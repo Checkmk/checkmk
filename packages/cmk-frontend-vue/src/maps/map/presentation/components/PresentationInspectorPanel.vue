@@ -5,13 +5,16 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkButton from 'cmk-ui-library/components/CmkButton'
+import CmkCatalogPanel from 'cmk-ui-library/components/CmkCatalogPanel.vue'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
 import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
+import CmkTabs, { CmkTab, CmkTabContent } from 'cmk-ui-library/components/CmkTabs'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed, ref, watch } from 'vue'
 
 import ImagePicker from '@/maps/image-library/components/ImagePicker.vue'
+import EditField from '@/maps/map/edit/components/EditField.vue'
 import { useMapsApis } from '@/maps/services/context'
 import type { PresentationElement, PresentationTheme, PresentationView } from '@/maps/types/api'
 
@@ -36,7 +39,6 @@ const props = defineProps<{
   connectionId: string
   targets: { id: string; name: string }[]
   backgroundImageName: string
-  saveLabel: string
 }>()
 
 const emit = defineEmits<{
@@ -44,7 +46,6 @@ const emit = defineEmits<{
   delete: []
   duplicate: []
   slide: [Partial<PresentationView>]
-  save: []
   group: []
   ungroup: []
   /** Reopen the template gallery, which greets an empty slide on its own. */
@@ -67,7 +68,7 @@ const single = computed(() => (props.selection.length === 1 ? props.selection[0]
 // The panel is contextual (Figma-style): selecting follows to the Element tab,
 // deselecting falls back to Slide. The tabs make the current context explicit
 // and let the operator inspect slide settings without dropping the selection.
-const tab = ref<'slide' | 'element'>('slide')
+const tab = ref('slide')
 watch(
   () => props.selection.length,
   (n) => {
@@ -152,258 +153,263 @@ const slidePresets = SLIDE_PRESETS
 
 <template>
   <aside class="maps-presentation-inspector-panel" @pointerdown.stop @dblclick.stop>
-    <div class="maps-presentation-inspector-panel__topbar">
-      <div class="maps-presentation-inspector-panel__tabs">
-        <button
-          class="maps-presentation-inspector-panel__tab"
-          :class="{ 'maps-presentation-inspector-panel__tab--on': tab === 'slide' }"
-          @click="tab = 'slide'"
-        >
-          {{ _t('Slide') }}
-        </button>
-        <button
-          class="maps-presentation-inspector-panel__tab"
-          :class="{ 'maps-presentation-inspector-panel__tab--on': tab === 'element' }"
+    <CmkTabs v-model="tab" class="maps-presentation-inspector-panel__tabs">
+      <template #tabs>
+        <CmkTab id="slide">{{ _t('Slide') }}</CmkTab>
+        <CmkTab
+          id="element"
           :disabled="!selection.length"
           :title="selection.length ? undefined : _t('Select an element on the slide')"
-          @click="tab = 'element'"
         >
           {{ _t('Element') }}
-        </button>
-      </div>
-      <div class="maps-presentation-inspector-panel__save">
-        <span class="maps-presentation-inspector-panel__save-label">{{ saveLabel }}</span>
-        <button
-          class="maps-presentation-inspector-panel__icon"
-          :title="_t('Save now')"
-          @click="emit('save')"
+        </CmkTab>
+      </template>
+      <template #tab-contents>
+        <CmkTabContent
+          id="element"
+          spacing="none"
+          class="maps-presentation-inspector-panel__content"
         >
-          <PresentationGlyph :svg="ICONS.save" />
-        </button>
-      </div>
-    </div>
-
-    <template v-if="tab === 'element' && single">
-      <div class="maps-presentation-inspector-panel__head">
-        <input
-          class="maps-presentation-inspector-panel__name"
-          :value="single.name ?? ''"
-          :placeholder="kindTitle(single)"
-          :title="_t('Element name')"
-          @change="onRename"
-        />
-        <div class="maps-presentation-inspector-panel__actions">
-          <button
-            class="maps-presentation-inspector-panel__icon"
-            :title="_t('Duplicate')"
-            @click="emit('duplicate')"
-          >
-            <PresentationGlyph :svg="ICONS.duplicate" />
-          </button>
-          <button
-            class="maps-presentation-inspector-panel__icon maps-presentation-inspector-panel__icon--danger"
-            :title="_t('Delete')"
-            @click="emit('delete')"
-          >
-            <PresentationGlyph :svg="ICONS.trash" />
-          </button>
-        </div>
-      </div>
-      <CmkScrollContainer class="maps-presentation-inspector-panel__body-wrap">
-        <div class="maps-presentation-inspector-panel__body">
-          <template v-if="single.kind === 'group'">
-            <div class="maps-presentation-inspector-panel__hint">
-              {{ _t('Group — move or duplicate it as one unit.') }}
+          <template v-if="single">
+            <div class="maps-presentation-inspector-panel__head">
+              <div class="maps-presentation-inspector-panel__name">
+                <CmkInput
+                  field-size="fill"
+                  :model-value="single.name ?? ''"
+                  :placeholder="kindTitle(single)"
+                  :aria-label="_t('Element name')"
+                  :title="_t('Element name')"
+                  @change="onRename"
+                />
+              </div>
+              <div class="maps-presentation-inspector-panel__actions">
+                <button
+                  class="maps-presentation-inspector-panel__icon"
+                  :title="_t('Duplicate')"
+                  @click="emit('duplicate')"
+                >
+                  <PresentationGlyph :svg="ICONS.duplicate" />
+                </button>
+                <button
+                  class="maps-presentation-inspector-panel__icon maps-presentation-inspector-panel__icon--danger"
+                  :title="_t('Delete')"
+                  @click="emit('delete')"
+                >
+                  <PresentationGlyph :svg="ICONS.trash" />
+                </button>
+              </div>
             </div>
-            <CmkButton class="maps-presentation-inspector-panel__grow" @click="emit('ungroup')">
-              {{ _t('Ungroup') }}
-            </CmkButton>
+            <CmkScrollContainer class="maps-presentation-inspector-panel__body-wrap">
+              <div class="maps-presentation-inspector-panel__body">
+                <template v-if="single.kind === 'group'">
+                  <div class="maps-presentation-inspector-panel__hint">
+                    {{ _t('Group — move or duplicate it as one unit.') }}
+                  </div>
+                  <CmkButton
+                    class="maps-presentation-inspector-panel__grow"
+                    @click="emit('ungroup')"
+                  >
+                    {{ _t('Ungroup') }}
+                  </CmkButton>
+                </template>
+                <InspectorLayoutSection
+                  v-if="showLayout"
+                  :element="single"
+                  @patch="emit('patch', $event)"
+                />
+                <InspectorTypographySection
+                  v-if="single.kind === 'text'"
+                  :element="single"
+                  :theme="view.theme"
+                  @patch="emit('patch', $event)"
+                />
+                <InspectorAppearanceSection
+                  v-if="single.kind === 'shape'"
+                  :element="single"
+                  :theme="view.theme"
+                  @patch="emit('patch', $event)"
+                />
+                <InspectorImageSection
+                  v-if="single.kind === 'image'"
+                  :element="single"
+                  @patch="emit('patch', $event)"
+                />
+                <InspectorDataSection
+                  v-if="isBindable(single)"
+                  :element="single"
+                  :connection-id="connectionId"
+                  :targets="targets"
+                  :theme="view.theme"
+                  @patch="emit('patch', $event)"
+                />
+              </div>
+            </CmkScrollContainer>
           </template>
-          <InspectorLayoutSection
-            v-if="showLayout"
-            :element="single"
-            @patch="emit('patch', $event)"
-          />
-          <InspectorTypographySection
-            v-if="single.kind === 'text'"
-            :element="single"
-            :theme="view.theme"
-            @patch="emit('patch', $event)"
-          />
-          <InspectorAppearanceSection
-            v-if="single.kind === 'shape'"
-            :element="single"
-            :theme="view.theme"
-            @patch="emit('patch', $event)"
-          />
-          <InspectorImageSection
-            v-if="single.kind === 'image'"
-            :element="single"
-            @patch="emit('patch', $event)"
-          />
-          <InspectorDataSection
-            v-if="isBindable(single)"
-            :element="single"
-            :connection-id="connectionId"
-            :targets="targets"
-            :theme="view.theme"
-            @patch="emit('patch', $event)"
-          />
-        </div>
-      </CmkScrollContainer>
-    </template>
 
-    <template v-else-if="tab === 'element' && selection.length > 1">
-      <div class="maps-presentation-inspector-panel__head">
-        <span class="maps-presentation-inspector-panel__title">{{
-          _t('%{n} elements selected', { n: String(selection.length) })
-        }}</span>
-        <div class="maps-presentation-inspector-panel__actions">
-          <button
-            class="maps-presentation-inspector-panel__icon"
-            :title="_t('Duplicate')"
-            @click="emit('duplicate')"
-          >
-            <PresentationGlyph :svg="ICONS.duplicate" />
-          </button>
-          <button
-            class="maps-presentation-inspector-panel__icon maps-presentation-inspector-panel__icon--danger"
-            :title="_t('Delete')"
-            @click="emit('delete')"
-          >
-            <PresentationGlyph :svg="ICONS.trash" />
-          </button>
-        </div>
-      </div>
-      <div class="maps-presentation-inspector-panel__body">
-        <div class="maps-presentation-inspector-panel__row">
-          <span class="maps-cap">{{ _t('Opacity') }}</span>
-          <input
-            class="maps-range"
-            type="range"
-            min="0"
-            max="100"
-            :value="Math.round(multiOpacity * 100)"
-            @input="onMultiOpacity"
-          />
-          <span class="maps-range-pct">{{ Math.round(multiOpacity * 100) }}%</span>
-        </div>
-        <div class="maps-presentation-inspector-panel__row">
-          <CmkButton class="maps-presentation-inspector-panel__grow" @click="emit('group')">{{
-            _t('Group')
-          }}</CmkButton>
-          <CmkButton
-            class="maps-presentation-inspector-panel__grow"
-            :disabled="!hasGroup"
-            @click="emit('ungroup')"
-          >
-            {{ _t('Ungroup') }}
-          </CmkButton>
-        </div>
-        <div class="maps-presentation-inspector-panel__hint">
-          {{ _t('Use the toolbar above the slide to align and distribute.') }}
-        </div>
-      </div>
-    </template>
-
-    <template v-else>
-      <CmkScrollContainer class="maps-presentation-inspector-panel__body-wrap">
-        <div class="maps-presentation-inspector-panel__body">
-          <section class="maps-presentation-inspector-panel__section">
-            <h3 class="maps-section-title">{{ _t('Theme') }}</h3>
-            <CmkDropdown
-              :model-value="view.theme"
-              :options="themeDropdownOptions"
-              :width="'fill'"
-              :label="_t('Theme')"
-              @update:model-value="emit('slide', { theme: $event as PresentationTheme })"
-            />
-          </section>
-          <section class="maps-presentation-inspector-panel__section">
-            <h3 class="maps-section-title">{{ _t('Aspect / size') }}</h3>
-            <div class="maps-presentation-inspector-panel__presets">
-              <button
-                v-for="p in slidePresets"
-                :key="p.label"
-                class="maps-presentation-inspector-panel__preset"
-                :class="{
-                  'maps-presentation-inspector-panel__preset--on':
-                    view.width === p.w && view.height === p.h
-                }"
-                @click="emit('slide', { width: p.w, height: p.h })"
-              >
-                {{ p.label }}
-              </button>
+          <template v-else-if="selection.length > 1">
+            <div class="maps-presentation-inspector-panel__head">
+              <span class="maps-presentation-inspector-panel__title">{{
+                _t('%{n} elements selected', { n: String(selection.length) })
+              }}</span>
+              <div class="maps-presentation-inspector-panel__actions">
+                <button
+                  class="maps-presentation-inspector-panel__icon"
+                  :title="_t('Duplicate')"
+                  @click="emit('duplicate')"
+                >
+                  <PresentationGlyph :svg="ICONS.duplicate" />
+                </button>
+                <button
+                  class="maps-presentation-inspector-panel__icon maps-presentation-inspector-panel__icon--danger"
+                  :title="_t('Delete')"
+                  @click="emit('delete')"
+                >
+                  <PresentationGlyph :svg="ICONS.trash" />
+                </button>
+              </div>
             </div>
-            <div class="maps-presentation-inspector-panel__row">
-              <label class="maps-presentation-inspector-panel__num">
-                <span class="maps-cap">{{ _t('Width') }}</span>
-                <CmkInput
-                  type="number"
-                  :model-value="view.width"
-                  min="320"
-                  max="8192"
-                  @change="onSideChange('width', $event)"
-                />
-              </label>
-              <label class="maps-presentation-inspector-panel__num">
-                <span class="maps-cap">{{ _t('Height') }}</span>
-                <CmkInput
-                  type="number"
-                  :model-value="view.height"
-                  min="320"
-                  max="8192"
-                  @change="onSideChange('height', $event)"
-                />
-              </label>
+            <div class="maps-presentation-inspector-panel__body">
+              <EditField v-slot="{ id }" labels-control :label="_t('Opacity')">
+                <div class="maps-presentation-inspector-panel__row">
+                  <input
+                    :id="id"
+                    class="maps-presentation-inspector-panel__range"
+                    type="range"
+                    min="0"
+                    max="100"
+                    :value="Math.round(multiOpacity * 100)"
+                    @input="onMultiOpacity"
+                  />
+                  <span class="maps-range-pct">{{ Math.round(multiOpacity * 100) }}%</span>
+                </div>
+              </EditField>
+              <div class="maps-presentation-inspector-panel__row">
+                <CmkButton class="maps-presentation-inspector-panel__grow" @click="emit('group')">{{
+                  _t('Group')
+                }}</CmkButton>
+                <CmkButton
+                  class="maps-presentation-inspector-panel__grow"
+                  :disabled="!hasGroup"
+                  @click="emit('ungroup')"
+                >
+                  {{ _t('Ungroup') }}
+                </CmkButton>
+              </div>
+              <div class="maps-presentation-inspector-panel__hint">
+                {{ _t('Use the toolbar above the slide to align and distribute.') }}
+              </div>
             </div>
-          </section>
-          <section class="maps-presentation-inspector-panel__section">
-            <h3 class="maps-section-title">{{ _t('Background') }}</h3>
-            <div class="maps-presentation-inspector-panel__row">
-              <ColorField
-                :label="_t('Background color')"
-                :value="view.background ?? null"
-                :default-color="themeTokens(view.theme)['--pres-bg']"
-                @set="emit('slide', { background: $event })"
-              />
-              <span
-                class="maps-presentation-inspector-panel__hint maps-presentation-inspector-panel__hint--inline"
-                >{{ view.background ? view.background : _t('Theme default') }}</span
-              >
+          </template>
+        </CmkTabContent>
+        <CmkTabContent id="slide" spacing="none" class="maps-presentation-inspector-panel__content">
+          <CmkScrollContainer class="maps-presentation-inspector-panel__body-wrap">
+            <div class="maps-presentation-inspector-panel__body">
+              <CmkCatalogPanel :title="_t('Theme')">
+                <div class="maps-presentation-inspector-panel__section">
+                  <CmkDropdown
+                    :model-value="view.theme"
+                    :options="themeDropdownOptions"
+                    :width="'fill'"
+                    :label="_t('Theme')"
+                    @update:model-value="emit('slide', { theme: $event as PresentationTheme })"
+                  />
+                </div>
+              </CmkCatalogPanel>
+              <CmkCatalogPanel :title="_t('Aspect / size')">
+                <div class="maps-presentation-inspector-panel__section">
+                  <div class="maps-presentation-inspector-panel__presets">
+                    <button
+                      v-for="p in slidePresets"
+                      :key="p.label"
+                      class="maps-presentation-inspector-panel__preset"
+                      :class="{
+                        'maps-presentation-inspector-panel__preset--on':
+                          view.width === p.w && view.height === p.h
+                      }"
+                      @click="emit('slide', { width: p.w, height: p.h })"
+                    >
+                      {{ p.label }}
+                    </button>
+                  </div>
+                  <div class="maps-presentation-inspector-panel__row">
+                    <EditField
+                      v-slot="{ id }"
+                      class="maps-presentation-inspector-panel__num"
+                      labels-control
+                      :label="_t('Width')"
+                    >
+                      <CmkInput
+                        :id="id"
+                        type="number"
+                        unit="px"
+                        :model-value="view.width"
+                        min="320"
+                        max="8192"
+                        @change="onSideChange('width', $event)"
+                      />
+                    </EditField>
+                    <EditField
+                      v-slot="{ id }"
+                      class="maps-presentation-inspector-panel__num"
+                      labels-control
+                      :label="_t('Height')"
+                    >
+                      <CmkInput
+                        :id="id"
+                        type="number"
+                        unit="px"
+                        :model-value="view.height"
+                        min="320"
+                        max="8192"
+                        @change="onSideChange('height', $event)"
+                      />
+                    </EditField>
+                  </div>
+                </div>
+              </CmkCatalogPanel>
+              <CmkCatalogPanel :title="_t('Background')">
+                <div class="maps-presentation-inspector-panel__section">
+                  <div class="maps-presentation-inspector-panel__row">
+                    <ColorField
+                      :label="_t('Background color')"
+                      :value="view.background ?? null"
+                      :default-color="themeTokens(view.theme)['--pres-bg']"
+                      @set="emit('slide', { background: $event })"
+                    />
+                    <span
+                      class="maps-presentation-inspector-panel__hint maps-presentation-inspector-panel__hint--inline"
+                      >{{ view.background ? view.background : _t('Theme default') }}</span
+                    >
+                  </div>
+                  <ImagePicker
+                    :model-value="backgroundImageName"
+                    :placeholder="_t('Background image…')"
+                    kind="image"
+                    @update:model-value="emit('slide', { background_image: $event || null })"
+                  />
+                  <CmkButton :disabled="bgUploading" @click="bgFileInput?.click()">
+                    {{ bgUploading ? _t('Uploading…') : _t('Upload background image…') }}
+                  </CmkButton>
+                  <input
+                    ref="bgFileInput"
+                    type="file"
+                    accept="image/png,image/jpeg,image/svg+xml,image/webp,image/gif"
+                    class="maps-presentation-inspector-panel__hidden-file"
+                    @change="onBgUpload"
+                  />
+                  <p v-if="bgUploadError" class="maps-presentation-inspector-panel__error">
+                    {{ bgUploadError }}
+                  </p>
+                </div>
+              </CmkCatalogPanel>
+              <CmkButton @click="emit('browse-templates')">
+                {{ _t('Browse templates…') }}
+              </CmkButton>
             </div>
-            <ImagePicker
-              :model-value="backgroundImageName"
-              :placeholder="_t('Background image…')"
-              kind="image"
-              @update:model-value="emit('slide', { background_image: $event || null })"
-            />
-            <CmkButton
-              class="maps-presentation-inspector-panel__grow"
-              :disabled="bgUploading"
-              @click="bgFileInput?.click()"
-            >
-              {{ bgUploading ? _t('Uploading…') : _t('Upload background image…') }}
-            </CmkButton>
-            <input
-              ref="bgFileInput"
-              type="file"
-              accept="image/png,image/jpeg,image/svg+xml,image/webp,image/gif"
-              class="maps-presentation-inspector-panel__hidden-file"
-              @change="onBgUpload"
-            />
-            <p v-if="bgUploadError" class="maps-presentation-inspector-panel__error">
-              {{ bgUploadError }}
-            </p>
-          </section>
-          <section class="maps-presentation-inspector-panel__section">
-            <CmkButton @click="emit('browse-templates')">
-              {{ _t('Browse templates…') }}
-            </CmkButton>
-          </section>
-        </div>
-      </CmkScrollContainer>
-    </template>
+          </CmkScrollContainer>
+        </CmkTabContent>
+      </template>
+    </CmkTabs>
   </aside>
 </template>
 
@@ -411,64 +417,28 @@ const slidePresets = SLIDE_PRESETS
 .maps-presentation-inspector-panel {
   display: flex;
   flex-direction: column;
-  width: 280px;
+  width: var(--maps-presentation-inspector-width);
   flex-shrink: 0;
-  background: var(--ux-theme-3);
+  background: var(--default-bg-color);
   border-left: 1px solid var(--default-border-color, rgb(255 255 255 / 8%));
   color: var(--font-color);
   z-index: 5;
 }
 
-.maps-presentation-inspector-panel__topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--dimension-4);
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--default-border-color, rgb(255 255 255 / 8%));
-}
-
 .maps-presentation-inspector-panel__tabs {
+  flex: 1;
+  min-height: 0;
+  box-sizing: border-box;
+  padding: var(--dimension-4) var(--dimension-4) 0;
+}
+
+/* Without :not, display would override the hidden attribute of the inactive tab. */
+.maps-presentation-inspector-panel__content:not([hidden]) {
   display: flex;
-  gap: var(--dimension-2);
-  padding: var(--dimension-2);
-  border-radius: 7px;
-  background: var(--ux-theme-1, rgb(0 0 0 / 20%));
-}
-
-.maps-presentation-inspector-panel__tab {
-  padding: 4px 12px;
-  border: none;
-  border-radius: 5px;
-  background: transparent;
-  color: var(--font-color-dimmed);
-  font-size: var(--font-size-normal);
-  font-weight: var(--font-weight-bold);
-  cursor: pointer;
-}
-
-.maps-presentation-inspector-panel__tab--on {
-  background: var(--ux-theme-3);
-  color: var(--font-color);
-  box-shadow: 0 1px 3px rgb(0 0 0 / 30%);
-}
-
-.maps-presentation-inspector-panel__tab:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-
-.maps-presentation-inspector-panel__save {
-  display: flex;
-  align-items: center;
-  gap: var(--dimension-3);
-  min-width: 0;
-}
-
-.maps-presentation-inspector-panel__save-label {
-  font-size: var(--font-size-normal);
-  color: var(--font-color-dimmed);
-  white-space: nowrap;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  border-radius: 0 var(--dimension-3) 0 0;
 }
 
 .maps-presentation-inspector-panel__grow {
@@ -491,7 +461,7 @@ const slidePresets = SLIDE_PRESETS
   align-items: center;
   justify-content: space-between;
   gap: var(--dimension-4);
-  padding: 8px 12px;
+  padding: var(--dimension-4) var(--dimension-5);
   border-bottom: 1px solid var(--default-border-color, rgb(255 255 255 / 8%));
   min-height: 44px;
   box-sizing: border-box;
@@ -505,23 +475,6 @@ const slidePresets = SLIDE_PRESETS
 .maps-presentation-inspector-panel__name {
   flex: 1;
   min-width: 0;
-  padding: 4px 6px;
-  font-weight: var(--font-weight-bold);
-  font-size: var(--font-size-large);
-  color: var(--font-color);
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 6px;
-}
-
-.maps-presentation-inspector-panel__name:hover {
-  border-color: var(--default-form-element-border-color);
-}
-
-.maps-presentation-inspector-panel__name:focus {
-  outline: none;
-  border-color: var(--interactive-accent);
-  background: var(--default-form-element-bg-color);
 }
 
 .maps-presentation-inspector-panel__actions {
@@ -536,7 +489,7 @@ const slidePresets = SLIDE_PRESETS
   width: 28px;
   height: 28px;
   border: none;
-  border-radius: 5px;
+  border-radius: var(--border-radius);
   background: transparent;
   color: var(--font-color-dimmed);
   cursor: pointer;
@@ -565,14 +518,15 @@ const slidePresets = SLIDE_PRESETS
 .maps-presentation-inspector-panel__body {
   display: flex;
   flex-direction: column;
-  gap: var(--dimension-6);
-  padding: var(--dimension-5);
+  gap: var(--dimension-4);
+  padding: var(--dimension-4);
 }
 
 .maps-presentation-inspector-panel__section {
   display: flex;
   flex-direction: column;
   gap: var(--dimension-4);
+  padding: var(--dimension-4) 0;
 }
 
 .maps-presentation-inspector-panel__row {
@@ -581,10 +535,13 @@ const slidePresets = SLIDE_PRESETS
   gap: var(--dimension-4);
 }
 
+.maps-presentation-inspector-panel__range {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--interactive-accent);
+}
+
 .maps-presentation-inspector-panel__num {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dimension-3);
   flex: 1;
   min-width: 0;
 }
@@ -592,13 +549,13 @@ const slidePresets = SLIDE_PRESETS
 .maps-presentation-inspector-panel__presets {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 6px;
+  gap: var(--dimension-4);
 }
 
 .maps-presentation-inspector-panel__preset {
-  padding: 6px 4px;
+  padding: var(--dimension-4) var(--dimension-3);
   border: 1px solid var(--default-form-element-border-color);
-  border-radius: 6px;
+  border-radius: var(--border-radius);
   background: transparent;
   color: inherit;
   cursor: pointer;

@@ -7,7 +7,14 @@
 from dataclasses import dataclass
 from typing import ClassVar
 
+from cryptography.exceptions import InvalidTag
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
+from . import MKCryptoException
+
+
+class DecryptionError(MKCryptoException):
+    """A ciphertext could not be decrypted and authenticated with the given key and nonce"""
 
 
 @dataclass
@@ -62,8 +69,10 @@ def aes_gcm_decrypt(key: bytes, nonce: bytes, ciphertext: TaggedCiphertext) -> s
     This is the inverse method for `aes_gcm_encrypt`. See the docstring of `aes_gcm_encrypt` for
     further information.
     """
-    return (
-        AESGCM(key)
-        .decrypt(nonce, ciphertext.ciphertext + ciphertext.tag, associated_data=None)
-        .decode("utf-8")
-    )
+    try:
+        decrypted = AESGCM(key).decrypt(
+            nonce, ciphertext.ciphertext + ciphertext.tag, associated_data=None
+        )
+    except InvalidTag as e:
+        raise DecryptionError("Decryption failed: authentication tag mismatch") from e
+    return decrypted.decode("utf-8")

@@ -386,7 +386,7 @@ def formspec() -> Dictionary:
 
 rule_spec_azure = SpecialAgent(
     name="azure",
-    title=Title("Azure (deprecated)"),
+    title=Title("Azure"),
     help_text=Help(
         "To monitor Azure resources add this data source to <b>one</b> host. "
         "The data will be transported using the piggyback mechanism, so make "
@@ -396,4 +396,5 @@ rule_spec_azure = SpecialAgent(
     ),
     topic=Topic.CLOUD,
     parameter_form=formspec,
+    is_deprecated=True,
 )

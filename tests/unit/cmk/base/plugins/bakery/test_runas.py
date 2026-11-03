@@ -11,8 +11,8 @@ from cmk.base.plugins.bakery.runas import get_runas_files
 
 def test_runas_files() -> None:
     conf = [
-        ("plugin", "myuser", "/usr/lib/check_mk_agent/plugins/my_plugin"),
-        ("local", "", "/usr/lib/check_mk_agent/local/my_local"),
+        [("plugin", "myuser", "/usr/lib/check_mk_agent/plugins/my_plugin")],
+        [("local", "", "/usr/lib/check_mk_agent/local/my_local")],
     ]
     result = list(get_runas_files(conf))
     expected = [

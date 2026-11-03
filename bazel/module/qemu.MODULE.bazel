@@ -1,0 +1,5 @@
+# The static QEMU the test VMs run on (third_party/qemu). Not a build
+# dependency: only tests that boot a VM fetch it.
+
+qemu_repos = use_extension("//bazel/module:qemu_repositories.bzl", "repos")
+use_repo(qemu_repos, "qemu_linux_x86_64")

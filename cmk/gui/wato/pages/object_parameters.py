@@ -29,7 +29,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuEntry, PageMenuTopic
-from cmk.gui.valuespec import Tuple, ValueSpecText
+from cmk.gui.valuespec import ValueSpecText
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.automations import (
     make_automation_config,
@@ -38,7 +38,6 @@ from cmk.gui.watolib.check_mk_automations import analyse_host, analyse_service
 from cmk.gui.watolib.hosts_and_folders import (
     Folder,
     folder_from_request,
-    folder_preserving_link,
     Host,
     make_folder_tree,
 )
@@ -48,6 +47,7 @@ from cmk.gui.watolib.rulespecs import (
     AllowAll,
     get_rulegroup,
     get_rulespec_allow_list,
+    ManualCheckParameterRulespec,
     Rulespec,
     rulespec_group_registry,
     rulespec_registry,
@@ -344,22 +344,21 @@ class ModeObjectParameters(WatoMode):
             return
 
         rulespec = rulespec_registry[RuleGroup.StaticChecks(checkgroup)]
-        url = folder_preserving_link(
-            request,
+        url = self._host.folder().url(
             [
                 ("mode", "edit_ruleset"),
                 ("varname", RuleGroup.StaticChecks(checkgroup)),
                 ("host", self._hostname),
             ],
         )
-        assert isinstance(rulespec.valuespec, Tuple)
+        assert isinstance(rulespec, ManualCheckParameterRulespec)
         self._render_rule_reason(
             _("Parameters"),
             url,
             _("Determined by discovery"),
             "",
             False,
-            rulespec.valuespec._elements[2].value_to_html(serviceinfo["parameters"]),  # noqa: SLF001
+            render_value_model_readonly(rulespec.parameter_value_model, serviceinfo["parameters"]),
         )
         render_labels()
 
@@ -398,9 +397,9 @@ class ModeObjectParameters(WatoMode):
             service_result=service_result,
             debug=debug,
         )
-        assert isinstance(rulespec.valuespec, Tuple)
+        assert isinstance(rulespec, ManualCheckParameterRulespec)
         html.write_text_permissive(
-            rulespec.valuespec._elements[2].value_to_html(serviceinfo["parameters"])  # noqa: SLF001
+            render_value_model_readonly(rulespec.parameter_value_model, serviceinfo["parameters"])
         )
         html.close_td()
         html.close_tr()
@@ -460,13 +459,11 @@ class ModeObjectParameters(WatoMode):
             )
         rule_folder, rule_index, rule = origin_rule_result
 
-        url = folder_preserving_link(
-            request,
+        url = self._host.folder().url(
             [("mode", "edit_ruleset"), ("varname", "custom_checks"), ("host", self._hostname)],
         )
         forms.section(HTMLWriter.render_a(_("Command line"), href=url))
-        url = folder_preserving_link(
-            request,
+        url = self._host.folder().url(
             [
                 ("mode", "edit_rule"),
                 ("varname", "custom_checks"),
@@ -582,8 +579,7 @@ class ModeObjectParameters(WatoMode):
             known_settings = self._PARAMETERS_UNKNOWN
 
         def rule_url(rule: Rule) -> str:
-            return folder_preserving_link(
-                request,
+            return self._host.folder().url(
                 [
                     ("mode", "edit_rule"),
                     ("varname", varname),
@@ -601,8 +597,7 @@ class ModeObjectParameters(WatoMode):
         varname = rulespec.name
         value_model = rulespec.value_model
 
-        url = folder_preserving_link(
-            request,
+        url = self._host.folder().url(
             [
                 ("mode", "edit_ruleset"),
                 ("varname", varname),

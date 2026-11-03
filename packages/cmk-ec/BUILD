@@ -22,8 +22,10 @@ py_library(
         "//visibility:public",
     ],
     deps = [
+        "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:site",
+        "//packages/cmk-ccc:translations",
         requirement("python-dateutil"),
     ],
 )
@@ -48,6 +50,31 @@ py_library(
         ":event",
         ":syslog",
         "//packages/cmk-ccc:hostaddress",
+    ],
+)
+
+py_library(
+    name = "mib_status",
+    srcs = ["cmk/ec/mib_status.py"],
+    imports = ["."],
+    visibility = [
+        "//visibility:public",
+    ],
+)
+
+py_library(
+    name = "mib_compiler",
+    srcs = ["cmk/ec/mib_compiler.py"],
+    imports = ["."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//non-free/packages:__subpackages__",
+        "//packages:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":mib_status",
+        requirement("pysmi"),
     ],
 )
 
@@ -87,6 +114,7 @@ py_library(
     ],
     deps = [
         ":event",
+        ":mib_status",
         ":syslog",
         "//packages/cmk-ccc:daemon",
         "//packages/cmk-ccc:exceptions",
@@ -105,7 +133,6 @@ py_library(
         requirement("pyasn1"),
         requirement("pymongo"),
         requirement("pysnmp"),
-        requirement("pysmi"),
         requirement("setproctitle"),
     ],
 )
@@ -117,6 +144,8 @@ py_doc_test(
         "cmk-ec",
         "event",
         "forwarder",
+        "mib_compiler",
+        "mib_status",
         "syslog",
     ],
 )
@@ -124,11 +153,24 @@ py_doc_test(
 py_cmk_test(
     name = "unit",
     size = "small",
-    srcs = glob(["tests/**/*.py"]),
+    srcs = glob(["tests/unit/**/*.py"]),
+    args = ["packages/cmk-ec/tests/unit"],
     deps = [
         ":cmk-ec",
         ":forwarder",
         requirement("time-machine"),
+    ],
+)
+
+py_cmk_test(
+    name = "component",
+    size = "small",
+    srcs = glob(["tests/component/**/*.py"]),
+    args = ["packages/cmk-ec/tests/component"],
+    deps = [
+        ":mib_compiler",
+        ":mib_status",
+        requirement("pysmi"),
     ],
 )
 
@@ -143,6 +185,8 @@ py_wheel(
         ":cmk-ec",
         ":event",
         ":forwarder",
+        ":mib_compiler",
+        ":mib_status",
         ":py_typed",
         ":syslog",
     ],
@@ -183,6 +227,8 @@ py_requirements_test(
         ":syslog",
         ":forwarder",
         ":cmk-ec",
+        ":mib_compiler",
+        ":mib_status",
     ],
     requirements_in = "requirements.in",
 )

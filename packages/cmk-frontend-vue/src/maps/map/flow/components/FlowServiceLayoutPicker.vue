@@ -125,12 +125,12 @@ function pick(layout: ServiceLayout): void {
   z-index: 10;
   display: flex;
   align-items: center;
-  gap: var(--spacing-half);
-  padding: var(--spacing-half) var(--spacing);
+  gap: var(--dimension-3);
+  padding: var(--dimension-3) var(--dimension-5);
   font-size: var(--font-size-normal);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   line-height: 16px;
-  border-radius: var(--dimension-5);
+  border-radius: var(--border-radius);
   transition: all 0.2s;
 }
 
@@ -139,22 +139,24 @@ function pick(layout: ServiceLayout): void {
   background: color-mix(in srgb, var(--interactive-accent) 15%, transparent);
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--interactive-accent) 40%, transparent),
-    0 10px 15px -3px rgb(0 0 0 / 30%),
-    0 4px 6px -4px rgb(0 0 0 / 30%);
+    var(--maps-shadow-canvas-overlay-high);
 }
 
 .maps-flow-service-layout-picker__button--off {
   color: var(--font-color-dimmed);
-  background: color-mix(in srgb, var(--ux-theme-3) 80%, transparent);
+  background: var(--ux-theme-3);
   box-shadow:
     0 0 0 1px var(--default-border-color),
-    0 10px 15px -3px rgb(0 0 0 / 30%),
-    0 4px 6px -4px rgb(0 0 0 / 30%);
+    var(--maps-shadow-canvas-overlay-high);
 }
 
 .maps-flow-service-layout-picker__button--off:hover {
   color: var(--font-color);
   background: var(--ux-theme-3);
+}
+
+.maps-flow-service-layout-picker__button:focus-visible {
+  outline: revert;
 }
 
 .maps-flow-service-layout-picker__caret {
@@ -173,13 +175,13 @@ function pick(layout: ServiceLayout): void {
   bottom: 100%;
   z-index: 10;
   width: 120px;
-  margin-bottom: 6px;
+  margin-bottom: var(--dimension-4);
   overflow: hidden;
   background: var(--ux-theme-3);
-  border-radius: var(--dimension-5);
+  border-radius: var(--border-radius);
   box-shadow:
     0 0 0 1px var(--default-border-color),
-    0 25px 50px -12px rgb(0 0 0 / 50%);
+    var(--maps-shadow-canvas-overlay-high);
 }
 
 .maps-flow-service-layout-picker__item {
@@ -187,7 +189,7 @@ function pick(layout: ServiceLayout): void {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: var(--spacing-half) var(--spacing);
+  padding: var(--dimension-3) var(--dimension-5);
   color: var(--font-color-dimmed);
   font-size: var(--font-size-normal);
   line-height: 16px;

@@ -3,16 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
 from .bakery_api.v1 import (
     register,
-    WindowsConfigContent,
     WindowsConfigGenerator,
     WindowsGlobalConfigEntry,
 )
 
 
-def get_agent_port_windows_config(conf: WindowsConfigContent) -> WindowsConfigGenerator:
-    yield WindowsGlobalConfigEntry(name="port", content=conf)
+def get_agent_port_windows_config(conf: Mapping[str, int]) -> WindowsConfigGenerator:
+    yield WindowsGlobalConfigEntry(name="port", content=conf["port"])
 
 
 register.bakery_plugin(

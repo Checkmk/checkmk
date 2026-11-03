@@ -34,9 +34,12 @@ const { _t } = usei18n()
 
 const draft = ref(props.initialValues)
 const isValid = ref(props.form === undefined)
+/** Off until the first submit, so a fresh form does not open on a wall of errors. */
+const showErrors = ref(false)
 
 function submit(): void {
   if (!isValid.value) {
+    showErrors.value = true
     return
   }
   emit('submit', draft.value)
@@ -71,7 +74,7 @@ function cancel(): void {
       </div>
 
       <div class="monitoring-action-form-pane__actions">
-        <CmkButton variant="primary" size="medium" :disabled="!isValid" @click="submit">
+        <CmkButton variant="primary" size="medium" @click="submit">
           {{ submitLabel ?? _t('Apply') }}
         </CmkButton>
         <CmkButton size="medium" :icon="{ name: 'cancel' }" @click="cancel">
@@ -85,6 +88,7 @@ function cancel(): void {
           v-if="form"
           v-bind="formProps"
           v-model="draft"
+          :show-errors="showErrors"
           @update:valid="isValid = $event"
         />
         <p v-else class="monitoring-action-form-pane__confirm">

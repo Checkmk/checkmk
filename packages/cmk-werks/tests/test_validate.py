@@ -16,6 +16,7 @@ from ._werk_files import werk_text
 _VERSION_REGEX = re.compile(r"^\d.\d.\d([ipb]\d+)?$")
 
 _CONFIG = """
+flavor = "cmk"
 editions = [("community", "Community")]
 components = [("core", "Core")]
 edition_components = {}
@@ -29,9 +30,8 @@ online_url = "https://checkmk.com/werk/%d"
 def _validate(tmp_path: Path, werk_files: list[Path]) -> None:
     config = tmp_path / "config"
     config.write_text(_CONFIG, encoding="utf-8")
-    defines_make = tmp_path / "defines.make"
-    defines_make.write_text("VERSION := 2.5.0\n", encoding="utf-8")
-    main(werk_files, config, defines_make, _VERSION_REGEX)
+    (tmp_path / "defines.make").write_text("VERSION := 2.5.0\n", encoding="utf-8")
+    main(werk_files, config, tmp_path, _VERSION_REGEX)
 
 
 def _write_werk(tmp_path: Path, text: str) -> Path:

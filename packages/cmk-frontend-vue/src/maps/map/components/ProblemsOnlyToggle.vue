@@ -40,7 +40,7 @@ const { _t } = usei18n()
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
+  border-radius: var(--border-radius);
   background: transparent;
   border: 1px solid transparent;
   cursor: pointer;
@@ -51,8 +51,12 @@ const { _t } = usei18n()
   background: var(--input-hover-bg-color);
 }
 
+.maps-problems-only-toggle:focus-visible {
+  outline: revert;
+}
+
 .maps-problems-only-toggle--active {
   border-color: var(--color-state-warning);
-  background: rgb(251 191 36 / 12%);
+  background: color-mix(in srgb, var(--color-state-warning) var(--status-tint-mix), transparent);
 }
 </style>

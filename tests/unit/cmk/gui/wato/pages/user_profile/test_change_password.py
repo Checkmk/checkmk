@@ -3,8 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -13,19 +12,6 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.wato.pages.user_profile import change_password as change_password_mod
 from cmk.gui.wato.pages.user_profile.change_password import UserChangePasswordPage
 from cmk.gui.wato.pages.user_profile.main_menu import default_user_menu_topics
-
-
-@pytest.fixture(name="stub_user_menu_quick_entries")
-def fixture_stub_user_menu_quick_entries() -> Iterator[None]:
-    # The "Color theme" and "Sidebar position" quick entries need a populated
-    # theme registry and a user attribute on disk — neither exists in the
-    # unit-test web_dir. Stub them so the menu renders.
-    base = "cmk.gui.wato.pages.user_profile.main_menu"
-    with (
-        patch(f"{base}._get_current_theme_title", return_value="Default"),
-        patch(f"{base}._get_sidebar_position", return_value="right"),
-    ):
-        yield
 
 
 @pytest.mark.usefixtures("with_admin_login", "remote_site", "stub_user_menu_quick_entries")

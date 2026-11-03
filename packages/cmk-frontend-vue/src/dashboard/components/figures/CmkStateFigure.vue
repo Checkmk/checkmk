@@ -9,6 +9,7 @@ import { computed } from 'vue'
 import ContextualLinkTrigger from '@/dashboard/components/ContextualLinkTrigger.vue'
 import type { HostOrServiceState, VisualContext } from '@/dashboard/types/widget'
 
+import SvgLinkArrow from './lib/SvgLinkArrow.vue'
 import {
   HOST_OR_SERVICE_STATE_COLOR,
   hostOrServiceStateKind,
@@ -30,7 +31,8 @@ const stateKind = computed(() =>
   hostOrServiceStateKind(props.value.state, props.value.has_been_checked)
 )
 
-const fontSizePx = computed(() => `${valueFontSize(props.width, props.height)}px`)
+const fontSize = computed(() => valueFontSize(props.width, props.height))
+const fontSizePx = computed(() => `${fontSize.value}px`)
 
 const summaryBox = computed(() => ({
   x: SUMMARY_MARGIN,
@@ -57,6 +59,7 @@ const summaryBox = computed(() => ({
       aria-hidden="true"
     />
     <ContextualLinkTrigger
+      v-slot="{ several }"
       :links="value.links"
       :link-properties="value.link_properties"
       :filters="filters"
@@ -72,7 +75,7 @@ const summaryBox = computed(() => ({
         <div class="db-cmk-state-figure__summary">{{ value.plugin_output }}</div>
       </foreignObject>
       <text
-        class="db-cmk-state-figure__state"
+        class="db-contextual-link-anchor__text db-cmk-state-figure__state"
         :x="width / 2"
         :y="height / 2"
         text-anchor="middle"
@@ -80,6 +83,11 @@ const summaryBox = computed(() => ({
       >
         {{ shortHostOrServiceState(stateKind) }}
       </text>
+      <SvgLinkArrow
+        v-if="several"
+        :layout="`${shortHostOrServiceState(stateKind)} ${width} ${height}`"
+        :size="fontSize * 0.4"
+      />
     </ContextualLinkTrigger>
   </svg>
 </template>
@@ -110,6 +118,5 @@ const summaryBox = computed(() => ({
 .db-cmk-state-figure__state {
   fill: var(--font-color);
   font-size: v-bind(fontSizePx);
-  font-weight: bold;
 }
 </style>

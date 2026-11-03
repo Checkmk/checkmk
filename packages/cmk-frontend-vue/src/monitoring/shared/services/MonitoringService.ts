@@ -23,7 +23,7 @@ import {
   watch
 } from 'vue'
 
-import type { FilterNode } from '@/monitoring/shared/api/types'
+import type { FieldConditionMap, FilterNode } from '@/monitoring/shared/api/types'
 import { DEFAULT_BATCH_SIZE, POLL_INTERVAL_MS } from '@/monitoring/shared/constants'
 import type { FilterUrlState } from '@/monitoring/shared/filterState/types'
 import {
@@ -58,6 +58,15 @@ export interface PagedResponse<T> {
     offset?: number
     /** Highest offset the backend serves. Absent for listings that do not page. */
     maxOffset?: number
+    /** Sites that could not be reached; their rows are missing from the items and the counts. */
+    unreachable_sites?: string[]
+  }
+}
+
+export class RowsNotLoadedError extends Error {
+  constructor() {
+    super('The rows of the current query could not be loaded')
+    this.name = 'RowsNotLoadedError'
   }
 }
 
@@ -71,6 +80,9 @@ export type FetchKind = 'foreground' | 'background'
 
 /** The current fetch state: a {@link FetchKind} in flight, or `'idle'`. */
 export type FetchState = 'idle' | FetchKind
+
+/** A condition on a field whose column has the same id, so narrowing to it can show that column. */
+export type ColumnCondition = FieldConditionMap['groups'] | FieldConditionMap['labels']
 
 export interface MonitoringServiceOptions<T> {
   pollIntervalMs?: number | undefined
@@ -202,6 +214,7 @@ export abstract class MonitoringService<T> extends ServiceBase {
   readonly items: Ref<T[]> = shallowRef<T[]>([])
   readonly matched: Ref<number> = ref(0)
   readonly total: Ref<number> = ref(0)
+  readonly unreachableSites: Ref<string[]> = shallowRef<string[]>([])
 
   readonly offeredLimits: RequestedLimit[]
   readonly requestedLimit: Ref<RequestedLimit>
@@ -242,6 +255,7 @@ export abstract class MonitoringService<T> extends ServiceBase {
   readonly toggleableColumns: ToggleableColumn[]
   protected readonly hideableColumnIds: string[]
   readonly columnVisibility: Ref<VisibilityState>
+  private readonly storedColumnVisibility: Ref<VisibilityState>
   readonly defaultColumnVisibility: VisibilityState
   /** The table's non-filter display state, for a URL sync to watch. */
   readonly tableState: ComputedRef<TableState>
@@ -291,6 +305,8 @@ export abstract class MonitoringService<T> extends ServiceBase {
   private tickTimer: ReturnType<typeof setInterval> | null = null
   private stopFilterWatch: WatchStopHandle | null = null
   private currentAbort: AbortController | null = null
+  /** Whether the initial fetch or a delayed refresh is still waiting for its timer. */
+  private readonly fetchScheduled: Ref<boolean> = ref(false)
 
   constructor(
     serviceId: string,
@@ -333,17 +349,15 @@ export abstract class MonitoringService<T> extends ServiceBase {
       initialState?.cols === undefined
         ? undefined
         : visibilityFromColumnIds(initialState.cols, this.hideableColumnIds)
-    // usePersistentRef writes every later change back, so the selection outlives
-    // the tab it was made in. Seeding through `parse` lets a URL's columns win
-    // without persisting them - the user's own next change still writes through.
-    this.columnVisibility =
+    // Only the user's own picks are stored, so the selection outlives the tab it was made in. A
+    // URL's columns, and those a click on a value sets, are shown without overwriting it.
+    this.storedColumnVisibility =
       columnStorageKey === undefined
-        ? ref(urlVisibility ?? defaultVisibility)
+        ? ref(defaultVisibility)
         : usePersistentRef(columnStorageKey, defaultVisibility, (stored) =>
-            urlVisibility === undefined
-              ? sanitizeVisibility(stored, this.toggleableColumns, defaultVisibility)
-              : urlVisibility
+            sanitizeVisibility(stored, this.toggleableColumns, defaultVisibility)
           )
+    this.columnVisibility = ref(urlVisibility ?? { ...this.storedColumnVisibility.value })
 
     this.offeredLimits =
       tableStateSchema?.offeredLimits ?? buildOfferedLimits(limitTiers, mayRemoveLimit)
@@ -366,13 +380,8 @@ export abstract class MonitoringService<T> extends ServiceBase {
       this.appliedSearchQuery.value = initialFilterState.search
     }
 
-    this.filters = new FilterStore(quickFilters, this.searchQuery)
-    // Seed before the filterNode watch below exists, so this never fires a spurious
-    // updateFilters() fetch - the scheduled initial fetch already carries this filter.
-    if (initialFilterState?.filter !== undefined) {
-      this.filters.setQueryNode(initialFilterState.filter)
-      this.filterState.value = initialFilterState.filter
-    }
+    this.filters = new FilterStore(quickFilters, this.searchQuery, initialFilterState?.filter)
+    this.filterState.value = initialFilterState?.filter
     this.filterUrlState = computed(() => ({
       filter: this.filterState.value,
       search: this.appliedSearchQuery.value
@@ -391,7 +400,9 @@ export abstract class MonitoringService<T> extends ServiceBase {
     this.initialFetchTimer = setTimeout(() => {
       this.initialFetchTimer = null
       void this.fetch()
+      this.syncFetchScheduled()
     }, 0)
+    this.syncFetchScheduled()
     this.tickTimer = setInterval(() => {
       this.tick()
     }, 1000)
@@ -421,6 +432,38 @@ export abstract class MonitoringService<T> extends ServiceBase {
   }
 
   protected abstract fetchBatch(signal: AbortSignal): Promise<PagedResponse<T>>
+
+  private syncFetchScheduled(): void {
+    this.fetchScheduled.value = this.initialFetchTimer !== null || this.refreshTimer !== null
+  }
+
+  /**
+   * Resolves once no fetch is in flight or scheduled, so the rows match the current query and
+   * columns, including what a delayed refresh after an action is still to pick up.
+   */
+  async settled(): Promise<void> {
+    const isSettled = (): boolean => this.fetchState.value === 'idle' && !this.fetchScheduled.value
+    if (isSettled()) {
+      return
+    }
+    await new Promise<void>((resolve) => {
+      const stop = watch(isSettled, (done) => {
+        if (done) {
+          stop()
+          resolve()
+        }
+      })
+    })
+  }
+
+  /** The rows of the current query once {@link settled}; throws when they could not be loaded. */
+  protected async loadedItems(): Promise<T[]> {
+    await this.settled()
+    if (this.loadFailed.value) {
+      throw new RowsNotLoadedError()
+    }
+    return this.items.value
+  }
 
   onFocusSearch(callback: () => void): void {
     this.pushCallBack('focus-search', callback)
@@ -483,6 +526,7 @@ export abstract class MonitoringService<T> extends ServiceBase {
       ({ id }) => isHidden(this.columnVisibility.value, id) && !isHidden(guarded, id)
     )
     this.columnVisibility.value = guarded
+    this.storedColumnVisibility.value = { ...guarded }
     if (revealed || (toggled && this.appliedSearchQuery.value !== '')) {
       void this.fetch()
     }
@@ -558,12 +602,15 @@ export abstract class MonitoringService<T> extends ServiceBase {
     }
     if (delayMs <= 0) {
       void this.fetch('background')
+      this.syncFetchScheduled()
       return
     }
     this.refreshTimer = setTimeout(() => {
       this.refreshTimer = null
       void this.fetch('background')
+      this.syncFetchScheduled()
     }, delayMs)
+    this.syncFetchScheduled()
   }
 
   /**
@@ -579,6 +626,18 @@ export abstract class MonitoringService<T> extends ServiceBase {
     // Refresh explicitly: a quick filter may only change the search query, leaving the
     // filter node unchanged so the filterNode watcher would not fire.
     this.updateFilters(quickFilter.filter)
+  }
+
+  /**
+   * Narrow the listing to `condition` alone. Whatever filter and search were set before go, and
+   * the columns go back to their defaults plus the one filtered on, so the result shows what it
+   * was narrowed by. The user's stored column selection stays as it is.
+   */
+  showOnly(condition: ColumnCondition): void {
+    this.clearSearch()
+    this.columnVisibility.value = { ...this.defaultColumnVisibility, [condition.field]: true }
+    // A fresh node always fires the filter watcher, which fetches; no second fetch here.
+    this.filters.setQueryNode({ ...condition })
   }
 
   deactivateQuickFilter(quickFilter: QuickFilter): void {
@@ -623,14 +682,24 @@ export abstract class MonitoringService<T> extends ServiceBase {
       clearInterval(this.tickTimer)
       this.tickTimer = null
     }
+    this.syncFetchScheduled()
     if (this.currentAbort !== null) {
       this.currentAbort.abort()
       this.currentAbort = null
     }
   }
 
+  /**
+   * A fetch that was in flight or scheduled never completes once the service is gone, so the
+   * load counts as failed and anyone waiting in {@link settled} is released.
+   */
   destruct(): void {
+    const interrupted = this.fetchState.value !== 'idle' || this.fetchScheduled.value
     this.stopPolling()
+    if (interrupted) {
+      this.loadFailed.value = true
+      this.fetchState.value = 'idle'
+    }
     this.disableShortCuts()
     this.removeCallbacks()
   }
@@ -662,6 +731,7 @@ export abstract class MonitoringService<T> extends ServiceBase {
       this.items.value = response.items
       this.matched.value = response.meta.matched
       this.total.value = response.meta.total
+      this.unreachableSites.value = response.meta.unreachable_sites ?? []
       // A paging backend reports which page it actually served; trust it over the
       // requested offset, which it may have clamped.
       if (response.meta.offset !== undefined) {

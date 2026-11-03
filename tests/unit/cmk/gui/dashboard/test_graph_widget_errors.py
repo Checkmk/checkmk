@@ -35,7 +35,7 @@ class TestGraphWidgetErrorHandling:
         mock_dashlet_spec: TemplateGraphDashletConfig = {
             "type": "performance_graph",
             "graph_render_options": {},
-            "timerange": "25h",
+            "timerange": {"type": "dashboard"},
             "graph_id": "",
         }
 
@@ -59,7 +59,7 @@ class TestGraphWidgetErrorHandling:
         mock_dashlet_spec: TemplateGraphDashletConfig = {
             "type": "performance_graph",
             "graph_render_options": {},
-            "timerange": "25h",
+            "timerange": {"type": "dashboard"},
             "graph_id": "",
         }
 

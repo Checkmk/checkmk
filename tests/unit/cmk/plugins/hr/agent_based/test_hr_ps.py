@@ -102,3 +102,14 @@ def test_hr_ps_discovery(
     assert sorted(hr_ps.discover_hr_ps([discovery_params, {}], hr_ps.parse_hr_ps(info))) == sorted(
         Service(item=i, parameters=p) for i, p in expected_discovery_result
     )
+
+
+def test_hr_ps_discovery_skips_empty_service_name() -> None:
+    section = hr_ps.parse_hr_ps([["sshd", "/usr/sbin/sshd", "2"]])
+    params: list[Mapping[str, object]] = [
+        {"descr": "%s", "match_name_or_path": ("match_name", "~(x*)sshd")},
+        {"descr": "SSH", "match_name_or_path": ("match_name", "~.*sshd")},
+        {},
+    ]
+
+    assert [service.item for service in hr_ps.discover_hr_ps(params, section)] == ["SSH"]

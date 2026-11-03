@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# shellcheck source=agents/plugins/kaspersky_av
-MK_SOURCE_ONLY=true source "${UNIT_SH_PLUGINS_DIR}/kaspersky_av"
+# shellcheck source=cmk/plugins/collection/agents/kaspersky_av
+MK_SOURCE_ONLY=true source "${UNIT_SH_REPO_PATH}/cmk/plugins/collection/agents/kaspersky_av"
 
 test_only_root_can_modify() {
 

@@ -1,9 +1,16 @@
-load("@aspect_rules_js//js:defs.bzl", "js_library")
+load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_library")
 load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
+load("@npm//:vue-tsc/package_json.bzl", vue_tsc_bin = "bin")
+load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
+load("@rules_shell//shell:sh_library.bzl", "sh_library")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 
-# The shared runner behind rust_wine_test() (xcomp/rust_wine_test.bzl).
-exports_files(["xcomp/rust-test-wine.sh"])
+exports_files([
+    # The shared runner behind rust_wine_test() (xcomp/rust_wine_test.bzl).
+    "xcomp/rust-test-wine.sh",
+    # Sourced by the scripts of package_msi.bzl rules.
+    "xcomp/package_msi.sh",
+])
 
 js_library(
     name = "vitest_runner",
@@ -40,6 +47,77 @@ config_setting(
     name = "signing_key_file_unset",
     flag_values = {":signing_key_file": ""},
     visibility = ["//visibility:public"],
+)
+
+# Absolute host path of the Azure Artifact Signing credentials, consumed only by
+# the actions of sign_azure.bzl - never by any other target,
+# and never through --action_env.
+string_flag(
+    name = "azure_signing_credentials_file",
+    build_setting_default = "",
+    visibility = ["//visibility:public"],
+)
+
+# Selects between the unsigned and the Azure-signed inputs of an MSI, and marks
+# the sign_azure.bzl targets incompatible without credentials.
+config_setting(
+    name = "azure_signing_credentials_file_unset",
+    flag_values = {":azure_signing_credentials_file": ""},
+    visibility = ["//visibility:public"],
+)
+
+# Azure Artifact Signing: sign_azure signs files on the host (e.g. a finished
+# MSI), the sign_azure.bzl rules sign inside a build. All of them sign and
+# verify with azure_signing.sh.
+sh_library(
+    name = "azure_signing",
+    srcs = ["azure_signing.sh"],
+)
+
+sh_binary(
+    name = "sign_tar_azure",
+    srcs = ["sign_tar_azure.sh"],
+)
+
+sh_binary(
+    name = "sign_file_azure",
+    srcs = ["sign_file_azure.sh"],
+)
+
+sh_binary(
+    name = "sign_azure",
+    srcs = ["sign_azure.sh"],
+    data = [
+        ":azure_signing",
+        "//tests/packaging:signing_roots",
+        "@osslsigncode",
+        "@psign",
+    ],
+    env = {
+        "SIGN_AZURE_LIB": "$(rlocationpath :azure_signing)",
+        "SIGN_AZURE_OSSLSIGNCODE": "$(rlocationpath @osslsigncode)",
+        "SIGN_AZURE_PSIGN": "$(rlocationpath @psign)",
+        "SIGN_AZURE_ROOTS": "$(rlocationpaths //tests/packaging:signing_roots)",
+    },
+    # The launcher initializes the runfiles library and exports rlocation.
+    use_bash_launcher = True,
+)
+
+js_library(
+    name = "vue_type_check_tsconfig_lib",
+    srcs = ["vue_type_check_tsconfig.mjs"],
+    deps = ["//:node_modules/typescript"],
+)
+
+js_binary(
+    name = "vue_type_check_tsconfig",
+    data = [":vue_type_check_tsconfig_lib"],
+    entry_point = ":vue_type_check_tsconfig_lib",
+)
+
+vue_tsc_bin.vue_tsc_binary(
+    name = "vue_tsc",
+    env = {"NODE_OPTIONS": "--max-old-space-size=8192"},
 )
 
 py_library(
@@ -92,5 +170,8 @@ sh_library(
     name = "shell_scripts",
     srcs = [
         "sign_package.sh",
+        "vue_tsc_report.sh",
+        "vue_tsc_run.sh",
+        "xcomp/package_msi.sh",
     ],
 )

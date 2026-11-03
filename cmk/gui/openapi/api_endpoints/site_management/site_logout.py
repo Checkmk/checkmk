@@ -9,6 +9,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.openapi.framework import ApiContext, PathParam
 from cmk.gui.openapi.framework.api_config import APIVersion
 from cmk.gui.openapi.framework.model.converter import (
+    folder_tree_of_request,
     SiteIdConverter,
     TypedPlainValidator,
 )
@@ -20,7 +21,6 @@ from cmk.gui.openapi.framework.versioned_endpoint import (
     VersionedEndpoint,
 )
 from cmk.gui.openapi.restful_objects.constructors import object_action_href
-from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.site_management import SitesApiMgr
 
 from .endpoint_family import SITE_MANAGEMENT_FAMILY
@@ -38,7 +38,7 @@ def site_connection_logout_v1(
     """Logout from a remote site"""
     user.need_permission("wato.sites")
     SitesApiMgr().logout_of_site(
-        make_folder_tree(api_context.config),
+        folder_tree_of_request(api_context),
         site_id=site_id,
         pprint_value=api_context.config.wato_pprint_config,
         liveproxyd_enabled=api_context.config.liveproxyd_enabled,

@@ -33,7 +33,7 @@ from cmk.gui.form_specs import get_visitor, RawFrontendData, VisitorOptions
 from cmk.gui.http import Request
 from cmk.gui.i18n import localize
 from cmk.gui.logged_in import user
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.quick_setup.handlers.utils import (
     Action,
     BackgroundJobException,
@@ -378,7 +378,10 @@ class QuickSetupStageActionBackgroundJob(BackgroundJob):
     ) -> None:
         job_interface.get_logger().debug("Running Quick setup stage action finally")
         with job_interface.gui_context(
-            UserPermissions.from_serialized_config(user_permission_config, permission_registry)
+            UserPermissions.from_serialized_config(
+                user_permission_config,
+                all_permissions(),
+            )
         ):
             localize(self._language, user_localizations)
             try:

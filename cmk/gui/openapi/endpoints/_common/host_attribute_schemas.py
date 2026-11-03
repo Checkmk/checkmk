@@ -80,7 +80,7 @@ class RelayField(fields.String):
         super()._validate(value)
 
         # FYI: The suppression was chosen to keep the logic of this method clear.
-        # astrein: disable=cmk-module-layer-violation
+        # astrein: disable=module-layers
         from cmk.gui.nonfree.ultimate.relay.watolib.relay_config import (  # type: ignore[import-not-found,unused-ignore]
             validate_relay_id,
         )

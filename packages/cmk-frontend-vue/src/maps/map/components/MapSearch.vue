@@ -9,6 +9,8 @@ import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue'
 
+import { useNavigation } from '@/maps/services/context'
+
 const props = defineProps<{
   modelValue: string
   placeholder?: TranslatedString
@@ -21,6 +23,7 @@ const props = defineProps<{
 const emit = defineEmits<{ 'update:modelValue': [string] }>()
 
 const { _t } = usei18n()
+const nav = useNavigation()
 
 const operators = computed(() => {
   const all = [
@@ -109,7 +112,11 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
   <div
     ref="rootRef"
     class="maps-map-search"
-    :class="{ 'maps-map-search--open': dropdownOpen, 'maps-map-search--inline': inline }"
+    :class="{
+      'maps-map-search--open': dropdownOpen,
+      'maps-map-search--inline': inline,
+      'maps-map-search--kiosk': nav.state.kiosk && !inline
+    }"
   >
     <CmkIcon name="search" size="small" class="maps-map-search__search-icon" />
     <input
@@ -182,16 +189,22 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
   z-index: 6;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 8px;
+  gap: var(--dimension-4);
+  padding: var(--dimension-3) var(--dimension-4);
   border-radius: var(--border-radius);
-  background: var(--maps-map-view-glass);
+  background: var(--maps-map-view-overlay-bg);
   border: 1px solid var(--default-border-color);
-  backdrop-filter: blur(6px);
   min-width: 300px;
 }
 
-/* Embedded in a toolbar: sit in the normal flow, no float/glass, so it never
+/* Full screen has no title bar to clear; the exit holds the corner, and the
+   left one belongs to the zoom controls and the radar summary. */
+.maps-map-search--kiosk {
+  top: var(--dimension-5);
+  right: calc(var(--dimension-5) + var(--dimension-9) + var(--dimension-4));
+}
+
+/* Embedded in a toolbar: sit in the normal flow, so it never
    covers map content. */
 .maps-map-search--inline {
   position: relative;
@@ -200,7 +213,6 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
   z-index: auto;
   min-width: 0;
   width: 260px;
-  backdrop-filter: none;
   background: var(--ux-theme-1);
 }
 
@@ -213,7 +225,6 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
   min-width: 0;
   background: transparent;
   border: none;
-  outline: none;
   color: var(--font-color);
   font-size: var(--font-size-normal);
 }
@@ -234,23 +245,28 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
   cursor: pointer;
   font-size: var(--font-size-large);
   line-height: 1;
-  padding: 0 4px;
-  border-radius: 3px;
+  padding: 0 var(--dimension-3);
+  border-radius: var(--border-radius-half);
 }
 
 .maps-map-search__icon-btn:hover {
   color: var(--font-color);
-  background: rgb(255 255 255 / 8%);
+  background: var(--input-hover-bg-color);
+}
+
+.maps-map-search__input:focus-visible,
+.maps-map-search__icon-btn:focus-visible {
+  outline: revert;
 }
 
 .maps-map-search__help {
   font-weight: var(--font-weight-bold);
-  font-size: 11px;
+  font-size: var(--font-size-normal);
 }
 
 .maps-map-search__help--active {
   color: var(--font-color);
-  background: rgb(255 255 255 / 10%);
+  background: var(--input-hover-bg-color);
 }
 
 .maps-map-search__dropdown {
@@ -259,16 +275,16 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
   left: 0;
   right: 0;
   z-index: 20;
-  background: var(--ux-theme-1, rgb(24 24 27 / 98%));
+  background: var(--ux-theme-1);
   border: 1px solid var(--default-border-color);
   border-radius: var(--border-radius);
-  box-shadow: 0 8px 24px rgb(0 0 0 / 35%);
+  box-shadow: var(--maps-shadow-canvas-overlay-high);
   overflow: hidden;
 }
 
 .maps-map-search__dropdown-title {
-  padding: 6px 10px;
-  font-size: 11px;
+  padding: var(--dimension-4) var(--dimension-5);
+  font-size: var(--font-size-small);
   font-weight: var(--font-weight-bold);
   color: var(--font-color-dimmed);
   border-bottom: 1px solid var(--default-border-color);
@@ -277,7 +293,7 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
 .maps-map-search__operator-list {
   list-style: none;
   margin: 0;
-  padding: 4px 0;
+  padding: var(--dimension-3) 0;
   max-height: 320px;
   overflow-y: auto;
 }
@@ -285,15 +301,15 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
 .maps-map-search__operator {
   display: flex;
   align-items: center;
-  gap: var(--spacing);
-  padding: 6px 10px;
+  gap: var(--dimension-5);
+  padding: var(--dimension-4) var(--dimension-5);
   cursor: pointer;
   font-size: var(--font-size-normal);
   color: var(--font-color);
 }
 
 .maps-map-search__operator:hover {
-  background: rgb(255 255 255 / 6%);
+  background: var(--input-hover-bg-color);
 }
 
 .maps-map-search__operator-tag {
@@ -301,13 +317,13 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
   align-items: center;
   justify-content: center;
   min-width: 28px;
-  padding: 1px 6px;
+  padding: var(--dimension-1) var(--dimension-4);
   border: 1px solid var(--default-border-color);
   border-radius: var(--border-radius);
   font-family: var(--font-monospace, ui-monospace, monospace);
-  font-size: 11px;
+  font-size: var(--font-size-small);
   color: var(--font-color);
-  background: rgb(255 255 255 / 4%);
+  background: var(--background-muted);
 }
 
 .maps-map-search__operator-label {
@@ -318,10 +334,10 @@ onBeforeUnmount(() => document.removeEventListener('mousedown', onDocumentClick)
   display: flex;
   align-items: flex-start;
   gap: var(--dimension-4);
-  padding: 8px 10px;
+  padding: var(--dimension-4) var(--dimension-5);
   border-top: 1px solid var(--default-border-color);
-  background: rgb(255 255 255 / 3%);
-  font-size: 11px;
+  background: var(--background-muted);
+  font-size: var(--font-size-normal);
   line-height: 1.4;
   color: var(--font-color-dimmed);
 }

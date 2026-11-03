@@ -66,7 +66,7 @@ const CASES: Record<RowIssue['code'], { issue: RowIssue; message: string }> = {
   },
   'domain-mismatch': {
     issue: { id: 'A', field: 'ast', code: 'domain-mismatch', ref: 'B' },
-    message: 'Cannot mix RRD and metrics backend data: "B".'
+    message: 'Cannot mix RRD data and OpenTelemetry metrics: "B".'
   },
   'needs-consolidation': {
     issue: { id: 'A', field: 'ast', code: 'needs-consolidation', ref: 'B' },

@@ -18,10 +18,17 @@ import LabelCell from '@/monitoring/shared/components/cell/LabelCell.vue'
 import NumberCell from '@/monitoring/shared/components/cell/NumberCell.vue'
 import StateCell from '@/monitoring/shared/components/cell/StateCell.vue'
 import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
+import GraphsLink from '@/monitoring/shared/components/graphs/GraphsLink.vue'
 import { MODE_COLUMN_ID, MODE_ICONS_PER_ROW } from '@/monitoring/shared/components/modeColumn'
 import { formatDisplayTimestamp } from '@/monitoring/shared/formatTimestamp'
 import { hostServicesPageUrl } from '@/monitoring/shared/hostServicesPageUrl'
-import { toLabelItems, toNameItems, toTagItems } from '@/monitoring/shared/labels'
+import {
+  groupCondition,
+  labelCondition,
+  toLabelItems,
+  toNameItems,
+  toTagItems
+} from '@/monitoring/shared/labels'
 import type { DisplayOptions } from '@/monitoring/shared/types'
 
 const props = withDefaults(
@@ -34,8 +41,9 @@ const props = withDefaults(
     // Lazy loader for the overflow menu entries of this host.
     loadActionMenu?: ((host: HostRef) => Promise<CellAction[]>) | undefined
     displayOptions: DisplayOptions
+    readOnly?: boolean
   }>(),
-  { rowActions: () => [], loadActionMenu: undefined }
+  { rowActions: () => [], loadActionMenu: undefined, readOnly: false }
 )
 
 const emit = defineEmits<{
@@ -99,12 +107,16 @@ const hostGroups = computed(() => toNameItems(props.row.groups ?? []))
 const lastCheck = computed(() =>
   props.row.last_check === undefined
     ? undefined
-    : formatDisplayTimestamp(props.row.last_check, props.displayOptions)
+    : props.row.last_check === null
+      ? '–'
+      : formatDisplayTimestamp(props.row.last_check, props.displayOptions)
 )
 const lastStateChange = computed(() =>
   props.row.last_state_change === undefined
     ? undefined
-    : formatDisplayTimestamp(props.row.last_state_change, props.displayOptions)
+    : props.row.last_state_change === null
+      ? '–'
+      : formatDisplayTimestamp(props.row.last_state_change, props.displayOptions)
 )
 </script>
 
@@ -133,14 +145,21 @@ const lastStateChange = computed(() =>
     v-if="hasColumn('name')"
     column-id="name"
     :value="row.name"
-    :button="true"
+    :button="!readOnly"
     @click="emit('open', row)"
-  />
+  >
+    <!-- Every name keeps the slot, so the names line up whether their host has graphs or not.
+         A read-only row on a dashboard still links to the graphs, as the legacy views do; a
+         shared dashboard is sent no link, as its viewer could not open the graphs. -->
+    <template #aside>
+      <GraphsLink v-if="row.graphs_link !== undefined" :host="hostRef" :href="row.graphs_link" />
+    </template>
+  </StringCell>
   <NumberCell
     v-if="hasColumn('num_relations')"
     column-id="num_relations"
     :value="row.num_relations"
-    :button="!!row.num_relations"
+    :button="!readOnly && !!row.num_relations"
     :button-label="relationsLabel"
     blank-when-zero
     @click="emit('open', row, true)"
@@ -161,7 +180,13 @@ const lastStateChange = computed(() =>
     column-id="last_state_change"
     :value="lastStateChange"
   />
-  <LabelCell v-if="hasColumn('labels')" column-id="labels" :items="labels" size="small" />
+  <LabelCell
+    v-if="hasColumn('labels')"
+    column-id="labels"
+    :items="labels"
+    size="small"
+    :filter-by="labelCondition"
+  />
   <LabelCell v-if="hasColumn('tags')" column-id="tags" :items="tags" size="small" />
   <LabelCell v-if="hasColumn('contacts')" column-id="contacts" :items="contacts" size="small" />
   <LabelCell
@@ -170,7 +195,13 @@ const lastStateChange = computed(() =>
     :items="contactGroups"
     size="small"
   />
-  <LabelCell v-if="hasColumn('groups')" column-id="groups" :items="hostGroups" size="small" />
+  <LabelCell
+    v-if="hasColumn('groups')"
+    column-id="groups"
+    :items="hostGroups"
+    size="small"
+    :filter-by="groupCondition"
+  />
 
   <NumberCell
     v-if="hasColumn('num_services')"

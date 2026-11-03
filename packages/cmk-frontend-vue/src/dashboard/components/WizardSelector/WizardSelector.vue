@@ -17,12 +17,13 @@ import type {
   WidgetSpec
 } from '../../types/widget'
 import AlertsAndNotificationsWizard from '../Wizard/wizards/alert-notification/AlertNotificationWizard.vue'
+import CreateCustomGraphWizard from '../Wizard/wizards/custom-graphs/CreateCustomGraphWizard.vue'
 import CustomGraphsWizard from '../Wizard/wizards/custom-graphs/CustomGraphsWizard.vue'
 import EventsWizard from '../Wizard/wizards/events/EventsWizard.vue'
 import HostsSiteWizard from '../Wizard/wizards/hosts-site/HostsSiteWizard.vue'
 import HwSwInventoryWizard from '../Wizard/wizards/hw_sw_inventory/HwSwInventoryWizard.vue'
 import MetricsWizard from '../Wizard/wizards/metrics/MetricsWizard.vue'
-import NetworkFlowWizard from '../Wizard/wizards/network-flow/NetworkFlowWizard.vue'
+import MonitoringTableWizard from '../Wizard/wizards/monitoring-table/MonitoringTableWizard.vue'
 import NtopWizard from '../Wizard/wizards/ntop/NtopWizard.vue'
 import OtherWizard from '../Wizard/wizards/other/OtherWizard.vue'
 import ServicesOverviewWizard from '../Wizard/wizards/services/ServicesOverviewWizard.vue'
@@ -155,8 +156,20 @@ const handleAddEditWidget = (
         @add-widget="handleAddEditWidget"
       />
 
+      <MonitoringTableWizard
+        v-if="selectedWizard === 'view'"
+        :dashboard-key="dashboardKey"
+        :tick="tick"
+        :range="range"
+        :context-filters="contextFilters"
+        :edit-widget-spec="editWidgetSpec"
+        @go-back="handleGoBack"
+        @close="handleClose"
+        @add-widget="handleAddEditWidget"
+      />
+
       <ViewWizardWrapper
-        v-if="selectedWizard === 'views'"
+        v-if="selectedWizard === 'classic_view'"
         :dashboard-key="dashboardKey"
         :tick="tick"
         :range="range"
@@ -192,6 +205,18 @@ const handleAddEditWidget = (
         @add-widget="handleAddEditWidget"
       />
 
+      <CreateCustomGraphWizard
+        v-if="selectedWizard === 'new_custom_graph'"
+        :dashboard-key="dashboardKey"
+        :tick="tick"
+        :range="range"
+        :context-filters="contextFilters"
+        :edit-widget-spec="editWidgetSpec"
+        @go-back="handleGoBack"
+        @close="handleClose"
+        @add-widget="handleAddEditWidget"
+      />
+
       <OtherWizard
         v-if="selectedWizard === 'other'"
         :dashboard-key="dashboardKey"
@@ -206,17 +231,6 @@ const handleAddEditWidget = (
 
       <NtopWizard
         v-if="selectedWizard === 'ntop'"
-        :edit-widget-spec="editWidgetSpec"
-        @go-back="handleGoBack"
-        @close="handleClose"
-        @add-widget="handleAddEditWidget"
-      />
-
-      <NetworkFlowWizard
-        v-if="selectedWizard === 'network_flow'"
-        :dashboard-key="dashboardKey"
-        :tick="tick"
-        :range="range"
         :edit-widget-spec="editWidgetSpec"
         @go-back="handleGoBack"
         @close="handleClose"

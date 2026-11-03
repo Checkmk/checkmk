@@ -42,6 +42,17 @@ void main() {
     try {
         stage("Run mk-oracle component tests (Linux)") {
             inside_container() {
+                // Built hermetically, so the binaries run on the test host
+                // regardless of the glibc of this container.
+                sh("""
+                    cd ${checkout_dir}
+                    bazel build //packages/mk-oracle:mk-oracle-lib-test-external
+                    for t in test_ora_no_db test_ora_discovery test_ora_with_db; do
+                        install -m 0755 \
+                            \$(bazel cquery --output=files //packages/mk-oracle:mk-oracle-lib-test-external_tests/\${t}_test) \
+                            packages/mk-oracle/
+                    done
+                """);
                 withCredentials([
                     sshUserPrivateKey(
                         credentialsId: 'jenkins-oracle-ssh-key',

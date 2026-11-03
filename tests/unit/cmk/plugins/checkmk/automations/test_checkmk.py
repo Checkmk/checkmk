@@ -17,7 +17,6 @@ from typing import NoReturn, override
 import pytest
 from pytest import MonkeyPatch
 
-import cmk.ccc.debug
 import cmk.ccc.resulttype as result
 
 # We need an active check plugin that exists.
@@ -47,7 +46,6 @@ from cmk.checkengine.fetchers.piggyback import PiggybackFetcher
 from cmk.checkengine.specs.checkresults import ServiceState
 from cmk.checkengine.submitters import ServiceDetails
 from cmk.discover_plugins import PluginLocation
-from cmk.flags import ExperimentalFlagConfig
 from cmk.inventory.label_picker import InventorizedHostLabelsStore
 from cmk.plugins.checkmk.automations import checkmk
 from cmk.relay_protocols.tasks import AdHocActiveCheckTask, AdHocSiteStores
@@ -106,6 +104,7 @@ def _prepare(
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
+        debug=False,
     )
     loading_result = config.LoadingResult(
         loaded_config=EMPTY_CONFIG,
@@ -187,6 +186,7 @@ class TestAutomationDiagHost:
                         autochecks_dir=cmk.utils.paths.autochecks_dir,
                         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
                         builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
+                        debug=False,
                     ),
                 ),
                 app=app,
@@ -225,7 +225,7 @@ def _patch_plugin_loading(
 
 class AutomationActiveCheckTestable(checkmk.AutomationActiveCheck):
     @override
-    def _execute_check_plugin(self, commandline: Sequence[str]) -> tuple[int, str]:
+    def _execute_check_plugin(self, commandline: Sequence[str], *, debug: bool) -> tuple[int, str]:
         return (0, f"Assume I ran {commandline!r}")
 
 
@@ -330,6 +330,7 @@ def test_automation_active_check(  # type: ignore[misc]
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
+        debug=False,
     )
     monkeypatch.setattr(config_cache, "active_checks", lambda *a, **kw: active_checks)  # noqa: ARG005
 
@@ -410,10 +411,9 @@ def test_automation_active_check_invalid_args(  # type: ignore[misc]
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
+        debug=False,
     )
     monkeypatch.setattr(config_cache, "active_checks", lambda *a, **kw: active_checks)  # noqa: ARG005
-
-    monkeypatch.setattr(cmk.ccc.debug, "enabled", lambda: False)
 
     active_check = checkmk.AutomationActiveCheck()
     active_check.execute(
@@ -439,7 +439,9 @@ class _RecordingAutomation(checkmk.AutomationActiveCheck):
         self.shipped_site_stores: AdHocSiteStores | None = None
 
     @override
-    def _execute_check_plugin(self, commandline: str) -> tuple[ServiceState, ServiceDetails]:
+    def _execute_check_plugin(
+        self, commandline: str, *, debug: bool
+    ) -> tuple[ServiceState, ServiceDetails]:
         self.calls["local"] = commandline
         return (0, "local output")
 
@@ -451,6 +453,7 @@ class _RecordingAutomation(checkmk.AutomationActiveCheck):
         command_line: str,
         *,
         site_stores: AdHocSiteStores | None = None,
+        debug: bool,
     ) -> tuple[ServiceState, ServiceDetails]:
         self.calls["relay"] = (relay_id, str(host), command_line)
         self.shipped_site_stores = site_stores
@@ -572,11 +575,6 @@ def _password_check_on(
     cmk.utils.password_store.save(
         {"uuid1234": "s3cret", "uuid-of-another-host": "theirs"}, pending_secrets_path_site()
     )
-    monkeypatch.setattr(
-        config._impl,  # noqa: SLF001
-        "load_experimental_flags",
-        lambda _config_dir: ExperimentalFlagConfig(exp_relay_active_checks=True),
-    )
     automation = _RecordingAutomation()
     automation.execute(make_common_state(lr), ["my_host", plugin, "Password check"])
     return automation
@@ -639,7 +637,7 @@ def test_execute_on_relay_import_error_is_unknown(monkeypatch: pytest.MonkeyPatc
 
     monkeypatch.setattr(auto, "_submit_to_relay", _raise)
     state, output = auto._execute_check_plugin_on_relay(  # noqa: SLF001
-        "relay-1", HostName("myhost"), "check_httpv2 -u http://x"
+        "relay-1", HostName("myhost"), "check_httpv2 -u http://x", debug=False
     )
     assert state == 3
     assert "not available" in output
@@ -647,14 +645,13 @@ def test_execute_on_relay_import_error_is_unknown(monkeypatch: pytest.MonkeyPatc
 
 def test_execute_on_relay_submit_failure_is_unknown(monkeypatch: pytest.MonkeyPatch) -> None:
     auto = checkmk.AutomationActiveCheck()
-    monkeypatch.setattr(cmk.ccc.debug, "enabled", lambda: False)
 
     def _raise(relay_id: str, host: HostName, command: str, **_kw: object) -> NoReturn:  # noqa: ARG001
         raise TimeoutError("no result")
 
     monkeypatch.setattr(auto, "_submit_to_relay", _raise)
     state, output = auto._execute_check_plugin_on_relay(  # noqa: SLF001
-        "relay-1", HostName("myhost"), "check_httpv2 -u http://x"
+        "relay-1", HostName("myhost"), "check_httpv2 -u http://x", debug=False
     )
     assert state == 3
     assert "relay execution failed" in output
@@ -799,7 +796,9 @@ def test_delete_hosts_deletes_inventorized_host_labels() -> None:
         {"cmk/inventory/product": "foo"}
     )
 
-    checkmk.automation_delete_hosts.handler(NoState(cmk.utils.paths.omd_root, {}), [str(host_name)])
+    checkmk.automation_delete_hosts.handler(
+        NoState(cmk.utils.paths.omd_root, {}, debug=True), [str(host_name)]
+    )
 
     assert not (cmk.utils.paths.inventorized_host_labels_dir / f"{host_name}.json").exists()
 

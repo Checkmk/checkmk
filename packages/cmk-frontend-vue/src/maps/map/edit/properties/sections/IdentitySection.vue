@@ -5,7 +5,8 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <!--
 What the object stands for: the connection it reads from, and the monitoring
-object it is bound to — which differs per object type.
+object it is bound to — which differs per object type. A line picks the type
+of object it shows the state of.
 -->
 <script setup lang="ts">
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
@@ -19,33 +20,50 @@ import type { ObjectSuggestions } from '@/maps/map/edit/composables/useObjectSug
 import { rebindHost } from '@/maps/map/edit/hostBinding'
 import PropertyRow from '@/maps/map/edit/properties/PropertyRow.vue'
 import PropertySection from '@/maps/map/edit/properties/PropertySection.vue'
-import type { ObjectForm } from '@/maps/map/edit/properties/objectForm'
+import {
+  type ObjectForm,
+  boundTypeOf,
+  choosesServiceCounting,
+  hasStateOptions
+} from '@/maps/map/edit/properties/objectForm'
 import MapsColorInput from '@/maps/shared/components/MapsColorInput.vue'
 import MapsObjectField from '@/maps/shared/components/MapsObjectField.vue'
 import MapsSuggestionField from '@/maps/shared/components/MapsSuggestionField.vue'
 import MapsTextArea from '@/maps/shared/components/MapsTextArea.vue'
-import type { MapElement } from '@/maps/types/api'
-import { dyngroupTypeOptions } from '@/maps/utils/dropdownOptions'
+import { noAggregationsHint } from '@/maps/shared/suggestions'
+import type { MapElement, MonitoredObjectType } from '@/maps/types/api'
+import { dyngroupTypeOptions, lineObjectTypeOptions } from '@/maps/utils/dropdownOptions'
 
 const props = defineProps<{
   object: MapElement
   suggestions: ObjectSuggestions
+  /** The map's connection, which the object reads from unless it overrides it. */
+  mapConnectionId: string
 }>()
 
 const form = defineModel<ObjectForm>('form', { required: true })
 
 const { _t } = usei18n()
 
-const { options: connectionOptions } = useConnectionOverride()
+const { options: connectionOptions } = useConnectionOverride(() => props.mapConnectionId)
 
 const dyngroupTypeSuggestions = computed(() => ({
   type: 'fixed' as const,
   suggestions: dyngroupTypeOptions(_t)
 }))
 
-const type = computed(() => props.object.type)
+const lineObjectTypeSuggestions = computed(() => ({
+  type: 'fixed' as const,
+  suggestions: lineObjectTypeOptions(_t)
+}))
+
+const isLine = computed(() => props.object.type === 'line')
+const type = computed(() => boundTypeOf(form.value, props.object))
 /** Only an expanded aggregation draws the lines down to its subtree. */
-const showsSubtreeLines = computed(() => form.value.expand_depth > 0)
+const showsSubtreeLines = computed(() => !isLine.value && form.value.expand_depth > 0)
+
+const showsStateChecks = computed(() => hasStateOptions(type.value))
+const showsRecognizeServices = computed(() => choosesServiceCounting(type.value, form.value))
 </script>
 
 <template>
@@ -58,6 +76,17 @@ const showsSubtreeLines = computed(() => form.value.expand_depth > 0)
         :label="_t('Connection')"
         width="fill"
         @update:model-value="form.connection_id = $event ?? ''"
+      />
+    </PropertyRow>
+
+    <PropertyRow v-if="isLine" :label="_t('Shows the state of')">
+      <CmkDropdown
+        floating
+        :model-value="form.line_object_type"
+        :options="lineObjectTypeSuggestions"
+        :label="_t('Shows the state of')"
+        width="fill"
+        @update:model-value="form.line_object_type = ($event ?? 'host') as MonitoredObjectType"
       />
     </PropertyRow>
 
@@ -80,24 +109,18 @@ const showsSubtreeLines = computed(() => form.value.expand_depth > 0)
           :placeholder="_t('service description')"
         />
       </PropertyRow>
-      <div class="maps-identity-section__checks">
-        <CmkCheckbox v-model="form.only_hard_states" :label="_t('Only hard states')" />
-        <CmkCheckbox
-          v-if="type === 'host'"
-          v-model="form.recognize_services"
-          :label="_t('Consider services')"
-        />
-      </div>
     </template>
 
-    <PropertyRow v-if="type === 'hostgroup' || type === 'servicegroup'" :label="_t('Group name')">
-      <MapsObjectField
-        v-model="form.group_name"
-        :kind="type"
-        :label="_t('Group name')"
-        :placeholder="_t('group name')"
-      />
-    </PropertyRow>
+    <template v-if="type === 'hostgroup' || type === 'servicegroup'">
+      <PropertyRow :label="_t('Group name')">
+        <MapsObjectField
+          v-model="form.group_name"
+          :kind="type"
+          :label="_t('Group name')"
+          :placeholder="_t('group name')"
+        />
+      </PropertyRow>
+    </template>
 
     <template v-if="type === 'dyngroup'">
       <PropertyRow :label="_t('Filter on')">
@@ -131,6 +154,17 @@ const showsSubtreeLines = computed(() => form.value.expand_depth > 0)
       </p>
     </template>
 
+    <PropertyRow v-if="showsStateChecks" :label="_t('State')">
+      <div class="maps-identity-section__checks">
+        <CmkCheckbox v-model="form.only_hard_states" :label="_t('Only hard states')" />
+        <CmkCheckbox
+          v-if="showsRecognizeServices"
+          v-model="form.recognize_services"
+          :label="_t('Consider services')"
+        />
+      </div>
+    </PropertyRow>
+
     <PropertyRow v-if="type === 'map'" :label="_t('Map name')">
       <MapsSuggestionField
         v-model="form.map_name"
@@ -148,14 +182,10 @@ const showsSubtreeLines = computed(() => form.value.expand_depth > 0)
           :label="_t('BI aggregation')"
           :list="suggestions.aggregations"
           :placeholder="_t('aggregation id')"
-          :empty-hint="
-            _t(
-              'No BI aggregations available — none are configured in Checkmk, or your user has no permission to view them.'
-            )
-          "
+          :empty-hint="noAggregationsHint(_t)"
         />
       </PropertyRow>
-      <PropertyRow v-slot="{ id }" labels-control :label="_t('Expand depth')">
+      <PropertyRow v-if="!isLine" v-slot="{ id }" labels-control :label="_t('Expand depth')">
         <CmkInput
           :id="id"
           v-model="form.expand_depth"

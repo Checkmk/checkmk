@@ -17,6 +17,7 @@ from cmk.plugins.aws_v2.special_agent.config import (
     TagsImportPatternOption,
     TagsOption,
 )
+from cmk.plugins.aws_v2.special_agent.hosts import SOURCE_HOST
 from cmk.plugins.aws_v2.special_agent.sections.core import (
     AWSRegionLimit,
     AWSSectionResult,
@@ -462,6 +463,43 @@ def test_agent_aws_ecs_without_colleague_content(get_ecs_sections: ECSSections) 
     results = ecs.run()
     assert isinstance(results, AWSSectionResults)
     assert results.results == []
+
+
+def test_agent_aws_ecs_metrics_go_to_the_host_of_their_cluster(
+    get_ecs_sections: ECSSections,
+) -> None:
+    _ecs_limits, ecs_summary, ecs = get_ecs_sections(None, (None, None))
+    ecs_summary.run()
+
+    results = ecs.run().results
+
+    assert {
+        result.piggyback_hostname: {row["Label"] for row in result.content} for result in results
+    } == {"cluster-test1": {"cluster-test1"}, "cluster-test2": {"cluster-test2"}}
+
+
+def test_agent_aws_ecs_cluster_hosts_get_the_service_label(
+    get_ecs_sections: ECSSections,
+) -> None:
+    _ecs_limits, ecs_summary, ecs = get_ecs_sections(None, (None, None))
+    ecs_summary.run()
+
+    results = ecs.run().results
+
+    assert [result.piggyback_host_labels for result in results] == [
+        {"cmk/aws/service": "ecs"},
+        {"cmk/aws/service": "ecs"},
+    ]
+
+
+def test_agent_aws_ecs_summary_and_limits_stay_on_the_account_host(
+    get_ecs_sections: ECSSections,
+) -> None:
+    ecs_limits, ecs_summary, _ecs = get_ecs_sections(None, (None, None))
+
+    results = [*ecs_limits.run().results, *ecs_summary.run().results]
+
+    assert {result.piggyback_hostname for result in results} == {SOURCE_HOST}
 
 
 @pytest.mark.parametrize(

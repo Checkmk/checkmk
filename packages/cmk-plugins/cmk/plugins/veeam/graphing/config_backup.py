@@ -3,11 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.graphing.v1 import metrics, Title
+from cmk.graphing.v1 import metrics, perfometers, Title
 
 metric_veeam_config_backup_age = metrics.Metric(
     name="veeam_config_backup_age",
     title=Title("Time since last successful configuration backup"),
     unit=metrics.Unit(metrics.TimeNotation()),
     color=metrics.Color.BLUE,
+)
+
+perfometer_veeam_config_backup_age = perfometers.Perfometer(
+    name="veeam_config_backup_age",
+    focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(400000)),
+    segments=["veeam_config_backup_age"],
 )

@@ -118,6 +118,26 @@ def test_service_sorter_timestamp_columns() -> None:
     assert value == expected
 
 
+def test_service_sorter_sorts_services_without_state_change_first() -> None:
+    services = [
+        ServiceFactory.build(last_state_change=1767312000),
+        ServiceFactory.build(last_state_change=None),
+        ServiceFactory.build(last_state_change=1767225600),
+    ]
+    sorters = [
+        ServiceSort(column=ServiceSortColumn.LAST_STATE_CHANGE, direction=ServiceSortDirection.ASC)
+    ]
+
+    value = [service.last_state_change for service in sorted(services, key=service_sorter(sorters))]
+    expected = [
+        None,
+        1767225600,
+        1767312000,
+    ]
+
+    assert value == expected
+
+
 def test_service_sorter_sorts_never_checked_services_first() -> None:
     services = [
         ServiceFactory.build(last_check=1767312000),
@@ -340,3 +360,28 @@ def test_sort_naturally_sorts_service_names_correctly() -> None:
     ]
 
     assert value == expected
+
+
+def test_sorting_by_host_name_then_service_name() -> None:
+    services = [
+        ServiceFactory.build(host_name="web10", name="CPU"),
+        ServiceFactory.build(host_name="web9", name="Memory"),
+        ServiceFactory.build(host_name="web9", name="CPU"),
+    ]
+    sorters = [
+        ServiceSort(column=ServiceSortColumn.HOST_NAME, direction=ServiceSortDirection.ASC),
+        ServiceSort(column=ServiceSortColumn.NAME, direction=ServiceSortDirection.ASC),
+    ]
+
+    value = [(s.host_name, s.name) for s in sorted(services, key=service_sorter(sorters))]
+
+    assert value == [("web9", "CPU"), ("web9", "Memory"), ("web10", "CPU")]
+
+
+def test_sorting_by_site() -> None:
+    services = [ServiceFactory.build(site_id=site_id) for site_id in ("stable", "beta", "heute")]
+    sorters = [ServiceSort(column=ServiceSortColumn.SITE_ID, direction=ServiceSortDirection.DESC)]
+
+    value = [s.site_id for s in sorted(services, key=service_sorter(sorters))]
+
+    assert value == ["stable", "heute", "beta"]

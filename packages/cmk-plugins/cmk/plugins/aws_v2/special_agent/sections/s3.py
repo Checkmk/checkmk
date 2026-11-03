@@ -6,12 +6,14 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 
+import threading
 from collections.abc import Mapping, Sequence
 from datetime import datetime
 from typing import Any, Literal, override
 
 from botocore.client import BaseClient
 
+from .. import hosts
 from ..config import AWSConfig, LOGGER, Tags
 from .core import (
     AWSColleagueContents,
@@ -37,25 +39,33 @@ class ResultDistributorS3Limits(ResultDistributor):
     results and distributes both upon receiving and upon adding a new colleague. This is done
     because we want to run S3Limits only once (does not matter for which region, results are the
     same for all regions) and later distribute the results to S3Summary objects in other regions.
+
+    S3Limits runs in the owner region. The regions of one account may run at the same time, so
+    the owner is chosen up front, and adding and distributing hold a lock. An S3Summary that
+    runs before S3Limits has distributed lists the buckets itself.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, owner_region: str | None) -> None:
         super().__init__()
+        self._owner_region = owner_region
         self._received_results: dict[str, tuple[AWSSection, AWSComputedContent]] = {}
+        self._lock = threading.Lock()
 
     @override
     def add(self, sender_name: str, colleague: AWSSection) -> None:
-        super().add(sender_name, colleague)
-        for sender, content in self._received_results.values():
-            colleague.receive(sender, content)
+        with self._lock:
+            super().add(sender_name, colleague)
+            for sender, content in self._received_results.values():
+                colleague.receive(sender, content)
 
     @override
     def distribute(self, sender: AWSSection, result: AWSComputedContent) -> None:
-        self._received_results.setdefault(sender.name, (sender, result))
-        super().distribute(sender, result)
+        with self._lock:
+            self._received_results.setdefault(sender.name, (sender, result))
+            super().distribute(sender, result)
 
-    def is_empty(self) -> bool:
-        return len(self._colleagues) == 0
+    def is_owner(self, region: str) -> bool:
+        return region == self._owner_region
 
 
 class S3BucketHelper:
@@ -136,7 +146,7 @@ class S3Limits(AWSSectionLimits):
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
         self._add_limit(
-            "", AWSLimit("buckets", "Buckets", 100, len(raw_content.content)), region="Global"
+            AWSLimit("buckets", "Buckets", 100, len(raw_content.content)), region="Global"
         )
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
@@ -244,7 +254,11 @@ class S3Summary(AWSSection):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", list(computed_content.content.values()))]
+        return [
+            AWSSectionResult(
+                self._target_host(hosts.AccountScope()), list(computed_content.content.values())
+            )
+        ]
 
 
 class S3(AWSSectionCloudwatch):
@@ -339,7 +353,57 @@ class S3(AWSSectionCloudwatch):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", computed_content.content)]
+        return [AWSSectionResult(self._target_host(hosts.AccountScope()), computed_content.content)]
+
+
+def _rows_by_bucket(
+    rows: Sequence[Mapping[str, Any]],
+) -> Mapping[str, Sequence[Mapping[str, Any]]]:
+    rows_by_bucket: dict[str, list[Mapping[str, Any]]] = {}
+    for row in rows:
+        rows_by_bucket.setdefault(row["Label"], []).append(row)
+    return rows_by_bucket
+
+
+class S3Bucket(AWSSection):
+    @property
+    @override
+    def name(self) -> str:
+        return "s3_bucket"
+
+    @property
+    @override
+    def cache_interval(self) -> int:
+        return int(get_seconds_since_midnight(NOW))
+
+    @override
+    def _get_colleague_contents(self) -> AWSColleagueContents:
+        colleague = self._received_results.get("s3")
+        if colleague and colleague.content:
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents([], 0.0)
+
+    @override
+    def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping[str, object]]:
+        (colleague_contents,) = args
+        return colleague_contents.content
+
+    @override
+    def _compute_content(
+        self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
+    ) -> AWSComputedContent:
+        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
+
+    @override
+    def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
+        return [
+            AWSSectionResult(
+                self._target_host(hosts.S3Bucket(bucket_name)),
+                bucket_rows,
+                {"cmk/aws/service": "s3"},
+            )
+            for bucket_name, bucket_rows in _rows_by_bucket(computed_content.content).items()
+        ]
 
 
 class S3Requests(AWSSectionCloudwatch):
@@ -422,4 +486,11 @@ class S3Requests(AWSSectionCloudwatch):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", computed_content.content)]
+        return [
+            AWSSectionResult(
+                self._target_host(hosts.S3Bucket(bucket_name)),
+                bucket_rows,
+                {"cmk/aws/service": "s3"},
+            )
+            for bucket_name, bucket_rows in _rows_by_bucket(computed_content.content).items()
+        ]

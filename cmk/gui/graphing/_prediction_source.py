@@ -5,13 +5,14 @@
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Literal, override, Protocol
+from typing import override, Protocol
 
 from cmk.agent_based.prediction_backend import PredictionInfo
 from cmk.ccc.hostaddress import HostName as CoreHostName
 from cmk.ccc.site import SiteId
 from cmk.graphing_engine import (
-    ConsolidationFunction,
+    Direction,
+    fetched_time_range,
     FetchedData,
     HostName,
     MetricName,
@@ -23,6 +24,7 @@ from cmk.graphing_engine import (
     SiteID,
     TimeRange,
     TimeSeries,
+    timestamps,
 )
 from cmk.gui import sites
 from cmk.utils.prediction import estimate_levels, PredictionData
@@ -30,8 +32,6 @@ from cmk.utils.servicename import ServiceName as CoreServiceName
 
 from ._prediction_query import PredictionQuerier, PredictionQuerierProtocol
 from ._source import RRDFetchData
-
-type Direction = Literal["upper", "lower"]
 
 _CURVE_KINDS_OF: Mapping[
     Direction, tuple[PredictionCurveKind, PredictionCurveKind, PredictionCurveKind]
@@ -163,34 +163,6 @@ class _LivestatusPredictionSource:
         return _LoadedPredictions(by_key=by_key, failures=failures)
 
 
-@dataclass(frozen=True, kw_only=True)
-class _PredictionGrid:
-    time_range: TimeRange
-    num_points: int
-
-    def timestamps(self) -> Sequence[int]:
-        return [
-            self.time_range.start + (index + 1) * self.time_range.step
-            for index in range(self.num_points)
-        ]
-
-
-def _resolved_grid(
-    fetched: Mapping[MetricProtocol, Sequence[FetchedData]], time_range: TimeRange
-) -> _PredictionGrid:
-    for series in fetched.values():
-        for data in series:
-            if data.time_series is not None:
-                return _PredictionGrid(
-                    time_range=data.time_series.time_range,
-                    num_points=len(data.time_series.values),
-                )
-    step = max(1, time_range.step)
-    return _PredictionGrid(
-        time_range=time_range, num_points=max(0, (time_range.end - time_range.start) // step)
-    )
-
-
 def _predict(
     prediction: _LoadedPrediction, timestamp: int
 ) -> tuple[float | None, float | None, float | None]:
@@ -203,11 +175,11 @@ def _predict(
 
 
 def _sample_prediction_curves(
-    loaded: Mapping[Direction, _LoadedPrediction], grid: _PredictionGrid
+    loaded: Mapping[Direction, _LoadedPrediction], time_range: TimeRange
 ) -> Mapping[PredictionCurveKind, Sequence[float | None]]:
     sampled: dict[PredictionCurveKind, Sequence[float | None]] = {}
     for direction, prediction in loaded.items():
-        points = [_predict(prediction, timestamp) for timestamp in grid.timestamps()]
+        points = [_predict(prediction, timestamp) for timestamp in timestamps(time_range)]
         reference_kind, warning_kind, critical_kind = _CURVE_KINDS_OF[direction]
         sampled[reference_kind] = [reference for reference, _warning, _critical in points]
         sampled[warning_kind] = [warning for _reference, warning, _critical in points]
@@ -228,16 +200,16 @@ def _values_of(
 def _drawn_curves(
     group: Sequence[PredictionMetric],
     loaded: Mapping[Direction, _LoadedPrediction],
-    grid: _PredictionGrid,
+    time_range: TimeRange,
 ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
     if not loaded:
         return {}
-    sampled = _sample_prediction_curves(loaded, grid)
+    sampled = _sample_prediction_curves(loaded, time_range)
     return {
         metric: [
             FetchedData(
                 performance_data=None,
-                time_series=TimeSeries(time_range=grid.time_range, values=list(values)),
+                time_series=TimeSeries(time_range=time_range, values=values),
             )
         ]
         for metric in group
@@ -254,21 +226,16 @@ class PredictionFetchData(RRDFetchData):
         self,
         metrics: Sequence[MetricProtocol],
         *,
-        consolidation_function: ConsolidationFunction,
         time_range: TimeRange,
     ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
-        fetched = dict(
-            super().__call__(
-                metrics, consolidation_function=consolidation_function, time_range=time_range
-            )
-        )
+        fetched = dict(super().__call__(metrics, time_range=time_range))
         predictions = [metric for metric in metrics if isinstance(metric, PredictionMetric)]
         if not predictions:
             return fetched
-        grid = _resolved_grid(fetched, time_range)
+        time_range = fetched_time_range(fetched, fallback=time_range)
         groups = _grouped(predictions)
         for key, loaded in self._load(list(groups)).items():
-            fetched.update(_drawn_curves(groups[key], loaded, grid))
+            fetched.update(_drawn_curves(groups[key], loaded, time_range))
         return fetched
 
     def _load(

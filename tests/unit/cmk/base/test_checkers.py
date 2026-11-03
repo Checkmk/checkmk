@@ -612,6 +612,7 @@ def test_cmk_fetcher_reports_missing_ip_instead_of_the_fallback_address(
                 relative_walk_cache_path=Path("dev/null"),
                 relative_section_cache_path=Path("dev/null"),
                 caching_config=lambda host_name: {},  # noqa: ARG005
+                debug=True,
             ),
         ),
         plugins=plugins,
@@ -627,6 +628,7 @@ def test_cmk_fetcher_reports_missing_ip_instead_of_the_fallback_address(
         simulation_mode=False,
         secrets_config_relay=AdHocSecrets(path=Path("/pw/relay"), secrets={}),
         secrets_config_site=StoredSecrets(path=Path("/pw/store"), secrets={}),
+        debug=True,
     )
 
     fetched = fetcher(testhost, ip_address=None)
@@ -654,6 +656,7 @@ def _aggregated_result_of(
             HostSections[Mapping[SectionName, Sequence[Sequence[str]]]]({section_name: [["123"]]}),
             host_name,
             error_handling=lambda *_args: "",
+            debug=True,
         ),
         section_plugins={section_name: SectionPlugin.trivial(section_name)},
     )
@@ -682,6 +685,7 @@ def _aggregated_result_of(
         get_agent_output=get_agent_output,
         get_effective_host=lambda host_name, *_args: host_name,
         snmp_backend=SNMPBackendEnum.CLASSIC,
+        debug=False,
     )
 
 
@@ -709,6 +713,7 @@ def _make_providers(host_name: HostName) -> Mapping[HostKey, Provider]:
                 HostSections[AgentRawDataSection](sections={SectionName("section"): [["data"]]}),
                 host_name=host_name,
                 error_handling=lambda *_args, **_kw: "error",
+                debug=True,
             ),
             section_plugins={SectionName("section"): SectionPlugin.trivial(SectionName("section"))},
         )
@@ -728,10 +733,11 @@ def _get_aggregated_result(
         service=service,
         plugin=_make_check_plugin(),
         check_function=check_function,
-        get_parameters=lambda: service.parameters.evaluate(lambda _timeperiod: True),
+        get_parameters=lambda: service.parameters.evaluate(lambda _timeperiod: True, debug=True),
         get_agent_output=lambda: None,
         get_effective_host=lambda host_name, _service_name, _labels: host_name,
         snmp_backend=SNMPBackendEnum.CLASSIC,
+        debug=False,
     )
 
 
@@ -739,7 +745,7 @@ def _raise(**_kwargs: object) -> ServiceCheckResult:
     raise ValueError("crash")
 
 
-@pytest.mark.usefixtures("disable_debug", "patch_omd_site")
+@pytest.mark.usefixtures("patch_omd_site")
 def test_crash_report_of_a_check_function_contains_the_agent_output() -> None:
     _aggregated_result_of(_raise, lambda: AgentRawData(b"<<<uptime>>>\n123\n"))
 
@@ -787,7 +793,6 @@ def test_get_aggregated_result_passes_parameters() -> None:
     assert received["params"] == {"levels": (1, 2)}
 
 
-@pytest.mark.usefixtures("disable_debug")
 @pytest.mark.parametrize(
     "raw_parameters",
     [

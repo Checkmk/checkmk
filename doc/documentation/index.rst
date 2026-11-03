@@ -1,24 +1,31 @@
 Checkmk - Developer documentation
 =================================
 
-Architecture
-------------
-
 .. toctree::
    :maxdepth: 1
+   :caption: Architecture
 
    arch-index.rst
    sec-certificates.rst
    sec-auth.rst
    sec-boundaries.rst
    arch-werk.rst
-   arch-experimental-flags.rst
 
-APIs
-----
+.. toctree::
+   :maxdepth: 1
+   :caption: Developer tools
+
+   dev-experimental-flags.rst
+   dev-testing.rst
+   dev-testing-classification.rst
+   dev-testing-flaky.rst
+   dev-testing-python.rst
+   dev-testing-vue.rst
+   dev-cmk-schema-manager.rst
 
 .. toctree::
    :maxdepth: 2
+   :caption: APIs
 
    api-index.rst
 

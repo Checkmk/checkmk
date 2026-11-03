@@ -345,6 +345,15 @@ agent_config['dnsclient'] = [
 
 agent_config = locals().setdefault('agent_config', {})
 
+agent_config.setdefault('agent_exclude_sections', [])
+
+agent_config['agent_exclude_sections'] = [
+{'id': 'f49dc496-6172-4718-bf79-bd38bbfc04b3', 'value': {'sections': []}, 'condition': {}, 'options': {'disabled': False}},
+] + agent_config['agent_exclude_sections']
+
+
+agent_config = locals().setdefault('agent_config', {})
+
 agent_config.setdefault('exclude_sections_aix', [])
 
 agent_config['exclude_sections_aix'] = [
@@ -555,7 +564,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('mk_inotify', [])
 
 agent_config['mk_inotify'] = [
-{'id': '17ffd5a3-449a-4e92-839c-12e1016be6a5', 'value': None, 'condition': {}, 'options': {'disabled': False}},
+{'id': '17ffd5a3-449a-4e92-839c-12e1016be6a5', 'value': {'deployment': ('do_not_deploy', None)}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['mk_inotify']
 
 
@@ -564,7 +573,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('mk_inventory', [])
 
 agent_config['mk_inventory'] = [
-{'id': '2859b446-eb7a-46b1-b5ef-738b0b86c75f', 'value': {'interval': 14400, 'reg_paths': ['Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall', 'Software\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall']}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '2859b446-eb7a-46b1-b5ef-738b0b86c75f', 'value': {'deployment': ('sync', None), 'interval': 14400, 'exe_paths': [], 'reg_paths': ('default', None)}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['mk_inventory']
 
 
@@ -618,7 +627,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('mk_ms_sql', [])
 
 agent_config['mk_ms_sql'] = [
-{'id': 'd84533fd-d7ac-4dba-8ff6-74aa2508f584', 'value': {'main': {'auth': 'local'}}, 'condition': {}, 'options': {'disabled': False}},
+{'id': 'd84533fd-d7ac-4dba-8ff6-74aa2508f584', 'value': {'deployment': ('sync', None), 'main': {'auth': ('local', None)}, 'other': []}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['mk_ms_sql']
 
 
@@ -627,7 +636,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('mk_msoffice', [])
 
 agent_config['mk_msoffice'] = [
-{'id': '9f2c53de-b9fd-4bc4-aeea-7f39a8cea4de', 'value': {'client_id': '00000000-0000-0000-0000-000000000001', 'tenant_id': '00000000-0000-0000-0000-000000000001', 'client_secret': ('password', 'example_secret_value_for_demo')}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '9f2c53de-b9fd-4bc4-aeea-7f39a8cea4de', 'value': {'deployment': ('sync', None), 'client_id': '00000000-0000-0000-0000-000000000001', 'tenant_id': '00000000-0000-0000-0000-000000000001', 'client_secret': ('cmk_postprocessed', 'explicit_password', ('9f2c53de-b9fd-4bc4-aeea-7f39a8cea4de', 'example_secret_value_for_demo'))}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['mk_msoffice']
 
 
@@ -636,7 +645,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('mk_mysql', [])
 
 agent_config['mk_mysql'] = [
-{'id': 'e82fd570-f001-4f9a-87c0-1cfea1ac6e02', 'value': {}, 'condition': {}, 'options': {'disabled': False}},
+{'id': 'e82fd570-f001-4f9a-87c0-1cfea1ac6e02', 'value': {'deployment': ('sync', None), 'credentials': ('no_credentials', None), 'sockets': [], 'host': '', 'custom_port': ('default', None)}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['mk_mysql']
 
 
@@ -690,7 +699,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('mk_redis', [])
 
 agent_config['mk_redis'] = [
-{'id': '0f339552-8dd4-429d-b981-2a01c1ec1c03', 'value': 'autodetect', 'condition': {}, 'options': {'disabled': False}},
+{'id': '0f339552-8dd4-429d-b981-2a01c1ec1c03', 'value': {'deployment': ('sync', None), 'instances': ('autodetect', None)}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['mk_redis']
 
 
@@ -708,7 +717,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('mk_sap_hana', [])
 
 agent_config['mk_sap_hana'] = [
-{'id': '6c5f5be1-afa0-4543-8c74-734da02b32e6', 'value': {'credentials': ('SYSTEM', ('password', 'example_password'))}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '6c5f5be1-afa0-4543-8c74-734da02b32e6', 'value': {'deployment': ('sync', ('user_password', {'user': 'SYSTEM', 'password': ('cmk_postprocessed', 'explicit_password', ('6c5f5be1-afa0-4543-8c74-734da02b32e6', 'example_password'))})), 'credentials_sap_connect': ('none', None), 'runas': 'instance'}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['mk_sap_hana']
 
 
@@ -726,7 +735,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('mk_scaleio', [])
 
 agent_config['mk_scaleio'] = [
-{'id': '215f961b-3160-4a84-8a81-7d7c5f566e78', 'value': {'user': '', 'password': ('password', ''), 'interval': 60}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '215f961b-3160-4a84-8a81-7d7c5f566e78', 'value': {'deployment': ('sync', None), 'user': 'example_user', 'password': ('cmk_postprocessed', 'explicit_password', ('215f961b-3160-4a84-8a81-7d7c5f566e78', 'example_password'))}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['mk_scaleio']
 
 
@@ -852,7 +861,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('only_from', [])
 
 agent_config['only_from'] = [
-{'id': '38c51063-4b75-4e5f-a127-dd8ed3a7bc9e', 'value': [], 'condition': {}, 'options': {'disabled': False}},
+{'id': '38c51063-4b75-4e5f-a127-dd8ed3a7bc9e', 'value': {'allowed_addresses': []}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['only_from']
 
 
@@ -861,7 +870,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('package_name', [])
 
 agent_config['package_name'] = [
-{'id': '1f77993a-9629-43f6-b892-1e3ab5249876', 'value': 'check-mk-agent', 'condition': {}, 'options': {'disabled': False}},
+{'id': '1f77993a-9629-43f6-b892-1e3ab5249876', 'value': {'name': 'check-mk-agent'}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['package_name']
 
 
@@ -879,7 +888,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('python_plugins', [])
 
 agent_config['python_plugins'] = [
-{'id': 'daadce35-e1a4-486e-ae3d-83793cf7266b', 'value': {'version': 'auto'}, 'condition': {}, 'options': {'disabled': False}},
+{'id': 'daadce35-e1a4-486e-ae3d-83793cf7266b', 'value': {'python_version': 'auto', 'command': ''}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['python_plugins']
 
 
@@ -1014,7 +1023,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('win_agent_disabled_sections', [])
 
 agent_config['win_agent_disabled_sections'] = [
-{'id': '91ca1245-3a49-4d38-955b-79d0ddc1fa7b', 'value': [], 'condition': {}, 'options': {'disabled': False}},
+{'id': '91ca1245-3a49-4d38-955b-79d0ddc1fa7b', 'value': {'sections': []}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['win_agent_disabled_sections']
 
 
@@ -1023,7 +1032,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('win_agent_sections', [])
 
 agent_config['win_agent_sections'] = [
-{'id': 'df88124d-af99-4768-a582-d540757ec8c3', 'value': ['check_mk', 'uptime', 'systemtime', 'w32time_status', 'w32time_peers', 'df', 'mem', 'ps', 'services', 'winperf', 'logwatch', 'logfiles', 'fileinfo', 'plugins', 'local', 'mrpe', 'spool', 'wmi_cpuload', 'msexch', 'wmi_webservices', 'dotnet_clrmemory', 'openhardwaremonitor', 'skype'], 'condition': {}, 'options': {'disabled': False}},
+{'id': 'df88124d-af99-4768-a582-d540757ec8c3', 'value': {'sections': ['check_mk', 'uptime', 'systemtime', 'w32time_status', 'w32time_peers', 'df', 'mem', 'ps', 'services', 'winperf', 'logwatch', 'logfiles', 'fileinfo', 'plugins', 'local', 'mrpe', 'spool', 'wmi_cpuload', 'msexch', 'wmi_webservices', 'dotnet_clrmemory', 'openhardwaremonitor', 'skype']}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['win_agent_sections']
 
 
@@ -1041,7 +1050,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('win_controller', [])
 
 agent_config['win_controller'] = [
-{'id': 'ed6f5d72-7d8f-4785-893f-d8512fc53d8e', 'value': {'check_controller_access': True, 'force_legacy': False}, 'condition': {}, 'options': {'disabled': False}},
+{'id': 'ed6f5d72-7d8f-4785-893f-d8512fc53d8e', 'value': {'check_access': True, 'allow_legacy': False, 'agent_channel': ('mailslot', None)}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['win_controller']
 
 
@@ -1068,7 +1077,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('win_eventlog', [])
 
 agent_config['win_eventlog'] = [
-{'id': '8e05d650-58d1-4d96-a112-a74d69b5c58d', 'value': {'logfiles': [], 'sendall': False, 'skip_duplicated': False}, 'condition': {}, 'options': {'disabled': False}},
+{'id': '8e05d650-58d1-4d96-a112-a74d69b5c58d', 'value': {'event_logs': [], 'filter_ids': [], 'filter_sources': [], 'filter_users': [], 'text_pattern': [], 'sendall': False, 'skip_duplicated': False, 'cluster_mapping': [], 'vista_api': False}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['win_eventlog']
 
 
@@ -1077,7 +1086,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('win_exe_suffixes', [])
 
 agent_config['win_exe_suffixes'] = [
-{'id': '9515215d-efd4-41ce-b38d-6742d14824a8', 'value': None, 'condition': {}, 'options': {'disabled': False}},
+{'id': '9515215d-efd4-41ce-b38d-6742d14824a8', 'value': {'mode': ('all_files', None)}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['win_exe_suffixes']
 
 
@@ -1230,7 +1239,7 @@ agent_config = locals().setdefault('agent_config', {})
 agent_config.setdefault('winperf', [])
 
 agent_config['winperf'] = [
-{'id': '72aac8ba-3f4d-48d9-a5c0-0ce1c5857c60', 'value': [], 'condition': {}, 'options': {'disabled': False}},
+{'id': '72aac8ba-3f4d-48d9-a5c0-0ce1c5857c60', 'value': {'counters': []}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_config['winperf']
 
 
@@ -1255,21 +1264,14 @@ agent_config['zorp'] = [
 globals().setdefault('agent_encryption', [])
 
 agent_encryption = [
-{'id': 'aed26744-00ac-40d0-a890-99615f77009e', 'value': None, 'condition': {}, 'options': {'disabled': False}},
+{'id': 'aed26744-00ac-40d0-a890-99615f77009e', 'value': {'passphrase': None}, 'condition': {}, 'options': {'disabled': False}},
 ] + agent_encryption
-
-
-globals().setdefault('agent_exclude_sections', [])
-
-agent_exclude_sections = [
-{'id': 'f49dc496-6172-4718-bf79-bd38bbfc04b3', 'value': {'sections': []}, 'condition': {}, 'options': {'disabled': False}},
-] + agent_exclude_sections
 
 
 globals().setdefault('agent_ports', [])
 
 agent_ports = [
-{'id': 'eb77c2e5-b767-474e-832b-08717e3eecb7', 'value': 6556, 'condition': {}, 'options': {'disabled': False, 'description': 'Example rule'}},
+{'id': 'eb77c2e5-b767-474e-832b-08717e3eecb7', 'value': {'port': 6556}, 'condition': {}, 'options': {'disabled': False, 'description': 'Example rule'}},
 ] + agent_ports
 
 
@@ -3247,11 +3249,11 @@ checkgroup_parameters['drbd'] = [
 
 checkgroup_parameters = locals().setdefault('checkgroup_parameters', {})
 
-checkgroup_parameters.setdefault('eaton_enviroment', [])
+checkgroup_parameters.setdefault('eaton_environment', [])
 
-checkgroup_parameters['eaton_enviroment'] = [
+checkgroup_parameters['eaton_environment'] = [
 {'id': '304076ff-d4dc-456f-8af1-d3afaddeb0e0', 'value': {}, 'condition': {}, 'options': {'disabled': False}},
-] + checkgroup_parameters['eaton_enviroment']
+] + checkgroup_parameters['eaton_environment']
 
 
 checkgroup_parameters = locals().setdefault('checkgroup_parameters', {})
@@ -10722,11 +10724,11 @@ static_checks['drbd'] = [
 
 static_checks = locals().setdefault('static_checks', {})
 
-static_checks.setdefault('eaton_enviroment', [])
+static_checks.setdefault('eaton_environment', [])
 
-static_checks['eaton_enviroment'] = [
-{'id': '4d219d25-0f78-4778-aae0-77916029d26e', 'value': ('ups_eaton_enviroment', None, {}), 'condition': {}, 'options': {'disabled': False}},
-] + static_checks['eaton_enviroment']
+static_checks['eaton_environment'] = [
+{'id': '4d219d25-0f78-4778-aae0-77916029d26e', 'value': ('ups_eaton_environment', None, {}), 'condition': {}, 'options': {'disabled': False}},
+] + static_checks['eaton_environment']
 
 
 static_checks = locals().setdefault('static_checks', {})

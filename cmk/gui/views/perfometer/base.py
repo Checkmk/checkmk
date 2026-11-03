@@ -5,19 +5,15 @@
 
 from collections.abc import Mapping, Sequence
 
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.graphing.v1 import metrics as metrics_v1
+from cmk.graphing_engine import drawn_segments, DrawnSegment, perfometer_sort_value, PerfometerIndex
 from cmk.gui.graphing import (
-    drawn_segments,
-    DrawnSegment,
     evaluated_perfometer,
     perfometer_label,
-    perfometer_sort_value,
-    PerfometerFromAPI,
     registered_translations,
 )
 from cmk.gui.htmllib.generator import HTMLWriter
-from cmk.gui.i18n import _
+from cmk.gui.log import logger
 from cmk.gui.type_defs import Row
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.web.utils.html import HTML
@@ -28,7 +24,7 @@ class Perfometer:
         self,
         row: Row,
         registered_metrics: Mapping[str, metrics_v1.Metric],
-        registered_perfometers: Mapping[str, PerfometerFromAPI],
+        registered_perfometers: PerfometerIndex,
         *,
         debug: bool,
     ) -> None:
@@ -50,7 +46,7 @@ class Perfometer:
             return None, None
         return (
             perfometer_label(self._evaluated, temperature_unit),
-            _render_metricometer(drawn_segments(self._evaluated), background_color),
+            _render_metricometer(drawn_segments(self._evaluated, logger=logger), background_color),
         )
 
     def sort_value(self) -> tuple[str, float]:
@@ -90,11 +86,6 @@ def _render_row(segments: Sequence[DrawnSegment], background_color: str) -> HTML
 
 
 def _render_metricometer(rows: Sequence[Sequence[DrawnSegment]], background_color: str) -> HTML:
-    if len(rows) not in (1, 2):
-        raise MKGeneralException(
-            _("Invalid Perf-O-Meter definition %(stack)r: only one or two entries are allowed")
-            % {"stack": rows}
-        )
     h = HTML.empty().join(_render_row(row, background_color) for row in rows)
     if len(rows) == 2:
         h = HTMLWriter.render_div(h, class_="stacked")

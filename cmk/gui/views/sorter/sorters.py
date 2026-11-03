@@ -24,6 +24,7 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
 from cmk.gui.painter.helpers import get_perfdata_nth_value, get_tag_groups
 from cmk.gui.painter.painters import (
+    add_docker_nodes,
     get_docker_node,
     metric_choices,
 )
@@ -821,4 +822,5 @@ SorterHostDockerNode = Sorter(
     title=_l("Node name"),
     columns=["host_name", "host_labels", "host_label_sources"],
     sort_function=_sort_docker_nodes_,
+    row_extender=add_docker_nodes,
 )

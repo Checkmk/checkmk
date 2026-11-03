@@ -293,14 +293,29 @@ test('drops the wildcard entry when a key leaves a single value to match', async
   expect(screen.queryByRole('button', { name: 'criticality*' })).not.toBeInTheDocument()
 })
 
-test('offers no wildcard for a key without the start of a value, which matches no pair', async () => {
+test('offers any value of a picked key and commits it as a pair', async () => {
+  const { selected } = mountKeyValue({ wildcardOption: true })
+
+  await userEvent.type(screen.getByRole('searchbox'), 'os_family')
+  await waitFor(() => screen.getByRole('button', { name: 'cmk/os_family' }))
+  await userEvent.click(screen.getByRole('button', { name: 'cmk/os_family' }))
+  await waitFor(() => screen.getByRole('button', { name: 'cmk/os_family:*' }))
+
+  const results = within(screen.getByRole('list', { name: 'Search results' }))
+  const listed = results.getAllByRole('button').map((button) => button.textContent?.trim())
+  expect(listed[0]).toBe('cmk/os_family:*')
+
+  await userEvent.click(screen.getByRole('button', { name: 'cmk/os_family:*' }))
+  expect(selected.value).toEqual(['cmk/os_family:*'])
+})
+
+test('offers no any value entry for a key with a single value', async () => {
   mountKeyValue({ wildcardOption: true })
 
-  await userEvent.type(screen.getByRole('searchbox'), 'cmk/os_family:')
-  await waitFor(() => screen.getByRole('button', { name: 'cmk/os_family:linux' }))
+  await userEvent.type(screen.getByRole('searchbox'), 'criticality:')
+  await waitFor(() => screen.getByRole('button', { name: 'criticality:prod' }))
 
-  expect(screen.getByRole('button', { name: 'cmk/os_family:windows' })).toBeInTheDocument()
-  expect(screen.queryByRole('button', { name: 'cmk/os_family:*' })).not.toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'criticality:*' })).not.toBeInTheDocument()
 })
 
 test('offers no wildcard for the start of a value without its key', async () => {

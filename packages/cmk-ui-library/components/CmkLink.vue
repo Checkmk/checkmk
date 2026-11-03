@@ -37,17 +37,18 @@ defineExpose({
   width: 100%;
   font-size: var(--font-size-normal, 12px);
   font-style: normal;
-  font-weight: var(--font-weight-default, 400);
+  font-weight: var(--font-weight-semibold, 600);
   line-height: normal;
-  text-decoration-line: underline;
+  text-decoration-line: none;
   text-decoration-style: solid;
   text-decoration-skip-ink: auto;
   text-decoration-thickness: auto;
   text-underline-offset: auto;
   text-underline-position: from-font;
 
-  &:hover {
-    color: var(--cmk-link-hover-color, #15d1a0);
+  &:hover,
+  &:focus-visible {
+    text-decoration-line: underline;
   }
 
   &:focus-visible {

@@ -12,6 +12,7 @@ from typing import override
 
 from botocore.client import BaseClient
 
+from .. import hosts
 from ..config import AWSConfig, LOGGER
 from .core import (
     AWSColleagueContents,
@@ -102,7 +103,6 @@ class EBSLimits(AWSSectionLimits):
         # Space values are in TiB.
         # Reference: https://docs.aws.amazon.com/general/latest/gr/ebs-service.html
         self._add_limit(
-            "",
             AWSLimit(
                 "block_store_snapshots",
                 "Block store snapshots",
@@ -111,7 +111,6 @@ class EBSLimits(AWSSectionLimits):
             ),
         )
         self._add_limit(
-            "",
             AWSLimit(
                 "block_store_space_standard",
                 "Magnetic volumes space",
@@ -120,7 +119,6 @@ class EBSLimits(AWSSectionLimits):
             ),
         )
         self._add_limit(
-            "",
             AWSLimit(
                 "block_store_space_io1",
                 "Provisioned IOPS SSD (io1) space",
@@ -129,7 +127,6 @@ class EBSLimits(AWSSectionLimits):
             ),
         )
         self._add_limit(
-            "",
             AWSLimit(
                 "block_store_iops_io1",
                 "Provisioned IOPS SSD (io1) IO operations per second",
@@ -138,7 +135,6 @@ class EBSLimits(AWSSectionLimits):
             ),
         )
         self._add_limit(
-            "",
             AWSLimit(
                 "block_store_space_io2",
                 "Provisioned IOPS SSD (io2) space",
@@ -147,7 +143,6 @@ class EBSLimits(AWSSectionLimits):
             ),
         )
         self._add_limit(
-            "",
             AWSLimit(
                 "block_store_iops_io2",
                 "Provisioned IOPS SSD (io2) IO operations per second",
@@ -156,7 +151,6 @@ class EBSLimits(AWSSectionLimits):
             ),
         )
         self._add_limit(
-            "",
             AWSLimit(
                 "block_store_space_gp2",
                 "General Purpose SSD (gp2) space",
@@ -165,7 +159,6 @@ class EBSLimits(AWSSectionLimits):
             ),
         )
         self._add_limit(
-            "",
             AWSLimit(
                 "block_store_space_gp3",
                 "General Purpose SSD (gp3) space",
@@ -174,7 +167,6 @@ class EBSLimits(AWSSectionLimits):
             ),
         )
         self._add_limit(
-            "",
             AWSLimit(
                 "block_store_space_sc1",
                 "Cold HDD space",
@@ -183,7 +175,6 @@ class EBSLimits(AWSSectionLimits):
             ),
         )
         self._add_limit(
-            "",
             AWSLimit(
                 "block_store_space_st1",
                 "Throughput Optimized HDD space",
@@ -288,9 +279,12 @@ class EBSSummary(AWSSection):
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
         _col_volumes, col_instances = colleague_contents.content
-        instance_name_mapping = {v["InstanceId"]: k for k, v in col_instances.items()}
+        # The keys of the EC2 summary are the hosts of the monitored instances.
+        instance_hosts: dict[str, hosts.TargetHost] = {
+            v["InstanceId"]: k for k, v in col_instances.items()
+        }
 
-        content_by_piggyback_hosts: dict[str, list[str]] = {}
+        content_by_piggyback_hosts: dict[hosts.TargetHost | None, list[str]] = {}
         for vol in raw_content.content.values():
             vol["TagsForCmkLabels"] = self.process_tags_for_cmk_labels(vol.get("Tags", []))
 
@@ -299,10 +293,11 @@ class EBSSummary(AWSSection):
                 # Just for security
                 if vol["VolumeId"] != attachment["VolumeId"]:
                     continue
-                instance_name = instance_name_mapping.get(attachment["InstanceId"])
-                if instance_name is None:
-                    instance_name = ""
-                instance_names.append(instance_name)
+                instance_names.append(
+                    self._target_host(
+                        hosts.EBSAttachment(instance_hosts.get(attachment["InstanceId"]))
+                    )
+                )
 
             # Should be attached to max. one instance
             for instance_name in instance_names:
@@ -372,7 +367,7 @@ class EBS(AWSSectionCloudwatch):
                     continue
                 metric: Metric = {
                     "Id": self._create_id_for_metric_data_query(idx, metric_name),
-                    "Label": instance_name,
+                    "Label": self._metric_label(instance_name),
                     "MetricStat": {
                         "Metric": {
                             "Namespace": "AWS/EBS",
@@ -393,13 +388,25 @@ class EBS(AWSSectionCloudwatch):
                 metrics.append(metric)
         return metrics
 
+    # CloudWatch returns the label, the DataCache keeps it, and the EBS check uses it as
+    # the item. So the volumes of instances that are not monitored keep the empty label.
+    def _metric_label(self, host: hosts.TargetHost | None) -> str:
+        if host is None or host == self._target_host(hosts.EBSAttachment(None)):
+            return ""
+        return host
+
+    def _host_of_metric_label(self, label: str) -> hosts.TargetHost | None:
+        return self._target_host(hosts.EBSAttachment(hosts.TargetHost(label) if label else None))
+
     @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
-        content_by_piggyback_hosts: dict[str, list[str]] = {}
+        content_by_piggyback_hosts: dict[hosts.TargetHost | None, list[str]] = {}
         for row in raw_content.content:
-            content_by_piggyback_hosts.setdefault(row["Label"], []).append(row)
+            content_by_piggyback_hosts.setdefault(
+                self._host_of_metric_label(row["Label"]), []
+            ).append(row)
         return AWSComputedContent(content_by_piggyback_hosts, raw_content.cache_timestamp)
 
     @override

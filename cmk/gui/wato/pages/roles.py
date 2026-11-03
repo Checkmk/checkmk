@@ -21,7 +21,6 @@ from typing import override
 
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
-from cmk.ccc.version import Edition
 from cmk.gui import forms, userdb
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
@@ -42,10 +41,9 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
     show_confirm_cancel_dialog,
 )
-from cmk.gui.pages import PageContext
 from cmk.gui.permissions import (
-    load_dynamic_permissions,
-    permission_registry,
+    all_permissions,
+    get_sorted_permissions,
     permission_section_registry,
 )
 from cmk.gui.site_config import get_login_sites
@@ -59,7 +57,6 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib import userroles
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.config_domain_name import CORE
-from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.pending_changes import (
     Change,
@@ -78,7 +75,7 @@ from cmk.web.utils.doc_references import DocReference
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.permission_verification import PermissionName
-from cmk.web.utils.urls import makeactionuri, makeuri_contextless
+from cmk.web.utils.urls import makeactionuri, makeactionuri_contextless, makeuri_contextless
 
 
 def register(mode_registry: ModeRegistry) -> None:
@@ -118,7 +115,9 @@ class ModeRoles(WatoMode):
                                     title=_("Permission matrix"),
                                     icon_name=StaticIcon(IconNames.matrix),
                                     item=make_simple_link(
-                                        folder_preserving_link(request, [("mode", "role_matrix")])
+                                        makeuri_contextless(
+                                            request, [("mode", "role_matrix")], filename="wato.py"
+                                        )
                                     ),
                                 ),
                             ],
@@ -191,13 +190,23 @@ class ModeRoles(WatoMode):
 
                 # Actions
                 table.cell(_("Actions"), css=["buttons"])
-                edit_url = folder_preserving_link(
-                    request, [("mode", "edit_role"), ("edit", role.name)]
+                edit_url = makeuri_contextless(
+                    request, [("mode", "edit_role"), ("edit", role.name)], filename="wato.py"
                 )
-                clone_url = make_action_link(request, [("mode", "roles"), ("_clone", role.name)])
+                clone_url = makeactionuri_contextless(
+                    request,
+                    transactions.get(),
+                    [("mode", "roles"), ("_clone", role.name)],
+                    filename="wato.py",
+                )
                 delete_url = make_confirm_delete_link(
                     i18n=_,
-                    url=make_action_link(request, [("mode", "roles"), ("_delete", role.name)]),
+                    url=makeactionuri_contextless(
+                        request,
+                        transactions.get(),
+                        [("mode", "roles"), ("_delete", role.name)],
+                        filename="wato.py",
+                    ),
                     title=_("Delete role #%(nr)d") % {"nr": nr},
                     suffix=role.alias,
                     message=("Name: %s") % role.name,
@@ -237,8 +246,10 @@ class ModeRoles(WatoMode):
                         [
                             HTMLWriter.render_a(
                                 user.get("alias", user_id),
-                                folder_preserving_link(
-                                    request, [("mode", "edit_user"), ("edit", user_id)]
+                                makeuri_contextless(
+                                    request,
+                                    [("mode", "edit_user"), ("edit", user_id)],
+                                    filename="wato.py",
                                 ),
                             )
                             for (user_id, user) in users.items()
@@ -267,10 +278,6 @@ class ModeRoleTwoFactor(WatoMode):
     @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeRoles
-
-    def __init__(self, edition: Edition, ctx: PageContext) -> None:
-        super().__init__(edition, ctx)
-        load_dynamic_permissions()
 
     @override
     def _from_vars(self) -> None:
@@ -362,13 +369,6 @@ class ModeEditRole(WatoMode):
     @override
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeRoles
-
-    def __init__(self, edition: Edition, ctx: PageContext) -> None:
-        super().__init__(edition, ctx)
-
-        # Make sure that all dynamic permissions are available (e.g. those for custom
-        # views)
-        load_dynamic_permissions()
 
     @override
     def _from_vars(self) -> None:
@@ -528,10 +528,11 @@ class ModeEditRole(WatoMode):
             )
         )
 
+        permissions = all_permissions()
         for section in permission_section_registry.get_sorted_sections():
             # Now filter by the optional search term
             filtered_perms = []
-            for perm in permission_registry.get_sorted_permissions(section):
+            for perm in get_sorted_permissions(permissions, section):
                 if search and (
                     search not in perm.title.lower() and search not in perm.name.lower()
                 ):
@@ -593,6 +594,7 @@ class ModeRoleMatrix(WatoMode):
 
     @override
     def page(self, config: Config) -> None:
+        permissions = all_permissions()
         for section in permission_section_registry.get_sorted_sections():
             with table_element(
                 section.name,
@@ -600,7 +602,7 @@ class ModeRoleMatrix(WatoMode):
                 foldable=Foldable.FOLDABLE_SAVE_STATE,
                 limit=max(200, config.table_row_limit),
             ) as table:
-                permission_list = permission_registry.get_sorted_permissions(section)
+                permission_list = get_sorted_permissions(permissions, section)
 
                 if not permission_list:
                     table.row()

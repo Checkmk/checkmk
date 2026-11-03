@@ -40,6 +40,7 @@ from cmk.gui.utils.user_errors import user_errors
 from cmk.shared_typing.icon import DynamicIconAppProps, StaticIconAppProps
 from cmk.web.utils import escaping
 from cmk.web.utils.choices import Choice, ChoiceId, ChoiceText
+from cmk.web.utils.confirm_links import ConfirmLink
 from cmk.web.utils.doc_references import DocReference, DocReferenceUtm
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import DynamicIcon, DynamicIconName, IconNames, IconSizes, StaticIcon
@@ -125,6 +126,7 @@ class HTMLGenerator(HTMLWriter):
         self._header_sent = False
         self._body_classes = ["main"]
         self._main_navigation_open = False
+        self._inject_profiling_code = False
         self.have_help = False
 
         # Forms
@@ -271,7 +273,10 @@ class HTMLGenerator(HTMLWriter):
 
         self.open_head()
         if inject_js_profiling_code or self.request.has_var("inject_js_profiling_code"):
-            self._inject_profiling_code()
+            self._inject_profiling_code = True
+            self.javascript_file(
+                HTMLGenerator._append_cache_busting_query("js/tracking_entry_min.js")
+            )
 
         self.default_html_headers()
         self.title(title)
@@ -306,7 +311,6 @@ class HTMLGenerator(HTMLWriter):
         self.set_csrf_token_meta()
 
         if self.browser_reload != 0.0:
-            # Picked up by packages/cmk-frontend/src/js/index.ts on page load
             self.meta(name="cmk-browser-reload", content=str(self.browser_reload))
 
         self.close_head()
@@ -339,24 +343,14 @@ class HTMLGenerator(HTMLWriter):
                 injected.add(stylesheet)
                 self.stylesheet(f"cmk-frontend-vue/{stylesheet}")
 
-    def _inject_profiling_code(self) -> None:
-        self.javascript("const startTime = Date.now();")
-        # A lambda, so it will get evaluated at the end of the request, not the beginning.
-        self.final_javascript(
-            lambda: (
-                f"""
-                const generationDuration = {round((time.monotonic() - self.request.started) * 1000, 0)};
-                const currentUrl = window.location.pathname + window.location.search;
-                document.addEventListener(
-                    'DOMContentLoaded',
-                    function() {{
-                        activate_tracking(currentUrl, startTime, generationDuration);
-                    }}
-                );
-            """
-            )
+    def _write_profiling_data(self) -> None:
+        self.js_entrypoint(
+            json.dumps(
+                {"generation_duration": round((time.monotonic() - self.request.started) * 1000, 0)}
+            ),
+            type_="application/json",
+            id_="cmk_tracking_data",
         )
-        self.javascript_file(HTMLGenerator._append_cache_busting_query("js/tracking_entry_min.js"))
 
     def set_csrf_token_meta(self) -> None:
         # session is LocalProxy, only on access it is None, so we cannot test on 'is None'
@@ -467,7 +461,8 @@ class HTMLGenerator(HTMLWriter):
     def body_end(self) -> None:
         if self.have_help:
             enable_page_menu_entry(self, "inline_help")
-        self.write_final_javascript()
+        if self._inject_profiling_code:
+            self._write_profiling_data()
         if self._main_navigation_open:
             hooks.call("content-area-ended")
             self.close_div()  # #content_area
@@ -968,7 +963,7 @@ class HTMLGenerator(HTMLWriter):
         enabled: bool,
         help_txt: str,
         class_: CSSSpec | None = None,
-        href: str = "javascript:void(0)",
+        href: str = "#",
         onclick: str | None = None,
         click_action: ClickAction | None = None,
     ) -> None:
@@ -1450,7 +1445,7 @@ class HTMLGenerator(HTMLWriter):
 
     @staticmethod
     def render_icon_button(
-        url: None | str,
+        url: None | str | ConfirmLink,
         title: str,
         icon: DynamicIcon | StaticIcon,
         id_: str | None = None,
@@ -1465,14 +1460,18 @@ class HTMLGenerator(HTMLWriter):
         download: str | None = None,
         click_action: ClickAction | None = None,
     ) -> HTML:
+        if isinstance(url, ConfirmLink):
+            click_action = ClickAction.confirm(url)
+            url = None
+
         classes = [] if cssclass is None else [cssclass]
         if isinstance(class_, list):
             classes.extend(class_)
         elif class_ is not None:
             classes.append(class_)  # type: ignore[unreachable]
 
-        href = url if not (onclick or click_action) else "javascript:void(0)"
-        assert href is not None
+        # Keep a real URL next to a click action: actions returning true let the browser follow it
+        href = "#" if onclick or not url else url
 
         if isinstance(icon, StaticIcon):
             icon_content = HTMLGenerator.render_static_icon(icon, css_classes=["iconbutton"])
@@ -1517,7 +1516,7 @@ class HTMLGenerator(HTMLWriter):
 
     def icon_button(
         self,
-        url: str | None,
+        url: str | ConfirmLink | None,
         title: str,
         icon: DynamicIcon | StaticIcon,
         id_: str | None = None,
@@ -1565,7 +1564,7 @@ class HTMLGenerator(HTMLWriter):
             return
 
         self.open_a(
-            href="javascript:void(0)",
+            href="#",
             id_="more_%s" % id_,
             class_=["more", "has_text" if with_text else ""],
             onclick="cmk.utils.toggle_more(this, %s, %d);%s"
@@ -1646,7 +1645,7 @@ class HTMLGenerator(HTMLWriter):
         atag = HTMLWriter.render_a(
             content,
             class_="popup_trigger",
-            href="javascript:void(0);",
+            href="#",
             # Needed to prevent wrong linking when views are parts of dashlets
             target="_self",
             onclick=onclick,
@@ -1686,7 +1685,7 @@ class HTMLGenerator(HTMLWriter):
             HTMLGenerator.render_static_icon(
                 StaticIcon(IconNames.drag), title=_("Move this entry")
             ),
-            href="javascript:void(0)",
+            href="#",
             class_=["element_dragger"],
             onmousedown=f"cmk.element_dragging.start(event, this, {json.dumps(dragging_tag.upper())}, {drop_handler}",
         )

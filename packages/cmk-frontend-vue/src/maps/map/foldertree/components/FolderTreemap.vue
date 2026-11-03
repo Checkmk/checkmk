@@ -340,7 +340,7 @@ useD3Cleanup(svgEl)
 /* stylelint-disable selector-pseudo-class-no-unknown -- d3 owns the tiles, so
    their styles have to reach past this component's own markup. */
 .maps-folder-treemap__stage :deep(.maps-folder-treemap__cell:focus-visible) {
-  outline: 2px solid var(--interactive-accent);
+  outline: revert;
   outline-offset: -2px;
 }
 
@@ -355,7 +355,7 @@ useD3Cleanup(svgEl)
 }
 
 .maps-folder-treemap__stage :deep(.maps-folder-treemap__mark) {
-  font-size: 11px;
+  font-size: var(--font-size-small);
   font-weight: var(--font-weight-default);
 }
 
@@ -380,7 +380,7 @@ useD3Cleanup(svgEl)
   align-items: center;
   justify-content: center;
   padding: var(--dimension-8);
-  font-size: 13px;
+  font-size: var(--font-size-normal);
   color: var(--font-color-dimmed);
   text-align: center;
 

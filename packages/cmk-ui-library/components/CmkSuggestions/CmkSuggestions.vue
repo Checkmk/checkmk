@@ -398,7 +398,7 @@ defineExpose({
       <CmkScrollContainer class="cmk-suggestions__scroll" :max-height="maxHeight">
         <li v-if="error" class="cmk-suggestions--error"><CmkHtml :html="error" /></li>
         <li v-if="warning" class="cmk-suggestions--warning"><CmkHtml :html="warning" /></li>
-        <!-- eslint-disable vue/valid-v-for vue/require-v-for-key since the index in suggestionRefs does not get correctly updated when using the suggestion name as key -->
+        <!-- eslint-disable vue/require-v-for-key -- the index in suggestionRefs does not get correctly updated when using the suggestion name as key -->
         <template v-for="(section, sIdx) in displaySections">
           <li
             v-if="section.title !== null"
@@ -468,7 +468,7 @@ defineExpose({
             </SuggestionTooltip>
           </li>
         </template>
-        <!-- eslint-enable vue/valid-v-for vue/require-v-for-key -->
+        <!-- eslint-enable vue/require-v-for-key -->
         <li v-if="filteredSuggestions.length === 0 && noResultsHint !== ''">
           {{ noResultsHint }}
         </li>

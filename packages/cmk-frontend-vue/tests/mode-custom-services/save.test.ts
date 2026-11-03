@@ -9,6 +9,7 @@
 import type { ConsolidationFunction } from 'cmk-shared-typing/typescript/consolidation'
 import { CmkApiError } from 'cmk-ui-library/lib/error'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
+// eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
 import { HttpResponse, http } from 'msw'
 import { afterEach, describe, expect, test } from 'vitest'
 
@@ -77,10 +78,35 @@ describe('createCustomService', () => {
       host_assignment: { mode: 'explicit_host', host_name: 'web01' },
       configuration: {
         metric_name: 'otel.http.duration',
-        service_name_template: 'HTTP duration',
+        service_name_template: 'HTTP duration $SERIES_ATTRIBUTES$',
         consolidation: { type: 'gauge', function: 'gauge_last', lookback_seconds: 120 }
       }
     })
+  })
+
+  test('sends the host name template it assigns the service by', async () => {
+    await createCustomService({
+      ...completeModel(),
+      hostName: null,
+      hostNameTemplate: '$RESOURCE_ATTR.service.name$'
+    })
+    expect(lastBody).toMatchObject({
+      host_assignment: {
+        mode: 'host_name_template',
+        host_name_template: '$RESOURCE_ATTR.service.name$'
+      }
+    })
+  })
+
+  test('refuses to save with an empty host name template and issues no request', async () => {
+    const result = await createCustomService({
+      ...completeModel(),
+      hostName: null,
+      hostNameTemplate: ' '
+    })
+    expect(result.ok).toBe(false)
+    expect(result.error).toBeTruthy()
+    expect(createRequests).toBe(0)
   })
 
   test('surfaces the backend error message when the name is already taken', async () => {
@@ -99,6 +125,75 @@ describe('createCustomService', () => {
     const result = await createCustomService(completeModel())
     expect(result.ok).toBe(false)
     expect(result.error).toContain('already exists')
+  })
+
+  test('reports a refused host name template for the template field', async () => {
+    server.use(
+      http.post(CREATE_URL, () =>
+        HttpResponse.json(
+          {
+            status: 400,
+            title: 'Bad Request',
+            detail: 'These fields have problems: body.host_assignment.host_name_template',
+            fields: {
+              'body.host_assignment.host_name_template.host_name_template': {
+                type: 'value_error',
+                loc: ['body', 'host_assignment', 'host_name_template', 'host_name_template'],
+                msg: 'Value error, The host name template must reference at least one attribute.',
+                input: 'fixed-name'
+              }
+            }
+          },
+          { status: 400 }
+        )
+      )
+    )
+    const result = await createCustomService({
+      ...completeModel(),
+      hostName: null,
+      hostNameTemplate: 'fixed-name'
+    })
+    expect(result.ok).toBe(false)
+    expect(result.templateError).toBe(
+      'The host name template must reference at least one attribute.'
+    )
+  })
+
+  test('reports a refused host name template with other problems as a whole', async () => {
+    server.use(
+      http.post(CREATE_URL, () =>
+        HttpResponse.json(
+          {
+            status: 400,
+            title: 'Bad Request',
+            detail: 'These fields have problems: body.host_assignment, body.configuration',
+            fields: {
+              'body.host_assignment.host_name_template.host_name_template': {
+                type: 'value_error',
+                loc: ['body', 'host_assignment', 'host_name_template', 'host_name_template'],
+                msg: 'Value error, The host name template must reference at least one attribute.',
+                input: 'fixed-name'
+              },
+              'body.configuration.metric_name': {
+                type: 'string_too_short',
+                loc: ['body', 'configuration', 'metric_name'],
+                msg: 'String should have at least 1 character',
+                input: ''
+              }
+            }
+          },
+          { status: 400 }
+        )
+      )
+    )
+    const result = await createCustomService({
+      ...completeModel(),
+      hostName: null,
+      hostNameTemplate: 'fixed-name'
+    })
+    expect(result.ok).toBe(false)
+    expect(result.templateError).toBeUndefined()
+    expect(result.error).toContain('These fields have problems')
   })
 
   test('lets a server fault through so it keeps its crash report', async () => {
@@ -163,7 +258,7 @@ describe('updateCustomService', () => {
       host_assignment: { mode: 'explicit_host', host_name: 'web01' },
       configuration: {
         metric_name: 'otel.http.duration',
-        service_name_template: 'HTTP duration',
+        service_name_template: 'HTTP duration $SERIES_ATTRIBUTES$',
         consolidation: { type: 'gauge', function: 'gauge_last', lookback_seconds: 120 }
       }
     })

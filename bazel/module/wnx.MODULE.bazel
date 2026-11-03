@@ -1,7 +1,29 @@
 # Build dependencies of the C++ Windows agent (agents/wnx).
 
 wnx_repos = use_extension("//bazel/module:wnx_repositories.bzl", "repos")
-use_repo(wnx_repos, "wine_linux_x86_64", "wine_mono", "wix3")
+use_repo(
+    wnx_repos,
+    "wine_linux_x86_64",
+    "wine_mono",
+    "wix3",
+)
+
+# The Windows test VM (agents/wnx/test-vm): its image and the media it is
+# built from. Not build dependencies: only the image build and the tests
+# that boot a VM fetch them.
+# Not exported as `repos`, like most extensions here: Bzlmod numbers
+# same-named extensions in use order, so one more `repos` would rename the
+# repositories of every later one.
+test_vm_repos = use_extension("//bazel/extensions:test_vm_repositories.bzl", "test_vm")
+use_repo(
+    test_vm_repos,
+    "msodbcsql17_msi",
+    "mssql2022_cu",
+    "mssql2022_dev_iso",
+    "virtio_win_iso",
+    "win2022_core_image",
+    "win2022_eval_iso",
+)
 
 # Vendored dependencies of the C++ Windows agent; the same
 # tarballs the vcxproj build unpacks into agents/wnx/extlibs.
@@ -26,3 +48,9 @@ vendored_archive(
     build_file = "//third_party:yaml-cpp/BUILD.yaml-cpp.bazel",
     strip_prefix = "yaml-cpp-0.8.0",
 )
+
+# The host CPU as the pinned QEMU sees it: keys the Windows test VM's saved
+# state (bazel/rules/xcomp/windows_vm_state.bzl).
+qemu_host_cpu = use_repo_rule("//bazel/rules:xcomp/qemu_host_cpu.bzl", "qemu_host_cpu")
+
+qemu_host_cpu(name = "qemu_host_cpu")

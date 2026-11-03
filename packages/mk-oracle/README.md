@@ -239,7 +239,7 @@ All Oracle-specific configuration lives under `oracle.main`. It contains the fol
 | `excluded_sections`        | No          | Sections that individual targets do not collect                                |
 | `custom_metrics`           | No          | User-defined SQL queries emitted under `oracle_sql`                            |
 | `cache_age`                | No          | Cache lifetime for async sections (default: `600` seconds)                     |
-| `custom_metrics_cache_age` | No          | Cache lifetime for async custom metrics (default: `600` seconds)               |
+| `custom_metrics_cache_age` | No          | Cache lifetime for async custom metrics (default: the value of `cache_age`)    |
 | `piggyback_host`           | No          | Piggyback hostname for forwarding data to another host                         |
 
 ### Authentication

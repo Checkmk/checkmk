@@ -88,3 +88,20 @@ def test_check_silverpeak_VX6000(info: InfoType, expected_results: Sequence[Resu
     assert parsed is not None
     result = list(check_silverpeak(parsed))
     assert result == expected_results
+
+
+def test_check_silverpeak_VX6000_alarm_count_without_alarm_rows() -> None:
+    # Crash group 4960: the device reported three active alarms, but its alarm
+    # table delivered no rows.
+    parsed = parse_silverpeak([[["3"]], []])
+    assert parsed is not None
+    assert list(check_silverpeak(parsed)) == [
+        Result(
+            state=State.OK,
+            summary="3 active alarms. OK: 0, WARN: 0, CRIT: 0, UNKNOWN: 0",
+        ),
+        Result(
+            state=State.UNKNOWN,
+            summary="Device reports 3 active alarms but delivered no alarm details",
+        ),
+    ]

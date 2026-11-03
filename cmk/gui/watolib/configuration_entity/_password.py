@@ -120,7 +120,7 @@ def get_password_slidein_schema(user: LoggedInUser) -> Catalog:
                                         elements=[
                                             SingleChoiceElement(
                                                 name=name,
-                                                title=Title(  # astrein: disable=localization-checker
+                                                title=Title(  # astrein: disable=localization
                                                     title
                                                 ),
                                             )
@@ -149,7 +149,7 @@ def get_password_slidein_schema(user: LoggedInUser) -> Catalog:
                             elements=[
                                 MultipleChoiceElement(
                                     name=name,
-                                    title=Title(title),  # astrein: disable=localization-checker
+                                    title=Title(title),  # astrein: disable=localization
                                 )
                                 for name, title in sorted_contact_group_choices(only_own=False)
                             ],

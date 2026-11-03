@@ -267,7 +267,8 @@ describe('enumerateIssues', () => {
           thresholdMiB: 2048,
           overThreshold: true,
           extensionActive: true,
-          monitored: true
+          monitored: true,
+          inStartupGrace: false
         }
       })
     )
@@ -460,7 +461,8 @@ describe('getDomainSummary', () => {
           thresholdMiB: 2048,
           overThreshold: true,
           extensionActive: true,
-          monitored: true
+          monitored: true,
+          inStartupGrace: false
         }
       })
     )

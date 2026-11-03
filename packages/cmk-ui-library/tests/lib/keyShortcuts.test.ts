@@ -177,3 +177,40 @@ test('matches an unidentified key press by its physical key', () => {
 
   expect(toggle).toHaveBeenCalledOnce()
 })
+
+test('altHeld follows Alt alone, not Ctrl+Alt', () => {
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Alt', altKey: true }))
+  const held = shortcuts.altHeld.value
+  window.dispatchEvent(
+    new KeyboardEvent('keydown', { key: 'Control', altKey: true, ctrlKey: true })
+  )
+  const heldWithCtrl = shortcuts.altHeld.value
+  window.dispatchEvent(new KeyboardEvent('keyup', { key: 'Alt' }))
+
+  expect([held, heldWithCtrl, shortcuts.altHeld.value]).toEqual([true, false, false])
+})
+
+test('altHeld is released when the window loses focus', () => {
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Alt', altKey: true }))
+  window.dispatchEvent(new FocusEvent('blur'))
+
+  expect(shortcuts.altHeld.value).toBe(false)
+})
+
+test('altHeld is released by a pointer move without Alt, e.g. after a missed Alt keyup', () => {
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Alt', altKey: true }))
+  window.dispatchEvent(new MouseEvent('pointermove', { altKey: true }))
+  const heldWhileMovingWithAlt = shortcuts.altHeld.value
+  window.dispatchEvent(new MouseEvent('pointermove'))
+
+  expect([heldWhileMovingWithAlt, shortcuts.altHeld.value]).toEqual([true, false])
+})
+
+test('altHeld is released when a listened-to iframe loads a new document', async () => {
+  const frame = element<HTMLIFrameElement>('<iframe></iframe>')
+  await Promise.resolve()
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Alt', altKey: true }))
+  frame.dispatchEvent(new Event('load'))
+
+  expect(shortcuts.altHeld.value).toBe(false)
+})

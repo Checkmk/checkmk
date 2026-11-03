@@ -15,36 +15,39 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import translations as translations_v1
-from cmk.graphing_engine import ConsolidationFunction, TimeRange
+from cmk.graphing_engine import (
+    ApiGraph,
+    ConsolidationFunction,
+    TimeRange,
+)
 from cmk.graphing_engine import HostName as EngineHostName
 from cmk.graphing_engine import ServiceName as EngineServiceName
 from cmk.gui import sites
 from cmk.gui.config import active_config, Config, RequestCacheConfig
 from cmk.gui.dashboard.exceptions import WidgetRenderError
-from cmk.gui.dashboard.type_defs import ABCGraphDashletConfig
+from cmk.gui.dashboard.type_defs import ABCGraphDashletConfig, DashboardWindow
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.graphing import (
     build_template_graphs,
     discover_template_graphs,
     DiscoveredGraphs,
     evaluate_built_graphs,
+    EvaluationOptions,
     get_graph_plugin_choices,
     graph_choices,
     GraphChoices,
     GraphDestinations,
-    GraphFromAPI,
     GraphPluginChoice,
-    graphs_from_api,
     GraphSpecification,
+    registered_graphs,
     registered_metrics,
     registered_translations,
     resolve_graph_id_from_index,
     RRDFetchMetricNames,
-    sort_registered_graph_plugins,
     TemplateGraphSpecification,
 )
 from cmk.gui.i18n import _
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import GraphRenderOptionsVS, SingleInfos, VisualContext
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.valuespec import (
@@ -121,7 +124,7 @@ class ABCGraphDashlet[T: ABCGraphDashletConfig](Dashlet[T]):
         # configured. So we assume the default timerange here by default.
         # TODO: If the comment above is correct, the typing is wrong => suppression for now
         if "timerange" not in self._dashlet_spec:
-            self._dashlet_spec["timerange"] = "25h"  # type: ignore[unreachable]
+            self._dashlet_spec["timerange"] = DashboardWindow(type="dashboard")  # type: ignore[unreachable]
 
         self._cached_display_title: str | None = None
 
@@ -135,18 +138,21 @@ class ABCGraphDashlet[T: ABCGraphDashletConfig](Dashlet[T]):
 
     def _resolve_display_title(self) -> str:
         try:
-            start, end = Timerange.compute_range(self._dashlet_spec["timerange"]).range
+            window = self._dashlet_spec["timerange"]
+            start, end = Timerange.compute_range(
+                window["window"] if window["type"] == "range" else "25h"
+            ).range
             discovered = self.discover_graphs(
                 debug=active_config.debug,
-                user_permissions=UserPermissions.from_config(active_config, permission_registry),
+                user_permissions=UserPermissions.from_config(active_config, all_permissions()),
             )
             evaluated = evaluate_built_graphs(
                 [built.graph for built in discovered.graphs[:1]],
-                {
-                    "consolidation_function": ConsolidationFunction.MAX,
-                    "time_range": TimeRange(start=int(start), end=int(end), step=60),
-                    "destination": None,
-                },
+                EvaluationOptions(
+                    consolidation_function=ConsolidationFunction.MAX,
+                    time_range=TimeRange(start=int(start), end=int(end), step=60),
+                    destination=None,
+                ),
             )
         except Exception:
             return self.title()
@@ -312,7 +318,7 @@ def graph_templates_autocompleter(
     return _graph_templates_autocompleter_testable(
         value_entered_by_user=value_entered_by_user,
         params=params,
-        registered_plugin_graphs=graphs_from_api,
+        registered_plugin_graphs=registered_graphs(),
         registered_metric_definitions=registered_metrics(),
         registered_translations=registered_translations(),
         debug=config.debug,
@@ -323,7 +329,7 @@ def _graph_templates_autocompleter_testable(
     *,
     value_entered_by_user: str,
     params: Mapping[str, Any],
-    registered_plugin_graphs: Mapping[str, GraphFromAPI],
+    registered_plugin_graphs: Sequence[ApiGraph],
     registered_metric_definitions: Mapping[str, metrics_v1.Metric],
     registered_translations: Sequence[translations_v1.Translation],
     debug: bool,
@@ -352,7 +358,7 @@ def _graph_templates_autocompleter_testable(
 
 def _graph_and_single_metric_templates_choices_for_context(
     context: VisualContext,
-    registered_graphs: Mapping[str, GraphFromAPI],
+    registered_graphs: Sequence[ApiGraph],
     registered_metric_definitions: Mapping[str, metrics_v1.Metric],
     registered_translations: Sequence[translations_v1.Translation],
     *,
@@ -365,9 +371,6 @@ def _graph_and_single_metric_templates_choices_for_context(
     site_id = only_sites[0] if only_sites and len(only_sites) == 1 else None
     host_name = HostName(context["host"]["host"])
     service_name = ServiceName(context["service"]["service"])
-    sorted_graph_plugins = [
-        plugin for _name, plugin in sort_registered_graph_plugins(registered_graphs)
-    ]
     return graph_choices(
         [
             built.graph
@@ -377,7 +380,7 @@ def _graph_and_single_metric_templates_choices_for_context(
                     host_name=host_name,
                     service_description=service_name,
                 ),
-                registered_graphs=sorted_graph_plugins,
+                registered_graphs=registered_graphs,
                 registered_metrics=registered_metric_definitions,
                 fetch_metric_names=RRDFetchMetricNames(
                     host_name=EngineHostName(host_name),
@@ -388,7 +391,7 @@ def _graph_and_single_metric_templates_choices_for_context(
                 ),
             )
         ],
-        sorted_graph_plugins,
+        registered_graphs,
     )
 
 

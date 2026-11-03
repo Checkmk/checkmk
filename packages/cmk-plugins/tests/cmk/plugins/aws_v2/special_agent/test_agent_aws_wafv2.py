@@ -17,6 +17,7 @@ from cmk.plugins.aws_v2.special_agent.config import (
     TagsImportPatternOption,
     TagsOption,
 )
+from cmk.plugins.aws_v2.special_agent.hosts import SOURCE_HOST
 from cmk.plugins.aws_v2.special_agent.sections.core import ResultDistributor
 from cmk.plugins.aws_v2.special_agent.sections.wafv2 import (
     _get_wafv2_web_acls,
@@ -241,7 +242,7 @@ def _test_limits(wafv2_sections: Wafv2Sections) -> None:
     assert wafv2_limits.name == "wafv2_limits"
 
     for result in wafv2_limits_results:
-        if result.piggyback_hostname == "":
+        if result.piggyback_hostname is SOURCE_HOST:
             assert len(result.content) == 4
         else:
             assert len(result.content) == 1
@@ -270,7 +271,7 @@ def _test_summary(
     if found_instances:
         assert len(wafv2_summary_results) == 1
         wafv2_summary_results = wafv2_summary_results[0]
-        assert wafv2_summary_results.piggyback_hostname == ""
+        assert wafv2_summary_results.piggyback_hostname is SOURCE_HOST
         assert len(wafv2_summary_results.content) == len(found_instances)
 
     else:
@@ -311,7 +312,7 @@ def _test_web_acl(wafv2_sections: Wafv2Sections, found_instances: Sequence[str])
     assert len(wafv2_web_acl_results) == len(found_instances)
 
     for result in wafv2_web_acl_results:
-        assert result.piggyback_hostname != ""
+        assert result.piggyback_hostname is not SOURCE_HOST
         assert len(result.content) == 2
 
 
@@ -368,3 +369,25 @@ def test_agent_aws_wafv2_summary_filters_tags(
 
         for result in wafv2_summary_result.content:
             assert list(result["TagsForCmkLabels"].keys()) == expected_tags[result["ARN"]]
+
+
+@pytest.mark.parametrize(
+    ("is_regional", "expected_suffix"),
+    [
+        pytest.param(True, "region", id="regional"),
+        pytest.param(False, "CloudFront", id="cloudfront"),
+    ],
+)
+def test_agent_aws_wafv2_web_acl_metrics_go_to_a_host_per_web_acl_and_scope(
+    is_regional: bool, expected_suffix: str
+) -> None:
+    wafv2_sections = create_sections(None, (None, None), is_regional)
+    wafv2_sections["wafv2_summary"].run()
+
+    wafv2_web_acl_results = wafv2_sections["wafv2_web_acl"].run().results
+
+    assert sorted(result.piggyback_hostname for result in wafv2_web_acl_results) == [
+        f"Name-0_{expected_suffix}",
+        f"Name-1_{expected_suffix}",
+        f"Name-2_{expected_suffix}",
+    ]

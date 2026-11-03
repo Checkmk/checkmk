@@ -4,6 +4,7 @@
 #include "pch.h"
 
 #include <filesystem>
+#include <fstream>
 #include <numeric>
 #include <ranges>
 
@@ -157,6 +158,96 @@ TEST_F(AgentControllerCreateToml, UpdaterRegistration) {
     EXPECT_EQ(table[5], "detect_proxy = false");
     EXPECT_EQ(table[6], "validate_api_cert = false");
     EXPECT_EQ(table[7], "updater_registration = \"overwrite\"");
+}
+
+/// IsIntegratedUpdaterActivated reads the update configuration the bakery
+/// baked, which decides whether `check_mk_agent.exe updater` points an
+/// operator at the agent controller or tells them that updates are off.
+class AgentControllerUpdaterActivated : public ::testing::Test {
+public:
+    void SetUp() override { temp_fs_ = tst::TempCfgFs::Create(); }
+
+    void TearDown() override {
+        std::error_code ec;
+        fs::remove(tomlFile(), ec);
+    }
+
+    [[nodiscard]] fs::path tomlFile() const {
+        return tst::GetTempDir() / "cmk-agent-ctl-update.toml";
+    }
+
+    [[nodiscard]] bool activatedBy(std::string_view content) const {
+        std::ofstream ofs(tomlFile());
+        ofs << content;
+        ofs.close();
+        return ac::IsIntegratedUpdaterActivated(tomlFile());
+    }
+
+    /// The file as the bakery writes it, with `activated` set to `value`.
+    static std::string baked(std::string_view value) {
+        return fmt::format(
+            "# Controlled by Check_MK Agent Bakery.\n"
+            "# This file is managed via WATO, do not edit manually or you\n"
+            "# lose your changes next time when you update the agent.\n"
+            "\n"
+            "activated = {}\n"
+            "interval = 3600\n"
+            "signature_keys = [\n"
+            R"(    "-----BEGIN CERTIFICATE-----\nabc==\n-----END CERTIFICATE-----\n",)"
+            "\n"
+            "]\n",
+            value);
+    }
+
+private:
+    tst::TempCfgFs::ptr temp_fs_;
+};
+
+TEST_F(AgentControllerUpdaterActivated, BakedAndActivated) {
+    EXPECT_TRUE(activatedBy(baked("true")));
+}
+
+/// The rule exists but does not use the agent controller: the file is baked
+/// all the same, so that the controller can tell "off" from "not configured".
+TEST_F(AgentControllerUpdaterActivated, BakedAndDeactivated) {
+    EXPECT_FALSE(activatedBy(baked("false")));
+}
+
+/// A host whose rule enables no updates gets no file at all.
+TEST_F(AgentControllerUpdaterActivated, WithoutTheFile) {
+    EXPECT_FALSE(ac::IsIntegratedUpdaterActivated(tomlFile()));
+}
+
+TEST_F(AgentControllerUpdaterActivated, WithoutTheSetting) {
+    EXPECT_FALSE(activatedBy("interval = 3600\nsignature_keys = [\n]\n"));
+}
+
+TEST_F(AgentControllerUpdaterActivated, CommentedOutSettingDoesNotCount) {
+    EXPECT_FALSE(activatedBy("# activated = true\ninterval = 3600\n"));
+}
+
+TEST_F(AgentControllerUpdaterActivated, SurroundingWhitespaceIsIgnored) {
+    EXPECT_TRUE(activatedBy("   activated   =   true   \n"));
+    EXPECT_TRUE(activatedBy("activated=true\n"));
+}
+
+/// TOML spells a boolean in lower case, so nothing else is `true`.
+TEST_F(AgentControllerUpdaterActivated, OnlyLowerCaseTrueCounts) {
+    EXPECT_FALSE(activatedBy("activated = True\n"));
+    EXPECT_FALSE(activatedBy("activated = yes\n"));
+    EXPECT_FALSE(activatedBy("activated = \n"));
+}
+
+/// The base64 padding of a signature key carries `=`, and a key may be written
+/// before `activated`. The name in front of the first `=` decides, so such a
+/// line is no setting of `activated`.
+TEST_F(AgentControllerUpdaterActivated, SignatureKeyIsNoSetting) {
+    EXPECT_TRUE(
+        activatedBy("signature_keys = [\n"
+                    R"(    "-----BEGIN CERTIFICATE-----\nabc==\n",)"
+                    "\n"
+                    "]\n"
+                    "activated = true\n"));
 }
 
 TEST(AgentController, BuildCommandLineAgentChannelOk) {

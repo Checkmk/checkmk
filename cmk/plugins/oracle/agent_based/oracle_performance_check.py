@@ -382,11 +382,18 @@ def _check_oracle_performance_iostat_file(
             data_index, metric_suffix, field_name = field
             metric_name = f"oracle_ios_f_{iofile.id}_{metric_suffix}"
 
+            if (counter := waitdata[data_index]) is None:
+                yield Result(
+                    state=State.UNKNOWN,
+                    summary=f"{iofile.name} {field_name}: Oracle reported no integer value, counter skipped",
+                )
+                continue
+
             rate = get_rate(
                 value_store,
                 f"{item}.iostat_file.{metric_name}",
                 now,
-                waitdata[data_index],
+                counter,
             )
 
             totals[i] += rate

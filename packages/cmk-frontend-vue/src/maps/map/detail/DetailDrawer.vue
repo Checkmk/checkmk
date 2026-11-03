@@ -23,16 +23,21 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, nextTick, ref, useTemplateRef, watch } from 'vue'
 
 import type { CommandVerb } from '@/maps/api/ticket'
+import ObjectActionModal from '@/maps/map/commands/ObjectActionModal.vue'
+import { useObjectActions } from '@/maps/map/commands/useObjectActions'
 import { useMetricInfo } from '@/maps/map/composables/useMetricInfo'
 import { metricTitlesOf, metricUnitsOf } from '@/maps/map/composables/useMetricUnits'
 import { useAuth } from '@/maps/services/context'
+import MapsConfirmDialog from '@/maps/shared/components/MapsConfirmDialog.vue'
 import type { CommandTarget, MapElement, ObjectState } from '@/maps/types/api'
 import { objectTypeLabel } from '@/maps/utils/dropdownOptions'
-import { buildCheckmkUrl, stripCheckmkBase, summarySubject } from '@/maps/utils/mapNavigation'
-import { getEffectiveObjectType, getMapElementName } from '@/maps/utils/naming'
+import { buildCheckmkUrl, stripCheckmkBase } from '@/maps/utils/mapNavigation'
+import { getEffectiveObjectType } from '@/maps/utils/naming'
+import { isProblemState } from '@/maps/utils/problemState'
 import { stateColorVar } from '@/maps/utils/stateColors'
+import { objectName } from '@/maps/utils/template'
 
-import { activityCount } from './activityFacts'
+import { activityCount, activityTabLabel } from './activityFacts'
 import DetailActions from './components/DetailActions.vue'
 import DetailActivityTab from './components/DetailActivityTab.vue'
 import DetailAggregationSection from './components/DetailAggregationSection.vue'
@@ -49,7 +54,7 @@ import { usePerformanceHistory } from './composables/usePerformanceHistory'
 import { usePerformanceMetrics } from './composables/usePerformanceMetrics'
 import { useSummaryChips } from './composables/useSummaryChips'
 import { hasContextFacts } from './contextFacts'
-import { isProblemState, severityKindOf, sinceText } from './statusFacts'
+import { severityKindOf, sinceText } from './statusFacts'
 
 const props = defineProps<{
   object: MapElement | null
@@ -73,14 +78,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   close: []
-  acknowledge: []
-  'remove-ack': []
-  'schedule-downtime': []
-  'remove-downtime': []
-  'force-check': []
-  'add-comment': []
-  'enable-notifications': []
-  'disable-notifications': []
   /**
    * A host was picked out of the drawer -- from the topology, a group's members
    * or an aggregation's leaves. ``seed`` carries a state for targets that never
@@ -165,7 +162,12 @@ const { historyData, mainHistoryKey, mainThresholds, HISTORY_MINUTES } = usePerf
 })
 
 const isSite = computed(() => props.object?.type === 'site')
-const isAggregation = computed(() => props.object?.type === 'aggregation')
+
+const actions = useObjectActions({
+  object: () => props.object,
+  state: () => props.state,
+  checkmkUrl: () => props.checkmkUrl
+})
 
 // A dyngroup's scope is its bundled hosts where it names them, and otherwise
 // whatever its filter actually matched -- which is what its members are.
@@ -184,13 +186,8 @@ const { serviceChips, hostChips } = useSummaryChips({
   object: () => props.object,
   state: () => props.state,
   checkmkUrl: () => props.checkmkUrl,
-  isSite: () => isSite.value,
   dyngroupHosts: () => dyngroupHosts.value
 })
-
-const serviceChipsLabel = computed(() =>
-  props.object && summarySubject(props.object) === 'hosts' ? _t('Hosts') : _t('Services')
-)
 
 const {
   checkmkSetupUrlFull,
@@ -213,7 +210,7 @@ const {
   onBulkAcknowledge: (targets) => emit('bulk-acknowledge', targets)
 })
 
-const displayName = computed(() => (props.object ? (getMapElementName(props.object) ?? '') : ''))
+const displayName = computed(() => (props.object ? objectName(props.object, props.state) : ''))
 const typeLabel = computed(() =>
   props.object ? objectTypeLabel(getEffectiveObjectType(props.object), _t) : ''
 )
@@ -240,15 +237,27 @@ const siteProblemsUrl = computed(() => {
   return `${stripCheckmkBase(props.checkmkUrl)}/check_mk/view.py?${params}`
 })
 
-const showContextTab = computed(() => hasContextFacts(details.value, _t))
-const showActivityTab = computed(() => activityCount(details.value) > 0)
-
 const activeTab = ref('status')
 
 // A different object may not have the tab the previous one was read on, and
 // landing on an empty pane reads as a broken drawer.
 watch([() => props.object?.host_name, () => props.object?.service_description], () => {
   activeTab.value = 'status'
+})
+
+const tabShown = computed<Record<string, boolean>>(() => ({
+  status: true,
+  performance: showPerformanceTab.value,
+  context: hasContextFacts(details.value, _t),
+  members: isGroup.value,
+  activity: activityCount(details.value) > 0
+}))
+
+// The open tab can go too, e.g. once its last downtime is removed.
+watch(tabShown, (shown) => {
+  if (!shown[activeTab.value]) {
+    activeTab.value = 'status'
+  }
 })
 
 // Focus moves in on open and back out on close, so a keyboard user lands in the
@@ -292,7 +301,6 @@ const accentStyle = computed(() => ({
       :style="accentStyle"
       :aria-label="displayName"
       tabindex="-1"
-      @click.stop
       @keydown.esc="emit('close')"
     >
       <div class="maps-detail-drawer__severity-bar" />
@@ -311,17 +319,17 @@ const accentStyle = computed(() => ({
         <CmkTabs v-model="activeTab" class="maps-detail-drawer__tabs">
           <template #tabs>
             <CmkTab id="status">{{ _t('Status') }}</CmkTab>
-            <CmkTab v-if="showPerformanceTab" id="performance">{{ _t('Performance') }}</CmkTab>
-            <CmkTab v-if="showContextTab" id="context">{{ _t('Context') }}</CmkTab>
-            <CmkTab v-if="isGroup" id="members">
+            <CmkTab v-if="tabShown.performance" id="performance">{{ _t('Performance') }}</CmkTab>
+            <CmkTab v-if="tabShown.context" id="context">{{ _t('Context') }}</CmkTab>
+            <CmkTab v-if="tabShown.members" id="members">
               <span class="maps-detail-drawer__tab-with-count">
                 {{ _t('Members') }}
                 <span class="maps-detail-drawer__tab-count">{{ groupMembers.length }}</span>
               </span>
             </CmkTab>
-            <CmkTab v-if="showActivityTab" id="activity">
+            <CmkTab v-if="tabShown.activity" id="activity">
               <span class="maps-detail-drawer__tab-with-count">
-                {{ _t('Activity') }}
+                {{ activityTabLabel(details, _t) }}
                 <span class="maps-detail-drawer__tab-count">{{ activityCount(details) }}</span>
               </span>
             </CmkTab>
@@ -337,7 +345,6 @@ const accentStyle = computed(() => ({
                 :checkmk-url="checkmkUrl"
                 :host-chips="hostChips"
                 :service-chips="serviceChips"
-                :service-chips-label="serviceChipsLabel"
                 :now-ms="nowMs"
               >
                 <template #aggregation>
@@ -361,7 +368,7 @@ const accentStyle = computed(() => ({
               </DetailStatusTab>
             </CmkTabContent>
 
-            <CmkTabContent v-if="showPerformanceTab" id="performance" spacing="none">
+            <CmkTabContent v-if="tabShown.performance" id="performance" spacing="none">
               <DetailPerformanceTab
                 :headline="mainHeadline"
                 :headline-row="mainPerfRow"
@@ -375,7 +382,7 @@ const accentStyle = computed(() => ({
               />
             </CmkTabContent>
 
-            <CmkTabContent v-if="showContextTab" id="context" spacing="none">
+            <CmkTabContent v-if="tabShown.context" id="context" spacing="none">
               <DetailContextTab
                 :details="details"
                 :selectable-hosts="selectableHosts ?? []"
@@ -383,7 +390,7 @@ const accentStyle = computed(() => ({
               />
             </CmkTabContent>
 
-            <CmkTabContent v-if="isGroup" id="members" spacing="none">
+            <CmkTabContent v-if="tabShown.members" id="members" spacing="none">
               <DetailMembersTab
                 :members="groupMembers"
                 :visible-members="visibleMembers"
@@ -402,7 +409,7 @@ const accentStyle = computed(() => ({
               />
             </CmkTabContent>
 
-            <CmkTabContent v-if="showActivityTab" id="activity" spacing="none">
+            <CmkTabContent v-if="tabShown.activity" id="activity" spacing="none">
               <DetailActivityTab :details="details" :now-ms="nowMs" />
             </CmkTabContent>
           </template>
@@ -410,24 +417,20 @@ const accentStyle = computed(() => ({
       </div>
 
       <!-- An aggregation gets no command footer: the commands dispatch by host
-           and service, which a BI aggregation does not have, so every button
-           would be a silent no-op. Its own pane offers the one command that
-           does apply -- acknowledging the real leaves underneath. -->
+           and service, which a BI aggregation does not have. Its own pane offers
+           the one command that does apply -- acknowledging the real leaves
+           underneath. -->
       <DetailActions
-        v-if="!isSite && !isAggregation"
+        v-if="actions.scope.value"
+        v-model:feedback-open="actions.feedbackOpen.value"
         :state="state"
-        :problematic="isProblemState(state)"
-        :is-group="isGroup"
+        :problematic="isProblemState(state?.state)"
+        :is-group="actions.scope.value === 'group'"
         :member-count="groupMembers.length"
         :can="canCommand"
-        @acknowledge="emit('acknowledge')"
-        @remove-ack="emit('remove-ack')"
-        @force-check="emit('force-check')"
-        @schedule-downtime="emit('schedule-downtime')"
-        @remove-downtime="emit('remove-downtime')"
-        @add-comment="emit('add-comment')"
-        @enable-notifications="emit('enable-notifications')"
-        @disable-notifications="emit('disable-notifications')"
+        :running="actions.running"
+        :feedback="actions.feedback.value"
+        @select="actions.select"
       />
 
       <footer v-else-if="isSite && siteProblemsUrl" class="maps-detail-drawer__site-actions">
@@ -442,6 +445,22 @@ const accentStyle = computed(() => ({
       </footer>
     </aside>
   </Transition>
+
+  <ObjectActionModal
+    v-if="object && actions.activeAction.value"
+    :object="object"
+    :action="actions.activeAction.value"
+    :submit="actions.submit"
+    @close="actions.close"
+  />
+  <MapsConfirmDialog
+    :open="actions.confirmingRemoveDowntimes.value"
+    variant="warning"
+    :title="_t('Remove all downtimes of %{name}?', { name: displayName })"
+    :confirm-label="_t('Remove downtimes')"
+    @confirm="actions.confirmRemoveDowntimes"
+    @cancel="actions.close"
+  />
 </template>
 
 <style scoped>
@@ -455,9 +474,9 @@ const accentStyle = computed(() => ({
   z-index: var(--z-index-modal);
   display: flex;
   flex-direction: column;
-  width: min(360px, 100%);
+  width: min(400px, 100%);
   box-sizing: border-box;
-  border-left: 4px solid var(--maps-detail-drawer-accent);
+  border-left: 4px solid var(--default-border-color-green);
   background: var(--default-bg-color);
 
   &:focus {
@@ -508,10 +527,10 @@ const accentStyle = computed(() => ({
 .maps-detail-drawer__tab-count {
   background: color-mix(in srgb, var(--color-state-warning) 20%, transparent);
   color: var(--font-color);
-  font-size: 9px;
+  font-size: var(--font-size-small);
   line-height: 14px;
   min-width: 16px;
-  padding: 0 4px;
+  padding: 0 var(--dimension-3);
   border-radius: 999px;
   text-align: center;
   font-weight: var(--font-weight-bold);
@@ -519,7 +538,7 @@ const accentStyle = computed(() => ({
 
 .maps-detail-drawer__site-actions {
   border-top: 1px solid var(--default-border-color);
-  padding: 12px 16px;
+  padding: var(--dimension-5) var(--dimension-6);
   flex-shrink: 0;
   background: var(--ux-theme-3);
 }

@@ -44,7 +44,15 @@ def check_palo_alto_sessions(
         infotext += f" (warn/crit at {warn}/{crit}%)"
 
     yield Result(state=state, summary=infotext)
-    yield Metric("total_active_sessions", total)
+    if sessions_supported == 0:
+        yield Metric("total_active_sessions", total)
+    else:
+        yield Metric(
+            "total_active_sessions",
+            total,
+            levels=(sessions_supported * warn / 100, sessions_supported * crit / 100),
+            boundaries=(0, sessions_supported),
+        )
     yield Metric("tcp_active_sessions", tcp)
     yield Metric("udp_active_sessions", udp)
     yield Metric("icmp_active_sessions", icmp)

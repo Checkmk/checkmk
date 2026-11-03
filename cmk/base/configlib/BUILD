@@ -16,7 +16,6 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/base/default_config:default-config",
         "//cmk/piggyback:backend",
         "//cmk/rrd",
         "//cmk/utils",

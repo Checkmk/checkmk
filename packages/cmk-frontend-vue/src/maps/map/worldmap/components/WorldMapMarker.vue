@@ -115,23 +115,19 @@ function onResizeStart(event: PointerEvent): void {
 </template>
 
 <style scoped>
-/* Two-tone, so the ring reads on light and dark tiles alike. */
 .maps-world-map-marker:focus-visible {
-  outline: 2px solid var(--interactive-accent);
+  outline: revert;
   outline-offset: 2px;
-  box-shadow: 0 0 0 2px var(--white);
 }
 
-/* The static map's dashed selection outline, plus a white ring and a dark glow
-   between marker and dashes: a marker is state-coloured, often in the same
-   green as the dashes, and sits on map tiles of any colour. */
+/* The static map's dashed selection outline, on a plate of the map's overlay
+   colour reaching out to it: map tiles of any colour, and their place names,
+   would otherwise show between the marker and the dashes. */
 .maps-world-map-marker--selected {
-  border-radius: 9px;
-  outline: 3px dashed var(--interactive-accent);
-  outline-offset: 5px;
-  box-shadow:
-    0 0 0 4px var(--white),
-    0 0 0 7px rgb(0 0 0 / 80%),
-    0 0 14px 5px rgb(0 0 0 / 55%);
+  border-radius: var(--border-radius);
+  outline: 2px dashed var(--interactive-accent);
+  outline-offset: 4px;
+  background: var(--maps-map-view-overlay-bg);
+  box-shadow: 0 0 0 4px var(--maps-map-view-overlay-bg);
 }
 </style>

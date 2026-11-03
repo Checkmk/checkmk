@@ -7,19 +7,28 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
+import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import { CmkApiError } from 'cmk-ui-library/lib/error'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
+import useId from 'cmk-ui-library/lib/useId'
 import { computed, nextTick, onMounted, ref } from 'vue'
 
 import { useConnections, useMaps, useSettings } from '@/maps/services/context'
 import MapsModal from '@/maps/shared/components/MapsModal.vue'
 import { mapTypeOptions } from '@/maps/utils/dropdownOptions'
-import { sanitizeMapName, sanitizeStrippedChars, slugToTitleCase } from '@/maps/utils/naming'
+import {
+  mapIdFromName,
+  sanitizeMapName,
+  sanitizeStrippedChars,
+  slugToTitleCase
+} from '@/maps/utils/naming'
 
 const emit = defineEmits<{ close: []; created: [name: string] }>()
 
 const { _t } = usei18n()
+const aliasId = useId()
+const nameId = useId()
 const mapsStore = useMaps()
 const connectionsStore = useConnections()
 const settingsStore = useSettings()
@@ -37,35 +46,41 @@ const connectionOptions = computed(() => ({
 }))
 const mapTypeCards = computed(() => {
   const descriptions: Record<string, string> = {
-    static: _t('Free placement of objects on a canvas or background image'),
-    worldmap: _t('Objects positioned on an interactive world map using geo-coordinates'),
-    flow: _t('Dynamic tree of all hosts and their relationships'),
-    radar: _t('Automatic display of all hosts/services matching a group filter'),
-    foldertree: _t(
-      'Live status tree along the Checkmk SETUP folder hierarchy, with worst-state roll-up'
-    ),
-    presentation: _t('Design-first slide for dashboards and status walls — direct manipulation')
+    static: _t('Place objects on a blank canvas or a picture, such as a floor plan'),
+    worldmap: _t('Show hosts, services and groups at their locations on a world map'),
+    flow: _t('Lay out all hosts automatically by how they are connected'),
+    radar: _t('Show all hosts or services, or those of one group, worst first'),
+    foldertree: _t('Watch your Setup folders as a tree, each folder in its worst state'),
+    presentation: _t('Design a slide for a status wall from text, shapes and live states')
   }
   return mapTypeOptions(_t).map((o) => ({ ...o, desc: descriptions[o.name] ?? '' }))
 })
 
-const _NAME_RE = /^[a-zA-Z0-9_-]+$/
-const _MAX_NAME_LEN = 64
 const nameError = ref('')
 const nameWarning = ref('')
+// A name in a script without Latin letters leaves nothing to fill an ID in from.
+const nothingToDerive = computed(
+  () => !nameTouched.value && !form.value.name && form.value.alias.trim() !== ''
+)
+
+function nameLengthError(name: string): string {
+  const maxLength = settingsStore.mapNameMaxLength.value
+  return maxLength !== null && name.length > maxLength
+    ? _t('Map ID is too long (max %{max} characters)', { max: maxLength })
+    : ''
+}
+
+// Until the site's limit is known, the backend is left to reject an ID that is too long.
+function mapIdFromAlias(): string {
+  return mapIdFromName(form.value.alias, settingsStore.mapNameMaxLength.value ?? Infinity)
+}
 
 function onNameInput(raw: string) {
-  nameTouched.value = true
-  const stripped = sanitizeStrippedChars(raw)
-  form.value.name = sanitizeMapName(raw)
-  if (form.value.name.length > _MAX_NAME_LEN) {
-    nameError.value = _t('Map ID is too long (max %{max} characters)', { max: _MAX_NAME_LEN })
-  } else if (form.value.name && !_NAME_RE.test(form.value.name)) {
-    nameError.value = _t('Only letters, digits, hyphens (-) and underscores (_) allowed')
-  } else {
-    nameError.value = ''
-  }
-  nameWarning.value = stripped
+  // An emptied ID goes back to following the display name.
+  nameTouched.value = raw !== ''
+  form.value.name = nameTouched.value ? sanitizeMapName(raw) : mapIdFromAlias()
+  nameError.value = nameLengthError(form.value.name)
+  nameWarning.value = sanitizeStrippedChars(raw)
     ? _t('Some characters were removed (umlauts, punctuation, symbols are not allowed)')
     : ''
   if (!aliasTouched.value) {
@@ -76,11 +91,8 @@ function onNameInput(raw: string) {
 function onAliasInput() {
   aliasTouched.value = true
   if (!nameTouched.value) {
-    form.value.name = sanitizeMapName(form.value.alias).toLowerCase()
-    nameError.value =
-      form.value.name && !_NAME_RE.test(form.value.name)
-        ? _t('Only letters, digits, hyphens (-) and underscores (_) allowed')
-        : ''
+    form.value.name = mapIdFromAlias()
+    nameError.value = nameLengthError(form.value.name)
   }
 }
 
@@ -90,15 +102,15 @@ function pickBackendId() {
   return (preferred && ids.includes(preferred) ? preferred : ids[0]) ?? ''
 }
 
-const nameInput = ref<{ focus: () => void } | null>(null)
+const aliasInput = ref<{ focus: () => void } | null>(null)
 
 onMounted(async () => {
-  // The dialog opens on the first field, so a map can be named right away.
+  // The dialog opens on the display name, so a map can be named right away.
   // CmkPopup renders through a portal, where the native autofocus attribute
   // does not fire; it also focuses its own container, so this has to come
   // after that.
   await nextTick()
-  nameInput.value?.focus()
+  aliasInput.value?.focus()
   await connectionsStore.fetch()
   form.value.connection_id = pickBackendId()
   form.value.view_type = settingsStore.settings.value.default_map_type || 'static'
@@ -147,33 +159,10 @@ async function submit() {
   <MapsModal :open="true" :title="_t('Add map')" closable @close="$emit('close')">
     <form class="maps-create-map-modal__form" @submit.prevent="submit">
       <div class="maps-create-map-modal__field">
-        <label for="maps-create-map-name" class="maps-create-map-modal__label">{{
-          _t('Map ID')
-        }}</label>
+        <CmkLabel :for="aliasId">{{ _t('Display name') }}</CmkLabel>
         <CmkInput
-          id="maps-create-map-name"
-          ref="nameInput"
-          :model-value="form.name"
-          placeholder="my-map"
-          field-size="fill"
-          @update:model-value="(v) => onNameInput(String(v ?? ''))"
-        />
-        <p v-if="nameError" class="maps-create-map-modal__error">{{ nameError }}</p>
-        <p v-else-if="nameWarning" class="maps-create-map-modal__warning">{{ nameWarning }}</p>
-        <p v-else class="maps-create-map-modal__hint">
-          {{
-            _t(
-              'Letters, digits, hyphens and underscores only — spaces become hyphens automatically'
-            )
-          }}
-        </p>
-      </div>
-      <div class="maps-create-map-modal__field">
-        <label for="maps-create-map-alias" class="maps-create-map-modal__label">{{
-          _t('Display name')
-        }}</label>
-        <CmkInput
-          id="maps-create-map-alias"
+          :id="aliasId"
+          ref="aliasInput"
           v-model="form.alias"
           :placeholder="_t('My map')"
           field-size="fill"
@@ -181,8 +170,30 @@ async function submit() {
         />
       </div>
       <div class="maps-create-map-modal__field">
-        <!-- Not a <label>: CmkDropdown is not labelable, it carries its own aria-label. -->
-        <span class="maps-create-map-modal__label">{{ _t('Connection') }}</span>
+        <CmkLabel :for="nameId">{{ _t('Map ID') }}</CmkLabel>
+        <CmkInput
+          :id="nameId"
+          :model-value="form.name"
+          placeholder="my-map"
+          field-size="fill"
+          @update:model-value="(v) => onNameInput(String(v ?? ''))"
+        />
+        <p v-if="nameError" class="maps-create-map-modal__error">{{ nameError }}</p>
+        <p v-else-if="nameWarning" class="maps-create-map-modal__warning">{{ nameWarning }}</p>
+        <p v-else-if="nothingToDerive" class="maps-create-map-modal__warning">
+          {{ _t('This name has no letters or digits to fill in an ID from. Enter a map ID.') }}
+        </p>
+        <p v-else class="maps-create-map-modal__hint">
+          {{
+            _t(
+              'The ID is used in the URL of the map and is filled in from the display name. Use only letters, digits, hyphens (-) and underscores (_).'
+            )
+          }}
+        </p>
+      </div>
+      <div class="maps-create-map-modal__field">
+        <!-- Bound to nothing: CmkDropdown is not labelable, it carries its own aria-label. -->
+        <CmkLabel>{{ _t('Connection') }}</CmkLabel>
         <template v-if="connectionsStore.connections.value.length > 0">
           <CmkDropdown
             :model-value="form.connection_id || null"
@@ -207,8 +218,8 @@ async function submit() {
         </template>
       </div>
       <div class="maps-create-map-modal__field">
-        <!-- Not a <label>: the radiogroup below carries its own aria-label. -->
-        <span class="maps-create-map-modal__label">{{ _t('Map type') }}</span>
+        <!-- Bound to nothing: the radiogroup below carries its own aria-label. -->
+        <CmkLabel>{{ _t('Map type') }}</CmkLabel>
         <div
           class="maps-create-map-modal__type-grid"
           role="radiogroup"
@@ -262,12 +273,6 @@ async function submit() {
   gap: var(--dimension-3);
 }
 
-.maps-create-map-modal__label {
-  font-size: var(--font-size-normal);
-  font-weight: 500;
-  color: var(--font-color-dimmed);
-}
-
 .maps-create-map-modal__error {
   font-size: var(--font-size-normal);
   color: var(--status-text-color-error-pale);
@@ -275,7 +280,7 @@ async function submit() {
 
 .maps-create-map-modal__warning {
   font-size: var(--font-size-normal);
-  color: var(--color-state-warning);
+  color: var(--status-text-color-warning);
 }
 
 .maps-create-map-modal__hint {
@@ -286,7 +291,7 @@ async function submit() {
 .maps-create-map-modal__link {
   display: block;
   margin-top: var(--dimension-3);
-  color: var(--color-state-warning);
+  color: var(--status-text-color-warning);
   font-weight: var(--font-weight-bold);
   text-decoration: underline;
 }
@@ -297,7 +302,10 @@ async function submit() {
   gap: var(--dimension-3);
 }
 
+/* The theme gives every button a side margin and bold text. */
 .maps-create-map-modal__type-card {
+  margin: 0;
+  font-weight: var(--font-weight-default);
   text-align: left;
   padding: var(--dimension-4) var(--dimension-5);
   background: var(--default-form-element-bg-color);
@@ -325,8 +333,8 @@ async function submit() {
   );
 }
 
-/* With an odd number of map types (currently 5) the last card would sit alone
-   in a half-row; let it span the full width so the grid reads balanced. */
+/* With an odd number of map types the last card would sit alone in a half-row;
+   let it span the full width so the grid reads balanced. */
 .maps-create-map-modal__type-card:last-child:nth-child(odd) {
   grid-column: 1 / -1;
 }
@@ -338,7 +346,7 @@ async function submit() {
 }
 
 .maps-create-map-modal__type-card-desc {
-  font-size: 11px;
+  font-size: var(--font-size-normal);
   color: var(--font-color-dimmed);
   line-height: 1.35;
 }

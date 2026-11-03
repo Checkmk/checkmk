@@ -39,6 +39,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//cmk/base/config",
+        "//cmk/config",
         "//cmk/gui:app",
         "//cmk/gui:auth_core",
         "//cmk/gui:config",
@@ -89,9 +90,12 @@ py_library(
         "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-plugin-apis:graphing",
         "//packages/cmk-plugin-apis:rulesets",
+        "//packages/cmk-plugin-apis:update_config",
+        "//packages/cmk-schema-manager",
         "//packages/cmk-web/cmk/web/utils",
+        "//packages/cmk-werks:core",
+        "//packages/cmk-werks:flavor_cmk",
         "//packages/cmk-werks:site",
-        "//packages/cmk-werks:tool",
         "//packages/cmk-wsgi",
     ],
 )

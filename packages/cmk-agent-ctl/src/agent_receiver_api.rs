@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use super::{certs, config, types};
-use anyhow::{bail, Context, Result as AnyhowResult};
+use anyhow::{Context, Result as AnyhowResult};
 use http::StatusCode;
 use reqwest::header::AUTHORIZATION;
 use serde::{Deserialize, Serialize};
@@ -49,11 +49,27 @@ struct RegisterExistingBody {
     host_name: String,
 }
 
+/// Whether the registration file of a UUID permits agent updates through its
+/// connection, as the site of the registration reports it.
+#[derive(Deserialize, Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum AgentUpdateAuthorization {
+    Authorized,
+    NotPermitted,
+    /// Also stands for a site that predates the field, and for a value that
+    /// this controller doesn't know.
+    #[default]
+    #[serde(other)]
+    Unavailable,
+}
+
 #[derive(Deserialize)]
 pub struct RegisterExistingResponse {
     pub root_cert: String,
     pub agent_cert: String,
     pub connection_mode: config::ConnectionMode,
+    #[serde(default)]
+    pub agent_update_authorization: AgentUpdateAuthorization,
 }
 
 #[serde_with::serde_as]
@@ -79,6 +95,8 @@ pub struct RegisterNewOngoingResponseDeclined {
 pub struct RegisterNewOngoingResponseSuccess {
     pub agent_cert: String,
     pub connection_mode: config::ConnectionMode,
+    #[serde(default)]
+    pub agent_update_authorization: AgentUpdateAuthorization,
 }
 
 #[derive(Deserialize)]
@@ -107,6 +125,50 @@ struct ErrorResponse {
     pub detail: String,
 }
 
+/// An error of a request to the agent receiver, keeping the status code of
+/// an answer the caller has to tell apart.
+#[derive(Debug)]
+pub enum ApiError {
+    /// The site answered, but not with the expected status.
+    Status {
+        status: StatusCode,
+        body: Option<String>,
+    },
+    Other(anyhow::Error),
+}
+
+impl std::fmt::Display for ApiError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ApiError::Status { status, body } => {
+                f.write_str(&Api::error_response_description(*status, body.clone()))
+            }
+            ApiError::Other(error) => write!(f, "{error}"),
+        }
+    }
+}
+
+impl std::error::Error for ApiError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            ApiError::Status { .. } => None,
+            ApiError::Other(error) => error.source(),
+        }
+    }
+}
+
+impl From<anyhow::Error> for ApiError {
+    fn from(error: anyhow::Error) -> Self {
+        ApiError::Other(error)
+    }
+}
+
+impl From<reqwest::Error> for ApiError {
+    fn from(error: reqwest::Error) -> Self {
+        ApiError::Other(error.into())
+    }
+}
+
 /// What the host tells the site about its agent. The site keeps no state about
 /// the host beyond this, so every field is reported on every check.
 ///
@@ -126,7 +188,10 @@ pub struct UpdateStatusBody<'a> {
 }
 
 /// One signature of the offered agent package.
-#[derive(Deserialize, Clone, Debug, PartialEq, Eq)]
+///
+/// Serialized as well as read: the install request carries the signatures on
+/// to the privileged install step, in the shape the site sent them.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct AgentSignature {
     /// PEM-encoded certificate of the signing key.
     pub certificate: String,
@@ -176,7 +241,7 @@ pub trait AgentUpdate {
         base_url: &reqwest::Url,
         connection: &config::TrustedConnection,
         body: &UpdateStatusBody<'_>,
-    ) -> AnyhowResult<UpdateStatusResponse>;
+    ) -> AnyhowResult<UpdateStatusResponse, ApiError>;
 
     /// Fetch the agent package itself, unverified.
     fn download_agent(
@@ -184,14 +249,14 @@ pub trait AgentUpdate {
         base_url: &reqwest::Url,
         connection: &config::TrustedConnection,
         body: &AgentDownloadBody<'_>,
-    ) -> AnyhowResult<Vec<u8>>;
+    ) -> AnyhowResult<Vec<u8>, ApiError>;
 }
 
 pub trait Registration {
     fn register_existing(
         &self,
         base_url: &reqwest::Url,
-        root_cert: &Option<&str>,
+        root_certs: &[&str],
         credentials: &types::Credentials,
         uuid: &uuid::Uuid,
         csr: &str,
@@ -201,7 +266,7 @@ pub trait Registration {
     fn register_new(
         &self,
         base_url: &reqwest::Url,
-        root_cert: &Option<&str>,
+        root_certs: &[&str],
         credentials: &types::Credentials,
         uuid: &uuid::Uuid,
         csr: &str,
@@ -268,16 +333,16 @@ impl Api {
     fn deserialize_json_response<T>(
         response: reqwest::blocking::Response,
         deserializer: fn(&str) -> serde_json::Result<T>,
-    ) -> AnyhowResult<T> {
+    ) -> Result<T, ApiError> {
         let status = response.status();
         if status != StatusCode::OK {
-            bail!(Api::error_response_description(
+            return Err(ApiError::Status {
                 status,
-                response.text().ok()
-            ))
+                body: response.text().ok(),
+            });
         }
         let body = response.text().context("Failed to obtain response body")?;
-        deserializer(&body).context(format!("Error parsing this response body: {body}"))
+        Ok(deserializer(&body).context(format!("Error parsing this response body: {body}"))?)
     }
 
     fn error_response_description(status: StatusCode, body: Option<String>) -> String {
@@ -296,13 +361,13 @@ impl Api {
     }
 
     /// The body of a response that is not JSON, for example an agent package.
-    fn response_bytes(response: reqwest::blocking::Response) -> AnyhowResult<Vec<u8>> {
+    fn response_bytes(response: reqwest::blocking::Response) -> Result<Vec<u8>, ApiError> {
         let status = response.status();
         if status != StatusCode::OK {
-            bail!(Api::error_response_description(
+            return Err(ApiError::Status {
                 status,
-                response.text().ok()
-            ))
+                body: response.text().ok(),
+            });
         }
         Ok(response
             .bytes()
@@ -310,15 +375,15 @@ impl Api {
             .to_vec())
     }
 
-    fn check_response_204(response: reqwest::blocking::Response) -> AnyhowResult<()> {
+    fn check_response_204(response: reqwest::blocking::Response) -> Result<(), ApiError> {
         let status = response.status();
         if status == StatusCode::NO_CONTENT {
             Ok(())
         } else {
-            bail!(Api::error_response_description(
+            Err(ApiError::Status {
                 status,
-                response.text().ok()
-            ))
+                body: response.text().ok(),
+            })
         }
     }
 }
@@ -330,7 +395,7 @@ impl RenewCertificate for Api {
         connection: &config::TrustedConnection,
         csr: String,
     ) -> AnyhowResult<RenewCertificateResponse> {
-        Self::deserialize_json_response(
+        Ok(Self::deserialize_json_response(
             certs::client(
                 Some(connection.tls_handshake_credentials()?),
                 self.use_proxy,
@@ -342,7 +407,7 @@ impl RenewCertificate for Api {
             .json(&RenewCertificateBody { csr })
             .send()?,
             |body| serde_json::from_str::<RenewCertificateResponse>(body),
-        )
+        )?)
     }
 }
 
@@ -350,7 +415,7 @@ impl Registration for Api {
     fn register_existing(
         &self,
         base_url: &reqwest::Url,
-        root_cert: &Option<&str>,
+        root_certs: &[&str],
         credentials: &types::Credentials,
         uuid: &uuid::Uuid,
         csr: &str,
@@ -362,7 +427,7 @@ impl Registration for Api {
         };
         self.call_registration_init_endpoint(
             Self::endpoint_url(base_url, &[endpoint])?,
-            root_cert,
+            root_certs,
             credentials,
             &RegisterExistingBody {
                 uuid: uuid.to_owned(),
@@ -376,7 +441,7 @@ impl Registration for Api {
     fn register_new(
         &self,
         base_url: &reqwest::Url,
-        root_cert: &Option<&str>,
+        root_certs: &[&str],
         credentials: &types::Credentials,
         uuid: &uuid::Uuid,
         csr: &str,
@@ -384,7 +449,7 @@ impl Registration for Api {
     ) -> AnyhowResult<RegisterNewResponse> {
         self.call_registration_init_endpoint(
             Self::endpoint_url(base_url, &["register_new"])?,
-            root_cert,
+            root_certs,
             credentials,
             &RegisterNewBody {
                 uuid: uuid.to_owned(),
@@ -402,7 +467,7 @@ impl Registration for Api {
         credentials: &types::Credentials,
         uuid: &uuid::Uuid,
     ) -> AnyhowResult<RegisterNewOngoingResponse> {
-        Self::deserialize_json_response(
+        Ok(Self::deserialize_json_response(
             Self::apply_registration_auth(
                 certs::client(
                     Some(certs::HandshakeCredentials {
@@ -420,7 +485,7 @@ impl Registration for Api {
             .send()
             .context("Calling register_new_ongoing endpoint failed")?,
             |body| serde_json::from_str::<RegisterNewOngoingResponse>(body),
-        )
+        )?)
     }
 }
 
@@ -428,7 +493,7 @@ impl Api {
     fn call_registration_init_endpoint<'a, T>(
         &self,
         url: reqwest::Url,
-        root_cert: &Option<&str>,
+        root_certs: &[&str],
         credentials: &types::Credentials,
         body: &impl Serialize,
         deserializer: fn(&str) -> serde_json::Result<T>,
@@ -436,11 +501,11 @@ impl Api {
     where
         T: Deserialize<'a>,
     {
-        Self::deserialize_json_response(
+        Ok(Self::deserialize_json_response(
             Self::apply_registration_auth(
                 certs::client(
-                    root_cert.map(|r| certs::HandshakeCredentials {
-                        server_root_certs: vec![r],
+                    (!root_certs.is_empty()).then(|| certs::HandshakeCredentials {
+                        server_root_certs: root_certs.to_vec(),
                         client_identity: None,
                     }),
                     self.use_proxy,
@@ -452,7 +517,7 @@ impl Api {
             .send()
             .context("Calling registration endpoint failed")?,
             deserializer,
-        )
+        )?)
     }
 
     fn apply_registration_auth(
@@ -478,7 +543,7 @@ impl AgentData for Api {
         compression_algorithm: &str,
         monitoring_data: &[u8],
     ) -> AnyhowResult<()> {
-        Api::check_response_204(
+        Ok(Api::check_response_204(
             certs::client(
                 Some(connection.tls_handshake_credentials()?),
                 self.use_proxy,
@@ -498,7 +563,7 @@ impl AgentData for Api {
                 ),
             )
             .send()?,
-        )
+        )?)
     }
 }
 
@@ -508,7 +573,7 @@ impl RegistrationStatusV2 for Api {
         base_url: &reqwest::Url,
         connection: &config::TrustedConnection,
     ) -> AnyhowResult<RegistrationStatusV2Response> {
-        Self::deserialize_json_response(
+        Ok(Self::deserialize_json_response(
             certs::client(
                 Some(connection.tls_handshake_credentials()?),
                 self.use_proxy,
@@ -519,7 +584,7 @@ impl RegistrationStatusV2 for Api {
             )?)
             .send()?,
             |body| serde_json::from_str::<RegistrationStatusV2Response>(body),
-        )
+        )?)
     }
 }
 
@@ -529,7 +594,7 @@ impl AgentUpdate for Api {
         base_url: &reqwest::Url,
         connection: &config::TrustedConnection,
         body: &UpdateStatusBody<'_>,
-    ) -> AnyhowResult<UpdateStatusResponse> {
+    ) -> AnyhowResult<UpdateStatusResponse, ApiError> {
         Self::deserialize_json_response(
             certs::client(
                 Some(connection.tls_handshake_credentials()?),
@@ -551,7 +616,7 @@ impl AgentUpdate for Api {
         base_url: &reqwest::Url,
         connection: &config::TrustedConnection,
         body: &AgentDownloadBody<'_>,
-    ) -> AnyhowResult<Vec<u8>> {
+    ) -> AnyhowResult<Vec<u8>, ApiError> {
         Self::response_bytes(
             certs::client(
                 Some(connection.tls_handshake_credentials()?),
@@ -571,6 +636,70 @@ impl AgentUpdate for Api {
 #[cfg(test)]
 mod test_api {
     use super::*;
+
+    fn authorization_of_register_existing(field: &str) -> AgentUpdateAuthorization {
+        serde_json::from_str::<RegisterExistingResponse>(&format!(
+            r#"{{"root_cert": "root", "agent_cert": "cert", "connection_mode": "pull-agent"{field}}}"#
+        ))
+        .unwrap()
+        .agent_update_authorization
+    }
+
+    /// CMK-39588 AC1
+    #[test]
+    fn test_register_existing_response_reports_authorized() {
+        assert_eq!(
+            authorization_of_register_existing(r#", "agent_update_authorization": "authorized""#),
+            AgentUpdateAuthorization::Authorized
+        );
+    }
+
+    /// CMK-39588 AC1
+    #[test]
+    fn test_register_existing_response_reports_not_permitted() {
+        assert_eq!(
+            authorization_of_register_existing(
+                r#", "agent_update_authorization": "not_permitted""#
+            ),
+            AgentUpdateAuthorization::NotPermitted
+        );
+    }
+
+    /// CMK-39588 AC1: a site that predates the field.
+    #[test]
+    fn test_register_existing_response_without_authorization_is_unavailable() {
+        assert_eq!(
+            authorization_of_register_existing(""),
+            AgentUpdateAuthorization::Unavailable
+        );
+    }
+
+    /// CMK-39588 AC1
+    #[test]
+    fn test_register_existing_response_with_an_unknown_authorization_is_unavailable() {
+        assert_eq!(
+            authorization_of_register_existing(r#", "agent_update_authorization": "pending""#),
+            AgentUpdateAuthorization::Unavailable
+        );
+    }
+
+    /// CMK-39588 AC1, AC6
+    #[test]
+    fn test_register_new_ongoing_success_reports_the_authorization() {
+        let response = serde_json::from_str::<RegisterNewOngoingResponse>(
+            r#"{"status": "Success", "agent_cert": "cert", "connection_mode": "push-agent",
+                "agent_update_authorization": "authorized"}"#,
+        )
+        .unwrap();
+
+        let RegisterNewOngoingResponse::Success(success) = response else {
+            panic!("not a success");
+        };
+        assert_eq!(
+            success.agent_update_authorization,
+            AgentUpdateAuthorization::Authorized
+        );
+    }
 
     #[test]
     fn test_endpoint_url() {

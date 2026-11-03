@@ -95,3 +95,35 @@ def test_legacy_weathermap_style_migrates_to_arrow_inward() -> None:
 def test_worldmap_view_rejects_a_view_it_cannot_open_on(view: dict[str, object]) -> None:
     with pytest.raises(ValidationError):
         WorldmapView.model_validate({"type": "worldmap", **view})
+
+
+@pytest.mark.parametrize("pool", ["noc wall", "a" * 101])
+def test_rotation_pool_must_be_usable_in_a_url(pool: str) -> None:
+    with pytest.raises(ValidationError):
+        MapConfig.model_validate({"name": "m", "rotation_pools": [pool]})
+
+
+@pytest.mark.parametrize("pool", ["noc", "a" * 100])
+def test_rotation_pools_are_kept(pool: str) -> None:
+    assert MapConfig.model_validate({"name": "m", "rotation_pools": [pool]}).rotation_pools == [
+        pool
+    ]
+
+
+def test_background_defaults_to_its_own_size_at_the_top_left() -> None:
+    cfg = MapConfig.model_validate({"name": "m"})
+    assert (cfg.background_style, cfg.background_position) == ("single", "top_left")
+
+
+@pytest.mark.parametrize(
+    "field, value", [("background_style", "cover"), ("background_position", "bottom")]
+)
+def test_unknown_background_layout_is_rejected(field: str, value: str) -> None:
+    with pytest.raises(ValidationError):
+        MapConfig.model_validate({"name": "m", field: value})
+
+
+def test_background_color_that_is_no_color_is_rejected() -> None:
+    # It ends up in the canvas' inline style.
+    with pytest.raises(ValidationError):
+        MapConfig.model_validate({"name": "m", "background_color": "red; background: url(x)"})

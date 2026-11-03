@@ -9,8 +9,8 @@ from typing import override
 
 import cmk.utils.paths
 from cmk.agent_based.prediction_backend import PredictionInfo
-from cmk.update_config.lib import ExpiryVersion
-from cmk.update_config.registry import update_action_registry, UpdateAction
+from cmk.update_config.internal import ExpiryVersion, UpdateAction
+from cmk.update_config.registry import update_action_registry
 from cmk.utils.prediction import iter_prediction_files, PredictionData
 from cmk.utils.prediction import Paths as PredictionPaths
 

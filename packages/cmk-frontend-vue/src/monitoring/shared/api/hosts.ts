@@ -31,10 +31,8 @@ export class HostApi extends MonitoringApi {
     params: HostQueryParams = {},
     signal?: AbortSignal
   ): Promise<HostsResponse> {
-    const filter = this.resolveFilter(params.filter)
     const body: HostsRequestBody = {
-      ...this.buildRequestBody(params),
-      ...(filter && { filter: filter as NonNullable<HostsRequestBody['filter']> }),
+      ...this.requestBody(params),
       ...(params.fields !== undefined && { fields: params.fields })
     }
     return unwrap(
@@ -46,7 +44,11 @@ export class HostApi extends MonitoringApi {
     )
   }
 
-  public async fetchHost(host: HostRef, signal?: AbortSignal): Promise<HostEntry | null> {
+  public async fetchHost(
+    host: HostRef,
+    signal?: AbortSignal,
+    fields?: readonly HostOptionalField[]
+  ): Promise<HostEntry | null> {
     const response = await this.fetchHosts(
       {
         filter: {
@@ -56,7 +58,8 @@ export class HostApi extends MonitoringApi {
             { type: 'condition', field: 'site_id', op: 'one_of', value: [host.site_id] }
           ]
         },
-        limit: 1
+        limit: 1,
+        ...(fields !== undefined && { fields: [...fields] })
       },
       signal
     )
@@ -75,5 +78,14 @@ export class HostApi extends MonitoringApi {
         }
       })
     )
+  }
+
+  /** The body `fetchHosts` sends for these params, with relative age filters resolved. */
+  public requestBody(params: HostQueryParams): HostsRequestBody {
+    const filter = this.resolveFilter(params.filter)
+    return {
+      ...this.buildRequestBody(params),
+      ...(filter && { filter: filter as NonNullable<HostsRequestBody['filter']> })
+    }
   }
 }

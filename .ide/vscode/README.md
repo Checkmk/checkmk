@@ -111,16 +111,16 @@ The extension monitors build targets and shows their status in the status bar:
 
 **What is monitored:**
 
-| Target             | Stale when                                                                     |
-| ------------------ | ------------------------------------------------------------------------------ |
-| Python venv        | `.venv/` missing                                                               |
-| shared-typing (TS) | Symlink to `cmk-frontend-vue/node_modules/cmk-shared-typing` missing or broken |
-| shared-typing (PY) | `cmk/shared_typing` missing from venv site-packages                            |
-| cmk-frontend       | `packages/cmk-frontend/dist` symlink missing or broken                         |
-| node_modules       | `node_modules/` missing or out of sync with `pnpm-lock.yaml`                   |
-| mypy config        | `.vscode/.mypy.ini` missing                                                    |
+| Target             | Stale when                                                                                                |
+| ------------------ | --------------------------------------------------------------------------------------------------------- |
+| Python venv        | `.venv/` missing                                                                                          |
+| shared-typing (TS) | Symlink `node_modules/cmk-shared-typing` missing or broken in a package that calls `link_shared_typing()` |
+| shared-typing (PY) | `cmk/shared_typing` missing from venv site-packages                                                       |
+| cmk-frontend       | `packages/cmk-frontend/dist` symlink missing or broken                                                    |
+| node_modules       | `node_modules/` missing or out of sync with `pnpm-lock.yaml`                                              |
+| mypy config        | `.vscode/.mypy.ini` missing                                                                               |
 
-**Auto-refresh triggers:** extension activation, after CMK build tasks complete, source file changes in `packages/cmk-shared-typing/source/`, `packages/cmk-frontend/src/`, the pinned requirements files (`requirements.txt`, `omd/non-free/relay/requirements.txt`), `pnpm-lock.yaml`, and git branch switches (`.git/HEAD`).
+**Auto-refresh triggers:** extension activation, after CMK build tasks complete, source file changes in `packages/cmk-shared-typing/source/`, `packages/cmk-frontend/src/`, the `BUILD` files of `packages/*` and `non-free/packages/*`, the pinned requirements files (`requirements.txt`, `omd/non-free/relay/requirements.txt`), `pnpm-lock.yaml`, and git branch switches (`.git/HEAD`).
 
 Click the status bar item to see stale targets and build commands in a QuickPick. When stale targets exist, a warning banner also appears at the top of the Environment sidebar section with a **Build All Stale** button.
 
@@ -133,7 +133,7 @@ Available via the command palette (F1) or by clicking the status bar. Build comm
 | Command                             | Description                                                                                                                                                                                                |
 | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Build venv`                        | `bazel run //:create_venv` — creates/updates the Python venv with all dependencies including generated packages.                                                                                           |
-| `Build shared-typing`               | Builds TS and PY types from `cmk-shared-typing` and symlinks the output into `cmk-frontend-vue/node_modules/`.                                                                                             |
+| `Build shared-typing`               | Builds TS and PY types from `cmk-shared-typing` and symlinks the output into the `node_modules/` of every package that calls `link_shared_typing()` in its BUILD file.                                     |
 | `Build cmk-frontend`                | Builds `cmk-frontend` (webpack) and symlinks `dist/` into the package directory.                                                                                                                           |
 | `Build cmk-frontend-vue`            | Builds `cmk-frontend-vue` via Bazel.                                                                                                                                                                       |
 | `Run UI Component Library`          | Starts the UI Component Library dev server via `//bazel/tools/devserver`.                                                                                                                                  |

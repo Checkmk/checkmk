@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
 import signal
 import sys
 from collections.abc import Iterator
@@ -10,7 +11,6 @@ from typing import NoReturn
 
 import pytest
 
-from cmk.ccc.exceptions import MKGeneralException, raise_mkterminate_on_sigint
 from cmk.cli.engine.commands import (
     _pager_environment,
     Command,
@@ -24,7 +24,9 @@ from cmk.cli.engine.commands import (
     parse_sub_options,
     write_paged,
 )
-from cmk.cli.internal import GlobalOptions
+from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
+
+from ._logger import null_logger
 
 
 def test_a_redirected_help_is_written_to_stdout(capsys: pytest.CaptureFixture[str]) -> None:
@@ -70,7 +72,7 @@ def test_an_interrupt_leaves_the_pager_to_clean_up_after_itself(
 ) -> None:
     monkeypatch.setenv("PAGER", "sh -c 'kill -INT $PPID; sleep 1; cat'")
     monkeypatch.setattr(sys.stdout, "isatty", lambda: True)
-    raise_mkterminate_on_sigint()
+    signal.signal(signal.SIGINT, signal.default_int_handler)
 
     write_paged("the help\n")
 
@@ -88,8 +90,8 @@ def test_a_page_that_fits_the_screen_is_not_held_open() -> None:
 def test_an_argument_to_a_flag_option_is_rejected() -> None:
     option = Option(long_option="flag", short_help="a flag")
 
-    with pytest.raises(MKGeneralException):
-        parse_sub_options([option], [("--flag", "a value")])
+    with pytest.raises(ValueError):
+        parse_sub_options([option], [("--flag", "a value")], null_logger())
 
 
 def test_an_option_argument_the_conversion_rejects_is_reported() -> None:
@@ -101,20 +103,21 @@ def test_an_option_argument_the_conversion_rejects_is_reported() -> None:
         argument_conv=int,
     )
 
-    with pytest.raises(MKGeneralException):
-        parse_sub_options([option], [("--number", "not a number")])
+    with pytest.raises(ValueError):
+        parse_sub_options([option], [("--number", "not a number")], null_logger())
 
 
 def test_a_deprecated_option_warns_about_the_one_it_replaces(
-    capsys: pytest.CaptureFixture[str],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     option = Option(
         long_option="plugins", short_help="the plugins", deprecated_long_options={"checks"}
     )
 
-    parse_sub_options([option], [("--checks", "")])
+    with caplog.at_level(logging.WARNING):
+        parse_sub_options([option], [("--checks", "")], logging.getLogger("cmk.test"))
 
-    assert "'plugins'" in capsys.readouterr().out
+    assert caplog.messages == ["'--checks' is deprecated in favour of option 'plugins'"]
 
 
 def test_a_missing_string_option_has_no_value() -> None:
@@ -122,17 +125,17 @@ def test_a_missing_string_option_has_no_value() -> None:
 
 
 def test_a_string_option_that_is_not_a_string_is_rejected() -> None:
-    with pytest.raises(MKGeneralException):
+    with pytest.raises(TypeError):
         option_string({"snmp-backend": 23}, "snmp-backend")
 
 
 def test_a_counted_option_that_was_never_given_is_rejected() -> None:
-    with pytest.raises(MKGeneralException):
+    with pytest.raises(TypeError):
         option_count({}, "discover")
 
 
 def test_a_name_of_the_wrong_type_is_rejected() -> None:
-    with pytest.raises(MKGeneralException):
+    with pytest.raises(TypeError):
         option_names({"plugins": {23}}, "plugins", str)
 
 
@@ -141,24 +144,20 @@ def test_a_missing_collected_option_has_no_values() -> None:
 
 
 def test_collected_values_that_are_not_strings_are_rejected() -> None:
-    with pytest.raises(MKGeneralException):
+    with pytest.raises(TypeError):
         option_strings({"oid": (23,)}, "oid")
 
 
 def test_a_general_flag_is_collected() -> None:
-    assert parse_general_options([("--debug", "")]) == GlobalOptions(debug=True)
-
-
-def test_a_general_option_hands_over_its_argument() -> None:
-    assert parse_general_options([("--fake-dns", "1.2.3.4")]) == GlobalOptions(fake_dns="1.2.3.4")
+    assert parse_general_options([("--debug", "")]) == CLIGlobalOptions(debug=True)
 
 
 def test_the_verbosity_counts_the_short_and_long_spelling_alike() -> None:
-    assert parse_general_options([("-v", ""), ("--verbose", "")]) == GlobalOptions(verbosity=2)
+    assert parse_general_options([("-v", ""), ("--verbose", "")]) == CLIGlobalOptions(verbosity=2)
 
 
 def test_an_option_that_is_not_a_general_one_is_left_alone() -> None:
-    assert parse_general_options([("--flag", "")]) == GlobalOptions()
+    assert parse_general_options([("--flag", "")]) == CLIGlobalOptions()
 
 
 def _never(*_args: object, **_kwargs: object) -> NoReturn:
@@ -167,6 +166,7 @@ def _never(*_args: object, **_kwargs: object) -> NoReturn:
 
 def _command(long_option: str, short_option: str | None = None) -> Command:
     return Command(
+        name=long_option,
         long_option=long_option,
         short_option=short_option,
         handler_function=_never,
@@ -175,15 +175,15 @@ def _command(long_option: str, short_option: str | None = None) -> Command:
 
 
 def test_two_commands_cannot_claim_the_same_long_option() -> None:
-    with pytest.raises(MKGeneralException, match="'twice'"):
+    with pytest.raises(ValueError, match="'twice'"):
         Commands(plugins=[_command("twice"), _command("twice")], general_options=[])
 
 
 def test_two_commands_cannot_claim_the_same_short_option() -> None:
-    with pytest.raises(MKGeneralException, match="'x'"):
+    with pytest.raises(ValueError, match="'x'"):
         Commands(plugins=[_command("one", "x"), _command("other", "x")], general_options=[])
 
 
 def test_a_command_cannot_claim_the_built_in_help_option() -> None:
-    with pytest.raises(MKGeneralException, match="'help'"):
+    with pytest.raises(ValueError, match="'help'"):
         Commands(plugins=[_command("help")], general_options=[])

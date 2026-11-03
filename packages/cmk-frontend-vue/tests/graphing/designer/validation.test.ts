@@ -317,7 +317,7 @@ describe('validateDesign', () => {
     })
   })
 
-  test('an RRD formula cannot reach into the metrics backend', () => {
+  test('an RRD formula cannot reach into OpenTelemetry metrics', () => {
     const design = [telemetryMetricsItem('E'), formulaItem('D', { ast: { op: 'ref', id: 'E' } })]
 
     expect(validateDesign(design, filterDefinitions)).toEqual([

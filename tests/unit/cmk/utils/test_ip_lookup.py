@@ -33,7 +33,7 @@ def patch_config_cache(monkeypatch: MonkeyPatch, cache: _IPLookupCacheMapping) -
 
 
 def patch_persisted_cache(monkeypatch: MonkeyPatch, cache: _PersistedCache) -> None:
-    monkeypatch.setattr(ip_lookup, "_get_ip_lookup_cache", lambda: cache)
+    monkeypatch.setattr(ip_lookup, "_get_ip_lookup_cache", lambda *, debug: cache)  # noqa: ARG005
 
 
 def patch_actual_lookup(monkeypatch: MonkeyPatch, mapping: _PersistedCache) -> None:
@@ -192,11 +192,13 @@ def test_cached_dns_lookup_is_config_cached_ok(monkeypatch: MonkeyPatch) -> None
         HostName("config_cached_host"),
         family=socket.AddressFamily.AF_INET,
         force_file_cache_renewal=False,
+        debug=True,
     ) == HostAddress("1.2.3.4")
     assert ip_lookup.cached_dns_lookup(
         HostName("config_cached_host"),
         family=socket.AddressFamily.AF_INET,
         force_file_cache_renewal=True,
+        debug=True,
     ) == HostAddress("1.2.3.4")
 
 
@@ -218,6 +220,7 @@ def test_cached_dns_lookup_reraises(monkeypatch: MonkeyPatch) -> None:
             HostName("the_host_that_raised"),
             family=socket.AddressFamily.AF_INET6,
             force_file_cache_renewal=False,
+            debug=True,
         )
 
     with pytest.raises(MKIPAddressLookupError):
@@ -225,6 +228,7 @@ def test_cached_dns_lookup_reraises(monkeypatch: MonkeyPatch) -> None:
             HostName("the_host_that_raised"),
             family=socket.AddressFamily.AF_INET6,
             force_file_cache_renewal=True,
+            debug=True,
         )
 
 
@@ -245,6 +249,7 @@ def test_cached_dns_lookup_is_persisted_cached_ok(monkeypatch: MonkeyPatch) -> N
         HostName("persisted_cached_host"),
         family=socket.AddressFamily.AF_INET,
         force_file_cache_renewal=False,
+        debug=True,
     ) == HostAddress("1.2.3.4")
     assert config_ipcache.pop(
         (HostName("persisted_cached_host"), socket.AddressFamily.AF_INET)
@@ -257,6 +262,7 @@ def test_cached_dns_lookup_is_persisted_cached_ok(monkeypatch: MonkeyPatch) -> N
         HostName("persisted_cached_host"),
         family=socket.AddressFamily.AF_INET,
         force_file_cache_renewal=True,
+        debug=True,
     ) == HostAddress("6.6.6.6")
     assert config_ipcache[
         (HostName("persisted_cached_host"), socket.AddressFamily.AF_INET)
@@ -283,6 +289,7 @@ def test_cached_dns_lookup_is_persisted_cached_ok_unchanged(monkeypatch: MonkeyP
         HostName("persisted_cached_host"),
         family=socket.AddressFamily.AF_INET,
         force_file_cache_renewal=False,
+        debug=True,
     ) == HostAddress("1.2.3.4")
     assert config_ipcache.pop(
         (HostName("persisted_cached_host"), socket.AddressFamily.AF_INET)
@@ -295,6 +302,7 @@ def test_cached_dns_lookup_is_persisted_cached_ok_unchanged(monkeypatch: MonkeyP
         HostName("persisted_cached_host"),
         family=socket.AddressFamily.AF_INET,
         force_file_cache_renewal=True,
+        debug=True,
     ) == HostAddress("1.2.3.4")
     assert config_ipcache.pop(
         (HostName("persisted_cached_host"), socket.AddressFamily.AF_INET)
@@ -318,6 +326,7 @@ def test_cached_dns_lookup_uncached(monkeypatch: MonkeyPatch) -> None:
         HostName("test_host"),
         family=socket.AddressFamily.AF_INET,
         force_file_cache_renewal=False,
+        debug=True,
     ) == HostAddress("3.1.4.1")
     assert config_ipcache.pop((HostName("test_host"), socket.AddressFamily.AF_INET)) == HostAddress(
         "3.1.4.1"
@@ -330,6 +339,7 @@ def test_cached_dns_lookup_uncached(monkeypatch: MonkeyPatch) -> None:
         HostName("test_host"),
         family=socket.AddressFamily.AF_INET,
         force_file_cache_renewal=True,
+        debug=True,
     ) == HostAddress("3.1.4.1")
     assert config_ipcache[(HostName("test_host"), socket.AddressFamily.AF_INET)] == HostAddress(
         "3.1.4.1"
@@ -352,6 +362,7 @@ def test_cached_dns_lookup_raises_every_time(monkeypatch: MonkeyPatch) -> None:
             HostName("test_host"),
             family=socket.AddressFamily.AF_INET,
             force_file_cache_renewal=False,
+            debug=True,
         )
 
     with pytest.raises(MKIPAddressLookupError):
@@ -359,6 +370,7 @@ def test_cached_dns_lookup_raises_every_time(monkeypatch: MonkeyPatch) -> None:
             HostName("test_host"),
             family=socket.AddressFamily.AF_INET,
             force_file_cache_renewal=False,
+            debug=True,
         )
 
 
@@ -376,6 +388,7 @@ def test_filecache_beats_failing_lookup(monkeypatch: MonkeyPatch) -> None:
         HostName("test_host"),
         family=socket.AddressFamily.AF_INET,
         force_file_cache_renewal=True,
+        debug=True,
     ) == HostAddress("3.1.4.1")
     assert persisted_cache[(HostName("test_host"), socket.AddressFamily.AF_INET)]
 
@@ -400,7 +413,7 @@ class TestIPLookupCache:
 
         cache = ip_lookup.IPLookupCache({})
         with pytest.raises(SyntaxError):
-            cache.load_persisted()
+            cache.load_persisted(debug=True)
         assert not cache
 
     @pytest.mark.usefixtures("tmp_path")
@@ -410,7 +423,7 @@ class TestIPLookupCache:
         ip_lookup_cache[cache_id] = HostAddress("127.0.0.1")
 
         new_cache_instance = ip_lookup.IPLookupCache({})
-        new_cache_instance.load_persisted()
+        new_cache_instance.load_persisted(debug=True)
         assert new_cache_instance[cache_id] == HostAddress("127.0.0.1")
 
     @pytest.mark.usefixtures("tmp_path")
@@ -423,7 +436,7 @@ class TestIPLookupCache:
         ip_lookup_cache[cache_id2] = HostAddress("127.0.0.2")
 
         new_cache_instance = ip_lookup.IPLookupCache({})
-        new_cache_instance.load_persisted()
+        new_cache_instance.load_persisted(debug=True)
         assert new_cache_instance[cache_id1] == HostAddress("127.0.0.1")
         assert new_cache_instance[cache_id2] == HostAddress("127.0.0.2")
 
@@ -443,7 +456,7 @@ class TestIPLookupCache:
         ip_lookup_cache[cache_id1] = HostAddress("127.0.0.1")
 
         new_cache_instance = ip_lookup.IPLookupCache({})
-        new_cache_instance.load_persisted()
+        new_cache_instance.load_persisted(debug=True)
         assert new_cache_instance[cache_id1] == HostAddress("127.0.0.1")
         assert new_cache_instance[cache_id2] == HostAddress("2")
 
@@ -460,7 +473,7 @@ class TestIPLookupCache:
         assert ip_lookup_cache[cache_id1] == HostAddress("127.0.0.1")
 
         new_cache_instance = ip_lookup.IPLookupCache({})
-        new_cache_instance.load_persisted()
+        new_cache_instance.load_persisted(debug=True)
         assert new_cache_instance[cache_id1] == HostAddress("0.0.0.0")
 
     @pytest.mark.usefixtures("tmp_path")
@@ -473,7 +486,7 @@ class TestIPLookupCache:
             f.write(repr({"host1": "127.0.0.1", "host2": "127.0.0.2"}))
 
         cache = ip_lookup.IPLookupCache({})
-        cache.load_persisted()
+        cache.load_persisted(debug=True)
         assert cache[cache_id1] == HostAddress("127.0.0.1")
         assert cache[cache_id2] == HostAddress("127.0.0.2")
 
@@ -484,7 +497,7 @@ class TestIPLookupCache:
         ).save_persisted()
 
         ip_lookup_cache = ip_lookup.IPLookupCache({})
-        ip_lookup_cache.load_persisted()
+        ip_lookup_cache.load_persisted(debug=True)
         assert ip_lookup_cache[(HostName("host1"), socket.AddressFamily.AF_INET)] == HostAddress(
             "127.0.0.1"
         )
@@ -494,14 +507,14 @@ class TestIPLookupCache:
         assert not ip_lookup_cache
 
         ip_lookup_cache = ip_lookup.IPLookupCache({})
-        ip_lookup_cache.load_persisted()
+        ip_lookup_cache.load_persisted(debug=True)
         assert not ip_lookup_cache
 
 
 def test_update_dns_cache(monkeypatch: MonkeyPatch) -> None:
     def ip_lookup_cache() -> ip_lookup.IPLookupCache:
         cache = ip_lookup.IPLookupCache({})
-        cache.load_persisted()
+        cache.load_persisted(debug=True)
         return cache
 
     monkeypatch.setattr(
@@ -539,6 +552,7 @@ def test_update_dns_cache(monkeypatch: MonkeyPatch) -> None:
         ),
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         lookup_ip_address=ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        debug=True,
     )
     assert ip_lookup_cache() == {
         ("blub", socket.AddressFamily.AF_INET): HostAddress("127.0.0.13"),

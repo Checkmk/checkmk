@@ -23,13 +23,12 @@ const emit = defineEmits<{
 .maps-hover-card {
   min-width: 208px;
   max-width: 288px;
-  padding: 14px;
-  background: var(--maps-map-view-glass);
-  backdrop-filter: blur(12px);
-  border-radius: var(--dimension-5);
+  padding: var(--dimension-5);
+  background: var(--maps-map-view-overlay-bg);
+  border-radius: var(--border-radius);
   box-shadow:
     0 0 0 1px var(--default-border-color),
-    0 25px 50px -12px rgb(0 0 0 / 60%);
+    var(--maps-shadow-canvas-overlay-high);
 
   /* Hoverable for its links; leaving it re-schedules the close. */
   pointer-events: auto;

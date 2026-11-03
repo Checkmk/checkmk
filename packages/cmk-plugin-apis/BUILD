@@ -1,5 +1,7 @@
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@bazel_skylib//rules:diff_test.bzl", "diff_test")
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_python//python:packaging.bzl", "py_wheel")
 load("//bazel/rules:doctest.bzl", "py_doc_test")
@@ -191,6 +193,7 @@ py_library(
     srcs = [
         "cmk/server_side_programs/__init__.py",
         "cmk/server_side_programs/v1/__init__.py",
+        "cmk/server_side_programs/v1/_agent_messages.py",
         "cmk/server_side_programs/v1/_crash_reporting.py",
         "cmk/server_side_programs/v1/_host_name_validation.py",
         "cmk/server_side_programs/v1/_logging.py",
@@ -296,6 +299,16 @@ py_library(
     visibility = ["//visibility:public"],
 )
 
+py_library(
+    name = "update_config",
+    srcs = [
+        "cmk/update_config/internal/__init__.py",
+    ],
+    data = ["cmk/update_config/py.typed"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+)
+
 py_doc_test(
     name = "doctest",
     size = "small",
@@ -316,6 +329,7 @@ py_doc_test(
         ":rulesets",
         ":server_side_calls",
         ":server_side_programs",
+        ":update_config",
     ],
 )
 
@@ -483,12 +497,42 @@ py_wheel(
         ":rulesets",
         ":server_side_calls",
         ":server_side_programs",
+        ":update_config",
     ],
 )
 
 build_test(
     name = "build_test",
     targets = ["wheel"],
+)
+
+# The plugin APIs must not depend on any other Checkmk package, only on
+# third-party requirements. List all first-party targets outside of this
+# package that end up in the wheel; the test asserts that there are none.
+genquery(
+    name = "first_party_deps",
+    expression = " except ".join([
+        "filter('^//', deps(//packages/cmk-plugin-apis:wheel))",
+        "filter('^//packages/cmk-plugin-apis[:/]', deps(//packages/cmk-plugin-apis:wheel))",
+    ]),
+    opts = [
+        "--noimplicit_deps",
+        "--notool_deps",
+    ],
+    scope = [":wheel"],
+)
+
+write_file(
+    name = "no_first_party_deps",
+    out = "no_first_party_deps.txt",
+    content = [],
+)
+
+diff_test(
+    name = "first_party_deps_test",
+    failure_message = "cmk-plugin-apis must not depend on other Checkmk packages",
+    file1 = ":first_party_deps",
+    file2 = ":no_first_party_deps",
 )
 
 filegroup(
@@ -510,6 +554,7 @@ filegroup(
         "cmk/rulesets/py.typed",
         "cmk/server_side_calls/py.typed",
         "cmk/server_side_programs/py.typed",
+        "cmk/update_config/py.typed",
     ],
 )
 
@@ -538,6 +583,7 @@ py_requirements_test(
         ":rulesets",
         ":server_side_calls",
         ":server_side_programs",
+        ":update_config",
         "//packages/cmk-plugin-apis/doc:sphinx_build",
     ],
     requirements_in = "requirements.in",

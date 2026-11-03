@@ -9,8 +9,10 @@ This talks to the long-running automation helper over its unix socket instead of
 ``cmk --automation`` process, which makes it convenient for debugging the helper itself or
 reproducing behavior against its cached configuration and plugins.
 
-This is an internal debugging tool and NOT a stable API: its name, arguments, behavior and output
-may change or be removed at any time without notice.
+This is an internal tool and NOT a public API: its name, arguments, behavior and output may
+change or be removed at any time without notice. Users must not build scripts or integrations on
+top of it; within Checkmk, the automation-helper init script uses ``--health`` to wait until the
+helper is ready.
 """
 
 import argparse
@@ -47,11 +49,11 @@ def _parse_arguments(argv: list[str]) -> argparse.Namespace:
             "Send a command to the running automation-helper daemon and print its raw "
             "JSON response. Standard input is forwarded to the automation when piped.\n"
             "\n"
-            "WARNING: This is an internal debugging tool, NOT a stable API. Its name, "
+            "WARNING: This is an internal tool, NOT a public API. Its name, "
             "arguments, behavior and output may change or be removed at any time without "
             "notice. Do not build scripts, integrations or automation on top of it."
         ),
-        epilog=("Internal debugging use only — no compatibility guarantees of any kind."),
+        epilog=("Internal use only — no compatibility guarantees of any kind."),
     )
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument(

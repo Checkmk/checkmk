@@ -8,6 +8,7 @@ py_library(
     visibility = [
         "//cmk:__subpackages__",
         "//non-free/packages:__subpackages__",
+        "//non-free/tests:__subpackages__",
         "//packages/cmk-backup:__pkg__",
         "//packages/cmk-maps:__pkg__",
         "//tests:__subpackages__",

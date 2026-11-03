@@ -24,7 +24,13 @@ from cmk.base.diagnostics import (
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
 from cmk.cli.engine.commands import option_string
-from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
+from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Command as CLICommand
+from cmk.cli.internal import Context as CLIContext
+from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
+from cmk.cli.internal import Option as CLIOption
+from cmk.cli.internal import Options
 from cmk.diagnostics.engine import DumpSelection, resolve_selection
 from cmk.diagnostics.internal import DiagnosticsPlugin, Sensitivity, Topic
 
@@ -103,11 +109,11 @@ def _print_available_plugins(catalogue: Mapping[str, DiagnosticsPlugin]) -> None
 
 
 def _mode_create_diagnostics_dump(
-    _omd_root: Path, _global_options: GlobalOptions, parsed: Options, _args: Args
-) -> int:
+    _omd_root: Path, global_options: CLIGlobalOptions, parsed: Options, _args: CLIArgs
+) -> CLIExitCode:
     options = _cli_selection(parsed)
 
-    with exit_on_config_file_load_error():
+    with exit_on_config_file_load_error(debug=global_options.debug):
         raw_config = load_raw_config()
 
     # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
@@ -115,7 +121,7 @@ def _mode_create_diagnostics_dump(
 
     if options.list_plugins:
         _print_available_plugins(catalogue)
-        return 0
+        return CLIExitCode.SUCCESS
 
     dump = create_diagnostics_dump_v2(
         omd_root=cmk.utils.paths.omd_root,
@@ -132,43 +138,53 @@ def _mode_create_diagnostics_dump(
         )
     else:
         logger.message("No dump")
-    return 0
+    return CLIExitCode.SUCCESS
+
+
+def _run_create_diagnostics_dump(
+    context: CLIContext, options: Options, args: CLIArgs
+) -> CLIExitCode:
+    try:
+        return _mode_create_diagnostics_dump(
+            context.omd_root, context.global_options, options, args
+        )
+    except MKGeneralException as e:
+        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+        if context.global_options.debug:
+            raise
+        return CLIExitCode.UNKNOWN
 
 
 cli_command_create_diagnostics_dump = CLICommand(
-    long_option="create-diagnostics-dump",
-    handler_function=_mode_create_diagnostics_dump,
+    name="create_diagnostics_dump",
+    long="create-diagnostics-dump",
+    handler_function=_run_create_diagnostics_dump,
     sub_options=[
         CLIOption(
-            long_option="list",
-            short_help="List the available topics and plugins and exit",
+            long="list",
+            help="List the available topics and plugins and exit",
         ),
         CLIOption(
-            long_option="all-topics",
-            short_help=(
+            long="all-topics",
+            help=(
                 "Select all plugins of all topics up to the given sensitivity threshold "
                 "(off, low, medium or high)"
             ),
-            argument=True,
-            argument_descr="THRESHOLD",
+            argument="THRESHOLD",
         ),
         CLIOption(
-            long_option="plugins",
-            short_help="Additionally select the given plugins, regardless of topic thresholds",
-            argument=True,
-            argument_descr="NAME,NAME...",
+            long="plugins",
+            help="Additionally select the given plugins, regardless of topic thresholds",
+            argument="NAME,NAME...",
         ),
         CLIOption(
-            long_option="checkmk-server-host",
-            short_help=(
-                "The name of the host monitoring the Checkmk server; needed by some plugins"
-            ),
-            argument=True,
-            argument_descr="HOST",
+            long="checkmk-server-host",
+            help=("The name of the host monitoring the Checkmk server; needed by some plugins"),
+            argument="HOST",
         ),
     ],
-    short_help="Create diagnostics dump",
-    long_help=[
+    help="Create diagnostics dump",
+    description=[
         (
             "Create a dump containing information for diagnostic analysis "
             "in the folder var/check_mk/diagnostics. The dump content is "

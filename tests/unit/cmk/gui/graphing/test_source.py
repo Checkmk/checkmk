@@ -30,13 +30,13 @@ from cmk.graphing_engine import (
 )
 from cmk.gui.graphing import (
     build_template_graphs,
-    CommonGraphOptions,
+    EvaluateGraph,
     HOST_PSEUDO_SERVICE,
+    requested_window,
     RRDFetchData,
     RRDFetchMetricNames,
     TemplateGraphSpecification,
 )
-from cmk.gui.graphing._graph_templates import _EvaluateTemplateGraphs
 from cmk.gui.graphing._source import (
     chop_last_empty_step,
     PerformanceDataRow,
@@ -174,9 +174,8 @@ def test_fetch_data_of_a_host_metric_reads_the_hosts_table(
     )
 
     with mock_livestatus():
-        [fetched] = RRDFetchData(debug=False)(
+        [fetched] = RRDFetchData(debug=False, consolidation_function=ConsolidationFunction.MAX)(
             [metric],
-            consolidation_function=ConsolidationFunction.MAX,
             time_range=TimeRange(start=0, end=30, step=10),
         )[metric]
 
@@ -274,10 +273,11 @@ def _drawn(
         registered_metrics={},
         fetch_metric_names=_FakeMetricNames(metric_name),
     )
-    [evaluated] = _EvaluateTemplateGraphs(
-        CommonGraphOptions(consolidation_function=ConsolidationFunction.MAX, time_range=_RANGE),
+    [evaluated] = EvaluateGraph(
+        _RANGE,
         RRDFetchData(
             debug=True,
+            consolidation_function=ConsolidationFunction.MAX,
             registered_translations=[
                 translations.Translation(
                     name="t",
@@ -288,6 +288,7 @@ def _drawn(
             performance_data_source=_FakeRRDFetchPerformanceData(perf_data),
             time_series_source=time_series,
         ),
+        window_of=requested_window,
     )(built.graph).graphs
     [curve] = _drawn_curves(evaluated)
     return curve, time_series.requested
@@ -461,12 +462,12 @@ def _fetched_with_edge_neighbours(
     with time_machine.travel(_NOW, tick=False):
         [fetched] = RRDFetchData(
             debug=False,
+            consolidation_function=ConsolidationFunction.MAX,
             performance_data_source=performance_data,
             time_series_source=rrd,
-            edge_neighbours_at_served_step=True,
+            include_edge_neighbours=True,
         )(
             [_EDGE_METRIC],
-            consolidation_function=ConsolidationFunction.MAX,
             time_range=_HALF_HOUR_A_WEEK_AGO,
         )[_EDGE_METRIC]
     return fetched
@@ -532,11 +533,11 @@ def test_a_fetch_without_edge_neighbours_asks_for_exactly_the_range() -> None:
 
     RRDFetchData(
         debug=False,
+        consolidation_function=ConsolidationFunction.MAX,
         performance_data_source=_EDGE_PERFORMANCE_DATA,
         time_series_source=rrd,
     )(
         [_EDGE_METRIC],
-        consolidation_function=ConsolidationFunction.MAX,
         time_range=_HALF_HOUR_A_WEEK_AGO,
     )
 

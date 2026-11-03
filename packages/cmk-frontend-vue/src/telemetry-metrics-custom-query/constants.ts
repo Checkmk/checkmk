@@ -9,6 +9,6 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 export function telemetryMetricsMacroHelp(): TranslatedString {
   const { _t } = usei18n()
   return _t(
-    'Available macros: <tt>$SERIES_ID$</tt>, <tt>$METRIC_NAME$</tt>, <tt>$RESOURCE_ATTR.&lt;key&gt;$</tt>, <tt>$SCOPE_ATTR.&lt;key&gt;$</tt>, <tt>$DATA_POINT_ATTR.&lt;key&gt;$</tt>'
+    'Available macros: <tt>$SERIES_ID$</tt>, <tt>$METRIC_NAME$</tt>, <tt>$RESOURCE_ATTR.&lt;key&gt;$</tt>, <tt>$SCOPE_ATTR.&lt;key&gt;$</tt>, <tt>$DATA_POINT_ATTR.&lt;key&gt;$</tt>, <tt>$SERIES_ATTRIBUTES$</tt> (all attribute values of the series; names longer than 200 bytes are shortened and end in a short hash)'
   )
 }

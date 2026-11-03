@@ -15,9 +15,12 @@ from typing import cast
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+from cmk.ccc.user import UserId
 from cmk.gui import sites
 from cmk.gui.config import active_config
 from cmk.gui.logged_in import user
+from cmk.gui.monitor.shared import folder_files_matching, HostState
+from cmk.gui.monitor.site_scope import MonitorSites
 from cmk.gui.sites import SiteStates
 from cmk.gui.utils.host_relation_kinds import kind_accepts
 from cmk.gui.utils.host_relations import (
@@ -29,7 +32,10 @@ from cmk.gui.utils.host_relations import (
 from cmk.livestatus_client import (
     LivestatusClient,
     MultiSiteConnection,
+    NotificationOption,
+    ProcessHostCheckResult,
     ScheduleForcedHostCheck,
+    SendCustomHostNotification,
 )
 from cmk.livestatus_client.expressions import And, NothingExpression, Or, QueryExpression
 from cmk.livestatus_client.queries import detailed_connection, Query, ResultRow
@@ -38,12 +44,7 @@ from cmk.livestatus_client.types import Column
 from cmk.ruleset_matcher.labels import BuiltinLabelsKey
 
 from ._exceptions import HostNotFoundError
-from ._folder import (
-    folder_files_matching,
-    folder_path_from_filename,
-    folder_title,
-    MonitorFolders,
-)
+from ._folder import folder_path_from_filename, folder_title, MonitorFolders
 from ._models import (
     Event,
     EventClass,
@@ -53,7 +54,7 @@ from ._models import (
     HostOptionalField,
     HostSort,
     HostSortColumn,
-    HostState,
+    HostTarget,
     MAX_RESOLVED_RELATIONS,
     RelatedHost,
     RelatedHostHealth,
@@ -61,7 +62,6 @@ from ._models import (
     ServiceCounts,
     UnixTimestamp,
 )
-from ._site import MonitorSites
 from ._sorting import host_sorter
 
 
@@ -90,6 +90,11 @@ def unavailable_sites(site_states: SiteStates, *, sees_all: bool) -> frozenset[s
     )
 
 
+def reader_unavailable_sites() -> frozenset[str]:
+    """:func:`unavailable_sites` for the logged-in reader."""
+    return unavailable_sites(_site_states(), sees_all=user.may("general.see_all"))
+
+
 class LiveStatusHostRepository:
     def __init__(
         self,
@@ -97,9 +102,7 @@ class LiveStatusHostRepository:
         connection: MultiSiteConnection,
         folders: MonitorFolders | None = None,
         sites: MonitorSites | None = None,
-        read_unavailable_sites: Callable[[], frozenset[str]] = lambda: unavailable_sites(
-            _site_states(), sees_all=user.may("general.see_all")
-        ),
+        read_unavailable_sites: Callable[[], frozenset[str]] = reader_unavailable_sites,
     ) -> None:
         self._connection = connection
         # A folder is shown and searched by its Setup title, which Livestatus does not have. A
@@ -195,6 +198,9 @@ class LiveStatusHostRepository:
                         in_check_period=bool(row["in_check_period"]),
                         is_flapping=bool(row["is_flapping"]),
                         stale=row["staleness"] >= active_config.staleness_threshold,
+                        has_graphs=(
+                            row["pnpgraph_present"] == 1 if "pnpgraph_present" in row else None
+                        ),
                         last_check=_timestamp(row.get("last_check")),
                         last_state_change=_timestamp(row.get("last_state_change")),
                         folder=(
@@ -305,6 +311,7 @@ class LiveStatusHostRepository:
             # The overview does not expose contacts, so its query does not read them.
             contacts=[],
             labels=HostLabelValue.by_label(row["labels"], row["label_sources"]),
+            setup_access=self._setup_access(row["name"], row["filename"]),
             relations=relations,
             more_relations=more_relations,
         )
@@ -447,6 +454,11 @@ class LiveStatusHostRepository:
         )
         return self._count_hosts(extra_lines=[*query_filter, *_split_filter_lines(filters)])
 
+    def unreachable_sites(self) -> list[str]:
+        # Unlike `unavailable_sites`, told to every reader: the classic views do the same, and
+        # without it a missing site reads as hosts that do not exist.
+        return sorted(self._connection.dead_sites())
+
     def _count_hosts(self, *, extra_lines: Sequence[str] = ()) -> int:
         # A ``Stats`` count on the hosts table. Runs under the connection's ``AuthUser`` filter, so a
         # user without "see all" counts only the hosts they may see. The count is the trailing column
@@ -515,6 +527,34 @@ class LiveStatusHostActions:
                     host_name=HostName(target.host_name),
                     check_time=target.check_time,
                 ),
+                SiteId(target.site_id),
+            )
+
+    def send_custom_notification(
+        self,
+        targets: Sequence[HostTarget],
+        *,
+        author: UserId,
+        comment: str,
+        forced: bool,
+        broadcast: bool,
+    ) -> None:
+        client = LivestatusClient(self._connection)
+        option = NotificationOption(
+            NotificationOption.FORCED.value * forced
+            + NotificationOption.BROADCAST.value * broadcast
+        )
+        for target in targets:
+            client.command(
+                SendCustomHostNotification(HostName(target.host_name), option, author, comment),
+                SiteId(target.site_id),
+            )
+
+    def fake_check_result(self, targets: Sequence[HostTarget], *, state: int, output: str) -> None:
+        client = LivestatusClient(self._connection)
+        for target in targets:
+            client.command(
+                ProcessHostCheckResult(HostName(target.host_name), state, output),
                 SiteId(target.site_id),
             )
 
@@ -607,6 +647,11 @@ _SEARCHED_FIELDS: Mapping[HostOptionalField, Callable[[str], QueryExpression]] =
 }
 
 
+SEARCHED_FIELDS: frozenset[HostOptionalField] = frozenset(
+    {*_SEARCHED_FIELDS, HostOptionalField.FOLDER}
+)
+
+
 def _build_query_filter(
     query: str,
     fields: Set[HostOptionalField],
@@ -675,6 +720,7 @@ _OPTIONAL_COLUMNS: Mapping[HostOptionalField, tuple[Column, ...]] = {
     HostOptionalField.CONTACT_GROUPS: (Hosts.contact_groups,),
     HostOptionalField.GROUPS: (Hosts.groups,),
     HostOptionalField.SETUP_ACCESS: (Hosts.filename,),
+    HostOptionalField.GRAPHS_LINK: (Hosts.pnpgraph_present,),
 }
 
 # The optional field a sort column needs read, or ``None`` when every query reads it anyway.

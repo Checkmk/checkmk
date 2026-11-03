@@ -30,9 +30,7 @@ import { computed, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vu
 import type { CommandVerb } from '@/maps/api/ticket'
 import BulkAckModal from '@/maps/map/commands/BulkAckModal.vue'
 import BulkDowntimeModal from '@/maps/map/commands/BulkDowntimeModal.vue'
-import ObjectCommandModals from '@/maps/map/commands/ObjectCommandModals.vue'
 import { commandTargetsOf, fanOutCommand } from '@/maps/map/commands/fanOutCommand'
-import { useObjectActions } from '@/maps/map/commands/useObjectActions'
 import ContextMenu from '@/maps/map/components/ContextMenu.vue'
 import HoverMenu from '@/maps/map/components/HoverMenu.vue'
 import MapPlaceholder from '@/maps/map/components/MapPlaceholder.vue'
@@ -254,10 +252,6 @@ function onObjectHover(
   // the card would otherwise cover the very thing it describes.
   menus.openHover(object, null, { x: anchor.right + 8, y: anchor.top, anchorRect: anchor })
 }
-
-// --- The commands about one object.
-const objectActions = useObjectActions(() => props.checkmkUrl, menus.close)
-const drawerCommands = objectActions.drawerHandlers(() => drawerObject.value)
 
 // --- The commands about a whole selection.
 // A command sent to fifty hosts at once is still a command: it needs the same
@@ -583,15 +577,12 @@ watch(serviceLayout, () => {
         :connection-id="connectionId"
         :selectable-hosts="selectableHosts"
         :unattended="unattended"
-        v-on="drawerCommands"
         @close="closeDetail"
         @select-host="onSelectHost"
       />
     </template>
 
     <MapPlaceholder v-else :message="_t('Map not found')" variant="empty" />
-
-    <ObjectCommandModals :actions="objectActions" :checkmk-url="checkmkUrl" />
 
     <BulkAckModal
       v-if="bulkAckTargets"
@@ -643,14 +634,13 @@ watch(serviceLayout, () => {
   align-items: center;
   gap: var(--dimension-3);
   max-width: min(60%, 520px);
-  padding: 4px 4px 4px 10px;
+  padding: var(--dimension-3) var(--dimension-3) var(--dimension-3) var(--dimension-5);
   color: var(--font-color);
   font-size: var(--font-size-normal);
   text-align: left;
-  background: var(--maps-map-view-glass);
+  background: var(--maps-map-view-overlay-bg);
   border: 1px solid var(--default-border-color);
   border-radius: var(--border-radius);
-  backdrop-filter: blur(6px);
   pointer-events: none;
 }
 

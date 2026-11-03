@@ -44,13 +44,23 @@ def make_exit_code_spec(
     return exit_code_spec
 
 
+def _individual_key(data_source_id: str) -> str:
+    """Map the ident of a data source to its key in the ruleset's "individual" entry
+
+    Special agents are identified as "special_<name>" (with an optional "_<n>"
+    suffix if the same agent is configured multiple times), the rule has one
+    entry for all of them.
+    """
+    return "special" if data_source_id.startswith("special_") else data_source_id
+
+
 def _extract_data_source_exit_code_spec(
     spec: _NestedExitSpec,
     data_source_id: str | None,
 ) -> ExitSpec:
     if data_source_id is not None:
         with contextlib.suppress(KeyError):
-            return spec["individual"][data_source_id]
+            return spec["individual"][_individual_key(data_source_id)]
     with contextlib.suppress(KeyError):
         return spec["overall"]
     # Old configuration format

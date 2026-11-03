@@ -230,7 +230,7 @@ write_file(
     name = "bazel-requirements-constraints",
     out = "bazel-requirements-constraints.txt",
     content = [
-        "ruff==0.17.0",  # keep in sync with the multitool hub % RUFF_VERSION,
+        "ruff==0.17.1",  # keep in sync with the multitool hub % RUFF_VERSION,
         "protobuf==%s" % PROTOBUF_PYTHON_VERSION,
     ],
 )
@@ -318,7 +318,8 @@ multirun(
         ":requirements",
         ":community_requirements",
         ":runtime_requirements",
-        "//agents/modules/windows:requirements_windows",
+        "//agents/modules/windows:windows_requirements",
+        "//agents/modules/windows:windows_test_cab_requirements",
     ] + select({
         "@//:gpl+nonfree_repo": ["//omd/non-free/relay:requirements"],
         "@//:gpl_repo": [],
@@ -334,7 +335,8 @@ test_suite(
         ":community_requirements_test",
         ":requirements_test",
         ":runtime_requirements_test",
-        "//agents/modules/windows:requirements_windows_test",
+        "//agents/modules/windows:windows_requirements_test",
+        "//agents/modules/windows:windows_test_cab_requirements_test",
     ],
 )
 
@@ -342,7 +344,8 @@ test_suite(
     name = "py_requirements_test_gpl",
     tests = [
         ":community_requirements_test",
-        "//agents/modules/windows:requirements_windows_test",
+        "//agents/modules/windows:windows_requirements_test",
+        "//agents/modules/windows:windows_test_cab_requirements_test",
     ],
 )
 
@@ -539,6 +542,7 @@ js_library(
         # fs.readdirSync, which means we need to make this dependency explicit for the sandbox
         "//packages/cmk-frontend:eslintrc",
         "//packages/cmk-frontend-vue:eslintrc",
+        "//packages/cmk-profiling:eslintrc",
         "//packages/cmk-ui-library:eslintrc",
     ],
 )

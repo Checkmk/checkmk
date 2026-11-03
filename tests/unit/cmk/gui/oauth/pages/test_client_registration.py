@@ -13,6 +13,8 @@ from cmk.gui.http import request, response
 from cmk.gui.oauth.pages._client_registration import OAuthClientRegistrationPage
 from cmk.gui.oauth.store.client_store import get_client_store
 from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 
@@ -30,7 +32,11 @@ class TestOAuthClientRegistrationPage:
             flask_app.preprocess_request()
             OAuthClientRegistrationPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -52,7 +58,11 @@ class TestOAuthClientRegistrationPage:
             flask_app.preprocess_request()
             OAuthClientRegistrationPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -68,7 +78,11 @@ class TestOAuthClientRegistrationPage:
             flask_app.preprocess_request()
             OAuthClientRegistrationPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
             assert isinstance(response.json, dict)
@@ -76,7 +90,11 @@ class TestOAuthClientRegistrationPage:
 
             OAuthClientRegistrationPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
             assert isinstance(response.json, dict)
@@ -89,7 +107,11 @@ class TestOAuthClientRegistrationPage:
             flask_app.preprocess_request()
             OAuthClientRegistrationPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -100,7 +122,11 @@ class TestOAuthClientRegistrationPage:
             flask_app.preprocess_request()
             OAuthClientRegistrationPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -114,7 +140,11 @@ class TestOAuthClientRegistrationPage:
             flask_app.preprocess_request()
             OAuthClientRegistrationPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -127,7 +157,11 @@ class TestOAuthClientRegistrationPage:
             flask_app.preprocess_request()
             OAuthClientRegistrationPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -144,7 +178,11 @@ class TestOAuthClientRegistrationPage:
             flask_app.preprocess_request()
             OAuthClientRegistrationPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -161,7 +199,11 @@ class TestOAuthClientRegistrationPage:
             flask_app.preprocess_request()
             OAuthClientRegistrationPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -177,7 +219,11 @@ class TestOAuthClientRegistrationPage:
             flask_app.preprocess_request()
             OAuthClientRegistrationPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -193,7 +239,11 @@ class TestOAuthClientRegistrationPage:
             flask_app.preprocess_request()
             OAuthClientRegistrationPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -220,7 +270,11 @@ class TestOAuthClientRegistrationPage:
             flask_app.preprocess_request()
             OAuthClientRegistrationPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -236,7 +290,11 @@ class TestOAuthClientRegistrationPage:
             flask_app.preprocess_request()
             OAuthClientRegistrationPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -255,7 +313,11 @@ class TestOAuthClientRegistrationPage:
             flask_app.preprocess_request()
             OAuthClientRegistrationPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 

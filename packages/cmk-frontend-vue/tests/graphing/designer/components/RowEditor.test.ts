@@ -6,6 +6,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import { useProvideFilterDefinitions } from 'cmk-ui-library/components/filter'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
+// eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
 import { HttpResponse, http } from 'msw'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { defineComponent, h } from 'vue'

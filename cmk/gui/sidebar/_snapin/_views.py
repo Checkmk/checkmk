@@ -18,9 +18,12 @@ from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.main_menu_pages import main_menu_page_registry
 from cmk.gui.main_menu_types import MainMenuItem
 from cmk.gui.monitor.hosts._pages._monitor_all_hosts import monitor_all_hosts_visual_spec
+from cmk.gui.monitor.services._pages._monitor_all_services import (
+    monitor_all_services_visual_spec,
+)
 from cmk.gui.nodevis.topology import ParentChildTopologyPage
 from cmk.gui.pages import PageContext, PageEndpoint, PageRegistry
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import Visual
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.store import get_permitted_views
@@ -76,13 +79,13 @@ class Views(SidebarSnapin):
     @classmethod
     @override
     def description(cls) -> str:
-        return _("Links to global views and dashboards")
+        return _("Links to global views")
 
     @override
     def show(self, config: Config) -> None:
         show_main_menu(
             treename="views",
-            menu=default_view_menu_topics(UserPermissions.from_config(config, permission_registry)),
+            menu=self._get_view_menu_topics(UserPermissions.from_config(config, all_permissions())),
         )
 
         links = []
@@ -91,6 +94,15 @@ class Views(SidebarSnapin):
                 links.append((_("Export"), "export_views.py"))
             links.append((_("Edit"), "edit_views.py"))
             footnotelinks(links)
+
+    def _get_view_menu_topics(self, user_permissions: UserPermissions) -> list[NavItemTopic]:
+        return merge_registered_monitor_topics(
+            make_main_menu(
+                [item for item in view_menu_items(user_permissions) if item.type != "dashboards"],
+                user_permissions,
+            ),
+            user_permissions,
+        )
 
 
 def ajax_export_views(ctx: PageContext) -> None:  # noqa: ARG001
@@ -117,7 +129,7 @@ def view_menu_items(user_permissions: UserPermissions) -> list[VisualMenuItem]:
         if not issubclass(page_type, pagetypes.PageRenderer):
             continue
 
-        for page in page_type.load(user_permissions).pages(user_permissions):
+        for page in page_type.load().pages(user_permissions):
             if page._show_in_sidebar():  # noqa: SLF001
                 visual = page.to_visual()
                 visual["hidden"] = False  # Is currently not configurable for pagetypes
@@ -139,6 +151,9 @@ def view_menu_items(user_permissions: UserPermissions) -> list[VisualMenuItem]:
     if user.may("view.allhosts"):
         all_hosts_visual_spec = monitor_all_hosts_visual_spec()
         pages_to_show.append((all_hosts_visual_spec["name"], all_hosts_visual_spec))
+    if user.may("view.allservices"):
+        all_services_visual_spec = monitor_all_services_visual_spec()
+        pages_to_show.append((all_services_visual_spec["name"], all_services_visual_spec))
     # Pages a feature plugin registered, rather than hardcoded above: this module is
     # edition-independent and must not import the non-free plugins themselves.
     for main_menu_page in main_menu_page_registry.values():

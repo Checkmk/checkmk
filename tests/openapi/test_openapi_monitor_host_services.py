@@ -4,33 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from collections.abc import Iterator
+from collections.abc import Mapping
 from http import HTTPStatus
 
 import pytest
 import time_machine
 
 from cmk.ccc.user import UserId
-from cmk.graphing.v1 import perfometers
-from cmk.gui.graphing import perfometers_from_api
-from cmk.gui.monitor.services._api._list_host_services import _MAX_HOST_SVC_LIMIT
+from cmk.gui.monitor.services._api._limits import MAX_SERVICE_LIMIT
 from cmk.livestatus_client.testing import MockLiveStatusConnection
+from tests.testlib.unit.gui.web_test_app import SetConfig
 from tests.testlib.unit.rest_api_client import ClientRegistry
-
-
-@pytest.fixture(name="registered_perfometer")
-def fixture_registered_perfometer() -> Iterator[None]:
-    perfometers_from_api.register(
-        perfometers.Perfometer(
-            name="test_perfometer",
-            focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Closed(100)),
-            segments=["test_metric"],
-        )
-    )
-    try:
-        yield
-    finally:
-        perfometers_from_api.unregister("test_perfometer")
 
 
 class TestMonitorHostServicesAuth:
@@ -165,6 +149,8 @@ class TestMonitorHostServicesFilters:
                     "check_type": 0,
                     "cached_at": 0,
                     "cache_interval": 0,
+                    "host_state": 0,
+                    "host_has_been_checked": 1,
                     "host_name": _HOSTNAME,
                     "state": 1,
                     "has_been_checked": 1,
@@ -286,6 +272,8 @@ class TestMonitorHostServicesFilters:
                     "check_type": 0,
                     "cached_at": 0,
                     "cache_interval": 0,
+                    "host_state": 0,
+                    "host_has_been_checked": 1,
                     "host_name": _HOSTNAME,
                     "state": 1,
                     "has_been_checked": 1,
@@ -429,6 +417,8 @@ class TestMonitorHostServices:
                     "check_type": 0,
                     "cached_at": 0,
                     "cache_interval": 0,
+                    "host_state": 0,
+                    "host_has_been_checked": 1,
                     "host_name": _HOSTNAME,
                     "state": 0,
                     "has_been_checked": 1,
@@ -508,6 +498,7 @@ class TestMonitorHostServices:
                 "limit": _LIMIT,
                 "matched": 1,
                 "total": 1,
+                "unreachable_sites": [],
             },
         }
 
@@ -546,6 +537,8 @@ class TestMonitorHostServices:
                     "check_type": 0,
                     "cached_at": 0,
                     "cache_interval": 0,
+                    "host_state": 0,
+                    "host_has_been_checked": 1,
                     "labels": {"cmk/check_plugin": "cpu_load", "owner": "platform"},
                     "label_sources": {"cmk/check_plugin": "discovered", "owner": "explicit"},
                     "tags": {},
@@ -599,6 +592,8 @@ class TestMonitorHostServices:
                     "check_type": 0,
                     "cached_at": 0,
                     "cache_interval": 0,
+                    "host_state": 0,
+                    "host_has_been_checked": 1,
                     "labels": {},
                     "label_sources": {},
                     "tags": {"criticality": "prod", "networking": "lan"},
@@ -652,6 +647,8 @@ class TestMonitorHostServices:
                     "check_type": 0,
                     "cached_at": 0,
                     "cache_interval": 0,
+                    "host_state": 0,
+                    "host_has_been_checked": 1,
                     "labels": {"cmk/check_plugin": "cpu_load"},
                     "label_sources": {"cmk/check_plugin": "discovered"},
                     "tags": {"criticality": "prod"},
@@ -702,6 +699,8 @@ class TestMonitorHostServices:
                     "check_type": 0,
                     "cached_at": 0,
                     "cache_interval": 0,
+                    "host_state": 0,
+                    "host_has_been_checked": 1,
                     "labels": {"cmk/check_plugin": "cpu_load"},
                     "label_sources": {"cmk/check_plugin": "discovered"},
                     "tags": {"criticality": "prod"},
@@ -752,6 +751,8 @@ class TestMonitorHostServices:
                     "check_type": 0,
                     "cached_at": 0,
                     "cache_interval": 0,
+                    "host_state": 0,
+                    "host_has_been_checked": 1,
                     "labels": {},
                     "label_sources": {},
                     "tags": {},
@@ -803,6 +804,8 @@ class TestMonitorHostServices:
                     "check_type": 0,
                     "cached_at": 0,
                     "cache_interval": 0,
+                    "host_state": 0,
+                    "host_has_been_checked": 1,
                     "labels": {},
                     "label_sources": {},
                     "tags": {},
@@ -854,6 +857,8 @@ class TestMonitorHostServices:
                     "check_type": 0,
                     "cached_at": 0,
                     "cache_interval": 0,
+                    "host_state": 0,
+                    "host_has_been_checked": 1,
                     "labels": {},
                     "label_sources": {},
                     "tags": {},
@@ -906,6 +911,8 @@ class TestMonitorHostServices:
                     "check_type": 0,
                     "cached_at": 0,
                     "cache_interval": 0,
+                    "host_state": 0,
+                    "host_has_been_checked": 1,
                     "labels": {},
                     "label_sources": {},
                     "tags": {},
@@ -923,7 +930,6 @@ class TestMonitorHostServices:
 
         assert "contact_groups" not in resp.json["services"][0]
 
-    @pytest.mark.usefixtures("registered_perfometer")
     def test_service_with_performance_data_has_a_perfometer(
         self,
         clients: ClientRegistry,
@@ -954,7 +960,7 @@ class TestMonitorHostServices:
                     "staleness": 0.0,
                     "last_check": time.time() - 30,
                     "last_state_change": time.time(),
-                    "perf_data": "test_metric=42;;;0;100",
+                    "perf_data": "fs_used_percent=42;;;0;100",
                     "labels": {},
                     "label_sources": {},
                     "tags": {},
@@ -962,6 +968,8 @@ class TestMonitorHostServices:
                     "check_type": 0,
                     "cached_at": 0,
                     "cache_interval": 0,
+                    "host_state": 0,
+                    "host_has_been_checked": 1,
                 }
             ],
         )
@@ -973,8 +981,8 @@ class TestMonitorHostServices:
             )
 
         assert resp.json["services"][0]["perfometer"] == {
-            "bars": [[{"share": 42.0, "color": "#8c8c8c"}, {"share": 58.0, "color": None}]],
-            "formatted": "42",
+            "bars": [[{"share": 42.0, "color": "#1ee6e6"}, {"share": 58.0, "color": None}]],
+            "formatted": "42 %",
         }
 
     def test_service_without_performance_data_has_no_perfometer(
@@ -1015,6 +1023,8 @@ class TestMonitorHostServices:
                     "check_type": 0,
                     "cached_at": 0,
                     "cache_interval": 0,
+                    "host_state": 0,
+                    "host_has_been_checked": 1,
                 }
             ],
         )
@@ -1027,7 +1037,61 @@ class TestMonitorHostServices:
 
         assert "perfometer" not in resp.json["services"][0]
 
-    @pytest.mark.usefixtures("registered_perfometer")
+    def test_service_with_recorded_time_series_links_to_its_graphs(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table("hosts", [{"name": _HOSTNAME}])
+        mock_livestatus.add_table(
+            "services",
+            [
+                {
+                    "description": "CPU load",
+                    "host_name": _HOSTNAME,
+                    "state": 0,
+                    "has_been_checked": 1,
+                    "plugin_output": "OK - load average: 0.10, 0.05, 0.01",
+                    "acknowledged": 0,
+                    "scheduled_downtime_depth": 0,
+                    "notifications_enabled": 1,
+                    "comments": [],
+                    "modified_attributes_list": [],
+                    "active_checks_enabled": 1,
+                    "accept_passive_checks": 1,
+                    "in_notification_period": 1,
+                    "in_service_period": 1,
+                    "in_check_period": 1,
+                    "in_passive_check_period": 1,
+                    "is_flapping": 0,
+                    "staleness": 0.0,
+                    "last_check": time.time() - 30,
+                    "last_state_change": time.time(),
+                    "perf_data": "",
+                    "labels": {},
+                    "label_sources": {},
+                    "tags": {},
+                    "check_command": "check_mk-test",
+                    "pnpgraph_present": 1,
+                    "check_type": 0,
+                    "cached_at": 0,
+                    "cache_interval": 0,
+                    "host_state": 0,
+                    "host_has_been_checked": 1,
+                }
+            ],
+        )
+        _expect_list_services_queries(mock_livestatus, extra_columns="pnpgraph_present")
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.list_host_services(
+                hostname=_HOSTNAME, site_id=_SITE_ID, limit=_LIMIT, fields=["graphs_link"]
+            )
+
+        assert resp.json["services"][0]["graphs_link"] == (
+            f"view.py?view_name=service_graphs&site={_SITE_ID}&host={_HOSTNAME}&service=CPU+load"
+        )
+
     def test_performance_data_matching_no_perfometer_is_omitted(
         self,
         clients: ClientRegistry,
@@ -1066,6 +1130,8 @@ class TestMonitorHostServices:
                     "check_type": 0,
                     "cached_at": 0,
                     "cache_interval": 0,
+                    "host_state": 0,
+                    "host_has_been_checked": 1,
                 }
             ],
         )
@@ -1097,6 +1163,8 @@ class TestMonitorHostServices:
                     "check_type": 0,
                     "cached_at": 0,
                     "cache_interval": 0,
+                    "host_state": 0,
+                    "host_has_been_checked": 1,
                     "host_name": _HOSTNAME,
                     "state": 0,
                     "has_been_checked": 0,
@@ -1237,6 +1305,8 @@ class TestMonitorHostServices:
                     "check_type": 0,
                     "cached_at": 0,
                     "cache_interval": 0,
+                    "host_state": 0,
+                    "host_has_been_checked": 1,
                     "host_name": _HOSTNAME,
                     "state": 0,
                     "has_been_checked": 1,
@@ -1319,6 +1389,8 @@ class TestMonitorHostServicessLimitPermissions:
                     "check_type": 0,
                     "cached_at": 0,
                     "cache_interval": 0,
+                    "host_state": 0,
+                    "host_has_been_checked": 1,
                     "host_name": _HOSTNAME,
                     "state": 0,
                     "has_been_checked": 1,
@@ -1358,7 +1430,7 @@ class TestMonitorHostServicessLimitPermissions:
                 f"Columns: {_SERVICES_COLUMNS}",
                 f"Filter: host_name = {_HOSTNAME}",
                 _DEFAULT_ORDER_BY,
-                f"Limit: {_MAX_HOST_SVC_LIMIT}",
+                f"Limit: {MAX_SERVICE_LIMIT}",
             ],
             sites=[_SITE_ID],
             match_type="loose",
@@ -1376,7 +1448,7 @@ class TestMonitorHostServicessLimitPermissions:
         with mock_livestatus(expect_status_query=True):
             resp = client.list_host_services(hostname=_HOSTNAME, site_id=_SITE_ID, limit=None)
 
-        assert resp.json["meta"]["limit"] == _MAX_HOST_SVC_LIMIT
+        assert resp.json["meta"]["limit"] == MAX_SERVICE_LIMIT
 
     def test_limit_removal_honored_with_permission(
         self,
@@ -1401,6 +1473,8 @@ class TestMonitorHostServicessLimitPermissions:
                     "check_type": 0,
                     "cached_at": 0,
                     "cache_interval": 0,
+                    "host_state": 0,
+                    "host_has_been_checked": 1,
                     "host_name": _HOSTNAME,
                     "state": 0,
                     "has_been_checked": 1,
@@ -1473,6 +1547,7 @@ class TestMonitorServiceOverview:
                     "description": _SERVICE_DESCRIPTION,
                     "perf_data": "",
                     "check_command": "check_mk-test",
+                    "pnpgraph_present": 1,
                     "check_type": 0,
                     "cached_at": 0,
                     "cache_interval": 0,
@@ -1593,6 +1668,7 @@ class TestMonitorServiceOverview:
                     "description": _SERVICE_DESCRIPTION,
                     "perf_data": "",
                     "check_command": "check_mk-test",
+                    "pnpgraph_present": 0,
                     "check_type": 0,
                     "cached_at": 0,
                     "cache_interval": 0,
@@ -1651,6 +1727,145 @@ class TestMonitorServiceOverview:
 
         assert [mode["icon_name"] for mode in resp.json["modes"]] == expected_icons
 
+    @staticmethod
+    def _get_overview_link(
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+        field: str = "legacy_service_parameters_link",
+        service_name: str | None = None,
+        row_overrides: Mapping[str, object] | None = None,
+    ) -> str | None:
+        service_name = service_name or _SERVICE_DESCRIPTION
+        mock_livestatus.add_table(
+            "services",
+            [{**_OVERVIEW_SERVICE_ROW, "description": service_name, **(row_overrides or {})}],
+        )
+        mock_livestatus.expect_query(
+            [
+                "GET services",
+                f"Columns: {_SERVICE_OVERVIEW_COLUMNS}",
+                f"Filter: host_name = {_HOSTNAME}",
+                f"Filter: description = {service_name}",
+                "And: 2",
+            ],
+            sites=[_SITE_ID],
+        )
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.get_service_overview(
+                hostname=_HOSTNAME, site_id=_SITE_ID, service_name=service_name
+            )
+        link: str | None = resp.json[field]
+        return link
+
+    def test_no_graphs_link_for_a_service_without_recorded_time_series(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        assert (
+            self._get_overview_link(
+                clients,
+                mock_livestatus,
+                field="legacy_service_graphs_link",
+                row_overrides={"pnpgraph_present": 0},
+            )
+            is None
+        )
+
+    @pytest.mark.usefixtures("suppress_remote_automation_calls")
+    def test_links_parameters_of_a_host_setup_grants(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        clients.HostConfig.create(_HOSTNAME, folder="/")
+
+        assert self._get_overview_link(clients, mock_livestatus) == (
+            f"wato.py?mode=object_parameters&host={_HOSTNAME}&service=CPU+load"
+        )
+
+    def test_no_parameters_link_for_a_host_setup_does_not_grant(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        assert self._get_overview_link(clients, mock_livestatus) is None
+
+    @pytest.mark.usefixtures("suppress_remote_automation_calls")
+    def test_no_parameters_link_while_setup_is_disabled(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+        set_config: SetConfig,
+    ) -> None:
+        clients.HostConfig.create(_HOSTNAME, folder="/")
+
+        with set_config(wato_enabled=False):
+            assert self._get_overview_link(clients, mock_livestatus) is None
+
+    @pytest.mark.usefixtures("suppress_remote_automation_calls")
+    def test_links_discovery_of_a_host_setup_grants(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        clients.HostConfig.create(_HOSTNAME, folder="/")
+
+        assert self._get_overview_link(
+            clients,
+            mock_livestatus,
+            field="legacy_service_discovery_link",
+            service_name="Check_MK Discovery",
+        ) == (f"wato.py?mode=inventory&host={_HOSTNAME}")
+
+    @pytest.mark.usefixtures("suppress_remote_automation_calls")
+    def test_no_discovery_link_for_other_services(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        clients.HostConfig.create(_HOSTNAME, folder="/")
+
+        assert (
+            self._get_overview_link(clients, mock_livestatus, field="legacy_service_discovery_link")
+            is None
+        )
+
+    def test_no_discovery_link_for_a_host_setup_does_not_grant(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        assert (
+            self._get_overview_link(
+                clients,
+                mock_livestatus,
+                field="legacy_service_discovery_link",
+                service_name="Check_MK Discovery",
+            )
+            is None
+        )
+
+    @pytest.mark.usefixtures("suppress_remote_automation_calls")
+    def test_no_discovery_link_while_setup_is_disabled(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+        set_config: SetConfig,
+    ) -> None:
+        clients.HostConfig.create(_HOSTNAME, folder="/")
+
+        with set_config(wato_enabled=False):
+            assert (
+                self._get_overview_link(
+                    clients,
+                    mock_livestatus,
+                    field="legacy_service_discovery_link",
+                    service_name="Check_MK Discovery",
+                )
+                is None
+            )
+
     @time_machine.travel("2026-07-13 11:39:00+00:00", tick=False)
     def test_passive_service_has_no_next_check(
         self,
@@ -1664,6 +1879,7 @@ class TestMonitorServiceOverview:
                     "description": _SERVICE_DESCRIPTION,
                     "perf_data": "",
                     "check_command": "check_mk-test",
+                    "pnpgraph_present": 0,
                     "check_type": 0,
                     "cached_at": 0,
                     "cache_interval": 0,
@@ -1734,6 +1950,7 @@ class TestMonitorServiceOverview:
                     "description": _SERVICE_DESCRIPTION,
                     "perf_data": "",
                     "check_command": "check_mk-test",
+                    "pnpgraph_present": 0,
                     "check_type": 0,
                     "cached_at": 0,
                     "cache_interval": 0,
@@ -1805,6 +2022,7 @@ class TestMonitorServiceOverview:
                     "description": _SERVICE_DESCRIPTION,
                     "perf_data": "",
                     "check_command": "check_mk-test",
+                    "pnpgraph_present": 0,
                     "check_type": 0,
                     "cached_at": 0,
                     "cache_interval": 0,
@@ -2133,6 +2351,48 @@ _ACTION_MENU_SERVICE_ROW = {
     "service_cache_interval": 0,
 }
 _HOST_ALIAS = "Web Server"
+_OVERVIEW_SERVICE_ROW = {
+    "description": _SERVICE_DESCRIPTION,
+    "perf_data": "",
+    "check_command": "check_mk-test",
+    "pnpgraph_present": 0,
+    "check_type": 0,
+    "cached_at": 0,
+    "cache_interval": 0,
+    "host_name": _HOSTNAME,
+    "state": 0,
+    "has_been_checked": 1,
+    "plugin_output": "OK - load average: 0.10, 0.05, 0.01",
+    "last_check": 0,
+    "last_state_change": 0,
+    "acknowledged": 0,
+    "scheduled_downtime_depth": 0,
+    "notifications_enabled": 1,
+    "comments": [],
+    "modified_attributes_list": [],
+    "active_checks_enabled": 1,
+    "accept_passive_checks": 1,
+    "in_notification_period": 1,
+    "in_service_period": 1,
+    "in_check_period": 1,
+    "in_passive_check_period": 1,
+    "is_flapping": 0,
+    "staleness": 0.0,
+    "host_alias": _HOST_ALIAS,
+    "host_state": 0,
+    "host_has_been_checked": 1,
+    "host_acknowledged": 0,
+    "host_scheduled_downtime_depth": 0,
+    "contact_groups": ["all"],
+    "long_plugin_output": "",
+    "current_attempt": 1,
+    "max_check_attempts": 1,
+    "next_check": 0,
+    "contacts": [],
+    "labels": {},
+    "label_sources": {},
+    "tags": {},
+}
 _SERVICE_OVERVIEW_COLUMNS = (
     "description host_name state has_been_checked plugin_output last_check last_state_change "
     "acknowledged "
@@ -2140,14 +2400,14 @@ _SERVICE_OVERVIEW_COLUMNS = (
     "host_has_been_checked host_acknowledged host_scheduled_downtime_depth contact_groups "
     "long_plugin_output "
     "current_attempt max_check_attempts next_check tags labels label_sources perf_data "
-    "check_command check_type cached_at cache_interval"
+    "check_command pnpgraph_present check_type cached_at cache_interval"
 )
 _LIMIT = 1000
 _SERVICES_COLUMNS = (
     "description host_name state has_been_checked plugin_output acknowledged "
     "scheduled_downtime_depth "
     "notifications_enabled comments modified_attributes_list active_checks_enabled accept_passive_checks in_notification_period in_service_period in_check_period in_passive_check_period is_flapping staleness last_check last_state_change perf_data "
-    "check_command check_type cached_at cache_interval"
+    "check_command check_type cached_at cache_interval host_state host_has_been_checked"
 )
 _DEFAULT_ORDER_BY = "OrderBy: description asc natural"
 

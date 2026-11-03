@@ -36,6 +36,10 @@ export function useMapFabMenus(editor: MapEditor) {
     editor.resetDraft()
   }
 
+  // Placing the object finishes adding it, so the panel goes with it. Cancelled
+  // placing places nothing, and the panel stays for another try.
+  watch(() => editor.placedCount.value, closeAddPanel)
+
   // Leaving edit mode dismisses the panel so it can't linger over a read-only map.
   watch(
     () => editor.editMode.value,

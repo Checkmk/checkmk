@@ -3,11 +3,14 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { fireEvent, render, screen } from '@testing-library/vue'
+import userEvent from '@testing-library/user-event'
+import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import { describe, expect, it } from 'vitest'
 
 import CmkSiteOverviewHostsFigure from '@/dashboard/components/figures/CmkSiteOverviewHostsFigure.vue'
 import type { SiteOverviewHost, SiteOverviewHosts } from '@/dashboard/types/widget'
+
+import { emulateFocusVisible } from './emulateFocusVisible'
 
 function host(hostName: string, overrides: Partial<SiteOverviewHost> = {}): SiteOverviewHost {
   return {
@@ -46,6 +49,15 @@ const HOSTS: SiteOverviewHosts = {
   hosts: [host('alpha'), host('beta', { state: 'DOWN' })]
 }
 
+const TWO_LINKS: SiteOverviewHosts = {
+  ...HOSTS,
+  links: [...HOSTS.links, { ...HOSTS.links[0]!, title: 'Services' }],
+  hosts: HOSTS.hosts.map((entry) => ({
+    ...entry,
+    link_properties: { links: [...entry.link_properties.links, ...entry.link_properties.links] }
+  }))
+}
+
 function renderFigure(value: SiteOverviewHosts = HOSTS) {
   return render(CmkSiteOverviewHostsFigure, {
     props: {
@@ -63,7 +75,144 @@ async function hoverFirstHost(): Promise<void> {
   await fireEvent.pointerMove(area!, { clientX: 44, clientY: 49 })
 }
 
+async function openFirstHostMenu(): Promise<void> {
+  await hoverFirstHost()
+  screen.getByRole('button', { name: /^alpha,/ }).focus()
+  await userEvent.keyboard('{Enter}')
+  await screen.findByRole('menu')
+  await screen.findByText('Host is up')
+}
+
+function highlights(): Element[] {
+  return [...document.querySelectorAll('.db-hexagon-grid-figure__highlight')]
+}
+
 describe('CmkSiteOverviewHostsFigure', () => {
+  emulateFocusVisible()
+
+  it('highlights the hovered host only', async () => {
+    renderFigure()
+
+    await hoverFirstHost()
+
+    expect(highlights()).toHaveLength(1)
+  })
+
+  it('removes the highlight once the pointer leaves', async () => {
+    renderFigure()
+    await hoverFirstHost()
+
+    await fireEvent.pointerLeave(document.querySelector('svg g')!)
+
+    expect(highlights()).toHaveLength(0)
+  })
+
+  it('keeps the tooltip and the menu of a host after the pointer leaves', async () => {
+    renderFigure(TWO_LINKS)
+    await openFirstHostMenu()
+
+    await fireEvent.pointerLeave(document.querySelector('svg g')!)
+
+    expect(screen.getByRole('menu')).toBeInTheDocument()
+    expect(screen.getByText('Host is up')).toBeInTheDocument()
+  })
+
+  it('lets the tooltip go once a refresh takes the menu of a host away', async () => {
+    const { rerender } = renderFigure(TWO_LINKS)
+    await openFirstHostMenu()
+
+    await rerender({ value: HOSTS })
+
+    expect(screen.queryByText('Host is up')).toBeNull()
+  })
+
+  it('closes the menu of a host once a refresh puts another host in its place', async () => {
+    const { rerender } = renderFigure(TWO_LINKS)
+    await openFirstHostMenu()
+
+    await rerender({ value: { ...TWO_LINKS, hosts: [...TWO_LINKS.hosts].reverse() } })
+
+    await waitFor(() => expect(screen.queryByRole('menu')).toBeNull())
+  })
+
+  it('shows no tooltip again once a click away closes the menu of a host', async () => {
+    renderFigure(TWO_LINKS)
+    await openFirstHostMenu()
+
+    await userEvent.setup({ pointerEventsCheck: 0 }).click(document.body)
+
+    await waitFor(() => expect(screen.queryByRole('menu')).toBeNull())
+    expect(screen.queryByText('Host is up')).toBeNull()
+  })
+
+  it('closes the menu of a host on Escape', async () => {
+    renderFigure(TWO_LINKS)
+    await openFirstHostMenu()
+
+    await userEvent.keyboard('{Escape}')
+
+    expect(screen.queryByRole('menu')).toBeNull()
+    expect(await screen.findByText('Host is up')).toBeInTheDocument()
+  })
+
+  it('shows the tooltip of the host keyboard focus is on', async () => {
+    renderFigure()
+
+    await userEvent.tab()
+
+    expect(await screen.findByText('Host is up')).toBeInTheDocument()
+  })
+
+  it('hides the tooltip of the focused host on Escape', async () => {
+    renderFigure()
+    await userEvent.tab()
+    await screen.findByText('Host is up')
+
+    await userEvent.keyboard('{Escape}')
+
+    expect(screen.queryByText('Host is up')).toBeNull()
+  })
+
+  it('moves keyboard focus to the next host on ArrowRight', async () => {
+    renderFigure()
+    await userEvent.tab()
+    const alpha = document.activeElement
+
+    await userEvent.keyboard('{ArrowRight}')
+
+    expect(document.activeElement).not.toBe(alpha)
+    expect(document.activeElement).toHaveAccessibleName(/^beta,/)
+  })
+
+  it('keeps one link, with keyboard focus, on the host the pointer moves to', async () => {
+    renderFigure(TWO_LINKS)
+    screen.getByRole('button', { name: /^alpha,/ }).focus()
+    await userEvent.keyboard('{ArrowRight}')
+
+    await hoverFirstHost()
+
+    expect(screen.getAllByRole('button')).toHaveLength(1)
+    expect(document.activeElement).toHaveAccessibleName(/^alpha,/)
+  })
+
+  it('names a host by its state for screen readers', () => {
+    renderFigure()
+
+    expect(screen.getByRole('link', { name: /^alpha, Host is up/ })).toBeInTheDocument()
+  })
+
+  it('marks the tooltip of a host with several links with the menu arrow', async () => {
+    renderFigure(TWO_LINKS)
+
+    await hoverFirstHost()
+
+    expect(
+      (await screen.findByText('Host is up'))
+        .closest('.cmk-pointer-tooltip')!
+        .querySelector('.db-contextual-link-anchor__arrow')
+    ).not.toBeNull()
+  })
+
   it('names the hosts by their state in its accessible name', () => {
     renderFigure()
 
@@ -75,7 +224,7 @@ describe('CmkSiteOverviewHostsFigure', () => {
 
     await hoverFirstHost()
 
-    expect(screen.getByRole('link', { name: 'alpha' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /^alpha,/ })).toHaveAttribute(
       'href',
       expect.stringContaining('host=alpha')
     )
@@ -95,7 +244,9 @@ describe('CmkSiteOverviewHostsFigure', () => {
       hosts: [host('alpha'), host('beta', { num_warn: 2 }), host('gamma', { num_crit: 1 })]
     })
 
-    const fills = [...container.querySelectorAll('path')].map((path) => path.style.fill)
+    const fills = [...container.querySelectorAll('path')]
+      .map((path) => path.style.fill)
+      .filter((fill) => fill !== '')
     expect(fills.at(-1)).toBe('var(--background-muted)')
   })
 

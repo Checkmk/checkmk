@@ -350,3 +350,10 @@ def _stop_time_results(stop_time: str) -> list[Result]:
 )
 def test_stop_time_fallback(stop_time: str, expected_results: list[Result]) -> None:
     assert _stop_time_results(stop_time) == expected_results
+
+
+def test_negative_backup_age_from_clock_skew_is_unknown() -> None:
+    assert _check_results(_job_section(LastBackupAge="-19")) == [
+        Result(state=State.OK, summary=_SUCCESS_SUMMARY),
+        Result(state=State.UNKNOWN, summary="Last backup: end time is in the future"),
+    ]

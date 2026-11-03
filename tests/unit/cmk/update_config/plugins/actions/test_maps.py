@@ -24,7 +24,7 @@ from cmk.maps.gui.legacy_maps import legacy_maps_dir
 from cmk.maps.gui.pagetype import MapPage
 from cmk.maps.gui.store import get_own_map
 from cmk.maps.rest_api.utils import map_from_spec
-from cmk.update_config.lib import ExpiryVersion
+from cmk.update_config.internal import ExpiryVersion
 from cmk.update_config.plugins.actions.maps import MigrateLegacyMaps
 from cmk.utils import paths
 from tests.testlib.unit.gui.users import create_and_destroy_user
@@ -343,6 +343,56 @@ def test_weathermap_line_style_is_split_up(admin: UserId) -> None:
     assert obj["line_style"] == "arrow_inward"
     assert obj["line_perfdata_label"] == "bandwidth"
     assert obj["line_weather_color"] is True
+
+
+_DYNGROUP = {"type": "dyngroup", "object_filter": "Filter: name ~ ^web\n"}
+
+
+def test_a_geo_bundle_keeps_counting_its_services(admin: UserId) -> None:
+    bundle = _complete_object(
+        object_types="host", bundle_kind="static", recognize_services=False, **_DYNGROUP
+    )
+
+    obj = _objects(_migrated(admin, "bundle", _complete_map(objects=[bundle])).config.map_spec)[0]
+
+    assert obj["recognize_services"] is True
+
+
+@pytest.mark.parametrize(
+    "group",
+    [
+        pytest.param({"object_types": "host", "recognize_services": False}, id="hosts"),
+        pytest.param({"object_types": "service"}, id="services"),
+    ],
+)
+def test_a_dynamic_group_keeps_its_service_counting(
+    admin: UserId, group: dict[str, object]
+) -> None:
+    map_spec = _complete_map(objects=[_complete_object(**_DYNGROUP, **group)])
+
+    obj = _objects(_migrated(admin, "dyn", map_spec).config.map_spec)[0]
+
+    assert obj.get("recognize_services") == group.get("recognize_services")
+
+
+def test_member_patterns_orbvis_never_applied_are_dropped(admin: UserId) -> None:
+    # OrbVis asked for state names; Maps would read them as a pattern on names.
+    map_spec = _complete_map(
+        objects=[
+            _complete_object(
+                id="g1",
+                type="hostgroup",
+                group_name="web",
+                exclude_members="test-*",
+                exclude_member_states="DOWN,CRITICAL\nOr: 2",
+            )
+        ]
+    )
+
+    obj = _objects(_migrated(admin, "excl", map_spec).config.map_spec)[0]
+
+    assert "exclude_members" not in obj
+    assert "exclude_member_states" not in obj
 
 
 def test_a_single_graph_metric_becomes_a_list(admin: UserId) -> None:
@@ -742,6 +792,14 @@ def test_the_background_becomes_the_maps_background(admin: UserId) -> None:
     assert (_maps_backgrounds_dir() / stored).read_bytes() == _PNG
 
 
+def test_a_board_background_keeps_covering_the_box_its_objects_are_placed_in(
+    admin: UserId,
+) -> None:
+    spec = _migrated(admin, "legacy", _complete_map(background_image="gone.png")).config.map_spec
+
+    assert spec["background_style"] == "stretch"
+
+
 def test_a_missing_background_keeps_its_reference(admin: UserId) -> None:
     spec = _migrated(admin, "legacy", _complete_map(background_image="gone.png")).config.map_spec
 
@@ -976,13 +1034,15 @@ def test_a_demo_board_is_recorded_as_skipped(admin: UserId) -> None:
     assert _outcomes()["demo-static"] == "skipped"
 
 
-def test_existing_map_name_is_recorded_as_skipped(admin: UserId) -> None:
-    _migrated(admin, "dup", _complete_map())
+def test_a_board_named_like_one_of_the_admin_gets_the_fallback_name(admin: UserId) -> None:
+    _run_with_board("dup", _complete_map(alias="First"))
     store.save_object_to_file(_record_path(), {})
+    _run_with_board("dup", _complete_map(alias="Second"))
 
-    _action()(_LOGGER)
-
-    assert _outcomes()["dup"] == "skipped"
+    page = get_own_map(admin, "dup_legacy")
+    assert page is not None
+    assert page.config.map_spec["alias"] == "Second"
+    assert _outcomes()["dup"] == "migrated"
 
 
 def test_existing_map_keeps_its_content(admin: UserId) -> None:
@@ -993,6 +1053,23 @@ def test_existing_map_keeps_its_content(admin: UserId) -> None:
     page = get_own_map(admin, "dup")
     assert page is not None
     assert page.config.map_spec["alias"] == "First"
+
+
+def test_a_board_stored_by_a_stopped_run_is_recorded_as_migrated(admin: UserId) -> None:
+    _migrated(admin, "legacy", _complete_map())
+    store.save_object_to_file(_record_path(), {"pending": {"legacy": "legacy"}})
+
+    _action()(_LOGGER)
+
+    assert _outcomes() == {"legacy": "migrated"}
+
+
+def test_a_board_a_stopped_run_did_not_store_is_migrated_again(admin: UserId) -> None:
+    store.save_object_to_file(_record_path(), {"pending": {"legacy": "legacy"}})
+
+    _migrated(admin, "legacy", _complete_map())
+
+    assert _outcomes() == {"legacy": "migrated"}
 
 
 def test_a_board_named_like_a_builtin_map_gets_a_fallback_name(admin: UserId) -> None:
@@ -1020,7 +1097,7 @@ def test_the_fallback_name_keeps_the_boards_visibility() -> None:
 
 
 def test_a_taken_fallback_name_is_recorded_as_skipped(admin: UserId) -> None:
-    # A fixed fallback name keeps a rerun after a stopped run from importing twice.
+    # Not imported over the map of the fallback name.
     save_user_file("user_maps", {"infrastructure_legacy": {"title": "Taken"}}, admin)
     _run_with_board("infrastructure", _complete_map())
 
@@ -1040,14 +1117,13 @@ def test_a_board_named_like_another_users_map_gets_a_fallback_name(
         assert get_own_map(admin, "dc1_legacy") is not None
 
 
-@pytest.mark.usefixtures("with_admin")
-def test_a_fallback_name_too_long_for_a_map_is_left_for_a_later_run(load_config: Config) -> None:
+def test_a_long_name_is_shortened_for_its_fallback(load_config: Config, admin: UserId) -> None:
     board = "a" * 100
     with create_and_destroy_user(username="bob", config=load_config):
         save_user_file("user_maps", {board: {"title": "Bob's"}}, UserId("bob"))
         _run_with_board(board, _complete_map())
 
-        assert board not in _outcomes()
+        assert get_own_map(admin, "a" * 93 + "_legacy") is not None
 
 
 @pytest.mark.usefixtures("with_admin")

@@ -50,6 +50,7 @@ class SourceConfig:
         metrics_identity_routing: Callable[[HostName], Mapping[str, object]],
         is_cmc: bool,
         uuid_lookup_dir: Path,
+        debug: bool,
     ) -> None:
         # Pure pass-through callbacks are exposed directly as attributes.
         self.labels_of_host: Final = labels_of_host
@@ -65,6 +66,7 @@ class SourceConfig:
         self.metrics_identity_routing: Final = metrics_identity_routing
         self.is_cmc: Final = is_cmc
         self.uuid_lookup_dir: Final = uuid_lookup_dir
+        self.debug: Final = debug
 
     # .-- SNMP -----------------------------------------------------------------.
 

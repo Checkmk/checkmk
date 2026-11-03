@@ -60,7 +60,6 @@ export interface ArrowDecoration extends Painted {
 export interface LabelDecoration extends Painted {
   /** The line the label belongs to, whose configuration it is drawn from. */
   lineId: string
-  text: string
 }
 
 /** Everything the Vue layer paints on top of the lines. */
@@ -339,15 +338,14 @@ export function useWorldmapLines(source: {
       }
     }
 
-    const text = object.label?.show === false ? '' : (object.label?.text ?? '')
-    entry.label = place(map, entry.label, !!text, midpoint(from, to), LABEL_SPEC)
+    const labelled = object.label?.show !== false && !!object.label?.text
+    entry.label = place(map, entry.label, labelled, midpoint(from, to), LABEL_SPEC)
     if (entry.label) {
       painted.labels.push({
         key: `${object.id}:label`,
         element: entry.label.element,
         dimmed,
-        lineId: object.id,
-        text
+        lineId: object.id
       })
     }
   }

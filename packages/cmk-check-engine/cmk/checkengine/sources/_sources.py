@@ -79,6 +79,7 @@ def _make_snmp_fetcher(
         relative_stored_walk_path=snmp_fetcher_config.relative_stored_walk_path,
         relative_walk_cache_path=snmp_fetcher_config.relative_walk_cache_path,
         force_stored_walks=snmp_fetcher_config.force_stored_walks,
+        debug=snmp_fetcher_config.debug,
     )
 
 

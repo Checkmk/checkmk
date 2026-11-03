@@ -12,37 +12,37 @@ WARNING: Use at your own risk, not supported.
 
 from collections.abc import Mapping
 from http import HTTPStatus
-from typing import Any, Literal
+from typing import Any
 from uuid import UUID
 
-import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import omd_site
 from cmk.gui.agent_registration import PERMISSION_SECTION_AGENT_REGISTRATION
 from cmk.gui.config import active_config
-from cmk.gui.exceptions import MKAuthException, MKUserError
+from cmk.gui.exceptions import MKAuthException, MKInsufficientScope, MKUserError
 from cmk.gui.fields import HostField
 from cmk.gui.http import Response
 from cmk.gui.i18n import _l
 from cmk.gui.logged_in import user
-from cmk.gui.openapi.endpoints.host_internal.request_schemas import (
-    LinkHostUUID,
-    RegisterHostRequest,
-)
-from cmk.gui.openapi.endpoints.host_internal.response_schemas import (
-    HostConfigSchemaInternal,
-    HostConnectionMode,
-)
+from cmk.gui.openapi.endpoints.host_internal.request_schemas import RegisterHostRequest
+from cmk.gui.openapi.endpoints.host_internal.response_schemas import HostConnectionMode
 from cmk.gui.openapi.restful_objects import constructors, Endpoint
-from cmk.gui.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.openapi.restful_objects.registry import EndpointRegistry
 from cmk.gui.openapi.utils import ProblemException, serve_json
 from cmk.gui.permissions import Permission, permission_registry
+from cmk.gui.watolib import bakery
+from cmk.gui.watolib.agent_registration import (
+    link_uuid_of_existing_host,
+    uuid_links_locked,
+    UUIDAlreadyLinkedError,
+    UUIDOfOpenRequestError,
+)
 from cmk.gui.watolib.hosts_and_folders import FolderTree, Host, make_folder_tree
 from cmk.utils.agent_registration import (
     connection_mode_from_host_config,
     HostAgentConnectionMode,
-    UUIDLinkManager,
+    RegistrationRoute,
+    UUIDRegistration,
 )
 from cmk.web.utils import permission_verification as permissions
 
@@ -86,10 +86,13 @@ permission_registry.register(
         HTTPStatus.FORBIDDEN,
         HTTPStatus.NOT_FOUND,
         HTTPStatus.METHOD_NOT_ALLOWED,
+        HTTPStatus.CONFLICT,
     ],
     status_descriptions={
         HTTPStatus.FORBIDDEN: "You do not have the permissions to register this host.",
         HTTPStatus.METHOD_NOT_ALLOWED: "This host cannot be registered on this site.",
+        HTTPStatus.CONFLICT: "The UUID is already linked to a host or belongs to an open request"
+        " of the automatic registration.",
     },
     path_params=[
         {
@@ -101,37 +104,67 @@ permission_registry.register(
     ],
     request_schema=RegisterHostRequest,
     response_schema=HostConnectionMode,
-    permissions_required=permissions.AnyPerm(
+    # The registration changes the UUID links, not the Setup configuration. It takes the lock of
+    # the UUID links, so that it does not wait for long running Setup actions.
+    skip_locking=True,
+    update_config_generation=False,
+    permissions_required=permissions.AllPerm(
         [
-            permissions.Perm("agent_registration.register_any_existing_host"),
-            permissions.Perm("agent_registration.register_managed_existing_host"),
-            permissions.AllPerm(
+            permissions.AnyPerm(
                 [
-                    # read access
-                    permissions.Optional(permissions.Perm("wato.see_all_folders")),
-                    # write access
-                    permissions.AnyPerm(
+                    permissions.Perm("agent_registration.register_any_existing_host"),
+                    permissions.Perm("agent_registration.register_managed_existing_host"),
+                    permissions.AllPerm(
                         [
-                            permissions.Perm("wato.all_folders"),
-                            permissions.Perm("wato.edit_hosts"),
+                            # read access
+                            permissions.Optional(permissions.Perm("wato.see_all_folders")),
+                            # write access
+                            permissions.AnyPerm(
+                                [
+                                    permissions.Perm("wato.all_folders"),
+                                    permissions.Perm("wato.edit_hosts"),
+                                ]
+                            ),
                         ]
                     ),
                 ]
             ),
+            bakery.PERMISSIONS_MAY_REGISTER_FOR_AGENT_UPDATES,
         ]
     ),
 )
 def register_host(params: Mapping[str, Any]) -> Response:
     """Register an existing host, ie. link it to a UUID"""
     host_name = params["host_name"]
-    host = _verified_host(make_folder_tree(active_config), host_name)
-    connection_mode = connection_mode_from_host_config(host.effective_attributes())
-    _link_with_uuid(
-        host_name,
-        params["body"]["uuid"],
-        connection_mode,
-    )
+    # A host rename renames the host and then moves the UUID links under this lock. Loading the
+    # host under this lock either finds the old name, and the rename moves the new link
+    # afterwards, or does not find the host any more. The UUID is never linked to a name that
+    # the rename has already moved away from.
+    with uuid_links_locked():
+        host = _verified_host(make_folder_tree(active_config), host_name)
+        connection_mode = connection_mode_from_host_config(host.effective_attributes())
+        _link_registration(host, params["body"]["uuid"], connection_mode)
     return serve_json({"connection_mode": connection_mode.value})
+
+
+def _link_registration(host: Host, uuid: UUID, connection_mode: HostAgentConnectionMode) -> None:
+    try:
+        link_uuid_of_existing_host(
+            host.name(),
+            uuid,
+            push_configured=connection_mode is HostAgentConnectionMode.PUSH,
+            registration=UUIDRegistration(
+                agent_updates_permitted=bakery.may_register_for_agent_updates(
+                    user, is_contact=host.is_contact(user)
+                ),
+                subject=user.ident,
+                registration_route=RegistrationRoute.REGISTER,
+            ),
+        )
+    except (UUIDAlreadyLinkedError, UUIDOfOpenRequestError) as exc:
+        raise ProblemException(
+            status=HTTPStatus.CONFLICT, title="UUID already in use", detail=str(exc)
+        ) from exc
 
 
 def _verified_host(tree: FolderTree, host_name: HostName) -> Host:
@@ -178,10 +211,9 @@ def _verify_permissions(host: Host) -> None:
 
     try:
         host.permissions.need_permission("read", user)
-    except MKAuthException:
-        raise unathorized_excpt
-    try:
         host.permissions.need_permission("write", user)
+    except MKInsufficientScope:
+        raise
     except MKAuthException:
         raise unathorized_excpt
 
@@ -201,117 +233,5 @@ def _verify_host_properties(host: Host) -> None:
         )
 
 
-def _check_host_access_permissions(
-    tree: FolderTree,
-    host_name: HostName,
-    *,
-    access_type: Literal["read", "write"],
-) -> Host:
-    host = tree.load_host(host_name)
-    try:
-        host.permissions.need_permission(access_type, user)
-    except MKAuthException as exc:
-        # The request is already authenticated at this point, so a failed permission check
-        # means the user lacks a permission -> forbidden (403), not unauthorized (401). Let this
-        # propagate so the shared MKAuthException -> 403 remap in decorators.py applies.
-        raise MKAuthException(
-            f"You do not have {access_type} access to the host {host_name}"
-        ) from exc
-    return host
-
-
-def _link_with_uuid(
-    host_name: HostName,
-    uuid: UUID,
-    connection_mode: HostAgentConnectionMode,
-) -> None:
-    uuid_link_manager = UUIDLinkManager(
-        received_outputs_dir=cmk.utils.paths.received_outputs_dir,
-        data_source_dir=cmk.utils.paths.data_source_push_agent_dir,
-        r4r_discoverable_dir=cmk.utils.paths.r4r_discoverable_dir,
-        uuid_lookup_dir=cmk.utils.paths.uuid_lookup_dir,
-    )
-    uuid_link_manager.create_link(
-        host_name,
-        uuid,
-        push_configured=connection_mode is HostAgentConnectionMode.PUSH,
-    )
-
-
-@Endpoint(
-    constructors.object_action_href(
-        "host_config_internal",
-        "{host_name}",
-        action_name="link_uuid",
-    ),
-    "cmk/link_uuid",
-    method="put",
-    tag_group="Checkmk Internal",
-    additional_status_codes=[HTTPStatus.FORBIDDEN],
-    status_descriptions={
-        HTTPStatus.FORBIDDEN: "You do not have the permissions to edit this host.",
-    },
-    path_params=[HOST_NAME],
-    request_schema=LinkHostUUID,
-    permissions_required=permissions.AnyPerm(
-        [
-            permissions.Perm("wato.all_folders"),
-            permissions.Perm("wato.edit_hosts"),
-            permissions.Undocumented(permissions.Perm("wato.see_all_folders")),
-        ]
-    ),
-    output_empty=True,
-)
-def link_with_uuid(params: Mapping[str, Any]) -> Response:
-    """Link a host to a UUID"""
-    host_name = params["host_name"]
-    connection_mode = connection_mode_from_host_config(
-        _check_host_access_permissions(
-            make_folder_tree(active_config),
-            host_name,
-            access_type="write",
-        ).effective_attributes()
-    )
-    _link_with_uuid(
-        host_name := params["host_name"],
-        params["body"]["uuid"],
-        connection_mode,
-    )
-    return Response(status=HTTPStatus.NO_CONTENT)
-
-
-@Endpoint(
-    constructors.object_href(
-        "host_config_internal",
-        "{host_name}",
-    ),
-    "cmk/show",
-    method="get",
-    tag_group="Checkmk Internal",
-    additional_status_codes=[HTTPStatus.FORBIDDEN],
-    status_descriptions={
-        HTTPStatus.FORBIDDEN: "You do not have read access to this host.",
-    },
-    path_params=[HOST_NAME],
-    response_schema=HostConfigSchemaInternal,
-    permissions_required=permissions.Optional(permissions.Perm("wato.see_all_folders")),
-)
-def show_host(params: Mapping[str, Any]) -> Response:
-    """Show a host"""
-    host = _check_host_access_permissions(
-        make_folder_tree(active_config),
-        params["host_name"],
-        access_type="read",
-    )
-    return serve_json(
-        {
-            "site": host.site_id(),
-            "is_cluster": host.is_cluster(),
-        }
-    )
-
-
 def register(endpoint_registry: EndpointRegistry) -> None:
     endpoint_registry.register(register_host)
-    endpoint_registry.register(link_with_uuid)
-    endpoint_registry.register(show_host)

@@ -10,8 +10,8 @@ from cmk.gui.form_specs.visitors.string import StringVisitor
 from cmk.gui.i18n import _
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
-from ._from_api import metrics_from_api
 from ._metric_spec import registered_metric_ids_and_titles
+from ._plugins import registered_metrics
 
 
 class MetricVisitor(StringVisitor):
@@ -56,7 +56,7 @@ class MetricVisitor(StringVisitor):
 
     @override
     def _validate(self, parsed_value: str) -> list[shared_type_defs.ValidationMessage]:
-        metrics = [name for (name, _) in registered_metric_ids_and_titles(metrics_from_api)]
+        metrics = [name for (name, _) in registered_metric_ids_and_titles(registered_metrics())]
         if parsed_value not in metrics:
             return create_validation_error(parsed_value, _("Unknown metric"))
         return []

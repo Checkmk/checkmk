@@ -15,10 +15,13 @@ import { GADGET_DEFAULT_SIZE } from '@/maps/utils/gadget'
  * line endpoints bound to an object read this, so they agree on where the
  * object's edge is.
  */
-export function objectIconSize(
-  object: MapElement,
-  sizes: { map: number | null | undefined; override: number | undefined; fallback: number }
-): number {
+export interface IconSizes {
+  map: number | null | undefined
+  override: number | undefined
+  fallback: number
+}
+
+export function objectIconSize(object: MapElement, sizes: IconSizes): number {
   if (object.display?.image_size !== null && object.display?.image_size !== undefined) {
     return object.display.image_size
   }

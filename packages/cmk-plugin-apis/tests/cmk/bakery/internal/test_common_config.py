@@ -14,10 +14,30 @@ from cmk.bakery.internal import (
     AgentConfig,
     DeploymentModeProvider,
     get_unix_agent_paths_keeper,
+    is_agent_controller_deployed,
     LogicalPath,
     TargetPathsProvider,
     UnixSingleDirectoryKeeper,
 )
+
+
+@pytest.mark.parametrize("deployment_mode", ["auto", "systemd"])
+def test_agent_controller_is_deployed_with_systemd(deployment_mode: str) -> None:
+    assert is_agent_controller_deployed({"super_server": {"deployment_mode": deployment_mode}})
+
+
+@pytest.mark.parametrize("deployment_mode", ["xinetd", "no_service"])
+def test_agent_controller_is_not_deployed_without_systemd(deployment_mode: str) -> None:
+    assert not is_agent_controller_deployed({"super_server": {"deployment_mode": deployment_mode}})
+
+
+def test_agent_controller_is_not_deployed_when_disabled() -> None:
+    assert not is_agent_controller_deployed(
+        {
+            "super_server": {"deployment_mode": "auto"},
+            "agent_controller": {"agent_ctl_enabled": ("disabled", None)},
+        }
+    )
 
 
 def test_get_unix_agent_paths_keeper_multi_directory() -> None:
@@ -226,15 +246,21 @@ def test_unix_single_directory_keeper_make_package_structure(tmp_path: Path) -> 
         assert mode(base / "package") == 0o755
         assert mode(base / "package" / "bin") == 0o755
         assert mode(base / "package" / "plugins") == 0o755
+        # Traversable for others (0o751)
+        assert mode(base / "runtime") == 0o751
+        assert mode(base / "runtime" / "job") == 0o751
         # Forbidden for others (0o750)
         assert mode(base / "package" / "agent") == 0o750
         assert mode(base / "package" / "local") == 0o750
         assert mode(base / "package" / "config") == 0o750
         assert mode(base / "package" / "scripts") == 0o750
-        assert mode(base / "runtime") == 0o750
         assert mode(base / "runtime" / "log") == 0o750
         assert mode(base / "runtime" / "spool") == 0o750
-        assert mode(base / "runtime" / "job") == 0o750
         assert mode(base / "runtime" / "controller") == 0o750
+        assert mode(base / "runtime" / "cache") == 0o750
+        assert mode(base / "runtime" / "logwatch-batches") == 0o750
+        assert mode(base / "runtime" / "persisted") == 0o750
+        assert mode(base / "runtime" / "rtc_remotes") == 0o750
+        assert mode(base / "runtime" / "tmp") == 0o750
     finally:
         os.umask(old_umask)

@@ -232,13 +232,13 @@ test('keeps the graph on screen when a refetch fails, stating the error over it'
 
 test("reports the response's own per-metric errors alongside the graph", async () => {
   postSpy.mockResolvedValue({
-    data: { ...FETCHED, errors: ['Metrics backend is unavailable.'] },
+    data: { ...FETCHED, errors: ['The data backend is not reachable.'] },
     error: undefined,
     response: new Response('{}', { status: 200 })
   } as never)
   renderFigure()
 
-  expect(await screen.findByText('Metrics backend is unavailable.')).toBeInTheDocument()
+  expect(await screen.findByText('The data backend is not reachable.')).toBeInTheDocument()
   expect(screen.getByTestId('time-series-graph')).toBeInTheDocument()
 })
 
@@ -261,7 +261,7 @@ test('states errors and warnings together, at the error severity', async () => {
   postSpy.mockResolvedValue({
     data: {
       ...FETCHED,
-      errors: ['Metrics backend is unavailable.'],
+      errors: ['The data backend is not reachable.'],
       warnings: ['The query matched more than 100 time series.']
     },
     error: undefined,
@@ -271,7 +271,7 @@ test('states errors and warnings together, at the error severity', async () => {
 
   // One pill states both, so the advice is not dropped for arriving next to a failure.
   const message = await screen.findByText(
-    'Metrics backend is unavailable. The query matched more than 100 time series.'
+    'The data backend is not reachable. The query matched more than 100 time series.'
   )
   expect(message.closest('.cmk-surface-notice')).toHaveClass('cmk-surface-notice--error')
 })
@@ -510,18 +510,27 @@ test('shows the timestamp only when requested', async () => {
   expect(document.querySelector('.graphing-graph-timestamp')).not.toBeInTheDocument()
 })
 
-test('shows the compact legend only when requested', async () => {
-  const { unmount } = renderFigure({ showLegend: true })
+test('shows the compact legend when requested', async () => {
+  renderFigure({ legend: 'compact' })
   await screen.findByTestId('time-series-graph')
   // The compact legend middle-truncates names into head/tail spans; the full title
   // is carried by the series' title attribute.
   expect(screen.getByTitle('CPU utilization')).toBeInTheDocument()
   expect(document.querySelector('.graphing-graph-legend-compact')).toBeInTheDocument()
-  unmount()
+})
 
+test('shows the extended legend with the series statistics when requested', async () => {
+  renderFigure({ legend: 'extended' })
+  await screen.findByTestId('time-series-graph')
+  expect(screen.getByText('CPU utilization')).toBeInTheDocument()
+  expect(screen.getByRole('columnheader', { name: 'Average' })).toBeInTheDocument()
+})
+
+test('draws no legend by default', async () => {
   renderFigure()
   await screen.findByTestId('time-series-graph')
   expect(document.querySelector('.graphing-graph-legend-compact')).not.toBeInTheDocument()
+  expect(document.querySelector('.graphing-graph-legend')).not.toBeInTheDocument()
 })
 
 test('shows the burger menu only when requested and there is an add-to target', async () => {

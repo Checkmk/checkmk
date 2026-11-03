@@ -85,7 +85,7 @@ function previewElements(t: PresentationTemplate): PresentationElement[] {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgb(0 0 0 / 45%);
+  background: var(--color-popup-backdrop);
 }
 
 .maps-presentation-template-gallery__card {
@@ -93,10 +93,9 @@ function previewElements(t: PresentationTemplate): PresentationElement[] {
   flex-direction: column;
   width: min(920px, calc(100% - 64px));
   max-height: calc(100% - 64px);
-  border-radius: 14px;
+  border-radius: var(--border-radius);
   background: var(--ux-theme-3);
   border: 1px solid var(--default-border-color, rgb(255 255 255 / 8%));
-  box-shadow: 0 24px 64px rgb(0 0 0 / 50%);
   color: var(--font-color);
 }
 
@@ -105,18 +104,18 @@ function previewElements(t: PresentationTemplate): PresentationElement[] {
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--dimension-5);
-  padding: 20px 24px 12px;
+  padding: var(--dimension-7) var(--dimension-8) var(--dimension-5);
 }
 
 .maps-presentation-template-gallery__title {
   margin: 0;
-  font-size: 20px;
+  font-size: var(--font-size-xlarge);
   font-weight: var(--font-weight-bold);
 }
 
 .maps-presentation-template-gallery__sub {
-  margin: 4px 0 0;
-  font-size: var(--font-size-large);
+  margin: var(--dimension-3) 0 0;
+  font-size: var(--font-size-normal);
   color: var(--font-color-dimmed);
 }
 
@@ -124,7 +123,7 @@ function previewElements(t: PresentationTemplate): PresentationElement[] {
   border: none;
   background: transparent;
   color: var(--font-color-dimmed);
-  font-size: 22px;
+  font-size: var(--font-size-xxlarge);
   cursor: pointer;
 }
 
@@ -141,7 +140,7 @@ function previewElements(t: PresentationTemplate): PresentationElement[] {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(264px, 1fr));
   gap: var(--dimension-6);
-  padding: 12px 24px 24px;
+  padding: var(--dimension-5) var(--dimension-8) var(--dimension-8);
 }
 
 .maps-presentation-template-gallery__item {
@@ -151,19 +150,19 @@ function previewElements(t: PresentationTemplate): PresentationElement[] {
   gap: var(--dimension-3);
   padding: var(--dimension-4);
   border: 1px solid var(--default-border-color, rgb(255 255 255 / 10%));
-  border-radius: var(--dimension-5);
+  border-radius: var(--border-radius);
   background: transparent;
   color: inherit;
   cursor: pointer;
   text-align: left;
   transition:
     border-color 0.12s ease,
-    transform 0.12s ease;
+    background-color 0.12s ease;
 }
 
 .maps-presentation-template-gallery__item:hover {
   border-color: var(--interactive-accent);
-  transform: translateY(-2px);
+  background: var(--input-hover-bg-color);
 }
 
 .maps-presentation-template-gallery__blank {
@@ -172,7 +171,7 @@ function previewElements(t: PresentationTemplate): PresentationElement[] {
   justify-content: center;
   height: 139px;
   border: 1px dashed var(--default-border-color, rgb(255 255 255 / 18%));
-  border-radius: var(--dimension-4);
+  border-radius: var(--border-radius);
   color: var(--font-color-dimmed);
 }
 
@@ -182,7 +181,7 @@ function previewElements(t: PresentationTemplate): PresentationElement[] {
 }
 
 .maps-presentation-template-gallery__item-title {
-  margin-top: 6px;
+  margin-top: var(--dimension-4);
   font-weight: var(--font-weight-bold);
   font-size: var(--font-size-large);
 }

@@ -21,7 +21,7 @@ from werkzeug.datastructures import ETags, Headers
 
 from cmk.ccc import store
 from cmk.gui.config import Config
-from cmk.gui.exceptions import MKAuthException, MKUnauthenticatedException
+from cmk.gui.exceptions import MKAuthException, MKInsufficientScope, MKUnauthenticatedException
 from cmk.gui.logged_in import LoggedInNobody, user
 from cmk.gui.openapi.framework import (
     ApiContext,
@@ -743,6 +743,63 @@ def test_handle_endpoint_request_permission_denied_is_forbidden(
     response = exc_info.value.to_problem()
     assert response.status_code == HTTPStatus.FORBIDDEN, response.get_data(as_text=True)
     assert "lack the permission" in response.get_json()["detail"]
+
+
+def test_handle_endpoint_request_scope_denial_carries_insufficient_scope_challenge(
+    permission_validator: PermissionValidator,
+) -> None:
+    def _scope_denied_handler() -> None:
+        raise MKInsufficientScope("The presented token scope was not granted the permission.")
+
+    request_endpoint = RequestEndpointFactory.build(handler=_scope_denied_handler)
+    request_data = RawRequestDataFactory.build(
+        headers=Headers({"Accept": request_endpoint.content_type})
+    )
+
+    with pytest.raises(RestAPIForbiddenException) as exc_info:
+        handle_endpoint_request(
+            request_endpoint,
+            request_data,
+            _api_context(),
+            permission_validator,
+            update_config_generation=lambda: None,
+            do_git_commit=lambda: None,
+            wato_enabled=True,
+            wato_use_git=False,
+            is_testing=False,
+        )
+
+    assert (
+        exc_info.value.to_problem().headers["WWW-Authenticate"]
+        == 'Bearer error="insufficient_scope"'
+    )
+
+
+def test_handle_endpoint_request_role_denial_carries_no_scope_challenge(
+    permission_validator: PermissionValidator,
+) -> None:
+    def _denied_handler() -> None:
+        raise MKAuthException("We are sorry, but you lack the permission for this operation.")
+
+    request_endpoint = RequestEndpointFactory.build(handler=_denied_handler)
+    request_data = RawRequestDataFactory.build(
+        headers=Headers({"Accept": request_endpoint.content_type})
+    )
+
+    with pytest.raises(RestAPIForbiddenException) as exc_info:
+        handle_endpoint_request(
+            request_endpoint,
+            request_data,
+            _api_context(),
+            permission_validator,
+            update_config_generation=lambda: None,
+            do_git_commit=lambda: None,
+            wato_enabled=True,
+            wato_use_git=False,
+            is_testing=False,
+        )
+
+    assert "WWW-Authenticate" not in exc_info.value.to_problem().headers
 
 
 def test_handle_endpoint_request_unauthenticated_stays_unauthorized(

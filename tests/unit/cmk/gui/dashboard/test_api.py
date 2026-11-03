@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import copy
 from http import HTTPStatus
 from typing import get_args, get_type_hints
 
@@ -14,20 +13,24 @@ from cmk.gui.config import Config
 from cmk.gui.dashboard import DashletConfig, get_all_dashboards
 from cmk.gui.dashboard.api._utils import INTERNAL_TO_API_TYPE_NAME
 from cmk.gui.dashboard.api.model.constants import RESPONSIVE_GRID_BREAKPOINTS
-from cmk.gui.dashboard.api.model.widget import WidgetTitle
-from cmk.gui.dashboard.api.model.widget_content import _CONTENT_TYPES
+from cmk.gui.dashboard.api.model.widget import RelativeGridWidgetResponse, WidgetTitle
+from cmk.gui.dashboard.api.model.widget_content import (
+    _CONTENT_TYPES,
+    content_from_internal,
+    NotSupportedContent,
+)
 from cmk.gui.dashboard.api.model.widget_content._base import BaseWidgetContent
-from cmk.gui.dashboard.api.model.widget_content.network_flow import NetworkFlowDonutContent
+from cmk.gui.dashboard.api.model.widget_content.graph import EmbeddedCustomGraphContent
 from cmk.gui.dashboard.api.model.widget_content.url import URLContent
 from cmk.gui.dashboard.dashlet.dashlets.custom_url import URLDashletConfig
-from cmk.gui.dashboard.type_defs import NetworkFlowDonutDashletConfig
+from cmk.gui.dashboard.type_defs import EmbeddedCustomGraphDashletConfig
 from cmk.gui.openapi.framework.model import ApiOmitted
-from cmk.gui.role_types import BuiltInUserRole, CustomUserRole
 from cmk.gui.type_defs import ColumnSpec, DashboardEmbeddedViewSpec, SorterSpec, VisualLinkSpec
 from cmk.gui.views.icon.registry import all_icons
 from tests.testlib.unit.gui.web_test_app import SetConfig
 from tests.testlib.unit.rest_api_client import ClientRegistry, Response
 from tests.unit.cmk.gui.helpers.dashboard_api_test_helper import (
+    admin_roles_without,
     check_widget_create,
     create_dashboard_payload,
     create_widget,
@@ -74,16 +77,15 @@ def test_widget_title_from_internal_sanitizes_title_url(
         assert result.url == expected_url
 
 
-def test_donut_content_defaults_of_a_stored_widget() -> None:
-    """A donut stored before these options existed keeps the table and no comparison."""
-    config: NetworkFlowDonutDashletConfig = {
-        "type": "network_flow_donut",
-        "dimension": "applications",
-        "limit_to": 6,
-    }
-    content = NetworkFlowDonutContent.from_internal(config)
-    assert content.legend_mode == "table"
-    assert content.show_delta is False
+def test_stored_widget_of_an_unknown_type_is_not_supported() -> None:
+    config: DashletConfig = {"type": "notification_analysis", "position": (1, 1), "size": (10, 10)}
+
+    widget = RelativeGridWidgetResponse.from_internal(config)
+
+    assert (widget.content, widget.filter_context.uses_infos) == (
+        NotSupportedContent(type="not_supported", original_type="notification_analysis"),
+        [],
+    )
 
 
 def test_url_content_defaults_of_a_stored_widget() -> None:
@@ -128,6 +130,42 @@ def test_widget_title_url_scheme_validation(
         assert resp.status_code == HTTPStatus.CREATED, (
             f"Expected 201 for {title_url}, got {resp.status_code} {resp.body!r}"
         )
+
+
+def test_create_embedded_custom_graph_widget_is_unsupported(clients: ClientRegistry) -> None:
+    widget = create_widget(
+        {
+            "type": "embedded_custom_graph",
+            "timerange": {"type": "predefined", "value": "last_25_hours"},
+            "definition": {},
+        }
+    )
+
+    resp = clients.DashboardClient.create_relative_grid_dashboard(
+        create_dashboard_payload("test_dashboard", {"test_widget": widget}),
+        expect_ok=False,
+    )
+
+    assert resp.status_code == HTTPStatus.BAD_REQUEST, resp.body
+    assert (
+        resp.json["fields"]["body.widgets.test_widget.content.embedded_custom_graph"]["msg"]
+        == "Value error, Widget is not supported by this edition"
+    )
+
+
+def test_embedded_custom_graph_content_without_its_edition_has_empty_definition() -> None:
+    # e.g. after a downgrade: the stored definition cannot be rendered here, and stays stored
+    config = EmbeddedCustomGraphDashletConfig(
+        type="embedded_custom_graph",
+        timerange={"type": "dashboard"},
+        graph_render_options={},
+        definition={"version": 2, "graph_options": {}, "data_sources": []},
+    )
+
+    content = content_from_internal(config)
+
+    assert isinstance(content, EmbeddedCustomGraphContent)
+    assert content.definition == {}
 
 
 @pytest.mark.parametrize("widget_api_model", _CONTENT_TYPES)
@@ -183,6 +221,7 @@ def test_dashboard_constants_tell_the_link_options_of_a_widget(clients: ClientRe
     assert widgets["host_stats"]["contextual_link"] == {
         "modes": ["default", "inherited", "custom"],
         "filters": ["siteopt", "wato_folder", "hoststate", "opthostgroup"],
+        "filter_keys": {},
         "single_infos": [],
     }
     assert "contextual_link" not in widgets["event_stats"]
@@ -222,6 +261,19 @@ def test_dashboard_constants_responsive_breakpoints_make_sense(clients: ClientRe
                 f"Widget type '{widget_type}' has minimum columns {columns} for breakpoint "
                 f"'{breakpoint_id}', which exceeds the maximum columns {max_columns}."
             )
+
+
+@pytest.mark.parametrize("widget_type", ["embedded_view", "linked_view"])
+def test_view_widgets_allow_a_minimum_height_of_two_rows(
+    clients: ClientRegistry, widget_type: str
+) -> None:
+    resp = clients.ConstantClient.get_dashboard()
+    responsive_constraints = resp.json["extensions"]["widgets"][widget_type]["layout"]["responsive"]
+
+    assert {
+        breakpoint_id: constraints["minimum_size"]["rows"]
+        for breakpoint_id, constraints in responsive_constraints.items()
+    } == dict.fromkeys(RESPONSIVE_GRID_BREAKPOINTS, 2)
 
 
 @pytest.mark.usefixtures("mock_livestatus")
@@ -438,6 +490,49 @@ class TestPerformanceGraphContent:
                 "graph_render_options": {},
                 "source": "active_sessions",
             },
+        )
+
+    def test_keeps_the_legend_style(self, clients: ClientRegistry) -> None:
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
+            create_dashboard_payload(
+                "test_dashboard",
+                {
+                    "test_widget": create_widget(
+                        {
+                            "type": "performance_graph",
+                            "timerange": {"type": "predefined", "value": "last_25_hours"},
+                            "graph_render_options": {
+                                "show_legend": True,
+                                "legend_style": "extended",
+                            },
+                            "source": "active_sessions",
+                        }
+                    )
+                },
+            )
+        )
+        widget = next(iter(resp.json["extensions"]["widgets"].values()))
+        assert widget["content"]["graph_render_options"]["legend_style"] == "extended"
+
+    def test_rejects_an_unknown_legend_style(self, clients: ClientRegistry) -> None:
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
+            create_dashboard_payload(
+                "test_dashboard",
+                {
+                    "test_widget": create_widget(
+                        {
+                            "type": "performance_graph",
+                            "timerange": {"type": "predefined", "value": "last_25_hours"},
+                            "graph_render_options": {"legend_style": "huge"},
+                            "source": "active_sessions",
+                        }
+                    )
+                },
+            ),
+            expect_ok=False,
+        )
+        assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+            f"Expected 400, got {resp.status_code} {resp.body!r}"
         )
 
 
@@ -803,23 +898,25 @@ class TestNotSupportedContent:
             == "Value error, Cannot use unsupported content type."
         )
 
+    def test_compute_widget_attributes(self, clients: ClientRegistry) -> None:
+        resp = clients.DashboardClient.compute_widget_attributes(
+            {"type": "not_supported", "original_type": "notification_analysis"},
+            expect_ok=False,
+        )
+        assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+            f"Expected 400, got {resp.status_code} {resp.body!r}"
+        )
+        assert (
+            resp.json["fields"]["body.content.not_supported"]["msg"]
+            == "Value error, Cannot use unsupported content type."
+        )
+
 
 def _payload_with_share(dashboard_id: str, share: object) -> dict[str, object]:
     payload = create_dashboard_payload(dashboard_id, {})
     visibility = payload["general_settings"]["visibility"]  # type: ignore[index]
     visibility["share"] = share
     return payload
-
-
-def _admin_roles_without(
-    config: Config, *permissions: str
-) -> dict[str, BuiltInUserRole | CustomUserRole]:
-    roles = copy.deepcopy(config.roles)
-    admin_permissions = dict(roles["admin"].get("permissions", {}))
-    for permission in permissions:
-        admin_permissions[permission] = False
-    roles["admin"]["permissions"] = admin_permissions
-    return roles
 
 
 @pytest.fixture(name="contact_groups")
@@ -849,7 +946,7 @@ class TestSharePermissionEnforcement:
     def test_share_with_all_users_denied_without_permission(
         self, clients: ClientRegistry, set_config: SetConfig, load_config: Config
     ) -> None:
-        with set_config(roles=_admin_roles_without(load_config, "general.publish_dashboards")):
+        with set_config(roles=admin_roles_without(load_config, "general.publish_dashboards")):
             resp = clients.DashboardClient.create_relative_grid_dashboard(
                 _payload_with_share("shared_with_all_denied", {"type": "with_all_users"}),
                 expect_ok=False,
@@ -872,7 +969,7 @@ class TestSharePermissionEnforcement:
         own, _foreign = contact_groups
         # Without the foreign-groups permission, sharing with an own group still works.
         with set_config(
-            roles=_admin_roles_without(load_config, "general.publish_dashboards_to_foreign_groups")
+            roles=admin_roles_without(load_config, "general.publish_dashboards_to_foreign_groups")
         ):
             resp = clients.DashboardClient.create_relative_grid_dashboard(
                 _payload_with_share(
@@ -893,7 +990,7 @@ class TestSharePermissionEnforcement:
     ) -> None:
         _own, foreign = contact_groups
         with set_config(
-            roles=_admin_roles_without(load_config, "general.publish_dashboards_to_foreign_groups")
+            roles=admin_roles_without(load_config, "general.publish_dashboards_to_foreign_groups")
         ):
             resp = clients.DashboardClient.create_relative_grid_dashboard(
                 _payload_with_share(
@@ -934,7 +1031,7 @@ class TestSharePermissionEnforcement:
     ) -> None:
         own, _foreign = contact_groups
         with set_config(
-            roles=_admin_roles_without(
+            roles=admin_roles_without(
                 load_config,
                 "general.publish_dashboards_to_groups",
                 "general.publish_dashboards_to_foreign_groups",
@@ -959,7 +1056,7 @@ class TestSharePermissionEnforcement:
         self, clients: ClientRegistry, set_config: SetConfig, load_config: Config
     ) -> None:
         with set_config(
-            roles=_admin_roles_without(load_config, "general.publish_dashboards_to_sites")
+            roles=admin_roles_without(load_config, "general.publish_dashboards_to_sites")
         ):
             resp = clients.DashboardClient.create_relative_grid_dashboard(
                 _payload_with_share(

@@ -11,12 +11,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <style scoped>
 .db-wizard-steps-container {
-  flex: 1;
+  flex: 0 0 320px; /* no grow, no shrink, always 320px wide */
+  box-sizing: border-box;
   background-color: var(--slide-in-left-part);
   padding-top: var(--spacing);
   padding-bottom: var(--spacing);
   padding-left: var(--spacing);
-  height: calc(100% - var(--spacing) * 2);
+  height: 100%;
   gap: 0;
 }
 </style>

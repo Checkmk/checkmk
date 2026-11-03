@@ -9,8 +9,8 @@ Complements the Bazel aspect //bazel/tools:aspects.bzl%python_extension_checker
 Bazel target's srcs. This test closes the gap for Python source files that are
 not (yet) in any Bazel target.
 
-See https://wiki.lan.checkmk.net/x/jStSCQ for the rationale and guidance on
-how to fix offending files.
+See https://checkmk-int.atlassian.net/wiki/x/p4hlD ("Python File Extension Warnings")
+for the rationale and guidance on how to fix offending files.
 """
 
 import contextlib
@@ -54,7 +54,8 @@ def test_no_python_files_without_py_extension() -> None:
     if violations:
         message = (
             f"Found {len(violations)} Python source file(s) without a .py extension "
-            "(see https://wiki.lan.checkmk.net/x/jStSCQ):\n"
+            "(see https://checkmk-int.atlassian.net/wiki/x/p4hlD, "
+            '"Python File Extension Warnings"):\n'
             + "\n".join(f" -- {path}" for path in sorted(violations))
         )
         _write_results_file(message)

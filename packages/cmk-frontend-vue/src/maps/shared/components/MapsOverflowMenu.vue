@@ -84,7 +84,6 @@ defineProps<{ label: TranslatedString }>()
   background: var(--ux-theme-1);
   border: 1px solid var(--ux-theme-6);
   border-radius: var(--border-radius);
-  box-shadow: 0 2px 8px rgb(0 0 0 / 30%);
 }
 
 /* 28px rows, so an entry is an easy target rather than a line of text. */
@@ -96,8 +95,7 @@ defineProps<{ label: TranslatedString }>()
   color: inherit;
   text-decoration: none;
   white-space: nowrap;
-  border-radius: var(--dimension-2);
-  outline: none;
+  border-radius: var(--border-radius-half);
   cursor: pointer;
   user-select: none;
 

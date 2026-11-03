@@ -50,7 +50,6 @@ const emit = defineEmits<{
   <!-- Hidden rather than absent until measured: the form's height decides where
        it can sit, and a flash at the top-left corner would be worse. -->
   <PresentationPanel
-    raised
     class="maps-presentation-connect-popover"
     :style="position ?? { visibility: 'hidden', left: '0px', top: '0px' }"
     @pointerdown.stop
@@ -106,7 +105,7 @@ const emit = defineEmits<{
   align-items: center;
   justify-content: space-between;
   gap: var(--dimension-4);
-  padding: 8px 12px;
+  padding: var(--dimension-4) var(--dimension-5);
   font-weight: var(--font-weight-bold);
   font-size: var(--font-size-normal);
   border-bottom: 1px solid var(--default-border-color);
@@ -120,13 +119,13 @@ const emit = defineEmits<{
 }
 
 .maps-presentation-connect-popover__body {
-  padding: 10px 12px;
+  padding: var(--dimension-5);
 }
 
 .maps-presentation-connect-popover__foot {
   display: flex;
   justify-content: flex-end;
-  padding: 8px 12px;
+  padding: var(--dimension-4) var(--dimension-5);
   border-top: 1px solid var(--default-border-color);
 }
 </style>

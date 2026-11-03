@@ -9,7 +9,7 @@
 
 from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.sidebar import (
     monitor_menu_topic_registry,
     MonitorMenuTopicContributor,
@@ -21,7 +21,7 @@ from cmk.maps.gui.store import save_map
 
 
 def _user_permissions() -> UserPermissions:
-    return UserPermissions.from_config(active_config, permission_registry)
+    return UserPermissions.from_config(active_config, all_permissions())
 
 
 def _save_map(owner: UserId, name: str, alias: str, *, hide_in_monitor_menu: bool = False) -> None:

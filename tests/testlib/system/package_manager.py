@@ -19,10 +19,7 @@ from typing import NewType, override
 import requests
 
 from tests.testlib.common.repo import repo_path
-from tests.testlib.common.utils2 import (
-    get_cmk_download_credentials,
-    run,
-)
+from tests.testlib.common.utils2 import get_cmk_download_credentials
 from tests.testlib.common.version import (
     CMKEdition,
     CMKPackageInfo,
@@ -31,6 +28,7 @@ from tests.testlib.common.version import (
     TypeCMKEdition,
     version_from_env,
 )
+from tests.testlib.system.systemctl_stub import align_systemctl_with_environment
 
 logger = logging.getLogger(__name__)
 
@@ -248,13 +246,7 @@ class ABCPackageManager(abc.ABC):
         raise NotImplementedError
 
     def _execute(self, cmd: list[str | Path]) -> None:
-        # Workaround to fix package installation issues
-        # - systemctl in docker leads to: Failed to connect to bus: No such file or directory
-        if Path("/.dockerenv").exists() or bool(os.environ.get("POD_LABEL")):
-            systemctl = Path("/bin/systemctl")
-            if systemctl.exists():
-                run(["rm", "-f", systemctl.as_posix()], sudo=True)
-            run(["ln", "-s", "/bin/true", systemctl.as_posix()], sudo=True)
+        align_systemctl_with_environment()
 
         if os.geteuid() != 0:
             cmd.insert(0, "sudo")

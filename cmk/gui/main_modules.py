@@ -90,13 +90,11 @@ _FEATURE_PLUGIN_MODULES: Mapping[Edition, Sequence[str]] = {
     Edition.PRO: [_MAPS_REGISTRATION, "cmk.mcp.gui.registration"],
     Edition.ULTIMATE: [
         "cmk.data_backend.telemetry_metrics.gui._registration_ultimate",
-        "cmk.network_flow.gui.registration_ultimate",
         _MAPS_REGISTRATION,
         "cmk.mcp.gui.registration",
     ],
     Edition.ULTIMATEMT: [
         "cmk.data_backend.telemetry_metrics.gui._registration_ultimate",
-        "cmk.network_flow.gui.registration_ultimate",
         _MAPS_REGISTRATION,
         "cmk.mcp.gui.registration",
     ],

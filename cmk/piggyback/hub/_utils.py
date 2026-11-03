@@ -11,7 +11,6 @@ import sys
 import time
 from collections.abc import Callable
 from pathlib import Path
-from ssl import SSLCertVerificationError
 from typing import override
 
 from pydantic import BaseModel
@@ -97,12 +96,8 @@ def make_connection(
         try:
             # Note: We re-read the certificates here.
             return Connection(APP_NAME, omd_root, omd_site)
-        except (
-            # Certs could have changed
-            SSLCertVerificationError,
-            # and/or broker is restarting
-            CMKConnectionError,
-        ) as exc:
+        except CMKConnectionError as exc:
+            # Certs could have changed and/or broker is restarting
             logger.info(
                 "Connection failed (will retry): %(task_name)s: %(exc)s",
                 {"task_name": task_name, "exc": exc},

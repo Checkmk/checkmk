@@ -10,6 +10,7 @@ import { type PropType, defineComponent, h } from 'vue'
 
 import type { MapsCapabilities } from '@/maps/api/ticket'
 import MapSettingsForm from '@/maps/map/edit/settings/MapSettingsForm.vue'
+import { NavigationService } from '@/maps/services/NavigationService'
 import type { MapConfig, MapRead } from '@/maps/types/api'
 
 import { aMap, newMapView } from '../../../support/fixtures'
@@ -96,7 +97,7 @@ const unsavedChangesDialogStub = defineComponent({
       props.open
         ? h('div', [
             h('button', { type: 'button', onClick: () => emit('confirm') }, 'Discard changes'),
-            h('button', { type: 'button', onClick: () => emit('cancel') }, 'Stay on page')
+            h('button', { type: 'button', onClick: () => emit('cancel') }, 'Keep editing')
           ])
         : h('div')
   }
@@ -136,6 +137,7 @@ function makeMap(overrides: Partial<MapRead> = {}): MapRead {
     view: newMapView('static'),
     object_count: 0,
     rotation_interval: 0,
+    rotation_pools: [],
     sort_order: 0,
     click_action: 'link',
     can_delete: true,
@@ -188,14 +190,9 @@ beforeEach(async () => {
 })
 
 describe('MapSettingsForm – rendering', () => {
-  it('titles the dialog with the map alias and name', async () => {
+  it('titles the dialog "Map settings"', async () => {
     await renderReady()
-    expect(
-      screen.getByRole('heading', {
-        level: 1,
-        name: /Map settings — Network Overview · net-overview/
-      })
-    ).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: 'Map settings' })).toBeInTheDocument()
   })
 
   it('offers Close and Save, with Save disabled while there are no changes', async () => {
@@ -203,25 +200,17 @@ describe('MapSettingsForm – rendering', () => {
     expect(footerButton('Close')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
   })
-
-  it('reveals a Reset button only once the form is dirty', async () => {
-    const user = userEvent.setup()
-    await renderReady()
-    expect(screen.queryByRole('button', { name: 'Reset' })).toBeNull()
-    await editForm(user)
-    expect(await screen.findByRole('button', { name: 'Reset' })).toBeInTheDocument()
-  })
 })
 
 describe('MapSettingsForm – delete affordance', () => {
   it('shows the Delete button when the map is deletable', async () => {
     await renderReady(makeMap({ can_delete: true }))
-    expect(screen.getByRole('button', { name: 'Delete map…' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Delete map' })).toBeInTheDocument()
   })
 
   it('hides the Delete button when the map cannot be deleted', async () => {
     await renderReady(makeMap({ can_delete: false }))
-    expect(screen.queryByRole('button', { name: 'Delete map…' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Delete map' })).toBeNull()
   })
 })
 
@@ -332,20 +321,51 @@ describe('MapSettingsForm – save', () => {
   })
 })
 
-describe('MapSettingsForm – delete flow', () => {
-  it('deletes the map on confirmation and emits updated + close', async () => {
-    const user = userEvent.setup()
-    const { emitted } = await renderReady()
+describe('MapSettingsForm – background layout', () => {
+  it('offers the image style and position only once there is an image', async () => {
+    await renderReady()
+    expect(screen.queryByRole('combobox', { name: 'Image style' })).toBeNull()
+  })
 
-    await user.click(screen.getByRole('button', { name: 'Delete map…' }))
+  it('leaves the image to the NagVis-compatible renderer, which shows it at its own size', async () => {
+    await renderReady(makeMap({ background_image: 'floor.png', render_mode: 'nagvis_classic' }))
+    expect(screen.queryByRole('combobox', { name: 'Image style' })).toBeNull()
+  })
+
+  it('saves where the image sits', async () => {
+    const user = userEvent.setup()
+    await renderReady(makeMap({ background_image: 'floor.png' }))
+
+    await user.click(screen.getByRole('button', { name: 'Toggle Center' }))
+    await waitFor(() => expect(footerButton('Save')).toBeEnabled())
+    await user.click(footerButton('Save'))
+
+    await waitFor(() => expect(saveMapMetadata).toHaveBeenCalledTimes(1))
+    expect(saveMapMetadata).toHaveBeenCalledWith(
+      'net-overview',
+      expect.objectContaining({ background_style: 'single', background_position: 'center' }),
+      expect.anything()
+    )
+  })
+})
+
+describe('MapSettingsForm – delete flow', () => {
+  it('deletes the map on confirmation and leaves it for the map list', async () => {
+    const load = vi.fn()
+    services = { ...services, nav: new NavigationService(load) }
+    const user = userEvent.setup()
+    await renderReady()
+
+    await user.click(screen.getByRole('button', { name: 'Delete map' }))
     // Confirmation lives in the focus-trap region; dispatch the click directly.
     await fireEvent.click(
       await screen.findByRole('button', { name: 'Confirm delete', hidden: true })
     )
 
     await waitFor(() => expect(deleteMap).toHaveBeenCalledWith('net-overview'))
-    await waitFor(() => expect(emitted().updated).toHaveLength(1))
-    expect(emitted().close).toHaveLength(1)
+    await waitFor(() =>
+      expect(load).toHaveBeenCalledWith(services.nav.href({ view: 'home' }), { replace: true })
+    )
   })
 })
 
@@ -367,7 +387,9 @@ describe('MapSettingsForm – tabs', () => {
     await renderReady(makeMap({ hide_in_monitor_menu: true }))
 
     await user.click(screen.getByRole('tab', { name: 'Access' }))
-    const hide = await screen.findByRole('checkbox', { name: 'Hide this map in the Monitor menu' })
+    const hide = await screen.findByRole('checkbox', {
+      name: 'Hide this map from the Monitor menu'
+    })
     expect(hide).toBeChecked()
     await user.click(hide)
     await waitFor(() => expect(footerButton('Save')).toBeEnabled())

@@ -17,7 +17,7 @@ from cmk.ccc.user import UserId
 from cmk.gui.config import Config
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.form_specs.unstable import CACertificate
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.session_context import UserContext
 from cmk.gui.utils.roles import UserPermissions
 from cmk.rulesets.v1 import Title
@@ -72,7 +72,12 @@ def test_empty_value_fails_validation(spec: CACertificate) -> None:
 
 
 def _user_permissions(config: Config, user_id: UserId, role: str) -> UserPermissions:
-    return UserPermissions(config.roles, permission_registry, {user_id: [role]}, [])
+    return UserPermissions(
+        config.roles,
+        all_permissions(),
+        {user_id: [role]},
+        [],
+    )
 
 
 def test_to_vue_allows_fetch_for_permitted_user(

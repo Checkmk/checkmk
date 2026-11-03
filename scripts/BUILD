@@ -40,6 +40,7 @@ sh_library(
         "find-python-files",
         "find-shell-files",
         "install-iwyu.sh",
+        "remove-orphaned-bazel-bases.sh",
         "remove-unused-filelevel-mypy-suppressions.sh",
         "run-in-docker.sh",
         "run-iwyu",

@@ -56,7 +56,7 @@ pnp4nagios_enabled = {enabled}
 
 PNP4NAGIOS = Hook(
     name="PNP4NAGIOS",
-    choices=[
+    choices=lambda _edition: [
         ("on", "enable bulk mode with npcdmod and npcd"),
         ("npcd", "enable bulk mode with npcd"),
         ("gearman", "enable gearman worker"),

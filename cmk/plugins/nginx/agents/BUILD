@@ -8,3 +8,12 @@ py_library(
         "//tests:__subpackages__",
     ],
 )
+
+filegroup(
+    name = "files",
+    srcs = glob(
+        ["*"],
+        exclude = ["BUILD"],
+    ),
+    visibility = ["//cmk/plugins:__pkg__"],
+)

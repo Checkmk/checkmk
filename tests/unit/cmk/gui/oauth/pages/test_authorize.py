@@ -24,6 +24,7 @@ from cmk.gui.oauth.pages._authorize import _SCOPE_SELECTED_VARNAME, OAuthAuthori
 from cmk.gui.oauth.store._auth_code_store import AuthCodeRecord, AuthCodeStore
 from cmk.gui.oauth.store.client_store import get_client_store
 from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
 from cmk.gui.session_context import UserContext
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
@@ -155,7 +156,11 @@ class TestOAuthAuthorizePage:
             flask_app.preprocess_request()
             OAuthAuthorizePage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -173,7 +178,11 @@ class TestOAuthAuthorizePage:
             flask_app.preprocess_request()
             OAuthAuthorizePage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -190,7 +199,11 @@ class TestOAuthAuthorizePage:
             flask_app.preprocess_request()
             OAuthAuthorizePage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -209,7 +222,11 @@ class TestOAuthAuthorizePage:
             flask_app.preprocess_request()
             OAuthAuthorizePage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -229,7 +246,11 @@ class TestOAuthAuthorizePage:
             flask_app.preprocess_request()
             OAuthAuthorizePage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -247,7 +268,11 @@ class TestOAuthAuthorizePage:
             flask_app.preprocess_request()
             OAuthAuthorizePage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -265,7 +290,11 @@ class TestOAuthAuthorizePage:
             flask_app.preprocess_request()
             OAuthAuthorizePage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -297,7 +326,11 @@ class TestOAuthAuthorizePage:
             flask_app.preprocess_request()
             OAuthAuthorizePage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -331,7 +364,11 @@ class TestOAuthAuthorizePage:
             flask_app.preprocess_request()
             OAuthAuthorizePage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -354,7 +391,11 @@ class TestOAuthAuthorizePage:
             flask_app.preprocess_request()
             OAuthAuthorizePage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -374,7 +415,11 @@ class TestOAuthAuthorizePage:
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
                 OAuthAuthorizePage().handle_page(
                     PageContext(
-                        config=Config(), request=request, transactions=transactions, session=session
+                        config=Config(),
+                        request=request,
+                        transactions=transactions,
+                        session=session,
+                        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                     )
                 )
 
@@ -411,7 +456,11 @@ class TestOAuthAuthorizePage:
             ):
                 OAuthAuthorizePage().handle_page(
                     PageContext(
-                        config=Config(), request=request, transactions=transactions, session=session
+                        config=Config(),
+                        request=request,
+                        transactions=transactions,
+                        session=session,
+                        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                     )
                 )
 
@@ -429,7 +478,11 @@ class TestOAuthAuthorizePage:
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
                 OAuthAuthorizePage().handle_page(
                     PageContext(
-                        config=Config(), request=request, transactions=transactions, session=session
+                        config=Config(),
+                        request=request,
+                        transactions=transactions,
+                        session=session,
+                        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                     )
                 )
 
@@ -461,7 +514,11 @@ class TestOAuthAuthorizePage:
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
                 OAuthAuthorizePage().handle_page(
                     PageContext(
-                        config=Config(), request=request, transactions=transactions, session=session
+                        config=Config(),
+                        request=request,
+                        transactions=transactions,
+                        session=session,
+                        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                     )
                 )
 
@@ -488,7 +545,11 @@ class TestOAuthAuthorizePage:
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
                 OAuthAuthorizePage().handle_page(
                     PageContext(
-                        config=Config(), request=request, transactions=transactions, session=session
+                        config=Config(),
+                        request=request,
+                        transactions=transactions,
+                        session=session,
+                        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                     )
                 )
 
@@ -512,7 +573,11 @@ class TestOAuthAuthorizePage:
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
                 OAuthAuthorizePage().handle_page(
                     PageContext(
-                        config=Config(), request=request, transactions=transactions, session=session
+                        config=Config(),
+                        request=request,
+                        transactions=transactions,
+                        session=session,
+                        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                     )
                 )
 
@@ -556,7 +621,11 @@ class TestOAuthAuthorizePage:
             flask_app.preprocess_request()
             OAuthAuthorizePage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -605,7 +674,11 @@ class TestOAuthAuthorizePage:
             flask_app.preprocess_request()
             OAuthAuthorizePage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -651,7 +724,11 @@ class TestOAuthAuthorizePage:
             flask_app.preprocess_request()
             OAuthAuthorizePage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -675,7 +752,11 @@ class TestOAuthAuthorizePage:
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
                 OAuthAuthorizePage().handle_page(
                     PageContext(
-                        config=Config(), request=request, transactions=transactions, session=session
+                        config=Config(),
+                        request=request,
+                        transactions=transactions,
+                        session=session,
+                        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                     )
                 )
 
@@ -726,7 +807,11 @@ class TestOAuthAuthorizePage:
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
                 OAuthAuthorizePage().handle_page(
                     PageContext(
-                        config=Config(), request=request, transactions=transactions, session=session
+                        config=Config(),
+                        request=request,
+                        transactions=transactions,
+                        session=session,
+                        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                     )
                 )
 
@@ -762,7 +847,11 @@ class TestOAuthAuthorizePage:
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
                 OAuthAuthorizePage().handle_page(
                     PageContext(
-                        config=Config(), request=request, transactions=transactions, session=session
+                        config=Config(),
+                        request=request,
+                        transactions=transactions,
+                        session=session,
+                        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                     )
                 )
 
@@ -793,7 +882,11 @@ class TestOAuthAuthorizePage:
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
                 OAuthAuthorizePage().handle_page(
                     PageContext(
-                        config=Config(), request=request, transactions=transactions, session=session
+                        config=Config(),
+                        request=request,
+                        transactions=transactions,
+                        session=session,
+                        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                     )
                 )
 
@@ -816,7 +909,11 @@ class TestOAuthAuthorizePage:
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
                 OAuthAuthorizePage().handle_page(
                     PageContext(
-                        config=Config(), request=request, transactions=transactions, session=session
+                        config=Config(),
+                        request=request,
+                        transactions=transactions,
+                        session=session,
+                        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                     )
                 )
 
@@ -839,7 +936,11 @@ class TestOAuthAuthorizePage:
             ):
                 OAuthAuthorizePage().handle_page(
                     PageContext(
-                        config=Config(), request=request, transactions=transactions, session=session
+                        config=Config(),
+                        request=request,
+                        transactions=transactions,
+                        session=session,
+                        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                     )
                 )
 
@@ -866,7 +967,11 @@ class TestOAuthAuthorizePage:
             ):
                 OAuthAuthorizePage().handle_page(
                     PageContext(
-                        config=Config(), request=request, transactions=transactions, session=session
+                        config=Config(),
+                        request=request,
+                        transactions=transactions,
+                        session=session,
+                        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                     )
                 )
 
@@ -887,7 +992,11 @@ class TestOAuthAuthorizePage:
             with UserContext(_SESSION_USER, UserPermissions({}, {}, {}, [])):
                 OAuthAuthorizePage().handle_page(
                     PageContext(
-                        config=Config(), request=request, transactions=transactions, session=session
+                        config=Config(),
+                        request=request,
+                        transactions=transactions,
+                        session=session,
+                        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                     )
                 )
 

@@ -3,12 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 
 from cmk.ccc.site import omd_site
 from cmk.ccc.store import load_from_mk_file
 from cmk.ccc.version import Edition, edition
-from cmk.rulesets.internal.form_specs import MultipleChoiceElementExtended, MultipleChoiceExtended
+from cmk.rulesets.internal.form_specs import (
+    DictGroupExtended,
+    DictionaryGroupLayout,
+    MultipleChoiceElementExtended,
+    MultipleChoiceExtended,
+)
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
@@ -35,117 +40,44 @@ from cmk.utils.keypair_store import KeypairStore
 DEFAULT_UPDATE_INTERVAL: int = 3600
 MAX_UPDATE_INTERVAL: int = 30 * 24 * 60 * 60  # 30 days
 
-
-def _migrate(obj: object) -> Mapping[str, object]:
-    if not isinstance(obj, Mapping):
-        raise ValueError(obj)
-
-    if not obj:
-        return {
-            "updater_registration": "manual",
-        }
-
-    return obj
+_LEGACY_UPDATER_GROUP = DictGroupExtended(
+    title=Title("Options of the legacy updater"),
+    help_text=Help(
+        "Only the legacy updater uses these options. The entries <i>Enable agent updates "
+        "using the Agent Controller (fallback to legacy updater in case of problems)</i> and "
+        "<i>Enable agent updates using the legacy updater (deprecated)</i> of "
+        "<i>Activation</i> deploy it. The entry <i>Enable agent updates using the Agent "
+        "Controller</i> deploys it on Solaris only. <i>Do not enable agent updates</i> "
+        "ignores these options."
+    ),
+    layout=DictionaryGroupLayout.vertical,
+)
 
 
 def _migrate_activated(value: object) -> str:
-    if isinstance(value, bool):
-        return "enabled" if value else "disabled"
-    if isinstance(value, str) and value in ("enabled", "disabled"):
-        return value
-    raise ValueError(value)
-
-
-def _migrate_proxy_old_format(
-    value: object,
-) -> tuple[str, object]:
     match value:
-        # used for migration from 2.4.0 version
-        case None:
-            return "no_proxy", None
-        # used for migration from 2.4.0 version
-        case "env":
-            return "env_proxy", "env"
-        # used for migration from 2.4.0 version
-        case {
-            "server": server,
-            "port": port,
-            "proxy_protocol": proxy_config,
-        }:
-            protocol, credentials = _parse_proxy_protocol(proxy_config)
-            creds = {}
-            if credentials:
-                creds = {
-                    "credentials": {
-                        "user": credentials[0],
-                        "password": credentials[1],
-                    }
-                }
-            return "explicit_proxy", {
-                "server": server,
-                "port": port,
-                "proxy_protocol": protocol,
-                **creds,
-            }
-        # new format with CascadingSingleChoice element
-        case ((str() as choice), config):
-            return choice, config
-        case _:
-            raise ValueError(value)
-
-
-def _parse_proxy_protocol(
-    proxy_protocol: object,
-) -> tuple[str, tuple[str, str] | None]:
-    match proxy_protocol:
-        case ("http", Mapping() as credentials):
-            return "http", credentials["credentials"]
-        case ("http", None):
-            return "http", None
-        case ("socks4", None):
-            return "socks4", None
-        case ("socks5", Mapping() as credentials):
-            return "socks5", credentials["credentials"]
-        case ("socks5", None):
-            return "socks5", None
-        case "http":
-            return "http", None
-        case "socks4":
-            return "socks4", None
-        case "socks5":
-            return "socks5", None
-        case _:
-            return "http", None
+        # Up to Checkmk 2.5, the only updater was the legacy one. The compatible entry keeps it.
+        case "enabled":
+            return "compatible"
+        case str() if value in ("disabled", "integrated_only", "compatible", "legacy"):
+            return value
+    raise ValueError(value)
 
 
 def _migrate_edition(value: object) -> str:
     match value:
+        # Builds before Checkmk 2.5.0b1 stored the choice as a tuple. Checkmk 2.5 cannot
+        # convert it, so such rules can still come from a 2.5 site.
         case (str(choice), None):
             return _migrate_edition(choice)
-        case "bit64" | "64bit":
+        case "bit64":
             return "bit64"
-        case "32bit" | "bit32" | "script":
+        case "bit32" | "script":
             # 32bit binaries are no longer supported, migrate to script since that is the
             # only alternative for 32bit systems.
             return "script"
         case _:
             raise ValueError(value)
-
-
-def _migrate_certificates(value: object) -> Sequence[tuple[str, str, bytes]]:
-    if isinstance(value, list):
-        result: list[tuple[str, str, bytes]] = []
-        for idx, cert in enumerate(value):
-            if isinstance(cert, str):
-                # Old format: PEM string, convert to FileUpload tuple
-                cert_bytes = cert.encode()
-                result.append((f"certificate_{idx}.pem", "application/x-pem-file", cert_bytes))
-            elif isinstance(cert, tuple) and len(cert) == 3:
-                # Already in new format
-                name, mime_type, content = cert
-                result.append((str(name), str(mime_type), bytes(content)))
-        return result
-    return []
 
 
 def _valuespec_proxy_settings() -> CascadingSingleChoice:
@@ -232,7 +164,6 @@ def _valuespec_proxy_settings() -> CascadingSingleChoice:
                 ),
             ),
         ],
-        migrate=_migrate_proxy_old_format,
     )
 
 
@@ -360,21 +291,50 @@ def _valuespec_activation() -> SingleChoice:
     return SingleChoice(
         title=Title("Activation"),
         help_text=Help(
-            "Do not forget to activate the plug-in in at least one of your rules. "
+            "Choose which updater keeps the agents up to date.<br>"
+            "<b>Enable agent updates using the Agent Controller</b>: The Agent Controller "
+            "updates the agents for Linux and Windows. On Linux, it needs the Agent Controller "
+            "and the single directory deployment of the rule set <i>Customize agent package</i>. "
+            "Baking fails for Linux agents without them. Solaris agents get the legacy "
+            "updater.<br>"
+            "<b>Enable agent updates using the Agent Controller (fallback to legacy updater in "
+            "case of problems)</b>: The agents get both updaters, and both run side by side, "
+            "independently of each other. Both install the agent package that is baked for the "
+            "host, so it does not matter which of them updates an agent first. If the Agent "
+            "Controller fails to update an agent, the legacy updater still keeps it up to date. "
+            "Agents that cannot use the Agent Controller get the legacy updater only: Solaris "
+            "agents, and Linux agents without the Agent Controller or without the single "
+            "directory deployment. Rules that enabled agent updates before Checkmk 3.0 use this "
+            "entry after the update.<br>"
+            "<b>Enable agent updates using the legacy updater (deprecated)</b>: Only the legacy "
+            "updater updates the agents.<br>"
+            "<br>"
+            "Do not forget to enable agent updates in at least one of your rules. "
             "It can be useful to create rules that are only partially filled out. "
             "Since the rule execution is done on a <i>per parameter</i> base "
             "you can for example create one rule at the top of your list that "
-            "just sets the activation to <i>no</i> for just some of your hosts without "
-            "setting any of the other parameters."
+            "just sets the activation to <i>Do not enable agent updates</i> for just some of "
+            "your hosts without setting any of the other parameters."
         ),
         elements=[
             SingleChoiceElement(
                 name="disabled",
-                title=Title("Do not deploy automatic agent update plug-in"),
+                title=Title("Do not enable agent updates"),
             ),
             SingleChoiceElement(
-                name="enabled",
-                title=Title("Deploy plug-in that updates agent automatically"),
+                name="integrated_only",
+                title=Title("Enable agent updates using the Agent Controller"),
+            ),
+            SingleChoiceElement(
+                name="compatible",
+                title=Title(
+                    "Enable agent updates using the Agent Controller"
+                    " (fallback to legacy updater in case of problems)"
+                ),
+            ),
+            SingleChoiceElement(
+                name="legacy",
+                title=Title("Enable agent updates using the legacy updater (deprecated)"),
             ),
         ],
         prefill=DefaultValue("disabled"),
@@ -395,7 +355,6 @@ def _valuespec_certificates() -> List[tuple[str, str, bytes]]:
             title=Title("CA or self-signed certificate"),
         ),
         add_element_label=Label("Add CA or self-signed certificate"),
-        migrate=_migrate_certificates,
     )
 
 
@@ -490,20 +449,12 @@ def _is_ultimatemt_remote_site() -> bool:
     distributed_wato_file = paths.check_mk_config_dir / "distributed_wato.mk"
     if not distributed_wato_file.exists() or distributed_wato_file.stat().st_size == 0:
         return False
-    is_distributed_setup_remote_site = load_from_mk_file(
+    return load_from_mk_file(
         distributed_wato_file,
         key="is_distributed_setup_remote_site",
         default=False,
         lock=False,
     )
-    # On 2.4 site this option is called `is_wato_slave_site`
-    is_wato_slave_site = load_from_mk_file(
-        distributed_wato_file,
-        key="is_wato_slave_site",
-        default=False,
-        lock=False,
-    )
-    return is_distributed_setup_remote_site or is_wato_slave_site
 
 
 def _validate_signature_keys(value: Sequence[object]) -> None:
@@ -548,18 +499,18 @@ def _valuespec_agent_config_cmk_update_agent() -> Dictionary:
     return Dictionary(
         title=Title("Agent updater (Linux, Windows, Solaris)"),
         help_text=Help(
-            "This rule set allows to deploy an agent plug-in that updates "
-            "the Checkmk agent for Linux, Solaris and Windows on a regular base. "
+            "This rule set enables automatic updates "
+            "of the Checkmk agent for Linux, Solaris and Windows. "
             "The agent will look for new updates on a regular base and update "
             "itself, when a newly baked agent is available, released and signed. "
             "<br><b>Note<sup>1</sup>:</b> This update mechanism is baked into the agent itself. "
             "So after activating this feature you need at least one more manual "
             "update of the agent, of course."
-            "<br><b>Note<sup>2</sup>:</b> After deploying this new plug-in "
-            "it must be registered at your Checkmk server. This can be done either by registering "
+            "<br><b>Note<sup>2</sup>:</b> After installing such an agent, its updater "
+            "must be registered at your Checkmk server. This can be done either by registering "
             "the Agent Controller, or by manual agent updater registration call. "
             "Customizable in _Registration_ option below. See there for details."
-            "<br><b>Note<sup>3</sup>:</b> In order to deploy this plug-in to Solaris, a "
+            "<br><b>Note<sup>3</sup>:</b> In order to deploy the legacy updater to Solaris, a "
             'Python 3.7 installation (or newer) with installed python packages "cryptography", '
             '"requests" and "PySocks" is required on the target hosts.'
         ),
@@ -568,25 +519,9 @@ def _valuespec_agent_config_cmk_update_agent() -> Dictionary:
                 required=False,
                 parameter_form=_valuespec_activation(),
             ),
-            "server_data": DictElement(
-                required=False,
-                parameter_form=_valuespec_server_data(),
-            ),
-            "certificates": DictElement(
-                required=False,
-                parameter_form=_valuespec_certificates(),
-            ),
             "interval": DictElement(
                 required=False,
                 parameter_form=_valuespec_interval(),
-            ),
-            "proxy": DictElement(
-                required=False,
-                parameter_form=_valuespec_proxy_settings(),
-            ),
-            "edition": DictElement(
-                required=False,
-                parameter_form=_valuespec_editions(),
             ),
             "signature_keys": DictElement(
                 required=False,
@@ -596,8 +531,27 @@ def _valuespec_agent_config_cmk_update_agent() -> Dictionary:
                 required=False,
                 parameter_form=_valuespec_updater_registration(),
             ),
+            "server_data": DictElement(
+                required=False,
+                parameter_form=_valuespec_server_data(),
+                group=_LEGACY_UPDATER_GROUP,
+            ),
+            "certificates": DictElement(
+                required=False,
+                parameter_form=_valuespec_certificates(),
+                group=_LEGACY_UPDATER_GROUP,
+            ),
+            "proxy": DictElement(
+                required=False,
+                parameter_form=_valuespec_proxy_settings(),
+                group=_LEGACY_UPDATER_GROUP,
+            ),
+            "edition": DictElement(
+                required=False,
+                parameter_form=_valuespec_editions(),
+                group=_LEGACY_UPDATER_GROUP,
+            ),
         },
-        migrate=_migrate,
     )
 
 

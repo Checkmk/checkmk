@@ -144,7 +144,7 @@ def _get_singlecontext_html_vars_from_row(
         with suppress(KeyError):
             url_vars.update(visuals.get_filter(dst_key).request_vars_from_row(row))
 
-    add_site_hint = _may_add_site_hint(
+    add_site_hint = may_add_site_hint(
         visual_name,
         info_keys=tuple(visual_info_registry.keys()),
         single_info_keys=tuple(single_infos),
@@ -248,7 +248,7 @@ def get_linked_visual_request_vars(
         vars_values.append(("site", singlecontext_request_vars["site"]))
     else:
         # site may already be added earlier from the livestatus row
-        add_site_hint = _may_add_site_hint(
+        add_site_hint = may_add_site_hint(
             visual["name"],
             info_keys=tuple(visual_info_registry.keys()),
             single_info_keys=tuple(visual["single_infos"]),
@@ -262,7 +262,7 @@ def get_linked_visual_request_vars(
 
 
 @request_memoize()
-def _may_add_site_hint(
+def may_add_site_hint(
     visual_name: str,
     info_keys: SingleInfos,
     single_info_keys: SingleInfos,

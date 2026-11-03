@@ -57,15 +57,15 @@ describe('leavesOf', () => {
 })
 
 describe('leafStateCounts', () => {
-  it('lists the states problems-first and counts every leaf', () => {
+  it('lists the states in the slide-in order and counts every leaf', () => {
     const counts = leafStateCounts([leaf('a', 0), leaf('b', 2), leaf('c', 2), leaf('d', 1)])
 
-    expect(counts.map((count) => count.label)).toEqual(['CRIT', 'WARN', 'UNKN', 'OK'])
-    expect(counts.map((count) => count.count)).toEqual([2, 1, 0, 1])
+    expect(counts.map((count) => count.label)).toEqual(['OK', 'WARN', 'CRIT', 'UNKN'])
+    expect(counts.map((count) => count.count)).toEqual([1, 1, 2, 0])
   })
 
   it('colours each state from the shared state tokens', () => {
-    expect(leafStateCounts([leaf('a', 0)])[3]!.color).toBe('var(--color-state-ok)')
+    expect(leafStateCounts([leaf('a', 0)])[0]!.color).toBe('var(--color-state-ok)')
   })
 })
 

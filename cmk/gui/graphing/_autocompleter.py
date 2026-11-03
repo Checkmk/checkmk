@@ -11,7 +11,6 @@ from cmk.gui.config import Config
 from cmk.web.utils.choices import Choice
 
 from ._decoding import context_from_json
-from ._from_api import metrics_from_api
 from ._metric_spec import registered_metric_ids_and_titles
 from ._plugins import registered_metrics, registered_translations
 from ._valuespecs import LivestatusQueryFunc, metrics_of_query
@@ -35,7 +34,7 @@ def metrics_autocompleter(
             )
         )
     else:
-        metrics = set(registered_metric_ids_and_titles(metrics_from_api))
+        metrics = set(registered_metric_ids_and_titles(registered_metrics()))
 
     return sorted(
         (v for v in metrics if _matches_id_or_title(value, v)),

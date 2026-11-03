@@ -30,7 +30,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import GroupSpecs
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import mandatory_parameter, Request, request
+from cmk.gui.http import mandatory_parameter, request
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
@@ -56,7 +56,7 @@ from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.loading_transition import loading_transition_onclick, LoadingTransition
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
-from cmk.gui.utils.regex import validate_regex
+from cmk.gui.utils.regex import compile_search_pattern, validate_regex
 from cmk.gui.utils.rendering import set_inpage_search_result_info
 from cmk.gui.utils.selection_id import SelectionId
 from cmk.gui.utils.session import session
@@ -89,12 +89,10 @@ from cmk.gui.watolib.hosts_and_folders import (
     find_available_folder_name,
     Folder,
     folder_from_request,
-    folder_preserving_link,
     FolderTree,
     Host,
     host_action_menu_registry,
     host_url_resolver,
-    make_action_link,
     make_folder_tree,
     SearchFolder,
 )
@@ -120,7 +118,13 @@ from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.permission_verification import PermissionName
-from cmk.web.utils.urls import HTTPVariable, makeactionuri, makeuri, makeuri_contextless
+from cmk.web.utils.urls import (
+    HTTPVariable,
+    makeactionuri,
+    makeactionuri_contextless,
+    makeuri,
+    makeuri_contextless,
+)
 
 from ._bulk_actions import get_hostnames_from_checkboxes
 from ._host_attributes import configure_attributes
@@ -211,16 +215,19 @@ class WatoFolderChoices(AjaxDropdownChoice):
     ident = "wato_folder_choices"
 
 
-def make_folder_breadcrumb(folder: Folder | SearchFolder, request: Request) -> Breadcrumb:
-    return Breadcrumb(
-        [
-            BreadcrumbItem(
-                title=_("Hosts"),
-                url=None,
-                id=MainModuleTopicHosts.name,
-            ),
-        ]
-    ) + folder.breadcrumb(request)
+def make_folder_breadcrumb(folder: Folder | SearchFolder) -> Breadcrumb:
+    return (
+        Breadcrumb(
+            [
+                BreadcrumbItem(
+                    title=_("Hosts"),
+                    url=None,
+                    id=MainModuleTopicHosts.name,
+                ),
+            ]
+        )
+        + folder.breadcrumb()
+    )
 
 
 class ModeFolder(WatoMode):
@@ -259,7 +266,7 @@ class ModeFolder(WatoMode):
 
     @override
     def breadcrumb(self) -> Breadcrumb:
-        return make_folder_breadcrumb(self._folder, request)
+        return make_folder_breadcrumb(self._folder)
 
     @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
@@ -387,9 +394,7 @@ class ModeFolder(WatoMode):
                                 PageMenuEntry(
                                     title=_("Refine search"),
                                     icon_name=StaticIcon(IconNames.search),  # TODO: new icon!
-                                    item=make_simple_link(
-                                        self._folder.url(request, [("mode", "search")])
-                                    ),
+                                    item=make_simple_link(self._folder.url([("mode", "search")])),
                                     is_shortcut=True,
                                 ),
                             ],
@@ -416,28 +421,26 @@ class ModeFolder(WatoMode):
             yield PageMenuEntry(
                 title=_("Add host"),
                 icon_name=StaticIcon(IconNames.new),
-                item=make_simple_link(self._folder.url(request, [("mode", "newhost")])),
+                item=make_simple_link(self._folder.url([("mode", "newhost")])),
                 is_shortcut=True,
                 is_suggested=True,
             )
             yield PageMenuEntry(
                 title=_("Add cluster"),
                 icon_name=StaticIcon(IconNames.new_cluster),
-                item=make_simple_link(self._folder.url(request, [("mode", "newcluster")])),
+                item=make_simple_link(self._folder.url([("mode", "newcluster")])),
             )
             yield PageMenuEntry(
                 title=_("Import hosts via CSV file"),
                 icon_name=StaticIcon(IconNames.bulk_import),
-                item=make_simple_link(self._folder.url(request, [("mode", "bulk_import")])),
+                item=make_simple_link(self._folder.url([("mode", "bulk_import")])),
             )
 
         if user.may("wato.services"):
             yield PageMenuEntry(
                 title=_("Run bulk service discovery"),
                 icon_name=StaticIcon(IconNames.services),
-                item=make_simple_link(
-                    self._folder.url(request, [("mode", "bulkinventory"), ("all", "1")])
-                ),
+                item=make_simple_link(self._folder.url([("mode", "bulkinventory"), ("all", "1")])),
                 disabled_tooltip=add_host_tooltip_text,
                 is_enabled=folder_or_subfolder_has_hosts,
             )
@@ -446,7 +449,7 @@ class ModeFolder(WatoMode):
             yield PageMenuEntry(
                 title=_("Rename multiple hosts"),
                 icon_name=StaticIcon(IconNames.rename_host),
-                item=make_simple_link(self._folder.url(request, [("mode", "bulk_rename_host")])),
+                item=make_simple_link(self._folder.url([("mode", "bulk_rename_host")])),
                 disabled_tooltip=add_host_tooltip_text,
                 is_enabled=folder_or_subfolder_has_hosts,
             )
@@ -474,7 +477,7 @@ class ModeFolder(WatoMode):
             yield PageMenuEntry(
                 title=_("Add random hosts"),
                 icon_name=StaticIcon(IconNames.random),
-                item=make_simple_link(self._folder.url(request, [("mode", "random_hosts")])),
+                item=make_simple_link(self._folder.url([("mode", "random_hosts")])),
             )
 
         for entry in folder_menu_entry_registry.by_location(FolderMenuLocation.IN_FOLDER):
@@ -588,7 +591,7 @@ class ModeFolder(WatoMode):
             yield PageMenuEntry(
                 title=_("Add folder"),
                 icon_name=StaticIcon(IconNames.newfolder),
-                item=make_simple_link(self._folder.url(request, [("mode", "newfolder")])),
+                item=make_simple_link(self._folder.url([("mode", "newfolder")])),
                 is_shortcut=True,
                 is_suggested=True,
             )
@@ -600,12 +603,10 @@ class ModeFolder(WatoMode):
                 title=_("Rules"),
                 icon_name=StaticIcon(IconNames.rulesets),
                 item=make_simple_link(
-                    folder_preserving_link(
-                        request,
+                    self._folder.url(
                         [
                             ("mode", "rule_search"),
                             ("filled_in", "rule_search"),
-                            ("folder", self._folder.path()),
                             ("search_p_ruleset_used", DropdownChoice.option_id(True)),
                             ("search_p_ruleset_used_USE", "on"),
                         ],
@@ -624,13 +625,17 @@ class ModeFolder(WatoMode):
         yield PageMenuEntry(
             title=_("Tags"),
             icon_name=StaticIcon(IconNames.tag),
-            item=make_simple_link(folder_preserving_link(request, [("mode", "tags")])),
+            item=make_simple_link(
+                makeuri_contextless(request, [("mode", "tags")], filename="wato.py")
+            ),
         )
 
         yield PageMenuEntry(
             title=_("Custom host attributes"),
             icon_name=StaticIcon(IconNames.custom_attr),
-            item=make_simple_link(folder_preserving_link(request, [("mode", "host_attrs")])),
+            item=make_simple_link(
+                makeuri_contextless(request, [("mode", "host_attrs")], filename="wato.py")
+            ),
         )
 
         if user.may("wato.dcd_connections"):
@@ -638,7 +643,7 @@ class ModeFolder(WatoMode):
                 title=_("Dynamic host management"),
                 icon_name=StaticIcon(IconNames.dcd_connections),
                 item=make_simple_link(
-                    folder_preserving_link(request, [("mode", "dcd_connections")])
+                    makeuri_contextless(request, [("mode", "dcd_connections")], filename="wato.py")
                 ),
             )
 
@@ -649,7 +654,7 @@ class ModeFolder(WatoMode):
         yield PageMenuEntry(
             title=_("Search hosts"),
             icon_name=StaticIcon(IconNames.search),  # TODO: new icon!
-            item=make_simple_link(folder_preserving_link(request, [("mode", "search")])),
+            item=make_simple_link(self._folder.url([("mode", "search")])),
         )
 
     def _page_menu_entries_details(self) -> Iterator[PageMenuEntry]:
@@ -677,7 +682,7 @@ class ModeFolder(WatoMode):
         if request.var("_search"):  # just commit to search form
             return None
 
-        folder_url = self._folder.url(request)
+        folder_url = self._folder.url()
 
         # Operations on SUBFOLDERS
 
@@ -826,7 +831,6 @@ class ModeFolder(WatoMode):
             if request.var(request_var):
                 return redirect(
                     self._folder.url(
-                        request,
                         add_vars=[
                             ("mode", mode_name),
                             ("search", search_text),
@@ -930,7 +934,7 @@ class ModeFolder(WatoMode):
             )  # This won't hurt even if there are no visible subfolders
 
             if (searched_folder := request.var("search")) is not None:
-                match_regex = re.compile(searched_folder.lower(), re.IGNORECASE)
+                match_regex = compile_search_pattern(searched_folder)
                 search_results = 0
 
             subfolders_dict = {
@@ -959,7 +963,7 @@ class ModeFolder(WatoMode):
             html.close_div()
             html.open_div(
                 class_=["floatfolder", "unlocked", "newfolder"],
-                onclick="location.href='%s'" % self._folder.url(request, [("mode", "newfolder")]),
+                onclick="location.href='%s'" % self._folder.url([("mode", "newfolder")]),
             )
             html.write_text_permissive("+")
             html.close_div()
@@ -972,7 +976,7 @@ class ModeFolder(WatoMode):
                 "unlocked" if subfolder.permissions.may("read", user) else "locked",
             ],
             id_="folder_%s" % subfolder.name(),
-            onclick="cmk.wato.open_folder(event, '%s');" % subfolder.url(request),
+            onclick="cmk.wato.open_folder(event, '%s');" % subfolder.url(),
         )
         self._show_subfolder_hoverarea(subfolder, show_file_names=show_file_names)
         self._show_subfolder_infos(subfolder)
@@ -1004,7 +1008,7 @@ class ModeFolder(WatoMode):
 
         html.open_div(class_="title", title=title)
         if subfolder.permissions.may("read", user):
-            html.a(subfolder.title(), href=subfolder.url(request))
+            html.a(subfolder.title(), href=subfolder.url())
         else:
             html.write_text_permissive(subfolder.title())
         html.close_div()
@@ -1049,8 +1053,15 @@ class ModeFolder(WatoMode):
         html.icon_button(
             make_confirm_delete_link(
                 i18n=_,
-                url=make_action_link(
-                    request, [("mode", "folder"), ("_delete_folder", subfolder.name())]
+                url=makeactionuri_contextless(
+                    request,
+                    transactions.get(),
+                    [
+                        ("folder", self._folder.path()),
+                        ("mode", "folder"),
+                        ("_delete_folder", subfolder.name()),
+                    ],
+                    filename="wato.py",
                 ),
                 title=_("Delete folder"),
                 suffix=subfolder.title(),
@@ -1327,7 +1338,7 @@ class ModeFolder(WatoMode):
         # Located in folder
         if isinstance(self._folder, SearchFolder):
             table.cell(_("Folder"))
-            html.a(host.folder().alias_path(), href=host.folder().url(request))
+            html.a(host.folder().alias_path(), href=host.folder().url())
 
         quick_setup_source_cell(table, host.locked_by())
 
@@ -1471,7 +1482,7 @@ class ModeFolder(WatoMode):
             acting_user=user,
         )
         flash(_("Successfully deleted %(count)d hosts") % {"count": len(host_names)})
-        return redirect(self._folder.url(request))
+        return redirect(self._folder.url())
 
     def _render_bulk_move_form(self) -> HTML:
         with output_funnel.plugged():
@@ -1588,7 +1599,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
         # two breadcrumb layers up. This is a very specific case, so we realize this locally instead
         # of using a generic approach. Just like it done locally by the action method.
         if (backfolder := request.var("backfolder")) is not None:
-            breadcrumb = make_folder_breadcrumb(self._tree.folder(backfolder), request)
+            breadcrumb = make_folder_breadcrumb(self._tree.folder(backfolder))
             breadcrumb.append(self._breadcrumb_item())
 
         return make_simple_form_page_menu(

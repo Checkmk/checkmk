@@ -57,8 +57,6 @@ Section = Mapping[str, Mount]
 
 
 def parse_nfsiostat(string_table: StringTable) -> Section:
-    # removes double list
-    [new_info] = string_table
     import re
 
     # Result is a dictionary with mountpoint as key and a list of (currently 16)
@@ -78,7 +76,7 @@ def parse_nfsiostat(string_table: StringTable) -> Section:
     # on our list is not in brackets.
     matches = re.findall(
         rf"(\S+:\S+) mounted on \S+:.*?{NUMBER_SEPARATOR.join([NUMBER] * 2)}.*?read:.*?{NUMBERS}.*?write:.*?{NUMBERS}",
-        " ".join(new_info),
+        " ".join(word for line in string_table for word in line),
         flags=re.DOTALL,
     )
     # Note we skip elements 6 and 13 (non-% retransmission)

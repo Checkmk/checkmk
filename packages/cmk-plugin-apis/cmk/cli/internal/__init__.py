@@ -2,7 +2,7 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Internal CLI API: the ``CLICommand`` plug-in type, its ``CLIOption`` and the discovery prefix.
+"""Internal CLI API: the ``Command`` plug-in type, its ``Option`` and the discovery prefix.
 
 This is the ``internal`` variant of the per-domain command line API (see the
 plugin discovery reference in ``cmk.discover_plugins``). It is not exposed to
@@ -14,9 +14,31 @@ plug-in family (``cmk/plugins/<family>/cli/<module>.py``) and the plug-in instan
 name must start with the prefix returned by :func:`entry_point_prefixes`.
 """
 
+import logging
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
+
+
+class ExitCode(Enum):
+    """The exit codes the engine and the command handlers report"""
+
+    SUCCESS = 0
+    FAILURE = 1
+    """Any failure not reported otherwise, e.g. a crashed command"""
+    ERROR = 2
+    """A command's own error, e.g. the monitoring plug-in API's CRITICAL state or an automation's unknown error"""
+    UNKNOWN = 3
+    """The command refused its command line or input: an invalid option, an unknown
+    host, a missing file. The number is the monitoring plug-in API's UNKNOWN state,
+    so a check invoked wrongly reports UNKNOWN rather than WARNING (1) or CRITICAL (2).
+    """
+    INTERRUPTED = 130
+    """128 + SIGINT, as a shell reports a command interrupted by Ctrl-C"""
+    BROKEN_PIPE = 141
+    """128 + SIGPIPE, as a shell reports a command whose reader went away"""
+
 
 type Options = Mapping[str, object]
 """The parsed sub-options of a command, keyed by their long option name.
@@ -39,8 +61,9 @@ class GlobalOptions:
     """The options every command accepts.
 
     The engine declares and parses them, and applies the effects that are its own
-    (log level, debug mode, profiling) before the command's handler runs. The
-    handler receives the values for whatever it has to do with them itself.
+    (log level, profiling) before the command's handler runs. The handler
+    receives the values for whatever it has to do with them itself, such as
+    switching on debug mode for the Checkmk code it reaches.
     """
 
     verbosity: int = 0
@@ -49,40 +72,40 @@ class GlobalOptions:
     """``--debug``: let most Python exceptions raise through"""
     profile: bool = False
     """``--profile``: profile the command"""
-    fake_dns: str | None = None
-    """``--fake-dns IP``: use this address for all hosts instead of looking them up
-
-    A plain string: the address type lives in cmk-ccc, on which this package must
-    not depend. The handler that uses it validates it.
-    """
-
-
-type CommandHandler = Callable[[Path, GlobalOptions, Options, Args], int]
-"""The signature of a command's handler; it returns the exit status.
-
-The first argument is the site's root directory. A command that needs more of
-the runtime than that builds it itself, e.g. with ``cmk.base.app.make_app()``.
-"""
-
-
-def _validate_argument_declaration(
-    *,
-    argument: bool,
-    argument_descr: str | None,
-    argument_optional: bool,
-    argument_conv: Callable[[str], object] | None = None,
-) -> None:
-    if (argument_descr is not None) != argument:
-        raise ValueError("an argument description is required if and only if there is an argument")
-    if argument_conv is not None and not argument:
-        raise ValueError("a conversion function requires an argument")
-    if argument_optional and not argument:
-        raise ValueError("an optional argument requires an argument")
 
 
 @dataclass(frozen=True, kw_only=True)
-class CLIOption:
-    """A sub-option of a :class:`CLICommand`, handed to the command's handler as part of its options.
+class Context:
+    """What the engine hands every command besides its own options and arguments.
+
+    A command that needs more of the runtime than that builds it itself, e.g.
+    with ``cmk.base.app.make_app()``.
+    """
+
+    omd_root: Path
+    """The site's root directory"""
+    global_options: GlobalOptions
+    logger: logging.Logger
+    """Where the command reports what the engine would report, e.g. its errors"""
+
+
+type CommandHandler = Callable[[Context, Options, Args], ExitCode]
+"""The signature of a command's handler; it returns the exit status."""
+
+
+@dataclass(frozen=True)
+class Arguments:
+    """The positional arguments of a :class:`Command`"""
+
+    placeholder: str
+    """What the help shows in their place, e.g. ``"HOST"`` or ``"HOST1 HOST2..."``"""
+    optional: bool = False
+    """Whether the command takes any number of arguments, none included, instead of exactly one"""
+
+
+@dataclass(frozen=True, kw_only=True)
+class Option:
+    """A sub-option of a :class:`Command`, handed to the command's handler as part of its options.
 
     An option can either
     a) have an argument (with ``repeat``, every value is collected),
@@ -90,69 +113,57 @@ class CLIOption:
     c) have no argument (its presence is passed as ``True``).
     """
 
-    long_option: str
-    short_help: str
-    short_option: str | None = None
-    argument: bool = False
-    argument_descr: str | None = None
-    argument_conv: Callable[[str], object] | None = None
+    long: str
+    help: str
+    short: str | None = None
+    argument: str | None = None
+    """What the help shows in the argument's place; ``None`` for an option without argument"""
+    parse: Callable[[str], object] | None = None
     argument_optional: bool = False
     repeat: bool = False
-    deprecated_long_options: frozenset[str] = frozenset()
+    deprecated_names: frozenset[str] = frozenset()
 
     def __post_init__(self) -> None:
-        _validate_argument_declaration(
-            argument=self.argument,
-            argument_descr=self.argument_descr,
-            argument_conv=self.argument_conv,
-            argument_optional=self.argument_optional,
-        )
+        if self.argument is None and (self.parse is not None or self.argument_optional):
+            raise ValueError(f"--{self.long} parses or makes optional an argument it does not take")
 
 
 @dataclass(frozen=True, kw_only=True)
-class CLICommand:
-    """A command of the ``cmk`` command line, selected via ``--<long_option>``.
+class Command:
+    """A command of the ``cmk`` command line, selected via ``--<long>``.
 
     Example:
     ********
 
-    >>> def greet(omd_root: Path, global_options: GlobalOptions, options: Options, args: Args) -> int:
+    >>> def greet(context: Context, options: Options, args: Args) -> ExitCode:
     ...     print("Hello", ", ".join(args))
-    ...     return 0
-    >>> cli_command_greet = CLICommand(
-    ...     long_option="greet",
+    ...     return ExitCode.SUCCESS
+    >>> cli_command_greet = Command(
+    ...     name="greet",
+    ...     long="greet",
     ...     handler_function=greet,
-    ...     short_help="Greet the given names",
-    ...     argument=True,
-    ...     argument_descr="NAME...",
-    ...     argument_optional=True,
+    ...     help="Greet the given names",
+    ...     arguments=Arguments("NAME...", optional=True),
     ... )
     """
 
-    long_option: str
+    name: str
+    """The name under which the command is registered, a Python identifier"""
+    long: str
+    """The long option that selects the command"""
     handler_function: CommandHandler
-    short_help: str
-    short_option: str | None = None
-    argument: bool = False
-    argument_descr: str | None = None
-    argument_optional: bool = False
-    long_help: Sequence[str] | None = None
-    sub_options: Sequence[CLIOption] = ()
-
-    @property
-    def name(self) -> str:
-        """The name under which the command is registered: its long option"""
-        return self.long_option
+    help: str
+    short: str | None = None
+    arguments: Arguments | None = None
+    description: Sequence[str] | None = None
+    sub_options: Sequence[Option] = ()
 
     def __post_init__(self) -> None:
-        _validate_argument_declaration(
-            argument=self.argument,
-            argument_descr=self.argument_descr,
-            argument_optional=self.argument_optional,
-        )
+        if not self.name.isidentifier():
+            raise ValueError(f"{self.name!r} is not an identifier")
 
 
-def entry_point_prefixes() -> Mapping[type[CLICommand], str]:
+def entry_point_prefixes() -> Mapping[type[Command], str]:
     """Return the types of plug-ins and their respective prefixes that can be discovered by Checkmk.
 
     Example:
@@ -160,17 +171,20 @@ def entry_point_prefixes() -> Mapping[type[CLICommand], str]:
 
     >>> for plugin_type, prefix in entry_point_prefixes().items():
     ...     print(f'{prefix}... = {plugin_type.__name__}(...)')
-    cli_command_... = CLICommand(...)
+    cli_command_... = Command(...)
     """
-    return {CLICommand: "cli_command_"}
+    return {Command: "cli_command_"}
 
 
 __all__ = [
     "Args",
-    "CLICommand",
-    "CLIOption",
+    "Arguments",
+    "Command",
+    "Option",
+    "Context",
     "CommandHandler",
     "entry_point_prefixes",
+    "ExitCode",
     "GlobalOptions",
     "Options",
 ]

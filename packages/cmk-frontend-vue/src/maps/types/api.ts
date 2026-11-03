@@ -32,9 +32,9 @@ export type AggregationInfo = Schemas['MapsAggregation']
 // alias types both.
 export type AggregationNode = Daemon['AggregationNode']
 
-// Per-branch BI state from the maps_aggregation show-states endpoint: the raw
-// cmk.bi result (integer state), which the states service maps into an ObjectState.
-export type AggregationStateRaw = Schemas['MapsAggregationState']
+// Per-branch BI state from the maps_aggregation show-states endpoint, already named
+// the way an ObjectState names its state.
+export type AggregationBranchState = Schemas['MapsAggregationState']
 
 // The daemon-flat object label dict. The wire ``MapObjectLabel`` also carries
 // ``border``/``max_length``, but those live as separate flat fields on
@@ -46,6 +46,8 @@ export type DisplayConfig = Daemon['DisplayConfig']
 export type LineStyle = NonNullable<Daemon['MapElement']['line_style']>
 
 export type LinePerfdataLabel = Daemon['MapElement']['line_perfdata_label']
+
+export type MonitoredObjectType = NonNullable<Daemon['MapElement']['line_object_type']>
 
 export type ServiceLayout = NonNullable<Daemon['FlowView']['service_layout']>
 
@@ -148,6 +150,8 @@ export type MapElement = Omit<Daemon['MapElement'], 'type'> & {
 export type ClickAction = Daemon['MapConfig']['click_action']
 
 export type RenderMode = Daemon['MapConfig']['render_mode']
+export type BackgroundStyle = NonNullable<Daemon['MapConfig']['background_style']>
+export type BackgroundPosition = NonNullable<Daemon['MapConfig']['background_position']>
 
 export type MapConfig = Omit<Daemon['MapConfig'], 'objects' | 'view'> & {
   objects: MapElement[]
@@ -170,12 +174,15 @@ export interface MapRead {
   alias: string
   background_image?: string | null
   background_color?: string | null
+  background_style?: BackgroundStyle
+  background_position?: BackgroundPosition
   icon_size: number | null
   connection_id: string
   view_type: string
   view: MapView
   object_count: number
   rotation_interval: number
+  rotation_pools: string[]
   version?: number
   sort_order: number
   click_action: ClickAction
@@ -218,16 +225,6 @@ export interface MapBulkDeleteResult {
   failed: MapBulkDeleteFailure[]
 }
 
-export interface MapBulkEditFailure {
-  name: string
-  reason: string
-}
-
-export interface MapBulkEditResult {
-  updated: string[]
-  failed: MapBulkEditFailure[]
-}
-
 export type ServicesSummary = Daemon['ServicesSummary']
 
 // The daemon types ``state`` as a plain string: it passes Livestatus values
@@ -259,20 +256,6 @@ export type MetricInfoEntry = Schemas['MapsMetric']
 
 export type MetricInfoResult = Schemas['MapsMetricInfoResponse']
 
-// One scheduled downtime as the SPA lists it. Not a wire type: the Checkmk REST
-// API answers with domain objects, and this is the row projected out of one.
-export interface DowntimeEntry {
-  id: string
-  site_id: string
-  host_name: string
-  service_description?: string
-  author: string
-  comment: string
-  start_time: string
-  end_time: string
-  type: 'host' | 'service'
-}
-
 export type ServiceNode = Daemon['ServiceNode']
 export type TopologyNode = Daemon['TopologyNode']
 export type MapStates = Daemon['MapStates']
@@ -298,6 +281,7 @@ export type ConnectionConfig = Daemon['ConnectionListEntry']
 // INTERNAL REST endpoint. Not editable in the SPA.
 export type GlobalSettings = Schemas['MapsAuthoringSettings']
 export type TileSource = Schemas['MapsTileSource']
+export type MapNameRules = Schemas['MapsNameRules']
 
 export type MapListView = 'cards' | 'table'
 

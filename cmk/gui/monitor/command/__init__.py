@@ -5,6 +5,8 @@
 
 from ._commands import monitor_commands, MonitorCommands
 from ._downtime import downtime_recurrences, DowntimeRecurrence, DowntimeRecurrences
+from ._fake_check_result import fake_check_output
+from ._host import host_setup_links, HOST_SUPPORTED_ACTIONS, HostSetupLink
 from ._legacy import LegacyCommand, LegacyCommandSource
 from ._presets import (
     acknowledge_defaults,
@@ -30,6 +32,10 @@ __all__ = [
     "DowntimePreset",
     "DowntimeRecurrence",
     "DowntimeRecurrences",
+    "fake_check_output",
+    "HOST_SUPPORTED_ACTIONS",
+    "host_setup_links",
+    "HostSetupLink",
     "LegacyCommand",
     "LegacyCommandSource",
     "monitor_command_registry",

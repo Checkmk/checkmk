@@ -128,6 +128,20 @@ describe('useMapEditor placing — services resolved outside setup', () => {
     expect(map.objects[0]).toMatchObject({ type: 'host', host_name: 'heute', x: 120, y: 80 })
   })
 
+  it("has a new host consider its services, as NagVis' hosts do", async () => {
+    const services = fakeMapsServices()
+    const map = emptyMap()
+    services.maps.currentMap.value = map
+    const editor = runWithServices(services, () => useMapEditor())
+
+    editor.draft.type = 'host'
+    editor.draft.host_name = 'heute'
+    editor.startPlacing()
+    await editor.placeAt(120, 80)
+
+    expect(map.objects[0]).toMatchObject({ recognize_services: true })
+  })
+
   it('places a geo object from a map click after setup has finished', async () => {
     const services = fakeMapsServices()
     const map = emptyMap()
@@ -240,5 +254,31 @@ describe('useMapEditor map links — the caption follows the target', () => {
     editor.updateObjectProperties('link1', { map_name: 'private_map' })
 
     expect(link.map_title).toBeNull()
+  })
+})
+
+describe('useMapEditor — geo coordinates', () => {
+  it('stores a moved object to six decimals', () => {
+    const services = fakeMapsServices()
+    const host = makeObject({ id: 'host1', type: 'host', lat: 51, lng: 10 })
+    services.maps.currentMap.value = { objects: [host] } as unknown as MapConfig
+    const editor = runWithServices(services, () => useMapEditor())
+
+    editor.moveObjectToLatLng('host1', 51.83512345678912, 8.342219876543)
+
+    expect([host.lat, host.lng]).toEqual([51.835123, 8.34222])
+  })
+
+  it('stores a duplicate to six decimals', async () => {
+    const services = fakeMapsServices()
+    const host = makeObject({ id: 'host1', type: 'host', lat: 51.1, lng: 52.3 })
+    services.maps.currentMap.value = { objects: [host] } as unknown as MapConfig
+    const editor = runWithServices(services, () => useMapEditor())
+
+    editor.selectObject('host1')
+    await editor.duplicateSelected()
+
+    const clone = services.maps.currentMap.value.objects[1]!
+    expect([clone.lat, clone.lng]).toEqual([51.05, 52.35])
   })
 })

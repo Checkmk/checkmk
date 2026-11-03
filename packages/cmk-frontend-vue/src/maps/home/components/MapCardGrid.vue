@@ -4,8 +4,8 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <!--
-The map list as a grid of cards, draggable into the order they should be listed
-in.
+The map list as a grid of cards; your own ones are draggable into the order
+they should be listed in.
 -->
 <script setup lang="ts">
 import MapCard from '@/maps/home/components/MapCard.vue'
@@ -14,7 +14,7 @@ import type { MapRead } from '@/maps/types/api'
 
 const props = defineProps<{
   maps: readonly MapRead[]
-  /** Whether the shown order is the stored one, i.e. whether a drag may reorder. */
+  /** Whether no search hides any of your maps, i.e. whether a drag may reorder them. */
   orderIsPristine: boolean
 }>()
 
@@ -24,7 +24,7 @@ const emit = defineEmits<{
   delete: [map: MapRead]
 }>()
 
-const { isEnabled, dragIndex, onDragStart, onDragOver, onDrop, onDragEnd } = useMapListReorder(
+const { isDraggable, isDragging, onDragStart, onDragOver, onDrop, onDragEnd } = useMapListReorder(
   () => props.orderIsPristine
 )
 </script>
@@ -32,13 +32,13 @@ const { isEnabled, dragIndex, onDragStart, onDragOver, onDrop, onDragEnd } = use
 <template>
   <div class="maps-map-card-grid" role="list">
     <MapCard
-      v-for="(map, index) in maps"
+      v-for="map in maps"
       :key="map.name"
       :map="map"
-      :draggable="isEnabled"
-      :dragging="isEnabled && dragIndex === index"
-      @dragstart="onDragStart($event, index)"
-      @dragover="onDragOver($event, index)"
+      :draggable="isDraggable(map)"
+      :dragging="isDragging(map)"
+      @dragstart="onDragStart($event, map)"
+      @dragover="onDragOver($event, map)"
       @drop="onDrop"
       @dragend="onDragEnd"
       @clone="emit('clone', $event)"

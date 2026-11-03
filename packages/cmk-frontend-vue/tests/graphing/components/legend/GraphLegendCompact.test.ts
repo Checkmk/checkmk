@@ -173,7 +173,7 @@ test('hovering a horizontal line item emits nothing', async () => {
   expect(emitted()['hoverMetrics']).toBeUndefined()
 })
 
-test('a metrics-backend item offers its attributes grouped by kind', () => {
+test('an OpenTelemetry metrics item offers its attributes grouped by kind', () => {
   render(GraphLegendCompact, {
     props: { metrics: [makeBackendMetric('requests', 'Requests')] },
     global: { stubs: TOOLTIP_STUBS }
@@ -187,7 +187,7 @@ test('a metrics-backend item offers its attributes grouped by kind', () => {
 })
 
 // No stubs: only the real components show whether focus opens the popup.
-test('focusing a metrics-backend item reveals its attributes, blurring hides them', async () => {
+test('focusing an OpenTelemetry metrics item reveals its attributes, blurring hides them', async () => {
   render(GraphLegendCompact, { props: { metrics: [makeBackendMetric('requests', 'Requests')] } })
   const trigger = document.querySelector('.graphing-graph-legend-compact__series--has-attributes')!
 
@@ -199,6 +199,16 @@ test('focusing a metrics-backend item reveals its attributes, blurring hides the
   await fireEvent.blur(trigger)
 
   await waitFor(() => expect(screen.queryByText('Resource attributes')).not.toBeInTheDocument())
+})
+
+test('the attributes popup is titled with the full metric name', async () => {
+  const title = 'Requests per second by endpoint'
+  render(GraphLegendCompact, { props: { metrics: [makeBackendMetric('requests', title)] } })
+  const trigger = document.querySelector('.graphing-graph-legend-compact__series--has-attributes')!
+
+  await fireEvent.focus(trigger)
+
+  await waitFor(() => expect(screen.getByText(title)).toBeInTheDocument())
 })
 
 test('only an item that has attributes is reachable by keyboard to reveal them', () => {

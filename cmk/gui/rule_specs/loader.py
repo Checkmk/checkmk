@@ -109,8 +109,13 @@ def load_api_v1_rule_specs(
             raise_errors=raise_errors,
         )
         discovered_plugins = DiscoveredPlugins(
-            [*discovered_plugins.errors, *more_discovered_plugins.errors],
-            {**discovered_plugins.plugins, **more_discovered_plugins.plugins},
+            errors=[*discovered_plugins.errors, *more_discovered_plugins.errors],
+            plugins={**discovered_plugins.plugins, **more_discovered_plugins.plugins},
+            conflicts=[*discovered_plugins.conflicts, *more_discovered_plugins.conflicts],
+            errors_by_module={
+                **discovered_plugins.errors_by_module,
+                **more_discovered_plugins.errors_by_module,
+            },
         )
 
     return load_discovered_rule_specs(discovered_plugins)

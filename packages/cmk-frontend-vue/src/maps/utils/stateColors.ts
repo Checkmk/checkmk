@@ -6,35 +6,13 @@
 /**
  * Monitoring state to colour, and to state ordering.
  *
- * Prefer ``stateColorVar`` (or ``stateColorProperty``, where a colour has to be
- * resolved): those name the shared ``--color-state-*`` tokens and therefore
- * follow the theme. ``STATE_COLORS`` is the literal fallback still used by the
- * map types that have not moved onto the tokens yet.
+ * Colours are references to the shared ``--color-state-*`` tokens, so they
+ * follow the theme. Resolve one with ``stateColorProperty`` where a literal
+ * value is needed.
  */
-const PENDING_COLOR = '#9ca3af'
 
-export const STATE_COLORS: Record<string, string> = {
-  UP: '#4ade80',
-  OK: '#4ade80',
-  DOWN: '#f87171',
-  CRITICAL: '#f87171',
-  UNREACHABLE: '#fb923c',
-  UNKNOWN: '#fb923c',
-  WARNING: '#ffd000',
-  PENDING: PENDING_COLOR,
-  // Object referenced on the map doesn't exist in monitoring data — neutral
-  // dim grey, paired with a dashed outline + "?" badge for clear differentiation.
-  NOT_FOUND: '#71717a'
-}
-
-// Tailwind blue-500 / amber-400 — kept in sync with the badges rendered
-// directly via Tailwind classes in MapElement.vue (downtime/ack indicators).
-export const DOWNTIME_COLOR = '#3b82f6'
-export const ACKNOWLEDGED_COLOR = '#fbbf24'
-
-export function stateColor(state: string | undefined): string {
-  return STATE_COLORS[state ?? 'PENDING'] ?? PENDING_COLOR
-}
+export const DOWNTIME_COLOR = 'var(--status-color-downtime)'
+export const ACKNOWLEDGED_COLOR = 'var(--status-color-acknowledged)'
 
 // The shared token carrying each state's colour.
 const STATE_PROPERTY: Record<string, string> = {
@@ -57,22 +35,22 @@ export function stateColorProperty(state: string | undefined): string {
 }
 
 /**
- * A state's colour as a token reference. Usable wherever CSS resolves — an
- * HTML ``style``, an SVG ``style`` binding, ``.style('fill', …)`` in D3 — but
- * NOT in an SVG presentation attribute, which cannot resolve ``var()``.
+ * A state's colour as a token reference, for a style, an SVG presentation
+ * attribute or ``.style('fill', …)`` in D3. String arithmetic on it, such as
+ * appending a hex alpha, does not work; use ``color-mix()`` instead.
  */
 export function stateColorVar(state: string | undefined): string {
   return `var(${stateColorProperty(state)})`
 }
 
-// Full severity ranking (mirrors backend _COMBINED_SEVERITY) for sorting —
-// worst-first when sorted descending. EMPTY sinks below healthy.
+// Severity ranking for sorting; mirrors the backend's SEVERITY_RANK, plus the
+// folder tree's EMPTY below everything.
 const STATE_RANK: Record<string, number> = {
-  CRITICAL: 4,
-  DOWN: 3,
-  WARNING: 2,
-  UNKNOWN: 1,
-  UNREACHABLE: 1,
+  DOWN: 5,
+  UNREACHABLE: 4,
+  CRITICAL: 3,
+  UNKNOWN: 2,
+  WARNING: 1,
   OK: 0,
   UP: 0,
   PENDING: -1,
@@ -81,15 +59,6 @@ const STATE_RANK: Record<string, number> = {
 
 export function stateRank(state: string | undefined): number {
   return STATE_RANK[state ?? ''] ?? -1
-}
-
-// Display severity (worst first) — mirrors backend _COMBINED_SEVERITY ranking.
-const SEVERITY_ORDER: Record<string, number> = {
-  CRITICAL: 5,
-  DOWN: 4,
-  UNKNOWN: 3,
-  UNREACHABLE: 3,
-  WARNING: 2
 }
 
 // Text on a state's own colour, as Checkmk's themes write it on their state
@@ -125,7 +94,7 @@ export function severityPills(counts: Record<string, number> | undefined): Sever
   }
   return Object.entries(counts)
     .filter(([, n]) => n > 0)
-    .sort((a, b) => (SEVERITY_ORDER[b[0]] ?? 1) - (SEVERITY_ORDER[a[0]] ?? 1))
+    .sort((a, b) => stateRank(b[0]) - stateRank(a[0]))
     .map(([state, count]) => ({
       state,
       count,

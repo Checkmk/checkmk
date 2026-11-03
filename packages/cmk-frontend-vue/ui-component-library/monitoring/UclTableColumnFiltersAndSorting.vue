@@ -295,6 +295,7 @@ const rows: HostEntry[] = [
     name: 'web-server-01',
     modes: [
       {
+        id: 'downtime',
         icon_name: 'downtime',
         link: 'view.py?view_name=downtimes_of_host&host=web-server-01',
         title: 'In scheduled downtime'
@@ -325,11 +326,13 @@ const rows: HostEntry[] = [
     name: 'db-primary-02',
     modes: [
       {
+        id: 'acknowledged',
         icon_name: 'ack',
         link: 'view.py?view_name=hostproblems&host=db-primary-02',
         title: 'Problem acknowledged'
       },
       {
+        id: 'notifications_off',
         icon_name: 'notif_disabled',
         link: 'view.py?view_name=hoststatus&host=db-primary-02',
         title: 'Notifications disabled'

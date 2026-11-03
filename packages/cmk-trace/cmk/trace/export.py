@@ -4,13 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+from typing import TYPE_CHECKING
 
-import opentelemetry.exporter.otlp.proto.grpc.exporter as grpc_exporter
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk.trace import export as sdk_export
 from opentelemetry.sdk.trace import TracerProvider
 
 from ._config import LocalTarget, TraceSendConfig
+
+if TYPE_CHECKING:
+    # cmk.trace is the only package allowed to import the OTLP gRPC exporter (TID251).
+    # Only for the annotations: exporter_from_config() imports the exporter at runtime, because it
+    # pulls in grpc and protobuf, which only processes with tracing enabled need
+    from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter  # noqa: TID251
 
 # Re-export 3rd party names to avoid direct dependencies in the code
 BatchSpanProcessor = sdk_export.BatchSpanProcessor
@@ -21,10 +26,18 @@ SpanExportResult = sdk_export.SpanExportResult
 def exporter_from_config(
     exporter_log_level: int,
     config: TraceSendConfig,
-    exporter_class: type[OTLPSpanExporter] = OTLPSpanExporter,
+    exporter_class: type[OTLPSpanExporter] | None = None,
 ) -> OTLPSpanExporter | None:
     if not config.enabled:
         return None
+
+    if exporter_class is None:
+        # cmk.trace is the only package allowed to import the OTLP gRPC exporter (TID251).
+        # Imported here (TID253), because the exporter pulls in grpc and protobuf. Every process
+        # which initializes tracing calls this, but only processes with tracing enabled need them.
+        from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter  # noqa: TID251
+
+        exporter_class = OTLPSpanExporter
 
     _set_exporter_logging(exporter_log_level)
 
@@ -55,4 +68,4 @@ def _set_exporter_logging(level: int) -> None:
 
     `Failed to export traces to localhost:4418, error code: StatusCode.UNAVAILABLE`
     """
-    logging.getLogger(grpc_exporter.__name__).setLevel(level)
+    logging.getLogger("opentelemetry.exporter.otlp.proto.grpc.exporter").setLevel(level)

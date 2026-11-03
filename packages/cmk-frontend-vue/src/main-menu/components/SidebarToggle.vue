@@ -30,6 +30,7 @@ const shortCut: NavItemShortcut = {
 
 const combo = mainMenu.getNavShortCutCombo(shortCut)
 const highlighted = computed(() => highlightedCombo.value === comboKey(combo))
+const altHint = computed(() => mainMenu.isAltHinted(shortCut))
 
 const color = computed<CmkMultitoneIconColor>(() => {
   return (SidebarService.isActive() ? 'success' : 'font') as CmkMultitoneIconColor
@@ -42,7 +43,8 @@ const color = computed<CmkMultitoneIconColor>(() => {
     class="mm-sidebar-toggle__li"
     :class="{
       'mm-sidebar-toggle__li--active': SidebarService.isActive(),
-      'mm-sidebar-toggle__li--small': hideItemTitle
+      'mm-sidebar-toggle__li--small': hideItemTitle,
+      'mm-sidebar-toggle__li--alt-hint': altHint
     }"
     :title="_t('Toggle sidebar')"
     @mouseenter="highlightCombo(combo)"
@@ -117,6 +119,13 @@ const color = computed<CmkMultitoneIconColor>(() => {
 
     .mm-sidebar-toggle__icon {
       margin-bottom: 0;
+    }
+  }
+
+  &.mm-sidebar-toggle__li--alt-hint {
+    a {
+      filter: brightness(1.3) drop-shadow(0 0 2px rgb(255 255 255 / 80%))
+        drop-shadow(0 0 6px rgb(255 255 255 / 50%));
     }
   }
 }

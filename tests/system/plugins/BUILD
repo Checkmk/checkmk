@@ -19,7 +19,6 @@ py_library(
     imports = ["../../.."],
     deps = [
         requirement("pytest"),
-        "//tests/system:pkg_marker",
         "//tests/testlib/system",
     ] + select({
         "//:gpl+nonfree_repo": [

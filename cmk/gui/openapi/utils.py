@@ -6,14 +6,14 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="no-any-return"
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from http import HTTPStatus
 from typing import Any, Literal, NewType, override
 from wsgiref.types import StartResponse, WSGIEnvironment
 
-import docstring_parser
 from werkzeug.exceptions import HTTPException
 
+from cmk.gui.exceptions import MKAuthException, MKInsufficientScope
 from cmk.gui.http import Response
 from cmk.gui.openapi.restful_objects.type_defs import Serializable
 from cmk.utils.encoding import json_encode
@@ -59,12 +59,14 @@ class GeneralRestAPIException(HTTPException):
         detail: str,
         fields: FIELDS | None = None,
         ext: EXT | None = None,
+        headers: Mapping[str, str] | None = None,
     ) -> None:
         self.code: int = status  # type: ignore[mutable-override]
         self.description: str = title  # type: ignore[mutable-override]
         self.detail = detail
         self.fields = fields
         self.ext = ext
+        self.headers = headers or {}
         super().__init__(description=title)
 
     @override
@@ -72,13 +74,15 @@ class GeneralRestAPIException(HTTPException):
         return self.to_problem()(environ, start_response)
 
     def to_problem(self) -> Response:
-        return problem(
+        response = problem(
             status=self.code,
             title=self.description,
             detail=self.detail,
             fields=self.fields,
             ext=self.ext,
         )
+        response.headers.update(self.headers)
+        return response
 
 
 # ==================================================== REQUEST exceptions
@@ -98,8 +102,9 @@ class RestAPIRequestGeneralException(GeneralRestAPIException):
         detail: str,
         fields: FIELDS | None = None,
         ext: EXT | None = None,
+        headers: Mapping[str, str] | None = None,
     ) -> None:
-        super().__init__(status, title, detail, fields, ext)
+        super().__init__(status, title, detail, fields, ext, headers)
 
 
 class RestAPIRequestContentTypeException(RestAPIRequestGeneralException):
@@ -211,8 +216,22 @@ class RestAPIForbiddenException(RestAPIRequestGeneralException):
         *,
         fields: FIELDS | None = None,
         ext: EXT | None = None,
+        headers: Mapping[str, str] | None = None,
     ) -> None:
-        super().__init__(RestAPIForbiddenException.status, title, detail, fields, ext)
+        super().__init__(RestAPIForbiddenException.status, title, detail, fields, ext, headers)
+
+
+def forbidden_from_auth_exception(exc: MKAuthException) -> RestAPIForbiddenException:
+    return RestAPIForbiddenException(
+        title=HTTPStatus.FORBIDDEN.phrase,
+        detail=str(exc),
+        # The RFC 6750 section 3.1 challenge.
+        headers=(
+            {"WWW-Authenticate": 'Bearer error="insufficient_scope"'}
+            if isinstance(exc, MKInsufficientScope)
+            else None
+        ),
+    )
 
 
 class RestAPIPermissionException(GeneralRestAPIException):
@@ -293,41 +312,6 @@ class ProblemException(HTTPException):
             fields=self.fields,
             ext=self.ext,
         )
-
-
-def param_description(
-    string: str | None,
-    param_name: str,
-    errors: Literal["raise", "ignore"] = "raise",
-) -> str | None:
-    """Get a param description of a docstring.
-
-    Args:
-        string:
-            The docstring from which to extract the parameter description.
-
-        param_name:
-            The name of the parameter.
-
-        errors:
-            Either 'raise' or 'ignore'.
-
-    Returns:
-        The description of the parameter, if possible.
-
-    """
-    if string is None:
-        if errors == "raise":
-            raise ValueError("No docstring was given.")
-        return None
-
-    docstring = docstring_parser.parse(string)
-    for param in docstring.params:
-        if param.arg_name == param_name and param.description is not None:
-            return param.description.replace("\n", " ")
-    if errors == "raise":
-        raise ValueError(f"Parameter {param_name!r} not found in docstring.")
-    return None
 
 
 def serve_json(

@@ -422,7 +422,7 @@ program_start num_hosts num_services max_long_output_size core_pid edition'
             force_pos:
                 Only used internally. Ignore.
 
-            site:
+            sites:
                 Optionally the sites where the query should be expected. NOTE: When this is not
                 given, we default to all configured sites, unless the query stats with `COMMAND`. In
                 this case, we default to the FIRST SITE configured.
@@ -431,25 +431,45 @@ program_start num_hosts num_services max_long_output_size core_pid edition'
             The object itself, so you can chain.
 
         Raises:
-            ValueError: when an unknown `match_type` is given.
+            ValueError: when an unknown `match_type` is given, or the query would be expected on
+                an unknown or unreachable site: one named in `sites`, or the first site for a
+                `COMMAND`.
         """
         if isinstance(query, list):
             query = "\n".join(query)
         query = query.rstrip()
 
+        if sites is None and query.startswith("COMMAND"):
+            sites = self.sites[:1]
+
         if sites is not None:
             if unknown_sites := set(sites) - set(self.connections):
                 raise ValueError(f"Unknown site(s): {','.join(unknown_sites)}")
+            if dead_sites := [site for site in sites if self.connections[site].unreachable]:
+                raise ValueError(f"Unreachable site(s) get no query: {','.join(dead_sites)}")
             connections: Iterable[MockSingleSiteConnection] = (
                 self.connections[site] for site in sites
             )
-        elif query.startswith("COMMAND"):
-            connections = list(self.connections.values())[:1]
         else:
-            connections = self.connections.values()
+            connections = (conn for conn in self.connections.values() if not conn.unreachable)
 
         for single_conn in connections:
             single_conn.expect_query(query, match_type, force_pos)
+        return self
+
+    def make_site_unreachable(self, site_name: SiteName) -> MockLiveStatusConnection:
+        """Let every query to the site fail, as with a remote site that went down.
+
+        The multi-site connection then lists the site among its dead sites. Call it before
+        expecting queries: those for every site leave it out from then on, those aimed at it are
+        rejected.
+
+        Raises:
+            ValueError: when the site is unknown or queries are already expected on it.
+        """
+        if site_name not in self.sites:
+            raise ValueError(f"Unknown site: {site_name!r}")
+        self.connections[site_name].make_unreachable()
         return self
 
 
@@ -600,8 +620,17 @@ class MockSingleSiteConnection:
         self._multisite = multisite_connection
         self._last_response: io.StringIO | None = None
         self._expected_queries: list[tuple[str, MatchType]] = []
+        self.unreachable = False
 
         self.socket = FakeSocket(self)
+
+    def make_unreachable(self) -> None:
+        if self._expected_queries:
+            raise ValueError(
+                f"Queries are already expected on site {self._site_name!r}, "
+                "so it cannot become unreachable"
+            )
+        self.unreachable = True
 
     def _format_sent_queries(self) -> str:
         if not self._sent_queries:
@@ -686,6 +715,8 @@ class MockSingleSiteConnection:
         return self._last_response.read(length).encode("utf-8")
 
     def socket_send(self, data: bytes) -> None:
+        if self.unreachable:
+            raise ConnectionRefusedError(f"Site {self._site_name!r} does not answer")
         self._sent_queries.append(data)
         if data[-2:] == b"\n\n":
             data = data[:-2]
@@ -1468,6 +1499,36 @@ def mock_livestatus_communication() -> Iterator[MockLiveStatusConnection]:
         yield live
 
 
+def mock_site_configurations(site_names: Iterable[SiteName]) -> SiteConfigurations:
+    """Local sites as a multi-site connection needs them to talk to the mock."""
+    return SiteConfigurations(
+        {
+            SiteId(site_name): SiteConfiguration(
+                id=SiteId(site_name),
+                alias=f"Local site {site_name}",
+                socket="unix:",
+                disable_wato=True,
+                disabled=False,
+                insecure=False,
+                url_prefix=f"/{site_name}/",
+                multisiteurl="",
+                persist=False,
+                replicate_ec=False,
+                replicate_mkps=False,
+                replication=None,
+                timeout=5,
+                user_login=True,
+                proxy=None,
+                user_attribute_sync_connections="all",
+                status_host=None,
+                message_broker_port=5672,
+                is_trusted=False,
+            )
+            for site_name in site_names
+        }
+    )
+
+
 # This function is used extensively in doctests. If we moved the tests to regular pytest tests, we
 # could make use of existing fixtures and simplify all this. When looking at the doctests in
 # cmk/utils/livestatus_helpers/queries.py it looks like many of then should better be unit tests.
@@ -1511,72 +1572,4 @@ def expect_single_query(
         if query:
             mock_live.expect_query(query, match_type=match_type)
         with mock_live(expect_status_query):
-            yield MultiSiteConnection(
-                sites=SiteConfigurations(
-                    {
-                        SiteId("NO_SITE"): SiteConfiguration(
-                            id=SiteId("NO_SITE"),
-                            alias="Local site NO_SITE",
-                            socket="unix:",
-                            disable_wato=True,
-                            disabled=False,
-                            insecure=False,
-                            url_prefix="/NO_SITE/",
-                            multisiteurl="",
-                            persist=False,
-                            replicate_ec=False,
-                            replicate_mkps=False,
-                            replication=None,
-                            timeout=5,
-                            user_login=True,
-                            proxy=None,
-                            user_attribute_sync_connections="all",
-                            status_host=None,
-                            message_broker_port=5672,
-                            is_trusted=False,
-                        ),
-                        SiteId("remote"): SiteConfiguration(
-                            id=SiteId("remote"),
-                            alias="Local site remote",
-                            socket="unix:",
-                            disable_wato=True,
-                            disabled=False,
-                            insecure=False,
-                            url_prefix="/remote/",
-                            multisiteurl="",
-                            persist=False,
-                            replicate_ec=False,
-                            replicate_mkps=False,
-                            replication=None,
-                            timeout=5,
-                            user_login=True,
-                            proxy=None,
-                            user_attribute_sync_connections="all",
-                            status_host=None,
-                            message_broker_port=5672,
-                            is_trusted=False,
-                        ),
-                        SiteId("local"): SiteConfiguration(
-                            id=SiteId("local"),
-                            alias="Local site local",
-                            socket="unix:",
-                            disable_wato=True,
-                            disabled=False,
-                            insecure=False,
-                            url_prefix="/local/",
-                            multisiteurl="",
-                            persist=False,
-                            replicate_ec=False,
-                            replicate_mkps=False,
-                            replication=None,
-                            timeout=5,
-                            user_login=True,
-                            proxy=None,
-                            user_attribute_sync_connections="all",
-                            status_host=None,
-                            message_broker_port=5672,
-                            is_trusted=False,
-                        ),
-                    }
-                )
-            )
+            yield MultiSiteConnection(sites=mock_site_configurations(mock_live.sites))

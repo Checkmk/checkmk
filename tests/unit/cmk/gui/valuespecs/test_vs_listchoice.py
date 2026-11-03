@@ -10,6 +10,7 @@ from typing import override
 import pytest
 
 import cmk.gui.valuespec as vs
+from cmk.gui.utils.output_funnel import output_funnel
 
 from .utils import expect_validate_failure, expect_validate_success, request_var
 
@@ -69,3 +70,22 @@ class TestListChoice:
 
     def test_canonical_value(self) -> None:
         assert not _get_list_choice().canonical_value()
+
+    @pytest.mark.usefixtures("request_context")
+    def test_toggle_all_renders_click_action(self) -> None:
+        with output_funnel.plugged():
+            vs.ListChoice(choices=CHOICES, toggle_all=True).render_input("l", [])
+            rendered = output_funnel.drain()
+
+        assert 'data-cmk_on_click="valuespec_list_choice_toggle_all"' in rendered
+        assert "javascript:" not in rendered
+
+
+@pytest.mark.usefixtures("request_context")
+def test_duallist_controls_render_click_actions() -> None:
+    with output_funnel.plugged():
+        vs.DualListChoice(choices=CHOICES).render_input("dl", [])
+        rendered = output_funnel.drain()
+
+    assert rendered.count('data-cmk_on_click="valuespec_duallist_switch"') == 2
+    assert "javascript:" not in rendered

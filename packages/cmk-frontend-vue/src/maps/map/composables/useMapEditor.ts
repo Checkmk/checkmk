@@ -10,9 +10,11 @@ import { randomId } from 'cmk-ui-library/lib/randomId'
 import { computed, onScopeDispose, reactive, ref, toRaw, watch } from 'vue'
 
 import { isDraftPlaceable } from '@/maps/map/edit/draftFacts'
+import { roundCoordinate } from '@/maps/map/worldmap/coordinates'
 import { useMaps, useSettings } from '@/maps/services/context'
 import type { MapElement, ObjectType } from '@/maps/types/api'
 import { newMapElement } from '@/maps/utils/model'
+import { getEffectiveObjectType } from '@/maps/utils/naming'
 
 export interface NewObjectDraft {
   type: ObjectType | ''
@@ -517,7 +519,7 @@ export function useMapEditor() {
     const obj = mapsStore.currentMap.value?.objects.find((o) => o.id === id)
     if (obj) {
       Object.assign(obj, updates)
-      if (obj.type === 'map') {
+      if (getEffectiveObjectType(obj) === 'map') {
         obj.map_title = linkedMapTitle(obj.map_name)
       }
     }
@@ -525,6 +527,9 @@ export function useMapEditor() {
   }
 
   const placing = ref(false)
+  // Counts the objects placed from the draft. Placing can start and end in the
+  // same tick (a geo-located host), so watchers can't rely on `placing` flipping.
+  const placedCount = ref(0)
   const draft = reactive<NewObjectDraft>({
     type: '',
     host_name: '',
@@ -605,6 +610,9 @@ export function useMapEditor() {
       aggregation_id: draft.aggregation_id || null,
       object_types: draft.type === 'dyngroup' ? draft.object_types : null,
       object_filter: draft.type === 'dyngroup' ? draft.object_filter || null : null,
+      // A host with failing services is not fine, so a new host shows them, as
+      // a NagVis host does by default.
+      recognize_services: draft.type === 'host',
       ...(draft.expand_depth ? { expand_depth: draft.expand_depth } : {}),
       label: {
         show: s.label_show,
@@ -685,6 +693,7 @@ export function useMapEditor() {
     mapsStore.scheduleSave()
     selectObject(obj.id)
     resetDraft()
+    placedCount.value++
   }
 
   async function placeAtLatLng(lat: number, lng: number) {
@@ -692,11 +701,15 @@ export function useMapEditor() {
       return
     }
     placing.value = false
+    lat = roundCoordinate(lat)
+    lng = roundCoordinate(lng)
     const obj: MapElement = {
       ..._draftToObject(_newDraftId()),
       lat,
       lng,
-      ...(draft.type === 'line' ? { lat2: lat + 2, lng2: lng + 4 } : {})
+      ...(draft.type === 'line'
+        ? { lat2: roundCoordinate(lat + 2), lng2: roundCoordinate(lng + 4) }
+        : {})
     }
     await _persistNewObject(obj)
   }
@@ -704,8 +717,8 @@ export function useMapEditor() {
   function moveObjectToLatLng(id: string, lat: number, lng: number) {
     const obj = mapsStore.currentMap.value?.objects.find((o) => o.id === id)
     if (obj) {
-      obj.lat = lat
-      obj.lng = lng
+      obj.lat = roundCoordinate(lat)
+      obj.lng = roundCoordinate(lng)
     }
     mapsStore.scheduleSave()
   }
@@ -733,8 +746,8 @@ export function useMapEditor() {
     for (const m of moves) {
       const obj = objects.find((o) => o.id === m.id)
       if (obj) {
-        obj.lat = m.lat
-        obj.lng = m.lng
+        obj.lat = roundCoordinate(m.lat)
+        obj.lng = roundCoordinate(m.lng)
       }
     }
     mapsStore.scheduleSave()
@@ -781,16 +794,16 @@ export function useMapEditor() {
     // Geo objects are placed by lat/lng — offset those too so the clone doesn't
     // land exactly on top of the original.
     if (src.lat !== null && src.lat !== undefined && src.lng !== null && src.lng !== undefined) {
-      clone.lat = src.lat - 0.05
-      clone.lng = src.lng + 0.05
+      clone.lat = roundCoordinate(src.lat - 0.05)
+      clone.lng = roundCoordinate(src.lng + 0.05)
       if (
         src.lat2 !== null &&
         src.lat2 !== undefined &&
         src.lng2 !== null &&
         src.lng2 !== undefined
       ) {
-        clone.lat2 = src.lat2 - 0.05
-        clone.lng2 = src.lng2 + 0.05
+        clone.lat2 = roundCoordinate(src.lat2 - 0.05)
+        clone.lng2 = roundCoordinate(src.lng2 + 0.05)
       }
     }
     mapsStore.currentMap.value?.objects.push(clone)
@@ -833,8 +846,8 @@ export function useMapEditor() {
       lat = best.lat
       lng = best.lng
     } else {
-      lat = members.reduce((a, o) => a + (o.lat as number), 0) / members.length
-      lng = members.reduce((a, o) => a + (o.lng as number), 0) / members.length
+      lat = roundCoordinate(members.reduce((a, o) => a + (o.lat as number), 0) / members.length)
+      lng = roundCoordinate(members.reduce((a, o) => a + (o.lng as number), 0) / members.length)
     }
     const objectFilter = `${
       hosts.map((h) => `Filter: name = ${h}`).join('\n') +
@@ -849,6 +862,8 @@ export function useMapEditor() {
       lng,
       object_types: 'host',
       object_filter: objectFilter,
+      // A bundle stands for its hosts with everything on them.
+      recognize_services: true,
       bundle_kind: kind,
       bundle_hosts: hosts,
       label: {
@@ -911,6 +926,7 @@ export function useMapEditor() {
     startLineDrag,
     updateObjectProperties,
     placing,
+    placedCount,
     draft,
     resetDraft,
     startPlacing,

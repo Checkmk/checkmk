@@ -39,7 +39,7 @@ from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.common_fields import AnnotatedHostName
 from cmk.gui.openapi.framework.model.converter import SiteIdConverter, TypedPlainValidator
 from cmk.gui.openapi.utils import ProblemException
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import Row
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view_utils import replace_action_url_macros, transform_action_url
@@ -52,12 +52,18 @@ from cmk.web.utils.icons import DynamicIcon, StaticIcon
 
 from ._family import MONITOR_SERVICES_FAMILY
 
-# "Parameters" (rule_editor) is surfaced as an explicit inline button of the slide-in header.
+# Shared by the table row and the slide-in, so only what both offer on their own is left out:
+# "Parameters" (rule_editor) is a row action and a slide-in header button.
 _EXCLUDED_IDENTS = frozenset({"rule_editor"})
 
 
 @api_model
 class ServiceActionMenuItem:
+    ident: str | ApiOmitted = api_field(
+        description="Identifier of the icon providing this action",
+        example="logwatch",
+        default_factory=ApiOmitted,
+    )
     icon_name: str = api_field(description="Icon to render for this action", example="logwatch")
     title: str = api_field(description="Label shown for the action", example="Open log file viewer")
     url: str = api_field(
@@ -97,6 +103,7 @@ def _serialize_entry(entry: IconEntry, row: Row) -> ServiceActionMenuItem | None
         return None
 
     return ServiceActionMenuItem(
+        ident=entry.ident if entry.ident else ApiOmitted(),
         icon_name=_icon_name(entry.icon_name),
         title=entry.title or "",
         url=url,
@@ -110,7 +117,7 @@ def get_service_action_menu(
         PathParam(description="Host name", example="web-server-01"),
     ],
     site_id: Annotated[
-        Annotated[SiteId, TypedPlainValidator(str, SiteIdConverter.should_exist)],
+        Annotated[SiteId, TypedPlainValidator(str, SiteIdConverter.should_be_authorized)],
         QueryParam(description="An existing site id", example="local"),
     ],
     service_name: Annotated[
@@ -135,7 +142,7 @@ def get_service_action_menu(
     entries = get_icons(
         "service",
         row,
-        UserPermissions.from_config(active_config, permission_registry),
+        UserPermissions.from_config(active_config, all_permissions()),
         IconConfig.from_config(active_config),
         toplevel=False,
         ignore_idents=_EXCLUDED_IDENTS,

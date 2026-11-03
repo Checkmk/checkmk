@@ -7,10 +7,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
 import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
-import type { Suggestions } from 'cmk-ui-library/components/CmkSuggestions'
-import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
+import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, ref } from 'vue'
 
+import { dateFormatChoices, timestampFormatChoices } from '@/monitoring/shared/displayOptionChoices'
 import { DEFAULT_DISPLAY_OPTIONS, type DisplayOptions } from '@/monitoring/shared/types'
 
 const props = defineProps<{
@@ -26,27 +26,9 @@ const { _t } = usei18n()
 
 const draft = ref<DisplayOptions>({ ...props.modelValue })
 
-const dateFormatOptions: Suggestions = {
-  type: 'fixed',
-  suggestions: [
-    { name: '%Y-%m-%d', title: untranslated('1970-12-18') },
-    { name: '%d.%m.%Y', title: untranslated('18.12.1970') },
-    { name: '%m/%d/%Y', title: untranslated('12/18/1970') },
-    { name: '%d.%m.', title: untranslated('18.12.') },
-    { name: '%m/%d', title: untranslated('12/18') }
-  ]
-}
+const dateFormatOptions = dateFormatChoices()
 
-const timestampFormatOptions: Suggestions = {
-  type: 'fixed',
-  suggestions: [
-    { name: 'mixed', title: _t('Mixed') },
-    { name: 'abs', title: _t('Absolute') },
-    { name: 'rel', title: _t('Relative') },
-    { name: 'both', title: _t('Both') },
-    { name: 'epoch', title: _t('Unix timestamp (epoch)') }
-  ]
-}
+const timestampFormatOptions = timestampFormatChoices()
 
 const dateFormat = computed<string | null>({
   get: () => draft.value.dateFormat,

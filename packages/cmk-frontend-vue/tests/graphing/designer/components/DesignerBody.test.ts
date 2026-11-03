@@ -38,7 +38,7 @@ vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
   default: {
     inheritAttrs: false,
     props: ['metrics', 'highlightedMetricNames', 'panEnabled', 'view_time_range', 'options'],
-    emits: ['pan', 'update:valueResolution'],
+    emits: ['pan', 'reset', 'update:valueResolution'],
     template: `<div data-testid="time-series-graph">
       <span data-testid="drawn">{{ metrics.map((m) => m.metadata.title).join(',') }}</span>
       <span data-testid="highlighted">{{ highlightedMetricNames.join(',') }}</span>
@@ -52,6 +52,7 @@ vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
         data-testid="report-value-resolution"
         @click="$emit('update:valueResolution', 0.005)"
       />
+      <button data-testid="reset" @click="$emit('reset')" />
       <button
         data-testid="pan-back"
         @click="$emit('pan', {
@@ -271,6 +272,7 @@ function renderBody(
     graph?: CustomGraphObject
     issuesByRow?: ReadonlyMap<ItemId, RowIssue[]>
     telemetryMetricsAvailable?: boolean
+    isEmbedded?: boolean
   } = {}
 ) {
   const { graph, ...rest } = overrides
@@ -471,9 +473,9 @@ test('the metrics tab names a row by what the fetch resolved it to', async () =>
   await waitFor(() => expect(within(metricsTab).getByText('CPU')).toBeInTheDocument())
   // Q fanned out to a single series, yet a group row is named by its group title.
   expect(
-    within(metricsTab).getByText('util - <HOST_NAME>/<SERVICE_DESCRIPTION>')
+    within(metricsTab).getByTitle('util - <HOST_NAME>/<SERVICE_DESCRIPTION>')
   ).toBeInTheDocument()
-  expect(within(metricsTab).queryByText('CPU of my-host')).not.toBeInTheDocument()
+  expect(within(metricsTab).queryByTitle('CPU of my-host')).not.toBeInTheDocument()
 })
 
 test('a row keeps the name of the last fetch until the one its edit triggers lands', async () => {
@@ -493,7 +495,7 @@ test('a row keeps the name of the last fetch until the one its edit triggers lan
   const metricsTab = await screen.findByRole('tabpanel')
   await waitFor(() =>
     expect(
-      within(metricsTab).getByText('util - <HOST_NAME>/<SERVICE_DESCRIPTION>')
+      within(metricsTab).getByTitle('util - <HOST_NAME>/<SERVICE_DESCRIPTION>')
     ).toBeInTheDocument()
   )
 
@@ -501,11 +503,11 @@ test('a row keeps the name of the last fetch until the one its edit triggers lan
   await nextTick()
 
   expect(
-    within(metricsTab).getByText('util - <HOST_NAME>/<SERVICE_DESCRIPTION>')
+    within(metricsTab).getByTitle('util - <HOST_NAME>/<SERVICE_DESCRIPTION>')
   ).toBeInTheDocument()
-  expect(within(metricsTab).queryByText('CPU of my-host')).not.toBeInTheDocument()
+  expect(within(metricsTab).queryByTitle('CPU of my-host')).not.toBeInTheDocument()
 
-  await waitFor(() => expect(within(metricsTab).getByText('CPU of my-host')).toBeInTheDocument())
+  await waitFor(() => expect(within(metricsTab).getByTitle('CPU of my-host')).toBeInTheDocument())
 })
 
 test('the metrics tab carries no marker while nothing blocks the save', async () => {
@@ -637,11 +639,11 @@ test("states the response's own per-metric errors without offering a retry", asy
   const response = fetchDataResponse() as { data: Record<string, unknown> }
   vi.spyOn(client, 'POST').mockResolvedValue({
     ...response,
-    data: { ...response.data, errors: ['Metrics backend is unavailable.'] }
+    data: { ...response.data, errors: ['The data backend is not reachable.'] }
   } as never)
   renderBody('view')
 
-  expect(await screen.findByText('Metrics backend is unavailable.')).toBeInTheDocument()
+  expect(await screen.findByText('The data backend is not reachable.')).toBeInTheDocument()
   expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument()
 })
 
@@ -656,6 +658,46 @@ test("states the response's own warnings over the preview it drew anyway", async
   const message = await screen.findByText('The query for A matched more than 100 time series.')
   expect(message.closest('.cmk-surface-notice')).toHaveClass('cmk-surface-notice--warning')
   expect(await screen.findByTestId('time-series-graph')).toBeInTheDocument()
+})
+
+function builtGraphResponse(): unknown {
+  const response = fetchDataResponse() as { data: Record<string, unknown> }
+  return { ...response, data: { ...response.data, internal: 'built-graph' } }
+}
+
+test('an embedded preview takes no input', async () => {
+  renderBody('edit', { isEmbedded: true })
+
+  expect((await screen.findByTestId('time-series-graph')).closest('[inert]')).not.toBeNull()
+})
+
+test('an embedded preview has no header above the graph', async () => {
+  renderBody('edit', { isEmbedded: true })
+  await screen.findByTestId('time-series-graph')
+
+  expect(screen.queryByText('My graph')).not.toBeInTheDocument()
+  expect(
+    screen.queryByRole('group', { name: 'Graph zoom controls and action menu' })
+  ).not.toBeInTheDocument()
+})
+
+test('an edit-mode preview shows its header above the graph', async () => {
+  renderBody('edit')
+  await screen.findByTestId('time-series-graph')
+
+  expect(screen.getByText('My graph')).toBeInTheDocument()
+  expect(
+    screen.getByRole('group', { name: 'Graph zoom controls and action menu' })
+  ).toBeInTheDocument()
+})
+
+test('an edit-mode preview shows no burger menu', async () => {
+  vi.spyOn(client, 'POST').mockResolvedValue(builtGraphResponse() as never)
+
+  renderBody('edit')
+
+  expect(await screen.findByTestId('time-series-graph')).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: 'Action menu' })).not.toBeInTheDocument()
 })
 
 test('states an empty custom graph over a drawn frame', async () => {
@@ -680,6 +722,84 @@ test.each(['view', 'edit'] as const)('the %s-mode preview arms the pan gesture',
   renderBody(mode)
 
   expect(await screen.findByTestId('pan-enabled')).toHaveTextContent('true')
+})
+
+test('a given time range keeps the preview off the page time picker', async () => {
+  useGlobalTimeRange().setActiveTimeRange(PAST_WINDOW, 'time_picker')
+  const postSpy = echoingPostSpy()
+  const timeRange = { start: 1_700_000_000 - 4 * 3600, end: 1_700_000_000 }
+  const harness = defineComponent({
+    setup() {
+      useProvideFilterDefinitions({ definitions: filterDefinitions, groups: {} })
+      return () => h(DesignerBody, { ...bodyProps(), timeRange })
+    }
+  })
+  render(harness)
+
+  await waitFor(() => expect(postSpy).toHaveBeenCalled())
+  expect(requestedRangeOf(postSpy.mock.calls[0]!)).toMatchObject(timeRange)
+})
+
+test('a new time range replaces a zoom on the preview, so a reset returns to the new range', async () => {
+  const postSpy = echoingPostSpy()
+  const lastFourHours = { start: 1_700_000_000 - 4 * 3600, end: 1_700_000_000 }
+  const lastHour = { start: 1_700_000_000 - 3600, end: 1_700_000_000 }
+  const timeRange = ref(lastFourHours)
+  const harness = defineComponent({
+    setup() {
+      useProvideFilterDefinitions({ definitions: filterDefinitions, groups: {} })
+      return () => h(DesignerBody, { ...bodyProps(), timeRange: timeRange.value })
+    }
+  })
+  render(harness)
+  const lastRequested = () => requestedRangeOf(postSpy.mock.calls.at(-1)!)
+  await waitFor(() => expect(postSpy).toHaveBeenCalled())
+
+  await fireEvent.click(await screen.findByTestId('pan-back'))
+  await waitFor(
+    () => expect(lastRequested()).toMatchObject({ start: lastFourHours.start - PAN_SECONDS }),
+    { timeout: PAN_REFETCH_TIMEOUT_MS }
+  )
+  timeRange.value = lastHour
+  await waitFor(() => expect(lastRequested()).toMatchObject(lastHour))
+  await fireEvent.click(screen.getByTestId('pan-back'))
+  await waitFor(
+    () => expect(lastRequested()).toMatchObject({ start: lastHour.start - PAN_SECONDS }),
+    { timeout: PAN_REFETCH_TIMEOUT_MS }
+  )
+  await fireEvent.click(screen.getByTestId('reset'))
+
+  await waitFor(() => expect(lastRequested()).toMatchObject(lastHour), {
+    timeout: PAN_REFETCH_TIMEOUT_MS
+  })
+})
+
+test('the same time range in a new object leaves a zoom on the preview in place', async () => {
+  const postSpy = echoingPostSpy()
+  const lastFourHours = { start: 1_700_000_000 - 4 * 3600, end: 1_700_000_000 }
+  const timeRange = ref(lastFourHours)
+  const harness = defineComponent({
+    setup() {
+      useProvideFilterDefinitions({ definitions: filterDefinitions, groups: {} })
+      return () => h(DesignerBody, { ...bodyProps(), timeRange: timeRange.value })
+    }
+  })
+  render(harness)
+  const lastRequested = () => requestedRangeOf(postSpy.mock.calls.at(-1)!)
+  await waitFor(() => expect(postSpy).toHaveBeenCalled())
+  await fireEvent.click(await screen.findByTestId('pan-back'))
+  await waitFor(
+    () => expect(lastRequested()).toMatchObject({ start: lastFourHours.start - PAN_SECONDS }),
+    { timeout: PAN_REFETCH_TIMEOUT_MS }
+  )
+
+  timeRange.value = { ...lastFourHours }
+  await nextTick()
+  await fireEvent.click(screen.getByTestId('reset'))
+
+  await waitFor(() => expect(lastRequested()).toMatchObject(lastFourHours), {
+    timeout: PAN_REFETCH_TIMEOUT_MS
+  })
 })
 
 test('a pan on the preview refetches the shifted window, keeping its span', async () => {
@@ -775,7 +895,7 @@ test('toggling visibility in the appearance table drops the metric from the prev
 test.each([
   { kind: 'an RRD query', source: () => rrdQuerySource('Q'), telemetryMetricsAvailable: false },
   {
-    kind: 'a metrics backend query',
+    kind: 'an OpenTelemetry metrics query',
     source: () => telemetryMetricsSource('Q'),
     telemetryMetricsAvailable: true
   }

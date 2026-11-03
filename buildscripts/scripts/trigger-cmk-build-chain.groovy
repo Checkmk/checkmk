@@ -199,6 +199,37 @@ void main() {
                     );
                 }[0]
             },
+            "Agent update test ubuntu-24.04": {
+                // the baked package is the same in every edition that bakes, so only run for pro
+                success &= smart_stage(
+                    name: "Agent update test ubuntu-24.04",
+                    condition: edition == "pro",
+                    raiseOnError: false,) {
+                    smart_build(
+                        use_upstream_build: true,
+                        force_build: force_build,
+                        relative_job_name: "${edition_base_folder}/test-system-agent-updates",
+                        build_params: job_parameters + [DISTRO: "ubuntu-24.04"],
+                        build_params_no_check: job_parameters_no_check,
+                        download: false,
+                    );
+                }[0]
+            },
+            "Agent update test almalinux-10": {
+                success &= smart_stage(
+                    name: "Agent update test almalinux-10",
+                    condition: edition == "pro",
+                    raiseOnError: false,) {
+                    smart_build(
+                        use_upstream_build: true,
+                        force_build: force_build,
+                        relative_job_name: "${edition_base_folder}/test-system-agent-updates",
+                        build_params: job_parameters + [DISTRO: "almalinux-10"],
+                        build_params_no_check: job_parameters_no_check,
+                        download: false,
+                    );
+                }[0]
+            },
         ]);
 
         success &= smart_stage(

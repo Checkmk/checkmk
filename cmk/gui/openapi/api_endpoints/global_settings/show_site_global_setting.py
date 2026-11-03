@@ -56,7 +56,9 @@ def show_site_global_setting_v1(
         varname,
         global_settings=load_configuration_settings(),
     )
-    form_spec = config_variable.value_model(global_settings_context_of(site_id, api_context))
+    form_spec = config_variable.value_model(
+        global_settings_context_of(site_id, api_context, edits_site_specific_value=True)
+    )
     spec, json_value = to_json(form_spec, value)
     return ApiResponse(
         body=SiteGlobalSettingModel(

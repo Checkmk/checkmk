@@ -6,6 +6,7 @@
 import { userEvent } from '@testing-library/user-event'
 import { cleanup, render, screen, waitFor } from '@testing-library/vue'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
+// eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
 import { HttpResponse, http } from 'msw'
 import { afterEach, expect, test } from 'vitest'
 
@@ -14,6 +15,8 @@ import { type ServiceModel, emptyService } from '@/mode-custom-services/types'
 
 const CREATE_URL = `${location.protocol}//${location.host}/api/internal/domain-types/custom_service/collections/all`
 const AUTOCOMPLETE_URL = `${location.protocol}//${location.host}/api/internal/objects/autocomplete/:ident`
+const TEMPLATE_ATTRIBUTES_URL = `${location.protocol}//${location.host}/api/internal/domain-types/custom_service/actions/template_attributes/invoke`
+const RESOLVE_URL = `${location.protocol}//${location.host}/api/internal/domain-types/custom_service/actions/resolve_host_name_template/invoke`
 
 let createRequests = 0
 let lastBody: unknown = null
@@ -36,6 +39,17 @@ const server = useMswServer(
   ),
   http.post(AUTOCOMPLETE_URL, () =>
     HttpResponse.json({ choices: [{ id: 'web01', value: 'web01 (10.0.0.1)' }] })
+  ),
+  http.post(TEMPLATE_ATTRIBUTES_URL, () =>
+    HttpResponse.json({ availability: 'available', attributes: [], truncated: false })
+  ),
+  http.post(RESOLVE_URL, () =>
+    HttpResponse.json({
+      matching_hosts: [],
+      unmatched_host_names: [],
+      hidden_match_count: 0,
+      truncated: false
+    })
   )
 )
 
@@ -168,7 +182,7 @@ test('saving persists the metric query from the graph and closes the dialog', as
     host_assignment: { mode: 'explicit_host', host_name: 'web01' },
     configuration: {
       metric_name: 'otel.http.duration',
-      service_name_template: 'HTTP duration',
+      service_name_template: 'HTTP duration $SERIES_ATTRIBUTES$',
       consolidation: { type: 'sum', function: 'sum_rate', lookback_seconds: 300 },
       aggregator
     }
@@ -201,4 +215,11 @@ test('cancelling closes the dialog without saving', async () => {
   await userEvent.click(await screen.findByRole('button', { name: 'Cancel' }))
   expect(emitted('close')).toBeTruthy()
   expect(createRequests).toBe(0)
+})
+
+test('a host name template that matches no host cannot be saved', async () => {
+  renderSlideIn(initialModel({ hostNameTemplate: '$RESOURCE_ATTR.service.name$' }))
+
+  expect(await screen.findByText(/No configured host currently matches/)).toBeTruthy()
+  expect(screen.getByRole('button', { name: 'Save' })).toBeDisabled()
 })

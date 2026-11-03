@@ -5,6 +5,8 @@
 
 # mypy: disable-error-code="explicit-any"
 
+import io
+from argparse import Namespace as Args
 from collections.abc import Sequence
 from datetime import datetime
 from typing import Any
@@ -12,11 +14,18 @@ from unittest import mock
 
 import pytest
 
-from cmk.plugins.aws_v2.special_agent.runner import AWSSectionsGeneric, Results
+from cmk.plugins.aws_v2.special_agent.config import AWSConfig, NamingConvention
+from cmk.plugins.aws_v2.special_agent.hosts import SOURCE_HOST, TargetHost
+from cmk.plugins.aws_v2.special_agent.runner import (
+    AWSSectionsGeneric,
+    AWSSectionsUSEast,
+    Results,
+)
 from cmk.plugins.aws_v2.special_agent.sections.core import (
     AWSSectionResult,
     get_seconds_since_midnight,
 )
+from cmk.plugins.aws_v2.special_agent.sections.s3 import ResultDistributorS3Limits
 
 
 @pytest.mark.parametrize(
@@ -53,7 +62,7 @@ class TestAWSSections:
         cached_data: Results = {
             ("costs_and_usage", 1606382471.693873, 38582.763184): [
                 AWSSectionResult(
-                    piggyback_hostname="",
+                    piggyback_hostname=SOURCE_HOST,
                     content=[
                         {
                             "TimePeriod": {
@@ -103,7 +112,7 @@ class TestAWSHostLabelSections:
             pytest.param(
                 {
                     ("costs_and_usage", 1606382471.693873, 38582.763184): [
-                        AWSSectionResult(piggyback_hostname="", content=[{}])
+                        AWSSectionResult(piggyback_hostname=SOURCE_HOST, content=[{}])
                     ],
                 },
                 [
@@ -115,11 +124,11 @@ class TestAWSHostLabelSections:
             pytest.param(
                 {
                     ("costs_and_usage", 1606382471.693873, 38582.763184): [
-                        AWSSectionResult(piggyback_hostname="", content=[{}])
+                        AWSSectionResult(piggyback_hostname=SOURCE_HOST, content=[{}])
                     ],
                     ("ec2", 1606382471.693873, 38582.763184): [
                         AWSSectionResult(
-                            piggyback_hostname="test-piggyback",
+                            piggyback_hostname=TargetHost("test-piggyback"),
                             content=[{}],
                             piggyback_host_labels={"cmk/aws/test-key": "test-value"},
                         )
@@ -135,6 +144,24 @@ class TestAWSHostLabelSections:
                 ],
                 id="piggyback_ec2_label",
             ),
+            pytest.param(
+                {
+                    ("wafv2_web_acl", 1606382471.693873, 38582.763184): [
+                        AWSSectionResult(
+                            piggyback_hostname=TargetHost("test-web-acl"), content=[{}]
+                        )
+                    ],
+                },
+                [
+                    "<<<labels:sep(0)>>>",
+                    '{"cmk/aws/account": "test-account"}',
+                    "<<<<test-web-acl>>>>",
+                    "<<<labels:sep(0)>>>",
+                    '{"cmk/aws/account": "test-account"}',
+                    "<<<<>>>>",
+                ],
+                id="piggyback_host_without_labels_of_its_own",
+            ),
         ],
     )
     def test_label_section_header(  # type: ignore[misc]
@@ -149,19 +176,29 @@ class TestAWSHostLabelSections:
         assert section_stdout.strip().split("\n") == expected_lines
 
 
-def _account_host_sections() -> AWSSectionsGeneric:
-    return AWSSectionsGeneric(
-        hostname="aws-org",
-        session=mock.Mock(),
-        account_id="333333333333",
-        account_host="333333333333",
-    )
+def _account_host_sections() -> AWSSectionsUSEast:
+    config = AWSConfig(
+        "aws-org", Args(), ([], []), NamingConvention.ip_region_instance
+    ).for_account("333333333333", host="333333333333")
+    sections = AWSSectionsUSEast(hostname="aws-org", session=mock.Mock(), account_id="333333333333")
+    sections.init_sections([], "us-east-1", config, ResultDistributorS3Limits(None))
+    return sections
 
 
-def test_account_host_receives_the_rule_host_sections(capsys: pytest.CaptureFixture[str]) -> None:
+@pytest.mark.parametrize(
+    "piggyback_hostname",
+    [
+        pytest.param(SOURCE_HOST, id="source host"),
+        pytest.param(TargetHost("aws-org"), id="named like the rule host"),
+        pytest.param(TargetHost(""), id="empty name"),
+    ],
+)
+def test_account_host_receives_results_without_a_piggyback_host(
+    capsys: pytest.CaptureFixture[str], piggyback_hostname: TargetHost | None
+) -> None:
     results: Results = {
         ("ec2_limits", 1606382471.693873, 300.0): [
-            AWSSectionResult(piggyback_hostname="", content=[{"limit": 1}])
+            AWSSectionResult(piggyback_hostname=piggyback_hostname, content=[{"limit": 1}])
         ],
     }
 
@@ -178,13 +215,32 @@ def test_account_host_receives_the_rule_host_sections(capsys: pytest.CaptureFixt
 def test_account_host_keeps_resource_piggyback_hosts(capsys: pytest.CaptureFixture[str]) -> None:
     results: Results = {
         ("ec2", 1606382471.693873, 300.0): [
-            AWSSectionResult(piggyback_hostname="10.0.0.1-eu-central-1-i-1", content=[{}])
+            AWSSectionResult(
+                piggyback_hostname=TargetHost("10.0.0.1-eu-central-1-i-1"), content=[{}]
+            )
         ],
     }
 
     _account_host_sections()._write_section_results(results)  # noqa: SLF001
 
     assert capsys.readouterr().out.splitlines()[0] == "<<<<10.0.0.1-eu-central-1-i-1>>>>"
+
+
+def test_account_host_gets_its_labels_once(capsys: pytest.CaptureFixture[str]) -> None:
+    results: Results = {
+        ("ec2_limits", 1606382471.693873, 300.0): [
+            AWSSectionResult(piggyback_hostname=TargetHost("333333333333"), content=[{}])
+        ],
+    }
+
+    _account_host_sections()._write_host_labels(results)  # noqa: SLF001
+
+    assert capsys.readouterr().out.splitlines() == [
+        "<<<<333333333333>>>>",
+        "<<<labels:sep(0)>>>",
+        '{"cmk/aws/account": "333333333333"}',
+        "<<<<>>>>",
+    ]
 
 
 def test_account_host_receives_the_labels(capsys: pytest.CaptureFixture[str]) -> None:
@@ -196,3 +252,16 @@ def test_account_host_receives_the_labels(capsys: pytest.CaptureFixture[str]) ->
         '{"cmk/aws/account": "333333333333"}',
         "<<<<>>>>",
     ]
+
+
+def test_run_writes_only_into_the_given_output(capsys: pytest.CaptureFixture[str]) -> None:
+    output = io.StringIO()
+
+    AWSSectionsGeneric(
+        hostname="", session=mock.Mock(), account_id="333333333333", output=output
+    ).run()
+
+    assert (capsys.readouterr().out, output.getvalue().splitlines()[:2]) == (
+        "",
+        ["<<<aws_v2_exceptions>>>", "AWSSectionsGeneric: No exceptions"],
+    )

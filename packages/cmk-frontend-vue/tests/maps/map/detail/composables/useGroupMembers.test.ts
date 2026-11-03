@@ -53,9 +53,14 @@ describe('memberHealth + filteredMembers', () => {
     expect(gm.filteredMembers.value.map((m) => m.host)).toEqual(['m', 'a', 'z'])
   })
 
-  it('onlyProblems filter drops OK/UP members', () => {
+  it('onlyProblems filter drops OK/UP and PENDING members', () => {
     const gm = setup()
-    gm.groupMembers.value = [member('a', 'OK'), member('b', 'CRITICAL')]
+    gm.groupMembers.value = [
+      member('a', 'OK'),
+      member('b', 'CRITICAL'),
+      member('c', 'PENDING'),
+      member('d', 'UP')
+    ]
     gm.onlyProblems.value = true
     expect(gm.filteredMembers.value.map((m) => m.host)).toEqual(['b'])
   })
@@ -68,6 +73,34 @@ describe('memberHealth + filteredMembers', () => {
     ]
     gm.memberSearch.value = 'LOAD'
     expect(gm.filteredMembers.value.map((m) => m.host)).toEqual(['db02'])
+  })
+})
+
+describe('memberChips', () => {
+  it("counts a host group's members in host states", () => {
+    const gm = setup()
+    gm.groupMembers.value = [member('a', 'UP'), member('b', 'DOWN'), member('c', 'DOWN')]
+    expect(gm.memberChips.value.map((c) => [c.label, c.count])).toEqual([
+      ['UP', 1],
+      ['DOWN', 2],
+      ['UNREACH', 0],
+      ['PENDING', 0]
+    ])
+  })
+
+  it("counts a service group's members in service states", () => {
+    const gm = setup()
+    gm.groupMembers.value = [
+      member('a', 'OK', { service: 'CPU' }),
+      member('b', 'UNKNOWN', { service: 'PING' })
+    ]
+    expect(gm.memberChips.value.map((c) => [c.label, c.count])).toEqual([
+      ['OK', 1],
+      ['WARN', 0],
+      ['CRIT', 0],
+      ['UNKNOWN', 1],
+      ['PENDING', 0]
+    ])
   })
 })
 
@@ -89,17 +122,31 @@ describe('truncation', () => {
 })
 
 describe('memberChips', () => {
-  it('emits problem chips only when non-zero, always keeps OK', () => {
+  it('counts service members by service state, zeros included', () => {
     const gm = setup()
-    gm.groupMembers.value = [member('a', 'CRITICAL'), member('b', 'OK')]
-    expect(gm.memberChips.value.map((c) => c.label)).toEqual(['CRIT', 'OK'])
+    gm.groupMembers.value = [
+      member('a', 'CRITICAL', { service: 'CPU' }),
+      member('b', 'OK', { service: 'CPU' }),
+      member('c', 'OK', { service: 'Disk' })
+    ]
+    expect(gm.memberChips.value.map((c) => [c.label, c.count])).toEqual([
+      ['OK', 2],
+      ['WARN', 0],
+      ['CRIT', 1],
+      ['UNKNOWN', 0],
+      ['PENDING', 0]
+    ])
   })
 
-  it('keeps only the OK chip when everything is healthy', () => {
+  it('counts host members by host state, zeros included', () => {
     const gm = setup()
-    gm.groupMembers.value = [member('a', 'OK'), member('b', 'UP')]
-    expect(gm.memberChips.value.map((c) => c.label)).toEqual(['OK'])
-    expect(gm.memberChips.value[0]!.count).toBe(2)
+    gm.groupMembers.value = [member('a', 'DOWN'), member('b', 'UP'), member('c', 'UP')]
+    expect(gm.memberChips.value.map((c) => [c.label, c.count])).toEqual([
+      ['UP', 2],
+      ['DOWN', 1],
+      ['UNREACH', 0],
+      ['PENDING', 0]
+    ])
   })
 })
 

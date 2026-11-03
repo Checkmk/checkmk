@@ -10,6 +10,7 @@ export { default as GraphSkeleton } from './components/GraphSkeleton.vue'
 export type { TimerangeModel } from './components/GraphFigure/computeEpochTimeRange'
 export type {
   GraphFetch,
+  GraphFigureLegend,
   GraphFigureProps,
   GraphFigureSource
 } from './components/GraphFigure/types'
@@ -22,7 +23,7 @@ export type {
 } from './composables/useGraphData'
 export { useGraphNotice } from './composables/useGraphNotice'
 export { toDateTimeRange, toRequestedTimeRange } from './composables/useRequestedTimeRange'
-export type { BurgerMenuGroup, RequestedTimeRange } from './types'
+export type { BurgerMenuGroup, GraphDisplayOptions, RequestedTimeRange } from './types'
 
 export { default as GraphLegendCompact } from './components/legend/GraphLegendCompact.vue'
 export { default as TimeSeriesGraph } from './components/TimeSeriesGraph'

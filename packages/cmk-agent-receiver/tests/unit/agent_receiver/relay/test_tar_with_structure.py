@@ -201,19 +201,13 @@ def test_create_tar_with_unicode_content(common_parent: Path) -> None:
         assert content == unicode_content
 
 
-def test_create_tar_is_uncompressed(common_parent: Path) -> None:
-    """Test that created tar archive is uncompressed."""
+def test_create_tar_is_gzip_compressed(common_parent: Path) -> None:
     test_file = common_parent / "test.txt"
     test_file.write_text("test content")
 
-    # Create tar archive
     result = create_tar(common_parent)
 
-    # Verify tar is uncompressed (mode 'r' should work, not 'r:gz' or 'r:bz2')
-    tar_buffer = io.BytesIO(result)
-
-    # Should open without specifying compression
-    with tarfile.open(fileobj=tar_buffer, mode="r") as tar:
+    with tarfile.open(fileobj=io.BytesIO(result), mode="r:gz") as tar:
         assert len(tar.getmembers()) == 2
 
 

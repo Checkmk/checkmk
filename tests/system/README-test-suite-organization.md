@@ -1,7 +1,7 @@
 # Work in progress!
 
 We're currently in the process of reorganizing the test suites.
-The full target architecture is described [here](https://wiki.lan.checkmk.net/spaces/DEV/pages/209453301/Test+classification+and+architecture).
+The full target architecture is described [here](https://checkmk-int.atlassian.net/wiki/x/ro9lD).
 
 # Desired test suite organization in a nutshell
 
@@ -25,7 +25,9 @@ directory over growing these further.
 
 # Pytest setup
 
-`tests/system/conftest.py` registers the setup every system suite needs: the
+`tests/system/conftest.py` (and its copy `non-free/tests/system/conftest.py` for
+the suites below `non-free/tests/system/`) registers the setup every system
+suite needs: the
 package under test (`--cmk-edition`, edition skips, crash reports), the session
 timeout, sharding, CI selection and failure diagnostics. Each of those is a
 plugin module in `tests/testlib/system/pytest_helpers/` (or in

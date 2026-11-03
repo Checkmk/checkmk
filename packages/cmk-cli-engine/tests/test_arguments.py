@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
-from pathlib import Path
 from typing import Final, NoReturn
 
 import pytest
@@ -17,12 +16,14 @@ from cmk.cli.engine.commands import (
     Option,
     parse_sub_options,
 )
-from cmk.cli.internal import Args, GlobalOptions, Options
+from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Context as CLIContext
+from cmk.cli.internal import Options
+
+from ._logger import null_logger
 
 
-def _unreachable(
-    _omd_root: Path, _global: GlobalOptions, _options: Options, _args: Args
-) -> NoReturn:
+def _unreachable(_context: CLIContext, _options: Options, _args: CLIArgs) -> NoReturn:
     raise AssertionError("parsing must not run the command")
 
 
@@ -31,6 +32,7 @@ _COMMAND_ARGUMENT: Final = "myhost"
 _ARGUMENT_EVERY_CONVERSION_ACCEPTS: Final = "inline"
 
 _PLAIN: Final = Command(
+    name="plain",
     long_option="plain",
     short_option="p",
     handler_function=_unreachable,
@@ -38,12 +40,14 @@ _PLAIN: Final = Command(
 )
 
 _OTHER_PLAIN: Final = Command(
+    name="other_plain",
     long_option="other-plain",
     handler_function=_unreachable,
     short_help="takes no argument either",
 )
 
 _WITH_ARGUMENT: Final = Command(
+    name="with_argument",
     long_option="with-argument",
     handler_function=_unreachable,
     argument=True,
@@ -54,6 +58,7 @@ _WITH_ARGUMENT: Final = Command(
 # The engine runs this one when the command line names no command at all, so the
 # name is not free to choose.
 _CHECK: Final = Command(
+    name="check",
     long_option="check",
     short_option="c",
     handler_function=_unreachable,
@@ -114,7 +119,9 @@ def test_a_sub_option_reaches_its_command() -> None:
     parsed = parse(_COMMANDS, ["cmk", "--check", "--keepalive"])
 
     assert isinstance(parsed, RunCommand)
-    assert "keepalive" in parse_sub_options(parsed.command.sub_options, parsed.options)
+    assert "keepalive" in parse_sub_options(
+        parsed.command.sub_options, parsed.options, null_logger()
+    )
 
 
 def test_a_bare_command_shows_the_help() -> None:
@@ -160,14 +167,16 @@ def test_a_repeated_sub_option_is_counted() -> None:
 
     assert isinstance(parsed, RunCommand)
     assert parsed.command is _CHECK
-    assert parse_sub_options(parsed.command.sub_options, parsed.options) == {"counted": 2}
+    assert parse_sub_options(parsed.command.sub_options, parsed.options, null_logger()) == {
+        "counted": 2
+    }
 
 
 def test_a_repeated_sub_option_argument_is_collected() -> None:
     parsed = parse(_COMMANDS, ["cmk", "--check", "--collected=.1.1", "--collected=.1.2", "myhost"])
 
     assert isinstance(parsed, RunCommand)
-    assert parse_sub_options(parsed.command.sub_options, parsed.options) == {
+    assert parse_sub_options(parsed.command.sub_options, parsed.options, null_logger()) == {
         "collected": (".1.1", ".1.2")
     }
 
@@ -176,14 +185,18 @@ def test_a_sub_option_argument_is_converted() -> None:
     parsed = parse(_COMMANDS, ["cmk", "--check", "--converted=value", "myhost"])
 
     assert isinstance(parsed, RunCommand)
-    assert parse_sub_options(parsed.command.sub_options, parsed.options) == {"converted": "VALUE"}
+    assert parse_sub_options(parsed.command.sub_options, parsed.options, null_logger()) == {
+        "converted": "VALUE"
+    }
 
 
 def test_a_deprecated_sub_option_reaches_the_option_it_replaces() -> None:
     parsed = parse(_COMMANDS, ["cmk", "--check", "--legacy-name=value", "myhost"])
 
     assert isinstance(parsed, RunCommand)
-    assert parse_sub_options(parsed.command.sub_options, parsed.options) == {"converted": "VALUE"}
+    assert parse_sub_options(parsed.command.sub_options, parsed.options, null_logger()) == {
+        "converted": "VALUE"
+    }
 
 
 def test_one_argument_runs_the_implicit_check_command() -> None:

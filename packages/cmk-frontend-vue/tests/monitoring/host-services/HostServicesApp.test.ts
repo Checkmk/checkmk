@@ -19,6 +19,7 @@ type ApiServiceEntry = components['schemas']['HostServiceEntry']
 type ApiHostEntry = components['schemas']['HostEntry']
 
 const HOSTS_PATH = '/monitor/hosts'
+const EXPORT_EVENT = 'cmk-monitoring-export'
 
 // Several tests here drive the Mode filter panel through multiple userEvent interactions.
 // That's enough combined work to overrun the default 5s budget when the suite runs alongside
@@ -115,6 +116,7 @@ function renderApp(overrides: Partial<MonitoringHostServicesApp> = {}) {
       user_id: 'cmkadmin',
       edition: 'pro',
       limit_tiers: [1000, 5000],
+      export_event: EXPORT_EVENT,
       ...overrides
     } satisfies MonitoringHostServicesApp
   })
@@ -200,7 +202,7 @@ test('requests the services sorted by name ascending on the first click of the S
       body: {
         limit: 1000,
         sort: ['name:asc'],
-        fields: []
+        fields: ['graphs_link']
       }
     })
   )
@@ -219,7 +221,7 @@ test('requests a descending sort first for the State column', async () => {
       body: {
         limit: 1000,
         sort: ['state:desc'],
-        fields: []
+        fields: ['graphs_link']
       }
     })
   )
@@ -238,7 +240,7 @@ test('requests the services matching a submitted search query', async () => {
   expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
-      body: { limit: 1000, q: 'CPU', fields: [] }
+      body: { limit: 1000, q: 'CPU', fields: ['graphs_link'] }
     })
   )
 })
@@ -272,7 +274,7 @@ test('requests services whose name contains the typed filter text', async () => 
       body: {
         limit: 1000,
         filter: { type: 'condition', field: 'name', op: 'contains', value: 'cpu' },
-        fields: []
+        fields: ['graphs_link']
       }
     })
   )
@@ -295,7 +297,7 @@ test('clearing the name filter restores the full, unfiltered list', async () => 
   expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
-      body: { limit: 1000, fields: [] }
+      body: { limit: 1000, fields: ['graphs_link'] }
     })
   )
 })
@@ -315,7 +317,7 @@ test('requests services whose summary contains the typed filter text', async () 
       body: {
         limit: 1000,
         filter: { type: 'condition', field: 'summary', op: 'contains', value: 'timeout' },
-        fields: []
+        fields: ['graphs_link']
       }
     })
   )
@@ -338,7 +340,7 @@ test('clearing the summary filter restores the full, unfiltered list', async () 
   expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
-      body: { limit: 1000, fields: [] }
+      body: { limit: 1000, fields: ['graphs_link'] }
     })
   )
 })
@@ -373,7 +375,7 @@ test('requests services that are not acknowledged and not in downtime', async ()
             { type: 'condition', field: 'acknowledged', op: 'eq', value: false }
           ]
         },
-        fields: []
+        fields: ['graphs_link']
       }
     })
   )
@@ -400,7 +402,7 @@ test('clearing the mode filter restores the full, unfiltered list', async () => 
   expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
-      body: { limit: 1000, fields: [] }
+      body: { limit: 1000, fields: ['graphs_link'] }
     })
   )
 })
@@ -424,7 +426,7 @@ test('activating the unhandled-problems quick filter requests the WARN/CRIT/UNKN
             { type: 'condition', field: 'in_downtime', op: 'eq', value: false }
           ]
         },
-        fields: []
+        fields: ['graphs_link']
       }
     })
   )
@@ -441,7 +443,7 @@ test('clicking the unhandled-problems chip again turns it back off', async () =>
   expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
-      body: { limit: 1000, fields: [] }
+      body: { limit: 1000, fields: ['graphs_link'] }
     })
   )
 })
@@ -456,7 +458,7 @@ test('resetting all filters also turns off the unhandled-problems chip', async (
   expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
-      body: { limit: 1000, fields: [] }
+      body: { limit: 1000, fields: ['graphs_link'] }
     })
   )
 })
@@ -502,7 +504,7 @@ test('resetting all filters restores the full, unfiltered list', async () => {
   expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
-      body: { limit: 1000, fields: [] }
+      body: { limit: 1000, fields: ['graphs_link'] }
     })
   )
 })
@@ -525,7 +527,7 @@ test('requests only the states the URL a link arrived on names', async () => {
       body: {
         limit: 1000,
         filter: { type: 'condition', field: 'state', op: 'one_of', value: ['CRIT'] },
-        fields: []
+        fields: ['graphs_link']
       }
     })
   )
@@ -575,7 +577,7 @@ test('requests services in a picked state that are also flapping', async () => {
             { type: 'condition', field: 'is_flapping', op: 'eq', value: true }
           ]
         },
-        fields: []
+        fields: ['graphs_link']
       }
     })
   )
@@ -602,7 +604,7 @@ test('clearing the state filter also clears its flapping/stale flags', async () 
   expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
-      body: { limit: 1000, fields: [] }
+      body: { limit: 1000, fields: ['graphs_link'] }
     })
   )
 })
@@ -699,7 +701,7 @@ test('sorts by the column the URL a link arrived on names', async () => {
   expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
-      body: { limit: 1000, sort: ['state:desc'], fields: [] }
+      body: { limit: 1000, sort: ['state:desc'], fields: ['graphs_link'] }
     })
   )
   expect(screen.getByRole('columnheader', { name: 'State' })).toHaveAttribute(
@@ -726,7 +728,7 @@ test('shows the columns the URL a link arrived on names, and asks for their fiel
   expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
-      body: { limit: 1000, fields: ['labels'] }
+      body: { limit: 1000, fields: ['labels', 'graphs_link'] }
     })
   )
 })
@@ -764,7 +766,7 @@ test('falls back to the default ordering when the URL names an unsortable column
   expect(servicesPost).toHaveBeenLastCalledWith(
     '/monitor/hosts/{hostname}/services',
     expect.objectContaining({
-      body: { limit: 1000, fields: [] }
+      body: { limit: 1000, fields: ['graphs_link'] }
     })
   )
   expect(new URLSearchParams(window.location.search).get('sort')).toBeNull()
@@ -807,7 +809,7 @@ test('requests services whose last state change is younger than the entered age'
             (value: number) => value >= before - 5 * 60 && value <= after - 5 * 60
           )
         },
-        fields: []
+        fields: ['graphs_link']
       }
     })
   )
@@ -849,7 +851,7 @@ test('requests services whose last state change is at or after the picked instan
           op: 'gte',
           value: picked
         },
-        fields: []
+        fields: ['graphs_link']
       }
     })
   )
@@ -902,7 +904,7 @@ test('a range picked as instants keeps filtering once the ages show as ages', as
           op: 'gte',
           value: expect.toSatisfy((value: number) => Math.abs(value - picked) <= 2)
         },
-        fields: []
+        fields: ['graphs_link']
       }
     })
   )
@@ -987,6 +989,197 @@ test('reads the host of the page alongside its services', async () => {
   )
 })
 
+describe('the host slide-in', () => {
+  const originalOffsetHeight = Object.getOwnPropertyDescriptor(
+    HTMLElement.prototype,
+    'offsetHeight'
+  )
+  const originalOffsetWidth = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth')
+
+  beforeEach(() => {
+    const contentArea = document.createElement('div')
+    contentArea.id = 'content_area'
+    document.body.appendChild(contentArea)
+    Object.defineProperty(HTMLElement.prototype, 'offsetHeight', { configurable: true, value: 600 })
+    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', { configurable: true, value: 800 })
+    vi.spyOn(client, 'GET').mockReturnValue(new Promise(() => {}) as never)
+  })
+
+  afterEach(() => {
+    if (originalOffsetHeight) {
+      Object.defineProperty(HTMLElement.prototype, 'offsetHeight', originalOffsetHeight)
+    }
+    if (originalOffsetWidth) {
+      Object.defineProperty(HTMLElement.prototype, 'offsetWidth', originalOffsetWidth)
+    }
+  })
+
+  test('opens when the host name in the page header is clicked', async () => {
+    mockServices([makeApiEntry()])
+    renderApp()
+
+    await userEvent.click(await screen.findByRole('link', { name: 'web-1' }))
+
+    expect(await screen.findByText('Host details')).toBeInTheDocument()
+  })
+
+  test('offers the host commands the page permits', async () => {
+    mockServices([makeApiEntry()])
+    renderApp({ host_actions: [ACKNOWLEDGE] })
+
+    await userEvent.click(await screen.findByRole('link', { name: 'web-1' }))
+
+    expect(await screen.findByRole('button', { name: 'Acknowledge problems' })).toBeInTheDocument()
+  })
+
+  test('closes the service slide-in it replaces', async () => {
+    mockServices([makeApiEntry()])
+    renderApp()
+
+    await userEvent.click(await screen.findByRole('button', { name: 'CPU load' }))
+    expect(await screen.findByText('Service details')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('link', { name: 'web-1' }))
+
+    expect(await screen.findByText('Host details')).toBeInTheDocument()
+    expect(screen.queryByText('Service details')).not.toBeInTheDocument()
+  })
+
+  test('closes the host slide-in a service replaces', async () => {
+    mockServices([makeApiEntry()])
+    renderApp()
+
+    await userEvent.click(await screen.findByRole('link', { name: 'web-1' }))
+    expect(await screen.findByText('Host details')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'CPU load' }))
+
+    expect(await screen.findByText('Service details')).toBeInTheDocument()
+    expect(screen.queryByText('Host details')).not.toBeInTheDocument()
+  })
+
+  describe('with the reload countdown running', () => {
+    const POLL_INTERVAL_MS = 1000
+
+    // The clock is faked to drive the countdown, which rules out every testing-library waiter:
+    // they advance a faked clock themselves.
+    async function renderPolling() {
+      vi.useFakeTimers()
+      const user = userEvent.setup({ advanceTimers: (ms: number) => vi.advanceTimersByTime(ms) })
+      mockServices([makeApiEntry()])
+      renderApp({ poll_interval_ms: POLL_INTERVAL_MS })
+      await vi.advanceTimersByTimeAsync(0)
+      return user
+    }
+
+    function serviceReads(): number {
+      return servicesPost.mock.calls.length
+    }
+
+    async function readsOverSomePolls(): Promise<number> {
+      const before = serviceReads()
+      await vi.advanceTimersByTimeAsync(3 * POLL_INTERVAL_MS)
+      return serviceReads() - before
+    }
+
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    test('holds the table still while the host slide-in is open, and reloads once it closes', async () => {
+      const user = await renderPolling()
+
+      await user.click(screen.getByRole('link', { name: 'web-1' }))
+      await vi.advanceTimersByTimeAsync(0)
+      expect(screen.getByText('Host details')).toBeInTheDocument()
+      expect(await readsOverSomePolls()).toBe(0)
+
+      await user.click(screen.getByRole('button', { name: 'Close' }))
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(await readsOverSomePolls()).toBeGreaterThan(0)
+    })
+
+    test('keeps the table still across switching between the slide-ins, and reloads once the last closes', async () => {
+      const user = await renderPolling()
+
+      await user.click(screen.getByRole('link', { name: 'web-1' }))
+      await vi.advanceTimersByTimeAsync(0)
+      await user.click(screen.getByRole('button', { name: 'CPU load' }))
+      await vi.advanceTimersByTimeAsync(0)
+      expect(screen.getByText('Service details')).toBeInTheDocument()
+      expect(await readsOverSomePolls()).toBe(0)
+
+      await user.click(screen.getByRole('link', { name: 'web-1' }))
+      await vi.advanceTimersByTimeAsync(0)
+      expect(screen.getByText('Host details')).toBeInTheDocument()
+      expect(await readsOverSomePolls()).toBe(0)
+
+      await user.click(screen.getByRole('button', { name: 'Close' }))
+      await vi.advanceTimersByTimeAsync(0)
+
+      expect(await readsOverSomePolls()).toBeGreaterThan(0)
+    })
+  })
+
+  test('names the host it shows in the URL fragment', async () => {
+    mockServices([makeApiEntry()])
+    renderApp()
+
+    await userEvent.click(await screen.findByRole('link', { name: 'web-1' }))
+    await screen.findByText('Host details')
+
+    const fragment = new URLSearchParams(window.location.hash.slice(1))
+    expect(fragment.get('host')).toBe('web-1')
+    expect(fragment.get('site')).toBe('local')
+  })
+
+  test('names a tab picked in it apart from the tab of the service slide-in', async () => {
+    mockServices([makeApiEntry()])
+    renderApp()
+
+    await userEvent.click(await screen.findByRole('link', { name: 'web-1' }))
+    await userEvent.click(await screen.findByRole('tab', { name: 'History' }))
+
+    const fragment = new URLSearchParams(window.location.hash.slice(1))
+    expect(fragment.get('host_tab')).toBe('history')
+    expect(fragment.has('tab')).toBe(false)
+  })
+
+  test('opens from a link naming the host of the page', async () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/monitor_host_services.py?host=web-1&site=local#host=web-1&site=local'
+    )
+    mockServices([makeApiEntry()])
+    renderApp()
+
+    expect(await screen.findByText('Host details')).toBeInTheDocument()
+  })
+})
+
+test('asks whether the host may be opened in Setup when the page offers host Setup links', async () => {
+  mockServices([makeApiEntry()])
+  renderApp({
+    host_row_actions: [
+      {
+        ident: 'edit',
+        title: 'Edit host',
+        icon: 'edit',
+        url: 'wato.py?mode=edit_host&host={host}'
+      }
+    ]
+  })
+
+  await screen.findByText('UP')
+
+  expect(postSpy).toHaveBeenCalledWith(
+    HOSTS_PATH,
+    expect.objectContaining({ body: expect.objectContaining({ fields: ['setup_access'] }) })
+  )
+})
+
 describe('with the rows laid out', () => {
   const originalOffsetHeight = Object.getOwnPropertyDescriptor(
     HTMLElement.prototype,
@@ -1038,4 +1231,152 @@ describe('with the rows laid out', () => {
 
     expect(screen.queryByRole('button', { name: 'Explain with AI' })).not.toBeInTheDocument()
   })
+})
+
+describe('export', () => {
+  let downloads: string[]
+
+  beforeEach(() => {
+    downloads = []
+    URL.createObjectURL = vi.fn(() => 'blob:services')
+    URL.revokeObjectURL = vi.fn()
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+      this: HTMLAnchorElement
+    ) {
+      downloads.push(this.download)
+    })
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  async function exportAs(format: 'csv' | 'json'): Promise<void> {
+    await screen.findByRole('columnheader', { name: 'Service' })
+    await vi.waitUntil(() => servicesPost.mock.calls.length > 0)
+    document.dispatchEvent(new CustomEvent(EXPORT_EVENT, { detail: format }))
+  }
+
+  test.each(['csv', 'json'] as const)(
+    'downloads the services as %s, named after the host',
+    async (format) => {
+      mockServices([makeApiEntry()])
+      renderApp()
+
+      await exportAs(format)
+      await vi.waitUntil(() => downloads.length > 0)
+
+      expect(downloads[0]).toMatch(new RegExp(`^web-1-services-.*\\.${format}$`))
+    }
+  )
+
+  test('says how many services were exported when the row limit left some out', async () => {
+    mockServices([makeApiEntry()], { matched: 3, total: 3 })
+    renderApp()
+
+    await exportAs('csv')
+
+    expect(
+      await screen.findByText('Exported 1 of 3 services. Show more services to export more.')
+    ).toBeInTheDocument()
+  })
+
+  test('posts the host, the shown columns and the listing to the instant PDF report', async () => {
+    const posted: { action: string | null; fields: Record<string, string> }[] = []
+    vi.spyOn(HTMLFormElement.prototype, 'submit').mockImplementation(function (
+      this: HTMLFormElement
+    ) {
+      posted.push({
+        action: this.getAttribute('action'),
+        fields: Object.fromEntries(
+          [...new FormData(this).entries()].map(([key, value]) => [key, String(value)])
+        )
+      })
+    })
+    window.history.replaceState(
+      null,
+      '',
+      '/monitor_host_services.py?host=web-1&site=local&cols=summary,labels'
+    )
+    mockServices([makeApiEntry()])
+    renderApp()
+    await screen.findByRole('columnheader', { name: 'Labels' })
+    await vi.waitUntil(() => servicesPost.mock.calls.length > 0)
+
+    document.dispatchEvent(new CustomEvent(EXPORT_EVENT, { detail: 'pdf' }))
+
+    const [report] = posted
+    expect([report!.action, report!.fields.host, report!.fields.site]).toEqual([
+      'report_instant_host_services.py',
+      'web-1',
+      'local'
+    ])
+    expect(report!.fields.cols).toBe('state,name,summary,labels')
+    expect(JSON.parse(report!.fields.body!)).toEqual({
+      ...servicesPost.mock.lastCall![1].body,
+      fields: undefined
+    })
+  })
+})
+
+test('offers the further service commands in the "More" menu, the missing ones disabled', async () => {
+  const user = userEvent.setup()
+  mockServices([makeApiEntry()])
+  renderApp({
+    actions: [
+      { ident: 'acknowledge', title: 'Acknowledge problems', icon: 'ack' },
+      { ident: 'not_implemented', title: 'Not implemented', icon: 'archive' }
+    ]
+  })
+
+  await user.click(await screen.findByRole('checkbox', { name: 'Select all rows' }))
+  await user.click(screen.getByRole('button', { name: 'More' }))
+
+  expect(await screen.findByRole('menuitem', { name: 'Not implemented' })).toHaveAttribute(
+    'data-disabled'
+  )
+  expect(screen.queryByRole('menuitem', { name: 'Acknowledge problems' })).not.toBeInTheDocument()
+})
+
+test('removes the downtime of the selected service after confirming it', async () => {
+  const user = userEvent.setup()
+  mockServices([
+    {
+      ...makeApiEntry(),
+      modes: [{ id: 'downtime', icon_name: 'downtime', link: '', title: 'In downtime' }]
+    }
+  ])
+  renderApp({
+    actions: [
+      {
+        ident: 'remove_downtimes_hosts_services',
+        title: 'Remove downtimes',
+        icon: 'downtime'
+      }
+    ]
+  })
+
+  await user.click(await screen.findByRole('checkbox', { name: 'Select all rows' }))
+  await user.click(screen.getByRole('button', { name: 'More' }))
+  await user.click(await screen.findByRole('menuitem', { name: 'Remove downtimes' }))
+
+  expect(await screen.findByRole('alert')).toHaveTextContent('Downtimes: 1')
+  await user.click(screen.getByRole('button', { name: 'Remove downtimes' }))
+
+  expect(await screen.findByText('Removed downtime of the selected service')).toBeInTheDocument()
+  expect(postSpy).toHaveBeenCalledWith(
+    '/domain-types/downtime/actions/delete/invoke',
+    expect.objectContaining({
+      body: {
+        delete_type: 'query',
+        query: {
+          op: 'and',
+          expr: [
+            { op: '=', left: 'host_name', right: 'web-1' },
+            { op: 'or', expr: [{ op: '=', left: 'service_description', right: 'CPU load' }] }
+          ]
+        }
+      }
+    })
+  )
 })

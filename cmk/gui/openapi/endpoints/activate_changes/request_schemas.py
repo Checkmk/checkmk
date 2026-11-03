@@ -6,8 +6,6 @@
 from cmk import fields
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import BaseSchema
-from cmk.gui.openapi.utils import param_description
-from cmk.gui.watolib.activate_changes import activate_changes_start
 
 
 class ActivateChanges(BaseSchema):
@@ -28,7 +26,10 @@ class ActivateChanges(BaseSchema):
         example=["production"],
     )
     force_foreign_changes = fields.Boolean(
-        description=param_description(activate_changes_start.__doc__, "force_foreign_changes"),
+        description=(
+            "Will activate changes even if the user who made those changes is not the "
+            "currently logged in user."
+        ),
         required=False,
         load_default=False,
         example=False,

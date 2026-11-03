@@ -26,6 +26,15 @@ export interface MonitoringAction<Values = unknown, Target = HostRef> {
   description?: readonly TranslatedString[]
   form?: Component
   formProps?: Record<string, unknown>
+  /**
+   * Makes an action without input ask for confirmation in an alert above the table instead of
+   * opening the side pane. Both get the number of targets.
+   */
+  confirm?: {
+    /** What the targets carry, e.g. "Downtimes: 2". */
+    detail(count: number): TranslatedString
+    submitLabel(count: number): TranslatedString
+  }
   defaultValues(): Values
   perform(targets: Target[], values: Values): Promise<ActionFeedback>
 }

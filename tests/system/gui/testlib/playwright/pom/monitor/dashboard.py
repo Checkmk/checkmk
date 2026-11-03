@@ -149,7 +149,7 @@ class BaseDashboard(CmkPage):
         return base_locator.locator("table")
 
     def get_widget_table_rows(self, widget_title: str, iframed: bool = False) -> Locator:
-        """Get the rows of the table inside a widget exluding the table heading.
+        """Get the rows of the table inside a widget excluding the table heading.
 
         Args:
             widget_title: the title of the widget.

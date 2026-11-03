@@ -58,14 +58,14 @@ const { toasts } = useToast()
 .maps-toast-container__toast {
   display: flex;
   align-items: flex-start;
-  gap: var(--spacing);
+  gap: var(--dimension-5);
   max-width: 384px;
-  padding: 12px 16px;
-  font-size: var(--font-size-large);
-  line-height: 20px;
-  font-weight: 500;
+  padding: var(--dimension-5) var(--dimension-6);
+  font-size: var(--font-size-normal);
+  line-height: 16px;
+  font-weight: var(--font-weight-medium);
   background: var(--ux-theme-3);
-  border-radius: var(--dimension-5);
+  border-radius: var(--border-radius);
   pointer-events: auto;
 }
 
@@ -73,24 +73,21 @@ const { toasts } = useToast()
   color: var(--success);
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--success) 30%, transparent),
-    0 20px 25px -5px rgb(0 0 0 / 40%),
-    0 8px 10px -6px rgb(0 0 0 / 40%);
+    var(--maps-shadow-canvas-overlay-high);
 }
 
 .maps-toast-container__toast--error {
   color: var(--status-text-color-error-pale);
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--status-color-error-bright) 30%, transparent),
-    0 20px 25px -5px rgb(0 0 0 / 40%),
-    0 8px 10px -6px rgb(0 0 0 / 40%);
+    var(--maps-shadow-canvas-overlay-high);
 }
 
 .maps-toast-container__toast--warning {
   color: var(--color-warning);
   box-shadow:
     0 0 0 1px color-mix(in srgb, var(--color-warning) 30%, transparent),
-    0 20px 25px -5px rgb(0 0 0 / 40%),
-    0 8px 10px -6px rgb(0 0 0 / 40%);
+    var(--maps-shadow-canvas-overlay-high);
 }
 
 .maps-toast-container__toast-icon {

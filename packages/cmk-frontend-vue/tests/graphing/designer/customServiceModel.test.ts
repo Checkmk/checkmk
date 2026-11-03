@@ -36,6 +36,12 @@ test('the row title becomes the service name, with the default title macro expan
   expect(model.serviceName).toBe('p95 of $METRIC_NAME$ - $SERIES_ID$')
 })
 
+test('a custom service created from a row appends the series attributes', () => {
+  expect(
+    customServiceModelFor(telemetryMetricsItem('A'), DEFAULT_TITLE).appendSeriesAttributes
+  ).toBe(true)
+})
+
 test('a gauge consolidation maps to the gauge wire shape', () => {
   const model = customServiceModelFor(
     telemetryMetricsItem('A', {

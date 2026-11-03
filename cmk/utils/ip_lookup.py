@@ -21,7 +21,6 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import assert_never, Final, Literal, override, Protocol
 
-import cmk.ccc.debug
 import cmk.utils.paths
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKIPAddressLookupError, MKTerminate, MKTimeout
@@ -80,6 +79,7 @@ class IPLookupConfig:
     simulation_mode: bool
     fake_dns: HostAddress | None
     use_dns_cache: bool
+    debug: bool
 
 
 def make_lookup_mgmt_board_ip_address(
@@ -123,6 +123,7 @@ def make_lookup_mgmt_board_ip_address(
                 ),
                 is_dyndns_host=ip_config.is_dyndns_host(host_name),
                 force_file_cache_renewal=not ip_config.use_dns_cache,
+                debug=ip_config.debug,
             )
         except MKIPAddressLookupError:
             return None
@@ -162,6 +163,7 @@ def make_lookup_ip_address(
             ),
             is_dyndns_host=ip_config.is_dyndns_host(host_name),
             force_file_cache_renewal=not ip_config.use_dns_cache,
+            debug=ip_config.debug,
         )
 
     return _wrapped_lookup
@@ -237,6 +239,7 @@ def _lookup_ip_address(
     is_snmp_usewalk_host: bool,
     is_dyndns_host: bool,
     force_file_cache_renewal: bool,
+    debug: bool,
 ) -> HostAddress:
     """This function *may* look up an IP address, or return a host name"""
     # Honor usewalk hosts. Never contact the network.
@@ -256,6 +259,7 @@ def _lookup_ip_address(
         host_name,
         family=family,
         force_file_cache_renewal=force_file_cache_renewal,
+        debug=debug,
     )
 
 
@@ -265,6 +269,7 @@ def cached_dns_lookup(
     *,
     family: SupportedAddressFamily,
     force_file_cache_renewal: bool,
+    debug: bool,
 ) -> HostAddress:
     """Cached DNS lookup in *two* caching layers
 
@@ -293,6 +298,7 @@ def cached_dns_lookup(
             hostname,
             family,
             force_file_cache_renewal=force_file_cache_renewal,
+            debug=debug,
         )
     except MKIPAddressLookupError as exc:
         cache[cache_id] = exc
@@ -313,6 +319,7 @@ def _file_cached_dns_lookup(
     family: SupportedAddressFamily,
     *,
     force_file_cache_renewal: bool,
+    debug: bool,
 ) -> HostAddress:
     # TODO: is there any point in the IPLookupCache being cached in the
     # *config cache*?
@@ -327,7 +334,7 @@ def _file_cached_dns_lookup(
     Before a new value is writte to file, the file is re-read, as another process might have changed
     it.
     """
-    ip_lookup_cache = _get_ip_lookup_cache()
+    ip_lookup_cache = _get_ip_lookup_cache(debug=debug)
     cache_id = hostname, family
 
     cached_ip = ip_lookup_cache.get(cache_id)
@@ -440,7 +447,7 @@ class IPLookupCache:
     def get(self, key: IPLookupCacheId) -> HostAddress | None:
         return self._cache.get(key)
 
-    def load_persisted(self) -> None:
+    def load_persisted(self, *, debug: bool) -> None:
         try:
             self._cache.update(self._store.read_obj(default={}))
         except MKTerminate, MKTimeout:
@@ -449,7 +456,7 @@ class IPLookupCache:
             raise
 
         except Exception:
-            if cmk.ccc.debug.enabled():
+            if debug:
                 raise
             # TODO: Would be better to log it somewhere to make the failure transparent
 
@@ -490,14 +497,14 @@ class IPLookupCache:
         self.save_persisted()
 
 
-def _get_ip_lookup_cache() -> IPLookupCache:
+def _get_ip_lookup_cache(*, debug: bool) -> IPLookupCache:
     """A file based fall-back DNS cache in case resolution fails"""
     if "ip_lookup" in cache_manager:
         # Return already created and initialized cache
         return IPLookupCache(cache_manager.obtain_cache("ip_lookup"))
 
     cache = IPLookupCache(cache_manager.obtain_cache("ip_lookup"))
-    cache.load_persisted()
+    cache.load_persisted(debug=debug)
     return cache
 
 
@@ -506,10 +513,11 @@ def update_dns_cache(
     hosts: Iterable[HostName],
     get_ip_stack_config: Callable[[HostName], IPStackConfig],
     lookup_ip_address: IPLookup,
+    debug: bool,
 ) -> tuple[int, Sequence[HostName]]:
     failed = []
 
-    ip_lookup_cache = _get_ip_lookup_cache()
+    ip_lookup_cache = _get_ip_lookup_cache(debug=debug)
 
     with ip_lookup_cache.persisting_disabled():
         logger.debug("Cleaning up existing DNS cache...")
@@ -536,7 +544,7 @@ def update_dns_cache(
             except Exception:
                 failed.append(host_name)
                 logger.exception("IP lookup failed")
-                if cmk.ccc.debug.enabled():
+                if debug:
                     raise
                 continue
 

@@ -27,12 +27,7 @@ from cmk.graphing.v1 import metrics as metrics_api
 from cmk.graphing.v1 import perfometers as perfometers_api
 from cmk.graphing.v1 import Title
 from cmk.graphing.v1 import translations as translations_api
-from cmk.gui.graphing import (
-    GraphFromAPI,
-    parse_metric_from_api,
-    PerfometerFromAPI,
-    RegisteredMetric,
-)
+from cmk.graphing_engine import ApiGraph, PerfometerIndex
 from cmk.gui.theme import make_theme
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.maps.gui._metrics import (
@@ -57,6 +52,7 @@ def _metric(name: str, title: Title, unit: metrics_api.Unit) -> metrics_api.Metr
 
 _PERCENT = metrics_api.Unit(metrics_api.DecimalNotation("%"), metrics_api.AutoPrecision(2))
 _BYTES = metrics_api.Unit(metrics_api.IECNotation("B"), metrics_api.StrictPrecision(1))
+_COUNT = metrics_api.Unit(metrics_api.DecimalNotation(""), metrics_api.StrictPrecision(2))
 
 # Two views of the same registry, as ``metric_info`` takes them: the plug-in
 # objects the evaluation engine builds quantities from, and the parsed display
@@ -66,47 +62,46 @@ _METRIC_PLUGINS: Mapping[str, metrics_api.Metric] = {
     "mem_used": _metric("mem_used", Title("RAM used"), _BYTES),
     "if_in_bps": _metric("if_in_bps", Title("Input bandwidth"), _PERCENT),
     "if_out_bps": _metric("if_out_bps", Title("Output bandwidth"), _PERCENT),
+    "load1": _metric("load1", Title("CPU load average of last minute"), _COUNT),
 }
 
-_REGISTERED_METRICS: Mapping[str, RegisteredMetric] = {
-    name: parse_metric_from_api(plugin) for name, plugin in _METRIC_PLUGINS.items()
-}
-
-_REGISTERED_PERFOMETERS: Mapping[str, PerfometerFromAPI] = {
-    "mem_used_percent": perfometers_api.Perfometer(
-        name="mem_used_percent",
-        focus_range=perfometers_api.FocusRange(
-            perfometers_api.Closed(0), perfometers_api.Closed(100)
-        ),
-        segments=["mem_used_percent"],
-    ),
-    "if_bps": perfometers_api.Bidirectional(
-        name="if_bps",
-        left=perfometers_api.Perfometer(
-            name="if_in_bps",
+_REGISTERED_PERFOMETERS = PerfometerIndex(
+    {
+        "mem_used_percent": perfometers_api.Perfometer(
+            name="mem_used_percent",
             focus_range=perfometers_api.FocusRange(
                 perfometers_api.Closed(0), perfometers_api.Closed(100)
             ),
-            segments=["if_in_bps"],
+            segments=["mem_used_percent"],
         ),
-        right=perfometers_api.Perfometer(
-            name="if_out_bps",
-            focus_range=perfometers_api.FocusRange(
-                perfometers_api.Closed(0), perfometers_api.Closed(100)
+        "if_bps": perfometers_api.Bidirectional(
+            name="if_bps",
+            left=perfometers_api.Perfometer(
+                name="if_in_bps",
+                focus_range=perfometers_api.FocusRange(
+                    perfometers_api.Closed(0), perfometers_api.Closed(100)
+                ),
+                segments=["if_in_bps"],
             ),
-            segments=["if_out_bps"],
+            right=perfometers_api.Perfometer(
+                name="if_out_bps",
+                focus_range=perfometers_api.FocusRange(
+                    perfometers_api.Closed(0), perfometers_api.Closed(100)
+                ),
+                segments=["if_out_bps"],
+            ),
         ),
-    ),
-}
+    }
+)
 
 
-_REGISTERED_GRAPHS: Mapping[str, GraphFromAPI] = {
-    "ram_usage": graphs_api.Graph(
+_REGISTERED_GRAPHS: Sequence[ApiGraph] = [
+    graphs_api.Graph(
         name="ram_usage",
         title=Title("RAM usage graph"),
         compound_lines=["mem_used_percent"],
     ),
-    "bandwidth": graphs_api.Bidirectional(
+    graphs_api.Bidirectional(
         name="bandwidth",
         title=Title("Bandwidth"),
         upper=graphs_api.Graph(
@@ -116,7 +111,12 @@ _REGISTERED_GRAPHS: Mapping[str, GraphFromAPI] = {
             name="bandwidth_down", title=Title("In"), compound_lines=["if_in_bps"]
         ),
     ),
-}
+    graphs_api.Graph(
+        name="cpu_load",
+        title=Title('CPU load - _EXPRESSION:{"metric":"load1","scalar":"max"} CPU cores'),
+        compound_lines=["load1"],
+    ),
+]
 
 # Renames *and* scales, so the payload has to report the raw label as its key,
 # the canonical name as ``name`` and the translation factor as ``scale``.
@@ -139,7 +139,6 @@ def _info(
     return metric_info(
         perf_data,
         check_command,
-        registered_metrics=_REGISTERED_METRICS,
         registered_metric_plugins=_METRIC_PLUGINS,
         registered_translations=registered_translations,
         registered_perfometers=_REGISTERED_PERFOMETERS,
@@ -153,7 +152,6 @@ def _info_with_graphs(perf_data: str) -> MetricInfo:
     return metric_info(
         perf_data,
         "check_mk-mem_linux",
-        registered_metrics=_REGISTERED_METRICS,
         registered_metric_plugins=_METRIC_PLUGINS,
         registered_translations=(),
         registered_perfometers=_REGISTERED_PERFOMETERS,
@@ -280,6 +278,22 @@ def test_graphs_bidirectional_reports_lower_half_as_mirrored(request_context: No
             mirrored=["if_in_bps"],
         )
     ]
+
+
+def test_graphs_title_quotes_the_perfdata_value(request_context: None) -> None:
+    graphs = _info_with_graphs("load1=1.09;;;0;4").graphs
+
+    assert graphs is not None
+    assert [group.title for group in graphs] == ["CPU load - 4 CPU cores"]
+
+
+def test_graphs_title_without_the_quoted_value_keeps_its_plain_part(
+    request_context: None,
+) -> None:
+    graphs = _info_with_graphs("load1=1.09;;;0;").graphs
+
+    assert graphs is not None
+    assert [group.title for group in graphs] == ["CPU load"]
 
 
 def test_graphs_empty_when_nothing_applies(request_context: None) -> None:

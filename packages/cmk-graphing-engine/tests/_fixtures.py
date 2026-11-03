@@ -8,7 +8,6 @@
 from collections.abc import Mapping, Sequence
 
 from cmk.graphing_engine import (
-    ConsolidationFunction,
     FetchedData,
     HostName,
     MetricName,
@@ -79,7 +78,6 @@ class _FakeRRDFetchData:
         self,
         metrics: Sequence[MetricProtocol],
         *,
-        consolidation_function: ConsolidationFunction,  # noqa: ARG002
         time_range: TimeRange,  # noqa: ARG002
     ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
         return {metric: self._fetched[metric] for metric in metrics if metric in self._fetched}

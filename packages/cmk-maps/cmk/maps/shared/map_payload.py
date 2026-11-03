@@ -55,6 +55,12 @@ LineStyle = Literal[
 
 LinePerfdataLabel = Literal["none", "percent", "bandwidth", "both"]
 
+# The objects with a monitoring state. A line can show any of them, since NagVis
+# draws each of them as a line on request.
+MonitoredObjectType = Literal[
+    "host", "service", "hostgroup", "servicegroup", "dyngroup", "map", "aggregation"
+]
+
 DisplayMode = Literal["icon", "text", "gadget"]
 
 GadgetType = Literal["gauge", "bar", "trafficlight", "value"]
@@ -66,6 +72,10 @@ LabelAlign = Literal["left", "right", "center", "justify"]
 ClickAction = Literal["link", "none"]
 
 RenderMode = Literal["default", "nagvis_classic"]
+
+BackgroundStyle = Literal["single", "zoom", "stretch", "tile"]
+
+BackgroundPosition = Literal["top_left", "center"]
 
 
 class MapLabel(TypedDict):
@@ -86,6 +96,7 @@ class MapLabel(TypedDict):
 
 class MapDisplay(TypedDict):
     mode: DisplayMode
+    image_size: NotRequired[int | None]
     gadget_type: NotRequired[GadgetType]
     gadget_metric: NotRequired[str | None]
 
@@ -228,12 +239,17 @@ class MapObject(TypedDict):
     object_filter: NotRequired[str | None]
     only_hard_states: NotRequired[bool]
     recognize_services: NotRequired[bool]
+    exclude_members: NotRequired[str | None]
+    exclude_member_states: NotRequired[str | None]
+    label_maxlen: NotRequired[int | None]
     image_src: NotRequired[str | None]
     line_style: NotRequired[LineStyle]
     line_width: NotRequired[int]
+    line_color: NotRequired[str | None]
     line_color_border: NotRequired[str]
     line_perfdata_label: NotRequired[LinePerfdataLabel]
     line_weather_color: NotRequired[bool]
+    line_object_type: NotRequired[MonitoredObjectType | None]
     weathermap_metric: NotRequired[str]
     weathermap_metric_out: NotRequired[str]
     textbox_background: NotRequired[str]
@@ -246,6 +262,7 @@ class MapObject(TypedDict):
     graph_height: NotRequired[int]
     url: NotRequired[str]
     url_target: NotRequired[str]
+    hover_url: NotRequired[str | None]
 
 
 class MapPayload(TypedDict):
@@ -254,6 +271,7 @@ class MapPayload(TypedDict):
     connection_id: str
     icon_size: int | None
     rotation_interval: int
+    rotation_pools: NotRequired[list[str]]
     sort_order: int
     click_action: ClickAction
     render_mode: RenderMode
@@ -264,6 +282,8 @@ class MapPayload(TypedDict):
     context_template: NotRequired[str | None]
     background_image: NotRequired[str | None]
     background_color: NotRequired[str]
+    background_style: NotRequired[BackgroundStyle]
+    background_position: NotRequired[BackgroundPosition]
     version: NotRequired[int]
 
 
@@ -277,6 +297,8 @@ class _MapFieldDefaults(TypedDict):
     click_action: ClickAction
     render_mode: RenderMode
     default_z: int
+    background_style: BackgroundStyle
+    background_position: BackgroundPosition
 
 
 class _ObjectFieldDefaults(TypedDict):
@@ -305,6 +327,8 @@ MAP_FIELD_DEFAULTS: Final[_MapFieldDefaults] = {
     "click_action": "link",
     "render_mode": "default",
     "default_z": 1,
+    "background_style": "single",
+    "background_position": "top_left",
 }
 OBJECT_FIELD_DEFAULTS: Final[_ObjectFieldDefaults] = {"x": 0, "y": 0, "url_target": "_blank"}
 LABEL_FIELD_DEFAULTS: Final[MapLabel] = {

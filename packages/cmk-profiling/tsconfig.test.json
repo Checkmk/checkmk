@@ -1,0 +1,7 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["env.d.ts", "frontend/**/*", "tests/frontend/**/*"],
+  "compilerOptions": {
+    "types": ["vitest/globals", "@testing-library/jest-dom"]
+  }
+}

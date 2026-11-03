@@ -8,11 +8,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from cmk.werks.tool.config import (
-    load_config,
-    RuntimeConfiguration,
-    try_load_current_version_from_defines_make,
-)
+from cmk.werks.tool.flavor_registry import load_config
 
 _CONFIG = """
 editions = [("community", "Community")]
@@ -25,65 +21,54 @@ online_url = "https://checkmk.com/werk/%d"
 """
 
 
-def _write_config(tmp_path: Path, extra: str = "") -> Path:
+def _write_config(tmp_path: Path, extra: str = 'flavor = "cmk"\n') -> Path:
     config = tmp_path / "config"
     config.write_text(_CONFIG + extra, encoding="utf-8")
     return config
 
 
-def _write_defines_make(tmp_path: Path, content: str) -> Path:
-    defines_make = tmp_path / "defines.make"
-    defines_make.write_text(content, encoding="utf-8")
-    return defines_make
+def _write_defines_make(tmp_path: Path) -> None:
+    (tmp_path / "defines.make").write_text("VERSION := 2.5.0\n", encoding="utf-8")
 
 
 def test_the_current_version_of_the_config_file_wins(tmp_path: Path) -> None:
-    config = _write_config(tmp_path, 'current_version = "2.4.0"\n')
+    _write_defines_make(tmp_path)
+    config = _write_config(tmp_path, 'flavor = "cmk"\ncurrent_version = "2.4.0"\n')
 
-    assert load_config(config, current_version="2.5.0").current_version == "2.4.0"
+    assert load_config(config, tmp_path).current_version == "2.4.0"
 
 
-def test_the_current_version_falls_back_to_the_given_one(tmp_path: Path) -> None:
-    config = _write_config(tmp_path)
+def test_the_current_version_falls_back_to_the_one_of_the_repository(tmp_path: Path) -> None:
+    _write_defines_make(tmp_path)
 
-    assert load_config(config, current_version="2.5.0").current_version == "2.5.0"
+    assert load_config(_write_config(tmp_path), tmp_path).current_version == "2.5.0"
 
 
 def test_a_config_without_any_current_version_is_rejected(tmp_path: Path) -> None:
-    config = _write_config(tmp_path)
-
     with pytest.raises(ValidationError, match="current_version must be provided"):
-        load_config(config)
+        load_config(_write_config(tmp_path), tmp_path)
+
+
+@pytest.mark.parametrize(
+    "flavor",
+    [pytest.param("", id="missing"), pytest.param('flavor = "unknown"\n', id="unknown")],
+)
+def test_a_config_needs_a_known_flavor(tmp_path: Path, flavor: str) -> None:
+    _write_defines_make(tmp_path)
+
+    with pytest.raises(ValueError, match="'flavor' has to be one of .*cmk"):
+        load_config(_write_config(tmp_path, flavor), tmp_path)
 
 
 def test_all_components_include_the_edition_specific_ones(tmp_path: Path) -> None:
-    config = load_config(_write_config(tmp_path), current_version="2.5.0")
+    _write_defines_make(tmp_path)
+    config = load_config(_write_config(tmp_path), tmp_path)
 
     assert config.all_components() == [("core", "Core"), ("cmc", "CMC")]
 
 
-def test_the_version_is_read_from_defines_make(tmp_path: Path) -> None:
-    defines_make = _write_defines_make(tmp_path, "EDITION := community\nVERSION := 2.5.0b1\n")
+def test_a_legacy_edition_is_listed_as_its_current_name(tmp_path: Path) -> None:
+    _write_defines_make(tmp_path)
+    config = load_config(_write_config(tmp_path), tmp_path)
 
-    assert try_load_current_version_from_defines_make(defines_make) == "2.5.0b1"
-
-
-def test_defines_make_without_a_version_yields_none(tmp_path: Path) -> None:
-    defines_make = _write_defines_make(tmp_path, "EDITION := community\n")
-
-    assert try_load_current_version_from_defines_make(defines_make) is None
-
-
-def test_a_missing_defines_make_yields_none(tmp_path: Path) -> None:
-    assert try_load_current_version_from_defines_make(tmp_path / "defines.make") is None
-
-
-def test_the_runtime_configuration_reads_the_version_of_the_repository(tmp_path: Path) -> None:
-    _write_defines_make(tmp_path, "VERSION := 2.5.0\n")
-
-    assert RuntimeConfiguration(tmp_path).get_defines_make_version() == "2.5.0"
-
-
-def test_the_runtime_configuration_fails_without_a_version(tmp_path: Path) -> None:
-    with pytest.raises(RuntimeError, match="Could not load version from defines.make"):
-        RuntimeConfiguration(tmp_path).get_defines_make_version()
+    assert config.canonical_edition("cee") == "pro"

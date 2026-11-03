@@ -316,7 +316,7 @@ def test_show_falls_back_to_the_bookmark_list_icon(
 def test_add_bookmark_creates_the_personal_list_on_demand(with_user_login: UserId) -> None:
     Bookmarks()._add_bookmark("All hosts", "view.py?view_name=allhosts", USER_PERMISSIONS)  # noqa: SLF001
 
-    instances = BookmarkList.load(USER_PERMISSIONS)
+    instances = BookmarkList.load()
     stored = instances.instance((with_user_login, "my_bookmarks"))
     assert [b["title"] for b in stored.config.bookmarks] == ["All hosts"]
 
@@ -338,7 +338,7 @@ def test_add_bookmark_appends_to_an_existing_personal_list(with_user_login: User
 
     Bookmarks()._add_bookmark("Second", "b.py", USER_PERMISSIONS)  # noqa: SLF001
 
-    stored = BookmarkList.load(USER_PERMISSIONS).instance((with_user_login, "my_bookmarks"))
+    stored = BookmarkList.load().instance((with_user_login, "my_bookmarks"))
     assert [b["title"] for b in stored.config.bookmarks] == ["First", "Second"]
 
 

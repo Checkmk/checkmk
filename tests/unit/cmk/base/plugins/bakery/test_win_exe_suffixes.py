@@ -8,12 +8,16 @@ from cmk.base.plugins.bakery.win_exe_suffixes import get_win_exe_suffixes_window
 
 
 def test_win_exe_suffixes_windows_config() -> None:
-    assert list(get_win_exe_suffixes_windows_config(["exe", "bat", "vbs"])) == [
+    assert list(get_win_exe_suffixes_windows_config({"mode": ("only", ["exe", "bat", "vbs"])})) == [
         WindowsGlobalConfigEntry(name="execute", content=["exe", "bat", "vbs"]),
     ]
 
 
 def test_win_exe_suffixes_windows_config_empty_list() -> None:
-    assert list(get_win_exe_suffixes_windows_config([])) == [
+    assert list(get_win_exe_suffixes_windows_config({"mode": ("only", [])})) == [
         WindowsGlobalConfigEntry(name="execute", content=[]),
     ]
+
+
+def test_win_exe_suffixes_windows_config_execute_all() -> None:
+    assert list(get_win_exe_suffixes_windows_config({"mode": ("all_files", None)})) == []

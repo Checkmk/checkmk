@@ -49,7 +49,6 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
 from cmk.gui.pagetypes import PagetypeTopics
-from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
@@ -85,7 +84,7 @@ class ReportSubmitDetails(TypedDict):
 
 class CrashReportsRowFetcher(Protocol):
     def get_crash_report_rows(
-        self, only_sites: livestatus.OnlySites, filter_headers: str
+        self, only_sites: livestatus.OnlySites, filter_headers: str, *, with_agent_output: bool
     ) -> Iterator[CrashReportRow]: ...
 
 
@@ -114,6 +113,7 @@ class CrashReport:
                 fetcher.get_crash_report_rows(
                     only_sites=[SiteId(site_id)],
                     filter_headers="Filter: id = %s" % livestatus.lqencode(crash_id),
+                    with_agent_output=True,
                 )
             )
         except StopIteration:
@@ -179,8 +179,7 @@ class PageCrash(Page):
         report = CrashReport.build(ctx.request, CrashReportsRowTable())
         title = _("Crash report: %(crash_id)s") % {"crash_id": report.crash_id}
 
-        permissions = UserPermissions.from_config(ctx.config, permission_registry)
-        breadcrumb = self._breadcrumb(ctx.request, title, permissions)
+        breadcrumb = self._breadcrumb(ctx.request, title, ctx.user_permissions)
 
         page_menu = self._page_menu(ctx.request, breadcrumb, report.info, report.site_id)
         make_header(
@@ -882,7 +881,9 @@ def _show_output_box(title: str, content: str) -> None:
 
 def _show_agent_output(row: CrashReportRow) -> None:
     agent_output = row.get("agent_output")
-    if isinstance(agent_output, str):
+    if isinstance(agent_output, bytes):
+        agent_output = agent_output.decode(errors="surrogateescape")
+    if agent_output:
         _show_output_box(_("Agent output"), agent_output)
 
 

@@ -16,14 +16,17 @@ from cmk.gui.form_specs import (
     VisitorOptions,
 )
 from cmk.gui.form_specs.visitors.single_choice import NO_SELECTION, SingleChoiceVisitor
+from cmk.rulesets.internal.form_specs import SingleChoiceElementExtended, SingleChoiceExtended
 from cmk.rulesets.v1 import Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
+    InputHint,
     InvalidElementMode,
     InvalidElementValidator,
     SingleChoice,
     SingleChoiceElement,
 )
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 
 def single_choice_spec(validator: InvalidElementValidator | None = None) -> SingleChoice:
@@ -204,3 +207,26 @@ def test_default_value_roundtrip() -> None:
     visitor = get_visitor(single_choice, VisitorOptions(migrate_values=True, mask_values=False))
     _, vue_value = visitor.to_vue(DEFAULT_VALUE)
     assert visitor.to_disk(RawFrontendData(vue_value)) == "bar"
+
+
+@pytest.mark.parametrize(
+    "prefill, has_default_value",
+    [
+        pytest.param(DefaultValue("bar"), True, id="default value"),
+        pytest.param(DefaultValue("gone"), False, id="default missing from elements"),
+        pytest.param(InputHint(Title("Please choose")), False, id="input hint"),
+    ],
+)
+def test_vue_spec_tells_whether_a_default_value_is_prefilled(
+    prefill: DefaultValue[str] | InputHint[Title], has_default_value: bool
+) -> None:
+    single_choice = SingleChoiceExtended(
+        elements=lambda: [SingleChoiceElementExtended(name="bar", title=Title("bar"))],
+        prefill=prefill,
+    )
+    visitor = get_visitor(single_choice, VisitorOptions(migrate_values=True, mask_values=False))
+
+    vue_spec, _ = visitor.to_vue(DEFAULT_VALUE)
+
+    assert isinstance(vue_spec, shared_type_defs.SingleChoice)
+    assert vue_spec.has_default_value is has_default_value

@@ -6,3 +6,7 @@
 
 class HostNotFoundError(KeyError):
     """Raised when a host cannot be found by its identifiers."""
+
+
+class InvalidFilterError(ValueError):
+    """Raised when a host filter cannot be applied to the configured sites."""

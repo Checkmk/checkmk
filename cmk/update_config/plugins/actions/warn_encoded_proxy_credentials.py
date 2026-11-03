@@ -18,8 +18,8 @@ from typing import Final, override
 
 from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.password_store import PasswordStore
-from cmk.update_config.lib import ExpiryVersion
-from cmk.update_config.registry import update_action_registry, UpdateAction
+from cmk.update_config.internal import ExpiryVersion, UpdateAction
+from cmk.update_config.registry import update_action_registry
 
 _PERCENT_ENCODED: Final = re.compile(r"%[0-9A-Fa-f]{2}")
 

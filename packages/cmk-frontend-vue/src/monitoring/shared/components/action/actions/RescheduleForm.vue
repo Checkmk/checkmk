@@ -8,6 +8,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 export interface RescheduleValues {
   spreadMinutes: number | undefined
 }
+
+function hasSpread(values: RescheduleValues): boolean {
+  return values.spreadMinutes !== undefined && values.spreadMinutes >= 0
+}
 </script>
 
 <script setup lang="ts">
@@ -19,6 +23,14 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, inject, watch } from 'vue'
 
 import { ACTION_TARGET_COUNT } from '../types'
+
+const props = withDefaults(
+  defineProps<{
+    /** Whether to point out the fields that keep the form from being submitted. */
+    showErrors?: boolean
+  }>(),
+  { showErrors: false }
+)
 
 const model = defineModel<RescheduleValues>({ required: true })
 
@@ -33,11 +45,14 @@ const targetCount = inject(
   computed(() => 1)
 )
 
-watch(
-  () => model.value.spreadMinutes,
-  (minutes) => emit('update:valid', minutes !== undefined && minutes >= 0),
-  { immediate: true }
+const spreadErrors = computed(() =>
+  props.showErrors && !hasSpread(model.value) ? [_t('Enter 0 or more minutes.')] : []
 )
+
+watch(model, (values) => emit('update:valid', hasSpread(values)), {
+  immediate: true,
+  deep: true
+})
 </script>
 
 <template>
@@ -67,6 +82,7 @@ watch(
           type="number"
           field-size="small"
           :unit="_t('minutes')"
+          :external-errors="spreadErrors"
         />
       </label>
     </div>

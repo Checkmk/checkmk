@@ -33,6 +33,7 @@ const props = defineProps<{
   hostName?: string | undefined
   label: TranslatedString
   placeholder: TranslatedString
+  hasError?: boolean
 }>()
 
 const model = defineModel<string>({ required: true })
@@ -71,6 +72,7 @@ const shut = computed(() => props.kind === 'service' && !props.hostName)
     :label="label"
     :no-results-hint="_t('No results found')"
     :disabled="shut"
+    :form-validation="hasError ?? false"
     width="fill"
     floating
     @update:model-value="model = $event ?? ''"

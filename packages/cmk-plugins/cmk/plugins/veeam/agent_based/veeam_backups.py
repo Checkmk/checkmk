@@ -33,6 +33,17 @@ from cmk.plugins.veeam.lib import (
 )
 
 
+@dataclass(frozen=True)
+class Unparsable:
+    """A value the API sent in an unexpected format, kept so that it can be surfaced
+    instead of silently disappearing like an absent one."""
+
+    raw: str
+
+    def as_result_text(self, field_name: str) -> str:
+        return f"{field_name}: Unparsable value ({self.raw})"
+
+
 @dataclass(frozen=True, kw_only=True)
 class BackupTask:
     """Mirrors the VBR REST API's BackupTaskSessionModel (GET /api/v1/taskSessions),
@@ -50,12 +61,9 @@ class BackupTask:
     total_size: int | None
     read_size: int | None
     transferred_size: int | None
-    duration: float | None
-    processing_rate: float | None
-    processing_rate_raw: str | None
-    """The unparsed `processingRate` string, kept so an unexpected format (as opposed
-    to the expected "N/A") can still be surfaced instead of silently disappearing."""
-    end_time: str | None
+    duration: float | Unparsable | None
+    processing_rate: float | Unparsable | None
+    end_time: float | Unparsable | None
 
 
 Section = Mapping[str, BackupTask]
@@ -83,11 +91,29 @@ _RATE_UNIT_FACTORS = {
 }
 
 
-def _parse_processing_rate_bps(processing_rate: str | None) -> float | None:
-    if processing_rate is None or (match := _RATE_PATTERN.match(processing_rate)) is None:
+def _parse_processing_rate_bps(processing_rate: str | None) -> float | Unparsable | None:
+    if not processing_rate or processing_rate.upper() == "N/A":
         return None
+    if (match := _RATE_PATTERN.match(processing_rate)) is None:
+        return Unparsable(processing_rate)
     factor = _RATE_UNIT_FACTORS[(match["unit"] or "B").upper()]
     return float(match["value"]) * factor
+
+
+def _parse_end_time(end_time: str | None) -> float | Unparsable | None:
+    if end_time is None:
+        return None
+    if (epoch := parse_iso8601_epoch(end_time)) is None:
+        return Unparsable(end_time)
+    return epoch
+
+
+def _parse_duration(duration: str | None) -> float | Unparsable | None:
+    if duration is None:
+        return None
+    if (parsed := parse_dotnet_timespan_seconds(duration)) is None:
+        return Unparsable(duration)
+    return parsed
 
 
 def parse_veeam_backups(string_table: StringTable) -> Section:
@@ -97,7 +123,6 @@ def parse_veeam_backups(string_table: StringTable) -> Section:
         progress = task_dict.get("progress") or {}
         result = task_dict.get("result") or {}
         duration = progress.get("duration")
-        processing_rate_raw = progress.get("processingRate")
         section[sanitize_name(task_dict["jobName"])] = BackupTask(
             state=task_dict["state"],
             result=result.get("result", "None"),
@@ -105,10 +130,9 @@ def parse_veeam_backups(string_table: StringTable) -> Section:
             total_size=progress.get("processedSize"),
             read_size=progress.get("readSize"),
             transferred_size=progress.get("transferredSize"),
-            duration=parse_dotnet_timespan_seconds(duration) if duration is not None else None,
-            processing_rate=_parse_processing_rate_bps(processing_rate_raw),
-            processing_rate_raw=processing_rate_raw,
-            end_time=task_dict.get("endTime"),
+            duration=_parse_duration(duration),
+            processing_rate=_parse_processing_rate_bps(progress.get("processingRate")),
+            end_time=_parse_end_time(task_dict.get("endTime")),
         )
     return section
 
@@ -140,68 +164,90 @@ def monitoring_state(state: str, result: str) -> State:
             return State.UNKNOWN
 
 
-def check_veeam_backups(item: str, params: CheckParameters, section: Section) -> CheckResult:
+def check_veeam_backups(
+    item: str, params: CheckParameters, section: Section, *, now: float
+) -> CheckResult:
     if (task := section.get(item)) is None:
         return
 
     state = monitoring_state(task.state, task.result)
     summary = f"Status: {task.result}"
-    if task.result_message:
+    if task.result_message and task.result_message.lower() != task.result.lower():
         summary += f" ({task.result_message})"
     yield Result(state=state, summary=summary)
 
+    if task.state in _TERMINAL_STATES:
+        yield from _check_last_backup(task.end_time, params["age"], now)
+
     size_info = []
-    if task.total_size is not None:
-        yield Metric("backup_size", task.total_size)
-        size_info.append(f"total: {render.bytes(task.total_size)}")
     if task.read_size is not None:
         yield Metric("readsize", task.read_size)
         size_info.append(f"read: {render.bytes(task.read_size)}")
     if task.transferred_size is not None:
         yield Metric("transferredsize", task.transferred_size)
         size_info.append(f"transferred: {render.bytes(task.transferred_size)}")
-    if size_info:
+    if task.total_size is not None:
+        yield Metric("backup_size", task.total_size)
+        size_summary = f"Size: {render.bytes(task.total_size)}"
+        if size_info:
+            size_summary += f" ({', '.join(size_info)})"
+        yield Result(state=State.OK, summary=size_summary)
+    elif size_info:
+        yield Result(state=State.OK, notice=f"Size ({', '.join(size_info)})")
+
+    if isinstance(task.processing_rate, Unparsable):
         yield Result(
             state=State.OK,
-            summary=f"Size ({', '.join(size_info)})",
+            notice=task.processing_rate.as_result_text("Average speed"),
         )
-
-    if task.processing_rate is not None:
+    elif task.processing_rate is not None:
         yield from check_levels(
             task.processing_rate,
             metric_name="backup_avgspeed",
             render_func=render.iobandwidth,
             label="Average speed",
-        )
-    elif task.processing_rate_raw and task.processing_rate_raw.upper() != "N/A":
-        yield Result(
-            state=State.OK,
-            notice=f"Average speed: unparsable value ({task.processing_rate_raw})",
+            notice_only=True,
         )
 
     if task.state in _TERMINAL_STATES:
-        if task.duration is not None:
-            yield from check_levels(
-                task.duration,
-                metric_name="backup_duration",
-                render_func=render.timespan,
-                label="Duration",
-            )
+        match task.duration:
+            case float():
+                yield from check_levels(
+                    task.duration,
+                    metric_name="backup_duration",
+                    render_func=render.timespan,
+                    label="Duration",
+                    notice_only=True,
+                )
+            case Unparsable():
+                yield Result(
+                    state=State.OK,
+                    notice=task.duration.as_result_text("Duration"),
+                )
+            case None:
+                pass
 
-        if task.end_time is None:
-            yield from check_backup_age(None, params["age"])
-        elif (end_time := parse_iso8601_epoch(task.end_time)) is None:
-            # TODO: confirm whether this branch is ever actually reachable once we can
-            # test against real API responses. If it is, move the parsing into the
-            # parse function instead of guessing here.
-            yield Result(
-                state=State.UNKNOWN,
-                summary=f"FAILED TO PARSE -> End time: ({task.end_time})",
-            )
-        elif (age := time.time() - end_time) < 0:
-            yield Result(state=State.UNKNOWN, summary="Last backup: end time is in the future")
-        else:
-            yield from check_backup_age(age, params["age"])
+
+def _check_last_backup(
+    end_time: float | Unparsable | None, levels_upper: LevelsT[float], now: float
+) -> CheckResult:
+    if end_time is None:
+        yield from check_backup_age(None, levels_upper)
+    elif isinstance(end_time, Unparsable):
+        yield Result(
+            state=State.UNKNOWN,
+            summary=end_time.as_result_text("End time"),
+        )
+    elif (age := now - end_time) < 0:
+        yield Result(state=State.UNKNOWN, summary="Last backup: end time is in the future")
+    else:
+        yield from check_backup_age(
+            age, levels_upper, label="Last backup age", metric_name="backup_age"
+        )
+
+
+def check_veeam_backups_now(item: str, params: CheckParameters, section: Section) -> CheckResult:
+    yield from check_veeam_backups(item, params, section, now=time.time())
 
 
 agent_section_veeam_backups = AgentSection(
@@ -214,7 +260,7 @@ check_plugin_veeam_backups = CheckPlugin(
     name="veeam_backups",
     service_name="Backup %s",
     discovery_function=discovery_veeam_backups,
-    check_function=check_veeam_backups,
+    check_function=check_veeam_backups_now,
     check_ruleset_name="veeam_backup",
     check_default_parameters=CheckParameters(
         age=("fixed", (108000.0, 172800.0)),  # 30h/2d, as the agent plug-in's VEEAM Client

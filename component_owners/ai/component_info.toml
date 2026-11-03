@@ -1,4 +1,6 @@
 type = "Component"
+display_name = "AI"
+previous_name = "Ai"
 members_required = 2
 tier = 1
 has_support_component = true

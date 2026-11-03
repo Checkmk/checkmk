@@ -42,10 +42,9 @@ def _form_spec() -> Dictionary:
 
 
 rule_spec_agent_user = AgentConfig(
-    title=Title("Run agent as non-root user (Linux) (deprecated)"),
+    title=Title("Run agent as non-root user (Linux)"),
     name="agent_user",
     topic=Topic.OPERATING_SYSTEM,
     parameter_form=_form_spec,
-    # was: 'deprecation_planned'. TODO CMK-35119
     is_deprecated=True,
 )

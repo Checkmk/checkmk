@@ -7,8 +7,10 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { computed } from 'vue'
 
 import { useInjectCmkToken } from '@/dashboard/composables/useCmkToken'
+import { useInjectDrillDownSource } from '@/dashboard/composables/useDrillDownSource'
 import { useSuppressEventOnPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
 import type { EmbeddedViewContent, IFrameContent } from '@/dashboard/types/widget'
+import { IFRAME_DASHBOARD_URL_PARAM } from '@/page-header/drillUp'
 
 import DashboardContentIFrame from './DashboardContentIFrame.vue'
 import type { ContentProps } from './types.ts'
@@ -16,6 +18,7 @@ import type { ContentProps } from './types.ts'
 const props = defineProps<ContentProps>()
 const cmkToken = useInjectCmkToken()
 const suppressEventOnPublicDashboard = useSuppressEventOnPublicDashboard()
+const drillDownSource = useInjectDrillDownSource()
 
 const iFrameUrl = computed(() => {
   if (cmkToken !== undefined) {
@@ -34,8 +37,14 @@ const iFrameUrl = computed(() => {
     embedded_id: content.embedded_id,
     context: JSON.stringify(props.effective_filter_context.filters),
     is_preview: JSON.stringify(props.isPreview ?? false)
-  }).toString()
-  return `widget_iframe_view.py?${urlParams}`
+  })
+  // The view's column drill-downs leave this dashboard, so they name it. Its URL is the way back
+  // from a column link opened in a new tab, whose referrer is this iframe.
+  if (drillDownSource.value) {
+    urlParams.set('drill_down_source_title', drillDownSource.value)
+    urlParams.set(IFRAME_DASHBOARD_URL_PARAM, window.location.href)
+  }
+  return `widget_iframe_view.py?${urlParams.toString()}`
 })
 
 const iFrameProps = computed(() => {

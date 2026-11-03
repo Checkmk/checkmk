@@ -48,12 +48,6 @@ export function severityKindOf(state: ObjectState | undefined): SeverityKind {
   }
 }
 
-const PROBLEM_STATES = new Set(['CRITICAL', 'WARNING', 'UNKNOWN', 'DOWN', 'UNREACHABLE'])
-
-export function isProblemState(state: ObjectState | undefined): boolean {
-  return state ? PROBLEM_STATES.has(state.state) : false
-}
-
 /** A qualifier on the state, rather than a state of its own. */
 export interface StateModifier {
   label: string

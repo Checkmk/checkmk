@@ -11,7 +11,7 @@ set -e
 source "$(dirname "$0")/lib-precommit"
 
 # Filter out files that break doctest collection:
-# - tests/*: test files are not doctest targets
+# - tests/*, non-free/tests/*: test files are not doctest targets
 # - non-free/packages/*: isolated package trees whose import paths cannot be
 #   resolved by pytest running from the repo root
 # - omd/packages/*: same as non-free/packages
@@ -19,7 +19,7 @@ source "$(dirname "$0")/lib-precommit"
 declare -a FILES
 
 for param in "$@"; do
-    if [[ "$param" == tests* || "$param" == non-free/packages/* || "$param" == omd/packages/* || "$param" == */__main__.py ]]; then
+    if [[ "$param" == tests* || "$param" == non-free/tests/* || "$param" == non-free/packages/* || "$param" == omd/packages/* || "$param" == */__main__.py ]]; then
         continue
     fi
     # the enterprise/... files are included via symlinks. The doctests do not work reliably

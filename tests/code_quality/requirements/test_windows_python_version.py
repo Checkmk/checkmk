@@ -17,7 +17,7 @@ from tests.code_quality.bazel_utils import bazel_repo_root
 _DIVERGENCE_CHECKLIST = (
     "See the 'Bumping the Python version' section of agents/modules/windows/README.md: "
     "changing PYTHON_VERSION_WINDOWS's major.minor requires updating "
-    "pip.parse(python_version = ...) in bazel/module/python_cab.MODULE.bazel and, in "
+    "both pip.parse(python_version = ...) in bazel/module/python_cab.MODULE.bazel and, in "
     "bazel/module/py.MODULE.bazel, the x86_64-pc-windows-msvc "
     "single_version_platform_override, the use_repo'd "
     "python_<X_Y>_x86_64-unknown-linux-gnu runtime repo, and -- only while the minor "
@@ -41,16 +41,18 @@ def test_windows_python_version_module_literals() -> None:
     )
 
     wnx_module = root / "bazel/module/python_cab.MODULE.bazel"
-    hub_version = _major_minor(
-        wnx_module.read_text(),
-        r'hub_name = "windows_python_wheels",\s*python_version = "(\d+)\.(\d+)"',
-        wnx_module,
-    )
-    assert hub_version == windows, (
-        f'pip.parse(hub_name = "windows_python_wheels") in {wnx_module.name} resolves for '
-        f"Python {hub_version}, but PYTHON_VERSION_WINDOWS is on {windows}. "
-        + _DIVERGENCE_CHECKLIST
-    )
+    # python-3.cab's closure and the test cab's (agents/wnx/tests' harness Python).
+    for hub in ("windows_python_wheels", "windows_test_python_wheels"):
+        hub_version = _major_minor(
+            wnx_module.read_text(),
+            rf'hub_name = "{hub}",\s*python_version = "(\d+)\.(\d+)"',
+            wnx_module,
+        )
+        assert hub_version == windows, (
+            f'pip.parse(hub_name = "{hub}") in {wnx_module.name} resolves for '
+            f"Python {hub_version}, but PYTHON_VERSION_WINDOWS is on {windows}. "
+            + _DIVERGENCE_CHECKLIST
+        )
 
     py_module = root / "bazel/module/py.MODULE.bazel"
     py_module_text = py_module.read_text()
@@ -68,7 +70,7 @@ def test_windows_python_version_module_literals() -> None:
     runtime_repo = f"python_{windows.replace('.', '_')}_x86_64-unknown-linux-gnu"
     assert re.search(rf'use_repo\(\s*python,\s*"{runtime_repo}"\s*\)', py_module_text), (
         f'use_repo(python, "{runtime_repo}") missing from {py_module.name}: '
-        "//agents/modules/windows:requirements_windows resolves under this runtime "
+        "//agents/modules/windows:windows_requirements resolves under this runtime "
         "(rules_uv py3_runtime). " + _DIVERGENCE_CHECKLIST
     )
 

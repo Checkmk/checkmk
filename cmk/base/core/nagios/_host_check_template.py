@@ -14,19 +14,22 @@ import cmk.utils.log
 import cmk.utils.password_store
 from cmk.base import config
 from cmk.base.app import make_app
+from cmk.base.checking import run_checking
 from cmk.base.core.active_config_layout import RELATIVE_PATH_SECRETS, RELATIVE_PATH_TRUSTED_CAS
 from cmk.base.core.nagios import HostCheckConfig
-from cmk.base.modes.check_mk import run_checking
 from cmk.ccc.config_path import detect_latest_config_path
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.checker_helper_config import load_packed_config
 from cmk.checkengine.fetcher_utils.secrets import StoredSecrets
+from cmk.checkengine.filecache import FileCacheOptions
+from cmk.checkengine.parser import NO_SELECTION
 from cmk.checkengine.plugin_backend import (
     load_selected_plugins,
 )
 from cmk.checkengine.plugins import CheckPluginName, ServiceID
 from cmk.discover_plugins import PluginLocation
 from cmk.server_side_calls_backend import load_secrets_file
+from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.paths import omd_root
 
 # This will be replaced by the config generation, when the template is instantiated.
@@ -116,6 +119,7 @@ def main() -> int:
             discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
             builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
             excluded_service_ids=frozenset(CONFIG.disabled_service_ids),
+            debug=debug,
         )
 
         secrets = load_secrets_file(
@@ -140,9 +144,16 @@ def main() -> int:
             config.ServiceDependsOn(
                 tag_list=loading_result.host_tags.tag_list,
                 service_dependencies=loading_result.loaded_config.service_dependencies,
+                debug=debug,
             ),
-            {},
             [CONFIG.hostname],
+            file_cache_options=FileCacheOptions(),
+            snmp_backend=None,
+            usewalk=False,
+            selected_sections=NO_SELECTION,
+            run_plugin_names=EVERYTHING,
+            dry_run=False,
+            show_perfdata=False,
             secrets_config_relay=StoredSecrets(
                 path=cmk.utils.password_store.active_secrets_path_relay(), secrets=secrets
             ),
@@ -153,6 +164,8 @@ def main() -> int:
                 secrets=secrets,
             ),
             trusted_ca_file=(active_config_path / RELATIVE_PATH_TRUSTED_CAS),
+            fake_dns=None,
+            debug=debug,
         )
     except KeyboardInterrupt:
         with suppress(IOError):

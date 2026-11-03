@@ -5,6 +5,7 @@
 
 
 from collections.abc import Sequence
+from dataclasses import asdict
 
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbRenderer
 from cmk.gui.htmllib.debug_vars import debug_vars
@@ -16,10 +17,22 @@ from cmk.gui.i18n import _
 from cmk.gui.page_menu import PageMenu, PageMenuPopupsRenderer, PageMenuRenderer
 from cmk.gui.page_state import PageState, PageStateRenderer
 from cmk.licensing.registry import get_licensing_user_effect
+from cmk.shared_typing.drill_up_button import DrillUpButton
 from cmk.utils import paths
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri_contextless
+
+# A drill-down names the page it leaves. The leading underscore drops them from any further
+# GET page (filter form, sort links), so the way back only shows where the drill-down landed.
+DRILLED_FROM_VAR = "_drilled_from"
+
+
+def requested_drill_up(request: Request) -> DrillUpButton | None:
+    """The way back to the page a drill-down came from, if a drill-down opened this one."""
+    if not (title := request.get_str_input(DRILLED_FROM_VAR)):
+        return None
+    return DrillUpButton(title=title)
 
 
 def top_heading(
@@ -33,6 +46,7 @@ def top_heading(
     debug: bool,
     hide_suggestions: bool,
     user_role_ids: Sequence[str],
+    drill_up: DrillUpButton | None = None,
 ) -> None:
     show_license_expiry(writer, user_role_ids)
 
@@ -43,6 +57,10 @@ def top_heading(
     if breadcrumb:
         BreadcrumbRenderer().show(breadcrumb)
 
+    if drill_up is not None:
+        writer.open_div(class_="title_row")
+        writer.vue_component("cmk-drill-up-button", data=asdict(drill_up))
+
     # We don't want to handle "title" permissive.
     html_title = HTML.with_escaping(title)
     writer.a(
@@ -52,6 +70,9 @@ def top_heading(
         href="#",
         onclick="this.innerHTML='%s'; document.location.reload();" % _("Reloading..."),
     )
+
+    if drill_up is not None:
+        writer.close_div()
 
     writer.close_div()
 

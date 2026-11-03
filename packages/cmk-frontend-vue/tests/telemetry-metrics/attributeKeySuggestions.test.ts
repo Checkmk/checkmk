@@ -3,8 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { useMswServer } from 'cmk-ui-library/vitest.msw'
-import { HttpResponse, http } from 'msw'
+import { restApiHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
 import { expect, test, vi } from 'vitest'
 
 import type { KeySection } from '@/telemetry-metrics/attribute-kind'
@@ -19,15 +18,16 @@ const KEYS_BY_KIND: Record<string, string[]> = {
   [KEY_IDENTS.data_point]: ['http.method']
 }
 
-const API_BASE = `${location.protocol}//${location.host}/api/internal`
-
 useMswServer(
-  http.post(`${API_BASE}/objects/autocomplete/:ident`, async ({ params, request }) => {
-    const keys = KEYS_BY_KIND[params.ident as string] ?? []
-    const { value: query } = (await request.json()) as { value: string }
-    const matching = query ? keys.filter((key) => key.includes(query)) : keys
-    return HttpResponse.json({ choices: matching.map((key) => ({ id: key, value: key })) })
-  })
+  restApiHttp.post(
+    '/objects/autocomplete/{autocomplete_id}',
+    async ({ params, request, response }) => {
+      const keys = KEYS_BY_KIND[params.autocomplete_id] ?? []
+      const { value: query } = await request.json()
+      const matching = query ? keys.filter((key) => key.includes(query)) : keys
+      return response(200).json({ choices: matching.map((key) => ({ id: key, value: key })) })
+    }
+  )
 )
 
 function keySuggestions(): (query: string) => Promise<KeySection[]> {

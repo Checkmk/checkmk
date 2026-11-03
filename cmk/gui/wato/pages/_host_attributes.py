@@ -116,7 +116,7 @@ def configure_attributes(
                 "<a href='%(relation_detection_url)s'>relation detection</a> functionality."
                 "<br><br><a href='%(werk_url)s' target='_blank'>Werk #%(werk_id)d</a> · "
                 "<a href='%(read_more_url)s' target='_blank'>"
-                "Read more about management boards &amp; relations.</a>"
+                "Read more about management boards & relations.</a>"
             ) % {
                 "ipmi_url": makeuri_contextless(
                     request,

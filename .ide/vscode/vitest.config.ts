@@ -11,17 +11,6 @@ import { defineConfig } from 'vitest/config'
 const configDir =
   typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url))
 
-// Bazel sets XML_OUTPUT_FILE for every test target — write per-test JUnit XML
-// there so the CMK Tests view in VS Code can attribute results to individual
-// `it()` blocks instead of seeing one wrapping case for the whole target.
-const xmlOut = process.env.XML_OUTPUT_FILE
-const junitOptions = xmlOut
-  ? {
-      reporters: ['default', 'junit'] as const,
-      outputFile: { junit: xmlOut }
-    }
-  : {}
-
 export default defineConfig({
   test: {
     include: ['tests/**/*.test.ts'],
@@ -30,7 +19,12 @@ export default defineConfig({
     alias: {
       vscode: path.resolve(configDir, 'tests/__mocks__/vscode.ts')
     },
-    ...junitOptions
+    // Bazel sets XML_OUTPUT_FILE for every test target — write per-test JUnit XML
+    // there so the CMK Tests view in VS Code can attribute results to individual
+    // `it()` blocks instead of seeing one wrapping case for the whole target.
+    ...(process.env.XML_OUTPUT_FILE
+      ? { reporters: ['default', 'junit'], outputFile: { junit: process.env.XML_OUTPUT_FILE } }
+      : {})
   },
   plugins: [
     {

@@ -9,10 +9,25 @@ import { computed } from 'vue'
 
 const { _t } = usei18n()
 
-const props = withDefaults(defineProps<{ total?: number }>(), { total: 0 })
+const props = withDefaults(
+  defineProps<{
+    total?: number
+    /** Whether some sites could not be reached, so the total covers only the others. */
+    partial?: boolean
+  }>(),
+  { total: 0, partial: false }
+)
 
-const label = computed(() => _t('Total rows: %{total}', { total: props.total }))
-const shortLabel = computed(() => _t('Total: %{total}', { total: props.total }))
+const label = computed(() =>
+  props.partial
+    ? _t('Total rows of reachable sites: %{total}', { total: props.total })
+    : _t('Total rows: %{total}', { total: props.total })
+)
+const shortLabel = computed(() =>
+  props.partial
+    ? _t('Total (partial): %{total}', { total: props.total })
+    : _t('Total: %{total}', { total: props.total })
+)
 </script>
 
 <template>

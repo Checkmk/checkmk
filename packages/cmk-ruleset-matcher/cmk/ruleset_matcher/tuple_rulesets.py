@@ -6,7 +6,6 @@
 from collections.abc import Iterable, Sequence
 from re import Pattern
 
-import cmk.ccc.debug
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.regex import combine_patterns, regex
 from cmk.ruleset_matcher.tags import TagID
@@ -46,7 +45,7 @@ def get_rule_options(
     return entry, {}
 
 
-def in_extraconf_hostlist(hostlist: Sequence[str], hostname: str | bool) -> bool:
+def in_extraconf_hostlist(hostlist: Sequence[str], hostname: str | bool, *, debug: bool) -> bool:
     """Whether or not the given host matches the hostlist.
 
     Entries in list are hostnames that must equal the hostname.
@@ -104,7 +103,7 @@ def in_extraconf_hostlist(hostlist: Sequence[str], hostname: str | bool) -> bool
             ):
                 return not negate
         except MKGeneralException:
-            if cmk.ccc.debug.enabled():
+            if debug:
                 raise
 
     return False

@@ -1,0 +1,19 @@
+type = "Component"
+display_name = "Crash reporting"
+previous_name = "Crash Reporting System"
+has_support_component = true
+members_required = 2
+tier = 3
+description = """
+Crash reports: how Checkmk creates them and sends them in, and the service at
+crash.checkmk.com that receives and stores them (cmk-crash-reporting repository).
+
+Belongs here:
+- Creating crash reports in all major Checkmk components, with as much
+  information as possible to reproduce the crash (packages/cmk-crash)
+- Sending crash reports from Checkmk (cmk/gui/crash_reporting)
+- The crash report receiver and its GUI at crash.checkmk.com
+"""
+external_code_location = [
+  "https://review.lan.tribe29.com/gitweb?p=cmk-crash-reporting.git;a=summary",
+]

@@ -48,7 +48,7 @@ describe('FolderBulkActionModal', () => {
     const commands = await renderModal(aRackOf('web01', 'db01'))
 
     // The dialog content teleports into the document body a tick after mount.
-    await user.type(await screen.findByRole('textbox'), 'rack maintenance')
+    await user.type(await screen.findByPlaceholderText('Enter a comment…'), 'rack maintenance')
     await user.click(screen.getByRole('button', { name: 'Acknowledge 2 hosts' }))
 
     await waitFor(() => expect(commands.acknowledgeHost).toHaveBeenCalledTimes(2))
@@ -66,7 +66,7 @@ describe('FolderBulkActionModal', () => {
     )
 
     await screen.findByText('1 host that is up left out.')
-    await user.type(screen.getByRole('textbox'), 'rack maintenance')
+    await user.type(screen.getByPlaceholderText('Enter a comment…'), 'rack maintenance')
     await user.click(screen.getByRole('button', { name: 'Acknowledge 1 host' }))
 
     await waitFor(() => expect(commands.acknowledgeHost).toHaveBeenCalledTimes(1))
@@ -112,7 +112,7 @@ describe('FolderBulkActionModal', () => {
     const commands = await renderModal(aRackOf('web01', 'web02', 'db01'))
     vi.mocked(commands.acknowledgeHost).mockRejectedValueOnce(new Error('pipe closed'))
 
-    await user.type(await screen.findByRole('textbox'), 'rack maintenance')
+    await user.type(await screen.findByPlaceholderText('Enter a comment…'), 'rack maintenance')
     await user.click(screen.getByRole('button', { name: 'Acknowledge 3 hosts' }))
     await screen.findByText(/1 of 3 failed: web01/)
 

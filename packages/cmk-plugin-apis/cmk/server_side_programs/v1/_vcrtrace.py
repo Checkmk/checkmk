@@ -109,7 +109,9 @@ def vcrtrace(
             from vcr.request import Request
 
             def before_record_request(request: Request) -> Request:
-                request.body = filter_body(request.body)
+                # vcrpy defines Request.body_bytes between the getter and the setter of
+                # Request.body, so mypy misses the setter.
+                request.body = filter_body(request.body)  # type: ignore[misc]
                 return request
 
             setattr(namespace, self.dest, True)

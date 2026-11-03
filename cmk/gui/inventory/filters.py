@@ -12,6 +12,7 @@ from typing import override
 from cmk.gui import query_filters
 from cmk.gui.config import RequestCacheConfig
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.htmllib.generator import ClickAction
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.ifaceoper import interface_oper_states, interface_port_types
@@ -652,12 +653,34 @@ class FilterInvtableDualChoice(Filter):
         html.open_tr()
         html.open_td(class_="head")
         html.write_text_permissive(_("Available"))
-        html.a(">", href="javascript:%s;" % select_func, class_=["control", "add"])
+        html.action_link(
+            ">",
+            click_action=ClickAction(
+                action="valuespec_duallist_switch",
+                arguments={
+                    "field_suffix": "unselected",
+                    "varprefix": self._html_var,
+                    "keeporder": False,
+                },
+            ),
+            class_=["control", "add"],
+        )
         html.close_td()
 
         html.open_td(class_="head")
         html.write_text_permissive(_("Selected"))
-        html.a("<", href="javascript:%s;" % unselect_func, class_=["control", "del"])
+        html.action_link(
+            "<",
+            click_action=ClickAction(
+                action="valuespec_duallist_switch",
+                arguments={
+                    "field_suffix": "selected",
+                    "varprefix": self._html_var,
+                    "keeporder": False,
+                },
+            ),
+            class_=["control", "del"],
+        )
         html.close_td()
         html.close_tr()
 

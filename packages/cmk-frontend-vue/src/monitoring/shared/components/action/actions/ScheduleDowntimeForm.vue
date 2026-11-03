@@ -140,15 +140,22 @@ function adhocDurationIsValid(values: ScheduleDowntimeFormValues): boolean {
   )
 }
 
+function hasComment(values: ScheduleDowntimeFormValues): boolean {
+  return values.comment.trim() !== ''
+}
+
+/** A downtime starting now has to last for some time. */
+function adhocHasDuration(values: ScheduleDowntimeFormValues): boolean {
+  return values.selection !== 'adhoc' || adhocDurationIsValid(values)
+}
+
 /** A custom downtime has to end after it starts. */
 export function customRangeIsOrdered(values: ScheduleDowntimeFormValues): boolean {
   return values.selection !== 'custom' || values.customRange.from.compare(values.customRange.to) < 0
 }
 
 export function isScheduleDowntimeValid(values: ScheduleDowntimeFormValues): boolean {
-  const durationValid =
-    (values.selection !== 'adhoc' || adhocDurationIsValid(values)) && customRangeIsOrdered(values)
-  return values.comment.trim() !== '' && durationValid
+  return hasComment(values) && adhocHasDuration(values) && customRangeIsOrdered(values)
 }
 
 /** The absolute downtime window in ISO 8601, or `null` when the selected duration is empty. */
@@ -182,6 +189,7 @@ import CmkLink from 'cmk-ui-library/components/CmkLink.vue'
 import type { Suggestions } from 'cmk-ui-library/components/CmkSuggestions'
 import CmkDateTimePicker from 'cmk-ui-library/components/date-time/CmkDateTimePicker.vue'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
+import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequired.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -203,12 +211,15 @@ const props = withDefaults(
     presets?: DowntimePresetOption[]
     /** Where the duration presets are edited. */
     presetsUrl?: string | null
+    /** Whether to point out the fields that keep the form from being submitted. */
+    showErrors?: boolean
   }>(),
   {
     targetKind: 'host',
     recurrences: () => [],
     presets: () => [],
-    presetsUrl: null
+    presetsUrl: null,
+    showErrors: false
   }
 )
 
@@ -220,6 +231,7 @@ const emit = defineEmits<{
 
 const { _t } = usei18n()
 const adhocLabelId = useId()
+const adhocErrorId = useId()
 
 function rejectNonDigits(event: InputEvent): void {
   const inserted = event.data ?? event.dataTransfer?.getData('text/plain') ?? ''
@@ -255,9 +267,24 @@ const repeatOptions = computed(() => ({
   ).map(({ recur, title }) => ({ name: recur, title: title as TranslatedString }))
 }))
 
+const commentErrors = computed(() =>
+  props.showErrors && !hasComment(model.value) ? [_t('Comment is required.')] : []
+)
+
+const adhocErrors = computed(() =>
+  props.showErrors && !adhocHasDuration(model.value)
+    ? [_t('Enter a duration longer than 0 minutes.')]
+    : []
+)
+
 const rangeOrderHint = computed(() =>
   customRangeIsOrdered(model.value) ? null : _t('The downtime has to end after it starts.')
 )
+
+/** The hints above, raised to errors once a submit has run into them. */
+function hintAsErrors(hint: TranslatedString | null): TranslatedString[] {
+  return props.showErrors && hint !== null ? [hint] : []
+}
 
 const repeat = computed({
   get: () => model.value.recur,
@@ -345,6 +372,7 @@ function selectOverflow(id: string | null): void {
           v-model="model.comment"
           field-size="large"
           :placeholder="_t('What is the occasion?')"
+          :external-errors="commentErrors"
         />
       </label>
     </div>
@@ -447,37 +475,47 @@ function selectOverflow(id: string | null): void {
               :label="_t('Choose when the downtime ends')"
             />
           </div>
-          <p v-if="rangeOrderHint" class="monitoring-schedule-downtime-form__preset-hint">
+          <CmkInlineValidation v-if="showErrors" :validation="hintAsErrors(rangeOrderHint)" />
+          <p v-else-if="rangeOrderHint" class="monitoring-schedule-downtime-form__preset-hint">
             {{ rangeOrderHint }}
           </p>
         </div>
-        <div
-          v-else-if="model.selection === 'adhoc'"
-          class="monitoring-schedule-downtime-form__adhoc"
-          role="group"
-          :aria-labelledby="adhocLabelId"
-        >
-          <span :id="adhocLabelId">{{ _t('From now, for') }}</span>
-          <CmkInput
-            v-model="model.adhocHours"
-            type="number"
-            field-size="small"
-            :unit="_t('hours')"
-            inputmode="numeric"
-            min="0"
-            :aria-label="_t('Hours')"
-            @beforeinput="rejectNonDigits"
-          />
-          <CmkInput
-            v-model="model.adhocMinutes"
-            type="number"
-            field-size="small"
-            :unit="_t('minutes')"
-            inputmode="numeric"
-            min="0"
-            :aria-label="_t('Minutes')"
-            @beforeinput="rejectNonDigits"
-          />
+        <div v-else-if="model.selection === 'adhoc'">
+          <!-- One message for both inputs: neither is wrong alone, only their sum is. -->
+          <CmkInlineValidation :id="adhocErrorId" :validation="adhocErrors" />
+          <div
+            class="monitoring-schedule-downtime-form__adhoc"
+            role="group"
+            :aria-labelledby="adhocLabelId"
+          >
+            <span :id="adhocLabelId">{{ _t('From now, for') }}</span>
+            <CmkInput
+              v-model="model.adhocHours"
+              type="number"
+              field-size="small"
+              :unit="_t('hours')"
+              inputmode="numeric"
+              min="0"
+              :aria-label="_t('Hours')"
+              :external-errors="adhocErrors"
+              hide-validation-message
+              :described-by="adhocErrors.length > 0 ? adhocErrorId : undefined"
+              @beforeinput="rejectNonDigits"
+            />
+            <CmkInput
+              v-model="model.adhocMinutes"
+              type="number"
+              field-size="small"
+              :unit="_t('minutes')"
+              inputmode="numeric"
+              min="0"
+              :aria-label="_t('Minutes')"
+              :external-errors="adhocErrors"
+              hide-validation-message
+              :described-by="adhocErrors.length > 0 ? adhocErrorId : undefined"
+              @beforeinput="rejectNonDigits"
+            />
+          </div>
         </div>
         <p v-else-if="untilEndDate" class="monitoring-schedule-downtime-form__preset-hint">
           {{

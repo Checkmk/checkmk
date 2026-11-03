@@ -48,7 +48,9 @@ def show_global_setting_v1(
     config_variable = config_variable_registry[varname]
     need_read_permission(config_variable)
     value, origin = effective_value(load_configuration_settings(), varname)
-    form_spec = config_variable.value_model(global_settings_context_of(omd_site(), api_context))
+    form_spec = config_variable.value_model(
+        global_settings_context_of(omd_site(), api_context, edits_site_specific_value=False)
+    )
     spec, json_value = to_json(form_spec, value)
     return ApiResponse(
         body=GlobalSettingModel(varname=varname, value=json_value, spec=spec, origin=origin),

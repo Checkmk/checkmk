@@ -1,0 +1,25 @@
+################################################################################
+# The Windows QEMU test tiers (qemu_test) start one VM each. How many run at once:
+# - Each test claims its VM's 4 vCPUs and 4700 MB (resources:cpu/memory tags), so
+#   Bazel runs as many VMs as the host's CPUs and memory hold: 2 on 8 cores.
+# - In CI, --config=ci's CPU load scheduling ignores the CPU claim and the pod's
+#   memory limit (which HOST_RAM follows) sets the number of VMs:
+#   HOST_RAM*.67 / 4700 MB. Size a CI pod for the VMs it should run, with 4 CPUs
+#   each.
+# - Each test also claims one qemu_vm (resources:qemu_vm:1), a limit of its own
+#   for running fewer VMs than the CPUs and memory allow. Bazel fails a test whose
+#   tag names an undeclared resource, so qemu_vm is declared below as HOST_CPUS,
+#   which limits nothing: the CPU or memory claim binds first. To run at most N
+#   VMs at once, e.g. 1 to keep a laptop responsive, pass
+#   --local_resources=qemu_vm=N or put it in user.bazelrc. Whichever of the
+#   three limits is lowest wins.
+# - Bazel ignores all test resource tags under a non-zero --local_test_jobs:
+#   never pass it with these tiers (they would run as many VMs as test jobs).
+# None of this is the licence limit: VMs on a developer's machine run under their
+# own MSDN licence, and in CI a cluster quota caps the Windows VMs of all builds
+# together (CMK-41343).
+# --config=qemu includes --config=test-vm, without which the tiers are incompatible.
+# Example: bazel test --config=qemu //agents/wnx:watest-qemu
+################################################################################
+common --local_resources=qemu_vm=HOST_CPUS
+common:qemu --config=test-vm

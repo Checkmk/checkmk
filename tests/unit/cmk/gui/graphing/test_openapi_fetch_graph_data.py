@@ -43,16 +43,15 @@ from cmk.graphing_engine import (
     Unit,
 )
 from cmk.gui.graphing import (
-    CommonGraphOptions,
-    edge_neighbours_at_served_step_of,
     EvaluatedGraphs,
+    EvaluateGraph,
+    EvaluationOptions,
     FetchDiagnostics,
     QueryLimitReached,
+    requested_window,
 )
 from cmk.gui.graphing._graph_dispatch import serialize_graphs
-from cmk.gui.graphing._graph_templates import _EvaluateTemplateGraphs
-from cmk.gui.graphing._unit_format import unit_to_unit_format
-from cmk.gui.graphing._user_specific_unit import apply_temperature_unit
+from cmk.gui.graphing._user_specific_unit import user_unit_format
 from cmk.gui.graphing.openapi import fetch_graph_data as fetch_graph_data_module
 from cmk.gui.graphing.openapi._serialize import (
     api_consolidation_to_engine,
@@ -101,7 +100,7 @@ def test_evaluated_to_response_surfaces_fetch_diagnostics() -> None:
             lines=[],
         ),
         diagnostics=FetchDiagnostics(
-            limits_reached=[QueryLimitReached(metric_name="cpu", max_series=100, num_series=100)],
+            limits_reached=[QueryLimitReached(metric_name="cpu", max_series=100)],
             errors=["telemetry metrics unavailable"],
         ),
         temperature_unit=TemperatureUnit.CELSIUS,
@@ -184,7 +183,7 @@ def test_a_region_open_at_the_top_is_served_without_an_upper_bound() -> None:
 @pytest.mark.usefixtures("load_config")
 def test_fetch_graph_data_empty_graph_runs_end_to_end() -> None:
     # An empty graph has no metrics, so the livestatus-backed RRD source is never queried. The handler
-    # therefore runs end to end (evaluate_graphs -> _EvaluateTemplateGraphs -> evaluated_to_response)
+    # therefore runs end to end (evaluate_graphs -> EvaluateGraph -> evaluated_to_response)
     # and returns an empty, fallback-ranged response -- guarding the real wiring without a livestatus
     # fixture.
     graph = Graph(name="g", title="t", kind="template")
@@ -263,10 +262,10 @@ def test_fetch_graph_data_multiple_internal_graphs_raises_500() -> None:
 
 
 def _capture_request(
-    monkeypatch: pytest.MonkeyPatch, captured: dict[str, Mapping[str, object]]
+    monkeypatch: pytest.MonkeyPatch, captured: dict[str, EvaluationOptions]
 ) -> None:
     def _capture(
-        _graphs: Sequence[Mapping[str, object]], options: Mapping[str, object]
+        _graphs: Sequence[Mapping[str, object]], options: EvaluationOptions
     ) -> EvaluatedGraphs:
         captured["options"] = options
         return EvaluatedGraphs(
@@ -290,7 +289,7 @@ def _capture_request(
 def test_fetch_graph_data_passes_combination_mode_into_options(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    captured: dict[str, Mapping[str, object]] = {}
+    captured: dict[str, EvaluationOptions] = {}
     _capture_request(monkeypatch, captured)
     fetch_graph_data_v1(
         _api_context(),
@@ -301,14 +300,14 @@ def test_fetch_graph_data_passes_combination_mode_into_options(
             combination_mode="stacked",
         ),
     )
-    assert captured["options"]["combination_mode"] == "stacked"
+    assert captured["options"].combination_mode == "stacked"
 
 
 @pytest.mark.usefixtures("load_config")
 def test_fetch_graph_data_asks_each_rrd_for_the_neighbours_of_the_archive_serving_it(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    captured: dict[str, Mapping[str, object]] = {}
+    captured: dict[str, EvaluationOptions] = {}
     _capture_request(monkeypatch, captured)
 
     fetch_graph_data_v1(
@@ -320,14 +319,14 @@ def test_fetch_graph_data_asks_each_rrd_for_the_neighbours_of_the_archive_servin
         ),
     )
 
-    assert edge_neighbours_at_served_step_of(captured["options"])
+    assert captured["options"].include_edge_neighbours
 
 
 @pytest.mark.usefixtures("load_config")
 def test_fetch_graph_data_omits_combination_mode_when_not_requested(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    captured: dict[str, Mapping[str, object]] = {}
+    captured: dict[str, EvaluationOptions] = {}
     _capture_request(monkeypatch, captured)
     fetch_graph_data_v1(
         _api_context(),
@@ -337,7 +336,7 @@ def test_fetch_graph_data_omits_combination_mode_when_not_requested(
             consolidation_function="avg",
         ),
     )
-    assert "combination_mode" not in captured["options"]
+    assert captured["options"].combination_mode is None
 
 
 def test_evaluated_to_response_carries_the_lines_and_the_scalars() -> None:
@@ -377,7 +376,6 @@ def test_evaluated_to_response_carries_the_lines_and_the_scalars() -> None:
             self,
             metrics: Sequence[MetricProtocol],
             *,
-            consolidation_function: ConsolidationFunction,  # noqa: ARG002
             time_range: TimeRange,
         ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
             return {
@@ -391,11 +389,10 @@ def test_evaluated_to_response_carries_the_lines_and_the_scalars() -> None:
                 if isinstance(rrd_metric, RRDMetric)
             }
 
-    [evaluated] = _EvaluateTemplateGraphs(
-        CommonGraphOptions(
-            consolidation_function=ConsolidationFunction.AVERAGE, time_range=time_range
-        ),
+    [evaluated] = EvaluateGraph(
+        time_range,
         _FetchData(),
+        window_of=requested_window,
     )(graph).graphs
     response = evaluated_to_response(
         evaluated,
@@ -417,7 +414,7 @@ def test_evaluated_to_response_carries_the_lines_and_the_scalars() -> None:
     # The legend renders the value with the unit of the metric the line bounds, as it does a
     # metric's own values - without it the raw number is all it can show.
     assert horizontal_line.unit == ApiUnitFormat.from_shared(
-        apply_temperature_unit(unit_to_unit_format(unit), TemperatureUnit.CELSIUS)[0]
+        user_unit_format(unit, TemperatureUnit.CELSIUS)[0]
     )
 
 
@@ -453,7 +450,6 @@ def test_evaluated_to_response_keeps_a_metric_whose_rrd_holds_no_series() -> Non
             self,
             metrics: Sequence[MetricProtocol],
             *,
-            consolidation_function: ConsolidationFunction,  # noqa: ARG002
             time_range: TimeRange,  # noqa: ARG002
         ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
             return {
@@ -467,11 +463,10 @@ def test_evaluated_to_response_keeps_a_metric_whose_rrd_holds_no_series() -> Non
                 if isinstance(rrd_metric, RRDMetric)
             }
 
-    [evaluated] = _EvaluateTemplateGraphs(
-        CommonGraphOptions(
-            consolidation_function=ConsolidationFunction.AVERAGE, time_range=time_range
-        ),
+    [evaluated] = EvaluateGraph(
+        time_range,
         _FetchData(),
+        window_of=requested_window,
     )(graph).graphs
     response = evaluated_to_response(
         evaluated,
@@ -522,7 +517,6 @@ def test_evaluated_to_response_converts_the_values_to_the_users_temperature_unit
             self,
             metrics: Sequence[MetricProtocol],
             *,
-            consolidation_function: ConsolidationFunction,  # noqa: ARG002
             time_range: TimeRange,
         ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
             return {
@@ -536,11 +530,10 @@ def test_evaluated_to_response_converts_the_values_to_the_users_temperature_unit
                 if isinstance(rrd_metric, RRDMetric)
             }
 
-    [evaluated] = _EvaluateTemplateGraphs(
-        CommonGraphOptions(
-            consolidation_function=ConsolidationFunction.AVERAGE, time_range=time_range
-        ),
+    [evaluated] = EvaluateGraph(
+        time_range,
         _FetchData(),
+        window_of=requested_window,
     )(graph).graphs
     response = evaluated_to_response(
         evaluated,
@@ -586,7 +579,6 @@ def test_evaluated_to_response_leaves_a_non_temperature_unit_alone() -> None:
             self,
             metrics: Sequence[MetricProtocol],
             *,
-            consolidation_function: ConsolidationFunction,  # noqa: ARG002
             time_range: TimeRange,
         ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
             return {
@@ -600,11 +592,10 @@ def test_evaluated_to_response_leaves_a_non_temperature_unit_alone() -> None:
                 if isinstance(rrd_metric, RRDMetric)
             }
 
-    [evaluated] = _EvaluateTemplateGraphs(
-        CommonGraphOptions(
-            consolidation_function=ConsolidationFunction.AVERAGE, time_range=time_range
-        ),
+    [evaluated] = EvaluateGraph(
+        time_range,
         _FetchData(),
+        window_of=requested_window,
     )(graph).graphs
     response = evaluated_to_response(
         evaluated,

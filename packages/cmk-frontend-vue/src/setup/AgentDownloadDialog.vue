@@ -61,6 +61,7 @@ const triggerRescan = () => {
     <CmkTooltip :open="!tooltipHidden && !tooltipClosed" class="tooltip">
       <CmkTooltipTrigger as="span"></CmkTooltipTrigger>
       <CmkTooltipContent
+        variant="unstyled"
         align="center"
         side="right"
         :avoid-collisions="false"
@@ -110,6 +111,7 @@ const triggerRescan = () => {
       :agent-install-cmds="agentSlideout.agent_install_cmds"
       :agent-registration-cmds="agentSlideout.agent_registration_cmds"
       :agent-status-cmds="agentSlideout.agent_status_cmds"
+      :command-placeholders="agentSlideout.command_placeholders"
       :legacy-agent-url="agentSlideout.legacy_agent_url"
       :kubernetes-helm-command="agentSlideout.kubernetes_helm_command"
       :kubernetes-values="agentSlideout.kubernetes_values"

@@ -3,18 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from .bakery_api.v1 import (
-    register,
-    WindowsConfigContent,
-    WindowsConfigGenerator,
-    WindowsGlobalConfigEntry,
-)
+from collections.abc import Mapping, Sequence
+
+from pydantic import BaseModel
+
+from .bakery_api.v1 import register, WindowsConfigGenerator, WindowsGlobalConfigEntry
+
+
+class _Config(BaseModel):
+    sections: Sequence[str]
 
 
 def get_win_agent_disabled_sections_windows_config(
-    conf: WindowsConfigContent,
+    conf: Mapping[str, object],
 ) -> WindowsConfigGenerator:
-    yield WindowsGlobalConfigEntry(name="disabled_sections", content=conf)
+    config = _Config.model_validate(conf)
+    yield WindowsGlobalConfigEntry(name="disabled_sections", content=list(config.sections))
 
 
 register.bakery_plugin(

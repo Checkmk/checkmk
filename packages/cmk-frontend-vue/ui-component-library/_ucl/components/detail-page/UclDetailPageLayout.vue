@@ -14,7 +14,7 @@ import UclFooter from '../UclFooter.vue'
       title="Design System documentation"
       subtitle="Explore detailed guidelines, usage principles, and processes in our Design System documentation. This space provides additional context to help you design, build, and maintain consistent components."
       button-text="View documentation"
-      button-url="https://wiki.lan.checkmk.net/spaces/DS/pages/190552500/Components"
+      button-url="https://checkmk-int.atlassian.net/wiki/x/cw_GD"
     />
   </div>
 </template>

@@ -367,7 +367,7 @@ mod test_renew_certificate {
 
     fn get_connection(registry: &Registry, site_name: &str) -> config::TrustedConnection {
         registry
-            .get(&site_spec::SiteID::from_str(site_name).unwrap())
+            .get_connection(&site_spec::SiteID::from_str(site_name).unwrap())
             .unwrap()
             .trust
             .clone()

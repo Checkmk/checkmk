@@ -20,6 +20,7 @@ import type {
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import CmkAlertBoxDeprecated from 'cmk-ui-library/components/CmkAlertBoxDeprecated.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
+import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
 import CmkSlideInDialog from 'cmk-ui-library/components/CmkSlideInDialog.vue'
 import CmkTabs, { CmkTab, CmkTabContent } from 'cmk-ui-library/components/CmkTabs'
@@ -39,6 +40,7 @@ import RadarSettings from '@/maps/map/edit/settings/components/RadarSettings.vue
 import StaticMapSettings from '@/maps/map/edit/settings/components/StaticMapSettings.vue'
 import WorldmapSettings from '@/maps/map/edit/settings/components/WorldmapSettings.vue'
 import {
+  type SettingsFocus,
   flowViewData,
   formFromMap,
   geoViewOutOfRange,
@@ -51,7 +53,7 @@ import {
 import { useMapAccess } from '@/maps/map/edit/settings/useMapAccess'
 import { useSettingsPreview } from '@/maps/map/edit/settings/useSettingsPreview'
 import { useStagedBackgroundImage } from '@/maps/map/edit/settings/useStagedBackgroundImage'
-import { useMaps, useMapsApis, useToast } from '@/maps/services/context'
+import { useMaps, useMapsApis, useNavigation, useToast } from '@/maps/services/context'
 import MapsConfirmDialog from '@/maps/shared/components/MapsConfirmDialog.vue'
 import MapsUnsavedChangesDialog from '@/maps/shared/components/MapsUnsavedChangesDialog.vue'
 import type { MapRead, MapView } from '@/maps/types/api'
@@ -64,6 +66,8 @@ const props = defineProps<{
   map: MapRead
   worldmapView?: { lat: number; lng: number; zoom: number } | null
   parentMapSize?: { width: number; height: number } | null
+  /** The option to open at, when the map sent the operator here for it. */
+  initialFocus?: SettingsFocus | null
 }>()
 
 const emit = defineEmits<{
@@ -77,6 +81,7 @@ const { _t } = usei18n()
 const { mapConfig, formSchemas } = useMapsApis()
 const mapsStore = useMaps()
 const toast = useToast()
+const nav = useNavigation()
 
 type Schema = NonNullable<VueFormspecComponents['components']>
 
@@ -234,7 +239,7 @@ function startWorldmapViewPick(): void {
 // ---- Unsaved changes ----
 
 /**
- * The form as it was, for both "has anything changed" and "put it back".
+ * The form as it was, to tell whether anything changed.
  *
  * The baseline holds the map's stored view rather than a geo view prefilled
  * from the parent canvas — otherwise opening the form on a panned map would
@@ -285,32 +290,6 @@ function onSlideInClose(): void {
   if (!isPickingView.value) {
     requestClose()
   }
-}
-
-function resetChanges(): void {
-  const snapshot = JSON.parse(initialSnapshot.value) as {
-    form: typeof form.value
-    formSpec: Record<string, unknown>
-    flowView: Record<string, unknown>
-    access: string
-  }
-  form.value = snapshot.form
-  formSpecData.value = snapshot.formSpec
-  flowViewFormSpecData.value = snapshot.flowView
-  const restored = JSON.parse(snapshot.access) as {
-    mode: typeof access.mode.value
-    groups: string[]
-    sites: string[]
-    hideInMonitorMenu: boolean
-  }
-  access.mode.value = restored.mode
-  access.groups.value = restored.groups
-  access.sites.value = restored.sites
-  access.hideInMonitorMenu.value = restored.hideInMonitorMenu
-  background.reset()
-  saveAttempted.value = false
-  formBackendValidation.value = []
-  saveError.value = ''
 }
 
 // ---- Saving ----
@@ -426,6 +405,8 @@ async function save(): Promise<void> {
         ...metadataOverridesFrom(formSpec),
         background_image: form.value.background_image || null,
         background_color: form.value.background_color || null,
+        background_style: form.value.background_style,
+        background_position: form.value.background_position,
         // A presentation's slides — elements, theme, size, background — are
         // owned and autosaved by its canvas; sending a metadata-only view
         // here would blank them. The view is assembled as a loose record but
@@ -499,24 +480,16 @@ function confirmDiscard(): void {
 
 async function confirmDelete(): Promise<void> {
   deleteDialogOpen.value = false
-  const label = props.map.alias || props.map.name
   try {
     await mapsStore.deleteMap(props.map.name)
-    toast.success(_t('Map "%{name}" deleted', { name: label }))
-    emit('updated')
-    emit('close')
+    // Replace, so Back does not lead to the map that is gone.
+    nav.replace({ view: 'home' })
   } catch (error: unknown) {
     saveError.value = messageFor(error)
   }
 }
 
 // ---- Chrome ----
-
-const mapTitle = computed(() => {
-  const alias = form.value.alias || props.map.name
-  const head = `${_t('Map settings')} — ${alias}`
-  return alias === props.map.name ? head : `${head} · ${props.map.name}`
-})
 
 function openMap(): void {
   emit('close')
@@ -603,7 +576,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 <template>
   <CmkSlideInDialog
     :open="!isPickingView"
-    :header="{ title: mapTitle, closeButton: true }"
+    :header="{ title: _t('Map settings'), closeButton: true }"
     :size="showPreview ? 'medium' : 'small'"
     @close="onSlideInClose"
   >
@@ -638,11 +611,13 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
                     v-if="mapType === 'static'"
                     v-model:form="form"
                     :background="background"
+                    :classic="map.render_mode === 'nagvis_classic'"
                   />
                   <WorldmapSettings
                     v-else-if="mapType === 'worldmap'"
                     v-model:form="form"
                     :save-attempted="saveAttempted"
+                    :initial-focus="initialFocus ?? null"
                     @pick-view="startWorldmapViewPick"
                   />
                   <!-- A flow map's view fields are a FormSpec too, so their
@@ -684,9 +659,6 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
       </div>
 
       <div class="maps-map-settings-form__footer">
-        <CmkButton v-if="isDirty" variant="optional" :disabled="saving" @click="resetChanges">
-          {{ _t('Reset') }}
-        </CmkButton>
         <CmkButton
           variant="optional"
           :icon="{ name: 'view', size: 'small' }"
@@ -695,8 +667,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
           {{ showPreview ? _t('Hide preview') : _t('Show preview') }}
         </CmkButton>
         <span class="maps-map-settings-form__spacer" />
-        <CmkButton v-if="map.can_delete" variant="danger" @click="deleteDialogOpen = true">
-          {{ _t('Delete map…') }}
+        <CmkButton v-if="map.can_delete" @click="deleteDialogOpen = true">
+          <CmkIcon name="delete" variant="inline" size="small" />
+          {{ _t('Delete map') }}
         </CmkButton>
         <CmkButton variant="secondary" @click="requestClose">{{ _t('Close') }}</CmkButton>
         <CmkButton variant="primary" :disabled="!canSave" :title="saveTooltip" @click="save">
@@ -720,7 +693,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         'This permanently removes the map configuration. Existing object data on other maps is unaffected.'
       )
     "
-    :confirm-label="_t('Delete map…')"
+    :confirm-label="_t('Delete map')"
     @confirm="confirmDelete"
     @cancel="deleteDialogOpen = false"
   />

@@ -10,11 +10,12 @@ import CmkSlideInDialog from 'cmk-ui-library/components/CmkSlideInDialog.vue'
 import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
-import { computed, ref, useTemplateRef } from 'vue'
+import { computed, ref, useTemplateRef, watch } from 'vue'
 
 import { createCustomService } from './save'
 import AssignHostStep from './steps/AssignHostStep.vue'
 import ConfigureNameStep from './steps/ConfigureNameStep.vue'
+import { templatePreviewBlocksSave, useHostNameTemplatePreview } from './templatePreview'
 import { type ServiceModel, isReadyToCreate } from './types'
 
 const { open, initial } = defineProps<{
@@ -35,9 +36,21 @@ const { _t } = usei18n()
 const model = ref<ServiceModel>({ ...initial })
 const saving = ref(false)
 const saveError = ref<string | null>(null)
+const templateErrors = ref<string[]>([])
 const nameStepRef = useTemplateRef<InstanceType<typeof ConfigureNameStep>>('nameStep')
 
-const canSave = computed(() => isReadyToCreate(model.value))
+const templatePreview = useHostNameTemplatePreview(() => model.value)
+
+const canSave = computed(
+  () => isReadyToCreate(model.value) && !templatePreviewBlocksSave(templatePreview.preview.value)
+)
+
+watch(
+  () => model.value.hostNameTemplate,
+  () => {
+    templateErrors.value = []
+  }
+)
 
 async function save(): Promise<void> {
   saveError.value = null
@@ -47,6 +60,10 @@ async function save(): Promise<void> {
       return
     }
     const result = await createCustomService(model.value)
+    if (result.templateError !== undefined) {
+      templateErrors.value = [result.templateError]
+      return
+    }
     if (!result.ok) {
       saveError.value = result.error ?? _t('Failed to create the custom service.')
       return
@@ -75,7 +92,19 @@ async function save(): Promise<void> {
           stacked
         />
       </div>
-      <AssignHostStep v-model:service-name="model.serviceName" v-model:host-name="model.hostName" />
+      <AssignHostStep
+        v-model:service-name="model.serviceName"
+        v-model:host-name="model.hostName"
+        v-model:host-name-template="model.hostNameTemplate"
+        :metric-name="model.metricName"
+        :attribute-filter="model.attributeFilter"
+        :consolidation="model.consolidation"
+        :aggregator="model.aggregator"
+        :append-series-attributes="model.appendSeriesAttributes"
+        :template-errors="templateErrors"
+        :template-preview="templatePreview.preview.value"
+        @refresh-template-preview="templatePreview.refresh"
+      />
       <CmkAlert v-if="saveError" variant="error" :text="untranslated(saveError)" />
       <div class="mode-custom-services-create-custom-service-slide-in__actions">
         <CmkButton variant="primary" :disabled="!canSave || saving" @click="save">

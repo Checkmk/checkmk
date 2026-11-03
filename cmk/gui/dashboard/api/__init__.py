@@ -5,10 +5,11 @@
 
 from ._compute_endpoint import widget_compute_endpoint
 from ._contextual_link_encoding import (
-    clicked_object_values,
     EffectiveLink,
+    link_columns,
     link_properties_for,
     view_link,
+    with_link_columns,
 )
 from ._family import DASHBOARD_FAMILY
 from ._registration import register_endpoints
@@ -75,5 +76,6 @@ __all__ = [
     "validated_dashboard_token",
     "view_link",
     "widget_compute_endpoint",
-    "clicked_object_values",
+    "link_columns",
+    "with_link_columns",
 ]

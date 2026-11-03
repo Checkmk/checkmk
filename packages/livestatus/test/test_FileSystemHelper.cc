@@ -9,6 +9,7 @@
 #include <tuple>
 #include <variant>
 
+#include "TemporaryDirectory.h"
 #include "gtest/gtest.h"
 #include "livestatus/FileSystemHelper.h"
 
@@ -17,23 +18,21 @@ namespace fs = std::filesystem;
 class PathContainsFixtureBase
     : public ::testing::TestWithParam<std::tuple<fs::path, fs::path, bool>> {
 protected:
-    [[nodiscard]] fs::path basepath() const { return basepath_; };
+    [[nodiscard]] fs::path basepath() const { return basedir_.path(); };
     [[nodiscard]] fs::path directory() const {
         return basepath() / directory_;
     };
     [[nodiscard]] fs::path path() const { return basepath() / path_; };
     virtual void SetUp_(const fs::path &directory, const fs::path &path) = 0;
-    void TearDown() override { fs::remove_all(basepath()); }
 
 private:
-    fs::path basepath_ = fs::temp_directory_path() / "crash_report_tests";
+    TemporaryDirectory basedir_{"crash_report_tests"};
     fs::path directory_;
     fs::path path_;
 };
 
 void PathContainsFixtureBase::SetUp_(const fs::path &_directory,
                                      const fs::path &_path) {
-    fs::create_directories(basepath());
     // Make sure the dirs are going to be under basepath.
     assert(_directory.is_relative() and _path.is_relative());
     directory_ = _directory;

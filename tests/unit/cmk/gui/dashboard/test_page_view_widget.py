@@ -10,14 +10,31 @@ import pytest
 
 from cmk.ccc.user import UserId
 from cmk.gui.config import Config
-from cmk.gui.dashboard.page_view_widget import ViewWidgetEditPage, ViewWidgetIFrameTokenPage
+from cmk.gui.dashboard.page_view_widget import (
+    _ViewWidgetIFrameRequestParameters,
+    ViewWidgetEditPage,
+    ViewWidgetIFrameTokenPage,
+)
+from cmk.gui.dashboard.store import DashboardStore, get_all_dashboards, save_all_dashboards
 from cmk.gui.http import request
 from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
+from cmk.gui.type_defs import (
+    ColumnSpec,
+    ContextFilterConfig,
+    ContextualLinkEntryConfig,
+    DashboardEmbeddedViewSpec,
+)
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
-from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
+from cmk.shared_typing.drill_up_button import DrillUpButton
+from tests.testlib.unit.gui.web_test_app import SetConfig, WebTestAppForCMK
+from tests.testlib.unit.rest_api_client import ClientRegistry
+from tests.unit.cmk.gui.helpers.dashboard_api_test_helper import create_dashboard_payload
 from tests.unit.cmk.gui.helpers.dashboard_widget_resolution_test_helper import dashboard_token
+from tests.unit.cmk.gui.helpers.setup_mode_test_helper import form_values
 
 
 def _assert_posts_message_without_inline_script(page: str, message_type: str) -> None:
@@ -64,9 +81,88 @@ def test_widget_edit_view_posts_save_completed_to_parent(
     _assert_posts_message_without_inline_script(response.text, "cmk:view:save-completed")
 
 
+@pytest.mark.usefixtures("patch_theme")
+@pytest.mark.parametrize(
+    "wato_enabled, kept_filters",
+    [
+        pytest.param(True, ["host_labels", "wato_folder"], id="with Setup"),
+        pytest.param(False, ["host_labels"], id="folder without Setup"),
+    ],
+)
+def test_widget_edit_view_duplicate_keeps_the_offered_filters_of_a_custom_column_link(
+    clients: ClientRegistry,
+    with_automation_user: tuple[UserId, str],
+    logged_in_admin_wsgi_app: WebTestAppForCMK,
+    set_config: SetConfig,
+    wato_enabled: bool,
+    kept_filters: list[str],
+) -> None:
+    owner = with_automation_user[0]
+    clients.DashboardClient.create_relative_grid_dashboard(create_dashboard_payload("board", {}))
+    link = ContextualLinkEntryConfig(
+        title="allhosts",
+        location=("views", "allhosts"),
+        filters=[
+            ContextFilterConfig(filter_id="host_labels", key="cmk/os_family"),
+            ContextFilterConfig(filter_id="wato_folder"),
+        ],
+        include_context=False,
+        include_time_range=True,
+        show_filter_form=False,
+    )
+    get_all_dashboards()[(owner, "board")]["embedded_views"] = {
+        "source": DashboardEmbeddedViewSpec(
+            single_infos=[],
+            datasource="hosts",
+            layout="table",
+            painters=[ColumnSpec(name="host", parameters={"color_choices": []})],
+            group_painters=[],
+            sorters=[],
+            browser_reload=0,
+            num_columns=1,
+            column_headers="pergroup",
+            column_links={0: link},
+        )
+    }
+    save_all_dashboards(owner)
+    DashboardStore.get_instance.cache_clear()  # type: ignore[attr-defined]
+
+    with set_config(wato_enabled=wato_enabled):
+        editor = logged_in_admin_wsgi_app.get(
+            "/NO_SITE/check_mk/widget_edit_view.py"
+            f"?dashboard=board&owner={owner}&embedded_id=copy&mode=duplicate"
+            "&source_embedded_id=source",
+            status=HTTPStatus.OK,
+        )
+        fields = form_values(editor.text, "widget_view")
+        # The page's script numbers the entries of each list.
+        for name in fields:
+            if index := re.search(r"_indexof_(\d+)$", name):
+                fields[name] = fields[name] or index.group(1)
+        saved = logged_in_admin_wsgi_app.post(
+            "/NO_SITE/check_mk/widget_edit_view.py",
+            data={**fields, "_save": "1"},
+            status=HTTPStatus.OK,
+        )
+    assert "cmk:view:save-completed" in saved.text, re.findall(
+        r"class=\"error\"[^>]*>(.*?)</div>", saved.text
+    )
+    DashboardStore.get_instance.cache_clear()  # type: ignore[attr-defined]
+
+    copy = get_all_dashboards()[(owner, "board")]["embedded_views"]["copy"]
+    kept = [f for f in link["filters"] if f["filter_id"] in kept_filters]
+    assert copy.get("column_links") == {0: {**link, "filters": kept}}
+
+
 @pytest.mark.usefixtures("request_context", "patch_theme")
 def test_widget_iframe_token_redirects_to_shared_dashboard() -> None:
-    ctx = PageContext(config=Config(), request=request, transactions=transactions, session=session)
+    ctx = PageContext(
+        config=Config(),
+        request=request,
+        transactions=transactions,
+        session=session,
+        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+    )
     request.set_var("widget_id", "any")
 
     # The token's dashboard does not exist, which disables the token
@@ -78,3 +174,30 @@ def test_widget_iframe_token_redirects_to_shared_dashboard() -> None:
     assert "shared_dashboard.py?cmk-token=" in page
     # No error message follows the redirect
     assert page.rstrip().endswith("</html>")
+
+
+def _set_iframe_request(**drill_down_source: str) -> None:
+    for variable, value in {
+        "dashboard_name": "main",
+        "dashboard_owner": "",
+        "widget_id": "view-1",
+        "embedded_id": "view-1",
+        **drill_down_source,
+    }.items():
+        request.set_var(variable, value)
+
+
+@pytest.mark.usefixtures("request_context")
+def test_drill_up_names_the_dashboard_around_the_iframe() -> None:
+    _set_iframe_request(drill_down_source_title="Overview")
+
+    assert _ViewWidgetIFrameRequestParameters.from_request(request).drill_up() == DrillUpButton(
+        title="Overview"
+    )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_drill_up_is_none_without_a_dashboard_to_name() -> None:
+    _set_iframe_request()
+
+    assert _ViewWidgetIFrameRequestParameters.from_request(request).drill_up() is None

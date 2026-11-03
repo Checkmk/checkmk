@@ -16,9 +16,13 @@ const props = defineProps<{
   stale?: boolean | undefined
   /** Two-letter labels, for a state column too tight to spell the state out. */
   abbreviated?: boolean | undefined
+  /** Sized to sit inside a line of text rather than to fill the state column. */
+  inline?: boolean | undefined
 }>()
 
 const { _t } = usei18n()
+
+const short = computed<boolean>(() => props.abbreviated === true || props.inline === true)
 
 const assertNever = (value: never): never => {
   throw new Error(`Unhandled host state: ${String(value)}`)
@@ -30,18 +34,18 @@ const stateLabel = computed<TranslatedString>(() => {
     case 'UP':
       return _t('UP')
     case 'DOWN':
-      return props.abbreviated ? _t('DO') : _t('DOWN')
+      return short.value ? _t('DO') : _t('DOWN')
     case 'UNREACHABLE':
-      return props.abbreviated ? _t('UN') : _t('UNREACH')
+      return short.value ? _t('UN') : _t('UNREACH')
     case 'PENDING':
-      return props.abbreviated ? _t('PD') : _t('PENDING')
+      return short.value ? _t('PD') : _t('PENDING')
     default:
       return assertNever(state)
   }
 })
 
 const stateTitle = computed<TranslatedString | undefined>(() => {
-  if (!props.abbreviated) {
+  if (!short.value) {
     return undefined
   }
   const state = props.state
@@ -75,7 +79,12 @@ const stateTone = computed<StateTone>(() => {
   }
 })
 
-const tagSize = computed<StateTagSize>(() => (props.abbreviated ? 'compact' : 'default'))
+const tagSize = computed<StateTagSize>(() => {
+  if (props.inline) {
+    return 'inline'
+  }
+  return props.abbreviated ? 'compact' : 'default'
+})
 </script>
 
 <template>

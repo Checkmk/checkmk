@@ -32,6 +32,8 @@ import type { MapRead } from '@/maps/types/api'
 const props = defineProps<{
   map: MapRead
   selected: boolean
+  /** Whether the table has the selection column; the row has a box only if it may be deleted. */
+  showSelect: boolean
   showActions: boolean
 }>()
 
@@ -46,9 +48,8 @@ const { _t } = usei18n()
 const auth = useAuth()
 
 const title = computed(() => props.map.alias || props.map.name)
-// A selection is only offered to someone who can act on it. The connection asks
-// the same composable the header does, so cells and header cannot disagree.
-const showSelect = computed(() => auth.canCreateMaps.value)
+// The connection asks the same composable the header does, so cells and header
+// cannot disagree.
 const showConnection = useShowConnection()
 </script>
 
@@ -56,11 +57,22 @@ const showConnection = useShowConnection()
   <tr class="maps-map-list-table-row" :class="{ 'maps-map-list-table-row--selected': selected }">
     <td v-if="showSelect" class="maps-map-list-table-row__select" @click.stop>
       <CmkCheckbox
+        v-if="map.can_delete"
         :model-value="selected"
         :aria-label="_t('Select %{name}', { name: title })"
         @update:model-value="emit('toggle-select', map.name)"
       />
     </td>
+    <td v-if="showActions" class="maps-map-list-table-row__cell" @click.stop>
+      <MapRowActions
+        :map="map"
+        variant="inline"
+        @clone="emit('clone', $event)"
+        @export="emit('export', $event)"
+        @delete="emit('delete', $event)"
+      />
+    </td>
+    <td class="maps-map-list-table-row__cell">{{ map.name }}</td>
     <td class="maps-map-list-table-row__cell maps-map-list-table-row__cell--stretch">
       <div class="maps-map-list-table-row__name">
         <MapsLink
@@ -75,23 +87,8 @@ const showConnection = useShowConnection()
         <MapFlags v-if="auth.isAdmin.value" :map="map" variant="text" />
       </div>
     </td>
-    <td v-if="showActions" class="maps-map-list-table-row__cell" @click.stop>
-      <MapRowActions
-        :map="map"
-        variant="inline"
-        @clone="emit('clone', $event)"
-        @export="emit('export', $event)"
-        @delete="emit('delete', $event)"
-      />
-    </td>
     <td class="maps-map-list-table-row__cell">
       {{ mapTypeLabel(map.view.type, _t) }}
-    </td>
-    <td class="maps-map-list-table-row__cell maps-map-list-table-row__cell--dimmed">
-      {{ mapOwnerLabel(map, auth.user.value?.user_id, _t) }}
-    </td>
-    <td class="maps-map-list-table-row__cell">
-      {{ mapVisibilityLabel(map, _t) }}
     </td>
     <td v-if="showConnection" class="maps-map-list-table-row__cell">
       <MapConnectionLabel :connection-id="map.connection_id" />
@@ -103,6 +100,12 @@ const showConnection = useShowConnection()
         {{ untranslated('—') }}
       </span>
       <span v-else>{{ map.object_count }}</span>
+    </td>
+    <td class="maps-map-list-table-row__cell maps-map-list-table-row__cell--dimmed">
+      {{ mapOwnerLabel(map, auth.user.value?.user_id, _t) }}
+    </td>
+    <td class="maps-map-list-table-row__cell">
+      {{ mapVisibilityLabel(map, _t) }}
     </td>
   </tr>
 </template>

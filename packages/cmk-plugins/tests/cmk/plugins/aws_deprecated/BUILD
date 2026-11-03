@@ -8,8 +8,6 @@ py_cmk_test(
     deps = [
         "//packages/cmk-plugins/cmk/plugins/aws_deprecated",
         requirement("mypy-boto3-logs"),
-        requirement("polyfactory"),
         requirement("python-dateutil"),
-        requirement("requests"),
     ],
 )

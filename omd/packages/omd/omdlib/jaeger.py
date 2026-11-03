@@ -98,7 +98,7 @@ TRACE_JAEGER_ADMIN_PORT = PortHook(
     display_name="The port",
     default_port=14269,
     activation=_write_jaeger_admin_port_conf,
-    choices=network_port_has_error,
+    choices=lambda _edition: network_port_has_error,
     depends=lambda c: c.get("TRACE_RECEIVE") == "on",
 )
 
@@ -107,20 +107,20 @@ TRACE_JAEGER_UI_PORT = PortHook(
     display_name="The port",
     default_port=16686,
     activation=_write_jaeger_ui_port_conf,
-    choices=network_port_has_error,
+    choices=lambda _edition: network_port_has_error,
     depends=lambda c: c.get("TRACE_RECEIVE") == "on",
 )
 
 TRACE_RECEIVE = Hook(
     name="TRACE_RECEIVE",
-    choices=[("on", "enable"), ("off", "disable")],
+    choices=lambda _edition: [("on", "enable"), ("off", "disable")],
     default=lambda _edition: "off",
     activation=write_jaeger_apache_conf,
 )
 
 TRACE_RECEIVE_ADDRESS = Hook(
     name="TRACE_RECEIVE_ADDRESS",
-    choices=ip_address_list_has_error,
+    choices=lambda _edition: ip_address_list_has_error,
     default=lambda _edition: "[::1]",
     depends=lambda c: c.get("TRACE_RECEIVE") == "on",
     activation=write_jaeger_receiver_conf,
@@ -131,20 +131,20 @@ TRACE_RECEIVE_PORT = PortHook(
     display_name="Trace receiving port",
     default_port=4417,
     activation=write_jaeger_receiver_conf,
-    choices=network_port_has_error,
+    choices=lambda _edition: network_port_has_error,
     depends=lambda c: c.get("TRACE_RECEIVE") == "on",
 )
 
 TRACE_SEND = Hook(
     name="TRACE_SEND",
-    choices=[("on", "enable"), ("off", "disable")],
+    choices=lambda _edition: [("on", "enable"), ("off", "disable")],
     default=lambda _edition: "off",
     activation=null_action,
 )
 
 TRACE_SEND_TARGET = Hook(
     name="TRACE_SEND_TARGET",
-    choices=re.compile(r"^(local_site|https?://[^\:]+:[0-9]{4,5})$$"),
+    choices=lambda _edition: re.compile(r"^(local_site|https?://[^\:]+:[0-9]{4,5})$$"),
     default=lambda _edition: "local_site",
     depends=lambda c: c.get("TRACE_SEND") == "on",
     activation=null_action,
@@ -152,7 +152,7 @@ TRACE_SEND_TARGET = Hook(
 
 TRACE_SERVICE_NAMESPACE = Hook(
     name="TRACE_SERVICE_NAMESPACE",
-    choices=re.compile(r"^[a-zA-Z0-9_\.-]*$$"),
+    choices=lambda _edition: re.compile(r"^[a-zA-Z0-9_\.-]*$$"),
     default=lambda _edition: "",
     depends=lambda c: c.get("TRACE_SEND") == "on",
     activation=null_action,

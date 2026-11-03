@@ -8,33 +8,43 @@
 //! See [`crate::updater`] for what the three artifacts are and how they relate.
 
 use super::connection;
+#[cfg(unix)]
+use super::install;
+#[cfg(windows)]
+use super::platform::parse_key_value;
+use super::source;
 use super::verification;
 use crate::agent_receiver_api;
+use crate::agent_receiver_api::ApiError;
 use crate::config::{
     tmp_path_for_atomical_save, JSONLoader, JSONLoaderMissingSafe, Registry, TOMLLoader,
     UpdaterRegistration,
 };
+#[cfg(windows)]
+use crate::constants;
 use crate::environment::PathResolver;
+use crate::modes::registration::AddedConnection;
 use crate::site_spec;
 use crate::types::AgentHash;
-use anyhow::{bail, Context, Error, Result as AnyhowResult};
+use anyhow::{anyhow, bail, Context, Error, Result as AnyhowResult};
 use log::{log, Level};
 use serde::{Deserialize, Serialize};
 use serde_with::DisplayFromStr;
 use std::fs;
+use std::fs::File;
 use std::io;
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use x509_parser::certificate::X509Certificate;
-
-#[cfg(windows)]
-use super::platform::parse_key_value;
-#[cfg(windows)]
-use crate::constants;
 
 /// Fallback update interval, matching the default of the agent updater ruleset.
 const DEFAULT_INTERVAL: u64 = 3600;
+
+/// Shortest interval the daemon runs its cycle at: the finest step the ruleset
+/// offers. Only a configuration edited by hand can ask for less.
+const MIN_INTERVAL: Duration = Duration::from_secs(60);
 
 /// Permissions of the state file: owner only, as for the connection registry.
 /// The state carries the last error, which quotes paths and the site address.
@@ -49,6 +59,11 @@ const PACKAGE_FILE_MODE: u32 = 0o640;
 /// Longest last error reported to the site, in characters. The state file may
 /// hold a longer one - the site only quotes it back in its deployment views.
 const LAST_ERROR_MAX_LEN: usize = 512;
+
+/// The file the Windows agent service installs from its update directory
+/// (`kDefaultMsiFileName` in `agents/wnx`).
+#[cfg(windows)]
+const WINDOWS_UPDATE_FILE: &str = "check_mk_agent.msi";
 
 fn default_activated() -> bool {
     true
@@ -75,6 +90,14 @@ pub struct UpdaterConfig {
     /// PEM-encoded certificates whose signatures are accepted for an agent package. .
     #[serde(default)]
     pub signature_keys: Vec<String>,
+
+    /// Where the privileged install step of this host listens.
+    ///
+    /// Linux only: the bakery writes it into the configuration of a package
+    /// that ships the installer unit. Absent means a package can be fetched but
+    /// not handed over to anybody.
+    #[serde(default)]
+    pub installer_socket: Option<PathBuf>,
 }
 
 impl TOMLLoader for UpdaterConfig {}
@@ -226,18 +249,42 @@ const AGENT_HASH_KEY: &str = "hash";
 
 /// An agent package as the site delivered it, not verified yet.
 ///
-/// It becomes a file only through [`UpdatePackage::verify`], which turns it
-/// into a [`VerifiedUpdatePackage`] - the only one that can be saved.
+/// Cannot be saved
 #[derive(Debug)]
 pub struct UpdatePackage {
     /// Hash the site named it by, and the name it is spooled under later.
-    pub hash: AgentHash,
+    hash: AgentHash,
 
     /// Target platform of the package, which decides its file name extension.
-    pub platform: String,
+    platform: String,
 
     /// The package itself.
-    pub bytes: Vec<u8>,
+    bytes: Vec<u8>,
+}
+
+/// Whether a fetch insists on a signature it can verify.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SignatureCheck {
+    /// Refuse a package whose signature does not verify.
+    Required,
+
+    /// Spool the package whatever its signature says.
+    Skip,
+}
+
+impl SignatureCheck {
+    /// How a package checked this way is named, wherever it is named: in the
+    /// controller log and in the line the update mode prints.
+    ///
+    /// The spooled file carries no mark of what was checked about it, so these
+    /// lines are the only record of it, and both must word it the same way.
+    pub fn package_name(self, hash: &AgentHash) -> String {
+        let checked = match self {
+            Self::Required => "Verified",
+            Self::Skip => "UNVERIFIED",
+        };
+        format!("{checked} agent package {hash}")
+    }
 }
 
 impl UpdatePackage {
@@ -249,7 +296,7 @@ impl UpdatePackage {
     ///
     /// # Returns
     ///
-    /// The same package, verified.
+    /// The same package as [`VerifiedPackage`].
     ///
     /// # Errors
     ///
@@ -259,38 +306,46 @@ impl UpdatePackage {
         self,
         signatures: &[agent_receiver_api::AgentSignature],
         local_certificates: &[X509Certificate],
-    ) -> AnyhowResult<VerifiedUpdatePackage> {
+    ) -> AnyhowResult<VerifiedPackage> {
         verification::verify(&self.bytes, signatures, local_certificates)?;
-        Ok(VerifiedUpdatePackage {
-            hash: self.hash,
-            platform: self.platform,
-            bytes: self.bytes,
-        })
+        Ok(VerifiedPackage(self))
+    }
+
+    /// Take the package as it is, with its signature never looked at.
+    ///
+    /// The one way to an [`UnverifiedPackage`], and nothing it yields can be
+    /// passed where a [`VerifiedPackage`] is asked for. Private on purpose:
+    /// only the [`SignatureCheck::Skip`] branch of [`Updater::fetch_update`],
+    /// which `--skip-signatures` reaches, may call it.
+    ///
+    /// In future this API entry may be disabled, removed or limited.
+    fn accept_unverified(self) -> UnverifiedPackage {
+        log::warn!(
+            "Not checking the signature of the agent package {}, as asked: \
+             nothing vouches for it",
+            self.hash
+        );
+        UnverifiedPackage(self)
     }
 }
 
-/// An agent package whose signature has been checked.
+/// An agent package a signature of the site vouches for.
+///
+/// Reached only through [`UpdatePackage::verify`], so a function that asks for
+/// one is asking for a package that was checked.
 #[derive(Debug)]
-pub struct VerifiedUpdatePackage {
-    /// Hash the site named it by, and the name it is spooled under.
-    pub hash: AgentHash,
+pub struct VerifiedPackage(UpdatePackage);
 
-    /// Target platform of the package, which decides its file name extension.
-    pub platform: String,
+impl VerifiedPackage {
+    fn hash(&self) -> &AgentHash {
+        &self.0.hash
+    }
 
-    /// The package itself.
-    pub bytes: Vec<u8>,
-}
-
-impl VerifiedUpdatePackage {
-    /// Write the package to `dir` as `<hash>.<extension>`, creating `dir` if it
-    /// does not exist yet.
+    /// Write the package to `dir`, as described at [`spool`], and report where
+    /// it went.
     ///
-    /// This is the point where bytes delivered by a semi-trusted site turn into
-    /// a file that a privileged process will install.
-    ///
-    /// The package appears under its `<hash>.<extension>` atomically, so that an
-    /// interrupted save cannot leave a truncated one behind for the installer.
+    /// The spooled file carries no mark of what was checked about it, so that
+    /// line is the only record of it.
     ///
     /// # Returns
     ///
@@ -301,18 +356,88 @@ impl VerifiedUpdatePackage {
     /// If no package format is known for the platform, or if the directory or
     /// the package cannot be written.
     pub fn save(&self, dir: &Path) -> AnyhowResult<PathBuf> {
-        let path = dir.join(format!(
-            "{}.{}",
-            self.hash,
-            package_extension(&self.platform)?
-        ));
-        fs::create_dir_all(dir).context(format!("Failed to create {dir:?}"))?;
-        let tmp_path = tmp_path_for_atomical_save(&path);
-        write_restricted(&tmp_path, &self.bytes, PACKAGE_FILE_MODE)
-            .context(format!("Failed to write {tmp_path:?}"))?;
-        fs::rename(&tmp_path, &path).context(format!("Failed to move {tmp_path:?} to {path:?}"))?;
+        let path = spool(&self.0, dir)?;
+        log::info!("Spooled: {self} at {path:?}, waiting for the installer");
         Ok(path)
     }
+}
+
+/// An agent package nothing vouches for.
+///
+/// It can be spooled - `--skip-signatures` exists for that - but only by
+/// [`UnverifiedPackage::save_unverified`], which no caller reaches by reflex
+/// or by mistaking it for the checked one.
+#[derive(Debug)]
+pub struct UnverifiedPackage(UpdatePackage);
+
+impl UnverifiedPackage {
+    fn hash(&self) -> &AgentHash {
+        &self.0.hash
+    }
+
+    /// Write the package to `dir`, as described at [`spool`], although nothing
+    /// says the site it came from is the one it claims to come from, and report
+    /// where it went.
+    ///
+    /// The line it writes is a warning, visible without `-v`: the only word
+    /// anyone gets that a privileged installer is about to take a package
+    /// nobody vouched for.
+    ///
+    /// # Returns
+    ///
+    /// The path the package was written to.
+    ///
+    /// # Errors
+    ///
+    /// If no package format is known for the platform, or if the directory or
+    /// the package cannot be written.
+    pub fn save_unverified(&self, dir: &Path) -> AnyhowResult<PathBuf> {
+        let path = spool(&self.0, dir)?;
+        log::warn!("Spooled: {self} at {path:?}, waiting for the installer");
+        Ok(path)
+    }
+}
+
+impl std::fmt::Display for VerifiedPackage {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", SignatureCheck::Required.package_name(&self.0.hash))
+    }
+}
+
+impl std::fmt::Display for UnverifiedPackage {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", SignatureCheck::Skip.package_name(&self.0.hash))
+    }
+}
+
+/// Atomically write `package` to `dir` as `<hash>.<extension>`,
+/// `dir` may be created if absent.
+///
+/// This is the point where bytes delivered by a semi-trusted site turn into a
+/// file that a privileged process will install. Private, and reached only
+/// through [`VerifiedPackage::save`] or [`UnverifiedPackage::save_unverified`]:
+/// the writing is the same, what differs is who may ask for it.
+///
+/// # Returns
+///
+/// The path the package was written to.
+///
+/// # Errors
+///
+/// If no package format is known for the platform, or if the directory or the
+/// package cannot be written.
+fn spool(package: &UpdatePackage, dir: &Path) -> AnyhowResult<PathBuf> {
+    let path = dir.join(format!(
+        "{}.{}",
+        package.hash,
+        package_extension(&package.platform)?
+    ));
+    fs::create_dir_all(dir).context(format!("Failed to create {dir:?}"))?;
+    let tmp_path = tmp_path_for_atomical_save(&path);
+    write_restricted(&tmp_path, &package.bytes, PACKAGE_FILE_MODE)
+        .context(format!("Failed to write {tmp_path:?}"))?;
+    fs::rename(&tmp_path, &path).context(format!("Failed to move {tmp_path:?} to {path:?}"))?;
+    Ok(path)
 }
 
 /// File name extension of an agent package, by the platform the bakery names.
@@ -328,6 +453,37 @@ fn package_extension(platform: &str) -> AnyhowResult<&'static str> {
         "windows_msi" => Ok("msi"),
         other => bail!("No agent package format known for the platform {other:?}"),
     }
+}
+
+/// Refuse a package verification could not accept, before it is downloaded.
+///
+/// A pre-check, never an acceptance: [`UpdatePackage::verify`] stays the only
+/// thing that passes a package.
+///
+/// # Errors
+///
+/// If the site signed the package with nothing, if this host has no usable
+/// signature key, or if the site signed with no certificate among those keys.
+fn ensure_verifiable(
+    offered: &agent_receiver_api::TargetAgent,
+    local_certificates: &[X509Certificate],
+) -> AnyhowResult<()> {
+    if offered.signatures.is_empty() {
+        bail!(
+            "The site offers the agent package {} but has not signed it",
+            offered.aghash
+        );
+    }
+    if local_certificates.is_empty() {
+        bail!("No usable signature key is configured for this host");
+    }
+    if !verification::any_certificate_is_trusted(&offered.signatures, local_certificates) {
+        bail!(
+            "The site signed the agent package {} with no certificate this host trusts",
+            offered.aghash
+        );
+    }
+    Ok(())
 }
 
 /// What the site answered a check with. Nothing was changed to learn it.
@@ -348,32 +504,270 @@ pub enum CheckOutcome {
         target: AgentHash,
         installed: AgentHash,
     },
+
+    /// The site of the update source serves no agent updates: likely the Community edition.
+    SourceUnavailable,
+}
+
+/// What a fetch did. Nothing is installed here: the package is spooled for the
+/// privileged installer, which is the step after this one.
+#[derive(Debug, PartialEq, Eq)]
+pub enum FetchOutcome {
+    /// No site was asked: the updater is not operational or no registered
+    /// connection can reach one. The reason is logged.
+    NotPossible,
+
+    /// The site has no agent package for this host.
+    NoPackage,
+
+    /// The site offers the package this host already runs.
+    UpToDate(AgentHash),
+
+    /// The package is waiting for the installer. `signature` says whether
+    /// anything vouched for it: the spooled file itself does not tell them
+    /// apart, so the run that produced it has to say so.
+    Spooled {
+        hash: AgentHash,
+        path: PathBuf,
+        signature: SignatureCheck,
+
+        /// The signatures the site delivered with the package.
+        signatures: Vec<agent_receiver_api::AgentSignature>,
+    },
+
+    /// The site of the update source serves no agent updates: it answered 501.
+    SourceUnavailable,
+
+    /// The site no longer has the package it offered: it answered 409 to the
+    /// download. The next status request names the package that replaced it.
+    Superseded,
+}
+
+/// What the hand-over of a spooled package to the privileged install step did.
+#[cfg(unix)]
+#[derive(Debug, PartialEq, Eq)]
+pub enum InstallOutcome {
+    /// The configuration names no installer socket, so this host has no
+    /// privileged install step. The package stays where it was spooled.
+    NoInstaller,
+
+    /// The install step has taken the package and finished.
+    HandedOver,
+}
+
+/// What the site offers, as [`Updater::offered_update`] decided it.
+///
+/// Carries the package itself in the one case a fetch goes on, and which of the
+/// two ways it ends without one this is - [`FetchOutcome`] names those for the
+/// caller, this one keeps the package out of the public surface.
+#[derive(Debug, PartialEq, Eq)]
+enum OfferedUpdate<'a> {
+    /// The site has no agent package for this host.
+    NoPackage,
+
+    /// The site offers the package this host already runs.
+    UpToDate(AgentHash),
+
+    /// The site offers a package other than the installed one: fetch it.
+    Due(&'a agent_receiver_api::TargetAgent),
+}
+
+/// What the site answered a status request with, short of an error.
+#[derive(Debug)]
+pub enum UpdateAvailabilityStatus {
+    Available(agent_receiver_api::UpdateStatusResponse),
+    Unavailable,
+}
+
+/// What the site answered a download with, short of an error.
+#[derive(Debug)]
+enum PackageDownload {
+    Downloaded(UpdatePackage),
+
+    /// The site serves no agent updates: it answered 501.
+    Unavailable,
+
+    /// The site no longer has the offered package: it answered 409.
+    Superseded,
+}
+
+/// An [`Updater`] that holds `update.lock`, loaded after taking it.
+///
+/// Only a locked updater changes the update state, so no process writes the
+/// state back from a copy that another process changed in the meantime.
+/// Dropping it releases the lock.
+pub struct WritableUpdater {
+    updater: Updater,
+    _lock: File,
+}
+
+impl std::ops::Deref for WritableUpdater {
+    type Target = Updater;
+
+    fn deref(&self) -> &Updater {
+        &self.updater
+    }
+}
+
+impl std::ops::DerefMut for WritableUpdater {
+    fn deref_mut(&mut self) -> &mut Updater {
+        &mut self.updater
+    }
+}
+
+impl WritableUpdater {
+    /// Note `hash` before the hand-over: installing it may end this process.
+    pub fn store_pending_hash(&mut self, hash: &AgentHash) -> AnyhowResult<()> {
+        self.state.pending_hash = Some(hash.to_string());
+        self.state.save(&self.state_path)
+    }
+
+    /// Settle the package handed over in an earlier run: the installed hash says
+    /// whether its installation took effect, and a failure the install step
+    /// reported gives the reason. With nothing pending, or nothing known about
+    /// the installed agent, the state stays as it is.
+    pub fn settle_pending_install(&mut self) -> AnyhowResult<()> {
+        let Some(pending) = self.state.pending_hash.as_deref() else {
+            return Ok(());
+        };
+        let Some(info) = &self.agent_info else {
+            return Ok(());
+        };
+        if info.hash.as_str() == pending {
+            self.record_applied_update()
+        } else {
+            #[cfg(unix)]
+            let reported = self.reported_install_error(pending);
+            // On Windows no install step reports a result.
+            #[cfg(windows)]
+            let reported = None;
+            self.record_failed_install(reported)
+        }
+    }
+
+    /// The pending package runs: record when, and drop the error that preceded it.
+    fn record_applied_update(&mut self) -> AnyhowResult<()> {
+        self.state.last_update = Some(SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs());
+        self.state.pending_hash = None;
+        self.state.last_error = None;
+        self.state.save(&self.state_path)
+    }
+
+    /// The pending package does not run: record that its installation failed.
+    fn record_failed_install(&mut self, reported: Option<String>) -> AnyhowResult<()> {
+        let pending = self.state.pending_hash.as_deref().unwrap_or("unknown");
+        let error = match reported {
+            Some(reported) => {
+                format!("The installation of agent package {pending} failed: {reported}")
+            }
+            None => format!(
+                "The installation of agent package {} did not take effect, the installed agent is {}",
+                pending,
+                self.agent_info
+                    .as_ref()
+                    .map_or("unknown", |info| info.hash.as_str())
+            ),
+        };
+        log::warn!("{error}");
+        self.state.last_error = Some(error);
+        self.state.pending_hash = None;
+        self.state.save(&self.state_path)
+    }
+
+    /// The error the install step reported for `pending`, if it reported a
+    /// failure of that package. An absent or unreadable report is no reason.
+    #[cfg(unix)]
+    fn reported_install_error(&self, pending: &str) -> Option<String> {
+        let result: super::install::InstallResult =
+            serde_json::from_slice(&fs::read(&self.install_result_path).ok()?).ok()?;
+        if result.aghash.as_str() != pending || result.success {
+            return None;
+        }
+        result.error
+    }
+
+    /// The site of the source answered 501: no more requests go through it.
+    pub fn record_source_unavailable(&mut self) -> AnyhowResult<()> {
+        let Some(source) = self.state.source.as_mut() else {
+            return Ok(());
+        };
+        if !source.available {
+            return Ok(());
+        }
+        source.available = false;
+        log::warn!(
+            "The site of the update source serves no agent updates, connection {} gets no more update requests",
+            source.uuid
+        );
+        self.state.save(&self.state_path)
+    }
+
+    /// Keep `err` with its causes for the next status request to report.
+    pub fn record_error(&mut self, err: &Error) -> AnyhowResult<()> {
+        self.state.last_error = Some(format!("{err:#}"));
+        self.state.save(&self.state_path)
+    }
+
+    /// The cycle ended with nothing left to do, so there is no error to report.
+    pub fn clear_last_error(&mut self) -> AnyhowResult<()> {
+        if self.state.last_error.take().is_none() {
+            return Ok(());
+        }
+        self.state.save(&self.state_path)
+    }
+
+    /// The hand-over did not happen, so nothing waits for installation.
+    pub fn clear_pending_hash(&mut self) -> AnyhowResult<()> {
+        self.state.pending_hash = None;
+        self.state.save(&self.state_path)
+    }
+}
+
+/// The update configuration, as this run found it.
+#[derive(Debug)]
+enum ConfigState {
+    /// No file: agent updates are not configured for this host.
+    Absent,
+
+    /// A file that failed to load.
+    Broken(Error),
+
+    Loaded(UpdaterConfig),
 }
 
 /// The three updater artifacts of this host, loaded together.
 ///
 /// Fields are private: what is missing or broken is only observable through
-/// [`Updater::is_operational`] and [`Updater::summary`].
+/// [`Updater::is_configured`], [`Updater::is_operational`] and
+/// [`Updater::summary`].
 pub struct Updater {
-    config: Option<UpdaterConfig>,
+    config: ConfigState,
     state: UpdateState,
     agent_info: Option<AgentInfo>,
     load_error: Option<Error>,
 
     /// Where the state was read from, and where it is written back.
     state_path: PathBuf,
+
+    /// Where a verified package is spooled for the privileged installer.
+    package_dir: PathBuf,
+
+    /// Where the privileged install step reports how the installation went.
+    #[cfg(unix)]
+    install_result_path: PathBuf,
 }
 
 impl Updater {
     pub fn new(paths: &PathResolver) -> Self {
         let mut load_error = None;
-        let config = Self::load_or_log(
-            "updater configuration",
-            Level::Warn,
-            UpdaterConfig::load_if_configured(&paths.updater_config_path),
-            &mut load_error,
-        )
-        .flatten();
+        let config = match UpdaterConfig::load_if_configured(&paths.updater_config_path) {
+            Ok(None) => ConfigState::Absent,
+            Ok(Some(config)) => ConfigState::Loaded(config),
+            Err(error) => {
+                log::warn!("Continuing without updater configuration: {error:#}");
+                ConfigState::Broken(error)
+            }
+        };
         if !paths.updater_state_path.exists() {
             log::info!(
                 "No updater state at {:?}, starting from the default state",
@@ -404,95 +798,85 @@ impl Updater {
             agent_info,
             load_error,
             state_path: paths.updater_state_path.clone(),
+            package_dir: paths.updater_package_dir.clone(),
+            #[cfg(unix)]
+            install_result_path: paths.install_result_path.clone(),
         }
     }
 
-    /// Record the connection a registration just created as the update source.
+    /// Bring the update source in line with the registered connections, after
+    /// a run that changed them (TD 4.4).
     ///
-    /// `Keep` fills an empty slot or replaces a source whose connection is
-    /// absent from the registry.
-    /// `Overwrite` replaces the source in any case.
-    /// `Manual` leaves it alone - with it the updater is the operator's business.
+    /// `update.lock` is taken only when the source changes. A run that changes
+    /// nothing doesn't wait for an update cycle that holds the lock, and doesn't
+    /// create the download directory.
     ///
     /// # Arguments
     ///
-    /// * `registration` - what the host is configured to do about the updater
-    /// * `source` - the connection the registration created
-    /// * `registry` - the registry the registration just wrote
+    /// * `added_connections` - the connections this run registered, in order
+    /// * `updater_registration` - the Registration option of this run
+    /// * `registry` - the registry as the run left it
     ///
     /// # Errors
     ///
-    /// If the registry cannot be read or the state cannot be written.
-    pub fn register_update_source(
-        &mut self,
-        registration: &UpdaterRegistration,
-        source: UpdateSource,
+    /// If the lock can't be taken or the state can't be written.
+    pub fn determine_source(
+        paths: &PathResolver,
+        added_connections: &[AddedConnection],
+        updater_registration: &UpdaterRegistration,
         registry: &Registry,
     ) -> AnyhowResult<()> {
-        match registration {
-            UpdaterRegistration::Overwrite => self.state.source = Some(source),
-            UpdaterRegistration::Keep => {
-                // The recorded source is replaced when it is absent, or
-                // dangling: no registered connection carries its UUID.
-                match self.recorded_source_site(registry) {
-                    Some(site_id) => log::info!(
-                        "Keeping the recorded update source: its connection is still registered at {site_id}"
-                    ),
-                    None => {
-                        log::info!(
-                            "Refreshing the update source: no registered connection carries the recorded UUID"
-                        );
-                        self.state.source = Some(source);
-                    }
-                }
-            }
-            UpdaterRegistration::Manual => log::info!(
-                "Keeping the recorded update source: updater registration is {registration:?}"
-            ),
+        for connection in added_connections {
+            source::report(connection, updater_registration, registry);
         }
-        self.state.save(&self.state_path)
-    }
-
-    /// Drop the recorded update source when its connection is gone from the
-    /// registry.
-    ///
-    /// # Arguments
-    ///
-    /// * `registry` - the registry as it is after the deletion
-    ///
-    /// # Errors
-    ///
-    /// If the state cannot be written.
-    pub fn forget_vanished_update_source(&mut self, registry: &Registry) -> AnyhowResult<()> {
-        if self.recorded_source_site(registry).is_some() {
-            return Ok(());
-        }
-        let Some(source) = self.state.source.take() else {
-            return Ok(());
+        let reconciled = |recorded: Option<&UpdateSource>| {
+            source::determine_update_source(
+                recorded,
+                added_connections,
+                updater_registration,
+                registry,
+            )
         };
+        let recorded = UpdateState::load_missing_safe(&paths.updater_state_path)
+            .ok()
+            .and_then(|state| state.source);
+        if reconciled(recorded.as_ref()) == recorded {
+            return Ok(());
+        }
+        // The state may have changed until the lock was taken, so decide again.
+        let mut updater = Self::writable(paths)?;
+        let source = reconciled(updater.state.source.as_ref());
+        if source == updater.state.source {
+            return Ok(());
+        }
         log::info!(
-            "Dropping the recorded update source: connection {} is not registered anymore",
-            source.uuid
+            "Update source: {:?}, before: {:?}",
+            source,
+            updater.state.source
         );
-        self.state.save(&self.state_path)
+        updater.state.source = source;
+        updater.state.save(&updater.state_path)
     }
 
-    /// The site of the recorded update source, as the registry keys its
-    /// connection.
-    ///
-    /// # Arguments
-    ///
-    /// * `registry` - the registry to look the recorded connection up in
-    ///
-    /// # Returns
-    ///
-    /// `None` when no source is recorded, or when its connection is not in the
-    /// registry anymore.
-    fn recorded_source_site(&self, registry: &Registry) -> Option<site_spec::SiteID> {
-        self.state
-            .source
-            .as_ref()
-            .and_then(|recorded| registry.retrieve_standard_connection_by_uuid(&recorded.uuid))
+    /// Wait for `update.lock`, then load: the state is read only once no other
+    /// process can change it.
+    pub fn writable(paths: &PathResolver) -> AnyhowResult<WritableUpdater> {
+        let lock = Self::lock(paths)?;
+        Ok(WritableUpdater {
+            updater: Self::new(paths),
+            _lock: lock,
+        })
+    }
+
+    fn lock(paths: &PathResolver) -> AnyhowResult<File> {
+        fs::create_dir_all(&paths.updater_package_dir)?;
+        let file = File::options()
+            .create(true)
+            .write(true)
+            .truncate(false)
+            .open(paths.updater_package_dir.join("update.lock"))?;
+        file.lock()?;
+        Ok(file)
     }
 
     /// Keeps the *first* error: the artifacts fail independently, so the first
@@ -521,13 +905,14 @@ impl Updater {
             self.load_error
                 .as_ref()
                 .map_or_else(String::new, |error| format!(", error '{error:#}'")),
-            self.config
-                .as_ref()
-                .map(|config| format!(
+            match &self.config {
+                ConfigState::Absent => String::from("not configured"),
+                ConfigState::Broken(error) => format!("broken: {error:#}"),
+                ConfigState::Loaded(config) => format!(
                     "activated: {}, interval {}",
                     config.activated, config.interval
-                ))
-                .unwrap_or_else(|| String::from("not configured")),
+                ),
+            },
             self.state,
             self.agent_info
                 .as_ref()
@@ -540,14 +925,45 @@ impl Updater {
     ///
     /// True even when the config has `activated = false`: by design.
     pub fn is_operational(&self) -> bool {
-        self.load_error.is_none() && self.config.is_some() && self.agent_info.is_some()
+        self.load_error.is_none() && self.loaded_config().is_some() && self.agent_info.is_some()
+    }
+
+    /// Whether agent updates are configured for this host.
+    ///
+    /// # Errors
+    ///
+    /// If a configuration is deployed but failed to load.
+    pub fn is_configured(&self) -> AnyhowResult<bool> {
+        match &self.config {
+            ConfigState::Absent => Ok(false),
+            ConfigState::Broken(error) => Err(anyhow!("{error:#}")),
+            ConfigState::Loaded(_) => Ok(true),
+        }
+    }
+
+    /// The configuration, if it loaded.
+    fn loaded_config(&self) -> Option<&UpdaterConfig> {
+        match &self.config {
+            ConfigState::Loaded(config) => Some(config),
+            ConfigState::Absent | ConfigState::Broken(_) => None,
+        }
     }
 
     /// Whether this host is supposed to update its agent automatically.
     ///
     /// False when no updater configuration is deployed at all.
     fn is_activated(&self) -> bool {
-        self.config.as_ref().is_some_and(|config| config.activated)
+        self.loaded_config().is_some_and(|config| config.activated)
+    }
+
+    /// Time between two cycles of the daemon, the default without a loaded
+    /// configuration, and never less than [`MIN_INTERVAL`].
+    pub fn interval(&self) -> Duration {
+        Duration::from_secs(
+            self.loaded_config()
+                .map_or(DEFAULT_INTERVAL, |config| config.interval),
+        )
+        .max(MIN_INTERVAL)
     }
 
     /// Integrated updater main action.
@@ -598,7 +1014,10 @@ impl Updater {
         let Some(selected) = self.find_update_connection(registry) else {
             return Ok(CheckOutcome::NotPossible);
         };
-        let status = self.request_update_status(api, &selected)?;
+        let status = match self.request_update_status(api, &selected)? {
+            UpdateAvailabilityStatus::Available(status) => status,
+            UpdateAvailabilityStatus::Unavailable => return Ok(CheckOutcome::SourceUnavailable),
+        };
         let Some(target) = status.target_agent.map(|offered| offered.aghash) else {
             return Ok(CheckOutcome::NoPackage);
         };
@@ -613,6 +1032,151 @@ impl Updater {
         } else {
             CheckOutcome::UpdateAvailable { target, installed }
         })
+    }
+
+    /// Fetch the package the site offers and spool it for the installer.
+    ///
+    /// The four steps of an update the controller can do today: ask the site,
+    /// refuse what could not be verified anyway, download the rest, and write
+    /// it out once its signature has been checked. Installing the spooled
+    /// package is not part of it.
+    ///
+    /// The package is the only thing written: recording the outcome in the
+    /// updater state is left to the cycle that calls this.
+    ///
+    /// With [`SignatureCheck::Skip`] both the pre-check and the verification
+    /// are left out, and a package nothing vouches for is spooled for a
+    /// privileged installer that cannot tell the difference. Only
+    /// `--skip-signatures` asks for that.
+    ///
+    /// # Errors
+    ///
+    /// If the site cannot be reached, offers a package this host could not
+    /// verify, does not deliver the package it offered, delivers one that fails
+    /// verification, or if the package cannot be spooled.
+    pub fn fetch_update(
+        &self,
+        registry: &Registry,
+        api: &impl agent_receiver_api::AgentUpdate,
+        signature: SignatureCheck,
+    ) -> AnyhowResult<FetchOutcome> {
+        let Some(selected) = self.find_update_connection(registry) else {
+            return Ok(FetchOutcome::NotPossible);
+        };
+        let status = match self.request_update_status(api, &selected)? {
+            UpdateAvailabilityStatus::Available(status) => status,
+            UpdateAvailabilityStatus::Unavailable => return Ok(FetchOutcome::SourceUnavailable),
+        };
+        let offered = match self.offered_update(&status)? {
+            OfferedUpdate::NoPackage => return Ok(FetchOutcome::NoPackage),
+            OfferedUpdate::UpToDate(installed) => return Ok(FetchOutcome::UpToDate(installed)),
+            OfferedUpdate::Due(offered) => offered,
+        };
+        // The PEM blocks are kept alive here: the parsed certificates borrow
+        // the DER they decode to.
+        let blocks = self.signature_key_blocks();
+        let local_certificates = verification::certificates(&blocks);
+        if signature == SignatureCheck::Required {
+            ensure_verifiable(offered, &local_certificates)?;
+        }
+        let package = match self.download_package(api, &selected, offered)? {
+            PackageDownload::Downloaded(package) => package,
+            PackageDownload::Unavailable => return Ok(FetchOutcome::SourceUnavailable),
+            PackageDownload::Superseded => return Ok(FetchOutcome::Superseded),
+        };
+        let (hash, path) = match signature {
+            SignatureCheck::Required => {
+                let package = package.verify(&offered.signatures, &local_certificates)?;
+                (package.hash().clone(), package.save(&self.package_dir)?)
+            }
+            SignatureCheck::Skip => {
+                let package = package.accept_unverified();
+                (
+                    package.hash().clone(),
+                    package.save_unverified(&self.package_dir)?,
+                )
+            }
+        };
+        Ok(FetchOutcome::Spooled {
+            hash,
+            path,
+            signature,
+            signatures: offered.signatures.clone(),
+        })
+    }
+
+    /// Hand a spooled package to the privileged install step of this host.
+    ///
+    /// The step is a process of its own, running as root: this side only names
+    /// the package and the signatures the site delivered with it, and the unit
+    /// verifies both again against trust anchors the agent user cannot write.
+    /// Blocks until the step has finished, which is as long as the package
+    /// manager takes.
+    ///
+    /// Writes no artifact of the updater, as [`Updater::fetch_update`] does
+    /// not: reconciling the outcome belongs to the cycle, which compares hashes
+    /// on a later run.
+    ///
+    /// # Arguments
+    ///
+    /// * `package` - the spooled package, as [`Updater::fetch_update`]
+    ///   reported it
+    /// * `signatures` - the signatures of the status that named the package
+    ///
+    /// # Returns
+    ///
+    /// [`InstallOutcome::NoInstaller`] when no installer socket is configured.
+    ///
+    /// # Errors
+    ///
+    /// If the installer socket cannot be reached or the request not be
+    /// delivered.
+    #[cfg(unix)]
+    pub fn install_update(
+        &self,
+        package: &Path,
+        signatures: &[agent_receiver_api::AgentSignature],
+    ) -> AnyhowResult<InstallOutcome> {
+        let Some(socket) = self
+            .loaded_config()
+            .and_then(|config| config.installer_socket.as_ref())
+        else {
+            log::info!("No installer socket is configured, leaving {package:?} where it is");
+            return Ok(InstallOutcome::NoInstaller);
+        };
+        log::info!("Handing {package:?} to the installer at {socket:?}");
+        install::hand_over(
+            socket,
+            &install::InstallRequest {
+                package: package.to_path_buf(),
+                signatures: signatures.to_vec(),
+            },
+        )?;
+        Ok(InstallOutcome::HandedOver)
+    }
+
+    /// Hand a spooled package to the update mechanism of the Windows agent.
+    ///
+    /// The agent service watches its update directory, which is the download
+    /// directory, for [`WINDOWS_UPDATE_FILE`] and installs it with msiexec
+    /// (`CheckForUpdateFile` in `agents/wnx`). The rename stays within one
+    /// directory and is atomic, so the service never sees a partial file.
+    ///
+    /// # Returns
+    ///
+    /// Where the package now waits for the agent service.
+    ///
+    /// # Errors
+    ///
+    /// If the package cannot be renamed, for example while the service still
+    /// holds an earlier one.
+    #[cfg(windows)]
+    pub fn hand_over_msi(&self, package: &Path) -> AnyhowResult<PathBuf> {
+        let target = self.package_dir.join(WINDOWS_UPDATE_FILE);
+        fs::rename(package, &target)
+            .context(format!("Failed to move {package:?} to {target:?}"))?;
+        log::info!("Handed {package:?} to the Windows agent service as {target:?}");
+        Ok(target)
     }
 
     /// The connection to run an update over, if the updater may run at all.
@@ -636,10 +1200,21 @@ impl Updater {
             log::info!("No agent update is possible: the updater is not operational");
             return None;
         }
-        let Some(selected) = connection::select(registry) else {
+
+        let Some(source) = &self.state.source else {
+            log::info!("No agent update is possible: no update source is recorded");
+            return None;
+        };
+
+        if !source.available {
+            log::info!("No agent update is possible: the site of the update source serves no agent updates");
+            return None;
+        }
+
+        let Some(selected) = connection::select(registry, source.uuid) else {
             log::info!(
-                "No agent update is possible: none of the registered connections carries a \
-                 site address (imported connections cannot serve updates)"
+"No agent update is possible: the connection {} of the update source is not registered",
+    source.uuid
             );
             return None;
         };
@@ -653,6 +1228,11 @@ impl Updater {
     /// what the host reports. It is authenticated by the client certificate of
     /// the connection alone - see [`super::connection`].
     ///
+    /// # Returns
+    ///
+    /// [`UpdateAvailabilityStatus::Unavailable`] when the site answers 501: it
+    /// serves no agent updates.
+    ///
     /// # Errors
     ///
     /// If nothing is known about the installed agent, if the site address
@@ -662,13 +1242,13 @@ impl Updater {
         &self,
         api: &impl agent_receiver_api::AgentUpdate,
         selected: &connection::UpdateConnection<'_>,
-    ) -> AnyhowResult<agent_receiver_api::UpdateStatusResponse> {
+    ) -> AnyhowResult<UpdateAvailabilityStatus> {
         let agent_info = self
             .agent_info
             .as_ref()
             .context("Cannot ask for an agent update without the info of the installed agent")?;
         let url = site_spec::make_site_url(selected.site_id, &selected.connection.receiver_port)?;
-        api.update_status(
+        match api.update_status(
             &url,
             &selected.connection.trust,
             &agent_receiver_api::UpdateStatusBody {
@@ -676,66 +1256,110 @@ impl Updater {
                 installed_aghash: &agent_info.hash,
                 last_error: self.reported_last_error(),
             },
-        )
-        .context(format!(
-            "Agent update status request to {} failed",
-            selected.site_id
-        ))
+        ) {
+            Ok(status) => Ok(UpdateAvailabilityStatus::Available(status)),
+            Err(ApiError::Status {
+                status: http::StatusCode::NOT_IMPLEMENTED,
+                ..
+            }) => Ok(UpdateAvailabilityStatus::Unavailable),
+            Err(error) => Err(Error::new(error).context(format!(
+                "Agent update status request to {} failed",
+                selected.site_id
+            ))),
+        }
     }
 
-    /// Fetch the package `status` offers, unless it is the installed one.
+    /// The package `status` offers, unless there is nothing to fetch.
+    ///
+    /// The one place that decides whether an update is due, so that the
+    /// decision and the transfer cannot disagree about which package is meant.
+    ///
+    /// # Returns
+    ///
+    /// The package to fetch, or which of the two ways a fetch ends without one
+    /// this is: the site offers no package, or offers the installed one. The
+    /// reason is logged as well.
+    ///
+    /// # Errors
+    ///
+    /// If nothing is known about the installed agent.
+    fn offered_update<'a>(
+        &self,
+        status: &'a agent_receiver_api::UpdateStatusResponse,
+    ) -> AnyhowResult<OfferedUpdate<'a>> {
+        let installed = &self
+            .agent_info
+            .as_ref()
+            .context("Cannot decide on an agent update without the info of the installed agent")?
+            .hash;
+        let Some(offered) = status.target_agent.as_ref() else {
+            log::info!("No agent package available for this host");
+            return Ok(OfferedUpdate::NoPackage);
+        };
+        if offered.aghash == *installed {
+            log::info!("The installed agent {installed} is the one the site offers");
+            return Ok(OfferedUpdate::UpToDate(offered.aghash.clone()));
+        }
+        Ok(OfferedUpdate::Due(offered))
+    }
+
+    /// Download the package `offered`, which is not the installed one.
     ///
     /// The package is not verified here: it is held in memory until its
     /// signature has been checked, and only then written anywhere.
     ///
     /// # Returns
     ///
-    /// `None` when the site offers no package, or offers the installed one -
-    /// the two ways a check ends without an update.
+    /// [`PackageDownload::Unavailable`] when the site answers 501, and
+    /// [`PackageDownload::Superseded`] when it answers 409.
     ///
     /// # Errors
     ///
     /// If nothing is known about the installed agent, if the site address
     /// cannot be assembled, or if the site does not deliver the package.
-    pub fn download_update(
+    fn download_package(
         &self,
         api: &impl agent_receiver_api::AgentUpdate,
         selected: &connection::UpdateConnection<'_>,
-        status: &agent_receiver_api::UpdateStatusResponse,
-    ) -> AnyhowResult<Option<UpdatePackage>> {
+        offered: &agent_receiver_api::TargetAgent,
+    ) -> AnyhowResult<PackageDownload> {
         let agent_info = self
             .agent_info
             .as_ref()
             .context("Cannot download an agent update without the info of the installed agent")?;
-        let Some(target) = status.target_agent.as_ref().map(|offered| &offered.aghash) else {
-            log::info!("No agent package available for this host");
-            return Ok(None);
-        };
-        if *target == agent_info.hash {
-            log::info!("The installed agent {target} is the one the site offers");
-            return Ok(None);
-        }
+        let target = &offered.aghash;
         let url = site_spec::make_site_url(selected.site_id, &selected.connection.receiver_port)?;
-        let bytes = api
-            .download_agent(
-                &url,
-                &selected.connection.trust,
-                &agent_receiver_api::AgentDownloadBody {
-                    platform: &agent_info.platform,
-                    aghash: target,
-                },
-            )
-            .context(format!(
-                "Agent update download of {target} from {} failed",
-                selected.site_id
-            ))?;
+        let bytes = match api.download_agent(
+            &url,
+            &selected.connection.trust,
+            &agent_receiver_api::AgentDownloadBody {
+                platform: &agent_info.platform,
+                aghash: target,
+            },
+        ) {
+            Ok(bytes) => bytes,
+            Err(ApiError::Status {
+                status: http::StatusCode::NOT_IMPLEMENTED,
+                ..
+            }) => return Ok(PackageDownload::Unavailable),
+            Err(ApiError::Status {
+                status: http::StatusCode::CONFLICT,
+                ..
+            }) => return Ok(PackageDownload::Superseded),
+            Err(error) => {
+                return Err(Error::new(error).context(format!(
+                    "Agent update download of {target} from {} failed",
+                    selected.site_id
+                )))
+            }
+        };
         log::info!(
             "Downloaded the agent package {target} ({} bytes) from {}, installed is {}",
             bytes.len(),
             selected.site_id,
             agent_info.hash
         );
-        Ok(Some(UpdatePackage {
+        Ok(PackageDownload::Downloaded(UpdatePackage {
             hash: target.clone(),
             platform: agent_info.platform.clone(),
             bytes,
@@ -755,9 +1379,14 @@ impl Updater {
     }
 
     pub fn signature_keys(&self) -> &[String] {
-        self.config
-            .as_ref()
+        self.loaded_config()
             .map_or(&[], |config| &config.signature_keys)
+    }
+
+    /// The configured signature keys as PEM blocks, which
+    /// [`verification::certificates`] turns into certificates.
+    fn signature_key_blocks(&self) -> Vec<x509_parser::pem::Pem> {
+        verification::pem_blocks(self.signature_keys())
     }
 
     pub fn platform(&self) -> Option<&str> {
@@ -804,9 +1433,11 @@ mod tests {
     use crate::config::test_helpers::TestRegistry;
     use crate::config::{ConnectionMode, TrustedConnection};
     use crate::environment::SetupMode;
+    use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
     use std::cell::RefCell;
     use std::path::PathBuf;
     use std::str::FromStr;
+    use std::sync::LazyLock;
 
     use crate::agent_receiver_api::{TargetAgent, UpdateStatusResponse};
 
@@ -816,7 +1447,14 @@ mod tests {
     const SOURCE_SITE: &str = "server/site";
     const OTHER_SITE: &str = "other-server/site";
     const STATE_FILE: &str = "state.json";
+    const PACKAGE_DIR: &str = "update";
+    #[cfg(unix)]
+    const INSTALL_RESULT_FILE: &str = "agent-install-result.json";
     const PACKAGE: &[u8] = b"an agent package";
+
+    /// Length of a signature under the 2048 bit key of [`SITE_SIGNATURE`].
+    /// A signature of any other length is rejected before it is verified.
+    const RSA_SIGNATURE_LEN: usize = 256;
 
     const UPDATER_CONFIG_TOML: &str = "\
 activated = false
@@ -867,6 +1505,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
                 signature_keys: vec![String::from(
                     "-----BEGIN CERTIFICATE-----\nabc\n-----END CERTIFICATE-----\n"
                 )],
+                installer_socket: None,
             }
         );
     }
@@ -892,6 +1531,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
                 activated: true,
                 interval: DEFAULT_INTERVAL,
                 signature_keys: vec![],
+                installer_socket: None,
             }
         );
     }
@@ -963,15 +1603,6 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         }
     }
 
-    /// The source of a second registration at the site of [`some_source`],
-    /// whose connection - and with it the UUID - it replaced.
-    fn reregistered_source() -> UpdateSource {
-        UpdateSource {
-            uuid: uuid::Uuid::from_str("3c9d1e7b-6a4f-42c8-9e05-7d8b1f2a3c4d").unwrap(),
-            ..some_source()
-        }
-    }
-
     /// The source the updater saved to its state file.
     fn saved_source(updater: &Updater) -> Option<UpdateSource> {
         UpdateState::load(&updater.state_path).unwrap().source
@@ -986,138 +1617,251 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             })
     }
 
+    fn authorized_connection_of(source: &UpdateSource) -> AddedConnection {
+        AddedConnection::new(
+            source.uuid,
+            agent_receiver_api::AgentUpdateAuthorization::Authorized,
+        )
+    }
+
+    /// CMK-39588 AC4: written without an update configuration, and without a site.
     #[test]
-    fn test_register_update_source_into_a_state_without_one() {
+    fn test_reconcile_source_writes_the_uuid_and_the_availability() {
         let dir = tempfile::TempDir::new().unwrap();
-        let registry = registry_with_the_connections_of(&[(SOURCE_SITE, &some_source())]);
-        let mut updater = updater_in(&dir, UpdateState::default());
+        let paths = artifact_paths(&dir);
 
-        updater
-            .register_update_source(
-                &UpdaterRegistration::Keep,
-                some_source(),
-                &registry.registry,
-            )
-            .unwrap();
+        Updater::determine_source(
+            &paths,
+            &[authorized_connection_of(&some_source())],
+            &UpdaterRegistration::Overwrite,
+            &registry_with_the_connections_of(&[(SOURCE_SITE, &some_source())]).registry,
+        )
+        .unwrap();
 
-        assert_eq!(updater.state.source, Some(some_source()));
-        assert_eq!(saved_source(&updater), Some(some_source()));
+        let state: serde_json::Value =
+            serde_json::from_str(&fs::read_to_string(&paths.updater_state_path).unwrap()).unwrap();
+        assert_eq!(
+            state["source"],
+            serde_json::json!({"uuid": CONNECTION_UUID, "available": true})
+        );
     }
 
     #[test]
-    fn test_register_update_source_keeps_the_recorded_one() {
+    fn test_reconcile_source_without_a_change_takes_no_lock() {
         let dir = tempfile::TempDir::new().unwrap();
-        let registry = registry_with_the_connections_of(&[
-            (SOURCE_SITE, &some_source()),
-            (OTHER_SITE, &other_source()),
-        ]);
-        let mut updater = updater_in(
+        let paths = artifact_paths(&dir);
+
+        Updater::determine_source(
+            &paths,
+            &[authorized_connection_of(&some_source())],
+            &UpdaterRegistration::Manual,
+            &registry_with_the_connections_of(&[(SOURCE_SITE, &some_source())]).registry,
+        )
+        .unwrap();
+
+        assert!(!paths.updater_package_dir.exists());
+    }
+
+    #[test]
+    fn test_reconcile_source_drops_a_source_whose_connection_is_gone() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let paths = artifact_paths(&dir);
+        UpdateState {
+            source: Some(some_source()),
+            ..Default::default()
+        }
+        .save(&paths.updater_state_path)
+        .unwrap();
+
+        Updater::determine_source(
+            &paths,
+            &[],
+            &UpdaterRegistration::Manual,
+            &TestRegistry::new().registry,
+        )
+        .unwrap();
+
+        assert_eq!(
+            UpdateState::load(&paths.updater_state_path).unwrap().source,
+            None
+        );
+    }
+
+    #[test]
+    fn test_settle_pending_install_without_a_pending_package_changes_nothing() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let state = UpdateState {
+            last_error: Some(String::from("boom")),
+            ..Default::default()
+        };
+        let mut updater = writable_in(&dir, state.clone());
+
+        updater.settle_pending_install().unwrap();
+
+        assert_eq!(updater.state, state);
+    }
+
+    #[test]
+    fn test_settle_pending_install_records_the_applied_update() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let mut updater = writable_in(
             &dir,
             UpdateState {
-                source: Some(some_source()),
+                pending_hash: Some(String::from(INSTALLED_HASH)),
+                last_error: Some(String::from("boom")),
                 ..Default::default()
             },
         );
 
-        updater
-            .register_update_source(
-                &UpdaterRegistration::Keep,
-                other_source(),
-                &registry.registry,
-            )
-            .unwrap();
-
-        assert_eq!(saved_source(&updater), Some(some_source()));
-    }
-
-    #[test]
-    fn test_register_update_source_refreshes_a_vanished_recorded_one() {
-        let dir = tempfile::TempDir::new().unwrap();
-        // The registry holds the connection this registration created, which
-        // replaced the recorded one at the same site.
-        let registry = registry_with_the_connections_of(&[(SOURCE_SITE, &reregistered_source())]);
-        let mut updater = updater_in(
-            &dir,
-            UpdateState {
-                source: Some(some_source()),
-                ..Default::default()
-            },
-        );
-
-        updater
-            .register_update_source(
-                &UpdaterRegistration::Keep,
-                reregistered_source(),
-                &registry.registry,
-            )
-            .unwrap();
-
-        // Keeping the recorded source would leave it naming the connection this
-        // registration replaced.
-        assert_eq!(saved_source(&updater), Some(reregistered_source()));
-    }
-
-    #[test]
-    fn test_register_update_source_overwrites_the_recorded_one() {
-        let dir = tempfile::TempDir::new().unwrap();
-        let registry = registry_with_the_connections_of(&[
-            (SOURCE_SITE, &some_source()),
-            (OTHER_SITE, &other_source()),
-        ]);
-        let mut updater = updater_in(
-            &dir,
-            UpdateState {
-                source: Some(some_source()),
-                last_check: Some(1759276800),
-                ..Default::default()
-            },
-        );
-
-        // The recorded connection is still registered, and replaced anyway.
-        updater
-            .register_update_source(
-                &UpdaterRegistration::Overwrite,
-                other_source(),
-                &registry.registry,
-            )
-            .unwrap();
+        updater.settle_pending_install().unwrap();
 
         let saved = UpdateState::load(&updater.state_path).unwrap();
-        assert_eq!(saved.source, Some(other_source()));
-        // The rest of the state belongs to the update cycle, not to the registration.
-        assert_eq!(saved.last_check, Some(1759276800));
+        assert!(saved.last_update.is_some());
+        assert_eq!(saved.pending_hash, None);
+        assert_eq!(saved.last_error, None);
     }
 
     #[test]
-    fn test_forget_vanished_update_source_of_a_deleted_connection() {
+    fn test_settle_pending_install_records_the_failed_install() {
         let dir = tempfile::TempDir::new().unwrap();
-        // The deletion took the last connection, so the registry is empty.
-        let registry = registry_with_the_connections_of(&[]);
-        let mut updater = updater_in(
+        let mut updater = writable_in(
             &dir,
             UpdateState {
-                source: Some(some_source()),
-                last_check: Some(1759276800),
+                pending_hash: Some(String::from(TARGET_HASH)),
                 ..Default::default()
             },
         );
 
-        updater
-            .forget_vanished_update_source(&registry.registry)
-            .unwrap();
+        updater.settle_pending_install().unwrap();
 
         let saved = UpdateState::load(&updater.state_path).unwrap();
-        assert_eq!(saved.source, None);
-        // The rest of the state belongs to the update cycle, not to the deletion.
-        assert_eq!(saved.last_check, Some(1759276800));
+        assert_eq!(saved.pending_hash, None);
+        assert_eq!(
+            saved.last_error.unwrap(),
+            "The installation of agent package fedcba9876543210 did not take effect, \
+             the installed agent is 0123456789abcdef"
+        );
+    }
+
+    /// The package manager's own error explains a failure better than the
+    /// hashes do.
+    #[cfg(unix)]
+    #[test]
+    fn test_settle_pending_install_reports_the_install_steps_error() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let mut updater = writable_in(
+            &dir,
+            UpdateState {
+                pending_hash: Some(String::from(TARGET_HASH)),
+                ..Default::default()
+            },
+        );
+        fs::write(
+            &updater.install_result_path,
+            r#"{"aghash": "fedcba9876543210", "success": false, "error": "dpkg failed", "finished": 1759276800}"#,
+        )
+        .unwrap();
+
+        updater.settle_pending_install().unwrap();
+
+        assert_eq!(
+            UpdateState::load(&updater.state_path)
+                .unwrap()
+                .last_error
+                .unwrap(),
+            "The installation of agent package fedcba9876543210 failed: dpkg failed"
+        );
+    }
+
+    /// A report about another package says nothing about the pending one.
+    #[cfg(unix)]
+    #[test]
+    fn test_settle_pending_install_ignores_the_result_of_another_package() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let mut updater = writable_in(
+            &dir,
+            UpdateState {
+                pending_hash: Some(String::from(TARGET_HASH)),
+                ..Default::default()
+            },
+        );
+        fs::write(
+            &updater.install_result_path,
+            r#"{"aghash": "1111111111111111", "success": false, "error": "dpkg failed", "finished": 1759276800}"#,
+        )
+        .unwrap();
+
+        updater.settle_pending_install().unwrap();
+
+        assert_eq!(
+            UpdateState::load(&updater.state_path)
+                .unwrap()
+                .last_error
+                .unwrap(),
+            "The installation of agent package fedcba9876543210 did not take effect, \
+             the installed agent is 0123456789abcdef"
+        );
+    }
+
+    /// Without the info of the installed agent there is nothing to compare
+    /// with, so the note stays for a later run.
+    #[test]
+    fn test_settle_pending_install_without_agent_info_keeps_the_note() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let state = UpdateState {
+            pending_hash: Some(String::from(TARGET_HASH)),
+            ..Default::default()
+        };
+        let mut updater = writable_in(&dir, state.clone());
+        updater.agent_info = None;
+
+        updater.settle_pending_install().unwrap();
+
+        assert_eq!(updater.state, state);
+    }
+
+    /// The site quotes the error back to the administrator, so the cause must
+    /// survive the context the cycle wraps it in.
+    #[test]
+    fn test_record_error_keeps_the_cause() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let mut updater = writable_in(&dir, UpdateState::default());
+        let error = Error::msg("connection refused").context("Agent update status request failed");
+
+        updater.record_error(&error).unwrap();
+
+        assert_eq!(
+            UpdateState::load(&updater.state_path)
+                .unwrap()
+                .last_error
+                .unwrap(),
+            "Agent update status request failed: connection refused"
+        );
     }
 
     #[test]
-    fn test_forget_vanished_update_source_of_a_re_registered_site() {
+    fn test_clear_last_error_removes_the_recorded_error() {
         let dir = tempfile::TempDir::new().unwrap();
-        // The site is registered again, with a connection of its own.
-        let registry = registry_with_the_connections_of(&[(SOURCE_SITE, &reregistered_source())]);
-        let mut updater = updater_in(
+        let mut updater = writable_in(
+            &dir,
+            UpdateState {
+                last_error: Some(String::from("boom")),
+                ..Default::default()
+            },
+        );
+
+        updater.clear_last_error().unwrap();
+
+        assert_eq!(
+            UpdateState::load(&updater.state_path).unwrap().last_error,
+            None
+        );
+    }
+
+    #[test]
+    fn test_record_source_unavailable_marks_the_saved_source() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let mut updater = writable_in(
             &dir,
             UpdateState {
                 source: Some(some_source()),
@@ -1125,69 +1869,28 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             },
         );
 
-        updater
-            .forget_vanished_update_source(&registry.registry)
-            .unwrap();
+        updater.record_source_unavailable().unwrap();
 
-        assert_eq!(saved_source(&updater), None);
+        assert!(!saved_source(&updater).unwrap().available);
     }
 
+    /// The note is written before the hand-over, which may not return.
     #[test]
-    fn test_forget_vanished_update_source_keeps_a_registered_one() {
+    fn test_store_pending_hash_saves_the_note() {
         let dir = tempfile::TempDir::new().unwrap();
-        let registry = registry_with_the_connections_of(&[(SOURCE_SITE, &some_source())]);
-        let mut updater = updater_in(
-            &dir,
-            UpdateState {
-                source: Some(some_source()),
-                ..Default::default()
-            },
+        let mut updater = writable_in(&dir, UpdateState::default());
+
+        updater
+            .store_pending_hash(&TARGET_HASH.parse().unwrap())
+            .unwrap();
+
+        assert_eq!(
+            UpdateState::load(&updater.state_path)
+                .unwrap()
+                .pending_hash
+                .unwrap(),
+            TARGET_HASH
         );
-
-        updater
-            .forget_vanished_update_source(&registry.registry)
-            .unwrap();
-
-        assert_eq!(updater.state.source, Some(some_source()));
-    }
-
-    #[test]
-    fn test_forget_vanished_update_source_without_a_recorded_one() {
-        let dir = tempfile::TempDir::new().unwrap();
-        let registry = registry_with_the_connections_of(&[]);
-        let mut updater = updater_in(&dir, UpdateState::default());
-
-        updater
-            .forget_vanished_update_source(&registry.registry)
-            .unwrap();
-
-        assert_eq!(updater.state.source, None);
-    }
-
-    #[test]
-    fn test_register_update_source_with_manual_registration() {
-        let dir = tempfile::TempDir::new().unwrap();
-        let registry = registry_with_the_connections_of(&[
-            (SOURCE_SITE, &some_source()),
-            (OTHER_SITE, &other_source()),
-        ]);
-        let mut updater = updater_in(
-            &dir,
-            UpdateState {
-                source: Some(some_source()),
-                ..Default::default()
-            },
-        );
-
-        updater
-            .register_update_source(
-                &UpdaterRegistration::Manual,
-                other_source(),
-                &registry.registry,
-            )
-            .unwrap();
-
-        assert_eq!(saved_source(&updater), Some(some_source()));
     }
 
     #[test]
@@ -1364,7 +2067,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         let updater = Updater::new(&paths);
 
         assert!(updater.load_error.is_none());
-        assert_eq!(updater.config.unwrap().interval, 60);
+        assert_eq!(updater.loaded_config().unwrap().interval, 60);
         assert_eq!(updater.state.last_check, Some(1759276800));
         assert_eq!(updater.agent_info.unwrap().hash.as_str(), INSTALLED_HASH);
     }
@@ -1375,7 +2078,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
 
         let updater = Updater::new(&artifact_paths(&dir));
 
-        assert!(updater.config.is_none());
+        assert!(!updater.is_configured().unwrap());
         assert_eq!(updater.state, UpdateState::default());
         assert!(updater.agent_info.is_none());
     }
@@ -1392,6 +2095,8 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         assert!(!updater.is_operational());
     }
 
+    /// A broken configuration must not read as "not configured": the operator
+    /// has to learn that it is broken, and which file.
     #[test]
     fn test_updater_new_survives_a_malformed_config() {
         let dir = tempfile::TempDir::new().unwrap();
@@ -1400,28 +2105,95 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
 
         let updater = Updater::new(&paths);
 
-        assert!(updater.config.is_none());
         assert!(!updater.is_operational());
-        // The agent info fails to load afterwards, but the config error is kept.
         // The context quotes the path with `{:?}`, which escapes the separators
         // of a Windows path, so the expectation has to be built the same way.
         assert!(updater
-            .load_error
-            .unwrap()
+            .is_configured()
+            .unwrap_err()
             .to_string()
             .contains(&format!("{:?}", paths.updater_config_path)));
     }
 
+    /// The lock is real: no other handle can take it while the writable
+    /// updater lives, and one can once it is dropped. `artifact_paths` leaves
+    /// the download directory missing, so taking the lock has to create it.
+    #[test]
+    fn test_writable_holds_the_update_lock_until_dropped() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let paths = artifact_paths(&dir);
+        let lock_path = paths.updater_package_dir.join("update.lock");
+
+        let updater = Updater::writable(&paths).unwrap();
+
+        assert!(File::open(&lock_path).unwrap().try_lock().is_err());
+
+        drop(updater);
+
+        assert!(File::open(&lock_path).unwrap().try_lock().is_ok());
+    }
+
+    /// The contract with `CheckForUpdateFile` in `agents/wnx`: the agent service
+    /// installs whatever `check_mk_agent.msi` it finds in the update directory.
+    #[cfg(windows)]
+    #[test]
+    fn test_hand_over_msi_leaves_the_package_as_check_mk_agent_msi() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let updater = updater_spooling_into(&dir);
+        fs::create_dir_all(&updater.package_dir).unwrap();
+        let package = updater.package_dir.join("fedcba9876543210.msi");
+        fs::write(&package, PACKAGE).unwrap();
+        fs::write(
+            updater.package_dir.join("check_mk_agent.msi"),
+            b"an older one",
+        )
+        .unwrap();
+
+        let handed_over = updater.hand_over_msi(&package).unwrap();
+
+        assert_eq!(handed_over, updater.package_dir.join("check_mk_agent.msi"));
+        assert_eq!(fs::read(&handed_over).unwrap(), PACKAGE);
+        assert!(!package.exists());
+    }
+
+    #[test]
+    fn test_interval_of_the_loaded_configuration() {
+        let config = UpdaterConfig {
+            interval: 900,
+            ..some_config().unwrap()
+        };
+
+        assert_eq!(
+            updater(Some(config), some_agent_info()).interval(),
+            Duration::from_secs(900)
+        );
+    }
+
+    #[test]
+    fn test_interval_without_a_configuration_falls_back_to_the_default() {
+        assert_eq!(
+            updater(None, some_agent_info()).interval(),
+            Duration::from_secs(DEFAULT_INTERVAL)
+        );
+    }
+
+    /// An interval of 0 would make the daemon ask the site in a tight loop.
+    #[test]
+    fn test_interval_never_drops_below_the_minimum() {
+        let config = UpdaterConfig {
+            interval: 0,
+            ..some_config().unwrap()
+        };
+
+        assert_eq!(
+            updater(Some(config), some_agent_info()).interval(),
+            MIN_INTERVAL
+        );
+    }
+
     #[test]
     fn test_summary_without_config_and_agent_info() {
-        let summary = Updater {
-            config: None,
-            state: UpdateState::default(),
-            agent_info: None,
-            load_error: None,
-            state_path: PathBuf::from(STATE_FILE),
-        }
-        .summary();
+        let summary = updater(None, None).summary();
 
         assert!(summary.starts_with("operational: false, config 'not configured'"));
         assert!(summary.contains("agent hash 'unknown'"));
@@ -1457,7 +2229,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     #[test]
     fn test_summary_reports_config_and_hash_but_no_signature_keys() {
         let updater = Updater {
-            config: Some(UpdaterConfig {
+            config: ConfigState::Loaded(UpdaterConfig {
                 signature_keys: vec![String::from(SIGNATURE_KEY)],
                 ..some_config().unwrap()
             }),
@@ -1514,6 +2286,35 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             activated: true,
             interval: 60,
             signature_keys: vec![],
+            installer_socket: None,
+        })
+    }
+
+    /// A configuration that accepts what the site signed in [`SITE_SIGNATURE`].
+    fn config_trusting_the_signer() -> Option<UpdaterConfig> {
+        Some(UpdaterConfig {
+            signature_keys: vec![SITE_SIGNATURE.certificate.clone()],
+            ..some_config().unwrap()
+        })
+    }
+
+    /// A configuration whose one signature key signed nothing, to tell "no key
+    /// configured" apart from "the key is not the one the site signed with".
+    ///
+    /// The certificate is for an elliptic curve key - fast
+    fn config_trusting_a_stranger() -> Option<UpdaterConfig> {
+        let key_pair = rcgen::KeyPair::generate_for(&rcgen::PKCS_ECDSA_P256_SHA256).unwrap();
+        let certificate = rcgen::CertificateParams::default()
+            .self_signed(&key_pair)
+            .unwrap();
+        Some(UpdaterConfig {
+            signature_keys: vec![pem_rfc7468::encode_string(
+                "CERTIFICATE",
+                pem_rfc7468::LineEnding::LF,
+                certificate.der(),
+            )
+            .unwrap()],
+            ..some_config().unwrap()
         })
     }
 
@@ -1527,11 +2328,29 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     /// The state plays no role for [`Updater::is_operational`].
     fn updater(config: Option<UpdaterConfig>, agent_info: Option<AgentInfo>) -> Updater {
         Updater {
-            config,
+            config: config.map_or(ConfigState::Absent, ConfigState::Loaded),
             state: UpdateState::default(),
             agent_info,
             load_error: None,
             state_path: PathBuf::from(STATE_FILE),
+            package_dir: PathBuf::from(PACKAGE_DIR),
+            #[cfg(unix)]
+            install_result_path: PathBuf::from(INSTALL_RESULT_FILE),
+        }
+    }
+
+    /// An updater whose registration recorded the connection of
+    /// [`registry_with_one_connection`] as its update source.
+    fn updater_with_source(
+        config: Option<UpdaterConfig>,
+        agent_info: Option<AgentInfo>,
+    ) -> Updater {
+        Updater {
+            state: UpdateState {
+                source: Some(some_source()),
+                ..Default::default()
+            },
+            ..updater(config, agent_info)
         }
     }
 
@@ -1540,7 +2359,27 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         Updater {
             state,
             state_path: dir.path().join(STATE_FILE),
+            #[cfg(unix)]
+            install_result_path: dir.path().join(INSTALL_RESULT_FILE),
             ..updater(some_config(), some_agent_info())
+        }
+    }
+
+    /// [`updater_in`], allowed to write its state. The lock file is never
+    /// locked: nothing else runs against `dir`.
+    fn writable_in(dir: &tempfile::TempDir, state: UpdateState) -> WritableUpdater {
+        WritableUpdater {
+            updater: updater_in(dir, state),
+            _lock: File::create(dir.path().join("update.lock")).unwrap(),
+        }
+    }
+
+    /// An updater that spools the package it fetches into `dir`, and trusts
+    /// the certificate the test site signs with.
+    fn updater_spooling_into(dir: &tempfile::TempDir) -> Updater {
+        Updater {
+            package_dir: dir.path().join(PACKAGE_DIR),
+            ..updater_with_source(config_trusting_the_signer(), some_agent_info())
         }
     }
 
@@ -1595,14 +2434,16 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     fn test_maybe_update_agent_selects_a_connection() {
         let registry = registry_with_one_connection();
 
-        assert!(updater(some_config(), some_agent_info()).handle_update_cycle(&registry.registry));
+        assert!(updater_with_source(some_config(), some_agent_info())
+            .handle_update_cycle(&registry.registry));
     }
 
     #[test]
     fn test_maybe_update_agent_without_a_reachable_site() {
         let registry = TestRegistry::new();
 
-        assert!(!updater(some_config(), some_agent_info()).handle_update_cycle(&registry.registry));
+        assert!(!updater_with_source(some_config(), some_agent_info())
+            .handle_update_cycle(&registry.registry));
     }
 
     #[test]
@@ -1650,8 +2491,30 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
 
     impl TestApi {
         fn new(target: Option<&str>) -> Self {
+            Self::answering(offered(target))
+        }
+
+        fn unsigned(target: &str) -> Self {
+            Self::answering(unsigned(target))
+        }
+
+        /// A site that offers `target` with the certificate this host trusts,
+        /// but a signature that does not match the package.
+        fn badly_signed(target: &str) -> Self {
+            Self::answering(UpdateStatusResponse {
+                target_agent: Some(TargetAgent {
+                    aghash: target.parse().unwrap(),
+                    signatures: vec![agent_receiver_api::AgentSignature {
+                        signature: BASE64.encode([0_u8; RSA_SIGNATURE_LEN]),
+                        ..SITE_SIGNATURE.clone()
+                    }],
+                }),
+            })
+        }
+
+        fn answering(response: agent_receiver_api::UpdateStatusResponse) -> Self {
             Self {
-                response: offered(target),
+                response,
                 request: RefCell::new(None),
                 download: RefCell::new(None),
             }
@@ -1677,7 +2540,8 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             base_url: &reqwest::Url,
             connection: &TrustedConnection,
             body: &agent_receiver_api::UpdateStatusBody<'_>,
-        ) -> AnyhowResult<agent_receiver_api::UpdateStatusResponse> {
+        ) -> AnyhowResult<agent_receiver_api::UpdateStatusResponse, agent_receiver_api::ApiError>
+        {
             *self.request.borrow_mut() = Some(RecordedRequest {
                 url: base_url.to_string(),
                 uuid: connection.uuid.to_string(),
@@ -1693,7 +2557,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             base_url: &reqwest::Url,
             connection: &TrustedConnection,
             body: &agent_receiver_api::AgentDownloadBody<'_>,
-        ) -> AnyhowResult<Vec<u8>> {
+        ) -> AnyhowResult<Vec<u8>, agent_receiver_api::ApiError> {
             *self.download.borrow_mut() = Some(RecordedDownload {
                 url: base_url.to_string(),
                 uuid: connection.uuid.to_string(),
@@ -1713,8 +2577,11 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             _base_url: &reqwest::Url,
             _connection: &TrustedConnection,
             _body: &agent_receiver_api::UpdateStatusBody<'_>,
-        ) -> AnyhowResult<agent_receiver_api::UpdateStatusResponse> {
-            Err(Error::msg("connection refused"))
+        ) -> AnyhowResult<agent_receiver_api::UpdateStatusResponse, agent_receiver_api::ApiError>
+        {
+            Err(agent_receiver_api::ApiError::Other(Error::msg(
+                "connection refused",
+            )))
         }
 
         fn download_agent(
@@ -1722,25 +2589,127 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             _base_url: &reqwest::Url,
             _connection: &TrustedConnection,
             _body: &agent_receiver_api::AgentDownloadBody<'_>,
-        ) -> AnyhowResult<Vec<u8>> {
-            Err(Error::msg("connection refused"))
+        ) -> AnyhowResult<Vec<u8>, agent_receiver_api::ApiError> {
+            Err(agent_receiver_api::ApiError::Other(Error::msg(
+                "connection refused",
+            )))
         }
     }
 
-    /// The status of a site that has `target` for this host.
+    /// A site that refuses one of the two requests with a status code, and
+    /// answers the other one as [`TestApi`] does for [`TARGET_HASH`].
+    struct RefusingApi {
+        status: Option<http::StatusCode>,
+        download: Option<http::StatusCode>,
+    }
+
+    impl RefusingApi {
+        fn status(code: http::StatusCode) -> Self {
+            Self {
+                status: Some(code),
+                download: None,
+            }
+        }
+
+        fn download(code: http::StatusCode) -> Self {
+            Self {
+                status: None,
+                download: Some(code),
+            }
+        }
+    }
+
+    fn refused(status: http::StatusCode) -> agent_receiver_api::ApiError {
+        agent_receiver_api::ApiError::Status { status, body: None }
+    }
+
+    impl agent_receiver_api::AgentUpdate for RefusingApi {
+        fn update_status(
+            &self,
+            _base_url: &reqwest::Url,
+            _connection: &TrustedConnection,
+            _body: &agent_receiver_api::UpdateStatusBody<'_>,
+        ) -> AnyhowResult<agent_receiver_api::UpdateStatusResponse, agent_receiver_api::ApiError>
+        {
+            match self.status {
+                Some(code) => Err(refused(code)),
+                None => Ok(offered(Some(TARGET_HASH))),
+            }
+        }
+
+        fn download_agent(
+            &self,
+            _base_url: &reqwest::Url,
+            _connection: &TrustedConnection,
+            _body: &agent_receiver_api::AgentDownloadBody<'_>,
+        ) -> AnyhowResult<Vec<u8>, agent_receiver_api::ApiError> {
+            match self.download {
+                Some(code) => Err(refused(code)),
+                None => Ok(PACKAGE.to_vec()),
+            }
+        }
+    }
+
+    /// The status of a site that has `target` for this host, signed with the
+    /// certificate [`config_trusting_the_signer`] configures.
     fn offered(target: Option<&str>) -> UpdateStatusResponse {
         UpdateStatusResponse {
             target_agent: target.map(|hash| TargetAgent {
                 aghash: hash.parse().unwrap(),
+                signatures: vec![SITE_SIGNATURE.clone()],
+            }),
+        }
+    }
+
+    /// The status of a site that has `target` for this host and signed nothing,
+    /// which is what a site whose bakery has no signature key answers.
+    fn unsigned(target: &str) -> UpdateStatusResponse {
+        UpdateStatusResponse {
+            target_agent: Some(TargetAgent {
+                aghash: target.parse().unwrap(),
                 signatures: vec![],
             }),
         }
     }
 
+    /// The signature of [`PACKAGE`] as the site delivers it with the status.
+    ///
+    /// Made once: generating the RSA key dominates the runtime of these tests.
+    /// Which signatures verification accepts is covered in [`super::verification`];
+    /// here one that passes is all that is needed.
+    static SITE_SIGNATURE: LazyLock<agent_receiver_api::AgentSignature> = LazyLock::new(|| {
+        use rsa::pkcs1v15::SigningKey;
+        use rsa::pkcs8::EncodePrivateKey;
+        use rsa::signature::{SignatureEncoding, Signer};
+        use sha2::Sha256;
+
+        let key = rsa::RsaPrivateKey::new(&mut rand::thread_rng(), 2048).unwrap();
+        let key_pair = rcgen::KeyPair::from_pkcs8_der_and_sign_algo(
+            &rustls::pki_types::PrivatePkcs8KeyDer::from(key.to_pkcs8_der().unwrap().as_bytes()),
+            &rcgen::PKCS_RSA_SHA256,
+        )
+        .unwrap();
+        let mut params = rcgen::CertificateParams::default();
+        params
+            .distinguished_name
+            .push(rcgen::DnType::CommonName, "agent package signer");
+        let certificate = params.self_signed(&key_pair).unwrap();
+        agent_receiver_api::AgentSignature {
+            certificate: pem_rfc7468::encode_string(
+                "CERTIFICATE",
+                pem_rfc7468::LineEnding::LF,
+                certificate.der(),
+            )
+            .unwrap(),
+            signature: BASE64.encode(SigningKey::<Sha256>::new(key).sign(PACKAGE).to_bytes()),
+        }
+    });
+
     /// An updater whose last update attempt ended in `last_error`.
     fn updater_after(last_error: Option<&str>) -> Updater {
         Updater {
             state: UpdateState {
+                source: Some(some_source()),
                 last_error: last_error.map(String::from),
                 ..Default::default()
             },
@@ -1751,7 +2720,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     #[test]
     fn test_request_update_status_reports_the_installed_hash_and_the_last_error() {
         let registry = registry_with_one_connection();
-        let selected = connection::select(&registry.registry).unwrap();
+        let selected = connection::select(&registry.registry, some_source().uuid).unwrap();
         let api = TestApi::new(Some(TARGET_HASH));
 
         updater_after(Some("boom"))
@@ -1769,7 +2738,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     #[test]
     fn test_request_update_status_after_a_successful_cycle_reports_no_error() {
         let registry = registry_with_one_connection();
-        let selected = connection::select(&registry.registry).unwrap();
+        let selected = connection::select(&registry.registry, some_source().uuid).unwrap();
         let api = TestApi::new(None);
 
         updater_after(None)
@@ -1784,7 +2753,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     #[test]
     fn test_request_update_status_truncates_a_long_last_error() {
         let registry = registry_with_one_connection();
-        let selected = connection::select(&registry.registry).unwrap();
+        let selected = connection::select(&registry.registry, some_source().uuid).unwrap();
         let api = TestApi::new(None);
         // Two bytes per character: truncating by byte would split one.
         let last_error = "ä".repeat(LAST_ERROR_MAX_LEN + 10);
@@ -1802,7 +2771,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     #[test]
     fn test_request_update_status_keeps_a_short_last_error_whole() {
         let registry = registry_with_one_connection();
-        let selected = connection::select(&registry.registry).unwrap();
+        let selected = connection::select(&registry.registry, some_source().uuid).unwrap();
         let api = TestApi::new(None);
         let last_error = "e".repeat(LAST_ERROR_MAX_LEN);
 
@@ -1816,11 +2785,14 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     #[test]
     fn test_request_update_status_parses_the_offered_package() {
         let registry = registry_with_one_connection();
-        let selected = connection::select(&registry.registry).unwrap();
+        let selected = connection::select(&registry.registry, some_source().uuid).unwrap();
 
-        let status = updater_after(None)
+        let UpdateAvailabilityStatus::Available(status) = updater_after(None)
             .request_update_status(&TestApi::new(Some(TARGET_HASH)), &selected)
-            .unwrap();
+            .unwrap()
+        else {
+            panic!("expected the site to answer");
+        };
 
         assert_eq!(status.target_agent.unwrap().aghash.as_str(), TARGET_HASH);
     }
@@ -1828,11 +2800,14 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     #[test]
     fn test_request_update_status_parses_a_site_without_a_package() {
         let registry = registry_with_one_connection();
-        let selected = connection::select(&registry.registry).unwrap();
+        let selected = connection::select(&registry.registry, some_source().uuid).unwrap();
 
-        let status = updater_after(None)
+        let UpdateAvailabilityStatus::Available(status) = updater_after(None)
             .request_update_status(&TestApi::new(None), &selected)
-            .unwrap();
+            .unwrap()
+        else {
+            panic!("expected the site to answer");
+        };
 
         assert!(status.target_agent.is_none());
     }
@@ -1840,7 +2815,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     #[test]
     fn test_request_update_status_without_agent_info() {
         let registry = registry_with_one_connection();
-        let selected = connection::select(&registry.registry).unwrap();
+        let selected = connection::select(&registry.registry, some_source().uuid).unwrap();
 
         let error = updater(some_config(), None)
             .request_update_status(&TestApi::new(None), &selected)
@@ -1852,7 +2827,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     #[test]
     fn test_request_update_status_names_the_site_that_did_not_answer() {
         let registry = registry_with_one_connection();
-        let selected = connection::select(&registry.registry).unwrap();
+        let selected = connection::select(&registry.registry, some_source().uuid).unwrap();
 
         let error = updater_after(None)
             .request_update_status(&UnreachableApi, &selected)
@@ -1919,6 +2894,70 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         assert!(api.request.borrow().is_none());
     }
 
+    #[test]
+    fn test_check_without_a_recorded_source_asks_nobody() {
+        let registry = registry_with_one_connection();
+        let api = TestApi::new(Some(TARGET_HASH));
+
+        let outcome = updater(some_config(), some_agent_info())
+            .check(&registry.registry, &api)
+            .unwrap();
+
+        assert_eq!(outcome, CheckOutcome::NotPossible);
+        assert!(api.request.borrow().is_none());
+    }
+
+    /// Once the site answered 501, the source gets no more requests.
+    #[test]
+    fn test_check_with_an_unavailable_source_asks_nobody() {
+        let registry = registry_with_one_connection();
+        let api = TestApi::new(Some(TARGET_HASH));
+        let updater = Updater {
+            state: UpdateState {
+                source: Some(UpdateSource {
+                    available: false,
+                    ..some_source()
+                }),
+                ..Default::default()
+            },
+            ..updater(some_config(), some_agent_info())
+        };
+
+        let outcome = updater.check(&registry.registry, &api).unwrap();
+
+        assert_eq!(outcome, CheckOutcome::NotPossible);
+        assert!(api.request.borrow().is_none());
+    }
+
+    /// Another registered connection does not stand in for a source whose own
+    /// connection is gone.
+    #[test]
+    fn test_check_whose_source_connection_is_gone_asks_nobody() {
+        let registry = registry_with_the_connections_of(&[(OTHER_SITE, &other_source())]);
+        let api = TestApi::new(Some(TARGET_HASH));
+
+        let outcome = updater_with_source(some_config(), some_agent_info())
+            .check(&registry.registry, &api)
+            .unwrap();
+
+        assert_eq!(outcome, CheckOutcome::NotPossible);
+        assert!(api.request.borrow().is_none());
+    }
+
+    #[test]
+    fn test_check_reports_a_site_without_agent_updates() {
+        let registry = registry_with_one_connection();
+
+        let outcome = updater_after(None)
+            .check(
+                &registry.registry,
+                &RefusingApi::status(http::StatusCode::NOT_IMPLEMENTED),
+            )
+            .unwrap();
+
+        assert_eq!(outcome, CheckOutcome::SourceUnavailable);
+    }
+
     /// A host that may not update itself can still be asked what it would
     /// update to: an admin wants to see that before activating anything.
     #[test]
@@ -1929,7 +2968,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             ..some_config().unwrap()
         };
 
-        let outcome = updater(Some(config), some_agent_info())
+        let outcome = updater_with_source(Some(config), some_agent_info())
             .check(&registry.registry, &TestApi::new(Some(TARGET_HASH)))
             .unwrap();
 
@@ -1967,16 +3006,64 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         );
     }
 
-    #[test]
-    fn test_download_update_fetches_a_package_that_is_not_installed() {
-        let registry = registry_with_one_connection();
-        let selected = connection::select(&registry.registry).unwrap();
-        let api = TestApi::new(None);
+    /// The package [`offered`] carries, for the functions that take it alone.
+    fn target_agent(status: &UpdateStatusResponse) -> &TargetAgent {
+        status.target_agent.as_ref().unwrap()
+    }
 
-        let package = updater_after(None)
-            .download_update(&api, &selected, &offered(Some(TARGET_HASH)))
+    #[test]
+    fn test_offered_update_is_a_package_that_is_not_installed() {
+        let status = offered(Some(TARGET_HASH));
+
+        let offered = updater_after(None).offered_update(&status).unwrap();
+
+        assert_eq!(offered, OfferedUpdate::Due(target_agent(&status)));
+    }
+
+    #[test]
+    fn test_offered_update_when_the_offered_package_is_the_installed_one() {
+        let status = offered(Some(INSTALLED_HASH));
+
+        assert_eq!(
+            updater_after(None).offered_update(&status).unwrap(),
+            OfferedUpdate::UpToDate(INSTALLED_HASH.parse().unwrap())
+        );
+    }
+
+    #[test]
+    fn test_offered_update_without_an_offered_package() {
+        let status = offered(None);
+
+        assert_eq!(
+            updater_after(None).offered_update(&status).unwrap(),
+            OfferedUpdate::NoPackage
+        );
+    }
+
+    #[test]
+    fn test_offered_update_without_agent_info() {
+        let status = offered(Some(TARGET_HASH));
+
+        let error = updater(some_config(), None)
+            .offered_update(&status)
+            .unwrap_err();
+
+        assert!(error.to_string().contains("info of the installed agent"));
+    }
+
+    #[test]
+    fn test_download_package_fetches_the_offered_package() {
+        let registry = registry_with_one_connection();
+        let selected = connection::select(&registry.registry, some_source().uuid).unwrap();
+        let api = TestApi::new(None);
+        let status = offered(Some(TARGET_HASH));
+
+        let PackageDownload::Downloaded(package) = updater_after(None)
+            .download_package(&api, &selected, target_agent(&status))
             .unwrap()
-            .unwrap();
+        else {
+            panic!("expected the site to deliver the package");
+        };
 
         assert_eq!(package.hash.as_str(), TARGET_HASH);
         assert_eq!(package.platform, "linux_deb");
@@ -1989,50 +3076,26 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     }
 
     #[test]
-    fn test_download_update_when_the_offered_package_is_the_installed_one() {
+    fn test_download_package_without_agent_info() {
         let registry = registry_with_one_connection();
-        let selected = connection::select(&registry.registry).unwrap();
-        let api = TestApi::new(None);
-
-        assert!(updater_after(None)
-            .download_update(&api, &selected, &offered(Some(INSTALLED_HASH)))
-            .unwrap()
-            .is_none());
-        assert!(api.download().is_none());
-    }
-
-    #[test]
-    fn test_download_update_without_an_offered_package() {
-        let registry = registry_with_one_connection();
-        let selected = connection::select(&registry.registry).unwrap();
-        let api = TestApi::new(None);
-
-        assert!(updater_after(None)
-            .download_update(&api, &selected, &offered(None))
-            .unwrap()
-            .is_none());
-        assert!(api.download().is_none());
-    }
-
-    #[test]
-    fn test_download_update_without_agent_info() {
-        let registry = registry_with_one_connection();
-        let selected = connection::select(&registry.registry).unwrap();
+        let selected = connection::select(&registry.registry, some_source().uuid).unwrap();
+        let status = offered(Some(TARGET_HASH));
 
         let error = updater(some_config(), None)
-            .download_update(&TestApi::new(None), &selected, &offered(Some(TARGET_HASH)))
+            .download_package(&TestApi::new(None), &selected, target_agent(&status))
             .unwrap_err();
 
         assert!(error.to_string().contains("info of the installed agent"));
     }
 
     #[test]
-    fn test_download_update_names_the_package_and_the_site_that_failed() {
+    fn test_download_package_names_the_package_and_the_site_that_failed() {
         let registry = registry_with_one_connection();
-        let selected = connection::select(&registry.registry).unwrap();
+        let selected = connection::select(&registry.registry, some_source().uuid).unwrap();
+        let status = offered(Some(TARGET_HASH));
 
         let error = updater_after(None)
-            .download_update(&UnreachableApi, &selected, &offered(Some(TARGET_HASH)))
+            .download_package(&UnreachableApi, &selected, target_agent(&status))
             .unwrap_err();
 
         assert_eq!(
@@ -2041,13 +3104,440 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         );
     }
 
-    /// A downloaded package of `platform`, ready to be saved.
-    fn verified(platform: &str) -> VerifiedUpdatePackage {
-        VerifiedUpdatePackage {
+    #[test]
+    fn test_a_signed_package_this_host_trusts_is_verifiable() {
+        let blocks =
+            updater(config_trusting_the_signer(), some_agent_info()).signature_key_blocks();
+        let status = offered(Some(TARGET_HASH));
+
+        assert!(
+            ensure_verifiable(target_agent(&status), &verification::certificates(&blocks)).is_ok()
+        );
+    }
+
+    #[test]
+    fn test_an_unsigned_package_is_not_verifiable() {
+        let blocks =
+            updater(config_trusting_the_signer(), some_agent_info()).signature_key_blocks();
+        let status = unsigned(TARGET_HASH);
+
+        let error = ensure_verifiable(target_agent(&status), &verification::certificates(&blocks))
+            .unwrap_err();
+
+        assert_eq!(
+            error.to_string(),
+            "The site offers the agent package fedcba9876543210 but has not signed it"
+        );
+    }
+
+    #[test]
+    fn test_a_package_is_not_verifiable_without_a_signature_key() {
+        let status = offered(Some(TARGET_HASH));
+
+        let error = ensure_verifiable(target_agent(&status), &[]).unwrap_err();
+
+        assert_eq!(
+            error.to_string(),
+            "No usable signature key is configured for this host"
+        );
+    }
+
+    /// The host has a key, the site signed with another: nothing the download
+    /// could add would make the package verifiable.
+    #[test]
+    fn test_a_package_signed_by_a_stranger_is_not_verifiable() {
+        let blocks =
+            updater(config_trusting_a_stranger(), some_agent_info()).signature_key_blocks();
+        let status = offered(Some(TARGET_HASH));
+
+        let error = ensure_verifiable(target_agent(&status), &verification::certificates(&blocks))
+            .unwrap_err();
+
+        assert_eq!(
+            error.to_string(),
+            "The site signed the agent package fedcba9876543210 with no certificate \
+             this host trusts"
+        );
+    }
+
+    #[test]
+    fn test_fetch_update_spools_the_package_the_site_offers() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let registry = registry_with_one_connection();
+        let updater = updater_spooling_into(&dir);
+
+        let outcome = updater
+            .fetch_update(
+                &registry.registry,
+                &TestApi::new(Some(TARGET_HASH)),
+                SignatureCheck::Required,
+            )
+            .unwrap();
+
+        let FetchOutcome::Spooled {
+            hash,
+            path,
+            signature,
+            ..
+        } = outcome
+        else {
+            panic!("expected a spooled package, got {outcome:?}");
+        };
+        assert_eq!(signature, SignatureCheck::Required);
+        assert_eq!(hash.as_str(), TARGET_HASH);
+        assert_eq!(
+            path,
+            dir.path().join(PACKAGE_DIR).join("fedcba9876543210.deb")
+        );
+        assert_eq!(fs::read(&path).unwrap(), PACKAGE);
+    }
+
+    #[test]
+    fn test_fetch_update_reports_the_signatures_the_site_delivered() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let registry = registry_with_one_connection();
+        let updater = updater_spooling_into(&dir);
+
+        let outcome = updater
+            .fetch_update(
+                &registry.registry,
+                &TestApi::new(Some(TARGET_HASH)),
+                SignatureCheck::Required,
+            )
+            .unwrap();
+
+        let FetchOutcome::Spooled { signatures, .. } = outcome else {
+            panic!("expected a spooled package, got {outcome:?}");
+        };
+        assert_eq!(signatures, vec![SITE_SIGNATURE.clone()]);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn test_install_update_without_an_installer_socket() {
+        let updater = updater(some_config(), some_agent_info());
+
+        assert_eq!(
+            updater
+                .install_update(Path::new("/spool/fedcba9876543210.deb"), &[])
+                .unwrap(),
+            InstallOutcome::NoInstaller
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn test_install_update_hands_the_package_to_the_configured_socket() {
+        use std::io::Read;
+
+        let dir = tempfile::TempDir::new().unwrap();
+        let socket = dir.path().join("cmk-agent-installer.sock");
+        let listener = std::os::unix::net::UnixListener::bind(&socket).unwrap();
+        let installer = std::thread::spawn(move || {
+            let (mut connection, _) = listener.accept().unwrap();
+            let mut request = String::new();
+            connection.read_to_string(&mut request).unwrap();
+            request
+        });
+        let updater = updater(
+            Some(UpdaterConfig {
+                installer_socket: Some(socket),
+                ..some_config().unwrap()
+            }),
+            some_agent_info(),
+        );
+
+        let outcome = updater
+            .install_update(Path::new("/spool/fedcba9876543210.deb"), &[])
+            .unwrap();
+
+        assert_eq!(outcome, InstallOutcome::HandedOver);
+        assert!(installer
+            .join()
+            .unwrap()
+            .contains("/spool/fedcba9876543210.deb"));
+    }
+
+    #[test]
+    fn test_fetch_update_when_the_site_offers_the_installed_package() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let registry = registry_with_one_connection();
+        let updater = updater_spooling_into(&dir);
+
+        let outcome = updater
+            .fetch_update(
+                &registry.registry,
+                &TestApi::new(Some(INSTALLED_HASH)),
+                SignatureCheck::Required,
+            )
+            .unwrap();
+
+        assert_eq!(
+            outcome,
+            FetchOutcome::UpToDate(INSTALLED_HASH.parse().unwrap())
+        );
+        assert!(!dir.path().join(PACKAGE_DIR).exists());
+    }
+
+    #[test]
+    fn test_fetch_update_without_a_package() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let registry = registry_with_one_connection();
+        let updater = updater_spooling_into(&dir);
+
+        let outcome = updater
+            .fetch_update(
+                &registry.registry,
+                &TestApi::new(None),
+                SignatureCheck::Required,
+            )
+            .unwrap();
+
+        assert_eq!(outcome, FetchOutcome::NoPackage);
+        assert!(!dir.path().join(PACKAGE_DIR).exists());
+    }
+
+    #[test]
+    fn test_fetch_update_when_not_operational() {
+        let registry = registry_with_one_connection();
+
+        let outcome = updater(some_config(), None)
+            .fetch_update(
+                &registry.registry,
+                &TestApi::new(Some(TARGET_HASH)),
+                SignatureCheck::Required,
+            )
+            .unwrap();
+
+        assert_eq!(outcome, FetchOutcome::NotPossible);
+    }
+
+    /// The pre-check refuses before the transfer, so the site is never asked
+    /// for the package.
+    #[test]
+    fn test_fetch_update_does_not_download_an_unsigned_package() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let registry = registry_with_one_connection();
+        let updater = updater_spooling_into(&dir);
+        let api = TestApi::unsigned(TARGET_HASH);
+
+        let error = updater
+            .fetch_update(&registry.registry, &api, SignatureCheck::Required)
+            .unwrap_err();
+
+        assert_eq!(
+            error.to_string(),
+            "The site offers the agent package fedcba9876543210 but has not signed it"
+        );
+        assert!(api.download().is_none());
+        assert!(!dir.path().join(PACKAGE_DIR).exists());
+    }
+
+    /// The pre-check lets a package through on the certificate alone, so
+    /// verification is still what rejects a signature that does not match.
+    #[test]
+    fn test_fetch_update_rejects_a_package_the_signature_does_not_match() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let registry = registry_with_one_connection();
+        let updater = updater_spooling_into(&dir);
+        let api = TestApi::badly_signed(TARGET_HASH);
+
+        let error = updater
+            .fetch_update(&registry.registry, &api, SignatureCheck::Required)
+            .unwrap_err();
+
+        assert_eq!(
+            error.to_string(),
+            "Could not verify the signature of this package"
+        );
+        assert!(api.download().is_some());
+        assert!(!dir.path().join(PACKAGE_DIR).exists());
+    }
+
+    /// What `--skip-signatures` is for: the host has no signature key yet, and
+    /// the package is spooled anyway.
+    #[test]
+    fn test_fetch_update_spools_an_unsigned_package_when_asked_to_skip() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let registry = registry_with_one_connection();
+        let updater = Updater {
+            package_dir: dir.path().join(PACKAGE_DIR),
+            ..updater_with_source(some_config(), some_agent_info())
+        };
+
+        let outcome = updater
+            .fetch_update(
+                &registry.registry,
+                &TestApi::unsigned(TARGET_HASH),
+                SignatureCheck::Skip,
+            )
+            .unwrap();
+
+        let FetchOutcome::Spooled {
+            hash,
+            path,
+            signature,
+            ..
+        } = outcome
+        else {
+            panic!("expected a spooled package, got {outcome:?}");
+        };
+        assert_eq!(signature, SignatureCheck::Skip);
+        assert_eq!(hash.as_str(), TARGET_HASH);
+        assert_eq!(fs::read(&path).unwrap(), PACKAGE);
+    }
+
+    /// Skipping overrides the verification too, not only the pre-check: this
+    /// package carries a signature that does not match it.
+    #[test]
+    fn test_fetch_update_spools_a_badly_signed_package_when_asked_to_skip() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let registry = registry_with_one_connection();
+        let updater = updater_spooling_into(&dir);
+
+        let outcome = updater
+            .fetch_update(
+                &registry.registry,
+                &TestApi::badly_signed(TARGET_HASH),
+                SignatureCheck::Skip,
+            )
+            .unwrap();
+
+        assert!(matches!(
+            outcome,
+            FetchOutcome::Spooled {
+                signature: SignatureCheck::Skip,
+                ..
+            }
+        ));
+    }
+
+    /// Skipping says nothing about which package is due: an up-to-date host
+    /// still fetches nothing.
+    #[test]
+    fn test_fetch_update_skipping_still_fetches_nothing_when_up_to_date() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let registry = registry_with_one_connection();
+        let updater = updater_spooling_into(&dir);
+
+        let outcome = updater
+            .fetch_update(
+                &registry.registry,
+                &TestApi::new(Some(INSTALLED_HASH)),
+                SignatureCheck::Skip,
+            )
+            .unwrap();
+
+        assert_eq!(
+            outcome,
+            FetchOutcome::UpToDate(INSTALLED_HASH.parse().unwrap())
+        );
+        assert!(!dir.path().join(PACKAGE_DIR).exists());
+    }
+
+    #[test]
+    fn test_fetch_update_names_the_site_that_did_not_answer() {
+        let registry = registry_with_one_connection();
+
+        let error = updater_with_source(some_config(), some_agent_info())
+            .fetch_update(
+                &registry.registry,
+                &UnreachableApi,
+                SignatureCheck::Required,
+            )
+            .unwrap_err();
+
+        assert_eq!(
+            error.to_string(),
+            "Agent update status request to server/site failed"
+        );
+    }
+
+    #[test]
+    fn test_fetch_update_reports_a_site_without_agent_updates() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let registry = registry_with_one_connection();
+
+        let outcome = updater_spooling_into(&dir)
+            .fetch_update(
+                &registry.registry,
+                &RefusingApi::status(http::StatusCode::NOT_IMPLEMENTED),
+                SignatureCheck::Required,
+            )
+            .unwrap();
+
+        assert_eq!(outcome, FetchOutcome::SourceUnavailable);
+    }
+
+    /// The site may stop serving agent updates between the status request and
+    /// the download.
+    #[test]
+    fn test_fetch_update_reports_a_site_that_stopped_serving_the_download() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let registry = registry_with_one_connection();
+
+        let outcome = updater_spooling_into(&dir)
+            .fetch_update(
+                &registry.registry,
+                &RefusingApi::download(http::StatusCode::NOT_IMPLEMENTED),
+                SignatureCheck::Required,
+            )
+            .unwrap();
+
+        assert_eq!(outcome, FetchOutcome::SourceUnavailable);
+    }
+
+    /// A 409 is no failure: the site baked a newer package in between, and the
+    /// next status request names it.
+    #[test]
+    fn test_fetch_update_reports_a_package_the_site_replaced() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let registry = registry_with_one_connection();
+
+        let outcome = updater_spooling_into(&dir)
+            .fetch_update(
+                &registry.registry,
+                &RefusingApi::download(http::StatusCode::CONFLICT),
+                SignatureCheck::Required,
+            )
+            .unwrap();
+
+        assert_eq!(outcome, FetchOutcome::Superseded);
+        assert!(!dir.path().join(PACKAGE_DIR).exists());
+    }
+
+    /// A 404 may be temporary, so it is an error like any other.
+    #[test]
+    fn test_fetch_update_fails_on_a_404() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let registry = registry_with_one_connection();
+
+        let error = updater_spooling_into(&dir)
+            .fetch_update(
+                &registry.registry,
+                &RefusingApi::status(http::StatusCode::NOT_FOUND),
+                SignatureCheck::Required,
+            )
+            .unwrap_err();
+
+        assert_eq!(
+            error.to_string(),
+            "Agent update status request to server/site failed"
+        );
+    }
+
+    /// A downloaded package of `platform`, as the site delivered it.
+    fn downloaded(platform: &str) -> UpdatePackage {
+        UpdatePackage {
             hash: TARGET_HASH.parse().unwrap(),
             platform: String::from(platform),
             bytes: PACKAGE.to_vec(),
         }
+    }
+
+    /// A downloaded package of `platform`, verified and ready to be saved.
+    fn verified(platform: &str) -> VerifiedPackage {
+        VerifiedPackage(downloaded(platform))
     }
 
     #[test]
@@ -2144,5 +3634,36 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             fs::metadata(&path).unwrap().permissions().mode() & 0o777,
             PACKAGE_FILE_MODE
         );
+    }
+
+    #[test]
+    fn test_a_verified_package_is_named_verified() {
+        assert_eq!(
+            verified("linux_deb").to_string(),
+            "Verified agent package fedcba9876543210"
+        );
+    }
+
+    #[test]
+    fn test_an_unverified_package_says_so_in_capitals() {
+        assert_eq!(
+            downloaded("linux_deb").accept_unverified().to_string(),
+            "UNVERIFIED agent package fedcba9876543210"
+        );
+    }
+
+    /// The file an unverified package leaves behind is the same file: only the
+    /// method that asks for it, and the line that reports it, differ.
+    #[test]
+    fn test_save_an_unverified_package() {
+        let dir = tempfile::TempDir::new().unwrap();
+
+        let path = downloaded("linux_deb")
+            .accept_unverified()
+            .save_unverified(dir.path())
+            .unwrap();
+
+        assert_eq!(path, dir.path().join("fedcba9876543210.deb"));
+        assert_eq!(fs::read(&path).unwrap(), PACKAGE);
     }
 }

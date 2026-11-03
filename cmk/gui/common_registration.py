@@ -8,7 +8,6 @@
 from collections.abc import Callable
 
 import cmk.gui.help
-from cmk.ccc.hostaddress import HostName
 from cmk.ccc.version import Edition
 from cmk.gui import (
     activate_menu,
@@ -50,11 +49,10 @@ from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.form_specs import registration as vue_registration
 from cmk.gui.graphing import registration as graphing_registration
 from cmk.gui.graphing.openapi import register as register_graphing_openapi_endpoints
-from cmk.gui.logged_in import user
 from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.monitor.command import downtime_recurrences, monitor_commands
 from cmk.gui.monitor.hosts import registration as monitor_hosts_registration
-from cmk.gui.monitor.hosts._folder import monitor_folders, SetupFolders
+from cmk.gui.monitor.router import registration as monitor_router_registration
 from cmk.gui.monitor.services import registration as monitor_services_registration
 from cmk.gui.monitor.services._page_menu import host_menus
 from cmk.gui.nodevis import nodevis
@@ -113,13 +111,7 @@ from cmk.gui.watolib.host_attributes import (
     HostAttributeTopicRegistry,
 )
 from cmk.gui.watolib.host_rename import RenameHostHookRegistry
-from cmk.gui.watolib.hosts_and_folders import (
-    all_folder_title_paths,
-    folder_title_path,
-    folder_tree,
-    FolderValidatorsRegistry,
-    may_read_host,
-)
+from cmk.gui.watolib.hosts_and_folders import FolderReader
 from cmk.gui.watolib.main_menu import MainModuleRegistry, MainModuleTopicRegistry
 from cmk.gui.watolib.mode import ModeRegistry
 from cmk.gui.watolib.notification_parameter import notification_parameter_registry
@@ -178,7 +170,6 @@ def register(
     config_file_registry: ConfigFileRegistry,
     rename_host_hook_registry: RenameHostHookRegistry,
     command_group_registry: CommandGroupRegistry,
-    folder_validators_registry: FolderValidatorsRegistry,
     user_attribute_registry: UserAttributeRegistry,
     quick_setup_registry: QuickSetupRegistry,
     help_info_line: Callable[[], str],
@@ -256,17 +247,6 @@ def register(
     monitor_commands.use_legacy_source(command_registry)
     downtime_recurrences.use_legacy_source(command_registry)
     host_menus.use_legacy_source(LegacyHostMenus())
-    # Setup answers about the folders of whoever is asking, so both the tree and the user are read
-    # per call - `user` is the request's, not this wiring's.
-    monitor_folders.use_setup_source(
-        SetupFolders(
-            title_of=lambda path: folder_title_path(folder_tree(), path, user),
-            all_titles=lambda: all_folder_title_paths(folder_tree(), user),
-            may_read_host=lambda host_name, path: may_read_host(
-                folder_tree(), HostName(host_name), path, user
-            ),
-        )
-    )
     monitor_hosts_registration.register(
         endpoint_family_registry,
         versioned_endpoint_registry,
@@ -274,6 +254,7 @@ def register(
         monitor_commands,
         downtime_recurrences,
         monitoring_teleport_target,
+        FolderReader,
     )
     monitor_services_registration.register(
         endpoint_family_registry,
@@ -283,8 +264,9 @@ def register(
         downtime_recurrences,
         host_menus,
         monitoring_teleport_target,
-        lambda host_name: may_read_host(folder_tree(), host_name, None, user),
+        FolderReader,
     )
+    monitor_router_registration.register(page_registry, FolderReader)
     crash_reporting.register(
         page_registry,
         data_source_registry,
@@ -297,7 +279,6 @@ def register(
         cron_job_registry,
     )
     watolib_registration.register(
-        edition,
         rulespec_group_registry,
         automation_command_registry,
         job_registry,
@@ -310,7 +291,6 @@ def register(
         config_variable_group_registry,
         autocompleter_registry,
         replication_path_registry,
-        folder_validators_registry,
         cron_job_registry,
     )
 
@@ -452,6 +432,7 @@ def _register_visuals_autocompleters(
         check_command_autocompleter,
         kubernetes_labels_autocompleter,
         label_autocompleter,
+        label_key_autocompleter,
         monitored_hostname_autocompleter,
         monitored_service_description_autocompleter,
     )
@@ -467,3 +448,4 @@ def _register_visuals_autocompleters(
         "kubernetes_labels", kubernetes_labels_autocompleter
     )
     autocompleter_registry.register_autocompleter("label", label_autocompleter)
+    autocompleter_registry.register_autocompleter("label_key", label_key_autocompleter)

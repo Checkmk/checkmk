@@ -59,6 +59,7 @@ def _automation_notification_replay(
         timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
             livestatus.get_optional_timeperiods_active_map, log=logger.warning
         ),
+        debug=state.debug,
     )
     return NotificationReplayResult()
 
@@ -88,6 +89,7 @@ def _automation_notification_analyse(
             timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
                 livestatus.get_optional_timeperiods_active_map, log=logger.warning
             ),
+            debug=state.debug,
         )
     )
 
@@ -121,6 +123,7 @@ def _automation_notification_test(
             timeperiods_active=cmk.utils.timeperiod.TimeperiodActiveCoreLookup(
                 livestatus.get_optional_timeperiods_active_map, log=logger.warning
             ),
+            debug=state.debug,
         )
     )
 

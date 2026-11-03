@@ -77,10 +77,10 @@ const { mockLoaded } = useMswWorker([
 defineProps<{ screenshotMode: boolean }>()
 
 const DEFINITIONS: FilterDefinitions = {
-  network_flow_application: {
+  demo_application: {
     domainType: 'visual_filter',
     links: [],
-    id: 'network_flow_application',
+    id: 'demo_application',
     title: 'Application',
     extensions: {
       info: 'host',
@@ -89,10 +89,10 @@ const DEFINITIONS: FilterDefinitions = {
       components: [
         {
           component_type: 'multiselect_with_free_text',
-          id: 'network_flow_application_value',
+          id: 'demo_application_value',
           separator: ',',
           pick_hint: 'Select an application...',
-          autocompleter: { ident: 'network_flow_applications', params: {} }
+          autocompleter: { ident: 'demo_applications', params: {} }
         }
       ]
     }
@@ -102,7 +102,7 @@ const DEFINITIONS: FilterDefinitions = {
 useProvideFilterDefinitions({ definitions: DEFINITIONS, groups: {} })
 
 const configuredFilters = ref<ConfiguredFilters>({
-  network_flow_application: { network_flow_application_value: 'TLS, HTTP' }
+  demo_application: { demo_application_value: 'TLS, HTTP' }
 })
 </script>
 
@@ -114,8 +114,8 @@ const configuredFilters = ref<ConfiguredFilters>({
       <span v-if="mockLoaded" class="ucl-multiselect-with-free-text-dev__stack">
         <div class="ucl-multiselect-with-free-text-dev__container">
           <CmkFilterInputItem
-            filter-id="network_flow_application"
-            :configured-filter-values="configuredFilters['network_flow_application'] ?? null"
+            filter-id="demo_application"
+            :configured-filter-values="configuredFilters['demo_application'] ?? null"
             @update-filter-values="(id, values) => (configuredFilters[id] = values)"
           />
         </div>
@@ -123,8 +123,7 @@ const configuredFilters = ref<ConfiguredFilters>({
         <p class="ucl-multiselect-with-free-text-dev__readout">
           Filter value:
           <code>{{
-            configuredFilters['network_flow_application']?.['network_flow_application_value'] ||
-            '(unset)'
+            configuredFilters['demo_application']?.['demo_application_value'] || '(unset)'
           }}</code>
         </p>
 

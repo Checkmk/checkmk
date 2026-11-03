@@ -11,23 +11,28 @@ from the hosts' own coordinates.
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
+import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
-import { computed } from 'vue'
+import { computed, onMounted, useTemplateRef, watch } from 'vue'
 
 import EditField from '@/maps/map/edit/components/EditField.vue'
 import SettingsSection from '@/maps/map/edit/settings/components/SettingsSection.vue'
 import {
   GEO_MAX_ZOOM,
+  type SettingsFocus,
   type SettingsForm,
   geoViewOutOfRange
 } from '@/maps/map/edit/settings/settingsForm'
 import { useSettings } from '@/maps/services/context'
+import MapsObjectField from '@/maps/shared/components/MapsObjectField.vue'
 import { isAllowedTileUrl } from '@/maps/shared/worldmap/tileLayer'
 
 const props = defineProps<{
   /** True once the operator tried to save, so gaps may be pointed out. */
   saveAttempted: boolean
+  /** The option to bring into view and focus on opening. */
+  initialFocus?: SettingsFocus | null
 }>()
 
 const form = defineModel<SettingsForm>('form', { required: true })
@@ -36,21 +41,45 @@ const emit = defineEmits<{ 'pick-view': [] }>()
 
 const { _t } = usei18n()
 
+const automapSource = useTemplateRef<HTMLElement>('automapSource')
+const automapSourceDropdown =
+  useTemplateRef<InstanceType<typeof CmkDropdown>>('automapSourceDropdown')
+onMounted(() => {
+  if (props.initialFocus === 'automap_source') {
+    automapSource.value?.scrollIntoView({ block: 'center' })
+    automapSourceDropdown.value?.focus()
+  }
+})
+
 const autoSourceOptions = computed(() => ({
   type: 'fixed' as const,
   suggestions: [
-    { name: '', title: _t('None — manual placement only') },
+    { name: '', title: _t('None, place objects manually') },
     { name: 'all_hosts', title: _t('All hosts with geo coordinates') },
     { name: 'hostgroup', title: _t('Hosts in host group…') },
     { name: 'servicegroup', title: _t('Hosts hosting a service in service group…') }
   ]
 }))
 
-const needsGroupName = computed(
-  () =>
-    form.value.worldmap_auto_source === 'hostgroup' ||
-    form.value.worldmap_auto_source === 'servicegroup'
+const groupKind = computed(() =>
+  form.value.worldmap_auto_source === 'hostgroup' ||
+  form.value.worldmap_auto_source === 'servicegroup'
+    ? form.value.worldmap_auto_source
+    : null
 )
+
+// A group picked for the other kind of group must not survive the swap; a
+// detour over a choice without a group keeps it.
+let pickedFor = groupKind.value
+watch(groupKind, (kind) => {
+  if (kind === null) {
+    return
+  }
+  if (pickedFor !== null && kind !== pickedFor) {
+    form.value.worldmap_auto_filter_value = ''
+  }
+  pickedFor = kind
+})
 const groupNameMissing = computed(
   () => props.saveAttempted && !form.value.worldmap_auto_filter_value
 )
@@ -116,7 +145,7 @@ const tileUrlBlocked = computed(
         :title="_t('Closes settings and switches the map to picker mode.')"
         @click="emit('pick-view')"
       >
-        <CmkIcon name="zoom" size="small" />
+        <CmkIcon name="search" variant="inline" size="small" />
         <span>{{ _t('Pick from map') }}</span>
       </CmkButton>
     </div>
@@ -143,7 +172,12 @@ const tileUrlBlocked = computed(
         "
       />
     </EditField>
-    <EditField v-slot="{ id }" labels-control :label="_t('Map saturation (%)')">
+    <EditField
+      v-slot="{ id }"
+      labels-control
+      :label="_t('Map saturation (%)')"
+      :help="_t('Left empty, the map shows at 100 %, in its full colors.')"
+    >
       <CmkInput
         :id="id"
         v-model="form.worldmap_tile_saturate"
@@ -151,41 +185,41 @@ const tileUrlBlocked = computed(
         :min="0"
         :max="100"
         :step="5"
-        :placeholder="_t('100 (default)')"
+        placeholder="100"
       />
     </EditField>
 
-    <EditField
-      :label="_t('Automap source')"
-      :help="
-        _t(
-          'Hosts are auto-discovered from monitoring data via maps_lat/maps_lng labels or LAT/LONG custom variables. They show up alongside any objects you place manually.'
-        )
-      "
-    >
-      <CmkDropdown
-        :model-value="form.worldmap_auto_source"
-        :options="autoSourceOptions"
-        :label="_t('Automap source')"
-        width="fill"
-        @update:model-value="
-          form.worldmap_auto_source = ($event ?? '') as typeof form.worldmap_auto_source
+    <div ref="automapSource">
+      <EditField
+        :label="_t('Automatic object placement')"
+        :help="
+          _t(
+            'Hosts are auto-discovered from monitoring data via maps_lat/maps_lng labels or LAT/LONG custom variables. They show up alongside any objects you place manually.'
+          )
         "
+      >
+        <CmkDropdown
+          ref="automapSourceDropdown"
+          :model-value="form.worldmap_auto_source"
+          :options="autoSourceOptions"
+          :label="_t('Automatic object placement')"
+          width="fill"
+          @update:model-value="
+            form.worldmap_auto_source = ($event ?? '') as typeof form.worldmap_auto_source
+          "
+        />
+      </EditField>
+    </div>
+    <EditField v-if="groupKind" :label="_t('Group name')" required>
+      <CmkInlineValidation
+        :validation="groupNameMissing ? [_t('Pick a group to discover hosts from.')] : []"
       />
-    </EditField>
-    <EditField
-      v-if="needsGroupName"
-      v-slot="{ id }"
-      labels-control
-      :label="_t('Group name')"
-      required
-    >
-      <CmkInput
-        :id="id"
+      <MapsObjectField
         v-model="form.worldmap_auto_filter_value"
-        :placeholder="_t('group name')"
-        field-size="fill"
-        :external-errors="groupNameMissing ? [_t('Pick a group to discover hosts from.')] : []"
+        :kind="groupKind"
+        :label="_t('Group name')"
+        :placeholder="_t('Select a group')"
+        :has-error="groupNameMissing"
       />
     </EditField>
   </SettingsSection>

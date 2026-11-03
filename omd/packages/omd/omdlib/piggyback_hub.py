@@ -7,7 +7,7 @@ from omdlib.config_api import Hook, null_action
 
 PIGGYBACK_HUB = Hook(
     name="PIGGYBACK_HUB",
-    choices=[("on", "enable"), ("off", "disable")],
+    choices=lambda _edition: [("on", "enable"), ("off", "disable")],
     default=lambda _edition: "off",
     activation=null_action,
 )

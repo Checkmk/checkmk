@@ -17,26 +17,6 @@ rest_api -> agent_receiver: Connection mode
 agent_receiver -> agent: Root Certificate, Signed Certificate, Connection mode
 
 
-== pairing ==
-
-agent -> agent_receiver:  /pairing (Credentials, csr)
-agent_receiver -> rest_api: /root__cert (Credentials)
-rest_api -> agent_receiver: Root Certificate
-agent_receiver -> rest_api: /csr (Credentials, csr)
-rest_api -> agent_receiver: Signed certificate
-agent_receiver -> agent: Root Certificate, Signed Certificate
-
-
-== register_with_hostname ==
-
-agent -> agent_receiver: /register_with_hostname (Credentials, uuid, hostname)
-agent_receiver -> rest_api: /objects/host_config_internal/hostname (Credentials, hostname)
-rest_api -> agent_receiver: host_config
-agent_receiver -> rest_api: /objects/host_config_internal/hostname/actions/link_uuid/invoke (Credentials, hostname, uuid)
-rest_api -> agent_receiver: OK
-agent_receiver -> agent: OK
-
-
 == register_new ==
 
 agent -> agent_receiver: /register_new (Credentials, uuid, csr, agent_labels)

@@ -12,6 +12,7 @@ mirror and the opaque ``map_spec`` dict that the pagetype store persists.
 import json
 from collections.abc import Callable, Mapping
 from http import HTTPStatus
+from typing import Final, get_args
 
 from pydantic import TypeAdapter, ValidationError
 
@@ -23,7 +24,7 @@ from cmk.gui.openapi.utils import RestAPIRequestGeneralException
 from cmk.gui.type_defs import VisualPublic
 from cmk.maps.gui._tickets import sign_map_config
 from cmk.maps.gui.pagetype import MapPage
-from cmk.maps.gui.store import get_permitted_map
+from cmk.maps.gui.store import get_permitted_map, rotation_pools_of
 from cmk.maps.gui.type_defs import MapName
 from cmk.maps.rest_api.models.map import (
     MapConfig,
@@ -37,7 +38,12 @@ from cmk.maps.rest_api.models.response_models import (
     MapObject,
     MapVisibility,
 )
-from cmk.maps.shared.map_payload import ClickAction, RenderMode
+from cmk.maps.shared.map_payload import (
+    BackgroundPosition,
+    BackgroundStyle,
+    ClickAction,
+    RenderMode,
+)
 from cmk.web.utils import permission_verification as permissions
 
 # Resolving which maps the user may see checks for the other users' maps
@@ -145,6 +151,7 @@ _OBJECT_GROUPS: dict[str, dict[str, str]] = {
         "width": "line_width",
         "perfdata_label": "line_perfdata_label",
         "weather_color": "line_weather_color",
+        "object_type": "line_object_type",
         "metric_in": "weathermap_metric",
         "metric_out": "weathermap_metric_out",
         "color": "line_color",
@@ -337,6 +344,19 @@ def _render_mode(value: object) -> RenderMode:
     return "nagvis_classic" if value == "nagvis_classic" else "default"
 
 
+_BACKGROUND_STYLES: Final[Mapping[str, BackgroundStyle]] = {
+    value: value for value in get_args(BackgroundStyle)
+}
+
+
+def _background_style(value: object) -> BackgroundStyle:
+    return _BACKGROUND_STYLES.get(value, "single") if isinstance(value, str) else "single"
+
+
+def _background_position(value: object) -> BackgroundPosition:
+    return "center" if value == "center" else "top_left"
+
+
 def _click_action(value: object) -> ClickAction:
     return "none" if value == "none" else "link"
 
@@ -383,7 +403,7 @@ def resolve_map_link_titles(
         return {}
     linked: set[str] = set()
     for obj in objects:
-        if not isinstance(obj, dict) or obj.get("type") != "map":
+        if not isinstance(obj, dict) or "map" not in (obj.get("type"), obj.get("line_object_type")):
             continue
         name = obj.get("map_name")
         if isinstance(name, str) and name:
@@ -439,8 +459,11 @@ def serialize_map_list_entry(page: MapPage, *, can_edit: bool, can_delete: bool)
         object_count=cfg.object_count,
         background_image=_opt_str(payload.get("background_image")),
         background_color=_opt_str(payload.get("background_color")),
+        background_style=_background_style(payload.get("background_style")),
+        background_position=_background_position(payload.get("background_position")),
         icon_size=_opt_int(payload.get("icon_size")),
         rotation_interval=_int(payload.get("rotation_interval"), 0),
+        rotation_pools=rotation_pools_of(payload.get("rotation_pools")),
         sort_order=_int(payload.get("sort_order"), 0),
         version=_int(payload.get("version"), 0),
         render_mode=_render_mode(payload.get("render_mode")),

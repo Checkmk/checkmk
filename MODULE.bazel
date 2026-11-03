@@ -32,12 +32,12 @@ bazel_dep(name = "mod_fcgid", version = "2.3.9.cmk.1")
 bazel_dep(name = "mod_wsgi", version = "6.1.0.cmk.1")
 bazel_dep(name = "msitools", version = "0.94.cmk.9")
 bazel_dep(name = "nagios", version = "3.5.1.cmk.1")
-bazel_dep(name = "openssl", version = "3.5.7.cmk.1")
+bazel_dep(name = "openssl", version = "3.5.7.cmk.2")
 bazel_dep(name = "osslsigncode", version = "2.10.cmk.1")
 bazel_dep(name = "package_metadata", version = "0.0.7")
 bazel_dep(name = "patch", version = "2.7.6.cmk.1")
 bazel_dep(name = "patchelf", version = "0.18.0.bcr.1")
-bazel_dep(name = "perl-modules", version = "0.0.1.cmk.2")
+bazel_dep(name = "perl-modules", version = "0.0.1.cmk.3")
 bazel_dep(name = "plantuml", version = "1.2026.2.cmk.1")
 bazel_dep(name = "platforms", version = "1.1.0")
 bazel_dep(name = "pnp4nagios", version = "0.6.26.cmk.2")
@@ -121,6 +121,11 @@ archive_override(
 # release by buildscripts/scripts/extract_llvm.sh.
 bazel_dep(name = "clang-resource-headers", version = "21.1.8.cmk.1", dev_dependency = True)
 
+# Not used directly: only here so that the ape_cosmos extension below can
+# be configured from the root module.  It comes in via rules_gzip and
+# rules_coreutils.
+bazel_dep(name = "ape", version = "1.0.1", dev_dependency = True)
+
 archive_override(
     module_name = "rules_mypy",
     integrity = "sha256-rf/7qI1Atf//4SlJfQWhsyAt+SaZjQoYDKRZ93TXQBQ=",
@@ -182,6 +187,8 @@ single_version_override(
     patches = [
         # https://github.com/aspect-build/rules_py/pull/577
         "//bazel/patches:rules_py-no_mypy_for_py_pytest_main.patch",
+        # Fixed upstream in 2.x, see CMK-40567
+        "//bazel/patches:rules_py-tolerate_no_coverage_data.patch",
     ],
     version = "1.5.2",
 )
@@ -449,18 +456,6 @@ http_file(
     urls = [
         "https://github.com/jaegertracing/jaeger/releases/download/v2.18.0/jaeger-2.18.0-linux-amd64.tar.gz",
         UPSTREAM_MIRROR_URL + "jaeger-2.18.0-linux-amd64.tar.gz",
-    ],
-)
-
-# cmk-network-flow payload: a prebuilt ntopng bundle (binary + private libs + share/
-# tree), snapshotted from ntop's rolling apt-stable build. Consumed by
-# omd/non-free/packages/cmk-network-flow/BUILD.
-http_file(
-    name = "cmk_network_flow_bundle",
-    downloaded_file_path = "cmk-network-flow-bundle.tar.gz",
-    sha256 = "28c31fbdf150227ca4be6bde78487daab6b6604734d8deae48ba29f8db2f1dee",
-    urls = [
-        UPSTREAM_MIRROR_URL + "flow-bundle-6.6.260622-slim.tar.gz",
     ],
 )
 
@@ -741,6 +736,7 @@ http_archive(
     patches = [
         "//omd/packages/nagvis/patches:0001-global.php.dif",
         "//omd/packages/nagvis/patches:0002-cmkadmin.dif",
+        "//omd/packages/nagvis/patches:0003-deprecation-note.dif",
     ],
     sha256 = "21218c27662442432ba0a7fc701a051025639c9b9f6682e424b548d0dbc88c55",
     strip_prefix = "nagvis-1.10.6",
@@ -753,6 +749,22 @@ http_archive(
 repo_license(name = "repo_license")
 
 openapi_spec_editions(name = "openapi_spec_editions")
+
+# rules_gzip downloads its Cosmopolitan binaries (gzip, the APE loader, ...)
+# through ape's cosmos extension, which only lists https://cosmo.zip.  That
+# host went down in October 2026 for days, so add the package registry of the
+# ape project on gitlab.arm.com, which mirrors the same files and is readable
+# without authentication.  The extension tries the URL tags of the root module
+# first and keeps cosmo.zip as the fallback; the integrity hashes from ape's
+# lock files are checked either way, so the mirror cannot change the bytes.
+cosmos = use_extension(
+    "@ape//ape/cosmos:defs.bzl",
+    "ape_cosmos",
+    dev_dependency = True,
+)
+cosmos.url(
+    template = "https://gitlab.arm.com/api/v4/projects/bazel%2Fape/packages/generic/cosmos.zip/{version}/{name}",
+)
 
 multitool = use_extension("@rules_multitool//multitool:extension.bzl", "multitool")
 multitool.hub(
@@ -851,5 +863,7 @@ include("//bazel/module:gcc.MODULE.bazel")
 include("//bazel/module:xwin.MODULE.bazel")
 
 include("//bazel/module:wnx.MODULE.bazel")
+
+include("//bazel/module:qemu.MODULE.bazel")
 
 include("//bazel/module:python_cab.MODULE.bazel")

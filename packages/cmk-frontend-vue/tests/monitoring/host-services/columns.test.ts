@@ -10,11 +10,14 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { buildHostColumns } from '@/monitoring/all-hosts/columns'
 import {
   buildHostServicesColumnPinning,
+  requestedServiceFields,
   uncapNameWithoutSummary,
   useHostServicesColumns,
   visibleServiceFields
 } from '@/monitoring/host-services/columns'
+import { ServiceExport } from '@/monitoring/host-services/export/serviceExport'
 import type { HostServiceEntry } from '@/monitoring/shared/api/types'
+import { RowExport } from '@/monitoring/shared/export/rowExport'
 import {
   MonitoringService,
   type PagedResponse
@@ -82,6 +85,10 @@ test('a column the user shows asks for its field again', () => {
   expect(
     visibleServiceFields({ labels: false, tags: false, contacts: false, groups: false })
   ).toEqual(['contact_groups'])
+})
+
+test('every row asks for its graphs link, whichever columns are shown', () => {
+  expect(requestedServiceFields(makeService().columnVisibility.value)).toEqual(['graphs_link'])
 })
 
 test('the state column reads as the one in the hosts listing', () => {
@@ -212,4 +219,12 @@ test('the actions column widens by one button width per inline action', () => {
 test('last state change comes before last check, matching the legacy view', () => {
   const ids = serviceColumns().map((column) => columnId(column as ColumnDef<never>))
   expect(ids.indexOf('last_state_change')).toBeLessThan(ids.indexOf('last_check'))
+})
+
+test('the export carries every data column of the table in table order', () => {
+  const dataColumns = serviceColumns()
+    .map(columnId)
+    .filter((id) => id !== 'select' && id !== 'actions')
+
+  expect(RowExport.shownColumns(serviceColumns(), {}, ServiceExport.isColumn)).toEqual(dataColumns)
 })

@@ -34,25 +34,18 @@ import type {
   AlertOverviewContent,
   Barplot,
   BarplotContent,
-  ComputedNetworkFlowDonut,
-  ComputedNetworkFlowKpiStatCard,
-  ComputedNetworkFlowTopTable,
-  ComputedNetworkFlowTrendChart,
+  ComputedMonitoringTable,
   ComputedSingleMetric,
   ComputedTopList,
   ComputedWidgetResponse,
   ComputedWidgetSpecResponse,
   EffectiveWidgetFilterContext,
-  ExplicitWidgetContent,
   Gauge,
   GaugeContent,
   HostOrServiceState,
   InventoryAttribute,
   InventoryContent,
-  NetworkFlowDonutContent,
-  NetworkFlowKpiStatCardContent,
-  NetworkFlowTopTableContent,
-  NetworkFlowTrendChartContent,
+  MonitoringTableContent,
   ResponsiveGridWidgetLayouts,
   SingleMetricContent,
   SiteOverview,
@@ -71,6 +64,7 @@ import type {
   WidgetTimeRange
 } from '@/dashboard/types/widget.ts'
 import type { GraphFetchResponse } from '@/graphing'
+import { DRILLED_FROM_PARAM } from '@/page-header/drillUp'
 
 import type { ComputeWidgetTitlesRequest, ComputeWidgetTitlesResponse } from './types/api'
 
@@ -334,6 +328,18 @@ export const dashboardAPI = {
       })
     )
   },
+  computeMonitoringTable: async (
+    body: { source: WidgetSource<MonitoringTableContent>; sort: string[] },
+    headers: Record<string, string>
+  ): Promise<ComputedWidgetResponse<ComputedMonitoringTable>> => {
+    return unwrap(
+      await client.POST('/domain-types/dashboard/actions/compute-monitoring-table/invoke', {
+        ...CONTENT_TYPE_HEADER,
+        headers,
+        body
+      })
+    )
+  },
   computeSiteOverview: async (
     body: { source: WidgetSource<SiteOverviewContent> },
     headers: Record<string, string>
@@ -457,48 +463,6 @@ export const dashboardAPI = {
         body
       })
     )
-  },
-  computeNetworkFlowTopTable: async (body: {
-    source: ExplicitWidgetContent<NetworkFlowTopTableContent>
-  }): Promise<ComputedWidgetResponse<ComputedNetworkFlowTopTable>> => {
-    return unwrap(
-      await client.POST('/domain-types/dashboard/actions/compute-network-flow-top-table/invoke', {
-        ...CONTENT_TYPE_HEADER,
-        body
-      })
-    )
-  },
-  computeNetworkFlowDonut: async (body: {
-    source: ExplicitWidgetContent<NetworkFlowDonutContent>
-  }): Promise<ComputedWidgetResponse<ComputedNetworkFlowDonut>> => {
-    return unwrap(
-      await client.POST('/domain-types/dashboard/actions/compute-network-flow-donut/invoke', {
-        ...CONTENT_TYPE_HEADER,
-        body
-      })
-    )
-  },
-  computeNetworkFlowKpiStatCard: async (body: {
-    source: ExplicitWidgetContent<NetworkFlowKpiStatCardContent>
-  }): Promise<ComputedWidgetResponse<ComputedNetworkFlowKpiStatCard>> => {
-    return unwrap(
-      await client.POST(
-        '/domain-types/dashboard/actions/compute-network-flow-kpi-stat-card/invoke',
-        { ...CONTENT_TYPE_HEADER, body }
-      )
-    )
-  },
-  computeNetworkFlowTrendChart: async (body: {
-    source: ExplicitWidgetContent<NetworkFlowTrendChartContent>
-    // Set once the graph was zoomed or panned; without it the time filter decides the window.
-    requested_time_range?: { start: number; end: number }
-  }): Promise<ComputedWidgetResponse<ComputedNetworkFlowTrendChart>> => {
-    return unwrap(
-      await client.POST('/domain-types/dashboard/actions/compute-network-flow-trend-chart/invoke', {
-        ...CONTENT_TYPE_HEADER,
-        body
-      })
-    )
   }
 }
 
@@ -576,6 +540,7 @@ const FILE_DASHBOARD = '/dashboard.py'
 const FILE_SHARED_DASHBOARD = '/shared_dashboard.py'
 
 const CLONE_RESULT_PARAM = 'clone_result'
+const DROPPED_FILTERS_PARAM = '_dropped_filters'
 const CLONE_RESULTS = ['cloned', 'cloned_as_responsive'] as const
 export type CloneResult = (typeof CLONE_RESULTS)[number]
 
@@ -627,6 +592,18 @@ export const urlHandler = {
     return url
   },
 
+  /**
+   * The dashboard's URL with new runtime filters. It keeps the dashboard and the way back a
+   * drill-down offered, and drops every other variable.
+   */
+  withRuntimeFilters(input: string, runtimeFilters: Record<string, string>): URL {
+    return urlHandler.updateWithPreserve(
+      input,
+      ['name', 'owner', DRILLED_FROM_PARAM],
+      runtimeFilters
+    )
+  },
+
   /** Update the current URL in the browser's address bar.
    * @param url - The new URL to set.
    */
@@ -659,6 +636,12 @@ export const urlHandler = {
   withoutCloneResult(url: URL): URL {
     const cleanUrl = new URL(url)
     cleanUrl.searchParams.delete(CLONE_RESULT_PARAM)
+    return cleanUrl
+  },
+
+  withoutDroppedFilters(url: URL): URL {
+    const cleanUrl = new URL(url)
+    cleanUrl.searchParams.delete(DROPPED_FILTERS_PARAM)
     return cleanUrl
   },
 

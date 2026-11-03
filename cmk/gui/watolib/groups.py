@@ -42,7 +42,6 @@ from cmk.gui.watolib.host_attributes import (
 )
 from cmk.gui.watolib.hosts_and_folders import (
     find_usages_of_contact_group_in_hosts_and_folders,
-    folder_preserving_link,
     FolderTree,
 )
 from cmk.gui.watolib.pending_changes import Change, ChangeScope, PendingChanges
@@ -319,8 +318,10 @@ def _find_usages_of_group_in_rules(
                 used_in.append(
                     (
                         "{}: {}".format(_("Rule set"), ruleset.title()),
-                        folder_preserving_link(
-                            request, [("mode", "edit_ruleset"), ("varname", varname)]
+                        makeuri_contextless(
+                            request,
+                            [("mode", "edit_ruleset"), ("varname", varname)],
+                            filename="wato.py",
                         ),
                     )
                 )

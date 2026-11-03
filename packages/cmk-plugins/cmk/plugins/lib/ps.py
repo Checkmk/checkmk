@@ -561,6 +561,8 @@ def discover_ps(
             match_groups = () if isinstance(matches, bool) else matches.groups()
 
             i_servicedesc = replace_service_description(i_servicedesc, match_groups, spec.pattern)
+            if not i_servicedesc:
+                continue
 
             # Problem here: We need to instantiate all subexpressions
             # with their actual values of the found process.

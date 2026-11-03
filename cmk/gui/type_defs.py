@@ -673,6 +673,8 @@ type ContextualLinkLocationConfig = (
 
 class ContextFilterConfig(TypedDict):
     filter_id: FilterName
+    # The label key, tag group or auxiliary tag of a filter that needs one.
+    key: NotRequired[str]
 
 
 class ContextualLinkEntryConfig(TypedDict):
@@ -803,13 +805,13 @@ class RowShading(TypedDict):
 
 
 GraphTitleFormatVS = Literal["plain", "add_host_name", "add_host_alias", "add_service_description"]
+GraphLegendStyle = Literal["compact", "extended"]
 
 
 class GraphRenderOptionsVS(TypedDict, total=False):
-    border_width: SizeMM
     fixed_timerange: bool
     font_size: SizePT
-    preview: bool
+    legend_style: GraphLegendStyle
     resizable: bool
     show_controls: bool
     show_graph_time: bool

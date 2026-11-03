@@ -4,14 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from abc import ABC, abstractmethod
 from collections.abc import Iterable, Mapping
-from typing import Self
+from typing import Literal, Self
 
 from pydantic import model_validator
 from pydantic_core import ErrorDetails
 
 from cmk.gui.dashboard import dashlet_registry, DashletConfig
+from cmk.gui.dashboard.type_defs import DashboardWindow, FixedWindow
 from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model import api_model
+from cmk.gui.openapi.framework.model.common_fields import timerange_from_internal, TimerangeModel
 from cmk.gui.type_defs import DashboardEmbeddedViewSpec
 
 from ..contextual_link import (
@@ -20,6 +22,22 @@ from ..contextual_link import (
     ContextualLinkDefault,
     ContextualLinkOptions,
 )
+
+
+def time_range_from_internal(
+    window: DashboardWindow | FixedWindow,
+) -> Literal["dashboard"] | TimerangeModel:
+    if window["type"] == "dashboard":
+        return "dashboard"
+    return timerange_from_internal(window["window"])
+
+
+def time_range_to_internal(
+    time_range: Literal["dashboard"] | TimerangeModel,
+) -> DashboardWindow | FixedWindow:
+    if time_range == "dashboard":
+        return DashboardWindow(type="dashboard")
+    return FixedWindow(type="range", window=time_range.to_internal())
 
 
 @api_model
@@ -62,11 +80,13 @@ class BaseWidgetContent(ABC):
         context: ApiContext,  # noqa: ARG002
         *,
         embedded_views: Mapping[str, DashboardEmbeddedViewSpec],  # noqa: ARG002
+        stored_widget: DashletConfig | None,  # noqa: ARG002
     ) -> Iterable[ErrorDetails]:
         """Run additional validation based on the config.
 
         Specifically, this should be used when they validation requires access to the active config
-        or the existing dashboard configuration (embedded views). The `location` parameter describes
+        or the existing dashboard configuration (embedded views, the stored config of the widget
+        with the same ID, None if there is none). The `location` parameter describes
         the location up to this widget. The errors should include the exact location of the
         erroneous data in the `loc` of the `ErrorDetails`.
         """

@@ -62,7 +62,7 @@ class SidebarHelper(LocatorHelper):
     def _sidebar_locator(self) -> Locator:
         """Locator property for the main area of the sidebar.
 
-        It has to be overriden by the children classes.
+        It has to be overridden by the children classes.
         """
 
     def expect_page_title(self) -> None:

@@ -4,11 +4,14 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import CmkCatalogPanel from 'cmk-ui-library/components/CmkCatalogPanel.vue'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
+import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
 import ImagePicker from '@/maps/image-library/components/ImagePicker.vue'
+import EditField from '@/maps/map/edit/components/EditField.vue'
 import type { ImageElement } from '@/maps/types/api'
 
 import { imageRefName } from '../../elements'
@@ -44,36 +47,35 @@ function onUrlChange(e: Event): void {
 </script>
 
 <template>
-  <section class="maps-inspector-image-section">
-    <h3 class="maps-section-title">{{ _t('Image') }}</h3>
-    <div class="maps-inspector-image-section__field">
-      <span class="maps-cap">{{ _t('From image library') }}</span>
-      <ImagePicker
-        :model-value="storeImageName"
-        :placeholder="_t('Choose an image…')"
-        @update:model-value="emit('patch', { src: $event || null })"
-      />
+  <CmkCatalogPanel :title="_t('Image')">
+    <div class="maps-inspector-image-section">
+      <EditField :label="_t('From image library')">
+        <ImagePicker
+          :model-value="storeImageName"
+          :placeholder="_t('Choose an image…')"
+          @update:model-value="emit('patch', { src: $event || null })"
+        />
+      </EditField>
+      <EditField :label="_t('…or image URL')">
+        <CmkInput
+          field-size="fill"
+          :model-value="externalSrc"
+          :aria-label="_t('Image URL')"
+          :placeholder="_t('https://…')"
+          @change="onUrlChange"
+        />
+      </EditField>
+      <EditField :label="_t('Fit')">
+        <CmkDropdown
+          :model-value="element.fit"
+          :options="fitOptions"
+          :label="_t('Fit')"
+          width="fill"
+          @update:model-value="emit('patch', { fit: $event })"
+        />
+      </EditField>
     </div>
-    <div class="maps-inspector-image-section__field">
-      <span class="maps-cap">{{ _t('…or image URL') }}</span>
-      <input
-        class="maps-field"
-        :value="externalSrc"
-        :placeholder="_t('https://…')"
-        @change="onUrlChange"
-      />
-    </div>
-    <div class="maps-inspector-image-section__field">
-      <span class="maps-cap">{{ _t('Fit') }}</span>
-      <CmkDropdown
-        :model-value="element.fit"
-        :options="fitOptions"
-        :label="_t('Fit')"
-        width="fill"
-        @update:model-value="emit('patch', { fit: $event })"
-      />
-    </div>
-  </section>
+  </CmkCatalogPanel>
 </template>
 
 <style scoped>
@@ -81,11 +83,6 @@ function onUrlChange(e: Event): void {
   display: flex;
   flex-direction: column;
   gap: var(--dimension-4);
-}
-
-.maps-inspector-image-section__field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dimension-3);
+  padding: var(--dimension-4) 0;
 }
 </style>

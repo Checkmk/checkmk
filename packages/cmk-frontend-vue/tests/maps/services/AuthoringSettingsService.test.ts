@@ -32,13 +32,36 @@ describe('AuthoringSettingsService', () => {
       allowed_sources: ['https://tiles.internal/']
     }
     const service = serviceWith({
-      fetch: vi.fn().mockResolvedValue({ settings: { ...SETTINGS_DEFAULTS, icon_size: 64 }, tiles })
+      fetch: vi.fn().mockResolvedValue({
+        settings: { ...SETTINGS_DEFAULTS, icon_size: 64 },
+        tiles,
+        mapName: { max_length: 100 }
+      })
     })
 
     await service.load()
 
     expect(service.settings.value.icon_size).toBe(64)
     expect(service.tiles.value).toEqual(tiles)
+  })
+
+  it('has no map name limit of its own before the site has answered', () => {
+    const service = serviceWith({ fetch: vi.fn() })
+    expect(service.mapNameMaxLength.value).toBeNull()
+  })
+
+  it('adopts the longest map name the site accepts', async () => {
+    const service = serviceWith({
+      fetch: vi.fn().mockResolvedValue({
+        settings: SETTINGS_DEFAULTS,
+        tiles: { default_url: '', allowed_sources: [] },
+        mapName: { max_length: 100 }
+      })
+    })
+
+    await service.load()
+
+    expect(service.mapNameMaxLength.value).toBe(100)
   })
 
   it('stays usable when the defaults cannot be read', async () => {

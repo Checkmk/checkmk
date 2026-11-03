@@ -231,7 +231,7 @@ def test_check_table_enforced_vs_discovered_precedence(
 
     def _source_of_item(table: HostCheckTable, item: str) -> str:
         timespecific_params = table[ServiceID(smart, item)].parameters
-        p = timespecific_params.evaluate(lambda _: True)
+        p = timespecific_params.evaluate(lambda _: True, debug=True)
         assert p is not None
         assert not isinstance(p, tuple | list | str | int)
         return str(p["source"])
@@ -802,7 +802,9 @@ def test_check_table__static_checks_win(
     # assert check table is populated as expected
     assert len(chk_table) == 1
     # assert static checks won
-    effective_params = chk_table[ServiceID(plugin_name, item)].parameters.evaluate(lambda _: True)
+    effective_params = chk_table[ServiceID(plugin_name, item)].parameters.evaluate(
+        lambda _: True, debug=True
+    )
     assert effective_params["source"] == "static"
 
 

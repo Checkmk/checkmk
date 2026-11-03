@@ -20,11 +20,22 @@ py_library(
     ],
 )
 
+py_library(
+    name = "selfbootstrap_conf_d_helpers",
+    testonly = True,
+    srcs = ["plugins/actions/selfbootstrap_conf_d_helpers.py"],
+    visibility = [":__subpackages__"],
+    deps = ["//cmk/gui/watolib"],
+)
+
 py_cmk_test(
     name = "update_config",
     srcs = glob(
         include = ["**/*.py"],
-        exclude = ["**/conftest.py"],
+        exclude = [
+            "**/conftest.py",
+            "plugins/actions/selfbootstrap_conf_d_helpers.py",
+        ],
     ),
     args = [
         "--random-order-bucket=global",
@@ -37,19 +48,25 @@ py_cmk_test(
     visibility = ["//visibility:private"],
     deps = [
         ":conftest",
+        ":selfbootstrap_conf_d_helpers",
         "//cmk/update_config",
         "//packages/cmk-backup:utils",
         "//packages/cmk-ccc:store",
+        "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-maps:registration",
+        "//packages/cmk-mkp-tool",
+        "//packages/cmk-plugin-apis:discover_plugins",
+        "//packages/cmk-plugin-apis:update_config",
         "//packages/cmk-plugins/cmk/plugins/lib",
+        "//packages/cmk-werks:core",
+        "//packages/cmk-werks:flavor_cmk",
         "//packages/cmk-werks:site",
-        "//packages/cmk-wsgi",
         "//tests/testlib/unit",
         "//tests/unit:conftest",
         "//tests/unit/cmk/gui:helpers",
         requirement("flask"),
         requirement("pytest-asyncio"),
-        requirement("pytest-random-order"),
         requirement("pytest-mock"),
+        requirement("pytest-random-order"),
     ],
 )

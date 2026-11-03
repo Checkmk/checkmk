@@ -4,13 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence, Set
 from http import HTTPStatus
-from typing import Annotated, Final, Self
+from typing import Annotated, Self
 
 from annotated_types import Interval
-from pydantic import PlainValidator
+from pydantic import PlainValidator, ValidationError
 
 from cmk.ccc.site import SiteId
 from cmk.gui import sites
+from cmk.gui.graphing import registered_perfometers
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
@@ -27,8 +28,10 @@ from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.common_fields import AnnotatedHostName
 from cmk.gui.openapi.framework.model.converter import SiteIdConverter, TypedPlainValidator
 from cmk.gui.openapi.utils import ProblemException
+from cmk.livestatus_client import SiteConfigurations
 from cmk.web.utils import permission_verification as permissions
 
+from .._exceptions import HostNotFoundError, InvalidServiceFilterError
 from .._impl import LiveStatusHostServicesRepository
 from .._models import (
     Service,
@@ -43,20 +46,23 @@ from .._models import (
 )
 from .._repositories import HostServicesRepository
 from ._family import MONITOR_SERVICES_FAMILY
-from ._filters import parse_as_livestatus_filter, ServiceFilterNode
+from ._filters import (
+    parse_as_livestatus_filter,
+    scope_filter_by_site,
+    SERVICE_FILTER_NODE,
+    ServiceFilterNode,
+)
+from ._limits import (
+    DEFAULT_SERVICE_LIMIT,
+    MAX_SERVICE_LIMIT,
+    MIN_SERVICE_LIMIT,
+    resolve_service_limit,
+)
 from ._modes import build_service_modes_by_id, ServiceModeInfo
 from ._perfometer import ServicePerfometer
 from ._reschedule_offer import build_reschedule_offer, ServiceRescheduleOffer
+from ._urls import service_view_link_by_id
 from ._validators import parse_service_search_query, parse_service_sort_options
-
-# View-local limits, deliberately not coupled to the global soft/hard query limit settings so they
-# never affect the legacy views.
-_MIN_HOST_SVC_LIMIT = 0
-_MAX_HOST_SVC_LIMIT = 5_000
-_DEFAULT_LIMIT = 1_000
-
-# The row limits the services of a host page offers: the default first, the maximum last.
-LIMIT_TIERS: Final = (_DEFAULT_LIMIT, _MAX_HOST_SVC_LIMIT)
 
 # Requesting no sorter is not the same as requesting no order: the repository reads an empty list
 # as "the page default", which leads with Checkmk's own services.
@@ -93,8 +99,11 @@ class HostServiceEntry:
         ),
         example=1752405510,
     )
-    last_state_change: UnixTimestamp = api_field(
-        description="Unix timestamp of the service's last state change",
+    last_state_change: UnixTimestamp | None = api_field(
+        description=(
+            "Unix timestamp of the service's last state change. Null for services that have "
+            "never been checked, i.e. those still pending their first check."
+        ),
         example=1752405540,
     )
     modes: list[ServiceModeInfo] | ApiOmitted = api_field(
@@ -137,6 +146,14 @@ class HostServiceEntry:
         ),
         default_factory=ApiOmitted,
     )
+    graphs_link: str | ApiOmitted = api_field(
+        description=(
+            "Link to the page with the graphs of this service. Omitted when the service has none, "
+            "or when not asked for."
+        ),
+        example="view.py?view_name=service_graphs&site=local&host=web-server-01&service=CPU+load",
+        default_factory=ApiOmitted,
+    )
     reschedule: ServiceRescheduleOffer | ApiOmitted = api_field(
         description=(
             "What rescheduling this service does. Omitted for users who may not reschedule."
@@ -145,8 +162,13 @@ class HostServiceEntry:
     )
 
     @classmethod
-    def from_domain(cls, service: Service, *, hostname: str, site_id: str) -> Self:
+    def from_domain(cls, service: Service) -> Self:
+        return cls._from_domain(service)
+
+    @classmethod
+    def _from_domain(cls, service: Service, **extra: str) -> Self:
         return cls(
+            **extra,
             name=service.name,
             state=service.state_label,
             is_flapping=service.is_flapping,
@@ -154,7 +176,9 @@ class HostServiceEntry:
             summary=service.summary,
             last_check=service.last_check,
             last_state_change=service.last_state_change,
-            modes=build_service_modes_by_id(service, hostname=hostname, site_id=site_id)
+            modes=build_service_modes_by_id(
+                service, hostname=service.host_name, site_id=service.site_id
+            )
             or ApiOmitted(),
             labels=service.labels if service.labels is not None else ApiOmitted(),
             tags=service.tags if service.tags is not None else ApiOmitted(),
@@ -166,10 +190,19 @@ class HostServiceEntry:
             perfometer=ServicePerfometer.from_perf_data(
                 service.perf_data,
                 service.check_command,
-                host_name=hostname,
+                host_name=service.host_name,
                 service_name=service.name,
+                registered_perfometers=registered_perfometers(),
             )
             or ApiOmitted(),
+            graphs_link=service_view_link_by_id(
+                "service_graphs",
+                site_id=service.site_id,
+                hostname=service.host_name,
+                service_name=service.name,
+            )
+            if service.has_graphs
+            else ApiOmitted(),
             reschedule=build_reschedule_offer(service) or ApiOmitted(),
         )
 
@@ -181,6 +214,13 @@ class HostServicesPageMeta:
     limit: int | None = api_field(description="Applied row limit.", example=1000)
     matched: int = api_field(description="Total matched services", example=42)
     total: int = api_field(description="Total number of services", example=1234)
+    unreachable_sites: list[str] = api_field(
+        description=(
+            "Holds the host's site when it could not be reached. The services and counts are empty "
+            "then."
+        ),
+        example=[],
+    )
 
 
 @api_model
@@ -191,16 +231,14 @@ class HostServicesResponse:
 
 @api_model
 class ServicesRequestBody:
-    limit: Annotated[int, Interval(ge=_MIN_HOST_SVC_LIMIT, le=_MAX_HOST_SVC_LIMIT)] | None = (
-        api_field(
-            description=(
-                "Number of services to return. Pass null to remove the limit entirely; this requires "
-                "the 'general.ignore_hard_limit' permission and otherwise falls back to the maximum "
-                f"of {_MAX_HOST_SVC_LIMIT}."
-            ),
-            example=_DEFAULT_LIMIT,
-            default=_DEFAULT_LIMIT,
-        )
+    limit: Annotated[int, Interval(ge=MIN_SERVICE_LIMIT, le=MAX_SERVICE_LIMIT)] | None = api_field(
+        description=(
+            "Number of services to return. Pass null to remove the limit entirely; this requires "
+            "the 'general.ignore_hard_limit' permission and otherwise falls back to the maximum "
+            f"of {MAX_SERVICE_LIMIT}."
+        ),
+        example=DEFAULT_SERVICE_LIMIT,
+        default=DEFAULT_SERVICE_LIMIT,
     )
     sort: Annotated[
         list[ServiceSort] | ApiOmitted,
@@ -249,43 +287,89 @@ def list_services(
         PathParam(description="Host name", example="web-server-01"),
     ],
     site_id: Annotated[
-        Annotated[SiteId, TypedPlainValidator(str, SiteIdConverter.should_exist)],
+        Annotated[SiteId, TypedPlainValidator(str, SiteIdConverter.should_be_authorized)],
         QueryParam(description="An existing site id", example="local"),
     ],
     api_context: ApiContext,
     body: ServicesRequestBody = ServicesRequestBody(),
 ) -> HostServicesResponse:
     """List services of a host to be consumed by the host services monitoring page."""
-    with sites.only_sites(site_id):
-        host_services_repo = LiveStatusHostServicesRepository(connection=sites.live())
-
-        # A `None` request means "remove the limit". We only honor that for users allowed to ignore
-        # the hard limit; everyone else is clamped to the safety ceiling. Numeric requests are
-        # already bounded to the ceiling by the request schema, so they pass through unchanged.
-        match body.limit:
-            case None if api_context.user.may("general.ignore_hard_limit"):
-                limit = None
-            case None:
-                limit = _MAX_HOST_SVC_LIMIT
-            case _:
-                limit = body.limit
-
-        parsed_filters = (
-            ServiceFilter("")
-            if isinstance(body.filter, ApiOmitted)
-            else parse_as_livestatus_filter(body.filter)
-        )
-
-        return _handle_list_services(
-            host_services_repo,
+    try:
+        return HostServicesTable(api_context.config.sites).list(
             hostname=hostname,
             site_id=site_id,
-            limit=limit,
+            limit=resolve_service_limit(body.limit, api_context.user),
             query="" if isinstance(body.q, ApiOmitted) else body.q,
             sorters=_DEFAULT_SORT if isinstance(body.sort, ApiOmitted) else body.sort,
-            filters=parsed_filters,
+            filter_node=None if isinstance(body.filter, ApiOmitted) else body.filter,
             fields=_DEFAULT_FIELDS if isinstance(body.fields, ApiOmitted) else body.fields,
         )
+    except HostNotFoundError as exc:
+        raise ProblemException(
+            status=HTTPStatus.NOT_FOUND,
+            title="The requested host was not found",
+            detail=str(exc),
+        ) from None
+    except InvalidServiceFilterError as exc:
+        raise ProblemException(
+            status=HTTPStatus.BAD_REQUEST, title="Invalid filter", detail=str(exc)
+        ) from None
+
+
+class HostServicesTable:
+    def __init__(self, site_configs: SiteConfigurations) -> None:
+        self._site_ids = frozenset(site_configs)
+
+    @staticmethod
+    def parse_filter(raw: str) -> ServiceFilterNode:
+        try:
+            return SERVICE_FILTER_NODE.validate_json(raw)
+        except ValidationError as exc:
+            raise InvalidServiceFilterError(str(exc)) from exc
+
+    def list(
+        self,
+        *,
+        hostname: str,
+        site_id: SiteId,
+        limit: int | None,
+        query: str,
+        sorters: Sequence[ServiceSort],
+        filter_node: ServiceFilterNode | None,
+        fields: Set[ServiceOptionalField],
+    ) -> HostServicesResponse:
+        if site_id not in self._site_ids:
+            raise HostNotFoundError(
+                f"The host {hostname!r} was not found: the site {site_id!r} does not exist"
+            )
+        with sites.only_sites(site_id):
+            return _handle_list_services(
+                LiveStatusHostServicesRepository(connection=sites.live()),
+                hostname=hostname,
+                site_id=site_id,
+                limit=limit,
+                query=query,
+                sorters=sorters,
+                filters=(
+                    ServiceFilter("")
+                    if filter_node is None
+                    else _parse_host_services_filter(filter_node)
+                ),
+                fields=fields,
+            )
+
+
+def _parse_host_services_filter(node: ServiceFilterNode) -> ServiceFilter:
+    try:
+        scoped = scope_filter_by_site(node)
+    except ValueError as exc:
+        raise InvalidServiceFilterError(str(exc)) from exc
+    if scoped.sites is not None:
+        raise InvalidServiceFilterError(
+            "The services of a host take their site from the 'site_id' query parameter, "
+            "so the filter must not contain a 'site_id' condition."
+        )
+    return parse_as_livestatus_filter(node)
 
 
 def _handle_list_services(
@@ -293,18 +377,17 @@ def _handle_list_services(
     *,
     hostname: str,
     site_id: str,
-    limit: int | None = _DEFAULT_LIMIT,
+    limit: int | None = DEFAULT_SERVICE_LIMIT,
     query: str = "",
     sorters: Sequence[ServiceSort] = _DEFAULT_SORT,
     filters: ServiceFilter = ServiceFilter(""),
     fields: Set[ServiceOptionalField] = _DEFAULT_FIELDS,
 ) -> HostServicesResponse:
-    if not host_services_repo.host_exists(hostname):
-        raise ProblemException(
-            status=HTTPStatus.NOT_FOUND,
-            title="The requested host was not found",
-            detail=f"The host {hostname!r} was not found on site {site_id!r}",
-        ) from None
+    if (
+        not host_services_repo.host_exists(hostname)
+        and site_id not in host_services_repo.unavailable_sites()
+    ):
+        raise HostNotFoundError(f"The host {hostname!r} was not found on site {site_id!r}")
 
     services = host_services_repo.fetch(
         hostname, limit=limit, query=query, sorters=sorters, filters=filters, fields=fields
@@ -318,18 +401,19 @@ def _handle_list_services(
         )
     else:
         matched_service_count = total_service_count
+    # Asked again after reading, as the site may fail during the reads. Only the host's site
+    # counts: the connection's dead sites span the whole request.
+    site_unreachable = site_id in host_services_repo.unreachable_sites()
 
     return HostServicesResponse(
-        services=[
-            HostServiceEntry.from_domain(service, hostname=hostname, site_id=site_id)
-            for service in services
-        ],
+        services=[HostServiceEntry.from_domain(service) for service in services],
         meta=HostServicesPageMeta(
             hostname=hostname,
             site_id=site_id,
             limit=limit,
             matched=matched_service_count,
             total=total_service_count,
+            unreachable_sites=[site_id] if site_unreachable else [],
         ),
     )
 

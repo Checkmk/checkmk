@@ -17,7 +17,9 @@ from cmk.gui.oauth.pages._introspect import OAuthIntrospectPage
 from cmk.gui.oauth.store.client_store import get_client_store
 from cmk.gui.oauth.token.token_store import get_token_store
 from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
 from cmk.gui.scopes import DEFAULT_SCOPE
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from tests.testlib.unit.gui.users import create_and_destroy_user
@@ -59,7 +61,11 @@ class TestOAuthIntrospectPage:
             flask_app.preprocess_request()
             OAuthIntrospectPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -78,7 +84,11 @@ class TestOAuthIntrospectPage:
             flask_app.preprocess_request()
             OAuthIntrospectPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -99,7 +109,11 @@ class TestOAuthIntrospectPage:
             flask_app.preprocess_request()
             OAuthIntrospectPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -119,7 +133,11 @@ class TestOAuthIntrospectPage:
             flask_app.preprocess_request()
             OAuthIntrospectPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -138,7 +156,11 @@ class TestOAuthIntrospectPage:
                 flask_app.preprocess_request()
                 OAuthIntrospectPage().handle_page(
                     PageContext(
-                        config=Config(), request=request, transactions=transactions, session=session
+                        config=Config(),
+                        request=request,
+                        transactions=transactions,
+                        session=session,
+                        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                     )
                 )
 
@@ -155,7 +177,11 @@ class TestOAuthIntrospectPage:
             flask_app.preprocess_request()
             OAuthIntrospectPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -173,7 +199,11 @@ class TestOAuthIntrospectPage:
             flask_app.preprocess_request()
             OAuthIntrospectPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -185,7 +215,11 @@ class TestOAuthIntrospectPage:
             flask_app.preprocess_request()
             OAuthIntrospectPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 
@@ -200,7 +234,11 @@ class TestOAuthIntrospectPage:
             flask_app.preprocess_request()
             OAuthIntrospectPage().handle_page(
                 PageContext(
-                    config=Config(), request=request, transactions=transactions, session=session
+                    config=Config(),
+                    request=request,
+                    transactions=transactions,
+                    session=session,
+                    user_permissions=UserPermissions.from_config(Config(), all_permissions()),
                 )
             )
 

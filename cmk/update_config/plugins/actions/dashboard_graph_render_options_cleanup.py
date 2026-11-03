@@ -9,11 +9,11 @@ from typing import override
 
 import cmk.utils.paths
 from cmk.ccc import store
-from cmk.update_config.lib import ExpiryVersion
+from cmk.update_config.internal import ExpiryVersion, UpdateAction
 from cmk.update_config.plugins.lib.user_profiles import user_directories
-from cmk.update_config.registry import update_action_registry, UpdateAction
+from cmk.update_config.registry import update_action_registry
 
-_OBSOLETE_RENDER_OPTIONS = frozenset({"color_gradient", "font_size"})
+_OBSOLETE_RENDER_OPTIONS = frozenset({"border_width", "color_gradient", "font_size", "preview"})
 
 
 def _as_dict(value: object, what: str) -> dict[str, object]:

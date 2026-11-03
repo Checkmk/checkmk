@@ -88,6 +88,38 @@ test('is invalid until a comment is provided', async () => {
   expect(emitted('update:valid')?.at(-1)).toEqual([true])
 })
 
+test('points out a missing comment until one is typed', async () => {
+  render(ScheduleDowntimeForm, {
+    props: {
+      modelValue: defaultScheduleDowntimeValues(PRESETS),
+      presets: PRESETS,
+      showErrors: true
+    }
+  })
+  expect(screen.getByText('Comment is required.')).toBeInTheDocument()
+
+  await userEvent.type(screen.getByPlaceholderText('What is the occasion?'), 'maintenance')
+  expect(screen.queryByText('Comment is required.')).not.toBeInTheDocument()
+})
+
+test('points out a downtime from now that lasts no time, on both of its inputs', () => {
+  const modelValue: ScheduleDowntimeFormValues = {
+    ...defaultScheduleDowntimeValues(PRESETS),
+    comment: 'maintenance',
+    selection: 'adhoc',
+    adhocHours: 0,
+    adhocMinutes: 0
+  }
+  render(ScheduleDowntimeForm, { props: { modelValue, presets: PRESETS, showErrors: true } })
+
+  expect(screen.getByRole('alert')).toHaveTextContent('Enter a duration longer than 0 minutes.')
+  expect(screen.getByRole('spinbutton', { name: 'Hours' })).toHaveAttribute('aria-invalid', 'true')
+  expect(screen.getByRole('spinbutton', { name: 'Minutes' })).toHaveAttribute(
+    'aria-invalid',
+    'true'
+  )
+})
+
 test('reveals the advanced options when the section is expanded', async () => {
   mountForm({ comment: 'maintenance' })
 
@@ -458,5 +490,17 @@ describe('Custom duration', () => {
     })
 
     expect(await screen.findByText('The downtime has to end after it starts.')).toBeVisible()
+  })
+
+  it('raises a downtime ending before it starts to an error once a submit runs into it', () => {
+    const modelValue: ScheduleDowntimeFormValues = {
+      ...defaultScheduleDowntimeValues(PRESETS),
+      comment: 'maintenance',
+      selection: 'custom',
+      customRange: { from: start, to: start.subtract({ hours: 1 }) }
+    }
+    render(ScheduleDowntimeForm, { props: { modelValue, presets: PRESETS, showErrors: true } })
+
+    expect(screen.getByRole('alert')).toHaveTextContent('The downtime has to end after it starts.')
   })
 })

@@ -82,7 +82,6 @@ class UrlStateSync {
     const { pathname, search, hash } = this.urlSync.getCurrentUrl()
     const sources: Record<UrlStateTarget, string> = { query: body(search), hash: body(hash) }
     const merged: Record<UrlStateTarget, string> = { ...sources }
-    let push = false
 
     for (const target of TARGETS) {
       const updates: Record<string, string | null> = {}
@@ -108,12 +107,6 @@ class UrlStateSync {
       }
       this.lastWritten.set(target, written)
       merged[target] = mergeParams(sources[target], updates)
-      const wantsHistory = this.writers.some(
-        (writer) => targetOf(writer) === target && writer.history === 'push'
-      )
-      if (wantsHistory && merged[target] !== sources[target]) {
-        push = true
-      }
     }
 
     if (merged.query === sources.query && merged.hash === sources.hash) {
@@ -123,10 +116,6 @@ class UrlStateSync {
     const fragment = merged.hash === '' ? '' : `#${merged.hash}`
     const url = `${pathname}${query}${fragment}`
     this.lastSeenUrl = url
-    if (push) {
-      this.urlSync.pushUrl(url)
-      return
-    }
     this.urlSync.replaceUrl(url)
   }
 

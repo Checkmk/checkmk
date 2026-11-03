@@ -5,7 +5,7 @@
  */
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 
-import type { HostRef } from '@/monitoring/shared/api/types'
+import type { HostRef, ServiceRef } from '@/monitoring/shared/api/types'
 
 export class RescheduleApi {
   public async rescheduleHosts(hosts: HostRef[], spreadMinutes: number): Promise<number> {
@@ -18,19 +18,15 @@ export class RescheduleApi {
     return response.rescheduled
   }
 
-  public async rescheduleServices(
-    host: HostRef,
-    serviceNames: string[],
-    spreadMinutes: number
-  ): Promise<number> {
+  public async rescheduleServices(services: ServiceRef[], spreadMinutes: number): Promise<number> {
     const response = unwrap(
       await client.POST('/monitor/services/actions/reschedule', {
         params: { header: { 'Content-Type': 'application/json' } },
         body: {
-          services: serviceNames.map((name) => ({
-            site_id: host.site_id,
-            host_name: host.name,
-            name
+          services: services.map((service) => ({
+            site_id: service.host.site_id,
+            host_name: service.host.name,
+            name: service.description
           })),
           spread_minutes: spreadMinutes
         }

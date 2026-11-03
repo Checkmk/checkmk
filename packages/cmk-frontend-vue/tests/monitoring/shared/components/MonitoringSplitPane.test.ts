@@ -56,9 +56,14 @@ const STUB_FORM = markRaw(
   })
 )
 
+let unreachableSites: string[] = []
+
 class RowService extends MonitoringService<Row> {
   protected async fetchBatch(): Promise<PagedResponse<Row>> {
-    return { items: [ROW], meta: { limit: 1000, matched: 1, total: 1 } }
+    return {
+      items: [ROW],
+      meta: { limit: 1000, matched: 1, total: 1, unreachable_sites: unreachableSites }
+    }
   }
 }
 
@@ -77,12 +82,13 @@ let service: RowService | null = null
 
 async function mountPaneWithLoadedRows(
   perform: MonitoringAction['perform'],
-  getActionTargets?: (rows: Row[], actionId: string) => HostRef[]
+  getActionTargets?: (rows: Row[], actionId: string) => HostRef[],
+  ackConfirm?: MonitoringAction['confirm']
 ) {
   service = new RowService('row-service', makeKeyShortcutService(), { columns: COLUMNS })
   const actions: MonitoringActionRegistry = {
     [RESCHEDULE_ID]: makeAction(RESCHEDULE_ID, perform),
-    [ACK_ID]: makeAction(ACK_ID, perform)
+    [ACK_ID]: { ...makeAction(ACK_ID, perform), ...(ackConfirm && { confirm: ackConfirm }) }
   }
   const activeService = service
   await vi.waitUntil(() => activeService.hasLoaded.value)
@@ -137,6 +143,24 @@ describe('MonitoringSplitPane', () => {
   afterEach(() => {
     service?.stopPolling()
     service = null
+    unreachableSites = []
+  })
+
+  it('names the sites that cannot be reached', async () => {
+    unreachableSites = ['remote_1', 'remote_2']
+
+    await mountPaneWithLoadedRows(vi.fn())
+
+    expect(screen.getByText('2 sites are not reachable')).toBeInTheDocument()
+    expect(
+      screen.getByText('No data could be retrieved from sites remote_1, remote_2.')
+    ).toBeInTheDocument()
+  })
+
+  it('warns about no site while every site answers', async () => {
+    await mountPaneWithLoadedRows(vi.fn())
+
+    expect(screen.queryByText(/not reachable/)).not.toBeInTheDocument()
   })
 
   it('performs an immediate action on the selected row without opening the form', async () => {
@@ -173,6 +197,27 @@ describe('MonitoringSplitPane', () => {
 
     expect(perform).not.toHaveBeenCalled()
     expect(screen.queryByRole('button', { name: 'Submit' })).not.toBeInTheDocument()
+    expect(
+      await screen.findByText('This action cannot be performed on any of the selected rows.')
+    ).toBeInTheDocument()
+  })
+
+  it('refuses a confirmed action whose targets are gone by the time it is confirmed', async () => {
+    const perform = vi
+      .fn()
+      .mockResolvedValue({ variant: 'success', message: untranslated('Acknowledged') })
+    let targets: HostRef[] = [ROW]
+    await mountPaneWithLoadedRows(perform, () => targets, {
+      detail: (count) => untranslated(`Targets: ${count}`),
+      submitLabel: () => untranslated('Confirm')
+    })
+    await selectTheOnlyRow()
+    await userEvent.click(screen.getByRole('button', { name: ACK_LABEL }))
+    targets = []
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Confirm' }))
+
+    expect(perform).not.toHaveBeenCalled()
     expect(
       await screen.findByText('This action cannot be performed on any of the selected rows.')
     ).toBeInTheDocument()

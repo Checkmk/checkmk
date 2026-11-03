@@ -5,8 +5,10 @@
 
 
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Self
+
+from cmk.discover_plugins import PluginConflict
 
 from ._check import CheckPlugin, CheckPluginName
 from ._common import SectionName
@@ -21,6 +23,10 @@ class AgentBasedPlugins:
     check_plugins: Mapping[CheckPluginName, CheckPlugin]
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin]
     errors: Sequence[str]
+    conflicts: Sequence[PluginConflict] = ()
+    """The name conflicts among `errors`"""
+    errors_by_module: Mapping[str, Sequence[str]] = field(default_factory=dict)
+    """The other `errors`, by the module they occurred in"""
 
     @classmethod
     def empty(cls) -> Self:

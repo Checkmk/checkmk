@@ -11,7 +11,6 @@ import socket
 from collections.abc import Callable, Iterable, Sequence
 from typing import Literal
 
-import cmk.ccc.debug
 import cmk.utils.paths
 from cmk import trace
 from cmk.base.config import ConfigCache, CoreObjectsConfig, ObjectAttributes

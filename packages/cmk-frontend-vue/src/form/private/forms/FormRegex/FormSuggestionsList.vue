@@ -287,7 +287,7 @@ defineExpose({
   <li v-if="error" class="form-suggestions-list__li">
     <CmkHtml :html="error" />
   </li>
-  <!-- eslint-disable vue/valid-v-for vue/require-v-for-key -->
+  <!-- eslint-disable vue/require-v-for-key -->
   <li
     v-for="(suggestion, index) in type === 'regex' && suggestionsMode === 'preview'
       ? filteredSuggestions.slice(0, 5)

@@ -78,6 +78,7 @@ def test_snmp_scan_find_plugins__success() -> None:
         FAKE_OID_CACHE,
         on_error=OnError.RAISE,
         backend=SNMPTestBackend(),
+        debug=False,
     )
 
     assert _SNMP_SECTIONS
@@ -93,6 +94,7 @@ def test_gather_available_raw_section_names_defaults() -> None:
             missing_sys_description=True,
         ),
         backend=SNMPTestBackend(),
+        debug=False,
     ) == {
         SNMPSectionName("hr_mem"),
         SNMPSectionName("snmp_info"),

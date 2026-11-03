@@ -1,0 +1,157 @@
+#!/usr/bin/env python3
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+"""Checker to prevent disallowed imports of modules."""
+
+import ast
+from pathlib import Path
+from typing import override
+
+from cmk.astrein.checkers.module_layers.config import (
+    Component,
+    compute_module_name,
+    get_absolute_importee,
+    ModuleLayersConfig,
+    ModuleName,
+    ModulePath,
+)
+from cmk.astrein.framework import ASTVisitorChecker
+
+
+class ModuleLayersChecker(ASTVisitorChecker):
+    """Checker for module layer architecture violations.
+
+    Enforces architectural boundaries between different components of the
+    Checkmk codebase based on the component rules in module_layers.toml."""
+
+    checker_id = "module-layers"
+    summary = "Enforces architectural boundaries between components"
+
+    def __init__(
+        self,
+        file_path: Path,
+        repo_root: Path,
+        source_code: str,
+        config: ModuleLayersConfig,
+    ):
+        super().__init__(file_path, repo_root, source_code)
+
+        self._config = config
+
+        # Compute module name from file path
+        self.module_name = compute_module_name(file_path, repo_root)
+
+        # Check if this is a package
+        self.is_package = file_path.name == "__init__.py"
+
+        # Compute relative path from repo root
+        try:
+            self.relative_path = ModulePath(file_path.relative_to(repo_root))
+        except ValueError:
+            # File is outside repo (e.g., /tmp files)
+            self.relative_path = ModulePath(file_path)
+
+        # Find the component this file belongs to
+        self.component = self._find_component(self.module_name, self.relative_path)
+
+    @override
+    def visit_Import(self, node: ast.Import) -> None:
+        for alias in node.names:
+            self._check_import(node, ModuleName(alias.name))
+        self.generic_visit(node)
+
+    @override
+    def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
+        if node.level in {1, 2}:
+            # This is a relative import. Assume this is fine.
+            self.generic_visit(node)
+            return
+
+        # IMPORTANT: In ast module, the attribute is 'module', not 'modname'!
+        if node.module is None:
+            self.generic_visit(node)
+            return
+
+        imported = [f"{node.module}.{alias.name}" for alias in node.names]
+        for modname in imported:
+            self._check_import(
+                node,
+                (
+                    ModuleName(modname)
+                    if node.level == 0
+                    else get_absolute_importee(
+                        root_name=str(self.module_name),
+                        modname=modname,
+                        level=node.level,
+                        is_package=self.is_package,
+                    )
+                ),
+            )
+        self.generic_visit(node)
+
+    def _check_import(self, node: ast.Import | ast.ImportFrom, imported: ModuleName) -> None:
+        """Check if an import is allowed"""
+        if self._shall_skip_layer_check(self.relative_path):
+            return
+
+        if not any(imported.in_component(c) for c in self._config.first_party):
+            return
+
+        if not self._is_import_allowed(self.component, self.relative_path, imported):
+            self.add_error(
+                f"Import of {imported} not allowed in {self.component or self.module_name!r}",
+                node,
+            )
+
+    @staticmethod
+    def _shall_skip_layer_check(relative_path: ModulePath) -> bool:
+        """Decide whether a file is out of scope for module-layer checking.
+
+        The layer checker enforces rules in the cmk namespace. For the cases
+        below, dependencies are already managed by Bazel, so the layer checker
+        would only restate what Bazel already enforces:
+
+        - Files under the top-level ``tests/`` or ``non-free/tests/`` tree.
+        - Files below ``packages/<pkg>/`` or ``non-free/packages/<pkg>/`` that
+          are not under the package's own ``cmk/`` subtree (the package's own
+          tests, scripts, helpers).
+        """
+        if relative_path.is_below("tests") or relative_path.is_below("non-free/tests"):
+            return True
+        for base_path in ("packages", "non-free/packages"):
+            if relative_path.is_below(base_path):
+                relative_to_pkg = ModulePath(*relative_path.relative_to(base_path).parts[1:])
+                if not relative_to_pkg.is_below("cmk"):
+                    return True
+        return False
+
+    def _is_import_allowed(
+        self, component: Component | None, importing_path: ModulePath, imported: ModuleName
+    ) -> bool:
+        """Check if an import is allowed based on component rules"""
+        if component:
+            return self._config.components[component](imported=imported, component=component)
+
+        try:
+            file_specific_checker = self._config.file_dependencies[importing_path]
+        except KeyError:
+            # This file does not belong to any component, and is not listed in
+            # file_dependencies. We don't allow any cmk imports.
+            return False
+        return file_specific_checker(imported=imported, component=component)
+
+    def _find_component(
+        self, importing: ModuleName, importing_path: ModulePath
+    ) -> Component | None:
+        """Find which component a file belongs to"""
+        # Let's *not* check the explicit list first. We don't want to encourage to define exceptions.
+        # What's below cmk/foobar, belongs to cmk.foobar, PERIOD.
+        for component in self._config.components:
+            if importing.in_component(component):
+                return component
+        try:
+            return self._config.file_components[importing_path]
+        except KeyError:
+            return None

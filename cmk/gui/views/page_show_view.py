@@ -29,7 +29,6 @@ from cmk.gui.pages import PageContext
 from cmk.gui.painter import Cell, columns_of_cells, PainterConfig, PainterContext
 from cmk.gui.painter.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.permissions import permission_registry
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import (
     ColumnName,
@@ -54,6 +53,7 @@ from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.urls import makeuri_contextless
 
 from . import availability
+from .drilldown_filters import dropped_filters_warning
 from .exporter import exporter_registry
 from .row_post_processing import post_process_rows
 from .sorter import sorter_parameter_ident, SorterEntry, SorterProtocol
@@ -76,7 +76,6 @@ def page_show_view(
         )
         _patch_view_context(view_spec)
 
-        user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
         request_cache = RequestCache(ctx.config)
         datasource = data_source_registry[view_spec["datasource"]]()
         context = visuals.active_context_from_request(
@@ -93,7 +92,7 @@ def page_show_view(
                 painter_options=PainterOptions.get_instance(),
                 theme=theme,
                 url_renderer=RenderLink(ctx.request, response, display_options),
-                user_permissions=user_permissions,
+                user_permissions=ctx.user_permissions,
             ),
             request_cache,
         )
@@ -107,6 +106,8 @@ def page_show_view(
         )
 
         view.only_sites = get_only_sites_from_context(context)
+        if (dropped_filters := dropped_filters_warning(request)) is not None:
+            view.add_warning_message(dropped_filters)
 
         view.user_sorters = get_user_sorters(view.spec["sorters"], view.row_cells)
         view.want_checkboxes = get_want_checkboxes()
@@ -128,7 +129,7 @@ def page_show_view(
                 show_buttons=True,
                 page_menu_dropdowns_callback=page_menu_dropdowns_callback,
             ),
-            user_permissions,
+            ctx.user_permissions,
             config=ctx.config,
         )
 

@@ -10,6 +10,7 @@ import sys
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextlib import suppress
 from pathlib import Path
+from typing import Literal, TypedDict
 
 import cmk.ccc.debug
 import cmk.utils.password_store
@@ -39,24 +40,9 @@ from cmk.base.errorhandling import (
     RecordingFetcher,
     serialize_fetched,
 )
-from cmk.base.modes.check_mk import (
-    DiscoveryOptions,
-    extract_plugin_selection,
-    FETCHER_OPTIONS,
-    forced_ip_lookup,
-    get_plugins_option,
-    handle_fetcher_options,
-    host_address,
-    load_checks,
-    option_detect_plugins,
-    option_sections,
-    parse_snmp_backend,
-    set_fake_dns,
-    SNMP_BACKEND_OPTION,
-)
 from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.cpu_tracking import CPUTracker
-from cmk.ccc.exceptions import MKBailOut, OnError
+from cmk.ccc.exceptions import MKBailOut, MKGeneralException, OnError
 from cmk.ccc.hostaddress import HostName, Hosts
 from cmk.checkengine.checking import make_timing_results
 from cmk.checkengine.discovery import (
@@ -73,11 +59,33 @@ from cmk.checkengine.plugins import CheckPluginName, SectionName
 from cmk.checkengine.snmplib import SNMPSectionName
 from cmk.checkengine.specs.checkresults import ActiveCheckResult, ServiceState
 from cmk.cli.engine.commands import option_count, option_names, option_string
-from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
+from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Arguments as CLIArguments
+from cmk.cli.internal import Command as CLICommand
+from cmk.cli.internal import Context as CLIContext
+from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
+from cmk.cli.internal import Option as CLIOption
+from cmk.cli.internal import Options
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
 from cmk.server_side_calls_backend import load_secrets_file
 from cmk.utils import ip_lookup
 from cmk.utils.log import console
+
+from .agent_based import extract_plugin_selection, load_checks
+from .exit_code import state_exit_code
+from .options import (
+    fake_dns_address,
+    FAKE_DNS_OPTION,
+    FETCHER_OPTIONS,
+    get_plugins_option,
+    handle_fetcher_options,
+    host_address,
+    option_detect_plugins,
+    option_sections,
+    parse_snmp_backend,
+    SNMP_BACKEND_OPTION,
+)
 
 # .
 #   .--check-discovery-----------------------------------------------------.
@@ -98,10 +106,10 @@ def _write_active_check_result(check_result: ActiveCheckResult) -> ServiceState:
 
 
 def _mode_check_discovery(
-    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> int:
+    omd_root: Path, global_options: CLIGlobalOptions, options: Options, args: CLIArgs
+) -> CLIExitCode:
     app = make_app(omd_root)
-    set_fake_dns(global_options.fake_dns)
+    fake_dns = fake_dns_address(options)
     raw_host_name = args[0]
     hostname = host_address(raw_host_name)
     file_cache_options = handle_fetcher_options(options)
@@ -113,8 +121,8 @@ def _mode_check_discovery(
     # We do not resolve the `latest` link here, as any given serial might be removed by the core.
     latest_config_path = VersionedConfigPath.make_latest_path(cmk.utils.paths.omd_root)
 
-    plugins = load_checks()
-    loading_result = config.load(validate_hosts=True)
+    plugins = load_checks(debug=global_options.debug)
+    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
     loaded_config = loading_result.loaded_config
     config_cache = loading_result.config_cache
     ruleset_matcher = config_cache.ruleset_matcher
@@ -123,8 +131,10 @@ def _mode_check_discovery(
     if hostname not in hosts_config.all_configured_hosts:
         # There is no configuration to discover from, hence no data source to contact.
         # Such a host must not be reported as "all up to date".
-        return _write_active_check_result(
-            ActiveCheckResult(state=3, summary=f"Unknown host: {hostname}")
+        return state_exit_code(
+            _write_active_check_result(
+                ActiveCheckResult(state=3, summary=f"Unknown host: {hostname}")
+            )
         )
 
     host_tags = loading_result.host_tags
@@ -134,7 +144,7 @@ def _mode_check_discovery(
         label_manager,
         omd_root=cmk.utils.paths.omd_root,
         var_dir=cmk.utils.paths.var_dir,
-        debug=cmk.ccc.debug.enabled(),
+        debug=global_options.debug,
     )
 
     with ruleset_matcher.ruleset_optimizer.processed_hosts({hostname}):
@@ -160,9 +170,9 @@ def _mode_check_discovery(
             label_manager.labels_of_host,
             loaded_config.discovery_parameters,
         )
-        ip_lookup_config = config_cache.ip_lookup_config()
+        ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
         ip_address_of = ip_lookup.ConfiguredIPLookup(
-            forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+            ip_lookup.make_lookup_ip_address(ip_lookup_config),
             allow_empty=hosts_config.clusters,
             error_handler=config.handle_ip_lookup_failure,
         )
@@ -195,6 +205,7 @@ def _mode_check_discovery(
                         loaded_config, ruleset_matcher, label_manager.labels_of_host
                     ),
                     force_stored_walks=bool(options.get("usewalk", False)),
+                    debug=global_options.debug,
                 ),
             ),
             plugins=plugins,
@@ -204,8 +215,7 @@ def _mode_check_discovery(
             force_snmp_cache_refresh=False,
             get_ip_stack_config=ip_lookup_config.ip_stack_config,
             ip_address_of=ip_address_of,
-            ip_address_of_mgmt=forced_ip_lookup()
-            or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
+            ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
             mode=FetchMode.DISCOVERY,
             simulation_mode=loaded_config.simulation_mode,
             max_cachefile_age=MaxAge(
@@ -225,6 +235,7 @@ def _mode_check_discovery(
                 path=cmk.utils.password_store.active_secrets_path_site(RELATIVE_PATH_SECRETS),
                 secrets=secrets,
             ),
+            debug=global_options.debug,
         )
         parser = CMKParser(
             config.make_parser_config(
@@ -235,6 +246,7 @@ def _mode_check_discovery(
             ),
             selected_sections=NO_SELECTION,
             keep_outdated=file_cache_options.keep_outdated,
+            debug=global_options.debug,
         )
         summarizer = CMKSummarizer(
             hostname,
@@ -251,6 +263,7 @@ def _mode_check_discovery(
             snmp_backend=config_cache.get_snmp_backend(hostname),
             keepalive=False,
             get_agent_output=lambda: recording_fetcher.serialized(hostname),
+            debug=global_options.debug,
         )
 
         check_results: Sequence[ActiveCheckResult] = []
@@ -291,6 +304,7 @@ def _mode_check_discovery(
                         hn, cmk.utils.paths.autochecks_dir
                     ).read(),
                     read_discovered_host_labels=label_manager.discovered_labels_of_host,
+                    debug=global_options.debug,
                 )
             check_results = [
                 *check_results,
@@ -304,17 +318,32 @@ def _mode_check_discovery(
         if error_handler.result is not None:
             check_results = (error_handler.result,)
 
-        return _write_active_check_result(ActiveCheckResult.from_subresults(*check_results))
+        return state_exit_code(
+            _write_active_check_result(ActiveCheckResult.from_subresults(*check_results))
+        )
+
+
+def _run_check_discovery(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
+    if context.global_options.debug:
+        # the store reads cmk.ccc.debug
+        cmk.ccc.debug.enable()
+    try:
+        return _mode_check_discovery(context.omd_root, context.global_options, options, args)
+    except (MKBailOut, MKGeneralException) as e:
+        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+        if context.global_options.debug:
+            raise
+        return CLIExitCode.UNKNOWN
 
 
 cli_command_check_discovery = CLICommand(
-    long_option="check-discovery",
-    handler_function=_mode_check_discovery,
-    argument=True,
-    argument_descr="HOSTNAME",
-    sub_options=[*FETCHER_OPTIONS, SNMP_BACKEND_OPTION],
-    short_help="Check for not yet monitored services",
-    long_help=[
+    name="check_discovery",
+    long="check-discovery",
+    handler_function=_run_check_discovery,
+    arguments=CLIArguments("HOSTNAME"),
+    sub_options=[*FETCHER_OPTIONS, SNMP_BACKEND_OPTION, FAKE_DNS_OPTION],
+    help="Check for not yet monitored services",
+    description=[
         (
             "Make Check_MK behave as monitoring plug-ins that checks if an "
             "inventory would find new or vanished services for the host. "
@@ -322,6 +351,24 @@ cli_command_check_discovery = CLICommand(
             "autodiscovery"
         )
     ],
+)
+
+
+DiscoveryOptions = TypedDict(
+    "DiscoveryOptions",
+    {
+        "cache": Literal[True],
+        "snmp-backend": str,
+        "no-cache": Literal[True],
+        "no-tcp": Literal[True],
+        "usewalk": Literal[True],
+        "detect-sections": frozenset[SectionName],
+        "plugins": frozenset[CheckPluginName],
+        "detect-plugins": frozenset[str],
+        "discover": int,
+        "only-host-labels": bool,
+    },
+    total=False,
 )
 
 
@@ -377,13 +424,13 @@ def _preprocess_hostnames(
 
 
 def _mode_discover(
-    omd_root: Path, global_options: GlobalOptions, parsed: Options, args: Args
-) -> int:
+    omd_root: Path, global_options: CLIGlobalOptions, parsed: Options, args: CLIArgs
+) -> CLIExitCode:
     app = make_app(omd_root)
-    set_fake_dns(global_options.fake_dns)
+    fake_dns = fake_dns_address(parsed)
     options = _discovery_options(parsed)
-    plugins = load_checks()
-    loading_result = config.load(validate_hosts=True)
+    plugins = load_checks(debug=global_options.debug)
+    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
     loaded_config = loading_result.loaded_config
     hosts_config = loading_result.hosts_config
     host_tags = loading_result.host_tags
@@ -396,7 +443,7 @@ def _mode_discover(
         label_manager,
         omd_root=cmk.utils.paths.omd_root,
         var_dir=cmk.utils.paths.var_dir,
-        debug=cmk.ccc.debug.enabled(),
+        debug=global_options.debug,
     )
 
     discovery_config = DiscoveryConfig(
@@ -417,9 +464,9 @@ def _mode_discover(
         plugins.check_plugins,
         label_manager.labels_of_service,
     )
-    ip_lookup_config = config_cache.ip_lookup_config()
+    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -445,7 +492,7 @@ def _mode_discover(
         except ValueError as exc:
             raise MKBailOut("Unknown SNMP backend") from exc
 
-        on_error = OnError.RAISE if cmk.ccc.debug.enabled() else OnError.WARN
+        on_error = OnError.RAISE if global_options.debug else OnError.WARN
         selected_sections, run_plugin_names = extract_plugin_selection(
             detect_plugins=options.get("detect-plugins"),
             detect_sections=options.get("detect-sections"),
@@ -465,6 +512,7 @@ def _mode_discover(
             ),
             selected_sections=selected_sections,
             keep_outdated=file_cache_options.keep_outdated,
+            debug=global_options.debug,
         )
         fetcher = CMKFetcher(
             config_cache,
@@ -499,6 +547,7 @@ def _mode_discover(
                         loaded_config, ruleset_matcher, label_manager.labels_of_host
                     ),
                     force_stored_walks=bool(options.get("usewalk", False)),
+                    debug=global_options.debug,
                 ),
             ),
             plugins=plugins,
@@ -508,8 +557,7 @@ def _mode_discover(
             force_snmp_cache_refresh=False,
             get_ip_stack_config=ip_lookup_config.ip_stack_config,
             ip_address_of=ip_address_of,
-            ip_address_of_mgmt=forced_ip_lookup()
-            or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
+            ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
             mode=(
                 FetchMode.DISCOVERY
                 if selected_sections is NO_SELECTION
@@ -530,6 +578,7 @@ def _mode_discover(
                 path=cmk.utils.password_store.pending_secrets_path_site(),
                 secrets=secrets,
             ),
+            debug=global_options.debug,
         )
         recording_fetcher = RecordingFetcher(fetcher)
         any_failed = False
@@ -590,39 +639,53 @@ def _mode_discover(
                 autochecks_dir=cmk.utils.paths.autochecks_dir,
                 discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
                 inventorized_host_labels_dir=cmk.utils.paths.inventorized_host_labels_dir,
+                debug=global_options.debug,
             )
             any_failed |= not succeeded
 
-        return 1 if any_failed else 0
+        return CLIExitCode.FAILURE if any_failed else CLIExitCode.SUCCESS
+
+
+def _run_discover(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
+    if context.global_options.debug:
+        # the store reads cmk.ccc.debug
+        cmk.ccc.debug.enable()
+    try:
+        return _mode_discover(context.omd_root, context.global_options, options, args)
+    except (MKBailOut, MKGeneralException) as e:
+        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+        if context.global_options.debug:
+            raise
+        return CLIExitCode.UNKNOWN
 
 
 cli_command_discover = CLICommand(
-    long_option="discover",
-    short_option="I",
-    handler_function=_mode_discover,
-    argument=True,
-    argument_descr="[-I] HOST1 HOST2...",
-    argument_optional=True,
+    name="discover",
+    long="discover",
+    short="I",
+    handler_function=_run_discover,
+    arguments=CLIArguments("[-I] HOST1 HOST2...", optional=True),
     sub_options=[
         *FETCHER_OPTIONS,
         SNMP_BACKEND_OPTION,
         CLIOption(
-            long_option="discover",
-            short_option="I",
-            short_help="Delete existing services before starting discovery",
+            long="discover",
+            short="I",
+            help="Delete existing services before starting discovery",
             repeat=True,
         ),
         option_sections,
         get_plugins_option(CheckPluginName),
         option_detect_plugins,
         CLIOption(
-            long_option="only-host-labels",
-            short_option="L",
-            short_help="Restrict discovery to host labels only",
+            long="only-host-labels",
+            short="L",
+            help="Restrict discovery to host labels only",
         ),
+        FAKE_DNS_OPTION,
     ],
-    short_help="Find new services",
-    long_help=[
+    help="Find new services",
+    description=[
         (
             "Make Check_MK behave as monitoring plug-ins that checks if an "
             "inventory would find new or vanished services for the host. "

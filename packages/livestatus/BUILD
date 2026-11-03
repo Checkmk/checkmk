@@ -30,6 +30,12 @@ cc_library(
     name = "livestatus_headers",
     hdrs = glob(["include/livestatus/*.h"]),
     copts = ["-std=c++20"],
+    # Our headers include Asio, so everybody including them must configure
+    # Asio the same way, otherwise we violate the one definition rule.
+    defines = [
+        "ASIO_DISABLE_CONCEPTS",
+        "ASIO_NO_DEPRECATED",
+    ],
     platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
     strip_include_prefix = "include/",
     visibility = ["//:__subpackages__"],
@@ -49,11 +55,7 @@ cc_library(
         "-O3",
         "-std=c++20",
     ],
-    local_defines = [
-        "HAVE_RE2",
-        "ASIO_DISABLE_CONCEPTS",
-        "ASIO_NO_DEPRECATED",
-    ],
+    local_defines = ["HAVE_RE2"],
     platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
     visibility = [
         # Should rather be private

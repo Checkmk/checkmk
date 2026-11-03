@@ -15,11 +15,10 @@ from collections.abc import Iterable, Mapping, Sequence
 from contextlib import suppress
 from pathlib import Path
 
-import cmk.ccc.debug
 from cmk.base import config
 from cmk.base.config import ConfigCache
-from cmk.base.modes.check_mk import load_checks
 from cmk.ccc import tty
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName, Hosts
 from cmk.checkengine.plugin_backend import (
     filter_relevant_raw_sections,
@@ -32,13 +31,22 @@ from cmk.checkengine.plugins import (
 from cmk.cli.engine.commands import (
     write_stdout,
 )
-from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
+from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Arguments as CLIArguments
+from cmk.cli.internal import Command as CLICommand
+from cmk.cli.internal import Context as CLIContext
+from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
+from cmk.cli.internal import Option as CLIOption
+from cmk.cli.internal import Options
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.ruleset_matcher.tags import HostTags, TagID
 from cmk.ruleset_matcher.tuple_rulesets import hosttags_match_taglist
 from cmk.server_side_calls_backend import (
     load_active_checks,
 )
+
+from .agent_based import load_checks
 
 
 # TODO: Does not care about internal group "check_mk"
@@ -80,9 +88,9 @@ def _list_all_hosts(
 
 
 def _mode_list_hosts(
-    _omd_root: Path, _global_options: GlobalOptions, options: Options, args: Args
-) -> int:
-    loading_result = config.load(validate_hosts=True)
+    _omd_root: Path, global_options: CLIGlobalOptions, options: Options, args: CLIArgs
+) -> CLIExitCode:
+    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
     config_cache = loading_result.config_cache
     core_objects_config = config.CoreObjectsConfig(
         loading_result.loaded_config,
@@ -99,28 +107,37 @@ def _mode_list_hosts(
     with suppress(IOError):
         sys.stdout.write("\n".join(hosts) + "\n")
         sys.stdout.flush()
-    return 0
+    return CLIExitCode.SUCCESS
+
+
+def _run_list_hosts(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
+    try:
+        return _mode_list_hosts(context.omd_root, context.global_options, options, args)
+    except MKGeneralException as e:
+        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+        if context.global_options.debug:
+            raise
+        return CLIExitCode.UNKNOWN
 
 
 cli_command_list_hosts = CLICommand(
-    long_option="list-hosts",
-    short_option="l",
-    handler_function=_mode_list_hosts,
-    argument=True,
-    argument_descr="G1 G2...",
-    argument_optional=True,
+    name="list_hosts",
+    long="list-hosts",
+    short="l",
+    handler_function=_run_list_hosts,
+    arguments=CLIArguments("G1 G2...", optional=True),
     sub_options=[
         CLIOption(
-            long_option="all-sites",
-            short_help="Include hosts of foreign sites",
+            long="all-sites",
+            help="Include hosts of foreign sites",
         ),
         CLIOption(
-            long_option="include-offline",
-            short_help="Include offline hosts",
+            long="include-offline",
+            help="Include offline hosts",
         ),
     ],
-    short_help="Print list of all hosts or members of host groups",
-    long_help=[
+    help="Print list of all hosts or members of host groups",
+    description=[
         (
             "Called without argument lists all hosts. You may "
             "specify one or more host groups to restrict the output to hosts "
@@ -156,9 +173,9 @@ def _list_all_hosts_with_tags(
 
 
 def _mode_list_tag(
-    _omd_root: Path, _global_options: GlobalOptions, _options: Options, args: Args
-) -> int:
-    loading_result = config.load(validate_hosts=True)
+    _omd_root: Path, global_options: CLIGlobalOptions, _options: Options, args: CLIArgs
+) -> CLIExitCode:
+    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
     hosts = _list_all_hosts_with_tags(
         tuple(TagID(_) for _ in args),
         loading_result.config_cache,
@@ -168,17 +185,26 @@ def _mode_list_tag(
     write_stdout("\n".join(sorted(hosts)))
     if hosts:
         write_stdout("\n")
-    return 0
+    return CLIExitCode.SUCCESS
+
+
+def _run_list_tag(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
+    try:
+        return _mode_list_tag(context.omd_root, context.global_options, options, args)
+    except MKGeneralException as e:
+        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+        if context.global_options.debug:
+            raise
+        return CLIExitCode.UNKNOWN
 
 
 cli_command_list_tag = CLICommand(
-    long_option="list-tag",
-    handler_function=_mode_list_tag,
-    argument=True,
-    argument_descr="TAG1 TAG2...",
-    argument_optional=True,
-    short_help="List hosts having certain tags",
-    long_help=["Prints all hosts that have all of the specified tags at once."],
+    name="list_tag",
+    long="list-tag",
+    handler_function=_run_list_tag,
+    arguments=CLIArguments("TAG1 TAG2...", optional=True),
+    help="List hosts having certain tags",
+    description=["Prints all hosts that have all of the specified tags at once."],
 )
 
 
@@ -234,20 +260,20 @@ def _get_ds_type(
 
 
 def _mode_list_checks(
-    _omd_root: Path, _global_options: GlobalOptions, _options: Options, _args: Args
-) -> int:
+    _omd_root: Path, global_options: CLIGlobalOptions, _options: Options, _args: CLIArgs
+) -> CLIExitCode:
     from cmk.utils import man_pages
 
-    plugins = load_checks()
+    plugins = load_checks(debug=global_options.debug)
     section_plugins: Iterable[AgentSectionPlugin | SNMPSectionPlugin] = [
         *plugins.agent_sections.values(),
         *plugins.snmp_sections.values(),
     ]
 
     all_check_manuals = {
-        n: man_pages.parse_man_page(n, p)
+        n: man_pages.parse_man_page(n, p, debug=global_options.debug)
         for n, p in man_pages.make_man_page_path_map(
-            discover_families(raise_errors=cmk.ccc.debug.enabled()),
+            discover_families(raise_errors=global_options.debug),
             PluginGroup.CHECKMAN.value,
         ).items()
     }
@@ -265,7 +291,7 @@ def _mode_list_checks(
                 ds_type=_DSType.ACTIVE,
                 title=_get_title(name),
             )
-            for p in load_active_checks(raise_errors=cmk.ccc.debug.enabled()).values()
+            for p in load_active_checks(raise_errors=global_options.debug).values()
         ),
         *(
             _TableRow(
@@ -279,12 +305,23 @@ def _mode_list_checks(
 
     for e in sorted(table, key=lambda e: e.name):
         write_stdout(f"{e.render_tty()}\n")
-    return 0
+    return CLIExitCode.SUCCESS
+
+
+def _run_list_checks(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
+    try:
+        return _mode_list_checks(context.omd_root, context.global_options, options, args)
+    except MKGeneralException as e:
+        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+        if context.global_options.debug:
+            raise
+        return CLIExitCode.UNKNOWN
 
 
 cli_command_list_checks = CLICommand(
-    long_option="list-checks",
-    short_option="L",
-    handler_function=_mode_list_checks,
-    short_help="List all available Check_MK checks",
+    name="list_checks",
+    long="list-checks",
+    short="L",
+    handler_function=_run_list_checks,
+    help="List all available Check_MK checks",
 )

@@ -1,0 +1,10 @@
+type = "Component"
+display_name = "DB Management"
+has_support_component = true
+members_required = 2
+tier = 2
+product_managers = []
+description = """
+Database schema management: versioned schema migrations that components
+declare and that are applied during omd create and omd update.
+"""

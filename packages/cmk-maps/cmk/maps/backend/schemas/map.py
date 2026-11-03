@@ -4,35 +4,54 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Map configuration schemas."""
 
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Self
 
-from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_validator
+from pydantic import (
+    AfterValidator,
+    BaseModel,
+    BeforeValidator,
+    Field,
+    field_validator,
+    model_validator,
+)
 
 from cmk.maps.backend.schemas.presentation import PresentationView
-from cmk.maps.shared.filters import normalize_object_filter
+from cmk.maps.shared.filters import (
+    bound_type_of,
+    check_host_member_patterns,
+    normalize_object_filter,
+    optional_member_pattern,
+)
 from cmk.maps.shared.geo import LAT_LIMIT, LNG_LIMIT, MAX_ZOOM
 from cmk.maps.shared.map_compat import (
     accept_legacy_backend_id,
     coerce_graph_metric,
     migrate_weathermap,
 )
+from cmk.maps.shared.map_name import MAP_NAME_MAX_LENGTH, MAP_NAME_PATTERN
 from cmk.maps.shared.map_payload import (
+    BackgroundPosition,
+    BackgroundStyle,
     ClickAction,
     LinePerfdataLabel,
     LineStyle,
+    MonitoredObjectType,
     ObjectType,
     RenderMode,
 )
 from cmk.maps.shared.validators import (
     coerce_asset_ref,
     coerce_url_target,
+    MAX_ROTATION_POOLS,
     validate_color,
+    validate_rotation_pool,
     validate_user_url,
 )
 
 # Uploaded icon / background references are bare filenames the SPA expands into an
 # asset URL; drop anything that could climb out of the asset directory.
 _AssetRef = Annotated[str | None, BeforeValidator(coerce_asset_ref)]
+_RotationPool = Annotated[str, AfterValidator(validate_rotation_pool)]
 
 
 class AggregationInfo(BaseModel):
@@ -82,6 +101,8 @@ class LabelConfig(BaseModel):
     # NagVis label_width — fixed pixel width that wraps long labels.
     width: int | None = None
     weight: Literal["normal", "bold"] | None = None
+    # How a text box aligns its text. An object's label in the NagVis-compatible
+    # renderer starts at ``x`` when left-aligned and is centered on it otherwise.
     align: Literal["left", "right", "center", "justify"] | None = None
 
     @field_validator("color", "background")
@@ -241,6 +262,9 @@ class MapElement(BaseModel):
     line_perfdata_label: LinePerfdataLabel = "none"
     # Color the line by inbound/outbound utilization gradient instead of state color.
     line_weather_color: bool = False
+    # What the line shows the state of. ``None`` → a service when one is bound,
+    # else the host.
+    line_object_type: MonitoredObjectType | None = None
     # Inbound metric (rendered left of the midpoint).
     weathermap_metric: str | None = None
     # Outbound metric (rendered right of the midpoint).
@@ -305,7 +329,18 @@ class MapElement(BaseModel):
             return None
         return normalize_object_filter(v)
 
+    @field_validator("exclude_members", "exclude_member_states")
+    @classmethod
+    def _validate_member_patterns(cls, v: str | None) -> str | None:
+        return optional_member_pattern(v)
+
     _migrate_weathermap = model_validator(mode="before")(migrate_weathermap)
+
+    @model_validator(mode="after")
+    def _host_takes_no_service_pattern(self) -> Self:
+        bound = bound_type_of(self.type, self.line_object_type, self.service_description)
+        check_host_member_patterns(bound, self.exclude_members, self.exclude_member_states)
+        return self
 
     line_color: str | None = None
     line_color_border: str | None = None
@@ -319,23 +354,29 @@ class MapElement(BaseModel):
 class MapConfig(BaseModel):
     _migrate_legacy_keys = model_validator(mode="before")(accept_legacy_backend_id)
 
-    # Constrained like MapRead.name: the name keys the in-memory cache and the
-    # on-disk path, so an unvalidated value would allow cache poisoning / path
-    # traversal via the (auth-only) register endpoint. Matches the GUI's
-    # is_valid_map_name so a GUI-saved map always round-trips.
-    name: str = Field(..., min_length=1, max_length=100, pattern=r"^[a-zA-Z0-9_\-]+$")
+    # The name keys the in-memory cache and the on-disk path, so an unvalidated
+    # value would allow cache poisoning / path traversal via the (auth-only)
+    # register endpoint. Matches the GUI's is_valid_map_name so a GUI-saved map
+    # always round-trips.
+    name: str = Field(..., min_length=1, max_length=MAP_NAME_MAX_LENGTH, pattern=MAP_NAME_PATTERN)
     alias: str = ""
     connection_id: str = "live_1"
     icon_size: int | None = None
     rotation_interval: int = 0
+    rotation_pools: list[_RotationPool] = Field(default_factory=list, max_length=MAX_ROTATION_POOLS)
     sort_order: int = 0
     click_action: ClickAction = "link"
     hover_template: str | None = None
     context_template: str | None = None
     background_image: _AssetRef = None
     background_color: str | None = None
+    # How the image covers the map, in map coordinates; "nagvis_classic"
+    # ignores both and always draws it at its own size.
+    background_style: BackgroundStyle = "single"
+    background_position: BackgroundPosition = "top_left"
     # Default keeps existing maps on the Maps renderer; "nagvis_classic"
-    # opts an imported map into top-left anchoring + flat styling.
+    # opts an imported map into NagVis' geometry (top-left anchoring, labels at
+    # their own offset, the background at its own size).
     render_mode: RenderMode = "default"
     # Map-wide fallback z for objects that carry no explicit ``z`` (mirrors
     # NagVis' global default). Default 1 preserves the historic per-object
@@ -357,69 +398,10 @@ class MapConfig(BaseModel):
     # pathological payload.
     objects: list[MapElement] = Field(default=[], max_length=5000)
 
-
-class MapCreate(BaseModel):
-    _migrate_legacy_keys = model_validator(mode="before")(accept_legacy_backend_id)
-
-    name: str = Field(..., min_length=1, max_length=100, pattern=r"^[a-zA-Z0-9_\-]+$")
-    alias: str = ""
-    background_image: _AssetRef = None
-    background_color: str | None = None
-    icon_size: int | None = None
-    connection_id: str = "live_1"
-    view: MapView = StaticView()
-    render_mode: RenderMode = "default"
-    default_z: int = 1
-
-
-class MapUpdate(BaseModel):
-    _migrate_legacy_keys = model_validator(mode="before")(accept_legacy_backend_id)
-
-    alias: str | None = None
-    background_image: _AssetRef = None
-    background_color: str | None = None
-    icon_size: int | None = None
-    connection_id: str | None = None
-    view: MapView | None = None
-    sort_order: int | None = None
-    click_action: ClickAction | None = None
-    hover_template: str | None = None
-    context_template: str | None = None
-    rotation_interval: int | None = None
-    render_mode: RenderMode | None = None
-    default_z: int | None = None
-    canvas_width: int | None = None
-    canvas_height: int | None = None
-
-
-class MapOrderItem(BaseModel):
-    name: str
-    sort_order: int
-
-
-class MapRead(BaseModel):
-    _migrate_legacy_keys = model_validator(mode="before")(accept_legacy_backend_id)
-
-    name: str
-    alias: str
-    background_image: _AssetRef
-    background_color: str | None = None
-    icon_size: int | None
-    connection_id: str
-    view_type: str
-    view: MapView
-    object_count: int
-    rotation_interval: int
-    version: int = 0
-    sort_order: int = 0
-    click_action: ClickAction = "link"
-    hover_template: str | None = None
-    context_template: str | None = None
-    render_mode: RenderMode = "default"
-    default_z: int = 1
-    # Per-user capability stamped by the list endpoint: whether the requesting
-    # user may edit this map (admins, or non-admins with edit permission).
-    can_edit: bool = False
+    @field_validator("background_color")
+    @classmethod
+    def _validate_background_color(cls, v: str | None) -> str | None:
+        return validate_color(v)
 
 
 class MapElementUpdate(BaseModel):
@@ -448,6 +430,7 @@ class MapElementUpdate(BaseModel):
     line_width: int | None = Field(default=None, ge=1, le=20)
     line_perfdata_label: LinePerfdataLabel | None = None
     line_weather_color: bool | None = None
+    line_object_type: MonitoredObjectType | None = None
     weathermap_metric: str | None = None
     weathermap_metric_out: str | None = None
     cmk_label_name: str | None = None
@@ -512,55 +495,9 @@ class MapElementUpdate(BaseModel):
             return None
         return normalize_object_filter(v)
 
+    @field_validator("exclude_members", "exclude_member_states")
+    @classmethod
+    def _validate_member_patterns(cls, v: str | None) -> str | None:
+        return optional_member_pattern(v)
+
     _migrate_weathermap = model_validator(mode="before")(migrate_weathermap)
-
-
-class MapClone(BaseModel):
-    new_name: str = Field(..., min_length=1, max_length=100, pattern=r"^[a-zA-Z0-9_\-]+$")
-    alias: str | None = None
-
-
-class MapPermissionsRead(BaseModel):
-    """Which roles have view/edit access to a specific map (by name, not wildcard)."""
-
-    view: list[str]
-    edit: list[str]
-
-
-_MapNameStr = Annotated[str, Field(min_length=1, max_length=100, pattern=r"^[a-zA-Z0-9_\-]+$")]
-
-
-class MapBulkDelete(BaseModel):
-    names: Annotated[list[_MapNameStr], Field(min_length=1, max_length=500)]
-
-
-class MapBulkDeleteFailure(BaseModel):
-    name: str
-    reason: str
-
-
-class MapBulkDeleteResult(BaseModel):
-    deleted: list[str]
-    failed: list[MapBulkDeleteFailure]
-
-
-class MapBulkEdit(BaseModel):
-    names: Annotated[list[_MapNameStr], Field(min_length=1, max_length=500)]
-    # Untyped dict on purpose: the API layer first runs the FormSpec wire
-    # conversions (rotation cascading → int, click_action bool → literal)
-    # and then validates the resulting subset against ``MapUpdate``.
-    updates: dict[str, object]
-
-
-class MapBulkEditFailure(BaseModel):
-    name: str
-    reason: str
-
-
-class MapBulkEditResult(BaseModel):
-    updated: list[str]
-    failed: list[MapBulkEditFailure]
-
-
-class MapBulkExport(BaseModel):
-    names: Annotated[list[_MapNameStr], Field(min_length=1, max_length=500)]

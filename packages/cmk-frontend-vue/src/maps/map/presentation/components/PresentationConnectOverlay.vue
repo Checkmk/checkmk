@@ -142,7 +142,7 @@ const badgeStyle = computed(() => ({
 }
 
 .maps-presentation-connect-overlay__badge--bound {
-  background: #22c55e;
+  background: var(--interactive-accent);
 }
 
 /* Lift the current slot's number off the muted ones with a contrasting ring. */

@@ -22,10 +22,9 @@ import pytest
 from pytest import MonkeyPatch
 
 import cmk.base.configlib.fetchers
-import cmk.ccc.debug
 import cmk.utils.paths
 from cmk.base import config, notify
-from cmk.base.config import ConfigCache, EnforcedServicesTable
+from cmk.base.config import ConfigCache, EnforcedServicesTable, make_host_tags, make_hosts_config
 from cmk.base.configlib.checkengine import CheckingConfig
 from cmk.base.configlib.labels import LabelConfig
 from cmk.base.configlib.loaded_config import BaseConfig, CustomCheck
@@ -34,7 +33,6 @@ from cmk.base.configlib.servicename import (
     make_final_service_name_config,
     PassiveServiceNameConfig,
 )
-from cmk.base.default_config.base import _PeriodicDiscovery
 from cmk.base.notify import make_notification_parameters_config
 from cmk.ccc import store
 from cmk.ccc.config_path import VersionedConfigPath
@@ -62,7 +60,6 @@ from cmk.checkengine.plugins import CheckPlugin as CheckPluginAPI
 from cmk.checkengine.snmplib import SNMPBackendEnum
 from cmk.checkengine.specs.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.discover_plugins import family_libexec_dir, PluginLocation
-from cmk.flags import ExperimentalFlagConfig
 from cmk.gui.watolib.sample_config import USE_NEW_DESCRIPTIONS_FOR_SETTING
 from cmk.password_store.v1 import Secret
 from cmk.piggyback import backend as piggyback_backend
@@ -248,12 +245,24 @@ def test_tcp_fetcher_config_agent_ports_matching(
     ts.set_ruleset(
         "agent_ports",
         [
-            {"id": "01", "condition": {"host_folder": "/wato/level11/level22/"}, "value": 22},
-            {"id": "02", "condition": {"host_folder": "/wato/level11/"}, "value": 11},
-            {"id": "03", "condition": {"host_folder": "/wato/level1/level3/"}, "value": 3},
-            {"id": "04", "condition": {"host_folder": "/wato/level1/level2/"}, "value": 2},
-            {"id": "05", "condition": {"host_folder": "/wato/level1/"}, "value": 1},
-            {"id": "06", "condition": {}, "value": 0},
+            {
+                "id": "01",
+                "condition": {"host_folder": "/wato/level11/level22/"},
+                "value": {"port": 22},
+            },
+            {"id": "02", "condition": {"host_folder": "/wato/level11/"}, "value": {"port": 11}},
+            {
+                "id": "03",
+                "condition": {"host_folder": "/wato/level1/level3/"},
+                "value": {"port": 3},
+            },
+            {
+                "id": "04",
+                "condition": {"host_folder": "/wato/level1/level2/"},
+                "value": {"port": 2},
+            },
+            {"id": "05", "condition": {"host_folder": "/wato/level1/"}, "value": {"port": 1}},
+            {"id": "06", "condition": {}, "value": {"port": 0}},
         ],
     )
 
@@ -325,6 +334,37 @@ def test_is_ipv4v6_host(
     ts.add_host(hostname, tags)
     ip_lookup_config = ts.apply(monkeypatch).config_cache.ip_lookup_config()
     assert (ip_lookup_config.ip_stack_config(hostname) is IPStackConfig.DUAL_STACK) is result
+
+
+def _config_cache_of(loaded_config: BaseConfig) -> ConfigCache:
+    hosts_config = make_hosts_config(loaded_config)
+    return ConfigCache(
+        loaded_config,
+        hosts_config,
+        make_host_tags(loaded_config, hosts_config),
+        autochecks_dir=cmk.utils.paths.autochecks_dir,
+        discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
+        builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
+        debug=False,
+    )
+
+
+def test_the_configured_fake_dns_address_is_looked_up() -> None:
+    ip_lookup_config = _config_cache_of(BaseConfig(fake_dns="10.0.0.1")).ip_lookup_config()
+
+    assert make_lookup_ip_address(ip_lookup_config)(
+        HostName("testhost"), socket.AddressFamily.AF_INET
+    ) == HostAddress("10.0.0.1")
+
+
+def test_a_given_fake_dns_address_wins_over_the_configured_one() -> None:
+    ip_lookup_config = _config_cache_of(BaseConfig(fake_dns="10.0.0.1")).ip_lookup_config(
+        fake_dns=HostAddress("10.0.0.2")
+    )
+
+    assert make_lookup_ip_address(ip_lookup_config)(
+        HostName("testhost"), socket.AddressFamily.AF_INET
+    ) == HostAddress("10.0.0.2")
 
 
 def _assert_not_called(*args: object) -> NoReturn:
@@ -917,7 +957,7 @@ def test_make_tcp_fetcher_config_symmetric_agent_encryption(
             {
                 "id": "01",
                 "condition": {"host_name": [HostName("testhost2")]},
-                "value": "my-super-secret-psk",
+                "value": {"passphrase": "my-super-secret-psk"},
             }
         ],
     )
@@ -988,12 +1028,12 @@ def test_only_from(monkeypatch: MonkeyPatch, hostname: HostName, result: list[st
                 {
                     "id": "01",
                     "condition": {"host_name": [HostName("testhost2")]},
-                    "value": ["127.0.0.1"],
+                    "value": {"allowed_addresses": ["127.0.0.1"]},
                 },
                 {
                     "id": "02",
                     "condition": {"host_name": [HostName("testhost2")]},
-                    "value": ["127.0.0.2"],
+                    "value": {"allowed_addresses": ["127.0.0.2"]},
                 },
             ],
         },
@@ -1655,6 +1695,30 @@ def test_config_cache_exit_code_spec_individual(
     assert config_cache.exit_code_spec(hostname, data_source_id="snmp") == result
 
 
+@pytest.mark.parametrize("data_source_id", ["special_aws", "special_aws_1"])
+def test_config_cache_exit_code_spec_special_agent_uses_special_entry(
+    monkeypatch: MonkeyPatch, data_source_id: str
+) -> None:
+    hostname = HostName("testhost")
+    ts = Scenario()
+    ts.add_host(hostname)
+    ts.set_ruleset(
+        "check_mk_exit_status",
+        [
+            {
+                "id": "01",
+                "condition": {},
+                "value": {
+                    "overall": {"connection": 1},
+                    "individual": {"special": {"connection": 4}},
+                },
+            },
+        ],
+    )
+    config_cache = ts.apply(monkeypatch).config_cache
+    assert config_cache.exit_code_spec(hostname, data_source_id=data_source_id) == {"connection": 4}
+
+
 @pytest.mark.parametrize(
     "ruleset",
     [
@@ -1866,6 +1930,7 @@ def test_service_depends_on_unknown_host() -> None:
     service_depends_on = config.ServiceDependsOn(
         tag_list=lambda hn: (),  # noqa: ARG005
         service_dependencies=(),
+        debug=True,
     )
     assert not service_depends_on(HostName("test-host"), "svc")
 
@@ -1879,6 +1944,7 @@ def test_service_depends_on() -> None:
             ("dep2-%s", [], config.ALL_HOSTS, ["svc1-(.*)"], {}),
             ("dep-disabled", [], config.ALL_HOSTS, ["svc1"], {"disabled": True}),
         ],
+        debug=True,
     )
 
     assert not service_depends_on(test_host, "svc2")
@@ -2454,6 +2520,7 @@ def test_config_cache_max_cachefile_age_no_cluster() -> None:
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
+        debug=False,
     )
 
     assert xyz_host not in config.make_hosts_config(loaded_config).clusters
@@ -2477,6 +2544,7 @@ def test_config_cache_max_cachefile_age_cluster() -> None:
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
+        debug=False,
     )
 
     assert clu in config.make_hosts_config(loaded_config).clusters
@@ -2573,16 +2641,16 @@ def test_host_config_service_level(
     assert config_cache.service_level_config.of_host(hostname) == result
 
 
-def _rule_val(check_interval: int) -> _PeriodicDiscovery:
-    return _PeriodicDiscovery(
-        severity_unmonitored=0,
-        severity_vanished=0,
-        severity_changed_service_labels=0,
-        severity_changed_service_params=0,
-        severity_new_host_label=0,
-        check_interval=check_interval,
-        inventory_rediscovery=RediscoveryParameters(),
-    )
+def _rule_val(check_interval: int) -> Mapping[str, object]:
+    return {
+        "severity_unmonitored": 0,
+        "severity_vanished": 0,
+        "severity_changed_service_labels": 0,
+        "severity_changed_service_params": 0,
+        "severity_new_host_label": 0,
+        "check_interval": check_interval,
+        "inventory_rediscovery": RediscoveryParameters(),
+    }
 
 
 @pytest.mark.parametrize(
@@ -2598,7 +2666,7 @@ def _rule_val(check_interval: int) -> _PeriodicDiscovery:
 )
 def test_host_config_add_discovery_check(
     monkeypatch: MonkeyPatch,
-    rule_entries: Sequence[_PeriodicDiscovery | None],
+    rule_entries: Sequence[Mapping[str, object] | None],
     ignored: bool,
     ping: bool,
     result: bool,
@@ -2680,6 +2748,7 @@ def test_load_config_folder_paths(folder_path_test_config: BaseConfig) -> None:
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         builtin_host_labels_file=Path("/dev/null"),
+        debug=False,
     )
     hosts_config = config.make_hosts_config(folder_path_test_config)
     ruleset_matcher = config_cache.ruleset_matcher
@@ -2818,17 +2887,18 @@ def test_load_raw_config_raises_on_an_unreadable_config_file(main_mk: Path) -> N
     assert str(excinfo.value) == f"Cannot read in configuration file {main_mk}: broken"
 
 
-@pytest.mark.usefixtures("disable_debug")
 def test_exit_on_config_file_load_error_ends_the_process() -> None:
-    with pytest.raises(SystemExit) as excinfo, config.exit_on_config_file_load_error():
+    with pytest.raises(SystemExit) as excinfo, config.exit_on_config_file_load_error(debug=False):
         raise config.ConfigFileLoadError(Path("main.mk"), ValueError("broken"))
 
     assert excinfo.value.code == 1
 
 
-@pytest.mark.usefixtures("enable_debug_fixture")
 def test_exit_on_config_file_load_error_reraises_when_debugging() -> None:
-    with pytest.raises(config.ConfigFileLoadError), config.exit_on_config_file_load_error():
+    with (
+        pytest.raises(config.ConfigFileLoadError),
+        config.exit_on_config_file_load_error(debug=True),
+    ):
         raise config.ConfigFileLoadError(Path("main.mk"), ValueError("broken"))
 
 
@@ -2929,7 +2999,7 @@ cmc_host_rrd_config = [
     _add_host_in_folder(wato_lvl2_folder, "lvl2-host")
     _add_rule_in_folder(wato_lvl2_folder, "LVL2")
 
-    yield config.load(validate_hosts=True).loaded_config
+    yield config.load(validate_hosts=True, debug=True).loaded_config
 
     # Cleanup after the test. Would be better to use a dedicated test directory
     cmk.utils.paths.main_config_file.unlink()
@@ -3020,7 +3090,7 @@ def test_explicit_setting_loading() -> None:
         for foldername, setting, values in settings:
             _add_explicit_setting_in_folder(wato_main_folder / foldername, setting, values)
 
-        loading_result = config.load(validate_hosts=True)
+        loading_result = config.load(validate_hosts=True, debug=True)
         explicit_host_conf = loading_result.loaded_config.explicit_host_conf
         assert explicit_host_conf["parents"][HostName("hostA")] == "setting1"
         assert explicit_host_conf["parents"][HostName("hostB")] == "setting2"
@@ -3357,7 +3427,6 @@ def test_get_active_service_data_crash(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    monkeypatch.setattr(cmk.ccc.debug, cmk.ccc.debug.enabled.__name__, lambda: False)
     # Patch the module that holds the binding actually being read, not the
     # re-export in `cmk.base.config`: those are independent bindings.
     monkeypatch.setattr(
@@ -3374,7 +3443,7 @@ def test_get_active_service_data_crash(
         },
     )
     host_name = HostName("test_host")
-    ts = Scenario()
+    ts = Scenario(debug=False)
     ts.add_host(host_name)
     ts.set_ruleset_bundle(
         "active_checks",
@@ -3429,7 +3498,6 @@ def test_get_active_service_data_not_supported_on_relay(
     that a defect can be traced, and there is no defect to trace in a configuration the
     user is free to correct.
     """
-    monkeypatch.setattr(cmk.ccc.debug, cmk.ccc.debug.enabled.__name__, lambda: debug_enabled)
     monkeypatch.setattr(
         config._impl,  # noqa: SLF001
         "load_active_checks",
@@ -3446,7 +3514,7 @@ def test_get_active_service_data_not_supported_on_relay(
         },
     )
     host_name = HostName("test_host")
-    ts = Scenario()
+    ts = Scenario(debug=debug_enabled)
     ts.add_host(host_name)
     ts.set_ruleset_bundle(
         "active_checks",
@@ -3564,77 +3632,6 @@ def test_relay_monitored_host_keeps_its_name_as_address_without_a_site_lookup(
     attrs = config_cache.get_host_attributes(host_name, socket.AddressFamily.AF_INET, lookup)
 
     assert attrs["address"] == host_name
-
-
-@pytest.mark.parametrize("flag_enabled", [False, True])
-def test_relay_active_checks_gated_by_experimental_flag(
-    monkeypatch: pytest.MonkeyPatch,
-    capsys: pytest.CaptureFixture[str],
-    flag_enabled: bool,
-) -> None:
-    """A relay-compatible active check reaches the relay only with exp_relay_active_checks set.
-
-    Until the feature is GA (experimental flag CMK-38421) such a check must be reported as not
-    supported on relays, exactly like a check the relay cannot run at all.
-    """
-    monkeypatch.setattr(
-        config._impl,  # noqa: SLF001
-        "load_active_checks",
-        lambda **kw: {  # noqa: ARG005
-            PluginLocation(__name__, "active_check_my_active_check"): ActiveCheckConfig(
-                name="my_active_check",
-                parameter_parser=lambda p: p,
-                commands_function=lambda *a, **kw: [  # noqa: ARG005
-                    ActiveCheckCommand(service_description="My active check", command_arguments=())
-                ],
-            )
-        },
-    )
-    monkeypatch.setattr(
-        config._impl,  # noqa: SLF001
-        "load_experimental_flags",
-        lambda _config_dir: ExperimentalFlagConfig(exp_relay_active_checks=flag_enabled),
-    )
-    host_name = HostName("test_host")
-    ts = Scenario(relay_supported_active_checks=frozenset({"my_active_check"}))
-    ts.add_host(host_name)
-    ts.set_ruleset_bundle(
-        "active_checks",
-        {
-            "my_active_check": [
-                {
-                    "condition": {},
-                    "id": "2",
-                    "value": {"description": "My active check", "param1": "param1"},
-                }
-            ]
-        },
-    )
-    config_cache = ts.apply(monkeypatch).config_cache
-
-    services = list(
-        config_cache.active_check_services(
-            host_name,
-            IPStackConfig.IPv4,
-            socket.AddressFamily.AF_INET,
-            config_cache.get_host_attributes(
-                host_name,
-                socket.AddressFamily.AF_INET,
-                lambda *a, **kw: HostAddress(""),  # noqa: ARG005
-            ),
-            FinalServiceNameConfig(config_cache.ruleset_matcher, "", ()),
-            lambda *a, **kw: HostAddress(""),  # noqa: ARG005
-            _SecretsConfig(path=Path(), secrets={}),
-            for_relay=True,
-        )
-    )
-
-    if flag_enabled:
-        assert [s.plugin_name for s in services] == ["my_active_check"]
-        assert capsys.readouterr().err == ""
-    else:
-        assert not services
-        assert "is not supported for relay-monitored hosts" in capsys.readouterr().err
 
 
 class TestLabelsConfig:
@@ -3863,6 +3860,7 @@ _EXPECTED_OLD_DESCRIPTIONS = {
     "statgrab_mem": TestServiceDescription("test_item", "Memory used test_item"),
     "tplink_mem": TestServiceDescription("test_item", "Memory used test_item"),
     "ups_bat_temp": TestServiceDescription("test_item", "Temperature Battery test_item"),
+    "ups_eaton_environment": TestServiceDescription("test_item", "Enviroment"),
     "vms_diskstat_df": TestServiceDescription("test_item", "fs_test_item"),
     "wmic_process": TestServiceDescription("test_item", "proc_test_item"),
     "zfsget": TestServiceDescription("test_item", "fs_test_item"),

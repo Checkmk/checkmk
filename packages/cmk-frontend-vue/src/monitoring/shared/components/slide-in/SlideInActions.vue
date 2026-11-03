@@ -28,10 +28,12 @@ const emit = defineEmits<{
       :key="action.id"
       size="medium"
       variant="optional"
+      :href="action.url"
+      :target="action.url ? (action.target ?? '_top') : undefined"
       :title="action.label"
       :running="runningActionId === action.id"
       class="monitoring-slide-in-actions__action"
-      @click="emit('select', action.id)"
+      @click="action.url || emit('select', action.id)"
     >
       <ActionIcon :icon="action.icon" />
       {{ action.label }}

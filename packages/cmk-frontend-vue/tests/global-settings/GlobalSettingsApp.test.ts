@@ -13,6 +13,7 @@ import type {
 } from 'cmk-shared-typing/typescript/global_settings'
 import type { SingleChoiceEditable } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
+// eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
 import { HttpResponse, http } from 'msw'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 

@@ -6,12 +6,15 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import {
+  buildCheckmkUrl,
   buildFolderStateViewUrl,
+  buildHostStateViewUrl,
   buildServiceStateViewUrl,
   hostStateOn,
   openUrl,
   svcStateOn
 } from '@/maps/utils/mapNavigation'
+import { newMapElement } from '@/maps/utils/model'
 
 describe('svcStateOn / hostStateOn', () => {
   it('maps monitoring states to Checkmk filter checkboxes', () => {
@@ -23,6 +26,22 @@ describe('svcStateOn / hostStateOn', () => {
     expect(hostStateOn('UP')).toBe('hst0')
     expect(hostStateOn('DOWN')).toBe('hst1')
     expect(hostStateOn('UNREACHABLE')).toBe('hst2')
+    expect(hostStateOn('PENDING')).toBe('hstp')
+  })
+})
+
+describe('buildCheckmkUrl', () => {
+  it('links a line to the object it shows', () => {
+    const line = newMapElement({
+      id: 'l',
+      type: 'line',
+      line_object_type: 'hostgroup',
+      group_name: 'web'
+    })
+    const url = buildCheckmkUrl(line, 'http://h/SITE/check_mk/')
+    const inner = new URL(url!, 'http://h').searchParams.get('start_url') ?? ''
+    expect(inner).toContain('view_name=hostgroup')
+    expect(inner).toContain('hostgroup=web')
   })
 })
 
@@ -66,6 +85,15 @@ describe('buildServiceStateViewUrl', () => {
 
   it('returns null for states the svcstate filter cannot express', () => {
     expect(buildServiceStateViewUrl(cmk, { host: 'web01' }, 'DOWN')).toBeNull()
+  })
+})
+
+describe('buildHostStateViewUrl', () => {
+  it('links pending hosts through the pending box of the host state filter', () => {
+    const url = buildHostStateViewUrl('http://h/SITE/check_mk/', ['web01', 'db01'], 'PENDING')
+    const inner = new URL(url!, 'http://h').searchParams.get('start_url') ?? ''
+    expect(inner).toContain('view_name=allhosts')
+    expect(inner).toContain('hstp=on')
   })
 })
 

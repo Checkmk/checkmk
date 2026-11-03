@@ -12,7 +12,7 @@ import {
   utilColor,
   utilPercent
 } from '@/maps/utils/perf'
-import { stateColor } from '@/maps/utils/stateColors'
+import { stateColorVar } from '@/maps/utils/stateColors'
 
 import { hasBinding } from './binding'
 
@@ -68,7 +68,7 @@ export function flowVisual(
   if (el.flow && util !== null) {
     color = utilColor(util)
   } else if (bound) {
-    color = stateColor(state?.state)
+    color = stateColorVar(state?.state)
   } else {
     color = el.stroke && el.stroke.length > 0 ? el.stroke : 'var(--pres-shape-stroke)'
   }

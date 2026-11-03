@@ -3,7 +3,13 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { CalendarDate } from '@internationalized/date'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 
 export type TimerangeModel = components['schemas']['TimerangeModel']
 export type PreDefinedTimeRange = components['schemas']['_Predefined']
+
+export interface DateRange {
+  from: CalendarDate
+  to: CalendarDate
+}

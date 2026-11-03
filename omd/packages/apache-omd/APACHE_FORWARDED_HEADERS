@@ -1,0 +1,17 @@
+# Alias: Forward X-Forwarded-Proto/-Ssl headers to sites
+# Menu: Web GUI
+# Description:
+#  Controls whether the system Apache automatically sets the
+#  X-Forwarded-Proto and X-Forwarded-Ssl headers for this site,
+#  telling it whether the original client request came in via
+#  HTTP or HTTPS.
+#
+#  The value "auto" (default) lets the system Apache set these headers,
+#  based on the scheme of the request it receives itself.
+#
+#  Choose "manual" if another reverse proxy or load balancer in front of
+#  the system Apache terminates TLS and already sets these headers
+#  (client > proxy > system Apache > site). With "auto", the system Apache
+#  would overwrite them with the scheme of the proxy's connection (usually
+#  plain HTTP). This setting has no effect when a proxy connects to the
+#  site's Apache directly, bypassing the system Apache.

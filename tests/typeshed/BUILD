@@ -10,11 +10,3 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [requirement("marshmallow")],
 )
-
-py_library(
-    name = "pyprof2calltree-stubs",
-    srcs = [
-        "pyprof2calltree.pyi",
-    ],
-    visibility = ["//visibility:public"],
-)

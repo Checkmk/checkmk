@@ -150,14 +150,13 @@ const showsCaption = computed(
       :icon-size="iconSize"
       :selected="selected"
       :connection-id="connectionId"
-      :classic="classic"
       @subtree-enter="(node, nodeState, event) => emit('subtree-enter', node, nodeState, event)"
       @subtree-leave="emit('subtree-leave')"
     />
     <MapElementLabel
       v-if="showsCaption"
       :object="object"
-      :text="objectCaption(object, _t)"
+      :text="objectCaption(object, state, _t)"
       placement="stacked"
       :classic="classic"
     />

@@ -22,7 +22,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.valuespec import (
@@ -230,7 +230,7 @@ class BookmarkList(pagetypes.Overridable[BookmarkListConfig]):
         return sorted(
             {
                 (topic, topic)
-                for instance in BookmarkList.load(user_permissions).instances_sorted()
+                for instance in BookmarkList.load().instances_sorted()
                 if instance.is_permitted(user_permissions)
                 for topic, _bookmarks in instance.bookmarks_by_topic()
             }
@@ -303,13 +303,13 @@ class Bookmarks(SidebarSnapin):
     def description(cls) -> str:
         return _(
             "A simple and yet practical snap-in allowing to create "
-            "bookmarks to views and other content in the main frame"
+            "bookmarks to views and other pages"
         )
 
     @override
     def show(self, config: Config) -> None:
         for topic, bookmarks in self._get_bookmarks_by_topic(
-            UserPermissions.from_config(config, permission_registry)
+            UserPermissions.from_config(config, all_permissions())
         ):
             with foldable_container(
                 treename="bookmarks",
@@ -328,7 +328,7 @@ class Bookmarks(SidebarSnapin):
         begin_footnote_links()
         link(
             _("Add bookmark"),
-            "javascript:void(0)",
+            "#",
             click_action=ClickAction(action="add_bookmark"),
         )
         link(_("Edit"), "bookmark_lists.py")
@@ -338,7 +338,7 @@ class Bookmarks(SidebarSnapin):
         self, user_permissions: UserPermissions
     ) -> list[tuple[str, list[BookmarkSpec]]]:
         topics: dict[str, list[BookmarkSpec]] = {}
-        instances = BookmarkList.load(user_permissions)
+        instances = BookmarkList.load()
         for instance in instances.instances_sorted():
             if instance.is_permitted(user_permissions):
                 for topic, bookmarks in instance.bookmarks_by_topic():
@@ -349,15 +349,14 @@ class Bookmarks(SidebarSnapin):
         check_csrf_token(session, request, i18n=_)
         title = request.var("title")
         url = request.var("url")
-        user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
         if title and url:
             BookmarkList.validate_url(url, "url")
-            self._add_bookmark(title, url, user_permissions)
+            self._add_bookmark(title, url, ctx.user_permissions)
         self.show(ctx.config)
 
     def _add_bookmark(self, title: str, url: str, user_permissions: UserPermissions) -> None:
         assert user.id is not None
-        instances = BookmarkList.load(user_permissions)
+        instances = BookmarkList.load()
 
         if not instances.has_instance((user.id, "my_bookmarks")):
             BookmarkList.add_default_bookmark_list(instances, user.ident)

@@ -17,26 +17,24 @@ from typing import Literal, override
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
 from cmk.discover_plugins import discover_families, PluginGroup
-from cmk.graphing_engine import MetricName
+from cmk.graphing.v1 import metrics as metrics_v1
+from cmk.graphing_engine import metric_attributes, MetricName
 from cmk.gui import sites
 from cmk.gui.color import render_color_icon
 from cmk.gui.config import Config
 from cmk.gui.graphing import (
     evaluated_metrics,
     EvaluatedMetric,
-    get_metric_spec,
     get_temperature_unit,
-    metrics_from_api,
     registered_metric_ids_and_titles,
     registered_metrics,
     registered_translations,
-    RegisteredMetric,
 )
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import HTMLGenerator
 from cmk.gui.http import Request
-from cmk.gui.i18n import _, _l
+from cmk.gui.i18n import _, _l, translate_to_current_language
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.painter_options import (
     paint_age,
@@ -45,6 +43,7 @@ from cmk.gui.painter_options import (
     PainterOptionRegistry,
     PainterOptions,
 )
+from cmk.gui.sites import SiteStates
 from cmk.gui.theme import Theme
 from cmk.gui.type_defs import PainterParameters, Row, VisualLinkSpec
 from cmk.gui.utils.host_relations import RELATIONS_CUSTOM_VARIABLE
@@ -608,6 +607,35 @@ def _parameters_svc_long_plugin_output(_context: PainterContext) -> Dictionary:
     )
 
 
+MAX_LONG_OUTPUT_SIZE = "site_max_long_output_size"
+
+
+def _with_max_long_output_size(row: Row, states: SiteStates) -> Row:
+    if "site" not in row:
+        return row
+    return {**row, MAX_LONG_OUTPUT_SIZE: states.get(row["site"], {}).get("max_long_output_size", 0)}
+
+
+def _with_joined_max_long_output_sizes(row: Row, states: SiteStates) -> Row:
+    if "JOIN" not in row:
+        return row
+    return {
+        **row,
+        "JOIN": {
+            key: _with_max_long_output_size(joined_row, states)
+            for key, joined_row in row["JOIN"].items()
+        },
+    }
+
+
+def add_max_long_output_sizes(rows: Sequence[Row]) -> Sequence[Row]:
+    states = sites.states()
+    return [
+        _with_joined_max_long_output_sizes(_with_max_long_output_size(row, states), states)
+        for row in rows
+    ]
+
+
 def _render_svc_long_plugin_output(
     row: Row, cell: Cell, _user: LoggedInUser, context: PainterContext
 ) -> CellSpec:
@@ -632,7 +660,7 @@ def _render_svc_long_plugin_output(
     # has to be placed after format_plugin_output() to keep links save from
     # escaping
     if (
-        max_long_output_size := sites.states().get(row["site"], {}).get("max_long_output_size", 0)
+        max_long_output_size := row.get(MAX_LONG_OUTPUT_SIZE, 0)
     ) and long_output_len > max_long_output_size:
         setting_link_tag = context.url_renderer.link_from_filename(
             "global_settings.py",
@@ -657,6 +685,7 @@ def make_svc_long_plugin_output_painter() -> InternalPainter:
         title=_l("Details"),
         list_title=_l("Details (previously named: long output)"),
         columns=["service_long_plugin_output", "service_custom_variables"],
+        row_extender=add_max_long_output_sizes,
         parameters=_parameters_svc_long_plugin_output,
         render=_render_svc_long_plugin_output,
     )
@@ -1449,7 +1478,7 @@ def _render_check_manpage(
     name = checktype.split()[0]
 
     try:
-        page = man_pages.parse_man_page(name, man_page_path_map[name])
+        page = man_pages.parse_man_page(name, man_page_path_map[name], debug=False)
     except KeyError:
         return "", ""
 
@@ -4797,11 +4826,38 @@ def make_service_labels_painter() -> InternalPainter:
     )
 
 
+DOCKER_NODE = "host_docker_node"
+
+# Stops before a state marker or further results, e.g. "on node mynode2(!!), Error: ..."
+_DOCKER_NODE_IN_STATUS_OUTPUT = re.compile(r"^Container \S+ on node ([^\s,(]+)")
+
+
+def _docker_nodes_by_container() -> Mapping[str, str]:
+    query = (
+        "GET services\n"
+        "Columns: host_name service_plugin_output\n"
+        "Filter: check_command = check_mk-docker_container_status\n"
+    )
+    return {
+        host_name: match.group(1)
+        for host_name, output in sites.live().query(query)
+        if (match := _DOCKER_NODE_IN_STATUS_OUTPUT.match(output))
+    }
+
+
+def add_docker_nodes(rows: Sequence[Row]) -> Sequence[Row]:
+    nodes = _docker_nodes_by_container()
+    return [
+        {**row, DOCKER_NODE: nodes[row["host_name"]]} if row.get("host_name") in nodes else row
+        for row in rows
+    ]
+
+
 def get_docker_node(row: Row) -> str:
     if row.get("host_labels", {}).get("cmk/docker_object") != "container":
         return ""
 
-    return _get_docker_nodes_by_container().get(row["host_name"], "")
+    return row.get(DOCKER_NODE, "")
 
 
 def _group_by_host_docker_node(row: Row, _cell: Cell, _context: PainterContext) -> str:
@@ -4831,32 +4887,10 @@ def make_host_docker_node_painter() -> InternalPainter:
         title=_l("Docker node"),
         short_title=_l("Node"),
         columns=["host_name", "host_labels", "host_label_sources"],
+        row_extender=add_docker_nodes,
         group_by=_group_by_host_docker_node,
         render=_render_host_docker_node,
     )
-
-
-# Stops before a state marker or further results, e.g. "on node mynode2(!!), Error: ..."
-_DOCKER_NODE_IN_STATUS_OUTPUT = re.compile(r"^Container \S+ on node ([^\s,(]+)")
-
-
-@request_memoize()
-def _get_docker_nodes_by_container() -> dict[str, str]:
-    """Returns a map of all known hosts with their docker nodes
-
-    It is important to cache this query per request and also try to use the
-    liveproxyd query cached.
-    """
-    query: str = (
-        "GET services\n"
-        "Columns: host_name service_plugin_output\n"
-        "Filter: check_command = check_mk-docker_container_status\n"
-    )
-    return {
-        host_name: match.group(1)
-        for host_name, output in sites.live().query(query)
-        if (match := _DOCKER_NODE_IN_STATUS_OUTPUT.match(output))
-    }
 
 
 _SPECIFIC_METRIC_DEFAULT_TITLE = _l("Show single metric")
@@ -4866,15 +4900,17 @@ def _title_specific_metric(cell: Cell, _context: PainterContext) -> str:
     if not (parameters := cell.painter_parameters()):
         # Used in Edit-View
         return str(_SPECIFIC_METRIC_DEFAULT_TITLE)
-    return _title_with_parameters(parameters, metrics_from_api)
+    return _title_with_parameters(parameters, registered_metrics())
 
 
 def _title_with_parameters(
     parameters: PainterParameters,
-    registered_metrics: Mapping[str, RegisteredMetric],
+    registered_metrics: Mapping[str, metrics_v1.Metric],
 ) -> str:
     try:
-        return get_metric_spec(parameters["metric"], registered_metrics).title
+        return metric_attributes(
+            parameters["metric"], translate_to_current_language, registered_metrics
+        ).title
     except KeyError:
         return _("Metric not found")
 
@@ -4884,7 +4920,7 @@ def metric_choices() -> list[tuple[str, str]]:
     return sorted(
         (
             (metric_id, metric_title)
-            for metric_id, metric_title in registered_metric_ids_and_titles(metrics_from_api)
+            for metric_id, metric_title in registered_metric_ids_and_titles(registered_metrics())
         ),
         key=lambda x: x[1],
     )

@@ -78,12 +78,9 @@ onUnmounted(() => {
    attribution, so it carries no scope attribute of its own. Under the root, the
    rule outweighs Leaflet's own white-on-white one. */
 .maps-world-map-thumbnail :deep(.maps-world-map-thumbnail__attribution) {
-  font-size: 11px;
+  font-size: var(--font-size-small);
   color: var(--font-color);
-  background: var(
-    --maps-map-view-glass,
-    color-mix(in srgb, var(--default-tooltip-background-color) 92%, transparent)
-  );
+  background: var(--default-tooltip-background-color);
 }
 
 .maps-world-map-thumbnail :deep(.maps-world-map-thumbnail__attribution a) {

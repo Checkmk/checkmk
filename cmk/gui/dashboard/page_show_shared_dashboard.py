@@ -21,7 +21,6 @@ from cmk.gui.graphing.openapi.models import ApiDiscoveredGraph
 from cmk.gui.htmllib.html import html
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext, PageResult
-from cmk.gui.permissions import permission_registry
 from cmk.gui.token_auth import AuthToken, DashboardToken, TokenId
 from cmk.gui.type_defs import VisualContext
 from cmk.gui.utils.roles import UserPermissions
@@ -29,6 +28,7 @@ from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.web.utils.request_cache import RequestCache
 
 from .api import convert_internal_relative_dashboard_to_api_model_dict, DashboardConstants
+from .api.model.widget_content.graph import EmbeddedCustomGraphContent
 from .dashlet.dashlets.status_helpers import make_mk_missing_data_error
 from .dashlet.registry import dashlet_registry
 from .exceptions import WidgetRenderError
@@ -94,6 +94,7 @@ def compute_widget_titles(
     return {
         widget_id: _compute_widget_title(widget, request_cache)
         for widget_id, widget in board["widgets"].items()
+        if widget["type"] in dashlet_registry
     }
 
 
@@ -117,7 +118,13 @@ def _compute_widget_graphs(
 
     return {
         "graphs": [
-            asdict(ApiDiscoveredGraph.from_built(built, temperature_unit))
+            # we empty the query-carrying fields on shared dashboards to not leak query information
+            {
+                **asdict(ApiDiscoveredGraph.from_built(built, temperature_unit)),
+                "internal": "",
+                "add_to_specification": None,
+                "add_type": None,
+            }
             for built in discovered.graphs
         ],
         "no_data_message": discovered.no_data_message,
@@ -134,8 +141,9 @@ def compute_widget_graphs(
     """Discover the graph shells of the dashboard's client-side rendered graph widgets.
 
     The browser of a shared dashboard never sees the filter values, so it cannot discover the
-    graphs itself. Errors are kept per widget so that one unresolvable graph does not take the
-    whole dashboard down.
+    graphs itself. Nor does it see the serialized graphs or their add-to specifications, which
+    carry the queries: `internal`, `add_to_specification` and `add_type` are empty. Errors are
+    kept per widget so that one unresolvable graph does not take the whole dashboard down.
     """
     dashboard_context = board.get("context")
     return {
@@ -175,13 +183,22 @@ def remove_sensitive_filter_information(board: DashboardConfig) -> None:
         widget["context"] = _remove_filter_values(widget.get("context", {}))
 
 
+def remove_embedded_graph_definitions(spec: dict[str, object]) -> None:
+    """Empties embedded custom graph definitions; the shared page renders from discovered shells."""
+    widgets = spec["widgets"]
+    assert isinstance(widgets, dict)
+    for widget in widgets.values():
+        content = widget["content"]
+        if content["type"] == EmbeddedCustomGraphContent.internal_type():
+            content["definition"] = {}
+
+
 def page_shared_dashboard(
     token_id: TokenId, token_issuer: UserId, token_details: DashboardToken, ctx: PageContext
 ) -> None:
-    user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
     request_cache = RequestCache(ctx.config)
     with impersonate_dashboard_token_issuer(
-        token_issuer, token_details, user_permissions
+        token_issuer, token_details, ctx.user_permissions
     ) as issuer:
         board = issuer.load_dashboard()
         SharedDashboardPageComponents.verify_dashboard_referenced_token(board, token_id)
@@ -191,7 +208,7 @@ def page_shared_dashboard(
         widget_graphs = compute_widget_graphs(
             board,
             debug=ctx.config.debug,
-            user_permissions=user_permissions,
+            user_permissions=ctx.user_permissions,
             temperature_unit=issuer.temperature_unit(ctx.config.default_temperature_unit),
         )
         remove_sensitive_filter_information(board)
@@ -199,6 +216,8 @@ def page_shared_dashboard(
         # this can end up loading views when computing the used infos,
         # so it needs the impersonation context
         internal_spec = convert_internal_relative_dashboard_to_api_model_dict(board)
+
+        remove_embedded_graph_definitions(internal_spec)
 
     title = visuals.visual_title("dashboard", board, board["context"], request_cache=request_cache)
     dashboard_properties = {

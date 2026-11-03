@@ -246,7 +246,7 @@ onMounted(() => {
               >
                 <FilterSelectionActiveIcon :is-active="filters.isFilterActive(entry.id)" />
                 <div class="filter-menu__filter-title">
-                  <CmkLabel>{{ entry.title }}</CmkLabel>
+                  <CmkLabel cursor="inherit">{{ entry.title }}</CmkLabel>
                 </div>
               </div>
 

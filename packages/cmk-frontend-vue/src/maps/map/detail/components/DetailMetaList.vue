@@ -48,16 +48,14 @@ defineProps<{
 .maps-detail-meta-list {
   display: grid;
   grid-template-columns: 90px 1fr;
-  gap: 6px 12px;
+  gap: var(--dimension-4) var(--dimension-5);
   margin: 0;
-  font-size: 11px;
+  font-size: var(--font-size-normal);
 }
 
 .maps-detail-meta-list dt {
   color: var(--font-color-dimmed);
-  text-transform: uppercase;
   font-size: var(--font-size-small);
-  letter-spacing: 0.04em;
   align-self: center;
 }
 
@@ -71,7 +69,7 @@ defineProps<{
    their values are rows of chips -- so the label gets its own line. */
 .maps-detail-meta-list--stacked {
   grid-template-columns: 1fr;
-  gap: 6px;
+  gap: var(--dimension-4);
 }
 
 .maps-detail-meta-list--stacked dt {

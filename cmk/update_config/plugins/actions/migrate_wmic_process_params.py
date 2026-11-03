@@ -22,8 +22,8 @@ from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.rulesets import AllRulesets, RulesetCollection
 from cmk.plugins.windows.agent_based.wmic_process import Params
 from cmk.ruleset_matcher.definition import RuleGroup
-from cmk.update_config.lib import ExpiryVersion
-from cmk.update_config.registry import update_action_registry, UpdateAction
+from cmk.update_config.internal import ExpiryVersion, UpdateAction
+from cmk.update_config.registry import update_action_registry
 from cmk.utils.timeperiod import TIMESPECIFIC_DEFAULT_KEY
 
 _RULESET_NAME: Final = RuleGroup.StaticChecks("wmic_process")

@@ -18,6 +18,7 @@ import EditField from '@/maps/map/edit/components/EditField.vue'
 import { useAggregationPreview } from '@/maps/map/edit/composables/useAggregationPreview'
 import type { ObjectSuggestions } from '@/maps/map/edit/composables/useObjectSuggestions'
 import MapsSuggestionField from '@/maps/shared/components/MapsSuggestionField.vue'
+import { noAggregationsHint } from '@/maps/shared/suggestions'
 
 const props = defineProps<{
   suggestions: ObjectSuggestions
@@ -47,11 +48,7 @@ const aggregationFunction = computed(() =>
       :label="_t('BI aggregation')"
       :list="suggestions.aggregations"
       :placeholder="_t('Select an aggregation')"
-      :empty-hint="
-        _t(
-          'No BI aggregations available — none are configured in Checkmk, or your user has no permission to view them.'
-        )
-      "
+      :empty-hint="noAggregationsHint(_t)"
     />
   </EditField>
 

@@ -23,7 +23,7 @@ def _parameter_form_veeam_cdp_jobs() -> Dictionary:
         elements={
             "age": DictElement(
                 parameter_form=SimpleLevels[float](
-                    title=Title("Time since last CDP run"),
+                    title=Title("Time since last CDP sync"),
                     level_direction=LevelDirection.UPPER,
                     form_spec_template=TimeSpan(
                         displayed_magnitudes=[
@@ -45,7 +45,7 @@ def _parameter_form_veeam_cdp_jobs() -> Dictionary:
 
 rule_spec_veeam_cdp_jobs = CheckParameters(
     name="veeam_cdp_jobs",
-    title=Title("Veeam: Time since last CDP run"),
+    title=Title("Veeam: Time since last CDP sync"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_veeam_cdp_jobs,
     condition=HostAndItemCondition(item_title=Title("Job name")),

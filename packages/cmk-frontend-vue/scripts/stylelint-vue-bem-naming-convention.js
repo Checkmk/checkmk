@@ -60,12 +60,12 @@ const patternMap = {
 }
 
 function normalize(relativePath) {
-  // cmk-ui-library hosts the extracted components/ and lib/ trees; for naming
-  // purposes its layout maps onto the legacy src/ layout so the established
-  // block names (.cmk-*, .lib-*) stay valid.
+  // Extracted Vue packages map onto the legacy src/ layout for naming purposes,
+  // so the established block names (.cmk-*, .lib-*, .profiling-*) stay valid.
   return relativePath
     .replace(/^\.\.\/cmk-ui-library\/tests\//, 'tests/')
     .replace(/^\.\.\/cmk-ui-library\//, 'src/')
+    .replace(/^\.\.\/cmk-profiling\/frontend\//, 'src/profiling/')
 }
 
 function getPrefix(relativePath) {

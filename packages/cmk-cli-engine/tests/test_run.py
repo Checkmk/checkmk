@@ -5,15 +5,29 @@
 
 import errno
 import logging
-from collections.abc import Callable, Sequence
+import signal
+from collections.abc import Callable, Iterator, Sequence
+from contextlib import nullcontext
 from pathlib import Path
+from types import FrameType
 
 import pytest
 
-from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTerminate
+from cmk.cli.engine.call import CommandTracer
 from cmk.cli.engine.commands import Command, make_command
-from cmk.cli.engine.run import dispatch, enable_file_logging, log_level, run, Runtime
-from cmk.cli.internal import Args, CLICommand, GlobalOptions, Options
+from cmk.cli.engine.run import (
+    dispatch,
+    enable_file_logging,
+    log_level,
+    run,
+    Runtime,
+)
+from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Command as CLICommand
+from cmk.cli.internal import CommandHandler, Options
+from cmk.cli.internal import Context as CLIContext
+from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import Option as CLIOption
 
 from ._logger import null_logger
 
@@ -43,35 +57,29 @@ class Recorder:
         self.calls.append(args[0] if len(args) == 1 else args)
 
 
-def _raising(exception: Exception) -> Callable[[], int]:
-    def command() -> int:
+def _raising(exception: BaseException) -> Callable[[], CLIExitCode]:
+    def command() -> CLIExitCode:
         raise exception
 
     return command
 
 
-def _dispatch(command: Callable[[], int], reporter: FakeCrashReporter | None = None) -> int:
-    return dispatch(command, null_logger(), reporter or FakeCrashReporter(), lambda: False)
+def _dispatch(
+    command: Callable[[], CLIExitCode], reporter: FakeCrashReporter | None = None
+) -> CLIExitCode:
+    return dispatch(command, null_logger(), reporter or FakeCrashReporter(), debug=False)
 
 
 def test_the_exit_status_of_a_command_that_succeeds_is_its_own() -> None:
-    assert _dispatch(lambda: 2) == 2
+    assert _dispatch(lambda: CLIExitCode.ERROR) == CLIExitCode.ERROR
 
 
-def test_an_interrupted_command_exits_one() -> None:
-    assert _dispatch(_raising(MKTerminate())) == 1
+def test_an_interrupted_command_exits_as_interrupted() -> None:
+    assert _dispatch(_raising(KeyboardInterrupt())) == CLIExitCode.INTERRUPTED
 
 
-def test_a_general_exception_exits_three() -> None:
-    assert _dispatch(_raising(MKGeneralException("no such host"))) == 3
-
-
-def test_a_bail_out_exits_three() -> None:
-    assert _dispatch(_raising(MKBailOut("no such host"))) == 3
-
-
-def test_a_broken_pipe_exits_four() -> None:
-    assert _dispatch(_raising(OSError(errno.EPIPE, "broken pipe"))) == 4
+def test_a_broken_pipe_exits_as_broken_pipe() -> None:
+    assert _dispatch(_raising(OSError(errno.EPIPE, "broken pipe"))) == CLIExitCode.BROKEN_PIPE
 
 
 def test_a_broken_pipe_is_no_crash() -> None:
@@ -83,7 +91,7 @@ def test_a_broken_pipe_is_no_crash() -> None:
 
 
 def test_any_other_os_error_exits_one() -> None:
-    assert _dispatch(_raising(OSError(errno.EACCES, "denied"))) == 1
+    assert _dispatch(_raising(OSError(errno.EACCES, "denied"))) == CLIExitCode.FAILURE
 
 
 def test_an_os_error_that_is_no_broken_pipe_is_reported() -> None:
@@ -95,7 +103,7 @@ def test_an_os_error_that_is_no_broken_pipe_is_reported() -> None:
 
 
 def test_an_unexpected_exception_exits_one() -> None:
-    assert _dispatch(_raising(ValueError("unexpected"))) == 1
+    assert _dispatch(_raising(ValueError("unexpected"))) == CLIExitCode.FAILURE
 
 
 def test_an_unexpected_exception_is_reported() -> None:
@@ -108,9 +116,16 @@ def test_an_unexpected_exception_is_reported() -> None:
 
 def test_a_debugged_exception_is_raised_through() -> None:
     with pytest.raises(ValueError):
-        dispatch(
-            _raising(ValueError("unexpected")), null_logger(), FakeCrashReporter(), lambda: True
-        )
+        dispatch(_raising(ValueError("unexpected")), null_logger(), FakeCrashReporter(), debug=True)
+
+
+def test_a_debugged_exception_is_not_reported() -> None:
+    reporter = FakeCrashReporter()
+
+    with pytest.raises(ValueError):
+        dispatch(_raising(ValueError("unexpected")), null_logger(), reporter, debug=True)
+
+    assert reporter.reports == 0
 
 
 def test_the_crash_message_reaches_the_log(caplog: pytest.LogCaptureFixture) -> None:
@@ -122,7 +137,7 @@ def test_the_crash_message_reaches_the_log(caplog: pytest.LogCaptureFixture) -> 
 
 def test_an_interruption_says_so_in_the_log(caplog: pytest.LogCaptureFixture) -> None:
     with caplog.at_level(logging.ERROR):
-        _dispatch(_raising(MKTerminate()))
+        _dispatch(_raising(KeyboardInterrupt()))
 
     assert "<Interrupted>" in caplog.text
 
@@ -162,61 +177,132 @@ def test_file_logging_replaces_the_handlers_it_finds(tmp_path: Path) -> None:
     assert len(logger.handlers) == 1
 
 
-def _command(handler: Callable[[Path, GlobalOptions, Options, Args], int]) -> Command:
+def _command(handler: CommandHandler) -> Command:
     return make_command(
-        CLICommand(long_option="demo", handler_function=handler, short_help="Demonstrate")
+        CLICommand(name="demo", long="demo", handler_function=handler, help="Demonstrate")
     )
 
 
 def _runtime(
     commands: Sequence[Command] = (),
     *,
-    start_tracing: Callable[[Path], None] = lambda _omd_root: None,
-    on_sigint: Callable[[], None] = lambda: None,
-    enable_debug: Callable[[], None] = lambda: None,
-    debug_enabled: Callable[[], bool] = lambda: False,
+    trace_command: CommandTracer = lambda *_args: nullcontext(),
+    on_sigint: Callable[[int, FrameType | None], object] = signal.default_int_handler,
     enable_profiling: Callable[[], None] = lambda: None,
     write_profile: Callable[[Path], None] = lambda _path: None,
     page: Callable[[str], None] = lambda _text: None,
     write: Callable[[str], None] = lambda _text: None,
+    logger: logging.Logger = null_logger(),
 ) -> Runtime:
     return Runtime(
         discover=lambda: commands,
-        start_tracing=start_tracing,
+        trace_command=trace_command,
         on_sigint=on_sigint,
         crash_reporter_for=lambda _omd_root, _argv, _environ: FakeCrashReporter(),
-        enable_debug=enable_debug,
-        debug_enabled=debug_enabled,
         enable_profiling=enable_profiling,
         write_profile=write_profile,
         page=page,
         write=write,
-        logger=null_logger(),
+        logger=logger,
     )
 
 
 def _run(argv: Sequence[str], runtime: Runtime) -> int:
-    return run(_SITE, argv, {}, runtime)
+    previous = signal.getsignal(signal.SIGINT)
+    try:
+        return run(_SITE, argv, {}, runtime)
+    finally:
+        signal.signal(signal.SIGINT, previous)
+
+
+def _numbered(handler: CommandHandler) -> Command:
+    return make_command(
+        CLICommand(
+            name="demo",
+            long="demo",
+            handler_function=handler,
+            help="Demonstrate",
+            sub_options=[
+                CLIOption(
+                    long="number",
+                    help="A number",
+                    argument="N",
+                    parse=int,
+                )
+            ],
+        )
+    )
+
+
+def test_a_sub_option_reaches_the_command_converted() -> None:
+    seen: list[Options] = []
+
+    def remember(_context: CLIContext, sub: Options, _args: CLIArgs) -> CLIExitCode:
+        seen.append(sub)
+        return CLIExitCode.SUCCESS
+
+    _run(["cmk", "--demo", "--number", "5"], _runtime([_numbered(remember)]))
+
+    assert seen == [{"number": 5}]
 
 
 def test_a_command_reports_its_own_exit_status() -> None:
-    assert _run(["cmk", "--demo"], _runtime([_command(lambda *_args: 2)])) == 2
+    assert _run(["cmk", "--demo"], _runtime([_command(lambda *_args: CLIExitCode.ERROR)])) == 2
+
+
+def test_a_sub_option_argument_the_conversion_rejects_exits_three() -> None:
+    command = _numbered(lambda *_args: CLIExitCode.SUCCESS)
+
+    assert _run(["cmk", "--demo", "--number", "x"], _runtime([command])) == 3
+
+
+def test_a_sub_option_argument_the_conversion_rejects_is_logged(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    runtime = _runtime(
+        [_numbered(lambda *_args: CLIExitCode.SUCCESS)], logger=logging.getLogger("cmk.test")
+    )
+
+    with caplog.at_level(logging.ERROR):
+        _run(["cmk", "--demo", "--number", "x"], runtime)
+
+    assert caplog.messages == ["--number: Invalid argument"]
+
+
+def test_a_sub_option_argument_the_conversion_rejects_is_raised_through_under_debug() -> None:
+    runtime = _runtime([_numbered(lambda *_args: CLIExitCode.SUCCESS)])
+
+    with pytest.raises(ValueError, match="--number: Invalid argument"):
+        _run(["cmk", "--debug", "--demo", "--number", "x"], runtime)
 
 
 def test_a_command_is_handed_the_site_root() -> None:
     seen: list[Path] = []
 
-    def remember(omd_root: Path, _options: GlobalOptions, _sub: Options, _args: Args) -> int:
-        seen.append(omd_root)
-        return 0
+    def remember(context: CLIContext, _sub: Options, _args: CLIArgs) -> CLIExitCode:
+        seen.append(context.omd_root)
+        return CLIExitCode.SUCCESS
 
     _run(["cmk", "--demo"], _runtime([_command(remember)]))
 
     assert seen == [_SITE]
 
 
-def test_an_unknown_option_exits_one() -> None:
-    assert _run(["cmk", "--nonsense"], _runtime()) == 1
+def test_a_command_reports_through_the_engines_logger() -> None:
+    seen: list[logging.Logger] = []
+
+    def remember(context: CLIContext, _sub: Options, _args: CLIArgs) -> CLIExitCode:
+        seen.append(context.logger)
+        return CLIExitCode.SUCCESS
+
+    logger = logging.getLogger("cmk.test")
+    _run(["cmk", "--demo"], _runtime([_command(remember)], logger=logger))
+
+    assert seen == [logger.getChild("base")]
+
+
+def test_an_unknown_option_exits_three() -> None:
+    assert _run(["cmk", "--nonsense"], _runtime()) == 3
 
 
 def test_an_unknown_option_says_what_it_did_not_recognise() -> None:
@@ -242,41 +328,85 @@ def test_the_help_is_paged() -> None:
 def test_the_help_names_the_commands_there_are() -> None:
     paged = Recorder()
 
-    _run(["cmk", "--help"], _runtime([_command(lambda *_args: 0)], page=paged))
+    _run(["cmk", "--help"], _runtime([_command(lambda *_args: CLIExitCode.SUCCESS)], page=paged))
 
     assert "--demo" in str(paged.calls[0])
 
 
+@pytest.fixture(name="ignored_sigint")
+def _ignored_sigint() -> Iterator[None]:
+    previous = signal.signal(signal.SIGINT, signal.SIG_IGN)
+    try:
+        yield
+    finally:
+        signal.signal(signal.SIGINT, previous)
+
+
+def _interrupting(_context: CLIContext, _sub: Options, _args: CLIArgs) -> CLIExitCode:
+    signal.raise_signal(signal.SIGINT)
+    return CLIExitCode.SUCCESS
+
+
+@pytest.mark.usefixtures("ignored_sigint")
+def test_an_ignored_interrupt_signal_interrupts_the_command() -> None:
+    assert _run(["cmk", "--demo"], _runtime([_command(_interrupting)])) == 130
+
+
 def test_the_command_line_takes_the_interrupt_signal() -> None:
-    installed = Recorder()
+    handled = Recorder()
 
-    _run(["cmk", "--help"], _runtime(on_sigint=installed))
+    _run(["cmk", "--demo"], _runtime([_command(_interrupting)], on_sigint=handled))
 
-    assert len(installed.calls) == 1
+    assert len(handled.calls) == 1
 
 
-def test_tracing_starts_for_the_site_when_a_command_runs() -> None:
-    started = Recorder()
+class FakeCommandTracer:
+    """Stands in for the tracer that spans a command's run"""
 
-    _run(["cmk", "--demo"], _runtime([_command(lambda *_args: 0)], start_tracing=started))
+    def __init__(self) -> None:
+        self.traced: list[str] = []
 
-    assert started.calls == [_SITE]
+    def __call__(
+        self, _context: CLIContext, command: Command, _options: Options, _args: CLIArgs
+    ) -> nullcontext[None]:
+        self.traced.append(command.name)
+        return nullcontext()
+
+
+def test_a_command_runs_traced() -> None:
+    tracer = FakeCommandTracer()
+
+    _run(
+        ["cmk", "--demo"],
+        _runtime([_command(lambda *_args: CLIExitCode.SUCCESS)], trace_command=tracer),
+    )
+
+    assert tracer.traced == ["demo"]
 
 
 def test_the_help_is_not_traced() -> None:
-    started = Recorder()
+    tracer = FakeCommandTracer()
 
-    _run(["cmk", "--help"], _runtime(start_tracing=started))
+    _run(["cmk", "--help"], _runtime(trace_command=tracer))
 
-    assert not started.calls
+    assert not tracer.traced
 
 
 def test_a_command_line_that_is_rejected_is_not_traced() -> None:
-    started = Recorder()
+    tracer = FakeCommandTracer()
 
-    _run(["cmk", "--nonsense"], _runtime(start_tracing=started))
+    _run(["cmk", "--nonsense"], _runtime(trace_command=tracer))
 
-    assert not started.calls
+    assert not tracer.traced
+
+
+def test_a_sub_option_argument_the_conversion_rejects_is_not_traced() -> None:
+    tracer = FakeCommandTracer()
+    command = _numbered(lambda *_args: CLIExitCode.SUCCESS)
+
+    _run(["cmk", "--demo", "--number", "x"], _runtime([command], trace_command=tracer))
+
+    assert not tracer.traced
 
 
 def test_verbosity_raises_the_log_level() -> None:
@@ -285,14 +415,6 @@ def test_verbosity_raises_the_log_level() -> None:
     _run(["cmk", "-v", "--help"], runtime)
 
     assert runtime.logger.level == log_level(1)
-
-
-def test_debug_is_enabled_on_request() -> None:
-    enabled = Recorder()
-
-    _run(["cmk", "--debug", "--help"], _runtime(enable_debug=enabled))
-
-    assert len(enabled.calls) == 1
 
 
 def test_profiling_is_enabled_on_request() -> None:
@@ -314,14 +436,14 @@ def test_the_profile_is_written_below_the_site() -> None:
 def test_the_profile_is_written_even_when_the_command_raises() -> None:
     written = Recorder()
 
-    with pytest.raises(MKGeneralException):
+    with pytest.raises(ValueError):
         _run(
-            ["cmk", "--demo"],
-            _runtime([_command(_failing)], debug_enabled=lambda: True, write_profile=written),
+            ["cmk", "--debug", "--demo"],
+            _runtime([_command(_failing)], write_profile=written),
         )
 
     assert len(written.calls) == 1
 
 
-def _failing(_omd_root: Path, _options: GlobalOptions, _sub_options: Options, _args: Args) -> int:
-    raise MKGeneralException("no such host")
+def _failing(_context: CLIContext, _sub_options: Options, _args: CLIArgs) -> CLIExitCode:
+    raise ValueError("no such host")

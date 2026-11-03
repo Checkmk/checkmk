@@ -41,8 +41,8 @@ Everything else is hermetic via bazel modules:
 
 - CPython version: `PYTHON_VERSION_WINDOWS` in `package_versions.bzl`, the
   single source of truth for the CAB's CPython version: `defines.make`
-  `sed`-reads it out of there at make time, `BUILD.bazel` `load()`s it into
-  `python_version`, and the MSI URLs below derive from it. Only
+  `sed`-reads it out of there at make time, `python_cab.bzl` `load()`s it,
+  and the MSI URLs below derive from it. Only
   `MODULE.bazel` files duplicate the version — they cannot `load()` it; see
   the bump procedure below.
 - Per-feature MSIs (`ucrt`, `core`, `exe`, `lib`, `pip`): declared by the
@@ -51,21 +51,24 @@ Everything else is hermetic via bazel modules:
   `PYTHON_VERSION_WINDOWS` — a `.bzl` file can `load()` it, whereas
   `MODULE.bazel` cannot, so the version is not spelled out twice. Only the
   SHA256 hashes (`_MSI_SHA256`) are maintained by hand.
-- Python packages: edit `requirements-windows.in`, then regenerate the
-  sha256-pinned `requirements-windows.txt` with
-  `bazel run //agents/modules/windows:requirements_windows` (same uv flow
+- Python packages: edit `windows-requirements.in`, then regenerate the
+  sha256-pinned `windows-requirements.txt` with
+  `bazel run //agents/modules/windows:windows_requirements` (same uv flow
   as the repo's other requirements files, but resolved under the hermetic
   interpreter of `PYTHON_VERSION_WINDOWS`'s `major.minor` line — rules_uv's
   `py3_runtime` — so the lock tracks the CAB's Python, independent of the
   site toolchain). The `@windows_python_wheels` pip.parse hub
   (`bazel/module/python_cab.MODULE.bazel`) downloads the pinned wheels; stale pins
-  fail `:requirements_windows_test` in CI
-  (`make check_python_requirements`).
+  fail `:windows_requirements_test` in CI
+  (`make check_python_requirements`). The same holds for the test Python's
+  `windows-test-cab-requirements.txt` (`:windows_test_cab_requirements`, checked
+  by `:windows_test_cab_requirements_test`); `//:lock_python_requirements`
+  refreshes both.
 
-  Keep `requirements-windows.in` unpinned — the resolved
-  `requirements-windows.txt` is the pin. Version bounds go into
-  `constraints-windows.txt`, which the resolution consumes via
-  `:requirements-windows-in`. That file is deliberately separate from
+  Keep `windows-requirements.in` unpinned — the resolved
+  `windows-requirements.txt` is the pin. Version bounds go into
+  `windows-constraints.txt`, which the resolution consumes via
+  `:windows-requirements-in`. That file is deliberately separate from
   `//:constraints.txt`: the CAB resolves for `win_amd64` with
   `--only-binary=:all:`, so a bound that is satisfiable for the site can be
   unsatisfiable here, and a shared file would let a server-side hold break
@@ -73,7 +76,7 @@ Everything else is hermetic via bazel modules:
   its removal, enforced by
   `//tests/code_quality/requirements:requirements_files`.
 
-  `requirements-windows.txt` is also a `manifest_srcs` entry of
+  `windows-requirements.txt` is also a `manifest_srcs` entry of
   `//omd/dependency_management:list_of_dependencies`. The SBOM aspect already
   finds the CAB's packages in the build graph, through the `package_metadata`
   of the hub's generated whl repositories, but it carries no artifact hashes
@@ -107,7 +110,8 @@ For a **patch bump** (same `major.minor`, e.g. 3.13.14 → 3.13.15):
 
   ```bash
   bazel run //agents/modules/windows:refresh_msi_pins
-  bazel run //agents/modules/windows:requirements_windows
+  bazel run //agents/modules/windows:windows_requirements
+  bazel run //agents/modules/windows:windows_test_cab_requirements
   ```
 
   `refresh_msi_pins` takes no version: the `py_binary` passes
@@ -132,7 +136,7 @@ For a **patch bump** (same `major.minor`, e.g. 3.13.14 → 3.13.15):
 For a **minor bump** (e.g. 3.13.x → 3.14.x), additionally:
 
 - update `pip.parse(python_version = ...)` for the `windows_python_wheels`
-  hub in `bazel/module/python_cab.MODULE.bazel`,
+  and `windows_test_python_wheels` hubs in `bazel/module/python_cab.MODULE.bazel`,
 - in `bazel/module/py.MODULE.bazel`: update the `x86_64-pc-windows-msvc`
   `single_version_platform_override` to the new minor (and add an
   `x86_64-unknown-linux-gnu` one for it, so the resolver runtime is pinned
@@ -207,6 +211,20 @@ Wine-side `pip` for package installation. Both are removable:
 The post-install scripts that `pywin32` and friends ship are _not_ run by
 this build, and the historical Windows-side build did not run them
 either — the agent invokes them on the target host after CAB extraction.
+
+## The test Python (`python_test_cab`)
+
+`:python_test_cab` is the harness Python of the Windows agent's pytest suites
+(`agents/wnx/tests/regression` and `integration`) in their QEMU tiers. It is
+built from the same MSIs, so it is always `PYTHON_VERSION_WINDOWS`, but it is not
+the product: no `.venv`, the stdlib kept (pytest needs `unittest`, which
+`python-3.cab` strips), and the closure of `windows-test-cab-requirements.in` in the
+base interpreter's `site-packages`. That lock is resolved with `//:requirements.txt`
+as constraints, so shared packages stay at the repo's versions;
+`//:lock_python_requirements` refreshes it with the others, and
+`:windows_test_cab_requirements_test` fails when the repo lock moved one of
+them. The tiers unpack it with `expand.exe` into the test's own directory and
+call its `python.exe` by path. It is never shipped.
 
 ## Tests
 

@@ -19,7 +19,6 @@ py_library(
     imports = ["../../.."],
     deps = [
         requirement("pytest"),
-        "//tests/system:pkg_marker",
         "//tests/testlib/common",
         "//tests/testlib/system",
     ] + select({
@@ -28,7 +27,6 @@ py_library(
             "//non-free/tests/testlib/system:clickhouse_version",
             "//non-free/tests/testlib/system:data_backend",
             "//non-free/tests/testlib/system:opentelemetry",
-            "//non-free/tests/testlib/system/cloud",
             "//non-free/tests/testlib/system/licensing",
             "//tests/testlib/pytest_helpers",
         ],

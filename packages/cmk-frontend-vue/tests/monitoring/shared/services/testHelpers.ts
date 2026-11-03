@@ -4,9 +4,12 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { KeyShortcutService } from 'cmk-ui-library/lib/keyShortcuts'
-import { vi } from 'vitest'
+import { onTestFinished, vi } from 'vitest'
 
-import type { PagedResponse } from '@/monitoring/shared/services/MonitoringService'
+import {
+  MonitoringService,
+  type PagedResponse
+} from '@/monitoring/shared/services/MonitoringService'
 
 export function makeResponse<T>(
   items: T[],
@@ -22,4 +25,17 @@ export function makeKeyShortcutService(): KeyShortcutService {
     on: vi.fn(() => 'shortcut-id'),
     remove: vi.fn()
   } as unknown as KeyShortcutService
+}
+
+class EmptyListingService extends MonitoringService<unknown> {
+  protected async fetchBatch(): Promise<PagedResponse<unknown>> {
+    return makeResponse([], 0, 0)
+  }
+}
+
+/** A listing with no rows, for a component under test to narrow; it stops polling on its own. */
+export function makeListingService(): MonitoringService<unknown> {
+  const service = new EmptyListingService('test-listing', makeKeyShortcutService())
+  onTestFinished(() => service.destruct())
+  return service
 }

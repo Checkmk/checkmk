@@ -30,6 +30,10 @@ def service_sorter(sorters: Sequence[ServiceSort]) -> Callable[[Service], Any]:
         match column:
             case ServiceSortColumn.NAME:
                 return service.name
+            case ServiceSortColumn.HOST_NAME:
+                return service.host_name
+            case ServiceSortColumn.SITE_ID:
+                return service.site_id
             case ServiceSortColumn.STATE:
                 return service.state
             case ServiceSortColumn.SUMMARY:
@@ -37,7 +41,7 @@ def service_sorter(sorters: Sequence[ServiceSort]) -> Callable[[Service], Any]:
             case ServiceSortColumn.LAST_CHECK:
                 return service.last_check or _NEVER_CHECKED
             case ServiceSortColumn.LAST_STATE_CHANGE:
-                return service.last_state_change
+                return service.last_state_change or _NEVER_CHECKED
             case _:
                 assert_never(column)
 

@@ -13,7 +13,6 @@ import type {
   CfgImport,
   FolderTreeView,
   MapBulkDeleteResult,
-  MapBulkEditResult,
   MapConfig,
   MapEnvelope,
   MapRead,
@@ -21,6 +20,7 @@ import type {
   ServiceLayout
 } from '@/maps/types/api'
 import { hasAutoSource, newMapView } from '@/maps/utils/model'
+import { getEffectiveObjectType } from '@/maps/utils/naming'
 
 /** Edits are optimistic and coalesced; this is how long a burst is collected. */
 const SAVE_DEBOUNCE_MS = 400
@@ -132,7 +132,7 @@ export class MapService {
       // link is rendered gets the caption right in the first paint, and gets it
       // right everywhere at once (caption, hover, context menu, aria label).
       cfg.objects = cfg.objects.map((object) =>
-        object.type === 'map' && object.map_name
+        getEffectiveObjectType(object) === 'map' && object.map_name
           ? { ...object, map_title: signed.map_link_titles[object.map_name] ?? null }
           : object
       )
@@ -259,6 +259,8 @@ export class MapService {
       rotation_interval: 0,
       sort_order: 0,
       click_action: 'link',
+      background_style: 'single',
+      background_position: 'top_left',
       render_mode: renderMode,
       default_z: 1,
       version: 0,
@@ -280,6 +282,7 @@ export class MapService {
         cfg.objects.length +
         (cfg.view.type === 'presentation' ? (cfg.view.elements?.length ?? 0) : 0),
       rotation_interval: cfg.rotation_interval,
+      rotation_pools: cfg.rotation_pools ?? [],
       sort_order: cfg.sort_order,
       click_action: cfg.click_action,
       hide_in_monitor_menu: false,
@@ -321,10 +324,13 @@ export class MapService {
       row.connection_id = merged.connection_id
       row.icon_size = merged.icon_size ?? null
       row.rotation_interval = merged.rotation_interval
+      row.rotation_pools = merged.rotation_pools ?? []
       row.click_action = merged.click_action
       row.render_mode = merged.render_mode
       row.background_image = merged.background_image ?? null
       row.background_color = merged.background_color ?? null
+      row.background_style = merged.background_style ?? 'single'
+      row.background_position = merged.background_position ?? 'top_left'
       row.hover_template = merged.hover_template ?? null
       row.context_template = merged.context_template ?? null
       row.view = merged.view
@@ -338,8 +344,8 @@ export class MapService {
   }
 
   /**
-   * Stamps a new order onto the maps. The list endpoint sorts by ``sort_order``,
-   * so this survives a reload. Saved one by one: reordering is rare and the lists
+   * Stamps a new order onto the maps. The map list sorts by ``sort_order``, so
+   * this survives a reload. Saved one by one: reordering is rare and the lists
    * are small.
    */
   public async reorderMaps(order: { name: string; sort_order: number }[]): Promise<void> {
@@ -392,24 +398,6 @@ export class MapService {
       this.maps.value = this.maps.value.filter((m) => !removed.has(m.name))
     }
     return { deleted, failed }
-  }
-
-  public async bulkEditMaps(
-    names: string[],
-    updates: Partial<MapConfig>
-  ): Promise<MapBulkEditResult> {
-    const { _t } = usei18n()
-    const updated: string[] = []
-    const failed: { name: string; reason: string }[] = []
-    for (const name of names) {
-      try {
-        await this.saveMapMetadata(name, updates)
-        updated.push(name)
-      } catch (e: unknown) {
-        failed.push({ name, reason: e instanceof Error ? e.message : _t('edit failed') })
-      }
-    }
-    return { updated, failed }
   }
 
   private async persist(map: MapConfig): Promise<void> {

@@ -61,12 +61,12 @@ const overflow = computed(() => Math.max(0, props.names.length - MAX_VISIBLE))
   border: 1px solid var(--default-border-color);
   border-radius: var(--border-radius-half);
   font-family: var(--font-family-monospace, monospace);
-  font-size: 0.9em;
+  font-size: var(--font-size-normal);
   text-align: left;
 }
 
 .maps-map-bulk-delete-dialog__list li {
-  padding: 1px 0;
+  padding: var(--dimension-1) 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -76,6 +76,6 @@ const overflow = computed(() => Math.max(0, props.names.length - MAX_VISIBLE))
   margin: var(--dimension-3) 0 0;
   color: var(--font-color-dimmed);
   font-style: italic;
-  font-size: 0.9em;
+  font-size: var(--font-size-normal);
 }
 </style>

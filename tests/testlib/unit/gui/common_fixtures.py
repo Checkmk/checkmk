@@ -28,12 +28,14 @@ from cmk.ccc.version import Edition
 from cmk.gui import hooks, http, main_modules
 from cmk.gui.background_job.job import override_default_executor
 from cmk.gui.background_job.process import ThreadedJobExecutor
-from cmk.gui.config import active_config, Config
+from cmk.gui.config import active_config, Config, get_default_config, make_config_object
 from cmk.gui.logged_in import user
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.gui.wsgi.app import session_wsgi_app
 from cmk.livestatus_client import SiteConfigurations
+from cmk.ruleset_matcher.tags import get_effective_tag_config
+from tests.testlib.unit.fake_site import no_site_configuration
 
 from .web_test_app import WebTestAppForCMK
 
@@ -261,9 +263,17 @@ def _noop_pending_changes() -> PendingChanges:
     )
 
 
+def make_default_config() -> Config:
+    """A GUI config with the default values, the built-in tags and the fake OMD site NO_SITE."""
+    raw_config = get_default_config()
+    raw_config["tags"] = get_effective_tag_config(raw_config["wato_tags"])
+    raw_config["sites"] = SiteConfigurations({SiteId("NO_SITE"): no_site_configuration()})
+    return make_config_object(raw_config)
+
+
 def create_test_hosts() -> Iterator[list[HostName]]:
     hostnames = [HostName("heute"), HostName("example.com")]
-    root_folder = folder_tree().root_folder()
+    root_folder = make_folder_tree(make_default_config()).root_folder()
     root_folder.create_hosts(
         [(hostname, {}, None) for hostname in hostnames],
         pprint_value=False,

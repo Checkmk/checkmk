@@ -141,6 +141,18 @@ describe('zoom sync across the graphs on a page', () => {
     expect(siblingRange.value).toEqual({ start: 1_100, end: 2_100 })
   })
 
+  test('a reset returns both the graph and its sibling to the pre-zoom range', async () => {
+    const { zoomedGraph, zoomedRange, siblingRange } = twoGraphsOnOnePage()
+    zoomedGraph.onZoom({ timeRange: { start: 1_200, end: 1_500, step: 60 } })
+    await settlePropagation()
+
+    zoomedGraph.onReset()
+    await settlePropagation()
+
+    expect(zoomedRange.value).toEqual(INITIAL)
+    expect(siblingRange.value).toEqual(INITIAL)
+  })
+
   test("a graph's own X-zoom keeps its reset target once it has round-tripped through the page", async () => {
     const { siblingGraph } = twoGraphsOnOnePage()
 

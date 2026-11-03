@@ -132,6 +132,11 @@ const emit = defineEmits(['close'])
   border: none;
   margin: 0;
   padding: 0;
+  display: inline-flex;
+}
+
+.cmk-slide-in-dialog__close:focus-visible {
+  outline: revert;
 }
 
 button {

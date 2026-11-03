@@ -15,7 +15,7 @@ from tests.qa_metrics.components import (
     OwnershipUnavailableError,
     UnknownComponentError,
 )
-from tests.qa_metrics.components._ownership import _assert_usable, _owner_ids
+from tests.qa_metrics.components._ownership import _assert_usable
 from tests.unit.qa_metrics._owners import define_component
 
 
@@ -87,21 +87,6 @@ def test_load_ownership_resolves_paths_by_the_checkouts_owners_files(tmp_path: P
 def test_load_ownership_refuses_a_checkout_without_components(tmp_path: Path) -> None:
     with pytest.raises(OwnershipUnavailableError, match="no component at all"):
         load_ownership(_checkout(tmp_path, {}), [Path("cmk/one.py")])
-
-
-def test_owner_ids_of_unowned_path_is_empty() -> None:
-    assert _owner_ids(None) == []
-
-
-def test_owner_ids_of_single_owner() -> None:
-    assert _owner_ids("ui_setup") == ["ui_setup"]
-
-
-def test_owner_ids_splits_joined_owners() -> None:
-    assert _owner_ids("business_intelligence, ui_setup") == [
-        "business_intelligence",
-        "ui_setup",
-    ]
 
 
 def test_owners_of_known_path() -> None:

@@ -21,9 +21,7 @@ py_library(
         "//packages/cmk-plugins/cmk/plugins/lib",
         requirement("boto3"),
         requirement("botocore"),
-        requirement("feedparser"),
         requirement("mypy-boto3-logs"),
-        requirement("requests"),
     ],
 )
 

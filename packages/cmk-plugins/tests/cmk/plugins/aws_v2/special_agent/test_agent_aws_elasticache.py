@@ -19,7 +19,9 @@ from cmk.plugins.aws_v2.special_agent.config import (
     TagsImportPatternOption,
     TagsOption,
 )
+from cmk.plugins.aws_v2.special_agent.hosts import SOURCE_HOST
 from cmk.plugins.aws_v2.special_agent.sections.core import (
+    AWSComputedContent,
     AWSRegionLimit,
     AWSSectionResult,
     AWSSectionResults,
@@ -722,6 +724,52 @@ def test_agent_aws_elasticache_without_colleague_content(
     results = elasticache.run()
     assert isinstance(results, AWSSectionResults)
     assert results.results == []
+
+
+def _elasticache_with_two_nodes(sections: ElasticacheSectionsOut) -> ElastiCache:
+    _limits, elasticache_summary, elasticache = sections
+    elasticache.receive(
+        elasticache_summary,
+        AWSComputedContent(([], [{"NodeId": "node-a"}, {"NodeId": "node-b"}]), 0.0),
+    )
+    return elasticache
+
+
+def test_agent_aws_elasticache_metrics_go_to_the_host_of_their_node(
+    get_elasticache_sections: ElasticacheSections,
+) -> None:
+    elasticache = _elasticache_with_two_nodes(get_elasticache_sections(None, (None, None)))
+
+    results = elasticache.run().results
+
+    assert {
+        result.piggyback_hostname: {row["Label"] for row in result.content} for result in results
+    } == {"node-a": {"node-a"}, "node-b": {"node-b"}}
+
+
+def test_agent_aws_elasticache_node_hosts_get_the_service_label(
+    get_elasticache_sections: ElasticacheSections,
+) -> None:
+    elasticache = _elasticache_with_two_nodes(get_elasticache_sections(None, (None, None)))
+
+    results = elasticache.run().results
+
+    assert [result.piggyback_host_labels for result in results] == [
+        {"cmk/aws/service": "elasticache"},
+        {"cmk/aws/service": "elasticache"},
+    ]
+
+
+def test_agent_aws_elasticache_summary_and_limits_stay_on_the_account_host(
+    get_elasticache_sections: ElasticacheSections,
+) -> None:
+    elasticache_limits, elasticache_summary, _elasticache = get_elasticache_sections(
+        None, (None, None)
+    )
+
+    results = [*elasticache_limits.run().results, *elasticache_summary.run().results]
+
+    assert {result.piggyback_hostname for result in results} == {SOURCE_HOST}
 
 
 @pytest.mark.parametrize(

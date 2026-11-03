@@ -9,7 +9,6 @@ import sys
 from collections.abc import Callable
 from pathlib import Path
 
-import cmk.ccc.debug
 import cmk.ccc.site
 import cmk.utils.password_store
 import cmk.utils.paths
@@ -17,14 +16,23 @@ from cmk.base import config
 from cmk.base.app import make_app
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.base.core import interface as core_interface
-from cmk.base.modes.check_mk import forced_ip_lookup, host_addresses, load_checks, set_fake_dns
 from cmk.ccc import tty
+from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.ccc.store import activation_lock
-from cmk.cli.internal import Args, CLICommand, GlobalOptions, Options
+from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Arguments as CLIArguments
+from cmk.cli.internal import Command as CLICommand
+from cmk.cli.internal import Context as CLIContext
+from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
+from cmk.cli.internal import Options
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
 from cmk.server_side_calls_backend import load_secrets_file
 from cmk.utils import config_warnings, ip_lookup, timeperiod
 from cmk.utils.log import console
+
+from .agent_based import load_checks
+from .options import fake_dns_address, FAKE_DNS_OPTION, host_addresses
 
 # .
 #   .--nagios-config-------------------------------------------------------.
@@ -38,17 +46,17 @@ from cmk.utils.log import console
 
 
 def _mode_dump_nagios_config(
-    omd_root: Path, global_options: GlobalOptions, _options: Options, raw_host_names: Args
-) -> int:
+    omd_root: Path, global_options: CLIGlobalOptions, options: Options, raw_host_names: CLIArgs
+) -> CLIExitCode:
     app = make_app(omd_root)
-    set_fake_dns(global_options.fake_dns)
+    fake_dns = fake_dns_address(options)
     args = host_addresses(raw_host_names)
 
     from cmk.base.core.nagios import create_config
     from cmk.base.core.nagios._create_config import NagiosCoreConfig
 
-    plugins = load_checks()
-    loading_result = config.load(validate_hosts=True)
+    plugins = load_checks(debug=global_options.debug)
+    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
@@ -56,7 +64,7 @@ def _mode_dump_nagios_config(
     core_objects_config = config.CoreObjectsConfig(loaded_config, ruleset_matcher, label_manager)
     hosts_config = loading_result.hosts_config
 
-    ip_lookup_config = config_cache.ip_lookup_config()
+    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
 
     hostnames = args if args else None
 
@@ -111,29 +119,40 @@ def _mode_dump_nagios_config(
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         default_address_family=ip_lookup_config.default_address_family,
         ip_address_of=ip_lookup.ConfiguredIPLookup(
-            forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+            ip_lookup.make_lookup_ip_address(ip_lookup_config),
             allow_empty=hosts_config.clusters,
             error_handler=config.handle_ip_lookup_failure,
         ),
         service_depends_on=config.ServiceDependsOn(
             tag_list=loading_result.host_tags.tag_list,
             service_dependencies=loading_result.loaded_config.service_dependencies,
+            debug=global_options.debug,
         ),
         timeperiods=timeperiod.get_all_timeperiods(loaded_config.timeperiods),
         get_relay_id=lambda host_name: config.get_relay_id(label_manager.labels_of_host(host_name)),
     )
-    return 0
+    return CLIExitCode.SUCCESS
+
+
+def _run_dump_nagios_config(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
+    try:
+        return _mode_dump_nagios_config(context.omd_root, context.global_options, options, args)
+    except (MKBailOut, MKGeneralException) as e:
+        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+        if context.global_options.debug:
+            raise
+        return CLIExitCode.UNKNOWN
 
 
 cli_command_nagios_config = CLICommand(
-    long_option="nagios-config",
-    short_option="N",
-    handler_function=_mode_dump_nagios_config,
-    argument=True,
-    argument_descr="HOST1 HOST2...",
-    argument_optional=True,
-    short_help="Output Nagios configuration",
-    long_help=[
+    name="nagios_config",
+    long="nagios-config",
+    short="N",
+    handler_function=_run_dump_nagios_config,
+    arguments=CLIArguments("HOST1 HOST2...", optional=True),
+    sub_options=[FAKE_DNS_OPTION],
+    help="Output Nagios configuration",
+    description=[
         (
             "Outputs the Nagios configuration. You may optionally add a list "
             "of hosts. In that case the configuration is generated only for "
@@ -181,21 +200,21 @@ def _make_configured_notify_relay(
 
 
 def _mode_update(
-    omd_root: Path, global_options: GlobalOptions, _options: Options, _args: Args
-) -> int:
+    omd_root: Path, global_options: CLIGlobalOptions, options: Options, _args: CLIArgs
+) -> CLIExitCode:
     app = make_app(omd_root)
-    set_fake_dns(global_options.fake_dns)
-    plugins = load_checks()
-    loading_result = config.load(validate_hosts=True)
+    fake_dns = fake_dns_address(options)
+    plugins = load_checks(debug=global_options.debug)
+    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
     core_objects_config = config.CoreObjectsConfig(loaded_config, ruleset_matcher, label_manager)
     hosts_config = loading_result.hosts_config
 
-    ip_lookup_config = loading_result.config_cache.ip_lookup_config()
+    ip_lookup_config = loading_result.config_cache.ip_lookup_config(fake_dns=fake_dns)
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=ip_lookup.CollectFailedHosts(),
     )
@@ -222,8 +241,8 @@ def _mode_update(
             core, core_client = app.create_core(loaded_config)
 
             core_interface.do_create_config(
-                core=core,
                 core_client=core_client,
+                config_builders=core_interface.config_builders(core),
                 hosts_config=hosts_config,
                 host_tags=loading_result.host_tags,
                 config_cache=loading_result.config_cache,
@@ -235,12 +254,12 @@ def _mode_update(
                 get_ip_stack_config=ip_lookup_config.ip_stack_config,
                 default_address_family=ip_lookup_config.default_address_family,
                 ip_address_of=ip_address_of,
-                ip_address_of_mgmt=forced_ip_lookup()
-                or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
+                ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
                 hosts_to_update=None,
                 service_depends_on=config.ServiceDependsOn(
                     tag_list=loading_result.host_tags.tag_list,
                     service_dependencies=loading_result.loaded_config.service_dependencies,
+                    debug=global_options.debug,
                 ),
                 duplicates=sorted(
                     hosts_config.duplicates(
@@ -255,24 +274,37 @@ def _mode_update(
                 edition=app.edition,
                 loaded_config=loaded_config,
                 make_fetcher_trigger=app.make_fetcher_trigger,
+                debug=global_options.debug,
             )
     except Exception as e:
         console.error(f"Configuration Error: {e}", file=sys.stderr)
-        if cmk.ccc.debug.enabled():
+        if global_options.debug:
             raise
-        sys.exit(1)
+        return CLIExitCode.FAILURE
 
     for warning in ip_address_of.error_handler.format_errors():
         console.warning(tty.format_warning(f"\n{warning}"))
-    return 0
+    return CLIExitCode.SUCCESS
+
+
+def _run_update(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
+    try:
+        return _mode_update(context.omd_root, context.global_options, options, args)
+    except (MKBailOut, MKGeneralException) as e:
+        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+        if context.global_options.debug:
+            raise
+        return CLIExitCode.UNKNOWN
 
 
 cli_command_update = CLICommand(
-    long_option="update",
-    short_option="U",
-    handler_function=_mode_update,
-    short_help="Create core config",
-    long_help=[
+    name="update",
+    long="update",
+    short="U",
+    handler_function=_run_update,
+    sub_options=[FAKE_DNS_OPTION],
+    help="Create core config",
+    description=[
         (
             "Updates the core configuration based on the current Checkmk "
             "configuration. When using the Nagios core, the precompiled host "
@@ -296,29 +328,27 @@ cli_command_update = CLICommand(
 
 
 def _mode_restart(
-    omd_root: Path, global_options: GlobalOptions, _options: Options, raw_host_names: Args
-) -> int:
+    omd_root: Path, global_options: CLIGlobalOptions, options: Options, raw_host_names: CLIArgs
+) -> CLIExitCode:
     app = make_app(omd_root)
-    set_fake_dns(global_options.fake_dns)
+    fake_dns = fake_dns_address(options)
     args = host_addresses(raw_host_names)
-    plugins = load_checks()
-    loading_result = config.load(validate_hosts=True)
+    plugins = load_checks(debug=global_options.debug)
+    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
     core_objects_config = config.CoreObjectsConfig(loaded_config, ruleset_matcher, label_manager)
     hosts_config = loading_result.hosts_config
 
-    ip_lookup_config = loading_result.config_cache.ip_lookup_config()
+    ip_lookup_config = loading_result.config_cache.ip_lookup_config(fake_dns=fake_dns)
 
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=ip_lookup.CollectFailedHosts(),
     )
-    ip_address_of_mgmt = forced_ip_lookup() or ip_lookup.make_lookup_mgmt_board_ip_address(
-        ip_lookup_config
-    )
+    ip_address_of_mgmt = ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)
     final_service_name_config = make_final_service_name_config(loaded_config, ruleset_matcher)
     passive_service_name_config = loading_result.config_cache.make_passive_service_name_config(
         final_service_name_config
@@ -348,14 +378,15 @@ def _mode_restart(
         ip_lookup_config.default_address_family,
         ip_address_of,
         ip_address_of_mgmt,
-        core,
         core_client,
         plugins,
+        config_builders=core_interface.config_builders(core),
         hosts_to_update=set(args) if args else None,
         locking_mode=loaded_config.restart_locking,
         service_depends_on=config.ServiceDependsOn(
             tag_list=loading_result.host_tags.tag_list,
             service_dependencies=loaded_config.service_dependencies,
+            debug=global_options.debug,
         ),
         duplicates=sorted(
             hosts_config.duplicates(
@@ -370,21 +401,32 @@ def _mode_restart(
         edition=app.edition,
         loaded_config=loaded_config,
         make_fetcher_trigger=app.make_fetcher_trigger,
+        debug=global_options.debug,
     )
     for warning in ip_address_of.error_handler.format_errors():
         console.warning(tty.format_warning(f"\n{warning}"))
-    return 0
+    return CLIExitCode.SUCCESS
+
+
+def _run_restart(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
+    try:
+        return _mode_restart(context.omd_root, context.global_options, options, args)
+    except (MKBailOut, MKGeneralException) as e:
+        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+        if context.global_options.debug:
+            raise
+        return CLIExitCode.UNKNOWN
 
 
 cli_command_restart = CLICommand(
-    long_option="restart",
-    short_option="R",
-    handler_function=_mode_restart,
-    argument=True,
-    argument_descr="[HostA, HostB]",
-    argument_optional=True,
-    short_help="Create core config + core restart",
-    long_help=[
+    name="restart",
+    long="restart",
+    short="R",
+    handler_function=_run_restart,
+    arguments=CLIArguments("[HostA, HostB]", optional=True),
+    sub_options=[FAKE_DNS_OPTION],
+    help="Create core config + core restart",
+    description=[
         (
             "You may add host names as additional arguments. This enables the incremental "
             "activate mechanism, only compiling these host names and using cached data for all "
@@ -406,29 +448,27 @@ cli_command_restart = CLICommand(
 
 
 def _mode_reload(
-    omd_root: Path, global_options: GlobalOptions, _options: Options, raw_host_names: Args
-) -> int:
+    omd_root: Path, global_options: CLIGlobalOptions, options: Options, raw_host_names: CLIArgs
+) -> CLIExitCode:
     app = make_app(omd_root)
-    set_fake_dns(global_options.fake_dns)
+    fake_dns = fake_dns_address(options)
     args = host_addresses(raw_host_names)
-    plugins = load_checks()
-    loading_result = config.load(validate_hosts=True)
+    plugins = load_checks(debug=global_options.debug)
+    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
     core_objects_config = config.CoreObjectsConfig(loaded_config, ruleset_matcher, label_manager)
     hosts_config = loading_result.hosts_config
 
-    ip_lookup_config = loading_result.config_cache.ip_lookup_config()
+    ip_lookup_config = loading_result.config_cache.ip_lookup_config(fake_dns=fake_dns)
 
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=ip_lookup.CollectFailedHosts(),
     )
-    ip_address_of_mgmt = forced_ip_lookup() or ip_lookup.make_lookup_mgmt_board_ip_address(
-        ip_lookup_config
-    )
+    ip_address_of_mgmt = ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)
     final_service_name_config = make_final_service_name_config(loaded_config, ruleset_matcher)
     passive_service_name_config = loading_result.config_cache.make_passive_service_name_config(
         final_service_name_config
@@ -458,14 +498,15 @@ def _mode_reload(
         ip_lookup_config.default_address_family,
         ip_address_of,
         ip_address_of_mgmt,
-        core,
         core_client,
         plugins,
+        config_builders=core_interface.config_builders(core),
         hosts_to_update=set(args) if args else None,
         locking_mode=loaded_config.restart_locking,
         service_depends_on=config.ServiceDependsOn(
             tag_list=loading_result.host_tags.tag_list,
             service_dependencies=loaded_config.service_dependencies,
+            debug=global_options.debug,
         ),
         duplicates=sorted(
             hosts_config.duplicates(
@@ -480,21 +521,32 @@ def _mode_reload(
         edition=app.edition,
         loaded_config=loaded_config,
         make_fetcher_trigger=app.make_fetcher_trigger,
+        debug=global_options.debug,
     )
     for warning in ip_address_of.error_handler.format_errors():
         console.warning(tty.format_warning(f"\n{warning}"))
-    return 0
+    return CLIExitCode.SUCCESS
+
+
+def _run_reload(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
+    try:
+        return _mode_reload(context.omd_root, context.global_options, options, args)
+    except (MKBailOut, MKGeneralException) as e:
+        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+        if context.global_options.debug:
+            raise
+        return CLIExitCode.UNKNOWN
 
 
 cli_command_reload = CLICommand(
-    long_option="reload",
-    short_option="O",
-    handler_function=_mode_reload,
-    argument=True,
-    argument_descr="[HostA, HostB]",
-    argument_optional=True,
-    short_help="Create core config + core reload",
-    long_help=[
+    name="reload",
+    long="reload",
+    short="O",
+    handler_function=_run_reload,
+    arguments=CLIArguments("[HostA, HostB]", optional=True),
+    sub_options=[FAKE_DNS_OPTION],
+    help="Create core config + core reload",
+    description=[
         (
             "You may add host names as additional arguments. This enables the incremental "
             "activate mechanism, only compiling these host names and using cached data for all "

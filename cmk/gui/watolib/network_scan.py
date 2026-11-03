@@ -27,7 +27,7 @@ from cmk.gui.http import Request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.session_context import UserContext
 from cmk.gui.site_config import is_distributed_setup_remote_site, site_is_local
 from cmk.gui.user_sites import activation_sites
@@ -87,7 +87,10 @@ def execute_network_scan_job(config: Config) -> None:
             % {"run_as": run_as, "folder": folder.title()}
         )
 
-    with UserContext(run_as, UserPermissions.from_config(config, permission_registry)):
+    with UserContext(
+        run_as,
+        UserPermissions.from_config(config, all_permissions()),
+    ):
         result: NetworkScanResult = {
             "start": time.time(),
             "end": True,  # means currently running

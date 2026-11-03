@@ -653,8 +653,8 @@ def test_a_pair_naming_an_end_the_relation_does_not_have_is_refused() -> None:
 
 @pytest.fixture(name="tree")
 def _tree() -> Iterator[FolderTree]:
-    # Built explicitly rather than through the request-global folder_tree(), so that no Flask
-    # request context is needed - the same way test_hosts_and_folders.py builds one.
+    # Built explicitly from a crafted config, so that no Flask request context is needed - the
+    # same way test_hosts_and_folders.py builds one.
     cmk.utils.paths.profile_dir.mkdir(parents=True, exist_ok=True)
     raw_config = get_default_config()
     raw_config["tags"] = cmk.ruleset_matcher.tags.get_effective_tag_config(raw_config["wato_tags"])
@@ -1065,7 +1065,7 @@ def test_a_pair_the_edition_refuses_is_reported_instead_of_offered(tree: FolderT
     _create_host(root, "srv-01", HostAttributes({"site": SiteId("customer_b")}))
     tree.invalidate_caches()
     root = tree.root_folder()
-    root.validators = replace(root.validators, validate_host_relation=refuse_relations_across_sites)
+    root.validators = replace(root.validators, host_relation=[refuse_relations_across_sites])
 
     found = detect_relations(tree, evidence=_evidence(), acting_user=_SUPERUSER)
 

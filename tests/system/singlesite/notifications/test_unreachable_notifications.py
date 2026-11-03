@@ -163,7 +163,7 @@ def _send_child_down_expect_unreachable(
             "HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;"
         )
     # TODO: Can not test this because it drains too many entries from the log. WatchLog could deal
-    # with this by readding the read lines after succeeded test or similar
+    # with this by re-adding the read lines after succeeded test or similar
     # else:
     #     log.check_not_logged(
     #         "HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;"
@@ -202,7 +202,7 @@ def test_unreachable_child_down_before_parent_down(unreachable_enabled: bool, si
                 "HOST NOTIFICATION: check-mk-notify;notify-test-parent;DOWN;check-mk-notify;"
             )
 
-            # Difference beween nagios/cmc: when sending DOWN via PROCESS_HOST_CHECK_RESULT
+            # Difference between nagios/cmc: when sending DOWN via PROCESS_HOST_CHECK_RESULT
             # the nagios core needs another child down check result to report it as unreachable.
             site.send_host_check_result(
                 "notify-test-child", STATE_DOWN, "DOWN", expected_state=STATE_UNREACHABLE
@@ -280,7 +280,7 @@ def test_parent_down_child_state_changes(unreachable_enabled: bool, site: Site) 
                 "HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;"
             )
         # TODO: Can not test this because it drains too many entries from the log. WatchLog could deal
-        # with this by readding the read lines after succeeded test or similar
+        # with this by re-adding the read lines after succeeded test or similar
         # else:
         #     log.check_not_logged(
         #         "HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;"
@@ -293,7 +293,7 @@ def test_parent_down_child_state_changes(unreachable_enabled: bool, site: Site) 
         if unreachable_enabled:
             log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;")
         # TODO: Can not test this because it drains too many entries from the log. WatchLog could deal
-        # with this by readding the read lines after succeeded test or similar
+        # with this by re-adding the read lines after succeeded test or similar
         # else:
         #     log.check_not_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;")
 
@@ -309,7 +309,7 @@ def test_parent_down_child_state_changes(unreachable_enabled: bool, site: Site) 
                 "HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;"
             )
         # TODO: Can not test this because it drains too many entries from the log. WatchLog could deal
-        # with this by readding the read lines after succeeded test or similar
+        # with this by re-adding the read lines after succeeded test or similar
         # else:
         #     log.check_not_logged(
         #         "HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;"
@@ -381,7 +381,7 @@ def test_child_up_after_parent_recovers(unreachable_enabled: bool, site: Site) -
                 "HOST NOTIFICATION: check-mk-notify;notify-test-child;UP;check-mk-notify;"
             )
         # TODO: Can not test this because it drains too many entries from the log. WatchLog could deal
-        # with this by readding the read lines after succeeded test or similar
+        # with this by re-adding the read lines after succeeded test or similar
         # else:
         #     log.check_not_logged(
         #         "HOST NOTIFICATION: check-mk-notify;notify-test-child;UP;check-mk-notify;"
@@ -414,7 +414,7 @@ def test_child_down_and_up_while_not_reachable(unreachable_enabled: bool, site: 
                 "HOST NOTIFICATION: check-mk-notify;notify-test-child;UP;check-mk-notify;"
             )
         # TODO: Can not test this because it drains too many entries from the log. WatchLog could deal
-        # with this by readding the read lines after succeeded test or similar
+        # with this by re-adding the read lines after succeeded test or similar
         # else:
         #    log.check_not_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UP")
 
@@ -437,7 +437,7 @@ def test_down_child_becomes_unreachable_and_down_again(
         # - Set parent down, expect DOWN notification for parent and UNREACHABLE notification for child
         _send_parent_down(site, log)
 
-        # Difference beween nagios/cmc: when sending DOWN via PROCESS_HOST_CHECK_RESULT
+        # Difference between nagios/cmc: when sending DOWN via PROCESS_HOST_CHECK_RESULT
         # the nagios core needs another child down check result to report it as unreachable.
         if site.core_name() == "cmc":
             log.check_logged("HOST ALERT: notify-test-child;UNREACHABLE;HARD;1;")
@@ -447,7 +447,7 @@ def test_down_child_becomes_unreachable_and_down_again(
                     "HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;"
                 )
             # TODO: Can not test this because it drains too many entries from the log. WatchLog could deal
-            # with this by readding the read lines after succeeded test or similar
+            # with this by re-adding the read lines after succeeded test or similar
             # else:
             #    log.check_not_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
 
@@ -513,7 +513,7 @@ def test_down_child_becomes_unreachable_then_up(unreachable_enabled: bool, site:
         site.send_host_check_result("notify-test-parent", STATE_DOWN, "DOWN")
         log.check_logged("HOST ALERT: notify-test-parent;DOWN;HARD;1;DOWN")
 
-        # Difference beween nagios/cmc: when sending DOWN via PROCESS_HOST_CHECK_RESULT
+        # Difference between nagios/cmc: when sending DOWN via PROCESS_HOST_CHECK_RESULT
         # the nagios core needs another child down check result to report it as unreachable.
         if site.core_name() == "cmc":
             log.check_logged("HOST ALERT: notify-test-child;UNREACHABLE;HARD;1;")
@@ -523,7 +523,7 @@ def test_down_child_becomes_unreachable_then_up(unreachable_enabled: bool, site:
                     "HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;"
                 )
             # TODO: Can not test this because it drains too many entries from the log. WatchLog could deal
-            # with this by readding the read lines after succeeded test or similar
+            # with this by re-adding the read lines after succeeded test or similar
             # else:
             #    log.check_not_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;")
 

@@ -3,7 +3,13 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { LinePerfdataLabel, MapElement, MapViewType } from '@/maps/types/api'
+import type {
+  LinePerfdataLabel,
+  MapElement,
+  MapViewType,
+  MonitoredObjectType,
+  ObjectType
+} from '@/maps/types/api'
 
 /**
  * How a label is aligned. The wire model also knows 'justify', which the card
@@ -40,6 +46,8 @@ export interface ObjectForm {
   line_width: number | undefined
   line_perfdata_label: LinePerfdataLabel
   line_weather_color: boolean
+  /** What a line shows the state of; meaningless for anything else. */
+  line_object_type: MonitoredObjectType
   label: {
     show: boolean
     text: string
@@ -99,6 +107,41 @@ const DEFAULT_GRAPH_TIME_WINDOW = 60
 /** How far a new line reaches when the object carries no end point yet. */
 const LINE_DEFAULT_LENGTH = 150
 
+const STATEFUL_TYPES: ReadonlySet<ObjectType> = new Set([
+  'host',
+  'service',
+  'hostgroup',
+  'servicegroup',
+  'dyngroup'
+])
+
+/** Whether an object bound to `bound` offers the hard-state option. */
+export function hasStateOptions(bound: ObjectType): boolean {
+  return STATEFUL_TYPES.has(bound)
+}
+
+/**
+ * Whether the object may count its hosts' services: a host, a host group,
+ * and a dynamic group of hosts.
+ */
+export function choosesServiceCounting(bound: ObjectType, form: ObjectForm): boolean {
+  return (
+    bound === 'host' ||
+    bound === 'hostgroup' ||
+    (bound === 'dyngroup' && form.object_types !== 'service')
+  )
+}
+
+/** What the object stands for: a line, the object type it shows the state of. */
+export function boundTypeOf(form: ObjectForm, object: MapElement): ObjectType {
+  return object.type === 'line' ? form.line_object_type : object.type
+}
+
+/** Where the daemon leaves out members as NagVis does. */
+export function leavesOutMembers(type: ObjectType): boolean {
+  return type === 'host' || type === 'hostgroup' || type === 'servicegroup'
+}
+
 /** The object as the form sees it. */
 export function formFromObject(object: MapElement, defaults: ObjectFormDefaults): ObjectForm {
   return {
@@ -117,6 +160,7 @@ export function formFromObject(object: MapElement, defaults: ObjectFormDefaults)
     line_width: object.line_width ?? undefined,
     line_perfdata_label: object.line_perfdata_label ?? 'none',
     line_weather_color: object.line_weather_color ?? false,
+    line_object_type: object.line_object_type ?? (object.service_description ? 'service' : 'host'),
     label: {
       show: object.label?.show ?? false,
       text: object.label?.text ?? '',
@@ -175,7 +219,9 @@ export function formFromObject(object: MapElement, defaults: ObjectFormDefaults)
  * Only what the object's own type can carry is included: a hostname on a
  * textbox, or line coordinates on a worldmap object, would be stored and then
  * silently ignored by every renderer. Empty strings become null so that
- * clearing a field really unsets it rather than storing "".
+ * clearing a field really unsets it rather than storing "". A cleared number
+ * field holds "" too (a native number input's v-model keeps it), so an
+ * optional one becomes null and any other one keeps what the object stores.
  */
 export function updatesFromForm(
   form: ObjectForm,
@@ -193,7 +239,7 @@ export function updatesFromForm(
         : {
             mode: form.display.mode,
             image: form.display.image || null,
-            image_size: form.display.image_size ?? null,
+            image_size: optionalNumber(form.display.image_size),
             gadget_type: form.display.mode === 'gadget' ? form.display.gadget_type : null,
             gadget_metric:
               form.display.mode === 'gadget' ? form.display.gadget_metric || null : null
@@ -201,31 +247,31 @@ export function updatesFromForm(
     label: {
       show: form.label.show,
       text: form.label.text || null,
-      x: form.label.x,
-      y: form.label.y,
-      size: form.label.size,
+      x: numberOr(form.label.x, object.label?.x),
+      y: numberOr(form.label.y, object.label?.y),
+      size: numberOr(form.label.size, object.label?.size),
       color: form.label.color,
       background: form.label.background,
       align: form.label.align
     },
     label_border: form.label_border || null,
-    label_maxlen: form.label_maxlen ?? null,
+    label_maxlen: optionalNumber(form.label_maxlen),
     textbox_background: form.textbox_background || null,
     textbox_border: form.textbox_border || null,
-    textbox_width: form.textbox_width ?? null,
-    textbox_height: form.textbox_height ?? null,
+    textbox_width: optionalNumber(form.textbox_width),
+    textbox_height: optionalNumber(form.textbox_height),
     graph_url: form.graph_url || null,
     graph_embed_type: form.graph_embed_type,
-    graph_width: form.graph_width,
-    graph_height: form.graph_height,
-    graph_refresh_interval: form.graph_refresh_interval,
+    graph_width: numberOr(form.graph_width, object.graph_width),
+    graph_height: numberOr(form.graph_height, object.graph_height),
+    graph_refresh_interval: numberOr(form.graph_refresh_interval, object.graph_refresh_interval),
     graph_metric: form.graph_metric.length ? form.graph_metric : null,
     graph_id: form.graph_id || null,
     graph_time_window: form.graph_time_window,
     line_style: form.line_style,
     line_color: form.line_color || null,
     line_color_border: form.line_color_border || null,
-    line_width: form.line_width ?? null,
+    line_width: optionalNumber(form.line_width),
     line_perfdata_label: form.line_perfdata_label,
     line_weather_color: form.line_weather_color,
     url: form.url || null,
@@ -235,64 +281,105 @@ export function updatesFromForm(
     context_template: form.context_template || null,
     exclude_members: form.exclude_members || null,
     exclude_member_states: form.exclude_member_states || null,
-    z: form.z
+    z: numberOr(form.z, object.z)
   }
 
-  if (type === 'host' || type === 'service') {
+  // A line is bound like the object it shows; switching what that is drops the
+  // binding it had before. A host stays implied by its name, so a line left
+  // without one stays a plain line; a service is stored, so one still without
+  // its description reopens as the service it was meant to be.
+  const bound = boundTypeOf(form, object)
+  // A pattern kept elsewhere would do nothing, then apply again on switching back.
+  if (!leavesOutMembers(bound)) {
+    Object.assign(updates, { exclude_members: null, exclude_member_states: null })
+  }
+  if (type === 'line') {
+    Object.assign(updates, {
+      line_object_type: bound === 'host' ? null : bound,
+      host_name: null,
+      service_description: null,
+      group_name: null,
+      map_name: null,
+      aggregation_id: null,
+      object_types: null,
+      object_filter: null,
+      only_hard_states: false,
+      recognize_services: false
+    })
+  }
+
+  if (bound === 'host' || bound === 'service') {
     updates.host_name = form.host_name || null
+  }
+  if (hasStateOptions(bound)) {
     updates.only_hard_states = form.only_hard_states
   }
-  if (type === 'host') {
+  if (choosesServiceCounting(bound, form)) {
     updates.recognize_services = form.recognize_services
   }
-  if (type === 'service') {
+  if (bound === 'service') {
     updates.service_description = form.service_description || null
   }
   if (type === 'graph') {
     updates.host_name = form.host_name || null
     updates.service_description = form.service_description || null
   }
-  if (type === 'hostgroup' || type === 'servicegroup') {
+  if (bound === 'hostgroup' || bound === 'servicegroup') {
     updates.group_name = form.group_name || null
   }
-  if (type === 'map') {
+  if (bound === 'map') {
     updates.map_name = form.map_name || null
   }
-  if (type === 'aggregation') {
+  if (bound === 'aggregation') {
     updates.aggregation_id = form.aggregation_id || null
-    updates.expand_depth = form.expand_depth ?? 0
   }
-  if (type === 'dyngroup') {
+  if (type === 'aggregation') {
+    updates.expand_depth = numberOr(form.expand_depth, object.expand_depth ?? 0)
+  }
+  if (bound === 'dyngroup') {
     updates.object_types = form.object_types
     updates.object_filter = form.object_filter || null
   }
 
   if (type === 'line') {
-    updates.host_name = form.host_name || null
-    updates.service_description = form.service_description || null
-    // The metric is what perfdata labels and weather colouring look up, so it
-    // is stored exactly while one of them is on.
-    if (form.line_perfdata_label !== 'none' || form.line_weather_color) {
+    // Perfdata labels and weather colouring read a metric, which only a service
+    // has; it is stored exactly while one of them is on.
+    if (bound !== 'service') {
+      updates.line_perfdata_label = 'none'
+      updates.line_weather_color = false
+    } else if (form.line_perfdata_label !== 'none' || form.line_weather_color) {
       updates.weathermap_metric = form.weathermap_metric || null
       // The outbound metric is the second direction of the first one; on its
       // own it would colour the inbound half from an arbitrary metric.
       updates.weathermap_metric_out = (form.weathermap_metric && form.weathermap_metric_out) || null
     }
     if (mapType !== 'worldmap') {
-      updates.x = form.x
-      updates.y = form.y
-      updates.x2 = form.x2
-      updates.y2 = form.y2
+      updates.x = numberOr(form.x, object.x)
+      updates.y = numberOr(form.y, object.y)
+      updates.x2 = numberOr(form.x2, object.x2)
+      updates.y2 = numberOr(form.y2, object.y2)
     }
   } else if (mapType === 'worldmap') {
-    updates.lat = form.lat
-    updates.lng = form.lng
+    updates.lat = numberOr(form.lat, object.lat)
+    updates.lng = numberOr(form.lng, object.lng)
   } else {
-    updates.x = form.x
-    updates.y = form.y
+    updates.x = numberOr(form.x, object.x)
+    updates.y = numberOr(form.y, object.y)
   }
 
   return updates
+}
+
+function isNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value)
+}
+
+function optionalNumber(value: number | undefined): number | null {
+  return isNumber(value) ? value : null
+}
+
+function numberOr<T>(value: number, stored: T): number | T {
+  return isNumber(value) ? value : stored
 }
 
 /**
@@ -300,5 +387,10 @@ export function updatesFromForm(
  * colouring has nothing to colour a line by without one.
  */
 export function weatherColorNeedsMetric(form: ObjectForm, object: MapElement): boolean {
-  return object.type === 'line' && form.line_weather_color && !form.weathermap_metric.trim()
+  return (
+    object.type === 'line' &&
+    form.line_object_type === 'service' &&
+    form.line_weather_color &&
+    !form.weathermap_metric.trim()
+  )
 }

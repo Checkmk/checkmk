@@ -30,6 +30,7 @@ from ..token_util import (
 from ..type_defs import DashletConfig
 from ._contextual_link_encoding import EffectiveLink
 from ._utils import validated_dashboard_token
+from .model.context_filters import context_filter_to_internal
 from .model.contextual_link import (
     ContextualLinkCustom,
     ContextualLinkDefault,
@@ -234,7 +235,7 @@ def _effective_links(
                     include_context=entry.include_context,
                     include_time_range=entry.include_time_range,
                     show_filter_form=entry.show_filter_form,
-                    filters=[f.filter_id for f in entry.filters],
+                    filters=[context_filter_to_internal(f) for f in entry.filters],
                 )
                 for entry in custom.links
             ]

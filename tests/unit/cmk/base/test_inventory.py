@@ -13,7 +13,7 @@ import pytest
 
 import cmk.ccc.resulttype as result
 from cmk.agent_based.v1 import Attributes, TableRow
-from cmk.base.modes.check_mk import (
+from cmk.base.inventory import (
     _get_save_tree_actions,
     _SaveTreeActions,
     execute_active_check_inventory,
@@ -1319,6 +1319,7 @@ def test_inventorize_host(failed_state: int | None, expected: int) -> None:
         ),
         raw_intervals_from_config=(),
         previous_tree=ImmutableTree(),
+        debug=True,
     ).check_results
 
     check_result = ActiveCheckResult.from_subresults(*check_results)
@@ -1350,6 +1351,7 @@ def test_inventorize_host_with_no_data_nor_files() -> None:
         parameters=HWSWInventoryParameters.from_raw({}),
         raw_intervals_from_config=(),
         previous_tree=ImmutableTree(),
+        debug=True,
     ).check_results
 
     check_result = ActiveCheckResult.from_subresults(*check_results)
@@ -1677,6 +1679,7 @@ def _execute_active_check_inventory(
         inventorized_host_labels_dir=tmp_path / "inventorized_host_labels",
         discovered_host_labels_dir=tmp_path / "discovered_host_labels",
         autodiscovery_dir=tmp_path / "autodiscovery",
+        debug=True,
     )
 
 

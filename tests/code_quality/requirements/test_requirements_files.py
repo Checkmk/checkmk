@@ -30,7 +30,7 @@ def loaded_requirements_fixture() -> dict[str, str]:
 )
 def test_all_packages_pinned(loaded_requirements: dict[str, str]) -> None:
     # Test implements process as described in:
-    # https://wiki.lan.checkmk.net/spaces/DEV/pages/106333650/Creating+a+new+version+branch
+    # https://checkmk-int.atlassian.net/wiki/x/EYFlD ("Creating a new version branch")
     unpinned_packages = [req for req in loaded_requirements if not loaded_requirements[req]]
     assert not unpinned_packages, (
         "The following packages are not pinned: %s. "

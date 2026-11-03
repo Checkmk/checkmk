@@ -168,7 +168,10 @@ def test_status_forwards_the_request_on_behalf_of_the_registered_host(
 ) -> None:
     report = STATUS_REQUEST | {
         "last_error": "Connection refused",
-        "legacy_registration": {"host_name": HOST_NAME, "host_secret": "xR3uVq9LcK2mWn7Z"},
+        "legacy_registration": {
+            "host_name": HOST_NAME,
+            "proof": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        },
     }
     _site_answers(wiremock, ar_site, "status", _json_answer(HTTPStatus.OK, NO_AGENT))
 

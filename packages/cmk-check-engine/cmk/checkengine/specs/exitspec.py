@@ -11,6 +11,7 @@ class ExitSpec(TypedDict, total=False):
     connection: int
     timeout: int
     exception: int
+    warnings: int
     wrong_version: int
     missing_sections: int
     specific_missing_sections: list[tuple[str, int]]

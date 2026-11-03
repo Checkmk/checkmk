@@ -12,7 +12,7 @@ from cmk.gui.valuespec import Dictionary
 from cmk.gui.wato.pages._password_store_valuespecs import (
     IndividualOrStoredPassword,
 )
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
+from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree
 from cmk.gui.watolib.rulesets import (
     AllRulesets,
     Rule,
@@ -25,7 +25,7 @@ from cmk.gui.watolib.rulespecs import Rulespec
 
 
 @pytest.fixture(name="allrulesets_with_rules_in_multiple_files")
-def fixture_allrulesets_with_rules_in_multiple_files() -> AllRulesets:
+def fixture_allrulesets_with_rules_in_multiple_files(tree: FolderTree) -> AllRulesets:
     rule_name = "special_agents:foo_rule"
 
     ruleset = Ruleset(
@@ -58,7 +58,6 @@ def fixture_allrulesets_with_rules_in_multiple_files() -> AllRulesets:
             doc_references=None,
         ),
     )
-    tree = folder_tree()
     root_folder = tree.root_folder()
     sub_folder = Folder(
         tree=tree,
@@ -110,7 +109,7 @@ def fixture_allrulesets_with_rules_in_multiple_files() -> AllRulesets:
             },
         ),
     )
-    return AllRulesets(rulesets={rule_name: ruleset}, tree=folder_tree())
+    return AllRulesets(rulesets={rule_name: ruleset}, tree=tree)
 
 
 @pytest.mark.parametrize(
@@ -120,7 +119,6 @@ def fixture_allrulesets_with_rules_in_multiple_files() -> AllRulesets:
         pytest.param(lambda *args, **kwargs: 1 / 0, id="Exception in hook call"),  # noqa: ARG005
     ],
 )
-@pytest.mark.usefixtures("request_context")
 @patch("cmk.gui.watolib.rulesets.update_merged_password_file")
 def test_all_rulesets_save(  # type: ignore[explicit-any, misc]
     updated_password_file_automation: MagicMock,

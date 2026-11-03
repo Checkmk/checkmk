@@ -27,7 +27,6 @@ from functools import cached_property
 from pathlib import Path
 from typing import Literal, overload
 
-import cmk.ccc.debug
 import cmk.utils.paths
 from cmk.base import config
 from cmk.base.base_app import CheckmkBaseApp
@@ -97,20 +96,23 @@ class AutomationEnvironment:
 
     app: CheckmkBaseApp
     loading_result: config.LoadingResult
+    debug: bool
 
     @classmethod
     def create(
         cls,
         app: CheckmkBaseApp,
         loading_result: config.LoadingResult,
+        *,
+        debug: bool,
     ) -> AutomationEnvironment:
-        return cls(app=app, loading_result=loading_result)
+        return cls(app=app, loading_result=loading_result, debug=debug)
 
     # --- Pass-through accessors (no caching — just re-expose what's already there).
 
     @property
     def plugins(self) -> AgentBasedPlugins:
-        return load_all_plugins(raise_errors=cmk.ccc.debug.enabled())
+        return load_all_plugins(raise_errors=self.debug)
 
     @property
     def loaded_config(self) -> BaseConfig:

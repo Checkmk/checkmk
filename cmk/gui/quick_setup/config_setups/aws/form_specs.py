@@ -9,7 +9,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 
 from cmk.gui.form_specs.unstable.validators import HostAddress
 from cmk.gui.quick_setup.config_setups.aws.ruleset_helper import formspec_aws_tags
-from cmk.plugins.aws_deprecated.lib import (  # astrein: disable=cmk-module-layer-violation
+from cmk.plugins.aws_deprecated.lib import (  # astrein: disable=module-layers
     aws_region_to_monitor,
 )
 from cmk.rulesets.v1 import Help, Message, Title
@@ -90,7 +90,7 @@ def _formspec_aws_api_access() -> dict[str, DictElement]:
                                 ),
                                 *(
                                     SingleChoiceElement(
-                                        title=Title(  # astrein: disable=localization-checker
+                                        title=Title(  # astrein: disable=localization
                                             region
                                         ),
                                         name=region.replace("-", "_"),
@@ -215,7 +215,7 @@ def quick_setup_stage_2(max_regions: int | None = None) -> Mapping[str, DictElem
                 elements=[
                     MultipleChoiceElement(
                         name=name.replace("-", "_"),
-                        title=Title(title),  # astrein: disable=localization-checker
+                        title=Title(title),  # astrein: disable=localization
                     )
                     for name, title in aws_region_to_monitor()
                 ],
@@ -225,7 +225,7 @@ def quick_setup_stage_2(max_regions: int | None = None) -> Mapping[str, DictElem
                         max_value=max_regions,
                         error_msg=Message("Please select at least one or more regions to continue.")
                         if max_regions is None
-                        else Message(  # astrein: disable=localization-checker
+                        else Message(  # astrein: disable=localization
                             f"Please select at least one and at most {max_regions} regions to continue"
                         ),
                     ),

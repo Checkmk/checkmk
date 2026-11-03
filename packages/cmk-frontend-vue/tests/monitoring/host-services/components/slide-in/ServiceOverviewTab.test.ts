@@ -9,7 +9,10 @@ import { describe, expect, it } from 'vitest'
 
 import ServiceOverviewTab from '@/monitoring/host-services/components/slide-in/ServiceOverviewTab.vue'
 import type { ServiceOverview } from '@/monitoring/shared/api/types'
+import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 import type { DisplayOptions } from '@/monitoring/shared/types'
+
+import { makeListingService } from '../../../shared/services/testHelpers'
 
 const DISPLAY_OPTIONS: DisplayOptions = { dateFormat: '%Y-%m-%d', timestampFormat: 'abs' }
 
@@ -34,6 +37,7 @@ function makeOverview(overrides: Partial<ServiceOverview> = {}): ServiceOverview
     legacy_host_status_link: HOST_LINK,
     legacy_service_status_link: SERVICE_LINK,
     legacy_service_parameters_link: PARAMETERS_LINK,
+    legacy_service_discovery_link: null,
     legacy_service_graphs_link: GRAPHS_LINK,
     contact_groups: ['all'],
     summary: 'OK - load average: 0.10, 0.05, 0.01',
@@ -100,6 +104,14 @@ describe('ServiceOverviewTab', () => {
   it('dashes out the next check of a passive service', () => {
     render(ServiceOverviewTab, {
       props: { displayOptions: DISPLAY_OPTIONS, data: makeOverview({ next_check: null }) }
+    })
+
+    expect(screen.getByText('–')).toBeInTheDocument()
+  })
+
+  it('dashes out the state age of a service that has never been checked', () => {
+    render(ServiceOverviewTab, {
+      props: { displayOptions: DISPLAY_OPTIONS, data: makeOverview({ last_state_change: null }) }
     })
 
     expect(screen.getByText('–')).toBeInTheDocument()
@@ -209,6 +221,7 @@ describe('ServiceOverviewTab', () => {
         data: makeOverview({
           host_modes: [
             {
+              id: 'downtime',
               icon_name: 'downtime',
               link: 'view.py?view_name=downtimes_of_host&site=local&host=web-server-01',
               title: 'Host is in scheduled downtime'
@@ -219,5 +232,25 @@ describe('ServiceOverviewTab', () => {
     })
 
     expect(screen.getByRole('link', { name: 'Host is in scheduled downtime' })).toBeInTheDocument()
+  })
+
+  it('narrows the listing to the services carrying a label clicked on', async () => {
+    const service = makeListingService()
+    render(ServiceOverviewTab, {
+      props: {
+        displayOptions: DISPLAY_OPTIONS,
+        data: makeOverview({ labels: { owner: { value: 'platform', source: 'explicit' } } })
+      },
+      global: { provide: { [MONITORING_SERVICE as symbol]: service } }
+    })
+
+    await userEvent.click(screen.getByRole('button', { name: 'owner: platform' }))
+
+    expect(service.filterState.value).toStrictEqual({
+      type: 'condition',
+      field: 'labels',
+      op: 'all_of',
+      value: ['owner:platform']
+    })
   })
 })

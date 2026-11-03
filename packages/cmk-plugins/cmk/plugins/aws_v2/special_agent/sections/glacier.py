@@ -14,6 +14,7 @@ from typing import override
 import botocore
 from botocore.client import BaseClient
 
+from .. import hosts
 from ..config import AWSConfig, LOGGER, Tags
 from .core import (
     AWSColleagueContents,
@@ -72,7 +73,6 @@ class GlacierLimits(AWSSectionLimits):
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
         self._add_limit(
-            "",
             AWSLimit(
                 "number_of_vaults",
                 "Vaults",
@@ -83,7 +83,7 @@ class GlacierLimits(AWSSectionLimits):
         return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
 
 
-class Glacier(AWSSection):
+class GlacierSummary(AWSSection):
     def __init__(
         self,
         client: BaseClient,
@@ -98,7 +98,7 @@ class Glacier(AWSSection):
     @property
     @override
     def name(self) -> str:
-        return "glacier"
+        return "glacier_summary"
 
     @property
     @override
@@ -196,4 +196,45 @@ class Glacier(AWSSection):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", computed_content.content)]
+        return [AWSSectionResult(self._target_host(hosts.AccountScope()), computed_content.content)]
+
+
+class Glacier(AWSSection):
+    @property
+    @override
+    def name(self) -> str:
+        return "glacier"
+
+    @property
+    @override
+    def cache_interval(self) -> int:
+        return int(get_seconds_since_midnight(NOW))
+
+    @override
+    def _get_colleague_contents(self) -> AWSColleagueContents:
+        colleague = self._received_results.get("glacier_summary")
+        if colleague and colleague.content:
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents([], 0.0)
+
+    @override
+    def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping[str, object]]:
+        (colleague_contents,) = args
+        return colleague_contents.content
+
+    @override
+    def _compute_content(
+        self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
+    ) -> AWSComputedContent:
+        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
+
+    @override
+    def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
+        return [
+            AWSSectionResult(
+                self._target_host(hosts.GlacierVault(vault["VaultName"])),
+                [vault],
+                {"cmk/aws/service": "glacier"},
+            )
+            for vault in computed_content.content
+        ]

@@ -11,9 +11,10 @@ import CmkPointerTooltip, {
 } from 'cmk-ui-library/components/CmkPointerTooltip.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { useTheme } from 'cmk-ui-library/lib/useTheme'
-import { computed, ref } from 'vue'
+import { computed, ref, useTemplateRef, watch } from 'vue'
 
 import ContextualLinkTrigger from '@/dashboard/components/ContextualLinkTrigger.vue'
+import { contextualLinkCount } from '@/dashboard/lib/contextualLinkUrl'
 import type {
   SiteOverviewContent,
   SiteOverviewSites,
@@ -22,6 +23,8 @@ import type {
 
 import FigureTooltip, { type FigureTooltipContent } from './lib/FigureTooltip.vue'
 import StateRingsHexagon from './lib/StateRingsHexagon.vue'
+import { byKeyboard } from './lib/byKeyboard'
+import { describeFigureTooltip } from './lib/describeFigureTooltip'
 import { HEXAGON_MAX_BOX_WIDTH, STATE_HEXAGON_STYLE, hexagonGrid, hexagonPath } from './lib/hexagon'
 
 const props = defineProps<{
@@ -131,15 +134,62 @@ const shapes = computed(() => {
 
 const hovered = ref<{ site: SiteElement; pointer: CmkPointerTooltipPointer } | null>(null)
 
+// While a site's link menu is open, its tooltip stays and the menu opens right below it.
+const menuOpenFor = ref<string | null>(null)
+const tooltipElement = useTemplateRef<InstanceType<typeof CmkPointerTooltip>>('tooltipElement')
+
+watch(menuOpenFor, (site) => {
+  if (site === null) {
+    hovered.value = null
+  }
+})
+
 function hover(site: SiteElement, event: PointerEvent): void {
-  hovered.value = { site, pointer: { clientX: event.clientX, clientY: event.clientY } }
+  if (menuOpenFor.value === null) {
+    hovered.value = { site, pointer: { clientX: event.clientX, clientY: event.clientY } }
+  }
 }
 
-const tooltip = computed<FigureTooltipContent | null>(() => {
-  const site = hovered.value?.site
-  if (site === undefined) {
-    return null
+function leave(): void {
+  if (menuOpenFor.value === null) {
+    hovered.value = null
   }
+}
+
+function focusSite(site: SiteElement, event: FocusEvent): void {
+  if (
+    menuOpenFor.value !== null ||
+    !byKeyboard(event) ||
+    !(event.currentTarget instanceof Element)
+  ) {
+    return
+  }
+  const bounds = event.currentTarget.getBoundingClientRect()
+  hovered.value = {
+    site,
+    pointer: { clientX: bounds.left + bounds.width / 2, clientY: bounds.top + bounds.height / 2 }
+  }
+}
+
+function opensMenu(site: SiteElement | undefined): boolean {
+  return (
+    site?.status === 'online' && contextualLinkCount(props.value.links, site.link_properties) > 1
+  )
+}
+
+const several = computed(() => opensMenu(hovered.value?.site))
+
+// A refresh can take the menu away with its site, without the menu reporting that it closed.
+watch(
+  () => opensMenu(props.value.sites.find((site) => site.site_id === menuOpenFor.value)),
+  (menu) => {
+    if (!menu) {
+      menuOpenFor.value = null
+    }
+  }
+)
+
+function tooltipOf(site: SiteElement): FigureTooltipContent {
   if (site.status !== 'online') {
     return { title: site.alias, state: OFFLINE_SITE[site.status].text, rows: [] }
   }
@@ -162,7 +212,13 @@ const tooltip = computed<FigureTooltipContent | null>(() => {
       }
     ]
   }
-})
+}
+
+const tooltip = computed(() => (hovered.value ? tooltipOf(hovered.value.site) : null))
+
+function siteName(site: SiteElement): string {
+  return `${site.alias}, ${describeFigureTooltip(tooltipOf(site))}`
+}
 </script>
 
 <template>
@@ -177,17 +233,24 @@ const tooltip = computed<FigureTooltipContent | null>(() => {
     <g
       v-for="shape in shapes"
       :key="shape.site.site_id"
+      class="db-cmk-site-overview-sites-figure__site"
       :transform="shape.transform"
       @pointermove="hover(shape.site, $event)"
-      @pointerleave="hovered = null"
+      @pointerleave="leave"
+      @focusin="focusSite(shape.site, $event)"
+      @focusout="leave"
+      @keydown.escape="leave"
     >
       <ContextualLinkTrigger
         v-if="shape.site.status === 'online'"
+        :open="menuOpenFor === shape.site.site_id"
         :links="value.links"
         :link-properties="shape.site.link_properties"
         :filters="filters"
+        :reference="tooltipElement?.element ?? null"
+        @update:open="(open: boolean) => (menuOpenFor = open ? shape.site.site_id : null)"
       >
-        <g :aria-label="shape.site.alias">
+        <g :aria-label="siteName(shape.site)">
           <path :d="shape.hitPath" fill="transparent" />
           <StateRingsHexagon
             v-if="shape.rings"
@@ -197,7 +260,8 @@ const tooltip = computed<FigureTooltipContent | null>(() => {
           />
         </g>
       </ContextualLinkTrigger>
-      <g v-else :aria-label="shape.site.alias">
+      <g v-else :aria-label="siteName(shape.site)" role="img" tabindex="0">
+        <path :d="shape.hitPath" fill="transparent" />
         <path :d="shape.iconPath ?? ''" class="db-cmk-site-overview-sites-figure__offline" />
         <image
           :href="getIconPath(OFFLINE_SITE[shape.site.status].icon, theme)"
@@ -207,6 +271,11 @@ const tooltip = computed<FigureTooltipContent | null>(() => {
           height="24"
         />
       </g>
+      <path
+        :d="shape.hitPath"
+        class="db-cmk-site-overview-sites-figure__highlight"
+        pointer-events="none"
+      />
       <foreignObject
         v-if="shape.label"
         :x="-shape.label.width / 2"
@@ -223,14 +292,23 @@ const tooltip = computed<FigureTooltipContent | null>(() => {
       </foreignObject>
     </g>
   </svg>
-  <CmkPointerTooltip :pointer="hovered?.pointer ?? null" @dismiss="hovered = null">
-    <FigureTooltip v-if="tooltip" v-bind="tooltip" />
+  <CmkPointerTooltip ref="tooltipElement" :pointer="hovered?.pointer ?? null" @dismiss="leave">
+    <FigureTooltip v-if="tooltip" v-bind="tooltip" :several="several" />
   </CmkPointerTooltip>
 </template>
 
 <style scoped>
 .db-cmk-site-overview-sites-figure {
   display: block;
+}
+
+.db-cmk-site-overview-sites-figure__highlight {
+  fill: transparent;
+}
+
+.db-cmk-site-overview-sites-figure__site:is(:hover, :has(:focus-visible))
+  .db-cmk-site-overview-sites-figure__highlight {
+  fill: color-mix(in srgb, var(--font-color) 10%, transparent);
 }
 
 .db-cmk-site-overview-sites-figure__offline {

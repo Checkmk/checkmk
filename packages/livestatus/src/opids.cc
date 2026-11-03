@@ -5,11 +5,10 @@
 
 #include "livestatus/opids.h"
 
-#include <functional>
+#include <array>
+#include <iterator>
 #include <ostream>
-#include <ranges>
 #include <stdexcept>
-#include <unordered_map>
 #include <utility>
 
 #include "livestatus/RegExp.h"
@@ -17,42 +16,47 @@
 using namespace std::string_view_literals;
 
 namespace {
-// NOLINTNEXTLINE(cert-err58-cpp)
-const std::unordered_map<std::string_view, RelationalOperator> fl_from_string =
-    {{"="sv, RelationalOperator::equal},
-     {"!="sv, RelationalOperator::not_equal},
-     {"~"sv, RelationalOperator::matches},
-     {"!~"sv, RelationalOperator::doesnt_match},
-     {"=~"sv, RelationalOperator::equal_icase},
-     {"!=~"sv, RelationalOperator::not_equal_icase},
-     {"~~"sv, RelationalOperator::matches_icase},
-     {"!~~"sv, RelationalOperator::doesnt_match_icase},
-     {"<"sv, RelationalOperator::less},
-     {"!<"sv, RelationalOperator::greater_or_equal},
-     {">="sv, RelationalOperator::greater_or_equal},
-     {"!>="sv, RelationalOperator::less},
-     {">"sv, RelationalOperator::greater},
-     {"!>"sv, RelationalOperator::less_or_equal},
-     {"<="sv, RelationalOperator::less_or_equal},
-     {"!<="sv, RelationalOperator::greater}};
+using OperatorName = std::pair<std::string_view, RelationalOperator>;
+
+// Each operator's canonical name comes before its aliases, and we output only
+// the canonical names: The EC doesn't know the aliases.
+constexpr auto operator_names = std::to_array<OperatorName>({
+    {"="sv, RelationalOperator::equal},
+    {"!="sv, RelationalOperator::not_equal},
+    {"~"sv, RelationalOperator::matches},
+    {"!~"sv, RelationalOperator::doesnt_match},
+    {"=~"sv, RelationalOperator::equal_icase},
+    {"!=~"sv, RelationalOperator::not_equal_icase},
+    {"~~"sv, RelationalOperator::matches_icase},
+    {"!~~"sv, RelationalOperator::doesnt_match_icase},
+    {"<"sv, RelationalOperator::less},
+    {">="sv, RelationalOperator::greater_or_equal},
+    {">"sv, RelationalOperator::greater},
+    {"<="sv, RelationalOperator::less_or_equal},
+    // aliases
+    {"!<"sv, RelationalOperator::greater_or_equal},
+    {"!>="sv, RelationalOperator::less},
+    {"!>"sv, RelationalOperator::less_or_equal},
+    {"!<="sv, RelationalOperator::greater},
+});
 }  // namespace
 
 std::ostream &operator<<(std::ostream &os, const RelationalOperator &relOp) {
-    // Slightly inefficient, but this doesn't matter for our purposes. We could
-    // use Boost.Bimap or use 2 maps if really necessary.
-    auto it = std::ranges::find_if(fl_from_string, [&](const auto &strAndOp) {
-        return strAndOp.second == relOp;
-    });
-    return it == fl_from_string.cend() ? os : (os << it->first);
+    for (const auto &[op_name, op] : operator_names) {
+        if (op == relOp) {
+            return os << op_name;
+        }
+    }
+    return os;
 }
 
 RelationalOperator relationalOperatorForName(std::string_view name) {
-    auto it = fl_from_string.find(name);
-    if (it == fl_from_string.end()) {
-        throw std::runtime_error("invalid operator '" + std::string{name} +
-                                 "'");
+    for (const auto &[op_name, op] : operator_names) {
+        if (op_name == name) {
+            return op;
+        }
     }
-    return it->second;
+    throw std::runtime_error("invalid operator '" + std::string{name} + "'");
 }
 
 RelationalOperator negateRelationalOperator(RelationalOperator relOp) {

@@ -17,7 +17,7 @@ from cmk.gui.watolib.sites import (
     _user_attribute_sync_from_disk,
     _user_attribute_sync_to_disk,
 )
-from cmk.update_config.lib import ExpiryVersion
+from cmk.update_config.internal import ExpiryVersion
 from cmk.update_config.plugins.actions import (
     migrate_user_sync_to_auth_connections as mod,
 )

@@ -1334,13 +1334,12 @@ tr.hidden {
   background-color: transparent;
 }
 
-// Firefox ignores the ::-webkit-scrollbar rules; give it the same colors via
-// scrollbar-color, which also stops it from tinting the dragged thumb with the
-// system accent color. This must stay Firefox-only (@supports -moz-appearance):
-// in Chromium a non-auto scrollbar-color disables the styling above.
+// Firefox ignores the ::-webkit-scrollbar rules and derives the hover and active
+// thumb colors from scrollbar-color. This must stay Firefox-only (@supports
+// -moz-appearance): in Chromium a non-auto scrollbar-color disables the styling above.
 @supports (-moz-appearance: none) {
   * {
-    scrollbar-color: $scrollbar-color transparent;
+    scrollbar-color: $scrollbar-color-firefox transparent;
   }
 }
 

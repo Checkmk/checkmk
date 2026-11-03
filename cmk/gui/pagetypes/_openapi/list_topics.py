@@ -68,7 +68,7 @@ class PagetypeTopicCollectionModel(DomainObjectCollectionModel):
 def list_topics_v1(api_context: ApiContext) -> PagetypeTopicCollectionModel:
     """Show all pagetype topics the user has access to."""
     user_permissions = api_context.config.user_permissions()
-    topics = PagetypeTopics.load(user_permissions)
+    topics = PagetypeTopics.load()
     return PagetypeTopicCollectionModel(
         domainType="pagetype_topic",
         id="all",

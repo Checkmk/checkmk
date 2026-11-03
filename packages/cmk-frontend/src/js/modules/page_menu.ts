@@ -177,8 +177,8 @@ function close_active_popups() {
 }
 
 // Close a specific PageMenuEntryPopup
-export function close_popup(a: HTMLAnchorElement) {
-  do_close_popup(a.closest<HTMLElement>('.page_menu_popup')!)
+export function close_popup(element: HTMLElement) {
+  do_close_popup(element.closest<HTMLElement>('.page_menu_popup')!)
 }
 
 function do_close_popup(popup: HTMLElement) {

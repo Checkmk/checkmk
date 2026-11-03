@@ -1,12 +1,17 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Starlark rule that builds the Windows ``python-3.cab`` on Linux.
+"""Starlark rules that build the Windows ``python-3.cab`` on Linux.
+
+python_msi_tree extracts the python.org MSIs once; python_cab builds the
+agent's python-3.cab from that tree, and python_test_cab the harness Python
+of the agent's pytest suites.
 
 The CAB has the same shape as the one historically produced by
 ``agents/modules/windows/Makefile`` on a Windows build node, but no
-Wine / MSBuild / makecab.exe is involved: every tool the action runs is a
-Bazel-managed input (see their py_binary targets in BUILD.bazel).
+Wine / MSBuild / makecab.exe is involved: every tool the actions run is a
+Bazel-managed input (see their py_binary and sh_binary targets in
+BUILD.bazel).
 
 Known deliberate deviations from the historic Windows-built CAB (all dead
 weight with no source in the pinned python.org MSI set):
@@ -22,69 +27,8 @@ weight with no source in the pinned python.org MSI set):
   tool spill-over in the base ``Lib/site-packages``.
 """
 
-# Stdlib subtrees to strip from the *base* interpreter, ported from
-# clean_environment.cmd.  ensurepip is stripped because production's CAB
-# ships without it (its phase 2 removes what phase 1 kept).
-_BASE_LIB_STRIP = [
-    "test",
-    "unittest",
-    "idlelib",
-    "turtledemo",
-    "tkinter",
-    "venv",
-    "ensurepip",
-    "sqlite3",
-]
-
-# Loose files at the install root that production strips.
-_ROOT_FILE_STRIP_GLOBS = [
-    "*.txt",  # LICENSE.txt, NEWS.txt
-    "*.msi",  # leftover MSI files (defensive; msiextract shouldn't drop these)
-    "Pipfile.*",
-    "python-3.cab",
-    "python-3.8.cab",
-    "ucrtbase.dll",
-    "api-ms-win-*.dll",
-]
-
-# Directories at the install root that production strips (not ``Lib`` / not ``DLLs``).
-_ROOT_DIR_STRIP = [
-    "tools",
-    "include",
-    "libs",
-    "Scripts",
-    "tcl",
-    "Tools",
-]
-
-# Production ships these into ``.venv/Scripts/`` so the venv interpreter
-# can resolve the UCRT runtime on a host without it installed system-wide.
-_UCRT_RUNTIME_GLOBS = [
-    "api-ms-win-crt-conio-l1-1-0.dll",
-    "api-ms-win-crt-convert-l1-1-0.dll",
-    "api-ms-win-crt-environment-l1-1-0.dll",
-    "api-ms-win-crt-filesystem-l1-1-0.dll",
-    "api-ms-win-crt-heap-l1-1-0.dll",
-    "api-ms-win-crt-locale-l1-1-0.dll",
-    "api-ms-win-crt-math-l1-1-0.dll",
-    "api-ms-win-crt-multibyte-l1-1-0.dll",
-    "api-ms-win-crt-private-l1-1-0.dll",
-    "api-ms-win-crt-process-l1-1-0.dll",
-    "api-ms-win-crt-runtime-l1-1-0.dll",
-    "api-ms-win-crt-stdio-l1-1-0.dll",
-    "api-ms-win-crt-string-l1-1-0.dll",
-    "api-ms-win-crt-time-l1-1-0.dll",
-    "api-ms-win-crt-utility-l1-1-0.dll",
-    "ucrtbase.dll",
-]
-
-# Production's pyvenv.cfg is three lines, with the home pointing at the
-# agent's install path on the target host.  See clean_environment.cmd.
-_PYVENV_HOME = "C:\\ProgramData\\checkmk\\agent\\modules\\python-3"
-
-# Interpreter the generated .exe wrappers exec at runtime — the production
-# install path (see make_exe_wrappers.py for why not the build machine's).
-_WRAPPER_SHEBANG = _PYVENV_HOME + "\\.venv\\Scripts\\python.exe"
+load("//:package_versions.bzl", "PYTHON_VERSION_WINDOWS")
+load(":python_msis.bzl", "PYTHON_MSI_FEATURES")
 
 def python_version_major_minor(version):
     # "3.13.14" -> "3.13", the part the cp3xx wheel ABI tag encodes
@@ -93,18 +37,16 @@ def python_version_major_minor(version):
         fail("python_version must be a dotted version like 3.13.13, got %r" % version)
     return parts[0] + "." + parts[1]
 
-def _python_version_short(version):
-    # "3.13.13" -> "313"
-    return python_version_major_minor(version).replace(".", "")
-
-def _py_platform_transition_impl(_settings, attr):
+def _windows_wheels_transition_impl(_settings, _attr):
     return {
-        "//command_line_option:platforms": str(attr.target_platform),
-        "@rules_python//python/config_settings:python_version": python_version_major_minor(attr.python_version),
+        "//command_line_option:platforms": str(Label("//bazel/platforms:x86_64-windows")),
+        "@rules_python//python/config_settings:python_version": python_version_major_minor(PYTHON_VERSION_WINDOWS),
     }
 
-_py_platform_transition = transition(
-    implementation = _py_platform_transition_impl,
+# A pip.parse hub selects wheels by platform and python version: build the
+# wheels attrs for Windows and the cab's major.minor.
+_windows_wheels_transition = transition(
+    implementation = _windows_wheels_transition_impl,
     inputs = [],
     outputs = [
         "//command_line_option:platforms",
@@ -112,424 +54,220 @@ _py_platform_transition = transition(
     ],
 )
 
-def _py_platform_transition_filegroup_impl(ctx):
-    return [DefaultInfo(
-        files = depset(transitive = [src[DefaultInfo].files for src in ctx.attr.srcs]),
-    )]
+def _python_msi_tree_impl(ctx):
+    tree = ctx.actions.declare_directory(ctx.label.name)
+    py_short = python_version_major_minor(PYTHON_VERSION_WINDOWS).replace(".", "")
 
-py_platform_transition_filegroup = rule(
-    implementation = _py_platform_transition_filegroup_impl,
+    args = ctx.actions.args()
+    args.add("--msiinfo", ctx.executable._msiinfo)
+    args.add("--cabextract", ctx.file._cabextract)
+    args.add("--directory", tree.path)
+    args.add("--require", "python.exe")
+    args.add("--require", "python{}.dll".format(py_short))
+    args.add_all(ctx.files.msis)
+
+    ctx.actions.run(
+        executable = ctx.executable._extract_msi,
+        arguments = [args],
+        outputs = [tree],
+        inputs = ctx.files.msis,
+        tools = [ctx.attr._msiinfo[DefaultInfo].files_to_run, ctx.file._cabextract],
+        mnemonic = "PythonMsiExtract",
+        progress_message = "Extracting the python.org MSIs (%{label})",
+        execution_requirements = {"block-network": ""},
+    )
+    return [DefaultInfo(files = depset([tree]))]
+
+python_msi_tree = rule(
+    implementation = _python_msi_tree_impl,
+    doc = "The python.org MSIs of PYTHON_VERSION_WINDOWS extracted into the " +
+          "install-root tree, the interpreter python_cab and python_test_cab " +
+          "start from.",
     attrs = {
-        "python_version": attr.string(
-            mandatory = True,
-            doc = "CPython version whose major.minor selects the wheel ABI; " +
-                  "a full version is accepted, the patch level is ignored.",
+        "msis": attr.label_list(
+            default = ["@python_msi_{}//file".format(f) for f in PYTHON_MSI_FEATURES],
+            allow_files = [".msi"],
+            doc = "The python.org per-feature MSIs, in extraction order.",
         ),
-        "srcs": attr.label_list(
-            allow_files = True,
-            cfg = _py_platform_transition,
+        "_cabextract": attr.label(
+            default = Label(":_cabextract"),
+            allow_single_file = True,
+            cfg = "exec",
         ),
-        "target_platform": attr.label(
-            mandatory = True,
-            doc = "Target platform to transition srcs to.",
+        "_extract_msi": attr.label(
+            default = Label(":extract_msi"),
+            executable = True,
+            cfg = "exec",
         ),
-        "_allowlist_function_transition": attr.label(
-            default = "@bazel_tools//tools/allowlists/function_transition_allowlist",
+        # Finds libmsi through its RUNPATH.
+        "_msiinfo": attr.label(
+            default = Label("@msitools//:msiinfo"),
+            executable = True,
+            cfg = "exec",
         ),
     },
-    doc = "platform_transition_filegroup that also pins rules_python's " +
-          "python_version flag: a pip.parse hub selects wheels by python " +
-          "version, so the platform alone is not enough.",
 )
 
-def _python_cab_impl(ctx):
-    cab = ctx.actions.declare_file(ctx.label.name + ".cab")
-
-    workdir = cab.path + ".work"
-    py_short = _python_version_short(ctx.attr.python_version)
-    py_major_minor = ".".join(ctx.attr.python_version.split(".")[:2])  # "3.13"
-    py_abi = "cp" + py_short  # "cp313"
-
-    # Derive the name==version install request from the wheel filenames
-    # (PEP 427), so it can never diverge from the fetched closure and every
-    # package installs as explicitly REQUESTED, like the historic pipenv flow.
-    wheel_files = ctx.files.wheels
+def _wheel_requirements(wheel_files):
+    """The name==version request for each wheel, from its filename (PEP 427)."""
     requirements = []
     for w in wheel_files:
         segments = w.basename.split("-")
         if len(segments) < 3 or not w.basename.endswith(".whl"):
             fail("not a wheel filename: %r" % w.basename)
         requirements.append("{}=={}".format(segments[0], segments[1]))
-    requirements = sorted(requirements)
+    return sorted(requirements)
+
+def _pip_requirement(requirements):
+    """The closure's one pip pin: pip_offline runs pip from that wheel."""
+    pip_pins = [r for r in requirements if r.startswith("pip==")]
+    if len(pip_pins) != 1:
+        fail("wheels must contain exactly one pip wheel, got %r" % requirements)
+    return pip_pins[0]
+
+def _cab_args(ctx, cab, requirements):
+    """The arguments both build scripts take."""
+    args = ctx.actions.args()
+    args.add("--out", cab)
+    args.add("--cab-lib", ctx.file._cab_lib)
+    args.add("--python-version", PYTHON_VERSION_WINDOWS)
+    args.add("--python-tree", ctx.file.python_tree.path)
+    args.add("--pip-offline", ctx.executable._pip_offline)
+    args.add("--pack-cab", ctx.executable._pack_cab)
+    args.add_all(ctx.files.wheels, before_each = "--wheel")
+    args.add_all(requirements, before_each = "--requirement")
+    return args
+
+def _cab_tools(ctx):
+    return [
+        ctx.attr._pack_cab[DefaultInfo].files_to_run,
+        ctx.attr._pip_offline[DefaultInfo].files_to_run,
+    ]
+
+# The attributes python_cab and python_test_cab share: the extracted
+# interpreter, the wheels and the tools that install them and pack the cab.
+_CAB_ATTRS = {
+    "python_tree": attr.label(
+        mandatory = True,
+        allow_single_file = True,
+        doc = "The python_msi_tree the cab starts from.",
+    ),
+    "wheels": attr.label_list(
+        allow_files = [".whl"],
+        cfg = _windows_wheels_transition,
+        doc = "The all_whl_requirements of a pip.parse hub: the pinned " +
+              "win_amd64/cp3xx wheel closure, installed offline. Must include " +
+              "exactly one pip wheel, the one pip_offline runs.",
+    ),
+    "_cab_lib": attr.label(
+        default = Label(":cab_lib"),
+        allow_single_file = True,
+    ),
+    "_pack_cab": attr.label(
+        default = Label(":pack_cab"),
+        executable = True,
+        cfg = "exec",
+    ),
+    "_pip_offline": attr.label(
+        default = Label(":pip_offline"),
+        executable = True,
+        cfg = "exec",
+    ),
+}
+
+def _python_cab_impl(ctx):
+    cab = ctx.actions.declare_file(ctx.label.name + ".cab")
+
+    # Derive the name==version install request from the wheel filenames
+    # (PEP 427), so it can never diverge from the fetched closure and every
+    # package installs as explicitly REQUESTED, like the historic pipenv flow.
+    requirements = _wheel_requirements(ctx.files.wheels)
 
     # The venv seeds pip (the historic flow's virtualenv did, so customers can
     # `.venv\Scripts\pip install` extra plugin deps); the same pinned wheel
     # also replaces the base interpreter's ensurepip bootstrap.
-    pip_pins = [r for r in requirements if r.startswith("pip==")]
-    if len(pip_pins) != 1:
-        fail("wheels must contain exactly one pip wheel, got %r" % requirements)
-    pip_requirement = pip_pins[0]
+    pip_requirement = _pip_requirement(requirements)
 
-    # Production-shape 3-line pyvenv.cfg, written as a build input so we
-    # avoid backslash-escape hazards inside the shell command.
-    pyvenv_cfg = ctx.actions.declare_file(ctx.label.name + ".pyvenv.cfg")
-    ctx.actions.write(
-        output = pyvenv_cfg,
-        content = "home = {home}\nversion_info = {ver}\ninclude-system-site-packages = false\n".format(
-            home = _PYVENV_HOME,
-            ver = ctx.attr.python_version,
-        ),
-    )
+    args = _cab_args(ctx, cab, requirements)
+    args.add("--make-exe-wrappers", ctx.executable._make_exe_wrappers)
+    args.add("--pip-requirement", pip_requirement)
+    args.add("--postinstall", ctx.file.postinstall_cmd)
+    args.add_all(ctx.files.venv_scripts, before_each = "--venv-script")
 
-    postinstall = ctx.file.postinstall_cmd
-
-    msis = [
-        ctx.file.msi_ucrt,
-        ctx.file.msi_core,
-        ctx.file.msi_exe,
-        ctx.file.msi_lib,
-        ctx.file.msi_pip,
-    ]
-    msi_path_args = " ".join(['"$exec_root/{}"'.format(m.path) for m in msis])
-
-    msiinfo = ctx.file.msiinfo
-    libmsi = ctx.file.libmsi
-    cabextract = ctx.file.cabextract
-    extract_msi_run = ctx.attr.extract_msi[DefaultInfo].files_to_run
-    pack_cab_run = ctx.attr.pack_cab[DefaultInfo].files_to_run
-    pip_offline_run = ctx.attr.pip_offline[DefaultInfo].files_to_run
-    make_exe_wrappers_run = ctx.attr.make_exe_wrappers[DefaultInfo].files_to_run
-
-    requirements_args = " ".join([
-        '"{}"'.format(req)
-        for req in requirements
-    ])
-    wheel_path_args = " ".join(['"$exec_root/{}"'.format(w.path) for w in wheel_files])
-    venv_script_files = ctx.files.venv_scripts
-    venv_script_args = " ".join(['"$exec_root/{}"'.format(f.path) for f in venv_script_files])
-    base_lib_strip = " ".join(_BASE_LIB_STRIP)
-    root_dir_strip = " ".join(_ROOT_DIR_STRIP)
-    root_file_strip = " ".join(['"%s"' % g for g in _ROOT_FILE_STRIP_GLOBS])
-    ucrt_globs = " ".join(_UCRT_RUNTIME_GLOBS)
-
-    cmd = """
-set -euo pipefail
-
-WORKDIR="{workdir}"
-rm -rf "$WORKDIR"
-mkdir -p "$WORKDIR"
-
-PY_DIR="$WORKDIR/py"
-mkdir -p "$PY_DIR"
-
-# msiinfo is dynamically linked against libmsi.so.0.  Bazel ships the
-# unversioned file libmsi.so.0.0.0; the loader needs to find it as the
-# SONAME libmsi.so.0 — create the symlink alongside.
-LIBMSI_ABS="$exec_root/{libmsi}"
-LIBMSI_DIR=$(dirname "$LIBMSI_ABS")
-ln -sf "$(basename "$LIBMSI_ABS")" "$LIBMSI_DIR/libmsi.so.0"
-
-# Stage the pinned win_amd64 wheel closure into a pip --find-links dir; both
-# pip installs below resolve against it offline (--no-index).
-WHEELDIR="$WORKDIR/wheels"
-mkdir -p "$WHEELDIR"
-for w in {wheel_paths}; do
-    cp "$w" "$WHEELDIR/"
-done
-
-# 1. Extract every MSI into the install-root tree using the Python
-# msiextract that drives @msitools' msiinfo and @cabextract.
-"$exec_root/{extract_msi}" \\
-    --msiinfo "$exec_root/{msiinfo}" \\
-    --cabextract "$exec_root/{cabextract}" \\
-    --libmsi-dir "$LIBMSI_DIR" \\
-    --directory "$PY_DIR" \\
-    {msi_paths}
-
-# Sanity-check the python interpreter landed where we expect.
-if [ ! -f "$PY_DIR/python.exe" ] || [ ! -f "$PY_DIR/python{py_short}.dll" ]; then
-    echo "error: python.exe / python{py_short}.dll not found after msiextract" >&2
-    find "$PY_DIR" -maxdepth 2 | head -50 >&2
-    exit 1
-fi
-
-# 2. Give the base interpreter its pip.  pip.msi has an empty File table
-# (the python.org installer bootstraps via a CustomAction msiextract can't
-# replay), so install the pinned pip wheel directly — by name, so pip
-# writes no direct_url.json pointing at build-machine paths.
-"$exec_root/{pip_offline}" "$WHEELDIR" install \\
-    --no-index \\
-    --find-links "$WHEELDIR" \\
-    --platform win_amd64 \\
-    --python-version "{py_major_minor}" \\
-    --implementation cp \\
-    --abi "{py_abi}" \\
-    --only-binary=:all: \\
-    --no-warn-script-location \\
-    --target "$PY_DIR/Lib/site-packages" \\
-    "{pip_requirement}"
-
-# 3. Hand-construct the .venv/ tree the way production's virtualenv laid it
-# out.  Scripts/ gets a copy of the interpreter, its runtime DLLs, and the
-# stdlib extension modules (virtualenv mirrored the base DLLs/ payload so
-# the venv works even if DLL search order quirks hide the base copies).
-VENV="$PY_DIR/.venv"
-mkdir -p "$VENV/Scripts" "$VENV/Lib/site-packages"
-
-cp "$PY_DIR/python.exe" "$VENV/Scripts/python.exe"
-cp "$PY_DIR/pythonw.exe" "$VENV/Scripts/pythonw3.exe"
-[ -f "$PY_DIR/python{py_short}.dll" ] && cp "$PY_DIR/python{py_short}.dll" "$VENV/Scripts/"
-[ -f "$PY_DIR/python3.dll" ] && cp "$PY_DIR/python3.dll" "$VENV/Scripts/"
-[ -f "$PY_DIR/vcruntime140.dll" ] && cp "$PY_DIR/vcruntime140.dll" "$VENV/Scripts/"
-[ -f "$PY_DIR/vcruntime140_1.dll" ] && cp "$PY_DIR/vcruntime140_1.dll" "$VENV/Scripts/"
-rm "$PY_DIR"/DLLs/sqlite3.dll
-rm "$PY_DIR"/DLLs/_sqlite3.pyd
-cp "$PY_DIR"/DLLs/*.pyd "$PY_DIR"/DLLs/*.dll "$VENV/Scripts/"
-
-# The venv (re)launchers; lib.msi ships them under Lib/venv/scripts/nt
-# (harvest before _BASE_LIB_STRIP removes Lib/venv).  python3/python3.exe
-# are the launcher under the names virtualenv seeded.
-VENV_NT="$PY_DIR/Lib/venv/scripts/nt"
-if [ ! -f "$VENV_NT/venvlauncher.exe" ] || [ ! -f "$VENV_NT/venvwlauncher.exe" ]; then
-    echo "error: venv launchers not found under Lib/venv/scripts/nt" >&2
-    exit 1
-fi
-cp "$VENV_NT/venvlauncher.exe" "$VENV/Scripts/venvlauncher.exe"
-cp "$VENV_NT/venvlauncher.exe" "$VENV/Scripts/python3.exe"
-cp "$VENV_NT/venvlauncher.exe" "$VENV/Scripts/python3"
-cp "$VENV_NT/venvwlauncher.exe" "$VENV/Scripts/venvwlauncher.exe"
-
-# UCRT redistributables alongside the venv python so it boots on hosts
-# without a system-wide UCRT.
-for f in {ucrt_globs}; do
-    [ -f "$PY_DIR/$f" ] && cp "$PY_DIR/$f" "$VENV/Scripts/"
-done
-
-# Activation scripts (production paths baked in; see venv_scripts/).  The
-# .tmpl suffix only keeps repo formatters/linters away; strip it on copy.
-for f in {venv_scripts}; do
-    cp "$f" "$VENV/Scripts/$(basename "$f" .tmpl)"
-done
-
-# 4. Install the locked closure into .venv/Lib/site-packages, offline.
-# Every name==version pin is an explicit argument, so each dist-info gets
-# a REQUESTED marker — exactly what the historic pipenv flow produced.
-"$exec_root/{pip_offline}" "$WHEELDIR" install \\
-    --no-index \\
-    --find-links "$WHEELDIR" \\
-    --platform win_amd64 \\
-    --python-version "{py_major_minor}" \\
-    --implementation cp \\
-    --abi "{py_abi}" \\
-    --only-binary=:all: \\
-    --no-warn-script-location \\
-    --target "$VENV/Lib/site-packages" \\
-    {requirements_args}
-
-# ... except pip itself: production's pip was seeded by virtualenv, which
-# writes no REQUESTED.
-rm -f "$VENV/Lib/site-packages"/pip-*.dist-info/REQUESTED
-
-# Console entry points: the cross-platform pip install drops POSIX scripts
-# into <target>/bin/; production ships distlib .exe launchers in Scripts/
-# instead.  Regenerate those, fix up the RECORDs, and drop bin/ (keeping
-# its plain-script payloads like a native Windows install does).
-"$exec_root/{make_exe_wrappers}" \\
-    --pip-wheel "$WHEELDIR" \\
-    --scripts-dir "$VENV/Scripts" \\
-    --python-major-minor "{py_major_minor}" \\
-    --shebang '{wrapper_shebang}' \\
-    --fixup-records "$VENV/Lib/site-packages" \\
-    --fixup-records "$PY_DIR/Lib/site-packages"
-if [ -d "$VENV/Lib/site-packages/bin" ]; then
-    find "$VENV/Lib/site-packages/bin" -name '*.py' -exec cp {{}} "$VENV/Scripts/" \\;
-    rm -rf "$VENV/Lib/site-packages/bin"
-fi
-
-# 5. Write the production-shape pyvenv.cfg.
-cp "$exec_root/{pyvenv_cfg}" "$VENV/pyvenv.cfg"
-
-# 6. Strip from the base interpreter what production strips (the union of
-# clean_environment.cmd's phase-1 and phase-2 cleanups).
-for d in {base_lib_strip}; do
-    rm -rf "$PY_DIR/Lib/$d"
-done
-for d in {root_dir_strip}; do
-    rm -rf "$PY_DIR/$d"
-done
-( cd "$PY_DIR" && for g in {root_file_strip}; do
-    # nullglob via 'find -name' so missing files don't fail the loop.
-    find . -maxdepth 1 -name "$g" -delete 2>/dev/null || true
-done )
-# clean_environment.cmd also dels DLLs/*.ico and DLLs/*.cat, but production
-# still ships them (the forward-slash del no-ops on cmd.exe) — keep them.
-rm -f "$PY_DIR/Lib/turtle.py" 2>/dev/null || true
-# The base pip's entry-point scripts land under bin/; production has no
-# base bin/ (its Scripts/ equivalent is stripped via _ROOT_DIR_STRIP above).
-rm -rf "$PY_DIR/Lib/site-packages/bin" 2>/dev/null || true
-
-# Installing by name from --find-links must not leave PEP 610 direct-url
-# metadata (it would leak build paths and break reproducibility); fail
-# loudly if pip's behaviour ever changes.
-if find "$PY_DIR" -name direct_url.json | grep -q .; then
-    echo "error: direct_url.json in the install tree leaks build paths:" >&2
-    find "$PY_DIR" -name direct_url.json >&2
-    exit 1
-fi
-
-# Bytecode caches.
-find "$PY_DIR" -name __pycache__ -type d -exec rm -rf {{}} + 2>/dev/null || true
-find "$PY_DIR" -name '*.pyc' -delete 2>/dev/null || true
-
-# Strip pipenv/virtualenv/setuptools subtrees anywhere in the tree
-# (clean_environment.cmd does this with a recursive dir loop).
-find "$PY_DIR" -type d \\( \\
-    -name 'pipenv' -o -name 'pipenv-*' -o \\
-    -name 'virtualenv' -o -name 'virtualenv-*' -o \\
-    -name 'setuptools' -o -name 'setuptools-*' \\
-\\) -exec rm -rf {{}} + 2>/dev/null || true
-
-# Production-specific venv strips.
-rm -f "$VENV/.project" 2>/dev/null || true
-rm -rf "$VENV/Lib/tcl8.6" 2>/dev/null || true
-rm -f "$VENV/Lib/site-packages/PyWin32.chm" 2>/dev/null || true
-rm -f "$VENV/Scripts/pythonw.exe" 2>/dev/null || true
-
-# 7. Drop the agent's postinstall.cmd at the install root.  Production
-# ships both postinstall.cmd and pyvenv.cfg with CRLF line endings.
-cp "$exec_root/{postinstall}" "$PY_DIR/postinstall.cmd"
-sed -i 's/\\r$//; s/$/\\r/' "$PY_DIR/postinstall.cmd" "$VENV/pyvenv.cfg"
-
-# 8. Pack into a cabinet via the vendored @cabarchive Python writer.
-"$exec_root/{pack_cab}" --root "$PY_DIR" --out "$exec_root/{cab_out}"
-""".format(
-        workdir = workdir,
-        msi_paths = msi_path_args,
-        msiinfo = msiinfo.path,
-        libmsi = libmsi.path,
-        cabextract = cabextract.path,
-        extract_msi = extract_msi_run.executable.path,
-        pack_cab = pack_cab_run.executable.path,
-        pip_offline = pip_offline_run.executable.path,
-        make_exe_wrappers = make_exe_wrappers_run.executable.path,
-        py_short = py_short,
-        py_major_minor = py_major_minor,
-        py_abi = py_abi,
-        pip_requirement = pip_requirement,
-        requirements_args = requirements_args,
-        wheel_paths = wheel_path_args,
-        venv_scripts = venv_script_args,
-        wrapper_shebang = _WRAPPER_SHEBANG,
-        base_lib_strip = base_lib_strip,
-        root_dir_strip = root_dir_strip,
-        root_file_strip = root_file_strip,
-        ucrt_globs = ucrt_globs,
-        postinstall = postinstall.path,
-        pyvenv_cfg = pyvenv_cfg.path,
-        cab_out = cab.path,
-    )
-    cmd = "exec_root=$PWD\n" + cmd
-
-    ctx.actions.run_shell(
+    ctx.actions.run(
+        executable = ctx.attr._build_script[DefaultInfo].files_to_run,
+        arguments = [args],
         outputs = [cab],
-        inputs = msis + wheel_files + venv_script_files +
-                 [postinstall, pyvenv_cfg, msiinfo, libmsi, cabextract],
-        tools = [extract_msi_run, pack_cab_run, pip_offline_run, make_exe_wrappers_run],
-        command = cmd,
+        inputs = ctx.files.wheels + ctx.files.venv_scripts + [ctx.file._cab_lib, ctx.file.python_tree, ctx.file.postinstall_cmd],
+        tools = _cab_tools(ctx) + [ctx.attr._make_exe_wrappers[DefaultInfo].files_to_run],
         mnemonic = "PythonCab",
         progress_message = "Building Windows python-3.cab on Linux (%{label})",
-        # No network: MSIs and wheels are fetched at the fetch phase and pip
-        # installs offline (--no-index --find-links).
         use_default_shell_env = True,
+        # MSIs and wheels are fetched at the fetch phase and pip installs
+        # offline (--no-index --find-links).
+        execution_requirements = {"block-network": ""},
     )
 
     return [DefaultInfo(files = depset([cab]))]
 
 python_cab = rule(
     implementation = _python_cab_impl,
-    attrs = {
-        "cabextract": attr.label(
-            mandatory = True,
-            allow_single_file = True,
-            cfg = "exec",
-            doc = "cabextract binary filegroup from @cabextract.",
-        ),
-        "extract_msi": attr.label(
-            mandatory = True,
-            executable = True,
-            cfg = "exec",
-            doc = "py_binary that extracts an MSI into a directory tree.",
-        ),
-        "libmsi": attr.label(
-            mandatory = True,
-            allow_single_file = True,
-            cfg = "exec",
-            doc = "libmsi shared library filegroup from @msitools.",
-        ),
-        "make_exe_wrappers": attr.label(
-            mandatory = True,
-            executable = True,
-            cfg = "exec",
-            doc = "py_binary that generates the Windows console-script .exe wrappers.",
-        ),
-        "msi_core": attr.label(
-            default = "@python_msi_core//file",
-            allow_single_file = [".msi"],
-        ),
-        "msi_exe": attr.label(
-            default = "@python_msi_exe//file",
-            allow_single_file = [".msi"],
-        ),
-        "msi_lib": attr.label(
-            default = "@python_msi_lib//file",
-            allow_single_file = [".msi"],
-        ),
-        "msi_pip": attr.label(
-            default = "@python_msi_pip//file",
-            allow_single_file = [".msi"],
-        ),
-        "msi_ucrt": attr.label(
-            default = "@python_msi_ucrt//file",
-            allow_single_file = [".msi"],
-        ),
-        "msiinfo": attr.label(
-            mandatory = True,
-            allow_single_file = True,
-            cfg = "exec",
-            doc = "msiinfo binary filegroup from @msitools.",
-        ),
-        "pack_cab": attr.label(
-            mandatory = True,
-            executable = True,
-            cfg = "exec",
-            doc = "py_binary that packs a directory tree into a CAB via @cabarchive.",
-        ),
-        "pip_offline": attr.label(
-            mandatory = True,
-            executable = True,
-            cfg = "exec",
-            doc = "py_binary that runs the pinned pip offline under the hermetic interpreter.",
-        ),
+    doc = "The agent's python-3.cab: the interpreter of a python_msi_tree, " +
+          "stripped like production's, with a venv holding the wheel closure.",
+    attrs = _CAB_ATTRS | {
         "postinstall_cmd": attr.label(
             mandatory = True,
             allow_single_file = True,
             doc = "Agent's postinstall.cmd, copied verbatim to the install root.",
         ),
-        "python_version": attr.string(
-            mandatory = True,
-            doc = "Full CPython version (e.g. \"3.13.13\"); must match PYTHON_VERSION_WINDOWS " +
-                  "in //:package_versions.bzl.",
-        ),
         "venv_scripts": attr.label_list(
             allow_files = True,
             doc = "Static venv activation scripts copied into .venv/Scripts (see venv_scripts/).",
         ),
-        "wheels": attr.label_list(
-            allow_files = [".whl"],
-            doc = "Pinned win_amd64/cp3xx wheel closure (the @windows_python_wheels " +
-                  "pip.parse hub, resolved for the windows platform and the CAB's " +
-                  "python version by py_platform_transition_filegroup) installed " +
-                  "offline into the CAB; must include exactly one pip wheel.",
+        "_build_script": attr.label(
+            default = Label(":build_python_cab"),
+            executable = True,
+            cfg = "exec",
+        ),
+        "_make_exe_wrappers": attr.label(
+            default = Label(":make_exe_wrappers"),
+            executable = True,
+            cfg = "exec",
+        ),
+    },
+)
+
+def _python_test_cab_impl(ctx):
+    cab = ctx.actions.declare_file(ctx.label.name + ".cab")
+    requirements = _wheel_requirements(ctx.files.wheels)
+
+    # Only checks there is one: pip_offline runs pip from that wheel.
+    _pip_requirement(requirements)
+
+    ctx.actions.run(
+        executable = ctx.attr._build_script[DefaultInfo].files_to_run,
+        arguments = [_cab_args(ctx, cab, requirements)],
+        outputs = [cab],
+        inputs = ctx.files.wheels + [ctx.file._cab_lib, ctx.file.python_tree],
+        tools = _cab_tools(ctx),
+        mnemonic = "PythonTestCab",
+        progress_message = "Building the Windows test Python cab on Linux (%{label})",
+        use_default_shell_env = True,
+        execution_requirements = {"block-network": ""},
+    )
+    return [DefaultInfo(files = depset([cab]))]
+
+python_test_cab = rule(
+    implementation = _python_test_cab_impl,
+    doc = "The Windows interpreter of python_cab (same python.org MSIs, same " +
+          "PYTHON_VERSION_WINDOWS) with a test closure in its site-packages and " +
+          "the stdlib kept: the harness Python of the Windows agent's pytest " +
+          "suites (agents/wnx/tests), unpacked with expand.exe and called by path.",
+    attrs = _CAB_ATTRS | {
+        "_build_script": attr.label(
+            default = Label(":build_python_test_cab"),
+            executable = True,
+            cfg = "exec",
         ),
     },
 )

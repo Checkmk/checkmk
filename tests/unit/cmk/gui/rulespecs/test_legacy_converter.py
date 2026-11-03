@@ -1675,6 +1675,7 @@ def _compare_specs(actual: object, expected: object) -> None:
     ignored_attrs = {
         "__orig_class__",
         "_form_spec_definition",
+        "_parameter_form_spec_definition",
     }
 
     if isinstance(expected, Sequence) and not isinstance(expected, str):

@@ -11,7 +11,7 @@ from typing import NewType
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.role_types import BuiltInUserRole, CustomUserRole
 from cmk.gui.user_connection_config_types import UserConnectionConfig
 from cmk.gui.userdb import (
@@ -144,10 +144,11 @@ def update_permissions(role: UserRole, new_permissions: Iterator[tuple[str, str]
     if new_permissions is None:
         return
 
+    permissions = all_permissions()
     for var_name, value in new_permissions:
         var_name = var_name.replace("perm_", "")
         try:
-            perm = permission_registry[var_name]
+            perm = permissions[var_name]
         except KeyError:
             continue
 

@@ -24,7 +24,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import (
     CustomUserAttrSpec,
     UserSpec,
@@ -158,7 +158,10 @@ class UserSyncBackgroundJob(BackgroundJob):
     ) -> None:
         logger = job_interface.get_logger()
         with job_interface.gui_context(
-            UserPermissions.from_serialized_config(args.user_permission_config, permission_registry)
+            UserPermissions.from_serialized_config(
+                args.user_permission_config,
+                all_permissions(),
+            )
         ):
             logger.info(_("Synchronization started..."))
             if self._execute_sync_action(

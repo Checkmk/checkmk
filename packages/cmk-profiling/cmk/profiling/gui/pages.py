@@ -17,6 +17,7 @@ import cmk.utils.paths
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
+from cmk.gui.htmllib.generator import ClickAction
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
@@ -241,6 +242,24 @@ class ModePerformanceProfiles(WatoMode[None]):
 
         profiles_data = []
         for profile in profiles:
+            delete_action = ClickAction.confirm(
+                make_confirm_delete_link(
+                    i18n=_,
+                    url=makeactionuri_contextless(
+                        request,
+                        self._ctx.transactions.get(),
+                        [
+                            ("mode", self.name()),
+                            ("_action", "delete"),
+                            ("_delete", profile.profile_id),
+                        ],
+                        filename="wato.py",
+                    ),
+                    title=_("Delete profile"),
+                    suffix=profile.profile_id,
+                    message=_("Source: %(source)s") % {"source": profile.source_info},
+                )
+            )
             profiles_data.append(
                 {
                     **asdict(profile),
@@ -254,22 +273,11 @@ class ModePerformanceProfiles(WatoMode[None]):
                         [("profile_id", profile.profile_id)],
                         filename="profile_download.py",
                     ),
-                    "delete_url": make_confirm_delete_link(
-                        i18n=_,
-                        url=makeactionuri_contextless(
-                            request,
-                            self._ctx.transactions.get(),
-                            [
-                                ("mode", self.name()),
-                                ("_action", "delete"),
-                                ("_delete", profile.profile_id),
-                            ],
-                            filename="wato.py",
-                        ),
-                        title=_("Delete profile"),
-                        suffix=profile.profile_id,
-                        message=_("Source: %(source)s") % {"source": profile.source_info},
-                    ),
+                    # Rendered as a click action by the Vue app, see ClickAction
+                    "delete_action": {
+                        "action": delete_action.action,
+                        "arguments": delete_action.arguments,
+                    },
                 }
             )
 

@@ -35,16 +35,20 @@ from cmk.gui.background_job.job import JobStatusStates
 from cmk.gui.breadcrumb import Breadcrumb, make_main_menu_breadcrumb
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.form_specs import (
+    get_visitor,
+    RawDiskData,
+    VisitorOptions,
+)
 from cmk.gui.htmllib.foldable_container import foldable_container
-from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.generator import ClickAction, HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, request
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
+    make_click_action_link,
     make_display_options_dropdown,
-    make_javascript_action,
-    make_javascript_link,
     make_simple_link,
     PageMenu,
     PageMenuDropdown,
@@ -65,6 +69,7 @@ from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.view_utils import format_plugin_output, LabelRenderType, render_labels
 from cmk.gui.wato.pages.hosts import ModeEditHost
+from cmk.gui.wato.pages.rulesets import render_value_model_readonly
 from cmk.gui.watolib.activate_changes import ActivateChanges, get_pending_changes_tooltip
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
@@ -76,8 +81,8 @@ from cmk.gui.watolib.automations import (
 )
 from cmk.gui.watolib.check_mk_automations import active_check
 from cmk.gui.watolib.hosts_and_folders import (
+    Folder,
     folder_from_request,
-    folder_preserving_link,
     FolderTree,
     Host,
     make_folder_tree,
@@ -89,7 +94,7 @@ from cmk.gui.watolib.pending_changes import (
     PendingChangesStore,
 )
 from cmk.gui.watolib.rulesets import may_edit_ruleset
-from cmk.gui.watolib.rulespecs import rulespec_registry
+from cmk.gui.watolib.rulespecs import Rulespec, rulespec_registry
 from cmk.gui.watolib.services import (
     checkbox_id,
     checkbox_service,
@@ -113,6 +118,7 @@ from cmk.gui.watolib.utils import mk_repr
 from cmk.livestatus_client import SiteConfigurations
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.ruleset_matcher.labels import HostLabelValueDict, Labels
+from cmk.rulesets.v1.form_specs import FormSpec
 from cmk.shared_typing.setup import (
     AgentDownload,
     AgentDownloadServerPerSite,
@@ -120,6 +126,7 @@ from cmk.shared_typing.setup import (
     AgentRegistrationCmds,
     AgentSlideout,
     AgentStatusCmds,
+    CommandPlaceholders,
     UnbakedFallback,
 )
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
@@ -479,6 +486,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         renderer = DiscoveryPageRenderer(
             host,
             api_request.discovery_options,
+            rulespec_registry,
         )
         if (
             api_request.update_source is not None
@@ -825,10 +833,13 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
 
 class DiscoveryPageRenderer:
-    def __init__(self, host: Host, options: DiscoveryOptions) -> None:
+    def __init__(
+        self, host: Host, options: DiscoveryOptions, rulespecs: Mapping[str, Rulespec]
+    ) -> None:
         super().__init__()
         self._host = host
         self._options = options
+        self._rulespecs = rulespecs
 
     def render(
         self,
@@ -874,8 +885,8 @@ class DiscoveryPageRenderer:
                         hostname=hostname,
                         save_host=False,
                         host_exists=True,
-                        all_agents_url=folder_preserving_link(
-                            request, [("mode", "agent_of_host"), ("host", hostname)]
+                        all_agents_url=self._host.folder().url(
+                            [("mode", "agent_of_host"), ("host", hostname)]
                         ),
                         user_settings_url=makeuri_contextless(
                             request=request,
@@ -885,6 +896,7 @@ class DiscoveryPageRenderer:
                         agent_install_cls=AgentInstallCmds,
                         agent_registration_cls=AgentRegistrationCmds,
                         agent_status_cls=AgentStatusCmds,
+                        command_placeholders_cls=CommandPlaceholders,
                         unbaked_fallback_cls=UnbakedFallback,
                         version=version,
                         baked_agents_available=baked_agents_available(user, permission_registry),
@@ -1204,12 +1216,9 @@ class DiscoveryPageRenderer:
                     self._toggle_bulk_action_page_menu_entries(entry.table_group)
                 html.hidden_fields()
 
-    @staticmethod
-    def _show_empty_cluster_hint() -> None:
+    def _show_empty_cluster_hint(self) -> None:
         html.br()
-        url = folder_preserving_link(
-            request, [("mode", "edit_ruleset"), ("varname", "clustered_services")]
-        )
+        url = self._host.folder().url([("mode", "edit_ruleset"), ("varname", "clustered_services")])
         html.show_message(
             _(
                 "Could not find any service for your cluster. You first need to "
@@ -1449,8 +1458,8 @@ class DiscoveryPageRenderer:
             ctype = "check_" + entry.check_plugin_name
         else:
             ctype = entry.check_plugin_name
-        manpage_url = folder_preserving_link(
-            request, [("mode", "check_manpage"), ("check_type", ctype)]
+        manpage_url = makeuri_contextless(
+            request, [("mode", "check_manpage"), ("check_type", ctype)], filename="wato.py"
         )
 
         if self._options.show_parameters:
@@ -1631,7 +1640,7 @@ class DiscoveryPageRenderer:
 
     def _show_check_parameters(self, entry: CheckPreviewEntry, *, debug: bool) -> None:
         varname = self._get_ruleset_name(entry)
-        if not varname or varname not in rulespec_registry:
+        if not varname or varname not in self._rulespecs:
             return
 
         params = entry.effective_parameters
@@ -1640,7 +1649,7 @@ class DiscoveryPageRenderer:
             # For instance: Ruleset requires a key, but discovered parameters are empty.
             return
 
-        rulespec = rulespec_registry[varname]
+        rulespec = self._rulespecs[varname]
         try:
             if isinstance(params, dict) and "tp_computed_params" in params:
                 html.write_text_permissive(
@@ -1653,10 +1662,16 @@ class DiscoveryPageRenderer:
                 )
                 html.br()
                 params = params["tp_computed_params"]["params"]
-            rulespec.valuespec.validate_datatype(params, "")
-            rulespec.valuespec.validate_value(params, "")
-            paramtext = rulespec.valuespec.value_to_html(params)
-            html.write_html(HTML.with_escaping(paramtext))
+            # A readonly form spec embeds its whole spec in each table row, so the compact
+            # valuespec rendering is used wherever the ruleset converts to one.
+            try:
+                valuespec = rulespec.valuespec
+            except NotImplementedError:
+                self._show_form_spec_parameters(rulespec.form_spec, params)
+            else:
+                valuespec.validate_datatype(params, "")
+                valuespec.validate_value(params, "")
+                html.write_html(HTML.with_escaping(valuespec.value_to_html(params)))
         except Exception as e:
             err = traceback.format_exc() if debug else "%s" % e
             paramtext = "<b>{}</b>: {}<br>".format(_("Invalid check parameter"), err)
@@ -1664,6 +1679,13 @@ class DiscoveryPageRenderer:
             paramtext += _("Parameters:")
             paramtext += "<pre>%s</pre>" % (pprint.pformat(params))
             html.write_text_permissive(paramtext)
+
+    @staticmethod
+    def _show_form_spec_parameters(form_spec: FormSpec, params: object) -> None:
+        visitor = get_visitor(form_spec, VisitorOptions(migrate_values=True, mask_values=False))
+        if messages := visitor.validate(RawDiskData(params)):
+            raise ValueError(", ".join(f"{'.'.join(m.location)}: {m.message}" for m in messages))
+        html.write_html(HTML.with_escaping(render_value_model_readonly(form_spec, params)))
 
     def _show_discovered_labels(
         self,
@@ -1855,8 +1877,12 @@ class DiscoveryPageRenderer:
             DiscoveryState.IGNORED,
             DiscoveryState.CHANGED,
         ] and user.may("wato.rulesets"):
-            num_buttons += self.rulesets_button(entry.description, self._host.name())
-            num_buttons += self.check_parameters_button(entry, self._host.name())
+            num_buttons += self.rulesets_button(
+                self._host.folder(), entry.description, self._host.name()
+            )
+            num_buttons += self.check_parameters_button(
+                self._host.folder(), entry, self._host.name()
+            )
 
         if entry.check_source == DiscoveryState.CHANGED:
             html.popup_trigger(
@@ -1881,10 +1907,10 @@ class DiscoveryPageRenderer:
         return [
             ("checkboxname", checkbox_name),
             ("hostname", self._host.name()),
-            # Preserve the host's folder so that folder_preserving_link() in the AJAX
-            # handler can build valid links. Without it the handler falls back to the
-            # root folder and the target pages fail to find hosts in subfolders with
-            # "The given host does not exist." (CMK-35216).
+            # Preserve the host's folder so that the AJAX handler can build valid
+            # links. Without it the handler falls back to the root folder and the
+            # target pages fail to find hosts in subfolders with "The given host does
+            # not exist." (CMK-35216).
             ("folder", self._host.folder().path()),
             ("entry", json.dumps(dataclasses.astuple(entry))),
         ]
@@ -1945,19 +1971,18 @@ class DiscoveryPageRenderer:
         return 1
 
     @classmethod
-    def rulesets_button(cls, descr: str, hostname: str) -> Literal[1]:
+    def rulesets_button(cls, folder: Folder, descr: str, hostname: str) -> Literal[1]:
         # Link to list of all rulesets affecting this service
         html.icon_button(
-            cls.rulesets_button_link(descr, hostname),
+            cls.rulesets_button_link(folder, descr, hostname),
             _("View and edit the parameters for this service"),
             StaticIcon(IconNames.rulesets),
         )
         return 1
 
     @classmethod
-    def rulesets_button_link(cls, descr: str, hostname: str) -> str:
-        return folder_preserving_link(
-            request,
+    def rulesets_button_link(cls, folder: Folder, descr: str, hostname: str) -> str:
+        return folder.url(
             [
                 ("mode", "object_parameters"),
                 ("host", hostname),
@@ -1966,10 +1991,12 @@ class DiscoveryPageRenderer:
         )
 
     @classmethod
-    def check_parameters_button(cls, entry: CheckPreviewEntry, hostname: str) -> Literal[0, 1]:
+    def check_parameters_button(
+        cls, folder: Folder, entry: CheckPreviewEntry, hostname: str
+    ) -> Literal[0, 1]:
         if not entry.ruleset_name:
             return 0
-        url = cls.check_parameters_button_link(entry, hostname)
+        url = cls.check_parameters_button_link(folder, entry, hostname)
         if not url:
             return 0
         html.icon_button(
@@ -1980,10 +2007,11 @@ class DiscoveryPageRenderer:
         return 1
 
     @classmethod
-    def check_parameters_button_link(cls, entry: CheckPreviewEntry, hostname: str) -> str | None:
+    def check_parameters_button_link(
+        cls, folder: Folder, entry: CheckPreviewEntry, hostname: str
+    ) -> str | None:
         if entry.check_source == DiscoveryState.MANUAL:
-            return folder_preserving_link(
-                request,
+            return folder.url(
                 [
                     ("mode", "edit_ruleset"),
                     ("varname", RuleGroup.StaticChecks(entry.ruleset_name)),
@@ -1994,8 +2022,7 @@ class DiscoveryPageRenderer:
         if ruleset_name is None:
             return None
 
-        return folder_preserving_link(
-            request,
+        return folder.url(
             [
                 ("mode", "edit_ruleset"),
                 ("varname", ruleset_name),
@@ -2013,8 +2040,7 @@ class DiscoveryPageRenderer:
 
     def _disabled_services_button(self, descr: str) -> Literal[1]:
         html.icon_button(
-            folder_preserving_link(
-                request,
+            self._host.folder().url(
                 [
                     ("mode", "edit_ruleset"),
                     ("varname", "ignored_services"),
@@ -2304,9 +2330,7 @@ def _page_menu_host_entries(host: Host) -> Iterator[PageMenuEntry]:
     yield PageMenuEntry(
         title=_("Properties"),
         icon_name=StaticIcon(IconNames.edit),
-        item=make_simple_link(
-            folder_preserving_link(request, [("mode", "edit_host"), ("host", host.name())])
-        ),
+        item=make_simple_link(host.folder().url([("mode", "edit_host"), ("host", host.name())])),
     )
 
     if not host.is_cluster():
@@ -2314,7 +2338,7 @@ def _page_menu_host_entries(host: Host) -> Iterator[PageMenuEntry]:
             title=_("Test connection"),
             icon_name=StaticIcon(IconNames.analysis),
             item=make_simple_link(
-                folder_preserving_link(request, [("mode", "diag_host"), ("host", host.name())])
+                host.folder().url([("mode", "diag_host"), ("host", host.name())])
             ),
         )
 
@@ -2323,9 +2347,7 @@ def _page_menu_host_entries(host: Host) -> Iterator[PageMenuEntry]:
             title=_("Effective parameters"),
             icon_name=StaticIcon(IconNames.rulesets),
             item=make_simple_link(
-                folder_preserving_link(
-                    request, [("mode", "object_parameters"), ("host", host.name())]
-                ),
+                host.folder().url([("mode", "object_parameters"), ("host", host.name())]),
                 transition=LoadingTransition.catalog,
             ),
         )
@@ -2349,9 +2371,7 @@ def _page_menu_settings_entries(host: Host) -> Iterator[PageMenuEntry]:
             title=_("Clustered services"),
             icon_name=StaticIcon(IconNames.rulesets),
             item=make_simple_link(
-                folder_preserving_link(
-                    request, [("mode", "edit_ruleset"), ("varname", "clustered_services")]
-                )
+                host.folder().url([("mode", "edit_ruleset"), ("varname", "clustered_services")])
             ),
         )
 
@@ -2362,9 +2382,7 @@ def _page_menu_settings_entries(host: Host) -> Iterator[PageMenuEntry]:
             emblem="disable",
         ),
         item=make_simple_link(
-            folder_preserving_link(
-                request, [("mode", "edit_ruleset"), ("varname", "ignored_services")]
-            )
+            host.folder().url([("mode", "edit_ruleset"), ("varname", "ignored_services")])
         ),
     )
 
@@ -2375,9 +2393,7 @@ def _page_menu_settings_entries(host: Host) -> Iterator[PageMenuEntry]:
             emblem="disable",
         ),
         item=make_simple_link(
-            folder_preserving_link(
-                request, [("mode", "edit_ruleset"), ("varname", "ignored_checks")]
-            )
+            host.folder().url([("mode", "edit_ruleset"), ("varname", "ignored_checks")])
         ),
     )
 
@@ -2409,8 +2425,8 @@ def _page_menu_entry_show_parameters(host: Host, options: DiscoveryOptions) -> P
         icon_name=StaticIcon(
             IconNames.toggle_on if options.show_parameters else IconNames.toggle_off
         ),
-        item=make_simple_link(
-            _checkbox_js_url(
+        item=make_click_action_link(
+            _start_click_action(
                 host,
                 options._replace(show_parameters=not options.show_parameters),
             )
@@ -2426,8 +2442,8 @@ def _page_menu_entry_show_checkboxes(host: Host, options: DiscoveryOptions) -> P
         icon_name=StaticIcon(
             IconNames.toggle_on if options.show_checkboxes else IconNames.toggle_off
         ),
-        item=make_simple_link(
-            _checkbox_js_url(
+        item=make_click_action_link(
+            _start_click_action(
                 host,
                 options._replace(show_checkboxes=not options.show_checkboxes),
             )
@@ -2437,18 +2453,14 @@ def _page_menu_entry_show_checkboxes(host: Host, options: DiscoveryOptions) -> P
     )
 
 
-def _checkbox_js_url(host: Host, options: DiscoveryOptions) -> str:
-    return "javascript:%s" % make_javascript_action(_start_js_call(host, options))
-
-
 def _page_menu_entry_show_discovered_labels(host: Host, options: DiscoveryOptions) -> PageMenuEntry:
     return PageMenuEntry(
         title=_("Show active discovered service labels"),
         icon_name=StaticIcon(
             IconNames.toggle_on if options.show_discovered_labels else IconNames.toggle_off
         ),
-        item=make_simple_link(
-            _checkbox_js_url(
+        item=make_click_action_link(
+            _start_click_action(
                 host,
                 options._replace(show_discovered_labels=not options.show_discovered_labels),
             )
@@ -2464,8 +2476,8 @@ def _page_menu_entry_show_plugin_names(host: Host, options: DiscoveryOptions) ->
         icon_name=StaticIcon(
             IconNames.toggle_on if options.show_plugin_names else IconNames.toggle_off
         ),
-        item=make_simple_link(
-            _checkbox_js_url(
+        item=make_click_action_link(
+            _start_click_action(
                 host,
                 options._replace(show_plugin_names=not options.show_plugin_names),
             )
@@ -2481,8 +2493,8 @@ def _page_menu_service_configuration_entries(
     yield PageMenuEntry(
         title=_("Accept all"),
         icon_name=StaticIcon(IconNames.accept),
-        item=make_javascript_link(
-            _start_js_call(
+        item=make_click_action_link(
+            _start_click_action(
                 host,
                 options._replace(action=DiscoveryAction.FIX_ALL),
                 waiting_message=_waiting_message_fix_all(host.name()),
@@ -2497,8 +2509,8 @@ def _page_menu_service_configuration_entries(
     yield PageMenuEntry(
         title=_("Remove all and find new"),
         icon_name=StaticIcon(IconNames.services_tabula_rasa),
-        item=make_javascript_link(
-            _start_js_call(host, options._replace(action=DiscoveryAction.TABULA_RASA))
+        item=make_click_action_link(
+            _start_click_action(host, options._replace(action=DiscoveryAction.TABULA_RASA))
         ),
         name="tabula_rasa",
         is_enabled=False,
@@ -2508,8 +2520,8 @@ def _page_menu_service_configuration_entries(
     yield PageMenuEntry(
         title=_("Rescan"),
         icon_name=StaticIcon(IconNames.services_refresh),
-        item=make_javascript_link(
-            _start_js_call(
+        item=make_click_action_link(
+            _start_click_action(
                 host,
                 options._replace(action=DiscoveryAction.REFRESH),
                 waiting_message=_waiting_message_refresh(host.name()),
@@ -2524,8 +2536,8 @@ def _page_menu_service_configuration_entries(
     yield PageMenuEntry(
         title=_("Stop job"),
         icon_name=StaticIcon(IconNames.services_stop),
-        item=make_javascript_link(
-            _start_js_call(host, options._replace(action=DiscoveryAction.STOP))
+        item=make_click_action_link(
+            _start_click_action(host, options._replace(action=DiscoveryAction.STOP))
         ),
         name="stop",
         is_enabled=False,
@@ -2557,8 +2569,8 @@ def _page_menu_selected_services_entries(
     yield PageMenuEntry(
         title=_("Add missing, remove vanished"),
         icon_name=StaticIcon(IconNames.services_fix_all),
-        item=make_javascript_link(
-            _start_js_call(host, options._replace(action=DiscoveryAction.UPDATE_SERVICES))
+        item=make_click_action_link(
+            _start_click_action(host, options._replace(action=DiscoveryAction.UPDATE_SERVICES))
         ),
         name="fix_all",
         is_enabled=False,
@@ -2643,8 +2655,8 @@ def _page_menu_selected_services_entries(
         yield PageMenuEntry(
             title=entry.title,
             icon_name=entry.icon,
-            item=make_javascript_link(
-                _start_js_call(
+            item=make_click_action_link(
+                _start_click_action(
                     host,
                     options._replace(action=DiscoveryAction.BULK_UPDATE),
                     request_vars={
@@ -2662,8 +2674,8 @@ def _page_menu_selected_services_entries(
     yield PageMenuEntry(
         title=_("Update service labels"),
         icon_name=StaticIcon(IconNames.update_service_labels),
-        item=make_javascript_link(
-            _start_js_call(
+        item=make_click_action_link(
+            _start_click_action(
                 host,
                 options._replace(action=DiscoveryAction.UPDATE_SERVICE_LABELS),
                 request_vars={
@@ -2680,8 +2692,8 @@ def _page_menu_selected_services_entries(
     yield PageMenuEntry(
         title=_("Update discovery parameters"),
         icon_name=StaticIcon(IconNames.update_discovery_parameters),
-        item=make_javascript_link(
-            _start_js_call(
+        item=make_click_action_link(
+            _start_click_action(
                 host,
                 options._replace(action=DiscoveryAction.UPDATE_DISCOVERY_PARAMETERS),
                 request_vars={
@@ -2703,8 +2715,8 @@ def _page_menu_host_labels_entries(
     yield PageMenuEntry(
         title=_("Update host labels"),
         icon_name=StaticIcon(IconNames.update_host_labels),
-        item=make_javascript_link(
-            _start_js_call(host, options._replace(action=DiscoveryAction.UPDATE_HOST_LABELS))
+        item=make_click_action_link(
+            _start_click_action(host, options._replace(action=DiscoveryAction.UPDATE_HOST_LABELS))
         ),
         name="update_host_labels",
         is_enabled=False,
@@ -2712,6 +2724,22 @@ def _page_menu_host_labels_entries(
         is_suggested=True,
         css_classes=["action"],
     )
+
+
+def _start_args(
+    host: Host,
+    options: DiscoveryOptions,
+    request_vars: dict | None,
+    waiting_message: str | None,
+) -> dict[str, object]:
+    return {
+        "host_name": host.name(),
+        "folder_path": host.folder().path(),
+        "discovery_options": options._asdict(),
+        "transid": transactions.get(),
+        "request_vars": request_vars,
+        "waiting_message": waiting_message,
+    }
 
 
 def _start_js_call(
@@ -2722,28 +2750,38 @@ def _start_js_call(
 ) -> str:
     params = ", ".join(
         json.dumps(param)
-        for param in [
-            host.name(),
-            host.folder().path(),
-            options._asdict(),
-            transactions.get(),
-            request_vars,
-            waiting_message,
-        ]
+        for param in _start_args(host, options, request_vars, waiting_message).values()
     )
     return f"cmk.service_discovery.start({params})"
 
 
-def ajax_popup_service_action_menu(ctx: PageContext) -> None:  # noqa: ARG001
+def _start_click_action(
+    host: Host,
+    options: DiscoveryOptions,
+    request_vars: dict | None = None,
+    waiting_message: str | None = None,
+) -> ClickAction:
+    return ClickAction(
+        action="service_discovery_start",
+        arguments=_start_args(host, options, request_vars, waiting_message),
+    )
+
+
+def ajax_popup_service_action_menu(ctx: PageContext) -> None:
     request.get_ascii_input_mandatory("checkboxname")
     hostname = request.get_validated_type_input_mandatory(HostName, "hostname")
+    folder = folder_from_request(make_folder_tree(ctx.config), request.var("folder"), hostname)
     entry = CheckPreviewEntry(*json.loads(request.get_ascii_input_mandatory("entry")))
-    html.open_a(href=DiscoveryPageRenderer.rulesets_button_link(entry.description, hostname))
+    html.open_a(
+        href=DiscoveryPageRenderer.rulesets_button_link(folder, entry.description, hostname)
+    )
     html.static_icon(StaticIcon(IconNames.rulesets))
     html.write_text_permissive(_("View and edit the parameters for this service"))
     html.close_a()
 
-    check_parameters_url = DiscoveryPageRenderer.check_parameters_button_link(entry, hostname)
+    check_parameters_url = DiscoveryPageRenderer.check_parameters_button_link(
+        folder, entry, hostname
+    )
     if not check_parameters_url:
         return
     html.open_a(href=check_parameters_url)

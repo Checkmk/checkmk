@@ -8,12 +8,12 @@ from cmk.base.plugins.bakery.win_agent_sections import get_win_agent_sections_wi
 
 
 def test_win_agent_sections_windows_config() -> None:
-    assert list(get_win_agent_sections_windows_config(["check_mk", "logwatch"])) == [
+    assert list(get_win_agent_sections_windows_config({"sections": ["check_mk", "logwatch"]})) == [
         WindowsGlobalConfigEntry(name="sections", content=["check_mk", "logwatch"]),
     ]
 
 
 def test_win_agent_sections_windows_config_empty() -> None:
-    assert list(get_win_agent_sections_windows_config([])) == [
+    assert list(get_win_agent_sections_windows_config({"sections": []})) == [
         WindowsGlobalConfigEntry(name="sections", content=[]),
     ]

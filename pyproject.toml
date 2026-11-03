@@ -60,6 +60,8 @@ select = [
   "W",                      # pycodestyle (warning)
   "T10",                    # flake8: debugger
   "T20",                    # flake8: print
+  "TID251",                 # flake8-tidy-imports: banned-api
+  "TID253",                 # flake8-tidy-imports: banned-module-level-imports
   "TRY400",                 # tryceratops: use logger.exception() instead of logger.error() in except blocks
   "pytest-fixture-autouse", # ruff (preview): ban autouse pytest fixtures (selected by name, no code)
 ]
@@ -87,6 +89,30 @@ ignore = [
 
 [tool.ruff.lint.mccabe]
 max-complexity = 64 # TODO: This is far too much, we need to lower this!
+
+# Files allowed to import one of these modules suppress TID251 with a noqa
+# comment. The large modules have to be imported inside the functions using
+# them (TID253), unless the importing process always uses them.
+[tool.ruff.lint.flake8-tidy-imports]
+banned-module-level-imports = [
+  "cmk.gui.wato.pages.timeperiods_ical",
+  "grpc",
+  "icalendar",
+  "opentelemetry.exporter.otlp.proto.grpc",
+  "pypdf",
+  "recurring_ical_events",
+  "reportlab",
+]
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"cmk.gui.wato.pages.timeperiods_ical".msg = "It loads the iCalendar libraries, which add several MB to every process importing them"
+"grpc".msg = "It adds several MB to every process importing it"
+"icalendar".msg = "It adds several MB to every process importing it, use cmk.gui.wato.pages.timeperiods_ical"
+"opentelemetry.exporter.otlp.proto.grpc".msg = "It adds several MB to every process importing it, use cmk.trace"
+"PIL".msg = "Use the images module at the correct layer, e.g. cmk.gui.utils.images"
+"pypdf".msg = "It adds several MB to every process importing it"
+"recurring_ical_events".msg = "It adds several MB to every process importing it, use cmk.gui.wato.pages.timeperiods_ical"
+"reportlab".msg = "It adds several MB to every process importing it, use cmk.gui.pdf"
 
 [tool.ruff.lint.isort]
 # Same-package detection looks for __init__.py files next to the linted file.
@@ -210,6 +236,11 @@ warn_required_dynamic_aliases = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# tests.system and tests.packaging span their non-free counterparts below non-free/tests/
+# as namespace packages (see tests/__init__.py). Keep the module names rooted at the
+# repository for both trees.
+pythonpath = ["."]
+consider_namespace_packages = true
 addopts = [
   # Live logs initially look like a good idea to pin down problems in the tests
   # quickly, but with the current state of our tests it's simply too much noise.

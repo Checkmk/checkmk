@@ -545,6 +545,10 @@
             },
             "input_hint": {
               "type": ["string", "null"]
+            },
+            "has_default_value": {
+              "type": "boolean",
+              "default": false
             }
           },
           "required": ["type", "no_elements_text", "label", "input_hint", "frozen", "elements"]
@@ -594,9 +598,12 @@
             },
             "i18n": {
               "$ref": "#/$defs/multiple_choice_i18n"
+            },
+            "no_element_label": {
+              "type": "string"
             }
           },
-          "required": ["elements", "show_toggle_all", "i18n"]
+          "required": ["elements", "show_toggle_all", "i18n", "no_element_label"]
         }
       ],
       "required": ["type"]
@@ -605,61 +612,11 @@
       "type": "object",
       "title": "dual_list_choice_i18n",
       "properties": {
-        "add": {
-          "type": "string"
-        },
-        "remove": {
-          "type": "string"
-        },
-        "add_all": {
-          "type": "string"
-        },
-        "remove_all": {
-          "type": "string"
-        },
-        "available_options": {
-          "type": "string"
-        },
-        "selected_options": {
-          "type": "string"
-        },
-        "selected": {
-          "type": "string"
-        },
-        "no_elements_available": {
-          "type": "string"
-        },
-        "no_elements_selected": {
-          "type": "string"
-        },
-        "autocompleter_loading": {
-          "type": "string"
-        },
-        "search_available_options": {
-          "type": "string"
-        },
-        "search_selected_options": {
-          "type": "string"
-        },
         "and_x_more": {
           "type": "string"
         }
       },
-      "required": [
-        "add",
-        "remove",
-        "add_all",
-        "remove_all",
-        "search_available_options",
-        "search_selected_options",
-        "available_options",
-        "selected_options",
-        "selected",
-        "no_elements_available",
-        "no_elements_selected",
-        "autocompleter_loading",
-        "and_x_more"
-      ]
+      "required": ["and_x_more"]
     },
     "checkbox_list_choice": {
       "type": "object",
@@ -683,9 +640,12 @@
             },
             "i18n": {
               "$ref": "#/$defs/multiple_choice_i18n"
+            },
+            "no_element_label": {
+              "type": "string"
             }
           },
-          "required": ["type", "elements", "show_toggle_all", "i18n"]
+          "required": ["type", "elements", "show_toggle_all", "i18n", "no_element_label"]
         }
       ],
       "required": ["type"]
@@ -969,6 +929,57 @@
             }
           },
           "required": ["type", "label", "input_hint", "allow_fetch"]
+        }
+      ]
+    },
+    "data_backend_settings": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/form_spec"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "data_backend_settings",
+              "default": "data_backend_settings"
+            },
+            "elements": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/dictionary_element"
+              },
+              "default": []
+            },
+            "groups": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/dictionary_group"
+              }
+            },
+            "no_elements_text": {
+              "type": "string"
+            },
+            "additional_static_elements": {
+              "type": ["object", "null"]
+            },
+            "central_location": {
+              "type": "string"
+            },
+            "connection_test_site_id": {
+              "type": ["string", "null"]
+            }
+          },
+          "required": [
+            "type",
+            "elements",
+            "additional_static_elements",
+            "no_elements_text",
+            "groups",
+            "central_location",
+            "connection_test_site_id"
+          ]
         }
       ]
     },
@@ -1934,6 +1945,9 @@
         },
         {
           "$ref": "#/$defs/oauth2_connection_setup"
+        },
+        {
+          "$ref": "#/$defs/data_backend_settings"
         },
         {
           "$ref": "#/$defs/metric"

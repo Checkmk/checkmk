@@ -26,6 +26,12 @@ test('renders the stale icon when stale', () => {
   expect(screen.getByTitle('Stale')).toBeInTheDocument()
 })
 
+test('announces the stale icon to assistive technology', () => {
+  render(StateModeIcons, { props: { stale: true } })
+
+  expect(screen.getByRole('img', { name: 'Stale' })).toBeInTheDocument()
+})
+
 test('renders both icons together', () => {
   render(StateModeIcons, { props: { flapping: true, stale: true } })
 

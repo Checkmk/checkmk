@@ -3,24 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Literal
-
-import pytest
-
-from cmk.gui.graphing import GraphDisplayConfigImage, GraphRenderOptions
+from cmk.gui.graphing._graph_display_config import GraphRenderOptions, GraphTitleFormat
 
 
-@pytest.mark.parametrize(
-    "show_title, expected",
-    [
-        pytest.param("inline", True, id="title on the graph area"),
-        pytest.param(True, True, id="title"),
-        pytest.param(False, False, id="no title"),
-    ],
-)
-def test_image_config_shows_the_title_requested_by_the_options(
-    show_title: bool | Literal["inline"], expected: bool
-) -> None:
-    config = GraphDisplayConfigImage.from_options(GraphRenderOptions(show_title=show_title))
-
-    assert config.show_title is expected
+def test_from_graph_render_options_vs_empty_title_format() -> None:
+    # Crash group 4324: no title element was selected, stored as an empty list
+    assert GraphRenderOptions.from_graph_render_options_vs(
+        {"title_format": []}
+    ).title_format == GraphTitleFormat(
+        plain=False,
+        add_host_name=False,
+        add_host_alias=False,
+        add_service_description=False,
+    )

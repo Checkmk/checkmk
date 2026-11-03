@@ -45,7 +45,7 @@ def send_pem_file(page: MainDashboard, description: str, password: str, content:
 
 
 def wait_for_bakery(test_site: Site, max_attempts: int = 60) -> None:
-    """Continously check the baking status and return once the agent baking is finished."""
+    """Continuously check the baking status and return once the agent baking is finished."""
     for attempt in range(max_attempts):
         if test_site.openapi.agents.get_baking_status().state == "finished":
             logger.info("Agent baking completed!")

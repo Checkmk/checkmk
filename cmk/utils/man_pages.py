@@ -25,7 +25,6 @@ from io import StringIO
 from pathlib import Path
 from typing import Final, override
 
-import cmk.ccc.debug
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
@@ -372,6 +371,7 @@ def load_man_page_catalog(
     group_subdir: str,
     *,
     blocked_paths: Container[str] = frozenset(),
+    debug: bool,
 ) -> ManPageCatalog:
     man_page_path_map = make_man_page_path_map(
         plugin_families,
@@ -380,7 +380,7 @@ def load_man_page_catalog(
     )
     catalog: dict[ManPageCatalogPath, list[ManPage]] = defaultdict(list)
     for name, path in man_page_path_map.items():
-        parsed = parse_man_page(name, path)
+        parsed = parse_man_page(name, path, debug=debug)
         for entry in _make_catalog_entries(parsed.catalog, parsed.agents):
             catalog[entry].append(parsed)
 
@@ -519,7 +519,7 @@ def _run_dialog(args: Sequence[str]) -> tuple[bool, bytes]:
     return completed_process.returncode == 0, completed_process.stderr
 
 
-def parse_man_page(name: str, path: Path) -> ManPage:
+def parse_man_page(name: str, path: Path, *, debug: bool) -> ManPage:
     with path.open(encoding="utf-8") as fp:
         content = fp.read()
 
@@ -539,7 +539,7 @@ def parse_man_page(name: str, path: Path) -> ManPage:
             cluster=parsed.get("cluster"),
         )
     except (KeyError, MKGeneralException) as msg:
-        if cmk.ccc.debug.enabled():
+        if debug:
             raise
         return ManPage.fallback(
             name=name,
@@ -887,7 +887,7 @@ def man_pages_for_website_export(
     The result should be json serializable.
     """
     return {
-        name: _extend_categorization_info(parse_man_page(name, path))
+        name: _extend_categorization_info(parse_man_page(name, path, debug=False))
         for name, path in make_man_page_path_map(plugin_families, group_subdir).items()
     }
 

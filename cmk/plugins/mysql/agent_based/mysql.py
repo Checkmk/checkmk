@@ -236,8 +236,13 @@ def check_mysql_connections(item: str, params: Mapping[str, Any], section: Secti
     if not (data := section.get(item)):
         return
 
-    if "Max_used_connections" not in data:
-        yield Result(state=State.UNKNOWN, summary="Connection information is missing")
+    if missing := sorted(
+        {"Max_used_connections", "Threads_connected", "max_connections"} - data.keys()
+    ):
+        yield Result(
+            state=State.UNKNOWN,
+            summary=f"Connection information is missing: {', '.join(missing)}",
+        )
         return
 
     # The maximum number of connections that have been in use simultaneously

@@ -17,8 +17,13 @@ from cmk.plugins.aws_v2.special_agent.config import (
     TagsImportPatternOption,
     TagsOption,
 )
+from cmk.plugins.aws_v2.special_agent.hosts import SOURCE_HOST
 from cmk.plugins.aws_v2.special_agent.sections.core import ResultDistributor
-from cmk.plugins.aws_v2.special_agent.sections.glacier import Glacier, GlacierLimits
+from cmk.plugins.aws_v2.special_agent.sections.glacier import (
+    Glacier,
+    GlacierLimits,
+    GlacierSummary,
+)
 
 from .agent_aws_fake_clients import GlacierListTagsInstancesIB, GlacierListVaultsIB
 
@@ -39,7 +44,7 @@ class FakeGlacierClient:
         return {"Tags": {}}
 
 
-GlacierSections = tuple[GlacierLimits, Glacier]
+GlacierSections = tuple[GlacierLimits, GlacierSummary, Glacier]
 
 
 class GetGlacierSections(Protocol):
@@ -71,10 +76,12 @@ def get_glacier_sections() -> GetGlacierSections:
 
         # TODO: FakeGlacierClient should actually subclass GlacierClient, etc.
         glacier_limits = GlacierLimits(fake_glacier_client, region, config, distributor)
+        glacier_summary = GlacierSummary(fake_glacier_client, region, config, distributor)
         glacier = Glacier(fake_glacier_client, region, config)
 
-        distributor.add(glacier_limits.name, glacier)
-        return glacier_limits, glacier
+        distributor.add(glacier_limits.name, glacier_summary)
+        distributor.add(glacier_summary.name, glacier)
+        return glacier_limits, glacier_summary, glacier
 
     return _create_glacier_sections
 
@@ -102,12 +109,12 @@ def test_agent_aws_glacier_limits(
     tags: OverallTags,
     amount_vaults: int,  # noqa: ARG001
 ) -> None:
-    glacier_limits, _glacier = get_glacier_sections(names, tags)
+    glacier_limits, _glacier_summary, _glacier = get_glacier_sections(names, tags)
     glacier_limits_results = glacier_limits.run().results
     assert glacier_limits.name == "glacier_limits"
 
     glacier_limits_result = glacier_limits_results[0]
-    assert glacier_limits_result.piggyback_hostname == ""
+    assert glacier_limits_result.piggyback_hostname is SOURCE_HOST
     assert len(glacier_limits_results) == 1
 
     glacier_limits_content = glacier_limits_result.content[0]
@@ -118,22 +125,22 @@ def test_agent_aws_glacier_limits(
 
 
 @pytest.mark.parametrize("names,tags,amount_vaults", glacier_params)
-def test_agent_aws_glacier(
+def test_agent_aws_glacier_summary(
     get_glacier_sections: GetGlacierSections,
     names: Sequence[str] | None,
     tags: OverallTags,
     amount_vaults: int,
 ) -> None:
-    glacier_limits, glacier = get_glacier_sections(names, tags)
+    glacier_limits, glacier_summary, _glacier = get_glacier_sections(names, tags)
     glacier_limits.run()
-    glacier_results = glacier.run().results
+    glacier_results = glacier_summary.run().results
 
-    assert glacier.name == "glacier"
+    assert glacier_summary.name == "glacier_summary"
 
     if amount_vaults:
         assert len(glacier_results) == 1
         glacier_result = glacier_results[0]
-        assert glacier_result.piggyback_hostname == ""
+        assert glacier_result.piggyback_hostname is SOURCE_HOST
         assert len(glacier_result.content) == amount_vaults
         assert "Tagging" in glacier_result.content[0]
     else:
@@ -141,21 +148,21 @@ def test_agent_aws_glacier(
 
 
 @pytest.mark.parametrize("names,tags,amount_vaults", glacier_params)
-def test_agent_aws_glacier_without_limits(
+def test_agent_aws_glacier_summary_without_limits(
     get_glacier_sections: GetGlacierSections,
     names: Sequence[str] | None,
     tags: OverallTags,
     amount_vaults: int,
 ) -> None:
-    _glacier_limits, glacier = get_glacier_sections(names, tags)
-    glacier_results = glacier.run().results
+    _glacier_limits, glacier_summary, _glacier = get_glacier_sections(names, tags)
+    glacier_results = glacier_summary.run().results
 
-    assert glacier.name == "glacier"
+    assert glacier_summary.name == "glacier_summary"
 
     if amount_vaults:
         assert len(glacier_results) == 1
         glacier_result = glacier_results[0]
-        assert glacier_result.piggyback_hostname == ""
+        assert glacier_result.piggyback_hostname is SOURCE_HOST
         assert len(glacier_result.content) == amount_vaults
         assert "Tagging" in glacier_result.content[0]
     else:
@@ -178,12 +185,51 @@ def test_agent_aws_glacier_filters_tags(
     tag_import: TagsOption,
     expected_tags: dict[str, list[str]],
 ) -> None:
-    glacier_limits, glacier = get_glacier_sections(tag_import=tag_import)
+    glacier_limits, glacier_summary, _glacier = get_glacier_sections(tag_import=tag_import)
     glacier_limits.run()
-    glacier_results = glacier.run().results
+    glacier_results = glacier_summary.run().results
 
     assert glacier_results
     for result in glacier_results:
         assert result.content
         for row in result.content:
             assert list(row["TagsForCmkLabels"].keys()) == expected_tags.get(row["VaultName"], [])
+
+
+def test_agent_aws_glacier_puts_each_vault_on_its_own_host(
+    get_glacier_sections: GetGlacierSections,
+) -> None:
+    _glacier_limits, glacier_summary, glacier = get_glacier_sections()
+    glacier_summary.run()
+
+    glacier_results = glacier.run().results
+
+    assert {
+        result.piggyback_hostname: [vault["VaultName"] for vault in result.content]
+        for result in glacier_results
+    } == {f"VaultName-{i}": [f"VaultName-{i}"] for i in range(4)}
+
+
+def test_agent_aws_glacier_labels_vault_hosts_as_glacier(
+    get_glacier_sections: GetGlacierSections,
+) -> None:
+    _glacier_limits, glacier_summary, glacier = get_glacier_sections()
+    glacier_summary.run()
+
+    glacier_results = glacier.run().results
+
+    assert glacier_results
+    assert all(
+        result.piggyback_host_labels == {"cmk/aws/service": "glacier"} for result in glacier_results
+    )
+
+
+def test_agent_aws_glacier_creates_no_vault_host_without_vaults(
+    get_glacier_sections: GetGlacierSections,
+) -> None:
+    _glacier_limits, glacier_summary, glacier = get_glacier_sections(names=["Uuuups"])
+    glacier_summary.run()
+
+    glacier_results = glacier.run().results
+
+    assert not glacier_results

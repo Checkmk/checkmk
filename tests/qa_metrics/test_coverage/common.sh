@@ -84,7 +84,7 @@ source_labels() {
 # Narrow on purpose. Broadening it to every target pulls some 26k external-repo
 # records into the report, and gives the tests whose manifest is empty -- the ones
 # coverage.py therefore measures unfiltered -- an include list disjoint from what
-# they execute, so they collect nothing and the runner raises NoDataError.
+# they execute, so they silently contribute an empty coverage.dat.
 #
 # A label in the root package -- //:refresh_compile_commands.py -- names no
 # directory, so the grep drops it: an empty alternative would match every label.
@@ -113,11 +113,6 @@ instrumentation_filter() {
 #     match a tag like no-requirements.
 #   * omd/dependency_management:test_licenses: its SBOM data dep builds the Rust
 #     agent controller, which fails to link under instrumentation.
-#   * non-free/packages/cmk-dev-ai/tests/component: it imports no measured
-#     module, and the rules_py runner fails a test that collects no data
-#     (CMK-40567).
-#   * non-free/packages/cmk-core-helpers/tests/component: it imports the
-#     measured module only in a child process, so the same applies.
 #   * from tests/, only what our test classification calls "package tests":
 #     openapi, agent-plugin-unit and unit. Everything else crosses package
 #     boundaries.
@@ -128,8 +123,6 @@ let t = $all
     except attr("srcs", "-doctest-runner\.py", $all)
     except attr("tags", "[\[ ]requirements[,\]]", $all)
     except //omd/dependency_management:test_licenses
-    except //non-free/packages/cmk-dev-ai/tests/component:component
-    except //non-free/packages/cmk-core-helpers/tests/component:component
     except (//tests/... except (//tests/openapi/... + //tests/agent-plugin-unit/... + //tests/unit/...))
 in
 EOF

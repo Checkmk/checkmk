@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import axios from 'axios'
+import type { DrillUpButton as DrillUp } from 'cmk-shared-typing/typescript/drill_up_button'
 import type { GlobalTimePickerProps } from 'cmk-shared-typing/typescript/global_time_picker.ts'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time/types.ts'
@@ -22,6 +23,7 @@ import {
 } from '@/dashboard/types/dashboard.ts'
 import { copyToClipboard, urlHandler } from '@/dashboard/utils.ts'
 import GlobalTimePicker from '@/graphing/GlobalTimePicker/GlobalTimePicker.vue'
+import DrillUpButton from '@/page-header/DrillUpButton.vue'
 
 import DashboardSelector from './DashboardSelector.vue'
 import DropdownMenu from './DropdownMenu.vue'
@@ -40,6 +42,7 @@ interface Props {
   isDashboardLoading: boolean
   runtimeFilters: Record<string, string>
   globalTimePicker: GlobalTimePickerProps
+  drillUp?: DrillUp | null
 }
 
 const { _t } = usei18n()
@@ -145,7 +148,10 @@ const copyInternalDashboardLink = async (): Promise<void> => {
 <template>
   <div class="db-menu-header" role="toolbar" :aria-label="_t('Dashboard menu')">
     <div class="db-menu-header__left">
-      <CmkHeading>{{ _t('Dashboard') }}</CmkHeading>
+      <div class="db-menu-header__title">
+        <DrillUpButton v-if="props.drillUp" v-bind="props.drillUp" />
+        <CmkHeading>{{ _t('Dashboard') }}</CmkHeading>
+      </div>
       <DashboardSelector
         :selected-dashboard="props.selectedDashboard"
         :disabled="props.isDashboardLoading || props.isEditMode"
@@ -284,6 +290,8 @@ const copyInternalDashboardLink = async (): Promise<void> => {
             {{ _t('Cancel') }}
           </MenuButton>
 
+          <div class="db-menu-header__separator" />
+
           <MenuButton :disabled="isInteractionDisabled" @click="handleAddWidget">
             <CmkIcon name="plus" />
             {{ _t('Add widget') }}
@@ -303,6 +311,12 @@ const copyInternalDashboardLink = async (): Promise<void> => {
   background-color: transparent;
 }
 
+.db-menu-header__title {
+  display: flex;
+  align-items: center;
+  gap: var(--dimension-2);
+}
+
 .db-menu-header__left {
   display: flex;
   flex-direction: column;
@@ -319,13 +333,14 @@ const copyInternalDashboardLink = async (): Promise<void> => {
   gap: var(--dimension-4);
   flex: 1 1 auto;
   min-width: 0;
+  min-height: 96px;
 }
 
 .db-menu-header__right {
   display: flex;
   align-items: center;
   padding-top: var(--dimension-8);
-  gap: var(--dimension-3);
+  gap: var(--dimension-4);
   flex: 0 0 auto;
 }
 
@@ -342,7 +357,7 @@ const copyInternalDashboardLink = async (): Promise<void> => {
 .db-menu-header__separator {
   align-self: stretch;
   width: var(--dimension-1);
-  padding: 0 var(--dimension-5) 0 var(--dimension-4);
+  padding: 0 var(--dimension-5) 0 var(--dimension-5);
   background-color: var(--color-mid-grey-60);
   background-clip: content-box;
 }

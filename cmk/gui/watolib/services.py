@@ -49,7 +49,7 @@ from cmk.gui.background_job.job import (
 )
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 from cmk.gui.watolib.activate_changes import sync_changes_before_remote_automation
 from cmk.gui.watolib.automations import (
@@ -1275,7 +1275,10 @@ def discovery_job_entry_point(
 ) -> None:
     job = ServiceDiscoveryBackgroundJob(args.host_name)
     with job_interface.gui_context(
-        UserPermissions.from_serialized_config(args.user_permission_config, permission_registry)
+        UserPermissions.from_serialized_config(
+            args.user_permission_config,
+            all_permissions(),
+        )
     ):
         job.discover(args.action, raise_errors=args.raise_errors, debug=args.debug)
 

@@ -6,17 +6,19 @@
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, ref, watch } from 'vue'
 
-import type { SummaryChip } from '@/maps/map/detail/composables/useSummaryChips'
+import type { MapStateCount } from '@/maps/map/components/MapStateCounts.vue'
 import { useMapsApis } from '@/maps/services/context'
 import type { AggregationNode, CommandTarget, MapElement, ObjectState } from '@/maps/types/api'
 import {
   BI_STATE_FULL_LABEL,
   BI_STATE_LABEL as BI_STATE_LABEL_MAP,
   BI_STATE_TONE,
+  biStateRank,
   walkAggregationLeavesWithPath
 } from '@/maps/utils/aggregationTree'
 import { buildCheckmkSetupUrl } from '@/maps/utils/mapNavigation'
 import { newObjectState } from '@/maps/utils/model'
+import { biStateCounts } from '@/maps/utils/stateCounts'
 
 export interface AggregationLeafRow {
   id: string
@@ -32,21 +34,17 @@ export interface AggregationLeafRow {
 }
 
 export interface AggregationSummary {
-  chips: SummaryChip[]
+  chips: MapStateCount[]
   worstPath: string | null
   worstOutput: string | null
   leaves: AggregationLeafRow[]
   /** Nodes at depth=`expand_depth` (or shallower terminal bi_leaves). */
   treeRows: AggregationLeafRow[]
-  treeChips: SummaryChip[]
+  treeChips: MapStateCount[]
   treeDepth: number
 }
 
 type AggregationView = 'summary' | 'details'
-
-// Operator-facing labels for the BI severity ordering: CRIT > WARN > UNKN > OK.
-// Used for chip layout, "worst leaf" sort, and tree-node count breakdown.
-const BI_CHIP_ORDER: readonly number[] = [2, 1, 3, 0]
 
 function _aggregationRow(node: AggregationNode, path: string[]): AggregationLeafRow {
   const fullPath = [...path, node.name]
@@ -85,16 +83,6 @@ function _nodesAtDepth(
   }
   const next = [...path, node.name]
   return node.children.flatMap((c) => _nodesAtDepth(c, targetDepth - 1, next))
-}
-
-function _chipsFromCounts(counts: Record<number, number>): SummaryChip[] {
-  return BI_CHIP_ORDER.map((s) => ({
-    state: BI_STATE_LABEL_MAP[s] ?? String(s),
-    count: counts[s] ?? 0,
-    label: BI_STATE_LABEL_MAP[s] ?? String(s),
-    tone: BI_STATE_TONE[s] ?? 'unknown',
-    url: null
-  }))
 }
 
 function _countByState(rows: ReadonlyArray<{ state: number }>): Record<number, number> {
@@ -182,13 +170,9 @@ export function useAggregationDetail(options: AggregationDetailOptions) {
       return null
     }
 
-    const chips = _chipsFromCounts(_countByState(leaves))
+    const chips = biStateCounts(_t, _countByState(leaves))
 
-    // Worst-leaf sort follows BI_CHIP_ORDER so ties resolve deterministically
-    // to the highest-severity slot (CRIT > WARN > UNKN > OK).
-    const sorted = [...leaves].sort(
-      (a, b) => BI_CHIP_ORDER.indexOf(a.state) - BI_CHIP_ORDER.indexOf(b.state)
-    )
+    const sorted = [...leaves].sort((a, b) => biStateRank(b.state) - biStateRank(a.state))
     const worst = sorted.find((l) => l.state > 0) ?? null
     const worstPath = worst ? worst.path.join(' › ') : null
     const worstOutput = worst?.output || null
@@ -207,7 +191,7 @@ export function useAggregationDetail(options: AggregationDetailOptions) {
     }
 
     const treeRows = _nodesAtDepth(tree, expandDepth)
-    const treeChips = _chipsFromCounts(_countByState(treeRows))
+    const treeChips = biStateCounts(_t, _countByState(treeRows))
 
     return {
       chips,
@@ -267,7 +251,7 @@ export function useAggregationDetail(options: AggregationDetailOptions) {
     return hosts.size > 1
   })
 
-  const activeChips = computed<SummaryChip[]>(() => {
+  const activeChips = computed<MapStateCount[]>(() => {
     const s = aggregationSummary.value
     if (!s) {
       return []

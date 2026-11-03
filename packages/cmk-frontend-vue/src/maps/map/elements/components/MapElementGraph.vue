@@ -17,6 +17,7 @@ import { computed } from 'vue'
 
 import { useMapElementChart } from '@/maps/map/elements/composables/useMapElementChart'
 import type { MapElement, ObjectState } from '@/maps/types/api'
+import { labelText } from '@/maps/utils/template'
 
 import MapElementChart from './MapElementChart.vue'
 import MapElementEmbeddedGraph from './MapElementEmbeddedGraph.vue'
@@ -44,6 +45,7 @@ const props = defineProps<{
 
 defineEmits<{ 'resize-start': [event: PointerEvent] }>()
 
+const caption = computed(() => labelText(props.object, props.state))
 const forbidden = computed(() => props.state?.state === 'NO_PERMISSION')
 const native = computed(() => !!props.object.host_name)
 
@@ -90,9 +92,9 @@ const waitingMessage = computed(() =>
     <MapElementEmbeddedGraph v-else :object="object" />
 
     <MapElementLabel
-      v-if="object.label?.show && object.label?.text && !forbidden"
+      v-if="object.label?.show && caption && !forbidden"
       :object="object"
-      :text="object.label.text"
+      :text="caption"
       placement="caption"
       :classic="classic"
     />
@@ -115,13 +117,13 @@ const waitingMessage = computed(() =>
   height: 100%;
   background: color-mix(in srgb, var(--ux-theme-1) 20%, transparent);
   border: 1px solid var(--default-border-color);
-  border-radius: var(--dimension-4);
+  border-radius: var(--border-radius);
 }
 
 .maps-map-element-graph__selection {
   position: absolute;
   inset: 0;
-  border-radius: var(--dimension-4);
+  border-radius: var(--border-radius);
   box-shadow:
     0 0 0 1px var(--ux-theme-1),
     0 0 0 3px var(--interactive-accent);

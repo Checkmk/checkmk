@@ -47,6 +47,7 @@ function makeHostsResponse(hosts: HostEntry[], meta: Partial<HostsPageMeta> = {}
       matched: hosts.length,
       total: hosts.length,
       fields: [],
+      unreachable_sites: [],
       ...meta
     }
   }
@@ -294,5 +295,37 @@ describe('HostApi.fetchHosts', () => {
     const result = await new HostApi().fetchHosts()
 
     expect(result).toEqual(response)
+  })
+})
+
+describe('HostApi.requestBody', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('is the body fetchHosts sends, without the fields', () => {
+    const body = new HostApi().requestBody({
+      limit: 5000,
+      sort: [{ id: 'state', desc: true }],
+      searchQuery: ' web '
+    })
+
+    expect(body).toEqual({ limit: 5000, sort: ['state:desc'], q: 'web' })
+  })
+
+  it('resolves an age filter to the absolute bound it means now', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(NOW * 1000)
+
+    const body = new HostApi().requestBody({
+      filter: { type: 'age', field: 'last_check', op: 'older_than', seconds: 300 }
+    })
+
+    expect(body.filter).toEqual({
+      type: 'condition',
+      field: 'last_check',
+      op: 'lte',
+      value: NOW - 300
+    })
   })
 })

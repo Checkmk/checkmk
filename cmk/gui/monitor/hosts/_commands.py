@@ -10,10 +10,32 @@ Each command should have a skinny interface for easy testing. One interface for 
 from collections.abc import Sequence
 from typing import Protocol
 
-from ._models import RescheduleTarget
+from cmk.ccc.user import UserId
+
+from ._models import HostTarget, RescheduleTarget
 
 
 class HostRescheduler(Protocol):
     def reschedule(self, targets: Sequence[RescheduleTarget]) -> None:
         """Force an immediate active check for each target on its site."""
+        ...
+
+
+class HostNotifier(Protocol):
+    def send_custom_notification(
+        self,
+        targets: Sequence[HostTarget],
+        *,
+        author: UserId,
+        comment: str,
+        forced: bool,
+        broadcast: bool,
+    ) -> None:
+        """Let the core send a custom notification for each target on its site."""
+        ...
+
+
+class HostCheckResultFaker(Protocol):
+    def fake_check_result(self, targets: Sequence[HostTarget], *, state: int, output: str) -> None:
+        """Submit a check result for each target on its site, as if its check had run."""
         ...

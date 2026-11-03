@@ -58,7 +58,6 @@ pub fn tmp_path_for_atomical_save(path: &Path) -> PathBuf {
 pub struct RegisterExistingConfig {
     pub connection_config: RegistrationConnectionConfig,
     pub host_name: String,
-    pub updater_registration: UpdaterRegistration,
 }
 
 impl RegisterExistingConfig {
@@ -66,22 +65,12 @@ impl RegisterExistingConfig {
         runtime_config: RuntimeConfig,
         register_opts: cli::RegisterOpts,
     ) -> AnyhowResult<Self> {
-        // CLI --automatic-updates flag uses "overwrite" semantics (explicit user intent).
-        let updater_registration = if register_opts.automatic_updates {
-            UpdaterRegistration::Overwrite
-        } else {
-            runtime_config
-                .updater_registration
-                .clone()
-                .unwrap_or_default()
-        };
         Ok(Self {
             connection_config: RegistrationConnectionConfig::from_register_opts(
                 runtime_config,
                 register_opts.connection_opts,
             )?,
             host_name: register_opts.hostname,
-            updater_registration,
         })
     }
 }
@@ -89,19 +78,16 @@ impl RegisterExistingConfig {
 pub struct RegisterNewConfig {
     pub connection_config: RegistrationConnectionConfig,
     pub agent_labels: types::AgentLabels,
-    pub updater_registration: UpdaterRegistration,
 }
 
 impl RegisterNewConfig {
     pub fn new(
         connection_config: RegistrationConnectionConfig,
         agent_labels: types::AgentLabels,
-        updater_registration: UpdaterRegistration,
     ) -> AnyhowResult<Self> {
         Ok(Self {
             connection_config,
             agent_labels: Self::enrich_with_automatic_agent_labels(agent_labels)?,
-            updater_registration,
         })
     }
 
@@ -138,7 +124,8 @@ pub struct RegistrationConnectionConfig {
     pub username: Option<String>,
     pub password: Option<String>,
     pub one_time_token: Option<String>,
-    pub root_certificate: Option<String>,
+    /// If empty, the agent receiver's certificate is confirmed interactively or blindly trusted.
+    pub root_certificates: Vec<String>,
     pub trust_server_cert: bool,
     pub client_config: ClientConfig,
 }
@@ -200,7 +187,7 @@ impl RegistrationConnectionConfig {
             username,
             password,
             one_time_token,
-            root_certificate: None,
+            root_certificates: vec![],
             trust_server_cert: endpoint_opts.trust_server_cert,
             client_config,
         })
@@ -223,15 +210,38 @@ pub struct PreConfiguredConnection {
     pub root_cert: String,
 }
 
-/// Controls how the agent updater registers during agent controller registration.
+/// What the registrations of a run do about the two agent updaters.
+///
+/// Both updaters follow the same rule, and each variant describes its effect
+/// on each updater separately. "First" and "last" refer to the connections
+/// that the run added, in order. `register` and `register-new` add one
+/// connection. The daemon adds one per new pre-configured connection.
+///
+/// For the integrated updater, only a connection whose registration the site
+/// authorized for agent updates counts. The update source stays only as long as
+/// the registry holds its connection.
 #[derive(Deserialize, Clone, Debug, PartialEq, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum UpdaterRegistration {
-    /// Register the updater only if it is not yet registered (check status first).
+    /// The existing registration wins.
+    ///
+    /// - Python updater: registered for the first connection, unless it is
+    ///   registered already.
+    /// - Integrated updater: the update source stays. Without a source, the
+    ///   first connection becomes the source.
     Keep,
-    /// Always register the updater, overwriting any existing registration.
+    /// The newest registration wins.
+    ///
+    /// - Python updater: registered for the last connection. This registration
+    ///   replaces an existing one.
+    /// - Integrated updater: the last connection becomes the update source. A
+    ///   run without an authorized connection leaves the source as it is.
     Overwrite,
-    /// Do not register the updater automatically.
+    /// The controller leaves the updaters alone.
+    ///
+    /// - Python updater: not registered.
+    /// - Integrated updater: no connection becomes the update source. The
+    ///   existing source stays.
     #[default]
     Manual,
 }
@@ -251,7 +261,26 @@ pub struct RuntimeConfig {
     validate_api_cert: Option<bool>,
 
     #[serde(default)]
-    pub updater_registration: Option<UpdaterRegistration>,
+    updater_registration: Option<UpdaterRegistration>,
+}
+
+impl RuntimeConfig {
+    /// The Registration option as `cmk-agent-ctl.toml` configures it.
+    pub fn configured_updater_registration(&self) -> UpdaterRegistration {
+        self.updater_registration.clone().unwrap_or_default()
+    }
+
+    /// The Registration option of a registration command.
+    ///
+    /// `--automatic-updates` states the intent of the user explicitly, so it
+    /// overrides the configuration with "overwrite".
+    pub fn updater_registration(&self, automatic_updates: bool) -> UpdaterRegistration {
+        if automatic_updates {
+            UpdaterRegistration::Overwrite
+        } else {
+            self.configured_updater_registration()
+        }
+    }
 }
 
 impl TOMLLoader for RuntimeConfig {}
@@ -462,6 +491,16 @@ impl Registry {
             .pull
             .keys()
             .chain(self.connections.push.keys())
+    }
+
+    pub fn get_connection(
+        &self,
+        site_id: &site_spec::SiteID,
+    ) -> Option<&TrustedConnectionWithRemote> {
+        self.connections
+            .pull
+            .get(site_id)
+            .or_else(|| self.connections.push.get(site_id))
     }
 
     pub fn get_connection_as_mut(
@@ -732,12 +771,45 @@ impl fmt::Display for ConnectionMode {
     }
 }
 
+/// Add the CAs that are not trusted yet, preserving the order of both inputs.
+/// Returns whether any CA was added.
+pub fn add_missing_root_certs(root_certs: &mut Vec<String>, additional: &[String]) -> bool {
+    let mut added = false;
+    for cert in additional {
+        if !root_certs.contains(cert) {
+            root_certs.push(cert.clone());
+            added = true;
+        }
+    }
+    added
+}
+
 fn mtime(path: &Path) -> AnyhowResult<Option<SystemTime>> {
     Ok(if path.exists() {
         Some(fs::metadata(path)?.modified()?)
     } else {
         None
     })
+}
+
+#[cfg(test)]
+mod test_add_missing_root_certs {
+    use super::*;
+
+    #[test]
+    fn test_add_missing_root_certs() {
+        let mut root_certs = vec![String::from("site_ca")];
+        assert!(add_missing_root_certs(
+            &mut root_certs,
+            &[String::from("site_ca"), String::from("upcoming_site_ca")],
+        ));
+        // the already trusted CA is not stored twice
+        assert_eq!(root_certs, vec!["site_ca", "upcoming_site_ca"]);
+        assert!(!add_missing_root_certs(
+            &mut root_certs,
+            &[String::from("site_ca")]
+        ));
+    }
 }
 
 #[cfg(test)]
@@ -949,15 +1021,6 @@ pub mod test_helpers {
             Self::from(uuid::Uuid::from_str(s).unwrap())
         }
     }
-
-    impl Registry {
-        pub fn get(&self, site_id: &site_spec::SiteID) -> Option<&TrustedConnectionWithRemote> {
-            self.connections
-                .pull
-                .get(site_id)
-                .or_else(|| self.connections.push.get(site_id))
-        }
-    }
 }
 
 #[cfg(test)]
@@ -1053,7 +1116,6 @@ mod test_registration_config {
             )
             .unwrap(),
             types::AgentLabels::new(),
-            UpdaterRegistration::Manual,
         )
         .unwrap()
         .agent_labels;
@@ -1078,7 +1140,6 @@ mod test_registration_config {
                 ),
                 (String::from("a"), String::from("b")),
             ]),
-            UpdaterRegistration::Manual,
         )
         .unwrap()
         .agent_labels;
@@ -1088,6 +1149,31 @@ mod test_registration_config {
         assert_eq!(keys, ["a", "cmk/hostname-simple", "cmk/os-family"]);
         assert_eq!(agent_labels["cmk/hostname-simple"], "custom-name");
         assert_eq!(agent_labels["a"], "b");
+    }
+
+    fn configured(updater_registration: UpdaterRegistration) -> RuntimeConfig {
+        RuntimeConfig {
+            updater_registration: Some(updater_registration),
+            ..runtime_config()
+        }
+    }
+
+    /// CMK-39588 AC2
+    #[test]
+    fn test_automatic_updates_override_the_configuration() {
+        assert_eq!(
+            configured(UpdaterRegistration::Manual).updater_registration(true),
+            UpdaterRegistration::Overwrite
+        );
+    }
+
+    /// CMK-39588 AC2
+    #[test]
+    fn test_without_automatic_updates_the_configuration_applies() {
+        assert_eq!(
+            configured(UpdaterRegistration::Keep).updater_registration(false),
+            UpdaterRegistration::Keep
+        );
     }
 }
 

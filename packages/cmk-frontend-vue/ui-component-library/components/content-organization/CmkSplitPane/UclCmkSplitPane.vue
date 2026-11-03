@@ -25,15 +25,15 @@ export const a11yData = [
   },
   {
     keys: ['Home'],
-    description: 'Shrinks the right pane to its minimum size.'
+    description: 'Moves the handle as far left as the size limits allow.'
   },
   {
     keys: ['End'],
-    description: 'Expands the right pane to its maximum size.'
+    description: 'Moves the handle as far right as the size limits allow.'
   },
   {
     keys: ['Enter'],
-    description: 'Toggles the collapsed state of the right pane.'
+    description: 'Toggles the collapsed state of the docked pane.'
   }
 ]
 
@@ -42,31 +42,41 @@ export const panelConfig = {
     type: 'boolean' as const,
     title: 'collapsed',
     initialState: false,
-    help: 'Two-way (v-model:collapsed). Hides or shows the right pane.'
+    help: 'Two-way (v-model:collapsed). Hides or shows the docked pane.'
   },
-  rightMinSize: {
+  dock: {
+    type: 'list' as const,
+    title: 'dock',
+    options: listOptions<NonNullable<CmkSplitPaneProps['dock']>>({
+      right: 'Right',
+      left: 'Left'
+    }),
+    initialState: 'right' as const,
+    help: 'The pane that can be resized within its limits and collapsed; the other pane fills the rest.'
+  },
+  paneMinSize: {
     type: 'number' as const,
-    title: 'rightMinSize',
+    title: 'paneMinSize',
     initialState: 20,
-    help: 'Minimum size of the right pane, expressed in sizeUnit.'
+    help: 'Minimum size of the docked pane, expressed in sizeUnit.'
   },
-  rightMaxSize: {
+  paneMaxSize: {
     type: 'number' as const,
-    title: 'rightMaxSize',
+    title: 'paneMaxSize',
     initialState: 50,
-    help: 'Maximum size of the right pane, expressed in sizeUnit.'
+    help: 'Maximum size of the docked pane, expressed in sizeUnit.'
   },
-  rightDefaultSize: {
+  paneDefaultSize: {
     type: 'number' as const,
-    title: 'rightDefaultSize',
+    title: 'paneDefaultSize',
     initialState: 30,
-    help: 'Initial size of the right pane, expressed in sizeUnit.'
+    help: 'Initial size of the docked pane, expressed in sizeUnit.'
   },
-  rightMinWidth: {
+  paneMinWidth: {
     type: 'string' as const,
-    title: 'rightMinWidth',
+    title: 'paneMinWidth',
     initialState: '',
-    help: 'CSS length the right pane never renders below, e.g. "520px". Empty means no floor.'
+    help: 'CSS length the docked pane never renders below, e.g. "520px". Empty means no floor.'
   },
   sizeUnit: {
     type: 'list' as const,
@@ -88,13 +98,13 @@ export const panelConfig = {
     type: 'boolean' as const,
     title: 'collapsibleOnResize',
     initialState: true,
-    help: 'When enabled, dragging the handle below the minimum size collapses the right pane.'
+    help: 'When enabled, dragging the handle below the minimum size collapses the docked pane.'
   },
   hideHandleWhenCollapsed: {
     type: 'boolean' as const,
     title: 'hideHandleWhenCollapsed',
     initialState: true,
-    help: 'When enabled, the resize handle is hidden while the right pane is collapsed.'
+    help: 'When enabled, the resize handle is hidden while the docked pane is collapsed.'
   }
 } satisfies PanelConfigFor<typeof CmkSplitPane>
 </script>
@@ -131,10 +141,11 @@ const propState = new PanelStateCreator<typeof CmkSplitPane>().createRef(panelCo
       >
         <CmkSplitPane
           v-model:collapsed="propState.collapsed"
-          :right-min-size="propState.rightMinSize"
-          :right-max-size="propState.rightMaxSize"
-          :right-default-size="propState.rightDefaultSize"
-          :right-min-width="propState.rightMinWidth || undefined"
+          :dock="propState.dock"
+          :pane-min-size="propState.paneMinSize"
+          :pane-max-size="propState.paneMaxSize"
+          :pane-default-size="propState.paneDefaultSize"
+          :pane-min-width="propState.paneMinWidth || undefined"
           :size-unit="propState.sizeUnit"
           :keyboard-resize-by="propState.keyboardResizeBy"
           :collapsible-on-resize="propState.collapsibleOnResize"
@@ -142,15 +153,12 @@ const propState = new PanelStateCreator<typeof CmkSplitPane>().createRef(panelCo
         >
           <template #left>
             <div style="padding: var(--dimension-4)">
-              <p>Main content area. Drag the green handle to resize the right pane.</p>
+              <p>Left pane.</p>
             </div>
           </template>
           <template #right>
             <div style="padding: var(--dimension-4)">
-              <p>
-                Right pane. It can be collapsed by dragging the handle to the edge or via the
-                collapsed control.
-              </p>
+              <p>Right pane.</p>
             </div>
           </template>
         </CmkSplitPane>

@@ -24,6 +24,21 @@ describe('isReadyToCreate', () => {
     expect(isReadyToCreate({ ...ready, hostName: '   ' })).toBe(false)
   })
 
+  test('true when a host name template is set instead of a host', () => {
+    expect(
+      isReadyToCreate({
+        ...ready,
+        hostName: null,
+        hostNameTemplate: '$RESOURCE_ATTR.service.name$'
+      })
+    ).toBe(true)
+  })
+
+  test('false when the host name template is empty', () => {
+    expect(isReadyToCreate({ ...ready, hostNameTemplate: '' })).toBe(false)
+    expect(isReadyToCreate({ ...ready, hostNameTemplate: '   ' })).toBe(false)
+  })
+
   // Regression: clearing the service name must disable "Create & activate changes".
   test('false when the service name is empty or whitespace', () => {
     expect(isReadyToCreate({ ...ready, serviceName: '' })).toBe(false)

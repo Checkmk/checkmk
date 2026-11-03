@@ -29,17 +29,25 @@ Every model class is prefixed with ``Map`` so the generated OpenAPI component /
 TypeScript type names stay unambiguous in the shared spec namespace.
 """
 
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Self
 
-from pydantic import AfterValidator, BeforeValidator, Field
+from pydantic import AfterValidator, BeforeValidator, Field, model_validator
 
 from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
-from cmk.maps.shared.filters import normalize_object_filter
+from cmk.maps.shared.filters import (
+    bound_type_of,
+    check_host_member_patterns,
+    normalize_object_filter,
+    optional_member_pattern,
+)
 from cmk.maps.shared.geo import LAT_LIMIT, LNG_LIMIT, MAX_ZOOM
 from cmk.maps.shared.map_payload import (
+    BackgroundPosition,
+    BackgroundStyle,
     ClickAction,
     LinePerfdataLabel,
     LineStyle,
+    MonitoredObjectType,
     ObjectType,
     PresentationObjectType,
     PresentationTheme,
@@ -48,7 +56,9 @@ from cmk.maps.shared.map_payload import (
 from cmk.maps.shared.validators import (
     coerce_asset_ref,
     coerce_url_target,
+    MAX_ROTATION_POOLS,
     validate_color,
+    validate_rotation_pool,
     validate_user_url,
 )
 
@@ -83,6 +93,10 @@ def _normalize_object_filter(value: str) -> str | None:
 # ``normalize_object_filter`` raises on non-``Filter:`` input, so a bad filter is a
 # 422 at the REST boundary instead of a silently-stored value that bricks the map.
 _ObjectFilter = Annotated[str, AfterValidator(_normalize_object_filter)]
+
+# The daemon rejects a pattern that is not a single line, so reject it here too.
+_MemberPattern = Annotated[str, AfterValidator(optional_member_pattern)]
+_RotationPool = Annotated[str, AfterValidator(validate_rotation_pool)]
 
 
 # --------------------------------------------------------------------------- #
@@ -377,16 +391,20 @@ class MapWorldmapView:
         example="https://tiles.example.com/{z}/{x}/{y}.png",
         default_factory=ApiOmitted,
     )
-    tile_saturate: float | None | ApiOmitted = api_field(
+    tile_saturate: Annotated[float, Field(ge=0, le=100)] | None | ApiOmitted = api_field(
         description="CSS saturate() percent (0..100).", example=100.0, default_factory=ApiOmitted
     )
     auto_source: Literal["all_hosts", "hostgroup", "servicegroup"] | None | ApiOmitted = api_field(
-        description="Automap source that populates geo-tagged hosts.",
+        description="Which geo-tagged hosts are placed on the map automatically.",
         example="all_hosts",
         default_factory=ApiOmitted,
     )
     auto_filter_value: str | ApiOmitted = api_field(
-        description="Automap group filter value.", example="linux", default_factory=ApiOmitted
+        description=(
+            "The name of the host or service group whose geo-tagged hosts are placed automatically."
+        ),
+        example="linux",
+        default_factory=ApiOmitted,
     )
     problems_only: bool | ApiOmitted = api_field(
         description="Show only objects with problems.", example=False, default_factory=ApiOmitted
@@ -666,6 +684,13 @@ class MapObjectLine:
     weather_color: bool | ApiOmitted = api_field(
         description="Color the line by utilization.", example=True, default_factory=ApiOmitted
     )
+    object_type: MonitoredObjectType | None | ApiOmitted = api_field(
+        description=(
+            "What the line shows the state of. Absent: the bound service, else the bound host."
+        ),
+        example="hostgroup",
+        default_factory=ApiOmitted,
+    )
     metric_in: str | None | ApiOmitted = api_field(
         description="Inbound weathermap metric.",
         example="if_in_octets",
@@ -736,13 +761,24 @@ class MapObjectGraph:
 
 @api_model
 class MapObjectFilter:
-    """Member exclusion for aggregating objects (host/group/map)."""
+    """Members left out of a host, host group or service group, as in NagVis."""
 
-    exclude_members: str | None | ApiOmitted = api_field(
-        description="Member exclusion filter.", example="test-*", default_factory=ApiOmitted
+    exclude_members: _MemberPattern | None | ApiOmitted = api_field(
+        description=(
+            "Livestatus regular expression on member names. Matching members are left out"
+            " entirely. On a group, 'host~~service' names a service of a member host."
+        ),
+        example="^test-",
+        default_factory=ApiOmitted,
     )
-    exclude_member_states: str | None | ApiOmitted = api_field(
-        description="Member-state exclusion.", example="ok", default_factory=ApiOmitted
+    exclude_member_states: _MemberPattern | None | ApiOmitted = api_field(
+        description=(
+            "Livestatus regular expression on member names, like exclude_members. Matching"
+            " members are still listed but do not count towards the state. When set, it"
+            " replaces exclude_members for the state."
+        ),
+        example="~~^Backup",
+        default_factory=ApiOmitted,
     )
 
 
@@ -862,7 +898,8 @@ class MapElement:
         description="Embedded-graph config (graph objects).", default_factory=ApiOmitted
     )
     filter: MapObjectFilter | ApiOmitted = api_field(
-        description="Member exclusion (aggregating objects).", default_factory=ApiOmitted
+        description="Members left out (hosts, host groups, service groups).",
+        default_factory=ApiOmitted,
     )
     label: MapObjectLabel | ApiOmitted = api_field(
         description="Object name label.", default_factory=ApiOmitted
@@ -870,6 +907,21 @@ class MapElement:
     display: MapObjectDisplay | ApiOmitted = api_field(
         description="Render mode and custom icon.", default_factory=ApiOmitted
     )
+
+    @model_validator(mode="after")
+    def _host_takes_no_service_pattern(self) -> Self:
+        if isinstance(self.filter, ApiOmitted):
+            return self
+        line_type = None if isinstance(self.line, ApiOmitted) else self.line.object_type
+        service = None if isinstance(self.binding, ApiOmitted) else self.binding.service_description
+        bound = bound_type_of(
+            self.type,
+            line_type if isinstance(line_type, str) else None,
+            service if isinstance(service, str) else None,
+        )
+        patterns = (self.filter.exclude_members, self.filter.exclude_member_states)
+        check_host_member_patterns(bound, *(p for p in patterns if isinstance(p, str)))
+        return self
 
 
 @api_model
@@ -885,6 +937,13 @@ class MapConfig:
         description="Default icon size in pixels (null = default).", example=32
     )
     rotation_interval: int = api_field(description="Auto-rotation interval (s).", example=0)
+    rotation_pools: (
+        Annotated[list[_RotationPool], Field(max_length=MAX_ROTATION_POOLS)] | ApiOmitted
+    ) = api_field(
+        description="Rotation pools the map takes part in.",
+        example=["noc"],
+        default_factory=ApiOmitted,
+    )
     sort_order: int = api_field(description="Sort order in listings.", example=0)
     click_action: ClickAction = api_field(
         description="Default object click action.", example="link"
@@ -919,8 +978,25 @@ class MapConfig:
         example="floorplan.png",
         default_factory=ApiOmitted,
     )
-    background_color: str | None | ApiOmitted = api_field(
+    background_color: _Color | None | ApiOmitted = api_field(
         description="Background color.", example="#0f172a", default_factory=ApiOmitted
+    )
+    background_style: BackgroundStyle | ApiOmitted = api_field(
+        description=(
+            "How the background image covers the map, in map coordinates: at its own size,"
+            " zoomed to fit without distortion, stretched to the map's size, or tiled."
+            " Ignored by the NagVis-compatible renderer."
+        ),
+        example="single",
+        default_factory=ApiOmitted,
+    )
+    background_position: BackgroundPosition | ApiOmitted = api_field(
+        description=(
+            "Where the background image and the map sit: at the top left, the map extended"
+            " to the right or below, or centered. Ignored by the NagVis-compatible renderer."
+        ),
+        example="top_left",
+        default_factory=ApiOmitted,
     )
     render_mode: RenderMode | ApiOmitted = api_field(
         description="Rendering mode.", example="default", default_factory=ApiOmitted
@@ -969,14 +1045,36 @@ class MapListEntry:
         example="floorplan.png",
         default_factory=ApiOmitted,
     )
-    background_color: str | None | ApiOmitted = api_field(
+    background_color: _Color | None | ApiOmitted = api_field(
         description="Background color.", example="#0f172a", default_factory=ApiOmitted
+    )
+    background_style: BackgroundStyle | ApiOmitted = api_field(
+        description=(
+            "How the background image covers the map, in map coordinates: at its own size,"
+            " zoomed to fit without distortion, stretched to the map's size, or tiled."
+            " Ignored by the NagVis-compatible renderer."
+        ),
+        example="single",
+        default_factory=ApiOmitted,
+    )
+    background_position: BackgroundPosition | ApiOmitted = api_field(
+        description=(
+            "Where the background image and the map sit: at the top left, the map extended"
+            " to the right or below, or centered. Ignored by the NagVis-compatible renderer."
+        ),
+        example="top_left",
+        default_factory=ApiOmitted,
     )
     icon_size: int | None | ApiOmitted = api_field(
         description="Default icon size.", example=32, default_factory=ApiOmitted
     )
     rotation_interval: int | ApiOmitted = api_field(
         description="Auto-rotation interval (s).", example=0, default_factory=ApiOmitted
+    )
+    rotation_pools: list[str] | ApiOmitted = api_field(
+        description="Rotation pools the map takes part in.",
+        example=["noc"],
+        default_factory=ApiOmitted,
     )
     sort_order: int | ApiOmitted = api_field(
         description="Sort order in listings.", example=0, default_factory=ApiOmitted

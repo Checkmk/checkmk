@@ -3,10 +3,10 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import usei18n from 'cmk-ui-library/lib/i18n'
+import { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
-import { useMaps, useStates } from '@/maps/services/context'
+import { useMaps, useStates, useToast } from '@/maps/services/context'
 import type {
   MapConfig,
   PresentationElement,
@@ -38,8 +38,8 @@ const STATE_REFRESH_DELAY = 400
  * its flush, so leaving the map would drop the last edit.
  */
 export function useSlideDocument(config: () => MapConfig, onMapSwitch?: () => void) {
-  const { _t } = usei18n()
   const mapsStore = useMaps()
+  const toast = useToast()
   const statesStore = useStates()
 
   function initialView(): PresentationView {
@@ -94,43 +94,22 @@ export function useSlideDocument(config: () => MapConfig, onMapSwitch?: () => vo
     refreshTimer = setTimeout(refreshStates, STATE_REFRESH_DELAY)
   }
 
-  const unsaved = ref(false)
-  const saved = ref(false)
+  // Saving is as silent as on the other map canvases; only a failure speaks up.
   const saving = mapsStore.saving
-  const saveLabel = computed(() => {
-    if (saving.value || unsaved.value) {
-      return _t('Saving…')
-    }
-    if (mapsStore.error.value) {
-      return _t('Not saved')
-    }
-    return saved.value ? _t('Saved') : ''
-  })
-
-  // Only the store knows whether the slide reached the server.
   watch(saving, (now, before) => {
-    if (before && !now) {
-      unsaved.value = false
-      saved.value = mapsStore.error.value === null
+    const error = mapsStore.error.value
+    if (before && !now && error) {
+      toast.error(untranslated(error))
     }
   })
 
   function scheduleSave(): void {
-    saved.value = false
-    unsaved.value = true
     const map = mapsStore.currentMap.value
     if (map?.name === config().name) {
       map.view = clone(local.value)
     }
     mapsStore.scheduleSave()
     scheduleStateRefresh()
-  }
-
-  /** Persist now rather than on the debounce — the save button. */
-  async function saveNow(): Promise<void> {
-    scheduleSave()
-    await mapsStore.flushSave()
-    refreshStates()
   }
 
   function mutate(fn: () => void): void {
@@ -208,9 +187,6 @@ export function useSlideDocument(config: () => MapConfig, onMapSwitch?: () => vo
     mutate,
     setElements,
     scheduleSave,
-    saveNow,
-    saving,
-    saveLabel,
     undo,
     redo,
     childToGroup,

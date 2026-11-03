@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "title": "ai_assistant_panel_config",
+  "properties": {
+    "owner": { "type": "string" },
+    "setup": { "$ref": "#/$defs/ai_assistant_setup" }
+  },
+  "required": ["owner", "setup"],
+  "$defs": {
+    "ai_assistant_setup": {
+      "type": "object",
+      "properties": {
+        "status": { "$ref": "#/$defs/ai_assistant_setup_status" },
+        "user_may_fix": { "type": "boolean" }
+      },
+      "required": ["status", "user_may_fix"]
+    },
+    "ai_assistant_setup_status": {
+      "type": "string",
+      "enum": ["ok", "unknown", "no_provider", "invalid_provider", "not_activated"]
+    }
+  }
+}

@@ -25,6 +25,8 @@ from cmk.gui.config import Config as GUIConfig
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 
@@ -39,7 +41,11 @@ def test_backup_key_create_web(monkeypatch: pytest.MonkeyPatch, test_edition: Ed
         mode = ModeBackupEditKey(
             test_edition,
             PageContext(
-                config=GUIConfig(), request=request, transactions=transactions, session=session
+                config=GUIConfig(),
+                request=request,
+                transactions=transactions,
+                session=session,
+                user_permissions=UserPermissions.from_config(GUIConfig(), all_permissions()),
             ),
         )
 
@@ -54,7 +60,11 @@ def test_backup_key_create_web(monkeypatch: pytest.MonkeyPatch, test_edition: Ed
         test_mode = ModeBackupEditKey(
             test_edition,
             PageContext(
-                config=GUIConfig(), request=request, transactions=transactions, session=session
+                config=GUIConfig(),
+                request=request,
+                transactions=transactions,
+                session=session,
+                user_permissions=UserPermissions.from_config(GUIConfig(), all_permissions()),
             ),
         )
         keys = test_mode.key_store.load()

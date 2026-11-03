@@ -15,7 +15,7 @@ from cmk.gui import login
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.logged_in import LoggedInSuperUser, user
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.quick_setup.config_setups.kubernetes.actions import (
     finish_setup,
     prepare_push_credentials,
@@ -193,7 +193,12 @@ def test_pull_deployment_requires_password_store_permission(data: ParsedFormData
     roles = deepcopy(active_config.roles)
     roles["admin"].setdefault("permissions", {})["wato.edit_all_passwords"] = False
     assert user.id is not None
-    permissions = UserPermissions(roles, permission_registry, {user.id: ["admin"]}, [])
+    permissions = UserPermissions(
+        roles,
+        all_permissions(),
+        {user.id: ["admin"]},
+        [],
+    )
 
     with login.TransactionIdContext(user.id, permissions), pytest.raises(MKAuthException):
         recap_deployment(

@@ -68,3 +68,5 @@ compatible = [
 ]
 
 online_url = "https://checkmk.com/werk/%d"
+
+flavor = "cmk"

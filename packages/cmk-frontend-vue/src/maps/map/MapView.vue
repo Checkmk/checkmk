@@ -30,8 +30,6 @@ import {
 } from 'vue'
 
 import BulkAckModal from '@/maps/map/commands/BulkAckModal.vue'
-import ObjectCommandModals from '@/maps/map/commands/ObjectCommandModals.vue'
-import { useObjectActions } from '@/maps/map/commands/useObjectActions'
 import MapKioskExit from '@/maps/map/components/MapKioskExit.vue'
 import MapProblemsPill, { type ProblemCounts } from '@/maps/map/components/MapProblemsPill.vue'
 import MapSitesPill from '@/maps/map/components/MapSitesPill.vue'
@@ -54,6 +52,7 @@ import MapObjectActionBar, {
 import { useElementRect } from '@/maps/map/edit/composables/useElementRect'
 import ObjectPropertiesModal from '@/maps/map/edit/properties/ObjectPropertiesModal.vue'
 import MapSettingsModal from '@/maps/map/edit/settings/MapSettingsModal.vue'
+import type { SettingsFocus } from '@/maps/map/edit/settings/settingsForm'
 import type WorldMapViewType from '@/maps/map/worldmap/WorldMapView.vue'
 import type { WorldmapViewport } from '@/maps/map/worldmap/geo'
 import {
@@ -73,7 +72,8 @@ import type { AnchorRect } from '@/maps/utils/anchorRect'
 import { resolveCheckmkUrl } from '@/maps/utils/deploymentBase'
 import { objectDeleteTitle, objectDisplayName } from '@/maps/utils/dropdownOptions'
 import { buildCheckmkUrl, openUrl } from '@/maps/utils/mapNavigation'
-import { monitoringObjectId, newMapElement } from '@/maps/utils/model'
+import { derivesItsContent, monitoringObjectId, newMapElement } from '@/maps/utils/model'
+import { asBoundObject } from '@/maps/utils/naming'
 
 // Lazy, one chunk per map type: leaflet rides with the geo map and d3 with the
 // flow map, so opening a static map downloads neither. The type imports beside
@@ -150,13 +150,23 @@ const showsMapState = computed(
     statesStore.lastUpdate.value !== null
 )
 const isPresentation = computed(() => mapConfig.value?.view.type === 'presentation')
-// Content comes from a live query, so there is nothing on it to arrange.
-const derivesItsContent = computed(() => isFlowmap.value || isRadar.value || isFolderTree.value)
+const showsDerivedContent = computed(() => derivesItsContent(mapConfig.value?.view))
 
 const mapFilterNeedle = ref('')
 watch(mapName, () => {
   mapFilterNeedle.value = ''
 })
+
+// The server titles the page after the map it loads; moving to another map, or
+// renaming this one, happens without a load.
+watch(
+  () => mapConfig.value?.alias || mapConfig.value?.name,
+  (title) => {
+    if (title) {
+      document.title = title
+    }
+  }
+)
 const isLoading = computed(
   () => mapsStore.loading.value || (statesStore.initialLoad.value && !mapsStore.error.value)
 )
@@ -210,7 +220,7 @@ const showsEditTools = computed(
     !isKiosk.value &&
     !isPreview.value &&
     !!mapConfig.value &&
-    !derivesItsContent.value &&
+    !showsDerivedContent.value &&
     !drawerObject.value
 )
 
@@ -258,24 +268,6 @@ const propsModalObject = ref<MapElement | null>(null)
  */
 const justPlacedId = ref<string | null>(null)
 
-/**
- * The box the properties card sits beside, or ``null`` when it was reached
- * from somewhere with nothing to sit next to and opens as a centered dialog.
- *
- * Live rather than snapshotted at open time: the canvas re-lays out under the
- * open card (a window resize moves every object), and a stale box would place
- * the card beside where the object used to be.
- */
-const openedOnAnchor = ref<AnchorRect | null>(null)
-// A just-placed object sits beside its card too, so the operator still sees
-// where it went; its element only renders after the card opens. Kept apart
-// from ``justPlacedId``, which a save clears before it is done.
-const besidePlaced = ref(false)
-const propsModalAnchor = computed<AnchorRect | null>(() =>
-  openedOnAnchor.value || besidePlaced.value
-    ? (selectedObjectAnchor.value ?? openedOnAnchor.value)
-    : null
-)
 const deleteTargetObject = ref<MapElement | null>(null)
 const bulkDeleteOpen = ref(false)
 
@@ -287,7 +279,7 @@ function onObjectAction(action: MapObjectAction): void {
   }
   switch (action) {
     case 'edit':
-      openPropsModal(object, selectedObjectAnchor.value)
+      openPropsModal(object)
       break
     case 'duplicate':
       void editor.duplicateSelected()
@@ -332,9 +324,8 @@ const deleteDialogTitle = computed(() => {
   return obj ? objectDeleteTitle(obj, _t) : _t('Delete object')
 })
 
-function openPropsModal(obj: MapElement, anchor?: AnchorRect | null) {
+function openPropsModal(obj: MapElement) {
   editor.selectObject(obj.id)
-  openedOnAnchor.value = anchor ?? null
   propsModalObject.value = obj
 }
 
@@ -344,7 +335,6 @@ function onObjectPlaced() {
     return
   }
   justPlacedId.value = obj.id
-  besidePlaced.value = true
   openPropsModal(obj)
 }
 
@@ -358,9 +348,7 @@ function onSaveWorldmapViewport(at: WorldmapViewport) {
 
 function _closePropsModal() {
   propsModalObject.value = null
-  openedOnAnchor.value = null
   justPlacedId.value = null
-  besidePlaced.value = false
 }
 
 /** Dismissing the modal: an object that only exists because of it goes with it. */
@@ -486,24 +474,6 @@ const detailDrawerState = computed(() => {
   }
   return undefined
 })
-const detailActions = useObjectActions(() => checkmkUrl.value)
-const drawerCommands = detailActions.drawerHandlers(() => detailDrawerObject.value)
-
-function openDetail(obj: MapElement) {
-  // A line is a visual relation between two endpoints, but in monitoring
-  // terms it represents either the host or the host's service (whichever
-  // is configured). Drawer logic keys off `type` to fetch state and
-  // render the right tabs, so expose the line as its underlying
-  // host/service for the drawer's purposes.
-  if (obj.type === 'line' && obj.host_name) {
-    detailDrawerObject.value = {
-      ...obj,
-      type: obj.service_description ? 'service' : 'host'
-    }
-  } else {
-    detailDrawerObject.value = obj
-  }
-}
 
 // All host MapElements on this map, keyed by hostname so the Drawer's
 // topology section can decide whether a parent/child entry can highlight on
@@ -609,8 +579,14 @@ function onObjectClick(obj: MapElement, event?: MouseEvent) {
     openUrl(obj.url, obj.url_target || '_blank')
     return
   }
-  if (obj.type === 'map' && obj.map_name) {
-    nav.navigate({ view: 'map', name: obj.map_name })
+  const bound = asBoundObject(obj)
+  if (bound.type === 'map' && bound.map_name) {
+    nav.navigate({
+      view: 'map',
+      name: bound.map_name,
+      kiosk: nav.state.kiosk,
+      rotation: nav.state.rotation
+    })
     return
   }
   if (event && (event.ctrlKey || event.metaKey)) {
@@ -622,17 +598,17 @@ function onObjectClick(obj: MapElement, event?: MouseEvent) {
   }
   // Decorative objects without a monitored target have nothing to show in
   // the drawer. Click is a no-op rather than an empty drawer.
-  if (!objectHasMonitoringTarget(obj)) {
+  if (!objectHasMonitoringTarget(bound)) {
     return
   }
-  openDetail(obj)
+  // The drawer keys off `type` to fetch state and render the right tabs.
+  detailDrawerObject.value = bound
 }
 
 function objectHasMonitoringTarget(obj: MapElement): boolean {
   switch (obj.type) {
     case 'host':
     case 'service':
-    case 'line':
       return Boolean(obj.host_name)
     case 'hostgroup':
     case 'servicegroup':
@@ -711,6 +687,7 @@ watch(mapName, () => {
 })
 const showSettings = ref(false)
 const settingsWorldmapView = ref<WorldmapViewport | null>(null)
+const settingsFocus = ref<SettingsFocus | null>(null)
 const settingsParentMapSize = ref<{ width: number; height: number } | null>(null)
 
 // The picker runs on the map itself: the geo map's view shows the banner and
@@ -719,14 +696,37 @@ async function onSettingsPickWorldmapView(done: (at: WorldmapViewport | null) =>
   done((await worldmapViewRef.value?.pickViewport()) ?? null)
 }
 
+// The map list opens a map straight in its settings or its editor. Acted on
+// once the map and the right to edit it are known, then dropped from the URL,
+// so a reload shows the map as usual.
+watch(
+  () => [nav.state.open, mapConfigAsRead.value] as const,
+  ([open, map]) => {
+    if (!open || !map) {
+      return
+    }
+    if (open === 'settings') {
+      if (canEdit.value) {
+        openSettings()
+      }
+    } else if (showsEditTools.value && !editor.editMode.value) {
+      editor.toggleEditMode()
+    }
+    nav.replace({ view: 'map', name: map.name })
+  },
+  // After the render: the geo map's settings take its size from the mounted view.
+  { immediate: true, flush: 'post' }
+)
+
 function onSettingsWorldmapViewChange(at: WorldmapViewport) {
   worldmapViewRef.value?.setViewport(at)
 }
 
-function openSettings() {
+function openSettings(focus: SettingsFocus | null = null) {
   if (!mapConfig.value) {
     return
   }
+  settingsFocus.value = focus
   settingsWorldmapView.value = null
   settingsParentMapSize.value = isWorldmap.value
     ? (worldmapViewRef.value?.getContainerSize() ?? null)
@@ -740,7 +740,7 @@ async function onSettingsUpdated() {
   // again. ``initialLoad`` shows the view's spinner instead of any map in the gap.
   stopRotation()
   const map = mapsStore.currentMap.value
-  scheduleRotation(map?.rotation_interval ?? 0)
+  scheduleRotation(map)
   if (!map) {
     return
   }
@@ -777,9 +777,9 @@ onMounted(() => {
 })
 
 // A bulk ack's effect shows up in monitoring a moment later, so closing it
-// asks the state stream for a fresh picture -- the same thing the
-// single-object modals do via ``useObjectActions``. A dialog the operator
-// dismissed without sending anything has nothing to show.
+// asks the state stream for a fresh picture -- the same thing the slide-in's
+// own commands do. A dialog the operator dismissed without sending anything has
+// nothing to show.
 function closeBulkAckModal(sent: boolean): void {
   bulkAckModal.value = null
   if (sent) {
@@ -795,12 +795,12 @@ function closeBulkAckModal(sent: boolean): void {
       :connected="statesStore.connected.value"
       :can-edit="canEdit"
       :editing="editor.editMode.value"
-      :rotation-seconds="mapConfig && mapConfig.rotation_interval > 0 ? rotationCountdown : 0"
+      :rotation-seconds="rotationCountdown"
       :rotation-paused="rotationPaused"
       :dimmed="!!drawerObject"
       @toggle-rotation="toggleRotationPause"
       @open-full-screen="openKioskInNewTab"
-      @open-settings="openSettings"
+      @open-settings="openSettings()"
     >
       <template #breadcrumb>
         <CmkBreadcrumb :items="breadcrumbItems" />
@@ -842,6 +842,7 @@ function closeBulkAckModal(sent: boolean): void {
         @placed="onObjectPlaced"
         @view-changed="geoViewTick++"
         @save-viewport="onSaveWorldmapViewport"
+        @open-settings="openSettings"
       />
 
       <radar-map-view
@@ -926,14 +927,11 @@ function closeBulkAckModal(sent: boolean): void {
         :connection-id="detailDrawerObject?.connection_id ?? mapConfig?.connection_id ?? null"
         :selectable-hosts="selectableHostNames"
         :unattended="isKiosk || isPreview"
-        v-on="drawerCommands"
         @close="closeDetail"
         @select-host="onSelectHost"
         @bulk-acknowledge="onDetailBulkAcknowledge"
       />
     </div>
-
-    <ObjectCommandModals :actions="detailActions" :checkmk-url="checkmkUrl" />
 
     <BulkAckModal
       v-if="bulkAckModal"
@@ -953,6 +951,7 @@ function closeBulkAckModal(sent: boolean): void {
         :keyboard-active="editKeyboardActive"
         :offers-add-object="!isPresentation"
         :offers-grid="!isWorldmap && !isPresentation"
+        :beside-inspector="isPresentation && editor.editMode.value"
         @start-placing="onStartPlacing()"
         @toggle-edit-mode="onToggleEditMode"
         @delete-selection="onObjectAction('delete')"
@@ -1016,7 +1015,7 @@ function closeBulkAckModal(sent: boolean): void {
         :map-icon-size="mapConfig?.icon_size ?? settingsStore.settings.value.icon_size"
         :map-default-z="mapConfig?.default_z ?? 1"
         :checkmk-url="checkmkUrl"
-        :anchor-rect="propsModalAnchor"
+        :avoid="selectedObjectAnchor"
         @close="onPropsModalClose"
         @save="onPropsModalSave"
         @delete="onPropsModalDelete"
@@ -1029,6 +1028,7 @@ function closeBulkAckModal(sent: boolean): void {
       :map="mapConfigAsRead"
       :worldmap-view="settingsWorldmapView"
       :parent-map-size="settingsParentMapSize"
+      :initial-focus="settingsFocus"
       @close="showSettings = false"
       @updated="onSettingsUpdated"
       @pick-worldmap-view="onSettingsPickWorldmapView"
@@ -1049,14 +1049,9 @@ function closeBulkAckModal(sent: boolean): void {
      one set. Only values Checkmk has no token for live here — a map does not
      get its own idea of a radius, a font size or a state colour. */
 
-  /* A near-opaque surface for the controls that float over a map: readable on
-     any background, without hiding what is behind them entirely. Checkmk's
-     tooltip surface rather than the map's own, so a card stands off the map. */
-  --maps-map-view-glass: color-mix(
-    in srgb,
-    var(--default-tooltip-background-color) 92%,
-    transparent
-  );
+  /* The surface of controls floating over a map. Checkmk's tooltip surface
+     rather than the map's own, so a card stands off the map. */
+  --maps-map-view-overlay-bg: var(--default-tooltip-background-color);
 
   /* Keeps an icon legible on any backdrop in either theme, where the
      theme-coupled invert it replaces left dark-map icons invisible in the
@@ -1067,7 +1062,7 @@ function closeBulkAckModal(sent: boolean): void {
   /* The unfilled remainder of a gauge, and of a utilisation ring. A neutral
      grey rather than a theme surface, because it has to read on a light and a
      dark map background alike. */
-  --maps-map-view-gauge-track: rgb(120 120 130 / 50%);
+  --maps-map-view-gauge-track: color-mix(in srgb, var(--interactive-neutral) 50%, transparent);
 
   /* Label plates: light text on a dark plate whatever the theme, since the
      plate sits on the operator's own background image. */
@@ -1075,29 +1070,22 @@ function closeBulkAckModal(sent: boolean): void {
   --maps-map-view-label-ink: var(--white);
   --maps-map-view-text-halo: 0 1px 3px rgb(0 0 0 / 90%);
 
-  /* NagVis rendered on white, so an imported map's own text is black. */
-  --maps-map-view-classic-ink: rgb(0 0 0);
-
   /* An object whose image the site does not have. */
   --maps-map-view-missing-ink: var(--status-color-missing);
   --maps-map-view-missing-bg: color-mix(in srgb, var(--color-state-warning) 25%, transparent);
 
   /* An object monitoring does not know: a dimmed disc behind its dashed edge. */
-  --maps-map-view-missing-fill: rgb(63 63 70 / 40%);
-  --maps-map-view-badge-shadow: 0 4px 6px -1px rgb(0 0 0 / 10%), 0 2px 4px -2px rgb(0 0 0 / 10%);
+  --maps-map-view-missing-fill: color-mix(in srgb, var(--interactive-neutral) 40%, transparent);
   --maps-map-view-grid: color-mix(in srgb, var(--interactive-accent) 60%, transparent);
 
   /* Gadgets keep a dark "instrument" look in either theme: their value text is
-     always light, and has to stay legible even sitting directly on a light map
-     background — hence the outline below and a neutral track above. */
+     always light, and the label halo keeps it legible on a light map
+     background, with a neutral track above. */
   --maps-map-view-gadget-bg: rgb(0 0 0 / 55%);
   --maps-map-view-gadget-bar-bg: rgb(0 0 0 / 50%);
   --maps-map-view-gadget-ring: rgb(255 255 255 / 15%);
-  --maps-map-view-gadget-ink: rgb(244 244 245);
+  --maps-map-view-gadget-ink: var(--white);
   --maps-map-view-gadget-ink-dim: rgb(255 255 255 / 80%);
-  --maps-map-view-text-outline:
-    1px 1px 0 rgb(0 0 0 / 90%), -1px 1px 0 rgb(0 0 0 / 90%), 1px -1px 0 rgb(0 0 0 / 90%),
-    -1px -1px 0 rgb(0 0 0 / 90%), 0 0 3px rgb(0 0 0 / 70%);
 }
 
 .maps-map-view__shell {
@@ -1126,8 +1114,8 @@ function closeBulkAckModal(sent: boolean): void {
   align-items: center;
   justify-content: center;
   gap: var(--dimension-5);
-  font-size: var(--font-size-large);
-  line-height: 20px;
+  font-size: var(--font-size-normal);
+  line-height: 16px;
   color: var(--font-color-dimmed);
   background: var(--ux-theme-1);
 }

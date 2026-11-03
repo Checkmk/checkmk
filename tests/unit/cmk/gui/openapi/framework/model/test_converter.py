@@ -18,6 +18,7 @@ from cmk.gui.groups import GroupType
 from cmk.gui.logged_in import LoggedInNobody, LoggedInUser, UserDefaultConfig
 from cmk.gui.openapi.framework.model import ApiOmitted, json_dump_without_omitted
 from cmk.gui.openapi.framework.model.converter import (
+    folder_tree_of_request,
     GroupConverter,
     HostAddressConverter,
     HostConverter,
@@ -403,6 +404,16 @@ class TestHostConverter:
         )
 
         assert first.folder().tree is not other.folder().tree
+
+    def test_the_handler_gets_the_tree_the_validators_used(self, sample_host: str) -> None:
+        adapter: TypeAdapter[Host] = TypeAdapter(  # astrein: disable=pydantic-type-adapter
+            Annotated[Host, TypedPlainValidator(str, HostConverter().host)]
+        )
+        context = make_validation_context(Config(), LoggedInNobody())
+
+        host = adapter.validate_python(sample_host, context=context)
+
+        assert host.folder().tree is folder_tree_of_request(context.api_context)
 
     def test_host_permissions_are_checked_against_the_user_of_the_request(
         self, sample_host: str

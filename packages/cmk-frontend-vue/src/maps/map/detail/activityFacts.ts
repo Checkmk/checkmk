@@ -10,6 +10,7 @@
  * Both are relative to "now", so the caller passes the tick that drives the
  * drawer's ageing labels rather than each row reading the clock itself.
  */
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { renderDateAndTime } from 'cmk-ui-library/lib/renderTime'
 
 import type { ObjectDetails } from '@/maps/types/api'
@@ -63,6 +64,16 @@ export function downtimeRows(details: ObjectDetails | null): DowntimeRow[] {
     timeRange: `${renderDateAndTime(downtime.start_time)} → ${renderDateAndTime(downtime.end_time)}`,
     fixed: downtime.fixed
   }))
+}
+
+/** The tab's name, after what it holds. */
+export function activityTabLabel(details: ObjectDetails | null, _t: TranslateFn): TranslatedString {
+  const comments = (details?.comments?.length ?? 0) > 0
+  const downtimes = (details?.downtimes?.length ?? 0) > 0
+  if (comments && downtimes) {
+    return _t('Activity')
+  }
+  return downtimes ? _t('Downtimes') : _t('Comments')
 }
 
 /** How many entries the tab holds -- shown on the tab itself. */

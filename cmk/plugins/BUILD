@@ -40,7 +40,6 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//cmk/bi",
         "//cmk/utils",
         "//packages/cmk-ccc:regex",
         "//packages/cmk-ccc:site",
@@ -104,7 +103,12 @@ filegroup(
             "oracle/agents/.gitignore",
             "oracle/agents/README.md",
         ],
-    ),
+    ) + [
+        # A glob stops at a package boundary. Agent directories with their
+        # own BUILD file contribute their files through ":files".
+        "//cmk/plugins/%s:files" % package
+        for package in subpackages(include = ["*/agents"])
+    ],
 )
 
 filegroup(

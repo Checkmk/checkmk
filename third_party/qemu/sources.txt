@@ -1,0 +1,15 @@
+# Every source the static QEMU build uses: sha256, file name, upstream URL.
+# create-archive fetches each from the Nexus mirror first, then upstream, and
+# checks it against the sha256; build_qemu.sh publishes them all next to the
+# binary tarball (the sources of what is built here, and the musl release for
+# its licence). The libslirp file is a GitLab-generated archive, which upstream
+# does not keep byte-stable: our mirrored copy is the reference.
+079ffbff8a7111bbc89022107cbabf3bbfd614d5fc9d7cc675991196aca12482 qemu-11.1.1.tar.xz https://download.qemu.org/qemu-11.1.1.tar.xz
+ab24d24e698dfa1e408b7bcdb508f4aafc906185a8b8ce72fdf79bbbdc9b383b glib-2.88.3.tar.xz https://download.gnome.org/sources/glib/2.88/glib-2.88.3.tar.xz
+b6c68fdf6f3ac31388b50aa89ff0fc49c00c987c16e7b5146491d12003f2c8ed pcre2-10.48.tar.bz2 https://github.com/PCRE2Project/pcre2/releases/download/pcre2-10.48/pcre2-10.48.tar.bz2
+a098c33924754ad43f981b740f6d576c70f9ed1006e12221b1845431ebce1239 pixman-0.46.4.tar.xz https://cairographics.org/releases/pixman-0.46.4.tar.xz
+f43e68b60b580647574ec4a0e2b6c600a56281e6c39f79426510832dc810f483 libslirp-v4.9.5.tar.gz https://gitlab.freedesktop.org/slirp/libslirp/-/archive/v4.9.5/libslirp-v4.9.5.tar.gz
+d7a0654783a4da529d1bb793b7ad9c3318020af77667bcae35f95d0e42a792f3 zlib-1.3.2.tar.xz https://github.com/madler/zlib/releases/download/v1.3.2/zlib-1.3.2.tar.xz
+eb33e51f49a15e023950cd7825ca74a4a2b43db8354825ac24fc1b7ee09e6fa3 zstd-1.5.7.tar.gz https://github.com/facebook/zstd/releases/download/v1.5.7/zstd-1.5.7.tar.gz
+7da3e2d9a171eb0a038f592ecad3ff2bb2550f3496d87b3b29ad0cf4430c0db4 libffi-3.8.0.tar.gz https://github.com/libffi/libffi/releases/download/v3.8.0/libffi-3.8.0.tar.gz
+a9a118bbe84d8764da0ea0d28b3ab3fae8477fc7e4085d90102b8596fc7c75e4 musl-1.2.5.tar.gz https://musl.libc.org/releases/musl-1.2.5.tar.gz

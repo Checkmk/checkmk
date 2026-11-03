@@ -135,7 +135,7 @@ class ModeBulkEdit(WatoMode):
             # delay saving until end somehow
 
         flash(_("Edited %(count)d hosts") % {"count": len(host_names)})
-        return redirect(self._folder.url(request))
+        return redirect(self._folder.url())
 
     @override
     def page(self, config: Config) -> None:
@@ -268,7 +268,7 @@ class ModeBulkCleanup(WatoMode):
                 acting_user=user,
             )
 
-        return redirect(self._folder.url(request))
+        return redirect(self._folder.url())
 
     def _bulk_collect_cleaned_attributes(
         self, host_attributes: Mapping[str, ABCHostAttribute]

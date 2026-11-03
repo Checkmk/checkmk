@@ -80,7 +80,9 @@ export function mapOwnerLabel(
  * card carries tells them apart by nothing.
  */
 export function hasManagementFlags(map: MapRead): boolean {
-  return Boolean(map.hide_in_monitor_menu) || map.rotation_interval > 0
+  return (
+    Boolean(map.hide_in_monitor_menu) || map.rotation_interval > 0 || map.rotation_pools.length > 0
+  )
 }
 
 /**

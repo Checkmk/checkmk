@@ -4,25 +4,52 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import json
 import time
+from collections.abc import Mapping
 
 import pytest
 
+import cmk.ccc.resulttype as result
 from cmk.ccc.exceptions import MKTimeout
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.fetcher_abc import FetcherError
-from cmk.checkengine.parser import HostSections
+from cmk.checkengine.helper_interface import FetcherType
+from cmk.checkengine.parser import AgentRawDataSection, HostSections
 from cmk.checkengine.plugins import SectionName
 from cmk.checkengine.specs.checkresults import ActiveCheckResult
 from cmk.checkengine.specs.exitspec import ExitSpec
-from cmk.checkengine.summarize import summarize_failure, summarize_piggyback, summarize_success
+from cmk.checkengine.summarize import (
+    summarize,
+    summarize_failure,
+    summarize_piggyback,
+    summarize_success,
+    SummaryConfig,
+)
 from cmk.piggyback.backend import Config as PiggybackConfig
 from cmk.piggyback.backend import PiggybackMetaData
+from cmk.server_side_programs.v1 import AgentMessages
+
+
+def _messages_sections(*rows: Mapping[str, str]) -> HostSections[AgentRawDataSection]:
+    return HostSections(
+        {SectionName(AgentMessages.SECTION_NAME): [[json.dumps(row)] for row in rows]}
+    )
+
+
+def _warning(message: str) -> Mapping[str, str]:
+    return {"level": "warning", "message": message}
+
+
+def _info(message: str) -> Mapping[str, str]:
+    return {"level": "info", "message": message}
 
 
 class TestAgentSummarizer:
     def test_summarize_success(self) -> None:
-        assert summarize_success(ExitSpec()) == [ActiveCheckResult(state=0, summary="Success")]
+        assert summarize_success(HostSections({}), ExitSpec()) == [
+            ActiveCheckResult(state=0, summary="Success")
+        ]
 
     def test_summarize_base_exception(self) -> None:
         assert summarize_failure(ExitSpec(), Exception()) == [ActiveCheckResult(state=3)]
@@ -44,6 +71,76 @@ class TestAgentSummarizer:
                 details=["detail line 1", "detail line 2", "expected summary line"],
             )
         ]
+
+    def test_no_messages_section_is_success(self) -> None:
+        assert summarize_success(HostSections({}), ExitSpec()) == [
+            ActiveCheckResult(state=0, summary="Success")
+        ]
+
+    def test_each_message_is_one_result_in_order(self) -> None:
+        assert summarize_success(
+            _messages_sections(_info("first"), _warning("second"), {"message": "third"}),
+            ExitSpec(),
+        ) == [
+            ActiveCheckResult(state=0, summary="Success"),
+            ActiveCheckResult(state=0, summary="first"),
+            ActiveCheckResult(state=1, summary="second"),
+            ActiveCheckResult(state=1, summary="third"),
+        ]
+
+    def test_multi_line_message_shows_first_line_in_summary(self) -> None:
+        assert summarize_success(
+            _messages_sections(_warning("first line\nsecond line")), ExitSpec()
+        )[1] == ActiveCheckResult(
+            state=1, summary="first line", details=["first line", "second line"]
+        )
+
+    def test_empty_message_is_shown_as_unspecified(self) -> None:
+        assert summarize_success(_messages_sections(_info(""), _warning("")), ExitSpec())[1:] == [
+            ActiveCheckResult(state=0, summary="Unspecified info"),
+            ActiveCheckResult(state=1, summary="Unspecified warning"),
+        ]
+
+    @pytest.mark.parametrize("configured_state", [0, 2])
+    def test_warning_state_is_taken_from_exit_spec(self, configured_state: int) -> None:
+        assert (
+            summarize_success(
+                _messages_sections(_warning("first")),
+                ExitSpec(warnings=configured_state),
+            )[1].state
+            == configured_state
+        )
+
+    def test_info_is_ok_regardless_of_configured_warning_state(self) -> None:
+        assert (
+            summarize_success(_messages_sections(_info("first")), ExitSpec(warnings=2))[1].state
+            == 0
+        )
+
+    def test_summarize_dispatches_special_agent_sections(self) -> None:
+        assert summarize(
+            result.OK(_messages_sections(_warning("first"))),
+            SummaryConfig(
+                exit_spec=ExitSpec(warnings=2),
+                piggyback_config=PiggybackConfig(HostName("hostname"), []),
+                expect_data=False,
+            ),
+            fetcher_type=FetcherType.SPECIAL_AGENT,
+        ) == [
+            ActiveCheckResult(state=0, summary="Success"),
+            ActiveCheckResult(state=2, summary="first"),
+        ]
+
+    def test_summarize_dispatches_special_agent_failure(self) -> None:
+        assert summarize(
+            result.Error(FetcherError("boom")),
+            SummaryConfig(
+                exit_spec=ExitSpec(connection=1),
+                piggyback_config=PiggybackConfig(HostName("hostname"), []),
+                expect_data=False,
+            ),
+            fetcher_type=FetcherType.SPECIAL_AGENT,
+        ) == [ActiveCheckResult(state=1, summary="boom")]
 
 
 class TestPiggybackSummarizer:

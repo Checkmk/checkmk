@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 
+#include "TemporaryDirectory.h"
 #include "gtest/gtest.h"
 #include "livestatus/Logger.h"
 #include "livestatus/Metric.h"
@@ -17,8 +18,6 @@
 
 namespace {
 // NOLINTBEGIN(cert-err58-cpp)
-const std::filesystem::path basepath{std::filesystem::temp_directory_path() /
-                                     "metric_tests"};
 const std::string ext = ".xml";
 
 const std::string desc = "Service Description";
@@ -55,13 +54,19 @@ public:
     }
 
     void SetUp() override {
-        std::filesystem::create_directories(basepath);
         // Create the metrics we use for the test.
-        dump(basepath / pnp_cleanup(desc + ext), metrics);
+        dump(basepath() / pnp_cleanup(desc + ext), metrics);
         // Add non-matching metrics to the directory.
-        dump(basepath / pnp_cleanup(desc_other + ext), metrics_other);
+        dump(basepath() / pnp_cleanup(desc_other + ext), metrics_other);
     }
-    void TearDown() override { std::filesystem::remove_all(basepath); }
+
+protected:
+    [[nodiscard]] const std::filesystem::path &basepath() const {
+        return basedir_.path();
+    }
+
+private:
+    TemporaryDirectory basedir_{"metric_tests"};
 };
 
 TEST_F(MetricFixture, ScanRRDFindsMetrics) {
@@ -74,10 +79,10 @@ TEST_F(MetricFixture, ScanRRDFindsMetrics) {
         return out;
     };
 
-    ASSERT_TRUE(std::filesystem::exists(basepath));
-    ASSERT_FALSE(std::filesystem::is_empty(basepath));
+    ASSERT_TRUE(std::filesystem::exists(basepath()));
+    ASSERT_FALSE(std::filesystem::is_empty(basepath()));
     Logger *const logger{Logger::getLogger("test")};
 
-    const auto names = scan_rrd(basepath, desc, logger);
+    const auto names = scan_rrd(basepath(), desc, logger);
     EXPECT_EQ(human_readable(metrics), human_readable(names));
 }

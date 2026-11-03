@@ -8,11 +8,22 @@ from pathlib import Path
 
 import pytest
 
+from cmk.werks.flavor.cmk.precompile import load_precompiled_werks_file
 from cmk.werks.tool import parse_werk
-from cmk.werks.tool.utils import load_precompiled_werks_file
 from cmk.werks.tool.utils.__main__ import main
 
 from ._werk_files import werk_text
+
+_CONFIG = """
+flavor = "cmk"
+editions = [("community", "Community")]
+components = [("core", "Core")]
+edition_components = {}
+classes = [("fix", "Bug fix", "FIX")]
+levels = [("1", "Trivial change")]
+compatible = [("yes", "Compatible"), ("no", "Incompatible")]
+online_url = "https://checkmk.com/werk/%d"
+"""
 
 
 def _repository(tmp_path: Path, werk_files: Mapping[str, str], version: str = "2.5.0") -> Path:
@@ -20,6 +31,7 @@ def _repository(tmp_path: Path, werk_files: Mapping[str, str], version: str = "2
     werk_dir = repo_root / ".werks"
     werk_dir.mkdir(parents=True)
     (repo_root / "defines.make").write_text(f"VERSION := {version}\n", encoding="utf-8")
+    (werk_dir / "config").write_text(_CONFIG, encoding="utf-8")
     for name, content in werk_files.items():
         (werk_dir / name).write_text(content, encoding="utf-8")
     return repo_root
@@ -71,7 +83,7 @@ def test_burn_writes_the_release_version_into_a_werk_without_one(tmp_path: Path)
     main(["burn", str(repo_root)])
 
     burned = (repo_root / ".werks/1.md").read_text(encoding="utf-8")
-    assert parse_werk(burned, "1.md").metadata["version"] == "2.5.0p2"
+    assert parse_werk(burned, "1.md", v1_defaults={}).metadata["version"] == "2.5.0p2"
 
 
 def test_burn_reports_how_many_werks_it_burned(

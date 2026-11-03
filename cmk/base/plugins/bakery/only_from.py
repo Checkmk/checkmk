@@ -3,16 +3,17 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
+
 from .bakery_api.v1 import (
     register,
-    WindowsConfigContent,
     WindowsConfigGenerator,
     WindowsGlobalConfigEntry,
 )
 
 
-def get_only_from_windows_config(conf: WindowsConfigContent) -> WindowsConfigGenerator:
-    yield WindowsGlobalConfigEntry(name="only_from", content=conf)
+def get_only_from_windows_config(conf: Mapping[str, Sequence[str]]) -> WindowsConfigGenerator:
+    yield WindowsGlobalConfigEntry(name="only_from", content=list(conf["allowed_addresses"]))
 
 
 register.bakery_plugin(

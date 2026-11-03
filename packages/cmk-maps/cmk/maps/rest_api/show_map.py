@@ -39,7 +39,7 @@ def show_map_v1(
     if page is None:
         raise RestAPIRequestGeneralException(
             status=HTTPStatus.NOT_FOUND,
-            title=f"The map {name!r} does not exist.",
+            title=f"The map {name!r} does not exist",
             detail="No map with this name is visible to you.",
         )
     try:
@@ -50,7 +50,7 @@ def show_map_v1(
         # so answer 409 instead of crashing with an unhandled 500.
         raise RestAPIRequestGeneralException(
             status=HTTPStatus.CONFLICT,
-            title=f"The map {name!r} cannot be represented.",
+            title=f"The map {name!r} cannot be represented",
             detail="Its stored configuration is incompatible with the current map "
             "model and likely needs to be migrated or re-saved.",
         ) from exc

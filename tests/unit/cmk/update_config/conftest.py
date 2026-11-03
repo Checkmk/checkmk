@@ -16,7 +16,7 @@ from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui import login
 from cmk.gui.config import Config, get_default_config, make_config_object
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib import git
 from cmk.gui.watolib.hosts_and_folders import FolderTree, make_folder_tree
@@ -79,9 +79,11 @@ def fixture_config() -> Config:
 
 
 @pytest.fixture(name="tree")
-def fixture_tree(patch_omd_site: None, config: Config) -> Iterator[FolderTree]:
+def fixture_tree(config: Config) -> Iterator[FolderTree]:
     with disable_redis():
-        yield make_folder_tree(config)
+        tree = make_folder_tree(config)
+        Path(tree.get_root_dir()).mkdir(parents=True, exist_ok=True)
+        yield tree
 
 
 @pytest.fixture()
@@ -94,7 +96,13 @@ def with_admin(load_config: Config) -> Iterator[tuple[UserId, str]]:
 def with_admin_login(load_config: Config, with_admin: tuple[UserId, str]) -> Iterator[UserId]:
     user_id = with_admin[0]
     with login.TransactionIdContext(
-        user_id, UserPermissions(load_config.roles, permission_registry, {user_id: ["admin"]}, [])
+        user_id,
+        UserPermissions(
+            load_config.roles,
+            all_permissions(),
+            {user_id: ["admin"]},
+            [],
+        ),
     ):
         yield user_id
 

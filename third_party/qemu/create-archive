@@ -1,0 +1,306 @@
+#!/bin/bash
+# Build a static x86_64 QEMU (qemu-system-x86_64 + qemu-img) and pack it as the
+# tarball pinned by @qemu_linux_x86_64 (third_party/qemu/version.bzl).
+#
+# Runs inside the builder image (builder-image.txt); see README.md. Modelled on
+# hermeticbuild/qemu-prebuilt (MIT); unlike it, adds zstd (the test images are
+# zstd-compressed qcow2) and builds every linked library from a pinned source
+# (sources.txt). The result is reproducible: same recipe, same tarball.
+#
+# Output, in the current directory:
+#   qemu-<version>-<revision>-linux-x86_64.tar.xz   bin/, share/qemu/ (firmware),
+#                                         LICENSES/, BUILDINFO
+#   sources/                             the verified source tarballs, which
+#                                         build_qemu.sh publishes alongside
+# --print-name prints the archive's name (without .tar.xz) and does nothing else.
+set -euo pipefail
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# The directory a source tarball unpacks to: its file name in sources.txt
+# without the .tar.* suffix (srcdir glib -> glib-2.88.3). sources.txt names
+# every version; only the archive name in version.bzl repeats QEMU's, and
+# build_qemu.sh checks it against --print-name.
+srcdir() {
+    local dirs
+    dirs="$(awk -v n="$1-" '$1 !~ /^#/ && index($2, n) == 1 {sub(/\.tar\.[a-z0-9]+$/, "", $2); print $2}' \
+        "${HERE}/sources.txt")"
+    if [ -z "${dirs}" ] || [ "$(wc -l <<<"${dirs}")" -ne 1 ]; then
+        echo "error: sources.txt has no single $1-* entry" >&2
+        return 1
+    fi
+    echo "${dirs}"
+}
+
+# Assignments, so that a missing entry stops the build (set -e).
+QEMU="$(srcdir qemu)"
+GLIB="$(srcdir glib)"
+PCRE2="$(srcdir pcre2)"
+PIXMAN="$(srcdir pixman)"
+LIBSLIRP="$(srcdir libslirp)"
+ZLIB="$(srcdir zlib)"
+ZSTD="$(srcdir zstd)"
+LIBFFI="$(srcdir libffi)"
+MUSL="$(srcdir musl)"
+
+QEMU_VERSION="${QEMU#qemu-}"
+# Published archives are never replaced: a changed recipe for the same QEMU
+# version gets the next revision (r2 added vvfat; r3 records the builder image
+# and the link inputs of both binaries; r4 drops TCG and the VHD formats; r5
+# drops the licence of berkeley-softfloat-3, which only QEMU's tests use; r6
+# is the first built in an image of build-qemu-builder-image).
+REVISION=r6
+# The top-level directory of the tarball is the http_archive strip_prefix.
+ARTIFACT="qemu-${QEMU_VERSION}-${REVISION}-linux-x86_64"
+# Does not exist on any host: QEMU finds its firmware relative to the binary
+# or through -L, never in a system QEMU's data directory.
+PREFIX=/nonexistent-qemu
+# A fixed path, for reproducibility (and mapped away in the debug strings).
+BUILD_ROOT=/tmp/qemu-build
+# The container's CPU quota where there is one: nproc reports the host's CPUs.
+cpus() {
+    local quota period
+    if read -r quota period 2>/dev/null </sys/fs/cgroup/cpu.max && [ "${quota}" != max ]; then
+        echo $(((quota + period - 1) / period))
+    else
+        nproc
+    fi
+}
+JOBS="${JOBS:-$(cpus)}"
+# UPSTREAM_MIRROR_URL in bazel_variables.bzl; build_qemu.sh passes it in, the
+# default is for local builds (only this directory is mounted).
+MIRROR="${MIRROR-https://artifacts.lan.tribe29.com/repository/upstream-archives}"
+
+# The firmware the i440fx machine (pc) with an e1000 NIC needs: QEMU refuses
+# to start without the BIOS, the std VGA BIOS or the e1000 option ROM, and
+# kvmvapic.bin is guest-visible.
+FIRMWARE=(
+    bios-256k.bin
+    efi-e1000.rom
+    kvmvapic.bin
+    vgabios-stdvga.bin
+)
+
+OUT="$(pwd)"
+SRC="${BUILD_ROOT}/src"
+DEPS="${BUILD_ROOT}/deps"
+OBJ="${BUILD_ROOT}/obj"
+STAGE="${BUILD_ROOT}/stage/${ARTIFACT}"
+
+verified() { # verified <sha256> <file>
+    echo "$1  $2" | sha256sum --quiet -c - >/dev/null 2>&1
+}
+
+# The mirror first, then upstream; whichever copy is used must match its
+# sha256. A wrong copy on the mirror stops the build: the mirror refuses
+# redeploys, and for libslirp, a GitLab-generated archive, its copy is the
+# only byte-exact one (README.md).
+fetch_sources() {
+    local sha file url dest
+    mkdir -p "${OUT}/sources"
+    while read -r sha file url; do
+        case "${sha}" in "" | "#"*) continue ;; esac
+        dest="${OUT}/sources/${file}"
+        verified "${sha}" "${dest}" && continue
+        # Quiet: a file missing on the mirror is not an error.
+        if [ -n "${MIRROR}" ] && curl -fsL --retry 3 -o "${dest}" "${MIRROR}/${file}"; then
+            if ! verified "${sha}" "${dest}"; then
+                echo "error: the mirror's ${file} does not match its sha256 in sources.txt." >&2
+                echo "       Have a Nexus admin delete it; the next build-qemu-from-source run" >&2
+                echo "       uploads a verified copy." >&2
+                exit 1
+            fi
+            continue
+        fi
+        curl -fsSL --retry 3 -o "${dest}" "${url}"
+        if ! verified "${sha}" "${dest}"; then
+            echo "error: ${file} from upstream does not match its sha256 in sources.txt" >&2
+            echo "       (the mirror lacked it or did not answer: if Nexus was down, re-run)." >&2
+            exit 1
+        fi
+    done <"${HERE}/sources.txt"
+}
+
+unpack() {
+    local sha file url
+    rm -rf "${BUILD_ROOT}"
+    mkdir -p "${SRC}" "${DEPS}" "${STAGE}"
+    while read -r sha file url; do
+        case "${sha}" in "" | "#"*) continue ;; esac
+        tar -xf "${OUT}/sources/${file}" -C "${SRC}"
+    done <"${HERE}/sources.txt"
+}
+
+meson_static() {
+    local src="$1"
+    shift
+    meson setup "${OBJ}/${src}" "${SRC}/${src}" \
+        --prefix="${DEPS}" --libdir=lib \
+        --default-library=static --prefer-static \
+        --buildtype=release --wrap-mode=nodownload "$@"
+    meson compile -C "${OBJ}/${src}" -j "${JOBS}"
+    meson install -C "${OBJ}/${src}" --quiet
+}
+
+build_deps() {
+    cd "${SRC}"
+    (cd "${ZLIB}" && ./configure --static --prefix="${DEPS}" && make -j"${JOBS}" && make install)
+    # The library only; the CLI is not needed.
+    make -C "${ZSTD}/lib" -j"${JOBS}" PREFIX="${DEPS}" libzstd.a libzstd.pc
+    make -C "${ZSTD}/lib" PREFIX="${DEPS}" install-static install-includes install-pc
+    # glib's regex backend.
+    (cd "${PCRE2}" && ./configure --prefix="${DEPS}" --disable-shared --enable-static \
+        --disable-pcre2grep-libz --disable-pcre2grep-libbz2 && make -j"${JOBS}" && make install)
+    # Only needed to build glib's gobject; QEMU does not link it.
+    (cd "${LIBFFI}" && ./configure --prefix="${DEPS}" --disable-shared --enable-static \
+        --disable-docs --disable-multi-os-directory && make -j"${JOBS}" && make install)
+    meson_static "${GLIB}" \
+        -Dtests=false -Dintrospection=disabled -Dlibmount=disabled -Dselinux=disabled \
+        -Dxattr=false -Dman-pages=disabled -Ddocumentation=false -Dnls=disabled \
+        -Dsysprof=disabled -Dlibelf=disabled -Dglib_debug=disabled -Dbsymbolic_functions=false
+    meson_static "${PIXMAN}" \
+        -Dtests=disabled -Ddemos=disabled -Dgtk=disabled -Dlibpng=disabled -Dopenmp=disabled
+    meson_static "${LIBSLIRP}"
+}
+
+CONFIGURE_FLAGS=(
+    --prefix="${PREFIX}"
+    --static
+    --target-list=x86_64-softmmu
+    --without-default-features
+    --disable-download
+    --disable-werror
+    --disable-debug-info
+    --disable-docs
+    --enable-system
+    --enable-tools
+    --enable-kvm
+    # Enabled unless disabled: the test VMs only run under KVM.
+    --disable-tcg
+    # User networking, with the SSH port forward.
+    --enable-slirp
+    --enable-zstd
+    --enable-pixman
+    # The Server Core image build hands Windows Setup its answer file on a
+    # virtual FAT floppy (fat:floppy:<dir>).
+    --enable-vvfat
+    # musl gives threads the stack size in PT_GNU_STACK, 128 KiB by default
+    # (glibc: 8 MiB). A vCPU thread overflowed that under a busy Windows guest
+    # (segfault just below its stack pointer); match glibc.
+    '--extra-ldflags=-Wl,-z,stack-size=8388608'
+)
+
+build_qemu() {
+    mkdir -p "${OBJ}/${QEMU}"
+    cd "${OBJ}/${QEMU}"
+    "${SRC}/${QEMU}/configure" "${CONFIGURE_FLAGS[@]}"
+    ninja -j "${JOBS}" qemu-system-x86_64 qemu-img
+    # The final link arguments show which archives end up in the binaries.
+    for b in qemu-system-x86_64 qemu-img; do
+        awk -v b="build ${b}: " 'index($0, b) == 1 {f = 1; next}
+            f && /^ LINK_ARGS = / {for (i = 3; i <= NF; i++) if ($i ~ /\.a$|^-l|^-static/) print $i; exit}' \
+            build.ninja | sort -u >"${BUILD_ROOT}/link-${b}.txt"
+    done
+}
+
+stage() {
+    local b f q="${QEMU}"
+    mkdir -p "${STAGE}/bin" "${STAGE}/share/qemu" "${STAGE}/LICENSES"
+    for b in qemu-system-x86_64 qemu-img; do
+        install -m 0755 "${OBJ}/${q}/${b}" "${STAGE}/bin/${b}"
+        strip "${STAGE}/bin/${b}"
+        if readelf -l "${STAGE}/bin/${b}" | grep -q 'program interpreter'; then
+            echo "error: ${b} is not static" >&2
+            exit 1
+        fi
+        if ! readelf -lW "${STAGE}/bin/${b}" | grep -q 'GNU_STACK .* 0x0*800000 RW'; then
+            echo "error: ${b} does not ask for 8 MiB thread stacks" >&2
+            exit 1
+        fi
+    done
+    for f in "${FIRMWARE[@]}"; do
+        install -m 0644 "${SRC}/${q}/pc-bios/${f}" "${STAGE}/share/qemu/${f}"
+    done
+    lic qemu "${q}/COPYING" "${q}/COPYING.LIB" "${q}/LICENSE"
+    lic seabios "${q}/roms/seabios/COPYING" "${q}/roms/seabios/COPYING.LESSER"
+    lic ipxe "${q}/roms/ipxe/COPYING" "${q}/roms/ipxe/COPYING.GPLv2" "${q}/roms/ipxe/COPYING.UBDL"
+    lic glib "${GLIB}/COPYING"
+    lic pcre2 "${PCRE2}/LICENCE.md"
+    lic pixman "${PIXMAN}/COPYING"
+    lic libslirp "${LIBSLIRP}/COPYRIGHT"
+    lic zlib "${ZLIB}/LICENSE"
+    lic zstd "${ZSTD}/LICENSE" "${ZSTD}/COPYING"
+    lic musl "${MUSL}/COPYRIGHT"
+    buildinfo >"${STAGE}/BUILDINFO"
+}
+
+lic() { # lic <name> <file relative to ${SRC}>...
+    local name="$1" f
+    shift
+    mkdir -p "${STAGE}/LICENSES/${name}"
+    for f in "$@"; do install -m 0644 "${SRC}/${f}" "${STAGE}/LICENSES/${name}/"; done
+}
+
+buildinfo() {
+    local f b
+    echo "name: ${ARTIFACT}"
+    echo "qemu: ${QEMU_VERSION}"
+    echo "source_date_epoch: ${SOURCE_DATE_EPOCH}"
+    echo "prefix: ${PREFIX} (does not exist; QEMU finds share/qemu next to bin/, or pass -L)"
+    echo "configure:"
+    printf '  %s\n' "${CONFIGURE_FLAGS[@]}"
+    echo "CFLAGS: ${CFLAGS}"
+    for b in qemu-system-x86_64 qemu-img; do
+        echo "statically linked archives (${b}):"
+        sed 's/^/  /' "${BUILD_ROOT}/link-${b}.txt"
+    done
+    echo "sources (sha256 file url, all published next to this archive):"
+    grep -v '^#' "${HERE}/sources.txt" | sed 's/^/  /'
+    echo "builder image: $(cat "${HERE}/builder-image.txt")"
+    echo "  Alpine $(cat /etc/alpine-release)"
+    echo "toolchain packages (musl libc.a, gcc libgcc.a and libatomic.a are linked statically):"
+    apk info -v 2>/dev/null | grep -E '^(musl-dev|gcc|binutils|linux-headers|meson|python3|samurai|pkgconf)-[0-9]' |
+        sort | sed 's/^/  /'
+    echo "firmware (share/qemu, prebuilt blobs from the QEMU tarball's pc-bios/):"
+    for f in "${FIRMWARE[@]}"; do
+        echo "  $(sha256sum "${STAGE}/share/qemu/${f}" | cut -d' ' -f1)  ${f}"
+    done
+    echo "binaries:"
+    for b in qemu-system-x86_64 qemu-img; do
+        echo "  $(sha256sum "${STAGE}/bin/${b}" | cut -d' ' -f1)  bin/${b}"
+    done
+}
+
+pack() {
+    cd "${BUILD_ROOT}/stage"
+    # --mtime gives every member the same time, whatever the stage tree has.
+    tar --format=gnu --sort=name --owner=0 --group=0 --numeric-owner --mode=u+rwX,go+rX,go-w \
+        --mtime="@${SOURCE_DATE_EPOCH}" -cf - "${ARTIFACT}" |
+        xz -9 -T1 >"${OUT}/${ARTIFACT}.tar.xz"
+    cd "${OUT}"
+    sha256sum "${ARTIFACT}.tar.xz"
+}
+
+main() {
+    if [ "${1:-}" = --print-name ]; then
+        echo "${ARTIFACT}"
+        return 0
+    fi
+    fetch_sources
+    unpack
+    # The QEMU release tarball's own timestamp.
+    SOURCE_DATE_EPOCH="$(stat -c %Y "${SRC}/${QEMU}/VERSION")"
+    export SOURCE_DATE_EPOCH
+    export CFLAGS="-O2 -pipe -ffile-prefix-map=${BUILD_ROOT}/=/"
+    export CXXFLAGS="${CFLAGS}"
+    export PKG_CONFIG_PATH="${DEPS}/lib/pkgconfig:${DEPS}/share/pkgconfig"
+    # Never pick up Alpine's .pc files.
+    export PKG_CONFIG_LIBDIR="${PKG_CONFIG_PATH}"
+    export PATH="${DEPS}/bin:${PATH}"
+    build_deps
+    build_qemu
+    stage
+    pack
+}
+
+main "$@"

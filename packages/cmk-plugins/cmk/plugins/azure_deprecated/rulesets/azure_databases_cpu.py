@@ -35,8 +35,9 @@ def _make_form() -> Dictionary:
 
 rule_spec_azure_databases_cpu = CheckParameters(
     name="azure_databases_cpu",
-    title=Title("Azure SQL database CPU usage (deprecated)"),
+    title=Title("Azure SQL database CPU usage"),
     topic=Topic.APPLICATIONS,
     parameter_form=_make_form,
     condition=HostAndItemCondition(item_title=Title("Database name")),
+    is_deprecated=True,
 )

@@ -30,7 +30,7 @@ from collections.abc import (
     Sequence,
 )
 from contextlib import contextmanager, suppress
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from functools import cached_property, wraps
 from http import HTTPStatus
@@ -64,11 +64,9 @@ from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.regex import regex, WATO_FOLDER_PATH_NAME_CHARS
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
-from cmk.ccc.version import edition
 from cmk.gui import hooks, userdb
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
-from cmk.gui.config import active_config, Config
-from cmk.gui.ctx_stack import g
+from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException, MKUserError, RequestTimeout
 from cmk.gui.groups import GroupName
 from cmk.gui.hooks import request_memoize
@@ -80,7 +78,6 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInSuperUser, LoggedInUser
 from cmk.gui.page_menu import confirmed_form_submit_options
 from cmk.gui.pages import PageContext
-from cmk.gui.session_context import get_session_csrf_token
 from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.type_defs import CustomHostAttrSpec, SetOnceDict
 from cmk.gui.utils.host_relations import (
@@ -94,7 +91,6 @@ from cmk.gui.utils.host_relations import (
     reverse_direction,
     same_links,
 )
-from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib.automations import (
     make_automation_config,
 )
@@ -1044,7 +1040,7 @@ class _PickleWATOInfoStorage(ABCWATOInfoStorage):
     @override
     def read(self, file_path: Path) -> WATOFolderInfo | None:
         pickle_path = self._add_suffix(file_path)
-        if not pickle_path.exists() or not self._file_valid(pickle_path, file_path):
+        if not self._file_valid(pickle_path, file_path):
             return None
         return store.ObjectStore(
             pickle_path, serializer=store.PickleSerializer[WATOFolderInfo]()
@@ -1052,11 +1048,12 @@ class _PickleWATOInfoStorage(ABCWATOInfoStorage):
 
     def _file_valid(self, pickle_path: Path, file_path: Path) -> bool:
         # The experimental file must not be older than the corresponding .wato
-        # The file is also invalid if no matching .wato file exists
-        if not file_path.exists():
+        # The file is also invalid if it or the matching .wato file does not exist. The folder
+        # may be deleted concurrently, so do not check for existence before calling stat().
+        try:
+            return file_path.stat().st_mtime <= pickle_path.stat().st_mtime
+        except FileNotFoundError:
             return False
-
-        return file_path.stat().st_mtime <= pickle_path.stat().st_mtime
 
     @override
     def write(self, file_path: Path, data: WATOFolderInfo) -> None:
@@ -1167,14 +1164,14 @@ def _normalize_folder_name(name: str) -> str:
     return converted
 
 
-def _folder_breadcrumb(folder: Folder | SearchFolder, request: Request) -> Breadcrumb:
+def _folder_breadcrumb(folder: Folder | SearchFolder) -> Breadcrumb:
     breadcrumb = Breadcrumb()
 
     for this_folder in parent_folder_chain(folder) + [folder]:
         breadcrumb.append(
             BreadcrumbItem(
                 title=this_folder.title(),
-                url=this_folder.url(request),
+                url=this_folder.url(),
                 id=this_folder.id() if isinstance(this_folder, Folder) else None,
             )
         )
@@ -1452,25 +1449,27 @@ def _refusal_of(
 
 
 def need_relatable(site_id: SiteId, counterpart: Host) -> None:
-    """Let the edition refuse a relation between the hosts of these two sites."""
+    """Let the ``host_relation`` validators refuse a relation between the hosts of these two
+    sites."""
     folder = counterpart.folder()
-    folder.validators.validate_host_relation(
-        site_id, counterpart.site_id(), SiteConfigurations(folder.tree.config.sites)
-    )
+    for validate in folder.validators.host_relation:
+        validate(site_id, counterpart.site_id(), SiteConfigurations(folder.tree.config.sites))
 
 
 def _need_edit_accepted(host: Host, attributes: HostAttributes) -> None:
-    """Let the edition refuse ``host`` being edited to ``attributes``."""
+    """Let the ``edit_host`` validators refuse ``host`` being edited to ``attributes``."""
     folder = host.folder()
-    folder.validators.validate_edit_host(
-        folder.site_id(), host.name(), attributes, SiteConfigurations(folder.tree.config.sites)
-    )
+    for validate in folder.validators.edit_host:
+        validate(
+            folder.site_id(), host.name(), attributes, SiteConfigurations(folder.tree.config.sites)
+        )
 
 
 def _need_relatable_from(
     site_id: SiteId, hosts: Iterable[Host], resolve_host: Callable[[HostName], Host | None]
 ) -> set[SiteId]:
-    """Let the edition refuse a relation ``hosts`` keep once they are monitored on ``site_id``.
+    """Let the ``host_relation`` validators refuse a relation ``hosts`` keep once they are
+    monitored on ``site_id``.
 
     A counterpart among ``hosts`` moves along, so that relation stays on one site.
 
@@ -1497,8 +1496,8 @@ def _need_links_relatable(
     *,
     moving: Container[HostName] = (),
 ) -> set[SiteId]:
-    """Let the edition refuse the relations ``links`` name once their host is monitored on
-    ``site_id``. Counterparts in ``moving`` move along and are skipped.
+    """Let the ``host_relation`` validators refuse the relations ``links`` name once their host
+    is monitored on ``site_id``. Counterparts in ``moving`` move along and are skipped.
 
     Returns the sites of the counterparts asked about.
     """
@@ -1591,8 +1590,8 @@ def _need_relation_mirror(
             counterpart.writable_relations(links)
             counterpart.permissions.need_permission("write", acting_user)
             need_writable_folders([counterpart.folder()], acting_user=acting_user)
-            # validate_edit_host does not look at relations, so the stored attributes stand for
-            # the edit.
+            # The edit_host validators do not look at relations, so the stored attributes stand
+            # for the edit.
             _need_edit_accepted(counterpart, counterpart.attributes)
             pending.append(_MirrorWrite(counterpart, links, visible, optional))
     return pending
@@ -1948,16 +1947,6 @@ class FolderTree:
     def reset_cache(self) -> None:
         self.cache.reset()
 
-    def refresh_config(self) -> None:
-        """Re-read the config snapshot from the global active_config.
-
-        The config is snapshotted once when the tree is created (see folder_tree())
-        and stays valid for the lifetime of the request. This is only needed in tests
-        that change the global config between requests while reusing the same request
-        context (and thus the same cached tree).
-        """
-        self.config = HostsAndFoldersConfig.from_config(active_config)
-
     def all_host_attributes(self) -> dict[str, ABCHostAttribute]:
         if self._all_host_attributes is None:
             self._all_host_attributes = all_host_attributes(
@@ -2026,13 +2015,6 @@ def make_folder_tree(config: FolderTreeConfigSource) -> FolderTree:
     return FolderTree(config=HostsAndFoldersConfig.from_config(config))
 
 
-# Hope that we can cleanup these request global objects one day
-def folder_tree() -> FolderTree:
-    if "folder_tree" not in g:
-        g.folder_tree = make_folder_tree(active_config)
-    return g.folder_tree
-
-
 def folder_from_request(
     tree: FolderTree, var_folder: str | None = None, host_name: str | None = None
 ) -> Folder:
@@ -2097,7 +2079,17 @@ def _search_folder_from_request(
                 varprefix="host_search_",
             ),
         }
-        return SearchFolder(tree, base_folder, search_criteria, acting_user)
+        return SearchFolder(
+            tree,
+            base_folder,
+            search_criteria,
+            acting_user,
+            search_vars=[
+                (varname, value)
+                for varname, value in request.itervars()
+                if varname.startswith(("host_search_", "_change"))
+            ],
+        )
     return None
 
 
@@ -2148,7 +2140,7 @@ class Folder:
             tree=tree,
             name=name,
             parent_folder=parent_folder,
-            validators=folder_validators_registry[str(edition(cmk.utils.paths.omd_root))],
+            validators=folder_validator_registry,
             folder_id=uuid.uuid4().hex,
             folder_path=(folder_path := os.path.join(parent_folder.path(), name)),
             title=title or _fallback_title(folder_path),
@@ -2176,7 +2168,7 @@ class Folder:
             tree=tree,
             name=name,
             parent_folder=parent_folder,
-            validators=folder_validators_registry[str(edition(cmk.utils.paths.omd_root))],
+            validators=folder_validator_registry,
             # Cleanup this compatibility code by adding a cmk-update-config action
             folder_id=serialized["__id"] if "__id" in serialized else uuid.uuid4().hex,
             folder_path=folder_path,
@@ -2200,7 +2192,7 @@ class Folder:
         folder_id: str,
         folder_path: str,
         parent_folder: Folder | None,
-        validators: FolderValidators,
+        validators: FolderValidatorRegistry,
         title: str,
         attributes: HostAttributes,
         locked: bool,
@@ -2238,8 +2230,8 @@ class Folder:
     def __repr__(self) -> str:
         return f"Folder({self.path()!r}, {self._title!r})"
 
-    def breadcrumb(self, request: Request) -> Breadcrumb:
-        return _folder_breadcrumb(self, request)
+    def breadcrumb(self) -> Breadcrumb:
+        return _folder_breadcrumb(self)
 
     def parent(self) -> Folder | None:
         return self._parent
@@ -2465,17 +2457,14 @@ class Folder:
 
     def _folder_attributes_for_base_config(self) -> dict[str, FolderAttributesForBase]:
         # TODO:
-        # These attributes only exist in PRO.
+        # At this time, this is the only attribute there is, and it only exists in PRO.
         # This functionality should be moved to PRO specific code!
         if "bake_agent_package" in self.attributes:
-            attributes: FolderAttributesForBase = {
-                "bake_agent_package": bool(self.attributes["bake_agent_package"]),
+            return {
+                self.path_for_rule_matching(): {
+                    "bake_agent_package": bool(self.attributes["bake_agent_package"]),
+                },
             }
-            # The agent connection mode is inheritable folder configuration, so the
-            # effective (not the folder's own) value is what the baked package must use.
-            if (connection := self.effective_attributes().get("cmk_agent_connection")) is not None:
-                attributes["cmk_agent_connection"] = connection
-            return {self.path_for_rule_matching(): attributes}
         return {}
 
     def save(self, *, pprint_value: bool, acting_user: LoggedInUser) -> None:
@@ -2498,10 +2487,12 @@ class Folder:
 
         root_dir = self.tree.get_root_dir()
         dir_path = root_dir + self.path()
-        if not os.path.exists(dir_path):
+        try:
+            entries = os.listdir(dir_path)
+        except FileNotFoundError:
             return loaded_subfolders
 
-        for entry in os.listdir(dir_path):
+        for entry in entries:
             subfolder_dir = os.path.join(dir_path, entry)
             if os.path.isdir(subfolder_dir):
                 loaded_subfolders[entry] = Folder.load(
@@ -3068,7 +3059,7 @@ class Folder:
                 % {"folder": self.title()}
             )
 
-    def url(self, request: Request, add_vars: Sequence[HTTPVariable] | None = None) -> str:
+    def url(self, add_vars: Sequence[HTTPVariable] | None = None) -> str:
         if add_vars is None:
             add_vars = []
 
@@ -3081,8 +3072,6 @@ class Folder:
         if not have_mode:
             url_vars.append(("mode", "folder"))
         url_vars += add_vars
-        if request.var("debug") == "1":
-            url_vars.append(("debug", "1"))
         return _makeuri_to_wato(url_vars)
 
     def edit_url(self, backfolder: Folder | None = None) -> str:
@@ -3218,9 +3207,8 @@ class Folder:
         acting_user.need_permission("wato.manage_folders")
         self.permissions.need_permission("write", acting_user)
         self.need_unlocked_subfolders()
-        self.validators.validate_create_subfolder(
-            self, attributes, SiteConfigurations(self.tree.config.sites)
-        )
+        for validate in self.validators.create_subfolder:
+            validate(self, attributes, SiteConfigurations(self.tree.config.sites))
         _must_be_in_contactgroups(_get_cgconf_from_attributes(attributes)["groups"], acting_user)
 
         attributes = update_metadata(attributes, created_by=acting_user.id)
@@ -3329,9 +3317,8 @@ class Folder:
         target_folder.permissions.need_permission("write", acting_user)
         target_folder.need_unlocked_subfolders()
         subfolder.need_recursive_permission("write", acting_user)  # Inheritance is changed
-        self.validators.validate_move_subfolder_to(
-            subfolder, target_folder, SiteConfigurations(self.tree.config.sites)
-        )
+        for validate in self.validators.move_subfolder_to:
+            validate(subfolder, target_folder, SiteConfigurations(self.tree.config.sites))
         if os.path.exists(target_folder.filesystem_path() + "/" + subfolder.name()):
             raise MKUserError(
                 None,
@@ -3423,9 +3410,8 @@ class Folder:
         acting_user.need_permission("wato.edit_folders")
         self.permissions.need_permission("write", acting_user)
         self.need_unlocked()
-        self.validators.validate_edit_folder(
-            self, new_attributes, SiteConfigurations(self.tree.config.sites)
-        )
+        for validate in self.validators.edit_folder:
+            validate(self, new_attributes, SiteConfigurations(self.tree.config.sites))
         new_site_id = (
             new_attributes["site"] if "site" in new_attributes else self._inherited_site_id()
         )
@@ -3496,7 +3482,7 @@ class Folder:
 
     def create_hosts(
         self,
-        entries: Iterable[tuple[HostName, HostAttributes, Sequence[HostName] | None]],
+        entries: Sequence[tuple[HostName, HostAttributes, Sequence[HostName] | None]],
         *,
         pprint_value: bool,
         pending_changes: PendingChanges,
@@ -3516,9 +3502,8 @@ class Folder:
         """
         # 1. Check preconditions
         self.prepare_create_hosts(acting_user=acting_user)
-        self.validators.validate_create_hosts(
-            entries, self.site_id(), SiteConfigurations(self.tree.config.sites)
-        )
+        for validate in self.validators.create_hosts:
+            validate(entries, self.site_id(), SiteConfigurations(self.tree.config.sites))
 
         validated = [
             (
@@ -3785,9 +3770,8 @@ class Folder:
         self.need_unlocked_hosts()
         target_folder.permissions.need_permission("write", acting_user)
         target_folder.need_unlocked_hosts()
-        self.validators.validate_move_hosts(
-            self, host_names, target_folder, SiteConfigurations(self.tree.config.sites)
-        )
+        for validate in self.validators.move_hosts:
+            validate(self, host_names, target_folder, SiteConfigurations(self.tree.config.sites))
         target_site = target_folder.site_id()
         counterpart_sites = (
             _need_relatable_from(
@@ -4182,6 +4166,7 @@ class SearchFolder:
         base_folder: Folder,
         criteria: SearchCriteria,
         acting_user: LoggedInUser,
+        search_vars: Sequence[HTTPVariable],
     ) -> None:
         super().__init__()
         self.attributes: dict[str, Any] = {"meta_data": {}}
@@ -4191,6 +4176,7 @@ class SearchFolder:
         self._criteria = criteria
         self._base_folder = base_folder
         self._acting_user = acting_user
+        self._search_vars = search_vars
         self._found_hosts: dict[HostName, Host] | None = None
         self._name = None
 
@@ -4204,8 +4190,8 @@ class SearchFolder:
     def title(self) -> str:
         return _("Search results for folder %(folder)s") % {"folder": self._base_folder.title()}
 
-    def breadcrumb(self, request: Request) -> Breadcrumb:
-        return _folder_breadcrumb(self, request)
+    def breadcrumb(self) -> Breadcrumb:
+        return _folder_breadcrumb(self)
 
     def hosts(self) -> Mapping[HostName, Host]:
         if self._found_hosts is None:
@@ -4250,16 +4236,11 @@ class SearchFolder:
             return self._base_folder.path() + "//search:" + self._name  # type: ignore[unreachable]
         return self._base_folder.path() + "//search"
 
-    def url(self, request: Request, add_vars: Sequence[HTTPVariable] | None = None) -> str:
+    def url(self, add_vars: Sequence[HTTPVariable] | None = None) -> str:
         if add_vars is None:
             add_vars = []
 
-        url_vars: list[HTTPVariable] = [("host_search", "1"), *add_vars]
-
-        for varname, value in request.itervars():
-            if varname.startswith(("host_search_", "_change")):
-                url_vars.append((varname, value))
-        return self.parent().url(request, url_vars)
+        return self.parent().url([("host_search", "1"), *add_vars, *self._search_vars])
 
     def delete_hosts(
         self,
@@ -5216,20 +5197,6 @@ def collect_hosts(hosts: Mapping[HostName, Host]) -> Mapping[HostName, Collected
     return hosts_attributes
 
 
-def folder_preserving_link(request: Request, add_vars: Sequence[HTTPVariable]) -> str:
-    return folder_from_request(
-        folder_tree(), request.var("folder"), request.get_ascii_input("host")
-    ).url(request, add_vars)
-
-
-def make_action_link(request: Request, vars_: Sequence[HTTPVariable]) -> str:
-    session_vars: list[HTTPVariable] = [("_transid", transactions.get())]
-    if (csrf_token := get_session_csrf_token()) is not None:
-        session_vars.append(("_csrf_token", csrf_token))
-
-    return folder_preserving_link(request, [*vars_, *session_vars])
-
-
 @request_memoize()
 def get_folder_title_path(tree: FolderTree, path: PathWithoutSlash) -> list[str]:
     """Return a list with all the titles of the paths'
@@ -5305,6 +5272,28 @@ def may_read_host(
     else:
         host = None
     return host is not None and host.permissions.may("read", acting_user)
+
+
+class FolderReader:
+    """Setup's folders as one user sees them, for a reader outside Setup.
+
+    The tree is read once from the given config, so all questions of one request are answered
+    from the same tree: the title lookups are memoized per tree, so the rows of one response walk
+    it at most once.
+    """
+
+    def __init__(self, config: FolderTreeConfigSource, acting_user: LoggedInUser) -> None:
+        self._tree = make_folder_tree(config)
+        self._acting_user = acting_user
+
+    def title_of(self, path: PathWithoutSlash) -> str | None:
+        return folder_title_path(self._tree, path, self._acting_user)
+
+    def all_titles(self) -> Mapping[PathWithoutSlash, str]:
+        return all_folder_title_paths(self._tree, self._acting_user)
+
+    def may_read_host(self, host_name: str, path: PathWithoutSlash | None) -> bool:
+        return may_read_host(self._tree, HostName(host_name), path, self._acting_user)
 
 
 def _ensure_trailing_slash(path: str) -> PathWithSlash:
@@ -5449,41 +5438,86 @@ class FolderSiteStats:
             FolderSiteStats._walk_folder_tree(subfolder, hosts, folders)
 
 
-@dataclass(frozen=True)
-class FolderValidators:
-    """Edition specific validation of Setup folder and host changes
+class ValidateEditHost(Protocol):
+    """Must not look at the relations: the relation mirror passes the stored attributes of a
+    host for an edit of its relations."""
 
-    The callbacks get the site configurations passed explicitly: they are the
-    part of the config the validations (customer assignments of sites) are
-    based on, and the callbacks must not rely on a request context being
-    around (e.g. cmk-post-rename-site runs them unattended).
+    def __call__(
+        self,
+        folder_site_id: SiteId,
+        host_name: HostName,
+        attributes: HostAttributes,
+        sites: SiteConfigurations,
+        /,
+    ) -> None: ...
+
+
+class ValidateCreateHosts(Protocol):
+    def __call__(
+        self,
+        entries: Sequence[tuple[HostName, HostAttributes, Sequence[HostName] | None]],
+        site_id: SiteId,
+        sites: SiteConfigurations,
+        /,
+    ) -> None: ...
+
+
+class ValidateCreateSubfolder(Protocol):
+    def __call__(
+        self, folder: Folder, attributes: HostAttributes, sites: SiteConfigurations, /
+    ) -> None: ...
+
+
+class ValidateEditFolder(Protocol):
+    def __call__(
+        self, folder: Folder, new_attributes: HostAttributes, sites: SiteConfigurations, /
+    ) -> None: ...
+
+
+class ValidateMoveHosts(Protocol):
+    def __call__(
+        self,
+        folder: Folder,
+        host_names: Iterable[HostName],
+        target_folder: Folder,
+        sites: SiteConfigurations,
+        /,
+    ) -> None: ...
+
+
+class ValidateMoveSubfolderTo(Protocol):
+    def __call__(
+        self, subfolder: Folder, target_folder: Folder, sites: SiteConfigurations, /
+    ) -> None: ...
+
+
+class ValidateHostRelation(Protocol):
+    def __call__(
+        self, site_id: SiteId, other_site_id: SiteId, sites: SiteConfigurations, /
+    ) -> None: ...
+
+
+@dataclass
+class FolderValidatorRegistry:
+    """Validation of Setup folder and host changes
+
+    An operation is refused by the first of its validators raising MKUserError. The
+    validators get the site configurations passed explicitly: they are the part of the
+    config the validations (customer assignments of sites) are based on, and the
+    validators must not rely on a request context being around (e.g.
+    cmk-post-rename-site runs them unattended).
     """
 
-    ident: str
-    validate_edit_host: Callable[[SiteId, HostName, HostAttributes, SiteConfigurations], None]
-    validate_create_hosts: Callable[
-        [
-            Iterable[tuple[HostName, HostAttributes, Sequence[HostName] | None]],
-            SiteId,
-            SiteConfigurations,
-        ],
-        None,
-    ]
-    validate_create_subfolder: Callable[[Folder, HostAttributes, SiteConfigurations], None]
-    validate_edit_folder: Callable[[Folder, HostAttributes, SiteConfigurations], None]
-    validate_move_hosts: Callable[[Folder, Iterable[HostName], Folder, SiteConfigurations], None]
-    validate_move_subfolder_to: Callable[[Folder, Folder, SiteConfigurations], None]
-    #: Called with the sites of the two hosts of a relation a save establishes.
-    validate_host_relation: Callable[[SiteId, SiteId, SiteConfigurations], None]
+    edit_host: list[ValidateEditHost] = field(default_factory=list)
+    create_hosts: list[ValidateCreateHosts] = field(default_factory=list)
+    create_subfolder: list[ValidateCreateSubfolder] = field(default_factory=list)
+    edit_folder: list[ValidateEditFolder] = field(default_factory=list)
+    move_hosts: list[ValidateMoveHosts] = field(default_factory=list)
+    move_subfolder_to: list[ValidateMoveSubfolderTo] = field(default_factory=list)
+    host_relation: list[ValidateHostRelation] = field(default_factory=list)
 
 
-class FolderValidatorsRegistry(Registry[FolderValidators]):
-    @override
-    def plugin_name(self, instance: FolderValidators) -> str:
-        return instance.ident
-
-
-folder_validators_registry = FolderValidatorsRegistry()
+folder_validator_registry = FolderValidatorRegistry()
 
 
 def strip_hostname_whitespace_chars(host: str) -> str:

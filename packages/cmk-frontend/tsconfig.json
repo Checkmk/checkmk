@@ -18,7 +18,11 @@
     "allowSyntheticDefaultImports": true,
     "allowJs": false,
     "paths": {
-      "@/*": ["./src/js/*"]
+      "@/*": ["./src/js/*"],
+      "cmk-shared-typing/*": [
+        "./node_modules/cmk-shared-typing/*",
+        "../../bazel-bin/packages/cmk-frontend/node_modules/cmk-shared-typing/*"
+      ]
     }
   },
   "include": ["./src/**/*"],

@@ -6,6 +6,7 @@
 import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
+import { expect, test, vi } from 'vitest'
 
 import type { HostEntry, HostMode } from '@/monitoring/shared/api/types'
 import HostHeader from '@/monitoring/shared/components/HostHeader.vue'
@@ -33,6 +34,7 @@ function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
 }
 
 const DOWNTIME: HostMode = {
+  id: 'downtime',
   icon_name: 'downtime',
   link: 'view.py?view_name=downtimes_of_host&host=web-1',
   title: 'In scheduled downtime'
@@ -73,6 +75,17 @@ test('links the host name to the given url', () => {
     'href',
     'monitor_all_hosts.py#host=web-1'
   )
+})
+
+test('reports a click on the linked host name', async () => {
+  const onTitleClick = vi.fn((event: MouseEvent) => event.preventDefault())
+  render(HostHeader, {
+    props: { host: makeHost(), url: 'monitor_all_hosts.py#host=web-1', onTitleClick }
+  })
+
+  await userEvent.click(screen.getByRole('link', { name: 'web-1' }))
+
+  expect(onTitleClick).toHaveBeenCalledOnce()
 })
 
 test('shows the name and state without any modes', () => {

@@ -5,10 +5,12 @@
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from pathlib import PurePosixPath
 
-from cmk.gui.type_defs import FilterHTTPVariables, FilterName
-from cmk.livestatus_client import LivestatusColumn
+from cmk.gui.openapi.framework.model import ApiOmitted
+from cmk.gui.type_defs import ColumnName, ContextFilterConfig, FilterHTTPVariables, FilterName
+from cmk.gui.views.drilldown_filters import drop_reason, filter_drilldown, filter_keys
+from cmk.gui.visuals.filter import filter_registry
+from cmk.gui.visuals.filter.drilldowns import RowValues
 
 from .model.contextual_link import VisualLocation
 from .model.link_properties import (
@@ -28,7 +30,7 @@ class EffectiveLink:
     include_time_range: bool
     show_filter_form: bool
     # None carries the native click key, a sequence exactly the filters a custom link configures.
-    filters: Sequence[FilterName] | None = None
+    filters: Sequence[ContextFilterConfig] | None = None
 
     def to_api(self) -> ResolvedLink:
         return ResolvedLink(
@@ -56,51 +58,43 @@ def view_link(
 def link_properties_for(
     links: Sequence[EffectiveLink],
     native_key: Mapping[FilterName, FilterHTTPVariables],
-    values: Mapping[FilterName, FilterHTTPVariables] | None = None,
+    row: RowValues | None = None,
 ) -> LinkProperties:
-    """One map per link: the native click key, or the configured filters valued from what the
-    clicked element knows."""
-    known = native_key if values is None else values
+    """One map per link: the native click key, or the configured filters, valued from the
+    native key first and then from the row."""
     return LinkProperties(
         links=[
             _encoded(native_key)
             if link.filters is None
-            else {name: _encoded_filter(known.get(name)) for name in link.filters}
+            else {
+                filter_name: _encoded_filter(filter_name, keys, native_key, row)
+                for filter_name, keys in filter_keys(link.filters).items()
+            }
             for link in links
         ]
     )
 
 
-def clicked_object_values(
-    row: Mapping[str, LivestatusColumn],
-) -> dict[FilterName, FilterHTTPVariables]:
-    """What a custom link may carry beyond the native key of a clicked host or service row:
-    the states and the folder."""
-    values: dict[FilterName, FilterHTTPVariables] = {
-        "hoststate": {_state_variable("hst", row["host_state"], row["host_has_been_checked"]): "on"}
-    }
-    if "service_state" in row:
-        values["svcstate"] = {
-            _state_variable("st", row["service_state"], row["service_has_been_checked"]): "on"
+def link_columns(links: Sequence[EffectiveLink]) -> list[ColumnName]:
+    """The columns a row needs for the filters the links configure. Not the site, which comes
+    with every row."""
+    return sorted(
+        {
+            column
+            for link in links
+            for filter_config in link.filters or []
+            if (drilldown := filter_drilldown(filter_config["filter_id"])) is not None
+            for column in drilldown.columns
         }
-    if (folder := _folder_path(str(row["host_filename"]))) is not None:
-        values["wato_folder"] = {"wato_folder": folder}
-    return values
+        - {"site"}
+    )
 
 
-def _state_variable(
-    prefix: str, state: LivestatusColumn, has_been_checked: LivestatusColumn
-) -> str:
-    return f"{prefix}p" if has_been_checked != 1 else f"{prefix}{int(str(state))}"
-
-
-def _folder_path(filename: str) -> str | None:
-    # Setup writes one hosts.mk per folder below /wato, so the path between them is the folder.
-    path = PurePosixPath(filename)
-    if path.name != "hosts.mk" or path.parts[:2] != ("/", "wato"):
-        return None
-    folder = path.relative_to("/wato").parent
-    return "" if folder == PurePosixPath(".") else str(folder)
+def with_link_columns(
+    columns: Sequence[ColumnName], links: Sequence[EffectiveLink]
+) -> list[ColumnName]:
+    """The columns a widget queries, plus those its links' filters read."""
+    return [*columns, *(column for column in link_columns(links) if column not in columns)]
 
 
 def _encoded(key: Mapping[FilterName, FilterHTTPVariables]) -> dict[FilterName, FilterResult]:
@@ -110,7 +104,20 @@ def _encoded(key: Mapping[FilterName, FilterHTTPVariables]) -> dict[FilterName, 
     }
 
 
-def _encoded_filter(variables: FilterHTTPVariables | None) -> FilterResult:
+def _encoded_filter(
+    filter_name: FilterName,
+    keys: Sequence[str],
+    native_key: Mapping[FilterName, FilterHTTPVariables],
+    row: RowValues | None,
+) -> FilterResult:
+    if filter_name not in filter_registry:
+        return DroppedFilter(status="dropped", reason="not_available")
+    if (variables := native_key.get(filter_name)) is not None:
+        return EncodedFilter(status="encoded", variables=dict(variables))
+    missing = list(keys)
+    if row is not None and (drilldown := filter_drilldown(filter_name)) is not None:
+        variables, missing = drilldown.carried(row, keys)
+    missing_keys: list[str] | ApiOmitted = missing or ApiOmitted()
     if variables is None:
-        return DroppedFilter(status="dropped", reason="no_value")
-    return EncodedFilter(status="encoded", variables=dict(variables))
+        return DroppedFilter(status="dropped", reason=drop_reason(keys), missing_keys=missing_keys)
+    return EncodedFilter(status="encoded", variables=dict(variables), missing_keys=missing_keys)

@@ -24,6 +24,7 @@ py_library(
     imports = ["../../.."],
     deps = [
         "//packages/cmk-plugins/cmk/plugins/aws_deprecated",
+        "//packages/cmk-plugins/cmk/plugins/aws_v2",
         "//packages/cmk-plugins/cmk/plugins/azure_v2",
         "//packages/cmk-plugins/cmk/plugins/gcp",
         requirement("playwright"),
@@ -33,7 +34,6 @@ py_library(
         requirement("pyyaml"),
         requirement("pytest_playwright"),
         requirement("clickhouse_connect"),
-        "//tests/system:pkg_marker",
         "//tests/testlib/common",
         "//tests/testlib/pytest_helpers",
         "//tests/testlib/system",
@@ -41,7 +41,6 @@ py_library(
         "//:gpl+nonfree_repo": [
             "//cmk/gui/nonfree/pro",
             "//non-free/tests/testlib/system:data_backend",
-            "//non-free/tests/testlib/system/cloud",
             "//non-free/tests/testlib/system/licensing",
             "//packages/cmk-wsgi",
         ],

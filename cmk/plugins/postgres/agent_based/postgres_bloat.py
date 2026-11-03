@@ -49,6 +49,9 @@ def discover_postgres_bloat(section: postgres.Section) -> DiscoveryResult:
             yield Service(item=entry)
 
 
+_REQUIRED_COLUMNS = ("tbloat", "wastedbytes", "ibloat", "wastedibytes", "tablename")
+
+
 def check_postgres_bloat(
     item: str, params: Mapping[str, Any], section: postgres.Section
 ) -> CheckResult:
@@ -58,6 +61,13 @@ def check_postgres_bloat(
         # the database has failed and we simply skip this check. It won't
         # switch to UNKNOWN, but will get stale.
         raise IgnoreResultsError("Login into database failed")
+
+    if missing := [column for column in _REQUIRED_COLUMNS if column not in database[0]]:
+        yield Result(
+            state=State.UNKNOWN,
+            summary=f"Cannot evaluate bloat data: column '{missing[0]}' is missing in the agent output",
+        )
+        return
 
     table_perc_max: Mapping[str, str] | None = None
     table_abs_max: Mapping[str, str] | None = None

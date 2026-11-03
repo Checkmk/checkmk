@@ -219,12 +219,6 @@ def check_ntp_summary(
         )
         return
 
-    if isinstance(params, tuple):  # type: ignore[unreachable]
-        params = {  # type: ignore[unreachable]
-            "ntp_levels": params,
-            "alert_delay": (300, 3600),
-        }
-
     yield from check_ntp(peer.name, params, section)
     store_sync_time(value_store, time.time(), value_store_key="time_server")
     yield Result(state=State.OK, notice=f"Synchronized on {peer.name}")

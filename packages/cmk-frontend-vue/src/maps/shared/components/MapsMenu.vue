@@ -9,9 +9,10 @@ the entries the caller puts in the ``default`` slot as MapsMenuItems.
 
 What is clicked is drawn on a canvas, so there is no element for the focus to
 come back to: it moves into the menu when the menu opens, and the arrow keys walk
-the entries from there. Escape closes it.
+the entries from there. Escape or a click outside closes it.
 -->
 <script setup lang="ts">
+import useClickOutside from 'cmk-ui-library/lib/useClickOutside'
 import { useTemplateRef, watch } from 'vue'
 
 import { usePointerOverlayStyle } from '@/maps/utils/overlayFrame'
@@ -29,6 +30,8 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{ close: [] }>()
+
+const vClickOutside = useClickOutside()
 
 const menuEl = useTemplateRef('menuEl')
 const menuStyle = usePointerOverlayStyle(menuEl, () => ({ x: props.x, y: props.y }))
@@ -79,6 +82,7 @@ function onKeydown(e: KeyboardEvent): void {
 <template>
   <div
     ref="menuEl"
+    v-click-outside="() => emit('close')"
     class="maps-menu"
     role="menu"
     :aria-label="label"
@@ -101,23 +105,22 @@ function onKeydown(e: KeyboardEvent): void {
   width: max-content;
   min-width: 192px;
   max-width: calc(100% - 16px);
-  padding: 6px 0;
-  background: var(--maps-map-view-glass);
-  backdrop-filter: blur(12px);
-  border-radius: var(--dimension-5);
+  padding: var(--dimension-4) 0;
+  background: var(--maps-map-view-overlay-bg);
+  border-radius: var(--border-radius);
   box-shadow:
     0 0 0 1px var(--default-border-color),
-    0 25px 50px -12px rgb(0 0 0 / 60%);
+    var(--maps-shadow-canvas-overlay-high);
 }
 
 .maps-menu:focus-visible {
-  outline: 2px solid var(--interactive-accent);
+  outline: revert;
   outline-offset: 2px;
 }
 
 .maps-menu__header {
   margin-bottom: var(--dimension-3);
-  padding: var(--dimension-4) 14px;
+  padding: var(--dimension-4) var(--dimension-5);
   border-bottom: 1px solid var(--default-border-color);
 }
 

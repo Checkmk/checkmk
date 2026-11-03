@@ -50,7 +50,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.theme import make_theme
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.doc_reference_urls import doc_reference_url
@@ -511,7 +511,10 @@ class DiagnosticsDumpBackgroundJob(BackgroundJob):
         self, job_interface: BackgroundProcessInterface, args: DiagnosticsDumpArgs
     ) -> None:
         with job_interface.gui_context(
-            UserPermissions.from_serialized_config(args.user_permission_config, permission_registry)
+            UserPermissions.from_serialized_config(
+                args.user_permission_config,
+                all_permissions(),
+            )
         ):
             self._do_execute(job_interface, args)
 

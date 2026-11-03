@@ -11,7 +11,7 @@ from werkzeug.test import create_environ
 
 from cmk.gui.config import Config
 from cmk.gui.http import Request
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.search._engines._livestatus import (
     ABCQuicksearchConductor,
     BasicPluginQuicksearchConductor,
@@ -814,7 +814,7 @@ class TestDetermineSearchObjects:
     def test_an_explicit_expression_yields_a_single_aggregated_conductor(
         self, load_config: Config
     ) -> None:
-        user_permissions = UserPermissions.from_config(load_config, permission_registry)
+        user_permissions = UserPermissions.from_config(load_config, all_permissions())
 
         search_objects = self._manager()._determine_search_objects(  # noqa: SLF001
             "h:myhost s:CPU", user_permissions
@@ -825,7 +825,7 @@ class TestDetermineSearchObjects:
         assert search_objects[0]._used_filters == {"h": ["myhost"], "s": ["CPU"]}  # noqa: SLF001
 
     def test_a_plain_query_is_offered_to_every_configured_filter(self, load_config: Config) -> None:
-        user_permissions = UserPermissions.from_config(load_config, permission_registry)
+        user_permissions = UserPermissions.from_config(load_config, all_permissions())
 
         search_objects = self._manager()._determine_search_objects("myhost", user_permissions)  # noqa: SLF001
 
@@ -838,7 +838,7 @@ class TestDetermineSearchObjects:
         ]
 
     def test_a_glob_query_is_converted_to_a_regex(self, load_config: Config) -> None:
-        user_permissions = UserPermissions.from_config(load_config, permission_registry)
+        user_permissions = UserPermissions.from_config(load_config, all_permissions())
 
         search_objects = self._manager()._determine_search_objects("my*host", user_permissions)  # noqa: SLF001
 

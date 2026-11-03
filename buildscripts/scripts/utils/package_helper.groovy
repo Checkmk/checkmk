@@ -88,6 +88,8 @@ void provide_agent_binaries(Map args) {
     def test_binaries_only = args.test_binaries_only == null ? false : true;
     def fake_artifacts = args.fake_artifacts == null ? false : args.fake_artifacts.asBoolean();
     def need_windows_python_cab = args.need_windows_python_cab == null ? false : args.need_windows_python_cab.asBoolean();
+    // The editions shipping the relay MSI (see relay_install_pkg gating in omd/BUILD).
+    def skip_relay_msi = !(args.edition in ["cloud", "ultimate", "ultimatemt"]);
 
     // This _should_ go to an externally maintained file (single point of truth), see
     // https://jira.lan.tribe29.com/browse/CMK-13857
@@ -102,40 +104,6 @@ void provide_agent_binaries(Map args) {
             retry: 1,
             install_cmd: """\
                 cp mk-oracle.{aix,solaris} ${checkout_dir}/omd/packages/mk-oracle/
-                """.stripIndent(),
-        ],
-        "build-mk-oracle-rhel8": [
-            relative_job_name: "${branch_base_folder(false)}/builders/build-cmk-package-mk-oracle-k8s",
-            dependency_paths_hash: all_dependency_paths_hashes["build-mk-oracle"],
-            skip: test_binaries_only || fake_artifacts,
-            retry: 1,
-            additional_build_params: [
-                PACKAGE_PATH: "packages/mk-oracle",
-                DISTRO: "almalinux-8",
-                FILE_ARCHIVING_PATTERN: "mk-oracle*",
-                // do not add line breaks here. ci-artifacts might not find a match
-                // groovylint-disable-next-line LineLength
-                COMMAND_LINE: """bazel build --cmk_version=${args.cmk_version} mk-oracle; cp \$(bazel info workspace)/\$(bazel cquery --output=files mk-oracle) \$(bazel info workspace)""",
-            ],
-            install_cmd: """\
-                cp mk-oracle ${checkout_dir}/omd/packages/mk-oracle/mk-oracle.rhel8
-                """.stripIndent(),
-        ],
-        "build-mk-oracle-rhel8-component-test": [
-            relative_job_name: "${branch_base_folder(false)}/builders/build-cmk-package-mk-oracle-k8s",
-            dependency_paths_hash: all_dependency_paths_hashes["build-mk-oracle"],
-            skip: ! test_binaries_only,
-            retry: 1,
-            additional_build_params: [
-                PACKAGE_PATH: "packages/mk-oracle",
-                DISTRO: "almalinux-8",
-                FILE_ARCHIVING_PATTERN: "test_ora_*_test",
-                // do not add line breaks here. ci-artifacts might not find a match
-                // groovylint-disable-next-line LineLength
-                COMMAND_LINE: """bazel build //packages/mk-oracle:mk-oracle-lib-test-external; for t in test_ora_no_db test_ora_discovery test_ora_with_db; do cp \$(bazel info workspace)/\$(bazel cquery --output=files //packages/mk-oracle:mk-oracle-lib-test-external_tests/\${t}_test) \$(bazel info workspace); done"""
-            ],
-            install_cmd: """\
-                cp test_ora_no_db_test test_ora_discovery_test test_ora_with_db_test ${checkout_dir}/packages/mk-oracle/
                 """.stripIndent(),
         ],
         "build-mk-oracle-aix-solaris-component-test": [
@@ -210,8 +178,7 @@ void provide_agent_binaries(Map args) {
             // winagt-build (checkmk/<branch>/winagt-build) - NOT under builders/.
             relative_job_name: "${branch_base_folder(false)}/relay-msi",
             dependency_paths_hash: all_dependency_paths_hashes["relay-msi"],
-            skip: test_binaries_only || fake_artifacts ||
-                !(args.edition in ["cloud", "ultimate", "ultimatemt"]),
+            skip: test_binaries_only || fake_artifacts || skip_relay_msi,
             retry: 3,
             additional_build_params: AZURE_SIGN_METHOD,
             // Forward the edition so the relay-msi job's edition guard can validate
@@ -224,6 +191,22 @@ void provide_agent_binaries(Map args) {
                     CheckmkRelayInstaller.msi \
                     ${checkout_dir}/non-free/packages/cmk-relay-engine/
                 """.stripIndent(),
+        ],
+        "relay-msi-linux": [
+            // Builds the relay MSI on Linux with Bazel. Nothing consumes its
+            // output yet (it is unsigned), it runs alongside relay-msi only so
+            // that a change breaking the Linux build fails here. Keyed on the git
+            // ref like winagt-build-linux: its Bazel inputs include the shared
+            // WiX/wine toolchain. Never downloaded: its MSI carries the same file
+            // name as relay-msi's.
+            relative_job_name: "${branch_base_folder(false)}/relay-msi-linux",
+            skip: test_binaries_only || fake_artifacts || skip_relay_msi,
+            retry: 1,
+            additional_build_params: [],
+            // Like relay-msi: for the edition guard, kept out of the cache
+            // identity as the MSI is the same across the gated editions.
+            additional_build_params_no_check: [EDITION: args.edition],
+            fetch_artifacts: false,
         ],
         "winagt-build-modules-linux": [
             // The deb/rpm/cma package build no longer needs this: it builds

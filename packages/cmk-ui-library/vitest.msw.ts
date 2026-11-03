@@ -3,8 +3,14 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { paths as RestApiPaths } from 'cmk-shared-typing/typescript/openapi_internal'
+import { http } from 'msw'
 import { setupServer } from 'msw/node'
+import { createOpenApiHttp } from 'openapi-msw'
 import { afterAll, afterEach, beforeAll } from 'vitest'
+
+export { createOpenApiHttp }
+export type { ResponseResolver } from 'openapi-msw'
 
 /**
  * An msw server for one test file, started and cleaned up around it.
@@ -22,3 +28,7 @@ export function useMswServer(
   afterAll(() => server.close())
   return server
 }
+
+export const restApiHttp = createOpenApiHttp<RestApiPaths>({ baseUrl: '*/api/internal' })
+
+export const untypedHttp = http

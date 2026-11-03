@@ -5,6 +5,7 @@
  */
 import type { MapElement } from '@/maps/types/api'
 
+import { asBoundObject } from './naming'
 import { SAFE_URL_SCHEMES, hasSafeUrlAuthority } from './sanitize'
 
 // Strip the trailing "/check_mk" segment (and trailing slash) from a stored
@@ -75,17 +76,18 @@ export function buildCheckmkViewUrl(
 }
 
 export function buildCheckmkUrl(
-  obj: MapElement,
+  object: MapElement,
   checkmkUrl: string | null,
   siteOverride?: string | null
 ): string | null {
+  const obj = asBoundObject(object)
   // Don't fall back to the URL's path segment for the site — on a central
   // that would pin the link to the central site id even for remote hosts.
   const opts = { site: siteOverride ?? null, chrome: true }
-  if ((obj.type === 'host' || obj.type === 'line') && obj.host_name && !obj.service_description) {
+  if (obj.type === 'host' && obj.host_name) {
     return buildCheckmkViewUrl(checkmkUrl, 'hoststatus', { host: obj.host_name }, opts)
   }
-  if ((obj.type === 'service' || obj.type === 'line') && obj.host_name && obj.service_description) {
+  if (obj.type === 'service' && obj.host_name && obj.service_description) {
     return buildCheckmkViewUrl(
       checkmkUrl,
       'service',
@@ -220,6 +222,9 @@ export function hostStateOn(state: string): string {
   if (state === 'UNREACHABLE') {
     return 'hst2'
   }
+  if (state === 'PENDING') {
+    return 'hstp'
+  }
   return 'hst0' // UP
 }
 
@@ -228,7 +233,8 @@ export function hostStateOn(state: string): string {
 const _MAX_HOST_REGEX_MEMBERS = 90
 
 /**
- * Checkmk view listing a host's (or site's) services filtered to one state —
+ * Checkmk view listing the services of a host, a site, a host group or a set of
+ * hosts, filtered to one state —
  * the target of the clickable state pills/chips in HoverMenu and DetailDrawer.
  * Returns null outside a Checkmk deployment or for states the svcstate filter
  * can't express (PENDING maps to the filter's "stp" checkbox, so it's fine).
@@ -239,6 +245,7 @@ export function buildServiceStateViewUrl(
     host?: string | null | undefined
     site?: string | null | undefined
     hosts?: string[] | null | undefined
+    hostgroup?: string | null | undefined
   },
   state: string
 ): string | null {
@@ -258,6 +265,9 @@ export function buildServiceStateViewUrl(
     params._active = 'svcstate;site'
   } else if (target.host) {
     params.host = target.host
+  } else if (target.hostgroup) {
+    params.opthost_group = target.hostgroup
+    params._active = 'svcstate;opthostgroup'
   } else if (target.hosts && target.hosts.length) {
     if (target.hosts.length > _MAX_HOST_REGEX_MEMBERS) {
       return null
@@ -276,15 +286,6 @@ export function buildServiceStateViewUrl(
 const _VIEW_LINK_DISPLAY_OPTIONS = 'f'
 
 /**
- * What an object's ``services_summary`` counts. Host groups roll up member HOST
- * states into that field; everyone else counts services. (Host dyngroups carry
- * their host rollup separately in ``hosts_summary``.)
- */
-export function summarySubject(obj: MapElement): 'hosts' | 'services' {
-  return obj.type === 'hostgroup' ? 'hosts' : 'services'
-}
-
-/**
  * Checkmk allhosts view filtered to one host state over a member set — the
  * target of clickable HOST state pills/chips on dyngroups.
  */
@@ -296,7 +297,7 @@ export function buildHostStateViewUrl(
   if (!checkmkUrl) {
     return null
   }
-  if (!['UP', 'DOWN', 'UNREACHABLE'].includes(state)) {
+  if (!['UP', 'DOWN', 'UNREACHABLE', 'PENDING'].includes(state)) {
     return null
   }
   if (!hosts.length || hosts.length > _MAX_HOST_REGEX_MEMBERS) {

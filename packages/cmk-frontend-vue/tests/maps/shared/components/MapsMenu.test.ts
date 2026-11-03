@@ -20,6 +20,7 @@ function renderMenu() {
       components: { MapsMenu, MapsMenuItem },
       setup: () => ({ open, picked }),
       template: `
+        <button type="button">Elsewhere</button>
         <MapsMenu v-if="open" :x="10" :y="10" label="web01" heading="web01" @close="open = false">
           <MapsMenuItem href="http://checkmk/site/host">Host in Checkmk</MapsMenuItem>
           <MapsMenuItem @click="picked.push('edit')">Edit</MapsMenuItem>
@@ -80,6 +81,26 @@ describe('MapsMenu', () => {
 
     await user.keyboard('{Escape}')
     expect(open.value).toBe(false)
+  })
+
+  it('closes on a click outside it', async () => {
+    const user = userEvent.setup()
+    const { open } = renderMenu()
+    await waitFor(() => expect(entry('Host in Checkmk')).toHaveFocus())
+
+    await user.click(screen.getByRole('button', { name: 'Elsewhere' }))
+
+    expect(open.value).toBe(false)
+  })
+
+  it('stays open on a click inside it', async () => {
+    const user = userEvent.setup()
+    const { open } = renderMenu()
+    await waitFor(() => expect(entry('Host in Checkmk')).toHaveFocus())
+
+    await user.click(screen.getByText('web01'))
+
+    expect(open.value).toBe(true)
   })
 
   it('opens a link entry in a new tab', async () => {

@@ -9,8 +9,8 @@ from typing import override
 import cmk.utils.paths
 from cmk.ccc.site import omd_site
 from cmk.ruleset_matcher.labels import BuiltinLabelsKey, update_builtin_host_labels
-from cmk.update_config.lib import ExpiryVersion
-from cmk.update_config.registry import update_action_registry, UpdateAction
+from cmk.update_config.internal import ExpiryVersion, UpdateAction
+from cmk.update_config.registry import update_action_registry
 
 
 class CreateBuiltinHostLabelsFile(UpdateAction):

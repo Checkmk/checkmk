@@ -49,9 +49,9 @@ defineProps<{
   box-sizing: border-box;
   width: 100%;
   margin: 0;
-  padding: var(--dimension-4) 14px;
-  font-size: var(--font-size-large);
-  line-height: 20px;
+  padding: var(--dimension-4) var(--dimension-5);
+  font-size: var(--font-size-normal);
+  line-height: 16px;
   font-weight: inherit;
   letter-spacing: inherit;
 
@@ -80,7 +80,7 @@ defineProps<{
 }
 
 .maps-menu-item:focus-visible {
-  outline: 2px solid var(--interactive-accent);
+  outline: revert;
   outline-offset: 2px;
 }
 

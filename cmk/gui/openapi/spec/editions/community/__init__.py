@@ -74,7 +74,7 @@ from cmk.gui.visuals.info._openapi._registration import (
 )
 from cmk.gui.wato._permissions import register as wato_permissions_register
 from cmk.gui.wato.pages.folders import folder_bulk_action_registry, folder_menu_entry_registry
-from cmk.gui.watolib.hosts_and_folders import host_action_menu_registry
+from cmk.gui.watolib.hosts_and_folders import FolderReader, host_action_menu_registry
 from cmk.gui.watolib.mode import mode_registry
 from cmk.maps.gui._permissions import register as maps_permissions_register
 from cmk.maps.gui.pagetype import MapPage
@@ -103,8 +103,12 @@ def register_for_community() -> None:
     views_register_endpoints(endpoint_family_registry, versioned_endpoint_registry)
     inventory_register(endpoint_family_registry, versioned_endpoint_registry)
     dashboard_register_endpoints(endpoint_family_registry, versioned_endpoint_registry)
-    monitor_hosts_register_endpoints(endpoint_family_registry, versioned_endpoint_registry)
-    monitor_services_register_endpoints(endpoint_family_registry, versioned_endpoint_registry)
+    monitor_hosts_register_endpoints(
+        endpoint_family_registry, versioned_endpoint_registry, FolderReader
+    )
+    monitor_services_register_endpoints(
+        endpoint_family_registry, versioned_endpoint_registry, FolderReader
+    )
     bi_register(endpoint_registry)
     user_message_register_endpoints(endpoint_family_registry, versioned_endpoint_registry)
     agent_registration_register_endpoints(endpoint_family_registry, versioned_endpoint_registry)

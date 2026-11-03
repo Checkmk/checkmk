@@ -13,10 +13,11 @@ from pytest import MonkeyPatch
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.logged_in import LoggedInNobody
-from cmk.gui.table import table_element
+from cmk.gui.table import table_element, table_search_term
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.web.utils.html import HTML
 from tests.unit.cmk.gui.compare_html import compare_html
+from tests.unit.cmk.gui.helpers.setup_mode_test_helper import icon_titles
 
 
 def read_out_simple_table(text: str) -> list[list[str]]:
@@ -335,3 +336,136 @@ def test_table_cubical(
     # Assert data correctness
     assert len(data) <= limit, f"Wrong number of rows: Got {len(data)}, should be <= {limit}"
     assert data == rows[:limit], f"Incorrect data: {data}\n\nVS\n{rows[:limit]}"
+
+
+@pytest.mark.usefixtures("request_context", "with_user_login", "patch_theme")
+def test_a_search_which_is_no_regular_expression_finds_the_rows_containing_it() -> None:
+    request.set_var("search", "disk(")
+
+    with output_funnel.plugged():
+        with table_element(table_id="0", title="Messages", limit=100) as table:
+            for text in ["disk(s) full", "cpu"]:
+                table.row()
+                table.cell("Text", text)
+        written_text = "".join(output_funnel.drain())
+
+    assert read_out_simple_table(written_text)[1:] == [["disk(s)full"]]
+
+
+@pytest.mark.usefixtures("request_context", "with_user_login", "patch_theme")
+def test_a_search_finds_no_rows_by_cells_with_an_empty_search_text() -> None:
+    # E.g. the URLs of links to the rows tell the pages they are on.
+    request.set_var("search", "disk")
+
+    with output_funnel.plugged():
+        with table_element(table_id="0", title="Messages", limit=100) as table:
+            for text in ["disk full", "cpu"]:
+                table.row()
+                table.cell("Text", text)
+                link = HTML.without_escaping('<a href="wato.py?mode=disk">Edit</a>')
+                table.cell("Link", link, search_text="")
+        written_text = "".join(output_funnel.drain())
+
+    assert read_out_simple_table(written_text)[1:] == [["diskfull", "Edit"]]
+
+
+def _table_with_search_texts() -> str:
+    with output_funnel.plugged():
+        with table_element(table_id="0", title="States", limit=100) as table:
+            for state in ["CRIT", "OK"]:
+                table.row()
+                state_html = HTML.without_escaping(f'<span class="state">{state}</span>')
+                table.cell("State", state_html, search_text=state)
+        return "".join(output_funnel.drain())
+
+
+@pytest.mark.usefixtures("request_context", "with_user_login", "patch_theme")
+def test_a_search_finds_rows_by_the_search_text_of_a_cell() -> None:
+    request.set_var("search", "crit")
+
+    assert read_out_simple_table(_table_with_search_texts())[1:] == [["CRIT"]]
+
+
+@pytest.mark.usefixtures("request_context", "with_user_login", "patch_theme")
+def test_a_search_finds_no_rows_by_the_html_of_a_cell_with_a_search_text() -> None:
+    request.set_var("search", "span")
+
+    assert "Found no matching rows." in _table_with_search_texts()
+
+
+@pytest.mark.usefixtures("request_context")
+def test_search_term_is_the_search_in_lower_case_with_its_blanks() -> None:
+    request.set_var("search", " Disk ")
+
+    assert table_search_term() == " disk "
+
+
+@pytest.mark.usefixtures("request_context", "with_user_login", "patch_theme")
+def test_a_search_of_blanks_filters_the_rows() -> None:
+    request.set_var("search", " ")
+
+    with output_funnel.plugged():
+        with table_element(table_id="0", title="Messages", limit=100) as table:
+            for text in ["disk full", "cpu"]:
+                table.row()
+                table.cell("Text", text)
+        written_text = "".join(output_funnel.drain())
+
+    assert read_out_simple_table(written_text)[1:] == [["diskfull"]]
+
+
+def _table_with_draggable_rows(*, searchable: bool = True) -> str:
+    with output_funnel.plugged():
+        with table_element(
+            table_id="0", title="Messages", limit=100, searchable=searchable
+        ) as table:
+            for text in ["disk full", "cpu"]:
+                table.row()
+                table.cell("Actions", css=["buttons"])
+                table.element_dragger_url("tr", base_url="wato.py?mode=messages")
+                table.cell("Text", text)
+        return "".join(output_funnel.drain())
+
+
+def _drag_handles(page: str) -> int:
+    return len(bs4.BeautifulSoup(page, "lxml").select("a.element_dragger"))
+
+
+@pytest.mark.usefixtures("request_context", "with_user_login", "patch_theme")
+def test_a_table_offers_dragging_its_rows() -> None:
+    assert _drag_handles(_table_with_draggable_rows()) == 2
+
+
+@pytest.mark.usefixtures("request_context", "with_user_login", "patch_theme")
+def test_a_table_showing_only_the_rows_its_search_finds_offers_no_dragging() -> None:
+    # The position to drop a row at counts the shown rows only.
+    request.set_var("search", "disk")
+
+    assert _drag_handles(_table_with_draggable_rows()) == 0
+
+
+@pytest.mark.usefixtures("request_context", "with_user_login", "patch_theme")
+def test_a_table_showing_only_the_rows_its_search_finds_tells_to_clear_it_to_drag_them() -> None:
+    request.set_var("search", "disk")
+
+    page = _table_with_draggable_rows()
+
+    assert icon_titles(bs4.BeautifulSoup(page, "lxml")) == ["Clear the search to move this entry"]
+
+
+@pytest.mark.usefixtures("request_context", "with_user_login", "patch_theme")
+def test_a_table_not_filtering_its_rows_by_a_search_offers_dragging_them() -> None:
+    request.set_var("search", "disk")
+
+    assert _drag_handles(_table_with_draggable_rows(searchable=False)) == 2
+
+
+@pytest.mark.usefixtures("request_context", "with_user_login", "patch_theme")
+def test_a_table_with_draggable_rows_sorts_them_by_no_column_while_searching() -> None:
+    # Like without a search, the rows keep the order they are dragged in.
+    request.set_var("search", "u")
+    request.set_var("_0_sort", "1,0")
+
+    page = _table_with_draggable_rows()
+
+    assert [row[-1] for row in read_out_simple_table(page)[1:]] == ["diskfull", "cpu"]

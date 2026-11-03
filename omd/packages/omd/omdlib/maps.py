@@ -10,7 +10,7 @@ from omdlib.config_api import Hook, null_action
 # edition, so the hook defaults to "on" everywhere the hook file is present.
 MAPS = Hook(
     name="MAPS",
-    choices=[("on", "enable"), ("off", "disable")],
+    choices=lambda _edition: [("on", "enable"), ("off", "disable")],
     default=lambda _edition: "on",
     activation=null_action,
 )

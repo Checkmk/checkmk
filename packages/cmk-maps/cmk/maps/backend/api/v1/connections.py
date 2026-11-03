@@ -92,9 +92,9 @@ async def list_backends(
 # added later without a ticket-contract change.
 
 
-# Higher number = more "interesting"; OK comes last, PENDING/unknown stable in
-# the middle so a flapping service doesn't reshuffle the visible top-N.
-_SERVICE_SORT_KEY = {"CRITICAL": 0, "WARNING": 1, "UNKNOWN": 2, "PENDING": 3, "OK": 4}
+# Worst first, as Checkmk ranks the states; PENDING sits above OK so a flapping
+# service doesn't reshuffle the visible top-N.
+_SERVICE_SORT_KEY = {"CRITICAL": 0, "UNKNOWN": 1, "WARNING": 2, "PENDING": 3, "OK": 4}
 
 
 def _sorted_truncated_services(svcs: list[ServiceRow], limit: int) -> tuple[list[ServiceRow], int]:

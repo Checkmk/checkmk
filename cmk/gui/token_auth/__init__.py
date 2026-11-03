@@ -25,10 +25,13 @@ from cmk.gui.token_auth._store import (
     InvalidToken,
     RelayRegistrationToken,
     TokenDetails,
+    TokenExpired,
     TokenId,
+    TokenRevoked,
     TokenStore,
     TokenType,
     TokenUseAlreadyConsumed,
+    UnknownToken,
 )
 
 __all__ = [
@@ -44,10 +47,13 @@ __all__ = [
     "TokenAuthenticatedPage",
     "TokenAuthenticatedPageRegistry",
     "TokenDetails",
+    "TokenExpired",
     "TokenId",
+    "TokenRevoked",
     "TokenStore",
     "TokenType",
     "TokenUseAlreadyConsumed",
+    "UnknownToken",
     "get_token_store",
     "InvalidToken",
     "handle_token_page",

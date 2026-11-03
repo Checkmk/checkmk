@@ -17,7 +17,7 @@
  */
 import { type Ref, type ShallowRef } from 'vue'
 
-import { objectIconSize } from '@/maps/map/objectIconSize'
+import { type IconSizes, objectIconSize } from '@/maps/map/objectIconSize'
 import type { MapConfig, MapElement } from '@/maps/types/api'
 
 /** The box a line aims at: centre plus half-extents, in map units. */
@@ -60,11 +60,7 @@ export function useCanvasLineAnchors(source: {
   canvas: Readonly<ShallowRef<HTMLElement | null>>
   config: () => MapConfig
   dragPositions: () => Record<string, { x: number; y: number }>
-  iconSizes: () => {
-    map: number | null | undefined
-    override: number | undefined
-    fallback: number
-  }
+  iconSizes: () => IconSizes
   toMapCoords: (offsetX: number, offsetY: number, rect: DOMRect) => { x: number; y: number }
   scale: () => { sx: number; sy: number }
   /** Re-measure whenever the canvas resizes. */

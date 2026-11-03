@@ -7,6 +7,9 @@
 System tests run against a Checkmk site (or container) under test. Everything
 here is about that: which package is tested, how long a run may take, what to
 report when it fails. Suite specific setup lives in the suites' own conftests.
+
+non-free/tests/system/conftest.py holds a copy for the non-free suites. Keep
+both in sync.
 """
 
 import pytest

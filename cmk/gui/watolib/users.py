@@ -42,7 +42,6 @@ from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.pending_changes import Change, ChangeScope, PendingChanges
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoSingleConfigFile
 from cmk.gui.watolib.user_scripts import (
-    declare_notification_plugin_permissions,
     user_script_choices,
     user_script_title,
 )
@@ -510,9 +509,6 @@ def notification_script_title(name: str) -> str:
 
 @request_memoize()
 def notification_script_choices() -> list[tuple[str, str]]:
-    # Ensure the required dynamic permissions are registered
-    declare_notification_plugin_permissions()
-
     choices: list[tuple[str, str]] = []
     for choice in user_script_choices("notifications"):
         notification_plugin_name, _notification_plugin_title = choice

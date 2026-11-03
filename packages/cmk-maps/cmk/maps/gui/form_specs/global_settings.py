@@ -63,7 +63,7 @@ def _default_connection_element(
                 elements=[
                     SingleChoiceElement(
                         name=cid,
-                        title=Title(label or cid),  # astrein: disable=localization-checker
+                        title=Title(label or cid),  # astrein: disable=localization
                     )
                     for cid, label in connection_choices
                 ],
@@ -150,7 +150,7 @@ def map_defaults_spec(
                         ),
                         CascadingSingleChoiceElement(
                             name="radar",
-                            title=Title("Radar (dynamic filter)"),
+                            title=Title("Radar map"),
                             parameter_form=FixedValue(value=None),
                         ),
                         CascadingSingleChoiceElement(
@@ -173,9 +173,9 @@ def map_defaults_spec(
                     title=Title("Rendering style"),
                     help_text=Help(
                         "Pre-selected rendering style for new maps. NagVis-classic "
-                        "anchors objects top-left with flat textboxes on a light "
-                        "canvas; imported NagVis maps switch to it automatically "
-                        "regardless of this default."
+                        "places objects as NagVis does, anchored top-left; imported "
+                        "NagVis maps switch to it automatically regardless of this "
+                        "default."
                     ),
                     elements=[
                         SingleChoiceElement(name="default", title=Title("Maps (default)")),
@@ -235,7 +235,7 @@ def object_defaults_spec(title: Title = Title("Object defaults")) -> Dictionary:
                     elements=[
                         SingleChoiceElement(
                             name=name,
-                            title=Title(title),  # astrein: disable=localization-checker
+                            title=Title(title),  # astrein: disable=localization
                         )
                         for name, title in LINE_STYLES
                     ],

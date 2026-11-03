@@ -5,7 +5,7 @@
  */
 import { computed, ref } from 'vue'
 
-import type { PanelKey, RangeChange, RequestedTimeRange } from '../types'
+import type { RangeChange, RangeChangeSource, RequestedTimeRange } from '../types'
 import { type RequestedTimeRangeState, nextRangeChange } from './useRequestedTimeRange'
 
 /**
@@ -22,7 +22,7 @@ export function useLocalTimeRange(initial: RequestedTimeRange): RequestedTimeRan
 
   return {
     requestedTimeRange: computed(() => request.value),
-    setRequestedTimeRange: (range: RequestedTimeRange, source: PanelKey) => {
+    setRequestedTimeRange: (range: RequestedTimeRange, source: RangeChangeSource) => {
       request.value = { start: range.start, end: range.end }
       rangeChange.value = nextRangeChange(rangeChange.value, source)
     },

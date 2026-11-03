@@ -6,7 +6,6 @@
 import sys
 from itertools import chain
 
-import cmk.ccc.debug
 from cmk.bakery.v1 import (
     BakeryPlugin,
     create_bakery_plugin,
@@ -38,7 +37,7 @@ def bakery_plugin(
     registered_bakery_plugins[str(bakery_plugin_object.name)] = bakery_plugin_object
 
 
-def get_bakery_plugins() -> dict[str, BakeryPlugin]:
+def get_bakery_plugins(*, debug: bool) -> dict[str, BakeryPlugin]:
     for plugin, exception in chain(
         # This is where our unmigrated shipped bakery plugins reside:
         load_plugins_with_exceptions("cmk.base.nonfree.plugins.bakery"),
@@ -55,7 +54,7 @@ def get_bakery_plugins() -> dict[str, BakeryPlugin]:
         load_plugins_with_exceptions("cmk.base.plugins.bakery"),
     ):
         console.error(f"Error in bakery plug-in {plugin}: {exception}", file=sys.stderr)
-        if cmk.ccc.debug.enabled():
+        if debug:
             raise exception
 
     return registered_bakery_plugins

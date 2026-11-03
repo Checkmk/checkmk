@@ -44,7 +44,7 @@ from cmk.gui.default_permissions import PERMISSION_SECTION_GENERAL
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.header import make_header
 from cmk.gui.hooks import request_memoize
-from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.generator import ClickAction, HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, request, response
 from cmk.gui.i18n import _, _l, _u
@@ -59,10 +59,10 @@ from cmk.gui.main_menu import (
 from cmk.gui.main_menu_types import MainMenuItem
 from cmk.gui.page_menu import (
     doc_reference_to_page_menu,
+    make_click_action_link,
     make_confirmed_form_submit_link,
     make_external_link,
     make_form_submit_link,
-    make_javascript_link,
     make_simple_link,
     PageMenu,
     PageMenuDropdown,
@@ -74,6 +74,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import Page, page_registry, PageContext, PageEndpoint, PageHandler
 from cmk.gui.permissions import (
     declare_permission_section,
+    dynamic_permission_registry,
     Permission,
     permission_registry,
     permission_section_registry,
@@ -111,7 +112,7 @@ from cmk.shared_typing.main_menu import (
     NavItemTopic,
     NavItemTopicEntry,
 )
-from cmk.web.utils.confirm_links import make_confirm_delete_link
+from cmk.web.utils.confirm_links import ConfirmLink, make_confirm_delete_link
 from cmk.web.utils.flashed_messages import flash, get_flashed_messages
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import DynamicIcon, DynamicIconName, IconNames, StaticIcon
@@ -643,7 +644,7 @@ class Overridable[T_OverridableConfig: OverridableConfig](Base[T_OverridableConf
     # TODO: Wie is die Semantik hier genau? Umsetzung vervollständigen!
     def may_see(self) -> bool:
         perm_name = f"{self.type_name()}.{self.name()}"
-        return perm_name not in permission_registry or user.may(perm_name)
+        return not user.permission_exists(perm_name) or user.may(perm_name)
 
         # if self.owner() == "" and not user.may(perm_name):
         #    return False
@@ -702,7 +703,7 @@ class Overridable[T_OverridableConfig: OverridableConfig](Base[T_OverridableConf
             filename="edit_%s.py" % self.type_name(),
         )
 
-    def delete_url(self) -> str:
+    def delete_url(self) -> ConfirmLink:
         add_vars: list[HTTPVariable] = [("_delete", self.name())]
         if not self.is_mine():
             add_vars.append(("_owner", self.owner()))
@@ -933,7 +934,7 @@ class Overridable[T_OverridableConfig: OverridableConfig](Base[T_OverridableConf
         return page_dicts_by_instance_id
 
     @classmethod
-    def load(cls, user_permissions: UserPermissions) -> OverridableInstances[Self]:
+    def load(cls) -> OverridableInstances[Self]:
         instances = OverridableInstances[Self]()
 
         # First load built-in pages. Set username to ''
@@ -953,20 +954,26 @@ class Overridable[T_OverridableConfig: OverridableConfig](Base[T_OverridableConf
                 continue
             instances.add_instance((user_id, name), instance)
 
-        cls._declare_instance_permissions(instances, user_permissions)
         return instances
 
     @classmethod
-    def _declare_instance_permissions(
-        cls, instances: OverridableInstances[Self], user_permissions: UserPermissions
-    ) -> None:
-        for instance in instances.instances():
-            # Skip the permission declaration for the fallback topic.
+    def instance_permissions(cls) -> Iterator[Permission]:
+        """The permissions of the public instances of this page type"""
+        # The publish permissions are static ones, so the registry is sufficient here
+        user_permissions = UserPermissions.from_config(active_config, permission_registry)
+        for instance in cls.load().instances():
+            # Skip the permission for the fallback topic.
             # Otherwise, users can disable it leading to a crashed GUI
             if instance.name() == cls.default_topic():
                 continue
             if instance.is_public(user_permissions):
-                cls.declare_permission(instance, user_permissions)
+                yield Permission(
+                    section=permission_section_registry[cls.type_name()],
+                    name=instance.name(),
+                    title=f"{instance.title()} ({instance.name()})",
+                    description=instance.description(),
+                    defaults=default_authorized_builtin_role_ids,
+                )
 
     @classmethod
     def save_user_instances(
@@ -992,20 +999,6 @@ class Overridable[T_OverridableConfig: OverridableConfig](Base[T_OverridableConf
         return self.__class__(page_config)
 
     @classmethod
-    def declare_permission(cls, page: Self, user_permissions: UserPermissions) -> None:
-        permname = f"{cls.type_name()}.{page.name()}"
-        if page.is_public(user_permissions) and permname not in permission_registry:
-            permission_registry.register(
-                Permission(
-                    section=permission_section_registry[cls.type_name()],
-                    name=page.name(),
-                    title=f"{page.title()} ({page.name()})",
-                    description=page.description(),
-                    defaults=default_authorized_builtin_role_ids,
-                )
-            )
-
-    @classmethod
     def custom_list_buttons(cls, instance: Self) -> None:
         pass
 
@@ -1027,8 +1020,7 @@ class ListPage[T: Overridable](Page):
 
     @override
     def page(self, ctx: PageContext) -> None:
-        user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
-        instances = self._type.load(user_permissions)
+        instances = self._type.load()
         self._type.need_overriding_permission("edit")
 
         title_plural = self._type.phrase("title_plural")
@@ -1113,7 +1105,7 @@ class ListPage[T: Overridable](Page):
 
             try:
                 instances.remove_instance((owner, delname))
-                self._type.save_user_instances(instances, user_permissions, owner)
+                self._type.save_user_instances(instances, ctx.user_permissions, owner)
                 flash(
                     _("Your %(pagetype_title)s has been deleted.")
                     % {"pagetype_title": pagetype_title}
@@ -1123,10 +1115,10 @@ class ListPage[T: Overridable](Page):
                 html.user_error(e)
 
         elif request.var("_bulk_delete") and transactions.check_transaction(request):
-            self._bulk_delete_after_confirm(instances, user_permissions)
+            self._bulk_delete_after_confirm(instances, ctx.user_permissions)
 
         my_instances, foreign_instances, builtin_instances = self._partition_instances(
-            instances, user_permissions
+            instances, ctx.user_permissions
         )
         for what, title, scope_instances in [
             ("my", _("Customized"), my_instances),
@@ -1139,13 +1131,15 @@ class ListPage[T: Overridable](Page):
                 if what != "builtin":
                     with html.form_context("bulk_delete", method="POST"):
                         self._show_table(
-                            instances, scope_instances, user_permissions, deletable=True
+                            instances, scope_instances, ctx.user_permissions, deletable=True
                         )
                         html.hidden_field("selection_id", SelectionId.from_request(request))
                         html.hidden_fields()
                         init_rowselect(self._type.type_name())
                 else:
-                    self._show_table(instances, scope_instances, user_permissions, deletable=False)
+                    self._show_table(
+                        instances, scope_instances, ctx.user_permissions, deletable=False
+                    )
 
         html.call_ts_function(
             function_name="check_menu_entry_by_checkboxes", arguments={"id": "delete"}
@@ -1293,9 +1287,7 @@ class EditPage[T_OverridableConfig: OverridableConfig, T: Overridable](Page):
         """Page for editing an existing page, or creating a new one"""
         back_url = request.get_url_input("back", self._type.list_url())
 
-        instances = self._type.load(
-            user_permissions := UserPermissions.from_config(ctx.config, permission_registry)
-        )
+        instances = self._type.load()
         self._type.need_overriding_permission("edit")
 
         raw_mode = request.get_ascii_input_mandatory("mode", "edit")
@@ -1372,7 +1364,7 @@ class EditPage[T_OverridableConfig: OverridableConfig, T: Overridable](Page):
             user_role_ids=user.role_ids,
         )
 
-        parameters, keys_by_topic = self._collect_parameters(mode, user_permissions)
+        parameters, keys_by_topic = self._collect_parameters(mode, ctx.user_permissions)
 
         vs = Dictionary(
             title=_("General properties"),
@@ -1384,7 +1376,7 @@ class EditPage[T_OverridableConfig: OverridableConfig, T: Overridable](Page):
                 mode,
                 {
                     p.name(): p
-                    for p in instances.permitted_instances_sorted(user_permissions)
+                    for p in instances.permitted_instances_sorted(ctx.user_permissions)
                     if p.is_mine()
                 },
                 self._type.reserved_unique_ids(),
@@ -1423,7 +1415,7 @@ class EditPage[T_OverridableConfig: OverridableConfig, T: Overridable](Page):
                 new_page = self._type.deserialize(page_dict)
 
                 instances.add_page(new_page)
-                self._type.save_user_instances(instances, user_permissions, owner_id)
+                self._type.save_user_instances(instances, ctx.user_permissions, owner_id)
                 if request.var("save_and_view"):
                     redirect_url = new_page.after_create_url() or makeuri_contextless(
                         request,
@@ -1799,7 +1791,7 @@ class OverridableContainer[T_OverridableContainerConfig: OverridableContainerCon
         if not cls.may_contain(added_type):
             return []
 
-        pages = cls.load(user_permissions).pages(user_permissions)
+        pages = cls.load().pages(user_permissions)
         if not pages:
             return []
 
@@ -1816,8 +1808,11 @@ class OverridableContainer[T_OverridableContainerConfig: OverridableContainerCon
             yield PageMenuEntry(
                 title=page.title(),
                 icon_name=cls.type_icon(),
-                item=make_javascript_link(
-                    f"cmk.popup_menu.pagetype_add_to_container({json.dumps(cls.type_name())}, {json.dumps(page.name())});",
+                item=make_click_action_link(
+                    ClickAction(
+                        action="pagetype_add_to_container",
+                        arguments={"page_type": cls.type_name(), "page_name": page.name()},
+                    ),
                     action_id="add_to_container",
                     action_parameters=[cls.type_name(), page.name()],
                 ),
@@ -1853,7 +1848,7 @@ class OverridableContainer[T_OverridableContainerConfig: OverridableContainerCon
             page_name,
             element_type,
             create_info,
-            UserPermissions.from_config(ctx.config, permission_registry),
+            ctx.user_permissions,
             ctx.config,
         )
         # Redirect user to tha page this displays the thing we just added to
@@ -1873,7 +1868,7 @@ class OverridableContainer[T_OverridableContainerConfig: OverridableContainerCon
         cls.need_overriding_permission("edit")
 
         need_sidebar_reload = False
-        instances = cls.load(user_permissions)
+        instances = cls.load()
         page = instances.find_page(page_name, user_permissions)
         if page is None:
             raise MKGeneralException(
@@ -2140,6 +2135,7 @@ page_types: dict[str, type[Overridable]] = {}
 
 def declare(page_ty: type[Overridable]) -> None:
     page_ty.declare_overriding_permissions()
+    dynamic_permission_registry.register(page_ty.type_name(), page_ty.instance_permissions)
     page_types[page_ty.type_name()] = page_ty
 
     for path, page_func in page_ty.page_handlers().items():
@@ -2462,7 +2458,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
 
     @classmethod
     def choices(cls, user_permissions: UserPermissions) -> list[tuple[str, str]]:
-        instances = cls.load(user_permissions)
+        instances = cls.load()
         return [
             (p.name(), p.title())
             for p in sorted(instances.instances(), key=lambda p: p.sort_index())
@@ -2472,7 +2468,7 @@ class PagetypeTopics(Overridable[PagetypeTopicConfig]):
     @classmethod
     def get_topic(cls, topic_id: str, user_permissions: UserPermissions) -> PagetypeTopics:
         """Returns either the requested topic or fallback to "other"."""
-        instances = PagetypeTopics.load(user_permissions)
+        instances = PagetypeTopics.load()
         other_page = instances.find_page("other", user_permissions)
         # should never happen
         if not other_page:
@@ -2640,7 +2636,7 @@ class CustomizePermissionsHandler:
 
     @classmethod
     def build(cls, ctx: PageContext) -> Self:
-        return cls(UserPermissions.from_config(ctx.config, permission_registry))
+        return cls(ctx.user_permissions)
 
     def may_see_category(self, category: str) -> bool:  # noqa: ARG002
         return not hide_customize_menu()
@@ -2653,21 +2649,3 @@ class CustomizePermissionsHandler:
             if main_menu_item.url
         }
         return lambda url: url in visible_urls
-
-
-#   .--Permissions---------------------------------------------------------.
-#   |        ____                     _         _                          |
-#   |       |  _ \ ___ _ __ _ __ ___ (_)___ ___(_) ___  _ __  ___          |
-#   |       | |_) / _ \ '__| '_ ` _ \| / __/ __| |/ _ \| '_ \/ __|         |
-#   |       |  __/  __/ |  | | | | | | \__ \__ \ | (_) | | | \__ \         |
-#   |       |_|   \___|_|  |_| |_| |_|_|___/___/_|\___/|_| |_|___/         |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Declare all pagetype permissions as dynamic permissions              |
-#   '----------------------------------------------------------------------'
-
-
-def _load_pagetype_permissions() -> None:
-    user_permissions = UserPermissions.from_config(active_config, permission_registry)
-    for pagetype in all_page_types().values():
-        pagetype.load(user_permissions)

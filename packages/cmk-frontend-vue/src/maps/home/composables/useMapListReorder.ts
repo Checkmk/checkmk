@@ -5,41 +5,77 @@
  */
 import { type ComputedRef, computed } from 'vue'
 
+import { byStoredOrder } from '@/maps/home/composables/useMapListFilter'
 import { useAuth, useMaps } from '@/maps/services/context'
 import { useDragReorder } from '@/maps/shared/composables/useDragReorder'
 import type { MapRead } from '@/maps/types/api'
+import { mapOwnerKind } from '@/maps/utils/mapVisibility'
+
+export interface MapListReorder {
+  isDraggable: (map: MapRead) => boolean
+  isDragging: (map: MapRead) => boolean
+  onDragStart: (event: DragEvent, map: MapRead) => void
+  onDragOver: (event: DragEvent, map: MapRead) => void
+  onDrop: (event: DragEvent) => void
+  onDragEnd: (event: DragEvent) => void
+}
 
 /**
- * Dragging the cards into the order they should be listed in.
+ * Dragging your own cards into the order they should be listed in.
  *
- * Reorder operates on the FULL store list, never on a filtered subset —
- * ``sort_order`` is a per-owner concept, so the drag is only offered while the
- * displayed order matches the store's one to one (``orderIsPristine``).
+ * ``sort_order`` is per owner, and only your own maps are yours to write, so a
+ * drag orders those among themselves; the maps of other users and the built-in
+ * ones keep their place. It is offered only while no search hides some of them.
  */
-export function useMapListReorder(
-  orderIsPristine: () => boolean
-): { isEnabled: ComputedRef<boolean> } & ReturnType<typeof useDragReorder<MapRead>> {
+export function useMapListReorder(orderIsPristine: () => boolean): MapListReorder {
   const auth = useAuth()
   const maps = useMaps()
 
-  const isEnabled = computed(() => auth.isAdmin.value && orderIsPristine())
+  const ownMaps: ComputedRef<MapRead[]> = computed(() => {
+    if (!orderIsPristine()) {
+      return []
+    }
+    const userId = auth.user.value?.user_id
+    return maps.maps.value
+      .filter((map) => map.can_edit === true && mapOwnerKind(map, userId) === 'you')
+      .sort(byStoredOrder)
+  })
+
+  function stamp(list: readonly MapRead[]): void {
+    list.forEach((map, index) => {
+      map.sort_order = index
+    })
+  }
 
   function persist(): void {
-    const order = maps.maps.value.map((map, index) => ({ name: map.name, sort_order: index }))
+    const order = ownMaps.value.map((map, index) => ({ name: map.name, sort_order: index }))
     // A failed write leaves the list showing an order the server does not have,
     // so re-read it rather than keeping the optimistic one.
     maps.reorderMaps(order).catch(() => maps.fetchMaps())
   }
 
+  const drag = useDragReorder<MapRead>(() => ownMaps.value, stamp, persist)
+
+  function indexOf(map: MapRead): number {
+    return ownMaps.value.findIndex((own) => own.name === map.name)
+  }
+
   return {
-    isEnabled,
-    ...useDragReorder<MapRead>(
-      () => maps.maps.value,
-      (list) => {
-        maps.maps.value.splice(0, maps.maps.value.length, ...list)
-      },
-      persist,
-      () => isEnabled.value
-    )
+    isDraggable: (map) => indexOf(map) !== -1,
+    isDragging: (map) => drag.dragIndex.value !== null && drag.dragIndex.value === indexOf(map),
+    onDragStart: (event, map) => {
+      const index = indexOf(map)
+      if (index !== -1) {
+        drag.onDragStart(event, index)
+      }
+    },
+    onDragOver: (event, map) => {
+      const index = indexOf(map)
+      if (index !== -1) {
+        drag.onDragOver(event, index)
+      }
+    },
+    onDrop: drag.onDrop,
+    onDragEnd: drag.onDragEnd
   }
 }

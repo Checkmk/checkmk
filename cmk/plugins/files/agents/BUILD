@@ -15,3 +15,12 @@ py_doc_test(
     size = "small",
     srcs = [":agents"],
 )
+
+filegroup(
+    name = "files",
+    srcs = glob(
+        ["*"],
+        exclude = ["BUILD"],
+    ),
+    visibility = ["//cmk/plugins:__pkg__"],
+)

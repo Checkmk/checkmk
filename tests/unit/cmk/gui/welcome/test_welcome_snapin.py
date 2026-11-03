@@ -13,7 +13,7 @@ import pytest
 from cmk.ccc.user import UserId
 from cmk.gui import login
 from cmk.gui.config import Config
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
@@ -33,7 +33,12 @@ def _logged_in_admin_created_on(config: Config, version: str | None) -> Iterator
         ),
         login.TransactionIdContext(
             user_id,
-            UserPermissions(config.roles, permission_registry, {user_id: ["admin"]}, []),
+            UserPermissions(
+                config.roles,
+                all_permissions(),
+                {user_id: ["admin"]},
+                [],
+            ),
         ),
     ):
         yield

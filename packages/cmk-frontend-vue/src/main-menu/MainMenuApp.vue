@@ -5,7 +5,11 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script setup lang="ts">
-import { type MainMenuConfig, type NavItemIdEnum } from 'cmk-shared-typing/typescript/main_menu'
+import {
+  type MainMenuConfig,
+  type NavItemIdEnum,
+  type NavItemShortcut
+} from 'cmk-shared-typing/typescript/main_menu'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkKeyboardKey from 'cmk-ui-library/components/CmkKeyboardKey.vue'
 import CmkPopupDialog from 'cmk-ui-library/components/CmkPopupDialog.vue'
@@ -21,6 +25,7 @@ import { MainMenuService } from '@/main-menu/lib/main-menu-service'
 import { getNavToggle } from '@/main-menu/lib/nav-toggles'
 import { type UserPopupMessageRef } from '@/main-menu/lib/type-defs'
 
+import MnemonicTitle from './components/MnemonicTitle.vue'
 import NavItem from './components/NavItem.vue'
 import NavToggleItem from './components/NavToggleItem.vue'
 import SidebarToggle from './components/SidebarToggle.vue'
@@ -51,6 +56,8 @@ const CHEAT_SHEET_COMBO = ['Alt', 'k']
 const cheatSheetHintHighlighted = computed(
   () => highlightedCombo.value === comboKey(CHEAT_SHEET_COMBO)
 )
+const CHEAT_SHEET_SHORTCUT: NavItemShortcut = { key: 'k', alt: true }
+const cheatSheetAltHint = computed(() => mainMenu.isAltHinted(CHEAT_SHEET_SHORTCUT))
 
 const usePopupMessages = ref<UserPopupMessageRef[]>([])
 
@@ -123,6 +130,7 @@ onMounted(() => {
       />
       <div
         class="mm-app__key-hint-wrapper"
+        :class="{ 'mm-app__key-hint-wrapper--alt-hint': cheatSheetAltHint }"
         @mouseenter="highlightCombo(CHEAT_SHEET_COMBO)"
         @mouseleave="highlightCombo(null)"
       >
@@ -131,7 +139,10 @@ onMounted(() => {
           class="mm-app__key-hint-button"
           @click="toggleCheatSheetPin()"
         >
-          {{ _t('Key hints') }}
+          <MnemonicTitle
+            :title="_t('Key hints')"
+            :mnemonic="cheatSheetAltHint ? CHEAT_SHEET_SHORTCUT.key : null"
+          />
         </CmkButton>
         <CmkKeyboardKey
           v-if="mainMenu.showKeyHints.value"
@@ -246,6 +257,11 @@ nav {
 
       .mm-app__key-hint--highlighted {
         outline: 2px solid var(--success);
+      }
+
+      &.mm-app__key-hint-wrapper--alt-hint {
+        filter: brightness(1.3) drop-shadow(0 0 2px rgb(255 255 255 / 80%))
+          drop-shadow(0 0 6px rgb(255 255 255 / 50%));
       }
     }
   }

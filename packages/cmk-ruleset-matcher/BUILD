@@ -30,7 +30,6 @@ py_library(
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [
-        "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:i18n",
@@ -81,6 +80,7 @@ py_cmk_test(
     srcs = glob(["tests/**/*.py"]),
     deps = [
         ":cmk-ruleset-matcher",
+        "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
     ],
 )

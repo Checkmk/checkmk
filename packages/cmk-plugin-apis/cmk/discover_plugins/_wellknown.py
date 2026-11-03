@@ -30,3 +30,4 @@ class PluginGroup(enum.Enum):
     LICENSING = "licensing"
     CLI = "cli"
     AUTOMATIONS = "automations"
+    UPDATE_CONFIG = "update_config"

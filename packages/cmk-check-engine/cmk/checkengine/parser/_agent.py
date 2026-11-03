@@ -10,7 +10,6 @@ import time
 from collections.abc import Iterator, Mapping, MutableMapping, Sequence
 from typing import Final, final, NamedTuple, override
 
-import cmk.ccc.debug
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.translations import TranslationOptions
 from cmk.checkengine.helper_interface import AgentRawData
@@ -91,12 +90,14 @@ class ParserState(abc.ABC):
         *,
         translation: TranslationOptions,
         encoding_fallback: str,
+        debug: bool,
     ) -> None:
         self.hostname: Final = hostname
         self.sections = sections
         self.piggyback_sections = piggyback_sections
         self.translation: Final = translation
         self.encoding_fallback: Final = encoding_fallback
+        self.debug: Final = debug
 
     @abc.abstractmethod
     def do_action(self, line: bytes) -> ParserState:
@@ -129,6 +130,7 @@ class ParserState(abc.ABC):
             self.piggyback_sections,
             translation=self.translation,
             encoding_fallback=self.encoding_fallback,
+            debug=self.debug,
         )
 
     def to_host_section_parser(
@@ -152,6 +154,7 @@ class ParserState(abc.ABC):
             current_section=section_header,
             translation=self.translation,
             encoding_fallback=self.encoding_fallback,
+            debug=self.debug,
         )
 
     def to_piggyback_parser(
@@ -174,6 +177,7 @@ class ParserState(abc.ABC):
             current_host=header,
             translation=self.translation,
             encoding_fallback=self.encoding_fallback,
+            debug=self.debug,
         )
 
     def to_piggyback_section_parser(
@@ -203,6 +207,7 @@ class ParserState(abc.ABC):
             current_section=section_header,
             translation=self.translation,
             encoding_fallback=self.encoding_fallback,
+            debug=self.debug,
         )
 
     def to_piggyback_noop_parser(
@@ -216,6 +221,7 @@ class ParserState(abc.ABC):
             current_host=current_host,
             translation=self.translation,
             encoding_fallback=self.encoding_fallback,
+            debug=self.debug,
         )
 
     def to_piggyback_ignore_parser(self) -> PiggybackIgnoreParser:
@@ -225,6 +231,7 @@ class ParserState(abc.ABC):
             self.piggyback_sections,
             translation=self.translation,
             encoding_fallback=self.encoding_fallback,
+            debug=self.debug,
         )
 
     def to_error(self, line: bytes) -> ParserState:
@@ -265,7 +272,7 @@ class ParserState(abc.ABC):
                 )
             return self.do_action(line)
         except Exception:
-            if cmk.ccc.debug.enabled():
+            if self.debug:
                 raise
             return self.to_error(line)
 
@@ -305,6 +312,7 @@ class PiggybackParser(ParserState):
         current_host: PiggybackMarker,
         translation: TranslationOptions,
         encoding_fallback: str,
+        debug: bool,
     ) -> None:
         super().__init__(
             hostname,
@@ -312,6 +320,7 @@ class PiggybackParser(ParserState):
             piggyback_sections,
             translation=translation,
             encoding_fallback=encoding_fallback,
+            debug=debug,
         )
         self.current_host: Final = current_host
 
@@ -351,6 +360,7 @@ class PiggybackSectionParser(ParserState):
         current_section: SectionMarker,
         translation: TranslationOptions,
         encoding_fallback: str,
+        debug: bool,
     ) -> None:
         super().__init__(
             hostname,
@@ -358,6 +368,7 @@ class PiggybackSectionParser(ParserState):
             piggyback_sections,
             translation=translation,
             encoding_fallback=encoding_fallback,
+            debug=debug,
         )
         self.current_host: Final = current_host
         self.current_section: Final = current_section
@@ -397,6 +408,7 @@ class PiggybackNOOPParser(ParserState):
         current_host: PiggybackMarker,
         translation: TranslationOptions,
         encoding_fallback: str,
+        debug: bool,
     ) -> None:
         super().__init__(
             hostname,
@@ -404,6 +416,7 @@ class PiggybackNOOPParser(ParserState):
             piggyback_sections,
             translation=translation,
             encoding_fallback=encoding_fallback,
+            debug=debug,
         )
         self.current_host: Final = current_host
 
@@ -465,6 +478,7 @@ class HostSectionParser(ParserState):
         current_section: SectionMarker,
         translation: TranslationOptions,
         encoding_fallback: str,
+        debug: bool,
     ) -> None:
         super().__init__(
             hostname,
@@ -472,6 +486,7 @@ class HostSectionParser(ParserState):
             piggyback_sections,
             translation=translation,
             encoding_fallback=encoding_fallback,
+            debug=debug,
         )
         self.current_section: Final = current_section
 
@@ -514,6 +529,7 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
         keep_outdated: bool,
         translation: TranslationOptions,
         encoding_fallback: str,
+        debug: bool,
     ) -> None:
         super().__init__()
         self.hostname: Final = hostname
@@ -523,6 +539,7 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
         self.keep_outdated: Final = keep_outdated
         self.translation: Final = translation
         self.encoding_fallback: Final = encoding_fallback
+        self.debug: Final = debug
 
     @override
     def parse(
@@ -564,6 +581,7 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
             {},
             translation=self.translation,
             encoding_fallback=self.encoding_fallback,
+            debug=self.debug,
         )
         for line in raw_data.split(b"\n"):
             parser = parser(line.rstrip(b"\r"))

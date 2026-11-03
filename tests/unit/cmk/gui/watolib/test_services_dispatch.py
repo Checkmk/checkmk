@@ -63,7 +63,7 @@ from cmk.ccc.user import UserId
 from cmk.ccc.version import __version__, Version
 from cmk.checkengine.discovery import CheckPreviewEntry, DiscoverySettings
 from cmk.checkengine.plugins import SectionName
-from cmk.gui.config import Config
+from cmk.gui.config import Config, get_default_config, make_config_object
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.openapi.api_endpoints.service_discovery import update_service_phase
@@ -79,7 +79,7 @@ from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.automations import make_automation_config
 from cmk.gui.watolib.host_attributes import HostAttributes
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, FolderTree, Host
+from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree, Host
 from cmk.gui.watolib.pending_changes import (
     Change,
     ChangeScope,
@@ -105,6 +105,7 @@ from cmk.livestatus_client import (
     UnixSocketInfo,
 )
 from cmk.ruleset_matcher.labels import HostLabel, HostLabelValueDict
+from cmk.ruleset_matcher.tags import get_effective_tag_config
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.web.utils.permission_verification import BasePerm
 from tests.unit.cmk.gui.watolib.discovery_matrix import (
@@ -351,9 +352,18 @@ def site_configuration(site_id: SiteId, *, remote_url: str | None = None) -> Sit
     return config
 
 
+@pytest.fixture(name="config")
+def fixture_config() -> Config:
+    raw_config = get_default_config()
+    raw_config["tags"] = get_effective_tag_config(raw_config["wato_tags"])
+    config = make_config_object(raw_config)
+    config.sites = SiteConfigurations({SiteId("NO_SITE"): site_configuration(SiteId("NO_SITE"))})
+    return config
+
+
 @contextlib.contextmanager
-def _host_in_the_root_folder(attributes: HostAttributes) -> Iterator[Host]:
-    root_folder = folder_tree().root_folder()
+def _host_in_the_root_folder(tree: FolderTree, attributes: HostAttributes) -> Iterator[Host]:
+    root_folder = tree.root_folder()
     root_folder.create_hosts(
         [(HOST_NAME, attributes, None)],
         pprint_value=False,
@@ -377,11 +387,11 @@ def _host_in_the_root_folder(attributes: HostAttributes) -> Iterator[Host]:
 
 @pytest.fixture(name="sample_host")
 def fixture_sample_host(
-    request_context: None,
     with_admin_login: UserId,
+    tree: FolderTree,
 ) -> Generator[Host]:
     """A host on the site this process runs on, so ``LOCAL`` is its transport."""
-    with _host_in_the_root_folder(HostAttributes()) as host:
+    with _host_in_the_root_folder(tree, HostAttributes()) as host:
         # The site is inherited, not set; the assertion is what makes `remote_host` a contrast
         # rather than a second spelling of the same thing.
         assert host.site_id() != REMOTE_SITE
@@ -389,7 +399,7 @@ def fixture_sample_host(
 
 
 @pytest.fixture(name="remote_site")
-def fixture_remote_site(request_context: None) -> Generator[None]:
+def fixture_remote_site(tree: FolderTree) -> Generator[None]:
     """Adds ``REMOTE_SITE`` to the sites the folder tree knows about.
 
     The tree resolves a host's site every time it writes or deletes that host, against a snapshot
@@ -398,7 +408,6 @@ def fixture_remote_site(request_context: None) -> Generator[None]:
     asserted here, so that "the host's site" and "the automation config the test passes" cannot
     drift apart.
     """
-    tree = folder_tree()
     original = tree.config
     tree.config = dataclasses.replace(
         original,
@@ -420,6 +429,7 @@ def fixture_remote_site(request_context: None) -> Generator[None]:
 def fixture_remote_host(
     remote_site: None,
     with_admin_login: UserId,
+    tree: FolderTree,
 ) -> Generator[Host]:
     """A host that really lives on ``REMOTE_SITE`` -- every ``REMOTE`` parametrization uses this.
 
@@ -429,7 +439,7 @@ def fixture_remote_host(
     pre-sync target -- ``sync_changes_before_remote_automation(host.site_id())``, not the
     automation config's site -- indistinguishable from the local site.
     """
-    with _host_in_the_root_folder(HostAttributes(site=REMOTE_SITE)) as host:
+    with _host_in_the_root_folder(tree, HostAttributes(site=REMOTE_SITE)) as host:
         assert host.site_id() == REMOTE_SITE
         yield host
 
@@ -1465,9 +1475,9 @@ def fixture_quick_setup_fix_all(mocker: MockerFixture) -> MagicMock:
     )
 
 
-def run_quick_setup_discovery(pending_changes: PendingChanges) -> None:
+def run_quick_setup_discovery(tree: FolderTree, pending_changes: PendingChanges) -> None:
     _run_service_discovery(
-        folder_tree(),
+        tree,
         str(HOST_NAME),
         REMOTE_SITE,
         automation_config=REMOTE,
@@ -1481,9 +1491,9 @@ def run_quick_setup_discovery(pending_changes: PendingChanges) -> None:
 
 @pytest.mark.usefixtures("inline_background_jobs", "remote_host", "transport")
 def test_quick_setup_writes_to_the_site_it_read_from(
-    pending_changes: RecordingPendingChanges, quick_setup_fix_all: MagicMock
+    tree: FolderTree, pending_changes: RecordingPendingChanges, quick_setup_fix_all: MagicMock
 ) -> None:
     """The apply goes to the site quick setup was given, not the central one (CMK-38596)."""
-    run_quick_setup_discovery(pending_changes)
+    run_quick_setup_discovery(tree, pending_changes)
 
     assert quick_setup_fix_all.call_args.kwargs["automation_config"] == REMOTE

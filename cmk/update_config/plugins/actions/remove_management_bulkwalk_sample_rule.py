@@ -13,8 +13,8 @@ from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import FolderTree, make_folder_tree
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.gui.watolib.rulesets import AllRulesets, RulesetCollection, UseHostFolder
-from cmk.update_config.lib import ExpiryVersion
-from cmk.update_config.registry import update_action_registry, UpdateAction
+from cmk.update_config.internal import ExpiryVersion, UpdateAction
+from cmk.update_config.registry import update_action_registry
 
 RULESET_NAME = "management_bulkwalk_hosts"
 SAMPLE_RULE_ID = "59d84cde-ee3a-4f8d-8bec-fce35a2b0d15"

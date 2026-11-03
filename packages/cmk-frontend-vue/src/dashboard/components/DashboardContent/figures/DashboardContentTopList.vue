@@ -10,8 +10,9 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import CmkRankedTable from '@/dashboard/components/CmkRankedTable'
 import type { RankedTableColumn, RankedTableRow } from '@/dashboard/components/CmkRankedTable'
 import { useComputedWidget } from '@/dashboard/composables/useComputedWidget'
+import { useInjectDrillDownSource } from '@/dashboard/composables/useDrillDownSource'
 import { useInjectIsPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
-import { firstContextualLinkUrl } from '@/dashboard/lib/contextualLinkUrl'
+import { type ContextualLinkEntry, contextualLinkEntries } from '@/dashboard/lib/contextualLinkUrl'
 import type {
   ComputedTopList,
   LinkProperties,
@@ -20,6 +21,7 @@ import type {
   TopListError
 } from '@/dashboard/types/widget.ts'
 import { dashboardAPI } from '@/dashboard/utils.ts'
+import { DRILLED_FROM_PARAM } from '@/page-header/drillUp'
 
 import type { ContentProps } from '../types.ts'
 import WidgetFigureFrame from './WidgetFigureFrame.vue'
@@ -27,6 +29,7 @@ import WidgetFigureFrame from './WidgetFigureFrame.vue'
 const { _t } = usei18n()
 const props = defineProps<ContentProps<TopListContent>>()
 const isPublicDashboard = useInjectIsPublicDashboard()
+const drillDownSource = useInjectDrillDownSource()
 const { state, retry } = useComputedWidget(props, dashboardAPI.computeTopList)
 
 const errorMessage: string = _t(
@@ -70,22 +73,37 @@ function link(url: string): { href?: string } {
   return isPublicDashboard ? {} : { href: url }
 }
 
+// A ranked row's built-in link is a drill-down too, so it names the dashboard it leaves.
+function drilledFromUrl(url: string): string {
+  const title = drillDownSource.value
+  if (!title) {
+    return url
+  }
+  const target = new URL(url, window.location.href)
+  target.searchParams.set(DRILLED_FROM_PARAM, title)
+  return target.href
+}
+
 // Only the ranked rows follow the contextual link; the error table's links help to fix the
 // configuration. The server resolves no built-in link, as each cell has its own view.
 function contextualLink(
   topList: ComputedTopList,
   builtInUrl: string,
   properties: LinkProperties
-): { href?: string } {
+): { href?: string } | { choices: ContextualLinkEntry[] } {
   if (props.content.contextual_link.type === 'default') {
-    return link(builtInUrl)
+    return link(drilledFromUrl(builtInUrl))
   }
-  const url = firstContextualLinkUrl(
+  const entries = contextualLinkEntries(
     topList.links,
     properties,
-    props.effective_filter_context.filters
+    props.effective_filter_context.filters,
+    drillDownSource.value
   )
-  return url === null ? {} : link(url)
+  if (entries.length === 0 || isPublicDashboard) {
+    return {}
+  }
+  return entries.length === 1 ? { href: entries[0]!.href } : { choices: entries }
 }
 
 function columns(topList: ComputedTopList): RankedTableColumn[] {

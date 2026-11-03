@@ -17,11 +17,14 @@ from cmk.graphing_engine import (
     EngineeringScientificNotation,
     FALLBACK_UNIT,
     IECNotation,
-    metric_display_attributes,
+    metric_attributes,
+    parse_performance_data,
+    parse_unit,
     SINotation,
     StandardScientificNotation,
     StrictPrecision,
     TimeNotation,
+    translate_metric_names,
     Unit,
 )
 from cmk.graphing_engine import MetricName as EngineMetricName
@@ -29,6 +32,7 @@ from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, translate_to_current_language
+from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, PageContext, PageResult
 from cmk.gui.type_defs import GraphTitleFormatVS, VisualContext
@@ -59,11 +63,9 @@ from cmk.web.utils.choices import Choice
 from cmk.web.utils.unit_formatter import NotationFormatter, TimeFormatter
 
 from ._decoding import ensure_type
-from ._from_api import metrics_from_api, RegisteredMetric
 from ._graph_display_config import GraphDisplayConfigHTML
-from ._metric_data import translate_metric_names
-from ._metric_spec import get_metric_spec, registered_metric_ids_and_titles
-from ._performance_data import parse_performance_data
+from ._metric_spec import registered_metric_ids_and_titles
+from ._plugins import registered_metrics
 from ._user_specific_unit import get_temperature_unit, user_specific_unit
 
 type LivestatusQueryFunc = Callable[
@@ -80,22 +82,8 @@ def _title_format(entry: object) -> GraphTitleFormatVS:
 
 
 def migrate_graph_render_options_title_format(
-    p: (
-        Literal["plain", "add_host_name", "add_host_alias"]
-        | tuple[
-            Literal["add_title_infos", "plain"],
-            list[Literal["add_host_name", "add_host_alias", "add_service_description"]],
-        ]
-        | Sequence[GraphTitleFormatVS]
-    ),
-) -> Sequence[GraphTitleFormatVS]:
-    return migrate_graph_render_options_title_format_from_disk(p)
-
-
-def migrate_graph_render_options_title_format_from_disk(
     p: object,
 ) -> Sequence[GraphTitleFormatVS]:
-    """Same migration for FormSpec migrate hooks, which receive unvalidated disk data."""
     # ->1.5.0i2 pnp_graph reportlet
     if p == "add_host_name":
         return ["plain", "add_host_name"]
@@ -131,7 +119,7 @@ def migrate_graph_render_options(value: Mapping[str, object]) -> DictionaryModel
         migrated["title_format"] = ["plain", "add_host_name", "add_service_description"]
     #   1.5.0i2->2.0.0i1 title format DropdownChoice to ListChoice
     if isinstance(migrated.get("title_format"), str | tuple):
-        migrated["title_format"] = migrate_graph_render_options_title_format_from_disk(
+        migrated["title_format"] = migrate_graph_render_options_title_format(
             migrated["title_format"]
         )
     return migrated
@@ -351,7 +339,7 @@ class ValuesWithUnits(CascadingDropdown):
                     ),
                 )
                 for choice in _sorted_unit_choices(
-                    metrics_from_api,
+                    registered_metrics(),
                     temperature_unit=temperature_unit,
                 )
             ],
@@ -386,13 +374,13 @@ class _UnitChoice:
 
 
 def _sorted_unit_choices(
-    registered_metrics: Mapping[str, RegisteredMetric],
+    registered_metrics: Mapping[str, metrics_v1.Metric],
     *,
     temperature_unit: TemperatureUnit,
 ) -> list[_UnitChoice]:
     return sorted(
         {
-            _unit_choice_from_unit(metric.unit, temperature_unit=temperature_unit)
+            _unit_choice_from_unit(parse_unit(metric.unit), temperature_unit=temperature_unit)
             for metric in registered_metrics.values()
         }
         | {_unit_choice_from_unit(FALLBACK_UNIT, temperature_unit=temperature_unit)},
@@ -468,10 +456,11 @@ class PageVsAutocomplete(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
         temperature_unit = get_temperature_unit(user, ctx.config.default_temperature_unit)
-        if metric_name := ctx.request.get_request()["metric"]:
-            metric_spec = get_metric_spec(metric_name, metrics_from_api)
+        if metric_name := ctx.request.get_request().get("metric"):
             unit_choice_for_metric = _unit_choice_from_unit(
-                metric_spec.unit,
+                metric_attributes(
+                    metric_name, translate_to_current_language, registered_metrics()
+                ).unit,
                 temperature_unit=temperature_unit,
             )
         else:
@@ -482,7 +471,7 @@ class PageVsAutocomplete(AjaxPage):
 
         for idx, choice in enumerate(
             _sorted_unit_choices(
-                metrics_from_api,
+                registered_metrics(),
                 temperature_unit=temperature_unit,
             )
         ):
@@ -497,7 +486,7 @@ class PageVsAutocomplete(AjaxPage):
         )
         for idx, choice in enumerate(
             _sorted_unit_choices(
-                metrics_from_api,
+                registered_metrics(),
                 temperature_unit=temperature_unit,
             )
         ):
@@ -554,7 +543,7 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
                 (
                     (metric_id, metric_title)
                     for metric_id, metric_title in registered_metric_ids_and_titles(
-                        metrics_from_api
+                        registered_metrics()
                     )
                     if metric_id == value
                 ),
@@ -574,9 +563,7 @@ def _metric_choices(
     ):
         yield (
             metric_name,
-            metric_display_attributes(
-                metric_name, translate_to_current_language, registered_metrics
-            ).title,
+            metric_attributes(metric_name, translate_to_current_language, registered_metrics).title,
         )
 
 
@@ -608,6 +595,7 @@ def metrics_of_query(
             ensure_type(row["service_perf_data"], str),
             ensure_type(row["service_check_command"], str),
             debug=active_config.debug,
+            logger=logger,
         )
         yield from _metric_choices(
             raw.check_command,

@@ -9,38 +9,11 @@ from pydantic import PlainValidator, TypeAdapter, ValidationInfo
 
 from cmk.gui.config import Config
 from cmk.gui.logged_in import LoggedInNobody
-from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.framework.model.validation_context import (
     RequestValidationContext,
     validation_context_of,
 )
-from tests.testlib.unit.gui.validation_context import make_api_context, make_validation_context
-
-
-def _build_value(api_context: ApiContext) -> tuple[str, ApiContext]:
-    return ("value", api_context)
-
-
-def _build_other_value(api_context: ApiContext) -> tuple[str, ApiContext]:
-    return ("other", api_context)
-
-
-def test_the_validators_of_a_request_share_one_value() -> None:
-    context = make_validation_context(Config(), LoggedInNobody())
-
-    assert context.shared(_build_value) is context.shared(_build_value)
-
-
-def test_a_value_is_built_from_the_api_context_of_the_request() -> None:
-    api_context = make_api_context(Config(), LoggedInNobody())
-
-    assert RequestValidationContext(api_context).shared(_build_value)[1] is api_context
-
-
-def test_each_build_function_gets_its_own_value() -> None:
-    context = make_validation_context(Config(), LoggedInNobody())
-
-    assert context.shared(_build_value) != context.shared(_build_other_value)
+from tests.testlib.unit.gui.validation_context import make_validation_context
 
 
 def _context_probe(value: str, info: ValidationInfo[object]) -> str:

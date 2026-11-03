@@ -9,6 +9,7 @@ from typing import override
 from cmk.ccc.site import SiteId
 from cmk.gui import sites, user_sites
 from cmk.gui.config import Config
+from cmk.gui.htmllib.generator import ClickAction
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
@@ -111,13 +112,13 @@ class SiteStatus(SidebarSnapin):
         begin_footnote_links()
         link(
             _("Enable all"),
-            "javascript:void(0)",
-            onclick="cmk.sidebar.switch_site(%s)" % json.dumps(enable_all_url),
+            "#",
+            click_action=ClickAction(action="switch_site", arguments={"url": enable_all_url}),
         )
         link(
             _("Disable all"),
-            "javascript:void(0)",
-            onclick="cmk.sidebar.switch_site(%s)" % json.dumps(disable_all_url),
+            "#",
+            click_action=ClickAction(action="switch_site", arguments={"url": disable_all_url}),
         )
         end_footnote_links()
 

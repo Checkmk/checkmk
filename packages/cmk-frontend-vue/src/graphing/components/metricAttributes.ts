@@ -29,7 +29,7 @@ export function attributesOf(metric: Metric): MetricAttribute[] {
   return metric.metadata.attributes ?? []
 }
 
-/** Only metrics-backend series carry attributes. */
+/** Only OpenTelemetry metrics series carry attributes. */
 export function hasAttributes(metric: Metric): boolean {
   return attributesOf(metric).length > 0
 }

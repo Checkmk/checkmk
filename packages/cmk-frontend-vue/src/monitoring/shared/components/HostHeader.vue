@@ -33,6 +33,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   (event: 'command', payload: { id: string; host: HostRef }): void
+  (event: 'titleClick', mouseEvent: MouseEvent): void
 }>()
 
 const hostRef = computed<HostRef>(() => ({ site_id: props.host.site_id, name: props.host.name }))
@@ -50,6 +51,7 @@ function onSelect(action: CellAction): void {
     :actions="actions"
     :load-action-menu="loadActionMenu"
     @select="onSelect"
+    @title-click="emit('titleClick', $event)"
   >
     <template #state>
       <span class="monitoring-host-header__state">

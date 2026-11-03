@@ -17,12 +17,14 @@ import abc
 import ast
 import contextlib
 import errno
+import hashlib
 import ipaddress
 import itertools
 import json
 import logging
 import os
 import pprint
+import re
 import select
 import signal
 import socket
@@ -40,11 +42,10 @@ from setproctitle import setthreadtitle
 
 import cmk.ccc.daemon
 import cmk.ccc.profile
-from cmk.ccc.exceptions import MKException
+import cmk.ccc.store
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.log import CMKFormatter
 from cmk.ccc.site import omd_site, SiteId
-from cmk.ccc.translations import translate
 from cmk.ccc.version_info import get_general_version_infos
 from cmk.crash import ABCCrashReport, CrashReportStore, make_crash_report_base_path
 from cmk.livestatus_client import LocalConnection
@@ -61,7 +62,13 @@ from .config import (
     Rule,
 )
 from .core_queries import Connection, HostInfo, query_hosts_scheduled_downtime_depth
-from .event import create_events_from_syslog_messages, Event, scrub_string
+from .event import (
+    create_events_from_syslog_messages,
+    Event,
+    LimitKind,
+    scrub_string,
+    translate_event_host,
+)
 from .helpers import ECLock, parse_bytes_into_syslog_messages
 from .history import ActiveHistoryPeriod, get_logfile, History, HistoryWhat, quote_tab, TimedHistory
 from .history_file import FileHistory
@@ -80,7 +87,16 @@ from .query import (
     QueryREPLICATE,
     StatusTable,
 )
-from .rule_matcher import compile_rule, match, MatchFailure, MatchResult, MatchSuccess, RuleMatcher
+from .rule_matcher import (
+    compile_active_rule,
+    match,
+    match_outcome,
+    MatchFailure,
+    MatchOutcome,
+    MatchResult,
+    MatchSuccess,
+    RuleMatcher,
+)
 from .rule_packs import load_active_config
 from .settings import create_settings, FileDescriptor, PortNumber, Settings
 from .snmp import SNMPTrapParser
@@ -126,11 +142,24 @@ class SlaveStatus(TypedDict):
     success: bool
 
 
+# Fetches the state of the master of a replication slave, see get_state_from_master()
+FetchMasterState = Callable[[Config, SlaveStatus], dict[str, Any]]
+
 FileDescr = int  # mypy calls this FileDescriptor, but this clashes with our definition
+
+# What all events counting towards the same event limit of some kind share: nothing for the
+# overall limit, the rule ID for a rule limit and both host names for a host limit
+_LimitKey = str | tuple[str, HostName | None] | None
 
 Response = Iterable[Sequence[object]] | Mapping[str, object] | None
 
-LimitKind = Literal["overall", "by_rule", "by_host"]
+# The order in which the event limits are checked
+_LIMIT_KINDS: tuple[LimitKind, ...] = ("overall", "by_host", "by_rule")
+
+# The text of an overflow event, which older versions didn't mark otherwise
+_OVERFLOW_EVENT_TEXT = re.compile(
+    r"The (overall|host|rule) event limit of \d+ open events has been reached"
+)
 
 
 # .
@@ -322,35 +351,95 @@ def drain_pipe(pipe: FileDescr) -> None:
             break  # No data available
 
 
+# A reference to the matched message in a text which a rule rewrites: \0 for the whole message,
+# \1, \2, ... for its match groups, or e.g. $MATCH_GROUPS_MESSAGE_1$ for a match group by name
+_GROUP_REFERENCE = re.compile(r"\\(\d+)|\$([A-Z_]+)_(\d+)\$")
+
+
 def replace_groups(text: str, origtext: str, match_groups: MatchGroups) -> str:
-    # replace \0 with text itself. This allows to add information
-    # in front or and the end of a message
-    text = text.replace("\\0", origtext)
+    r"""Replaces the references to the matched message in the text all at once
 
-    # Generic replacement with \1, \2, ...
-    match_groups_message = match_groups.get("match_groups_message", False)
-    if match_groups_message is not False:
-        for nr, g in enumerate(match_groups_message):
-            text = text.replace(f"\\{nr + 1}", g)
+    So a replacement is never replaced again, e.g. a reference within the message inserted by \0.
+    For \10 and up, the longest number referring to a match group wins, so with fewer groups,
+    \10 is still the first group followed by a 0. A reference to a missing group stays as it is.
+    """
+    message_groups = match_groups.get("match_groups_message", False)
+    groups = () if message_groups is False else message_groups
+    named_groups = {
+        name.upper(): values for name, values in match_groups.items() if isinstance(values, tuple)
+    }
 
-    # Replacement with keyword
-    # Right now we have
-    # $MATCH_GROUPS_MESSAGE_x$
-    # $MATCH_GROUPS_SYSLOG_APPLICATION_x$
-    for key_prefix, values in match_groups.items():
-        if not isinstance(values, tuple):
-            continue
+    def replacement(reference: re.Match[str]) -> str:
+        if (digits := reference.group(1)) is not None:
+            for end in range(len(digits), 0, -1):
+                number, rest = digits[:end], digits[end:]
+                if number == "0":
+                    return origtext + rest
+                if not number.startswith("0") and int(number) <= len(groups):
+                    return groups[int(number) - 1] + rest
+            return reference.group(0)
+        values = named_groups.get(reference.group(2), ())
+        index = int(reference.group(3))
+        return values[index - 1] if 1 <= index <= len(values) else reference.group(0)
 
-        for idx, match_value in enumerate(values):
-            text = text.replace(f"${key_prefix.upper()}_{idx + 1}$", match_value)
-
-    return text
+    return _GROUP_REFERENCE.sub(replacement, text)
 
 
-class MKSignalException(MKException):
+class MKSignalException(BaseException):
+    """Tells the main thread about a signal, see SignalHandler
+
+    Like KeyboardInterrupt, it isn't an Exception, so no handler for errors swallows it, e.g. while
+    the main thread runs an action or waits for the master of a replication slave.
+    """
+
     def __init__(self, signum: int) -> None:
-        MKException.__init__(self, f"Got signal {signum}")
+        super().__init__(f"Got signal {signum}")
         self.signum = signum
+
+
+class SignalHandler:
+    """Turns the signals it handles into an MKSignalException, unless it holds them back
+
+    Raising the exception interrupts whatever the main thread is doing, e.g. waiting for the master
+    of a replication slave, so the main loop holds back the signals where that must not happen.
+    """
+
+    def __init__(self, logger: Logger) -> None:
+        self._logger = logger
+        self._holding_back = False
+        self._held_back: int | None = None
+
+    def __call__(self, signum: int, stack_frame: FrameType | None) -> None:  # noqa: ARG002
+        # Record the signal first, so a further signal arriving meanwhile, e.g. while logging, can't
+        # make it get lost. Terminating takes precedence over reloading.
+        if self._held_back is None or self._held_back == signal.SIGHUP:
+            self._held_back = signum
+        self._logger.log(VERBOSE, "Got signal %(signum)d.", {"signum": signum})
+        if not self._holding_back:
+            self._raise_held_back()
+
+    @contextlib.contextmanager
+    def holding_back(self) -> Iterator[None]:
+        """Holds back the signals arriving within the block, raising the exception afterwards"""
+        self._holding_back = True
+        try:
+            yield
+        finally:
+            self._holding_back = False
+            self._raise_held_back()
+
+    def _raise_held_back(self) -> None:
+        """Raises the exception for the recorded signal, if any
+
+        A further signal arriving meanwhile raises the exception for the signal taking precedence
+        instead, until the recorded signal is forgotten right before raising the exception: No call
+        is left in between, so no signal handler runs there.
+        """
+        if (signum := self._held_back) is None:
+            return
+        exception = MKSignalException(signum)
+        self._held_back = None
+        raise exception
 
 
 # .
@@ -400,7 +489,7 @@ class EventServer(ECServerThread):
 
         self._rules: list[Rule] = []
         self._rule_by_id: dict[str | None, Rule] = {}
-        self._rule_hash: dict[int, dict[int, Any]] = {}
+        self._rule_hash: dict[int, dict[int, Any]] | None = None  # None without rule optimizer
         self._hash_stats: list[list[int]] = []  # facility/priority
         for _unused_facility in range(32):
             self._hash_stats.append([0] * 8)
@@ -803,7 +892,7 @@ class EventServer(ECServerThread):
             self._perfcounters.count("messages")
             before = time.time()
             # In replication slave mode (when not took over), ignore all events
-            if not is_replication_slave(self._config) or self._slave_status["mode"] != "sync":
+            if not is_syncing_replication_slave(self._config, self._slave_status):
                 self.process_potential_event(event)
             elif self.settings.options.debug:
                 self._logger.info("Replication: we are in slave mode, ignoring event")
@@ -820,10 +909,13 @@ class EventServer(ECServerThread):
         )
 
     def do_housekeeping(self) -> None:
-        with self._event_status.lock, self._lock_configuration:
-            self.hk_handle_event_timeouts()
-            self.hk_check_expected_messages()
-            self.hk_cleanup_downtime_events()
+        # In replication slave mode (when not took over), the master handles the events. Every sync
+        # replaces them, so handling them here would only duplicate the master's actions.
+        if not is_syncing_replication_slave(self._config, self._slave_status):
+            with self._event_status.lock, self._lock_configuration:
+                self.hk_handle_event_timeouts()
+                self.hk_check_expected_messages()
+                self.hk_cleanup_downtime_events()
         self._history.housekeeping()
 
     def hk_cleanup_downtime_events(self) -> None:
@@ -833,7 +925,7 @@ class EventServer(ECServerThread):
         archive the events that have been created in a downtime.
         """
         host_downtimes: dict[str, bool] = {}
-        for event in self._event_status.events():
+        for event in self._event_status.events()[:]:  # a copy, as removing events changes the list
             if not event["host_in_downtime"]:
                 continue  # only care about events created in downtime
             host_name = HostName("") if event["core_host"] is None else event["core_host"]
@@ -859,11 +951,11 @@ class EventServer(ECServerThread):
         2. Automatically delete all events that are in state "open"
            and whose lifetime is elapsed.
         """
-        events_to_delete: list[tuple[Event, HistoryWhat]] = []
-        events = self._event_status.events()
         now = time.time()
-        for event in events:
-            rule = self._rule_by_id.get(event["rule_id"])
+        # Remove each event right when closing it, so a signal interrupting the actions of a later
+        # event leaves no closed event behind. Hence iterate over a copy of the events.
+        for event in self._event_status.events()[:]:
+            rule = self._rule_by_id.get(self._event_status.creating_rule_id(event))
 
             if event["phase"] == "counting":
                 # Event belongs to a rule that does not longer exist? It
@@ -874,7 +966,7 @@ class EventServer(ECServerThread):
                         {"event_id": event["id"], "rule_id": event["rule_id"]},
                     )
                     event["phase"] = "closed"
-                    events_to_delete.append((event, "ORPHANED"))
+                    self._event_status.remove_event(event, "ORPHANED")
 
                 elif "count" not in rule and not rule.get("expect"):
                     self._logger.info(
@@ -883,7 +975,7 @@ class EventServer(ECServerThread):
                         {"event_id": event["id"], "rule_id": event["rule_id"]},
                     )
                     event["phase"] = "closed"
-                    events_to_delete.append((event, "NOCOUNT"))
+                    self._event_status.remove_event(event, "NOCOUNT")
 
                 # handle counting
                 elif "count" in rule:
@@ -923,7 +1015,7 @@ class EventServer(ECServerThread):
                                     },
                                 )
                                 event["phase"] = "closed"
-                                events_to_delete.append((event, "COUNTFAILED"))
+                                self._event_status.remove_event(event, "COUNTFAILED")
 
                     elif event["first"] + count["period"] <= now:  # End of period reached
                         self._logger.info(
@@ -938,7 +1030,7 @@ class EventServer(ECServerThread):
                             },
                         )
                         event["phase"] = "closed"
-                        events_to_delete.append((event, "COUNTFAILED"))
+                        self._event_status.remove_event(event, "COUNTFAILED")
 
             # Handle delayed actions
             elif event["phase"] == "delayed":
@@ -951,21 +1043,7 @@ class EventServer(ECServerThread):
                     event["phase"] = "open"
                     self._history.add(event, "DELAYOVER")
                     if rule:
-                        event_has_opened(
-                            self._history,
-                            self.settings,
-                            self._config,
-                            self._logger,
-                            self._connection,
-                            self.host_config,
-                            self._event_columns,
-                            rule,
-                            event,
-                        )
-                        if rule.get("autodelete"):
-                            event["phase"] = "closed"
-                            events_to_delete.append((event, "AUTODELETE"))
-
+                        self._open_event(rule, event, holding_lock=True)
                     else:
                         self._logger.info(
                             "Cannot do rule action: rule %(rule_id)s not present anymore.",
@@ -977,14 +1055,11 @@ class EventServer(ECServerThread):
                 allowed_phases = event.get("live_until_phases", ["open"])
                 if event["phase"] in allowed_phases:
                     event["phase"] = "closed"
-                    events_to_delete.append((event, "EXPIRED"))
+                    self._event_status.remove_event(event, "EXPIRED")
                     self._logger.info(
                         "Lifetime of event %(event_id)d (rule %(rule_id)s) exceeded. Deleting event.",
                         {"event_id": event["id"], "rule_id": event["rule_id"]},
                     )
-
-        for event, reason in events_to_delete:
-            self._event_status.remove_event(event, reason)
 
     def hk_check_expected_messages(self) -> None:
         """
@@ -1022,42 +1097,50 @@ class EventServer(ECServerThread):
                 # Interval has been elapsed. Now comes the truth: do we have enough
                 # rule matches?
 
-                # First look for case 1: rule that already have at least one hit
-                # and this events in the state "counting" exist.
-                events_to_delete: list[tuple[Event, HistoryWhat]] = []
-                events = self._event_status.events()
-                for event in events:
-                    if event["rule_id"] == rule["id"] and event["phase"] == "counting":
-                        # time has elapsed. Now lets see if we have reached
-                        # the necessary count:
-                        if event["count"] < expect["count"]:  # no -> trigger alarm
-                            events_to_delete.append((event, "AUTODELETE"))
-                            self._handle_absent_event(rule, expect, event["count"], event["last"])
-                        else:  # yes -> everything is fine.
-                            self._event_status.clear_interval_start(rule["id"])
-                            self._logger.info(
-                                "Rule %(pack)s/%(rule_id)s has reached %(count)d occurrences (%(required)d required). "
-                                "Starting next period.",
-                                {
-                                    "pack": rule["pack"],
-                                    "rule_id": rule["id"],
-                                    "count": event["count"],
-                                    "required": expect["count"],
-                                },
-                            )
-                        # Counting event is no longer needed.
-                        events_to_delete.append((event, "COUNTREACHED"))
-                        break
+                try:
+                    # First look for case 1: rule that already have at least one hit
+                    # and this events in the state "counting" exist.
+                    for event in self._event_status.events():
+                        if (
+                            self._event_status.creating_rule_id(event) == rule["id"]
+                            and event["phase"] == "counting"
+                        ):
+                            # time has elapsed. Now lets see if we have reached
+                            # the necessary count:
+                            # Either way, the counting event is no longer needed. Removing it right
+                            # away is fine, as the loop ends here anyway.
+                            if event["count"] < expect["count"]:  # no -> trigger alarm
+                                # Remove it before opening the event about the missing messages, so
+                                # the limits neither count it nor delete it to make room for that
+                                # event.
+                                self._event_status.remove_event(event, "AUTODELETE")
+                                self._handle_absent_event(
+                                    rule, expect, event["count"], interval_start
+                                )
+                            else:  # yes -> everything is fine.
+                                self._event_status.remove_event(event, "COUNTREACHED")
+                                self._event_status.clear_interval_start(rule["id"])
+                                self._logger.info(
+                                    "Rule %(pack)s/%(rule_id)s has reached %(count)d occurrences (%(required)d required). "
+                                    "Starting next period.",
+                                    {
+                                        "pack": rule["pack"],
+                                        "rule_id": rule["id"],
+                                        "count": event["count"],
+                                        "required": expect["count"],
+                                    },
+                                )
+                            break
 
-                # Ou ou, no event found at all.
-                else:
-                    self._handle_absent_event(rule, expect, 0, interval_start)
+                    # Ou ou, no event found at all.
+                    else:
+                        self._handle_absent_event(rule, expect, 0, interval_start)
 
-                # Do not forget to switch to next interval
-                self._event_status.start_next_interval(rule["id"], interval)
-
-                for event, reason in events_to_delete:
-                    self._event_status.remove_event(event, reason)
+                finally:
+                    # Do not forget to switch to next interval, even if a signal interrupts the
+                    # actions of the event about the missing messages: Checking the same interval
+                    # again would open another such event.
+                    self._event_status.start_next_interval(rule["id"], interval)
 
     def _handle_absent_event(
         self, rule: Rule, expect: Expect, event_count: int, interval_start: float
@@ -1085,7 +1168,7 @@ class EventServer(ECServerThread):
 
         if merge != "never":
             for event in self._event_status.events():
-                if event["rule_id"] == rule["id"] and (
+                if self._event_status.creating_rule_id(event) == rule["id"] and (
                     event["phase"] == "open" or (event["phase"] == "ack" and merge == "acked")
                 ):
                     merge_event = event
@@ -1093,7 +1176,9 @@ class EventServer(ECServerThread):
 
         if merge_event:
             merge_event["last"] = now
-            merge_event["count"] += 1
+            # Like counting up an event, cope with events which have never been counted, e.g. from
+            # before the rule expected messages.
+            merge_event["count"] = merge_event.get("count", 1) + 1
 
             # This was resetting the state back to "open", even in case an
             # "ack" event is being merged. This was made configurable in
@@ -1105,7 +1190,14 @@ class EventServer(ECServerThread):
             merge_event["text"] = text
             # Better rewrite (again). Rule might have changed. Also we have changed
             # the text and the user might have his own text added via set_text.
+            # Like for a new event, rewrite from an empty host name and application, so a
+            # reference to them doesn't insert what the previous rewriting produced.
+            if "set_host" in rule:
+                merge_event["host"] = HostName("")
+            if "set_application" in rule:
+                merge_event["application"] = ""
             self.rewrite_event(rule, merge_event, MatchGroups(), set_first=False)
+            self._event_status.follow_hosts_of(merge_event)
             self._history.add(merge_event, "COUNTFAILED")
         else:
             # Create artificial event from scratch. Make sure that all important
@@ -1132,133 +1224,140 @@ class EventServer(ECServerThread):
             )
             self._add_rule_contact_groups_to_event(rule, event)
             self.rewrite_event(rule, event, MatchGroups())
-            self._event_status.new_event(event)
+            # Like the event counting the expected messages, no limit drops it, but the limits still
+            # act on it. It has no host in the core.
+            self._new_event_respecting_limits(event, None, droppable=False)
             self._history.add(event, "COUNTFAILED")
-            event_has_opened(
-                self._history,
-                self.settings,
-                self._config,
-                self._logger,
-                self._connection,
-                self.host_config,
-                self._event_columns,
-                rule,
-                event,
-            )
-            if rule.get("autodelete"):
-                event["phase"] = "closed"
-                self._event_status.remove_event(event, "AUTODELETE")
+            self._open_event(rule, event, holding_lock=True)
 
     def reload_configuration(self, config: Config, history: History) -> None:
-        self._config = config
-        self._history = history
-        self._snmp_trap_parser = SNMPTrapParser(
-            self.settings, self._config, self._logger.getChild("snmp")
+        # Prepare everything which can fail before changing anything, so a failed reload keeps the
+        # previous configuration.
+        snmp_trap_parser = SNMPTrapParser(
+            self.settings, config, self._logger.getChild("snmp")
         ).parse
-        self.compile_rules(self._config["rule_packs"])
-        self.host_config = HostConfig(self._logger, self._connection)
-        self._rule_matcher = RuleMatcher(
-            logger=self._logger if config["debug_rules"] else None,
-            omd_site_id=self._omd_site,
-            is_active_time_period=self._time_period.active,
+        compiled_rules = self._compile_rules(
+            config["rule_packs"], rule_optimizer=config["rule_optimizer"]
         )
+        rule_digests = _rule_digests(config["rule_packs"])
+        # Messages count the hits of the rules they match, so forget the hits of the changed rules
+        # together with replacing them. Like the status server, take the lock of the event status
+        # before the one of the configuration.
+        with self._event_status.lock, self._lock_configuration:
+            self._event_status.use_rules(rule_digests)
+            self._config = config
+            self._history = history
+            self._snmp_trap_parser = snmp_trap_parser
+            self._rules, self._rule_by_id, self._rule_hash = compiled_rules
+            self.host_config = HostConfig(self._logger, self._connection)
+            self._rule_matcher = RuleMatcher(
+                logger=self._logger if config["debug_rules"] else None,
+                omd_site_id=self._omd_site,
+                is_active_time_period=self._time_period.active,
+            )
 
     def compile_rules(self, rule_packs: Sequence[ECRulePack]) -> None:
         """Precompile regular expressions and similar stuff."""
-        self._rules = []
-        self._rule_by_id = {}
+        self._rules, self._rule_by_id, self._rule_hash = self._compile_rules(
+            rule_packs, rule_optimizer=self._config["rule_optimizer"]
+        )
+
+    def _compile_rules(
+        self, rule_packs: Sequence[ECRulePack], *, rule_optimizer: bool
+    ) -> tuple[list[Rule], dict[str | None, Rule], dict[int, dict[int, Any]] | None]:
+        """Compiles the rules into new structures, so messages never see partially compiled rules
+
+        Without the rule optimizer, there is no rule hash, so messages tell from the compiled rules
+        alone whether to use it, even while a reload changes the rule optimizer setting.
+        """
+        rules: list[Rule] = []
+        rule_by_id: dict[str | None, Rule] = {}
         # Speedup-Hash for rule execution
-        self._rule_hash = {}
+        rule_hash: dict[int, dict[int, Any]] = {}
         count_disabled = 0
         count_rules = 0
         count_unspecific = 0
 
         # Loop through all rule packs and with through their rules
         for rule_pack in rule_packs:
-            if rule_pack["disabled"]:
-                count_disabled += len(rule_pack["rules"])
-                continue
-
             for rule in rule_pack["rules"]:
-                if rule.get("disabled"):
+                try:
+                    active_rule = compile_active_rule(rule_pack, rule)
+                except Exception:
+                    if self.settings.options.debug:
+                        raise
                     count_disabled += 1
-                else:
-                    count_rules += 1
-                    rule = rule.copy()  # keep original intact because of slave replication
+                    self._logger.exception(
+                        "Ignoring rule '%(pack)s/%(rule_id)s' because it is invalid.",
+                        {"pack": rule_pack["id"], "rule_id": rule["id"]},
+                    )
+                    continue
+                if isinstance(active_rule, str):
+                    count_disabled += 1
+                    continue
 
-                    # Store information about rule pack right within the rule. This is needed
-                    # for debug output and also for skipping rule packs
-                    rule["pack"] = rule_pack["id"]
-                    self._rules.append(rule)
-                    self._rule_by_id[rule["id"]] = rule
-                    try:
-                        compile_rule(rule)
-                    except Exception:
-                        if self.settings.options.debug:
-                            raise
-                        rule["disabled"] = True
-                        count_disabled += 1
-                        self._logger.exception(
-                            "Ignoring rule '%(pack)s/%(rule_id)s' because of an invalid regex.",
-                            {"pack": rule["pack"], "rule_id": rule["id"]},
-                        )
-
-                    if self._config["rule_optimizer"]:
-                        self.hash_rule(rule)
-                        if (
-                            "match_facility" not in rule
-                            and "match_priority" not in rule
-                            and "cancel_priority" not in rule
-                            and "cancel_application" not in rule
-                        ):
-                            count_unspecific += 1
+                count_rules += 1
+                rules.append(active_rule)
+                rule_by_id[active_rule["id"]] = active_rule
+                if rule_optimizer:
+                    self.hash_rule(rule_hash, active_rule)
+                    if (
+                        "match_facility" not in active_rule
+                        and "match_priority" not in active_rule
+                        and "cancel_priority" not in active_rule
+                        and "cancel_application" not in active_rule
+                    ):
+                        count_unspecific += 1
 
         self._logger.info(
             "Compiled %(count_rules)d active rules (ignoring %(count_disabled)d disabled rules)",
             {"count_rules": count_rules, "count_disabled": count_disabled},
         )
-        if self._config["rule_optimizer"]:
+        if rule_optimizer:
             self._logger.info(
                 "Rule hash: %(total)d rules - %(hashed)d hashed, %(unspecific)d unspecific",
                 {
-                    "total": len(self._rules),
-                    "hashed": len(self._rules) - count_unspecific,
+                    "total": len(rules),
+                    "hashed": len(rules) - count_unspecific,
                     "unspecific": count_unspecific,
                 },
             )
             for facility in list(range(23)) + [31]:
-                if facility in self._rule_hash:
+                if facility in rule_hash:
                     stats = [
                         f"{SyslogPriority(prio)}({len(entries)})"
-                        for prio, entries in self._rule_hash[facility].items()
+                        for prio, entries in rule_hash[facility].items()
                     ]
                     self._logger.info(
                         " %(facility)-12s: %(stats)s",
                         {"facility": SyslogFacility(facility), "stats": " ".join(stats)},
                     )
+        return rules, rule_by_id, rule_hash if rule_optimizer else None
 
-    def hash_rule(self, rule: Rule) -> None:
+    @classmethod
+    def hash_rule(cls, rule_hash: dict[int, dict[int, Any]], rule: Rule) -> None:
         """Construct rule hash for faster execution."""
         facility = rule.get("match_facility")
         if facility and not rule.get("invert_matching"):
-            self.hash_rule_facility(rule, facility)
+            cls.hash_rule_facility(rule_hash, rule, facility)
         else:
             for facility in range(32):  # all syslog facilities
-                self.hash_rule_facility(rule, facility)
+                cls.hash_rule_facility(rule_hash, rule, facility)
 
-    def hash_rule_facility(self, rule: Rule, facility: int) -> None:
+    @staticmethod
+    def hash_rule_facility(rule_hash: dict[int, dict[int, Any]], rule: Rule, facility: int) -> None:
         needed_prios = [False] * 8
 
         if "match_priority" in rule:
-            prio_from, prio_to = rule["match_priority"]
-            for p in range(prio_to, prio_from + 1):  # Beware: from > to!
+            prio_from, prio_to = rule["match_priority"]  # sorted by compile_rule()
+            for p in range(prio_from, prio_to + 1):
                 needed_prios[p] = True
         else:  # all priorities match
             needed_prios = [True] * 8  # needed to check this rule for all event priorities
 
         if "cancel_priority" in rule:
-            prio_from, prio_to = rule["cancel_priority"]
-            for p in range(prio_to, prio_from + 1):  # Beware: from > to!
+            prio_from, prio_to = rule["cancel_priority"]  # sorted by compile_rule()
+            for p in range(prio_from, prio_to + 1):
                 needed_prios[p] = True
         elif "match_ok" in rule:  # a cancelling rule where all priorities cancel
             needed_prios = [True] * 8  # needed to check this rule for all event priorities
@@ -1266,7 +1365,7 @@ class EventServer(ECServerThread):
         if rule.get("invert_matching"):
             needed_prios = [True] * 8
 
-        prio_hash = self._rule_hash.setdefault(facility, {})
+        prio_hash = rule_hash.setdefault(facility, {})
         for prio, need in enumerate(needed_prios):
             if need:
                 prio_hash.setdefault(prio, []).append(rule)
@@ -1301,12 +1400,17 @@ class EventServer(ECServerThread):
         if self._config["log_messages"]:
             self.log_message(event)
 
-        # Rule optimizer
-        if self._config["rule_optimizer"]:
+        # Rule optimizer: Rely on the compiled rules instead of the setting, which a reload changes
+        # before replacing the rules. A reload may replace them while the message runs through them,
+        # so the hits count by the digests of the rules it runs through.
+        with self._lock_configuration:
+            rules, rule_hash = self._rules, self._rule_hash
+            rule_digests = self._event_status.rule_digests
+        if rule_hash is not None:
             self._hash_stats[event["facility"]][event["priority"]] += 1
-            rule_candidates = self._rule_hash.get(event["facility"], {}).get(event["priority"], [])
+            rule_candidates = rule_hash.get(event["facility"], {}).get(event["priority"], [])
         else:
-            rule_candidates = self._rules
+            rule_candidates = rules
 
         skip_pack = None
         for rule in rule_candidates:
@@ -1330,7 +1434,7 @@ class EventServer(ECServerThread):
                         {"match_groups": pprint.pformat(result.match_groups)},
                     )
 
-                self._event_status.count_rule_match(rule["id"])
+                self._event_status.count_rule_match(rule["id"], rule_digests=rule_digests)
                 if self._config["log_rulehits"]:
                     self._logger.info(
                         "Rule '%(pack)s/%(rule_id)s' hit by message %(facility)s/%(priority)s - '%(text)s'.",
@@ -1343,19 +1447,19 @@ class EventServer(ECServerThread):
                         },
                     )
 
-                if rule.get("drop"):
-                    if rule["drop"] == "skip_pack":
-                        skip_pack = rule["pack"]
-                        if self._config["debug_rules"]:
-                            self._logger.info(
-                                "  skipping this rule pack (%(skip_pack)s)",
-                                {"skip_pack": skip_pack},
-                            )
-                        continue
+                outcome = match_outcome(rule, result)
+                if outcome is MatchOutcome.SKIP_PACK:
+                    skip_pack = rule["pack"]
+                    if self._config["debug_rules"]:
+                        self._logger.info(
+                            "  skipping this rule pack (%(skip_pack)s)",
+                            {"skip_pack": skip_pack},
+                        )
+                    continue
+                if outcome is MatchOutcome.DROP_MESSAGE:
                     self._perfcounters.count("drops")
                     return
-
-                if result.cancelling:
+                if outcome is MatchOutcome.CANCEL_EVENTS:
                     self._event_status.cancel_events(
                         self, self._event_columns, event, result.match_groups, rule
                     )
@@ -1408,25 +1512,10 @@ class EventServer(ECServerThread):
                                 )
                             existing_event["delay_until"] = time.time() + rule["delay"]
                             existing_event["phase"] = "delayed"
+                            self._history.add(existing_event, "COUNTREACHED")
                         else:
-                            event_has_opened(
-                                self._history,
-                                self.settings,
-                                self._config,
-                                self._logger,
-                                self._connection,
-                                self.host_config,
-                                self._event_columns,
-                                rule,
-                                existing_event,
-                            )
-
-                        self._history.add(existing_event, "COUNTREACHED")
-
-                        if "delay" not in rule and rule.get("autodelete"):
-                            existing_event["phase"] = "closed"
-                            with self._event_status.lock:
-                                self._event_status.remove_event(existing_event, "AUTODELETE")
+                            self._history.add(existing_event, "COUNTREACHED")
+                            self._open_event(rule, existing_event, holding_lock=False)
                 elif rule.get("expect"):
                     self._event_status.count_expected_event(self, event)
                 else:
@@ -1442,26 +1531,36 @@ class EventServer(ECServerThread):
                         event["phase"] = "open"
 
                     if self.new_event_respecting_limits(event) and event["phase"] == "open":
-                        event_has_opened(
-                            self._history,
-                            self.settings,
-                            self._config,
-                            self._logger,
-                            self._connection,
-                            self.host_config,
-                            self._event_columns,
-                            rule,
-                            event,
-                        )
-                        if rule.get("autodelete"):
-                            event["phase"] = "closed"
-                            with self._event_status.lock:
-                                self._event_status.remove_event(event, "AUTODELETE")
+                        self._open_event(rule, event, holding_lock=False)
                 return
 
         # End of loop over rules.
         if self._config["archive_orphans"]:
             self._event_status.archive_event(event)
+
+    def _open_event(self, rule: Rule, event: Event, *, holding_lock: bool) -> None:
+        """Executes the actions of the rule for the event it has just opened
+
+        If the rule deletes its events automatically, the event gets deleted afterwards, even if a
+        signal interrupts the actions.
+        """
+        try:
+            event_has_opened(
+                self._history,
+                self.settings,
+                self._config,
+                self._logger,
+                self._connection,
+                self.host_config,
+                self._event_columns,
+                rule,
+                event,
+            )
+        finally:
+            if rule.get("autodelete"):
+                event["phase"] = "closed"
+                with contextlib.nullcontext() if holding_lock else self._event_status.lock:
+                    self._event_status.remove_event(event, "AUTODELETE")
 
     def _add_rule_contact_groups_to_event(self, rule: Rule, event: Event) -> None:
         if rule.get("contact_groups") is None:
@@ -1562,14 +1661,11 @@ class EventServer(ECServerThread):
             )
 
     def do_translate_hostname(self, event: Event) -> None:
-        try:
-            event["host"] = HostName(translate(self._config["hostname_translation"], event["host"]))
-        except Exception:
-            if self._config["debug_rules"]:
-                self._logger.exception(
-                    'Unable to parse host "%(host)s"', {"host": event.get("host")}
-                )
-            event["host"] = HostName("")
+        event["host"] = translate_event_host(
+            self._config["hostname_translation"],
+            event["host"],
+            self._logger if self._config["debug_rules"] else None,
+        )
 
     def log_message(self, event: Event) -> None:
         try:
@@ -1618,28 +1714,58 @@ class EventServer(ECServerThread):
             >= self._config["event_limit"]["overall"]["limit"]
         )
 
+    def new_event_respecting_limits(self, event: Event, *, droppable: bool = True) -> bool:
+        """Adds the event, unless a limit drops it, returning whether it was added
+
+        A limit never drops an event which isn't droppable, but the event still counts towards the
+        limits, they make room for it, and they act on it reaching them.
+        """
+        core_host = event["core_host"]
+        host_config = self.host_config.get_config_for_host(core_host) if core_host else None
+        with self._event_status.lock:
+            return self._new_event_respecting_limits(event, host_config, droppable=droppable)
+
     # protected by self._event_status.lock
-    def new_event_respecting_limits(self, event: Event) -> bool:
+    def _new_event_respecting_limits(
+        self, event: Event, host_config: HostInfo | None, *, droppable: bool
+    ) -> bool:
         self._logger.log(
             VERBOSE,
             "Checking limit for message from %(host)s (rule '%(rule_id)s')",
             {"host": event["host"], "rule_id": event["rule_id"]},
         )
-
-        core_host = event["core_host"]
-        host_config = self.host_config.get_config_for_host(core_host) if core_host else None
-        with self._event_status.lock:
-            if self._handle_event_limit("overall", event, host_config):
+        limits: list[tuple[LimitKind, int, str]] = []
+        for ty in _LIMIT_KINDS:
+            limit, action = self._get_event_limit(ty, event, host_config)
+            if droppable and self._drops_event(ty, event, limit, action):
                 return False
-
-            if self._handle_event_limit("by_host", event, host_config):
-                return False
-
-            if self._handle_event_limit("by_rule", event, host_config):
-                return False
-
-            self._event_status.new_event(event)
-            return True
+            limits.append((ty, limit, action))
+        # Only now that no limit drops the event, make room for it and act on the limits which
+        # it reaches. Otherwise, a limit would delete events for an event which is dropped
+        # anyway, and while a further limit drops the events, each of them would reach the
+        # limit again. Make room for all limits first, as deleting events for one limit can
+        # keep the event from reaching another one.
+        for ty, limit, action in limits:
+            if action == "delete_oldest":
+                self._delete_oldest_events(ty, event, limit)
+        reached_limits = [
+            (ty, limit, action)
+            for ty, limit, action in limits
+            if self._reaches_limit(ty, event, limit, action)
+        ]
+        num_open_before = {
+            ty: self._event_status.get_num_existing_events_by(ty, event) for ty in _LIMIT_KINDS
+        }
+        for ty, limit, action in reached_limits:
+            self._act_on_reached_limit(ty, event, limit, action)
+        # Overflow events created meanwhile count towards the limits, too, so the limits
+        # deleting the oldest events make room once more, but only by deleting the events open
+        # before: Deleting an overflow event right away would hide that its limit is reached.
+        for ty, limit, action in limits:
+            if action == "delete_oldest":
+                self._delete_oldest_events(ty, event, limit, at_most=num_open_before[ty])
+        self._event_status.new_event(event)
+        return True
 
     # The following actions can be configured:
     # stop                 Stop creating new events
@@ -1648,48 +1774,67 @@ class EventServer(ECServerThread):
     # delete_oldest        Delete oldest event, create new event
     # protected by self._event_status.lock
 
-    def _handle_event_limit(
-        self, ty: LimitKind, event: Event, host_config: HostInfo | None
-    ) -> bool:
-        """Returns False if the event has been created and actions should be performed on that event."""
-        num_already_open = self._event_status.get_num_existing_events_by(ty, event)
+    def _drops_event(self, ty: LimitKind, event: Event, limit: int, action: str) -> bool:
+        """Tells whether the limit of the given kind drops the new event, as it's reached already
 
-        limit, action = self._get_event_limit(ty, event, host_config)
+        Only the events open before any of them is deleted count, so deleting the oldest events for
+        another limit never makes room for the new event.
+        """
+        num_already_open = self._event_status.get_num_existing_events_by(ty, event)
         self._logger.log(
             VERBOSE,
             "  Type: %(type)s, already open events: %(num_open)d, Limit: %(limit)d",
             {"type": ty, "num_open": num_already_open, "limit": limit},
         )
 
-        # Limit not reached: add new event
-        if num_already_open < limit:
-            num_already_open += 1  # after adding this event
-
-        # Limit even then still not reached: we are fine
-        if num_already_open < limit:
-            return False
-
-        # Delete oldest messages if that is the configure method of keeping the limit
-        if action == "delete_oldest":
-            while num_already_open > limit:
-                self._perfcounters.count("overflows")
-                self._event_status.remove_oldest_event(ty, event)
-                num_already_open -= 1
+        # Even with this event, the limit isn't exceeded, or deleting the oldest events keeps it
+        if num_already_open + 1 <= limit or action == "delete_oldest":
             return False
 
         # Limit reached already in the past: Simply drop silently
-        if num_already_open > limit:
-            # Just log in verbose mode! Otherwise log file will be flooded
-            self._logger.log(VERBOSE, "  Skip processing because limit is already in effect")
+        # Just log in verbose mode! Otherwise log file will be flooded
+        self._logger.log(VERBOSE, "  Skip processing because limit is already in effect")
+        self._perfcounters.count("overflows")
+        return True
+
+    # protected by self._event_status.lock
+    def _delete_oldest_events(
+        self, ty: LimitKind, event: Event, limit: int, *, at_most: int | None = None
+    ) -> None:
+        """Deletes the oldest events counting towards the limit of the given kind, making room for
+        the new event, which no limit drops, but at most the given number of events"""
+        num_open = self._event_status.get_num_existing_events_by(ty, event) + 1  # after adding it
+        num_deleted = 0
+        while num_open > limit and (at_most is None or num_deleted < at_most):
             self._perfcounters.count("overflows")
-            return True  # Prevent creation and prevent one time actions (below)
+            self._event_status.remove_oldest_event(ty, event)
+            num_open -= 1
+            num_deleted += 1
 
-        self._logger.info("  The %(type)s limit has been reached", {"type": ty})
+    # protected by self._event_status.lock
+    def _reaches_limit(self, ty: LimitKind, event: Event, limit: int, action: str) -> bool:
+        """Tells whether the new event, for which the limits made room, reaches the limit of the
+        given kind
 
+        A limit deleting the oldest events is never reached, it keeps the limit instead.
+        """
         # This is the event which reached the limit, allow creation of it. Further
         # events will be stopped.
+        return (
+            action != "delete_oldest"
+            and self._event_status.get_num_existing_events_by(ty, event) + 1 == limit
+        )
 
-        # Perform one time actions
+    # protected by self._event_status.lock
+    def _act_on_reached_limit(self, ty: LimitKind, event: Event, limit: int, action: str) -> None:
+        """Performs the one time actions for the event which reaches the limit of the given kind"""
+        # Not again as long as their overflow event is still open, though.
+        if self._event_status.has_overflow_event(ty, event):
+            self._logger.info(
+                "  The %(type)s limit has been reached, overflow event still open", {"type": ty}
+            )
+            return
+        self._logger.info("  The %(type)s limit has been reached", {"type": ty})
         overflow_event = self._create_overflow_event(ty, event, limit)
 
         if "overflow" in action:
@@ -1699,8 +1844,6 @@ class EventServer(ECServerThread):
         if "notify" in action:
             self._logger.info("  Creating overflow notification")
             do_notify(self.host_config, self._logger, self._connection, overflow_event)
-
-        return False
 
     # protected by self._event_status.lock
     def _get_event_limit(
@@ -1771,6 +1914,7 @@ class EventServer(ECServerThread):
             sl=event["sl"],
             core_host=None,
             host_in_downtime=False,
+            overflowed_limit=ty,
         )
         self._add_rule_contact_groups_to_event(Rule(), new_event)
 
@@ -1785,7 +1929,10 @@ class EventServer(ECServerThread):
             case "by_host":
                 new_event.update(
                     {
+                        # Like the event reaching the limit, so it counts towards the same one.
                         "host": event["host"],
+                        "core_host": event["core_host"],
+                        "host_in_downtime": event["host_in_downtime"],
                         "ipaddress": event["ipaddress"],
                         "text": (
                             f'The host event limit of {limit} open events has been reached for host "{event["host"]}". '
@@ -1794,10 +1941,6 @@ class EventServer(ECServerThread):
                         ),
                     }
                 )
-
-                # Lookup the monitoring core hosts and add the core host
-                # name to the event when one can be matched
-                self._add_core_host_to_new_event(new_event)
 
             case "by_rule":
                 new_event.update(
@@ -1860,35 +2003,25 @@ def partition[T](pred: Callable[[T], bool], iterable: Iterable[T]) -> tuple[list
 
 
 class Queries:
-    """Parsing and processing of status queries."""
+    """Reading the status queries of a client"""
 
-    def __init__(
-        self,
-        get_table: Callable[[str], StatusTable],
-        sock: socket.socket,
-        logger: Logger,
-    ) -> None:
-        self._get_table = get_table
+    def __init__(self, sock: socket.socket) -> None:
         self._socket = sock
-        self._logger = logger
         self._buffer = b""
 
-    def _query(self, request: bytes) -> Query:
-        return Query.make(self._get_table, request.decode("utf-8").splitlines(), self._logger)
-
-    def __iter__(self) -> Iterator[Query]:
+    def __iter__(self) -> Iterator[bytes]:
         while True:
             parts = self._buffer.split(b"\n\n", 1)
             if len(parts) > 1:
                 request, self._buffer = parts
-                yield self._query(request)
+                yield request
             else:
                 data = self._socket.recv(4096)
                 if data:
                     self._buffer += data
                 elif self._buffer:
                     request, self._buffer = [self._buffer, b""]
-                    yield self._query(request)
+                    yield request
                 else:
                     break
 
@@ -2247,10 +2380,13 @@ class StatusServer(ECServerThread):
     def handle_client(
         self, client_socket: socket.socket, allow_commands: bool, client_ip: str
     ) -> None:
-        for query in Queries(self.table, client_socket, self._logger):
-            self._logger.log(VERBOSE, "Client livestatus query: %(query)r", {"query": query})
-
+        for request in Queries(client_socket):
             with self._event_status.lock:
+                # Reloading the configuration closes the previous history while holding the lock,
+                # so parse the query only now, when its table can't be that history anymore.
+                query = Query.make(self.table, request.decode("utf-8").splitlines(), self._logger)
+                self._logger.log(VERBOSE, "Client livestatus query: %(query)r", {"query": query})
+
                 # TODO: What we really want is a method in Query returning a response instead of this dispatching horror.
                 if isinstance(query, QueryGET):
                     response: Response = query.table.query(query)
@@ -2418,11 +2554,7 @@ class StatusServer(ECServerThread):
         self._history.flush()
         self._event_status.flush()
         self._event_status.save_status()
-        if is_replication_slave(self._config):
-            with contextlib.suppress(Exception):
-                self.settings.paths.master_config_file.value.unlink()
-                self.settings.paths.slave_status_file.value.unlink()
-                update_slave_status(self._slave_status, self.settings, self._config)
+        # The replication stays as it is, so e.g. a slave which took over keeps processing messages.
         self._logger.info("Flushed current status and historic events.")
 
     def handle_command_sync(self) -> None:
@@ -2536,59 +2668,81 @@ def run_eventd(
     slave_status: SlaveStatus,
     logger: Logger,
     reload_config_event: threading.Event,
+    *,
+    fetch_master_state: FetchMasterState,
+    signal_handler: SignalHandler,
 ) -> None:
     """Dispatching: starting and managing the two threads."""
     status_server.start()
     event_server.start()
-    now = time.time()
-    next_housekeeping = now + config["housekeeping_interval"]
-    next_retention = now + config["retention_interval"]
-    next_statistics = now + config["statistics_interval"]
-    next_replication = 0.0  # force immediate replication after restart
+    # Each task is due an interval after its last run, so reloaded intervals apply right away.
+    last_housekeeping = last_retention = last_statistics = time.time()
+    last_replication = 0.0  # force immediate replication after restart
 
     while not terminate_main_event.is_set():
         try:
             try:
-                # Wait until either housekeeping or retention is due, but at
-                # maximum 60 seconds. That way changes of the interval from a very
-                # high to a low value will never require more than 60 seconds
+                # Reload before using the configuration: If a reloaded one breaks the code below,
+                # reloading a fixed one still works.
+                if reload_config_event.is_set():
+                    reload_config_event.clear()
+                    # A signal must not interrupt the reload halfway, e.g. once the event server
+                    # uses the new configuration, so handle it only once the main loop uses it, too.
+                    with signal_handler.holding_back():
+                        try:
+                            previous_master = _replication_master(config)
+                            config, history = reload_configuration(
+                                settings,
+                                logger,
+                                history,
+                                event_status,
+                                event_server,
+                                status_server,
+                                slave_status,
+                            )
+                            # Like a new one, a slave of another master syncs with it right away.
+                            if _replication_master(config) != previous_master:
+                                last_replication = 0.0
+                        except Exception:
+                            # A held back signal would replace the exception, so log it right away.
+                            # The previous configuration stays in effect.
+                            logger.exception("Cannot reload the configuration")
+                            if settings.options.debug:
+                                raise
 
-                event_list = [next_housekeeping, next_retention, next_statistics]
-                if is_replication_slave(config):
+                # Wait until the next task is due or a reload is requested, but at most a minute: A
+                # termination requested by the SHUTDOWN command doesn't end the wait.
+                event_list = [
+                    last_housekeeping + config["housekeeping_interval"],
+                    last_retention + config["retention_interval"],
+                    last_statistics + config["statistics_interval"],
+                ]
+                if (next_replication := _next_replication(config, last_replication)) is not None:
                     event_list.append(next_replication)
 
                 time_left = max(0, min(event_list) - time.time())
-                reload_config_event.wait(min(time_left, 60))
+                if reload_config_event.wait(min(time_left, 60)):
+                    continue  # reload before running any task
                 now = time.time()
 
-                if reload_config_event.is_set():
-                    reload_config_event.clear()
-                    history = reload_configuration(
-                        settings,
-                        getLogger("cmk.mkeventd"),
-                        lock_configuration,
-                        history,
-                        event_status,
-                        event_server,
-                        status_server,
-                        slave_status,
-                    )
-
-                if now > next_housekeeping:
+                # Each task counts as run even if it fails, so a failing one doesn't keep failing
+                # every second, keeping the tasks after it from running.
+                if now > last_housekeeping + config["housekeeping_interval"]:
+                    last_housekeeping = now
                     event_server.do_housekeeping()
-                    next_housekeeping = now + config["housekeeping_interval"]
 
-                if now > next_retention:
+                if now > last_retention + config["retention_interval"]:
+                    last_retention = now
                     with event_status.lock:
                         event_status.save_status()
-                    next_retention = now + config["retention_interval"]
 
-                if now > next_statistics:
+                if now > last_statistics + config["statistics_interval"]:
+                    last_statistics = now
                     perfcounters.do_statistics()
-                    next_statistics = now + config["statistics_interval"]
 
-                # Beware: replication might be turned on during this loop!
-                if is_replication_slave(config) and now > next_replication:
+                next_replication = _next_replication(config, last_replication)
+                if next_replication is not None and now > next_replication:
+                    last_replication = now
                     replication_pull(
                         settings,
                         config,
@@ -2598,13 +2752,8 @@ def run_eventd(
                         event_server,
                         slave_status,
                         logger,
+                        fetch_master_state=fetch_master_state,
                     )
-                    replication_settings = config["replication"]
-                    if replication_settings is None:  # help mypy a bit
-                        raise ValueError("no replication settings")
-                    next_replication = now + replication_settings["interval"]
-            except MKSignalException as e:
-                raise e
             except Exception:
                 logger.exception("Exception in main thread")
                 if settings.options.debug:
@@ -2613,16 +2762,7 @@ def run_eventd(
         except MKSignalException as e:
             if e.signum == 1:
                 logger.info("Received SIGHUP - going to reload configuration")
-                history = reload_configuration(
-                    settings,
-                    logger,
-                    lock_configuration,
-                    history,
-                    event_status,
-                    event_server,
-                    status_server,
-                    slave_status,
-                )
+                reload_config_event.set()  # like the RELOAD command
             else:
                 logger.info("Signalled to death by signal %(signum)d", {"signum": e.signum})
                 terminate(terminate_main_event, event_server, status_server)
@@ -2630,6 +2770,22 @@ def run_eventd(
     # Now wait for termination of the server threads
     event_server.join()
     status_server.join()
+
+
+def _next_replication(config: Config, last_replication: float) -> float | None:
+    """Returns when a replication slave syncs with its master next, None for any other EC"""
+    replication = config["replication"]
+    if replication is None or not is_replication_slave(config):  # None only helps mypy
+        return None
+    return last_replication + replication["interval"]
+
+
+def _replication_master(config: Config) -> tuple[str, int] | None:
+    """Returns the master of a replication slave, None for any other EC"""
+    replication = config["replication"]
+    if replication is None or not is_replication_slave(config):  # None only helps mypy
+        return None
+    return replication["master"]
 
 
 # .
@@ -2644,6 +2800,55 @@ def run_eventd(
 #   | Bereithalten des aktuellen Event-Status. Dieser schützt sich selbst  |
 #   | durch ein Lock vor gleichzeitigen Zugriffen durch die Threads.       |
 #   '----------------------------------------------------------------------'
+
+
+def _changed_rule_ids(previous: Mapping[str, str], current: Mapping[str, str]) -> set[str]:
+    """The IDs of the current rules which differ from the previous ones, or which are new
+
+    Both map the IDs of the rules to their digests, see _rule_digests()."""
+    return {id_ for id_, digest in current.items() if previous.get(id_) != digest}
+
+
+def _rules_by_id(rule_packs: Iterable[ECRulePack]) -> dict[str, list[Rule]]:
+    rules: dict[str, list[Rule]] = {}
+    for rule_pack in rule_packs:
+        for rule in rule_pack["rules"]:
+            # Nobody validates rules written by hand, and the EC compiles no disabled ones, which
+            # count no hits anyway, so they may lack an ID.
+            if (id_ := rule.get("id")) is not None:
+                rules.setdefault(id_, []).append(rule)
+    return rules
+
+
+def _rule_digests(rule_packs: Iterable[ECRulePack]) -> dict[str, str]:
+    """A digest of all rules with each ID, telling which rules changed, also across restarts
+
+    Several rules may have the same ID, so the digest covers all of them, but not their order, which
+    e.g. moving their rule packs changes."""
+    return {
+        id_: hashlib.sha256(repr(sorted(map(_sorted_repr, rules))).encode("utf-8")).hexdigest()
+        for id_, rules in _rules_by_id(rule_packs).items()
+    }
+
+
+def _sorted_repr(value: object) -> str:
+    """Like repr(), but sorting the keys of dictionaries and the elements of sets
+
+    So equal rules have the same text, also in other processes: Pretty printing the rules sorts the
+    keys, but only of the sets it breaks into several lines, and equal sets may list their elements
+    in different orders, e.g. sets of strings in other processes."""
+    match value:
+        case dict():
+            items = (f"{_sorted_repr(key)}: {_sorted_repr(item)}" for key, item in value.items())
+            return "{" + ", ".join(sorted(items)) + "}"
+        case set() | frozenset():
+            return f"{type(value).__name__}([{', '.join(sorted(map(_sorted_repr, value)))}])"
+        case list():
+            return "[" + ", ".join(map(_sorted_repr, value)) + "]"
+        case tuple():
+            return "(" + ", ".join(map(_sorted_repr, value)) + ",)"
+        case _:
+            return repr(value)
 
 
 class EventStatus:
@@ -2663,6 +2868,7 @@ class EventStatus:
     ) -> None:
         self.settings = settings
         self._config = config
+        self._rule_digests: Mapping[str, str] = _rule_digests(config["rule_packs"])
         self._perfcounters = perfcounters
         self.lock = threading.Lock()
         self._history = history
@@ -2673,6 +2879,40 @@ class EventStatus:
     def reload_configuration(self, config: Config, history: History) -> None:
         self._config = config
         self._history = history
+
+    @property
+    def rule_digests(self) -> Mapping[str, str]:
+        """The digests of the rules in use, see _rule_digests()
+
+        Using other rules replaces them instead of changing them, see use_rules()."""
+        return self._rule_digests
+
+    def use_rules(self, rule_digests: Mapping[str, str]) -> None:
+        """Tells the rules the event server uses from now on, forgetting the hits of changed ones
+
+        The hits of a changed rule would mix the ones of its previous version, so they start over.
+        The event server replaces its rules holding the lock, so no hit of the new ones gets lost,
+        and a message still running through the previous ones counts none, see count_rule_match().
+        Like counted hits, saving the status later on keeps this, as failing to save it here would
+        leave the reload half done. The rules come as their digests, see _rule_digests(), which the
+        event server computes before taking the lock."""
+        self._forget_hits_of_changed_rules(_changed_rule_ids(self._rule_digests, rule_digests))
+        self._rule_digests = rule_digests
+
+    def use_rules_of_master(self, rule_packs: Iterable[ECRulePack]) -> None:
+        """Tells the rules a replication slave got from its master
+
+        The hits of the rules come with the status of the master, see unpack_status(), so a restart
+        of the slave keeps them. Like for unpack_status(), the caller holds the lock."""
+        self._rule_digests = _rule_digests(rule_packs)
+
+    def _forget_hits_of_changed_rules(self, changed_rule_ids: set[str]) -> None:
+        if reset := sorted(changed_rule_ids & self._rule_stats.keys()):
+            self._logger.info(
+                "Resetting counters of changed rules %(rules)s", {"rules": ", ".join(reset)}
+            )
+            for rule_id in reset:
+                del self._rule_stats[rule_id]
 
     def flush(self) -> None:
         # TODO: Improve types!
@@ -2764,15 +3004,25 @@ class EventStatus:
         self._events = status["events"]
         self._rule_stats = status["rule_stats"]
         self._interval_starts = status["interval_starts"]
+        self._initialize_event_limit_status()
 
     def save_status(self) -> None:
         now = time.time()
         status = self.pack_status()
+        # Unlike replicating the status, restoring it needs to tell which counted rules changed.
+        saved_status = {
+            **status,
+            "rule_digests": {
+                id_: self._rule_digests[id_]
+                for id_ in status["rule_stats"]
+                if id_ in self._rule_digests
+            },
+        }
         path = self.settings.paths.status_file.value
         path_new = path.parent / (path.name + ".new")
         # Believe it or not: cPickle is more than two times slower than repr()
         with path_new.open(mode="wb") as f:
-            f.write((repr(status) + "\n").encode("utf-8"))
+            f.write((repr(saved_status) + "\n").encode("utf-8"))
             f.flush()
             os.fsync(f.fileno())
         path_new.rename(path)
@@ -2801,6 +3051,12 @@ class EventStatus:
                 self._rule_stats = status["rule_stats"]
                 self._interval_starts = status.get("interval_starts", {})
                 self._logger.info("Loaded event state from %(path)s.", {"path": path})
+                # Like reloading, forget the hits of the rules changed meanwhile, e.g. by activating
+                # changes while the EC was stopped. A previous version saved no digests, though.
+                if (rule_digests := status.get("rule_digests")) is not None:
+                    self._forget_hits_of_changed_rules(
+                        _changed_rule_ids(rule_digests, self._rule_digests)
+                    )
             except Exception:
                 self._logger.exception("Error loading event state from %(path)s", {"path": path})
                 raise
@@ -2829,11 +3085,16 @@ class EventStatus:
 
         self.num_existing_events_by_host: dict[tuple[str, HostName | None], int] = {}
         self.num_existing_events_by_rule: dict[Any, int] = {}
+        self._num_overflow_events: dict[tuple[LimitKind, _LimitKey], int] = {}
+        # The host names each open event is counted for by the host limit, by the identity of the
+        # event, which unlike its fields never changes
+        self._counted_host_keys: dict[int, tuple[str, HostName | None]] = {}
         for event in self._events:
             self._count_event_add(event)
 
     def _count_event_add(self, event: Event) -> None:
-        host_key = (event["host"], event["core_host"])
+        host_key = self._host_key(event)
+        self._counted_host_keys[id(event)] = host_key
         if host_key not in self.num_existing_events_by_host:
             self.num_existing_events_by_host[host_key] = 1
         else:
@@ -2844,12 +3105,20 @@ class EventStatus:
         else:
             self.num_existing_events_by_rule[event["rule_id"]] += 1
 
+        if (overflow_key := self._overflow_key(event)) is not None:
+            self._num_overflow_events[overflow_key] = (
+                self._num_overflow_events.get(overflow_key, 0) + 1
+            )
+
     def _count_event_remove(self, event: Event) -> None:
-        host_key = (event["host"], event["core_host"])
+        # Even if the host names of the event changed unnoticed, take back exactly what was counted.
+        host_key = self._counted_host_keys.pop(id(event))
 
         self.num_existing_events -= 1
         self.num_existing_events_by_host[host_key] -= 1
         self.num_existing_events_by_rule[event["rule_id"]] -= 1
+        if (overflow_key := self._overflow_key(event)) is not None:
+            self._num_overflow_events[overflow_key] -= 1
 
     def new_event(self, event: Event) -> None:
         self._perfcounters.count("events")
@@ -2879,39 +3148,16 @@ class EventStatus:
 
     # protected by self.lock
     def remove_oldest_event(self, ty: LimitKind, event: Event) -> None:
-        match ty:
-            case "overall":
-                self._logger.log(VERBOSE, "  Removing oldest event")
-                oldest_event = self._events[0]
-                self.remove_event(oldest_event, "AUTODELETE")
-            case "by_rule":
-                if event["rule_id"] is not None:
-                    self._logger.log(
-                        VERBOSE,
-                        '  Removing oldest event of rule "%(rule_id)s"',
-                        {"rule_id": event["rule_id"]},
-                    )
-                    self._remove_oldest_event_of_rule(event["rule_id"])
-            case "by_host":
+        """Removes the oldest event counting towards the same limit of the given kind as the event"""
+        key = self._limit_key(ty, event)
+        for other in self._events:
+            if self._limit_key(ty, other) == key:
                 self._logger.log(
                     VERBOSE,
-                    '  Removing oldest event of host "%(host)s"',
-                    {"host": event["host"]},
+                    "  Removing oldest event %(event_id)d of the %(type)s limit",
+                    {"event_id": other["id"], "type": ty},
                 )
-                self._remove_oldest_event_of_host(event["host"])
-
-    # protected by self.lock
-    def _remove_oldest_event_of_rule(self, rule_id: str) -> None:
-        for event in self._events:
-            if event["rule_id"] == rule_id:
-                self.remove_event(event, "AUTODELETE")
-                return
-
-    # protected by self.lock
-    def _remove_oldest_event_of_host(self, hostname: str) -> None:
-        for event in self._events:
-            if event["host"] == hostname:
-                self.remove_event(event, "AUTODELETE")
+                self.remove_event(other, "AUTODELETE")
                 return
 
     # protected by self.lock
@@ -2922,9 +3168,67 @@ class EventStatus:
             case "by_rule":
                 return self.num_existing_events_by_rule.get(event["rule_id"], 0)
             case "by_host":
-                return self.num_existing_events_by_host.get((event["host"], event["core_host"]), 0)
+                return self.num_existing_events_by_host.get(self._host_key(event), 0)
             case _ as unreachable:
                 assert_never(unreachable)
+
+    # protected by self.lock
+    def has_overflow_event(self, ty: LimitKind, event: Event) -> bool:
+        """Whether the overflow event about the limit of the given kind for the event is open"""
+        return self._num_overflow_events.get((ty, self._limit_key(ty, event)), 0) > 0
+
+    @classmethod
+    def _overflow_key(cls, event: Event) -> tuple[LimitKind, _LimitKey] | None:
+        """Returns which limit an overflow event is about, None for any other event"""
+        if (ty := event.get("overflowed_limit")) is None:
+            return None
+        return ty, cls._limit_key(ty, event)
+
+    @staticmethod
+    def is_overflow_event(event: Event) -> bool:
+        """Whether the event is about reaching an event limit, also if an older version created it"""
+        return "overflowed_limit" in event or (
+            event.get("application") == "Event Console"
+            and _OVERFLOW_EVENT_TEXT.match(event.get("text", "")) is not None
+        )
+
+    @classmethod
+    def creating_rule_id(cls, event: Event) -> str | None:
+        """Returns the ID of the rule which created the event, None for an overflow event
+
+        The overflow event about a rule limit has the rule's ID only to count towards that limit.
+        """
+        return None if cls.is_overflow_event(event) else event["rule_id"]
+
+    @classmethod
+    def _limit_key(cls, ty: LimitKind, event: Event) -> _LimitKey:
+        """Returns what all events counting towards the same limit of the given kind share"""
+        match ty:
+            case "overall":
+                return None
+            case "by_rule":
+                return event["rule_id"]
+            case "by_host":
+                return cls._host_key(event)
+            case _ as unreachable:
+                assert_never(unreachable)
+
+    @staticmethod
+    def _host_key(event: Event) -> tuple[str, HostName | None]:
+        """Returns the combination of both host names, which the host limit counts separately"""
+        return event["host"], event["core_host"]
+
+    # protected by self.lock
+    def follow_hosts_of(self, event: Event) -> None:
+        """Lets the host limit count an open event for the host names it has now"""
+        host_key = self._host_key(event)
+        previous_host_key = self._counted_host_keys[id(event)]
+        if host_key != previous_host_key:
+            self.num_existing_events_by_host[previous_host_key] -= 1
+            self.num_existing_events_by_host[host_key] = (
+                self.num_existing_events_by_host.get(host_key, 0) + 1
+            )
+            self._counted_host_keys[id(event)] = host_key
 
     def cancel_events(
         self,
@@ -2941,7 +3245,7 @@ class EventStatus:
         with self.lock:
             to_delete = []
             for event in self._events:
-                if event["rule_id"] == rule["id"] and self.cancelling_match(
+                if self.creating_rule_id(event) == rule["id"] and self.cancelling_match(
                     match_groups, new_event, event, rule
                 ):
                     # Fill a few fields of the cancelled event with data from
@@ -3100,11 +3404,17 @@ class EventStatus:
 
         return True
 
-    def count_rule_match(self, rule_id: str) -> None:
-        with self.lock:
-            self._rule_stats.setdefault(rule_id, 0)
-            self._rule_stats[rule_id] += 1
+    def count_rule_match(self, rule_id: str, *, rule_digests: Mapping[str, str]) -> None:
+        """Counts a hit of the rule, unless a reload changed it since the message matched it
 
+        The reload forgot the hits of the changed rule, so a hit of its previous version doesn't
+        count. The digests of the rules the message ran through tell the version."""
+        with self.lock:
+            if rule_digests.get(rule_id) == self._rule_digests.get(rule_id):
+                self._rule_stats.setdefault(rule_id, 0)
+                self._rule_stats[rule_id] += 1
+
+    # protected by self.lock
     def count_event_up(self, found: Event, event: Event) -> None:
         """
         Update event with new information from new occurrence,
@@ -3121,17 +3431,22 @@ class EventStatus:
                 preserve["contact"] = found["contact"]
         found.update(event)
         found.update(preserve)
+        # The event got the host names of the new occurrence, e.g. when counting several hosts.
+        self.follow_hosts_of(found)
 
     def count_expected_event(self, event_server: EventServer, event: Event) -> None:
-        for ev in self._events:
-            if ev["rule_id"] == event["rule_id"] and ev["phase"] == "counting":
-                self.count_event_up(ev, event)
-                return
+        # Holding the lock, nothing else removes the event before it is counted up.
+        with self.lock:
+            for ev in self._events:
+                if self.creating_rule_id(ev) == event["rule_id"] and ev["phase"] == "counting":
+                    self.count_event_up(ev, event)
+                    return
 
-        # None found, create one
+        # None found, create one. No event limit drops it: The expected message would count as
+        # missing otherwise, and as there is only one such event per rule, it can't flood the EC.
         event["count"] = 1
         event["phase"] = "counting"
-        event_server.new_event_respecting_limits(event)
+        event_server.new_event_respecting_limits(event, droppable=False)
 
     def count_event(self, event_server: EventServer, event: Event, count: Count) -> Event | None:
         """
@@ -3141,8 +3456,13 @@ class EventStatus:
         since the event has been created because the count was too
         low in the specified period of time.
         """
-        for ev in self._events:
-            if ev["rule_id"] == event["rule_id"]:
+        found: Event | None = None
+        # Holding the lock, nothing else removes the event before it is counted up.
+        with self.lock:
+            for ev in self._events:
+                if self.creating_rule_id(ev) != event["rule_id"]:
+                    continue  # e.g. the overflow event about the rule's limit
+
                 if ev["phase"] == "ack" and not count["count_ack"]:
                     continue  # skip acknowledged events
 
@@ -3166,10 +3486,12 @@ class EventStatus:
                 found = ev
                 self.count_event_up(found, event)
                 break
-        else:
+
+        if found is None:
             event["count"] = 1
             event["phase"] = "counting"
-            event_server.new_event_respecting_limits(event)
+            if not event_server.new_event_respecting_limits(event):
+                return None  # dropped because of an event limit, so don't open it
             found = event
 
         # Did we just count the event that was just one too much?
@@ -3187,7 +3509,7 @@ class EventStatus:
                 if user:
                     event["owner"] = user
                 self.remove_event(event, "DELETE", user)
-                rule_id = event["rule_id"]
+                rule_id = self.creating_rule_id(event)
                 if event["id"] + 1 == self._next_event_id and rule_id in self._interval_starts:
                     event_rule = get_rule(rule_id)
                     if event_rule is not None and "expect" in event_rule:
@@ -3219,11 +3541,25 @@ def is_replication_slave(config: ConfigFromWATO) -> bool:
     return repl_settings is not None and not repl_settings.get("disabled")
 
 
+def is_syncing_replication_slave(config: ConfigFromWATO, slave_status: SlaveStatus) -> bool:
+    """Whether the EC replicates its events from its master, which then handles them"""
+    return is_replication_slave(config) and slave_status["mode"] == "sync"
+
+
+# The next sync replaces the events of a syncing slave anyway.
+_COMMANDS_CHANGING_THE_SYNCED_STATUS = {
+    "ACTION",
+    "CHANGESTATE",
+    "DELETE",
+    "DELETE_EVENTS_OF_HOST",
+    "UPDATE",
+}
+
+
 def replication_allow_command(config: Config, command: str, slave_status: SlaveStatus) -> None:
     if (
-        is_replication_slave(config)
-        and slave_status["mode"] == "sync"
-        and command in {"DELETE", "UPDATE", "CHANGESTATE", "ACTION"}
+        is_syncing_replication_slave(config, slave_status)
+        and command in _COMMANDS_CHANGING_THE_SYNCED_STATUS
     ):
         raise MKClientError(
             "This command is not allowed on a replication slave while it is in sync mode."
@@ -3236,7 +3572,9 @@ def replication_send(
     response: dict[str, object] = {}
     with lock_configuration:
         response["status"] = event_status.pack_status()
-        if last_update < config["last_reload"]:
+        # Both are whole seconds, so if the slave synced in the second of the reload, it might have
+        # synced before the reload: Better send the configuration once more.
+        if last_update <= config["last_reload"]:
             response["rules"] = config[
                 "rules"
             ]  # Remove one bright day, where legacy rules are not needed anymore
@@ -3254,6 +3592,8 @@ def replication_pull(
     event_server: EventServer,
     slave_status: SlaveStatus,
     logger: Logger,
+    *,
+    fetch_master_state: FetchMasterState,
 ) -> None:
     """
     We distinguish two modes:
@@ -3283,7 +3623,7 @@ def replication_pull(
     if need_sync:
         with event_status.lock, lock_configuration:
             try:
-                new_state = get_state_from_master(config, slave_status)
+                new_state = fetch_master_state(config, slave_status)
                 replication_update_state(settings, config, event_status, event_server, new_state)
                 if repl_settings.get("logging"):
                     logger.info("Successfully synchronized with master")
@@ -3351,38 +3691,63 @@ def replication_update_state(
 ) -> None:
     # Keep a copy of the masters' rules and actions and also prepare using them
     if "rules" in new_state:
-        save_master_config(settings, new_state)
-        event_server.compile_rules(new_state.get("rule_packs", []))
-        config["actions"] = new_state["actions"]
+        replication = config["replication"]
+        if replication is None:  # help mypy a bit
+            raise ValueError("no replication settings")
+        save_master_config(settings, replication["master"], new_state)
+        # Like loading the configuration of a slave, use the master's rules and actions.
+        slave_config = make_config(_with_master_config(config, new_state))
+        event_server.compile_rules(slave_config["rule_packs"])
+        # Update the configuration in place, as the main loop and the threads share it.
+        config.update(slave_config)
+        event_status.use_rules_of_master(slave_config["rule_packs"])
 
     # Update to the masters' event state
     event_status.unpack_status(new_state["status"])
 
 
-def save_master_config(settings: Settings, new_state: Mapping[str, object]) -> None:
-    path = settings.paths.master_config_file.value
-    path_new = path.parent / (path.name + ".new")
-    path_new.write_text(
-        repr(
-            {
-                "rules": new_state["rules"],
-                "rule_packs": new_state["rule_packs"],
-                "actions": new_state["actions"],
-            }
-        )
-        + "\n",
-        encoding="utf-8",
+def save_master_config(
+    settings: Settings, master: tuple[str, int], new_state: Mapping[str, object]
+) -> None:
+    cmk.ccc.store.save_object_to_file(
+        settings.paths.master_config_file.value,
+        {
+            "master": master,
+            "rules": new_state["rules"],
+            "rule_packs": new_state["rule_packs"],
+            "actions": new_state["actions"],
+        },
     )
-    path_new.rename(path)
 
 
-def load_master_config(settings: Settings, config: ConfigFromWATO, logger: Logger) -> None:
+def _with_master_config(config: ConfigFromWATO, master_config: Mapping[str, Any]) -> ConfigFromWATO:
+    """Returns the configuration of a replication slave using the rules and actions of its master"""
+    return {
+        **config,
+        "rules": master_config["rules"],
+        "rule_packs": master_config.get("rule_packs", []),
+        "actions": master_config["actions"],
+    }
+
+
+def load_master_config(settings: Settings, config: ConfigFromWATO, logger: Logger) -> bool:
+    """Uses the saved configuration of the master of a replication slave
+
+    Returns whether it is from another master than the configured one, so the slave ignores it.
+    """
     path = settings.paths.master_config_file.value
     try:
-        master_config = ast.literal_eval(path.read_text(encoding="utf-8"))
-        config["rules"] = master_config["rules"]
-        config["rule_packs"] = master_config.get("rule_packs", [])
-        config["actions"] = master_config["actions"]
+        # Like a missing file, an empty one left behind by an interrupted save yields None.
+        if (master_config := cmk.ccc.store.load_object_from_file(path, default=None)) is None:
+            logger.info("Replication: no previously saved master state available")
+            return False
+        if _is_from_other_master(master_config, config):
+            logger.info(
+                "Replication: ignoring the saved configuration of the previous master %(master)r",
+                {"master": master_config["master"]},
+            )
+            return True
+        config.update(_with_master_config(config, master_config))
         logger.info(
             "Replication: restored %(rule_packs)d rule packs and %(actions)d actions from %(path)s",
             {
@@ -3392,8 +3757,20 @@ def load_master_config(settings: Settings, config: ConfigFromWATO, logger: Logge
             },
         )
     except Exception:
-        if is_replication_slave(config):
-            logger.exception("Replication: no previously saved master state available")
+        logger.exception("Replication: no previously saved master state available")
+    return False
+
+
+def _is_from_other_master(master_config: Mapping[str, object], config: ConfigFromWATO) -> bool:
+    """Whether a saved configuration of a master is from another one than the configured master
+
+    Older versions didn't save the master, so assume that it's the configured one then.
+    """
+    replication = config["replication"]
+    return (
+        replication is not None
+        and master_config.get("master", replication["master"]) != replication["master"]
+    )
 
 
 def get_state_from_master(config: Config, slave_status: SlaveStatus) -> Any:
@@ -3430,7 +3807,8 @@ def get_state_from_master(config: Config, slave_status: SlaveStatus) -> Any:
 
 
 def save_slave_status(settings: Settings, slave_status: SlaveStatus) -> None:
-    settings.paths.slave_status_file.value.write_text(repr(slave_status) + "\n", encoding="utf-8")
+    # The store never leaves a partially written file behind, even if threads save at once.
+    cmk.ccc.store.save_object_to_file(settings.paths.slave_status_file.value, slave_status)
 
 
 def default_slave_status_master() -> SlaveStatus:
@@ -3457,14 +3835,21 @@ def update_slave_status(
     path = settings.paths.slave_status_file.value
     if is_replication_slave(config):
         try:
-            slave_status.update(ast.literal_eval(path.read_text(encoding="utf-8")))
-        except Exception:
-            slave_status = default_slave_status_sync()
+            # Like a missing file, an empty one left behind by an interrupted save yields None.
+            saved_status = cmk.ccc.store.load_object_from_file(path, default=None)
+            if saved_status is not None:
+                slave_status.update(saved_status)
+        except Exception:  # e.g. a file edited by hand
+            saved_status = None
+        if saved_status is None:
+            # A new slave starts syncing, but e.g. a slave which took over keeps doing so.
+            if slave_status["mode"] == "master":
+                slave_status.update(default_slave_status_sync())
             save_slave_status(settings, slave_status)
     else:
         if path.exists():
             path.unlink()
-        slave_status = default_slave_status_master()
+        slave_status.update(default_slave_status_master())
 
 
 # .
@@ -3481,59 +3866,135 @@ def update_slave_status(
 
 
 def make_config(config: ConfigFromWATO) -> Config:
-    return Config(
+    """Adds the fields derived from the configuration, replacing any existing ones"""
+    return {
         **config,
-        action={action["id"]: action for action in config["actions"]},
-        last_reload=int(time.time()),
-    )
+        "action": {action["id"]: action for action in config["actions"]},
+        "last_reload": int(time.time()),
+    }
 
 
 def load_configuration(settings: Settings, logger: Logger, slave_status: SlaveStatus) -> Config:
+    config, start_over = _read_configuration(settings, logger)
+    _set_log_levels(_configured_log_levels(settings, logger, config))
+    _update_replication_status(settings, logger, slave_status, config, start_over=start_over)
+    return config
+
+
+def _read_configuration(settings: Settings, logger: Logger) -> tuple[Config, bool]:
+    """Returns the configuration and whether the EC has to start over as a replication slave
+
+    That's the case if the saved configuration of the master is from another master.
+    """
     config = load_active_config(settings)
-    # If not set by command line, set the log level by configuration
-    if settings.options.verbosity == 0:
-        levels = config["log_level"]
-        logger.setLevel(levels["cmk.mkeventd"])
-        logger.getChild("EventServer").setLevel(levels["cmk.mkeventd.EventServer"])
-        if "cmk.mkeventd.EventServer.snmp" in levels:
-            logger.getChild("EventServer.snmp").setLevel(levels["cmk.mkeventd.EventServer.snmp"])
-        logger.getChild("EventStatus").setLevel(levels["cmk.mkeventd.EventStatus"])
-        logger.getChild("StatusServer").setLevel(levels["cmk.mkeventd.StatusServer"])
-        logger.getChild("lock").setLevel(levels["cmk.mkeventd.lock"])
-    # Are we a replication slave? Parts of the configuration will be overridden by values from the master.
-    update_slave_status(slave_status, settings, config)
+    # Are we a replication slave? Parts of the configuration will be overridden by values from the
+    # master. Only slaves, not former ones, use the saved configuration of their master.
+    start_over = False
+    if is_replication_slave(config):
+        start_over = load_master_config(settings, config, logger)
+    return make_config(config), start_over
+
+
+def _configured_log_levels(settings: Settings, logger: Logger, config: Config) -> dict[Logger, int]:
+    """Returns the log levels of the configuration, unless the command line sets the verbosity"""
+    if settings.options.verbosity != 0:
+        return {}
+    levels = config["log_level"]
+    log_levels = {
+        logger: levels["cmk.mkeventd"],
+        logger.getChild("EventServer"): levels["cmk.mkeventd.EventServer"],
+        logger.getChild("EventStatus"): levels["cmk.mkeventd.EventStatus"],
+        logger.getChild("StatusServer"): levels["cmk.mkeventd.StatusServer"],
+        logger.getChild("lock"): levels["cmk.mkeventd.lock"],
+    }
+    if "cmk.mkeventd.EventServer.snmp" in levels:
+        log_levels[logger.getChild("EventServer.snmp")] = levels["cmk.mkeventd.EventServer.snmp"]
+    return log_levels
+
+
+def _set_log_levels(log_levels: Mapping[Logger, int]) -> None:
+    for each_logger, level in log_levels.items():
+        each_logger.setLevel(level)
+
+
+def _update_replication_status(
+    settings: Settings,
+    logger: Logger,
+    slave_status: SlaveStatus,
+    config: Config,
+    *,
+    start_over: bool,
+) -> None:
+    if start_over:
+        # Like a newly set up slave, sync completely with the new master.
+        settings.paths.master_config_file.value.unlink()
+        slave_status.update(default_slave_status_sync())
+        save_slave_status(settings, slave_status)
+    else:
+        update_slave_status(slave_status, settings, config)
     if is_replication_slave(config):
         logger.info(
             "Replication: slave configuration, current mode: %(mode)s",
             {"mode": slave_status["mode"]},
         )
-    load_master_config(settings, config, logger)
-    return make_config(config)
 
 
 def reload_configuration(
     settings: Settings,
     logger: Logger,
-    lock_configuration: ECLock,
     history: History,
     event_status: EventStatus,
     event_server: EventServer,
     status_server: StatusServer,
     slave_status: SlaveStatus,
-) -> History:
-    with lock_configuration:
-        config = load_configuration(settings, logger, slave_status)
-
-        history.close()
-        history = create_history(
+) -> tuple[Config, History]:
+    config, start_over = _read_configuration(settings, logger)
+    log_levels = _configured_log_levels(settings, logger, config)
+    previous_log_levels = {each_logger: each_logger.level for each_logger in log_levels}
+    try:
+        # Creating the history depends on the log levels, so set them first.
+        _set_log_levels(log_levels)
+        new_history = create_history(
             settings, config, logger, StatusTableEvents.columns, StatusTableHistory.columns
         )
-        event_server.reload_configuration(config, history)
+        try:
+            # It takes the locks for replacing its configuration itself.
+            event_server.reload_configuration(config, new_history)
+        except Exception:
+            new_history.close()
+            raise
+    except Exception:
+        _set_log_levels(previous_log_levels)
+        raise
+    # Update the replication status only now that the new configuration is in effect, so a failed
+    # reload keeps the previous one. Like the status server switching the replication mode, hold the
+    # lock of the event status, so neither undoes what the other one changes. As the event server
+    # uses the new configuration already, complete the reload even if updating the replication
+    # status fails.
+    with event_status.lock:
+        try:
+            _update_replication_status(
+                settings, logger, slave_status, config, start_over=start_over
+            )
+        except Exception:
+            logger.exception("Cannot update the replication status")
 
-    event_status.reload_configuration(config, history)
-    status_server.reload_configuration(config, history)
+    # Until now, the status server answered replication requests with the previous configuration,
+    # so stamp the reload only now: A slave which synced meanwhile gets the new one with its next
+    # sync then.
+    config["last_reload"] = int(time.time())
+    event_status.reload_configuration(config, new_history)
+    status_server.reload_configuration(config, new_history)
+    # Once a status query still reading it is answered, only the event server may still use the
+    # previous history, e.g. to record an action it started before the reload. With SQLite,
+    # recording that then fails, which the action logs, while MongoDB reconnects.
+    with event_status.lock:
+        try:
+            history.close()
+        except Exception:
+            logger.exception("Cannot close the previous history")
     logger.info("Reloaded configuration.")
-    return history
+    return config, new_history
 
 
 # .
@@ -3639,11 +4100,7 @@ def main() -> None:
             logger.info("Daemonized with PID %(pid)d.", {"pid": os.getpid()})
 
         with cmk.ccc.daemon.pid_file_lock(pid_path):
-
-            def signal_handler(signum: int, stack_frame: FrameType | None) -> None:  # noqa: ARG001
-                logger.log(VERBOSE, "Got signal %(signum)d.", {"signum": signum})
-                raise MKSignalException(signum)
-
+            signal_handler = SignalHandler(logger)
             signal.signal(signal.SIGHUP, signal_handler)
             signal.signal(signal.SIGINT, signal_handler)
             signal.signal(signal.SIGQUIT, signal_handler)
@@ -3663,6 +4120,8 @@ def main() -> None:
                 slave_status,
                 logger,
                 reload_config_event,
+                fetch_master_state=get_state_from_master,
+                signal_handler=signal_handler,
             )
 
             # We reach this point, if the server has been killed by

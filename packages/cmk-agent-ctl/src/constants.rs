@@ -17,15 +17,24 @@ pub const UNIX_AGENT_SOCKET: &str = "/run/check-mk-agent.socket";
 pub const CMK_UPDATE_AGENT_CMD: &str = "check_mk_agent.exe";
 #[cfg(unix)]
 pub const CMK_UPDATE_AGENT_CMD: &str = "cmk-update-agent";
+/// The plugin of the Windows agent that `check_mk_agent.exe updater` runs
+/// (`kAgentUpdaterPython` in `agents/wnx`).
+#[cfg(windows)]
+pub const PYTHON_UPDATER_PLUGIN: &str = "cmk_update_agent.checkmk.py";
 
 // FILES
 pub const PRE_CONFIGURED_CONNECTIONS_FILE: &str = "pre_configured_connections.json";
+pub const TRUSTED_CAS_FILE: &str = "trusted_cas.json";
 pub const REGISTRY_FILE: &str = "registered_connections.json";
 pub const CONFIG_FILE: &str = "cmk-agent-ctl.toml";
 // Agent updates. Baked next to CONFIG_FILE, but a separate artifact because two
 // bakery plugins cannot write one file.
 pub const UPDATER_CONFIG_FILE: &str = "cmk-agent-ctl-update.toml";
 pub const UPDATER_STATE_FILE: &str = "agent-update-state.json";
+/// The outcome of one run of the privileged install step, written by it and
+/// read by the controller. Linux only: no other platform has that step.
+#[cfg(unix)]
+pub const INSTALL_RESULT_FILE: &str = "agent-install-result.json";
 /// Directory holding a verified agent package until the installer has taken it.
 pub const UPDATER_PACKAGE_DIR: &str = "update";
 #[cfg(unix)]
@@ -47,6 +56,13 @@ pub const ENV_LOG_TO_FILE: &str = "CMK_AGENT_CTL_LOG_TO_FILE";
 pub const WIN_AGENT_HOME_DIR: &str = "\\checkmk\\agent";
 
 // ENV VARS
+/// Names the root-owned update configuration of `install-agent`.
+///
+/// The installer unit sets it. The path must come from the unit and not from
+/// the install request, which the agent user writes: the file it names decides
+/// what root is willing to install.
+#[cfg(unix)]
+pub const ENV_UPDATE_CONFIG: &str = "CMK_AGENT_CTL_UPDATE_CONFIG";
 pub const ENV_HOME_DIR: &str = "DEBUG_HOME_DIR";
 pub const ENV_MAX_CONNECTIONS: &str = "DEBUG_MAX_CONNECTIONS";
 pub const ENV_CONNECTION_TIMEOUT: &str = "DEBUG_CONNECTION_TIMEOUT";

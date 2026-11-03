@@ -17,8 +17,8 @@ from cmk.gui.openapi.framework import (
 )
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.openapi.framework.model.base_models import DomainObjectCollectionModel, LinkModel
+from cmk.gui.openapi.framework.model.converter import folder_tree_of_request
 from cmk.gui.openapi.restful_objects.constructors import collection_href
-from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.site_management import SitesApiMgr
 
 from .endpoint_family import SITE_MANAGEMENT_FAMILY
@@ -52,7 +52,7 @@ def list_sites_connections_v1(api_context: ApiContext) -> SiteManagementCollecti
     """Show all site connections"""
     user.need_permission("wato.sites")
 
-    tree = make_folder_tree(api_context.config)
+    tree = folder_tree_of_request(api_context)
     return SiteManagementCollectionModel(
         id="site_connection",
         domainType="site_connection",

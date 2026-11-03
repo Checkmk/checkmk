@@ -7,7 +7,7 @@ import abc
 import multiprocessing
 import os
 import subprocess
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterable, Iterator, Sequence
 from pathlib import Path
 from typing import override
 
@@ -18,13 +18,13 @@ import cmk.utils.paths
 import cmk.utils.render
 from cmk.backup.gui.handler import BackupConfig
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.site import SiteId
+from cmk.ccc.site import get_omd_config, SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import userdb
 from cmk.gui.config import active_config, Config
 from cmk.gui.http import request
 from cmk.gui.i18n import _, ungettext
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.site_config import (
     distributed_setup_remote_sites,
     has_distributed_setup_remote_sites,
@@ -69,6 +69,7 @@ def register(ac_test_registry: ACTestRegistry) -> None:
     ac_test_registry.register(ACTestLivestatusSecured)
     ac_test_registry.register(ACTestNumberOfUsers)
     ac_test_registry.register(ACTestHTTPSecured)
+    ac_test_registry.register(ACTestApacheForwardedHeaders)
     ac_test_registry.register(ACTestBackupConfigured)
     ac_test_registry.register(ACTestBackupNotEncryptedConfigured)
     ac_test_registry.register(ACTestEscapeHTMLDisabled)
@@ -434,8 +435,9 @@ class ACTestHTTPSecured(ACTest):
             )
             + " "
             + _(
-                'Please note that you have to set <tt>RequestHeader set X-Forwarded-Proto "https"</tt> in '
-                "your system Apache configuration to tell the Checkmk GUI about the SSL setup."
+                "If your system Apache terminates TLS itself, or sits behind a proxy or load "
+                "balancer that does, the 'Apache X-Forwarded-Proto/-Ssl headers' test covers "
+                "whether the Checkmk GUI is correctly told about it."
             )
         )
 
@@ -451,6 +453,110 @@ class ACTestHTTPSecured(ACTest):
             yield ACSingleResult(
                 state=ACResultState.WARN,
                 text=_("Site is using plain HTTP. Consider enabling HTTPS."),
+                site_id=site_id,
+            )
+
+
+_APACHE_FORWARDED_HEADERS_SEARCH_DIRS = (
+    Path("/etc/apache2"),
+    Path("/etc/httpd"),
+)
+
+
+def _manual_forwarded_headers_files(search_dirs: Iterable[Path]) -> list[Path]:
+    """Best-effort scan of well-known system Apache config locations for a manually configured
+    RequestHeader for X-Forwarded-Proto/X-Forwarded-Ssl. An admin who put it somewhere else, or
+    behind a variable/include Apache can't be statically resolved, won't be caught."""
+    found = []
+    for root in search_dirs:
+        if not root.is_dir():
+            continue
+        for candidate in root.rglob("*.conf"):
+            try:
+                content = candidate.read_text()
+            except OSError:
+                continue
+            if "X-Forwarded-Proto" in content or "X-Forwarded-Ssl" in content:
+                found.append(candidate)
+    return found
+
+
+class ACTestApacheForwardedHeaders(ACTest):
+    def __init__(
+        self,
+        omd_root: Path | None = None,
+        search_dirs: Iterable[Path] | None = None,
+    ) -> None:
+        self._omd_root = omd_root or cmk.utils.paths.omd_root
+        self._search_dirs = (
+            _APACHE_FORWARDED_HEADERS_SEARCH_DIRS if search_dirs is None else list(search_dirs)
+        )
+
+    @override
+    def category(self) -> str:
+        return ACTestCategories.security
+
+    @override
+    def title(self) -> str:
+        return _("Apache X-Forwarded-Proto/-Ssl headers")
+
+    @override
+    def help(self) -> str:
+        return (
+            _(
+                "Checkmk's OAuth and MCP endpoints need to know whether the original client "
+                "request arrived via HTTP or HTTPS. By default (<tt>APACHE_FORWARDED_HEADERS "
+                "auto</tt>), the system Apache sets the X-Forwarded-Proto and X-Forwarded-Ssl "
+                "headers for the site itself, based on what it sees on its own connection."
+            )
+            + " "
+            + _(
+                "If your system Apache sits behind another proxy or load balancer that "
+                "terminates TLS and forwards plain HTTP to it, that automatic value would be "
+                "wrong. Run <tt>omd config set APACHE_FORWARDED_HEADERS manual</tt> for the "
+                "site and set the headers yourself in the system Apache configuration instead, "
+                'e.g. <tt>RequestHeader set X-Forwarded-Proto "https"</tt>.'
+            )
+        )
+
+    @override
+    def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
+        mode = get_omd_config(self._omd_root)["CONFIG_APACHE_FORWARDED_HEADERS"]
+        manual_files = _manual_forwarded_headers_files(self._search_dirs)
+
+        if mode == "auto":
+            if manual_files:
+                yield ACSingleResult(
+                    state=ACResultState.WARN,
+                    text=_(
+                        "Found a RequestHeader for X-Forwarded-Proto/X-Forwarded-Ssl in "
+                        "%(files)s. Checkmk already sets this header itself; remove the manual "
+                        "entry to avoid duplicate or conflicting configuration, or set "
+                        "APACHE_FORWARDED_HEADERS to 'manual' if this Apache needs it."
+                    )
+                    % {"files": ", ".join(str(path) for path in manual_files)},
+                    site_id=site_id,
+                )
+            else:
+                yield ACSingleResult(
+                    state=ACResultState.OK,
+                    text=_("X-Forwarded-Proto/-Ssl are set automatically"),
+                    site_id=site_id,
+                )
+        elif manual_files:
+            yield ACSingleResult(
+                state=ACResultState.OK,
+                text=_("X-Forwarded-Proto/-Ssl are configured manually, as configured"),
+                site_id=site_id,
+            )
+        else:
+            yield ACSingleResult(
+                state=ACResultState.WARN,
+                text=_(
+                    "APACHE_FORWARDED_HEADERS is set to 'manual', but no matching "
+                    "RequestHeader configuration was found in the usual system Apache "
+                    "locations. Is this intentional?"
+                ),
                 site_id=site_id,
             )
 
@@ -1720,8 +1826,14 @@ class ACTestAutomationUserSecret(ACTest):
     @override
     def help(self) -> str:
         return _(
-            "With 2.4.0 (Werk #17344) it was made optional to store the secret of an automation user. "
-            "We do not recommend to store the secret for automation users with high privileges."
+            "Since 2.4.0 (Werk #17344), the secret of an automation user is only stored in "
+            "cleartext if <i>Store the secret in cleartext</i> is enabled. A stored secret can be "
+            "read by anyone with access to the site files or backups. Together with permissions "
+            "that allow running arbitrary code, this gives full control over the site.<br>"
+            "External tools and scripts do not need a stored secret, they keep the secret "
+            "themselves. Only Checkmk features that read the secret from the site need it, e.g. "
+            "the agent auto-registration rule or the special agent for BI aggregations. These "
+            "users only need the permissions of that feature, not the role administrator."
         )
 
     @staticmethod
@@ -1744,7 +1856,7 @@ class ACTestAutomationUserSecret(ACTest):
         if is_distributed_setup_remote_site(config.sites):
             return
         flagged_users = self.get_flagged_users(
-            UserPermissions.from_config(config, permission_registry),
+            UserPermissions.from_config(config, all_permissions()),
             userdb.load_users(),
         )
 
@@ -1758,18 +1870,21 @@ class ACTestAutomationUserSecret(ACTest):
             )
             return
 
+        permissions = all_permissions()
         for user_id, dangerous_perms in flagged_users.items():
             yield ACSingleResult(
                 state=ACResultState.WARN,
                 text=_(
-                    "Automation user %(user_id)s has stored secret with %(count)d dangerous permission(s): %(permissions)s"
+                    "Automation user %(user_id)s has a stored secret and %(count)d dangerous "
+                    "permission(s): %(permissions)s. If no Checkmk feature reads the secret, "
+                    "disable 'Store the secret in cleartext' and generate a new secret. "
+                    "Otherwise, assign a role without these permissions."
                 )
                 % {
                     "user_id": user_id,
                     "count": len(dangerous_perms),
                     "permissions": ", ".join(
-                        (perm.title if (perm := permission_registry.get(p)) else p)
-                        for p in dangerous_perms
+                        (perm.title if (perm := permissions.get(p)) else p) for p in dangerous_perms
                     ),
                 },
                 site_id=site_id,

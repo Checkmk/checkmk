@@ -18,13 +18,14 @@ from cmk.gui.session_context import SuperUserContext
 from cmk.gui.watolib import groups
 from cmk.gui.watolib.groups import HostAttributeContactGroups
 from cmk.gui.watolib.host_attributes import HostAttributes
-from cmk.gui.watolib.hosts_and_folders import folder_tree, make_folder_tree
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.pending_changes import PendingChanges, PendingChangesStore
 from cmk.gui.wsgi.app import session_wsgi_app
 from cmk.gui.wsgi.blueprints import checkmk, rest_api
 from cmk.livestatus_client import SiteConfigurations
 from tests.testlib.unit.rest_api_client import RestApiClient
 
+from .common_fixtures import make_default_config
 from .web_test_app import WebTestAppForCMK, WebTestAppRequestHandler
 
 
@@ -73,7 +74,7 @@ def create_test_groups(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
 
 def create_sample_host_context() -> Iterator[str]:
     host_name = "test_host"
-    root_folder = folder_tree().root_folder()
+    root_folder = make_folder_tree(make_default_config()).root_folder()
     contact_groups = HostAttributeContactGroups().default_value()
     contact_groups["groups"] = ["all"]
     with SuperUserContext():

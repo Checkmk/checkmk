@@ -6,17 +6,14 @@
 # mypy: disable-error-code="type-arg"
 
 import contextlib
-import copy
 import sys
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from pathlib import Path
-from types import ModuleType
 from typing import override
 
-import cmk.ccc.debug
 import cmk.utils.paths
-from cmk.base import default_config
 from cmk.ccc.hostaddress import HostName
+from cmk.config import get_legacy_default_base_config
 from cmk.utils.host_storage import (
     apply_hosts_file_to_object,
     get_host_storage_loaders,
@@ -24,20 +21,6 @@ from cmk.utils.host_storage import (
 )
 from cmk.utils.log import console
 from cmk.utils.misc import key_config_paths
-
-
-def get_default_config() -> dict[str, object]:
-    """Provides a dictionary containing the Check_MK default configuration"""
-    # Note: variable_defaults contains a lot of additional values not part of
-    # BaseConfig:
-    # Type definitions that are leaked by the '*' import, but also deprecated actual
-    # config values.
-    return {
-        key: copy.deepcopy(value) if isinstance(value, dict | list) else value
-        for key, value in default_config.__dict__.items()
-        # we don't want default_configs submodules here:
-        if key[0] != "_" and not isinstance(value, ModuleType)
-    }
 
 
 def strip_tag(tagged_hostname: str) -> HostName:
@@ -120,12 +103,12 @@ class ConfigFileLoadError(Exception):
 
 
 @contextlib.contextmanager
-def exit_on_config_file_load_error() -> Iterator[None]:
+def exit_on_config_file_load_error(*, debug: bool) -> Iterator[None]:
     """Report an unreadable config file and end the process, unless debugging"""
     try:
         yield
     except ConfigFileLoadError as e:
-        if cmk.ccc.debug.enabled():
+        if debug:
             raise
         if sys.stderr.isatty():
             console.error(str(e), file=sys.stderr)
@@ -139,7 +122,7 @@ def _load_config_file(file_to_load: Path, into_dict: dict[str, object]) -> None:
 def load_raw_config(
     *,
     config_files: Iterable[Path] | None = None,
-    context_factory: Callable[[], dict[str, object]] = get_default_config,
+    context_factory: Callable[[], dict[str, object]] = get_legacy_default_base_config,
 ) -> Mapping[str, object]:
     """Execute the config files into a namespace
 
@@ -147,8 +130,8 @@ def load_raw_config(
     conf.d, final.mk and local.mk.
 
     The namespace starts out with what is returned by `context_factory`,
-    which defaults to get_default_config: legacy config files reference
-    variables before assigning them.
+    which defaults to get_legacy_default_base_config: legacy config files
+    reference variables before assigning them.
     """
     target_context = context_factory()
     # The loader itself needs these, regardless of what the config files expect.

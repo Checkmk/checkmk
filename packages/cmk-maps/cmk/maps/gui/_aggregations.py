@@ -32,11 +32,12 @@ behaviour:
 its endpoints publish.
 """
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Literal
+from typing import Final, Literal
 
 from cmk.bi.computer import BIAggregationFilter
-from cmk.bi.lib import ABCBICompiledNode, NodeResultBundle
+from cmk.bi.lib import ABCBICompiledNode, BIState, NodeResultBundle
 from cmk.bi.trees import BICompiledAggregation, BICompiledLeaf, BICompiledRule
 from cmk.gui.bi.bi_manager import BIManager
 from cmk.gui.logged_in import user
@@ -44,6 +45,7 @@ from cmk.gui.sites import live
 from cmk.livestatus_client import MKLivestatusException
 from cmk.livestatus_client.queries import Query
 from cmk.livestatus_client.tables.hosts import Hosts
+from cmk.maps.shared.states import BIStateName
 
 MAX_TREE_DEPTH = 10
 
@@ -85,11 +87,25 @@ class AggregationTreeResult:
     connection_ok: bool
 
 
+_BI_STATE_NAMES: Final[Mapping[int, BIStateName]] = {
+    BIState.PENDING: "PENDING",
+    BIState.OK: "OK",
+    BIState.WARN: "WARNING",
+    BIState.CRIT: "CRITICAL",
+    BIState.UNKNOWN: "UNKNOWN",
+}
+
+
+def bi_state_name(state: int) -> BIStateName:
+    """The token the SPA renders for a computed BI state."""
+    return _BI_STATE_NAMES.get(state, "UNKNOWN")
+
+
 @dataclass(frozen=True, kw_only=True)
 class AggregationState:
     """The computed state of one BI aggregation branch."""
 
-    state: int
+    state: BIStateName
     output: str
     acknowledged: bool
     in_downtime: bool
@@ -171,7 +187,7 @@ def _results_to_states(
                 continue
             actual = bundle.actual_result
             out[title] = AggregationState(
-                state=int(actual.state),
+                state=bi_state_name(actual.state),
                 output=str(actual.output or ""),
                 acknowledged=bool(actual.acknowledged),
                 in_downtime=bool(actual.in_downtime),

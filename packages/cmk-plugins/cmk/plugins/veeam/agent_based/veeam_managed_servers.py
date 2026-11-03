@@ -6,6 +6,7 @@
 import json
 from collections.abc import Mapping
 from dataclasses import dataclass
+from enum import StrEnum
 from typing import TypedDict
 
 from cmk.agent_based.v2 import (
@@ -20,6 +21,18 @@ from cmk.agent_based.v2 import (
 )
 
 
+class ManagedServerType(StrEnum):
+    WINDOWS_HOST = "WindowsHost"
+    LINUX_HOST = "LinuxHost"
+    VI_HOST = "ViHost"
+    CLOUD_DIRECTOR_HOST = "CloudDirectorHost"
+    HV_SERVER = "HvServer"
+    HV_CLUSTER = "HvCluster"
+    SCVMM = "SCVMM"
+    SMB_V3_CLUSTER = "SmbV3Cluster"
+    SMB_V3_STANDALONE_HOST = "SmbV3StandaloneHost"
+
+
 @dataclass(frozen=True, kw_only=True)
 class VeeamManagedServer:
     """Mirrors the VBR REST API's ManagedServerModel
@@ -30,7 +43,7 @@ class VeeamManagedServer:
     """
 
     id: str
-    type: str
+    type: ManagedServerType | str
     description: str
     status: str | None
     is_backup_server: bool
@@ -51,7 +64,7 @@ def parse_veeam_managed_servers(string_table: StringTable) -> Section:
         server_dict = json.loads(line[0])
         section[server_dict["name"]] = VeeamManagedServer(
             id=server_dict["id"],
-            type=server_dict["type"],
+            type=_parse_type(server_dict["type"]),
             description=server_dict["description"],
             status=server_dict.get("status"),
             is_backup_server=server_dict.get("isBackupServer", False),
@@ -64,28 +77,37 @@ def discovery_veeam_managed_servers(section: Section) -> DiscoveryResult:
     yield from (Service(item=item) for item in section)
 
 
-def _type_display_name(raw_type: str) -> str:
-    match raw_type:
-        case "WindowsHost":
+def _parse_type(raw_type: str) -> ManagedServerType | str:
+    try:
+        return ManagedServerType(raw_type)
+    except ValueError:
+        return raw_type
+
+
+def _known_type_display_name(type_: ManagedServerType) -> str:
+    match type_:
+        case ManagedServerType.WINDOWS_HOST:
             return "Microsoft Windows"
-        case "LinuxHost":
+        case ManagedServerType.LINUX_HOST:
             return "Linux"
-        case "ViHost":
+        case ManagedServerType.VI_HOST:
             return "VMware vSphere"
-        case "CloudDirectorHost":
+        case ManagedServerType.CLOUD_DIRECTOR_HOST:
             return "VMware Cloud Director"
-        case "HvServer":
+        case ManagedServerType.HV_SERVER:
             return "Hyper-V server"
-        case "HvCluster":
+        case ManagedServerType.HV_CLUSTER:
             return "Hyper-V cluster"
-        case "SCVMM":
+        case ManagedServerType.SCVMM:
             return "SCVMM"
-        case "SmbV3Cluster":
+        case ManagedServerType.SMB_V3_CLUSTER:
             return "SMB3 cluster"
-        case "SmbV3StandaloneHost":
+        case ManagedServerType.SMB_V3_STANDALONE_HOST:
             return "SMB3 server"
-        case _:
-            return raw_type
+
+
+def _type_display_name(type_: ManagedServerType | str) -> str:
+    return _known_type_display_name(type_) if isinstance(type_, ManagedServerType) else type_
 
 
 def _status_state(status: str | None, params: CheckParameters) -> State:

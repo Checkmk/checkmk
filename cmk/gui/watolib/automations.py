@@ -619,6 +619,9 @@ def do_site_login(site: SiteConfiguration, name: UserId, password: str, *, debug
     # Adding _ajaxid makes the web service fail silently with an HTTP code and
     # not output HTML code for an error screen.
     url = site["multisiteurl"] + "login.py"
+    # The remote site lets this login through its post-auth gates (e.g. the trial mode
+    # selection) only because is_site_login() recognizes the _origtarget below. Keep the two
+    # in sync: the gates are off on most development sites, so a mismatch goes unnoticed there.
     post_data = {
         "_login": "1",
         "_username": name,

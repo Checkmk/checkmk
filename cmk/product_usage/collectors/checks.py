@@ -27,7 +27,7 @@ def collect() -> Checks:
 def _get_services(connection: LocalConnection) -> Checks:
     count_checks_on_hosts = defaultdict(set)
 
-    query = Query([Services.check_type, Services.host_name, Services.check_command]).compile()
+    query = Query([Services.check_type, Services.host_name, Services.check_command])
 
     rows = connection.query(query)
     checks: Checks = {}
@@ -67,10 +67,8 @@ def _get_services(connection: LocalConnection) -> Checks:
 
 
 def _get_disabled_services(connection: LocalConnection) -> Checks:
-    query = (
-        Query([Services.long_plugin_output])
-        .filter(Services.check_command.equals("check-mk-inventory"))
-        .compile()
+    query = Query([Services.long_plugin_output]).filter(
+        Services.check_command.equals("check-mk-inventory")
     )
 
     rows = connection.query(query)

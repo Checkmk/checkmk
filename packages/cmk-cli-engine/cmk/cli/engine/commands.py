@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import logging
 import os
 import shlex
 import signal
@@ -15,16 +16,12 @@ from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager, suppress
 from typing import Final, override
 
-from cmk.ccc import tty
-from cmk.ccc.exceptions import MKGeneralException
-from cmk.cli.internal import (
-    CLICommand,
-    CLIOption,
-    CommandHandler,
-    entry_point_prefixes,
-    GlobalOptions,
-)
-from cmk.discover_plugins import discover_all_plugins, PluginGroup
+from cmk.cli.internal import Command as CLICommand
+from cmk.cli.internal import CommandHandler
+from cmk.cli.internal import entry_point_prefixes as cli_entry_point_prefixes
+from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
+from cmk.cli.internal import Option as CLIOption
+from cmk.discover_plugins import discover_all_plugins, PluginGroup, PluginLocation
 
 OptionSpec = str
 Argument = str
@@ -130,7 +127,7 @@ class Option:
 
 
 def parse_sub_options(
-    sub_options: Sequence[Option], all_opts: Options
+    sub_options: Sequence[Option], all_opts: Options, logger: logging.Logger
 ) -> Mapping[OptionName, object]:
     options: dict[OptionName, object] = {}
     counts: Counter[OptionName] = Counter()
@@ -142,13 +139,13 @@ def parse_sub_options(
                 continue
 
             if option.is_deprecated_option(o):
-                write_stdout(
-                    tty.format_warning(f"{o!r} is deprecated in favour of option {option.name!r}")
-                    + "\n"
+                logger.warning(
+                    "%(deprecated)r is deprecated in favour of option %(name)r",
+                    {"deprecated": o, "name": option.name},
                 )
 
             if a and not option.argument:
-                raise MKGeneralException("No argument to %s expected." % o)
+                raise ValueError("No argument to %s expected." % o)
 
             if option.repeat:
                 if option.argument:
@@ -164,7 +161,7 @@ def parse_sub_options(
                 try:
                     val = option.argument_conv(a)
                 except ValueError:
-                    raise MKGeneralException("%s: Invalid argument" % o)
+                    raise ValueError("%s: Invalid argument" % o)
 
             options[option.name] = val
 
@@ -182,7 +179,7 @@ def option_string(parsed: Mapping[OptionName, object], name: OptionName) -> str 
         case str() as value:
             return value
         case value:
-            raise MKGeneralException(f"--{name}: invalid argument {value!r}")
+            raise TypeError(f"--{name}: invalid argument {value!r}")
 
 
 def option_strings(parsed: Mapping[OptionName, object], name: OptionName) -> Sequence[str]:
@@ -193,9 +190,9 @@ def option_strings(parsed: Mapping[OptionName, object], name: OptionName) -> Seq
             strings = tuple(element for element in value if isinstance(element, str))
             if len(strings) == len(value):
                 return strings
-            raise MKGeneralException(f"--{name}: invalid argument {value!r}")
+            raise TypeError(f"--{name}: invalid argument {value!r}")
         case value:
-            raise MKGeneralException(f"--{name}: invalid argument {value!r}")
+            raise TypeError(f"--{name}: invalid argument {value!r}")
 
 
 def option_count(parsed: Mapping[OptionName, object], name: OptionName) -> int:
@@ -203,7 +200,7 @@ def option_count(parsed: Mapping[OptionName, object], name: OptionName) -> int:
         case int() as value:
             return value
         case value:
-            raise MKGeneralException(f"--{name}: invalid argument {value!r}")
+            raise TypeError(f"--{name}: invalid argument {value!r}")
 
 
 def option_names[NameT](
@@ -214,15 +211,16 @@ def option_names[NameT](
             names = frozenset(element for element in value if isinstance(element, type_))
             if len(names) == len(value):
                 return names
-            raise MKGeneralException(f"--{name}: invalid argument {value!r}")
+            raise TypeError(f"--{name}: invalid argument {value!r}")
         case value:
-            raise MKGeneralException(f"--{name}: invalid argument {value!r}")
+            raise TypeError(f"--{name}: invalid argument {value!r}")
 
 
 class Command(Option):
     def __init__(
         self,
         *,
+        name: str,
         long_option: OptionName,
         handler_function: CommandHandler,
         short_help: str,
@@ -241,9 +239,15 @@ class Command(Option):
             argument_descr=argument_descr,
             argument_optional=argument_optional,
         )
+        self._name: Final = name
         self.handler_function = handler_function
         self.long_help = long_help
         self.sub_options = sub_options
+
+    @property
+    @override
+    def name(self) -> str:
+        return self._name
 
     @override
     def short_getopt_specs(self) -> list[str]:
@@ -297,29 +301,31 @@ class Command(Option):
 def make_option(option: CLIOption) -> Option:
     """Build the engine's option from its API declaration"""
     return Option(
-        long_option=option.long_option,
-        short_help=option.short_help,
-        short_option=option.short_option,
-        argument=option.argument,
-        argument_descr=option.argument_descr,
-        argument_conv=option.argument_conv,
+        long_option=option.long,
+        short_help=option.help,
+        short_option=option.short,
+        argument=option.argument is not None,
+        argument_descr=option.argument,
+        argument_conv=option.parse,
         argument_optional=option.argument_optional,
         repeat=option.repeat,
-        deprecated_long_options=set(option.deprecated_long_options),
+        deprecated_long_options=set(option.deprecated_names),
     )
 
 
 def make_command(command: CLICommand) -> Command:
     """Build the engine's command from its API declaration"""
+    arguments = command.arguments
     return Command(
-        long_option=command.long_option,
+        name=command.name,
+        long_option=command.long,
         handler_function=command.handler_function,
-        short_help=command.short_help,
-        short_option=command.short_option,
-        argument=command.argument,
-        argument_descr=command.argument_descr,
-        argument_optional=command.argument_optional,
-        long_help=list(command.long_help) if command.long_help is not None else None,
+        short_help=command.help,
+        short_option=command.short,
+        argument=arguments is not None,
+        argument_descr=None if arguments is None else arguments.placeholder,
+        argument_optional=arguments is not None and arguments.optional,
+        long_help=list(command.description) if command.description is not None else None,
         sub_options=[make_option(option) for option in command.sub_options],
     )
 
@@ -340,45 +346,44 @@ _PROFILE_OPTION = Option(
     short_help="Enable profiling mode",
 )
 
-_FAKE_DNS_OPTION = Option(
-    long_option="fake-dns",
-    short_help="Fake IP addresses of all hosts to be IP. This prevents DNS lookups.",
-    argument=True,
-    argument_descr="IP",
-)
-
 
 def general_options() -> Sequence[Option]:
     """The options every command accepts, see `cmk.cli.internal.GlobalOptions`"""
-    return [_VERBOSE_OPTION, _DEBUG_OPTION, _PROFILE_OPTION, _FAKE_DNS_OPTION]
+    return [_VERBOSE_OPTION, _DEBUG_OPTION, _PROFILE_OPTION]
 
 
-def parse_general_options(all_opts: Options) -> GlobalOptions:
+def parse_general_options(all_opts: Options) -> CLIGlobalOptions:
     """Collect the general options from the parsed command line"""
     verbosity = 0
     debug = False
     profile = False
-    fake_dns: str | None = None
-    for option, argument in all_opts:
+    for option, _argument in all_opts:
         if option in _VERBOSE_OPTION.options():
             verbosity += 1
         elif option in _DEBUG_OPTION.options():
             debug = True
         elif option in _PROFILE_OPTION.options():
             profile = True
-        elif option in _FAKE_DNS_OPTION.options():
-            fake_dns = argument
-    return GlobalOptions(verbosity=verbosity, debug=debug, profile=profile, fake_dns=fake_dns)
+    return CLIGlobalOptions(verbosity=verbosity, debug=debug, profile=profile)
+
+
+def _named_after_its_variable(location: PluginLocation, command: CLICommand) -> CLICommand:
+    if location.name != f"{cli_entry_point_prefixes()[CLICommand]}{command.name}":
+        raise ValueError(f"{location} is not named after its command {command.name!r}")
+    return command
 
 
 def discover_commands() -> Sequence[Command]:
     discovered = discover_all_plugins(
         PluginGroup.CLI,
-        entry_point_prefixes(),
+        cli_entry_point_prefixes(),
         skip_wrong_types=False,
         raise_errors=True,
     )
-    return tuple(make_command(command) for command in discovered.plugins.values())
+    return tuple(
+        make_command(_named_after_its_variable(location, command))
+        for location, command in discovered.plugins.items()
+    )
 
 
 _DEFAULT_PAGER: Final = "less"
@@ -437,9 +442,9 @@ def _map_options(commands: Sequence[Command]) -> Mapping[OptionName, Command]:
             if name is None:
                 continue
             if name in reserved:
-                raise MKGeneralException(f"{name!r} is the help, not the command {command.name!r}")
+                raise ValueError(f"{name!r} is the help, not the command {command.name!r}")
             if (other := mapped.get(name)) is not None:
-                raise MKGeneralException(
+                raise ValueError(
                     f"{name!r} is claimed by the commands {other.name!r} and {command.name!r}"
                 )
             mapped[name] = command

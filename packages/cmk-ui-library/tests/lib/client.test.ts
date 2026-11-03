@@ -5,8 +5,8 @@
  */
 import { type CmkApiError, CmkNetworkError } from 'cmk-ui-library/lib/error'
 import { createClient, unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
-import { useMswServer } from 'cmk-ui-library/vitest.msw'
-import { HttpResponse, http } from 'msw'
+import { untypedHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
+import { HttpResponse } from 'msw'
 
 const EXAMPLE_DATA = {
   some_random_playload: 123
@@ -20,13 +20,13 @@ const BROKEN_ENDPOINT_WITHOUT_JSON = '/broken-endpoint-without-json'
 const UNREACHABLE_ENDPOINT = '/unreachable-endpoint'
 
 const restHandlers = [
-  http.get(`${BASE_URL}${VALID_ENDPOINT}`, () => {
+  untypedHttp.get(`${BASE_URL}${VALID_ENDPOINT}`, () => {
     return HttpResponse.json(EXAMPLE_DATA, { status: 200 })
   }),
-  http.get(`${BASE_URL}${BROKEN_ENDPOINT}`, () => {
+  untypedHttp.get(`${BASE_URL}${BROKEN_ENDPOINT}`, () => {
     return HttpResponse.json(EXAMPLE_DATA, { status: 418 })
   }),
-  http.get(`${BASE_URL}${BROKEN_ENDPOINT_WITH_CRASHREPORT}`, () => {
+  untypedHttp.get(`${BASE_URL}${BROKEN_ENDPOINT_WITH_CRASHREPORT}`, () => {
     return HttpResponse.json(
       {
         detail: 'some_detail',
@@ -36,10 +36,10 @@ const restHandlers = [
       { status: 500 }
     )
   }),
-  http.get(`${BASE_URL}${BROKEN_ENDPOINT_WITHOUT_JSON}`, () => {
+  untypedHttp.get(`${BASE_URL}${BROKEN_ENDPOINT_WITHOUT_JSON}`, () => {
     return HttpResponse.text('<html><body>Gateway Time-out</body></html>', { status: 504 })
   }),
-  http.get(`${BASE_URL}${UNREACHABLE_ENDPOINT}`, () => {
+  untypedHttp.get(`${BASE_URL}${UNREACHABLE_ENDPOINT}`, () => {
     return HttpResponse.error()
   })
 ]

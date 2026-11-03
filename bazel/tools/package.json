@@ -1,5 +1,6 @@
 {
   "devDependencies": {
+    "@copilotkit/aimock": "1.45.1",
     "@eslint/js": "^9.39.4",
     "@trivago/prettier-plugin-sort-imports": "6.0.2",
     "@vue/compiler-sfc": "^3.5.22",

@@ -19,7 +19,7 @@ from cmk.gui.openapi.framework import (
     VersionedEndpoint,
 )
 from cmk.gui.openapi.restful_objects.constructors import collection_href
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.userdb import load_roles
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.userroles import clone_role
@@ -45,7 +45,7 @@ def create_user_role_v1(api_context: ApiContext, body: CreateUserRoleModel) -> U
         ),
         UserPermissions(
             load_roles(),
-            permission_registry,
+            all_permissions(),
             user_roles={
                 UserId(user_id): user["roles"]
                 for user_id, user in api_context.config.multisite_users.items()

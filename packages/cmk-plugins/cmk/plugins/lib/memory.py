@@ -34,18 +34,13 @@ class SectionMemTotal:
         return self.memory_total
 
 
+LINUX_REQUIRED_KEYS = frozenset(
+    {"Buffers", "Cached", "Dirty", "MemFree", "MemTotal", "SwapFree", "SwapTotal"}
+)
+
+
 def is_linux_section(section: SectionMem) -> bool:
-    # match these to the keys required by checks/mem
-    return {
-        "Buffers",
-        "Cached",
-        "Dirty",
-        "MemFree",
-        "MemTotal",
-        "SwapFree",
-        "SwapTotal",
-        "Writeback",
-    } <= section.keys()
+    return LINUX_REQUIRED_KEYS | {"Writeback"} <= section.keys()
 
 
 def get_levels_mode_from_value(warn: float | None) -> LevelsMode:

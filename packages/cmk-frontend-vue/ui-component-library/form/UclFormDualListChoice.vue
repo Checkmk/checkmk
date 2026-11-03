@@ -27,24 +27,13 @@ const spec = ref<DualListChoice>({
     { name: 'Test_name_4', title: 'Test Name 4' }
   ] as MultipleChoiceElement[],
   show_toggle_all: true,
+  no_element_label: '',
 
   type: 'dual_list_choice',
   title: 'the Title',
   help: '',
   validators: [],
   i18n: {
-    add: '',
-    remove: '',
-    add_all: '',
-    remove_all: '',
-    available_options: '',
-    selected_options: '',
-    selected: '',
-    no_elements_available: '',
-    no_elements_selected: '',
-    autocompleter_loading: '',
-    search_available_options: '',
-    search_selected_options: '',
     and_x_more: ''
   } as DualListChoiceI18N
 })

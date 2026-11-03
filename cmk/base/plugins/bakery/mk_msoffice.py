@@ -6,37 +6,45 @@
 from collections.abc import Mapping
 from json import dumps
 from pathlib import Path
+from typing import Literal
 
-from cmk.utils.password_store import lookup_for_bakery
+from pydantic import BaseModel
+
+from cmk.utils.password_store import extract_formspec_password, FormSpecPassword
 
 from .bakery_api.v1 import FileGenerator, OS, Plugin, PluginConfig, register
 
 
+class _Config(BaseModel):
+    deployment: tuple[Literal["do_not_deploy", "sync"], None]
+    client_id: str = ""
+    tenant_id: str = ""
+    client_secret: FormSpecPassword | None = None
+
+
 def get_mk_msoffice_files(conf: Mapping[str, object]) -> FileGenerator:
+    config = _Config.model_validate(conf)
+    if config.deployment[0] == "do_not_deploy":
+        return
+
     yield Plugin(base_os=OS.WINDOWS, source=Path("mk_msoffice.ps1"))
     yield PluginConfig(
         base_os=OS.WINDOWS,
         lines=dumps(
             {
-                "ClientId": conf["client_id"],
-                "TenantId": conf["tenant_id"],
-                "ClientSecret": _client_secret(conf["client_secret"]),
+                "ClientId": config.client_id,
+                "TenantId": config.tenant_id,
+                "ClientSecret": (
+                    ""
+                    if config.client_secret is None
+                    else extract_formspec_password(config.client_secret)
+                ),
             },
             indent=4,
         ).splitlines(),
         target=Path("msoffice_cfg.json"),
         include_header=False,
     )
-
-
-def _client_secret(value: object) -> str:
-    match value:
-        case ("password", str(secret)):
-            return secret
-        case ("store", str(pwd_id)):
-            return lookup_for_bakery(pwd_id)
-        case other:
-            raise ValueError(f"Invalid password type: {other!r}")
 
 
 register.bakery_plugin(

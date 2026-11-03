@@ -14,15 +14,15 @@ click on an object leads to is the map view's.
 -->
 <script setup lang="ts">
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { nextTick, useTemplateRef } from 'vue'
+import { computed, nextTick, useTemplateRef } from 'vue'
 
 import MapPlaceholder from '@/maps/map/components/MapPlaceholder.vue'
 import MapSearch from '@/maps/map/components/MapSearch.vue'
 import ProblemsOnlyToggle from '@/maps/map/components/ProblemsOnlyToggle.vue'
 import type { MapEditor } from '@/maps/map/composables/useMapEditor'
 import type { MapConfig, MapElement, ObjectState } from '@/maps/types/api'
-import type { AnchorRect } from '@/maps/utils/anchorRect'
 
+import { isCentered } from './canvasSpace'
 import MapCanvas from './components/MapCanvas.vue'
 
 const { _t } = usei18n()
@@ -46,8 +46,8 @@ const emit = defineEmits<{
   'update:filterNeedle': [needle: string]
   'update:problemsOnly': [value: boolean]
   'object-click': [object: MapElement, event?: MouseEvent]
-  /** Open the object's properties, anchored where the operator asked. */
-  'object-properties': [object: MapElement, anchor: AnchorRect | null]
+  /** Open the object's properties. */
+  'object-properties': [object: MapElement]
   'object-delete': [object: MapElement]
   /** An object was just dropped onto the map. */
   placed: []
@@ -55,12 +55,25 @@ const emit = defineEmits<{
 
 const canvas = useTemplateRef<InstanceType<typeof MapCanvas>>('canvas')
 
+const centered = computed(() => props.config !== null && isCentered(props.config, props.preview))
+
+/**
+ * NagVis colors the whole page, so a label hanging past the canvas still sits
+ * on the map's color; a centered map fills the pane around it with it, too.
+ */
+const areaStyle = computed(() =>
+  (props.config?.render_mode === 'nagvis_classic' || centered.value) &&
+  props.config?.background_color
+    ? { backgroundColor: props.config.background_color }
+    : {}
+)
+
 /**
  * Lock the canvas size after any edit that can grow the content, so the next
  * reload reuses the divisor the editor was working with (see
  * ``MapConfig.canvas_width``). Only the default renderer positions by
- * percentage; the NagVis-compatible one sizes to its background image and needs
- * no lock. The wait lets the sticky extents settle after an addition.
+ * percentage; the NagVis-compatible one starts from its background image's size
+ * and needs no lock. The wait lets the sticky extents settle after an addition.
  */
 async function lockCanvasSize(): Promise<void> {
   if (!props.config || props.config.render_mode === 'nagvis_classic') {
@@ -120,7 +133,7 @@ function onLineDragStart(
 ): void {
   const element = canvas.value?.getCanvasEl()
   if (element) {
-    props.editor.startLineDrag(event, object, mode, element, canvas.value?.getNativeSize() ?? null)
+    props.editor.startLineDrag(event, object, mode, element, canvas.value?.getShownSize() ?? null)
   }
 }
 
@@ -134,19 +147,21 @@ async function onResizeEnd(id: string, width: number, height: number): Promise<v
   }
 }
 
-/**
- * Double-click opens the object's properties, anchored on the object itself so
- * the dialog appears where the operator is looking.
- */
-function onObjectDblclick(object: MapElement, anchor: AnchorRect | null): void {
+/** Double-click opens the object's properties. */
+function onObjectDblclick(object: MapElement): void {
   if (props.editor.editMode.value) {
-    emit('object-properties', object, anchor)
+    emit('object-properties', object)
   }
 }
 </script>
 
 <template>
-  <div class="maps-static-map-view" @click="onAreaClick">
+  <div
+    class="maps-static-map-view"
+    :class="{ 'maps-static-map-view--centered': centered }"
+    :style="areaStyle"
+    @click="onAreaClick"
+  >
     <MapPlaceholder v-if="error" :message="error" variant="error" />
 
     <template v-else-if="config">
@@ -172,7 +187,7 @@ function onObjectDblclick(object: MapElement, anchor: AnchorRect | null): void {
         <p class="maps-static-map-view__empty-text">
           {{
             canEdit
-              ? _t('No objects yet — click the Edit button (bottom right) to add some')
+              ? _t('No objects yet. Use the Edit button at the bottom right to add some.')
               : _t('This map has no objects yet')
           }}
         </p>
@@ -196,7 +211,7 @@ function onObjectDblclick(object: MapElement, anchor: AnchorRect | null): void {
         :preview="preview"
         @object-click="(object, event) => emit('object-click', object, event)"
         @object-dblclick="onObjectDblclick"
-        @object-properties="(object, anchor) => emit('object-properties', object, anchor)"
+        @object-properties="(object) => emit('object-properties', object)"
         @object-delete="emit('object-delete', $event)"
         @object-duplicate="
           (object) => {
@@ -229,15 +244,19 @@ function onObjectDblclick(object: MapElement, anchor: AnchorRect | null): void {
 
 <style scoped>
 /* A block container, not a flex one. The canvas sizes itself: to the pane for
-   the default renderer, to the background image's own pixels for the
-   NagVis-compatible one. As a flex item the latter would be shrunk back to the
-   pane on every layout change — a sidebar toggle or a window resize — instead
-   of overflowing it and scrolling. */
+   the default renderer, to the map's own pixels (the background image and any
+   object beyond it) for the NagVis-compatible one. As a flex item the latter
+   would be shrunk back to the pane on every layout change — a sidebar toggle
+   or a window resize — instead of overflowing it and scrolling. */
 .maps-static-map-view {
   position: relative;
   flex: 1;
   overflow: auto;
   min-height: 0;
+}
+
+.maps-static-map-view--centered {
+  display: grid;
 }
 
 .maps-static-map-view__empty {

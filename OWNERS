@@ -1,0 +1,43 @@
+per-file .bazelignore=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file .bazeliskrc=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file .bazelrc=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file .bazelversion=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file .buildifier.json=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file .dockerignore=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file .shellcheckrc=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file BAZEL.md=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file MODULE.bazel=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file MODULE.bazel.lock=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file bazel_downloader.cfg=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file bazel_variables.bzl=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file defines.make=file:/component_owners/ci_platform/OWNERS_DEFINITION
+per-file editions.yml=file:/component_owners/ci_platform/OWNERS_DEFINITION
+
+per-file .stylelintignore=file:/component_owners/basic_vue_functionality/OWNERS_DEFINITION
+per-file .stylelintrc.mjs=file:/component_owners/basic_vue_functionality/OWNERS_DEFINITION
+per-file eslint.config.mjs=file:/component_owners/basic_vue_functionality/OWNERS_DEFINITION
+per-file package.json=file:/component_owners/basic_vue_functionality/OWNERS_DEFINITION
+per-file pnpm-lock.yaml=file:/component_owners/basic_vue_functionality/OWNERS_DEFINITION
+per-file pnpm-workspace.yaml=file:/component_owners/basic_vue_functionality/OWNERS_DEFINITION
+
+per-file pyproject.toml=file:/component_owners/basic_python_functionality/OWNERS_DEFINITION
+
+per-file .mcp.json=file:/component_owners/ai_dev_tools/OWNERS_DEFINITION
+per-file AGENTS.md=file:/component_owners/ai_dev_tools/OWNERS_DEFINITION
+per-file CLAUDE.md=file:/component_owners/ai_dev_tools/OWNERS_DEFINITION
+
+per-file .pre-commit-config.yaml=file:/component_owners/local_validation/OWNERS_DEFINITION
+
+per-file relay_supported_plugins.bzl=file:/component_owners/relay/OWNERS_DEFINITION
+
+per-file SECURITY.md=file:/component_owners/security/OWNERS_DEFINITION
+
+# Please
+#  - don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead
+#  - don't add folder-wide owners here: every OWNERS file without `set noparent` would inherit them
+#  - `per-file` globs also match same-named files in every subfolder: only add names whose
+#    nested copies sit below a closer OWNERS file with `set noparent`
+#
+# Find information about code-owners (+ find-owners syntax) here:
+#  - https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners-cookbook.html
+#  - https://android-review.googlesource.com/plugins/code-owners/Documentation/backend-find-owners.html#syntax

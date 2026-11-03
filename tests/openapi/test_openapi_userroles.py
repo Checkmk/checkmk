@@ -6,6 +6,7 @@
 from http import HTTPStatus
 
 from cmk.gui.config import builtin_role_ids
+from cmk.gui.userdb import UserRolesConfigFile
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
@@ -221,3 +222,16 @@ def test_permission_change_when_builtin_changes(clients: ClientRegistry) -> None
         body={"new_basedon": "user"},
     )
     assert set(resp.json["extensions"]["permissions"]) == set(user_permissions)
+
+
+def test_role_granting_removed_agent_pairing_permission_loads(clients: ClientRegistry) -> None:
+    """CMK-40813: a user role that still grants general.agent_pairing loads without an error."""
+    clients.UserRole.clone(body={"role_id": "admin"})
+    roles_file = UserRolesConfigFile()
+    roles = roles_file.load_for_modification()
+    roles["adminx"]["permissions"]["general.agent_pairing"] = True
+    roles_file.save(roles, pprint_value=False)
+
+    resp = clients.UserRole.get(role_id="adminx")
+
+    assert "general.agent_pairing" not in resp.json["extensions"]["permissions"]

@@ -30,6 +30,7 @@ function aMapRead(overrides: Partial<MapRead> = {}): MapRead {
     view: newMapView('static'),
     object_count: 0,
     rotation_interval: 0,
+    rotation_pools: [],
     sort_order: 0,
     click_action: 'link',
     can_delete: true,

@@ -84,7 +84,7 @@ def write_livestatus_xinetd_conf(site_name: str, site_home: Path, config: Config
 
 LIVESTATUS_TCP = Hook(
     name="LIVESTATUS_TCP",
-    choices=[("on", "enable"), ("off", "disable")],
+    choices=lambda _edition: [("on", "enable"), ("off", "disable")],
     default=lambda _edition: "off",
     depends=lambda c: c.get("CORE") != "none",
     activation=write_livestatus_xinetd_conf,
@@ -92,7 +92,7 @@ LIVESTATUS_TCP = Hook(
 
 LIVESTATUS_TCP_INSTANCES = Hook(
     name="LIVESTATUS_TCP_INSTANCES",
-    choices=re.compile(r"[0-9]+$"),
+    choices=lambda _edition: re.compile(r"[0-9]+$"),
     default=lambda _edition: "500",
     depends=lambda c: c.get("CORE") != "none" and c.get("LIVESTATUS_TCP") == "on",
     activation=write_livestatus_xinetd_conf,
@@ -100,7 +100,7 @@ LIVESTATUS_TCP_INSTANCES = Hook(
 
 LIVESTATUS_TCP_ONLY_FROM = Hook(
     name="LIVESTATUS_TCP_ONLY_FROM",
-    choices=ip_address_list_has_error,
+    choices=lambda _edition: ip_address_list_has_error,
     default=lambda _edition: "0.0.0.0 ::/0",
     depends=lambda c: c.get("CORE") != "none" and c.get("LIVESTATUS_TCP") == "on",
     activation=write_livestatus_xinetd_conf,
@@ -108,7 +108,7 @@ LIVESTATUS_TCP_ONLY_FROM = Hook(
 
 LIVESTATUS_TCP_PER_SOURCE = Hook(
     name="LIVESTATUS_TCP_PER_SOURCE",
-    choices=re.compile(r"[0-9]+$"),
+    choices=lambda _edition: re.compile(r"[0-9]+$"),
     default=lambda _edition: "250",
     depends=lambda c: c.get("CORE") != "none" and c.get("LIVESTATUS_TCP") == "on",
     activation=write_livestatus_xinetd_conf,
@@ -119,7 +119,7 @@ LIVESTATUS_TCP_PORT = PortHook(
     display_name="Livestatus port",
     default_port=6557,
     activation=write_livestatus_xinetd_conf,
-    choices=re.compile(r"[0-9]{1,5}$"),
+    choices=lambda _edition: re.compile(r"[0-9]{1,5}$"),
     depends=lambda c: c.get("CORE") != "none" and c.get("LIVESTATUS_TCP") == "on",
 )
 
@@ -130,7 +130,7 @@ LIVESTATUS_TCP_PORT = PortHook(
 # tmpfs may not be available during hook execution.
 LIVESTATUS_TCP_TLS = Hook(
     name="LIVESTATUS_TCP_TLS",
-    choices=[("on", "encrypt"), ("off", "clear text")],
+    choices=lambda _edition: [("on", "encrypt"), ("off", "clear text")],
     default=lambda _edition: "on",
     depends=lambda c: c.get("CORE") != "none" and c.get("LIVESTATUS_TCP") == "on",
     activation=null_action,

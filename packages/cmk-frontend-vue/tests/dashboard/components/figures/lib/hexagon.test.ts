@@ -4,11 +4,23 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import {
+  type HexagonGrid,
   hexagonGrid,
   hexagonPath,
   hostIndexAt,
+  neighbourIndex,
   nestedRings
 } from '@/dashboard/components/figures/lib/hexagon'
+
+// Seven cells in rows of three: 0 1 2 / 3 4 5 / 6.
+const SEVEN_IN_ROWS_OF_THREE: HexagonGrid = {
+  columns: 3,
+  radius: 10,
+  boxWidth: 20,
+  boxHeight: 17,
+  centers: Array.from({ length: 7 }, (_cell, index) => ({ x: index, y: 0 })),
+  labelHeight: null
+}
 
 function radii(counts: number[]): number[] {
   return nestedRings(
@@ -105,5 +117,37 @@ describe('hexagonGrid', () => {
 
     expect(hostIndexAt(grid, 100, 79.282)).toBeNull()
     expect(hostIndexAt(grid, 28, 2)).toBeNull()
+  })
+})
+
+describe('neighbourIndex', () => {
+  it('moves to the next and the previous cell', () => {
+    expect(neighbourIndex(SEVEN_IN_ROWS_OF_THREE, 2, 'ArrowRight')).toBe(3)
+    expect(neighbourIndex(SEVEN_IN_ROWS_OF_THREE, 3, 'ArrowLeft')).toBe(2)
+  })
+
+  it('moves a row down and up', () => {
+    expect(neighbourIndex(SEVEN_IN_ROWS_OF_THREE, 1, 'ArrowDown')).toBe(4)
+    expect(neighbourIndex(SEVEN_IN_ROWS_OF_THREE, 4, 'ArrowUp')).toBe(1)
+  })
+
+  it('stays put at the edges of the grid', () => {
+    expect(neighbourIndex(SEVEN_IN_ROWS_OF_THREE, 0, 'ArrowLeft')).toBe(0)
+    expect(neighbourIndex(SEVEN_IN_ROWS_OF_THREE, 6, 'ArrowRight')).toBe(6)
+    expect(neighbourIndex(SEVEN_IN_ROWS_OF_THREE, 6, 'ArrowDown')).toBe(6)
+    expect(neighbourIndex(SEVEN_IN_ROWS_OF_THREE, 1, 'ArrowUp')).toBe(1)
+  })
+
+  it('moves down into a shorter last row to its last cell', () => {
+    expect(neighbourIndex(SEVEN_IN_ROWS_OF_THREE, 5, 'ArrowDown')).toBe(6)
+  })
+
+  it('jumps to the first and the last cell', () => {
+    expect(neighbourIndex(SEVEN_IN_ROWS_OF_THREE, 4, 'Home')).toBe(0)
+    expect(neighbourIndex(SEVEN_IN_ROWS_OF_THREE, 4, 'End')).toBe(6)
+  })
+
+  it('leaves any other key alone', () => {
+    expect(neighbourIndex(SEVEN_IN_ROWS_OF_THREE, 4, 'a')).toBeNull()
   })
 })

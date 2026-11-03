@@ -100,3 +100,32 @@ def test_check_db2_connections(
     parsed = parse_db2_dbs(info)
     result = list(check_db2_connections(item, params, parsed))
     assert result == expected_results
+
+
+def test_check_db2_connections_without_port() -> None:
+    section = parse_db2_dbs([["[[[db2inst:DB1]]]"], ["connections", "40"]])
+
+    assert list(check_db2_connections("db2inst:DB1", {"levels_total": (150, 200)}, section)) == [
+        Result(state=State.OK, summary="Connections: 40.00"),
+        Metric("connections", 40.0, levels=(150.0, 200.0)),
+    ]
+
+
+def test_check_db2_connections_reports_db2_error_message() -> None:
+    # Crash group 4695: DB2 answered the connection query with an error
+    # message, which the agent printed in place of the connection count.
+    section = parse_db2_dbs(
+        [
+            ["[[[db2inst1:DB1]]]"],
+            ["port", "0"],
+            ["connections", "SQL20249N", "The", "statement", "was", "not", "processed."],
+            ["latency", "1042"],
+        ]
+    )
+
+    assert list(check_db2_connections("db2inst1:DB1", {"levels_total": (200, 500)}, section)) == [
+        Result(
+            state=State.UNKNOWN,
+            summary="Cannot parse agent output: connections SQL20249N The statement was not processed.",
+        ),
+    ]

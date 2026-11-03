@@ -10,7 +10,7 @@ import pytest
 
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.groups_io import load_contact_group_information
-from cmk.gui.watolib.hosts_and_folders import folder_tree, FolderTree
+from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.rulesets import AllRulesets
 from cmk.gui.watolib.sample_config import (
     init_wato_datastructures,
@@ -23,8 +23,8 @@ from cmk.utils.paths import omd_root
 
 
 @pytest.mark.usefixtures("request_context")
-def test_init_wato_data_structures() -> None:
-    init_wato_datastructures(folder_tree())
+def test_init_wato_data_structures(tree: FolderTree) -> None:
+    init_wato_datastructures(tree)
     assert Path(omd_root, "etc/check_mk/conf.d/wato/rules.mk").exists()
     assert Path(omd_root, "etc/check_mk/multisite.d/wato/tags.mk").exists()
     assert Path(omd_root, "etc/check_mk/conf.d/wato/global.mk").exists()
@@ -36,8 +36,7 @@ def test_init_wato_data_structures() -> None:
 
 
 @pytest.mark.usefixtures("request_context")
-def test_sample_config_ships_no_rules_of_deprecated_rule_sets() -> None:
-    tree = folder_tree()
+def test_sample_config_ships_no_rules_of_deprecated_rule_sets(tree: FolderTree) -> None:
     sample_config_generator_registry["basic_wato_config"]().generate(tree)
 
     deprecated_with_rules = [
@@ -49,9 +48,8 @@ def test_sample_config_ships_no_rules_of_deprecated_rule_sets() -> None:
     assert deprecated_with_rules == []
 
 
-@pytest.mark.usefixtures("request_context")
-def test_sample_config_gen_groups() -> None:
-    SampleConfigGeneratorGroups().generate(folder_tree())
+def test_sample_config_gen_groups(tree: FolderTree) -> None:
+    SampleConfigGeneratorGroups().generate(tree)
     assert load_contact_group_information() == {
         "all": {
             "alias": "Everything",

@@ -107,10 +107,9 @@ from .lib import parse_hp_msa
 # host-port-statistics 2 stop-sample-time-numeric 1440157920
 
 
-def parse_hp_msa_if(
-    string_table: StringTable,
+def parse_hp_msa_if_pure(
+    string_table: StringTable, timestamp: float
 ) -> interfaces.Section[interfaces.InterfaceWithCounters]:
-    timestamp = time.time()
     parsed = []
     for idx, (_key, values) in enumerate(sorted(parse_hp_msa(string_table).items())):
         try:
@@ -140,6 +139,12 @@ def parse_hp_msa_if(
         )
 
     return parsed
+
+
+def parse_hp_msa_if(
+    string_table: StringTable,
+) -> interfaces.Section[interfaces.InterfaceWithCounters]:
+    return parse_hp_msa_if_pure(string_table, timestamp=time.time())
 
 
 agent_section_hp_msa_if = AgentSection(

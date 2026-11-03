@@ -85,6 +85,8 @@ def issue_agent_registration_token(
     comment: str = "",
     token_store: TokenStore | None = None,
     connection_mode: HostAgentConnectionMode | None = None,
+    *,
+    agent_updates_permitted: bool | None,
 ) -> AuthToken:
     """Issues a new agent registration token."""
     if token_store is None:
@@ -109,6 +111,7 @@ def issue_agent_registration_token(
             comment=comment,
             host_name=host.name(),
             connection_mode=connection_mode,
+            agent_updates_permitted=agent_updates_permitted,
         ),
         issuer=user.ident,
         now=now,

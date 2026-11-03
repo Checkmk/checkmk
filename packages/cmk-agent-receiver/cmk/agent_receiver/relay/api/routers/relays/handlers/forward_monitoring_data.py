@@ -4,9 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import dataclasses
 import socket
+import time
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Final
+
+from fastapi.concurrency import run_in_threadpool
 
 from cmk.agent_receiver.relay.lib.shared_types import RelayID, Serial
 from cmk.relay_protocols.monitoring_data import PayloadType
@@ -20,6 +23,10 @@ _HEADER_TOKEN: Final[Mapping[PayloadType, str]] = {
 }
 
 
+_CONNECT_RETRY_FIRST_PAUSE: Final = 0.01
+_CONNECT_RETRY_MAX_PAUSE: Final = 0.2
+
+
 class FailedToSendMonitoringDataError(Exception):
     pass
 
@@ -30,7 +37,7 @@ class ForwardMonitoringDataHandler:
         self._data_socket: Path = data_socket
         self._socket_timeout: Final = socket_timeout
 
-    def process(
+    async def process(
         self,
         *,
         relay_id: RelayID,
@@ -51,7 +58,8 @@ class ForwardMonitoringDataHandler:
             f"service_description:{service};"
             f"\n"
         )
-        self._send_to_cmc(header.encode("utf-8") + payload)
+        # Off the loop: the hand-over waits for the core, up to the socket timeout.
+        await run_in_threadpool(self._send_to_cmc, header.encode("utf-8") + payload)
 
     def _send_to_cmc(self, data: bytes) -> None:
         """
@@ -64,7 +72,7 @@ class ForwardMonitoringDataHandler:
         try:
             with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
                 sock.settimeout(self._socket_timeout)
-                sock.connect(str(self._data_socket))
+                self._connect(sock)
                 sock.sendall(data)
 
                 # See https://docs.python.org/3/library/socket.html#socket.socket.close
@@ -74,3 +82,21 @@ class ForwardMonitoringDataHandler:
                 sock.shutdown(socket.SHUT_RDWR)
         except OSError as e:
             raise FailedToSendMonitoringDataError(str(e)) from e
+
+    def _connect(self, sock: socket.socket) -> None:
+        """Connect, waiting up to the socket timeout for a free slot in the backlog of the core
+
+        The core accepts one waiting connection at a time. A socket with a timeout connects
+        non-blocking, so a full backlog fails at once with EAGAIN instead of waiting.
+        """
+        deadline = time.monotonic() + self._socket_timeout
+        pause = _CONNECT_RETRY_FIRST_PAUSE
+        while True:
+            try:
+                sock.connect(str(self._data_socket))
+                return
+            except BlockingIOError:
+                if (remaining := deadline - time.monotonic()) <= 0:
+                    raise
+                time.sleep(min(pause, remaining))
+                pause = min(pause * 2, _CONNECT_RETRY_MAX_PAUSE)

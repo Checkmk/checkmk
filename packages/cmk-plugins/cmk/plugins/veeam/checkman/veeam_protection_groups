@@ -11,7 +11,7 @@ description:
  protection groups requires the Veeam Backup Administrator, Restore Operator
  or Tape Operator role.
 
- This check is {WARN} by default if the protection group is disabled; the
+ This check is {OK} by default if the protection group is disabled; the
  state is configurable, since a deliberately disabled protection group is
  normal in some estates. Otherwise it is {OK}.
 

@@ -405,15 +405,6 @@ test('labels both ends of the displayed range', () => {
   )
 })
 
-test('delta.fromCaller: an undefined override stays empty, not a series-derived fallback', () => {
-  // Without fromCaller this same series would produce a series-derived delta (see
-  // "compares the current value against the average..." above) - fromCaller must
-  // suppress that fallback instead of silently swapping in the wrong delta.
-  const { container } = renderCard({ delta: { fromCaller: true } })
-
-  expect(deltaOf(container)).toBeNull()
-})
-
 function cardOf(container: Element): HTMLElement {
   return container.querySelector('.db-cmk-kpi-stat-card')!
 }

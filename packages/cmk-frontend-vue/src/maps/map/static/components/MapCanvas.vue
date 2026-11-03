@@ -24,6 +24,7 @@ import MapZoomResetPill from '@/maps/map/components/MapZoomResetPill.vue'
 import { useMapObjectMenus } from '@/maps/map/composables/useMapObjectMenus'
 import { useObjectResize } from '@/maps/map/composables/useObjectResize'
 import { useRovingFocus } from '@/maps/map/composables/useRovingFocus'
+import { backgroundLayout, isCentered, spaceFillingPane } from '@/maps/map/static/canvasSpace'
 import { useCanvasBackground } from '@/maps/map/static/composables/useCanvasBackground'
 import { useCanvasExtents } from '@/maps/map/static/composables/useCanvasExtents'
 import { useCanvasLayout } from '@/maps/map/static/composables/useCanvasLayout'
@@ -34,7 +35,6 @@ import { useCanvasPan } from '@/maps/map/static/composables/useCanvasPan'
 import { CANVAS_SCALE, useCanvasViewport } from '@/maps/map/static/composables/useCanvasViewport'
 import { useSettings } from '@/maps/services/context'
 import type { MapConfig, MapElement, ObjectState } from '@/maps/types/api'
-import { type AnchorRect, anchorRectOf } from '@/maps/utils/anchorRect'
 import { objectDisplayName } from '@/maps/utils/dropdownOptions'
 
 import MapCanvasGrid from './MapCanvasGrid.vue'
@@ -78,8 +78,8 @@ const emit = defineEmits<{
   'object-drag-end': [id: string, x: number, y: number]
   'objects-drag-end': [moves: { id: string; x: number; y: number }[]]
   'object-click': [object: MapElement, event?: MouseEvent]
-  'object-dblclick': [object: MapElement, anchor: AnchorRect | null]
-  'object-properties': [object: MapElement, anchor: AnchorRect | null]
+  'object-dblclick': [object: MapElement]
+  'object-properties': [object: MapElement]
   'object-delete': [object: MapElement]
   'object-duplicate': [object: MapElement]
   'object-straighten': [object: MapElement]
@@ -95,16 +95,29 @@ const canvas = useTemplateRef<HTMLElement>('canvas')
 
 const classic = computed(() => props.config.render_mode === 'nagvis_classic')
 
+const backgroundStyle = computed(() => props.config.background_style ?? 'single')
+const centered = computed(() => isCentered(props.config, props.preview === true))
+
 const background = useCanvasBackground({
   config: () => props.config,
-  sizesToImage: () => classic.value
+  measure: () => classic.value || backgroundStyle.value !== 'stretch'
 })
 
+const iconSizes = computed(() => ({
+  map: props.config.icon_size,
+  override: props.iconSizeOverride,
+  fallback: settings.settings.value.icon_size
+}))
+
 // The classic renderer draws at the background's own pixel size; every other
-// renderer derives the space from where the objects are.
+// renderer derives the space from where the objects are, and keeps an image
+// shown at its own size whole.
 const extents = useCanvasExtents({
   config: () => props.config,
-  backgroundSize: () => (classic.value ? background.naturalSize.value : null)
+  backgroundSize: () => (classic.value ? background.naturalSize.value : null),
+  minimumSize: () => (backgroundStyle.value === 'single' ? background.naturalSize.value : null),
+  iconSizes: () => iconSizes.value,
+  classic: () => classic.value
 })
 
 const { _t } = usei18n()
@@ -112,17 +125,47 @@ const { _t } = usei18n()
 const viewport = useCanvasViewport({
   canvas,
   config: () => props.config,
-  width: () => extents.width.value,
-  height: () => extents.height.value,
+  width: () => space.value.width,
+  height: () => space.value.height,
   editMode: () => props.editMode,
   preview: () => props.preview === true,
   classic: () => classic.value,
-  backgroundUrl: () => background.url.value
+  centered: () => centered.value,
+  backgroundUrl: () => background.url.value,
+  backgroundSize: () => (classic.value ? background.naturalSize.value : null),
+  backgroundLayout: () => backgroundBox.value
 })
 
+/**
+ * The coordinate space the canvas shows. The default renderer fills its pane at
+ * one scale for both axes: the map's own space is extended, to the right or
+ * below, to the pane's proportions, so a grid cell stays square and nothing is
+ * distorted. What is stored as the map's size stays ``extents``. The classic
+ * renderer, the settings preview and a centered map show the map's own space as
+ * it is.
+ */
+const space = computed(() => {
+  const own = { width: extents.width.value, height: extents.height.value }
+  return classic.value || props.preview === true || centered.value
+    ? own
+    : spaceFillingPane(own, viewport.restingPane.value)
+})
+
+const backgroundBox = computed(() =>
+  classic.value
+    ? null
+    : backgroundLayout(
+        backgroundStyle.value,
+        props.config.background_position ?? 'top_left',
+        { width: extents.width.value, height: extents.height.value },
+        space.value,
+        background.naturalSize.value
+      )
+)
+
 // The line and label layers draw in display pixels so their strokes and glyphs
-// keep their proportions under the asymmetric stretch; they need the scale to
-// place themselves against the objects.
+// keep their proportions; they need the scale to place themselves against the
+// objects.
 provide(CANVAS_SCALE, viewport.scale)
 
 function snap(value: number): number {
@@ -177,23 +220,19 @@ function withContextObject(act: (object: MapElement) => void): void {
   }
 }
 
-/**
- * "Edit properties" hands over where the menu stood, so the properties dialog
- * can open next to the object rather than in the middle of the map.
- */
 function onContextProperties(): void {
-  const { object, x, y } = menus.context
+  const { object } = menus.context
   menus.close()
   if (object) {
-    emit('object-properties', object, { left: x, top: y, right: x, bottom: y })
+    emit('object-properties', object)
   }
 }
 
 const layout = useCanvasLayout({
   config: () => props.config,
   states: () => props.states,
-  width: () => extents.width.value,
-  height: () => extents.height.value,
+  width: () => space.value.width,
+  height: () => space.value.height,
   filterNeedle: () => props.filterNeedle,
   problemsOnly: () => props.problemsOnly,
   editMode: () => props.editMode,
@@ -210,12 +249,6 @@ const roving = useRovingFocus({
   nameOf: (object) => objectDisplayName(object, _t),
   root: () => canvas.value
 })
-
-const iconSizes = computed(() => ({
-  map: props.config.icon_size,
-  override: props.iconSizeOverride,
-  fallback: settings.settings.value.icon_size
-}))
 
 const anchors = useCanvasLineAnchors({
   canvas,
@@ -346,7 +379,9 @@ defineExpose({
   getCanvasEl: () => canvas.value,
   getMapPosition: viewport.mapPositionOf,
   resetZoom: viewport.resetZoom,
-  getNativeSize: () => ({ w: extents.width.value, h: extents.height.value })
+  getNativeSize: () => ({ w: extents.width.value, h: extents.height.value }),
+  /** The coordinate space the canvas element spans, to map pointer positions into. */
+  getShownSize: () => ({ w: space.value.width, h: space.value.height })
 })
 </script>
 
@@ -370,8 +405,8 @@ defineExpose({
     <MapCanvasGrid
       v-if="editMode && (snapGrid ?? 0) > 0"
       :size="snapGrid ?? 0"
-      :width="extents.width.value"
-      :height="extents.height.value"
+      :width="space.width"
+      :height="space.height"
     />
 
     <MapMarqueeBox v-if="marquee.visible.value" :rect="marquee.rect.value" :layer="90" />
@@ -397,7 +432,7 @@ defineExpose({
           @line-drag-start="(event, mode) => emit('line-drag-start', event, line, mode)"
           @context-menu="(event) => menus.openContext(line, event)"
           @line-click="onLineClick(line)"
-          @line-dblclick="emit('object-dblclick', line, anchorRectOf($event.currentTarget))"
+          @line-dblclick="emit('object-dblclick', line)"
           @hover="menus.openHover(line, $event)"
           @hover-leave="menus.hover.scheduleClose()"
         />
@@ -421,7 +456,7 @@ defineExpose({
       :tab-stop="roving.isTabStop(object.id)"
       @pointer-down="onObjectPointerDown($event, object)"
       @activate="onObjectActivate(object, $event)"
-      @double-click="emit('object-dblclick', object, anchorRectOf($event.currentTarget))"
+      @double-click="emit('object-dblclick', object)"
       @context-menu="menus.openContext(object, $event)"
       @hover="
         (event, anchor) => !editMode && menus.openHover(object, event, { anchorRect: anchor })
@@ -503,6 +538,9 @@ defineExpose({
   inset: 0;
   width: 100%;
   height: 100%;
+
+  /* A caption or arrowhead at the canvas edge hangs past it, as a label does. */
+  overflow: visible;
   pointer-events: none;
 }
 </style>

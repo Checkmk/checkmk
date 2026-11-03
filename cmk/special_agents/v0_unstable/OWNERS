@@ -1,6 +1,6 @@
 
 
-per-file crash_reporting.py=file:/component_owners/crash_reporting_system/OWNERS_DEFINITION
+per-file crash_reporting.py=file:/component_owners/crash_reporting/OWNERS_DEFINITION
 per-file crash_reporting.py=set noparent
 
 # Please

@@ -11,7 +11,6 @@ from cmk.ccc.resulttype import Error, OK, Result
 from cmk.ccc.user import UserId
 from cmk.gui.auth import parse_and_check_cookie
 from cmk.gui.exceptions import MKAuthException
-from cmk.gui.permissions import permission_registry
 from cmk.gui.userdb import convert_idle_timeout, load_custom_attr, load_session_infos, load_user
 from cmk.gui.userdb.session import active_sessions
 from cmk.gui.utils.roles import UserPermissions
@@ -83,6 +82,6 @@ def held_permissions(
     """Whether the user holds each named permission. An unregistered name is never held."""
     # A role keeps a saved grant after its permission is gone, so check the registry too.
     return {
-        name: name in permission_registry and user_permissions.user_may(user_id, name)
+        name: user_permissions.permission_exists(name) and user_permissions.user_may(user_id, name)
         for name in names
     }

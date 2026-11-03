@@ -36,6 +36,13 @@ def test_resolves_the_title_of_a_linked_map() -> None:
     assert resolve_map_link_titles(spec, visible.get) == {"dc_2": "Datacenter 2"}
 
 
+def test_resolves_the_title_of_a_map_a_line_shows() -> None:
+    visible = _lookup(_page("dc_2", "Datacenter 2"))
+    spec = _spec({"id": "o1", "type": "line", "line_object_type": "map", "map_name": "dc_2"})
+
+    assert resolve_map_link_titles(spec, visible.get) == {"dc_2": "Datacenter 2"}
+
+
 def test_leaves_out_a_map_the_user_may_not_see() -> None:
     spec = _spec(
         {"id": "o1", "type": "map", "map_name": "dc_2"},

@@ -62,9 +62,10 @@ defineProps<CmkTabProps>()
   height: var(--dimension-9);
   background: var(--background-base);
   padding: 0 var(--dimension-6) !important;
+  margin-bottom: 1px;
   border: 1px solid var(--border-color-subtle);
   border-right-width: 0;
-  border-bottom-color: var(--border-color-strong);
+  border-bottom-width: 0;
   font-weight: var(--font-weight-default);
 
   &:first-of-type {
@@ -88,9 +89,9 @@ defineProps<CmkTabProps>()
 
   &[data-state='active'] {
     height: var(--dimension-10);
+    margin-bottom: 0;
     background: var(--background-subtle);
     border-right-width: 1px;
-    border-bottom-width: 0;
     border-top-left-radius: var(--dimension-3);
     border-top-right-radius: var(--dimension-3);
     font-weight: var(--font-weight-bold);

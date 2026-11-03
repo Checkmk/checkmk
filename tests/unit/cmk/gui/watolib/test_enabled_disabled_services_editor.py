@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
-
 from collections.abc import Generator
 
 import pytest
@@ -15,10 +13,9 @@ from livestatus import SiteConfigurations
 from cmk.automations.results import DeleteHostsResult, GetServicesLabelsResult
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.ccc.user import UserId
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInSuperUser
 from cmk.gui.watolib.audit_log import AuditLogStore, make_audit_log_change_hook
-from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import FolderTree, Host
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 from cmk.gui.watolib.rulesets import (
     EnabledDisabledServicesEditor,
@@ -41,17 +38,14 @@ PENDING_CHANGES = PendingChanges(
 
 
 @pytest.fixture(name="sample_host")
-def fixture_sample_host(
-    request_context: None,
-    with_admin_login: UserId,
-) -> Generator[Host]:
+def fixture_sample_host(tree: FolderTree) -> Generator[Host]:
     hostname = HostName("heute")
-    root_folder = folder_tree().root_folder()
+    root_folder = tree.root_folder()
     root_folder.create_hosts(
         [(hostname, {}, None)],
         pprint_value=False,
         pending_changes=PENDING_CHANGES,
-        acting_user=user,
+        acting_user=LoggedInSuperUser(),
     )
     host = root_folder.host(hostname)
     assert host is not None
@@ -62,7 +56,7 @@ def fixture_sample_host(
         pprint_value=False,
         debug=False,
         pending_changes=PENDING_CHANGES,
-        acting_user=user,
+        acting_user=LoggedInSuperUser(),
     )
 
 

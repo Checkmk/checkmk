@@ -17,7 +17,6 @@ py_library(
         requirement("pytest"),
         requirement("beautifulsoup4"),
         "//scripts/html_validation",
-        "//tests/system:pkg_marker",
         "//tests/testlib/system",
     ],
 )

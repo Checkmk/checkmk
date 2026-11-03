@@ -7,9 +7,6 @@
 from cmk import fields
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import BaseSchema
-from cmk.gui.livestatus_utils.commands.acknowledgments import acknowledge_service_problem
-from cmk.gui.livestatus_utils.commands.downtimes import schedule_servicegroup_service_downtime
-from cmk.gui.openapi.utils import param_description
 
 MONITORED_HOST = gui_fields.HostField(
     description="The host name or IP address itself.",
@@ -17,14 +14,6 @@ MONITORED_HOST = gui_fields.HostField(
     should_exist=None,
     should_be_monitored=True,
     required=True,
-)
-
-SERVICEGROUP_NAME = fields.String(
-    required=True,
-    description=param_description(
-        schedule_servicegroup_service_downtime.__doc__, "servicegroup_name"
-    ),
-    example="Webservers",
 )
 
 SERVICE_DESCRIPTION_FIELD = fields.String(
@@ -44,28 +33,31 @@ SERVICE_STICKY_FIELD = fields.Boolean(
     required=False,
     load_default=False,
     example=False,
-    description=param_description(acknowledge_service_problem.__doc__, "sticky"),
+    description=(
+        "If set, only a state-change to the UP/OK state will discard the acknowledgement. "
+        "Otherwise, it will be discarded on any state-change."
+    ),
 )
 
 SERVICE_PERSISTENT_FIELD = fields.Boolean(
     required=False,
     load_default=False,
     example=False,
-    description=param_description(acknowledge_service_problem.__doc__, "persistent"),
+    description="If set, the comment will persist a restart.",
 )
 
 SERVICE_NOTIFY_FIELD = fields.Boolean(
     required=False,
     load_default=False,
     example=False,
-    description=param_description(acknowledge_service_problem.__doc__, "notify"),
+    description="If set, notifications will be sent out to the configured contacts.",
 )
 
 SERVICE_COMMENT_FIELD = fields.String(
     required=False,
     load_default="Acknowledged",
     example="This was expected.",
-    description=param_description(acknowledge_service_problem.__doc__, "comment"),
+    description="Comment to be stored alongside the acknowledgement.",
 )
 
 

@@ -1,0 +1,361 @@
+#!/usr/bin/env python3
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+import re
+from collections import Counter
+from collections.abc import Iterable, Iterator, Mapping, Sequence
+from dataclasses import dataclass, field
+from typing import Literal
+
+import pytest
+
+from cmk.discover_plugins import PluginLocation
+from cmk.graphing.v1 import graphs as graphs_v1
+from cmk.graphing.v1 import metrics as metrics_v1
+from cmk.graphing.v1 import perfometers as perfometers_v1
+from cmk.graphing.v1 import translations as translations_api
+from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
+from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
+from cmk.graphing.v2_unstable import perfometers as perfometers_v2_unstable
+from cmk.graphing_engine import ApiGraph, ApiPerfometer
+from cmk.gui.graphing._plugins import graphing_plugins
+
+
+def test_graphing_plugins_load_without_errors() -> None:
+    discovered_graphing_plugins = graphing_plugins().discovered
+    assert not discovered_graphing_plugins.errors
+    assert discovered_graphing_plugins.plugins
+
+
+def test_translations_to_be_standalone() -> None:
+    by_module: dict[str, Counter[Literal["translations", "rest"]]] = {}
+    for plugin_location, plugin in graphing_plugins().discovered.plugins.items():
+        counter = by_module.setdefault(plugin_location.module, Counter())
+        match plugin:
+            case translations_api.Translation():
+                counter.update(["translations"])
+            case _:
+                counter.update(["rest"])
+    for module, counter in by_module.items():
+        if counter["translations"]:
+            assert not counter["rest"], (
+                f"The module {module!r} contains translations and other graphing plugins. Our"
+                " graphing modules are allowed to contain either translations or other plugins."
+            )
+        if counter["rest"]:
+            assert not counter["translations"], (
+                f"The module {module!r} contains translations and other graphing plugins. Our"
+                " graphing modules are allowed to contain either translations or other plugins."
+            )
+
+
+_MB_TO_BYTES = 1048576
+_SIZE_TREND_RAW_METRICS = ("growth", "trend")
+
+
+def test_growth_and_trend_translations_scale_mb_per_day_to_bytes_per_day() -> None:
+    """The raw growth/trend metrics are recorded in MB/day but render directly in bytes/day, so
+    every translation of them must rename and scale by 1 MiB. See SUP-29835."""
+    offenders = [
+        f"{location.module}: translation {plugin.name!r} maps {raw_name!r} via {op!r}"
+        for location, plugin in graphing_plugins().discovered.plugins.items()
+        if isinstance(plugin, translations_api.Translation)
+        for raw_name, op in plugin.translations.items()
+        if raw_name in _SIZE_TREND_RAW_METRICS
+        and not (isinstance(op, translations_api.RenameToAndScaleBy) and op.factor == _MB_TO_BYTES)
+    ]
+    assert not offenders, (
+        f"growth/trend must be renamed and scaled by 1 MiB ({_MB_TO_BYTES}) to convert MB/day to"
+        " bytes/day; these translations render the graph in the wrong unit:\n"
+        + "\n".join(offenders)
+    )
+
+
+def _collect_metric_names_from_quantity(
+    quantity: (
+        str
+        | metrics_v1.Constant
+        | metrics_v2_unstable.LowerWarningOf
+        | metrics_v2_unstable.LowerCriticalOf
+        | metrics_v1.WarningOf
+        | metrics_v1.CriticalOf
+        | metrics_v1.MinimumOf
+        | metrics_v1.MaximumOf
+        | metrics_v1.Sum
+        | metrics_v1.Product
+        | metrics_v1.Difference
+        | metrics_v1.Fraction
+    ),
+) -> Iterator[str]:
+    match quantity:
+        case str():
+            yield quantity
+        case (
+            metrics_v2_unstable.LowerWarningOf()
+            | metrics_v2_unstable.LowerCriticalOf()
+            | metrics_v1.WarningOf()
+            | metrics_v1.CriticalOf()
+            | metrics_v1.MinimumOf()
+            | metrics_v1.MaximumOf()
+        ):
+            yield quantity.metric_name
+        case metrics_v1.Sum():
+            for summand in quantity.summands:
+                yield from _collect_metric_names_from_quantity(summand)
+        case metrics_v1.Product():
+            for factor in quantity.factors:
+                yield from _collect_metric_names_from_quantity(factor)
+        case metrics_v1.Difference():
+            yield from _collect_metric_names_from_quantity(quantity.minuend)
+            yield from _collect_metric_names_from_quantity(quantity.subtrahend)
+        case metrics_v1.Fraction():
+            yield from _collect_metric_names_from_quantity(quantity.dividend)
+            yield from _collect_metric_names_from_quantity(quantity.divisor)
+        case _:
+            pass  # TODO: Hmmmm...
+
+
+def _collect_metric_names_from_perfometer(
+    perfometer: perfometers_v1.Perfometer | perfometers_v2_unstable.Perfometer,
+) -> Iterator[str]:
+    if not isinstance(perfometer.focus_range.lower.value, int | float):
+        yield from _collect_metric_names_from_quantity(perfometer.focus_range.lower.value)
+    if not isinstance(perfometer.focus_range.upper.value, int | float):
+        yield from _collect_metric_names_from_quantity(perfometer.focus_range.upper.value)
+    for segment in perfometer.segments:
+        yield from _collect_metric_names_from_quantity(segment)
+
+
+def _collect_metric_names_from_graph(
+    graph: graphs_v1.Graph | graphs_v2_unstable.Graph,
+) -> Iterator[str]:
+    if graph.minimal_range:
+        if not isinstance(graph.minimal_range.lower, int | float):
+            yield from _collect_metric_names_from_quantity(graph.minimal_range.lower)
+        if not isinstance(graph.minimal_range.lower, int | float):
+            yield from _collect_metric_names_from_quantity(graph.minimal_range.lower)
+    for compound_line in graph.compound_lines:
+        yield from _collect_metric_names_from_quantity(compound_line)
+    for simple_line in graph.simple_lines:
+        yield from _collect_metric_names_from_quantity(simple_line)
+    yield from graph.optional
+    yield from graph.conflicting
+
+
+@dataclass(frozen=True)
+class _MetricNamesInModule:
+    _from_metrics: set[str] = field(default_factory=set)
+    _from_perfometer_or_graph: dict[tuple[Literal["perfometer", "graph"], str], set[str]] = field(
+        default_factory=dict
+    )
+
+    @property
+    def from_metrics(self) -> Sequence[str]:
+        return list(self._from_metrics)
+
+    @property
+    def bundles(self) -> Sequence[tuple[str, ...]]:
+        bundles: set[tuple[str, ...]] = set()
+        for left_ident, left_metric_names in self._from_perfometer_or_graph.items():
+            bundle_ = left_metric_names
+            for (
+                right_ident,
+                right_metric_names,
+            ) in self._from_perfometer_or_graph.items():
+                if left_ident == right_ident:
+                    continue
+                if left_metric_names.intersection(right_metric_names):
+                    bundle_.update(right_metric_names)
+            bundles.add(tuple(sorted(bundle_)))
+        # remove subsets
+        result: set[tuple[str, ...]] = set()
+        for bundle in sorted(bundles, key=len, reverse=True):
+            if any(set(bundle).issubset(r) for r in result):
+                continue
+            result.add(bundle)
+        return list(result)
+
+    def add_from_plugin(
+        self,
+        plugin: (metrics_v1.Metric | ApiPerfometer | ApiGraph | translations_api.Translation),
+    ) -> None:
+        match plugin:
+            case metrics_v1.Metric():
+                self._from_metrics.add(plugin.name)
+            case perfometers_v1.Perfometer() | perfometers_v2_unstable.Perfometer():
+                self._from_perfometer_or_graph.setdefault(
+                    ("perfometer", plugin.name),
+                    set(_collect_metric_names_from_perfometer(plugin)),
+                )
+            case perfometers_v1.Bidirectional() | perfometers_v2_unstable.Bidirectional():
+                self._from_perfometer_or_graph.setdefault(
+                    ("perfometer", plugin.name),
+                    set(_collect_metric_names_from_perfometer(plugin.left)).union(
+                        _collect_metric_names_from_perfometer(plugin.right)
+                    ),
+                )
+            case perfometers_v1.Stacked() | perfometers_v2_unstable.Stacked():
+                self._from_perfometer_or_graph.setdefault(
+                    ("perfometer", plugin.name),
+                    set(_collect_metric_names_from_perfometer(plugin.lower)).union(
+                        _collect_metric_names_from_perfometer(plugin.upper)
+                    ),
+                )
+            case graphs_v1.Graph() | graphs_v2_unstable.Graph():
+                self._from_perfometer_or_graph.setdefault(
+                    ("graph", plugin.name),
+                    set(_collect_metric_names_from_graph(plugin)),
+                )
+            case graphs_v1.Bidirectional() | graphs_v2_unstable.Bidirectional():
+                self._from_perfometer_or_graph.setdefault(
+                    ("graph", plugin.name),
+                    set(_collect_metric_names_from_graph(plugin.lower)).union(
+                        _collect_metric_names_from_graph(plugin.upper)
+                    ),
+                )
+            case _:
+                pass
+
+
+@pytest.mark.parametrize(
+    "from_plugins, expected_bundles",
+    [
+        pytest.param({}, [], id="empty"),
+        pytest.param(
+            {(0, "perfometer", "name"): ["b", "a"]},
+            [("a", "b")],
+            id="one-perfometer",
+        ),
+        pytest.param(
+            {("graph", "name"): ["b", "a"]},
+            [("a", "b")],
+            id="one-graph",
+        ),
+        pytest.param(
+            {
+                ("perfometer", "name"): ["b", "a"],
+                ("graph", "name"): ["d", "c"],
+            },
+            [("a", "b"), ("c", "d")],
+            id="no-intersection",
+        ),
+        pytest.param(
+            {
+                ("perfometer", "name"): ["b", "a"],
+                ("graph", "name"): ["c", "b"],
+            },
+            [("a", "b", "c")],
+            id="intersection-1",
+        ),
+        pytest.param(
+            {
+                ("perfometer", "name"): ["b", "a"],
+                ("graph", "name1"): ["d", "c"],
+                ("graph", "name2"): ["b", "d"],
+            },
+            [("a", "b", "c", "d")],
+            id="intersection-via-third",
+        ),
+        pytest.param(
+            {
+                ("perfometer", "name1"): ["b", "a"],
+                ("graph", "name1"): ["c", "b"],
+                ("perfometer", "name2"): ["e", "d"],
+                ("graph", "name2"): ["f", "e"],
+            },
+            [("a", "b", "c"), ("d", "e", "f")],
+            id="two-bundles",
+        ),
+        pytest.param(
+            {
+                ("perfometer", "name1"): ["b", "a"],
+                ("graph", "name1"): ["c", "b"],
+                ("perfometer", "name2"): ["e", "d"],
+                ("graph", "name2"): ["f", "e"],
+                ("graph", "name3"): ["f", "c"],
+            },
+            [("a", "b", "c", "d", "e", "f")],
+            id="two-bundles-intersection-via-third",
+        ),
+    ],
+)
+def test__MetricNamesInModule_bundles(
+    from_plugins: Mapping[tuple[Literal["perfometer", "graph"], str], Sequence[str]],
+    expected_bundles: Sequence[tuple[str, ...]],
+) -> None:
+    metric_names = _MetricNamesInModule(set(), {i: set(m) for i, m in from_plugins.items()})
+    assert sorted(metric_names.bundles) == expected_bundles
+
+
+def _metric_names_by_module(
+    plugins: Mapping[
+        PluginLocation,
+        metrics_v1.Metric | ApiPerfometer | ApiGraph | translations_api.Translation,
+    ],
+) -> Mapping[str, _MetricNamesInModule]:
+    metric_names_by_module: dict[str, _MetricNamesInModule] = {}
+    for plugin_location, plugin in plugins.items():
+        metric_names_by_module.setdefault(
+            plugin_location.module, _MetricNamesInModule()
+        ).add_from_plugin(plugin)
+    return metric_names_by_module
+
+
+def test_bundles() -> None:
+    offenders = [
+        (module, metric_names, bundles)
+        for module, metric_names in _metric_names_by_module(
+            graphing_plugins().discovered.plugins
+        ).items()
+        if (bundles := metric_names.bundles)
+        and (len(bundles) > 1 or set(metric_names.from_metrics) != set(bundles[0]))
+    ]
+
+    assert not [m for m, *_ in offenders]
+    for module, metric_names, bundles in offenders:
+        assert len(bundles) <= 1, (
+            f"The module {module} defines multiple bundles. Our graphing modules are allowed to"
+            " contain either standalone metric definitions or exactly one cohesive bundle of"
+            " metric, perfometer or graph template definitions."
+        )
+        raise AssertionError(
+            f"The module {module} contains metric definitions which do not belong to a"
+            " bundle. Our graphing modules are allowed to contain either standalone metric"
+            " definitions or exactly one cohesive bundle of metric, perfometer or graph"
+            " template definitions."
+        )
+
+
+def _normalized_title(title: str) -> str:
+    return re.sub(r"[\s_-]+", " ", title).strip().casefold()
+
+
+def _names_sharing_a_title(titled_names: Iterable[tuple[str, str]]) -> Mapping[str, Sequence[str]]:
+    names_by_title: dict[str, list[str]] = {}
+    for name, title in titled_names:
+        names_by_title.setdefault(_normalized_title(title), []).append(name)
+    return {title: sorted(names) for title, names in names_by_title.items() if len(names) > 1}
+
+
+def test_metric_titles_are_unique() -> None:
+    assert not _names_sharing_a_title(
+        (plugin.name, plugin.title.localize(str))
+        for plugin in graphing_plugins().discovered.plugins.values()
+        if isinstance(plugin, metrics_v1.Metric)
+    )
+
+
+def test_graph_titles_are_unique() -> None:
+    assert not _names_sharing_a_title(
+        (plugin.name, plugin.title.localize(str))
+        for plugin in graphing_plugins().discovered.plugins.values()
+        if isinstance(
+            plugin,
+            graphs_v1.Graph
+            | graphs_v1.Bidirectional
+            | graphs_v2_unstable.Graph
+            | graphs_v2_unstable.Bidirectional,
+        )
+    )

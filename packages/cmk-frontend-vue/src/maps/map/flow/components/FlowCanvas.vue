@@ -541,7 +541,7 @@ defineExpose({
 /* stylelint-disable selector-pseudo-class-no-unknown -- ``deep`` is Vue's own,
    and these elements are d3's rather than Vue's. */
 :deep(.maps-flow-canvas__node:focus-visible) {
-  outline: 2px solid var(--interactive-accent);
+  outline: revert;
   outline-offset: 2px;
 }
 

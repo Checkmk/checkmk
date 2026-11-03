@@ -33,7 +33,7 @@ from cmk.gui.http import Request
 from cmk.gui.http import request as thread_local_request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import CustomHostAttrSpec
 from cmk.gui.utils.roles import UserPermissions, UserPermissionSerializableConfig
 from cmk.gui.watolib.automation_commands import AutomationCommand
@@ -213,7 +213,10 @@ class CheckmkAutomationBackgroundJob(BackgroundJob):
         collect_all_hosts: Callable[[], Mapping[HostName, CollectedHostAttributes]],
     ) -> None:
         with job_interface.gui_context(
-            UserPermissions.from_serialized_config(user_permission_config, permission_registry)
+            UserPermissions.from_serialized_config(
+                user_permission_config,
+                all_permissions(),
+            )
         ):
             self._execute_automation(job_interface, api_request, for_cmk_version, collect_all_hosts)
 

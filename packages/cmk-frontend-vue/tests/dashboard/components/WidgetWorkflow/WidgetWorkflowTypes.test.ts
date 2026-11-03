@@ -8,6 +8,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   type WorkflowCatalog,
+  type WorkflowGroup,
   type WorkflowItem,
   findParentWorkflowKey,
   getDashboardWidgetWorkflows
@@ -54,5 +55,33 @@ describe('getDashboardWidgetWorkflows', () => {
     const parentKey = findParentWorkflowKey(dashboardCatalog, 'link_custom_graph')
 
     expect(parentKey).toBe('custom_graphs')
+  })
+
+  it('offers creating a custom graph to every user', () => {
+    const dashboardCatalog = getDashboardWidgetWorkflows({ mayEditCustomGraph: false })
+
+    const newEntry = (dashboardCatalog['custom_graphs'] as WorkflowGroup).subWorkflows[
+      'new_custom_graph'
+    ]
+
+    expect(newEntry?.unavailableReason).toBeUndefined()
+  })
+
+  it('disables cloning for users who may not edit custom graphs', () => {
+    const dashboardCatalog = getDashboardWidgetWorkflows({ mayEditCustomGraph: false })
+
+    const cloneEntry = (dashboardCatalog['custom_graphs'] as WorkflowGroup).subWorkflows[
+      'clone_custom_graph'
+    ]
+
+    expect(cloneEntry?.unavailableReason).toContain('Customize and use custom graphs')
+  })
+
+  it.each(['view', 'classic_view'])('offers the %s wizard inside the views group', (key) => {
+    const dashboardCatalog = getDashboardWidgetWorkflows()
+
+    const parentKey = findParentWorkflowKey(dashboardCatalog, key)
+
+    expect(parentKey).toBe('views')
   })
 })

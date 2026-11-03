@@ -1,8 +1,13 @@
+load("@aspect_rules_js//js:defs.bzl", "js_library")
 load("@aspect_rules_py//py:defs.bzl", "py_library")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@rules_python//python:packaging.bzl", "py_wheel")
+load("//bazel/rules:link_shared_typing.bzl", "link_shared_typing")
 load("//bazel/rules:package_wheel.bzl", "package_wheel")
 load("//bazel/rules:py_requirements_test.bzl", "py_requirements_test")
+load("//bazel/rules:vitest_test.bzl", "vitest_test")
+load("//bazel/rules:vue_library.bzl", "vue_library")
 
 exports_files([
     "dev-requirements.in",
@@ -109,4 +114,75 @@ py_requirements_test(
         ":plugins",
     ],
     requirements_in = "requirements.in",
+)
+
+link_shared_typing()
+
+npm_link_all_packages(name = "node_modules")
+
+vue_library(
+    name = "cmk-profiling",
+    srcs = glob([
+        "*.d.ts",
+        "frontend/**/*.ts",
+        "frontend/**/*.vue",
+    ]) + [
+        "package.json",
+        "tsconfig.json",
+        "tsconfig.test.json",
+    ],
+    tsconfig = "tsconfig.json",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":node_modules/@tanstack",
+        ":node_modules/cmk-shared-typing-bzl",
+        ":node_modules/cmk-ui-library",
+        ":node_modules/vite",
+        "//:node_modules/vue",
+    ],
+)
+
+vue_library(
+    name = "tests",
+    tsconfig = "tsconfig.test.json",
+    deps = [
+        ":cmk-profiling",
+        "//packages/cmk-profiling/tests/frontend",
+    ],
+)
+
+js_library(
+    name = "eslintrc",
+    srcs = ["eslint.config.mjs"],
+    tags = ["no-lint"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":cmk-profiling",
+        "//packages/cmk-ui-library:eslintrc",
+    ],
+)
+
+filegroup(
+    name = "srcs",
+    srcs = glob([
+        "*.d.ts",
+        "frontend/**",
+    ]) + [
+        "eslint.config.mjs",
+        "package.json",
+        "tsconfig.json",
+        "tsconfig.test.json",
+        "vite.config.ts",
+        "//packages/cmk-profiling/tests/frontend:srcs",
+    ],
+    visibility = ["//visibility:public"],
+)
+
+vitest_test(
+    name = "unit-test",
+    data = [
+        "vite.config.ts",
+        "//packages/cmk-frontend:theme_images",
+    ],
+    project = ":tests",
 )

@@ -8,7 +8,11 @@ import { useDebounceFn } from 'cmk-ui-library/lib/useDebounce'
 import { type Ref, ref, watch } from 'vue'
 
 import type { GraphTimerange } from '@/dashboard/components/TimeRange/GraphTimeRange.vue'
-import { useTimeRange } from '@/dashboard/components/TimeRange/useTimeRange'
+import { useTimeRangeSource } from '@/dashboard/components/TimeRange/useTimeRangeSource'
+import {
+  type UseGraphLegend,
+  useGraphLegend
+} from '@/dashboard/components/Wizard/components/GraphRenderOptions/useGraphLegend'
 import {
   type UseWidgetVisualizationOptions,
   useWidgetVisualizationProps
@@ -27,7 +31,8 @@ import { type UseAdditionalOptions, useAdditionalOptions } from './useAdditional
 
 const CONTENT_TYPE = 'average_scatterplot'
 export interface UseScatterplot
-  extends UseWidgetHandler, UseWidgetVisualizationOptions, UseAdditionalOptions {
+  extends UseWidgetHandler, UseWidgetVisualizationOptions, UseAdditionalOptions, UseGraphLegend {
+  followDashboardTimeRange: Ref<boolean>
   timeRange: Ref<GraphTimerange>
   widgetProps: Ref<WidgetProps>
 }
@@ -44,9 +49,11 @@ export const useScatterplot = async (
       ? (currentSpec?.content as ScatterplotContent)
       : null
 
-  const { timeRange, widgetProps: generateTimeRangeSpec } = useTimeRange(
-    currentContent?.time_range ?? null
-  )
+  const {
+    followDashboard: followDashboardTimeRange,
+    timeRange,
+    widgetProps: generateTimeRangeSpec
+  } = useTimeRangeSource(currentContent?.time_range ?? null)
 
   const {
     title,
@@ -67,6 +74,11 @@ export const useScatterplot = async (
     currentContent?.median_color
   )
 
+  const { graphLegend, graphLegendStyle } = useGraphLegend(
+    currentContent ?? undefined,
+    currentContent === null
+  )
+
   const widgetProps = ref<WidgetProps>()
 
   const validate = (): boolean => {
@@ -81,7 +93,9 @@ export const useScatterplot = async (
       metric_color: metricColor.value === 'default' ? 'default' : metricColor.value.toUpperCase(),
       average_color:
         averageColor.value === 'default' ? 'default' : averageColor.value.toUpperCase(),
-      median_color: medianColor.value === 'default' ? 'default' : medianColor.value.toUpperCase()
+      median_color: medianColor.value === 'default' ? 'default' : medianColor.value.toUpperCase(),
+      show_legend: graphLegend.value,
+      legend_style: graphLegendStyle.value
     }
   }
 
@@ -109,7 +123,16 @@ export const useScatterplot = async (
   }
 
   watch(
-    [timeRange, widgetGeneralSettings, metricColor, averageColor, medianColor],
+    [
+      followDashboardTimeRange,
+      timeRange,
+      widgetGeneralSettings,
+      metricColor,
+      averageColor,
+      medianColor,
+      graphLegend,
+      graphLegendStyle
+    ],
     useDebounceFn(() => {
       void _updateWidgetProps()
     }, 300),
@@ -119,6 +142,7 @@ export const useScatterplot = async (
   await _updateWidgetProps()
 
   return {
+    followDashboardTimeRange,
     timeRange,
 
     title,
@@ -131,6 +155,9 @@ export const useScatterplot = async (
     metricColor,
     averageColor,
     medianColor,
+
+    graphLegend,
+    graphLegendStyle,
 
     titleUrlValidationErrors,
     titleMacros,

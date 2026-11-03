@@ -2,6 +2,8 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+pub mod trusted_cas;
+
 use crate::constants;
 use anyhow::{anyhow, bail, Context, Result as AnyhowResult};
 use reqwest::blocking::{Client, ClientBuilder};

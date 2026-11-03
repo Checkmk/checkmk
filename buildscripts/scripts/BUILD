@@ -41,6 +41,11 @@ py_binary(
 )
 
 py_binary(
+    name = "check_no_privileged_containers",
+    srcs = ["check_no_privileged_containers.py"],
+)
+
+py_binary(
     name = "check_no_remote_cache_tags",
     srcs = ["check_no_remote_cache_tags.py"],
 )
@@ -85,13 +90,13 @@ py_binary(
 )
 
 py_library(
-    name = "collect_mypy_lib",
-    srcs = ["collect_mypy.py"],
+    name = "collect_type_errors_lib",
+    srcs = ["collect_type_errors.py"],
 )
 
 py_binary(
-    name = "collect_mypy",
-    srcs = [":collect_mypy_lib"],
+    name = "collect_type_errors",
+    srcs = [":collect_type_errors_lib"],
     tags = ["manual"],
 )
 
@@ -119,12 +124,14 @@ sh_library(
         "bazel_mypy.sh",
         "bazel_test_ci.sh",
         "bazel_test_post_archive_xunit.sh",
+        "build_qemu.sh",
         "build_wine.sh",
         "check_community_edition_all_free.sh",
         "create_unsign_msi_patch.sh",
         "extract_llvm.sh",
         "gcc-toolchain/docker/build.sh",
         "gcc-toolchain/docker/test.sh",
+        "nexus_upload.sh",
         "sign-packages.sh",
     ],
 )
@@ -140,10 +147,11 @@ py_cmk_test(
         requirement("requests"),
         ":assert_build_artifacts",
         ":build_cmk_container",
+        ":check_no_privileged_containers",
         ":check_no_remote_cache_tags",
         ":check_thirdparty_modules",
-        ":collect_mypy_lib",
         ":collect_rust_tests_lib",
+        ":collect_type_errors_lib",
         ":get_distros",
         ":lib",
         ":publish_cloud_images",

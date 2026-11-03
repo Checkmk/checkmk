@@ -72,7 +72,10 @@ def test_missing_version_yields_nothing() -> None:
 
 def test_connections_without_usage_data_are_unknown() -> None:
     assert list(check_mysql_connections("galera", {}, SECTION)) == [
-        Result(state=State.UNKNOWN, summary="Connection information is missing"),
+        Result(
+            state=State.UNKNOWN,
+            summary="Connection information is missing: Max_used_connections, Threads_connected, max_connections",
+        ),
     ]
 
 
@@ -92,6 +95,16 @@ def test_connection_usage_is_checked_against_levels() -> None:
         Result(state=State.OK, summary="Currently open connections: 10.00%"),
         Metric("connections_perc_conn_threads", 10.0),
         Metric("connections_conn_threads", 10.0),
+    ]
+
+
+def test_connections_without_max_connections_are_unknown() -> None:
+    # Crash group 4823: the service was discovered, but a later agent output
+    # lacked the server variable max_connections.
+    section = parse_mysql([["Max_used_connections", "80"], ["Threads_connected", "10"]])
+
+    assert list(check_mysql_connections("mysql", {}, section)) == [
+        Result(state=State.UNKNOWN, summary="Connection information is missing: max_connections"),
     ]
 
 

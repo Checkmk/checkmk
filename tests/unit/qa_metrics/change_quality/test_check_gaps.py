@@ -12,7 +12,7 @@ import psycopg
 import pytest
 from psycopg import errors as psycopg_errors
 
-from cmk.werks.tool.models import Class
+from cmk.werks.flavor.cmk.models import Class
 from tests.qa_metrics.change_quality import check_gaps, walk
 from tests.qa_metrics.db import MetabasePostgres
 

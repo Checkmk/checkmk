@@ -8,21 +8,36 @@ from typing import Literal
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
+from cmk.ccc.site import SiteId
 from cmk.gui.monitor.services._api._filters import (
     parse_as_livestatus_filter,
+    scope_filter_by_site,
     ServiceAndNode,
     ServiceBooleanCondition,
     ServiceFilterNode,
+    ServiceHostNode,
+    ServiceHostStateChoiceCondition,
     ServiceLabelChoiceCondition,
     ServiceNameChoiceCondition,
     ServiceNotNode,
     ServiceOrNode,
+    ServiceSiteChoiceCondition,
     ServiceStateChoiceCondition,
     ServiceStringCondition,
     ServiceStringOp,
     ServiceTimestampCondition,
     ServiceTimestampOp,
 )
+from cmk.gui.monitor.shared import (
+    BooleanCondition,
+    FolderCondition,
+    LabelChoiceCondition,
+    NameChoiceCondition,
+    NotNode,
+    SiteChoiceCondition,
+    StateChoiceCondition,
+)
+from cmk.gui.monitor.shared import FilterNode as HostFilterNode
 from tests.testlib.unit.gui.web_test_app import SetConfig
 
 
@@ -266,6 +281,37 @@ def test_query_builder_state_choice_pending_matches_has_been_checked_only() -> N
     assert parse_as_livestatus_filter(condition) == "Filter: has_been_checked = 0"
 
 
+@pytest.mark.parametrize(
+    "states, expected",
+    [
+        pytest.param(
+            ["DOWN"],
+            "Filter: host_state = 1\nFilter: host_has_been_checked = 1\nAnd: 2",
+            id="a checked host in that state",
+        ),
+        pytest.param(
+            ["PENDING"],
+            "Filter: host_has_been_checked = 0",
+            id="pending host by its missing check, not by its state",
+        ),
+        pytest.param(
+            ["UP", "PENDING"],
+            "Filter: host_state = 0\nFilter: host_has_been_checked = 1\nAnd: 2\n"
+            "Filter: host_has_been_checked = 0\nOr: 2",
+            id="any of several host states",
+        ),
+    ],
+)
+def test_query_builder_host_state_choice(
+    states: list[Literal["UP", "DOWN", "UNREACHABLE", "PENDING"]], expected: str
+) -> None:
+    condition = ServiceHostStateChoiceCondition(
+        type="condition", field="host_state", op="one_of", value=states
+    )
+
+    assert parse_as_livestatus_filter(condition) == expected
+
+
 def test_query_builder_state_choice_mixes_pending_and_real_states() -> None:
     condition = ServiceStateChoiceCondition(
         type="condition", field="state", op="one_of", value=["OK", "PENDING"]
@@ -356,6 +402,39 @@ def test_query_builder_tag_key_prefix_matches_its_own_names_column() -> None:
     )
 
     assert parse_as_livestatus_filter(condition) == "Filter: tag_names ~ ^crit"
+
+
+def test_query_builder_label_any_value_matches_the_key_in_the_names_column() -> None:
+    condition = ServiceLabelChoiceCondition(
+        type="condition", field="labels", op="all_of", value=["cmk/os_family:*"]
+    )
+
+    assert parse_as_livestatus_filter(condition) == "Filter: label_names >= cmk/os_family"
+
+
+def test_query_builder_tag_any_value_matches_the_group_in_the_names_column() -> None:
+    condition = ServiceLabelChoiceCondition(
+        type="condition", field="tags", op="all_of", value=["criticality:*"]
+    )
+
+    assert parse_as_livestatus_filter(condition) == "Filter: tag_names >= criticality"
+
+
+@pytest.mark.parametrize(
+    "pair",
+    [
+        pytest.param("*", id="only-star"),
+        pytest.param(":*", id="any-value-without-key"),
+        pytest.param("os:", id="key-without-value"),
+    ],
+)
+def test_label_choice_condition_rejects_an_incomplete_pair(pair: str) -> None:
+    payload = {"type": "condition", "field": "labels", "op": "all_of", "value": [pair]}
+
+    with pytest.raises(ValidationError):
+        TypeAdapter(ServiceFilterNode).validate_python(  # astrein: disable=pydantic-type-adapter
+            payload, strict=False
+        )
 
 
 def test_query_builder_label_choice_prefix_is_a_literal_not_a_pattern() -> None:
@@ -544,4 +623,149 @@ def test_timestamp_condition_only_accepts_unix_timestamps(value: object) -> None
     with pytest.raises(ValidationError):
         TypeAdapter(ServiceFilterNode).validate_python(  # astrein: disable=pydantic-type-adapter
             payload, strict=False
+        )
+
+
+def test_query_builder_host_name_condition() -> None:
+    condition = ServiceStringCondition(
+        type="condition", field="host_name", op="matches", value="^web"
+    )
+    assert parse_as_livestatus_filter(condition) == "Filter: host_name ~ ^web"
+
+
+_SITE = SiteId("NO_SITE")
+_OTHER_SITE = SiteId("other")
+_SITE_CONDITION = ServiceSiteChoiceCondition(
+    type="condition", field="site_id", op="one_of", value=[_SITE]
+)
+_NAME_CONDITION = ServiceStringCondition(type="condition", field="name", op="contains", value="CPU")
+
+
+def test_scope_filter_by_site_restricts_to_the_named_sites() -> None:
+    scoped = scope_filter_by_site(
+        ServiceAndNode(type="and", children=[_SITE_CONDITION, _NAME_CONDITION])
+    )
+
+    assert (scoped.node, scoped.site_scope(frozenset({_SITE, _OTHER_SITE}))) == (
+        _NAME_CONDITION,
+        [_SITE],
+    )
+
+
+def test_scope_filter_by_site_negated_condition_is_a_complement() -> None:
+    scoped = scope_filter_by_site(ServiceNotNode(type="not", child=_SITE_CONDITION))
+
+    assert (scoped.node, scoped.site_scope(frozenset({_SITE, _OTHER_SITE}))) == (
+        None,
+        [_OTHER_SITE],
+    )
+
+
+def test_scope_filter_by_site_leaves_a_site_free_tree_unaffected() -> None:
+    scoped = scope_filter_by_site(_NAME_CONDITION)
+
+    assert (scoped.node, scoped.sites) == (_NAME_CONDITION, None)
+
+
+def test_scope_filter_by_site_rejects_a_site_condition_under_or() -> None:
+    node = ServiceOrNode(type="or", children=[_SITE_CONDITION, _NAME_CONDITION])
+
+    with pytest.raises(ValueError, match="only be combined via 'and'"):
+        scope_filter_by_site(node)
+
+
+def test_site_condition_accepts_a_site_that_is_not_configured() -> None:
+    payload = {"type": "condition", "field": "site_id", "op": "one_of", "value": ["gone"]}
+
+    node = TypeAdapter(ServiceFilterNode).validate_python(  # astrein: disable=pydantic-type-adapter
+        payload, strict=False
+    )
+
+    assert node == ServiceSiteChoiceCondition(
+        type="condition", field="site_id", op="one_of", value=[SiteId("gone")]
+    )
+
+
+@pytest.mark.parametrize(
+    "host_node, expected",
+    [
+        pytest.param(
+            StateChoiceCondition(type="condition", field="state", op="one_of", value=["DOWN"]),
+            "Filter: host_state = 1\nFilter: host_has_been_checked = 1\nAnd: 2",
+            id="host state",
+        ),
+        pytest.param(
+            BooleanCondition(type="condition", field="in_downtime", op="eq", value=True),
+            "Filter: host_scheduled_downtime_depth > 0",
+            id="host in downtime",
+        ),
+        pytest.param(
+            BooleanCondition(type="condition", field="active_checks_disabled", op="eq", value=True),
+            "Filter: host_modified_attributes_list >= active_checks_enabled\n"
+            "Filter: host_active_checks_enabled = 0\nAnd: 2",
+            id="host active checks disabled",
+        ),
+        pytest.param(
+            LabelChoiceCondition(
+                type="condition", field="labels", op="all_of", value=["env:prod", "os*"]
+            ),
+            "Filter: host_labels = 'env' 'prod'\nFilter: host_label_names ~ ^os\nAnd: 2",
+            id="host labels",
+        ),
+        pytest.param(
+            NameChoiceCondition(type="condition", field="groups", op="one_of", value=["linux"]),
+            "Filter: host_groups >= linux",
+            id="host groups",
+        ),
+        pytest.param(
+            NotNode(
+                type="not",
+                child=BooleanCondition(type="condition", field="acknowledged", op="eq", value=True),
+            ),
+            "Filter: host_acknowledged = 1\nNegate:",
+            id="negated host condition",
+        ),
+    ],
+)
+def test_query_builder_host_node_filters_the_host_columns(
+    host_node: HostFilterNode, expected: str
+) -> None:
+    condition = ServiceHostNode(type="host", child=host_node)
+    assert parse_as_livestatus_filter(condition) == expected
+
+
+@pytest.mark.usefixtures("request_context")
+def test_query_builder_host_node_stale_uses_the_host_staleness(set_config: SetConfig) -> None:
+    condition = ServiceHostNode(
+        type="host",
+        child=BooleanCondition(type="condition", field="stale", op="eq", value=True),
+    )
+    with set_config(staleness_threshold=3.5):
+        assert parse_as_livestatus_filter(condition) == "Filter: host_staleness >= 3.5"
+
+
+@pytest.mark.parametrize(
+    "host_node",
+    [
+        pytest.param(
+            SiteChoiceCondition(
+                type="condition", field="site_id", op="one_of", value=[SiteId("local")]
+            ),
+            id="site",
+        ),
+        pytest.param(
+            NotNode(
+                type="not",
+                child=FolderCondition(
+                    type="condition", field="folder", op="contains", value="Munich"
+                ),
+            ),
+            id="folder inside not",
+        ),
+    ],
+)
+def test_host_node_rejects_conditions_beyond_the_host_columns(host_node: object) -> None:
+    with pytest.raises(ValidationError):
+        TypeAdapter(ServiceFilterNode).validate_python(  # astrein: disable=pydantic-type-adapter
+            {"type": "host", "child": host_node}
         )

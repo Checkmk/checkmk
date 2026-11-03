@@ -44,7 +44,6 @@ class GuiTimingsPage(Page):
             arguments=None,
         )
 
-        html.final_javascript_code()
         html.close_body()
         return None
 

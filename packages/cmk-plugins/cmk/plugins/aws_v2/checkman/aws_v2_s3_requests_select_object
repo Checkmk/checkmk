@@ -1,0 +1,27 @@
+title: AWS v2 S3: SELECT Object
+agents: aws_v2
+catalog: cloud/aws
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the rate of bytes of data scanned or
+ returned with AWS SELECT object requests.
+
+ To make this check work, you have to configure the related
+ special agent {Amazon Web Services (AWS) v2}. Furthermore, you
+ have to enable request metrics in the AWS/S3 console. This is
+ a paid feature. Note that the filter name has to be set to
+ `EntireBucket`, as is recommended in the AWS documentation for
+ a filter that applies to all objects. The AWS special agent
+ uses this filter name to query S3 request metrics from the AWS
+ API.
+
+ The service is always {OK}.
+
+item:
+ Name of the bucket
+
+discovery:
+ Each bucket is a piggyback host with the name {<bucket name>}.
+ One service is created on this host if all required metrics
+ (SelectBytesScanned, SelectBytesReturned) are given.

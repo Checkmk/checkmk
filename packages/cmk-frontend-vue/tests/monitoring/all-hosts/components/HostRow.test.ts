@@ -4,16 +4,23 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { Row } from '@tanstack/vue-table'
+import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen } from '@testing-library/vue'
 import { renderDateAndTime } from 'cmk-ui-library/lib/renderTime'
+import client from 'cmk-ui-library/lib/rest-api-client/client'
+import { afterEach, vi } from 'vitest'
 import { defineComponent, h } from 'vue'
 
 import { buildHostColumns } from '@/monitoring/all-hosts/columns'
 import HostRow from '@/monitoring/all-hosts/components/HostRow.vue'
 import type { HostEntry } from '@/monitoring/shared/api/types'
+import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
+import type { MonitoringService } from '@/monitoring/shared/services/MonitoringService'
 import { columnId } from '@/monitoring/shared/tableState/schema'
 import type { DisplayOptions } from '@/monitoring/shared/types'
+
+import { makeListingService } from '../../shared/services/testHelpers'
 
 // 'abs' keeps assertions comparable to plain `renderDateAndTime`, independent of how old
 // a fixture's timestamp happens to be relative to the real clock the test runs under.
@@ -52,6 +59,7 @@ function makeTableRow(overrides: Partial<Row<HostEntry>> = {}): Row<HostEntry> {
 }
 
 interface RowActionProps {
+  readOnly?: boolean
   rowActions?: CellAction[]
   loadActionMenu?: () => Promise<CellAction[]>
 }
@@ -59,7 +67,8 @@ interface RowActionProps {
 function mountRow(
   row: HostEntry,
   tableRow: Row<HostEntry> = makeTableRow(),
-  actionProps: RowActionProps = {}
+  actionProps: RowActionProps = {},
+  service: MonitoringService<unknown> | null = null
 ) {
   return render(
     defineComponent({
@@ -73,7 +82,8 @@ function mountRow(
           ])
         ])
       }
-    })
+    }),
+    service ? { global: { provide: { [MONITORING_SERVICE as symbol]: service } } } : {}
   )
 }
 
@@ -99,6 +109,55 @@ test('repeats no ip address on hover that the cell shows in full', async () => {
   expect(screen.queryByTitle('fe80::1')).not.toBeInTheDocument()
 })
 
+const GRAPHS_LINK = 'view.py?view_name=host_graphs&site=local&host=web-1'
+
+afterEach(() => {
+  vi.restoreAllMocks()
+})
+
+test('links a host with graphs to its graphs page, beside its name', () => {
+  const { container } = mountRow(makeHost({ graphs_link: GRAPHS_LINK }))
+
+  const link = screen.getByRole('link', { name: 'Show the graphs of host web-1' })
+  expect(link).toHaveAttribute('href', GRAPHS_LINK)
+  expect(container.querySelector('td[data-column-id="name"]')).toContainElement(link)
+})
+
+test('offers no graphs link for a host without graphs', () => {
+  mountRow(makeHost())
+
+  expect(
+    screen.queryByRole('link', { name: 'Show the graphs of host web-1' })
+  ).not.toBeInTheDocument()
+})
+
+test('links to the graphs on a read-only row too, as on a dashboard', () => {
+  mountRow(makeHost({ graphs_link: GRAPHS_LINK }), makeTableRow(), { readOnly: true })
+
+  expect(screen.getByRole('link', { name: 'Show the graphs of host web-1' })).toHaveAttribute(
+    'href',
+    GRAPHS_LINK
+  )
+})
+
+test('previews the graphs of the host itself, from its own site', async () => {
+  const post = vi.spyOn(client, 'POST').mockResolvedValue({
+    data: { graphs: [], no_data_message: null },
+    response: new Response(null, { status: 200 })
+  } as never)
+  mountRow(makeHost({ site_id: 'remote', graphs_link: GRAPHS_LINK }))
+
+  await userEvent.hover(screen.getByRole('link', { name: 'Show the graphs of host web-1' }))
+
+  await vi.waitUntil(() => post.mock.calls.length > 0)
+  expect(post).toHaveBeenCalledWith(
+    '/domain-types/graph/actions/discover_template_graphs/invoke',
+    expect.objectContaining({
+      body: { hostname: 'web-1', service_description: '_HOST_', site: 'remote', graph_id: null }
+    })
+  )
+})
+
 test('renders alias, folder and formatted timestamps in their cells', () => {
   const host = makeHost()
   mountRow(host)
@@ -107,6 +166,12 @@ test('renders alias, folder and formatted timestamps in their cells', () => {
   expect(screen.getByTitle('Netzwerk / Rechenzentrum 1')).toBeInTheDocument()
   expect(screen.getByTitle(renderDateAndTime(host.last_check!))).toBeInTheDocument()
   expect(screen.getByTitle(renderDateAndTime(host.last_state_change!))).toBeInTheDocument()
+})
+
+test('dashes out the timestamps of a host that has never been checked', () => {
+  mountRow(makeHost({ last_check: null, last_state_change: null }))
+
+  expect(screen.getAllByText('–')).toHaveLength(2)
 })
 
 test('emits open with the host when the name cell button is clicked', async () => {
@@ -450,6 +515,45 @@ test('renders the host groups of a host, sorted alphabetically', () => {
 
   const tags = Array.from(container.querySelectorAll('[data-label-cell-item]'))
   expect(tags.map((tag) => tag.textContent?.trim())).toEqual(['linux', 'web'])
+})
+
+test('clicking a host group narrows the listing to the hosts in that group', async () => {
+  const service = makeListingService()
+  mountRow(makeHost({ groups: ['web', 'linux'] }), makeTableRow(), {}, service)
+
+  await fireEvent.click(screen.getByRole('button', { name: 'linux' }))
+
+  expect(service.filterState.value).toStrictEqual({
+    type: 'condition',
+    field: 'groups',
+    op: 'one_of',
+    value: ['linux']
+  })
+})
+
+test('clicking a label narrows the listing to the hosts carrying it', async () => {
+  const service = makeListingService()
+  mountRow(
+    makeHost({ labels: { 'cmk/os_family': { value: 'linux', source: 'discovered' } } }),
+    makeTableRow(),
+    {},
+    service
+  )
+
+  await fireEvent.click(screen.getByRole('button', { name: 'cmk/os_family: linux' }))
+
+  expect(service.filterState.value).toStrictEqual({
+    type: 'condition',
+    field: 'labels',
+    op: 'all_of',
+    value: ['cmk/os_family:linux']
+  })
+})
+
+test('host groups stay plain where there is no listing to narrow', () => {
+  mountRow(makeHost({ groups: ['linux'] }))
+
+  expect(screen.queryByRole('button', { name: 'linux' })).not.toBeInTheDocument()
 })
 
 test('renders the customer of a host', () => {

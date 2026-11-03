@@ -70,7 +70,7 @@ const DISTRIBUTE_AXES: { axis: 'x' | 'y'; icon: string; title: string }[] = [
   transform: translateX(-50%);
   display: flex;
   gap: var(--dimension-3);
-  padding: var(--spacing-half);
+  padding: var(--dimension-3);
   z-index: 5;
   animation: maps-presentation-align-bar-pop 0.12s ease-out;
 }

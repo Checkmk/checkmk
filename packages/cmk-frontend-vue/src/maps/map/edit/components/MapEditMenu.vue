@@ -106,10 +106,10 @@ function onKeydown(event: KeyboardEvent, index: number): void {
   margin-bottom: var(--dimension-4);
   overflow: hidden;
   background: var(--ux-theme-3);
-  border-radius: var(--dimension-5);
+  border-radius: var(--border-radius);
   box-shadow:
     0 0 0 1px var(--default-border-color),
-    0 25px 50px -12px rgb(0 0 0 / 60%);
+    var(--maps-shadow-canvas-overlay-high);
 }
 
 /* The entries are buttons, which Checkmk styles page-wide: the reset keeps
@@ -117,7 +117,7 @@ function onKeydown(event: KeyboardEvent, index: number): void {
 .maps-map-edit-menu__item {
   display: flex;
   align-items: center;
-  gap: var(--spacing);
+  gap: var(--dimension-5);
   box-sizing: border-box;
   width: 100%;
   margin: 0;

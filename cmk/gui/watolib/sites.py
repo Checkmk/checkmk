@@ -263,8 +263,10 @@ class SiteManagement:
     def __init__(
         self,
         liveproxy_hook: LivestatusProxyHook | None = None,
+        connection_config_domains: Sequence[ABCConfigDomain] = (),
     ) -> None:
         self._liveproxy_hook = liveproxy_hook or NoOpLivestatusProxy()
+        self._connection_config_domains = connection_config_domains
 
     @classmethod
     def connection_method_form_spec(cls) -> CascadingSingleChoiceExtended:
@@ -508,7 +510,7 @@ class SiteManagement:
         ldap_elements = [
             SingleChoiceElementExtended(
                 name=id_,
-                title=Title(label),  # astrein: disable=localization-checker
+                title=Title(label),  # astrein: disable=localization
             )
             for id_, label in ldap_choices
         ]
@@ -527,7 +529,7 @@ class SiteManagement:
             saml_elements = [
                 SingleChoiceElementExtended(
                     name=id_,
-                    title=Title(label),  # astrein: disable=localization-checker
+                    title=Title(label),  # astrein: disable=localization
                 )
                 for id_, label in saml_choices
             ]
@@ -599,7 +601,7 @@ class SiteManagement:
                     elements=[
                         MultipleChoiceElementExtended(
                             name=ident,
-                            title=Title(label),  # astrein: disable=localization-checker
+                            title=Title(label),  # astrein: disable=localization
                         )
                         for ident, label in connection_choices()
                     ],
@@ -984,7 +986,11 @@ class SiteManagement:
         cmk.gui.watolib.activate_changes.clear_site_replication_status(site_id)
 
     def _affected_config_domains(self) -> list[ABCConfigDomain]:
-        return [ConfigDomainGUI()] + self._liveproxy_hook.affected_config_domains()
+        return [
+            ConfigDomainGUI(),
+            *self._liveproxy_hook.affected_config_domains(),
+            *self._connection_config_domains,
+        ]
 
 
 class SiteManagementRegistry(Registry[SiteManagement]):

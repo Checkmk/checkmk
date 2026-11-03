@@ -3,10 +3,12 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { ColumnDef } from '@tanstack/vue-table'
 import type { KeyShortcutService } from 'cmk-ui-library/lib/keyShortcuts'
 
-import type { HostApi } from '@/monitoring/shared/api/hosts'
+import type { HostApi, HostQueryParams } from '@/monitoring/shared/api/hosts'
 import type { HostEntry, HostOptionalField } from '@/monitoring/shared/api/types'
+import { RowExport } from '@/monitoring/shared/export/rowExport'
 import {
   MonitoringService,
   type MonitoringServiceOptions,
@@ -14,6 +16,7 @@ import {
 } from '@/monitoring/shared/services/MonitoringService'
 
 import { visibleHostFields } from '../columns'
+import { HostExport, type HostExportColumn } from '../export/hostExport'
 
 export interface HostServiceOptions extends MonitoringServiceOptions<HostEntry> {
   /** Fields read on every fetch, whichever columns are shown, for what a row offers. */
@@ -22,6 +25,7 @@ export interface HostServiceOptions extends MonitoringServiceOptions<HostEntry> 
 
 export class HostService extends MonitoringService<HostEntry> {
   private readonly rowFields: readonly HostOptionalField[]
+  private readonly columns: readonly ColumnDef<HostEntry>[]
 
   constructor(
     private readonly api: Pick<HostApi, 'fetchHosts'>,
@@ -30,15 +34,32 @@ export class HostService extends MonitoringService<HostEntry> {
   ) {
     super('host-service', shortCutService, options)
     this.rowFields = options.rowFields ?? []
+    this.columns = options.columns ?? []
+  }
+
+  async export(): Promise<HostExport> {
+    const hosts = await this.loadedItems()
+    return new HostExport(this.exportColumns(), hosts)
+  }
+
+  exportColumns(): HostExportColumn[] {
+    return RowExport.shownColumns(this.columns, this.columnVisibility.value, HostExport.isColumn)
+  }
+
+  /** What the listing asks the endpoint for, whatever fields its rows read. */
+  listingParams(): HostQueryParams {
+    return {
+      limit: this.requestedLimit.value,
+      sort: this.sortState.value,
+      searchQuery: this.appliedSearchQuery.value,
+      filter: this.filterState.value
+    }
   }
 
   protected async fetchBatch(signal: AbortSignal): Promise<PagedResponse<HostEntry>> {
     const response = await this.api.fetchHosts(
       {
-        limit: this.requestedLimit.value,
-        sort: this.sortState.value,
-        searchQuery: this.appliedSearchQuery.value,
-        filter: this.filterState.value,
+        ...this.listingParams(),
         fields: [
           ...visibleHostFields(this.columnVisibility.value, this.hideableColumnIds),
           ...this.rowFields

@@ -6,6 +6,7 @@
 from pydantic import BaseModel
 
 from cmk.ccc.version import Edition, edition
+from cmk.flags import ExperimentalFlagConfig
 from cmk.gui.log import logger
 from cmk.ruleset_matcher.definition import RuleGroupType
 from cmk.utils import paths
@@ -18,7 +19,12 @@ class GlobalSettings(BaseModel):
     is_activate: set[str]
 
     def is_activated(self, varname: str) -> bool:
-        return edition(paths.omd_root) is not Edition.CLOUD or varname in self.is_activate
+        # Experimental flags are not on the allow list: CMK_DEV alone decides whether they show.
+        return (
+            edition(paths.omd_root) is not Edition.CLOUD
+            or varname in self.is_activate
+            or varname in ExperimentalFlagConfig.model_fields
+        )
 
 
 class RuleSetGroup(BaseModel):

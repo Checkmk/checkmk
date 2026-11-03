@@ -9,6 +9,7 @@ from typing import override, TypeGuard
 from cmk.gui.i18n import _, translate_to_current_language
 from cmk.rulesets.internal.form_specs import SingleChoiceElementExtended, SingleChoiceExtended
 from cmk.rulesets.v1 import Message
+from cmk.rulesets.v1.form_specs import DefaultValue as PrefillDefaultValue
 from cmk.rulesets.v1.form_specs import InvalidElementMode
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
@@ -147,16 +148,17 @@ class SingleChoiceVisitor[T](
     ) -> tuple[shared_type_defs.SingleChoice, str | None]:
         title, help_text = get_title_and_help(self.form_spec)
 
+        available_elements = (
+            parsed_value.fallback_value.available_elements
+            if isinstance(parsed_value, InvalidValue)
+            else parsed_value.available_elements
+        )
         elements = [
             shared_type_defs.SingleChoiceElement(
                 name=self.option_id(element.name),
                 title=element.title.localize(translate_to_current_language),
             )
-            for element in (
-                parsed_value.fallback_value.available_elements
-                if isinstance(parsed_value, InvalidValue)
-                else parsed_value.available_elements
-            )
+            for element in available_elements
         ]
 
         input_hint = compute_title_input_hint(self.form_spec.prefill)
@@ -181,6 +183,8 @@ class SingleChoiceVisitor[T](
                 validators=build_vue_validators(compute_validators(self.form_spec)),
                 frozen=self.form_spec.frozen and isinstance(parsed_value, _ValidValue),
                 input_hint=input_hint or _("Please choose"),
+                has_default_value=isinstance(self.form_spec.prefill, PrefillDefaultValue)
+                and self._is_valid_choice(self.form_spec.prefill.value, available_elements),
                 no_elements_text=localize(self.form_spec.no_elements_text),
             ),
             parsed_value.fallback_value.value

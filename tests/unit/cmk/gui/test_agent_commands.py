@@ -5,10 +5,9 @@
 
 """The agent slideout rewrites these command templates in the browser.
 
-`packages/cmk-frontend-vue/src/mode-host/agent-connection-test/lib/commandTemplate.ts`
-substitutes the macros and the token placeholders below. Nothing else ties the
-two ends together, so renaming one here without the other would leave the
-slideout handing out commands that cannot be run.
+The page hands the slideout the macros and token placeholders it substitutes, so
+the browser always looks for the ones defined in `cmk.gui.agent_commands`. These
+tests make sure the templates use exactly those.
 
 The commercial editions build their install commands in
 `cmk/gui/nonfree/pro/agent_commands.py`; the same contract is checked for those
@@ -25,14 +24,17 @@ from cmk.gui.agent_commands import (
     build_agent_registration_cmds,
     build_agent_status_cmds,
     build_kubernetes_helm_cmd,
+    DOWNLOAD_TOKEN_PLACEHOLDER,
+    HOST_NAME_MACRO,
     KUBERNETES_VALUES,
+    REGISTRATION_TOKEN_PLACEHOLDER,
+    REGISTRATION_USER_FLAG,
+    SERVER_MACRO,
+    SITE_MACRO,
 )
 from cmk.shared_typing.agent_slideout import AgentInstallCmds
 
-DOWNLOAD_TOKEN_PLACEHOLDER = "[AGENT_DOWNLOAD_OTT]"
-REGISTRATION_USER_FLAG = "--user agent_registration"
-REGISTRATION_TOKEN_PLACEHOLDER = "[AGENT_REGISTRATION_OTT]"
-MACROS = ("{{HOSTNAME}}", "{{SITE}}", "{{SERVER}}")
+MACROS = (HOST_NAME_MACRO, SITE_MACRO, SERVER_MACRO)
 
 #: Commands hitting one of these endpoints have to authorize with a token.
 DOWNLOAD_ENDPOINT_MARKER = "download_by"

@@ -1,0 +1,34 @@
+--- nagvis-1.10.6.orig/share/frontend/nagvis-js/classes/NagVisHeaderMenu.php
++++ nagvis-1.10.6/share/frontend/nagvis-js/classes/NagVisHeaderMenu.php
+@@ -497,6 +497,9 @@
+             'langMgmtBackgrounds' => l('Manage Backgrounds'),
+             'langMgmtMaps' => l('Manage Maps'),
+             'langMgmtShapes' => l('Manage Shapes'),
++            'langDeprecated' => l('Deprecated, see Werk #[WERK]', ['WERK' => 22512]),
++            'deprecationUrl' => cfg('paths', 'htmlcgi') . '/index.py?start_url='
++                . urlencode('werk.py?werk=22512'),
+             'langNeedHelp' => l('needHelp'),
+             'langOnlineDoc' => l('onlineDoc'),
+             'langForum' => l('forum'),
+--- nagvis-1.10.6.orig/share/frontend/nagvis-js/locale/de_DE/LC_MESSAGES/nagvis.po
++++ nagvis-1.10.6/share/frontend/nagvis-js/locale/de_DE/LC_MESSAGES/nagvis.po
+@@ -2121,6 +2121,9 @@
+ msgid "nagiosNotRunning"
+ msgstr "Laut NDO läuft der Nagios-Dienst nicht."
+
++msgid "Deprecated, see Werk #[WERK]"
++msgstr "Veraltet, siehe Werk #[WERK]"
++
+ #: share/frontend/nagvis-js/classes/NagVisHeaderMenu.php:403
+ msgid "needHelp"
+ msgstr "Hilfe?"
+--- nagvis-1.10.6.orig/share/userfiles/templates/default.header.html
++++ nagvis-1.10.6/share/userfiles/templates/default.header.html
+@@ -126,6 +126,7 @@
+     {/if}
+ </ul>
+ <ul class="head right">
++    <li><a href="{$deprecationUrl}" target="_top">{$langDeprecated}</a></li>
+     <li><div id="refreshCounterHead"></div></li>
+     <li id="editIndicator" style="display:none">
+         <span>Edit Mode!</span>

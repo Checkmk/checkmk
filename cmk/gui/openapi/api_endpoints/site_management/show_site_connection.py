@@ -17,9 +17,12 @@ from cmk.gui.openapi.framework import (
     PathParam,
     VersionedEndpoint,
 )
-from cmk.gui.openapi.framework.model.converter import SiteIdConverter, TypedPlainValidator
+from cmk.gui.openapi.framework.model.converter import (
+    folder_tree_of_request,
+    SiteIdConverter,
+    TypedPlainValidator,
+)
 from cmk.gui.openapi.restful_objects.constructors import object_href
-from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.site_management import SitesApiMgr
 
 from .endpoint_family import SITE_MANAGEMENT_FAMILY
@@ -38,7 +41,7 @@ def show_site_connection_v1(
     """Show a site connection"""
     user.need_permission("wato.sites")
     return SiteConnectionModel.from_internal(
-        make_folder_tree(api_context.config), SitesApiMgr().get_a_site(site_id)
+        folder_tree_of_request(api_context), SitesApiMgr().get_a_site(site_id)
     )
 
 

@@ -89,6 +89,7 @@ def execute_checkmk_checks(
     exit_spec: ExitSpec,
     section_error_handling: Callable[[SectionName, Sequence[object]], str],
     timeperiods_active: Mapping[str, bool],
+    debug: bool,
 ) -> Sequence[ActiveCheckResult]:
     host_sections = parser(fetched)
     host_sections_by_host = group_by_host(
@@ -99,6 +100,7 @@ def execute_checkmk_checks(
         host_sections_by_host,
         section_plugins,
         error_handling=section_error_handling,
+        debug=debug,
     )
     service_results = list(
         check_host_services(
@@ -123,6 +125,7 @@ def execute_checkmk_checks(
             inventory_plugins=inventory_plugins,
             params=params,
             providers=providers,
+            debug=debug,
         )
     return [
         *summarizer(host_sections),
@@ -141,6 +144,7 @@ def _do_inventory_actions_during_checking_for(
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     params: HWSWInventoryParameters,
     providers: Mapping[HostKey, Provider],
+    debug: bool,
 ) -> None:
     inv_store = InventoryStore(omd_root)
 
@@ -155,6 +159,7 @@ def _do_inventory_actions_during_checking_for(
         providers=providers,
         inventory_plugins=inventory_plugins,
         run_plugin_names=EVERYTHING,
+        debug=debug,
     )
 
     if status_data_tree:

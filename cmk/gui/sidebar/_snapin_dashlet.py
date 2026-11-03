@@ -7,7 +7,7 @@ import contextlib
 from collections.abc import Iterator
 from typing import override
 
-from cmk.gui.config import active_config, Config, RequestCacheConfig
+from cmk.gui.config import Config, RequestCacheConfig
 from cmk.gui.dashboard.dashlet.base import IFrameDashlet
 from cmk.gui.dashboard.type_defs import SnapinDashletConfig
 from cmk.gui.exceptions import MKUserError
@@ -15,9 +15,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import Page, PageContext
-from cmk.gui.permissions import permission_registry
 from cmk.gui.theme.current_theme import theme
-from cmk.gui.utils.roles import UserPermissions
 from cmk.web.utils.request_cache import RequestCache
 
 from ..dashboard.dashlet.base import RelativeLayoutConstraints, WidgetSize
@@ -54,9 +52,7 @@ class SnapinDashlet(IFrameDashlet[SnapinDashletConfig]):
 
     @override
     def default_display_title(self, _request_cache: RequestCache[RequestCacheConfig]) -> str:
-        return all_snapins(
-            UserPermissions.from_config(active_config, permission_registry),
-        )[self._dashlet_spec["snapin"]].title()
+        return all_snapins()[self._dashlet_spec["snapin"]].title()
 
 
 class SnapinWidgetIFramePage(Page):
@@ -64,9 +60,7 @@ class SnapinWidgetIFramePage(Page):
     def page(self, ctx: PageContext) -> None:
         """Render a snapin for use in an iframe."""
         snapin_name = ctx.request.get_ascii_input_mandatory("name")
-        snapin_instance = self._get_snapin_instance(
-            snapin_name, UserPermissions.from_config(ctx.config, permission_registry)
-        )
+        snapin_instance = self._get_snapin_instance(snapin_name)
 
         html.browser_reload = False
         html.html_head(
@@ -85,8 +79,8 @@ class SnapinWidgetIFramePage(Page):
         html.body_end()
 
     @staticmethod
-    def _get_snapin_instance(snapin_name: str, user_permissions: UserPermissions) -> SidebarSnapin:
-        snapin = all_snapins(user_permissions).get(snapin_name)
+    def _get_snapin_instance(snapin_name: str) -> SidebarSnapin:
+        snapin = all_snapins().get(snapin_name)
         if not snapin:
             raise MKUserError(None, _("The configured element does not exist."))
         return snapin()

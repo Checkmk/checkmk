@@ -35,7 +35,9 @@ from cmk.ccc.hostaddress import HostName  # noqa: E402
 from cmk.ccc.user import UserId  # noqa: E402
 from cmk.gui import login  # noqa: E402
 from cmk.gui.config import Config  # noqa: E402
-from cmk.gui.permissions import permission_registry  # noqa: E402
+from cmk.gui.permissions import (  # noqa: E402
+    all_permissions,
+)
 from cmk.gui.utils.roles import UserPermissions  # noqa: E402
 from cmk.licensing.handler import (  # noqa: E402
     LicenseState,
@@ -312,7 +314,13 @@ def with_admin(load_config: Config) -> Iterator[tuple[UserId, str]]:
 def with_admin_login(load_config: Config, with_admin: tuple[UserId, str]) -> Iterator[UserId]:
     user_id = with_admin[0]
     with login.TransactionIdContext(
-        user_id, UserPermissions(load_config.roles, permission_registry, {user_id: ["admin"]}, [])
+        user_id,
+        UserPermissions(
+            load_config.roles,
+            all_permissions(),
+            {user_id: ["admin"]},
+            [],
+        ),
     ):
         yield user_id
 

@@ -75,7 +75,7 @@ const tiles = computed(() =>
         <CmkIconButton
           v-if="props.deletable"
           name="delete"
-          size="xsmall"
+          size="medium"
           class="maps-image-grid__delete"
           :title="_t('Delete image')"
           :aria-label="_t('Delete image %{name}', { name: tile.name })"
@@ -150,16 +150,11 @@ const tiles = computed(() =>
   white-space: nowrap;
 }
 
+/* Always shown, at the size of the delete icons in Checkmk's tables: a button
+   that only appears on hover is one a touch screen never offers. */
 .maps-image-grid__delete {
   position: absolute;
   top: var(--dimension-3);
   right: var(--dimension-3);
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-
-.maps-image-grid__delete:focus-visible,
-.maps-image-grid__tile:hover .maps-image-grid__delete {
-  opacity: 1;
 }
 </style>

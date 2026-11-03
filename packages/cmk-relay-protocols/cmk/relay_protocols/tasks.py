@@ -19,6 +19,12 @@ AD_HOC_FILES_DIR: Final = PurePosixPath("tmp/check_mk")
 class HEADERS(StrEnum):
     SERIAL = "X-CMK-SERIAL"
     VERSION = "X-CMK-VERSION"
+    # Sent by the relay: comma separated ConfigEncoding values it can unpack.
+    CONFIG_ENCODING = "X-CMK-CONFIG-ENCODING"
+
+
+class ConfigEncoding(StrEnum):
+    GZIP = "gzip"
 
 
 class _TaskType(StrEnum):

@@ -46,7 +46,7 @@ from pydantic import BaseModel
 from setproctitle import setthreadtitle
 
 import cmk.bi.filesystem
-import cmk.ec.export as ec  # astrein: disable=cmk-module-layer-violation
+import cmk.ec.export as ec  # astrein: disable=module-layers
 import cmk.gui.watolib.automations
 import cmk.gui.watolib.sidebar_reload
 import cmk.gui.watolib.utils
@@ -83,7 +83,7 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.nodevis.utils import topology_configs_dir, topology_settings_lookup
 from cmk.gui.ntop import ntop_connection
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.search import index as search_index
 from cmk.gui.site_config import (
     is_distributed_setup_remote_site,
@@ -110,6 +110,7 @@ from cmk.gui.utils.roles import (
     UserPermissionSerializableConfig,
 )
 from cmk.gui.watolib import backup_snapshots
+from cmk.gui.watolib.agent_registration import uuid_links_locked
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import (
@@ -156,7 +157,6 @@ from cmk.gui.watolib.hosts_and_folders import (
     ACTIVATION_FOLDER_TREE,
     collect_all_hosts,
     collect_hosts,
-    folder_preserving_link,
     FolderTree,
     HostsAndFoldersConfig,
     make_folder_tree,
@@ -178,7 +178,7 @@ from cmk.livestatus_client import (
     SiteConfiguration,
     SiteConfigurations,
 )
-from cmk.messaging import rabbitmq
+from cmk.messaging import CMKConnectionError, rabbitmq
 from cmk.ruleset_matcher.tags import TagConfig, TagConfigSpec
 from cmk.shared_typing.changes import (
     ActivationPhase,
@@ -430,13 +430,20 @@ def sync_changes_from_active_config_before_remote_automation(site_id: SiteId, de
     """Sync for callers that hold no folder tree, such as the automation wrappers.
 
     The sync takes the sites and the snapshot settings from the active config
-    anyway, so the tree comes from the active config as well.
+    anyway, so the tree comes from the active config as well. It is only built
+    when the site needs a sync, which most remote automation calls do not.
     """
-    sync_changes_before_remote_automation(make_folder_tree(active_config), site_id, debug)
+    _sync_changes_before_remote_automation(lambda: make_folder_tree(active_config), site_id, debug)
 
 
 # If the site is not up-to-date, synchronize it first.
 def sync_changes_before_remote_automation(tree: FolderTree, site_id: SiteId, debug: bool) -> None:
+    _sync_changes_before_remote_automation(lambda: tree, site_id, debug)
+
+
+def _sync_changes_before_remote_automation(
+    make_tree: Callable[[], FolderTree], site_id: SiteId, debug: bool
+) -> None:
     manager = ActivateChangesManager()
     # TODO: So far we used active_config.sites. Would it be enough to use [site_id]?
     manager.changes.load(list(active_config.sites))
@@ -448,7 +455,7 @@ def sync_changes_before_remote_automation(tree: FolderTree, site_id: SiteId, deb
 
     manager.start(
         sites=[site_id],
-        tree=tree,
+        tree=make_tree(),
         activate_foreign=True,
         prevent_activate=True,
         source="INTERNAL",
@@ -1893,20 +1900,36 @@ def _distribute_central_piggyback_configs(
     ):
         return
 
+    _distribute_piggyback_hub_configs(activation_features, all_site_configs, sites, tree)
+
+
+def _distribute_piggyback_hub_configs(
+    activation_features: ActivationFeatures,
+    all_site_configs: SiteConfigurations,
+    sites: Sequence[SiteId],
+    tree: FolderTree,
+) -> None:
     with (
         tracer.span("distribute_piggyback_hub_configs"),
         _debug_log_message("Starting piggyback hub config distribution"),
     ):
-        activation_features.distribute_piggyback_hub_configs(
-            logger,
-            load_configuration_settings(),
-            all_site_configs,
-            sites,
-            {
-                host_name: host.site_id()
-                for host_name, host in tree.root_folder().all_hosts_recursively().items()
-            },
-        )
+        try:
+            activation_features.distribute_piggyback_hub_configs(
+                logger,
+                load_configuration_settings(),
+                all_site_configs,
+                sites,
+                {
+                    host_name: host.site_id()
+                    for host_name, host in tree.root_folder().all_hosts_recursively().items()
+                },
+            )
+        except CMKConnectionError as e:
+            logger.warning(
+                "The piggyback hub configuration was not distributed, because the connection "
+                "to the local message broker failed: %(error)s",
+                {"error": e},
+            )
 
 
 class ActivateChangesManager:
@@ -2111,11 +2134,7 @@ class ActivateChangesManager:
                 _("You cannot activate changes while some hosts have an invalid configuration: ")
                 + ", ".join(
                     [
-                        '<a href="%s">%s</a>'
-                        % (
-                            folder_preserving_link(_request, [("mode", "edit_host"), ("host", hn)]),
-                            hn,
-                        )
+                        f'<a href="{tree.load_host(hn).edit_url()}">{hn}</a>'
                         for hn in defective_hosts
                     ]
                 ),
@@ -3247,7 +3266,10 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
         tree: FolderTree,
     ) -> None:
         with job_interface.gui_context(
-            UserPermissions.from_serialized_config(user_permission_config, permission_registry)
+            UserPermissions.from_serialized_config(
+                user_permission_config,
+                all_permissions(),
+            )
         ):
             job_interface.send_progress_update(
                 _("Activate changes scheduler started"), with_timestamp=True
@@ -3396,9 +3418,11 @@ def _update_links_for_agent_receiver(tree: FolderTree) -> None:
         data_source_dir=paths.data_source_push_agent_dir,
         r4r_discoverable_dir=paths.r4r_discoverable_dir,
         uuid_lookup_dir=paths.uuid_lookup_dir,
+        registrations_dir=paths.registrations_dir,
     )
 
-    uuid_link_manager.update_links(collect_all_hosts(tree))
+    with uuid_links_locked():
+        uuid_link_manager.update_links(collect_all_hosts(tree))
 
 
 def serialize_domain_requests(domain_requests: DomainRequests) -> str:
@@ -3518,7 +3542,8 @@ class RemoteActivationBackgroundJob(BackgroundJob):
         try:
             with job_interface.gui_context(
                 UserPermissions.from_serialized_config(
-                    args.user_permission_config, permission_registry
+                    args.user_permission_config,
+                    all_permissions(),
                 )
             ):
                 warnings = execute_activate_changes(

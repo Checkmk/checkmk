@@ -11,6 +11,7 @@ import traceback
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
 
+import omdlib
 from omdlib.admin_mail import ADMIN_MAIL
 from omdlib.agent_receiver import AGENT_RECEIVER, AGENT_RECEIVER_PORT
 from omdlib.automation_helper import AUTOMATION_HELPER
@@ -40,6 +41,7 @@ from omdlib.maps import MAPS
 from omdlib.mcp import MCP_SERVER, MCP_TRACE_FORWARD
 from omdlib.mkeventd import MKEVENTD, MKEVENTD_SNMPTRAP, MKEVENTD_SYSLOG, MKEVENTD_SYSLOG_TCP
 from omdlib.multisite import MULTISITE_AUTHORISATION, MULTISITE_COOKIE_AUTH
+from omdlib.nagvis import NAGVIS
 from omdlib.opentelemetry import (
     OPENTELEMETRY_COLLECTOR,
     OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT,
@@ -55,6 +57,7 @@ from omdlib.rabbitmq import (
 from omdlib.site_paths import SitePaths
 from omdlib.sites import all_sites
 from omdlib.system_apache import (
+    APACHE_FORWARDED_HEADERS,
     APACHE_MODE,
     APACHE_TCP_ADDR,
     APACHE_TCP_PORT,
@@ -62,7 +65,7 @@ from omdlib.system_apache import (
 from omdlib.tmpfs import TMPFS
 
 from cmk.ccc.exceptions import MKTerminate
-from cmk.ccc.version import edition
+from cmk.ccc.version import Edition
 
 ConfigHookResult = tuple[int, str]
 
@@ -146,6 +149,7 @@ _HOOKS: Sequence[Hook | PortHook] = [
     ADMIN_MAIL,
     AGENT_RECEIVER,
     AGENT_RECEIVER_PORT,
+    APACHE_FORWARDED_HEADERS,
     APACHE_MODE,
     APACHE_TCP_ADDR,
     APACHE_TCP_PORT,
@@ -168,6 +172,7 @@ _HOOKS: Sequence[Hook | PortHook] = [
     MKEVENTD_SYSLOG_TCP,
     MULTISITE_AUTHORISATION,
     MULTISITE_COOKIE_AUTH,
+    NAGVIS,
     OPENTELEMETRY_COLLECTOR,
     OPENTELEMETRY_COLLECTOR_SELF_MONITORING_PORT,
     PIGGYBACK_HUB,
@@ -212,7 +217,9 @@ def load_config(site_name: str, hook_dir: str | None, omd_path: Path = Path("/om
                         )
                     )
                 else:
-                    config[hook_name] = hook.default(edition(Path(site_home)))
+                    config[hook_name] = hook.default(
+                        Edition.from_version_string(omdlib.__version__)
+                    )
     return config
 
 

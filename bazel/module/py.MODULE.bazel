@@ -26,7 +26,7 @@ python.toolchain(
     python_version = "3.14",
 )
 
-# rules_uv py3_runtime for //agents/modules/windows:requirements_windows; the
+# rules_uv py3_runtime for //agents/modules/windows:windows_requirements; the
 # version infix must track PYTHON_VERSION_WINDOWS's major.minor (same guard).
 use_repo(python, "python_3_14_x86_64-unknown-linux-gnu")
 

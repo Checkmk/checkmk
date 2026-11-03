@@ -31,6 +31,14 @@ test('reports invalid when no spread is entered', () => {
   expect(emitted('update:valid')?.at(-1)).toEqual([false])
 })
 
+test('points out a missing spread once asked to show errors', async () => {
+  const { rerender } = mountForm({ spreadMinutes: undefined })
+  expect(screen.queryByText('Enter 0 or more minutes.')).not.toBeInTheDocument()
+
+  await rerender({ showErrors: true })
+  expect(screen.getByText('Enter 0 or more minutes.')).toBeInTheDocument()
+})
+
 test('renders the spread-over input', () => {
   mountForm()
 

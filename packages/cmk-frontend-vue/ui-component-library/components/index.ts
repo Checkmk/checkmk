@@ -15,7 +15,6 @@ import UclIcons from '../foundations/Icons/UclIcons.vue'
 import { pages as globalSettingsPages } from '../global-settings'
 import { pages as graphingPages } from '../graphing'
 import { pages as monitoringPages } from '../monitoring'
-import { pages as networkFlowPages } from '../network-flow'
 import { pages as telemetryMetricsPages } from '../telemetry-metrics'
 import { pages as twoFactorAuthPages } from '../two-factor-authentication'
 import UclCmkBadge from './basic-elements/CmkBadge/UclCmkBadge.vue'
@@ -23,6 +22,7 @@ import UclCmkButton from './basic-elements/CmkButton/UclCmkButton.vue'
 import UclCmkChip from './basic-elements/CmkChip/UclCmkChip.vue'
 import UclCmkCode from './basic-elements/CmkCode/UclCmkCode.vue'
 import UclCmkColorPicker from './basic-elements/CmkColorPicker/UclCmkColorPicker.vue'
+import UclCmkColorSwatch from './basic-elements/CmkColorSwatch/UclCmkColorSwatch.vue'
 import UclCmkIconButton from './basic-elements/CmkIconButton/UclCmkIconButton.vue'
 import UclCmkIconLink from './basic-elements/CmkIconLink/UclCmkIconLink.vue'
 import UclCmkInlineButton from './basic-elements/CmkInlineButton/UclCmkInlineButton.vue'
@@ -52,6 +52,7 @@ import UclCmkDropdown from './form-elements/CmkDropdown/UclCmkDropdown.vue'
 import UclCmkDualList from './form-elements/CmkDualList/UclCmkDualList.vue'
 import UclCmkInput from './form-elements/CmkInput/UclCmkInput.vue'
 import UclCmkList from './form-elements/CmkList/UclCmkList.vue'
+import UclCmkMultiselectList from './form-elements/CmkMultiselectList/UclCmkMultiselectList.vue'
 import UclCmkRadioButton from './form-elements/CmkRadioButton/UclCmkRadioButton.vue'
 import UclCmkSearchInput from './form-elements/CmkSearchInput/UclCmkSearchInput.vue'
 import UclCmkSlideInDropdown from './form-elements/CmkSlideInDropdown/UclCmkSlideInDropdown.vue'
@@ -61,7 +62,6 @@ import UclCmkDatePicker from './form-elements/date-time/UclCmkDatePicker.vue'
 import UclCmkDateTimePicker from './form-elements/date-time/UclCmkDateTimePicker.vue'
 import UclCmkTimePicker from './form-elements/date-time/UclCmkTimePicker.vue'
 import UclCmkTimeRangePicker from './form-elements/date-time/UclCmkTimeRangePicker.vue'
-import UclCmkTimeRangeTooltip from './form-elements/date-time/UclCmkTimeRangeTooltip.vue'
 import UclCmkFilterDisplayItem from './form-elements/filter/UclCmkFilterDisplayItem.vue'
 import UclCmkFilterInputItem from './form-elements/filter/UclCmkFilterInputItem.vue'
 import UclCmkFilterSelection from './form-elements/filter/UclCmkFilterSelection.vue'
@@ -82,6 +82,7 @@ import UclCmkParagraph from './foundation-elements/typography/UclCmkParagraph.vu
 import UclArrowDown from './graphics/ArrowDown/UclArrowDown.vue'
 import UclCmkBreadcrumb from './navigation/CmkBreadcrumb/UclCmkBreadcrumb.vue'
 import UclCmkLinkCard from './navigation/CmkLinkCard/UclCmkLinkCard.vue'
+import UclCmkMenu from './navigation/CmkMenu/UclCmkMenu.vue'
 import UclCmkAlert from './system-feedback/CmkAlert/UclCmkAlert.vue'
 import UclCmkAsyncContent from './system-feedback/CmkAsyncContent/UclCmkAsyncContent.vue'
 import UclCmkCopy from './system-feedback/CmkCopy/UclCmkCopy.vue'
@@ -111,6 +112,7 @@ const basicElementsPages = [
   new Page('CmkChip', UclCmkChip),
   new Page('CmkCode', UclCmkCode),
   new Page('CmkColorPicker', UclCmkColorPicker),
+  new Page('CmkColorSwatch', UclCmkColorSwatch, { status: 'new', statusSince: '2026-10-26' }),
   new Page('CmkLabeledSwitch', UclCmkLabeledSwitch),
   new Page('CmkLink', UclCmkLink),
   new Page('CmkSwitch', UclCmkSwitch),
@@ -143,6 +145,7 @@ const formElementsPages = [
   new Page('CmkDualList', UclCmkDualList),
   new Page('CmkInput', UclCmkInput),
   new Page('CmkList', UclCmkList),
+  new Page('CmkMultiselectList', UclCmkMultiselectList),
   new Page('CmkRadioButton', UclCmkRadioButton),
   new Page('CmkSearchInput', UclCmkSearchInput),
   new Page('CmkSlideInDropdown', UclCmkSlideInDropdown),
@@ -152,8 +155,7 @@ const formElementsPages = [
     new Page('CmkTimePicker', UclCmkTimePicker),
     new Page('CmkDatePicker', UclCmkDatePicker),
     new Page('CmkDateTimePicker', UclCmkDateTimePicker),
-    new Page('CmkTimeRangePicker', UclCmkTimeRangePicker),
-    new Page('CmkTimeRangeTooltip', UclCmkTimeRangeTooltip)
+    new Page('CmkTimeRangePicker', UclCmkTimeRangePicker)
   ]),
   new Folder('Filters', [
     new Page('CmkFilterInputItem', UclCmkFilterInputItem),
@@ -189,7 +191,8 @@ const graphicsPages = [new Page('ArrowDown', UclArrowDown)]
 
 const navigationPages = [
   new Page('CmkBreadcrumb', UclCmkBreadcrumb),
-  new Page('CmkLinkCard', UclCmkLinkCard)
+  new Page('CmkLinkCard', UclCmkLinkCard),
+  new Page('CmkMenu', UclCmkMenu, { status: 'new', statusSince: '2026-10-26' })
 ]
 
 const systemFeedbackPages = [
@@ -213,7 +216,7 @@ const systemFeedbackPages = [
   new Page('CmkStateCountBar', UclCmkStateCountBar),
   new Page('CmkSurfaceNotice', UclCmkSurfaceNotice),
   new Page('StateTag', UclStateTag),
-  new Page('CmkTooltip', UclCmkTooltip)
+  new Page('CmkTooltip', UclCmkTooltip, { status: 'updated', statusSince: '2026-10-13' })
 ]
 export const roots = [
   new Folder('Foundations', foundationsPages, true),
@@ -239,7 +242,6 @@ export const roots = [
     new Folder('Graphing', graphingPages),
     new Folder('Telemetry metrics', telemetryMetricsPages),
     new Folder('Monitoring', monitoringPages),
-    new Folder('Network flow', networkFlowPages),
     new Folder('Two Factor Authentication', twoFactorAuthPages)
   ])
 ]

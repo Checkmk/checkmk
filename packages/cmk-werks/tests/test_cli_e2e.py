@@ -36,6 +36,7 @@ def initialize_werks_project(
         extra_options.append(f'werk_ids_server_url = "{werk_ids_server_url}"')
     extra_config = "\n".join(extra_options)
     (werks / "config").write_text(f"""
+flavor = "cmk"
 editions = [("community", "COMMUNITY")]
 components = [("ccc", "CCC")]
 edition_components = {"{}"}

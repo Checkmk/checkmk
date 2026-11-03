@@ -6,22 +6,17 @@
 from collections.abc import Mapping
 
 from cmk.graphing_engine import (
-    AutoPrecision,
-    DecimalNotation,
-    EngineeringScientificNotation,
-    IECNotation,
     NonConvertibleUnit,
     Notation,
+    notation_from_name,
+    notation_name,
     Precision,
-    SINotation,
-    StandardScientificNotation,
-    StrictPrecision,
-    TimeNotation,
+    precision_from_kind,
+    precision_kind,
     Unit,
 )
 
 from ._decoding import ensure_type
-from ._unit_format import notation_name, precision_kind
 
 
 def unit_to_specification(unit: Unit | NonConvertibleUnit) -> Mapping[str, object]:
@@ -34,34 +29,16 @@ def unit_to_specification(unit: Unit | NonConvertibleUnit) -> Mapping[str, objec
 
 def _notation_from_specification(raw: object) -> Notation:
     specification = ensure_type(raw, dict)
-    symbol = ensure_type(specification["symbol"], str)
-    match specification["type"]:
-        case "decimal":
-            return DecimalNotation(symbol)
-        case "si":
-            return SINotation(symbol)
-        case "iec":
-            return IECNotation(symbol)
-        case "standard_scientific":
-            return StandardScientificNotation(symbol)
-        case "engineering_scientific":
-            return EngineeringScientificNotation(symbol)
-        case "time":
-            return TimeNotation(symbol)
-        case other:
-            raise ValueError(f"unknown notation: {other!r}")
+    return notation_from_name(
+        ensure_type(specification["type"], str), ensure_type(specification["symbol"], str)
+    )
 
 
 def _precision_from_specification(raw: object) -> Precision:
     specification = ensure_type(raw, dict)
-    digits = ensure_type(specification["digits"], int)
-    match specification["type"]:
-        case "auto":
-            return AutoPrecision(digits)
-        case "strict":
-            return StrictPrecision(digits)
-        case other:
-            raise ValueError(f"unknown precision: {other!r}")
+    return precision_from_kind(
+        ensure_type(specification["type"], str), ensure_type(specification["digits"], int)
+    )
 
 
 def _unit_from_specification(raw: object) -> Unit | NonConvertibleUnit:

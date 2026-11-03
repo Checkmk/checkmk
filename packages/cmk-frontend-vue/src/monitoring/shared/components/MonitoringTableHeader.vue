@@ -153,6 +153,15 @@ function extendSort(table: Table<T>, column: Column<T, unknown>, direction: Sort
   )
 }
 
+function toggleSort(table: Table<T>, column: Column<T, unknown>, event: MouseEvent): void {
+  const multi = column.getCanMultiSort() && (table.options.isMultiSortEvent?.(event) ?? false)
+  if (column.getSortIndex() > 0 && !multi) {
+    table.setSorting([{ id: column.id, desc: column.getFirstSortDir() === 'desc' }])
+    return
+  }
+  column.getToggleSortingHandler()?.(event)
+}
+
 function columnLabel(column: Column<T, unknown>): string {
   return column.columnDef.header?.toString() ?? column.id
 }
@@ -332,7 +341,7 @@ function reservesFilterSpace(header: Header<T, unknown>): boolean {
             :style="contentStyle(header.column.columnDef)"
             :disabled="disabled"
             @mouseenter="showTitleIfHidden($event, header.column)"
-            @click="header.column.getToggleSortingHandler()?.($event)"
+            @click="toggleSort(header.getContext().table, header.column, $event)"
           >
             <span class="monitoring-table-header__label">
               <FlexRender :render="header.column.columnDef.header" :props="header.getContext()" />

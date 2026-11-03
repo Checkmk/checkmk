@@ -51,6 +51,20 @@ from cmk.relay_protocols import tasks as tasks_protocol
 router = fastapi.APIRouter()
 
 
+def _accepted_config_encoding(
+    # Plain str: an encoding added in a later relay must not make the endpoints reject it.
+    header: Annotated[
+        str | None, fastapi.Header(alias=tasks_protocol.HEADERS.CONFIG_ENCODING)
+    ] = None,
+) -> tasks_protocol.ConfigEncoding | None:
+    accepted = {e.strip() for e in (header or "").split(",")}
+    return (
+        tasks_protocol.ConfigEncoding.GZIP
+        if tasks_protocol.ConfigEncoding.GZIP in accepted
+        else None
+    )
+
+
 @router.post(
     "/{relay_id}/tasks",
     status_code=fastapi.status.HTTP_200_OK,
@@ -131,6 +145,9 @@ async def update_task(
     task_id: str,
     request: tasks_protocol.TaskUpdateRequest,
     handler: Annotated[UpdateTaskHandler, fastapi.Depends(get_update_task_handler)],
+    config_encoding: Annotated[
+        tasks_protocol.ConfigEncoding | None, fastapi.Depends(_accepted_config_encoding)
+    ],
 ) -> tasks_protocol.TaskResponse:
     """Update a task with results.
 
@@ -168,7 +185,7 @@ async def update_task(
             status_code=fastapi.status.HTTP_502_BAD_GATEWAY,
             detail=e.msg,
         )
-    return TaskResponseSerializer.serialize(updated_task)
+    return TaskResponseSerializer.serialize(updated_task, config_encoding)
 
 
 # TODO try to use dependency to check the serial mismatch
@@ -186,6 +203,9 @@ async def get_tasks_endpoint(
     relay_id: str,
     handler: Annotated[GetRelayTasksHandler, fastapi.Depends(get_relay_tasks_handler)],
     version_handler: Annotated[GetVersionHandler, fastapi.Depends(get_version_handler)],
+    config_encoding: Annotated[
+        tasks_protocol.ConfigEncoding | None, fastapi.Depends(_accepted_config_encoding)
+    ],
     relay_serial: Annotated[int | None, fastapi.Header(alias=tasks_protocol.HEADERS.SERIAL)] = None,
     if_none_match: Annotated[str | None, fastapi.Header()] = None,
     status: Annotated[
@@ -224,22 +244,24 @@ async def get_tasks_endpoint(
             status_code=fastapi.status.HTTP_502_BAD_GATEWAY,
             detail=e.msg,
         )
-    etag = _task_list_etag(tasks)
+    etag = _task_list_etag(tasks, config_encoding)
     headers = {
         "ETag": etag,
         tasks_protocol.HEADERS.VERSION: version_handler.process(),
     }
     if if_none_match == etag:
         return fastapi.Response(status_code=HTTPStatus.NOT_MODIFIED, headers=headers)
-    body = TaskListResponseSerializer.serialize(tasks).model_dump_json().encode()
+    body = TaskListResponseSerializer.serialize(tasks, config_encoding).model_dump_json().encode()
     return fastapi.Response(content=body, media_type="application/json", headers=headers)
 
 
-def _task_list_etag(tasks: Sequence[RelayTask]) -> str:
+def _task_list_etag(
+    tasks: Sequence[RelayTask], config_encoding: tasks_protocol.ConfigEncoding | None
+) -> str:
     # Tasks are immutable except through TasksRepository.update_task, which bumps
     # update_timestamp, so id and update_timestamp identify the serialized list without
-    # serializing the config tarballs.
-    digest = hashlib.sha256()
+    # serializing the config tarballs. The encoding changes the body of a config task.
+    digest = hashlib.sha256(f"{config_encoding}\n".encode())
     for task in tasks:
         digest.update(f"{task.id} {task.update_timestamp.isoformat()}\n".encode())
     return f'"{digest.hexdigest()}"'

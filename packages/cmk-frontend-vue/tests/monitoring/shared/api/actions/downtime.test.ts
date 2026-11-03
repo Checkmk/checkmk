@@ -126,3 +126,66 @@ describe('ScheduleDowntimeApi.resolveChildHosts', () => {
     expect(postSpy).toHaveBeenCalledTimes(1)
   })
 })
+
+describe('ScheduleDowntimeApi.scheduleServiceDowntime', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let postSpy: any
+
+  beforeEach(() => {
+    postSpy = vi.spyOn(client, 'POST')
+    postSpy.mockResolvedValue({
+      data: undefined,
+      error: undefined,
+      response: new Response(null, { status: 204 })
+    } as never)
+  })
+
+  it('schedules the downtime for the services of several hosts in one request', async () => {
+    await new ScheduleDowntimeApi().scheduleServiceDowntime(
+      [
+        { host: { site_id: 'local', name: 'web-1' }, description: 'CPU load' },
+        { host: { site_id: 'local', name: 'web-2' }, description: 'Memory' },
+        { host: { site_id: 'local', name: 'web-1' }, description: 'Uptime' }
+      ],
+      OPTIONS
+    )
+
+    expect(postSpy).toHaveBeenCalledTimes(1)
+    expect(postSpy).toHaveBeenCalledWith('/domain-types/downtime/collections/service', {
+      ...CONTENT_TYPE,
+      body: {
+        downtime_type: 'service_by_query',
+        query: {
+          op: 'or',
+          expr: [
+            {
+              op: 'and',
+              expr: [
+                { op: '=', left: 'host_name', right: 'web-1' },
+                {
+                  op: 'or',
+                  expr: [
+                    { op: '=', left: 'description', right: 'CPU load' },
+                    { op: '=', left: 'description', right: 'Uptime' }
+                  ]
+                }
+              ]
+            },
+            {
+              op: 'and',
+              expr: [
+                { op: '=', left: 'host_name', right: 'web-2' },
+                { op: 'or', expr: [{ op: '=', left: 'description', right: 'Memory' }] }
+              ]
+            }
+          ]
+        },
+        start_time: OPTIONS.startTime,
+        end_time: OPTIONS.endTime,
+        recur: OPTIONS.recur,
+        duration: OPTIONS.durationMinutes,
+        comment: OPTIONS.comment
+      }
+    })
+  })
+})

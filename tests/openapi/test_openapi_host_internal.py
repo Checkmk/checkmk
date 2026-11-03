@@ -4,149 +4,50 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from datetime import datetime, timedelta, UTC
 from http import HTTPStatus
 from urllib.parse import urljoin
 from uuid import UUID
 
 import pytest
-from pytest_mock import MockerFixture
 
 from cmk.ccc.hostaddress import HostName
-from cmk.gui.exceptions import MKAuthException
-from cmk.utils.agent_registration import UUIDLinkManager
+from cmk.ccc.user import UserId
+from cmk.gui.oauth.store.client_store import get_client_store
+from cmk.gui.oauth.token.token_store import get_token_store
+from cmk.gui.scopes import ScopeId
+from cmk.utils.agent_registration import RegistrationRoute, UUIDLinkManager
 from cmk.utils.paths import (
     data_source_push_agent_dir,
     r4r_discoverable_dir,
     received_outputs_dir,
+    registrations_dir,
     uuid_lookup_dir,
 )
 from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
 
 _API_BASE = "/NO_SITE/check_mk/api/1.0/"
 _HOST_CONFIG_INTERNAL_BASE = urljoin(_API_BASE, "objects/host_config_internal/")
-_URL_LINK_UUID = urljoin(_HOST_CONFIG_INTERNAL_BASE, "example.com/actions/link_uuid/invoke")
 _URL_REGISTER = urljoin(_HOST_CONFIG_INTERNAL_BASE, "example.com/actions/register/invoke")
 
 
-@pytest.mark.usefixtures("with_host")
-def test_openapi_host_link_uuid_400(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
-    aut_user_auth_wsgi_app.call_method(
-        "put",
-        _URL_LINK_UUID,
-        params=json.dumps({"uuid": "abc-123"}),
-        status=HTTPStatus.BAD_REQUEST,
-        headers={"Accept": "application/json"},
-        content_type="application/json; charset=utf-8",
+def _uuid_link_manager() -> UUIDLinkManager:
+    return UUIDLinkManager(
+        received_outputs_dir=received_outputs_dir,
+        data_source_dir=data_source_push_agent_dir,
+        r4r_discoverable_dir=r4r_discoverable_dir,
+        uuid_lookup_dir=uuid_lookup_dir,
+        registrations_dir=registrations_dir,
     )
 
 
-@pytest.mark.usefixtures("with_host")
-def test_link_with_uuid_403(
-    mocker: MockerFixture,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-) -> None:
-    mocker.patch(
-        "cmk.gui.watolib.hosts_and_folders.PermissionChecker.need_permission",
-        side_effect=MKAuthException("hands off this host"),
-    )
-    assert (
-        aut_user_auth_wsgi_app.call_method(
-            "put",
-            _URL_LINK_UUID,
-            params=json.dumps({"uuid": "1409ac78-6548-4138-9285-12484409ddf2"}),
-            status=HTTPStatus.FORBIDDEN,
-            headers={"Accept": "application/json"},
-            content_type="application/json; charset=utf-8",
-        ).json_body["detail"]
-        == "You do not have write access to the host example.com"
-    )
-    mocker.stopall()
+def _links() -> dict[UUID, HostName]:
+    return {link.uuid: link.hostname for link in _uuid_link_manager()}
 
 
-@pytest.mark.usefixtures("with_host")
-def test_openapi_host_link_uuid_204(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
-    uuid = UUID("1409ac78-6548-4138-9285-12484409ddf2")
-    aut_user_auth_wsgi_app.call_method(
-        "put",
-        _URL_LINK_UUID,
-        params=json.dumps({"uuid": str(uuid)}),
-        status=HTTPStatus.NO_CONTENT,
-        headers={"Accept": "application/json"},
-        content_type="application/json; charset=utf-8",
-    )
-    assert (
-        UUIDLinkManager(
-            received_outputs_dir=received_outputs_dir,
-            data_source_dir=data_source_push_agent_dir,
-            r4r_discoverable_dir=r4r_discoverable_dir,
-            uuid_lookup_dir=uuid_lookup_dir,
-        ).uuid_store.get(HostName("example.com"))
-        == uuid
-    )
-
-
-@pytest.mark.usefixtures("with_host")
-def test_openapi_show_host_ok(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
-    assert aut_user_auth_wsgi_app.call_method(
-        "get",
-        urljoin(_HOST_CONFIG_INTERNAL_BASE, "heute"),
-        status=HTTPStatus.OK,
-        headers={"Accept": "application/json"},
-    ).json_body == {
-        "site": "NO_SITE",
-        "is_cluster": False,
-    }
-
-
-@pytest.mark.usefixtures("with_host")
-def test_openapi_show_host_cluster_ok(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
-    aut_user_auth_wsgi_app.call_method(
-        "post",
-        urljoin(_API_BASE, "domain-types/host_config/collections/clusters"),
-        params='{"host_name": "my-cluster", "folder": "/", "nodes": ["heute"]}',
-        status=HTTPStatus.OK,
-        headers={"Accept": "application/json"},
-        content_type='application/json; charset="utf-8"',
-    )
-    assert aut_user_auth_wsgi_app.call_method(
-        "get",
-        urljoin(_HOST_CONFIG_INTERNAL_BASE, "my-cluster"),
-        status=HTTPStatus.OK,
-        headers={"Accept": "application/json"},
-    ).json_body == {
-        "site": "NO_SITE",
-        "is_cluster": True,
-    }
-
-
-def test_openapi_show_host_missing(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
-    aut_user_auth_wsgi_app.call_method(
-        "get",
-        urljoin(_HOST_CONFIG_INTERNAL_BASE, "missing"),
-        headers={"Accept": "application/json"},
-        status=HTTPStatus.NOT_FOUND,
-    )
-
-
-@pytest.mark.usefixtures("with_host")
-def test_openapi_show_host_403(
-    mocker: MockerFixture,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-) -> None:
-    mocker.patch(
-        "cmk.gui.watolib.hosts_and_folders.PermissionChecker.need_permission",
-        side_effect=MKAuthException("hands off this host"),
-    )
-    assert (
-        aut_user_auth_wsgi_app.call_method(
-            "get",
-            urljoin(_HOST_CONFIG_INTERNAL_BASE, "heute"),
-            headers={"Accept": "application/json"},
-            status=HTTPStatus.FORBIDDEN,
-        ).json_body["detail"]
-        == "You do not have read access to the host heute"
-    )
-    mocker.stopall()
+def _recorded_registration(uuid: UUID) -> dict[str, object] | None:
+    registration = _uuid_link_manager().registration(uuid)
+    return None if registration is None else registration.model_dump(exclude={"registered_at"})
 
 
 @pytest.mark.usefixtures("with_host")
@@ -161,15 +62,34 @@ def test_openapi_host_register_ok(aut_user_auth_wsgi_app: WebTestAppForCMK) -> N
         content_type="application/json; charset=utf-8",
     )
     assert set(response.json) == {"connection_mode"}
-    assert (
-        UUIDLinkManager(
-            received_outputs_dir=received_outputs_dir,
-            data_source_dir=data_source_push_agent_dir,
-            r4r_discoverable_dir=r4r_discoverable_dir,
-            uuid_lookup_dir=uuid_lookup_dir,
-        ).uuid_store.get(HostName("example.com"))
-        == uuid
+    assert _uuid_link_manager().uuid_store.get(HostName("example.com")) == uuid
+
+
+@pytest.mark.usefixtures("with_host")
+def test_openapi_host_register_with_read_scoped_token_reports_insufficient_scope(
+    wsgi_app: WebTestAppForCMK, with_admin: tuple[UserId, str]
+) -> None:
+    with get_client_store() as clients:
+        client_id = clients.register(["https://client.example/callback"], None).ok.client_id
+    with get_token_store() as tokens:
+        token = tokens.issue_token(
+            with_admin[0],
+            expires_at=datetime.now(UTC) + timedelta(minutes=5),
+            resource=None,
+            scope=frozenset({ScopeId.READ}),
+            client_id=client_id,
+        ).ok
+
+    response = wsgi_app.call_method(
+        "put",
+        _URL_REGISTER,
+        params=json.dumps({"uuid": "1409ac78-6548-4138-9285-12484409ddf2"}),
+        status=HTTPStatus.FORBIDDEN,
+        headers={"Accept": "application/json", "Authorization": f"Bearer {token}"},
+        content_type="application/json; charset=utf-8",
     )
+
+    assert response.headers["WWW-Authenticate"] == 'Bearer error="insufficient_scope"'
 
 
 @pytest.mark.usefixtures("with_host")
@@ -226,3 +146,66 @@ def test_openapi_host_register_wrong_site(aut_user_auth_wsgi_app: WebTestAppForC
         content_type='application/json; charset="utf-8"',
     )
     assert any("attributes.site" in key for key in resp.json["fields"])
+
+
+@pytest.mark.usefixtures("with_host")
+def test_openapi_host_register_refuses_a_uuid_that_is_linked_to_another_host(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+) -> None:
+    """CMK-40803 AC1"""
+    uuid = UUID("1409ac78-6548-4138-9285-12484409ddf2")
+    _uuid_link_manager().create_link(HostName("heute"), uuid, push_configured=False)
+
+    aut_user_auth_wsgi_app.call_method(
+        "put",
+        _URL_REGISTER,
+        params=json.dumps({"uuid": str(uuid)}),
+        status=HTTPStatus.CONFLICT,
+        headers={"Accept": "application/json"},
+        content_type="application/json; charset=utf-8",
+    )
+
+    assert _links() == {uuid: HostName("heute")}
+
+
+@pytest.mark.usefixtures("with_host")
+def test_openapi_host_register_refuses_a_uuid_that_is_linked_to_the_same_host(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+) -> None:
+    """CMK-40803 AC1"""
+    uuid = UUID("1409ac78-6548-4138-9285-12484409ddf2")
+    _uuid_link_manager().create_link(HostName("example.com"), uuid, push_configured=False)
+
+    aut_user_auth_wsgi_app.call_method(
+        "put",
+        _URL_REGISTER,
+        params=json.dumps({"uuid": str(uuid)}),
+        status=HTTPStatus.CONFLICT,
+        headers={"Accept": "application/json"},
+        content_type="application/json; charset=utf-8",
+    )
+
+    assert _links() == {uuid: HostName("example.com")}
+
+
+@pytest.mark.usefixtures("with_host")
+def test_openapi_host_register_records_no_update_permission_on_a_site_without_agent_updates(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, with_automation_user: tuple[UserId, str]
+) -> None:
+    """CMK-39504 AC5"""
+    uuid = UUID("1409ac78-6548-4138-9285-12484409ddf2")
+
+    aut_user_auth_wsgi_app.call_method(
+        "put",
+        _URL_REGISTER,
+        params=json.dumps({"uuid": str(uuid)}),
+        status=HTTPStatus.OK,
+        headers={"Accept": "application/json"},
+        content_type="application/json; charset=utf-8",
+    )
+
+    assert _recorded_registration(uuid) == {
+        "agent_updates_permitted": None,
+        "subject": with_automation_user[0],
+        "registration_route": RegistrationRoute.REGISTER,
+    }

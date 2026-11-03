@@ -10,6 +10,7 @@ import itertools
 import time
 from collections.abc import Container, Mapping, Sequence
 from pathlib import Path
+from typing import Literal, TypedDict
 
 import cmk.ccc.cleanup
 import cmk.ccc.debug
@@ -19,6 +20,7 @@ import cmk.utils.paths
 from cmk.base import config
 from cmk.base.app import make_app
 from cmk.base.checkers import CMKFetcher, CMKParser, CMKSummarizer, SectionPluginMapper
+from cmk.base.checking import mandatory_ip_lookup
 from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.base.core.active_config_layout import (
@@ -26,23 +28,9 @@ from cmk.base.core.active_config_layout import (
     RELATIVE_PATH_TRUSTED_CAS,
 )
 from cmk.base.errorhandling import create_section_crash_dump, RecordingFetcher
-from cmk.base.modes.check_mk import (
-    execute_active_check_inventory,
-    extract_plugin_selection,
-    FETCHER_OPTIONS,
-    forced_ip_lookup,
-    get_plugins_option,
-    handle_fetcher_options,
-    InventoryOptions,
-    load_checks,
-    option_detect_plugins,
-    option_sections,
-    parse_snmp_backend,
-    set_fake_dns,
-    SNMP_BACKEND_OPTION,
-)
+from cmk.base.inventory import execute_active_check_inventory
 from cmk.ccc.config_path import VersionedConfigPath
-from cmk.ccc.exceptions import MKBailOut, MKTimeout, OnError
+from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTimeout, OnError
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.timeout import Timeout
 from cmk.checkengine import inventory
@@ -56,7 +44,14 @@ from cmk.checkengine.plugins import InventoryPluginName, SectionName
 from cmk.checkengine.snmplib import SNMPSectionName
 from cmk.checkengine.specs.checkresults import ActiveCheckResult
 from cmk.cli.engine.commands import option_names, option_string
-from cmk.cli.internal import Args, CLICommand, CLIOption, GlobalOptions, Options
+from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Arguments as CLIArguments
+from cmk.cli.internal import Command as CLICommand
+from cmk.cli.internal import Context as CLIContext
+from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
+from cmk.cli.internal import Option as CLIOption
+from cmk.cli.internal import Options
 from cmk.inventory.paths import InventoryPaths
 from cmk.inventory.store import InventoryStore
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
@@ -64,6 +59,19 @@ from cmk.server_side_calls_backend import load_secrets_file
 from cmk.utils import ip_lookup
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.log import console, section
+
+from .agent_based import extract_plugin_selection, load_checks
+from .options import (
+    fake_dns_address,
+    FAKE_DNS_OPTION,
+    FETCHER_OPTIONS,
+    get_plugins_option,
+    handle_fetcher_options,
+    option_detect_plugins,
+    option_sections,
+    parse_snmp_backend,
+    SNMP_BACKEND_OPTION,
+)
 
 # .
 #   .--inventory-----------------------------------------------------------.
@@ -74,6 +82,23 @@ from cmk.utils.log import console, section
 #   |            |_|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |              |
 #   |                                                  |___/               |
 #   '----------------------------------------------------------------------'
+
+
+InventoryOptions = TypedDict(
+    "InventoryOptions",
+    {
+        "cache": Literal[True],
+        "snmp-backend": str,
+        "no-cache": Literal[True],
+        "no-tcp": Literal[True],
+        "usewalk": Literal[True],
+        "force": bool,
+        "detect-sections": frozenset[SectionName],
+        "plugins": frozenset[InventoryPluginName],
+        "detect-plugins": frozenset[str],
+    },
+    total=False,
+)
 
 
 def _inventory_options(parsed: Mapping[str, object]) -> InventoryOptions:
@@ -100,10 +125,10 @@ def _inventory_options(parsed: Mapping[str, object]) -> InventoryOptions:
 
 
 def _mode_inventory(
-    omd_root: Path, global_options: GlobalOptions, parsed: Options, args: Args
-) -> int:
+    omd_root: Path, global_options: CLIGlobalOptions, parsed: Options, args: CLIArgs
+) -> CLIExitCode:
     app = make_app(omd_root)
-    set_fake_dns(global_options.fake_dns)
+    fake_dns = fake_dns_address(parsed)
     options = _inventory_options(parsed)
     file_cache_options = handle_fetcher_options(options)
     try:
@@ -111,8 +136,8 @@ def _mode_inventory(
     except ValueError as exc:
         raise MKBailOut("Unknown SNMP backend") from exc
 
-    plugins = load_checks()
-    loading_result = config.load(validate_hosts=True)
+    plugins = load_checks(debug=global_options.debug)
+    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
     loaded_config = loading_result.loaded_config
     host_tags = loading_result.host_tags
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
@@ -133,9 +158,9 @@ def _mode_inventory(
         plugins.check_plugins,
         label_manager.labels_of_service,
     )
-    ip_lookup_config = config_cache.ip_lookup_config()
+    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -207,6 +232,7 @@ def _mode_inventory(
                         loaded_config, ruleset_matcher, label_manager.labels_of_host
                     ),
                     force_stored_walks=bool(options.get("usewalk", False)),
+                    debug=global_options.debug,
                 ),
             ),
             plugins=plugins,
@@ -216,10 +242,10 @@ def _mode_inventory(
             force_snmp_cache_refresh=False,
             get_ip_stack_config=ip_lookup_config.ip_stack_config,
             ip_address_of=ip_address_of,
-            ip_address_of_mandatory=forced_ip_lookup()
-            or ip_lookup.make_lookup_ip_address(ip_lookup_config),
-            ip_address_of_mgmt=forced_ip_lookup()
-            or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
+            ip_address_of_mandatory=mandatory_ip_lookup(
+                usewalk=bool(options.get("usewalk", False)), ip_lookup_config=ip_lookup_config
+            ),
+            ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
             mode=(
                 FetchMode.INVENTORY
                 if selected_sections is NO_SELECTION
@@ -239,6 +265,7 @@ def _mode_inventory(
             secrets_config_site=StoredSecrets(
                 path=cmk.utils.password_store.pending_secrets_path_site(), secrets=secrets
             ),
+            debug=global_options.debug,
         )
         recording_fetcher = RecordingFetcher(fetcher)
         parser = CMKParser(
@@ -250,6 +277,7 @@ def _mode_inventory(
             ),
             selected_sections=selected_sections,
             keep_outdated=file_cache_options.keep_outdated,
+            debug=global_options.debug,
         )
 
         section_plugins = SectionPluginMapper({**plugins.agent_sections, **plugins.snmp_sections})
@@ -305,6 +333,7 @@ def _mode_inventory(
                         parameters=parameters,
                         raw_intervals_from_config=raw_intervals_from_config,
                         previous_tree=previous_tree,
+                        debug=global_options.debug,
                     ).check_results
 
                 check_result = ActiveCheckResult.from_subresults(*check_results)
@@ -314,35 +343,48 @@ def _mode_inventory(
                     section.section_success(check_result.summary)
 
             except Exception as e:
-                if cmk.ccc.debug.enabled():
+                if global_options.debug:
                     raise
                 section.section_error("%s" % e)
             finally:
                 cmk.ccc.cleanup.cleanup_globals()
-        return 0
+        return CLIExitCode.SUCCESS
+
+
+def _run_inventory(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
+    if context.global_options.debug:
+        # the store reads cmk.ccc.debug
+        cmk.ccc.debug.enable()
+    try:
+        return _mode_inventory(context.omd_root, context.global_options, options, args)
+    except (MKBailOut, MKGeneralException) as e:
+        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+        if context.global_options.debug:
+            raise
+        return CLIExitCode.UNKNOWN
 
 
 cli_command_inventory = CLICommand(
-    long_option="inventory",
-    short_option="i",
-    handler_function=_mode_inventory,
-    argument=True,
-    argument_descr="HOST1 HOST2...",
-    argument_optional=True,
+    name="inventory",
+    long="inventory",
+    short="i",
+    handler_function=_run_inventory,
+    arguments=CLIArguments("HOST1 HOST2...", optional=True),
     sub_options=[
         *FETCHER_OPTIONS,
         SNMP_BACKEND_OPTION,
         CLIOption(
-            long_option="force",
-            short_option="f",
-            short_help="Use cached agent data even if it's outdated.",
+            long="force",
+            short="f",
+            help="Use cached agent data even if it's outdated.",
         ),
         option_sections,
         get_plugins_option(InventoryPluginName),
         option_detect_plugins,
+        FAKE_DNS_OPTION,
     ],
-    short_help="Do a HW/SW Inventory on some or all hosts",
-    long_help=[
+    help="Do a HW/SW Inventory on some or all hosts",
+    description=[
         (
             "Does a HW/SW Inventory for all, one or several "
             "hosts. If you add the option -f, --force then persisted sections "
@@ -353,10 +395,10 @@ cli_command_inventory = CLICommand(
 
 
 def _mode_inventorize_marked_hosts(
-    omd_root: Path, global_options: GlobalOptions, options: Options, _args: Args
-) -> int:
+    omd_root: Path, global_options: CLIGlobalOptions, options: Options, _args: CLIArgs
+) -> CLIExitCode:
     app = make_app(omd_root)
-    set_fake_dns(global_options.fake_dns)
+    fake_dns = fake_dns_address(options)
     file_cache_options = handle_fetcher_options(options)
     try:
         snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
@@ -365,13 +407,13 @@ def _mode_inventorize_marked_hosts(
 
     if not (queue := AutoQueue(InventoryPaths(cmk.utils.paths.omd_root).auto_dir)):
         console.verbose("Autoinventory: No hosts marked by inventory check")
-        return 0
+        return CLIExitCode.SUCCESS
 
     # We do not resolve the `latest` link here, as any given serial might be removed by the core.
     latest_config_path = VersionedConfigPath.make_latest_path(cmk.utils.paths.omd_root)
 
-    plugins = load_checks()
-    loading_result = config.load(validate_hosts=True)
+    plugins = load_checks(debug=global_options.debug)
+    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
     loaded_config = loading_result.loaded_config
     hosts_config = loading_result.hosts_config
     host_tags = loading_result.host_tags
@@ -392,9 +434,9 @@ def _mode_inventorize_marked_hosts(
         plugins.check_plugins,
         label_manager.labels_of_service,
     )  # not obvious to me why/if we *really* need this
-    ip_lookup_config = config_cache.ip_lookup_config()
+    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
@@ -408,6 +450,7 @@ def _mode_inventorize_marked_hosts(
         ),
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
+        debug=global_options.debug,
     )
     fetcher = CMKFetcher(
         config_cache,
@@ -434,6 +477,7 @@ def _mode_inventorize_marked_hosts(
                     loaded_config, ruleset_matcher, label_manager.labels_of_host
                 ),
                 force_stored_walks=bool(options.get("usewalk", False)),
+                debug=global_options.debug,
             ),
         ),
         plugins=plugins,
@@ -443,10 +487,10 @@ def _mode_inventorize_marked_hosts(
         force_snmp_cache_refresh=False,
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         ip_address_of=ip_address_of,
-        ip_address_of_mandatory=forced_ip_lookup()
-        or ip_lookup.make_lookup_ip_address(ip_lookup_config),
-        ip_address_of_mgmt=forced_ip_lookup()
-        or ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
+        ip_address_of_mandatory=mandatory_ip_lookup(
+            usewalk=bool(options.get("usewalk", False)), ip_lookup_config=ip_lookup_config
+        ),
+        ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=FetchMode.INVENTORY,
         simulation_mode=loaded_config.simulation_mode,
         secrets_config_relay=StoredSecrets(
@@ -461,6 +505,7 @@ def _mode_inventorize_marked_hosts(
             path=cmk.utils.password_store.active_secrets_path_site(RELATIVE_PATH_SECRETS),
             secrets=secrets,
         ),
+        debug=global_options.debug,
     )
 
     def summarizer(host_name: HostName) -> CMKSummarizer:
@@ -482,7 +527,7 @@ def _mode_inventorize_marked_hosts(
 
     if queue.oldest() is None:
         console.verbose("Autoinventory: No hosts marked by inventory check")
-        return 0
+        return CLIExitCode.SUCCESS
 
     console.verbose("Autoinventory: Inventorize all hosts marked by inventory check:")
     try:
@@ -530,18 +575,37 @@ def _mode_inventorize_marked_hosts(
                     inventorized_host_labels_dir=cmk.utils.paths.inventorized_host_labels_dir,
                     discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
                     autodiscovery_dir=cmk.utils.paths.autodiscovery_dir,
+                    debug=global_options.debug,
                 )
     except (MKTimeout, TimeoutError) as exc:
         console.verbose_no_lf(str(exc))
-    return 0
+    return CLIExitCode.SUCCESS
+
+
+def _run_inventorize_marked_hosts(
+    context: CLIContext, options: Options, args: CLIArgs
+) -> CLIExitCode:
+    if context.global_options.debug:
+        # the store reads cmk.ccc.debug
+        cmk.ccc.debug.enable()
+    try:
+        return _mode_inventorize_marked_hosts(
+            context.omd_root, context.global_options, options, args
+        )
+    except (MKBailOut, MKGeneralException) as e:
+        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+        if context.global_options.debug:
+            raise
+        return CLIExitCode.UNKNOWN
 
 
 cli_command_inventorize_marked_hosts = CLICommand(
-    long_option="inventorize-marked-hosts",
-    handler_function=_mode_inventorize_marked_hosts,
-    sub_options=[*FETCHER_OPTIONS, SNMP_BACKEND_OPTION],
-    short_help="Run inventory for hosts which previously had no tree data",
-    long_help=[
+    name="inventorize_marked_hosts",
+    long="inventorize-marked-hosts",
+    handler_function=_run_inventorize_marked_hosts,
+    sub_options=[*FETCHER_OPTIONS, SNMP_BACKEND_OPTION, FAKE_DNS_OPTION],
+    help="Run inventory for hosts which previously had no tree data",
+    description=[
         "Run actual service HW/SW Inventory on all hosts that had no tree data",
         "in the previous run",
     ],

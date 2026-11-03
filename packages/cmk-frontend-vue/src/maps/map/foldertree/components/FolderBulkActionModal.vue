@@ -16,21 +16,31 @@ being fired blind.
 <script setup lang="ts">
 import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
-import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
 import CmkToggleButtonGroup from 'cmk-ui-library/components/CmkToggleButtonGroup.vue'
-import { CmkTimeRangeDisplay, CmkTimeRangePicker } from 'cmk-ui-library/components/date-time'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
-import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed, ref } from 'vue'
+import { type Ref, computed, ref } from 'vue'
 
 import CommandFeedback from '@/maps/map/commands/CommandFeedback.vue'
+import { messageOf } from '@/maps/map/commands/commandErrors'
+import {
+  acknowledgeOptions,
+  childHostTargets,
+  useCommandForms
+} from '@/maps/map/commands/commandForms'
 import { useBulkCommandSubmit } from '@/maps/map/commands/useBulkCommandSubmit'
-import { useDowntimeWindow } from '@/maps/map/commands/useDowntimeWindow'
 import { useAuth, useMapsApis } from '@/maps/services/context'
 import MapsModal from '@/maps/shared/components/MapsModal.vue'
 import type { CommandTarget, FolderTreeNode } from '@/maps/types/api'
 import { isProblemState } from '@/maps/utils/problemState'
+import type { ScheduleDowntimeOptions } from '@/monitoring/shared/api/actions/downtime'
+import AcknowledgeForm, {
+  type AcknowledgeValues
+} from '@/monitoring/shared/components/action/actions/AcknowledgeForm.vue'
+import ScheduleDowntimeForm, {
+  type ScheduleDowntimeFormValues
+} from '@/monitoring/shared/components/action/actions/ScheduleDowntimeForm.vue'
+import { noDowntimeWindow } from '@/monitoring/shared/components/action/actions/scheduleDowntime'
 
 import { folderHosts } from '../objects'
 
@@ -58,11 +68,13 @@ const modes = computed(() => [
 ])
 
 const recursive = ref(true)
-const comment = ref('')
-const sticky = ref(true)
-const notify = ref(true)
-const persistent = ref(false)
-const { range, isValid, asIso } = useDowntimeWindow()
+const forms = useCommandForms()
+const ackDraft = ref(forms.acknowledgeValues()) as Ref<AcknowledgeValues>
+const downtimeDraft = ref(forms.downtimeValues()) as Ref<ScheduleDowntimeFormValues>
+const valid = ref(false)
+const children = ref<CommandTarget[]>([])
+// Resolved once per submit, so every host gets the same window.
+let downtime: ScheduleDowntimeOptions | null = null
 
 const hosts = computed(() => folderHosts(props.folder, recursive.value))
 // Only offered where it changes something.
@@ -83,35 +95,36 @@ const nothingToAcknowledge = computed(
 const { submitting, progress, succeeded, pending, error, blocked, submit, reject } =
   useBulkCommandSubmit({
     what: 'folder-bulk-command',
-    targets: () => targets.value,
+    targets: () => [...targets.value, ...children.value],
     onDone: () => emit('close'),
-    send: (target) => {
-      if (mode.value === 'acknowledge') {
-        return commands.acknowledgeHost(target.host, {
-          comment: comment.value,
-          sticky: sticky.value,
-          notify: notify.value,
-          persistent: persistent.value
-        })
-      }
-      const window = asIso()
-      return commands.downtimeHost(target.host, {
-        startTime: window.start,
-        endTime: window.end,
-        comment: comment.value
-      })
-    }
+    send: (target) =>
+      mode.value === 'acknowledge'
+        ? commands.acknowledgeHost(target.host, acknowledgeOptions(ackDraft.value))
+        : commands.downtimeHost(target.host, downtime!)
   })
 
-function onSubmit(): void {
-  if (!comment.value.trim() || pending.value === 0) {
+async function onSubmit(): Promise<void> {
+  if (!valid.value || blocked.value || pending.value === 0) {
     return
   }
-  if (mode.value === 'downtime' && !isValid.value) {
-    reject(_t('Please provide a start and an end time, with the end after the start.'))
-    return
+  children.value = []
+  if (mode.value === 'downtime') {
+    downtime = forms.downtimeOptions(downtimeDraft.value)
+    if (downtime === null) {
+      reject(noDowntimeWindow().message)
+      return
+    }
+    // Looked up before the first run only: a retry is about what refused.
+    if (downtimeDraft.value.includeChildHosts && progress.value === 0) {
+      try {
+        children.value = await childHostTargets(commands, targets.value)
+      } catch (caught) {
+        reject(messageOf(caught, _t('Could not find the child hosts')))
+        return
+      }
+    }
   }
-  void submit()
+  await submit()
 }
 </script>
 
@@ -119,6 +132,7 @@ function onSubmit(): void {
   <MapsModal
     :open="true"
     :title="_t('Folder actions — %{folder}', { folder: folder.title })"
+    :scrolls="false"
     closable
     @close="emit('close')"
   >
@@ -159,35 +173,22 @@ function onSubmit(): void {
     </p>
     <CmkCheckbox v-if="hasSubfolders" v-model="recursive" :label="_t('Include sub-folders')" />
 
-    <div v-if="!nothingToAcknowledge" class="maps-folder-bulk-action-modal__fields">
-      <div class="maps-folder-bulk-action-modal__field">
-        <CmkLabel>{{ _t('Comment') }}</CmkLabel>
-        <CmkInput v-model="comment" field-size="fill" :placeholder="`${_t('Comment')}…`" />
-      </div>
-      <template v-if="mode === 'acknowledge'">
-        <CmkCheckbox v-model="sticky" :label="_t('Sticky (stays until OK)')" />
-        <CmkCheckbox v-model="notify" :label="_t('Send notification')" />
-        <CmkCheckbox v-model="persistent" :label="_t('Persistent')" />
-      </template>
-      <div v-else class="maps-folder-bulk-action-modal__field">
-        <CmkLabel>{{ _t('Downtime period') }}</CmkLabel>
-        <!-- Own trigger: the theme's button margin pushes the default one
-             10px past the dialog. -->
-        <CmkTimeRangePicker v-model="range" :label="_t('Downtime period')">
-          <template #trigger="{ aria, triggerRef, fields, settings, disabled }">
-            <button
-              :ref="triggerRef"
-              type="button"
-              class="maps-folder-bulk-action-modal__period"
-              :disabled="disabled"
-              v-bind="aria"
-            >
-              <CmkTimeRangeDisplay :from="fields.from" :to="fields.to" :settings="settings" />
-            </button>
-          </template>
-        </CmkTimeRangePicker>
-      </div>
-    </div>
+    <template v-if="!nothingToAcknowledge">
+      <AcknowledgeForm
+        v-if="mode === 'acknowledge'"
+        v-model="ackDraft"
+        class="maps-folder-bulk-action-modal__form"
+        v-bind="forms.acknowledgeProps('host')"
+        @update:valid="valid = $event"
+      />
+      <ScheduleDowntimeForm
+        v-else
+        v-model="downtimeDraft"
+        class="maps-folder-bulk-action-modal__form"
+        v-bind="forms.downtimeProps('host')"
+        @update:valid="valid = $event"
+      />
+    </template>
 
     <CommandFeedback
       :error="error"
@@ -204,7 +205,7 @@ function onSubmit(): void {
       <CmkButton
         v-if="!nothingToAcknowledge"
         variant="primary"
-        :disabled="blocked || !comment.trim() || pending === 0"
+        :disabled="blocked || !valid || pending === 0"
         @click="onSubmit"
       >
         {{
@@ -244,35 +245,10 @@ function onSubmit(): void {
   color: var(--font-color-dimmed);
 }
 
-.maps-folder-bulk-action-modal__fields {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dimension-4);
+/* A fixed width, so switching between the two forms, or opening the downtime
+   form's advanced options, does not resize the dialog around them. */
+.maps-folder-bulk-action-modal__form {
+  width: min(520px, 80vw);
   margin-top: var(--dimension-5);
-}
-
-.maps-folder-bulk-action-modal__field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dimension-2);
-}
-
-.maps-folder-bulk-action-modal__period {
-  box-sizing: border-box;
-  display: block;
-  width: 100%;
-  margin: 0;
-  padding: var(--dimension-7);
-  border: none;
-  border-radius: var(--border-radius);
-  background: none;
-  font: inherit;
-  color: inherit;
-  text-align: inherit;
-  cursor: inherit;
-
-  &:focus-visible {
-    outline: revert;
-  }
 }
 </style>

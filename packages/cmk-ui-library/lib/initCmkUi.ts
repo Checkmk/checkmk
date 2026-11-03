@@ -10,17 +10,13 @@ import { type Component, computed, defineCustomElement, h } from 'vue'
 let appCount = 0
 
 function defineCmkComponent(
-  componentName: string,
+  componentName: `cmk-${string}`,
   component: Component,
   options?: {
     appprops?: CmkAppProps
     pure?: boolean
   }
 ) {
-  if (componentName.startsWith('cmk-') === false) {
-    throw new Error(`Element name "${componentName}" must start with "cmk-"`)
-  }
-
   if (options === undefined) {
     options = {}
   }
@@ -54,6 +50,15 @@ function defineCmkComponent(
   customElements.define(componentName, CustomElement)
 }
 
+export type CmkElements = Record<Parameters<typeof defineCmkComponent>[0], Component>
+
+function defineCmkElements(elements: CmkElements) {
+  const entries = Object.entries(elements) as [keyof CmkElements, Component][]
+  for (const [componentName, component] of entries) {
+    defineCmkComponent(componentName, component)
+  }
+}
+
 export interface CmkUiConfig {
   /**
    * cmk-ui-library ships no translation catalogs: its strings are extracted into the
@@ -65,7 +70,8 @@ export interface CmkUiConfig {
 
 export default function initCmkUi(config: CmkUiConfig): {
   defineCmkComponent: typeof defineCmkComponent
+  defineCmkElements: typeof defineCmkElements
 } {
   setTranslationLoader(config.translationLoader)
-  return { defineCmkComponent }
+  return { defineCmkComponent, defineCmkElements }
 }

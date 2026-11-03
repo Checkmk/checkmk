@@ -9,14 +9,17 @@ import type { MapElement, ObjectType } from '@/maps/types/api'
 export const VISUAL_ONLY_TYPES: readonly ObjectType[] = ['image', 'textbox', 'line']
 
 /**
- * The type an object counts as where it is named. Graph and line objects go by
- * what they monitor ('service' or 'host') when bound to one, not by their Maps
- * object type.
+ * The type an object counts as where it is named. A line goes by the object
+ * whose state it shows, a graph by the service or host it is bound to, not by
+ * their Maps object type.
  *
  * Still a wire name — pass it through ``objectTypeLabel`` for anything a person
  * reads.
  */
 export function getEffectiveObjectType(object: MapElement): ObjectType {
+  if (object.type === 'line' && object.line_object_type) {
+    return object.line_object_type
+  }
   if (object.type === 'graph' || object.type === 'line') {
     if (object.service_description) {
       return 'service'
@@ -28,17 +31,36 @@ export function getEffectiveObjectType(object: MapElement): ObjectType {
   return object.type
 }
 
-/** Return the display name for a map object (label > host/service > host/group/map/aggregation). */
+/**
+ * A line as the object whose state it shows, so that code keyed on the type
+ * treats it like that object. Anything else is returned as it is.
+ */
+export function asBoundObject(object: MapElement): MapElement {
+  const type = object.type === 'line' ? getEffectiveObjectType(object) : object.type
+  return type === object.type ? object : { ...object, type }
+}
+
+/** A placeholder ``interpolateTemplate`` fills in, such as ``{{host}}``. */
+export const PLACEHOLDER = /\{\{(\w+(?::\w+)?)\}\}/
+
+/**
+ * Return the display name for a map object (label > host/service > host/group/map/aggregation).
+ *
+ * A label with placeholders needs the object's state to read right
+ * (``labelText``); without it the object goes by its identifier.
+ */
 export function getMapElementName(object: MapElement): string | null {
-  if (object.label?.text) {
-    return object.label.text
+  const text = object.label?.text
+  if (text && !PLACEHOLDER.test(text)) {
+    return text
   }
   return getMapElementIdentifier(object)
 }
 
 /**
  * Monitoring identifier; falls back to the label for objects with no
- * host/group/map/aggregation binding, such as geo bundles.
+ * host/group/map/aggregation binding, such as geo bundles, unless the label
+ * has placeholders.
  *
  * ``null`` when the object has nothing a person would recognise it by — a
  * dynamic group, an unbound graph or line. The object id is not that name:
@@ -55,7 +77,7 @@ export function getMapElementIdentifier(object: MapElement): string | null {
     object.map_title ??
     object.map_name ??
     object.aggregation_id ??
-    (object.label?.text || null)
+    (object.label?.text && !PLACEHOLDER.test(object.label.text) ? object.label.text : null)
   )
 }
 
@@ -66,10 +88,14 @@ export function getMapElementIdentifier(object: MapElement): string | null {
  * its own kind — a service object reads as the service, not as
  * "host / service" — because the caption sits under an icon with little room,
  * and the operator already knows which host they are looking at.
- * ``label_maxlen`` then truncates, the way NagVis does.
+ * ``label_maxlen`` then truncates, the way NagVis does. ``shownLabel`` is the
+ * label as shown, its placeholders filled in.
  */
-export function mapElementCaption(object: MapElement): string | null {
-  const name = captionFor(object)
+export function mapElementCaption(
+  object: MapElement,
+  shownLabel: string | null | undefined
+): string | null {
+  const name = shownLabel || captionFor(object)
   const maxLength = object.label_maxlen
   return name && maxLength && maxLength > 0 && name.length > maxLength
     ? `${name.slice(0, maxLength)}…`
@@ -77,9 +103,6 @@ export function mapElementCaption(object: MapElement): string | null {
 }
 
 function captionFor(object: MapElement): string | null {
-  if (object.label?.text) {
-    return object.label.text
-  }
   switch (object.type) {
     case 'host':
       return object.host_name ?? null
@@ -106,6 +129,34 @@ export function sanitizeMapName(raw: string): string {
 export function sanitizeStrippedChars(raw: string): boolean {
   const withoutSpaces = raw.replace(/ /g, '-')
   return withoutSpaces.replace(/[^a-zA-Z0-9_-]/g, '') !== withoutSpaces
+}
+
+// Letters that have no base letter to fall back to once their accent is gone.
+const _SPELLED_OUT: Record<string, string> = {
+  ß: 'ss',
+  æ: 'ae',
+  œ: 'oe',
+  ø: 'o',
+  ł: 'l',
+  đ: 'd'
+}
+
+/**
+ * A map ID filled in from a display name. It is the user's to change, not to
+ * fix: letters lose their accents rather than vanish, and it is cut to fit
+ * rather than flagged.
+ */
+export function mapIdFromName(name: string, maxLength: number): string {
+  return name
+    .toLowerCase()
+    .replace(/[ßæœøłđ]/g, (c) => _SPELLED_OUT[c] ?? '')
+    .normalize('NFD')
+    .replace(/\p{M}/gu, '')
+    .replace(/[^\p{L}\p{N}_]+/gu, '-')
+    .replace(/[^a-z0-9_-]/g, '')
+    .replace(/-+/g, '-')
+    .slice(0, maxLength)
+    .replace(/^-+|-+$/g, '')
 }
 
 /** Convert a hyphen/underscore-separated slug to Title Case display name. */

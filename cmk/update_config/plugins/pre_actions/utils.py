@@ -3,15 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import enum
 import sys
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
-from termios import tcflush, TCIFLUSH
 from typing import Final
 
 # It's OK to import centralized config load logic
-import cmk.ec.export as ec  # astrein: disable=cmk-module-layer-violation
+import cmk.ec.export as ec  # astrein: disable=module-layers
 from cmk.ccc import version
 from cmk.discover_plugins import addons_plugins_local_path, plugins_local_path
 from cmk.gui.search import index as search_index
@@ -25,6 +23,7 @@ from cmk.mkp_tool import (
     PathConfig,
     reload_services_affected_by_mkp_changes,
 )
+from cmk.update_config.internal import ConflictMode, prompt, Resume
 from cmk.utils import paths
 from cmk.utils.visuals import invalidate_visuals_cache
 
@@ -34,11 +33,6 @@ GUI_PLUGINS_PREACTION_SORT_INDEX = 20
 AUTOCHECK_REWRITE_PREACTION_SORT_INDEX = (  # autocheck rewrite *must* run after these two!
     max(AGENT_BASED_PLUGINS_PREACTION_SORT_INDEX, GUI_PLUGINS_PREACTION_SORT_INDEX) + 10
 )
-
-
-def _prompt(message: str) -> str:
-    tcflush(sys.stdin, TCIFLUSH)
-    return input(message)
 
 
 def make_path_config() -> PathConfig | None:
@@ -79,26 +73,8 @@ PACKAGE_STORE = PackageStore(
 )
 
 
-class ConflictMode(enum.StrEnum):
-    ASK = "ask"
-    ABORT = "abort"
-    FORCE = "force"
-
-
 _USER_INPUT_ABORT: Final = ("a", "abort")
-_USER_INPUT_CONTINUE: Final = ("c", "continue")
 _USER_INPUT_DISABLE: Final = ("d", "disable")
-
-
-class Resume(enum.Enum):
-    UPDATE = enum.auto()
-    ABORT = enum.auto()
-
-    def is_abort(self) -> bool:
-        return self is Resume.ABORT
-
-    def is_not_abort(self) -> bool:
-        return self is not Resume.ABORT
 
 
 def disable_incomp_mkp(
@@ -160,19 +136,8 @@ def error_message_incomp_local_file(path: Path, error: BaseException) -> str:
     return f"Incompatible local file '{path}'.\nError: {error}\n\n"
 
 
-def continue_per_users_choice(prompt_text: str) -> Resume:
-    while (response := _prompt(prompt_text).lower()) not in [
-        *_USER_INPUT_CONTINUE,
-        *_USER_INPUT_ABORT,
-    ]:
-        sys.stdout.write(f"Invalid input '{response}'.\n")
-    if response in _USER_INPUT_CONTINUE:
-        return Resume.UPDATE
-    return Resume.ABORT
-
-
 def _disable_per_users_choice(prompt_text: str) -> Resume:
-    while (response := _prompt(prompt_text).lower()) not in [
+    while (response := prompt(prompt_text).lower()) not in [
         *_USER_INPUT_DISABLE,
         *_USER_INPUT_ABORT,
     ]:

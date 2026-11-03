@@ -13,6 +13,9 @@
  */
 import { type Ref, ref } from 'vue'
 
+/** Travel, in screen pixels, before a press counts as a pan. */
+const PAN_THRESHOLD = 4
+
 export interface CanvasPan {
   active: Ref<boolean>
   /** Take the gesture, or leave it for the next handler. */
@@ -47,32 +50,50 @@ export function useCanvasPan(source: {
     if (!target) {
       return false
     }
-    active.value = true
     pointerId = event.pointerId
     scroller = target
     fromX = event.clientX
     fromY = event.clientY
     fromScrollLeft = target.scrollLeft
     fromScrollTop = target.scrollTop
-    source.canvas()?.setPointerCapture(event.pointerId)
     return true
   }
 
   function move(event: PointerEvent): boolean {
-    if (!active.value || !scroller) {
+    if (!scroller || event.pointerId !== pointerId) {
       return false
     }
-    scroller.scrollLeft = fromScrollLeft - (event.clientX - fromX)
-    scroller.scrollTop = fromScrollTop - (event.clientY - fromY)
+    // Released outside the canvas, where no pointerup reaches it.
+    if ((event.buttons & 1) === 0) {
+      end()
+      return false
+    }
+    const dx = event.clientX - fromX
+    const dy = event.clientY - fromY
+    if (!active.value) {
+      if (Math.abs(dx) <= PAN_THRESHOLD && Math.abs(dy) <= PAN_THRESHOLD) {
+        return true
+      }
+      active.value = true
+      // Grab the pointer only now: capturing on press would redirect a plain
+      // click, e.g. on a link in a hover card, to the canvas.
+      if (pointerId !== null) {
+        source.canvas()?.setPointerCapture(pointerId)
+      }
+    }
+    scroller.scrollLeft = fromScrollLeft - dx
+    scroller.scrollTop = fromScrollTop - dy
     return true
   }
 
+  /** Whether the press turned into a pan, so that its click must be dropped. */
   function end(): boolean {
-    if (!active.value) {
+    if (!scroller) {
       return false
     }
+    const panned = active.value
     active.value = false
-    if (pointerId !== null) {
+    if (panned && pointerId !== null) {
       try {
         source.canvas()?.releasePointerCapture(pointerId)
       } catch {
@@ -81,7 +102,7 @@ export function useCanvasPan(source: {
     }
     pointerId = null
     scroller = null
-    return true
+    return panned
   }
 
   return { active, tryBegin, move, end }

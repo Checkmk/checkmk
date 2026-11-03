@@ -23,6 +23,7 @@ pub enum SetupMode {
 pub struct PathResolver {
     pub config_path: PathBuf,
     pub pre_configured_connections_path: PathBuf,
+    pub trusted_cas_path: PathBuf,
     pub registry_path: PathBuf,
 
     /// Baked by the site, read-only for the controller.
@@ -39,6 +40,15 @@ pub struct PathResolver {
     /// Holds a verified agent package until the installer has taken it. Written
     /// by the controller, read by the privileged installer.
     pub updater_package_dir: PathBuf,
+
+    /// What the privileged install step made of the package it was handed.
+    /// Written by that step as root, read by the controller. Linux only.
+    #[cfg(unix)]
+    pub install_result_path: PathBuf,
+
+    /// The Python agent updater, a plugin of the Windows agent.
+    #[cfg(windows)]
+    pub python_updater_plugin_path: PathBuf,
 }
 
 impl PathResolver {
@@ -61,6 +71,7 @@ impl PathResolver {
             config_path: home_dir.join(constants::CONFIG_FILE),
             pre_configured_connections_path: home_dir
                 .join(constants::PRE_CONFIGURED_CONNECTIONS_FILE),
+            trusted_cas_path: home_dir.join(constants::TRUSTED_CAS_FILE),
             registry_path: home_dir.join(constants::REGISTRY_FILE),
             updater_config_path: home_dir.join(constants::UPDATER_CONFIG_FILE),
             updater_state_path: home_dir.join(constants::UPDATER_STATE_FILE),
@@ -78,6 +89,12 @@ impl PathResolver {
             // `$MK_LIBDIR/update` on Windows: `MK_LIBDIR` is the agent's user
             // directory (`agents/wnx/src/engine/cfg.cpp`), which is `home_dir`.
             updater_package_dir: home_dir.join(constants::UPDATER_PACKAGE_DIR),
+            #[cfg(unix)]
+            install_result_path: home_dir.join(constants::INSTALL_RESULT_FILE),
+            #[cfg(windows)]
+            python_updater_plugin_path: home_dir
+                .join("plugins")
+                .join(constants::PYTHON_UPDATER_PLUGIN),
         }
     }
 
@@ -93,11 +110,13 @@ impl PathResolver {
             config_path: config_dir.join(constants::CONFIG_FILE),
             pre_configured_connections_path: config_dir
                 .join(constants::PRE_CONFIGURED_CONNECTIONS_FILE),
+            trusted_cas_path: config_dir.join(constants::TRUSTED_CAS_FILE),
             registry_path: runtime_dir.join(constants::REGISTRY_FILE),
             updater_config_path: config_dir.join(constants::UPDATER_CONFIG_FILE),
             updater_state_path: runtime_dir.join(constants::UPDATER_STATE_FILE),
             agent_info_path: agent_dir.join(constants::AGENT_INFO_FILE),
             updater_package_dir: runtime_dir.join(constants::UPDATER_PACKAGE_DIR),
+            install_result_path: runtime_dir.join(constants::INSTALL_RESULT_FILE),
         }
     }
 }

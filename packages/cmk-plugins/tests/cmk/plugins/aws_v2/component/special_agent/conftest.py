@@ -18,7 +18,7 @@ def patch_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
 
 @pytest.fixture(name="fake_sts")
 def _fake_sts(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[FakeSts]:
-    """Route STS calls to a fake and hide every credential source of the test host."""
+    """Route STS and Organizations calls to a fake and hide the credentials of the test host."""
     monkeypatch.setenv("AWS_CONFIG_FILE", str(tmp_path / "does_not_exist"))
     monkeypatch.setenv("AWS_SHARED_CREDENTIALS_FILE", str(tmp_path / "does_not_exist"))
     monkeypatch.setenv("AWS_EC2_METADATA_DISABLED", "true")
@@ -26,4 +26,5 @@ def _fake_sts(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[FakeS
         monkeypatch.delenv(name, raising=False)
     with running_fake_sts() as sts:
         monkeypatch.setenv("AWS_ENDPOINT_URL_STS", sts.url)
+        monkeypatch.setenv("AWS_ENDPOINT_URL_ORGANIZATIONS", sts.url)
         yield sts

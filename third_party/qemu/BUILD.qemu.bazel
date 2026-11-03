@@ -1,0 +1,28 @@
+# BUILD file injected into the @qemu_linux_x86_64 repository: the static QEMU
+# built by third_party/qemu/create-archive.
+
+package(default_visibility = ["//visibility:public"])
+
+exports_files([
+    "bin/qemu-img",
+    "bin/qemu-system-x86_64",
+    # A file of the -L directory, for callers that need its path.
+    "share/qemu/bios-256k.bin",
+])
+
+# The firmware QEMU loads from -L <dir of share/qemu/bios-256k.bin>: only what
+# the i440fx machine ("pc") with an e1000 NIC needs (create-archive FIRMWARE).
+# q35 or another NIC (e1000e, virtio-net) fails at start, for want of its ROM.
+filegroup(
+    name = "firmware",
+    srcs = glob(["share/qemu/*"]),
+)
+
+# Everything, for runfiles.
+filegroup(
+    name = "qemu",
+    srcs = glob(
+        ["**"],
+        exclude = ["BUILD.bazel"],
+    ),
+)

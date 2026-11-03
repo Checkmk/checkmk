@@ -51,6 +51,7 @@ from cmk.gui.painter import painter_registry
 from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.parentscan.register import register as parentscan_register
 from cmk.gui.permissions import permission_registry, permission_section_registry
+from cmk.gui.png import registration as png_registration
 from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.rule_specs.legacy_converter import (
     convert_dictionary_formspec_to_valuespec,
@@ -104,7 +105,7 @@ from cmk.gui.watolib.host_attributes import (
     host_attribute_topic_registry,
 )
 from cmk.gui.watolib.host_rename import rename_host_hook_registry
-from cmk.gui.watolib.hosts_and_folders import folder_validators_registry, host_action_menu_registry
+from cmk.gui.watolib.hosts_and_folders import host_action_menu_registry
 from cmk.gui.watolib.main_menu import main_module_registry, main_module_topic_registry
 from cmk.gui.watolib.mode import mode_registry
 from cmk.gui.watolib.notification_parameter import (
@@ -207,7 +208,6 @@ def register(
         config_file_registry=config_file_registry,
         rename_host_hook_registry=rename_host_hook_registry,
         command_group_registry=command_group_registry,
-        folder_validators_registry=folder_validators_registry,
         user_attribute_registry=user_attribute_registry,
         quick_setup_registry=quick_setup_registry,
         help_info_line=default_info_line,
@@ -373,6 +373,7 @@ def register(
         autocompleter_registry,
         livestatus_query=livestatus_query_bare,
     )
+    png_registration.register(page_registry)
     plugins.register()
     password_change_effect_registry.register(
         affected_domains_add=[CORE],

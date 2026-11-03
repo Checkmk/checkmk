@@ -33,7 +33,7 @@ from cmk.gui.valuespec.definitions import RegExp
 from cmk.gui.wato import IndividualOrStoredPassword
 from cmk.gui.watolib.rulespec_groups import RulespecGroupVMCloudContainer
 from cmk.gui.watolib.rulespecs import HostRulespec, rulespec_registry
-from cmk.plugins.aws_deprecated.lib import (  # astrein: disable=cmk-module-layer-violation
+from cmk.plugins.aws_deprecated.lib import (  # astrein: disable=module-layers
     aws_region_to_monitor,
 )
 from cmk.ruleset_matcher.definition import RuleGroup

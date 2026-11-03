@@ -10,7 +10,7 @@ agents/waitmax.c
 agents/wnx/extensions/robotmk_ext/src/main.rs
 agents/wnx/test_files/tools/v/src/main.rs
 agents/z_os/waitmax.c
-bazel/thirdparty/modules/perl-modules/0.0.1.cmk.2/src/bin/cpan.wrapper
+bazel/thirdparty/modules/perl-modules/0.0.1.cmk.3/src/bin/cpan.wrapper
 bazel/tools/workspace_status.sh
 buildscripts/infrastructure/build-nodes/scripts/install-lz4-parallel.sh
 buildscripts/scripts/gcc-toolchain/build.sh
@@ -48,9 +48,6 @@ packages/check-http/src/pwstore.rs
 packages/cmk-agent-ctl/src/main.rs
 packages/cmk-ec/src/mkevent.cc
 packages/cmk-ec/src/mkeventd_open514.cc
-packages/cmk-frontend/babel.config.js
-packages/cmk-frontend/postcss.config.js
-packages/cmk-frontend/resources/license-header.js
 packages/mk-oracle/deploy-docker
 packages/mk-oracle/deploy-run
 packages/mk-oracle/run_legacy.sh
@@ -67,7 +64,6 @@ scripts/run-in-docker2.sh
 tests/packaging/package_validator/src/main.rs
 tests/run_tests.sh
 tests/unit-shell/agents/plugins/test_ibm_mq.sh
-tests/unit-shell/agents/plugins/test_kaspersky_av.sh
 tests/unit-shell/agents/plugins/test_mk_inventory.sh
 tests/unit-shell/agents/plugins/test_mk_redis.sh
 tests/unit-shell/agents/plugins/test_mk_tsm.sh

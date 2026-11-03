@@ -7,8 +7,11 @@ import abc
 import math
 from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
-from typing import ClassVar, Final, Literal, override
+from typing import assert_never, ClassVar, Final, Literal, override
 
+type NotationName = Literal[
+    "decimal", "si", "iec", "standard_scientific", "engineering_scientific", "time"
+]
 type PrecisionKind = Literal["auto", "strict"]
 
 
@@ -612,3 +615,27 @@ class TimeFormatter(NotationFormatter):
         if max_y >= _ONE_MINUTE:
             return _BASIC_TIME_ATOMS[3:12]
         return _BASIC_DECIMAL_ATOMS[:6]
+
+
+def notation_formatter(
+    notation: NotationName, symbol: str, precision_kind: PrecisionKind, digits: int
+) -> NotationFormatter:
+    match notation:
+        case "decimal":
+            return DecimalFormatter(symbol=symbol, precision_kind=precision_kind, digits=digits)
+        case "si":
+            return SIFormatter(symbol=symbol, precision_kind=precision_kind, digits=digits)
+        case "iec":
+            return IECFormatter(symbol=symbol, precision_kind=precision_kind, digits=digits)
+        case "standard_scientific":
+            return StandardScientificFormatter(
+                symbol=symbol, precision_kind=precision_kind, digits=digits
+            )
+        case "engineering_scientific":
+            return EngineeringScientificFormatter(
+                symbol=symbol, precision_kind=precision_kind, digits=digits
+            )
+        case "time":
+            return TimeFormatter(symbol=symbol, precision_kind=precision_kind, digits=digits)
+        case other:
+            assert_never(other)

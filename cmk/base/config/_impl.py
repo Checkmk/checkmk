@@ -21,7 +21,6 @@ from collections.abc import Callable, Collection, Container, Iterable, Iterator,
 from pathlib import Path
 from typing import Any, AnyStr, assert_never, Final, Literal, NamedTuple, overload, override
 
-import cmk.ccc.debug
 import cmk.checkengine.plugin_backend as agent_based_register
 import cmk.utils
 import cmk.utils.paths
@@ -91,7 +90,6 @@ from cmk.checkengine.snmplib import (  # some of these are required in the modul
 from cmk.checkengine.source_abc import SourceConfig
 from cmk.checkengine.specs.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.summarize import SummaryConfig
-from cmk.flags import load_experimental_flags
 from cmk.password_store.v1 import Secret
 from cmk.piggyback import backend as piggyback_backend
 from cmk.ruleset_matcher import matcher as ruleset_matcher
@@ -614,8 +612,8 @@ class LoadingResult:
     config_cache: ConfigCache
 
 
-def load(validate_hosts: bool) -> LoadingResult:
-    with exit_on_config_file_load_error():
+def load(validate_hosts: bool, *, debug: bool) -> LoadingResult:
+    with exit_on_config_file_load_error(debug=debug):
         raw_config = load_raw_config()
 
     loading_result = perform_post_config_loading_actions(
@@ -623,6 +621,7 @@ def load(validate_hosts: bool) -> LoadingResult:
         autochecks_dir=cmk.utils.paths.autochecks_dir,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
         builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
+        debug=debug,
     )
 
     if validate_hosts:
@@ -665,6 +664,7 @@ def perform_post_config_loading_actions(  # type: ignore[explicit-any]
     discovered_host_labels_dir: Path,
     builtin_host_labels_file: Path,
     excluded_service_ids: Container[ServiceID] = frozenset(),
+    debug: bool,
 ) -> LoadingResult:
     """These tasks must be performed after loading the Check_MK base configuration"""
     return make_loading_result(
@@ -673,6 +673,7 @@ def perform_post_config_loading_actions(  # type: ignore[explicit-any]
         discovered_host_labels_dir=discovered_host_labels_dir,
         builtin_host_labels_file=builtin_host_labels_file,
         excluded_service_ids=excluded_service_ids,
+        debug=debug,
     )
 
 
@@ -683,6 +684,7 @@ def make_loading_result(
     discovered_host_labels_dir: Path,
     builtin_host_labels_file: Path,
     excluded_service_ids: Container[ServiceID] = frozenset(),
+    debug: bool,
 ) -> LoadingResult:
     """Derive everything below the BaseConfig.
 
@@ -709,6 +711,7 @@ def make_loading_result(
             builtin_host_labels_file=builtin_host_labels_file,
             excluded_service_ids=excluded_service_ids,
             relay_supported_active_checks=relay_supported_active_checks(),
+            debug=debug,
         ),
     )
 
@@ -812,6 +815,7 @@ class ServiceDependsOn:
         | tuple[str, Sequence[str], Sequence[str]]
         | tuple[str, Sequence[str], Sequence[str], dict[str, object]]
     ]
+    debug: bool
 
     def __call__(self, hostname: HostName, servicedesc: ServiceName) -> list[ServiceName]:
         """Return a list of services this service depends on"""
@@ -831,7 +835,7 @@ class ServiceDependsOn:
                 )
             if tuple_rulesets.hosttags_match_taglist(
                 self.tag_list(hostname), tags
-            ) and tuple_rulesets.in_extraconf_hostlist(hostlist, hostname):
+            ) and tuple_rulesets.in_extraconf_hostlist(hostlist, hostname, debug=self.debug):
                 for pattern in patternlist:
                     if matchobject := regex(pattern).search(servicedesc):
                         try:
@@ -1128,6 +1132,7 @@ class ConfigCache:
         builtin_host_labels_file: Path,
         excluded_service_ids: Container[ServiceID] = frozenset(),
         relay_supported_active_checks: Container[str] = frozenset(),
+        debug: bool,
     ) -> None:
         """Hold the configuration and derive the check tables from it.
 
@@ -1151,6 +1156,7 @@ class ConfigCache:
         self._host_tags = host_tags
         self._excluded_service_ids: Final = excluded_service_ids
         self._relay_supported_active_checks: Final = relay_supported_active_checks
+        self._debug: Final = debug
         self.__enforced_services_table: dict[
             HostName,
             Mapping[
@@ -1319,6 +1325,7 @@ class ConfigCache:
             ),
             is_cmc=self._loaded_config.monitoring_core == "cmc",
             uuid_lookup_dir=cmk.utils.paths.uuid_lookup_dir,
+            debug=self._debug,
         )
 
     def summary_config(self, host_name: HostName, source_id: str) -> SummaryConfig:
@@ -1350,7 +1357,7 @@ class ConfigCache:
             host_name, self._loaded_config.datasource_programs, self.label_manager.labels_of_host
         )
 
-    def ip_lookup_config(self) -> ip_lookup.IPLookupConfig:
+    def ip_lookup_config(self, *, fake_dns: HostAddress | None = None) -> ip_lookup.IPLookupConfig:
         return ip_lookup.IPLookupConfig(
             ip_stack_config=self.ip_stack_config,
             is_snmp_host=lambda host_name: self.computed_datasources(host_name).is_snmp,
@@ -1362,12 +1369,16 @@ class ConfigCache:
             management_address=self.management_address,
             is_dyndns_host=self.is_dyndns_host,
             simulation_mode=self._loaded_config.simulation_mode,
-            fake_dns=None
-            if self._loaded_config.fake_dns is None
-            else HostAddress(self._loaded_config.fake_dns),
+            fake_dns=fake_dns
+            or (
+                None
+                if self._loaded_config.fake_dns is None
+                else HostAddress(self._loaded_config.fake_dns)
+            ),
             use_dns_cache=self._loaded_config.use_dns_cache,
             ipv4_addresses=self._loaded_config.ipaddresses,
             ipv6_addresses=self._loaded_config.ipv6addresses,
+            debug=self._debug,
         )
 
     def make_snmp_config(
@@ -1982,11 +1993,11 @@ class ConfigCache:
         host_macros = ConfigCache.get_host_macros_from_attributes(host_name, host_attrs)
         resource_macros = load_resource_cfg_macros(
             cmk.utils.paths.nagios_resource_cfg,
-            None if cmk.ccc.debug.enabled() else lambda x: None,  # noqa: ARG005
+            None if self._debug else lambda x: None,  # noqa: ARG005
         )
         macros = {**host_macros, **resource_macros}
         active_check_config = ActiveCheck(
-            load_active_checks(raise_errors=cmk.ccc.debug.enabled()),
+            load_active_checks(raise_errors=self._debug),
             host_name,
             get_ssc_host_config(
                 host_name,
@@ -2028,16 +2039,7 @@ class ConfigCache:
             ),
             ip_lookup_failed=ip_lookup.is_fallback_ip(host_attrs["address"]),
             for_relay=for_relay,
-            # Experimental flag exp_relay_active_checks (CMK-38421): until the feature is GA no
-            # active check is supported on relays, so relay-monitored hosts keep getting the
-            # "not supported on relays" warning / UNKNOWN result.
-            relay_supported_active_checks=(
-                self._relay_supported_active_checks
-                if load_experimental_flags(
-                    cmk.utils.paths.default_config_dir
-                ).exp_relay_active_checks
-                else frozenset()
-            ),
+            relay_supported_active_checks=self._relay_supported_active_checks,
             site_side_only_active_checks=SITE_SIDE_ONLY_ACTIVE_CHECKS,
         )
 
@@ -2057,7 +2059,7 @@ class ConfigCache:
                 )
                 continue
             except Exception as e:
-                if cmk.ccc.debug.enabled():
+                if self._debug:
                     raise
                 config_warnings.warn(
                     f"Config creation for active check {plugin_name} failed on {host_name}: {e}"
@@ -2146,7 +2148,7 @@ class ConfigCache:
 
         host_attrs = self.get_host_attributes(host_name, host_ip_family, usable_ip_address_of)
         special_agent = SpecialAgent(
-            load_special_agents(raise_errors=cmk.ccc.debug.enabled()),
+            load_special_agents(raise_errors=self._debug),
             host_name,
             ip_address,
             get_ssc_host_config(
@@ -2185,7 +2187,7 @@ class ConfigCache:
                     for agent_data in special_agent.iter_special_agent_commands(agentname, params):
                         yield agentname, agent_data
                 except Exception as exc:
-                    if cmk.ccc.debug.enabled():
+                    if self._debug:
                         raise
                     config_warnings.warn(
                         f"Config creation for special agent {agentname} failed on host '{host_name}': {exc}"
@@ -2733,7 +2735,7 @@ class ConfigCache:
         }
 
     @staticmethod
-    def replace_macros(s: str, macros: ObjectMacros) -> str:
+    def replace_macros(s: str, macros: ObjectMacros, *, debug: bool) -> str:
         for key, value in macros.items():
             if isinstance(value, numbers.Integral | float):
                 value = str(value)  # e.g. in _EC_SL (service level)
@@ -2746,7 +2748,7 @@ class ConfigCache:
                     s = s.replace(key, value.decode("utf-8"))
                 except Exception:
                     # If this does not help, do not replace
-                    if cmk.ccc.debug.enabled():
+                    if debug:
                         raise
 
         return s
@@ -2762,7 +2764,7 @@ class ConfigCache:
         def _translate_host_macros(cmd: str) -> str:
             attrs = self.get_host_attributes(host_name, host_ip_family, ip_address_of)
             macros = ConfigCache.get_host_macros_from_attributes(host_name, attrs)
-            return ConfigCache.replace_macros(cmd, macros)
+            return ConfigCache.replace_macros(cmd, macros, debug=self._debug)
 
         def _translate_legacy_macros(cmd: str) -> str:
             # Make "legacy" translation. The users should use the $...$ macros in future
@@ -2807,12 +2809,6 @@ class ConfigCache:
         if self._loaded_config.use_new_descriptions_for.get("cmk_inventory", False):
             return "Check_MK Discovery"
         return "Check_MK inventory"
-
-    def agent_exclude_sections(self, host_name: HostName) -> dict[str, str]:
-        settings = self.ruleset_matcher.get_host_values_all(
-            host_name, self._loaded_config.agent_exclude_sections, self.label_manager.labels_of_host
-        )
-        return settings[0] if settings else {}
 
     def ping_levels(self, host_name: HostName) -> PingLevels:
         levels: PingLevels = {}

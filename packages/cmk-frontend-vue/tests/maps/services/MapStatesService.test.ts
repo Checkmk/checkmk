@@ -315,7 +315,7 @@ describe('MapStatesService — BI aggregations resolve GUI-side', () => {
     })
     const objects = {
       fetchAggregationStates: vi.fn().mockResolvedValue({
-        'Host x': { state: 2, output: 'crit', acknowledged: false, in_downtime: false }
+        'Host x': { state: 'CRITICAL', output: 'crit', acknowledged: false, in_downtime: false }
       }),
       fetchAggregationTree: vi.fn().mockResolvedValue({
         tree: { name: 'Host x', node_type: 'bi_aggregator', state: 2, children: [] },

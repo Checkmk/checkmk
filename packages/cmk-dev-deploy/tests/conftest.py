@@ -71,12 +71,18 @@ _TEST_INSTALL_SPEC_EXTENSIONS: dict[str, frozenset[str]] = {
     "packages/cmk-frontend": frozenset({".css", ".js", ".scss", ".ts"}),
     "packages/cmk-frontend-vue": frozenset({".js", ".ts", ".tsx", ".vue"}),
     "packages/cmk-ui-library": frozenset({".json", ".mjs", ".svg", ".ts", ".vue"}),
+    "packages/cmk-profiling": frozenset({".json", ".mjs", ".ts", ".vue"}),
+    "packages/cmk-shared-typing": frozenset({".json", ".ts", ".txt"}),
 }
 
 # Input prefixes per package_target: packages compiled into an install
-# target's artifact that have no deploy spec of their own.
+# target's artifact whose sources there no spec of their own deploys.
 _TEST_INPUT_PREFIXES: dict[str, tuple[str, ...]] = {
-    "//packages/cmk-frontend-vue:frontend_vue_dist_pkg": ("packages/cmk-ui-library/",),
+    "//packages/cmk-frontend-vue:frontend_vue_dist_pkg": (
+        "packages/cmk-profiling/",
+        "packages/cmk-shared-typing/",
+        "packages/cmk-ui-library/",
+    ),
 }
 
 
@@ -106,6 +112,7 @@ def _build_seed_manifest() -> dict[str, object]:
     wheel_prefixes: list[str] = [
         "cmk/",
         "packages/cmk-ccc/",
+        "packages/cmk-profiling/",
         "packages/cmk-shared-typing/",
         "non-free/packages/cmk-bakery/",
     ]

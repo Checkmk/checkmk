@@ -9,6 +9,7 @@ from typing import NamedTuple, Protocol
 
 from cmk.gui.config import Config, RequestCacheConfig
 from cmk.gui.http import Request
+from cmk.gui.painter import RowExtender
 from cmk.gui.type_defs import ColumnName, ColumnSpec, Row
 from cmk.gui.valuespec import Dictionary
 from cmk.web.utils.request_cache import RequestCache
@@ -60,12 +61,14 @@ class Sorter:
         columns: Sequence[ColumnName],
         sort_function: SorterProtocol,
         load_inv: bool = False,
+        row_extender: RowExtender | None = None,
     ):
         self.ident = ident
         self._title = title
         self.columns = columns
         self.cmp = sort_function
         self.load_inv = load_inv
+        self.row_extender = row_extender
 
     @property
     def title(self) -> str:

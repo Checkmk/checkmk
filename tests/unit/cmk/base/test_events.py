@@ -83,7 +83,7 @@ HTTP_PROXY: Final = EnvironmentProxyConfig()
     ],
 )
 def test_raw_context_from_string(context: str, expected: EventContext) -> None:
-    assert raw_context_from_string(context) == expected
+    assert raw_context_from_string(context, debug=True) == expected
 
 
 @pytest.mark.parametrize(
@@ -111,6 +111,7 @@ def test_complete_raw_context_pre_formats_state_change_with_local_tz(
             with_dump=False,
             contacts_needed=False,
             analyse=False,
+            debug=True,
         )
 
     assert enriched["LASTHOSTSTATECHANGE_LOCAL"] == expected_host
@@ -132,6 +133,7 @@ def test_complete_raw_context_skips_local_field_for_host_notification() -> None:
             with_dump=False,
             contacts_needed=False,
             analyse=False,
+            debug=True,
         )
 
     assert enriched["LASTHOSTSTATECHANGE_LOCAL"] == "2025-05-12 08:11:34 UTC"
@@ -322,7 +324,7 @@ def test_add_to_event_context(param: object, expected: EventContext) -> None:
                     "explicit": "label",
                     "cmk/site": "heute",
                 },
-                service_labels={"Interface 1": {"dicovered": "label", "rule": "label"}},
+                service_labels={"Interface 1": {"discovered": "label", "rule": "label"}},
                 tags={
                     TagGroupID("criticality"): TagID("prod"),
                 },
@@ -340,7 +342,7 @@ def test_add_to_event_context(param: object, expected: EventContext) -> None:
                 "HOSTLABEL_explicit": "label",
                 "HOSTLABEL_cmk/site": "heute",
                 "HOSTTAG_criticality": "prod",
-                "SERVICELABEL_dicovered": "label",
+                "SERVICELABEL_discovered": "label",
                 "SERVICELABEL_rule": "label",
             },
             id="service notification",
@@ -361,7 +363,7 @@ def test_add_to_event_context(param: object, expected: EventContext) -> None:
                     "explicit": "label",
                     "cmk/site": "heute",
                 },
-                service_labels={"Interface 1": {"dicovered": "label", "rule": "label"}},
+                service_labels={"Interface 1": {"discovered": "label", "rule": "label"}},
                 tags={
                     TagGroupID("networking"): TagID("wan"),
                     TagGroupID("criticality"): TagID("critical"),

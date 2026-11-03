@@ -10,7 +10,7 @@ the infrastructure view of the _mk-oracle finalization_ test plan (epic
 [CMK-33846](https://jira.lan.tribe29.com/browse/CMK-33846)). Keep it current —
 see the Maintenance section in the [tests README](../README.md). The IT-managed
 systems are also documented in the wiki under
-[Test Environments](https://wiki.lan.checkmk.net/spaces/DEV/pages/149528955/Test+Environments).
+[Test Environments](https://checkmk-int.atlassian.net/wiki/x/x4VlD).
 
 ## Topology
 
@@ -58,7 +58,7 @@ flowchart LR
 - **Provisioning**: persistent, IT-managed, re-provisioned via Ansible ("hard
   reference environment" per the test plan — kept for what Docker can't
   represent: full local-instance discovery, OS-specific paths). Wiki:
-  [Linux — Oracle Test Environment with OracleDB 19c and 23AI](https://wiki.lan.checkmk.net/spaces/DEV/pages/171676250/Linux+-+Oracle+Test+Environment+with+OracleDB+19c+and+23AI).
+  [Linux — Oracle Test Environment with OracleDB 19c and 23AI](https://checkmk-int.atlassian.net/wiki/x/nIdlD).
 - **Reachability**: SQL\*Net from Linux CI containers and Windows build nodes;
   SSH for the run-on-VM model (login user from the Jenkins SSH credential,
   home `/home/rocky`).
@@ -85,7 +85,7 @@ flowchart LR
     `localhost` (see [`windows-local-testing.md`](windows-local-testing.md)).
   - These details are a snapshot — the VM is re-provisioned via Ansible;
     re-verify after a reset. Wiki:
-    [Win — Oracle Test Environment with OracleDB 19c and 23AI](https://wiki.lan.checkmk.net/spaces/DEV/pages/149528959/Win+-+Oracle+Test+Environment+with+OracleDB+19c+and+23AI).
+    [Win — Oracle Test Environment with OracleDB 19c and 23AI](https://checkmk-int.atlassian.net/wiki/x/6IJlD).
 - **Provisioning**: persistent, IT-managed (Ansible).
 - **CI status**: both stages of the `winagt-test-mk-oracle` job are active —
   the **network model** (connects to the 23ai Free instance over TCP) and the

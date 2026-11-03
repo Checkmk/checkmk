@@ -23,10 +23,14 @@ def generate_prism_command(
     args: list[str | Secret] = [
         "--server",
         host_config.primary_ip_config.address,
+        "--hostname",
+        host_config.name,
         "--username",
         str(params["username"]),
         "--password-id",
         secret,
+        "--api-version",
+        str(params["api_version"]),
     ]
 
     if "port" in params:

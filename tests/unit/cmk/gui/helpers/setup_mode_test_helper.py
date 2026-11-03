@@ -8,12 +8,15 @@ from urllib.parse import parse_qs, urlparse
 
 from bs4 import BeautifulSoup, Tag
 
+from cmk.gui import hooks
 from cmk.gui.config import Config
 from cmk.gui.exceptions import HTTPRedirect
 from cmk.gui.http import request
 from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib.mode import WatoMode
@@ -22,7 +25,13 @@ type TableRow = dict[str, Tag]
 
 
 def page_context(config: Config) -> PageContext:
-    return PageContext(config=config, request=request, transactions=transactions, session=session)
+    return PageContext(
+        config=config,
+        request=request,
+        transactions=transactions,
+        session=session,
+        user_permissions=UserPermissions.from_config(config, all_permissions()),
+    )
 
 
 def render_page[T](mode: WatoMode[T], config: Config) -> str:
@@ -42,6 +51,14 @@ def submit(**variables: str) -> None:
     transactions.ignore()
     request.set_var("_transid", "-1")
     request.set_var("_csrf_token", session.session_info.csrf_token)
+
+
+def end_request() -> None:
+    """Ends the request, e.g. the one showing a page before submitting its form
+
+    Like after a real one, the next request no longer sees what it memoized, e.g. loaded
+    configuration, but the changes made meanwhile."""
+    hooks.call("request-end")
 
 
 def _query_vars(url: str) -> dict[str, str]:
@@ -81,6 +98,11 @@ def form_values(page: str, form_name: str) -> dict[str, str]:
         else:
             values[name] = str(field.get("value", ""))
     return values
+
+
+def error_messages(page: str) -> list[str]:
+    """The error messages the page shows, e.g. the one refusing a submitted form"""
+    return [div.get_text() for div in BeautifulSoup(page, "html.parser").select("div.error")]
 
 
 def data_table(page: str, title: str | None = None) -> Tag:

@@ -17,18 +17,19 @@ and the per-branch state.
 """
 
 from types import SimpleNamespace
-from typing import cast
+from typing import cast, get_args
 from unittest.mock import MagicMock
 
 import pytest
 
-from cmk.bi.lib import NodeComputeResult, NodeResultBundle, RequiredBIElement
+from cmk.bi.lib import BIState, NodeComputeResult, NodeResultBundle, RequiredBIElement
 from cmk.bi.trees import BICompiledAggregation, BICompiledLeaf, BICompiledRule
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.livestatus_client import MKLivestatusException
 from cmk.maps.gui import _aggregations
 from cmk.maps.gui._aggregations import AggregationInfo, AggregationState
+from cmk.maps.shared.states import BIStateName
 
 
 def _compute_result(
@@ -116,9 +117,15 @@ def test_results_to_states_projects_per_branch() -> None:
     # inside and are not keyed here.
     results = _results([_rule("Host a", 2, []), _rule("Host b", 1, [])])
     states = _aggregations._results_to_states(results, None)  # noqa: SLF001
-    assert states["Host a"].state == 2
+    assert states["Host a"].state == "CRITICAL"
     assert states["Host a"].acknowledged is True
-    assert states["Host b"].state == 1
+    assert states["Host b"].state == "WARNING"
+
+
+def test_every_bi_state_has_a_name_of_its_own() -> None:
+    # Iterating an IntEnum skips its aliases (HOST_UP is OK), so this covers each state once.
+    names = [_aggregations.bi_state_name(state) for state in BIState]
+    assert sorted(names) == sorted(get_args(BIStateName.__value__))
 
 
 def test_results_to_states_reads_in_downtime_from_actual_result() -> None:
@@ -215,7 +222,9 @@ def test_aggregation_states_batches(monkeypatch: pytest.MonkeyPatch) -> None:
     _fake_manager(monkeypatch, results=_results([_rule("Host a", 2, [])]))
     states = _aggregations.aggregation_states(["Host a"])
     assert states == {
-        "Host a": AggregationState(state=2, output="", acknowledged=True, in_downtime=False)
+        "Host a": AggregationState(
+            state="CRITICAL", output="", acknowledged=True, in_downtime=False
+        )
     }
 
 

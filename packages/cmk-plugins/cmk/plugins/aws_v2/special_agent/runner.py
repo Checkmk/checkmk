@@ -15,7 +15,7 @@ import sys
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
 from datetime import datetime
-from typing import override
+from typing import override, TextIO
 
 import boto3
 import botocore
@@ -27,6 +27,8 @@ from .config import (
     describe_credential_failure,
     LOGGER,
 )
+from .credentials import CLIENT_LOCK
+from .hosts import AccountScope, SOURCE_HOST, target_host, TargetHost
 from .sections.aws_lambda import (
     LambdaCloudwatch,
     LambdaCloudwatchInsights,
@@ -58,11 +60,25 @@ from .sections.elbv2 import (
     ELBv2Network,
     ELBv2TargetGroups,
 )
-from .sections.glacier import Glacier, GlacierLimits
-from .sections.rds import RDS, RDSLimits, RDSSummary
+from .sections.glacier import Glacier, GlacierLimits, GlacierSummary
+from .sections.rds import RDS, RDSLabels, RDSLimits, RDSSummary
 from .sections.route53 import Route53Cloudwatch, Route53HealthChecks
-from .sections.s3 import ResultDistributorS3Limits, S3, S3Limits, S3Requests, S3Summary
-from .sections.sns import SNS, SNSLimits, SNSSMS, SNSSummary, SNSTopicsFetcher
+from .sections.s3 import (
+    ResultDistributorS3Limits,
+    S3,
+    S3Bucket,
+    S3Limits,
+    S3Requests,
+    S3Summary,
+)
+from .sections.sns import (
+    SNS,
+    SNSLimits,
+    SNSSMS,
+    SNSSummary,
+    SNSTopicCloudwatch,
+    SNSTopicsFetcher,
+)
 from .sections.wafv2 import WAFV2Limits, WAFV2Summary, WAFV2WebACL
 
 Results = dict[tuple[str, float, float], Sequence["AWSSectionResult"]]
@@ -103,12 +119,16 @@ def datetime_serializer(obj):
 # '-- S3Summary
 #     |
 #     |-- S3
+#     |   |
+#     |   '-- S3Bucket
 #     |
 #     '-- S3Requests
 
 # GlacierLimits
 # |
-# '-- Glacier
+# '-- GlacierSummary
+#     |
+#     '-- Glacier
 
 # ELBLimits
 # |
@@ -134,6 +154,8 @@ def datetime_serializer(obj):
 
 # RDSSummary
 # |
+# |-- RDSLabels
+# |
 # '-- RDS
 
 # CloudFrontSummary
@@ -156,7 +178,9 @@ def datetime_serializer(obj):
 #     |
 #     '-- WAFV2WebACL
 
-# LambdaSummary, LambdaRegionLimits
+# LambdaSummary
+# |
+# |-- LambdaRegionLimits
 # |
 # '-- LambdaProvisionedConcurrency
 #     |
@@ -175,6 +199,8 @@ def datetime_serializer(obj):
 # '-- SNSSummary
 #     |
 #     '-- SNS
+#         |
+#         '-- SNSTopicCloudwatch
 
 # ECSLimits
 # |
@@ -189,6 +215,13 @@ def datetime_serializer(obj):
 #     '-- ElastiCache
 
 
+def denied_by_scp(error: Exception) -> bool:
+    """Whether AWS refused the call because of a service control policy of the organization."""
+    return isinstance(error, botocore.exceptions.ClientError) and (
+        "service control policy" in error.response.get("Error", {}).get("Message", "")
+    )
+
+
 class AWSSections(abc.ABC):
     def __init__(
         self,
@@ -197,11 +230,13 @@ class AWSSections(abc.ABC):
         account_id: str,
         debug: bool = False,
         config: botocore.config.Config | None = None,
-        account_host: str | None = None,
+        output: TextIO | None = None,
     ) -> None:
         self._hostname = hostname
-        # The piggyback host that receives what would otherwise go to the rule host.
-        self._account_host = account_host
+        # Where the agent output goes. None is sys.stdout at the time of writing.
+        self._output = output
+        # The host of the labels and exceptions of the account. init_sections sets it.
+        self._account_host: TargetHost | None = SOURCE_HOST
         self._session = session
         # None until init_sections runs. boto3 then falls back to the session's own
         # region, which is what happened before the region moved onto the client.
@@ -210,6 +245,9 @@ class AWSSections(abc.ABC):
         self._sections: list[AWSSection] = []
         self.config = config
         self.account_id = account_id
+        # The sections that a service control policy kept from running. They are no error:
+        # the organization chose to deny them.
+        self.denied_by_scp: list[str] = []
 
     def init_sections(
         self,
@@ -222,6 +260,7 @@ class AWSSections(abc.ABC):
         # below lands in it. One session serves all regions; the client decides where it
         # talks to.
         self._region = region
+        self._account_host = target_host(AccountScope(), config.host_naming)
         self._build_sections(services, region, config, s3_limits_distributor)
 
     @abc.abstractmethod
@@ -238,7 +277,10 @@ class AWSSections(abc.ABC):
         try:
             # TODO: The signature of the client() method depends on the literal(!) value of its
             # first argument, so using a plain str here is wrong.
-            return self._session.client(client_key, region_name=self._region, config=self.config)
+            with CLIENT_LOCK:
+                return self._session.client(
+                    client_key, region_name=self._region, config=self.config
+                )
         except (
             ValueError,
             botocore.exceptions.ClientError,
@@ -281,7 +323,10 @@ class AWSSections(abc.ABC):
                 )
                 if self._debug:
                     raise
-                exceptions.append(e)
+                if denied_by_scp(e):
+                    self.denied_by_scp.append(section.name)
+                else:
+                    exceptions.append(e)
             else:
                 results.setdefault(
                     (section.name, section_result.cache_timestamp, section.cache_interval),
@@ -297,27 +342,29 @@ class AWSSections(abc.ABC):
         return {"cmk/aws/account": self.account_id}
 
     def _is_piggyback_host_result(self, section_result: AWSSectionResult) -> bool:
-        return section_result.piggyback_hostname not in {None, "", self._hostname}
+        # "" guards against an empty host name in the AWS data or in older cache files.
+        return section_result.piggyback_hostname not in {SOURCE_HOST, "", self._hostname}
 
     def _collect_piggyback_host_labels(
         self, results: Results, static_labels: Mapping[str, str]
     ) -> Mapping[str, Mapping[str, str]]:
-        """Labels dependent on the type of piggyback host"""
+        """The static labels for every piggyback host, plus the labels of its type"""
         host_labels: dict[str, dict[str, str]] = defaultdict(lambda: {**static_labels})
         for result in results.values():
             for row in result:
-                if self._is_piggyback_host_result(row) and row.piggyback_host_labels:
-                    host_labels[str(row.piggyback_hostname)].update(row.piggyback_host_labels)
+                # The account host gets its labels together with the account's own data.
+                if (
+                    self._is_piggyback_host_result(row)
+                    and row.piggyback_hostname != self._account_host
+                ):
+                    host_labels[str(row.piggyback_hostname)].update(row.piggyback_host_labels or {})
         return host_labels
 
-    def _target_host(self, section_result: AWSSectionResult) -> str | None:
-        if self._is_piggyback_host_result(section_result):
-            return str(section_result.piggyback_hostname)
-        return self._account_host
+    def _write(self, content: str) -> None:
+        (self._output or sys.stdout).write(content)
 
-    @staticmethod
-    def _write_to_host(host: str | None, content: str) -> None:
-        sys.stdout.write(content if host is None else f"<<<<{host}>>>>\n{content}<<<<>>>>\n")
+    def _write_to_host(self, host: TargetHost | None, content: str) -> None:
+        self._write(content if host is SOURCE_HOST else f"<<<<{host}>>>>\n{content}<<<<>>>>\n")
 
     def _write_host_labels(self, results: Results) -> None:
         static_host_labels = self._collect_static_host_labels()
@@ -327,7 +374,7 @@ class AWSSections(abc.ABC):
 
         piggyback_host_labels = self._collect_piggyback_host_labels(results, static_host_labels)
         for hostname, host_labels in piggyback_host_labels.items():
-            sys.stdout.write(
+            self._write(
                 f"<<<<{hostname}>>>>\n<<<labels:sep(0)>>>\n{json.dumps(host_labels)}\n<<<<>>>>\n"
             )
 
@@ -388,7 +435,11 @@ class AWSSections(abc.ABC):
 
         for row in result:
             self._write_to_host(
-                self._target_host(row),
+                # The source host, an empty name and a host named like the rule host
+                # mean the data of the account.
+                row.piggyback_hostname
+                if self._is_piggyback_host_result(row)
+                else self._account_host,
                 f"{section_header}{json.dumps(row.content, default=datetime_serializer)}\n",
             )
 
@@ -446,12 +497,7 @@ class AWSSectionsUSEast(AWSSections):
             cloudfront_summary = CloudFrontSummary(
                 cloudfront_client, tagging_client, region, config, distributor
             )
-            cloudfront = CloudFront(
-                cloudwatch_client,
-                region,
-                config,
-                config.service_config["cloudfront_host_assignment"],
-            )
+            cloudfront = CloudFront(cloudwatch_client, region, config)
             distributor.add(cloudfront_summary.name, cloudfront)
             self._sections.append(cloudfront_summary)
             self._sections.append(cloudfront)
@@ -478,7 +524,7 @@ def _create_lamdba_sections(
         config,
         distributor,
     )
-    distributor.add(lambda_limits.name, lambda_summary)
+    distributor.add(lambda_summary.name, lambda_limits)
     lambda_provisioned_concurrency_configuration = LambdaProvisionedConcurrency(
         lambda_client,
         region,
@@ -622,11 +668,11 @@ class AWSSectionsGeneric(AWSSections):
             # S3 is special because there are no per-region limits, but only a global per-account limit.
             # The list of buckets can be queried from any region, however, the metrics for the
             # individual buckets must be queried from the region the bucket resides in. Therefore, we
-            # only want to run S3Limits once, namely for the first region (does not matter which region
-            # that is). The results will then be distributed to the S3Summary objects across all regions
-            # using the special distributor for S3 limits.
+            # only want to run S3Limits once, namely for the owner region of the distributor (does not
+            # matter which region that is). The results will then be distributed to the S3Summary
+            # objects across all regions using the special distributor for S3 limits.
             s3_client = self._init_client("s3")
-            if s3_limits_distributor.is_empty():
+            if s3_limits_distributor.is_owner(region):
                 s3_limits: S3Limits | None = S3Limits(
                     s3_client, region, config, s3_limits_distributor
                 )
@@ -635,35 +681,44 @@ class AWSSectionsGeneric(AWSSections):
             s3_summary = S3Summary(s3_client, region, config, distributor)
 
             s3_limits_distributor.add("s3_limits", s3_summary)
-            s3 = S3(cloudwatch_client, region, config)
+            s3 = S3(cloudwatch_client, region, config, distributor)
             distributor.add(s3_summary.name, s3)
+            s3_bucket = S3Bucket(cloudwatch_client, region, config)
+            distributor.add(s3.name, s3_bucket)
             s3_requests = S3Requests(cloudwatch_client, region, config)
             distributor.add(s3_summary.name, s3_requests)
             if config.service_config.get("s3_limits") and s3_limits:
                 self._sections.append(s3_limits)
             self._sections.append(s3_summary)
             self._sections.append(s3)
+            self._sections.append(s3_bucket)
             if config.service_config["s3_requests"]:
                 self._sections.append(s3_requests)
 
         if "glacier" in services:
             glacier_client = self._init_client("glacier")
             glacier_limits = GlacierLimits(glacier_client, region, config, distributor)
-            glacier_summary = Glacier(glacier_client, region, config)
+            glacier_summary = GlacierSummary(glacier_client, region, config, distributor)
+            glacier = Glacier(glacier_client, region, config)
             distributor.add(glacier_limits.name, glacier_summary)
+            distributor.add(glacier_summary.name, glacier)
             if config.service_config.get("glacier_limits"):
                 self._sections.append(glacier_limits)
             self._sections.append(glacier_summary)
+            self._sections.append(glacier)
 
         if "rds" in services:
             rds_client = self._init_client("rds")
             rds_summary = RDSSummary(rds_client, region, config, distributor)
             rds_limits = RDSLimits(rds_client, region, config)
+            rds_labels = RDSLabels(rds_client, region, config)
             rds = RDS(cloudwatch_client, region, config)
+            distributor.add(rds_summary.name, rds_labels)
             distributor.add(rds_summary.name, rds)
             if config.service_config.get("rds_limits"):
                 self._sections.append(rds_limits)
             self._sections.append(rds_summary)
+            self._sections.append(rds_labels)
             self._sections.append(rds)
 
         if "cloudwatch_alarms" in services:
@@ -728,9 +783,10 @@ class AWSSectionsGeneric(AWSSections):
                 config,
                 distributor,
             )
+            # lambda_limits needs the functions of lambda_summary.
+            self._sections.append(lambda_summary)
             if config.service_config.get("lambda_limits"):
                 self._sections.append(lambda_limits)
-            self._sections.append(lambda_summary)
             self._sections.append(lambda_provisioned_concurrency_configuration)
             self._sections.append(lambda_cloudwatch)
             self._sections.append(lambda_cloudwatch_insights)
@@ -741,8 +797,10 @@ class AWSSectionsGeneric(AWSSections):
             sns_summary = SNSSummary(
                 sns_client, region, config, sns_topics_fetcher, distributor=distributor
             )
-            sns_cloudwatch = SNS(cloudwatch_client, region, config)
+            sns_cloudwatch = SNS(cloudwatch_client, region, config, distributor)
             distributor.add(sns_summary.name, sns_cloudwatch)
+            sns_topic_cloudwatch = SNSTopicCloudwatch(cloudwatch_client, region, config)
+            distributor.add(sns_cloudwatch.name, sns_topic_cloudwatch)
             sns_sms_cloudwatch = SNSSMS(cloudwatch_client, region, config)
             if config.service_config.get("sns_limits"):
                 sns_limits = SNSLimits(
@@ -755,6 +813,7 @@ class AWSSectionsGeneric(AWSSections):
             # there through the distributor
             self._sections.append(sns_summary)
             self._sections.append(sns_cloudwatch)
+            self._sections.append(sns_topic_cloudwatch)
             self._sections.append(sns_sms_cloudwatch)
 
         if "ecs" in services:
@@ -775,7 +834,7 @@ class AWSSectionsGeneric(AWSSections):
             self._sections.append(ecs_summary)
 
             ecs = ECS(cloudwatch_client, region, config)
-            distributor.add("ecs_summary", ecs)
+            distributor.add(ecs_summary.name, ecs)
             self._sections.append(ecs)
 
         if "elasticache" in services:
@@ -798,5 +857,5 @@ class AWSSectionsGeneric(AWSSections):
             self._sections.append(elasticache_summary)
 
             elasticache = ElastiCache(cloudwatch_client, region, config)
-            distributor.add("elasticache_summary", elasticache)
+            distributor.add(elasticache_summary.name, elasticache)
             self._sections.append(elasticache)

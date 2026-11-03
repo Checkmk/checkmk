@@ -18,7 +18,7 @@ import {
   searchMonitoringObjects
 } from '@/maps/shared/monitoringAutocompleters'
 import type { ObjectState, PresentationElement } from '@/maps/types/api'
-import { stateColor } from '@/maps/utils/stateColors'
+import { stateColorVar } from '@/maps/utils/stateColors'
 
 import { isBindable } from '../binding'
 import { BINDING_DROP_MIME, type BindingDropKind, type BindingDropPayload } from '../bindingDrop'
@@ -185,7 +185,7 @@ function stateDotFor(p: {
   service?: string | null
 }): string | null {
   const st = boundStates.value.get(bindingKey(p.kind, p.name, p.service))
-  return st ? stateColor(st) : null
+  return st ? stateColorVar(st) : null
 }
 
 function onDragStart(e: DragEvent, payload: BindingDropPayload): void {
@@ -349,7 +349,7 @@ function onDragStart(e: DragEvent, payload: BindingDropPayload): void {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
+  padding: var(--dimension-4) var(--dimension-5);
   border-bottom: 1px solid var(--default-border-color, rgb(255 255 255 / 8%));
   min-height: 44px;
   box-sizing: border-box;
@@ -360,17 +360,19 @@ function onDragStart(e: DragEvent, payload: BindingDropPayload): void {
   font-size: var(--font-size-large);
 }
 
+/* No tab panel follows these tabs to draw the line under them. */
 .maps-presentation-data-panel__tabs {
-  padding: 8px 12px 0;
+  padding: var(--dimension-4) var(--dimension-5) 0;
+  box-shadow: inset 0 -1px 0 var(--border-color-strong);
 }
 
 .maps-presentation-data-panel__search {
-  margin: 10px 12px 0;
+  margin: var(--dimension-5) var(--dimension-5) 0;
   width: calc(100% - 24px);
 }
 
 .maps-presentation-data-panel__hint {
-  padding: 6px 12px 8px;
+  padding: var(--dimension-4) var(--dimension-5) var(--dimension-4);
   font-size: var(--font-size-normal);
   color: var(--font-color-dimmed);
 }
@@ -389,8 +391,8 @@ function onDragStart(e: DragEvent, payload: BindingDropPayload): void {
 .maps-presentation-data-panel__row {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
+  gap: var(--dimension-4);
+  padding: var(--dimension-3) var(--dimension-5);
   cursor: grab;
 }
 
@@ -432,7 +434,7 @@ function onDragStart(e: DragEvent, payload: BindingDropPayload): void {
 
 .maps-presentation-data-panel__chip {
   flex-shrink: 0;
-  padding: 1px 6px;
+  padding: var(--dimension-1) var(--dimension-4);
   border: 1px solid var(--interactive-accent);
   border-radius: 9999px;
   font-size: var(--font-size-small);
@@ -440,7 +442,7 @@ function onDragStart(e: DragEvent, payload: BindingDropPayload): void {
 }
 
 .maps-presentation-data-panel__empty {
-  padding: 10px 12px;
+  padding: var(--dimension-5);
   font-size: var(--font-size-normal);
   color: var(--font-color-dimmed);
 }
@@ -450,7 +452,7 @@ function onDragStart(e: DragEvent, payload: BindingDropPayload): void {
 }
 
 .maps-presentation-data-panel__more {
-  padding: 8px 12px;
+  padding: var(--dimension-4) var(--dimension-5);
   font-size: var(--font-size-normal);
   font-style: italic;
   color: var(--font-color-dimmed);

@@ -34,6 +34,7 @@ from cmk.gui.user_sites import activation_sites
 from cmk.gui.userdb import get_user_attributes
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.watolib import bakery
+from cmk.gui.watolib.agent_registration import uuid_links_locked
 from cmk.gui.watolib.audit_log import make_audit_log_change_hook
 from cmk.gui.watolib.automations import (
     make_automation_config,
@@ -631,14 +632,7 @@ def _rename_host_in_uuid_link_manager(
     for site_id, renamings in renamings_by_site.items():
         automation_config = make_automation_config(site_configs[site_id])
         if isinstance(automation_config, LocalAutomationConfig):
-            n_relinked += len(
-                UUIDLinkManager(
-                    received_outputs_dir=cmk.utils.paths.received_outputs_dir,
-                    data_source_dir=cmk.utils.paths.data_source_push_agent_dir,
-                    r4r_discoverable_dir=cmk.utils.paths.r4r_discoverable_dir,
-                    uuid_lookup_dir=cmk.utils.paths.uuid_lookup_dir,
-                ).rename(renamings)
-            )
+            n_relinked += len(_rename_uuid_links(renamings))
         else:
             n_relinked += int(
                 str(
@@ -658,6 +652,19 @@ def _rename_host_in_uuid_link_manager(
     return ["uuid_link"] * n_relinked
 
 
+def _rename_uuid_links(
+    renamings: Iterable[tuple[HostName, HostName]],
+) -> list[tuple[HostName, HostName]]:
+    with uuid_links_locked():
+        return UUIDLinkManager(
+            received_outputs_dir=cmk.utils.paths.received_outputs_dir,
+            data_source_dir=cmk.utils.paths.data_source_push_agent_dir,
+            r4r_discoverable_dir=cmk.utils.paths.r4r_discoverable_dir,
+            uuid_lookup_dir=cmk.utils.paths.uuid_lookup_dir,
+            registrations_dir=cmk.utils.paths.registrations_dir,
+        ).rename(renamings)
+
+
 class _RenameHostsUUIDLinkRequest(BaseModel):
     renamings: Sequence[tuple[AnnotatedHostName, AnnotatedHostName]]
 
@@ -669,14 +676,7 @@ class AutomationRenameHostsUUIDLink(AutomationCommand[_RenameHostsUUIDLinkReques
 
     @override
     def execute(self, api_request: _RenameHostsUUIDLinkRequest) -> int:
-        return len(
-            UUIDLinkManager(
-                received_outputs_dir=cmk.utils.paths.received_outputs_dir,
-                data_source_dir=cmk.utils.paths.data_source_push_agent_dir,
-                r4r_discoverable_dir=cmk.utils.paths.r4r_discoverable_dir,
-                uuid_lookup_dir=cmk.utils.paths.uuid_lookup_dir,
-            ).rename(api_request.renamings)
-        )
+        return len(_rename_uuid_links(api_request.renamings))
 
     @override
     def get_request(self, config: Config, request: Request) -> _RenameHostsUUIDLinkRequest:
@@ -712,7 +712,7 @@ class RenameHostBackgroundJob(RenameHostsBackgroundJob):
 
     @override
     def _back_url(self) -> str:
-        return self._host.folder().url(request)
+        return self._host.folder().url()
 
 
 class RenameHostsJobArgs(BaseModel, frozen=True):
@@ -734,12 +734,15 @@ def rename_hosts_job_entry_point(
     args: RenameHostsJobArgs,
 ) -> None:
     from cmk.gui.i18n import ungettext
-    from cmk.gui.permissions import permission_registry
+    from cmk.gui.permissions import all_permissions
     from cmk.gui.utils.roles import UserPermissions
     from cmk.gui.watolib.activate_changes import ActivateChanges
 
     with job_interface.gui_context(
-        UserPermissions.from_serialized_config(args.user_permission_config, permission_registry)
+        UserPermissions.from_serialized_config(
+            args.user_permission_config,
+            all_permissions(),
+        )
     ):
         # The job acts on the configuration of the request that started it, so the tree is built
         # from the values that request put into the job arguments.

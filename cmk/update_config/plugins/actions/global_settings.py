@@ -29,8 +29,8 @@ from cmk.gui.watolib.global_settings import (
 )
 from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.sites import site_globals_editable, site_management_registry
-from cmk.update_config.lib import ExpiryVersion
-from cmk.update_config.registry import update_action_registry, UpdateAction
+from cmk.update_config.internal import ExpiryVersion, UpdateAction
+from cmk.update_config.registry import update_action_registry
 from cmk.utils.log import VERBOSE
 
 # List[(old_config_name, new_config_name, replacement_dict{old: new})]

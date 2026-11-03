@@ -58,6 +58,7 @@ export function checkmkVueConfig({
 }) {
   return {
     files: [`${packageDir}/**/*.{ts,tsx,vue,js,mjs}`],
+    linterOptions: { reportUnusedDisableDirectives: 'error' },
     languageOptions: {
       parserOptions: {
         project,
@@ -97,6 +98,7 @@ export function checkmkVueConfig({
       ],
       eqeqeq: 'error',
       'vue/eqeqeq': 'error',
+      'vue/comment-directive': ['error', { reportUnusedDisableDirectives: true }],
       'no-var': 'error',
       'no-restricted-syntax': ['error', ...RESTRICTED_SYNTAX],
       'no-restricted-imports': ['error', { patterns: [...RESTRICTED_IMPORT_PATTERNS] }],
@@ -205,7 +207,7 @@ export function checkmkVueTestConfig(packageDir) {
               name: '@vue/test-utils',
               message:
                 'Use @testing-library/vue instead of @vue/test-utils. ' +
-                'See https://wiki.lan.checkmk.net/spaces/DEV/pages/149528812/All+things+Vue'
+                'See https://checkmk-int.atlassian.net/wiki/x/no9lD'
             },
             {
               name: 'msw/node',
@@ -213,6 +215,14 @@ export function checkmkVueTestConfig(packageDir) {
               message:
                 "Use useMswServer from 'cmk-ui-library/vitest.msw', which also resets the " +
                 'handlers after each test and fails on unhandled requests.'
+            },
+            {
+              name: 'msw',
+              importNames: ['http'],
+              message:
+                "Use restApiHttp from 'cmk-ui-library/vitest.msw' for the Checkmk REST API, " +
+                'or createOpenApiHttp from there for another OpenAPI schema. For a URL ' +
+                'without a schema, use untypedHttp from there.'
             }
           ],
           patterns: [...RESTRICTED_IMPORT_PATTERNS]

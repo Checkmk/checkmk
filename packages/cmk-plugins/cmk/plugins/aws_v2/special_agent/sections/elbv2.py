@@ -11,6 +11,7 @@ from typing import override
 
 from botocore.client import BaseClient
 
+from .. import hosts
 from ..config import AWSConfig
 from .core import (
     AWSColleagueContents,
@@ -111,7 +112,7 @@ class ELBv2Limits(AWSSectionLimits):
         nlb_count = 0
         target_groups_count = 0
         for load_balancer in load_balancers:
-            lb_dns_name = load_balancer["DNSName"]
+            lb = hosts.LoadBalancerV2(load_balancer["DNSName"])
             lb_type = load_balancer["Type"]
 
             lb_listeners_count = len(load_balancer.get("Listeners", []))
@@ -123,17 +124,16 @@ class ELBv2Limits(AWSSectionLimits):
                 key = "application"
                 title = "Application"
                 self._add_limit(
-                    lb_dns_name,
                     AWSLimit(
                         "application_load_balancer_rules",
                         "Application Load Balancer Rules",
                         limits["rules-per-application-load-balancer"],
                         len(load_balancer.get("Rules", [])),
                     ),
+                    resource=lb,
                 )
 
                 self._add_limit(
-                    lb_dns_name,
                     AWSLimit(
                         "application_load_balancer_certificates",
                         "Application Load Balancer Certificates",
@@ -146,6 +146,7 @@ class ELBv2Limits(AWSSectionLimits):
                             ]
                         ),
                     ),
+                    resource=lb,
                 )
 
             elif lb_type == "network":
@@ -157,27 +158,26 @@ class ELBv2Limits(AWSSectionLimits):
                 continue
 
             self._add_limit(
-                lb_dns_name,
                 AWSLimit(
                     "%s_load_balancer_listeners" % key,
                     "%s Load Balancer Listeners" % title,
                     limits["listeners-per-%s-load-balancer" % key],
                     lb_listeners_count,
                 ),
+                resource=lb,
             )
 
             self._add_limit(
-                lb_dns_name,
                 AWSLimit(
                     "%s_load_balancer_target_groups" % key,
                     "%s Load Balancer Target Groups" % title,
                     limits["targets-per-%s-load-balancer" % key],
                     lb_target_groups_count,
                 ),
+                resource=lb,
             )
 
         self._add_limit(
-            "",
             AWSLimit(
                 "application_load_balancers",
                 "Application Load balancers",
@@ -187,7 +187,6 @@ class ELBv2Limits(AWSSectionLimits):
         )
 
         self._add_limit(
-            "",
             AWSLimit(
                 "network_load_balancers",
                 "Network Load balancers",
@@ -197,7 +196,6 @@ class ELBv2Limits(AWSSectionLimits):
         )
 
         self._add_limit(
-            "",
             AWSLimit(
                 "load_balancer_target_groups",
                 "Load balancers target groups",

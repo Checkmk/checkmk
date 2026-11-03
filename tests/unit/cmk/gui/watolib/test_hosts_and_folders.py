@@ -26,7 +26,6 @@ from pytest import MonkeyPatch
 from redis import ConnectionError as RedisConnectionError
 from redis import Redis
 from redis import TimeoutError as RedisTimeoutError
-from werkzeug.test import create_environ
 
 import cmk.ruleset_matcher.tags
 import cmk.utils.paths
@@ -38,7 +37,6 @@ from cmk.ccc.user import UserId
 from cmk.gui import userdb
 from cmk.gui.config import Config, get_default_config, make_config_object
 from cmk.gui.exceptions import MKAuthException, MKUserError
-from cmk.gui.http import Request
 from cmk.gui.logged_in import (
     LoggedInNobody,
     LoggedInSuperUser,
@@ -85,7 +83,6 @@ from cmk.livestatus_client import SiteConfiguration, SiteConfigurations
 from cmk.utils.global_ident_type import PROGRAM_ID_QUICK_SETUP
 from cmk.utils.host_storage import PickleHostsStorage
 from cmk.utils.redis import disable_redis
-from cmk.web.utils.urls import HTTPVariable
 from tests.unit.cmk.gui.watolib.host_relations_fakes import refuse_relations_across_sites
 
 # Cheap in-memory acting user with all permissions. Avoids the expensive
@@ -178,8 +175,8 @@ def test_effective_attributes() -> None:
 
 @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def tree() -> Iterator[FolderTree]:
-    # Build the tree explicitly instead of using the request-global
-    # folder_tree(), so no Flask request context is needed at all.
+    # Build the tree explicitly from a crafted config, so no Flask request
+    # context is needed at all.
     # Computing effective attributes loads the users to determine the network
     # scan "run_as" default. Ensure the profile dir exists (usually done by
     # the load_config fixture).
@@ -352,6 +349,26 @@ def test_write_and_read_host_attributes(attributes: HostAttributes, tree: Folder
         }
 
 
+def test_wato_info_read_returns_empty_when_wato_file_is_gone(
+    tree: FolderTree, tmp_path: Path
+) -> None:
+    wato_file = tmp_path / ".wato"
+    tree.wato_info_storage_manager.write(wato_file, {"title": "x"})
+    wato_file.unlink()
+
+    assert tree.wato_info_storage_manager.read(wato_file) == {}
+
+
+def test_wato_info_read_falls_back_to_wato_file_when_pickle_is_gone(
+    tree: FolderTree, tmp_path: Path
+) -> None:
+    wato_file = tmp_path / ".wato"
+    tree.wato_info_storage_manager.write(wato_file, {"title": "x"})
+    (tmp_path / ".wato.pkl").unlink()
+
+    assert tree.wato_info_storage_manager.read(wato_file) == {"title": "x"}
+
+
 def test_create_multiple_hosts(tree: FolderTree) -> None:
     root = tree.root_folder()
     subfolder = root.create_subfolder(
@@ -407,18 +424,6 @@ def test_create_nested_folders(tree: FolderTree) -> None:
         folder2.save_folder_attributes()
 
         shutil.rmtree(os.path.dirname(folder1.wato_info_path()))
-
-
-def test_url_does_not_mutate_the_passed_variables(tree: FolderTree) -> None:
-    """A debug request used to append its marker to the caller's list."""
-    add_vars: list[HTTPVariable] = [("mode", "edit_host")]
-
-    root = tree.root_folder()
-    request = Request(create_environ(query_string="debug=1"))
-    first = root.url(request, add_vars)
-
-    assert add_vars == [("mode", "edit_host")]
-    assert root.url(request, add_vars) == first
 
 
 def test_eq_operation(tree: FolderTree) -> None:
@@ -1707,12 +1712,12 @@ def test_subfolder_cache_invalidated(tree: FolderTree) -> None:
     )
     subfolder.effective_attributes()
 
-    # WHEN cache is invalidated from folder_tree and attribute is updated
+    # WHEN cache is invalidated from the tree and attribute is updated
     tree.invalidate_caches()
     subfolder.attributes["alias"] = "other_alias"
 
     # THEN we read updated attribute
-    # There is a bug when invalidating cache from folder_tree(), not all
+    # There is a bug when invalidating cache from the tree, not all
     # subfolders are part of the tree
     with pytest.raises(AssertionError):
         assert subfolder.effective_attributes()["alias"] == "other_alias"
@@ -1743,42 +1748,16 @@ def test_folder_attributes_for_base_config_without_bake_attribute(tree: FolderTr
     assert folder._folder_attributes_for_base_config() == {}  # noqa: SLF001
 
 
-def test_folder_attributes_for_base_config_defaults_to_pull_mode(tree: FolderTree) -> None:
+def test_folder_attributes_for_base_config_exports_bake_attribute(tree: FolderTree) -> None:
     folder = hosts_and_folders.Folder.new(
         tree=tree,
         name="baking",
         parent_folder=tree.root_folder(),
-        attributes=HostAttributes({"bake_agent_package": True}),
-    )
-
-    attributes = folder._folder_attributes_for_base_config()[folder.path_for_rule_matching()]  # noqa: SLF001
-    assert attributes["bake_agent_package"] is True
-    # the attribute's default value may or may not be filled in, depending on
-    # whether the edition under test registers the attribute
-    assert attributes.get("cmk_agent_connection", "pull-agent") == "pull-agent"
-
-
-def test_folder_attributes_for_base_config_exports_inherited_agent_connection(
-    tree: FolderTree,
-) -> None:
-    parent = hosts_and_folders.Folder.new(
-        tree=tree,
-        name="push_folder",
-        parent_folder=tree.root_folder(),
-        attributes=HostAttributes({"cmk_agent_connection": "push-agent"}),
-    )
-    folder = hosts_and_folders.Folder.new(
-        tree=tree,
-        name="baking",
-        parent_folder=parent,
         attributes=HostAttributes({"bake_agent_package": True}),
     )
 
     assert folder._folder_attributes_for_base_config() == {  # noqa: SLF001
-        folder.path_for_rule_matching(): {
-            "bake_agent_package": True,
-            "cmk_agent_connection": "push-agent",
-        },
+        folder.path_for_rule_matching(): {"bake_agent_package": True},
     }
 
 
@@ -2342,7 +2321,7 @@ def test_mirror_batch_refuses_a_counterpart_the_edition_refuses_before_touching_
     root = tree.root_folder()
     os1 = _create_host(root, "os1")
     _create_host(root, "board")
-    root.validators = replace(root.validators, validate_edit_host=_refuse_editing_board)
+    root.validators = replace(root.validators, edit_host=[_refuse_editing_board])
 
     with pytest.raises(MKUserError, match="The edition refuses 'board'"):
         RelationMirrorBatch(root, acting_user=_SUPERUSER).need_edit(
@@ -2375,7 +2354,7 @@ def test_mirror_batch_refuses_a_site_the_edition_refuses_for_a_kept_relation(
             }
         ),
     )
-    root.validators = replace(root.validators, validate_host_relation=refuse_relations_across_sites)
+    root.validators = replace(root.validators, host_relation=[refuse_relations_across_sites])
 
     with pytest.raises(MKUserError, match="Only hosts of the same customer"):
         RelationMirrorBatch(root, acting_user=_SUPERUSER).need_edit(
@@ -2389,9 +2368,7 @@ def test_create_asks_the_edition_about_the_folder_site_of_a_host_with_an_empty_s
     """An empty site is the placeholder for the folder's one, as in Host.site_id()."""
     folder = _subfolder(tree.root_folder(), "site_a", HostAttributes({"site": SiteId("site_a")}))
     _create_host(folder, "board")
-    folder.validators = replace(
-        folder.validators, validate_host_relation=refuse_relations_across_sites
-    )
+    folder.validators = replace(folder.validators, host_relation=[refuse_relations_across_sites])
 
     os1 = _create_host(
         folder,

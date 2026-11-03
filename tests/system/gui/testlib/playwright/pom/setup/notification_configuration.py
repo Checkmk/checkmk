@@ -58,7 +58,7 @@ class NotificationConfiguration(CmkPage):
     def clone_and_edit_button(self) -> Locator:
         """Return locator of button to confirm the action "clone & edit" a rule.
 
-        Apears only when a notification rule is being cloned!
+        Appears only when a notification rule is being cloned!
         """
         return self.main_area.get_confirmation_popup_button("clone & edit")
 

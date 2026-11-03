@@ -117,6 +117,7 @@ def get_check_preview(
     autochecks_dir: Path,
     discovered_host_labels_dir: Path,
     inventorized_host_labels_dir: Path,
+    debug: bool,
 ) -> CheckPreview:
     """Get the list of service of a host or cluster and guess the current state of
     all services if possible. Those are for example (only?) displayed in the UI discovery page
@@ -134,6 +135,7 @@ def get_check_preview(
         host_sections_by_host,
         section_plugins,
         error_handling=section_error_handling,
+        debug=debug,
     )
 
     if is_cluster:
@@ -180,7 +182,11 @@ def get_check_preview(
 
     with tracer.span("preview.discover_services", attributes={"cmk.host_name": host_name}):
         discovered_services = discovery_by_host(
-            cluster_nodes if is_cluster else (host_name,), providers, discovery_plugins, on_error
+            cluster_nodes if is_cluster else (host_name,),
+            providers,
+            discovery_plugins,
+            on_error,
+            debug=debug,
         )
     grouped_services_by_host = get_host_services_by_host_name(
         host_name,
@@ -217,6 +223,7 @@ def get_check_preview(
                 providers=providers,
                 found_on_nodes=found_on_nodes,
                 timeperiods_active=timeperiods_active,
+                debug=debug,
             )
             for check_source, services_with_nodes in entries.items()
             for entry, found_on_nodes in services_with_nodes
@@ -232,6 +239,7 @@ def get_check_preview(
                 providers=providers,
                 found_on_nodes=[h],
                 timeperiods_active=timeperiods_active,
+                debug=debug,
             )
             for service in enforced_services.values()
         ]
@@ -256,6 +264,7 @@ def _check_preview_table_row(
     providers: Mapping[HostKey, Provider],
     found_on_nodes: Sequence[HostName],
     timeperiods_active: Mapping[str, bool],
+    debug: bool,
 ) -> CheckPreviewEntry:
     check_plugin = check_plugins.get(service.check_plugin_name)
     ruleset_name = (
@@ -287,7 +296,7 @@ def _check_preview_table_row(
         item=service.item,
         old_discovered_parameters=service.discovered_parameters,
         new_discovered_parameters=new_discovered_parameters,
-        effective_parameters=service.parameters.preview(timeperiods_active.get),
+        effective_parameters=service.parameters.preview(timeperiods_active.get, debug=debug),
         description=service.description,
         state=result.state,
         output=make_output(),

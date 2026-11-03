@@ -41,7 +41,6 @@ py_library(
         "//cmk/gui:core_toolkit",
         "//cmk/gui/fields",
         "//cmk/gui/fields:base",
-        "//cmk/gui/livestatus_utils/commands",
         "//cmk/gui/openapi:permission_tracking",
         "//cmk/gui/openapi:utils",
         "//cmk/gui/openapi/framework:api_config",

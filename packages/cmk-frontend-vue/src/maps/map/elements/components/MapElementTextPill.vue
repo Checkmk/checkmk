@@ -52,7 +52,7 @@ const configuredStyle = computed(() => {
       :class="selected ? 'maps-map-element-text-pill__body--selected' : ''"
       :style="configuredStyle"
     >
-      {{ objectCaption(object, _t) }}
+      {{ objectCaption(object, state, _t) }}
     </div>
   </div>
 </template>
@@ -65,13 +65,12 @@ const configuredStyle = computed(() => {
 }
 
 .maps-map-element-text-pill__body {
-  padding: var(--dimension-2) 6px;
+  padding: var(--dimension-2) var(--dimension-4);
   font-weight: var(--font-weight-bold);
   white-space: nowrap;
   background: var(--maps-map-view-label-bg);
   outline: 1px solid var(--border-color-hairline);
   border-radius: var(--border-radius);
-  backdrop-filter: blur(4px);
   text-shadow: var(--maps-map-view-text-halo);
   pointer-events: none;
 }

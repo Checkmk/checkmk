@@ -28,8 +28,8 @@ from cmk.ccc.site import SiteId
 from cmk.gui.watolib.config_domain_name import config_domain_registry, ConfigDomainName
 from cmk.gui.watolib.paths import wato_var_dir
 from cmk.gui.watolib.site_changes import SiteChanges
-from cmk.update_config.lib import ExpiryVersion
-from cmk.update_config.registry import update_action_registry, UpdateAction
+from cmk.update_config.internal import ExpiryVersion, UpdateAction
+from cmk.update_config.registry import update_action_registry
 
 # Match the file name pattern used by SiteChanges:
 #   wato_var_dir() / "replication_changes_{site_id}.mk"

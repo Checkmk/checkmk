@@ -10,6 +10,7 @@ import type { AgentSlideout } from 'cmk-shared-typing/typescript/agent_slideout'
 import AgentDownloadApp from '@/setup/AgentDownloadApp.vue'
 
 import {
+  commandPlaceholders,
   installCmds,
   kubernetesHelmCommand,
   kubernetesValues,
@@ -29,7 +30,8 @@ const agentSlideout: AgentSlideout = {
   kubernetes_doc_url: 'https://docs.example.test/kubernetes',
   save_host: false,
   host_exists: true,
-  unbaked_fallback: null
+  unbaked_fallback: null,
+  command_placeholders: commandPlaceholders
 }
 
 const notRegisteredForHostOutput =

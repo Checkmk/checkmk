@@ -57,7 +57,6 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
-        "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:i18n",
         "//packages/cmk-ccc:tty",
@@ -158,7 +157,8 @@ py_library(
     deps = [
         ":utils",
         "//packages/cmk-ccc:version",
-        "//packages/cmk-werks:tool",
+        "//packages/cmk-werks:core",
+        "//packages/cmk-werks:flavor_cmk",
         requirement("GitPython"),
         requirement("jinja2"),
     ],
@@ -196,7 +196,6 @@ py_library(
         "//non-free/packages/cmk-dcd:__subpackages__",
         "//non-free/packages/cmk-licensing-nonfree:__subpackages__",
         "//non-free/packages/cmk-liveproxyd:__subpackages__",
-        "//non-free/packages/cmk-network-flow:__subpackages__",
         "//non-free/packages/cmk-notification-plugins-nonfree:__subpackages__",
         "//non-free/packages/cmk-plugins-nonfree:__subpackages__",
         "//non-free/packages/cmk-robotmk:__subpackages__",
@@ -212,7 +211,6 @@ py_library(
     deps = [
         ":paths",
         "//packages/cmk-ccc:config-path",
-        "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:i18n",

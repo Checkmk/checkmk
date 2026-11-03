@@ -7,7 +7,6 @@ from cmk.gui.main_menu import MainMenuRegistry
 from cmk.gui.main_menu_match_items import MatchItemGeneratorMainMenu
 from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
-from cmk.gui.permissions import declare_dynamic_permissions
 from cmk.gui.search.matchers import MatchItemGeneratorRegistry
 from cmk.gui.search.permissions import (
     search_permissions_handler_registry,
@@ -17,7 +16,6 @@ from cmk.shared_typing.unified_search import ProviderName
 
 from ._core import (
     _customize_menu_topics,
-    _load_pagetype_permissions,
     BuiltinPagetypeTopicRegistry,
     CustomizePermissionsHandler,
     declare,
@@ -49,7 +47,6 @@ def register(
         )
     )
     declare(PagetypeTopics)
-    declare_dynamic_permissions(_load_pagetype_permissions)
     register_openapi_endpoints(
         endpoint_family_registry=endpoint_family_registry,
         versioned_endpoint_registry=versioned_endpoint_registry,

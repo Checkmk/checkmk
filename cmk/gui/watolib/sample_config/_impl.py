@@ -195,7 +195,7 @@ class SampleConfigGeneratorGroups(SampleConfigGeneratorABCGroups):
 class SampleConfigGeneratorInlineSNMPBackend(SampleConfigGenerator):
     """Make the inline SNMP backend the default in the editions shipping it
 
-    The shipped default in `cmk.base.default_config` must be a backend that is
+    The shipped default in `BaseConfig` must be a backend that is
     available in every edition, so the editions shipping the inline backend
     configure it here.
     """

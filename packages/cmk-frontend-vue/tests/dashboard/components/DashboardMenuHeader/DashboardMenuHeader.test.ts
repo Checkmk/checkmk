@@ -6,10 +6,11 @@
 import { CalendarDateTime, type ZonedDateTime, toZoned } from '@internationalized/date'
 import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
+import type { DrillUpButton } from 'cmk-shared-typing/typescript/drill_up_button'
 import type { GlobalTimePickerProps } from 'cmk-shared-typing/typescript/global_time_picker'
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time/types.ts'
 import { kioskMode } from 'cmk-ui-library/lib/kiosk'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, onTestFinished, vi } from 'vitest'
 
 import DashboardMenuHeader from '@/dashboard/components/DashboardMenuHeader/DashboardMenuHeader.vue'
 import type { SelectedDashboard } from '@/dashboard/components/DashboardMenuHeader/types'
@@ -81,6 +82,7 @@ interface RenderProps {
   runtimeFilters?: Record<string, string>
   globalTimePicker?: GlobalTimePickerProps
   range?: DateTimeRange
+  drillUp?: DrillUpButton | null
 }
 
 function renderHeader(props: RenderProps = {}) {
@@ -103,7 +105,33 @@ function renderHeader(props: RenderProps = {}) {
   })
 }
 
+function referredBySite(): void {
+  const referrer = vi
+    .spyOn(Document.prototype, 'referrer', 'get')
+    .mockReturnValue(`${window.location.origin}/dashboard.py`)
+  onTestFinished(() => referrer.mockRestore())
+}
+
 describe('DashboardMenuHeader', () => {
+  describe('way back from a drill-down', () => {
+    it('offers the way back to the page a drill-down came from', () => {
+      referredBySite()
+
+      renderHeader({ drillUp: { title: 'Overview' } })
+
+      expect(screen.getByRole('button', { name: 'Back to Overview' })).toBeInTheDocument()
+    })
+
+    it('offers no way back on a dashboard no drill-down opened', () => {
+      // A same-site referrer would give an arrow a way back, so only its absence can hide it.
+      referredBySite()
+
+      renderHeader({ drillUp: null })
+
+      expect(screen.queryByRole('button', { name: /^Back to / })).not.toBeInTheDocument()
+    })
+  })
+
   describe('view mode rendering', () => {
     it('renders the Dashboard label', () => {
       renderHeader()

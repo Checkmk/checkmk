@@ -12,22 +12,6 @@ import { type RankedTableCellRender } from '@/dashboard/components/CmkRankedTabl
 import codeExample from './UclCmkRankedTableCodeExample.vue?raw'
 
 export const panelConfig = {
-  barColor: {
-    type: 'list' as const,
-    title: 'Bar color',
-    help: 'CSS color of the inline bars. A cell may override it with its own `color`.',
-    options: [
-      { title: 'Blue', name: 'var(--color-light-blue-50)' },
-      { title: 'Green', name: 'var(--color-corporate-green-50)' },
-      { title: 'Grey', name: 'var(--color-mid-grey-50)' },
-      { title: 'Magenta', name: 'var(--color-pink-50)' },
-      { title: 'Orange', name: 'var(--color-orange-50)' },
-      { title: 'Purple', name: 'var(--color-purple-50)' },
-      { title: 'Red', name: 'var(--color-light-red-50)' },
-      { title: 'Yellow', name: 'var(--color-yellow-50)' }
-    ],
-    initialState: 'var(--color-corporate-green-50)' as const
-  },
   containerHeight: {
     type: 'number' as const,
     title: 'Container height (px)',
@@ -72,19 +56,17 @@ export const panelConfig = {
   valueRender: {
     type: 'list' as const,
     title: 'Value rendering',
-    help: 'Bytes are formatted as SI values, count is right-aligned as-is, text is left-aligned, delta draws an arrow along the sign of the value.',
+    help: 'Count is right-aligned as-is, text is left-aligned.',
     options: listOptions<RankedTableCellRender>({
-      bytes: 'Bytes',
       count: 'Count',
-      text: 'Text',
-      delta: 'Delta'
+      text: 'Text'
     }),
-    initialState: 'bytes' as const
+    initialState: 'count' as const
   },
   fixedBarRange: {
     type: 'boolean' as const,
     title: 'Fixed bar range',
-    help: 'Scales the bars against a fixed 0 - 250 GB range, clamped to it, instead of against the largest value in the column.',
+    help: 'Scales the bars against a fixed 0 - 1000 range, clamped to it, instead of against the largest value in the column.',
     initialState: false
   },
   preFormatted: {
@@ -96,19 +78,13 @@ export const panelConfig = {
   perRowColor: {
     type: 'boolean' as const,
     title: 'Per-row bar colors',
-    help: 'Each cell carries its own bar `color`, overriding the palette color above.',
+    help: 'Each cell carries its own bar `color`, overriding the default bar color.',
     initialState: false
   },
   linkedHosts: {
     type: 'boolean' as const,
     title: 'Linked host cells',
     help: 'Cells with an `href` render as links.',
-    initialState: false
-  },
-  clickableHosts: {
-    type: 'boolean' as const,
-    title: 'Clickable host cells',
-    help: 'Cells of a `clickable` column render as buttons emitting `cellClick`.',
     initialState: false
   }
 } satisfies PanelConfigFor<typeof CmkRankedTable, 'rows' | 'columns'> & {
@@ -124,7 +100,6 @@ export const panelConfig = {
   preFormatted: BoolPropDef
   perRowColor: BoolPropDef
   linkedHosts: BoolPropDef
-  clickableHosts: BoolPropDef
 }
 </script>
 
@@ -139,8 +114,7 @@ import {
   UclPropertiesPanel,
   UclResizablePreview
 } from '@ucl/_ucl/components/detail-page'
-import CmkParagraph from 'cmk-ui-library/components/typography/CmkParagraph.vue'
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 
 import CmkRankedTable, {
   type RankedTableColumn,
@@ -155,18 +129,18 @@ const propState = new PanelStateCreator<typeof CmkRankedTable, 'rows' | 'columns
 
 // Pre-ranked sample data; the panel decides how many of these rows are shown.
 const HOSTS = [
-  { host: '10.0.71.219', volume: 194_420_000_000, flows: 1284 },
-  { host: '10.0.234.247', volume: 158_270_000_000, flows: 967 },
-  { host: '10.0.171.51', volume: 58_270_000_000, flows: 411 },
-  { host: '10.0.151.254', volume: 51_670_000_000, flows: 388 },
-  { host: '10.0.198.27', volume: 27_380_000_000, flows: 154 },
-  { host: '10.0.139.151', volume: 22_260_000_000, flows: 102 },
-  { host: '10.0.104.62', volume: 18_940_000_000, flows: 97 },
-  { host: '10.0.88.13', volume: 12_510_000_000, flows: 74 },
-  { host: '10.0.57.201', volume: 9_330_000_000, flows: 61 },
-  { host: '10.0.42.98', volume: 6_120_000_000, flows: 43 },
-  { host: '10.0.31.7', volume: 3_870_000_000, flows: 28 },
-  { host: '10.0.12.44', volume: 1_240_000_000, flows: 11 }
+  { host: '10.0.71.219', flows: 1284 },
+  { host: '10.0.234.247', flows: 967 },
+  { host: '10.0.171.51', flows: 411 },
+  { host: '10.0.151.254', flows: 388 },
+  { host: '10.0.198.27', flows: 154 },
+  { host: '10.0.139.151', flows: 102 },
+  { host: '10.0.104.62', flows: 97 },
+  { host: '10.0.88.13', flows: 74 },
+  { host: '10.0.57.201', flows: 61 },
+  { host: '10.0.42.98', flows: 43 },
+  { host: '10.0.31.7', flows: 28 },
+  { host: '10.0.12.44', flows: 11 }
 ]
 
 const LONG_HOST_NAMES = [
@@ -196,8 +170,7 @@ const columns = computed<RankedTableColumn[]>(() => [
     key: 'host',
     title: propState.value.longColumnTitles ? 'Local host name' : 'Host',
     render: 'text',
-    bar: false,
-    ...(propState.value.clickableHosts ? { clickable: true } : {})
+    bar: false
   },
   ...(propState.value.serviceColumn
     ? [
@@ -210,13 +183,12 @@ const columns = computed<RankedTableColumn[]>(() => [
       ]
     : []),
   {
-    key: 'volume',
-    title: 'Volume',
+    key: 'flows',
+    title: 'Flows',
     render: propState.value.valueRender,
     bar: propState.value.valueBar,
-    ...(propState.value.fixedBarRange ? { barRange: [0, 250_000_000_000] as [number, number] } : {})
-  },
-  { key: 'flows', title: 'Flows', render: 'count', bar: false }
+    ...(propState.value.fixedBarRange ? { barRange: [0, 1000] as [number, number] } : {})
+  }
 ])
 
 const rows = computed<RankedTableRow[]>(() =>
@@ -225,24 +197,14 @@ const rows = computed<RankedTableRow[]>(() =>
     return {
       host: propState.value.linkedHosts ? { value: host, href: '#' } : host,
       service: 'Interface 1',
-      volume: {
-        value: entry.volume,
-        ...(propState.value.preFormatted
-          ? { formatted: `~${Math.round(entry.volume / 1_000_000_000)} GB` }
-          : {}),
+      flows: {
+        value: entry.flows,
+        ...(propState.value.preFormatted ? { formatted: `${entry.flows} flows` } : {}),
         ...(propState.value.perRowColor ? { color: ROW_COLORS[index % ROW_COLORS.length]! } : {})
-      },
-      flows: entry.flows
+      }
     }
   })
 )
-
-const lastCellClick = ref<string | null>(null)
-
-function onCellClick(column: RankedTableColumn, row: RankedTableRow): void {
-  const cell = row[column.key]
-  lastCellClick.value = `${column.key} = ${typeof cell === 'object' ? cell.value : cell}`
-}
 </script>
 
 <template>
@@ -254,14 +216,8 @@ function onCellClick(column: RankedTableColumn, row: RankedTableRow): void {
         v-model:width="propState.containerWidth"
         v-model:height="propState.containerHeight"
       >
-        <CmkRankedTable
-          :columns="columns"
-          :rows="rows"
-          :bar-color="propState.barColor"
-          @cell-click="onCellClick"
-        />
+        <CmkRankedTable :columns="columns" :rows="rows" />
       </UclResizablePreview>
-      <CmkParagraph v-if="lastCellClick">Last cellClick: {{ lastCellClick }}</CmkParagraph>
 
       <template #properties>
         <UclPropertiesPanel v-model="propState" :config="panelConfig" />

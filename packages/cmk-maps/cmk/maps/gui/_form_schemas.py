@@ -45,14 +45,13 @@ from cmk.gui.form_specs import (
 from cmk.maps.gui._settings import connection_choices
 from cmk.maps.gui.form_specs.map_metadata import (
     flow_view_spec,
-    map_bulk_metadata_spec,
     map_metadata_spec,
 )
 from cmk.rulesets.v1.form_specs import Dictionary
 from cmk.shared_typing.vue_formspec_components import ValidationMessage
 
 # The dialogs the SPA renders from a server-side FormSpec.
-type FormSchemaName = Literal["map_metadata", "map_bulk_metadata", "flow_view"]
+type FormSchemaName = Literal["map_metadata", "flow_view"]
 
 
 def _build_spec(spec_name: FormSchemaName) -> Dictionary:
@@ -65,8 +64,6 @@ def _build_spec(spec_name: FormSchemaName) -> Dictionary:
     match spec_name:
         case "map_metadata":
             return map_metadata_spec(connection_choices=connection_choices())
-        case "map_bulk_metadata":
-            return map_bulk_metadata_spec(connection_choices=connection_choices())
         case "flow_view":
             return flow_view_spec()
 

@@ -17,8 +17,8 @@ from cmk.gui.openapi.framework import (
     VersionedEndpoint,
 )
 from cmk.gui.openapi.framework.endpoint_link import link_to_endpoint
+from cmk.gui.openapi.framework.model.converter import folder_tree_of_request
 from cmk.gui.openapi.restful_objects.constructors import collection_href
-from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.rulesets import AllRulesets
 
 from ._family import RULE_FAMILY
@@ -35,7 +35,7 @@ def list_rules_v1(
 ) -> RuleCollectionModel:
     """List rules"""
     user.need_permission("wato.rulesets")
-    all_rulesets = AllRulesets.load_all_rulesets(make_folder_tree(api_context.config))
+    all_rulesets = AllRulesets.load_all_rulesets(folder_tree_of_request(api_context))
     ruleset = retrieve_from_rulesets(all_rulesets, ruleset_name)
 
     rules = [

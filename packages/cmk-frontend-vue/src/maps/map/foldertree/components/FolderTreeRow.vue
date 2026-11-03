@@ -224,12 +224,12 @@ function onContextMenu(event: MouseEvent): void {
 .maps-folder-tree-row {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: var(--dimension-4);
 
   /* Must match the list's row height, which drives the windowing. */
   height: var(--maps-folder-tree-row-height, 28px);
-  padding-left: 6px;
-  font-size: 13px;
+  padding-left: var(--dimension-4);
+  font-size: var(--font-size-normal);
   color: var(--font-color);
   border-radius: var(--border-radius);
   cursor: pointer;
@@ -247,7 +247,7 @@ function onContextMenu(event: MouseEvent): void {
 }
 
 .maps-folder-tree-row--folder {
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .maps-folder-tree-row:hover {
@@ -255,7 +255,7 @@ function onContextMenu(event: MouseEvent): void {
 }
 
 .maps-folder-tree-row:focus-visible {
-  outline: 2px solid var(--interactive-accent);
+  outline: revert;
   outline-offset: -2px;
 }
 
@@ -263,7 +263,7 @@ function onContextMenu(event: MouseEvent): void {
   width: 16px;
   flex-shrink: 0;
   padding: 0;
-  font-size: 11px;
+  font-size: var(--font-size-small);
   color: var(--font-color-dimmed);
   background: transparent;
   border: none;
@@ -297,12 +297,12 @@ function onContextMenu(event: MouseEvent): void {
    hover card -- but still ellipsizes when very long. */
 .maps-folder-tree-row__title--service {
   flex-shrink: 1;
-  font-weight: 400;
+  font-weight: var(--font-weight-default);
 }
 
 .maps-folder-tree-row__title--empty {
   font-style: italic;
-  font-weight: 400;
+  font-weight: var(--font-weight-default);
   color: var(--font-color-dimmed);
 }
 
@@ -313,15 +313,15 @@ function onContextMenu(event: MouseEvent): void {
 }
 
 .maps-folder-tree-row__meta {
-  font-size: 11px;
+  font-size: var(--font-size-small);
   color: var(--font-color-dimmed);
 }
 
 .maps-folder-tree-row__badge {
   flex-shrink: 0;
-  padding: 1px 6px;
+  padding: var(--dimension-1) var(--dimension-4);
   font-size: var(--font-size-small);
-  border-radius: 9px;
+  border-radius: 9999px;
 }
 
 .maps-folder-tree-row__badge--empty {
@@ -342,22 +342,22 @@ function onContextMenu(event: MouseEvent): void {
 .maps-folder-tree-row__pills {
   display: inline-flex;
   flex-shrink: 0;
-  gap: 3px;
+  gap: var(--dimension-3);
 }
 
 .maps-folder-tree-row__pill {
   min-width: 16px;
-  padding: 2px 6px;
+  padding: var(--dimension-2) var(--dimension-4);
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-bold);
   line-height: 1;
   text-align: center;
-  border-radius: 9px;
+  border-radius: 9999px;
 }
 
 .maps-folder-tree-row__site {
   flex-shrink: 0;
-  padding: 1px 6px;
+  padding: var(--dimension-1) var(--dimension-4);
   font-size: var(--font-size-small);
   color: var(--font-color-dimmed);
   background: var(--input-hover-bg-color);

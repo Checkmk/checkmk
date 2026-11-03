@@ -30,7 +30,7 @@ from cmk.password_store.v1 import (
     PasswordStore,
     PasswordStoreError,
 )
-from cmk.password_store.v1._impl import _read_store_secret
+from cmk.password_store.v1._impl import _read_store_secret  # FIXME
 from cmk.plugins.emailchecks.lib.ac_args import (
     BasicAuth,
     HTTPProxyConfig,
@@ -41,6 +41,7 @@ from cmk.plugins.emailchecks.lib.ac_args import (
 )
 from cmk.plugins.emailchecks.lib.graph_api_client import AuthorityURLs, GraphApiClient
 from cmk.server_side_programs.v1 import Storage
+from cmk.server_side_programs.v1._storage import _storage_dir  # FIXME
 
 # Isort messes with the type annotation and creates a unused-ignore for the
 # OAUTH2 and OAuth2Credentials imports.
@@ -320,14 +321,15 @@ class GraphApi(_Connection):
     def _build_api_client(self) -> GraphApiClient:
         if (store_secret := _read_store_secret()) is None:
             raise PasswordStoreError("Password store key file not found.")
-        storage = Storage(program_ident="graph_api_emailchecks", host=self.storage_id)
+        ident = "graph_api_emailchecks"
+        storage = Storage(program_ident=ident, host=self.storage_id)
         return GraphApiClient(
             tenant=self.auth.tenant_id,
             client=self.auth.client_id,
             secret=self.auth.client_secret,
             authority_urls=self.authority_urls,
             pw_store=PasswordStore(store_secret),
-            pw_store_file=storage._full_dir / "stored_tokens",  # noqa: SLF001
+            pw_store_file=_storage_dir(host=self.storage_id, ident=ident) / "stored_tokens",
             storage=storage,
             initial_access_token=self.auth.initial_access_token,
             initial_refresh_token=self.auth.initial_refresh_token,

@@ -4,12 +4,31 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Links that ask the user for confirmation before following through."""
 
-import json
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 
 from cmk.web.utils.escaping import escape_text
 from cmk.web.utils.html import HTML
-from cmk.web.utils.urls import quote_plus
+
+
+@dataclass(frozen=True, kw_only=True)
+class ConfirmLink:
+    """Asks for confirmation and then POSTs to ``url``
+
+    Rendered as a click action by the HTML helpers which accept it."""
+
+    url: str
+    message: str
+    options: Mapping[str, object]
+    post_confirm_waiting_text: str | None
+
+    def arguments(self) -> dict[str, object]:
+        return {
+            "url": self.url,
+            "message": self.message,
+            "options": dict(self.options),
+            "post_confirm_waiting_text": self.post_confirm_waiting_text,
+        }
 
 
 def make_confirm_link(
@@ -21,7 +40,7 @@ def make_confirm_link(
     message: str | HTML | None = None,
     confirm_button: str | None = None,
     cancel_button: str | None = None,
-) -> str:
+) -> ConfirmLink:
     return _make_customized_confirm_link(
         url=url,
         title=get_confirm_link_title(title, suffix),
@@ -42,7 +61,7 @@ def make_confirm_delete_link(
     cancel_button: str | None = None,
     warning: bool = False,
     post_confirm_waiting_text: str | None = None,
-) -> str:
+) -> ConfirmLink:
     return _make_customized_confirm_link(
         url=url,
         title=get_confirm_link_title(title, suffix),
@@ -68,23 +87,21 @@ def _make_customized_confirm_link(
     icon: str | None = None,
     custom_class_options: dict[str, str] | None = None,
     post_confirm_waiting_text: str | None = None,
-) -> str:
+) -> ConfirmLink:
     """Build the dialog link. A ``str`` message keeps the simple formatting tags that
     ``escape_text`` allows and loses only its links; an ``HTML`` one is written as it is, so
     whoever builds it owns its escaping."""
-    return "javascript:cmk.forms.confirm_link({}, {}, {}, {}),cmk.popup_menu.close_popup()".format(
-        json.dumps(quote_plus(url)),
-        json.dumps(escape_text(message, escape_links=True)),
-        json.dumps(
-            {
-                "title": escape_text(title, escape_links=True),
-                "confirmButtonText": confirm_button,
-                "cancelButtonText": cancel_button,
-                "icon": icon if icon else "question",
-                "customClass": custom_class_options if custom_class_options else {},
-            }
-        ),
-        json.dumps(post_confirm_waiting_text),
+    return ConfirmLink(
+        url=url,
+        message=escape_text(message, escape_links=True),
+        options={
+            "title": escape_text(title, escape_links=True),
+            "confirmButtonText": confirm_button,
+            "cancelButtonText": cancel_button,
+            "icon": icon if icon else "question",
+            "customClass": custom_class_options if custom_class_options else {},
+        },
+        post_confirm_waiting_text=post_confirm_waiting_text,
     )
 
 

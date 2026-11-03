@@ -89,7 +89,7 @@ defineProps<{
       :title="_t('Choose a different start page')"
       :subtitle="
         _t(
-          'Use the \'Start URL to display in main frame\' option in your profile to define which page, dashboard or custom URL is shown when you log in.'
+          'Use the \'Start URL\' option in your profile to define which page, dashboard or custom URL is shown when you log in.'
         )
       "
       icon-name="users"

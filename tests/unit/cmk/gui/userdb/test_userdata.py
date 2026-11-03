@@ -16,7 +16,7 @@ from cmk.events.notify_types import EventRule
 from cmk.gui.type_defs import LastLoginInfo, SessionInfo, TwoFactorCredentials, UserSpec
 from cmk.gui.userdb import get_user_attributes, UserAttribute
 from cmk.gui.userdb.store import load_users, save_users
-from cmk.gui.userdb.user_attributes import ForceAuthUserUserAttribute
+from cmk.gui.userdb.user_attributes import ContextualHelpIcon, ForceAuthUserUserAttribute
 from cmk.gui.userdb.userdata import UserData, UserDataDiff, UserDB, UserNotFoundError
 
 
@@ -98,6 +98,14 @@ def _user(
         cast(UserSpec, {"alias": "Happy Testuser", "roles": []} | dict(spec)),
         user_attributes,
     )
+
+
+def test_roundtrip_does_not_add_absent_custom_attributes() -> None:
+    attrs = [("contextual_help_icon", ContextualHelpIcon())]
+
+    roundtripped = _user({}, attrs).to_userspec()
+
+    assert "contextual_help_icon" not in roundtripped
 
 
 def test_diff_reports_only_changed_fields() -> None:

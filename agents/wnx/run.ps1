@@ -29,7 +29,39 @@ $argWin = $false
 $argSkipSqlTest = $false
 
 $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+
+# Diagnostics for CI nodes whose agent session breaks (vswhere 0x80070583 or
+# 0x80070008, suspected desktop heap exhaustion): log whether COM activation
+# via vswhere still works, the latest "desktop heap allocation failed" event
+# (Win32k 243) and the USER objects held by this account's processes.
+# Never throws, so it cannot fail the build.
+function Write-SessionHealth([string]$step) {
+    try {
+        $vs = & $vswhere -latest -property installationVersion 2>&1 | Out-String
+        $com = if ($LASTEXITCODE -eq 0) { "ok" } else { "FAILED($LASTEXITCODE): $($vs.Trim())" }
+        $heap_event = Get-WinEvent -FilterHashtable @{LogName = 'System'; ProviderName = 'Win32k'; Id = 243 } -MaxEvents 1 -ErrorAction SilentlyContinue
+        $last_243 = if ($heap_event) { $heap_event.TimeCreated.ToString("s") } else { "none" }
+        if (-not ("Wnx.Gui" -as [type])) {
+            Add-Type -Namespace Wnx -Name Gui -MemberDefinition '[DllImport("user32.dll")] public static extern uint GetGuiResources(IntPtr h, uint flags);'
+        }
+        $me = [Security.Principal.WindowsIdentity]::GetCurrent().Name
+        $procs = Get-Process -IncludeUserName -ErrorAction SilentlyContinue | Where-Object UserName -eq $me
+        $usage = foreach ($p in $procs) {
+            try { [pscustomobject]@{ Name = $p.ProcessName; User = [Wnx.Gui]::GetGuiResources($p.Handle, 1) } } catch {}
+        }
+        $total = ($usage | Measure-Object User -Sum).Sum
+        $top = ($usage | Group-Object Name | ForEach-Object {
+                [pscustomobject]@{ Name = "$($_.Count)x$($_.Name)"; User = ($_.Group | Measure-Object User -Sum).Sum }
+            } | Sort-Object User -Descending | Select-Object -First 5 | ForEach-Object { "$($_.Name)=$($_.User)" }) -join " "
+        Write-Host "session-health [$step]: vswhere=$com last_win32k_243=$last_243 procs=$(@($procs).Count) user_objects=$total top: $top" -Fore Cyan
+    }
+    catch {
+        Write-Host "session-health [$step]: diagnostics failed: $_" -Fore Yellow
+    }
+}
+
 if (Test-Path $vswhere) {
+    Write-SessionHealth "startup"
     $msbuild_exe = & $vswhere -latest -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe
     # vswhere reports failures (e.g. 0x80070583, broken VS installer) on
     # stdout: validate we really got an existing MSBuild.exe, not error text.
@@ -241,6 +273,10 @@ function Build-MSI {
     }
     Write-Host "Building MSI..." -ForegroundColor White
     Remove-Item "$build_dir/install/Release/check_mk_service.msi" -Force -ErrorAction SilentlyContinue
+    # The .wixobj files bake $env:SignedPluginsFolder in at compile time, and MSBuild
+    # would reuse those of Start-MsiControlBuild (or of a previous run), which embed
+    # the scripts before signing. CMK-39886
+    Remove-Item "install\obj\Release" -Recurse -Force -ErrorAction SilentlyContinue
 
     & $msbuild_exe wamain.sln "/t:install" "/p:Configuration=Release,Platform=x64" "/p:EncryptedPluginsFolder=..\..\windows\plugins"
     if ($LASTEXITCODE -ne 0) {
@@ -410,6 +446,32 @@ function Invoke-TestSigning($usbip) {
 
 }
 
+# Every .ps1 of the MSI comes from $env:SignedPluginsFolder (see Product.wxs). Stage them
+# unsigned and flat there; Start-BazelSigning signs them in place or points the folder at
+# signed copies.
+function Initialize-MsiScripts {
+    if (-not ($argMsi -or $argSign -or $argSignAzure)) {
+        return
+    }
+
+    Write-Host "Staging MSI scripts..." -ForegroundColor White
+    $unsigned_tar = "$repo_root/bazel-bin/agents/windows/plugins/unsigned_plugins.tar"
+    &bazel build //agents/windows/plugins:unsigned_plugins
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Failed to build unsigned_plugins, error code is $LASTEXITCODE" -ErrorAction Stop
+    }
+    $plugins_dir = "$build_dir\plugins_signed"
+    Remove-Item $plugins_dir -Recurse -Force -ErrorAction SilentlyContinue
+    New-Item -ItemType Directory -Path $plugins_dir -Force | Out-Null
+    # Use .NET's tar support (System.Formats.Tar, part of the .NET runtime PowerShell 7
+    # runs on) rather than a `tar` executable: tar is not always on PATH on the build
+    # nodes, and Git's GNU tar mis-parses the drive-letter colon in Windows paths as a
+    # remote host. The tar is flat, matching the layout the signed_plugins pkg_tar produces.
+    [System.Formats.Tar.TarFile]::ExtractToDirectory($unsigned_tar, $plugins_dir, $true)
+    $env:SignedPluginsFolder = $plugins_dir
+    Write-Host "MSI scripts staged in $plugins_dir" -ForegroundColor Green
+}
+
 function Start-MsiControlBuild {
     if (-not ($argSign -or $argSignAzure)) {
         Write-Host "Skipping MSI Control Build..." -ForegroundColor Yellow
@@ -475,27 +537,14 @@ function Start-BazelSigning {
         return
     }
 
-    $env:BAZELISK_BASE_URL = "https://github.com/aspect-build/aspect-cli/releases/download"
-    $env:USE_BAZEL_VERSION = "aspect/2025.11.0"
-
     if ($argSignAzure) {
         # Azure signing runs in this process, where the full environment and credentials are
-        # available. Bazel is only used to gather the plugin files (including the cross-package
-        # bakery-migrated ones) into an unsigned tar; signing must NOT run inside a Bazel action
-        # because strict action env scrubs the credentials and runtime the ArtifactSigning
-        # module needs. See Invoke-SignFile, which already signs the binaries this way.
+        # available. It signs the scripts Initialize-MsiScripts staged; signing must NOT run
+        # inside a Bazel action because strict action env scrubs the credentials and runtime
+        # the ArtifactSigning module needs. See Invoke-SignFile, which already signs the
+        # binaries this way.
         Write-Host "Azure plugin signing (in-process)..." -ForegroundColor White
-        $unsigned_tar = "$repo_root/bazel-bin/agents/windows/plugins/unsigned_plugins.tar"
-        &bazel build //agents/windows/plugins:unsigned_plugins
-        $sign_dir = "$build_dir\plugins_signed"
-        Remove-Item $sign_dir -Recurse -Force -ErrorAction SilentlyContinue
-        New-Item -ItemType Directory -Path $sign_dir -Force | Out-Null
-        # Use .NET's tar support (System.Formats.Tar, part of the .NET runtime PowerShell 7
-        # runs on) rather than a `tar` executable: tar is not always on PATH on the build
-        # nodes, and Git's GNU tar mis-parses the drive-letter colon in Windows paths as a
-        # remote host. Extracting to / creating from a directory flattens to basenames,
-        # matching the layout the signed_plugins pkg_tar produced.
-        [System.Formats.Tar.TarFile]::ExtractToDirectory($unsigned_tar, $sign_dir, $true)
+        $sign_dir = $env:SignedPluginsFolder
         Get-ChildItem -Path $sign_dir -Filter *.ps1 -Recurse | ForEach-Object {
             Write-Host "Signing plugin $($_.Name)" -ForegroundColor White
             Invoke-SignFile $_.FullName
@@ -507,7 +556,6 @@ function Start-BazelSigning {
         New-Item -Path (Split-Path $signed_plugins_tar) -ItemType Directory -Force | Out-Null
         Remove-Item $signed_plugins_tar -Force -ErrorAction SilentlyContinue
         [System.Formats.Tar.TarFile]::CreateFromDirectory($sign_dir, $signed_plugins_tar, $false)
-        $env:SignedPluginsFolder = $sign_dir
         Write-Host "Signed plugins packed into $signed_plugins_tar" -ForegroundColor Green
     }
     else {
@@ -532,19 +580,7 @@ function Start-BazelSigning {
         # sign genrules without %SECTIGO_2023_PIN% in the environment.
         &bazel build //agents/windows/plugins:signed_plugins --action_env=SECTIGO_2023_PIN
     }
-
-    # Invalidate the MSI object cache when the signed-files folder changed since the
-    # previous build (stamp comparison).
     Write-Host "$env:SignedPluginsFolder is used to store the signed files"
-    $stamp_file = "install\obj\Release\.epf_stamp"
-    $current_val = $env:SignedPluginsFolder ?? ""
-    $previous_val = if (Test-Path $stamp_file) { Get-Content $stamp_file } else { "" }
-
-    if ($current_val -ne $previous_val) {
-        Remove-Item "install\obj\Release" -Recurse -Force -ErrorAction SilentlyContinue
-        New-Item -Path (Split-Path $stamp_file) -ItemType Directory -Force | Out-Null
-        Set-Content $stamp_file $current_val
-    }
 }
 
 
@@ -722,7 +758,8 @@ $argAttached = $false
 $result = 1
 try {
     # SETTING UP
-    $env:SignedPluginsFolder = "..\..\windows\plugins"
+    $env:BAZELISK_BASE_URL = "https://github.com/aspect-build/aspect-cli/releases/download"
+    $env:USE_BAZEL_VERSION = "aspect/2025.11.0"
     $mainStartTime = Get-Date
     Invoke-Detach $argDetach
     Update-ArtefactDirs
@@ -751,21 +788,28 @@ try {
         $build_arg = ""
     }
 
+    Write-SessionHealth "after agent"
     Build-Package $argCtl "cmk-agent-ctl" "Controller" $build_arg
+    Write-SessionHealth "after controller"
     if ($argSkipSqlTest -ne $true) {
         Build-Package $argSql "mk-sql" "MK-SQL" $build_arg
+        Write-SessionHealth "after mk-sql"
         Build-Package $argOracle "mk-oracle" "mk-oracle"  $build_arg
     }
     else {
         Build-Package $argSql "mk-sql" "MK-SQL" --build
+        Write-SessionHealth "after mk-sql"
         Build-Package $argOracle "mk-oracle" "mk-oracle" --build
     }
+    Write-SessionHealth "after mk-oracle"
     Build-Ext
 
     Start-UnitTests
+    Write-SessionHealth "after unit tests"
 
     # SIGNING
     Invoke-TestSigning $usbip_exe
+    Initialize-MsiScripts
     Start-MsiControlBuild
     Invoke-Attach $usbip_exe "yubi-usbserver.lan.checkmk.net" "1-1.2"
     if ($argSign -eq $true) {

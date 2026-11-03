@@ -19,6 +19,7 @@ import type {
   AverageScatterplotContent,
   CombinedGraphContent,
   CustomGraphContent,
+  EmbeddedCustomGraphContent,
   PerformanceGraphContent,
   ProblemGraphContent,
   SingleTimeseriesContent,
@@ -26,6 +27,7 @@ import type {
 } from '@/dashboard/types/widget.ts'
 import {
   GraphFigure,
+  type GraphFigureLegend,
   type GraphFigureSource,
   type RequestedTimeRange,
   toDateTimeRange,
@@ -48,14 +50,27 @@ const props =
       | AverageScatterplotContent
       | ProblemGraphContent
       | CustomGraphContent
+      | EmbeddedCustomGraphContent
     >
   >()
 const emit = defineEmits<WidgetEmitTimeRange>()
 
-const dashboardTimeRange = computed(() => toRequestedTimeRange(props.range))
+// A graph that follows the dashboard has no window of its own.
+const timerange = computed(() => {
+  const content = props.content
+  const configured = content.type === 'average_scatterplot' ? content.time_range : content.timerange
+  return configured === 'dashboard' ? undefined : configured
+})
+const followsDashboard = computed(() => timerange.value === undefined)
+const dashboardTimeRange = computed(() =>
+  followsDashboard.value ? toRequestedTimeRange(props.range) : undefined
+)
 
+// A graph with its own time range zooms and pans for itself, leaving the dashboard as it is.
 function onCommitTimeRange(range: RequestedTimeRange): void {
-  emit('updateTimeRange', toDateTimeRange(range, props.range.from.timeZone))
+  if (followsDashboard.value) {
+    emit('updateTimeRange', toDateTimeRange(range, props.range.from.timeZone))
+  }
 }
 
 const shell = ref<DiscoveredGraph | null>(null)
@@ -200,7 +215,19 @@ const discoverGraphs = async (): Promise<GraphDiscovery> => {
         await client.POST('/domain-types/graph/actions/discover_custom_graphs/invoke', {
           params: { header: { 'Content-Type': 'application/json' } },
           body: {
-            custom_graph: content.custom_graph
+            type: 'saved',
+            name: content.custom_graph
+          }
+        })
+      )
+    case 'embedded_custom_graph':
+      return unwrap(
+        await client.POST('/domain-types/graph/actions/discover_custom_graphs/invoke', {
+          params: { header: { 'Content-Type': 'application/json' } },
+          body: {
+            type: 'inline',
+            // the widget content keeps the definition untyped; the endpoint validates it
+            definition: content.definition as components['schemas']['CustomGraphDefinition']
           }
         })
       )
@@ -270,6 +297,8 @@ const discoveryKey = computed(() => {
       return { context: props.effective_filter_context.filters }
     case 'custom_graph':
       return { custom_graph: content.custom_graph }
+    case 'embedded_custom_graph':
+      return { definition: content.definition }
     default:
       staticAssertNever(content)
       return {}
@@ -291,11 +320,15 @@ const graphRenderOptions = computed(() => {
   const content = props.content
   return 'graph_render_options' in content ? content.graph_render_options : undefined
 })
-const timerange = computed(() => {
-  const content = props.content
-  return content.type === 'average_scatterplot' ? content.time_range : content.timerange
+const legendOptions = computed(() =>
+  props.content.type === 'average_scatterplot' ? props.content : graphRenderOptions.value
+)
+const legend = computed((): GraphFigureLegend => {
+  if (!(legendOptions.value?.show_legend ?? false)) {
+    return 'none'
+  }
+  return legendOptions.value?.legend_style ?? 'compact'
 })
-const showLegend = computed(() => graphRenderOptions.value?.show_legend ?? false)
 const showTimestamp = computed(() => graphRenderOptions.value?.show_graph_time ?? false)
 const showPin = computed(
   () => props.isPreview !== true && (graphRenderOptions.value?.show_pin ?? true)
@@ -354,7 +387,7 @@ onMounted(() => {
     :effective-title="effectiveTitle"
     :general_settings="general_settings"
     content-overflow="hidden"
-    :is-scrollable-preview="(isPreview ?? false) && showLegend"
+    :is-scrollable-preview="(isPreview ?? false) && legend !== 'none'"
   >
     <div
       class="db-content-time-series-graph"
@@ -379,7 +412,7 @@ onMounted(() => {
         :timerange="timerange"
         :requested-time-range="dashboardTimeRange"
         :combination-mode="combinationMode"
-        :show-legend="showLegend"
+        :legend="legend"
         :show-timestamp="showTimestamp"
         :show-pin="showPin"
         :show-time-axis="showTimeAxis"

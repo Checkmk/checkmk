@@ -45,7 +45,28 @@ function renderFigure(value: Partial<HostOrServiceState> = {}) {
   })
 }
 
+function withTwoLinks(): Partial<HostOrServiceState> {
+  return {
+    links: [...SERVICE_STATE.links, { ...SERVICE_STATE.links[0]!, title: 'Host' }],
+    link_properties: {
+      links: [...SERVICE_STATE.link_properties.links, ...SERVICE_STATE.link_properties.links]
+    }
+  }
+}
+
 describe('CmkStateFigure', () => {
+  it('marks a state with several links with the menu arrow', () => {
+    const { container } = renderFigure(withTwoLinks())
+
+    expect(container.querySelector('.db-svg-link-arrow')).not.toBeNull()
+  })
+
+  it('marks a state with one link with no menu arrow', () => {
+    const { container } = renderFigure()
+
+    expect(container.querySelector('.db-svg-link-arrow')).toBeNull()
+  })
+
   it('draws the short name of the state', () => {
     renderFigure()
 

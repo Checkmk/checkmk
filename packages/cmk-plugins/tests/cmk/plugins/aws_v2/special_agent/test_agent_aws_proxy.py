@@ -6,11 +6,15 @@
 import cmk.plugins.aws_v2.special_agent.agent_aws_v2 as agent
 from cmk.plugins.aws_v2.special_agent.agent_aws_v2 import parse_arguments
 
-PROXY_ARGS = [
+BASE_ARGS = [
     "--hostname",
     "foo",
     "--piggyback-naming-convention",
     "ip_region_instance",
+]
+
+PROXY_ARGS = [
+    *BASE_ARGS,
     "--proxy-host",
     "proxy.example.com",
     "--proxy-port",
@@ -21,18 +25,26 @@ PROXY_ARGS = [
 
 
 def test_proxy_without_secret_has_no_credentials() -> None:
-    args = parse_arguments(PROXY_ARGS)
+    config = agent._client_config(parse_arguments(PROXY_ARGS))  # noqa: SLF001
 
-    config = agent._get_proxy(args)  # noqa: SLF001
-
-    assert config is not None
     assert config.proxies == {"https": "proxy.example.com:3128"}
 
 
 def test_proxy_secret_becomes_part_of_the_address() -> None:
-    args = parse_arguments([*PROXY_ARGS, "--proxysecret", "s3cret"])
+    config = agent._client_config(  # noqa: SLF001
+        parse_arguments([*PROXY_ARGS, "--proxysecret", "s3cret"])
+    )
 
-    config = agent._get_proxy(args)  # noqa: SLF001
-
-    assert config is not None
     assert config.proxies == {"https": "alice:s3cret@proxy.example.com:3128"}
+
+
+def test_no_proxy_without_a_proxy_host() -> None:
+    config = agent._client_config(parse_arguments(BASE_ARGS))  # noqa: SLF001
+
+    assert config.proxies is None
+
+
+def test_throttled_calls_are_retried_in_standard_mode() -> None:
+    config = agent._client_config(parse_arguments(BASE_ARGS))  # noqa: SLF001
+
+    assert config.retries == {"mode": "standard"}

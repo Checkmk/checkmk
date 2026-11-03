@@ -13,6 +13,7 @@ from .api.model.widget_content._base import BaseWidgetContent
 from .api.model.widget_content.graph import (
     CombinedGraphContent,
     CustomGraphContent,
+    EmbeddedCustomGraphContent,
     PerformanceGraphContent,
     ProblemGraphContent,
     SingleTimeseriesContent,
@@ -29,6 +30,7 @@ _GRAPH_WIDGET_CONTENTS: Final = (
     AverageScatterplotContent,
     CombinedGraphContent,
     CustomGraphContent,
+    EmbeddedCustomGraphContent,
     PerformanceGraphContent,
     ProblemGraphContent,
     SingleTimeseriesContent,
@@ -39,6 +41,7 @@ type GraphWidgetContent = (
     AverageScatterplotContent
     | CombinedGraphContent
     | CustomGraphContent
+    | EmbeddedCustomGraphContent
     | PerformanceGraphContent
     | ProblemGraphContent
     | SingleTimeseriesContent

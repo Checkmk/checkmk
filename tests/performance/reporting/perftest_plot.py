@@ -1394,7 +1394,7 @@ class PerftestPlot:
             dict[str, MeasurementsList]: A dictionary mapping scenario names to measurement lists.
 
         Notes:
-            - If `read_from_filesystem` and the scenario file exists, filessystem data is read.
+            - If `read_from_filesystem` and the scenario file exists, filesystem data is read.
             - If `read_from_database` and the job exists in the database, database data is read.
             - If no data is found for a scenario, an empty list is returned for that scenario.
         """

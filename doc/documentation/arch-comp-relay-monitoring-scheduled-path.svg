@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="496" font-family="Helvetica, Arial, sans-serif" viewBox="0 0 760 496" role="img" aria-label="A scheduled result is pushed once and evaluated on the site" font-size="13">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<defs><marker id="sch-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#6b7280"/></marker></defs>
+<text x="24" y="34" font-size="15" font-weight="600" fill="#111827">A scheduled result is pushed once and evaluated on the site</text>
+<text x="24" y="54" font-size="11.5" fill="#4b5563">Check_MK, Check_MK Discovery and active checks of a relay host</text>
+<g><line x1="76" x2="76" y1="120" y2="456" stroke="#d1d5db" stroke-width="1.25" stroke-dasharray="4 4"/><line x1="198" x2="198" y1="120" y2="456" stroke="#d1d5db" stroke-width="1.25" stroke-dasharray="4 4"/><line x1="320" x2="320" y1="120" y2="456" stroke="#d1d5db" stroke-width="1.25" stroke-dasharray="4 4"/><line x1="442" x2="442" y1="120" y2="456" stroke="#d1d5db" stroke-width="1.25" stroke-dasharray="4 4"/><line x1="564" x2="564" y1="120" y2="456" stroke="#d1d5db" stroke-width="1.25" stroke-dasharray="4 4"/><line x1="684" x2="684" y1="120" y2="456" stroke="#d1d5db" stroke-width="1.25" stroke-dasharray="4 4"/></g>
+<g><rect x="24" y="72" width="104" height="48" rx="8" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="76" y="92" text-anchor="middle" font-size="12" font-weight="600" fill="#111827">Monitored</text><text x="76" y="108" text-anchor="middle" font-size="12" font-weight="600" fill="#111827">host</text></g>
+<g><rect x="146" y="72" width="104" height="48" rx="8" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="198" y="92" text-anchor="middle" font-size="12" font-weight="600" fill="#111827">Relay</text><text x="198" y="108" text-anchor="middle" font-size="12" font-weight="600" fill="#111827">helper</text></g>
+<g><rect x="268" y="72" width="104" height="48" rx="8" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="320" y="92" text-anchor="middle" font-size="12" font-weight="600" fill="#111827">cmk-relay</text><text x="320" y="108" text-anchor="middle" font-size="12" font-weight="600" fill="#111827">daemon</text></g>
+<g><rect x="390" y="72" width="104" height="48" rx="8" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="442" y="92" text-anchor="middle" font-size="12" font-weight="600" fill="#111827">Agent</text><text x="442" y="108" text-anchor="middle" font-size="12" font-weight="600" fill="#111827">receiver</text></g>
+<g><rect x="512" y="72" width="104" height="48" rx="8" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="564" y="100" text-anchor="middle" font-size="12" font-weight="600" fill="#111827">CMC core</text></g>
+<g><rect x="632" y="72" width="104" height="48" rx="8" fill="#2563eb" fill-opacity="0.12" stroke="#2563eb" stroke-width="2"/><text x="684" y="92" text-anchor="middle" font-size="12" font-weight="600" fill="#111827">Checker</text><text x="684" y="108" text-anchor="middle" font-size="12" font-weight="600" fill="#111827">helper</text></g>
+<g fill="none" stroke="#6b7280" stroke-width="1.25"><path d="M320 156H198" marker-end="url(#sch-arrow)"/><path d="M198 196H76" marker-end="url(#sch-arrow)"/><path d="M76 236H198" marker-end="url(#sch-arrow)"/><path d="M198 276H320" marker-end="url(#sch-arrow)"/><path d="M320 316H442" marker-end="url(#sch-arrow)"/><path d="M442 356H564" marker-end="url(#sch-arrow)"/><path d="M564 396H684" stroke-dasharray="5 4" marker-end="url(#sch-arrow)"/><path d="M684 436H564" stroke-dasharray="5 4" marker-end="url(#sch-arrow)"/></g>
+<text x="259" y="148" text-anchor="middle" font-size="11.5" fill="#111827">1, due service</text>
+<text x="137" y="188" text-anchor="middle" font-size="11.5" fill="#111827">2, fetch or check</text>
+<text x="137" y="228" text-anchor="middle" font-size="11.5" fill="#111827">3, raw data</text>
+<text x="259" y="268" text-anchor="middle" font-size="11.5" fill="#111827">4, result</text>
+<text x="381" y="308" text-anchor="middle" font-size="11.5" fill="#111827">5, POST /monitoring</text>
+<text x="503" y="348" text-anchor="middle" font-size="11.5" fill="#111827">6, raw-data socket</text>
+<text x="624" y="388" text-anchor="middle" font-size="11.5" fill="#111827">7, evaluate</text>
+<text x="624" y="428" text-anchor="middle" font-size="11.5" fill="#111827">8, service states</text>
+<text x="24" y="480" font-size="11.5" fill="#4b5563">Dashed steps run for fetcher payloads only; an active check result is final when it reaches the CMC.</text>
+</svg>

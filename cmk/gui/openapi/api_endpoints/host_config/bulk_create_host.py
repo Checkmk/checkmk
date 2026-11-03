@@ -23,10 +23,11 @@ from cmk.gui.openapi.framework.model import (
     api_model,
     ApiOmitted,
 )
+from cmk.gui.openapi.framework.model.converter import folder_tree_of_request
 from cmk.gui.openapi.framework.model.restrict_features import RestrictFeatures
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.watolib import bakery
-from cmk.gui.watolib.hosts_and_folders import Folder, make_folder_tree, RelationMirrorBatch
+from cmk.gui.watolib.hosts_and_folders import Folder, RelationMirrorBatch
 from cmk.licensing.basics.options import OptionName
 from cmk.web.utils import permission_verification as permissions
 
@@ -126,7 +127,7 @@ def bulk_create_host_v1(
     if not isinstance(bake_agent, ApiOmitted) and bake_agent:
         bakery.try_bake_agents_for_hosts(succeeded_hosts, debug=api_context.config.debug)
 
-    tree = make_folder_tree(api_context.config)
+    tree = folder_tree_of_request(api_context)
     return bulk_host_action_response(
         failed_hosts,
         [tree.load_host(host_name) for host_name in succeeded_hosts],

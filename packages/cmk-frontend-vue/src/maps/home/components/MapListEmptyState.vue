@@ -46,7 +46,7 @@ const hint = computed(() => {
 .maps-map-list-empty-state {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-half);
+  gap: var(--dimension-3);
   padding: var(--dimension-10) 0;
   text-align: center;
 }

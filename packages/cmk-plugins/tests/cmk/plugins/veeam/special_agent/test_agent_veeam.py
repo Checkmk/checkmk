@@ -6,10 +6,10 @@
 import json
 import logging
 import socket
-from collections.abc import Iterator
+from collections.abc import Container, Iterator
 from http import HTTPStatus
 from pathlib import Path
-from urllib.parse import parse_qs, quote
+from urllib.parse import parse_qs
 
 import pytest
 import requests
@@ -20,6 +20,7 @@ from cmk.password_store.v1 import Secret
 from cmk.plugins.veeam.special_agent.agent_veeam import (
     BACKUP_OBJECTS_STORAGE_KEY,
     create_session,
+    fetch_backup_jobs,
     fetch_backups,
     fetch_list,
     fetch_object,
@@ -36,7 +37,7 @@ from cmk.plugins.veeam.special_agent.agent_veeam import (
     VeeamClient,
     write_sections,
 )
-from cmk.server_side_programs.v1 import Storage
+from cmk.server_side_programs.v1 import AgentMessages, Storage
 
 URL = "https://veeam.example.com:443"
 TOKEN_URL = f"{URL}/api/oauth2/token"
@@ -61,11 +62,14 @@ def _veeam_api(cert_server_name: str | None = None) -> VeeamApi:
 
 
 def _auth(
-    storage: Storage, cert_server_name: str | None = None, user: str = "monitoring"
+    storage: Storage,
+    cert_server_name: str | None = None,
+    user: str = "monitoring",
+    password: str = "top-secret",
 ) -> VeeamAuth:
     """The token handling as created by one run of the agent."""
     return VeeamAuth(
-        _veeam_api(cert_server_name), storage=storage, user=user, password=Secret("top-secret")
+        _veeam_api(cert_server_name), storage=storage, user=user, password=Secret(password)
     )
 
 
@@ -253,6 +257,31 @@ def test_failing_endpoint_does_stop_the_other_sections(
     assert "<<<veeam_jobs:sep(0)>>>" not in captured.out
 
 
+@pytest.mark.xfail(
+    strict=True,
+    reason="Any data endpoint error terminates the agent run, so the other sections are lost",
+)
+def test_failing_endpoint_does_not_stop_the_other_sections(
+    api: responses.RequestsMock, storage: Storage, capsys: pytest.CaptureFixture[str]
+) -> None:
+    api.get(
+        f"{URL}/api/v1/broken",
+        status=HTTPStatus.INTERNAL_SERVER_ERROR,
+        json={"errorCode": "UnknownError", "message": "boom"},
+    )
+    api.get(f"{URL}/api/v1/jobs", json={"data": [], "pagination": {"total": 0}})
+
+    write_sections(
+        _client(_auth(storage), storage),
+        [
+            ("veeam_broken", fetch_list("/api/v1/broken")),
+            ("veeam_jobs", fetch_list("/api/v1/jobs")),
+        ],
+    )
+
+    assert "<<<veeam_jobs:sep(0)>>>" in capsys.readouterr().out
+
+
 def test_broken_response_on_a_data_endpoint_does_stop_the_other_sections(
     api: responses.RequestsMock, storage: Storage, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -272,26 +301,71 @@ def test_broken_response_on_a_data_endpoint_does_stop_the_other_sections(
     assert "<<<veeam_jobs:sep(0)>>>" not in captured.out
 
 
-def test_access_denied_is_fatal(
-    api: responses.RequestsMock, storage: Storage, capsys: pytest.CaptureFixture[str]
-) -> None:
-    # The API message ends with a period; the appended note must not double it up.
+_REPLICAS_DENIED = (
+    "Could not create section 'veeam_replicas': denied permission to endpoint /api/v1/replicas"
+)
+
+
+def _replicas_denied_section() -> str:
+    messages = AgentMessages()
+    messages.add_warning(_REPLICAS_DENIED)
+    return messages.render()
+
+
+def _deny_replicas(api: responses.RequestsMock) -> None:
     api.get(
         f"{URL}/api/v1/replicas",
         status=HTTPStatus.FORBIDDEN,
         json={"errorCode": "Forbidden", "message": "Access denied."},
     )
 
-    with pytest.raises(TerminateAgent) as excinfo:
-        write_sections(
-            _client(_auth(storage), storage), [("veeam_replicas", fetch_list("/api/v1/replicas"))]
-        )
 
-    message = str(excinfo.value)
-    assert "HTTP 403" in message
-    assert "lacks a role" in message
-    assert ".." not in message
-    assert capsys.readouterr().out == ""
+def test_denied_section_is_reported_as_warning_and_the_others_are_written(
+    api: responses.RequestsMock, storage: Storage, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _deny_replicas(api)
+    api.get(f"{URL}/api/v1/license", json={"edition": "Enterprise"})
+
+    write_sections(
+        _client(_auth(storage), storage),
+        [
+            ("veeam_replicas", fetch_list("/api/v1/replicas")),
+            ("veeam_license", fetch_object("/api/v1/license")),
+        ],
+    )
+
+    assert capsys.readouterr().out == (
+        '<<<veeam_license:sep(0)>>>\n{"edition": "Enterprise"}\n' + _replicas_denied_section()
+    )
+
+
+def test_warnings_are_written_after_the_piggyback_hosts(
+    api: responses.RequestsMock, storage: Storage, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _deny_replicas(api)
+
+    write_sections(
+        _client(_auth(storage), storage),
+        [
+            ("section_a", _piggyback_on("host-1")),
+            ("veeam_replicas", fetch_list("/api/v1/replicas")),
+        ],
+    )
+
+    assert capsys.readouterr().out == (
+        "<<<section_a:sep(0)>>>\n"
+        "<<<<host-1>>>>\n"
+        "<<<section_a:sep(0)>>>\n{}\n"
+        "<<<<>>>>\n" + _replicas_denied_section()
+    )
+
+
+@pytest.mark.usefixtures("storage")
+def test_main_succeeds_if_a_section_is_denied(api: responses.RequestsMock) -> None:
+    api.post(TOKEN_URL, json=_token("first"))
+    _deny_replicas(api)
+
+    assert main([*_MINIMAL_ARGV, "--sections", "veeam_replicas", "veeam.example.com"]) == 0
 
 
 def test_session_rejected_again_after_renewal_is_fatal(
@@ -1209,21 +1283,36 @@ def _task(**overrides: object) -> dict[str, object]:
 def _mock_jobs(
     api: responses.RequestsMock,
     jobs: list[dict[str, object]],
+    disabled_ids: Container[object] = (),
 ) -> None:
     api.get(
         f"{URL}/api/v1/jobs/states?skip=0",
         json={"data": jobs, "pagination": {"total": len(jobs)}},
     )
+    api.get(
+        f"{URL}/api/v1/jobs?skip=0",
+        json={
+            "data": [
+                {
+                    "id": job["id"],
+                    "name": job["name"],
+                    "type": "Backup",
+                    "isDisabled": job["id"] in disabled_ids,
+                }
+                for job in jobs
+            ],
+            "pagination": {"total": len(jobs)},
+        },
+    )
 
 
 def _mock_tasks(
     api: responses.RequestsMock,
-    created_after: str,
     tasks: list[dict[str, object]],
+    session_id: str = "session-1",
 ) -> None:
-    query = f"skip=0&typeFilter=Backup&createdAfterFilter={quote(created_after)}"
     api.get(
-        f"{URL}/api/v1/taskSessions?{query}",
+        f"{URL}/api/v1/sessions/{session_id}/taskSessions?skip=0&typeFilter=Backup",
         json={"data": tasks, "pagination": {"total": len(tasks)}},
     )
 
@@ -1262,7 +1351,7 @@ def test_fetch_backups_resolves_the_job_name_via_the_session_join(
 ) -> None:
     _mock_jobs(api, [_job()])
     _mock_session_and_objects(api, "session-1", ["vm-1"])
-    _mock_tasks(api, "2026-09-29T00:00:00+00:00", [_task()])
+    _mock_tasks(api, [_task()])
 
     write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
 
@@ -1274,7 +1363,11 @@ def test_fetch_backups_resolves_the_job_name_via_the_session_join(
     assert lines[-1] == "<<<<>>>>"
 
 
-def test_fetch_backups_window_uses_the_earliest_last_run_across_jobs(
+def _task_requests(api: responses.RequestsMock) -> list[str]:
+    return [str(call.request.url) for call in api.calls if "taskSessions" in str(call.request.url)]
+
+
+def test_fetch_backups_fetches_only_the_tasks_of_each_jobs_current_session(
     api: responses.RequestsMock,
     storage: Storage,
     capsys: pytest.CaptureFixture[str],
@@ -1282,37 +1375,47 @@ def test_fetch_backups_window_uses_the_earliest_last_run_across_jobs(
     _mock_jobs(
         api,
         [
+            _job(),
             _job(
-                name="Daily_VM_Backup", sessionId="session-1", lastRun="2026-09-29T00:00:00+00:00"
-            ),
-            _job(
-                name="Weekly_VM_Backup",
+                id="job-id-2",
+                name="Rarely_Run_Backup",
                 sessionId="session-2",
-                lastRun="2026-09-20T00:00:00+00:00",
+                lastRun="2026-05-21T00:00:00+00:00",
             ),
         ],
     )
-    _mock_session_with_no_objects(api, "session-1")
-    _mock_session_with_no_objects(api, "session-2")
-    _mock_tasks(api, "2026-09-20T00:00:00+00:00", [])
+    _mock_session_and_objects(api, "session-1", ["vm-1"])
+    _mock_session_and_objects(api, "session-2", ["vm-2"], resource_id="resource-2")
+    _mock_tasks(api, [_task()])
+    _mock_tasks(
+        api,
+        [_task(name="vm-2", sessionId="session-2", creationTime="2026-05-21T01:00:00+00:00")],
+        session_id="session-2",
+    )
 
     write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
 
-    assert capsys.readouterr().out == ""
+    output = capsys.readouterr().out
+    assert "<<<<vm-1>>>>" in output
+    assert "<<<<vm-2>>>>" in output
+    assert _task_requests(api) == [
+        f"{URL}/api/v1/sessions/session-1/taskSessions?skip=0&typeFilter=Backup",
+        f"{URL}/api/v1/sessions/session-2/taskSessions?skip=0&typeFilter=Backup",
+    ]
 
 
-def test_fetch_backups_no_job_has_ever_run_skips_the_task_fetch_entirely(
+def test_fetch_backups_job_without_resolved_objects_gets_no_task_request(
     api: responses.RequestsMock,
     storage: Storage,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    _mock_jobs(api, [_job(lastRun=None)])
+    _mock_jobs(api, [_job()])
     _mock_session_with_no_objects(api, "session-1")
 
     write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
 
     assert capsys.readouterr().out == ""
-    assert all("taskSessions" not in str(call.request.url) for call in api.calls)
+    assert _task_requests(api) == []
 
 
 def test_fetch_backups_ignores_disabled_jobs(
@@ -1324,46 +1427,25 @@ def test_fetch_backups_ignores_disabled_jobs(
         api,
         [
             _job(),
+            # A disabled agent backup or file backup job keeps the status "Stopped"
             _job(
                 id="job-id-2",
                 name="Disabled_VM_Backup",
-                status="Disabled",
+                status="Stopped",
                 sessionId="session-2",
                 lastRun="2026-09-01T00:00:00+00:00",
             ),
         ],
+        disabled_ids={"job-id-2"},
     )
     _mock_session_and_objects(api, "session-1", ["vm-1"])
-    # The window starts at the enabled job's last run, not at the disabled job's.
-    _mock_tasks(
-        api,
-        "2026-09-29T00:00:00+00:00",
-        [_task(), _task(name="vm-2", sessionId="session-2")],
-    )
+    _mock_tasks(api, [_task()])
 
     write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
 
     output = capsys.readouterr().out
     assert "<<<<vm-1>>>>" in output
-    assert "vm-2" not in output
-
-
-def test_fetch_backups_task_with_unmatched_session_is_dropped(
-    api: responses.RequestsMock,
-    storage: Storage,
-    capsys: pytest.CaptureFixture[str],
-) -> None:
-    _mock_jobs(api, [_job(sessionId="session-current")])
-    _mock_session_with_no_objects(api, "session-current")
-    _mock_tasks(
-        api,
-        "2026-09-29T00:00:00+00:00",
-        [_task(sessionId="session-old")],
-    )
-
-    write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
-
-    assert capsys.readouterr().out == ""
+    assert all("session-2" not in str(call.request.url) for call in api.calls)
 
 
 def test_fetch_backups_task_with_non_backupjob_session_type_is_dropped(
@@ -1374,8 +1456,9 @@ def test_fetch_backups_task_with_non_backupjob_session_type_is_dropped(
     # sessionTypeFilter=BackupJob is not sent server-side (it silently matches
     # nothing on VBR 13.0.3.63); this is filtered client-side instead.
     _mock_jobs(api, [_job()])
-    _mock_session_with_no_objects(api, "session-1")
-    _mock_tasks(api, "2026-09-29T00:00:00+00:00", [_task(sessionType="AgentDiscovery")])
+    # Two objects, so that the job has no single-object session fallback.
+    _mock_session_and_objects(api, "session-1", ["vm-1", "vm-2"])
+    _mock_tasks(api, [_task(sessionType="AgentDiscovery")])
 
     write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
 
@@ -1391,7 +1474,7 @@ def test_fetch_backups_relabels_a_single_object_job_task_to_the_resolved_name(
     # object name for some platforms (e.g. a Linux agent's raw IP vs. its hostname).
     _mock_jobs(api, [_job()])
     _mock_session_and_objects(api, "session-1", ["ip-172-31-26-65"])
-    _mock_tasks(api, "2026-09-29T00:00:00+00:00", [_task(name="172.31.26.65")])
+    _mock_tasks(api, [_task(name="172.31.26.65")])
 
     write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
 
@@ -1408,7 +1491,6 @@ def test_fetch_backups_multi_object_job_matches_by_name_and_drops_the_rest(
     _mock_session_and_objects(api, "session-1", ["vm-1", "vm-2"])
     _mock_tasks(
         api,
-        "2026-09-29T00:00:00+00:00",
         [_task(name="vm-1"), _task(name="vm-3", id="unmatched")],
     )
 
@@ -1445,7 +1527,7 @@ def test_fetch_backups_falls_back_to_the_session_for_a_single_object_job_with_no
             "pagination": {"total": 1},
         },
     )
-    _mock_tasks(api, "2026-09-29T00:00:00+00:00", [])
+    _mock_tasks(api, [])
 
     write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
 
@@ -1480,7 +1562,7 @@ def _fetch_backup_records(
     """One run of `veeam_backups` for a single-object job (object vm-1)."""
     _mock_jobs(api, [job])
     _mock_session_and_objects(api, "session-1", ["vm-1"])
-    _mock_tasks(api, "2026-09-29T00:00:00+00:00", tasks)
+    _mock_tasks(api, tasks)
     write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
     _header, *lines = capsys.readouterr().out.splitlines()
     return [json.loads(line) for line in lines[1:-1]]
@@ -1572,11 +1654,56 @@ def test_fetch_backups_session_404_skips_just_that_job(
         status=HTTPStatus.NOT_FOUND,
         json={"message": "Session not found"},
     )
-    _mock_tasks(api, "2026-09-29T00:00:00+00:00", [])
+    _mock_tasks(api, [])
 
     write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
 
     assert capsys.readouterr().out == ""
+
+
+def test_fetch_backups_task_sessions_404_skips_just_that_job(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    _mock_jobs(api, [_job(), _job(id="job-id-2", sessionId="session-2")])
+    # Two objects, so that the job has no single-object session fallback.
+    _mock_session_and_objects(api, "session-1", ["vm-1", "vm-1b"])
+    api.get(
+        f"{URL}/api/v1/sessions/session-1/taskSessions?skip=0&typeFilter=Backup",
+        status=HTTPStatus.NOT_FOUND,
+        json={"message": "Session not found"},
+    )
+    _mock_session_and_objects(api, "session-2", ["vm-2"], resource_id="resource-2")
+    _mock_tasks(api, [_task(name="vm-2", sessionId="session-2")], session_id="session-2")
+
+    write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
+
+    output = capsys.readouterr().out
+    assert "<<<<vm-2>>>>" in output
+    assert "vm-1" not in output
+
+
+def test_fetch_backups_task_sessions_404_of_a_single_object_job_falls_back_to_its_session(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    _mock_jobs(api, [_job()])
+    _mock_session_and_objects(api, "session-1", ["vm-1"])
+    api.get(
+        f"{URL}/api/v1/sessions/session-1/taskSessions?skip=0&typeFilter=Backup",
+        status=HTTPStatus.NOT_FOUND,
+        json={"message": "Session not found"},
+    )
+
+    write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
+
+    header, *lines = capsys.readouterr().out.splitlines()
+    assert header == "<<<<vm-1>>>>"
+    (record,) = (json.loads(line) for line in lines[1:-1])
+    assert record["state"] == "Stopped"
+    assert record["jobName"] == "Daily_VM_Backup"
 
 
 def test_fetch_backups_job_with_an_invalid_object_is_not_misattributed(
@@ -1600,7 +1727,7 @@ def test_fetch_backups_job_with_an_invalid_object_is_not_misattributed(
             "pagination": {"total": 2},
         },
     )
-    _mock_tasks(api, "2026-09-29T00:00:00+00:00", [_task(name="vm-2")])
+    _mock_tasks(api, [_task(name="vm-2")])
 
     write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
 
@@ -1622,7 +1749,7 @@ def test_fetch_backups_objects_400_skips_just_that_job(
         status=HTTPStatus.BAD_REQUEST,
         json={"message": "Backup platform or job type are not supported"},
     )
-    _mock_tasks(api, "2026-09-29T00:00:00+00:00", [])
+    _mock_tasks(api, [])
 
     write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
 
@@ -1643,7 +1770,7 @@ def test_fetch_backups_session_missing_state_keeps_the_jobs_tasks(
             "pagination": {"total": 1},
         },
     )
-    _mock_tasks(api, "2026-09-29T00:00:00+00:00", [_task()])
+    _mock_tasks(api, [_task()])
 
     write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
 
@@ -1668,7 +1795,7 @@ def test_fetch_backups_session_missing_state_writes_no_fallback_record(
             "pagination": {"total": 1},
         },
     )
-    _mock_tasks(api, "2026-09-29T00:00:00+00:00", [])
+    _mock_tasks(api, [])
 
     write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
 
@@ -1698,14 +1825,14 @@ def test_fetch_backups_cached_session_feeds_the_fallback_task_on_a_later_run(
             "pagination": {"total": 1},
         },
     )
-    _mock_tasks(api, "2026-09-29T00:00:00+00:00", [_task()])
+    _mock_tasks(api, [_task()])
     write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
     capsys.readouterr()
 
     # Second run: the job's session is unchanged (cache hit), but it now has no
     # task, so `_session_fallback_task` must build its record from the cached
     # `_SessionInfo`, round-tripped through `model_dump()`/`populate_by_name`.
-    _mock_tasks(api, "2026-09-29T00:00:00+00:00", [])
+    _mock_tasks(api, [])
     write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
     output = capsys.readouterr().out
 
@@ -1723,7 +1850,7 @@ def test_fetch_backups_reuses_cached_object_names_for_an_unchanged_session(
 ) -> None:
     _mock_jobs(api, [_job()])
     _mock_session_and_objects(api, "session-1", ["vm-1"])
-    _mock_tasks(api, "2026-09-29T00:00:00+00:00", [_task()])
+    _mock_tasks(api, [_task()])
 
     write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
     capsys.readouterr()
@@ -1735,7 +1862,7 @@ def test_fetch_backups_reuses_cached_object_names_for_an_unchanged_session(
     assert "<<<<vm-1>>>>" in output
     new_calls = api.calls[calls_before_second_run:]
     assert not any(
-        "/api/v1/sessions/" in (call.request.url or "")
+        call.request.url == f"{URL}/api/v1/sessions/session-1"
         or "/api/v1/backups/resource" in (call.request.url or "")
         for call in new_calls
     )
@@ -1748,7 +1875,7 @@ def test_fetch_backups_refetches_object_names_when_the_session_changes(
 ) -> None:
     _mock_jobs(api, [_job()])
     _mock_session_and_objects(api, "session-1", ["vm-1"])
-    _mock_tasks(api, "2026-09-29T00:00:00+00:00", [_task()])
+    _mock_tasks(api, [_task()])
 
     write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
     capsys.readouterr()
@@ -1758,8 +1885,8 @@ def test_fetch_backups_refetches_object_names_when_the_session_changes(
     _mock_session_and_objects(api, "session-2", ["vm-1-renamed"])
     _mock_tasks(
         api,
-        "2026-09-29T00:00:00+00:00",
         [_task(sessionId="session-2", name="vm-1-renamed")],
+        session_id="session-2",
     )
 
     write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
@@ -1776,14 +1903,14 @@ def test_fetch_backups_drops_a_job_no_longer_present_from_the_cache(
 ) -> None:
     _mock_jobs(api, [_job()])
     _mock_session_and_objects(api, "session-1", ["vm-1"])
-    _mock_tasks(api, "2026-09-29T00:00:00+00:00", [_task()])
+    _mock_tasks(api, [_task()])
 
     write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
     capsys.readouterr()
     assert "job-id-1" in storage.read(JOB_OBJECT_NAMES_STORAGE_KEY, "{}")
 
     _mock_jobs(api, [])
-    _mock_tasks(api, "2026-09-29T00:00:00+00:00", [])
+    _mock_tasks(api, [])
 
     write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
     capsys.readouterr()
@@ -1819,7 +1946,7 @@ def test_fetch_backups_only_caches_a_session_once_it_has_stopped(
         },
     )
     _mock_jobs(api, [_job()])
-    _mock_tasks(api, "2026-09-29T00:00:00+00:00", [])
+    _mock_tasks(api, [])
 
     write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
     capsys.readouterr()
@@ -1835,18 +1962,42 @@ def test_fetch_backups_only_caches_a_session_once_it_has_stopped(
     assert record["result"] == {"result": "Success"}
 
 
+def test_fetch_backup_jobs_adds_whether_the_job_is_disabled(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    _mock_jobs(
+        api,
+        [
+            _job(status="Stopped"),
+            _job(id="job-id-2", name="Disabled_Agent_Backup", status="Stopped"),
+        ],
+        disabled_ids={"job-id-2"},
+    )
+
+    write_sections(_client(_auth(storage), storage), [("veeam_backup_jobs", fetch_backup_jobs)])
+
+    header, *lines = capsys.readouterr().out.splitlines()
+    assert header == "<<<veeam_backup_jobs:sep(0)>>>"
+    assert [(job["name"], job["isDisabled"]) for job in map(json.loads, lines)] == [
+        ("Daily_VM_Backup", False),
+        ("Disabled_Agent_Backup", True),
+    ]
+
+
 def test_sections_sharing_a_list_endpoint_fetch_it_once_per_run(
     api: responses.RequestsMock,
     storage: Storage,
 ) -> None:
     _mock_jobs(api, [_job()])
     _mock_session_and_objects(api, "session-1", ["vm-1"])
-    _mock_tasks(api, "2026-09-29T00:00:00+00:00", [_task()])
+    _mock_tasks(api, [_task()])
 
     write_sections(
         _client(_auth(storage), storage),
         [
-            ("veeam_backup_jobs", fetch_list("/api/v1/jobs/states")),
+            ("veeam_backup_jobs", fetch_backup_jobs),
             ("veeam_backups", fetch_backups),
         ],
     )
@@ -1861,7 +2012,7 @@ def test_sections_sharing_a_list_with_different_page_sizes_fetch_it_once_per_run
 ) -> None:
     _mock_jobs(api, [_job()])
     _mock_session_and_objects(api, "session-1", ["vm-1"], resource_id="backup-1")
-    _mock_tasks(api, "2026-09-29T00:00:00+00:00", [_task()])
+    _mock_tasks(api, [_task()])
     api.get(
         f"{URL}/api/v1/backupObjects?skip=0&limit=500",
         json={"data": [{"id": "object-vm-1", "name": "vm-1"}], "pagination": {"total": 1}},
@@ -1899,7 +2050,6 @@ def test_fetch_backups_keeps_the_newest_task_per_object_and_job(
     _mock_session_and_objects(api, "session-1", ["vm-1"])
     _mock_tasks(
         api,
-        "2026-09-29T00:00:00+00:00",
         [
             _task(id="older", creationTime="2026-09-29T01:00:00+00:00"),
             _task(id="newer", creationTime="2026-09-29T02:00:00+00:00"),
@@ -1913,6 +2063,27 @@ def test_fetch_backups_keeps_the_newest_task_per_object_and_job(
     assert '"id": "older"' not in output
 
 
+def test_fetch_backups_reports_a_machine_that_succeeded_on_retry_as_successful(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    _mock_jobs(api, [_job()])
+    _mock_session_and_objects(api, "session-1", ["vm-1"])
+    _mock_tasks(
+        api,
+        [
+            _task(creationTime="2026-09-29T01:00:00+00:00", result={"result": "Failed"}),
+            _task(creationTime="2026-09-29T02:00:00+00:00", result={"result": "Success"}),
+        ],
+    )
+
+    write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
+
+    _header, _section_header, *records, _footer = capsys.readouterr().out.splitlines()
+    assert [json.loads(record)["result"] for record in records] == [{"result": "Success"}]
+
+
 def test_wrong_credentials_are_reported(api: responses.RequestsMock, storage: Storage) -> None:
     api.post(
         TOKEN_URL,
@@ -1920,7 +2091,7 @@ def test_wrong_credentials_are_reported(api: responses.RequestsMock, storage: St
         json={"errorCode": "AccessDenied", "message": "Authentication failed"},
     )
 
-    with pytest.raises(TerminateAgent, match="Check the user name and password"):
+    with pytest.raises(TerminateAgent, match="Check the user name and password.*may lock the user"):
         _auth(storage).authenticate()
 
 
@@ -1972,6 +2143,21 @@ def test_timeout_is_reported_as_unreachable(
         _auth(storage).authenticate()
 
 
+def test_next_run_uses_the_changed_password(api: responses.RequestsMock, storage: Storage) -> None:
+    api.post(
+        TOKEN_URL,
+        status=HTTPStatus.UNAUTHORIZED,
+        json={"errorCode": "AccessDenied", "message": "Authentication failed"},
+    )
+    with pytest.raises(TerminateAgent):
+        _auth(storage, password="old-secret").authenticate()
+    api.replace(responses.POST, TOKEN_URL, json=_token("first"))
+
+    _auth(storage, password="new-secret").authenticate()
+
+    assert [r["password"] for r in _token_requests(api)] == [["old-secret"], ["new-secret"]]
+
+
 def test_rejected_certificate_names_the_expected_host_name(
     api: responses.RequestsMock, storage: Storage
 ) -> None:
@@ -2015,6 +2201,33 @@ def test_unreachable_server_is_reported_with_a_non_zero_exit_code(
     assert "is unreachable" in capsys.readouterr().err
 
 
+@pytest.mark.usefixtures("storage")
+def test_server_that_never_answers_is_reported_after_the_timeout(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    with socket.socket() as silent_server:
+        silent_server.bind(("127.0.0.1", 0))
+        silent_server.listen()
+
+        exit_code = main(
+            [
+                "--user",
+                "monitoring",
+                "--password",
+                "top-secret",
+                "--disable-cert-verification",
+                "--timeout",
+                "1",
+                "--port",
+                str(silent_server.getsockname()[1]),
+                "127.0.0.1",
+            ]
+        )
+
+    assert exit_code == 1
+    assert "did not answer within 1 seconds" in capsys.readouterr().err
+
+
 _MINIMAL_ARGV = ["--user", "u", "--password", "p", "--disable-cert-verification"]
 
 
@@ -2042,7 +2255,7 @@ def test_main_fetches_only_the_selected_sections(
     api: responses.RequestsMock, capsys: pytest.CaptureFixture[str]
 ) -> None:
     api.post(TOKEN_URL, json=_token("first"))
-    api.get(f"{URL}/api/v1/jobs/states", json={"data": [], "pagination": {"total": 0}})
+    _mock_jobs(api, [])
 
     exit_code = main([*_MINIMAL_ARGV, "--sections", "veeam_backup_jobs", "veeam.example.com"])
 

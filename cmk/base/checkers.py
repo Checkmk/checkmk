@@ -17,7 +17,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, Literal, override
 
-import cmk.ccc.debug
 import cmk.ccc.resulttype as result
 import cmk.checkengine.plugin_backend as agent_based_register
 import cmk.livestatus_client as livestatus
@@ -157,6 +156,7 @@ def _fetch_all(
     secrets: FetcherSecrets,
     *,
     simulation: bool,
+    debug: bool,
 ) -> Sequence[
     tuple[
         SourceInfo,
@@ -172,6 +172,7 @@ def _fetch_all(
             source.fetcher(),
             mode,
             secrets,
+            debug=debug,
         )
         for source in sources
     ]
@@ -184,6 +185,8 @@ def _do_fetch(  # type: ignore[explicit-any]
     fetcher: Fetcher,
     mode: Mode,
     secrets: FetcherSecrets,
+    *,
+    debug: bool,
 ) -> tuple[
     SourceInfo,
     result.Result[AgentRawData | SNMPRawData, Exception],
@@ -191,7 +194,7 @@ def _do_fetch(  # type: ignore[explicit-any]
 ]:
     logger.debug("Fetching source: %(source_info)s", {"source_info": source_info})
     with CPUTracker(logger.debug) as tracker:
-        raw_data = trigger.get_raw_data(file_cache, fetcher, mode, secrets)
+        raw_data = trigger.get_raw_data(file_cache, fetcher, mode, secrets, debug=debug)
     return source_info, raw_data, tracker.duration
 
 
@@ -202,10 +205,12 @@ class CMKParser:
         *,
         selected_sections: SectionNameCollection,
         keep_outdated: bool,
+        debug: bool,
     ) -> None:
         self.config: Final = config
         self.selected_sections: Final = selected_sections
         self.keep_outdated: Final = keep_outdated
+        self.debug: Final = debug
 
     def __call__(
         self,
@@ -236,6 +241,7 @@ class CMKParser:
                         section_cache_path=section_cache_path,
                     ),
                     keep_outdated=self.keep_outdated,
+                    debug=self.debug,
                 ),
                 raw_data,
                 selection=self.selected_sections,
@@ -319,8 +325,10 @@ class SpecialAgentFetcher(FetcherFunction):
         agent_name: str,
         cmds: Iterator[SpecialAgentCommandLine],
         is_cmc: bool,
+        debug: bool,
     ) -> None:
         self.trigger: Final = trigger
+        self.debug: Final = debug
         self.agent_name: Final = agent_name
         self.cmds: Final = cmds
         self.secrets: Final = secrets
@@ -351,6 +359,7 @@ class SpecialAgentFetcher(FetcherFunction):
                 ProgramFetcher(cmdline=cmd.cmdline, stdin=cmd.stdin, is_cmc=self.is_cmc),
                 Mode.DISCOVERY,
                 self.secrets,
+                debug=self.debug,
             )
             for cmd in self.cmds
         ]
@@ -385,8 +394,10 @@ class CMKFetcher(FetcherFunction):
         secrets_config_site: StoredSecrets,
         simulation_mode: bool,
         max_cachefile_age: MaxAge | None = None,
+        debug: bool,
     ) -> None:
         self.config_cache: Final = config_cache
+        self.debug: Final = debug
         self.host_tags: Final = host_tags
         self.get_relay_id: Final = get_relay_id
         self.make_trigger: Final = make_trigger
@@ -526,6 +537,7 @@ class CMKFetcher(FetcherFunction):
                 mode=self.mode,
                 secrets=secrets_config,
                 simulation=self.simulation_mode,
+                debug=self.debug,
             )
         ]
 
@@ -620,6 +632,7 @@ class CheckerPluginMapper(Mapping[CheckPluginName, CheckerPlugin]):
         clusters: Container[HostName],
         get_agent_output: Callable[[], AgentRawData | None],
         omd_root: Path,
+        debug: bool,
     ):
         self.config: Final = config
         self.value_store_manager: Final = value_store_manager
@@ -627,6 +640,7 @@ class CheckerPluginMapper(Mapping[CheckPluginName, CheckerPlugin]):
         self.get_agent_output: Final = get_agent_output
         self.check_plugins: Final = check_plugins
         self.omd_root: Final = omd_root
+        self.debug: Final = debug
 
     @override
     def __getitem__(self, __key: CheckPluginName) -> CheckerPlugin:
@@ -663,8 +677,9 @@ class CheckerPluginMapper(Mapping[CheckPluginName, CheckerPlugin]):
                 get_effective_host=self.config.effective_host,
                 snmp_backend=self.config.get_snmp_backend(host_name),
                 get_parameters=lambda: _compute_final_check_parameters(
-                    host_name, service, self.config, is_preview, self.omd_root
+                    host_name, service, self.config, is_preview, self.omd_root, debug=self.debug
                 ),
+                debug=self.debug,
             )
 
         return CheckerPlugin(
@@ -685,7 +700,7 @@ class CheckerPluginMapper(Mapping[CheckPluginName, CheckerPlugin]):
 
 
 def _make_rrd_data_getter(
-    host_name: HostAddress, service_name: ServiceName
+    host_name: HostAddress, service_name: ServiceName, *, debug: bool
 ) -> Callable[[str, int, int], MetricRecord | None]:
     """Replacement for `partial` which is not supported by mypy"""
 
@@ -696,7 +711,7 @@ def _make_rrd_data_getter(
             )
         except (
             ()
-            if cmk.ccc.debug.enabled()
+            if debug
             else (
                 livestatus.MKLivestatusSocketError,
                 livestatus.MKLivestatusNotFoundError,
@@ -760,8 +775,9 @@ def _compute_final_check_parameters(
     checker_config: CheckerConfig,
     is_preview: bool,
     omd_root: Path,
+    debug: bool,
 ) -> Parameters:
-    params = service.parameters.evaluate(checker_config.timeperiods_active.get)
+    params = service.parameters.evaluate(checker_config.timeperiods_active.get, debug=debug)
 
     if not _needs_postprocessing(params):
         return Parameters(params)
@@ -785,7 +801,7 @@ def _compute_final_check_parameters(
             meta_file_path_template=prediction_store.meta_file_path_template,
             predictions=make_updated_predictions(
                 prediction_store,
-                _make_rrd_data_getter(host_name, service.description),
+                _make_rrd_data_getter(host_name, service.description, debug=debug),
                 time.time(),
             ),
         )
@@ -1017,6 +1033,7 @@ def get_aggregated_result(  # type: ignore[explicit-any]
     get_agent_output: Callable[[], AgentRawData | None],
     get_effective_host: Callable[[HostName, ServiceName, _Labels], HostName],
     snmp_backend: SNMPBackendEnum,
+    debug: bool,
 ) -> AggregatedResult:
     # Mostly API-specific error-handling around the check function.
     #
@@ -1083,7 +1100,7 @@ def get_aggregated_result(  # type: ignore[explicit-any]
     except MKTimeout:
         raise
     except Exception:
-        if cmk.ccc.debug.enabled():
+        if debug:
             raise
         check_result = SubmittableServiceCheckResult(
             3,

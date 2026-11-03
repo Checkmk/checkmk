@@ -13,7 +13,6 @@ from contextlib import contextmanager, suppress
 from dataclasses import fields
 from typing import Literal
 
-import cmk.ccc.debug
 import cmk.utils.password_store
 import cmk.utils.paths
 from cmk import trace
@@ -67,10 +66,10 @@ def build_and_activate_monitoring_config(
     ],
     ip_address_of: ip_lookup.ConfiguredIPLookup[ip_lookup.CollectFailedHosts],
     ip_address_of_mgmt: ip_lookup.IPLookupOptional,
-    core: MonitoringConfigBuilder,
     core_client: CoreClient,
     plugins: AgentBasedPlugins,
     *,
+    config_builders: Sequence[MonitoringConfigBuilder],
     hosts_to_update: set[HostName] | None = None,
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     locking_mode: _LockingMode,
@@ -80,14 +79,15 @@ def build_and_activate_monitoring_config(
     edition: Edition,
     loaded_config: BaseConfig,
     make_fetcher_trigger: FetcherTriggerFactory,
+    debug: bool,
 ) -> None:
     try:
         with activation_lock(
             main_mk_file=cmk.utils.paths.default_config_dir / "main.mk", mode=locking_mode
         ):
             do_create_config(
-                core=core,
                 core_client=core_client,
+                config_builders=config_builders,
                 config_cache=config_cache,
                 core_objects_config=core_objects_config,
                 hosts_config=hosts_config,
@@ -108,17 +108,17 @@ def build_and_activate_monitoring_config(
                 edition=edition,
                 loaded_config=loaded_config,
                 make_fetcher_trigger=make_fetcher_trigger,
+                debug=debug,
             )
             core_client.run(action, log=_print)
 
     except Exception as e:
-        if cmk.ccc.debug.enabled():
+        if debug:
             raise
         raise MKBailOut("An error occurred: %s" % e)
 
 
 def do_create_config(
-    core: MonitoringConfigBuilder,
     core_client: CoreClient,
     config_cache: ConfigCache,
     core_objects_config: CoreObjectsConfig,
@@ -141,12 +141,14 @@ def do_create_config(
     hosts_to_update: set[HostName] | None,
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     *,
+    config_builders: Sequence[MonitoringConfigBuilder],
     duplicates: Collection[HostName],
     notify_relay: Callable[[config_warnings.IssueConfigWarning], None],
     licensing_handler_factory: Callable[[], LicensingHandler],
     edition: Edition,
     loaded_config: BaseConfig,
     make_fetcher_trigger: FetcherTriggerFactory,
+    debug: bool,
 ) -> None:
     """Creating the monitoring core configuration and additional files
 
@@ -155,7 +157,7 @@ def do_create_config(
     """
     with suppress(IOError):
         sys.stdout.write(
-            "Generating configuration for core (type %s)...\n" % core.name,
+            "Generating configuration for core (type %s)...\n" % loaded_config.monitoring_core,
         )
         sys.stdout.flush()
 
@@ -163,12 +165,11 @@ def do_create_config(
         with tracer.span(
             "create_core_config",
             attributes={
-                "cmk.core_config.core": core.name,
+                "cmk.core_config.core": loaded_config.monitoring_core,
                 "cmk.core_config.core_config.hosts_to_update": repr(hosts_to_update),
             },
         ):
             _create_active_config(
-                core,
                 core_client,
                 config_cache,
                 core_objects_config,
@@ -184,14 +185,16 @@ def do_create_config(
                 ip_address_of_mgmt,
                 hosts_to_update=hosts_to_update,
                 service_depends_on=service_depends_on,
+                config_builders=config_builders,
                 duplicates=duplicates,
                 licensing_handler_factory=licensing_handler_factory,
                 edition=edition,
                 loaded_config=loaded_config,
                 make_fetcher_trigger=make_fetcher_trigger,
+                debug=debug,
             )
     except Exception as e:
-        if cmk.ccc.debug.enabled():
+        if debug:
             raise
         raise MKGeneralException("Error creating configuration: %s" % e)
 
@@ -242,7 +245,6 @@ def _backup_objects_file(core_client: CoreClient) -> Iterator[None]:
 # we create below to indicate that the configuration is ready to be used.
 # Everything that should be in it must be created before creating that link.
 def _create_active_config(
-    core: MonitoringConfigBuilder,
     core_client: CoreClient,
     config_cache: ConfigCache,
     core_objects_config: CoreObjectsConfig,
@@ -265,11 +267,13 @@ def _create_active_config(
     hosts_to_update: set[HostName] | None,
     service_depends_on: Callable[[HostAddress, ServiceName], Sequence[ServiceName]],
     *,
+    config_builders: Sequence[MonitoringConfigBuilder],
     duplicates: Collection[HostName],
     licensing_handler_factory: Callable[[], LicensingHandler],
     edition: Edition,
     loaded_config: BaseConfig,
     make_fetcher_trigger: FetcherTriggerFactory,
+    debug: bool,
 ) -> None:
     config_warnings.initialize()
 
@@ -282,8 +286,6 @@ def _create_active_config(
         cmk.utils.password_store.pending_secrets_path_site(),
     )
 
-    config_builders = _make_config_builders(core)
-
     with (
         config_path.create(cmk.utils.paths.omd_root) as config_creation_context,
         _backup_objects_file(core_client),
@@ -291,6 +293,7 @@ def _create_active_config(
         intermediate_config = IntermediateMonitoringConfig(
             edition=edition,
             make_fetcher_trigger=make_fetcher_trigger,
+            debug=debug,
             config_creation_context=config_creation_context,
             passwords=passwords,
             licensing_handler=licensing_handler_factory(),
@@ -317,7 +320,7 @@ def _create_active_config(
     core_client.cleanup_old_configs()
 
 
-def _make_config_builders(
+def config_builders(
     core: MonitoringConfigBuilder,
 ) -> Sequence[MonitoringConfigBuilder]:
     """Everything that goes into one activation, in the order it is created.

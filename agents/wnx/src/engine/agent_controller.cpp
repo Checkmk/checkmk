@@ -54,6 +54,66 @@ fs::path TomlConfigFile() {
     return fs::path{cfg::GetUserDir()} / cfg::files::kAgentToml;
 }
 
+fs::path UpdateTomlConfigFile() {
+    return fs::path{cfg::GetUserDir()} / cfg::files::kAgentUpdateToml;
+}
+
+namespace {
+/// The value that `line` assigns to `key`, if it assigns one.
+///
+/// Covers the subset of TOML the bakery writes into the update configuration:
+/// comments, blank lines, and `key = value` with a bare value. A line that
+/// sets another key, or sets nothing, yields nothing. A `=` inside a value,
+/// such as the padding of a base64 signature key, cannot be mistaken for the
+/// separator of `key`, because the name before the first `=` then does not
+/// match.
+std::optional<std::string> TomlSetting(const std::string &line,
+                                       std::string_view key) {
+    std::string trimmed{line};
+    tools::AllTrim(trimmed);
+    if (trimmed.empty() || trimmed.starts_with('#')) {
+        return {};
+    }
+    const auto separator = trimmed.find('=');
+    if (separator == std::string::npos) {
+        return {};
+    }
+    std::string name{trimmed.substr(0, separator)};
+    tools::AllTrim(name);
+    if (name != key) {
+        return {};
+    }
+    std::string value{trimmed.substr(separator + 1)};
+    tools::AllTrim(value);
+    return value;
+}
+}  // namespace
+
+bool IsIntegratedUpdaterActivated(const fs::path &update_toml) {
+    std::error_code ec;
+    if (!fs::exists(update_toml, ec)) {
+        XLOG::d.i("No update configuration '{}', no integrated updater",
+                  update_toml);
+        return false;
+    }
+    std::ifstream ifs(update_toml);
+    if (!ifs.is_open()) {
+        XLOG::l("Failed to open the update configuration '{}'", update_toml);
+        return false;
+    }
+    std::string line;
+    while (std::getline(ifs, line)) {
+        if (const auto value = TomlSetting(line, kUpdaterActivatedKey)) {
+            XLOG::d.i("The update configuration '{}' sets '{} = {}'",
+                      update_toml, kUpdaterActivatedKey, *value);
+            return *value == "true";
+        }
+    }
+    XLOG::d.i("The update configuration '{}' does not set '{}'", update_toml,
+              kUpdaterActivatedKey);
+    return false;
+}
+
 namespace {
 std::pair<fs::path, fs::path> ServiceName2TargetName() {
     return {fs::path{cfg::GetRootDir()} / cfg::files::kAgentCtl,

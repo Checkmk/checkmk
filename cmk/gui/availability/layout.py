@@ -9,11 +9,10 @@ from collections.abc import Callable, Iterator, Sequence
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.utils import dateutils
 from cmk.utils.servicename import ServiceName
-from cmk.web.utils.urls import makeuri, urlencode_vars
+from cmk.web.utils.urls import HTTPVariable, urlencode_vars
 
 from .columns import availability_columns
 from .computation import cell_active, check_av_levels, history_url_of
@@ -41,6 +40,8 @@ from .type_defs import (
     AVTimeStamp,
 )
 
+MakeUri = Callable[[Sequence[HTTPVariable]], str]
+
 
 # When grouping is enabled, this function is called once for each group
 # TODO: range_title should be superfluous here
@@ -63,6 +64,7 @@ def layout_availability_table(
     group_title: str | None,
     availability_table: AVData,
     avoptions: AVOptions,
+    make_uri: MakeUri,
 ) -> AVLayoutTable:
     time_range: AVTimeRange = avoptions["range"][0]
     from_time, until_time = time_range
@@ -99,7 +101,7 @@ def layout_availability_table(
 
         # Iconbuttons with URLs
         if "omit_buttons" not in labelling:
-            urls = make_object_urls(host, service, site, time_range, what)
+            urls = make_object_urls(host, service, site, time_range, what, make_uri)
         else:
             urls = []
 
@@ -250,11 +252,11 @@ def make_object_urls(
     site: SiteId,
     time_range: AVTimeRange,
     what: AVObjectType,
+    make_uri: MakeUri,
 ) -> list[AVIconSpec]:
     urls: list[AVIconSpec] = []
     if what != "bi":
-        timeline_url = makeuri(
-            request,
+        timeline_url = make_uri(
             [
                 ("av_mode", "timeline"),
                 ("av_site", site),
@@ -263,8 +265,7 @@ def make_object_urls(
             ],
         )
     else:
-        timeline_url = makeuri(
-            request,
+        timeline_url = make_uri(
             [
                 ("av_mode", "timeline"),
                 ("av_aggr_group", host),
@@ -413,13 +414,13 @@ def layout_timeline(
     # Render graphical representation
     # Make sure that each cell is visible, if possible
     if timeline_rows:
-        min_percentage = min(100.0 / len(timeline_rows), style == "inline" and 0.0 or 0.5)
+        min_percentage = min(100.0 / len(timeline_rows), 0.0 if style == "inline" else 0.5)
     else:
         min_percentage = 0
     rest_percentage = 100 - len(timeline_rows) * min_percentage
 
-    chaos_begin = None
-    chaos_end = None
+    chaos_begin: AVTimeStamp | None = None
+    chaos_end: AVTimeStamp | None = None
     chaos_count = 0
     chaos_width = 0.0
 
@@ -442,6 +443,17 @@ def layout_timeline(
         }
         return (None, title, chaos_width, "chaos")
 
+    def end_chaos_period(
+        chaos_begin: AVTimeStamp | None,
+        chaos_end: AVTimeStamp | None,
+        chaos_count: int,
+        chaos_width: float,
+    ) -> tuple[None, None, int, float]:
+        # Only output chaos phases with a certain length
+        if chaos_count >= 4 and chaos_begin is not None and chaos_end is not None:
+            spans.append(chaos_period(chaos_begin, chaos_end, chaos_count, chaos_width))
+        return None, None, 0, 0.0
+
     current_time = from_time
     for row_nr, (row, state_id) in enumerate(timeline_rows):
         this_from_time = row["from"]
@@ -449,6 +461,9 @@ def layout_timeline(
         # If timeline span begins after timeline beginning time, add
         # unmonitored span in front
         if this_from_time > current_time:  # GAP
+            chaos_begin, chaos_end, chaos_count, chaos_width = end_chaos_period(
+                chaos_begin, chaos_end, chaos_count, chaos_width
+            )
             spans.append(
                 (
                     None,
@@ -509,7 +524,7 @@ def layout_timeline(
             # If the width is very small then we group several phases into
             # one single "chaos period".
             if style == "inline" and width < 0.05:
-                if not chaos_begin:
+                if chaos_begin is None:
                     chaos_begin = row["from"]
                 chaos_width += width
                 chaos_count += 1
@@ -517,18 +532,15 @@ def layout_timeline(
                 continue
 
             # Chaos period has ended? One not-small phase:
-            if chaos_begin and chaos_end:
-                # Only output chaos phases with a certain length
-                if chaos_count >= 4:
-                    spans.append(chaos_period(chaos_begin, chaos_end, chaos_count, chaos_width))
-
-                chaos_begin = None
-                chaos_end = None
-                chaos_count = 0
-                chaos_width = 0
-
+            chaos_begin, chaos_end, chaos_count, chaos_width = end_chaos_period(
+                chaos_begin, chaos_end, chaos_count, chaos_width
+            )
             width += min_percentage
             spans.append((row_nr, title, width, css))
+    chaos_begin, chaos_end, chaos_count, chaos_width = end_chaos_period(
+        chaos_begin, chaos_end, chaos_count, chaos_width
+    )
+
     # If timeline span ends before the current time, fill it up with
     # unmonitored entry until end
     if avoptions["service_period"] == "honor" and current_time < until_time:  # GAP
@@ -540,9 +552,6 @@ def layout_timeline(
                 "unmonitored",
             )
         )
-
-    if chaos_count > 1 and chaos_begin and chaos_end:
-        spans.append(chaos_period(chaos_begin, chaos_end, chaos_count, chaos_width))
 
     if style == "inline":
         timeline_layout["time_choords"] = list(layout_timeline_choords(time_range))

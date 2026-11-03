@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import functools
 import time
 from collections.abc import Iterator, Sequence
 from typing import cast
@@ -14,6 +15,7 @@ from cmk.gui import sites
 from cmk.gui.availability.annotations import load_annotations
 from cmk.gui.availability.bi import get_bi_availability
 from cmk.gui.availability.computation import (
+    availability_group_titles,
     compute_availability,
     compute_availability_groups,
     get_host_service_availability_rawdata,
@@ -562,7 +564,9 @@ def do_render_availability(
     *,
     table_row_limit: int,
 ) -> None:
-    availability_tables = compute_availability_groups(what, av_data, avoptions)
+    availability_tables = compute_availability_groups(
+        what, av_data, avoptions, availability_group_titles(avoptions["grouping"])
+    )
     if av_mode == "timeline":
         render_availability_timelines(
             what, availability_tables, avoptions, table_row_limit=table_row_limit
@@ -774,7 +778,9 @@ def render_timeline_legend(what: AVObjectType) -> None:
 def render_availability_table(
     group_title: str | None, availability_table: AVData, what: AVObjectType, avoptions: AVOptions
 ) -> None:
-    av_table = layout_availability_table(what, group_title, availability_table, avoptions)
+    av_table = layout_availability_table(
+        what, group_title, availability_table, avoptions, functools.partial(makeuri, request)
+    )
 
     # TODO: If summary line is activated, then sorting should now move that line to the
     # top. It should also stay at the bottom. This would require an extension to the

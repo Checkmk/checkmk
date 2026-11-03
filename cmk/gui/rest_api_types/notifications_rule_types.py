@@ -11,7 +11,7 @@ from collections.abc import Iterator, Mapping, MutableMapping, Sequence
 from dataclasses import dataclass, field
 from typing import cast, Literal, NotRequired, Required, Self, TypedDict
 
-import cmk.ec.export as ec  # astrein: disable=cmk-module-layer-violation
+import cmk.ec.export as ec  # astrein: disable=module-layers
 from cmk.events.notify_types import (
     AckState,
     AlwaysBulkParameters,

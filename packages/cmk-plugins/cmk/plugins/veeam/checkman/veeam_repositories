@@ -23,4 +23,5 @@ discovery:
 
 item:
  The repository type (or, for a scale-out repository extent, its extent
- type) followed by the repository name.
+ type) followed by the repository name and the first 8 characters of its ID
+ in parentheses, since repository names are not unique in Veeam.

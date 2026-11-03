@@ -223,3 +223,72 @@ def test_inventorize_licenses_overview_no_devices() -> None:
     )
 
     assert value == expected
+
+
+# Crash group 4925: organizations with per-device licensing report neither a
+# license status nor licensed device counts
+_PER_DEVICE_LICENSING_OVERVIEW = {
+    "organisation_id": "456",
+    "organisation_name": "PerDevice",
+    "licenseCount": 426,
+    "licenseTypes": [{"counts": {"unassigned": 16}, "licenseType": "ENT"}],
+    "states": {
+        "active": {"count": 210},
+        "expired": {"count": 0},
+        "expiring": {
+            "count": 78,
+            "critical": {"expiringCount": 0, "thresholdInDays": 14},
+            "warning": {"expiringCount": 78, "thresholdInDays": 90},
+        },
+        "recentlyQueued": {"count": 29},
+        "unused": {"count": 0, "soonestActivation": {"activationDate": None, "toActivateCount": 0}},
+        "unusedActive": {
+            "count": 109,
+            "oldestActivation": {"activationDate": "2022-06-02", "activeCount": 2},
+        },
+    },
+    "systemsManager": {
+        "counts": {
+            "activeSeats": 0,
+            "orgwideEnrolledDevices": 0,
+            "totalSeats": 0,
+            "unassignedSeats": 0,
+        }
+    },
+}
+
+
+def _per_device_licensing_string_table() -> StringTable:
+    co_termination = _LicensesOverviewFactory.build(
+        organisation_name="CoTerm", organisation_id="123", status="OK"
+    )
+    return [[json.dumps([co_termination, _PER_DEVICE_LICENSING_OVERVIEW])]]
+
+
+def test_discover_licenses_overview_per_device_licensing() -> None:
+    section = parse_licenses_overview(_per_device_licensing_string_table())
+    assert list(discover_licenses_overview(section)) == [
+        Service(item="CoTerm/123"),
+        Service(item="PerDevice/456"),
+    ]
+
+
+def test_check_licenses_overview_per_device_licensing() -> None:
+    section = parse_licenses_overview(_per_device_licensing_string_table())
+    assert list(check_licenses_overview("PerDevice/456", _DEFAULT_PARAMS, section)) == [
+        Result(state=State.OK, notice="Organization ID: 456"),
+        Result(state=State.OK, notice="Organization name: PerDevice"),
+        Result(
+            state=State.UNKNOWN,
+            summary="Status: not reported by the Meraki API (per-device licensing is not supported)",
+        ),
+    ]
+
+
+def test_inventorize_licenses_overview_per_device_licensing() -> None:
+    section = parse_licenses_overview(_per_device_licensing_string_table())
+    assert [
+        row.key_columns
+        for row in inventorize_licenses_overview(section)
+        if isinstance(row, TableRow)
+    ] == [{"org_id": "123"}]

@@ -70,7 +70,7 @@ def _query_version_command(distro: str) -> str:
     reason="Reinstall on SLES does not trigger an apache2 restart",
 )
 def test_apache_restart_trigger(site: Site) -> None:
-    # The intention of this test is to verify a successfull restart due to an update of apache
+    # The intention of this test is to verify a successful restart due to an update of apache
     assert site.is_running()
     previous_logs = site.read_file("var/log/apache/error_log")
 

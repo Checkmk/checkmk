@@ -91,29 +91,26 @@ function onKeydown(event: KeyboardEvent): void {
 
 <style scoped>
 .maps-radar-card {
-  padding: 14px;
+  padding: var(--dimension-5);
 
   /* The state colours are background colours, too dark to read as ink in the
      dark theme; mixed towards the theme's font colour they keep the state's
      hue and stay legible in both themes. */
   color: color-mix(in srgb, var(--maps-radar-card-color) 65%, var(--font-color));
   background: color-mix(in srgb, var(--maps-radar-card-color) 8%, transparent);
-  border-radius: var(--dimension-5);
+  border-radius: var(--border-radius);
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--maps-radar-card-color) 20%, transparent);
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background-color 0.2s;
 }
 
 .maps-radar-card:focus-visible {
-  outline: 2px solid var(--interactive-accent);
+  outline: revert;
   outline-offset: 2px;
 }
 
 .maps-radar-card:not(.maps-radar-card--compact):hover {
-  transform: translateY(-2px);
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--maps-radar-card-color) 20%, transparent),
-    var(--maps-map-view-badge-shadow);
+  background: color-mix(in srgb, var(--maps-radar-card-color) 16%, transparent);
 }
 
 .maps-radar-card--compact {
@@ -160,7 +157,7 @@ function onKeydown(event: KeyboardEvent): void {
   /* Dimming the state's own ink far enough to read as secondary would leave it
      illegible on the tinted card. */
   color: var(--font-color-dimmed);
-  font-size: 11px;
+  font-size: var(--font-size-normal);
   line-height: 1.375;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;

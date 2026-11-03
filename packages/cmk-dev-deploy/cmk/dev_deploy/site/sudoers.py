@@ -19,7 +19,9 @@ for a password again.
 Declining the rule still deploys: the run then authenticates sudo
 interactively once, and the cached timestamp carries the run's
 ``sudo -n`` calls.  Nothing persistent is installed, so the consent
-prompt returns on the next run.  There is deliberately no SSH path —
+prompt returns on the next run.  Without the rule, ``--purge`` uses the
+same one-off session, but does not offer the rule
+(:func:`ensure_site_access`).  There is deliberately no SSH path —
 the sudoers rule is the single channel to the site user.
 """
 
@@ -119,9 +121,9 @@ def admin_setup_commands(site_name: str) -> str:
     )
 
 
-def _admin_recovery(site_name: str) -> str:
+def _manual_setup_recovery(site_name: str) -> str:
     indented = "\n".join(f"    {line}" for line in admin_setup_commands(site_name).splitlines())
-    return f"Ask an administrator to run:\n{indented}"
+    return f"To set up the sudoers rule manually, run:\n{indented}"
 
 
 def bootstrap(site_name: str) -> None:
@@ -133,8 +135,9 @@ def bootstrap(site_name: str) -> None:
     carrying the manual setup instructions.
 
     Raises:
-        SudoersError: No TTY, install failed, or (after declining) the
-            user's own sudo rights cannot run commands as the site user.
+        SudoersError: No TTY, sudo authentication or install failed, or
+            (after declining) the user's own sudo rights cannot run
+            commands as the site user.
     """
     rule = rule_content(site_name)
     path = drop_in_path(site_name)
@@ -143,7 +146,7 @@ def bootstrap(site_name: str) -> None:
         raise SudoersError(
             f"No sudoers rule allows running commands as site user '{site_name}', "
             "and there is no interactive terminal to set one up.",
-            recovery=_admin_recovery(site_name),
+            recovery=_manual_setup_recovery(site_name),
         )
 
     output.info("The clone backend runs site commands via a per-site sudoers rule.")
@@ -153,13 +156,11 @@ def bootstrap(site_name: str) -> None:
     answer = input("Install this rule now? [y/N] ")
     if answer.strip().lower() not in ("y", "yes"):
         output.info("Rule not installed -- using a one-off sudo session for this run.")
-        _authenticate_sudo()
-        if not probe(site_name):
-            raise SudoersError(
-                "Sudoers rule declined, and your own sudo rights cannot run "
-                f"commands as site user '{site_name}'.",
-                recovery=_admin_recovery(site_name),
-            )
+        _start_one_off_session(
+            site_name,
+            failure="Sudoers rule declined, and your own sudo rights cannot run "
+            f"commands as site user '{site_name}'.",
+        )
         return
 
     _install_rule(rule, path, site_name)
@@ -177,6 +178,39 @@ def bootstrap(site_name: str) -> None:
     output.success(f"Sudoers rule installed: {path}")
 
 
+def ensure_site_access(site_name: str) -> None:
+    """Make sure commands can run as the site user, without offering the rule.
+
+    For ``--purge``, which reverts the site and so should not install
+    new system configuration on the way.  A missing rule falls back to a
+    one-off sudo session, as when declining it in :func:`bootstrap`.
+
+    Raises:
+        SudoersError: No rule and no TTY, sudo authentication failed, or
+            the user's own sudo rights cannot run commands as the site user.
+    """
+    if probe(site_name):
+        return
+    if not sys.stdin.isatty():
+        raise SudoersError(
+            f"No sudoers rule allows running commands as site user '{site_name}', "
+            "and there is no interactive terminal to ask for your sudo password.",
+            recovery=_manual_setup_recovery(site_name),
+        )
+    output.info(f"No sudoers rule for site user '{site_name}' -- using a one-off sudo session.")
+    _start_one_off_session(
+        site_name,
+        failure=f"Your sudo rights cannot run commands as site user '{site_name}'.",
+    )
+
+
+def _start_one_off_session(site_name: str, *, failure: str) -> None:
+    """Cache the sudo timestamp, which carries this run's ``sudo -n`` calls."""
+    _authenticate_sudo()
+    if not probe(site_name):
+        raise SudoersError(failure, recovery=_manual_setup_recovery(site_name))
+
+
 def _install_rule(rule: str, path: Path, site_name: str) -> None:
     """Validate the rule with ``visudo -cf`` and install the drop-in as root."""
     _authenticate_sudo()
@@ -188,7 +222,7 @@ def _install_rule(rule: str, path: Path, site_name: str) -> None:
             raise SudoersError(
                 "Generated sudoers rule failed visudo validation: "
                 f"{check.stderr.strip() or check.stdout.strip()}",
-                recovery=_admin_recovery(site_name),
+                recovery=_manual_setup_recovery(site_name),
             )
         result = _run_root(
             ["install", "-m", "0440", "-o", "root", "-g", "root", tmp.name, str(path)]
@@ -196,7 +230,7 @@ def _install_rule(rule: str, path: Path, site_name: str) -> None:
         if result.returncode != 0:
             raise SudoersError(
                 f"Failed to install sudoers drop-in {path}: {result.stderr.strip()}",
-                recovery=_admin_recovery(site_name),
+                recovery=_manual_setup_recovery(site_name),
             )
 
 
@@ -209,21 +243,22 @@ def ensure_dev_versions_dir() -> None:
     this may prompt for the sudo password — once per machine, ever.
 
     Raises:
-        SudoersError: If the directory cannot be created.
+        SudoersError: If sudo authentication fails or the directory
+            cannot be created.
     """
     if os.access(DEV_VERSIONS_DIR, os.W_OK):
         return
     user = get_real_user()
+    recovery = (
+        f"To create it manually, run:\n    sudo install -d -m 0755 -o {user} {DEV_VERSIONS_DIR}"
+    )
     output.info(f"Creating {DEV_VERSIONS_DIR} (owned by {user}) requires sudo")
-    _authenticate_sudo()
+    _authenticate_sudo(recovery=recovery)
     result = _run_root(["install", "-d", "-m", "0755", "-o", user, str(DEV_VERSIONS_DIR)])
     if result.returncode != 0:
         raise SudoersError(
             f"Failed to prepare {DEV_VERSIONS_DIR}: {result.stderr.strip()}",
-            recovery=(
-                "Ask an administrator to run:\n"
-                f"    sudo install -d -m 0755 -o {user} {DEV_VERSIONS_DIR}"
-            ),
+            recovery=recovery,
         )
 
 
@@ -240,7 +275,8 @@ def remove_setup(site_name: str) -> None:
     """Remove the per-site sudoers drop-in (``--remove-setup``).
 
     Raises:
-        SudoersError: If the drop-in cannot be removed.
+        SudoersError: If sudo authentication fails or the drop-in cannot
+            be removed.
     """
     path = drop_in_path(site_name)
     if not path.exists():
@@ -265,14 +301,26 @@ def remove_setup(site_name: str) -> None:
 # ---------------------------------------------------------------------------
 
 
-def _authenticate_sudo() -> None:
-    """Refresh the sudo timestamp, prompting on the terminal if needed."""
+def _authenticate_sudo(*, recovery: str | None = None) -> None:
+    """Refresh the sudo timestamp, prompting on the terminal if needed.
+
+    The exit code cannot tell a wrong password from missing sudo rights,
+    so the error defers to sudo's own message on the terminal.  Usually
+    the password was mistyped and running again is the fix, so only
+    callers that can run without a terminal, where sudo cannot prompt at
+    all, pass a *recovery*.
+
+    Raises:
+        SudoersError: If sudo rejects the user.
+    """
     env = {k: v for k, v in os.environ.items() if k != "SUDO_ASKPASS"}
-    subprocess.run(
+    result = subprocess.run(
         ["sudo", "-v", "-p", "[cmk-dev-deploy] sudo password for %u: "],
         check=False,
         env=env,
     )
+    if result.returncode != 0:
+        raise SudoersError("sudo failed -- see its message on the terminal.", recovery=recovery)
 
 
 def _run_root(cmd: list[str]) -> subprocess.CompletedProcess[str]:

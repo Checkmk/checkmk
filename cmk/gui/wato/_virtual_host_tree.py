@@ -13,7 +13,7 @@ from cmk.gui import sites
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.foldable_container import foldable_container
-from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.generator import ClickAction, HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
@@ -30,6 +30,10 @@ from cmk.ruleset_matcher.tags import TagGroup, TagGroupID, TagID
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.urls import HTTPVariable, makeuri_contextless
+
+
+def _tree_enter_action(path: Sequence[str]) -> ClickAction:
+    return ClickAction(action="virtual_host_tree_enter", arguments={"path": "|".join(path)})
 
 
 class Tree(TypedDict, total=False):
@@ -113,10 +117,12 @@ class VirtualHostTree(SidebarSnapin):
 
             # Give chance to change one level up, if we are in a subtree
             if self._current_tree_path:
-                upurl = "javascript:cmk.sidebar.virtual_host_tree_enter('%s')" % "|".join(
-                    self._current_tree_path[:-1]
+                html.icon_button(
+                    None,
+                    _("Go up one tree level"),
+                    StaticIcon(IconNames.back),
+                    click_action=_tree_enter_action(self._current_tree_path[:-1]),
                 )
-                html.icon_button(upurl, _("Go up one tree level"), StaticIcon(IconNames.back))
 
             html.br()
 
@@ -211,9 +217,9 @@ class VirtualHostTree(SidebarSnapin):
             class_=["tagtree"] + (["leaf"] if leaf else []) + ["statebullet", "state%d" % state],
         )
         if not leaf:
-            code = HTMLWriter.render_a(
+            code = HTMLWriter.render_action_link(
                 code,
-                href="javascript:cmk.sidebar.virtual_host_tree_enter('%s');" % "|".join(path),
+                click_action=_tree_enter_action(path),
                 title=_("Display the tree only below this node"),
             )
         return code + " "

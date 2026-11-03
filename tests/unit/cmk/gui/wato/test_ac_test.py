@@ -17,6 +17,7 @@ from cmk.gui.permissions import Permission, PermissionSection
 from cmk.gui.role_types import BuiltInUserRole, CustomUserRole
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.wato._ac_tests import (
+    ACTestApacheForwardedHeaders,
     ACTestAutomationUserSecret,
     ACTestBakeryAPI,
     ACTestGenericCheckHelperUsage,
@@ -121,6 +122,70 @@ def test_automation_user_secret_flagging() -> None:
     ) == {
         UserId("automation"): ["wato.manage_mkps", "wato.users"],
     }
+
+
+def _omd_root(tmp_path: Path, forwarded_headers: str) -> Path:
+    site_conf = tmp_path / "etc" / "omd" / "site.conf"
+    site_conf.parent.mkdir(parents=True)
+    site_conf.write_text(f"CONFIG_APACHE_FORWARDED_HEADERS='{forwarded_headers}'\n")
+    return tmp_path
+
+
+def test_apache_forwarded_headers_auto_ok(tmp_path: Path) -> None:
+    """Default mode, no manual leftover config anywhere -> OK"""
+    results = list(
+        ACTestApacheForwardedHeaders(
+            omd_root=_omd_root(tmp_path, "auto"), search_dirs=[tmp_path / "apache2"]
+        ).execute(SiteId("NO_SITE"), Config())
+    )
+
+    assert [r.state for r in results] == [ACResultState.OK]
+    assert "automatically" in results[0].text
+
+
+def test_apache_forwarded_headers_auto_leftover_warns(tmp_path: Path) -> None:
+    """Default mode, but a manual RequestHeader is still configured -> WARN"""
+    apache_dir = tmp_path / "apache2" / "conf-enabled"
+    apache_dir.mkdir(parents=True)
+    leftover = apache_dir / "proxy.conf"
+    leftover.write_text('RequestHeader set X-Forwarded-Proto "https"\n')
+
+    results = list(
+        ACTestApacheForwardedHeaders(
+            omd_root=_omd_root(tmp_path, "auto"), search_dirs=[tmp_path / "apache2"]
+        ).execute(SiteId("NO_SITE"), Config())
+    )
+
+    assert [r.state for r in results] == [ACResultState.WARN]
+    assert str(leftover) in results[0].text
+
+
+def test_apache_forwarded_headers_manual_with_config_ok(tmp_path: Path) -> None:
+    """Opted out, and a manual RequestHeader is indeed configured -> OK"""
+    apache_dir = tmp_path / "apache2"
+    apache_dir.mkdir()
+    (apache_dir / "proxy.conf").write_text('RequestHeader set X-Forwarded-Proto "https"\n')
+
+    results = list(
+        ACTestApacheForwardedHeaders(
+            omd_root=_omd_root(tmp_path, "manual"), search_dirs=[apache_dir]
+        ).execute(SiteId("NO_SITE"), Config())
+    )
+
+    assert [r.state for r in results] == [ACResultState.OK]
+    assert "manually" in results[0].text
+
+
+def test_apache_forwarded_headers_manual_without_config_warns(tmp_path: Path) -> None:
+    """Opted out, but no matching manual configuration was found -> WARN"""
+    results = list(
+        ACTestApacheForwardedHeaders(
+            omd_root=_omd_root(tmp_path, "manual"), search_dirs=[tmp_path / "apache2"]
+        ).execute(SiteId("NO_SITE"), Config())
+    )
+
+    assert [r.state for r in results] == [ACResultState.WARN]
+    assert "intentional" in results[0].text
 
 
 def _write_plugin_file(plugin_root: Path, rel_path: str, content: str) -> Path:

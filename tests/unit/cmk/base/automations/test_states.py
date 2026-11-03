@@ -15,4 +15,4 @@ def test_base_config_state_picks_the_base_configuration() -> None:
         "FOLDER_PATH": None,  # read by load_raw_config(), but no base configuration
     }
 
-    assert BaseConfigState(Path("/old"), raw_config).loaded_config == EMPTY_CONFIG
+    assert BaseConfigState(Path("/old"), raw_config, debug=True).loaded_config == EMPTY_CONFIG

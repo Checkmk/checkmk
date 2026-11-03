@@ -6,7 +6,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { MonitoringAllHostsApp } from 'cmk-shared-typing/typescript/monitoring/all_hosts'
 import { useCmkErrorBoundary } from 'cmk-ui-library/components/CmkErrorBoundary'
-import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon/types'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { getKeyShortcutServiceInstance } from 'cmk-ui-library/lib/keyShortcuts'
@@ -17,9 +16,9 @@ import { computed, onBeforeUnmount, onMounted, provide, ref, useTemplateRef } fr
 import { HostApi } from '@/monitoring/shared/api/hosts'
 import type { HostEntry, HostRef, HostState } from '@/monitoring/shared/api/types'
 import DisplayOptionsPane from '@/monitoring/shared/components/DisplayOptionsPane.vue'
+import HostSlideIn from '@/monitoring/shared/components/HostSlideIn.vue'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 import TypeToFocusIndicator from '@/monitoring/shared/components/TypeToFocusIndicator.vue'
-import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import { sizeModeColumn, useModeColumnWidth } from '@/monitoring/shared/components/modeColumn'
 import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
 import {
@@ -27,19 +26,22 @@ import {
   readDisplayOptionsFromUrl,
   seedDisplayOptions
 } from '@/monitoring/shared/displayOptionsState/urlState'
+import { HOST_TAB_OVERVIEW } from '@/monitoring/shared/hostSlideInTabs'
+import { labelCondition } from '@/monitoring/shared/labels'
 import { filterTimestampsAsShown } from '@/monitoring/shared/timestampFilters'
 import { DEFAULT_DISPLAY_OPTIONS } from '@/monitoring/shared/types'
+import { IMMEDIATE_HOST_COMMAND_IDS, useHostActions } from '@/monitoring/shared/useHostActions'
 
+import MonitoringExportFeedback from '../shared/components/MonitoringExportFeedback.vue'
 import MonitoringHeaderActions from '../shared/components/MonitoringHeaderActions.vue'
 import MonitoringLegacyViewButton from '../shared/components/MonitoringLegacyViewButton.vue'
 import MonitoringSplitPane from '../shared/components/MonitoringSplitPane.vue'
 import MonitoringSurveyLink from '../shared/components/MonitoringSurveyLink.vue'
 import MonitoringToolbar from '../shared/components/MonitoringToolbar.vue'
 import { type ActionFeedback as ActionFeedbackResult } from '../shared/components/action/ActionFeedback.vue'
-import { acknowledgeDefaults } from '../shared/components/action/actions/acknowledge'
-import { RESCHEDULE_ACTION_ID } from '../shared/components/action/actions/reschedule'
-import { downtimePresets } from '../shared/components/action/actions/scheduleDowntime'
-import { createActionRegistry } from '../shared/components/action/registry'
+import { rowsToActOn } from '../shared/components/action/actions/remove'
+import { InstantReport } from '../shared/export/instantReport'
+import { useRowExport } from '../shared/export/useRowExport'
 import { buildFilterUrlSchema } from '../shared/filterState/schema'
 import { filterStateWriter, readFilterUrlState } from '../shared/filterState/urlState'
 import { tableKeyboardHints } from '../shared/keyboardHints'
@@ -59,15 +61,9 @@ import { useUrlSync } from '../shared/urlState/useUrlSync'
 import { useContextMenuKey } from '../shared/useContextMenuKey'
 import { useFallbackKeys } from '../shared/useFallbackKeys'
 import { useTypeToFocus } from '../shared/useTypeToFocus'
-import { useAcknowledgeHostsAction } from './actions/acknowledgeHosts'
-import { useRescheduleHostsAction } from './actions/rescheduleHosts'
-import { useScheduleHostDowntimeAction } from './actions/scheduleHostDowntime'
-import { HostActionMenuApi } from './api/actionMenu'
 import { buildHostColumnPinning, buildHostColumns } from './columns'
 import HostRow from './components/HostRow.vue'
-import HostSlideIn from './components/HostSlideIn.vue'
 import { HostService } from './services/HostService'
-import { HOST_TAB_OVERVIEW } from './slideInTabs'
 
 const { _t, _tn } = usei18n()
 
@@ -78,62 +74,17 @@ useKeyboardHints(_t('All hosts'), [
 
 const props = defineProps<MonitoringAllHostsApp>()
 
-// Icons come from the command registry. Only commands whose registry icon has no counterpart in the
-// Vue icon set need an entry here.
-const ACTION_ICON_OVERRIDES: Record<string, SimpleIcons> = {
-  [RESCHEDULE_ACTION_ID]: 'reload'
-}
-
-const hostActions: CellAction[] = (props.actions ?? []).map((action) => ({
-  id: action.ident,
-  label: action.title as TranslatedString,
-  icon: ACTION_ICON_OVERRIDES[action.ident] ?? (action.icon as SimpleIcons)
-}))
-
-// Inline buttons linking into Setup (edit host, parameters), offered on the hosts the user may open
-// there. Their url keeps the {host} placeholder, resolved per row in HostRow.
-const rowActionButtons: CellAction[] = (props.row_actions ?? []).map((action) => ({
-  id: action.ident,
-  label: action.title as TranslatedString,
-  icon: action.icon as SimpleIcons,
-  url: action.url
-}))
-
-// Command entries the row dropdown runs immediately with their default values (no form), acting on
-// that single host to mirror the legacy per-row action menu. Only list actions that are safe
-// without user input — form-based ones (acknowledge, downtime) carry essential per-host input and
-// must go through the action pane, not here. They carry no url, so ActionsCell emits `select`.
-const IMMEDIATE_ROW_COMMAND_IDS: readonly string[] = [RESCHEDULE_ACTION_ID]
-
-const rowCommands: CellAction[] = (props.actions ?? [])
-  .filter((action) => IMMEDIATE_ROW_COMMAND_IDS.includes(action.ident))
-  .map((action) => ({
-    id: action.ident,
-    label: action.title as TranslatedString,
-    icon: ACTION_ICON_OVERRIDES[action.ident] ?? (action.icon as SimpleIcons)
-  }))
+const {
+  permittedActions: hostActions,
+  moreActions: moreHostActions,
+  rowActions: rowActionButtons,
+  registry: actionRegistry,
+  loadActionMenu
+} = useHostActions(props)
 
 // Checkboxes only make sense where the selection can be acted on, so the permitted-action list
 // that decides the action bar decides the select column too.
-const mayActOnSelection = hostActions.length > 0
-
-const actionMenuApi = new HostActionMenuApi()
-
-// Overflow-menu entries for a host: the immediate commands (reschedule) followed by the fetched
-// legacy action-menu links (inventory, notes, topology, download, ...).
-async function loadActionMenu(host: HostRef): Promise<CellAction[]> {
-  const items = await actionMenuApi.fetchActionMenu(host)
-  return [
-    ...rowCommands,
-    ...items.map((item) => ({
-      id: `${item.title}|${item.url}`,
-      label: item.title as TranslatedString,
-      icon: item.icon_name as SimpleIcons,
-      url: item.url,
-      target: item.target
-    }))
-  ]
-}
+const mayActOnSelection = hostActions.length + moreHostActions.length > 0
 
 // Only hosts monitored by an edition with multi-tenancy support belong to a customer.
 const showCustomer = props.edition === 'ultimatemt'
@@ -194,7 +145,8 @@ const hostService = new HostService(hostApi, getKeyShortcutServiceInstance(), {
       }
     }
   ],
-  rowFields: rowActionButtons.length > 0 ? ['setup_access'] : []
+  // Every row offers its graphs from the host name, whichever columns are shown.
+  rowFields: ['graphs_link', ...(rowActionButtons.length > 0 ? (['setup_access'] as const) : [])]
 })
 
 const modeColumnSize = useModeColumnWidth(() => hostService.items.value)
@@ -225,21 +177,28 @@ const typeToFocus = useTypeToFocus(root)
 useFallbackKeys(root, () => root.value?.querySelector<HTMLElement>('.monitoring-table'))
 useContextMenuKey(root)
 
-const actionRegistry = createActionRegistry([
-  useAcknowledgeHostsAction(
-    {
-      presetsUrl: props.acknowledge_presets_url ?? null,
-      notificationRulesUrl: props.notification_rules_url ?? null
-    },
-    acknowledgeDefaults(props.acknowledge_defaults)
-  ),
-  useRescheduleHostsAction(),
-  useScheduleHostDowntimeAction(
-    props.downtime_recurrences ?? [],
-    downtimePresets(props.downtime_presets),
-    props.downtime_presets_url ?? null
-  )
-])
+const instantReport = new InstantReport('report_instant_all_hosts.py')
+
+function openInstantReport(): void {
+  instantReport.open(hostService.exportColumns(), hostApi.requestBody(hostService.listingParams()))
+}
+
+const exportFeedback = useRowExport(hostService, {
+  exportEvent: props.export_event,
+  build: () => hostService.export(),
+  openReport: openInstantReport,
+  texts: {
+    exporting: _t('Exporting hosts…'),
+    notLoaded: _t('The hosts could not be loaded, so nothing was exported.'),
+    truncated: (counts, canShowMore) =>
+      canShowMore
+        ? _t('Exported %{exported} of %{matched} hosts. Show more hosts to export more.', counts)
+        : _t(
+            'Exported %{exported} of %{matched} hosts. Narrow the filters to export all of them.',
+            counts
+          )
+  }
+})
 
 onMounted(() => {
   hostService.onFocusSearch(() => toolbar.value?.focus())
@@ -257,6 +216,10 @@ function rowKey(row: HostEntry): string {
 
 function hostRef(row: HostEntry): HostRef {
   return { site_id: row.site_id, name: row.name }
+}
+
+function hostActionTargets(rows: HostEntry[], actionId: string): HostRef[] {
+  return rowsToActOn(rows, actionId).map(hostRef)
 }
 
 function hostSelectionLabel(count: number): TranslatedString {
@@ -365,15 +328,18 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         :service="hostService"
         :search-placeholder="_t('Search hosts…')"
       />
+      <MonitoringExportFeedback v-model="exportFeedback" />
       <MonitoringSplitPane
         :service="hostService"
         :actions="actionRegistry"
         :bulk-actions="hostActions"
+        :more-actions="moreHostActions"
         :columns="tableColumns"
         :column-pinning="columnPinning"
         :get-row-key="rowKey"
         :get-action-target="hostRef"
-        :immediate-action-ids="IMMEDIATE_ROW_COMMAND_IDS"
+        :get-action-targets="hostActionTargets"
+        :immediate-action-ids="IMMEDIATE_HOST_COMMAND_IDS"
         :selection-label="hostSelectionLabel"
         :actions-label="_t('Actions for selected hosts')"
         :counts-label="hostCountsLabel"
@@ -408,6 +374,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         :active-tab-id="slideInTabId"
         :host="slideInHost"
         :reveal-relations-request="revealRelationsRequest"
+        :filter-labels-by="labelCondition"
         :actions="actionRegistry"
         :row-actions="rowActionButtons"
         :permitted-actions="hostActions"

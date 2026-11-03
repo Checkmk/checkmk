@@ -12,13 +12,13 @@ from cmk.gui.dashboard.dashlet.dashlets.graph import (
 )
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 
-_REGISTERED_GRAPHS = {
-    "graph1": Graph(
+_REGISTERED_GRAPHS = [
+    Graph(
         name="graph1",
         title=TitleV1("Graph 1"),
         simple_lines=["metric1"],
     )
-}
+]
 
 
 def test_graph_templates_autocompleter_testable_unconstrained() -> None:

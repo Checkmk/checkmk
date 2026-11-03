@@ -22,13 +22,13 @@ def _simple_levels_element(property: str) -> DictElement:  # noqa: A002
     return DictElement(
         required=False,
         parameter_form=Dictionary(
-            title=Title(  # astrein: disable=localization-checker
+            title=Title(  # astrein: disable=localization
                 f"{property.capitalize()} Podman containers"
             ),
             elements={
                 "levels_lower": DictElement(
                     parameter_form=SimpleLevels(
-                        title=Title(  # astrein: disable=localization-checker
+                        title=Title(  # astrein: disable=localization
                             f"Lower threshold on {property} number of Podman containers"
                         ),
                         form_spec_template=Integer(),
@@ -38,7 +38,7 @@ def _simple_levels_element(property: str) -> DictElement:  # noqa: A002
                 ),
                 "levels_upper": DictElement(
                     parameter_form=SimpleLevels(
-                        title=Title(  # astrein: disable=localization-checker
+                        title=Title(  # astrein: disable=localization
                             f"Upper threshold on {property} number of Podman containers"
                         ),
                         form_spec_template=Integer(),

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="584" font-family="Helvetica, Arial, sans-serif" viewBox="0 0 760 584" role="img" aria-label="An ad-hoc task waits in the agent receiver until the relay picks it up" font-size="13">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<defs><marker id="adhoc-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#6b7280"/></marker></defs>
+<text x="24" y="34" font-size="15" font-weight="600" fill="#111827">An ad-hoc task waits in the agent receiver until the relay picks it up</text>
+<text x="24" y="54" font-size="11.5" fill="#4b5563">Ad-hoc fetches and ad-hoc active checks; dashed requests repeat every 0.5 s</text>
+<g><line x1="80" x2="80" y1="120" y2="536" stroke="#d1d5db" stroke-width="1.25" stroke-dasharray="4 4"/><line x1="225" x2="225" y1="120" y2="536" stroke="#d1d5db" stroke-width="1.25" stroke-dasharray="4 4"/><line x1="370" x2="370" y1="120" y2="536" stroke="#d1d5db" stroke-width="1.25" stroke-dasharray="4 4"/><line x1="515" x2="515" y1="120" y2="536" stroke="#d1d5db" stroke-width="1.25" stroke-dasharray="4 4"/><line x1="660" x2="660" y1="120" y2="536" stroke="#d1d5db" stroke-width="1.25" stroke-dasharray="4 4"/></g>
+<g><rect x="24" y="72" width="112" height="48" rx="8" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="80" y="100" text-anchor="middle" font-size="12" font-weight="600" fill="#111827">Site caller</text></g>
+<g><rect x="169" y="72" width="112" height="48" rx="8" fill="#059669" fill-opacity="0.12" stroke="#059669" stroke-width="2"/><text x="225" y="92" text-anchor="middle" font-size="12" font-weight="600" fill="#111827">Agent</text><text x="225" y="108" text-anchor="middle" font-size="12" font-weight="600" fill="#111827">receiver</text></g>
+<g><rect x="314" y="72" width="112" height="48" rx="8" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="370" y="92" text-anchor="middle" font-size="12" font-weight="600" fill="#111827">cmk-relay</text><text x="370" y="108" text-anchor="middle" font-size="12" font-weight="600" fill="#111827">daemon</text></g>
+<g><rect x="459" y="72" width="112" height="48" rx="8" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="515" y="92" text-anchor="middle" font-size="12" font-weight="600" fill="#111827">Relay</text><text x="515" y="108" text-anchor="middle" font-size="12" font-weight="600" fill="#111827">helper</text></g>
+<g><rect x="604" y="72" width="112" height="48" rx="8" fill="none" stroke="#6b7280" stroke-width="1.25"/><text x="660" y="92" text-anchor="middle" font-size="12" font-weight="600" fill="#111827">Monitored</text><text x="660" y="108" text-anchor="middle" font-size="12" font-weight="600" fill="#111827">host</text></g>
+<g fill="none" stroke="#6b7280" stroke-width="1.25"><path d="M80 156H225" marker-end="url(#adhoc-arrow)"/><path d="M370 196H225" stroke-dasharray="5 4" marker-end="url(#adhoc-arrow)"/><path d="M225 236H370" marker-end="url(#adhoc-arrow)"/><path d="M370 276H515" marker-end="url(#adhoc-arrow)"/><path d="M515 316H660" marker-end="url(#adhoc-arrow)"/><path d="M660 356H515" marker-end="url(#adhoc-arrow)"/><path d="M515 396H370" marker-end="url(#adhoc-arrow)"/><path d="M370 436H225" marker-end="url(#adhoc-arrow)"/><path d="M80 476H225" stroke-dasharray="5 4" marker-end="url(#adhoc-arrow)"/><path d="M225 516H80" marker-end="url(#adhoc-arrow)"/></g>
+<text x="152" y="148" text-anchor="middle" font-size="11.5" fill="#111827">1, POST /tasks</text>
+<text x="297" y="188" text-anchor="middle" font-size="11.5" fill="#111827">2, GET pending tasks</text>
+<text x="297" y="228" text-anchor="middle" font-size="11.5" fill="#111827">3, the task</text>
+<text x="442" y="268" text-anchor="middle" font-size="11.5" fill="#111827">4, run it</text>
+<text x="587" y="308" text-anchor="middle" font-size="11.5" fill="#111827">5, fetch or check</text>
+<text x="587" y="348" text-anchor="middle" font-size="11.5" fill="#111827">6, data</text>
+<text x="442" y="388" text-anchor="middle" font-size="11.5" fill="#111827">7, result</text>
+<text x="297" y="428" text-anchor="middle" font-size="11.5" fill="#111827">8, PATCH /tasks/&lt;id&gt;</text>
+<text x="152" y="468" text-anchor="middle" font-size="11.5" fill="#111827">9, GET /tasks/&lt;id&gt;</text>
+<text x="152" y="508" text-anchor="middle" font-size="11.5" fill="#111827">10, finished task</text>
+<text x="24" y="568" font-size="11.5" fill="#4b5563">The caller polls from step 1 on. A task still pending 120 s after step 1 expires, and the caller gets a timeout.</text>
+</svg>

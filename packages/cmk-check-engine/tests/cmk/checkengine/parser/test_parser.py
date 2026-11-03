@@ -69,6 +69,7 @@ class TestAgentParser:
             keep_outdated=True,
             translation=TranslationOptions(),
             encoding_fallback="ascii",
+            debug=False,
         )
 
     def test_missing_host_header(
@@ -751,6 +752,7 @@ class ParserStateAdapter(ParserState):
             piggyback_sections={},
             translation={} if translation is None else translation,
             encoding_fallback="utf-8",
+            debug=False,
         )
 
     @override
@@ -1066,6 +1068,7 @@ class TestAgentPersistentSectionHandling:
             keep_outdated=True,
             translation=TranslationOptions(),
             encoding_fallback="ascii",
+            debug=False,
         )
 
         ahs = parser.parse(raw_data, selection=NO_SELECTION)
@@ -1087,6 +1090,7 @@ class TestAgentPersistentSectionHandling:
             keep_outdated=True,
             translation=TranslationOptions(),
             encoding_fallback="ascii",
+            debug=False,
         )
 
         ahs = parser.parse(raw_data, selection=NO_SELECTION)
@@ -1105,6 +1109,7 @@ class TestAgentPersistentSectionHandling:
             keep_outdated=True,
             translation=TranslationOptions(),
             encoding_fallback="ascii",
+            debug=False,
         )
 
         ahs = parser.parse(raw_data, selection=NO_SELECTION)
@@ -1126,6 +1131,7 @@ class TestAgentPersistentSectionHandling:
             keep_outdated=True,
             translation=TranslationOptions(),
             encoding_fallback="ascii",
+            debug=False,
         )
 
         ahs = parser.parse(raw_data, selection=NO_SELECTION)
@@ -1153,6 +1159,7 @@ class TestAgentPersistentSectionHandling:
             keep_outdated=True,
             translation=TranslationOptions(),
             encoding_fallback="ascii",
+            debug=False,
         )
 
         ahs = parser.parse(raw_data, selection=NO_SELECTION)
@@ -1183,6 +1190,7 @@ class TestAgentPersistentSectionHandling:
             keep_outdated=True,
             translation=TranslationOptions(),
             encoding_fallback="ascii",
+            debug=False,
         )
 
         ahs = parser.parse(raw_data, selection=NO_SELECTION)
@@ -1206,6 +1214,7 @@ class TestAgentPersistentSectionHandling:
             keep_outdated=False,
             translation=TranslationOptions(),
             encoding_fallback="ascii",
+            debug=False,
         )
 
         ahs = parser.parse(raw_data, selection=NO_SELECTION)
@@ -1229,6 +1238,7 @@ class TestAgentPersistentSectionHandling:
             keep_outdated=True,
             translation=TranslationOptions(),
             encoding_fallback="ascii",
+            debug=False,
         )
 
         ahs = parser.parse(raw_data, selection=NO_SELECTION)

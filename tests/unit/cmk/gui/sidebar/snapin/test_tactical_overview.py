@@ -270,6 +270,8 @@ def test_show_rows_renders_a_column_per_table(monkeypatch: pytest.MonkeyPatch) -
     assert "Events" in rendered
     assert "monitor_all_hosts.py" in rendered
     assert "view.py?view_name=allhosts" not in rendered
+    assert "monitor_all_services.py" in rendered
+    assert "view.py?view_name=allservices" not in rendered
 
 
 def test_total_url_links_an_unfiltered_hosts_row_to_the_new_all_hosts_page() -> None:
@@ -301,10 +303,25 @@ def test_total_url_treats_an_empty_filter_value_as_unfiltered() -> None:
     assert url == "monitor_all_hosts.py"
 
 
-def test_total_url_keeps_the_classic_view_for_non_host_rows() -> None:
+def test_total_url_links_an_unfiltered_services_row_to_the_new_all_services_page() -> None:
     url = total_url("services", {}, [], [("view_name", "allservices")])
 
-    assert url == "view.py?view_name=allservices"
+    assert url == "monitor_all_services.py"
+
+
+def test_total_url_keeps_the_classic_view_for_a_filtered_services_row() -> None:
+    context = {"host": {"host": "heute"}}
+    url = total_url(
+        "services", context, get_context_url_variables(context), [("view_name", "allservices")]
+    )
+
+    assert url == "view.py?host=heute&view_name=allservices"
+
+
+def test_total_url_keeps_the_classic_view_for_event_rows() -> None:
+    url = total_url("events", {}, [], [("view_name", "ec_events")])
+
+    assert url == "view.py?view_name=ec_events"
 
 
 def test_show_rows_hides_events_when_none_exist_and_the_ec_is_off(

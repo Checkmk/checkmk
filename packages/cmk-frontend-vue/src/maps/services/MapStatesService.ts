@@ -32,25 +32,14 @@ import type {
   TopologyTiming
 } from '@/maps/types/api'
 import { resolveStreamUrl } from '@/maps/utils/deploymentBase'
+import { getEffectiveObjectType } from '@/maps/utils/naming'
 import { parsePerfData } from '@/maps/utils/perf'
+import { isProblemState } from '@/maps/utils/problemState'
+import { stateRank } from '@/maps/utils/stateColors'
 
 type MapEvent = FastApiEvent<paths, '/api/v1/sse/maps/{name}'>
 type MapEventData<Name extends MapEvent['event']> = Extract<MapEvent, { event: Name }>['data']
 
-// BI integer state -> Maps MonitoringState (mirrors the daemon's BI_INT_TO_STATE
-// in cmk.maps.backend.connections.base). BI resolves GUI-side, so the SPA maps.
-const BI_STATE: Record<number, MonitoringState> = {
-  [-2]: 'UNKNOWN',
-  [-1]: 'PENDING',
-  0: 'OK',
-  1: 'WARNING',
-  2: 'CRITICAL',
-  3: 'UNKNOWN',
-  4: 'UNKNOWN'
-}
-function biState(n: number): MonitoringState {
-  return BI_STATE[n] ?? 'UNKNOWN'
-}
 // Depth the detail drawer needs for the full leaf list even when the icon is
 // collapsed on the canvas.
 const AGG_DRAWER_DEPTH = 10
@@ -66,27 +55,13 @@ const HISTORY_MAX = 10080 // up to 7d at 1min resolution
 
 const NOTIFICATIONS_STORAGE_KEY = 'maps_notifications'
 
-const BAD_STATES = new Set(['DOWN', 'UNREACHABLE', 'CRITICAL', 'WARNING', 'UNKNOWN'])
-const SEVERITY: Record<string, number> = {
-  OK: 0,
-  UP: 0,
-  PENDING: 0,
-  WARNING: 1,
-  UNKNOWN: 1,
-  CRITICAL: 2,
-  UNREACHABLE: 2,
-  DOWN: 3
-}
-
 // Fire a browser notification when `name` worsens into a bad state. Shared by
 // the flat-states path and the foldertree snapshot diff so the policy lives once.
 function maybeNotify(name: string, state: string, prevState: string | undefined) {
   if (typeof Notification === 'undefined' || Notification.permission !== 'granted') {
     return
   }
-  const prevSev = SEVERITY[prevState ?? 'OK'] ?? 0
-  const newSev = SEVERITY[state] ?? 0
-  if (newSev <= prevSev || !BAD_STATES.has(state)) {
+  if (stateRank(state) <= stateRank(prevState ?? 'OK') || !isProblemState(state)) {
     return
   }
   new Notification(`Maps: ${state}`, { body: name, tag: name })
@@ -177,6 +152,11 @@ export class MapStatesService {
    * otherwise sit on a spinner that never stops, so it shows this instead.
    */
   public readonly loadError: Ref<string | null> = ref(null)
+  /**
+   * Counts the refreshes after a command, for what is fetched beside the
+   * stream -- an object's comments and downtimes -- to follow along.
+   */
+  public readonly commandRefreshes: Ref<number> = ref(0)
   public readonly topology: Ref<TopologyNode[]> = ref([])
   public readonly topologyReady: Ref<boolean> = ref(false)
   /**
@@ -514,12 +494,14 @@ export class MapStatesService {
    */
   public refreshAfterCommand(): void {
     void this.refresh()
+    this.commandRefreshes.value++
     if (this.postCommandTimer) {
       clearTimeout(this.postCommandTimer)
     }
     this.postCommandTimer = setTimeout(() => {
       this.postCommandTimer = null
       void this.refresh()
+      this.commandRefreshes.value++
     }, 1500)
   }
 
@@ -868,9 +850,9 @@ export class MapStatesService {
   }
 
   /**
-   * Resolves the map's BI aggregation objects GUI-side and merges them into the
-   * same state map, keyed by object id. This owns those entries — the daemon does
-   * not stream them.
+   * Resolves the map's BI aggregation objects (and lines showing one) GUI-side
+   * and merges them into the same state map, keyed by object id. This owns those
+   * entries — the daemon does not stream them.
    */
   private async refreshAggregations(): Promise<void> {
     if (this.aggInFlight) {
@@ -879,7 +861,7 @@ export class MapStatesService {
     const map = this.maps.currentMap.value
     const aggObjects = (map?.objects ?? []).filter(
       (o): o is MapElement & { aggregation_id: string } =>
-        o.type === 'aggregation' &&
+        getEffectiveObjectType(o) === 'aggregation' &&
         typeof o.aggregation_id === 'string' &&
         o.aggregation_id.length > 0
     )
@@ -907,7 +889,7 @@ export class MapStatesService {
         const state = raw[o.aggregation_id]
         this.states.value[o.id] = state
           ? aggregationState(o.id, {
-              state: biState(state.state),
+              state: state.state,
               output: state.output,
               acknowledged: state.acknowledged,
               in_downtime: state.in_downtime,

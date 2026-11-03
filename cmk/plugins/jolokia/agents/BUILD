@@ -12,3 +12,12 @@ py_library(
         requirement("requests"),
     ],
 )
+
+filegroup(
+    name = "files",
+    srcs = glob(
+        ["*"],
+        exclude = ["BUILD"],
+    ),
+    visibility = ["//cmk/plugins:__pkg__"],
+)

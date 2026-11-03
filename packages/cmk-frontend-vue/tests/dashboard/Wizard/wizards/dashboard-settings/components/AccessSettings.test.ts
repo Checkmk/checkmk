@@ -18,7 +18,8 @@ const allPermissions: DashboardPermissions = {
   publish_to_all: true,
   publish_to_contact_groups: true,
   publish_to_foreign_contact_groups: true,
-  publish_to_sites: true
+  publish_to_sites: true,
+  edit_custom_graph: true
 }
 
 const mockGetContactGroups = vi.hoisted(() =>
@@ -194,7 +195,8 @@ describe('AccessSettings', () => {
         publish_to_all: false,
         publish_to_contact_groups: false,
         publish_to_foreign_contact_groups: false,
-        publish_to_sites: false
+        publish_to_sites: false,
+        edit_custom_graph: false
       })
       expect(getToggleButton('Owner (private)')).toBeInTheDocument()
     })

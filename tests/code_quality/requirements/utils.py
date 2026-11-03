@@ -55,15 +55,15 @@ def all_requirements_files() -> list[Path]:
     # no need to look for requirements.in-* files, since those are aggregated into requirements.in
     return (
         list(root.glob("**/*/requirements.in"))
-        + list(root.glob("**/*/dev-requirements.in"))
-        # platform specific ones, e.g. the Windows agent's requirements-windows.in
-        + list(root.glob("**/*/requirements-*.in"))
+        # dev-requirements.in and the platform specific ones, e.g. the Windows
+        # agent's windows-requirements.in
+        + list(root.glob("**/*/*-requirements.in"))
     )
 
 
 def all_constraints_files() -> list[Path]:
     """Return all constraints files: the shared one plus any platform specific ones."""
-    return sorted(bazel_repo_root().glob("**/constraints*.txt"))
+    return sorted(bazel_repo_root().glob("**/*constraints.txt"))
 
 
 def parse_requirements_file(file_path: Path) -> dict[str, str]:

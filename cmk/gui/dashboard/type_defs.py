@@ -12,6 +12,7 @@ from cmk.gui.type_defs import (
     ContextualLinkLocationConfig,
     DashboardEmbeddedViewSpec,
     FilterName,
+    GraphLegendStyle,
     GraphPresentation,
     GraphRenderOptionsVS,
     InventoryJoinMacrosSpec,
@@ -86,8 +87,17 @@ class DashletConfig(_DashletConfigMandatory, total=False):
     show_title: bool | Literal["transparent"]
 
 
+class FixedWindow(TypedDict):
+    type: Literal["range"]
+    window: TimerangeValue
+
+
+class DashboardWindow(TypedDict):
+    type: Literal["dashboard"]
+
+
 class ABCGraphDashletConfig(DashletConfig):
-    timerange: TimerangeValue
+    timerange: DashboardWindow | FixedWindow
     graph_render_options: GraphRenderOptionsVS
 
 
@@ -112,17 +122,15 @@ class CustomGraphDashletConfig(ABCGraphDashletConfig):
     show_legend: NotRequired[bool]
 
 
+class EmbeddedCustomGraphDashletConfig(ABCGraphDashletConfig):
+    # Stored config of the embedded_custom_graph widget. `definition` is the dumped
+    # CustomGraphContentV2 (nonfree/pro), including "version"; community code only passes it
+    # through, the registered pro widget parses and validates it.
+    definition: dict[str, object]
+
+
 class MetricCurrentValue(TypedDict):
     type: Literal["current"]
-
-
-class FixedWindow(TypedDict):
-    type: Literal["range"]
-    window: TimerangeValue
-
-
-class DashboardWindow(TypedDict):
-    type: Literal["dashboard"]
 
 
 class MetricFixedWindow(FixedWindow):
@@ -169,10 +177,12 @@ class SingleGraphDashletConfig(SingleMetricDashletConfig):
 
 class AverageScatterplotDashletConfig(DashletConfig):
     metric: str
-    time_range: TimerangeValue
+    time_range: DashboardWindow | FixedWindow
     metric_color: str | None
     avg_color: str | None
     median_color: str | None
+    show_legend: NotRequired[bool]
+    legend_style: NotRequired[GraphLegendStyle]
 
 
 class TopListColumnConfig(TypedDict):
@@ -186,66 +196,7 @@ class TopListDashletConfig(DashletConfig):
     display_range: MetricDisplayRangeWithAutomatic
     ranking_order: Literal["high", "low"]
     limit_to: int
-    contextual_link: NotRequired[ContextualLinkNoneConfig | ContextualLinkInheritedConfig]
-
-
-NetworkFlowTopTableDimension = Literal[
-    "local_hosts", "remote_hosts", "applications", "autonomous_systems"
-]
-NetworkFlowAccent = Literal["blue", "magenta", "green", "yellow", "orange", "purple", "red"]
-
-
-class NetworkFlowTopTableDashletConfig(DashletConfig):
-    dimension: NetworkFlowTopTableDimension
-    accent: NetworkFlowAccent
-    limit_to: int
-
-
-NetworkFlowDonutDimension = Literal["applications", "protocols"]
-NetworkFlowDonutLegendMode = Literal["table", "compact"]
-
-
-class NetworkFlowDonutDashletConfig(DashletConfig):
-    dimension: NetworkFlowDonutDimension
-    limit_to: int
-    # Absent from every donut stored before the legend became configurable.
-    legend_mode: NotRequired[NetworkFlowDonutLegendMode]
-    # Absent from every donut stored before the comparison existed.
-    show_delta: NotRequired[bool]
-
-
-NetworkFlowKpiStatCardMetric = Literal[
-    "total_bytes",
-    "ingress_bytes",
-    "egress_bytes",
-    "active_hosts",
-    "total_flows",
-    "active_asn",
-    "peak_throughput",
-    "avg_throughput",
-    "tracked_hosts",
-]
-
-
-NetworkFlowKpiStatCardSparkHeightMode = Literal["band", "full"]
-
-
-class NetworkFlowKpiStatCardDashletConfig(DashletConfig):
-    metric: NetworkFlowKpiStatCardMetric
-    accent: NetworkFlowAccent
-    show_delta: bool
-    spark_height_mode: NotRequired[NetworkFlowKpiStatCardSparkHeightMode]
-
-
-NetworkFlowTrendChartDimension = Literal["applications", "autonomous_systems", "total_bandwidth"]
-NetworkFlowTrendChartDisplayMode = Literal["lines", "stacked_area"]
-
-
-class NetworkFlowTrendChartDashletConfig(DashletConfig):
-    dimension: NetworkFlowTrendChartDimension
-    display_mode: NetworkFlowTrendChartDisplayMode
-    limit_to: int
-    show_legend: bool
+    contextual_link: NotRequired[ContextualLinkConfig]
 
 
 class StatsDashletConfig(DashletConfig):
@@ -274,6 +225,22 @@ class InventoryDashletConfig(DashletConfig):
 class AlertOverviewDashletConfig(DashletConfig):
     time_range: DashboardWindow | FixedWindow
     limit_objects: NotRequired[int]
+
+
+type MonitoringTableName = Literal["hosts", "services"]
+
+# The display options of the monitoring pages for their timestamp columns.
+type MonitoringTableDateFormat = Literal["%Y-%m-%d", "%d.%m.%Y", "%m/%d/%Y", "%d.%m.", "%m/%d"]
+type MonitoringTableTimestampFormat = Literal["mixed", "abs", "rel", "both", "epoch"]
+
+
+class MonitoringTableDashletConfig(DashletConfig):
+    table: MonitoringTableName
+    columns: Sequence[str]
+    sort: Sequence[str]
+    limit: int
+    date_format: NotRequired[MonitoringTableDateFormat]
+    timestamp_format: NotRequired[MonitoringTableTimestampFormat]
 
 
 class SiteOverviewDashletConfig(DashletConfig):

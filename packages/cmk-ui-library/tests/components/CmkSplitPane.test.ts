@@ -28,7 +28,7 @@ test('exposes an accessible resize handle', async () => {
 
 test('collapses the right pane when collapsed is set', async () => {
   const { rerender } = render(CmkSplitPane, {
-    props: { collapsed: false, rightDefaultSize: 30 },
+    props: { collapsed: false, paneDefaultSize: 30 },
     slots
   })
 
@@ -44,7 +44,7 @@ test('collapses the right pane when collapsed is set', async () => {
 
 test('resizes with the keyboard once the handle is focused via pointer', async () => {
   const user = userEvent.setup()
-  render(CmkSplitPane, { props: { rightDefaultSize: 30, keyboardResizeBy: 10 }, slots })
+  render(CmkSplitPane, { props: { paneDefaultSize: 30, keyboardResizeBy: 10 }, slots })
 
   const separator = await screen.findByRole('separator')
   expect(separator.getAttribute('aria-valuenow')).toBe('70')
@@ -74,4 +74,33 @@ test('keeps the handle visible while collapsed when opted out', async () => {
   })
 
   await screen.findByRole('separator')
+})
+
+test('docks the pane on the left when asked to', async () => {
+  const user = userEvent.setup()
+  render(CmkSplitPane, {
+    props: { dock: 'left', paneDefaultSize: 30, keyboardResizeBy: 10 },
+    slots
+  })
+
+  const separator = await screen.findByRole('separator')
+  expect(separator.getAttribute('aria-valuenow')).toBe('30')
+
+  await user.pointer({ keys: '[MouseLeft]', target: separator })
+  await user.keyboard('{ArrowRight}')
+  expect(separator.getAttribute('aria-valuenow')).toBe('40')
+})
+
+test('reports the new size of the docked pane on resize', async () => {
+  const user = userEvent.setup()
+  const { emitted } = render(CmkSplitPane, {
+    props: { paneDefaultSize: 30, keyboardResizeBy: 10 },
+    slots
+  })
+
+  const separator = await screen.findByRole('separator')
+  await user.pointer({ keys: '[MouseLeft]', target: separator })
+  await user.keyboard('{ArrowLeft}')
+
+  expect(emitted('resize')!.at(-1)).toEqual([40])
 })

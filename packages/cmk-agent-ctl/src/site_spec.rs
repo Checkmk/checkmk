@@ -93,7 +93,15 @@ enum IPv6ParsingError {
 }
 
 #[derive(
-    PartialEq, Eq, Hash, Debug, Clone, serde_with::SerializeDisplay, serde_with::DeserializeFromStr,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    Debug,
+    Clone,
+    serde_with::SerializeDisplay,
+    serde_with::DeserializeFromStr,
 )]
 pub struct SiteID {
     pub server: String,

@@ -24,11 +24,7 @@ from cmk.gui.dashboard.token_util import (
     InvalidWidgetError,
 )
 from cmk.gui.dashboard.type_defs import EmbeddedViewDashletConfig, LinkedViewDashletConfig
-from cmk.gui.dashboard.view_drilldown import (
-    column_drilldown_targets,
-    column_drilldowns,
-    inherited_column_link,
-)
+from cmk.gui.dashboard.view_drilldown import column_drilldowns
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKAuthException, MKUserError
@@ -40,7 +36,6 @@ from cmk.gui.pages import Page, PageContext, PageResult
 from cmk.gui.painter import PainterConfig, PainterContext
 from cmk.gui.painter.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.permissions import permission_registry
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.token_auth import AuthToken, DashboardToken
 from cmk.gui.type_defs import (
@@ -54,15 +49,12 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view import View
 from cmk.gui.view_renderer import GUIViewRenderer
-from cmk.gui.views.page_edit_view import (
-    ColumnDrilldownTarget,
-    create_embedded_view_from_valuespec,
-    render_view_config,
-)
+from cmk.gui.views.page_edit_view import create_embedded_view_from_valuespec, render_view_config
 from cmk.gui.views.page_show_view import get_limit, get_user_sorters, process_view
 from cmk.gui.views.store import get_permitted_views, get_view_by_name
 from cmk.gui.visuals import get_merged_context, get_only_sites_from_context
 from cmk.gui.visuals.info import visual_info_registry
+from cmk.shared_typing.drill_up_button import DrillUpButton
 from cmk.web.utils.escaping import escape_to_html_permissive
 from cmk.web.utils.request_cache import RequestCache
 
@@ -182,6 +174,7 @@ class ViewWidgetIFramePageHelper:
         is_debug: bool,  # noqa: ARG003
         is_preview: bool = False,
         is_public: bool = False,
+        drilled_from: DrillUpButton | None = None,
     ) -> None:
         # include the views context, but override it with the provided widget context
         context = get_merged_context(view_spec.get("context", {}), context)
@@ -198,7 +191,9 @@ class ViewWidgetIFramePageHelper:
                 user_permissions=user_permissions,
             ),
             request_cache=RequestCache(config),
-            column_drilldowns=column_drilldowns(view_spec, column_links, context, user_permissions),
+            column_drilldowns=column_drilldowns(
+                view_spec, column_links, context, user_permissions, drilled_from=drilled_from
+            ),
         )
         view.row_limit = row_limit
         view.only_sites = get_only_sites_from_context(context)
@@ -322,6 +317,7 @@ class _ViewWidgetIFrameRequestParameters(_ViewWidgetIFrameAuthTokenRequestParame
     limit: Literal["soft", "hard", "none"]
     raw_debug: str | None
     is_preview: bool
+    drill_down_source_title: str | None
 
     @classmethod
     @override
@@ -339,6 +335,7 @@ class _ViewWidgetIFrameRequestParameters(_ViewWidgetIFrameAuthTokenRequestParame
                     "underscore_display_options": request.get_str_input("_display_options"),
                     "raw_debug": request.get_str_input("debug"),
                     "is_preview": request.get_str_input("is_preview", "false"),
+                    "drill_down_source_title": request.get_str_input("drill_down_source_title"),
                 }
             )
         except ValidationError as e:
@@ -352,6 +349,12 @@ class _ViewWidgetIFrameRequestParameters(_ViewWidgetIFrameAuthTokenRequestParame
                 _("Cannot specify both 'view_name' and 'embedded_id' parameters."),
             )
         return self
+
+    def drill_up(self) -> DrillUpButton | None:
+        """The way back the column drill-downs offer, to the dashboard around the iframe."""
+        if not self.drill_down_source_title:
+            return None
+        return DrillUpButton(title=self.drill_down_source_title)
 
     def is_debug(self) -> bool:
         return self.raw_debug == "1"
@@ -423,6 +426,17 @@ class _ViewWidgetIFrameRequestParameters(_ViewWidgetIFrameAuthTokenRequestParame
         }
 
 
+def _iframe_body_start(ctx: PageContext) -> None:
+    html.body_start(
+        lang=user.language,
+        inject_js_profiling_code=ctx.config.inject_js_profiling_code,
+        load_frontend_vue=ctx.config.load_frontend_vue,
+        custom_style_sheet=ctx.config.custom_style_sheet,
+        screenshotmode=ctx.config.screenshotmode,
+        inline_help_as_text=user.inline_help_as_text,
+    )
+
+
 class ViewWidgetIFramePage(Page):
     @override
     def page(self, ctx: PageContext) -> None:
@@ -446,21 +460,13 @@ class ViewWidgetIFramePage(Page):
         except MKUserError as e:
             # a linked view used by a widget can be (intentionally) deleted,
             # so we need to handle this gracefully so that the rest of the dashboard still works
-            html.body_start(
-                lang=user.language,
-                inject_js_profiling_code=ctx.config.inject_js_profiling_code,
-                load_frontend_vue=ctx.config.load_frontend_vue,
-                custom_style_sheet=ctx.config.custom_style_sheet,
-                screenshotmode=ctx.config.screenshotmode,
-                inline_help_as_text=user.inline_help_as_text,
-            )
+            _iframe_body_start(ctx)
             html.write_html(html.render_error(str(e)))
             return
 
         ViewWidgetIFramePageHelper.setup_filled_in(ctx.request)
         ViewWidgetIFramePageHelper.setup_datasource(ctx.request, view_spec["datasource"])
 
-        user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
         row_limit = get_limit(
             view_spec_row_limit=view_spec.get("row_limit", 0),
             request_limit_mode=parameters.limit,
@@ -474,12 +480,13 @@ class ViewWidgetIFramePage(Page):
             view_spec,
             row_limit,
             parameters.get_context(),
-            user_permissions,
+            ctx.user_permissions,
             ctx.config,
             column_links=column_links,
             is_reload=parameters.is_reload(),
             is_debug=parameters.is_debug(),
             is_preview=parameters.is_preview,
+            drilled_from=parameters.drill_up(),
         )
 
 
@@ -552,10 +559,9 @@ class ViewWidgetIFrameTokenPage(DashboardTokenAuthenticatedPage):
     @override
     def _get(self, token: AuthToken, token_details: DashboardToken, ctx: PageContext) -> None:
         parameters = _ViewWidgetIFrameAuthTokenRequestParameters.from_request(ctx.request)
-        user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
 
         with impersonate_dashboard_token_issuer(
-            token.issuer, token_details, user_permissions
+            token.issuer, token_details, ctx.user_permissions
         ) as issuer:
             dashboard = issuer.load_dashboard()
             unique_widget_name = f"{dashboard['name']}_{parameters.widget_id}"
@@ -574,7 +580,7 @@ class ViewWidgetIFrameTokenPage(DashboardTokenAuthenticatedPage):
                 row_limit=view_spec.get("row_limit", 0) or ctx.config.soft_query_limit,
                 # includes dashboard context via _get_view_spec_by_widget_id
                 context=widget.context,
-                user_permissions=user_permissions,
+                user_permissions=ctx.user_permissions,
                 config=ctx.config,
                 # Every drill-down target sits behind a login, so a shared dashboard links nowhere.
                 column_links={},
@@ -593,14 +599,7 @@ class ViewWidgetIFrameTokenPage(DashboardTokenAuthenticatedPage):
         search_name = f"{SharedDashboardPageComponents.page_name}.py"
         target_url = get_shared_dashboard_url(token.token_id)
         # Only the page head loads the script that runs the redirect.
-        html.body_start(
-            lang=user.language,
-            inject_js_profiling_code=ctx.config.inject_js_profiling_code,
-            load_frontend_vue=ctx.config.load_frontend_vue,
-            custom_style_sheet=ctx.config.custom_style_sheet,
-            screenshotmode=ctx.config.screenshotmode,
-            inline_help_as_text=user.inline_help_as_text,
-        )
+        _iframe_body_start(ctx)
         html.call_ts_function(
             function_name="redirect_shared_dashboard",
             arguments={"search_name": search_name, "target_url": target_url},
@@ -697,7 +696,7 @@ class ViewWidgetEditPage(Page):
                 )
                 return  # we're done, stop rendering the rest
 
-        self._body_start(ctx)  # include CSS to render the view editor properly
+        _iframe_body_start(ctx)  # include CSS to render the view editor properly
         # remove the 10px padding that body.main adds
         html.open_div(style="margin-left: -10px;")
         if error:
@@ -720,22 +719,11 @@ class ViewWidgetEditPage(Page):
                 general_properties=True,
                 allow_browser_reload=False,
                 config=ctx.config,
-                column_drilldowns=self._get_column_drilldowns(ctx.request, dashboard, mode),
+                column_links=self._get_column_links(ctx.request, dashboard, mode),
             )
 
         html.close_div()
         html.body_end()
-
-    @staticmethod
-    def _body_start(ctx: PageContext) -> None:
-        html.body_start(
-            lang=user.language,
-            inject_js_profiling_code=ctx.config.inject_js_profiling_code,
-            load_frontend_vue=ctx.config.load_frontend_vue,
-            custom_style_sheet=ctx.config.custom_style_sheet,
-            screenshotmode=ctx.config.screenshotmode,
-            inline_help_as_text=user.inline_help_as_text,
-        )
 
     def _post_message_page(
         self,
@@ -743,7 +731,7 @@ class ViewWidgetEditPage(Page):
         message: ConfigurationErrorMessage | SaveCompletedMessage,
     ) -> None:
         # Only the page head loads the script that sends the message.
-        self._body_start(ctx)
+        _iframe_body_start(ctx)
         self._post_message(message)
         html.body_end()
 
@@ -761,14 +749,12 @@ class ViewWidgetEditPage(Page):
         dashboard: DashboardConfig, embedded_id: str, view_spec: ViewSpec, config: Config
     ) -> None:
         # first arg is just used for the datasource (so it can't be overwritten)
-        view_spec, column_drilldowns = create_embedded_view_from_valuespec(
+        view_spec, column_links = create_embedded_view_from_valuespec(
             old_view=view_spec, view=view_spec, allow_browser_reload=False, config=config
         )
         embedded = EmbeddedViewSpecManager.normal_to_embedded_view_spec(view_spec)
-        if column_drilldowns:
-            embedded["column_links"] = {
-                index: inherited_column_link(target) for index, target in column_drilldowns.items()
-            }
+        if column_links:
+            embedded["column_links"] = column_links
         dashboard.setdefault("embedded_views", {})[embedded_id] = embedded
         save_all_dashboards(dashboard["owner"])
         # we don't do the remote site sync here, as this is done when the dashboard is saved
@@ -867,16 +853,16 @@ class ViewWidgetEditPage(Page):
         )
 
     @staticmethod
-    def _get_column_drilldowns(
+    def _get_column_links(
         request: Request, dashboard: DashboardConfig, mode: Mode
-    ) -> dict[int, ColumnDrilldownTarget]:
+    ) -> dict[int, ContextualLinkEntryConfig]:
         # Only a duplicate starts from an embedded view, the one place column links live in.
         if mode != "duplicate":
             return {}
         source = dashboard["embedded_views"][
             request.get_ascii_input_mandatory("source_embedded_id")
         ]
-        return column_drilldown_targets(source.get("column_links", {}))
+        return source.get("column_links", {})
 
     @staticmethod
     def _create_new_view_spec(

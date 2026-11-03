@@ -25,6 +25,7 @@ from ._common_config import DeploymentModeProvider as DeploymentModeProvider
 from ._common_config import DirectoryConfig as DirectoryConfig
 from ._common_config import get_agent_controller_arch as get_agent_controller_arch
 from ._common_config import get_unix_agent_paths_keeper as get_unix_agent_paths_keeper
+from ._common_config import is_agent_controller_deployed as is_agent_controller_deployed
 from ._common_config import SingleDirectoryConfig as SingleDirectoryConfig
 from ._common_config import TargetPathsProvider as TargetPathsProvider
 from ._common_config import UnixAgentPathsKeeper as UnixAgentPathsKeeper
@@ -94,4 +95,5 @@ __all__ = [
     "entry_point_prefixes",
     "get_agent_controller_arch",
     "get_unix_agent_paths_keeper",
+    "is_agent_controller_deployed",
 ]

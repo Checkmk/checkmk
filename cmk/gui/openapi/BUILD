@@ -16,7 +16,6 @@ py_library(
         "//cmk/gui:core_toolkit",
         "//cmk/gui/openapi/restful_objects:type_defs",
         "//cmk/utils",
-        requirement("docstring-parser"),
         requirement("werkzeug"),
     ],
 )
@@ -31,6 +30,7 @@ py_library(
     ],
     deps = [
         "//cmk/gui:core_toolkit",
+        requirement("flask"),
     ],
 )
 
@@ -91,6 +91,8 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        ":permission_tracking",
+        "//cmk/gui:core_toolkit",
         "//cmk/gui/openapi/api_endpoints",
         "//cmk/gui/openapi/endpoints",
         "//cmk/gui/openapi/framework",

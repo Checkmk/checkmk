@@ -4,26 +4,27 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <!--
-Everything about one object on a map, as a card beside the object itself.
-
-The card is a popover when the operator reached it from the object (it stays
-anchored to it, and can be dragged aside), and a centered dialog when there is
-no anchor to sit next to. Which properties it shows follows from the object's
-type — the sections decide that for themselves.
+Everything about one object on a map, as a card at the top of the map, on the
+side away from the object it edits so it stays in view. The header drags the
+card aside. An
+edited card asks before any way out of it discards the form: a click beside
+it, Escape, the close button or Cancel. Which properties it shows follows from
+the object's type — the sections decide that for themselves.
 -->
 <script setup lang="ts">
 import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkBadge from 'cmk-ui-library/components/CmkBadge.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
+import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import CmkScrollContainer from 'cmk-ui-library/components/CmkScrollContainer.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
-import { computed, ref, watch } from 'vue'
+import { computed, ref, useTemplateRef, watch } from 'vue'
 
+import { useDraggableCard } from '@/maps/map/edit/composables/useDraggableCard'
 import { useObjectMetrics } from '@/maps/map/edit/composables/useObjectMetrics'
 import { useObjectSuggestions } from '@/maps/map/edit/composables/useObjectSuggestions'
-import { usePropertiesPopover } from '@/maps/map/edit/composables/usePropertiesPopover'
 import {
   type GraphSource,
   applyGraphSource,
@@ -31,7 +32,9 @@ import {
 } from '@/maps/map/edit/properties/graphSource'
 import {
   type ObjectForm,
+  boundTypeOf,
   formFromObject,
+  leavesOutMembers,
   updatesFromForm,
   weatherColorNeedsMetric
 } from '@/maps/map/edit/properties/objectForm'
@@ -47,11 +50,13 @@ import PositionSection from '@/maps/map/edit/properties/sections/PositionSection
 import TemplatesSection from '@/maps/map/edit/properties/sections/TemplatesSection.vue'
 import TextboxSection from '@/maps/map/edit/properties/sections/TextboxSection.vue'
 import MapsConfirmDialog from '@/maps/shared/components/MapsConfirmDialog.vue'
+import MapsUnsavedChangesDialog from '@/maps/shared/components/MapsUnsavedChangesDialog.vue'
 import { useEscapeClose } from '@/maps/shared/composables/useEscapeClose'
 import type { MapElement, MapViewType, ObjectState } from '@/maps/types/api'
+import type { AnchorRect } from '@/maps/utils/anchorRect'
 import { objectDeleteTitle, objectTypeLabel } from '@/maps/utils/dropdownOptions'
 import { buildCheckmkViewUrl } from '@/maps/utils/mapNavigation'
-import { getMapElementName } from '@/maps/utils/naming'
+import { VISUAL_ONLY_TYPES, getMapElementName } from '@/maps/utils/naming'
 
 const props = defineProps<{
   object: MapElement
@@ -61,7 +66,8 @@ const props = defineProps<{
   mapIconSize?: number | null
   mapDefaultZ?: number
   checkmkUrl?: string | null
-  anchorRect?: { left: number; top: number; right: number; bottom: number } | null
+  /** Where the object it edits is on screen, for the card to open away from. */
+  avoid?: AnchorRect | null
 }>()
 
 const emit = defineEmits<{
@@ -73,18 +79,23 @@ const emit = defineEmits<{
 
 const { _t } = usei18n()
 
-useEscapeClose(() => emit('close'))
-
 const form = ref<ObjectForm>(formFromObject(props.object, { z: props.mapDefaultZ ?? 1 }))
 const graphSource = ref<GraphSource>(graphSourceOf(props.object))
 
-// Another object may be selected while the card is open (the canvas keeps
-// working underneath it), so the form follows whatever it is showing.
+// What a save would send, so a field cleared back to empty is no edit.
+const updates = () => JSON.stringify(updatesFromForm(form.value, props.object, props.mapType))
+/** The card as it opened, to tell an edited card from an untouched one. */
+const pristine = ref(updates())
+const dirty = computed(() => updates() !== pristine.value)
+
+// Another object may be selected while the card is open, so the form follows
+// whatever it is showing.
 watch(
   () => props.object,
   (object) => {
     form.value = formFromObject(object, { z: props.mapDefaultZ ?? 1 })
     graphSource.value = graphSourceOf(object)
+    pristine.value = updates()
   }
 )
 
@@ -93,12 +104,14 @@ function setGraphSource(source: GraphSource): void {
   applyGraphSource(form.value, source)
 }
 
+const boundType = computed(() => boundTypeOf(form.value, props.object))
+
 // The per-object connection override wins over the map's own.
 const connectionId = computed(() => form.value.connection_id || props.connectionId)
 
 const suggestions = useObjectSuggestions({
   connectionId: () => connectionId.value,
-  objectType: () => props.object.type,
+  objectType: () => boundType.value,
   mapName: () => form.value.map_name
 })
 
@@ -110,27 +123,66 @@ const metrics = useObjectMetrics({
   serviceDescription: () => form.value.service_description
 })
 
-const card = ref<HTMLElement | null>(null)
+const frame = useTemplateRef<HTMLElement>('frame')
+const { dragOffset, dragging, onHeaderPointerDown, onHeaderPointerMove, onHeaderPointerUp } =
+  useDraggableCard(
+    () => props.object,
+    () => frame.value
+  )
 
-const {
-  isPopover,
-  cardStyle,
-  dragging,
-  onHeaderPointerDown,
-  onHeaderPointerMove,
-  onHeaderPointerUp
-} = usePropertiesPopover({
-  anchorRect: () => props.anchorRect,
-  object: () => props.object,
-  card
+const side = ref<'center' | 'left' | 'right'>('center')
+let sideChosen = false
+// Chosen once per object: a card that moved whenever the object did would jump
+// under the pointer. A just-placed object is only measured after the card
+// opened, so it waits for the first box.
+watch(
+  () => [props.object.id, props.avoid] as const,
+  ([id, avoid], previous) => {
+    if (previous && previous[0] !== id) {
+      sideChosen = false
+      side.value = 'center'
+    }
+    if (sideChosen || !avoid) {
+      return
+    }
+    sideChosen = true
+    side.value = (avoid.left + avoid.right) / 2 < window.innerWidth / 2 ? 'right' : 'left'
+  },
+  { immediate: true }
+)
+
+const cardStyle = computed(() => {
+  const { dx, dy } = dragOffset.value
+  return {
+    transform:
+      side.value === 'center'
+        ? `translate(calc(-50% + ${dx}px), ${dy}px)`
+        : `translate(${dx}px, ${dy}px)`
+  }
 })
+
+const confirmDiscard = ref(false)
+
+/** Every way out of the card: an edited one asks before it discards. */
+function requestClose(): void {
+  if (dirty.value) {
+    confirmDiscard.value = true
+  } else {
+    emit('close')
+  }
+}
+
+function discard(): void {
+  confirmDiscard.value = false
+  emit('close')
+}
 
 const displayName = computed(() => getMapElementName(props.object) ?? '')
 
 /** The object's own page in Checkmk, offered as the link field's default. */
 const autoUrl = computed((): string | null => {
   const options = { site: props.state?.site_id ?? null }
-  const { type } = props.object
+  const type = boundType.value
   if (type === 'host' && form.value.host_name) {
     return buildCheckmkViewUrl(
       props.checkmkUrl,
@@ -168,20 +220,31 @@ const autoUrl = computed((): string | null => {
 
 const objectType = computed(() => props.object.type)
 const isLine = computed(() => objectType.value === 'line')
-const showsIdentity = computed(
-  () => !['textbox', 'line', 'graph', 'image'].includes(objectType.value)
-)
+// A graph bound to neither host nor service embeds a URL, and a line bound to
+// no host has no state, as updatesFromForm stores it.
+const stateful = computed(() => {
+  if (boundType.value === 'graph') {
+    return !!(form.value.host_name || form.value.service_description)
+  }
+  if (isLine.value && boundType.value === 'host') {
+    return !!form.value.host_name
+  }
+  return !VISUAL_ONLY_TYPES.includes(boundType.value)
+})
+const showsIdentity = computed(() => !['textbox', 'graph', 'image'].includes(objectType.value))
 const showsAppearance = computed(() => !['line', 'textbox', 'graph'].includes(objectType.value))
-// Every object that stands for more than itself can hide members -- including
-// the BI aggregation, which is also the only one whose leaves the section can
-// count back at the operator.
-const showsFilter = computed(() =>
-  ['host', 'hostgroup', 'servicegroup', 'map', 'aggregation'].includes(objectType.value)
-)
+const showsFilter = computed(() => leavesOutMembers(boundType.value))
 
 const saving = ref(false)
 const saveError = ref('')
 const confirmDelete = ref(false)
+
+// Escape on one of the card's own questions answers that question.
+useEscapeClose(() => {
+  if (!confirmDiscard.value && !confirmDelete.value) {
+    requestClose()
+  }
+})
 
 function save(): void {
   saveError.value = ''
@@ -201,27 +264,18 @@ function onConfirmDelete(): void {
 
 <template>
   <div
+    ref="frame"
     class="maps-object-properties-modal"
-    :class="{ 'maps-object-properties-modal--centered': !isPopover }"
     role="dialog"
     :aria-label="_t('Object properties')"
   >
-    <!-- Clicking beside the card closes it. Keyboard users have Escape and the
-         close button, so this is hidden from the a11y tree. -->
+    <!-- Takes the clicks beside the card; an edited card asks before they
+         discard it. Keyboard users have Escape and the close
+         button, so this is hidden from the a11y tree. -->
+    <div class="maps-object-properties-modal__backdrop" aria-hidden="true" @click="requestClose" />
     <div
-      class="maps-object-properties-modal__backdrop"
-      :class="{ 'maps-object-properties-modal__backdrop--dim': !isPopover }"
-      aria-hidden="true"
-      @click="emit('close')"
-    />
-    <div
-      ref="card"
       class="maps-object-properties-modal__card"
-      :class="
-        isPopover
-          ? 'maps-object-properties-modal__card--popover'
-          : 'maps-object-properties-modal__card--modal'
-      "
+      :class="`maps-object-properties-modal__card--${side}`"
       :style="cardStyle"
     >
       <!-- The header doubles as the drag handle that moves the card aside. -->
@@ -240,7 +294,7 @@ function onConfirmDelete(): void {
           size="xsmall"
           :title="_t('Close')"
           :aria-label="_t('Close')"
-          @click="emit('close')"
+          @click="requestClose"
         />
       </div>
 
@@ -250,6 +304,7 @@ function onConfirmDelete(): void {
           v-model:form="form"
           :object="object"
           :suggestions="suggestions"
+          :map-connection-id="props.connectionId"
         />
         <TextboxSection v-if="objectType === 'textbox'" v-model:form="form" />
         <template v-if="objectType === 'graph'">
@@ -278,16 +333,22 @@ function onConfirmDelete(): void {
           v-model:form="form"
           :metrics="metrics"
           :map-icon-size="mapIconSize"
+          :stateful="stateful"
         />
         <LinkSection v-model:form="form" :auto-url="autoUrl" />
-        <FilterSection v-if="showsFilter" v-model:form="form" :connection-id="connectionId" />
-        <TemplatesSection v-model:form="form" />
+        <FilterSection v-if="showsFilter" v-model:form="form" :is-host="boundType === 'host'" />
+        <TemplatesSection v-model:form="form" :stateful="stateful" />
       </CmkScrollContainer>
 
       <CmkAlert v-if="saveError" variant="error" :text="untranslated(saveError)" />
 
       <div class="maps-object-properties-modal__footer">
-        <CmkButton variant="danger" @click="confirmDelete = true">{{ _t('Delete') }}</CmkButton>
+        <!-- Quiet like the delete actions elsewhere in Checkmk; the
+             confirmation is where it turns red. -->
+        <CmkButton @click="confirmDelete = true">
+          <CmkIcon name="delete" variant="inline" size="small" />
+          {{ _t('Delete') }}
+        </CmkButton>
         <MapsConfirmDialog
           :open="confirmDelete"
           variant="error"
@@ -297,8 +358,13 @@ function onConfirmDelete(): void {
           @confirm="onConfirmDelete"
           @cancel="confirmDelete = false"
         />
+        <MapsUnsavedChangesDialog
+          :open="confirmDiscard"
+          @confirm="discard"
+          @cancel="confirmDiscard = false"
+        />
         <div class="maps-object-properties-modal__actions">
-          <CmkButton variant="secondary" @click="emit('close')">{{ _t('Cancel') }}</CmkButton>
+          <CmkButton variant="secondary" @click="requestClose">{{ _t('Cancel') }}</CmkButton>
           <CmkButton variant="primary" :disabled="saving" @click="save">
             {{ saving ? _t('Saving…') : _t('Save') }}
           </CmkButton>
@@ -318,46 +384,36 @@ function onConfirmDelete(): void {
   z-index: var(--z-index-modal);
 }
 
-.maps-object-properties-modal--centered {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .maps-object-properties-modal__backdrop {
   position: absolute;
   inset: 0;
 }
 
-.maps-object-properties-modal__backdrop--dim {
-  background: rgb(0 0 0 / 60%);
-  backdrop-filter: blur(4px);
-}
-
+/* At the top, centered until it knows where the object is; the transform
+   carries the centering and the offset the header was dragged by. */
 .maps-object-properties-modal__card {
+  position: absolute;
+  top: var(--dimension-8);
+  left: 50%;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  width: 504px;
   max-width: calc(100% - var(--dimension-8));
+  max-height: calc(100% - 2 * var(--dimension-8));
+  overflow: hidden;
   background: var(--ux-theme-3);
   border: 1px solid var(--default-border-color);
   border-radius: var(--border-radius);
-
-  /* No elevation token exists in the design system, and this card has to lift
-     off the map behind it — so the shadow stays a literal. */
-  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 60%);
+  box-shadow: var(--maps-shadow-canvas-overlay-high);
 }
 
-.maps-object-properties-modal__card--popover {
-  position: absolute;
-  width: 400px;
-  max-height: 75%;
+.maps-object-properties-modal__card--left {
+  left: var(--dimension-8);
 }
 
-.maps-object-properties-modal__card--modal {
-  position: relative;
-  width: 504px;
-  max-height: 90%;
+.maps-object-properties-modal__card--right {
+  right: var(--dimension-8);
+  left: auto;
 }
 
 .maps-object-properties-modal__header {

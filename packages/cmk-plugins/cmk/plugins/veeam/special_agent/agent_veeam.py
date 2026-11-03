@@ -15,12 +15,10 @@ import json
 import logging
 import sys
 import time
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
-from datetime import datetime, UTC
 from http import HTTPStatus
 from typing import override
-from urllib.parse import quote
 
 import requests
 import requests.auth
@@ -30,7 +28,12 @@ from pydantic.alias_generators import to_camel
 
 from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option, Secret
 from cmk.plugins.veeam.lib import parse_iso8601_epoch
-from cmk.server_side_programs.v1 import HostnameValidationAdapter, report_agent_crashes, Storage
+from cmk.server_side_programs.v1 import (
+    AgentMessages,
+    HostnameValidationAdapter,
+    report_agent_crashes,
+    Storage,
+)
 
 AGENT = "veeam"
 
@@ -72,6 +75,14 @@ class TerminateAgent(RuntimeError):
 
     Terminate the agent with a user facing message, but do not create a crash report.
     """
+
+
+class AccessDenied(RuntimeError):
+    """The Veeam user may not read an endpoint (HTTP 403)."""
+
+    def __init__(self, path: str) -> None:
+        self.endpoint = path.split("?", 1)[0]
+        super().__init__(f"Access to {self.endpoint} was denied (HTTP 403)")
 
 
 class VeeamApiError(RuntimeError):
@@ -331,7 +342,9 @@ class VeeamAuth(requests.auth.AuthBase):
             if exc.status == HTTPStatus.UNAUTHORIZED:
                 raise TerminateAgent(
                     f"Authentication at the Veeam REST API failed for user '{self._user}': "
-                    f"{exc.message}. Check the user name and password"
+                    f"{exc.message}. Check the user name and password. After repeated "
+                    "failed logins, Veeam may lock the user and then reject even the correct "
+                    "password until the user is unlocked"
                 ) from exc
             raise TerminateAgent(
                 f"Login at the Veeam REST API failed with HTTP {exc.status}: {exc.message}"
@@ -370,10 +383,7 @@ class VeeamClient:
                 f"The Veeam REST API rejected the session on {path}: {error.message}"
             ) from error
         if error.status == HTTPStatus.FORBIDDEN:
-            raise TerminateAgent(
-                f"Access to {path} was denied (HTTP 403): {error.message} "
-                f"(the Veeam user lacks a role required for this endpoint)"
-            ) from error
+            raise AccessDenied(path) from error
         raise TerminateAgent(str(error)) from error
 
     def get_all(self, path: str, limit: int | None = None, extra_params: str = "") -> list[object]:
@@ -475,6 +485,39 @@ class _SessionProgress(_ApiItem):
     transferred_size: int | None = None
 
 
+class _Job(_ApiItem):
+    """An item of GET /api/v1/jobs."""
+
+    id: str
+    is_disabled: bool
+
+
+def _disabled_job_ids(client: VeeamClient) -> frozenset[str]:
+    """The ids of the jobs that are disabled in Veeam.
+
+    `status` in GET /api/v1/jobs/states is only "Disabled" for agent policies; a disabled
+    agent backup or file backup job stays "Stopped". `isDisabled` in GET /api/v1/jobs is
+    set for every job type.
+    """
+    return frozenset(
+        job.id for job in _parse_items(_Job, client.get_all("/api/v1/jobs")) if job.is_disabled
+    )
+
+
+def fetch_backup_jobs(client: VeeamClient, name: str) -> Fetched:
+    """GET /api/v1/jobs/states, one job per line, each with `isDisabled` added (see
+    `_disabled_job_ids`)."""
+    disabled_ids = _disabled_job_ids(client)
+    return Fetched(
+        own=f"<<<{name}:sep(0)>>>\n"
+        + "".join(
+            f"{json.dumps({**item, 'isDisabled': item.get('id') in disabled_ids})}\n"
+            for item in client.get_all("/api/v1/jobs/states")
+            if isinstance(item, dict)
+        )
+    )
+
+
 class _JobState(_ApiItem):
     """An item of GET /api/v1/jobs/states."""
 
@@ -482,7 +525,6 @@ class _JobState(_ApiItem):
     name: str
     status: str
     session_id: str | None = None
-    last_run: str | None = None
     session_progress: _SessionProgress | None = None
 
 
@@ -738,31 +780,20 @@ def fetch_restore_points(limit: int = 500) -> FetchStrategy:
     return _fetch
 
 
-def _job_sessions_and_window(
+def _job_sessions(
     jobs: Sequence[_JobState],
-) -> tuple[dict[str, tuple[str, str]], str | None]:
-    """Builds `sessionId -> (job id, job name)` from each job's current session,
-    plus the earliest `lastRun` (the taskSessions window's lower bound).
+    disabled_ids: Container[str],
+) -> dict[str, tuple[str, str]]:
+    """Builds `sessionId -> (job id, job name)` from each job's current session.
 
-    Disabled jobs are excluded, like the old plug-in; a schedule-disabled job is
-    still included. Jobs that never ran don't affect the window.
-
-    TODO: a rarely-run job drags the window back every cycle; cap it (e.g. 30
-    days) if that becomes a real problem.
+    Disabled jobs (`disabled_ids`) are excluded, like the old plug-in; a
+    schedule-disabled job is still included.
     """
-    session_to_job: dict[str, tuple[str, str]] = {}
-    last_runs: list[float] = []
-    for job in jobs:
-        if job.status == "Disabled":
-            continue
-        if job.session_id is not None:
-            session_to_job[job.session_id] = (job.id, job.name)
-        if job.last_run is not None and (epoch := parse_iso8601_epoch(job.last_run)) is not None:
-            last_runs.append(epoch)
-
-    if not last_runs:
-        return session_to_job, None
-    return session_to_job, datetime.fromtimestamp(min(last_runs), tz=UTC).isoformat()
+    return {
+        job.session_id: (job.id, job.name)
+        for job in jobs
+        if job.id not in disabled_ids and job.session_id is not None
+    }
 
 
 def _task_creation_epoch(task: Mapping[str, object]) -> float:
@@ -839,7 +870,7 @@ def _resolve_job_object_names(
     """Maps job ID -> its current session's object name(s), via
     GET /api/v1/sessions/{sessionId} -> resourceId -> GET /api/v1/backups/{id}/objects.
 
-    Iterates `session_to_job` (built by `_job_sessions_and_window`) rather than the
+    Iterates `session_to_job` (built by `_job_sessions`) rather than the
     raw job list, so disabled/malformed jobs are filtered in one place only.
 
     Same identity as /api/v1/restorePoints and the old plug-in (e.g.
@@ -962,21 +993,20 @@ def fetch_backups(client: VeeamClient, name: str) -> Fetched:
     back to its own session (`_session_fallback_task`); a multi-object job in
     that case is just left without data.
 
-    A task's job is resolved by matching its `sessionId` against each job's
-    current session (from /api/v1/jobs/states), not via a third endpoint. A task
-    whose session isn't any job's current one is dropped; its piggyback host just
-    keeps showing its last known state via normal staleness handling.
+    Only the tasks of each job's current session (from /api/v1/jobs/states) are
+    fetched, via /api/v1/sessions/{id}/taskSessions, and only for jobs whose
+    objects resolved. This costs one request per job however long ago it last ran;
+    a time window over /api/v1/taskSessions would reach back to the least recently
+    run job and pull everything since. A task session lookup that 404s/400s leaves
+    that job without tasks (a single-object job still falls back to its session).
 
-    /api/v1/taskSessions is windowed with `createdAfterFilter` (earliest job
-    `lastRun`) rather than fetched in full, to avoid pulling the server's entire
-    history every run.
-
-    `sessionTypeFilter=BackupJob` isn't used: on VBR 13.0.3.63 it silently
-    matches nothing even for matching records, so `sessionType` is filtered
-    client-side instead.
+    /api/v1/jobs/states also lists jobs that aren't backup jobs, e.g. backup copy
+    jobs, whose sessions hold tasks of their own `sessionType`. These are dropped
+    client-side: `sessionTypeFilter=BackupJob` isn't used, as on VBR 13.0.3.63 it
+    silently matches nothing even for matching records.
     """
     jobs = _parse_items(_JobState, client.get_all("/api/v1/jobs/states"))
-    session_to_job, created_after = _job_sessions_and_window(jobs)
+    session_to_job = _job_sessions(jobs, _disabled_job_ids(client))
     progress_by_job_id = {
         job.id: job.session_progress for job in jobs if job.session_progress is not None
     }
@@ -986,22 +1016,24 @@ def fetch_backups(client: VeeamClient, name: str) -> Fetched:
 
     newest: dict[tuple[str, str], Mapping[str, object]] = {}
 
-    if created_after is not None:
-        tasks = client.get_all(
-            "/api/v1/taskSessions",
-            extra_params=f"&typeFilter=Backup&createdAfterFilter={quote(created_after)}",
-        )
+    for session_id, (job_id, job_name) in session_to_job.items():
+        if job_id not in job_objects:
+            continue
+        try:
+            tasks = client.get_all(
+                f"/api/v1/sessions/{session_id}/taskSessions", extra_params="&typeFilter=Backup"
+            )
+        except TerminateAgent as exc:
+            if _is_skippable(exc):
+                continue
+            raise
 
+        resolved_names = job_objects[job_id].names
         for task in tasks:
             if not isinstance(task, dict) or not isinstance(task_name := task.get("name"), str):
                 continue
             if task.get("sessionType") != "BackupJob":
                 continue
-            session_id = task.get("sessionId")
-            if not isinstance(session_id, str) or (job := session_to_job.get(session_id)) is None:
-                continue
-            job_id, job_name = job
-            resolved_names = job_objects[job_id].names if job_id in job_objects else []
             if len(resolved_names) == 1:
                 object_name = resolved_names[0]
             elif task_name in resolved_names:
@@ -1018,7 +1050,7 @@ def fetch_backups(client: VeeamClient, name: str) -> Fetched:
             if current is None or _task_creation_epoch(task) >= _task_creation_epoch(current):
                 newest[key] = {**task, "jobName": job_name}
 
-    # Single-object jobs that /api/v1/taskSessions has no task for at all (e.g. the
+    # Single-object jobs whose session has no task at all (e.g. the
     # Linux/Windows Agent Backup gap) fall back to the job's own session: with only
     # one object, the job's result already *is* that object's result.
     for job_id, job_obj in job_objects.items():
@@ -1043,21 +1075,33 @@ def fetch_backups(client: VeeamClient, name: str) -> Fetched:
 
 
 def write_sections(client: VeeamClient, sections: Sequence[Section]) -> None:
-    """Each piggyback host is written once, with the sections of all fetches for it."""
+    """Each piggyback host is written once, with the sections of all fetches for it.
+
+    A section the user may not read is left out and reported as a warning, the other
+    sections are still written.
+    """
     piggyback: dict[str, list[str]] = {}
+    messages = AgentMessages()
     for name, fetch in sections:
-        fetched = fetch(client, name)
+        try:
+            fetched = fetch(client, name)
+        except AccessDenied as exc:
+            messages.add_warning(
+                f"Could not create section '{name}': denied permission to endpoint {exc.endpoint}"
+            )
+            continue
         sys.stdout.write(fetched.own)
         for host, text in fetched.piggyback.items():
             piggyback.setdefault(host, []).append(text)
     for host, texts in piggyback.items():
         sys.stdout.write(f"<<<<{host}>>>>\n{''.join(texts)}<<<<>>>>\n")
+    sys.stdout.write(messages.render())
 
 
 SECTIONS: Sequence[Section] = (
     ("veeam_server_info", fetch_object("/api/v1/serverInfo")),
     ("veeam_license", fetch_object("/api/v1/license")),
-    ("veeam_backup_jobs", fetch_list("/api/v1/jobs/states")),
+    ("veeam_backup_jobs", fetch_backup_jobs),
     ("veeam_backups", fetch_backups),
     ("veeam_replicas", fetch_list("/api/v1/replicas")),
     ("veeam_protection_groups", fetch_list("/api/v1/agents/protectionGroups")),

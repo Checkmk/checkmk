@@ -26,7 +26,7 @@ def main() -> int:
             return 1
 
         with disable_redis(), gui_context():
-            config.load(validate_hosts=True)
+            config.load(validate_hosts=True, debug=False)
 
             result = validate_mk_files(make_folder_tree(active_config))
 

@@ -9,11 +9,11 @@ from pathlib import Path
 import pytest
 
 from cmk.gui.exceptions import MKUserError
+from cmk.update_config.internal import ConflictMode
 from cmk.update_config.plugins.pre_actions.service_descriptions import (
     action,
     find_outdated_entries,
 )
-from cmk.update_config.plugins.pre_actions.utils import ConflictMode
 
 LOGGER = logging.getLogger("test")
 

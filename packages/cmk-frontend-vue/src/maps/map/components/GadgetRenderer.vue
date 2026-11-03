@@ -6,20 +6,20 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { perfometerCaption } from '@/maps/map/composables/usePerfometer'
+import { perfometerCaptionLines } from '@/maps/map/composables/usePerfometer'
 import type { MetricUnitMap, ObjectState, PerfometerResult } from '@/maps/types/api'
 import { renderMetricValue } from '@/maps/utils/metricFormat'
 import { getMetric, hasFillScale, parsePerfData, utilColor, utilPercent } from '@/maps/utils/perf'
-import { stateColor } from '@/maps/utils/stateColors'
+import { stateColorVar } from '@/maps/utils/stateColors'
 
 const props = defineProps<{
   type: string // 'gauge' | 'bar' | 'trafficlight' | 'value'
   metric?: string | null
   state: ObjectState | undefined
   size: number
-  // CMK perfometer for the bound service. Supplies the fill percentage when
-  // the raw perf_data carries no scale (no max/crit and not a % unit) and the
-  // CMK-formatted value for the caption.
+  // CMK perfometer for the bound service: the reading while `metric` is unset,
+  // the fill where the raw perf_data carries no scale (no max/crit, no % unit),
+  // and the caption.
   perfometer?: PerfometerResult | null
   // Registered display units per raw perfdata label (CMK metric registry) —
   // the readout then matches the Checkmk GUI exactly.
@@ -28,11 +28,22 @@ const props = defineProps<{
 
 const metrics = computed(() => parsePerfData(props.state?.perf_data ?? ''))
 const m = computed(() => getMetric(metrics.value, props.metric))
+// Unconfigured, a gadget shows what Checkmk's Perf-O-Meter shows. The first
+// perfdata label would be arbitrary (CPU load lists load15 before load1), and
+// a multi-segment Perf-O-Meter reads the sum of its metrics, not any one of
+// them. A two-sided one (in/out, upper/lower) shows the side it fills; the
+// caption names both.
+const perfometerReading = computed(() =>
+  props.metric ? null : (props.perfometer?.sides.find((s) => s !== null) ?? null)
+)
 const pct = computed(() => (m.value ? utilPercent(m.value) : 0))
 // Fill is proportional (NagVis scales to crit when there's no max). Metrics
 // without any client-side scale fall back to the CMK perfometer percentage,
 // which is computed from the plugin's focus_range.
 const fillPct = computed(() => {
+  if (perfometerReading.value) {
+    return perfometerReading.value.pct
+  }
   if (m.value && !hasFillScale(m.value)) {
     return props.perfometer?.sides[0]?.pct ?? 0
   }
@@ -42,19 +53,32 @@ const fillPct = computed(() => {
 // CMK perfometer); otherwise fall back to the monitoring state colour.
 const hasScale = computed(() => (m.value ? hasFillScale(m.value) : false) || !!props.perfometer)
 const color = computed(() =>
-  hasScale.value ? utilColor(fillPct.value) : stateColor(props.state?.state)
+  hasScale.value ? utilColor(fillPct.value) : stateColorVar(props.state?.state)
 )
 
-const valueLabel = computed(() =>
-  m.value ? renderMetricValue(m.value.value, props.metricUnits?.[m.value.label], m.value.unit) : '—'
-)
+const valueLabel = computed(() => {
+  if (perfometerReading.value) {
+    return perfometerReading.value.label
+  }
+  return m.value
+    ? renderMetricValue(m.value.value, props.metricUnits?.[m.value.label], m.value.unit)
+    : '—'
+})
 
-// Primary readout inside the gauge/bar: the metric value rendered exactly like
-// Checkmk (vendored CMK formatter via the registry unit). A percent shows only
-// when the unit genuinely is % — never faked from a bare `max` such as CPU
-// load's core count. The CMK perfometer caption carries the titled context below.
+// Primary readout inside the gauge/bar, formatted as Checkmk formats it: the
+// Perf-O-Meter's label, or a configured metric through the registry unit. A
+// percent shows only when the unit genuinely is % — never faked from a bare
+// `max` such as CPU load's core count. The caption carries the titled context.
 const readout = computed(() => valueLabel.value)
-const caption = computed(() => (props.perfometer ? perfometerCaption(props.perfometer) : ''))
+// The caption's value line goes where the readout already says the same.
+const caption = computed(() => {
+  if (!props.perfometer) {
+    return null
+  }
+  const { title, value } = perfometerCaptionLines(props.perfometer)
+  const shownValue = value === readout.value ? '' : value
+  return title || shownValue ? { title, value: shownValue } : null
+})
 
 // The raw-value gadget scales on its own label since it never shows a percentage.
 const rawScale = computed(() => {
@@ -94,16 +118,17 @@ const isGreen = computed(() => ['UP', 'OK'].includes(monState.value))
 // Bulb style: lit = solid colored glow; unlit = slightly lighter than the dark housing + colored ring
 // The bulbs always sit inside the dark housing (rgba(0,0,0,0.55)), so contrast against
 // the housing — not the map background — is what matters here.
-function bulbStyle(active: boolean, rgb: string): Record<string, string> {
+function bulbStyle(active: boolean, state: string): Record<string, string> {
+  const color = stateColorVar(state)
   if (active) {
     return {
-      background: `rgb(${rgb})`,
-      boxShadow: `0 0 10px 2px rgba(${rgb},0.7)`
+      background: color,
+      boxShadow: `0 0 10px 2px color-mix(in srgb, ${color} 70%, transparent)`
     }
   }
   return {
     background: 'rgba(255,255,255,0.07)',
-    boxShadow: `inset 0 0 0 1.5px rgba(${rgb},0.55), inset 0 0 6px rgba(${rgb},0.2)`
+    boxShadow: `inset 0 0 0 1.5px color-mix(in srgb, ${color} 55%, transparent), inset 0 0 6px color-mix(in srgb, ${color} 20%, transparent)`
   }
 }
 
@@ -152,7 +177,7 @@ const valArc = computed(() => {
     <div
       class="maps-gadget-renderer__bulb"
       :style="{
-        ...bulbStyle(isRed, '239,68,68'),
+        ...bulbStyle(isRed, 'CRITICAL'),
         width: `${size * 0.55}px`,
         height: `${size * 0.55}px`
       }"
@@ -160,7 +185,7 @@ const valArc = computed(() => {
     <div
       class="maps-gadget-renderer__bulb"
       :style="{
-        ...bulbStyle(isAmber, '255,208,0'),
+        ...bulbStyle(isAmber, 'WARNING'),
         width: `${size * 0.55}px`,
         height: `${size * 0.55}px`
       }"
@@ -168,7 +193,7 @@ const valArc = computed(() => {
     <div
       class="maps-gadget-renderer__bulb"
       :style="{
-        ...bulbStyle(isGreen, '34,197,94'),
+        ...bulbStyle(isGreen, 'OK'),
         width: `${size * 0.55}px`,
         height: `${size * 0.55}px`
       }"
@@ -194,24 +219,22 @@ const valArc = computed(() => {
       />
       <span
         class="maps-gadget-renderer__pct"
-        style="
-          color: var(--maps-map-view-gadget-ink);
-          text-shadow: var(--maps-map-view-text-outline);
-        "
         :style="{ fontSize: `${Math.max(8, Math.round(size * 0.13 * readoutScale))}px` }"
         >{{ readout }}</span
       >
     </div>
-    <span
+    <div
       v-if="caption"
-      style="
-        color: var(--maps-map-view-gadget-ink-dim);
-        text-shadow: var(--maps-map-view-text-outline);
-      "
       class="maps-gadget-renderer__value maps-gadget-renderer__value--bar"
       :style="{ fontSize: `${Math.max(8, Math.round(size * 0.13))}px` }"
-      >{{ caption }}</span
     >
+      <span v-if="caption.title" class="maps-gadget-renderer__caption-line">{{
+        caption.title
+      }}</span>
+      <span v-if="caption.value" class="maps-gadget-renderer__caption-line">{{
+        caption.value
+      }}</span>
+    </div>
   </div>
 
   <!-- Raw value (NagVis rawNumbers): the metric reading as bare state-coloured text -->
@@ -219,7 +242,7 @@ const valArc = computed(() => {
     <span
       class="maps-gadget-renderer__raw"
       :style="{
-        color: stateColor(state?.state),
+        color: stateColorVar(state?.state),
         fontSize: `${Math.max(11, Math.round(size * 0.32 * rawScale))}px`
       }"
       >{{ valueLabel }}</span
@@ -228,8 +251,6 @@ const valArc = computed(() => {
 
   <div v-else class="maps-gadget-renderer__stack">
     <svg :width="size" :height="size * 0.65" :viewBox="`0 0 ${size} ${size * 0.65}`">
-      <!-- The track colour is a token, so it is styled rather than set as a
-           presentation attribute, which cannot resolve var(). -->
       <path
         class="maps-gadget-renderer__gauge-track"
         :d="bgArc"
@@ -262,16 +283,14 @@ const valArc = computed(() => {
         {{ readout }}
       </text>
     </svg>
-    <span
-      v-if="caption"
-      style="
-        color: var(--maps-map-view-gadget-ink-dim);
-        text-shadow: var(--maps-map-view-text-outline);
-      "
-      class="maps-gadget-renderer__value"
-      :style="{ fontSize: '9px', maxWidth: `${size}px` }"
-      >{{ caption }}</span
-    >
+    <div v-if="caption" class="maps-gadget-renderer__value" :style="{ maxWidth: `${size}px` }">
+      <span v-if="caption.title" class="maps-gadget-renderer__caption-line">{{
+        caption.title
+      }}</span>
+      <span v-if="caption.value" class="maps-gadget-renderer__caption-line">{{
+        caption.value
+      }}</span>
+    </div>
   </div>
 </template>
 
@@ -284,7 +303,7 @@ const valArc = computed(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  border-radius: var(--dimension-5);
+  border-radius: var(--border-radius);
   box-shadow: 0 0 0 1px currentcolor;
 }
 
@@ -322,24 +341,45 @@ const valArc = computed(() => {
   align-items: center;
   justify-content: center;
   font-weight: var(--font-weight-bold);
+  color: var(--maps-map-view-gadget-ink);
+  text-shadow: var(--maps-map-view-text-halo);
 }
 
 .maps-gadget-renderer__raw {
   font-weight: var(--font-weight-bold);
   line-height: 1.1;
   white-space: nowrap;
-  text-shadow: var(--maps-map-view-text-outline);
+  text-shadow: var(--maps-map-view-text-halo);
 }
 
+/* On the label plate, so the light ink reads on a light map too. */
 .maps-gadget-renderer__value {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+  max-width: 100%;
+  padding: 0 var(--dimension-2);
+  font-size: var(--font-size-small);
+  line-height: 1.2;
+  background: var(--maps-map-view-label-bg);
+  border-radius: var(--border-radius-half);
+}
+
+/* A gadget is narrower than its caption ("RAM usage 48.91 %"); on lines of
+   their own the title can be shortened and the value still shows. Colour and
+   halo sit on each line because the theme resets text-shadow everywhere. */
+.maps-gadget-renderer__caption-line {
   overflow: hidden;
+  color: var(--maps-map-view-gadget-ink-dim);
+  text-shadow: var(--maps-map-view-text-halo);
+  max-width: 100%;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .maps-gadget-renderer__value--bar {
   width: 100%;
-  text-align: center;
 }
 
 .maps-gadget-renderer__arc {

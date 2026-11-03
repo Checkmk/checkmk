@@ -13,6 +13,7 @@ from typing import override
 
 from botocore.client import BaseClient
 
+from .. import hosts
 from ..config import AWSConfig
 from .core import (
     AWSColleagueContents,
@@ -57,6 +58,11 @@ class SNSTopic:
         # name to avoid considering 2 topics with the same name in different regions as the same
         # topic
         return f"{self.topic_name} [{self.region}]"
+
+    @staticmethod
+    def topic_name_from_item_id(item_id: str) -> str:
+        # A topic name has no spaces, so the name ends before the first space.
+        return item_id.split(" ", 1)[0]
 
 
 class SNSTopicsFetcher:
@@ -166,7 +172,6 @@ class SNSLimits(AWSSectionLimits):
         topics: Sequence[Mapping] = raw_content.content
 
         self._add_limit(
-            "",
             AWSLimit(
                 key="topics_standard",
                 title="Standard Topics",
@@ -176,7 +181,6 @@ class SNSLimits(AWSSectionLimits):
             region=self._region,
         )
         self._add_limit(
-            "",
             AWSLimit(
                 key="topics_fifo",
                 title="FIFO Topics",
@@ -262,7 +266,7 @@ class SNSSummary(AWSSection):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", computed_content.content)]
+        return [AWSSectionResult(self._target_host(hosts.AccountScope()), computed_content.content)]
 
 
 class SNSSMS(AWSSectionCloudwatch):
@@ -319,13 +323,10 @@ class SNSSMS(AWSSectionCloudwatch):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", computed_content.content)]
+        return [AWSSectionResult(self._target_host(hosts.AccountScope()), computed_content.content)]
 
 
 class SNS(AWSSectionCloudwatch):
-    def __init__(self, client: BaseClient, region: str, config: AWSConfig):
-        super().__init__(client, region, config)
-
     @property
     @override
     def name(self) -> str:
@@ -388,4 +389,50 @@ class SNS(AWSSectionCloudwatch):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", computed_content.content)]
+        return [AWSSectionResult(self._target_host(hosts.AccountScope()), computed_content.content)]
+
+
+class SNSTopicCloudwatch(AWSSection):
+    @property
+    @override
+    def name(self) -> str:
+        return "sns_topic_cloudwatch"
+
+    @property
+    @override
+    def cache_interval(self) -> int:
+        return 300
+
+    @override
+    def _get_colleague_contents(self) -> AWSColleagueContents:
+        colleague = self._received_results.get("sns_cloudwatch")
+        if colleague and colleague.content:
+            return AWSColleagueContents(colleague.content, colleague.cache_timestamp)
+        return AWSColleagueContents([], 0.0)
+
+    @override
+    def get_live_data(self, *args: AWSColleagueContents) -> Sequence[Mapping[str, object]]:
+        (colleague_contents,) = args
+        rows: Sequence[Mapping[str, object]] = colleague_contents.content
+        return rows
+
+    @override
+    def _compute_content(
+        self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
+    ) -> AWSComputedContent:
+        # The label of each metric is the item ID of its topic.
+        rows_by_item_id: dict[str, list[Mapping[str, object]]] = {}
+        for row in raw_content.content:
+            rows_by_item_id.setdefault(row["Label"], []).append(row)
+        return AWSComputedContent(rows_by_item_id, raw_content.cache_timestamp)
+
+    @override
+    def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
+        return [
+            AWSSectionResult(
+                self._target_host(hosts.SNSTopic(SNSTopic.topic_name_from_item_id(item_id))),
+                rows,
+                {"cmk/aws/service": "sns"},
+            )
+            for item_id, rows in computed_content.content.items()
+        ]

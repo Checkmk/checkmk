@@ -9,7 +9,6 @@ import cmk.utils.paths
 from cmk.ccc import store
 from cmk.ccc.user import UserId
 from cmk.gui.sidebar import CustomSnapins
-from cmk.gui.utils.roles import UserPermissions
 
 
 def _write_user_custom_snapins(user_id: UserId) -> None:
@@ -57,6 +56,6 @@ def test_custom_snapins_load_skips_legacy_entries(with_user: tuple[UserId, str])
     user_id, _password = with_user
     _write_user_custom_snapins(user_id)
 
-    instances = CustomSnapins.load(UserPermissions({}, {}, {}, []))
+    instances = CustomSnapins.load()
 
     assert [instance.name() for instance in instances.instances()] == ["my_tactical_overview"]

@@ -112,7 +112,7 @@ def check_silverpeak(section: Section) -> CheckResult:
         yield Result(state=State.OK, summary="No active alarms.")
         return
 
-    alarms = section["alarms"]
+    alarms = section.get("alarms", [])
 
     cnt_ok = len([alarm for alarm in alarms if alarm["state"] == State.OK])
     cnt_warn = len([alarm for alarm in alarms if alarm["state"] == State.WARN])
@@ -123,6 +123,12 @@ def check_silverpeak(section: Section) -> CheckResult:
         state=State.OK,
         summary=f"{alarm_cnt} active alarms. OK: {cnt_ok}, WARN: {cnt_warn}, CRIT: {cnt_crit}, UNKNOWN: {cnt_unkn}",
     )
+
+    if not alarms:
+        yield Result(
+            state=State.UNKNOWN,
+            summary=f"Device reports {alarm_cnt} active alarms but delivered no alarm details",
+        )
 
     for elem in alarms:
         yield Result(

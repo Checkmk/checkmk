@@ -32,43 +32,20 @@ labels instead; a folder column cannot show it, and labels are the dimension tha
 """
 
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass
 from pathlib import PurePosixPath
 
-
-@dataclass(frozen=True, kw_only=True)
-class SetupFolders:
-    """What this domain needs from Setup: how its folders are titled, and who may open a host.
-
-    Two questions about titles rather than one mapping, because they do not cost the same: the
-    title of one folder is a lookup, while every title means walking the whole folder tree - which
-    the column, redrawn on a timer, has no business doing. They arrive as functions, so Setup
-    answers them off its own request-scoped caches and this domain holds nothing of Setup's to call
-    them on.
-
-    Whether the user may open a host in Setup decides whether a page links there at all: Setup
-    restricts its hosts by contact group, so a user allowed into Setup may still be refused the one
-    host a row shows. The folder path, when known, spares Setup the search for the host.
-    """
-
-    title_of: Callable[[str], str | None]
-    all_titles: Callable[[], Mapping[str, str]]
-    may_read_host: Callable[[str, str | None], bool]
+from cmk.gui.monitor.setup_folders import SetupFolders
 
 
 class MonitorFolders:
-    """How the monitoring pages name the folder a host is configured in.
+    """How the monitoring pages of one request name the folder a host is configured in.
 
-    Setup is injected as a source and asked when a caller wants to know rather than read out at
-    wiring time: its folders live for one request only, and one added meanwhile has to be found.
-    While no source is wired no folder has a title, which reads as no folder at all.
+    Setup is asked when a caller wants to know rather than read out up front, so a folder added
+    meanwhile is found. Without Setup no folder has a title, which reads as no folder at all.
     """
 
-    def __init__(self) -> None:
-        self._setup: SetupFolders | None = None
-
-    def use_setup_source(self, source: SetupFolders) -> None:
-        self._setup = source
+    def __init__(self, setup: SetupFolders | None = None) -> None:
+        self._setup = setup
 
     def title_of(self, path: str) -> str | None:
         """The title Setup shows for one folder, None when the user has no folder of that path."""
@@ -81,9 +58,6 @@ class MonitorFolders:
     def may_read_host(self, host_name: str, path: str | None) -> bool:
         """Whether the user may open the host in Setup, False while Setup is not wired."""
         return self._setup is not None and self._setup.may_read_host(host_name, path)
-
-
-monitor_folders = MonitorFolders()
 
 
 def folder_path_from_filename(filename: str) -> str | None:
@@ -100,40 +74,3 @@ def folder_title(filename: str, title_of: Callable[[str], str | None]) -> str:
     if (path := folder_path_from_filename(filename)) is None:
         return ""
     return title_of(path) or ""
-
-
-def folder_matching_filters(value: str, titles: Mapping[str, str]) -> list[str]:
-    """Livestatus filter lines selecting the hosts whose folder title carries ``value``.
-
-    A title is Setup's word, not Livestatus', so which folders carry the value is decided here and
-    Livestatus is only asked about their files.
-
-        >>> for line in folder_matching_filters("Munich", {"dc_muc": "Data center Munich"}):
-        ...     print(line)
-        Filter: filename = /wato/dc_muc/hosts.mk
-
-        >>> for line in folder_matching_filters("Rack", {"dc_muc": "Data center Munich"}):
-        ...     print(line)
-        Filter: state >= 0
-        Negate:
-    """
-    if not (files := folder_files_matching(value, titles)):
-        # No folder carries the value, so no host does. Every host has a state, hence not having
-        # one selects none - said as a filter, because saying nothing would select every host.
-        return ["Filter: state >= 0", "Negate:"]
-
-    lines = [f"Filter: filename = {file}" for file in files]
-    if len(files) > 1:
-        lines.append(f"Or: {len(files)}")
-    return lines
-
-
-def folder_files_matching(value: str, titles: Mapping[str, str]) -> list[str]:
-    """The files of the folders whose title carries ``value``, in a settled order."""
-    needle = value.lower()
-    return [_filename_of(path) for path, title in sorted(titles.items()) if needle in title.lower()]
-
-
-def _filename_of(path: str) -> str:
-    """The file Setup writes the hosts of the folder at ``path`` into."""
-    return f"/wato/{path}/hosts.mk" if path else "/wato/hosts.mk"

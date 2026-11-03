@@ -9,8 +9,8 @@ from collections.abc import Mapping, Sequence
 from typing import Literal
 
 import cmk.utils.render
+from cmk.graphing_engine import split_predict_prefix
 from cmk.gui.display_options import display_options
-from cmk.gui.graphing import split_predict_prefix
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html

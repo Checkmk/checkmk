@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -67,8 +67,14 @@ def parse_db2_bp_hitratios(string_table: StringTable) -> Section:
     return databases
 
 
+def _has_header(lines: Sequence[Sequence[str]]) -> bool:
+    return bool(lines) and lines[0][0] == "BP_NAME"
+
+
 def discover_db2_bp_hitratios(section: Section) -> DiscoveryResult:
     for key, values in section.items():
+        if not _has_header(values):
+            continue
         for field in values[1:]:
             if not field[0].startswith("IBMSYSTEMBP"):
                 yield Service(item=f"{key}:{field[0]}")
@@ -87,6 +93,11 @@ def check_db2_bp_hitratios(item: str, section: Section) -> CheckResult:
     db = section.get(db_instance)
     if not db:
         raise IgnoreResultsError("Login into database failed")
+
+    if not _has_header(db):
+        message = " ".join(word for line in db for word in line)
+        yield Result(state=State.UNKNOWN, summary=f"Cannot read buffer pool hit ratios: {message}")
+        return
 
     headers = db[0]
     for line in db[1:]:

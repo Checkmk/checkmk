@@ -19,6 +19,7 @@ rust_library(
     srcs = [
         "src/agent_receiver_api.rs",
         "src/certs.rs",
+        "src/certs/trusted_cas.rs",
         "src/cli.rs",
         "src/configuration.rs",
         "src/configuration/config.rs",
@@ -34,6 +35,7 @@ rust_library(
         "src/modes/delete_connection.rs",
         "src/modes/dump.rs",
         "src/modes/import_connection.rs",
+        "src/modes/install_agent.rs",
         "src/modes/pull.rs",
         "src/modes/push.rs",
         "src/modes/registration.rs",
@@ -50,7 +52,10 @@ rust_library(
         "src/updater.rs",
         "src/updater/backend.rs",
         "src/updater/connection.rs",
+        "src/updater/install.rs",
         "src/updater/platform.rs",
+        "src/updater/python_updater.rs",
+        "src/updater/source.rs",
         "src/updater/verification.rs",
         ":version.rs",  # invalidates the cache
     ],
@@ -277,6 +282,19 @@ rust_doc(
     crate = ":cmk-agent-ctl-lib",
     rustdoc_flags = ["--document-private-items"],
     tags = ["manual"],
+)
+
+# Drives "cmk-agent-ctl install-agent" against a stand-in package manager: the
+# refusals, the command lines of dpkg and rpm, and the removal of the package,
+# through the real binary and without installing anything. Linux only, as the
+# mode is.
+sh_test(
+    name = "smoke_install_agent",
+    size = "small",
+    srcs = ["tests/scripts/smoke-install-agent.sh"],
+    args = ["$(rootpath :cmk-agent-ctl)"],
+    data = [":cmk-agent-ctl"],
+    target_compatible_with = ["@platforms//os:linux"],
 )
 
 sh_library(

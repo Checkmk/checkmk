@@ -75,6 +75,13 @@ class HostRepository(Protocol):
         """Count the hosts matching the given criteria, searching `fields` alongside the name."""
         ...
 
+    def unreachable_sites(self) -> list[str]:
+        """The sites that could not be reached so far, sorted by ID.
+
+        Their hosts are missing from every result read, so ask after reading.
+        """
+        ...
+
 
 class EventRepository(Protocol):
     def fetch(

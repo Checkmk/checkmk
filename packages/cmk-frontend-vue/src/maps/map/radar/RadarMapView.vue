@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <!--
 A map that is nothing but the current state of whatever an operator's filter
-matches -- a host group, a service group, a tag -- laid out worst first.
+matches -- all hosts or services, or those of one group -- laid out worst first.
 
 Nothing is placed on a radar map, so there is no drawing of its own: the map is
 the state stream, so this view reads it directly rather than being handed the
@@ -214,7 +214,7 @@ const counts = computed(() => radarStateCounts(matching.value))
 .maps-radar-map-view__empty-title {
   font-size: var(--font-size-large);
   line-height: 20px;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .maps-radar-map-view__empty-hint {
@@ -247,13 +247,13 @@ const counts = computed(() => radarStateCounts(matching.value))
 .maps-radar-map-view__tally {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--dimension-4);
 
   /* The state colours are background colours: on the neutral stage WARNING and
      OK are unreadable as ink in the light theme, so the tally mixes far towards
      the theme's font colour and leaves the hue to the dot beside it. */
   color: color-mix(in srgb, var(--maps-radar-tally-color) 40%, var(--font-color));
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 .maps-radar-map-view__dot {
@@ -265,7 +265,7 @@ const counts = computed(() => radarStateCounts(matching.value))
 
 .maps-radar-map-view__grid {
   display: grid;
-  gap: var(--spacing);
+  gap: var(--dimension-5);
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
 }
 

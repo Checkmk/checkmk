@@ -98,6 +98,7 @@ from cmk.gui.watolib.config_variable_groups import (
     ConfigVariableGroupDeveloperTools,
     ConfigVariableGroupSiteManagement,
     ConfigVariableGroupUserInterface,
+    ConfigVariableGroupUserManagement,
     ConfigVariableGroupWATO,
 )
 from cmk.gui.watolib.groups_io import (
@@ -377,7 +378,7 @@ def _fs_single_choice_elements[T](
     return [
         SingleChoiceElementExtended(
             name=name,
-            title=Title(choice_title),  # astrein: disable=localization-checker
+            title=Title(choice_title),  # astrein: disable=localization
         )
         for name, choice_title in choices
     ]
@@ -638,8 +639,8 @@ def _form_spec_profile(context: GlobalSettingsContext) -> SingleChoiceExtended[b
             "Retention is controlled by the <b>Profiling options</b> setting in Developer Tools. "
             "Profiles are also included in Support Diagnostics dumps when the "
             "Performance Profiles option is selected. "
-            "In addition, <tt>multisite.profile</tt> and <tt>multisite.cachegrind</tt> "
-            "are written to <tt>%(var_dir)s</tt> for use with external tools like KCachegrind. "
+            "In addition, the profile of the latest request is written to "
+            "<tt>%(var_dir)s/multisite.profile</tt>. "
             "When enabled by request, the profiling mode is enabled by providing the HTTP "
             "variable <tt>_profile</tt> in the query parameters."
         )
@@ -965,10 +966,10 @@ ConfigVariableStartURL = ConfigVariable(
     primary_domain=ConfigDomainGUI,
     ident="start_url",
     form_spec=lambda context: fs.String(  # noqa: ARG005
-        title=Title("Start URL to display in main frame"),
+        title=Title("Start URL"),
         help_text=Help(
             "When you point your browser to the Checkmk GUI, usually the dashboard "
-            "is shown in the main (right) frame. You can replace this with any other "
+            "is shown. You can replace this with any other "
             "URL you like here."
         ),
         field_size=fs.FieldSize.LARGE,
@@ -1132,7 +1133,7 @@ ConfigVariableVirtualHostTrees = ConfigVariable(
                             elements=lambda: [
                                 SingleChoiceElementExtended(
                                     name=name,
-                                    # astrein: disable=localization-checker
+                                    # astrein: disable=localization
                                     title=Title(choice_title),
                                 )
                                 for name, choice_title in _virtual_host_tree_choices()
@@ -1537,7 +1538,7 @@ ConfigVariableUserLocalizations = ConfigVariable(
                             elements={
                                 language: fs.DictElement(
                                     parameter_form=fs.String(
-                                        # astrein: disable=localization-checker
+                                        # astrein: disable=localization
                                         title=Title(alias),
                                     ),
                                 )
@@ -1927,7 +1928,7 @@ ConfigVariableBuiltinIconVisibility = ConfigVariable(
                             (
                                 SingleChoiceElementExtended(
                                     name=id_,
-                                    # astrein: disable=localization-checker
+                                    # astrein: disable=localization
                                     title=Title(class_.title),
                                 )
                                 for id_, class_ in icon_and_action_registry.items()
@@ -2102,7 +2103,7 @@ ConfigVariableDefaultTemperatureUnit = ConfigVariable(
 ConfigVariableTrustedCertificateAuthorities = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
     primary_domain=ConfigDomainCACertificates,
-    hints=lambda: [
+    hints=lambda _context: [
         ConfigVariableHint(
             html.HTML.without_escaping(
                 _(
@@ -2167,6 +2168,8 @@ ConfigVariableTrustedCertificateAuthorities = ConfigVariable(
         },
     ),
 )
+
+ConfigVariableTrustedCertificateAuthorities.add_config_domain_affected_by_change(ConfigDomainCore)
 
 ConfigVariableSiteSubjectAlternativeNames = ConfigVariable(
     group=ConfigVariableGroupSiteManagement,
@@ -2441,14 +2444,6 @@ ConfigVariableWATOIconCategories = ConfigVariable(
 #   +----------------------------------------------------------------------+
 #   | Global settings for users and LDAP connector.                        |
 #   '----------------------------------------------------------------------'
-
-
-ConfigVariableGroupUserManagement = ConfigVariableGroup(
-    title=_l("User management"),
-    sort_index=40,
-    icon=IconNames.users,
-    description=_l("Configures user/authentication settings"),
-)
 
 
 ConfigVariableDefaultDynamicVisualsPermission = ConfigVariable(
@@ -2804,7 +2799,7 @@ def _role_selection() -> MultipleChoiceExtended:
         elements=[
             MultipleChoiceElementExtended(
                 name=ident,
-                title=Title(alias),  # astrein: disable=localization-checker
+                title=Title(alias),  # astrein: disable=localization
             )
             for ident, alias in _list_roles()
         ],
@@ -2819,7 +2814,7 @@ def _contactgroup_selection() -> MultipleChoiceExtended:
         elements=[
             MultipleChoiceElementExtended(
                 name=ident,
-                title=Title(alias),  # astrein: disable=localization-checker
+                title=Title(alias),  # astrein: disable=localization
             )
             for ident, alias in _list_contactgroups()
         ],
@@ -3094,6 +3089,9 @@ def use_new_descriptions_for_form_spec(context: GlobalSettingsContext) -> fs.Dic
             "statgrab_mem": use_new_service_name(Title("Statgrab memory usage")),
             "tplink_mem": use_new_service_name(Title("TP Link: Used memory via SNMP")),
             "ups_bat_temp": use_new_service_name(Title("Generic UPS Device: Temperature sensor")),
+            "ups_eaton_environment": use_new_service_name(
+                Title("Eaton UPS: Temperature and humidity sensors")
+            ),
             "vms_diskstat_df": use_new_service_name(Title("Disk space on OpenVMS")),
             "wmic_process": use_new_service_name(
                 Title("Resource consumption of Windows processes")
@@ -5830,7 +5828,6 @@ def _valuespec_agent_ports() -> Integer:
         minvalue=1,
         maxvalue=65535,
         default_value=6556,
-        title=_("TCP port for connection to Checkmk agent"),
         help=_(
             "This variable allows to specify the TCP port to "
             "be used to connect to the agent on a per-host-basis. "
@@ -5838,10 +5835,33 @@ def _valuespec_agent_ports() -> Integer:
     )
 
 
+def _valuespec_agent_ports_migrated() -> Migrate[dict[str, Any]]:
+    # All keys are mandatory: merging the matching rules then yields the first matching rule.
+    return Migrate(
+        valuespec=Dictionary(
+            title=_("TCP port for connection to Checkmk agent"),
+            optional_keys=False,
+            elements=[("port", _valuespec_agent_ports())],
+        ),
+        migrate=_migrate_agent_ports,
+    )
+
+
+def _migrate_agent_ports(value: object) -> dict[str, object]:
+    match value:
+        case dict():
+            return value
+        case int():
+            return {"port": value}
+        case _:
+            raise ValueError(f"Unexpected value: {value!r}")
+
+
 AgentPorts = HostRulespec(
     group=RulespecGroupAgentCMKAgent,
+    match_type="dict",
     name="agent_ports",
-    valuespec=_valuespec_agent_ports,
+    valuespec=_valuespec_agent_ports_migrated,
 )
 
 
@@ -5905,27 +5925,28 @@ EncryptionHandling = HostRulespec(
 )
 
 
-def _migrate_encryption_settings(p: Mapping[str, Any]) -> str | None:
-    """
-    >>> _migrate_encryption_settings({}) is None
-    True
-    >>> _migrate_encryption_settings({'use_realtime': 'enforce'}) is None
-    True
-    >>> _migrate_encryption_settings({'passphrase': 'this-must-be-for-rtc-only'}) is None
-    True
-    >>> _migrate_encryption_settings({'passphrase': 'this-is-also-for-the-agent', 'use_regular': 'disable', 'use_realtime': 'enforce'})
-    'this-is-also-for-the-agent'
+def _valuespec_agent_encryption() -> Alternative:
+    return Alternative(
+        title=_("Symmetric encryption (Linux, Solaris, Windows)"),
+        elements=[
+            FixedValue(
+                title="Do not apply symmetric encryption",
+                value=None,
+                totext="",
+            ),
+            PasswordSpec(
+                title="Configure shared secret and apply symmetric encryption",
+                pwlen=16,
+                allow_empty=False,
+            ),
+        ],
+    )
 
-    """
-    if p is None or isinstance(p, str):  # type: ignore[redundant-expr, unreachable]
-        return p  # type: ignore[unreachable]
-    return p["passphrase"] if "use_regular" in p else None
 
-
-def _valuespec_agent_encryption() -> Migrate:
+def _valuespec_agent_encryption_migrated() -> Migrate[dict[str, Any]]:
+    # All keys are mandatory: merging the matching rules then yields the first matching rule.
     return Migrate(
-        migrate=_migrate_encryption_settings,
-        valuespec=Alternative(
+        valuespec=Dictionary(
             title=_("Symmetric encryption (Linux, Solaris, Windows)"),
             help=_(
                 "If you cannot use the Agent Controllers encrypted TLS connections,"
@@ -5933,31 +5954,49 @@ def _valuespec_agent_encryption() -> Migrate:
                 " Note that using this encryption in addition to the TLS encryption is not only useless,"
                 " but also prevents the controller from compressing the data for transport."
             ),
-            elements=[
-                FixedValue(
-                    title="Do not apply symmetric encryption",
-                    value=None,
-                    totext="",
-                ),
-                PasswordSpec(
-                    title="Configure shared secret and apply symmetric encryption",
-                    pwlen=16,
-                    allow_empty=False,
-                ),
-            ],
+            optional_keys=False,
+            elements=[("passphrase", _valuespec_agent_encryption())],
         ),
+        migrate=_migrate_agent_encryption,
     )
+
+
+def _migrate_agent_encryption(value: object) -> dict[str, object]:
+    match value:
+        case dict():
+            return value
+        case str() | None:
+            return {"passphrase": value}
+        case False:
+            # Agents baked before stored False as the default.
+            return {"passphrase": None}
+        case _:
+            raise ValueError(f"Unexpected value: {value!r}")
 
 
 AgentEncryption = HostRulespec(
     group=RulespecGroupAgentCMKAgent,
+    match_type="dict",
     name="agent_encryption",
-    valuespec=_valuespec_agent_encryption,
+    valuespec=_valuespec_agent_encryption_migrated,
 )
 
 
 def _common_check_mk_exit_status_elements() -> list[tuple[str, DropdownChoice[int]]]:
     return [
+        (
+            "warnings",
+            MonitoringState(
+                default_value=1,
+                title=_("State in case the data source reports warnings"),
+                help=_(
+                    "Data sources can report problems that did not stop them from "
+                    "producing data, for example a single endpoint the configured "
+                    "account is not allowed to access. Warnings result in the state "
+                    "configured here. Informational messages are always OK."
+                ),
+            ),
+        ),
         (
             "connection",
             MonitoringState(default_value=2, title=_("State in case of connection problems")),
@@ -5973,25 +6012,34 @@ def _common_check_mk_exit_status_elements() -> list[tuple[str, DropdownChoice[in
     ]
 
 
-def _factory_default_check_mk_exit_status() -> dict[str, int]:
+def _factory_default_check_mk_exit_status() -> dict[str, dict[str, int]]:
     return {
-        "connection": 2,
-        "wrong_version": 1,
-        "exception": 3,
-        "missing_sections": 1,
+        "overall": {
+            "warnings": 1,
+            "connection": 2,
+            "timeout": 2,
+            "exception": 3,
+            "missing_sections": 1,
+        },
     }
 
 
-def _drop_empty_output(params: dict[str, int]) -> dict[str, int]:
-    return {k: v for k, v in params.items() if k != "empty_output"}
+# The keys became mandatory in 3.0.0, fill in the former defaults.
+def _migrate_individual(params: Mapping[str, object]) -> dict[str, object]:
+    return {"warnings": 1, "connection": 2, "timeout": 2, "exception": 3, **params}
+
+
+def _migrate_overall(params: Mapping[str, object]) -> dict[str, object]:
+    return {"missing_sections": 1, **_migrate_individual(params)}
 
 
 def _individual_spec(title: str) -> Migrate:
     return Migrate(
-        migrate=_drop_empty_output,
+        migrate=_migrate_individual,
         valuespec=Dictionary(
             title=title,
             elements=_common_check_mk_exit_status_elements(),
+            required_keys=["warnings", "connection", "timeout", "exception"],
         ),
     )
 
@@ -6004,7 +6052,12 @@ def _valuespec_check_mk_exit_status() -> Dictionary:
             "<i>Check_MK Discovery</i> and <i>Check_MK HW/SW inventory</i> in case of various "
             "error situations. One use case is the monitoring of hosts that are not always up. "
             "You can have Checkmk in an OK status here if the host is not reachable. Note: the "
-            "<i>Timeout</i> setting only works when using the Checkmk Micro Core."
+            "<i>Timeout</i> setting only works when using the Checkmk Micro Core. "
+            "While the state is not OK, the automatic service discovery skips the host, as the "
+            "data is probably incomplete. If you set a state to OK, the discovery only uses the "
+            "data of the remaining data sources, so the services of the failing data source may "
+            "be considered vanished. A special agent that exits with an error is treated as a "
+            "connection problem."
         ),
         elements=[
             (
@@ -6046,8 +6099,15 @@ def _valuespec_check_mk_exit_status() -> Dictionary:
                                 ),
                             ),
                         ],
+                        required_keys=[
+                            "warnings",
+                            "connection",
+                            "timeout",
+                            "exception",
+                            "missing_sections",
+                        ],
                     ),
-                    migrate=_drop_empty_output,
+                    migrate=_migrate_overall,
                 ),
             ),
             (
@@ -6154,39 +6214,57 @@ CheckMkAgentTargetVersions = HostRulespec(
 )
 
 
-def _valuespec_agent_config_only_from() -> ListOfStrings:
-    return ListOfStrings(
-        valuespec=IPNetwork(),
-        title=_("Allowed agent access via IP address (Linux, Windows)"),
-        help=_(
-            "This rule allows you to restrict the access to the "
-            "Checkmk agent to certain IP addresses and networks. "
-            "Usually you configure just the IP addresses of your "
-            "Checkmk servers here. You can enter either IP addresses "
-            "in the form <tt>1.2.3.4</tt> or networks in the style "
-            "<tt>1.2.0.0/16</tt>. If you leave this configuration empty "
-            "or create no rule then <b>all</b> addresses are allowed to "
-            "access the agent. IPv6 addresses and networks are also allowed."
-        )
-        + _(
-            "If you are using the Agent Bakery, the configuration will be "
-            "used for restricting network access to the baked agents. On Linux, a systemd "
-            "installation >= systemd 235 or an xinetd installation is needed. Please note "
-            "that the agent will be inaccessible if a Linux host doesn't meet these prerequisites, "
-            "i.e. an activation of a service that can't realize the IP restriction will be "
-            'prevented on agent package installation, see "Checkmk agent network service (Linux)" '
-            "rule set. Even if you don't use the Bakery, the configured IP address "
-            "restrictions of a host will be verified against the allowed "
-            "IP addresses reported by the agent. This is done during "
-            "monitoring by the 'Check_MK' service."
+def _valuespec_agent_config_only_from_migrated() -> Migrate[dict[str, Any]]:
+    # All keys are mandatory: merging the matching rules then yields the first matching rule.
+    return Migrate(
+        valuespec=Dictionary(
+            title=_("Allowed agent access via IP address (Linux, Windows)"),
+            optional_keys=False,
+            elements=[
+                ("allowed_addresses", ListOfStrings(valuespec=IPNetwork())),
+            ],
+            help=_(
+                "This rule allows you to restrict the access to the "
+                "Checkmk agent to certain IP addresses and networks. "
+                "Usually you configure just the IP addresses of your "
+                "Checkmk servers here. You can enter either IP addresses "
+                "in the form <tt>1.2.3.4</tt> or networks in the style "
+                "<tt>1.2.0.0/16</tt>. If you leave this configuration empty "
+                "or create no rule then <b>all</b> addresses are allowed to "
+                "access the agent. IPv6 addresses and networks are also allowed."
+            )
+            + _(
+                "If you are using the Agent Bakery, the configuration will be "
+                "used for restricting network access to the baked agents. On Linux, a systemd "
+                "installation >= systemd 235 or an xinetd installation is needed. Please note "
+                "that the agent will be inaccessible if a Linux host doesn't meet these prerequisites, "
+                "i.e. an activation of a service that can't realize the IP restriction will be "
+                'prevented on agent package installation, see "Checkmk agent network service (Linux)" '
+                "rule set. Even if you don't use the Bakery, the configured IP address "
+                "restrictions of a host will be verified against the allowed "
+                "IP addresses reported by the agent. This is done during "
+                "monitoring by the 'Check_MK' service."
+            ),
         ),
+        migrate=_migrate_only_from,
     )
+
+
+def _migrate_only_from(value: object) -> dict[str, object]:
+    match value:
+        case dict():
+            return value
+        case list():
+            return {"allowed_addresses": value}
+        case _:
+            raise ValueError(f"Unexpected value: {value!r}")
 
 
 AgentConfigOnlyFrom = HostRulespec(
     group=RulespecGroupMonitoringAgentsGenericOptions,
+    match_type="dict",
     name=RuleGroup.AgentConfig("only_from"),
-    valuespec=_valuespec_agent_config_only_from,
+    valuespec=_valuespec_agent_config_only_from_migrated,
 )
 
 
@@ -6275,6 +6353,9 @@ def _valuespec_snmp_fetch_interval() -> Tuple:
             "This is especially important for counter-based checks such as the interface checks. A "
             "check interval which is shorter then the interval for fetching the data might result "
             "in misleading output (e.g. far too large interface throughputs) in such cases."
+            "<br><br>"
+            "All matching rules apply. If several of them list the same section, the first "
+            "one decides its fetch interval."
         ),
         elements=[
             DualListChoice(
@@ -6303,6 +6384,7 @@ def _valuespec_snmp_fetch_interval() -> Tuple:
 
 SnmpCheckInterval = HostRulespec(
     group=RulespecGroupAgentSNMP,
+    match_type="all",
     name="snmp_check_interval",  # legacy name, kept for compatibility
     valuespec=_valuespec_snmp_fetch_interval,
 )
@@ -6323,6 +6405,9 @@ def _valuespec_snmp_config_agent_sections() -> Dictionary:
             "of 32-bit network interface counters (section <tt>if</tt>, superseded by "
             "<tt>if64</tt>) in case the 64-bit counters reported by the device are useless "
             "due to broken firmware."
+            "<br><br>"
+            "All matching rules apply. If several of them list the same section, the first "
+            "one decides whether the section is disabled or enabled."
         ),
         elements=[
             (
@@ -6365,6 +6450,7 @@ def _validate_snmp_config_agent_sections(value: Mapping[str, Any], varprefix: st
 
 SnmpExcludeSections = HostRulespec(
     group=RulespecGroupAgentSNMP,
+    match_type="all",
     name="snmp_exclude_sections",
     valuespec=_valuespec_snmp_config_agent_sections,
 )
@@ -6398,6 +6484,9 @@ def _valuespec_snmpv3_contexts() -> Tuple:
             "The default context is only queried if it is selected here. "
             "If several contexts return the same OIDs, only the data of the first context "
             "is used."
+            "<br><br>"
+            "All matching rules apply. For each section, the first rule that names it or "
+            "applies to all SNMP sections is used."
         ),
         elements=[
             DropdownChoice(
@@ -6442,6 +6531,7 @@ def _valuespec_snmpv3_contexts() -> Tuple:
 
 Snmpv3Contexts = HostRulespec(
     group=RulespecGroupAgentSNMP,
+    match_type="all",
     name="snmpv3_contexts",
     valuespec=_valuespec_snmpv3_contexts,
 )

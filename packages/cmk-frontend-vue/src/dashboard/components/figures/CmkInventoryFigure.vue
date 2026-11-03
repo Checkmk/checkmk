@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
+import ContextualLinkArrow from '@/dashboard/components/ContextualLinkArrow.vue'
 import ContextualLinkTrigger from '@/dashboard/components/ContextualLinkTrigger.vue'
 import type { InventoryAttribute, VisualContext } from '@/dashboard/types/widget'
 
@@ -33,13 +34,17 @@ const fontSizePx = computed(() => `${valueFontSize(props.width, props.height)}px
     :viewBox="`0 0 ${width} ${height}`"
   >
     <ContextualLinkTrigger
+      v-slot="{ several }"
       :links="value.links"
       :link-properties="value.link_properties"
       :filters="filters"
     >
       <foreignObject :width="width" :height="height">
         <div class="db-cmk-inventory-figure__box">
-          <div class="db-cmk-inventory-figure__value">{{ value.value ?? _t('n/a') }}</div>
+          <div class="db-cmk-inventory-figure__value">
+            <span class="db-contextual-link-anchor__text">{{ value.value ?? _t('n/a') }}</span>
+            <ContextualLinkArrow v-if="several" />
+          </div>
         </div>
       </foreignObject>
     </ContextualLinkTrigger>
@@ -63,7 +68,6 @@ const fontSizePx = computed(() => `${valueFontSize(props.width, props.height)}px
   width: 100%;
   color: var(--font-color);
   font-size: v-bind(fontSizePx);
-  font-weight: var(--font-weight-bold);
   text-align: center;
   overflow-wrap: break-word;
 }

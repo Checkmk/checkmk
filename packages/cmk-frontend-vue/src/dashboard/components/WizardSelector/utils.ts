@@ -6,9 +6,10 @@
 import { type DashboardWidgetWorkflowKey } from '@/dashboard/components/WidgetWorkflow/WidgetWorkflowTypes.ts'
 import type { WidgetContentType } from '@/dashboard/types/widget.ts'
 
+// null: the widget has no editor yet
 export function widgetTypeToSelectorMatcher(
   widgetContentType: WidgetContentType
-): DashboardWidgetWorkflowKey {
+): DashboardWidgetWorkflowKey | null {
   switch (widgetContentType) {
     case 'combined_graph':
     case 'performance_graph':
@@ -25,9 +26,14 @@ export function widgetTypeToSelectorMatcher(
       return 'link_custom_graph'
     }
 
+    // all embedded custom graph widgets are edited in the "new" workflow
+    case 'embedded_custom_graph': {
+      return 'new_custom_graph'
+    }
+
     case 'linked_view':
     case 'embedded_view': {
-      return 'views'
+      return 'classic_view'
     }
 
     case 'host_stats':
@@ -71,11 +77,8 @@ export function widgetTypeToSelectorMatcher(
       return 'ntop'
     }
 
-    case 'network_flow_top_table':
-    case 'network_flow_donut':
-    case 'network_flow_kpi_stat_card':
-    case 'network_flow_trend_chart': {
-      return 'network_flow'
+    case 'monitoring_table': {
+      return 'view'
     }
 
     default: {
@@ -87,10 +90,10 @@ export function widgetTypeToSelectorMatcher(
 }
 
 export function wizardSlideInSize(wizard: string): 'small' | 'medium' | 'large' {
-  if (['other', 'ntop', 'network_flow'].includes(wizard)) {
+  if (['other', 'ntop'].includes(wizard)) {
     return 'small'
   }
-  if (wizard === 'views') {
+  if (['view', 'classic_view', 'new_custom_graph'].includes(wizard)) {
     return 'large'
   }
   return 'medium'

@@ -1,0 +1,15 @@
+# Direct requirements of the Windows agent's pytest suites (agents/wnx/tests:
+# regression and integration) where they run on real Windows: the harness
+# Python of their QEMU tiers, :python_test_cab. Not shipped to customers.
+#
+# Keep this list unpinned: the resolved windows-test-cab-requirements.txt is the
+# pin, regenerated with
+# `bazel run //agents/modules/windows:windows_test_cab_requirements`. It is
+# resolved with //:requirements.txt as constraints, so packages the repo lock
+# has stay at its versions (the ones the suites are type-checked against).
+
+pytest
+pyyaml
+pywin32  # win32evtlog (test_section_eventlog.py)
+# pip_offline installs the closure with the pinned pip from its own wheel.
+pip

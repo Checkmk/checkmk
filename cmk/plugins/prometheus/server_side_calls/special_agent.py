@@ -134,20 +134,22 @@ def _commands_function(
         args.append("--disable-cert-verification")
     # the authentication parameters must come last because they are parsed by subparsers that
     # consume all remaining arguments (and throw errors if they don't recognize them)
-    match params.auth_basic:  # type: ignore[exhaustive-match]
-        case ("auth_login", AuthLogin(username=username, password=password)):  # type: ignore[unreachable]
+    match params.auth_basic:
+        case None:
+            pass
+        case ("auth_login", auth_login):
             args += [
                 "auth_login",
                 "--username",
-                username,
+                auth_login.username,
                 "--password-id",
-                password,
+                auth_login.password,
             ]
-        case ("auth_token", AuthToken(token=token)):  # type: ignore[unreachable]
+        case ("auth_token", auth_token):
             args += [
                 "auth_token",
                 "--token-id",
-                token,
+                auth_token.token,
             ]
     yield SpecialAgentCommand(command_arguments=args, stdin=stdin)
 

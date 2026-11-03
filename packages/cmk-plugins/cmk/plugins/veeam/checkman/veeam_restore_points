@@ -6,13 +6,14 @@ distribution: check_mk
 description:
  This check monitors the restore points of a machine (e.g. a virtual
  machine) backed up by a Veeam Backup & Replication server, collected via
- the Veeam special agent. It reports the number of restore points, the age
- of the newest one, the platform, the object type, the type of the newest
- restore point and the malware status.
+ the Veeam special agent. It reports the age of the last restore point, the
+ number of restore points, the platform, the object type, the type of the
+ last restore point and the malware status.
 
  This check is {CRIT} if the object has no restore point at all, since it
- cannot be recovered. {WARN} and {CRIT} levels can be set for the age of the
- newest restore point (default: 30 and 48 hours).
+ cannot be recovered. It is {UNKNOWN} if the last restore point is not
+ found. {WARN} and {CRIT} levels can be set for the age of the last restore
+ point (default: 30 and 48 hours).
 
  The malware status is the worst one across all restore points of the
  object: {OK} if clean or informative, {WARN} if suspicious, {CRIT} if

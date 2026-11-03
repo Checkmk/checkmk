@@ -16,10 +16,14 @@ from cmk.gui import main_modules
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.legacy_plugins import remove_failed_plugin
 from cmk.mkp_tool import Manifest, PackageID
-from cmk.update_config.lib import ExpiryVersion
-from cmk.update_config.plugins.pre_actions.utils import (
+from cmk.update_config.internal import (
     ConflictMode,
     continue_per_users_choice,
+    ExpiryVersion,
+    PreUpdateAction,
+    Resume,
+)
+from cmk.update_config.plugins.pre_actions.utils import (
     disable_incomp_mkp,
     error_message_incomp_local_file,
     error_message_incomp_package,
@@ -28,9 +32,8 @@ from cmk.update_config.plugins.pre_actions.utils import (
     is_applicable_mkp,
     make_path_config,
     PACKAGE_STORE,
-    Resume,
 )
-from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
+from cmk.update_config.registry import pre_update_action_registry
 
 
 def _get_package_manifest(package_map: Mapping[Path, Manifest], rel_path: str) -> Manifest | None:

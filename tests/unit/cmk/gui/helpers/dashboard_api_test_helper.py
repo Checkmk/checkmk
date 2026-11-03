@@ -5,6 +5,7 @@
 
 """Shared helpers for dashboard API tests across editions."""
 
+import copy
 import datetime as dt
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
@@ -14,7 +15,9 @@ from http import HTTPStatus
 import pytest
 
 from cmk.ccc.user import UserId
+from cmk.gui.config import Config
 from cmk.gui.dashboard.store import DashboardStore, get_all_dashboards, save_all_dashboards
+from cmk.gui.role_types import BuiltInUserRole, CustomUserRole
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
@@ -51,6 +54,18 @@ def create_dashboard_payload(
         "widgets": widgets,
         "layout": {"type": "relative_grid"},
     }
+
+
+def admin_roles_without(
+    config: Config, *permissions: str
+) -> dict[str, BuiltInUserRole | CustomUserRole]:
+    """The configured roles, with the given permissions revoked from the admin role."""
+    roles = copy.deepcopy(config.roles)
+    admin_permissions = dict(roles["admin"].get("permissions", {}))
+    for permission in permissions:
+        admin_permissions[permission] = False
+    roles["admin"]["permissions"] = admin_permissions
+    return roles
 
 
 def create_widget(content: dict[str, object]) -> dict[str, object]:
@@ -183,6 +198,33 @@ class TestSingleTimeseriesContent:
             },
         )
 
+    @pytest.mark.usefixtures("mock_livestatus")
+    @pytest.mark.parametrize(
+        "timerange",
+        ["dashboard", {"type": "predefined", "value": "last_25_hours"}],
+    )
+    def test_reads_back_the_timerange(
+        self, clients: ClientRegistry, timerange: str | dict[str, str]
+    ) -> None:
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
+            create_dashboard_payload(
+                "test_dashboard",
+                {
+                    "test_widget": create_widget(
+                        {
+                            "type": "single_timeseries",
+                            "timerange": timerange,
+                            "graph_render_options": {},
+                            "metric": "availability",
+                            "color": "#ABCDEF",
+                        }
+                    )
+                },
+            )
+        )
+        widget = next(iter(resp.json["extensions"]["widgets"].values()))
+        assert widget["content"]["timerange"] == timerange
+
 
 class TestCustomGraphContent:
     def test_create(self, clients: ClientRegistry) -> None:
@@ -193,6 +235,40 @@ class TestCustomGraphContent:
                 "timerange": {"type": "predefined", "value": "last_25_hours"},
                 "graph_render_options": {},
                 "custom_graph": "???",
+            },
+        )
+
+
+class TestEmbeddedCustomGraphContent:
+    def test_create(self, clients: ClientRegistry) -> None:
+        check_widget_create(
+            clients,
+            {
+                "type": "embedded_custom_graph",
+                "timerange": {"type": "predefined", "value": "last_25_hours"},
+                "graph_render_options": {},
+                "definition": {
+                    "graph_options": {
+                        "unit": {"type": "first_entry_with_unit"},
+                        "explicit_vertical_range": {"type": "auto"},
+                        "omit_zero_metrics": False,
+                    },
+                    "data_sources": [
+                        {
+                            "type": "rrd_metric",
+                            "id": "A",
+                            "title": "$DEFAULT_TITLE$",
+                            "line_type": "line",
+                            "mirrored": False,
+                            "visible": True,
+                            "color": "#111111",
+                            "host_name": "heute",
+                            "service_name": "CPU load",
+                            "metric_name": "load1",
+                            "consolidation": "avg",
+                        }
+                    ],
+                },
             },
         )
 
@@ -262,6 +338,103 @@ class TestAverageScatterplotContent:
                 "average_color": "default",
                 "median_color": "default",
             },
+        )
+
+    @pytest.mark.parametrize(
+        "time_range",
+        ["dashboard", {"type": "predefined", "value": "last_25_hours"}],
+    )
+    def test_reads_back_the_time_range(
+        self, clients: ClientRegistry, time_range: str | dict[str, str]
+    ) -> None:
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
+            create_dashboard_payload(
+                "test_dashboard",
+                {
+                    "test_widget": create_widget(
+                        {
+                            "type": "average_scatterplot",
+                            "time_range": time_range,
+                            "metric": "availability",
+                            "metric_color": "default",
+                            "average_color": "default",
+                            "median_color": "default",
+                        }
+                    )
+                },
+            )
+        )
+        widget = next(iter(resp.json["extensions"]["widgets"].values()))
+        assert widget["content"]["time_range"] == time_range
+
+    def test_keeps_the_legend(self, clients: ClientRegistry) -> None:
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
+            create_dashboard_payload(
+                "test_dashboard",
+                {
+                    "test_widget": create_widget(
+                        {
+                            "type": "average_scatterplot",
+                            "time_range": {"type": "predefined", "value": "last_25_hours"},
+                            "metric": "availability",
+                            "metric_color": "default",
+                            "average_color": "default",
+                            "median_color": "default",
+                            "show_legend": True,
+                            "legend_style": "extended",
+                        }
+                    )
+                },
+            )
+        )
+        widget = next(iter(resp.json["extensions"]["widgets"].values()))
+        assert widget["content"]["show_legend"] is True
+        assert widget["content"]["legend_style"] == "extended"
+
+    def test_leaves_an_omitted_legend_out(self, clients: ClientRegistry) -> None:
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
+            create_dashboard_payload(
+                "test_dashboard",
+                {
+                    "test_widget": create_widget(
+                        {
+                            "type": "average_scatterplot",
+                            "time_range": {"type": "predefined", "value": "last_25_hours"},
+                            "metric": "availability",
+                            "metric_color": "default",
+                            "average_color": "default",
+                            "median_color": "default",
+                        }
+                    )
+                },
+            )
+        )
+        widget = next(iter(resp.json["extensions"]["widgets"].values()))
+        assert "show_legend" not in widget["content"]
+        assert "legend_style" not in widget["content"]
+
+    def test_rejects_an_unknown_legend_style(self, clients: ClientRegistry) -> None:
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
+            create_dashboard_payload(
+                "test_dashboard",
+                {
+                    "test_widget": create_widget(
+                        {
+                            "type": "average_scatterplot",
+                            "time_range": {"type": "predefined", "value": "last_25_hours"},
+                            "metric": "availability",
+                            "metric_color": "default",
+                            "average_color": "default",
+                            "median_color": "default",
+                            "legend_style": "huge",
+                        }
+                    )
+                },
+            ),
+            expect_ok=False,
+        )
+        assert resp.status_code == HTTPStatus.BAD_REQUEST, (
+            f"Expected 400, got {resp.status_code} {resp.body!r}"
         )
 
 

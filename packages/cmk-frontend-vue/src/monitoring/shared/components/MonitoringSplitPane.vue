@@ -5,12 +5,13 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts" generic="T, Target">
 import type { ColumnDef, ColumnPinningState, RowSelectionState } from '@tanstack/vue-table'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkSplitPane from 'cmk-ui-library/components/CmkSplitPane.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import ColumnPicker from '@/monitoring/shared/components/ColumnPicker.vue'
 import MonitoringEmptyState from '@/monitoring/shared/components/MonitoringEmptyState.vue'
@@ -28,6 +29,7 @@ import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell
 import { ACTION_PANE_MIN_WIDTH } from '@/monitoring/shared/constants'
 import type { MonitoringService } from '@/monitoring/shared/services/MonitoringService'
 import { useMonitoringActions } from '@/monitoring/shared/services/useMonitoringActions'
+import { unreachableSitesHeading, unreachableSitesHint } from '@/monitoring/shared/unreachableSites'
 
 const props = withDefaults(
   defineProps<{
@@ -35,6 +37,8 @@ const props = withDefaults(
     actions: MonitoringActionRegistry<Target>
     /** Entries offered by the action bar, acting on the current row selection. */
     bulkActions?: CellAction[]
+    /** Entries of the action bar's "More" menu, acting on the selection as well. */
+    moreActions?: CellAction[]
     /** Names the rows the actions act on, e.g. "Selected hosts: 3". */
     selectionLabel: (count: number) => TranslatedString
     /** Names the action bar for screen readers, e.g. "Actions for selected hosts". */
@@ -57,7 +61,7 @@ const props = withDefaults(
      */
     immediateActionIds?: readonly string[]
   }>(),
-  { bulkActions: () => [], immediateActionIds: () => [] }
+  { bulkActions: () => [], moreActions: () => [], immediateActionIds: () => [] }
 )
 
 const emit = defineEmits<{
@@ -68,6 +72,8 @@ const { _t } = usei18n()
 
 const rowSelection = ref<RowSelectionState>({})
 const runningActionId = ref<string | null>(null)
+/** The action awaiting confirmation in the alert above the table. */
+const confirmingActionId = ref<string | null>(null)
 const displayOptionsOpen = ref(false)
 
 const selectableKeys = computed<string[]>(() =>
@@ -91,9 +97,63 @@ function targetsFor(actionId: string): Target[] {
     : rows.map((row) => props.getActionTarget(row))
 }
 
+const noTargetsFeedback: ActionFeedbackResult = {
+  variant: 'error',
+  message: _t('This action cannot be performed on any of the selected rows.')
+}
+
+const confirmation = computed(() => {
+  const id = confirmingActionId.value
+  const action = id === null ? undefined : props.actions[id]
+  const count = id === null ? 0 : targetsFor(id).length
+  return (
+    action?.confirm && {
+      title: action.title,
+      // Both lines are translated on their own; the alert keeps the line break.
+      text: `${props.countsLabel(selectedCount.value, props.service.total.value)}\n${action.confirm.detail(count)}` as TranslatedString,
+      submitLabel: action.confirm.submitLabel(count)
+    }
+  )
+})
+
+watch(selectedCount, (count) => {
+  if (count === 0) {
+    confirmingActionId.value = null
+  }
+})
+
+async function onConfirm(): Promise<void> {
+  const id = confirmingActionId.value
+  const action = id === null ? undefined : props.actions[id]
+  confirmingActionId.value = null
+  if (id === null || !action) {
+    return
+  }
+  // The selection may have changed while the confirmation was shown.
+  const targets = targetsFor(id)
+  if (targets.length === 0) {
+    applyFeedback(noTargetsFeedback)
+    return
+  }
+  runningActionId.value = id
+  try {
+    onFeedback(await action.perform(targets, action.defaultValues()))
+  } finally {
+    runningActionId.value = null
+  }
+}
+
 const isNarrowed = computed(
   () =>
     props.service.filters.activeFilterCount > 0 || props.service.committedSearchQuery.value !== ''
+)
+
+const hasUnreachableSites = computed(() => props.service.unreachableSites.value.length > 0)
+const unreachableSitesTitle = computed(() =>
+  unreachableSitesHeading(props.service.unreachableSites.value)
+)
+const unreachableSitesText = computed(() =>
+  unreachableSitesHint(props.service.unreachableSites.value)
 )
 
 function onFeedback(result: ActionFeedbackResult): void {
@@ -108,10 +168,7 @@ async function onBulkAction(action: CellAction): Promise<void> {
   }
   const targets = targetsFor(action.id)
   if (targets.length === 0) {
-    applyFeedback({
-      variant: 'error',
-      message: _t('This action cannot be performed on any of the selected rows.')
-    })
+    applyFeedback(noTargetsFeedback)
     return
   }
   if (props.immediateActionIds.includes(action.id) && selectedCount.value === 1) {
@@ -124,6 +181,12 @@ async function onBulkAction(action: CellAction): Promise<void> {
     return
   }
   displayOptionsOpen.value = false
+  if (registered.confirm) {
+    closeAction()
+    confirmingActionId.value = action.id
+    return
+  }
+  confirmingActionId.value = null
   openAction(action.id)
 }
 
@@ -157,9 +220,9 @@ function onRightPaneCollapse(collapsed: boolean): void {
 <template>
   <CmkSplitPane
     :collapsed="!activeAction && !displayOptionsOpen"
-    :right-min-size="30"
-    :right-max-size="50"
-    :right-min-width="ACTION_PANE_MIN_WIDTH"
+    :pane-min-size="30"
+    :pane-max-size="50"
+    :pane-min-width="ACTION_PANE_MIN_WIDTH"
     :collapsible-on-resize="false"
     class="monitoring-split-pane"
     @update:collapsed="onRightPaneCollapse($event as boolean)"
@@ -177,12 +240,33 @@ function onRightPaneCollapse(collapsed: boolean): void {
           class="monitoring-split-pane__feedback"
           :feedback="feedback"
         />
+        <CmkAlert
+          v-if="hasUnreachableSites"
+          class="monitoring-split-pane__unreachable-sites"
+          variant="warning"
+          :heading="unreachableSitesTitle"
+          :text="unreachableSitesText"
+        />
+        <CmkAlert
+          v-if="confirmation"
+          class="monitoring-split-pane__confirmation"
+          variant="warning"
+          :heading="confirmation.title"
+          :text="confirmation.text"
+          :main-button="{ title: confirmation.submitLabel, onclick: onConfirm }"
+          :optional-button="{
+            title: _t('Cancel'),
+            icon: 'cancel',
+            onclick: () => (confirmingActionId = null)
+          }"
+        />
         <div class="monitoring-split-pane__table-toolbar">
           <MonitoringActionBar
-            v-if="bulkActions.length > 0"
+            v-if="bulkActions.length + moreActions.length > 0"
             class="monitoring-split-pane__action-bar"
             :selected-count="selectedCount"
             :actions="bulkActions"
+            :more-actions="moreActions"
             :selection-label="selectionLabel(selectedCount)"
             :label="actionsLabel"
             :running-action-id="runningActionId"
@@ -190,7 +274,7 @@ function onRightPaneCollapse(collapsed: boolean): void {
           />
           <div class="monitoring-split-pane__table-toolbar-end">
             <div class="monitoring-split-pane__table-toolbar-stats">
-              <MonitoringTotalCount :total="service.total.value" />
+              <MonitoringTotalCount :total="service.total.value" :partial="hasUnreachableSites" />
               <MonitoringLimitSelector />
             </div>
             <div class="monitoring-split-pane__table-toolbar-controls">
@@ -277,7 +361,7 @@ function onRightPaneCollapse(collapsed: boolean): void {
   flex-direction: column;
   height: 100%;
   min-height: 0;
-  padding: 0 var(--dimension-5);
+  padding: 0 var(--spacing) 0 0;
 
   /* The panel is resized by dragging the split handle or opening the right pane, so the
      responsive layout of the toolbar below must follow this element, not the viewport. */
@@ -289,9 +373,19 @@ function onRightPaneCollapse(collapsed: boolean): void {
   margin: var(--spacing-half) 0 var(--spacing);
 }
 
-.monitoring-split-pane__feedback {
+.monitoring-split-pane__feedback,
+.monitoring-split-pane__unreachable-sites {
   flex: 0 0 auto;
   margin: 0 0 var(--spacing);
+}
+
+.monitoring-split-pane__confirmation {
+  flex: 0 0 auto;
+  margin: 0 0 var(--spacing);
+
+  :deep(.cmk-alert__body) {
+    white-space: pre-line;
+  }
 }
 
 .monitoring-split-pane__table-toolbar {

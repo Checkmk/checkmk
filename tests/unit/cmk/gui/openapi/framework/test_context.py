@@ -67,3 +67,36 @@ def test_other_user_id_less_users_are_not_promoted_to_super_user(pseudo_user: Lo
     assert context.user is pseudo_user
     assert context.user.id is None
     assert not context.user.may("wato.all_folders")
+
+
+def _build_value(api_context: ApiContext) -> tuple[str, ApiContext]:
+    return ("value", api_context)
+
+
+def _build_other_value(api_context: ApiContext) -> tuple[str, ApiContext]:
+    return ("other", api_context)
+
+
+def test_a_request_shares_one_value_per_build_function() -> None:
+    context = _api_context(LoggedInNobody())
+
+    assert context.shared(_build_value) is context.shared(_build_value)
+
+
+def test_a_shared_value_is_built_from_the_api_context_of_the_request() -> None:
+    context = _api_context(LoggedInNobody())
+
+    assert context.shared(_build_value)[1] is context
+
+
+def test_each_build_function_gets_its_own_shared_value() -> None:
+    context = _api_context(LoggedInNobody())
+
+    assert context.shared(_build_value) != context.shared(_build_other_value)
+
+
+def test_requests_do_not_share_values() -> None:
+    first = _api_context(LoggedInNobody())
+    second = _api_context(LoggedInNobody())
+
+    assert first.shared(_build_value) is not second.shared(_build_value)

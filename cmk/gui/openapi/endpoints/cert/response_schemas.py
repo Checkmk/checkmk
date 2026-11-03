@@ -7,13 +7,6 @@ from cmk import fields
 from cmk.gui.fields.utils import BaseSchema
 
 
-class X509PEM(BaseSchema):
-    cert = fields.String(
-        required=True,
-        description="PEM-encoded X.509 certificate.",
-    )
-
-
 class AgentControllerCertificateSettings(BaseSchema):
     lifetime_in_months = fields.Integer(
         description="Lifetime of agent controller certificates in months",

@@ -52,10 +52,11 @@ def _parameter_form_spec_connections() -> Dictionary:
 
 rule_spec_database_connections = CheckParameters(
     name="database_connections",
-    title=Title("Azure database connections (deprecated)"),
+    title=Title("Azure database connections"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_connections,
     condition=HostAndItemCondition(item_title=Title("Database")),
+    is_deprecated=True,
 )
 
 rule_spec_azure_v2_database_connections = CheckParameters(

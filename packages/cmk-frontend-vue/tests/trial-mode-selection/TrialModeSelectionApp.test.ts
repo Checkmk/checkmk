@@ -13,8 +13,8 @@ import {
 } from 'cmk-shared-typing/typescript/trial_mode_selection_request'
 import { type TrialModeVerificationRequest } from 'cmk-shared-typing/typescript/trial_mode_verification_request'
 import { type TrialModeVerificationResponse } from 'cmk-shared-typing/typescript/trial_mode_verification_response'
-import { useMswServer } from 'cmk-ui-library/vitest.msw'
-import { HttpResponse, http } from 'msw'
+import { untypedHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
+import { HttpResponse } from 'msw'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import TrialModeSelectionApp from '@/trial-mode-selection/TrialModeSelectionApp.vue'
@@ -60,7 +60,7 @@ function ajaxResult(result: unknown) {
 
 /** Records every save before answering it. */
 function onSave(answer: () => Response | Promise<Response>) {
-  return http.post(SAVE_ENDPOINT, async ({ request }) => {
+  return untypedHttp.post(SAVE_ENDPOINT, async ({ request }) => {
     received.save.push(await decode<SaveRequest>(request))
     return answer()
   })
@@ -68,7 +68,7 @@ function onSave(answer: () => Response | Promise<Response>) {
 
 /** Records every verification request before answering it. */
 function onVerification(answer: (sent: VerificationRequest) => Response | Promise<Response>) {
-  return http.post(VERIFICATION_ENDPOINT, async ({ request }) => {
+  return untypedHttp.post(VERIFICATION_ENDPOINT, async ({ request }) => {
     const sent = await decode<VerificationRequest>(request)
     received.verification.push(sent)
     return answer(sent)
@@ -127,6 +127,8 @@ function makeSiteUnreachableForVerification() {
  * page was left can only be read from this, not from the screen still showing.
  */
 const mockLocationAssign = vi.fn()
+const mockLocationReload = vi.fn()
+const PAGE_PATH = '/mysite/check_mk/trial_mode_selection.py'
 // The page's own address: fetch resolves the relative AJAX URLs against it.
 const pageHref = window.location.href
 
@@ -272,9 +274,15 @@ describe('TrialModeSelectionApp', () => {
     received.save = []
     received.verification = []
     mockLocationAssign.mockClear()
+    sessionStorage.clear()
     document.head.innerHTML = '<meta name="cmk-csrf-token" content="the-csrf-token">'
     Object.defineProperty(window, 'location', {
-      value: { href: pageHref, assign: mockLocationAssign },
+      value: {
+        href: pageHref,
+        pathname: PAGE_PATH,
+        assign: mockLocationAssign,
+        reload: mockLocationReload
+      },
       writable: true
     })
   })
@@ -360,7 +368,7 @@ describe('TrialModeSelectionApp', () => {
 
     // prettier-ignore
     it.each([
-      { title: 'Verify online',  mode: 'online',  target: VERIFY_ONLINE_URL },
+      { title: 'Verify online', mode: 'online', target: VERIFY_ONLINE_URL },
       { title: 'Verify offline', mode: 'offline', target: VERIFY_OFFLINE_URL }
     ] as const)('persists the selection and opens the $mode verification on $title', async ({ title, mode, target }) => {
       renderApp()
@@ -629,6 +637,85 @@ describe('TrialModeSelectionApp', () => {
 
       expect(screen.getByText('Verify your email address')).toBeInTheDocument()
     })
+
+    describe('Retry', () => {
+      /*
+       * Clicks Retry on the blocked connection, which stores the flag for the reloaded
+       * page. The reload is mocked, so the dialog is unmounted by hand; the test's next
+       * render plays the reloaded page.
+       */
+      async function retry() {
+        const { unmount } = renderApp({ offline: true })
+        await startTrial()
+        await user.click(screen.getByRole('button', { name: 'Retry' }))
+        unmount()
+      }
+
+      it('reloads the page', async () => {
+        await retry()
+
+        expect(mockLocationReload).toHaveBeenCalledOnce()
+      })
+
+      it('reopens on the email step once the site can reach the domain', async () => {
+        await retry()
+
+        renderApp({ offline: false })
+
+        expect(screen.getByText('Verify your email address')).toBeInTheDocument()
+      })
+
+      it('reopens on the blocked connection while the site still cannot reach it', async () => {
+        await retry()
+
+        renderApp({ offline: true })
+
+        expect(
+          screen.getByRole('heading', { name: /This site can't reach analytics.checkmk.com/ })
+        ).toBeInTheDocument()
+      })
+
+      it('opens on the choice when the page is loaded once more', async () => {
+        await retry()
+        renderApp({ offline: false }).unmount()
+
+        renderApp({ offline: false })
+
+        expect(card('Start a trial')).toBeInTheDocument()
+      })
+
+      it('opens on the choice when the page is loaded long after', async () => {
+        await retry()
+        vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 2 * 60 * 1000)
+
+        renderApp({ offline: false })
+
+        expect(card('Start a trial')).toBeInTheDocument()
+      })
+
+      it('opens on the choice on another site of the same host', async () => {
+        await retry()
+        window.location.pathname = '/othersite/check_mk/trial_mode_selection.py'
+
+        renderApp({ offline: false })
+
+        expect(card('Start a trial')).toBeInTheDocument()
+      })
+
+      it('reloads onto the choice when the browser blocks the storage', async () => {
+        const blocked = () => {
+          throw new DOMException('The operation is insecure.', 'SecurityError')
+        }
+        vi.spyOn(Storage.prototype, 'setItem').mockImplementation(blocked)
+        vi.spyOn(Storage.prototype, 'getItem').mockImplementation(blocked)
+        await retry()
+
+        renderApp({ offline: false })
+
+        expect(mockLocationReload).toHaveBeenCalledOnce()
+        expect(card('Start a trial')).toBeInTheDocument()
+      })
+    })
   })
 
   describe('email step', () => {
@@ -709,35 +796,13 @@ describe('TrialModeSelectionApp', () => {
       })
     })
 
-    it('leaves the newsletter opt-in off', async () => {
-      renderApp()
-
-      await startTrial()
-
-      expect(screen.getByRole('checkbox', { name: /email newsletters/ })).not.toBeChecked()
-    })
-
-    it('does not opt in to the newsletter from the unsubscribe link in its label', async () => {
-      renderApp()
-      await startTrial()
-
-      // The legal notice below carries an unsubscribe link of its own; this is the one
-      // inside the checkbox's label, where a plain click would activate the control as
-      // its default action.
-      await user.click(
-        screen.getByRole('link', { name: 'unsubscribe from the newsletter by email' })
-      )
-
-      expect(screen.getByRole('checkbox', { name: /email newsletters/ })).not.toBeChecked()
-    })
-
     // prettier-ignore
     describe.each([
-      { failure: 'the site cannot be reached',                failCodeRequest: makeSiteUnreachableForVerification,        reason: SITE_UNREACHABLE },
-      { failure: 'the site reports an error',                 failCodeRequest: reportErrorForVerification,                reason: SITE_ERROR },
+      { failure: 'the site cannot be reached', failCodeRequest: makeSiteUnreachableForVerification, reason: SITE_UNREACHABLE },
+      { failure: 'the site reports an error', failCodeRequest: reportErrorForVerification, reason: SITE_ERROR },
       { failure: 'the site reports an error without message', failCodeRequest: reportErrorWithoutMessageForVerification, reason: INTERNAL_ERROR },
-      { failure: 'the site answers without a salt',           failCodeRequest: answerWithoutSaltForVerification,          reason: INTERNAL_ERROR },
-      { failure: 'the site fails to handle the request',      failCodeRequest: raiseErrorForVerification,                 reason: NOT_PROCESSED }
+      { failure: 'the site answers without a salt', failCodeRequest: answerWithoutSaltForVerification, reason: INTERNAL_ERROR },
+      { failure: 'the site fails to handle the request', failCodeRequest: raiseErrorForVerification, reason: NOT_PROCESSED }
     ])('when $failure', ({ failCodeRequest, reason }) => {
       async function requestCode() {
         failCodeRequest()
@@ -899,6 +964,39 @@ describe('TrialModeSelectionApp', () => {
       ])
     })
 
+    it('offers no way around the verification for a wrong or expired code', async () => {
+      renderApp()
+      await reachCodeStep()
+      answerVerificationWith({
+        status: 'error',
+        errorCode: 'invalid_code',
+        errorMessage: 'The verification code is incorrect.'
+      })
+
+      await user.type(codeDigits()[0]!, '424242')
+
+      expect(await screen.findByText('The verification code is incorrect.')).toBeInTheDocument()
+      expect(
+        screen.queryByRole('button', { name: 'Continue without verification' })
+      ).not.toBeInTheDocument()
+    })
+
+    it('offers continuing without verification when the code was refused otherwise', async () => {
+      renderApp()
+      await reachCodeStep()
+      answerVerificationWith({
+        status: 'error',
+        errorCode: 'rejected',
+        errorMessage: 'You have exceeded the maximum number of attempts.'
+      })
+
+      await user.type(codeDigits()[0]!, '424242')
+
+      expect(
+        await screen.findByRole('button', { name: 'Continue without verification' })
+      ).toBeInTheDocument()
+    })
+
     it('keeps the code for another try when it could not be checked', async () => {
       renderApp()
       await reachCodeStep()
@@ -974,10 +1072,10 @@ describe('TrialModeSelectionApp', () => {
 
     // prettier-ignore
     describe.each([
-      { failure: 'the site cannot be reached',                failVerify: makeSiteUnreachableForVerification,        reason: SITE_UNREACHABLE },
-      { failure: 'the site reports an error',                 failVerify: reportErrorForVerification,                reason: SITE_ERROR },
+      { failure: 'the site cannot be reached', failVerify: makeSiteUnreachableForVerification, reason: SITE_UNREACHABLE },
+      { failure: 'the site reports an error', failVerify: reportErrorForVerification, reason: SITE_ERROR },
       { failure: 'the site reports an error without message', failVerify: reportErrorWithoutMessageForVerification, reason: INTERNAL_ERROR },
-      { failure: 'the site fails to handle the request',      failVerify: raiseErrorForVerification,                 reason: NOT_PROCESSED }
+      { failure: 'the site fails to handle the request', failVerify: raiseErrorForVerification, reason: NOT_PROCESSED }
     ])('when $failure on verifying', ({ failVerify, reason }) => {
       it('says why the code was not verified', async () => {
         renderApp()
@@ -1113,10 +1211,9 @@ describe('TrialModeSelectionApp', () => {
       })
     })
 
-    it('still verifies a code already delivered once the send limit is used up', async () => {
+    it('still verifies the code after several resends', async () => {
       renderApp()
       await reachCodeStep()
-      // The first send plus four resends use up the five a day.
       for (let sends = 1; sends < 5; sends++) {
         await resend()
       }
@@ -1148,6 +1245,57 @@ describe('TrialModeSelectionApp', () => {
       await resend()
 
       expect(verifyButton()).toBeDisabled()
+    })
+
+    it('says why a resend failed, not why the previous code was rejected', async () => {
+      renderApp()
+      await reachCodeStep()
+      answerVerificationWith({
+        status: 'error',
+        errorCode: 'rejected',
+        errorMessage: 'You have exceeded the maximum number of attempts.'
+      })
+      await user.type(codeDigits()[0]!, '424242')
+      await screen.findByText('You have exceeded the maximum number of attempts.')
+      await vi.advanceTimersByTimeAsync(60_000)
+      answerVerificationWith({
+        status: 'error',
+        errorCode: 'rate_limited',
+        errorMessage: 'Too many verification codes have been requested.'
+      })
+
+      await user.click(resendButton())
+
+      expect(
+        await screen.findByText('Too many verification codes have been requested.')
+      ).toBeInTheDocument()
+      expect(
+        screen.queryByText('You have exceeded the maximum number of attempts.')
+      ).not.toBeInTheDocument()
+    })
+
+    it('offers continuing without verification once a resend fails after an expired code', async () => {
+      renderApp()
+      await reachCodeStep()
+      answerVerificationWith({
+        status: 'error',
+        errorCode: 'invalid_code',
+        errorMessage: 'Your verification code has expired.'
+      })
+      await user.type(codeDigits()[0]!, '424242')
+      await screen.findByText('Your verification code has expired.')
+      await vi.advanceTimersByTimeAsync(60_000)
+      answerVerificationWith({
+        status: 'error',
+        errorCode: 'rate_limited',
+        errorMessage: 'Too many verification codes have been requested.'
+      })
+
+      await user.click(resendButton())
+
+      expect(
+        await screen.findByRole('button', { name: 'Continue without verification' })
+      ).toBeInTheDocument()
     })
   })
 

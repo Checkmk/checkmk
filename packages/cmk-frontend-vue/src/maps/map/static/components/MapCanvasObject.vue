@@ -119,23 +119,21 @@ function onKeydown(event: KeyboardEvent): void {
   position: absolute;
 }
 
-/* Two-tone, so the ring reads on any background. */
 .maps-map-canvas-object:focus-visible {
-  outline: 2px solid var(--interactive-accent);
+  outline: revert;
   outline-offset: 2px;
-  box-shadow: 0 0 0 2px var(--white);
 }
 
 /* The object a line being dragged would bind to on release. */
 .maps-map-canvas-object--bind-target {
   outline: 3px solid var(--interactive-accent);
   outline-offset: 3px;
-  border-radius: var(--dimension-4);
+  border-radius: var(--border-radius);
 }
 
 .maps-map-canvas-object--selected {
   outline: 2px dashed var(--interactive-accent);
   outline-offset: 4px;
-  border-radius: 6px;
+  border-radius: var(--border-radius);
 }
 </style>

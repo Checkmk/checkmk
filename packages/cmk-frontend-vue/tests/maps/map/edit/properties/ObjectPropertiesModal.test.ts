@@ -4,9 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import userEvent from '@testing-library/user-event'
-import { render, screen, waitFor } from '@testing-library/vue'
+import { render, screen, waitFor, within } from '@testing-library/vue'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { defineComponent, h, nextTick } from 'vue'
+import { defineComponent, h } from 'vue'
 
 import ObjectPropertiesModal from '@/maps/map/edit/properties/ObjectPropertiesModal.vue'
 import type { MapElement, ObjectType } from '@/maps/types/api'
@@ -17,15 +17,20 @@ import { mapsGlobal } from '../../../support/services'
 // Stand-in for the confirmation popup: the real MapsConfirmDialog renders through
 // reka-ui's Dialog, whose a11y title warning would trip the fail-on-console rule.
 // The stub preserves the only contract the modal depends on — it surfaces a
-// confirm affordance while open and re-emits `confirm` — so the delete flow stays
-// observable without pulling the dialog internals into scope.
+// confirm affordance named after its action while open and re-emits `confirm` —
+// so the delete and discard flows stay observable without pulling the dialog
+// internals into scope.
 const confirmDialogStub = defineComponent({
-  props: { open: { type: Boolean, default: false } },
+  props: { open: { type: Boolean, default: false }, confirmLabel: { type: String, default: '' } },
   emits: ['confirm', 'cancel'],
   setup(props, { emit }) {
     return () =>
       props.open
-        ? h('button', { type: 'button', onClick: () => emit('confirm') }, 'Confirm delete')
+        ? h(
+            'button',
+            { type: 'button', onClick: () => emit('confirm') },
+            `Confirm ${props.confirmLabel.toLowerCase()}`
+          )
         : null
   }
 })
@@ -99,8 +104,29 @@ describe('ObjectPropertiesModal – conditional fields by object type', () => {
     expect(screen.queryByText('View type')).not.toBeInTheDocument()
   })
 
+  it('asks a line for the object it shows the state of', () => {
+    renderModal(obj({ type: 'line', line_object_type: 'hostgroup', group_name: 'web' }))
+
+    expect(screen.getByText('Shows the state of')).toBeInTheDocument()
+    expect(screen.getByText('Group name')).toBeInTheDocument()
+  })
+
+  it('offers no perfdata on a line that shows no service', () => {
+    renderModal(obj({ type: 'line', line_object_type: 'hostgroup', group_name: 'web' }))
+
+    expect(screen.queryByText('Perfdata label')).not.toBeInTheDocument()
+  })
+
   it('renders line-specific styling and drops the generic position/appearance sections', () => {
-    renderModal(obj({ type: 'line', x2: 200, y2: 60 }))
+    renderModal(
+      obj({
+        type: 'line',
+        host_name: 'sw01',
+        service_description: 'Interface 1',
+        x2: 200,
+        y2: 60
+      })
+    )
 
     // Twice: the header's type badge and the section title.
     expect(screen.getAllByText('Line')).toHaveLength(2)
@@ -125,15 +151,29 @@ describe('ObjectPropertiesModal – conditional fields by object type', () => {
 
     expect(screen.getByText('Filter on')).toBeInTheDocument()
     expect(screen.getByText('Livestatus filter')).toBeInTheDocument()
+    expect(screen.getByText('Consider services')).toBeInTheDocument()
   })
 
-  // The exclude-members preview counts BI leaves, so the aggregation is the one
-  // object type whose filter the card can actually show a result for.
-  it('offers the member filter to a BI aggregation', () => {
-    renderModal(obj({ type: 'aggregation', aggregation_id: 'Hosts', exclude_members: 'test-.*' }))
+  it('offers the services toggle only to a dynamic group of hosts', () => {
+    renderModal(obj({ type: 'dyngroup', object_types: 'service' }))
+
+    expect(screen.getByText('Only hard states')).toBeInTheDocument()
+    expect(screen.queryByText('Consider services')).not.toBeInTheDocument()
+  })
+
+  it('offers the member filter to a host group, also as a line', () => {
+    renderModal(
+      obj({ type: 'line', line_object_type: 'hostgroup', group_name: 'web', exclude_members: 'x' })
+    )
 
     expect(screen.getByText('Exclude members')).toBeInTheDocument()
-    expect(screen.getByText('Exclude states')).toBeInTheDocument()
+    expect(screen.getByText('Exclude members from state')).toBeInTheDocument()
+  })
+
+  it('offers no member filter where the daemon applies none', () => {
+    renderModal(obj({ type: 'aggregation', aggregation_id: 'Hosts', exclude_members: 'x' }))
+
+    expect(screen.queryByText('Exclude members')).not.toBeInTheDocument()
   })
 
   it('renders the metric-source and url-embed sections for a graph', () => {
@@ -144,15 +184,62 @@ describe('ObjectPropertiesModal – conditional fields by object type', () => {
     // Graphs render their own embed; the icon/appearance section is hidden.
     expect(screen.queryByText('View type')).not.toBeInTheDocument()
   })
+
+  it('offers an image only the template placeholders it can fill', () => {
+    renderModal(obj({ type: 'image', hover_template: '{{name}}' }))
+
+    expect(screen.getByText('Available: {{name}}')).toBeInTheDocument()
+  })
+
+  it('offers a graph that only embeds a URL no state placeholders', () => {
+    renderModal(
+      obj({ type: 'graph', graph_url: 'https://example.com/graph.png', hover_template: '{{name}}' })
+    )
+
+    expect(screen.getByText('Available: {{name}}')).toBeInTheDocument()
+  })
+
+  it('offers a host line without a host no state placeholders, whatever service it showed', () => {
+    renderModal(
+      obj({
+        type: 'line',
+        line_object_type: 'host',
+        host_name: null,
+        service_description: 'CPU load',
+        hover_template: '{{name}}'
+      })
+    )
+
+    expect(screen.getByText('Available: {{name}}')).toBeInTheDocument()
+  })
 })
 
 describe('ObjectPropertiesModal – field names', () => {
   it('names each field by its row', () => {
-    renderModal(obj({ type: 'host', host_name: 'web01' }))
+    renderModal(
+      obj({
+        type: 'host',
+        host_name: 'web01',
+        label: { show: true, x: 0, y: 0, size: 11, color: '#fff', background: 'transparent' }
+      })
+    )
 
-    expect(screen.getByLabelText('X')).toHaveValue(40)
-    expect(screen.getByLabelText('Label text')).toBeInTheDocument()
+    expect(within(screen.getByRole('group', { name: 'Position' })).getByLabelText('X')).toHaveValue(
+      40
+    )
+    expect(within(screen.getByRole('group', { name: 'Offset' })).getByLabelText('X')).toHaveValue(0)
+    expect(screen.getByLabelText('Text')).toBeInTheDocument()
+    expect(screen.getByLabelText('Font size')).toBeInTheDocument()
     expect(screen.getByRole('checkbox', { name: 'Show label' })).toBeInTheDocument()
+  })
+
+  it('shows the label settings only while the label is shown', async () => {
+    renderModal(obj({ type: 'host', host_name: 'web01' }))
+    expect(screen.queryByLabelText('Font size')).not.toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('checkbox', { name: 'Show label' }))
+
+    expect(screen.getByLabelText('Font size')).toBeInTheDocument()
   })
 })
 
@@ -205,7 +292,15 @@ describe('ObjectPropertiesModal – save payload', () => {
   it('blocks the save and shows an error when weather coloring has no metric', async () => {
     const user = userEvent.setup()
     const { emitted } = renderModal(
-      obj({ type: 'line', line_weather_color: true, weathermap_metric: '', x2: 200, y2: 60 })
+      obj({
+        type: 'line',
+        host_name: 'sw01',
+        service_description: 'Interface 1',
+        line_weather_color: true,
+        weathermap_metric: '',
+        x2: 200,
+        y2: 60
+      })
     )
 
     await user.click(screen.getByRole('button', { name: 'Save' }))
@@ -225,6 +320,18 @@ describe('ObjectPropertiesModal – close / detach / delete', () => {
     await user.keyboard('{Escape}')
 
     expect(emitted().close).toHaveLength(3)
+  })
+
+  it('closes on Escape while a layer elsewhere on the page stays open', async () => {
+    const user = userEvent.setup()
+    const { emitted } = renderModal(obj({ type: 'host', host_name: 'web01' }))
+    const elsewhere = document.body.appendChild(document.createElement('div'))
+    elsewhere.setAttribute('data-dismissable-layer', '')
+
+    await user.keyboard('{Escape}')
+    elsewhere.remove()
+
+    expect(emitted().close).toHaveLength(1)
   })
 
   it('emits detach for an attached line', async () => {
@@ -251,118 +358,161 @@ describe('ObjectPropertiesModal – close / detach / delete', () => {
   })
 })
 
-describe('ObjectPropertiesModal – popover placement', () => {
-  // Embedded in the Checkmk page, the card's fixed overlay is contained by the
-  // content area rather than the viewport, so its left/top are read in that
-  // box's coordinates. jsdom lays nothing out, so stand in for the browser's
-  // measurements — the clamping on top of them is what is under test.
-  const FRAME = { left: 74, top: 0, width: 1292, height: 768 }
-  const CARD = { width: 402, height: 578 }
-
-  function measureAs(frame: typeof FRAME, card: typeof CARD): void {
-    // jsdom's window is 1024px wide; the browser around a frame this size is not.
-    vi.stubGlobal('innerWidth', 1440)
-    vi.stubGlobal('innerHeight', 900)
-    const parent = document.createElement('div')
-    parent.getBoundingClientRect = () =>
-      ({ ...frame, right: frame.left + frame.width, bottom: frame.top + frame.height }) as DOMRect
-    vi.spyOn(HTMLElement.prototype, 'offsetParent', 'get').mockReturnValue(parent)
-    vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(card.width)
-    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(card.height)
-  }
-
-  async function renderPlaced(
-    frame: typeof FRAME,
-    anchorRect: { left: number; top: number; right: number; bottom: number } | null
-  ): Promise<CSSStyleDeclaration> {
-    measureAs(frame, CARD)
-    const { container } = renderModal(obj({ type: 'host', host_name: 'web01' }), { anchorRect })
-    // The card can only be measured once it is in the DOM, so the placement
-    // lands a tick after the first render.
-    await nextTick()
-    return container.querySelector<HTMLElement>('.maps-object-properties-modal__card')!.style
-  }
-
-  it('opens beside the object, in the frame coordinates rather than the viewport ones', async () => {
-    const style = await renderPlaced(FRAME, { left: 174, top: 100, right: 274, bottom: 160 })
-
-    // 274 (anchor right, viewport) - 74 (frame left) + 12 (margin).
-    expect(style.left).toBe('212px')
-    expect(style.top).toBe('100px')
-  })
-
-  it('flips the card to the left of an object near the frame right edge', async () => {
-    const style = await renderPlaced(FRAME, { left: 1230, top: 100, right: 1330, bottom: 160 })
-
-    // 1230 (anchor left) - 74 (frame left) - 12 (margin) - 402 (card width).
-    expect(style.left).toBe('742px')
-  })
-
-  it('pins a card too wide for either side inside the frame', async () => {
-    const style = await renderPlaced(
-      { left: 74, top: 0, width: 500, height: 768 },
-      { left: 300, top: 100, right: 400, bottom: 160 }
+describe('ObjectPropertiesModal – a click on the map', () => {
+  function clickMap(container: Element): Promise<void> {
+    return userEvent.click(
+      container.querySelector<HTMLElement>('.maps-object-properties-modal__backdrop')!
     )
+  }
 
-    expect(style.left).toBe('12px')
-  })
-
-  it('lifts the card so its bottom stays inside the frame', async () => {
-    const style = await renderPlaced(FRAME, { left: 174, top: 700, right: 274, bottom: 760 })
-
-    // 768 (frame height) - 578 (card height) - 12 (margin).
-    expect(style.top).toBe('178px')
-  })
-
-  it('centers as an unplaced modal when the object gave no anchor', async () => {
-    const style = await renderPlaced(FRAME, null)
-
-    expect(style.left).toBe('')
-    expect(style.top).toBe('')
-  })
-
-  it('leaves a card the operator dragged aside where they put it', async () => {
-    const user = userEvent.setup()
-    measureAs(FRAME, CARD)
-    const { container } = renderModal(obj({ type: 'host', host_name: 'web01' }), {
-      anchorRect: { left: 174, top: 100, right: 274, bottom: 160 }
+  function renderClosable(object: MapElement): { container: Element; closes: () => number } {
+    let closes = 0
+    const { container } = renderModal(object, {
+      onClose: () => {
+        closes += 1
+      }
     })
-    await nextTick()
-    const card = container.querySelector<HTMLElement>('.maps-object-properties-modal__card')!
-    const header = card.querySelector<HTMLElement>('.maps-object-properties-modal__header')!
+    return { container, closes: () => closes }
+  }
+
+  it('closes an untouched card', async () => {
+    const { container, closes } = renderClosable(obj({ type: 'textbox' }))
+
+    await clickMap(container)
+
+    expect(closes()).toBe(1)
+    expect(screen.queryByRole('button', { name: 'Discard changes' })).toBeNull()
+  })
+
+  it('asks before it throws away an edit, and closes once that is confirmed', async () => {
+    const user = userEvent.setup()
+    const { container, closes } = renderClosable(obj({ type: 'textbox' }))
+    await user.type(screen.getByPlaceholderText(/Text content/), 'Rack A')
+
+    await clickMap(container)
+    expect(closes()).toBe(0)
+
+    await user.click(await screen.findByRole('button', { name: 'Discard changes' }))
+    expect(closes()).toBe(1)
+  })
+
+  it('takes a field typed into and cleared again as untouched', async () => {
+    const user = userEvent.setup()
+    const { container, closes } = renderClosable(obj({ type: 'line' }))
+    const width = screen.getByLabelText('Line width')
+    await user.type(width, '4')
+    await user.clear(width)
+
+    await clickMap(container)
+
+    expect(closes()).toBe(1)
+    expect(screen.queryByRole('button', { name: 'Discard changes' })).toBeNull()
+  })
+
+  it('asks the same before Escape, the close button or Cancel discard an edit', async () => {
+    const user = userEvent.setup()
+    const { closes } = renderClosable(obj({ type: 'textbox' }))
+    await user.type(screen.getByPlaceholderText(/Text content/), 'Rack A')
+
+    for (const leave of [
+      () => user.keyboard('{Escape}'),
+      () => user.click(screen.getByRole('button', { name: 'Close' })),
+      () => user.click(screen.getByRole('button', { name: 'Cancel' }))
+    ]) {
+      await leave()
+      await user.click(await screen.findByRole('button', { name: 'Keep editing' }))
+      await waitFor(() => expect(screen.queryByRole('button', { name: 'Keep editing' })).toBeNull())
+    }
+
+    expect(closes()).toBe(0)
+    expect(screen.getByPlaceholderText(/Text content/)).toHaveValue('Rack A')
+  })
+
+  it('keeps editing when the question is dismissed with Escape', async () => {
+    const user = userEvent.setup()
+    const { container, closes } = renderClosable(obj({ type: 'textbox' }))
+    await user.type(screen.getByPlaceholderText(/Text content/), 'Rack A')
+    await clickMap(container)
+    await screen.findByRole('button', { name: 'Discard changes' })
+
+    await user.keyboard('{Escape}')
+
+    expect(closes()).toBe(0)
+    expect(screen.getByPlaceholderText(/Text content/)).toHaveValue('Rack A')
+  })
+})
+
+describe('ObjectPropertiesModal – placement', () => {
+  function cardBeside(left: number): HTMLElement {
+    const { container } = renderModal(obj({ type: 'host', host_name: 'web01' }), {
+      avoid: { left, top: 40, right: left + 32, bottom: 72 }
+    })
+    return container.querySelector<HTMLElement>('.maps-object-properties-modal__card')!
+  }
+
+  it('opens on the right of an object in the left half of the window', () => {
+    vi.stubGlobal('innerWidth', 1200)
+
+    expect(cardBeside(100)).toHaveClass('maps-object-properties-modal__card--right')
+  })
+
+  it('opens on the left of an object in the right half of the window', () => {
+    vi.stubGlobal('innerWidth', 1200)
+
+    expect(cardBeside(900)).toHaveClass('maps-object-properties-modal__card--left')
+  })
+})
+
+/** A 1200×800 map with the 504-px card's 40-px header at the top center. */
+function renderDraggable() {
+  const { container } = renderModal(obj({ type: 'host', host_name: 'web01' }))
+  const frame = container.querySelector<HTMLElement>('.maps-object-properties-modal')!
+  const card = frame.querySelector<HTMLElement>('.maps-object-properties-modal__card')!
+  const header = card.querySelector<HTMLElement>('.maps-object-properties-modal__header')!
+  const backdrop = frame.querySelector<HTMLElement>('.maps-object-properties-modal__backdrop')!
+  vi.spyOn(frame, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 0, 1200, 800))
+  vi.spyOn(header, 'getBoundingClientRect').mockReturnValue(new DOMRect(348, 16, 504, 40))
+  return { card, header, backdrop }
+}
+
+describe('ObjectPropertiesModal – dragging', () => {
+  it('moves with its header from where it opened', async () => {
+    const user = userEvent.setup()
+    const { card, header } = renderDraggable()
 
     await user.pointer([
       { target: header, coords: { clientX: 500, clientY: 300 }, keys: '[MouseLeft>]' },
       { target: header, coords: { clientX: 700, clientY: 400 } },
       { target: header, keys: '[/MouseLeft]' }
     ])
-    const draggedTo = { left: card.style.left, top: card.style.top }
 
-    // A section folds open and makes the card taller. Re-placing would now
-    // compute a different top (the clamp has less room), which is exactly the
-    // snatch-back the drag must survive.
-    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(740)
-    window.dispatchEvent(new Event('resize'))
-    await nextTick()
-
-    expect({ left: card.style.left, top: card.style.top }).toEqual(draggedTo)
-    expect(card.style.transform).toBe('translate(200px, 100px)')
+    expect(card.style.transform).toBe('translate(calc(-50% + 200px), 100px)')
   })
 
-  it('re-places an undragged card when it grows past the frame', async () => {
-    measureAs(FRAME, CARD)
-    const { container } = renderModal(obj({ type: 'host', host_name: 'web01' }), {
-      anchorRect: { left: 174, top: 100, right: 274, bottom: 160 }
-    })
-    await nextTick()
-    const card = container.querySelector<HTMLElement>('.maps-object-properties-modal__card')!
-    expect(card.style.top).toBe('100px')
+  it('keeps its header on the map, so it can always be pulled back', async () => {
+    const user = userEvent.setup()
+    const { card, header } = renderDraggable()
 
-    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockReturnValue(740)
-    window.dispatchEvent(new Event('resize'))
-    await nextTick()
+    await user.pointer([
+      { target: header, coords: { clientX: 500, clientY: 30 }, keys: '[MouseLeft>]' },
+      { target: header, coords: { clientX: 2000, clientY: -500 } },
+      { target: header, keys: '[/MouseLeft]' }
+    ])
 
-    // 768 (frame height) - 740 (card height) - 12 (margin).
-    expect(card.style.top).toBe('16px')
+    expect(card.style.transform).toBe('translate(calc(-50% + 348px), -16px)')
+  })
+
+  it('stays put under a pointer that was released off the header', async () => {
+    const user = userEvent.setup()
+    const { card, header, backdrop } = renderDraggable()
+
+    await user.pointer([
+      { target: header, coords: { clientX: 500, clientY: 300 }, keys: '[MouseLeft>]' },
+      { target: backdrop, coords: { clientX: 700, clientY: 400 } },
+      { target: backdrop, keys: '[/MouseLeft]' },
+      { target: header, coords: { clientX: 600, clientY: 350 } }
+    ])
+
+    expect(card.style.transform).toBe('translate(calc(-50% + 0px), 0px)')
   })
 })

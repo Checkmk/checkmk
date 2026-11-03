@@ -1,0 +1,20 @@
+title: AWS v2 CloudWatch: Alarms Limits
+agents: aws_v2
+catalog: cloud/aws
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the AWS/CloudWatch alarms limits, ie. the
+ number of allowed alarms withing a region.
+
+ To make this check work you have to configure the related
+ special agent {Amazon Web Services (AWS) v2}.
+
+ You can configure upper levels for {WARN}/{CRIT} in percent (default: 80, 90).
+ and the maximum value (default: 5000).
+
+ If limits are enabled all alarms are fetched regardless of
+ possibly configured restriction to names.
+
+discovery:
+ One service is created per monitored AWS region.

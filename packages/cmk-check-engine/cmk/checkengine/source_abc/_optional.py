@@ -42,6 +42,7 @@ class SourceContext:
     # uninterpreted; an empty mapping means that no rule matched. Like the ruleset above
     # it is carried unresolved, so hosts whose sources never ask do not pay for the match.
     metrics_identity_routing: Callable[[HostName], Mapping[str, object]]
+    debug: bool
 
 
 class OptionalSource[TRawData: Sized](Source[TRawData], abc.ABC):

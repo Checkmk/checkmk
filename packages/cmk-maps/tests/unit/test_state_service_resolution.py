@@ -42,7 +42,7 @@ from cmk.maps.backend.schemas.state import (
     ServicesSummary,
 )
 from cmk.maps.backend.schemas.topology import ServiceNode, TopologyNode
-from cmk.maps.backend.services import state_service
+from cmk.maps.backend.services import map_service, state_service
 from cmk.maps.backend.services.state_service import (
     get_connection,
     get_map_states,
@@ -192,8 +192,6 @@ def test_map_link_aggregates_nested_map_states(
     mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """A Map-A → Map-B → host(DOWN) chain must surface DOWN on the top link."""
-    from cmk.maps.backend.services import map_service
-
     monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
 
     inner = _map([_obj("h_inner", "host", host_name="srv-crit")], name="inner")
@@ -215,8 +213,6 @@ def test_map_link_handles_cycle_without_recursion(
     mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """A self-referential map cycle must not stack-overflow; result is PENDING."""
-    from cmk.maps.backend.services import map_service
-
     monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
 
     a = _map([_obj("a_to_b", "map", map_name="b")], name="a")
@@ -437,6 +433,7 @@ def test_static_bundle_suppresses_markers_and_folds_services(
                 object_filter="Filter: name = srv1\nFilter: name = srv2\nOr: 2\n",
                 bundle_kind="static",
                 bundle_hosts=["srv1", "srv2"],
+                recognize_services=True,
                 lat=1.0,
                 lng=2.0,
             )
@@ -606,8 +603,30 @@ def test_presentation_map_resolves_group_bindings(
     assert by_id["legacy"].state == "UP"
     assert by_id["hg"].state == "WARNING"
     assert by_id["sg"].state == "CRITICAL"
-    mock_connection.get_hostgroup_states.assert_awaited_once_with("linux")
-    mock_connection.get_servicegroup_states.assert_awaited_once_with("https")
+    mock_connection.get_hostgroup_states.assert_awaited_once_with(
+        "linux", only_hard=False, with_services=False, exclude=None
+    )
+    mock_connection.get_servicegroup_states.assert_awaited_once_with(
+        "https", only_hard=False, exclude=None
+    )
+
+
+def test_presentation_auto_host_tile_names_the_host_it_was_bound_to(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Only the daemon knows which host an ``auto_host`` tile shows; without it
+    in the state the tile has no name and no commands."""
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    monkeypatch.setattr(state_service, "_resolve_primary_host", AsyncMock(return_value="heute"))
+    mock_connection.get_hosts_states = AsyncMock(
+        return_value={"heute": ObjectState(object_id="x", type="host", state="UP")}
+    )
+    view = PresentationView(elements=[DataElement(id="tile", kind="data", auto_host=True)])
+    map_cfg = MapConfig(name="pres", alias="P", connection_id="mock", view=view)
+
+    result = asyncio.run(get_map_states(map_cfg))
+
+    assert {s.object_id: s.host_name for s in result.states} == {"tile": "heute"}
 
 
 def test_presentation_view_rejects_duplicate_element_ids() -> None:
@@ -628,6 +647,268 @@ def test_presentation_shape_rejects_css_injection_color() -> None:
 # ---------------------------------------------------------------------------
 # Object-state SSE delta — compute_states_delta (slim timing patches)
 # ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "recognize_services, expected",
+    [
+        (False, "UP"),
+        (True, "WARNING"),  # NagVis counts the members' services too
+    ],
+)
+def test_hostgroup_counts_its_services_only_where_asked(
+    mock_connection: MagicMock,
+    monkeypatch: pytest.MonkeyPatch,
+    recognize_services: bool,
+    expected: str,
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    mock_connection.get_hostgroup_states = AsyncMock(
+        return_value=ObjectState(
+            object_id="x",
+            type="hostgroup",
+            state="UP",
+            services_summary=ServicesSummary(ok=3, warning=1) if recognize_services else None,
+        )
+    )
+    map_cfg = _map(
+        [
+            _obj(
+                "hg",
+                "hostgroup",
+                group_name="web",
+                recognize_services=recognize_services,
+                only_hard_states=True,
+            )
+        ]
+    )
+
+    result = asyncio.run(get_map_states(map_cfg))
+
+    assert result.states[0].state == expected
+    mock_connection.get_hostgroup_states.assert_awaited_once_with(
+        "web", only_hard=True, with_services=recognize_services, exclude=None
+    )
+
+
+def test_hostgroup_with_a_down_host_shows_down_over_a_critical_service(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    mock_connection.get_hostgroup_states = AsyncMock(
+        return_value=ObjectState(
+            object_id="x",
+            type="hostgroup",
+            state="DOWN",
+            services_summary=ServicesSummary(ok=3, critical=1),
+        )
+    )
+    map_cfg = _map([_obj("hg", "hostgroup", group_name="web", recognize_services=True)])
+
+    result = asyncio.run(get_map_states(map_cfg))
+
+    assert result.states[0].state == "DOWN"
+
+
+def test_host_group_leaves_out_the_members_whose_state_is_excluded(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # As in NagVis, the pattern for the state replaces the one for the members.
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    mock_connection.get_hostgroup_states = AsyncMock(
+        return_value=ObjectState(object_id="x", type="hostgroup", state="UP")
+    )
+    map_cfg = _map(
+        [
+            _obj(
+                "hg",
+                "hostgroup",
+                group_name="web",
+                exclude_members="^test-",
+                exclude_member_states="^db-",
+            )
+        ]
+    )
+
+    asyncio.run(get_map_states(map_cfg))
+
+    mock_connection.get_hostgroup_states.assert_awaited_once_with(
+        "web", only_hard=False, with_services=False, exclude="^db-"
+    )
+
+
+def test_host_counts_only_the_services_it_does_not_leave_out(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    mock_connection.get_hosts_states = AsyncMock(
+        return_value={"web01": ObjectState(object_id="x", type="host", state="UP")}
+    )
+    mock_connection.get_services_summary = AsyncMock(
+        return_value={"web01": ServicesSummary(ok=3, critical=1)}
+    )
+    mock_connection.get_hosts_services_summaries = AsyncMock(
+        return_value={"web01": ServicesSummary(ok=3)}
+    )
+    map_cfg = _map([_obj("h", host_name="web01", recognize_services=True, exclude_members="^CPU")])
+
+    result = asyncio.run(get_map_states(map_cfg))
+
+    assert result.states[0].state == "UP"
+    assert result.states[0].services_summary == ServicesSummary(ok=3)
+    mock_connection.get_hosts_services_summaries.assert_awaited_once_with(["web01"], "^CPU")
+
+
+def test_graph_counts_every_service_of_its_host(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    mock_connection.get_hosts_states = AsyncMock(
+        return_value={"web01": ObjectState(object_id="x", type="host", state="UP")}
+    )
+    mock_connection.get_services_summary = AsyncMock(
+        return_value={"web01": ServicesSummary(ok=3, critical=1)}
+    )
+    mock_connection.get_hosts_services_summaries = AsyncMock(
+        return_value={"web01": ServicesSummary(ok=3)}
+    )
+    map_cfg = _map([_obj("g", "graph", host_name="web01", exclude_members="^CPU")])
+
+    result = asyncio.run(get_map_states(map_cfg))
+
+    assert result.states[0].services_summary == ServicesSummary(ok=3, critical=1)
+
+
+def test_host_whose_excluded_services_cannot_be_read_is_stale(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Falling back to every service would count the excluded ones again.
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    mock_connection.get_hosts_states = AsyncMock(
+        return_value={"web01": ObjectState(object_id="x", type="host", state="UP")}
+    )
+    mock_connection.get_services_summary = AsyncMock(
+        return_value={"web01": ServicesSummary(critical=1)}
+    )
+    mock_connection.get_hosts_services_summaries = AsyncMock(side_effect=OSError)
+    map_cfg = _map(
+        [_obj("h", host_name="web01", recognize_services=True, exclude_members="^Backup")]
+    )
+
+    state = asyncio.run(get_map_states(map_cfg)).states[0]
+
+    assert state.state == "UP"
+    assert state.stale is True
+
+
+def test_dynamic_host_group_counts_its_services_only_where_asked(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    # One state per call: the resolver stamps the object id onto what it gets.
+    mock_connection.get_dyngroup_state = AsyncMock(
+        side_effect=lambda *_args, **_kwargs: ObjectState(
+            object_id="", type="dyngroup", state="UP", services_summary=ServicesSummary(warning=1)
+        )
+    )
+    group = {"object_types": "host", "object_filter": "Filter: groups >= web\n"}
+    map_cfg = _map(
+        [
+            _obj("hosts", "dyngroup", recognize_services=False, only_hard_states=True, **group),
+            _obj("services", "dyngroup", recognize_services=True, **group),
+        ]
+    )
+
+    result = asyncio.run(get_map_states(map_cfg))
+
+    assert {s.object_id: s.state for s in result.states} == {"hosts": "UP", "services": "WARNING"}
+    mock_connection.get_dyngroup_state.assert_any_await(
+        "host", "Filter: groups >= web\n", only_hard=True, with_services=False
+    )
+    mock_connection.get_dyngroup_state.assert_any_await(
+        "host", "Filter: groups >= web\n", only_hard=False, with_services=True
+    )
+
+
+def test_line_shows_the_state_of_its_host_group(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    mock_connection.get_hostgroup_states = AsyncMock(
+        return_value=ObjectState(
+            object_id="x",
+            type="hostgroup",
+            state="UP",
+            services_summary=ServicesSummary(ok=3, critical=1),
+        )
+    )
+    map_cfg = _map(
+        [
+            _obj(
+                "l1",
+                "line",
+                line_object_type="hostgroup",
+                group_name="web",
+                recognize_services=True,
+            )
+        ]
+    )
+
+    result = asyncio.run(get_map_states(map_cfg))
+
+    assert (result.states[0].object_id, result.states[0].state) == ("l1", "CRITICAL")
+
+
+def test_line_shows_the_worst_state_of_its_map(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    inner = _map([_obj("h_inner", "host", host_name="srv-down")], name="inner")
+    monkeypatch.setattr(map_service, "get_map", lambda _owner, name="": {"inner": inner}.get(name))
+    mock_connection.get_hosts_states = AsyncMock(
+        return_value={"srv-down": ObjectState(object_id="h_inner", type="host", state="DOWN")}
+    )
+    outer = _map([_obj("l1", "line", line_object_type="map", map_name="inner")], name="outer")
+
+    result = asyncio.run(get_map_states(outer))
+
+    assert {s.object_id: s.state for s in result.states}["l1"] == "DOWN"
+
+
+@pytest.mark.parametrize(
+    "binding, expected",
+    [
+        pytest.param({"host_name": "web01"}, "DOWN", id="host"),
+        pytest.param({"host_name": "web01", "service_description": "CPU"}, "WARNING", id="service"),
+    ],
+)
+def test_line_without_object_type_shows_its_host_or_service(
+    mock_connection: MagicMock,
+    monkeypatch: pytest.MonkeyPatch,
+    binding: dict[str, str],
+    expected: str,
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    mock_connection.get_hosts_states = AsyncMock(
+        return_value={"web01": ObjectState(object_id="x", type="host", state="DOWN")}
+    )
+    mock_connection.get_services_states = AsyncMock(
+        return_value={("web01", "CPU"): ObjectState(object_id="x", type="service", state="WARNING")}
+    )
+
+    result = asyncio.run(get_map_states(_map([_obj("l1", "line", **binding)])))
+
+    assert result.states[0].state == expected
+
+
+def test_line_bound_to_nothing_stays_a_line(
+    mock_connection: MagicMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+
+    result = asyncio.run(get_map_states(_map([_obj("l1", "line", x2=10, y2=10)])))
+
+    assert (result.states[0].type, result.states[0].state) == ("line", "PENDING")
 
 
 def _timed(object_id: str, state: str, *, last: float, nxt: float, attempt: int = 1) -> ObjectState:
@@ -689,6 +970,27 @@ def test_states_delta_operational_change_carries_timing_inline() -> None:
     assert full is False
     assert removed == []
     assert timing == []
+    state_service.drop_states_snapshot(the_map)
+
+
+def test_states_delta_resends_a_group_whose_host_counts_change() -> None:
+    the_map = "timing-map-hosts"
+    state_service.drop_states_snapshot(the_map)
+
+    def group(down: int) -> ObjectState:
+        return ObjectState(
+            object_id="hg",
+            type="hostgroup",
+            state="DOWN",
+            hosts_summary=ServicesSummary(ok=2, critical=down),
+        )
+
+    state_service.compute_states_delta(the_map, None, [group(1)])
+    to_send, _removed, _full, _timing = state_service.compute_states_delta(
+        the_map, None, [group(2)]
+    )
+
+    assert [s.object_id for s in to_send] == ["hg"]
     state_service.drop_states_snapshot(the_map)
 
 

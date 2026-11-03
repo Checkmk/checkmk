@@ -5,14 +5,15 @@
 import logging
 import ssl
 import threading
-from collections.abc import Callable
-from dataclasses import dataclass
+from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass, field
 from enum import StrEnum
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from ipaddress import IPv4Address
 from pathlib import Path
 from types import TracebackType
+from urllib.parse import urlsplit
 
 from cmk.crypto.certificate import (
     CertificateWithPrivateKey,
@@ -47,15 +48,93 @@ class MockResponse:
     content_type: str = "application/json"
 
 
+@dataclass(frozen=True)
+class ReceivedRequest:
+    method: MockMethod
+    path: str
+    headers: dict[str, str]
+    body: bytes
+
+
+@dataclass(frozen=True)
+class MockAnswer:
+    """What the mock sends back for a request."""
+
+    status: int
+    reason: str | None = None
+    headers: Mapping[str, str] = field(default_factory=dict)
+    body: bytes = b""
+
+
+class MockEndpoints:
+    """The responses configured for each endpoint, the answer they give to a request, and
+    the requests answered so far.
+
+    No HTTP here: MockHandler reads the request and writes the answer.
+    """
+
+    def __init__(self, *, ignore_query: bool = False) -> None:
+        self._ignore_query = ignore_query
+        self._responses: dict[MockEndpoint, list[MockResponse]] = {}
+        self._received_requests: list[ReceivedRequest] = []
+
+    def add(
+        self, endpoint: MockEndpoint, response: MockResponse, *next_responses: MockResponse
+    ) -> None:
+        """Answer the first request to the endpoint with response, the next ones with
+        next_responses in turn; the last response answers every further request."""
+        self._responses[endpoint] = [response, *next_responses]
+
+    @property
+    def received_requests(self) -> Sequence[ReceivedRequest]:
+        """Every request answered so far, in order, including those to unknown paths."""
+        return list(self._received_requests)
+
+    def reset(self) -> None:
+        """Forget the endpoints and the received requests."""
+        self._responses.clear()
+        self._received_requests.clear()
+
+    def answer(self, request: ReceivedRequest) -> MockAnswer:
+        self._received_requests.append(request)
+        path = urlsplit(request.path).path if self._ignore_query else request.path
+        endpoint = MockEndpoint(method=request.method, path=path)
+        if not (responses := self._responses.get(endpoint)):
+            return MockAnswer(status=HTTPStatus.NOT_FOUND)
+        # The last response answers every further request.
+        response = responses.pop(0) if len(responses) > 1 else responses[0]
+        if response.request_validator is not None:
+            try:
+                if not response.request_validator(request.headers, request.body):
+                    raise AssertionError("Request validation failed")
+            except AssertionError as excp:
+                return MockAnswer(
+                    status=HTTPStatus.BAD_REQUEST,
+                    reason="Request Validation Failed",
+                    body=str(excp).encode(),
+                )
+        body = (
+            response.body
+            if isinstance(response.body, bytes)
+            else response.body(request.headers, request.body)
+        )
+        return MockAnswer(
+            status=response.status,
+            headers={"Content-Type": response.content_type, "Content-Length": str(len(body))},
+            body=body,
+        )
+
+
 class MockHTTPServer(HTTPServer):
     def __init__(
         self,
         server_address: tuple[str, int],
         RequestHandlerClass: type[BaseHTTPRequestHandler],
         bind_and_activate: bool = True,
+        ignore_query: bool = False,
     ) -> None:
         super().__init__(server_address, RequestHandlerClass, bind_and_activate)
-        self.endpoints: dict[MockEndpoint, MockResponse] = {}
+        self.endpoints = MockEndpoints(ignore_query=ignore_query)
 
 
 class MockHandler(BaseHTTPRequestHandler):
@@ -74,38 +153,23 @@ class MockHandler(BaseHTTPRequestHandler):
     def _handle(self, method: MockMethod) -> None:
         if not isinstance(self.server, MockHTTPServer):
             raise TypeError(f"Expected MockHTTPServer, got {type(self.server)}")
-        endpoints = self.server.endpoints
-        endpoint = MockEndpoint(method=method, path=self.path)
 
         # Always consume the request body before sending a response to avoid
         # BrokenPipeError on the client side (e.g. with OpenSSL 3.5+).
         size = int(self.headers.get("Content-Length", 0))
-        request_body = self.rfile.read(size) if size > 0 else b""
-
-        if not (response := endpoints.get(endpoint)):
-            self.send_response(HTTPStatus.NOT_FOUND)
-            self.end_headers()
-            return
-        request_headers = dict(self.headers.items())
-        if response.request_validator is not None:
-            try:
-                if not response.request_validator(request_headers, request_body):
-                    raise AssertionError("Request validation failed")
-            except AssertionError as excp:
-                self.send_response(HTTPStatus.BAD_REQUEST, "Request Validation Failed")
-                self.end_headers()
-                self.wfile.write(str(excp).encode())
-                return
-        body = (
-            response.body
-            if isinstance(response.body, bytes)
-            else response.body(request_headers, request_body)
+        request = ReceivedRequest(
+            method=method,
+            path=self.path,
+            headers=dict(self.headers.items()),
+            body=self.rfile.read(size) if size > 0 else b"",
         )
-        self.send_response(response.status)
-        self.send_header("Content-Type", response.content_type)
-        self.send_header("Content-Length", str(len(body)))
+
+        answer = self.server.endpoints.answer(request)
+        self.send_response(answer.status, answer.reason)
+        for name, value in answer.headers.items():
+            self.send_header(name, value)
         self.end_headers()
-        self.wfile.write(body)
+        self.wfile.write(answer.body)
 
 
 class MockServer:
@@ -121,6 +185,8 @@ class MockServer:
         port (int, optional): The port to bind to. If 0 (default), a random free port is used.
         https (bool, optional): Whether to use HTTPS. Defaults to False.
         cert_dir (Path, optional): Directory to store certificates when using HTTPS.
+        ignore_query (bool, optional): Match endpoints on the URL path only, whatever query
+            string a request carries. Defaults to False.
 
     Attributes:
         server: The HTTPServer instance.
@@ -128,6 +194,9 @@ class MockServer:
         url: The full URL of the running server (set after entering context).
         cert_file: Path to the certificate file (only set when using HTTPS).
         key_file: Path to the private key file (only set when using HTTPS).
+        received_requests: Every request received so far, in order, including those to
+            unknown paths. Methods without a handler, such as HEAD, are answered by the
+            base class and not recorded.
 
     Example:
         >>> # HTTP server
@@ -153,6 +222,7 @@ class MockServer:
         port: int = 0,  # port=0 → random free port
         https: bool = False,
         cert_dir: Path = Path("/tmp"),  # nosec
+        ignore_query: bool = False,
     ) -> None:
         self.host = host
         self.https = https
@@ -164,7 +234,7 @@ class MockServer:
         if self.https:
             self._create_self_signed_cert()
 
-        self.server = MockHTTPServer((host, port), MockHandler)
+        self.server = MockHTTPServer((host, port), MockHandler, ignore_query=ignore_query)
         self.thread = threading.Thread(target=self.server.serve_forever)
         self.thread.daemon = True
 
@@ -215,5 +285,16 @@ class MockServer:
         self,
         endpoint: MockEndpoint,
         response: MockResponse,
+        *next_responses: MockResponse,
     ) -> None:
-        self.server.endpoints[endpoint] = response
+        """Answer the first request to the endpoint with response, the next ones with
+        next_responses in turn; the last response answers every further request."""
+        self.server.endpoints.add(endpoint, response, *next_responses)
+
+    @property
+    def received_requests(self) -> Sequence[ReceivedRequest]:
+        return self.server.endpoints.received_requests
+
+    def reset(self) -> None:
+        """Forget the endpoints and the received requests, keeping the server and its URL."""
+        self.server.endpoints.reset()

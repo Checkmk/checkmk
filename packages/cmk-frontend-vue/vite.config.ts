@@ -169,7 +169,7 @@ export default defineConfig(({ command }) => {
       server: {
         strictPort: true,
         fs: {
-          allow: ['.', '../cmk-frontend/', '../cmk-ui-library/']
+          allow: ['.', '../cmk-frontend/', '../cmk-profiling/', '../cmk-ui-library/']
         },
         proxy: {
           // dev server proxies whole checkmk to inject js resources and support auto hot reloading

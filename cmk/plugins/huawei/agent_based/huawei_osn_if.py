@@ -25,8 +25,7 @@ from cmk.plugins.lib import interfaces
 Section = Mapping[str, interfaces.InterfaceWithCounters]
 
 
-def parse_huawei_osn_if(string_table: Sequence[StringTable]) -> Section:
-    timestamp = time.time()
+def parse_huawei_osn_if_pure(string_table: Sequence[StringTable], timestamp: float) -> Section:
     return {
         name: interfaces.InterfaceWithCounters(
             interfaces.Attributes(
@@ -53,6 +52,10 @@ def parse_huawei_osn_if(string_table: Sequence[StringTable]) -> Section:
         for line in string_table[0]
         for name in [line[0]]
     }
+
+
+def parse_huawei_osn_if(string_table: Sequence[StringTable]) -> Section:
+    return parse_huawei_osn_if_pure(string_table, timestamp=time.time())
 
 
 snmp_section_huawei_osn_if = SNMPSection(

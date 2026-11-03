@@ -20,8 +20,9 @@ from cmk.gui.openapi.framework import (
 )
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.framework.model.common_fields import FieldsFilterType
+from cmk.gui.openapi.framework.model.converter import folder_tree_of_request
 from cmk.gui.openapi.restful_objects.constructors import collection_href
-from cmk.gui.watolib.hosts_and_folders import Folder, Host, make_folder_tree
+from cmk.gui.watolib.hosts_and_folders import Folder, Host
 
 from ._family import HOST_CONFIG_FAMILY
 from ._utils import PERMISSIONS, serialize_host_collection
@@ -105,7 +106,7 @@ def list_hosts_v1(
     ] = ApiOmitted(),
 ) -> HostConfigCollectionModel:
     """Show all hosts"""
-    root_folder = make_folder_tree(api_context.config).root_folder()
+    root_folder = folder_tree_of_request(api_context).root_folder()
     hosts_filter = SearchFilter(
         hostnames=None if isinstance(hostnames, ApiOmitted) else hostnames,
         site=None if isinstance(site, ApiOmitted) else site,

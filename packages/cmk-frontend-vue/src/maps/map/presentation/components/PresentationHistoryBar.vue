@@ -45,8 +45,8 @@ const emit = defineEmits<{ undo: []; redo: [] }>()
   left: 12px;
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: var(--spacing-half);
+  gap: var(--dimension-4);
+  padding: var(--dimension-3);
   z-index: 5;
 }
 </style>

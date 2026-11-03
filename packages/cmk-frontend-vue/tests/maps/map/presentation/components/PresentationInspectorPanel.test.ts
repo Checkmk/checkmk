@@ -33,11 +33,10 @@ interface CapturedEvents {
   slide: Record<string, unknown> | null
   patches: Record<string, unknown>[]
   group: number
-  save: number
 }
 
 function renderPanel(selection: PresentationElement[]): CapturedEvents {
-  const captured = reactive<CapturedEvents>({ slide: null, patches: [], group: 0, save: 0 })
+  const captured = reactive<CapturedEvents>({ slide: null, patches: [], group: 0 })
   render(
     defineComponent({
       components: { PresentationInspectorPanel },
@@ -53,9 +52,6 @@ function renderPanel(selection: PresentationElement[]): CapturedEvents {
           },
           onGroup: () => {
             captured.group += 1
-          },
-          onSave: () => {
-            captured.save += 1
           }
         }
       },
@@ -66,11 +62,9 @@ function renderPanel(selection: PresentationElement[]): CapturedEvents {
           connection-id="live_1"
           :targets="[]"
           background-image-name=""
-          save-label=""
           @slide="onSlide"
           @patch="onPatch"
           @group="onGroup"
-          @save="onSave"
         />
       `
     }),
@@ -95,9 +89,9 @@ describe('PresentationInspectorPanel', () => {
 
   it('shows slide settings when nothing is selected', () => {
     renderPanel([])
-    expect(screen.getByRole('button', { name: 'Slide' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Aspect / size' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Background' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Slide' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Toggle Aspect / size' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Toggle Background' })).toBeInTheDocument()
   })
 
   it('reports a slide change for a size preset', async () => {
@@ -111,8 +105,8 @@ describe('PresentationInspectorPanel', () => {
     const user = userEvent.setup()
     const text = createElement('text', 0, 0)
     const captured = renderPanel([text])
-    expect(screen.getByRole('heading', { name: 'Layout' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Typography' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Toggle Layout' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Toggle Typography' })).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'B' }))
     expect(captured.patches[0]).toHaveProperty('font_weight')
@@ -146,23 +140,31 @@ describe('PresentationInspectorPanel', () => {
   it('shows appearance + data sections for a shape', () => {
     const shape = createElement('rect', 0, 0)
     renderPanel([shape])
-    expect(screen.getByRole('heading', { name: 'Appearance' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Data' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Toggle Appearance' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Toggle Data' })).toBeInTheDocument()
     expect(screen.getByText(/Data slot/)).toBeInTheDocument()
   })
 
   it('shows display controls and binding form for a data element', () => {
     const data = createElement('data', 0, 0)
     renderPanel([data])
-    expect(screen.getByRole('heading', { name: 'Layout' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Toggle Layout' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Toggle Data' })).toBeInTheDocument()
     expect(screen.getByText('Host')).toBeInTheDocument()
-    expect(screen.getByText('Display')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Toggle Display' })).toBeInTheDocument()
+    expect(screen.getByText('Show as')).toBeInTheDocument()
+  })
+
+  it('names the opacity slider by its label', () => {
+    renderPanel([createElement('rect', 0, 0)])
+    expect(screen.getByRole('slider', { name: 'Opacity' })).toBeInTheDocument()
   })
 
   it('hides the layout numbers for connectors', () => {
     const line = createElement('line', 0, 0)
     renderPanel([line])
-    expect(screen.queryByRole('heading', { name: 'Layout' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Toggle Layout' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Toggle Connector' })).toBeInTheDocument()
     expect(screen.getByText('Start endpoint')).toBeInTheDocument()
   })
 
@@ -190,20 +192,13 @@ describe('PresentationInspectorPanel', () => {
     const user = userEvent.setup()
     const shape = createElement('rect', 0, 0)
     renderPanel([shape])
-    expect(screen.getByRole('heading', { name: 'Appearance' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Toggle Appearance' })).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Slide' }))
-    expect(screen.getByRole('heading', { name: 'Aspect / size' })).toBeInTheDocument()
+    await user.click(screen.getByRole('tab', { name: 'Slide' }))
+    expect(screen.getByRole('button', { name: 'Toggle Aspect / size' })).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Element' }))
-    expect(screen.getByRole('heading', { name: 'Appearance' })).toBeInTheDocument()
-  })
-
-  it('reports save from the topbar save button', async () => {
-    const user = userEvent.setup()
-    const captured = renderPanel([])
-    await user.click(screen.getByRole('button', { name: 'Save now' }))
-    expect(captured.save).toBe(1)
+    await user.click(screen.getByRole('tab', { name: 'Element' }))
+    expect(screen.getByRole('button', { name: 'Toggle Appearance' })).toBeInTheDocument()
   })
 
   it('renames the element via the header input', async () => {

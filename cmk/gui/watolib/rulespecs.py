@@ -10,6 +10,7 @@
 """The rulespecs are the ruleset specifications registered to Setup."""
 
 import abc
+import dataclasses
 import re
 import sys
 from collections.abc import Callable, Mapping, Sequence
@@ -20,6 +21,7 @@ import cmk.ccc.plugin_registry
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.version import Edition, edition
 from cmk.gui.config import active_config
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.form_specs.unstable.legacy_converter import resolve_help_text, resolve_title
 from cmk.gui.form_specs.unstable.legacy_converter import Tuple as FSTuple
 from cmk.gui.form_specs.unstable.time_specific import TimeSpecific
@@ -55,9 +57,10 @@ from cmk.gui.valuespec import (
 )
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.rulesets.internal.form_specs import SingleChoiceElementExtended, SingleChoiceExtended
-from cmk.rulesets.v1 import Help, Label, Title
+from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import DefaultValue, FormSpec
 from cmk.rulesets.v1.form_specs import FixedValue as FSFixedValue
+from cmk.rulesets.v1.form_specs.validators import ValidationError
 from cmk.utils import paths
 from cmk.utils.timeperiod import TIMESPECIFIC_DEFAULT_KEY, TIMESPECIFIC_VALUES_KEY
 from cmk.web.utils.doc_references import DocReference
@@ -346,8 +349,6 @@ class FormSpecDefinition[ModelT, ModelU]:
     ) -> None:
         self._value_factory: Final = value
         self._item_factory: Final = item
-        self._value: FormSpec[ModelT] | None = None
-        self._item: FormSpec[ModelU] | None = None
 
     @property
     def value(self) -> Callable[[], FormSpec[ModelT]]:
@@ -359,16 +360,14 @@ class FormSpecDefinition[ModelT, ModelU]:
             return None
         return self._get_item
 
+    @request_memoize(maxsize=None)
     def _get_value(self) -> FormSpec[ModelT]:
-        if self._value is None:
-            self._value = self._value_factory()
-        return self._value
+        return self._value_factory()
 
+    @request_memoize(maxsize=None)
     def _get_item(self) -> FormSpec[ModelU]:
         assert self._item_factory is not None
-        if self._item is None:
-            self._item = self._item_factory()
-        return self._item
+        return self._item_factory()
 
 
 class FormSpecNotImplementedError(Exception):
@@ -446,6 +445,7 @@ class Rulespec:
         self._help = help_func
         self._doc_references = doc_references
         self._form_spec_definition = form_spec_definition
+        self._help_by_language: dict[str, None | str | HTML] = {}
 
     @property
     def name(self) -> str:
@@ -472,8 +472,11 @@ class Rulespec:
 
     @property
     def has_valuespec(self) -> bool:
-        # Right now, a Valuespec is always present
-        # Will be refactored later on
+        # Some form specs cannot be converted to a valuespec
+        try:
+            self.valuespec
+        except NotImplementedError:
+            return False
         return True
 
     @property
@@ -519,6 +522,12 @@ class Rulespec:
 
     @property
     def help(self) -> None | str | HTML:
+        language = get_current_language()
+        if language not in self._help_by_language:
+            self._help_by_language[language] = self._compute_help()
+        return self._help_by_language[language]
+
+    def _compute_help(self) -> None | str | HTML:
         if self._help:
             return self._help()
 
@@ -1077,6 +1086,33 @@ def _wrap_form_spec_in_timespecific[ModelT](
     return wrapped
 
 
+# An enforced service is configured as (check type, item, parameters).
+_ENFORCED_SERVICE_ITEM_INDEX: Final = 1
+
+
+def _validate_enforced_service_item(value: tuple[object, ...], varprefix: str) -> None:
+    """Validate the item of the enforced service the whole rule value configures"""
+    if value[_ENFORCED_SERVICE_ITEM_INDEX] == "":
+        raise MKUserError(
+            f"{varprefix}_{_ENFORCED_SERVICE_ITEM_INDEX}",
+            _(
+                "The item must not be empty. Only check plug-ins that have no item at "
+                "all can be enforced without one."
+            ),
+        )
+
+
+def _validate_item_is_not_empty(value: object) -> None:
+    """Validate the item of an enforced service on its own form spec"""
+    if value == "":
+        raise ValidationError(
+            Message(
+                "The item must not be empty. Only check plug-ins that have no item at "
+                "all can be enforced without one."
+            )
+        )
+
+
 class ManualCheckParameterRulespec(HostRulespec):
     """Base class for all rulespecs managing manually configured checks
 
@@ -1134,11 +1170,19 @@ class ManualCheckParameterRulespec(HostRulespec):
 
         # Optional keys
         self._parameter_valuespec = parameter_valuespec
+        self._parameter_form_spec_definition = form_spec_definition
         self._rule_value_item_valuespec = item_spec
 
     @property
     def check_group_name(self) -> str:
         return self._check_group_name
+
+    @property
+    def parameter_value_model(self) -> ValueSpec | FormSpec[Any]:
+        if self._parameter_form_spec_definition is not None:
+            return self._parameter_form_spec_definition.value()
+        assert self._parameter_valuespec is not None
+        return _wrap_valuespec_in_timeperiod_valuespec(self._parameter_valuespec())
 
     def _rulespec_valuespec(self) -> ValueSpec:
         """Wraps the parameter together with the other needed valuespecs
@@ -1170,6 +1214,7 @@ class ManualCheckParameterRulespec(HostRulespec):
                 self._get_item_valuespec(),
                 parameter_vs,
             ],
+            validate=_validate_enforced_service_item,
         )
 
     def _get_item_valuespec(self) -> ValueSpec:
@@ -1218,7 +1263,14 @@ class ManualCheckParameterRulespec(HostRulespec):
                 value=None,
                 label=Label(""),
             )
-        return form_spec()
+        item_form_spec = form_spec()
+        return dataclasses.replace(
+            item_form_spec,
+            custom_validate=(
+                *(item_form_spec.custom_validate or ()),
+                _validate_item_is_not_empty,
+            ),
+        )
 
 
 def _get_check_type_group_choice(
@@ -1232,7 +1284,7 @@ def _get_check_type_group_choice(
                 elements.append(
                     SingleChoiceElementExtended[str](
                         name=str(checkname),
-                        title=Title(  # astrein: disable=localization-checker
+                        title=Title(  # astrein: disable=localization
                             f"{checkname} - {check['title']}"
                         ),
                     )

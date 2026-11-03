@@ -7,7 +7,12 @@ import type usei18n from 'cmk-ui-library/lib/i18n'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
 import { describe, expect, it } from 'vitest'
 
-import { activityCount, commentRows, downtimeRows } from '@/maps/map/detail/activityFacts'
+import {
+  activityCount,
+  activityTabLabel,
+  commentRows,
+  downtimeRows
+} from '@/maps/map/detail/activityFacts'
 
 import { aDetails } from '../../support/fixtures'
 
@@ -129,5 +134,37 @@ describe('activityCount', () => {
 
   it('counts nothing before the details have arrived', () => {
     expect(activityCount(null)).toBe(0)
+  })
+})
+
+describe('activityTabLabel', () => {
+  const comment = { id: 1, author: 'a', comment: 'x', entry_time: NOW_SECONDS, expire_time: null }
+  const downtime = {
+    id: 2,
+    author: 'a',
+    comment: 'y',
+    start_time: NOW_SECONDS,
+    end_time: NOW_SECONDS + 1,
+    fixed: true
+  }
+
+  it('names a tab of comments only after them', () => {
+    const details = aDetails({ type: 'host', host_name: 'web01', comments: [comment] })
+    expect(activityTabLabel(details, _t)).toBe('Comments')
+  })
+
+  it('names a tab of downtimes only after them', () => {
+    const details = aDetails({ type: 'host', host_name: 'web01', downtimes: [downtime] })
+    expect(activityTabLabel(details, _t)).toBe('Downtimes')
+  })
+
+  it('calls a tab of both the activity on the object', () => {
+    const details = aDetails({
+      type: 'host',
+      host_name: 'web01',
+      comments: [comment],
+      downtimes: [downtime]
+    })
+    expect(activityTabLabel(details, _t)).toBe('Activity')
   })
 })

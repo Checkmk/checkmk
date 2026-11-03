@@ -16,9 +16,16 @@ export interface AcknowledgeValues {
   notify: boolean
 }
 
+function hasComment(values: AcknowledgeValues): boolean {
+  return values.comment.trim() !== ''
+}
+
+function hasExpiry(values: AcknowledgeValues): boolean {
+  return !values.expireOnEnabled || values.expireOn !== null
+}
+
 export function isAcknowledgeValid(values: AcknowledgeValues): boolean {
-  const expiryValid = !values.expireOnEnabled || values.expireOn !== null
-  return values.comment.trim() !== '' && expiryValid
+  return hasComment(values) && hasExpiry(values)
 }
 </script>
 
@@ -26,6 +33,7 @@ export function isAcknowledgeValid(values: AcknowledgeValues): boolean {
 import CmkLink from 'cmk-ui-library/components/CmkLink.vue'
 import CmkDateTimePicker from 'cmk-ui-library/components/date-time/CmkDateTimePicker.vue'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
+import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequired.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -41,8 +49,10 @@ const props = withDefaults(
     /** Where the option defaults are edited; absent for users who may not edit them. */
     presetsUrl?: string | null
     notificationRulesUrl?: string | null
+    /** Whether to point out the fields that keep the form from being submitted. */
+    showErrors?: boolean
   }>(),
-  { targetKind: 'host', presetsUrl: null, notificationRulesUrl: null }
+  { targetKind: 'host', presetsUrl: null, notificationRulesUrl: null, showErrors: false }
 )
 
 const model = defineModel<AcknowledgeValues>({ required: true })
@@ -52,6 +62,14 @@ const emit = defineEmits<{
 }>()
 
 const { _t, _tp } = usei18n()
+
+const commentErrors = computed(() =>
+  props.showErrors && !hasComment(model.value) ? [_t('Comment is required.')] : []
+)
+
+const expiryErrors = computed(() =>
+  props.showErrors && !hasExpiry(model.value) ? [_t('Choose an expiry date & time.')] : []
+)
 
 const expireOnHelp = computed(() =>
   props.targetKind === 'service'
@@ -111,6 +129,7 @@ watch(model, (values) => emit('update:valid', isAcknowledgeValid(values)), {
           v-model="model.comment"
           field-size="large"
           :placeholder="_t('Enter a comment…')"
+          :external-errors="commentErrors"
         />
       </label>
     </div>
@@ -130,6 +149,7 @@ watch(model, (values) => emit('update:valid', isAcknowledgeValid(values)), {
       </div>
 
       <CmkCheckbox v-model="model.expireOnEnabled" :label="_t('Expire on')" :help="expireOnHelp">
+        <CmkInlineValidation v-if="model.expireOnEnabled" :validation="expiryErrors" />
         <CmkDateTimePicker
           v-if="model.expireOnEnabled"
           v-model="model.expireOn"

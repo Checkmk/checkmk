@@ -12,7 +12,7 @@ import type { SignedMap } from '@/maps/api/mapConfig'
 import MapViewComponent from '@/maps/map/MapView.vue'
 import type { MapConfig, MapRead, MapView } from '@/maps/types/api'
 
-import { aListedMap, aMap, newMapView } from '../support/fixtures'
+import { aListedMap, aMap, anObject, newMapView } from '../support/fixtures'
 import { fakeMapsServices, provideServices } from '../support/services'
 
 // connectToMap opens an EventSource; jsdom has none. A minimal stand-in keeps the
@@ -70,14 +70,20 @@ function signedMap(view: MapView, extra: Partial<MapConfig> = {}): SignedMap {
 
 let services: ReturnType<typeof fakeMapsServices>
 
+// Navigation reloads the page between the list and a map, so the URL is set
+// before the services read it, as a page load would.
+function openMapPage(): void {
+  window.history.replaceState({}, '', '/site/check_mk/maps.py?name=map1')
+}
+
 function opensMap(view: MapView, extra: Partial<MapConfig> = {}): void {
   vi.mocked(services.apis.mapConfig.get).mockResolvedValue(signedMap(view, extra))
 }
 
-function renderMap() {
+function renderMap(extraStubs: Record<string, unknown> = {}) {
   const { global: provided } = provideServices(services)
   return render(MapViewComponent, {
-    global: { ...provided, stubs }
+    global: { ...provided, stubs: { ...stubs, ...extraStubs } }
   })
 }
 
@@ -110,16 +116,22 @@ beforeAll(async () => {
 
 describe('MapView – map-type dispatch', () => {
   beforeEach(() => {
+    openMapPage()
     services = fakeMapsServices()
     vi.stubGlobal('EventSource', FakeEventSource)
-    // Point navigation at a map so the shell fetches and renders one.
-    services.nav.replace({ view: 'map', name: 'map1' })
   })
 
   it('renders the static MapCanvas for a static view', async () => {
     opensMap(newMapView('static'))
     renderMap()
     await expectOnlyRenderer('renderer-static')
+  })
+
+  it('titles the browser tab after the map', async () => {
+    opensMap(newMapView('static'), { alias: 'Datacenter Munich' })
+    renderMap()
+
+    await waitFor(() => expect(document.title).toBe('Datacenter Munich'))
   })
 
   it('renders the WorldMapView for a worldmap view', async () => {
@@ -160,11 +172,36 @@ describe('MapView – map-type dispatch', () => {
   })
 })
 
-describe('MapView – loading / error / read-only states', () => {
+describe('MapView – the area around a static map', () => {
   beforeEach(() => {
     services = fakeMapsServices()
     vi.stubGlobal('EventSource', FakeEventSource)
     services.nav.replace({ view: 'map', name: 'map1' })
+  })
+
+  async function renderedArea(extra: Partial<MapConfig>): Promise<HTMLElement> {
+    opensMap(newMapView('static'), { background_color: '#ffcc00', ...extra })
+    const { container } = renderMap()
+    await expectOnlyRenderer('renderer-static')
+    return container.querySelector<HTMLElement>('.maps-static-map-view')!
+  }
+
+  it('takes the map color in the NagVis-compatible renderer, as a NagVis page does', async () => {
+    const area = await renderedArea({ render_mode: 'nagvis_classic' })
+    expect(area.style.backgroundColor).toBe('rgb(255, 204, 0)')
+  })
+
+  it('keeps the theme around a map in the default renderer', async () => {
+    const area = await renderedArea({ render_mode: 'default' })
+    expect(area.style.backgroundColor).toBe('')
+  })
+})
+
+describe('MapView – loading / error / read-only states', () => {
+  beforeEach(() => {
+    openMapPage()
+    services = fakeMapsServices()
+    vi.stubGlobal('EventSource', FakeEventSource)
   })
 
   it('shows the loading spinner and no renderer while the map fetch is in flight', async () => {
@@ -203,9 +240,9 @@ describe('MapView – loading / error / read-only states', () => {
 
 describe('MapView – breadcrumb', () => {
   beforeEach(() => {
+    openMapPage()
     services = fakeMapsServices()
     vi.stubGlobal('EventSource', FakeEventSource)
-    services.nav.replace({ view: 'map', name: 'map1' })
   })
 
   it('links back to the map list and ends on the open map', async () => {
@@ -217,6 +254,59 @@ describe('MapView – breadcrumb', () => {
       services.nav.href({ view: 'home' })
     )
     expect(screen.queryByRole('link', { name: 'Map 1' })).toBeNull()
+  })
+})
+
+describe('MapView – opened from the map list', () => {
+  const settingsProbe = { template: '<div data-testid="settings-open" />' }
+
+  function openMapPageWith(open: string): void {
+    window.history.replaceState({}, '', `/site/check_mk/maps.py?name=map1&open=${open}`)
+    services = fakeMapsServices()
+    vi.stubGlobal('EventSource', FakeEventSource)
+  }
+
+  function renderOpened(view: MapView, canEdit: boolean) {
+    opensMap(view)
+    services.maps.maps.value = [aListedMap({ name: 'map1', can_edit: canEdit })]
+    const { global: provided } = provideServices(services)
+    return render(MapViewComponent, {
+      global: { ...provided, stubs: { ...stubs, MapSettingsModal: settingsProbe } }
+    })
+  }
+
+  async function expectOpenDropped(): Promise<void> {
+    await waitFor(() => expect(window.location.search).toBe('?name=map1'))
+  }
+
+  it('opens the settings and drops the request from the URL', async () => {
+    openMapPageWith('settings')
+    renderOpened(newMapView('static'), true)
+    await waitFor(() => expect(screen.getByTestId('settings-open')).toBeInTheDocument())
+    await expectOpenDropped()
+  })
+
+  it('opens the editor and drops the request from the URL', async () => {
+    openMapPageWith('editor')
+    renderOpened(newMapView('static'), true)
+    await waitFor(() => expect(screen.getByText('Editing')).toBeInTheDocument())
+    await expectOpenDropped()
+  })
+
+  it('opens no editor on a map whose content comes from a live query', async () => {
+    openMapPageWith('editor')
+    renderOpened(newMapView('flow'), true)
+    await expectOnlyRenderer('renderer-flow')
+    await expectOpenDropped()
+    expect(screen.queryByText('Editing')).toBeNull()
+  })
+
+  it('opens no settings on a map the user may not edit', async () => {
+    openMapPageWith('settings')
+    renderOpened(newMapView('static'), false)
+    await waitFor(() => expect(screen.getByTestId('renderer-static')).toBeInTheDocument())
+    await expectOpenDropped()
+    expect(screen.queryByTestId('settings-open')).toBeNull()
   })
 })
 
@@ -244,9 +334,9 @@ describe('MapView – what the settings slide-in is handed', () => {
 
   beforeEach(() => {
     handedMap = null
+    openMapPage()
     services = fakeMapsServices()
     vi.stubGlobal('EventSource', FakeEventSource)
-    services.nav.replace({ view: 'map', name: 'map1' })
   })
 
   it('carries the sharing and delete rights over from the map list', async () => {
@@ -283,11 +373,44 @@ describe('MapView – what the settings slide-in is handed', () => {
   })
 })
 
-describe('MapView – unreachable sites', () => {
+describe('MapView – following a map object', () => {
+  const clickingRenderer = defineComponent({
+    emits: ['object-click'],
+    setup(_props, { emit }) {
+      const floor = anObject({ id: 'm1', type: 'map', map_name: 'floor-2' })
+      return () => h('button', { onClick: () => emit('object-click', floor) }, 'Floor 2')
+    }
+  })
+
   beforeEach(() => {
+    openMapPage()
     services = fakeMapsServices()
     vi.stubGlobal('EventSource', FakeEventSource)
-    services.nav.replace({ view: 'map', name: 'map1' })
+  })
+
+  // A wall display keeps showing maps the way it was set up.
+  it('opens the map in kiosk mode and the rotation pool this one was opened in', async () => {
+    services.nav.replace({ view: 'map', name: 'map1', kiosk: true, rotation: 'noc' })
+    opensMap(newMapView('radar'))
+    const navigate = vi.spyOn(services.nav, 'navigate').mockImplementation(() => {})
+    renderMap({ 'radar-map-view': clickingRenderer })
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Floor 2' }))
+
+    expect(navigate).toHaveBeenCalledWith({
+      view: 'map',
+      name: 'floor-2',
+      kiosk: true,
+      rotation: 'noc'
+    })
+  })
+})
+
+describe('MapView – unreachable sites', () => {
+  beforeEach(() => {
+    openMapPage()
+    services = fakeMapsServices()
+    vi.stubGlobal('EventSource', FakeEventSource)
     vi.mocked(services.apis.mapStates.fetchStates).mockResolvedValue({
       map_name: 'map1',
       states: [],
@@ -375,9 +498,9 @@ describe('MapView – saving the settings', () => {
   })
 
   beforeEach(() => {
+    openMapPage()
     services = fakeMapsServices()
     vi.stubGlobal('EventSource', FakeEventSource)
-    services.nav.replace({ view: 'map', name: 'map1' })
   })
 
   async function saveSettings(): Promise<void> {

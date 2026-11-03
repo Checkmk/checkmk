@@ -7,19 +7,22 @@
 The module is pure file/symlink manipulation plus ``omd stop/start``
 through the sudoers rule.  The tests run it against a fake OMD layout in
 a tmp dir: ``run_as_site_user`` executes commands locally, a fake
-``omd`` on ``$PATH`` records the stop/start sequence, and
+``omd`` on ``$PATH`` records the stop/start sequence, a fake ``sudo``
+on ``$PATH`` grants site access and records its calls, and
 ``delete_state`` is replaced by a recorder (``FakeOmd.state_resets``).
 """
 
 import dataclasses
+import io
 import os
 import stat
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
 
-from cmk.dev_deploy.errors import CloneError
+from cmk.dev_deploy.errors import CloneError, SudoersError
 from cmk.dev_deploy.site import sudoers, version_clone
 from cmk.dev_deploy.site.version_clone import ensure_clone, is_clone_active, teardown_clone
 
@@ -34,6 +37,7 @@ class FakeOmd:
     site_root: Path
     dev_versions: Path
     omd_log: Path
+    sudo_log: Path
     shim_bin: Path
     state_resets: list[Path]
 
@@ -47,6 +51,9 @@ class FakeOmd:
 
     def omd_calls(self) -> list[str]:
         return self.omd_log.read_text().splitlines() if self.omd_log.is_file() else []
+
+    def sudo_calls(self) -> list[str]:
+        return self.sudo_log.read_text().splitlines() if self.sudo_log.is_file() else []
 
 
 def _local_run_as_site_user(
@@ -84,10 +91,13 @@ def omd(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> FakeOmd:
     shim_bin = tmp_path / "shim-bin"
     shim_bin.mkdir()
     omd_log = tmp_path / "omd.log"
+    sudo_log = tmp_path / "sudo.log"
     _write_shim(shim_bin, "omd", '#!/bin/sh\necho "$1" >> "$OMD_LOG"\n')
+    _write_shim(shim_bin, "sudo", '#!/bin/sh\necho "$*" >> "$SUDO_LOG"\n')
     _write_shim(shim_bin, "getcap", "#!/bin/sh\nexit 0\n")
     monkeypatch.setenv("PATH", f"{shim_bin}{os.pathsep}{os.environ['PATH']}")
     monkeypatch.setenv("OMD_LOG", str(omd_log))
+    monkeypatch.setenv("SUDO_LOG", str(sudo_log))
 
     state_resets: list[Path] = []
     monkeypatch.setattr(version_clone, "PRISTINE_VERSIONS_DIR", tmp_path / "versions")
@@ -100,6 +110,7 @@ def omd(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> FakeOmd:
         site_root=site_root,
         dev_versions=dev_versions,
         omd_log=omd_log,
+        sudo_log=sudo_log,
         shim_bin=shim_bin,
         state_resets=state_resets,
     )
@@ -491,6 +502,20 @@ class TestTeardownClone:
         assert not (omd.dev_versions / "v260").exists()
         assert omd.omd_calls() == ["stop"]  # left stopped
 
+    def test_missing_site_access_aborts_before_stopping(
+        self, omd: FakeOmd, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        ensure_clone(omd.site_root)
+        omd.omd_log.unlink()
+        _write_shim(omd.shim_bin, "sudo", "#!/bin/sh\nexit 1\n")
+        monkeypatch.setattr(sys, "stdin", io.StringIO())  # no TTY to ask for a password
+
+        with pytest.raises(SudoersError, match="site user 'v260'"):
+            teardown_clone(omd.site_root)
+
+        assert os.readlink(omd.version_link) == str(omd.clone)
+        assert omd.omd_calls() == []
+
     def test_pristine_site_only_cleans_leftovers(self, omd: FakeOmd) -> None:
         leftover = omd.dev_versions / "v260" / "2.5.0-old"
         leftover.mkdir(parents=True)
@@ -500,6 +525,7 @@ class TestTeardownClone:
         assert os.readlink(omd.version_link) == f"../../versions/{_VERSION}"
         assert not leftover.exists()
         assert omd.omd_calls() == []  # site untouched
+        assert omd.sudo_calls() == []
 
     def test_deleted_site_only_removes_clone_data(self, omd: FakeOmd, tmp_path: Path) -> None:
         clone = omd.dev_versions / "gone" / _VERSION
@@ -508,3 +534,4 @@ class TestTeardownClone:
         teardown_clone(tmp_path / "sites" / "gone")
 
         assert not (omd.dev_versions / "gone").exists()
+        assert omd.sudo_calls() == []  # the site user no longer exists

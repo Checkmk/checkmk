@@ -11,6 +11,7 @@ import hashlib
 import json
 import logging
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass, replace
 from enum import Enum
 from typing import Literal, Self, TypedDict
 
@@ -71,6 +72,27 @@ class NamingConvention(Enum):
     private_dns_name = "private_dns_name"
 
 
+class CloudFrontHostAssignment(Enum):
+    """Where the data of a CloudFront distribution goes. The values are those of the rule."""
+
+    account = "aws_host"
+    origin_domain = "domain_host"
+    distribution = "distribution_host"
+
+
+@dataclass(frozen=True)
+class HostNaming:
+    """The rule settings that the host names of AWS resources depend on.
+
+    See hosts.target_host, which is the only reader.
+    """
+
+    ec2: NamingConvention
+    cloudfront: CloudFrontHostAssignment
+    account: str | None = None
+    """The piggyback host for the data of the account, or None if it has none of its own."""
+
+
 class TagsImportPatternOption(Enum):
     ignore_all = "IGNORE_ALL"
     import_all = "IMPORT_ALL"
@@ -87,6 +109,8 @@ class AWSConfig:
         overall_tags: OverallTags,
         piggyback_naming_convention: NamingConvention,
         tags_option: TagsOption = TagsImportPatternOption.import_all,
+        *,
+        cloudfront_host_assignment: CloudFrontHostAssignment = CloudFrontHostAssignment.account,
     ) -> None:
         self.hostname = hostname
         self._overall_tags = self._prepare_tags(overall_tags)
@@ -94,14 +118,21 @@ class AWSConfig:
         self._config_hash_storage = Storage(AGENT, hostname)
         self._config_hash_key = "config_hash"
         self._current_config_hash = self._compute_config_hash(sys_argv)
-        self.piggyback_naming_convention = piggyback_naming_convention
+        self.host_naming = HostNaming(
+            ec2=piggyback_naming_convention, cloudfront=cloudfront_host_assignment
+        )
         self.tags_option = tags_option
         self.account_id: str | None = None
 
-    def for_account(self, account_id: str) -> Self:
-        """The same rule settings, scoped to one AWS account. Sections need this scope."""
-        account_config = copy.copy(self)
+    def for_account(self, account_id: str, host: str | None = None) -> Self:
+        """The same rule settings, scoped to one AWS account. Sections need this scope.
+
+        host is the piggyback host for the data of the account, or None if it has none of
+        its own.
+        """
+        account_config = copy.deepcopy(self)
         account_config.account_id = account_id
+        account_config.host_naming = replace(self.host_naming, account=host)
         return account_config
 
     def add_service_tags(self, tags_key: str, tags: OverallTags) -> None:

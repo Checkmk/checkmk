@@ -11,13 +11,12 @@ from typing import NamedTuple
 from jinja2 import Environment, PackageLoader, select_autoescape, StrictUndefined
 
 from cmk.ccc.version import ReleaseType, Version
-from cmk.werks.tool.models import Class, Compatibility, EditionV3, WerkV3
-from cmk.werks.tool.utils import (
-    has_content,
-    load_raw_files,
-    sort_by_version_and_component,
-    WerkTranslator,
-)
+from cmk.werks.flavor.cmk import CmkFlavor
+from cmk.werks.flavor.cmk.models import Class, EditionV3, WerkV3
+from cmk.werks.flavor.cmk.precompile import load_raw_files
+from cmk.werks.flavor.cmk.translator import sort_by_version_and_component, WerkTranslator
+from cmk.werks.tool.flavor import current_version
+from cmk.werks.tool.models import Compatibility
 
 
 class SimpleWerk(NamedTuple):
@@ -39,7 +38,7 @@ class SimpleWerk(NamedTuple):
         return cls(
             id=werk.id,
             title=werk.title,
-            has_content=has_content(werk.description),
+            has_content=bool(werk.description.strip()),
             compatible=werk.compatible == Compatibility.COMPATIBLE,
             prefix=prefix,
             url=f"https://checkmk.com/werk/{werk.id}",
@@ -75,7 +74,13 @@ def get_werks_by_edition(werks: list[WerkV3], edition: EditionV3) -> WerksByEdit
 
 def main(args: argparse.Namespace) -> None:
     werks_list = load_raw_files(args.werk_dir)
-    version_werks = [werk for werk in werks_list if werk.version == args.version]
+    defines_make_version = current_version(CmkFlavor(), args.werk_dir.parent)
+    version_werks: list[WerkV3] = []
+    for werk in werks_list:
+        if werk.version is None:
+            werk.version = defines_make_version
+        if werk.version == args.version:
+            version_werks.append(werk)
 
     werks = {}
     for edition in [

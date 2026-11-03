@@ -63,12 +63,15 @@ class AutomationState(ABC):
     :meth:`update` whenever they change.
     """
 
+    debug: bool
+    """Whether a failure the automation would otherwise report should raise through"""
+
     @abstractmethod
-    def update(self, omd_root: Path, raw_config: Mapping[str, object]) -> None: ...
+    def update(self, omd_root: Path, raw_config: Mapping[str, object], *, debug: bool) -> None: ...
 
 
-type StateFactory[StateT: AutomationState] = Callable[[Path, Mapping[str, object]], StateT]
-"""Build a state from the site's root and the raw configuration."""
+type StateFactory[StateT: AutomationState] = Callable[[Path, Mapping[str, object], bool], StateT]
+"""Build a state from the site's root, the raw configuration and the debug flag."""
 
 
 class NoState(AutomationState):
@@ -79,12 +82,12 @@ class NoState(AutomationState):
     deriving anything from the configuration.
     """
 
-    def __init__(self, _omd_root: Path, _raw_config: Mapping[str, object]) -> None:
-        pass
+    def __init__(self, _omd_root: Path, _raw_config: Mapping[str, object], debug: bool) -> None:
+        self.debug = debug
 
     @override
-    def update(self, _omd_root: Path, _raw_config: Mapping[str, object]) -> None:
-        pass
+    def update(self, _omd_root: Path, _raw_config: Mapping[str, object], *, debug: bool) -> None:
+        self.debug = debug
 
 
 @dataclass(frozen=True, kw_only=True)

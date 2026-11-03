@@ -113,6 +113,7 @@ def execute_check_discovery(
     enforced_services: Container[ServiceID],
     read_autochecks: Callable[[HostName], Sequence[AutocheckEntry]],
     read_discovered_host_labels: Callable[[HostName], Sequence[HostLabel]],
+    debug: bool,
 ) -> Sequence[ActiveCheckResult]:
     # Note: '--cache' is set in core_cmc, nagios template or even on CL and means:
     # 1. use caches as default:
@@ -131,6 +132,7 @@ def execute_check_discovery(
         host_sections_by_host,
         section_plugins,
         error_handling=section_error_handling,
+        debug=debug,
     )
 
     if is_cluster:
@@ -173,7 +175,11 @@ def execute_check_discovery(
             else {host_name: read_autochecks(host_name)}
         ),
         discovered_services=discovery_by_host(
-            cluster_nodes if is_cluster else (host_name,), providers, plugins, OnError.RAISE
+            cluster_nodes if is_cluster else (host_name,),
+            providers,
+            plugins,
+            OnError.RAISE,
+            debug=debug,
         ),
         is_cluster=is_cluster,
         cluster_nodes=cluster_nodes,

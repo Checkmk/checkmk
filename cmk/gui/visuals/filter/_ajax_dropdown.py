@@ -27,6 +27,7 @@ from cmk.web.utils.speaklater import LazyString
 
 from ._base import Filter, FilterGroup
 from .components import Checkbox, DynamicDropdown, FilterComponent, HorizontalGroup
+from .drilldowns import Drilldown
 
 
 class AjaxDropdownFilter(Filter):
@@ -45,6 +46,7 @@ class AjaxDropdownFilter(Filter):
         is_show_more: bool = False,
         validate_value: Callable[[str, str], None] | None = None,
         group: FilterGroup | None = None,
+        drilldown: Drilldown | None = None,
     ) -> None:
         self.query_filter = query_filter
         self.autocompleter = autocompleter
@@ -60,6 +62,7 @@ class AjaxDropdownFilter(Filter):
             description=description,
             is_show_more=is_show_more,
             group=group,
+            drilldown=drilldown,
         )
 
     @override
@@ -121,6 +124,7 @@ class FilterGroupCombo(AjaxDropdownFilter):
         query_filter: query_filters.TextQuery,
         description: None | str | LazyString = None,
         group: FilterGroup | None = None,
+        drilldown: Drilldown | None = None,
     ) -> None:
         self.query_filter = query_filter
         self.group_type = group_type
@@ -134,6 +138,7 @@ class FilterGroupCombo(AjaxDropdownFilter):
             link_columns=[group_type + "group_name"],
             description=description,
             group=group,
+            drilldown=drilldown,
         )
 
     @override

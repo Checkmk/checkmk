@@ -418,20 +418,9 @@ const dualListChoiceFormSpec: FormSpec.DualListChoice = {
   help: 'fooHelp',
   show_toggle_all: true,
   i18n: {
-    add: 'add',
-    remove: 'remove',
-    add_all: 'add_all',
-    remove_all: 'remove_all',
-    available_options: 'available_options',
-    selected_options: 'selected_options',
-    selected: 'selected',
-    no_elements_available: 'no_elements_available',
-    no_elements_selected: 'no_elements_selected',
-    autocompleter_loading: 'autocompleter_loading',
-    search_available_options: 'search_available_options',
-    search_selected_options: 'search_selected_options',
     and_x_more: 'and %(count)s more'
   },
+  no_element_label: 'no_element_label',
   validators: [],
   elements: [
     { name: 'choice1', title: 'Choice 1' },
@@ -478,6 +467,25 @@ test.each(['dual_list_choice', 'checkbox_list_choice'] as const)(
     screen.getByText('Choice 4')
     screen.getByText('and 2 more')
     expect(screen.queryByText('Choice 5')).toBeNull()
+  }
+)
+
+test.each(['dual_list_choice', 'checkbox_list_choice'] as const)(
+  'FormReadonly renders the no element label for an empty %s selection',
+  (type) => {
+    const spec: FormSpec.DualListChoice | FormSpec.CheckboxListChoice = {
+      ...dualListChoiceFormSpec,
+      type,
+      no_element_label: 'No ports defined'
+    }
+    render(FormReadonly, {
+      props: {
+        spec,
+        backendValidation: [],
+        data: []
+      }
+    })
+    screen.getByText('No ports defined')
   }
 )
 

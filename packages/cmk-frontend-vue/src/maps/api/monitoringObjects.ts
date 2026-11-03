@@ -15,9 +15,9 @@
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 
 import type {
+  AggregationBranchState,
   AggregationInfo,
   AggregationNode,
-  AggregationStateRaw,
   GroupMember,
   PerfMetricsSource
 } from '@/maps/types/api'
@@ -54,7 +54,7 @@ export class MonitoringObjectsApi {
 
   public async fetchAggregationStates(
     aggregationIds: string[]
-  ): Promise<Record<string, AggregationStateRaw>> {
+  ): Promise<Record<string, AggregationBranchState>> {
     return unwrap(
       await client.POST('/domain-types/maps_aggregation/actions/show-states/invoke', {
         params: { header: { 'Content-Type': 'application/json' } },

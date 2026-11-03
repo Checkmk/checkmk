@@ -3,9 +3,10 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
+import defaultClient, { type createClient, unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 
-import { hostNameQuery } from '@/monitoring/shared/api/actions/query'
+import { hostNameQuery, serviceQuery } from '@/monitoring/shared/api/actions/query'
+import type { ServiceRef } from '@/monitoring/shared/api/types'
 
 /** The intervals the downtime API repeats a downtime on, `fixed` being no repeat at all. */
 export type DowntimeRecur =
@@ -30,6 +31,12 @@ export interface ScheduleDowntimeOptions {
 
 export class ScheduleDowntimeApi {
   /**
+   * A caller that commands objects on another site passes that site's client, which may be
+   * its versioned `api/1.0` one, so every call here must stay within that API.
+   */
+  public constructor(private readonly client: ReturnType<typeof createClient> = defaultClient) {}
+
+  /**
    * Resolve the child hosts of the given hosts recursively, mirroring the classic downtime
    * dialog's "Set child hosts in downtime" option. A host is a child of `parent` when `parent`
    * is contained in its `parents` list (`parents >= parent` in Livestatus terms).
@@ -41,7 +48,7 @@ export class ScheduleDowntimeApi {
 
     while (frontier.length > 0) {
       const data = unwrap(
-        await client.POST('/domain-types/host/collections/all', {
+        await this.client.POST('/domain-types/host/collections/all', {
           params: { header: { 'Content-Type': 'application/json' } },
           body: {
             columns: ['name'],
@@ -69,7 +76,7 @@ export class ScheduleDowntimeApi {
     options: ScheduleDowntimeOptions
   ): Promise<void> {
     unwrap(
-      await client.POST('/domain-types/downtime/collections/host', {
+      await this.client.POST('/domain-types/downtime/collections/host', {
         params: { header: { 'Content-Type': 'application/json' } },
         body: {
           downtime_type: 'host_by_query',
@@ -85,22 +92,53 @@ export class ScheduleDowntimeApi {
   }
 
   public async scheduleServiceDowntime(
-    hostName: string,
-    serviceDescriptions: string[],
+    services: ServiceRef[],
     options: ScheduleDowntimeOptions
   ): Promise<void> {
     unwrap(
-      await client.POST('/domain-types/downtime/collections/service', {
+      await this.client.POST('/domain-types/downtime/collections/service', {
         params: { header: { 'Content-Type': 'application/json' } },
         body: {
-          downtime_type: 'service',
-          host_name: hostName,
-          service_descriptions: serviceDescriptions,
+          downtime_type: 'service_by_query',
+          query: serviceQuery(services),
           start_time: options.startTime,
           end_time: options.endTime,
           recur: options.recur,
           duration: options.durationMinutes,
           comment: options.comment
+        }
+      })
+    )
+  }
+}
+
+export class RemoveDowntimeApi {
+  /** Removes the downtimes of the hosts themselves, not those of their services. */
+  public async removeHostDowntimes(hostNames: string[]): Promise<void> {
+    unwrap(
+      await defaultClient.POST('/domain-types/downtime/actions/delete/invoke', {
+        params: { header: { 'Content-Type': 'application/json' } },
+        body: {
+          delete_type: 'query',
+          query: {
+            op: 'and',
+            expr: [
+              { op: '=', left: 'is_service', right: '0' },
+              hostNameQuery(hostNames, 'host_name')
+            ]
+          }
+        }
+      })
+    )
+  }
+
+  public async removeServiceDowntimes(services: ServiceRef[]): Promise<void> {
+    unwrap(
+      await defaultClient.POST('/domain-types/downtime/actions/delete/invoke', {
+        params: { header: { 'Content-Type': 'application/json' } },
+        body: {
+          delete_type: 'query',
+          query: serviceQuery(services, 'service_description')
         }
       })
     )

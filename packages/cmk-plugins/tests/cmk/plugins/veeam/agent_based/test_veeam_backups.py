@@ -7,7 +7,6 @@ import datetime
 import json
 
 import pytest
-import time_machine
 
 from cmk.agent_based.v2 import IgnoreResultsError, Metric, Result, Service, State
 from cmk.plugins.veeam.agent_based.veeam_backups import (
@@ -17,10 +16,12 @@ from cmk.plugins.veeam.agent_based.veeam_backups import (
     discovery_veeam_backups,
     monitoring_state,
     parse_veeam_backups,
+    Unparsable,
 )
 
 PARAMS: CheckParameters = {"age": ("fixed", (20.0, 40.0))}
 END_TIME = "2019-01-21T00:29:12.473+03:00"
+NOW = datetime.datetime.fromisoformat(END_TIME).timestamp() + 10
 
 
 def _task(
@@ -77,42 +78,69 @@ def test_discovered_item_is_the_sanitized_job_name() -> None:
 
 def test_check_veeam_backups_success() -> None:
     section = parse_veeam_backups(STRING_TABLE)
-    results = list(check_veeam_backups("Daily_VM_Backup", PARAMS, section))
+    results = list(check_veeam_backups("Daily_VM_Backup", PARAMS, section, now=NOW))
     assert results[0] == Result(state=State.OK, summary="Status: Success")
     assert Metric("backup_size", 107374182400) in results
     assert Metric("readsize", 53687091200) in results
     assert Metric("transferredsize", 21474836480) in results
     assert Metric("backup_avgspeed", 41943040.0) in results
     assert Metric("backup_duration", 1130.0) in results
-    assert any(
-        r.summary.startswith("Time since last backup:") for r in results if isinstance(r, Result)
+    assert Metric("backup_age", 10.0, levels=(20.0, 40.0)) in results
+
+
+def test_check_veeam_backups_summary() -> None:
+    section = parse_veeam_backups(STRING_TABLE)
+    results = list(check_veeam_backups("Daily_VM_Backup", PARAMS, section, now=NOW))
+    assert [r.summary for r in results if isinstance(r, Result) and r.summary] == [
+        "Status: Success",
+        "Last backup age: 10 seconds",
+        "Size: 100 GiB (read: 50.0 GiB, transferred: 20.0 GiB)",
+    ]
+
+
+def test_check_veeam_backups_without_total_size_shows_partial_sizes_in_details() -> None:
+    section = parse_veeam_backups(
+        [[_task("partial", progress={"readSize": 1024, "transferredSize": 512})]]
     )
+    results = list(check_veeam_backups("partial", PARAMS, section, now=NOW))
+    assert Result(state=State.OK, notice="Size (read: 1.00 KiB, transferred: 512 B)") in results
+    assert not any(isinstance(r, Result) and "Size" in r.summary for r in results)
 
 
 def test_check_veeam_backups_warning() -> None:
     section = parse_veeam_backups(STRING_TABLE)
-    results = list(check_veeam_backups("warning_backup", PARAMS, section))
+    results = list(check_veeam_backups("warning_backup", PARAMS, section, now=NOW))
     assert results[0] == Result(state=State.WARN, summary="Status: Warning")
 
 
 def test_check_veeam_backups_failed_shows_message() -> None:
     section = parse_veeam_backups(STRING_TABLE)
-    results = list(check_veeam_backups("failed_backup", PARAMS, section))
+    results = list(check_veeam_backups("failed_backup", PARAMS, section, now=NOW))
     assert results[0] == Result(state=State.CRIT, summary="Status: Failed (Network error)")
+
+
+def test_message_repeating_the_result_is_not_shown_twice() -> None:
+    section = parse_veeam_backups(
+        [[_task("job", result={"result": "Success", "message": "Success"})]]
+    )
+
+    results = list(check_veeam_backups("job", PARAMS, section, now=NOW))
+
+    assert results[0] == Result(state=State.OK, summary="Status: Success")
 
 
 def test_check_veeam_backups_end_time_in_future_is_unknown() -> None:
     section = parse_veeam_backups(
         [[_task("future_backup", endTime="2999-01-21T00:29:12.473+03:00")]]
     )
-    results = list(check_veeam_backups("future_backup", PARAMS, section))
+    results = list(check_veeam_backups("future_backup", PARAMS, section, now=NOW))
     assert Result(state=State.UNKNOWN, summary="Last backup: end time is in the future") in results
 
 
 def test_check_veeam_backups_running_raises_ignore_results() -> None:
     section = parse_veeam_backups(STRING_TABLE)
     with pytest.raises(IgnoreResultsError):
-        list(check_veeam_backups("running_backup", PARAMS, section))
+        list(check_veeam_backups("running_backup", PARAMS, section, now=NOW))
 
 
 @pytest.mark.parametrize(
@@ -120,14 +148,14 @@ def test_check_veeam_backups_running_raises_ignore_results() -> None:
     [
         pytest.param(
             10,
-            Result(state=State.OK, summary="Time since last backup: 10 seconds"),
+            Result(state=State.OK, summary="Last backup age: 10 seconds"),
             id="age within the levels",
         ),
         pytest.param(
             30,
             Result(
                 state=State.WARN,
-                summary="Time since last backup: 30 seconds (warn/crit at 20 seconds/40 seconds)",
+                summary="Last backup age: 30 seconds (warn/crit at 20 seconds/40 seconds)",
             ),
             id="age above the warn level",
         ),
@@ -135,7 +163,7 @@ def test_check_veeam_backups_running_raises_ignore_results() -> None:
             50,
             Result(
                 state=State.CRIT,
-                summary="Time since last backup: 50 seconds (warn/crit at 20 seconds/40 seconds)",
+                summary="Last backup age: 50 seconds (warn/crit at 20 seconds/40 seconds)",
             ),
             id="age above the crit level",
         ),
@@ -145,18 +173,21 @@ def test_last_backup_age_is_rated_against_the_levels(
     seconds_after_end: int, expected_age_result: Result
 ) -> None:
     section = parse_veeam_backups([[_task("job")]])
-    now = datetime.datetime.fromisoformat(END_TIME) + datetime.timedelta(seconds=seconds_after_end)
+    now = datetime.datetime.fromisoformat(END_TIME).timestamp() + seconds_after_end
 
-    with time_machine.travel(now, tick=False):
-        results = list(check_veeam_backups("job", PARAMS, section))
+    results = list(check_veeam_backups("job", PARAMS, section, now=now))
 
-    assert results == [Result(state=State.OK, summary="Status: Success"), expected_age_result]
+    assert results == [
+        Result(state=State.OK, summary="Status: Success"),
+        expected_age_result,
+        Metric("backup_age", float(seconds_after_end), levels=(20.0, 40.0)),
+    ]
 
 
 def test_finished_backup_without_end_time_is_crit() -> None:
     section = parse_veeam_backups([[_task("job", endTime=None)]])
 
-    results = list(check_veeam_backups("job", PARAMS, section))
+    results = list(check_veeam_backups("job", PARAMS, section, now=NOW))
 
     assert Result(state=State.CRIT, summary="No complete backup") in results
 
@@ -164,17 +195,17 @@ def test_finished_backup_without_end_time_is_crit() -> None:
 def test_unparsable_end_time_is_unknown() -> None:
     section = parse_veeam_backups([[_task("job", endTime="garbage")]])
 
-    results = list(check_veeam_backups("job", PARAMS, section))
+    results = list(check_veeam_backups("job", PARAMS, section, now=NOW))
 
     assert results == [
         Result(state=State.OK, summary="Status: Success"),
-        Result(state=State.UNKNOWN, summary="FAILED TO PARSE -> End time: (garbage)"),
+        Result(state=State.UNKNOWN, summary="End time: Unparsable value (garbage)"),
     ]
 
 
 def test_check_veeam_backups_vanished_task_goes_stale() -> None:
     section = parse_veeam_backups(STRING_TABLE)
-    assert list(check_veeam_backups("no_longer_reported", PARAMS, section)) == []
+    assert list(check_veeam_backups("no_longer_reported", PARAMS, section, now=NOW)) == []
 
 
 def test_check_veeam_backups_running_suppresses_duration_and_age() -> None:
@@ -190,16 +221,16 @@ def test_check_veeam_backups_running_suppresses_duration_and_age() -> None:
             ]
         ]
     )
-    results = list(check_veeam_backups("in_progress", PARAMS, section))
-    assert not any("Duration" in r.summary for r in results if isinstance(r, Result))
-    assert not any("Time since last backup" in r.summary for r in results if isinstance(r, Result))
+    results = list(check_veeam_backups("in_progress", PARAMS, section, now=NOW))
+    assert not any("Duration" in r.details for r in results if isinstance(r, Result))
+    assert not any("Last backup" in r.summary for r in results if isinstance(r, Result))
 
 
 def test_check_veeam_backups_formatted_processing_rate_becomes_metric() -> None:
     # "53.7 MB" is a real example value from the REST API reference's progress
     # schema (no "/s" suffix, unlike the VBR UI's own display format).
     section = parse_veeam_backups([[_task("fast", progress={"processingRate": "53.7 MB"})]])
-    results = list(check_veeam_backups("fast", PARAMS, section))
+    results = list(check_veeam_backups("fast", PARAMS, section, now=NOW))
     assert Metric("backup_avgspeed", 53_700_000.0) in results
 
 
@@ -208,7 +239,7 @@ def test_check_veeam_backups_no_processing_rate_is_silent(processing_rate: str) 
     section = parse_veeam_backups(
         [[_task("odd_rate", progress={"processingRate": processing_rate})]]
     )
-    results = list(check_veeam_backups("odd_rate", PARAMS, section))
+    results = list(check_veeam_backups("odd_rate", PARAMS, section, now=NOW))
     assert not any(isinstance(r, Metric) and r.name == "backup_avgspeed" for r in results)
     assert not any("speed" in r.summary.lower() for r in results if isinstance(r, Result))
     assert not any("speed" in r.details.lower() for r in results if isinstance(r, Result))
@@ -216,10 +247,10 @@ def test_check_veeam_backups_no_processing_rate_is_silent(processing_rate: str) 
 
 def test_check_veeam_backups_unparsable_processing_rate_is_surfaced_as_raw_text() -> None:
     section = parse_veeam_backups([[_task("odd_rate", progress={"processingRate": "18.3 MiB/s"})]])
-    results = list(check_veeam_backups("odd_rate", PARAMS, section))
+    results = list(check_veeam_backups("odd_rate", PARAMS, section, now=NOW))
     assert not any(isinstance(r, Metric) and r.name == "backup_avgspeed" for r in results)
     assert any(
-        r.state == State.OK and "unparsable value (18.3 MiB/s)" in r.details
+        r.state == State.OK and "Unparsable value (18.3 MiB/s)" in r.details
         for r in results
         if isinstance(r, Result)
     )
@@ -227,8 +258,13 @@ def test_check_veeam_backups_unparsable_processing_rate_is_surfaced_as_raw_text(
 
 def test_check_veeam_backups_unparsable_duration_is_omitted() -> None:
     section = parse_veeam_backups([[_task("odd_duration", progress={"duration": "N/A"})]])
-    results = list(check_veeam_backups("odd_duration", PARAMS, section))
+    results = list(check_veeam_backups("odd_duration", PARAMS, section, now=NOW))
     assert not any(isinstance(r, Metric) and r.name == "backup_duration" for r in results)
+    assert any(
+        r.state == State.OK and "Duration: Unparsable value (N/A)" in r.details
+        for r in results
+        if isinstance(r, Result)
+    )
 
 
 @pytest.mark.parametrize(
@@ -240,11 +276,13 @@ def test_check_veeam_backups_unparsable_duration_is_omitted() -> None:
         pytest.param("2 GB/s", 2_000_000_000.0, id="gigabytes"),
         pytest.param("18.3 mb/s", 18_300_000.0, id="lowercase"),
         pytest.param("N/A", None, id="not available"),
-        pytest.param("fast", None, id="garbage"),
+        pytest.param("fast", Unparsable("fast"), id="garbage"),
         pytest.param(None, None, id="missing"),
     ],
 )
-def test_parse_processing_rate(processing_rate: str | None, expected: float | None) -> None:
+def test_parse_processing_rate(
+    processing_rate: str | None, expected: float | Unparsable | None
+) -> None:
     progress: dict[str, object] = (
         {} if processing_rate is None else {"processingRate": processing_rate}
     )
@@ -264,8 +302,7 @@ def test_parse_veeam_backups() -> None:
             transferred_size=None,
             duration=None,
             processing_rate=None,
-            processing_rate_raw=None,
-            end_time=END_TIME,
+            end_time=datetime.datetime.fromisoformat(END_TIME).timestamp(),
         )
     }
 

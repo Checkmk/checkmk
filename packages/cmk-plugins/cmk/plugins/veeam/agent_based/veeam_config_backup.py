@@ -65,7 +65,9 @@ def discovery_veeam_config_backup(section: Section) -> DiscoveryResult:  # noqa:
     yield Service()
 
 
-def check_veeam_config_backup(params: CheckParameters, section: Section) -> CheckResult:
+def check_veeam_config_backup(
+    params: CheckParameters, section: Section, *, now: float
+) -> CheckResult:
     if not section.is_enabled:
         yield Result(
             state=State(params["disabled_state"]),
@@ -78,29 +80,33 @@ def check_veeam_config_backup(params: CheckParameters, section: Section) -> Chec
             state=State.CRIT,
             summary="No successful backup yet",
         )
+    elif (age := now - section.last_successful_time) < 0:
+        yield Result(state=State.OK, summary="Last successful backup: in the future")
     else:
         yield from check_levels(
-            time.time() - section.last_successful_time,
+            age,
             levels_upper=params["age"],
             metric_name="veeam_config_backup_age",
-            render_func=lambda v: (
-                render.timespan(v) if v >= 0 else "last successful backup is in the future"
-            ),
-            label="Time since last successful backup",
+            render_func=render.timespan,
+            label="Last successful backup age",
         )
 
     yield Result(
         state=State.OK,
-        summary=f"Restore points kept: {section.restore_points_to_keep}",
+        notice=f"Restore points kept: {section.restore_points_to_keep}",
     )
     yield Result(
         state=State.OK,
-        summary=f"Encryption: {'enabled' if section.encryption_enabled else 'disabled'}",
+        notice=f"Encryption: {'enabled' if section.encryption_enabled else 'disabled'}",
     )
     yield Result(
         state=State.OK,
-        summary=f"Target repository ID: {section.backup_repository_id}",
+        notice=f"Target repository ID: {section.backup_repository_id}",
     )
+
+
+def check_veeam_config_backup_now(params: CheckParameters, section: Section) -> CheckResult:
+    yield from check_veeam_config_backup(params, section, now=time.time())
 
 
 agent_section_veeam_config_backup = AgentSection(
@@ -112,7 +118,7 @@ check_plugin_veeam_config_backup = CheckPlugin(
     name="veeam_config_backup",
     service_name="Configuration backup",
     discovery_function=discovery_veeam_config_backup,
-    check_function=check_veeam_config_backup,
+    check_function=check_veeam_config_backup_now,
     check_ruleset_name="veeam_config_backup",
     # TODO: thresholds are proposed and unvalidated. The reference PowerShell
     # implementation instead uses 7/14 days, looser than a daily backup schedule

@@ -3,33 +3,20 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, ref, watch } from 'vue'
 
+import type { MapStateCount } from '@/maps/map/components/MapStateCounts.vue'
 import { useMapsApis } from '@/maps/services/context'
 import type { GroupMember, MapElement } from '@/maps/types/api'
-
-interface MemberChip {
-  label: string
-  count: number
-  tone: 'crit' | 'warn' | 'unknown' | 'ok'
-}
+import { groupMembersQuery } from '@/maps/utils/memberFilter'
+import { isProblemState } from '@/maps/utils/problemState'
+import { stateRank } from '@/maps/utils/stateColors'
+import { hostStateCounts, serviceStateCounts } from '@/maps/utils/stateCounts'
 
 interface GroupMembersOptions {
   object: () => MapElement | null
   connectionId: () => string | null | undefined
-}
-
-// Severity rank for sort: worst first. Matches the radar view's intent so the
-// member list and the donut counts agree.
-const _MEMBER_SEVERITY: Record<string, number> = {
-  DOWN: 5,
-  CRITICAL: 5,
-  UNREACHABLE: 4,
-  WARNING: 3,
-  UNKNOWN: 3,
-  PENDING: 1,
-  UP: 0,
-  OK: 0
 }
 
 const MEMBER_TRUNCATE = 50
@@ -43,6 +30,7 @@ const MEMBER_TRUNCATE = 50
 export function useGroupMembers(options: GroupMembersOptions) {
   const { object, connectionId } = options
   const { objects } = useMapsApis()
+  const { _t } = usei18n()
 
   const groupMembers = ref<GroupMember[]>([])
   const loadingMembers = ref(false)
@@ -55,9 +43,10 @@ export function useGroupMembers(options: GroupMembersOptions) {
       () => object()?.group_name,
       () => object()?.object_filter,
       () => object()?.object_types,
+      () => object()?.exclude_members,
       connectionId
     ],
-    async ([objType, groupName, objFilter, objTypes, connId]) => {
+    async ([objType, groupName, objFilter, objTypes, excluded, connId]) => {
       groupMembers.value = []
       memberSearch.value = ''
       onlyProblems.value = false
@@ -76,18 +65,23 @@ export function useGroupMembers(options: GroupMembersOptions) {
       }
       loadingMembers.value = true
       try {
-        const rows =
-          objType === 'dyngroup'
-            ? await objects.fetchDyngroupMembers(objTypes ?? 'host', objFilter ?? '')
-            : await objects.fetchGroupMembers(
-                objType as 'hostgroup' | 'servicegroup',
-                groupName ?? ''
-              )
+        let rows: GroupMember[]
+        if (objType === 'dyngroup') {
+          rows = await objects.fetchDyngroupMembers(objTypes ?? 'host', objFilter ?? '')
+        } else if (objType === 'hostgroup' || objType === 'servicegroup') {
+          const thinned = excluded ? groupMembersQuery(objType, groupName ?? '', excluded) : null
+          rows = thinned
+            ? await objects.fetchDyngroupMembers(thinned.objectTypes, thinned.objectFilter)
+            : await objects.fetchGroupMembers(objType, groupName ?? '')
+        } else {
+          return
+        }
         // Stale-response guard.
         if (
           object()?.type === objType &&
           object()?.group_name === groupName &&
-          object()?.object_filter === objFilter
+          object()?.object_filter === objFilter &&
+          object()?.exclude_members === excluded
         ) {
           groupMembers.value = rows
         }
@@ -100,29 +94,11 @@ export function useGroupMembers(options: GroupMembersOptions) {
     { immediate: true }
   )
 
-  const memberHealth = computed(() => {
-    const counts = { ok: 0, warn: 0, crit: 0, unkn: 0, pending: 0 }
-    for (const m of groupMembers.value) {
-      if (m.state === 'OK' || m.state === 'UP') {
-        counts.ok += 1
-      } else if (m.state === 'WARNING') {
-        counts.warn += 1
-      } else if (m.state === 'CRITICAL' || m.state === 'DOWN') {
-        counts.crit += 1
-      } else if (m.state === 'UNKNOWN' || m.state === 'UNREACHABLE') {
-        counts.unkn += 1
-      } else {
-        counts.pending += 1
-      }
-    }
-    return counts
-  })
-
   const filteredMembers = computed(() => {
     const needle = memberSearch.value.trim().toLowerCase()
     return groupMembers.value
       .filter((m) => {
-        if (onlyProblems.value && (m.state === 'OK' || m.state === 'UP')) {
+        if (onlyProblems.value && !isProblemState(m.state)) {
           return false
         }
         if (!needle) {
@@ -134,14 +110,12 @@ export function useGroupMembers(options: GroupMembersOptions) {
           m.output.toLowerCase().includes(needle)
         )
       })
-      .sort((a, b) => {
-        const sa = _MEMBER_SEVERITY[a.state] ?? 0
-        const sb = _MEMBER_SEVERITY[b.state] ?? 0
-        if (sa !== sb) {
-          return sb - sa
-        }
-        return a.host.localeCompare(b.host) || a.service.localeCompare(b.service)
-      })
+      .sort(
+        (a, b) =>
+          stateRank(b.state) - stateRank(a.state) ||
+          a.host.localeCompare(b.host) ||
+          a.service.localeCompare(b.service)
+      )
   })
 
   const visibleMembers = computed(() => filteredMembers.value.slice(0, MEMBER_TRUNCATE))
@@ -154,20 +128,15 @@ export function useGroupMembers(options: GroupMembersOptions) {
     return t === 'hostgroup' || t === 'servicegroup' || t === 'dyngroup'
   })
 
-  const memberChips = computed<MemberChip[]>(() => {
-    const h = memberHealth.value
-    const chips: MemberChip[] = []
-    if (h.crit > 0) {
-      chips.push({ label: 'CRIT', count: h.crit, tone: 'crit' })
+  // A host group's members are hosts and are counted as such.
+  const memberChips = computed<MapStateCount[]>(() => {
+    const counts: Record<string, number> = {}
+    for (const member of groupMembers.value) {
+      counts[member.state] = (counts[member.state] ?? 0) + 1
     }
-    if (h.warn > 0) {
-      chips.push({ label: 'WARN', count: h.warn, tone: 'warn' })
-    }
-    if (h.unkn > 0) {
-      chips.push({ label: 'UNKN', count: h.unkn, tone: 'unknown' })
-    }
-    chips.push({ label: 'OK', count: h.ok, tone: 'ok' })
-    return chips
+    return groupMembers.value.every((member) => !member.service)
+      ? hostStateCounts(_t, counts)
+      : serviceStateCounts(_t, counts)
   })
 
   function memberStateTone(state: string): string {

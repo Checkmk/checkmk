@@ -26,7 +26,6 @@ seccomp !chroot
 # Disable potentially dangerous features
 nodvd
 nosound
-no3d
 notv
 nou2f
 novideo
@@ -78,6 +77,11 @@ mkdir ${HOME}/.cache/bazelisk
 # Allow Bazel to utilize its build and output cache
 whitelist ${HOME}/.cache/bazel
 mkdir ${HOME}/.cache/bazel
+whitelist ${HOME}/.cache/bazel_disk_cache
+mkdir ${HOME}/.cache/bazel_disk_cache
+
+whitelist ${HOME}/.cache/pip
+mkdir ${HOME}/.cache/pip
 
 # Allow Java to run inside the sandbox
 whitelist ${HOME}/.java-caller

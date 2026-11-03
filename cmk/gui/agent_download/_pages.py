@@ -35,7 +35,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import Page, PageContext
-from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
 from cmk.gui.watolib.mode import WatoMode
 from cmk.web.utils.icons import IconNames, StaticIcon
 from cmk.web.utils.permission_verification import PermissionName
@@ -204,7 +203,9 @@ class ABCModeDownloadAgents(WatoMode):
                 title=_("Windows files"),
                 icon_name=StaticIcon(IconNames.download_agents),
                 item=make_simple_link(
-                    folder_preserving_link(request, [("mode", "download_agents_windows")])
+                    makeuri_contextless(
+                        request, [("mode", "download_agents_windows")], filename="wato.py"
+                    )
                 ),
             )
 
@@ -213,7 +214,9 @@ class ABCModeDownloadAgents(WatoMode):
                 title=_("Linux, Solaris, AIX files"),
                 icon_name=StaticIcon(IconNames.download_agents),
                 item=make_simple_link(
-                    folder_preserving_link(request, [("mode", "download_agents_linux")])
+                    makeuri_contextless(
+                        request, [("mode", "download_agents_linux")], filename="wato.py"
+                    )
                 ),
             )
 
@@ -222,7 +225,7 @@ class ABCModeDownloadAgents(WatoMode):
                 title=_("Other operating systems"),
                 icon_name=StaticIcon(IconNames.download_agents),
                 item=make_simple_link(
-                    folder_preserving_link(request, [("mode", "download_agents")])
+                    makeuri_contextless(request, [("mode", "download_agents")], filename="wato.py")
                 ),
             )
 

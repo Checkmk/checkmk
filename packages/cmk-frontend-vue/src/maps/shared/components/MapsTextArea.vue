@@ -35,11 +35,14 @@ const model = defineModel<string>({ required: true })
 
 <style scoped>
 .maps-text-area {
+  box-sizing: border-box;
   width: 100%;
+  max-width: 100%;
+  resize: vertical;
   padding: var(--dimension-3) var(--dimension-4);
   font-family: inherit;
-  font-size: var(--font-size-large);
-  line-height: 20px;
+  font-size: var(--font-size-normal);
+  line-height: 16px;
   color: var(--font-color);
   background: var(--default-form-element-bg-color);
   border: 1px solid var(--default-form-element-border-color);
@@ -47,8 +50,7 @@ const model = defineModel<string>({ required: true })
 }
 
 .maps-text-area:focus-visible {
-  outline: none;
-  border-color: var(--interactive-accent);
+  outline: revert;
 }
 
 .maps-text-area--monospace {

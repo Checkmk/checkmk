@@ -56,7 +56,7 @@ class DashboardTitle:
 # TODO: replace with proper icon lookup once it has been properly migrated
 #  the misleading all_icons currently does not contain all icons
 #  alternatively the existing IconSelector should get adjusted to retrieve the correct list
-# type IconName = Annotated[str, AfterValidator(RegistryConverter(lambda x: all_icons()).validate)]
+# type IconName = Annotated[str, AfterValidator(RegistryConverter(lambda: all_icons()).validate)]
 
 
 @api_model
@@ -368,6 +368,7 @@ class BaseDashboardRequest(_BaseDashboard, ABC):
                 link,
                 ("body", "widgets", widget_id, "content", widget.content.type, "contextual_link"),
                 context.config.user_permissions(),
+                context.config.tags,
             )
 
     @abstractmethod
@@ -483,6 +484,7 @@ class RelativeGridDashboardRequest(BaseDashboardRequest):
                 ("body", "widgets", widget_id),
                 context=context,
                 embedded_views=embedded_views,
+                stored_widget=stored_widgets.get(widget_id),
             )
         ]
         errors.extend(self._iter_contextual_link_errors(context, stored_widgets))

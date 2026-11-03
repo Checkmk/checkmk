@@ -14,6 +14,8 @@ import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { ref, watch } from 'vue'
 
+import PropertyInline from '@/maps/map/edit/properties/PropertyInline.vue'
+import PropertyInlineInput from '@/maps/map/edit/properties/PropertyInlineInput.vue'
 import PropertyRow from '@/maps/map/edit/properties/PropertyRow.vue'
 import PropertySection from '@/maps/map/edit/properties/PropertySection.vue'
 import type { ObjectForm } from '@/maps/map/edit/properties/objectForm'
@@ -35,94 +37,76 @@ watch(
 </script>
 
 <template>
-  <PropertySection :title="_t('Label')">
-    <PropertyRow :label="_t('Show label')">
+  <PropertySection :title="_t('Label')" :empty="!form.label.show">
+    <template #title-control>
       <CmkCheckbox v-model="form.label.show" :aria-label="_t('Show label')" />
+    </template>
+
+    <PropertyRow
+      v-if="object.type !== 'textbox'"
+      v-slot="{ id }"
+      labels-control
+      :label="_t('Text')"
+    >
+      <CmkInput
+        :id="id"
+        v-model="form.label.text"
+        :placeholder="_t('(auto from object)')"
+        field-size="fill"
+      />
+    </PropertyRow>
+    <PropertyRow v-slot="{ id }" labels-control :label="_t('Font size')">
+      <CmkInput :id="id" v-model="form.label.size" type="number" min="8" max="72" unit="px" />
+    </PropertyRow>
+    <PropertyRow v-slot="{ id, label }" labels-control :label="_t('Color')">
+      <MapsColorInput
+        v-model="form.label.color"
+        :label="label"
+        :input-id="id"
+        default-color="#ffffff"
+      />
+    </PropertyRow>
+    <PropertyRow :label="_t('Offset')">
+      <PropertyInline>
+        <PropertyInlineInput v-model="form.label.x" :label="_t('X')" unit="px" />
+        <PropertyInlineInput v-model="form.label.y" :label="_t('Y')" unit="px" />
+      </PropertyInline>
     </PropertyRow>
 
-    <div :class="{ 'maps-label-section--off': !form.label.show }">
-      <div class="maps-label-section__rows">
-        <PropertyRow
-          v-if="object.type !== 'textbox'"
-          v-slot="{ id }"
-          labels-control
-          :label="_t('Label text')"
-        >
-          <CmkInput
-            :id="id"
-            v-model="form.label.text"
-            :placeholder="_t('(auto from object)')"
-            field-size="fill"
-          />
-        </PropertyRow>
-        <PropertyRow v-slot="{ id }" labels-control :label="_t('Size')">
-          <CmkInput :id="id" v-model="form.label.size" type="number" min="8" max="72" />
-        </PropertyRow>
-        <PropertyRow v-slot="{ id, label }" labels-control :label="_t('Color')">
-          <MapsColorInput
-            v-model="form.label.color"
-            :label="label"
-            :input-id="id"
-            default-color="#ffffff"
-          />
-        </PropertyRow>
-        <PropertyRow v-slot="{ id }" labels-control :label="_t('Offset X')">
-          <CmkInput :id="id" v-model="form.label.x" type="number" />
-        </PropertyRow>
-        <PropertyRow v-slot="{ id }" labels-control :label="_t('Offset Y')">
-          <CmkInput :id="id" v-model="form.label.y" type="number" />
-        </PropertyRow>
-
-        <CmkCollapsibleTitle
-          :title="_t('Background & border')"
-          :open="showAdvanced"
-          @toggle-open="showAdvanced = !showAdvanced"
+    <CmkCollapsibleTitle
+      :title="_t('Background & border')"
+      :open="showAdvanced"
+      @toggle-open="showAdvanced = !showAdvanced"
+    />
+    <template v-if="showAdvanced">
+      <PropertyRow v-slot="{ id, label }" labels-control :label="_t('Background')">
+        <MapsColorInput
+          v-model="form.label.background"
+          :label="label"
+          :input-id="id"
+          :enable-label="_t('Use color')"
+          none-value="transparent"
+          default-color="#000000"
         />
-        <template v-if="showAdvanced">
-          <PropertyRow v-slot="{ id, label }" labels-control :label="_t('Background')">
-            <MapsColorInput
-              v-model="form.label.background"
-              :label="label"
-              :input-id="id"
-              :enable-label="_t('Use color')"
-              none-value="transparent"
-              default-color="#000000"
-            />
-          </PropertyRow>
-          <PropertyRow v-slot="{ id, label }" labels-control :label="_t('Border color')">
-            <MapsColorInput
-              v-model="form.label_border"
-              :label="label"
-              :input-id="id"
-              :enable-label="_t('Use color')"
-              default-color="#e5e5e5"
-            />
-          </PropertyRow>
-          <PropertyRow v-slot="{ id }" labels-control :label="_t('Max length')">
-            <CmkInput
-              :id="id"
-              v-model="form.label_maxlen"
-              type="number"
-              min="0"
-              :placeholder="_t('no limit')"
-            />
-          </PropertyRow>
-        </template>
-      </div>
-    </div>
+      </PropertyRow>
+      <PropertyRow v-slot="{ id, label }" labels-control :label="_t('Border color')">
+        <MapsColorInput
+          v-model="form.label_border"
+          :label="label"
+          :input-id="id"
+          :enable-label="_t('Use color')"
+          default-color="#e5e5e5"
+        />
+      </PropertyRow>
+      <PropertyRow v-slot="{ id }" labels-control :label="_t('Max length')">
+        <CmkInput
+          :id="id"
+          v-model="form.label_maxlen"
+          type="number"
+          min="0"
+          :placeholder="_t('no limit')"
+        />
+      </PropertyRow>
+    </template>
   </PropertySection>
 </template>
-
-<style scoped>
-/* A hidden label still has settings, but changing them has no visible effect
-   until it is shown again. */
-.maps-label-section--off {
-  opacity: 0.5;
-}
-
-.maps-label-section__rows {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dimension-4);
-}
-</style>

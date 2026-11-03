@@ -133,15 +133,6 @@ class TestMonitorHostsQueryParamValidation:
                     "type": "condition",
                     "field": "site_id",
                     "op": "one_of",
-                    "value": ["no-such-site"],
-                },
-                id="unknown site id",
-            ),
-            pytest.param(
-                {
-                    "type": "condition",
-                    "field": "site_id",
-                    "op": "one_of",
                     "value": [_SITE_ID, _SITE_ID],
                 },
                 id="duplicate site ids",
@@ -207,6 +198,47 @@ class TestMonitorHostsQueryParamValidation:
     ) -> None:
         resp = clients.MonitorHosts.list_all(limit=1000, filters=filters, expect_ok=False)
         assert resp.status_code == HTTPStatus.BAD_REQUEST
+
+    @pytest.mark.parametrize(
+        "filters",
+        [
+            pytest.param(
+                {
+                    "type": "condition",
+                    "field": "site_id",
+                    "op": "one_of",
+                    "value": ["no-such-site"],
+                },
+                id="unknown site id",
+            ),
+            pytest.param(
+                {
+                    "type": "and",
+                    "children": [
+                        {"type": "condition", "field": "name", "op": "contains", "value": "heute"},
+                        {
+                            "type": "not",
+                            "child": {
+                                "type": "condition",
+                                "field": "site_id",
+                                "op": "one_of",
+                                "value": ["no-such-site"],
+                            },
+                        },
+                    ],
+                },
+                id="unknown site id inside the tree",
+            ),
+        ],
+    )
+    def test_filters_with_an_unknown_site_are_rejected(
+        self,
+        clients: ClientRegistry,
+        filters: dict[str, object],
+    ) -> None:
+        resp = clients.MonitorHosts.list_all(limit=1000, filters=filters, expect_ok=False)
+        assert resp.status_code == HTTPStatus.BAD_REQUEST
+        assert resp.json["detail"] == "Site 'no-such-site' does not exist."
 
 
 class TestMonitorHosts:
@@ -496,6 +528,29 @@ class TestMonitorHostsFilters:
 
         assert resp.json["hosts"][0]["state"] == "PENDING"
 
+    def test_host_with_recorded_time_series_links_to_its_graphs(
+        self,
+        clients: ClientRegistry,
+        mock_livestatus: MockLiveStatusConnection,
+    ) -> None:
+        mock_livestatus.add_table("hosts", [{**_HOSTS[0], "pnpgraph_present": 1}])
+        mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
+        mock_livestatus.expect_query(
+            [
+                "GET hosts",
+                f"Columns: {_host_columns('graphs_link')}",
+                "OrderBy: name asc natural",
+                f"Limit: {_LIMIT}",
+            ]
+        )
+
+        with mock_livestatus(expect_status_query=True):
+            resp = clients.MonitorHosts.list_all(limit=_LIMIT, fields=["graphs_link"])
+
+        assert resp.json["hosts"][0]["graphs_link"] == (
+            "view.py?view_name=host_graphs&site=NO_SITE&host=heute"
+        )
+
     def test_hosts_filtered_by_folder(
         self,
         clients: ClientRegistry,
@@ -582,8 +637,8 @@ class TestMonitorHostsFilters:
         set_config: SetConfig,
     ) -> None:
         # "remote" needs to be a real configured site (not just a mock-livestatus fake site) for
-        # `SiteIdConverter.should_exist` to accept it, and for the complement (every site except
-        # "remote") to be computed against the right set of configured sites.
+        # the handler to accept it, and for the complement (every site except "remote") to be
+        # computed against the right set of configured sites.
         with set_config(sites=_site_configs([SiteId(_SITE_ID), SiteId("remote"), SiteId("local")])):
             mock_livestatus.add_table("hosts", _HOSTS)
             mock_livestatus.expect_query(["GET hosts", "Stats: state >= 0"])
@@ -1189,6 +1244,7 @@ class TestMonitorHostOverview:
             "tags": {"criticality": "prod"},
             "labels": {"cmk/os_family": {"value": "linux", "source": "discovered"}},
             "legacy_host_status_link": "view.py?view_name=hoststatus&site=NO_SITE&host=heute",
+            "setup_access": False,
             "relations": [],
             "more_relations": False,
         }
@@ -1448,6 +1504,7 @@ _HOSTS = [
         "in_check_period": 1,
         "is_flapping": 0,
         "staleness": 0.0,
+        "pnpgraph_present": 0,
         "last_check": 1700000000,
         "last_state_change": 1700000060,
         "filename": "/wato/hosts.mk",
@@ -1482,6 +1539,7 @@ _HOSTS = [
         "in_check_period": 1,
         "is_flapping": 0,
         "staleness": 0.0,
+        "pnpgraph_present": 0,
         "last_check": 1700000100,
         "last_state_change": 1700000160,
         "filename": "/wato/network/hosts.mk",
@@ -1516,6 +1574,7 @@ _HOSTS = [
         "in_check_period": 1,
         "is_flapping": 0,
         "staleness": 0.0,
+        "pnpgraph_present": 0,
         "last_check": 1700000200,
         "last_state_change": 1700000260,
         # Not managed via Setup, e.g. added directly to the monitoring core.
@@ -1596,6 +1655,7 @@ _OPTIONAL_COLUMNS = {
     "tags": "tags",
     "contacts": "contacts",
     "contact_groups": "contact_groups",
+    "graphs_link": "pnpgraph_present",
 }
 _DEFAULT_FIELDS = (
     "address",

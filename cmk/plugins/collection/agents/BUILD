@@ -37,3 +37,17 @@ sh_library(
         "mk_zypper",
     ],
 )
+
+exports_files(
+    ["kaspersky_av"],
+    visibility = ["//tests/unit-shell/agents:__pkg__"],
+)
+
+filegroup(
+    name = "files",
+    srcs = glob(
+        ["*"],
+        exclude = ["BUILD"],
+    ),
+    visibility = ["//cmk/plugins:__pkg__"],
+)

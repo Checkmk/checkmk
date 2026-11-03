@@ -10,8 +10,8 @@ from cmk.gui.config import active_config
 from cmk.gui.watolib.hosts_and_folders import FolderTree, make_folder_tree
 from cmk.gui.watolib.rulesets import AllRulesets, Rule, Ruleset, RulesetCollection
 from cmk.gui.watolib.sample_config import CMK_INV_RULES
-from cmk.update_config.lib import ExpiryVersion
-from cmk.update_config.registry import update_action_registry, UpdateAction
+from cmk.update_config.internal import ExpiryVersion, UpdateAction
+from cmk.update_config.registry import update_action_registry
 
 CMK_INV_RULESET_NAME = "active_checks:cmk_inv"
 

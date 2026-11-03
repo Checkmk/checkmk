@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# -- (type|target|mask|gateway|device)
+# -- (type|target|mask|gateway|device), mask is the prefix length for IPv6
 # <<<win_ip_r:sep(124):persist(1495544240)>>>
 # indirect|0.0.0.0|0.0.0.0|11.112.81.1|vmxnet3 Ethernet Adapter #2
 # direct|11.112.81.0|255.255.255.0|0.0.0.0|vmxnet3 Ethernet Adapter #2
@@ -28,6 +28,8 @@
 # direct|255.255.255.255|255.255.255.255|0.0.0.0|vmxnet3 Ethernet Adapter #2
 # direct|255.255.255.255|255.255.255.255|0.0.0.0|vmxnet3 Ethernet Adapter
 # direct|255.255.255.255|255.255.255.255|0.0.0.0|Microsoft Failover Cluster Virtual Adapter
+# indirect|::|0|fe80::290:27ff:fee9:2486|vmxnet3 Ethernet Adapter
+# direct|fe80::|64|::|vmxnet3 Ethernet Adapter
 
 from collections.abc import Sequence
 from typing import NamedTuple
@@ -45,14 +47,14 @@ class Route(NamedTuple):
 Section = Sequence[Route]
 
 
+def _prefix_length(mask: str) -> int:
+    return int(mask) if mask.isdigit() else sum(int(x).bit_count() for x in mask.split("."))
+
+
 def parse_win_ip_r(string_table: StringTable) -> Section:
     return [
         Route(
-            target="{target}/{subnet}".format(
-                target=target,
-                # Convert subnetmask to CIDR
-                subnet=sum(int(x).bit_count() for x in mask.split(".")),
-            ),
+            target=f"{target}/{_prefix_length(mask)}",
             device=device,
             gateway=gateway,
             type_=type_,

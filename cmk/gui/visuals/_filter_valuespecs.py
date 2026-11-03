@@ -304,7 +304,7 @@ class VisualFilterListWithAddPopup(VisualFilterList):
 
                     html.a(
                         choice[1].title() or filter_name,
-                        href="javascript:void(0)",
+                        href="#",
                         onclick="cmk.valuespecs.listofmultiple_add(%s, %s, %s, this);"
                         "cmk.page_menu.update_filter_list_scroll(%s)"
                         % (

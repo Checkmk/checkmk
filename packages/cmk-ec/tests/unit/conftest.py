@@ -1,0 +1,227 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# mypy: disable-error-code="explicit-any"
+
+import logging
+import os
+import threading
+from collections.abc import Iterator
+from pathlib import Path
+from unittest import mock
+
+import pytest
+
+import cmk.ec.export as ec
+from cmk.ccc.site import SiteId
+from cmk.ec.config import Config
+from cmk.ec.helpers import ECLock
+from cmk.ec.history import History
+from cmk.ec.history_file import FileHistory
+from cmk.ec.history_mongo import MongoDBHistory
+from cmk.ec.history_sqlite import SQLiteHistory, SQLiteSettings
+from cmk.ec.main import (
+    create_history,
+    default_slave_status_master,
+    EventServer,
+    EventStatus,
+    make_config,
+    SlaveStatus,
+    StatusServer,
+    StatusTableEvents,
+    StatusTableHistory,
+)
+from cmk.ec.perfcounters import Perfcounters
+from cmk.ec.settings import create_settings
+
+from .helpers import FakeConnection
+
+
+@pytest.fixture(name="settings")
+def fixture_settings(tmp_path: Path) -> ec.Settings:
+    settings = create_settings("1.2.3i45", tmp_path, ["mkeventd"])
+    # Like main(), make sure that the directories for the status files and the event pipe exist.
+    settings.paths.status_file.value.parent.mkdir(parents=True)
+    settings.paths.event_pipe.value.parent.mkdir(parents=True)
+    return settings
+
+
+@pytest.fixture(name="logger")
+def fixture_logger(request: pytest.FixtureRequest) -> logging.Logger:
+    """A logger of each test's own, so its configured levels don't affect other tests"""
+    return logging.getLogger(f"{request.module.__name__}.{request.node.name}")
+
+
+@pytest.fixture(name="lock_configuration")
+def fixture_lock_configuration() -> ECLock:
+    return ECLock(logging.getLogger("cmk.mkeventd.configuration"))
+
+
+@pytest.fixture(name="slave_status")
+def fixture_slave_status() -> SlaveStatus:
+    return default_slave_status_master()
+
+
+@pytest.fixture(name="config")
+def fixture_config() -> Config:
+    return make_config(ec.default_config())
+
+
+@pytest.fixture(name="history")
+def fixture_history(settings: ec.Settings, config: Config) -> FileHistory:
+    history = create_history(
+        settings,
+        config | {"archive_mode": "file"},
+        logging.getLogger("cmk.mkeventd"),
+        StatusTableEvents.columns,
+        StatusTableHistory.columns,
+    )
+    assert isinstance(history, FileHistory)
+    return history
+
+
+@pytest.fixture(name="history_mongo")
+def fixture_history_mongo(settings: ec.Settings, config: Config) -> Iterator[MongoDBHistory]:
+    """history_mongo with connection config file mocked"""
+
+    connection_string = os.getenv("MONGODB_CONNECTION_STRING") or ""
+
+    connection_opts = (
+        (connection_string,) if connection_string.startswith("mongodb://") else ("localhost", 27017)
+    )
+
+    with mock.patch(
+        "cmk.ec.history_mongo._mongodb_local_connection_opts",
+        mock.Mock(return_value=connection_opts),
+    ):
+        history = create_history(
+            settings,
+            config | {"archive_mode": "mongodb"},
+            logging.getLogger("cmk.mkeventd"),
+            StatusTableEvents.columns,
+            StatusTableHistory.columns,
+        )
+        assert isinstance(history, MongoDBHistory)
+        yield history
+        history.flush()
+
+
+@pytest.fixture(name="history_sqlite")
+def fixture_history_sqlite(settings: ec.Settings, config: Config) -> Iterator[SQLiteHistory]:
+    """history_sqlite with history file path set to :memory:"""
+
+    history = SQLiteHistory(
+        SQLiteSettings.from_settings(settings, database=":memory:"),
+        config | {"archive_mode": "sqlite"},
+        logging.getLogger("cmk.mkeventd"),
+        StatusTableEvents.columns,
+        StatusTableHistory.columns,
+    )
+
+    yield history
+
+    history.flush()
+
+
+@pytest.fixture(name="perfcounters")
+def fixture_perfcounters() -> Perfcounters:
+    return Perfcounters(logging.getLogger("cmk.mkeventd.lock.perfcounters"))
+
+
+@pytest.fixture(name="core_connection")
+def fixture_core_connection() -> Iterator[FakeConnection]:
+    core_connection = FakeConnection()
+    yield core_connection
+    # The EC copes with failing queries itself, so don't let a test silently rely on that.
+    if core_connection.unexpected_queries:
+        pytest.fail(f"unexpected Livestatus queries: {core_connection.unexpected_queries!r}")
+
+
+@pytest.fixture(name="terminate_main_event")
+def fixture_terminate_main_event() -> threading.Event:
+    return threading.Event()
+
+
+@pytest.fixture(name="reload_config_event")
+def fixture_reload_config_event() -> threading.Event:
+    return threading.Event()
+
+
+@pytest.fixture(name="event_status")
+def fixture_event_status(
+    settings: ec.Settings,
+    config: Config,
+    perfcounters: Perfcounters,
+    history: History,
+    core_connection: FakeConnection,
+) -> EventStatus:
+    return EventStatus(
+        settings,
+        config,
+        perfcounters,
+        history,
+        logging.getLogger("cmk.mkeventd.EventStatus"),
+        core_connection,
+    )
+
+
+@pytest.fixture(name="event_server")
+def fixture_event_server(
+    settings: ec.Settings,
+    config: Config,
+    slave_status: SlaveStatus,
+    perfcounters: Perfcounters,
+    lock_configuration: ECLock,
+    history: History,
+    event_status: EventStatus,
+    core_connection: FakeConnection,
+) -> EventServer:
+    return EventServer(
+        logging.getLogger("cmk.mkeventd.EventServer"),
+        settings,
+        config,
+        slave_status,
+        perfcounters,
+        lock_configuration,
+        history,
+        event_status,
+        StatusTableEvents.columns,
+        core_connection,
+        SiteId("hurz"),
+        create_pipes_and_sockets=False,
+    )
+
+
+@pytest.fixture(name="status_server")
+def fixture_status_server(
+    settings: ec.Settings,
+    config: Config,
+    slave_status: SlaveStatus,
+    perfcounters: Perfcounters,
+    lock_configuration: ECLock,
+    history: History,
+    event_status: EventStatus,
+    event_server: EventServer,
+    terminate_main_event: threading.Event,
+    reload_config_event: threading.Event,
+    core_connection: FakeConnection,
+) -> Iterator[StatusServer]:
+    status_server = StatusServer(
+        logging.getLogger("cmk.mkeventd.StatusServer"),
+        settings,
+        config,
+        slave_status,
+        perfcounters,
+        lock_configuration,
+        history,
+        event_status,
+        event_server,
+        terminate_main_event,
+        reload_config_event,
+        core_connection,
+    )
+    yield status_server
+    status_server.close_unix_socket()
+    status_server.close_tcp_socket()

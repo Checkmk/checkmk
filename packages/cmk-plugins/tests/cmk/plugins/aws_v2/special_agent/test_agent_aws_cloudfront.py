@@ -7,18 +7,20 @@
 import datetime
 from argparse import Namespace as Args
 from collections.abc import Iterator, Mapping, Sequence
-from typing import Literal, Protocol
+from typing import Protocol
 
 import pytest
 from dateutil.tz import tzutc
 
 from cmk.plugins.aws_v2.special_agent.config import (
     AWSConfig,
+    CloudFrontHostAssignment,
     NamingConvention,
     OverallTags,
     TagsImportPatternOption,
     TagsOption,
 )
+from cmk.plugins.aws_v2.special_agent.hosts import SOURCE_HOST
 from cmk.plugins.aws_v2.special_agent.sections.cloudfront import CloudFront, CloudFrontSummary
 from cmk.plugins.aws_v2.special_agent.sections.core import ResultDistributor
 
@@ -227,7 +229,7 @@ class CloudFrontSections(Protocol):
         self,
         names: object | None,
         tags: OverallTags,
-        assign_to_domain_host: bool,
+        host_assignment: CloudFrontHostAssignment,
         tag_import: TagsOption = TagsImportPatternOption.import_all,
     ) -> CloudFrontSectionsOut: ...
 
@@ -237,12 +239,17 @@ def get_cloudfront_sections() -> CloudFrontSections:
     def _create_cloudfront_sections(
         names: object | None,
         tags: OverallTags,
-        assign_to_domain_host: bool,
+        host_assignment: CloudFrontHostAssignment,
         tag_import: TagsOption = TagsImportPatternOption.import_all,
     ) -> CloudFrontSectionsOut:
         region = "us-east-1"
         config = AWSConfig(
-            "hostname", Args(), ([], []), NamingConvention.ip_region_instance, tag_import
+            "hostname",
+            Args(),
+            ([], []),
+            NamingConvention.ip_region_instance,
+            tag_import,
+            cloudfront_host_assignment=host_assignment,
         ).for_account("123456789012")
         config.add_single_service_config("cloudfront_names", names)
         config.add_service_tags("cloudfront_tags", tags)
@@ -261,10 +268,7 @@ def get_cloudfront_sections() -> CloudFrontSections:
             config,
             distributor,
         )
-        host_assignment: Literal["domain_host", "aws_host"] = (
-            "domain_host" if assign_to_domain_host else "aws_host"
-        )
-        cloudfront = CloudFront(fake_cloudwatch_client, region, config, host_assignment)
+        cloudfront = CloudFront(fake_cloudwatch_client, region, config)
         distributor.add(cloudfront_summary.name, cloudfront)
 
         return cloudfront_summary, cloudfront
@@ -273,28 +277,48 @@ def get_cloudfront_sections() -> CloudFrontSections:
 
 
 cloudfront_params = [
-    (None, (None, None), False, ["E2RAYOVSSL6ZM3", "EWN6C0UT7HBX0"]),
-    (None, (None, None), True, ["E2RAYOVSSL6ZM3", "EWN6C0UT7HBX0"]),
-    (["E2RAYOVSSL6ZM3"], (None, None), False, ["E2RAYOVSSL6ZM3"]),
-    (["E2RAYOVSSL6ZM3"], (None, None), True, ["E2RAYOVSSL6ZM3"]),
-    (None, (["test-tag-key"], ["test-tag-value"]), False, ["EWN6C0UT7HBX0"]),
-    (None, (["test-tag-key"], ["test-tag-value"]), True, ["EWN6C0UT7HBX0"]),
-    (None, (["test-tag-key"], ["wrong-tag-value"]), False, []),
-    (None, (["wrong-tag-key"], ["test-tag-value"]), False, []),
-    (["NONEXISTINGID"], (None, None), False, []),
-    (["E2RAYOVSSL6ZM3", "EWN6C0UT7HBX0"], (None, None), False, ["E2RAYOVSSL6ZM3", "EWN6C0UT7HBX0"]),
+    (None, (None, None), CloudFrontHostAssignment.account, ["E2RAYOVSSL6ZM3", "EWN6C0UT7HBX0"]),
+    (
+        None,
+        (None, None),
+        CloudFrontHostAssignment.origin_domain,
+        ["E2RAYOVSSL6ZM3", "EWN6C0UT7HBX0"],
+    ),
+    (["E2RAYOVSSL6ZM3"], (None, None), CloudFrontHostAssignment.account, ["E2RAYOVSSL6ZM3"]),
+    (["E2RAYOVSSL6ZM3"], (None, None), CloudFrontHostAssignment.origin_domain, ["E2RAYOVSSL6ZM3"]),
+    (
+        None,
+        (["test-tag-key"], ["test-tag-value"]),
+        CloudFrontHostAssignment.account,
+        ["EWN6C0UT7HBX0"],
+    ),
+    (
+        None,
+        (["test-tag-key"], ["test-tag-value"]),
+        CloudFrontHostAssignment.origin_domain,
+        ["EWN6C0UT7HBX0"],
+    ),
+    (None, (["test-tag-key"], ["wrong-tag-value"]), CloudFrontHostAssignment.account, []),
+    (None, (["wrong-tag-key"], ["test-tag-value"]), CloudFrontHostAssignment.account, []),
+    (["NONEXISTINGID"], (None, None), CloudFrontHostAssignment.account, []),
+    (
+        ["E2RAYOVSSL6ZM3", "EWN6C0UT7HBX0"],
+        (None, None),
+        CloudFrontHostAssignment.account,
+        ["E2RAYOVSSL6ZM3", "EWN6C0UT7HBX0"],
+    ),
 ]
 
 
-@pytest.mark.parametrize("names, tags, use_piggyback, found_distributions", cloudfront_params)
+@pytest.mark.parametrize("names, tags, host_assignment, found_distributions", cloudfront_params)
 def test_agent_aws_cloudfront_summary(
     get_cloudfront_sections: CloudFrontSections,
     names: Sequence[str] | None,
     tags: OverallTags,
-    use_piggyback: bool,
+    host_assignment: CloudFrontHostAssignment,
     found_distributions: Sequence[str],
 ) -> None:
-    cloudfront_summary, _cloudfront = get_cloudfront_sections(names, tags, use_piggyback)
+    cloudfront_summary, _cloudfront = get_cloudfront_sections(names, tags, host_assignment)
     cloudfront_summary_results = cloudfront_summary.run().results
 
     assert cloudfront_summary.cache_interval == 300
@@ -304,21 +328,21 @@ def test_agent_aws_cloudfront_summary(
     if found_distributions:
         assert len(cloudfront_summary_results) == 1
         cloudfront_summary_result = cloudfront_summary_results[0]
-        assert cloudfront_summary_result.piggyback_hostname == ""
+        assert cloudfront_summary_result.piggyback_hostname is SOURCE_HOST
         assert [e["Id"] for e in cloudfront_summary_result.content] == found_distributions
     else:
         assert len(cloudfront_summary_results) == 0
 
 
-@pytest.mark.parametrize("names, tags, use_piggyback, found_distributions", cloudfront_params)
+@pytest.mark.parametrize("names, tags, host_assignment, found_distributions", cloudfront_params)
 def test_agent_aws_cloudfront(
     get_cloudfront_sections: CloudFrontSections,
     names: Sequence[str] | None,
     tags: OverallTags,
-    use_piggyback: bool,
+    host_assignment: CloudFrontHostAssignment,
     found_distributions: Sequence[str],
 ) -> None:
-    cloudfront_summary, cloudfront = get_cloudfront_sections(names, tags, use_piggyback)
+    cloudfront_summary, cloudfront = get_cloudfront_sections(names, tags, host_assignment)
     cloudfront_summary.run()
     cloudfront_results = cloudfront.run().results
 
@@ -329,7 +353,11 @@ def test_agent_aws_cloudfront(
     if found_distributions:
         assert len(cloudfront_results) == 1
         cloudfront_result = cloudfront_results[0]
-        assert cloudfront_result.piggyback_hostname == (PIGGYBACK_HOSTNAME if use_piggyback else "")
+        assert cloudfront_result.piggyback_hostname == (
+            PIGGYBACK_HOSTNAME
+            if host_assignment is CloudFrontHostAssignment.origin_domain
+            else SOURCE_HOST
+        )
         assert {e["Label"] for e in cloudfront_result.content} == set(found_distributions)
         # We are retrieving 6 metrics for each CloudFront distribution
         assert len(cloudfront_result.content) == 6 * len(found_distributions)
@@ -371,9 +399,53 @@ def test_agent_aws_cloudfront_summary_filters_tags(
     tag_import: TagsOption,
     expected_tags: dict[str, Sequence[str]],
 ) -> None:
-    cloudfront_summary, _cloudfront = get_cloudfront_sections(None, (None, None), False, tag_import)
+    cloudfront_summary, _cloudfront = get_cloudfront_sections(
+        None, (None, None), CloudFrontHostAssignment.account, tag_import
+    )
     cloudfront_summary_results = cloudfront_summary.run().results
     cloudfront_summary_result = cloudfront_summary_results[0]
 
     for result in cloudfront_summary_result.content:
         assert list(result["TagsForCmkLabels"].keys()) == expected_tags[result["ARN"]]
+
+
+def test_agent_aws_cloudfront_puts_each_distribution_on_its_own_host(
+    get_cloudfront_sections: CloudFrontSections,
+) -> None:
+    cloudfront_summary, cloudfront = get_cloudfront_sections(
+        None, (None, None), CloudFrontHostAssignment.distribution
+    )
+    cloudfront_summary.run()
+
+    cloudfront_results = cloudfront.run().results
+
+    assert {
+        result.piggyback_hostname: {row["Label"] for row in result.content}
+        for result in cloudfront_results
+    } == {"E2RAYOVSSL6ZM3": {"E2RAYOVSSL6ZM3"}, "EWN6C0UT7HBX0": {"EWN6C0UT7HBX0"}}
+
+
+@pytest.mark.parametrize(
+    "host_assignment, expected_labels",
+    [
+        pytest.param(CloudFrontHostAssignment.account, None, id="aws host"),
+        pytest.param(CloudFrontHostAssignment.origin_domain, None, id="origin domain host"),
+        pytest.param(
+            CloudFrontHostAssignment.distribution,
+            {"cmk/aws/service": "cloudfront"},
+            id="distribution host",
+        ),
+    ],
+)
+def test_agent_aws_cloudfront_labels_only_distribution_hosts(
+    get_cloudfront_sections: CloudFrontSections,
+    host_assignment: CloudFrontHostAssignment,
+    expected_labels: Mapping[str, str] | None,
+) -> None:
+    cloudfront_summary, cloudfront = get_cloudfront_sections(None, (None, None), host_assignment)
+    cloudfront_summary.run()
+
+    cloudfront_results = cloudfront.run().results
+
+    assert cloudfront_results
+    assert all(result.piggyback_host_labels == expected_labels for result in cloudfront_results)

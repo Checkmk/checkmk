@@ -25,11 +25,11 @@ from typing import Any, ClassVar
 import pytest
 
 import cmk.utils.paths
-from cmk.base.config import get_default_config
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
+from cmk.config import get_legacy_default_base_config
 from cmk.gui import login, valuespec
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKConfigError, MKUserError
@@ -59,7 +59,7 @@ from cmk.gui.form_specs.unstable.legacy_converter.transform import (
 )
 from cmk.gui.form_specs.unstable.legacy_valuespec import LegacyValueSpec
 from cmk.gui.form_specs.unstable.list_unique_selection import UniqueSingleChoiceElement
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.config_domain_name import (
     config_variable_registry,
@@ -138,25 +138,52 @@ ENVIRONMENT_DERIVED_DEFAULT_DOMAINS = frozenset({"apache", "rrdcached", "omd"})
 
 @functools.cache
 def _core_default_config() -> Mapping[str, object]:
-    return get_default_config()
+    return get_legacy_default_base_config()
 
 
 def factory_default_disk_value(config_variable: ConfigVariable) -> object:
     """The value the GUI shows for a variable nobody has ever saved: the
     factory default of the variable's primary config domain. ConfigDomainCore
     asks the site via the get-configuration automation, whose result is the
-    default config of cmk.base (see _automation_get_configuration in
+    legacy default config of cmk.config (see _automation_get_configuration in
     cmk.plugins.checkmk.automations.checkmk); the unit test reads it directly."""
     domain = config_variable.primary_domain()
     if isinstance(domain, ConfigDomainCore):
-        value = _core_default_config().get(config_variable.ident(), NoFactoryDefault())
-        return NoFactoryDefault() if callable(value) else value
+        return _core_default_config().get(config_variable.ident(), NoFactoryDefault())
     if domain.ident() in ENVIRONMENT_DERIVED_DEFAULT_DOMAINS:
         return NoFactoryDefault()
     return domain.default_globals().get(config_variable.ident(), NoFactoryDefault())
 
 
+_REUSE_LOWER_EDITION = object()
+
+
+@dataclass(frozen=True)
+class EditionDependentDefault:
+    """A pin or case list whose value differs between editions. Every edition
+    reuses the value of the next lower edition (declaration order of Edition:
+    community, pro, ultimate, ultimatemt, cloud) unless it spells out its own,
+    so a pin states only the editions where the value changes. community is
+    the base of the chain and therefore always required."""
+
+    community: object
+    pro: object = _REUSE_LOWER_EDITION
+    ultimate: object = _REUSE_LOWER_EDITION
+    ultimatemt: object = _REUSE_LOWER_EDITION
+    cloud: object = _REUSE_LOWER_EDITION
+
+    def for_edition(self, edition: Edition) -> object:
+        editions = list(Edition)
+        while (value := getattr(self, edition.long)) is _REUSE_LOWER_EDITION:
+            edition = editions[editions.index(edition) - 1]
+        return value
+
+
 FACTORY_DEFAULTS_NORMALIZED_BY_LOAD: Mapping[str, object] = {
+    "data_backend": EditionDependentDefault(
+        community={},
+        ultimate={"features": {"telemetry": "disabled", "synthetic_monitoring": "disabled"}},
+    ),
     "notification_spooling": "local",
     "site_opentelemetry_collector_delta_to_cumulative_processor": {
         "max_stale": 300.0,
@@ -186,7 +213,8 @@ factory floats (0.97, 0.94, 0.70) onto the nearest n/255 grid value below,
 exactly as the legacy Transform did on every edit. The delta-to-cumulative
 max_streams default is the int64 maximum, which exceeds what a JSON number
 can represent exactly, so loading clamps it to the largest JSON-safe
-integer."""
+integer. Loading the data backend factory default deletes the routing of
+the features the edition does not license."""
 
 
 def validate_disk_value(
@@ -254,30 +282,6 @@ class DefaultWithoutKeys:
     keys: frozenset[str]
 
 
-_REUSE_LOWER_EDITION = object()
-
-
-@dataclass(frozen=True)
-class EditionDependentDefault:
-    """A pin whose value differs between editions. Every edition reuses the
-    value of the next lower edition (declaration order of Edition: community,
-    pro, ultimate, ultimatemt, cloud) unless it spells out its own, so a pin
-    states only the editions where the value changes. community is the base
-    of the chain and therefore always required."""
-
-    community: object
-    pro: object = _REUSE_LOWER_EDITION
-    ultimate: object = _REUSE_LOWER_EDITION
-    ultimatemt: object = _REUSE_LOWER_EDITION
-    cloud: object = _REUSE_LOWER_EDITION
-
-    def for_edition(self, edition: Edition) -> object:
-        editions = list(Edition)
-        while (value := getattr(self, edition.long)) is _REUSE_LOWER_EDITION:
-            edition = editions[editions.index(edition) - 1]
-        return value
-
-
 def resolve_case_value(
     config_variable: ConfigVariable, context: GlobalSettingsContext, value: object
 ) -> object:
@@ -304,6 +308,14 @@ W6UwWFko7ZZvNwLYAiEAyTjDYETA0XhtxzcXKyzGECbeZUHbZpYz2xJpZGuAzKw=
 """
 
 _STORED_API_KEY = ("cmk_postprocessed", "stored_password", ("my_key", ""))
+_VALID_PROVIDER_OPTIONS = {
+    "model": "claude-opus-5",
+    "credential": _STORED_API_KEY,
+    "prompt_cache": "five_minutes",
+    "rounds_per_turn": 50,
+    "output_tokens_per_reply": 32768,
+    "compaction_percentage": 80.0,
+}
 
 CHECKBOX_CASES: list[Case] = [
     CasePass("enabled", True),
@@ -375,6 +387,7 @@ SCALAR_VALUE_MODELS: frozenset[type] = frozenset(
         form_specs.DataSize,
         form_specs.Float,
         form_specs.Integer,
+        form_specs.MultilineText,
         form_specs.Percentage,
         form_specs.SingleChoice,
         form_specs.String,
@@ -707,10 +720,26 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
     },
     "ai_control_plane_provider": {
         "none": None,
-        "anthropic": {"model": NoSaveableDefault(), "credential": NoSaveableDefault()},
+        "anthropic": {
+            "model": NoSaveableDefault(),
+            "credential": NoSaveableDefault(),
+            "prompt_cache": "five_minutes",
+            "rounds_per_turn": 50,
+            "output_tokens_per_reply": 32768,
+            "compaction_percentage": 80.0,
+        },
         "anthropic.base_url": NoSaveableDefault(),
-        "openai": {"model": NoSaveableDefault(), "credential": NoSaveableDefault()},
+        "anthropic.context_window_tokens": NoSaveableDefault(),
+        "openai": {
+            "model": NoSaveableDefault(),
+            "credential": NoSaveableDefault(),
+            "prompt_cache": "five_minutes",
+            "rounds_per_turn": 50,
+            "output_tokens_per_reply": 32768,
+            "compaction_percentage": 80.0,
+        },
         "openai.base_url": NoSaveableDefault(),
+        "openai.context_window_tokens": NoSaveableDefault(),
     },
     "auth_by_http_header": {
         "[enable]": "X-Remote-User",
@@ -858,38 +887,22 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         "labels.shown.color": "#ffffff",
     },
     "data_backend": {
-        "address_seen_by_central": NoSaveableDefault(),
         "local_instance": {
             "https_port": 27909,
             "relative_memory_limit_percentage": 50.0,
             "tls_port": 25720,
         },
         "local_instance.http_port": 25962,
-        "local_instance.remote_access": ("disabled", None),
-        "local_instance.remote_access.disabled": None,
-        "local_instance.central_access": ("disabled", None),
-        "local_instance.central_access.disabled": None,
-        "local_instance.central_access.enabled": NoSaveableDefault(),
-        "local_instance.remote_access.enabled": NoSaveableDefault(),
+        "local_instance.central_access": {
+            "address": NoSaveableDefault(),
+            "address_reachable_by_central": NoSaveableDefault(),
+        },
     },
     "mkeventd_notify_remotehost": {
         "[enable]": "",
     },
     "mkeventd_service_levels": {
         "[add]": (0, ""),
-    },
-    "network_flow": {
-        "disabled": None,
-        "enabled": {
-            "dns_mode": 3,
-            "flow_source_endpoints": [],
-            "local_networks": ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"],
-            "retention_days": 30,
-        },
-        "enabled.flow_source_endpoints[add]": NoSaveableDefault(),
-        "enabled.flow_source_endpoints[add].connect": NoSaveableDefault(),
-        "enabled.flow_source_endpoints[add].listen": NoSaveableDefault(),
-        "enabled.local_networks[add]": NoSaveableDefault(),
     },
     "notification_fallback_email": {
         "[enable]": NoSaveableDefault(),
@@ -1317,10 +1330,12 @@ DEFAULT_DISK_VALUES: Mapping[str, object] = {
         "url_target": "_blank",
         "labels": ("shown", {"size": 11}),
     },
-    "data_backend": {"features": {"telemetry": "disabled"}},
+    "data_backend": EditionDependentDefault(
+        community={},
+        ultimate={"features": {"telemetry": "disabled", "synthetic_monitoring": "disabled"}},
+    ),
     "mkeventd_notify_remotehost": None,
     "mkeventd_service_levels": [],
-    "network_flow": ("disabled", None),
     "notification_fallback_email": "",
     "notification_fallback_format": ("asciimail", {}),
     "notification_spooler_config": {
@@ -1480,6 +1495,7 @@ DEFAULT_DISK_VALUES: Mapping[str, object] = {
         "statgrab_mem": False,
         "tplink_mem": False,
         "ups_bat_temp": False,
+        "ups_eaton_environment": False,
         "vms_diskstat_df": False,
         "wmic_process": False,
         "zfsget": False,
@@ -1497,7 +1513,7 @@ DEFAULT_DISK_VALUES: Mapping[str, object] = {
 }
 
 
-CASES: Mapping[str, list[Case]] = {
+CASES: Mapping[str, list[Case] | EditionDependentDefault] = {
     "acknowledge_problems": [
         CasePass(
             "configured",
@@ -1592,11 +1608,22 @@ CASES: Mapping[str, list[Case]] = {
         CaseFail("unknown-key", {"bogus": 1}),
         CaseFail("not-a-pem", {"certificates": ["not a pem"]}),
     ],
+    "ai_control_plane_instructions": [CasePass("custom", "Dummy instructions.")],
     "ai_control_plane_provider": [
         CasePass("none", ("none", None)),
         CasePass(
             "anthropic",
-            ("anthropic", {"model": "claude-opus-5", "credential": _STORED_API_KEY}),
+            (
+                "anthropic",
+                {
+                    **_VALID_PROVIDER_OPTIONS,
+                    "prompt_cache": "off",
+                    "rounds_per_turn": 7,
+                    "output_tokens_per_reply": 20000,
+                    "context_window_tokens": 200000,
+                    "compaction_percentage": 50.0,
+                },
+            ),
         ),
         CasePass(
             "openai-with-base-url",
@@ -1606,25 +1633,83 @@ CASES: Mapping[str, list[Case]] = {
                     "model": "gpt-5",
                     "base_url": "https://llm.corp.example/v1",
                     "credential": _STORED_API_KEY,
+                    "prompt_cache": "one_hour",
+                    "rounds_per_turn": 50,
+                    "output_tokens_per_reply": 32768,
+                    "compaction_percentage": 80.0,
                 },
             ),
         ),
-        CaseFail("missing-credential", ("anthropic", {"model": "claude-opus-5"})),
-        CaseFail("empty-model", ("anthropic", {"model": "", "credential": _STORED_API_KEY})),
+        CaseFail(
+            "missing-credential",
+            ("anthropic", {k: v for k, v in _VALID_PROVIDER_OPTIONS.items() if k != "credential"}),
+        ),
+        CaseFail("empty-model", ("anthropic", {**_VALID_PROVIDER_OPTIONS, "model": ""})),
         CaseFail(
             "non-http-base-url",
-            ("openai", {"model": "gpt-5", "base_url": "ftp://x", "credential": _STORED_API_KEY}),
+            ("openai", {**_VALID_PROVIDER_OPTIONS, "base_url": "ftp://x"}),
+        ),
+        CaseFail(
+            "missing-rounds-per-turn",
+            (
+                "anthropic",
+                {k: v for k, v in _VALID_PROVIDER_OPTIONS.items() if k != "rounds_per_turn"},
+            ),
+        ),
+        CaseFail(
+            "missing-output-tokens-per-reply",
+            (
+                "anthropic",
+                {
+                    k: v
+                    for k, v in _VALID_PROVIDER_OPTIONS.items()
+                    if k != "output_tokens_per_reply"
+                },
+            ),
+        ),
+        CaseFail(
+            "rounds-below-minimum", ("anthropic", {**_VALID_PROVIDER_OPTIONS, "rounds_per_turn": 1})
+        ),
+        CaseFail(
+            "tokens-below-minimum",
+            ("anthropic", {**_VALID_PROVIDER_OPTIONS, "output_tokens_per_reply": 16383}),
         ),
         CaseFail(
             "explicit-password",
             (
                 "anthropic",
                 {
-                    "model": "claude-opus-5",
+                    **_VALID_PROVIDER_OPTIONS,
                     "credential": ("cmk_postprocessed", "explicit_password", ("id", "s3cret")),
                 },
             ),
             exception=MKGeneralException,
+        ),
+        CaseFail(
+            "missing-compaction-percentage",
+            (
+                "anthropic",
+                {k: v for k, v in _VALID_PROVIDER_OPTIONS.items() if k != "compaction_percentage"},
+            ),
+        ),
+        CaseFail(
+            "compaction-percentage-below-minimum",
+            ("anthropic", {**_VALID_PROVIDER_OPTIONS, "compaction_percentage": 0.5}),
+        ),
+        CaseFail(
+            "compaction-percentage-above-maximum",
+            ("anthropic", {**_VALID_PROVIDER_OPTIONS, "compaction_percentage": 100.5}),
+        ),
+        CaseFail(
+            "context-window-below-minimum",
+            ("anthropic", {**_VALID_PROVIDER_OPTIONS, "context_window_tokens": 0}),
+        ),
+        CaseFail(
+            "missing-prompt-cache",
+            (
+                "anthropic",
+                {k: v for k, v in _VALID_PROVIDER_OPTIONS.items() if k != "prompt_cache"},
+            ),
         ),
     ],
     "alert_handler_event_types": [
@@ -1894,7 +1979,6 @@ CASES: Mapping[str, list[Case]] = {
     ],
     "eventsocket_queue_len": MIN_ONE_INTEGER_CASES,
     "exp_ai_assistant": CHECKBOX_CASES,
-    "exp_relay_active_checks": CHECKBOX_CASES,
     "exp_trial_mode_selection": CHECKBOX_CASES,
     "failed_notification_horizon": [
         CasePass("configured", 172800),
@@ -2180,54 +2264,97 @@ CASES: Mapping[str, list[Case]] = {
         CaseFail("below-minimum", 100),
         CaseFail("not-an-int", "5000"),
     ],
-    "data_backend": [
-        CaseMigrates(
-            "legacy-disabled", ("disabled", None), {"features": {"telemetry": "disabled"}}
-        ),
-        CaseMigrates(
-            "legacy-enabled",
-            (
-                "enabled",
-                {"tls_port": 9000, "https_port": 8443, "relative_memory_limit_percentage": 50.0},
+    "data_backend": EditionDependentDefault(
+        community=[],
+        pro=[
+            CaseMigrates(
+                "legacy-enabled",
+                (
+                    "enabled",
+                    {
+                        "tls_port": 9000,
+                        "https_port": 8443,
+                        "relative_memory_limit_percentage": 50.0,
+                    },
+                ),
+                {
+                    "local_instance": {
+                        "tls_port": 9000,
+                        "https_port": 8443,
+                        "relative_memory_limit_percentage": 50.0,
+                    },
+                },
             ),
-            {
-                "features": {"telemetry": "local"},
-                "local_instance": {
-                    "tls_port": 9000,
-                    "https_port": 8443,
-                    "relative_memory_limit_percentage": 50.0,
+            CaseMigrates(
+                "unlicensed-routing-deleted",
+                {"features": {"telemetry": "central"}, "address_seen_by_central": "10.0.0.2"},
+                {},
+            ),
+        ],
+        ultimate=[
+            CaseMigrates(
+                "legacy-disabled",
+                ("disabled", None),
+                {"features": {"telemetry": "disabled", "synthetic_monitoring": "disabled"}},
+            ),
+            CaseMigrates(
+                "legacy-enabled",
+                (
+                    "enabled",
+                    {
+                        "tls_port": 9000,
+                        "https_port": 8443,
+                        "relative_memory_limit_percentage": 50.0,
+                    },
+                ),
+                {
+                    "features": {"telemetry": "local", "synthetic_monitoring": "disabled"},
+                    "local_instance": {
+                        "tls_port": 9000,
+                        "https_port": 8443,
+                        "relative_memory_limit_percentage": 50.0,
+                    },
                 },
-            },
-        ),
-        CasePass(
-            "telemetry-on-central",
-            {"features": {"telemetry": "central"}, "address_seen_by_central": "10.0.0.2"},
-        ),
-        CaseFail("central-feature-without-address", {"features": {"telemetry": "central"}}),
-        CasePass(
-            "local-instance",
-            {
-                "features": {"telemetry": "local"},
-                "local_instance": {
-                    "tls_port": 9000,
-                    "https_port": 8443,
-                    "relative_memory_limit_percentage": 50.0,
+            ),
+            CaseFail(
+                "central-feature-without-address",
+                {"features": {"telemetry": "central", "synthetic_monitoring": "disabled"}},
+            ),
+            CasePass(
+                "address-kept-without-central-feature",
+                {
+                    "features": {"telemetry": "disabled", "synthetic_monitoring": "disabled"},
+                    "address_seen_by_central": "10.0.0.2",
                 },
-            },
-        ),
-        CaseFail("local-feature-without-local-instance", {"features": {"telemetry": "local"}}),
-        CaseFail(
-            "duplicate-ports",
-            {
-                "features": {"telemetry": "local"},
-                "local_instance": {
-                    "tls_port": 9000,
-                    "https_port": 9000,
-                    "relative_memory_limit_percentage": 50.0,
+            ),
+            CasePass(
+                "local-instance",
+                {
+                    "features": {"telemetry": "local", "synthetic_monitoring": "disabled"},
+                    "local_instance": {
+                        "tls_port": 9000,
+                        "https_port": 8443,
+                        "relative_memory_limit_percentage": 50.0,
+                    },
                 },
-            },
-        ),
-    ],
+            ),
+            CaseFail(
+                "local-feature-without-local-instance",
+                {"features": {"telemetry": "local", "synthetic_monitoring": "disabled"}},
+            ),
+            CaseFail(
+                "duplicate-ports",
+                {
+                    "features": {"telemetry": "local", "synthetic_monitoring": "disabled"},
+                    "local_instance": {
+                        "tls_port": 9000,
+                        "https_port": 9000,
+                        "relative_memory_limit_percentage": 50.0,
+                    },
+                },
+            ),
+        ],
+    ),
     "mkeventd_connect_timeout": MIN_ONE_INTEGER_CASES,
     "mkeventd_notify_contactgroup": [
         CaseDirty("no-groups-defined-in-test-config", "oncall", MKUserError),
@@ -2248,72 +2375,6 @@ CASES: Mapping[str, list[Case]] = {
         CaseFail("not-a-list", "10"),
     ],
     "multisite_draw_ruleicon": CHECKBOX_CASES,
-    "network_flow": [
-        CasePass("disabled", ("disabled", None)),
-        CasePass(
-            "configured",
-            (
-                "enabled",
-                {
-                    "flow_source_endpoints": [
-                        ("connect", "collector.example.com:9995"),
-                        ("listen", 9996),
-                    ],
-                    "local_networks": ["10.0.0.0/8"],
-                    "dns_mode": 0,
-                    "retention_days": 30,
-                },
-            ),
-        ),
-        CaseFail(
-            "endpoint-missing-port",
-            (
-                "enabled",
-                {
-                    "flow_source_endpoints": [("connect", "collector.example.com")],
-                    "local_networks": [],
-                    "dns_mode": 0,
-                    "retention_days": 30,
-                },
-            ),
-        ),
-        CaseFail(
-            "endpoint-port-not-a-number",
-            (
-                "enabled",
-                {
-                    "flow_source_endpoints": [("connect", "collector.example.com:abc")],
-                    "local_networks": [],
-                    "dns_mode": 0,
-                    "retention_days": 30,
-                },
-            ),
-        ),
-        CaseFail(
-            "endpoint-port-out-of-range",
-            (
-                "enabled",
-                {
-                    "flow_source_endpoints": [("connect", "collector.example.com:70000")],
-                    "local_networks": [],
-                    "dns_mode": 0,
-                    "retention_days": 30,
-                },
-            ),
-        ),
-        CaseFail(
-            "empty-endpoints",
-            (
-                "enabled",
-                {
-                    "flow_source_endpoints": [],
-                    "local_networks": [],
-                    "dns_mode": 0,
-                    "retention_days": 30,
-                },
-            ),
-        ),
-    ],
     "notification_backlog": UNBOUNDED_INTEGER_CASES,
     "notification_bulk_interval": MIN_ONE_AGE_CASES,
     "notification_fallback_email": [
@@ -2981,7 +3042,12 @@ class ConfigVariableSuite:
         user_id = UserId("admin")
         with login.TransactionIdContext(
             user_id,
-            UserPermissions(load_config.roles, permission_registry, {user_id: ["admin"]}, []),
+            UserPermissions(
+                load_config.roles,
+                all_permissions(),
+                {user_id: ["admin"]},
+                [],
+            ),
         ):
             yield
 
@@ -3054,6 +3120,8 @@ class ConfigVariableSuite:
             if isinstance(factory, NoFactoryDefault):
                 continue
             expected = FACTORY_DEFAULTS_NORMALIZED_BY_LOAD.get(ident, factory)
+            if isinstance(expected, EditionDependentDefault):
+                expected = expected.for_edition(self.EDITION)
             try:
                 loaded = round_trip_disk_value(config_variable, global_settings_context, factory)
                 if loaded != expected:
@@ -3174,6 +3242,16 @@ class ConfigVariableSuite:
                 assert round_trip_disk_value(config_variable, context, value) == value
 
 
+def _cases_for_edition(
+    case_list: list[Case] | EditionDependentDefault, edition: Edition
+) -> list[Case]:
+    if isinstance(case_list, EditionDependentDefault):
+        resolved = case_list.for_edition(edition)
+        assert isinstance(resolved, list)
+        return resolved
+    return case_list
+
+
 def generate_config_variable_tests(metafunc: pytest.Metafunc) -> None:
     """Parametrize the suite with the case table entries the edition under test
     actually registers. The config variable registry is the single source of
@@ -3192,7 +3270,7 @@ def generate_config_variable_tests(metafunc: pytest.Metafunc) -> None:
                 pytest.param(ident, case, id=f"{ident}-{case.id}")
                 for ident, case_list in CASES.items()
                 if ident in registered
-                for case in case_list
+                for case in _cases_for_edition(case_list, metafunc.cls.EDITION)
             ],
         )
     elif "ident" in metafunc.fixturenames:

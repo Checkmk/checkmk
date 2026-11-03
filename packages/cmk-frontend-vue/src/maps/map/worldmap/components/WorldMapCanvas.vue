@@ -48,15 +48,15 @@ import {
 import { useSettings } from '@/maps/services/context'
 import { applyTileLayer } from '@/maps/shared/worldmap/tileLayer'
 import type { MapConfig, MapElement, ObjectState } from '@/maps/types/api'
-import { type AnchorRect, anchorRectOf } from '@/maps/utils/anchorRect'
 import { objectDisplayName } from '@/maps/utils/dropdownOptions'
 import {
   dimmedStyle,
   objectMatchesTerms,
   parseFilterTerms,
-  passesProblemFilter
+  problemObjects
 } from '@/maps/utils/objectFilter'
 import { stateRank } from '@/maps/utils/stateColors'
+import { labelText } from '@/maps/utils/template'
 
 import WorldMapLineArrow from './WorldMapLineArrow.vue'
 import WorldMapLineHandle from './WorldMapLineHandle.vue'
@@ -96,8 +96,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'object-click': [object: MapElement, event?: MouseEvent]
-  'object-dblclick': [object: MapElement, anchor: AnchorRect | null]
-  'object-properties': [object: MapElement, anchor: AnchorRect | null]
+  'object-dblclick': [object: MapElement]
+  'object-properties': [object: MapElement]
   'object-delete': [object: MapElement]
   'object-duplicate': [object: MapElement]
   'object-detach': [object: MapElement]
@@ -132,17 +132,21 @@ const objectsById = computed(
   () => new Map(props.config.objects.map((object) => [object.id, object]))
 )
 
-const filterActive = computed(() => props.filterNeedle.trim() !== '' || props.problemsOnly)
+const filterActive = computed(() => props.filterNeedle.trim() !== '')
+
+// "Only problems" means what it says; the editor still shows everything.
+const shownObjects = computed(() =>
+  props.editMode
+    ? props.config.objects
+    : problemObjects(props.config.objects, props.problemsOnly, props.states)
+)
 
 // Parsed once per needle rather than once per object: every object on the map
 // is matched against the same query.
 const filterTerms = computed(() => parseFilterTerms(props.filterNeedle))
 
 function matches(object: MapElement): boolean {
-  return (
-    objectMatchesTerms(object, filterTerms.value) &&
-    passesProblemFilter(object, props.problemsOnly, props.states[object.id]?.state)
-  )
+  return objectMatchesTerms(object, filterTerms.value)
 }
 
 function iconSizeOf(object: MapElement): number {
@@ -190,9 +194,9 @@ function onObjectClick(object: MapElement, event?: MouseEvent): void {
   emit('object-click', object, event)
 }
 
-function onObjectDblclick(object: MapElement, event: MouseEvent): void {
+function onObjectDblclick(object: MapElement): void {
   if (!props.preview) {
-    emit('object-dblclick', object, anchorRectOf(event.currentTarget))
+    emit('object-dblclick', object)
   }
 }
 
@@ -245,7 +249,7 @@ function onMarkersDropped(moves: MarkerMove[]): void {
 
 const markers = useWorldmapMarkers({
   map: () => map,
-  objects: () => props.config.objects,
+  objects: () => shownObjects.value,
   fallbackAt: () => (viewport.value ? [viewport.value.lat, viewport.value.lng] : DEFAULT_CENTRE),
   iconSizeOf,
   defaultZ: () => props.config.default_z ?? 1,
@@ -260,7 +264,7 @@ const markers = useWorldmapMarkers({
 
 const lines = useWorldmapLines({
   map: () => map,
-  objects: () => props.config.objects,
+  objects: () => shownObjects.value,
   colorOf,
   editMode: () => props.editMode,
   isSelected,
@@ -306,16 +310,15 @@ const roving = useRovingFocus({
 const labelViews = computed(() =>
   lines.decorations.value.labels.flatMap((label) => {
     const object = objectsById.value.get(label.lineId)
-    return object ? [{ label, object }] : []
+    return object ? [{ label, object, text: labelText(object, props.states[object.id]) }] : []
   })
 )
 
-/** Where the context menu stood, so the properties dialog opens next to it. */
 function onContextProperties(): void {
-  const { object, x, y } = menus.context
+  const { object } = menus.context
   menus.close()
   if (object) {
-    emit('object-properties', object, { left: x, top: y, right: x, bottom: y })
+    emit('object-properties', object)
   }
 }
 
@@ -474,7 +477,7 @@ watch(
 
 /** Brings every object that has a place of its own into view. */
 function fitAll(): void {
-  const placed = pointObjects(props.config.objects)
+  const placed = pointObjects(shownObjects.value)
   if (map && placed.length) {
     map.fitBounds(L.latLngBounds(placed.map(({ at }) => at)), { padding: FIT_PADDING })
   }
@@ -529,7 +532,7 @@ defineExpose({
         :preview="preview"
         :tab-stop="roving.isTabStop(view.object.id)"
         @activate="onObjectClick(view.object, $event)"
-        @double-click="onObjectDblclick(view.object, $event)"
+        @double-click="onObjectDblclick(view.object)"
         @context-menu="onObjectContext(view.object, $event)"
         @hover="(event, anchor) => onObjectHover(view.object, event, anchor)"
         @hover-leave="closeHoverCard"
@@ -559,10 +562,11 @@ defineExpose({
       />
     </Teleport>
 
-    <Teleport v-for="{ label, object } in labelViews" :key="label.key" :to="label.element">
+    <Teleport v-for="{ label, object, text } in labelViews" :key="label.key" :to="label.element">
       <MapElementLabel
+        v-if="text"
         :object="object"
-        :text="label.text"
+        :text="text"
         placement="plain"
         :style="dimmedStyle(label.dimmed)"
       />
@@ -615,11 +619,11 @@ defineExpose({
    attribution, so it carries no scope attribute of its own. Under the root, the
    rule outweighs Leaflet's own white-on-white one. */
 .maps-world-map-canvas :deep(.maps-world-map-canvas__attribution) {
-  padding: 1px var(--dimension-3);
-  font-size: 11px;
+  padding: var(--dimension-1) var(--dimension-3);
+  font-size: var(--font-size-small);
   line-height: 1.4;
   color: var(--font-color);
-  background: var(--maps-map-view-glass);
+  background: var(--maps-map-view-overlay-bg);
 }
 
 .maps-world-map-canvas :deep(.maps-world-map-canvas__attribution a) {
@@ -636,10 +640,8 @@ defineExpose({
   isolation: isolate;
 }
 
-/* Two-tone, so the ring reads on light and dark tiles alike. */
 .maps-world-map-canvas__map:focus-visible {
-  outline: 2px solid var(--color-corporate-green-50);
+  outline: revert;
   outline-offset: -2px;
-  box-shadow: inset 0 0 0 4px var(--white);
 }
 </style>

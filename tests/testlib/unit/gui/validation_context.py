@@ -10,12 +10,14 @@ from cmk.gui.openapi.framework import ApiContext, APIVersion
 from cmk.gui.openapi.framework.model.validation_context import RequestValidationContext
 
 
-def make_api_context(config: Config, user: LoggedInUser) -> ApiContext:
-    """An ApiContext like the framework builds it for a request."""
+def make_api_context(
+    config: Config, user: LoggedInUser, *, if_match_any: bool = False
+) -> ApiContext:
+    """An ApiContext like the framework builds it for a request, with "If-Match: *" if asked."""
     return ApiContext.new(
         config=config,
         version=APIVersion.UNSTABLE,
-        etag_if_match=ETags(),
+        etag_if_match=ETags(star_tag=if_match_any),
         host_url="http://localhost/",
         user=user,
         token=None,

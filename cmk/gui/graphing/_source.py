@@ -14,34 +14,38 @@ from cmk.ccc.site import SiteId
 from cmk.graphing.v1 import translations as translations_v1
 from cmk.graphing_engine import (
     ConsolidationFunction,
+    expected_served_step,
     FetchedData,
     HostName,
+    map_metric_names,
+    merge_series,
     MetricName,
     MetricProtocol,
+    parse_performance_data,
     PerformanceData,
+    RawPerformanceData,
+    resample,
+    rrd_originals,
     RRDMetric,
+    scaled_series,
     Service,
     ServiceName,
+    time_series_of_rrd_column,
     TimeRange,
     TimeSeries,
+    translate_performance_data,
+    with_edge_neighbours,
 )
 from cmk.graphing_engine import (
     SiteID as EngineSiteID,
 )
 from cmk.gui import sites
+from cmk.gui.log import logger
 from cmk.livestatus_client import LivestatusColumn, lqencode, MKLivestatusNotFoundError
 
-from ._edge_neighbours import expected_served_step, with_edge_neighbours
 from ._metric_data import (
-    map_metric_names,
-    merge_series,
-    resample,
     rrd_column_name,
-    rrd_originals,
-    scaled_series,
-    translate_performance_data,
 )
-from ._performance_data import parse_performance_data, RawPerformanceData
 
 HOST_PSEUDO_SERVICE: Final = ServiceName("_HOST_")
 
@@ -134,7 +138,11 @@ class RRDFetchMetricNameMapping:
                     service, values = query.parse_row(row, EngineSiteID(str(row_site)))
                     perf_data_string, rrd_metrics, check_command = values
                     raw = parse_performance_data(
-                        perf_data_string, check_command, rrd_metrics, debug=self.debug
+                        perf_data_string,
+                        check_command,
+                        rrd_metrics,
+                        debug=self.debug,
+                        logger=logger,
                     )
                     result[service] = map_metric_names(
                         raw.check_command, list(raw.values), self.registered_translations
@@ -258,14 +266,10 @@ class RRDFetchTimeSeries:
                         service, values = query.parse_row(row)
                         for metric in metrics_by_service.get(service, []):
                             column = values[column_of[str(metric.metric_name)]]
-                            if not column:
+                            if column is None:
                                 continue
-                            result[metric] = TimeSeries(
-                                time_range=TimeRange(
-                                    start=int(column[0]), end=int(column[1]), step=int(column[2])
-                                ),
-                                values=column[3:],
-                            )
+                            if (series := time_series_of_rrd_column(column)) is not None:
+                                result[metric] = series
         return result
 
 
@@ -302,7 +306,6 @@ class QueryLimitReached:
     # A fan-out query hit its backend series cap, so its result is truncated.
     metric_name: str
     max_series: int
-    num_series: int
 
 
 @dataclass
@@ -345,13 +348,14 @@ def _grouped_by_site(
 @dataclass(frozen=True)
 class RRDFetchData:
     debug: bool
+    consolidation_function: ConsolidationFunction
     registered_translations: Sequence[translations_v1.Translation] = ()
     # Where the two reads this fetch is built on come from. The defaults are the monitoring core;
     # what the fetch does with the data - translate it, resolve the columns a metric is drawn from,
     # scale and merge the series - sits above them and is independent of it.
     performance_data_source: _RRDFetchPerformanceDataProtocol = RRDFetchPerformanceData()
     time_series_source: _RRDFetchTimeSeriesProtocol = RRDFetchTimeSeries()
-    edge_neighbours_at_served_step: bool = False
+    include_edge_neighbours: bool = False
     # Accumulated while fetching; read by the dispatcher into the evaluated result.
     diagnostics: FetchDiagnostics = field(default_factory=FetchDiagnostics, compare=False)
 
@@ -359,7 +363,6 @@ class RRDFetchData:
         self,
         metrics: Sequence[MetricProtocol],
         *,
-        consolidation_function: ConsolidationFunction,
         time_range: TimeRange,
     ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
         rrd_metrics = [metric for metric in metrics if isinstance(metric, RRDMetric)]
@@ -369,7 +372,6 @@ class RRDFetchData:
             rrd_metrics,
             raw_performance_data,
             site_of_service,
-            consolidation_function=consolidation_function,
             time_range=time_range,
         )
         return assemble_fetched_data(rrd_metrics, performance_data, time_series)
@@ -403,7 +405,6 @@ class RRDFetchData:
         raw_performance_data: Mapping[tuple[EngineSiteID | None, Service], RawPerformanceData],
         site_of_service: Mapping[Service, EngineSiteID],
         *,
-        consolidation_function: ConsolidationFunction,
         time_range: TimeRange,
     ) -> Mapping[RRDMetric, TimeSeries]:
         originals_by_metric: dict[
@@ -416,7 +417,7 @@ class RRDFetchData:
             # A metric that already carries its site keeps it; otherwise use the site resolved while
             # fetching the performance data, so the RRD fetch is scoped to it.
             site_id = metric.site_id or site_of_service.get(service)
-            function = metric.consolidation_function or consolidation_function
+            function = metric.consolidation_function or self.consolidation_function
             originals_by_metric[metric] = (
                 function,
                 [
@@ -498,7 +499,7 @@ class RRDFetchData:
             # on two sites keeps a distinct entry per site.
             for row in self.performance_data_source(site_services, only_site=group_site):
                 result[(group_site, row.service)] = parse_performance_data(
-                    row.perf_data, row.check_command, debug=self.debug
+                    row.perf_data, row.check_command, debug=self.debug, logger=logger
                 )
                 site_of_service[row.service] = row.site_id
         return result, site_of_service
@@ -512,7 +513,7 @@ class RRDFetchData:
     ) -> Mapping[RRDMetric, TimeSeries]:
         time_series_source = (
             _TimeSeriesWithEdgeNeighboursAtServedStep(self.time_series_source)
-            if self.edge_neighbours_at_served_step
+            if self.include_edge_neighbours
             else self.time_series_source
         )
         result: dict[RRDMetric, TimeSeries] = {}

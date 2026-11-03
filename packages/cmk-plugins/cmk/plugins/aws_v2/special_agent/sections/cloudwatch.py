@@ -11,6 +11,7 @@ from typing import override
 
 from botocore.client import BaseClient
 
+from .. import hosts
 from ..config import AWSConfig
 from .core import (
     AWSColleagueContents,
@@ -63,7 +64,6 @@ class CloudwatchAlarmsLimits(AWSSectionLimits):
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
         self._add_limit(
-            "",
             AWSLimit(
                 "cloudwatch_alarms",
                 "CloudWatch Alarms",
@@ -133,4 +133,4 @@ class CloudwatchAlarms(AWSSection):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", computed_content.content)]
+        return [AWSSectionResult(self._target_host(hosts.AccountScope()), computed_content.content)]

@@ -36,6 +36,7 @@ from cmk.maps.shared.validators import (
     coerce_asset_ref,
     coerce_url_target,
     coerce_user_url,
+    is_valid_map_name,
     validate_user_url,
 )
 
@@ -271,6 +272,40 @@ def test_map_element_rejects_filter_injection() -> None:
 def test_map_element_update_normalises_filter() -> None:
     obj = MapElementUpdate.model_validate({"object_filter": "Filter: host_name ~ ^web"})
     assert obj.object_filter == "Filter: host_name ~ ^web\n"
+
+
+@pytest.mark.parametrize("field", ["exclude_members", "exclude_member_states"])
+@pytest.mark.parametrize(
+    "pattern",
+    [
+        "x\nOr: 2",
+        "x\\nOr: 2",  # literal backslash-n, a line break to dyngroup filters
+        "x\rOr: 2",
+        "x\x0bOr: 2",
+        "x\x0cOr: 2",
+        "x\u2028Or: 2",
+        "x\x00",
+    ],
+)
+def test_map_element_update_rejects_a_member_pattern_spanning_lines(
+    field: str, pattern: str
+) -> None:
+    # A second line could add an ``Or:`` that makes the group condition optional.
+    with pytest.raises(ValidationError):
+        MapElementUpdate.model_validate({field: pattern})
+
+
+@pytest.mark.parametrize(
+    "element",
+    [
+        {"id": "h", "type": "host", "host_name": "web01", "exclude_members": "web01~~CPU"},
+        {"id": "l", "type": "line", "host_name": "web01", "exclude_member_states": "~~CPU"},
+    ],
+)
+def test_map_element_rejects_a_service_pattern_on_a_host(element: dict[str, object]) -> None:
+    # NagVis ignores host~~service on a host; storing it would look like it works.
+    with pytest.raises(ValidationError):
+        MapElement.model_validate(element)
 
 
 # The runtime location-bundle filter (``_names_or_filter``) is built from live
@@ -520,3 +555,18 @@ def test_connection_rejects_dangerous_socket_path(path: str) -> None:
     # The same reject branches must fire through the schema's field validator.
     with pytest.raises(ValidationError):
         ConnectionConfig(id="b1", socket_path=path)
+
+
+@pytest.mark.parametrize(
+    "name, expected",
+    [
+        ("ok_name-1", True),
+        ("", False),
+        ("../escape", False),
+        ("with space", False),
+        ("a" * 100, True),
+        ("a" * 101, False),
+    ],
+)
+def test_is_valid_map_name(name: str, expected: bool) -> None:
+    assert is_valid_map_name(name) is expected

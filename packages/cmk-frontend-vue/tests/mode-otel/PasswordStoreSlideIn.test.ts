@@ -4,11 +4,12 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { cleanup, fireEvent, render, screen } from '@testing-library/vue'
-// eslint-disable-next-line no-restricted-imports -- TODO: migrate to @testing-library/vue, see https://wiki.lan.checkmk.net/spaces/DEV/pages/149528812/All+things+Vue
+// eslint-disable-next-line no-restricted-imports -- TODO: migrate to @testing-library/vue, see https://checkmk-int.atlassian.net/wiki/x/no9lD
 import { flushPromises } from '@vue/test-utils'
 import type * as FormSpec from 'cmk-shared-typing/typescript/vue_formspec_components'
 import type { Catalog } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
+// eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
 import { HttpResponse, http } from 'msw'
 
 import { initializeComponentRegistry } from '@/form/private/FormEditDispatcher/dispatch'

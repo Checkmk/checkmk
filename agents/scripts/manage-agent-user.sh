@@ -38,7 +38,12 @@ _set_agent_user_permissions() {
     chown -R :"${GROUP_REF}" "${MK_INSTALLDIR}/package/config"
     chown -R :"${GROUP_REF}" "${MK_INSTALLDIR}/package/agent"
     chown -R :"${GROUP_REF}" "${MK_INSTALLDIR}/package/local"
-    chown -R "${USER_REF}":"${GROUP_REF}" "${MK_INSTALLDIR}/runtime"
+    # The folders below runtime/job belong to the users that run mk-job.
+    # The agent user can write to runtime and could replace job by a symlink.
+    # Hence chown must not follow symlinks here.
+    chown -h "${USER_REF}":"${GROUP_REF}" "${MK_INSTALLDIR}/runtime" "${MK_INSTALLDIR}/runtime/job"
+    find "${MK_INSTALLDIR}/runtime" -mindepth 1 -maxdepth 1 ! -name job \
+        -exec chown -R "${USER_REF}":"${GROUP_REF}" {} +
 }
 
 _set_agent_controller_user_permissions() {
@@ -46,10 +51,11 @@ _set_agent_controller_user_permissions() {
     chown :"${GROUP_REF}" "${MK_INSTALLDIR}/runtime"
     chown -R "${USER_REF}":"${GROUP_REF}" "${MK_INSTALLDIR}/runtime/controller"
     chown :"${GROUP_REF}" "${MK_INSTALLDIR}/package/config"
-    agent_controller_config="${MK_INSTALLDIR}/package/config/cmk-agent-ctl.toml"
-    [ -e "${agent_controller_config}" ] && chown :"${GROUP_REF}" "${agent_controller_config}"
-    pre_configured_connections="${MK_INSTALLDIR}/package/config/pre_configured_connections.json"
-    [ -e "${pre_configured_connections}" ] && chown :"${GROUP_REF}" "${pre_configured_connections}"
+    for baked_file in "cmk-agent-ctl.toml" "cmk-agent-ctl-update.toml" "pre_configured_connections.json" "trusted_cas.json"; do
+        baked_path="${MK_INSTALLDIR}/package/config/${baked_file}"
+        [ -e "${baked_path}" ] && chown :"${GROUP_REF}" "${baked_path}"
+    done
+    chown :"${GROUP_REF}" "${MK_INSTALLDIR}/package/agent"
     agent_info="${MK_INSTALLDIR}/package/agent/agent_info.json"
     [ -e "${agent_info}" ] && chown :"${GROUP_REF}" "${agent_info}"
 }

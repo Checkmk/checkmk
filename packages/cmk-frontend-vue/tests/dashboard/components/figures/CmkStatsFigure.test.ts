@@ -78,6 +78,23 @@ describe('CmkStatsFigure', () => {
     ])
   })
 
+  it('marks a part with several links with the menu arrow', () => {
+    const { container } = render(CmkStatsFigure, {
+      props: {
+        value: {
+          ...HOST_STATS,
+          links: [...HOST_STATS.links, { ...HOST_STATS.links[0]!, title: 'Host view' }],
+          parts: [{ category: 'up', count: 12, link_properties: { links: [{}, {}] } }]
+        },
+        width: 400,
+        height: 200,
+        filters: {}
+      }
+    })
+
+    expect(container.querySelectorAll('.db-svg-link-arrow')).toHaveLength(1)
+  })
+
   it('wraps every linkable part in the contextual link trigger', () => {
     renderFigure()
 

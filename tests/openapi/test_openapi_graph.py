@@ -7,7 +7,6 @@ from http import HTTPStatus
 
 from cmk.graphing_engine import (
     AutoPrecision,
-    ConsolidationFunction,
     Constant,
     Curve,
     CurveAttributes,
@@ -50,7 +49,7 @@ def _comprehensive_graph() -> Graph:
         title="Title %(x)s",
         kind="template",
         vertical_range=FixedRange(
-            lower=0, upper=ScalarOf(metric=rrd, scalar_kind=ScalarKind.MAXIMUM, color="#mx")
+            lower=0, upper=ScalarOf(metric=rrd, scalar_kind=ScalarKind.MAXIMUM)
         ),
         stacks=[
             Stack(
@@ -59,28 +58,19 @@ def _comprehensive_graph() -> Graph:
                         quantity=Sum(
                             summands=(
                                 rrd,
-                                Constant(2, CurveAttributes(title="c", unit=unit, color="#c")),
+                                Constant(2),
                             )
                         ),
                         attributes=attrs,
                     )
                 ],
                 inverse=True,
-                reference=Curve(
-                    quantity=RRDMetric(
-                        host_name=HostName("h"),
-                        service_name=ServiceName("s"),
-                        metric_name=MetricName("ref"),
-                        consolidation_function=ConsolidationFunction.MAX,
-                    ),
-                    attributes=attrs,
-                ),
             )
         ],
         lines=[
             Line(
                 curve=Curve(
-                    quantity=ScalarOf(metric=rrd, scalar_kind=ScalarKind.WARNING, color="#w"),
+                    quantity=ScalarOf(metric=rrd, scalar_kind=ScalarKind.WARNING),
                     attributes=attrs,
                 ),
                 inverse=False,
@@ -89,7 +79,7 @@ def _comprehensive_graph() -> Graph:
         rules=[
             Rule(
                 curve=Curve(
-                    quantity=ScalarOf(metric=rrd, scalar_kind=ScalarKind.MAXIMUM, color="#mx"),
+                    quantity=ScalarOf(metric=rrd, scalar_kind=ScalarKind.MAXIMUM),
                     attributes=attrs,
                 ),
                 inverse=True,
@@ -110,8 +100,8 @@ def test_fetch_graph_data_comprehensive_graph(
                 "host_name": "h",
                 "description": "s",
                 "check_command": "check_mk-x",
-                "metrics": ["m", "ref"],
-                "perf_data": "m=1;5;10;0;100 ref=2",
+                "metrics": ["m"],
+                "perf_data": "m=1;5;10;0;100",
             }
         ],
     )
@@ -150,11 +140,6 @@ def test_fetch_graph_data_comprehensive_graph(
         "title": "Title %(x)s",
         "time_range": {"start": 0, "end": 60, "step": 10},
         "metrics": [
-            {
-                "metadata": _metadata("-rrd_metric(h/s/ref)"),
-                "render": {"shape": "area", "stack": "stack-0", "inverse": True, "hidden": True},
-                "data_points": [None, None, None, None, None, None],
-            },
             {
                 "metadata": _metadata("-sum(rrd_metric(h/s/m),constant(2))"),
                 "render": {"shape": "area", "stack": "stack-0", "inverse": True, "hidden": False},

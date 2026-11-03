@@ -161,6 +161,7 @@ class Rule(TypedDict, total=False):
     contact_groups: ContactGroups
     count: Count
     customer: str  # TODO: This is a GUI-only feature, which doesn't belong here at all.
+    delay: int  # seconds
     description: str
     docu_url: str
     disabled: bool

@@ -85,6 +85,7 @@ class EndpointDefinition:
     removed_in_version: APIVersion | None
     allowed_tokens: set[TokenType] = field(default_factory=set)
     token_failure_detail: str | None = None
+    remote_site_only: bool = False
 
     @property
     def ident(self) -> str:
@@ -159,6 +160,7 @@ class VersionedEndpointRegistry:
             removed_in_version=endpoint.removed_in_version,
             allowed_tokens=endpoint.allowed_tokens,
             token_failure_detail=endpoint.token_failure_detail,
+            remote_site_only=endpoint.remote_site_only,
         )
 
     @staticmethod

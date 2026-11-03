@@ -23,6 +23,16 @@ abortrepeat()       - Abort the current repeat cycle.
 `)
 }
 
+const startTime = Date.now()
+
+document.addEventListener('DOMContentLoaded', () => {
+  const data = document.getElementById('cmk_tracking_data')
+  if (!data) return
+  const generationDuration = JSON.parse(data.textContent ?? '{}').generation_duration ?? 0
+  const currentUrl = window.location.pathname + window.location.search
+  activate_tracking(currentUrl, startTime, generationDuration)
+})
+
 const siteName = window.location.pathname.split('/')[1]
 console.warn(
   'Tracking code enabled. See results at ' +
@@ -35,6 +45,5 @@ export const cmk_export = {
   clearData: clearData,
   nukeDataFromOrbit: nukeDataFromOrbit,
   repeat: repeat,
-  abortrepeat: abortrepeat,
-  activate_tracking: activate_tracking // not documented in help() as not expected to be called by user.
+  abortrepeat: abortrepeat
 }

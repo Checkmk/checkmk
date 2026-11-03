@@ -67,13 +67,13 @@ describe('CmkAlertOverviewFigure', () => {
     renderFigure()
 
     await hover(52, 61)
-    expect(screen.getByRole('link', { name: 'myhost - CPU load' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /^myhost - CPU load,/ })).toHaveAttribute(
       'href',
       expect.stringContaining('view_name=svcevents')
     )
 
     await hover(148, 61)
-    expect(screen.getByRole('link', { name: 'otherhost' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /^otherhost,/ })).toHaveAttribute(
       'href',
       expect.stringContaining('view_name=hostsvcevents')
     )

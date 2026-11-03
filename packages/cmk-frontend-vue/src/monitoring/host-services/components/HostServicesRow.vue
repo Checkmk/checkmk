@@ -11,24 +11,39 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, inject } from 'vue'
 
 import { AI_EXPLAIN_ACTION_ID } from '@/monitoring/host-services/aiExplain'
-import type { HostServiceEntry } from '@/monitoring/shared/api/types'
+import type {
+  HostRef,
+  HostServiceEntry,
+  HostState,
+  ServiceEntry
+} from '@/monitoring/shared/api/types'
 import { COLUMN_LAYOUT_KEY } from '@/monitoring/shared/components/MonitoringTableContext'
 import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/actions/reschedule'
 import ActionsCell, { type CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import CheckboxCell from '@/monitoring/shared/components/cell/CheckboxCell.vue'
+import HostCell from '@/monitoring/shared/components/cell/HostCell.vue'
 import IconCell from '@/monitoring/shared/components/cell/IconCell.vue'
 import LabelCell from '@/monitoring/shared/components/cell/LabelCell.vue'
 import PerfometerCell from '@/monitoring/shared/components/cell/PerfometerCell.vue'
 import StateCell from '@/monitoring/shared/components/cell/StateCell.vue'
 import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
+import GraphsLink from '@/monitoring/shared/components/graphs/GraphsLink.vue'
 import { MODE_COLUMN_ID, MODE_ICONS_PER_ROW } from '@/monitoring/shared/components/modeColumn'
 import { formatDisplayTimestamp } from '@/monitoring/shared/formatTimestamp'
-import { toLabelItems, toNameItems, toTagItems } from '@/monitoring/shared/labels'
+import {
+  groupCondition,
+  labelCondition,
+  toLabelItems,
+  toNameItems,
+  toTagItems
+} from '@/monitoring/shared/labels'
 import type { DisplayOptions } from '@/monitoring/shared/types'
 
 const props = withDefaults(
   defineProps<{
-    row: HostServiceEntry
+    row: HostServiceEntry | ServiceEntry
+    /** The host the service runs on, to preview the graphs of. */
+    serviceHost: HostRef
     tableRow: Row<HostServiceEntry>
     // Always-visible inline buttons; their url may contain a {service} placeholder resolved per row.
     rowActions?: CellAction[]
@@ -38,8 +53,15 @@ const props = withDefaults(
     loadActionMenu?: ((service: string) => Promise<CellAction[]>) | undefined
     displayOptions: DisplayOptions
     aiExplain?: boolean
+    readOnly?: boolean
   }>(),
-  { rowActions: () => [], mayReschedule: false, loadActionMenu: undefined, aiExplain: false }
+  {
+    rowActions: () => [],
+    mayReschedule: false,
+    loadActionMenu: undefined,
+    aiExplain: false,
+    readOnly: false
+  }
 )
 
 const { _t } = usei18n()
@@ -47,11 +69,18 @@ const { _t } = usei18n()
 const emit = defineEmits<{
   (event: 'open', service: HostServiceEntry): void
   (event: 'openGraphs', service: HostServiceEntry): void
+  (event: 'openHost', host: HostRef & { state: HostState }): void
   (event: 'command', payload: { id: string; target: string }): void
   (event: 'explain', service: HostServiceEntry): void
 }>()
 
 const columns = inject(COLUMN_LAYOUT_KEY, null)
+
+const host = computed<(HostRef & { state: HostState }) | null>(() =>
+  'host_name' in props.row
+    ? { name: props.row.host_name, site_id: props.row.site_id, state: props.row.host_state }
+    : null
+)
 
 function hasColumn(columnId: string): boolean {
   return columns?.value.has(columnId) ?? true
@@ -115,7 +144,9 @@ const lastCheck = computed(() =>
     : formatDisplayTimestamp(props.row.last_check, props.displayOptions)
 )
 const lastStateChange = computed(() =>
-  formatDisplayTimestamp(props.row.last_state_change, props.displayOptions)
+  props.row.last_state_change === null
+    ? '–'
+    : formatDisplayTimestamp(props.row.last_state_change, props.displayOptions)
 )
 const labels = computed(() => toLabelItems(props.row.labels ?? {}))
 const tags = computed(() => toTagItems(props.row.tags ?? {}))
@@ -150,17 +181,50 @@ const serviceGroups = computed(() => toNameItems(props.row.groups ?? []))
     v-if="hasColumn('name')"
     column-id="name"
     :value="row.name"
-    :button="true"
+    :button="!readOnly"
     @click="emit('open', row)"
+  >
+    <!-- Every name keeps the slot, so the names line up whether their service has graphs or not. -->
+    <template #aside>
+      <GraphsLink
+        v-if="row.graphs_link !== undefined"
+        :host="serviceHost"
+        :service="row.name"
+        :href="row.graphs_link"
+      />
+    </template>
+  </StringCell>
+  <StringCell
+    v-if="hasColumn('summary')"
+    column-id="summary"
+    :value="row.summary"
+    state-markers
+    title-only-when-cut
   />
-  <StringCell v-if="hasColumn('summary')" column-id="summary" :value="row.summary" state-markers />
+  <template v-if="host">
+    <HostCell
+      v-if="hasColumn('host_name')"
+      column-id="host_name"
+      :name="host.name"
+      :state="host.state"
+      :button="!readOnly"
+      @open="emit('openHost', host)"
+    />
+    <StringCell v-if="hasColumn('site_id')" column-id="site_id" :value="host.site_id" />
+  </template>
   <StringCell
     v-if="hasColumn('last_state_change')"
     column-id="last_state_change"
     :value="lastStateChange"
   />
   <StringCell v-if="hasColumn('last_check')" column-id="last_check" :value="lastCheck" />
-  <LabelCell v-if="hasColumn('labels')" column-id="labels" :items="labels" size="small" />
+  <LabelCell
+    v-if="hasColumn('labels')"
+    column-id="labels"
+    :items="labels"
+    size="small"
+    :filter-by="labelCondition"
+  />
   <LabelCell v-if="hasColumn('tags')" column-id="tags" :items="tags" size="small" />
   <LabelCell v-if="hasColumn('contacts')" column-id="contacts" :items="contacts" size="small" />
   <LabelCell
@@ -169,12 +233,18 @@ const serviceGroups = computed(() => toNameItems(props.row.groups ?? []))
     :items="contactGroups"
     size="small"
   />
-  <LabelCell v-if="hasColumn('groups')" column-id="groups" :items="serviceGroups" size="small" />
+  <LabelCell
+    v-if="hasColumn('groups')"
+    column-id="groups"
+    :items="serviceGroups"
+    size="small"
+    :filter-by="groupCondition"
+  />
   <PerfometerCell
     v-if="hasColumn('perfometer')"
     column-id="perfometer"
     :data="row.perfometer"
-    :button="row.perfometer !== undefined"
+    :button="!readOnly && row.perfometer !== undefined"
     @click="emit('openGraphs', row)"
   />
   <ActionsCell

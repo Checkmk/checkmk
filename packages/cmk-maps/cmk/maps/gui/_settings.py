@@ -65,7 +65,7 @@ class AuthoringDefaults(TypedDict):
     default_map_type: str
     default_render_mode: RenderMode
     default_tile_url: str | None
-    # Per-operator localStorage overrides this client-side.
+    # The map list's ``layout`` parameter overrides it.
     map_list_view: MapListView
 
 
@@ -93,7 +93,7 @@ _FLAT_DEFAULTS: AuthoringDefaults = {
     "default_map_type": "static",
     "default_render_mode": "default",
     "default_tile_url": None,
-    # Home overview layout (per-operator localStorage overrides this client-side).
+    # Map list layout (the list's ``layout`` parameter overrides it).
     "map_list_view": "cards",
 }
 

@@ -84,3 +84,11 @@ def test_get_or_create_product_usage_site_id() -> None:
         site_info_collector.get_product_usage_site_id(product_usage_site_id_fp)
         == product_usage_site_id
     )
+
+
+def test_get_site_status_query_can_be_answered_as_json(local_connection: MockType) -> None:
+    local_connection.query.return_value = [[10, 20]]
+
+    site_info_collector.get_site_status()
+
+    assert local_connection.query.call_args.args[0].supports_json_format()

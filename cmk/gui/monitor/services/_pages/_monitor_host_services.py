@@ -9,6 +9,7 @@ from urllib.parse import urlencode
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+from cmk.ccc.version import Edition as ProductEdition
 from cmk.ccc.version import edition
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.config import Config
@@ -23,16 +24,22 @@ from cmk.gui.monitor.command import (
     downtime_presets,
     downtime_presets_url,
     DowntimeRecurrences,
+    host_setup_links,
+    HOST_SUPPORTED_ACTIONS,
     MonitorCommands,
     notification_rules_url,
 )
+from cmk.gui.monitor.export import EXPORT_EVENT, MonitorReportExportMenu
 from cmk.gui.monitor.hosts._pages._monitor_all_hosts import monitor_all_hosts_visual_spec
+from cmk.gui.monitor.services._access import HOST_SERVICES_PERMISSION, LEGACY_HOST_VIEW_NAME
 from cmk.gui.monitor.services._ai_explain import ai_explain
-from cmk.gui.monitor.services._api._list_host_services import LIMIT_TIERS
+from cmk.gui.monitor.services._api._limits import LIMIT_TIERS
 from cmk.gui.monitor.services._page_menu import build_page_menu, HostMenus
+from cmk.gui.monitor.services._supported_actions import SERVICE_SUPPORTED_ACTIONS
+from cmk.gui.monitor.services.page_url import host_services_url
+from cmk.gui.monitor.setup_folders import SetupFolderSource
 from cmk.gui.pages import Page, PageContext
 from cmk.gui.pagetypes import PagetypeTopics
-from cmk.gui.permissions import permission_registry
 from cmk.gui.utils.roles import UserPermissions
 from cmk.shared_typing.monitoring.host_services import (
     AcknowledgeDefaults,
@@ -47,15 +54,6 @@ from cmk.shared_typing.monitoring.host_services import (
 )
 from cmk.utils import paths
 from cmk.web.utils.urls import makeuri_contextless
-
-_SUPPORTED_ACTIONS: tuple[str, ...] = (
-    "acknowledge",
-    "reschedule",
-    "schedule_downtimes",
-)
-
-_LEGACY_VIEW_NAME = "host"
-_LEGACY_VIEW_PERMISSION = f"view.{_LEGACY_VIEW_NAME}"
 
 _HOST_STATUS_VIEW_NAME = "hoststatus"
 _ALL_HOSTS_PERMISSION = "view.allhosts"
@@ -94,31 +92,38 @@ class MonitorHostServicesPage(Page):
         host_menus: HostMenus,
         teleport_target: str | None = None,
         *,
-        may_read_host: Callable[[HostName], bool],
+        setup_folders: SetupFolderSource,
     ) -> None:
         self._commands = commands
         self._recurrences = recurrences
         self._host_menus = host_menus
         self._teleport_target = teleport_target
-        self._may_read_host = may_read_host
+        self._setup_folders = setup_folders
 
     def _permitted_actions(self) -> list[MonitoringAction]:
         return [
             MonitoringAction(ident=command.ident, title=str(command.title), icon=command.icon)
-            for command in self._commands.permitted_actions(user, "service", _SUPPORTED_ACTIONS)
+            for command in self._commands.permitted_actions(
+                user, "service", SERVICE_SUPPORTED_ACTIONS
+            )
+        ]
+
+    def _permitted_host_actions(self) -> list[MonitoringAction]:
+        return [
+            MonitoringAction(ident=command.ident, title=str(command.title), icon=command.icon)
+            for command in self._commands.permitted_actions(user, "host", HOST_SUPPORTED_ACTIONS)
         ]
 
     @override
     def page(self, ctx: PageContext) -> None:
-        user.need_permission(_LEGACY_VIEW_PERMISSION)
+        user.need_permission(HOST_SERVICES_PERMISSION)
 
         hostname = ctx.request.get_validated_type_input_mandatory(HostName, "host")
         site_id = SiteId(ctx.request.get_str_input_mandatory("site"))
         title = _("Services of host %(host)s") % {"host": hostname}
 
-        user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
         host_url = _host_url(ctx, hostname, site_id)
-        breadcrumb = _make_breadcrumb(ctx, hostname, site_id, host_url, user_permissions)
+        breadcrumb = _make_breadcrumb(ctx, hostname, site_id, host_url, ctx.user_permissions)
 
         make_header(
             html,
@@ -129,6 +134,9 @@ class MonitorHostServicesPage(Page):
                 hostname=hostname,
                 site_id=site_id,
                 breadcrumb=breadcrumb,
+                export_dropdowns=MonitorReportExportMenu(
+                    instant_reports=edition(paths.omd_root) is not ProductEdition.COMMUNITY
+                ).dropdowns(),
             ),
             enable_main_page_scrollbar=False,
             debug=ctx.config.debug,
@@ -154,6 +162,7 @@ class MonitorHostServicesPage(Page):
                     may_ignore_hard_limit=user.may("general.ignore_hard_limit"),
                     limit_tiers=list(LIMIT_TIERS),
                     host=hostname,
+                    export_event=EXPORT_EVENT,
                     site=site_id,
                     host_url=host_url,
                     user_id=str(user.id),
@@ -168,8 +177,15 @@ class MonitorHostServicesPage(Page):
                     row_actions=_row_actions(
                         ctx.config,
                         hostname,
-                        setup_access=lambda: self._may_read_host(hostname),
+                        setup_access=lambda: self._setup_folders(ctx.config, user).may_read_host(
+                            hostname, None
+                        ),
                     ),
+                    host_actions=self._permitted_host_actions(),
+                    host_row_actions=[
+                        RowAction(ident=link.ident, title=link.title, icon=link.icon, url=link.url)
+                        for link in host_setup_links(ctx.config, user)
+                    ],
                     acknowledge_presets_url=acknowledge_presets_url(ctx.config),
                     acknowledge_defaults=AcknowledgeDefaults(
                         sticky=ack.sticky,
@@ -195,7 +211,7 @@ class MonitorHostServicesPage(Page):
                         url=makeuri_contextless(
                             ctx.request,
                             [
-                                ("view_name", _LEGACY_VIEW_NAME),
+                                ("view_name", LEGACY_HOST_VIEW_NAME),
                                 ("host", hostname),
                                 ("site", site_id),
                             ],
@@ -259,11 +275,7 @@ def _make_breadcrumb(
     breadcrumb.append(
         BreadcrumbItem(
             title=_("Services of host"),
-            url=makeuri_contextless(
-                ctx.request,
-                [("host", hostname), ("site", site_id)],
-                filename="monitor_host_services.py",
-            ),
+            url=host_services_url(ctx.request, host_name=hostname, site_id=site_id),
             id="monitor_host_services",
         )
     )

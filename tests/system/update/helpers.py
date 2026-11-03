@@ -6,7 +6,6 @@ import json
 import logging
 import os
 import subprocess
-from contextlib import AbstractContextManager, nullcontext
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -26,8 +25,10 @@ from tests.testlib.common.version import (
     CMKVersion,
     edition_from_env,
     get_min_version,
+    supported_base_versions,
     TypeCMKEdition,
 )
+from tests.testlib.system.edition_setup import edition_setup
 from tests.testlib.system.site import Site, SiteFactory
 
 MODULE_PATH = Path(__file__).parent.resolve()
@@ -90,24 +91,11 @@ def create_site(base_package: CMKPackageInfo) -> Site:
     assert not site.exists(), "Trying to install existing site!"
     logger.info("Creating new site")
 
-    is_cloud = base_package.edition.is_cloud_edition()
-    if is_cloud:
-        from tests.testlib.system.cloud.utils import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
-            create_cloud_initial_config,
-        )
-
-        create_cloud_initial_config()
+    setup = edition_setup(base_package.edition)
+    setup.prepare_host(Path("/"))
 
     site = site_factory.get_site(site_name)
-    if is_cloud:
-        from tests.testlib.system.cloud.utils import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
-            cloud_environment,
-        )
-
-        ctx: AbstractContextManager[object] = cloud_environment(site.apache_port)
-    else:
-        ctx = nullcontext()
-    with ctx:
+    with setup.site_environment(site):
         site_factory.initialize_site(site, auto_restart_httpd=True)
 
     return site
@@ -213,6 +201,110 @@ def inject_rules(site: Site) -> None:
 def cleanup_cmk_package(site: Site, request: pytest.FixtureRequest) -> None:
     if is_cleanup_enabled() and not request.config.getoption(name="--skip-uninstall"):
         site.uninstall_cmk()
+
+
+LEGACY_CONF_D_FILE = Path("etc/check_mk/conf.d/zzz_extends_undefined.mk")
+# Generated files a site created before 3.0 holds in extend-only style, and the update action
+# that makes each of them define its variables. The base site must have them all, or the
+# update test would not notice that action going missing.
+# hosts.mk is not among them: the config loader reads the hosts.pkl next to it, which
+# create_precompiled_files rewrites, so the verification never executes hosts.mk.
+GENERATED_EXTEND_ONLY_FILES = {
+    "etc/check_mk/conf.d/wato/rules.mk": "rulesets",
+    "etc/check_mk/conf.d/wato/contacts.mk": "selfbootstrap_conf_d_files",
+    "etc/check_mk/conf.d/wato/tags.mk": "selfbootstrap_conf_d_files",
+    "etc/check_mk/conf.d/wato/notifications.mk": "selfbootstrap_conf_d_files",
+    "etc/check_mk/conf.d/wato/notification_parameter.mk": "selfbootstrap_conf_d_files",
+    "etc/check_mk/conf.d/wato/passwords.mk": "selfbootstrap_conf_d_files",
+}
+_UNSEEDED_WARNING_LIST_HEADER = "The following configuration files fail to load:"
+_DEFAULTS_WARNING_LIST_HEADER = (
+    "The following configuration files rely on the defaults of these variables:"
+)
+# omd update forwards the output of its hook scripts, cmk-update-config among them, with this
+# prefix on every line (see omdlib.scripts).
+_OMD_HOOK_OUTPUT_PREFIX = "-| "
+
+
+def check_generated_files_present(site: Site) -> None:
+    """Assert the base site holds every generated file the update has to rewrite.
+
+    Only then does check_unseeded_config_warning prove that the responsible update actions
+    still exist and work: a file they miss stays extend-only and gets named by the update.
+    """
+    missing = {
+        path: action
+        for path, action in GENERATED_EXTEND_ONLY_FILES.items()
+        if not site.file_exists(path)
+    }
+    assert not missing, (
+        "The base site lacks generated files, so the update test would not cover the update "
+        f"actions that rewrite them: {missing}"
+    )
+    logger.info(
+        "Base site holds the generated files the update rewrites: %s",
+        ", ".join(GENERATED_EXTEND_ONLY_FILES),
+    )
+
+
+def plant_legacy_conf_d_file(site: Site) -> Path:
+    """Write a hand-written style config file that extends a variable it never defines.
+
+    Checkmk 3.0 still predefines the variable, so the file loads; the update is expected to
+    warn about it, as Checkmk 3.1 will not predefine anything. Returns the absolute path, the
+    way the update names it.
+    """
+    site.write_file(
+        LEGACY_CONF_D_FILE,
+        "# Planted by the update test: extends a variable it does not define.\n"
+        "define_hostgroups.update({'legacy': 'Legacy hosts'})\n",
+    )
+    planted = site.path(LEGACY_CONF_D_FILE)
+    logger.info("Planted %s, which extends a variable it does not define", planted)
+    return planted
+
+
+def check_unseeded_config_warning(site: Site, planted: Path) -> None:
+    """Assert that the update warned about exactly the planted file.
+
+    `omd update` copies the output of cmk-update-config to var/log/update.log. Every
+    generated file must have been rewritten to define its variables, so the planted one is
+    the only file the verification at the end of the update may name. With
+    check_generated_files_present on the base site, this also proves the actions listed in
+    GENERATED_EXTEND_ONLY_FILES did their job. No generated file extends a variable whose
+    default is not empty, so the verification must not name any file for that.
+    """
+    log_lines = [
+        line.removeprefix(_OMD_HOOK_OUTPUT_PREFIX)
+        for line in site.read_file("var/log/update.log").splitlines()
+    ]
+    relying = [i for i, line in enumerate(log_lines) if _DEFAULTS_WARNING_LIST_HEADER in line]
+    assert not relying, "update.log names files relying on non-empty defaults:\n" + (
+        "\n".join(log_lines[relying[-1] : relying[-1] + 20])
+    )
+    headers = [i for i, line in enumerate(log_lines) if _UNSEEDED_WARNING_LIST_HEADER in line]
+    assert headers, "No warning about unseeded config files in update.log, which ends:\n" + (
+        "\n".join(log_lines[-40:])
+    )
+    named_files: set[Path] = set()
+    end = start = headers[-1] + 1
+    for end, line in enumerate(log_lines[start:], start):
+        if not line.strip():
+            if named_files:
+                break
+            continue  # the header is followed by a blank line
+        if not line.startswith(" ") or ": " not in line:
+            break
+        named_files.add(Path(line.strip().split(": ", 1)[0]))
+    else:
+        end = len(log_lines)
+    logger.info(
+        "update.log warns about these configuration files:\n%s", "\n".join(log_lines[start:end])
+    )
+    assert named_files == {planted}, (
+        f"The update should warn about the planted file only, but named: {named_files}"
+    )
+    logger.info("update.log names exactly the planted file %s", planted)
 
 
 def check_errors_in_log_files(site: Site) -> None:
@@ -335,12 +427,9 @@ class BaseVersions:
 
     @classmethod
     def _version_lists(cls) -> list[list[str]]:
-        """The release-system-maintained version lists, oldest branch first."""
-        previous_branch = cls._read_versions("base_versions_previous_branch.json")
-        if previous_branch is None:
-            previous_branch = cls._read_versions("base_versions.json")
-        if previous_branch is None:
-            raise FileNotFoundError(f"No base versions list found in {MODULE_PATH}")
+        """The version lists, oldest branch first: the supported base versions
+        (tests/testlib/common) and, if present, the current branch's own."""
+        previous_branch = [version.version for version in supported_base_versions()]
         current_branch = cls._read_versions("base_versions_current_branch.json")
         return [previous_branch] + ([current_branch] if current_branch else [])
 
@@ -381,7 +470,7 @@ class BaseVersions:
 @dataclass
 class InteractiveModeDistros:
     DISTROS = [
-        "ubuntu-22.04",
+        "ubuntu-24.04",
         "almalinux-9",
     ]
     assert set(DISTROS).issubset(set(get_supported_distros()))

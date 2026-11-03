@@ -10,33 +10,35 @@
 import abc
 import ast
 import contextlib
-import io
+import copy
+import functools
+import hashlib
 import logging
 import re
 import socket
 import sys
 import time
 import warnings
-import zipfile
+from collections import Counter
 from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, cast, Literal, overload, override
+from typing import Any, cast, Literal, override, Self
 
 import cmk.ccc.translations
 
 # It's OK to import centralized config load logic
-import cmk.ec.export as ec  # astrein: disable=cmk-module-layer-violation
+import cmk.ec.export as ec  # astrein: disable=module-layers
 import cmk.mkp_tool
 import cmk.utils.paths
 import cmk.utils.render
 from cmk.ccc import store
-from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.regex import RegexFutureWarning
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.user import UserId
-from cmk.ccc.version import Edition, edition
+from cmk.ccc.version import Edition
 from cmk.gui import forms, hooks, log, sites, watolib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config, Config
@@ -51,11 +53,12 @@ from cmk.gui.form_specs.unstable.legacy_converter import (
 )
 from cmk.gui.form_specs.unstable.legacy_converter import Tuple as FSTuple
 from cmk.gui.form_specs.unstable.validators import id_validators, validate_ip_network
+from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.type_defs import RequireConfirmation
 from cmk.gui.http import request
-from cmk.gui.i18n import _, _l
+from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
     get_search_expression,
@@ -79,7 +82,7 @@ from cmk.gui.search.matchers import (
     MatchItems,
 )
 from cmk.gui.site_config import enabled_sites
-from cmk.gui.table import table_element
+from cmk.gui.table import table_element, table_search_term
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.user_sites import activation_sites, get_event_console_site_choices
 from cmk.gui.utils.roles import UserPermissions
@@ -144,10 +147,7 @@ from cmk.gui.watolib.global_settings import (
     make_pending_changes,
 )
 from cmk.gui.watolib.host_attributes import CollectedHostAttributes
-from cmk.gui.watolib.hosts_and_folders import (
-    FolderTree,
-    make_action_link,
-)
+from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
 from cmk.gui.watolib.mode import mode_url, ModeRegistry, redirect, WatoMode
 from cmk.gui.watolib.notification_parameter import (
@@ -170,6 +170,7 @@ from cmk.gui.watolib.sample_config import (
     SampleConfigGenerator,
     SampleConfigGeneratorRegistry,
 )
+from cmk.gui.watolib.sites import load_site_globals
 from cmk.gui.watolib.translation import translation_form_spec_elements
 from cmk.livestatus_client import (
     ECCreate,
@@ -177,8 +178,8 @@ from cmk.livestatus_client import (
     ECSwitchMode,
     LivestatusClient,
     LocalConnection,
+    MKLivestatusConfigError,
     MKLivestatusSocketError,
-    SiteConfiguration,
     SiteConfigurations,
 )
 from cmk.ruleset_matcher.definition import RuleGroup
@@ -214,12 +215,27 @@ from cmk.web.utils.flashed_messages import flash
 from cmk.web.utils.html import HTML
 from cmk.web.utils.icons import DynamicIcon, IconNames, StaticIcon
 from cmk.web.utils.permission_verification import PermissionName
-from cmk.web.utils.urls import makeuri_contextless, makeuri_contextless_rulespec_group
+from cmk.web.utils.urls import (
+    HTTPVariable,
+    makeactionuri_contextless,
+    makeuri_contextless,
+    makeuri_contextless_rulespec_group,
+)
 
 from ._rulespecs import RulespecLogwatchEC
 from .config_domain import ConfigDomainEventConsole
 from .defines import syslog_facilities, syslog_priorities
-from .helpers import action_choices, eventd_configuration, service_levels
+from .helpers import (
+    action_choices,
+    dissolve_mkp_proxies,
+    rule_editor_vars,
+    rule_pack_editor_vars,
+    RulePackRef,
+    RuleRef,
+    rules_with_editor_vars,
+    service_levels,
+)
+from .mib_upload import CompileMib, defined_module_name, upload_mibs
 from .permission_section import PERMISSION_SECTION_EVENT_CONSOLE
 
 
@@ -333,27 +349,241 @@ def register_permissions(permission_registry: PermissionRegistry) -> None:
     permission_registry.register(SwitchSlaveReplicationPermission)
 
 
-def match_event_rule(
-    rule_pack: ec.ECRulePack, rule: ec.Rule, event: ec.Event, site_config: SiteConfiguration
-) -> ec.MatchResult:
-    if edition(cmk.utils.paths.omd_root) is Edition.ULTIMATEMT:
-        rule_customer_id = (
-            rule_pack["customer"] if "customer" in rule_pack else rule.get("customer", SCOPE_GLOBAL)
-        )
-        site_customer_id = customer_api().get_customer_id(site_config)
-        if rule_customer_id not in (SCOPE_GLOBAL, site_customer_id):
-            return ec.MatchFailure(reason=_("Wrong customer"))
+def _no_livestatus_connection_message(site_id: SiteId) -> str:
+    """Explains why the GUI has no Livestatus connection to a site, as far as the GUI knows it"""
+    if user.is_site_disabled(site_id):
+        return _(
+            "The GUI has no Livestatus connection to site %(site)s, because the site is disabled "
+            'in the "Site status" snap-in.'
+        ) % {"site": site_id}
+    if dead_site := sites.live().dead_sites().get(site_id):
+        return _("The GUI has no Livestatus connection to site %(site)s: %(error)s") % {
+            "site": site_id,
+            "error": dead_site["exception"],
+        }
+    return _("The GUI has no Livestatus connection to site %(site)s.") % {"site": site_id}
 
-    time_period = ec.TimePeriods(log.logger, LocalConnection())
-    rule_matcher = ec.RuleMatcher(
-        logger=None,
-        omd_site_id=omd_site(),
-        is_active_time_period=time_period.active,
+
+class _SiteLivestatus:
+    """Sends Livestatus queries to a single site"""
+
+    def __init__(self, site_id: SiteId) -> None:
+        self._site_id = site_id
+
+    def query(self, query: str) -> Sequence[Sequence[Any]]:
+        # The GUI has no connection to its own site if the user disabled it in the site status
+        # snap-in, so query the local site directly.
+        if self._site_id == omd_site():
+            return LocalConnection().query(query)
+        # Restricting a query via sites.only_sites() silently returns no rows if the GUI has no
+        # connection to the site, e.g. because it is down or disabled, so fail loudly instead.
+        try:
+            connection = sites.live().get_connection(self._site_id)
+        except KeyError:
+            raise MKGeneralException(_no_livestatus_connection_message(self._site_id)) from None
+        return connection.query(query)
+
+
+class _TimePeriodsUnavailable(MKGeneralException):
+    pass
+
+
+def _timeout_causing(exception: BaseException) -> MKTimeout | None:
+    """Returns the timeout which caused an exception, e.g. one the Livestatus client turned into an
+    error of its own"""
+    seen: set[int] = set()
+    cause: BaseException | None = exception
+    while cause is not None and id(cause) not in seen:
+        if isinstance(cause, MKTimeout):
+            return cause
+        seen.add(id(cause))
+        cause = cause.__cause__ or cause.__context__
+    return None
+
+
+class _SiteTimePeriods:
+    """Tells whether time periods of a site are active, giving up after the first failed query"""
+
+    def __init__(self, site_id: SiteId) -> None:
+        self._time_periods = ec.TimePeriods(log.logger, _SiteLivestatus(site_id))
+        self._error: str | None = None
+
+    def active(self, name: ec.TimeperiodName) -> bool:
+        # Querying again for every rule could mean waiting for a timeout every time.
+        if self._error is not None:
+            raise _TimePeriodsUnavailable(self._error)
+        try:
+            return self._time_periods.active(name)
+        except MKTimeout:
+            raise
+        except Exception as e:
+            # The Livestatus client turns e.g. a request timeout into an error of its own.
+            if (timeout := _timeout_causing(e)) is not None:
+                raise timeout from None
+            self._error = str(e)
+            raise _TimePeriodsUnavailable(self._error) from e
+
+
+@dataclass(frozen=True)
+class RuleMatch:
+    result: ec.MatchSuccess
+    outcome: ec.MatchOutcome
+
+
+@dataclass(frozen=True)
+class UnknownMatch(ec.MatchFailure):
+    """The simulator can't tell whether a rule matches, unlike the Event Console of the site"""
+
+
+@dataclass(frozen=True)
+class RulePackMatch:
+    matching_rules: int
+    # Like in the Event Console, the first matching rule decides what happens.
+    first_match: RuleMatch | None
+    # One of these rules before the first match might match and decide instead.
+    unknown_matches: Sequence[UnknownMatch]
+
+
+class EventSimulator:
+    """Matches a simulated event against rules like the Event Console of the simulated site"""
+
+    def __init__(
+        self,
+        event: ec.Event,
+        site_configs: SiteConfigurations,
+        hostname_translation: cmk.ccc.translations.TranslationOptions,
+        edition: Edition,
+    ) -> None:
+        # Like the Event Console, match against the translated host name.
+        self._event = event.copy()
+        self._event["host"] = ec.translate_event_host(hostname_translation, event["host"])
+        self._site_config = site_configs[event["site"]]
+        self._rule_matcher = ec.RuleMatcher(
+            logger=None,
+            # Match against the site the event is simulated for, not the one running the GUI.
+            omd_site_id=event["site"],
+            is_active_time_period=_SiteTimePeriods(event["site"]).active,
+        )
+        self._edition = edition
+
+    @classmethod
+    def for_event(cls, event: ec.Event, site_configs: SiteConfigurations, edition: Edition) -> Self:
+        """Creates a simulator with the host name translation of the simulated site"""
+        return cls(
+            event, site_configs, hostname_translation_of_site(event["site"], site_configs), edition
+        )
+
+    def match_rule(self, rule_pack: ec.ECRulePack, rule: ec.Rule) -> ec.MatchResult:
+        if self._edition is Edition.ULTIMATEMT:
+            rule_customer_id = (
+                rule_pack["customer"]
+                if "customer" in rule_pack
+                else rule.get("customer", SCOPE_GLOBAL)
+            )
+            site_customer_id = customer_api().get_customer_id(self._site_config)
+            if rule_customer_id not in (SCOPE_GLOBAL, site_customer_id):
+                return ec.MatchFailure(reason=_("Wrong customer"))
+
+        # The Event Console ignores rules it can't compile, and errors while matching mean no match.
+        # A request timeout must still abort the page, though.
+        try:
+            active_rule = ec.compile_active_rule(rule_pack, rule)
+        except MKTimeout:
+            raise
+        except Exception as e:
+            return ec.MatchFailure(reason=_("Cannot compile the rule: %(error)s") % {"error": e})
+        if isinstance(active_rule, str):
+            return ec.MatchFailure(reason=active_rule)
+        try:
+            return self._match_compiled_rule(active_rule)
+        except MKTimeout:
+            raise
+        except Exception as e:
+            log.logger.exception(
+                "Cannot match rule %(pack)s/%(rule_id)s against the simulated event",
+                {"pack": active_rule["pack"], "rule_id": active_rule["id"]},
+            )
+            return ec.MatchFailure(reason=_("Cannot match the rule: %(error)s") % {"error": e})
+
+    def _match_compiled_rule(self, rule: ec.Rule) -> ec.MatchResult:
+        try:
+            return self._rule_matcher.event_rule_matches(rule, self._event)
+        except _TimePeriodsUnavailable as e:
+            # The Event Console of the site knows its time periods, though, so the simulator can
+            # only tell whether the rule matches if that doesn't depend on them. The failed query is
+            # logged already.
+            if_active = self._match_assuming_time_periods(rule, active=True)
+            if_inactive = self._match_assuming_time_periods(rule, active=False)
+            if isinstance(if_active, ec.MatchSuccess) is isinstance(if_inactive, ec.MatchSuccess):
+                return if_active
+            return UnknownMatch(
+                reason=_("Cannot look up the time periods: %(error)s") % {"error": e}
+            )
+
+    def _match_assuming_time_periods(self, rule: ec.Rule, *, active: bool) -> ec.MatchResult:
+        """Matches the rule as if all time periods were active or all were inactive"""
+        return ec.RuleMatcher(
+            logger=None,
+            omd_site_id=self._event["site"],
+            is_active_time_period=lambda _name: active,
+        ).event_rule_matches(rule, self._event)
+
+    def match_rule_pack(self, rule_pack: ec.ECRulePack) -> RulePackMatch:
+        matching_rules = 0
+        first_match: RuleMatch | None = None
+        unknown_matches: list[UnknownMatch] = []
+        for rule in rule_pack["rules"]:
+            result = self.match_rule(rule_pack, rule)
+            if isinstance(result, ec.MatchSuccess):
+                matching_rules += 1
+                if first_match is None:
+                    first_match = RuleMatch(result, ec.match_outcome(rule, result))
+            elif isinstance(result, UnknownMatch) and first_match is None:
+                unknown_matches.append(result)
+        return RulePackMatch(matching_rules, first_match, tuple(unknown_matches))
+
+    def has_decisive_match(self, rule_packs: Iterable[ec.ECRulePack]) -> bool:
+        """Tells whether a rule of the rule packs decides what happens, like in the Event Console"""
+        return any(
+            (first_match := self.match_rule_pack(rule_pack).first_match) is not None
+            and first_match.outcome is not ec.MatchOutcome.SKIP_PACK
+            for rule_pack in rule_packs
+        )
+
+
+def hostname_translation_of_site(
+    site_id: SiteId, site_configs: SiteConfigurations
+) -> cmk.ccc.translations.TranslationOptions:
+    """Returns the host name translation the Event Console of the given site uses"""
+    # Only the configuration of the local Event Console is available with all its files, including
+    # the ones written by hand, which override the ones of Setup.
+    if site_id == omd_site():
+        return ec.load_config_to_activate(ec.create_paths(cmk.utils.paths.omd_root))[
+            "hostname_translation"
+        ]
+    site_globals = load_site_globals(site_configs, site_id)
+    if "hostname_translation" in site_globals:
+        return cast(cmk.ccc.translations.TranslationOptions, site_globals["hostname_translation"])
+    # Without a site-specific setting, the site inherits the global one, which in turn falls back to
+    # the built-in default. The host name translation is a global setting of the Event Console only,
+    # so don't determine the defaults of all configuration domains, which would e.g. run an
+    # automation of the core.
+    ec_domain = config_domain_registry[EVENT_CONSOLE]
+    return cast(
+        cmk.ccc.translations.TranslationOptions,
+        {**ec_domain.default_globals(), **ec_domain.load()}["hostname_translation"],
     )
-    rule = rule.copy()
-    rule["pack"] = rule_pack["id"]
-    ec.compile_rule(rule)
-    return rule_matcher.event_rule_matches(rule, event)
+
+
+def message_match_groups_text(result: ec.MatchSuccess) -> str:
+    """Returns the groups of the message text pattern which decided the match as text"""
+    # Like the Event Console, treat groups which didn't take part in the match as empty.
+    groups = (
+        result.match_groups.get("match_groups_message_ok", ())
+        if result.cancelling
+        else result.match_groups.get("match_groups_message", ())
+    )
+    return ",".join(g or _("(empty)") for g in groups) if groups is not False else ""
 
 
 # .
@@ -533,9 +763,19 @@ class RuleState(CascadingDropdown):
         )
 
 
-def vs_mkeventd_rule_pack(
-    fixed_id: str | None = None, fixed_title: str | None = None
-) -> Dictionary:
+def vs_mkeventd_rule_pack(elements: list[DictionaryEntry]) -> Dictionary:
+    """The form of the properties of a rule pack, with the elements of _rule_pack_elements()"""
+    return Dictionary(
+        title=_("Rule pack properties"),
+        render="form",
+        elements=elements,
+        optional_keys=["customer"],
+    )
+
+
+def _rule_pack_elements(
+    edition: Edition, fixed_id: str | None = None, fixed_title: str | None = None
+) -> list[DictionaryEntry]:
     elements: list[DictionaryEntry] = []
     if fixed_id:
         elements.append(
@@ -595,18 +835,15 @@ def vs_mkeventd_rule_pack(
         ),
     )
 
-    if edition(cmk.utils.paths.omd_root) is Edition.ULTIMATEMT:
+    if edition is Edition.ULTIMATEMT:
         elements += customer_api().customer_choice_element(deflt=SCOPE_GLOBAL)
 
-    return Dictionary(
-        title=_("Rule pack properties"),
-        render="form",
-        elements=elements,
-        optional_keys=["customer"],
-    )
+    return elements
 
 
-def _vs_mkeventd_rule(site_configs: SiteConfigurations, customer: str | None = None) -> Dictionary:
+def _vs_mkeventd_rule(
+    site_configs: SiteConfigurations, edition: Edition, customer: str | None = None
+) -> Dictionary:
     elements = [
         (
             "id",
@@ -622,7 +859,7 @@ def _vs_mkeventd_rule(site_configs: SiteConfigurations, customer: str | None = N
         ),
     ] + rule_option_elements()
 
-    if edition(cmk.utils.paths.omd_root) is Edition.ULTIMATEMT:
+    if edition is Edition.ULTIMATEMT:
         if customer:
             # Enforced by rule pack
             elements += [
@@ -1554,8 +1791,14 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
         assert isinstance(config_domain, ConfigDomainEventConsole)
         self._config_domain = config_domain
         self._paths = ec.create_paths(cmk.utils.paths.omd_root)
-        self._rule_packs = list(ec.load_rule_packs(self._paths))
         super().__init__(edition, ctx)
+
+    @functools.cached_property
+    def _rule_packs(self) -> list[ec.ECRulePack]:
+        """The rule packs, loaded only by the modes using them, e.g. not by the MIB pages
+
+        The modes of a request share them, see _load_rule_packs()."""
+        return _load_rule_packs(self._paths, self._edition)
 
     def _mib_dirs(self) -> Sequence[tuple[Path, str, bool]]:
         # ASN1 MIB source directory candidates. Non existing dirs are ok.
@@ -1586,11 +1829,28 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
     def _search_expression(self) -> str | None:
         return get_search_expression()
 
-    def _rule_pack_with_id(self, rule_pack_id: str | None) -> tuple[int, ec.ECRulePack]:
-        for nr, entry in enumerate(self._rule_packs):
-            if entry["id"] == rule_pack_id:
-                return nr, entry
-        raise MKUserError(None, _("The requested rule pack does not exist."))
+    def _rule_pack_ids(self) -> list[str]:
+        return [rule_pack["id"] for rule_pack in self._rule_packs]
+
+    def _requested_rule_pack(self) -> tuple[int, ec.ECRulePack, RulePackRef]:
+        """Returns the position, the rule pack and the reference to it the request tells"""
+        nr = self._requested_rule_pack_position("rule_pack")
+        return nr, self._rule_packs[nr], RulePackRef.of(self._rule_packs)[nr]
+
+    def _requested_rule_pack_position(self, varname: str) -> int:
+        """The position of the rule pack the variables of RulePackRef.to_vars() tell"""
+        return RulePackRef.existing_position(
+            self._rule_pack_ids(), varname, _("The requested rule pack does not exist.")
+        )
+
+    def _writable_rule_pack(self, nr: int, type_: ec.RulePackType) -> ec.ECRulePack:
+        """The rule pack at the position, for changing it
+
+        An unmodified rule pack of an MKP is replaced by a copy, so the changes go into a modified
+        rule pack instead of the MKP."""
+        if type_ == ec.RulePackType.unmodified_mkp:
+            ec.override_rule_pack_proxy(nr, self._rule_packs)
+        return self._rule_packs[nr]
 
     def _event_from_html_vars(self, varprefix: str) -> ec.Event:
         vs = self._vs_mkeventd_event()
@@ -1652,17 +1912,6 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
                 domains=[d.ident() for d in (domains or [self._config_domain])],
             ),
             ChangeScope.sites(_get_event_console_sync_sites()),
-        )
-
-    def _get_rule_pack_to_mkp_map(self) -> dict[str, Any]:
-        return (
-            {}
-            if edition(cmk.utils.paths.omd_root) is Edition.COMMUNITY
-            else cmk.mkp_tool.id_to_mkp(
-                cmk.mkp_tool.Installer(cmk.utils.paths.installed_packages_dir),
-                cmk.mkp_tool.all_rule_pack_files(self._paths.mkp_rule_pack_dir.value),
-                cmk.mkp_tool.PackagePart.EC_RULE_PACKS,
-            )
         )
 
     def _vs_mkeventd_event(self) -> Dictionary:
@@ -1835,9 +2084,11 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                     item=make_simple_link(
                         make_confirm_delete_link(
                             i18n=_,
-                            url=make_action_link(
+                            url=makeactionuri_contextless(
                                 request,
+                                transactions.get(),
                                 [("mode", "mkeventd_rule_packs"), ("_reset_counters", "1")],
+                                filename="wato.py",
                             ),
                             title=_("Reset all rule hit counters to zero"),
                             message=_("This affects all rule packs."),
@@ -1870,8 +2121,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
         # Deletion of rule packs
         if request.has_var("_delete"):
-            nr = request.get_integer_input_mandatory("_delete")
-            rule_pack = self._rule_packs[nr]
+            nr, rule_pack = self._rule_pack_to_change("_delete")
             self._add_change(
                 action_name="delete-rule-pack",
                 text=_("Deleted rule pack %(rule_pack_id)s") % {"rule_pack_id": rule_pack["id"]},
@@ -1882,13 +2132,12 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
         # Reset all rule hit counters
         elif request.has_var("_reset_counters"):
-            for site in _get_event_console_sync_sites():
-                LivestatusClient(sites.live()).command(ECResetCounters(), site)
-            self._add_change(
-                action_name="counter-reset",
-                text=_("Reset all rule hit counters to zero"),
-                pending_changes=pending_changes,
-            )
+            if _reset_rule_hit_counters():
+                self._add_change(
+                    action_name="counter-reset",
+                    text=_("Reset all rule hit counters to zero"),
+                    pending_changes=pending_changes,
+                )
 
         # Copy rules from master
         elif request.has_var("_copy_rules"):
@@ -1902,13 +2151,21 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 pending_changes=pending_changes,
             )
             flash(_("Copied rules from central site"))
-            return redirect(self.mode_url())
 
-        # Move rule packs
+        # Move rule packs, which the list offers for every one unless searching
         elif request.has_var("_move"):
-            from_pos = request.get_integer_input_mandatory("_move")
-            to_pos = request.get_integer_input_mandatory("_index")
+            from_pos = self._requested_rule_pack_position("_move")
+            _verify_order(
+                self._rule_pack_ids(),
+                _("The rule packs changed meanwhile, so please move the rule pack again."),
+            )
             rule_pack = self._rule_packs[from_pos]
+            to_pos = request.get_integer_input_mandatory("_index")
+            if not 0 <= to_pos < len(self._rule_packs):
+                raise MKUserError(
+                    "_index",
+                    _("There is no position %(nr)d to move the rule pack to.") % {"nr": to_pos},
+                )
             del self._rule_packs[from_pos]  # make to_pos now match!
             self._rule_packs[to_pos:to_pos] = [rule_pack]
             self._save_rules(config)
@@ -1921,12 +2178,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
         # Export rule pack
         elif request.has_var("_export"):
-            nr = request.get_integer_input_mandatory("_export")
-            try:
-                rule_pack = self._rule_packs[nr]
-            except KeyError:
-                raise MKUserError("_export", _("The requested rule pack does not exist"))
-
+            nr, rule_pack = self._rule_pack_to_change("_export")
             self._export_mkp_rule_pack(rule_pack, config)
             self._rule_packs[nr] = ec.MkpRulePackProxy(rule_pack["id"])
             self._save_rules(config)
@@ -1939,58 +2191,86 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
 
         # Make rule pack non-exportable
         elif request.has_var("_dissolve"):
-            nr = request.get_integer_input_mandatory("_dissolve")
-            try:
-                rp = self._rule_packs[nr]
-            except KeyError:
-                raise MKUserError("_dissolve", _("The requested rule pack does not exist"))
-            if not isinstance(rp, ec.MkpRulePackProxy):
-                raise MKUserError("_dissolve", _("rule pack was not exported"))
-            self._rule_packs[nr] = rp.get_rule_pack_spec()
+            nr, rule_pack = self._rule_pack_to_change("_dissolve")
+            assert isinstance(rule_pack, ec.MkpRulePackProxy)
+            self._rule_packs[nr] = rule_pack.get_rule_pack_spec()
             self._save_rules(config)
             ec.remove_exported_rule_pack(self._rule_packs[nr], self._paths.mkp_rule_pack_dir.value)
             self._add_change(
                 action_name="dissolve-rule-pack",
                 text=_("Removed rule_pack %(rule_pack_id)s from MKP export")
-                % {"rule_pack_id": self._rule_packs[nr]["id"]},
+                % {"rule_pack_id": rule_pack["id"]},
                 pending_changes=pending_changes,
             )
 
         # Reset to rule pack provided via MKP
         elif request.has_var("_reset"):
-            nr = request.get_integer_input_mandatory("_reset")
-            try:
-                rp = ec.MkpRulePackProxy(self._rule_packs[nr]["id"])
-                self._rule_packs[nr] = rp
-            except KeyError:
-                raise MKUserError("_reset", _("The requested rule pack does not exist"))
+            nr, rule_pack = self._rule_pack_to_change("_reset")
+            self._rule_packs[nr] = ec.MkpRulePackProxy(rule_pack["id"])
             self._save_rules(config)
             self._add_change(
                 action_name="reset-rule-pack",
                 text=_("Reset the rules of rule pack %(id_)s to the ones provided via MKP")
-                % {"id_": rp.id_},
+                % {"id_": rule_pack["id"]},
                 pending_changes=pending_changes,
             )
 
         # Synchronize modified rule pack with MKP
         elif request.has_var("_synchronize"):
-            nr = request.get_integer_input_mandatory("_synchronize")
-            self._export_mkp_rule_pack(self._rule_packs[nr], config)
-            try:
-                rp = ec.MkpRulePackProxy(self._rule_packs[nr]["id"])
-                self._rule_packs[nr] = rp
-            except KeyError:
-                raise MKUserError("_synchronize", _("The requested rule pack does not exist"))
+            nr, rule_pack = self._rule_pack_to_change("_synchronize")
+            self._export_mkp_rule_pack(rule_pack, config)
+            self._rule_packs[nr] = ec.MkpRulePackProxy(rule_pack["id"])
             self._save_rules(config)
             self._add_change(
                 action_name="synchronize-rule-pack",
-                text=_("Synchronized MKP with the modified rule pack %(id_)s") % {"id_": rp.id_},
+                text=_("Synchronized MKP with the modified rule pack %(id_)s")
+                % {"id_": rule_pack["id"]},
                 pending_changes=pending_changes,
             )
 
-        # Update data structure after actions
-        self._rule_packs = list(ec.load_rule_packs(self._paths))
         return redirect(self.mode_url())
+
+    def _offers(self, action: str, rule_pack_type: ec.RulePackType, *, unique_id: bool) -> bool:
+        """Whether the list offers the action for a rule pack of the type
+
+        The list offers moving every rule pack, so this doesn't tell it. The export of a rule pack is
+        the file named after its ID, which the export of another rule pack with the ID would replace,
+        so the list offers exporting only one whose ID is unique."""
+        # Only the commercial editions have MKPs.
+        mkps = self._edition is not Edition.COMMUNITY
+        match action:
+            case "_delete":
+                return rule_pack_type is ec.RulePackType.internal
+            case "_export":
+                return mkps and rule_pack_type is ec.RulePackType.internal and unique_id
+            case "_dissolve":
+                return mkps and rule_pack_type is ec.RulePackType.exported
+            case "_reset" | "_synchronize":
+                return mkps and rule_pack_type is ec.RulePackType.modified_mkp
+            case _:
+                raise ValueError(action)
+
+    def _unique_ids(self) -> set[str]:
+        """The IDs only one rule pack has"""
+        return {id_ for id_, count in Counter(self._rule_pack_ids()).items() if count == 1}
+
+    def _rule_pack_to_change(self, varname: str) -> tuple[int, ec.ECRulePack]:
+        """Returns the position and the rule pack with the ID of the variable
+
+        The list must still offer the action for the rule pack."""
+        nr = self._requested_rule_pack_position(varname)
+        rule_pack = self._rule_packs[nr]
+        if not self._offers(
+            varname,
+            ec.RulePackType.type_of(rule_pack, _rule_pack_to_mkp_map(self._paths, self._edition)),
+            unique_id=rule_pack["id"] in self._unique_ids(),
+        ):
+            raise MKUserError(
+                varname,
+                _("This is not possible for the rule pack %(rule_pack_id)s in its current state.")
+                % {"rule_pack_id": rule_pack["id"]},
+            )
+        return nr, rule_pack
 
     def _copy_rules_from_master(self, *, connect_timeout: int, pretty_print: bool) -> None:
         answer = query_ec_directly(b"REPLICATE 0", connect_timeout)
@@ -2007,8 +2287,11 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
         if rep_mode in ["sync", "takeover"]:
             copy_url = make_confirm_delete_link(
                 i18n=_,
-                url=make_action_link(
-                    request, [("mode", "mkeventd_rule_packs"), ("_copy_rules", "1")]
+                url=makeactionuri_contextless(
+                    request,
+                    transactions.get(),
+                    [("mode", "mkeventd_rule_packs"), ("_copy_rules", "1")],
+                    filename="wato.py",
                 ),
                 title=_("Copy all event rules from the central site"),
                 message=_("This will replace your local configuration"),
@@ -2051,36 +2334,37 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                     "you have activated <i>Force message archiving</i> in the global settings."
                 )
             )
-        elif search_expression and not found_packs:
-            html.show_message(_("Found no rule packs."))
-            return
 
-        id_to_mkp = self._get_rule_pack_to_mkp_map()
+        id_to_mkp = _rule_pack_to_mkp_map(self._paths, self._edition)
 
+        simulator = EventSimulator.for_event(event, config.sites, self._edition) if event else None
         have_match = False
 
         rule_stats = _get_rule_stats_from_ec()
-        rule_pack_hits: dict[str, int] = {}
-        for rp in ec.load_rule_packs(self._paths):
-            pack_hits = 0
-            for rule in rp["rules"]:
-                pack_hits += rule_stats.get(rule["id"], 0)
-            rule_pack_hits[rp["id"]] = pack_hits
+        rule_pack_hits = [
+            sum(rule_stats.get(rule["id"], 0) for rule in rule_pack["rules"])
+            for rule_pack in self._rule_packs
+        ]
 
+        unique_ids = self._unique_ids()
+        order = _order_digest(self._rule_pack_ids())
         with table_element(css="ruleset", limit=0, title=title) as table:
-            for nr, rule_pack in enumerate(self._rule_packs):
+            for nr, (rule_pack, pack_ref) in enumerate(
+                zip(self._rule_packs, RulePackRef.of(self._rule_packs), strict=True)
+            ):
                 id_ = rule_pack["id"]
                 type_ = ec.RulePackType.type_of(rule_pack, id_to_mkp)
+                unique_id = id_ in unique_ids
 
-                table.row(css=["matches_search"] if id_ in found_packs else [])
+                # The table searching the HTML of the cells might miss found ones, e.g. ones found by
+                # one of their rules, or with text the page escapes, so they stay fixed.
+                found = nr in found_packs
+                table.row(css=["matches_search"] if found else [], fixed=found)
                 table.cell("#", css=["narrow nowrap"])
                 html.write_text_permissive(nr)
                 table.cell(_("Actions"), css=["buttons"])
 
-                edit_url = makeuri_contextless(
-                    request,
-                    [("mode", "mkeventd_edit_rule_pack"), ("edit", nr)],
-                )
+                edit_url = makeuri_contextless(request, rule_pack_editor_vars(pack_ref))
                 html.icon_button(
                     edit_url, _("Edit properties of this rule pack"), StaticIcon(IconNames.edit)
                 )
@@ -2089,17 +2373,14 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 # clone_url  = makeuri_contextless(request, [("mode", "mkeventd_edit_rule_pack"), ("clone", nr)])
                 # html.icon_button(clone_url, _("Create a copy of this rule pack"), "clone")
 
-                drag_url = make_action_link(
-                    request, [("mode", "mkeventd_rule_packs"), ("_move", nr)]
+                table.element_dragger_url(
+                    "tr", base_url=_rule_pack_action_url("_move", pack_ref, ("_order", order))
                 )
-                table.element_dragger_url("tr", base_url=drag_url)
 
-                if type_ == ec.RulePackType.internal:
+                if self._offers("_delete", type_, unique_id=unique_id):
                     delete_url = make_confirm_delete_link(
                         i18n=_,
-                        url=make_action_link(
-                            request, [("mode", "mkeventd_rule_packs"), ("_delete", nr)]
-                        ),
+                        url=_rule_pack_action_url("_delete", pack_ref),
                         title=_("Delete rule pack #%(nr)d") % {"nr": nr},
                         suffix=rule_pack["title"],
                         message=_("ID: %(id_)s") % {"id_": id_}
@@ -2114,64 +2395,33 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                         StaticIcon(IconNames.trans)
                     )  # Invisible dummy button for icon spacing
 
-                rules_url_vars = [("mode", "mkeventd_rules"), ("rule_pack", id_)]
-                if found_packs.get(id_):
-                    rules_url_vars.append(("search", search_expression))
-                rules_url = makeuri_contextless(request, rules_url_vars)
+                rules_url = _rules_url(pack_ref, search_expression if found_packs.get(nr) else None)
                 html.icon_button(
                     rules_url, _("Edit the rules in this pack"), StaticIcon(IconNames.rules)
                 )
 
-                if edition(cmk.utils.paths.omd_root) is not Edition.COMMUNITY:
-                    # Icons for mkp export (Commercial editions only)
-                    if type_ == ec.RulePackType.internal:
-                        export_url = make_action_link(
-                            request, [("mode", "mkeventd_rule_packs"), ("_export", nr)]
-                        )
+                for action, action_title, emblem in (
+                    (
+                        "_export",
+                        _("Make this rule pack available in the Extension Packages module"),
+                        "add",
+                    ),
+                    (
+                        "_dissolve",
+                        _("Remove this rule pack from the Extension Packages module"),
+                        "disable",
+                    ),
+                    ("_reset", _("Reset rule pack to the MKP version"), "disable"),
+                    ("_synchronize", _("Synchronize MKP with modified version"), "refresh"),
+                ):
+                    if self._offers(action, type_, unique_id=unique_id):
                         html.icon_button(
-                            export_url,
-                            _("Make this rule pack available in the Extension Packages module"),
-                            StaticIcon(
-                                IconNames.mkps,
-                                emblem="add",
-                            ),
-                        )
-                    elif type_ == ec.RulePackType.exported:
-                        dissolve_url = make_action_link(
-                            request, [("mode", "mkeventd_rule_packs"), ("_dissolve", nr)]
-                        )
-                        html.icon_button(
-                            dissolve_url,
-                            _("Remove this rule pack from the Extension Packages module"),
-                            StaticIcon(
-                                IconNames.mkps,
-                                emblem="disable",
-                            ),
-                        )
-                    elif type_ == ec.RulePackType.modified_mkp:
-                        reset_url = make_action_link(
-                            request, [("mode", "mkeventd_rule_packs"), ("_reset", nr)]
-                        )
-                        html.icon_button(
-                            reset_url,
-                            _("Reset rule pack to the MKP version"),
-                            StaticIcon(
-                                IconNames.mkps,
-                                emblem="disable",
-                            ),
-                        )
-                        sync_url = make_action_link(
-                            request, [("mode", "mkeventd_rule_packs"), ("_synchronize", nr)]
-                        )
-                        html.icon_button(
-                            sync_url,
-                            _("Synchronize MKP with modified version"),
-                            StaticIcon(
-                                IconNames.mkps,
-                                emblem="refresh",
-                            ),
+                            _rule_pack_action_url(action, pack_ref),
+                            action_title,
+                            StaticIcon(IconNames.mkps, emblem=emblem),
                         )
 
+                if self._edition is not Edition.COMMUNITY:
                     table.cell(_("State"), css=["buttons"])
                     if type_ == ec.RulePackType.exported:
                         html.static_icon(
@@ -2207,44 +2457,26 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                     )
 
                 # Simulation of all rules in this pack
-                elif event:
-                    matches = 0
-                    cancelling_matches = 0
-                    skips = 0
-
-                    for rule in rule_pack["rules"]:
-                        result = match_event_rule(
-                            rule_pack, rule, event, config.sites[event["site"]]
-                        )
-                        if isinstance(result, ec.MatchSuccess):
-                            cancelling, groups = result.cancelling, result.match_groups
-
-                            if not cancelling and rule.get("drop") == "skip_pack":
-                                matches += 1
-                                skips = 1
-                                break
-
-                            if cancelling and matches == 0:
-                                cancelling_matches += 1
-
-                            matches += 1
-
-                    if matches == 0:
+                elif simulator:
+                    pack_match = simulator.match_rule_pack(rule_pack)
+                    if (first_match := pack_match.first_match) is None:
                         msg = _("None of the rules in this pack matches")
                         icon = StaticIcon(IconNames.hyphen)
                     else:
                         msg = _("Number of matching rules in this pack: %(matches)d") % {
-                            "matches": matches
+                            "matches": pack_match.matching_rules
                         }
-                        if skips:
+                        if first_match.outcome is ec.MatchOutcome.SKIP_PACK:
                             msg += _(", the first match skips this rule pack")
                             icon = StaticIcon(IconNames.hyphen)
                         else:
-                            if cancelling:  # type: ignore[possibly-undefined]
+                            if first_match.outcome is ec.MatchOutcome.CANCEL_EVENTS:
                                 msg += _(", first match is a cancelling match")
-                            if groups:  # type: ignore[possibly-undefined]
+                            elif first_match.outcome is ec.MatchOutcome.DROP_MESSAGE:
+                                msg += _(", first match drops the message")
+                            if groups := message_match_groups_text(first_match.result):
                                 msg += _(", match groups of decisive match: %(groups)s") % {
-                                    "groups": ",".join([g or _("&lt;None&gt;") for g in groups])
+                                    "groups": groups
                                 }
                             if have_match:
                                 msg += _(
@@ -2255,34 +2487,51 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                                 icon = StaticIcon(IconNames.checkmark)
                                 have_match = True
                     html.static_icon(icon, title=msg)
+                    if unknown_matches := pack_match.unknown_matches:
+                        html.static_icon(
+                            StaticIcon(IconNames.warning),
+                            title=ungettext(
+                                "This might be wrong, because the simulator cannot tell whether "
+                                "%(count)d rule of this pack matches: %(reason)s",
+                                "This might be wrong, because the simulator cannot tell whether "
+                                "%(count)d rules of this pack match: %(reason)s",
+                                len(unknown_matches),
+                            )
+                            % {"count": len(unknown_matches), "reason": unknown_matches[0].reason},
+                        )
 
                 table.cell(_("ID"), id_)
-                table.cell(_("Title"), rule_pack["title"])
+                # The page escapes the title, e.g. "&" as "&amp;".
+                table.cell(_("Title"), rule_pack["title"], search_text=rule_pack["title"])
 
-                if edition(cmk.utils.paths.omd_root) is Edition.ULTIMATEMT:
+                if self._edition is Edition.ULTIMATEMT:
                     table.cell(_("Customer"))
                     if "customer" in rule_pack:
                         html.write_text_permissive(customer_api().get_customer_name(rule_pack))
 
+                rule_count = "%d" % len(rule_pack["rules"])
+                # The URL of the link tells the rule list, which would match every row.
                 table.cell(
                     _("Rules"),
-                    HTMLWriter.render_a("%d" % len(rule_pack["rules"]), href=rules_url),
+                    HTMLWriter.render_a(rule_count, href=rules_url),
                     css=["number"],
+                    search_text=rule_count,
                 )
 
-                table.cell(_("Hits"), str(rule_pack_hits[rule_pack["id"]]), css=["number"])
+                table.cell(_("Hits"), str(rule_pack_hits[nr]), css=["number"])
 
     def _filter_mkeventd_rule_packs(
         self, search_expression: str, rule_packs: Iterable[ec.ECRulePack]
-    ) -> dict[str, list[ec.Rule]]:
-        found_packs: dict[str, list[ec.Rule]] = {}
-        for rule_pack_ in rule_packs:
+    ) -> dict[int, list[ec.Rule]]:
+        """The positions of the rule packs the search finds, with the rules it finds in them"""
+        found_packs: dict[int, list[ec.Rule]] = {}
+        for nr, rule_pack_ in enumerate(rule_packs):
             rule_pack = cast(ec.ECRulePackSpec, rule_pack_)
             if (
                 search_expression in rule_pack["id"].lower()
                 or search_expression in rule_pack["title"].lower()
             ):
-                found_packs.setdefault(rule_pack["id"], [])
+                found_packs.setdefault(nr, [])
             for rule in rule_pack.get("rules", []):
                 match = rule.get("match", "")
                 if not isinstance(match, str):  # TODO: Remove when we have CompiledRule
@@ -2291,9 +2540,21 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                     search_expression in searchable_rule_item.lower()
                     for searchable_rule_item in (rule["id"], rule.get("description", ""), match)
                 ):
-                    found_rules = found_packs.setdefault(rule_pack["id"], [])
+                    found_rules = found_packs.setdefault(nr, [])
                     found_rules.append(rule)
         return found_packs
+
+
+def _rule_match_text(outcome: ec.MatchOutcome) -> str:
+    match outcome:
+        case ec.MatchOutcome.NEW_EVENT:
+            return _("This rule matches.")
+        case ec.MatchOutcome.CANCEL_EVENTS:
+            return _("This rule does a cancelling match.")
+        case ec.MatchOutcome.DROP_MESSAGE:
+            return _("This rule matches and drops the message.")
+        case ec.MatchOutcome.SKIP_PACK:
+            return _("This rule matches and skips the rest of this rule pack.")
 
 
 def _deref[T](x: T | Callable[[], T]) -> T:
@@ -2316,27 +2577,14 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEventConsoleRulePacks
 
-    @overload
-    @classmethod
-    def mode_url(cls, *, rule_pack: str) -> str: ...
-
-    @overload
-    @classmethod
-    def mode_url(cls, **kwargs: str) -> str: ...
-
-    @classmethod
-    @override
-    def mode_url(cls, **kwargs: str) -> str:
-        return super().mode_url(**kwargs)
-
     @override
     def _breadcrumb_url(self) -> str:
-        return self.mode_url(rule_pack=self._rule_pack_id)
+        # The rule editor passes the search on to the rule list it returns to.
+        return _rules_url(self._rule_pack_ref, self._search_expression())
 
     @override
     def _from_vars(self) -> None:
-        self._rule_pack_id = request.get_ascii_input_mandatory("rule_pack")
-        self._rule_pack_nr, self._rule_pack = self._rule_pack_with_id(self._rule_pack_id)
+        self._rule_pack_nr, self._rule_pack, self._rule_pack_ref = self._requested_rule_pack()
 
     @override
     def title(self) -> str:
@@ -2379,7 +2627,10 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     item=make_simple_link(
                         makeuri_contextless(
                             request,
-                            [("mode", "mkeventd_edit_rule"), ("rule_pack", self._rule_pack_id)],
+                            [
+                                *rule_editor_vars(self._rule_pack_ref),
+                                *_search_vars(self._search_expression()),
+                            ],
                         )
                     ),
                     is_shortcut=True,
@@ -2395,10 +2646,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                     title=_("Edit properties"),
                     icon_name=StaticIcon(IconNames.edit),
                     item=make_simple_link(
-                        makeuri_contextless(
-                            request,
-                            [("mode", "mkeventd_edit_rule_pack"), ("edit", self._rule_pack_nr)],
-                        )
+                        makeuri_contextless(request, rule_pack_editor_vars(self._rule_pack_ref))
                     ),
                 ),
             ],
@@ -2407,34 +2655,38 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
     @override
     def action(self, config: Config) -> ActionResult:
         check_csrf_token(session, request, i18n=_)
+        rules_url = _rules_url(self._rule_pack_ref, self._search_expression())
 
         if not transactions.check_transaction(request):
-            return redirect(self.mode_url(rule_pack=self._rule_pack_id))
+            return redirect(rules_url)
 
-        id_to_mkp = self._get_rule_pack_to_mkp_map()
+        id_to_mkp = _rule_pack_to_mkp_map(self._paths, self._edition)
         type_ = ec.RulePackType.type_of(self._rule_pack, id_to_mkp)
         pending_changes = _pending_changes_for_ec(config=config, acting_user=user.id)
 
         if request.var("_move_to"):
-            for move_nr, rule in enumerate(self._rule_pack["rules"]):
-                move_var = "_move_to_%s" % rule["id"]
+            rules = self._rule_pack["rules"]
+            for move_nr, (rule, rule_ref) in enumerate(zip(rules, RuleRef.of(rules), strict=True)):
+                move_var = "_move_to_" + rule_ref.form_value()
                 if request.var(move_var):
-                    other_pack_nr, other_pack = self._rule_pack_with_id(request.var(move_var))
+                    other_pack_nr = RulePackRef.existing_position_in_form(
+                        self._rule_pack_ids(),
+                        move_var,
+                        _("The requested rule pack does not exist."),
+                    )
+                    other_pack = self._rule_packs[other_pack_nr]
+                    if _shares_rules(other_pack, self._rule_pack):
+                        raise MKUserError(None, _("The rule is in this rule pack already."))
 
                     other_type_ = ec.RulePackType.type_of(other_pack, id_to_mkp)
-                    if other_type_ == ec.RulePackType.unmodified_mkp:
-                        ec.override_rule_pack_proxy(other_pack_nr, self._rule_packs)
+                    other_pack = self._writable_rule_pack(other_pack_nr, other_type_)
+                    self._rule_pack = self._writable_rule_pack(self._rule_pack_nr, type_)
 
-                    if type_ == ec.RulePackType.unmodified_mkp:
-                        ec.override_rule_pack_proxy(self._rule_pack_nr, self._rule_packs)
+                    other_pack["rules"] = [rule] + list(other_pack["rules"])
 
-                    self._rule_packs[other_pack_nr]["rules"] = [rule] + list(
-                        self._rule_packs[other_pack_nr]["rules"]
-                    )
-
-                    rules = list(self._rule_packs[self._rule_pack_nr]["rules"])
+                    rules = list(self._rule_pack["rules"])
                     del rules[move_nr]
-                    self._rule_packs[self._rule_pack_nr]["rules"] = rules
+                    self._rule_pack["rules"] = rules
 
                     if other_type_ == ec.RulePackType.exported:
                         self._export_mkp_rule_pack(other_pack, config)
@@ -2452,18 +2704,21 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                         _("Moved rule %(rule)s to pack %(pack)s")
                         % {"rule": rule["id"], "pack": other_pack["title"]}
                     )
-                    return None
+                    # Rendered for this request, the rule list would choose the same rule pack for
+                    # the next rule with the ID of the moved one.
+                    return redirect(rules_url)
+            # The rule a rule pack was chosen for is gone, e.g. deleted meanwhile. Choosing the empty
+            # entry of a dropdown moves nothing, though.
+            if any(value for _varname, value in request.itervars("_move_to_")):
+                raise MKUserError(None, _("The requested rule does not exist."))
 
         if self._event_simulation_action():
             return None
 
         if request.has_var("_delete"):
-            nr = request.get_integer_input_mandatory("_delete")
-            if type_ == ec.RulePackType.unmodified_mkp:
-                ec.override_rule_pack_proxy(self._rule_pack_nr, self._rule_packs)
-                rules = list(self._rule_packs[self._rule_pack_nr]["rules"])
-            else:
-                rules = list(self._rule_pack["rules"])
+            nr = self._rule_to_change("_delete")
+            self._rule_pack = self._writable_rule_pack(self._rule_pack_nr, type_)
+            rules = list(self._rule_pack["rules"])
 
             self._add_change(
                 action_name="delete-rule",
@@ -2477,17 +2732,24 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
             if type_ == ec.RulePackType.exported:
                 self._export_mkp_rule_pack(self._rule_pack, config)
             self._save_rules(config)
-            return redirect(self.mode_url(rule_pack=self._rule_pack_id))
+            return redirect(rules_url)
 
         if request.has_var("_move"):
-            from_pos = request.get_integer_input_mandatory("_move")
+            _verify_not_searching()
+            from_pos = self._rule_to_change("_move")
+            _verify_order(
+                _rule_ids(self._rule_pack["rules"]),
+                _("The rules of this rule pack changed meanwhile, so please move the rule again."),
+            )
             to_pos = request.get_integer_input_mandatory("_index")
+            if not 0 <= to_pos < len(self._rule_pack["rules"]):
+                raise MKUserError(
+                    "_index",
+                    _("There is no position %(nr)d to move the rule to.") % {"nr": to_pos},
+                )
 
-            if type_ == ec.RulePackType.unmodified_mkp:
-                ec.override_rule_pack_proxy(self._rule_pack_nr, self._rule_packs)
-                rules = list(self._rule_packs[self._rule_pack_nr]["rules"])
-            else:
-                rules = list(self._rule_pack["rules"])
+            self._rule_pack = self._writable_rule_pack(self._rule_pack_nr, type_)
+            rules = list(self._rule_pack["rules"])
 
             rule = rules[from_pos]
             del rules[from_pos]  # make to_pos now match!
@@ -2504,7 +2766,30 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 text=_("Changed position of rule %(rule_id)s") % {"rule_id": rule["id"]},
                 pending_changes=pending_changes,
             )
-        return redirect(self.mode_url(rule_pack=self._rule_pack_id))
+        return redirect(rules_url)
+
+    def _rule_to_change(self, varname: str) -> int:
+        """Returns the position of the rule with the ID of the variable"""
+        return RuleRef.existing_position(
+            _rule_ids(self._rule_pack["rules"]),
+            varname,
+            _("The requested rule does not exist."),
+        )
+
+    def _rule_action_url(self, action: str, rule: RuleRef, *more_vars: HTTPVariable) -> str:
+        """The URL of the action of the rule list for the rule, which keeps the search of the list"""
+        return makeactionuri_contextless(
+            request,
+            transactions.get(),
+            [
+                ("mode", "mkeventd_rules"),
+                *self._rule_pack_ref.to_vars("rule_pack"),
+                *rule.to_vars(action),
+                *_search_vars(self._search_expression()),
+                *more_vars,
+            ],
+            filename="wato.py",
+        )
 
     @override
     def page(self, config: Config) -> None:
@@ -2524,17 +2809,25 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         if not rules:
             html.show_message(_("This package does not yet contain any rules."))
             return
-        if search_expression and not found_rules:
-            html.show_message(_("No rules found."))
-            return
 
-        if len(self._rule_packs) > 1:
+        move_choices = self._move_choices()
+        if move_choices:
             with html.form_context("move_to", method="POST"):
-                self._show_table(event, found_rules, rules, config.sites)
+                self._show_table(event, found_rules, rules, config.sites, move_choices)
                 html.hidden_field("_move_to", "yes")
                 html.hidden_fields()
         else:
-            self._show_table(event, found_rules, rules, config.sites)
+            self._show_table(event, found_rules, rules, config.sites, move_choices)
+
+    def _move_choices(self) -> list[Choice]:
+        """The rule packs to offer moving the rules to, leaving out the ones sharing their rules"""
+        return [
+            (pack_ref.form_value(), pack["title"])
+            for pack, pack_ref in zip(
+                self._rule_packs, RulePackRef.of(self._rule_packs), strict=True
+            )
+            if not _shares_rules(pack, self._rule_pack)
+        ]
 
     def _show_table(
         self,
@@ -2542,6 +2835,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
         found_rules: list[ec.Rule],
         rules: Collection[ec.Rule],
         site_configs: SiteConfigurations,
+        move_choices: Sequence[Choice],
     ) -> None:
         # TODO: Rethink the typing of syslog_facilites/syslog_priorities.
         priorities = _deref(syslog_priorities)
@@ -2549,36 +2843,38 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
 
         # Show content of the rule pack
         with table_element(title=_("Rules"), css="ruleset", limit=0) as table:
-            have_match = False
             hits = _get_rule_stats_from_ec()
-            for nr, rule in enumerate(rules):
-                table.row(css=["matches_search"] if rule in found_rules else [])
+            simulator = (
+                EventSimulator.for_event(event, site_configs, self._edition) if event else None
+            )
+            # A match in a previous rule pack overrules the matches in this one.
+            have_match = simulator is not None and simulator.has_decisive_match(
+                self._rule_packs[: self._rule_pack_nr]
+            )
+            order = _order_digest(_rule_ids(rules))
+            search_vars = _search_vars(self._search_expression())
+            for nr, (rule, rule_ref) in enumerate(zip(rules, RuleRef.of(rules), strict=True)):
+                # Besides the found rules, the table shows the ones matching the search in other
+                # columns. It might miss found ones, as it searches the HTML of the cells, e.g.
+                # escaped text, and leaves out their ID, so they stay fixed.
+                found = rule in found_rules
+                table.row(css=["matches_search"] if found else [], fixed=found)
                 delete_url = make_confirm_delete_link(
                     i18n=_,
-                    url=make_action_link(
-                        request,
-                        [
-                            ("mode", "mkeventd_rules"),
-                            ("rule_pack", self._rule_pack_id),
-                            ("_delete", nr),
-                        ],
-                    ),
+                    url=self._rule_action_url("_delete", rule_ref),
                     title=_("Delete rule #%(nr)d") % {"nr": nr},
                     message=_("ID: %(id_)s") % {"id_": rule["id"]},
                     suffix=rule.get("description", ""),
                 )
-                drag_url = make_action_link(
+                # The rule editor passes the search on to the rule list it returns to.
+                edit_url = makeuri_contextless(
                     request,
-                    [("mode", "mkeventd_rules"), ("rule_pack", self._rule_pack_id), ("_move", nr)],
+                    [*rule_editor_vars(self._rule_pack_ref, rule_ref), *search_vars],
+                    filename="wato.py",
                 )
-                edit_url = _rule_edit_url(self._rule_pack_id, nr)
                 clone_url = makeuri_contextless(
                     request,
-                    [
-                        ("mode", "mkeventd_edit_rule"),
-                        ("rule_pack", self._rule_pack_id),
-                        ("clone", nr),
-                    ],
+                    [*rule_editor_vars(self._rule_pack_ref, rule_ref, "clone_rule"), *search_vars],
                 )
 
                 table.cell("#", css=["narrow nowrap"])
@@ -2588,7 +2884,9 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 html.icon_button(
                     clone_url, _("Create a copy of this rule"), StaticIcon(IconNames.clone)
                 )
-                table.element_dragger_url("tr", base_url=drag_url)
+                table.element_dragger_url(
+                    "tr", base_url=self._rule_action_url("_move", rule_ref, ("_order", order))
+                )
                 html.icon_button(delete_url, _("Delete this rule"), StaticIcon(IconNames.delete))
 
                 table.cell("", css=["buttons"])
@@ -2597,36 +2895,31 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                         StaticIcon(IconNames.disabled),
                         title=_("This rule is currently disabled and will not be applied"),
                     )
-                elif event:
-                    event["host"] = HostName(
-                        cmk.ccc.translations.translate(
-                            eventd_configuration()["hostname_translation"], event["host"]
+                elif simulator:
+                    result = simulator.match_rule(self._rule_pack, rule)
+                    if isinstance(result, UnknownMatch):
+                        html.static_icon(
+                            StaticIcon(IconNames.warning),
+                            title=_(
+                                "The simulator cannot tell whether this rule matches: %(reason)s"
+                            )
+                            % {"reason": result.reason},
                         )
-                    )
-                    result = match_event_rule(
-                        self._rule_pack, rule, event, site_configs[event["site"]]
-                    )
-                    if not isinstance(result, ec.MatchSuccess):
+                    elif not isinstance(result, ec.MatchSuccess):
                         html.static_icon(
                             StaticIcon(IconNames.hyphen),
                             title=_("Rule does not match: %(reason)s") % {"reason": result.reason},
                         )
                     else:
-                        cancelling, groups = result.cancelling, result.match_groups
                         if have_match:
                             msg = _("This rule matches, but is overruled by a previous match.")
                             icon = StaticIcon(IconNames.checkmark_plus)
                         else:
-                            if cancelling:
-                                msg = _("This rule does a cancelling match.")
-                            else:
-                                msg = _("This rule matches.")
+                            msg = _rule_match_text(ec.match_outcome(rule, result))
                             icon = StaticIcon(IconNames.checkmark)
                             have_match = True
-                        if groups:
-                            msg += _(" Match groups: %(groups)s") % {
-                                "groups": ",".join([g or _("&lt;None&gt;") for g in groups])
-                            }
+                        if groups := message_match_groups_text(result):
+                            msg += _(" Match groups: %(groups)s") % {"groups": groups}
                         html.static_icon(icon, title=msg)
 
                 if rule.get("invert_matching"):
@@ -2641,9 +2934,10 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                         % {"groups": ", ".join(rule["contact_groups"]["groups"]) or _("(none)")},
                     )
 
-                table.cell(_("ID"), HTMLWriter.render_a(rule["id"], edit_url))
+                # The URL of the link tells the rule pack, which would match every row.
+                table.cell(_("ID"), HTMLWriter.render_a(rule["id"], edit_url), search_text="")
 
-                if edition(cmk.utils.paths.omd_root) is Edition.ULTIMATEMT:
+                if self._edition is Edition.ULTIMATEMT:
                     table.cell(_("Customer"))
                     if "customer" in self._rule_pack:
                         html.write_text_permissive(
@@ -2678,6 +2972,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                         _("State"),
                         HTMLWriter.render_span(txt, class_="state_rounded_fill"),
                         css=["state state%s" % stateval],
+                        search_text=txt,
                     )
 
                 # Syslog priority
@@ -2710,10 +3005,11 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 # ECRuleSpec the match type is wrong for the UI. In the config we only have str.
                 # during EC runtime we may have a pattern in that field.
                 assert not isinstance(match, re.Pattern)
-                table.cell(_("Text to match"), match)
+                table.cell(_("Text to match"), match, search_text=match)
 
                 # Description
-                table.cell(_("Description"))
+                # The link to the context information has its title, e.g. "Context information".
+                table.cell(_("Description"), search_text=rule.get("description", ""))
                 url = rule.get("docu_url")
                 if url:
                     html.icon_button(
@@ -2726,15 +3022,14 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
                 html.write_text_permissive(rule.get("description", ""))
 
                 # Move rule to other pack
-                if len(self._rule_packs) > 1:
-                    table.cell(_("Move to pack..."))
-                    choices: list[Choice] = [("", "")]
-                    choices += [
-                        (pack["id"], pack["title"])
-                        for pack in self._rule_packs
-                        if pack is not self._rule_pack
-                    ]
-                    html.dropdown("_move_to_%s" % rule["id"], choices, onchange="move_to.submit();")
+                if move_choices:
+                    # The rule packs to move the rule to would match every row.
+                    table.cell(_("Move to pack..."), search_text="")
+                    html.dropdown(
+                        "_move_to_" + rule_ref.form_value(),
+                        [("", ""), *move_choices],
+                        onchange="move_to.submit();",
+                    )
 
     def _filter_mkeventd_rules(
         self, search_expression: str, rule_pack: ec.ECRulePack
@@ -2765,10 +3060,11 @@ def _add_change_for_sites(
     rule_or_rulepack: DictionaryModel | ec.ECRulePackSpec,
     config_domain: ConfigDomainEventConsole,
     pending_changes: PendingChanges,
+    edition: Edition,
 ) -> None:
     """In case of Ultimate with multi-tenancy, add the changes only for the customer's sites if customer is configured"""
     customer_id: str | None = rule_or_rulepack.get("customer")
-    if edition(cmk.utils.paths.omd_root) is Edition.ULTIMATEMT and customer_id is not None:
+    if edition is Edition.ULTIMATEMT and customer_id is not None:
         sites_ = list(customer_api().get_sites_of_customer(customer_id).keys())
     else:
         sites_ = _get_event_console_sync_sites()
@@ -2801,23 +3097,26 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
 
     @override
     def _from_vars(self) -> None:
-        self._edit_nr = request.get_integer_input_mandatory("edit", -1)  # missing -> new rule pack
-        self._new = self._edit_nr < 0
-
-        if self._new:
-            self._rule_pack: ec.ECRulePack = ec.default_rule_pack(rules=[])
+        if request.has_var("edit"):
+            # Links from before rule packs were addressed by their ID, e.g. bookmarks, would add one.
+            raise MKUserError("edit", _("The link to this rule pack is outdated."))
+        self._edit_nr: int | None  # missing -> new rule pack
+        self._rule_pack: ec.ECRulePack
+        if request.has_var("rule_pack"):
+            self._edit_nr = self._requested_rule_pack_position("rule_pack")
+            self._rule_pack = self._rule_packs[self._edit_nr]
+            id_to_mkp = _rule_pack_to_mkp_map(self._paths, self._edition)
+            self._type = ec.RulePackType.type_of(self._rule_pack, id_to_mkp)
         else:
-            try:
-                self._rule_pack = self._rule_packs[self._edit_nr]
-            except IndexError:
-                raise MKUserError("edit", _("The rule pack you are trying to edit does not exist."))
-
-        id_to_mkp = self._get_rule_pack_to_mkp_map()
-        self._type = ec.RulePackType.type_of(self._rule_pack, id_to_mkp)
+            self._edit_nr = None
+            self._rule_pack = ec.default_rule_pack(rules=[])
+            # Not the type of the rule pack of an MKP with the same ID, which would fix the ID and
+            # title.
+            self._type = ec.RulePackType.internal
 
     @override
     def title(self) -> str:
-        if self._new:
+        if self._edit_nr is None:
             return _("Add rule pack")
         return _("Edit rule pack %(rule_pack_id)s") % {
             "rule_pack_id": self._rule_packs[self._edit_nr]["id"]
@@ -2848,12 +3147,13 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
         if not transactions.check_transaction(request):
             return redirect(mode_url("mkeventd_rule_packs"))
 
-        existing_rules = [] if self._new else self._rule_pack["rules"]
+        existing_rules = self._rule_pack["rules"]
 
-        vs = self._valuespec()
+        elements = self._form_elements()
+        vs = vs_mkeventd_rule_pack(elements)
         rule_pack_dict = vs.from_html_vars("rule_pack")
         vs.validate_value(rule_pack_dict, "rule_pack")
-        if edition(cmk.utils.paths.omd_root) is Edition.ULTIMATEMT and "customer" in rule_pack_dict:
+        if self._edition is Edition.ULTIMATEMT and "customer" in rule_pack_dict:
             self._rule_pack = ec.ECRulePackSpec(
                 id=rule_pack_dict["id"],
                 title=rule_pack_dict["title"],
@@ -2869,27 +3169,41 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
                 rules=existing_rules,
             )
 
+        if self._edit_nr is not None and self._type is ec.RulePackType.unmodified_mkp:
+            rp = self._rule_packs[self._edit_nr]
+            assert isinstance(rp, ec.MkpRulePackProxy)
+            # Only the fields of the form count, e.g. not the customer of an MKP made with another
+            # edition.
+            form_keys = [key for key, _vs in elements]
+            if all(rule_pack_dict.get(key) == rp.get(key) for key in form_keys):
+                # Unchanged, it stays the rule pack of the MKP instead of becoming a modified copy.
+                return redirect(mode_url("mkeventd_rule_packs"))
+
         new_id = self._rule_pack["id"]
 
-        # Make sure that ID is unique
-        for nr, other_rule_pack in enumerate(self._rule_packs):
-            if (self._new or nr != self._edit_nr) and other_rule_pack["id"] == new_id:
-                raise MKUserError("rule_pack_p_id", _("A rule pack with this ID already exists."))
+        # Make sure that ID is unique. Several rule packs may have the same ID already, and the ID
+        # of one of an MKP is fixed, so only a new ID needs to be unique.
+        if (self._edit_nr is None or new_id != self._rule_packs[self._edit_nr]["id"]) and any(
+            other_rule_pack["id"] == new_id for other_rule_pack in self._rule_packs
+        ):
+            raise MKUserError("rule_pack_p_id", _("A rule pack with this ID already exists."))
 
-        if self._new:
+        if self._edit_nr is None:
             self._rule_packs.insert(0, self._rule_pack)
-        elif isinstance(rp := self._rule_packs[self._edit_nr], ec.MkpRulePackProxy):
+        elif self._type is ec.RulePackType.exported:
+            rp = self._rule_packs[self._edit_nr]
+            assert isinstance(rp, ec.MkpRulePackProxy)
             rp.rule_pack = self._rule_pack
             self._export_mkp_rule_pack(self._rule_pack, config)
-        elif self._type in (ec.RulePackType.internal, ec.RulePackType.modified_mkp):
-            self._rule_packs[self._edit_nr] = self._rule_pack
         else:
+            # Like changing its rules, this replaces an unmodified rule pack of an MKP by a modified
+            # copy, leaving the files of the MKP alone.
             self._rule_packs[self._edit_nr] = self._rule_pack
 
         self._save_rules(config)
 
         pending_changes = _pending_changes_for_ec(config=config, acting_user=user.id)
-        if self._new:
+        if self._edit_nr is None:
             _add_change_for_sites(
                 action_name="new-rule-pack",
                 text=_("Created new rule pack with ID %(rule_pack_id)s")
@@ -2897,6 +3211,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
                 rule_or_rulepack=self._rule_pack,
                 config_domain=self._config_domain,
                 pending_changes=pending_changes,
+                edition=self._edition,
             )
         else:
             _add_change_for_sites(
@@ -2906,6 +3221,7 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
                 rule_or_rulepack=self._rule_pack,
                 config_domain=self._config_domain,
                 pending_changes=pending_changes,
+                edition=self._edition,
             )
         return redirect(mode_url("mkeventd_rule_packs"))
 
@@ -2913,16 +3229,16 @@ class ModeEventConsoleEditRulePack(ABCEventConsoleMode):
     def page(self, config: Config) -> None:
         self._verify_ec_enabled(enabled=config.mkeventd_enabled)
         with html.form_context("rule_pack"):
-            vs = self._valuespec()
+            vs = vs_mkeventd_rule_pack(self._form_elements())
             vs.render_input("rule_pack", dict(self._rule_pack))
             vs.set_focus("rule_pack")
             html.hidden_fields()
 
-    def _valuespec(self) -> Dictionary:
+    def _form_elements(self) -> list[DictionaryEntry]:
         if self._type == ec.RulePackType.internal:
-            return vs_mkeventd_rule_pack()
-        return vs_mkeventd_rule_pack(
-            fixed_id=self._rule_pack["id"], fixed_title=self._rule_pack["title"]
+            return _rule_pack_elements(self._edition)
+        return _rule_pack_elements(
+            self._edition, fixed_id=self._rule_pack["id"], fixed_title=self._rule_pack["title"]
         )
 
 
@@ -2944,50 +3260,62 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
 
     @override
     def _from_vars(self) -> None:
-        if request.has_var("rule_pack"):
-            self._rule_pack_nr, self._rule_pack = self._rule_pack_with_id(request.var("rule_pack"))
-
-        else:
+        for varname in ("edit", "clone"):
+            if request.has_var(varname):
+                # Links from before rules were addressed by their ID, e.g. bookmarks, would add one.
+                raise MKUserError(varname, _("The link to this rule is outdated."))
+        if not request.has_var("rule_pack"):
             # In links from multisite views the rule pack is not known.
             # We just know the rule id and need to find the pack ourselves.
-            rule_id = request.get_ascii_input_mandatory("rule_id")
-
-            rule_pack = None
-            for nr, pack in enumerate(self._rule_packs):
-                for rnr, rule in enumerate(pack["rules"]):
-                    if rule_id == rule["id"]:
-                        self._rule_pack_nr, rule_pack = nr, pack
-                        request.set_var("edit", str(rnr))
-                        request.set_var("rule_pack", pack["id"])
-                        break
-
-            if not rule_pack:
+            rule_id = request.get_str_input_mandatory("rule_id")
+            editor_vars = next(
+                (
+                    vars_
+                    for rule, vars_ in rules_with_editor_vars(self._rule_packs)
+                    if rule["id"] == rule_id
+                ),
+                None,
+            )
+            if editor_vars is None:
                 raise MKUserError("rule_id", _("The rule you are trying to edit does not exist."))
-            self._rule_pack = rule_pack
+            # The form passes them on to saving the rule.
+            for varname, value in editor_vars:
+                request.set_var(varname, str(value))
 
-        self._edit_nr = request.get_integer_input_mandatory("edit", -1)  # missing -> new rule
-        self._clone_nr = request.get_integer_input_mandatory(
-            "clone", -1
-        )  # Only needed in 'new' mode
-        self._new = self._edit_nr < 0
+        self._rule_pack_nr, self._rule_pack, self._rule_pack_ref = self._requested_rule_pack()
 
-        if self._new:
+        rule_ids = _rule_ids(self._rule_pack["rules"])
+        self._edit_nr = (  # missing -> new rule
+            RuleRef.existing_position(
+                rule_ids, "edit_rule", _("The rule you are trying to edit does not exist.")
+            )
+            if request.has_var("edit_rule")
+            else None
+        )
+        self._clone_nr: int | None  # Only needed in 'new' mode
+        if not request.has_var("clone_rule"):
+            self._clone_nr = None
+        elif request.has_var("_transid"):
+            # Saving the copy needs the original only for the position of the copy, and another
+            # user may have deleted it meanwhile. The copy comes first then, like a new rule.
+            self._clone_nr = RuleRef.from_request("clone_rule").position_in(rule_ids)
+        else:
+            self._clone_nr = RuleRef.existing_position(
+                rule_ids, "clone_rule", _("The rule you are trying to copy does not exist.")
+            )
+
+        if self._edit_nr is None:
             self._rule = ec.Rule({})
-            if self._clone_nr >= 0:
+            if self._clone_nr is not None:
                 self._rule.update(list(self._rule_pack["rules"])[self._clone_nr])
         else:
-            try:
-                self._rule = list(self._rule_pack["rules"])[self._edit_nr]
-            except IndexError:
-                raise MKUserError("edit", _("The rule you are trying to edit does not exist."))
+            self._rule = list(self._rule_pack["rules"])[self._edit_nr]
 
     @override
     def title(self) -> str:
-        if self._new:
+        if self._edit_nr is None:
             return _("Add rule")
-        return _("Edit rule %(rule_id)s") % {
-            "rule_id": list(self._rule_pack["rules"])[self._edit_nr]["id"]
-        }
+        return _("Edit rule %(rule_id)s") % {"rule_id": self._rule["id"]}
 
     @override
     def page_menu(self, config: Config, breadcrumb: Breadcrumb) -> PageMenu:
@@ -3011,19 +3339,18 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
 
     @override
     def action(self, config: Config) -> ActionResult:
+        rules_url = _rules_url(self._rule_pack_ref, self._search_expression())
         if not transactions.check_transaction(request):
-            return redirect(mode_url("mkeventd_rules", rule_pack=self._rule_pack["id"]))
+            return redirect(rules_url)
 
-        if not self._new:
-            old_id = self._rule["id"]
         vs = self._valuespec(config.sites)
         rule = vs.from_html_vars("rule")
         vs.validate_value(dict(rule), "rule")
-        if not self._new and old_id != rule["id"]:  # type: ignore[possibly-undefined]
+        if self._edit_nr is not None and self._rule["id"] != rule["id"]:
             raise MKUserError(
                 "rule_p_id", _("It is not allowed to change the ID of an existing rule.")
             )
-        if self._new:
+        if self._edit_nr is None:
             for pack in self._rule_packs:
                 for r in pack["rules"]:
                     if r["id"] == rule["id"]:
@@ -3082,27 +3409,21 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
                     )
             num_repl -= 1
 
-        if (
-            edition(cmk.utils.paths.omd_root) is Edition.ULTIMATEMT
-            and "customer" in self._rule_pack
-        ):
+        if self._edition is Edition.ULTIMATEMT and "customer" in self._rule_pack:
             with contextlib.suppress(KeyError):
                 del rule["customer"]
 
-        id_to_mkp = self._get_rule_pack_to_mkp_map()
+        id_to_mkp = _rule_pack_to_mkp_map(self._paths, self._edition)
         type_ = ec.RulePackType.type_of(self._rule_pack, id_to_mkp)
-        if type_ == ec.RulePackType.unmodified_mkp:
-            ec.override_rule_pack_proxy(self._rule_pack_nr, self._rule_packs)
-            rules = list(self._rule_packs[self._rule_pack_nr]["rules"])
-        else:
-            rules = list(self._rule_pack["rules"])
+        self._rule_pack = self._writable_rule_pack(self._rule_pack_nr, type_)
+        rules = list(self._rule_pack["rules"])
 
-        if self._new and self._clone_nr >= 0:
-            rules[self._clone_nr : self._clone_nr] = [rule]
-        elif self._new:
-            rules[0:0] = [rule]
-        else:
+        if self._edit_nr is not None:
             rules[self._edit_nr] = rule
+        elif self._clone_nr is not None:
+            rules[self._clone_nr : self._clone_nr] = [rule]
+        else:
+            rules[0:0] = [rule]
 
         self._rule_pack["rules"] = rules
 
@@ -3111,13 +3432,14 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
         self._save_rules(config)
 
         pending_changes = _pending_changes_for_ec(config=config, acting_user=user.id)
-        if self._new:
+        if self._edit_nr is None:
             _add_change_for_sites(
                 action_name="new-rule",
                 text=("Created new event correlation rule with id %s") % rule["id"],
                 rule_or_rulepack=rule,
                 config_domain=self._config_domain,
                 pending_changes=pending_changes,
+                edition=self._edition,
             )
         else:
             _add_change_for_sites(
@@ -3126,10 +3448,9 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
                 rule_or_rulepack=rule,
                 config_domain=self._config_domain,
                 pending_changes=pending_changes,
+                edition=self._edition,
             )
-            # Reset hit counters of this rule
-            LivestatusClient(sites.live()).command(ECResetCounters(rule["id"]), omd_site())
-        return redirect(mode_url("mkeventd_rules", rule_pack=self._rule_pack["id"]))
+        return redirect(rules_url)
 
     @override
     def page(self, config: Config) -> None:
@@ -3141,7 +3462,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
             html.hidden_fields()
 
     def _valuespec(self, site_configs: SiteConfigurations) -> Dictionary:
-        return _vs_mkeventd_rule(site_configs, self._rule_pack.get("customer"))
+        return _vs_mkeventd_rule(site_configs, self._edition, self._rule_pack.get("customer"))
 
 
 class ModeEventConsoleStatus(ABCEventConsoleMode):
@@ -3296,6 +3617,33 @@ def _get_event_console_sync_sites() -> list[SiteId]:
     return [s[0] for s in get_event_console_site_choices()]
 
 
+def _reset_rule_hit_counters() -> bool:
+    """Resets the hit counters of all rules on the sites running the rules, telling whether any
+    site reset them
+
+    The rule lists add up the hits of all sites. Sites without a connection, e.g. ones disabled in
+    the "Site status" snap-in, keep their counters, and so do sites being down or failing to take
+    the command, e.g. ones gone down meanwhile. Their hits count again once the rule lists reach
+    them, so a warning names them, instead of an error, as the others reset theirs already. The
+    Event Console resets the counters of a changed rule itself, once it is in effect."""
+    client = LivestatusClient(sites.live())
+    sync_sites = _get_event_console_sync_sites()
+    failed_sites: list[SiteId] = []
+    for site in sync_sites:
+        try:
+            client.command(ECResetCounters(), site)
+        # The former for a site without a connection, the latter also for a site known to be down
+        except MKLivestatusConfigError, MKLivestatusSocketError:
+            failed_sites.append(site)
+    if failed_sites:
+        flash(
+            _("Could not reset the rule hit counters on these sites: %(sites)s")
+            % {"sites": ", ".join(failed_sites)},
+            msg_type="warning",
+        )
+    return len(failed_sites) < len(sync_sites)
+
+
 def _pending_changes_for_ec(*, config: Config, acting_user: UserId | None) -> PendingChanges:
     return make_pending_changes(
         activation_sites=activation_sites(config.sites),
@@ -3308,7 +3656,8 @@ def _pending_changes_for_ec(*, config: Config, acting_user: UserId | None) -> Pe
 @dataclass
 class MIBInfo:
     size: int
-    name: str
+    name: ec.MibName | None
+    """The name of the MIB the file defines, unless its header tells none"""
     organization: str
 
 
@@ -3418,7 +3767,9 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         for filename in selected_custom_mibs:
             self._delete_mib(filename, custom_mibs[filename].name, pending_changes=pending_changes)
 
-    def _delete_mib(self, filename: str, mib_name: str, *, pending_changes: PendingChanges) -> None:
+    def _delete_mib(
+        self, filename: str, mib_name: ec.MibName | None, *, pending_changes: PendingChanges
+    ) -> None:
         self._add_change(
             action_name="delete-mib",
             text=_("Deleted MIB %(filename)s") % {"filename": filename},
@@ -3426,9 +3777,12 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         )
         pyc_suffix = f".cpython-{sys.version_info.major}{sys.version_info.minor}.pyc"
         compiled_mibs_dir = self._paths.compiled_mibs_dir.value
+        # The compiler names the compiled module like the definition, not like the file, which may
+        # be named like the compiled module of another MIB.
+        names = [] if mib_name is None else [Path(mib_name)]
         for path in {
             compiled_mibs_dir / p
-            for f in (Path(filename), Path(mib_name))
+            for f in names
             for p in (
                 f.with_suffix(".py"),
                 ("__pycache__" / f).with_suffix(pyc_suffix),
@@ -3477,8 +3831,11 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                 if deletable:
                     delete_url = make_confirm_delete_link(
                         i18n=_,
-                        url=make_action_link(
-                            request, [("mode", "mkeventd_mibs"), ("_delete", filename)]
+                        url=makeactionuri_contextless(
+                            request,
+                            transactions.get(),
+                            [("mode", "mkeventd_mibs"), ("_delete", filename)],
+                            filename="wato.py",
                         ),
                         title=_("Delete MIB file"),
                         message=_("File name: %(filename)s") % {"filename": str(filename)},
@@ -3487,7 +3844,7 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                     html.icon_button(delete_url, _("Delete this MIB"), StaticIcon(IconNames.delete))
 
                 table.cell(_("File name"), filename)
-                table.cell(_("MIB"), mib.name)
+                table.cell(_("MIB"), mib.name or "")
                 table.cell(_("Organization"), mib.organization)
                 table.cell(_("Size"), cmk.utils.render.fmt_bytes(mib.size), css=["number"])
 
@@ -3499,15 +3856,15 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
         }
 
     def _parse_snmp_mib_header(self, path: Path) -> MIBInfo:
-        # read up to first "OBJECT IDENTIFIER" declaration
-        head = ""
+        # Read up to the first "OBJECT IDENTIFIER" declaration, which comes after the definition.
+        # Comments may mention "OBJECT IDENTIFIER", too.
+        header: list[str] = []
         with path.open(encoding="utf-8", errors="replace") as f:
             for line in f:
-                if line.startswith("--"):
-                    continue
-                if "OBJECT IDENTIFIER" in line:
+                header.append(line)
+                if not line.lstrip().startswith("--") and "OBJECT IDENTIFIER" in line:
                     break  # seems the header is finished
-                head += line
+        head = "".join(line for line in header if not line.lstrip().startswith("--"))
         # now try to extract some relevant information from the header
         return MIBInfo(
             size=path.stat().st_size,
@@ -3516,11 +3873,8 @@ class ModeEventConsoleMIBs(ABCEventConsoleMode):
                 if (matches := re.search('ORGANIZATION[^"]+"([^"]+)"', head, re.M))
                 else ""
             ),
-            name=(
-                matches.group(1)
-                if (matches := re.search(r"^\s*([A-Z0-9][A-Z0-9-]+)\s", head, re.I | re.M))
-                else ""
-            ),
+            # Like the upload, which names the compiled module like that, e.g. for deleting it.
+            name=defined_module_name(header),
         )
 
 
@@ -3583,7 +3937,6 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
                         mimetype,
                         content,
                         pending_changes=_pending_changes_for_ec(config=config, acting_user=user.id),
-                        debug=config.debug,
                     )
                 )
                 return None
@@ -3600,138 +3953,25 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
         content: bytes,
         *,
         pending_changes: PendingChanges,
-        debug: bool,
     ) -> str:
-        self._validate_mib_file_name(filename)
-
-        if self._is_zipfile(io.BytesIO(content)):
-            msg = self._process_uploaded_zip_file(
-                filename, content, pending_changes=pending_changes, debug=debug
-            )
-        else:
-            if (
-                mimetype == "application/tar"
-                or filename.lower().endswith(".gz")
-                or filename.lower().endswith(".tgz")
-            ):
-                raise Exception(_("Sorry, uploading TAR/GZ files is not yet implemented."))
-
-            msg = self._process_uploaded_mib_file(
-                filename, content, pending_changes=pending_changes, debug=debug
+        def add_change(stored_filename: str, msg: str) -> None:
+            self._add_change(
+                action_name="uploaded-mib",
+                text=_("MIB %(filename)s: %(msg)s") % {"filename": stored_filename, "msg": msg},
+                pending_changes=pending_changes,
             )
 
-        return msg
-
-    # Used zipfile.is_zipfile(io.BytesIO(content)) before, but this only
-    # possible with python 2.7. zipfile is only supporting checking of files by
-    # their path.
-    def _is_zipfile(self, fo: io.BytesIO) -> bool:
-        try:
-            with zipfile.ZipFile(fo) as _opened_file:
-                pass
-            return True
-        except zipfile.BadZipfile:
-            return False
-
-    def _process_uploaded_zip_file(
-        self,
-        filename: str,  # noqa: ARG002
-        content: bytes,
-        *,
-        pending_changes: PendingChanges,
-        debug: bool,
-    ) -> str:
-        with zipfile.ZipFile(io.BytesIO(content)) as zip_obj:
-            messages = []
-            success, fail = 0, 0
-            for entry in zip_obj.infolist():
-                mib_file_name = entry.filename
-                try:
-                    if mib_file_name[-1] == "/":
-                        continue  # silently skip directories
-                    self._validate_mib_file_name(mib_file_name)
-                    with zip_obj.open(mib_file_name) as mib_obj:
-                        messages.append(
-                            self._process_uploaded_mib_file(
-                                mib_file_name,
-                                mib_obj.read(),
-                                pending_changes=pending_changes,
-                                debug=debug,
-                            )
-                        )
-                    success += 1
-                except Exception as e:
-                    messages.append(
-                        _("Skipped %(mib_file_name)s: %(e)s")
-                        % {"mib_file_name": mib_file_name, "e": e}
-                    )
-                    fail += 1
-
-        return "<br>\n".join(
-            messages
-        ) + "<br><br>\nProcessed %d MIB files, skipped %d MIB files" % (success, fail)
-
-    def _process_uploaded_mib_file(
-        self,
-        filename: str,
-        content_bytes: bytes,
-        *,
-        pending_changes: PendingChanges,
-        debug: bool,
-    ) -> str:
-        mibname = filename.split(".", maxsplit=1)[0] if "." in filename else filename
-
-        # FIXME: This is a temporary local fix that should be removed once
-        # handling of file contents uses a uniformly encoded representation
-        try:
-            content = content_bytes.decode("utf-8")
-        except UnicodeDecodeError:
-            content = content_bytes.decode("latin-1")
-
-        msg = self._validate_and_compile_mib(mibname=mibname.upper(), content=content, debug=debug)
-        self._paths.local_mibs_dir.value.mkdir(parents=True, exist_ok=True)
-        with (self._paths.local_mibs_dir.value / filename).open("wb") as f:
-            f.write(content_bytes)
-        self._add_change(
-            action_name="uploaded-mib",
-            text=_("MIB %(filename)s: %(msg)s") % {"filename": filename, "msg": msg},
-            pending_changes=pending_changes,
-        )
-        return msg
-
-    def _validate_mib_file_name(self, filename: str) -> None:
-        if filename.startswith(".") or "/" in filename:
-            raise Exception(_("Invalid file name"))
-
-    def _validate_and_compile_mib(self, *, mibname: str, content: str, debug: bool) -> str:  # noqa: ARG002
-        if not content or content.isspace():
-            raise Exception(_("The file is empty"))
-        results = ec.compile_mib(
-            mibname=mibname,
-            content=content,
+        return upload_mibs(
+            filename,
+            mimetype,
+            content,
+            make_compile_mib=_make_compile_mib,
+            paths=self._paths,
             source_dirs=[path for path, _title, _deletable in self._mib_dirs()],
-            search_dirs=[self._paths.compiled_mibs_dir.value],
-            destination_dir=self._paths.compiled_mibs_dir.value,
+            # Saving every change right away gets the stored MIB files activated even if the
+            # request dies before the rest of a zip file is uploaded.
+            on_stored=add_change,
         )
-        errors = []
-        for name, mib_status in sorted(results.items()):
-            if mibname == name and mib_status == "failed":
-                raise Exception(
-                    _("Failed to compile your module: %(error)s")
-                    % {"error": getattr(mib_status, "error")}
-                )
-            if mib_status == "missing":
-                errors.append(_("%(name)s - Dependency missing") % {"name": name})
-            elif mib_status == "failed":
-                errors.append(
-                    _("%(name)s - Failed to compile (%(error)s)")
-                    % {"name": name, "error": getattr(mib_status, "error")}
-                )
-        msg = _("MIB file %(mibname)s uploaded.") % {"mibname": mibname}
-        if errors:
-            msg += "<br>" + _("But there were errors:") + "<br>"
-            msg += "<br>\n".join(errors)
-        return msg
 
     @override
     def page(self, config: Config) -> None:
@@ -3755,6 +3995,16 @@ class ModeEventConsoleUploadMIBs(ABCEventConsoleMode):
             forms.end()
 
             html.hidden_fields()
+
+
+def _make_compile_mib() -> CompileMib:
+    # The import is deliberately done here and not at module level: the MIB compiler adds about 4 MB
+    # to every process importing it, and every process loading the GUI imports this module. This way
+    # it is only loaded when an uploaded MIB gets compiled.
+    from cmk.ec.mib_compiler import MibCompiler  # astrein: disable=module-layers
+
+    # upload_mibs() compiles all MIBs of a zip file with it, so the parser is built only once.
+    return MibCompiler().compile
 
 
 def _page_menu_entries_related_ec(mode_name: str) -> Iterator[PageMenuEntry]:
@@ -3781,6 +4031,145 @@ def _page_menu_entries_related_ec(mode_name: str) -> Iterator[PageMenuEntry]:
 
     if mode_name != "mkeventd_mibs":
         yield _page_menu_entry_snmp_mibs()
+
+
+def _rules_url(pack: RulePackRef, search_expression: str | None = None) -> str:
+    """The URL of the rule list of the rule pack
+
+    The rule list shows the rules the search finds, if any."""
+    return makeuri_contextless(
+        request,
+        [("mode", "mkeventd_rules"), *pack.to_vars("rule_pack"), *_search_vars(search_expression)],
+        filename="wato.py",
+    )
+
+
+def _search_vars(search_expression: str | None) -> list[HTTPVariable]:
+    """The variable of the search of a list, if any"""
+    return [("search", search_expression)] if search_expression else []
+
+
+def _rule_pack_action_url(action: str, pack: RulePackRef, *more_vars: HTTPVariable) -> str:
+    """The URL of the action of the rule pack list for the rule pack"""
+    return makeactionuri_contextless(
+        request,
+        transactions.get(),
+        [("mode", "mkeventd_rule_packs"), *pack.to_vars(action), *more_vars],
+        filename="wato.py",
+    )
+
+
+def _rule_ids(rules: Iterable[ec.Rule]) -> list[str]:
+    """The IDs of the rules, which their references and the digest of their order go by
+
+    Like for RuleRef.of(), a rule without an ID has the empty one."""
+    return [rule.get("id", "") for rule in rules]
+
+
+def _order_digest(ids: Iterable[str]) -> str:
+    """Tells the order of the rule packs or rules of a page with the variable "_order" of its moves
+
+    Dropping a dragged one tells the position to move it to, which means another one once the order
+    changed meanwhile, e.g. by another user. Like the references, it misses several with the same ID
+    swapping places, as nothing else tells them apart."""
+    return hashlib.sha256(repr(list(ids)).encode("utf-8")).hexdigest()
+
+
+def _verify_order(ids: Iterable[str], outdated: str) -> None:
+    """Refuses moving to a position of a page which showed another order, see _order_digest()"""
+    if request.get_str_input_mandatory("_order") != _order_digest(ids):
+        raise MKUserError(None, outdated)
+
+
+def _verify_not_searching() -> None:
+    """Refuses moving a rule on a page with a search, which the rule list doesn't offer
+
+    With a search, the rule list shows only the rules it finds, so the position of a dragged one
+    among them tells nothing about the others. Unlike the ones of the rule pack list, its action
+    URLs carry the search."""
+    if table_search_term():
+        raise MKUserError(
+            None,
+            _(
+                "The list shows only the rules the search finds, so please clear the search to "
+                "move a rule."
+            ),
+        )
+
+
+@request_memoize()
+def _rule_pack_to_mkp_map(
+    paths: ec.Paths, edition: Edition
+) -> Mapping[str, cmk.mkp_tool.PackageName | None]:
+    """The MKPs of the rule packs of installed MKPs, by the ID of the rule pack
+
+    It reads all MKP manifests, which several parts of a request need. No action of the Setup pages
+    of the EC installs or removes an MKP, so it stays the same for a request, and the callers share
+    it read-only."""
+    return (
+        {}
+        if edition is Edition.COMMUNITY
+        else cmk.mkp_tool.id_to_mkp(
+            cmk.mkp_tool.Installer(cmk.utils.paths.installed_packages_dir),
+            cmk.mkp_tool.all_rule_pack_files(paths.mkp_rule_pack_dir.value),
+            cmk.mkp_tool.PackagePart.EC_RULE_PACKS,
+        )
+    )
+
+
+@request_memoize()
+def _load_rule_packs(paths: ec.Paths, edition: Edition) -> list[ec.ECRulePack]:
+    """Loads the rule packs, keeping only the first one referring to an export as such
+
+    Hand-written rule packs may refer to an export several times, so may ones exported before
+    exporting a rule pack with the ID of another one was refused. They share the rules of the
+    export, so each further one becomes a rule pack with a copy of them, which the next change
+    saves. The Event Console runs the same rules either way.
+
+    Rule packs of MKPs listed several times, e.g. after resetting a modified one whose MKP was
+    installed again, stay as they are, as changes to them go into modified copies anyway.
+
+    Only the Setup pages tell exports from other rule packs and change their rules, so the other
+    users of ec.load_rule_packs() need no copies: they only read the rule packs, or dissolve the
+    proxies first. Telling exports apart needs the MKPs, which the Event Console doesn't read.
+    So binding the proxies in ec.load_rule_packs(), which it reloads with, can't make the copies:
+    Copying further proxies of MKPs would make their rule packs modified ones, and leaving out
+    further proxies would change the rules it runs. Rule packs of MKPs still share their rules,
+    see _shares_rules().
+
+    The modes of a request share the rule packs, e.g. the ones of the breadcrumb, which loads them
+    only once. An action changing them changes them for all of them."""
+    rule_packs = list(ec.load_rule_packs(paths))
+    proxy_ids = Counter(
+        rule_pack.id_ for rule_pack in rule_packs if isinstance(rule_pack, ec.MkpRulePackProxy)
+    )
+    if all(count == 1 for count in proxy_ids.values()):
+        # No two rule packs share an export, so there is no need to read all MKPs.
+        return rule_packs
+    id_to_mkp = _rule_pack_to_mkp_map(paths, edition)
+    exported_ids: set[str] = set()
+    for nr, rule_pack in enumerate(rule_packs):
+        if (
+            isinstance(rule_pack, ec.MkpRulePackProxy)
+            and ec.RulePackType.type_of(rule_pack, id_to_mkp) is ec.RulePackType.exported
+        ):
+            if rule_pack.id_ in exported_ids:
+                rule_packs[nr] = copy.deepcopy(rule_pack.get_rule_pack_spec())
+            exported_ids.add(rule_pack.id_)
+    return rule_packs
+
+
+def _shares_rules(rule_pack: ec.ECRulePack, other: ec.ECRulePack) -> bool:
+    """Whether the rule packs are the same one or share their rules
+
+    Rule packs referring to the same rule pack of an MKP share its rules, also once saved, e.g. the
+    ones of an MKP listed several times. For an export, _load_rule_packs() leaves only one rule pack
+    referring to it, though."""
+    return rule_pack is other or (
+        isinstance(rule_pack, ec.MkpRulePackProxy)
+        and isinstance(other, ec.MkpRulePackProxy)
+        and rule_pack.id_ == other.id_
+    )
 
 
 def _page_menu_entry_rulesets() -> PageMenuEntry:
@@ -3818,18 +4207,6 @@ def _page_menu_entry_snmp_mibs() -> PageMenuEntry:
         title=_("SNMP MIBs"),
         icon_name=StaticIcon(IconNames.snmpmib),
         item=make_simple_link(makeuri_contextless(request, [("mode", "mkeventd_mibs")])),
-    )
-
-
-def _rule_edit_url(rule_pack_id: str, rule_nr: int) -> str:
-    return makeuri_contextless(
-        request,
-        [
-            ("mode", "mkeventd_edit_rule"),
-            ("rule_pack", rule_pack_id),
-            ("edit", rule_nr),
-        ],
-        filename="wato.py",
     )
 
 
@@ -3970,6 +4347,7 @@ ConfigVariableEventConsole = ConfigVariable(
             ],
             title=Title("Listen for incoming messages via"),
             prefill=DefaultValue([]),
+            no_element_label=Label("Enabled, no listening ports defined"),
         ),
         title=Title("Event Console"),
         help_text=Help(
@@ -4965,7 +5343,7 @@ def _contact_group_elements() -> Sequence[SingleChoiceElementExtended[str]]:
     return [
         SingleChoiceElementExtended(
             name=name,
-            title=Title(title),  # astrein: disable=localization-checker
+            title=Title(title),  # astrein: disable=localization
         )
         for name, title in sorted_contact_group_choices()
     ] + [
@@ -5037,7 +5415,7 @@ ConfigVariableEventConsoleNotifyFacility = ConfigVariable(
         elements=[
             SingleChoiceElementExtended(
                 name=value,
-                title=Title(title),  # astrein: disable=localization-checker
+                title=Title(title),  # astrein: disable=localization
             )
             for value, title in syslog_facilities
         ],
@@ -5511,6 +5889,7 @@ class MatchItemGeneratorECRulePacksAndRules(ABCMatchItemGenerator):
         name: str,
         rule_pack_loader: Callable[[], Iterable[ec.ECRulePack]],
     ) -> None:
+        """The loader yields the rule packs with their proxies bound, like ec.load_rule_packs()"""
         super().__init__(name, provider="setup")
         self._rule_pack_loader = rule_pack_loader
 
@@ -5518,43 +5897,22 @@ class MatchItemGeneratorECRulePacksAndRules(ABCMatchItemGenerator):
     def generate_match_items(
         self, user_permissions: UserPermissions, _config: MatchItemConfig
     ) -> MatchItems:
-        for rule_pack in self._iter_rulepacks():
+        rule_packs = list(self._rule_pack_loader())
+        for rule_pack, pack_ref in zip(
+            dissolve_mkp_proxies(rule_packs), RulePackRef.of(rule_packs), strict=True
+        ):
             rule_pack_title = rule_pack["title"]
             rule_pack_id = rule_pack["id"]
             yield MatchItem(
                 title=f"{rule_pack_id} ({rule_pack_title})",
                 topic=_("Event Console rule packs"),
-                url=ModeEventConsoleRules.mode_url(rule_pack=rule_pack["id"]),
+                url=_rules_url(pack_ref),
                 match_texts=[rule_pack_title, rule_pack_id],
             )
-            yield from (
-                self._rule_to_match_item(rule, _rule_edit_url(rule_pack_id, nr))
-                for nr, rule in enumerate(rule_pack["rules"])
+        for rule, editor_vars in rules_with_editor_vars(rule_packs):
+            yield self._rule_to_match_item(
+                rule, makeuri_contextless(request, editor_vars, filename="wato.py")
             )
-
-    def _iter_rulepacks(self) -> Iterable[ec.ECRulePackSpec]:
-        yield from (
-            opt_rule_pack
-            for opt_rule_pack in (
-                self._rule_pack_from_rule_pack_or_mkp(rule_pack_or_mkp)
-                for rule_pack_or_mkp in self._rule_pack_loader()
-            )
-            if opt_rule_pack
-        )
-
-    def _rule_pack_from_rule_pack_or_mkp(
-        self, rule_pack_or_mkp: ec.ECRulePack
-    ) -> ec.ECRulePackSpec | None:
-        if isinstance(rule_pack_or_mkp, ec.MkpRulePackProxy):
-            return self._unpack_mkp_rule_pack(rule_pack_or_mkp.rule_pack)
-        return rule_pack_or_mkp
-
-    def _unpack_mkp_rule_pack(
-        self, mkp_rule_pack: ec.ECRulePack | None
-    ) -> ec.ECRulePackSpec | None:
-        if isinstance(mkp_rule_pack, ec.MkpRulePackProxy):
-            return self._unpack_mkp_rule_pack(mkp_rule_pack.rule_pack)
-        return mkp_rule_pack
 
     @staticmethod
     def _rule_to_match_item(rule: ec.Rule, url: str) -> MatchItem:

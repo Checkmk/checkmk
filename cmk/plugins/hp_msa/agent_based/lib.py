@@ -44,6 +44,16 @@ def _parse_hp_msa_objects(string_table: StringTable) -> Section:
     return info_enrolment
 
 
+def _to_item_name(name: str) -> str:
+    """
+    >>> _to_item_name('psu_1.1')
+    '1.1'
+    >>> _to_item_name('Enclosure 1 - Left')
+    'Enclosure 1 Left'
+    """
+    return name.replace("- ", "").rsplit("_", 1)[-1].strip()
+
+
 def _get_hp_msa_object_item(
     key: str,
     data: Entity,
@@ -53,9 +63,12 @@ def _get_hp_msa_object_item(
     'key'
     >>> _get_hp_msa_object_item('key', {'location': 'location'})
     'location'
+    >>> _get_hp_msa_object_item('psu_1.1', {'location': ''})
+    '1.1'
     """
-    item = data.get("location", key).replace("- ", "")
-    return item.rsplit("_", 1)[-1].strip()
+    if item := _to_item_name(data.get("location", "")):
+        return item
+    return _to_item_name(key)
 
 
 def parse_hp_msa(string_table: StringTable) -> Section:

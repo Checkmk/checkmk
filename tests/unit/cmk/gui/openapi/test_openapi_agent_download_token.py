@@ -318,6 +318,7 @@ class TestCreateAgentRegistrationToken:
         assert captured["command"] == "agent-registration-token-create"
         assert '"host_name":"heute"' in str(captured["request"])
         assert '"connection_mode":"pull-agent"' in str(captured["request"])
+        assert '"agent_updates_permitted":null' in str(captured["request"])
 
     @pytest.mark.usefixtures("with_host", "distributed_sites")
     def test_unknown_site_id_returns_400(self, clients: ClientRegistry) -> None:

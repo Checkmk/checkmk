@@ -79,6 +79,7 @@ class ChangeCategory(StrEnum):
     PYTHON = "python"
     CPP = "cpp"
     RUST = "rust"
+    GO = "go"
     VUE = "vue"
     FRONTEND = "frontend"
     CONFIG = "config"
@@ -218,8 +219,8 @@ class InstallSpec:
 
     input_prefixes: tuple[str, ...] = ()
     """Source prefixes (trailing ``/``) of packages built into this artifact
-    that no deployer covers on their own, e.g. ``packages/cmk-ui-library/``
-    for the cmk-frontend-vue dist.  Changes there deploy through this spec."""
+    whose sources there no deployer covers on their own.  Changes there
+    deploy through this spec."""
 
 
 @dataclass(frozen=True)

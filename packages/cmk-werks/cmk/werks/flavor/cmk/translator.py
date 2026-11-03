@@ -1,0 +1,134 @@
+#!/usr/bin/env python3
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+from collections.abc import Iterable, Sequence
+from functools import partial
+
+from cmk.ccc.version import parse_check_mk_version
+from cmk.werks.tool.models import Compatibility, Level
+
+from .models import Class, WerkV3
+
+_CLASS_SORTING_VALUE = {
+    Class.FEATURE: 1,
+    Class.SECURITY: 2,
+    Class.FIX: 3,
+}
+
+_COMPATIBLE_SORTING_VALUE = {
+    Compatibility.NOT_COMPATIBLE: 1,
+    Compatibility.COMPATIBLE: 3,
+}
+
+
+def get_sort_key_by_version_and_component(
+    translator: WerkTranslator,
+    current_version: str | None,
+    werk: WerkV3,
+) -> tuple[str | int, ...]:
+    return (
+        -parse_check_mk_version(resolve_version(current_version, werk.version)),
+        translator.translate_component(werk.component),
+        _CLASS_SORTING_VALUE.get(werk.class_, 99),
+        -werk.level.value,
+        # GuiWerk alters this tuple, and adds an element here!
+        _COMPATIBLE_SORTING_VALUE.get(werk.compatible, 99),
+        werk.title,
+    )
+
+
+def sort_by_version_and_component(
+    werks: Iterable[WerkV3], current_version: str | None = None
+) -> list[WerkV3]:
+    translator = WerkTranslator()
+    return sorted(
+        werks, key=partial(get_sort_key_by_version_and_component, translator, current_version)
+    )
+
+
+# This class is used to avoid repeated construction of dictionaries, including
+# *all* translation values.
+class WerkTranslator:
+    def __init__(self) -> None:
+        self._classes = {
+            Class.FEATURE: "New feature",
+            Class.FIX: "Bug fix",
+            Class.SECURITY: "Security fix",
+        }
+        self._components = {
+            # Community
+            "core": "Core & setup",
+            "checks": "Checks & agents",
+            "multisite": "User interface",
+            "wato": "Setup",
+            "notifications": "Notifications",
+            "bi": "BI",
+            "reporting": "Reporting & availability",
+            "ec": "Event console",
+            "livestatus": "Livestatus",
+            "liveproxy": "Livestatus proxy",
+            "inv": "HW/SW Inventory",
+            "rest-api": "REST API",
+            # Pro
+            "cmc": "The Checkmk Micro Core",
+            "setup": "Setup, site management",
+            "config": "Configuration generation",
+            "inline-snmp": "Inline SNMP",
+            "agents": "Agent Bakery",
+            "metrics": "Metrics system",
+            "alerts": "Alert handlers",
+            "dcd": "Dynamic host configuration",
+            "ntopng_integration": "Ntopng integration",
+            # Ultimate
+            "relay": "Relay",
+            "telemetry": "Telemetry",
+            # CMK-OMD
+            "omd": "Site management",
+            "rpm": "RPM packaging",
+            "deb": "DEB packaging",
+            "nagvis": "NagVis",
+            "packages": "Other components",
+            "distros": "Linux distributions",
+        }
+        self._levels = {
+            Level.LEVEL_1: "Trivial change",
+            Level.LEVEL_2: "Prominent change",
+            Level.LEVEL_3: "Major change",
+        }
+
+    def classes(self) -> Sequence[tuple[str, str]]:
+        return [(werk_class.value, title) for werk_class, title in self._classes.items()]
+
+    def class_of(self, werk: WerkV3) -> str:
+        return self._classes[werk.class_]
+
+    def components(self) -> Sequence[tuple[str, str]]:
+        return list(self._components.items())
+
+    def component_of(self, werk: WerkV3) -> str:
+        c = werk.component
+        return self._components.get(c, c)
+
+    def translate_component(self, component: str) -> str:
+        return self._components.get(component, component)
+
+    def levels(self) -> Sequence[tuple[int, str]]:
+        return [(level.value, title) for level, title in self._levels.items()]
+
+    def level_of(self, werk: WerkV3) -> str:
+        return self._levels[werk.level]
+
+
+def resolve_version(current_version: str | None, version: str | None) -> str:
+    # version can be None this means it was not yet burned (released)
+    if version is not None:
+        return version
+
+    if current_version is None:
+        # we use some functions in the UI, where we are sure that we don't have
+        # to resolve a version, this is why we can pass None and raise then.
+        raise RuntimeError("Can not resolve Werk version!")
+
+    return current_version

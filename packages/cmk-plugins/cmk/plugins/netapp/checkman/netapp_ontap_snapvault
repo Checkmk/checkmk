@@ -4,12 +4,22 @@ catalog: hw/storagehw/netapp
 license: GPLv2
 distribution: check_mk
 description:
- The check monitors the lag-time of snapvault volumes.
+ The check monitors the lag-time of snapvault volumes and the transfer state of
+ the underlying SnapMirror relationship.
  You can configure levels at which age the check should report {WARN} and {CRIT}.
- Per default the check is {OK}.
+ Per default there are no levels for the lag-time.
+ The transfer states "failed", "aborted" and "hard_aborted" are {CRIT} by default,
+ "queued", "success" and "transferring" are {OK}.
+ Transfer states not known to Checkmk are {UNKN}.
+ If ONTAP reports the relationship as unhealthy, the check is {CRIT} by default
+ and shows the reasons reported by ONTAP. Older ONTAP versions may not
+ report the health.
+ The levels, the mapping of the transfer states and the state for unhealthy
+ relationships can be configured with the rule "NetApp SnapVault / SnapMirror".
 
 discovery:
- One service is created for each snapvault volume.
+ One service is created for each SnapMirror relationship, also for
+ relationships that have no lag-time yet.
 
 item:
  The volume name

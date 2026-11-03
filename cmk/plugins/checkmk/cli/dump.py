@@ -11,6 +11,7 @@ from collections.abc import Iterable
 from pathlib import Path
 
 import cmk.base.dump_host
+import cmk.ccc.debug
 import cmk.livestatus_client as livestatus
 import cmk.utils.password_store
 import cmk.utils.paths
@@ -19,18 +20,7 @@ from cmk.base.app import make_app
 from cmk.base.config import handle_ip_lookup_failure
 from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.servicename import make_final_service_name_config
-from cmk.base.modes.check_mk import (
-    FETCHER_OPTIONS,
-    forced_ip_lookup,
-    handle_fetcher_options,
-    host_address,
-    host_addresses,
-    load_checks,
-    parse_snmp_backend,
-    set_fake_dns,
-    SNMP_BACKEND_OPTION,
-)
-from cmk.ccc.exceptions import MKBailOut, OnError
+from cmk.ccc.exceptions import MKBailOut, MKGeneralException, OnError
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.fetcher_abc import Mode as FetchMode
 from cmk.checkengine.fetcher_utils.secrets import AdHocSecrets, StoredSecrets
@@ -42,12 +32,30 @@ from cmk.checkengine.parser import make_parser, NO_SELECTION, parse_raw_data, Se
 from cmk.checkengine.source_builder import SourceBuilder
 from cmk.checkengine.summarize import summarize
 from cmk.cli.engine.commands import write_stdout
-from cmk.cli.internal import Args, CLICommand, GlobalOptions, Options
+from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Arguments as CLIArguments
+from cmk.cli.internal import Command as CLICommand
+from cmk.cli.internal import Context as CLIContext
+from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
+from cmk.cli.internal import Options
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
 from cmk.server_side_calls_backend import ExecutableFinder, load_secrets_file
 from cmk.utils import ip_lookup, timeperiod
 from cmk.utils.ip_lookup import ConfiguredIPLookup
 from cmk.utils.log import console
+
+from .agent_based import load_checks
+from .options import (
+    fake_dns_address,
+    FAKE_DNS_OPTION,
+    FETCHER_OPTIONS,
+    handle_fetcher_options,
+    host_address,
+    host_addresses,
+    parse_snmp_backend,
+    SNMP_BACKEND_OPTION,
+)
 
 # .
 #   .--dump-agent----------------------------------------------------------.
@@ -61,10 +69,10 @@ from cmk.utils.log import console
 
 
 def _mode_dump_agent(
-    omd_root: Path, global_options: GlobalOptions, options: Options, args: Args
-) -> int:
+    omd_root: Path, global_options: CLIGlobalOptions, options: Options, args: CLIArgs
+) -> CLIExitCode:
     app = make_app(omd_root)
-    set_fake_dns(global_options.fake_dns)
+    fake_dns = fake_dns_address(options)
     raw_host_name = args[0]
     hostname = host_address(raw_host_name)
     file_cache_options = handle_fetcher_options(options)
@@ -74,8 +82,8 @@ def _mode_dump_agent(
     except ValueError as exc:
         raise MKBailOut("Unknown SNMP backend") from exc
 
-    plugins = load_checks()
-    loading_result = config.load(validate_hosts=True)
+    plugins = load_checks(debug=global_options.debug)
+    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
@@ -103,17 +111,15 @@ def _mode_dump_agent(
     relay_id = config.get_relay_id(host_labels)
     fetcher_trigger = app.make_fetcher_trigger(relay_id, cmk.utils.paths.trusted_ca_file)
 
-    ip_lookup_config = config_cache.ip_lookup_config()
+    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
     ip_family = ip_lookup_config.default_address_family(hostname)
-    ip_address_of_bare = forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config)
+    ip_address_of_bare = ip_lookup.make_lookup_ip_address(ip_lookup_config)
     ip_address_of = ip_lookup.ConfiguredIPLookup(
         ip_address_of_bare,
         allow_empty=(),
         error_handler=config.handle_ip_lookup_failure,
     )
-    ip_address_of_mgmt = forced_ip_lookup() or ip_lookup.make_lookup_mgmt_board_ip_address(
-        ip_lookup_config
-    )
+    ip_address_of_mgmt = ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)
     with ruleset_matcher.ruleset_optimizer.processed_hosts({hostname}):
         ip_stack_config = ip_lookup_config.ip_stack_config(hostname)
         ipaddress = (
@@ -130,8 +136,9 @@ def _mode_dump_agent(
         )
 
         output = []
-        # Show errors of problematic data sources
-        has_errors = False
+        warnings = []
+        errors = []
+
         secrets = (
             AdHocSecrets(
                 path=cmk.utils.password_store.generate_ad_hoc_secrets_path(
@@ -173,6 +180,7 @@ def _mode_dump_agent(
                     ),
                     # Note: 'usewalk' is not in the options of this mode. We use options.get() just for consistency.
                     force_stored_walks=bool(options.get("usewalk", False)),
+                    debug=global_options.debug,
                 ),
             ),
             simulation_mode=loaded_config.simulation_mode,
@@ -227,6 +235,7 @@ def _mode_dump_agent(
                 source.fetcher(),
                 FetchMode.CHECKING,
                 secrets,
+                debug=global_options.debug,
             )
             host_sections = parse_raw_data(
                 make_parser(
@@ -246,6 +255,7 @@ def _mode_dump_agent(
                         section_cache_path=section_cache_path,
                     ),
                     keep_outdated=file_cache_options.keep_outdated,
+                    debug=global_options.debug,
                 ),
                 raw_data,
                 selection=NO_SELECTION,
@@ -255,29 +265,47 @@ def _mode_dump_agent(
                 config_cache.summary_config(hostname, source_info.ident),
                 fetcher_type=source_info.fetcher_type,
             )
-            if any(r.state != 0 for r in source_results):
-                summaries = ", ".join(r.summary for r in source_results)
-                console.error(f"ERROR [{source_info.ident}]: {summaries}", file=sys.stderr)
-                has_errors = True
+            summaries = ", ".join(r.summary for r in source_results)
+            if any(r.state not in (0, 1) for r in source_results):
+                errors.append(f"ERROR [{source_info.ident}]: {summaries}")
+            elif any(r.state == 1 for r in source_results):
+                warnings.append(f"WARNING [{source_info.ident}]: {summaries}")
+
             if raw_data.is_ok():
                 assert raw_data.ok is not None
                 output.append(raw_data.ok)
 
         write_stdout(b"".join(output).decode(errors="surrogateescape"))
-        if has_errors:
-            sys.exit(1)
-        return 0
+        for warn in warnings:
+            console.warning(warn, file=sys.stderr)
+        for err in errors:
+            console.error(err, file=sys.stderr)
+
+        return CLIExitCode.FAILURE if errors else CLIExitCode.SUCCESS
+
+
+def _run_dump_agent(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
+    if context.global_options.debug:
+        # the store reads cmk.ccc.debug
+        cmk.ccc.debug.enable()
+    try:
+        return _mode_dump_agent(context.omd_root, context.global_options, options, args)
+    except (MKBailOut, MKGeneralException) as e:
+        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+        if context.global_options.debug:
+            raise
+        return CLIExitCode.UNKNOWN
 
 
 cli_command_dump_agent = CLICommand(
-    long_option="dump-agent",
-    short_option="d",
-    handler_function=_mode_dump_agent,
-    argument=True,
-    argument_descr="HOSTNAME|ADDRESS",
-    sub_options=[*FETCHER_OPTIONS[:3], SNMP_BACKEND_OPTION],
-    short_help="Show raw information from agent",
-    long_help=[
+    name="dump_agent",
+    long="dump-agent",
+    short="d",
+    handler_function=_run_dump_agent,
+    arguments=CLIArguments("HOSTNAME|ADDRESS"),
+    sub_options=[*FETCHER_OPTIONS[:3], SNMP_BACKEND_OPTION, FAKE_DNS_OPTION],
+    help="Show raw information from agent",
+    description=[
         (
             "Shows the raw information received from the given host. For regular "
             "hosts it shows the agent output plus possible piggyback information. "
@@ -299,29 +327,27 @@ cli_command_dump_agent = CLICommand(
 
 
 def _mode_dump_hosts(
-    _omd_root: Path, global_options: GlobalOptions, _options: Options, args: Args
-) -> int:
-    set_fake_dns(global_options.fake_dns)
+    _omd_root: Path, global_options: CLIGlobalOptions, options: Options, args: CLIArgs
+) -> CLIExitCode:
+    fake_dns = fake_dns_address(options)
     hostlist: Iterable[HostName] = host_addresses(args)
     logger = logging.getLogger("cmk.base.modes")  # this might go nowhere.
-    plugins = load_checks()
-    loading_result = config.load(validate_hosts=True)
+    plugins = load_checks(debug=global_options.debug)
+    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
     config_cache = loading_result.config_cache
     core_objects_config = config.CoreObjectsConfig(loaded_config, ruleset_matcher, label_manager)
     hosts_config = loading_result.hosts_config
-    ip_lookup_config = config_cache.ip_lookup_config()
+    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
 
     ip_address_of = ip_lookup.ConfiguredIPLookup(
-        forced_ip_lookup() or ip_lookup.make_lookup_ip_address(ip_lookup_config),
+        ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
         error_handler=config.handle_ip_lookup_failure,
     )
-    ip_address_of_mgmt = forced_ip_lookup() or ip_lookup.make_lookup_mgmt_board_ip_address(
-        ip_lookup_config
-    )
+    ip_address_of_mgmt = ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)
 
     all_hosts = {
         hn
@@ -367,19 +393,33 @@ def _mode_dump_hosts(
                 timeperiod_active=timeperiod.TimeperiodActiveCoreLookup(
                     livestatus.get_optional_timeperiods_active_map, log=logger.warning
                 ).get,
+                debug=global_options.debug,
             )
-        return 0
+        return CLIExitCode.SUCCESS
+
+
+def _run_dump_hosts(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
+    if context.global_options.debug:
+        # the store reads cmk.ccc.debug
+        cmk.ccc.debug.enable()
+    try:
+        return _mode_dump_hosts(context.omd_root, context.global_options, options, args)
+    except (MKBailOut, MKGeneralException) as e:
+        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+        if context.global_options.debug:
+            raise
+        return CLIExitCode.UNKNOWN
 
 
 cli_command_dump = CLICommand(
-    long_option="dump",
-    short_option="D",
-    handler_function=_mode_dump_hosts,
-    argument=True,
-    argument_descr="H1 H2...",
-    argument_optional=True,
-    short_help="Dump info about all or some hosts",
-    long_help=[
+    name="dump",
+    long="dump",
+    short="D",
+    handler_function=_run_dump_hosts,
+    arguments=CLIArguments("H1 H2...", optional=True),
+    sub_options=[FAKE_DNS_OPTION],
+    help="Dump info about all or some hosts",
+    description=[
         (
             "Dumps out the complete configuration and information "
             "about one, several or all hosts. It shows all services, hostgroups, "

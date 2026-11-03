@@ -21,7 +21,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import assert_never
 
-import cmk.ccc.debug
 from cmk.agent_based.v1 import Attributes, TableRow
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.fetcher_abc import FetcherFunction
@@ -142,6 +141,7 @@ def inventorize_host(
     raw_intervals_from_config: Sequence[RawIntervalFromConfig],
     previous_tree: ImmutableTree,
     section_error_handling: Callable[[SectionName, Sequence[object]], str],
+    debug: bool,
 ) -> CheckInventoryTreeResult:
     fetched = fetcher(host_name, ip_address=None)
     host_sections = parser((f[0], f[1]) for f in fetched)
@@ -154,6 +154,7 @@ def inventorize_host(
         host_sections_by_host,
         section_plugins,
         error_handling=section_error_handling,
+        debug=debug,
     )
 
     trees = _inventorize_real_host(
@@ -165,6 +166,7 @@ def inventorize_host(
                 providers=providers,
                 inventory_plugins=inventory_plugins,
                 run_plugin_names=run_plugin_names,
+                debug=debug,
             )
         ),
         raw_intervals_from_config=raw_intervals_from_config,
@@ -294,6 +296,7 @@ def inventorize_status_data_of_real_host(
     providers: Mapping[HostKey, Provider],
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     run_plugin_names: Container[InventoryPluginName],
+    debug: bool,
 ) -> MutableTree:
     return _create_trees_from_inventory_plugin_items(
         _collect_inventory_plugin_items(
@@ -302,6 +305,7 @@ def inventorize_status_data_of_real_host(
             providers=providers,
             inventory_plugins=inventory_plugins,
             run_plugin_names=run_plugin_names,
+            debug=debug,
         )
     ).status_data
 
@@ -319,6 +323,7 @@ def _collect_inventory_plugin_items(
     providers: Mapping[HostKey, Provider],
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     run_plugin_names: Container[InventoryPluginName],
+    debug: bool,
 ) -> Iterator[ItemsOfInventoryPlugin]:
     logger.debug("Executing inventory plugins")
 
@@ -353,8 +358,7 @@ def _collect_inventory_plugin_items(
                     for item in inventory_plugin.function(**kwargs)
                 ]
             except Exception:
-                # TODO(ml): What is the `if cmk.ccc.debug.enabled()` actually good for?
-                if cmk.ccc.debug.enabled():
+                if debug:
                     raise
 
                 logger.warning(

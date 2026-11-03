@@ -62,7 +62,6 @@ def _mypy_aspect(mypy_ini):
             requirement("pika"): types[requirement("pika-ts")],
             # Add stubs for 3rd party packages we use
             requirement("marshmallow-oneofschema"): Label("@//tests/typeshed:marshmallow-oneofschema-stubs"),
-            requirement("pyprof2calltree"): Label("@//tests/typeshed:pyprof2calltree-stubs"),
         },
     )
 

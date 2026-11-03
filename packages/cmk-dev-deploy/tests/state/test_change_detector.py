@@ -76,9 +76,9 @@ def _make_mock_run(
 class TestChangeCategory:
     """Tests for the ChangeCategory enum."""
 
-    def test_has_11_members(self) -> None:
-        """ChangeCategory has exactly 11 members."""
-        assert len(ChangeCategory) == 11
+    def test_has_12_members(self) -> None:
+        """ChangeCategory has exactly 12 members."""
+        assert len(ChangeCategory) == 12
 
     def test_all_members_present(self) -> None:
         """All expected members exist."""
@@ -86,6 +86,7 @@ class TestChangeCategory:
             "PYTHON",
             "CPP",
             "RUST",
+            "GO",
             "VUE",
             "FRONTEND",
             "CONFIG",
@@ -565,6 +566,8 @@ class TestCategorizationRegression:
             ("packages/cmk-ui-library/components/StateTag.vue", ChangeCategory.VUE),
             ("packages/cmk-ui-library/lib/utils.ts", ChangeCategory.VUE),
             ("packages/cmk-ui-library/README.md", ChangeCategory.OTHER),
+            ("packages/cmk-profiling/frontend/App.vue", ChangeCategory.VUE),
+            ("packages/cmk-profiling/cmk/profiling/gui/pages.py", ChangeCategory.PYTHON),
             # Frontend (includes .ts -- the motivating bug fix)
             ("packages/cmk-frontend/scss/main.scss", ChangeCategory.FRONTEND),
             ("packages/cmk-frontend/src/main.js", ChangeCategory.FRONTEND),

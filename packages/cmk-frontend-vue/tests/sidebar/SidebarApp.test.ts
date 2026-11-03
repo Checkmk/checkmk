@@ -5,14 +5,14 @@
  */
 import userEvent from '@testing-library/user-event'
 import { render, waitFor } from '@testing-library/vue'
-import { useMswServer } from 'cmk-ui-library/vitest.msw'
-import { HttpResponse, http } from 'msw'
+import { untypedHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
+import { HttpResponse } from 'msw'
 import { beforeEach, expect, vi } from 'vitest'
 
 import SidebarApp from '@/sidebar/SidebarApp.vue'
 
 useMswServer(
-  http.get('*/sidebar_snapin.py', () =>
+  untypedHttp.get('*/sidebar_snapin.py', () =>
     HttpResponse.json(['<input id="mk_side_search_field" type="text" />'])
   )
 )

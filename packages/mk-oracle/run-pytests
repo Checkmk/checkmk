@@ -1,47 +1,25 @@
 #!/bin/bash
 
-# If want to test CI artefact
-# - You may need to create ~/.netrc file with credentials
-# - You need access to docker repo
 # Intended for manual local testing by development
 # Already included in CI pipeline
-# You may test everything locally
+#
+# Builds mk-oracle hermetically with Bazel (the same binary that is shipped)
+# and runs the system tests against it.
 #
 # Usage:
-#   ./run-pytests          # build locally with cargo zigbuild (default)
-#   ./run-pytests --local  # same as above
-#   ./run-pytests --ci     # download last successful build from CI
+#   ./run-pytests
 
 set -e
 
-REPO_ROOT="$(git rev-parse --show-toplevel)"
-BINARY_PATH="$REPO_ROOT/target/x86_64-unknown-linux-gnu/release/mk-oracle"
-DOWNLOAD_SERVER="${DOWNLOAD_SERVER:-ci.lan.tribe29.com}"
-JOB_NAME="${JOB_NAME:-build-cmk-package-mk-oracle-k8s}"
-if [ -z "${WORK_BRANCH:-}" ]; then
-    _branch_is_version=$(sed -n 's/^BRANCH_NAME_IS_BRANCH_VERSION\s*:=\s*//p' "$REPO_ROOT/defines.make")
-    if [ -n "$_branch_is_version" ]; then
-        WORK_BRANCH=$(sed -n 's/^BRANCH_VERSION\s*:=\s*//p' "$REPO_ROOT/defines.make")
-    else
-        WORK_BRANCH="master"
-    fi
+if [ $# -ne 0 ]; then
+    echo "Usage: $0" >&2
+    exit 1
 fi
 
-case "${1:-}" in
-    --ci)
-        jenkins_build_data.py \
-            "https://${DOWNLOAD_SERVER}/job/checkmk/job/${WORK_BRANCH}/job/builders/job/${JOB_NAME}/lastSuccessfulBuild/" \
-            --download "mk-oracle" --download-dir /tmp/jenkins-artifacts
-        chmod +x /tmp/jenkins-artifacts/mk-oracle
-        BINARY_PATH="/tmp/jenkins-artifacts/mk-oracle"
-        ;;
-    --local | "")
-        cargo zigbuild -p mk-oracle --release --target x86_64-unknown-linux-gnu.2.17
-        ;;
-    *)
-        echo "Usage: $0 [--ci|--local]" >&2
-        exit 1
-        ;;
-esac
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+
+cd "$REPO_ROOT"
+bazel build //packages/mk-oracle
+BINARY_PATH="$REPO_ROOT/$(bazel cquery --output=files //packages/mk-oracle 2>/dev/null)"
 
 pytest --mk-oracle-binary-path="$BINARY_PATH" "$REPO_ROOT/tests/system/mk_oracle"

@@ -21,9 +21,14 @@ import type usei18n from 'cmk-ui-library/lib/i18n'
 import { type DonutSegment, HEALTHY_HOST_STATES } from '@/maps/map/flow/geometry'
 import { serviceNameOf } from '@/maps/map/flow/nodeIds'
 import type { CmdMarker, FNode } from '@/maps/map/flow/nodes'
-import type { MapElement, ObjectState, TopologyNode } from '@/maps/types/api'
+import type { MapElement, ObjectState, ServicesSummary, TopologyNode } from '@/maps/types/api'
 import { newObjectState } from '@/maps/utils/model'
-import { stateColorVar } from '@/maps/utils/stateColors'
+import {
+  ACKNOWLEDGED_COLOR,
+  DOWNTIME_COLOR,
+  stateColorVar,
+  stateRank
+} from '@/maps/utils/stateColors'
 
 /**
  * The ``_t`` a component hands to a helper. Gettext extraction only sees literal
@@ -50,16 +55,13 @@ export function createFlowNodeModel(options: FlowNodeModelOptions) {
     if (!s) {
       return null
     }
-    if (s.critical > 0) {
-      return 'CRITICAL'
-    }
-    if (s.warning > 0) {
-      return 'WARNING'
-    }
-    if (s.unknown > 0) {
-      return 'UNKNOWN'
-    }
-    return null
+    const problems: [string, number][] = [
+      ['CRITICAL', s.critical],
+      ['WARNING', s.warning],
+      ['UNKNOWN', s.unknown]
+    ]
+    const present = problems.filter(([, count]) => count > 0).map(([state]) => state)
+    return present.sort((a, b) => stateRank(b) - stateRank(a))[0] ?? null
   }
 
   function hostHalo(d: FNode): { stroke: string; width: number } {
@@ -90,8 +92,8 @@ export function createFlowNodeModel(options: FlowNodeModelOptions) {
       out.push({
         key: 'ack',
         glyph: '✓',
-        fill: 'var(--color-warning)',
-        fg: '#18181b',
+        fill: ACKNOWLEDGED_COLOR,
+        fg: 'var(--black)',
         title: _t('Acknowledged'),
         corner: 'tr'
       })
@@ -100,8 +102,8 @@ export function createFlowNodeModel(options: FlowNodeModelOptions) {
       out.push({
         key: 'dt',
         glyph: '‖',
-        fill: 'var(--status-color-downtime)',
-        fg: '#ffffff',
+        fill: DOWNTIME_COLOR,
+        fg: 'var(--white)',
         title: _t('In downtime'),
         corner: 'tl'
       })
@@ -111,7 +113,7 @@ export function createFlowNodeModel(options: FlowNodeModelOptions) {
         key: 'notif',
         glyph: '∅',
         fill: 'var(--font-color-dimmed)',
-        fg: '#ffffff',
+        fg: 'var(--white)',
         title: _t('Notifications disabled'),
         corner: 'br'
       })
@@ -167,15 +169,12 @@ export function createFlowNodeModel(options: FlowNodeModelOptions) {
 
   function siteHostsAggregate(siteId: string): {
     hostCount: number
-    hostsUp: number
-    hostsDown: number
-    hostsUnreachable: number
-    summary: { ok: number; warning: number; critical: number; unknown: number; pending: number }
+    hosts: ServicesSummary
+    summary: ServicesSummary
   } {
     let hostCount = 0
-    let hostsUp = 0
-    let hostsDown = 0
-    let hostsUnreachable = 0
+    // Host states in a group's service slots, as the daemon counts them.
+    const hosts = { ok: 0, warning: 0, critical: 0, unknown: 0, pending: 0 }
     const summary = { ok: 0, warning: 0, critical: 0, unknown: 0, pending: 0 }
     for (const n of nodes()) {
       const sid = n.site_id || connectionId()
@@ -184,11 +183,13 @@ export function createFlowNodeModel(options: FlowNodeModelOptions) {
       }
       hostCount++
       if (n.state === 'UP') {
-        hostsUp++
+        hosts.ok++
       } else if (n.state === 'DOWN') {
-        hostsDown++
+        hosts.critical++
       } else if (n.state === 'UNREACHABLE') {
-        hostsUnreachable++
+        hosts.unknown++
+      } else if (n.state === 'PENDING') {
+        hosts.pending++
       }
       const s = n.services_summary
       if (s) {
@@ -199,12 +200,12 @@ export function createFlowNodeModel(options: FlowNodeModelOptions) {
         summary.pending += s.pending
       }
     }
-    return { hostCount, hostsUp, hostsDown, hostsUnreachable, summary }
+    return { hostCount, hosts, summary }
   }
 
   function objectStateFromFNode(d: FNode): ObjectState {
     if (d.nodeType === 'site') {
-      const agg = siteHostsAggregate(d.siteId ?? '')
+      const { hostCount, hosts, summary } = siteHostsAggregate(d.siteId ?? '')
       // Site state aggregation rules:
       // - DOWN: every host on this site is DOWN/UNREACHABLE (site itself is offline)
       // - CRITICAL: at least one host is DOWN/UNREACHABLE OR has critical services
@@ -212,24 +213,26 @@ export function createFlowNodeModel(options: FlowNodeModelOptions) {
       // - UP: everything is healthy
       // A single down host out of hundreds shouldn't paint the whole site
       // DOWN — that would mask the real picture during partial outages.
-      const allDown = agg.hostCount > 0 && agg.hostsDown + agg.hostsUnreachable === agg.hostCount
-      const anyDown = agg.hostsDown + agg.hostsUnreachable > 0
+      const hostsDown = hosts.critical + hosts.unknown
+      const allDown = hostCount > 0 && hostsDown === hostCount
       const worst = allDown
         ? 'DOWN'
-        : anyDown || agg.summary.critical > 0
+        : hostsDown > 0 || summary.critical > 0
           ? 'CRITICAL'
-          : agg.summary.warning > 0 || agg.summary.unknown > 0
+          : summary.warning > 0 || summary.unknown > 0
             ? 'WARNING'
             : 'UP'
+      const pending = hosts.pending ? `, ${hosts.pending} pending` : ''
       return newObjectState({
         object_id: d.id,
         type: 'site',
         state: worst,
         output:
-          `${agg.hostCount} hosts ` +
-          `(${agg.hostsUp} up, ${agg.hostsDown} down, ${agg.hostsUnreachable} unreachable)`,
+          `${hostCount} hosts ` +
+          `(${hosts.ok} up, ${hosts.critical} down, ${hosts.unknown} unreachable${pending})`,
         site_id: d.siteId ?? null,
-        services_summary: agg.summary
+        hosts_summary: hosts,
+        services_summary: summary
       })
     }
     if (d.nodeType === 'service') {

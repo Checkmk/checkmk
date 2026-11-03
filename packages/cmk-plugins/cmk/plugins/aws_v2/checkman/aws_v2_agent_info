@@ -1,0 +1,21 @@
+title: AWS v2: Agent info
+agents: aws_v2
+catalog: cloud/aws
+license: GPLv2
+distribution: check_mk
+description:
+ This check shows what one run of the AWS special agent reached.
+
+ It counts the accounts the agent monitored. It goes CRIT for each
+ account the agent could not reach, for example because the role in
+ that account cannot be assumed, and for a failed login. The service
+ details show the reason.
+
+ Regions an account has not enabled and sections a service control
+ policy denies are shown as information. They do not change the state.
+
+ To make this check work you have to configure the related
+ special agent {Amazon Web Services (AWS) v2}.
+
+discovery:
+ One service is created on the host of the special agent rule.

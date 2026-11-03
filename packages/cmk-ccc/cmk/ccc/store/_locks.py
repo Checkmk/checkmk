@@ -13,6 +13,7 @@ import os
 import threading
 from collections.abc import Iterator
 from contextlib import contextmanager
+from dataclasses import dataclass
 from pathlib import Path
 from typing import assert_never, Literal
 
@@ -109,11 +110,19 @@ def activation_lock(main_mk_file: Path, mode: Literal["abort", "wait"] | None) -
 #   | wait forever.                                                        |
 #   '----------------------------------------------------------------------'
 
-# This will hold our path to file descriptor dicts in acquired_locks
+
+@dataclass
+class _Lock:
+    fd: int
+    owner_pid: int
+    held: bool = False
+
+
+# This will hold our path to lock dicts in acquired_locks
 _locks = threading.local()
 
 
-def _acquired_locks() -> dict[Path, int]:
+def _acquired_locks() -> dict[Path, _Lock]:
     """Make access to global locking dict thread-safe.
 
     Only the thread which acquired the lock should see the file descriptor in the locking
@@ -121,20 +130,23 @@ def _acquired_locks() -> dict[Path, int]:
     threading.local() object, which has to be created at runtime. This decorator handles
     the creation of these dicts.
 
-    (*) The dict is a mapping from path-name to file descriptor.
+    (*) The dict is a mapping from path-name to the lock.
     """
     if not hasattr(_locks, "acquired_locks"):
         _locks.acquired_locks = {}
-    acquired_locks: dict[Path, int] = _locks.acquired_locks
+    acquired_locks: dict[Path, _Lock] = _locks.acquired_locks
     return acquired_locks
 
 
-def _set_lock(path: Path, fd: int) -> None:
-    _acquired_locks()[path] = fd
+def _set_lock(path: Path, fd: int) -> _Lock:
+    lock = _acquired_locks()[path] = _Lock(fd, os.getpid())
+    return lock
 
 
 def _get_lock(path: Path) -> int | None:
-    return _acquired_locks().get(path)
+    if (lock := _acquired_locks().get(path)) is None:
+        return None
+    return lock.fd
 
 
 def _del_lock(path: Path) -> None:
@@ -146,7 +158,7 @@ def _get_lock_keys() -> list[Path]:
 
 
 def have_lock(path: Path) -> bool:
-    return path in _acquired_locks()
+    return (lock := _acquired_locks().get(path)) is not None and lock.held
 
 
 @contextmanager
@@ -166,8 +178,11 @@ def acquire_lock(path: Path, blocking: bool = True) -> bool:
     """Obtain physical file lock on a file.
     If the file is already registered, then  done do nothing and return False.
     Otherwise, locks file physically, register file in global variable and returns True"""
-    if have_lock(path):
-        return False
+    if (lock := _acquired_locks().get(path)) is not None:
+        if lock.held:
+            return False
+        # An interrupted release_lock() left the lock registered: finish its release first
+        release_lock(path)
 
     logger.debug("Trying to acquire lock on %(path)s", {"path": path})
     # Create file (and base dir) for locking if not existent yet
@@ -175,25 +190,22 @@ def acquire_lock(path: Path, blocking: bool = True) -> bool:
     flags = fcntl.LOCK_EX | (0 if blocking else fcntl.LOCK_NB)
 
     while True:
-        with _open_lock_file(path) as fd:
-            fcntl.flock(fd, flags)
-            # Handle the case where the file has been renamed in the meantime
-            with _open_lock_file(path) as fd_new:
-                if os.path.sameopenfile(fd, fd_new):
-                    _set_lock(path, os.dup(fd))
-                    logger.debug("Got lock on %(path)s", {"path": path})
-                    return True
-
-
-@contextmanager
-def _open_lock_file(path: Path) -> Iterator[int]:
-    fd = None
-    try:
         fd = os.open(path, os.O_RDONLY | os.O_CREAT, 0o660)
-        yield fd
-    finally:
-        if isinstance(fd, int):
-            os.close(fd)
+        try:
+            # Register before locking and inside the try: whatever interrupts us from here
+            # on, the except clause below unregisters and closes the fd again.
+            lock = _set_lock(path, fd)
+            fcntl.flock(fd, flags)
+            if os.path.samestat(os.fstat(fd), os.stat(path)):
+                lock.held = True
+                logger.debug("Got lock on %(path)s", {"path": path})
+                return True
+        except FileNotFoundError:
+            pass  # deleted in the meantime, retry
+        except BaseException:
+            release_lock(path)
+            raise
+        release_lock(path)  # renamed or deleted in the meantime, retry
 
 
 @contextmanager
@@ -216,18 +228,32 @@ def try_acquire_lock(path: Path) -> bool:
 
 
 def release_lock(path: Path) -> None:
-    if (fd := _get_lock(path)) is None:
+    if (lock := _acquired_locks().get(path)) is None:
         return
 
     logger.debug("Releasing lock on %(path)s", {"path": path})
+    # Mark the lock as not held, unlock while the fd is still registered, then unregister,
+    # then close. An interruption at any point leaves either a registered fd, which the next
+    # acquire_lock() of the path, release_lock() or release_all_locks() releases, or an
+    # unlocked, unregistered fd (a harmless fd leak). It never leaves a held lock without an
+    # owner, a registered number that was already closed or a registered lock which is
+    # reported as held but is not.
+    lock.held = False
+    # A forked child inherits the fd, which shares the lock with its parent. The child only
+    # closes its copy, so the parent keeps the lock.
+    if lock.owner_pid == os.getpid():
+        try:
+            fcntl.flock(lock.fd, fcntl.LOCK_UN)
+        except OSError as e:
+            if e.errno != errno.EBADF:
+                raise
+    _del_lock(path)
     try:
-        os.close(fd)
+        os.close(lock.fd)
     except OSError as e:
-        if e.errno != errno.EBADF:  # Bad file number
+        if e.errno != errno.EBADF:
             raise
-    finally:
-        _del_lock(path)
-        logger.debug("Released lock on %(path)s", {"path": path})
+    logger.debug("Released lock on %(path)s", {"path": path})
 
 
 def release_all_locks() -> None:

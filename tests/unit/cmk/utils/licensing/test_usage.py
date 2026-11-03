@@ -1081,7 +1081,7 @@ def test_cloud_service_prefixes_up_to_date() -> None:
         )
 
     catalog = man_pages.load_man_page_catalog(
-        discover_families(raise_errors=True), PluginGroup.CHECKMAN.value
+        discover_families(raise_errors=True), PluginGroup.CHECKMAN.value, debug=False
     )
 
     cloud_man_pages = [

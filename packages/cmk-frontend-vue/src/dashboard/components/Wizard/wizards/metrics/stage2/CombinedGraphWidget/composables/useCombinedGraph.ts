@@ -8,7 +8,7 @@ import { useDebounceFn } from 'cmk-ui-library/lib/useDebounce'
 import { type Ref, ref, watch } from 'vue'
 
 import type { GraphTimerange } from '@/dashboard/components/TimeRange/GraphTimeRange.vue'
-import { useTimeRange } from '@/dashboard/components/TimeRange/useTimeRange'
+import { useTimeRangeSource } from '@/dashboard/components/TimeRange/useTimeRangeSource'
 import {
   type UseWidgetVisualizationOptions,
   useWidgetVisualizationProps
@@ -32,6 +32,7 @@ import {
 const CONTENT_TYPE = 'combined_graph'
 export interface UseCombinedGraph
   extends UseWidgetHandler, UseGraphRenderOptions, UseWidgetVisualizationOptions {
+  followDashboardTimeRange: Ref<boolean>
   timeRange: Ref<GraphTimerange>
   presentation: Ref<CombinedGraphContentPresentation>
 
@@ -49,9 +50,11 @@ export const useCombinedGraph = async (
       ? (currentSpec?.content as CombinedGraphContent)
       : null
 
-  const { timeRange, widgetProps: generateTimeRangeSpec } = useTimeRange(
-    currentContent?.timerange ?? null
-  )
+  const {
+    followDashboard: followDashboardTimeRange,
+    timeRange,
+    widgetProps: generateTimeRangeSpec
+  } = useTimeRangeSource(currentContent?.timerange ?? null)
 
   const {
     title,
@@ -74,11 +77,11 @@ export const useCombinedGraph = async (
     timestamp,
     roundMargin,
     graphLegend,
+    graphLegendStyle,
     clickToPlacePin,
     showBurgerMenu,
-    dontFollowTimerange,
     graphRenderOptions
-  } = useGraphRenderOptions(currentContent?.graph_render_options)
+  } = useGraphRenderOptions(currentContent?.graph_render_options, currentContent === null)
 
   const presentation = ref<CombinedGraphContentPresentation>(
     currentContent?.presentation ?? 'lines'
@@ -125,7 +128,7 @@ export const useCombinedGraph = async (
   }
 
   watch(
-    [timeRange, widgetGeneralSettings, graphRenderOptions, presentation],
+    [followDashboardTimeRange, timeRange, widgetGeneralSettings, graphRenderOptions, presentation],
     useDebounceFn(() => {
       void _updateWidgetProps()
     }, 300),
@@ -135,6 +138,7 @@ export const useCombinedGraph = async (
   await _updateWidgetProps()
 
   return {
+    followDashboardTimeRange,
     timeRange,
 
     title,
@@ -155,9 +159,9 @@ export const useCombinedGraph = async (
     timestamp,
     roundMargin,
     graphLegend,
+    graphLegendStyle,
     clickToPlacePin,
     showBurgerMenu,
-    dontFollowTimerange,
 
     presentation,
 

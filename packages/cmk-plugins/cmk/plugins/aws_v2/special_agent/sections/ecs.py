@@ -14,6 +14,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from cmk.plugins.aws_v2.constants import AWS_ECS_QUOTA_DEFAULTS
 
+from .. import hosts
 from ..config import AWSConfig
 from .core import (
     AWSColleagueContents,
@@ -118,7 +119,6 @@ class ECSLimits(AWSSectionLimits):
         clusters = [Cluster(**c) for c in cluster_dicts]
 
         self._add_limit(
-            "",
             AWSLimit(
                 key="clusters",
                 title="Clusters",
@@ -130,7 +130,6 @@ class ECSLimits(AWSSectionLimits):
 
         for cluster in clusters:
             self._add_limit(
-                "",
                 AWSLimit(
                     key="capacity_providers",
                     title=f"Capacity providers of {cluster.clusterName}",
@@ -141,7 +140,6 @@ class ECSLimits(AWSSectionLimits):
             )
 
             self._add_limit(
-                "",
                 AWSLimit(
                     key="container_instances",
                     title=f"Container instances of {cluster.clusterName}",
@@ -152,7 +150,6 @@ class ECSLimits(AWSSectionLimits):
             )
 
             self._add_limit(
-                "",
                 AWSLimit(
                     key="services",
                     title=f"Services of {cluster.clusterName}",
@@ -248,7 +245,7 @@ class ECSSummary(AWSSection):
             data = cluster.model_dump()
             data["TagsForCmkLabels"] = self.process_tags_for_cmk_labels(data.get("tags", []))
             clusters.append(data)
-        return [AWSSectionResult("", clusters)]
+        return [AWSSectionResult(self._target_host(hosts.AccountScope()), clusters)]
 
 
 class ECS(AWSSectionCloudwatch):
@@ -311,12 +308,27 @@ class ECS(AWSSectionCloudwatch):
                 metrics.append(metric)
         return metrics
 
+    @property
+    def host_labels(self) -> Mapping[str, str]:
+        return {"cmk/aws/service": "ecs"}
+
     @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
-        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
+        # The label of each metric is the name of its cluster.
+        content_by_cluster: dict[str, list[Mapping[str, object]]] = {}
+        for row in raw_content.content:
+            content_by_cluster.setdefault(row["Label"], []).append(row)
+        return AWSComputedContent(content_by_cluster, raw_content.cache_timestamp)
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", computed_content.content)]
+        return [
+            AWSSectionResult(
+                self._target_host(hosts.ECSCluster(cluster_name)),
+                rows,
+                self.host_labels,
+            )
+            for cluster_name, rows in computed_content.content.items()
+        ]

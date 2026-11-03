@@ -29,14 +29,14 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
 from cmk.gui.permissions import (
-    declare_dynamic_permissions,
+    dynamic_permission_registry,
     PermissionSection,
     PermissionSectionRegistry,
 )
 from cmk.gui.table import table_element
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.watolib.profile_replication import start_profile_replication_job
-from cmk.gui.watolib.user_scripts import declare_notification_plugin_permissions
+from cmk.gui.watolib.user_scripts import notification_plugin_permissions
 from cmk.livestatus_client import LivestatusResponse, MKLivestatusNotFoundError
 from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.icons import IconNames, StaticIcon
@@ -50,7 +50,9 @@ def register(
         PageEndpoint("clear_failed_notifications", ClearFailedNotificationPage())
     )
     permission_section_registry.register(PERMISSION_SECTION_NOTIFICATION_PLUGINS)
-    declare_dynamic_permissions(declare_notification_plugin_permissions)
+    dynamic_permission_registry.register(
+        PERMISSION_SECTION_NOTIFICATION_PLUGINS.name, notification_plugin_permissions
+    )
 
 
 class FailedNotificationTimes(NamedTuple):

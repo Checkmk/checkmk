@@ -186,7 +186,7 @@ boolean download_hot_cache(Map args) {
     catch (Exception exc) {
         print("hot cache: Decompression failed, contact your local CI dealer and tell: ${exc}");
         // Clean-up any partial extraction - this might otherwise result in broken cache archives
-        // See https://wiki.lan.checkmk.net/spaces/DEV/pages/181605060/2026-01-07+Corrupt+hot+cache+breaks+CV
+        // See "2026-01-07 Corrupt hot cache breaks CV": https://checkmk-int.atlassian.net/wiki/x/b4VlD
         clean_caches()
         return true;
     }
@@ -245,7 +245,7 @@ void withHotCache(Map args, Closure body) {
     // Skip restoring "All unit tests" as it might take up to 30min due to massive 27GB and high disk utilization
     // Skip restoring "test-mypy-docker" because restoring the 24GB archive takes around 20 minutes and causes high disk utilization
     if (
-        args.disable_hot_cache || args.target_name in ["All unit tests", "C++ unit tests", "Type repository with mypy", "Lint repository"]
+        args.disable_hot_cache || args.target_name in ["All unit tests", "C++ unit tests", "Type repository", "Lint repository"]
     ) {
         body();
         return;

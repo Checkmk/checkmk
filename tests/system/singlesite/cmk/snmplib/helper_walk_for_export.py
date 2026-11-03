@@ -20,8 +20,6 @@ from cmk.checkengine.snmplib import (
     walk_for_export,
 )
 
-cmk.ccc.debug.enable()
-
 logger = logging.getLogger(__name__)
 
 params: tuple[OID, str, Mapping[str, object], str] = ast.literal_eval(sys.stdin.read())

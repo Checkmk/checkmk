@@ -1,15 +1,21 @@
 load("@rules_python//python:defs.bzl", "py_binary")
+load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
+load("@rules_shell//shell:sh_library.bzl", "sh_library")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
 load("@windows_python_wheels//:requirements.bzl", "all_whl_requirements")
+load("@windows_test_python_wheels//:requirements.bzl", test_whl_requirements = "all_whl_requirements")
 load("//:package_versions.bzl", "PYTHON_VERSION_WINDOWS")
 load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
 load("//bazel/rules:requirements.bzl", "compile_requirements_in")
-load(":python_cab.bzl", "py_platform_transition_filegroup", "python_cab", "python_version_major_minor")
+load(":python_cab.bzl", "python_cab", "python_msi_tree", "python_test_cab", "python_version_major_minor")
+load(":python_msis.bzl", "PYTHON_MSI_FEATURES")
 
 exports_files([
-    "constraints-windows.txt",
-    "requirements-windows.in",
-    "requirements-windows.txt",
+    "windows-constraints.txt",
+    "windows-requirements.in",
+    "windows-requirements.txt",
+    "windows-test-cab-requirements.in",
+    "windows-test-cab-requirements.txt",
 ])
 
 _PY_WIN_MAJOR_MINOR = python_version_major_minor(PYTHON_VERSION_WINDOWS)
@@ -70,14 +76,31 @@ filegroup(
     srcs = glob(["venv_scripts/*"]),
 )
 
+# The actions of python_cab.bzl's rules.
+sh_binary(
+    name = "build_python_cab",
+    srcs = ["build_python_cab.sh"],
+)
+
+sh_binary(
+    name = "build_python_test_cab",
+    srcs = ["build_python_test_cab.sh"],
+)
+
+# Sourced by both; python_cab.bzl passes it to them.
+sh_library(
+    name = "cab_lib",
+    srcs = ["cab_lib.sh"],
+)
+
 compile_requirements_in(
-    name = "requirements-windows-in",
-    constraints = [":constraints-windows.txt"],
-    requirements = [":requirements-windows.in"],
+    name = "windows-requirements-in",
+    constraints = [":windows-constraints.txt"],
+    requirements = [":windows-requirements.in"],
 )
 
 pip_compile(
-    name = "requirements_windows",
+    name = "windows_requirements",
     extra_args = [
         # Fail loudly if any (transitive) dep lacks a win_amd64 wheel rather
         # than silently resolving an sdist the hub cannot build.
@@ -85,37 +108,46 @@ pip_compile(
     ],
     py3_runtime = _PY_WIN_RESOLVER_RUNTIME,
     python_platform = "x86_64-pc-windows-msvc",
-    requirements_in = ":requirements-windows-in",
-    requirements_txt = ":requirements-windows.txt",
+    requirements_in = ":windows-requirements-in",
+    requirements_txt = ":windows-requirements.txt",
     tags = ["manual"],
     visibility = ["//visibility:public"],
 )
 
-# Maintainer tool: recomputes the sha256 hashes for the five python.org
-# per-feature MSIs and prints the _MSI_SHA256 map for
-# //bazel/extensions:python_cab_repositories.bzl.  Run after bumping
-# PYTHON_VERSION_WINDOWS in //:package_versions.bzl -- which it reads through
-# args below, so the hashes cannot be fetched for a different version than the
-# extension requests.
-py_binary(
-    name = "refresh_msi_pins",
-    srcs = ["refresh_msi_pins.py"],
-    args = ["--python-version=" + PYTHON_VERSION_WINDOWS],
-    main = "refresh_msi_pins.py",
+# The test closure of :python_test_cab, resolved like windows_requirements but
+# constrained to the repo lock: shared packages stay at the repo's versions.
+compile_requirements_in(
+    name = "windows-test-cab-requirements-in",
+    constraints = ["//:requirements.txt"],
+    requirements = [":windows-test-cab-requirements.in"],
+)
+
+pip_compile(
+    name = "windows_test_cab_requirements",
+    extra_args = ["--only-binary=:all:"],
+    py3_runtime = _PY_WIN_RESOLVER_RUNTIME,
+    python_platform = "x86_64-pc-windows-msvc",
+    requirements_in = ":windows-test-cab-requirements-in",
+    requirements_txt = ":windows-test-cab-requirements.txt",
+    tags = ["manual"],
     visibility = ["//visibility:public"],
 )
 
-# Pull msiinfo and libmsi.so out of @msitools' configure_make output groups.
-filegroup(
-    name = "_msiinfo",
-    srcs = ["@msitools"],
-    output_group = "msiinfo",
-)
-
-filegroup(
-    name = "_libmsi",
-    srcs = ["@msitools"],
-    output_group = "libmsi.so.0.0.0",
+# Maintainer tool: recomputes the sha256 hashes for the python.org per-feature
+# MSIs and prints the _MSI_SHA256 map for
+# //bazel/extensions:python_cab_repositories.bzl.  Run after bumping
+# PYTHON_VERSION_WINDOWS in //:package_versions.bzl -- which it reads through
+# args below, as it does PYTHON_MSI_FEATURES, so the hashes cannot be fetched
+# for a different version or set of MSIs than the extension requests.
+py_binary(
+    name = "refresh_msi_pins",
+    srcs = ["refresh_msi_pins.py"],
+    args = ["--python-version=" + PYTHON_VERSION_WINDOWS] + [
+        "--msi=" + f
+        for f in PYTHON_MSI_FEATURES
+    ],
+    main = "refresh_msi_pins.py",
+    visibility = ["//visibility:public"],
 )
 
 # cabextract (LZX-capable CAB extractor) from the @cabextract bcr module —
@@ -127,27 +159,16 @@ filegroup(
     output_group = "cabextract",
 )
 
-py_platform_transition_filegroup(
-    name = "wheels",
-    srcs = all_whl_requirements,
-    python_version = PYTHON_VERSION_WINDOWS,
-    target_platform = "//bazel/platforms:x86_64-windows",
-)
+# The python.org MSIs extracted once, for both cabs.
+python_msi_tree(name = "python_tree")
 
 python_cab(
     name = "python_3_cab",
-    cabextract = ":_cabextract",
-    extract_msi = ":extract_msi",
-    libmsi = ":_libmsi",
-    make_exe_wrappers = ":make_exe_wrappers",
-    msiinfo = ":_msiinfo",
-    pack_cab = ":pack_cab",
-    pip_offline = ":pip_offline",
     postinstall_cmd = "postinstall.cmd",
-    python_version = PYTHON_VERSION_WINDOWS,
+    python_tree = ":python_tree",
     venv_scripts = [":venv_scripts"],
     visibility = ["//visibility:public"],
-    wheels = [":wheels"],
+    wheels = all_whl_requirements,
 )
 
 py_cmk_test(
@@ -155,6 +176,28 @@ py_cmk_test(
     srcs = ["cab_contents_test.py"],
     data = [":python_3_cab"],
     env = {"PYTHON_CAB": "$(rootpath :python_3_cab)"},
+    deps = [
+        "@cabarchive",
+    ],
+)
+
+# The harness Python of the Windows agent's pytest suites in their QEMU tiers
+# (agents/wnx/tests/{regression,integration}): the interpreter of python-3.cab
+# with the whole stdlib and windows-test-cab-requirements.txt installed. Test-only,
+# never shipped.
+python_test_cab(
+    name = "python_test_cab",
+    testonly = True,
+    python_tree = ":python_tree",
+    visibility = ["//agents/wnx/tests:__subpackages__"],
+    wheels = test_whl_requirements,
+)
+
+py_cmk_test(
+    name = "test_cab_contents_test",
+    srcs = ["test_cab_contents_test.py"],
+    data = [":python_test_cab"],
+    env = {"PYTHON_TEST_CAB": "$(rootpath :python_test_cab)"},
     deps = [
         "@cabarchive",
     ],

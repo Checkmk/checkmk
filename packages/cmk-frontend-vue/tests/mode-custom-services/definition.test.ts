@@ -8,23 +8,34 @@ import type { ConsolidationFunction } from 'cmk-shared-typing/typescript/consoli
 import { describe, expect, test } from 'vitest'
 
 import {
+  type CompleteModel,
   aggregationProblem,
+  appendedAttributeNames,
   buildCustomServiceDefinition,
   buildCustomServiceUpdate,
   serviceModelFrom
 } from '@/mode-custom-services/definition'
 import { type ServiceModel, emptyService } from '@/mode-custom-services/types'
 
-type CompleteModel = ServiceModel & { metricName: string; hostName: string }
+const TEMPLATE = '$RESOURCE_ATTR.service.name$'
 
-function model(overrides: Partial<CompleteModel> = {}): CompleteModel {
+function model(
+  overrides: Partial<Omit<ServiceModel, 'hostName' | 'hostNameTemplate'>> & {
+    metricName?: string
+  } = {}
+): CompleteModel {
   return {
     ...emptyService(),
     metricName: 'otel.http.duration',
     serviceName: 'HTTP duration',
+    ...overrides,
     hostName: 'web01',
-    ...overrides
+    hostNameTemplate: null
   }
+}
+
+function templateModel(): CompleteModel {
+  return { ...model(), hostName: null, hostNameTemplate: TEMPLATE }
 }
 
 describe('buildCustomServiceDefinition', () => {
@@ -35,10 +46,32 @@ describe('buildCustomServiceDefinition', () => {
     })
   })
 
-  test('carries the service name as the service name template', () => {
+  test('assigns the hosts the host name template resolves to', () => {
+    expect(buildCustomServiceDefinition(templateModel()).host_assignment).toEqual({
+      mode: 'host_name_template',
+      host_name_template: TEMPLATE
+    })
+  })
+
+  test('appends the series attributes to the service name', () => {
     expect(buildCustomServiceDefinition(model()).configuration.service_name_template).toBe(
-      'HTTP duration'
+      'HTTP duration $SERIES_ATTRIBUTES$'
     )
+  })
+
+  test('appends the series attributes after the trimmed service name', () => {
+    expect(
+      buildCustomServiceDefinition(model({ serviceName: ' HTTP duration  ' })).configuration
+        .service_name_template
+    ).toBe('HTTP duration $SERIES_ATTRIBUTES$')
+  })
+
+  test('carries a service name not appending the series attributes as is', () => {
+    expect(
+      buildCustomServiceDefinition(
+        model({ serviceName: 'Pod CPU usage ', appendSeriesAttributes: false })
+      ).configuration.service_name_template
+    ).toBe('Pod CPU usage ')
   })
 
   test('carries the selected metric', () => {
@@ -263,16 +296,132 @@ describe('serviceModelFrom', () => {
     ).toEqual(original)
   })
 
-  test('has no host to offer for a service assigned by host name template', () => {
+  test('splits the appended series attributes off the service name', () => {
     const restored = serviceModelFrom('http_duration_on_web01', {
-      host_assignment: {
-        mode: 'host_name_template',
-        host_name_template: '$RESOURCE_ATTR.service.name$'
-      },
-      configuration: buildCustomServiceUpdate(model()).configuration
+      host_assignment: { mode: 'explicit_host', host_name: 'web01' },
+      configuration: {
+        ...buildCustomServiceUpdate(model()).configuration,
+        service_name_template: 'HTTP duration $SERIES_ATTRIBUTES$'
+      }
     })
 
-    expect(restored.hostName).toBeNull()
+    expect(restored.serviceName).toBe('HTTP duration')
+    expect(restored.appendSeriesAttributes).toBe(true)
+  })
+
+  test.each([
+    ['without the macro', 'Pod CPU usage'],
+    ['with the macro elsewhere', '$SERIES_ATTRIBUTES$ CPU usage']
+  ])('writes back a stored template %s unchanged', (_case, template) => {
+    const extensions = {
+      host_assignment: { mode: 'explicit_host' as const, host_name: 'web01' },
+      configuration: {
+        ...buildCustomServiceUpdate(model()).configuration,
+        service_name_template: template
+      }
+    }
+    const restored = serviceModelFrom('pod_cpu_usage', extensions)
+
+    expect(
+      buildCustomServiceUpdate({
+        ...restored,
+        metricName: 'otel.http.duration',
+        hostName: 'web01',
+        hostNameTemplate: null
+      }).configuration.service_name_template
+    ).toBe(template)
+  })
+
+  test('restores a service assigned by host name template', () => {
+    const original = templateModel()
+
+    expect(
+      serviceModelFrom(original.configurationName, buildCustomServiceUpdate(original))
+    ).toEqual(original)
+  })
+})
+
+describe('appendedAttributeNames', () => {
+  const avg = { type: 'scalar' as const, name: 'avg' as const }
+  const gauge: ConsolidationFunction = {
+    type: 'gauge',
+    function: 'gauge_last',
+    lookback_seconds: 120
+  }
+
+  test('appends all attributes without any grouping', () => {
+    expect(appendedAttributeNames(gauge, undefined)).toBeNull()
+  })
+
+  test('appends the group-by keys in the order the check plugin renders them', () => {
+    expect(
+      appendedAttributeNames(gauge, {
+        stages: [
+          {
+            aggregate_by: [
+              { kind: 'data_point', name: 'http.method' },
+              { kind: 'resource', name: 'service.name' },
+              { kind: 'resource', name: 'k8s.pod.name' }
+            ],
+            aggregation_fn: avg
+          }
+        ]
+      })
+    ).toEqual(['k8s.pod.name', 'service.name', 'http.method'])
+  })
+
+  test('orders the group-by keys case-sensitively, like the check plugin', () => {
+    expect(
+      appendedAttributeNames(gauge, {
+        stages: [
+          {
+            aggregate_by: [
+              { kind: 'resource', name: 'app' },
+              { kind: 'resource', name: 'Zone' }
+            ],
+            aggregation_fn: avg
+          }
+        ]
+      })
+    ).toEqual(['Zone', 'app'])
+  })
+
+  test('appends only the keys every stage groups by', () => {
+    expect(
+      appendedAttributeNames(gauge, {
+        stages: [
+          {
+            aggregate_by: [
+              { kind: 'resource', name: 'service.name' },
+              { kind: 'resource', name: 'k8s.pod.name' }
+            ],
+            aggregation_fn: avg
+          },
+          { aggregate_by: [{ kind: 'resource', name: 'service.name' }], aggregation_fn: avg }
+        ]
+      })
+    ).toEqual(['service.name'])
+  })
+
+  test('appends the keys a preserving consolidation keeps', () => {
+    expect(
+      appendedAttributeNames(
+        {
+          type: 'histogram',
+          function: 'histogram_preserve_quantile',
+          lookback_seconds: 120,
+          percentile: 95,
+          group_by: [{ kind: 'resource', key: 'k8s.pod.name' }]
+        },
+        undefined
+      )
+    ).toEqual(['k8s.pod.name'])
+  })
+
+  test('appends nothing when all series are merged', () => {
+    expect(
+      appendedAttributeNames(gauge, { stages: [{ aggregate_by: [], aggregation_fn: avg }] })
+    ).toEqual([])
   })
 })
 

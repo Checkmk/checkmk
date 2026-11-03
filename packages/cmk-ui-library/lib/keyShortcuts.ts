@@ -6,6 +6,7 @@
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { comboLabels, registerKeyboardHelp } from 'cmk-ui-library/lib/keyboardHelp'
+import { type Ref, ref } from 'vue'
 
 import { randomId } from './randomId'
 
@@ -114,12 +115,15 @@ function pressedKey(e: KeyboardEvent): string {
 }
 
 export class KeyShortcutService {
+  /** Alt is down without Ctrl, as for an access key. */
+  public readonly altHeld: Ref<boolean> = ref(false)
   private keyStates: KeyStates = {}
   private handlers: KeyShortcutHandler[] = []
   private helpUnregisters = new Map<string, () => void>()
   private readonly boundHandleKeyDown: (e: KeyboardEvent) => void
   private readonly boundHandleKeyUp: (e: KeyboardEvent) => void
   private readonly boundReleaseKeys: () => void
+  private readonly boundReleaseAltOnPointer: (e: MouseEvent) => void
   private iframeObserver: MutationObserver | null = null
 
   constructor(
@@ -130,6 +134,7 @@ export class KeyShortcutService {
     this.boundHandleKeyDown = this.handleKeyDown.bind(this)
     this.boundHandleKeyUp = this.handleKeyUp.bind(this)
     this.boundReleaseKeys = this.releaseKeys.bind(this)
+    this.boundReleaseAltOnPointer = this.releaseAltOnPointer.bind(this)
     this.initListeners()
   }
 
@@ -216,6 +221,7 @@ export class KeyShortcutService {
     this.window.addEventListener('keydown', this.boundHandleKeyDown)
     this.window.addEventListener('keyup', this.boundHandleKeyUp)
     this.window.addEventListener('blur', this.boundReleaseKeys)
+    this.window.addEventListener('pointermove', this.boundReleaseAltOnPointer)
 
     if (this.listenTo) {
       this.observeIframes()
@@ -251,7 +257,11 @@ export class KeyShortcutService {
 
   private listenToIframe(iframe: HTMLIFrameElement): void {
     this.attachKeyListeners(iframe.contentWindow)
-    iframe.addEventListener('load', () => this.attachKeyListeners(iframe.contentWindow))
+    iframe.addEventListener('load', () => {
+      // The Alt keyup may have gone to the document that was just replaced.
+      this.altHeld.value = false
+      this.attachKeyListeners(iframe.contentWindow)
+    })
   }
 
   private attachKeyListeners(contentWindow: Window | null): void {
@@ -262,6 +272,7 @@ export class KeyShortcutService {
       contentWindow.addEventListener('keydown', this.boundHandleKeyDown)
       contentWindow.addEventListener('keyup', this.boundHandleKeyUp)
       contentWindow.addEventListener('blur', this.boundReleaseKeys)
+      contentWindow.addEventListener('pointermove', this.boundReleaseAltOnPointer)
     } catch {
       return
     }
@@ -291,16 +302,26 @@ export class KeyShortcutService {
 
   private handleKeyDown(e: KeyboardEvent): void {
     this.setKeyState(pressedKey(e), true)
+    this.altHeld.value = e.altKey && !e.ctrlKey
     this.callHandlers(e)
   }
 
   private handleKeyUp(e: KeyboardEvent): void {
     this.setKeyState(pressedKey(e), false)
+    this.altHeld.value = e.altKey && !e.ctrlKey
   }
 
   // A window that loses focus gets no keyup for the keys still held, e.g. after alt-tab.
   private releaseKeys(): void {
     this.keyStates = {}
+    this.altHeld.value = false
+  }
+
+  // Pointer events carry the Alt state too, so they catch a missed Alt keyup.
+  private releaseAltOnPointer(e: MouseEvent): void {
+    if (!e.altKey) {
+      this.altHeld.value = false
+    }
   }
 
   private shortcutKeysPressed(keys: string[]): boolean {

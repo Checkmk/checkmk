@@ -33,7 +33,7 @@ async function renderTable(
   services.connections.connections.value = connectionIds.map((id) => aConnection(id))
   return render(MapListTable, {
     ...provideServices(services),
-    props: { maps, selectedMaps: new Set<string>(), allSelected: false }
+    props: { maps, selectedMaps: new Set<string>() }
   })
 }
 
@@ -55,16 +55,24 @@ describe('MapListTable — columns', () => {
     expect(screen.queryByRole('columnheader', { name: /Connection/ })).not.toBeInTheDocument()
   })
 
-  it('offers checkboxes to a user who can act on a selection', async () => {
-    await renderTable([listed('prod')])
-    expect(screen.getByRole('checkbox', { name: 'Select all visible maps' })).toBeInTheDocument()
+  it('offers checkboxes for the maps a selection can delete', async () => {
+    await renderTable([listed('prod', { can_delete: true })])
+    expect(
+      screen.getByRole('checkbox', { name: 'Select all maps in Customized' })
+    ).toBeInTheDocument()
+    expect(screen.getByRole('checkbox', { name: 'Select prod' })).toBeInTheDocument()
   })
 
-  it('offers no checkboxes to a user who cannot act on a selection', async () => {
-    await renderTable([listed('prod')], READER)
-    expect(
-      screen.queryByRole('checkbox', { name: 'Select all visible maps' })
-    ).not.toBeInTheDocument()
+  it('offers no checkboxes where no map may be deleted', async () => {
+    await renderTable([listed('prod', { can_delete: false })])
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument()
+  })
+
+  it('leads every row with its actions, then the map ID', async () => {
+    await renderTable([listed('prod', { alias: 'Production', can_edit: true })])
+    const headers = screen.getAllByRole('columnheader').map((th) => th.textContent?.trim())
+    expect(headers.slice(0, 3)).toEqual(['Actions', 'ID', 'Title'])
+    expect(screen.getByRole('cell', { name: 'prod' })).toBeInTheDocument()
   })
 
   it('drops the actions column when no listed map offers an action', async () => {
@@ -78,6 +86,24 @@ describe('MapListTable — columns', () => {
       READER
     )
     expect(screen.getByRole('columnheader', { name: 'Actions' })).toBeInTheDocument()
+  })
+})
+
+describe('MapListTable — tables', () => {
+  it("lists this user's maps, other users' and the built-in ones in tables of their own", async () => {
+    await renderTable([
+      listed('mine'),
+      listed('theirs', { owner: 'someone' }),
+      listed('demo', { is_builtin: true, owner: '' })
+    ])
+    expect(screen.getByRole('region', { name: 'Customized' })).toHaveTextContent('mine')
+    expect(screen.getByRole('region', { name: 'Owned by other users' })).toHaveTextContent('theirs')
+    expect(screen.getByRole('region', { name: 'Built-in' })).toHaveTextContent('demo')
+  })
+
+  it('leaves out a table that would be empty', async () => {
+    await renderTable([listed('mine')])
+    expect(screen.queryByRole('region', { name: 'Built-in' })).not.toBeInTheDocument()
   })
 })
 
@@ -101,14 +127,14 @@ describe('MapListTable — content', () => {
 describe('MapListTable — sorting', () => {
   it('sorts by a column when its header is used, and reverses on a second use', async () => {
     await renderTable([listed('beta'), listed('alpha')])
-    const header = screen.getByRole('button', { name: /Name/ })
+    const header = screen.getByRole('button', { name: /Title/ })
 
     await userEvent.click(header)
     expect(screen.getAllByRole('link').map((link) => link.textContent?.trim())).toEqual([
       'alpha',
       'beta'
     ])
-    expect(screen.getByRole('columnheader', { name: /Name/ })).toHaveAttribute(
+    expect(screen.getByRole('columnheader', { name: /Title/ })).toHaveAttribute(
       'aria-sort',
       'ascending'
     )
@@ -118,7 +144,7 @@ describe('MapListTable — sorting', () => {
       'beta',
       'alpha'
     ])
-    expect(screen.getByRole('columnheader', { name: /Name/ })).toHaveAttribute(
+    expect(screen.getByRole('columnheader', { name: /Title/ })).toHaveAttribute(
       'aria-sort',
       'descending'
     )

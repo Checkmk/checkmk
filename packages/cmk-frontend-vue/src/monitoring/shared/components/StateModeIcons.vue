@@ -35,6 +35,7 @@ const { _t } = usei18n()
     name="stale"
     primary-color="font"
     :title="_t('Stale')"
+    :aria-label="_t('Stale')"
   />
 </template>
 

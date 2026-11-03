@@ -38,10 +38,25 @@ from cmk.graphing.v1 import translations as translations_v1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing.v2_unstable import perfometers as perfometers_v2_unstable
 from cmk.graphing_engine import (
+    ApiGraph,
+    ApiPerfometer,
     build_matched_graphs,
+    drawn_segments,
+    DrawnSegment,
+    evaluate_graphs,
+    FetchedData,
+    Graph,
     MetricName,
+    MetricProtocol,
+    parse_performance_data,
+    parse_unit,
+    PerfometerIndex,
+    RequestedGraph,
+    RRDMetric,
     Service,
     SiteID,
+    TimeRange,
+    translated_names_and_scales,
 )
 from cmk.graphing_engine import (
     HostName as EngineHostName,
@@ -50,21 +65,14 @@ from cmk.graphing_engine import (
     ServiceName as EngineServiceName,
 )
 from cmk.gui.graphing import (
-    drawn_segments,
-    DrawnSegment,
     evaluated_metrics,
     evaluated_perfometer,
     EvaluatedMetric,
-    GraphFromAPI,
-    parse_performance_data,
     perfometer_label,
-    PerfometerFromAPI,
-    RegisteredMetric,
-    sort_registered_graph_plugins,
-    translated_names_and_scales,
     unit_to_unit_format,
 )
 from cmk.gui.i18n import translate_to_current_language
+from cmk.gui.log import logger
 from cmk.gui.theme import Theme
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
@@ -212,12 +220,12 @@ def _side_payload(
         check_command,
         host_name=engine.host_name,
         service_name=engine.service_name,
-        registered_perfometers={side.name: side},
+        registered_perfometers=PerfometerIndex({side.name: side}),
         registered_metrics=engine.registered_metric_plugins,
         registered_translations=engine.registered_translations,
         debug=engine.debug,
     )
-    if evaluated is None or not (rows := drawn_segments(evaluated)):
+    if evaluated is None or not (rows := drawn_segments(evaluated, logger=logger)):
         return None
     return PerfometerSide(
         title=_first_segment_title(side, metrics),
@@ -227,7 +235,7 @@ def _side_payload(
 
 
 def _component_perfometers(
-    plugin: PerfometerFromAPI,
+    plugin: ApiPerfometer,
 ) -> Sequence[perfometers_v1.Perfometer | perfometers_v2_unstable.Perfometer]:
     """The plain Perf-O-Meters a plugin is composed of, in stack-row order."""
     if isinstance(plugin, perfometers_v1.Bidirectional | perfometers_v2_unstable.Bidirectional):
@@ -241,7 +249,7 @@ def _perfometer_payload(
     perf_data_str: str,
     check_command: str,
     metrics: Mapping[MetricName, EvaluatedMetric],
-    registered_perfometers: Mapping[str, PerfometerFromAPI],
+    registered_perfometers: PerfometerIndex,
     engine: _EngineInputs,
     temperature_unit: TemperatureUnit,
     theme: Theme,
@@ -256,7 +264,7 @@ def _perfometer_payload(
         registered_translations=engine.registered_translations,
         debug=engine.debug,
     )
-    if evaluated is None or not (rows := drawn_segments(evaluated)):
+    if evaluated is None or not (rows := drawn_segments(evaluated, logger=logger)):
         return None
 
     # The engine leaves the trailing padding segment colourless; the wire model
@@ -276,7 +284,7 @@ def _perfometer_payload(
         ],
         sides=[
             _side_payload(side, perf_data_str, check_command, metrics, engine, temperature_unit)
-            for side in _component_perfometers(registered_perfometers[evaluated.name])
+            for side in _component_perfometers(registered_perfometers.plugins[evaluated.name])
         ],
         bg_color=bg_color,
     )
@@ -285,7 +293,7 @@ def _perfometer_payload(
 def _metrics_payload(
     names_and_scales: Mapping[MetricName, tuple[MetricName, float]],
     metrics: Mapping[MetricName, EvaluatedMetric],
-    registered_metrics: Mapping[str, RegisteredMetric],
+    registered_metrics: Mapping[str, metrics_v1.Metric],
 ) -> dict[str, MetricDisplay]:
     """Display semantics per RAW perfdata label (what the SPA parses and stores).
 
@@ -303,7 +311,7 @@ def _metrics_payload(
         evaluated = metrics.get(canonical)
         if registered is None or evaluated is None:
             continue
-        unit_format = unit_to_unit_format(registered.unit)
+        unit_format = unit_to_unit_format(parse_unit(registered.unit))
         out[raw_name] = MetricDisplay(
             name=canonical,
             title=evaluated.title,
@@ -321,14 +329,14 @@ def _metrics_payload(
     return out
 
 
-def _evaluated_metric_names(
-    plugin: GraphFromAPI,
+def _matched_graphs(
+    plugin: ApiGraph,
     metrics: Mapping[MetricName, EvaluatedMetric],
     engine: _EngineInputs,
     object_context: tuple[SiteId, HostName, ServiceName],
-) -> list[MetricName]:
-    """Canonical names of the metrics a graph plugin would actually draw;
-    empty when the plugin doesn't apply to these metrics.
+) -> Sequence[Graph]:
+    """The graphs a graph plugin would draw; empty when the plugin doesn't
+    apply to these metrics.
 
     The engine does the matching, against exactly the metrics this perfdata
     resolved to: the SPA already sent us the object's ``perf_data``, so the
@@ -341,21 +349,50 @@ def _evaluated_metric_names(
         service_name=EngineServiceName(service_name),
     )
     available = frozenset(metrics)
-    graphs = build_matched_graphs(
+    return build_matched_graphs(
         localizer=translate_to_current_language,
         fetch_metric_names=lambda: {service: available},
         kind=_GRAPH_KIND,
         registered_graphs=[plugin],
         registered_metrics=engine.registered_metric_plugins,
-        graph_name=plugin.name,
+        request=RequestedGraph(plugin.name),
     )
+
+
+def _metric_names(graphs: Sequence[Graph]) -> list[MetricName]:
     return sorted({metric.metric_name for graph in graphs for metric in graph.metrics()})
+
+
+def _graph_title(graph: Graph, evaluated: Mapping[MetricName, EvaluatedMetric]) -> str:
+    """The graph's title with the values it quotes filled in, such as the
+    core count in "CPU load - 4 CPU cores".
+
+    The engine fills them in from the perfdata the SPA sent rather than from
+    RRD, so no curve is fetched for a title.
+    """
+
+    def _readings(
+        metrics: Sequence[MetricProtocol],
+        *,
+        time_range: TimeRange,  # noqa: ARG001
+    ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
+        return {
+            metric: [FetchedData(performance_data=reading.performance_data, time_series=None)]
+            for metric in metrics
+            if isinstance(metric, RRDMetric) and (reading := evaluated.get(metric.metric_name))
+        }
+
+    return evaluate_graphs(
+        time_range=TimeRange(start=0, end=0, step=0),
+        graphs=[graph],
+        fetch_data=_readings,
+    )[0].title
 
 
 def _graphs_payload(
     names_and_scales: Mapping[MetricName, tuple[MetricName, float]],
     metrics: Mapping[MetricName, EvaluatedMetric],
-    registered_graphs: Mapping[str, GraphFromAPI],
+    registered_graphs: Sequence[ApiGraph],
     engine: _EngineInputs,
     object_context: tuple[SiteId, HostName, ServiceName],
 ) -> list[GraphGroup]:
@@ -375,22 +412,25 @@ def _graphs_payload(
         return [str(raw_by_canonical[name]) for name in canonical_names if name in raw_by_canonical]
 
     groups: list[GraphGroup] = []
-    for _name, plugin in sort_registered_graph_plugins(registered_graphs):
+    for plugin in registered_graphs:
         if isinstance(plugin, graphs_v1.Bidirectional | graphs_v2_unstable.Bidirectional):
-            upper = _evaluated_metric_names(plugin.upper, metrics, engine, object_context)
-            lower = _evaluated_metric_names(plugin.lower, metrics, engine, object_context)
+            upper = _metric_names(_matched_graphs(plugin.upper, metrics, engine, object_context))
+            lower = _metric_names(_matched_graphs(plugin.lower, metrics, engine, object_context))
             names = upper + [n for n in lower if n not in upper]
             mirrored = lower
+            # The title belongs to the whole plugin, not to its halves.
+            matched = _matched_graphs(plugin, metrics, engine, object_context)
         else:
-            names = _evaluated_metric_names(plugin, metrics, engine, object_context)
+            matched = _matched_graphs(plugin, metrics, engine, object_context)
+            names = _metric_names(matched)
             mirrored = []
         raw_labels = _raw_labels(names)
-        if not raw_labels:
+        if not raw_labels or not matched:
             continue
         groups.append(
             GraphGroup(
                 graph_id=plugin.name,
-                title=plugin.title.localize(translate_to_current_language),
+                title=_graph_title(matched[0], metrics),
                 metrics=raw_labels,
                 mirrored=_raw_labels(mirrored),
             )
@@ -423,21 +463,16 @@ def metric_info(
     perf_data_str: str,
     check_command: str,
     *,
-    registered_metrics: Mapping[str, RegisteredMetric],
     registered_metric_plugins: Mapping[str, metrics_v1.Metric],
     registered_translations: Sequence[translations_v1.Translation],
-    registered_perfometers: Mapping[str, PerfometerFromAPI],
+    registered_perfometers: PerfometerIndex,
     temperature_unit: TemperatureUnit,
     theme: Theme,
     debug: bool,
-    registered_graphs: Mapping[str, GraphFromAPI] | None = None,
+    registered_graphs: Sequence[ApiGraph] | None = None,
     object_context: tuple[SiteId, HostName, ServiceName] | None = None,
 ) -> MetricInfo:
     """Resolve raw perfdata display semantics through Checkmk's graphing pipeline.
-
-    Two views of the metric registry are needed: ``registered_metrics`` carries
-    the parsed display semantics this module reports, ``registered_metric_plugins``
-    the plug-in objects the evaluation engine builds its quantities from.
 
     Graph groups are computed only when ``registered_graphs`` and
     ``object_context`` are given — walking every registered graph plugin is
@@ -446,7 +481,9 @@ def metric_info(
     """
     if not perf_data_str.strip():
         return MetricInfo(perfometer=None, metrics={})
-    raw_performance_data = parse_performance_data(perf_data_str, check_command, debug=debug)
+    raw_performance_data = parse_performance_data(
+        perf_data_str, check_command, debug=debug, logger=logger
+    )
     names_and_scales = translated_names_and_scales(
         raw_performance_data.check_command,
         list(raw_performance_data.values),
@@ -478,7 +515,7 @@ def metric_info(
             temperature_unit,
             theme,
         ),
-        metrics=_metrics_payload(names_and_scales, metrics, registered_metrics),
+        metrics=_metrics_payload(names_and_scales, metrics, registered_metric_plugins),
         graphs=(
             None
             if registered_graphs is None or object_context is None

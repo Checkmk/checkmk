@@ -543,6 +543,16 @@ def test_community_not_contains_nonfree_files(package_path: str) -> None:
     )
 
 
+def test_package_does_not_contain_test_plans(package_path: str) -> None:
+    """test plans are internal QA documents and must not ship in any package"""
+    test_plans = [
+        path
+        for path in _get_paths_from_package(package_path)
+        if re.search(r"test[_-]?plan.*\.md$", Path(path).name, re.IGNORECASE)
+    ]
+    assert not test_plans, f"Found test plans in {package_path}: {test_plans}"
+
+
 def test_package_is_identifiable_by_commit(package_path: str) -> None:
     if os.environ.get("CIPARAM_GATED_REBASE_ONTO"):
         pytest.skip("Package was built from a rebased commit, HEAD mismatch is expected")
@@ -571,8 +581,8 @@ def _parse_windows_requirements(
 ) -> dict[str, str]:
     """Map the direct python-3.cab requirements to their resolved versions.
 
-    requirements-windows.in names what the CAB ships (unpinned), the resolved
-    requirements-windows.txt holds the versions.  Returns
+    windows-requirements.in names what the CAB ships (unpinned), the resolved
+    windows-requirements.txt holds the versions.  Returns
     {package_name: version}.
     """
     resolved: dict[str, str] = {}
@@ -588,12 +598,12 @@ def _parse_windows_requirements(
         match = re.match(r"([A-Za-z0-9._-]+)(?:\[[^]]*\])?$", stripped)
         assert match, (
             f"unparsable requirement line: {line!r}"
-            " (requirements-windows.in must stay unpinned, bounds go into constraints.txt)"
+            " (windows-requirements.in must stay unpinned, bounds go into constraints.txt)"
         )
         name = match.group(1)
         assert name.lower() in resolved, (
             f"{name} is not in {requirements_txt_path.name};"
-            " run `bazel run //agents/modules/windows:requirements_windows`"
+            " run `bazel run //agents/modules/windows:windows_requirements`"
         )
         packages[name] = resolved[name.lower()]
     return packages
@@ -626,8 +636,8 @@ def test_python3_cab_integrity(package_path: str) -> None:
 
     repo_root = Path(__file__).parents[2]
     packages = _parse_windows_requirements(
-        repo_root / "agents/modules/windows/requirements-windows.in",
-        repo_root / "agents/modules/windows/requirements-windows.txt",
+        repo_root / "agents/modules/windows/windows-requirements.in",
+        repo_root / "agents/modules/windows/windows-requirements.txt",
     )
     python_version = _windows_python_version(repo_root / "package_versions.bzl")
 
@@ -1128,6 +1138,18 @@ def test_windows_artifacts_are_signed(
                     "File table of check_mk_agent.msi does not match the extracted "
                     f"files - signable entries were collapsed or lost: {msi_table_names}"
                 )
+                # The PowerShell scripts are signed too, so that they run under the
+                # AllSigned execution policy. Only inside the MSI: the package also ships
+                # the unsigned plugin sources. CMK-39886
+                extracted_scripts = sorted(Path(msi_content).rglob("*.ps1"))
+                assert extracted_scripts, "No PowerShell scripts found in check_mk_agent.msi"
+                for extracted_script in extracted_scripts:
+                    signing_failures.append(
+                        _verify_signature(
+                            extracted_script,
+                            f"check_mk_agent.msi/{extracted_script.relative_to(msi_content)}",
+                        )
+                    )
 
         # check the embedded relay MSI - shipped only for cloud/ultimate/ultimatemt and
         # signed by default in the distro build (relay-msi.groovy: should_sign). CMK-34188
@@ -1258,7 +1280,6 @@ PLUGINS_EXECUTABLE_EXCEPTIONS = {
     "cmk/plugins/oracle/agents/mk-oracle.aix",
     "cmk/plugins/oracle/agents/mk-oracle.exe",
     "cmk/plugins/oracle/agents/mk-oracle.solaris",
-    "cmk/plugins/oracle/agents/mk-oracle.faked",
     "cmk/plugins/oracle/agents/mk-oracle.aix.faked",
     "cmk/plugins/oracle/agents/mk-oracle.exe.faked",
     "cmk/plugins/oracle/agents/mk-oracle.solaris.faked",

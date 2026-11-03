@@ -14,7 +14,6 @@ from contextlib import suppress
 from dataclasses import dataclass
 from typing import Literal
 
-import cmk.ccc.debug
 from cmk.automations.results import Gateway, GatewayResult
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKGeneralException, MKIPAddressLookupError
@@ -55,6 +54,7 @@ def scan_parents_of(
     settings: dict[str, int] | None = None,
     *,
     lookup_ip_address: _IpAddressLookup,
+    debug: bool,
 ) -> Sequence[GatewayResult]:
     if settings is None:
         settings = {}
@@ -114,7 +114,7 @@ def scan_parents_of(
                 )
             )
         except Exception as e:
-            if cmk.ccc.debug.enabled():
+            if debug:
                 raise
             procs.append((host, None, "ERROR: %s" % e))
 
@@ -155,7 +155,7 @@ def scan_parents_of(
             continue
 
         if len(lines) == 0:
-            if cmk.ccc.debug.enabled():
+            if debug:
                 raise MKGeneralException(
                     "Cannot execute %s. Is traceroute installed? Are you root?" % command  # type: ignore[possibly-undefined]
                 )

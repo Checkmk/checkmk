@@ -19,7 +19,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   cancel: []
   delete: []
-  edit: []
   'toggle-select-all': [checked: boolean]
 }>()
 
@@ -52,9 +51,6 @@ const ariaLabel = computed(() =>
         </label>
       </div>
       <div class="maps-map-bulk-action-bar__actions">
-        <CmkButton variant="primary" :disabled="busy" @click="emit('edit')">
-          {{ _t('Edit') }}
-        </CmkButton>
         <CmkButton variant="danger" :disabled="busy" @click="emit('delete')">
           {{ _t('Delete') }}
         </CmkButton>
@@ -79,7 +75,6 @@ const ariaLabel = computed(() =>
   background: var(--ux-theme-3);
   border: 1px solid var(--default-border-color);
   border-radius: var(--border-radius);
-  box-shadow: 0 8px 24px rgb(0 0 0 / 25%);
   max-width: calc(100vw - 24px);
 }
 
@@ -107,7 +102,7 @@ const ariaLabel = computed(() =>
   align-items: center;
   gap: var(--dimension-2);
   color: var(--font-color-dimmed);
-  font-size: 0.9em;
+  font-size: var(--font-size-normal);
   cursor: pointer;
   user-select: none;
   white-space: nowrap;

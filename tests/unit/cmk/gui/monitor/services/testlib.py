@@ -19,7 +19,7 @@ from cmk.gui.monitor.services._models import (
 )
 from cmk.gui.monitor.services._repositories import HostServicesRepository
 from cmk.gui.monitor.services._sorting import service_sorter
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.role_types import BuiltInUserRole
 from cmk.gui.session_context import UserContext
 from cmk.gui.utils.roles import UserPermissions
@@ -101,7 +101,50 @@ def get_fake_host_services_repository(
             # this.
             return len([s for s in self._services if query.lower() in s.name.lower()])
 
+        def unreachable_sites(self) -> list[str]:
+            return []
+
+        def unavailable_sites(self) -> frozenset[str]:
+            return frozenset()
+
     return HostServicesFakeRepository()
+
+
+class FakeServicesRepository:
+    def __init__(self, services: Sequence[Service], *, matched: int | None = None) -> None:
+        self._services = list(services)
+        self._matched = matched
+        self.count_matched_calls = 0
+
+    def fetch(
+        self,
+        *,
+        limit: int | None,  # noqa: ARG002
+        query: str,
+        sorters: Sequence[ServiceSort],
+        filters: ServiceFilter,  # noqa: ARG002
+        fields: Set[ServiceOptionalField],  # noqa: ARG002
+    ) -> Sequence[Service]:
+        return sorted(self._matching(query), key=service_sorter(sorters))
+
+    def count_total(self) -> int:
+        return len(self._services)
+
+    def count_matched(
+        self,
+        *,
+        query: str,
+        filters: ServiceFilter,  # noqa: ARG002
+        fields: Set[ServiceOptionalField],  # noqa: ARG002
+    ) -> int:
+        self.count_matched_calls += 1
+        return len(self._matching(query)) if self._matched is None else self._matched
+
+    def unreachable_sites(self) -> list[str]:
+        return []
+
+    def _matching(self, query: str) -> list[Service]:
+        return [s for s in self._services if query.lower() in f"{s.host_name} {s.name}".lower()]
 
 
 @contextmanager
@@ -109,6 +152,12 @@ def login_with(permissions: dict[str, bool]) -> Iterator[None]:
     """A logged-in user whose role spells out exactly these permissions."""
     role: BuiltInUserRole = {"alias": "Test", "permissions": permissions, "builtin": True}
     with UserContext(
-        UserId("test"), UserPermissions({"user": role}, permission_registry, {}, ["user"])
+        UserId("test"),
+        UserPermissions(
+            {"user": role},
+            all_permissions(),
+            {},
+            ["user"],
+        ),
     ):
         yield

@@ -96,7 +96,7 @@ def test_perf_metrics_host_has_no_check_command(monkeypatch: pytest.MonkeyPatch)
 
 
 def test_group_members_maps_host_state_and_flags(monkeypatch: pytest.MonkeyPatch) -> None:
-    _patch_live(monkeypatch, [["h1", 1, "DOWN - unreachable\nline2", 1, 0, 1, 123.0]])
+    _patch_live(monkeypatch, [["h1", 1, "DOWN - unreachable\nline2", 1, 0, 1, 123.0, 1]])
     assert _object_queries.group_members("hostgroup", "linux") == [
         Member(
             host="h1",
@@ -111,6 +111,20 @@ def test_group_members_maps_host_state_and_flags(monkeypatch: pytest.MonkeyPatch
     ]
 
 
+def test_group_members_shows_a_host_never_checked_as_pending(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _patch_live(monkeypatch, [["h1", 0, "", 0, 0, 1, 0, 0]])
+    assert [m.state for m in _object_queries.group_members("hostgroup", "linux")] == ["PENDING"]
+
+
+def test_group_members_shows_a_service_never_checked_as_pending(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _patch_live(monkeypatch, [["h1", "CPU load", 0, "", 0, 0, 1, 0, 0]])
+    assert [m.state for m in _object_queries.group_members("servicegroup", "cpu")] == ["PENDING"]
+
+
 def test_group_members_filters_by_group_membership(monkeypatch: pytest.MonkeyPatch) -> None:
     # ``groups >= <name>`` is the list-membership filter, not a string compare.
     live = _patch_live(monkeypatch, [])
@@ -119,7 +133,7 @@ def test_group_members_filters_by_group_membership(monkeypatch: pytest.MonkeyPat
 
 
 def test_group_members_unknown_type_is_empty(monkeypatch: pytest.MonkeyPatch) -> None:
-    _patch_live(monkeypatch, [["h1", 0, "", 0, 0, 1, 0]])
+    _patch_live(monkeypatch, [["h1", 0, "", 0, 0, 1, 0, 1]])
     assert _object_queries.group_members("nope", "linux") == []
 
 

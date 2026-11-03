@@ -6,7 +6,7 @@
 import logging
 
 import cmk.utils.paths
-from cmk.update_config.lib import ExpiryVersion
+from cmk.update_config.internal import ExpiryVersion
 from cmk.update_config.plugins.actions.selfbootstrap_agent_signature_keys import (
     SelfbootstrapAgentSignatureKeys,
 )

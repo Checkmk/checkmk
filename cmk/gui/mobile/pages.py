@@ -26,7 +26,6 @@ from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.painter import PainterConfig, PainterContext
 from cmk.gui.painter.helpers import RenderLink
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.permissions import permission_registry
 from cmk.gui.saml2_login import show_saml2_login
 from cmk.gui.theme.current_theme import theme
 from cmk.gui.type_defs import Rows, VisualContext
@@ -84,7 +83,6 @@ def mobile_html_head(title: str) -> None:
 
 
 def mobile_html_foot() -> None:
-    html.write_final_javascript()
     html.close_body()
     html.close_html()
 
@@ -253,12 +251,11 @@ class MobileLoginPage(LoginPage):
 class PageMobileIndex(Page):
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        _page_index(ctx.request, ctx.config)
+        _page_index(ctx.request, ctx.config, ctx.user_permissions)
         return None
 
 
-def _page_index(request: Request, config: Config) -> None:
-    user_permissions = UserPermissions.from_config(config, permission_registry)
+def _page_index(request: Request, config: Config, user_permissions: UserPermissions) -> None:
     request_cache = RequestCache(config)
     title = _("Checkmk mobile")
     mobile_html_head(title)
@@ -339,14 +336,16 @@ def _page_index(request: Request, config: Config) -> None:
 class PageMobileView(Page):
     @override
     def page(self, ctx: PageContext) -> PageResult:
-        _page_view(ctx.request, ctx.config, debug=ctx.config.debug)
+        _page_view(ctx.request, ctx.config, ctx.user_permissions, debug=ctx.config.debug)
         return None
 
 
-def _page_view(request: Request, config: Config, *, debug: bool) -> None:
+def _page_view(
+    request: Request, config: Config, user_permissions: UserPermissions, *, debug: bool
+) -> None:
     view_name = request.var("view_name")
     if not view_name:
-        return _page_index(request, config)
+        return _page_index(request, config, user_permissions)
 
     view_spec = get_permitted_views().get(view_name)
     if not view_spec:
@@ -358,7 +357,6 @@ def _page_view(request: Request, config: Config, *, debug: bool) -> None:
         datasource.infos, view_spec["context"], request_cache
     )
 
-    user_permissions = UserPermissions.from_config(config, permission_registry)
     view = View(
         view_name,
         view_spec,

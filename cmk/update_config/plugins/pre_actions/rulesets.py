@@ -24,14 +24,15 @@ from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.rulesets import AllRulesets, Ruleset, RulesetCollection
 from cmk.gui.watolib.rulespecs import FormSpecNotImplementedError
 from cmk.gui.wsgi.app import gui_context
-from cmk.update_config.lib import ExpiryVersion
-from cmk.update_config.plugins.lib.rulesets import SKIP_PREACTION
-from cmk.update_config.plugins.pre_actions.utils import (
+from cmk.update_config.internal import (
     ConflictMode,
     continue_per_users_choice,
+    ExpiryVersion,
+    PreUpdateAction,
     Resume,
 )
-from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
+from cmk.update_config.plugins.lib.rulesets import rename_replaced_plugins, SKIP_PREACTION
+from cmk.update_config.registry import pre_update_action_registry
 from cmk.utils import paths
 from cmk.utils.log import VERBOSE
 from cmk.utils.redis import disable_redis
@@ -116,7 +117,7 @@ class PreUpdateRulesets(PreUpdateAction):
                     f"Ruleset: {ruleset.name}\n"
                     f"Title: {ruleset.title()}\n"
                     f"Folder: {folder.path() or 'main'}\n"
-                    f"Rule nr: {index + 1}\n"
+                    f"Rule nr: {index}\n"
                     f"Exception: {exception}\n\n"
                 )
                 logger.error(error_message)
@@ -182,6 +183,8 @@ def _validate_rule_values(
                 "Validating ruleset '%(ruleset_name)s' in folder '%(folder_name)s'",
                 {"ruleset_name": ruleset.name, "folder_name": folder.name()},
             )
+            # validate the value the update will produce, not one referring to replaced plug-ins
+            value = rename_replaced_plugins(ruleset.name, rule.value)
             with warnings.catch_warnings(action="error", category=RegexFutureWarning):
                 try:
                     try:
@@ -189,11 +192,11 @@ def _validate_rule_values(
                             ruleset.rulespec.form_spec,
                             VisitorOptions(migrate_values=True, mask_values=True),
                         )
-                        validation_errors = visitor.validate(RawDiskData(rule.value))
+                        validation_errors = visitor.validate(RawDiskData(value))
                         if validation_errors:
                             raise ValueError(f"Validation errors: {validation_errors}")
                     except FormSpecNotImplementedError:
-                        transformed_value = ruleset.rulespec.valuespec.transform_value(rule.value)
+                        transformed_value = ruleset.rulespec.valuespec.transform_value(value)
                         ruleset.rulespec.valuespec.validate_datatype(
                             transformed_value,
                             "",
@@ -209,7 +212,7 @@ def _validate_rule_values(
                         f"Ruleset: {ruleset.name}",
                         f"Title: {ruleset.title()}",
                         f"Folder: {folder.path() or 'main'}",
-                        f"Rule nr: {index + 1}",
+                        f"Rule nr: {index}",
                         "At the moment your regex works correctly, but it might stop working or",
                         "behave differently in a future Python version. Please consider updating it.",
                         "",
@@ -223,7 +226,7 @@ def _validate_rule_values(
                         f"Ruleset: {ruleset.name}",
                         f"Title: {ruleset.title()}",
                         f"Folder: {folder.path() or 'main'}",
-                        f"Rule nr: {index + 1}",
+                        f"Rule nr: {index}",
                     ]
                     add_info = _additional_info(ruleset, rule.value, contact_groups)
                     logger.exception("\n".join(error_messages + add_info.messages))

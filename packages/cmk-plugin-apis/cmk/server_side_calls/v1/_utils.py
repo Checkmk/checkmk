@@ -240,13 +240,16 @@ class Secret(NamedTuple):
      * whether to pass the secret itself, or preferable, only the
        name of the secret in the password store
 
-    If you pass the name of the secret to the special agents / active check,
-    it needs to look up the corresponding secret from the password store using
-    :func:`cmk.utils.password_store.lookup`.
-    There is no API for the password store (yet) that provides the desirable
-    stability, so the above might change location and name in the future.
+    If you pass the name of the secret to the special agent / active check,
+    it needs to look up the corresponding secret from the password store.
+    Use the :mod:`cmk.password_store.v1` API for this:
+    :func:`cmk.password_store.v1.parser_add_secret_option` and
+    :func:`cmk.password_store.v1.resolve_secret_option` handle both the
+    password store reference and an explicitly passed secret, while
+    :func:`cmk.password_store.v1.dereference_secret` resolves a reference
+    directly.
 
-    Neither the passord itself nor the name of the password is contained
+    Neither the password itself nor the name of the password is contained
     in this object.
 
     Example:

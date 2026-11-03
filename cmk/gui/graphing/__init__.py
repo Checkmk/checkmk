@@ -5,21 +5,7 @@
 from ._autocompleter import monitored_metrics_autocompleter
 from ._built_graphs import BuiltGraph, DiscoveredGraphs
 from ._decoding import context_from_json, ensure_type
-from ._drawn_curves import (
-    drawn_curves,
-    drawn_curves_with_references,
-    DrawnCurve,
-    line_type_with_mirroring,
-)
-from ._from_api import (
-    GraphFromAPI,
-    graphs_from_api,
-    metrics_from_api,
-    parse_metric_from_api,
-    PerfometerFromAPI,
-    perfometers_from_api,
-    RegisteredMetric,
-)
+from ._evaluation_options import EvaluationOptions
 from ._frontend import (
     DEFAULT_INTERACTION,
     default_time_range_seconds,
@@ -38,36 +24,32 @@ from ._frontend import (
 from ._graph_choices import graph_choices, GraphChoices, GraphPluginChoice
 from ._graph_codec import (
     COMMUNITY_QUANTITY_SPECS,
-    graph_codec,
     GraphCodec,
     QuantityCodec,
     QuantitySpec,
 )
 from ._graph_dispatch import (
-    CommonGraphOptions,
-    edge_neighbours_at_served_step_of,
     evaluate_built_graphs,
     EvaluatedGraphs,
     FetchDataWithDiagnosticsProtocol,
     graph_dispatcher_registry,
+    graph_request_of,
     GraphDispatcher,
     GraphDispatcherRegistry,
     legacy_graph_id,
+    metric_name_of,
     serialize_graphs,
 )
 from ._graph_display_config import (
-    compute_image_graph_ranges,
-    graph_image_render_options,
     GraphDestinations,
+    GraphDisplayConfigBase,
     GraphDisplayConfigHTML,
-    GraphDisplayConfigImage,
     GraphRenderOptions,
     GraphTitleFormat,
     HTML_SIZE_PER_EX,
     resolve_size,
 )
-from ._graph_png import render_png
-from ._graph_png_size import compute_png_size_mm, mm_per_ex
+from ._graph_evaluation import EvaluateGraph, requested_window
 from ._graph_ranges import compute_graph_ranges_for_width, GraphRanges
 from ._graph_specification import (
     AnnotatedHostName,
@@ -77,6 +59,7 @@ from ._graph_specification import (
     GraphExportRequest,
     GraphSpecification,
     parse_graph_specification,
+    site_time_zone,
     StoredGraphSpecification,
 )
 from ._graph_templates import (
@@ -89,18 +72,13 @@ from ._graph_templates import (
     TEMPLATE_KIND,
     TemplateGraphSpecification,
 )
-from ._graphs_order import sort_registered_graph_plugins
 from ._legacy_graph_spec import empty_graph_spec, evaluated_to_graph_spec, GraphSpec
-from ._line_types import DrawnLineType, LineType
+from ._line_types import line_type_with_mirroring, LineType
 from ._metric_data import (
     evaluated_metrics,
     EvaluatedMetric,
     merge_rrd_columns,
-    reverse_translated_names,
     rrd_column_names,
-    split_predict_prefix,
-    translate_metric_names,
-    translated_names_and_scales,
 )
 from ._metric_query import (
     AttributeGroup,
@@ -133,29 +111,17 @@ from ._metric_query import (
     SumLastRaw,
     SumRate,
 )
-from ._metric_spec import get_metric_spec, registered_metric_ids_and_titles
+from ._metric_spec import registered_metric_ids_and_titles
 from ._metric_visitor import MetricVisitor
-from ._notification_graph_images import (
-    AjaxGraphImagesForNotifications,
-)
 from ._perfometers import (
-    drawn_segments,
-    DrawnSegment,
     evaluated_perfometer,
     perfometer_label,
-    perfometer_sort_value,
 )
-from ._performance_data import (
-    parse_check_command,
-    parse_performance_data,
-    RawPerformanceData,
-)
-from ._plugin_loading import register_plugins
 from ._plugins import (
-    graphing_plugins,
-    GraphingPlugins,
+    load_plugins,
     registered_graphs,
     registered_metrics,
+    registered_perfometers,
     registered_translations,
 )
 from ._popup import PageHostServiceGraphPopup
@@ -182,7 +148,6 @@ from ._unit_specification import unit_from_specification, unit_to_specification
 from ._user_specific_unit import (
     get_temperature_unit,
     user_specific_unit,
-    user_specific_unit_from_unit_format,
 )
 from ._valuespecs import (
     id_from_unit,
@@ -190,7 +155,6 @@ from ._valuespecs import (
     MetricName,
     metrics_of_query,
     migrate_graph_render_options_title_format,
-    migrate_graph_render_options_title_format_from_disk,
     PageVsAutocomplete,
     ValuesWithUnits,
     vs_graph_render_option_elements,
@@ -198,7 +162,7 @@ from ._valuespecs import (
 )
 
 __all__ = [
-    "AjaxGraphImagesForNotifications",
+    "GraphDisplayConfigBase",
     "AnnotatedHostName",
     "assemble_fetched_data",
     "AttributeGroup",
@@ -206,24 +170,15 @@ __all__ = [
     "build_template_graphs",
     "BuiltGraph",
     "canonical_mapping_key",
-    "CommonGraphOptions",
     "COMMUNITY_QUANTITY_SPECS",
     "context_from_json",
     "compute_graph_ranges_for_width",
-    "compute_image_graph_ranges",
-    "compute_png_size_mm",
     "ConfigVariableGraphTimeranges",
     "ConsolidationFunction",
     "DEFAULT_INTERACTION",
     "default_time_range_seconds",
     "discover_template_graphs",
     "DiscoveredGraphs",
-    "drawn_curves",
-    "drawn_curves_with_references",
-    "drawn_segments",
-    "DrawnCurve",
-    "DrawnLineType",
-    "DrawnSegment",
     "empty_graph_spec",
     "EngineDisplayOptions",
     "ensure_type",
@@ -232,8 +187,11 @@ __all__ = [
     "evaluated_perfometer",
     "evaluated_to_graph_spec",
     "EvaluatedGraphs",
+    "EvaluationOptions",
     "EvaluatedMetric",
-    "edge_neighbours_at_served_step_of",
+    "graph_request_of",
+    "EvaluateGraph",
+    "requested_window",
     "FetchDataWithDiagnosticsProtocol",
     "FetchDiagnostics",
     "FetchTimeSeriesProtocol",
@@ -243,14 +201,11 @@ __all__ = [
     "GaugeMin",
     "get_graph_plugin_choices",
     "get_graph_plugin_from_id",
-    "get_metric_spec",
     "get_temperature_unit",
     "global_time_picker_props",
     "global_time_picker_refresh",
     "graph_choices",
-    "graph_codec",
     "graph_dispatcher_registry",
-    "graph_image_render_options",
     "graph_specification_registry",
     "GraphChoices",
     "GraphCodec",
@@ -259,17 +214,12 @@ __all__ = [
     "GraphDispatcher",
     "GraphDispatcherRegistry",
     "GraphDisplayConfigHTML",
-    "GraphDisplayConfigImage",
     "GraphEnvironment",
     "GraphExportRequest",
-    "GraphFromAPI",
-    "graphing_plugins",
-    "GraphingPlugins",
     "GraphLineGroupByKey",
     "GraphPluginChoice",
     "GraphRanges",
     "GraphRenderOptions",
-    "graphs_from_api",
     "GraphSpec",
     "GraphSpecification",
     "StoredGraphSpecification",
@@ -290,6 +240,8 @@ __all__ = [
     "HTML_SIZE_PER_EX",
     "id_from_unit",
     "legacy_graph_id",
+    "load_plugins",
+    "metric_name_of",
     "line_type_with_mirroring",
     "LineType",
     "LivestatusQueryFunc",
@@ -299,23 +251,14 @@ __all__ = [
     "TelemetryMetricsBackend",
     "MetricName",
     "monitored_metrics_autocompleter",
-    "metrics_from_api",
     "metrics_of_query",
     "MetricVisitor",
     "migrate_graph_render_options_title_format",
-    "migrate_graph_render_options_title_format_from_disk",
     "MKGraphNotFound",
-    "mm_per_ex",
     "PageHostServiceGraphPopup",
     "PageVsAutocomplete",
-    "parse_check_command",
     "parse_graph_specification",
-    "parse_metric_from_api",
-    "parse_performance_data",
     "perfometer_label",
-    "perfometer_sort_value",
-    "PerfometerFromAPI",
-    "perfometers_from_api",
     "prediction_graph_dispatcher",
     "QuantityCodec",
     "QuantitySpec",
@@ -326,28 +269,22 @@ __all__ = [
     "QueryDataTimeSeries",
     "QueryDataValue",
     "QueryLimitReached",
-    "RawPerformanceData",
     "registered_graphs",
-    "register_plugins",
     "registered_metric_ids_and_titles",
     "registered_metrics",
+    "registered_perfometers",
     "registered_translations",
-    "RegisteredMetric",
     "render_engine_graph_group",
     "render_global_time_picker",
     "resolve_default_time_range_seconds",
     "render_graph_error_html",
-    "render_png",
     "resolve_graph_id_from_index",
     "resolve_size",
-    "reverse_translated_names",
     "rrd_column_names",
     "RRDFetchData",
     "RRDFetchMetricNames",
     "RRDFetchTimeSeries",
     "serialize_graphs",
-    "sort_registered_graph_plugins",
-    "split_predict_prefix",
     "STATIC_INTERACTION",
     "stored_time_range_seconds",
     "SumDelta",
@@ -356,15 +293,13 @@ __all__ = [
     "TEMPLATE_KIND",
     "TemplateGraphSpecification",
     "to_cmk_time_series_graph",
-    "translate_metric_names",
-    "translated_names_and_scales",
     "unit_to_unit_format",
     "user_first_day_of_week",
     "unit_from_specification",
     "unit_to_specification",
     "user_specific_unit",
-    "user_specific_unit_from_unit_format",
     "ValuesWithUnits",
     "vs_graph_render_option_elements",
     "vs_graph_render_options",
+    "site_time_zone",
 ]

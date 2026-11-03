@@ -23,6 +23,7 @@ function makeService(overrides: Partial<HostServiceEntry> = {}): HostServiceEntr
 }
 
 const DOWNTIME: ServiceMode = {
+  id: 'downtime',
   icon_name: 'downtime',
   link: 'view.py?view_name=downtimes_of_service&host=web-server-01&service=CPU+load',
   title: 'In scheduled downtime'

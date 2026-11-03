@@ -6,9 +6,11 @@
 import { fromDate } from '@internationalized/date'
 import { screen, waitFor } from '@testing-library/vue'
 import { describe, expect, it } from 'vitest'
+import { defineComponent, h, ref } from 'vue'
 
 import DashboardContentSingleMetric from '@/dashboard/components/DashboardContent/figures/DashboardContentSingleMetric.vue'
 import type { ContentProps } from '@/dashboard/components/DashboardContent/types'
+import { useProvideDrillDownSource } from '@/dashboard/composables/useDrillDownSource'
 import type { ComputedSingleMetric, SingleMetricContent } from '@/dashboard/types/widget'
 
 import {
@@ -135,6 +137,23 @@ describe('DashboardContentSingleMetric', () => {
     expect(container.querySelector('a')).toHaveAttribute(
       'href',
       'view.py?view_name=service&site=heute&host=myhost&service=CPU+load&filled_in=filter&_show_filter_form=0'
+    )
+  })
+
+  it('names the dashboard its link leaves', async () => {
+    const props = makeContentProps(CURRENT_VALUE)
+    const dashboard = defineComponent({
+      setup() {
+        useProvideDrillDownSource(ref('Overview'))
+        return () => h(DashboardContentSingleMetric, props)
+      }
+    })
+    const { container } = await renderComputedWidget(dashboard, {})
+    await screen.findByText('801.84')
+
+    expect(container.querySelector('a')).toHaveAttribute(
+      'href',
+      expect.stringContaining('_drilled_from=Overview')
     )
   })
 

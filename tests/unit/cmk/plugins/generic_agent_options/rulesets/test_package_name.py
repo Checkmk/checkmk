@@ -1,0 +1,28 @@
+#!/usr/bin/env python3
+# Copyright (C) 2025 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+import pytest
+
+from cmk.plugins.generic_agent_options.rulesets.package_name import migrate
+
+
+@pytest.mark.parametrize(
+    "old, expected",
+    [
+        pytest.param("my-agent", {"name": "my-agent"}, id="string"),
+        pytest.param({"name": "my-agent"}, {"name": "my-agent"}, id="already_migrated"),
+    ],
+)
+def test_migrate(old: object, expected: dict[str, object]) -> None:
+    assert migrate(old) == expected
+
+
+@pytest.mark.parametrize(
+    "value",
+    [pytest.param(None, id="none"), pytest.param({}, id="empty"), pytest.param(["a"], id="list")],
+)
+def test_migrate_rejects_unknown_values(value: object) -> None:
+    with pytest.raises(ValueError):
+        migrate(value)

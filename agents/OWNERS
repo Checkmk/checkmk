@@ -1,6 +1,9 @@
 per-file waitmax.c=file:/component_owners/agent_bakery_updater/OWNERS_DEFINITION
 per-file waitmax.c=set noparent
 
+# keep the root OWNERS' pyproject.toml rule from claiming agent modules
+per-file pyproject.toml=set noparent
+
 # Please
 #  - don't add individual owners here but provide a reference to an OWNERS_DEFINITION file instead
 #  - consider a `per-file <PATH>=set noparent` line for each `per-file` rule

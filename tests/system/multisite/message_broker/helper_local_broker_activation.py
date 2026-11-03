@@ -15,11 +15,12 @@ from collections import defaultdict
 
 from cmk.ccc.version import edition
 from cmk.gui import main_modules
+from cmk.gui.config import active_config
 from cmk.gui.watolib.activate_changes import (
     _activate_central_steps,
     activation_features_registry,
 )
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.wsgi.app import gui_context
 from cmk.livestatus_client import SiteConfigurations
 from cmk.messaging import rabbitmq
@@ -35,5 +36,5 @@ if __name__ == "__main__":
             defaultdict(rabbitmq.Definitions),
             [],
             [],
-            folder_tree(),
+            make_folder_tree(active_config),
         )

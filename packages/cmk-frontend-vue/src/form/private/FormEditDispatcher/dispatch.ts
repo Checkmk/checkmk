@@ -53,6 +53,7 @@ type FeatureOwnedComponents =
   | 'telemetry_metrics_custom_query'
   | 'oauth2_connection_setup'
   | 'dcd_telemetry_metrics_filter'
+  | 'data_backend_settings'
 
 type BaseComponents = Omit<FormSpecComponents, FeatureOwnedComponents>
 

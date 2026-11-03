@@ -10,7 +10,8 @@ import { computed } from 'vue'
 
 import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import DashboardPreviewContent from '@/dashboard/components/DashboardPreviewContent.vue'
-import GraphTimeRange from '@/dashboard/components/TimeRange/GraphTimeRange.vue'
+import TimeRangeSource from '@/dashboard/components/TimeRange/TimeRangeSource.vue'
+import GraphLegendOptions from '@/dashboard/components/Wizard/components/GraphRenderOptions/GraphLegendOptions.vue'
 import FieldComponent from '@/dashboard/components/Wizard/components/TableForm/FieldComponent.vue'
 import FieldDescription from '@/dashboard/components/Wizard/components/TableForm/FieldDescription.vue'
 import TableForm from '@/dashboard/components/Wizard/components/TableForm/TableForm.vue'
@@ -55,7 +56,10 @@ const widgetProps = computed(() => handler.value.widgetProps)
       <TableFormRow>
         <FieldDescription>{{ _t('Time range') }}</FieldDescription>
         <FieldComponent>
-          <GraphTimeRange v-model:selected-timerange="handler.timeRange.value" />
+          <TimeRangeSource
+            v-model:follow-dashboard="handler.followDashboardTimeRange.value"
+            v-model:selected-timerange="handler.timeRange.value"
+          />
         </FieldComponent>
       </TableFormRow>
     </TableForm>
@@ -87,6 +91,15 @@ const widgetProps = computed(() => handler.value.widgetProps)
             v-model:metric-color="handler.metricColor.value"
             v-model:average-color="handler.averageColor.value"
             v-model:median-color="handler.medianColor.value"
+          />
+        </FieldComponent>
+      </TableFormRow>
+      <TableFormRow>
+        <FieldDescription>{{ _t('Legend') }}</FieldDescription>
+        <FieldComponent>
+          <GraphLegendOptions
+            v-model:show-legend="handler.graphLegend.value"
+            v-model:legend-style="handler.graphLegendStyle.value"
           />
         </FieldComponent>
       </TableFormRow>

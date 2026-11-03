@@ -86,6 +86,18 @@ STRINGTABLE: StringTable = [
             id="error from broker (e.g. mgmt plugin disabled)",
         ),
         pytest.param([], {}, id="empty list (e.g. broker not running)"),
+        pytest.param(
+            [
+                ['<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">'],
+                ["<title>404 Not Found</title>"],
+                ["</body></html>"],
+                [
+                    '[{"node": "rabbit-heute@localhost", "vhost": "/", "name":"cmk.intersite.heute_remote_1","messages":1}]'
+                ],
+            ],
+            {"heute": [Queue(vhost="/", name="cmk.intersite.heute_remote_1", messages=1)]},
+            id="html error page of another site",
+        ),
     ],
 )
 def test_parse_all_queues(string_table: StringTable, expected_parsed_data: SectionQueues) -> None:

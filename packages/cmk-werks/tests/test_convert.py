@@ -147,29 +147,32 @@ root@linux:~# reboot
 * check_mk_agent.macosx"""
 
 
+_DEFAULTS = {"compatible": "compat", "edition": "cre"}
+
+
 def test_convert_werk_simple() -> None:
-    assert werkv1_to_werkv2(WERK_V1, 1234) == WERK_V1_RESULT
+    assert werkv1_to_werkv2(WERK_V1, 1234, _DEFAULTS) == WERK_V1_RESULT
 
 
 def test_roundtrip() -> None:
-    assert werkv1_to_werkv2(WERK_V1_SIMPLE, 1234) == WERK_V1_SIMPLE_RESULT
+    assert werkv1_to_werkv2(WERK_V1_SIMPLE, 1234, _DEFAULTS) == WERK_V1_SIMPLE_RESULT
 
 
-def test_a_v1_werk_without_compatibility_is_converted_as_compatible() -> None:
+def test_a_v1_werk_without_compatibility_gets_the_default() -> None:
     werk_v1 = WERK_V1_SIMPLE.replace("Compatible: compat\n", "")
 
-    assert "compatible | yes\n" in werkv1_to_werkv2(werk_v1, 1234)
+    assert "compatible | yes\n" in werkv1_to_werkv2(werk_v1, 1234, _DEFAULTS)
 
 
 def test_a_v1_werk_with_an_unknown_compatibility_is_rejected() -> None:
     werk_v1 = WERK_V1_SIMPLE.replace("Compatible: compat\n", "Compatible: maybe\n")
 
     with pytest.raises(ValueError, match="got 'maybe'"):
-        werkv1_to_werkv2(werk_v1, 1234)
+        werkv1_to_werkv2(werk_v1, 1234, _DEFAULTS)
 
 
 def test_a_v1_line_without_a_key_is_rejected() -> None:
     werk_v1 = WERK_V1_SIMPLE.replace("Class: fix\n", "Class fix\n")
 
     with pytest.raises(RuntimeError, match="Can not parse line 'Class fix' of werk 1234"):
-        werkv1_to_werkv2(werk_v1, 1234)
+        werkv1_to_werkv2(werk_v1, 1234, _DEFAULTS)

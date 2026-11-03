@@ -108,7 +108,7 @@ class SetupHost(CmkPage):
 
         Args:
             host_name (str): Name of the host.
-            icon_name (str): Name of the icon, which perfoms an action on the host.
+            icon_name (str): Name of the icon, which performs an action on the host.
         """
         return self._host_row(host_name).get_by_role("link", name=icon_name)
 
@@ -447,7 +447,7 @@ class ImportHostsViaCSVFilePreview(CmkPage):
 
     def set_field_delimiter(self, delimiter: str | None) -> None:
         """
-        Set the field delimeter setting. If 'delimiter' is None, uncheck the form box.
+        Set the field delimiter setting. If 'delimiter' is None, uncheck the form box.
         """
         # Playwright considers the checkbox itself to be non-visible, so we can't call set_checked()
         # and similar on it directly, we have to click() on the "label".

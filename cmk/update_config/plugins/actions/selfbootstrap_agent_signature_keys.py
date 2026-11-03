@@ -23,8 +23,8 @@ written by earlier versions through it.
 from logging import Logger
 from typing import override
 
-from cmk.update_config.lib import ExpiryVersion
-from cmk.update_config.registry import update_action_registry, UpdateAction
+from cmk.update_config.internal import ExpiryVersion, UpdateAction
+from cmk.update_config.registry import update_action_registry
 from cmk.utils import paths
 from cmk.utils.keypair_store import KeypairStore
 

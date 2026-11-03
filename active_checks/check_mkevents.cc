@@ -53,9 +53,7 @@ void print_line(const std::string &output) {
     std::cout << std::endl;
 }
 
-[[noreturn]] void exit(State state) {
-    ::exit(static_cast<int>(state));
-}
+[[noreturn]] void exit(State state) { ::exit(static_cast<int>(state)); }
 
 [[noreturn]] void reply_and_exit(State state, const std::string &output) {
     std::cout << state << " - ";
@@ -72,9 +70,10 @@ void print_line(const std::string &output) {
                                 const std::stringstream &response) {
     auto resp = response.str();
     reply_and_exit(State::unknown,
-          "Event console answered with incorrect header (missing " + header +
-              ")\nQuery was:\n" + query + "\nReceived " +
-              std::to_string(resp.size()) + " byte response:\n" + resp);
+                   "Event console answered with incorrect header (missing " +
+                       header + ")\nQuery was:\n" + query + "\nReceived " +
+                       std::to_string(resp.size()) + " byte response:\n" +
+                       resp);
 }
 
 void usage() {
@@ -149,14 +148,15 @@ int main(int argc, char **argv) {
         char *remote_hostaddress = strtok(remote_host, ":");
         struct hostent *he = gethostbyname(remote_hostaddress);
         if (he == nullptr) {
-            reply_and_exit(State::unknown, "Unable to resolve remote host address: " +
-                                      std::string(remote_hostaddress));
+            reply_and_exit(State::unknown,
+                           "Unable to resolve remote host address: " +
+                               std::string(remote_hostaddress));
         }
 
         auto addr_list = reinterpret_cast<struct in_addr **>(he->h_addr_list);
         std::string remote_hostipaddress;
         for (int i = 0; addr_list[i] != nullptr; i++) {
-          remote_hostipaddress = std::string{inet_ntoa(*addr_list[i])};
+            remote_hostipaddress = std::string{inet_ntoa(*addr_list[i])};
         }
 
         char *port_str = strtok(nullptr, ":");
@@ -192,8 +192,9 @@ int main(int argc, char **argv) {
         if (unixsocket_path.empty()) {
             char *omd_path = getenv("OMD_ROOT");
             if (omd_path == nullptr) {
-                reply_and_exit(State::unknown,
-                      "OMD_ROOT is not set, no socket path is defined.");
+                reply_and_exit(
+                    State::unknown,
+                    "OMD_ROOT is not set, no socket path is defined.");
             }
             unixsocket_path =
                 std::string(omd_path) + "/tmp/run/mkeventd/status";
@@ -212,9 +213,7 @@ int main(int argc, char **argv) {
             ioError("Cannot set socket reveive timeout");
         }
 
-        struct sockaddr_un addr {
-          .sun_family = AF_UNIX, .sun_path = ""
-        };
+        struct sockaddr_un addr{.sun_family = AF_UNIX, .sun_path = ""};
         unixsocket_path.copy(&addr.sun_path[0], sizeof(addr.sun_path) - 1);
         addr.sun_path[sizeof(addr.sun_path) - 1] = '\0';
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
@@ -383,7 +382,7 @@ int main(int argc, char **argv) {
 
     std::stringstream output;
     output << count << " events (" << unhandled << " unacknowledged)";
-    if (!worst_row_event_text.empty() &&  last_log_in_summary) {
+    if (!worst_row_event_text.empty() && last_log_in_summary) {
         output << ", Last line: " << worst_row_event_text;
     }
     print_line(output.str());

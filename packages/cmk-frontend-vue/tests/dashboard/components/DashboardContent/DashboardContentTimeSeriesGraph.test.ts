@@ -13,7 +13,11 @@ import { createSharedGraphFetcher } from '@/dashboard/components/DashboardConten
 import { useProvideCmkToken } from '@/dashboard/composables/useCmkToken'
 import { useProvideSharedWidgetGraphs } from '@/dashboard/composables/useSharedWidgetGraphs'
 import type { SharedWidgetGraphs } from '@/dashboard/types/page.ts'
-import type { CustomGraphContent } from '@/dashboard/types/widget.ts'
+import type {
+  AverageScatterplotContent,
+  CustomGraphContent,
+  EmbeddedCustomGraphContent
+} from '@/dashboard/types/widget.ts'
 
 import { makeContentProps } from '@tests/dashboard/contentProps'
 
@@ -25,7 +29,7 @@ vi.mock('@/graphing/components/GraphFigure/GraphFigure.vue', () => ({
       'source',
       'timerange',
       'combinationMode',
-      'showLegend',
+      'legend',
       'showTimestamp',
       'showPin',
       'showTimeAxis',
@@ -40,6 +44,7 @@ vi.mock('@/graphing/components/GraphFigure/GraphFigure.vue', () => ({
     template: `<div
       data-testid="graph-figure"
       :data-show-pin="showPin"
+      :data-legend="legend"
       :data-source-type="source.type"
       :data-show-time-axis="showTimeAxis"
       :data-show-value-axis="showValueAxis"
@@ -47,12 +52,22 @@ vi.mock('@/graphing/components/GraphFigure/GraphFigure.vue', () => ({
       :data-min-value-axis-width="minValueAxisWidth"
       :data-show-burger-menu="showBurgerMenu"
       :data-requested-time-range="JSON.stringify(requestedTimeRange)"
+      :data-timerange="JSON.stringify(timerange)"
     >{{ source.type === 'definition' ? source.internal : source.key }}<button
       data-testid="emit-commit-time-range"
       @click="$emit('commitTimeRange', { start: 1767225600, end: 1767229200 })"
     /></div>`
   }
 }))
+
+const SCATTERPLOT_CONTENT: AverageScatterplotContent = {
+  type: 'average_scatterplot',
+  metric: 'util',
+  time_range: { type: 'predefined', value: 'last_25_hours' },
+  metric_color: 'default',
+  average_color: 'default',
+  median_color: 'default'
+}
 
 const CUSTOM_GRAPH_CONTENT: CustomGraphContent = {
   type: 'custom_graph',
@@ -96,7 +111,7 @@ describe('custom graph widget', () => {
     expect(postSpy.mock.calls[0][0]).toBe(
       '/domain-types/graph/actions/discover_custom_graphs/invoke'
     )
-    expect(postSpy.mock.calls[0][1].body).toEqual({ custom_graph: 'my_graph' })
+    expect(postSpy.mock.calls[0][1].body).toEqual({ type: 'saved', name: 'my_graph' })
   })
 
   test('renders the figure with the discovered definition', async () => {
@@ -129,7 +144,7 @@ describe('custom graph widget', () => {
     } as never)
 
     await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(2))
-    expect(postSpy.mock.calls[1][1].body).toEqual({ custom_graph: 'other_graph' })
+    expect(postSpy.mock.calls[1][1].body).toEqual({ type: 'saved', name: 'other_graph' })
   })
 
   test('shows the error message when the graph cannot be discovered', async () => {
@@ -144,6 +159,51 @@ describe('custom graph widget', () => {
     expect(
       await screen.findByText(/Custom graph not found: No custom graph was found\./)
     ).toBeInTheDocument()
+  })
+})
+
+const DEFINITION = {
+  graph_options: {
+    unit: { type: 'first_entry_with_unit' },
+    explicit_vertical_range: { type: 'auto' },
+    omit_zero_metrics: false
+  },
+  data_sources: [{ type: 'constant', id: 'C', value: 100 }]
+}
+
+const EMBEDDED_CUSTOM_GRAPH_CONTENT: EmbeddedCustomGraphContent = {
+  type: 'embedded_custom_graph',
+  definition: DEFINITION,
+  timerange: { type: 'predefined', value: 'last_25_hours' },
+  graph_render_options: { show_legend: true, show_graph_time: false }
+}
+
+describe('custom graph widget with an embedded definition', () => {
+  test('discovers the graph from its embedded definition', async () => {
+    renderWidget({ content: EMBEDDED_CUSTOM_GRAPH_CONTENT })
+
+    await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(1))
+    expect(postSpy.mock.calls[0][0]).toBe(
+      '/domain-types/graph/actions/discover_custom_graphs/invoke'
+    )
+    expect(postSpy.mock.calls[0][1].body).toEqual({ type: 'inline', definition: DEFINITION })
+  })
+
+  test('renders the figure with the discovered definition', async () => {
+    renderWidget({ content: EMBEDDED_CUSTOM_GRAPH_CONTENT })
+
+    expect(await screen.findByTestId('graph-figure')).toHaveTextContent('{"graphs": []}')
+  })
+
+  test('rediscovers when the embedded definition changes', async () => {
+    const { rerender } = renderWidget({ content: EMBEDDED_CUSTOM_GRAPH_CONTENT })
+    await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(1))
+
+    const changed = { ...DEFINITION, data_sources: [{ type: 'constant', id: 'C', value: 200 }] }
+    await rerender({ content: { ...EMBEDDED_CUSTOM_GRAPH_CONTENT, definition: changed } } as never)
+
+    await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(2))
+    expect(postSpy.mock.calls[1][1].body).toEqual({ type: 'inline', definition: changed })
   })
 })
 
@@ -211,6 +271,80 @@ describe('graph render options', () => {
 
     const figure = await screen.findByTestId('graph-figure')
     expect(figure.getAttribute('data-show-margin')).toBe('false')
+  })
+})
+
+describe('the legend of a graph widget', () => {
+  const legendOf = async () =>
+    (await screen.findByTestId('graph-figure')).getAttribute('data-legend')
+
+  test('is compact when shown without a stored style', async () => {
+    renderWidget({
+      content: { ...CUSTOM_GRAPH_CONTENT, graph_render_options: { show_legend: true } }
+    })
+
+    expect(await legendOf()).toBe('compact')
+  })
+
+  test('follows the stored style', async () => {
+    renderWidget({
+      content: {
+        ...CUSTOM_GRAPH_CONTENT,
+        graph_render_options: { show_legend: true, legend_style: 'extended' }
+      }
+    })
+
+    expect(await legendOf()).toBe('extended')
+  })
+
+  test('is not drawn while switched off, whatever the stored style', async () => {
+    renderWidget({
+      content: {
+        ...CUSTOM_GRAPH_CONTENT,
+        graph_render_options: { show_legend: false, legend_style: 'extended' }
+      }
+    })
+
+    expect(await legendOf()).toBe('none')
+  })
+
+  test('of a scatterplot follows the options on its content', async () => {
+    renderWidget({
+      content: { ...SCATTERPLOT_CONTENT, show_legend: true, legend_style: 'extended' }
+    })
+
+    expect(await legendOf()).toBe('extended')
+  })
+
+  test('of a scatterplot stored without the option is not drawn', async () => {
+    renderWidget({
+      content: SCATTERPLOT_CONTENT
+    })
+
+    expect(await legendOf()).toBe('none')
+  })
+
+  test('makes the widget preview scrollable', async () => {
+    renderWidget({
+      isPreview: true,
+      content: {
+        ...CUSTOM_GRAPH_CONTENT,
+        graph_render_options: { show_legend: true, legend_style: 'extended' }
+      }
+    })
+
+    await screen.findByTestId('graph-figure')
+    expect(document.querySelector('.db-content-container__preview-scroll-container')).not.toBeNull()
+  })
+
+  test('leaves the widget preview unscrolled while switched off', async () => {
+    renderWidget({
+      isPreview: true,
+      content: { ...CUSTOM_GRAPH_CONTENT, graph_render_options: { show_legend: false } }
+    })
+
+    await screen.findByTestId('graph-figure')
+    expect(document.querySelector('.db-content-container__preview-scroll-container')).toBeNull()
   })
 })
 
@@ -350,9 +484,22 @@ describe('createSharedGraphFetcher', () => {
   })
 })
 
-describe('the time range of a graph widget', () => {
-  test("is the dashboard's range, not the configured one", async () => {
-    renderWidget()
+const FOLLOWING_AND_SEPARATE = [
+  {
+    widget: 'a graph',
+    following: { ...CUSTOM_GRAPH_CONTENT, timerange: 'dashboard' as const },
+    separate: CUSTOM_GRAPH_CONTENT
+  },
+  {
+    widget: 'a scatterplot',
+    following: { ...SCATTERPLOT_CONTENT, time_range: 'dashboard' as const },
+    separate: SCATTERPLOT_CONTENT
+  }
+]
+
+describe.each(FOLLOWING_AND_SEPARATE)('the time range of $widget', ({ following, separate }) => {
+  test("is the dashboard's range while it follows the dashboard", async () => {
+    renderWidget({ content: following })
 
     const figure = await screen.findByTestId('graph-figure')
     expect(JSON.parse(figure.getAttribute('data-requested-time-range')!)).toEqual({
@@ -360,20 +507,42 @@ describe('the time range of a graph widget', () => {
       end: 1767229200
     })
   })
-})
 
-describe('a time range committed in the graph', () => {
-  test('is reported as the dashboard range, in its time zone', async () => {
-    const { emitted } = renderWidget()
+  test('is its own range while it keeps one', async () => {
+    renderWidget({ content: separate })
 
-    await fireEvent.click(await screen.findByTestId('emit-commit-time-range'))
-
-    const [[range]] = emitted('updateTimeRange') as [[typeof baseProps.range]]
-    expect(range.from.toAbsoluteString()).toBe('2026-01-01T00:00:00.000Z')
-    expect(range.to.toAbsoluteString()).toBe('2026-01-01T01:00:00.000Z')
-    expect(range.from.timeZone).toBe(baseProps.range.from.timeZone)
+    const figure = await screen.findByTestId('graph-figure')
+    expect(figure.getAttribute('data-requested-time-range')).toBeNull()
+    expect(JSON.parse(figure.getAttribute('data-timerange')!)).toEqual({
+      type: 'predefined',
+      value: 'last_25_hours'
+    })
   })
 })
+
+describe.each(FOLLOWING_AND_SEPARATE)(
+  'a time range committed in $widget',
+  ({ following, separate }) => {
+    test('is reported as the dashboard range, in its time zone', async () => {
+      const { emitted } = renderWidget({ content: following })
+
+      await fireEvent.click(await screen.findByTestId('emit-commit-time-range'))
+
+      const [[range]] = emitted('updateTimeRange') as [[typeof baseProps.range]]
+      expect(range.from.toAbsoluteString()).toBe('2026-01-01T00:00:00.000Z')
+      expect(range.to.toAbsoluteString()).toBe('2026-01-01T01:00:00.000Z')
+      expect(range.from.timeZone).toBe(baseProps.range.from.timeZone)
+    })
+
+    test('leaves the dashboard alone while the widget keeps its own range', async () => {
+      const { emitted } = renderWidget({ content: separate })
+
+      await fireEvent.click(await screen.findByTestId('emit-commit-time-range'))
+
+      expect(emitted('updateTimeRange')).toBeUndefined()
+    })
+  }
+)
 
 describe('the widget pin', () => {
   const pinOf = async (): Promise<string | null> =>

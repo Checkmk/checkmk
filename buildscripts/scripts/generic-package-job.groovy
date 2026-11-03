@@ -26,28 +26,9 @@ void main() {
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
 
     def safe_branch_name = versioning.safe_branch_name();
-    def docker_tag = versioning.select_docker_tag(
-        params.CIPARAM_OVERRIDE_DOCKER_TAG_BUILD,  // 'build tag'
-        safe_branch_name,                   // 'branch' returns '<BRANCH>-latest'
-    );
-
-    def distro = params.DISTRO;
     def output_file = params.PACKAGE_PATH.split("/")[-1] + ".txt";
 
-    def inside_container_args = [
-        init: true,
-        privileged: true,
-        pull: true,
-        set_docker_group_id: true,
-    ];
-
     currentBuild.description = "Running ${params.PACKAGE_PATH}<br>${currentBuild.description}";
-
-    if (distro != "REFERENCE_IMAGE") {
-        inside_container_args += [
-            image: docker.image("${docker_registry_no_http}/${distro}:${docker_tag}")
-        ]
-    }
 
     dir(checkout_dir) {
         this_call_site(safe_branch_name, output_file);
@@ -68,9 +49,6 @@ void this_call_site(String safe_branch_name, String output_file) {
 
     // fancy fancy hack, see buildscripts/scripts/utils/docker_image_aliases_helper.groovy why
     def container_name = "testing-ubuntu-2204-checkmk-${safe_branch_name.replace('.', '-')}";
-    if (params.PACKAGE_PATH == "packages/mk-oracle" && params.DISTRO == "almalinux-8") {
-        container_name = "this-distro-container";
-    }
     withCredentials(secret_list(params.SECRET_VARS).collect {
         string(credentialsId: it, variable: it)
     }) {

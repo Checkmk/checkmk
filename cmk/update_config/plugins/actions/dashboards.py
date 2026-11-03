@@ -10,8 +10,8 @@ from cmk.ccc.user import UserId
 from cmk.gui.dashboard import DashboardConfig
 from cmk.gui.dashboard.store import DashboardStore
 from cmk.gui.visuals import invalidate_all_caches, save
-from cmk.update_config.lib import ExpiryVersion
-from cmk.update_config.registry import update_action_registry, UpdateAction
+from cmk.update_config.internal import ExpiryVersion, UpdateAction
+from cmk.update_config.registry import update_action_registry
 
 
 class MigrateDashboardConfig(UpdateAction):

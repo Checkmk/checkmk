@@ -7,7 +7,7 @@ import sys
 
 from cmk.ccc.version import edition
 from cmk.gui import main_modules
-from cmk.gui.graphing import metrics_from_api
+from cmk.gui.graphing import registered_metrics
 from cmk.utils import paths
 
 main_modules.register(edition(paths.omd_root))
@@ -15,4 +15,4 @@ main_modules.register(edition(paths.omd_root))
 if errors := main_modules.get_failed_plugins():
     sys.exit(f"The following errors occurred during plug-in loading: {errors!r}")
 
-sys.stdout.write(f"{'metric_int_test' in metrics_from_api}\n")
+sys.stdout.write(f"{'metric_int_test' in registered_metrics()}\n")

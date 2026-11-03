@@ -18,9 +18,9 @@ from cmk.gui.openapi.framework import (
     PathParam,
     VersionedEndpoint,
 )
+from cmk.gui.openapi.framework.model.converter import folder_tree_of_request
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import object_href
-from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 
 from ._family import RULE_FAMILY
 from ._utils import get_rule_by_id, PERMISSIONS, rule_etag, serialize_rule
@@ -38,7 +38,7 @@ def show_rule_v1(
 ) -> ApiResponse[RuleObjectModel]:
     """Show a rule"""
     user.need_permission("wato.rulesets")
-    rule_entry = get_rule_by_id(make_folder_tree(api_context.config), rule_id)
+    rule_entry = get_rule_by_id(folder_tree_of_request(api_context), rule_id)
     return ApiResponse(
         body=serialize_rule(rule_entry, api_context),
         status_code=HTTPStatus.OK,

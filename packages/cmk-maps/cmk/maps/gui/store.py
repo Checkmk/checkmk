@@ -11,7 +11,6 @@ model and Activate Changes replication — like graph collections. The list/edit
 stays maps-own (the SPA); only the storage and permission plumbing is shared.
 """
 
-import re
 from pathlib import Path
 
 import cmk.utils.paths
@@ -20,30 +19,22 @@ from cmk.ccc.user import UserId
 from cmk.gui import pagetypes
 from cmk.gui.config import active_config
 from cmk.gui.hooks import request_memoize
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import VisualPublic
 from cmk.gui.utils.roles import UserPermissions
 from cmk.maps.gui.pagetype import MapPage
-from cmk.maps.gui.type_defs import map_config_from_spec, MapName, MapRead, MapSpec
-
-# Map names are URL components and per-map permission idents (``map.<name>``), so
-# keep them to the same safe charset the daemon enforces on map names.
-_MAP_NAME_RE = re.compile(r"^[a-zA-Z0-9_\-]{1,100}$")
-
-
-def is_valid_map_name(name: str) -> bool:
-    return bool(_MAP_NAME_RE.fullmatch(name))
+from cmk.maps.gui.type_defs import map_config_from_spec, MapName, MapSpec
 
 
 @request_memoize()
 def _user_permissions() -> UserPermissions:
-    return UserPermissions.from_config(active_config, permission_registry)
+    return UserPermissions.from_config(active_config, all_permissions())
 
 
 @request_memoize()
 def _instances() -> pagetypes.OverridableInstances[MapPage]:
     """Load all maps (built-ins + every user's) once per request."""
-    return MapPage.load(_user_permissions())
+    return MapPage.load()
 
 
 def get_permitted_maps(user_permissions: UserPermissions | None = None) -> list[MapPage]:
@@ -94,7 +85,7 @@ def _own_instances(owner: UserId) -> pagetypes.OverridableInstances[MapPage]:
     true owner.
     """
     own = pagetypes.OverridableInstances[MapPage]()
-    for page in MapPage.load(_user_permissions()).instances():
+    for page in MapPage.load().instances():
         if page.owner() == owner:
             own.add_instance((owner, page.name()), page)
     return own
@@ -175,53 +166,5 @@ def delete_map(owner: UserId, name: MapName) -> None:
         memoized.remove_instance((owner, name))
 
 
-def _opt_str(value: object) -> str | None:
-    return value if isinstance(value, str) else None
-
-
-def _opt_int(value: object) -> int | None:
-    return value if isinstance(value, int) and not isinstance(value, bool) else None
-
-
-def _int(value: object, default: int) -> int:
-    return value if isinstance(value, int) and not isinstance(value, bool) else default
-
-
-def map_to_read(page: MapPage, can_edit: bool, can_delete: bool) -> MapRead:
-    """Project a map to the SPA's light ``MapRead`` list shape.
-
-    Reads the display fields from the opaque ``map_spec`` payload (a full
-    MapConfig); the heavy ``objects`` list is intentionally dropped. ``can_edit``
-    and ``can_delete`` are the pagetype authorization for this exact instance
-    (``MapPage.may_edit``/``may_delete``), so built-ins and unauthorized foreign
-    maps surface as read-only.
-    """
-    cfg = page.config
-    payload = cfg.map_spec
-    raw_view = payload.get("view")
-    view = raw_view if isinstance(raw_view, dict) else {}
-    return MapRead(
-        name=cfg.name,
-        alias=str(payload.get("alias") or cfg.name),
-        background_image=_opt_str(payload.get("background_image")),
-        background_color=_opt_str(payload.get("background_color")),
-        icon_size=_opt_int(payload.get("icon_size")),
-        connection_id=cfg.connection_id,
-        view_type=cfg.map_type,
-        view=view,
-        object_count=cfg.object_count,
-        rotation_interval=_int(payload.get("rotation_interval"), 0),
-        version=_int(payload.get("version"), 0),
-        sort_order=_int(payload.get("sort_order"), 0),
-        click_action=str(payload.get("click_action") or "link"),
-        hide_in_monitor_menu=cfg.hidden,
-        hover_template=_opt_str(payload.get("hover_template")),
-        context_template=_opt_str(payload.get("context_template")),
-        render_mode=str(payload.get("render_mode") or "default"),
-        default_z=_int(payload.get("default_z"), 1),
-        can_edit=can_edit,
-        can_delete=can_delete,
-        owner=str(cfg.owner),
-        is_builtin=page.is_builtin(),
-        public=cfg.public,
-    )
+def rotation_pools_of(value: object) -> list[str]:
+    return [pool for pool in value if isinstance(pool, str)] if isinstance(value, list) else []

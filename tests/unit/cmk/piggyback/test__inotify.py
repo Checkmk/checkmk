@@ -13,7 +13,7 @@ import pytest
 from cmk.ccc.inotify import _EventParser, Cookie, Event, INotify, Masks, Watchee
 
 
-@pytest.mark.skip(reason="CMK-26458")
+@pytest.mark.xfail(reason="CMK-26458", strict=False)
 def test_basic_event_observing(tmp_path: Path) -> None:
     """This tests the happy path of observing events on a file."""
     folder = tmp_path / "folder"

@@ -22,6 +22,8 @@ from cmk.discover_plugins import DiscoveredPlugins, PluginLocation
 from cmk.gui.config import Config
 from cmk.gui.http import request
 from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import DropdownChoice
@@ -64,12 +66,14 @@ def fixture_fake_discovery(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         diagnostics_page,
         "load_diagnostics_plugins",
-        lambda *args, **kwargs: DiscoveredPlugins(  # noqa: ARG005
+        lambda *_a, **_kw: DiscoveredPlugins(
             errors=(),
             plugins={
                 PluginLocation("cmk.plugins.test.diagnostics.test", p.name): p
                 for p in _FAKE_PLUGINS
             },
+            conflicts=(),
+            errors_by_module={},
         ),
     )
 
@@ -79,7 +83,13 @@ def test_vs_diagnostics_builds_from_discovered_plugins() -> None:
     request.set_var("select_site_p_site", "NO_SITE")
     mode = diagnostics_page.ModeDiagnostics(
         Edition.COMMUNITY,
-        PageContext(config=Config(), request=request, transactions=transactions, session=session),
+        PageContext(
+            config=Config(),
+            request=request,
+            transactions=transactions,
+            session=session,
+            user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+        ),
     )
 
     valuespec = mode._vs_diagnostics(diagnostics_page._load_plugin_catalogue())  # noqa: SLF001
@@ -105,19 +115,27 @@ def test_vs_diagnostics_omits_always_element_without_always_plugins(
     monkeypatch.setattr(
         diagnostics_page,
         "load_diagnostics_plugins",
-        lambda *args, **kwargs: DiscoveredPlugins(  # noqa: ARG005
+        lambda *_a, **_kw: DiscoveredPlugins(
             errors=(),
             plugins={
                 PluginLocation("cmk.plugins.test.diagnostics.test", "a_low"): _make_plugin(
                     "a_low", _TOPIC_A, Sensitivity.LOW
                 )
             },
+            conflicts=(),
+            errors_by_module={},
         ),
     )
     request.set_var("select_site_p_site", "NO_SITE")
     mode = diagnostics_page.ModeDiagnostics(
         Edition.COMMUNITY,
-        PageContext(config=Config(), request=request, transactions=transactions, session=session),
+        PageContext(
+            config=Config(),
+            request=request,
+            transactions=transactions,
+            session=session,
+            user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+        ),
     )
 
     elements = dict(mode._vs_diagnostics(diagnostics_page._load_plugin_catalogue())._get_elements())  # noqa: SLF001
@@ -136,7 +154,13 @@ def test_form_submission_resolves_topic_thresholds() -> None:
 
     mode = diagnostics_page.ModeDiagnostics(
         Edition.COMMUNITY,
-        PageContext(config=Config(), request=request, transactions=transactions, session=session),
+        PageContext(
+            config=Config(),
+            request=request,
+            transactions=transactions,
+            session=session,
+            user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+        ),
     )
     params = mode._diagnostics_parameters  # noqa: SLF001
 

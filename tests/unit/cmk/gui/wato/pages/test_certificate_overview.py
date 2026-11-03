@@ -15,6 +15,8 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request as global_request
 from cmk.gui.http import response as global_response
 from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.certificate_overview import (
@@ -63,6 +65,7 @@ def fixture_page_context(request_context: None) -> PageContext:  # noqa: ARG001 
         request=global_request,
         transactions=transactions,
         session=session,
+        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
     )
 
 

@@ -19,6 +19,7 @@ from cmk.gui.openapi.framework import (
     VersionedEndpoint,
 )
 from cmk.gui.openapi.framework.endpoint_link import path_to_endpoint
+from cmk.gui.openapi.framework.model.converter import folder_tree_of_request
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.user_sites import activation_sites
@@ -30,7 +31,6 @@ from cmk.gui.watolib.bulk_discovery import (
     prepare_hosts_for_discovery,
     start_bulk_discovery,
 )
-from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.web.utils import permission_verification as permissions
 
 from ._family import SERVICE_DISCOVERY_FAMILY
@@ -69,7 +69,7 @@ def execute_bulk_discovery_v1(
         update_changed_service_parameters=options.update_service_parameters,
     )
     hosts_to_discover = prepare_hosts_for_discovery(
-        make_folder_tree(api_context.config), body.hostnames, api_context.config.sites
+        folder_tree_of_request(api_context), body.hostnames, api_context.config.sites
     )
     if (
         result := start_bulk_discovery(

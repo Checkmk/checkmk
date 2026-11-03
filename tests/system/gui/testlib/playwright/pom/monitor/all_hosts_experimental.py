@@ -141,16 +141,12 @@ class AllHostsExperimental(CmkPage):
     def host_name_cells(self) -> Locator:
         """The host-name cell text spans, in row order.
 
-        The name cell is the only one rendered as a button (it opens the detail
-        slide-in), which identifies it without depending on a column position
-        that shifts whenever a column is added or hidden. `StringCell` injects
-        zero-width spaces into the *displayed* text but keeps the unmodified
-        value in the ``title`` attribute, so read names from ``title``.
+        The name column is found by its column id, not by being the row's button:
+        the Relations cell is a button too once a host has relations. `StringCell`
+        injects zero-width spaces into the *displayed* text but keeps the
+        unmodified value in the ``title`` attribute, so read names from ``title``.
         """
-        return self.rows().locator(
-            "td.monitoring-base-cell:has(button.monitoring-base-cell__button) "
-            ".monitoring-string-cell__text"
-        )
+        return self.rows().locator('td[data-column-id="name"] .monitoring-string-cell__text')
 
     def host_name_cell(self, index: int) -> Locator:
         """The host-name cell text span at row ``index`` (0-based, in row order).
@@ -212,7 +208,9 @@ class AllHostsExperimental(CmkPage):
     @property
     def column_picker_trigger(self) -> Locator:
         """The column-picker trigger in the shared table toolbar."""
-        return self.main_area.locator("button.monitoring-column-picker__trigger")
+        return self.main_area.locator().get_by_role(
+            "button", name="Show or hide columns", exact=True
+        )
 
     @property
     def column_picker_panel(self) -> Locator:
@@ -270,7 +268,9 @@ class AllHostsExperimental(CmkPage):
 
     def open_slide_in(self, host_name: str) -> None:
         """Open the host detail slide-in by activating the host name cell."""
-        self.row_by_host(host_name).locator("button.monitoring-base-cell__button").click()
+        self.row_by_host(host_name).locator(
+            'td[data-column-id="name"] button.monitoring-base-cell__button'
+        ).click()
 
     @property
     def slide_in(self) -> Locator:
@@ -369,7 +369,7 @@ class AllHostsExperimental(CmkPage):
         return self.main_area.locator().get_by_placeholder("What is the occasion?")
 
     def submit_action(self, label: str) -> Locator:
-        """The form's submit control, which stays disabled while the form is incomplete."""
+        """The form's submit control."""
         return self.main_area.locator().get_by_role("button", name=label, exact=True)
 
     @property

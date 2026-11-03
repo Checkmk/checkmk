@@ -335,8 +335,9 @@ def agent_pure_storage_fa(args: argparse.Namespace) -> int:
         except SectionError:
             if args.debug:
                 return 1
+            continue
 
-        sys.stdout.write(f"<<<pure_storage_fa_{spec.name}:sep(0)>>>\n{json.dumps(data)}\n")  # type: ignore[possibly-undefined]
+        sys.stdout.write(f"<<<pure_storage_fa_{spec.name}:sep(0)>>>\n{json.dumps(data)}\n")
 
     return 0
 

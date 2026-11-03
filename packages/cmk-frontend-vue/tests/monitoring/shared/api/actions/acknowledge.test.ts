@@ -7,6 +7,7 @@ import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { AcknowledgeApi } from '@/monitoring/shared/api/actions/acknowledge'
+import type { ServiceRef } from '@/monitoring/shared/api/types'
 
 const CONTENT_TYPE = { params: { header: { 'Content-Type': 'application/json' } } }
 
@@ -108,6 +109,10 @@ describe('AcknowledgeApi.acknowledgeHosts', () => {
   })
 })
 
+function service(hostName: string, description: string): ServiceRef {
+  return { host: { site_id: 'local', name: hostName }, description }
+}
+
 describe('AcknowledgeApi.acknowledgeServices', () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let postSpy: any
@@ -124,10 +129,13 @@ describe('AcknowledgeApi.acknowledgeServices', () => {
     } as never)
   }
 
-  it('scopes the query to the page host and the selected descriptions', async () => {
+  it('scopes the query of a single host to the selected descriptions', async () => {
     mockNoContent()
 
-    await new AcknowledgeApi().acknowledgeServices('web-1', ['CPU load', 'Memory'], BASE_OPTIONS)
+    await new AcknowledgeApi().acknowledgeServices(
+      [service('web-1', 'CPU load'), service('web-1', 'Memory')],
+      BASE_OPTIONS
+    )
 
     expect(postSpy).toHaveBeenCalledTimes(1)
     expect(postSpy).toHaveBeenCalledWith('/domain-types/acknowledge/collections/service', {
@@ -155,10 +163,39 @@ describe('AcknowledgeApi.acknowledgeServices', () => {
     })
   })
 
+  it('matches the services of several hosts, each by its own host', async () => {
+    mockNoContent()
+
+    await new AcknowledgeApi().acknowledgeServices(
+      [service('web-1', 'CPU load'), service('web-2', 'Memory')],
+      BASE_OPTIONS
+    )
+
+    expect(postSpy.mock.calls[0][1].body.query).toEqual({
+      op: 'or',
+      expr: [
+        {
+          op: 'and',
+          expr: [
+            { op: '=', left: 'host_name', right: 'web-1' },
+            { op: 'or', expr: [{ op: '=', left: 'description', right: 'CPU load' }] }
+          ]
+        },
+        {
+          op: 'and',
+          expr: [
+            { op: '=', left: 'host_name', right: 'web-2' },
+            { op: 'or', expr: [{ op: '=', left: 'description', right: 'Memory' }] }
+          ]
+        }
+      ]
+    })
+  })
+
   it('includes expire_on when an expiry is provided', async () => {
     mockNoContent()
 
-    await new AcknowledgeApi().acknowledgeServices('web-1', ['CPU load'], {
+    await new AcknowledgeApi().acknowledgeServices([service('web-1', 'CPU load')], {
       ...BASE_OPTIONS,
       expireOn: '2026-05-20T07:30:00.000Z'
     })
@@ -170,7 +207,7 @@ describe('AcknowledgeApi.acknowledgeServices', () => {
   it('omits expire_on when no expiry is provided', async () => {
     mockNoContent()
 
-    await new AcknowledgeApi().acknowledgeServices('web-1', ['CPU load'], BASE_OPTIONS)
+    await new AcknowledgeApi().acknowledgeServices([service('web-1', 'CPU load')], BASE_OPTIONS)
 
     const body = postSpy.mock.calls[0][1].body
     expect(body).not.toHaveProperty('expire_on')
@@ -184,7 +221,7 @@ describe('AcknowledgeApi.acknowledgeServices', () => {
     } as never)
 
     await expect(
-      new AcknowledgeApi().acknowledgeServices('web-1', ['CPU load'], BASE_OPTIONS)
+      new AcknowledgeApi().acknowledgeServices([service('web-1', 'CPU load')], BASE_OPTIONS)
     ).rejects.toThrow()
   })
 })

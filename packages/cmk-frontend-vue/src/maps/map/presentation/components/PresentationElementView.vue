@@ -11,7 +11,7 @@ import GadgetRenderer from '@/maps/map/components/GadgetRenderer.vue'
 import { useMetricUnits } from '@/maps/map/composables/useMetricUnits'
 import { usePerfometer } from '@/maps/map/composables/usePerfometer'
 import type { DataElement, ObjectState, PresentationElement } from '@/maps/types/api'
-import { stateColor } from '@/maps/utils/stateColors'
+import { stateColorVar } from '@/maps/utils/stateColors'
 
 import { bindingLabel, isBoundElement, isMetriclessBinding } from '../binding'
 import { resolveImageRef } from '../elements'
@@ -48,8 +48,8 @@ const effectiveGadgetType = computed(() => {
   return isMetriclessBinding(el) ? 'trafficlight' : (el.display.gadget_type ?? 'gauge')
 })
 
-// The perfometer fills the dial where the raw perf_data has no max, and
-// supplies the CMK-formatted caption.
+// The perfometer is the reading of a gadget without a configured metric, fills
+// the dial where the raw perf_data has no max and supplies the caption.
 const gadgetBinding = {
   connectionId: () => props.connectionId,
   hostName: () => (props.element.kind === 'data' ? props.element.host_name : null),
@@ -60,17 +60,11 @@ const gadgetBinding = {
   enabled: () =>
     props.element.kind === 'data' &&
     props.element.display.mode === 'gadget' &&
-    ['gauge', 'bar'].includes(effectiveGadgetType.value)
+    effectiveGadgetType.value !== 'trafficlight'
 }
 const perfometer = usePerfometer(gadgetBinding)
 // Registered display units, so the readout matches the Checkmk GUI.
-const metricUnits = useMetricUnits({
-  ...gadgetBinding,
-  enabled: () =>
-    props.element.kind === 'data' &&
-    props.element.display.mode === 'gadget' &&
-    effectiveGadgetType.value !== 'trafficlight'
-})
+const metricUnits = useMetricUnits(gadgetBinding)
 // The sample perf_data carries exactly one metric; the gadget needs its name
 // to render a value rather than an empty dial.
 const sampleMetric = computed(() => {
@@ -82,7 +76,7 @@ const sampleMetric = computed(() => {
 // manual colour.
 const shapeStateColor = computed(() =>
   props.element.kind === 'shape' && (isBoundElement(props.element) || props.sampleState)
-    ? stateColor(effectiveState.value?.state)
+    ? stateColorVar(effectiveState.value?.state)
     : null
 )
 
@@ -158,7 +152,7 @@ const textStyle = computed(() => {
   return {
     color: resolve(el.color, '--pres-fg'),
     background: el.background ?? 'transparent',
-    fontFamily: el.font_family ?? 'var(--pres-font)',
+    fontFamily: el.font_family ?? undefined,
     fontSize: `${el.font_size}px`,
     fontWeight: el.font_weight,
     fontStyle: el.font_style,
@@ -182,7 +176,7 @@ const imageStyle = computed(() => ({
 // gap above it. Leaving the gap out made the gadget exactly one gap too tall,
 // so a traffic light came to rest on top of its own caption.
 const DATA_PADDING = 24
-const DATA_GAP = 6
+const DATA_GAP = 8
 const LABEL_HEIGHT = 30
 
 function chromeHeight(el: DataElement): number {
@@ -212,7 +206,7 @@ const iconSize = computed(() => {
   return Math.max(20, Math.min(96, Math.min(el.w - 28, el.h - chromeHeight(el)) * 0.55))
 })
 
-const stateClr = computed(() => stateColor(effectiveState.value?.state))
+const stateClr = computed(() => stateColorVar(effectiveState.value?.state))
 const stateText = computed(() => effectiveState.value?.state ?? _t('PENDING'))
 
 const dataBoxStyle = computed(() => {
@@ -409,7 +403,7 @@ function onTextBlur(): void {
           width: `${iconSize}px`,
           height: `${iconSize}px`,
           background: stateClr,
-          boxShadow: `0 0 ${iconSize * 0.5}px 1px ${stateClr}66`
+          boxShadow: `0 0 ${iconSize * 0.5}px 1px color-mix(in srgb, ${stateClr} 40%, transparent)`
         }"
       />
     </div>
@@ -440,8 +434,8 @@ function onTextBlur(): void {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  padding: 1px 6px;
-  border-radius: 6px;
+  padding: var(--dimension-1) var(--dimension-4);
+  border-radius: var(--border-radius);
   line-height: 1.2;
   white-space: nowrap;
   pointer-events: none;
@@ -481,7 +475,7 @@ function onTextBlur(): void {
   justify-content: center;
   border: 1px dashed var(--pres-muted);
   color: var(--pres-muted);
-  font-size: 13px;
+  font-size: var(--font-size-normal);
 }
 
 .maps-presentation-element-view__group {
@@ -492,12 +486,12 @@ function onTextBlur(): void {
 .maps-presentation-element-view__data {
   width: 100%;
   height: 100%;
-  border-radius: 14px;
+  border-radius: var(--border-radius);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: var(--dimension-4);
   padding: var(--dimension-4);
   box-sizing: border-box;
   overflow: hidden;
@@ -550,11 +544,10 @@ function onTextBlur(): void {
   position: absolute;
   top: 4px;
   right: 6px;
-  padding: 0 5px;
+  padding: 0 var(--dimension-3);
   border: 1px dashed var(--pres-muted);
-  border-radius: 5px;
+  border-radius: var(--border-radius);
   font-size: var(--font-size-small);
-  font-family: var(--pres-font, sans-serif);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--pres-muted);

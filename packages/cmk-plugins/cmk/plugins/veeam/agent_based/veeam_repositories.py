@@ -64,7 +64,7 @@ def parse_veeam_repositories(string_table: StringTable) -> Section:
         # translation table for the dozens of possible values. Double-check once we
         # can verify against real data whether a translation is worth adding.
         category = f"{extent_type} Extent" if extent_type is not None else repo_dict["type"]
-        item = f"{category} - {repo_dict['name']}"
+        item = f"{category} - {repo_dict['name']} ({repo_dict['id'][:8]})"
         section[item] = VeeamRepository(
             type=repo_dict["type"],
             description=repo_dict["description"],

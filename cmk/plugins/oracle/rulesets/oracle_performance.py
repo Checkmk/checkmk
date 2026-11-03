@@ -120,7 +120,7 @@ def _parameter_valuespec_oracle_performance() -> Dictionary:
     memory_choices = [
         CascadingSingleChoiceElement(
             name=ga.metric,
-            title=Title(ga.name),  # astrein: disable=localization-checker
+            title=Title(ga.name),  # astrein: disable=localization
             parameter_form=SimpleLevels(
                 form_spec_template=DataSize(
                     displayed_magnitudes=(
@@ -148,7 +148,7 @@ def _parameter_valuespec_oracle_performance() -> Dictionary:
                 target_array.append(
                     CascadingSingleChoiceElement(
                         name=f"oracle_ios_f_{iofile.id}_{size_code}_{io_code}",
-                        title=Title(  # astrein: disable=localization-checker
+                        title=Title(  # astrein: disable=localization
                             f" {iofile.name} {size_text} {io_text}"
                         ),
                         parameter_form=SimpleLevels(
@@ -236,7 +236,7 @@ def _parameter_valuespec_oracle_performance() -> Dictionary:
                         elements=[
                             CascadingSingleChoiceElement(
                                 name=name,
-                                title=Title(title),  # astrein: disable=localization-checker
+                                title=Title(title),  # astrein: disable=localization
                                 parameter_form=_PERSEC_LEVELS,
                             )
                             for name, title in waitclasses_choices

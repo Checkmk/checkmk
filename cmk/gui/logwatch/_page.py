@@ -41,7 +41,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pages import PageContext, PageEndpoint, PageRegistry
-from cmk.gui.permissions import permission_registry
 from cmk.gui.table import table_element
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.transaction_manager import transactions
@@ -88,15 +87,16 @@ def page_show(ctx: PageContext) -> None:
         )
         return
 
-    user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
     if file_name:
-        show_file(ctx.request, site, host_name, file_name, user_permissions, debug=ctx.config.debug)
+        show_file(
+            ctx.request, site, host_name, file_name, ctx.user_permissions, debug=ctx.config.debug
+        )
     else:
         show_host_log_list(
             ctx.request,
             site,
             host_name,
-            user_permissions,
+            ctx.user_permissions,
             debug=ctx.config.debug,
             table_row_limit=ctx.config.table_row_limit,
         )

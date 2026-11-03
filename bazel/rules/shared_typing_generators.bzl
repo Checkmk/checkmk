@@ -61,10 +61,7 @@ def json2python(name, srcs, data, formatter, extra_args, source_dir, target_dir)
         pkg = requirement("datamodel-code-generator"),
         script = "datamodel-codegen",
         tags = ["no-mypy"],
-        deps = [
-            formatter,
-            requirement("libcst"),
-        ],
+        deps = [formatter],
     )
 
     output_names = []

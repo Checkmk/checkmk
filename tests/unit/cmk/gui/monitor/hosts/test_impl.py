@@ -11,7 +11,7 @@ import pytest
 
 from cmk.ccc.site import SiteId
 from cmk.gui import sites
-from cmk.gui.monitor.hosts._folder import MonitorFolders, SetupFolders
+from cmk.gui.monitor.hosts._folder import MonitorFolders
 from cmk.gui.monitor.hosts._impl import (
     _build_primary_sort,
     _build_query_filter,
@@ -31,7 +31,7 @@ from cmk.gui.monitor.hosts._models import (
     HostSortDirection,
     MAX_RESOLVED_RELATIONS,
 )
-from cmk.gui.monitor.hosts._site import MonitorSite, MonitorSites
+from cmk.gui.monitor.site_scope import MonitorSite, MonitorSites
 from cmk.gui.sites import SiteStates, SiteStatus
 from cmk.livestatus_client.testing import expect_single_query, MockLiveStatusConnection
 from tests.testlib.unit.gui.web_test_app import SetConfig
@@ -113,17 +113,22 @@ def test_every_sort_column_says_how_livestatus_orders_by_it() -> None:
 _TITLES = {"web_dmz": "Web DMZ", "network": "Netzwerk"}
 
 
+class _SetupTitling:
+    """Setup's folders, titling two folders and granting no host."""
+
+    def title_of(self, path: str) -> str | None:
+        return _TITLES.get(path)
+
+    def all_titles(self) -> Mapping[str, str]:
+        return _TITLES
+
+    def may_read_host(self, _host_name: str, _path: str | None) -> bool:
+        return False
+
+
 def _folders() -> MonitorFolders:
-    """A `MonitorFolders` titling two folders, the way Setup's functions are wired in."""
-    folders = MonitorFolders()
-    folders.use_setup_source(
-        SetupFolders(
-            title_of=_TITLES.get,
-            all_titles=lambda: _TITLES,
-            may_read_host=lambda _host_name, _path: False,
-        ),
-    )
-    return folders
+    """A `MonitorFolders` titling two folders, the way Setup is wired in."""
+    return MonitorFolders(_SetupTitling())
 
 
 def _sites() -> MonitorSites:
@@ -336,6 +341,48 @@ def test_fetch_derives_stale_from_the_staleness_threshold(
             )
 
     assert [host.stale for host in hosts] == [expected_stale]
+
+
+@pytest.mark.parametrize(
+    "pnpgraph_present, expected",
+    [
+        pytest.param(1, True, id="time series recorded"),
+        pytest.param(0, False, id="no time series"),
+        pytest.param(-1, False, id="unknown whether there are time series"),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_fetch_offers_graphs_only_for_a_host_with_recorded_time_series(
+    pnpgraph_present: int, expected: bool
+) -> None:
+    row = _host_row(pnpgraph_present=pnpgraph_present)
+    with expect_single_query("GET hosts", tables={"hosts": [row]}) as live:
+        hosts = LiveStatusHostRepository(connection=live).fetch(
+            limit=None,
+            query="",
+            sorters=[],
+            filters=HostFilter(""),
+            fields=frozenset({HostOptionalField.GRAPHS_LINK}),
+            visible_relations=None,
+        )
+
+    assert [host.has_graphs for host in hosts] == [expected]
+
+
+@pytest.mark.usefixtures("request_context")
+def test_fetch_leaves_the_graphs_unread_when_not_asked_for() -> None:
+    row = _host_row(pnpgraph_present=1)
+    with expect_single_query("GET hosts", tables={"hosts": [row]}) as live:
+        hosts = LiveStatusHostRepository(connection=live).fetch(
+            limit=None,
+            query="",
+            sorters=[],
+            filters=HostFilter(""),
+            fields=frozenset(),
+            visible_relations=None,
+        )
+
+    assert [host.has_graphs for host in hosts] == [None]
 
 
 @pytest.mark.parametrize(
@@ -906,14 +953,14 @@ class _SetupHostAccess:
         self.asked.append((host_name, path))
         return (host_name, path) in self._readable
 
+    def title_of(self, path: str) -> str | None:
+        return _TITLES.get(path)
+
+    def all_titles(self) -> Mapping[str, str]:
+        return _TITLES
+
     def folders(self) -> MonitorFolders:
-        folders = MonitorFolders()
-        folders.use_setup_source(
-            SetupFolders(
-                title_of=_TITLES.get, all_titles=lambda: _TITLES, may_read_host=self.may_read_host
-            )
-        )
-        return folders
+        return MonitorFolders(self)
 
 
 @pytest.mark.usefixtures("request_context")
@@ -977,3 +1024,32 @@ def test_fetch_leaves_setup_access_unread_unless_asked_for() -> None:
 
     assert host.setup_access is None
     assert setup.asked == []
+
+
+@pytest.mark.parametrize(
+    "filename, expected",
+    [
+        pytest.param("/wato/web_dmz/hosts.mk", True, id="readable in its folder"),
+        pytest.param("/wato/network/hosts.mk", False, id="restricted in its folder"),
+    ],
+)
+def test_get_overview_asks_setup_whether_the_host_may_be_opened_in_its_folder(
+    request_context: None,  # noqa: ARG001  # Unused fixtures are needed for setup side effects
+    mock_livestatus: MockLiveStatusConnection,
+    filename: str,
+    expected: bool,
+) -> None:
+    setup = _SetupHostAccess(frozenset({("board", "web_dmz")}))
+    mock_livestatus.add_table("hosts", [{**_overview_row("board", []), "filename": filename}])
+    mock_livestatus.expect_query(
+        ["GET hosts", "Filter: name = board"], match_type="loose", sites=["NO_SITE"]
+    )
+
+    with mock_livestatus(expect_status_query=True):
+        host = LiveStatusHostRepository(
+            connection=sites.live(),
+            folders=setup.folders(),
+            read_unavailable_sites=frozenset,
+        ).get_overview(hostname="board", site_id="NO_SITE")
+
+    assert host.setup_access is expected

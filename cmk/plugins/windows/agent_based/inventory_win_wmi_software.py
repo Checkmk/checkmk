@@ -12,6 +12,7 @@
 # VMware vSphere Client 4.1|VMware, Inc.|4.1.0.17435
 # Microsoft Office Professional Plus 2010|Microsoft Corporation|14.0.7015.1000
 
+import contextlib
 import re
 import time
 from collections.abc import Sequence
@@ -81,6 +82,12 @@ _LANGUAGE_MAP = {
 }
 
 
+_INSTALL_DATE_FORMATS = (
+    (r"^20\d{6}$", "%Y%m%d"),
+    (r"^20\d{2}\.\d{1,2}\.\d{1,2}$", "%Y.%m.%d"),
+)
+
+
 def parse_win_wmi_software(string_table: StringTable) -> Section:
     parsed_packages: list[Package] = []
     for line in string_table:
@@ -91,8 +98,11 @@ def parse_win_wmi_software(string_table: StringTable) -> Section:
         dat = line[3] if len(line) > 3 else ""
 
         install_date = None
-        if len(dat) == 8 and re.match("^20", dat):
-            install_date = int(time.mktime(time.strptime(dat, "%Y%m%d")))
+        for pattern, date_format in _INSTALL_DATE_FORMATS:
+            if re.match(pattern, dat):
+                with contextlib.suppress(ValueError):
+                    install_date = int(time.mktime(time.strptime(dat, date_format)))
+                break
 
         # contains language as well
         language = _LANGUAGE_MAP.get(line[4], line[4]) if len(line) == 5 else ""

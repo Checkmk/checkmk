@@ -6,7 +6,14 @@
 import { describe, expect, it } from 'vitest'
 
 import { newMapElement } from '@/maps/utils/model'
-import { mapElementCaption, sanitizeMapName, slugToTitleCase } from '@/maps/utils/naming'
+import {
+  asBoundObject,
+  getMapElementName,
+  mapElementCaption,
+  mapIdFromName,
+  sanitizeMapName,
+  slugToTitleCase
+} from '@/maps/utils/naming'
 
 describe('sanitizeMapName', () => {
   it('replaces spaces with hyphens', () => {
@@ -52,54 +59,45 @@ describe('mapElementCaption', () => {
   it('names an object by what it is for its own kind', () => {
     expect(
       mapElementCaption(
-        newMapElement({ id: '1', type: 'host', host_name: 'db01', service_description: 'CPU' })
+        newMapElement({ id: '1', type: 'host', host_name: 'db01', service_description: 'CPU' }),
+        null
       )
     ).toBe('db01')
     expect(
       mapElementCaption(
-        newMapElement({ id: '1', type: 'service', host_name: 'db01', service_description: 'CPU' })
+        newMapElement({ id: '1', type: 'service', host_name: 'db01', service_description: 'CPU' }),
+        null
       )
     ).toBe('CPU')
     expect(
       mapElementCaption(
-        newMapElement({ id: '1', type: 'map', map_name: 'dc-2', map_title: 'Datacenter 2' })
+        newMapElement({ id: '1', type: 'map', map_name: 'dc-2', map_title: 'Datacenter 2' }),
+        null
       )
     ).toBe('Datacenter 2')
     expect(
-      mapElementCaption(newMapElement({ id: '1', type: 'aggregation', aggregation_id: 'web' }))
+      mapElementCaption(
+        newMapElement({ id: '1', type: 'aggregation', aggregation_id: 'web' }),
+        null
+      )
     ).toBe('web')
     expect(
-      mapElementCaption(newMapElement({ id: '1', type: 'hostgroup', group_name: 'linux' }))
+      mapElementCaption(newMapElement({ id: '1', type: 'hostgroup', group_name: 'linux' }), null)
     ).toBe('linux')
   })
 
-  it("prefers the operator's own label over any of that", () => {
+  it('prefers the label as shown over any of that', () => {
     expect(
-      mapElementCaption(
-        newMapElement({
-          id: '1',
-          type: 'host',
-          host_name: 'db01',
-          label: {
-            show: true,
-            text: 'Database',
-            x: 0,
-            y: 0,
-            size: 11,
-            color: '#ffffff',
-            background: 'transparent'
-          }
-        })
-      )
+      mapElementCaption(newMapElement({ id: '1', type: 'host', host_name: 'db01' }), 'Database')
     ).toBe('Database')
   })
 
   it('has no caption where nothing is bound — the id is storage, not a name', () => {
-    expect(mapElementCaption(newMapElement({ id: 'obj-7', type: 'dyngroup' }))).toBeNull()
+    expect(mapElementCaption(newMapElement({ id: 'obj-7', type: 'dyngroup' }), null)).toBeNull()
   })
 
   it("falls back to a map link's id where the target is gone or not visible", () => {
-    expect(mapElementCaption(newMapElement({ id: '1', type: 'map', map_name: 'dc-2' }))).toBe(
+    expect(mapElementCaption(newMapElement({ id: '1', type: 'map', map_name: 'dc-2' }), null)).toBe(
       'dc-2'
     )
   })
@@ -111,11 +109,77 @@ describe('mapElementCaption', () => {
       host_name: 'very-long-host-name',
       label_maxlen: 8
     })
-    expect(mapElementCaption(object)).toBe('very-lon…')
+    expect(mapElementCaption(object, null)).toBe('very-lon…')
   })
 
   it('leaves a name that already fits alone', () => {
     const object = newMapElement({ id: '1', type: 'host', host_name: 'db01', label_maxlen: 8 })
-    expect(mapElementCaption(object)).toBe('db01')
+    expect(mapElementCaption(object, null)).toBe('db01')
+  })
+})
+
+describe('mapIdFromName', () => {
+  it.each([
+    ['Rechenzentrum Süd – Etage 2', 'rechenzentrum-sud-etage-2'],
+    ['Größe', 'grosse'],
+    ['Søborg', 'soborg'],
+    ['İstanbul', 'istanbul'],
+    ['  -- Lab --  ', 'lab'],
+    ['東京', '']
+  ])('fills %j in as %j', (name, id) => {
+    expect(mapIdFromName(name, 64)).toBe(id)
+  })
+
+  it('does not end on a hyphen where it is cut', () => {
+    expect(mapIdFromName('ab cd', 3)).toBe('ab')
+  })
+})
+
+describe('asBoundObject', () => {
+  it('reads a line as the object whose state it shows', () => {
+    const line = newMapElement({
+      id: 'l',
+      type: 'line',
+      line_object_type: 'hostgroup',
+      group_name: 'web'
+    })
+    expect(asBoundObject(line)).toMatchObject({ type: 'hostgroup', group_name: 'web' })
+  })
+
+  it('reads a line bound to no type by its host and service', () => {
+    const line = newMapElement({
+      id: 'l',
+      type: 'line',
+      host_name: 'web01',
+      service_description: 'CPU'
+    })
+    expect(asBoundObject(line).type).toBe('service')
+  })
+
+  it('leaves a line bound to nothing a line', () => {
+    expect(asBoundObject(newMapElement({ id: 'l', type: 'line' })).type).toBe('line')
+  })
+})
+
+describe('getMapElementName', () => {
+  it('names an object by its identifier while its label needs a state to read', () => {
+    const label = { show: true, x: 0, y: 0, size: 11, color: '#000000', background: 'transparent' }
+    const named = (text: string) =>
+      getMapElementName(
+        newMapElement({ id: 'h', type: 'host', host_name: 'web01', label: { ...label, text } })
+      )
+
+    expect(named('{{output}}')).toBe('web01')
+    expect(named('Core switch')).toBe('Core switch')
+  })
+
+  it('gives an unbound object no name while its label needs a state to read', () => {
+    const label = { show: true, x: 0, y: 0, size: 11, color: '#000000', background: 'transparent' }
+
+    expect(
+      getMapElementName(
+        newMapElement({ id: 'l', type: 'line', label: { ...label, text: '{{state}}' } })
+      )
+    ).toBeNull()
   })
 })

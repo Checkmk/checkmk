@@ -16,6 +16,8 @@ py_cmk_test(
         # CMK-36295
         "-W",
         "ignore::starlette.exceptions.StarletteDeprecationWarning",
+        "-o",
+        "asyncio_default_fixture_loop_scope=function",
     ],
     deps = [
         ":unit_testlib",
@@ -28,7 +30,6 @@ py_cmk_test(
         requirement("pytest-socket"),
         requirement("pytest-random-order"),
         requirement("pytest-mock"),
-        requirement("requests"),
         requirement("starlette"),
         requirement("time-machine"),
         requirement("python-dateutil"),

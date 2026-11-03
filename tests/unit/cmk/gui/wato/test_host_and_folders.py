@@ -13,8 +13,12 @@ from livestatus import SiteConfigurations
 
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
-from cmk.gui.logged_in import user
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, FolderSiteStats
+from cmk.gui.logged_in import LoggedInSuperUser
+from cmk.gui.watolib.hosts_and_folders import (
+    Folder,
+    FolderSiteStats,
+    FolderTree,
+)
 from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChanges
 
 
@@ -28,11 +32,10 @@ def _noop_pending_changes() -> PendingChanges:
     )
 
 
-@pytest.mark.usefixtures("request_context", "with_admin_login")
 class TestFolderSiteStats:
     @pytest.fixture
-    def folder_site_stats(self) -> Generator[FolderSiteStats]:
-        root_folder = folder_tree().root_folder()
+    def folder_site_stats(self, tree: FolderTree) -> Generator[FolderSiteStats]:
+        root_folder = tree.root_folder()
         self._setup_fs(root_folder)
         yield FolderSiteStats.build(root_folder)
         self._cleanup_fs(root_folder)
@@ -52,7 +55,7 @@ class TestFolderSiteStats:
             [(HostName("main_host"), {}, None)],
             pprint_value=False,
             pending_changes=_noop_pending_changes(),
-            acting_user=user,
+            acting_user=LoggedInSuperUser(),
         )
         sub = folder.create_subfolder(
             name="sub",
@@ -60,13 +63,13 @@ class TestFolderSiteStats:
             attributes={},
             pprint_value=False,
             pending_changes=_noop_pending_changes(),
-            acting_user=user,
+            acting_user=LoggedInSuperUser(),
         )
         sub.create_hosts(
             [(HostName("sub_host"), {}, None)],
             pprint_value=False,
             pending_changes=_noop_pending_changes(),
-            acting_user=user,
+            acting_user=LoggedInSuperUser(),
         )
         nest = sub.create_subfolder(
             name="sub/nested",
@@ -74,13 +77,13 @@ class TestFolderSiteStats:
             attributes={},
             pprint_value=False,
             pending_changes=_noop_pending_changes(),
-            acting_user=user,
+            acting_user=LoggedInSuperUser(),
         )
         nest.create_hosts(
             [(HostName("nested_host"), {}, None)],
             pprint_value=False,
             pending_changes=_noop_pending_changes(),
-            acting_user=user,
+            acting_user=LoggedInSuperUser(),
         )
 
     def _cleanup_fs(self, root_folder: Folder) -> None:

@@ -10,6 +10,8 @@
  * which state it is in, so all canvases share this one builder.
  */
 import type usei18n from 'cmk-ui-library/lib/i18n'
+import { untranslated } from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
 import type { MapElement, MonitoringState } from '@/maps/types/api'
 
@@ -76,7 +78,7 @@ export function stateWordFromToken(_t: TranslateFn, token: string): string {
  * WARN, UNKN, UNREACH -- for a count or a caption. What a screen reader hears
  * stays the full word, from ``stateWordFromToken``.
  */
-export function stateShortWordFromToken(_t: TranslateFn, token: string): string {
+export function stateShortWordFromToken(_t: TranslateFn, token: string): TranslatedString {
   switch (token) {
     case 'CRITICAL':
       return _t('CRIT')
@@ -89,7 +91,28 @@ export function stateShortWordFromToken(_t: TranslateFn, token: string): string 
     case 'PENDING':
       return _t('PEND')
     default:
-      return token
+      return untranslated(token)
+  }
+}
+
+/**
+ * The word a state count bar writes for a state, as the monitoring pages'
+ * ``ServiceSummaryBar`` and state filters do: UNKNOWN and PENDING in full.
+ */
+export function stateCountWordFromToken(_t: TranslateFn, token: string): TranslatedString {
+  switch (token) {
+    case 'OK':
+      return _t('OK')
+    case 'UP':
+      return _t('UP')
+    case 'DOWN':
+      return _t('DOWN')
+    case 'UNKNOWN':
+      return _t('UNKNOWN')
+    case 'PENDING':
+      return _t('PENDING')
+    default:
+      return stateShortWordFromToken(_t, token)
   }
 }
 

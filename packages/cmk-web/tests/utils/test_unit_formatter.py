@@ -15,7 +15,9 @@ from cmk.web.utils.unit_formatter import (
     EngineeringScientificFormatter,
     IECFormatter,
     Label,
+    notation_formatter,
     NotationFormatter,
+    NotationName,
     PrecisionKind,
     SIFormatter,
     StandardScientificFormatter,
@@ -1051,3 +1053,26 @@ def test_render_y_labels_labels_no_range_across_zero() -> None:
         )
         == []
     )
+
+
+@pytest.mark.parametrize(
+    "notation, expected",
+    [
+        ("decimal", DecimalFormatter(symbol="U", precision_kind="strict", digits=3)),
+        ("si", SIFormatter(symbol="U", precision_kind="strict", digits=3)),
+        ("iec", IECFormatter(symbol="U", precision_kind="strict", digits=3)),
+        (
+            "standard_scientific",
+            StandardScientificFormatter(symbol="U", precision_kind="strict", digits=3),
+        ),
+        (
+            "engineering_scientific",
+            EngineeringScientificFormatter(symbol="U", precision_kind="strict", digits=3),
+        ),
+        ("time", TimeFormatter(symbol="U", precision_kind="strict", digits=3)),
+    ],
+)
+def test_a_notation_is_formatted_by_its_formatter(
+    notation: NotationName, expected: NotationFormatter
+) -> None:
+    assert notation_formatter(notation, "U", "strict", 3) == expected

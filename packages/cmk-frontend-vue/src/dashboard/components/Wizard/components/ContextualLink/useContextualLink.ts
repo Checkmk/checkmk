@@ -13,18 +13,30 @@ import type {
   ContextFilterIdOf,
   ContextualLinkOf,
   ContextualLinkOptions,
+  FilterKeyOption,
   LinkedContent,
   VisualLocation
 } from './contextualLink'
 
 const { _t } = usei18n()
 
+export interface FilterDraft<F> {
+  id: number
+  filterId: F
+  // The label key, tag group or aux tag; null for a filter that takes none, or until picked.
+  key: string | null
+  // What key the filter takes; undefined for a filter that takes none.
+  keyOption: FilterKeyOption | undefined
+}
+
 export interface CustomLinkDraft<F> {
   // Keys the row, so a removed row does not hand its picker state to the next one.
   id: number
   title: string
   target: VisualLocation | null
-  filters: F[]
+  // Unchecked, the link carries no filters; the rows stay, so checking it again brings them back.
+  includeClickedElement: boolean
+  filters: FilterDraft<F>[]
   includeContext: boolean
   includeTimeRange: boolean
   showFilterForm: boolean
@@ -42,6 +54,10 @@ export interface UseContextualLink<C extends LinkedContent> extends UseValidate 
   customLinks: Ref<CustomLinkDraft<ContextFilterIdOf<C>>[]>
   addCustomLink: () => void
   removeCustomLink: (index: number) => void
+  /** A method, so any widget's handler fits UseContextualLink<LinkedContent>. */
+  addFilter(link: CustomLinkDraft<ContextFilterIdOf<C>>, filterId: string): void
+  /** Picks another filter for the draft, which then needs its own key. */
+  setFilter(filter: FilterDraft<ContextFilterIdOf<C>>, filterId: string | null): void
   validationErrors: Ref<TranslatedString[]>
   /** The configured link; undefined while it is incomplete, so the widget keeps its built-in one. */
   contextualLink: ComputedRef<ContextualLinkOf<C> | undefined>
@@ -54,11 +70,26 @@ function newCustomLink<F>(): CustomLinkDraft<F> {
     id: nextDraftId++,
     title: '',
     target: null,
+    includeClickedElement: true,
     filters: [],
     includeContext: true,
     includeTimeRange: true,
     showFilterForm: false
   }
+}
+
+function newFilter<F>(
+  filterId: F,
+  keyOption: FilterKeyOption | undefined,
+  key: string | null = null
+): FilterDraft<F> {
+  return { id: nextDraftId++, filterId, key, keyOption }
+}
+
+// The key as the API stores it: trimmed, and null when nothing is left.
+function trimmedKey(filter: FilterDraft<unknown>): string | null {
+  const key = filter.key?.trim()
+  return key === undefined || key === '' ? null : key
 }
 
 export function useContextualLink<C extends LinkedContent>(
@@ -90,7 +121,10 @@ export function useContextualLink<C extends LinkedContent>(
           ...newCustomLink<F>(),
           title: link.title,
           target: link.location,
-          filters: link.filters.map((f) => f.filter_id as F),
+          includeClickedElement: link.filters.length > 0,
+          filters: link.filters.map((f) =>
+            newFilter(f.filter_id as F, options.filter_keys[f.filter_id], 'key' in f ? f.key : null)
+          ),
           includeContext: link.include_context,
           includeTimeRange: link.include_time_range,
           showFilterForm: link.show_filter_form
@@ -123,7 +157,10 @@ export function useContextualLink<C extends LinkedContent>(
           show_filter_form: inheritedHidden.show_filter_form
         }
       case 'custom':
-        if (customLinks.value.length === 0 || customLinks.value.some(_isIncomplete)) {
+        if (
+          customLinks.value.length === 0 ||
+          customLinks.value.some((link) => _isIncomplete(link) || _hasFilterError(link))
+        ) {
           return undefined
         }
         return {
@@ -131,7 +168,12 @@ export function useContextualLink<C extends LinkedContent>(
           links: customLinks.value.map((link) => ({
             title: link.title,
             location: link.target!,
-            filters: link.filters.map((filterId) => ({ filter_id: filterId })),
+            filters: _carriedFilters(link).map((filter) => {
+              const key = trimmedKey(filter)
+              return key === null
+                ? { filter_id: filter.filterId }
+                : { filter_id: filter.filterId, key }
+            }),
             include_context: link.includeContext,
             include_time_range: link.includeTimeRange,
             show_filter_form: link.showFilterForm
@@ -144,6 +186,50 @@ export function useContextualLink<C extends LinkedContent>(
     return link.title.trim() === '' || link.target === null
   }
 
+  function _carriedFilters(link: CustomLinkDraft<F>): FilterDraft<F>[] {
+    return link.includeClickedElement ? link.filters : []
+  }
+
+  function _lacksKey(filter: FilterDraft<F>): boolean {
+    return filter.keyOption !== undefined && trimmedKey(filter) === null
+  }
+
+  // A label is parsed as key:value, so a colon would end the key early.
+  function _hasColonInLabelKey(filter: FilterDraft<F>): boolean {
+    return filter.keyOption?.type === 'label' && (trimmedKey(filter)?.includes(':') ?? false)
+  }
+
+  function _hasDuplicate(filters: FilterDraft<F>[]): boolean {
+    const pairs = new Set(
+      filters.map((filter) => JSON.stringify([filter.filterId, trimmedKey(filter)]))
+    )
+    return pairs.size !== filters.length
+  }
+
+  // The field count of each aux tag filter carried more often than it has fields.
+  function _exceededAuxTagLimits(filters: FilterDraft<F>[]): number[] {
+    const counts = new Map<F, { count: number; maxCount: number }>()
+    for (const { filterId, keyOption } of filters) {
+      if (keyOption?.type === 'aux_tag') {
+        const count = (counts.get(filterId)?.count ?? 0) + 1
+        counts.set(filterId, { count, maxCount: keyOption.max_count })
+      }
+    }
+    return [...counts.values()]
+      .filter(({ count, maxCount }) => count > maxCount)
+      .map(({ maxCount }) => maxCount)
+  }
+
+  function _hasFilterError(link: CustomLinkDraft<F>): boolean {
+    const filters = _carriedFilters(link)
+    return (
+      filters.some(_lacksKey) ||
+      filters.some(_hasColonInLabelKey) ||
+      _hasDuplicate(filters) ||
+      _exceededAuxTagLimits(filters).length > 0
+    )
+  }
+
   const validate = (): boolean => {
     const errors: TranslatedString[] = []
     if (enabled.value && mode.value === 'inherited' && inheritedTarget.value === null) {
@@ -154,6 +240,19 @@ export function useContextualLink<C extends LinkedContent>(
         errors.push(_t('Add at least one contextual link.'))
       } else if (customLinks.value.some(_isIncomplete)) {
         errors.push(_t('Every contextual link needs a title and a target.'))
+      }
+      const carried = customLinks.value.map(_carriedFilters)
+      if (carried.some((filters) => filters.some(_lacksKey))) {
+        errors.push(_t('Select a key for every label, tag and auxiliary tag filter.'))
+      }
+      if (carried.some((filters) => filters.some(_hasColonInLabelKey))) {
+        errors.push(_t('A label key must not contain a colon.'))
+      }
+      if (carried.some(_hasDuplicate)) {
+        errors.push(_t('Add each filter only once, and a label or tag filter only once per key.'))
+      }
+      for (const maxCount of new Set(carried.flatMap(_exceededAuxTagLimits))) {
+        errors.push(_t('A link carries at most %{count} auxiliary tags.', { count: maxCount }))
       }
     }
     validationErrors.value = errors
@@ -184,6 +283,15 @@ export function useContextualLink<C extends LinkedContent>(
     customLinks,
     addCustomLink: () => customLinks.value.push(newCustomLink<F>()),
     removeCustomLink: (index: number) => customLinks.value.splice(index, 1),
+    addFilter: (link, filterId) =>
+      link.filters.push(newFilter(filterId as F, options.filter_keys[filterId])),
+    setFilter: (filter, filterId) => {
+      if (filterId !== null && filterId !== filter.filterId) {
+        filter.filterId = filterId as F
+        filter.key = null
+        filter.keyOption = options.filter_keys[filterId]
+      }
+    },
     validationErrors,
     validate,
     contextualLink

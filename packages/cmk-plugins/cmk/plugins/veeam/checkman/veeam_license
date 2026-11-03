@@ -6,7 +6,9 @@ distribution: check_mk
 description:
  This check monitors the license of a Veeam Backup & Replication server,
  collected via the Veeam special agent. It reports the license edition,
- status, expiry, support expiry and consumption.
+ status, expiry, support expiry and consumption. The summary shows the
+ status, the license expiry and the consumption; the other values are shown
+ in the details.
 
  This check is {OK} if the license status is {Valid}. It is {CRIT} if the
  status is {Invalid} or {Expired}. Any other or absent status makes the

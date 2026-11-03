@@ -9,7 +9,14 @@ import { hasDynamicContent, mapOwnerLabel, mapVisibilityLabel } from '@/maps/hom
 import type { MapRead } from '@/maps/types/api'
 import type { TranslateFn } from '@/maps/utils/dropdownOptions'
 
-export type MapSortColumn = 'name' | 'type' | 'owner' | 'visibility' | 'connection' | 'objects'
+export type MapSortColumn =
+  | 'id'
+  | 'name'
+  | 'type'
+  | 'owner'
+  | 'visibility'
+  | 'connection'
+  | 'objects'
 export type SortDirection = 'asc' | 'desc'
 
 /**
@@ -35,6 +42,8 @@ export function useMapListSort(
 
   function sortKey(map: MapRead, by: MapSortColumn): string | number {
     switch (by) {
+      case 'id':
+        return map.name.toLowerCase()
       case 'name':
         return (map.alias || map.name).toLowerCase()
       case 'type':

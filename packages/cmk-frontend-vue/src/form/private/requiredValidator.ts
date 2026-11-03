@@ -49,8 +49,10 @@ export function required(validator: FormSpec.Validator): boolean {
 }
 
 export function isRequired(spec: FormSpec.FormSpec): boolean {
-  const type = (spec as Components).type
+  const component = spec as Components
   return (
-    type === 'file_upload' || type === 'single_choice' || (spec.validators?.some(required) ?? false)
+    component.type === 'file_upload' ||
+    (component.type === 'single_choice' && !component.has_default_value) ||
+    (spec.validators?.some(required) ?? false)
   )
 }

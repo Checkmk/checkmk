@@ -97,7 +97,7 @@ def _valuespec_agent_config_mrpe() -> Migrate:
 rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupMonitoringAgentsGenericOptions,
-        match_type="list",
+        match_type="all",
         name=RuleGroup.AgentConfig("mrpe"),
         valuespec=_valuespec_agent_config_mrpe,
     )

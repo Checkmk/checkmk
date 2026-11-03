@@ -93,33 +93,41 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
 
 <template>
   <CmkErrorBoundary>
-    <ResponsiveGrid
-      v-if="dashboard.content.layout.type === 'responsive_grid'"
-      v-model:content="dashboard.content as ContentResponsiveGrid"
-      :dashboard-key="dashboardKey"
-      :content-props="widgetContentProps"
-      :updated-widget-render-keys="updatedWidgetRenderKeys.value"
-      :is-editing="isEditing"
-      @widget:edit="$emit('widget:edit', $event)"
-      @widget:delete="$emit('widget:delete', $event)"
-      @widget:clone="(oldWidgetId, newLayout) => $emit('widget:clone', oldWidgetId, newLayout)"
-      @widget:update-time-range="
-        (widgetId, range) => $emit('widget:updateTimeRange', widgetId, range)
-      "
-    />
-    <RelativeGrid
-      v-else-if="dashboard.content.layout.type === 'relative_grid'"
-      ref="relativeGrid"
-      v-model:content="dashboard.content as ContentRelativeGrid"
-      :content-props="widgetContentProps"
-      :updated-widget-render-keys="updatedWidgetRenderKeys.value"
-      :is-editing="isEditing"
-      @widget:edit="$emit('widget:edit', $event)"
-      @widget:delete="$emit('widget:delete', $event)"
-      @widget:clone="(oldWidgetId, newLayout) => $emit('widget:clone', oldWidgetId, newLayout)"
-      @widget:update-time-range="
-        (widgetId, range) => $emit('widget:updateTimeRange', widgetId, range)
-      "
-    />
+    <div class="db-component__container">
+      <ResponsiveGrid
+        v-if="dashboard.content.layout.type === 'responsive_grid'"
+        v-model:content="dashboard.content as ContentResponsiveGrid"
+        :dashboard-key="dashboardKey"
+        :content-props="widgetContentProps"
+        :updated-widget-render-keys="updatedWidgetRenderKeys.value"
+        :is-editing="isEditing"
+        @widget:edit="$emit('widget:edit', $event)"
+        @widget:delete="$emit('widget:delete', $event)"
+        @widget:clone="(oldWidgetId, newLayout) => $emit('widget:clone', oldWidgetId, newLayout)"
+        @widget:update-time-range="
+          (widgetId, range) => $emit('widget:updateTimeRange', widgetId, range)
+        "
+      />
+      <RelativeGrid
+        v-else-if="dashboard.content.layout.type === 'relative_grid'"
+        ref="relativeGrid"
+        v-model:content="dashboard.content as ContentRelativeGrid"
+        :content-props="widgetContentProps"
+        :updated-widget-render-keys="updatedWidgetRenderKeys.value"
+        :is-editing="isEditing"
+        @widget:edit="$emit('widget:edit', $event)"
+        @widget:delete="$emit('widget:delete', $event)"
+        @widget:clone="(oldWidgetId, newLayout) => $emit('widget:clone', oldWidgetId, newLayout)"
+        @widget:update-time-range="
+          (widgetId, range) => $emit('widget:updateTimeRange', widgetId, range)
+        "
+      />
+    </div>
   </CmkErrorBoundary>
 </template>
+
+<style scoped>
+.db-component__container {
+  padding-left: 6px;
+}
+</style>

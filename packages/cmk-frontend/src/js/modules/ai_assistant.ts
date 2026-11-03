@@ -7,7 +7,7 @@
 const OPEN_STORAGE_KEY = 'cmk-ai-assistant-open'
 const POSITION_STORAGE_KEY = 'cmk-ai-assistant-position'
 const PANEL_SIZE = '300px'
-const DOCK_POSITIONS = ['left', 'right', 'bottom']
+const DOCK_POSITIONS = ['left', 'right']
 
 function isOpen(): boolean {
   return sessionStorage.getItem(OPEN_STORAGE_KEY) === 'true'

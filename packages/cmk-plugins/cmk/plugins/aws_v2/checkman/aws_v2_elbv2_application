@@ -1,0 +1,16 @@
+title: AWS v2 ApplicationELB: LCUs
+agents: aws_v2
+catalog: cloud/aws
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the number of load balancer capacity units
+ consumed by AWS/ApplicationELB services.
+
+ To make this check work you have to configure the related
+ special agent {{Amazon Web Services (AWS) v2}}.
+
+ No default levels are set. Upper levels can be configured.
+
+discovery:
+ One service is created if all required metrics (ConsumedLCUs) are given.

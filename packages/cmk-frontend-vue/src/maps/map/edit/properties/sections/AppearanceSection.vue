@@ -25,6 +25,8 @@ const props = defineProps<{
   metrics: ObjectMetrics
   /** The map's own icon size, shown as the placeholder an object inherits. */
   mapIconSize?: number | null | undefined
+  /** Whether the object has a state of its own, which a custom icon has to carry. */
+  stateful: boolean
 }>()
 
 const form = defineModel<ObjectForm>('form', { required: true })
@@ -52,14 +54,17 @@ const gadgetTypeOptions = computed(() => ({
 
 const isGadget = computed(() => form.value.display.mode === 'gadget')
 
-const sizePlaceholder = computed(() => {
-  if (isGadget.value) {
-    return untranslated(String(GADGET_DEFAULT_SIZE))
-  }
-  return props.mapIconSize !== null && props.mapIconSize !== undefined
-    ? untranslated(String(props.mapIconSize))
-    : _t('map default')
-})
+const inheritedSize = computed(() => (isGadget.value ? GADGET_DEFAULT_SIZE : props.mapIconSize))
+const sizePlaceholder = computed(() =>
+  inheritedSize.value !== null && inheritedSize.value !== undefined
+    ? untranslated(String(inheritedSize.value))
+    : untranslated('')
+)
+// An empty size inherits. Said in words, because a bare grey number beside
+// other fields' white values reads as a disabled field.
+const sizeInherited = computed(
+  () => form.value.display.image_size === undefined || String(form.value.display.image_size) === ''
+)
 </script>
 
 <template>
@@ -81,8 +86,12 @@ const sizePlaceholder = computed(() => {
         type="number"
         min="1"
         max="512"
+        unit="px"
         :placeholder="sizePlaceholder"
       />
+      <span v-if="sizeInherited" class="maps-appearance-section__note">
+        {{ isGadget ? _t('Gadget default') : _t('Map default') }}
+      </span>
     </PropertyRow>
 
     <template v-if="isGadget">
@@ -108,7 +117,27 @@ const sizePlaceholder = computed(() => {
     </template>
 
     <PropertyRow v-else :label="_t('Custom icon')" tall>
-      <ImagePicker v-model="form.display.image" />
+      <div class="maps-appearance-section__icon">
+        <ImagePicker v-model="form.display.image" />
+        <p v-if="stateful" class="maps-appearance-section__note">
+          {{ _t('Replaces the state icon. The state is then shown as a ring around it.') }}
+        </p>
+      </div>
     </PropertyRow>
   </PropertySection>
 </template>
+
+<style scoped>
+.maps-appearance-section__icon {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--dimension-3);
+  min-width: 0;
+}
+
+.maps-appearance-section__note {
+  margin: 0;
+  color: var(--font-color-dimmed);
+}
+</style>

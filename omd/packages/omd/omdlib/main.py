@@ -1462,7 +1462,9 @@ def validate_config_change_commands(
         if not hook:
             sys.exit("Invalid config option: %r" % key)
 
-        error_from_config_choice = _error_from_config_choice(get_hook(key).choices, value)
+        error_from_config_choice = _error_from_config_choice(
+            get_hook(key).choices(Edition.from_version_string(omdlib.__version__)), value
+        )
         if error_from_config_choice is not None:
             sys.exit(f"Invalid value for '{value} for {key}'. {error_from_config_choice}\n")
 
@@ -1488,7 +1490,9 @@ def config_set(
     if not hook:
         return Error("No such variable '%s'" % hook_name)
 
-    error_from_config_choice = _error_from_config_choice(get_hook(hook_name).choices, value)
+    error_from_config_choice = _error_from_config_choice(
+        get_hook(hook_name).choices(Edition.from_version_string(omdlib.__version__)), value
+    )
     if error_from_config_choice is not None:
         return Error(f"Invalid value for '{value}'. {error_from_config_choice}")
 
@@ -1642,7 +1646,7 @@ def config_configure_hook(
     title = hook.alias
     descr = hook.description.replace("\n\n", "\001").replace("\n", " ").replace("\001", "\n\n")
     value = config[hook_name]
-    choices = get_hook(hook_name).choices
+    choices = get_hook(hook_name).choices(Edition.from_version_string(omdlib.__version__))
 
     if isinstance(choices, list):
         change, new_value = dialog_menu(title, descr, choices, value, "Change", "Cancel")
@@ -1984,6 +1988,7 @@ def init_site(
         site.name,
         config["APACHE_TCP_ADDR"],
         config["APACHE_TCP_PORT"],
+        config["APACHE_FORWARDED_HEADERS"],
         apache_reload,
         verbose=global_opts.verbose,
     )
@@ -2145,6 +2150,7 @@ def main_enable(
         site_name,
         config["APACHE_TCP_ADDR"],
         config["APACHE_TCP_PORT"],
+        config["APACHE_FORWARDED_HEADERS"],
         False,
         verbose=global_opts.verbose,
     )
@@ -2166,6 +2172,7 @@ def main_update_apache_config(
             site_name,
             config["APACHE_TCP_ADDR"],
             config["APACHE_TCP_PORT"],
+            config["APACHE_FORWARDED_HEADERS"],
             True,
             verbose=global_opts.verbose,
         )
@@ -2326,6 +2333,7 @@ def main_mv_or_cp(
         new_site.name,
         config["APACHE_TCP_ADDR"],
         config["APACHE_TCP_PORT"],
+        config["APACHE_FORWARDED_HEADERS"],
         "apache-reload" in options,
         verbose=global_opts.verbose,
     )
@@ -2907,7 +2915,9 @@ def main_config(
             error = Error(f"No such command '{command}'")
 
     if (
-        set(set_hooks).intersection({"APACHE_TCP_ADDR", "APACHE_TCP_PORT", "APACHE_MODE"})
+        set(set_hooks).intersection(
+            {"APACHE_TCP_ADDR", "APACHE_TCP_PORT", "APACHE_MODE", "APACHE_FORWARDED_HEADERS"}
+        )
         and not is_containerized()
     ):
         sys.stdout.write(
@@ -3077,6 +3087,7 @@ def _restore_backup_from_tar_root(
         site.name,
         config["APACHE_TCP_ADDR"],
         config["APACHE_TCP_PORT"],
+        config["APACHE_FORWARDED_HEADERS"],
         "apache-reload" in options,
         verbose=global_opts.verbose,
     )

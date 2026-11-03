@@ -8,6 +8,7 @@
 import { userEvent } from '@testing-library/user-event'
 import { cleanup, render, screen, waitFor } from '@testing-library/vue'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
+// eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
 import { HttpResponse, http } from 'msw'
 import { afterEach, beforeEach, expect, test } from 'vitest'
 
@@ -20,6 +21,8 @@ const LIST_URL = `${API_BASE}/domain-types/custom_service/collections/all`
 const AUTOCOMPLETE_URL = `${API_BASE}/objects/autocomplete/:ident`
 const METRIC_NAMES_URL = `${API_BASE}/domain-types/telemetry_metrics/actions/names_with_types/invoke`
 const GRAPH_DATA_URL = `${API_BASE}/domain-types/custom_graph/actions/fetch_data/invoke`
+const TEMPLATE_ATTRIBUTES_URL = `${API_BASE}/domain-types/custom_service/actions/template_attributes/invoke`
+const RESOLVE_URL = `${API_BASE}/domain-types/custom_service/actions/resolve_host_name_template/invoke`
 
 const STORED_EXTENSIONS = {
   host_assignment: { mode: 'explicit_host', host_name: 'web01' },
@@ -42,6 +45,7 @@ const WRITTEN_EXTENSIONS = {
 }
 
 let updateRequests = 0
+let templateAttributesRequests = 0
 let lastBody: unknown = null
 let lastIfMatch: string | null = null
 
@@ -79,6 +83,18 @@ const server = useMswServer(
   http.post(METRIC_NAMES_URL, () =>
     HttpResponse.json({ choices: [{ name: 'otel.http.duration', types: ['sum'] }] })
   ),
+  http.post(TEMPLATE_ATTRIBUTES_URL, () => {
+    templateAttributesRequests += 1
+    return HttpResponse.json({ availability: 'available', attributes: [], truncated: false })
+  }),
+  http.post(RESOLVE_URL, () =>
+    HttpResponse.json({
+      matching_hosts: ['cart'],
+      unmatched_host_names: [],
+      hidden_match_count: 0,
+      truncated: false
+    })
+  ),
   http.post(GRAPH_DATA_URL, () =>
     HttpResponse.json({
       time_range: { start: 0, end: 3600, step: 60 },
@@ -100,6 +116,7 @@ afterEach(() => {
   cleanup()
   resetGlobalTimeState()
   updateRequests = 0
+  templateAttributesRequests = 0
   lastBody = null
   lastIfMatch = null
 })
@@ -215,4 +232,102 @@ test('without a configuration name the wizard creates instead of saving', async 
 
   await expectActiveStep('General configuration properties')
   expect(screen.queryByRole('button', { name: 'Save & activate changes' })).toBeNull()
+})
+
+const TEMPLATE_ASSIGNMENT = {
+  mode: 'host_name_template',
+  host_name_template: '$RESOURCE_ATTR.service.name$'
+}
+
+function serveStoredTemplateService(): void {
+  server.use(
+    http.get(OBJECT_URL, () =>
+      HttpResponse.json(
+        {
+          domainType: 'custom_service',
+          id: 'http_duration_on_web01',
+          title: 'HTTP duration',
+          extensions: { ...STORED_EXTENSIONS, host_assignment: TEMPLATE_ASSIGNMENT }
+        },
+        { headers: { ETag: 'etag-1' } }
+      )
+    )
+  )
+}
+
+test('a service assigned by host name template is written back with its template', async () => {
+  serveStoredTemplateService()
+  renderWizard()
+  await goToHostStep()
+
+  expect(await screen.findByDisplayValue('$RESOURCE_ATTR.service.name$')).toBeTruthy()
+  expect(await screen.findByText('cart')).toBeTruthy()
+  await userEvent.click(await screen.findByRole('button', { name: 'Save & activate changes' }))
+
+  await waitFor(() => expect(updateRequests).toBe(1))
+  expect(lastBody).toMatchObject({ host_assignment: TEMPLATE_ASSIGNMENT })
+})
+
+test('a refused host name template is shown at the template field', async () => {
+  serveStoredTemplateService()
+  server.use(
+    http.put(OBJECT_URL, () =>
+      HttpResponse.json(
+        {
+          status: 400,
+          title: 'Bad Request',
+          detail: 'These fields have problems: body.host_assignment.host_name_template',
+          fields: {
+            'body.host_assignment.host_name_template.host_name_template': {
+              type: 'value_error',
+              loc: ['body', 'host_assignment', 'host_name_template', 'host_name_template'],
+              msg: "Value error, The host name template must not start with '.'.",
+              input: '.$RESOURCE_ATTR.service.name$'
+            }
+          }
+        },
+        { status: 400 }
+      )
+    )
+  )
+  renderWizard()
+  await goToHostStep()
+  await screen.findByText('cart')
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Save & activate changes' }))
+
+  expect(await screen.findByText("The host name template must not start with '.'.")).toBeTruthy()
+  expect(screen.queryByText(/These fields have problems/)).toBeNull()
+})
+
+test('a service assigned by host name template asks for its attributes only at the host step', async () => {
+  serveStoredTemplateService()
+  renderWizard()
+  await expectActiveStep('Define metric')
+  await new Promise((resolve) => setTimeout(resolve, 100))
+
+  expect(templateAttributesRequests).toBe(0)
+
+  await goToHostStep()
+
+  await waitFor(() => expect(templateAttributesRequests).toBe(1))
+})
+
+test('a host name template that matches no host cannot be saved', async () => {
+  serveStoredTemplateService()
+  server.use(
+    http.post(RESOLVE_URL, () =>
+      HttpResponse.json({
+        matching_hosts: [],
+        unmatched_host_names: ['crat'],
+        hidden_match_count: 0,
+        truncated: false
+      })
+    )
+  )
+  renderWizard()
+  await goToHostStep()
+
+  expect(await screen.findByText(/No configured host currently matches/)).toBeTruthy()
+  expect(screen.getByRole('button', { name: 'Save & activate changes' })).toBeDisabled()
 })

@@ -1,0 +1,384 @@
+{
+  "data": [
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.Cluster",
+      "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615",
+      "vmCount": 164,
+      "inefficientVmCount": 130,
+      "backupEligibilityScore": 3,
+      "name": "cluster-a",
+      "nodes": {
+        "numberOfNodes": 3,
+        "$reserved": {
+          "$fv": "v4.r2"
+        },
+        "$objectType": "clustermgmt.v4.config.NodeReference",
+        "nodeList": [
+          {
+            "nodeUuid": "24bce4ff-ea77-4f52-84b2-438552e227be",
+            "$reserved": {
+              "$fv": "v4.r2"
+            },
+            "$objectType": "clustermgmt.v4.config.NodeListItemReference",
+            "controllerVmIp": {
+              "$reserved": {
+                "$fv": "v1.r0"
+              },
+              "$objectType": "common.v1.config.IPAddress",
+              "ipv4": {
+                "$reserved": {
+                  "$fv": "v1.r0"
+                },
+                "$objectType": "common.v1.config.IPv4Address",
+                "value": "192.0.2.29",
+                "prefixLength": 32
+              }
+            },
+            "hostIp": {
+              "$reserved": {
+                "$fv": "v1.r0"
+              },
+              "$objectType": "common.v1.config.IPAddress",
+              "ipv4": {
+                "$reserved": {
+                  "$fv": "v1.r0"
+                },
+                "$objectType": "common.v1.config.IPv4Address",
+                "value": "192.0.2.25",
+                "prefixLength": 32
+              }
+            }
+          },
+          {
+            "nodeUuid": "387a54c1-7286-49aa-9602-a7e8e889f63c",
+            "controllerVmIp": {
+              "$reserved": {
+                "$fv": "v1.r0"
+              },
+              "$objectType": "common.v1.config.IPAddress",
+              "ipv4": {
+                "$reserved": {
+                  "$fv": "v1.r0"
+                },
+                "$objectType": "common.v1.config.IPv4Address",
+                "value": "192.0.2.30",
+                "prefixLength": 32
+              }
+            },
+            "hostIp": {
+              "$reserved": {
+                "$fv": "v1.r0"
+              },
+              "$objectType": "common.v1.config.IPAddress",
+              "ipv4": {
+                "$reserved": {
+                  "$fv": "v1.r0"
+                },
+                "$objectType": "common.v1.config.IPv4Address",
+                "value": "192.0.2.26",
+                "prefixLength": 32
+              }
+            }
+          },
+          {
+            "nodeUuid": "247a477f-b32f-4fc1-83a6-c73172169e73",
+            "controllerVmIp": {
+              "$reserved": {
+                "$fv": "v1.r0"
+              },
+              "$objectType": "common.v1.config.IPAddress",
+              "ipv4": {
+                "$reserved": {
+                  "$fv": "v1.r0"
+                },
+                "$objectType": "common.v1.config.IPv4Address",
+                "value": "192.0.2.31",
+                "prefixLength": 32
+              }
+            },
+            "hostIp": {
+              "$reserved": {
+                "$fv": "v1.r0"
+              },
+              "$objectType": "common.v1.config.IPAddress",
+              "ipv4": {
+                "$reserved": {
+                  "$fv": "v1.r0"
+                },
+                "$objectType": "common.v1.config.IPv4Address",
+                "value": "192.0.2.27",
+                "prefixLength": 32
+              }
+            }
+          }
+        ]
+      },
+      "config": {
+        "incarnationId": 1765593061145372,
+        "hypervisorTypes": ["AHV"],
+        "timezone": "Etc/UTC",
+        "clusterSoftwareMap": [
+          {
+            "$reserved": {
+              "$fv": "v4.r2"
+            },
+            "$objectType": "clustermgmt.v4.config.SoftwareMapReference",
+            "softwareType": "NCC",
+            "version": "ncc-5.3.0.1"
+          },
+          {
+            "softwareType": "NOS",
+            "version": "el8.5-release-ganges-7.5.0.6-stable-909c09d4325aa41a6c58efd7cbc477aac04d04be"
+          }
+        ],
+        "isRemoteSupportEnabled": false,
+        "isLts": false,
+        "isPasswordRemoteLoginEnabled": true,
+        "isAvailable": true,
+        "$reserved": {
+          "$fv": "v4.r2"
+        },
+        "$objectType": "clustermgmt.v4.config.ClusterConfigReference",
+        "buildInfo": {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "clustermgmt.v4.config.BuildReference",
+          "buildType": "release",
+          "version": "7.5",
+          "fullVersion": "el8.5-release-ganges-7.5.0.6-stable-909c09d4325aa41a6c58efd7cbc477aac04d04be",
+          "commitId": "909c09d4325aa41a6c58efd7cbc477aac04d04be",
+          "shortCommitId": "909c09"
+        },
+        "clusterFunction": ["AOS"],
+        "authorizedPublicKeyList": [
+          {
+            "$reserved": {
+              "$fv": "v4.r2"
+            },
+            "$objectType": "clustermgmt.v4.config.PublicKey",
+            "name": "247a477f-b32f-4fc1-83a6-c73172169e73",
+            "key": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCPEJj7krMCk11uN+WZdXtYmiQT0S/HQz2ayOjK5giZW/IozUiJFsmZXfRTJueTYF335eE6UXiaVQNqeNANnURPljaA9NqLAVGekY5PG4rsf1tD4AMV7EePoop6jWGoACDqjo98AiCTGxIWbTQ6+I0pvBwzQz8IBZTak33FcOMMrG3UamvgoBmqYKKdFbi5rePuXYwjT3UuhOPupV4MXDux3HDGwgaNsEwTFeB2+zlrblxOMr3qLGXm3EnRoKgP8s/gmmHlAVyp0jrZe5Qai/18vUduxS5onZNMnBe8WmDeoHclWzz3Ts7hy/r2x/pwpETkAi8kCukk01MYM1yG+nivNhIX8b3BgkoIRp91Fux4G32mNEKfqn4NkqN9r5PZq4Dg6TewnKcM/cfW4re+cEEsNYOLGDkmgC9fNEsPlGQWty5pgEG/0wTogSC+b6yzaohmekv/H69ATTQuF0Vxw4MhlUz2E/Cj6T7kOC7vt/eUInwXvotk18Ey9posEf3kaiU= nutanix@ntnx-25sh5u320682-a-cvm"
+          },
+          {
+            "name": "192.0.2.27",
+            "key": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCp/cHGyT+lM4ZE1pzMPI9I9NmWIJI0ctgdqqaTh/02oxnc+UPygMUyDpLp6OIKaBnDMAysNwYt/thZjSBNnqL7sKxF7pS3pyUQFDATf5ISvgac5FORgwGxQebGA0/yA58C13Uh3aAD4xCwMSlsFDrTzrep3S2T4djD96E5dgze2513+t2tatL86pOIb5Bl7+b9pQ/vr0j9GEVtpH3RmtU2p4MymrxUcga/Hk0K7FK+Zpmsdf8qH1w7edptZJxDIpkoCISLLgbLue8PiX0lReKZGn7p8P/fAiHzuPkkeJ5YXQsnzeZC88U3iuW5X5F6tQ7Wj/Jj2+5ULmGKai/19fcAebsBVeancegE22VS+jw1qdQtjes9uEd8i3mU6HYypU39WiWBzjgJvPCJn/EQcBsv0d5yoAoSn2CZujgc66T9Rjq7yELEbovVVKTlFvpkv/v38A3hxGJDwJSH/fYtuai8KowTYR0zkolU+TOkOG3HHRrIondiJrrZ7CWTfME+b2M= root@phoenix"
+          },
+          {
+            "name": "387a54c1-7286-49aa-9602-a7e8e889f63c",
+            "key": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDJpAM5hVslRnlyZ101ZqD0P4uff4Sq3ch9aSKMlYelWVcwG8mwXfFM0pSbcBSLs3effwaHDl9OGwdWn6epvj9kIWa+KtAP/+iAvEZVAC6KkN9ucondNv0lx1NTyUteUrLhMtwoVwpPWFP4WWuOg2re01jzoo6fU5dT2BxyjxwJ+UjNUD3gh85bECXdskC7QUt1/DEFIERvJtVw6pXNGjPCkVrW2kTu5gdjPyy7g4joEaG3dLkwS6g2XWEfG+Kv2uIU4LeaMYXttnItQV3EwyEzWve5hXOJYfAnlFu2B2yrXixDq/IUwCAzSPFSCn+GtquS3ISeJ73gWzapYDnBqeYQYrN5108z7l1VL61rFwJFOuVuu7fsYPoB0GfuCBj7JSutFFSVhzetYw+/eMxaZwFB0HnOFXlobxOaxeTVGWVUzT0Dj6MBiYClO84atSbuPUzBFqnDQonSO2ywIl3SxhmIF/ZklDVJSK5QrDdRiyDL7FgREdECuhUdvMe2+gY2b/s= nutanix@ntnx-25sh5u320679-a-cvm"
+          },
+          {
+            "name": "192.0.2.26",
+            "key": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDOf9+FMaPlW0iyEwx2KJoXzxKz41RIopX6yVCWy9X5b+AL210OwEbiWC7dNqHUruB5EaQyIJ04VyeA/5HGnK1VEhdM6LfbX/fH67fcVyGYAXvbj18mOWZd99OiaVdunRBdMKXdb5Vh17ez0bDicviiZnv93Y2uAYiaytdeW2u22xkQSRT5Qvb0NaF3MXU2y2kPci5PXL9ZwcvGTv9CI/xW9qISyk7BlXqJJwZzJd1OLYmEQ3oRQ5MCMkh41Ue3fZsDWZtjT309qWipaVM3NvfymBhxSfKd2q5x7dGogRvDRg2JDCr1rQ1uxmNmIrdONn5uP5AOmpO38cfuSdUfWmLEog17gpPPh8QR0FAyxbUaHmulPcq8yK3XHbNuabLHeTF0zFavCoJzdI19BCWGtZ617LnyNfDi8OqD7JvjiOpg5O7jrhL1OIhu4v3G5Hw8iv1IcQdR6jIv934IXeh0klFf2n56P2eZCz51yI7k+OQZOyMRBWZvV0Dj+JFNqFErP1c= root@phoenix"
+          },
+          {
+            "name": "24bce4ff-ea77-4f52-84b2-438552e227be",
+            "key": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDqNKsVDqx1HvPiOOsmZLdGa5rGlgDFvm80/UmUPhix3WYM0ZwiylQUqA8/oo3h2TvGf0tjVBmbtAlgx8f3sN/DlMN0/zFaOM0PowcoK9C64AI+V4hWOO0L6wYf3AH5PXKvaBl/cECSC7SOL4QJsgo0tYGie/jiBYyOVSyHxMPtmkluOcb/JdILhZH7uzy+JWApMr+TUp+a4lKs0c+D7FCggUF+Ex74Yp+GXHcMGXPcvsHOjFGhHDcGYoOaT5hJdEK6CbLvPnaGowLWRdIshDEtXg3lJYkX7OZeRYL1MZHWNHGkaX8pvzkM8iO22CYc3Fq6WYcTR9hO+RCpbj61N2Qfo5ELbRajld0v/6Hc9IAVbGKOWP+IVUKbMxsWCvnvs27oAz0ZumjDeKnCTtYSJDVo7p5jX4L4fsUXHWeY8vBauq6QddfAVCTGlUx5FLD/9o+o1uLYAg0f1W44eO0hYRHD2BWhK9mwon0JyZGn+bcYIFsH0O3Qq4/OwQG6r82gRUc= nutanix@ntnx-25sh5u320678-a-cvm"
+          },
+          {
+            "name": "192.0.2.25",
+            "key": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDe/ocST/5Aaade4LOa0X/nGi/ycrb801FSc2Z2gS4DMJxXFICXs0gq41DxYHaBEbxHJhfBFqnDvNNeZlHAj3Lhan9ynB+3tYZNivBmBJrFMIgSFezq5vtspgTtjwmT8Le/0D2SvQurM9NvNY3yi8ksp4m6Yib10qyLNXdMi97t0qp3di375FcRLq8DXBMAPQxCJ4FCZttff6wEEmoy+bLD1WW83baAz194KVo5Jae7WNKzk4p/rxTDwQrtC3M5fsUe6lktVh1x4YCC3M94Y3WpI1fkjumiGzFiSHcP9n/OhUbZWmkjHAb9Eqt0gU0+km86rjARfmHfm14o1FmcfGopVKjnx4Ji1YQUcSHknT3ZBs9N/9h5HR19XQnxfgX3NlHvY1nY3EfiaZoTTbMR7SkZ6wDNT4rg9eZ0gC5M8FuhEyX+pnMgcOWSxu44qiEjCM+110I2ahQBF4b5rTKuRVEU0IWQdFFBKOkIXQo9pZSafi3hGqn5kehxs8WG5IkFo+M= root@phoenix"
+          },
+          {
+            "name": "vx",
+            "key": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDRjA3wZvymvH7CV0U12f0jWnqaQKbSjBnwe30j8ctUEUvVWdRaxqUyPQpJB9/rAFLYTGiVYBJRo7jMMLpfVTvZ4WshYz7DsR/R7Lj24GUPD4nbgPluT7fLbBl5/uAJReI5KjaD658ZEJrkc9AXoxMxkkER9DrD6AeNI+DIRteWccBdpymtyyKpTlk2eISmmmqy4UUetMw7ibJ/rZXuTzLaEu9S1T7v4jtxPAWKIZQwUuDTHBxtegIpFmMCOvyXxeHQJx1YEGy0u4OTgWfewzJS0T/uSUSy2bn+1bLHeooaXKwV3/iQl7U7anQPz2hFPw5aspvi1xwPKMqZCIJHr7Xm/sZ17oHBgsVNxPi3nG8Y2r4uidTQg9HgtyTlhos7CT/TXQFryTnA1TAaUp+BrjpmSHLguOF6vM34v7olFBJPv7yTwXhsSUpooz8VL77cgMm0eQZC7iH3ne6AfC9VpgeQIQahZ4oUwGi6fkEnF87zZylx3PMAfW2A7dD6TKN9/VTzdpFzxzQEKCUZ1FzRDMnery7i/L+IHt8KOcHnaL+mlykwMVvsc1glCIca8co/p7d48pnLl1igljFfQ0gwCidPKVJmKhtizevI1sfXPR0AWQjnw4OPse4gkC6hCla67ntUeNnPCDSOPv42avbFYgiWOmZ04dZ4tIIiKX4dH3GDcQ=="
+          }
+        ],
+        "redundancyFactor": 2,
+        "clusterArch": "X86_64",
+        "faultToleranceState": {
+          "currentMaxFaultTolerance": 1,
+          "desiredMaxFaultTolerance": 1,
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "clustermgmt.v4.config.FaultToleranceState",
+          "domainAwarenessLevel": "NODE",
+          "currentClusterFaultTolerance": "CFT_1N_OR_1D",
+          "desiredClusterFaultTolerance": "CFT_1N_OR_1D"
+        },
+        "operationMode": "NORMAL",
+        "pulseStatus": {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "clustermgmt.v4.config.PulseStatus",
+          "isEnabled": true,
+          "piiScrubbingLevel": "DEFAULT"
+        },
+        "clusterType": "HYPER_CONVERGED"
+      },
+      "upgradeStatus": "SUCCEEDED"
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.Cluster",
+      "extId": "0806a141-8916-471b-99fd-b5119ff280ef",
+      "name": "prism-central",
+      "nodes": {
+        "numberOfNodes": 1,
+        "$reserved": {
+          "$fv": "v4.r2"
+        },
+        "$objectType": "clustermgmt.v4.config.NodeReference",
+        "nodeList": [
+          {
+            "nodeUuid": "cb0cf733-4f46-49af-8876-1ca819823dde",
+            "$reserved": {
+              "$fv": "v4.r2"
+            },
+            "$objectType": "clustermgmt.v4.config.NodeListItemReference",
+            "controllerVmIp": {
+              "$reserved": {
+                "$fv": "v1.r0"
+              },
+              "$objectType": "common.v1.config.IPAddress",
+              "ipv4": {
+                "$reserved": {
+                  "$fv": "v1.r0"
+                },
+                "$objectType": "common.v1.config.IPv4Address",
+                "value": "prism.example.com",
+                "prefixLength": 32
+              }
+            }
+          }
+        ]
+      },
+      "config": {
+        "incarnationId": 578326905008572187,
+        "hypervisorTypes": ["$UNKNOWN"],
+        "timezone": "America/Los_Angeles",
+        "clusterSoftwareMap": [
+          {
+            "$reserved": {
+              "$fv": "v4.r2"
+            },
+            "$objectType": "clustermgmt.v4.config.SoftwareMapReference",
+            "softwareType": "NCC",
+            "version": "ncc-5.3.1"
+          },
+          {
+            "softwareType": "PRISM_CENTRAL",
+            "version": "el8.5-release-ganges-7.5.1.1-stable-3913420c7d0acd705632ce88e39eef1e61a71f6b"
+          }
+        ],
+        "isRemoteSupportEnabled": false,
+        "isLts": false,
+        "isPasswordRemoteLoginEnabled": true,
+        "isAvailable": true,
+        "$reserved": {
+          "$fv": "v4.r2"
+        },
+        "$objectType": "clustermgmt.v4.config.ClusterConfigReference",
+        "buildInfo": {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "clustermgmt.v4.config.BuildReference",
+          "buildType": "release",
+          "version": "7.5",
+          "fullVersion": "el8.5-release-ganges-7.5.1.1-stable-3913420c7d0acd705632ce88e39eef1e61a71f6b",
+          "commitId": "3913420c7d0acd705632ce88e39eef1e61a71f6b",
+          "shortCommitId": "391342"
+        },
+        "clusterFunction": ["PRISM_CENTRAL"],
+        "authorizedPublicKeyList": [
+          {
+            "$reserved": {
+              "$fv": "v4.r2"
+            },
+            "$objectType": "clustermgmt.v4.config.PublicKey",
+            "name": "cb0cf733-4f46-49af-8876-1ca819823dde",
+            "key": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDWpzGtCEkKHK3qhd6yKReS2hXBHhPoRXIQDfbAdbRukOk056An1XHsjmJdTfWGYv5waVIogOD53o24sL8DjHGn3cVa/VNrJaGNCa+G3Vgw1HEz00hx3wAaxOCB4wAqkZ4FFX0Fo7lvL/L5IrneZfUFTtjHcNUGpZMJjVOvdMf483wbk2mqL2BgYFxUF6y2ufEewVbLzmH4Y8ln2ACNJHdVmJKSssgkhrmp1E+9GvV/EcvkZnO4mfknsJYmxcrY2V2dT9aNMINFpTHFLkTVi+j2RhOs5bm2NSp1DwFXh1sFWDymSjYeL0hQqHmS843bKoXtPZHA5GSKkQxAPDfjPypxxUKAMj+PUJFrSRmvu5wQfRB4IzKogbARjwA129f5h34WjwkArvGJCUHzCFBy5oZQ6drMyk2jNiQ3SCVSxi/TEItRkStZOVAdUVPyuCi1t3Mz6rrOKoMuf4lxktgIvqAcvPZ0NsVkgcC6X3uJdI+X747lRRD8M64N4TIizmf03yE= nutanix@ntnx-10-8-58-7-a-pcvm"
+          },
+          {
+            "name": "vx",
+            "key": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDRjA3wZvymvH7CV0U12f0jWnqaQKbSjBnwe30j8ctUEUvVWdRaxqUyPQpJB9/rAFLYTGiVYBJRo7jMMLpfVTvZ4WshYz7DsR/R7Lj24GUPD4nbgPluT7fLbBl5/uAJReI5KjaD658ZEJrkc9AXoxMxkkER9DrD6AeNI+DIRteWccBdpymtyyKpTlk2eISmmmqy4UUetMw7ibJ/rZXuTzLaEu9S1T7v4jtxPAWKIZQwUuDTHBxtegIpFmMCOvyXxeHQJx1YEGy0u4OTgWfewzJS0T/uSUSy2bn+1bLHeooaXKwV3/iQl7U7anQPz2hFPw5aspvi1xwPKMqZCIJHr7Xm/sZ17oHBgsVNxPi3nG8Y2r4uidTQg9HgtyTlhos7CT/TXQFryTnA1TAaUp+BrjpmSHLguOF6vM34v7olFBJPv7yTwXhsSUpooz8VL77cgMm0eQZC7iH3ne6AfC9VpgeQIQahZ4oUwGi6fkEnF87zZylx3PMAfW2A7dD6TKN9/VTzdpFzxzQEKCUZ1FzRDMnery7i/L+IHt8KOcHnaL+mlykwMVvsc1glCIca8co/p7d48pnLl1igljFfQ0gwCidPKVJmKhtizevI1sfXPR0AWQjnw4OPse4gkC6hCla67ntUeNnPCDSOPv42avbFYgiWOmZ04dZ4tIIiKX4dH3GDcQ=="
+          }
+        ],
+        "redundancyFactor": 1,
+        "clusterArch": "X86_64",
+        "faultToleranceState": {
+          "currentMaxFaultTolerance": 0,
+          "desiredMaxFaultTolerance": 0,
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "clustermgmt.v4.config.FaultToleranceState",
+          "domainAwarenessLevel": "NODE",
+          "currentClusterFaultTolerance": "CFT_0N_AND_0D",
+          "desiredClusterFaultTolerance": "CFT_0N_AND_0D"
+        },
+        "pulseStatus": {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "clustermgmt.v4.config.PulseStatus",
+          "isEnabled": false
+        }
+      }
+    }
+  ],
+  "$reserved": {
+    "$fv": "v4.r2"
+  },
+  "$objectType": "clustermgmt.v4.config.ListClustersApiResponse",
+  "metadata": {
+    "flags": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.config.Flag",
+        "name": "hasError",
+        "value": false
+      },
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.config.Flag",
+        "name": "isPaginated",
+        "value": true
+      },
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.config.Flag",
+        "name": "isTruncated",
+        "value": false
+      }
+    ],
+    "$reserved": {
+      "$fv": "v1.r0"
+    },
+    "$objectType": "common.v1.response.ApiResponseMetadata",
+    "links": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.response.ApiLink",
+        "href": "https://prism.example.com:9440/api/clustermgmt/v4.0/config/clusters?$limit=100&$page=0",
+        "rel": "first"
+      },
+      {
+        "href": "https://prism.example.com:9440/api/clustermgmt/v4.0/config/clusters?$limit=100&$page=0",
+        "rel": "self"
+      },
+      {
+        "href": "https://prism.example.com:9440/api/clustermgmt/v4.0/config/clusters?$limit=100&$page=0",
+        "rel": "last"
+      }
+    ],
+    "totalAvailableResults": 2
+  }
+}

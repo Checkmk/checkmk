@@ -13,7 +13,8 @@ import pprint
 import queue
 import shutil
 import tempfile
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 from unittest.mock import patch
@@ -30,6 +31,8 @@ import cmk.utils.caching
 import cmk.utils.paths
 from cmk.ccc.site import omd_site, SiteId
 from cmk.crash import make_crash_report_base_path
+from cmk.schema_manager import discover_db_migrations, ensure_schema
+from cmk.schema_manager.backend.sqlite import Sqlite
 from cmk.utils import redis
 from tests.testlib.common.repo import is_non_free_repo, repo_path
 
@@ -205,6 +208,7 @@ def setup_fake_omd_site(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     makedirs(cmk.utils.paths.var_dir / "php-api")
     makedirs(cmk.utils.paths.var_dir / "wato/php-api")
     makedirs(cmk.utils.paths.var_dir / "wato/auth")
+    makedirs(cmk.utils.paths.installed_packages_dir)
     makedirs(cmk.utils.paths.tmp_dir / "wato/activation")
     makedirs(cmk.utils.paths.omd_root / "var/log")
     makedirs(cmk.utils.paths.omd_root / "tmp/check_mk")
@@ -277,6 +281,10 @@ sites.update(%r)
         """
         % livestatus.SiteConfigurations({SiteId("NO_SITE"): no_site_configuration()}),
     )
+
+    # Mirror what the post-create hook does on a real site.
+    for database in discover_db_migrations(backend_type=Sqlite, event="create").values():
+        ensure_schema(database, logger)
 
     yield
     omd_site.cache_clear()
@@ -370,6 +378,14 @@ def reduce_password_hashing_rounds() -> Iterator[None]:
     """Reduce the number of rounds for hashing with bcrypt to the allowed minimum"""
     with patch.object(cmk.crypto.password_hashing, "BCRYPT_ROUNDS", 4):
         yield
+
+
+@dataclass(frozen=True, slots=True)
+class LoggedSecurityEvent:
+    """One event from the security log, as the security_events fixture records it"""
+
+    summary: str
+    details: Mapping[str, object]
 
 
 def prevent_security_event_file_logging() -> Iterator[queue.Queue[logging.LogRecord]]:

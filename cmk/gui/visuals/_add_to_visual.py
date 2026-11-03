@@ -16,11 +16,12 @@ import cmk.ccc.version as cmk_version
 from cmk.gui.config import Config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.htmllib.generator import ClickAction
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import (
-    make_javascript_link,
+    make_click_action_link,
     PageMenuDropdown,
     PageMenuEntry,
     PageMenuLink,
@@ -29,7 +30,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import PageContext
 from cmk.gui.pagetypes import page_menu_add_to_topics
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import ADD_TO_GRAPH_TYPES, VisualContext
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.regex import validate_regex
@@ -50,7 +51,7 @@ def ajax_popup_add(ctx: PageContext) -> None:
     page_menu_dropdown = page_menu_dropdown_add_to_visual(
         add_type=request.get_ascii_input_mandatory("add_type"),
         name="",
-        user_permissions=UserPermissions.from_config(ctx.config, permission_registry),
+        user_permissions=ctx.user_permissions,
     )[0]
 
     html.open_ul()
@@ -69,18 +70,24 @@ def ajax_popup_add(ctx: PageContext) -> None:
                 )
                 continue
 
-            html.open_a(
-                href=entry.item.link.url,
-                onclick=entry.item.link.onclick,
-                target=entry.item.link.target,
-            )
-            icon = entry.icon_name or StaticIcon(IconNames.trans)
-            if isinstance(icon, StaticIcon):
-                html.static_icon(icon)
+            link = entry.item.link
+            with output_funnel.plugged():
+                icon = entry.icon_name or StaticIcon(IconNames.trans)
+                if isinstance(icon, StaticIcon):
+                    html.static_icon(icon)
+                else:
+                    html.dynamic_icon(icon)
+                html.write_text_permissive(entry.title)
+                content = HTML(output_funnel.drain(), escape=False)
+            if link.url is None:
+                html.action_link(content, click_action=link.click_action)
             else:
-                html.dynamic_icon(icon)
-            html.write_text_permissive(entry.title)
-            html.close_a()
+                html.a(
+                    content,
+                    href=link.url,
+                    target=link.target,
+                    **(link.click_action.data_attributes() if link.click_action else {}),
+                )
             html.close_li()
 
     html.close_ul()
@@ -123,8 +130,8 @@ def page_menu_dropdown_add_to_visual(
                     PageMenuEntry(
                         title=_("Export as JSON"),
                         icon_name=StaticIcon(IconNames.download),
-                        item=make_javascript_link(
-                            "cmk.popup_menu.graph_export('graph_export')",
+                        item=make_click_action_link(
+                            ClickAction(action="graph_export", arguments={"page": "graph_export"}),
                             action_id="export",
                             action_parameters=["graph_export"],
                         ),
@@ -132,8 +139,8 @@ def page_menu_dropdown_add_to_visual(
                     PageMenuEntry(
                         title=_("Export as PNG"),
                         icon_name=StaticIcon(IconNames.download),
-                        item=make_javascript_link(
-                            "cmk.popup_menu.graph_export('graph_image')",
+                        item=make_click_action_link(
+                            ClickAction(action="graph_export", arguments={"page": "graph_image"}),
                             action_id="export",
                             action_parameters=["graph_image"],
                         ),
@@ -194,7 +201,7 @@ def ajax_add_visual(ctx: PageContext) -> None:
         element_type,
         create_info.context,
         create_info.params,
-        UserPermissions.from_config(ctx.config, permission_registry),
+        ctx.user_permissions,
         RequestCache(ctx.config),
     )
 
@@ -247,7 +254,7 @@ def add_to_dashboard_choices_autocompleter(
     return get_visual_choices(
         visual_type_name="dashboards",
         value=value,
-        user_permissions=UserPermissions.from_config(config, permission_registry),
+        user_permissions=UserPermissions.from_config(config, all_permissions()),
     )
 
 

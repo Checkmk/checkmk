@@ -17,7 +17,10 @@ export interface ServiceModel {
   consolidation: WireConsolidationFunction
   aggregator: Aggregator | undefined
   serviceName: string
+  appendSeriesAttributes: boolean
   hostName: string | null
+  // Null while the service is assigned to a host by hand
+  hostNameTemplate: string | null
 }
 
 export function emptyService(): ServiceModel {
@@ -29,7 +32,9 @@ export function emptyService(): ServiceModel {
     consolidation: { type: 'gauge', function: 'gauge_last', lookback_seconds: 120 },
     aggregator: undefined,
     serviceName: '',
-    hostName: null
+    appendSeriesAttributes: true,
+    hostName: null,
+    hostNameTemplate: null
   }
 }
 
@@ -39,7 +44,8 @@ export function isMetricSelected(model: ServiceModel): boolean {
 }
 
 // The assign host step is complete — and the service may be created — only when
-// both a non-empty service name and a target host are set.
+// both a non-empty service name and a target host or host name template are set.
 export function isReadyToCreate(model: ServiceModel): boolean {
-  return model.serviceName.trim() !== '' && model.hostName !== null && model.hostName.trim() !== ''
+  const assignment = model.hostNameTemplate ?? model.hostName
+  return model.serviceName.trim() !== '' && assignment !== null && assignment.trim() !== ''
 }

@@ -10,10 +10,9 @@
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Mapping, Sequence
-from typing import assert_never, override
+from typing import override
 
 from botocore.client import BaseClient
-from pydantic import BaseModel, Field
 
 from cmk.plugins.aws_v2.constants import (
     AWS_EC2_INST_FAMILIES,
@@ -22,7 +21,8 @@ from cmk.plugins.aws_v2.constants import (
     AWS_EC2_LIMITS_SPECIAL,
 )
 
-from ..config import AWSConfig, LOGGER, NamingConvention
+from .. import hosts
+from ..config import AWSConfig, LOGGER
 from .core import (
     AWSColleagueContents,
     AWSComputedContent,
@@ -37,36 +37,6 @@ from .core import (
     Metrics,
     ResultDistributor,
 )
-
-
-class Instance(BaseModel):
-    private_ip_address: str | None = Field(None, alias="PrivateIpAddress")
-    private_dns_name: str | None = Field(None, alias="PrivateDnsName")
-    instance_id: str = Field(..., alias="InstanceId")
-
-
-def _get_ec2_piggyback_hostname(
-    piggyback_naming_convention: NamingConvention, inst: Mapping[str, object], region: str
-) -> str | None:
-    # PrivateIpAddress and InstanceId is available although the instance is stopped
-    # When we terminate an instance, the instance gets the state "terminated":
-    # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-lifecycle.html
-    # The instance remains in this state about 60 minutes, after 60 minutes the
-    # instance is no longer visible in the console.
-    # In this case we do not deliever any data for this piggybacked host such that
-    # the services go stable and Check_MK service reports "CRIT - Got not information".
-    parsed_instance = Instance.model_validate(inst)
-    match piggyback_naming_convention:
-        case NamingConvention.private_dns_name:
-            return parsed_instance.private_dns_name
-        case NamingConvention.ip_region_instance:
-            if parsed_instance.private_ip_address and parsed_instance.instance_id:
-                return (
-                    f"{parsed_instance.private_ip_address}-{region}-{parsed_instance.instance_id}"
-                )
-            return None
-        case _:
-            assert_never(piggyback_naming_convention)
 
 
 class EC2Limits(AWSSectionLimits):
@@ -212,7 +182,6 @@ class EC2Limits(AWSSectionLimits):
                     inst_fam_name = "Unknown Instance Family"
                 ondemand_limit = instance_quotas.get(inst_fam_name, ondemand_limit)
                 self._add_limit(
-                    "",
                     AWSLimit(
                         "running_ondemand_instances_%s" % inst_type.lower(),
                         inst_fam_name + " vCPUs",
@@ -224,7 +193,6 @@ class EC2Limits(AWSSectionLimits):
 
             total_instances += count
             self._add_limit(
-                "",
                 AWSLimit(
                     "running_ondemand_instances_%s" % inst_type,
                     "Running On-Demand %s Instances" % inst_type,
@@ -233,7 +201,6 @@ class EC2Limits(AWSSectionLimits):
                 ),
             )
         self._add_limit(
-            "",
             AWSLimit(
                 "running_ondemand_instances_total",
                 "Total Running On-Demand Instances",
@@ -300,7 +267,6 @@ class EC2Limits(AWSSectionLimits):
             elif domain == "standard":
                 std_addresses += 1
         self._add_limit(
-            "",
             AWSLimit(
                 "vpc_elastic_ip_addresses",
                 "VPC Elastic IP addresses",
@@ -309,7 +275,6 @@ class EC2Limits(AWSSectionLimits):
             ),
         )
         self._add_limit(
-            "",
             AWSLimit(
                 "elastic_ip_addresses",
                 "Elastic IP addresses",
@@ -324,7 +289,6 @@ class EC2Limits(AWSSectionLimits):
         quotas_by_name: Mapping[str, float],
     ) -> None:
         self._add_limit(
-            "",
             AWSLimit(
                 "vpc_sec_groups",
                 "VPC security groups",
@@ -338,7 +302,6 @@ class EC2Limits(AWSSectionLimits):
             if not vpc_id:
                 continue
             self._add_limit(
-                "",
                 AWSLimit(
                     "vpc_sec_group_rules",
                     "Rules of VPC security group %s" % sec_group["GroupName"],
@@ -357,7 +320,6 @@ class EC2Limits(AWSSectionLimits):
         if_sec_group_limit = int(quotas_by_name.get("Security groups per network interface", 5))
         for iface in interfaces:
             self._add_limit(
-                "",
                 AWSLimit(
                     "if_vpc_sec_group",
                     "VPC security groups of elastic network interface %s"
@@ -373,7 +335,6 @@ class EC2Limits(AWSSectionLimits):
             if spot_inst_req["State"] in ["open", "active"]:
                 count_spot_inst_reqs += 1
         self._add_limit(
-            "",
             AWSLimit(
                 "spot_inst_requests",
                 "Spot Instance Requests",
@@ -393,7 +354,6 @@ class EC2Limits(AWSSectionLimits):
             total_target_cap += spot_fleet_req["SpotFleetRequestConfig"]["TargetCapacity"]
 
         self._add_limit(
-            "",
             AWSLimit(
                 "active_spot_fleet_requests",
                 "Active Spot Fleet Requests",
@@ -402,7 +362,6 @@ class EC2Limits(AWSSectionLimits):
             ),
         )
         self._add_limit(
-            "",
             AWSLimit(
                 "spot_fleet_total_target_capacity",
                 "Spot Fleet Requests Total Target Capacity",
@@ -524,18 +483,20 @@ class EC2Summary(AWSSection):
 
     def _format_instances(self, instances):
         formatted_instances = {}
-        for inst in instances:
-            inst_id = _get_ec2_piggyback_hostname(
-                self._config.piggyback_naming_convention, inst, self._region
-            )
-            if inst_id:
-                inst["TagsForCmkLabels"] = self.process_tags_for_cmk_labels(inst.get("Tags", []))
-                formatted_instances[inst_id] = inst
+        for host, inst in hosts.ec2_instance_hosts(
+            instances, self._region, self._config.host_naming
+        ):
+            inst["TagsForCmkLabels"] = self.process_tags_for_cmk_labels(inst.get("Tags", []))
+            formatted_instances[host] = inst
         return formatted_instances
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", list(computed_content.content.values()))]
+        return [
+            AWSSectionResult(
+                self._target_host(hosts.AccountScope()), list(computed_content.content.values())
+            )
+        ]
 
 
 class EC2Labels(AWSSectionLabels):

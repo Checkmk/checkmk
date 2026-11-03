@@ -4,11 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from functools import partial
 
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.http import request
 from cmk.gui.painter import CellDrilldown
+from cmk.gui.top_heading import DRILLED_FROM_VAR
 from cmk.gui.type_defs import (
     ColumnName,
     ContextualLinkEntryConfig,
@@ -22,7 +24,16 @@ from cmk.gui.type_defs import (
     VisualContext,
 )
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.views.page_edit_view import ColumnDrilldownTarget
+from cmk.gui.views.drilldown_filters import (
+    drilldown_filters,
+    Dropped,
+    DROPPED_FILTERS_VAR,
+    dropped_filters_variable,
+    filter_drilldown,
+    filter_keys,
+)
+from cmk.gui.visuals.filter.drilldowns import Drilldown
+from cmk.shared_typing.drill_up_button import DrillUpButton
 from cmk.web.utils.urls import makeuri_contextless
 
 from .api.model.contextual_link import (
@@ -38,27 +49,27 @@ _PAGE_BY_TARGET_TYPE: Mapping[ContextualLinkTargetType, tuple[str, str]] = {
 }
 
 
+@dataclass(frozen=True)
+class _CarriedFilter:
+    drilldown: Drilldown
+    keys: Sequence[str]
+
+
 def column_drilldowns(
     view_spec: ViewSpec,
     column_links: Mapping[int, ContextualLinkEntryConfig],
     context: VisualContext,
     user_permissions: UserPermissions,
+    drilled_from: DrillUpButton | None = None,
 ) -> dict[int, CellDrilldown]:
-    """The drill-downs of an embedded view's columns, by painter index.
-
-    A row of the view is one host or one service, so a link carries that object on top of the
-    effective context the view renders with. A row that names less than the target needs, like a
-    host downtime for a service view, links nowhere.
-    """
+    """The drill-downs of an embedded view's columns, by painter index."""
     if (
         not column_links
-        or (data_source := data_source_registry.get(view_spec["datasource"])) is None
+        or (data_source_type := data_source_registry.get(view_spec["datasource"])) is None
     ):
         return {}
-    infos = data_source().infos
-    object_infos = [info for info in ("host", "service") if info in infos]
-    if not object_infos:
-        return {}
+    data_source = data_source_type()
+    object_infos = [info for info in ("host", "service") if info in data_source.infos]
     drilldowns: dict[int, CellDrilldown] = {}
     for index, link in column_links.items():
         location = location_from_internal(link["location"])
@@ -67,44 +78,46 @@ def column_drilldowns(
             or (target := _permitted_target(location, user_permissions)) is None
         ):
             continue
-        # TODO(CMK-39811): carry the filters a custom column link configures.
+        link_context = context if link["include_context"] else {}
         if link["filters"]:
-            continue
-        drilldowns[index] = CellDrilldown(
-            columns=_object_columns(object_infos),
-            url=partial(
-                _url,
-                location,
-                context if link["include_context"] else {},
-                object_infos,
-                [info for info in target["single_infos"] if info in object_infos],
-                show_filter_form=link["show_filter_form"],
-            ),
-        )
+            carriable = set(drilldown_filters(data_source, location.type))
+            configured = filter_keys(link["filters"])
+            carried = {
+                filter_name: _CarriedFilter(drilldown, keys)
+                for filter_name, keys in configured.items()
+                if filter_name in carriable
+                and (drilldown := filter_drilldown(filter_name)) is not None
+            }
+            drilldowns[index] = CellDrilldown(
+                columns=[
+                    column
+                    for carried_filter in carried.values()
+                    for column in carried_filter.drilldown.columns
+                ],
+                url=partial(
+                    _custom_url,
+                    location,
+                    link_context,
+                    configured,
+                    carried,
+                    show_filter_form=link["show_filter_form"],
+                    drilled_from=drilled_from,
+                ),
+            )
+        elif object_infos:
+            drilldowns[index] = CellDrilldown(
+                columns=_object_columns(object_infos),
+                url=partial(
+                    _inherited_url,
+                    location,
+                    link_context,
+                    object_infos,
+                    [info for info in target["single_infos"] if info in object_infos],
+                    show_filter_form=link["show_filter_form"],
+                    drilled_from=drilled_from,
+                ),
+            )
     return drilldowns
-
-
-def inherited_column_link(target: ColumnDrilldownTarget) -> ContextualLinkEntryConfig:
-    """The stored link of a column the view editor set to drill down to the target."""
-    return ContextualLinkEntryConfig(
-        title=target[1],
-        location=target,
-        filters=[],
-        include_context=True,
-        include_time_range=True,
-        show_filter_form=False,
-    )
-
-
-def column_drilldown_targets(
-    column_links: Mapping[int, ContextualLinkEntryConfig],
-) -> dict[int, ColumnDrilldownTarget]:
-    """The targets of the inherited column links, as the view editor shows them."""
-    return {
-        index: (link["location"][0], link["location"][1])
-        for index, link in column_links.items()
-        if not link["filters"]
-    }
 
 
 def _object_columns(object_infos: Sequence[InfoName]) -> list[ColumnName]:
@@ -117,22 +130,22 @@ def _permitted_target(location: VisualLocation, user_permissions: UserPermission
     return permitted_copies(location, user_permissions).get(location.owner)
 
 
-def _object_key(
+def _object_filters(
     row: Row, object_infos: Sequence[InfoName]
 ) -> dict[FilterName, FilterHTTPVariables]:
     """The filters naming the row's object, as the Vue object widgets carry them.
 
     A row of a data source of hosts and services may be about a host alone, with an empty service.
     """
-    key: dict[FilterName, FilterHTTPVariables] = {"siteopt": {"site": str(row["site"])}}
+    filters: dict[FilterName, FilterHTTPVariables] = {"siteopt": {"site": str(row["site"])}}
     if host_name := row["host_name"]:
-        key["host"] = {"host": str(host_name)}
+        filters["host"] = {"host": str(host_name)}
     if "service" in object_infos and (service_description := row["service_description"]):
-        key["service"] = {"service": str(service_description)}
-    return key
+        filters["service"] = {"service": str(service_description)}
+    return filters
 
 
-def _url(
+def _inherited_url(
     location: VisualLocation,
     context: VisualContext,
     object_infos: Sequence[InfoName],
@@ -140,19 +153,80 @@ def _url(
     row: Row,
     *,
     show_filter_form: bool,
+    drilled_from: DrillUpButton | None,
 ) -> str | None:
-    object_key = _object_key(row, object_infos)
-    # The filters of the object key are named after the infos they fill.
-    if any(info not in object_key for info in target_infos):
+    object_filters = _object_filters(row, object_infos)
+    # The object filters are named after the infos they fill.
+    if any(info not in object_filters for info in target_infos):
         return None
+    # The clicked object goes last, so it wins over the same filter in the context.
+    return _target_url(
+        location,
+        {**context, **object_filters},
+        show_filter_form=show_filter_form,
+        drilled_from=drilled_from,
+    )
+
+
+def _custom_url(
+    location: VisualLocation,
+    context: VisualContext,
+    configured: Mapping[FilterName, Sequence[str]],
+    carried: Mapping[FilterName, _CarriedFilter],
+    row: Row,
+    *,
+    show_filter_form: bool,
+    drilled_from: DrillUpButton | None,
+) -> str:
+    valued: dict[FilterName, FilterHTTPVariables] = {}
+    dropped: list[Dropped] = []
+    for filter_name in configured:
+        if (carried_filter := carried.get(filter_name)) is None:
+            dropped.append(Dropped(filter_name, "not_available"))
+            continue
+        variables, missing = carried_filter.drilldown.carried(row, carried_filter.keys)
+        if variables is not None:
+            valued[filter_name] = variables
+        if missing:
+            dropped.extend(Dropped(filter_name, "no_such_key", key) for key in missing)
+        elif variables is None:
+            dropped.append(Dropped(filter_name, "no_value"))
+    filters = {**context, **valued}
+    return _target_url(
+        location,
+        filters,
+        show_filter_form=show_filter_form,
+        drilled_from=drilled_from,
+        # A filter the context carries in place of the row's value still travels.
+        dropped=[
+            entry
+            for entry in dropped
+            if entry.filter_name in valued or entry.filter_name not in filters
+        ],
+    )
+
+
+def _target_url(
+    location: VisualLocation,
+    context: VisualContext,
+    *,
+    show_filter_form: bool,
+    drilled_from: DrillUpButton | None,
+    dropped: Sequence[Dropped] = (),
+) -> str:
     page, name_variable = _PAGE_BY_TARGET_TYPE[location.type]
-    variables = {name_variable: location.name}
+    variables: dict[str, str] = {}
+    for filter_variables in context.values():
+        variables.update(filter_variables)
+    # The target's own variables go last, so no filter can override them.
+    variables[name_variable] = location.name
     # Without an owner, the target page resolves the name for each viewer.
     if location.owner is not None:
         variables["owner"] = str(location.owner)
-    # The clicked object goes last, so it wins over the same filter in the context.
-    for filter_variables in {**context, **object_key}.values():
-        variables.update(filter_variables)
     variables["filled_in"] = "filter"
     variables["_show_filter_form"] = "1" if show_filter_form else "0"
+    if dropped:
+        variables[DROPPED_FILTERS_VAR] = dropped_filters_variable(dropped)
+    if drilled_from is not None:
+        variables[DRILLED_FROM_VAR] = drilled_from.title
     return makeuri_contextless(request, list(variables.items()), filename=page)

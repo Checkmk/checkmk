@@ -51,21 +51,36 @@ Nice! Before contributing please check out our [contribution guidelines](CONTRIB
 ## Building your own packages
 
 It is highly recommended to use the prebuilt Checkmk packages we [provide](https://checkmk.com/download.php).
-But if you really want to build your own packages, you either need to download the source packages from our website or check out the [Git repository](https://github.com/Checkmk/checkmk).
+But if you really want to build your own packages, follow the instructions here.
 
-We're building the Checkmk packages within specific docker images for the different distros.
+We're building the Checkmk packages within specific docker images for the different distros as the builds are not (yet) fully hermetic.
 Please find the Dockerfiles under buildscripts/infrastructure/build-nodes/ in order to get an idea what's needed to build it locally.
 However, keep in mind that those Dockerfiles are heavily relying on our infrastructure and won't build from scratch on your machine.
 
-If you have the dependencies in place, you can either create RPM or DEB packages, depending on your Linux distribution.
-
-To build an RPM:
-
-    make rpm
+If you have the dependencies in place, you can build RPM or DEB packages with [Bazel](BAZEL.md).
 
 To create a DEB package:
 
-    DEBFULLNAME="Mr. Buildmaster" DEBEMAIL="mail@buildmaster.com" make deb
+    bazel build --cmk_edition=community --cmk_version=3.0.0 \
+        --//:disable_agent_package_signing=true //omd:deb
 
-Don't forget to insert your name and mail address.
-As a result you should find packages of the form `check-mk-[edition]-[version].[deb|rpm]` in your current directory.
+To build an RPM:
+
+    bazel build --cmk_edition=community --cmk_version=3.0.0 \
+        --//:disable_agent_package_signing=true //omd:rpm
+
+The build settings select what is packaged:
+
+- `--cmk_edition`: use `community` to build the open source version of checkmk
+- `--cmk_version`: the version string used in the package name and the installation path `/opt/omd/versions/<version>.<edition>`
+
+The packages bundle the `check-mk-agent` RPM, which is signed with our release key.
+Without a signing key, the package targets refuse to build, so that no unsigned agent package is shipped by accident.
+`--//:disable_agent_package_signing=true` bundles the unsigned agent RPM instead.
+
+Some artifacts cannot yet be built on linux-only and are provided by our CI from dedicated build nodes.
+Add `--//:use_faked_artifacts=true` to replace them with placeholders.
+Faked artifacts imply unsigned agent packages, so `--//:disable_agent_package_signing=true` isn't needed then.
+Packages built this way are fine for testing but must not be used in production.
+
+As a result you should find packages of the form `check-mk-[edition]-[version]*.[deb|rpm]` in `bazel-bin/omd/`.

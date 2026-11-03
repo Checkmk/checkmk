@@ -9,6 +9,7 @@ resolved live against the connection.
 -->
 <script setup lang="ts">
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
+import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, watch } from 'vue'
 
@@ -40,13 +41,20 @@ const groupKind = computed(() =>
     : null
 )
 
-// A group picked for the other filter type must not survive the swap.
-watch(
-  () => form.value.radar_filter,
-  () => {
+const groupNameMissing = computed(() => props.saveAttempted && !form.value.radar_filter_value)
+
+// A group picked for the other kind of group must not survive the swap; a
+// detour over a choice without a group keeps it.
+let pickedFor = groupKind.value
+watch(groupKind, (kind) => {
+  if (kind === null) {
+    return
+  }
+  if (pickedFor !== null && kind !== pickedFor) {
     form.value.radar_filter_value = ''
   }
-)
+  pickedFor = kind
+})
 </script>
 
 <template>
@@ -72,23 +80,18 @@ watch(
         )
       "
     >
+      <CmkInlineValidation
+        :validation="
+          groupNameMissing ? [_t('Pick a group — the map has nothing to show without one.')] : []
+        "
+      />
       <MapsObjectField
         v-model="form.radar_filter_value"
         :kind="groupKind"
         :label="_t('Group name')"
         :placeholder="_t('Group name')"
+        :has-error="groupNameMissing"
       />
-      <p v-if="props.saveAttempted && !form.radar_filter_value" class="maps-radar-settings__gap">
-        {{ _t('Pick a group — the map has nothing to show without one.') }}
-      </p>
     </EditField>
   </SettingsSection>
 </template>
-
-<style scoped>
-.maps-radar-settings__gap {
-  margin: 0;
-  font-size: var(--font-size-normal);
-  color: var(--color-state-critical);
-}
-</style>

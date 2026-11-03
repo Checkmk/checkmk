@@ -7,7 +7,7 @@ import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
 import type { NavToggleItem as NavToggleItemType } from 'cmk-shared-typing/typescript/main_menu'
 import { KeyShortcutService } from 'cmk-ui-library/lib/keyShortcuts'
-import { ref } from 'vue'
+import { nextTick, ref } from 'vue'
 
 import NavToggleItem from '@/main-menu/components/NavToggleItem.vue'
 import { MainMenuService } from '@/main-menu/lib/main-menu-service'
@@ -51,12 +51,12 @@ function openState(highlight?: NavToggle['highlight']) {
   return { open, navToggle }
 }
 
-function renderToggle(navToggle: NavToggle) {
+function renderToggle(navToggle: NavToggle, toggleItem: NavToggleItemType = item) {
   return render(NavToggleItem, {
     global: {
       provide: { [mainMenuKey]: new MainMenuService([], [], new KeyShortcutService(window)) }
     },
-    props: { item, navToggle, hideItemTitle: false }
+    props: { item: toggleItem, navToggle, hideItemTitle: false }
   })
 }
 
@@ -106,6 +106,27 @@ describe('NavToggleItem', () => {
     renderToggle(openState().navToggle)
 
     expect(screen.getByRole('listitem')).not.toHaveClass('mm-nav-toggle-item__li--highlight-ai')
+  })
+
+  test('glows and underlines its access key while Alt is held', async () => {
+    renderToggle(openState().navToggle, { ...item, shortcut: { key: 'i', alt: true } })
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Alt', altKey: true }))
+    await nextTick()
+
+    expect(screen.getByRole('listitem')).toHaveClass('mm-nav-toggle-item__li--alt-hint')
+    expect(screen.getByText('I')).toHaveClass('mm-mnemonic-title__key')
+    window.dispatchEvent(new KeyboardEvent('keyup', { key: 'Alt' }))
+  })
+
+  test('does not glow while Alt is held for a shortcut without Alt', async () => {
+    renderToggle(openState().navToggle)
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Alt', altKey: true }))
+    await nextTick()
+
+    expect(screen.getByRole('listitem')).not.toHaveClass('mm-nav-toggle-item__li--alt-hint')
+    window.dispatchEvent(new KeyboardEvent('keyup', { key: 'Alt' }))
   })
 
   test('unmounting frees its shortcut key', () => {

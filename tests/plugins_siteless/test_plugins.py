@@ -129,6 +129,7 @@ def test_checks_executor(agent_data_filename: str, request: pytest.FixtureReques
         autochecks_dir=paths.autochecks_dir,
         discovered_host_labels_dir=paths.discovered_host_labels_dir,
         builtin_host_labels_file=Path("/dev/null"),
+        debug=debug.enabled(),
     )
     parser_config = config.make_parser_config(
         EMPTY_CONFIG,
@@ -171,6 +172,7 @@ def test_checks_executor(agent_data_filename: str, request: pytest.FixtureReques
             clusters=(),
             get_agent_output=lambda: None,
             omd_root=Path(""),
+            debug=debug.enabled(),
         )
         assert check_plugins
 
@@ -195,6 +197,7 @@ def test_checks_executor(agent_data_filename: str, request: pytest.FixtureReques
             submitter=submitter,
             exit_spec=ExitSpec(),
             timeperiods_active={},
+            debug=debug.enabled(),
         )
         checks_result = submitter.results
         assert checks_result

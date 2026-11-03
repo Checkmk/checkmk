@@ -14,7 +14,7 @@ def _parameter_form_veeam_protection_groups() -> Dictionary:
             "disabled_state": DictElement(
                 parameter_form=ServiceState(
                     title=Title("State when the protection group is disabled"),
-                    prefill=DefaultValue(ServiceState.WARN),
+                    prefill=DefaultValue(ServiceState.OK),
                 ),
             ),
         },

@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import CmkCatalogPanel from 'cmk-ui-library/components/CmkCatalogPanel.vue'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
 import CmkSwitch from 'cmk-ui-library/components/CmkSwitch.vue'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
@@ -13,6 +14,7 @@ import useId from 'cmk-ui-library/lib/useId'
 import { computed, ref, watch } from 'vue'
 
 import ImagePicker from '@/maps/image-library/components/ImagePicker.vue'
+import EditField from '@/maps/map/edit/components/EditField.vue'
 import MapsSuggestionField from '@/maps/shared/components/MapsSuggestionField.vue'
 import { suggestionList, titledSuggestions } from '@/maps/shared/suggestions'
 import type {
@@ -172,106 +174,132 @@ watch(
 </script>
 
 <template>
-  <section class="maps-inspector-data-section">
-    <h3 class="maps-section-title">{{ _t('Data') }}</h3>
-    <PresentationBindingForm
-      :element="element"
-      :connection-id="connectionId"
-      @patch="emit('patch', $event)"
-    />
-
-    <template v-if="element.kind === 'data'">
-      <div class="maps-inspector-data-section__field">
-        <span class="maps-cap">{{ _t('Display') }}</span>
-        <CmkDropdown
-          :model-value="element.display.mode"
-          :options="modeOptions"
-          :width="'fill'"
-          :label="_t('Display')"
-          @update:model-value="patchDisplay({ mode: $event })"
-        />
-      </div>
-      <div v-if="element.display.mode === 'icon'" class="maps-inspector-data-section__field">
-        <span class="maps-cap">{{ _t('Icon') }}</span>
-        <ImagePicker
-          :model-value="element.display.image ?? ''"
-          :placeholder="_t('State dot (default)')"
-          @update:model-value="patchDisplay({ image: $event || null })"
-        />
-      </div>
-      <template v-if="element.display.mode === 'gadget'">
-        <div class="maps-inspector-data-section__field">
-          <span class="maps-cap">{{ _t('Gadget') }}</span>
-          <CmkDropdown
-            :model-value="element.display.gadget_type ?? 'gauge'"
-            :options="gadgetOptions"
-            :width="'fill'"
-            :label="_t('Gadget')"
-            @update:model-value="patchDisplay({ gadget_type: $event })"
-          />
-        </div>
-      </template>
-      <!-- Outside the gadget block on purpose: the field self-hides off-gadget,
-           but its mount keeps the binding-change metric reset running in every
-           display mode. -->
-      <PresentationGadgetMetricField
+  <CmkCatalogPanel :title="_t('Data')">
+    <div class="maps-inspector-data-section">
+      <PresentationBindingForm
         :element="element"
         :connection-id="connectionId"
         @patch="emit('patch', $event)"
       />
-      <div class="maps-inspector-data-section__field">
-        <span class="maps-cap">{{ _t('Fill') }}</span>
-        <ColorField
-          :label="_t('Fill')"
-          :value="element.fill"
-          :default-color="tokens['--pres-shape-fill']"
-          @set="emit('patch', { fill: $event })"
+      <!-- No <label> around the switch: its slider toggles itself, and a label
+           would pass the click on to the hidden checkbox, switching it back. -->
+      <span v-if="element.kind === 'shape'" class="maps-inspector-data-section__slot">
+        <CmkSwitch
+          :model-value="element.data_slot ?? false"
+          :aria-labelledby="slotLabelId"
+          @update:model-value="emit('patch', { data_slot: $event })"
         />
-      </div>
-    </template>
+        <span
+          :id="slotLabelId"
+          class="maps-inspector-data-section__slot-label"
+          @click="emit('patch', { data_slot: !element.data_slot })"
+        >
+          {{ _t('Data slot (fill in connect mode)') }}
+        </span>
+      </span>
+    </div>
+  </CmkCatalogPanel>
 
-    <CmkCheckbox
-      :model-value="effectiveLabelShow"
-      :label="_t('Show label')"
-      @update:model-value="emit('patch', { label: { ...labelBase, show: $event } })"
-    />
-    <template v-if="effectiveLabelShow">
-      <div class="maps-inspector-data-section__field">
-        <span class="maps-cap">{{ _t('Label text') }}</span>
-        <input
-          class="maps-field"
-          :value="element.label?.text ?? ''"
-          :placeholder="element.service_description || element.host_name || _t('Automatic')"
-          @change="onLabelText"
-        />
-      </div>
-      <div class="maps-inspector-data-section__row">
-        <label class="maps-inspector-data-section__num">
-          <span class="maps-cap">{{ _t('Label size') }}</span>
-          <CmkInput
-            type="number"
-            :model-value="element.label?.size ?? 14"
-            min="6"
-            max="96"
-            @update:model-value="patchLabelSize($event)"
+  <CmkCatalogPanel :title="_t('Display')">
+    <div class="maps-inspector-data-section">
+      <template v-if="element.kind === 'data'">
+        <EditField class="maps-inspector-data-section__field" :label="_t('Show as')">
+          <CmkDropdown
+            :model-value="element.display.mode"
+            :options="modeOptions"
+            :width="'fill'"
+            :label="_t('Show as')"
+            @update:model-value="patchDisplay({ mode: $event })"
           />
-        </label>
-        <div class="maps-inspector-data-section__field">
-          <span class="maps-cap">{{ _t('Label color') }}</span>
+        </EditField>
+        <EditField
+          v-if="element.display.mode === 'icon'"
+          class="maps-inspector-data-section__field"
+          :label="_t('Icon')"
+        >
+          <ImagePicker
+            :model-value="element.display.image ?? ''"
+            :placeholder="_t('State dot (default)')"
+            @update:model-value="patchDisplay({ image: $event || null })"
+          />
+        </EditField>
+        <template v-if="element.display.mode === 'gadget'">
+          <EditField class="maps-inspector-data-section__field" :label="_t('Gadget')">
+            <CmkDropdown
+              :model-value="element.display.gadget_type ?? 'gauge'"
+              :options="gadgetOptions"
+              :width="'fill'"
+              :label="_t('Gadget')"
+              @update:model-value="patchDisplay({ gadget_type: $event })"
+            />
+          </EditField>
+        </template>
+        <!-- Outside the gadget block on purpose: the field self-hides off-gadget,
+             but its mount keeps the binding-change metric reset running in every
+             display mode. -->
+        <PresentationGadgetMetricField
+          :element="element"
+          :connection-id="connectionId"
+          @patch="emit('patch', $event)"
+        />
+        <EditField class="maps-inspector-data-section__field" :label="_t('Fill')">
           <ColorField
-            :label="_t('Label color')"
-            :value="element.label?.color"
-            :default-color="tokens['--pres-fg']"
-            @set="emit('patch', { label: { ...labelBase, color: $event } })"
+            :label="_t('Fill')"
+            :value="element.fill"
+            :default-color="tokens['--pres-shape-fill']"
+            @set="emit('patch', { fill: $event })"
           />
-        </div>
-      </div>
-    </template>
+        </EditField>
+      </template>
 
-    <template v-if="connectorEl">
-      <div class="maps-inspector-data-section__sep" />
-      <div class="maps-inspector-data-section__field">
-        <span class="maps-cap">{{ _t('Start endpoint') }}</span>
+      <CmkCheckbox
+        :model-value="effectiveLabelShow"
+        :label="_t('Show label')"
+        @update:model-value="emit('patch', { label: { ...labelBase, show: $event } })"
+      />
+      <template v-if="effectiveLabelShow">
+        <EditField class="maps-inspector-data-section__field" :label="_t('Label text')">
+          <CmkInput
+            field-size="fill"
+            :model-value="element.label?.text ?? ''"
+            :aria-label="_t('Label text')"
+            :placeholder="element.service_description || element.host_name || _t('Automatic')"
+            @change="onLabelText"
+          />
+        </EditField>
+        <div class="maps-inspector-data-section__row">
+          <EditField
+            v-slot="{ id }"
+            class="maps-inspector-data-section__num"
+            labels-control
+            :label="_t('Label size')"
+          >
+            <CmkInput
+              :id="id"
+              type="number"
+              unit="px"
+              :model-value="element.label?.size ?? 14"
+              min="6"
+              max="96"
+              @update:model-value="patchLabelSize($event)"
+            />
+          </EditField>
+          <EditField class="maps-inspector-data-section__field" :label="_t('Label color')">
+            <ColorField
+              :label="_t('Label color')"
+              :value="element.label?.color"
+              :default-color="tokens['--pres-fg']"
+              @set="emit('patch', { label: { ...labelBase, color: $event } })"
+            />
+          </EditField>
+        </div>
+      </template>
+    </div>
+  </CmkCatalogPanel>
+
+  <CmkCatalogPanel v-if="connectorEl" :title="_t('Connector')">
+    <div class="maps-inspector-data-section">
+      <EditField class="maps-inspector-data-section__field" :label="_t('Start endpoint')">
         <CmkDropdown
           :model-value="connectorEl.start_ref ?? ''"
           :options="endpointOptions"
@@ -279,9 +307,8 @@ watch(
           :label="_t('Start endpoint')"
           @update:model-value="emit('patch', { start_ref: $event || null })"
         />
-      </div>
-      <div class="maps-inspector-data-section__field">
-        <span class="maps-cap">{{ _t('End endpoint') }}</span>
+      </EditField>
+      <EditField class="maps-inspector-data-section__field" :label="_t('End endpoint')">
         <CmkDropdown
           :model-value="connectorEl.end_ref ?? ''"
           :options="endpointOptions"
@@ -289,15 +316,14 @@ watch(
           :label="_t('End endpoint')"
           @update:model-value="emit('patch', { end_ref: $event || null })"
         />
-      </div>
+      </EditField>
       <CmkCheckbox
         :model-value="connectorEl.flow ?? false"
         :label="_t('Animate flow (weathermap)')"
         @update:model-value="emit('patch', { flow: $event })"
       />
       <template v-if="connectorEl.flow">
-        <div class="maps-inspector-data-section__field">
-          <span class="maps-cap">{{ _t('Flow metric') }}</span>
+        <EditField class="maps-inspector-data-section__field" :label="_t('Flow metric')">
           <MapsSuggestionField
             :label="_t('Flow metric')"
             :model-value="flowMetricModel"
@@ -305,9 +331,11 @@ watch(
             :placeholder="element.host_name ? _t('Pick a metric…') : _t('e.g. if_in_bps')"
             @update:model-value="emit('patch', { flow_metric: $event || null })"
           />
-        </div>
-        <div class="maps-inspector-data-section__field">
-          <span class="maps-cap">{{ _t('Return metric (optional)') }}</span>
+        </EditField>
+        <EditField
+          class="maps-inspector-data-section__field"
+          :label="_t('Return metric (optional)')"
+        >
           <MapsSuggestionField
             :label="_t('Return metric (optional)')"
             :model-value="flowMetricBackModel"
@@ -315,52 +343,30 @@ watch(
             :placeholder="_t('Splits the link into a two-way weathermap')"
             @update:model-value="emit('patch', { flow_metric_back: $event || null })"
           />
-        </div>
+        </EditField>
       </template>
-    </template>
-
-    <!-- .stop on the switch: the slider toggles itself; without it the wrapping
-         label would forward a second click to the hidden checkbox. -->
-    <label v-if="element.kind === 'shape'" class="maps-inspector-data-section__slot">
-      <CmkSwitch
-        :model-value="element.data_slot ?? false"
-        :aria-labelledby="slotLabelId"
-        @update:model-value="emit('patch', { data_slot: $event })"
-        @click.stop
-      />
-      <span :id="slotLabelId" class="maps-inspector-data-section__slot-label">
-        {{ _t('Data slot (fill in connect mode)') }}
-      </span>
-    </label>
-  </section>
+    </div>
+  </CmkCatalogPanel>
 </template>
 
 <style scoped>
 .maps-inspector-data-section {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing);
+  gap: var(--dimension-5);
+  padding: var(--dimension-4) 0;
 }
 
 .maps-inspector-data-section__row {
   display: flex;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: var(--dimension-4);
 }
 
 .maps-inspector-data-section__field,
 .maps-inspector-data-section__num {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dimension-3);
   min-width: 0;
   flex: 1;
-}
-
-.maps-inspector-data-section__sep {
-  height: 1px;
-  margin: 2px 0;
-  background: var(--default-form-element-border-color);
 }
 
 .maps-inspector-data-section__note {

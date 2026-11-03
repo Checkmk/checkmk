@@ -16,7 +16,7 @@ import argparse
 import logging
 import sys
 from collections import defaultdict
-from collections.abc import Collection, Iterable, Mapping, Sequence
+from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
 from enum import Enum
 from http import HTTPStatus
 from typing import Final, override
@@ -1005,26 +1005,47 @@ def fetch_qtree_quota(
         )
 
 
+_SNAPMIRROR_FIELDS: Final = (
+    "state",
+    "transfer.state",
+    "policy.name",
+    "policy.type",
+    "source.svm.name",
+    "source.svm.uuid",
+    "lag_time",
+    "destination.path",
+    "destination.svm.name",
+)
+_SNAPMIRROR_HEALTH_FIELDS: Final = ("healthy", "unhealthy_reason")
+
+
+def fetch_snapmirror_relationships[T](
+    get_collection: Callable[[str], Iterable[T]], logger: logging.Logger
+) -> Sequence[T]:
+    # The REST API docs before ONTAP 9.9 are offline, so it is unknown which versions
+    # have the health fields. Older systems may reject unknown fields with HTTP 400.
+    try:
+        return list(get_collection(",".join(_SNAPMIRROR_FIELDS + _SNAPMIRROR_HEALTH_FIELDS)))
+    except NetAppRestError as exc:
+        if exc.status_code != HTTPStatus.BAD_REQUEST:
+            raise
+        logger.debug(
+            "SnapMirror health fields rejected, retrying without them: %(error)s",
+            {"error": exc},
+        )
+    return list(get_collection(",".join(_SNAPMIRROR_FIELDS)))
+
+
 def fetch_snapmirror(
-    connection: HostConnection,
+    connection: HostConnection, logger: logging.Logger
 ) -> Iterable[models.SnapMirrorModel]:
-    field_query = (
-        "state",
-        "transfer.state",
-        "policy.name",
-        "policy.type",
-        "source.svm.name",
-        "source.svm.uuid",
-        "lag_time",
-        "destination.path",
-        "destination.svm.name",
-    )
+    def get_collection(fields: str) -> Iterable[Resource]:
+        return NetAppResource.SnapmirrorRelationship.get_collection(  # type: ignore[attr-defined,no-any-return]
+            connection=connection, fields=fields
+        )
 
-    for element in NetAppResource.SnapmirrorRelationship.get_collection(  # type: ignore[attr-defined]
-        connection=connection, fields=",".join(field_query)
-    ):
+    for element in fetch_snapmirror_relationships(get_collection, logger):
         element_data = element.to_dict()
-
         yield models.SnapMirrorModel(
             policy_name=element_data.get("policy", {}).get("name"),
             policy_type=element_data.get("policy", {}).get("type"),
@@ -1033,6 +1054,12 @@ def fetch_snapmirror(
             source_svm_name=element_data.get("source", {}).get("svm", {}).get("name"),
             lag_time=element_data.get("lag_time"),
             destination=element_data["destination"]["path"],
+            healthy=element_data.get("healthy"),
+            unhealthy_reason=[
+                reason["message"]
+                for reason in element_data.get("unhealthy_reason") or []
+                if reason.get("message")
+            ],
         )
 
 
@@ -1174,7 +1201,7 @@ def write_sections(
         safe_write_section("s3_buckets", fetch_s3_buckets(connection), logger)
 
     if FetchedResource.snapvault.value in fetched_resources:
-        safe_write_section("snapvault", fetch_snapmirror(connection), logger)
+        safe_write_section("snapvault", fetch_snapmirror(connection, logger), logger)
 
     if FetchedResource.vs_status.value in fetched_resources:
         safe_write_section("vs_status", fetch_vs_status(connection), logger)

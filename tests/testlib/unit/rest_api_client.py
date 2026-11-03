@@ -54,6 +54,7 @@ type WidgetComputeAction = Literal[
     "compute-state",
     "compute-state-summary",
     "compute-single-metric",
+    "compute-monitoring-table",
 ]
 
 
@@ -998,6 +999,21 @@ class HostConfigClient(RestApiClient):
             follow_redirects=follow_redirects,
         )
 
+    def register(
+        self,
+        host_name: str,
+        uuid: str,
+        headers: Mapping[str, str] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "put",
+            url=f"/objects/host_config_internal/{host_name}/actions/register/invoke",
+            body={"uuid": uuid},
+            headers=headers,
+            expect_ok=expect_ok,
+        )
+
     def register_via_token(
         self, host_name: str, token: str, uuid: str, expect_ok: bool = True
     ) -> Response:
@@ -1489,16 +1505,32 @@ class GraphClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def discover_custom_graphs(
+    def discover_saved_custom_graph(
         self,
-        custom_graph: str,
+        name: str,
         expect_ok: bool = True,
     ) -> Response:
         return self.request(
             "post",
             url=f"/domain-types/{self.domain}/actions/discover_custom_graphs/invoke",
             body={
-                "custom_graph": custom_graph,
+                "type": "saved",
+                "name": name,
+            },
+            expect_ok=expect_ok,
+        )
+
+    def discover_inline_custom_graph(
+        self,
+        definition: Mapping[str, object],
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/discover_custom_graphs/invoke",
+            body={
+                "type": "inline",
+                "definition": definition,
             },
             expect_ok=expect_ok,
         )
@@ -1666,6 +1698,14 @@ class CustomGraphClient(RestApiClient):
                 "requested_time_range": requested_time_range,
                 "consolidation_function": consolidation_function,
             },
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
+    def designer_config(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/actions/designer_config/invoke",
             expect_ok=expect_ok,
             api_version=APIVersion.INTERNAL,
         )
@@ -2557,12 +2597,16 @@ class AgentClient(RestApiClient):
         )
 
     def create_registration_token(
-        self, body: Mapping[str, Any], expect_ok: bool = True
+        self,
+        body: Mapping[str, Any],
+        headers: Mapping[str, str] | None = None,
+        expect_ok: bool = True,
     ) -> Response:
         return self.request(
             "post",
             url="/domain-types/agent_registration_token/collections/all",
             body=dict(body),
+            headers=headers,
             expect_ok=expect_ok,
             api_version=APIVersion.INTERNAL,
         )
@@ -2570,6 +2614,41 @@ class AgentClient(RestApiClient):
 
 class AgentDeploymentInternalClient(RestApiClient):
     domain: DomainType = "agent_deployment_internal"
+    default_version = APIVersion.INTERNAL
+
+    def status(
+        self,
+        host_name: str,
+        body: Mapping[str, Any],
+        headers: Mapping[str, str] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/objects/{self.domain}/{host_name}/actions/status/invoke",
+            body=dict(body),
+            headers=dict(headers) if headers else None,
+            expect_ok=expect_ok,
+        )
+
+    def download(
+        self,
+        host_name: str,
+        body: Mapping[str, Any],
+        headers: Mapping[str, str] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/objects/{self.domain}/{host_name}/actions/download/invoke",
+            body=dict(body),
+            headers={"Accept": "application/octet-stream", **(headers or {})},
+            expect_ok=expect_ok,
+        )
+
+
+class AgentDeploymentForwardedClient(RestApiClient):
+    domain: DomainType = "agent_deployment_forwarded"
     default_version = APIVersion.INTERNAL
 
     def status(
@@ -5062,6 +5141,30 @@ class DataBackendClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def test_central_connection(
+        self, payload: Mapping[str, Any], expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/test_central_connection/invoke",
+            body=dict(payload),
+            expect_ok=expect_ok,
+        )
+
+    def show_central_connection_test(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/actions/show_central_connection_test/invoke",
+            expect_ok=expect_ok,
+        )
+
+    def abort_central_connection_test(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/abort_central_connection_test/invoke",
+            expect_ok=expect_ok,
+        )
+
 
 class TelemetryMetricsClient(RestApiClient):
     domain: DomainType = "telemetry_metrics"
@@ -5096,6 +5199,16 @@ class CustomServiceClient(RestApiClient):
                 "host_assignment": dict(host_assignment),
                 "configuration": dict(configuration),
             },
+            expect_ok=expect_ok,
+        )
+
+    def resolve_host_name_template(
+        self, body: Mapping[str, object], expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/resolve_host_name_template/invoke",
+            body=dict(body),
             expect_ok=expect_ok,
         )
 
@@ -5146,6 +5259,16 @@ class CustomServiceClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def template_attributes(
+        self, metric_step: Mapping[str, Any], expect_ok: bool = True
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/template_attributes/invoke",
+            body=dict(metric_step),
+            expect_ok=expect_ok,
+        )
+
 
 class AlertClient(RestApiClient):
     domain: DomainType = "telemetry_alert"
@@ -5173,6 +5296,13 @@ class AlertClient(RestApiClient):
             "post",
             url=f"/domain-types/{self.domain}/collections/all",
             body=body,
+            expect_ok=expect_ok,
+        )
+
+    def get_all(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
             expect_ok=expect_ok,
         )
 
@@ -5792,6 +5922,7 @@ class ClientRegistry:
     Customer: CustomerClient
     Agent: AgentClient
     AgentDeploymentInternal: AgentDeploymentInternalClient
+    AgentDeploymentForwarded: AgentDeploymentForwardedClient
     Downtime: DowntimeClient
     HostGroup: HostGroupClient
     ServiceGroup: ServiceGroupClient
@@ -5868,6 +5999,7 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         Customer=CustomerClient(request_handler, url_prefix),
         Agent=AgentClient(request_handler, url_prefix),
         AgentDeploymentInternal=AgentDeploymentInternalClient(request_handler, url_prefix),
+        AgentDeploymentForwarded=AgentDeploymentForwardedClient(request_handler, url_prefix),
         Downtime=DowntimeClient(request_handler, url_prefix),
         HostGroup=HostGroupClient(request_handler, url_prefix),
         ServiceGroup=ServiceGroupClient(request_handler, url_prefix),

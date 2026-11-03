@@ -70,9 +70,8 @@ def sort_folder_services(services: list[FolderHostService]) -> None:
     services.sort(key=lambda s: (-severity_rank(s.state), natural_key(s.name)))
 
 
-_MONITORING_TYPES: frozenset[str] = frozenset(
-    {"host", "service", "hostgroup", "servicegroup", "line", "graph"}
-)
+# Graphs and lines report the state of the object they show, under its type.
+_MONITORING_TYPES: frozenset[str] = frozenset({"host", "service", "hostgroup", "servicegroup"})
 # Types that contribute to the worst-state roll-up of a map-link object.
 # Includes map and aggregation so nested maps transitively show up in the
 # parent map's status pill.
@@ -355,7 +354,6 @@ class _MapElementBins:
     hosts_hard: list[MapElement] = field(default_factory=list)
     svcs_soft: list[MapElement] = field(default_factory=list)
     svcs_hard: list[MapElement] = field(default_factory=list)
-    lines: list[MapElement] = field(default_factory=list)
     map_objects: list[MapElement] = field(default_factory=list)
     others: list[MapElement] = field(default_factory=list)
 
@@ -364,21 +362,15 @@ def _bin_map_elements(objects: list[MapElement]) -> _MapElementBins:
     """Split map objects into per-query-kind bins (hosts vs services vs …).
 
     Hosts and services are further split by ``only_hard_states`` so each batch
-    query carries a uniform ``only_hard`` flag. ``graph`` objects piggyback on
-    the host/service batches depending on whether they target a service.
+    query carries a uniform ``only_hard`` flag. Graphs and lines join the bin of
+    the object whose state they show.
     """
     bins = _MapElementBins()
-    for obj in objects:
+    for obj in map(_as_state_source, objects):
         if obj.type == "host" and obj.host_name:
             (bins.hosts_hard if obj.only_hard_states else bins.hosts_soft).append(obj)
         elif obj.type == "service" and obj.host_name and obj.service_description:
             (bins.svcs_hard if obj.only_hard_states else bins.svcs_soft).append(obj)
-        elif obj.type == "graph" and obj.host_name and obj.service_description:
-            bins.svcs_soft.append(obj)
-        elif obj.type == "graph" and obj.host_name:
-            bins.hosts_soft.append(obj)
-        elif obj.type == "line":
-            bins.lines.append(obj)
         elif obj.type == "map" and obj.map_name:
             bins.map_objects.append(obj)
         elif obj.type == "aggregation":
@@ -386,6 +378,21 @@ def _bin_map_elements(objects: list[MapElement]) -> _MapElementBins:
         else:
             bins.others.append(obj)
     return bins
+
+
+def _as_state_source(obj: MapElement) -> MapElement:
+    """A graph or line as the object whose state it shows."""
+    if obj.type not in ("graph", "line"):
+        return obj
+    bound = obj.line_object_type if obj.type == "line" else None
+    if bound is None and not obj.host_name:
+        return obj  # decoration, nothing to show the state of
+    derived = "service" if obj.service_description else "host"
+    update: dict[str, object] = {"type": bound or derived}
+    if obj.type == "graph":
+        # A graph leaves out no members, as in the editor.
+        update |= {"exclude_members": None, "exclude_member_states": None}
+    return obj.model_copy(update=update)
 
 
 async def _resolve_host_states(
@@ -446,7 +453,10 @@ async def _resolve_host_states(
     if not summary_hosts:
         return
     try:
-        summary_batch = await connection.get_services_summary(summary_hosts)
+        summary_batch, (thinned, failed) = await asyncio.gather(
+            connection.get_services_summary(summary_hosts),
+            _summaries_by_pattern(connection, host_objs, set(summary_hosts)),
+        )
     except Exception:
         logger.warning("Services-summary query failed", exc_info=True)
         return
@@ -457,10 +467,59 @@ async def _resolve_host_states(
         summary = summary_batch.get(obj.host_name)
         if existing is None or summary is None:
             continue
+        pattern = _state_exclusion(obj)
+        if pattern in failed:
+            # The excluded services would count again; better none at all.
+            results[obj.id] = existing.model_copy(update={"stale": True})
+            continue
+        if pattern in thinned:
+            summary = thinned[pattern].get(obj.host_name, summary)
         update: dict[str, object] = {"services_summary": summary}
         if obj.recognize_services:
             update["state"] = _combined_state_from_summary(existing.state, summary)
         results[obj.id] = existing.model_copy(update=update)
+
+
+def _state_exclusion(obj: MapElement) -> str | None:
+    """The member pattern that keeps members out of the state.
+
+    As in NagVis, a pattern for the state replaces the one for the members.
+    """
+    return obj.exclude_member_states or obj.exclude_members
+
+
+async def _summaries_by_pattern(
+    connection: ConnectionBase, host_objs: list[MapElement], visible: set[str]
+) -> tuple[dict[str, dict[str, ServicesSummary]], set[str]]:
+    """Per member pattern, its hosts' service counts without the excluded services.
+
+    One query per pattern, as maps imported from NagVis tend to share one. Also
+    returns the patterns whose query failed; a pattern that does not apply to a
+    host's services is in neither.
+    """
+    hosts_by_pattern: dict[str, set[str]] = {}
+    for obj in host_objs:
+        if (
+            obj.host_name is not None
+            and obj.host_name in visible
+            and (pattern := _state_exclusion(obj))
+        ):
+            hosts_by_pattern.setdefault(pattern, set()).add(obj.host_name)
+    thinned: dict[str, dict[str, ServicesSummary]] = {}
+    failed: set[str] = set()
+
+    async def _one(pattern: str, hosts: set[str]) -> None:
+        try:
+            summaries = await connection.get_hosts_services_summaries(sorted(hosts), pattern)
+        except Exception:
+            logger.warning("Filtered services-summary query failed", exc_info=True)
+            failed.add(pattern)
+            return
+        if summaries is not None:
+            thinned[pattern] = summaries
+
+    await asyncio.gather(*(_one(p, hosts) for p, hosts in hosts_by_pattern.items()))
+    return thinned, failed
 
 
 async def _resolve_service_states(
@@ -511,8 +570,8 @@ async def _resolve_individual_states(
     objects: list[MapElement],
     results: dict[str, ObjectState],
 ) -> None:
-    """Resolve objects that have no batch query (lines and everything else)
-    one-by-one, in parallel, into *results*."""
+    """Resolve objects that have no batch query one-by-one, in parallel, into
+    *results*."""
     individual = [_get_object_state(connection, obj) for obj in objects]
     for state in await asyncio.gather(*individual):
         results[state.object_id] = state
@@ -551,7 +610,7 @@ async def _resolve_map_link_states(
         included_objs = [
             o
             for o in ref_cfg.objects
-            if o.type != "map" or (o.map_name and o.map_name not in child_visited)
+            if _as_state_source(o).type != "map" or (o.map_name and o.map_name not in child_visited)
         ]
         try:
             map_states[map_name] = await _states_for_objects(
@@ -614,7 +673,7 @@ async def _get_map_states_batched(
 
     await _resolve_host_states(connection, bins.hosts_soft, bins.hosts_hard, auth_user, results)
     await _resolve_service_states(connection, bins.svcs_soft, bins.svcs_hard, auth_user, results)
-    await _resolve_individual_states(connection, bins.lines + bins.others, results)
+    await _resolve_individual_states(connection, bins.others, results)
     await _resolve_map_link_states(
         bins.map_objects,
         auth_user=auth_user,
@@ -628,38 +687,28 @@ async def _get_map_states_batched(
 
 async def _get_object_state(connection: ConnectionBase, obj: MapElement) -> ObjectState:
     try:
-        if obj.type == "host" and obj.host_name:
-            if obj.only_hard_states:
-                state = await connection.get_host_hard_state(obj.host_name)
-            else:
-                state = await connection.get_host_state(obj.host_name)
-            if obj.recognize_services:
-                state = await _aggregate_host_with_services(connection, state, obj.host_name)
-        elif obj.type == "service" and obj.host_name and obj.service_description:
-            if obj.only_hard_states:
-                state = await connection.get_service_hard_state(
-                    obj.host_name, obj.service_description
-                )
-            else:
-                state = await connection.get_service_state(obj.host_name, obj.service_description)
-        elif obj.type == "hostgroup" and obj.group_name:
-            state = await connection.get_hostgroup_states(obj.group_name)
-        elif obj.type == "servicegroup" and obj.group_name:
-            state = await connection.get_servicegroup_states(obj.group_name)
-        elif obj.type == "dyngroup" and obj.object_filter:
-            state = await connection.get_dyngroup_state(
-                obj.object_types or "host", obj.object_filter
+        if obj.type == "hostgroup" and obj.group_name:
+            state = await connection.get_hostgroup_states(
+                obj.group_name,
+                only_hard=obj.only_hard_states,
+                with_services=obj.recognize_services,
+                exclude=_state_exclusion(obj),
             )
-            if obj.bundle_kind is not None and (obj.object_types or "host") == "host":
+            state.state = _combined_state_from_summary(state.state, state.services_summary)
+        elif obj.type == "servicegroup" and obj.group_name:
+            state = await connection.get_servicegroup_states(
+                obj.group_name, only_hard=obj.only_hard_states, exclude=_state_exclusion(obj)
+            )
+        elif obj.type == "dyngroup" and obj.object_filter:
+            object_types = obj.object_types or "host"
+            state = await connection.get_dyngroup_state(
+                object_types,
+                obj.object_filter,
+                only_hard=obj.only_hard_states,
+                with_services=obj.recognize_services,
+            )
+            if object_types == "host" and obj.recognize_services:
                 state.state = _combined_state_from_summary(state.state, state.services_summary)
-        elif obj.type == "line" and obj.host_name and obj.service_description:
-            state = await connection.get_service_state(obj.host_name, obj.service_description)
-        elif obj.type == "line" and obj.host_name:
-            state = await connection.get_host_state(obj.host_name)
-        elif obj.type == "graph" and obj.host_name and obj.service_description:
-            state = await connection.get_service_state(obj.host_name, obj.service_description)
-        elif obj.type == "graph" and obj.host_name:
-            state = await connection.get_host_state(obj.host_name)
         else:
             state = ObjectState(object_id=obj.id, type=obj.type, state="PENDING")
         state.object_id = obj.id
@@ -670,19 +719,6 @@ async def _get_object_state(connection: ConnectionBase, obj: MapElement) -> Obje
             {"object_id": obj.id, "error": exc},
         )
         return ObjectState(object_id=obj.id, type=obj.type, state="PENDING", stale=True)
-
-
-async def _aggregate_host_with_services(
-    connection: ConnectionBase, host_state: ObjectState, hostname: str
-) -> ObjectState:
-    """Aggregate host state with the worst state of all its services."""
-    try:
-        summary = (await connection.get_services_summary([hostname])).get(hostname)
-    except Exception:
-        return host_state
-    return host_state.model_copy(
-        update={"state": _combined_state_from_summary(host_state.state, summary)}
-    )
 
 
 async def _resolve_primary_host(connection: ConnectionBase) -> str | None:
@@ -769,6 +805,9 @@ async def _get_presentation_states(
         auth_user=auth_user,
         visited_maps=frozenset({cfg.name}),
     )
+    for el in bound:
+        if not el.host_name and (state := state_map.get(el.id)) and (host := _host_of(el)):
+            state_map[el.id] = state.model_copy(update={"host_name": host})
     states = list(state_map.values())
 
     connection_ok = await _derive_connection_ok(states, connection)
@@ -914,10 +953,10 @@ def _combined_state_from_summary(host_state: str, summary: ServicesSummary | Non
     rank = SEVERITY_RANK.get(host_state, 0)
     if summary.critical and rank < SEVERITY_RANK["CRITICAL"]:
         return "CRITICAL"
-    if summary.warning and rank < SEVERITY_RANK["WARNING"]:
-        return "WARNING"
     if summary.unknown and rank < SEVERITY_RANK["UNKNOWN"]:
         return "UNKNOWN"
+    if summary.warning and rank < SEVERITY_RANK["WARNING"]:
+        return "WARNING"
     return host_state
 
 
@@ -1324,6 +1363,12 @@ def _hash_object_timing(s: ObjectState) -> int:
     return hash((s.last_check, s.next_check, s.current_attempt))
 
 
+def _summary_key(summary: ServicesSummary | None) -> tuple[int, ...]:
+    if summary is None:
+        return ()
+    return (summary.ok, summary.warning, summary.critical, summary.unknown, summary.pending)
+
+
 def _hash_object_state(s: ObjectState) -> int:
     """Hash only operationally-significant fields.
 
@@ -1337,13 +1382,9 @@ def _hash_object_state(s: ObjectState) -> int:
 
     ``perf_data`` *is* included because the frontend appends it to per-object
     metric history on every push — dropping it would freeze the live graphs.
+    The member counts are included because they change while the worst state
+    stays the same — a second host of a group going down, say.
     """
-    summary = s.services_summary
-    summary_t = (
-        (summary.ok, summary.warning, summary.critical, summary.unknown, summary.pending)
-        if summary is not None
-        else ()
-    )
     # AggregationNode is recursive and not directly tuple-hashable. Pydantic
     # JSON dump is fast (Rust core) and only runs for aggregation objects.
     tree_repr = s.tree.model_dump_json() if s.tree is not None else ""
@@ -1361,7 +1402,8 @@ def _hash_object_state(s: ObjectState) -> int:
             s.max_attempts,
             s.last_state_change,
             s.site_id,
-            summary_t,
+            _summary_key(s.services_summary),
+            _summary_key(s.hosts_summary),
             tree_repr,
         )
     )

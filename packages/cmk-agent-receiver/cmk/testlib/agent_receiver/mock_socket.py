@@ -132,6 +132,47 @@ def create_socket(
 
 
 @contextlib.contextmanager
+def create_busy_socket(*, socket_path: str, busy_for: float) -> Iterator[MockSocket]:
+    """
+    Create a socket whose backlog is full for `busy_for` seconds, then accept as usual.
+
+    This simulates the core, which listens with a backlog of one and accepts the next
+    connection only when its main loop gets to it. Until then, a connect fails with EAGAIN.
+    """
+    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as soc:
+        soc.bind(socket_path)
+        soc.listen(1)
+        ms = MockSocket(soc=soc, socket_path=socket_path, buffer_size=1024, socket_timeout=0.5)
+        backlog_filler: list[socket.socket] = []
+        while True:
+            filler = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            filler.setblocking(False)
+            try:
+                filler.connect(socket_path)
+            except BlockingIOError:
+                filler.close()
+                break
+            backlog_filler.append(filler)
+
+        def free_the_backlog() -> None:
+            # The filler connections send nothing, so the mock reads them as empty and drops them.
+            for filler in backlog_filler:
+                filler.close()
+            ms.start()
+
+        timer = threading.Timer(busy_for, free_the_backlog)
+        timer.start()
+        try:
+            yield ms
+        finally:
+            timer.cancel()
+            timer.join()
+            ms.stop()
+            with contextlib.suppress(FileNotFoundError):
+                os.unlink(socket_path)
+
+
+@contextlib.contextmanager
 def create_non_listening_socket(socket_path: str) -> Iterator[str]:
     with (
         socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as soc,

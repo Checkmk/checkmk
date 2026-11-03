@@ -26,6 +26,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.num_split import key_num_split
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.utils.regex import compile_search_pattern
 from cmk.gui.utils.rendering import set_inpage_search_result_info
 from cmk.gui.utils.selection_id import SelectionId
 from cmk.web.utils import escaping
@@ -46,6 +47,7 @@ class CellSpec(NamedTuple):
     content: HTML
     css: CSSSpec
     colspan: int | None
+    search_text: str | None
 
 
 class TableRow(NamedTuple):
@@ -227,7 +229,13 @@ class Table:
         help_txt: str | None = None,
         colspan: int | None = None,
         sortable: bool = True,
+        search_text: str | None = None,
     ) -> None:
+        """Adds a cell to the current row
+
+        The search of the table matches its HTML, unless a search text replaces it, e.g. the text of
+        a cell styling it with tags. An empty one leaves the cell out of the search, e.g. a link
+        whose URL would match every row."""
         self._finish_previous()
         self.next_func = lambda: self._add_cell(
             title=title,
@@ -236,6 +244,7 @@ class Table:
             help_txt=help_txt,
             colspan=colspan,
             sortable=sortable,
+            search_text=search_text,
         )
 
     def _finish_previous(self) -> None:
@@ -282,6 +291,7 @@ class Table:
         help_txt: str | None,
         colspan: int | None,
         sortable: bool,
+        search_text: str | None,
     ) -> None:
         if isinstance(text, HTML):
             content = text
@@ -312,7 +322,7 @@ class Table:
 
         current_row = self.rows[-1]
         assert isinstance(current_row, TableRow)
-        current_row.cells.append(CellSpec(htmlcode, css, colspan))
+        current_row.cells.append(CellSpec(htmlcode, css, colspan, search_text))
 
     def groupheader(self, title: str) -> None:
         """Intermediate title, shown as soon as there is a following row.
@@ -321,7 +331,19 @@ class Table:
         self.next_header = title
 
     def element_dragger_url(self, dragging_tag: str, base_url: str) -> None:
+        """Adds a handle to drag the row to another position, which the URL gets as "_index"
+
+        The position counts the shown rows, so a table showing only the rows its search finds gets
+        a disabled handle telling to clear the search. Sorting the rows by a column would show them
+        in another order, so the table offers no sorting, also while searching."""
         self.options["sortable"] = False
+        if self.options["searchable"] and table_search_term():
+            html.static_icon(
+                StaticIcon(IconNames.drag),
+                title=_("Clear the search to move this entry"),
+                css_classes=["element_dragger", "disabled"],
+            )
+            return
         html.write_html(
             html.render_element_dragger(
                 dragging_tag,
@@ -435,9 +457,7 @@ class Table:
             table_opts["actions_visible"] = actions_visible
 
         if self.options["searchable"]:
-            search_term = request.get_str_input_mandatory("search", "")
-            # Search is always lower case -> case insensitive
-            search_term = search_term.lower()
+            search_term = table_search_term()
             if search_term:
                 request.set_var("search", search_term)
                 rows = _filter_rows(rows, search_term)
@@ -716,9 +736,17 @@ class Table:
         html.close_tr()
 
 
+def table_search_term() -> str:
+    """The term searchable tables show only the matching rows of, "" for none
+
+    It is lower case, as the search ignores the case. Unlike get_search_expression(), it keeps
+    blanks, so a search of blanks filters the rows, too."""
+    return request.get_str_input_mandatory("search", "").lower()
+
+
 def _filter_rows(rows: TableRows, search_term: str) -> TableRows:
     filtered_rows: TableRows = []
-    match_regex = re.compile(search_term, re.IGNORECASE)
+    match_regex = compile_search_pattern(search_term)
 
     for row in rows:
         if isinstance(row, GroupHeader) or row.fixed:
@@ -730,10 +758,10 @@ def _filter_rows(rows: TableRows, search_term: str) -> TableRows:
             if any("buttons" in css.split() for css in cell.css):
                 continue
 
-            cell_string = str(cell.content)
+            cell_string = str(cell.content) if cell.search_text is None else cell.search_text
             # The inpage search of the folder page adds href with
             # "search=searchterm" to cell.content and would always match => remove for matching
-            if "inpage_search_form" in cell.content:
+            if cell.search_text is None and "inpage_search_form" in cell.content:
                 cell_string = re.sub(
                     r"&?search(?:=|%253D)[^&\"]*",
                     "",

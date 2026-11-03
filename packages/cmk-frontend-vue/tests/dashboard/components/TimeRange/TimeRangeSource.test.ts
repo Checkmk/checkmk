@@ -6,6 +6,7 @@
 import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
+// eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
 import { HttpResponse, http } from 'msw'
 import { describe, expect, it } from 'vitest'
 import { defineComponent, h } from 'vue'
@@ -43,7 +44,7 @@ describe('TimeRangeSource', () => {
     renderSource(null)
 
     expect(screen.getByRole('radio', { name: 'Follow dashboard time range' })).toBeChecked()
-    expect(screen.queryByRole('combobox')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Today' })).toBeNull()
   })
 
   it('selects the separate time range for a stored range', () => {
@@ -58,6 +59,6 @@ describe('TimeRangeSource', () => {
     await userEvent.click(screen.getByRole('radio', { name: 'Use separate time range' }))
 
     expect(source.widgetProps()).not.toBe('dashboard')
-    expect(await screen.findByRole('combobox')).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'Today' })).toBeInTheDocument()
   })
 })

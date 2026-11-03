@@ -56,6 +56,19 @@ class CustomServices(CmkPage):
         return self.services_table.locator("tr.data", has_text=service_name)
 
     def edit_button(self, service_name: str) -> Locator:
-        return self.service_row(service_name).locator(
-            "td.buttons a[title='Edit this custom service']"
+        return self.service_row(service_name).get_by_role(
+            "link", name="Edit this custom service", exact=True
         )
+
+    def delete_button(self, service_name: str) -> Locator:
+        return self.service_row(service_name).get_by_role(
+            "link", name="Delete this custom service", exact=True
+        )
+
+    def delete_custom_service(self, service_name: str) -> None:
+        logger.info("Delete custom service '%s'", service_name)
+        self.delete_button(service_name).click()
+        self.main_area.get_confirmation_popup_button("Delete").click()
+        expect(
+            self.service_row(service_name), f"The custom service {service_name!r} is still listed"
+        ).to_have_count(0)

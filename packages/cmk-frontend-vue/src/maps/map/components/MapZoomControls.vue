@@ -82,7 +82,7 @@ defineEmits<{ 'zoom-in': []; 'zoom-out': []; fit: [] }>()
   overflow: hidden;
   border: 1px solid var(--default-border-color);
   border-radius: var(--border-radius);
-  box-shadow: var(--maps-map-view-badge-shadow);
+  box-shadow: var(--maps-shadow-canvas-overlay-low);
 }
 
 .maps-map-zoom-controls__button {
@@ -91,15 +91,15 @@ defineEmits<{ 'zoom-in': []; 'zoom-out': []; fit: [] }>()
   justify-content: center;
   width: var(--dimension-9);
   height: var(--dimension-9);
+  margin: 0;
   padding: 0;
   font-size: var(--font-size-large);
   line-height: 1;
   color: var(--font-color);
-  background: var(--maps-map-view-glass);
+  background: var(--maps-map-view-overlay-bg);
   border: 0;
   border-radius: 0;
   cursor: pointer;
-  backdrop-filter: blur(6px);
 }
 
 .maps-map-zoom-controls__button + .maps-map-zoom-controls__button {
@@ -108,6 +108,11 @@ defineEmits<{ 'zoom-in': []; 'zoom-out': []; fit: [] }>()
 
 .maps-map-zoom-controls__button:hover {
   color: var(--interactive-accent);
+}
+
+.maps-map-zoom-controls__button:focus-visible {
+  outline: revert;
+  outline-offset: -2px;
 }
 
 .maps-map-zoom-controls__icon {

@@ -10,6 +10,7 @@ import type {
   PanelConfig,
   PanelState
 } from '@ucl/_ucl/types/prop-panel.ts'
+import CmkColorPicker from 'cmk-ui-library/components/CmkColorPicker.vue'
 import CmkCopy from 'cmk-ui-library/components/CmkCopy.vue'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
 import CmkHelpText from 'cmk-ui-library/components/CmkHelpText.vue'
@@ -134,6 +135,13 @@ onMounted(() => {
         field-size="fill"
         :model-value="state[key] as string"
         @update:model-value="state[key] = $event ?? ''"
+      />
+      <CmkColorPicker
+        v-else-if="def.type === 'color'"
+        :id="`${uid}-${key}`"
+        size="small"
+        :model-value="state[key] as string"
+        @update:model-value="state[key] = $event"
       />
       <CmkInput
         v-else-if="def.type === 'number'"

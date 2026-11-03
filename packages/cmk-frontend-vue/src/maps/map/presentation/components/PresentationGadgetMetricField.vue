@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, ref, watch } from 'vue'
 
+import EditField from '@/maps/map/edit/components/EditField.vue'
 import MapsSuggestionField from '@/maps/shared/components/MapsSuggestionField.vue'
 import { suggestionList, titledSuggestions } from '@/maps/shared/suggestions'
 import type { DataElement, MetricChoice } from '@/maps/types/api'
@@ -84,8 +85,11 @@ watch(
        binding-change reset below always runs; the picker itself is only
        relevant once the element actually renders as a gadget. -->
   <template v-if="element.display.mode === 'gadget'">
-    <div v-if="!isGroupBinding" class="maps-presentation-gadget-metric-field__field">
-      <span class="maps-cap">{{ _t('Metric') }}</span>
+    <EditField
+      v-if="!isGroupBinding"
+      class="maps-presentation-gadget-metric-field__field"
+      :label="_t('Metric')"
+    >
       <MapsSuggestionField
         :label="_t('Metric')"
         :model-value="metricModel"
@@ -95,7 +99,7 @@ watch(
           emit('patch', { display: { ...element.display, gadget_metric: $event || null } })
         "
       />
-    </div>
+    </EditField>
     <span v-else class="maps-presentation-gadget-metric-field__note">
       {{
         _t(
@@ -108,9 +112,6 @@ watch(
 
 <style scoped>
 .maps-presentation-gadget-metric-field__field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--dimension-3);
   min-width: 0;
   flex: 1;
 }

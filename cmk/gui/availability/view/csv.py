@@ -3,9 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import functools
 import time
 
-from cmk.gui.availability.computation import compute_availability_groups, object_title
+from cmk.gui.availability.computation import (
+    availability_group_titles,
+    compute_availability_groups,
+    object_title,
+)
 from cmk.gui.availability.layout import (
     get_object_cells,
     layout_availability_table,
@@ -20,9 +25,10 @@ from cmk.gui.availability.type_defs import (
     AVOptions,
     AVRowCells,
 )
-from cmk.gui.http import ContentDispositionType, response
+from cmk.gui.http import ContentDispositionType, request, response
 from cmk.gui.i18n import _
 from cmk.gui.table import Table, table_element
+from cmk.web.utils.urls import makeuri
 
 
 def _output_csv(
@@ -113,10 +119,18 @@ def _output_availability_csv(
             table.cell(title, text)
 
     _av_output_set_content_disposition("Checkmk-Availability")
-    availability_tables = compute_availability_groups(what, av_data, avoptions)
+    availability_tables = compute_availability_groups(
+        what, av_data, avoptions, availability_group_titles(avoptions["grouping"])
+    )
     with table_element("av_items", output_format="csv", limit=table_row_limit) as table:
         for group_title, availability_table in availability_tables:
-            av_table = layout_availability_table(what, group_title, availability_table, avoptions)
+            av_table = layout_availability_table(
+                what,
+                group_title,
+                availability_table,
+                avoptions,
+                functools.partial(makeuri, request),
+            )
             pad = 0
 
             if group_title:

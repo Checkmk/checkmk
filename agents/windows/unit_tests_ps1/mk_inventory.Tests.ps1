@@ -204,8 +204,30 @@ Context "mk_inventory.ps1 Tests" {
                     }
                 }
             }
+            Mock Get-NetRoute {
+                @(
+                    [PSCustomObject]@{
+                        DestinationPrefix = "::/0"
+                        NextHop           = "fe80::290:27ff:fee9:2486"
+                        InterfaceIndex    = 1
+                    },
+                    [PSCustomObject]@{
+                        DestinationPrefix = "fe80::/64"
+                        NextHop           = "::"
+                        InterfaceIndex    = 1
+                    },
+                    [PSCustomObject]@{
+                        DestinationPrefix = "ff00::/8"
+                        NextHop           = "::"
+                        InterfaceIndex    = 42
+                    }
+                )
+            }
             $result = GetRouteTable
             $result | Should -Contain "direct|0.0.0.0|0.0.0.0|192.168.1.1|Red Hat VirtIO Ethernet Adapter"
+            $result | Should -Contain "indirect|::|0|fe80::290:27ff:fee9:2486|Red Hat VirtIO Ethernet Adapter"
+            $result | Should -Contain "direct|fe80::|64|::|Red Hat VirtIO Ethernet Adapter"
+            $result.Count | Should -Be 3
         }
     }
 

@@ -5,6 +5,8 @@
  */
 import { metadataUpdatesFrom } from '@/maps/shared/metadataForm'
 import type {
+  BackgroundPosition,
+  BackgroundStyle,
   FlowView,
   FolderTreeView,
   MapConfig,
@@ -68,6 +70,8 @@ export interface SettingsForm {
   ft_sites: string
   background_image: string
   background_color: string
+  background_style: BackgroundStyle
+  background_position: BackgroundPosition
   /** Kept for the save call and the preview patch, edited via FormSpec. */
   alias: string
   connection_id: string
@@ -77,6 +81,9 @@ export interface SettingsForm {
   hover_template: string
   context_template: string
 }
+
+/** A settings option the dialog can open at, when sent there from the map. */
+export type SettingsFocus = 'automap_source'
 
 /** The map's stored geo view, or where the parent map is currently looking. */
 export function initialGeoView(
@@ -129,7 +136,9 @@ export function formFromMap(
     hover_template: map.hover_template ?? '',
     context_template: map.context_template ?? '',
     background_image: map.background_image ?? '',
-    background_color: map.background_color ?? ''
+    background_color: map.background_color ?? '',
+    background_style: map.background_style ?? 'single',
+    background_position: map.background_position ?? 'top_left'
   }
 }
 
@@ -241,6 +250,8 @@ export function previewPatch(
     hover_template: (formSpec.hover_template as string) ?? '',
     context_template: (formSpec.context_template as string) ?? '',
     background_color: form.background_color || null,
+    background_style: form.background_style,
+    background_position: form.background_position,
     ...(form.map_type === 'presentation' ? {} : { view: viewFromForm(form, flowView) })
   }
 }
@@ -261,6 +272,7 @@ export function metadataFormData(map: MapRead): Record<string, unknown> {
     alias: map.alias,
     connection_id: map.connection_id,
     rotation_interval: rotation > 0 ? ['every', rotation] : ['off', null],
+    rotation_pools: map.rotation_pools,
     click_action: map.click_action !== 'none',
     render_mode: map.render_mode ?? 'default',
     default_z: map.default_z ?? 1

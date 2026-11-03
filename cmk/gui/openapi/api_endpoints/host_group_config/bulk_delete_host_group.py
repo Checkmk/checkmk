@@ -13,11 +13,11 @@ from cmk.gui.openapi.framework import (
     EndpointPermissions,
     VersionedEndpoint,
 )
+from cmk.gui.openapi.framework.model.converter import folder_tree_of_request
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.watolib import groups
 from cmk.gui.watolib.groups import GroupInUseException, UnknownGroupException
-from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 
 from ._family import HOST_GROUP_FAMILY
 from ._utils import make_pending_changes, RW_PERMISSIONS
@@ -28,7 +28,7 @@ def bulk_delete_host_group_v1(api_context: ApiContext, body: BulkDeleteHostGroup
     """Bulk delete host groups"""
     api_context.user.need_permission("wato.edit")
     api_context.user.need_permission("wato.groups")
-    tree = make_folder_tree(api_context.config)
+    tree = folder_tree_of_request(api_context)
     for group_name in body.entries:
         try:
             groups.delete_group(

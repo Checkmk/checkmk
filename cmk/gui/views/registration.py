@@ -21,6 +21,7 @@ from . import _search, command, graph, icon, perfometer
 from ._join_service_rows import join_service_row_post_processor
 from ._openapi import register_endpoints
 from ._permissions import PERMISSION_SECTION_VIEWS
+from ._row_extenders import row_extenders_post_processor
 from .builtin_views import builtin_views
 from .command import CommandGroupRegistry, CommandRegistry
 from .datasource_selection import page_select_datasource
@@ -108,5 +109,6 @@ def register(
     )
     graph.register(painter_option_registry, multisite_builtin_views)
     row_post_processor_registry.register(join_service_row_post_processor)
+    row_post_processor_registry.register(row_extenders_post_processor)
     register_endpoints(endpoint_family_registry, versioned_endpoint_registry)
     _search.register(match_item_generator_registry, category_permissions_handler_registry)

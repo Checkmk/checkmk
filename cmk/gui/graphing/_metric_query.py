@@ -218,5 +218,4 @@ type QueryData = Mapping[QueryDataKey, QueryDataValue]
 
 @dataclass(frozen=True)
 class QueryDataError:
-    keys: Sequence[QueryDataKey]
     exception: Exception

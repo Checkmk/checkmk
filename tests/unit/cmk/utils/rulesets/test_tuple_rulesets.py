@@ -500,24 +500,24 @@ def test_all_matching_hosts(ts: Scenario) -> None:
 
 
 def test_in_extraconf_hostlist() -> None:
-    assert in_extraconf_hostlist(ALL_HOSTS, "host1") is True
-    assert in_extraconf_hostlist([], "host1") is False
+    assert in_extraconf_hostlist(ALL_HOSTS, "host1", debug=True) is True
+    assert in_extraconf_hostlist([], "host1", debug=True) is False
 
-    assert in_extraconf_hostlist(["host2", "host1"], "host1") is True
-    assert in_extraconf_hostlist(["host1", "host2"], "host1") is True
+    assert in_extraconf_hostlist(["host2", "host1"], "host1", debug=True) is True
+    assert in_extraconf_hostlist(["host1", "host2"], "host1", debug=True) is True
 
-    assert in_extraconf_hostlist(["host1"], "host1") is True
-    assert in_extraconf_hostlist(["!host1", "host1", "!host1"], "host1") is False
-    assert in_extraconf_hostlist(["!host1"], "host1") is False
-    assert in_extraconf_hostlist(["!host2"], "host1") is False
-    assert in_extraconf_hostlist(["host1", "!host2"], "host1") is True
-    assert in_extraconf_hostlist(["!host2", "host1"], "host1") is True
-    assert in_extraconf_hostlist(["~h"], "host1") is True
-    assert in_extraconf_hostlist(["~h"], "host1") is True
-    assert in_extraconf_hostlist(["~h$"], "host1") is False
-    assert in_extraconf_hostlist(["~1"], "host1") is False
-    assert in_extraconf_hostlist(["~.*1"], "host1") is True
-    assert in_extraconf_hostlist(["~.*1$"], "host1") is True
+    assert in_extraconf_hostlist(["host1"], "host1", debug=True) is True
+    assert in_extraconf_hostlist(["!host1", "host1", "!host1"], "host1", debug=True) is False
+    assert in_extraconf_hostlist(["!host1"], "host1", debug=True) is False
+    assert in_extraconf_hostlist(["!host2"], "host1", debug=True) is False
+    assert in_extraconf_hostlist(["host1", "!host2"], "host1", debug=True) is True
+    assert in_extraconf_hostlist(["!host2", "host1"], "host1", debug=True) is True
+    assert in_extraconf_hostlist(["~h"], "host1", debug=True) is True
+    assert in_extraconf_hostlist(["~h"], "host1", debug=True) is True
+    assert in_extraconf_hostlist(["~h$"], "host1", debug=True) is False
+    assert in_extraconf_hostlist(["~1"], "host1", debug=True) is False
+    assert in_extraconf_hostlist(["~.*1"], "host1", debug=True) is True
+    assert in_extraconf_hostlist(["~.*1$"], "host1", debug=True) is True
 
 
 def test_get_rule_options_regular_rule() -> None:

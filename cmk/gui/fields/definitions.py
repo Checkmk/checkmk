@@ -12,14 +12,11 @@ import ast
 import json
 import logging
 import re
-import uuid
 from collections.abc import Callable, Collection, Iterable, Mapping, MutableMapping
 from datetime import datetime, UTC
 from typing import Any, Literal, NoReturn, override
 
 import marshmallow
-from cryptography.x509 import CertificateSigningRequest, load_pem_x509_csr
-from cryptography.x509.oid import NameOID
 from marshmallow import fields as _fields
 from marshmallow import ValidationError
 from marshmallow.types import StrSequenceOrSet
@@ -1144,49 +1141,6 @@ class Timestamp(DateTime):
         return datetime.timestamp(val)
 
 
-class X509ReqPEMFieldUUID(base.String):
-    default_error_messages = {
-        "malformed": "Malformed CSR",
-        "invalid": "Invalid CSR (signature and public key do not match)",
-        "no_cn": "CN is missing",
-        "cn_no_uuid": "CN {cn} is no valid version-4 UUID",
-    }
-
-    @override
-    def _validate(self, value: CertificateSigningRequest) -> None:
-        if not value.is_signature_valid:
-            raise self.make_error("invalid")
-        try:
-            cn = value.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
-            if isinstance(cn, bytes):
-                cn = cn.decode()
-        except IndexError:
-            raise self.make_error("no_cn")
-        try:
-            uuid.UUID(
-                cn,
-                version=4,
-            )
-        except ValueError:
-            raise self.make_error("cn_no_uuid", cn=cn)
-
-    @override
-    def _deserialize(
-        self, value: object, attr: str | None, data: Mapping[str, object] | None, **kwargs: Any
-    ) -> CertificateSigningRequest:
-        x = super()._deserialize(
-            value,
-            attr,
-            data,
-            **kwargs,
-        )
-        assert isinstance(x, str), f"Expected a string value, got {x!r}"
-        try:
-            return load_pem_x509_csr(x.encode())
-        except ValueError:
-            raise self.make_error("malformed")
-
-
 class UserRoleID(base.String):
     default_error_messages = {
         "should_not_exist": "The role should not exist but it does: {role!r}",
@@ -1387,5 +1341,4 @@ __all__ = [
     "Timestamp",
     "Username",
     "UserRoleID",
-    "X509ReqPEMFieldUUID",
 ]

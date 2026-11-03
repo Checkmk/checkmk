@@ -93,6 +93,22 @@ describe('urlHandler', () => {
     })
   })
 
+  describe('withRuntimeFilters', () => {
+    it('keeps the dashboard and the way back a drill-down offered', () => {
+      const input =
+        'https://example.com/dashboard.py?name=foo&owner=bar&_drilled_from=Main&host=old'
+
+      const url = urlHandler.withRuntimeFilters(input, { host: 'new' })
+
+      expect(Object.fromEntries(url.searchParams)).toEqual({
+        name: 'foo',
+        owner: 'bar',
+        _drilled_from: 'Main',
+        host: 'new'
+      })
+    })
+  })
+
   describe('updateCurrentUrl', () => {
     it('updates the current URL in the browser', () => {
       defineLocation(window, 'https://example.com/site/check_mk/dashboard.py?name=foo')
@@ -140,5 +156,15 @@ describe('urlHandler', () => {
 
       expect(urlHandler.readCloneResult(cleanUrl)).toBeNull()
     })
+  })
+
+  it('removes the dropped filters but keeps the carried ones', () => {
+    const url = new URL(
+      'https://example.com/site/check_mk/dashboard.py?name=main&host=web01&_dropped_filters=host_labels:no_such_key'
+    )
+
+    const cleanUrl = urlHandler.withoutDroppedFilters(url)
+
+    expect(cleanUrl.search).toBe('?name=main&host=web01')
   })
 })

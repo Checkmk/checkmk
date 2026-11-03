@@ -26,7 +26,7 @@ hostname-validator.workspace = true
 http.workspace = true
 ipnet.workspace = true
 log.workspace = true
-nix = { workspace = true, features = ["user"] }
+nix = { workspace = true, features = ["fs", "user"] }
 os_info.workspace = true
 pem-rfc7468.workspace = true
 rand.workspace = true

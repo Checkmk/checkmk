@@ -1,0 +1,263 @@
+# The Windows Server 2022 test VM of the *-qemu test tiers: the
+# image build, the saved VM state the tests resume, and the guest-side files
+# both push into the guest. The image is pinned in image.bzl; see README.md.
+
+load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
+load("@cmk_requirements//:requirements.bzl", "requirement")
+load("@rules_shell//shell:sh_library.bzl", "sh_library")
+load("//bazel/rules:py_cmk_test.bzl", "py_cmk_test")
+load("//bazel/rules:xcomp/windows_vm_state.bzl", "windows_vm_state")
+load(":image.bzl", "TEST_VM_DATA", "WINDOWS_TEST_IMAGE", "WINDOWS_TEST_VM", "test_vm_env")
+
+# Off by default, which makes the targets that need the VM's media
+# incompatible: whole-repo sweeps then skip them instead of fetching
+# several GiB (`bazel cquery ... //...` also analyzes manual targets).
+# --config=test-vm (bazel/rc/test-vm.rc) turns it on.
+bool_flag(
+    name = "enable",
+    build_setting_default = False,
+    visibility = ["//visibility:public"],
+)
+
+config_setting(
+    name = "disabled",
+    flag_values = {":enable": "False"},
+    visibility = ["//visibility:public"],
+)
+
+# The image build without its media, for `bazel lint` and the unit tests:
+# build-core is manual, which `bazel lint ...` skips.
+py_library(
+    name = "make_image",
+    srcs = ["make_image.py"],
+    imports = ["."],
+    deps = [
+        "//bazel/tools/windows_vm:guest",
+        "//bazel/tools/windows_vm:machine",
+        "//bazel/tools/windows_vm:session",
+    ],
+)
+
+py_cmk_test(
+    name = "unit",
+    size = "small",
+    srcs = glob(["tests/*.py"]),
+    deps = [
+        ":make_image",
+        ":vm_console",
+        ":vm_registry",
+        ":winvm_lib",
+    ],
+)
+
+# The upload script, for `bazel lint` (shellcheck): the Jenkins job runs it
+# directly.
+sh_library(
+    name = "shell_scripts",
+    srcs = ["upload-image.sh"],
+)
+
+# The guest-side scripts, for `bazel lint` (PSScriptAnalyzer).
+filegroup(
+    name = "guest_scripts",
+    srcs = glob(["guest/*.ps1"]),
+    tags = ["lint-with-psscriptanalyzer"],
+)
+
+# The guest-side scripts of the VM state action (windows_vm_state.bzl).
+exports_files(
+    [
+        "guest/purge-standby.ps1",
+        "guest/wait-idle.ps1",
+        "guest/warm-up.ps1",
+    ],
+    visibility = ["//bazel/rules:__pkg__"],
+)
+
+_TOOLS = {
+    "--answer": ":answer/autounattend-core.xml",
+    "--bios": "@qemu_linux_x86_64//:share/qemu/bios-256k.bin",
+    "--first-logon": ":guest/first-logon.ps1",
+    "--install-mssql": ":guest/install-mssql.ps1",
+    "--media": "@win2022_eval_iso//file",
+    "--odbc": "@msodbcsql17_msi//file",
+    "--qemu": "@qemu_linux_x86_64//:bin/qemu-system-x86_64",
+    "--qemu-img": "@qemu_linux_x86_64//:bin/qemu-img",
+    "--sql-cu": "@mssql2022_cu//file",
+    "--sql-iso": "@mssql2022_dev_iso//file",
+    "--verify": ":guest/verify-image.ps1",
+    "--virtio-win": "@virtio_win_iso//file",
+}
+
+_DATA = [
+    "@qemu_linux_x86_64//:firmware",
+    "@qemu_linux_x86_64//:qemu",
+]
+
+# The VM's size (image.bzl), for the image build and core-vm.
+_SIZE_ARGS = [
+    "--cpus",
+    str(WINDOWS_TEST_VM.cpus),
+    "--memory-mib",
+    str(WINDOWS_TEST_VM.memory_mib),
+]
+
+py_binary(
+    name = "build-core",
+    srcs = ["make_image.py"],
+    args = [
+        arg
+        for option, label in _TOOLS.items()
+        for arg in [
+            option,
+            "$(rootpath %s)" % label,
+        ]
+    ] + _SIZE_ARGS,
+    data = _DATA + list(_TOOLS.values()),
+    main = "make_image.py",
+    # Downloads several GiB of media and needs /dev/kvm: bazel run only.
+    tags = ["manual"],
+    target_compatible_with = select({
+        ":disabled": ["@platforms//:incompatible"],
+        "//conditions:default": [],
+    }),
+    deps = [":make_image"],
+)
+
+# The saved, running test VM that every *-qemu test resumes: created on
+# this host (its CPU is part of the key), cached like any action output.
+windows_vm_state(
+    name = "core-state",
+    disk = "core-state/disk.qcow2",
+    image = "@win2022_core_image//file",
+    state = "core-state/state.bin",
+    tags = ["manual"],
+    target_compatible_with = select({
+        ":disabled": ["@platforms//:incompatible"],
+        "//conditions:default": [],
+    }),
+    # For qemu_test().
+    visibility = ["//bazel/rules:__pkg__"],
+)
+
+_CORE_VM = {
+    "--bios": "@qemu_linux_x86_64//:share/qemu/bios-256k.bin",
+    "--disk": ":core-state/disk.qcow2",
+    "--fingerprint": "@qemu_host_cpu//:fingerprint",
+    "--image": "@win2022_core_image//file",
+    "--qemu": "@qemu_linux_x86_64//:bin/qemu-system-x86_64",
+    "--qemu-img": "@qemu_linux_x86_64//:bin/qemu-img",
+    "--state": ":core-state/state.bin",
+}
+
+# PowerShell on a test VM's serial console.
+py_library(
+    name = "vm_console",
+    srcs = ["vm_console.py"],
+    imports = ["."],
+    deps = ["//bazel/tools/windows_vm:console"],
+)
+
+# The running test VMs, as core-vm registers them for winvm.
+py_library(
+    name = "vm_registry",
+    srcs = ["vm_registry.py"],
+    imports = ["."],
+)
+
+# core-vm without its VM, for `bazel lint`: core-vm is manual.
+py_library(
+    name = "core_vm",
+    srcs = ["core_vm.py"],
+    imports = ["."],
+    deps = [
+        ":vm_console",
+        ":vm_registry",
+        "//bazel/tools/windows_vm:state",
+    ],
+)
+
+# The VM a test resumes, in PowerShell on its serial console, to explore it
+# by hand (README.md).
+py_binary(
+    name = "core-vm",
+    srcs = ["core_vm.py"],
+    args = [
+        arg
+        for option, label in _CORE_VM.items()
+        for arg in [
+            option,
+            "$(rootpath %s)" % label,
+        ]
+    ] + _SIZE_ARGS + [
+        "--expires",
+        WINDOWS_TEST_IMAGE.expires,
+    ],
+    data = _DATA + list(_CORE_VM.values()),
+    main = "core_vm.py",
+    # Needs /dev/kvm: bazel run only.
+    tags = ["manual"],
+    target_compatible_with = select({
+        ":disabled": ["@platforms//:incompatible"],
+        "//conditions:default": [],
+    }),
+    deps = [":core_vm"],
+)
+
+py_library(
+    name = "winvm_lib",
+    srcs = ["winvm.py"],
+    imports = ["."],
+    deps = [
+        ":vm_registry",
+        "//bazel/tools/windows_vm:guest",
+    ],
+)
+
+# Works with the VMs core-vm runs (README.md); needs neither the image nor
+# --config=test-vm. In bazel_env.
+py_binary(
+    name = "winvm",
+    srcs = ["winvm.py"],
+    main = "winvm.py",
+    visibility = ["//bazel/tools:__pkg__"],
+    deps = [":winvm_lib"],
+)
+
+# The smoke test without its VM, for `bazel lint`: vm_smoke is manual.
+py_library(
+    name = "vm_smoke_lib",
+    testonly = True,
+    srcs = ["tests/vm/test_vm_smoke.py"],
+    deps = [
+        ":vm_console",
+        ":vm_registry",
+        ":winvm_lib",
+        "//bazel/tools/windows_vm:state",
+        requirement("pytest"),
+    ],
+)
+
+# core-vm's shell and winvm against a VM resumed from the saved state, for
+# what the unit tests fake: the guest's cmd.exe and PowerShell, and SAC.
+py_cmk_test(
+    name = "vm_smoke",
+    size = "large",
+    srcs = ["tests/vm/test_vm_smoke.py"],
+    data = TEST_VM_DATA,
+    env = test_vm_env(),
+    tags = [
+        # Needs /dev/kvm and a VM state created on this host.
+        "manual",
+        # Like qemu_test(): one VM, its vCPUs and RAM (bazel/rc/qemu.rc).
+        "resources:qemu_vm:1",
+        "resources:cpu:%d" % WINDOWS_TEST_VM.cpus,
+        "resources:memory:%d" % WINDOWS_TEST_VM.claim_mb,
+    ],
+    target_compatible_with = select({
+        ":disabled": ["@platforms//:incompatible"],
+        "//conditions:default": [],
+    }),
+    deps = [":vm_smoke_lib"],
+)

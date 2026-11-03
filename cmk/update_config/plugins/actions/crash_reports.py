@@ -8,8 +8,8 @@ from typing import override
 
 import cmk.utils.paths
 from cmk.crash import CrashReportStore, make_crash_report_base_path
-from cmk.update_config.lib import ExpiryVersion
-from cmk.update_config.registry import update_action_registry, UpdateAction
+from cmk.update_config.internal import ExpiryVersion, UpdateAction
+from cmk.update_config.registry import update_action_registry
 
 
 class MigrateCrashReports(UpdateAction):

@@ -435,18 +435,27 @@ def build_tar_gz(
                 "no_cache": args.no_cache,
             },
         )
-        image, build_logs = docker_client.images.build(
-            # Do not use the cache when set to True
-            nocache=args.no_cache,
-            buildargs=buildargs,
-            tag=this_tag,
-            path=docker_path,
+        # The Dockerfile needs BuildKit (RUN --mount), which docker-py does not support
+        completed_process = run_cmd(
+            cmd=[
+                "docker",
+                "buildx",
+                "build",
+                # Make the image available to docker_client
+                "--load",
+                # Keep a single image manifest, without an attestation manifest
+                "--provenance=false",
+                "--progress=plain",
+                *(["--no-cache"] if args.no_cache else []),
+                *(f"--build-arg={key}={value}" for key, value in buildargs.items()),
+                f"--tag={this_tag}",
+                docker_path,
+            ]
         )
+        for line in completed_process.stderr.splitlines():
+            LOG.debug(line)
+        image = docker_client.images.get(this_tag)
         LOG.debug("Built image: %(image)s", {"image": image})
-        for chunk in build_logs:
-            if isinstance(chunk, dict) and "stream" in chunk and isinstance(chunk["stream"], str):
-                for line in chunk["stream"].splitlines():
-                    LOG.debug(line)
 
         LOG.info("Creating Image-Tarball %(tar_name)s ...", {"tar_name": tar_name})
         if "-rc" in version_tag:
@@ -499,7 +508,7 @@ def build_image(
     docker_image_archive = f"check-mk-{args.edition}-docker-{args.version}.tar.gz"
     pkg_name = f"check-mk-{args.edition}-{args.version}"
     architecture = run_cmd(cmd=["dpkg", "--print-architecture"]).stdout.strip()
-    pkg_file = f"{pkg_name}_0.jammy_{architecture}.deb"
+    pkg_file = f"{pkg_name}_0.noble_{architecture}.deb"
 
     LOG.debug("docker_path: %(docker_path)s", {"docker_path": docker_path})
     LOG.debug(
@@ -523,7 +532,7 @@ def build_image(
     if version_tag is None:
         raise Exception("Required VERSION_TAG is not set.")
     needed_packages(
-        mk_file="omd/distros/UBUNTU_22.04.mk", output_file=f"{docker_path}/needed-packages"
+        mk_file="omd/distros/UBUNTU_24.04.mk", output_file=f"{docker_path}/needed-packages"
     )
 
     build_tar_gz(

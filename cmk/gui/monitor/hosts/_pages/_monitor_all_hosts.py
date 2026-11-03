@@ -7,14 +7,14 @@ from typing import override
 
 from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
+from cmk.ccc.version import Edition as ProductEdition
 from cmk.ccc.version import edition
 from cmk.gui import sites
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
-from cmk.gui.config import Config
 from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
-from cmk.gui.i18n import _
+from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import main_menu_registry
 from cmk.gui.monitor.command import (
@@ -23,9 +23,12 @@ from cmk.gui.monitor.command import (
     downtime_presets,
     downtime_presets_url,
     DowntimeRecurrences,
+    host_setup_links,
+    HOST_SUPPORTED_ACTIONS,
     MonitorCommands,
     notification_rules_url,
 )
+from cmk.gui.monitor.export import EXPORT_EVENT, MonitorReportExportMenu
 from cmk.gui.page_menu import (
     make_simple_link,
     PageMenu,
@@ -35,10 +38,8 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import Page, PageContext
 from cmk.gui.pagetypes import PagetypeTopics
-from cmk.gui.permissions import permission_registry
 from cmk.gui.type_defs import Visual
 from cmk.gui.user_sites import sorted_sites
-from cmk.gui.utils.roles import UserPermissions
 from cmk.shared_typing.monitoring.all_hosts import (
     AcknowledgeDefaults,
     DowntimePreset,
@@ -55,45 +56,11 @@ from cmk.utils import paths
 from cmk.web.utils.icons import DynamicIconName, IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri_contextless
 
+from .._access import ALL_HOSTS_PERMISSION, LEGACY_ALL_HOSTS_VIEW_NAME
 from .._api._list_hosts import LIMIT_TIERS
 from .._impl import LiveStatusHostRepository
 
-_PAGE_TITLE = _("All hosts")
-
-_LEGACY_VIEW_NAME = "allhosts"
-_LEGACY_VIEW_PERMISSION = f"view.{_LEGACY_VIEW_NAME}"
-
-
-def _row_actions(config: Config) -> list[RowAction]:
-    if not config.wato_enabled:
-        return []
-    actions: list[RowAction] = []
-    if user.may("wato.use") and (user.may("wato.seeall") or user.may("wato.hosts")):
-        actions.append(
-            RowAction(
-                ident="edit",
-                title=_("Edit host"),
-                icon="edit",
-                url="wato.py?mode=edit_host&host={host}",
-            )
-        )
-    if user.may("wato.rulesets"):
-        actions.append(
-            RowAction(
-                ident="parameters",
-                title=_("Parameters"),
-                icon="rulesets",
-                url="wato.py?mode=object_parameters&host={host}",
-            )
-        )
-    return actions
-
-
-_SUPPORTED_ACTIONS: tuple[str, ...] = (
-    "acknowledge",
-    "schedule_downtimes",
-    "reschedule",
-)
+_PAGE_TITLE = _l("All hosts")
 
 
 def monitor_all_hosts_visual_spec() -> Visual:
@@ -131,7 +98,7 @@ class MonitorAllHostsPage(Page):
 
     @override
     def page(self, ctx: PageContext) -> None:
-        user.need_permission(_LEGACY_VIEW_PERMISSION)
+        user.need_permission(ALL_HOSTS_PERMISSION)
 
         breadcrumb = _make_breadcrumb(ctx)
 
@@ -169,19 +136,23 @@ class MonitorAllHostsPage(Page):
                     ],
                     edition=Edition(edition(paths.omd_root).short),
                     header_teleport_target=self._teleport_target,
+                    export_event=EXPORT_EVENT,
                     actions=[
                         MonitoringAction(
                             ident=command.ident, title=str(command.title), icon=command.icon
                         )
                         for command in self._commands.permitted_actions(
-                            user, "host", _SUPPORTED_ACTIONS
+                            user, "host", HOST_SUPPORTED_ACTIONS
                         )
                     ],
                     downtime_recurrences=[
                         DowntimeRecurrence(recur=recurrence.recur, title=recurrence.title)
                         for recurrence in self._recurrences.offered()
                     ],
-                    row_actions=_row_actions(ctx.config),
+                    row_actions=[
+                        RowAction(ident=link.ident, title=link.title, icon=link.icon, url=link.url)
+                        for link in host_setup_links(ctx.config, user)
+                    ],
                     may_ignore_hard_limit=user.may("general.ignore_hard_limit"),
                     limit_tiers=list(LIMIT_TIERS),
                     acknowledge_presets_url=acknowledge_presets_url(ctx.config),
@@ -211,7 +182,7 @@ class MonitorAllHostsPage(Page):
                     legacy_view_button=MonitoringPageLinkButton(
                         url=makeuri_contextless(
                             ctx.request,
-                            vars_=[("view_name", _LEGACY_VIEW_NAME)],
+                            vars_=[("view_name", LEGACY_ALL_HOSTS_VIEW_NAME)],
                             filename="view.py",
                         ),
                         title=_("Return to classic view"),
@@ -224,10 +195,9 @@ class MonitorAllHostsPage(Page):
 
 
 def _make_breadcrumb(ctx: PageContext) -> Breadcrumb:
-    user_permissions = UserPermissions.from_config(ctx.config, permission_registry)
     breadcrumb = make_topic_breadcrumb(
         main_menu_registry.menu_monitoring(),
-        PagetypeTopics.get_topic("overview", user_permissions).title(),
+        PagetypeTopics.get_topic("overview", ctx.user_permissions).title(),
     )
     breadcrumb.append(
         BreadcrumbItem(
@@ -245,7 +215,7 @@ def _availability_dropdowns() -> list[PageMenuDropdown]:
 
     availability_url = makeuri_contextless(
         request,
-        [("view_name", _LEGACY_VIEW_NAME), ("mode", "availability")],
+        [("view_name", LEGACY_ALL_HOSTS_VIEW_NAME), ("mode", "availability")],
         filename="view.py",
     )
 
@@ -274,7 +244,10 @@ def _availability_dropdowns() -> list[PageMenuDropdown]:
 
 def _build_page_menu(breadcrumb: Breadcrumb) -> PageMenu:
     menu = PageMenu(
-        dropdowns=_availability_dropdowns(),
+        dropdowns=_availability_dropdowns()
+        + MonitorReportExportMenu(
+            instant_reports=edition(paths.omd_root) is not ProductEdition.COMMUNITY
+        ).dropdowns(),
         breadcrumb=breadcrumb,
     )
 

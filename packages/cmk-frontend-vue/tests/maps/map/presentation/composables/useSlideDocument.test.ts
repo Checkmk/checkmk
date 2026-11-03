@@ -19,7 +19,7 @@ import { fakeMapsServices, runWithServices } from '../../../support/services'
  * services are provided and the two calls are observed on them.
  */
 let services: ReturnType<typeof fakeMapsServices>
-let maps: { scheduleSave: MockInstance; flushSave: MockInstance }
+let maps: { scheduleSave: MockInstance }
 let states: { refresh: MockInstance }
 
 function withDoc(): ReturnType<typeof useSlideDocument> {
@@ -42,8 +42,7 @@ describe('useSlideDocument', () => {
     services = fakeMapsServices()
     services.maps.currentMap.value = makeConfig()
     maps = {
-      scheduleSave: vi.spyOn(services.maps, 'scheduleSave').mockImplementation(() => {}),
-      flushSave: vi.spyOn(services.maps, 'flushSave').mockResolvedValue(undefined)
+      scheduleSave: vi.spyOn(services.maps, 'scheduleSave').mockImplementation(() => {})
     }
     states = { refresh: vi.spyOn(services.states, 'refresh').mockResolvedValue(undefined) }
   })
@@ -96,33 +95,20 @@ describe('useSlideDocument', () => {
     expect(states.refresh).toHaveBeenCalledTimes(1)
   })
 
-  it('reports a rejected save rather than claiming the slide was stored', async () => {
-    const doc = withDoc()
-    maps.flushSave.mockImplementation(async () => {
-      services.maps.saving.value = true
-      await nextTick()
-      services.maps.error.value = 'boom'
-      services.maps.saving.value = false
-      await nextTick()
-    })
-
-    await doc.saveNow()
+  it('stays silent on a stored slide and reports a rejected one', async () => {
+    withDoc()
+    services.maps.saving.value = true
     await nextTick()
-    expect(doc.saveLabel.value).toBe('Not saved')
-  })
-
-  it('reports a stored slide once the store answers', async () => {
-    const doc = withDoc()
-    maps.flushSave.mockImplementation(async () => {
-      services.maps.saving.value = true
-      await nextTick()
-      services.maps.saving.value = false
-      await nextTick()
-    })
-
-    await doc.saveNow()
+    services.maps.saving.value = false
     await nextTick()
-    expect(doc.saveLabel.value).toBe('Saved')
+    expect(services.toasts.toasts.value).toEqual([])
+
+    services.maps.saving.value = true
+    await nextTick()
+    services.maps.error.value = 'boom'
+    services.maps.saving.value = false
+    await nextTick()
+    expect(services.toasts.toasts.value).toMatchObject([{ type: 'error', message: 'boom' }])
   })
 
   it('exposes shared lookups (byId, topLevelId, nextZ)', () => {

@@ -282,7 +282,7 @@ def test_get_otel_only_resources(
 async def test_process_single_resources_writes_otel_resources_under_one_section_name(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    app, storage = [
+    app, storage = (
         AzureResource(
             {
                 "id": f"{name}_id",
@@ -300,7 +300,7 @@ async def test_process_single_resources_writes_otel_resources_under_one_section_
             ("my_app", "Microsoft.App/containerApps"),
             ("my_storage", "Microsoft.Storage/storageAccounts"),
         ]
-    ]
+    )
 
     for section in await process_single_resources(
         AsyncMock(spec=BaseAsyncApiClient),

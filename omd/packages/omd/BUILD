@@ -40,6 +40,40 @@ pkg_files(
     prefix = "bin",
 )
 
+# SUP-10161: our openssl is incompatible with some system executables on various sles15sp*
+# SUP-26565: Getting an exception error when baking agent almalinux-9+
+# SUP-26879: Wrap other tools commonly used by users that require linking to the system openssl
+# SUP-30799: ssh-keygen fails with "OpenSSL version mismatch" on Ubuntu 22.04 (e.g. the Docker image)
+# etc.
+WRAPPED_EXECUTABLES = [
+    "curl",
+    "dig",
+    "host",
+    "journalctl",
+    "nc",
+    "nmap",
+    "nslookup",
+    "pdftoppm",
+    "php",
+    "php-cgi",
+    "resolvectl",
+    "rpm",
+    "rpmbuild",
+    "scp",
+    "ssh",
+    "ssh-keygen",
+    "systemctl",
+    "zypper",
+]
+
+[pkg_files(
+    name = "wrapper_" + executable,
+    srcs = ["use_system_openssl"],
+    attributes = pkg_attributes(mode = "0755"),
+    prefix = "bin",
+    renames = {"use_system_openssl": executable},
+) for executable in WRAPPED_EXECUTABLES]
+
 genrule(
     name = "omd_man_gz",
     srcs = ["omd.8"],
@@ -211,6 +245,7 @@ py_library(
         "omdlib/mcp.py",
         "omdlib/mkeventd.py",
         "omdlib/multisite.py",
+        "omdlib/nagvis.py",
         "omdlib/opentelemetry.py",
         "omdlib/options.py",
         "omdlib/options_legacy.py",
@@ -249,6 +284,7 @@ py_library(
         "//packages/cmk-ccc:version-info",
         "//packages/cmk-crash:crash",
         "//packages/cmk-crypto",
+        "//packages/cmk-schema-manager",
         requirement("psutil"),
     ],
 )
@@ -350,7 +386,10 @@ pkg_tar(
         ":omdlib_pkg",
         ":skel",
         ":xinetd_link",
-    ],
+    ] + select({
+        "@cmk//distro:incompatible-openssl": ["wrapper_" + executable for executable in WRAPPED_EXECUTABLES],
+        "//conditions:default": [],
+    }),
     stamp = 1,
     visibility = ["//omd:__pkg__"],
 )
@@ -360,5 +399,6 @@ sh_library(
     name = "shell_scripts",
     srcs = [
         "omd.init",
+        "use_system_openssl",
     ],
 )

@@ -37,8 +37,9 @@ def _make_form() -> Dictionary:
 
 rule_spec_azure_databases_deadlock = CheckParameters(
     name="azure_databases_deadlock",
-    title=Title("Azure SQL database deadlocks (deprecated)"),
+    title=Title("Azure SQL database deadlocks"),
     topic=Topic.APPLICATIONS,
     parameter_form=_make_form,
     condition=HostAndItemCondition(item_title=Title("Database name")),
+    is_deprecated=True,
 )

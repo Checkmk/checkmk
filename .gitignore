@@ -114,6 +114,7 @@ remote.bazelrc
 target/
 
 # gui-e2e tests: playwright specific ignores
+.playwright-mcp/
 test-results/
 /*.png
 .aider*

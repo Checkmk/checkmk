@@ -24,13 +24,12 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
 from cmk.maps.gui._image_security import (
-    BACKGROUND_SUFFIXES,
     ICON_SUFFIXES,
     is_valid_image,
     is_valid_image_name,
     safe_image_stem,
 )
-from cmk.maps.gui._images import delete_background_files, import_icon, store_background
+from cmk.maps.gui._images import import_background, import_icon
 from cmk.maps.shared.geo import bounded_view
 from cmk.maps.shared.map_compat import (
     accept_legacy_backend_id,
@@ -132,6 +131,8 @@ def legacy_map_to_spec(
     spec["name"] = name
     _rename_icon_refs(spec, renamed_icons)
     _translate_legacy_keys(spec)
+    _count_bundle_services(spec)
+    _drop_member_patterns(spec)
     _retarget_connections(spec, foreign)
     _convert_css_colors(spec)
     _fill_map_defaults(spec)
@@ -214,10 +215,43 @@ def _translate_legacy_keys(spec: dict[str, object]) -> None:
     # marked the demo boards.
     spec.pop("show_in_lists", None)
     spec.pop("readonly", None)
+    # A board stretched its background over the same box its objects were
+    # placed in; Maps defaults to the image's own size, which would move them.
+    if spec.get("background_image"):
+        spec.setdefault("background_style", "stretch")
     for obj in _dict_objects(spec):
         migrate_weathermap(obj)
         if "graph_metric" in obj:
             obj["graph_metric"] = coerce_graph_metric(obj["graph_metric"])
+
+
+def _count_bundle_services(spec: dict[str, object]) -> None:
+    """Keep a board's geo bundles counting their services.
+
+    OrbVis folded a bundle's service counts into its state, yet stored
+    ``recognize_services`` off on every dynamic group; Maps goes by that flag.
+    """
+    objects = spec.get("objects")
+    if not isinstance(objects, list):
+        return
+    for obj in objects:
+        if isinstance(obj, dict) and obj.get("type") == "dyngroup" and obj.get("bundle_kind"):
+            obj["recognize_services"] = True
+
+
+def _drop_member_patterns(spec: dict[str, object]) -> None:
+    """Drop the member patterns of a board.
+
+    OrbVis stored them but never applied them, and its editor asked for state
+    names where Maps reads a pattern on member names.
+    """
+    objects = spec.get("objects")
+    if not isinstance(objects, list):
+        return
+    for obj in objects:
+        if isinstance(obj, dict):
+            obj.pop("exclude_members", None)
+            obj.pop("exclude_member_states", None)
 
 
 # The keys that hold a color, at any depth of a board.
@@ -329,23 +363,17 @@ def copy_legacy_background(
     ref = spec.get("background_image")
     if not isinstance(ref, str) or not ref:
         return
-    path = legacy_maps_dir() / "boards" / "backgrounds" / ref
     with suppress(OSError):
-        if (
-            is_valid_image_name(ref)
-            and path.suffix.lower() in BACKGROUND_SUFFIXES
-            and path.is_file()
-            and is_valid_image(contents := path.read_bytes())
+        # Checked before the path is built from it.
+        if is_valid_image_name(ref) and (
+            stored := import_background(
+                owner, name, ref, (legacy_maps_dir() / "boards" / "backgrounds" / ref).read_bytes()
+            )
         ):
-            spec["background_image"] = store_background(owner, name, path.suffix.lower(), contents)
+            spec["background_image"] = stored
             return
     logger.warning(
         "The background %(file)s of the migrated map %(name)r is missing, unreadable or not a "
         "supported image; the map keeps the reference without the image.",
         {"file": ref, "name": name},
     )
-
-
-def drop_legacy_background(owner: UserId, name: str) -> None:
-    """Remove what ``copy_legacy_background`` stored for a map that was not created."""
-    delete_background_files(owner, name)

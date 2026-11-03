@@ -51,6 +51,13 @@ def tag_group_autocompleter(config: Config, value: str, params: dict) -> list[Ch
     )
 
 
+def aux_tag_autocompleter(config: Config, value: str, params: dict) -> list[Choice]:  # noqa: ARG001
+    return sorted(
+        (v for v in config.tags.aux_tag_list.get_choices() if _matches_id_or_title(value, v)),
+        key=lambda a: a[1].lower(),
+    )
+
+
 def tag_group_opt_autocompleter(config: Config, value: str, params: dict) -> list[Choice]:
     grouped: list[Choice] = []
 

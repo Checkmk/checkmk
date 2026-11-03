@@ -80,6 +80,13 @@ The page state (columns, sort, filter, opened row) lives in the URL, which
 makes pages shareable. Actions use the existing command infrastructure through
 the REST API.
 
+The CSV and JSON export is shared as well, so a new page family uses it
+instead of writing its own: ``cmk.gui.monitor.export`` builds the Export menu
+of the page, and in the Vue application ``RowExport`` writes the files from a
+per-page column schema, ``useRowExport`` answers the menu entries and
+``MonitoringExportFeedback`` shows the result. The page only supplies its
+column schema; the rows come from ``MonitoringService``.
+
 Interfaces
 ----------
 
@@ -87,25 +94,99 @@ Interfaces
 
   * Classic: ``view`` (``cmk/gui/views/page_show_view.py``).
   * Monitoring pages: ``monitor_all_hosts``
-    (``cmk/gui/monitor/hosts/_pages/_monitor_all_hosts.py``) and
+    (``cmk/gui/monitor/hosts/_pages/_monitor_all_hosts.py``),
+    ``monitor_all_services``
+    (``cmk/gui/monitor/services/_pages/_monitor_all_services.py``) and
     ``monitor_host_services``
     (``cmk/gui/monitor/services/_pages/_monitor_host_services.py``).
+  * The router ``monitor_search`` (``cmk/gui/monitor/router``): it renders
+    nothing itself, but parses a query of the global search with
+    ``cmk.gui.search.spec`` and redirects to the monitoring page that can
+    show it, with the query turned into the page's filters. A query without
+    prefix and an invalid one go to the search box of "All hosts" as typed.
+    One that no page can filter on yet goes to the legacy search of the
+    classic views (``search_open.py``) and is logged by its prefixes and the
+    reason, not by its values; this keeps ``search_open.py`` needed as a
+    fallback until the pages can filter on every prefix. Before it redirects
+    a host search (with or without prefix), it asks Livestatus through
+    ``HostTable.only_host`` of ``cmk.gui.monitor.hosts.table`` whether
+    "All hosts" would list a single host for it; if so, it opens "Services
+    of host" for that host with the host panel open instead.
 
 * Internal REST endpoints below ``/monitor/`` (see the *Checkmk Internal*
   documentation of the REST API).
+* ``cmk.gui.monitor.hosts.table``: the supported entry point for server-side
+  consumers that query hosts, such as the dashboards, the PDF reports and
+  the router ``monitor_search``. Other components use only this module, not
+  the package internals. It offers ``HostTable`` (with ``list``,
+  ``parse_filter`` and ``only_host``, the single host a listing finds, if
+  any), ``FilterNode``, the filter tree ``only_host`` takes,
+  ``MonitorFolders``, the column catalogs ``ALL_HOSTS_TABLE`` and
+  ``HOST_TABLE``, ``HostEntry``,
+  ``HOST_LISTING`` (which validates a request body of the internal REST
+  endpoint that lists hosts with the endpoint's own model) and
+  ``ALL_HOSTS_PERMISSION``, the permission the page "All hosts" needs. The
+  rows are ``HostEntry``, the response model of the internal REST endpoint,
+  so a change of that model also changes what these consumers get.
+* ``cmk.gui.monitor.services.table``: the same for the services of one host.
+  It offers ``HostServicesTable`` (with ``list`` and ``parse_filter``), the
+  column catalog ``HOST_SERVICES_TABLE``, ``HostServiceEntry``,
+  ``ServiceOptionalField``, the errors ``HostNotFoundError`` (also for a
+  site that does not exist) and ``InvalidServiceFilterError``,
+  ``SERVICE_LISTING`` (which validates a request body of the internal REST
+  endpoint that lists the services of a host with the endpoint's own model)
+  and ``HOST_SERVICES_PERMISSION``, the permission the page "Services of
+  host" needs. The rows are ``HostServiceEntry``, the response model of
+  that endpoint.
 * Livestatus, locally or via :doc:`arch-comp-liveproxyd` for remote sites.
+* Outside Community, the pages "All hosts" and "Services of host" link to
+  an instant PDF report of reporting with the columns they show and the
+  request body they send to their internal REST endpoint, with relative age
+  filters already resolved. Reporting turns that body into the listing with
+  ``HOST_LISTING`` from ``cmk.gui.monitor.hosts.table`` and
+  ``SERVICE_LISTING`` from ``cmk.gui.monitor.services.table``.
+* ``cmk.gui.monitor.table_widget``: what the tables of the monitoring pages
+  share. ``ColumnCatalog`` implements the column catalog ``TableCatalog``
+  and ``ListingParser`` turns a request body into a ``TableListing``; the
+  hosts and services packages only plug in their columns and models.
 
 Coexistence
 -----------
 
 The classic views offer a link to the new pages and the new pages a link back.
 
+The global search (``packages/cmk-frontend-vue/src/unified-search``) is an
+entry point into the monitoring pages, too: pressing Enter with the
+monitoring or "all" search selected opens ``monitor_search.py`` with the
+query, and the router picks the page. A query no monitoring page can filter
+on yet goes on to the legacy search of the classic views (``search_open.py``),
+which the sidebar snapin "Quick search" still opens directly. There is no
+setting to switch back yet.
+
 Risks and technical debts
 =========================
 
 * Two implementations of the same pages have to be kept consistent until the
   classic views are replaced.
+* The columns of the pages "All hosts" and "Services of host" and their
+  titles are defined in the frontend (``all-hosts/columns.ts``,
+  ``host-services/columns.ts``) and, for server-side consumers such as the
+  PDF reports, in the ``_table_catalog.py`` of ``cmk/gui/monitor/hosts`` and
+  ``cmk/gui/monitor/services``. A new or renamed column has to touch both.
+  The titles of the time columns differ on purpose: the pages show an age
+  ("Check age", "State age"), the PDFs an absolute time ("Last check",
+  "Last state change").
+* The server-side consumers of ``cmk.gui.monitor.hosts.table`` and
+  ``cmk.gui.monitor.services.table`` read ``HostEntry`` and
+  ``HostServiceEntry``, API models, instead of domain models, including the
+  ``ApiOmitted`` placeholder of the REST framework. Reshaping a response of
+  the internal endpoints has to keep them working, too.
 * Classic data sources are loosely typed (rows are dicts) and derive the
   queried columns at runtime, which makes it hard to see what is queried.
 * The filter vocabulary of the monitoring pages is defined in the API, the
   Livestatus translation and the frontend. A change has to touch all three.
+  The instant report of All hosts reuses the API's model for it.
+* The services filter tree embeds the hosts filter tree, which lives in
+  ``cmk.gui.monitor.shared``, to filter services by their host, so a change to
+  the host filters also reaches the services listing. A new host condition is
+  only accepted there once ``validate_host_columns_only`` lets it in.

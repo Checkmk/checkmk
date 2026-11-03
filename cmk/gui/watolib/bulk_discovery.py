@@ -43,7 +43,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.job_scheduler_client import StartupError
 from cmk.gui.logged_in import user
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import AnnotatedUserId, CustomHostAttrSpec
 from cmk.gui.utils.misc import gen_id
 from cmk.gui.utils.request_context import copy_request_context
@@ -449,7 +449,10 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         job_interface.send_progress_update(_("Waiting to acquire lock"))
         with (
             job_interface.gui_context(
-                UserPermissions.from_serialized_config(user_permission_config, permission_registry)
+                UserPermissions.from_serialized_config(
+                    user_permission_config,
+                    all_permissions(),
+                )
             ),
             store.locked(self.lock_file),
         ):

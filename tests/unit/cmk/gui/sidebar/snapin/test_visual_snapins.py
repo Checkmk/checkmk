@@ -18,6 +18,7 @@ from cmk.gui.config import Config
 from cmk.gui.http import request, response
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
 from cmk.gui.sidebar._snapin._dashboards import Dashboards
 from cmk.gui.sidebar._snapin._views import (
     ajax_export_views,
@@ -25,11 +26,12 @@ from cmk.gui.sidebar._snapin._views import (
     view_menu_items,
     Views,
 )
-from cmk.gui.type_defs import Visual
+from cmk.gui.type_defs import ViewSpec, Visual
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
+from cmk.gui.views.builtin_views import builtin_views
 
 USER_PERMISSIONS = UserPermissions({}, {}, {}, [])
 
@@ -68,13 +70,19 @@ def _visual(name: str, title: str, *, topic: str = "overview") -> Visual:
 
 
 def _page_context(config: Config) -> PageContext:
-    return PageContext(config=config, request=request, transactions=transactions, session=session)
+    return PageContext(
+        config=config,
+        request=request,
+        transactions=transactions,
+        session=session,
+        user_permissions=UserPermissions.from_config(config, all_permissions()),
+    )
 
 
 def test_views_metadata() -> None:
     assert Views.type_name() == "views"
     assert Views.title() == "Views"
-    assert Views.description() == "Links to global views and dashboards"
+    assert Views.description() == "Links to global views"
 
 
 def test_dashboards_metadata() -> None:
@@ -111,6 +119,41 @@ def test_view_menu_items_includes_the_hardcoded_pages(monkeypatch: pytest.Monkey
         items = view_menu_items(USER_PERMISSIONS)
 
     assert "pages" in {item.type for item in items}
+
+
+def test_view_menu_items_offers_the_all_services_page_with_the_classic_view_permission(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    with monkeypatch.context() as m:
+        m.setattr(user, "may", lambda permission: permission == "view.allservices")
+        m.setattr("cmk.gui.sidebar._snapin._views.get_permitted_views", dict)
+        m.setattr("cmk.gui.sidebar._snapin._views.get_permitted_dashboards", dict)
+        items = view_menu_items(USER_PERMISSIONS)
+
+    assert [item.item.name for item in items if item.type == "pages"] == ["monitor_all_services"]
+
+
+def test_default_view_menu_topics_place_all_services_right_after_all_hosts_in_any_language(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    host_search_titled_first: ViewSpec = {**builtin_views["searchhost"], "title": "A host search"}
+    classic_views = {
+        "allhosts": builtin_views["allhosts"],
+        "allservices": builtin_views["allservices"],
+        "searchhost": host_search_titled_first,
+    }
+    with monkeypatch.context() as m:
+        m.setattr(
+            user, "may", lambda permission: permission in ("view.allhosts", "view.allservices")
+        )
+        m.setattr("cmk.gui.sidebar._snapin._views.get_permitted_views", lambda: classic_views)
+        m.setattr("cmk.gui.sidebar._snapin._views.get_permitted_dashboards", dict)
+        topics = default_view_menu_topics(USER_PERMISSIONS)
+
+    overview_ids = [
+        entry.id for topic in topics if topic.id == "overview" for entry in topic.entries
+    ]
+    assert overview_ids == ["monitor_all_hosts", "monitor_all_services", "searchhost"]
 
 
 def test_view_menu_items_skips_the_hardcoded_pages_without_the_permission(
@@ -156,6 +199,27 @@ def test_views_snapin_offers_the_edit_link(
     assert "All hosts" in rendered
     assert "edit_views.py" in rendered
     assert "export_views.py" not in rendered
+
+
+@pytest.mark.usefixtures("patch_theme")
+def test_views_snapin_leaves_dashboards_to_the_dashboards_snapin(
+    monkeypatch: pytest.MonkeyPatch, load_config: Config
+) -> None:
+    with monkeypatch.context() as m:
+        m.setattr(
+            "cmk.gui.sidebar._snapin._views.get_permitted_views",
+            lambda: {"allhosts": _visual("allhosts", "All hosts")},
+        )
+        m.setattr(
+            "cmk.gui.sidebar._snapin._views.get_permitted_dashboards",
+            lambda: {"main": _visual("main", "Main dashboard")},
+        )
+        with output_funnel.plugged():
+            Views().show(load_config)
+            rendered = output_funnel.drain()
+
+    assert "All hosts" in rendered
+    assert "Main dashboard" not in rendered
 
 
 @pytest.mark.usefixtures("patch_theme")

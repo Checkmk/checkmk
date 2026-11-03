@@ -125,11 +125,19 @@ FILE_CLASSES: Final = (
     ),
     FileClass(
         # Most .js files outside an eslint rule kind are vendored bundles, which
-        # must not be linted. Being in any target is enough here.
+        # must not be linted. Being in any target is enough here. Of manual
+        # targets only their own sources count, not all their direct deps:
+        # those can be multi-GiB external repositories in data (the Windows
+        # test VM's media and image), which loading them would download on
+        # every run.
         name="javascript",
         extensions=(".js", ".cjs"),
-        covering_query='kind("source file", deps(//..., 1))',
-        target_hint="any target",
+        covering_query=(
+            f"let m = attr(tags, {_tag_pattern('manual')}, //...) in "
+            'kind("source file", deps(//... except $m, 1) '
+            "+ labels(srcs, $m) + labels(entry_point, $m))"
+        ),
+        target_hint="any target (of a manual one: srcs or entry_point)",
     ),
 )
 

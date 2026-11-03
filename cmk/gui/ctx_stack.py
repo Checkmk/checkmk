@@ -20,7 +20,7 @@ RequestLocalVarName = Literal[
     "display_options",
     "html",
     "output_funnel",
-    "permission_tracking",
+    "permission_tracker",
     "response",
     "theme",
     "timeout_manager",

@@ -9,6 +9,7 @@ import UclCmkButtonCodeExample from '@ucl/components/basic-elements/CmkButton/Uc
 import UclCmkChipCodeExample from '@ucl/components/basic-elements/CmkChip/UclCmkChipCodeExample.vue'
 import UclCmkCodeCodeExample from '@ucl/components/basic-elements/CmkCode/UclCmkCodeCodeExample.vue'
 import UclCmkColorPickerCodeExample from '@ucl/components/basic-elements/CmkColorPicker/UclCmkColorPickerCodeExample.vue'
+import UclCmkColorSwatchCodeExample from '@ucl/components/basic-elements/CmkColorSwatch/UclCmkColorSwatchCodeExample.vue'
 import UclCmkIconButtonCodeExample from '@ucl/components/basic-elements/CmkIconButton/UclCmkIconButtonCodeExample.vue'
 import UclCmkInlineButtonCodeExample from '@ucl/components/basic-elements/CmkInlineButton/UclCmkInlineButtonCodeExample.vue'
 import UclCmkSwitchCodeExample from '@ucl/components/basic-elements/CmkSwitch/UclCmkSwitchCodeExample.vue'
@@ -86,6 +87,11 @@ test('CmkCode code example renders without errors', () => {
 
 test('CmkColorPicker code example renders without errors', () => {
   const { container } = render(UclCmkColorPickerCodeExample)
+  expect(container.firstChild).toBeTruthy()
+})
+
+test('CmkColorSwatch code example renders without errors', () => {
+  const { container } = render(UclCmkColorSwatchCodeExample)
   expect(container.firstChild).toBeTruthy()
 })
 

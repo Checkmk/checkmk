@@ -13,6 +13,8 @@ import { computed, onBeforeUnmount } from 'vue'
 import type { NavToggle } from '@/main-menu/lib/nav-toggles'
 import { getInjectedMainMenu } from '@/main-menu/provider/main-menu'
 
+import MnemonicTitle from './MnemonicTitle.vue'
+
 const mainMenu = getInjectedMainMenu()
 
 const props = defineProps<{
@@ -27,6 +29,7 @@ const unregisterShortcut = mainMenu.registerToggleShortcut(props.item, () =>
 onBeforeUnmount(unregisterShortcut)
 
 const active = computed(() => props.navToggle.isActive())
+const altHint = computed(() => mainMenu.isAltHinted(props.item.shortcut))
 </script>
 
 <template>
@@ -36,7 +39,8 @@ const active = computed(() => props.navToggle.isActive())
     :class="{
       'mm-nav-toggle-item__li--active': active,
       'mm-nav-toggle-item__li--small': hideItemTitle,
-      'mm-nav-toggle-item__li--highlight-ai': navToggle.highlight === 'ai'
+      'mm-nav-toggle-item__li--highlight-ai': navToggle.highlight === 'ai',
+      'mm-nav-toggle-item__li--alt-hint': altHint
     }"
     :title="item.hint || item.title"
   >
@@ -53,7 +57,11 @@ const active = computed(() => props.navToggle.isActive())
         size="small"
         class="mm-nav-toggle-item__key-hint"
       />
-      <span v-if="!hideItemTitle">{{ item.title }}</span>
+      <MnemonicTitle
+        v-if="!hideItemTitle"
+        :title="item.title"
+        :mnemonic="altHint ? item.shortcut.key : null"
+      />
     </button>
   </li>
 </template>
@@ -116,6 +124,13 @@ const active = computed(() => props.navToggle.isActive())
 
     .mm-nav-toggle-item__icon {
       margin-bottom: 0;
+    }
+  }
+
+  &.mm-nav-toggle-item__li--alt-hint {
+    button {
+      filter: brightness(1.3) drop-shadow(0 0 2px rgb(255 255 255 / 80%))
+        drop-shadow(0 0 6px rgb(255 255 255 / 50%));
     }
   }
 }

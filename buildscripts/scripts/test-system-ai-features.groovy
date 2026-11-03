@@ -72,6 +72,7 @@ void main() {
             distro: distro,
             branch_name: setup_values.safe_branch_name,
             make_target: "${make_target}",
+            run_tests_script: "non-free/tests/run_tests.sh",
             test_filter: test_filter,
             faked_artifacts: fake_artifacts,
             force_build: force_build,

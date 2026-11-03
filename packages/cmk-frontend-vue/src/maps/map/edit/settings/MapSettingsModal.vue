@@ -11,6 +11,7 @@ lazily so the form stack lands in its own chunk.
 <script setup lang="ts">
 import { type Component, defineAsyncComponent } from 'vue'
 
+import type { SettingsFocus } from '@/maps/map/edit/settings/settingsForm'
 import type { MapRead } from '@/maps/types/api'
 
 const mapSettingsFormSpecModal: Component = defineAsyncComponent(
@@ -21,6 +22,7 @@ defineProps<{
   map: MapRead
   worldmapView?: { lat: number; lng: number; zoom: number } | null
   parentMapSize?: { width: number; height: number } | null
+  initialFocus?: SettingsFocus | null
 }>()
 
 const emit = defineEmits<{
@@ -37,6 +39,7 @@ const emit = defineEmits<{
     :map="map"
     :worldmap-view="worldmapView ?? null"
     :parent-map-size="parentMapSize ?? null"
+    :initial-focus="initialFocus ?? null"
     @close="emit('close')"
     @updated="emit('updated')"
     @pick-worldmap-view="emit('pickWorldmapView', $event)"

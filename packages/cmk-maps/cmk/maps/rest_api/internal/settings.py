@@ -26,9 +26,11 @@ from cmk.maps.rest_api.internal.endpoint_family import MAPS_INTERNAL_FAMILY
 from cmk.maps.rest_api.internal.models.response_models import (
     MapsAuthoringSettings,
     MapsAuthoringSettingsResponse,
+    MapsNameRules,
     MapsTileSource,
 )
 from cmk.maps.rest_api.utils import NO_CONFIG_CHANGE
+from cmk.maps.shared.map_name import MAP_NAME_MAX_LENGTH
 from cmk.web.utils import permission_verification as permissions
 
 
@@ -41,6 +43,7 @@ def show_authoring_settings_v1() -> MapsAuthoringSettingsResponse:
             default_url=default_tile_template(),
             allowed_sources=tile_csp_sources(),
         ),
+        map_name=MapsNameRules(max_length=MAP_NAME_MAX_LENGTH),
     )
 
 

@@ -342,7 +342,7 @@ async function handleOverwriteFilters(newFilters: ConfiguredFilters) {
       />
     </WizardStepsContainer>
 
-    <WizardStageContainer :overflow-hidden="wizardHandler.stage.value === 1" size="large">
+    <WizardStageContainer :overflow-hidden="wizardHandler.stage.value === 1">
       <CloseButton @close="() => emit('close')" />
       <Stage1
         v-if="wizardHandler.stage.value === 0"

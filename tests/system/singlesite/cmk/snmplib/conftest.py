@@ -30,7 +30,6 @@ from pysnmp.hlapi.asyncio import (  # type: ignore[attr-defined]
     UdpTransportTarget,
 )
 
-from cmk.ccc import debug
 from cmk.checkengine.snmplib import SNMPBackendEnum
 from cmk.utils import log
 from tests.testlib.common.repo import repo_path
@@ -56,7 +55,6 @@ def snmp_data_dir_fixture() -> Path:
 @pytest.fixture(name="snmpsim", scope="session")
 def snmpsim_fixture(site: Site, snmp_data_dir: Path) -> Iterator[None]:
     log.logger.setLevel(logging.DEBUG)
-    debug.enable()
 
     # Run the SNMP simulator as site user.
     # Don't run it as this user when running inside Kubernetes.
@@ -80,7 +78,6 @@ def snmpsim_fixture(site: Site, snmp_data_dir: Path) -> Iterator[None]:
             yield
         finally:
             log.logger.setLevel(logging.INFO)
-            debug.disable()
 
             logger.debug("Stopping snmpsimd...")
             for process_def in process_definitions:

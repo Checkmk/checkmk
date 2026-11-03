@@ -24,6 +24,10 @@ from cmk.maps.gui._cfg_import import (
     _parse_blocks,
     _parse_coord,
     cfg_to_map,
+    decode_cfg,
+    drop_member_filters,
+    drop_unusable_urls,
+    dynamic_map_warnings,
     map_name_from_filename,
     resolve_connection_ids,
 )
@@ -54,6 +58,49 @@ def test_parse_blocks_multiple_blocks() -> None:
     assert len(blocks) == 2
     assert blocks[0][0] == "global"
     assert blocks[1][0] == "host"
+
+
+def test_cfg_to_map_keeps_a_closing_brace_inside_a_value() -> None:
+    content = (
+        "define textbox {\n    text = <b>a}b</b>\n    x = 40\n}\n"
+        "define host {\n    host_name = h1\n}\n"
+    )
+    textbox, host = cfg_to_map(content, "test")["objects"]
+    assert textbox["label"]["text"] == "a}b"
+    assert textbox["x"] == 40
+    assert host.get("host_name") == "h1"
+
+
+def test_cfg_to_map_drops_a_block_that_a_define_cuts_short() -> None:
+    content = "define host {\n    host_name = h1\ndefine host {\n    host_name = h2\n}\n"
+    assert [o.get("host_name") for o in cfg_to_map(content, "test")["objects"]] == ["h2"]
+
+
+@pytest.mark.parametrize(
+    "sources, warned",
+    [
+        pytest.param("dynmap", True, id="dynmap"),
+        pytest.param("automap,dynmap", True, id="among-others"),
+        pytest.param("automap", False, id="automap"),
+    ],
+)
+def test_dynamic_map_warnings_name_a_map_filled_by_a_filter(sources: str, warned: bool) -> None:
+    content = f"define global {{\n    sources = {sources}\n}}\n"
+    assert bool(dynamic_map_warnings(content)) is warned
+
+
+def test_decode_cfg_reads_a_latin1_file() -> None:
+    assert decode_cfg("alias = München".encode("iso-8859-1")) == "alias = München"
+
+
+def test_decode_cfg_drops_a_byte_order_mark() -> None:
+    content = decode_cfg(b"\xef\xbb\xbfdefine global {\n    alias = A\n}\n")
+    assert cfg_to_map(content, "test")["alias"] == "A"
+
+
+def test_decode_cfg_drops_a_byte_order_mark_of_a_latin1_file() -> None:
+    content = decode_cfg(b"\xef\xbb\xbfdefine global {\n    alias = M\xfcnchen\n}\n")
+    assert cfg_to_map(content, "test")["alias"] == "München"
 
 
 def test_parse_blocks_unknown_type_included() -> None:
@@ -154,6 +201,11 @@ def test_cfg_to_map_global_map_image() -> None:
     assert parsed_map["background_image"] == "bg.png"
 
 
+def test_cfg_to_map_global_map_image_none_means_no_background() -> None:
+    content = "define global {\n    map_image = none\n}\n"
+    assert cfg_to_map(content, "test")["background_image"] is None
+
+
 @pytest.mark.parametrize(
     "filename, expected",
     [
@@ -172,9 +224,9 @@ def test_cfg_to_map_global_background_color() -> None:
     assert cfg_to_map(content, "x")["background_color"] == "#202020"
 
 
-def test_cfg_to_map_global_background_color_invalid_falls_back() -> None:
+def test_cfg_to_map_global_background_color_invalid_is_dropped() -> None:
     content = "define global {\n    background_color = expression(alert(1))\n}\n"
-    assert cfg_to_map(content, "x")["background_color"] == "#ffffff"
+    assert "background_color" not in cfg_to_map(content, "x")
 
 
 @pytest.mark.parametrize(
@@ -189,7 +241,7 @@ def test_cfg_to_map_global_background_rgb_color_becomes_hex(css: str, hex_color:
 def test_cfg_to_map_global_iconset() -> None:
     content = "define global {\n    iconset = std_big\n}\n"
     parsed_map = cfg_to_map(content, "x")
-    assert parsed_map["icon_size"] == 30
+    assert parsed_map["icon_size"] == 32
 
 
 def _first_obj(parsed_map: MapPayload) -> MapObject:
@@ -217,11 +269,40 @@ def test_cfg_to_map_host() -> None:
     assert obj["recognize_services"] is True
 
 
-def test_cfg_to_map_host_without_flags() -> None:
-    content = "define host {\n    object_id = 2\n    host_name = s\n    x = 0\n    y = 0\n}\n"
-    obj = _first_obj(cfg_to_map(content, "test"))
-    assert "only_hard_states" not in obj
-    assert "recognize_services" not in obj
+_HOST_COUNTING_BLOCKS = [
+    "host {\n    host_name = s",
+    "hostgroup {\n    hostgroup_name = g",
+    "dyngroup {\n    object_filter = Filter: name ~ ^web",
+]
+
+
+@pytest.mark.parametrize("block", _HOST_COUNTING_BLOCKS)
+def test_cfg_to_map_counts_services_as_nagvis_does_by_default(block: str) -> None:
+    obj = _first_obj(cfg_to_map(f"define {block}\n}}\n", "test"))
+    assert obj["recognize_services"] is True
+
+
+@pytest.mark.parametrize("block", _HOST_COUNTING_BLOCKS)
+def test_cfg_to_map_keeps_services_out_where_the_map_says_so(block: str) -> None:
+    content = f"define {block}\n    recognize_services = 0\n}}\n"
+    assert _first_obj(cfg_to_map(content, "test"))["recognize_services"] is False
+
+
+def test_cfg_to_map_dynamic_group_of_services_has_no_services_to_count() -> None:
+    content = "define dyngroup {\n    object_types = service\n    object_filter = Filter: x\n}\n"
+    assert "recognize_services" not in _first_obj(cfg_to_map(content, "test"))
+
+
+@pytest.mark.parametrize(
+    "block",
+    [
+        "servicegroup {\n    servicegroup_name = g",
+        "dyngroup {\n    object_filter = Filter: name ~ ^web",
+    ],
+)
+def test_cfg_to_map_group_keeps_hard_states(block: str) -> None:
+    content = f"define {block}\n    only_hard_states = 1\n}}\n"
+    assert _first_obj(cfg_to_map(content, "test"))["only_hard_states"] is True
 
 
 def test_cfg_to_map_service() -> None:
@@ -290,9 +371,118 @@ def test_cfg_to_map_line_width_stays_within_the_daemons_range(
     assert _first_obj(cfg_to_map(content, "test"))["line_width"] == expected
 
 
-def test_cfg_to_map_line_color_border_invalid_falls_back() -> None:
+def test_cfg_to_map_line_without_state_keeps_its_color() -> None:
+    content = "define line {\n    x = 0,10\n    y = 0,10\n    line_color = #ff0000\n}\n"
+    assert _first_obj(cfg_to_map(content, "test"))["line_color"] == "#ff0000"
+
+
+def test_cfg_to_map_line_without_state_or_color_takes_the_maps_color() -> None:
+    content = "define line {\n    x = 0,10\n    y = 0,10\n}\n"
+    assert "line_color" not in _first_obj(cfg_to_map(content, "test"))
+
+
+def test_cfg_to_map_line_with_state_is_colored_by_it() -> None:
+    content = (
+        "define service {\n    view_type = line\n    host_name = h\n"
+        "    service_description = s\n    x = 0,10\n    y = 0,10\n    line_color = #ff0000\n}\n"
+    )
+    assert "line_color" not in _first_obj(cfg_to_map(content, "test"))
+
+
+@pytest.mark.parametrize(
+    "block, binding",
+    [
+        pytest.param(
+            "hostgroup {\n    hostgroup_name = web\n",
+            {"line_object_type": "hostgroup", "group_name": "web", "recognize_services": True},
+            id="hostgroup",
+        ),
+        pytest.param(
+            "servicegroup {\n    servicegroup_name = db\n",
+            {"line_object_type": "servicegroup", "group_name": "db"},
+            id="servicegroup",
+        ),
+        pytest.param(
+            "map {\n    map_name = site-b\n",
+            {"line_object_type": "map", "map_name": "site-b"},
+            id="map",
+        ),
+        pytest.param(
+            "aggr {\n    name = Hosts\n",
+            {"line_object_type": "aggregation", "aggregation_id": "Hosts"},
+            id="aggregation",
+        ),
+    ],
+)
+def test_cfg_to_map_line_keeps_the_object_it_shows(block: str, binding: dict[str, object]) -> None:
+    content = f"define {block}    view_type = line\n    x = 0,10\n    y = 0,10\n}}\n"
+    obj: dict[str, object] = dict(_first_obj(cfg_to_map(content, "test")))
+    assert obj["type"] == "line"
+    assert {key: obj.get(key) for key in binding} == binding
+
+
+@pytest.mark.parametrize(
+    "block",
+    [
+        "host {\n    host_name = h\n",
+        "hostgroup {\n    hostgroup_name = web\n",
+        "line {\n    host_name = h\n",
+        "line {\n    service_description = CPU\n",
+    ],
+)
+def test_cfg_to_map_line_without_service_carries_no_perfdata(block: str) -> None:
+    content = (
+        f"define {block}    view_type = line\n    line_type = 14\n    x = 0,10\n    y = 0,10\n}}\n"
+    )
+    obj = _first_obj(cfg_to_map(content, "test"))
+    assert not {"line_perfdata_label", "line_weather_color", "weathermap_metric"} & obj.keys()
+
+
+def test_cfg_to_map_turns_nagvis_label_macros_into_placeholders() -> None:
+    content = (
+        "define service {\n    host_name = web01\n    service_description = CPU\n"
+        "    label_text = [name]/[service_description]: [output] [perfdata] [alias]\n}\n"
+    )
+    assert _first_obj(cfg_to_map(content, "test"))["label"].get("text") == (
+        "{{host}}/{{service}}: {{output}} {{perf_data}} {{alias}}"
+    )
+
+
+def test_cfg_to_map_labels_a_service_by_its_host_for_name() -> None:
+    content = (
+        "define service {\n    host_name = web01\n    service_description = CPU\n"
+        "    label_text = [name]\n}\n"
+    )
+    assert _first_obj(cfg_to_map(content, "test"))["label"].get("text") == "{{host}}"
+
+
+def test_cfg_to_map_keeps_a_label_macro_nagvis_does_not_fill_in() -> None:
+    content = (
+        "define host {\n    host_name = web01\n    label_text = [host_name] on [map_name] [x]\n}\n"
+    )
+    assert _first_obj(cfg_to_map(content, "test"))["label"].get("text") == (
+        "[host_name] on [map_name] [x]"
+    )
+
+
+def test_cfg_to_map_keeps_the_macros_of_a_link() -> None:
+    content = "define host {\n    host_name = web01\n    url = status.cgi?host=[host_name]\n}\n"
+    assert _first_obj(cfg_to_map(content, "test")).get("url") == "status.cgi?host=[host_name]"
+
+
+def test_cfg_to_map_labels_a_map_by_its_title() -> None:
+    content = (
+        "define map {\n    map_name = dc\n    x = 10\n    y = 10\n"
+        "    label_text = Go to [name] ([alias])\n}\n"
+    )
+    assert _first_obj(cfg_to_map(content, "test"))["label"].get("text") == (
+        "Go to {{name}} ({{name}})"
+    )
+
+
+def test_cfg_to_map_line_color_border_invalid_is_dropped() -> None:
     content = "define line {\n    x = 0,10\n    y = 0,10\n    line_color_border = expression(alert(1))\n}\n"
-    assert _first_obj(cfg_to_map(content, "test"))["line_color_border"] == "#000000"
+    assert "line_color_border" not in _first_obj(cfg_to_map(content, "test"))
 
 
 def test_cfg_to_map_line_default_type_is_arrow_end() -> None:
@@ -322,7 +512,7 @@ def test_cfg_to_map_line_type_inherited_from_template() -> None:
     content = (
         "define template {\n    name = wm\n    line_type = 13\n}\n"
         "define line {\n    object_id = l1\n    x = 10,20\n    y = 30,40\n"
-        "    template = wm\n}\n"
+        "    host_name = h\n    service_description = s\n    template = wm\n}\n"
     )
     obj = _first_obj(cfg_to_map(content, "test"))
     assert obj["line_style"] == "arrow_inward"
@@ -346,7 +536,8 @@ def test_cfg_to_map_element_line_type_overrides_template() -> None:
 def test_cfg_to_map_line_type_inherited_from_global() -> None:
     content = (
         "define global {\n    line_type = 13\n}\n"
-        "define line {\n    object_id = l1\n    x = 10,20\n    y = 30,40\n}\n"
+        "define line {\n    object_id = l1\n    x = 10,20\n    y = 30,40\n"
+        "    host_name = h\n    service_description = s\n}\n"
     )
     obj = _first_obj(cfg_to_map(content, "test"))
     assert obj["line_style"] == "arrow_inward"
@@ -357,14 +548,12 @@ def test_cfg_to_map_global_backend_not_inherited_by_objects() -> None:
     # backend_id stays map-level: a global backend must not become a
     # per-object connection_id override.
     content = (
-        "define global {\n    backend_id = primary\n    line_type = 13\n}\n"
+        "define global {\n    backend_id = primary\n}\n"
         "define line {\n    object_id = l1\n    x = 10,20\n    y = 30,40\n}\n"
     )
     parsed_map = cfg_to_map(content, "test")
     assert parsed_map["connection_id"] == "primary"
-    obj = _first_obj(parsed_map)
-    assert "connection_id" not in obj
-    assert obj["line_weather_color"] is True
+    assert "connection_id" not in _first_obj(parsed_map)
 
 
 def test_cfg_to_map_weathermap_metric_defaults_to_in_out() -> None:
@@ -424,6 +613,189 @@ def test_cfg_to_map_shape() -> None:
     assert obj["image_src"] == "img.png"
 
 
+def test_cfg_to_map_shape_keeps_its_links() -> None:
+    content = (
+        "define shape {\n    icon = img.png\n    x = 50\n    y = 60\n"
+        "    url = https://example.com\n    hover_url = https://example.com/hover\n}\n"
+    )
+    obj = _first_obj(cfg_to_map(content, "test"))
+    assert obj["url"] == "https://example.com"
+    assert obj["hover_url"] == "https://example.com/hover"
+
+
+@pytest.mark.parametrize(
+    "setting, expected",
+    [
+        pytest.param("", {"color": "#ffffff"}, id="maps-label"),
+        pytest.param(
+            "    label_background = #ffffff\n",
+            {"color": "#000000", "background": "#ffffff"},
+            id="light-background-keeps-nagvis-black",
+        ),
+        pytest.param(
+            "    label_color = #ff0000\n    label_border = #00ff00\n",
+            {"color": "#ff0000", "border": "#00ff00"},
+            id="explicit",
+        ),
+    ],
+)
+def test_cfg_to_map_keeps_only_the_label_colors_a_map_sets(
+    setting: str, expected: dict[str, str]
+) -> None:
+    obj = _first_obj(cfg_to_map(f"define host {{\n    host_name = web\n{setting}}}\n", "test"))
+    colors = {
+        "color": obj["label"]["color"],
+        "background": obj["label"]["background"],
+        "border": obj.get("label_border"),
+    }
+    assert colors == {"background": "transparent", "border": None, **expected}
+
+
+def test_cfg_to_map_object_keeps_its_label_length() -> None:
+    content = "define hostgroup {\n    hostgroup_name = web\n    label_maxlen = 12\n}\n"
+    assert _first_obj(cfg_to_map(content, "test"))["label_maxlen"] == 12
+
+
+@pytest.mark.parametrize(
+    "label_x, expected",
+    [
+        pytest.param("+30", {"x": 30, "align": "left"}, id="relative"),
+        pytest.param("-30", {"x": -30, "align": "left"}, id="relative-negative"),
+        pytest.param("0", {"x": 0, "align": "left"}, id="object-edge"),
+        pytest.param("700", {"x": 600, "align": "left"}, id="map-coordinate"),
+    ],
+)
+def test_cfg_to_map_starts_a_numbered_label_at_its_left_edge(
+    label_x: str, expected: dict[str, object]
+) -> None:
+    content = f"define host {{\n    host_name = web\n    x = 100\n    label_x = {label_x}\n}}\n"
+    label = _first_obj(cfg_to_map(content, "test"))["label"]
+    assert {"x": label["x"], "align": label.get("align")} == expected
+
+
+def test_cfg_to_map_centers_a_label_by_default() -> None:
+    content = "define host {\n    host_name = web\n    x = 100\n}\n"
+    label = _first_obj(cfg_to_map(content, "test"))["label"]
+    assert (label["x"], label.get("align")) == (0, None)
+
+
+@pytest.mark.parametrize(
+    "label_y, expected",
+    [
+        pytest.param("+40", 40, id="relative"),
+        pytest.param("-15", -15, id="relative-negative"),
+        pytest.param("0", 0, id="object-edge"),
+        pytest.param("120", -180, id="map-coordinate"),
+        pytest.param("bottom", 22, id="below-the-icon"),
+        # NagVis' own check rejects any keyword but ``bottom``.
+        pytest.param("top", 22, id="unknown-keyword-below-the-icon"),
+    ],
+)
+def test_cfg_to_map_puts_a_label_at_label_y(label_y: str, expected: int) -> None:
+    content = f"define host {{\n    host_name = web\n    y = 300\n    label_y = {label_y}\n}}\n"
+    assert _first_obj(cfg_to_map(content, "test"))["label"]["y"] == expected
+
+
+def test_cfg_to_map_sizes_an_object_by_its_own_iconset() -> None:
+    content = "define host {\n    host_name = web\n    iconset = std_big\n}\n"
+    obj = _first_obj(cfg_to_map(content, "test"))
+    assert (obj["display"].get("image_size"), obj["label"]["y"]) == (32, 32)
+
+
+def test_cfg_to_map_puts_a_label_below_the_map_iconset() -> None:
+    content = "define global {\n    iconset = std_small\n}\ndefine host {\n    host_name = web\n}\n"
+    obj = _first_obj(cfg_to_map(content, "test"))
+    assert (obj["display"].get("image_size"), obj["label"]["y"]) == (None, 16)
+
+
+def test_parse_keeps_a_group_with_the_members_it_leaves_out() -> None:
+    content = (
+        "define hostgroup {\n    hostgroup_name = web\n    exclude_members = ^test-~~^CPU\n"
+        "    exclude_member_states = ^db-\n}\n"
+        "define servicegroup {\n    servicegroup_name = http\n    exclude_members = ^test-\n"
+        "    view_type = line\n    x = 0,10\n    y = 0,10\n}\n"
+    )
+    map_cfg = cfg_to_map(content, "test")
+
+    assert drop_member_filters(map_cfg) == []
+    group, line = map_cfg["objects"]
+    assert group["type"] == "hostgroup"
+    assert group["group_name"] == "web"
+    assert group["exclude_members"] == "^test-~~^CPU"
+    assert group["exclude_member_states"] == "^db-"
+    assert line["line_object_type"] == "servicegroup"
+    assert line["exclude_members"] == "^test-"
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        pytest.param("define map {\n    map_name = a\n    exclude_members = ^x\n}\n", id="map"),
+        pytest.param(
+            "define service {\n    host_name = h1\n    service_description = CPU\n"
+            "    exclude_members = ^x\n}\n",
+            id="service",
+        ),
+        pytest.param(
+            "define host {\n    host_name = h1\n    exclude_members = h1~~CPU\n}\n",
+            id="host-service-pattern",
+        ),
+        pytest.param(
+            "define hostgroup {\n    hostgroup_name = web\n    exclude_members = x\\nOr: 2\n}\n",
+            id="query-line",
+        ),
+    ],
+)
+def test_drop_member_filters_drops_what_maps_cannot_apply(content: str) -> None:
+    map_cfg = cfg_to_map(content, "test")
+
+    warnings = drop_member_filters(map_cfg)
+
+    assert "exclude_members" not in _first_obj(map_cfg)
+    assert warnings[0].startswith("1 object leaves out members")
+
+
+def test_drop_member_filters_names_what_it_dropped() -> None:
+    map_cfg = cfg_to_map(
+        "define host {\n    host_name = h1\n    exclude_members = ^CPU\n}\n"
+        "define map {\n    map_name = a\n    exclude_members = ^x\n"
+        "    exclude_member_states = ^y\n}\n"
+        "define map {\n    map_name = b\n    exclude_members = ^x\n}\n",
+        "test",
+    )
+
+    warnings = drop_member_filters(map_cfg)
+
+    assert map_cfg["objects"][0]["exclude_members"] == "^CPU"
+    assert len(warnings) == 3
+    assert warnings[0].startswith("2 objects leave out members")
+    assert warnings[1].startswith("1 object ignores the state")
+    assert warnings[2].startswith("Maps applies such a pattern only to hosts")
+
+
+@pytest.mark.parametrize(
+    "block, key",
+    [
+        ("shape {\n    icon = i.png\n    url", "url"),
+        ("shape {\n    icon = i.png\n    hover_url", "hover_url"),
+        ("container {\n    url", "graph_url"),
+    ],
+)
+@pytest.mark.parametrize("url", ["//evil.example/x", "javascript:alert(1)", "file:///etc/passwd"])
+def test_drop_unusable_urls_drops_a_link_maps_refuses(block: str, key: str, url: str) -> None:
+    map_cfg = cfg_to_map(f"define {block} = {url}\n}}\n", "test")
+
+    assert len(drop_unusable_urls(map_cfg)) == 1
+    assert key not in _first_obj(map_cfg)
+
+
+def test_drop_unusable_urls_keeps_a_link_maps_accepts() -> None:
+    map_cfg = cfg_to_map("define shape {\n    icon = i.png\n    url = [htmlcgi]/x.cgi\n}\n", "test")
+
+    assert drop_unusable_urls(map_cfg) == []
+    assert _first_obj(map_cfg)["url"] == "[htmlcgi]/x.cgi"
+
+
 def test_cfg_to_map_textbox_coordinates() -> None:
     # nagvis_classic anchors top-left, so raw NagVis coords are preserved
     content = (
@@ -472,7 +844,22 @@ def test_cfg_to_map_textbox_background_color_is_not_text_color() -> None:
         '    text = <span style="background-color:#222222">Hi</span>\n}\n'
     )
     obj = _first_obj(cfg_to_map(content, "test"))
-    assert obj["label"]["color"] == "#000000"
+    assert obj["label"]["color"] == "#ffffff"
+
+
+@pytest.mark.parametrize(
+    "background, expected",
+    [
+        pytest.param("", "#ffffff", id="maps-surface"),
+        pytest.param("    background_color = #ffff99\n", "#000000", id="light-keeps-nagvis-black"),
+        pytest.param("    background_color = #222222\n", "#ffffff", id="dark"),
+    ],
+)
+def test_cfg_to_map_textbox_text_color_follows_its_background(
+    background: str, expected: str
+) -> None:
+    content = f"define textbox {{\n    x = 0\n    y = 0\n    text = Hi\n{background}}}\n"
+    assert _first_obj(cfg_to_map(content, "test"))["label"]["color"] == expected
 
 
 def test_cfg_to_map_textbox_explicit_color_after_background() -> None:
@@ -607,6 +994,16 @@ def test_relative_coordinate_resolves_against_the_explicit_object_id() -> None:
     assert (objects[1]["x"], objects[1]["y"]) == (140, 40)
 
 
+def test_a_label_at_a_map_coordinate_stays_there_for_a_relative_object() -> None:
+    content = (
+        "define host {\n    object_id = anchor\n    host_name = h1\n    x = 100\n    y = 50\n}\n"
+        "define host {\n    host_name = h2\n    x = anchor%+40\n    y = anchor%-10\n"
+        "    label_x = 200\n    label_y = 100\n}\n"
+    )
+    label = cfg_to_map(content, "m")["objects"][1]["label"]
+    assert (label["x"], label["y"]) == (60, 60)
+
+
 def test_counter_derived_ids_are_not_referenceable() -> None:
     # Only an explicit object_id is indexed for reference resolution. The second
     # block gets the counter id "2"; a reference to it must NOT resolve to it (it
@@ -667,11 +1064,11 @@ def _by_id(parsed_map: MapPayload, obj_id: str) -> MapObject:
 def test_fixture_global_settings(all_objects_map: MapPayload) -> None:
     assert all_objects_map["alias"] == "All Objects"
     assert all_objects_map["connection_id"] == "ZWEIFUENF"
-    assert all_objects_map["icon_size"] == 30  # iconset=std_big
+    assert all_objects_map["icon_size"] == 32  # iconset=std_big
     assert all_objects_map["view"] == {"type": "static"}
-    # cfg-import maps opt into the NagVis-classic renderer with a white canvas
+    # cfg-import maps opt into the NagVis-classic renderer, in Maps' own colors
     assert all_objects_map["render_mode"] == "nagvis_classic"
-    assert all_objects_map["background_color"] == "#ffffff"
+    assert "background_color" not in all_objects_map
 
 
 def test_fixture_object_count(all_objects_map: MapPayload) -> None:
@@ -867,7 +1264,7 @@ def test_resolve_keeps_an_object_override_that_names_a_configured_connection() -
         "test",
     )
 
-    assert resolve_connection_ids(map_cfg, ["primary", "secondary"]) == []
+    assert resolve_connection_ids(map_cfg, ["primary", "secondary"], "primary") == []
 
     assert map_cfg["connection_id"] == "primary"
     assert _first_obj(map_cfg)["connection_id"] == "secondary"
@@ -882,7 +1279,7 @@ def test_resolve_drops_an_object_override_equal_to_the_maps_connection() -> None
         "test",
     )
 
-    assert resolve_connection_ids(map_cfg, ["primary"]) == []
+    assert resolve_connection_ids(map_cfg, ["primary"], "primary") == []
 
     assert "connection_id" not in _first_obj(map_cfg)
 
@@ -903,7 +1300,7 @@ def test_resolve_drops_an_unconfigured_object_override_and_says_so() -> None:
         "test",
     )
 
-    warnings = resolve_connection_ids(map_cfg, ["primary"])
+    warnings = resolve_connection_ids(map_cfg, ["primary"], "primary")
 
     assert all("connection_id" not in obj for obj in map_cfg["objects"])
     assert len(warnings) == 1
@@ -914,7 +1311,7 @@ def test_resolve_drops_an_unconfigured_object_override_and_says_so() -> None:
 def test_resolve_reports_the_map_level_fallback() -> None:
     map_cfg = cfg_to_map("define global {\n    backend_id = gone\n}\n", "test")
 
-    warnings = resolve_connection_ids(map_cfg, ["primary"])
+    warnings = resolve_connection_ids(map_cfg, ["primary"], "primary")
 
     assert map_cfg["connection_id"] == "primary"
     assert len(warnings) == 1
@@ -931,8 +1328,58 @@ def test_resolve_follows_the_map_when_object_and_map_share_a_gone_backend() -> N
         "test",
     )
 
-    warnings = resolve_connection_ids(map_cfg, ["primary"])
+    warnings = resolve_connection_ids(map_cfg, ["primary"], "primary")
 
     assert map_cfg["connection_id"] == "primary"
     assert "connection_id" not in _first_obj(map_cfg)
     assert len(warnings) == 1  # only the map-level fallback
+
+
+def test_resolve_gives_a_map_without_backend_the_default_silently() -> None:
+    map_cfg = cfg_to_map("define host {\n    host_name = h1\n}\n", "test")
+
+    assert resolve_connection_ids(map_cfg, ["primary", "cmk_mysite"], "cmk_mysite") == []
+
+    assert map_cfg["connection_id"] == "cmk_mysite"
+
+
+@pytest.mark.parametrize("backend", ["mysite", "mysite_bi"])
+def test_resolve_maps_a_checkmk_nagvis_backend_to_the_sites_connection(backend: str) -> None:
+    # NagVis on a Checkmk site names its backends after the site.
+    map_cfg = cfg_to_map(
+        f"define global {{\n    backend_id = {backend}\n}}\n"
+        f"define aggr {{\n    name = bi1\n    backend_id = {backend}\n}}\n",
+        "test",
+    )
+
+    assert resolve_connection_ids(map_cfg, ["primary", "cmk_mysite"], "primary") == []
+
+    assert map_cfg["connection_id"] == "cmk_mysite"
+    assert "connection_id" not in _first_obj(map_cfg)
+
+
+def test_resolve_prefers_a_site_named_like_a_bi_backend() -> None:
+    map_cfg = cfg_to_map("define global {\n    backend_id = foo_bi\n}\n", "test")
+
+    assert resolve_connection_ids(map_cfg, ["cmk_foo", "cmk_foo_bi"], "cmk_foo") == []
+
+    assert map_cfg["connection_id"] == "cmk_foo_bi"
+
+
+def test_resolve_maps_an_object_backend_of_another_checkmk_site() -> None:
+    map_cfg = cfg_to_map(
+        "define host {\n    host_name = h1\n    backend_id = remote\n}\n",
+        "test",
+    )
+
+    assert resolve_connection_ids(map_cfg, ["cmk_central", "cmk_remote"], "cmk_central") == []
+
+    assert _first_obj(map_cfg)["connection_id"] == "cmk_remote"
+
+
+def test_resolve_does_not_report_a_default_the_site_lacks() -> None:
+    map_cfg = cfg_to_map("define host {\n    host_name = h1\n}\n", "test")
+
+    assert resolve_connection_ids(map_cfg, ["primary"], "cmk_mysite") == []
+
+    assert map_cfg["connection_id"] == "primary"

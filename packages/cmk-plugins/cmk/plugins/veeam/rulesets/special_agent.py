@@ -121,6 +121,15 @@ def _parameter_form() -> Dictionary:
                 required=True,
                 parameter_form=Password(
                     title=Title("Password"),
+                    help_text=Help(
+                        "After repeated failed logins, Veeam Backup & Replication locks the "
+                        "user and then rejects even the correct password until the user is "
+                        "unlocked. On a Veeam appliance, this happens after 3 failed logins and "
+                        "lasts 15 minutes, or until the user is unlocked manually if a Security "
+                        "Officer is configured (see the <a href='https://helpcenter.veeam.com/docs/vbr/userguide/hmc_manage_user_auth.html?ver=13#unlocking-users'>Veeam documentation</a>). "
+                        "Veeam Backup & Replication on Windows locks users as well. A corrected "
+                        "password therefore only takes effect once the user is unlocked."
+                    ),
                     custom_validate=(validators.LengthInRange(min_value=1),),
                 ),
             ),

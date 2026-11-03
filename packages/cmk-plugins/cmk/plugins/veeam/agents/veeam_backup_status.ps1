@@ -103,7 +103,7 @@ try {
 
 
     try {
-        $cdpjobs = Get-VBRCDPPolicy | Select-Object Name, NextRun, PolicyState
+        $cdpjobs = Get-VBRCDPPolicy | Select-Object Id, Name, NextRun, PolicyState, LastResult
     }
     catch {
         Write-Host "CDP jobs not supported"
@@ -111,6 +111,13 @@ try {
     }
 
     if ( $cdpjobs ) {
+        try {
+            $cdpReplicas = @(Get-VBRCDPReplica -ErrorAction Stop)
+        }
+        catch {
+            $cdpReplicas = @()
+        }
+
         $myCdpJobsText = "<<<veeam_cdp_jobs:sep(124)>>>`n"
 
         foreach ($mycdpjobs in $cdpjobs) {
@@ -118,7 +125,7 @@ try {
 
             $MyCdpJobsNextRun = $mycdpjobs.NextRun
             if ($MyCdpJobsNextRun -ne $null) {
-                $MyCdpJobsNextRun = Get-Date -Date $MyCdpJobsNextRun -UFormat %s
+                $MyCdpJobsNextRun = ([DateTimeOffset]$MyCdpJobsNextRun).ToUnixTimeSeconds()
             }
             else {
                 $MyCdpJobsNextRun = "null"
@@ -126,7 +133,21 @@ try {
 
             $MyCdpJobsPolicyState = $mycdpjobs.PolicyState
 
-            $myCdpJobsText = "$myCdpJobsText" + "$MyCdpJobsName" + "|" + "$MyCdpJobsNextRun" + "|" + "$MyCdpJobsPolicyState" + "`n"
+            # The replica lagging behind the most determines how current the policy is
+            $MyCdpJobsLastSync = ($cdpReplicas | Where-Object { $_.JobId -eq $mycdpjobs.Id -and $_.LastPointCreationTime -ne $null } | ForEach-Object { $_.LastPointCreationTime } | Sort-Object | Select-Object -First 1)
+            if ($MyCdpJobsLastSync -ne $null) {
+                $MyCdpJobsLastSync = ([DateTimeOffset]$MyCdpJobsLastSync).ToUnixTimeSeconds()
+            }
+            else {
+                $MyCdpJobsLastSync = "null"
+            }
+
+            $MyCdpJobsLastResult = $mycdpjobs.LastResult
+            if ($MyCdpJobsLastResult -eq $null) {
+                $MyCdpJobsLastResult = "null"
+            }
+
+            $myCdpJobsText = "$myCdpJobsText" + "$MyCdpJobsName" + "|" + "$MyCdpJobsNextRun" + "|" + "$MyCdpJobsPolicyState" + "|" + "$MyCdpJobsLastSync" + "|" + "$MyCdpJobsLastResult" + "`n"
         }
 
         Write-Host $myCdpJobsText
@@ -245,11 +266,60 @@ try {
 
     Write-Host $myJobsText
     Write-Host $myTaskText
+
+    # The result of a policy managed by the agent only reflects applying the policy.
+    # Each protected computer backs up in its own session named "<policy> - <computer>".
+    $myPolicyWorkloadsText = "<<<veeam_agent_policy_workloads:sep(9)>>>`n"
+    try {
+        foreach ($myPolicy in Get-VBRComputerBackupJob -Mode ManagedByAgent -ErrorAction Stop) {
+            $myPolicyName = $myPolicy.Name -replace "\'", "_" -replace " ", "_"
+            try {
+                # Only computers currently protected by the policy, so removed ones do not linger
+                $myComputers = foreach ($myBackupObject in $myPolicy.BackupObject) {
+                    if ($myBackupObject.GetType().Name -eq "VBRProtectionGroup") {
+                        Get-VBRDiscoveredComputer -ProtectionGroup $myBackupObject -ErrorAction Stop | ForEach-Object { $_.Name }
+                    }
+                    else {
+                        $myBackupObject.Name
+                    }
+                }
+
+                # One query per policy, a running backup has no result yet
+                $myFinishedSessions = @{}
+                Get-VBRComputerBackupJobSession -Name "$([WildcardPattern]::Escape("$($myPolicy.Name) - "))*" -ErrorAction Stop |
+                    Where-Object { $_.State -eq "Stopped" } |
+                    Sort-Object CreationTime |
+                    ForEach-Object { $myFinishedSessions[$_.Name] = $_ }
+
+                foreach ($myComputer in $myComputers | Sort-Object -Unique) {
+                    $myWorkloadName = $myComputer -replace "\'", "_" -replace " ", "_"
+                    $myWorkloadSession = $myFinishedSessions["$($myPolicy.Name) - $myComputer"]
+
+                    if ($myWorkloadSession -eq $null) {
+                        $myPolicyWorkloadsText = "$myPolicyWorkloadsText" + "computer" + "`t" + "$myPolicyName" + "`t" + "$myWorkloadName" + "`t" + "None" + "`t" + "None" + "`n"
+                        continue
+                    }
+
+                    $myWorkloadCreationTime = $myWorkloadSession.CreationTime | Get-Date -Format "dd.MM.yyyy HH\:mm\:ss" -ErrorAction SilentlyContinue
+
+                    $myWorkloadEndTime = $myWorkloadSession.EndTime | Get-Date -Format "dd.MM.yyyy HH\:mm\:ss" -ErrorAction SilentlyContinue
+
+                    $myPolicyWorkloadsText = "$myPolicyWorkloadsText" + "computer" + "`t" + "$myPolicyName" + "`t" + "$myWorkloadName" + "`t" + "$($myWorkloadSession.State)" + "`t" + "$($myWorkloadSession.Result)" + "`t" + "$myWorkloadCreationTime" + "`t" + "$myWorkloadEndTime" + "`n"
+                }
+            }
+            catch {
+                $myPolicyWorkloadsText = "$myPolicyWorkloadsText" + "error" + "`t" + "$myPolicyName" + "`t" + ("$_" -replace "\s+", " ") + "`n"
+            }
+        }
+    }
+    catch {
+        # Applies to all policies managed by the agent
+        $myPolicyWorkloadsText = "$myPolicyWorkloadsText" + "error" + "`t" + "*" + "`t" + ("$_" -replace "\s+", " ") + "`n"
+    }
+    Write-Host $myPolicyWorkloadsText
 }
 
 catch {
-    $errMsg = $_.Exception.Message
-    $errItem = $_.Exception.ItemName
-    Write-Error "Totally unexpected and unhandled error occured:`n Item: $errItem`n Error Message: $errMsg"
+    Write-Error "Totally unexpected and unhandled error occurred:`n$($_ | Out-String)"
     break
 }

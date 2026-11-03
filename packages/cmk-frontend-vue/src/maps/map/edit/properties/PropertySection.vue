@@ -8,11 +8,14 @@ One group of properties on the object card: its heading, and the rows below it.
 
 A section whose fields most objects never touch can fold itself away instead,
 and then starts open only when the object already carries a value in it.
+
+A section that is switched on and off as a whole carries that switch in its
+heading (the ``title-control`` slot), and its rows are indented below it, the
+way a FormSpec renders the elements of an optional dictionary entry.
 -->
 <script setup lang="ts">
 import { CmkCollapsibleTitle } from 'cmk-ui-library/components/CmkCollapsible'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
-import { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { ref } from 'vue'
 
@@ -21,8 +24,8 @@ const props = defineProps<{
   collapsible?: boolean
   /** Only read for a collapsible section, and only for its initial state. */
   defaultOpen?: boolean
-  /** Shown beside a collapsible heading, so a folded section still says what it holds. */
-  sideTitle?: TranslatedString
+  /** Hides the rows, e.g. while the heading's switch is off. */
+  empty?: boolean
 }>()
 
 const open = ref(props.defaultOpen === true)
@@ -33,15 +36,17 @@ const open = ref(props.defaultOpen === true)
     <CmkCollapsibleTitle
       v-if="collapsible"
       :title="title"
-      :side-title="sideTitle ?? untranslated('')"
       :open="open"
       @toggle-open="open = !open"
     />
-    <CmkHeading v-else type="h4" class="maps-property-section__title">{{ title }}</CmkHeading>
+    <div v-else class="maps-property-section__head">
+      <CmkHeading type="h4" class="maps-property-section__title">{{ title }}</CmkHeading>
+      <slot name="title-control" />
+    </div>
     <div
-      v-if="!collapsible || open"
+      v-if="(!collapsible || open) && !empty"
       class="maps-property-section__rows"
-      :class="collapsible ? 'maps-property-section__rows--collapsed-head' : ''"
+      :class="{ 'maps-property-section__rows--collapsed-head': collapsible }"
     >
       <slot />
     </div>
@@ -53,10 +58,14 @@ const open = ref(props.defaultOpen === true)
   margin-bottom: var(--dimension-6);
 }
 
-/* Outspecifies ``CmkHeading``'s own ``margin: 0``, which is at equal
-   specificity and would otherwise win on source order. */
-.maps-property-section > .maps-property-section__title {
+.maps-property-section__head {
+  display: flex;
+  align-items: center;
+  gap: var(--dimension-4);
   margin-bottom: var(--dimension-4);
+}
+
+.maps-property-section__title {
   color: var(--font-color-dimmed);
 }
 

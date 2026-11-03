@@ -143,6 +143,19 @@ def test_create_duplicate_returns_409(clients: ClientRegistry) -> None:
     clients.Maps.create(config=_STATIC_MAP, expect_ok=False).assert_status_code(HTTPStatus.CONFLICT)
 
 
+def test_map_name_limit_served_to_the_spa_is_the_one_create_applies(
+    clients: ClientRegistry,
+) -> None:
+    # The SPA checks a new map's name against this limit while the user types,
+    # so it has to be exactly the one map creation enforces.
+    max_length = clients.Maps.get_authoring_settings().json["map_name"]["max_length"]
+
+    clients.Maps.create(config={**_STATIC_MAP, "name": "a" * max_length})
+    clients.Maps.create(
+        config={**_STATIC_MAP, "name": "a" * (max_length + 1)}, expect_ok=False
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
+
+
 def test_update_roundtrip_with_valid_etag(clients: ClientRegistry) -> None:
     clients.Maps.create(config=_STATIC_MAP)
     updated = {**_STATIC_MAP, "alias": "Renamed"}

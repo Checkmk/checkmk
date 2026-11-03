@@ -343,3 +343,22 @@ def test_parse_ip_addresses_without_prefix() -> None:
             inet4=[AugmentedIPv4Interface("10.1.2.3/24")],
         )
     ]
+
+
+def test_parse_ip_addresses_skips_invalid_address_row() -> None:
+    # Crash groups 4602/4720: one ipAddrTable row holds no valid IPv4 address/netmask
+    assert parse_ip_addresses(
+        [
+            [
+                ["10.0.0.1.91", "13", "255.255.255.0"],
+                ["10.1.2.3", "3", "255.255.255.0"],
+            ],
+            [],
+            [["3", "eth0"], ["13", "eth1"]],
+        ]
+    ) == [
+        IPNetworkAdapter(
+            name="eth0",
+            inet4=[AugmentedIPv4Interface("10.1.2.3/24")],
+        )
+    ]

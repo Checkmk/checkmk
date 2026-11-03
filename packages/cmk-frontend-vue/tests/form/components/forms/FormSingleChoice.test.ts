@@ -68,6 +68,18 @@ test('FormSingleChoice marks required next to its label', () => {
   expect(container.querySelector('label')).toHaveTextContent(/^fooLabel\s*\(required\)$/)
 })
 
+test('FormSingleChoice does not mark a dropdown with a default value required', () => {
+  render(FormSingleChoice, {
+    props: {
+      spec: { ...spec, has_default_value: true },
+      data: 'choice1',
+      backendValidation: []
+    }
+  })
+
+  expect(screen.queryByText('(required)')).not.toBeInTheDocument()
+})
+
 test('FormSingleChoice marks required in the dropdown without label and title', () => {
   render(FormSingleChoice, {
     props: {

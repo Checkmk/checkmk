@@ -32,6 +32,7 @@ pkg_files(
         "post-create/00_certs",
         "post-create/01_create-sample-config.py",
         "post-create/02_message-broker-certs",
+        "post-create/03_cmk-schema-manager.py",
     ],
     attributes = pkg_attributes(
         mode = "0755",
@@ -238,12 +239,14 @@ py_library(
     name = "omd_packages_check_mk_py",
     srcs = [
         "post-create/01_create-sample-config.py",
+        "post-create/03_cmk-schema-manager.py",
     ],
     deps = [
         "//cmk/gui:app",
         "//cmk/gui:session_context",
         "//cmk/gui/watolib",
         "//cmk/utils",
+        "//packages/cmk-schema-manager",
         "//packages/cmk-wsgi",
     ],
 )

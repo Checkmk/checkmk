@@ -10,6 +10,7 @@ the rest of map authoring — the daemon owns only live state, not import.
 endpoint serving it is in :mod:`cmk.maps.rest_api.internal.cfg_import`.
 """
 
+import codecs
 import contextlib
 import html
 import re
@@ -21,8 +22,15 @@ from typing import get_args, Literal, TypedDict
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, ungettext
-from cmk.maps.gui._settings import connection_choices
+from cmk.maps.gui._settings import connection_choices, map_object_defaults
+from cmk.maps.shared.filters import (
+    bound_type_of,
+    check_host_member_patterns,
+    MEMBER_PATTERN_MAX_LENGTH,
+    validate_member_pattern,
+)
 from cmk.maps.shared.geo import bounded_view, parse_degrees
+from cmk.maps.shared.map_name import MAP_NAME_MAX_LENGTH
 from cmk.maps.shared.map_payload import (
     FlowView,
     GadgetType,
@@ -36,10 +44,10 @@ from cmk.maps.shared.map_payload import (
     MapLabel,
     MapObject,
     MapPayload,
-    ObjectType,
+    MonitoredObjectType,
     WorldmapView,
 )
-from cmk.maps.shared.validators import coerce_color
+from cmk.maps.shared.validators import coerce_color, coerce_user_url
 
 # A NagVis .cfg is a small text file; cap the upload before the whole-file regex
 # scan + multi-pass reference resolver run over it, mirroring the icon/background
@@ -51,9 +59,6 @@ MAX_CFG_BYTES = 5 * 1024 * 1024  # 5 MB
 # would balloon the draft the SPA has to hold. Real exported maps stay well below
 # this; an automap this large is unusable as a map anyway.
 _MAX_CFG_OBJECTS = 2000
-
-# Mirrors the daemon's MapConfig.name constraint.
-_MAX_MAP_NAME_LEN = 100
 
 
 # Legacy line_type integers from the .cfg map format; 20 is not a valid value.
@@ -67,17 +72,18 @@ _LINE_STYLES: dict[int, LineStyle] = {
 }
 _DEFAULT_LINE_STYLE: LineStyle = _LINE_STYLES[11]
 
-# 13/14/15 only appear on stateful lines (service block with view_type=line) and
-# are the only ones that carry perfdata labels — always with the weather gradient.
+# 13/14/15 are the only ones that carry perfdata labels, always with the weather
+# gradient. The perfdata is a service's, so only a line showing one keeps them.
 _LINE_PERFDATA_LABELS: dict[int, LinePerfdataLabel] = {
     13: "percent",
     14: "both",
     15: "bandwidth",
 }
 
+# The pixel size of the iconsets NagVis ships.
 ICONSET_SIZE: dict[str, int] = {
-    "std_big": 30,
-    "std_medium": 24,
+    "std_big": 32,
+    "std_medium": 22,
     "std": 22,
     "std_small": 16,
 }
@@ -100,19 +106,32 @@ _GADGET_URL_MAP: dict[str, GadgetType] = {
 # ---------------------------------------------------------------------------
 
 
+_DEFINE_RE = re.compile(r"define\s+(\w+)\s*\{")
+_PROPERTY_RE = re.compile(r"(\w+)\s*=\s*(.*)")
+
+
 def _parse_blocks(text: str) -> list[tuple[str, dict[str, str]]]:
-    text = re.sub(r"(?m)^\s*#[^\n]*", "", text)
-    text = re.sub(r"(?m)^\s*;[^\n]*", "", text)
-    blocks = []
-    for m in re.finditer(r"define\s+(\w+)\s*\{([^}]*)\}", text, re.DOTALL):
-        block_type = m.group(1).strip().lower()
-        props: dict[str, str] = {}
-        for line in m.group(2).splitlines():
-            line = line.strip()
-            kv = re.match(r"(\w+)\s*=\s*(.*)", line)
-            if kv:
-                props[kv.group(1).strip()] = kv.group(2).strip()
-        blocks.append((block_type, props))
+    """Read the blocks line by line, as NagVis does.
+
+    Only a line starting with ``}`` ends a block, so a ``}`` inside a value (CSS in a
+    textbox, say) stays part of that value. A ``define`` starts a new block even
+    if the previous one was never closed, which NagVis then drops.
+    """
+    blocks: list[tuple[str, dict[str, str]]] = []
+    current: tuple[str, dict[str, str]] | None = None
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith(("#", ";")):
+            continue
+        if m := _DEFINE_RE.match(line):
+            current = (m.group(1).lower(), {})
+        elif current is None:
+            continue
+        elif line.startswith("}"):
+            blocks.append(current)
+            current = None
+        elif kv := _PROPERTY_RE.match(line):
+            current[1][kv.group(1)] = kv.group(2).strip()
     return blocks
 
 
@@ -220,6 +239,9 @@ class _ImportObject:
     payload: MapObject
     pending: dict[_Axis, _PendingRef] = field(default_factory=dict)
     ref_id: str | None = None
+    # A label's map coordinate on an axis whose object position is only known
+    # once ``pending`` resolves.
+    label_at: dict[Literal["x", "y"], int] = field(default_factory=dict)
 
 
 def _pending(coords: Mapping[_Axis, _Coord]) -> dict[_Axis, _PendingRef]:
@@ -273,6 +295,9 @@ def _resolve_pending_refs(objects: list[_ImportObject]) -> None:
                 changed = True
         if not changed:
             break
+    for obj in objects:
+        for label_axis, at in obj.label_at.items():
+            obj.payload["label"][label_axis] = at - obj.payload[label_axis]
 
 
 def _axis_coords(
@@ -300,31 +325,31 @@ def _line_coords(
     return x, y, x2, y2, mid_x, mid_y
 
 
-# NagVis [name] macro resolves to the object identifier; Maps uses
-# {{name}}. Dropping the label lets the renderer fall back to host_name
-# rather than printing the literal token.
-_BARE_NAME_RE = re.compile(r"^\s*\[name\]\s*$")
-
-
-def _label_text(raw: str | None) -> str | None:
-    if not raw:
-        return None
-    if _BARE_NAME_RE.match(raw):
-        return None
-    return raw
-
-
-def _label_x(raw: str | None) -> int:
-    """Parse legacy ``label_x``. NagVis allows ``center`` to mean 0-offset."""
-    if raw is None:
-        return 0
-    v = raw.strip().lower()
-    if v == "center":
-        return 0
+def _label_map_coord(raw: str | None) -> int | None:
+    """``label_x`` or ``label_y`` as a map coordinate; ``None`` for a keyword or a
+    number relative to the object, a signed one or 0."""
+    v = (raw or "").strip()
     try:
-        return int(v.lstrip("+"))
+        at = int(v)
     except ValueError:
-        return 0
+        return None
+    return None if v[0] in "+-" or at == 0 else at
+
+
+def _label_x(raw: str | None, object_x: int) -> int | None:
+    """Where ``label_x`` puts the label's left edge, relative to the object.
+
+    ``None`` for ``center``, NagVis' default, which centers the label on the
+    icon instead. A signed number or 0 is relative to the object, any other
+    number a map coordinate.
+    """
+    v = (raw or "center").strip().lower()
+    if (at := _label_map_coord(v)) is not None:
+        return at - object_x
+    try:
+        return int(v)
+    except ValueError:
+        return None
 
 
 # CSS named colors are valid label backgrounds (see shared.validators), and the
@@ -384,27 +409,24 @@ def _bg_is_opaque_dark(value: str | None) -> bool:
     return b is not None and b < 100
 
 
-def _label_y(raw: str | None) -> int:
-    """Parse legacy ``label_y``.
+def _label_y(raw: str | None, object_y: int, icon_size: int) -> int:
+    """Where ``label_y`` puts the label's top edge, relative to the object.
 
-    NagVis defaults to ``bottom`` which places the label top flush with the
-    icon's bottom edge — that's ``label_top = object_y + icon_height``. With
-    Maps' 22-px default icon that's 22. Anything explicit (``+25``, ``-3``,
-    ``0``) is honoured as a relative pixel offset.
+    NagVis defaults to ``bottom``, which puts the label right below the icon.
+    A signed number or 0 is relative to the object, any other number a map
+    coordinate.
     """
     if raw is None:
-        return 22
+        return icon_size
     v = raw.strip().lower()
     if v in ("", "bottom"):
-        return 22
-    if v == "top":
-        return 0
-    if v == "center":
-        return -11
+        return icon_size
+    if (at := _label_map_coord(v)) is not None:
+        return at - object_y
     try:
-        return int(v.lstrip("+"))
+        return int(v)
     except ValueError:
-        return 22
+        return icon_size
 
 
 def _hidden_label() -> MapLabel:
@@ -415,23 +437,36 @@ def _hidden_label() -> MapLabel:
     ``background`` — a bare ``{"show": False}`` is rejected on save. Emit a full,
     hidden config so the import round-trips through the Maps REST API.
     """
-    return {**LABEL_FIELD_DEFAULTS, "show": False, "color": "#000000"}
+    return {**LABEL_FIELD_DEFAULTS, "show": False}
 
 
-def _label(p: dict[str, str], *, show_default: bool = True) -> MapLabel:
+def _text_color_on(raw_bg: str | None) -> str:
+    # Text NagVis draws in its black stays black on a light background of the
+    # object's own; on Maps' own surface it takes the Maps color.
+    if _color(raw_bg, "transparent") != "transparent" and not _bg_is_opaque_dark(raw_bg):
+        return "#000000"
+    return LABEL_FIELD_DEFAULTS["color"]
+
+
+def _label(
+    p: dict[str, str], object_x: int, object_y: int, icon_size: int, *, show_default: bool = True
+) -> MapLabel:
     raw_bg = p.get("label_background", "transparent")
-    # NagVis canvas is light, so default to black; flip only for opaque-dark bg.
-    default_color = "#ffffff" if _bg_is_opaque_dark(raw_bg) else "#000000"
-    return {
+    background = _color(raw_bg, "transparent")
+    left = _label_x(p.get("label_x"), object_x)
+    label: MapLabel = {
         "show": _bool(p.get("label_show"), show_default),
-        "text": _label_text(p.get("label_text")),
-        "x": _label_x(p.get("label_x")),
-        "y": _label_y(p.get("label_y")),
+        "text": p.get("label_text") or None,
+        "x": left or 0,
+        "y": _label_y(p.get("label_y"), object_y, icon_size),
         "size": _int(p.get("label_size"), 11),
-        "color": _color(p.get("label_color"), default_color),
-        "background": _color(raw_bg, "transparent"),
+        "color": _color(p.get("label_color"), _text_color_on(raw_bg)),
+        "background": background,
         "width": _int(p.get("label_width")) or None,
     }
+    if left is not None:
+        label["align"] = "left"
+    return label
 
 
 # ---------------------------------------------------------------------------
@@ -440,7 +475,7 @@ def _label(p: dict[str, str], *, show_default: bool = True) -> MapLabel:
 
 
 # Only ``aggr`` is renamed; every other block type carries over verbatim.
-_MONITOR_OBJECT_TYPES: dict[str, ObjectType] = {
+_MONITOR_OBJECT_TYPES: dict[str, MonitoredObjectType] = {
     "host": "host",
     "service": "service",
     "hostgroup": "hostgroup",
@@ -518,13 +553,17 @@ def _geo_view(p: dict[str, str]) -> WorldmapView:
     return view
 
 
+def _sources(p: dict[str, str]) -> set[str]:
+    return {s.strip().lower() for s in p.get("sources", "").split(",") if s.strip()}
+
+
 def _apply_global(map_cfg: MapPayload, p: dict[str, str]) -> None:
     if "alias" in p:
         map_cfg["alias"] = p["alias"]
-    if "map_image" in p:
+    if p.get("map_image", "").lower() not in ("", "none"):
         map_cfg["background_image"] = p["map_image"]
-    if "background_color" in p:
-        map_cfg["background_color"] = _color(p["background_color"], "#ffffff")
+    if background := _color(p.get("background_color"), ""):
+        map_cfg["background_color"] = background
     # NagVis cfg uses the legacy "backend_id" parameter name on disk; map to our
     # canonical "connection_id" while reading.
     if "backend_id" in p:
@@ -532,7 +571,7 @@ def _apply_global(map_cfg: MapPayload, p: dict[str, str]) -> None:
     if "iconset" in p:
         map_cfg["icon_size"] = ICONSET_SIZE.get(p["iconset"], 22)
 
-    sources = {s.strip().lower() for s in p.get("sources", "").split(",") if s.strip()}
+    sources = _sources(p)
     if "automap" in sources:
         view: FlowView = {"type": "flow"}
         if p.get("root"):
@@ -560,9 +599,6 @@ def _line_obj_common(p: dict[str, str], raw_id: str) -> _ImportObject:
         "x2": x2.value,
         "y2": y2.value,
         "label": _hidden_label(),
-        # NagVis default line_color_border = #000000; renders the colored fill
-        # over a black outline.
-        "line_color_border": _color(p.get("line_color_border"), "#000000"),
         "line_style": _LINE_STYLES.get(line_type, _DEFAULT_LINE_STYLE),
         # NagVis line_width is the polygon half-width (-w to +w); Maps renders
         # it as full stroke width. Double on import. The daemon's range starts at
@@ -574,6 +610,8 @@ def _line_obj_common(p: dict[str, str], raw_id: str) -> _ImportObject:
     if (perfdata_label := _LINE_PERFDATA_LABELS.get(line_type)) is not None:
         payload["line_perfdata_label"] = perfdata_label
         payload["line_weather_color"] = True
+    if border := _color(p.get("line_color_border"), ""):
+        payload["line_color_border"] = border
     _set_explicit_z(payload, p)
     refs: dict[_Axis, _Coord] = {"x": x, "y": y, "x2": x2, "y2": y2}
     # Explicit bend/meeting point (NagVis stored the middle of a 3-coord line).
@@ -585,8 +623,16 @@ def _line_obj_common(p: dict[str, str], raw_id: str) -> _ImportObject:
     return _ImportObject(payload, _pending(refs))
 
 
-def _apply_weathermap_defaults(obj: MapObject) -> None:
-    """Give weathermap lines NagVis' implicit in/out metric defaults.
+_LINE_PERFDATA_KEYS: tuple[
+    Literal[
+        "line_perfdata_label", "line_weather_color", "weathermap_metric", "weathermap_metric_out"
+    ],
+    ...,
+] = ("line_perfdata_label", "line_weather_color", "weathermap_metric", "weathermap_metric_out")
+
+
+def _apply_line_perfdata(obj: MapObject) -> None:
+    """Keep a line's perfdata where it shows a service, with NagVis' in/out defaults.
 
     NagVis needs no metric configuration: line_label_in/line_label_out default
     to "in"/"out" and are matched against the bound service's perfdata. Maps
@@ -594,38 +640,45 @@ def _apply_weathermap_defaults(obj: MapObject) -> None:
     imported weathermap lines have the gradient enabled but no metric to read
     and stay uncolored.
     """
+    if not (obj.get("host_name") and obj.get("service_description")):
+        # NagVis reports the perfdata of such a line as missing.
+        for key in _LINE_PERFDATA_KEYS:
+            obj.pop(key, None)
+        return
     if not obj.get("line_weather_color"):
         return
     obj.setdefault("weathermap_metric", "in")
     obj.setdefault("weathermap_metric_out", "out")
 
 
-def _handle_view_type_line(p: dict[str, str], raw_id: str) -> _ImportObject:
-    """Service/host block with view_type=line — render as a line.
+def _handle_view_type_line(block_type: str, p: dict[str, str], raw_id: str) -> _ImportObject:
+    """Monitored object with view_type=line — a line in the object's state.
 
     Legacy format encodes a line this way; recognising it explicitly avoids
     the icon path treating the comma-separated x/y as broken coords.
     """
     obj = _line_obj_common(p, raw_id)
-    if "host_name" in p:
-        obj.payload["host_name"] = p["host_name"]
-    if "service_description" in p:
-        obj.payload["service_description"] = p["service_description"]
+    _apply_links(obj.payload, p)
+    _apply_type_specific(obj.payload, block_type, p)
+    # A host or service line is implied by the fields it binds.
+    if block_type not in ("host", "service"):
+        obj.payload["line_object_type"] = _MONITOR_OBJECT_TYPES[block_type]
     # Legacy: line_label_in/out name the inbound/outbound perfdata fields so
     # the bandwidth labels can render flanking the midpoint.
     if "line_label_in" in p:
         obj.payload["weathermap_metric"] = p["line_label_in"]
     if "line_label_out" in p:
         obj.payload["weathermap_metric_out"] = p["line_label_out"]
-    _apply_weathermap_defaults(obj.payload)
+    _apply_line_perfdata(obj.payload)
     return obj
 
 
 def _handle_line_block(p: dict[str, str], raw_id: str) -> _ImportObject:
     obj = _line_obj_common(p, raw_id)
-    # Stateful line variants (13/14/15) — bind to host/service so live
+    _apply_links(obj.payload, p)
+    # Stateful line variants (13/14/15) — bind to the service so live
     # bandwidth and weather-color have data to read from.
-    if obj.payload.get("line_perfdata_label", "none") != "none":
+    if obj.payload.get("line_perfdata_label", "none") != "none" and p.get("service_description"):
         if "host_name" in p:
             obj.payload["host_name"] = p["host_name"]
         if "service_description" in p:
@@ -634,7 +687,10 @@ def _handle_line_block(p: dict[str, str], raw_id: str) -> _ImportObject:
             obj.payload["weathermap_metric"] = p["weathermap_metric"]
         if "weathermap_metric_out" in p:
             obj.payload["weathermap_metric_out"] = p["weathermap_metric_out"]
-    _apply_weathermap_defaults(obj.payload)
+    _apply_line_perfdata(obj.payload)
+    if not obj.payload.get("host_name") and (color := _color(p.get("line_color"), "")):
+        # A line without state has nothing else to colour it.
+        obj.payload["line_color"] = color
     return obj
 
 
@@ -649,6 +705,7 @@ def _handle_shape(p: dict[str, str], raw_id: str) -> _ImportObject:
         "label": _hidden_label(),
     }
     _set_explicit_z(payload, p)
+    _apply_links(payload, p)
     return _ImportObject(payload, _pending({"x": x, "y": y}))
 
 
@@ -656,8 +713,7 @@ def _handle_container(p: dict[str, str], raw_id: str) -> _ImportObject:
     """NagVis ``container`` (embeds a URL's content) → Maps ``graph`` iframe.
 
     Maps has no dedicated container type; the graph object is the structural
-    match — an iframe box at x/y with width/height. ``graph_url`` is validated on
-    the schema, so the raw NagVis URL is safe to pass through here.
+    match — an iframe box at x/y with width/height.
     """
     x, y = _parse_coord(p.get("x", "0"), "x"), _parse_coord(p.get("y", "0"), "y")
     payload: MapObject = {
@@ -746,11 +802,13 @@ def _handle_textbox(p: dict[str, str], raw_id: str) -> _ImportObject:
     # nagvis_classic anchors top-left; keep raw NagVis coords for 1:1 layout.
     tx = _parse_coord(p.get("x", "0"), "x")
     ty = _parse_coord(p.get("y", "0"), "y")
+    raw_bg = p.get("background_color")
+    background = _color(raw_bg, "transparent")
     label: MapLabel = {
         **LABEL_FIELD_DEFAULTS,
         "text": raw_text,
         "size": html_style.get("size", LABEL_FIELD_DEFAULTS["size"]),
-        "color": _color(html_style.get("color"), "#000000"),
+        "color": _color(html_style.get("color"), _text_color_on(raw_bg)),
     }
     if (weight := html_style.get("weight")) is not None:
         label["weight"] = weight
@@ -762,18 +820,15 @@ def _handle_textbox(p: dict[str, str], raw_id: str) -> _ImportObject:
         "x": tx.value,
         "y": ty.value,
         "label": label,
-        # NagVis default is transparent; lets lines drawn under the textbox
-        # stay visible on the white canvas.
-        "textbox_background": _color(p.get("background_color"), "transparent"),
+        "textbox_background": background,
     }
     _set_explicit_z(payload, p)
     if width is not None:
         payload["textbox_width"] = width
     if height is not None:
         payload["textbox_height"] = height
-    # NagVis textbox border_color default is #e5e5e5 (light gray); explicit
-    # #000000 in cfg renders prominent black, unset stays subtle.
-    payload["textbox_border"] = _color(p.get("border_color"), "#e5e5e5")
+    if border := _color(p.get("border_color"), ""):
+        payload["textbox_border"] = border
     return _ImportObject(payload, _pending({"x": tx, "y": ty}))
 
 
@@ -795,17 +850,21 @@ def _build_display(p: dict[str, str]) -> MapDisplay:
 
 
 def _apply_type_specific(obj: MapObject, block_type: str, p: dict[str, str]) -> None:
+    if block_type in ("host", "service", "hostgroup", "servicegroup", "dyngroup") and _bool(
+        p.get("only_hard_states")
+    ):
+        obj["only_hard_states"] = True
+    if block_type in ("host", "hostgroup"):
+        # NagVis counts the services of hosts unless told not to.
+        obj["recognize_services"] = _bool(p.get("recognize_services"), True)
+    for key in ("exclude_members", "exclude_member_states"):
+        if p.get(key):
+            obj[key] = p[key]
     if block_type == "host":
         obj["host_name"] = p.get("host_name")
-        if _bool(p.get("only_hard_states")):
-            obj["only_hard_states"] = True
-        if _bool(p.get("recognize_services")):
-            obj["recognize_services"] = True
     elif block_type == "service":
         obj["host_name"] = p.get("host_name")
         obj["service_description"] = p.get("service_description")
-        if _bool(p.get("only_hard_states")):
-            obj["only_hard_states"] = True
     elif block_type == "hostgroup":
         obj["group_name"] = p.get("hostgroup_name") or p.get("group_name")
     elif block_type == "servicegroup":
@@ -821,35 +880,87 @@ def _apply_type_specific(obj: MapObject, block_type: str, p: dict[str, str]) -> 
         ot = (p.get("object_types") or "host").strip().lower()
         obj["object_types"] = "service" if ot == "service" else "host"
         obj["object_filter"] = p.get("object_filter") or None
+        if obj["object_types"] == "host":
+            obj["recognize_services"] = _bool(p.get("recognize_services"), True)
 
 
-def _handle_monitor_block(block_type: str, p: dict[str, str], raw_id: str) -> _ImportObject:
+def _handle_monitor_block(
+    block_type: str, p: dict[str, str], raw_id: str, map_icon_size: int
+) -> _ImportObject:
     """host / service / hostgroup / servicegroup / map / aggr."""
     maps_type = _MONITOR_OBJECT_TYPES[block_type]
     x, y = _parse_coord(p.get("x", "0"), "x"), _parse_coord(p.get("y", "0"), "y")
+    display = _build_display(p)
+    icon_size = map_icon_size
+    if display["mode"] == "icon" and (own := ICONSET_SIZE.get(p.get("iconset", ""))):
+        display["image_size"] = icon_size = own
     payload: MapObject = {
         "id": f"{maps_type}_{raw_id}",
         "type": maps_type,
         "x": x.value,
         "y": y.value,
-        "label": _label(p),
-        "display": _build_display(p),
-        # NagVis .box CSS draws every label with a 1px solid border (#e5e5e5).
-        "label_border": _color(p.get("label_border"), "#e5e5e5"),
+        "label": _label(p, x.value, y.value, icon_size),
+        "display": display,
     }
+    if border := _color(p.get("label_border"), ""):
+        payload["label_border"] = border
     _set_explicit_z(payload, p)
     _apply_type_specific(payload, block_type, p)
+    _apply_links(payload, p)
+    if (maxlen := _int(p.get("label_maxlen"))) > 0:
+        payload["label_maxlen"] = maxlen
+    axes: tuple[tuple[Literal["x", "y"], _Coord], ...] = (("x", x), ("y", y))
+    label_at = {
+        axis: at
+        for axis, coord in axes
+        if coord.ref is not None and (at := _label_map_coord(p.get(f"label_{axis}"))) is not None
+    }
+    return _ImportObject(payload, _pending({"x": x, "y": y}), label_at=label_at)
+
+
+def _apply_links(payload: MapObject, p: dict[str, str]) -> None:
     if "url" in p:
         payload["url"] = p["url"]
     if "url_target" in p:
         raw_target = p["url_target"]
         payload["url_target"] = "_blank" if raw_target in _FRAMESET_TARGETS else raw_target
-    return _ImportObject(payload, _pending({"x": x, "y": y}))
+    if p.get("hover_url"):
+        payload["hover_url"] = p["hover_url"]
 
 
-def _handle_object_block(block_type: str, p: dict[str, str], raw_id: str) -> _ImportObject | None:
-    if p.get("view_type") == "line":
-        return _handle_view_type_line(p, raw_id)
+# The macros NagVis fills into a label (ElementLabel.js), as the placeholders
+# Maps fills in. NagVis leaves any other one as it is.
+_LABEL_MACROS = {
+    "alias": "{{alias}}",
+    "service_description": "{{service}}",
+    "output": "{{output}}",
+    "perfdata": "{{perf_data}}",
+}
+# ``[name]`` is the host of a host or service and the group of a group; a map's
+# label shows the map's title, for ``[alias]`` as for ``[name]``.
+_NAME_PLACEHOLDERS = {
+    "host": "{{host}}",
+    "service": "{{host}}",
+    "hostgroup": "{{group}}",
+    "servicegroup": "{{group}}",
+}
+_MACRO_RE = re.compile(r"\[(\w+)\]")
+
+
+def _translate_macros(payload: MapObject, block_type: str) -> None:
+    if not ((label := payload.get("label")) and (text := label.get("text"))):
+        return
+    macros = {**_LABEL_MACROS, "name": _NAME_PLACEHOLDERS.get(block_type, "{{name}}")}
+    if block_type == "map":
+        macros["alias"] = "{{name}}"
+    label["text"] = _MACRO_RE.sub(lambda m: macros.get(m.group(1), m.group(0)), text)
+
+
+def _handle_object_block(
+    block_type: str, p: dict[str, str], raw_id: str, map_icon_size: int
+) -> _ImportObject | None:
+    if p.get("view_type") == "line" and block_type in _MONITOR_OBJECT_TYPES:
+        return _handle_view_type_line(block_type, p, raw_id)
     if block_type == "line":
         return _handle_line_block(p, raw_id)
     if block_type == "shape":
@@ -858,7 +969,7 @@ def _handle_object_block(block_type: str, p: dict[str, str], raw_id: str) -> _Im
         return _handle_textbox(p, raw_id)
     if block_type == "container":
         return _handle_container(p, raw_id)
-    return _handle_monitor_block(block_type, p, raw_id)
+    return _handle_monitor_block(block_type, p, raw_id, map_icon_size)
 
 
 def cfg_to_map(content: str, map_name: str) -> MapPayload:
@@ -866,7 +977,9 @@ def cfg_to_map(content: str, map_name: str) -> MapPayload:
     map_cfg: MapPayload = {
         "name": map_name,
         "alias": map_name,
-        "connection_id": "live_1",
+        # Empty until the global block names a backend: NagVis then used its default
+        # backend, which resolve_connection_ids turns into this site's default.
+        "connection_id": "",
         "icon_size": 22,
         "rotation_interval": MAP_FIELD_DEFAULTS["rotation_interval"],
         "hover_template": None,
@@ -875,13 +988,13 @@ def cfg_to_map(content: str, map_name: str) -> MapPayload:
         # NagVis has no equivalent knobs.
         "sort_order": MAP_FIELD_DEFAULTS["sort_order"],
         "click_action": MAP_FIELD_DEFAULTS["click_action"],
-        # cfg-imports render with NagVis-classic top-left anchoring + flat look.
+        # cfg-imports keep NagVis' geometry: top-left anchoring, native background.
         "render_mode": "nagvis_classic",
         # NagVis' global default z is 10 for every object type and is never
         # written per-object; objects without an explicit z inherit this.
         "default_z": 10,
-        # NagVis falls back to a white canvas when map_image is missing.
-        "background_color": "#ffffff",
+        "background_style": MAP_FIELD_DEFAULTS["background_style"],
+        "background_position": MAP_FIELD_DEFAULTS["background_position"],
         "view": {"type": "static"},
         "objects": [],
     }
@@ -912,6 +1025,7 @@ def cfg_to_map(content: str, map_name: str) -> MapPayload:
         for k, v in global_props.items()
         if k not in _NON_INHERITED_KEYS and k not in _GLOBAL_MAP_KEYS
     }
+    map_icon_size = ICONSET_SIZE.get(global_props.get("iconset", ""), 22)
 
     for block_type, p in blocks:
         if block_type == "global":
@@ -930,12 +1044,14 @@ def cfg_to_map(content: str, map_name: str) -> MapPayload:
         }
         effective = {**global_defaults, **tmpl, **p}
         effective.pop("template", None)
-        obj = _handle_object_block(block_type, effective, raw_id)
+        obj = _handle_object_block(block_type, effective, raw_id, map_icon_size)
         if obj is not None:
             # ``url_target`` is a required field on every map object; only the
             # monitor handler sets it (and only when the cfg gave a target). Give
             # everything else NagVis' default so the map round-trips on save.
             obj.payload.setdefault("url_target", "_self")
+            if block_type in _MONITOR_OBJECT_TYPES:
+                _translate_macros(obj.payload, block_type)
             # NagVis allows backend_id per object so one map can mix monitoring
             # sources; the daemon honours that (it groups the state fetch by
             # connection). Kept raw here and resolved against the configured
@@ -964,7 +1080,7 @@ def cfg_to_map(content: str, map_name: str) -> MapPayload:
 def map_name_from_filename(filename: str) -> str:
     """Derive a map name the store and the daemon both accept from the upload."""
     stem = re.sub(r"[^a-zA-Z0-9_\-]", "_", Path(filename).stem)
-    return stem[:_MAX_MAP_NAME_LEN] or "imported_map"
+    return stem[:MAP_NAME_MAX_LENGTH] or "imported_map"
 
 
 def _configured_connection_ids() -> list[str]:
@@ -977,8 +1093,27 @@ def _configured_connection_ids() -> list[str]:
     return [cid for cid, _label in connection_choices()]
 
 
-def resolve_connection_ids(map_cfg: MapPayload, configured: Sequence[str]) -> list[str]:
+def _connection_for_backend(backend: str, configured: Sequence[str]) -> str:
+    """The connection that is the same source as a NagVis backend.
+
+    NagVis on a Checkmk site names its backends after the site (``<site>``, plus
+    ``<site>_bi`` for BI aggregations), and Maps names the site's connection
+    ``cmk_<site>``. A site whose own name ends in ``_bi`` wins over the BI backend
+    of another. Any other name is returned unchanged.
+    """
+    for candidate in (backend, f"cmk_{backend}", f"cmk_{backend.removesuffix('_bi')}"):
+        if candidate in configured:
+            return candidate
+    return backend
+
+
+def resolve_connection_ids(
+    map_cfg: MapPayload, configured: Sequence[str], default: str
+) -> list[str]:
     """Point the map and its objects at connections that exist here; report what changed.
+
+    A map without a backend gets ``default``, the connection new maps use: NagVis
+    used its own default backend for it, which is no choice worth reporting.
 
     A ``.cfg`` names the backends of the NagVis installation it came from, which
     need not exist on this site. The map falls back to the first configured
@@ -997,28 +1132,33 @@ def resolve_connection_ids(map_cfg: MapPayload, configured: Sequence[str]) -> li
     """
     warnings: list[str] = []
 
-    requested_map_id = map_cfg["connection_id"]
-    if requested_map_id not in configured and configured:
-        map_cfg["connection_id"] = configured[0]
-        warnings.append(
-            _(
-                "The map's monitoring connection %(requested)r is not configured here. "
-                "The map now uses %(used)r."
+    named_map_id = map_cfg["connection_id"]
+    requested_map_id = named_map_id or default
+    map_id = _connection_for_backend(requested_map_id, configured)
+    if map_id not in configured and configured:
+        map_id = configured[0]
+        if named_map_id:
+            warnings.append(
+                _(
+                    "The map's monitoring connection %(requested)r is not configured here. "
+                    "The map now uses %(used)r."
+                )
+                % {"requested": requested_map_id, "used": map_id}
             )
-            % {"requested": requested_map_id, "used": configured[0]}
-        )
+    map_cfg["connection_id"] = map_id
 
-    inherited = {requested_map_id, map_cfg["connection_id"]}
+    inherited = {requested_map_id, map_id}
     dropped: Counter[str] = Counter()
     for obj in map_cfg["objects"]:
-        override = obj.get("connection_id")
-        if override is None:
+        if (raw := obj.pop("connection_id", None)) is None:
             continue
+        override = _connection_for_backend(raw, configured)
         if override in inherited:
             # Same source as the map — an override would be redundant.
-            del obj["connection_id"]
-        elif override not in configured:
-            del obj["connection_id"]
+            continue
+        if override in configured:
+            obj["connection_id"] = override
+        else:
             dropped[override] += 1
 
     for requested, count in sorted(dropped.items()):
@@ -1055,7 +1195,138 @@ def parse_cfg_upload(filename: str, contents: bytes) -> tuple[MapPayload, list[s
             _("The uploaded file is too large (maximum %(limit)d MB).")
             % {"limit": MAX_CFG_BYTES // (1024 * 1024)},
         )
-    map_cfg = cfg_to_map(
-        contents.decode("utf-8", errors="replace"), map_name_from_filename(filename)
+    text = decode_cfg(contents)
+    map_cfg = cfg_to_map(text, map_name_from_filename(filename))
+    warnings = resolve_connection_ids(
+        map_cfg, _configured_connection_ids(), map_object_defaults()["default_backend_id"]
     )
-    return map_cfg, resolve_connection_ids(map_cfg, _configured_connection_ids())
+    return map_cfg, (
+        warnings
+        + drop_unusable_urls(map_cfg)
+        + drop_member_filters(map_cfg)
+        + dynamic_map_warnings(text)
+    )
+
+
+def dynamic_map_warnings(text: str) -> list[str]:
+    """Name a NagVis map that fills itself from a filter, which Maps does not do.
+
+    Without a warning such a map would arrive as an empty map.
+    """
+    if not any(
+        block_type == "global" and "dynmap" in _sources(params)
+        for block_type, params in _parse_blocks(text)
+    ):
+        return []
+    return [
+        _(
+            "This NagVis map adds its objects from a Livestatus filter. Maps keeps only "
+            "the objects the file lists. To show the state of everything the filter "
+            "matches, add a dynamic group with that filter."
+        )
+    ]
+
+
+_URL_KEYS: tuple[Literal["url", "hover_url", "graph_url"], ...] = ("url", "hover_url", "graph_url")
+
+
+def drop_unusable_urls(map_cfg: MapPayload) -> list[str]:
+    """Drop the links Maps does not accept, with a warning that counts them.
+
+    Saving the imported map validates every link, so a single one Maps rejects
+    (``javascript:``, ``//host/...``) would fail the whole import.
+    """
+    dropped = 0
+    for obj in map_cfg["objects"]:
+        for key in _URL_KEYS:
+            if obj.get(key) and coerce_user_url(obj[key]) is None:
+                del obj[key]
+                dropped += 1
+    if not dropped:
+        return []
+    return [
+        ungettext(
+            "%(count)d link uses an address Maps does not accept. It was dropped.",
+            "%(count)d links use an address Maps does not accept. They were dropped.",
+            dropped,
+        )
+        % {"count": dropped}
+    ]
+
+
+def drop_member_filters(map_cfg: MapPayload) -> list[str]:
+    """Drop the member filters Maps cannot apply, counting them in the warnings.
+
+    Maps leaves out members of a host, a host group and a service group as
+    NagVis does. A pattern anywhere else, or one Maps would reject, would only
+    mislead whoever reads the object later.
+    """
+    warnings: list[str] = []
+    if members := _drop_inapplicable(map_cfg, "exclude_members"):
+        warnings.append(
+            ungettext(
+                "%(count)d object leaves out members by a pattern Maps cannot apply. "
+                "The pattern was dropped.",
+                "%(count)d objects leave out members by a pattern Maps cannot apply. "
+                "The patterns were dropped.",
+                members,
+            )
+            % {"count": members}
+        )
+    if states := _drop_inapplicable(map_cfg, "exclude_member_states"):
+        warnings.append(
+            ungettext(
+                "%(count)d object ignores the state of some members by a pattern Maps "
+                "cannot apply. Maps counts every member; the setting was dropped.",
+                "%(count)d objects ignore the state of some members by a pattern Maps "
+                "cannot apply. Maps counts every member; the settings were dropped.",
+                states,
+            )
+            % {"count": states}
+        )
+    if warnings:
+        warnings.append(
+            _(
+                "Maps applies such a pattern only to hosts, host groups and service groups, "
+                "only as a single line of at most %(max)d characters, and never as "
+                "host~~service on a host."
+            )
+            % {"max": MEMBER_PATTERN_MAX_LENGTH}
+        )
+    return warnings
+
+
+def _drop_inapplicable(
+    map_cfg: MapPayload, key: Literal["exclude_members", "exclude_member_states"]
+) -> int:
+    dropped = 0
+    for obj in map_cfg["objects"]:
+        if not (pattern := obj.get(key)):
+            continue
+        if (kept := _applicable_member_pattern(obj, pattern)) is None:
+            del obj[key]
+            dropped += 1
+        else:
+            obj[key] = kept
+    return dropped
+
+
+def _applicable_member_pattern(obj: MapObject, pattern: str) -> str | None:
+    """*pattern* as Maps stores it, or ``None`` where Maps does not apply it."""
+    bound = bound_type_of(obj["type"], obj.get("line_object_type"), obj.get("service_description"))
+    if bound not in ("host", "hostgroup", "servicegroup"):
+        return None
+    try:
+        check_host_member_patterns(bound, pattern)
+        return validate_member_pattern(pattern)
+    except ValueError:
+        return None
+
+
+def decode_cfg(contents: bytes) -> str:
+    """NagVis reads a file that is no valid UTF-8 as ISO-8859-1, as older maps were saved."""
+    contents = contents.removeprefix(codecs.BOM_UTF8)
+    try:
+        return contents.decode("utf-8")
+    except UnicodeDecodeError:
+        return contents.decode("iso-8859-1")

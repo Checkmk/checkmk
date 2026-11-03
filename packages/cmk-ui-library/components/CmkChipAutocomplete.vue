@@ -47,7 +47,8 @@ const props = defineProps<{
    * everything starting with it rather than one named value. Only while more
    * than one value it could commit matches, since below that it stands for
    * nothing extra. In `key:value` mode a bare key is not such a value: picking
-   * it only continues the query.
+   * it only continues the query. Once a key is picked, `key:*` stands for any
+   * value of exactly that key.
    */
   wildcardOption?: boolean | undefined
   /** Refuse further picks once this many are selected. Unbounded when unset. */
@@ -116,8 +117,7 @@ function isPrefixOfAPair(typed: string): boolean {
   if (!props.keyValue) {
     return true
   }
-  const separator = typed.indexOf(KEY_VALUE_SEPARATOR)
-  return separator !== 0 && separator !== typed.length - 1
+  return typed.indexOf(KEY_VALUE_SEPARATOR) !== 0
 }
 
 const matchedEntries = computed<string[]>(() => {

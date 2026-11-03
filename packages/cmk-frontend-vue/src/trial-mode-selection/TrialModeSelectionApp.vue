@@ -34,6 +34,7 @@ const {
   sendRequestInFlight,
   errorMessage,
   startTrial,
+  retryTrial,
   continueUnverified,
   sendCode,
   resendCode,
@@ -81,7 +82,7 @@ const {
       :domain="props.verification_domain"
       :saving="saving"
       @back="goTo('choice')"
-      @retry="startTrial"
+      @retry="retryTrial"
       @continue-offline="continueUnverified('offline')"
     />
 

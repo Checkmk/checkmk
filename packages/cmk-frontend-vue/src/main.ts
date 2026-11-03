@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import profilingElements from 'cmk-profiling/frontend/elements'
 import DynamicIconApp from 'cmk-ui-library/components/CmkIcon/CmkDynamicIcon/DynamicIconApp.vue'
 import IconApp from 'cmk-ui-library/components/CmkIcon/IconApp.vue'
 import initCmkUi from 'cmk-ui-library/lib/initCmkUi'
@@ -13,6 +14,7 @@ import { FormApp } from '@/form'
 import { initializeComponentRegistry } from '@/form/private/FormEditDispatcher/dispatch'
 
 import '@/assets/variables.css'
+import { registerDataBackendFormComponents } from '@/data-backend/registerFormComponents'
 import MapsApp from '@/maps/MapsApp.vue'
 import ModeHostRelationDetectionApp from '@/mode-host-relation-detection/ModeHostRelationDetectionApp.vue'
 import ModeHostApp from '@/mode-host/ModeHostApp.vue'
@@ -30,6 +32,7 @@ import GlobalSettingsApp from './global-settings/GlobalSettingsApp.vue'
 import { GlobalTimePickerApp } from './graphing/GlobalTimePicker'
 import GraphGroup from './graphing/components/GraphGroup.vue'
 import CustomGraphDesignerApp from './graphing/designer/CustomGraphDesignerApp.vue'
+import mainElements from './mainElements'
 import AlertWizardApp from './mode-alerts/AlertWizardApp.vue'
 import CustomServicesWizardApp from './mode-custom-services/CustomServicesWizardApp.vue'
 import ModeCreateOAuth2ConnectionApp from './mode-oauth2-connection/ModeCreateOAuth2ConnectionApp.vue'
@@ -40,13 +43,12 @@ import ModeCreateOTelConfApp from './mode-otel/ModeCreateOTelConfApp.vue'
 import ModeCreatePrometheusConfApp from './mode-otel/ModeCreatePrometheusConfApp.vue'
 import ModeCreateRelayApp from './mode-relay/ModeCreateRelayApp.vue'
 import AllHostsApp from './monitoring/all-hosts/AllHostsApp.vue'
+import AllServicesApp from './monitoring/all-services/AllServicesApp.vue'
 import HostServicesApp from './monitoring/host-services/HostServicesApp.vue'
 import MonitoringPageLinkButton from './monitoring/shared/components/MonitoringPageLinkButton.vue'
-import FlowExplorerApp from './network-flow/flow-explorer/FlowExplorerApp.vue'
 import NotificationOverview from './notification/NotificationOverviewApp.vue'
+import DrillUpButton from './page-header/DrillUpButton.vue'
 import ProductUsageAnalyticsApp from './product-usage-analytics/ProductUsageAnalyticsApp.vue'
-import ProfilingFlamegraphApp from './profiling/ProfilingFlamegraphApp.vue'
-import ProfilingProfilesListApp from './profiling/ProfilingProfilesListApp.vue'
 import QuickSetup from './quick-setup/QuickSetupApp.vue'
 import AgentDownload from './setup/AgentDownloadApp.vue'
 import { registerTelemetryMetricsFormComponents } from './telemetry-metrics/registerFormComponents'
@@ -58,10 +60,11 @@ import WelcomeApp from './welcome/WelcomeApp.vue'
 import WelcomeSnapin from './welcome/components/snapin/WelcomeSnapin.vue'
 
 // Inject monolithic translation catalog from cmk-frontend-vue.
-const { defineCmkComponent } = initCmkUi({ translationLoader })
+const { defineCmkComponent, defineCmkElements } = initCmkUi({ translationLoader })
 
 initializeComponentRegistry()
 registerCustomQueryFormComponents()
+registerDataBackendFormComponents()
 registerOAuth2ConnectionFormComponents()
 registerTelemetryMetricsFormComponents()
 
@@ -85,9 +88,10 @@ defineCmkComponent('cmk-mode-create-oauth2-connection', ModeCreateOAuth2Connecti
 defineCmkComponent('cmk-oauth2-connection-info', OAuth2ConnectionInfoApp)
 defineCmkComponent('cmk-mode-redirect-oauth2-connection', ModeRedirectOAuth2ConnectionAppCopy)
 defineCmkComponent('cmk-monitoring-all-hosts', AllHostsApp)
+defineCmkComponent('cmk-monitoring-all-services', AllServicesApp)
 defineCmkComponent('cmk-monitoring-host-services', HostServicesApp)
 defineCmkComponent('cmk-monitoring-page-link-button', MonitoringPageLinkButton)
-defineCmkComponent('cmk-network-flow-explorer', FlowExplorerApp)
+defineCmkComponent('cmk-drill-up-button', DrillUpButton)
 defineCmkComponent('cmk-unified-search', UnifiedSearchApp)
 defineCmkComponent('cmk-welcome', WelcomeApp)
 defineCmkComponent('cmk-welcome-snapin', WelcomeSnapin)
@@ -105,5 +109,6 @@ defineCmkComponent('cmk-date-time-picker', DateTimePickerApp)
 defineCmkComponent('cmk-global-time-picker', GlobalTimePickerApp)
 defineCmkComponent('cmk-graph-group', GraphGroup)
 defineCmkComponent('cmk-custom-graph-designer', CustomGraphDesignerApp)
-defineCmkComponent('cmk-profiling-flamegraph', ProfilingFlamegraphApp)
-defineCmkComponent('cmk-profiling-profiles-list', ProfilingProfilesListApp)
+
+defineCmkElements(profilingElements)
+defineCmkElements(mainElements)

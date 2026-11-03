@@ -9,7 +9,7 @@ import pytest
 import cmk.utils.paths
 from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.utils.roles import UserPermissions
 from cmk.maps.gui import store
 from cmk.maps.gui.pagetype import MapPage
@@ -17,7 +17,7 @@ from cmk.maps.gui.type_defs import map_config_from_spec
 
 
 def _user_permissions() -> UserPermissions:
-    return UserPermissions.from_config(active_config, permission_registry)
+    return UserPermissions.from_config(active_config, all_permissions())
 
 
 def _map(name: str, alias: str = "My map") -> dict[str, object]:
@@ -39,7 +39,7 @@ def test_save_and_reload_round_trip(
 
     # A fresh load reads it back from disk (bypassing the request-memoized
     # instances).
-    reloaded = MapPage.load(_user_permissions())
+    reloaded = MapPage.load()
     assert reloaded.has_instance((owner, "map1"))
     page = reloaded.instance((owner, "map1"))
     assert page.config.map_spec["objects"] == [{"id": "o1"}, {"id": "o2"}]
@@ -65,7 +65,7 @@ def test_write_does_not_drop_a_map_stored_after_the_memoized_load(
     # Memoize this request's instance set (it now contains "first" only)...
     store.get_permitted_maps()
     # ...then let a concurrent request store another map straight to disk.
-    concurrent = MapPage.load(_user_permissions())
+    concurrent = MapPage.load()
     concurrent.add_instance(
         (owner, "second"), MapPage(map_config_from_spec(owner, "second", _map("second")))
     )
@@ -76,7 +76,7 @@ def test_write_does_not_drop_a_map_stored_after_the_memoized_load(
     else:
         store.delete_map(owner, "first")
 
-    on_disk = MapPage.load(_user_permissions())
+    on_disk = MapPage.load()
     assert on_disk.has_instance((owner, "second")), "the concurrently stored map was lost"
 
 
@@ -89,21 +89,6 @@ def test_empty_store_has_builtin_maps(
     permitted = store.get_permitted_maps()
     assert permitted, "built-in example maps should always be present"
     assert all(page.is_builtin() for page in permitted)
-
-
-@pytest.mark.parametrize(
-    "name, expected",
-    [
-        ("ok_name-1", True),
-        ("", False),
-        ("../escape", False),
-        ("with space", False),
-        ("a" * 100, True),
-        ("a" * 101, False),
-    ],
-)
-def test_is_valid_map_name(name: str, expected: bool) -> None:
-    assert store.is_valid_map_name(name) is expected
 
 
 def test_map_config_from_spec_derives_light_fields() -> None:
@@ -132,25 +117,9 @@ def test_map_config_from_spec_presentation_counts_elements() -> None:
     assert cfg.title == "pres"  # falls back to the name when no alias
 
 
-def test_map_to_read_projects_light_shape() -> None:
-    map_spec = {
-        "alias": "Net",
-        "connection_id": "cmk_heute",
-        "view": {"type": "worldmap", "lat": 1.0},
-        "objects": [{"id": "o1"}],
-        "render_mode": "nagvis_classic",
-        "rotation_interval": 30,
-    }
-    page = MapPage(map_config_from_spec(UserId("alice"), "net", map_spec))
-    read = store.map_to_read(page, can_edit=True, can_delete=True)
-    assert read["name"] == "net"
-    assert read["view_type"] == "worldmap"
-    assert read["object_count"] == 1
-    assert read["render_mode"] == "nagvis_classic"
-    assert read["rotation_interval"] == 30
-    assert read["can_edit"] is True
-    assert read["can_delete"] is True
-    assert "objects" not in read  # heavy payload dropped from the list shape
+def test_rotation_pools_of_keeps_only_pool_names() -> None:
+    assert store.rotation_pools_of(["noc", 7]) == ["noc"]
+    assert store.rotation_pools_of("noc") == []
 
 
 def test_delete_map_round_trip(
@@ -159,10 +128,10 @@ def test_delete_map_round_trip(
 ) -> None:
     owner = with_admin_login
     store.save_map(owner, "map1", _map("map1"), public=False)
-    assert MapPage.load(_user_permissions()).has_instance((owner, "map1"))
+    assert MapPage.load().has_instance((owner, "map1"))
 
     store.delete_map(owner, "map1")
-    assert not MapPage.load(_user_permissions()).has_instance((owner, "map1"))
+    assert not MapPage.load().has_instance((owner, "map1"))
 
 
 def test_map_hidden_from_the_menu_stays_permitted(

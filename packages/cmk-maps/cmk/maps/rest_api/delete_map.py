@@ -43,13 +43,13 @@ def delete_map_v1(
     if page is None:
         raise RestAPIRequestGeneralException(
             status=HTTPStatus.NOT_FOUND,
-            title=f"The map {name!r} does not exist.",
+            title=f"The map {name!r} does not exist",
             detail="No map with this name is visible to you.",
         )
     if not page.may_delete():
         raise RestAPIRequestGeneralException(
             status=HTTPStatus.FORBIDDEN,
-            title=f"You are not allowed to delete the map {name!r}.",
+            title=f"You are not allowed to delete the map {name!r}",
             detail="Deleting this map requires ownership or the 'delete foreign maps' permission.",
         )
     if api_context.etag.enabled:

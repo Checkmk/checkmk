@@ -5,9 +5,11 @@
  */
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { type ComputedRef, type Ref, computed, ref } from 'vue'
+import { useDebounceRef } from 'cmk-ui-library/lib/useDebounce'
+import { type ComputedRef, type Ref, computed, ref, watch } from 'vue'
 
 import { useAuth, useMaps } from '@/maps/services/context'
+import { replaceUrlParam } from '@/maps/shared/pageMenu'
 import type { MapRead } from '@/maps/types/api'
 import { type MapOwnerKind, mapOwnerKind } from '@/maps/utils/mapVisibility'
 
@@ -27,6 +29,27 @@ export interface ScopeOption {
  */
 const OWNER_ORDER: readonly MapOwnerKind[] = ['you', 'other', 'builtin']
 
+const SCOPE_PARAM = 'scope'
+const SEARCH_PARAM = 'search'
+
+function isMapScope(value: string | null): value is MapScope {
+  return value === 'all' || OWNER_ORDER.some((kind) => kind === value)
+}
+
+/** The scope the page URL carries, so the way back from a map keeps it. */
+function initialScope(): MapScope {
+  const value = new URLSearchParams(window.location.search).get(SCOPE_PARAM)
+  return isMapScope(value) ? value : 'all'
+}
+
+/**
+ * The order a drag stored. The list arrives sorted by title, and the sort is
+ * stable, so maps that were never dragged keep that order.
+ */
+export function byStoredOrder(a: MapRead, b: MapRead): number {
+  return a.sort_order - b.sort_order
+}
+
 export function useMapListFilter(): {
   searchQuery: Ref<string>
   /**
@@ -38,21 +61,22 @@ export function useMapListFilter(): {
   scopeOptions: ComputedRef<ScopeOption[]>
   showScopeFilter: ComputedRef<boolean>
   displayedMaps: ComputedRef<MapRead[]>
-  /** True while the displayed order matches the store's, so a drag may reorder. */
+  /** True while no search hides any of your maps, so a drag may reorder them. */
   isOrderPristine: ComputedRef<boolean>
 } {
   const { _t } = usei18n()
   const auth = useAuth()
   const maps = useMaps()
 
-  const searchQuery = ref('')
-  const chosenScope = ref<MapScope>('all')
+  const searchQuery = ref(new URLSearchParams(window.location.search).get(SEARCH_PARAM) ?? '')
+  // Safari throws once the URL is replaced too often, as on every keystroke.
+  watch(useDebounceRef(searchQuery, 100), (value) => replaceUrlParam(SEARCH_PARAM, value))
+  const chosenScope = ref<MapScope>(initialScope())
 
   /**
    * The list in its display order, each map with the owner kind the filter and
    * the ordering both need. Ordering does not depend on the query, so it is
-   * done once here instead of on every keystroke; bucketing keeps each block in
-   * the store's own sort order.
+   * done once here instead of on every keystroke.
    */
   const orderedMaps = computed<{ map: MapRead; kind: MapOwnerKind }[]>(() => {
     const userId = auth.user.value?.user_id
@@ -63,7 +87,12 @@ export function useMapListFilter(): {
       const kind = mapOwnerKind(map, userId)
       buckets.get(kind)?.push({ map, kind })
     }
-    return OWNER_ORDER.flatMap((kind) => buckets.get(kind) ?? [])
+    return OWNER_ORDER.flatMap((kind) => {
+      const bucket = buckets.get(kind) ?? []
+      // Others' maps keep the title order the list arrives in: each owner's
+      // sort_order only orders that owner's own maps.
+      return kind === 'other' ? bucket : bucket.sort((a, b) => byStoredOrder(a.map, b.map))
+    })
   })
 
   const presentKinds = computed<Set<MapOwnerKind>>(
@@ -92,6 +121,7 @@ export function useMapListFilter(): {
         : 'all',
     set: (value) => {
       chosenScope.value = value
+      replaceUrlParam(SCOPE_PARAM, value === 'all' ? '' : value)
     }
   })
 
@@ -109,7 +139,7 @@ export function useMapListFilter(): {
       .map(({ map }) => map)
   })
 
-  const isOrderPristine = computed(() => !searchQuery.value.trim() && presentKinds.value.size <= 1)
+  const isOrderPristine = computed(() => !searchQuery.value.trim())
 
   return {
     searchQuery,

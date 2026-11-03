@@ -162,3 +162,22 @@ def test_check_mem_linux_empty_section() -> None:
         )
         == []
     )
+
+
+def test_check_mem_linux_without_linux_memory_fields() -> None:
+    # Crash group 4589: after discovery the agent delivered a memory section
+    # without the Linux specific fields (only totals and free values).
+    section = {
+        "MemFree": 2363887616,
+        "MemTotal": 8588939264,
+        "PageFree": 2578345984,
+        "PageTotal": 9931116544,
+        "SwapFree": 214458368,
+        "SwapTotal": 1342177280,
+    }
+
+    assert list(check_mem_linux({}, section)) == [
+        Result(
+            state=State.UNKNOWN, summary="Memory information is missing: Buffers, Cached, Dirty"
+        ),
+    ]

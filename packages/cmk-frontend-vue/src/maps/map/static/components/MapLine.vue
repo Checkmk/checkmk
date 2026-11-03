@@ -12,7 +12,8 @@ import { CANVAS_SCALE } from '@/maps/map/static/composables/useCanvasViewport'
 import type { MapElement, ObjectState } from '@/maps/types/api'
 import { renderMetricValue } from '@/maps/utils/metricFormat'
 import { getMetric, parsePerfData, utilColor, utilPercent } from '@/maps/utils/perf'
-import { stateColor } from '@/maps/utils/stateColors'
+import { stateColorVar } from '@/maps/utils/stateColors'
+import { labelText } from '@/maps/utils/template'
 
 const props = defineProps<{
   object: MapElement
@@ -44,7 +45,7 @@ defineEmits<{
 // Injected from MapCanvas. Translates the line's native obj.x/y coords
 // into display-pixel coords so strokes, arrowheads, and text labels render
 // at their natural proportions inside the no-viewBox SVG (which itself sits
-// at the asymmetric-stretched canvas display size).
+// at the scaled canvas display size).
 const canvasScale = inject(
   CANVAS_SCALE,
   computed(() => ({ sx: 1, sy: 1 }))
@@ -134,7 +135,8 @@ const handle2 = computed(() =>
   )
 )
 
-const lineColor = computed(() => props.object.line_color ?? stateColor(props.state?.state))
+const caption = computed(() => labelText(props.object, props.state))
+const lineColor = computed(() => props.object.line_color ?? stateColorVar(props.state?.state))
 const lineColorBorder = computed(() => props.object.line_color_border ?? null)
 
 const isDashed = computed(() => props.object.line_style === 'dashed')
@@ -602,8 +604,8 @@ const wmLabelSingle = computed(() => {
         :y="wmLabelAnchors.inY - 10"
         :width="_labelBoxWidth(wmLabelIn)"
         height="20"
-        rx="3"
-        fill="white"
+        rx="2"
+        style="fill: var(--maps-map-view-overlay-bg)"
         :stroke="effectiveLineColor"
         stroke-width="1.5"
       />
@@ -613,7 +615,7 @@ const wmLabelSingle = computed(() => {
         text-anchor="middle"
         dominant-baseline="middle"
         font-weight="700"
-        :style="{ fill: '#000', fontSize: '11px' }"
+        style="fill: var(--default-tooltip-text-color); font-size: var(--font-size-small)"
         >{{ wmLabelIn }}</text
       >
     </g>
@@ -623,8 +625,8 @@ const wmLabelSingle = computed(() => {
         :y="wmLabelAnchors.outY - 10"
         :width="_labelBoxWidth(wmLabelOut)"
         height="20"
-        rx="3"
-        fill="white"
+        rx="2"
+        style="fill: var(--maps-map-view-overlay-bg)"
         :stroke="effectiveLineColor"
         stroke-width="1.5"
       />
@@ -634,7 +636,7 @@ const wmLabelSingle = computed(() => {
         text-anchor="middle"
         dominant-baseline="middle"
         font-weight="700"
-        :style="{ fill: '#000', fontSize: '11px' }"
+        style="fill: var(--default-tooltip-text-color); font-size: var(--font-size-small)"
         >{{ wmLabelOut }}</text
       >
     </g>
@@ -646,7 +648,7 @@ const wmLabelSingle = computed(() => {
       text-anchor="middle"
       font-weight="700"
       :style="{
-        fontSize: '13px',
+        fontSize: 'var(--font-size-normal)',
         fill: effectiveLineColor,
         paintOrder: 'stroke',
         stroke: 'var(--ux-theme-1)',
@@ -658,21 +660,21 @@ const wmLabelSingle = computed(() => {
     >
 
     <text
-      v-if="props.object.label?.show && props.object.label?.text"
+      v-if="props.object.label?.show && caption"
       :x="midX"
       :y="midY - 10"
       text-anchor="middle"
       font-weight="500"
       :style="{
         fontSize: `${props.object.label?.size ?? 11}px`,
-        fill: props.object.label?.color ?? '#e4e4e7',
+        fill: props.object.label?.color ?? 'var(--maps-map-view-label-ink)',
         paintOrder: 'stroke',
         stroke: 'rgb(0 0 0 / 80%)',
         strokeWidth: '3px',
         strokeLinejoin: 'round'
       }"
       pointer-events="none"
-      >{{ props.object.label?.text }}</text
+      >{{ caption }}</text
     >
 
     <!-- Edit handles. A bound endpoint's handle is nudged inward along the line
@@ -683,9 +685,9 @@ const wmLabelSingle = computed(() => {
         :cx="handle1.x"
         :cy="handle1.y"
         r="7"
-        :fill="startBound ? '#22c55e' : '#3b82f6'"
+        :fill="startBound ? 'var(--interactive-accent)' : 'var(--interactive-focus)'"
         fill-opacity="0.85"
-        stroke="white"
+        stroke="var(--white)"
         stroke-width="1.5"
         style="cursor: grab"
         @mousedown.prevent.stop="$emit('line-drag-start', $event, 'start')"
@@ -694,9 +696,9 @@ const wmLabelSingle = computed(() => {
         :cx="handle2.x"
         :cy="handle2.y"
         r="7"
-        :fill="endBound ? '#22c55e' : '#3b82f6'"
+        :fill="endBound ? 'var(--interactive-accent)' : 'var(--interactive-focus)'"
         fill-opacity="0.85"
-        stroke="white"
+        stroke="var(--white)"
         stroke-width="1.5"
         style="cursor: grab"
         @mousedown.prevent.stop="$emit('line-drag-start', $event, 'end')"
@@ -706,9 +708,9 @@ const wmLabelSingle = computed(() => {
         :cx="midX"
         :cy="midY"
         r="6"
-        :fill="hasMid ? '#3b82f6' : 'white'"
+        :fill="hasMid ? 'var(--interactive-focus)' : 'var(--white)'"
         fill-opacity="0.85"
-        stroke="#3b82f6"
+        stroke="var(--interactive-focus)"
         stroke-width="1.5"
         style="cursor: grab"
         @mousedown.prevent.stop="$emit('line-drag-start', $event, 'mid')"

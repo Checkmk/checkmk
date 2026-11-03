@@ -89,7 +89,7 @@ const doc = useSlideDocument(
   () => props.config,
   () => selection.clear()
 )
-const { local, elements, byId, topLevelId, isGrouped, isHidden, isLocked, history, saveLabel } = doc
+const { local, elements, byId, topLevelId, isGrouped, isHidden, isLocked, history } = doc
 
 const containerRef = ref<HTMLElement | null>(null)
 const slideW = computed(() => local.value.width)
@@ -681,12 +681,10 @@ function patchCurrentSlot(patch: Record<string, unknown>): void {
       :connection-id="config.connection_id"
       :targets="connectorTargets"
       :background-image-name="backgroundImageName"
-      :save-label="saveLabel"
       @patch="editing.patchSelection"
       @delete="editing.remove"
       @duplicate="editing.duplicate"
       @slide="slide.change"
-      @save="doc.saveNow"
       @group="editing.group"
       @ungroup="editing.ungroup"
       @browse-templates="galleryOpen = true"
@@ -721,7 +719,7 @@ function patchCurrentSlot(patch: Record<string, unknown>): void {
 }
 
 .maps-presentation-canvas__stage {
-  box-shadow: 0 12px 48px rgb(0 0 0 / 50%);
+  box-shadow: 0 0 0 1px var(--border-color-hairline);
   user-select: none;
 }
 
@@ -737,7 +735,6 @@ function patchCurrentSlot(patch: Record<string, unknown>): void {
   align-items: center;
   justify-content: center;
   color: var(--pres-muted);
-  font-family: var(--pres-font);
   font-size: 28px;
   letter-spacing: 0.02em;
   pointer-events: none;
@@ -757,7 +754,7 @@ function patchCurrentSlot(patch: Record<string, unknown>): void {
 }
 
 .maps-presentation-canvas__el--link:focus-visible {
-  outline: 2px solid var(--interactive-accent);
+  outline: revert;
   outline-offset: 2px;
 }
 

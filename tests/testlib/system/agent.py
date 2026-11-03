@@ -13,13 +13,12 @@ the Checkmk agent in various environments.
 import contextlib
 import json
 import logging
-import os
 import re
 import subprocess
 import sys
 import time
 from collections.abc import Iterator, Mapping
-from pathlib import Path
+from pathlib import Path, PurePath, PurePosixPath
 from typing import Any, assert_never, Literal
 
 from cmk.ccc.hostaddress import HostName
@@ -31,12 +30,18 @@ from tests.testlib.common.utils2 import (
     execute,
     is_containerized,
     run,
+    systemd_is_running,
 )
+from tests.testlib.system.host_under_test import HostUnderTest, LocalHost
 from tests.testlib.system.site import Site
+from tests.testlib.system.systemd import systemd_managed_agent_controller
 
 logger = logging.getLogger(__name__)
 
 OMD_STATUS_CACHE = Path("/var/lib/check_mk_agent/cache/omd_status.cache")
+AGENT_CTL = PurePosixPath("/usr/bin/cmk-agent-ctl")
+
+_LOCAL_HOST = LocalHost()
 
 
 def bake_agents(site: Site) -> None:
@@ -49,14 +54,11 @@ def bake_agents(site: Site) -> None:
     )
 
 
-def get_package_type() -> Literal["linux_deb", "linux_rpm"]:
-    if os.path.exists("/var/lib/dpkg/status"):
+def get_package_type(host: HostUnderTest = _LOCAL_HOST) -> Literal["linux_deb", "linux_rpm"]:
+    if host.run(["test", "-e", "/var/lib/dpkg/status"], check=False).returncode == 0:
         return "linux_deb"
-    if (
-        os.path.exists("/var/lib/rpm")
-        and os.path.exists("/bin/rpm")
-        or os.path.exists("/usr/bin/rpm")
-    ):
+    has_rpm = "test -e /usr/bin/rpm || { test -e /var/lib/rpm && test -e /bin/rpm; }"
+    if host.run(["sh", "-c", has_rpm], check=False).returncode == 0:
         return "linux_rpm"
     raise NotImplementedError(
         "package_type recognition for the current environment is not supported yet. Please"
@@ -64,53 +66,76 @@ def get_package_type() -> Literal["linux_deb", "linux_rpm"]:
     )
 
 
-def install_agent_package(package_path: Path) -> Path:
-    package_type = get_package_type()
-    installed_ctl_path = Path("/usr/bin/cmk-agent-ctl")
-    if package_type == "linux_deb":
-        agent_install_cmd = ["dpkg", "-i", package_path.as_posix()]
-    elif package_type == "linux_rpm":
-        agent_install_cmd = [
-            "rpm",
-            "-vU",
-            "--oldpackage",
-            "--replacepkgs",
-            package_path.as_posix(),
-        ]
-    else:
-        raise NotImplementedError(
-            f"Installation of package type {package_type} is not supported yet, please implement it"
-        )
-    logger.info("Installing Checkmk agent...")
-    try:
-        agent_installation = run(agent_install_cmd, sudo=True)
-        logger.info(
-            "Agent installation output: %s\n%s",
-            agent_installation.stdout,
-            agent_installation.stderr,
-        )
-    except RuntimeError as e:
-        process_table = run(["ps", "aux"]).stdout
-        raise RuntimeError(f"Agent installation failed. Process table:\n{process_table}") from e
-    if not installed_ctl_path.exists():
-        raise RuntimeError(
-            f'Agent installation completed but agent controller not found at "{installed_ctl_path}"'
-        )
-    return installed_ctl_path
+def install_agent_package(package_path: Path, host: HostUnderTest = _LOCAL_HOST) -> Path:
+    install_agent_package_with_output(package_path, host)
+    return Path(AGENT_CTL)
 
 
-def uninstall_agent_package(package_name: str = "check-mk-agent") -> None:
-    match package_type := get_package_type():
+def install_agent_package_with_output(
+    package_path: Path, host: HostUnderTest = _LOCAL_HOST
+) -> subprocess.CompletedProcess[str]:
+    """Install an agent package on the host and hand back what the maintainer scripts printed.
+
+    The maintainer scripts run without `set -e`, and the super server dispatcher runs its loop
+    in a pipeline subshell, so a deployment that went wrong still exits zero. Callers that care
+    have to look at the output.
+    """
+    package_dir = PurePosixPath("/tmp/cmk-agent-package")
+    on_host = package_dir / package_path.name
+    host.run(["mkdir", "-p", package_dir.as_posix()], sudo=True)
+    host.copy_to(package_path, on_host)
+    match package_type := get_package_type(host):
         case "linux_deb":
-            run(
-                ["dpkg", "--remove", package_name],
-                sudo=True,
-            )
+            agent_install_cmd = ["dpkg", "-i", on_host.as_posix()]
         case "linux_rpm":
-            run(
-                ["rpm", "--erase", package_name],
-                sudo=True,
-            )
+            agent_install_cmd = ["rpm", "-vU", "--oldpackage", "--replacepkgs", on_host.as_posix()]
+        case _:
+            assert_never(package_type)
+
+    logger.info("Installing Checkmk agent...")
+    installation = host.run(agent_install_cmd, sudo=True, check=False)
+    logger.info("Agent installation output: %s\n%s", installation.stdout, installation.stderr)
+    if installation.returncode != 0:
+        process_table = host.run(["ps", "aux"], check=False).stdout
+        raise RuntimeError(
+            f"Agent installation failed with exit code {installation.returncode}.\n"
+            f"stdout:\n{installation.stdout}\nstderr:\n{installation.stderr}\n"
+            f"Process table:\n{process_table}"
+        )
+    if host.run(["test", "-x", AGENT_CTL.as_posix()], check=False).returncode != 0:
+        # agents/scripts/super-server/0_systemd/setup deletes a controller it cannot run.
+        raise RuntimeError(
+            f'Agent installation completed but agent controller not found at "{AGENT_CTL}"'
+        )
+    return installation
+
+
+def uninstall_agent_package(
+    package_name: str = "check-mk-agent", host: HostUnderTest = _LOCAL_HOST
+) -> None:
+    match package_type := get_package_type(host):
+        case "linux_deb":
+            host.run(["dpkg", "--remove", package_name], sudo=True)
+        case "linux_rpm":
+            host.run(["rpm", "--erase", package_name], sudo=True)
+        case _:
+            assert_never(package_type)
+
+
+def purge_agent_package(
+    package_name: str = "check-mk-agent", host: HostUnderTest = _LOCAL_HOST
+) -> None:
+    """Remove the package and its configuration files, if it is there at all.
+
+    After a plain dpkg --remove, the next installation runs postinst as an upgrade from the
+    version whose configuration files are left behind.
+    """
+    match package_type := get_package_type(host):
+        case "linux_deb":
+            host.run(["dpkg", "--purge", package_name], sudo=True)
+        case "linux_rpm":
+            if host.run(["rpm", "-q", package_name], check=False).returncode == 0:
+                host.run(["rpm", "--erase", package_name], sudo=True)
         case _:
             assert_never(package_type)
 
@@ -122,22 +147,27 @@ def download_and_install_agent_package(site: Site, tmp_dir: Path) -> Path:
     # automatically deleted by the post install script in case it is not executable (see also
     # agents/scripts/super-server/0_systemd/setup).
     run([site.path("share/check_mk/agents/linux/cmk-agent-ctl").as_posix(), "--version"])
+    return install_agent_package(download_agent_package(site, get_package_type(), tmp_dir))
 
+
+def download_agent_package(
+    site: Site, package_type: Literal["linux_deb", "linux_rpm"], target_dir: Path
+) -> Path:
+    """Download the generic agent package of the site.
+
+    The Community edition serves the vanilla package. The other editions serve the baked one,
+    so for them the caller has to run bake_agents() first.
+    """
     if site.edition.is_community_edition():
         agent_download_resp = site.openapi.get(
             "domain-types/agent/actions/download/invoke",
-            params={
-                "os_type": get_package_type(),
-            },
+            params={"os_type": package_type},
             headers={"Accept": "application/octet-stream"},
         )
     else:
         agent_download_resp = site.openapi.get(
             "domain-types/agent/actions/download_by_host/invoke",
-            params={
-                "agent_type": "generic",
-                "os_type": get_package_type(),
-            },
+            params={"agent_type": "generic", "os_type": package_type},
             headers={"Accept": "application/octet-stream"},
         )
     if not agent_download_resp.ok:
@@ -145,21 +175,38 @@ def download_and_install_agent_package(site: Site, tmp_dir: Path) -> Path:
             f"Agent download failed ({agent_download_resp.status_code}): {agent_download_resp.text}"
         )
 
-    path_agent_package = tmp_dir / ("agent." + get_package_type())
+    path_agent_package = target_dir / ("agent." + package_type)
     with path_agent_package.open(mode="wb") as tmp_agent_package:
         for chunk in agent_download_resp.iter_content(chunk_size=None):
             tmp_agent_package.write(chunk)
-
-    return install_agent_package(path_agent_package)
+    return path_agent_package
 
 
 @contextlib.contextmanager
-def agent_controller_daemon(ctl_path: Path) -> Iterator[subprocess.Popen[str] | None]:
-    """Manually take over systemds job if we are in a container (where we have no systemd)."""
-    if not is_containerized():
-        yield None
-        return
+def agent_controller_daemon(ctl_path: Path) -> Iterator[None]:
+    """Make sure the agent controller and the agent socket are up for the duration.
 
+    In a container with systemd both are units that the agent package enabled and started. In a
+    container without systemd, tests/scripts/agent_controller_daemon.py takes their place. Both
+    mechanisms delete all registrations of the controller, so outside a container nothing is
+    done.
+    """
+    if not is_containerized():
+        logger.warning(
+            "Not in a container: nothing manages the agent controller, and registrations made "
+            "by this test will not be cleaned up."
+        )
+        yield
+    elif systemd_is_running():
+        with systemd_managed_agent_controller(_LOCAL_HOST, ctl_path):
+            yield
+    else:
+        with _shimmed_agent_controller(ctl_path):
+            yield
+
+
+@contextlib.contextmanager
+def _shimmed_agent_controller(ctl_path: Path) -> Iterator[None]:
     logger.info("Running agent controller daemon...")
     with daemon(
         [
@@ -172,7 +219,7 @@ def agent_controller_daemon(ctl_path: Path) -> Iterator[subprocess.Popen[str] | 
         name_for_logging="agent controller",
         termination_mode=DaemonTerminationMode.GROUP,
         sudo=True,
-    ) as agent_ctl_daemon:
+    ):
         # wait for a dump being returned successfully, which may not work immediately
         # after starting the agent controller, so we retry for some time
         wait_until(
@@ -188,15 +235,19 @@ def agent_controller_daemon(ctl_path: Path) -> Iterator[subprocess.Popen[str] | 
             timeout=30,
             interval=0.1,
         )
-        yield agent_ctl_daemon
+        yield
 
 
 def register_controller(
-    ctl_path: Path, site: Site, hostname: HostName, site_address: str | None = None
+    ctl_path: PurePath,
+    site: Site,
+    hostname: HostName,
+    site_address: str | None = None,
+    host: HostUnderTest = _LOCAL_HOST,
 ) -> None:
     # Register the agent controller with the site
     # (previously ran delete-all. Now part of _clean_agent_controller)
-    run(
+    host.run(
         [
             ctl_path.as_posix(),
             "--verbose",
@@ -243,9 +294,11 @@ def wait_until_host_receives_data(
             raise excp from e
 
 
-def controller_status_json(controller_path: Path) -> Mapping[str, Any]:
+def controller_status_json(
+    controller_path: PurePath, host: HostUnderTest = _LOCAL_HOST
+) -> Mapping[str, Any]:
     json_data: Mapping[str, Any] = json.loads(
-        run([controller_path.as_posix(), "status", "--json"], sudo=True).stdout
+        host.run([controller_path.as_posix(), "status", "--json"], sudo=True).stdout
     )
     return json_data
 

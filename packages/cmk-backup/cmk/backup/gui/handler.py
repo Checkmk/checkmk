@@ -864,6 +864,14 @@ class ModeEditBackupJob(WatoMode[object]):
         )
 
     def _fs_backup_job(self, backup_config: BackupConfig) -> Dictionary:
+        no_history_label = Label(
+            "Do not backup metric data (RRD files), the monitoring history and log files."
+        )
+        if self._edition is not Edition.COMMUNITY:
+            no_history_label += Label(
+                " Data stored in the data backend are never included in the backup and must be "
+                "backed up separately."
+            )
         if self._new:
             ident_attr = {
                 "ident": DictElement(
@@ -979,9 +987,7 @@ class ModeEditBackupJob(WatoMode[object]):
                         help_text=Help(
                             "You may use this option to create a much smaller partial backup of the site."
                         ),
-                        label=Label(
-                            "Do not backup metric data (RRD files), the monitoring history and log files"
-                        ),
+                        label=no_history_label,
                     ),
                 ),
             },
@@ -1009,7 +1015,7 @@ class ModeEditBackupJob(WatoMode[object]):
         return [
             SingleChoiceElementExtended(
                 name=ident,
-                title=Title(title),  # astrein: disable=localization-checker
+                title=Title(title),  # astrein: disable=localization
             )
             for ident, title in self.key_store.choices()
         ]
@@ -1021,7 +1027,7 @@ class ModeEditBackupJob(WatoMode[object]):
         return [
             SingleChoiceElementExtended(
                 name=target.ident,
-                title=Title(target.title),  # astrein: disable=localization-checker
+                title=Title(target.title),  # astrein: disable=localization
             )
             for target in sorted(
                 backup_config.all_targets.values(),
@@ -1991,7 +1997,7 @@ class ModeEditBackupTarget(WatoMode[object]):
                         elements=[
                             CascadingSingleChoiceElement(
                                 name=target_type.ident(),
-                                title=Title(  # astrein: disable=localization-checker
+                                title=Title(  # astrein: disable=localization
                                     target_type.title()
                                 ),
                                 parameter_form=target_type.form_spec(),

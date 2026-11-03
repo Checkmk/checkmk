@@ -12,9 +12,19 @@ import { reactive } from 'vue'
  */
 export type AdminTab = 'icons'
 
+/** What a map opens with, when the map list asks for more than the map. */
+export type MapOpening = 'settings' | 'editor'
+
 export type NavTarget =
   | { view: 'home' }
-  | { view: 'map'; name: string; kiosk?: boolean; preview?: boolean }
+  | {
+      view: 'map'
+      name: string
+      kiosk?: boolean
+      preview?: boolean
+      rotation?: string | null
+      open?: MapOpening
+    }
   | { view: 'admin'; tab: AdminTab }
 
 export interface NavState {
@@ -22,7 +32,21 @@ export interface NavState {
   name: string | null
   tab: AdminTab | null
   kiosk: boolean
+  /** The rotation pool a map was opened in, which it rotates on within. */
+  rotation: string | null
   preview: boolean
+  open: MapOpening | null
+}
+
+/** Loads a URL as a new page; `replace` keeps the current history entry. */
+export type PageLoader = (url: string, options: { replace: boolean }) => void
+
+function loadPage(url: string, { replace }: { replace: boolean }): void {
+  if (replace) {
+    window.location.replace(url)
+  } else {
+    window.location.assign(url)
+  }
 }
 
 const ADMIN_TABS: readonly AdminTab[] = ['icons']
@@ -31,19 +55,48 @@ function isAdminTab(value: string | null): value is AdminTab {
   return value !== null && (ADMIN_TABS as readonly string[]).includes(value)
 }
 
+function isMapOpening(value: string | null): value is MapOpening {
+  return value === 'settings' || value === 'editor'
+}
+
 function parse(search: string): NavState {
   const params = new URLSearchParams(search)
   const mode = params.get('mode')
   const name = params.get('name')
   const kiosk = params.get('kiosk') === '1'
   const preview = params.get('preview') === '1'
+  const open = params.get('open')
   if (isAdminTab(mode)) {
-    return { view: 'admin', name: null, tab: mode, kiosk: false, preview: false }
+    return {
+      view: 'admin',
+      name: null,
+      tab: mode,
+      kiosk: false,
+      preview: false,
+      rotation: null,
+      open: null
+    }
   }
   if (name) {
-    return { view: 'map', name, tab: null, kiosk, preview }
+    return {
+      view: 'map',
+      name,
+      tab: null,
+      kiosk,
+      preview,
+      rotation: params.get('rotation'),
+      open: isMapOpening(open) ? open : null
+    }
   }
-  return { view: 'home', name: null, tab: null, kiosk: false, preview: false }
+  return {
+    view: 'home',
+    name: null,
+    tab: null,
+    kiosk: false,
+    preview: false,
+    rotation: null,
+    open: null
+  }
 }
 
 function buildUrl(target: NavTarget): string {
@@ -57,6 +110,12 @@ function buildUrl(target: NavTarget): string {
     if (target.preview) {
       params.set('preview', '1')
     }
+    if (target.rotation) {
+      params.set('rotation', target.rotation)
+    }
+    if (target.open) {
+      params.set('open', target.open)
+    }
   } else if (target.view === 'admin') {
     params.set('mode', target.tab)
   }
@@ -69,8 +128,10 @@ function buildUrl(target: NavTarget): string {
  * vue-router.
  *
  * State travels in the page query string (`maps.py?name=<map>`,
- * `maps.py?mode=<admin-tab>`) and transitions use the History API, mirroring the
- * Dashboard app (`dashboard/utils.ts` urlHandler). No hash, no reload.
+ * `maps.py?mode=<admin-tab>`). Moving from one map to another uses the History
+ * API, mirroring the Dashboard app (`dashboard/utils.ts` urlHandler). Every
+ * other move loads the page: the map list carries the server's heading and page
+ * menu and a map does not, so only a load keeps that chrome in step.
  */
 export class NavigationService {
   public readonly state: NavState = reactive(parse(window.location.search))
@@ -79,7 +140,7 @@ export class NavigationService {
     Object.assign(this.state, parse(window.location.search))
   }
 
-  public constructor() {
+  public constructor(private readonly load: PageLoader = loadPage) {
     window.addEventListener('popstate', this.onPopState)
   }
 
@@ -90,6 +151,10 @@ export class NavigationService {
 
   public navigate(target: NavTarget): void {
     const url = buildUrl(target)
+    if (this.needsLoad(target)) {
+      this.load(url, { replace: false })
+      return
+    }
     if (url !== window.location.pathname + window.location.search) {
       window.history.pushState({}, '', url)
     }
@@ -97,8 +162,17 @@ export class NavigationService {
   }
 
   public replace(target: NavTarget): void {
-    window.history.replaceState({}, '', buildUrl(target))
+    const url = buildUrl(target)
+    if (this.needsLoad(target)) {
+      this.load(url, { replace: true })
+      return
+    }
+    window.history.replaceState({}, '', url)
     this.onPopState()
+  }
+
+  private needsLoad(target: NavTarget): boolean {
+    return target.view !== 'map' || this.state.view !== 'map'
   }
 
   public href(target: NavTarget): string {

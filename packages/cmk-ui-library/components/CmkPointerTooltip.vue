@@ -22,6 +22,9 @@ const props = defineProps<{
 const emit = defineEmits<{ dismiss: [] }>()
 
 const tooltipElement = useTemplateRef<HTMLDivElement>('tooltip')
+
+// A caller may anchor something to the shown tooltip, such as a menu below it.
+defineExpose({ element: tooltipElement })
 const tooltipSize = ref({ width: 0, height: 0 })
 
 // The post-flush watcher runs before the browser paints, so the corrected position is never
@@ -77,7 +80,7 @@ onScopeDispose(() => {
   <!-- On the body: a dashboard widget frame is a stacking context, so no z-index inside it could
        keep the tooltip above a neighbouring widget. -->
   <Teleport to="body">
-    <!-- Pointer-only, so hidden from assistive technology; keyboard users cannot open it. -->
+    <!-- Hidden from assistive technology: a caller that wants it read puts it into a name. -->
     <div
       v-if="pointer"
       ref="tooltip"

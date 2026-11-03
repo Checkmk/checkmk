@@ -13,7 +13,9 @@ import {
   buildHostColumns,
   visibleHostFields
 } from '@/monitoring/all-hosts/columns'
+import { HostExport } from '@/monitoring/all-hosts/export/hostExport'
 import type { HostEntry, HostOptionalField } from '@/monitoring/shared/api/types'
+import { RowExport } from '@/monitoring/shared/export/rowExport'
 import {
   MonitoringService,
   type PagedResponse
@@ -318,4 +320,11 @@ test('the customer column stays hidden until the user shows it', () => {
 test('the customer field is never asked for, the API deriving it from the site', () => {
   expect(requestedFields()).not.toContain('customer')
   expect(requestedFields({ customer: true }, { showCustomer: true })).not.toContain('customer')
+})
+
+test('the export carries every data column of the table in table order', () => {
+  const options = { showCustomer: true, showRelations: true }
+  const dataColumns = columnIds(options).filter((id) => id !== 'select' && id !== 'actions')
+
+  expect(RowExport.shownColumns(hostColumns(options), {}, HostExport.isColumn)).toEqual(dataColumns)
 })

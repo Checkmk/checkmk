@@ -33,6 +33,7 @@ import itertools
 import json
 import logging
 import pprint
+import sys
 import time
 import urllib.parse
 from collections.abc import Iterator, Mapping, Sequence
@@ -180,6 +181,7 @@ class CMKOpenApiSession(requests.Session):
         self.custom_graph = CustomGraphAPI(self)
         self.dashboard = DashboardAPI(self)
         self.autocomplete = AutocompleteAPI(self)
+        self.custom_service = CustomServiceAPI(self)
 
     def set_authentication_header(self, user: str, password: str) -> None:
         self.headers["Authorization"] = f"Bearer {user} {password}"
@@ -513,7 +515,7 @@ class ChangesAPI(BaseAPI):
                 ):
                     raise RuntimeError(
                         "Activation of the following sites did not succeed:\n"
-                        f"{pprint.pformat(not_succeeded_sites)}"
+                        f"{pprint.pformat(not_succeeded_sites, width=sys.maxsize)}"
                     )
                 logger.info(
                     "%s Use `--log-cli-level=DEBUG` for analysis.",
@@ -605,6 +607,30 @@ class GlobalSettingsAPI(BaseAPI):
         """Returns the Etag of the written setting"""
         response = self.session.put(
             f"/objects/global_setting/{varname}",
+            api_version=APIVersion.INTERNAL,
+            headers={"If-Match": etag},
+            json={"value": value},
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        return response.headers["ETag"]
+
+    def get_site(self, site_id: str, varname: str) -> GlobalSetting:
+        response = self.session.get(
+            f"/objects/site_connection/{site_id}/global_setting/{varname}",
+            api_version=APIVersion.INTERNAL,
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        body = response.json()
+        return GlobalSetting(
+            value=body["value"], origin=body["origin"], etag=response.headers["ETag"]
+        )
+
+    def update_site(self, site_id: str, varname: str, value: object, etag: str = "*") -> str:
+        """Returns the Etag of the written setting"""
+        response = self.session.put(
+            f"/objects/site_connection/{site_id}/global_setting/{varname}",
             api_version=APIVersion.INTERNAL,
             headers={"If-Match": etag},
             json={"value": value},
@@ -2355,7 +2381,7 @@ class DataBackendAPI(BaseAPI):
     # only, so older sites still serve the old name and answer the new one with 404.
     _DATA_BACKEND_DOMAIN_SINCE = CMKVersion("3.0.0b1")
 
-    def _request(self, site_id: str, config_type: str) -> None:
+    def _request(self, site_id: str, config: Mapping[str, object]) -> None:
         method = (
             self.session.patch
             if self.session.site_version >= self._PATCH_SINCE
@@ -2369,28 +2395,42 @@ class DataBackendAPI(BaseAPI):
         response = method(
             f"domain-types/{domain_type}/actions/update/invoke",
             api_version=APIVersion.INTERNAL,
-            json={
-                "site_id": site_id,
-                "config": {
-                    "type": config_type,
-                },
-            },
+            json={"site_id": site_id, "config": config},
         )
 
         if not response.ok:
             raise UnexpectedResponse.from_response(response)
 
     def disable(self, site_id: str) -> None:
-        self._request(site_id, "disabled")
+        self._request(site_id, {"type": "disabled"})
 
     def enable(self, site_id: str) -> None:
-        self._request(site_id, "enabled")
+        self._request(site_id, {"type": "enabled"})
 
-    def place_features(self, site_id: str, features: Mapping[str, str]) -> None:
+    def open_to_remote_sites(self, site_id: str, address: str) -> None:
+        self._request(
+            site_id,
+            {"type": "enabled", "remote_access": {"type": "enabled", "address": address}},
+        )
+
+    def place_features(
+        self,
+        site_id: str,
+        features: Mapping[str, str],
+        address_seen_by_central: str | None = None,
+    ) -> None:
         response = self.session.patch(
             "domain-types/data_backend/actions/update_feature_placement/invoke",
             api_version=APIVersion.INTERNAL,
-            json={"site_id": site_id, "features": features},
+            json={
+                "site_id": site_id,
+                "features": features,
+                **(
+                    {}
+                    if address_seen_by_central is None
+                    else {"address_seen_by_central": address_seen_by_central}
+                ),
+            },
         )
         if not response.ok:
             raise UnexpectedResponse.from_response(response)
@@ -2704,3 +2744,47 @@ class AgentReceiverRelayAPI(ARBaseAPI):
         if response.status_code != HTTPStatus.OK:
             raise UnexpectedResponse.from_response(response)
         return TaskListResponse.model_validate(response.json()).tasks
+
+
+class CustomServiceAPI(BaseAPI):
+    """Custom services built from telemetry metrics; only registered at ``APIVersion.UNSTABLE``."""
+
+    def create(
+        self,
+        configuration_name: str,
+        host_assignment: Mapping[str, object],
+        configuration: Mapping[str, object],
+    ) -> None:
+        response = self.session.post(
+            "domain-types/custom_service/collections/all",
+            api_version=APIVersion.UNSTABLE,
+            json={
+                "configuration_name": configuration_name,
+                "host_assignment": host_assignment,
+                "configuration": configuration,
+            },
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+
+    def get(self, configuration_name: str) -> dict[str, Any]:
+        response = self.session.get(
+            f"objects/custom_service/{configuration_name}", api_version=APIVersion.UNSTABLE
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        parsed = response.json()
+        if not isinstance(parsed, dict):
+            raise UnexpectedResponse(
+                response.status_code, f"expected a JSON object, got {parsed!r}"
+            )
+        return parsed
+
+    def delete(self, configuration_name: str, missing_ok: bool = False) -> None:
+        response = self.session.delete(
+            f"objects/custom_service/{configuration_name}", api_version=APIVersion.UNSTABLE
+        )
+        if missing_ok and response.status_code == HTTPStatus.NOT_FOUND:
+            return
+        if response.status_code != HTTPStatus.NO_CONTENT:
+            raise UnexpectedResponse.from_response(response)

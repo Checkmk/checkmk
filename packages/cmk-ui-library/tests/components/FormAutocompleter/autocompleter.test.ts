@@ -6,20 +6,19 @@
 import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import { ErrorResponse, Response, WarningResponse } from 'cmk-ui-library/components/CmkSuggestions'
 import { fetchSuggestions } from 'cmk-ui-library/components/FormAutocompleter/autocompleter'
-import { useMswServer } from 'cmk-ui-library/vitest.msw'
-import { HttpResponse, http } from 'msw'
+import { restApiHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
 
 // The component library talks to the autocompleter over the REST API. Mocking
 // the transport here rather than the module keeps the request itself under
 // test: the route it goes to, the body it sends and the shape it reads back.
-const ROUTE = '*/api/internal/objects/autocomplete/:autocomplete_id'
+const ROUTE = '/objects/autocomplete/{autocomplete_id}'
 
 let lastRequest: { id: string; body: unknown } | null = null
 
 const server = useMswServer(
-  http.post(ROUTE, async ({ request, params }) => {
-    lastRequest = { id: params['autocomplete_id'] as string, body: await request.json() }
-    return HttpResponse.json({ choices: [{ id: 'linux01', value: 'Linux 01' }] })
+  restApiHttp.post(ROUTE, async ({ request, params, response }) => {
+    lastRequest = { id: params.autocomplete_id, body: await request.json() }
+    return response(200).json({ choices: [{ id: 'linux01', value: 'Linux 01' }] })
   })
 )
 
@@ -62,8 +61,8 @@ test('keeps a choice that carries no id, so its hint still shows', async () => {
   // A null id marks a suggestion the user cannot select, which is how the
   // backend reports that it truncated the list.
   server.use(
-    http.post(ROUTE, () =>
-      HttpResponse.json({
+    restApiHttp.post(ROUTE, ({ response }) =>
+      response(200).json({
         choices: [
           { id: null, value: '(Max suggestions reached, be more specific)' },
           { id: 'linux01', value: 'Linux 01' }
@@ -88,8 +87,8 @@ test('turns the returned choices into suggestions', async () => {
 
 test('a warning in the response keeps the choices and carries the message', async () => {
   server.use(
-    http.post(ROUTE, () =>
-      HttpResponse.json({
+    restApiHttp.post(ROUTE, ({ response }) =>
+      response(200).json({
         choices: [{ id: 'linux01', value: 'Linux 01' }],
         warning: 'The backend is unavailable.'
       })
@@ -105,8 +104,8 @@ test('a warning in the response keeps the choices and carries the message', asyn
 
 test('an error response is reported rather than thrown', async () => {
   server.use(
-    http.post(ROUTE, () =>
-      HttpResponse.json({ title: 'Invalid input', detail: 'no such world' }, { status: 400 })
+    restApiHttp.post(ROUTE, ({ response }) =>
+      response(400).json({ title: 'Invalid input', detail: 'no such world', status: 400 })
     )
   )
 

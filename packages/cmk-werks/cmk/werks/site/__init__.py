@@ -10,10 +10,8 @@ from functools import cache
 from pathlib import Path
 
 import cmk.utils.paths
-from cmk.werks.tool.models import WerkV3
-from cmk.werks.tool.utils import (
-    load_precompiled_werks_file,
-)
+from cmk.werks.flavor.cmk.models import WerkV3
+from cmk.werks.flavor.cmk.precompile import load_precompiled_werks_file
 
 from .acknowledgement import load_acknowledgements, UNACKNOWLEDGED_WERKS_JSON
 

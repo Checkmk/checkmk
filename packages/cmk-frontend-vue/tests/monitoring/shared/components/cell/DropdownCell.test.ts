@@ -14,7 +14,7 @@ const OPTIONS: Suggestions = {
   type: 'fixed',
   suggestions: [
     { name: 'rrd', title: untranslated('CMK RRD') },
-    { name: 'backend', title: untranslated('Metrics backend') }
+    { name: 'otel', title: untranslated('OpenTelemetry metrics') }
   ]
 }
 
@@ -52,7 +52,7 @@ test('selecting another option emits its name', async () => {
   mountCell('rrd', onUpdate)
 
   await fireEvent.click(screen.getByRole('combobox', { name: 'Source' }))
-  await fireEvent.click(await screen.findByText('Metrics backend'))
+  await fireEvent.click(await screen.findByText('OpenTelemetry metrics'))
 
-  expect(onUpdate).toHaveBeenCalledWith('backend')
+  expect(onUpdate).toHaveBeenCalledWith('otel')
 })

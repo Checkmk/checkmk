@@ -15,14 +15,18 @@ import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon/types'
 import CmkSlideInTabbed, { type SlideInTab } from 'cmk-ui-library/components/CmkSlideInTabbed'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { computed, markRaw, onUnmounted, ref, watch } from 'vue'
+import { computed, markRaw, onUnmounted, provide, ref, watch } from 'vue'
 
 import TableSkeleton from '@/loading-transition/TableSkeleton.vue'
-import EventHistoryApp from '@/monitoring/events/EventHistoryApp.vue'
-import { fetchEvents } from '@/monitoring/events/api'
-import { ServiceGraphsApi } from '@/monitoring/host-services/api/graphs'
 import { HostServicesApi } from '@/monitoring/host-services/api/services'
-import type { HostRef, HostServiceEntry, ServiceOverview } from '@/monitoring/shared/api/types'
+import { GraphsApi } from '@/monitoring/shared/api/graphs'
+import type {
+  HostRef,
+  HostServiceEntry,
+  ServiceOverview,
+  ServiceRef
+} from '@/monitoring/shared/api/types'
+import { AFTER_NARROW } from '@/monitoring/shared/components/MonitoringTableContext'
 import ActionFeedback, {
   type ActionFeedback as ActionFeedbackResult
 } from '@/monitoring/shared/components/action/ActionFeedback.vue'
@@ -32,6 +36,8 @@ import type { MonitoringActionRegistry } from '@/monitoring/shared/components/ac
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionButtons.vue'
 import SlideInActions from '@/monitoring/shared/components/slide-in/SlideInActions.vue'
 import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
+import EventHistoryApp from '@/monitoring/shared/events/EventHistoryApp.vue'
+import { fetchEvents } from '@/monitoring/shared/events/api'
 import { useSlideInActions } from '@/monitoring/shared/services/useSlideInActions'
 import type { DisplayOptions } from '@/monitoring/shared/types'
 
@@ -51,8 +57,7 @@ const props = withDefaults(
     host: HostRef
     /** Offer the cloud edition's "Explain with AI" action. */
     aiExplain?: boolean
-    /** The actions this user may run, as reported by the backend; targets are service names. */
-    actions?: MonitoringActionRegistry<string>
+    actions?: MonitoringActionRegistry<ServiceRef>
     permittedActions?: CellAction[]
     /** Lazy loader for the overflow menu entries of a service. */
     loadActionMenu?: ((service: string) => Promise<CellAction[]>) | undefined
@@ -77,10 +82,18 @@ const emit = defineEmits<{
 
 const { _t } = usei18n()
 
+provide(AFTER_NARROW, () => emit('close'))
+
 const servicesApi = new HostServicesApi()
-const graphsApi = new ServiceGraphsApi()
+const graphsApi = new GraphsApi()
 
 const open = computed(() => props.service !== null)
+
+const serviceKey = computed(() =>
+  props.service === null
+    ? ''
+    : JSON.stringify([props.host.site_id, props.host.name, props.service.name])
+)
 
 // The header outlives the tab body, so the loaded overview is kept here rather than only being
 // handed to the tab component.
@@ -90,7 +103,7 @@ const overview = ref<ServiceOverview | null>(null)
 // Rescheduling is the one action that is not offered on every service: what it does, and whether
 // it can be done at all, is decided per service by the backend. A service it cannot be done for
 // gets no button here - the row's action menu is where the refusal is spelled out.
-const slideInActions = computed(() =>
+const commandActions = computed(() =>
   props.permittedActions
     .filter((action) => action.id in props.actions)
     .flatMap((action) => {
@@ -111,12 +124,36 @@ const slideInActions = computed(() =>
     })
 )
 
-const targets = computed<string[]>(() => (props.service ? [props.service.name] : []))
+// Links out next to the commands, offered by the overview once it has loaded.
+const slideInActions = computed<CellAction[]>(() => {
+  const discoveryLink = overview.value?.legacy_service_discovery_link
+  return [
+    ...commandActions.value,
+    ...(discoveryLink
+      ? [
+          {
+            id: 'run_service_discovery',
+            label: _t('Run service discovery'),
+            icon: 'services' as SimpleIcons,
+            url: discoveryLink
+          }
+        ]
+      : [])
+  ]
+})
+
+function serviceOfHost(description: string): ServiceRef {
+  return { host: props.host, description }
+}
+
+const targets = computed<ServiceRef[]>(() =>
+  props.service ? [serviceOfHost(props.service.name)] : []
+)
 
 // A byproduct of the agent-based check reschedules the service that fetches the data, not itself.
-function actionTargets(actionId: string): string[] {
+function actionTargets(actionId: string): ServiceRef[] {
   const redirect = actionId === RESCHEDULE_ACTION_ID ? props.service?.reschedule?.target : undefined
-  return redirect === undefined ? targets.value : [redirect]
+  return redirect === undefined ? targets.value : [serviceOfHost(redirect)]
 }
 
 const displayService = computed<ServiceHeaderSubject | null>(() => {
@@ -155,13 +192,14 @@ function onActionPerformed(result: ActionFeedbackResult): void {
       clearTimeout(reloadTimer)
     }
     const description = props.service.name
+    const key = serviceKey.value
     // Scheduling a downtime or acknowledging a problem sends an external command to the core
     // and returns before the core has necessarily applied it, so an immediate reload can still
     // show the pre-action state. Delayed like the table's own post-action refresh, for the same
     // reason.
     reloadTimer = setTimeout(() => {
       reloadTimer = null
-      if (props.service?.name !== description) {
+      if (serviceKey.value !== key) {
         return
       }
       reloadToken.value++
@@ -181,7 +219,7 @@ const {
   openAction,
   closeAction,
   applyFeedback
-} = useSlideInActions<string>(
+} = useSlideInActions<ServiceRef>(
   () => props.actions,
   actionTargets,
   () => props.service,
@@ -196,10 +234,11 @@ watch(
 )
 
 async function loadOverview(description: string): Promise<ServiceOverview> {
-  const loaded = await servicesApi.fetchServiceOverview({ host: props.host, description })
+  const key = serviceKey.value
+  const loaded = await servicesApi.fetchServiceOverview(serviceOfHost(description))
   // A request started for a service the user has since navigated away from must not win the
   // race against the one for the service now on screen.
-  if (props.service?.name === description) {
+  if (serviceKey.value === key) {
     overview.value = loaded
   }
   return loaded
@@ -251,7 +290,13 @@ const actionMenuLoader = computed<(() => Promise<CellAction[]>) | undefined>(() 
   if (!service || !load) {
     return undefined
   }
-  return () => load(service.name)
+  // The menu entry of the discovery is left out while the button next to the commands offers it.
+  return async () => {
+    const items = await load(service.name)
+    return overview.value?.legacy_service_discovery_link
+      ? items.filter((item) => item.ident !== 'wato')
+      : items
+  }
 })
 
 const tabs = computed<SlideInTab[]>(() => {
@@ -289,11 +334,12 @@ const tabs = computed<SlideInTab[]>(() => {
 
 <template>
   <!--
-    Keyed on the service, so picking another row while the panel is open remounts the tabs:
+    Keyed on the service and its host, so picking another row while the panel is open remounts
+    the tabs, even for a service of the same name on another host:
     CmkSlideInTabbed only drops its cached tab data when `open` flips, which never happens here.
   -->
   <CmkSlideInTabbed
-    :key="service?.name ?? ''"
+    :key="serviceKey"
     :open="open"
     :tabs="tabs"
     :reload-token="reloadToken"

@@ -17,6 +17,7 @@ from cmk.plugins.aws_v2.special_agent.config import (
     TagsImportPatternOption,
     TagsOption,
 )
+from cmk.plugins.aws_v2.special_agent.hosts import SOURCE_HOST
 from cmk.plugins.aws_v2.special_agent.sections.core import ResultDistributor
 from cmk.plugins.aws_v2.special_agent.sections.elb import ELBLabelsGeneric, ELBSummaryGeneric
 from cmk.plugins.aws_v2.special_agent.sections.elbv2 import (
@@ -326,11 +327,39 @@ def test_agent_aws_elbv2_limits(
     assert elbv2_limits.name == "elbv2_limits"
     assert len(elbv2_limits_results) == 4
     for result in elbv2_limits_results:
-        if result.piggyback_hostname == "":
+        if result.piggyback_hostname is SOURCE_HOST:
             assert len(result.content) == 3
         else:
             # Dependent on load balancer type "application" or "network" we have 2 or 4 limits
             assert len(result.content) in (2, 4)
+
+
+def test_agent_aws_elbv2_limits_go_to_each_load_balancer_then_to_the_account(
+    get_elbv2_sections: ELBv2Sections,
+) -> None:
+    elbv2_limits_results = get_elbv2_sections().elbv2_limits.run().results
+
+    assert [result.piggyback_hostname for result in elbv2_limits_results] == [
+        "DNSName-0",
+        "DNSName-1",
+        "DNSName-2",
+        SOURCE_HOST,
+    ]
+
+
+def test_agent_aws_elbv2_target_groups_go_to_the_host_of_their_load_balancer(
+    get_elbv2_sections: ELBv2Sections,
+) -> None:
+    elbv2_sections = get_elbv2_sections()
+    elbv2_sections.elbv2_summary.run()
+
+    elbv2_target_groups_results = elbv2_sections.elbv2_target_groups.run().results
+
+    assert sorted(result.piggyback_hostname for result in elbv2_target_groups_results) == [
+        "DNSName-0",
+        "DNSName-1",
+        "DNSName-2",
+    ]
 
 
 @pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elbv2_params)
@@ -353,7 +382,7 @@ def test_agent_aws_elbv2_summary(
     if found_instances:
         assert len(elbv2_summary_results) == 1
         elbv2_summary_result = elbv2_summary_results[0]
-        assert elbv2_summary_result.piggyback_hostname == ""
+        assert elbv2_summary_result.piggyback_hostname is SOURCE_HOST
         assert len(elbv2_summary_result.content) == len(found_instances)
 
     else:
@@ -379,7 +408,7 @@ def test_agent_aws_elbv2_labels(
     assert elbv2_labels.name == "elbv2_generic_labels"
     assert len(elbv2_labels_results) == len(found_instances_with_labels)
     for result in elbv2_labels_results:
-        assert result.piggyback_hostname != ""
+        assert result.piggyback_hostname is not SOURCE_HOST
 
 
 @pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elbv2_params)
@@ -401,7 +430,7 @@ def test_agent_aws_elbv2_target_groups(
     assert elbv2_target_groups.name == "elbv2_target_groups"
     assert len(elbv2_target_groups_results) == len(found_instances)
     for result in elbv2_target_groups_results:
-        assert result.piggyback_hostname != ""
+        assert result.piggyback_hostname is not SOURCE_HOST
 
 
 @pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elbv2_params)
@@ -433,7 +462,7 @@ def test_agent_aws_elbv2_application(
     assert elbv2_application.name == "elbv2_application"
     assert len(elbv2_application_results) == len(found_instances)
     for result in elbv2_application_results:
-        assert result.piggyback_hostname != ""
+        assert result.piggyback_hostname is not SOURCE_HOST
         # 20 metrics
         assert len(result.content) == 20
 
@@ -471,7 +500,7 @@ def test_agent_aws_elbv2_network(
     assert elbv2_network.name == "elbv2_network"
     assert len(elbv2_network_results) == len(found_instances)
     for result in elbv2_network_results:
-        assert result.piggyback_hostname != ""
+        assert result.piggyback_hostname is not SOURCE_HOST
         # 12 metrics
         assert len(result.content) == 12
 
@@ -495,7 +524,7 @@ def test_agent_aws_elbv2_summary_without_limits(
     if found_instances:
         assert len(elbv2_summary_results) == 1
         elbv2_summary_result = elbv2_summary_results[0]
-        assert elbv2_summary_result.piggyback_hostname == ""
+        assert elbv2_summary_result.piggyback_hostname is SOURCE_HOST
         assert len(elbv2_summary_result.content) == len(found_instances)
 
     else:
@@ -520,7 +549,7 @@ def test_agent_aws_elbv2_labels_without_limits(
     assert elbv2_labels.name == "elbv2_generic_labels"
     assert len(elbv2_labels_results) == len(found_instances_with_labels)
     for result in elbv2_labels_results:
-        assert result.piggyback_hostname != ""
+        assert result.piggyback_hostname is not SOURCE_HOST
 
 
 @pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elbv2_params)
@@ -541,7 +570,7 @@ def test_agent_aws_elbv2_target_groups_without_limits(
     assert elbv2_target_groups.name == "elbv2_target_groups"
     assert len(elbv2_target_groups_results) == len(found_instances)
     for result in elbv2_target_groups_results:
-        assert result.piggyback_hostname != ""
+        assert result.piggyback_hostname is not SOURCE_HOST
 
 
 @pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elbv2_params)
@@ -573,7 +602,7 @@ def test_agent_aws_elbv2_application_without_limits(
     assert elbv2_application.name == "elbv2_application"
     assert len(elbv2_application_results) == len(found_instances)
     for result in elbv2_application_results:
-        assert result.piggyback_hostname != ""
+        assert result.piggyback_hostname is not SOURCE_HOST
         # 20 metrics
         assert len(result.content) == 20
 
@@ -610,7 +639,7 @@ def test_agent_aws_elbv2_network_without_limits(
     assert elbv2_network.name == "elbv2_network"
     assert len(elbv2_network_results) == len(found_instances)
     for result in elbv2_network_results:
-        assert result.piggyback_hostname != ""
+        assert result.piggyback_hostname is not SOURCE_HOST
         # 12 metrics
         assert len(result.content) == 12
 

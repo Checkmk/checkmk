@@ -10,6 +10,7 @@ import UclCmkButton from '@ucl/components/basic-elements/CmkButton/UclCmkButton.
 import UclCmkChip from '@ucl/components/basic-elements/CmkChip/UclCmkChip.vue'
 import UclCmkCode from '@ucl/components/basic-elements/CmkCode/UclCmkCode.vue'
 import UclCmkColorPicker from '@ucl/components/basic-elements/CmkColorPicker/UclCmkColorPicker.vue'
+import UclCmkColorSwatch from '@ucl/components/basic-elements/CmkColorSwatch/UclCmkColorSwatch.vue'
 import UclCmkIconButton from '@ucl/components/basic-elements/CmkIconButton/UclCmkIconButton.vue'
 import UclCmkInlineButton from '@ucl/components/basic-elements/CmkInlineButton/UclCmkInlineButton.vue'
 import UclCmkSwitch from '@ucl/components/basic-elements/CmkSwitch/UclCmkSwitch.vue'
@@ -169,6 +170,11 @@ test('CmkCode page renders', () => {
 test('CmkColorPicker page renders its component', () => {
   render(UclCmkColorPicker, { props: { screenshotMode: false } })
   expect(componentPreview().querySelector('input[type="color"]')).toBeTruthy()
+})
+
+test('CmkColorSwatch page renders its component', () => {
+  render(UclCmkColorSwatch, { props: { screenshotMode: false } })
+  expect(componentPreview().querySelector('.cmk-color-swatch')).toBeTruthy()
 })
 
 test('CmkIconButton page renders its component', () => {

@@ -119,6 +119,9 @@ class UserPermissions:
             return ["guest"]  # unknown user with automation account
         return existing_role_ids(self._default_user_profile_roles)
 
+    def permission_exists(self, permission_name: str) -> bool:
+        return permission_name in self._permissions
+
     def user_may(self, user_id: UserId | None, permission_name: str) -> bool:
         key = (user_id, permission_name)
         if key not in self._user_may_memo:

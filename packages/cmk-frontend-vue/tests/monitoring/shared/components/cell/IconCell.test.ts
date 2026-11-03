@@ -12,12 +12,14 @@ import { iconListWidth } from '@/monitoring/shared/components/iconList'
 import { MODE_ICONS_PER_ROW } from '@/monitoring/shared/components/modeColumn'
 
 const DOWNTIME_MODE: HostMode = {
+  id: 'downtime',
   icon_name: 'downtime',
   link: 'view.py?view_name=downtimes_of_host&host=web-1',
   title: 'In scheduled downtime'
 }
 
 const ACKNOWLEDGED_MODE: HostMode = {
+  id: 'acknowledged',
   icon_name: 'ack',
   link: 'view.py?view_name=host&host=web-1',
   title: 'Problem acknowledged'

@@ -27,9 +27,19 @@ void main() {
         "//packages/mk-oracle:mk-oracle-windows",
         "//agents/wnx/extensions/robotmk_ext:robotmk_ext-windows",
     ];
+    // The exes the MSI embeds, signed during the build (msi_* in
+    // agents/wnx/BUILD.bazel). Archived as embedded and not signed again
+    // afterwards: one signature, and the archived file is the one in the
+    // MSI, like run.ps1 ships it.
+    def msi_exe_targets = [
+        "//packages/cmk-agent-ctl:cmk-agent-ctl-windows": "//agents/wnx:msi_cmk-agent-ctl",
+    ];
+    def signed_in_build = ["cmk-agent-ctl.exe"];
     // Built and archived like the binaries, but there is no -static-crt tier
     // for an MSI to check.
-    def targets = exe_targets + ["//agents/wnx:check_mk_agent_msi"];
+    def targets = exe_targets.collect { msi_exe_targets[it] ?: it } + [
+        "//agents/wnx:check_mk_agent_msi",
+    ];
     // The Wine unit-test tiers of the targets above (a separate list:
     // not every artifact has one).
     def wine_test_targets = [
@@ -42,7 +52,6 @@ void main() {
     def toolchain_test_targets = [
         "//bazel/toolchains/cc/clang/xwin/tests:tests",
     ];
-    def target_args = targets.join(" ");
     def crt_test_args = exe_targets.collect { it + "-static-crt" }.join(" ");
     // Fail the build but keep going, so the test results below still get
     // collected and published.
@@ -56,18 +65,7 @@ void main() {
             }
 
             stage("Build windows binaries") {
-                sh(
-                    """
-                    set -euo pipefail
-                    bazel build --cmk_version=${cmk_version} ${target_args}
-                    mkdir -p artefacts
-                    """
-                );
-                // The outputs already carry the Windows-node job's artifact
-                // names (binary_name on the targets).
-                targets.each { target ->
-                    sh("cp -f \$(bazel cquery --cmk_version=${cmk_version} --output=files ${target}) artefacts/");
-                }
+                build_windows_binaries(safe_branch_name, cmk_version, targets, "artefacts");
             }
 
             stage("Check toolchain argument contract") {
@@ -112,7 +110,7 @@ void main() {
             // right away and archives nothing, so unsigned or partially
             // signed binaries are never published.
             stage("Sign windows binaries") {
-                sign_windows_binaries(safe_branch_name, cmk_version, "artefacts");
+                sign_windows_binaries(safe_branch_name, cmk_version, "artefacts", signed_in_build);
             }
         }
 
@@ -152,38 +150,51 @@ void main() {
     }
 }
 
-void sign_windows_binaries(String branch_name, String cmk_version, String binary_directory) {
+void build_windows_binaries(String branch_name, String cmk_version, List targets, String binary_directory) {
     def windows = load("${checkout_dir}/buildscripts/scripts/utils/windows.groovy");
 
-    withCredentials([
-        string(credentialsId: "azure_artifact_signing_client_secret", variable: "AZURE_ARTIFACT_SIGNING_CLIENT_SECRET"),
-        string(credentialsId: "azure_artifact_signing_correlation_suffix", variable: "AZURE_ARTIFACT_SIGNING_CORRELATION_SUFFIX"),
-    ]) {
-        // Assembled inside the binding block: the suffix is only available there.
-        def correlation_id = windows.azure_signing_correlation_id(branch_name);
-        withEnv([
-            "AZURE_ARTIFACT_SIGNING_ENDPOINT=${env.AZURE_ARTIFACT_SIGNING_ENDPOINT}",
-            "AZURE_ARTIFACT_SIGNING_ACCOUNT=${env.AZURE_ARTIFACT_SIGNING_ACCOUNT}",
-            "AZURE_ARTIFACT_SIGNING_PROFILE=${env.AZURE_ARTIFACT_SIGNING_PROFILE}",
-            "AZURE_ARTIFACT_SIGNING_TENANT_ID=${env.AZURE_ARTIFACT_SIGNING_TENANT_ID}",
-            "AZURE_ARTIFACT_SIGNING_CLIENT_ID=${env.AZURE_ARTIFACT_SIGNING_CLIENT_ID}",
-            "AZURE_ARTIFACT_SIGNING_CORRELATION_ID=${correlation_id}",
-        ]) {
-            // The package build and the bakery also need each MSI unsigned
-            // (check_mk_agent_unsigned.msi, see cmk/utils/msi_engine.py), so
-            // keep a copy and sign everything else.
+    // The MSI embeds the PowerShell scripts and exes signed during the build,
+    // like the MSI winagt-build builds with --sign-azure. CMK-39886
+    windows.with_azure_signing_flag(
+        branch_name, "${WORKSPACE}/.azure_signing_credentials"
+    ) { signing_flag ->
+        sh(
+            """
+            set -euo pipefail
+            bazel build --cmk_version=${cmk_version} ${signing_flag} ${targets.join(" ")}
+            mkdir -p ${binary_directory}
+            """
+        );
+        // The outputs already carry the Windows-node job's artifact
+        // names (binary_name on the targets).
+        targets.each { target ->
             sh(
-                """
-                set -euo pipefail
-                for msi in ${binary_directory}/*.msi; do
-                    cp -f "\$msi" "\${msi%.msi}_unsigned.msi"
-                done
-                bazel run --cmk_version=${cmk_version} //agents/wnx/scripts:sign_azure -- \\
-                    \$(find ${binary_directory} -maxdepth 1 -type f ! -name '*_unsigned.msi' | sort)
-                """
+                "cp -f \$(bazel cquery --cmk_version=${cmk_version} ${signing_flag} " +
+                "--output=files ${target}) ${binary_directory}/"
             );
         }
     }
+}
+
+void sign_windows_binaries(
+    String branch_name, String cmk_version, String binary_directory, List signed_in_build
+) {
+    def windows = load("${checkout_dir}/buildscripts/scripts/utils/windows.groovy");
+
+    // The package build and the bakery also need each MSI unsigned
+    // (check_mk_agent_unsigned.msi, see cmk/utils/msi_engine.py), so
+    // keep a copy and sign everything else not signed in the build.
+    def files = sh(
+        script: """
+            set -euo pipefail
+            for msi in ${binary_directory}/*.msi; do
+                cp -f "\$msi" "\${msi%.msi}_unsigned.msi"
+            done
+            find ${binary_directory} -maxdepth 1 -type f ! -name '*_unsigned.msi' | sort
+            """,
+        returnStdout: true,
+    ).trim().split("\n").findAll { !(it.tokenize("/").last() in signed_in_build) };
+    windows.sign_with_azure(branch_name, "--cmk_version=${cmk_version}", files);
 }
 
 /// Merges the bazel test.xml files into results/ and makes them digestible for

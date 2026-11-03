@@ -32,6 +32,8 @@ const props = defineProps<{
   offersGrid: boolean
   /** False while a dialog over the map owns the keyboard. */
   keyboardActive: boolean
+  /** The slide inspector takes the right edge, so the tools sit left of it. */
+  besideInspector: boolean
 }>()
 
 const emit = defineEmits<{
@@ -109,7 +111,10 @@ const gridEntries = computed<MapEditMenuEntry[]>(() =>
 </script>
 
 <template>
-  <div class="maps-map-edit-tools">
+  <div
+    class="maps-map-edit-tools"
+    :class="{ 'maps-map-edit-tools--beside-inspector': besideInspector }"
+  >
     <Transition
       enter-from-class="maps-map-edit-tools__pop-enter-from"
       enter-active-class="maps-map-edit-tools__pop-enter-active"
@@ -144,7 +149,7 @@ const gridEntries = computed<MapEditMenuEntry[]>(() =>
           :aria-expanded="addPanelOpen"
           @click="toggleAddPanel"
         >
-          <CmkIcon name="add" size="medium" />
+          <CmkIcon name="add" size="medium" class="maps-map-edit-tools__add-icon" />
         </button>
       </div>
     </Transition>
@@ -196,7 +201,7 @@ const gridEntries = computed<MapEditMenuEntry[]>(() =>
       :aria-pressed="editing"
       @click="emit('toggle-edit-mode')"
     >
-      <CmkIcon name="edit" size="medium" />
+      <CmkIcon name="edit" size="medium" :colored="false" />
     </button>
   </div>
 </template>
@@ -217,8 +222,12 @@ const gridEntries = computed<MapEditMenuEntry[]>(() =>
   flex-direction: column;
   align-items: flex-end;
   justify-content: flex-end;
-  gap: var(--spacing);
+  gap: var(--dimension-5);
   pointer-events: none;
+}
+
+.maps-map-edit-tools--beside-inspector {
+  right: calc(var(--maps-presentation-inspector-width) + var(--dimension-8));
 }
 
 .maps-map-edit-tools > * {
@@ -247,7 +256,7 @@ const gridEntries = computed<MapEditMenuEntry[]>(() =>
   border-radius: var(--border-radius);
   box-shadow:
     0 0 0 1px var(--default-border-color),
-    0 25px 50px -12px rgb(0 0 0 / 60%);
+    var(--maps-shadow-canvas-overlay-high);
 }
 
 /* Checkmk styles every button of the page; these are plain tiles. The radius
@@ -261,8 +270,12 @@ const gridEntries = computed<MapEditMenuEntry[]>(() =>
   margin: 0;
   padding: 0;
   border: none;
-  border-radius: var(--dimension-5);
+  border-radius: var(--border-radius);
   transition: all 0.2s;
+}
+
+.maps-map-edit-tools__button:focus-visible {
+  outline: revert;
 }
 
 .maps-map-edit-tools__button:active {
@@ -271,25 +284,27 @@ const gridEntries = computed<MapEditMenuEntry[]>(() =>
 
 .maps-map-edit-tools__button--primary {
   background: var(--interactive-accent);
-  box-shadow:
-    0 10px 15px -3px rgb(0 0 0 / 30%),
-    0 4px 6px -4px rgb(0 0 0 / 30%);
+  box-shadow: var(--maps-shadow-canvas-overlay-high);
+}
+
+/* The icon is a light grey bitmap; on the accent it goes dark, like the label
+   of a primary button. */
+.maps-map-edit-tools__add-icon {
+  filter: brightness(0);
 }
 
 .maps-map-edit-tools__button--active {
   background: var(--default-form-element-bg-color);
   box-shadow:
     0 0 0 1px var(--default-border-color),
-    0 10px 15px -3px rgb(0 0 0 / 30%),
-    0 4px 6px -4px rgb(0 0 0 / 30%);
+    var(--maps-shadow-canvas-overlay-high);
 }
 
 .maps-map-edit-tools__button--idle {
   background: var(--ux-theme-3);
   box-shadow:
     0 0 0 1px var(--default-border-color),
-    0 10px 15px -3px rgb(0 0 0 / 30%),
-    0 4px 6px -4px rgb(0 0 0 / 30%);
+    var(--maps-shadow-canvas-overlay-high);
 }
 
 .maps-map-edit-tools__button--idle:hover {
@@ -303,7 +318,7 @@ const gridEntries = computed<MapEditMenuEntry[]>(() =>
 }
 
 .maps-map-edit-tools__pop-enter-active {
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 0.3s cubic-bezier(0, 0, 0.2, 1);
   transform-origin: bottom right;
 }
 

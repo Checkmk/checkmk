@@ -33,7 +33,7 @@ test('labels each source group and wraps its macros', () => {
     '<b>Checkmk RRD (single)</b>: <tt>$DEFAULT_TITLE$</tt>, <tt>$METRIC_NAME$</tt>'
   )
   // Source types without a help-specific label fall back to the row label.
-  expect(help).toContain('<b>Metrics backend</b>: <tt>$SERIES_ID$</tt>')
+  expect(help).toContain('<b>OpenTelemetry metrics</b>: <tt>$SERIES_ID$</tt>')
 })
 
 test('distinguishes the single metric from the dynamic query', () => {
@@ -55,7 +55,7 @@ test('renders in the frontend order, not the order the backend supplied', () => 
   ]
   const help = renderTitleMacroHelp(scrambled)
   expect(help.indexOf('Checkmk RRD (single)')).toBeLessThan(help.indexOf('Checkmk RRD (query)'))
-  expect(help.indexOf('Checkmk RRD (query)')).toBeLessThan(help.indexOf('Metrics backend'))
+  expect(help.indexOf('Checkmk RRD (query)')).toBeLessThan(help.indexOf('OpenTelemetry metrics'))
 })
 
 test('skips source types absent from the given macros', () => {
@@ -63,5 +63,5 @@ test('skips source types absent from the given macros', () => {
   const help = renderTitleMacroHelp([{ source_type: 'constant', macros: ['$DEFAULT_TITLE$'] }])
   expect(help).toContain('<b>Constant line</b>: <tt>$DEFAULT_TITLE$</tt>')
   expect(help).not.toContain('Checkmk RRD')
-  expect(help).not.toContain('Metrics backend')
+  expect(help).not.toContain('OpenTelemetry metrics')
 })

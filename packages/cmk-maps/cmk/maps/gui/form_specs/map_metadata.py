@@ -12,10 +12,13 @@ filter) plus background image stay in the existing custom Vue surface
 because they need live previews / pickers FormSpec doesn't ship.
 """
 
+from collections import Counter
 from collections.abc import Sequence
 
 from cmk.maps.gui.form_specs import MapsDictGroup
-from cmk.rulesets.v1 import Help, Label, Title
+from cmk.maps.shared.map_name import MAP_NAME_MAX_LENGTH, MAP_NAME_PATTERN
+from cmk.maps.shared.validators import MAX_ROTATION_POOLS
+from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
     CascadingSingleChoice,
@@ -27,11 +30,17 @@ from cmk.rulesets.v1.form_specs import (
     FixedValue,
     InputHint,
     Integer,
+    List,
     SingleChoice,
     SingleChoiceElement,
     String,
 )
-from cmk.rulesets.v1.form_specs.validators import NumberInRange
+from cmk.rulesets.v1.form_specs.validators import (
+    LengthInRange,
+    MatchRegex,
+    NumberInRange,
+    ValidationError,
+)
 
 _IDENTIFICATION = MapsDictGroup(
     title=Title("Identification"),
@@ -52,6 +61,11 @@ _TEMPLATES = MapsDictGroup(
         "Placeholders: {{name}}, {{state}}, {{output}}, {{host}}, {{service}}."
     ),
 )
+
+
+def _check_for_duplicate_pools(pools: Sequence[str]) -> None:
+    if any(count > 1 for count in Counter(pools).values()):
+        raise ValidationError(Message("Each rotation pool can be listed only once."))
 
 
 def _connection_form(
@@ -78,7 +92,7 @@ def _connection_form(
         elements=[
             SingleChoiceElement(
                 name=cid,
-                title=Title(label or cid),  # astrein: disable=localization-checker
+                title=Title(label or cid),  # astrein: disable=localization
             )
             for cid, label in choices
         ],
@@ -146,11 +160,11 @@ def map_metadata_spec(
                 parameter_form=SingleChoice(
                     title=Title("Rendering style"),
                     help_text=Help(
-                        "Maps renders objects centered on their coordinates "
-                        "with the modern glass look. NagVis-classic anchors "
-                        "objects top-left, draws flat textboxes on a light "
-                        "canvas and is auto-selected when importing a legacy "
-                        "NagVis .cfg map for a 1:1 result."
+                        "Maps renders objects centered on their coordinates. "
+                        "NagVis-classic places them as NagVis does, anchored "
+                        "top-left, with labels at their own offset and the "
+                        "background at its own size, in the same look. It is "
+                        "selected automatically for an imported NagVis .cfg map."
                     ),
                     elements=[
                         SingleChoiceElement(name="default", title=Title("Maps (default)")),
@@ -171,8 +185,8 @@ def map_metadata_spec(
                         "Show the next map in the rotation after the chosen "
                         "interval. Pick Off to keep this map open until the "
                         "operator switches manually. Rotation order follows "
-                        "the maps list; only maps with auto-rotate enabled "
-                        "participate."
+                        "the maps list; outside a rotation pool, only maps "
+                        "with auto-rotate enabled participate."
                     ),
                     prefill=DefaultValue("off"),
                     elements=[
@@ -192,6 +206,37 @@ def map_metadata_spec(
                             ),
                         ),
                     ],
+                ),
+            ),
+            "rotation_pools": DictElement(
+                required=True,
+                group=_BEHAVIOR,
+                parameter_form=List(
+                    title=Title("Rotation pools"),
+                    help_text=Help(
+                        "The rotation pools this map takes part in, as in NagVis. "
+                        "A map opened with the URL parameter rotation set to a pool name "
+                        "rotates through the maps of that pool only, each shown for its own "
+                        "auto-rotate interval, or 60 seconds without one."
+                    ),
+                    element_template=String(
+                        title=Title("Pool"),
+                        custom_validate=(
+                            LengthInRange(max_value=MAP_NAME_MAX_LENGTH),
+                            MatchRegex(
+                                regex=MAP_NAME_PATTERN,
+                                error_msg=Message(
+                                    "Use letters, digits, underscores and hyphens only."
+                                ),
+                            ),
+                        ),
+                    ),
+                    add_element_label=Label("Add pool"),
+                    editable_order=False,
+                    custom_validate=(
+                        LengthInRange(max_value=MAX_ROTATION_POOLS),
+                        _check_for_duplicate_pools,
+                    ),
                 ),
             ),
             "click_action": DictElement(
@@ -243,58 +288,6 @@ def map_metadata_spec(
             ),
         },
     )
-
-
-# Metadata fields the FormSpec covers; used by the API to slice
-# MapRead → form-data and merge form-data → MapUpdate. Anything not
-# in this set stays out of the FormSpec contract.
-METADATA_FIELDS = (
-    "alias",
-    "connection_id",
-    "icon_size",
-    "default_z",
-    "render_mode",
-    "rotation_interval",
-    "click_action",
-    "hover_template",
-    "context_template",
-)
-
-# ``alias`` stays single-map: applying one alias to many would collapse
-# their identities. Everything else is safe to overwrite in bulk.
-BULK_METADATA_FIELDS = tuple(f for f in METADATA_FIELDS if f != "alias")
-
-
-def _build_bulk_metadata_spec(
-    connection_choices: Sequence[tuple[str, str]] | None,
-) -> Dictionary:
-    # required=False makes FormEdit render a per-field activation checkbox,
-    # so only the elements the operator ticks end up in the wire payload.
-    single = map_metadata_spec(connection_choices)
-    elements = {
-        key: DictElement(
-            required=False,
-            group=elem.group,
-            parameter_form=elem.parameter_form,
-        )
-        for key, elem in single.elements.items()
-        if key in BULK_METADATA_FIELDS
-    }
-    return Dictionary(
-        title=Title("Apply to selected maps"),
-        help_text=Help(
-            "Pick the fields you want to overwrite on every selected map. "
-            "Unchecked fields stay untouched. Read-only demo maps are "
-            "skipped automatically."
-        ),
-        elements=elements,
-    )
-
-
-def map_bulk_metadata_spec(
-    connection_choices: Sequence[tuple[str, str]] | None = None,
-) -> Dictionary:
-    return _build_bulk_metadata_spec(connection_choices)
 
 
 _TOPOLOGY = MapsDictGroup(

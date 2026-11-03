@@ -400,7 +400,7 @@ class HostServicesExperimental(CmkPage):
         return self.main_area.locator().get_by_placeholder("What is the occasion?")
 
     def submit_action(self, label: str) -> Locator:
-        """The form's submit control, which stays disabled while the form is incomplete."""
+        """The form's submit control."""
         return self.main_area.locator().get_by_role("button", name=label, exact=True)
 
     def form_option(self, label: str) -> Locator:

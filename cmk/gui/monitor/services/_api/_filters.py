@@ -5,18 +5,29 @@
 
 import re
 from collections.abc import Mapping
-from typing import Annotated, Literal
+from typing import Annotated, Final, Literal
 
 from annotated_types import MinLen
-from pydantic import AfterValidator, PlainValidator, StringConstraints
+from pydantic import AfterValidator, PlainValidator, StringConstraints, TypeAdapter
 
+from cmk.ccc.site import SiteId
 from cmk.gui.config import active_config
+from cmk.gui.monitor.shared import FilterNode as HostFilterNode
+from cmk.gui.monitor.shared import livestatus_filter_lines, validate_host_columns_only
+from cmk.gui.monitor.site_scope import SiteScopedFilter, SiteScopeExtractor
 from cmk.gui.openapi.framework.model import api_field, api_model
 from cmk.gui.utils.labels import encode_label_for_livestatus, Label
 from cmk.livestatus_client import lqencode, quote_dict
 from cmk.livestatus_client.expressions import LqSafe
 
-from .._models import CRASH_MARKER, ServiceFilter, ServiceState, ServiceStateLabel
+from .._models import (
+    CRASH_MARKER,
+    HostState,
+    HostStateLabel,
+    ServiceFilter,
+    ServiceState,
+    ServiceStateLabel,
+)
 from ._validators import validate_label_pairs, validate_uniqueness, validate_unix_timestamp
 
 # NOTE: these models are named with a "Service" prefix (unlike their hosts counterparts) because
@@ -48,7 +59,7 @@ class ServiceStringCondition:
     type: Literal["condition"] = api_field(
         description="Node type discriminator", example="condition"
     )
-    field: Literal["name", "summary", "contacts"] = api_field(
+    field: Literal["name", "host_name", "summary", "contacts"] = api_field(
         description="String service field to filter on", example="name"
     )
     op: ServiceStringOp = api_field(description="String match operation", example="contains")
@@ -70,6 +81,37 @@ class ServiceStateChoiceCondition:
             example=["OK", "WARN"],
         )
     )
+
+
+@api_model
+class ServiceHostStateChoiceCondition:
+    type: Literal["condition"] = api_field(
+        description="Node type discriminator", example="condition"
+    )
+    field: Literal["host_state"] = api_field(
+        description="State of the host the service runs on", example="host_state"
+    )
+    op: Literal["one_of"] = api_field(description="Set membership operation", example="one_of")
+    value: Annotated[list[HostStateLabel], MinLen(1), AfterValidator(validate_uniqueness)] = (
+        api_field(
+            description="Host states to match",
+            example=["DOWN", "UNREACHABLE"],
+        )
+    )
+
+
+@api_model
+class ServiceSiteChoiceCondition:
+    type: Literal["condition"] = api_field(
+        description="Node type discriminator", example="condition"
+    )
+    field: Literal["site_id"] = api_field(description="Site field", example="site_id")
+    op: Literal["one_of"] = api_field(description="Set membership operation", example="one_of")
+    value: Annotated[
+        list[SiteId],
+        MinLen(1),
+        AfterValidator(validate_uniqueness),
+    ] = api_field(description="Site IDs to match", example=["local"])
 
 
 @api_model
@@ -137,7 +179,8 @@ class ServiceLabelChoiceCondition:
             "when it carries every pair, with 'one_of' when it carries any one of them. The "
             "first colon separates the two halves, so a value may contain colons. A trailing "
             "'*' matches by prefix: 'key:va*' takes every value of that key starting with "
-            "'va', 'ke*' every key starting with 'ke', whatever its value."
+            "'va', 'key:*' any value of exactly that key, 'ke*' every key starting with 'ke', "
+            "whatever its value."
         ),
         example=["cmk/os_family:linux"],
     )
@@ -167,7 +210,9 @@ class ServiceNameChoiceCondition:
 
 type ServiceConditionNode = (
     ServiceStateChoiceCondition
+    | ServiceHostStateChoiceCondition
     | ServiceStringCondition
+    | ServiceSiteChoiceCondition
     | ServiceBooleanCondition
     | ServiceTimestampCondition
     | ServiceLabelChoiceCondition
@@ -211,7 +256,39 @@ class ServiceNotNode:
     child: ServiceFilterNode = api_field(description="Child filter node")
 
 
-type ServiceFilterNode = ServiceAndNode | ServiceOrNode | ServiceNotNode | ServiceConditionNode
+@api_model(slots=False)
+class ServiceHostNode:
+    type: Literal["host"] = api_field(
+        description="Host scope: the host of the service must match the child", example="host"
+    )
+    child: Annotated[HostFilterNode, AfterValidator(validate_host_columns_only)] = api_field(
+        description=(
+            "Filter node on the host of the service, as the hosts listing takes it, except for "
+            "'site_id' and 'folder' conditions"
+        ),
+        example={"type": "condition", "field": "labels", "op": "all_of", "value": ["env:prod"]},
+    )
+
+
+type ServiceFilterNode = (
+    ServiceAndNode | ServiceOrNode | ServiceNotNode | ServiceHostNode | ServiceConditionNode
+)
+
+SERVICE_FILTER_NODE: Final = TypeAdapter[ServiceFilterNode](ServiceFilterNode)
+
+
+_SITE_SCOPE: SiteScopeExtractor[ServiceFilterNode] = SiteScopeExtractor(
+    site_condition=ServiceSiteChoiceCondition,
+    and_node=ServiceAndNode,
+    or_node=ServiceOrNode,
+    not_node=ServiceNotNode,
+    make_and=lambda children: ServiceAndNode(type="and", children=children),
+)
+
+
+def scope_filter_by_site(node: ServiceFilterNode) -> SiteScopedFilter[ServiceFilterNode]:
+    """Split off the tree's 'site_id' condition, see `SiteScopeExtractor`."""
+    return _SITE_SCOPE.scope(node)
 
 
 def parse_as_livestatus_filter(node: ServiceFilterNode) -> ServiceFilter:
@@ -231,6 +308,8 @@ def _label_choice_filters(field: str, pairs: list[str]) -> list[str]:
         if not separator:
             column = _LABEL_NAME_COLUMNS[field]
             lines.append(f"Filter: {column} ~ {lqencode(_anchored(key.removesuffix(_WILDCARD)))}")
+        elif value == _WILDCARD:
+            lines.append(f"Filter: {_LABEL_NAME_COLUMNS[field]} >= {lqencode(key)}")
         elif value.endswith(_WILDCARD):
             lines.append(
                 f"Filter: {lqencode(field)} ~ {lqencode(quote_dict(key))} "
@@ -280,6 +359,14 @@ def _accumulate_filters(node: ServiceFilterNode, filters: list[str]) -> None:
             match node.op:
                 case "one_of" if len(clauses) > 1:
                     filters.append(f"Or: {len(clauses)}")
+
+        case ServiceHostStateChoiceCondition():
+            host_clauses = [_host_state_choice_clause(value) for value in node.value]
+            for clause in host_clauses:
+                filters.extend(clause)
+
+            if len(host_clauses) > 1:
+                filters.append(f"Or: {len(host_clauses)}")
 
         case ServiceTimestampCondition():
             filters.append(f"Filter: {node.field} {_TIMESTAMP_OP_TO_LS[node.op]} {node.value}")
@@ -355,6 +442,9 @@ def _accumulate_filters(node: ServiceFilterNode, filters: list[str]) -> None:
             if len(node.value) > 1:
                 filters.append(f"Or: {len(node.value)}")
 
+        case ServiceSiteChoiceCondition():
+            raise AssertionError("Site conditions are not fully supported as filter nodes.")
+
         case ServiceAndNode() | ServiceOrNode():
             for child in node.children:
                 _accumulate_filters(child, filters)
@@ -369,6 +459,10 @@ def _accumulate_filters(node: ServiceFilterNode, filters: list[str]) -> None:
             _accumulate_filters(node.child, filters)
             filters.append("Negate:")
 
+        case ServiceHostNode():
+            # The services table carries every column of the host, named with a "host_" prefix.
+            filters.extend(livestatus_filter_lines(node.child, column_prefix="host_"))
+
 
 def _state_choice_clause(field: str, value: ServiceStateLabel) -> list[str]:
     """A pending service's raw ``state`` column is meaningless (always 0, coinciding with OK), so
@@ -379,6 +473,16 @@ def _state_choice_clause(field: str, value: ServiceStateLabel) -> list[str]:
     return [
         f"Filter: {field} = {ServiceState[value]}",
         "Filter: has_been_checked = 1",
+        "And: 2",
+    ]
+
+
+def _host_state_choice_clause(value: HostStateLabel) -> list[str]:
+    if value == "PENDING":
+        return ["Filter: host_has_been_checked = 0"]
+    return [
+        f"Filter: host_state = {HostState[value]}",
+        "Filter: host_has_been_checked = 1",
         "And: 2",
     ]
 

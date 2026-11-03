@@ -19,6 +19,7 @@ import { type SaveResult, createCustomService, updateCustomService } from './sav
 import AssignHostStep from './steps/AssignHostStep.vue'
 import ConfigureNameStep from './steps/ConfigureNameStep.vue'
 import DefineMetricStep from './steps/DefineMetricStep.vue'
+import { templatePreviewBlocksSave, useHostNameTemplatePreview } from './templatePreview'
 import { type ServiceModel, emptyService, isMetricSelected, isReadyToCreate } from './types'
 
 const props = defineProps<CustomServicesWizard>()
@@ -31,6 +32,7 @@ const currentStep = ref(editing ? 2 : 1)
 const model = ref<ServiceModel>(emptyService())
 const saving = ref(false)
 const saveError = ref<string | null>(null)
+const templateErrors = ref<string[]>([])
 const editETag = ref<string | null>(null)
 const loading = ref(editing)
 const loadError = ref<string | null>(null)
@@ -38,8 +40,21 @@ const nameStepRef = useTemplateRef<InstanceType<typeof ConfigureNameStep>>('name
 
 // A metric must be selected before the host-assignment step can be reached.
 const metricStepValid = computed(() => isMetricSelected(model.value))
-// A service name and a target host are both required before the service can be created.
-const hostStepValid = computed(() => isReadyToCreate(model.value))
+// Only looked up on the host step, so editing the metric step does not query on every change
+const templatePreview = useHostNameTemplatePreview(() =>
+  currentStep.value === 3 ? model.value : null
+)
+// A service name and a host, or a host name template whose matches allow saving, are required.
+const hostStepValid = computed(
+  () => isReadyToCreate(model.value) && !templatePreviewBlocksSave(templatePreview.preview.value)
+)
+
+watch(
+  () => model.value.hostNameTemplate,
+  () => {
+    templateErrors.value = []
+  }
+)
 
 // Default the service name to the selected metric name (editable in the assign host step). A
 // loaded service always brings its own name along, so prefilling never trips this.
@@ -108,6 +123,10 @@ async function saveService(): Promise<void> {
   saving.value = true
   try {
     const result = await persist()
+    if (result.templateError !== undefined) {
+      templateErrors.value = [result.templateError]
+      return
+    }
     if (!result.ok) {
       saveError.value = result.error ?? failureMessage.value
       return
@@ -167,9 +186,20 @@ async function saveService(): Promise<void> {
           <CmkHeading type="h3">{{ _t('Assign to host') }}</CmkHeading>
         </template>
         <template #content>
+          <!-- Mounted only while shown, so editing the metric step asks the backend nothing -->
           <AssignHostStep
+            v-if="currentStep === 3"
             v-model:service-name="model.serviceName"
             v-model:host-name="model.hostName"
+            v-model:host-name-template="model.hostNameTemplate"
+            :template-errors="templateErrors"
+            :template-preview="templatePreview.preview.value"
+            :metric-name="model.metricName"
+            :attribute-filter="model.attributeFilter"
+            :consolidation="model.consolidation"
+            :aggregator="model.aggregator"
+            :append-series-attributes="model.appendSeriesAttributes"
+            @refresh-template-preview="templatePreview.refresh"
           />
           <CmkAlert v-if="saveError" variant="error" :text="untranslated(saveError)" />
         </template>

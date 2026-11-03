@@ -11,6 +11,7 @@
 #include "eventlog/eventlogvista.h"
 #include "providers/logwatch_event_details.h"
 #include "tools/_misc.h"
+#include "tools/_raii.h"
 #include "watest/test_tools.h"
 #include "wnx/cfg.h"
 #include "wnx/cfg_engine.h"
@@ -35,18 +36,67 @@ const std::vector<tst::EventRecordData> &ApplicationLogData() {
     return application_log_data;
 }
 
+namespace {
+constexpr const wchar_t *kOwnSource = L"watest";
+}  // namespace
+
+/// For the tests that read the real Application log. They need a crit-level
+/// record there, which a long-lived machine has but a fresh Windows may not:
+/// write one only then, so that other machines' logs stay untouched.
+class EventLogApplicationTest : public ::testing::Test {
+protected:
+    static void SetUpTestSuite() {
+        const auto log = OpenEvl(L"Application", false);
+        ASSERT_TRUE(log->isLogValid());
+        const auto [last_before, worst] =
+            ScanEventLog(*log, 0, cfg::EventLevels::kCrit);
+        if (worst == cfg::EventLevels::kCrit) {
+            return;
+        }
+
+        auto *source = ::RegisterEventSourceW(nullptr, kOwnSource);
+        ASSERT_NE(source, nullptr);
+        ON_OUT_OF_SCOPE(::DeregisterEventSource(source));
+        const std::wstring message =
+            L"watest EventLogApplicationTest record, written by the test "
+            L"itself so that the Application log has error-level content to "
+            L"read";
+        const wchar_t *strings[] = {message.c_str()};
+        ASSERT_TRUE(::ReportEventW(source, EVENTLOG_ERROR_TYPE, 0, 100, nullptr,
+                                   1, 0, strings, nullptr));
+
+        // Look for our own source: other programs may write to the
+        // Application log meanwhile.
+        const auto own_record_visible = [&log, from = last_before + 1] {
+            log->seek(from);
+            while (true) {
+                const EventLogRecordBase::ptr record{log->readRecord()};
+                if (!record) {
+                    return false;
+                }
+                if (record->source() == kOwnSource) {
+                    return true;
+                }
+            }
+        };
+        ASSERT_TRUE(tst::WaitForSuccessSilent(std::chrono::seconds{5},
+                                              own_record_visible))
+            << "the record written is not in the log";
+    }
+};
+
 TEST(EventLogTest, ChoosePos) {
     EXPECT_EQ(choosePos(1), 2);
     EXPECT_EQ(choosePos(cfg::kFromBegin), 0);
 }
 
-TEST(EventLogTest, ScanEventLogComponent) {
+TEST_F(EventLogApplicationTest, ScanEventLogComponent) {
     for (auto vista_mode : {false, true}) {
         auto ptr = OpenEvl(L"Application", vista_mode);
         ASSERT_TRUE(ptr != nullptr);
         auto [last, level] = ScanEventLog(*ptr, 0, cfg::EventLevels::kCrit);
         EXPECT_TRUE(last > 0);
-        EXPECT_TRUE(level > cfg::EventLevels::kAll);
+        EXPECT_EQ(level, cfg::EventLevels::kCrit);
     }
 }
 
@@ -114,7 +164,7 @@ TEST(EventLogTest, PrintEventLogOffset) {
     EXPECT_EQ(table.size(), ApplicationLogData().size() - 3);
 }
 
-TEST(EventLogTest, PrintEventLogComponent) {
+TEST_F(EventLogApplicationTest, PrintEventLogComponent) {
     for (auto vista_mode : {false, true}) {
         auto ptr = OpenEvl(L"Application", vista_mode);
         ASSERT_TRUE(ptr != nullptr);
@@ -161,7 +211,7 @@ TEST(EventLogTest, BeginningOfTheHardwareLogComponent) {
     EXPECT_TRUE(str.empty());
 }
 
-TEST(EventLogTest, BeginningOfTheApplicationLogComponent) {
+TEST_F(EventLogApplicationTest, BeginningOfTheApplicationLogComponent) {
     auto ptr = OpenEvl(L"Application", false);
     std::string str;
     auto _ = PrintEventLog(

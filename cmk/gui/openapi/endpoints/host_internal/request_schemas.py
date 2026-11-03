@@ -7,14 +7,6 @@ from cmk import fields
 from cmk.gui.fields.utils import BaseSchema
 
 
-class LinkHostUUID(BaseSchema):
-    uuid = fields.UUID(
-        required=True,
-        example="34e4c967-1591-4883-8cdf-0e335b09618d",
-        description="A valid UUID.",
-    )
-
-
 class RegisterHostRequest(BaseSchema):
     uuid = fields.UUID(
         required=True,

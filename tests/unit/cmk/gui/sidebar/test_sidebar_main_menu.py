@@ -22,6 +22,7 @@ from cmk.gui.main_menu_types import (
     MainMenuToggleItem,
 )
 from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
 from cmk.gui.sidebar.main_menu import (
     ajax_message_read,
     MainMenuConfigCreator,
@@ -115,7 +116,13 @@ def _creator(monkeypatch: pytest.MonkeyPatch, items: Iterable[object]) -> MainMe
 
 
 def _page_context(config: Config) -> PageContext:
-    return PageContext(config=config, request=request, transactions=transactions, session=session)
+    return PageContext(
+        config=config,
+        request=request,
+        transactions=transactions,
+        session=session,
+        user_permissions=UserPermissions.from_config(config, all_permissions()),
+    )
 
 
 def test_a_menu_without_topics_and_without_a_vue_app_is_dropped(

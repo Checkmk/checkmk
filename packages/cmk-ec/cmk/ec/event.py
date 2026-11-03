@@ -14,14 +14,18 @@ from typing import Literal, TypedDict
 from dateutil.parser import isoparse
 from dateutil.tz import tzlocal
 
+from cmk.ccc.exceptions import MKTimeout
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.site import SiteId
+from cmk.ccc.translations import translate, TranslationOptions
 
 # State transitions (probably incomplete):
 #   {ack, open, counting} => closed
 #   {ack, delayed}  => open
 #   {open} => ack
 EventPhase = Literal["open", "delayed", "counting", "ack", "closed"]
+
+LimitKind = Literal["overall", "by_rule", "by_host"]
 
 
 # This is far from perfect, but at least we see all possible keys.
@@ -54,6 +58,7 @@ class Event(TypedDict, total=False):
     match_groups: Iterable[str]
     match_groups_syslog_application: Iterable[str]
     orig_host: HostName
+    overflowed_limit: LimitKind  # only for the events about reaching an event limit
     owner: str
     phase: EventPhase
     rule_id: str | None
@@ -452,6 +457,13 @@ def _split_syslog_nonnil_sd_and_message(sd_and_message: str) -> tuple[str, str]:
     raise ValueError("Invalid RFC 5424 syslog message: structured data has the wrong format")
 
 
+# The fields of an event which Checkmk itself sets via structured data, see
+# cmk.ec.syslog.SyslogMessage. Any other field, e.g. the lifetime of the event, could break the EC.
+_CHECKMK_STRUCTURED_DATA_FIELDS = frozenset(
+    {"host", "application", "pid", "msg_id", "ipaddress", "sl"}
+)
+
+
 def parse_syslog_message_structured_data(structured_data: str) -> tuple[dict[str, str], str]:
     """Checks if the structured data contains Checkmk-specific data and extracts it if found."""
     checkmk_id = "Checkmk@18662"
@@ -464,7 +476,8 @@ def parse_syslog_message_structured_data(structured_data: str) -> tuple[dict[str
     event_update = {}
     for sd_param in findall(r' .*?=".*?(?<!\\)"', checkmk_elements[0]):
         name, value = sd_param[1:].split("=", 1)
-        event_update[name] = value[1:-1]
+        if name in _CHECKMK_STRUCTURED_DATA_FIELDS:
+            event_update[name] = value[1:-1]
     return _unescape_parsed_struc(event_update), structured_data.replace(checkmk_elements[0], "")
 
 
@@ -494,3 +507,20 @@ def scrub_string(s: str) -> str:
 
 
 _scrub_string_unicode_table = {0: None, 1: None, 2: None, ord("\n"): None, ord("\t"): ord(" ")}
+
+
+def translate_event_host(
+    translation: TranslationOptions, host_name: str, logger: Logger | None = None
+) -> HostName:
+    """Translates the host name of an event like the Event Console. The translated host name is empty
+    if the translation fails, e.g. because of an invalid regular expression, or if the translated
+    host name is invalid. A given logger logs why.
+    """
+    try:
+        return HostName(translate(translation, host_name))
+    except MKTimeout:  # e.g. the request timeout of the GUI
+        raise
+    except Exception:
+        if logger:
+            logger.exception('Unable to parse host "%(host)s"', {"host": host_name})
+        return HostName("")

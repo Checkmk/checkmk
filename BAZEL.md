@@ -3,9 +3,9 @@
 Quick reference for common developer workflows. Bazel is the primary build
 system for unit tests, linting, formatting, and type checking. See
 [CONTRIBUTING.md](CONTRIBUTING.md) for the full contribution guide and
-the [Introduction to Bazel](https:de//wiki.lan.checkmk.net/spaces/DEV/pages/131340234/Introduction+to+Bazel)
+the [Introduction to Bazel](https://checkmk-int.atlassian.net/wiki/x/6IRlD)
 wiki page for deeper background.
-See [How to run Bazel](https://wiki.lan.checkmk.net/spaces/DEV/pages/131344788/How+to+run+Bazel)
+See [How to run Bazel](https://checkmk-int.atlassian.net/wiki/x/7oRlD)
 for more in depth commands.
 
 ## Core subcommands
@@ -64,12 +64,23 @@ For GUI tests that live under `nonfree/`, use the explicit targets:
 ```console
 $ bazel test //tests/unit/cmk/gui/nonfree/pro:all
 $ bazel test //tests/unit/cmk/gui/nonfree/ultimate:all
-$ bazel test //tests/unit/editions/...
 ```
 
 Available editions: `community`, `pro`, `ultimate`, `ultimatemt`, `cloud`.
 
-### Integration, composition, and GUI E2E tests
+### Integration tests
+
+```console
+# All integration tests
+$ tests/run_tests.sh test-integration
+
+# Tests of everything an edition ships
+$ bazel test //tests/integration/edition_scope/...
+$ bazel test //tests/integration/plugin_invariants/...
+$ bazel test //tests/integration/plugin_consistency/...
+```
+
+### System tests
 
 These still use Make:
 

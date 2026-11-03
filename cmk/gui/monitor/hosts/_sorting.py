@@ -10,7 +10,9 @@ import re
 from collections.abc import Callable, Sequence
 from typing import Any, assert_never, Final
 
-from ._models import Host, HostSort, HostSortColumn, HostSortDirection, HostState
+from cmk.gui.monitor.shared import HostState
+
+from ._models import Host, HostSort, HostSortColumn, HostSortDirection
 
 _UP_SEVERITY: Final = {(False, False): 0, (False, True): 1, (True, False): 2, (True, True): 3}
 _PENDING_SEVERITY: Final = 4

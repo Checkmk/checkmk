@@ -67,7 +67,7 @@ def create_full_path_folder_choice(
         elements=lambda: [
             SingleChoiceElementExtended(
                 name=path,
-                title=Title(folder_title),  # astrein: disable=localization-checker
+                title=Title(folder_title),  # astrein: disable=localization
             )
             for path, folder_title in folder_choices()
         ],
@@ -82,7 +82,7 @@ def _get_timeperiod_choices() -> Sequence[SingleChoiceElementExtended[Timeperiod
     elements = [
         SingleChoiceElementExtended(
             name=name,
-            title=Title(  # astrein: disable=localization-checker
+            title=Title(  # astrein: disable=localization
                 "{} - {}".format(name, tp["alias"])
             ),
         )

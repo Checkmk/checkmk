@@ -233,7 +233,9 @@ function Invoke-RegressionTest() {
         Create_FirewallRule $firewall_rule_name $exe_path
         $env:WNX_REGRESSION_BASE_DIR = "$regression_dir"
         $env:WNX_INTEGRATION_BASE_DIR = ""
-        python.exe -m pytest tests\regression
+        # The repository pyproject.toml enables namespace packages, which would make
+        # pytest put the repository root on sys.path instead of tests\, hiding testlib.
+        python.exe -m pytest -o consider_namespace_packages=false tests\regression
         if ($LASTEXITCODE -ne 0) {
             Write-Error "[-] Regression test :$_" -ErrorAction Stop
         }
@@ -311,7 +313,7 @@ function Invoke-IntegrationTest() {
         $env:WNX_REGRESSION_BASE_DIR = ""
         $env:WNX_INTEGRATION_BASE_DIR = "$integration_dir"
         Write-Host "RUN INTEGRATION in $env:WNX_INTEGRATION_BASE_DIR" -Foreground White
-        python.exe -m pytest tests\integration\
+        python.exe -m pytest -o consider_namespace_packages=false tests\integration\
         if ($LASTEXITCODE -ne 0) {
             Write-Error "[-] Integration test :$_" -ErrorAction Stop
         }

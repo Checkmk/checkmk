@@ -13,6 +13,9 @@ from urllib.parse import urlparse
 
 MAX_LOG_BYTES = 16_000  # cap log body per failure to keep XML manageable
 
+_ANSI_ESCAPE = re.compile(r"\x1b(?:\[[0-?]*[ -/]*[@-~]|[@-Z\\-_])")
+_XML_1_0_INVALID_CHAR = re.compile(r"[^\t\n\r\x20-\ud7ff\ue000-\ufffd\U00010000-\U0010ffff]")
+
 
 def read_uri(uri: str) -> str:
     """Return text content of a file:// URI; empty string on any error."""
@@ -54,6 +57,10 @@ def action_duration_seconds(start: str, end: str) -> float:
     return max(0.0, t_end - t_start) if t_start is not None and t_end is not None else 0.0
 
 
+def _xml_text(text: str) -> str:
+    return _XML_1_0_INVALID_CHAR.sub("", _ANSI_ESCAPE.sub("", text))
+
+
 def write_xml(root: ET.Element, path: Path) -> None:
     ET.indent(root, space="  ")
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -67,6 +74,7 @@ def make_xml(
     label: str, error_message: str, log_content: str, time_seconds: float = 0.0
 ) -> ET.Element:
     """Build a single-testcase JUnit XML tree."""
+    error_message, log_content = _xml_text(error_message), _xml_text(log_content)
     root = ET.Element("testsuites", tests="1", errors="1", failures="0")
     suite = ET.SubElement(root, "testsuite", name=label, tests="1", errors="1", failures="0")
     testcase = ET.SubElement(

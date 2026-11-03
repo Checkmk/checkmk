@@ -6,6 +6,7 @@
 import type * as intl from '@internationalized/date'
 import { render, screen, waitFor } from '@testing-library/vue'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
+// eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
 import { HttpResponse, http } from 'msw'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
@@ -162,17 +163,18 @@ describe('DashboardContentTimeline', () => {
     expect(await screen.findByText('Graph data could not be loaded.')).toBeInTheDocument()
   })
 
-  it('explains a window that follows the dashboard instead of fetching', async () => {
+  it("fetches the dashboard's range while it follows the dashboard", async () => {
     const followsDashboard: TimelineContent = {
       ...HOURLY,
-      render_mode: { type: 'bar_chart', time_range: 'dashboard', time_resolution: 'day' }
+      render_mode: { type: 'bar_chart', time_range: 'dashboard', time_resolution: 'hour' }
     }
 
     render(DashboardContentTimeline, { props: makeContentProps(followsDashboard) })
 
-    expect(
-      await screen.findByText('This widget follows the dashboard time range')
-    ).toBeInTheDocument()
-    expect(requests).toHaveLength(0)
+    await waitFor(() => expect(requests).toHaveLength(1))
+    expect(requests[0]!.time_range).toEqual({
+      start: '2026-01-01T00:00:00.000Z',
+      end: '2026-01-01T01:00:00.000Z'
+    })
   })
 })

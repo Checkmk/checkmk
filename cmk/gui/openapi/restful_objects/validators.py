@@ -26,21 +26,17 @@ from werkzeug.datastructures import MIMEAccept, MultiDict
 from werkzeug.http import parse_options_header
 
 from cmk import trace
-from cmk.gui import hooks
 from cmk.gui import http as cmk_http
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import HTTPMethod, Request
-from cmk.gui.openapi.permission_tracking import (
-    enable_permission_tracking,
-    is_permission_tracking_enabled,
-)
+from cmk.gui.openapi.permission_tracking import track_permissions
 from cmk.gui.openapi.restful_objects.content_decoder import decode
 from cmk.gui.openapi.restful_objects.params import path_parameters
 from cmk.gui.openapi.restful_objects.type_defs import ETagBehaviour, StatusCodeInt
 from cmk.gui.openapi.utils import (
     EXT,
     FIELDS,
-    RestAPIForbiddenException,
+    forbidden_from_auth_exception,
     RestAPIHeaderSchemaValidationException,
     RestAPIHeaderValidationException,
     RestAPIPathValidationException,
@@ -123,7 +119,7 @@ class PathParamsValidator:
         except ValidationError as exc:
             raise PathParamsValidator._schema_validation_exception(exc.messages)
         except MKAuthException as exc:
-            raise PathParamsValidator._auth_validation_exception(exc.args[0])
+            raise forbidden_from_auth_exception(exc) from exc
 
     @staticmethod
     def verify_marshmallow_params_presence(path: str, path_schema: type[Schema] | None) -> None:
@@ -197,13 +193,6 @@ class PathParamsValidator:
             ),
         )
 
-    @staticmethod
-    def _auth_validation_exception(message: str) -> RestAPIForbiddenException:
-        return RestAPIForbiddenException(
-            title=HTTPStatus.FORBIDDEN.phrase,
-            detail=message,
-        )
-
 
 class QueryParamsValidator:
     """Utility class for validating query parameters in API endpoints."""
@@ -229,7 +218,7 @@ class QueryParamsValidator:
         except ValidationError as exc:
             raise QueryParamsValidator._schema_validation_exception(exc.messages)
         except MKAuthException as exc:
-            raise QueryParamsValidator._auth_validation_exception(exc.args[0])
+            raise forbidden_from_auth_exception(exc) from exc
 
     @staticmethod
     def _schema_validation_exception(
@@ -241,13 +230,6 @@ class QueryParamsValidator:
             fields=FIELDS(
                 error_messages if isinstance(error_messages, dict) else {"exc": error_messages},
             ),
-        )
-
-    @staticmethod
-    def _auth_validation_exception(message: str) -> RestAPIForbiddenException:
-        return RestAPIForbiddenException(
-            title=HTTPStatus.FORBIDDEN.phrase,
-            detail=message,
         )
 
 
@@ -268,13 +250,6 @@ class RequestDataValidator:
         )
 
     @staticmethod
-    def _auth_exception(exc_detail: str) -> RestAPIForbiddenException:
-        return RestAPIForbiddenException(
-            title=HTTPStatus.FORBIDDEN.phrase,
-            detail=exc_detail,
-        )
-
-    @staticmethod
     def decode_marshmallow_schema(
         content_type: str,
         request_obj: Request,
@@ -289,7 +264,7 @@ class RequestDataValidator:
                 exc.messages,
             )
         except MKAuthException as exc:
-            raise RequestDataValidator._auth_exception(exc.args[0])
+            raise forbidden_from_auth_exception(exc) from exc
 
     @staticmethod
     def _format_pydantic_location(location: Iterable[str | int]) -> str:
@@ -551,9 +526,6 @@ class PermissionValidator:
 
         def on_permission_checked(pname: str) -> None:
             """Collect all checked permissions during execution"""
-            if not is_permission_tracking_enabled():
-                return
-
             used_permissions.add(pname)
 
             if required_permissions is None or pname not in required_permissions:
@@ -576,12 +548,8 @@ class PermissionValidator:
     @contextlib.contextmanager
     def track_permissions(self) -> Iterator[None]:
         """Track permissions for the duration of the context."""
-        hooks.register_builtin("permission-checked", self._on_permission_checked)
-        try:
-            with enable_permission_tracking():
-                yield
-        finally:
-            hooks.unregister("permission-checked", self._on_permission_checked)
+        with track_permissions(self._on_permission_checked):
+            yield
 
 
 def _filter_profile_headers(arg_dict: ArgDict) -> ArgDict:

@@ -71,6 +71,14 @@ def get_agent_controller_arch(agconf: AgentConfig) -> AgentControllerTargetArch:
     return CustomizeAgentPackageConfig.model_validate(customize_agent_package).agent_controller_arch
 
 
+def is_agent_controller_deployed(agconf: AgentConfig) -> bool:
+    """Whether the Linux package ships the agent controller and its systemd units"""
+    choice, _runtime_opts = agconf.get("agent_controller", {}).get(
+        "agent_ctl_enabled", ("enabled", {})
+    )
+    return agconf["super_server"]["deployment_mode"] in ("auto", "systemd") and choice == "enabled"
+
+
 class AgentPathsConfig(BaseModel, frozen=True):
     bin: str
     config: str
@@ -166,6 +174,7 @@ class UnixSingleDirectoryKeeper:
         LogicalPath.VAR: RUNTIME_SUBDIR,
     }
     ACCESSIBLE_FOR_OTHERS = 0o755
+    TRAVERSABLE_FOR_OTHERS = 0o751
     FORBIDDEN_FOR_OTHERS = 0o750
 
     def __init__(self, install_dir: str, package_name: str):
@@ -188,13 +197,17 @@ class UnixSingleDirectoryKeeper:
         (package_dir / "config").mkdir(mode=self.FORBIDDEN_FOR_OTHERS, exist_ok=True, parents=True)
         (package_dir / "scripts").mkdir(mode=self.FORBIDDEN_FOR_OTHERS, exist_ok=True, parents=True)
 
-        runtime_dir.mkdir(mode=self.FORBIDDEN_FOR_OTHERS, exist_ok=True, parents=True)
+        # mk-job runs as an arbitrary user and writes to runtime/job/<user>.
+        runtime_dir.mkdir(mode=self.TRAVERSABLE_FOR_OTHERS, exist_ok=True, parents=True)
         (runtime_dir / "log").mkdir(mode=self.FORBIDDEN_FOR_OTHERS, exist_ok=True, parents=True)
         (runtime_dir / "spool").mkdir(mode=self.FORBIDDEN_FOR_OTHERS, exist_ok=True, parents=True)
-        (runtime_dir / "job").mkdir(mode=self.FORBIDDEN_FOR_OTHERS, exist_ok=True, parents=True)
+        (runtime_dir / "job").mkdir(mode=self.TRAVERSABLE_FOR_OTHERS, exist_ok=True, parents=True)
         (runtime_dir / "controller").mkdir(
             mode=self.FORBIDDEN_FOR_OTHERS, exist_ok=True, parents=True
         )
+        # The agent and its plug-ins would otherwise create these on demand, readable for others.
+        for subdir in ("cache", "logwatch-batches", "persisted", "rtc_remotes", "tmp"):
+            (runtime_dir / subdir).mkdir(mode=self.FORBIDDEN_FOR_OTHERS, exist_ok=True)
 
     def get_target_path(self, logical_path: LogicalPath) -> Path:
         match logical_path:

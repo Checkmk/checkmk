@@ -5,6 +5,8 @@
 
 #include "livestatus/TableEventConsole.h"
 
+#include <algorithm>
+#include <array>
 #include <chrono>
 #include <cstdlib>
 #include <ctime>
@@ -12,17 +14,23 @@
 #include <functional>
 #include <iosfwd>
 #include <iostream>
+#include <iterator>
 #include <optional>
 #include <stdexcept>
+#include <string>
+#include <string_view>
 #include <unordered_set>
 #include <utility>
+#include <vector>
 
+#include "livestatus/Column.h"
 #include "livestatus/ColumnFilter.h"
 #include "livestatus/DoubleColumn.h"
 #include "livestatus/EventConsoleConnection.h"
 #include "livestatus/Filter.h"
 #include "livestatus/ICore.h"
 #include "livestatus/Interface.h"
+#include "livestatus/Logger.h"
 #include "livestatus/Query.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
@@ -45,6 +53,57 @@ const std::vector<std::string> grepping_filters = {
 
 };
 
+// Livestatus and the EC agree on an operator's meaning only for some column
+// types: Livestatus uses the regex operators as bit mask operators for int
+// columns, and the EC can't compare a missing string (None) via an ordering
+// operator.
+bool isUnderstoodByEC(ColumnType type, RelationalOperator op) {
+    switch (op) {
+        case RelationalOperator::equal:
+        case RelationalOperator::not_equal:
+            return type == ColumnType::int_ || type == ColumnType::string;
+        case RelationalOperator::matches:
+        case RelationalOperator::doesnt_match:
+        case RelationalOperator::equal_icase:
+        case RelationalOperator::not_equal_icase:
+        case RelationalOperator::matches_icase:
+        case RelationalOperator::doesnt_match_icase:
+            return type == ColumnType::string;
+        case RelationalOperator::less:
+        case RelationalOperator::greater_or_equal:
+        case RelationalOperator::greater:
+        case RelationalOperator::less_or_equal:
+            return type == ColumnType::int_;
+    }
+    return false;  // unreachable
+}
+
+// See https://docs.python.org/3/library/stdtypes.html#str.splitlines
+constexpr auto python_line_boundaries = std::to_array<std::string_view>({
+    "\n",
+    "\r",
+    "\v",
+    "\f",
+    "\x1c",
+    "\x1d",
+    "\x1e",
+    "\u0085",
+    "\u2028",
+    "\u2029",
+});
+
+// The EC splits a request into lines via Python's str.splitlines(), which
+// splits at more than just \n. So a value containing such a line boundary would
+// inject header lines into the request, e.g. a Columns: header without the
+// columns needed for authorization. Note that we only accept UTF-8 requests, so
+// we can simply search for the UTF-8 encoded line boundaries.
+bool isSafeForEC(std::string_view value) {
+    return std::ranges::none_of(
+        python_line_boundaries, [value](std::string_view boundary) {
+            return value.find(boundary) != std::string_view::npos;
+        });
+}
+
 class ECTableConnection : public EventConsoleConnection {
 public:
     ECTableConnection(const ICore &mc, const Table &table, Query &query,
@@ -55,6 +114,15 @@ public:
         , table_{&table}
         , query_{&query}
         , is_authorized_{std::move(is_authorized)} {}
+
+    // The EC always replies with a header first, so no reply at all means that
+    // it failed before replying, e.g. due to an invalid regex in a filter.
+    void runQuery() {
+        run();
+        if (!received_reply_) {
+            throw std::runtime_error(prefix("received no reply"));
+        }
+    }
 
 private:
     void sendRequest(std::ostream &os) override {
@@ -115,52 +183,71 @@ private:
 
     void emitGreppingFilter(std::ostream &os) {
         for (const auto &column_name : grepping_filters) {
-            auto conjuncts =
-                query_
-                    ->partialFilter(
-                        column_name,
-                        [&column_name](const std::string &columnName) {
-                            return column_name == columnName;
-                        })
-                    ->conjuncts();
-            if (conjuncts.size() == 1) {
-                if (const auto *column_filter =
-                        conjuncts[0]->as_column_filter()) {
-                    // NOTE: Keep this in sync with EC code. Ugly...
-                    switch (column_filter->oper()) {
-                        case RelationalOperator::equal:
-                        case RelationalOperator::matches:
-                        case RelationalOperator::equal_icase:
-                        case RelationalOperator::matches_icase:
-                            os << "\nFilter: " << column_name << " "
-                               << column_filter->oper() << " "
-                               << column_filter->value();
-                            continue;
-                        case RelationalOperator::not_equal:
-                        case RelationalOperator::doesnt_match:
-                        case RelationalOperator::not_equal_icase:
-                        case RelationalOperator::doesnt_match_icase:
-                        case RelationalOperator::less:
-                        case RelationalOperator::greater_or_equal:
-                        case RelationalOperator::greater:
-                        case RelationalOperator::less_or_equal:
-                            break;
-                    }
-                }
+            const auto restrictions = restrictionsFor(column_name);
+            if (restrictions.empty()) {
+                continue;
             }
-            if (auto svr = query_->stringValueRestrictionFor(column_name)) {
-                os << "\nFilter: " << column_name << " = " << *svr;
-            } else {
-                auto glb = query_->greatestLowerBoundFor(column_name);
-                auto lub = query_->leastUpperBoundFor(column_name);
-                if (glb && lub && glb == lub) {
-                    os << "\nFilter: " << column_name << " = " << *glb;
+            // Not all EC tables have the grepping columns, but a restriction
+            // on one of them implies that our table has it.
+            const auto type = table_->column(column_name, *mc_)->type();
+            for (const auto &[op, value] : restrictions) {
+                const bool forward =
+                    isUnderstoodByEC(type, op) && isSafeForEC(value);
+                Debug(mc_->loggerLivestatus())
+                    << "column " << table_->name() << "." << column_name
+                    << " is restricted by " << op << " " << value
+                    << (forward ? ", forwarding" : ", not forwarding")
+                    << " it to the EC";
+                if (forward) {
+                    os << "\nFilter: " << column_name << " " << op << " "
+                       << value;
                 }
-                // NOTE: We could emit >= or <= constraints for cases where we
-                // know only one bound or the bounds are different, but the EC
-                // can't make use of that currently.
             }
         }
+    }
+
+    // The restrictions of the query on the given column, one for each column
+    // filter in its conjuncts. For a disjunction, only what holds for all of
+    // its disjuncts is a restriction, e.g. Or(event_id = 3, event_id = 7)
+    // restricts event_id to the range from 3 to 7.
+    [[nodiscard]] std::vector<std::pair<RelationalOperator, std::string>>
+    restrictionsFor(const std::string &column_name) const {
+        std::vector<std::pair<RelationalOperator, std::string>> restrictions;
+        auto filter = query_->partialFilter(
+            column_name, [&column_name](const std::string &columnName) {
+                return column_name == columnName;
+            });
+        const auto timezone_offset = query_->timezoneOffset();
+        for (const auto &conjunct : filter->conjuncts()) {
+            if (const auto *column_filter = conjunct->as_column_filter()) {
+                restrictions.emplace_back(column_filter->oper(),
+                                          column_filter->value());
+                continue;
+            }
+            if (auto value = conjunct->stringValueRestrictionFor(column_name)) {
+                restrictions.emplace_back(RelationalOperator::equal, *value);
+            }
+            auto glb =
+                conjunct->greatestLowerBoundFor(column_name, timezone_offset);
+            auto lub =
+                conjunct->leastUpperBoundFor(column_name, timezone_offset);
+            if (glb && lub && *glb == *lub) {
+                // A range of a single value is an equality, which the EC's
+                // history can use for grepping, unlike the bounds.
+                restrictions.emplace_back(RelationalOperator::equal,
+                                          std::to_string(*glb));
+                continue;
+            }
+            if (glb) {
+                restrictions.emplace_back(RelationalOperator::greater_or_equal,
+                                          std::to_string(*glb));
+            }
+            if (lub) {
+                restrictions.emplace_back(RelationalOperator::less_or_equal,
+                                          std::to_string(*lub));
+            }
+        }
+        return restrictions;
     }
 
     void receiveReply(std::istream &is) override {
@@ -169,7 +256,11 @@ private:
         while (true) {
             std::string line;
             std::getline(is, line);
-            if (!is || line.empty()) {
+            if (!is) {
+                return;
+            }
+            received_reply_ = true;
+            if (line.empty()) {
                 return;
             }
             std::vector<std::string> columns = mk::split(line, '\t');
@@ -189,6 +280,7 @@ private:
     const Table *table_;
     Query *query_;
     std::function<bool(const row_type &)> is_authorized_;
+    bool received_reply_{false};
 };
 }  // namespace
 
@@ -299,7 +391,7 @@ void TableEventConsole::answerQuery(Query &query, const User &user,
     if (core.mkeventdEnabled()) {
         try {
             ECTableConnection{core, *this, query, get_authorizer(*this, user)}
-                .run();
+                .runQuery();
         } catch (const std::runtime_error &err) {
             query.badGateway(err.what());
         }

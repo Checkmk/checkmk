@@ -39,3 +39,18 @@ def test_check_fast_lta_silent_cube_capacity() -> None:
     metrics = [m for m in actual_check_results if isinstance(m, Metric)]
     assert metrics[0].name == "fs_used"
     assert metrics[0].value == 3695972.90234375
+
+
+def test_check_fast_lta_silent_cube_capacity_empty_used_value() -> None:
+    # Crash group 4562: the device reported its total capacity but an empty
+    # value for the used capacity.
+    assert list(
+        check_fast_lta_silent_cubes_capacity(
+            "Total", FILESYSTEM_DEFAULT_PARAMS, [["200021140045824", ""]]
+        )
+    ) == [
+        Result(
+            state=State.UNKNOWN,
+            summary="Cannot parse capacity: got total '200021140045824', used '' (expected integers)",
+        ),
+    ]

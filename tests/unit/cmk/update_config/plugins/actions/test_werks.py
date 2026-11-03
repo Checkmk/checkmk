@@ -12,9 +12,10 @@ from pydantic import TypeAdapter
 
 import cmk.werks.site
 import cmk.werks.site.acknowledgement
-from cmk.update_config.lib import ExpiryVersion
+from cmk.update_config.internal import ExpiryVersion
 from cmk.update_config.plugins.actions.werks import load_unacknowledged_werks, UnacknowledgedWerks
-from cmk.werks.tool.models import Class, Compatibility, EditionV3, Level, WerkV3
+from cmk.werks.flavor.cmk.models import Class, EditionV3, WerkV3
+from cmk.werks.tool.models import Compatibility, Level
 
 
 def generate_werk(

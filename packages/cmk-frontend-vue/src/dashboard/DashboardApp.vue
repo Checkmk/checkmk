@@ -49,6 +49,7 @@ import { useDashboardTimeControl } from '@/dashboard/composables/useDashboardTim
 import { useDashboardVisualTitle } from '@/dashboard/composables/useDashboardVisualTitle.ts'
 import { useDashboardWidgets } from '@/dashboard/composables/useDashboardWidgets.ts'
 import { useDashboardsManager } from '@/dashboard/composables/useDashboardsManager.ts'
+import { useProvideDrillDownSource } from '@/dashboard/composables/useDrillDownSource'
 import { useProvideDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import { useProvideMissingRuntimeFiltersAction } from '@/dashboard/composables/useProvideMissingRuntimeFiltersAction.ts'
 import { useProvideVisualInfos } from '@/dashboard/composables/useProvideVisualInfos'
@@ -75,12 +76,11 @@ import type {
   WidgetSpec
 } from '@/dashboard/types/widget'
 import { type CloneResult, dashboardAPI, urlHandler } from '@/dashboard/utils.ts'
-import NetworkFlowSlideIns from '@/network-flow/slide-ins/NetworkFlowSlideIns.vue'
-import { useNetworkFlowSlideIns } from '@/network-flow/slide-ins/useNetworkFlowSlideIns'
 import { PageHeader } from '@/page-header'
 
 import CloneSuccessAlert from './components/CloneSuccessAlert.vue'
 import DashboardRefreshControl from './components/DashboardRefreshControl.vue'
+import DroppedFiltersAlert from './components/DroppedFiltersAlert.vue'
 import DashboardSettingsWizard from './components/Wizard/DashboardSettingsWizard.vue'
 import DashboardSharingWizard from './components/Wizard/wizards/dashboard-sharing/DashboardSharingWizard.vue'
 
@@ -109,8 +109,11 @@ const widgetToEdit = ref<string | null>(null)
 const selectedDashboardBreadcrumb = ref<BreadcrumbItem[] | null>(null)
 const showCloneSuccessAlert = ref(false)
 const clonedAsResponsive = ref(false)
+const droppedFiltersWarning = ref<string | null>(null)
+// Another dashboard picked here was not drilled to, so it offers no way back.
+const drillUp = ref(props.drill_up)
 
-watch(showCloneSuccessAlert, async () => {
+watch([showCloneSuccessAlert, droppedFiltersWarning], async () => {
   await nextTick()
   window.dispatchEvent(new Event('resize'))
 })
@@ -125,9 +128,6 @@ useProvideVisualInfos()
 
 // So far, this is only needed and used by the DashboardContentNtop component
 provide(urlParamsKey, props.url_params)
-
-// The network flow detail slide-ins, opened from the flow widgets nested below.
-const networkFlowSlideIns = useNetworkFlowSlideIns()
 
 const dashboardsManager = useDashboardsManager()
 useProvideDashboardConstants(dashboardsManager.constants)
@@ -166,6 +166,10 @@ onBeforeMount(async () => {
       showCloneSuccessAlert.value = true
       urlHandler.updateCurrentUrl(urlHandler.withoutCloneResult(currentUrl))
     }
+    droppedFiltersWarning.value = dashboard.filter_context.dropped_filters_warning
+    if (droppedFiltersWarning.value !== null) {
+      urlHandler.updateCurrentUrl(urlHandler.withoutDroppedFilters(new URL(window.location.href)))
+    }
   }
 })
 
@@ -179,10 +183,10 @@ const widgetTitles = useComputeWidgetTitles(
   dashboardFilters.baseFilters,
   dashboardWidgets.widgetCores
 )
-const dashboardWidgetWorkflows = getDashboardWidgetWorkflows(
-  props.available_features.ntop_active,
-  props.available_features.network_flow_active
-)
+const dashboardWidgetWorkflows = getDashboardWidgetWorkflows({
+  ntopActive: props.available_features.ntop_active,
+  mayEditCustomGraph: props.permissions.edit_custom_graph
+})
 
 useProvideMissingRuntimeFiltersAction(dashboardFilters.areAllMandatoryFiltersApplied, () => {
   openDashboardFilterSettings.value = true
@@ -249,6 +253,8 @@ const setAsActiveDashboard = async (dashboardKey: DashboardKey, layout: Dashboar
 const handleSelectDashboard = async (dashboard: DashboardMetadata) => {
   isDashboardEditingMode.value = false
   showCloneSuccessAlert.value = false
+  droppedFiltersWarning.value = null
+  drillUp.value = null
 
   const key: DashboardKey = {
     name: dashboard.name,
@@ -284,6 +290,8 @@ const dashboardVisualTitle = useDashboardVisualTitle(
   filterDefinitions,
   dashboardFilters.baseFilters
 )
+
+useProvideDrillDownSource(dashboardVisualTitle)
 
 watch(dashboardVisualTitle, (newTitle) => {
   // We only set the title for the current document.
@@ -396,12 +404,16 @@ function editWidget(widgetId: string) {
     throw new Error('Dashboard not yet initialized.')
   }
 
-  widgetToEdit.value = widgetId
   const widgetSpec = dashboardsManager.activeDashboard.value!.model.content.widgets[widgetId]
   if (!widgetSpec) {
     throw new Error(`Widget with id ${widgetId} not found`)
   }
-  selectedWizard.value = widgetTypeToSelectorMatcher(widgetSpec.content.type)
+  const wizard = widgetTypeToSelectorMatcher(widgetSpec.content.type)
+  if (wizard === null) {
+    return
+  }
+  widgetToEdit.value = widgetId
+  selectedWizard.value = wizard
   openWizard.value = true
 }
 
@@ -591,9 +603,8 @@ const handleApplyRuntimeFilters = (filters: ConfiguredFilters, mode: RuntimeFilt
   dashboardFilters.handleApplyRuntimeFilters(filters)
   dashboardFilters.setRuntimeFiltersMode(mode)
 
-  const updatedDashboardUrl = urlHandler.updateWithPreserve(
+  const updatedDashboardUrl = urlHandler.withRuntimeFilters(
     window.location.href,
-    ['name', 'owner'],
     dashboardFilters.runtimeFiltersSearchParams.value
   )
   urlHandler.updateCurrentUrl(updatedDashboardUrl)
@@ -700,6 +711,7 @@ const { range, refreshTick, updateTimeRange } = useDashboardTimeControl(
             :is-empty-dashboard="Object.entries(dashboardWidgets.widgetCores.value).length === 0"
             :runtime-filters="dashboardFilters.runtimeFiltersSearchParams.value"
             :global-time-picker="global_time_picker"
+            :drill-up="drillUp"
             @open-runtime-filter="openRuntimeFilters"
             @open-filter-settings="openFilterSettings"
             @open-settings="openDashboardSettings = true"
@@ -813,7 +825,6 @@ const { range, refreshTick, updateTimeRange } = useDashboardTimeControl(
           @cancel="openDashboardSettings = false"
           @save="updateDashboardSettings"
         />
-        <NetworkFlowSlideIns :slide-ins="networkFlowSlideIns" />
       </div>
       <div class="db-app__content">
         <template v-if="dashboardsManager.isInitialized.value && !loadingError">
@@ -822,6 +833,11 @@ const { range, refreshTick, updateTimeRange } = useDashboardTimeControl(
             :has-filters="dashboardHasFilters"
             :cloned-as-responsive="clonedAsResponsive"
             @edit-filters="openDashboardFilterSettings = true"
+          />
+          <DroppedFiltersAlert
+            v-if="droppedFiltersWarning !== null"
+            :warning="droppedFiltersWarning"
+            @dismiss="droppedFiltersWarning = null"
           />
           <AddWidgetPage
             v-if="Object.entries(dashboardWidgets.widgetCores.value).length === 0"

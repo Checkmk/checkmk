@@ -13,6 +13,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from cmk.plugins.aws_v2.constants import AWS_ELASTICACHE_QUOTA_DEFAULTS
 
+from .. import hosts
 from ..config import AWSConfig
 from .core import (
     AWSColleagueContents,
@@ -38,7 +39,7 @@ from .core import (
 # is a cache cluster in the API)
 # The following fields are renamed so we can use the UI nomenclature consistently
 # in the Checkmk
-class ElastiCacheNode(BaseModel):
+class ElastiCacheNodeModel(BaseModel):
     model_config = ConfigDict(validate_by_name=True)
 
     NodeId: str = Field(..., alias="CacheClusterId")
@@ -46,7 +47,7 @@ class ElastiCacheNode(BaseModel):
     ARN: str
 
 
-class ElastiCacheCluster(BaseModel):
+class ElastiCacheClusterModel(BaseModel):
     model_config = ConfigDict(validate_by_name=True)
 
     ClusterId: str = Field(..., alias="ReplicationGroupId")
@@ -109,14 +110,17 @@ class ElastiCacheLimits(AWSSectionLimits):
         cluster_dicts = [
             c.model_dump()
             for c in get_paginated_resources(
-                self._client, "describe_replication_groups", "ReplicationGroups", ElastiCacheCluster
+                self._client,
+                "describe_replication_groups",
+                "ReplicationGroups",
+                ElastiCacheClusterModel,
             )
         ]
 
         node_dicts = [
             n.model_dump()
             for n in get_paginated_resources(
-                self._client, "describe_cache_clusters", "CacheClusters", ElastiCacheNode
+                self._client, "describe_cache_clusters", "CacheClusters", ElastiCacheNodeModel
             )
         ]
 
@@ -155,13 +159,12 @@ class ElastiCacheLimits(AWSSectionLimits):
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
         quotas = [Quota(**q) for q in raw_content.content[0]]
-        clusters = [ElastiCacheCluster(**c) for c in raw_content.content[1]]
-        nodes = [ElastiCacheNode(**c) for c in raw_content.content[2]]
+        clusters = [ElastiCacheClusterModel(**c) for c in raw_content.content[1]]
+        nodes = [ElastiCacheNodeModel(**c) for c in raw_content.content[2]]
         subnet_group_count, parameter_group_count = raw_content.content[3:]
 
         for cluster in clusters:
             self._add_limit(
-                "",
                 AWSLimit(
                     key="nodes_per_cluster",
                     title=f"Nodes of {cluster.ClusterId}",
@@ -174,7 +177,6 @@ class ElastiCacheLimits(AWSSectionLimits):
             )
 
         self._add_limit(
-            "",
             AWSLimit(
                 key="nodes",
                 title="Nodes",
@@ -184,7 +186,6 @@ class ElastiCacheLimits(AWSSectionLimits):
             region=self._region,
         )
         self._add_limit(
-            "",
             AWSLimit(
                 key="subnet_groups",
                 title="Subnet groups",
@@ -194,7 +195,6 @@ class ElastiCacheLimits(AWSSectionLimits):
             region=self._region,
         )
         self._add_limit(
-            "",
             AWSLimit(
                 key="parameter_groups",
                 title="Parameter groups",
@@ -247,29 +247,32 @@ class ElastiCacheSummary(AWSSection):
 
     def _fetch_data(
         self,
-        colleague_content: tuple[Sequence[ElastiCacheCluster], Sequence[ElastiCacheNode]]
+        colleague_content: tuple[Sequence[ElastiCacheClusterModel], Sequence[ElastiCacheNodeModel]]
         | tuple[()],
-    ) -> tuple[Sequence[ElastiCacheCluster], Sequence[ElastiCacheNode]]:
+    ) -> tuple[Sequence[ElastiCacheClusterModel], Sequence[ElastiCacheNodeModel]]:
         if colleague_content:
             return colleague_content
 
         clusters = list(
             get_paginated_resources(
-                self._client, "describe_replication_groups", "ReplicationGroups", ElastiCacheCluster
+                self._client,
+                "describe_replication_groups",
+                "ReplicationGroups",
+                ElastiCacheClusterModel,
             )
         )
 
         nodes = list(
             get_paginated_resources(
-                self._client, "describe_cache_clusters", "CacheClusters", ElastiCacheNode
+                self._client, "describe_cache_clusters", "CacheClusters", ElastiCacheNodeModel
             )
         )
 
         return clusters, nodes
 
     def _filter_clusters(
-        self, clusters: Iterable[ElastiCacheCluster], resource_tags: ResourceTags
-    ) -> Iterable[ElastiCacheCluster]:
+        self, clusters: Iterable[ElastiCacheClusterModel], resource_tags: ResourceTags
+    ) -> Iterable[ElastiCacheClusterModel]:
         if self._names is not None:
             for cluster in clusters:
                 if cluster.ClusterId in self._names:
@@ -287,7 +290,7 @@ class ElastiCacheSummary(AWSSection):
         yield from clusters
 
     def _filter_nodes(
-        self, nodes: Sequence[ElastiCacheNode], clusters: Iterable[ElastiCacheCluster]
+        self, nodes: Sequence[ElastiCacheNodeModel], clusters: Iterable[ElastiCacheClusterModel]
     ) -> Iterable[Mapping[str, object]]:
         for node in nodes:
             for cluster in clusters:
@@ -326,7 +329,9 @@ class ElastiCacheSummary(AWSSection):
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", computed_content.content[0])]
+        return [
+            AWSSectionResult(self._target_host(hosts.AccountScope()), computed_content.content[0])
+        ]
 
 
 class ElastiCache(AWSSectionCloudwatch):
@@ -398,12 +403,27 @@ class ElastiCache(AWSSectionCloudwatch):
                 metrics.append(metric)
         return metrics
 
+    @property
+    def host_labels(self) -> Mapping[str, str]:
+        return {"cmk/aws/service": "elasticache"}
+
     @override
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
-        return AWSComputedContent(raw_content.content, raw_content.cache_timestamp)
+        # The label of each metric is the ID of its node.
+        content_by_node: dict[str, list[Mapping[str, object]]] = {}
+        for row in raw_content.content:
+            content_by_node.setdefault(row["Label"], []).append(row)
+        return AWSComputedContent(content_by_node, raw_content.cache_timestamp)
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
-        return [AWSSectionResult("", computed_content.content)]
+        return [
+            AWSSectionResult(
+                self._target_host(hosts.ElastiCacheNode(node_id)),
+                rows,
+                self.host_labels,
+            )
+            for node_id, rows in computed_content.content.items()
+        ]

@@ -1,5 +1,6 @@
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
 load("//bazel/rules:pkg.bzl", "pkg_tar")
+load("//bazel/rules:sign_azure.bzl", "sign_tar_azure")
 
 # Sign all PowerShell scripts in the current directory.
 # `build bazel //agents/windows/plugins:all`
@@ -47,6 +48,8 @@ filegroup(
     visibility = ["//agents/wnx:__pkg__"],
 )
 
+# Every PowerShell script embedded in the MSI (agents/wnx/install/Product.wxs takes
+# them all from the signed folder), plus the ones the bakery ships.
 # May contain local file target labels, or cross package labels
 # from migrated bakery plugins under cmk/plugins/<family>/
 # In the latter case, the file target must be exposed to this package.
@@ -59,6 +62,7 @@ TO_SIGN_SCRIPTS = [
     "//cmk/plugins/hyperv/agents:hyperv_vms.ps1",
     "//cmk/plugins/collection/agents:iis_app_pool_state.ps1",
     "kaspersky_av_client.ps1",
+    "mk_inventory.ps1",
     "mk_msoffice.ps1",
     "mk_mysql.ps1",
     "mk_oracle.ps1",
@@ -75,22 +79,26 @@ TO_SIGN_SCRIPTS = [
     "//cmk/plugins/windows/agents:windows_tasks.ps1",
     "//cmk/plugins/windows/agents:windows_updates.ps1",
     "hyperv_host.ps1",
+    # Not a plugin: the agent runs every PowerShell plugin through it.
+    "//agents/wnx:install/resources/configure_and_exec.ps1",
 ]
+
+# Signed copies are flat, keyed by basename: cross-package labels may carry a
+# path below their package (e.g. agents/veeam_backup_status.ps1).
+SIGNED_NAMES = {n: n.split(":")[-1].split("/")[-1] for n in TO_SIGN_SCRIPTS}
 
 [
     genrule(
-        # n may be a cross-package label; strip the package prefix for
-        # the rule name and output path.
-        name = "sign_" + n.split(":")[-1],
+        name = "sign_" + name,
         srcs = [n],
-        outs = ["signed/" + n.split(":")[-1]],
+        outs = ["signed/" + name],
         cmd_bat = "$(execpath scripts/signer.bat) $< $@",
         executable = True,
         target_compatible_with = ["@platforms//os:windows"],
         tools = ["scripts/signer.bat"],
         visibility = ["//visibility:public"],
     )
-    for n in TO_SIGN_SCRIPTS
+    for n, name in SIGNED_NAMES.items()
 ]
 
 # Signatures of non-ASCII scripts break on Windows, see the script header.
@@ -106,7 +114,7 @@ sh_test(
 
 pkg_tar(
     name = "signed_plugins",
-    srcs = [":sign_" + n.split(":")[-1] for n in TO_SIGN_SCRIPTS],
+    srcs = [":sign_" + name for name in SIGNED_NAMES.values()],
     strip_prefix = "signed",
     tags = ["manual"],
     target_compatible_with = ["@platforms//os:windows"],
@@ -117,6 +125,7 @@ pkg_tar(
 # signing path, which signs in the run.ps1 process (full environment + credentials)
 # instead of inside Bazel actions. Bazel only gathers the files here - including the
 # cross-package bakery-migrated plugins - and run.ps1 signs them and repacks the tar.
+# Unsigned MSI builds of run.ps1 (without signing) take their scripts from it too.
 pkg_files(
     name = "unsigned_plugin_files",
     srcs = TO_SIGN_SCRIPTS,
@@ -127,6 +136,70 @@ pkg_tar(
     name = "unsigned_plugins",
     srcs = [":unsigned_plugin_files"],
     tags = ["manual"],
-    target_compatible_with = ["@platforms//os:windows"],
     visibility = ["//visibility:public"],
+)
+
+# Sets CMK_VERSION in plugins like `make setversion` does for the package builds.
+exports_files(
+    ["scripts/stamp_version.sh"],
+    visibility = ["//agents/wnx:__pkg__"],
+)
+
+# Lets shellcheck see the script.
+sh_library(
+    name = "stamp_version_sh",
+    srcs = ["scripts/stamp_version.sh"],
+)
+
+# The scripts with the version of --cmk_version, for the Linux build of the MSI
+# and of signed_plugins.tar. Stamped before signing: the signature covers it.
+[
+    genrule(
+        name = "stamp_" + name,
+        srcs = [
+            n,
+            "//agents/wnx:cmk_version",
+        ],
+        outs = ["stamped/" + name],
+        cmd = """
+            cp $(location {src}) $@
+            chmod u+w $@
+            $(execpath scripts/stamp_version.sh) "$$(cat $(location //agents/wnx:cmk_version))" $@
+        """.format(src = n),
+        tags = ["manual"],
+        tools = ["scripts/stamp_version.sh"],
+    )
+    for n, name in SIGNED_NAMES.items()
+]
+
+pkg_files(
+    name = "stamped_plugin_files",
+    srcs = [":stamp_" + name for name in SIGNED_NAMES.values()],
+    strip_prefix = strip_prefix.files_only(),
+    tags = ["manual"],
+)
+
+pkg_tar(
+    name = "stamped_plugins",
+    srcs = [":stamped_plugin_files"],
+    tags = ["manual"],
+)
+
+# Signed in the build via Azure Artifact Signing, for the MSI built on Linux.
+# Needs --//bazel/rules:azure_signing_credentials_file, see sign_azure.bzl.
+sign_tar_azure(
+    name = "azure_signed_plugins",
+    src = ":stamped_plugins",
+    tags = ["manual"],
+)
+
+# The scripts //agents/wnx:check_mk_agent_msi embeds: signed whenever signing
+# credentials are given, like the MSI run.ps1 builds with --sign-azure.
+alias(
+    name = "msi_plugins",
+    actual = select({
+        "//bazel/rules:azure_signing_credentials_file_unset": ":stamped_plugins",
+        "//conditions:default": ":azure_signed_plugins",
+    }),
+    visibility = ["//agents/wnx:__pkg__"],
 )

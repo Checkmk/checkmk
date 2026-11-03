@@ -52,7 +52,7 @@ function onRowClick(id: string, e: MouseEvent): void {
 </script>
 
 <template>
-  <PresentationPanel raised class="maps-presentation-layers-panel" @pointerdown.stop>
+  <PresentationPanel class="maps-presentation-layers-panel" @pointerdown.stop>
     <div class="maps-presentation-layers-panel__head">
       <span>{{ _t('Layers') }}</span>
       <CmkIconButton
@@ -142,13 +142,13 @@ function onRowClick(id: string, e: MouseEvent): void {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 10px;
+  padding: var(--dimension-4) var(--dimension-5);
   font-weight: var(--font-weight-bold);
   border-bottom: 1px solid var(--default-border-color);
 }
 
 .maps-presentation-layers-panel__hint {
-  padding: 6px 10px 4px;
+  padding: var(--dimension-4) var(--dimension-5) var(--dimension-3);
   font-size: var(--font-size-small);
   color: var(--font-color-dimmed);
 }
@@ -156,8 +156,8 @@ function onRowClick(id: string, e: MouseEvent): void {
 .maps-presentation-layers-panel__row {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
+  gap: var(--dimension-4);
+  padding: var(--dimension-4) var(--dimension-5);
   cursor: pointer;
 }
 
@@ -197,7 +197,7 @@ function onRowClick(id: string, e: MouseEvent): void {
   width: 24px;
   height: 24px;
   border: none;
-  border-radius: 5px;
+  border-radius: var(--border-radius);
   background: transparent;
   color: var(--font-color-dimmed);
   cursor: pointer;
@@ -220,8 +220,8 @@ function onRowClick(id: string, e: MouseEvent): void {
 
 .maps-presentation-layers-panel__foot {
   display: flex;
-  gap: 6px;
-  padding: 8px 10px;
+  gap: var(--dimension-4);
+  padding: var(--dimension-4) var(--dimension-5);
   border-top: 1px solid var(--default-border-color);
 }
 </style>

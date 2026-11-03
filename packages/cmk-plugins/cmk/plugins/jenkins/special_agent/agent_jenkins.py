@@ -125,16 +125,10 @@ def agent_jenkins_main(args: argparse.Namespace) -> int:
         ),
     ]
 
-    try:
-        handle_request(args, sections)
-    except Exception:
-        if args.debug:
-            raise
-
-    return 0
+    return handle_request(args, sections)
 
 
-def handle_request(args: argparse.Namespace, sections: Sequence[Section]) -> object:
+def handle_request(args: argparse.Namespace, sections: Sequence[Section]) -> int:
     url_base = f"{args.proto}://{args.hostname}:{args.port}"
     if args.path:
         url_base += f"/{args.path}"

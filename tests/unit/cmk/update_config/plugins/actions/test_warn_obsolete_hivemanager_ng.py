@@ -9,7 +9,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.gui.valuespec import Dictionary
-from cmk.gui.watolib.hosts_and_folders import folder_tree
+from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.rulesets import Rule, Ruleset, RulesetCollection
 from cmk.gui.watolib.rulespec_groups import RulespecGroupMonitoringConfigurationVarious
 from cmk.gui.watolib.rulespecs import HostRulespec
@@ -31,7 +31,7 @@ _LEGACY_RULE = {
 }
 
 
-def _make_ruleset(name: RulesetName, rule_values: Sequence[object]) -> Ruleset:
+def _make_ruleset(tree: FolderTree, name: RulesetName, rule_values: Sequence[object]) -> Ruleset:
     ruleset = Ruleset(
         name,
         rulespec=HostRulespec(
@@ -40,7 +40,7 @@ def _make_ruleset(name: RulesetName, rule_values: Sequence[object]) -> Ruleset:
             valuespec=lambda: Dictionary(elements=[], optional_keys=True),
         ),
     )
-    folder = folder_tree().root_folder()
+    folder = tree.root_folder()
     for value in rule_values:
         rule = Rule.from_ruleset(folder, ruleset, ruleset.rulespec.valuespec.default_value())
         rule.value = value
@@ -48,10 +48,9 @@ def _make_ruleset(name: RulesetName, rule_values: Sequence[object]) -> Ruleset:
     return ruleset
 
 
-@pytest.mark.usefixtures("request_context")
-def test_warns_and_keeps_legacy_rules(caplog: pytest.LogCaptureFixture) -> None:
+def test_warns_and_keeps_legacy_rules(caplog: pytest.LogCaptureFixture, tree: FolderTree) -> None:
     name = RuleGroup.SpecialAgents("hivemanager_ng")
-    all_rulesets = RulesetCollection({name: _make_ruleset(name, [_LEGACY_RULE])})
+    all_rulesets = RulesetCollection({name: _make_ruleset(tree, name, [_LEGACY_RULE])})
 
     with caplog.at_level(logging.WARNING):
         warn_obsolete_hivemanager_ng_rules(all_rulesets, LOGGER)
@@ -61,10 +60,11 @@ def test_warns_and_keeps_legacy_rules(caplog: pytest.LogCaptureFixture) -> None:
     assert [rule.value for _f, _i, rule in all_rulesets.get(name).get_rules()] == [_LEGACY_RULE]
 
 
-@pytest.mark.usefixtures("request_context")
-def test_no_warning_without_legacy_rules(caplog: pytest.LogCaptureFixture) -> None:
+def test_no_warning_without_legacy_rules(
+    caplog: pytest.LogCaptureFixture, tree: FolderTree
+) -> None:
     name = RuleGroup.SpecialAgents("hivemanager_ng")
-    all_rulesets = RulesetCollection({name: _make_ruleset(name, [])})
+    all_rulesets = RulesetCollection({name: _make_ruleset(tree, name, [])})
 
     with caplog.at_level(logging.WARNING):
         warn_obsolete_hivemanager_ng_rules(all_rulesets, LOGGER)

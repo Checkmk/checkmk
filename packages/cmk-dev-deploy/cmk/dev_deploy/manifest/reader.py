@@ -30,7 +30,7 @@ from cmk.dev_deploy.types import (
 
 logger = logging.getLogger(__name__)
 
-MANIFEST_VERSION = "4"
+MANIFEST_VERSION = "5"
 """Manifest format version; a mismatch triggers regeneration."""
 
 

@@ -47,6 +47,7 @@ def make_parser(
     omd_root: Path,
     persisted_section_dir: Path,
     keep_outdated: bool,
+    debug: bool,
 ) -> Parser:
     if fetcher_type is FetcherType.SNMP:
         return SNMPParser()
@@ -64,6 +65,7 @@ def make_parser(
             config.piggyback_max_cache_age_callbacks(host_name),
             keep_outdated=keep_outdated,
             encoding_fallback=config.fallback_agent_output_encoding,
+            debug=debug,
         )
 
     return AgentParser(
@@ -73,4 +75,5 @@ def make_parser(
         translation=config.parsed_piggyback_translations(host_name),
         keep_outdated=keep_outdated,
         encoding_fallback=config.fallback_agent_output_encoding,
+        debug=debug,
     )

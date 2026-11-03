@@ -24,10 +24,9 @@ from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.openapi.framework._context import ApiContext
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.framework.model.validation_context import validation_context_of
-from cmk.gui.permissions import load_dynamic_permissions, permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.site_config import distributed_setup_remote_sites
 from cmk.gui.userdb import connection_choices, get_saml_connections
-from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib import groups_io, tags
 from cmk.gui.watolib.hosts_and_folders import FolderTree, Host, make_folder_tree
 from cmk.gui.watolib.passwords import load_passwords, password_id_in_use
@@ -99,26 +98,29 @@ def _takes_validation_info[T](
     return len(positional) == 2
 
 
-def _folder_tree_of_request(api_context: ApiContext) -> FolderTree:
+def _build_folder_tree(api_context: ApiContext) -> FolderTree:
     return make_folder_tree(api_context.config)
+
+
+def folder_tree_of_request(api_context: ApiContext) -> FolderTree:
+    """The folder tree of the request, shared by its validators and its endpoint handler."""
+    return api_context.shared(_build_folder_tree)
 
 
 def folder_tree_of(info: ValidationInfo[object]) -> FolderTree:
     """The folder tree of the request a value is validated for."""
-    return validation_context_of(info).shared(_folder_tree_of_request)
+    return folder_tree_of_request(validation_context_of(info).api_context)
 
 
 @dataclass(slots=True)
 class RegistryConverter[T]:
-    registry_or_getter: Mapping[str, T] | Callable[[UserPermissions], Mapping[str, T]]
+    registry_or_getter: Mapping[str, T] | Callable[[], Mapping[str, T]]
     custom_error_message: str | None = None
 
     @property
     def _registry(self) -> Mapping[str, T]:
         if not isinstance(self.registry_or_getter, Mapping):
-            self.registry_or_getter = self.registry_or_getter(
-                UserPermissions.from_config(active_config, permission_registry)
-            )
+            self.registry_or_getter = self.registry_or_getter()
 
         return self.registry_or_getter
 
@@ -159,10 +161,8 @@ class HostConverter:
         return HostName.parse(value)
 
     def host(self, value: str, info: ValidationInfo[object]) -> Host:
-        context = validation_context_of(info)
-        return self.host_in_tree(
-            value, context.shared(_folder_tree_of_request), context.api_context.user
-        )
+        api_context = validation_context_of(info).api_context
+        return self.host_in_tree(value, folder_tree_of_request(api_context), api_context.user)
 
     def host_in_tree(self, value: str, tree: FolderTree, acting_user: LoggedInUser) -> Host:
         name = HostName(self._parse_host_name(value))
@@ -173,10 +173,8 @@ class HostConverter:
         raise ValueError(f"Host not found: {value!r}")
 
     def host_name(self, value: str, info: ValidationInfo[object]) -> HostName:
-        context = validation_context_of(info)
-        return self.host_name_in_tree(
-            value, context.shared(_folder_tree_of_request), context.api_context.user
-        )
+        api_context = validation_context_of(info).api_context
+        return self.host_name_in_tree(value, folder_tree_of_request(api_context), api_context.user)
 
     def host_name_in_tree(
         self, value: str, tree: FolderTree, acting_user: LoggedInUser
@@ -429,8 +427,6 @@ class UserRoleIdConverter:
         return RoleID(user_role)
 
     def _verify_user_permissions(self) -> None:
-        # TODO: clean this up (CMK-17068)
-        load_dynamic_permissions()
         user.need_permission("wato.users")
 
         if self.permission_type == "wato.edit":
@@ -441,8 +437,9 @@ class PermissionsConverter:
     @staticmethod
     def validate(value: dict[str, str]) -> dict[str, str]:
         _validation_errors = []
+        permissions = all_permissions()
         for key, val in value.items():
-            if key not in permission_registry:
+            if key not in permissions:
                 _validation_errors.append(f"The specified permission name doesn't exist: {key}")
             if val not in ["yes", "no", "default"]:
                 _validation_errors.append(

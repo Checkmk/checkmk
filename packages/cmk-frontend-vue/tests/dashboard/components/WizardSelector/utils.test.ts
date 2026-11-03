@@ -22,11 +22,30 @@ describe('widgetTypeToSelectorMatcher', () => {
 
     expect(wizardKey).toBe('link_custom_graph')
   })
+
+  it.each(['linked_view', 'embedded_view'] as const)(
+    'edits a %s widget in the classic view wizard',
+    (contentType) => {
+      expect(widgetTypeToSelectorMatcher(contentType)).toBe('classic_view')
+    }
+  )
+
+  it('edits a monitoring table widget in the view wizard', () => {
+    const wizardKey = widgetTypeToSelectorMatcher('monitoring_table')
+
+    expect(wizardKey).toBe('view')
+  })
+
+  it('edits an embedded custom graph in the create wizard', () => {
+    const wizardKey = widgetTypeToSelectorMatcher('embedded_custom_graph')
+
+    expect(wizardKey).toBe('new_custom_graph')
+  })
 })
 
 describe('wizardSlideInSize', () => {
-  const small: DashboardWidgetWorkflowKey[] = ['other', 'ntop', 'network_flow']
-  const large: DashboardWidgetWorkflowKey[] = ['views']
+  const small: DashboardWidgetWorkflowKey[] = ['other', 'ntop']
+  const large: DashboardWidgetWorkflowKey[] = ['view', 'classic_view', 'new_custom_graph']
   const medium = DASHBOARD_WIDGET_WORKFLOW_KEYS.filter(
     (key) => !small.includes(key) && !large.includes(key)
   )

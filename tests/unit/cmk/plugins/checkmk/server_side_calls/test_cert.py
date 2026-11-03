@@ -3,11 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
+
 from cmk.plugins.checkmk.server_side_calls.cert import (
     CertEndpoint,
     CertificateDetails,
+    ConnectionType,
     generate_cert_services,
     Issuer,
+    parse_cert_params,
     ServiceDescription,
     ServicePrefix,
     Settings,
@@ -63,6 +67,60 @@ def test_no_proxy() -> None:
             command_arguments=["--hostname", "abc.xyz", "--port", "443", "--ignore-proxy-env"],
         )
     ]
+
+
+@pytest.mark.parametrize("connection_type", list(ConnectionType))
+def test_connection_type_reaches_command_line(connection_type: ConnectionType) -> None:
+    # Every connection type (e.g. IMAP/LDAP STARTTLS) must be passed to
+    # check_cert via --connection-type.
+    result = list(
+        generate_cert_services(
+            [
+                CertEndpoint(
+                    service_name=ServiceDescription(prefix=ServicePrefix.AUTO, name="my_service"),
+                    address="abc.xyz",
+                    port=443,
+                    individual_settings=Settings(connection=connection_type),
+                )
+            ],
+            HOST_CONFIG,
+        )
+    )
+    assert result == [
+        ActiveCheckCommand(
+            service_description="CERT my_service",
+            command_arguments=[
+                "--hostname",
+                "abc.xyz",
+                "--port",
+                "443",
+                "--connection-type",
+                connection_type.value,
+            ],
+        )
+    ]
+
+
+def test_parse_ldap_starttls_connection_type() -> None:
+    # The raw params mirror what the "Check certificates" ruleset produces
+    # for "Connection type: LDAP STARTTLS" (CMK-32024).
+    endpoints = parse_cert_params(
+        {
+            "connections": [
+                {
+                    "service_name": {"prefix": "auto", "name": "my_service"},
+                    "address": "abc.xyz",
+                    "port": 389,
+                    "individual_settings": {"connection": "ldap_starttls"},
+                }
+            ],
+            "standard_settings": {"port": 443},
+        }
+    )
+    assert len(endpoints) == 1
+    assert endpoints[0].port == 389
+    assert endpoints[0].individual_settings is not None
+    assert endpoints[0].individual_settings.connection is ConnectionType.LDAP_STARTTLS
 
 
 def test_generate_cert_services() -> None:

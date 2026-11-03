@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { DrillUpButton } from 'cmk-shared-typing/typescript/drill_up_button'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import type { BreadcrumbItem } from 'cmk-ui-library/components/CmkBreadcrumb'
 
@@ -27,6 +28,7 @@ export interface FilterContext {
     }
   }
   application_mode: 'overwrite' | 'merge'
+  dropped_filters_warning: string | null
 }
 
 export interface LoadedDashboardProperties {
@@ -39,6 +41,7 @@ export interface DashboardPermissions {
   publish_to_contact_groups: boolean
   publish_to_foreign_contact_groups: boolean
   publish_to_sites: boolean
+  edit_custom_graph: boolean
 }
 
 export interface DashboardPageProperties {
@@ -54,11 +57,12 @@ export interface DashboardPageProperties {
   available_features: {
     dashboard_features: DashboardFeatures
     ntop_active: boolean
-    network_flow_active: boolean
   }
   permissions: DashboardPermissions
   logged_in_user: string
   global_time_picker: GlobalTimePickerProps
+  /** The way back to the page a drill-down opened this dashboard from. */
+  drill_up: DrillUpButton | null
 }
 
 /**

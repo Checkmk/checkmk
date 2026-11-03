@@ -156,9 +156,9 @@ test('names every row by its resolved title, single-line and group alike', () =>
       ['B', 'CPU load - <HOST_NAME>/<SERVICE_DESCRIPTION>']
     ])
   )
-  expect(screen.getByText('Resolved CPU')).toBeInTheDocument()
-  expect(screen.getByText('CPU load - <HOST_NAME>/<SERVICE_DESCRIPTION>')).toBeInTheDocument()
-  expect(screen.queryByText('$DEFAULT_TITLE$')).not.toBeInTheDocument()
+  expect(screen.getByTitle('Resolved CPU')).toBeInTheDocument()
+  expect(screen.getByTitle('CPU load - <HOST_NAME>/<SERVICE_DESCRIPTION>')).toBeInTheDocument()
+  expect(screen.queryByTitle('$DEFAULT_TITLE$')).not.toBeInTheDocument()
 })
 
 test('lists a multi-line row as one legend-styled row per resolved line', () => {
@@ -191,7 +191,7 @@ test('lists a multi-line row as one legend-styled row per resolved line', () => 
   expect(swatches[1]!.getAttribute('style')).toMatch(/#ff0000|rgb\(255, 0, 0\)/)
 })
 
-test('a resolved metrics-backend series expands into its attribute table', async () => {
+test('a resolved OpenTelemetry metrics series expands into its attribute table', async () => {
   renderTable(
     [telemetryMetricsItem('B', { title: 'Latency' })],
     new Map([['B', [backendMetric('line one')]]])
@@ -262,7 +262,7 @@ test('collapsing a multi-line row hides its per-line rows, reopening brings them
   expect(screen.getByText('line two')).toBeInTheDocument()
 })
 
-test('a row states its source, telling RRD and metrics backend rows apart', () => {
+test('a row states its source, telling RRD and OpenTelemetry metrics rows apart', () => {
   renderTable(
     [
       rrdMetricItem('A', { title: 'From RRD' }),
@@ -272,7 +272,7 @@ test('a row states its source, telling RRD and metrics backend rows apart', () =
   )
 
   expect(screen.getByText('Checkmk RRD')).toBeInTheDocument()
-  expect(screen.getByText('Metrics backend')).toBeInTheDocument()
+  expect(screen.getByText('OpenTelemetry metrics')).toBeInTheDocument()
 })
 
 test('per-row colour and visibility changes leave the other row untouched', async () => {

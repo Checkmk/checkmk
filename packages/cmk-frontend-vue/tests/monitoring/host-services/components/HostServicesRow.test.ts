@@ -5,18 +5,28 @@
  */
 import type { Row } from '@tanstack/vue-table'
 import userEvent from '@testing-library/user-event'
-import { fireEvent, render, screen } from '@testing-library/vue'
+import { fireEvent, render, screen, within } from '@testing-library/vue'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { renderDateAndTime } from 'cmk-ui-library/lib/renderTime'
-import { defineComponent, h } from 'vue'
+import { computed, defineComponent, h, provide } from 'vue'
 
 import HostServicesRow from '@/monitoring/host-services/components/HostServicesRow.vue'
-import type { HostServiceEntry } from '@/monitoring/shared/api/types'
+import type { HostRef, HostServiceEntry, ServiceEntry } from '@/monitoring/shared/api/types'
+import {
+  COLUMN_LAYOUT_KEY,
+  type ColumnLayoutInfo,
+  MONITORING_SERVICE
+} from '@/monitoring/shared/components/MonitoringTableContext'
+import type { MonitoringService } from '@/monitoring/shared/services/MonitoringService'
 import type { DisplayOptions } from '@/monitoring/shared/types'
+
+import { makeListingService } from '../../shared/services/testHelpers'
 
 // 'abs' keeps assertions comparable to plain `renderDateAndTime`, independent of how old
 // a fixture's timestamp happens to be relative to the real clock the test runs under.
 const DISPLAY_OPTIONS: DisplayOptions = { dateFormat: '%Y-%m-%d', timestampFormat: 'abs' }
+
+const HOST: HostRef = { site_id: 'local', name: 'web-server-01' }
 
 function reschedulesItself(name: string) {
   return {
@@ -51,7 +61,8 @@ function makeTableRow(overrides: Partial<Row<HostServiceEntry>> = {}): Row<HostS
 function mountRow(
   row: HostServiceEntry,
   tableRow: Row<HostServiceEntry> = makeTableRow(),
-  extraProps: Record<string, unknown> = {}
+  extraProps: Record<string, unknown> = {},
+  service: MonitoringService<unknown> | null = null
 ) {
   return render(
     defineComponent({
@@ -60,12 +71,19 @@ function mountRow(
         return h('table', [
           h('tbody', [
             h('tr', [
-              h(HostServicesRow, { row, tableRow, displayOptions: DISPLAY_OPTIONS, ...extraProps })
+              h(HostServicesRow, {
+                serviceHost: HOST,
+                row,
+                tableRow,
+                displayOptions: DISPLAY_OPTIONS,
+                ...extraProps
+              })
             ])
           ])
         ])
       }
-    })
+    }),
+    service ? { global: { provide: { [MONITORING_SERVICE as symbol]: service } } } : {}
   )
 }
 
@@ -73,7 +91,7 @@ test('renders service name and summary in their cells', () => {
   mountRow(makeService())
 
   expect(screen.getByTitle('CPU load')).toBeInTheDocument()
-  expect(screen.getByTitle('OK - 15 min load: 0.5')).toBeInTheDocument()
+  expect(screen.getByText('OK - 15 min load: 0.5')).toBeInTheDocument()
 })
 
 test('renders one cell per column', () => {
@@ -91,7 +109,7 @@ test('renders last state change before last check, matching the legacy view', ()
 
   const tds = Array.from(container.querySelectorAll('td'))
   const lastStateChangeIndex = tds.findIndex(
-    (td) => td.querySelector(`[title="${renderDateAndTime(service.last_state_change)}"]`) !== null
+    (td) => td.querySelector(`[title="${renderDateAndTime(service.last_state_change!)}"]`) !== null
   )
   const lastCheckIndex = tds.findIndex(
     (td) => td.querySelector(`[title="${renderDateAndTime(service.last_check!)}"]`) !== null
@@ -108,11 +126,28 @@ test('renders the state markers of the summary as badges', () => {
   expect(container.querySelector('.cmk-state-tag--critical')).toHaveTextContent('CR')
 })
 
-test('keeps the whole summary readable on hover, markers and all', () => {
-  const summary = 'load: 3.1(!), temp: 90(!!)'
-  mountRow(makeService({ summary }))
+function summaryText(container: Element): Element {
+  return container.querySelector('[data-column-id="summary"] .monitoring-string-cell__text')!
+}
 
-  expect(screen.getByTitle(summary)).toBeInTheDocument()
+test('keeps a cut summary readable on hover, with the markers spelled out', async () => {
+  const { container } = mountRow(makeService({ summary: 'load: 3.1(!), temp: 90(!!)' }))
+  const text = summaryText(container)
+  Object.defineProperty(text, 'scrollHeight', { configurable: true, value: 90 })
+  Object.defineProperty(text, 'clientHeight', { configurable: true, value: 60 })
+
+  await fireEvent.mouseEnter(text)
+
+  expect(text).toHaveAttribute('title', 'load: 3.1(WARN), temp: 90(CRIT)')
+})
+
+test('repeats no summary on hover that fits the cell', async () => {
+  const { container } = mountRow(makeService({ summary: 'load: 3.1(!), temp: 90(!!)' }))
+  const text = summaryText(container)
+
+  await fireEvent.mouseEnter(text)
+
+  expect(text).not.toHaveAttribute('title')
 })
 
 test('renders the flapping icon next to the state badge for a flapping service', () => {
@@ -193,6 +228,7 @@ test('emits a picked command with the service it acts on', async () => {
           h('tbody', [
             h('tr', [
               h(HostServicesRow, {
+                serviceHost: HOST,
                 row: makeService({ name: 'Memory' }),
                 tableRow: makeTableRow(),
                 displayOptions: DISPLAY_OPTIONS,
@@ -242,6 +278,20 @@ test('renders the service groups of a service, sorted alphabetically', () => {
   expect(tags.map((tag) => tag.textContent?.trim())).toEqual(['databases', 'web'])
 })
 
+test('clicking a service group narrows the listing to the services in that group', async () => {
+  const service = makeListingService()
+  mountRow(makeService({ groups: ['web', 'databases'] }), makeTableRow(), {}, service)
+
+  await fireEvent.click(screen.getByRole('button', { name: 'databases' }))
+
+  expect(service.filterState.value).toStrictEqual({
+    type: 'condition',
+    field: 'groups',
+    op: 'one_of',
+    value: ['databases']
+  })
+})
+
 test('renders the contacts of a service, sorted alphabetically', () => {
   const { container } = mountRow(makeService({ contacts: ['ops', 'hh'] }))
 
@@ -274,6 +324,25 @@ test('renders the labels of a service, sorted alphabetically', () => {
     'cmk/check_plugin: cpu_load',
     'owner: platform'
   ])
+})
+
+test('clicking a label narrows the listing to the services carrying it', async () => {
+  const service = makeListingService()
+  mountRow(
+    makeService({ labels: { owner: { value: 'platform', source: 'explicit' } } }),
+    makeTableRow(),
+    {},
+    service
+  )
+
+  await fireEvent.click(screen.getByRole('button', { name: 'owner: platform' }))
+
+  expect(service.filterState.value).toStrictEqual({
+    type: 'condition',
+    field: 'labels',
+    op: 'all_of',
+    value: ['owner:platform']
+  })
 })
 
 test('renders the perfometer of a service that has one', () => {
@@ -316,6 +385,24 @@ test('the perfometer asks for the graphs of its service', async () => {
   expect(openGraphs).toHaveBeenCalledWith(service)
 })
 
+test('links a service with graphs to its graphs page, beside its name', () => {
+  const graphsLink =
+    'view.py?view_name=service_graphs&site=local&host=web-server-01&service=CPU+load'
+  const { container } = mountRow(makeService({ name: 'CPU load', graphs_link: graphsLink }))
+
+  const link = screen.getByRole('link', { name: 'Show the graphs of service CPU load' })
+  expect(link).toHaveAttribute('href', graphsLink)
+  expect(container.querySelector('td[data-column-id="name"]')).toContainElement(link)
+})
+
+test('offers no graphs link for a service without graphs', () => {
+  mountRow(makeService({ name: 'CPU load' }))
+
+  expect(
+    screen.queryByRole('link', { name: 'Show the graphs of service CPU load' })
+  ).not.toBeInTheDocument()
+})
+
 test('a service without a perfometer leaves its cell unclickable', () => {
   const { container } = mountRow(makeService())
 
@@ -335,6 +422,14 @@ test('renders the two timestamps as formatted date-time strings', () => {
   const tds = Array.from(container.querySelectorAll('td'))
   expect(cellText(tds[5]!)).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)
   expect(cellText(tds[6]!)).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)
+})
+
+test('dashes out the state age of a service that has never been checked', () => {
+  const { container } = mountRow(makeService({ last_state_change: null }))
+
+  const cellText = (td: Element): string => (td.textContent ?? '').trim()
+  const tds = Array.from(container.querySelectorAll('td'))
+  expect(cellText(tds[5]!)).toBe('–')
 })
 
 test('dashes out the last check of a service that has never been checked', () => {
@@ -501,4 +596,106 @@ test('leaves the reschedule out for a user who may not reschedule', () => {
   })
 
   expect(screen.queryByRole('button', { name: 'More actions' })).not.toBeInTheDocument()
+})
+
+function makeServiceOfHost(): ServiceEntry {
+  return { ...makeService(), host_name: 'web-2', site_id: 'remote', host_state: 'UP' }
+}
+
+function mountRowInLayout(row: HostServiceEntry, columnIds: string[]) {
+  const layoutInfo: ColumnLayoutInfo = {
+    width: null,
+    pinnedLeft: null,
+    pinnedRight: null,
+    isLastPinned: false,
+    isFirstPinnedRight: false,
+    justify: 'left'
+  }
+  return render(
+    defineComponent({
+      setup() {
+        provide(
+          COLUMN_LAYOUT_KEY,
+          computed(() => new Map(columnIds.map((id) => [id, layoutInfo])))
+        )
+      },
+      render() {
+        return h('table', [
+          h('tbody', [
+            h('tr', [
+              h(HostServicesRow, {
+                row,
+                serviceHost: HOST,
+                tableRow: makeTableRow(),
+                displayOptions: DISPLAY_OPTIONS
+              })
+            ])
+          ])
+        ])
+      }
+    })
+  )
+}
+
+function renderedColumnIds(container: Element): (string | null)[] {
+  return Array.from(container.querySelectorAll('td')).map((td) => td.getAttribute('data-column-id'))
+}
+
+test('renders the host and site of a row that names its host after the summary', () => {
+  const { container } = mountRow(makeServiceOfHost())
+
+  const cells = renderedColumnIds(container)
+  expect(cells.slice(cells.indexOf('name'), cells.indexOf('site_id') + 1)).toEqual([
+    'name',
+    'summary',
+    'host_name',
+    'site_id'
+  ])
+  expect(screen.getByText('web-2')).toBeInTheDocument()
+  expect(screen.getByText('remote')).toBeInTheDocument()
+})
+
+test('opens the host on a click anywhere in its cell, its state included', async () => {
+  const openHost = vi.fn()
+  const { container } = mountRow(makeServiceOfHost(), makeTableRow(), { onOpenHost: openHost })
+  const hostCell = container.querySelector('[data-column-id="host_name"]') as HTMLElement
+
+  await userEvent.click(within(hostCell).getByText('UP'))
+  await userEvent.click(within(hostCell).getByText('web-2'))
+
+  expect(openHost).toHaveBeenCalledTimes(2)
+  expect(openHost).toHaveBeenLastCalledWith({ name: 'web-2', site_id: 'remote', state: 'UP' })
+})
+
+test('renders no host cells in a layout without the host and site columns', () => {
+  const { container } = mountRowInLayout(makeServiceOfHost(), ['state', 'name'])
+
+  expect(renderedColumnIds(container)).toEqual(['state', 'name'])
+})
+
+test('renders only the site cell in a layout without the host column', () => {
+  const { container } = mountRowInLayout(makeServiceOfHost(), [
+    'state',
+    'name',
+    'summary',
+    'site_id'
+  ])
+
+  expect(renderedColumnIds(container)).toEqual(['state', 'name', 'summary', 'site_id'])
+})
+
+test('renders no host cells for a service of the page host', () => {
+  const { container } = mountRow(makeService())
+
+  expect(container.querySelector('[data-column-id="host_name"]')).toBeNull()
+  expect(container.querySelector('[data-column-id="site_id"]')).toBeNull()
+})
+
+test('shows the state of the host beside its name', () => {
+  const service: ServiceEntry = { ...makeServiceOfHost(), host_state: 'DOWN' }
+  const { container } = mountRow(service)
+
+  const hostCell = container.querySelector('[data-column-id="host_name"]') as HTMLElement
+  expect(within(hostCell).getByText('DO')).toBeInTheDocument()
+  expect(within(hostCell).getByText('web-2')).toBeInTheDocument()
 })

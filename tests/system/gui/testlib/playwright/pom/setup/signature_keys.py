@@ -115,7 +115,7 @@ class SignatureKeysPage(CmkPage):
     @override
     def validate_page(self) -> None:
         self.page.wait_for_url(
-            re.compile(re.escape("wato.py?folder=&mode=signature_keys")), wait_until="load"
+            re.compile(re.escape("wato.py?mode=signature_keys")), wait_until="load"
         )
         self.main_area.check_page_title(self.page_title)
 

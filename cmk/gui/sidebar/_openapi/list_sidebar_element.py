@@ -6,7 +6,6 @@
 from typing import Literal
 
 from cmk.gui.openapi.framework import (
-    ApiContext,
     APIVersion,
     EndpointDoc,
     EndpointHandler,
@@ -41,11 +40,11 @@ class SidebarElementModelCollectionModel(DomainObjectCollectionModel):
     )
 
 
-def list_sidebar_element_v1(api_context: ApiContext) -> SidebarElementModelCollectionModel:
+def list_sidebar_element_v1() -> SidebarElementModelCollectionModel:
     """List all sidebar elements from snapins"""
 
     sidebar_elements = []
-    snapins = all_snapins(api_context.config.user_permissions())
+    snapins = all_snapins()
     for key, snapin in snapins.items():
         title = snapin.title()
         model = SidebarElementModel(

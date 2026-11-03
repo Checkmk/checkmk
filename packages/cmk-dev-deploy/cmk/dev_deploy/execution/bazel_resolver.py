@@ -10,8 +10,8 @@ spec's own package plus its input packages).  This is instant compared
 to the old ``bazel query rdeps()`` approach which had to load the entire
 workspace.
 
-Only files in categories requiring Bazel builds (CPP, RUST, VUE, FRONTEND)
-are resolved. Python fast-path files are excluded -- they are handled by
+Only files in categories requiring Bazel builds (CPP, RUST, GO, VUE,
+FRONTEND) are resolved. Python fast-path files are excluded -- they are handled by
 :mod:`cmk.dev_deploy.deployers.wheel_deployer` without Bazel.
 """
 
@@ -35,6 +35,7 @@ _BAZEL_CATEGORIES = frozenset(
     {
         ChangeCategory.CPP,
         ChangeCategory.RUST,
+        ChangeCategory.GO,
         ChangeCategory.VUE,
         ChangeCategory.FRONTEND,
     }
@@ -126,7 +127,7 @@ def _get_bazel_queryable_files(
 ) -> list[str]:
     """Extract files that need Bazel target resolution.
 
-    Only files in categories that require Bazel builds (CPP, RUST, VUE,
+    Only files in categories that require Bazel builds (CPP, RUST, GO, VUE,
     FRONTEND) are included. Python fast-path, config, data, test, and
     other files are excluded.
 
@@ -175,8 +176,10 @@ def _get_build_file_packages(changes: ChangeSet) -> list[str]:
     """Extract Bazel package patterns from changed BUILD files.
 
     Returns:
-        List of package patterns like ``'//packages/check-cert/...'``,
-        or ``['//...']`` for global build file changes (MODULE.bazel, bazel/).
+        List of package patterns like ``'//packages/check-cert/...'``, plus
+        ``'//...'`` for global build file changes (MODULE.bazel, bazel/).
+        Package patterns are kept alongside ``'//...'``, which matches no
+        install spec by itself.
     """
     build_files = changes.categories.get(ChangeCategory.BUILD, ())
     if not build_files:
@@ -185,9 +188,8 @@ def _get_build_file_packages(changes: ChangeSet) -> list[str]:
     packages: set[str] = set()
     for f in build_files:
         if f == "MODULE.bazel" or f.startswith("bazel/"):
-            # Global build files changed -- conservative full rebuild
-            return ["//..."]
-        if f.endswith(("/BUILD", "/BUILD.bazel")):
+            packages.add("//...")
+        elif f.endswith(("/BUILD", "/BUILD.bazel")):
             # Package-specific BUILD file
             dirname = f.rsplit("/", 1)[0]
             packages.add(f"//{dirname}/...")

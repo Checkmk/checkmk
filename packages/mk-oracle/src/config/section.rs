@@ -608,8 +608,13 @@ impl Sections {
         let custom_metrics_cache_age = yaml
             .get_int::<u32>(keys::CUSTOM_METRICS_CACHE_AGE)
             .unwrap_or_else(|| {
-                log::debug!("Using default metrics cache age");
-                default.custom_metrics_cache_age()
+                if yaml.get_int::<u32>(keys::CACHE_AGE).is_some() {
+                    log::debug!("Using cache age as metrics cache age");
+                    cache_age
+                } else {
+                    log::debug!("Using default metrics cache age");
+                    default.custom_metrics_cache_age()
+                }
             });
         let mut sections = Sections::get_sections(yaml.get(keys::SECTIONS), None, None)
             .map(strip_custom_headers)
@@ -825,6 +830,30 @@ sections:
                 DEFAULT_AFFINITY_MAP.get(s.name().as_str()).unwrap()
             )
         });
+    }
+
+    #[test]
+    fn test_custom_metrics_cache_age_follows_cache_age() {
+        let age = |text: &str, default: &Sections| {
+            Sections::from_yaml(&create_yaml(text), default)
+                .unwrap()
+                .custom_metrics_cache_age()
+        };
+        let default = Sections::default();
+        assert_eq!(age("cache_age: 300\n", &default), 300);
+        assert_eq!(
+            age("cache_age: 300\ncustom_metrics_cache_age: 120\n", &default),
+            120
+        );
+        assert_eq!(age("custom_metrics_cache_age: 120\n", &default), 120);
+        assert_eq!(
+            age("_sections:\n", &default),
+            defaults::CUSTOM_METRICS_CACHE_AGE
+        );
+
+        let main =
+            Sections::from_yaml(&create_yaml("custom_metrics_cache_age: 120\n"), &default).unwrap();
+        assert_eq!(age("_sections:\n", &main), 120);
     }
 
     fn create_sections_yaml_default() -> Yaml {

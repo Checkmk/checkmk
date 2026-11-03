@@ -38,7 +38,7 @@ def _target_form_spec() -> Dictionary:
                     elements=[
                         CascadingSingleChoiceElement(
                             name=target_type.ident(),
-                            title=Title(  # astrein: disable=localization-checker
+                            title=Title(  # astrein: disable=localization
                                 target_type.title()
                             ),
                             parameter_form=target_type.form_spec(),

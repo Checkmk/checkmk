@@ -35,7 +35,7 @@ from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.framework.model.common_fields import AnnotatedHostName
 from cmk.gui.openapi.framework.model.converter import SiteIdConverter, TypedPlainValidator
 from cmk.gui.openapi.utils import ProblemException
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import Row
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view_utils import replace_action_url_macros, transform_action_url
@@ -107,7 +107,7 @@ def get_host_action_menu(
         PathParam(description="The host name", example="web-server-01"),
     ],
     site_id: Annotated[
-        Annotated[SiteId, TypedPlainValidator(str, SiteIdConverter.should_exist)],
+        Annotated[SiteId, TypedPlainValidator(str, SiteIdConverter.should_be_authorized)],
         QueryParam(description="An existing site id", example="local"),
     ],
 ) -> HostActionMenuResponse:
@@ -125,7 +125,7 @@ def get_host_action_menu(
     entries = get_icons(
         "host",
         row,
-        UserPermissions.from_config(active_config, permission_registry),
+        UserPermissions.from_config(active_config, all_permissions()),
         IconConfig.from_config(active_config),
         toplevel=False,
         ignore_idents=_EXCLUDED_IDENTS,

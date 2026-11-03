@@ -5,7 +5,7 @@
  */
 import { render, screen } from '@testing-library/vue'
 import CmkPointerTooltip from 'cmk-ui-library/components/CmkPointerTooltip.vue'
-import { h, nextTick } from 'vue'
+import { h, nextTick, ref } from 'vue'
 
 const tooltip = (): HTMLElement | null => document.querySelector('.cmk-pointer-tooltip')
 
@@ -25,6 +25,23 @@ describe('CmkPointerTooltip', () => {
     // flip and the clamp are covered by the computeTooltipPosition tests.
     expect(tooltip()!.style.left).toBe('124px')
     expect(tooltip()!.style.top).toBe('213px')
+  })
+
+  it('exposes the shown tooltip element', async () => {
+    const { container } = render({
+      setup() {
+        const exposed = ref<{ element: HTMLElement | null } | null>(null)
+        return () =>
+          h('div', [
+            h(CmkPointerTooltip, { ref: exposed, pointer: { clientX: 0, clientY: 0 } }),
+            h('output', exposed.value?.element === tooltip() ? 'same' : 'other')
+          ])
+      }
+    })
+    await nextTick()
+
+    expect(tooltip()).not.toBeNull()
+    expect(container.querySelector('output')).toHaveTextContent('same')
   })
 
   it('renders nothing without a pointer', () => {

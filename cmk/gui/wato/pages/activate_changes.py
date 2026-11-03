@@ -24,15 +24,14 @@ from cmk.gui.background_job.job import JobStatusStates
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
-from cmk.gui.htmllib.generator import HTMLWriter
+from cmk.gui.htmllib.generator import ClickAction, HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
     make_checkbox_selection_topic,
-    make_javascript_action,
-    make_javascript_link,
+    make_click_action_link,
     make_simple_link,
     PageMenu,
     PageMenuDropdown,
@@ -69,7 +68,6 @@ from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCom
 from cmk.gui.watolib.backup_snapshots import get_last_wato_snapshot_file
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain, DomainRequests
 from cmk.gui.watolib.hosts_and_folders import (
-    folder_preserving_link,
     FolderTree,
     make_folder_tree,
 )
@@ -205,7 +203,9 @@ class ModeRevertChanges(WatoMode):
             yield PageMenuEntry(
                 title=_("Audit log"),
                 icon_name=StaticIcon(IconNames.auditlog),
-                item=make_simple_link(folder_preserving_link(request, [("mode", "auditlog")])),
+                item=make_simple_link(
+                    makeuri_contextless(request, [("mode", "auditlog")], filename="wato.py")
+                ),
             )
 
     def _may_discard_changes(
@@ -269,6 +269,7 @@ class ModeRevertChanges(WatoMode):
         manager.start(
             sites=[local_site],
             source="GUI",
+            # A tree of its own, read after the snapshot restored the folders
             tree=make_folder_tree(config),
             all_site_configs=active_config.sites,
             user_permission_config=UserPermissionSerializableConfig.from_global_config(config),
@@ -494,7 +495,9 @@ class ModeActivateChanges(WatoMode):
             yield PageMenuEntry(
                 title=_("Audit log"),
                 icon_name=StaticIcon(IconNames.auditlog),
-                item=make_simple_link(folder_preserving_link(request, [("mode", "auditlog")])),
+                item=make_simple_link(
+                    makeuri_contextless(request, [("mode", "auditlog")], filename="wato.py")
+                ),
             )
 
     def _page_menu_entries_all_sites(
@@ -548,7 +551,9 @@ class ModeActivateChanges(WatoMode):
                 IconNames.save,
                 emblem="refresh",
             ),
-            item=make_javascript_link('cmk.activation.activate_changes("selected")'),
+            item=make_click_action_link(
+                ClickAction(action="activate_changes", arguments={"mode": "selected"})
+            ),
             name="activate_selected",
             is_shortcut=True,
             is_suggested=True,
@@ -635,13 +640,9 @@ class ModeActivateChanges(WatoMode):
             class_="confirm_info",
         )
 
-        confirm_url = "javascript:" + make_javascript_action(
-            'cmk.activation.activate_changes("selected")'
-        )
-
         show_confirm_cancel_dialog(
             title=_("Activate pending changes"),
-            confirm_url=confirm_url,
+            confirm_url=ClickAction(action="activate_changes", arguments={"mode": "selected"}),
             confirm_text=_("Activate on selected sites"),
             message=message,
             show_cancel_button=False,
@@ -802,8 +803,8 @@ class ModeActivateChanges(WatoMode):
                 table.cell(_("Actions"), css=["buttons"])
 
                 if user.may("wato.sites"):
-                    edit_url = folder_preserving_link(
-                        request, [("mode", "edit_site"), ("site", site_id)]
+                    edit_url = makeuri_contextless(
+                        request, [("mode", "edit_site"), ("site", site_id)], filename="wato.py"
                     )
                     html.icon_button(
                         edit_url, _("Edit the properties of this site"), StaticIcon(IconNames.edit)
@@ -812,7 +813,7 @@ class ModeActivateChanges(WatoMode):
                 # State
                 if can_activate_all and need_sync:
                     html.icon_button(
-                        url="javascript:void(0)",
+                        url=None,
                         id_="activate_%s" % site_id,
                         cssclass="activate_site",
                         title=_("This site is not update and needs a replication. Start it now."),
@@ -822,7 +823,7 @@ class ModeActivateChanges(WatoMode):
 
                 if can_activate_all and need_restart:
                     html.icon_button(
-                        url="javascript:void(0)",
+                        url=None,
                         id_="activate_%s" % site_id,
                         cssclass="activate_site",
                         title=_(
@@ -983,7 +984,7 @@ def _get_object_reference(
     if object_ref.object_type is ObjectRefType.Folder:
         if tree.folder_exists(object_ref.ident):
             folder = tree.folder(object_ref.ident)
-            return folder.url(request), folder.title()
+            return folder.url(), folder.title()
         return None, object_ref.ident
 
     if object_ref.object_type is ObjectRefType.User:

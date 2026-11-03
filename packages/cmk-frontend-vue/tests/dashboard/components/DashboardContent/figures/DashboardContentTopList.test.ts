@@ -3,11 +3,13 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import userEvent from '@testing-library/user-event'
 import { screen, waitFor } from '@testing-library/vue'
 import { describe, expect, it } from 'vitest'
-import { defineComponent, h } from 'vue'
+import { defineComponent, h, ref } from 'vue'
 
 import DashboardContentTopList from '@/dashboard/components/DashboardContent/figures/DashboardContentTopList.vue'
+import { useProvideDrillDownSource } from '@/dashboard/composables/useDrillDownSource'
 import { useProvideIsPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
 import type { ComputedTopList, TopListContent, VisualContext } from '@/dashboard/types/widget'
 
@@ -73,13 +75,20 @@ const endpoint = useComputeWidgetEndpoint<ComputedTopList>('compute-top-list', (
 
 async function renderWidget(
   content: Partial<TopListContent> = {},
-  { isPublicDashboard = false, filters = {} as VisualContext } = {}
+  {
+    isPublicDashboard = false,
+    filters = {} as VisualContext,
+    drillDownSource = null as string | null
+  } = {}
 ) {
   const componentProps = props(content, filters)
   const wrapper = defineComponent({
     setup() {
       if (isPublicDashboard) {
         useProvideIsPublicDashboard()
+      }
+      if (drillDownSource !== null) {
+        useProvideDrillDownSource(ref(drillDownSource))
       }
       return () => h(DashboardContentTopList, componentProps)
     }
@@ -188,10 +197,70 @@ describe('DashboardContentTopList', () => {
     )
   })
 
+  it('lets a host choose among the named destinations of a custom link', async () => {
+    const os = { status: 'encoded' as const, variables: { host_labels_1_vs_1_vs: 'os:linux' } }
+    const custom = topList()
+    const destination = {
+      location: { type: 'views' as const, name: 'allhosts', owner: null },
+      include_context: false,
+      include_time_range: false,
+      show_filter_form: false
+    }
+    endpoint.answer({
+      ...custom,
+      links: [
+        { ...destination, title: 'Same OS' },
+        {
+          ...destination,
+          title: 'Linux dashboard',
+          location: { type: 'dashboards', name: 'linux', owner: null }
+        }
+      ],
+      entries: [
+        {
+          ...custom.entries[0]!,
+          host_link_properties: { links: [{ host_labels: os }, {}] }
+        }
+      ]
+    })
+    await renderWidget({
+      contextual_link: {
+        type: 'custom',
+        links: [
+          { ...destination, title: 'Same OS', filters: [] },
+          { ...destination, title: 'Linux dashboard', filters: [] }
+        ]
+      }
+    })
+
+    await userEvent.click(screen.getByText('host-b'))
+    await screen.findByRole('menu')
+
+    expect(screen.getByRole('menuitem', { name: 'Same OS' })).toHaveAttribute(
+      'href',
+      'view.py?view_name=allhosts&host_labels_1_vs_1_vs=os%3Alinux&filled_in=filter&_show_filter_form=0'
+    )
+    expect(screen.getByRole('menuitem', { name: 'Linux dashboard' })).toHaveAttribute(
+      'href',
+      'dashboard.py?name=linux&filled_in=filter&_show_filter_form=0'
+    )
+  })
+
   it('leaves hosts and services unlinked when the widget links nowhere', async () => {
     await renderWidget({ contextual_link: { type: 'none' } })
     expect(screen.queryAllByRole('link')).toHaveLength(0)
     expect(screen.getByText('host-b')).toBeInTheDocument()
+  })
+
+  it('names the dashboard its built-in links leave', async () => {
+    await renderWidget({}, { drillDownSource: 'Overview' })
+    expect(screen.getByRole('link', { name: 'host-b' })).toHaveAttribute(
+      'href',
+      new URL(
+        'view.py?view_name=host&site=heute&host=host-b&_drilled_from=Overview',
+        window.location.href
+      ).href
+    )
   })
 
   it('suppresses the links on a public dashboard', async () => {

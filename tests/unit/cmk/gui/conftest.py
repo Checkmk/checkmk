@@ -10,6 +10,7 @@
 
 import typing
 from collections.abc import Iterator
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -23,8 +24,9 @@ from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui import http, login
 from cmk.gui.config import Config
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.watolib.hosts_and_folders import FolderTree, make_folder_tree
 from cmk.livestatus_client.testing import mock_livestatus_communication, MockLiveStatusConnection
 from cmk.utils.redis import disable_redis
 from tests.testlib.unit.gui.common_fixtures import (
@@ -33,6 +35,7 @@ from tests.testlib.unit.gui.common_fixtures import (
     create_test_hosts,
     create_wsgi_app,
     inline_background_jobs_patches,
+    make_default_config,
     patch_theme_context,
     perform_gui_cleanup_after_test,
     perform_load_config,
@@ -169,7 +172,13 @@ def with_user(load_config: Config) -> Iterator[tuple[UserId, str]]:
 def with_user_login(load_config: Config, with_user: tuple[UserId, str]) -> Iterator[UserId]:
     user_id = UserId(with_user[0])
     with login.TransactionIdContext(
-        user_id, UserPermissions(load_config.roles, permission_registry, {user_id: ["user"]}, [])
+        user_id,
+        UserPermissions(
+            load_config.roles,
+            all_permissions(),
+            {user_id: ["user"]},
+            [],
+        ),
     ):
         yield user_id
 
@@ -184,7 +193,13 @@ def with_admin(load_config: Config) -> Iterator[tuple[UserId, str]]:
 def with_admin_login(load_config: Config, with_admin: tuple[UserId, str]) -> Iterator[UserId]:
     user_id = with_admin[0]
     with login.TransactionIdContext(
-        user_id, UserPermissions(load_config.roles, permission_registry, {user_id: ["admin"]}, [])
+        user_id,
+        UserPermissions(
+            load_config.roles,
+            all_permissions(),
+            {user_id: ["admin"]},
+            [],
+        ),
     ):
         yield user_id
 
@@ -275,6 +290,21 @@ def aut_user_auth_wsgi_app(
     with_automation_user: tuple[UserId, str],
 ) -> WebTestAppForCMK:
     return create_aut_user_auth_wsgi_app(wsgi_app, with_automation_user)
+
+
+@pytest.fixture(name="config")
+def fixture_config() -> Config:
+    """The default GUI config. Modules that need another config override this fixture."""
+    return make_default_config()
+
+
+@pytest.fixture(name="tree")
+def fixture_tree(config: Config) -> Iterator[FolderTree]:
+    """A folder tree built from the config fixture, with its root folder created on disk."""
+    with disable_redis():
+        tree = make_folder_tree(config)
+        Path(tree.get_root_dir()).mkdir(parents=True, exist_ok=True)
+        yield tree
 
 
 @pytest.fixture()

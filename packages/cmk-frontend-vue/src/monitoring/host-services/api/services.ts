@@ -31,12 +31,8 @@ export class HostServicesApi extends MonitoringApi {
     params: HostServicesQueryParams = {},
     signal?: AbortSignal
   ): Promise<HostServicesResponse> {
-    const filter = this.resolveFilter(params.filter)
     const body: ServicesRequestBody = {
-      ...this.buildRequestBody(params),
-      ...(filter && {
-        filter: filter as unknown as ServiceFilterNode
-      }),
+      ...this.requestBody(params),
       ...(params.fields !== undefined && { fields: params.fields })
     }
     return unwrap(
@@ -50,6 +46,17 @@ export class HostServicesApi extends MonitoringApi {
         ...(signal && { signal })
       })
     )
+  }
+
+  /** The body `fetchServices` sends for these params, with relative age filters resolved. */
+  public requestBody(params: HostServicesQueryParams): ServicesRequestBody {
+    const filter = this.resolveFilter(params.filter)
+    return {
+      ...this.buildRequestBody(params),
+      ...(filter && {
+        filter: filter as unknown as ServiceFilterNode
+      })
+    }
   }
 
   public async fetchServiceOverview(service: ServiceRef): Promise<ServiceOverview> {

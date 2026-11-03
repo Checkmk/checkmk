@@ -9,7 +9,6 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 
 import pytest
 
-from cmk.ccc import debug
 from cmk.ccc.hostaddress import HostName
 from cmk.checkengine.parser import AgentRawDataSection, AgentRawDataSectionElem, HostSections
 from cmk.checkengine.plugins import ParsedSectionName, SectionName
@@ -213,6 +212,7 @@ def make_parser() -> SectionsParser:
         ),
         host_name=HostName("some-host"),
         error_handling=lambda *args, **kw: "error",  # noqa: ARG005
+        debug=False,
     )
 
 
@@ -229,7 +229,8 @@ def test_parse_sections_unsuperseded() -> None:
 def test_parse_sections_superseded() -> None:
     assert (
         ParsedSectionsResolver(
-            make_parser(), section_plugins=dict((SECTION_ONE, SECTION_THREE, SECTION_FOUR))
+            make_parser(),
+            section_plugins=dict((SECTION_ONE, SECTION_THREE, SECTION_FOUR)),
         ).resolve(ParsedSectionName("parsed"))
         is None
     )
@@ -247,6 +248,7 @@ class TestSectionsParser:
             ),
             host_name=HostName("only-neede-for-crash-reporting"),
             error_handling=lambda *args, **kw: "error",  # noqa: ARG005
+            debug=False,
         )
 
     @staticmethod
@@ -271,15 +273,9 @@ class TestSectionsParser:
     ) -> None:
         section_name = SectionName("one")
 
-        was_enabled = debug.enabled()
-        debug.disable()
-        try:
-            assert sections_parser.parse(section_name, lambda *args, **kw: 1 / 0) is None  # noqa: ARG005
-            assert len(sections_parser.parsing_errors) == 1
-            assert sections_parser.parsing_errors == ["error"]
-        finally:
-            if was_enabled:
-                debug.enable()
+        assert sections_parser.parse(section_name, lambda *args, **kw: 1 / 0) is None  # noqa: ARG005
+        assert len(sections_parser.parsing_errors) == 1
+        assert sections_parser.parsing_errors == ["error"]
 
     @staticmethod
     def test_parse(sections_parser: SectionsParser[AgentRawDataSectionElem]) -> None:

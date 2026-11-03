@@ -573,7 +573,7 @@ def _anonymize(anon_interface: AnonInterface, data: HostsStorageData) -> HostsSt
     for folder_path, folder_attrs in data.folder_attributes.items():
         assert isinstance(folder_attrs, dict)
         # These attributes contain nothing to anonymize, only the folder path does
-        allowed_keys = {"bake_agent_package", "cmk_agent_connection"}
+        allowed_keys = {"bake_agent_package"}
         assert set(folder_attrs.keys()) - allowed_keys == set()
         anon_folder_attributes[anon_interface.get_folder_path(folder_path)] = folder_attrs
 

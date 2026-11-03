@@ -143,6 +143,7 @@ export const iconSearchLabels: Record<string, string[]> = {
   'chevron-left': ['arrow left', 'back', 'previous', 'caret'],
   'chevron-right': ['arrow right', 'forward', 'next', 'caret'],
   'chevron-up': ['arrow up', 'collapse', 'caret'],
+  'classic-view': ['legacy view', 'document', 'table'],
   cleanup: ['clear', 'tidy', 'remove', 'sweep', 'broom'],
   clear: ['remove', 'erase', 'empty', 'trash'],
   clipboard: ['copy', 'paste', 'board'],

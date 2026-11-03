@@ -15,15 +15,16 @@ from pathlib import Path
 from lsprotocol import types as lsp
 from pygls.lsp.server import LanguageServer
 
-from cmk.astrein.checker_http_status import (
+from cmk.astrein.checkers.http_status_literal import (
     HTTPStatusLiteralChecker,
     LEGACY_PYTHON_SOURCES,
     load_legacy_python_files,
 )
-from cmk.astrein.checker_module_layers import ModuleLayersChecker
-from cmk.astrein.checkers import all_checkers
-from cmk.astrein.framework import ASTVisitorChecker, CheckerError, CheckerFactory, run_checkers
-from cmk.astrein.module_layers_config import CONFIG_FILENAME, load_config
+from cmk.astrein.checkers.module_layers.checker import ModuleLayersChecker
+from cmk.astrein.checkers.module_layers.config import CONFIG_FILENAME, load_config
+from cmk.astrein.engine import run_checkers
+from cmk.astrein.framework import ASTVisitorChecker, CheckerError, CheckerFactory
+from cmk.astrein.registry import all_checkers
 
 logger = logging.getLogger(__name__)
 
@@ -178,8 +179,8 @@ def _bind_configs(
         )
     else:
         logger.warning(
-            "module_layers.toml not found at %(repo_root)s, skipping module-layers checker",
-            {"repo_root": repo_root},
+            "module_layers.toml not found at %(repo_root)s, skipping %(checker_id)s checker",
+            {"repo_root": repo_root, "checker_id": ModuleLayersChecker.checker_id},
         )
     if (repo_root / LEGACY_PYTHON_SOURCES).exists():
         bound[HTTPStatusLiteralChecker] = partial(
@@ -187,8 +188,12 @@ def _bind_configs(
         )
     else:
         logger.warning(
-            "%(sources)s not found at %(repo_root)s, skipping http-status-literal checker",
-            {"sources": LEGACY_PYTHON_SOURCES, "repo_root": repo_root},
+            "%(sources)s not found at %(repo_root)s, skipping %(checker_id)s checker",
+            {
+                "sources": LEGACY_PYTHON_SOURCES,
+                "repo_root": repo_root,
+                "checker_id": HTTPStatusLiteralChecker.checker_id,
+            },
         )
     return [factory for cls in checker_classes if (factory := bound.get(cls, cls)) is not None]
 

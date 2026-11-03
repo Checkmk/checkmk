@@ -14,7 +14,7 @@ import socket
 import sqlite3
 import sys
 import tarfile
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from types import TracebackType
@@ -28,6 +28,8 @@ from omdlib.options import CommandOptions
 from omdlib.site_paths import SitePaths
 from omdlib.site_user import site_environment_as_root
 from omdlib.users_and_groups import run_as_site_user
+
+from cmk.schema_manager.backend.sqlite import sqlite_backup_paths
 
 
 @dataclass(frozen=True)
@@ -65,6 +67,7 @@ def _try_backup_site_to_tarfile(
             tar,
             exclusions,
             verbose,
+            sqlite_relative_paths=[str(path) for path in sqlite_backup_paths()],
         )
     except OSError as e:
         sys.exit("Failed to perform backup: %s" % e)
@@ -146,6 +149,12 @@ def ensure_mkbackup_lock_dir_rights() -> None:
         pass
 
 
+def _snapshot_sidecar_excludes(relative_paths: Iterable[str]) -> list[str]:
+    # A snapshot is a complete database on its own. The live sidecar files
+    # are from a different instant and would be replayed onto it on restore.
+    return [pattern for path in relative_paths for pattern in (f"{path}-*", f"{path}.*")]
+
+
 def _backup_site_to_tarfile(
     site_name: str,
     site_home: str,
@@ -153,11 +162,20 @@ def _backup_site_to_tarfile(
     tar: tarfile.TarFile,
     exclusions: BackupExclusions,
     verbose: bool,
+    *,
+    sqlite_relative_paths: Sequence[str] = (),
 ) -> None:
+    """`sqlite_relative_paths` are SQLite databases archived as snapshots."""
     if not os.path.isdir(site_home):
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), site_home)
 
-    excludes = get_exclude_patterns(exclusions)
+    excludes = [
+        *get_exclude_patterns(exclusions),
+        *_snapshot_sidecar_excludes(sqlite_relative_paths),
+    ]
+    sqlite_snapshot_paths = frozenset(
+        os.path.join(site_home, relative_path) for relative_path in sqlite_relative_paths
+    )
 
     def accepted_files(tarinfo: tarfile.TarInfo) -> bool:
         # patterns are relative to site directory, tarinfo.name includes site name.
@@ -185,6 +203,7 @@ def _backup_site_to_tarfile(
             site_home,
             site_name,
             predicate=accepted_files,
+            sqlite_snapshot_paths=sqlite_snapshot_paths,
             verbose=verbose,
         )
 
@@ -365,6 +384,7 @@ def _tar_add(
     arcname: str,
     *,
     predicate: Callable[[tarfile.TarInfo], bool] = lambda _: True,
+    sqlite_snapshot_paths: frozenset[str] = frozenset(),
     verbose: bool,
 ) -> None:
     """Reimplement tar.add().
@@ -387,8 +407,11 @@ def _tar_add(
             if not predicate(tarinfo):
                 return
 
-            # Create a backup of history file and add it to the archive as history.sqlite.
-            if name.endswith("var/mkeventd/history/history.sqlite"):
+            # Snapshot via the sqlite backup API instead of copying the live file.
+            if (
+                name.endswith("var/mkeventd/history/history.sqlite")
+                or name in sqlite_snapshot_paths
+            ):
                 backup_name = f"{name}.backup"
                 try:
                     _backup_sqlite(name, backup_name)
@@ -419,6 +442,7 @@ def _tar_add(
             os.path.join(name, filename),
             os.path.join(arcname, filename),
             predicate=predicate,
+            sqlite_snapshot_paths=sqlite_snapshot_paths,
             verbose=verbose,
         )
 

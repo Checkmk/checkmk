@@ -1902,9 +1902,18 @@ class Site:
         if self.enforce_english_gui:
             web = CMKWebSession(self)
             if not self.edition.is_cloud_edition():
+                if not self.edition.is_community_edition():
+                    self._skip_trial_mode_selection()
                 web.login()
             self.enforce_non_localized_gui(web)
         self._add_wato_test_config()
+
+    def _skip_trial_mode_selection(self) -> None:
+        from tests.testlib.system.licensing.trial_mode import (  # type: ignore[import-untyped, unused-ignore, import-not-found]
+            skip_trial_mode_selection,
+        )
+
+        skip_trial_mode_selection(self)
 
     # Add some test configuration that is not test specific. These settings are set only to have a
     # bit more complex Checkmk config.

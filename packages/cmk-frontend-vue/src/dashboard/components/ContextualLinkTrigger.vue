@@ -6,21 +6,39 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { firstContextualLinkUrl } from '@/dashboard/lib/contextualLinkUrl'
+import { useInjectDrillDownSource } from '@/dashboard/composables/useDrillDownSource'
+import { contextualLinkEntries } from '@/dashboard/lib/contextualLinkUrl'
 import type { LinkProperties, ResolvedLink, VisualContext } from '@/dashboard/types/widget'
+
+import ContextualLinkAnchor from './ContextualLinkAnchor.vue'
 
 const props = defineProps<{
   links: ResolvedLink[]
   linkProperties: LinkProperties
   filters: VisualContext
+  /** Opens the menu of several below this element instead of below the link. */
+  reference?: HTMLElement | null | undefined
 }>()
 
-const href = computed(() =>
-  firstContextualLinkUrl(props.links, props.linkProperties, props.filters)
+const open = defineModel<boolean>('open', { default: false })
+
+defineSlots<{ default(props: { several: boolean }): unknown }>()
+
+const drillDownSource = useInjectDrillDownSource()
+
+const entries = computed(() =>
+  contextualLinkEntries(props.links, props.linkProperties, props.filters, drillDownSource.value)
 )
 </script>
 
 <template>
-  <a v-if="href !== null" :href="href"><slot /></a>
-  <slot v-else />
+  <ContextualLinkAnchor
+    v-slot="{ several }"
+    v-model:open="open"
+    :entries="entries"
+    :reference="reference"
+    in-svg
+  >
+    <slot :several="several" />
+  </ContextualLinkAnchor>
 </template>

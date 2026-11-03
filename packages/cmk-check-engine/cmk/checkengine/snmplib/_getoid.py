@@ -6,7 +6,6 @@
 import logging
 from contextlib import suppress
 
-import cmk.ccc.debug
 from cmk.ccc.exceptions import MKGeneralException
 
 from ._table import SNMPDecodedString
@@ -23,12 +22,13 @@ def get_single_oid(
     single_oid_cache: dict[OID, SNMPDecodedString | None],
     backend: SNMPBackend,
     warn_on_empty_value: bool = True,
+    debug: bool,
 ) -> SNMPDecodedString | None:
     # The OID can end with ".*". In that case we do a snmpgetnext and try to
     # find an OID with the prefix in question. The *cache* is working including
     # the X, however.
     if oid[0] != ".":
-        if cmk.ccc.debug.enabled():
+        if debug:
             raise MKGeneralException("OID definition '%s' does not begin with a '.'" % oid)
         oid = "." + oid
 
@@ -55,7 +55,7 @@ def get_single_oid(
                 "Exception while getting OID %(oid)s from context %(context)s.",
                 {"oid": oid, "context": context},
             )
-            if cmk.ccc.debug.enabled():
+            if debug:
                 raise
             value = None
 

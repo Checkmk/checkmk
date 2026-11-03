@@ -23,8 +23,10 @@ from typing import Any, NotRequired, TypedDict
 import requests
 
 from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
+from cmk.plugins.prism.special_agent.agent_prism_v4 import agent_prism_v4_main
+from cmk.plugins.prism.special_agent.session import base_url, new_session
 from cmk.server_side_programs.v1 import (
-    HostnameValidationAdapter,
+    configure_logging,
     report_agent_crashes,
     vcrtrace,
 )
@@ -58,13 +60,11 @@ class SessionManager:
     def __init__(
         self, username: str, password: str, timeout: int, cert_check: bool | str, base_url: str
     ) -> None:
-        self._session = requests.Session()
+        self._session = new_session(base_url, cert_check)
         auth_encoded = base64.b64encode(f"{username}:{password}".encode()).decode()
         self._session.headers.update({"Authorization": f"Basic {auth_encoded}"})
         self._verify = cert_check is not False
         self._timeout = timeout
-        if isinstance(cert_check, str):
-            self._session.mount(base_url, HostnameValidationAdapter(cert_check))
 
     def get(self, url: str, params: dict[str, str] | None = None) -> Any:
         resp = self._session.get(url, params=params, verify=self._verify, timeout=self._timeout)
@@ -98,7 +98,7 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         action=vcrtrace(
             # This is the result of a refactoring.
             # I did not check if it makes sense for this special agent.
-            filter_headers=[("authorization", "****")],
+            filter_headers=[("authorization", "****"), ("cookie", "****")],
         ),
     )
     parser.add_argument(
@@ -112,10 +112,21 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
     )
     parser.add_argument("--port", type=int, metavar="PORT", default=9440)
     parser.add_argument(
+        "--hostname",
+        metavar="HOST",
+        help="Checkmk host this agent runs for, to keep its state apart (default=--server)",
+    )
+    parser.add_argument(
         "--username", type=str, required=True, metavar="USER", help="user account on prism"
     )
     parser_add_secret_option(
         parser, long=f"--{PASSWORD_OPTION}", required=True, help="password for that account"
+    )
+    parser.add_argument(
+        "--api-version",
+        choices=("v4", "legacy"),
+        default="legacy",
+        help="Nutanix API to query: v4 (Prism Central only) or legacy v1/v2 (default=legacy)",
     )
     cert_args = parser.add_mutually_exclusive_group()
     cert_args.add_argument(
@@ -147,16 +158,16 @@ def fetch_from_gateway(
     server: str, port: int, username: str, password: str, timeout: int, cert_check: bool | str
 ) -> GatewayData:
     LOGGING.info("setup HTTPS connection..")
-    base_url = f"https://{server}:{port}"
+    url = base_url(server, port)
     session_manager = SessionManager(
         username=username,
         password=password,
         timeout=timeout,
         cert_check=cert_check,
-        base_url=base_url,
+        base_url=url,
     )
-    base_url_v1 = f"{base_url}/PrismGateway/services/rest/v1"
-    base_url_v2 = f"{base_url}/PrismGateway/services/rest/v2.0"
+    base_url_v1 = f"{url}/PrismGateway/services/rest/v1"
+    base_url_v2 = f"{url}/PrismGateway/services/rest/v2.0"
 
     hosts_obj = session_manager.get(f"{base_url_v2}/hosts")
     hosts_networks = {}
@@ -231,14 +242,29 @@ def output_entities(entities: dict[str, Any], target_name: str) -> None:
 def agent_prism_main(args: argparse.Namespace) -> int:
     """Establish a connection to a Prism server and process containers, alerts, clusters and
     storage_pools"""
+    password = resolve_secret_option(args, PASSWORD_OPTION).reveal()
+    cert_check = args.cert_server_name or not args.no_cert_check
+    if args.api_version == "v4":
+        return agent_prism_v4_main(
+            server=args.server,
+            port=args.port,
+            username=args.username,
+            password=password,
+            timeout=args.timeout,
+            cert_check=cert_check,
+            hostname=args.hostname or args.server,
+            debug=args.debug,
+            stream=sys.stdout,
+        )
+
     try:
         gateway_objs = fetch_from_gateway(
             server=args.server,
             port=args.port,
             username=args.username,
-            password=resolve_secret_option(args, PASSWORD_OPTION).reveal(),
+            password=password,
             timeout=args.timeout,
-            cert_check=args.cert_server_name or not args.no_cert_check,
+            cert_check=cert_check,
         )
     except (
         requests.exceptions.ReadTimeout,
@@ -266,7 +292,9 @@ def agent_prism_main(args: argparse.Namespace) -> int:
 @report_agent_crashes(AGENT, __version__)
 def main() -> int:
     """Main entry point to be used"""
-    return agent_prism_main(parse_arguments(sys.argv[1:]))
+    args = parse_arguments(sys.argv[1:])
+    configure_logging({0: logging.WARNING, 1: logging.INFO}.get(args.verbose, logging.DEBUG))
+    return agent_prism_main(args)
 
 
 if __name__ == "__main__":

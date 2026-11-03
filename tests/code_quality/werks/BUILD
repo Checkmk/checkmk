@@ -11,6 +11,8 @@ py_cmk_test(
     ],
     deps = [
         "//cmk/utils:werks",
+        "//packages/cmk-werks:core",
+        "//packages/cmk-werks:flavor_cmk",
         "//packages/cmk-werks:tool",
         "//tests/code_quality:bazel_utils",
     ],
@@ -41,6 +43,7 @@ py_cmk_test(
         "//:pyproject-toml",
         "//cmk/utils:werks",
         "//packages/cmk-ccc:version",
+        "//packages/cmk-werks:flavor_cmk",
         "//packages/cmk-werks:site",
         "//packages/cmk-werks:tool",
         "//tests/code_quality:bazel_utils",

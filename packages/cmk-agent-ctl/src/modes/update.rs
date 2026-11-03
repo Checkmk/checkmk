@@ -2,33 +2,162 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-//! The `update` mode: the agent update of this host, driven from the command
-//! line instead of by the controller itself.
+//! The update cycle of this host, run once by the `update` mode and at the
+//! configured interval by the update thread of the daemon.
 
-use crate::agent_receiver_api;
 use crate::configuration::config::{ClientConfig, Registry};
-use crate::updater::{CheckOutcome, Updater};
-use anyhow::{bail, Result as AnyhowResult};
+use crate::environment::PathResolver;
+#[cfg(unix)]
+use crate::updater::InstallOutcome;
+use crate::updater::{CheckOutcome, FetchOutcome, SignatureCheck, Updater, WritableUpdater};
+use crate::{agent_receiver_api, misc};
+use anyhow::Result as AnyhowResult;
+use log::warn;
+#[cfg(unix)]
+use std::path::Path;
+use std::thread;
+use std::time::Instant;
 
-/// Report which agent package the site has for this host.
+/// Ask the site which agent package it has for this host, and report it.
+///
+/// Reads only, so it needs no [`WritableUpdater`] and waits for no update.
 ///
 /// # Errors
 ///
-/// If anything but a check is asked for - installing an agent from the
-/// controller is not implemented yet - or if the site cannot be asked.
-pub fn update(
+/// If the site cannot be asked.
+pub fn check(
     updater: &Updater,
     registry: &Registry,
     client_config: &ClientConfig,
-    check_only: bool,
 ) -> AnyhowResult<()> {
-    if !check_only {
-        bail!("Installing an agent update is not implemented yet, use --check-only");
+    if !updater.is_configured()? {
+        println!("Agent updates are not configured for this host");
+        return Ok(());
     }
     let api = agent_receiver_api::Api {
         use_proxy: client_config.use_proxy,
     };
     println!("{}", report(updater.check(registry, &api)?));
+    Ok(())
+}
+
+/// Fetch the agent package the site has for this host and hand it over.
+///
+/// The package is downloaded and, once `signature` is satisfied, spooled for
+/// the installer and handed to it. The install step runs as root in a unit of
+/// its own, so this run ends when that unit does, and the line it prints says
+/// what reached it rather than what it installed.
+///
+/// `signature` carries `--skip-signatures` through. The install step checks
+/// the signature again regardless, so a package nobody vouched for is spooled
+/// here and refused there. On Windows nothing checks
+/// it again, so such a package is not handed over at all.
+///
+/// A package handed over in an earlier run is settled first: the installed
+/// hash says whether its installation took effect.
+///
+/// An error of the update goes to the update state, where the next status
+/// request reports it to the site.
+///
+/// # Errors
+///
+/// If the site cannot be asked, does not deliver the package it offered, if
+/// the package fails verification or cannot be spooled, or if the installer
+/// cannot be reached.
+pub fn update(
+    updater: &mut WritableUpdater,
+    registry: &Registry,
+    client_config: &ClientConfig,
+    signature: SignatureCheck,
+) -> AnyhowResult<()> {
+    if !updater.is_configured()? {
+        println!("Agent updates are not configured for this host");
+        return Ok(());
+    }
+    let api = agent_receiver_api::Api {
+        use_proxy: client_config.use_proxy,
+    };
+
+    let result = run_cycle(updater, registry, &api, signature);
+    if let Err(error) = &result {
+        if let Err(save_error) = updater.record_error(error) {
+            warn!("Could not record the error in the update state: {save_error:#}");
+        }
+    }
+    result
+}
+
+/// Settle the pending installation, then fetch and hand over what the site
+/// offers.
+fn run_cycle(
+    updater: &mut WritableUpdater,
+    registry: &Registry,
+    api: &agent_receiver_api::Api,
+    signature: SignatureCheck,
+) -> AnyhowResult<()> {
+    updater.settle_pending_install()?;
+
+    let fetched = updater.fetch_update(registry, api, signature)?;
+
+    println!("{}", report_fetch(&fetched));
+
+    match fetched {
+        FetchOutcome::UpToDate(_) | FetchOutcome::NoPackage => updater.clear_last_error()?,
+        FetchOutcome::SourceUnavailable => updater.record_source_unavailable()?,
+        _ => {}
+    }
+
+    #[cfg(unix)]
+    if let FetchOutcome::Spooled {
+        path,
+        signatures,
+        hash,
+        ..
+    } = &fetched
+    {
+        updater.store_pending_hash(hash)?;
+        let outcome = updater.install_update(path, signatures);
+        if !matches!(outcome, Ok(InstallOutcome::HandedOver)) {
+            if let Err(error) = updater.clear_pending_hash() {
+                log::warn!("Could not clear the pending installation: {error:#}");
+            }
+        }
+
+        println!("{}", report_install(outcome?, path));
+    }
+    // Nothing on Windows checks the signature again, so an unverified package stays put.
+    #[cfg(windows)]
+    if let FetchOutcome::Spooled {
+        path,
+        hash,
+        signature: SignatureCheck::Required,
+        ..
+    } = &fetched
+    {
+        updater.store_pending_hash(hash)?;
+        let handed_over = updater.hand_over_msi(path);
+        if handed_over.is_err() {
+            if let Err(error) = updater.clear_pending_hash() {
+                log::warn!("Could not clear the pending installation: {error:#}");
+            }
+        }
+        println!(
+            "The Windows agent service installs it from {}",
+            handed_over?.display()
+        );
+    }
+    #[cfg(windows)]
+    if let FetchOutcome::Spooled {
+        path,
+        signature: SignatureCheck::Skip,
+        ..
+    } = &fetched
+    {
+        println!(
+            "Unverified packages are not installed on Windows, {} stays where it is",
+            path.display()
+        );
+    }
     Ok(())
 }
 
@@ -47,6 +176,106 @@ fn report(outcome: CheckOutcome) -> String {
         CheckOutcome::UpdateAvailable { target, installed } => {
             format!("Agent update available: {target} (installed: {installed})")
         }
+        CheckOutcome::SourceUnavailable => {
+            String::from("The site of the update source serves no agent updates")
+        }
+    }
+}
+
+/// The outcome of a fetch in the line the mode prints for it.
+///
+/// A spooled package is named by its file: the privileged step is a process of
+/// its own, and [`report_install`] says on the next line what became of the
+/// hand-over to it.
+///
+/// The two outcomes that end without a package read as they do in [`report`]:
+/// the same situation must not be worded by whether `--check-only` was passed.
+///
+/// An unverified package says so. The file on disk carries no such mark, so
+/// this line is the only place the two are told apart.
+fn report_fetch(outcome: &FetchOutcome) -> String {
+    match outcome {
+        FetchOutcome::NotPossible => {
+            String::from("No agent update is possible for this host, run with -v for the reason")
+        }
+        FetchOutcome::NoPackage => String::from("No agent package available for this host"),
+        FetchOutcome::UpToDate(hash) => format!("Agent is up to date: {hash}"),
+        FetchOutcome::SourceUnavailable => {
+            String::from("The site of the update source serves no agent updates")
+        }
+        FetchOutcome::Superseded => String::from(
+            "The site replaced the offered agent package, the next update gets the new one",
+        ),
+        FetchOutcome::Spooled {
+            hash,
+            path,
+            signature,
+            ..
+        } => format!(
+            "{} is ready at {}",
+            signature.package_name(hash),
+            path.display()
+        ),
+    }
+}
+
+/// The update thread of the daemon: one cycle per interval, while automatic
+/// updates are activated, after a random delay at start.
+///
+/// The lock is taken only for a cycle that runs, so a host without automatic
+/// updates never touches the download directory. A failed cycle, a lock that
+/// cannot be taken included, is logged and retried at the next interval: only
+/// a registry that cannot be reloaded ends the thread, as in the other threads.
+pub fn fn_thread(
+    paths: PathResolver,
+    mut registry: Registry,
+    client_config: ClientConfig,
+) -> AnyhowResult<()> {
+    misc::sleep_randomly();
+
+    loop {
+        let begin = Instant::now();
+        registry.refresh()?;
+        let updater = Updater::new(&paths);
+        let interval = updater.interval();
+
+        if updater.handle_update_cycle(&registry) {
+            match Updater::writable(&paths) {
+                Ok(mut updater) => {
+                    if let Err(result) = update(
+                        &mut updater,
+                        &registry,
+                        &client_config,
+                        SignatureCheck::Required,
+                    ) {
+                        warn!("Could not update. {result:#}");
+                    }
+                }
+                Err(error) => warn!("Could not lock the updater: {error:#}"),
+            }
+        }
+
+        thread::sleep(interval.saturating_sub(begin.elapsed()));
+    }
+}
+
+/// What the hand-over to the privileged install step did, in the line the mode
+/// prints after the one of the fetch.
+///
+/// The step answers nothing yet, so a finished hand-over is all this side
+/// knows about it. What it made of the package is in the journal of its unit,
+/// and whether the agent moved is what the next check says.
+#[cfg(unix)]
+fn report_install(outcome: InstallOutcome, path: &Path) -> String {
+    match outcome {
+        InstallOutcome::NoInstaller => format!(
+            "No installer socket is configured, {} stays where it is",
+            path.display()
+        ),
+        InstallOutcome::HandedOver => String::from(
+            "The installer has taken it and finished, run with --check-only to see \
+             whether the agent moved",
+        ),
     }
 }
 
@@ -89,6 +318,89 @@ mod tests {
         assert_eq!(
             report(CheckOutcome::NotPossible),
             "No agent update check is possible for this host, run with -v for the reason"
+        );
+    }
+
+    #[test]
+    fn test_report_a_spooled_package() {
+        assert_eq!(
+            report_fetch(&FetchOutcome::Spooled {
+                hash: TARGET_HASH.parse().unwrap(),
+                path: std::path::PathBuf::from("/spool/fedcba9876543210.deb"),
+                signature: SignatureCheck::Required,
+                signatures: vec![],
+            }),
+            "Verified agent package fedcba9876543210 is ready at \
+             /spool/fedcba9876543210.deb"
+        );
+    }
+
+    /// The file on disk is the same either way, so the line has to carry the
+    /// difference.
+    #[test]
+    fn test_report_a_spooled_package_nobody_vouched_for() {
+        assert_eq!(
+            report_fetch(&FetchOutcome::Spooled {
+                hash: TARGET_HASH.parse().unwrap(),
+                path: std::path::PathBuf::from("/spool/fedcba9876543210.deb"),
+                signature: SignatureCheck::Skip,
+                signatures: vec![],
+            }),
+            "UNVERIFIED agent package fedcba9876543210 is ready at \
+             /spool/fedcba9876543210.deb"
+        );
+    }
+
+    /// The hand-over is over, and the outcome of the installation is not
+    /// this run's to report.
+    #[cfg(unix)]
+    #[test]
+    fn test_report_a_package_the_installer_took() {
+        assert_eq!(
+            report_install(
+                InstallOutcome::HandedOver,
+                std::path::Path::new("/spool/fedcba9876543210.deb")
+            ),
+            "The installer has taken it and finished, run with --check-only to see \
+             whether the agent moved"
+        );
+    }
+
+    /// Without a privileged step the package stays a file, and the line says
+    /// where it is rather than leaving the run without an answer.
+    #[cfg(unix)]
+    #[test]
+    fn test_report_a_package_nobody_takes() {
+        assert_eq!(
+            report_install(
+                InstallOutcome::NoInstaller,
+                std::path::Path::new("/spool/fedcba9876543210.deb")
+            ),
+            "No installer socket is configured, /spool/fedcba9876543210.deb stays where it is"
+        );
+    }
+
+    #[test]
+    fn test_report_a_fetch_from_a_site_without_a_package() {
+        assert_eq!(
+            report_fetch(&FetchOutcome::NoPackage),
+            "No agent package available for this host"
+        );
+    }
+
+    #[test]
+    fn test_report_a_fetch_of_an_agent_that_is_up_to_date() {
+        assert_eq!(
+            report_fetch(&FetchOutcome::UpToDate(INSTALLED_HASH.parse().unwrap())),
+            "Agent is up to date: 0123456789abcdef"
+        );
+    }
+
+    #[test]
+    fn test_report_a_fetch_that_could_not_be_made() {
+        assert_eq!(
+            report_fetch(&FetchOutcome::NotPossible),
+            "No agent update is possible for this host, run with -v for the reason"
         );
     }
 }

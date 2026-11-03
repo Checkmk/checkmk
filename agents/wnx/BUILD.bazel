@@ -1,9 +1,11 @@
 load("@rules_cc//cc:defs.bzl", "cc_library")
 load("@rules_python//python:defs.bzl", "py_binary")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
+load("//bazel/rules:sign_azure.bzl", "sign_file_azure")
 load("//bazel/rules:xcomp/cc.bzl", "cc_binary")
+load("//bazel/rules:xcomp/package_msi.bzl", "package_msi")
+load("//bazel/rules:xcomp/qemu_test.bzl", "qemu_test")
 load("//bazel/toolchains/cc/clang/xwin:rc.bzl", "windows_rc")
-load(":msi.bzl", "wnx_msi")
 
 package(features = ["treat_warnings_as_errors"])
 
@@ -44,16 +46,14 @@ WNX_DEFAULT_LINKOPTS = [
 windows_rc(
     name = "check_mk_service_res",
     src = "src/check_mk_service.rc",
-    hdrs = [
-        "include/common/version.h",
-        "include/common/wnx_version.h",
-        "src/resource.h",
-    ],
-    includes = [
-        "include",
-        "src",
-    ],
+    hdrs = ["src/resource.h"],
+    includes = ["src"],
     tags = ["manual"],
+    # common/version.h, with the version of :wnx_version.
+    deps = [
+        ":wnx_headers",
+        ":wnx_version",
+    ],
 )
 
 windows_rc(
@@ -106,8 +106,34 @@ cc_binary(
 
 cc_library(
     name = "wnx_headers",
-    hdrs = glob(["include/**/*.h"]),
+    # wnx_version.h is replaced by :wnx_version. Left out here, it can't
+    # be picked up next to common/version.h, which includes it.
+    hdrs = glob(
+        ["include/**/*.h"],
+        exclude = ["include/common/wnx_version.h"],
+    ),
     strip_include_prefix = "include",
+    tags = ["manual"],
+    target_compatible_with = [
+        "@platforms//cpu:x86_64",
+        "@platforms//os:windows",
+    ],
+)
+
+# The agent version from --cmk_version, in place of the checked-in
+# wnx_version.h, which `make setversion` patches for the MSBuild build.
+genrule(
+    name = "wnx_version_h",
+    srcs = [":cmk_version"],
+    outs = ["stamped/wnx_version.h"],
+    cmd = "printf '#define CMK_WIN_AGENT_VERSION \"%s\"\\n' \"$$(cat $<)\" >$@",
+    tags = ["manual"],
+)
+
+cc_library(
+    name = "wnx_version",
+    hdrs = [":wnx_version_h"],
+    strip_include_prefix = "stamped",
     tags = ["manual"],
     target_compatible_with = [
         "@platforms//cpu:x86_64",
@@ -203,6 +229,7 @@ cc_library(
         ":wnx_common",
         ":wnx_headers",
         ":wnx_lwa",
+        ":wnx_version",
         "@asio",
         "@wnx_fmt//:fmt",
         "@wnx_yaml_cpp//:yaml-cpp",
@@ -271,6 +298,47 @@ sh_test(
     ],
 )
 
+# The tiers of run_tests.ps1 (Invoke-UnitTest), named as there.
+_WATEST_QEMU_TIERS = [
+    "unit",
+    "component",
+    "ext",
+    "simulation",
+]
+
+# The whole watest suite inside real-Windows QEMU VMs, one test per tier
+# of run_tests.ps1: unit, *Component (component), *ComponentExt (ext) and
+# *_Simulation (simulation), each in its own VM with an auto-logged-on
+# console session (see watest/watest_qemu.py and
+# bazel/tools/windows_vm/qemu_windows/tier.py).
+[
+    qemu_test(
+        name = "watest-qemu-" + tier,
+        src = "watest/watest_qemu.py",
+        args = [
+            tier,
+            "$(rootpath watest/qemu-excluded-tests.txt)",
+            "$(rootpath :watest-windows)",
+        ],
+        data = [
+            "watest/qemu-excluded-tests.txt",
+            "watest/watest-qemu-share.ps1",
+            ":watest-windows",
+            ":watest_data",
+            "//agents/windows/plugins",
+            "//doc:ohm_binaries",
+        ],
+    )
+    for tier in _WATEST_QEMU_TIERS
+]
+
+# All four tiers.
+test_suite(
+    name = "watest-qemu",
+    tags = ["manual"],
+    tests = [":watest-qemu-" + tier for tier in _WATEST_QEMU_TIERS],
+)
+
 sh_library(
     name = "build_msi_sh",
     srcs = ["install/build_msi.sh"],
@@ -292,6 +360,7 @@ filegroup(
         "run_tests.ps1",
         "test_files/tools/v/run.ps1",
         "tests/files/regression/windows_if.ps1",
+        "watest/watest-qemu-share.ps1",
     ],
     tags = ["lint-with-psscriptanalyzer"],
 )
@@ -325,6 +394,8 @@ genrule(
         echo "$$v" >$@
     """,
     tags = ["manual"],
+    # Also stamped into the plugins the MSI embeds.
+    visibility = ["//agents/windows/plugins:__pkg__"],
 )
 
 filegroup(
@@ -340,7 +411,43 @@ filegroup(
     srcs = glob(["install/resources/**"]),
 )
 
-wnx_msi(
+# Signed along with the plugins, see //agents/windows/plugins:TO_SIGN_SCRIPTS.
+exports_files(
+    ["install/resources/configure_and_exec.ps1"],
+    visibility = ["//agents/windows/plugins:__pkg__"],
+)
+
+# The exes //agents/wnx:check_mk_agent_msi embeds: signed whenever signing
+# credentials are given, like the exes run.ps1 signs before linking the MSI
+# (Start-BinarySigning). Needs --//bazel/rules:azure_signing_credentials_file,
+# see sign_azure.bzl.
+MSI_EXES = {
+    "check_mk_service": ":check_mk_service-windows",
+    "cmk-agent-ctl": "//packages/cmk-agent-ctl:cmk-agent-ctl-windows",
+}
+
+[
+    sign_file_azure(
+        name = "azure_signed_" + name,
+        src = exe,
+        tags = ["manual"],
+    )
+    for name, exe in MSI_EXES.items()
+]
+
+[
+    alias(
+        name = "msi_" + name,
+        actual = select({
+            "//bazel/rules:azure_signing_credentials_file_unset": exe,
+            "//conditions:default": ":azure_signed_" + name,
+        }),
+        tags = ["manual"],
+    )
+    for name, exe in MSI_EXES.items()
+]
+
+package_msi(
     name = "check_mk_agent_msi",
     srcs = [
         ":msi_resources",
@@ -349,8 +456,15 @@ wnx_msi(
         "//agents/windows/plugins:msi_cmk_plugin_files",
     ],
     out = "check_mk_agent.msi",
-    agent_ctl_exe = "//packages/cmk-agent-ctl:cmk-agent-ctl-windows",
-    service_exe = ":check_mk_service-windows",
+    script = "install/build_msi.sh",
+    script_args = ["$(execpath //agents/windows/plugins:scripts/stamp_version.sh)"],
+    # Where Product.wxs expects them.
+    stage_files = {
+        "//agents/windows/plugins:msi_plugins": "agents/wnx/install/plugins.tar",
+        ":msi_check_mk_service": "agents/wnx/build/check_mk_service/x64/Release/check_mk_service.exe",
+        ":msi_cmk-agent-ctl": "artefacts/cmk-agent-ctl.exe",
+    },
     tags = ["manual"],
+    tools = ["//agents/windows/plugins:scripts/stamp_version.sh"],
     version_file = ":cmk_version",
 )

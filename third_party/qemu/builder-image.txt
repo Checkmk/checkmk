@@ -1,0 +1,1 @@
+int-registry.lan.checkmk.net/ci-qemu/qemu-builder:2026-10-13-a25bf0f60a89-b3@sha256:93b54614399abad28bddff954242d1d54a30b85d0faa77a0746ae3ca17281f96

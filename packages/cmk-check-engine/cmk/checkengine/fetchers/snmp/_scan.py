@@ -36,12 +36,13 @@ def gather_available_raw_section_names(
     *,
     scan_config: SNMPScanConfig,
     backend: SNMPBackend,
+    debug: bool,
 ) -> frozenset[SNMPSectionName]:
     if not sections:
         return frozenset()
 
     try:
-        return _snmp_scan(sections, scan_config=scan_config, backend=backend)
+        return _snmp_scan(sections, scan_config=scan_config, backend=backend, debug=debug)
     except MKTimeout:
         raise
     except Exception:
@@ -62,6 +63,7 @@ def _snmp_scan(
     *,
     scan_config: SNMPScanConfig,
     backend: SNMPBackend,
+    debug: bool,
 ) -> frozenset[SNMPSectionName]:
     logger.debug("SNMP scan:")
 
@@ -70,18 +72,23 @@ def _snmp_scan(
         (
             _fake_description_object()
             if scan_config.missing_sys_description
-            else _prefetch_description_object(backend=backend)
+            else _prefetch_description_object(backend=backend, debug=debug)
         ),
         on_error=scan_config.on_error,
         backend=backend,
+        debug=debug,
     )
     _output_snmp_check_plugins("SNMP scan found", found_sections)
     return found_sections
 
 
-def _prefetch_description_object(*, backend: SNMPBackend) -> Mapping[str, SNMPDecodedString]:
+def _prefetch_description_object(
+    *, backend: SNMPBackend, debug: bool
+) -> Mapping[str, SNMPDecodedString]:
     def _fetch_required(oid: str, name: str) -> SNMPDecodedString:
-        if (value := get_single_oid(oid, single_oid_cache={}, backend=backend)) is None:
+        if (
+            value := get_single_oid(oid, single_oid_cache={}, backend=backend, debug=debug)
+        ) is None:
             raise FetcherError(
                 "Cannot fetch %s OID %s. Please check your SNMP "
                 "configuration. Possible reason might be: Wrong credentials, "
@@ -113,6 +120,7 @@ def _find_sections(
     *,
     on_error: OnError,
     backend: SNMPBackend,
+    debug: bool,
 ) -> frozenset[SNMPSectionName]:
     found_sections: set[SNMPSectionName] = set()
     for name, specs in sections:
@@ -122,6 +130,7 @@ def _find_sections(
             single_oid_cache={**initial_system_oids},
             backend=backend,
             warn_on_empty_value=False,  # During discovery, this is not worth a warning
+            debug=debug,
         )
         try:
             if evaluate_snmp_detection(

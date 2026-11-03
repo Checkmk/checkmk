@@ -225,7 +225,7 @@ void main() {
                     "${filename}",
                     "${INTERNAL_DEPLOY_DEST}",
                     INTERNAL_DEPLOY_PORT,
-                    exclude_pattern = "{${bazel_log_prefix}*}"
+                    "{${bazel_log_prefix}*}",
                 );
             }
 
@@ -243,7 +243,7 @@ void main() {
                         "${filename}",
                         WEB_DEPLOY_DEST,
                         WEB_DEPLOY_PORT,
-                        exclude_pattern = exclude_pattern,
+                        exclude_pattern,
                     );
                 }
             }

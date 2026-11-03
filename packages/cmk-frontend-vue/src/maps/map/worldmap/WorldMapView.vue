@@ -25,19 +25,21 @@ import MapSearch from '@/maps/map/components/MapSearch.vue'
 import MapZoomControls from '@/maps/map/components/MapZoomControls.vue'
 import ProblemsOnlyToggle from '@/maps/map/components/ProblemsOnlyToggle.vue'
 import type { MapEditor } from '@/maps/map/composables/useMapEditor'
+import type { SettingsFocus } from '@/maps/map/edit/settings/settingsForm'
 import type { LineEndpoint } from '@/maps/map/worldmap/composables/useWorldmapLines'
 import type { MarkerMove } from '@/maps/map/worldmap/composables/useWorldmapMarkers'
+import { roundCoordinate } from '@/maps/map/worldmap/coordinates'
 import { type LatLng, type WorldmapViewport, pointObjects } from '@/maps/map/worldmap/geo'
 import { useMaps } from '@/maps/services/context'
 import MapsMenu from '@/maps/shared/components/MapsMenu.vue'
 import MapsMenuItem from '@/maps/shared/components/MapsMenuItem.vue'
 import type { MapConfig, MapElement, ObjectState } from '@/maps/types/api'
-import type { AnchorRect } from '@/maps/utils/anchorRect'
 import { hasAutoSource } from '@/maps/utils/model'
+import { problemObjects } from '@/maps/utils/objectFilter'
 
 import WorldMapCanvas from './components/WorldMapCanvas.vue'
 
-const { _t } = usei18n()
+const { _t, _tp } = usei18n()
 
 const props = defineProps<{
   config: MapConfig | null
@@ -56,8 +58,8 @@ const emit = defineEmits<{
   'update:filterNeedle': [needle: string]
   'update:problemsOnly': [value: boolean]
   'object-click': [object: MapElement, event?: MouseEvent]
-  /** Open the object's properties, anchored where the operator asked. */
-  'object-properties': [object: MapElement, anchor: AnchorRect | null]
+  /** Open the object's properties. */
+  'object-properties': [object: MapElement]
   'object-delete': [object: MapElement]
   /** An object was just dropped onto the map. */
   placed: []
@@ -65,14 +67,21 @@ const emit = defineEmits<{
   'view-changed': []
   /** The operator wants this viewport to be the one the map opens on. */
   'save-viewport': [at: WorldmapViewport]
+  /** Open the map's settings at the option that fills the map with hosts. */
+  'open-settings': [focus: SettingsFocus]
 }>()
 
 const canvas = useTemplateRef<InstanceType<typeof WorldMapCanvas>>('canvas')
 
 const { autoObjects } = useMaps()
 
-/** What to say on a map with nothing on it; nothing while there may still be. */
-const emptyText = computed<string | null>(() => {
+/**
+ * What to say on a map with nothing on it, and whether to point at the setting
+ * that fills it; nothing while there may still be something.
+ */
+// The button sits inside the sentence, so the sentence stays one msgid and the
+// placeholder marks where the button goes.
+const emptyState = computed<{ text: string; toSettings: boolean } | null>(() => {
   const config = props.config
   if (!config || config.objects.length > 0 || props.editor.editMode.value || props.preview) {
     return null
@@ -82,20 +91,34 @@ const emptyText = computed<string | null>(() => {
     // that failed says nothing about them.
     return autoObjects.value !== 'loaded'
       ? null
-      : _t(
-          'No hosts with geo coordinates found — set the maps_lat and maps_lng labels on hosts to show them here'
-        )
+      : {
+          text: _t(
+            'No hosts with geo coordinates found. Set the maps_lat and maps_lng labels on hosts to show them here.'
+          ),
+          toSettings: false
+        }
   }
   return props.canEdit
-    ? _t(
-        'No objects yet — click the Edit button (bottom right) to place some, or populate the map from hosts with the maps_lat and maps_lng labels under Map settings → Automap source'
-      )
-    : _t('This map has no objects yet')
+    ? {
+        text: _tp(
+          '%{link} is a button that opens the "Automatic object placement" setting',
+          'No objects yet. Use the Edit button at the bottom right to place some, or turn on %{link} to place hosts by their maps_lat and maps_lng labels.'
+        ),
+        toSettings: true
+      }
+    : { text: _t('This map has no objects yet'), toSettings: false }
 })
 
 // The same objects the canvas fits the viewport to, so the control never
 // promises something the map will not do.
-const canFit = computed(() => pointObjects(props.config?.objects ?? []).length > 0)
+const canFit = computed(() => {
+  const objects = props.config?.objects ?? []
+  const shown =
+    props.editor.editMode.value && !props.preview
+      ? objects
+      : problemObjects(objects, props.problemsOnly, props.states)
+  return pointObjects(shown).length > 0
+})
 
 /** Where a right-click on the empty map opened the menu. */
 const canvasMenu = ref<{ x: number; y: number } | null>(null)
@@ -149,19 +172,19 @@ function onEndpointBind(
   [lat, lng]: LatLng,
   boundTo: string | null
 ): void {
+  const at = { lat: roundCoordinate(lat), lng: roundCoordinate(lng) }
   void props.editor.updateObjectProperties(
     id,
-    endpoint === 1 ? { lat, lng, start_ref: boundTo } : { lat2: lat, lng2: lng, end_ref: boundTo }
+    endpoint === 1
+      ? { ...at, start_ref: boundTo }
+      : { lat2: at.lat, lng2: at.lng, end_ref: boundTo }
   )
 }
 
-/**
- * Double-click opens the object's properties, anchored on the object itself so
- * the dialog appears where the operator is looking.
- */
-function onObjectDblclick(object: MapElement, anchor: AnchorRect | null): void {
+/** Double-click opens the object's properties. */
+function onObjectDblclick(object: MapElement): void {
   if (props.editor.editMode.value) {
-    emit('object-properties', object, anchor)
+    emit('object-properties', object)
   }
 }
 
@@ -215,7 +238,7 @@ defineExpose({
         :checkmk-url="checkmkUrl"
         @object-click="(object, event) => emit('object-click', object, event)"
         @object-dblclick="onObjectDblclick"
-        @object-properties="(object, anchor) => emit('object-properties', object, anchor)"
+        @object-properties="(object) => emit('object-properties', object)"
         @object-delete="emit('object-delete', $event)"
         @object-duplicate="
           (object) => {
@@ -241,8 +264,20 @@ defineExpose({
       />
 
       <!-- Text only, as on a static map; over the tiles, which stay usable. -->
-      <div v-if="emptyText" class="maps-world-map-view__empty">
-        <p class="maps-world-map-view__empty-text">{{ emptyText }}</p>
+      <div v-if="emptyState" class="maps-world-map-view__empty">
+        <p class="maps-world-map-view__empty-text">
+          <template v-if="emptyState.toSettings">
+            {{ emptyState.text.split('%{link}')[0]
+            }}<CmkButton
+              variant="text"
+              size="small"
+              class="maps-world-map-view__empty-link"
+              @click="emit('open-settings', 'automap_source')"
+              >{{ _t('Automatic object placement') }}</CmkButton
+            >{{ emptyState.text.split('%{link}')[1] }}
+          </template>
+          <template v-else>{{ emptyState.text }}</template>
+        </p>
       </div>
 
       <div
@@ -297,6 +332,16 @@ defineExpose({
   pointer-events: none;
 }
 
+/* The overlay lets clicks through to the tiles; the button takes its own. It
+   sits in the sentence, so it drops the button's box. */
+.maps-world-map-view__empty-link {
+  height: auto;
+  margin: 0;
+  padding: 0;
+  vertical-align: baseline;
+  pointer-events: auto;
+}
+
 .maps-world-map-view__empty-text {
   max-width: 480px;
   margin: 0;
@@ -304,8 +349,11 @@ defineExpose({
   font-size: var(--font-size-normal);
   text-align: center;
   color: var(--font-color);
-  background: var(--maps-map-view-glass);
+  background: var(--maps-map-view-overlay-bg);
   border-radius: var(--border-radius);
+  box-shadow:
+    0 0 0 1px var(--default-border-color),
+    var(--maps-shadow-canvas-overlay-high);
 }
 
 /* Bottom centre: the top centre is where an unreachable site is announced. */
@@ -319,7 +367,7 @@ defineExpose({
   gap: var(--dimension-4);
   padding: var(--dimension-3) var(--dimension-5);
   color: var(--font-color);
-  background: var(--maps-map-view-glass);
+  background: var(--maps-map-view-overlay-bg);
   border-radius: 9999px;
   transform: translateX(-50%);
 }
@@ -340,18 +388,17 @@ defineExpose({
   align-items: center;
   gap: var(--dimension-5);
   padding: var(--dimension-4) var(--dimension-6);
-  background: var(--maps-map-view-glass);
-  border-radius: var(--dimension-4);
+  background: var(--maps-map-view-overlay-bg);
+  border-radius: var(--border-radius);
   box-shadow:
     0 0 0 1px var(--default-border-color),
-    0 25px 50px -12px rgb(0 0 0 / 25%);
-  backdrop-filter: blur(12px);
+    var(--maps-shadow-canvas-overlay-high);
   transform: translateX(-50%);
 }
 
 .maps-world-map-view__picker-text {
-  font-size: var(--font-size-large);
-  line-height: 20px;
+  font-size: var(--font-size-normal);
+  line-height: 16px;
   color: var(--font-color);
 }
 </style>

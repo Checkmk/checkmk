@@ -9,19 +9,14 @@ import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 import CmkSlideInDialog from 'cmk-ui-library/components/CmkSlideInDialog.vue'
 import CmkSpace from 'cmk-ui-library/components/CmkSpace.vue'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
-import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { ref } from 'vue'
 
-import FieldComponent from '@/dashboard/components/Wizard/components/TableForm/FieldComponent.vue'
-import FieldDescription from '@/dashboard/components/Wizard/components/TableForm/FieldDescription.vue'
 import TableForm from '@/dashboard/components/Wizard/components/TableForm/TableForm.vue'
-import TableFormRow from '@/dashboard/components/Wizard/components/TableForm/TableFormRow.vue'
 
 import { type CustomGraphOptions } from '../api'
 import { type DataFieldErrors, useCustomGraphOptions } from '../composables/useCustomGraphOptions'
-import UnitSettings from './UnitSettings.vue'
-import VerticalRangeSettings from './VerticalRangeSettings.vue'
+import GraphOptionRows from './GraphOptionRows.vue'
 
 const { _t } = usei18n()
 
@@ -79,40 +74,10 @@ const handleUpdate = () => {
       <div class="graphing-designer-settings__block">
         <CmkHeading type="h2">{{ _t('Graph options') }}</CmkHeading>
         <TableForm class="graphing-designer-settings__fields">
-          <TableFormRow>
-            <FieldDescription>{{ _t('Unit') }}</FieldDescription>
-            <FieldComponent>
-              <UnitSettings
-                v-model:unit-type="graphOptions.unitType.value"
-                v-model:notation="graphOptions.notation.value"
-                v-model:symbol="graphOptions.symbol.value"
-                v-model:rounding-mode="graphOptions.roundingMode.value"
-                v-model:rounding-digits="graphOptions.roundingDigits.value"
-                :digit-error="validationErrors.precision_digits ?? null"
-              />
-            </FieldComponent>
-          </TableFormRow>
-          <TableFormRow>
-            <FieldDescription>{{ _t('Explicit range') }}</FieldDescription>
-            <FieldComponent>
-              <VerticalRangeSettings
-                v-model:vertical-range-type="graphOptions.verticalRangeType.value"
-                v-model:lower-bound="graphOptions.lowerVerticalRange.value"
-                v-model:upper-bound="graphOptions.upperVerticalRange.value"
-                :lower-bound-error="validationErrors.lower_range ?? null"
-                :upper-bound-error="validationErrors.upper_range ?? null"
-              />
-            </FieldComponent>
-          </TableFormRow>
-          <TableFormRow>
-            <FieldDescription>{{ _t('Metric visibility') }}</FieldDescription>
-            <FieldComponent>
-              <CmkCheckbox
-                v-model="graphOptions.showZeroValues.value"
-                :label="_t('Show zero values')"
-              />
-            </FieldComponent>
-          </TableFormRow>
+          <GraphOptionRows
+            v-model:graph-options="graphOptions"
+            :validation-errors="validationErrors"
+          />
         </TableForm>
       </div>
     </div>

@@ -10,16 +10,31 @@ revoked once both uses are consumed.
 """
 
 import datetime as dt
+import json
+import threading
 from http import HTTPStatus
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from dateutil.relativedelta import relativedelta
+from werkzeug.datastructures import ETags
 
+import cmk.utils.paths
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.user import UserId
+from cmk.gui.config import Config
+from cmk.gui.logged_in import LoggedInNobody
+from cmk.gui.openapi.api_endpoints.host_config_internal.models.request_models import RegisterHost
+from cmk.gui.openapi.api_endpoints.host_config_internal.register_host_via_token import (
+    register_host_via_token_v1,
+)
+from cmk.gui.openapi.framework import ApiContext, APIVersion
+from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.token_auth import AgentRegistrationToken, AuthToken, get_token_store
 from cmk.gui.token_auth._store import TokenRevoked
+from cmk.gui.watolib.activate_changes import AutomationGetConfigSyncState
+from cmk.utils.agent_registration import get_r4r_filepath, RegistrationRoute, UUIDLinkManager
+from tests.testlib.unit.fake_site import LoggedSecurityEvent
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
@@ -29,6 +44,40 @@ def _issue_token(host_name: str) -> AuthToken:
         issuer=UserId("issuer"),
         now=dt.datetime.now(dt.UTC),
         valid_for=relativedelta(days=1),
+    )
+
+
+def _uuid_link_manager() -> UUIDLinkManager:
+    return UUIDLinkManager(
+        received_outputs_dir=cmk.utils.paths.received_outputs_dir,
+        data_source_dir=cmk.utils.paths.data_source_push_agent_dir,
+        r4r_discoverable_dir=cmk.utils.paths.r4r_discoverable_dir,
+        uuid_lookup_dir=cmk.utils.paths.uuid_lookup_dir,
+        registrations_dir=cmk.utils.paths.registrations_dir,
+    )
+
+
+def _links() -> dict[UUID, HostName]:
+    return {link.uuid: link.hostname for link in _uuid_link_manager()}
+
+
+def _recorded_registration(uuid: UUID) -> dict[str, object] | None:
+    registration = _uuid_link_manager().registration(uuid)
+    return None if registration is None else registration.model_dump(exclude={"registered_at"})
+
+
+def _register_with_authenticated_token(token: AuthToken) -> None:
+    register_host_via_token_v1(
+        ApiContext.new(
+            config=Config(),
+            version=APIVersion.INTERNAL,
+            etag_if_match=ETags(),
+            host_url="http://localhost/",
+            user=LoggedInNobody(),
+            token=token,
+        ),
+        HostName("heute"),
+        RegisterHost(uuid=uuid4()),
     )
 
 
@@ -82,6 +131,27 @@ class TestRegisterHostViaToken:
 
         resp.assert_status_code(HTTPStatus.UNAUTHORIZED)
 
+    def test_registration_does_not_wait_for_the_setup_lock(
+        self, clients: ClientRegistry, setup_lock_held_elsewhere: threading.Event
+    ) -> None:
+        """CMK-41457: A bulk discovery holds the lock for minutes."""
+        token = _issue_token("heute")
+
+        clients.HostConfig.register_via_token("heute", f"0:{token.token_id}", str(uuid4()))
+
+        assert not setup_lock_held_elsewhere.is_set(), "The registration waited for the Setup lock"
+
+    def test_registration_leaves_the_config_generation_unchanged(
+        self, clients: ClientRegistry
+    ) -> None:
+        """A new config generation aborts a running config sync of the site."""
+        token = _issue_token("heute")
+        _, generation_before = AutomationGetConfigSyncState().execute([])
+
+        clients.HostConfig.register_via_token("heute", f"0:{token.token_id}", str(uuid4()))
+
+        assert AutomationGetConfigSyncState().execute([])[1] == generation_before
+
     def test_token_for_different_host_is_rejected(self, clients: ClientRegistry) -> None:
         token = _issue_token("other_host")
 
@@ -91,3 +161,112 @@ class TestRegisterHostViaToken:
 
         resp.assert_status_code(HTTPStatus.FORBIDDEN)
         assert "different host" in resp.json["detail"]
+
+    def test_a_uuid_that_is_already_linked_is_refused_without_consuming_a_use(
+        self, clients: ClientRegistry
+    ) -> None:
+        """CMK-40803 AC1"""
+        uuid = str(uuid4())
+        clients.HostConfig.register("example.com", uuid)
+        token = _issue_token("heute")
+
+        resp = clients.HostConfig.register_via_token(
+            "heute", f"0:{token.token_id}", uuid, expect_ok=False
+        )
+
+        resp.assert_status_code(HTTPStatus.CONFLICT)
+        assert _links() == {UUID(uuid): HostName("example.com")}
+        stored = get_token_store().verify(f"0:{token.token_id}", now=dt.datetime.now(dt.UTC))
+        assert isinstance(stored.details, AgentRegistrationToken)
+        assert stored.details.host_registration_completed_at is None
+
+    def test_a_uuid_of_an_open_request_is_refused_without_consuming_a_use(
+        self, clients: ClientRegistry, security_events: list[LoggedSecurityEvent]
+    ) -> None:
+        """CMK-40803 AC5"""
+        uuid = uuid4()
+        cmk.utils.paths.r4r_pending_dir.mkdir(parents=True)
+        get_r4r_filepath(cmk.utils.paths.r4r_pending_dir, uuid).write_text(
+            json.dumps(
+                {
+                    "uuid": str(uuid),
+                    "username": "my-username",
+                    "agent_labels": {},
+                    "agent_cert": "cert",
+                }
+            )
+        )
+        token = _issue_token("heute")
+
+        resp = clients.HostConfig.register_via_token(
+            "heute", f"0:{token.token_id}", str(uuid), expect_ok=False
+        )
+
+        resp.assert_status_code(HTTPStatus.CONFLICT)
+        assert [
+            event.details
+            for event in security_events
+            if event.summary == "registration of a UUID with an open request refused"
+        ] == [{"host_name": "heute", "uuid": str(uuid)}]
+        stored = get_token_store().verify(f"0:{token.token_id}", now=dt.datetime.now(dt.UTC))
+        assert isinstance(stored.details, AgentRegistrationToken)
+        assert stored.details.host_registration_completed_at is None
+
+    def test_of_two_registrations_with_one_token_only_the_first_links_its_uuid(
+        self, clients: ClientRegistry
+    ) -> None:
+        """CMK-40803 AC3: The second registration holds the token as its authentication read it, before the first registration consumed the use."""
+        token_as_both_authentications_read_it = _issue_token("heute")
+        first_uuid = uuid4()
+        clients.HostConfig.register_via_token(
+            "heute", f"0:{token_as_both_authentications_read_it.token_id}", str(first_uuid)
+        )
+
+        with pytest.raises(ProblemException):
+            _register_with_authenticated_token(token_as_both_authentications_read_it)
+
+        assert _links() == {first_uuid: HostName("heute")}
+
+    def test_a_token_deleted_after_the_authentication_is_rejected(self) -> None:
+        token = _issue_token("heute")
+        get_token_store().delete(token.token_id)
+
+        with pytest.raises(ProblemException) as exc_info:
+            _register_with_authenticated_token(token)
+
+        assert exc_info.value.code == HTTPStatus.UNAUTHORIZED
+
+    def test_a_token_expired_after_the_authentication_is_rejected(self) -> None:
+        token = get_token_store().issue(
+            token_details=AgentRegistrationToken(host_name=HostName("heute")),
+            issuer=UserId("issuer"),
+            now=dt.datetime.now(dt.UTC) - dt.timedelta(days=2),
+            valid_for=relativedelta(days=1),
+        )
+
+        with pytest.raises(ProblemException) as exc_info:
+            _register_with_authenticated_token(token)
+
+        assert exc_info.value.code == HTTPStatus.UNAUTHORIZED
+
+    def test_the_registration_records_the_update_permission_that_the_token_carries(
+        self, clients: ClientRegistry
+    ) -> None:
+        """CMK-39504 AC3"""
+        token = get_token_store().issue(
+            token_details=AgentRegistrationToken(
+                host_name=HostName("heute"), agent_updates_permitted=True
+            ),
+            issuer=UserId("issuer"),
+            now=dt.datetime.now(dt.UTC),
+            valid_for=relativedelta(days=1),
+        )
+        uuid = uuid4()
+
+        clients.HostConfig.register_via_token("heute", f"0:{token.token_id}", str(uuid))
+
+        assert _recorded_registration(uuid) == {
+            "agent_updates_permitted": True,
+            "subject": "issuer",
+            "registration_route": RegistrationRoute.REGISTER_VIA_TOKEN,
+        }

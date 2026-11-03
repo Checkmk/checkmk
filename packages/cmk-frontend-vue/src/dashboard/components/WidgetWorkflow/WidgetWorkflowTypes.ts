@@ -41,10 +41,15 @@ export function findParentWorkflowKey(
   return null
 }
 
-export function getDashboardWidgetWorkflows(
-  ntopActive: boolean = false,
-  networkFlowActive: boolean = false
-): WorkflowCatalog {
+interface DashboardWidgetWorkflowOptions {
+  ntopActive?: boolean
+  mayEditCustomGraph?: boolean
+}
+
+export function getDashboardWidgetWorkflows({
+  ntopActive = false,
+  mayEditCustomGraph = false
+}: DashboardWidgetWorkflowOptions = {}): WorkflowCatalog {
   const workflows: WorkflowCatalog = {
     metrics_graphs: {
       title: _t('Metrics & graphs'),
@@ -61,15 +66,16 @@ export function getDashboardWidgetWorkflows(
           title: _t('New custom graph'),
           subtitle: _t('Create and configure a new custom graph'),
           icon: 'graph',
-          icon_emblem: 'add',
-          unavailableReason: _t('Not available yet.')
+          icon_emblem: 'add'
         },
         clone_custom_graph: {
           title: _t('Clone custom graph'),
           subtitle: _t('Configure and edit an existing custom graph'),
           icon: 'graph',
           icon_emblem: 'add',
-          unavailableReason: _t('Not available yet.')
+          unavailableReason: mayEditCustomGraph
+            ? _t('Not available yet.')
+            : _t('Requires the permission "Customize and use custom graphs".')
         },
         link_custom_graph: {
           title: _t('Link existing custom graph'),
@@ -81,7 +87,19 @@ export function getDashboardWidgetWorkflows(
     views: {
       title: _t('Views'),
       subtitle: _t('Embed saved views'),
-      icon: 'view'
+      icon: 'view',
+      subWorkflows: {
+        classic_view: {
+          title: _t('Classic view'),
+          subtitle: _t('Embed or link an existing classic view'),
+          icon: 'classic-view'
+        },
+        view: {
+          title: _t('View'),
+          subtitle: _t('Embed new views (from 3.0)'),
+          icon: 'view'
+        }
+      }
     },
     host_site_overview: {
       title: _t('Host & site overview'),
@@ -122,28 +140,22 @@ export function getDashboardWidgetWorkflows(
       icon: 'ntop'
     }
   }
-  if (networkFlowActive) {
-    workflows['network_flow'] = {
-      title: _t('Network flow monitoring'),
-      subtitle: _t('Visualize network flow traffic, applications and autonomous systems'),
-      icon: 'network-topology'
-    }
-  }
   return workflows
 }
 
 export const DASHBOARD_WIDGET_WORKFLOW_KEYS = [
   'metrics_graphs',
   'link_custom_graph',
-  'views',
+  'new_custom_graph',
+  'view',
+  'classic_view',
   'host_site_overview',
   'service_overview',
   'hw_sw_inventory',
   'alerts_notifications',
   'event_stats',
   'other',
-  'ntop',
-  'network_flow'
+  'ntop'
 ] as const
 
 export type DashboardWidgetWorkflowKey = (typeof DASHBOARD_WIDGET_WORKFLOW_KEYS)[number]

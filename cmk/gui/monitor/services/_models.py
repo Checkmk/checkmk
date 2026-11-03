@@ -80,7 +80,10 @@ class ServiceLabelValue:
 @dataclasses.dataclass(frozen=True)
 class Service:
     name: str
+    host_name: str
+    site_id: str
     state: ServiceState
+    host_state: HostState
     acknowledged: bool
     in_downtime: bool
     notifications_enabled: bool
@@ -94,9 +97,12 @@ class Service:
     stale: bool
     summary: str
     last_check: UnixTimestamp | None
-    last_state_change: UnixTimestamp
+    last_state_change: UnixTimestamp | None
     perf_data: str
     check_command: str
+    # Whether the core has recorded time series for this service, which is what its graphs show -
+    # None when the caller did not ask.
+    has_graphs: bool | None
     # The raw livestatus column, unlike ``active_checks_manually_disabled`` above, which says only
     # whether active checks were switched off by hand.
     active_checks_enabled: bool
@@ -140,21 +146,6 @@ class Service:
             case _:
                 assert_never(self.state)
 
-
-@dataclasses.dataclass(frozen=True)
-class ServiceOverview(Service):
-    host_name: str
-    host_alias: str
-    host_state: HostState
-    host_acknowledged: bool
-    host_in_downtime: bool
-    site_id: str
-    long_output: str
-    current_attempt: int
-    max_check_attempts: int
-    # Passive services are never scheduled, so livestatus reports no next check for them.
-    next_check: UnixTimestamp | None
-
     @property
     def host_state_label(self) -> HostStateLabel:
         match self.host_state:
@@ -170,6 +161,18 @@ class ServiceOverview(Service):
                 assert_never(self.host_state)
 
 
+@dataclasses.dataclass(frozen=True)
+class ServiceOverview(Service):
+    host_alias: str
+    host_acknowledged: bool
+    host_in_downtime: bool
+    long_output: str
+    current_attempt: int
+    max_check_attempts: int
+    # Passive services are never scheduled, so livestatus reports no next check for them.
+    next_check: UnixTimestamp | None
+
+
 class ServiceOptionalField(enum.StrEnum):
     """Columns a caller has to ask for, because fetching them costs a livestatus column per row."""
 
@@ -178,6 +181,7 @@ class ServiceOptionalField(enum.StrEnum):
     CONTACTS = "contacts"
     CONTACT_GROUPS = "contact_groups"
     GROUPS = "groups"
+    GRAPHS_LINK = "graphs_link"
 
     @classmethod
     def options(cls) -> str:
@@ -186,6 +190,8 @@ class ServiceOptionalField(enum.StrEnum):
 
 class ServiceSortColumn(enum.StrEnum):
     NAME = "name"
+    HOST_NAME = "host_name"
+    SITE_ID = "site_id"
     STATE = "state"
     SUMMARY = "summary"
     LAST_CHECK = "last_check"
@@ -203,6 +209,8 @@ class ServiceSortColumn(enum.StrEnum):
 _NATURAL_SORT_COLUMNS = frozenset(
     {
         ServiceSortColumn.NAME,
+        ServiceSortColumn.HOST_NAME,
+        ServiceSortColumn.SITE_ID,
         ServiceSortColumn.SUMMARY,
     }
 )
@@ -227,6 +235,23 @@ class ServiceSort:
     @override
     def __str__(self) -> str:
         return f"{self.column.value}:{self.direction.value}"
+
+
+# All services sort by site first, wherever they are listed.
+ALL_SERVICES_DEFAULT_SORT: tuple[ServiceSort, ...] = (
+    ServiceSort(column=ServiceSortColumn.SITE_ID, direction=ServiceSortDirection.ASC),
+    ServiceSort(column=ServiceSortColumn.HOST_NAME, direction=ServiceSortDirection.ASC),
+    ServiceSort(column=ServiceSortColumn.NAME, direction=ServiceSortDirection.ASC),
+)
+
+
+@dataclasses.dataclass(frozen=True)
+class ServiceTarget:
+    """A service a command is sent for, on its host's site."""
+
+    site_id: str
+    host_name: str
+    description: str
 
 
 @dataclasses.dataclass(frozen=True)

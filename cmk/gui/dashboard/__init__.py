@@ -8,7 +8,7 @@ from cmk.gui import visuals
 from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.i18n import _
 from cmk.gui.legacy_plugins import load_web_plugins
-from cmk.gui.permissions import declare_dynamic_permissions, declare_permission, permission_registry
+from cmk.gui.permissions import declare_permission, dynamic_permission_registry, permission_registry
 from cmk.utils import paths
 
 from .builtin_dashboards import (
@@ -29,7 +29,11 @@ from .dashlet import (
     IFrameDashlet,
     StaticTextDashletConfig,
 )
-from .store import get_all_dashboards, get_permitted_dashboards
+from .store import (
+    dashboard_permissions,
+    get_all_dashboards,
+    get_permitted_dashboards,
+)
 from .title_macros import render_title_with_macros_string
 from .type_defs import DashboardConfig, DashboardName
 from .visual_type import VisualTypeDashboards
@@ -73,8 +77,7 @@ def register() -> None:
     # dashboards after this function returns.
 
     # Make sure that custom views also have permissions
-    declare_dynamic_permissions(lambda: visuals.declare_custom_permissions("dashboards"))
-    declare_dynamic_permissions(lambda: visuals.declare_packaged_visuals_permissions("dashboards"))
+    dynamic_permission_registry.register("dashboard", dashboard_permissions)
 
 
 def declare_builtin_dashboard_permissions() -> None:
@@ -123,8 +126,8 @@ def _register_pre_21_plugin_api() -> None:
     CMK-12228
     """
     # Needs to be a local import to not influence the regular plug-in loading order
-    import cmk.gui.plugins.dashboard as api_module  # astrein: disable=cmk-module-layer-violation
-    import cmk.gui.plugins.dashboard.utils as plugin_utils  # astrein: disable=cmk-module-layer-violation
+    import cmk.gui.plugins.dashboard as api_module  # astrein: disable=module-layers
+    import cmk.gui.plugins.dashboard.utils as plugin_utils  # astrein: disable=module-layers
 
     for name, val in (
         ("ABCFigureDashlet", ABCFigureDashlet),

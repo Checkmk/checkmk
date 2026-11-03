@@ -20,6 +20,7 @@ py_library(
         "//packages/cmk-plugin-apis:server_side_programs",
         "//packages/cmk-plugins/cmk/plugins/lib",
         requirement("requests"),
+        requirement("urllib3"),
     ],
 )
 

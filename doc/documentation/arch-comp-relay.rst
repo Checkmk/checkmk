@@ -84,7 +84,7 @@ This is a simplified re-implementation of the fetching logic in the monitoring c
 Results are sent to the Agent Receiver, which forwards them to CMC.
 
 **Ad-hoc fetch** :
-Any UI interaction that requires fetcher output triggers an Ad-hoc fetch on the relay. 
+Any UI interaction that requires fetcher output triggers an Ad-hoc fetch on the relay.
 I.e. when a user triggers service discovery in the UI, the site creates a task in the Agent Receiver.
 The relay polls for tasks, executes the fetch, and returns results. Typical latency is 2-5 seconds.
 
@@ -188,5 +188,6 @@ See Also
 ========
 
 - :doc:`arch-comp-relay-engine`: Detailed relay engine internals
+- :doc:`arch-comp-relay-monitoring`: How site and relay components interact, per use case
 - :doc:`arch-comp-agent-receiver`: Agent receiver (includes relay support)
 - :doc:`arch-comp-checkengine`: Check engine architecture

@@ -9,16 +9,13 @@ import { type Component } from 'vue'
 import DashboardContentEmbeddedView from './DashboardContentEmbeddedView.vue'
 import DashboardContentIFrame from './DashboardContentIFrame.vue'
 import DashboardContentLinkedView from './DashboardContentLinkedView.vue'
+import DashboardContentMonitoringTable from './DashboardContentMonitoringTable.vue'
 import DashboardContentNtop from './DashboardContentNtop.vue'
 import DashboardContentSidebarElement from './DashboardContentSidebarElement.vue'
 import DashboardContentStaticText from './DashboardContentStaticText.vue'
 import DashboardContentTimeSeriesGraph from './DashboardContentTimeSeriesGraph.vue'
 import DashboardContentTimeline from './DashboardContentTimeline.vue'
 import DashboardContentUserMessages from './DashboardContentUserMessages.vue'
-import DashboardContentNetworkFlowDonut from './NetworkFlow/DashboardContentNetworkFlowDonut.vue'
-import DashboardContentNetworkFlowKpiStatCard from './NetworkFlow/DashboardContentNetworkFlowKpiStatCard.vue'
-import DashboardContentNetworkFlowTopTable from './NetworkFlow/DashboardContentNetworkFlowTopTable.vue'
-import DashboardContentNetworkFlowTrendChart from './NetworkFlow/DashboardContentNetworkFlowTrendChart.vue'
 import DashboardContentAlertOverview from './figures/DashboardContentAlertOverview.vue'
 import DashboardContentBarplot from './figures/DashboardContentBarplot.vue'
 import DashboardContentGauge from './figures/DashboardContentGauge.vue'
@@ -68,14 +65,6 @@ function contentToComponent(content: WidgetContent): Component {
       return DashboardContentTopList
     case contentType === 'single_metric':
       return DashboardContentSingleMetric
-    case contentType === 'network_flow_top_table':
-      return DashboardContentNetworkFlowTopTable
-    case contentType === 'network_flow_donut':
-      return DashboardContentNetworkFlowDonut
-    case contentType === 'network_flow_kpi_stat_card':
-      return DashboardContentNetworkFlowKpiStatCard
-    case contentType === 'network_flow_trend_chart':
-      return DashboardContentNetworkFlowTrendChart
     case contentType === 'user_messages':
       return DashboardContentUserMessages
     case contentType === 'sidebar_element':
@@ -87,7 +76,8 @@ function contentToComponent(content: WidgetContent): Component {
       'combined_graph',
       'average_scatterplot',
       'problem_graph',
-      'custom_graph'
+      'custom_graph',
+      'embedded_custom_graph'
     ].includes(contentType):
       return DashboardContentTimeSeriesGraph
     case ['host_stats', 'service_stats', 'event_stats'].includes(contentType):
@@ -106,6 +96,8 @@ function contentToComponent(content: WidgetContent): Component {
       return DashboardContentSiteOverview
     case contentType === 'alert_overview':
       return DashboardContentAlertOverview
+    case contentType === 'monitoring_table':
+      return DashboardContentMonitoringTable
     case NTOP_TYPES.includes(contentType):
       return DashboardContentNtop
     default:

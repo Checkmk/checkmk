@@ -83,6 +83,13 @@ describe('MapCard', () => {
     expect(screen.getByTitle('Rotates every 30 seconds')).toBeInTheDocument()
   })
 
+  it('flags a map that rotates only as part of a pool', async () => {
+    await renderCard(listed({ rotation_interval: 0, rotation_pools: ['noc', 'wall'] }))
+    expect(screen.getByTitle('Part of the rotation pools noc, wall')).toHaveTextContent(
+      '↻ noc, wall'
+    )
+  })
+
   it('leaves the flag row out where a map carries no flag at all', async () => {
     await renderCard(listed())
     expect(screen.queryByRole('group', { name: 'Map flags' })).not.toBeInTheDocument()

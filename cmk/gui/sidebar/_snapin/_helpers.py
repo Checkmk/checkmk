@@ -72,7 +72,7 @@ def render_link(
     # [1] protocol://hostname/url/link.py
     # [2] /absolute/link.py
     # [3] relative.py
-    if ":" not in url[:10] and not url.startswith("javascript") and url[0] != "/":
+    if ":" not in url[:10] and not url.startswith(("javascript", "#")) and url[0] != "/":
         url = url_prefix() + "check_mk/" + url
     return HTMLWriter.render_a(
         text,
@@ -233,9 +233,7 @@ def make_main_menu(
 ) -> list[NavItemTopic]:
     topics = {
         p.name(): p
-        for p in pagetypes.PagetypeTopics.load(user_permissions).permitted_instances_sorted(
-            user_permissions
-        )
+        for p in pagetypes.PagetypeTopics.load().permitted_instances_sorted(user_permissions)
     }
 
     by_topic: dict[pagetypes.PagetypeTopics, list[NavItemTopicEntry]] = {}

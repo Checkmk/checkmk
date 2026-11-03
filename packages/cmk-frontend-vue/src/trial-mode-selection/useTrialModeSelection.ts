@@ -18,6 +18,8 @@ import { onScopeDispose, ref } from 'vue'
 
 import { getCsrfToken } from '@/lib/csrf'
 
+import { consumeTrialRetryFlag, storeTrialRetryFlag } from './trialRetryFlag'
+
 /** Seconds a resend stays unavailable after a code has been sent. */
 const RESEND_COOLDOWN_SECONDS = 60
 
@@ -44,7 +46,9 @@ export type TrialModeScreen =
  */
 export function useTrialModeSelection(props: TrialModeSelectionProps) {
   const { _t } = usei18n()
-  const screen = ref<TrialModeScreen>(props.initial_screen)
+  const screen = ref<TrialModeScreen>(
+    consumeTrialRetryFlag() ? trialStartScreen() : props.initial_screen
+  )
   /**
    * The address a code is sent to. Kept here rather than on the email screen now that
    * the code screen names it and the cooldown keys on it - screens are unmounted as
@@ -166,9 +170,18 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
     screen.value = next
   }
 
+  function trialStartScreen(): TrialModeScreen {
+    return props.offline ? 'unreachable' : 'email'
+  }
+
   /** Starts the trial verification process if the site is online, or goes to the "offline" screen. */
   function startTrial(): void {
-    goTo(props.offline ? 'unreachable' : 'email')
+    goTo(trialStartScreen())
+  }
+
+  function retryTrial(): void {
+    storeTrialRetryFlag()
+    window.location.reload()
   }
 
   /**
@@ -283,6 +296,7 @@ export function useTrialModeSelection(props: TrialModeSelectionProps) {
     sendRequestInFlight,
     errorMessage,
     startTrial,
+    retryTrial,
     continueUnverified,
     sendCode,
     resendCode,

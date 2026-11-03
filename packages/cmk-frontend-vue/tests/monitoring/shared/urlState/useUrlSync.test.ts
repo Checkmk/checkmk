@@ -15,7 +15,6 @@ const PATHNAME = '/monitor_all_hosts.py'
 interface FakeUrl {
   urlSync: UrlSync
   replaceUrl: ReturnType<typeof vi.fn>
-  pushUrl: ReturnType<typeof vi.fn>
   /** Puts the browser on `url` and fires the navigation, as Back and Forward do. */
   navigateTo: (url: string) => void
   written: () => string[]
@@ -35,7 +34,6 @@ function makeUrlSync(url = PATHNAME): FakeUrl {
     written.push(next)
   }
   const replaceUrl = vi.fn(write)
-  const pushUrl = vi.fn(write)
   return {
     urlSync: {
       getCurrentUrl: () => {
@@ -48,14 +46,12 @@ function makeUrlSync(url = PATHNAME): FakeUrl {
         }
       },
       replaceUrl,
-      pushUrl,
       onNavigate: (listener) => {
         listeners.push(listener)
         return () => listeners.splice(listeners.indexOf(listener), 1)
       }
     },
     replaceUrl,
-    pushUrl,
     navigateTo: (next) => {
       current = next
       for (const listener of [...listeners]) {
@@ -169,30 +165,6 @@ describe('useUrlSync', () => {
     expect(written().at(-1)).toBe(`${PATHNAME}?q=web01#host=web01`)
   })
 
-  it('gives a push slice its own history entry, and keeps replacing for the others', async () => {
-    const query = ref<Record<string, string | null>>({ q: null })
-    const fragment = ref<Record<string, string | null>>({ host: null })
-    const { urlSync, replaceUrl, pushUrl } = makeUrlSync()
-
-    useUrlSync(
-      [
-        makeWriter('filter state', ['q'], query),
-        { ...makeWriter('slide-in', ['host'], fragment), target: 'hash', history: 'push' }
-      ],
-      { urlSync }
-    )
-
-    query.value = { q: 'web' }
-    await nextTick()
-    expect(replaceUrl).toHaveBeenCalledTimes(1)
-    expect(pushUrl).not.toHaveBeenCalled()
-
-    fragment.value = { host: 'web01' }
-    await nextTick()
-    expect(pushUrl).toHaveBeenCalledTimes(1)
-    expect(pushUrl.mock.calls[0]![0]).toBe(`${PATHNAME}?q=web#host=web01`)
-  })
-
   it('hands a slice what the URL says once the user walks the history', () => {
     const applied: Array<Record<string, string>> = []
     const fragment = ref<Record<string, string | null>>({ host: 'web01' })
@@ -205,7 +177,6 @@ describe('useUrlSync', () => {
           {
             ...makeWriter('slide-in', ['host'], fragment),
             target: 'hash',
-            history: 'push',
             apply: (params) => applied.push(params)
           }
         ],
@@ -232,7 +203,6 @@ describe('useUrlSync', () => {
           {
             ...makeWriter('slide-in', ['host'], fragment),
             target: 'hash',
-            history: 'push',
             apply: (params) => applied.push(params)
           }
         ],

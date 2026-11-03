@@ -5,13 +5,14 @@
 
 # mypy: disable-error-code="explicit-any"
 
+from collections.abc import Sequence
 from typing import Any, override
 
 from cmk.ccc.plugin_registry import Registry
-from cmk.gui.config import Config
 from cmk.gui.painter import painter_registry
 from cmk.gui.painter.host_tag_painters import HashableTagGroups
 from cmk.gui.type_defs import ColumnName, PainterName, SorterFunction
+from cmk.ruleset_matcher.tags import TagGroup
 
 from .base import Sorter
 from .host_tag_sorters import host_tag_config_based_sorters
@@ -26,9 +27,9 @@ class SorterRegistry(Registry[Sorter]):
 sorter_registry = SorterRegistry()
 
 
-def all_sorters(config: Config) -> dict[str, Sorter]:
+def all_sorters(tag_groups: Sequence[TagGroup]) -> dict[str, Sorter]:
     return dict(sorter_registry.items()) | host_tag_config_based_sorters(
-        HashableTagGroups(config.tags.tag_groups)
+        HashableTagGroups(tag_groups)
     )
 
 
@@ -66,6 +67,7 @@ def declare_1to1_sorter(
             ident=painter_name,
             title=painter.static_title,
             columns=painter.columns,
+            row_extender=painter.row_extender,
             sort_function=(
                 (lambda r1, r2, **_kwargs: func(painter.columns[col_num], r2, r1))
                 if reverse

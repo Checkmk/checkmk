@@ -13,15 +13,16 @@ from cmk.checkengine.plugins import CheckPluginName
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.watolib.hosts_and_folders import make_folder_tree
-from cmk.update_config.plugins.pre_actions.utils import (
-    AUTOCHECK_REWRITE_PREACTION_SORT_INDEX,
+from cmk.update_config.internal import (
     ConflictMode,
     continue_per_users_choice,
+    ExpiryVersion,
+    PreUpdateAction,
 )
-from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
+from cmk.update_config.plugins.pre_actions.utils import AUTOCHECK_REWRITE_PREACTION_SORT_INDEX
+from cmk.update_config.registry import pre_update_action_registry
 from cmk.utils.log import VERBOSE
 
-from ...lib import ExpiryVersion
 from ..lib.autochecks import rewrite_yielding_errors
 
 

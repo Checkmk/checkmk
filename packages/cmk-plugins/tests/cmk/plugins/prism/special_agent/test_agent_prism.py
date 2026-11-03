@@ -17,7 +17,7 @@ from unittest.mock import patch
 import pytest
 import requests
 
-from cmk.plugins.prism.special_agent.agent_prism import agent_prism_main
+from cmk.plugins.prism.special_agent.agent_prism import agent_prism_main, parse_arguments
 
 
 def _make_args(**kwargs: object) -> argparse.Namespace:
@@ -32,6 +32,7 @@ def _make_args(**kwargs: object) -> argparse.Namespace:
         "debug": False,
         "verbose": 0,
         "vcrtrace": False,
+        "api_version": "legacy",
     }
     defaults.update(kwargs)
     return argparse.Namespace(**defaults)
@@ -78,3 +79,8 @@ def test_agent_prism_main_handles_connection_errors_gracefully(
         result = agent_prism_main(args)
 
     assert result == 1
+
+
+def test_parse_arguments_defaults_to_legacy_api() -> None:
+    args = parse_arguments(["--server", "prism", "--username", "admin", "--password", "pw"])
+    assert args.api_version == "legacy"

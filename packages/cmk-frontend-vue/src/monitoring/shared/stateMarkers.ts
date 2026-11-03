@@ -10,9 +10,12 @@ export interface TextSegment {
   text: string
 }
 
+/** The states a marker can stand for. A marker never says a service is pending. */
+export type MarkerState = Exclude<ServiceState, 'PENDING'>
+
 export interface MarkerSegment {
   type: 'marker'
-  state: ServiceState
+  state: MarkerState
 }
 
 export type OutputSegment = TextSegment | MarkerSegment
@@ -22,7 +25,7 @@ export type OutputSegment = TextSegment | MarkerSegment
  * raised the service to which state. The same four the classic view renders,
  * so the two spell one plugin output the same way.
  */
-const MARKER_STATES: Readonly<Record<string, ServiceState>> = {
+const MARKER_STATES: Readonly<Record<string, MarkerState>> = {
   '(!)': 'WARN',
   '(!!)': 'CRIT',
   '(?)': 'UNKNOWN',

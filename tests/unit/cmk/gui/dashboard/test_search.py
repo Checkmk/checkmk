@@ -13,7 +13,7 @@ from cmk.gui.config import Config
 from cmk.gui.dashboard import _search as dashboard_search
 from cmk.gui.dashboard.store import get_all_dashboards, save_all_dashboards
 from cmk.gui.dashboard.type_defs import DashboardConfig
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.search import index
 from cmk.gui.search.matchers import MatchItemConfig, MatchItemGeneratorRegistry
 from cmk.gui.search.permissions import CategoryPermissionsHandlerRegistry
@@ -34,7 +34,12 @@ def test_builtin_dashboards_link_to_the_dashboard_clone_page(load_config: Config
     targets = [
         _page_target(item.url)
         for item in match_item_generator_registry["builtin_dashboards"].generate_match_items(
-            UserPermissions(load_config.roles, permission_registry, {}, []),
+            UserPermissions(
+                load_config.roles,
+                all_permissions(),
+                {},
+                [],
+            ),
             MatchItemConfig.from_config(load_config),
         )
     ]
@@ -92,7 +97,12 @@ def test_custom_dashboard_links_to_its_settings_page(
     match_item_generator_registry, _permissions = _registries()
 
     match_items = match_item_generator_registry["custom_dashboards"].generate_match_items(
-        UserPermissions(load_config.roles, permission_registry, {}, []),
+        UserPermissions(
+            load_config.roles,
+            all_permissions(),
+            {},
+            [],
+        ),
         MatchItemConfig.from_config(load_config),
     )
 

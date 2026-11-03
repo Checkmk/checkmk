@@ -21,7 +21,10 @@ const stringFormSpecWithAutocompleter: FormSpec.String = {
   label: null,
   validators: [],
   input_hint: 'Search...',
-  autocompleter: { data: { ident: '', params: {} }, fetch_method: 'rest_autocomplete' },
+  autocompleter: {
+    data: { ident: 'config_hostname', params: {} },
+    fetch_method: 'rest_autocomplete'
+  },
   field_size: 'small'
 }
 

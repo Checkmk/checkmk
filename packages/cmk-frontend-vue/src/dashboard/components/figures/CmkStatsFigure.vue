@@ -11,6 +11,7 @@ import ContextualLinkTrigger from '@/dashboard/components/ContextualLinkTrigger.
 import type { LinkProperties, Stats, StatsPart, VisualContext } from '@/dashboard/types/widget'
 
 import StateRingsHexagon, { type StateRingPart } from './lib/StateRingsHexagon.vue'
+import SvgLinkArrow from './lib/SvgLinkArrow.vue'
 import { STATE_HEXAGON_STYLE, hexagonPath } from './lib/hexagon'
 
 const props = defineProps<{
@@ -125,6 +126,7 @@ const tableOrigin = computed(() => ({
     <g ref="table" :transform="`translate(${tableOrigin.x}, ${tableOrigin.y})`">
       <ContextualLinkTrigger
         v-for="(row, index) in rows"
+        v-slot="{ several }"
         :key="row.key"
         :links="value.links"
         :link-properties="row.linkProperties"
@@ -132,7 +134,6 @@ const tableOrigin = computed(() => ({
       >
         <g :transform="`translate(0, ${index * ROW_HEIGHT})`">
           <text
-            class="db-cmk-stats-figure__legend-text"
             x="0"
             :y="ROW_HEIGHT / 2"
             text-anchor="end"
@@ -152,7 +153,7 @@ const tableOrigin = computed(() => ({
             aria-hidden="true"
           />
           <text
-            class="db-cmk-stats-figure__legend-text"
+            class="db-contextual-link-anchor__text"
             :x="COLUMN_GAP + BOX_WIDTH + COLUMN_GAP"
             :y="ROW_HEIGHT / 2"
             dominant-baseline="central"
@@ -160,6 +161,7 @@ const tableOrigin = computed(() => ({
           >
             {{ row.title }}
           </text>
+          <SvgLinkArrow v-if="several" :layout="row.title" :size="7" />
         </g>
       </ContextualLinkTrigger>
     </g>
@@ -175,10 +177,6 @@ const tableOrigin = computed(() => ({
   fill: var(--box-color);
   stroke: color-mix(in srgb, var(--box-color) var(--border-shade-mix), black);
   stroke-width: 1px;
-}
-
-a:hover .db-cmk-stats-figure__legend-text {
-  text-decoration: underline;
 }
 
 .db-cmk-stats-figure__empty {

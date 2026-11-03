@@ -20,12 +20,13 @@
 import contextlib
 import os
 import re
+from collections.abc import Iterator
 from pathlib import Path
 from typing import TypedDict
 
 import cmk.utils.paths
 from cmk.gui.i18n import _u
-from cmk.gui.permissions import declare_permission
+from cmk.gui.permissions import Permission, permission_section_registry
 
 
 class UserScriptInfo(TypedDict):
@@ -85,15 +86,20 @@ def load_notification_scripts() -> NotificationUserScripts:
     return load_user_scripts("notifications")
 
 
-# The permissions need to be loaded dynamically instead of only when the plug-ins are loaded because
-# the user may have placed new notification plug-ins in the local hierarchy.
-def declare_notification_plugin_permissions() -> None:
+# The permissions need to be computed dynamically instead of only when the plug-ins are loaded
+# because the user may have placed new notification plug-ins in the local hierarchy.
+def notification_plugin_permissions() -> Iterator[Permission]:
+    section = permission_section_registry["notification_plugin"]
     for name, attrs in load_notification_scripts().items():
         if name[0] == ".":
             continue
 
-        declare_permission(
-            "notification_plugin.%s" % name, _u(attrs["title"]), "", ["admin", "user"]
+        yield Permission(
+            section=section,
+            name=name,
+            title=_u(attrs["title"]),
+            description="",
+            defaults=["admin", "user"],
         )
 
 

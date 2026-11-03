@@ -80,7 +80,7 @@ def delete_site_global_setting_v1(
         pending_changes=make_pending_changes(api_context),
         diff_text=global_settings_diff_text(
             config_variable,
-            global_settings_context_of(site_id, api_context),
+            global_settings_context_of(site_id, api_context, edits_site_specific_value=True),
             {varname: old_value},
             {},
         ),

@@ -17,6 +17,7 @@ from cmk.plugins.aws_v2.special_agent.config import (
     TagsImportPatternOption,
     TagsOption,
 )
+from cmk.plugins.aws_v2.special_agent.hosts import SOURCE_HOST
 from cmk.plugins.aws_v2.special_agent.sections.core import ResultDistributor
 from cmk.plugins.aws_v2.special_agent.sections.ec2 import (
     EC2,
@@ -124,6 +125,7 @@ class EC2Sections(Protocol):
         tags: OverallTags = (None, None),
         skip_entities: Mapping[str, Collection[str]] | None = None,
         tag_import: TagsOption = TagsImportPatternOption.import_all,
+        naming_convention: NamingConvention = NamingConvention.ip_region_instance,
     ) -> EC2SectionsOut: ...
 
 
@@ -134,11 +136,12 @@ def get_ec2_sections() -> EC2Sections:
         tags: OverallTags = (None, None),
         skip_entities: Mapping[str, Collection[str]] | None = None,
         tag_import: TagsOption = TagsImportPatternOption.import_all,
+        naming_convention: NamingConvention = NamingConvention.ip_region_instance,
     ) -> EC2SectionsOut:
         region = "region"
-        config = AWSConfig(
-            "hostname", Args(), ([], []), NamingConvention.ip_region_instance, tag_import
-        ).for_account("123456789012")
+        config = AWSConfig("hostname", Args(), ([], []), naming_convention, tag_import).for_account(
+            "123456789012"
+        )
         config.add_single_service_config("ec2_names", names)
         config.add_service_tags("ec2_tags", tags)
         fake_ec2_client = FakeEC2Client(skip_entities)
@@ -206,7 +209,7 @@ def test_agent_aws_ec2_limits(
     assert len(ec2_limits_results) == 1
 
     for result in ec2_limits_results:
-        assert result.piggyback_hostname == ""
+        assert result.piggyback_hostname is SOURCE_HOST
         for limit in result.content:
             assert limit.key in [
                 "vpc_elastic_ip_addresses",
@@ -259,7 +262,7 @@ def test_agent_aws_ec2_summary(
         assert len(ec2_summary_results) == 1
 
         result = ec2_summary_results[0]
-        assert result.piggyback_hostname == ""
+        assert result.piggyback_hostname is SOURCE_HOST
         assert len(result.content) == found_ec2
 
     else:
@@ -306,7 +309,7 @@ def test_agent_aws_ec2_security_groups(
     assert len(ec2_security_groups_results) == found_ec2
 
     for result in ec2_security_groups_results:
-        assert result.piggyback_hostname != ""
+        assert result.piggyback_hostname is not SOURCE_HOST
 
 
 @pytest.mark.parametrize("names,tags,found_ec2,found_ec2_with_labels", ec2_params)
@@ -329,7 +332,7 @@ def test_agent_aws_ec2(
     assert len(ec2_results) == found_ec2
 
     for result in ec2_results:
-        assert result.piggyback_hostname != ""
+        assert result.piggyback_hostname is not SOURCE_HOST
 
         # 11 metrics
         assert len(result.content) == 11
@@ -348,7 +351,7 @@ def test_agent_aws_ec2_summary_without_limits(
     assert len(ec2_summary_results) == 1
 
     result = ec2_summary_results[0]
-    assert result.piggyback_hostname == ""
+    assert result.piggyback_hostname is SOURCE_HOST
     assert len(result.content) == 3
 
 
@@ -380,7 +383,7 @@ def test_agent_aws_ec2_security_groups_without_limits(
     assert len(ec2_security_groups_results) == 3
 
     for result in ec2_security_groups_results:
-        assert result.piggyback_hostname != ""
+        assert result.piggyback_hostname is not SOURCE_HOST
 
 
 def test_agent_aws_ec2_without_limits(get_ec2_sections: EC2Sections) -> None:
@@ -395,10 +398,59 @@ def test_agent_aws_ec2_without_limits(get_ec2_sections: EC2Sections) -> None:
     assert len(ec2_results) == 3
 
     for result in ec2_results:
-        assert result.piggyback_hostname != ""
+        assert result.piggyback_hostname is not SOURCE_HOST
 
         # 11 metrics
         assert len(result.content) == 11
+
+
+def test_agent_aws_ec2_metrics_go_to_ip_region_instance_hosts(
+    get_ec2_sections: EC2Sections,
+) -> None:
+    _ec2_limits, ec2_summary, _ec2_labels, _ec2_security_groups, ec2 = get_ec2_sections(
+        naming_convention=NamingConvention.ip_region_instance
+    )
+    ec2_summary.run()
+
+    ec2_results = ec2.run().results
+
+    assert sorted(result.piggyback_hostname for result in ec2_results) == [
+        "PrivateIpAddress-0-region-InstanceId-0",
+        "PrivateIpAddress-1-region-InstanceId-1",
+        "PrivateIpAddress-2-region-InstanceId-2",
+    ]
+
+
+def test_agent_aws_ec2_metrics_go_to_private_dns_name_hosts(
+    get_ec2_sections: EC2Sections,
+) -> None:
+    _ec2_limits, ec2_summary, _ec2_labels, _ec2_security_groups, ec2 = get_ec2_sections(
+        naming_convention=NamingConvention.private_dns_name
+    )
+    ec2_summary.run()
+
+    ec2_results = ec2.run().results
+
+    assert sorted(result.piggyback_hostname for result in ec2_results) == [
+        "PrivateDnsName-0",
+        "PrivateDnsName-1",
+        "PrivateDnsName-2",
+    ]
+
+
+def test_agent_aws_ec2_security_groups_go_to_the_host_of_their_instance(
+    get_ec2_sections: EC2Sections,
+) -> None:
+    _ec2_limits, ec2_summary, _ec2_labels, ec2_security_groups, _ec2 = get_ec2_sections()
+    ec2_summary.run()
+
+    ec2_security_groups_results = ec2_security_groups.run().results
+
+    assert sorted(result.piggyback_hostname for result in ec2_security_groups_results) == [
+        "PrivateIpAddress-0-region-InstanceId-0",
+        "PrivateIpAddress-1-region-InstanceId-1",
+        "PrivateIpAddress-2-region-InstanceId-2",
+    ]
 
 
 @pytest.mark.parametrize("names,tags,found_ec2,found_ec2_with_labels", ec2_params)
@@ -452,3 +504,18 @@ def test_agent_aws_ec2_filters_labels(
 
     for result in ec2_summary_results:
         assert list(result.content[0]["TagsForCmkLabels"].keys()) == expected_tags
+
+
+def test_agent_aws_ec2_limits_go_to_the_account_host_of_a_listed_account() -> None:
+    config = AWSConfig(
+        "hostname", Args(), ([], []), NamingConvention.ip_region_instance
+    ).for_account("333333333333", host="333333333333")
+    config.add_single_service_config("ec2_names", None)
+    config.add_service_tags("ec2_tags", (None, None))
+    ec2_limits = EC2Limits(
+        FakeEC2Client(), "region", config, ResultDistributor(), FakeServiceQuotasClient()
+    )
+
+    ec2_limits_results = ec2_limits.run().results
+
+    assert [result.piggyback_hostname for result in ec2_limits_results] == ["333333333333"]

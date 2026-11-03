@@ -16,12 +16,18 @@ from cmk.gui.form_specs._utils import migrate_form_spec_disk_value
 from cmk.gui.wato._check_mk_configuration import (
     _migrate_log_levels,
     _migrate_piggybacked_host_files,
+    AgentConfigOnlyFrom,
+    AgentEncryption,
+    AgentPorts,
+    CheckMkExitStatus,
     ConfigVariableChooseSNMPBackend,
     ConfigVariableTableRowLimit,
+    ConfigVariableTrustedCertificateAuthorities,
     make_snmp_backend_hosts_rulespec,
     Snmpv3Contexts,
 )
 from cmk.gui.watolib.config_domain_name import GlobalSettingsContext
+from cmk.gui.watolib.config_domains import ConfigDomainCACertificates, ConfigDomainCore
 from cmk.livestatus_client import SiteConfigurations
 from cmk.rulesets.v1.form_specs import DefaultValue, FormSpec, Integer
 
@@ -274,3 +280,89 @@ def test_snmpv3_contexts_rule_moves_the_default_context_first() -> None:
     )
 
     assert rule_value == (None, ["", "vrf1", "mgmt"], "stop_on_timeout")
+
+
+def test_trusted_cas_change_activates_the_core() -> None:
+    """The core snapshots the trusted CA bundle into every helper config serial, and relays
+    receive that serial. Without a core activation a new CA never reaches them."""
+    domain_idents = [d.ident() for d in ConfigVariableTrustedCertificateAuthorities.all_domains()]
+    assert domain_idents[0] == ConfigDomainCACertificates.ident()
+    assert ConfigDomainCore.ident() in domain_idents
+
+
+def test_check_mk_exit_status_accepts_agent_warnings_for_special_agents() -> None:
+    value = CheckMkExitStatus.valuespec.transform_value(
+        {"individual": {"special": {"warnings": 2}}}
+    )
+    CheckMkExitStatus.valuespec.validate_datatype(value, "")
+    CheckMkExitStatus.valuespec.validate_value(value, "")
+
+
+def test_check_mk_exit_status_migration_fills_in_former_defaults() -> None:
+    assert CheckMkExitStatus.valuespec.transform_value(
+        {"overall": {}, "individual": {"snmp": {"timeout": 0}}}
+    ) == {
+        "overall": {
+            "warnings": 1,
+            "connection": 2,
+            "timeout": 2,
+            "exception": 3,
+            "missing_sections": 1,
+        },
+        "individual": {"snmp": {"warnings": 1, "connection": 2, "timeout": 0, "exception": 3}},
+    }
+
+
+def test_check_mk_exit_status_factory_default_is_valid() -> None:
+    value = CheckMkExitStatus.factory_default
+    CheckMkExitStatus.valuespec.validate_datatype(value, "")
+    CheckMkExitStatus.valuespec.validate_value(value, "")
+
+
+@pytest.mark.parametrize(
+    "stored, expected",
+    [
+        pytest.param(6556, {"port": 6556}, id="port"),
+        pytest.param({"port": 6556}, {"port": 6556}, id="already migrated"),
+    ],
+)
+def test_agent_ports_migration(stored: object, expected: object) -> None:
+    assert AgentPorts.valuespec.transform_value(stored) == expected
+
+
+@pytest.mark.parametrize(
+    "stored, expected",
+    [
+        pytest.param("secret", {"passphrase": "secret"}, id="passphrase"),
+        pytest.param(None, {"passphrase": None}, id="no encryption"),
+        pytest.param(False, {"passphrase": None}, id="default of agents baked before"),
+        pytest.param(
+            {"passphrase": "secret", "use_regular": "enforce", "use_realtime": "enforce"},
+            {"passphrase": "secret"},
+            id="Checkmk 2.1 format",
+        ),
+        pytest.param({"passphrase": "secret"}, {"passphrase": "secret"}, id="already migrated"),
+    ],
+)
+def test_agent_encryption_migration(stored: object, expected: object) -> None:
+    assert AgentEncryption.valuespec.transform_value(stored) == expected
+
+
+@pytest.mark.parametrize(
+    "stored, expected",
+    [
+        pytest.param(
+            ["10.0.0.1", "10.1.0.0/16"],
+            {"allowed_addresses": ["10.0.0.1", "10.1.0.0/16"]},
+            id="addresses",
+        ),
+        pytest.param([], {"allowed_addresses": []}, id="all addresses allowed"),
+        pytest.param(
+            {"allowed_addresses": ["10.0.0.1"]},
+            {"allowed_addresses": ["10.0.0.1"]},
+            id="already migrated",
+        ),
+    ],
+)
+def test_only_from_migration(stored: object, expected: object) -> None:
+    assert AgentConfigOnlyFrom.valuespec.transform_value(stored) == expected

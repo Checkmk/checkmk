@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime as dt
+from http import HTTPStatus
 from typing import TypeIs
 
 import pytest
@@ -140,18 +141,18 @@ def test_a_saved_source_queries_as_the_token_issuer(monkeypatch: pytest.MonkeyPa
 
 @pytest.mark.usefixtures("load_config", "request_context")
 def test_a_token_may_not_send_a_configuration() -> None:
-    assert _problem(_explicit(), token=True).code == 403  # astrein: disable=http-status-literal
+    assert _problem(_explicit(), token=True).code == HTTPStatus.FORBIDDEN
 
 
 def test_a_saved_source_without_a_token_is_401() -> None:
-    assert _problem(_SAVED, token=False).code == 401  # astrein: disable=http-status-literal
+    assert _problem(_SAVED, token=False).code == HTTPStatus.UNAUTHORIZED
 
 
 @pytest.mark.usefixtures("load_config", "request_context")
 def test_a_widget_type_the_endpoint_rejects_is_400(monkeypatch: pytest.MonkeyPatch) -> None:
     impersonating(monkeypatch, {WIDGET_ID: dashboard_widget("servicestats")})
 
-    assert _problem(_SAVED, token=True).code == 400  # astrein: disable=http-status-literal
+    assert _problem(_SAVED, token=True).code == HTTPStatus.BAD_REQUEST
 
 
 def test_a_start_not_before_its_end_is_rejected() -> None:
@@ -164,20 +165,22 @@ def test_a_start_not_before_its_end_is_rejected() -> None:
 def test_a_missing_data_error_is_404() -> None:
     problem = _raised_from_the_handler(MKMissingDataError("Nothing found"))
 
-    assert (problem.code, problem.description) == (404, "No data available")
+    assert (problem.code, problem.description) == (HTTPStatus.NOT_FOUND, "No data available")
 
 
 @pytest.mark.usefixtures("load_config", "request_context")
 def test_a_user_error_is_404() -> None:
     problem = _raised_from_the_handler(MKUserError(None, "The context lacks a host"))
 
-    assert (problem.code, problem.description) == (404, "No data available")
+    assert (problem.code, problem.description) == (HTTPStatus.NOT_FOUND, "No data available")
 
 
 @pytest.mark.usefixtures("load_config", "request_context")
 def test_a_livestatus_error_is_503() -> None:
-    # astrein: disable=http-status-literal
-    assert _raised_from_the_handler(MKLivestatusException("Site down")).code == 503
+    assert (
+        _raised_from_the_handler(MKLivestatusException("Site down")).code
+        == HTTPStatus.SERVICE_UNAVAILABLE
+    )
 
 
 @pytest.mark.usefixtures("load_config", "request_context")
@@ -198,7 +201,7 @@ def test_a_saved_source_for_a_missing_widget_is_404_and_keeps_the_token(
 
     problem = _problem(_SAVED, token=True)
 
-    assert (problem.code, problem.description) == (404, "Widget not found")
+    assert (problem.code, problem.description) == (HTTPStatus.NOT_FOUND, "Widget not found")
     assert disabled == []
 
 
@@ -209,7 +212,7 @@ def test_a_dashboard_that_no_longer_resolves_retires_its_token(
     impersonating_but_unpermitted(monkeypatch)
     disabled = recording_token_retirement(monkeypatch)
 
-    assert _problem(_SAVED, token=True).code == 404  # astrein: disable=http-status-literal
+    assert _problem(_SAVED, token=True).code == HTTPStatus.NOT_FOUND
     assert disabled == [TOKEN_ID]
 
 
@@ -220,5 +223,5 @@ def test_a_widget_of_an_unknown_type_retires_its_token(monkeypatch: pytest.Monke
 
     problem = _problem(_SAVED, token=True)
 
-    assert (problem.code, problem.description) == (404, "Widget not found")
+    assert (problem.code, problem.description) == (HTTPStatus.NOT_FOUND, "Widget not found")
     assert disabled == [TOKEN_ID]

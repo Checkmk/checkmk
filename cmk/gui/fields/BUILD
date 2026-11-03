@@ -50,7 +50,6 @@ py_library(
         "//cmk/gui/watolib:password_store",
         "//packages/cmk-ccc:user",
         "//packages/cmk-livestatus-client",
-        requirement("cryptography"),
         requirement("marshmallow"),
         requirement("marshmallow-oneofschema"),
         requirement("pyparsing"),

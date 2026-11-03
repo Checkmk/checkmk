@@ -5,10 +5,8 @@
 """Browser flows for the quick actions of the experimental "Services of host" page.
 
 The services page shares its action machinery with the hosts page, so what is
-worth proving in a browser is what differs: the commands are aimed at services,
-and the downtime form therefore withholds the child-hosts option that only a
-host downtime has. The comment gate is asserted here too, because it is the
-services form that renders it.
+worth proving in a browser is what differs: the commands are aimed at the
+selected service and reach the monitoring core for it.
 
 The service under test is put into a problem state up front, because an
 acknowledgement is only observable on a service that has one. The state is
@@ -17,7 +15,6 @@ paused while it is held, so the core keeps it long enough to be read back.
 """
 
 import logging
-import re
 from collections.abc import Iterator
 
 import pytest
@@ -36,8 +33,8 @@ logger = logging.getLogger(__name__)
 ACKNOWLEDGE = "Acknowledge problems"
 SCHEDULE_DOWNTIME = "Schedule downtimes"
 
-# Only a host downtime offers this; a service downtime must not.
-CHILD_HOSTS_OPTION = "Only for hosts: Set child hosts in downtime."
+# The tooltip of the Mode column icon an acknowledged service carries.
+ACKNOWLEDGED_MODE = "Problem acknowledged"
 
 _SERVICE_CRIT = 2
 
@@ -110,16 +107,6 @@ def fixture_a_selected_service(
             test_site.openapi.downtimes.delete_by_params(monitored_host, [name])
 
 
-@pytest.mark.usefixtures("a_selected_service")
-def test_acknowledging_selected_services_opens_a_form_that_needs_a_comment(
-    services_page: HostServicesExperimental,
-) -> None:
-    services_page.trigger_action(ACKNOWLEDGE)
-
-    expect(services_page.action_form(ACKNOWLEDGE)).to_be_visible()
-    expect(services_page.submit_action("Acknowledge")).to_be_disabled()
-
-
 def test_a_commented_service_acknowledgement_reaches_the_monitoring_core(
     services_page: HostServicesExperimental,
     a_selected_service: str,
@@ -129,8 +116,8 @@ def test_a_commented_service_acknowledgement_reaches_the_monitoring_core(
     """The submitted command is applied to the service, not just accepted.
 
     The form giving way is the page's own half; the acknowledgement flag on the
-    service is what proves the command reached the core. The table is read back
-    too, since the state it shows is what a user is left looking at.
+    service is what proves the command reached the core. The row is read back
+    too, since the acknowledged mode it shows is what a user is left looking at.
     """
     assert _acknowledged(test_site, monitored_host, a_selected_service) == 0, (
         "the service is acknowledged already"
@@ -139,9 +126,7 @@ def test_a_commented_service_acknowledgement_reaches_the_monitoring_core(
     services_page.trigger_action(ACKNOWLEDGE)
     services_page.acknowledge_comment.fill("e2e service acknowledgement")
 
-    submit = services_page.submit_action("Acknowledge")
-    expect(submit).to_be_enabled()
-    submit.click()
+    services_page.submit_action("Acknowledge").click()
 
     expect(services_page.action_form(ACKNOWLEDGE)).to_be_hidden()
     wait_until(
@@ -151,29 +136,12 @@ def test_a_commented_service_acknowledgement_reaches_the_monitoring_core(
         condition_name=f"the acknowledgement of {a_selected_service} reaches the core",
     )
     # Retried rather than snapshotted: the table repaints after the action, and
-    # ``aria-busy`` clearing marks the fetch, not the render. The tag is spelled
-    # either way round depending on the column width.
-    expect(services_page.state_cell(a_selected_service)).to_have_text(
-        re.compile(r"^\s*(CR|CRITICAL)\s*$")
-    )
-
-
-@pytest.mark.usefixtures("a_selected_service")
-def test_a_service_downtime_offers_no_child_hosts_option(
-    services_page: HostServicesExperimental,
-) -> None:
-    """The child-hosts option belongs to host downtimes and must not appear here.
-
-    The positive half -- that the form itself is on screen with its comment field --
-    is asserted alongside, so a renamed form cannot turn the absence check green by
-    matching nothing at all.
-    """
-    services_page.trigger_action(SCHEDULE_DOWNTIME)
-
-    expect(services_page.action_form(SCHEDULE_DOWNTIME)).to_be_visible()
-    expect(services_page.downtime_comment).to_be_visible()
-    expect(services_page.form_option(CHILD_HOSTS_OPTION)).to_have_count(0)
-    expect(services_page.submit_action("Schedule service downtime")).to_be_disabled()
+    # ``aria-busy`` clearing marks the fetch, not the render.
+    expect(
+        services_page.row_by_service(a_selected_service).get_by_role(
+            "img", name=ACKNOWLEDGED_MODE, exact=True
+        )
+    ).to_be_visible()
 
 
 def test_a_commented_service_downtime_is_scheduled_in_the_monitoring_core(
@@ -195,9 +163,7 @@ def test_a_commented_service_downtime_is_scheduled_in_the_monitoring_core(
     services_page.trigger_action(SCHEDULE_DOWNTIME)
     services_page.downtime_comment.fill("e2e service downtime")
 
-    submit = services_page.submit_action("Schedule service downtime")
-    expect(submit).to_be_enabled()
-    submit.click()
+    services_page.submit_action("Schedule service downtime").click()
 
     expect(services_page.action_form(SCHEDULE_DOWNTIME)).to_be_hidden()
     wait_until(

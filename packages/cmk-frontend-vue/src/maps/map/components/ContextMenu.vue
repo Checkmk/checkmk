@@ -5,16 +5,16 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import usei18n from 'cmk-ui-library/lib/i18n'
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 
 import MapsMenu from '@/maps/shared/components/MapsMenu.vue'
 import MapsMenuItem from '@/maps/shared/components/MapsMenuItem.vue'
 import type { MapElement, ObjectState } from '@/maps/types/api'
 import { objectTypeLabel } from '@/maps/utils/dropdownOptions'
 import { buildCheckmkViewUrl } from '@/maps/utils/mapNavigation'
-import { getEffectiveObjectType, getMapElementName } from '@/maps/utils/naming'
+import { asBoundObject, getEffectiveObjectType } from '@/maps/utils/naming'
 import { sanitizeTemplateHtml } from '@/maps/utils/sanitize'
-import { interpolateTemplate } from '@/maps/utils/template'
+import { interpolateTemplate, objectName } from '@/maps/utils/template'
 
 const { _t } = usei18n()
 
@@ -69,7 +69,7 @@ const isProblematic = computed(
   () => props.state !== undefined && !_OK_STATES.has(props.state.state)
 )
 
-const displayName = computed(() => getMapElementName(props.object) ?? '')
+const displayName = computed(() => objectName(props.object, props.state))
 
 const site = computed(() => props.state?.site_id ?? null)
 
@@ -97,11 +97,13 @@ const serviceUrl = computed(() => {
   )
 })
 
+const target = computed(() => asBoundObject(props.object))
+
 const groupUrl = computed(() => {
   if (!props.object.group_name) {
     return null
   }
-  const view = props.object.type === 'hostgroup' ? 'hostgroup' : 'servicegroup'
+  const view = target.value.type === 'hostgroup' ? 'hostgroup' : 'servicegroup'
   return buildCheckmkViewUrl(
     props.checkmkUrl,
     view,
@@ -111,7 +113,7 @@ const groupUrl = computed(() => {
 })
 
 const aggregationUrl = computed(() => {
-  if (props.object.type !== 'aggregation' || !props.object.aggregation_id) {
+  if (target.value.type !== 'aggregation' || !props.object.aggregation_id) {
     return null
   }
   return buildCheckmkViewUrl(
@@ -123,14 +125,14 @@ const aggregationUrl = computed(() => {
 })
 
 const aggregationOverviewUrl = computed(() => {
-  if (props.object.type !== 'aggregation') {
+  if (target.value.type !== 'aggregation') {
     return null
   }
   return buildCheckmkViewUrl(props.checkmkUrl, 'aggr_all', {}, { site: site.value })
 })
 
 const hostServicesUrl = computed(() => {
-  if (props.object.type !== 'host' || !props.object.host_name) {
+  if (target.value.type !== 'host' || !props.object.host_name) {
     return null
   }
   if (!isProblematic.value) {
@@ -156,10 +158,35 @@ const hostServicesUrl = computed(() => {
     { site: site.value }
   )
 })
+
+// A menu with nothing in it is no menu: it does not open at all.
+const empty = computed(
+  () =>
+    !!props.checkmkUrl &&
+    !renderedTemplate.value &&
+    !hostUrl.value &&
+    !hostServicesUrl.value &&
+    !serviceUrl.value &&
+    !groupUrl.value &&
+    !aggregationUrl.value &&
+    !aggregationOverviewUrl.value &&
+    !lineHasBinding.value &&
+    !props.showEdit
+)
+watch(
+  empty,
+  (isEmpty) => {
+    if (isEmpty) {
+      emit('close')
+    }
+  },
+  { immediate: true }
+)
 </script>
 
 <template>
   <MapsMenu
+    v-if="!empty"
     :x="x"
     :y="y"
     :label="displayName"
@@ -184,7 +211,7 @@ const hostServicesUrl = computed(() => {
           d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
         />
       </svg>
-      <span>{{ _t('Host in Checkmk') }}</span>
+      <span>{{ _t('State of host') }}</span>
     </MapsMenuItem>
     <MapsMenuItem v-if="hostServicesUrl" :href="hostServicesUrl">
       <svg
@@ -216,7 +243,7 @@ const hostServicesUrl = computed(() => {
           d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
         />
       </svg>
-      <span>{{ _t('Service in Checkmk') }}</span>
+      <span>{{ _t('State of service') }}</span>
     </MapsMenuItem>
     <MapsMenuItem v-if="groupUrl" :href="groupUrl">
       <svg
@@ -369,7 +396,7 @@ const hostServicesUrl = computed(() => {
   max-height: 40vh;
   overflow: auto;
   margin-bottom: var(--dimension-3);
-  padding: var(--dimension-4) 14px;
+  padding: var(--dimension-4) var(--dimension-5);
   font-size: var(--font-size-normal);
   line-height: 16px;
   color: var(--font-color);
@@ -383,7 +410,7 @@ const hostServicesUrl = computed(() => {
 }
 
 .maps-context-menu__empty {
-  padding: var(--dimension-4) 14px;
+  padding: var(--dimension-4) var(--dimension-5);
   font-size: var(--font-size-normal);
   line-height: 16px;
   font-style: italic;

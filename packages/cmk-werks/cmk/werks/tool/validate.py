@@ -10,19 +10,20 @@ import sys
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
-from . import load_werk
-from .config import load_config, try_load_current_version_from_defines_make
 from .constants import NON_WERK_FILES_IN_WERK_FOLDER
+from .flavor_registry import get_flavor, load_config
 
 
 def main(
     werks_to_check: Sequence[Path],
     werks_config: Path,
-    defines_make: Path,
-    version_regex: re.Pattern[str],
+    repo_root: Path,
+    version_regex: re.Pattern[str] | None,
 ) -> None:
-    current_version = try_load_current_version_from_defines_make(defines_make)
-    config = load_config(werks_config, current_version=current_version)
+    config = load_config(werks_config, repo_root)
+    flavor = get_flavor(config.flavor)
+    if version_regex is None:
+        version_regex = re.compile(flavor.version_regex)
     choices_component = {e[0] for e in config.all_components()}
 
     for werk_path in werks_to_check:
@@ -31,7 +32,7 @@ def main(
             continue
         werk_content = werk_path.read_text(encoding="utf-8")
         try:
-            werk = load_werk(file_content=werk_content, file_name=werk_path.name)
+            werk = flavor.load_werk(file_content=werk_content, file_name=werk_path.name)
 
             if werk.component not in choices_component:
                 raise ValueError(
@@ -52,19 +53,12 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
     parser.add_argument(
         "--version-regex",
         help="regex used to validate the version in the werk",
-        default=r"^\d.\d.\d([ipb]\d+)?$",
         type=re.compile,
     )
     parser.add_argument(
         "--werk-config",
         help="path to werks config, typically .werks/config",
         default=".werks/config",
-        type=Path,
-    )
-    parser.add_argument(
-        "--defines-make",
-        help="path to defines.make to load current version, typically defines.make",
-        default="defines.make",
         type=Path,
     )
     parser.add_argument(
@@ -95,7 +89,7 @@ def run(argv: Sequence[str], environ: Mapping[str, str], working_dir: Path) -> N
     main(
         _werks_to_check(args.werk_paths, environ.get("CHANGED_WERK_FILES"), working_dir),
         working_dir / args.werk_config,
-        working_dir / args.defines_make,
+        working_dir,
         args.version_regex,
     )
 

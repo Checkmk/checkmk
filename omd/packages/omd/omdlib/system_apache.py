@@ -76,7 +76,7 @@ APACHE_TCP_PORT = PortHook(
     display_name="Apache port",
     default_port=5000,
     activation=write_apache_listen_conf,
-    choices=apache_network_port_has_error,
+    choices=lambda _edition: apache_network_port_has_error,
     depends=lambda c: c.get("APACHE_MODE") == "own",
 )
 
@@ -87,6 +87,7 @@ def register_with_system_apache(
     site_name: str,
     apache_tcp_addr: str,
     apache_tcp_port: str,
+    forwarded_headers: str,
     apache_reload: bool,
     verbose: bool,
 ) -> None:
@@ -102,7 +103,9 @@ def register_with_system_apache(
     if (err := apache_network_port_has_error(apache_tcp_port)) is not None:
         sys.exit(f"Invalid value for '{apache_tcp_port}' for APACHE_TCP_PORT'. {err}\n")
 
-    create_apache_hook(apache_config, site_name, apache_tcp_addr, apache_tcp_port)
+    create_apache_hook(
+        apache_config, site_name, apache_tcp_addr, apache_tcp_port, forwarded_headers
+    )
     apply_apache_config(version_info, apache_reload, verbose)
 
 
@@ -215,18 +218,50 @@ def _site_not_started_html(site_name: str) -> str:
     return header + instructions + footer
 
 
+def _forwarded_headers_comment(forwarded_headers: str) -> str:
+    if forwarded_headers == "manual":
+        return (
+            "# APACHE_FORWARDED_HEADERS is set to 'manual': Checkmk does not set\n"
+            "# X-Forwarded-Proto/X-Forwarded-Ssl itself, so the values set by the proxy\n"
+            "# or load balancer in front of this Apache reach the site unchanged. Set\n"
+            "# them there, from the scheme of the client's connection to that proxy."
+        )
+    return (
+        "# Tell the site whether the original client request came in via HTTP or HTTPS, since this\n"
+        "# Apache is what terminates TLS (or forwards on to whatever does). The headers are set in\n"
+        "# each of this site's Locations below instead of server-wide: every site's hook ends up in\n"
+        "# the same system Apache, so a server-wide header would also apply to the other sites'\n"
+        "# requests and override a site that has APACHE_FORWARDED_HEADERS set to 'manual'."
+    )
+
+
+def _forwarded_headers_directives(forwarded_headers: str) -> str:
+    if forwarded_headers == "manual":
+        return ""
+    return (
+        "\n    <IfModule headers_module>\n"
+        "      RequestHeader set X-Forwarded-Proto expr=%{REQUEST_SCHEME}\n"
+        "      RequestHeader set X-Forwarded-Ssl expr=%{HTTPS}\n"
+        "    </IfModule>"
+    )
+
+
 def _render_apache_hook(
     site_name: str,
     apache_tcp_addr: str,
     apache_tcp_port: str,
+    forwarded_headers: str,
 ) -> str:
     not_started_html = _site_not_started_html(site_name)
+    headers = _forwarded_headers_directives(forwarded_headers)
     return f"""# This file is managed by 'omd' and will automatically be overwritten. Better do not edit manually
 
 # Make sure that symlink /omd does not make problems
 <Directory />
   Options +FollowSymlinks
 </Directory>
+
+{_forwarded_headers_comment(forwarded_headers)}
 
 <IfModule mod_proxy_http.c>
   ProxyRequests Off
@@ -243,7 +278,7 @@ def _render_apache_hook(
     # "disablereuse=On" prevents the apache from keeping the connection which leads to
     # wrong devlivered pages sometimes
     ProxyPass http://{apache_tcp_addr}:{apache_tcp_port}/{site_name} retry=0 disablereuse=On timeout=120
-    ProxyPassReverse http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}
+    ProxyPassReverse http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}{headers}
   </Location>
 
   # RFC 7662 token introspection (cmk.gui.oauth.pages._introspect) is
@@ -264,8 +299,8 @@ def _render_apache_hook(
     # for multi-segment issuer paths. Lives outside the /{site_name} prefix,
     # so it needs its own Location, but is served by the same site backend
     # (see cmk.gui's noauth:oauth_authorization_server page).
-    ProxyPass http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}/check_mk/oauth_authorization_server.py retry=0 disablereuse=On timeout=120
-    ProxyPassReverse http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}/check_mk/oauth_authorization_server.py
+    ProxyPass http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}/check_mk/oauth_authorization_server.py
+    ProxyPassReverse http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}/check_mk/oauth_authorization_server.py{headers}
   </Location>
 
   # The authorization server's own endpoints, nested under its issuer path
@@ -273,18 +308,18 @@ def _render_apache_hook(
   # client that guesses endpoint paths from the issuer instead of reading
   # them out of the RFC 8414 metadata document lands on the real thing.
   <Location /oauth-{site_name}/authorize>
-    ProxyPass http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}/check_mk/oauth_authorize.py retry=0 disablereuse=On timeout=120
-    ProxyPassReverse http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}/check_mk/oauth_authorize.py
+    ProxyPass http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}/check_mk/oauth_authorize.py
+    ProxyPassReverse http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}/check_mk/oauth_authorize.py{headers}
   </Location>
 
   <Location /oauth-{site_name}/token>
-    ProxyPass http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}/check_mk/oauth_token.py retry=0 disablereuse=On timeout=120
-    ProxyPassReverse http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}/check_mk/oauth_token.py
+    ProxyPass http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}/check_mk/oauth_token.py
+    ProxyPassReverse http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}/check_mk/oauth_token.py{headers}
   </Location>
 
   <Location /oauth-{site_name}/register>
-    ProxyPass http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}/check_mk/oauth_client_registration.py retry=0 disablereuse=On timeout=120
-    ProxyPassReverse http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}/check_mk/oauth_client_registration.py
+    ProxyPass http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}/check_mk/oauth_client_registration.py
+    ProxyPassReverse http://{apache_tcp_addr}:{apache_tcp_port}/{site_name}/check_mk/oauth_client_registration.py{headers}
   </Location>
 
   <Proxy http://{apache_tcp_addr}:{apache_tcp_port}/.well-known/oauth-protected-resource/{site_name}/check_mk/mcp>
@@ -298,7 +333,7 @@ def _render_apache_hook(
   # <Location> does not exist and the request 404s (never another site's data).
   <Location /.well-known/oauth-protected-resource/{site_name}/check_mk/mcp>
     ProxyPass http://{apache_tcp_addr}:{apache_tcp_port}/.well-known/oauth-protected-resource/{site_name}/check_mk/mcp retry=0 disablereuse=On timeout=120
-    ProxyPassReverse http://{apache_tcp_addr}:{apache_tcp_port}/.well-known/oauth-protected-resource/{site_name}/check_mk/mcp
+    ProxyPassReverse http://{apache_tcp_addr}:{apache_tcp_port}/.well-known/oauth-protected-resource/{site_name}/check_mk/mcp{headers}
     Require all granted
   </Location>
 </IfModule>
@@ -323,10 +358,11 @@ def create_apache_hook(
     site_name: str,
     apache_tcp_addr: str,
     apache_tcp_port: str,
+    forwarded_headers: str,
 ) -> None:
     apache_config.parent.mkdir(parents=True, exist_ok=True)
     with open(apache_config, "w") as f:
-        f.write(_render_apache_hook(site_name, apache_tcp_addr, apache_tcp_port))
+        f.write(_render_apache_hook(site_name, apache_tcp_addr, apache_tcp_port, forwarded_headers))
     os.chmod(apache_config, 0o644)  # Ensure the site user can read the files created by root
 
 
@@ -370,7 +406,7 @@ def restart_apache(version_info: VersionInfo, verbose: bool) -> None:
 
 APACHE_MODE = Hook(
     name="APACHE_MODE",
-    choices=[
+    choices=lambda _edition: [
         ("own", "Run an own webserver process for this instance"),
         ("none", "Do not run or configure a webserver"),
     ],
@@ -380,8 +416,19 @@ APACHE_MODE = Hook(
 
 APACHE_TCP_ADDR = Hook(
     name="APACHE_TCP_ADDR",
-    choices=apache_TCP_addr_has_error,
+    choices=lambda _edition: apache_TCP_addr_has_error,
     default=lambda _edition: "127.0.0.1",
     depends=lambda c: c.get("APACHE_MODE") == "own",
     activation=write_apache_listen_conf,
+)
+
+APACHE_FORWARDED_HEADERS = Hook(
+    name="APACHE_FORWARDED_HEADERS",
+    choices=lambda _edition: [
+        ("auto", "Automatically set X-Forwarded-Proto/-Ssl for sites"),
+        ("manual", "I set X-Forwarded-Proto/-Ssl myself in the system Apache"),
+    ],
+    default=lambda _edition: "auto",
+    depends=lambda c: c.get("APACHE_MODE") == "own",
+    activation=null_action,
 )

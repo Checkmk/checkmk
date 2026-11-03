@@ -34,7 +34,7 @@ from cmk.gui.logged_in import (
     LoggedInSuperUser,
     LoggedInUser,
 )
-from cmk.gui.permissions import permission_registry
+from cmk.gui.permissions import all_permissions
 from cmk.gui.pseudo_users import PseudoUserId, RemoteSitePseudoUser, SiteInternalPseudoUser
 from cmk.gui.session_context import _user_defaults
 from cmk.gui.type_defs import AuthType, SessionInfo, SessionState, SessionStateMachine
@@ -572,7 +572,7 @@ class FileBasedSession(SessionInterface):
     def open_session(self, app: Flask, request: flask.Request) -> CheckmkFileBasedSession | None:
         # We need the config to be able to set the timeout values correctly.
         config.initialize()
-        user_permissions = UserPermissions.from_config(config.active_config, permission_registry)
+        user_permissions = UserPermissions.from_config(config.active_config, all_permissions())
 
         try:
             return self._resume_session(

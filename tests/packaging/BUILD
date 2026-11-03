@@ -8,6 +8,7 @@ py_library(
     imports = ["../.."],
     visibility = ["//tests:__subpackages__"],
     deps = [
+        "//tests:pkg_marker",
         "//tests/testlib/common",
         "//tests/testlib/pytest_helpers",
         requirement("pytest"),
@@ -19,5 +20,5 @@ py_library(
 filegroup(
     name = "signing_roots",
     srcs = glob(["certs/*.pem"]),
-    visibility = ["//agents/wnx/scripts:__pkg__"],
+    visibility = ["//bazel/rules:__pkg__"],
 )

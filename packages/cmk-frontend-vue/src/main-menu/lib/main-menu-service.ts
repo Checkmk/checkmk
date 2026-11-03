@@ -76,6 +76,13 @@ export class MainMenuService extends ServiceBase {
     return KeyShortcutService.getShortCutCombo(this.toKeyShortcut(shortcut))
   }
 
+  /** Alt is held and the shortcut is a plain Alt+key, like a desktop access key. */
+  public isAltHinted(shortcut: NavItemShortcut | null | undefined): boolean {
+    return (
+      this.shortCutService.altHeld.value && !!shortcut?.alt && !shortcut.ctrl && !shortcut.shift
+    )
+  }
+
   public registerToggleShortcut(item: NavToggleItem, toggle: () => void): () => void {
     const id = this.shortCutService.on(
       {

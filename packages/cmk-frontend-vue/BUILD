@@ -1,6 +1,7 @@
 load("@aspect_rules_js//js:defs.bzl", "js_binary", "js_library", "js_run_binary", "js_run_devserver")
 load("@aspect_rules_js//npm:defs.bzl", "npm_link_package", "npm_package")
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
+load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@npm//:defs.bzl", "npm_link_all_packages")
 load("@npm//:vitest/package_json.bzl", vitest_bin = "bin")
@@ -37,9 +38,7 @@ js_library(
     tags = ["no-lint"],
     visibility = ["//visibility:public"],
     deps = [
-        # eslint.config.mjs builds on cmk-ui-library's shared eslint config, and the
-        # tsconfig chain used by type-aware rules extends
-        # cmk-ui-library/tsconfig.vue-base.json, resolved via this node_modules link.
+        # Type-aware rules resolve the sources' cmk-ui-library/... imports via this link.
         ":node_modules/cmk-ui-library",
         ":vitest_isolated",
         "//packages/cmk-ui-library:eslintrc",
@@ -98,13 +97,20 @@ filegroup(
 
 NONFREE = ["src/**/nonfree/**"]
 
-vue_library(
-    name = "src_vue",
+css_library(
+    name = "src_vue_styles",
     srcs = glob(
         ["src/**/*.vue"],
         exclude = NONFREE,
     ),
-    data = [":tsconfig"],
+)
+
+js_library(
+    name = "src_vue",
+    srcs = [
+        ":src_vue_styles",
+        ":tsconfig",
+    ],
     deps = [
         ":src_ts",
         "//:node_modules/vue",
@@ -130,18 +136,38 @@ css_library(
     ),
 )
 
+css_library(
+    name = "src_nonfree_vue_styles",
+    srcs = glob(
+        ["src/**/nonfree/**/*.vue"],
+        allow_empty = True,
+    ),
+)
+
+js_library(
+    name = "src_nonfree_vue",
+    srcs = [
+        ":src_nonfree_vue_styles",
+        ":tsconfig",
+    ],
+    deps = [
+        ":src_ts",
+        "//:node_modules/vue",
+    ],
+)
+
 js_library(
     name = "src_nonfree",
     srcs = glob(
         [
             "src/**/nonfree/**/*.ts",
-            "src/**/nonfree/**/*.vue",
             "src/**/nonfree/**/*.css",
             "src/**/nonfree/**/*.scss",
         ],
         allow_empty = True,
     ) + [":tsconfig"],
     deps = [
+        ":src_nonfree_vue",
         ":src_ts",
         "//:node_modules/vue",
     ],
@@ -152,10 +178,37 @@ BUNDLED_NONFREE = select({
     "//conditions:default": [":src_nonfree"],
 })
 
-vue_library(
-    name = "demo_vue",
+copy_file(
+    name = "nav_sidebar_elements",
+    src = select({
+        "@cmk//edition:community": "src/navSidebarElements.community.ts",
+        "//conditions:default": "src/nonfree/navSidebarElements.ts",
+    }),
+    out = "src/navSidebarElements.ts",
+    allow_symlink = False,
+)
+
+copy_file(
+    name = "main_elements",
+    src = select({
+        "@cmk//edition:community": "src/mainElements.community.ts",
+        "//conditions:default": "src/nonfree/mainElements.ts",
+    }),
+    out = "src/mainElements.ts",
+    allow_symlink = False,
+)
+
+css_library(
+    name = "demo_vue_styles",
     srcs = glob(["ui-component-library/**/*.vue"]),
-    data = [":tsconfig"],
+)
+
+js_library(
+    name = "demo_vue",
+    srcs = [
+        ":demo_vue_styles",
+        ":tsconfig",
+    ],
     deps = [
         ":demo_ts",
         "//:node_modules/vue",
@@ -179,7 +232,8 @@ js_run_binary(
         ":node_modules/vue3-gettext",
         ":src_ts",
         ":src_vue",
-        "//packages/cmk-ui-library:pkg",
+        "//packages/cmk-profiling",
+        "//packages/cmk-ui-library",
     ] + BUNDLED_NONFREE,
     outs = ["locale/messages.pot"],
     tool = ":gettext-extract",
@@ -241,18 +295,7 @@ TOOLING = TEST_TOOLING + [
     "//:node_modules/vue3-gettext",
 ]
 
-VITE_SRCS = [
-    ":node_modules/cmk-ui-library",
-    "//packages/cmk-ui-library:vitest_shared",
-    "package.json",
-    "vite.config.ts",
-    ":vitest_isolated",
-    ":demo_ts",
-    ":demo_vue",
-    ":demo_css",
-    ":src_ts",
-    ":src_vue",
-    ":src_css",
+NPM_LINKS = [
     ":node_modules/@tanstack",
     ":node_modules/@testing-library",
     ":node_modules/@tsconfig",
@@ -291,13 +334,33 @@ VITE_SRCS = [
     ":node_modules/typescript",
     ":node_modules/vue-component-type-helpers",
     ":node_modules/vue-router",
+]
+
+VITE_SRCS = NPM_LINKS + [
+    ":node_modules/cmk-ui-library",
+    "//packages/cmk-ui-library:vitest_shared",
+    "package.json",
+    "vite.config.ts",
+    ":vitest_isolated",
+    ":demo_ts",
+    ":demo_vue",
+    ":demo_css",
+    ":src_ts",
+    ":src_vue",
+    ":src_css",
+    ":nav_sidebar_elements",
+    ":main_elements",
 ] + glob([
     "ui-component-library/**/*.png",
     "ui-component-library/**/*.svg",
 ])
 
-TYPE_CHECK_SRCS = VITE_SRCS + [
+# The dev server serves no translations and falls back to English: compiling the
+# catalogs re-extracts them from all sources, which takes seconds per rebuild.
+DEV_SERVER_SRCS = VITE_SRCS + [
+    ":node_modules/cmk-profiling",
     "//:eslintrc",
+    "//packages/cmk-frontend:dist",
     "env.d.ts",
     "weaki18nString.d.ts",
     "scripts/stylelint-vue-bem-naming-convention.js",
@@ -308,16 +371,19 @@ TYPE_CHECK_SRCS = VITE_SRCS + [
     "ui-component-library/index.html",
 ] + glob(["ui-component-library/public/*"])
 
-# The dev server serves no translations and falls back to English: compiling the
-# catalogs re-extracts them from all sources, which takes seconds per rebuild.
-DEV_SERVER_SRCS = TYPE_CHECK_SRCS + ["//packages/cmk-frontend:dist"]
-
 SRCS = DEV_SERVER_SRCS + LOCALE_OUTS
 
-vue_library(
-    name = "test_vue",
+css_library(
+    name = "test_vue_styles",
     srcs = glob(["tests/**/*.vue"]),
-    data = [":tsconfig"],
+)
+
+js_library(
+    name = "test_vue",
+    srcs = [
+        ":test_vue_styles",
+        ":tsconfig",
+    ],
     deps = [
         ":src_ts",
         ":test_ts",
@@ -331,7 +397,75 @@ js_library(
     deps = ["//packages/cmk-ui-library:vitest_msw"],
 )
 
-TYPE_CHECK_DATA = TOOLING + TYPE_CHECK_SRCS + [":src_nonfree"]
+TYPE_CHECK_DEPS = TEST_TOOLING + NPM_LINKS + [
+    ":node_modules/cmk-profiling",
+    ":node_modules/cmk-ui-library",
+]
+
+# Code outside nonfree/ calls non-free REST endpoints, whose types a checkout
+# without the non-free sources does not generate (CMK-41449).
+TYPE_CHECK_COMPATIBLE_WITH = select({
+    "@//:gpl+nonfree_repo": [],
+    "@//:gpl_repo": ["@platforms//:incompatible"],
+})
+
+vue_library(
+    name = "app",
+    srcs = [
+        "env.d.ts",
+        ":main_elements",
+        ":nav_sidebar_elements",
+    ],
+    target_compatible_with = TYPE_CHECK_COMPATIBLE_WITH,
+    tsconfig = "tsconfig.app.json",
+    deps = TYPE_CHECK_DEPS + [
+        ":src_nonfree",
+        ":src_ts",
+        ":src_vue",
+    ],
+)
+
+# Covers the same files as tsconfig.test.json but without the vitest and jest-dom
+# ambient types, so a test global leaking into the demo app is still an error.
+vue_library(
+    name = "ucl",
+    srcs = [
+        "env.d.ts",
+        "weaki18nString.d.ts",
+        ":main_elements",
+        ":nav_sidebar_elements",
+    ],
+    target_compatible_with = TYPE_CHECK_COMPATIBLE_WITH,
+    tsconfig = "tsconfig.ucl.json",
+    deps = TYPE_CHECK_DEPS + [
+        ":demo_ts",
+        ":demo_vue",
+        ":src_nonfree",
+        ":src_ts",
+        ":src_vue",
+    ],
+)
+
+vue_library(
+    name = "tests",
+    srcs = [
+        "env.d.ts",
+        "weaki18nString.d.ts",
+        ":main_elements",
+        ":nav_sidebar_elements",
+    ],
+    target_compatible_with = TYPE_CHECK_COMPATIBLE_WITH,
+    tsconfig = "tsconfig.test.json",
+    deps = TYPE_CHECK_DEPS + [
+        ":demo_ts",
+        ":demo_vue",
+        ":src_nonfree",
+        ":src_ts",
+        ":src_vue",
+        ":test_ts",
+        ":test_vue",
+    ],
+)
 
 TEST_DATA = TEST_TOOLING + VITE_SRCS + [
     ":src_nonfree",
@@ -423,22 +557,8 @@ vitest_test(
     name = "unit-test",
     timeout = "long",
     data = TEST_DATA,
+    project = ":tests",
     shard_count = 8,
-)
-
-# One target per tsconfig project: they have no cross-references, so a single
-# `--build` only ran them serially. Mirrors //bazel/rules:vue_package.bzl. Only
-# the tests project needs tests/ in its sandbox.
-vue_tsc_bin.vue_tsc_test(
-    name = "type-check",
-    timeout = "moderate",
-    args = [
-        "-p",
-        "tsconfig.app.json",
-    ],
-    chdir = package_name(),
-    data = TYPE_CHECK_DATA,
-    include_types = True,
 )
 
 vue_tsc_bin.vue_tsc_test(
@@ -449,36 +569,23 @@ vue_tsc_bin.vue_tsc_test(
         "tsconfig.node.json",
     ],
     chdir = package_name(),
-    data = TYPE_CHECK_DATA,
-    include_types = True,
-)
-
-# Covers the same files as tsconfig.test.json but without the vitest and jest-dom
-# ambient types, so a test global leaking into the demo app is still an error.
-vue_tsc_bin.vue_tsc_test(
-    name = "type-check-ucl",
-    timeout = "moderate",
-    args = [
-        "-p",
-        "tsconfig.ucl.json",
-    ],
-    chdir = package_name(),
-    data = TYPE_CHECK_DATA,
-    include_types = True,
-)
-
-vue_tsc_bin.vue_tsc_test(
-    name = "type-check-tests",
-    timeout = "moderate",
-    args = [
-        "-p",
-        "tsconfig.test.json",
-    ],
-    chdir = package_name(),
-    data = TYPE_CHECK_DATA + [
-        ":test_ts",
-        ":test_vue",
-    ],
+    data = TOOLING + NPM_LINKS + [
+        "package.json",
+        "ui-component-library/_ucl/types/prop-def.ts",
+        "ui-component-library/_ucl/vite-plugin-ucl-mcp.ts",
+        ":tsconfig",
+        ":vitest_isolated",
+        "//packages/cmk-ui-library:vitest_shared",
+    ] + glob(
+        [
+            "vite.config.*",
+            "vitest.config.*",
+            "cypress.config.*",
+            "nightwatch.conf.*",
+            "playwright.config.*",
+        ],
+        allow_empty = True,
+    ),
     include_types = True,
 )
 
@@ -543,7 +650,10 @@ py_cmk_test(
         "scripts/test_license_headers.py",
         "scripts/test_ucl_parity.py",
     ],
-    data = glob(["**"]) + ["//packages/cmk-ui-library:srcs"],
+    data = glob(["**"]) + [
+        "//packages/cmk-profiling:srcs",
+        "//packages/cmk-ui-library:srcs",
+    ],
 )
 
 build_test(

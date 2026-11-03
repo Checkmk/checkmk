@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 from lsprotocol import types as lsp
 
-from cmk.astrein.checker_http_status import LEGACY_PYTHON_SOURCES
+from cmk.astrein.checkers.http_status_literal import LEGACY_PYTHON_SOURCES
 from cmk.astrein.framework import CheckerError
 from cmk.astrein.lsp import (
     _checker_error_to_diagnostic,
@@ -179,7 +179,7 @@ def test_get_diagnostics_reports_errors_in_unsaved_source(tmp_path: Path) -> Non
     assert [d.code for d in result] == ["unused-suppression"]
 
 
-@pytest.mark.parametrize("checker_id", ["cmk-module-layer-violation", "http-status-literal"])
+@pytest.mark.parametrize("checker_id", ["module-layers", "http-status-literal"])
 def test_get_diagnostics_keeps_suppression_of_checker_without_config(
     tmp_path: Path, checker_id: str
 ) -> None:

@@ -12,7 +12,12 @@ from pathlib import Path
 import cmk.utils.paths
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKException
-from cmk.cli.internal import Args, CLICommand, GlobalOptions, Options
+from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Arguments as CLIArguments
+from cmk.cli.internal import Command as CLICommand
+from cmk.cli.internal import Context as CLIContext
+from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import Options
 from cmk.utils.log import VERBOSE
 
 __all__ = ["cli_command_localize"]
@@ -31,21 +36,17 @@ class LocalizeException(MKException):
 domain = "multisite"
 
 
-def _mode_localize(
-    _omd_root: Path, _global_options: GlobalOptions, _options: Options, args: Args
-) -> int:
-    do_localize(list(args))
-    return 0
+def _mode_localize(_context: CLIContext, _options: Options, args: CLIArgs) -> CLIExitCode:
+    return do_localize(list(args))
 
 
 cli_command_localize = CLICommand(
-    long_option="localize",
+    name="localize",
+    long="localize",
     handler_function=_mode_localize,
-    argument=True,
-    argument_descr="COMMAND",
-    argument_optional=True,
-    short_help="Do localization operations",
-    long_help=[
+    arguments=CLIArguments("COMMAND", optional=True),
+    help="Do localization operations",
+    description=[
         (
             "Brings you into localization mode. You can create "
             "and/or improve the localization of Check_MKs GUI. "
@@ -106,10 +107,10 @@ Available commands are:
     )
 
 
-def do_localize(args: list[str]) -> None:
+def do_localize(args: list[str]) -> CLIExitCode:
     if len(args) == 0:
         _localize_usage()
-        sys.exit(1)
+        return CLIExitCode.FAILURE
 
     command = args[0]
 
@@ -140,7 +141,7 @@ def do_localize(args: list[str]) -> None:
         except LocalizeException as e:
             # Expected CLI error, the traceback adds no value here.
             logger.error("%(error)s", {"error": e})  # noqa: TRY400
-            sys.exit(1)
+            return CLIExitCode.FAILURE
     else:
         allc = sorted(commands.keys())
         allc = [tty.bold + c + tty.normal for c in allc]
@@ -148,7 +149,8 @@ def do_localize(args: list[str]) -> None:
             "Invalid localize command. Allowed are: %(commands)s and %(last_command)s.",
             {"commands": ", ".join(allc[:-1]), "last_command": allc[-1]},
         )
-        sys.exit(1)
+        return CLIExitCode.FAILURE
+    return CLIExitCode.SUCCESS
 
 
 def _write_alias(lang: LanguageName, alias: str | None) -> None:

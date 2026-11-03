@@ -171,7 +171,7 @@ def _forward_to_ec_form() -> Dictionary:
                     elements=[
                         CascadingSingleChoiceElement(
                             name=name,
-                            title=Title(  # astrein: disable=localization-checker  # we have no choice here.
+                            title=Title(  # astrein: disable=localization  # we have no choice here.
                                 name
                             ),
                             parameter_form=FixedValue(value=value),

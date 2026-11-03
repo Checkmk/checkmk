@@ -1,0 +1,22 @@
+title: AWS v2 RDS: Agent Jobs
+agents: aws_v2
+catalog: cloud/aws
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the failed SQL server agent jobs (Microsoft
+ SQL servers only).
+
+ To make this check work you have to configure the related
+ special agent {Amazon Web Services (AWS) v2}.
+
+ The service goes {WARN} if at least one jobs fails.
+
+item:
+ Name of the instance and region name (to avoid duplicate services
+ in case of multi-region monitoring).
+
+discovery:
+ Each instance is a piggyback host with the name {<instance ID>}.
+ One service is created on this host if the required metrics
+ (FailedSQLServerAgentJobsCount) are given.

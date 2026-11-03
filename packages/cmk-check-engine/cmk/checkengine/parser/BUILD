@@ -8,7 +8,6 @@ py_library(
     deps = [
         "//cmk/piggyback:backend",
         "//cmk/utils",
-        "//packages/cmk-ccc:debug",
         "//packages/cmk-ccc:hostaddress",
         "//packages/cmk-ccc:resulttype",
         "//packages/cmk-ccc:store",

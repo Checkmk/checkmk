@@ -1,0 +1,24 @@
+title: AWS v2 S3: Limits
+agents: aws_v2
+catalog: cloud/aws
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the account-wide number of AWS/S3 buckets.
+ Note that there is no per-region limit, only an account-wide limit.
+
+ To make this check work you have to configure the related
+ special agent {Amazon Web Services (AWS) v2}.
+
+ Default levels are set to 80, 90 percent and the default max.
+ value is set 100, which is the default limit imposed by AWS.
+ These levels are configurable using the rule "AWS v2/S3 Limits".
+
+ Since there are no per-region limits, the regions selected when
+ configuring the AWS special agent do not apply here. Instead, this
+ check will always collect all buckets, regardless of their regions.
+ Also, possibly configured restriction to names or tags are not
+ taken into account.
+
+discovery:
+ One service is created per monitored AWS region.

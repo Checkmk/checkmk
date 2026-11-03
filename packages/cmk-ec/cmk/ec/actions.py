@@ -247,13 +247,13 @@ def run_in_subprocess(
     )
     if completed_process.returncode:
         logger.error(
-            "%(description) failed with exit code %(returncode)",
+            "%(description)s failed with exit code %(returncode)d",
             {"description": description, "returncode": completed_process.returncode},
         )
         for line in completed_process.stdout.splitlines():
             logger.error("  output: %(line)s", {"line": line})
     else:
-        logger.info("%(description) succeeded", {"description": description})
+        logger.info("%(description)s succeeded", {"description": description})
 
 
 def _send_email(config: Config, *, to: str, subject: str, body: str, logger: Logger) -> None:

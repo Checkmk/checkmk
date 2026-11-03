@@ -9,6 +9,9 @@ py_library(
     testonly = True,
     srcs = glob(["**/*.py"]),
     imports = ["../../.."],
+    tags = [
+        "deballast-keep=//cmk/schema_migrations:oauth",  # discovered at runtime via discover_db_migrations, not imported
+    ],
     visibility = [
         "//non-free/packages/cmk-robotmk:__pkg__",
         "//non-free/tests:__subpackages__",
@@ -34,6 +37,7 @@ py_library(
         "//cmk/gui/userdb",
         "//cmk/gui/watolib",
         "//cmk/gui/watolib:config_infra",
+        "//cmk/schema_migrations:oauth",
         "//cmk/utils",
         "//cmk/utils:paths",
         "//cmk/utils:redis",
@@ -44,6 +48,7 @@ py_library(
         "//packages/cmk-crypto",
         "//packages/cmk-livestatus-client:py_livestatus",
         "//packages/cmk-ruleset-matcher",
+        "//packages/cmk-schema-manager",
         "//packages/cmk-wsgi",
         "//tests/testlib/common",
         requirement("fakeredis"),

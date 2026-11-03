@@ -403,6 +403,8 @@ class GlobalSettingsContext:
     configured_sites: SiteConfigurations
     configured_graph_timeranges: Sequence[GraphTimerange]
     folder_choices: Callable[[], Sequence[tuple[str, str]]]
+    edits_site_specific_value: bool | None = None
+    """None: the caller edits no value, so form specs apply no scope-dependent behavior."""
 
 
 @dataclass(frozen=True)
@@ -425,7 +427,9 @@ class ConfigVariable:
         need_apache_reload: bool = False,
         allow_reset: bool = True,
         in_global_settings: bool = True,
-        hints: Callable[[], Sequence[ConfigVariableHint]] = tuple,
+        hints: Callable[
+            [GlobalSettingsContext], Sequence[ConfigVariableHint]
+        ] = lambda _context: (),
         always_affects_local_site: bool = False,
     ) -> None:
         self._group = group
@@ -484,9 +488,9 @@ class ConfigVariable:
         """Whether or not to show this option on the global settings page"""
         return self._in_global_settings
 
-    def hints(self) -> Sequence[ConfigVariableHint]:
+    def hints(self, context: GlobalSettingsContext) -> Sequence[ConfigVariableHint]:
         domain_hint = self.primary_domain().hint()
-        return [*([ConfigVariableHint(domain_hint)] if domain_hint else []), *self._hints()]
+        return [*([ConfigVariableHint(domain_hint)] if domain_hint else []), *self._hints(context)]
 
     def always_affects_local_site(self) -> bool:
         return self._always_affects_local_site

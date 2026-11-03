@@ -19,6 +19,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import { type ComponentPublicInstance, computed, inject, nextTick, provide, ref, watch } from 'vue'
 
+import { BREAKPOINTS } from '@/assets/breakpoints'
 import TableSkeleton from '@/loading-transition/TableSkeleton.vue'
 import type { FetchState } from '@/monitoring/shared/services/MonitoringService'
 
@@ -28,6 +29,7 @@ import {
   type ColumnLayoutInfo,
   type HeaderFitWidths,
   MONITORING_SERVICE,
+  MONITORING_TABLE_STATE,
   TABLE_BORDER_SPACING,
   TABLE_BORDER_SPACING_PX,
   resolveUpdater
@@ -36,6 +38,9 @@ import MonitoringTableHeader from './MonitoringTableHeader.vue'
 
 const DEFAULT_COLUMN_MIN_SIZE = 20
 const DEFAULT_COLUMN_MAX_SIZE = Number.POSITIVE_INFINITY
+// Below breakpoint m (sizes s and xs) pinned columns would take up most of the width, so
+// nothing is pinned and the whole table scrolls instead.
+const MIN_PINNING_CONTAINER_WIDTH = BREAKPOINTS.m
 const borderSpacing = TABLE_BORDER_SPACING_PX
 
 const props = defineProps<{
@@ -62,6 +67,7 @@ const emit = defineEmits<{
 const { _t } = usei18n()
 
 const monitoringService = inject(MONITORING_SERVICE, null)
+const tableState = inject(MONITORING_TABLE_STATE, null) ?? monitoringService
 const showSkeleton = computed(() => !props.hasLoaded || props.fetchState === 'foreground')
 const showEmptyState = computed(
   () => props.hasLoaded && props.rows.length === 0 && props.loadFailed !== true
@@ -85,7 +91,7 @@ const table = useVueTable({
   },
   state: {
     get sorting() {
-      return monitoringService?.sortState.value ?? []
+      return tableState?.sortState.value ?? []
     },
     get columnFilters() {
       return props.filterState
@@ -94,7 +100,7 @@ const table = useVueTable({
       return props.columnPinning ?? {}
     },
     get columnVisibility() {
-      return monitoringService?.columnVisibility.value ?? {}
+      return tableState?.columnVisibility.value ?? {}
     },
     get rowSelection() {
       return rowSelection.value
@@ -119,7 +125,7 @@ const table = useVueTable({
     ? { getRowId: (row: T, index: number) => String(props.getRowKey!(row, index)) }
     : {}),
   onSortingChange: (updater) => {
-    monitoringService?.updateSort(resolveUpdater(updater, monitoringService.sortState.value))
+    tableState?.updateSort(resolveUpdater(updater, tableState.sortState.value))
   },
   onColumnFiltersChange: (updater) => {
     emit('update:filterState', resolveUpdater(updater, props.filterState))
@@ -251,6 +257,7 @@ const pinningActive = computed(
   () =>
     pinningEnabled.value &&
     containerWidth.value !== null &&
+    containerWidth.value >= MIN_PINNING_CONTAINER_WIDTH &&
     containerWidth.value - borderSpacingTotal.value < totalMinWidth.value
 )
 

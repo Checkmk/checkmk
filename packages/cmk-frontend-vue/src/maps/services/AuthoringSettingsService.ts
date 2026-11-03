@@ -45,6 +45,8 @@ export class AuthoringSettingsService {
    * guessing one is what would reach openstreetmap.org from an air-gapped site.
    */
   public readonly tiles: Ref<TileSource | null> = ref(null)
+  /** The longest map name the site accepts. Null until the site has answered. */
+  public readonly mapNameMaxLength: Ref<number | null> = ref(null)
 
   public constructor(private readonly api: Pick<AuthoringSettingsApi, 'fetch'>) {}
 
@@ -61,6 +63,7 @@ export class AuthoringSettingsService {
       const read = await this.api.fetch()
       this.settings.value = read.settings
       this.tiles.value = read.tiles
+      this.mapNameMaxLength.value = read.mapName.max_length
     } catch (e: unknown) {
       console.warn('[Maps] Failed to load authoring defaults, using built-in ones:', e)
     }

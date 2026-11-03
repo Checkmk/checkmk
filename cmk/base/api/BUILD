@@ -11,7 +11,6 @@ py_library(
     ],
     deps = [
         "//cmk/utils",
-        "//packages/cmk-ccc:debug",
         "//packages/cmk-plugin-apis:bakery",
     ],
 )

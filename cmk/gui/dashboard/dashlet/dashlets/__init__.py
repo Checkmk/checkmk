@@ -15,6 +15,7 @@ from .graph import (
     graph_templates_autocompleter,
     TemplateGraphDashlet,
 )
+from .monitoring_table import MonitoringTableDashlet
 from .static_text import StaticTextDashlet, StaticTextDashletConfig
 from .stats import EventStatsDashlet, HostStatsDashlet, ServiceStatsDashlet
 from .user_messages import MessageUsersDashlet
@@ -50,6 +51,7 @@ def register_dashlets(
     dashlet_registry.register(ViewDashlet)
     dashlet_registry.register(EmbeddedViewDashlet)
     dashlet_registry.register(LinkedViewDashlet)
+    dashlet_registry.register(MonitoringTableDashlet)
     autocompleter_registry.register_autocompleter(
         GRAPH_TEMPLATE_CHOICE_AUTOCOMPLETER_ID,
         graph_templates_autocompleter,

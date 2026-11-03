@@ -8,6 +8,6 @@ from omdlib.config_api import Hook, null_action
 AUTOMATION_HELPER = Hook(
     name="AUTOMATION_HELPER",
     activation=null_action,
-    choices=[("on", "enable"), ("off", "disable")],
+    choices=lambda _edition: [("on", "enable"), ("off", "disable")],
     default=lambda _edition: "on",
 )

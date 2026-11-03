@@ -5,11 +5,12 @@
 
 """Consolidate methods which relate to processing version and edition of a Checkmk package."""
 
+import json
 import logging
 import os
 import re
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Final, Literal, override, Self
 
@@ -430,6 +431,26 @@ def edition_from_env(fallback: TypeCMKEdition = CMKEdition(CMKEdition.PRO)) -> T
     return CMKEdition.edition_from_text(value)
 
 
+# Maybe the wording is wrong / needs to be improved here?
+# The minimal version supported for an update to the *next released* version of this branch
+# is fixed in packages/cmk-ccc/cmk/ccc/version.py.
 def get_min_version() -> CMKVersion:
     """Minimal version supported for an update to the daily version of this branch."""
     return CMKVersion(os.getenv("MIN_VERSION", "2.5.0p8"))
+
+
+SUPPORTED_BASE_VERSIONS_FILE: Final = Path(__file__).parent / "supported_base_versions.json"
+"""The definitive list of released versions the version under development
+supports updates from, oldest first. The release system appends every patch
+release of the previous branch; nothing else writes it."""
+
+
+def supported_base_versions() -> Sequence[CMKVersion]:
+    """The released versions the version under development supports updates from
+
+    The whole list, oldest first.
+    """
+    versions = json.loads(SUPPORTED_BASE_VERSIONS_FILE.read_text(encoding="utf-8"))
+    if not isinstance(versions, list) or not all(isinstance(v, str) for v in versions):
+        raise ValueError(f"{SUPPORTED_BASE_VERSIONS_FILE}: expected a list of version strings")
+    return [CMKVersion(v) for v in versions]

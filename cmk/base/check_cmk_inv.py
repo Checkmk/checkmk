@@ -26,7 +26,7 @@ from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.base.core.active_config_layout import RELATIVE_PATH_SECRETS, RELATIVE_PATH_TRUSTED_CAS
 from cmk.base.errorhandling import CheckResultErrorHandler, RecordingFetcher
-from cmk.base.modes.check_mk import execute_active_check_inventory
+from cmk.base.inventory import execute_active_check_inventory
 from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.cpu_tracking import CPUTracker
 from cmk.ccc.exceptions import OnError
@@ -179,7 +179,7 @@ def _inventory_as_check(
     hostname: HostName,
     plugins: AgentBasedPlugins,
 ) -> ServiceState:
-    loading_result = config.load(validate_hosts=True)
+    loading_result = config.load(validate_hosts=True, debug=cmk.ccc.debug.enabled())
     loaded_config = loading_result.loaded_config
     ruleset_matcher = loading_result.config_cache.ruleset_matcher
     label_manager = loading_result.config_cache.label_manager
@@ -232,6 +232,7 @@ def _inventory_as_check(
                     caching_config=make_parsed_snmp_fetch_intervals_config(
                         loaded_config, ruleset_matcher, label_manager.labels_of_host
                     ),
+                    debug=cmk.ccc.debug.enabled(),
                 ),
             ),
             plugins=plugins,
@@ -261,6 +262,7 @@ def _inventory_as_check(
                 ),
                 secrets=secrets,
             ),
+            debug=cmk.ccc.debug.enabled(),
         )
         parser = CMKParser(
             config.make_parser_config(
@@ -271,6 +273,7 @@ def _inventory_as_check(
             ),
             selected_sections=NO_SELECTION,
             keep_outdated=file_cache_options.keep_outdated,
+            debug=cmk.ccc.debug.enabled(),
         )
         summarizer = CMKSummarizer(
             hostname,
@@ -287,6 +290,7 @@ def _inventory_as_check(
             snmp_backend=config_cache.get_snmp_backend(hostname),
             keepalive=False,
             get_agent_output=lambda: recording_fetcher.serialized(hostname),
+            debug=cmk.ccc.debug.enabled(),
         )
         check_results: Sequence[ActiveCheckResult] = []
         with error_handler:
@@ -315,6 +319,7 @@ def _inventory_as_check(
                     inventorized_host_labels_dir=cmk.utils.paths.inventorized_host_labels_dir,
                     discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
                     autodiscovery_dir=cmk.utils.paths.autodiscovery_dir,
+                    debug=cmk.ccc.debug.enabled(),
                 )
             check_results = [
                 *check_results,

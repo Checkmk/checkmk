@@ -9,6 +9,7 @@ import type { Aggregator } from 'cmk-shared-typing/typescript/aggregation'
 import type { ConsolidationFunction } from 'cmk-shared-typing/typescript/consolidation'
 import type { GlobalTimePickerProps } from 'cmk-shared-typing/typescript/global_time_picker'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
+// eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
 import { HttpResponse, http } from 'msw'
 import { afterEach, beforeEach, expect, test } from 'vitest'
 

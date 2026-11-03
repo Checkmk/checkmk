@@ -20,6 +20,9 @@ namespace cma::ac {
 constexpr std::string_view kLegacyPullFile{"allow-legacy-pull"};
 constexpr std::string_view kControllerFlagFile{"controller-flag"};
 constexpr std::string_view kCmkAgentUninstall{"cmk_agent_uninstall.txt"};
+/// `activated` of the UpdateConfig the bakery writes, see the technical design
+/// of the updater in the agent controller, section 4.2.
+constexpr std::string_view kUpdaterActivatedKey{"activated"};
 // keep old definition here!
 constexpr std::string_view kCmkAgentMarkerNewDeprecated{
     "Check MK monitoring and management Service - "};  // Keep!
@@ -55,6 +58,16 @@ bool IsControllerFlagFileExists();
 std::filesystem::path LegacyPullFile();
 std::filesystem::path ControllerFlagFile();
 std::filesystem::path TomlConfigFile();
+std::filesystem::path UpdateTomlConfigFile();
+
+/// Whether the integrated agent updater is activated for this host.
+///
+/// @param update_toml the configuration to read, UpdateTomlConfigFile() in
+///   production
+///
+/// @return false when the file is absent, unreadable, does not set
+/// `activated`, or sets it to anything but `true`
+bool IsIntegratedUpdaterActivated(const std::filesystem::path &update_toml);
 
 // config
 uint16_t GetConfiguredAgentChannelPort(Modus modus);

@@ -8,9 +8,9 @@ The Maps app.
 
 It owns the services every surface below it uses, the session it needs before it
 can show anything, and which view the page's query string asks for. The page
-renders the mount point and the handful of Checkmk URLs the SPA links out to:
-everything else shown here the SPA fetches, so there is one data-assembly path
-instead of a server-rendered second one.
+renders the mount point and hands in only what it decides itself or the SPA
+cannot fetch: everything else shown here the SPA fetches, so there is one
+data-assembly path instead of a server-rendered second one.
 -->
 <script setup lang="ts">
 import type { MapsApp } from 'cmk-shared-typing/typescript/maps'
@@ -19,15 +19,16 @@ import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { type Component, computed, defineAsyncComponent, onUnmounted, watch } from 'vue'
 
+import { provideMapListLayout } from '@/maps/home/composables/useMapListViewMode'
+import { provideMapsCommandSettings } from '@/maps/map/commands/commandSettings'
 import type { NavState } from '@/maps/services/NavigationService'
 import {
   createMapsServices,
   disposeMapsServices,
   provideMapsServices
 } from '@/maps/services/context'
-import { provideMapsBreadcrumbRoot } from '@/maps/shared/breadcrumb'
 import MapsToastContainer from '@/maps/shared/components/MapsToastContainer.vue'
-import { provideMapsPageLinks } from '@/maps/shared/pageLinks'
+import { provideMapsPageMenuEvent } from '@/maps/shared/pageMenu'
 
 // Lazy, so the heavy views (leaflet, d3) stay in their own chunks and load only
 // when one is actually opened.
@@ -46,8 +47,9 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
 
 const services = createMapsServices()
 provideMapsServices(services)
-provideMapsPageLinks(props.links)
-provideMapsBreadcrumbRoot(props.breadcrumb_root)
+provideMapsCommandSettings(props.commands)
+provideMapsPageMenuEvent(props.page_menu_event)
+provideMapListLayout(props.list_layout)
 onUnmounted(() => {
   disposeMapsServices(services)
 })
@@ -121,7 +123,7 @@ const framed = computed(() => !nav.state.kiosk && !nav.state.preview)
   display: flex;
   height: 100vh;
   overflow: hidden;
-  font-size: var(--font-size-large);
+  font-size: var(--font-size-normal);
   color: var(--font-color);
   background: var(--ux-theme-1);
 }
@@ -158,6 +160,18 @@ maps.py emits, so they match nothing on the other pages sharing this bundle.
    pill), which would otherwise anchor to the viewport — and to the corner
    behind the Checkmk sidebar. */
 .maps-app--embed {
+  /* Shadows only for UI over map content, where the surface below is an
+     arbitrary image or tile that a tone step or border does not separate;
+     elsewhere Maps stays flat like the rest of the GUI. Declared on the
+     wrapper rather than the app, so the overlays teleported to ``#app``
+     inherit them too. */
+  --maps-shadow-canvas-overlay-low: 0 1px 3px rgb(0 0 0 / 50%);
+  --maps-shadow-canvas-overlay-high:
+    0 10px 15px -3px rgb(0 0 0 / 30%), 0 4px 6px -4px rgb(0 0 0 / 30%);
+
+  /* Shared with the edit tools, which step left of the slide inspector. */
+  --maps-presentation-inspector-width: 280px;
+
   height: 100%;
   contain: layout;
 }

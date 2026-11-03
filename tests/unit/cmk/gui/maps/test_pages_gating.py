@@ -17,11 +17,15 @@ The client cannot be trusted to self-limit, so these must clamp server-side.
 only shows what they permit.
 """
 
+import pytest
+
 from cmk.ccc.user import UserId
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.logged_in import user as global_user
 from cmk.gui.session_context import UserContext
 from cmk.gui.utils.roles import UserPermissions
-from cmk.maps.gui._pages import _authorized_public
+from cmk.maps.gui import store
+from cmk.maps.gui._pages import _authorized_public, _require_visible_map
 from cmk.maps.gui._tickets import gather_capabilities
 from cmk.maps.gui.pagetype import MapPage
 from cmk.maps.gui.type_defs import map_config_from_spec
@@ -125,3 +129,37 @@ def test_gather_capabilities_reflects_only_granted_permissions(
     assert caps["may_edit"] is True
     assert caps["configure"] is False
     assert caps["commands"] == []
+
+
+def test_unknown_map_is_refused_like_an_unknown_view(
+    request_context: None, with_admin_login: UserId
+) -> None:
+    with pytest.raises(MKUserError, match="The requested map nope does not exist"):
+        _require_visible_map("nope")
+
+
+def test_unknown_map_name_is_not_rendered_as_markup(
+    request_context: None, with_admin_login: UserId
+) -> None:
+    with pytest.raises(MKUserError, match="&lt;a href=x&gt;"):
+        _require_visible_map("<a href=x>")
+
+
+def test_map_the_user_may_not_see_is_refused_like_an_unknown_one(
+    request_context: None, with_admin_login: UserId, with_user: tuple[UserId, str]
+) -> None:
+    store.save_map(
+        with_admin_login, "private", {"name": "private", "view": {"type": "static"}}, public=False
+    )
+    with (
+        UserContext(with_user[0], UserPermissions({}, {}, {}, [])),
+        pytest.raises(MKUserError, match="The requested map private does not exist"),
+    ):
+        _require_visible_map("private")
+
+
+def test_visible_map_passes(request_context: None, with_admin_login: UserId) -> None:
+    store.save_map(
+        with_admin_login, "mine", {"name": "mine", "view": {"type": "static"}}, public=False
+    )
+    assert _require_visible_map("mine").name() == "mine"

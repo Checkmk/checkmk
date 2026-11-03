@@ -13,7 +13,8 @@ import time
 from collections.abc import Callable
 from logging.handlers import WatchedFileHandler
 from pathlib import Path
-from typing import override
+from types import FrameType
+from typing import NoReturn, override
 
 from setproctitle import setproctitle
 
@@ -63,97 +64,123 @@ def default_crash_report_callback(_exc: Exception) -> str:
 
 
 def main(crash_report_callback: Callable[[Exception], str] = default_crash_report_callback) -> int:
+    logger = logging.getLogger("cmk.web.ui-job-scheduler")
+    return run_with_crash_reporting(
+        lambda: _run(crash_report_callback, logger), crash_report_callback, logger
+    )
+
+
+def run_with_crash_reporting(
+    run: Callable[[], None],
+    crash_report_callback: Callable[[Exception], str],
+    logger: logging.Logger,
+) -> int:
+    """Execute run and translate its outcome to an exit code
+
+    SIGTERM ends the process with exit code 0. This is only an intermediate handler until
+    gunicorn run_server sets its own handler. Unexpected exceptions create a crash report."""
+    terminate_requested = threading.Event()
+
+    def handle_sigterm(_signum: int, _frame: FrameType | None) -> NoReturn:
+        terminate_requested.set()
+        sys.exit(0)
+
+    signal.signal(signal.SIGTERM, handle_sigterm)
+
     try:
-        setproctitle("cmk-ui-job-scheduler")
-        os.unsetenv("LANG")
-
-        omd_root = Path(os.environ.get("OMD_ROOT", ""))
-        run_path = omd_root / "tmp" / "run"
-        log_path = omd_root / "var" / "log" / "ui-job-scheduler"
-
-        run_path.mkdir(exist_ok=True, parents=True)
-        log_path.mkdir(exist_ok=True, parents=True)
-
-        _setup_console_logging()
-
-        # This is only an intermediate handler until gunicorn run_server sets its own handler
-        signal.signal(signal.SIGTERM, lambda signum, frame: sys.exit(0))  # noqa: ARG005
-
-        daemonize()
-
-        _setup_file_logging(log_path / "ui-job-scheduler.log")
-        logger = logging.getLogger("cmk.web.ui-job-scheduler")
-        logger.info(
-            "--- Starting ui-job-scheduler (Checkmk %(version)s) ---",
-            {"version": cmk_version.__version__},
-        )
-
-        with pid_file_lock(_pid_file(omd_root)):
-            init_span_processor(
-                trace.init_tracing(
-                    service_namespace="",
-                    service_name="cmk-ui-job-scheduler",
-                    service_instance_id=omd_site(),
-                    extra_resource_attributes=trace.resource_attributes_from_config(omd_root),
-                ),
-                exporter_from_config(
-                    exporter_log_level=logging.ERROR,
-                    config=trace.trace_send_config(get_omd_config(omd_root)),
-                ),
-            )
-            add_span_log_handler()
-
-            loaded_at = int(time.time())
-
-            # The registration and load_pugins take a few seconds and we don't want to delay the
-            # pre-daemonize phase with this, because it also slows down "omd start" significantly.
-            main_modules.register(edition(omd_root))
-
-            if errors := main_modules.get_failed_plugins():
-                logger.error(
-                    "The following errors occurred during plug-in loading: %(errors)r",
-                    {"errors": errors},
-                )
-
-            scheduler_thread = run_scheduler_threaded(
-                crash_report_callback,
-                (stop_event := threading.Event()),
-                (scheduler_state := SchedulerState()),
-            )
-
-            try:
-                run_server(
-                    default_config(omd_root, run_path, log_path),
-                    get_application(
-                        logger=logger,
-                        loaded_at=loaded_at,
-                        process_health=make_process_health,
-                        registered_jobs=dict(job_registry.items()),
-                        executor=ThreadedJobExecutor(logger),
-                        scheduler_state=scheduler_state,
-                    ),
-                    logger,
-                )
-            except SystemExit as exc:
-                logger.info(
-                    "Process terminated (Exit code: %(exit_code)d)", {"exit_code": exc.code}
-                )
-                raise
-            finally:
-                logger.info("Stopping application")
-                stop_event.set()
-                scheduler_thread.join()
+        run()
     except MKGeneralException as exc:
         # Expected error, the traceback adds no value here.
-        logger.error("ERROR: %(error)s", {"error": exc})  # type: ignore[possibly-undefined]  # noqa: TRY400
+        logger.error("ERROR: %(error)s", {"error": exc})  # noqa: TRY400
         return 1
     except SystemExit:
         raise
     except Exception as exc:
+        if terminate_requested.is_set():
+            # The SystemExit raised by the SIGTERM handler may surface wrapped in another
+            # exception, e.g. a SchemaError when it hits pydantic-core while building a model
+            # during plug-in registration. This is a regular shutdown, not a crash.
+            return 0
         crash_msg = crash_report_callback(exc)
-        logger.exception("Unhandled exception (Crash ID: %(crash_id)s)", {"crash_id": crash_msg})  # type: ignore[possibly-undefined]
+        logger.exception("Unhandled exception (Crash ID: %(crash_id)s)", {"crash_id": crash_msg})
         return 1
     return 0
+
+
+def _run(crash_report_callback: Callable[[Exception], str], logger: logging.Logger) -> None:
+    setproctitle("cmk-ui-job-scheduler")
+    os.unsetenv("LANG")
+
+    omd_root = Path(os.environ.get("OMD_ROOT", ""))
+    run_path = omd_root / "tmp" / "run"
+    log_path = omd_root / "var" / "log" / "ui-job-scheduler"
+
+    run_path.mkdir(exist_ok=True, parents=True)
+    log_path.mkdir(exist_ok=True, parents=True)
+
+    _setup_console_logging()
+
+    daemonize()
+
+    _setup_file_logging(log_path / "ui-job-scheduler.log")
+    logger.info(
+        "--- Starting ui-job-scheduler (Checkmk %(version)s) ---",
+        {"version": cmk_version.__version__},
+    )
+
+    with pid_file_lock(_pid_file(omd_root)):
+        init_span_processor(
+            trace.init_tracing(
+                service_namespace="",
+                service_name="cmk-ui-job-scheduler",
+                service_instance_id=omd_site(),
+                extra_resource_attributes=trace.resource_attributes_from_config(omd_root),
+            ),
+            exporter_from_config(
+                exporter_log_level=logging.ERROR,
+                config=trace.trace_send_config(get_omd_config(omd_root)),
+            ),
+        )
+        add_span_log_handler()
+
+        loaded_at = int(time.time())
+
+        # The registration and load_pugins take a few seconds and we don't want to delay the
+        # pre-daemonize phase with this, because it also slows down "omd start" significantly.
+        main_modules.register(edition(omd_root))
+
+        if errors := main_modules.get_failed_plugins():
+            logger.error(
+                "The following errors occurred during plug-in loading: %(errors)r",
+                {"errors": errors},
+            )
+
+        scheduler_thread = run_scheduler_threaded(
+            crash_report_callback,
+            (stop_event := threading.Event()),
+            (scheduler_state := SchedulerState()),
+        )
+
+        try:
+            run_server(
+                default_config(omd_root, run_path, log_path),
+                get_application(
+                    logger=logger,
+                    loaded_at=loaded_at,
+                    process_health=make_process_health,
+                    registered_jobs=dict(job_registry.items()),
+                    executor=ThreadedJobExecutor(logger),
+                    scheduler_state=scheduler_state,
+                ),
+                logger,
+            )
+        except SystemExit as exc:
+            logger.info("Process terminated (Exit code: %(exit_code)d)", {"exit_code": exc.code})
+            raise
+        finally:
+            logger.info("Stopping application")
+            stop_event.set()
+            scheduler_thread.join()
 
 
 def _setup_console_logging() -> None:

@@ -22,7 +22,7 @@ from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.gui.openapi.utils import ProblemException, RestAPIRequestGeneralException
 from cmk.maps.gui._pages import _authorized_public
-from cmk.maps.gui.store import create_map, get_own_map, is_valid_map_name
+from cmk.maps.gui.store import create_map, get_own_map
 from cmk.maps.rest_api.endpoint_family import MAPS_FAMILY
 from cmk.maps.rest_api.models.request_models import MapRequest
 from cmk.maps.rest_api.models.response_models import MapObject
@@ -34,6 +34,7 @@ from cmk.maps.rest_api.utils import (
     spec_from_map,
     validate_visibility,
 )
+from cmk.maps.shared.validators import is_valid_map_name
 
 
 def create_map_v1(api_context: ApiContext, body: MapRequest) -> ApiResponse[MapObject]:  # noqa: ARG001
@@ -45,7 +46,7 @@ def create_map_v1(api_context: ApiContext, body: MapRequest) -> ApiResponse[MapO
     if not user.may("general.edit_map"):
         raise RestAPIRequestGeneralException(
             status=HTTPStatus.FORBIDDEN,
-            title="You are not allowed to create maps.",
+            title="You are not allowed to create maps",
             detail="Creating maps requires the 'Customize and use maps' permission.",
         )
     # ``user.ident`` narrows to a guaranteed UserId and raises (not stripped
@@ -81,7 +82,7 @@ def create_map_v1(api_context: ApiContext, body: MapRequest) -> ApiResponse[MapO
         # surface as an uncaught 500 with a crash report; answer a clean error.
         raise ProblemException(
             status=HTTPStatus.INTERNAL_SERVER_ERROR,
-            title="The map could not be stored.",
+            title="The map could not be stored",
             detail=str(exc),
         ) from exc
     if not created:
@@ -90,7 +91,7 @@ def create_map_v1(api_context: ApiContext, body: MapRequest) -> ApiResponse[MapO
         # "name taken" from "name malformed" — the SPA surfaces each differently.
         raise RestAPIRequestGeneralException(
             status=HTTPStatus.CONFLICT,
-            title=f"The map {name!r} already exists.",
+            title=f"The map {name!r} already exists",
             detail="Use the update endpoint to modify an existing map.",
         )
     page = get_own_map(user_id, name)

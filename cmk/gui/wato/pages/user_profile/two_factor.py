@@ -47,6 +47,7 @@ from cmk.gui.crash_handler import handle_exception_as_gui_crash_report
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import HTTPRedirect, MKHTTPException, MKUserError
 from cmk.gui.header import make_header
+from cmk.gui.htmllib.generator import ClickAction
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, response
 from cmk.gui.i18n import _
@@ -64,7 +65,6 @@ from cmk.gui.page_menu import (
     PageMenuVue,
 )
 from cmk.gui.pages import Page, PageContext, PageEndpoint, PageRegistry
-from cmk.gui.permissions import permission_registry
 from cmk.gui.session import session
 from cmk.gui.site_config import has_distributed_setup_remote_sites, is_distributed_setup_remote_site
 from cmk.gui.table import Table, table_element
@@ -93,7 +93,6 @@ from cmk.gui.userdb.session import (
     save_session_infos,
 )
 from cmk.gui.userdb.store import save_custom_attr, save_two_factor_credentials
-from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.security_log_events import TwoFactorEvent, TwoFactorEventType, TwoFAFailureEvent
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
@@ -538,7 +537,7 @@ class UserTwoFactorOverview(Page):
                 ),
             )
 
-            invalidate_codes_url = make_confirm_delete_link(
+            invalidate_codes_link = make_confirm_delete_link(
                 i18n=_,
                 url=makeactionuri(request, transactions.get(), [("_delete_codes", "")]),
                 title=_("Invalidate all backup codes"),
@@ -548,9 +547,9 @@ class UserTwoFactorOverview(Page):
                 html.render_input(
                     "invalidate_codes",
                     type_="button",
-                    onclick="location.href=%s" % json.dumps(invalidate_codes_url),
                     value=_("Invalidate all codes"),
                     class_=["button buttonlink"],
+                    **ClickAction.confirm(invalidate_codes_link).data_attributes(),
                 ),
             )
         else:
@@ -624,7 +623,7 @@ class UserTwoFactorOverview(Page):
     @override
     def page(self, ctx: PageContext) -> None:
         verify_requirements(
-            UserPermissions.from_config(ctx.config, permission_registry),
+            ctx.user_permissions,
             "general.manage_2fa",
             ctx.config.wato_enabled,
         )
@@ -828,7 +827,7 @@ class UserTwoFactorEnforce(Page):
     @override
     def page(self, ctx: PageContext) -> None:
         verify_requirements(
-            UserPermissions.from_config(ctx.config, permission_registry),
+            ctx.user_permissions,
             "general.manage_2fa",
             ctx.config.wato_enabled,
         )
@@ -974,7 +973,7 @@ class RegisterTotpSecret(Page):
             html.a(
                 html.render_span(base32_secret)
                 + html.render_static_icon(StaticIcon(IconNames.insert)),
-                href="javascript:void(0)",
+                href="#",
                 onclick="cmk.utils.copy_to_clipboard(%s, %s);"
                 % (
                     json.dumps(base32_secret),
@@ -1011,7 +1010,7 @@ class RegisterTotpSecret(Page):
     @override
     def page(self, ctx: PageContext) -> None:
         verify_requirements(
-            UserPermissions.from_config(ctx.config, permission_registry),
+            ctx.user_permissions,
             "general.manage_2fa",
             ctx.config.wato_enabled,
         )
@@ -1139,7 +1138,7 @@ class EditCredentialAlias(Page):
     @override
     def page(self, ctx: PageContext) -> None:
         verify_requirements(
-            UserPermissions.from_config(ctx.config, permission_registry),
+            ctx.user_permissions,
             "general.manage_2fa",
             ctx.config.wato_enabled,
         )
@@ -1248,7 +1247,8 @@ class UserWebAuthnRegisterBegin(JsonPage):
         assert user.id is not None
 
         if not session.two_factor_enforced(
-            user.ident, UserPermissions.from_config(ctx.config, permission_registry)
+            user.ident,
+            ctx.user_permissions,
         ):
             user.need_permission("general.manage_2fa")
 
@@ -1280,7 +1280,8 @@ class UserWebAuthnRegisterComplete(JsonPage):
         assert user.id is not None
 
         if not session.two_factor_enforced(
-            user.ident, UserPermissions.from_config(ctx.config, permission_registry)
+            user.ident,
+            ctx.user_permissions,
         ):
             user.need_permission("general.manage_2fa")
 

@@ -14,7 +14,6 @@ from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import Title
 from cmk.graphing_engine import (
-    ConsolidationFunction,
     FetchedData,
     HostName,
     MetricName,
@@ -31,18 +30,17 @@ from cmk.graphing_engine import (
 )
 from cmk.gui.graphing import (
     build_template_graphs,
-    CommonGraphOptions,
+    EvaluateGraph,
     FetchDiagnostics,
     parse_graph_specification,
+    requested_window,
     TemplateGraphSpecification,
 )
 from cmk.gui.graphing._built_graphs import BuiltGraph
 from cmk.gui.graphing._graph_templates import (
-    _EvaluateTemplateGraphs,
     MKGraphMixedUnitsError,
     StoredTemplateGraphSpecification,
 )
-from cmk.gui.graphing._performance_data import RawPerformanceValue
 
 _SERVICE = Service(
     host_name=HostName("h"), service_name=ServiceName("svc"), site_id=SiteID("mysite")
@@ -62,8 +60,8 @@ class _FakeRRDFetchMetricNames:
 
 @dataclass
 class _FakeRRDFetchData:
-    values: Mapping[str, RawPerformanceValue] = field(
-        default_factory=lambda: {_METRIC: RawPerformanceValue(value=1.0)}
+    values: Mapping[str, PerformanceData] = field(
+        default_factory=lambda: {_METRIC: PerformanceData(value=1.0)}
     )
     requested_ranges: list[TimeRange] = field(default_factory=list)
     diagnostics: FetchDiagnostics = field(default_factory=FetchDiagnostics)
@@ -72,7 +70,6 @@ class _FakeRRDFetchData:
         self,
         metrics: Sequence[MetricProtocol],
         *,
-        consolidation_function: ConsolidationFunction,  # noqa: ARG002
         time_range: TimeRange,
     ) -> Mapping[MetricProtocol, Sequence[FetchedData]]:
         self.requested_ranges.append(time_range)
@@ -120,12 +117,10 @@ def test_template_lifecycle_discover_and_update() -> None:
     # Discovery fetches performance data only, never the time series.
     assert fetch_data.requested_ranges == []
 
-    evaluate = _EvaluateTemplateGraphs(
-        CommonGraphOptions(
-            consolidation_function=ConsolidationFunction.MAX,
-            time_range=_DISCOVERY_RANGE,
-        ),
+    evaluate = EvaluateGraph(
+        _DISCOVERY_RANGE,
         fetch_data,
+        window_of=requested_window,
     )
     evaluated = [one for graph in graphs for one in evaluate(graph).graphs]
 

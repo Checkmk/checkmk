@@ -18,11 +18,11 @@ from cmk.gui.openapi.framework import (
     PathParam,
     VersionedEndpoint,
 )
+from cmk.gui.openapi.framework.model.converter import folder_tree_of_request
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_config_bundle
-from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.password_store import trusted_explicit_password_ids
 
 from ._family import RULE_FAMILY
@@ -53,7 +53,7 @@ def edit_rule_v1(
     user.need_permission("wato.edit")
     user.need_permission("wato.rulesets")
 
-    rule_entry = get_rule_by_id(make_folder_tree(api_context.config), rule_id)
+    rule_entry = get_rule_by_id(folder_tree_of_request(api_context), rule_id)
 
     folder = rule_entry.folder
     folder.permissions.need_permission("write", user)
@@ -83,7 +83,7 @@ def edit_rule_v1(
         folder, pprint_value=api_context.config.wato_pprint_config, debug=api_context.config.debug
     )
 
-    new_rule_entry = get_rule_by_id(make_folder_tree(api_context.config), rule_id)
+    new_rule_entry = get_rule_by_id(folder_tree_of_request(api_context), rule_id)
     return ApiResponse(
         body=serialize_rule(new_rule_entry, api_context),
         status_code=HTTPStatus.OK,

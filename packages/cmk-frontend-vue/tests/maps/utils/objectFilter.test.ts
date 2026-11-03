@@ -6,7 +6,9 @@
 import { describe, expect, it } from 'vitest'
 
 import type { MapElement } from '@/maps/types/api'
-import { objectMatchesFilter } from '@/maps/utils/objectFilter'
+import { objectMatchesFilter, problemObjects } from '@/maps/utils/objectFilter'
+
+import { aState, anObject } from '../support/fixtures'
 
 function obj(over: Partial<MapElement>): MapElement {
   return {
@@ -83,6 +85,11 @@ describe('objectMatchesFilter', () => {
       expect(objectMatchesFilter(hg, 'sg:linux')).toBe(false)
     })
 
+    it('hg: matches a line that shows a host group', () => {
+      const line = obj({ type: 'line', line_object_type: 'hostgroup', group_name: 'linux-servers' })
+      expect(objectMatchesFilter(line, 'hg:linux')).toBe(true)
+    })
+
     it('AND-combines multiple terms', () => {
       expect(objectMatchesFilter(svc, 'h:web s:http')).toBe(true)
       expect(objectMatchesFilter(svc, 'h:web s:ping')).toBe(false)
@@ -111,5 +118,41 @@ describe('objectMatchesFilter', () => {
       expect(objectMatchesFilter(hg, 'hg:linux')).toBe(true)
       expect(objectMatchesFilter(hg, 'HG:linux')).toBe(false)
     })
+  })
+})
+
+describe('problemObjects', () => {
+  const up = anObject({ id: 'up', type: 'host', host_name: 'web01' })
+  const down = anObject({ id: 'down', type: 'host', host_name: 'db01' })
+  const states = {
+    up: aState({ object_id: 'up', type: 'host', state: 'UP' }),
+    down: aState({ object_id: 'down', type: 'host', state: 'DOWN' })
+  }
+
+  function ids(objects: MapElement[]): string[] {
+    return objects.map((object) => object.id)
+  }
+
+  it('takes a line away with an object it connects', () => {
+    const line = anObject({ id: 'l', type: 'line', start_ref: 'up', end_ref: 'down' })
+    expect(ids(problemObjects([up, down, line], true, states))).toEqual(['down'])
+  })
+
+  it('keeps a line between objects that stay', () => {
+    const line = anObject({ id: 'l', type: 'line', start_ref: 'down', end_ref: null })
+    expect(ids(problemObjects([up, down, line], true, states))).toEqual(['down', 'l'])
+  })
+
+  it('judges a line bound to a service by its own state', () => {
+    const line = anObject({
+      id: 'l',
+      type: 'line',
+      host_name: 'web01',
+      service_description: 'Interface 1',
+      start_ref: 'up',
+      end_ref: 'up'
+    })
+    const crit = { ...states, l: aState({ object_id: 'l', type: 'service', state: 'CRITICAL' }) }
+    expect(ids(problemObjects([up, line], true, crit))).toEqual(['l'])
   })
 })

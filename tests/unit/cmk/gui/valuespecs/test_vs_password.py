@@ -9,6 +9,7 @@ import hashlib
 import pytest
 
 import cmk.gui.valuespec as vs
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.utils.encrypter import Encrypter
 
@@ -61,3 +62,13 @@ def test_password_from_html_vars_change_pw() -> None:
     request.set_var("pw", "xyz")
     pw = vs.Password()
     assert pw.from_html_vars("pw") == "xyz"
+
+
+@pytest.mark.usefixtures("request_context")
+def test_password_from_html_vars_undecryptable_pw_is_a_user_error() -> None:
+    encrypted = bytearray(Encrypter.encrypt("abc"))
+    encrypted[-1] ^= 0xFF
+    request.set_var("pw_orig", base64.b64encode(bytes(encrypted)).decode("ascii"))
+    request.set_var("pw", "")
+    with pytest.raises(MKUserError, match="enter the password again"):
+        vs.Password().from_html_vars("pw")

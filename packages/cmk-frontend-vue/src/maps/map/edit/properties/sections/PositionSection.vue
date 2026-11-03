@@ -8,11 +8,11 @@ Where the object sits: a coordinate on a canvas map, a latitude and longitude
 on a geo map, and how it stacks against its neighbours.
 -->
 <script setup lang="ts">
-import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
-import PropertyRow from '@/maps/map/edit/properties/PropertyRow.vue'
+import PropertyInline from '@/maps/map/edit/properties/PropertyInline.vue'
+import PropertyInlineInput from '@/maps/map/edit/properties/PropertyInlineInput.vue'
 import PropertySection from '@/maps/map/edit/properties/PropertySection.vue'
 import type { ObjectForm } from '@/maps/map/edit/properties/objectForm'
 import type { MapViewType } from '@/maps/types/api'
@@ -28,24 +28,16 @@ const isGeo = computed(() => props.mapType === 'worldmap')
 
 <template>
   <PropertySection :title="_t('Position')">
-    <template v-if="isGeo">
-      <PropertyRow v-slot="{ id }" labels-control :label="_t('Lat')">
-        <CmkInput :id="id" v-model="form.lat" type="number" step="any" />
-      </PropertyRow>
-      <PropertyRow v-slot="{ id }" labels-control :label="_t('Lng')">
-        <CmkInput :id="id" v-model="form.lng" type="number" step="any" />
-      </PropertyRow>
-    </template>
-    <template v-else>
-      <PropertyRow v-slot="{ id }" labels-control :label="_t('X')">
-        <CmkInput :id="id" v-model="form.x" type="number" min="0" max="10000" />
-      </PropertyRow>
-      <PropertyRow v-slot="{ id }" labels-control :label="_t('Y')">
-        <CmkInput :id="id" v-model="form.y" type="number" min="0" max="10000" />
-      </PropertyRow>
-    </template>
-    <PropertyRow v-slot="{ id }" labels-control :label="_t('Z')">
-      <CmkInput :id="id" v-model="form.z" type="number" min="1" max="999" />
-    </PropertyRow>
+    <PropertyInline :label="_t('Position')">
+      <template v-if="isGeo">
+        <PropertyInlineInput v-model="form.lat" :label="_t('Lat')" unit="°" wide />
+        <PropertyInlineInput v-model="form.lng" :label="_t('Lng')" unit="°" wide />
+      </template>
+      <template v-else>
+        <PropertyInlineInput v-model="form.x" :label="_t('X')" unit="px" min="0" max="10000" />
+        <PropertyInlineInput v-model="form.y" :label="_t('Y')" unit="px" min="0" max="10000" />
+      </template>
+      <PropertyInlineInput v-model="form.z" :label="_t('Z')" min="1" max="999" />
+    </PropertyInline>
   </PropertySection>
 </template>

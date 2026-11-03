@@ -53,6 +53,8 @@ COMMAND_ACTION_PERMISSIONS: dict[CommandVerb, str] = {
     "remove_acknowledgement": "action.acknowledge",
     "force_check": "action.reschedule",
     "schedule_downtime": "action.downtimes",
+    # The views offer lifting every downtime of an object only with this one.
+    "remove_all_downtimes": "action.remove_all_downtimes",
     "add_comment": "action.addcomment",
     "enable_notifications": "action.notifications",
     "disable_notifications": "action.notifications",

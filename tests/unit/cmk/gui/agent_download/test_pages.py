@@ -26,6 +26,8 @@ from cmk.gui.config import Config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request as global_request
 from cmk.gui.pages import PageContext
+from cmk.gui.permissions import all_permissions
+from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 
@@ -70,7 +72,11 @@ def test_download_href_local_plugin_family_file_uses_authenticated_handler() -> 
 @pytest.fixture(name="page_context")
 def fixture_page_context(request_context: None) -> PageContext:
     return PageContext(
-        config=Config(), request=global_request, transactions=transactions, session=session
+        config=Config(),
+        request=global_request,
+        transactions=transactions,
+        session=session,
+        user_permissions=UserPermissions.from_config(Config(), all_permissions()),
     )
 
 
@@ -261,7 +267,11 @@ def test_other_mode_shows_shipped_and_local_file_in_one_section(
         ModeDownloadAgentsOther(  # noqa: SLF001
             test_edition,
             PageContext(
-                config=Config(), request=global_request, transactions=transactions, session=session
+                config=Config(),
+                request=global_request,
+                transactions=transactions,
+                session=session,
+                user_permissions=UserPermissions.from_config(Config(), all_permissions()),
             ),
         )._extra_sections()
     )
@@ -289,7 +299,11 @@ def test_other_mode_titles_share_tree_section_by_path(test_edition: cmk_version.
         ModeDownloadAgentsOther(  # noqa: SLF001
             test_edition,
             PageContext(
-                config=Config(), request=global_request, transactions=transactions, session=session
+                config=Config(),
+                request=global_request,
+                transactions=transactions,
+                session=session,
+                user_permissions=UserPermissions.from_config(Config(), all_permissions()),
             ),
         )._title_for_root("/omd/share/check_mk/agents/plugins", "/plugins")
         == "Plug-ins"

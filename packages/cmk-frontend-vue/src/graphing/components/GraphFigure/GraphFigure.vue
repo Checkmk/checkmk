@@ -31,6 +31,7 @@ import TimeSeriesGraph, { type GraphOptions, type Size, type TimeRange } from '.
 import { deriveYAxis } from '../TimeSeriesGraph/yAxis'
 import { DEFAULT_CONSOLIDATION_FN } from '../consolidation'
 import { CANVAS_MARGIN_HORIZONTAL } from '../constants'
+import GraphLegend from '../legend/GraphLegend.vue'
 import GraphLegendCompact from '../legend/GraphLegendCompact.vue'
 import { computeEpochTimeRange } from './computeEpochTimeRange'
 import type { GraphFigureProps } from './types.ts'
@@ -43,7 +44,7 @@ const FONT_SIZE_PT = 8
 
 const props = withDefaults(defineProps<GraphFigureProps>(), {
   combinationMode: null,
-  showLegend: false,
+  legend: 'none',
   showTimestamp: false,
   showBurgerMenu: false,
   showPin: false,
@@ -77,10 +78,15 @@ const plotWidth = computed(() =>
 )
 
 const followsHostRange = computed(() => props.requestedTimeRange !== undefined)
-const baseTimeRange = (): RequestedTimeRange =>
-  props.requestedTimeRange === undefined
-    ? computeEpochTimeRange(props.timerange)
-    : { start: props.requestedTimeRange.start, end: props.requestedTimeRange.end }
+const baseTimeRange = (): RequestedTimeRange => {
+  if (props.requestedTimeRange !== undefined) {
+    return { start: props.requestedTimeRange.start, end: props.requestedTimeRange.end }
+  }
+  if (props.timerange === undefined) {
+    throw new Error('A graph figure needs either a timerange or a requested time range.')
+  }
+  return computeEpochTimeRange(props.timerange)
+}
 
 const requestedTimeRange = ref<RequestedTimeRange>(baseTimeRange())
 const zoomSessionActive = ref(false)
@@ -211,11 +217,19 @@ const {
 )
 
 watch(
-  () => [sourceKey.value, binUnit.value, props.combinationMode, JSON.stringify(props.timerange)],
+  () => [
+    sourceKey.value,
+    binUnit.value,
+    props.combinationMode,
+    JSON.stringify(props.timerange),
+    followsHostRange.value
+  ],
   () => {
     zoomSessionActive.value = false
     abandonInspection()
     refresh()
+    // Stop first: a figure that starts following the host must not keep its own timer.
+    timer.stop()
     startTimer()
   }
 )
@@ -245,6 +259,9 @@ const {
   () => graph.value?.metrics ?? [],
   () => graph.value?.horizontalLines ?? []
 )
+
+const legendMetrics = computed(() => (graph.value?.metrics ?? []).filter((m) => !m.render.hidden))
+const valueResolution = ref<number | null>(null)
 
 const onResetIntent = () => {
   onReset()
@@ -352,6 +369,7 @@ onBeforeUnmount(() => {
           @reset="onResetIntent"
           @pin-create="onPinCreate"
           @pin-action="clearPin"
+          @update:value-resolution="valueResolution = $event"
         />
         <CmkSurfaceNotice
           v-if="displayedNotice"
@@ -361,12 +379,25 @@ onBeforeUnmount(() => {
         />
       </div>
       <GraphLegendCompact
-        v-if="showLegend"
-        :metrics="graph.metrics"
+        v-if="legend === 'compact'"
+        :metrics="legendMetrics"
         :horizontal-lines="graph.horizontalLines"
         :shaded-regions="graph.shadedRegions"
         :hidden-metric-names="hiddenMetricNames"
         :hidden-line-names="hiddenLineNames"
+        @update:hidden-metric-names="hiddenMetricNames = $event"
+        @update:hidden-line-names="hiddenLineNames = $event"
+        @hover-metrics="highlightedMetricNames = $event"
+      />
+      <GraphLegend
+        v-else-if="legend === 'extended'"
+        :metrics="legendMetrics"
+        :horizontal-lines="graph.horizontalLines"
+        :shaded-regions="graph.shadedRegions"
+        :hidden-metric-names="hiddenMetricNames"
+        :hidden-line-names="hiddenLineNames"
+        :value-resolution="valueResolution"
+        :axis-unit="graphOptions.y_axis?.unit ?? null"
         @update:hidden-metric-names="hiddenMetricNames = $event"
         @update:hidden-line-names="hiddenLineNames = $event"
         @hover-metrics="highlightedMetricNames = $event"

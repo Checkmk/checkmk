@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "type": "object",
+  "title": "Monitoring - All Services App",
+  "$id": "../all_services.json",
+  "allOf": [{ "$ref": "monitoring/_base.json" }],
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "site": {
+      "type": "string"
+    },
+    "sites": {
+      "type": "array",
+      "items": { "$ref": "monitoring/_base.json#/$defs/site" }
+    },
+    "edition": { "$ref": "monitoring/_base.json#/$defs/edition" },
+    "ai_explain": {
+      "type": "boolean",
+      "default": false
+    },
+    "export_event": {
+      "type": "string"
+    },
+    "host_actions": {
+      "description": "The commands the user may run on a host, offered in the host slide-in.",
+      "type": "array",
+      "items": { "$ref": "monitoring/_base.json#/$defs/monitoring_action" },
+      "default": []
+    },
+    "host_row_actions": {
+      "description": "Setup links of a host, offered in the host slide-in.",
+      "type": "array",
+      "items": { "$ref": "monitoring/_base.json#/$defs/row_action" },
+      "default": []
+    }
+  },
+  "required": ["user_id", "site", "sites", "edition", "export_event"]
+}

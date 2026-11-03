@@ -47,7 +47,7 @@ defineProps<{
   width: 32px;
   height: 32px;
   border: none;
-  border-radius: 7px;
+  border-radius: var(--border-radius);
   background: transparent;
   color: var(--font-color);
   cursor: pointer;

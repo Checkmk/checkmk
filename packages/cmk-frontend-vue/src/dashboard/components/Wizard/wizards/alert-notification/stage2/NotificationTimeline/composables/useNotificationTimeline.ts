@@ -11,7 +11,7 @@ import { useDebounceFn } from 'cmk-ui-library/lib/useDebounce'
 import { type Ref, ref, watch } from 'vue'
 
 import { type GraphTimerange } from '@/dashboard/components/TimeRange/GraphTimeRange.vue'
-import { useTimeRange } from '@/dashboard/components/TimeRange/useTimeRange'
+import { useTimeRangeSource } from '@/dashboard/components/TimeRange/useTimeRangeSource'
 import {
   type UseWidgetVisualizationOptions,
   useWidgetVisualizationProps
@@ -35,6 +35,7 @@ const CONTENT_TYPE = 'notification_timeline'
 export interface UseNotificationTimeline extends UseWidgetHandler, UseWidgetVisualizationOptions {
   //Data settings
   timeRangeType: Ref<TimeRangeType>
+  followDashboardTimeRange: Ref<boolean>
   timeRange: Ref<GraphTimerange>
   timeResolution: Ref<'hour' | 'day'>
   visualizationType: Ref<VisualizationTimelineType>
@@ -69,10 +70,11 @@ export const useNotificationTimeline = async (
     currentSpec?.content?.type === CONTENT_TYPE
       ? (currentSpec?.content as NotificationTimelineContent)
       : null
-  const storedWindow = currentContent?.render_mode?.time_range
-  const { timeRange, widgetProps: generateTimeRangeProps } = useTimeRange(
-    storedWindow === undefined || storedWindow === 'dashboard' ? null : storedWindow
-  )
+  const {
+    followDashboard: followDashboardTimeRange,
+    timeRange,
+    widgetProps: generateTimeRangeProps
+  } = useTimeRangeSource(currentContent?.render_mode?.time_range ?? null)
 
   let initialTimeResolution: 'hour' | 'day' = 'hour'
   if (
@@ -168,7 +170,15 @@ export const useNotificationTimeline = async (
   }
 
   watch(
-    [timeRangeType, timeRange, timeResolution, visualizationType, logtarget, widgetGeneralSettings],
+    [
+      timeRangeType,
+      followDashboardTimeRange,
+      timeRange,
+      timeResolution,
+      visualizationType,
+      logtarget,
+      widgetGeneralSettings
+    ],
     useDebounceFn(async () => {
       void _updateWidgetProps()
     }, 300),
@@ -179,6 +189,7 @@ export const useNotificationTimeline = async (
 
   return {
     timeRangeType,
+    followDashboardTimeRange,
     timeRange,
     timeResolution,
     visualizationType,

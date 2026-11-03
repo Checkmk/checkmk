@@ -7,6 +7,7 @@
 // (MSW). The ETag it returns is what the update's optimistic locking depends on.
 import { CmkApiError, CmkSimpleError } from 'cmk-ui-library/lib/error'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
+// eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
 import { HttpResponse, http } from 'msw'
 import { describe, expect, test } from 'vitest'
 

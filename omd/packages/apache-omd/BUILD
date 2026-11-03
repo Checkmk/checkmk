@@ -32,6 +32,7 @@ pkg_files(
     # See also `//omd/packages/omd:hooks`.
     name = "omd_hooks",
     srcs = [
+        "APACHE_FORWARDED_HEADERS",
         "APACHE_TCP_ADDR",
         "APACHE_TCP_PORT",
     ],

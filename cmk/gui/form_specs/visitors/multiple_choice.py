@@ -31,6 +31,7 @@ from ._utils import (
     compute_validators,
     get_prefill_default,
     get_title_and_help,
+    localize,
 )
 from .validators import build_vue_validators
 
@@ -149,6 +150,7 @@ class MultipleChoiceVisitor(
                     autocompleter=autocompleter,
                     i18n=self._get_i18n(),
                     show_toggle_all=self.form_spec.show_toggle_all,
+                    no_element_label=localize(self.form_spec.no_element_label),
                 ),
                 parsed_value.fallback_value
                 if isinstance(parsed_value, InvalidValue)
@@ -163,24 +165,13 @@ class MultipleChoiceVisitor(
                 validators=build_vue_validators(compute_validators(self.form_spec)),
                 show_toggle_all=self.form_spec.show_toggle_all,
                 i18n=self._get_i18n(),
+                no_element_label=localize(self.form_spec.no_element_label),
             ),
             [] if isinstance(parsed_value, InvalidValue) else parsed_value,
         )
 
     def _get_i18n(self) -> shared_type_defs.DualListChoiceI18n:
         return shared_type_defs.DualListChoiceI18n(
-            add_all=_("Add all >>"),
-            remove_all=_("<< Remove all"),
-            add=_("Add >"),
-            remove=_("< Remove"),
-            available_options=_("Available options"),
-            selected_options=_("Selected options"),
-            search_available_options=_("Search available options"),
-            search_selected_options=_("Search selected options"),
-            selected=_("Selected"),
-            no_elements_available=_("No elements available"),
-            no_elements_selected=_("No elements selected"),
-            autocompleter_loading=_("Loading"),
             and_x_more=_("and %(count)s more"),
         )
 

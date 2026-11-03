@@ -6,3 +6,11 @@
 
 class ServiceNotFoundError(KeyError):
     """Raised when a service cannot be found by its identifiers."""
+
+
+class InvalidServiceFilterError(ValueError):
+    """Raised when a service filter tree is not one the services listing accepts."""
+
+
+class HostNotFoundError(LookupError):
+    """Raised when the host whose services are asked for does not exist."""

@@ -210,3 +210,14 @@ class VersionedEndpoint:
     token_failure_detail: str | None = None
     """The problem detail sent when a token is unknown, expired or revoked. If None, the
     generic authentication failure is sent."""
+
+    remote_site_only: bool = False
+    """If set to True, then this endpoint is only accessible with RemoteSite authentication,
+    the distributed setup secret that a remote site sends to its central site. A remote site
+    reaches no other endpoint, and no other credential reaches this one."""
+
+    def __post_init__(self) -> None:
+        if self.remote_site_only and self.allowed_tokens:
+            # Token authentication is answered before the remote site is checked, so a token
+            # would reach an endpoint that claims to accept a remote site and nothing else.
+            raise ValueError("An endpoint cannot declare both remote_site_only and allowed_tokens.")

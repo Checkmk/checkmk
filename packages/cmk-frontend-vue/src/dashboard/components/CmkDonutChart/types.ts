@@ -1,0 +1,70 @@
+/**
+ * Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+ * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+ * conditions defined in the file COPYING, which is part of this source code package.
+ */
+import type { ChartColor } from './colors'
+import type { Delta } from './delta'
+
+export interface DonutSlice {
+  /** Stable key for the slice (used as the render key). */
+  key: string
+  /** Localized label shown in the legend. */
+  label: string
+  /** Numeric weight of the slice; percentages are derived from the sum of all values. */
+  value: number
+  /** Named palette color of the slice arc and its legend swatch. */
+  color: ChartColor
+  /** Same measure over the preceding period; the legend compares against it. */
+  previousValue?: number | undefined
+  /** The aggregated remainder, which has a breakdown behind it. */
+  isOther?: boolean
+}
+
+/**
+ * Which shape the legend takes; the widget config picks one. The table follows
+ * the box it is given: beside the ring where there is room, under it where the
+ * widget stands upright, and down to the chips where a table would be a header
+ * and one row. The chips are the chips at every size.
+ */
+export type DonutLegendMode = 'table' | 'compact'
+
+/** One legend row, formatted by the chart so the legend holds no arithmetic. */
+export interface DonutLegendRow {
+  key: string
+  label: string
+  color: ChartColor
+  hidden: boolean
+  /** The aggregated remainder, drawn as drillable. */
+  isOther: boolean
+  /** Formatted volume, or a dash for a category the ring is not drawn over. */
+  currentText: string
+  /** Null while no history reaches the widget at all; a dash per row without it. */
+  previousText: string | null
+  /** Change against the previous period, null while no history reaches the widget. */
+  delta: Delta | null
+}
+
+export interface CmkDonutChartProps {
+  /**
+   * Slices in display order. The caller provides them pre-ranked and already
+   * includes any aggregated "Other" slice; percentages are computed from the
+   * sum of all slice values.
+   */
+  slices: DonutSlice[]
+  /** The chart does not know what its values measure, so the caller formats. */
+  formatValue: (value: number) => string
+  /** Defaults to "Volume". */
+  centerLabel?: string
+  /**
+   * The table states the volume per category and gives way to the chips where
+   * the widget has no room for it; the chips name the categories only and
+   * stack under the ring at any size. Defaults to the table.
+   */
+  legendMode?: DonutLegendMode
+  /**
+   * Heads the comparison column, e.g. "Prev 4 h". The chart has no notion of
+   * time, so the caller names the window. Defaults to "Previous".
+   */
+  previousLabel?: string | undefined
+}

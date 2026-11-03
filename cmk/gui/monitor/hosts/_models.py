@@ -15,25 +15,14 @@ import dataclasses
 import datetime as dt
 import enum
 from collections.abc import Mapping
-from typing import assert_never, Literal, NewType, override, Self
+from typing import assert_never, NewType, override, Self
 
+from cmk.gui.monitor.shared import HostState, HostStateLabel
 from cmk.gui.utils.host_relations import RelationDirection
 from cmk.ruleset_matcher.labels import LabelSource
 
 type UnixTimestamp = int
 """An instant as whole seconds since the epoch (UTC)."""
-
-type HostStateLabel = Literal["UP", "DOWN", "UNREACHABLE", "PENDING"]
-
-
-class HostState(enum.IntEnum):
-    UP = 0
-    DOWN = 1
-    UNREACHABLE = 2
-    # Not a real Livestatus state: assigned to a host that has never been checked, whose raw
-    # `state` column is meaningless (always 0). See ``LiveStatusHostRepository`` for where this
-    # gets constructed instead of the real state.
-    PENDING = 3
 
 
 @dataclasses.dataclass(frozen=True)
@@ -157,6 +146,9 @@ class Host:
     """Whether the host has relations beyond the ones in `relations`, i.e. the list was cut."""
     setup_access: bool | None = None
     """Whether the user may open the host in Setup - None when the caller did not ask."""
+    has_graphs: bool | None = None
+    """Whether the core has recorded time series for the host, which is what its graphs show -
+    None when the caller did not ask."""
 
     @property
     def state_label(self) -> HostStateLabel:
@@ -182,6 +174,7 @@ class HostOptionalField(enum.StrEnum):
     CONTACT_GROUPS = "contact_groups"
     GROUPS = "groups"
     SETUP_ACCESS = "setup_access"
+    GRAPHS_LINK = "graphs_link"
 
     @classmethod
     def options(cls) -> str:
@@ -244,6 +237,14 @@ class HostSort:
     @override
     def __str__(self) -> str:
         return f"{self.column.value}:{self.direction.value}"
+
+
+@dataclasses.dataclass(frozen=True)
+class HostTarget:
+    """A host a command is sent for, on its site."""
+
+    site_id: str
+    host_name: str
 
 
 @dataclasses.dataclass(frozen=True)

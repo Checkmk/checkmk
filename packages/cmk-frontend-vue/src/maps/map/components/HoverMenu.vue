@@ -5,30 +5,30 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import usei18n from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import HoverCard from '@/maps/map/components/HoverCard.vue'
 import HoverCardHeadline from '@/maps/map/components/HoverCardHeadline.vue'
-import HoverPillRow, { type HoverPill } from '@/maps/map/components/HoverPillRow.vue'
+import MapStateCounts, { type MapStateCount } from '@/maps/map/components/MapStateCounts.vue'
 import { useMetricInfo } from '@/maps/map/composables/useMetricInfo'
 import type { HoverAnchorRect } from '@/maps/map/composables/useObjectHoverMenu'
 import { displayRows, perfometerCaption } from '@/maps/map/composables/usePerfometer'
+import MapStateTag from '@/maps/map/radar/components/MapStateTag.vue'
 import { useMapsApis } from '@/maps/services/context'
 import type { MapElement, ObjectState, ServicesSummary } from '@/maps/types/api'
 import { objectTypeLabel } from '@/maps/utils/dropdownOptions'
-import {
-  buildHostStateViewUrl,
-  buildServiceStateViewUrl,
-  summarySubject
-} from '@/maps/utils/mapNavigation'
+import { buildHostStateViewUrl, buildServiceStateViewUrl } from '@/maps/utils/mapNavigation'
 import {
   VISUAL_ONLY_TYPES,
+  asBoundObject,
   getEffectiveObjectType,
   getMapElementIdentifier
 } from '@/maps/utils/naming'
 import { usePointerOverlayStyle } from '@/maps/utils/overlayFrame'
 import { type PerfMetric, parsePerfData, utilColor, utilPercent } from '@/maps/utils/perf'
 import { sanitizeTemplateHtml } from '@/maps/utils/sanitize'
+import { summaryStateCounts } from '@/maps/utils/stateCounts'
 import { interpolateTemplate } from '@/maps/utils/template'
 import { formatRelativeDuration, formatRelativeFuture } from '@/maps/utils/time'
 
@@ -70,13 +70,14 @@ function onCardLeave() {
 const { _t } = usei18n()
 const { objects } = useMapsApis()
 
+const target = computed(() => asBoundObject(props.object))
+
 // ``pending`` hides the raw perf_data fallback while the CMK perfometer is
 // still loading, so the tooltip does not flicker between two bar styles.
 const isServiceLinked = computed(
   () =>
-    props.object.type === 'service' ||
-    ((props.object.type === 'line' || props.object.type === 'graph') &&
-      !!props.object.service_description)
+    target.value.type === 'service' ||
+    (target.value.type === 'graph' && !!props.object.service_description)
 )
 const { info: cmkMetricInfo, pending: cmkPerfometerPending } = useMetricInfo({
   connectionId: () => props.connectionId,
@@ -119,7 +120,7 @@ const positionStyle = usePointerOverlayStyle(
 
 onMounted(() => {
   if (
-    props.object.type === 'dyngroup' &&
+    target.value.type === 'dyngroup' &&
     !props.object.bundle_hosts?.length &&
     props.object.object_filter &&
     props.connectionId &&
@@ -146,32 +147,12 @@ const displayName = computed(() => getMapElementIdentifier(props.object) ?? '')
 
 const hoverTypeLabel = computed(() => objectTypeLabel(getEffectiveObjectType(props.object), _t))
 
-const hasMonitoring = computed(() => {
-  // A line linked to a host/service is not purely decorative — show its state.
-  if (props.object.type === 'line') {
-    return !!(props.object.host_name || props.object.service_description)
-  }
-  return !(VISUAL_ONLY_TYPES as readonly string[]).includes(props.object.type)
-})
+const hasMonitoring = computed(
+  () => !(VISUAL_ONLY_TYPES as readonly string[]).includes(target.value.type)
+)
 
 const isNoPermission = computed(() => props.state?.state === 'NO_PERMISSION')
 const isNotFound = computed(() => props.state?.state === 'NOT_FOUND')
-
-const STATE_TEXT: Record<string, string> = {
-  UP: 'maps-hover-menu__state--ok',
-  OK: 'maps-hover-menu__state--ok',
-  DOWN: 'maps-hover-menu__state--down',
-  CRITICAL: 'maps-hover-menu__state--down',
-  UNREACHABLE: 'maps-hover-menu__state--unknown',
-  UNKNOWN: 'maps-hover-menu__state--unknown',
-  WARNING: 'maps-hover-menu__state--warn',
-  PENDING: 'maps-hover-menu__state--pending'
-}
-
-const dotState = computed(() => (hasMonitoring.value ? (props.state?.state ?? 'PENDING') : null))
-const stateTextColor = computed(
-  () => STATE_TEXT[props.state?.state ?? 'PENDING'] ?? 'maps-hover-menu__state--pending'
-)
 
 const subtitleText = computed(() => {
   const parts: string[] = [hoverTypeLabel.value]
@@ -271,97 +252,67 @@ const nextCheckText = computed((): NextCheckText | null => {
   }
 })
 
-interface PillRow {
-  label: string
-  pills: HoverPill[]
+interface CountRow {
+  label: TranslatedString
+  counts: MapStateCount[]
 }
 
 const dyngroupHostSet = computed<string[] | null>(() =>
-  props.object.type === 'dyngroup'
+  target.value.type === 'dyngroup'
     ? props.object.bundle_hosts?.length
       ? props.object.bundle_hosts
       : dyngroupMemberHosts.value
     : null
 )
 
-// Severity-descending, so the worst state reads first.
-function buildPills(summary: ServicesSummary, kind: 'hosts' | 'services'): HoverPill[] {
+function buildCounts(summary: ServicesSummary, kind: 'hosts' | 'services'): MapStateCount[] {
   const hosts = dyngroupHostSet.value
-  const linkFor = (state: string | null): string | null => {
-    if (!state || !props.checkmkUrl) {
+  const linkFor = (state: string): string | null => {
+    if (!props.checkmkUrl) {
       return null
     }
     if (kind === 'hosts') {
-      return props.object.type === 'dyngroup' && hosts?.length
+      return target.value.type === 'dyngroup' && hosts?.length
         ? buildHostStateViewUrl(props.checkmkUrl, hosts, state)
         : null
     }
-    if (props.object.type === 'host') {
+    if (target.value.type === 'host') {
       return buildServiceStateViewUrl(props.checkmkUrl, { host: props.object.host_name }, state)
     }
-    if (props.object.type === 'dyngroup' && hosts?.length) {
+    if (target.value.type === 'hostgroup') {
+      return buildServiceStateViewUrl(
+        props.checkmkUrl,
+        { hostgroup: props.object.group_name },
+        state
+      )
+    }
+    if (target.value.type === 'dyngroup' && hosts?.length) {
       return buildServiceStateViewUrl(props.checkmkUrl, { hosts }, state)
     }
     return null
   }
-  const defs =
-    kind === 'hosts'
-      ? ([
-          { key: 'critical', label: 'DOWN', tone: 'crit', state: 'DOWN' },
-          { key: 'unknown', label: 'UNREACH', tone: 'unknown', state: 'UNREACHABLE' },
-          { key: 'pending', label: 'PEND', tone: 'pending', state: null },
-          { key: 'ok', label: 'UP', tone: 'ok', state: 'UP' }
-        ] as const)
-      : ([
-          { key: 'critical', label: 'CRIT', tone: 'crit', state: 'CRITICAL' },
-          { key: 'unknown', label: 'UNKN', tone: 'unknown', state: 'UNKNOWN' },
-          { key: 'warning', label: 'WARN', tone: 'warn', state: 'WARNING' },
-          { key: 'pending', label: 'PEND', tone: 'pending', state: 'PENDING' },
-          { key: 'ok', label: 'OK', tone: 'ok', state: 'OK' }
-        ] as const)
-  return defs
-    .filter((d) => (summary[d.key] ?? 0) > 0)
-    .map((d) => ({
-      label: d.label,
-      count: summary[d.key] ?? 0,
-      tone: d.tone,
-      url: linkFor(d.state)
-    }))
+  return summaryStateCounts(_t, summary, kind, linkFor)
 }
 
-// Host dyngroups show two rows (member hosts + their services); everything else
-// shows one. ``services_summary`` holds host states for host groups (labelled
-// accordingly), services otherwise.
-const pillRows = computed<PillRow[]>(() => {
-  if (!['host', 'hostgroup', 'servicegroup', 'dyngroup'].includes(props.object.type)) {
+const countRows = computed<CountRow[]>(() => {
+  if (!['host', 'hostgroup', 'servicegroup', 'dyngroup'].includes(target.value.type)) {
     return []
   }
-  const rows: PillRow[] = []
+  const rows: CountRow[] = []
   const hs = props.state?.hosts_summary
   if (hs) {
-    const pills = buildPills(hs, 'hosts')
-    if (pills.length) {
-      rows.push({ label: _t('Hosts'), pills })
-    }
+    rows.push({ label: _t('Hosts'), counts: buildCounts(hs, 'hosts') })
   }
   const ss = props.state?.services_summary
   if (ss) {
-    const kind = summarySubject(props.object)
-    const pills = buildPills(ss, kind)
-    if (pills.length) {
-      rows.push({ label: kind === 'hosts' ? _t('Hosts') : _t('Services'), pills })
-    }
+    rows.push({ label: _t('Services'), counts: buildCounts(ss, 'services') })
   }
-  return rows
+  // An empty group has nothing to count, and the bar would read "No services".
+  return rows.filter((row) => row.counts.some((entry) => entry.count > 0))
 })
 
 const perfMetrics = computed((): PerfMetric[] => {
-  // Same reasoning as `isServiceLinked` above — only service-linked objects have perf data.
-  const showPerf =
-    props.object.type === 'service' ||
-    ((props.object.type === 'line' || props.object.type === 'graph') &&
-      !!props.object.service_description)
-  if (!showPerf) {
+  if (!isServiceLinked.value) {
     return []
   }
   return parsePerfData(props.state?.perf_data ?? '').slice(0, 4)
@@ -399,14 +350,13 @@ function fmtMetricValue(m: PerfMetric): string {
       <!-- eslint-enable vue/no-v-html -->
 
       <template v-else>
-        <HoverCardHeadline :name="displayName" :subtitle="subtitleText" :state="dotState">
-          <span
+        <HoverCardHeadline :name="displayName" :subtitle="subtitleText" :state="null">
+          <MapStateTag
             v-if="hasMonitoring && state"
+            :state="state.state"
+            :kind="state.type === 'service' ? 'service' : 'host'"
             class="maps-hover-menu__state"
-            :class="stateTextColor"
-          >
-            {{ state.state }}
-          </span>
+          />
           <span v-if="hasMonitoring && state && stateDuration" class="maps-hover-menu__since">
             {{ _t('since %{duration}', { duration: stateDuration }) }}
           </span>
@@ -499,14 +449,15 @@ function fmtMetricValue(m: PerfMetric): string {
             {{ state.output }}
           </div>
 
-          <!-- State pills, one labelled row per summary (host dyngroups show
-                         both Hosts and Services); each pill deep-links to the
-                         matching filtered Checkmk view. -->
-          <HoverPillRow
-            v-for="row in pillRows"
+          <!-- One labelled set of counts per summary (host dyngroups show both
+               Hosts and Services); each count deep-links to the matching
+               filtered Checkmk view. -->
+          <MapStateCounts
+            v-for="row in countRows"
             :key="row.label"
+            class="maps-hover-menu__counts"
             :label="row.label"
-            :pills="row.pills"
+            :counts="row.counts"
           />
 
           <div v-if="cmkPerfometer" class="maps-hover-menu__perfometer">
@@ -568,8 +519,8 @@ function fmtMetricValue(m: PerfMetric): string {
 }
 
 .maps-hover-menu__empty {
-  font-size: var(--font-size-large);
-  line-height: 20px;
+  font-size: var(--font-size-normal);
+  line-height: 16px;
   font-style: italic;
   color: var(--font-color-dimmed);
 }
@@ -590,36 +541,14 @@ function fmtMetricValue(m: PerfMetric): string {
   contain: paint;
   max-height: 40vh;
   overflow: auto;
-  font-size: var(--font-size-large);
-  line-height: 20px;
+  font-size: var(--font-size-normal);
+  line-height: 16px;
   color: var(--font-color);
 }
 
 .maps-hover-menu__state {
   flex-shrink: 0;
-  font-size: var(--font-size-large);
-  line-height: 1.25;
-  font-weight: var(--font-weight-bold);
-}
-
-.maps-hover-menu__state--ok {
-  color: var(--status-text-color-success-bright);
-}
-
-.maps-hover-menu__state--down {
-  color: var(--status-text-color-error-bright);
-}
-
-.maps-hover-menu__state--unknown {
-  color: var(--status-text-color-unknown-bright);
-}
-
-.maps-hover-menu__state--warn {
-  color: var(--status-text-color-warning-bright);
-}
-
-.maps-hover-menu__state--pending {
-  color: var(--font-color-dimmed);
+  align-self: center;
 }
 
 .maps-hover-menu__since {
@@ -629,7 +558,7 @@ function fmtMetricValue(m: PerfMetric): string {
 }
 
 .maps-hover-menu__attempts {
-  margin-top: 6px;
+  margin-top: var(--dimension-4);
   font-size: var(--font-size-small);
   color: var(--font-color-dimmed);
 }
@@ -642,15 +571,15 @@ function fmtMetricValue(m: PerfMetric): string {
 .maps-hover-menu__badges {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 6px;
+  gap: var(--dimension-4);
+  margin-top: var(--dimension-4);
 }
 
 .maps-hover-menu__badge {
   display: inline-flex;
   align-items: center;
   gap: var(--dimension-3);
-  padding: var(--dimension-2) 6px;
+  padding: var(--dimension-2) var(--dimension-4);
   font-size: var(--font-size-small);
   font-weight: var(--font-weight-bold);
   border-radius: 9999px;
@@ -687,15 +616,19 @@ function fmtMetricValue(m: PerfMetric): string {
   -webkit-line-clamp: 3;
   line-clamp: 3;
   overflow: hidden;
-  margin-top: var(--spacing);
+  margin-top: var(--dimension-5);
   font-size: var(--font-size-normal);
   line-height: 1.375;
   color: var(--font-color-dimmed);
   overflow-wrap: break-word;
 }
 
+.maps-hover-menu__counts {
+  margin-top: var(--dimension-5);
+}
+
 .maps-hover-menu__perfometer {
-  margin-top: var(--spacing);
+  margin-top: var(--dimension-5);
 }
 
 .maps-hover-menu__perfometer > * + * {
@@ -705,7 +638,7 @@ function fmtMetricValue(m: PerfMetric): string {
 .maps-hover-menu__perfometer-label {
   margin-bottom: var(--dimension-3);
   font-size: var(--font-size-small);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--font-color);
 }
 
@@ -714,7 +647,7 @@ function fmtMetricValue(m: PerfMetric): string {
   overflow: hidden;
   height: 12px;
   border-radius: var(--border-radius);
-  box-shadow: 0 0 0 1px rgb(255 255 255 / 10%);
+  box-shadow: 0 0 0 1px var(--default-border-color);
 }
 
 .maps-hover-menu__perfometer-seg {
@@ -723,11 +656,11 @@ function fmtMetricValue(m: PerfMetric): string {
 }
 
 .maps-hover-menu__metrics {
-  margin-top: var(--spacing);
+  margin-top: var(--dimension-5);
 }
 
 .maps-hover-menu__metrics > * + * {
-  margin-top: 6px;
+  margin-top: var(--dimension-4);
 }
 
 .maps-hover-menu__metric-head {
@@ -747,7 +680,7 @@ function fmtMetricValue(m: PerfMetric): string {
 
 .maps-hover-menu__metric-value {
   flex-shrink: 0;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--font-color);
 }
 
@@ -765,7 +698,7 @@ function fmtMetricValue(m: PerfMetric): string {
 }
 
 .maps-hover-menu__next-check {
-  margin-top: var(--spacing);
+  margin-top: var(--dimension-5);
   font-size: var(--font-size-small);
   color: var(--font-color-dimmed);
 }

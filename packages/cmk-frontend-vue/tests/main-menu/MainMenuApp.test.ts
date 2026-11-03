@@ -100,3 +100,15 @@ describe('MainMenuApp toggle items', () => {
     expect(swallowed).toBe(false)
   })
 })
+
+describe('MainMenuApp key hints button', () => {
+  test('underlines its access key while Alt is held', async () => {
+    renderMainMenu()
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Alt', altKey: true }))
+    await nextTick()
+
+    expect(screen.getByText('K')).toHaveClass('mm-mnemonic-title__key')
+    window.dispatchEvent(new KeyboardEvent('keyup', { key: 'Alt' }))
+  })
+})

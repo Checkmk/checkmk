@@ -77,4 +77,3 @@ Format every commit message as:
 - after a blank line, the trailer `Jira-Ref: CMK-12345`, only if the key is
   known from the context (never invent one; if unsure, ask the user; if
   there is no ticket, omit it)
-- do not add a `Co-authored-by` trailer

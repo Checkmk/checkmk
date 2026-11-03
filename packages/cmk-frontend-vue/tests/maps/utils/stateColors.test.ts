@@ -5,42 +5,44 @@
  */
 import { describe, expect, it } from 'vitest'
 
-import { STATE_COLORS, onStateColorVar, stateColor } from '@/maps/utils/stateColors'
+import { onStateColorVar, severityPills, stateColorVar, stateRank } from '@/maps/utils/stateColors'
 
-describe('STATE_COLORS', () => {
-  it('defines expected host states', () => {
-    expect(STATE_COLORS['UP']).toBe('#4ade80')
-    expect(STATE_COLORS['DOWN']).toBe('#f87171')
-    expect(STATE_COLORS['UNREACHABLE']).toBe('#fb923c')
-    expect(STATE_COLORS['PENDING']).toBe('#9ca3af')
+describe('stateRank', () => {
+  it('ranks host problems above service problems, as NagVis does', () => {
+    expect(stateRank('DOWN')).toBeGreaterThan(stateRank('UNREACHABLE'))
+    expect(stateRank('UNREACHABLE')).toBeGreaterThan(stateRank('CRITICAL'))
+    expect(stateRank('CRITICAL')).toBeGreaterThan(stateRank('WARNING'))
+    expect(stateRank('WARNING')).toBeGreaterThan(stateRank('OK'))
   })
 
-  it('defines expected service states', () => {
-    expect(STATE_COLORS['OK']).toBe('#4ade80')
-    expect(STATE_COLORS['CRITICAL']).toBe('#f87171')
-    expect(STATE_COLORS['WARNING']).toBe('#ffd000')
-    expect(STATE_COLORS['UNKNOWN']).toBe('#fb923c')
+  it('ranks UNKNOWN between WARNING and CRITICAL, as Checkmk does', () => {
+    expect(stateRank('CRITICAL')).toBeGreaterThan(stateRank('UNKNOWN'))
+    expect(stateRank('UNKNOWN')).toBeGreaterThan(stateRank('WARNING'))
   })
 })
 
-describe('stateColor', () => {
-  it('returns correct color for known states', () => {
-    expect(stateColor('UP')).toBe('#4ade80')
-    expect(stateColor('DOWN')).toBe('#f87171')
-    expect(stateColor('WARNING')).toBe('#ffd000')
-    expect(stateColor('CRITICAL')).toBe('#f87171')
-    expect(stateColor('OK')).toBe('#4ade80')
-    expect(stateColor('UNKNOWN')).toBe('#fb923c')
-    expect(stateColor('UNREACHABLE')).toBe('#fb923c')
-    expect(stateColor('PENDING')).toBe('#9ca3af')
+describe('severityPills', () => {
+  it('orders the pills as the states rank', () => {
+    const pills = severityPills({ CRITICAL: 2, DOWN: 1, WARNING: 3, UNKNOWN: 0 })
+    expect(pills.map((pill) => pill.state)).toEqual(['DOWN', 'CRITICAL', 'WARNING'])
+  })
+})
+
+describe('stateColorVar', () => {
+  it('names the shared state token of host and service states', () => {
+    expect(stateColorVar('UP')).toBe('var(--color-state-up)')
+    expect(stateColorVar('DOWN')).toBe('var(--color-state-down)')
+    expect(stateColorVar('UNREACHABLE')).toBe('var(--color-state-unreachable)')
+    expect(stateColorVar('OK')).toBe('var(--color-state-ok)')
+    expect(stateColorVar('WARNING')).toBe('var(--color-state-warning)')
+    expect(stateColorVar('CRITICAL')).toBe('var(--color-state-critical)')
+    expect(stateColorVar('UNKNOWN')).toBe('var(--color-state-unknown)')
   })
 
-  it('returns PENDING color for undefined', () => {
-    expect(stateColor(undefined)).toBe('#9ca3af')
-  })
-
-  it('returns PENDING color for unknown state string', () => {
-    expect(stateColor('SOME_UNKNOWN_STATE')).toBe('#9ca3af')
+  it('shows a missing, unknown or not found state as pending', () => {
+    expect(stateColorVar(undefined)).toBe('var(--color-state-pending)')
+    expect(stateColorVar('SOME_UNKNOWN_STATE')).toBe('var(--color-state-pending)')
+    expect(stateColorVar('NOT_FOUND')).toBe('var(--color-state-pending)')
   })
 })
 

@@ -34,6 +34,7 @@ from cmk.gui.monitor.hosts._models import (
 from cmk.gui.monitor.shared import IconSource
 from cmk.gui.monitor.site_scope import MonitorSite, MonitorSites
 from cmk.gui.sites import SiteStates, SiteStatus
+from cmk.livestatus_client.tables import Hosts
 from cmk.livestatus_client.testing import expect_single_query, MockLiveStatusConnection
 from tests.testlib.unit.gui.web_test_app import SetConfig
 
@@ -109,6 +110,15 @@ def test_every_sort_column_says_which_field_it_needs_read() -> None:
 def test_every_sort_column_says_how_livestatus_orders_by_it() -> None:
     """A column with no entry would default to its own name and be rejected by every site."""
     assert set(_LIVESTATUS_SORT_COLUMNS) == set(HostSortColumn)
+
+
+def test_every_sort_column_orders_by_a_column_the_core_has() -> None:
+    # No sort column stands for the default order.
+    orders = [_build_primary_sort([])] + [
+        _build_primary_sort([HostSort(column, HostSortDirection.ASC)]) for column in HostSortColumn
+    ]
+
+    assert {order.split()[1] for order in orders} - set(Hosts.__columns__()) == set()
 
 
 _TITLES = {"web_dmz": "Web DMZ", "network": "Netzwerk"}

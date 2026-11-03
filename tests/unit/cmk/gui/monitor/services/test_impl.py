@@ -26,6 +26,7 @@ from cmk.gui.monitor.services._models import (
     ServiceSortDirection,
 )
 from cmk.gui.monitor.site_scope import MonitorSite, MonitorSites
+from cmk.livestatus_client.tables import Services
 from cmk.livestatus_client.testing import expect_single_query, MockLiveStatusConnection
 from tests.testlib.unit.gui.web_test_app import SetConfig
 
@@ -376,6 +377,16 @@ def test_every_optional_field_names_the_columns_it_needs() -> None:
 def test_every_sort_column_says_how_livestatus_orders_by_it() -> None:
     """A sort column with no entry would fail every request sorted by it."""
     assert set(_LIVESTATUS_SORT_COLUMNS) == set(ServiceSortColumn)
+
+
+def test_every_sort_column_orders_by_a_column_the_core_has() -> None:
+    # No sort column stands for the default order.
+    orders = [_build_primary_sort([])] + [
+        _build_primary_sort([ServiceSort(column, ServiceSortDirection.ASC)])
+        for column in ServiceSortColumn
+    ]
+
+    assert {order.split()[1] for order in orders} - set(Services.__columns__()) == set()
 
 
 def test_build_query_filter_without_a_query_matches_everything() -> None:

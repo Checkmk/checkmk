@@ -17,6 +17,7 @@ from botocore.client import BaseClient
 
 from .. import hosts
 from ..config import AWSConfig, LOGGER, Tags
+from ..labels import AwsResource
 from .core import (
     AWSColleagueContents,
     AWSComputedContent,
@@ -43,7 +44,7 @@ if TYPE_CHECKING:
 
 ProvisionedConcurrencyConfigs = Mapping[str, Sequence[Mapping[str, str]]]
 
-LAMBDA_HOST_LABELS: Mapping[str, str] = {"cmk/aws/service": "lambda"}
+LAMBDA_RESOURCE = AwsResource(service="lambda")
 
 
 class LambdaRegionLimits(AWSSectionLimits):
@@ -182,7 +183,7 @@ class LambdaSummary(AWSSection):
             AWSSectionResult(
                 self._target_host(hosts.LambdaFunction(function["FunctionName"])),
                 [function],
-                LAMBDA_HOST_LABELS,
+                LAMBDA_RESOURCE,
             )
             for function in computed_content.content
         ]
@@ -310,7 +311,7 @@ class LambdaCloudwatch(AWSSectionCloudwatch):
             ).append(row)
         return [
             AWSSectionResult(
-                self._target_host(hosts.LambdaFunction(function_name)), rows, LAMBDA_HOST_LABELS
+                self._target_host(hosts.LambdaFunction(function_name)), rows, LAMBDA_RESOURCE
             )
             for function_name, rows in rows_by_function.items()
         ]
@@ -377,7 +378,7 @@ class LambdaProvisionedConcurrency(AWSSection):
                     hosts.LambdaFunction(_function_arn_to_function_name_dim(function_arn))
                 ),
                 {function_arn: function_content},
-                LAMBDA_HOST_LABELS,
+                LAMBDA_RESOURCE,
             )
             for function_arn, function_content in computed_content.content.items()
         ]
@@ -582,7 +583,7 @@ class LambdaCloudwatchInsights(AWSSection):
                     hosts.LambdaFunction(_function_arn_to_function_name_dim(function_arn))
                 ),
                 {function_arn: function_content},
-                LAMBDA_HOST_LABELS,
+                LAMBDA_RESOURCE,
             )
             for function_arn, function_content in computed_content.content.items()
         ]

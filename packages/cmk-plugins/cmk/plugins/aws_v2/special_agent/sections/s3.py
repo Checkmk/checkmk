@@ -15,7 +15,7 @@ from botocore.client import BaseClient
 
 from .. import hosts
 from ..config import AWSConfig, LOGGER, Tags
-from ..labels import resource_labels
+from ..labels import AwsResource
 from .core import (
     AWSColleagueContents,
     AWSComputedContent,
@@ -379,7 +379,15 @@ def _bucket_results(
         tags = bucket_rows[0].get("TagsForCmkLabels", {})
         results.append(
             AWSSectionResult(
-                host, bucket_rows, resource_labels("s3", bucket_name, bucket_name, region, tags)
+                host,
+                bucket_rows,
+                AwsResource(
+                    service="s3",
+                    name=bucket_name,
+                    resource_id=bucket_name,
+                    region=region,
+                    tags=tags,
+                ),
             )
         )
     return results

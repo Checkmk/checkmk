@@ -15,7 +15,7 @@ from cmk.plugins.aws_v2.constants import AWS_ELASTICACHE_QUOTA_DEFAULTS
 
 from .. import hosts
 from ..config import AWSConfig
-from ..labels import resource_labels
+from ..labels import AwsResource
 from .core import (
     AWSColleagueContents,
     AWSComputedContent,
@@ -450,9 +450,17 @@ class ElastiCache(AWSSectionCloudwatch):
         host = self._target_host(hosts.ElastiCacheNode(node_id))
         if node is None:
             # The node is gone from the summary since its metrics were cached.
-            return AWSSectionResult(host, rows, {"cmk/aws/service": "elasticache"})
+            return AWSSectionResult(host, rows, AwsResource(service="elasticache"))
         return AWSSectionResult(
-            host, rows, resource_labels("elasticache", node_id, node_id, self._region, node.tags)
+            host,
+            rows,
+            AwsResource(
+                service="elasticache",
+                name=node_id,
+                resource_id=node_id,
+                region=self._region,
+                tags=node.tags,
+            ),
         )
 
     @override

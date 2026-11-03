@@ -15,7 +15,7 @@ from botocore.client import BaseClient
 
 from .. import hosts
 from ..config import AWSConfig
-from ..labels import resource_labels
+from ..labels import AwsResource
 from .core import (
     AWSColleagueContents,
     AWSComputedContent,
@@ -213,7 +213,7 @@ class CloudFront(AWSSectionCloudwatch):
                     content,
                     None
                     if host == account_host
-                    else _cloudfront_host_labels(
+                    else _cloudfront_host_resource(
                         [distributions.get(d) for d in distributions_by_host[host]]
                     ),
                 )
@@ -227,8 +227,8 @@ class CloudFront(AWSSectionCloudwatch):
         return list(computed_content.content)
 
 
-def _cloudfront_host_labels(distributions: Sequence[Mapping | None]) -> Mapping[str, str]:
-    """The labels of a host of CloudFront distributions.
+def _cloudfront_host_resource(distributions: Sequence[Mapping | None]) -> AwsResource:
+    """The resource that a host of CloudFront distributions stands for.
 
     Several distributions can share the host of their origin domain, so a host stands for
     one distribution only if it has one. CloudFront is global and has no region. A
@@ -236,8 +236,10 @@ def _cloudfront_host_labels(distributions: Sequence[Mapping | None]) -> Mapping[
     """
     match distributions:
         case [Mapping() as distribution]:
-            return resource_labels(
-                "cloudfront", None, distribution["Id"], None, distribution["TagsForCmkLabels"]
+            return AwsResource(
+                service="cloudfront",
+                resource_id=distribution["Id"],
+                tags=distribution["TagsForCmkLabels"],
             )
         case _:
-            return {"cmk/aws/service": "cloudfront"}
+            return AwsResource(service="cloudfront")

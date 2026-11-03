@@ -15,7 +15,7 @@ from botocore.client import BaseClient
 
 from .. import hosts
 from ..config import AWSConfig, Tags
-from ..labels import resource_labels
+from ..labels import AwsResource
 from .core import (
     AWSColleagueContents,
     AWSComputedContent,
@@ -101,19 +101,19 @@ class DynamoDB(AWSSection):
 
         return AWSComputedContent(
             [
-                AWSSectionResult(host, rows, self._table_labels(colleague_contents.content[host]))
+                AWSSectionResult(host, rows, self._table_resource(colleague_contents.content[host]))
                 for host, rows in content_by_piggyback_hosts.items()
             ],
             raw_content.cache_timestamp,
         )
 
-    def _table_labels(self, table: Mapping[str, Any]) -> Mapping[str, str]:
-        return resource_labels(
-            "dynamodb",
-            table["TableName"],
-            table["TableId"],
-            table["Region"],
-            table["TagsForCmkLabels"],
+    def _table_resource(self, table: Mapping[str, Any]) -> AwsResource:
+        return AwsResource(
+            service="dynamodb",
+            name=table["TableName"],
+            resource_id=table["TableId"],
+            region=table["Region"],
+            tags=table["TagsForCmkLabels"],
         )
 
     @override

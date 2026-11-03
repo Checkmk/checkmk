@@ -16,7 +16,7 @@ from botocore.client import BaseClient
 
 from .. import hosts
 from ..config import AWSConfig, LOGGER, Tags
-from ..labels import resource_labels
+from ..labels import AwsResource
 from .core import (
     AWSColleagueContents,
     AWSComputedContent,
@@ -238,11 +238,11 @@ class Glacier(AWSSection):
         return AWSSectionResult(
             host,
             [vault],
-            resource_labels(
-                "glacier",
-                vault["VaultName"],
-                vault["VaultName"],
-                self._region,
-                vault["TagsForCmkLabels"],
+            AwsResource(
+                service="glacier",
+                name=vault["VaultName"],
+                resource_id=vault["VaultName"],
+                region=self._region,
+                tags=vault["TagsForCmkLabels"],
             ),
         )

@@ -15,7 +15,7 @@ from botocore.client import BaseClient
 
 from .. import hosts
 from ..config import AWSConfig, Tags
-from ..labels import resource_labels
+from ..labels import AwsResource
 from .core import (
     AWSColleagueContents,
     AWSComputedContent,
@@ -302,10 +302,6 @@ class ELB(AWSSectionCloudwatch):
     def granularity(self) -> int:
         return 300
 
-    @property
-    def host_labels(self) -> Mapping[str, str]:
-        return {"cmk/aws/service": "elb"}
-
     @override
     def _get_colleague_contents(self) -> AWSColleagueContents:
         colleague = self._received_results.get("elb_summary")
@@ -369,24 +365,24 @@ class ELB(AWSSectionCloudwatch):
                 AWSSectionResult(
                     host,
                     rows,
-                    self._load_balancer_labels(colleague_contents.content.get(host)),
+                    self._load_balancer_resource(colleague_contents.content.get(host)),
                 )
                 for host, rows in content_by_piggyback_hosts.items()
             ],
             raw_content.cache_timestamp,
         )
 
-    def _load_balancer_labels(self, load_balancer: Mapping[str, Any] | None) -> Mapping[str, str]:
+    def _load_balancer_resource(self, load_balancer: Mapping[str, Any] | None) -> AwsResource:
         if load_balancer is None:
             # The load balancer is gone from the summary since its metrics were cached.
-            return self.host_labels
+            return AwsResource(service="elb")
         # A classic load balancer has no ID of its own.
-        return resource_labels(
-            "elb",
-            load_balancer["LoadBalancerName"],
-            load_balancer["LoadBalancerName"],
-            self._region,
-            load_balancer["TagsForCmkLabels"],
+        return AwsResource(
+            service="elb",
+            name=load_balancer["LoadBalancerName"],
+            resource_id=load_balancer["LoadBalancerName"],
+            region=self._region,
+            tags=load_balancer["TagsForCmkLabels"],
         )
 
     @override

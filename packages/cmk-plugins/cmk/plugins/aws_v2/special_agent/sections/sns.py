@@ -15,7 +15,7 @@ from botocore.client import BaseClient
 
 from .. import hosts
 from ..config import AWSConfig
-from ..labels import resource_labels
+from ..labels import AwsResource
 from .core import (
     AWSColleagueContents,
     AWSComputedContent,
@@ -456,12 +456,16 @@ class SNSTopicCloudwatch(AWSSection):
         host = self._target_host(resource)
         if topic is None:
             # The topic is gone from the summary since its metrics were cached.
-            return AWSSectionResult(host, rows, {"cmk/aws/service": "sns"})
+            return AWSSectionResult(host, rows, AwsResource(service="sns"))
         return AWSSectionResult(
             host,
             rows,
-            resource_labels(
-                "sns", topic_name, topic_name, topic["Region"], topic["TagsForCmkLabels"]
+            AwsResource(
+                service="sns",
+                name=topic_name,
+                resource_id=topic_name,
+                region=topic["Region"],
+                tags=topic["TagsForCmkLabels"],
             ),
         )
 

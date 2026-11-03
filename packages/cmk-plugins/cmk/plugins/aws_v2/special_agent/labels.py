@@ -10,18 +10,14 @@ the account.
 """
 
 from collections.abc import Mapping
+from dataclasses import dataclass, field
 
 from cmk.plugins.lib.labels import ensure_valid_labels
 
 
-def resource_labels(
-    service: str,
-    name: str | None,
-    resource_id: str,
-    region: str | None,
-    tags: Mapping[str, str],
-) -> Mapping[str, str]:
-    """The labels of the host of one AWS resource.
+@dataclass(frozen=True, kw_only=True)
+class AwsResource:
+    """The AWS resource that the host of a section result stands for.
 
     The name is the name of the resource in AWS, not the name of its host. It stays the
     same when the host naming changes. A CloudFront distribution has no name. The resource
@@ -31,11 +27,31 @@ def resource_labels(
     type. A global resource, such as a CloudFront distribution, has no region. The tags
     are the AWS tags of the resource that the rule imports, as process_tags_for_cmk_labels
     gives them.
+
+    Of a resource that is gone from its summary since its metrics were cached, only the
+    service is known. Every other resource has its ID.
     """
-    return {
-        "cmk/aws/service": service,
-        **({} if name is None else {"cmk/aws/name": name}),
-        "cmk/aws/resource_id": resource_id,
-        **({} if region is None else {"cmk/aws/region": region}),
-        **{f"cmk/aws/tag/{key}": value for key, value in ensure_valid_labels(tags).items()},
-    }
+
+    service: str
+    name: str | None = None
+    resource_id: str | None = None
+    region: str | None = None
+    tags: Mapping[str, str] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        if self.resource_id is None and (
+            self.name is not None or self.region is not None or self.tags
+        ):
+            raise ValueError(f"{self.service} resource {self.name!r} without a resource ID")
+
+    def labels(self) -> Mapping[str, str]:
+        """The labels of the host of the resource."""
+        return {
+            "cmk/aws/service": self.service,
+            **({} if self.name is None else {"cmk/aws/name": self.name}),
+            **({} if self.resource_id is None else {"cmk/aws/resource_id": self.resource_id}),
+            **({} if self.region is None else {"cmk/aws/region": self.region}),
+            **{
+                f"cmk/aws/tag/{key}": value for key, value in ensure_valid_labels(self.tags).items()
+            },
+        }

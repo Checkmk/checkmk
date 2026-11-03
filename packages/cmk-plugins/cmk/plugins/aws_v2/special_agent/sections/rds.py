@@ -15,7 +15,7 @@ from botocore.client import BaseClient
 
 from .. import hosts
 from ..config import AWSConfig, LOGGER, Tags
-from ..labels import resource_labels
+from ..labels import AwsResource
 from .core import (
     AWSColleagueContents,
     AWSComputedContent,
@@ -41,14 +41,14 @@ def _rds_instance(instance: Mapping[str, object]) -> hosts.RDSInstance:
     return hosts.RDSInstance(str(instance["DBInstanceIdentifier"]))
 
 
-def _instance_labels(instance: Mapping[str, Any]) -> Mapping[str, str]:
-    """The labels of an instance host, from the instance as the RDS summary has it."""
-    return resource_labels(
-        "rds",
-        instance["DBInstanceIdentifier"],
-        instance["DbiResourceId"],
-        instance["Region"],
-        instance["TagsForCmkLabels"],
+def _instance_resource(instance: Mapping[str, Any]) -> AwsResource:
+    """The resource of an instance host, from the instance as the RDS summary has it."""
+    return AwsResource(
+        service="rds",
+        name=instance["DBInstanceIdentifier"],
+        resource_id=instance["DbiResourceId"],
+        region=instance["Region"],
+        tags=instance["TagsForCmkLabels"],
     )
 
 
@@ -225,7 +225,7 @@ class RDSSummary(AWSSection):
     def _instance_result(self, instance: Mapping[str, Any]) -> AWSSectionResult:
         host = self._target_host(_rds_instance(instance))
         return AWSSectionResult(
-            host, [{**instance, ON_INSTANCE_HOST: True}], _instance_labels(instance)
+            host, [{**instance, ON_INSTANCE_HOST: True}], _instance_resource(instance)
         )
 
 
@@ -348,8 +348,8 @@ class RDS(AWSSectionCloudwatch):
         host = self._target_host(hosts.RDSInstance(instance_id))
         if instance is None:
             # The instance is gone from the summary since its metrics were cached.
-            return AWSSectionResult(host, rows, {"cmk/aws/service": "rds"})
-        return AWSSectionResult(host, rows, _instance_labels(instance))
+            return AWSSectionResult(host, rows, AwsResource(service="rds"))
+        return AWSSectionResult(host, rows, _instance_resource(instance))
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:

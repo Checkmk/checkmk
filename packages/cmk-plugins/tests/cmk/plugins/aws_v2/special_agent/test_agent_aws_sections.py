@@ -146,7 +146,7 @@ class TestAWSHostLabelSections:
                         AWSSectionResult(
                             piggyback_hostname=TargetHost("test-piggyback"),
                             content=[{}],
-                            piggyback_host_labels={"cmk/aws/test-key": "test-value"},
+                            extra_labels={"cmk/aws/test-key": "test-value"},
                         )
                     ],
                 },
@@ -211,7 +211,7 @@ def test_account_name_labels_the_hosts_of_the_resources(capsys: pytest.CaptureFi
             AWSSectionResult(
                 piggyback_hostname=TargetHost("test-piggyback"),
                 content=[{}],
-                piggyback_host_labels={"cmk/aws/test-key": "test-value"},
+                extra_labels={"cmk/aws/test-key": "test-value"},
             )
         ],
     }

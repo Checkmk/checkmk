@@ -16,7 +16,7 @@ from cmk.plugins.aws_v2.constants import AWS_ECS_QUOTA_DEFAULTS
 
 from .. import hosts
 from ..config import AWSConfig
-from ..labels import resource_labels
+from ..labels import AwsResource
 from .core import (
     AWSColleagueContents,
     AWSComputedContent,
@@ -331,11 +331,15 @@ class ECS(AWSSectionCloudwatch):
         host = self._target_host(hosts.ECSCluster(name))
         if cluster is None:
             # The cluster is gone from the summary since its metrics were cached.
-            return AWSSectionResult(host, rows, {"cmk/aws/service": "ecs"})
+            return AWSSectionResult(host, rows, AwsResource(service="ecs"))
         tags = self.process_tags_for_cmk_labels(
             [{"Key": tag.Key, "Value": tag.Value} for tag in cluster.tags]
         )
-        return AWSSectionResult(host, rows, resource_labels("ecs", name, name, self._region, tags))
+        return AWSSectionResult(
+            host,
+            rows,
+            AwsResource(service="ecs", name=name, resource_id=name, region=self._region, tags=tags),
+        )
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:

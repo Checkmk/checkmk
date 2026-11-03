@@ -23,7 +23,7 @@ from cmk.plugins.aws_v2.constants import (
 
 from .. import hosts
 from ..config import AWSConfig, LOGGER
-from ..labels import resource_labels
+from ..labels import AwsResource
 from .core import (
     AWSColleagueContents,
     AWSComputedContent,
@@ -654,27 +654,31 @@ class EC2(AWSSectionCloudwatch):
         return AWSComputedContent(
             [
                 AWSSectionResult(
-                    host, rows, self._instance_labels(colleague_contents.content.get(host))
+                    host,
+                    rows,
+                    self._instance_resource(colleague_contents.content.get(host)),
+                    self.host_labels,
                 )
                 for host, rows in content_by_piggyback_hosts.items()
             ],
             raw_content.cache_timestamp,
         )
 
-    def _instance_labels(self, instance: Mapping[str, Any] | None) -> Mapping[str, str]:
+    def _instance_resource(self, instance: Mapping[str, Any] | None) -> AwsResource | None:
         if instance is None:
             # The instance is gone from the summary since its metrics were cached.
-            return self.host_labels
+            return None
         # An instance has no name of its own. The AWS console shows its Name tag.
         name = next(
             (tag["Value"] for tag in instance.get("Tags", []) if tag["Key"] == "Name"), None
         )
-        return {
-            **self.host_labels,
-            **resource_labels(
-                "ec2", name, instance["InstanceId"], self._region, instance["TagsForCmkLabels"]
-            ),
-        }
+        return AwsResource(
+            service="ec2",
+            name=name,
+            resource_id=instance["InstanceId"],
+            region=self._region,
+            tags=instance["TagsForCmkLabels"],
+        )
 
     @override
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:

@@ -25,6 +25,7 @@ from pydantic import BaseModel
 from ..config import AGENT, AWSConfig, LOGGER, RawTags, Tags, TagsImportPatternOption
 from ..data_cache import DataCache
 from ..hosts import AccountScope, HostedResource, target_host, TargetHost
+from ..labels import AwsResource
 
 NOW = datetime.now()
 
@@ -168,7 +169,18 @@ class AWSSectionResults(NamedTuple):
 class AWSSectionResult(NamedTuple):
     piggyback_hostname: TargetHost
     content: Any
-    piggyback_host_labels: Mapping[str, str] | None = None
+    resource: AwsResource | None = None
+    """The AWS resource that the piggyback host stands for."""
+    extra_labels: Mapping[str, str] | None = None
+    """Host labels of the piggyback host beyond those of its resource."""
+
+    @property
+    def piggyback_host_labels(self) -> Mapping[str, str] | None:
+        labels = {
+            **(self.extra_labels or {}),
+            **({} if self.resource is None else self.resource.labels()),
+        }
+        return labels or None
 
 
 class AWSLimit(NamedTuple):

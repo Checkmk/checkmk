@@ -13,7 +13,7 @@ from botocore.client import BaseClient
 
 from .. import hosts
 from ..config import AWSConfig
-from ..labels import resource_labels
+from ..labels import AwsResource
 from .core import (
     AWSColleagueContents,
     AWSComputedContent,
@@ -285,24 +285,24 @@ def _load_balancer_results(
     for row in rows:
         rows_by_host.setdefault(row["Label"], []).append(row)
     return [
-        AWSSectionResult(host, host_rows, _load_balancer_labels(region, load_balancers.get(host)))
+        AWSSectionResult(host, host_rows, _load_balancer_resource(region, load_balancers.get(host)))
         for host, host_rows in rows_by_host.items()
     ]
 
 
-def _load_balancer_labels(
+def _load_balancer_resource(
     region: str, load_balancer: Mapping[str, Any] | None
-) -> Mapping[str, str] | None:
+) -> AwsResource | None:
     if load_balancer is None:
         # The load balancer is gone from the summary since its metrics were cached.
         return None
-    return resource_labels(
-        "elbv2",
-        load_balancer["LoadBalancerName"],
+    return AwsResource(
+        service="elbv2",
+        name=load_balancer["LoadBalancerName"],
         # A load balancer has no ID of its own, only its ARN.
-        load_balancer["LoadBalancerName"],
-        region,
-        load_balancer["TagsForCmkLabels"],
+        resource_id=load_balancer["LoadBalancerName"],
+        region=region,
+        tags=load_balancer["TagsForCmkLabels"],
     )
 
 

@@ -1095,8 +1095,12 @@ def user_notification_rules(config_contacts: ConfigContacts) -> list[EventRule]:
             user_rules.append(rule)
 
             authorized_sites = contact.get("authorized_sites")
-            if authorized_sites is not None and "match_site" not in rule:
-                rule["match_site"] = authorized_sites
+            if authorized_sites is not None:
+                rule["match_site"] = (
+                    [site for site in rule["match_site"] if site in authorized_sites]
+                    if "match_site" in rule
+                    else list(authorized_sites)
+                )
 
     logger.debug("Found %d user specific rules", len(user_rules))
     return user_rules
@@ -1230,6 +1234,7 @@ def rbn_match_rule(
             rbn_match_notification_comment,
             rbn_match_event_console,
             rbn_match_timeperiod,
+            rbn_match_personal_rule_scope,
         ],
         rule,
         enriched_context,
@@ -1270,6 +1275,22 @@ def rbn_match_timeperiod(
         return f"The notification does not match the timeperiod '{timeperiod_name}'"
 
     return None
+
+
+def rbn_match_personal_rule_scope(
+    rule: EventRule,
+    context: EventContext,
+    _analyse: bool,
+    _all_timeperiods: TimeperiodSpecs,
+) -> str | None:
+    # A cancelling rule only removes recipients, so a user may still opt out of anything.
+    if (
+        (owner := rule.get("contact")) is None
+        or rule["notify_plugin"][1] is None
+        or owner in _determined_object_contact_names(context)
+    ):
+        return None
+    return f"User {owner} is not a contact of this host or service"
 
 
 def rbn_match_rule_disabled(
@@ -1615,8 +1636,7 @@ def rbn_object_contact_names(
     config_contacts: ConfigContacts,
     fallback_email: str,
 ) -> list[ContactName]:
-    commasepped = context.get("CONTACTS")
-    if commasepped == "?":
+    if context.get("CONTACTS") == "?":
         logger.info(
             "Warning: Contacts of %s cannot be determined. Using fallback contacts",
             events.find_host_service_in_context(context),
@@ -1627,11 +1647,14 @@ def rbn_object_contact_names(
                 config_contacts=config_contacts, fallback_email=fallback_email
             )
         ]
+    return _determined_object_contact_names(context)
 
-    if commasepped:
-        return commasepped.split(",")
 
-    return []
+def _determined_object_contact_names(context: EventContext) -> list[ContactName]:
+    commasepped = context.get("CONTACTS")
+    if not commasepped or commasepped == "?":
+        return []
+    return commasepped.split(",")
 
 
 def rbn_all_contacts(

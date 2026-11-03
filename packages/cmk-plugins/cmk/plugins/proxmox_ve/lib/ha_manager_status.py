@@ -42,7 +42,7 @@ class ServiceItem(BaseModel, frozen=True, validate_by_name=True):
 class LrmNode(BaseModel):
     node: str
     status: str
-    timestamp: int
+    timestamp: int | None = None
     type: Literal["lrm"]
     services: Mapping[str, ServiceItem] = {}
 
@@ -67,7 +67,7 @@ def _create_readable_status(status: str) -> str:
         return status
     try:
         after_paren = status.split("(", 1)[1]
-        return after_paren.split(",", 1)[0].strip()
+        return after_paren.split(",", 1)[0].removesuffix(")").strip()
     except (IndexError, AttributeError):
         return status
 

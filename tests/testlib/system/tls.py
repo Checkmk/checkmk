@@ -54,8 +54,11 @@ def tls_connect(
 
 
 @contextmanager
-def tls_listening_socket(tmp_path: Path, tls_version: ssl.TLSVersion) -> Iterator[tuple[int, Path]]:
-    """Open a tls listening socket with a specific tls version"""
+def tls_listening_socket(tmp_path: Path, tls_version: ssl.TLSVersion) -> Iterator[HTTPSDummy]:
+    """Open a tls listening socket with a specific tls version
+
+    Yields the running server; connect to its address and port and trust its cert_file.
+    """
     server = HTTPSDummy(cert_dir=tmp_path)
     with warnings.catch_warnings():
         warnings.filterwarnings(
@@ -67,7 +70,7 @@ def tls_listening_socket(tmp_path: Path, tls_version: ssl.TLSVersion) -> Iterato
         server.ssl_context.maximum_version = tls_version
     server.ssl_context.set_ciphers("DEFAULT@SECLEVEL=0")
     try:
-        port = server.run()
-        yield port, server.cert_file
+        server.run()
+        yield server
     finally:
         server.stop()

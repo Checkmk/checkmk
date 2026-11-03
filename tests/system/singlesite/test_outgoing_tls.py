@@ -53,8 +53,8 @@ def test_openssl_overwrite_ssl(site: Site, tmp_path: Path, tls_version: ssl.TLSV
             "MinProtocol = TLSv1\n"
             "CipherString = DEFAULT:@SECLEVEL=0",
         )
-        with tls_listening_socket(tmp_path, tls_version) as (port, ca_path):
-            site.write_file(site_ca_path, ca_path.read_text())
+        with tls_listening_socket(tmp_path, tls_version) as server:
+            site.write_file(site_ca_path, server.cert_file.read_text())
             site.check_output(  # this would raise if there was an ssl error
                 [
                     "python",
@@ -64,7 +64,7 @@ def test_openssl_overwrite_ssl(site: Site, tmp_path: Path, tls_version: ssl.TLSV
                         "import ssl;"
                         "context = ssl.create_default_context();"
                         f'context.load_verify_locations(cafile="{site_ca_path}");'
-                        f'sock = socket.create_connection(("127.0.0.1", {port}));'
+                        f'sock = socket.create_connection(("{server.address}", {server.port}));'
                         'context.wrap_socket(sock, server_hostname="localhost")'
                     ),
                 ],
@@ -77,5 +77,5 @@ def test_openssl_overwrite_ssl(site: Site, tmp_path: Path, tls_version: ssl.TLSV
 @pytest.mark.usefixtures("site")
 def test_test_utils(tmp_path: Path, tls_version: ssl.TLSVersion) -> None:
     """make sure that our tls_connect indeed could connect to an old TLS version"""
-    with tls_listening_socket(tmp_path, tls_version) as (port, ca_path):
-        tls_connect("127.0.0.1", port, ca_path, tls_version)
+    with tls_listening_socket(tmp_path, tls_version) as server:
+        tls_connect(server.address, server.port, server.cert_file, tls_version)

@@ -60,7 +60,7 @@ class HTTPSDummy:
         self.create_self_signed_cert()
 
         self.httpd = SiteApacheHTTPServer(
-            f"http://{self.address}:{redirect_target_port}", ("", 0), RedirectHandler
+            f"http://{self.address}:{redirect_target_port}", (self.address, 0), RedirectHandler
         )
         self.port: int = self.httpd.socket.getsockname()[1]
 

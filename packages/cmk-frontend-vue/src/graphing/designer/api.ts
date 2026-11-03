@@ -15,6 +15,8 @@ export type CustomGraphObject = MethodResponse<typeof client, 'get', '/objects/c
 
 /** Request body for replacing a custom graph. */
 export type UpdateCustomGraphRequest = components['schemas']['UpdateCustomGraph']
+/** Request body for creating a custom graph. */
+export type CreateCustomGraphRequest = components['schemas']['CreateCustomGraph']
 /** Request body for previewing an unsaved custom-graph definition. */
 export type FetchCustomGraphDataRequest = components['schemas']['FetchCustomGraphData']
 /** One evaluated series with the id of the data source that produced it. */
@@ -58,7 +60,7 @@ export interface LoadedCustomGraph {
   etag: string
 }
 
-// Both endpoints declare an ETag, so a response without one leaves nothing to save against.
+// These endpoints declare an ETag, so a response without one leaves nothing to save against.
 function requireEtag(response: Response): string {
   const etag = response.headers.get('ETag')
   if (etag === null) {
@@ -71,6 +73,17 @@ function requireEtag(response: Response): string {
 export async function getCustomGraph(name: string, owner?: string): Promise<LoadedCustomGraph> {
   const result = await client.GET('/objects/custom_graph/{name}', {
     params: graphParams(name, owner)
+  })
+  return { graph: unwrap(result), etag: requireEtag(result.response) }
+}
+
+/** Create a custom graph of the current user; a name the user already has is rejected (409). */
+export async function createCustomGraph(
+  body: CreateCustomGraphRequest
+): Promise<LoadedCustomGraph> {
+  const result = await client.POST('/domain-types/custom_graph/collections/all', {
+    params: { header: CONTENT_TYPE_HEADER },
+    body
   })
   return { graph: unwrap(result), etag: requireEtag(result.response) }
 }

@@ -7,12 +7,11 @@
 
 """This file is synced from the check_mk repo to the cmk-license repo."""
 
-import abc
 from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, tzinfo
-from typing import Literal, override, TypedDict
+from typing import Literal, TypedDict
 from uuid import UUID
 
 from dateutil.relativedelta import relativedelta
@@ -177,12 +176,17 @@ def _count(
     return raw[key] if _at_least(protocol_version, since) else 0
 
 
-def _parse_sample(
+def parse_sample(
     protocol_version: AllowedUsageHistoryVersions,
     instance_id: UUID | None,
     site_hash: str,
     raw: object,
 ) -> LicenseUsageSample:
+    """Parse a raw license usage sample of the given protocol version.
+
+    The given instance_id and site_hash are fallbacks: instance_id is used only before protocol
+    version 1.5, site_hash only if the sample has no site_hash.
+    """
     if not isinstance(raw, dict):
         raise TypeError(f"Parse sample {protocol_version}: Wrong sample type: {type(raw)!r}")
     if _at_least(protocol_version, "1.5"):
@@ -226,127 +230,6 @@ def _parse_sample(
         ),
         extension_ntop=_parse_extensions(raw).ntop,
     )
-
-
-class Parser:
-    @abc.abstractmethod
-    def parse_sample(
-        self, instance_id: UUID | None, site_hash: str, raw: object
-    ) -> LicenseUsageSample: ...
-
-
-class ParserV1_0(Parser):
-    @override
-    def parse_sample(
-        self, instance_id: UUID | None, site_hash: str, raw: object
-    ) -> LicenseUsageSample:
-        return _parse_sample("1.0", instance_id, site_hash, raw)
-
-
-class ParserV1_1(Parser):
-    @override
-    def parse_sample(
-        self, instance_id: UUID | None, site_hash: str, raw: object
-    ) -> LicenseUsageSample:
-        return _parse_sample("1.1", instance_id, site_hash, raw)
-
-
-class ParserV1_2(Parser):
-    @override
-    def parse_sample(
-        self, instance_id: UUID | None, site_hash: str, raw: object
-    ) -> LicenseUsageSample:
-        return _parse_sample("1.2", instance_id, site_hash, raw)
-
-
-class ParserV1_3(Parser):
-    @override
-    def parse_sample(
-        self, instance_id: UUID | None, site_hash: str, raw: object
-    ) -> LicenseUsageSample:
-        return _parse_sample("1.3", instance_id, site_hash, raw)
-
-
-class ParserV1_4(Parser):
-    @override
-    def parse_sample(
-        self, instance_id: UUID | None, site_hash: str, raw: object
-    ) -> LicenseUsageSample:
-        return _parse_sample("1.4", instance_id, site_hash, raw)
-
-
-class ParserV1_5(Parser):
-    @override
-    def parse_sample(
-        self, instance_id: UUID | None, site_hash: str, raw: object
-    ) -> LicenseUsageSample:
-        return _parse_sample("1.5", instance_id, site_hash, raw)
-
-
-class ParserV2_0(Parser):
-    @override
-    def parse_sample(
-        self, instance_id: UUID | None, site_hash: str, raw: object
-    ) -> LicenseUsageSample:
-        return _parse_sample("2.0", instance_id, site_hash, raw)
-
-
-class ParserV2_1(Parser):
-    @override
-    def parse_sample(
-        self, instance_id: UUID | None, site_hash: str, raw: object
-    ) -> LicenseUsageSample:
-        return _parse_sample("2.1", instance_id, site_hash, raw)
-
-
-class ParserV3_0(Parser):
-    @override
-    def parse_sample(
-        self, instance_id: UUID | None, site_hash: str, raw: object
-    ) -> LicenseUsageSample:
-        return _parse_sample("3.0", instance_id, site_hash, raw)
-
-
-class ParserV3_1(Parser):
-    @override
-    def parse_sample(
-        self, instance_id: UUID | None, site_hash: str, raw: object
-    ) -> LicenseUsageSample:
-        return _parse_sample("3.1", instance_id, site_hash, raw)
-
-
-class ParserV3_2(Parser):
-    @override
-    def parse_sample(
-        self, instance_id: UUID | None, site_hash: str, raw: object
-    ) -> LicenseUsageSample:
-        return _parse_sample("3.2", instance_id, site_hash, raw)
-
-
-def make_sample_parser(protocol_version: AllowedUsageHistoryVersions) -> Parser:
-    match protocol_version:
-        case "1.0":
-            return ParserV1_0()
-        case "1.1":
-            return ParserV1_1()
-        case "1.2":
-            return ParserV1_2()
-        case "1.3":
-            return ParserV1_3()
-        case "1.4":
-            return ParserV1_4()
-        case "1.5":
-            return ParserV1_5()
-        case "2.0":
-            return ParserV2_0()
-        case "2.1":
-            return ParserV2_1()
-        case "3.0":
-            return ParserV3_0()
-        case "3.1":
-            return ParserV3_1()
-        case "3.2":
-            return ParserV3_2()
 
 
 # .

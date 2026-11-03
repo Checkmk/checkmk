@@ -37,7 +37,7 @@ from cmk.licensing.basics.protocol_version import (
 from cmk.licensing.export import (
     LicenseUsageExtensions,
     LicenseUsageSample,
-    make_sample_parser,
+    parse_sample,
     RawLicenseUsageExtensions,
     RawLicenseUsageReport,
     RawLicenseUsageSample,
@@ -358,11 +358,11 @@ class LocalLicenseUsageHistory:
     ) -> LocalLicenseUsageHistory:
         if not raw_report:
             return cls([])
-        parser = make_sample_parser(parse_usage_history_version(raw_report)).parse_sample
+        protocol_version = parse_usage_history_version(raw_report)
         if not isinstance(raw_report, dict):
             raise TypeError("Wrong report type: %r" % type(raw_report))
         return cls(
-            parser(instance_id, site_hash, raw_sample)
+            parse_sample(protocol_version, instance_id, site_hash, raw_sample)
             for raw_sample in raw_report.get("history", [])
         )
 
@@ -370,10 +370,13 @@ class LocalLicenseUsageHistory:
     def parse(cls, raw_report: object) -> LocalLicenseUsageHistory:
         if not raw_report:
             return cls([])
-        parser = make_sample_parser(parse_usage_history_version(raw_report)).parse_sample
+        protocol_version = parse_usage_history_version(raw_report)
         if not isinstance(raw_report, dict):
             raise TypeError("Wrong report type: %r" % type(raw_report))
-        return cls(parser(None, "", raw_sample) for raw_sample in raw_report.get("history", []))
+        return cls(
+            parse_sample(protocol_version, None, "", raw_sample)
+            for raw_sample in raw_report.get("history", [])
+        )
 
     def add_sample(self, sample: LicenseUsageSample) -> None:
         if sample.sample_time in {s.sample_time for s in self._samples}:

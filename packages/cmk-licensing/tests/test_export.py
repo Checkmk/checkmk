@@ -17,7 +17,7 @@ from cmk.licensing.basics.protocol_version import AllowedUsageHistoryVersions
 from cmk.licensing.export import (
     _parse_extensions,
     LicenseUsageSample,
-    make_sample_parser,
+    parse_sample,
     RawSubscriptionDetailsForAggregation,
     SubscriptionDetailsForAggregation,
 )
@@ -330,8 +330,8 @@ def test_LicenseUsageExtensions_parse_from_sample(  # type: ignore[misc]
 def test_sample_ignores_keys_not_of_its_protocol_version(
     protocol_version: AllowedUsageHistoryVersions, expected_sample: LicenseUsageSample
 ) -> None:
-    sample = make_sample_parser(protocol_version).parse_sample(
-        _GIVEN_INSTANCE_ID, "given-site-hash", dict(_RAW_SAMPLE)
+    sample = parse_sample(
+        protocol_version, _GIVEN_INSTANCE_ID, "given-site-hash", dict(_RAW_SAMPLE)
     )
 
     assert sample == expected_sample
@@ -358,9 +358,7 @@ def test_sample_without_counters_of_later_versions_gets_them_as_0(
     raw_sample: Mapping[str, object],
     expected_sample: LicenseUsageSample,
 ) -> None:
-    sample = make_sample_parser(protocol_version).parse_sample(
-        _GIVEN_INSTANCE_ID, "given-site-hash", dict(raw_sample)
-    )
+    sample = parse_sample(protocol_version, _GIVEN_INSTANCE_ID, "given-site-hash", dict(raw_sample))
 
     assert sample == expected_sample
 
@@ -377,19 +375,18 @@ def test_sample_without_counters_of_later_versions_gets_them_as_0(
 def test_sample_missing_a_required_key_of_its_protocol_version_is_rejected(
     protocol_version: AllowedUsageHistoryVersions, missing_key: str
 ) -> None:
-    parser = make_sample_parser(protocol_version)
     raw_sample = _without(_RAW_SAMPLES[protocol_version], missing_key)
 
     with pytest.raises(KeyError):
-        parser.parse_sample(_GIVEN_INSTANCE_ID, "given-site-hash", raw_sample)
+        parse_sample(protocol_version, _GIVEN_INSTANCE_ID, "given-site-hash", raw_sample)
 
 
 @pytest.mark.parametrize("protocol_version", get_args(AllowedUsageHistoryVersions))
 def test_sample_without_site_hash_gets_the_given_one(
     protocol_version: AllowedUsageHistoryVersions,
 ) -> None:
-    sample = make_sample_parser(protocol_version).parse_sample(
-        _GIVEN_INSTANCE_ID, "given-site-hash", _without(_RAW_SAMPLE, "site_hash")
+    sample = parse_sample(
+        protocol_version, _GIVEN_INSTANCE_ID, "given-site-hash", _without(_RAW_SAMPLE, "site_hash")
     )
 
     assert sample.site_hash == "given-site-hash"
@@ -399,29 +396,28 @@ def test_sample_without_site_hash_gets_the_given_one(
 def test_sample_without_any_site_hash_is_rejected(
     protocol_version: AllowedUsageHistoryVersions,
 ) -> None:
-    parser = make_sample_parser(protocol_version)
-
     with pytest.raises(ValueError):
-        parser.parse_sample(_GIVEN_INSTANCE_ID, "", _without(_RAW_SAMPLE, "site_hash"))
+        parse_sample(protocol_version, _GIVEN_INSTANCE_ID, "", _without(_RAW_SAMPLE, "site_hash"))
 
 
 @pytest.mark.parametrize("protocol_version", get_args(AllowedUsageHistoryVersions))
 def test_sample_with_empty_site_hash_is_rejected_despite_the_given_one(
     protocol_version: AllowedUsageHistoryVersions,
 ) -> None:
-    parser = make_sample_parser(protocol_version)
-
     with pytest.raises(ValueError):
-        parser.parse_sample(_GIVEN_INSTANCE_ID, "given-site-hash", {**_RAW_SAMPLE, "site_hash": ""})
+        parse_sample(
+            protocol_version,
+            _GIVEN_INSTANCE_ID,
+            "given-site-hash",
+            {**_RAW_SAMPLE, "site_hash": ""},
+        )
 
 
 @pytest.mark.parametrize("protocol_version", _VERSIONS_WITHOUT_INSTANCE_ID_IN_SAMPLE)
 def test_sample_before_1_5_without_given_instance_id_has_none(
     protocol_version: AllowedUsageHistoryVersions,
 ) -> None:
-    sample = make_sample_parser(protocol_version).parse_sample(
-        None, "given-site-hash", dict(_RAW_SAMPLE)
-    )
+    sample = parse_sample(protocol_version, None, "given-site-hash", dict(_RAW_SAMPLE))
 
     assert sample.instance_id is None
 
@@ -430,8 +426,11 @@ def test_sample_before_1_5_without_given_instance_id_has_none(
 def test_sample_before_1_5_ignores_a_malformed_instance_id(
     protocol_version: AllowedUsageHistoryVersions,
 ) -> None:
-    sample = make_sample_parser(protocol_version).parse_sample(
-        _GIVEN_INSTANCE_ID, "given-site-hash", {**_RAW_SAMPLE, "instance_id": "not-a-uuid"}
+    sample = parse_sample(
+        protocol_version,
+        _GIVEN_INSTANCE_ID,
+        "given-site-hash",
+        {**_RAW_SAMPLE, "instance_id": "not-a-uuid"},
     )
 
     assert sample.instance_id == _GIVEN_INSTANCE_ID
@@ -441,11 +440,12 @@ def test_sample_before_1_5_ignores_a_malformed_instance_id(
 def test_sample_without_instance_id_is_rejected(
     protocol_version: AllowedUsageHistoryVersions,
 ) -> None:
-    parser = make_sample_parser(protocol_version)
-
     with pytest.raises(ValueError):
-        parser.parse_sample(
-            _GIVEN_INSTANCE_ID, "given-site-hash", _without(_RAW_SAMPLE, "instance_id")
+        parse_sample(
+            protocol_version,
+            _GIVEN_INSTANCE_ID,
+            "given-site-hash",
+            _without(_RAW_SAMPLE, "instance_id"),
         )
 
 
@@ -453,11 +453,12 @@ def test_sample_without_instance_id_is_rejected(
 def test_sample_with_malformed_instance_id_is_rejected(
     protocol_version: AllowedUsageHistoryVersions,
 ) -> None:
-    parser = make_sample_parser(protocol_version)
-
     with pytest.raises(ValueError):
-        parser.parse_sample(
-            _GIVEN_INSTANCE_ID, "given-site-hash", {**_RAW_SAMPLE, "instance_id": "not-a-uuid"}
+        parse_sample(
+            protocol_version,
+            _GIVEN_INSTANCE_ID,
+            "given-site-hash",
+            {**_RAW_SAMPLE, "instance_id": "not-a-uuid"},
         )
 
 
@@ -465,18 +466,21 @@ def test_sample_with_malformed_instance_id_is_rejected(
 def test_sample_that_is_not_a_dict_is_rejected(
     protocol_version: AllowedUsageHistoryVersions,
 ) -> None:
-    parser = make_sample_parser(protocol_version)
-
     with pytest.raises(TypeError):
-        parser.parse_sample(_GIVEN_INSTANCE_ID, "given-site-hash", list(_RAW_SAMPLE.items()))
+        parse_sample(
+            protocol_version, _GIVEN_INSTANCE_ID, "given-site-hash", list(_RAW_SAMPLE.items())
+        )
 
 
 @pytest.mark.parametrize("protocol_version", get_args(AllowedUsageHistoryVersions))
 def test_sample_platform_is_cut_to_50_characters(
     protocol_version: AllowedUsageHistoryVersions,
 ) -> None:
-    sample = make_sample_parser(protocol_version).parse_sample(
-        _GIVEN_INSTANCE_ID, "given-site-hash", {**_RAW_SAMPLE, "platform": "p" * 60}
+    sample = parse_sample(
+        protocol_version,
+        _GIVEN_INSTANCE_ID,
+        "given-site-hash",
+        {**_RAW_SAMPLE, "platform": "p" * 60},
     )
 
     assert sample.platform == "p" * 50

@@ -4,7 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from collections.abc import Sequence
+from collections import defaultdict
+from collections.abc import Mapping, Sequence
 from typing import Literal, Protocol
 
 import livestatus
@@ -15,6 +16,7 @@ from cmk.utils import paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.livestatus_helpers.expressions import And, NothingExpression
 from cmk.utils.livestatus_helpers.queries import Query
+from cmk.utils.livestatus_helpers.tables.comments import Comments
 from cmk.utils.livestatus_helpers.tables.downtimes import Downtimes
 from cmk.utils.livestatus_helpers.tables.hosts import Hosts
 from cmk.utils.servicename import ServiceName
@@ -2080,38 +2082,30 @@ CommandRemoveDowntimesDowntimesTable = Command(
 )
 
 
-@request_memoize()
-def _ack_host_comments() -> set[str]:
-    return {
-        str(comment)
-        for comment in sites.live().query_column(
-            "GET comments\n"
-            "Columns: comment_id\n"
-            "Filter: is_service = 0\n"
-            "Filter: entry_type = 4"
-        )
-    }
+# Host comments have an empty service description.
+type _CommentOwner = tuple[livestatus.SiteId, HostName, str]
+
+
+def _comment_owner(row: Row) -> _CommentOwner:
+    return row["site"], row["host_name"], row["service_description"]
 
 
 @request_memoize()
-def _ack_service_comments() -> set[str]:
-    return {
-        str(comment)
-        for comment in sites.live().query_column(
-            "GET comments\n"
-            "Columns: comment_id\n"
-            "Filter: is_service = 1\n"
-            "Filter: entry_type = 4"
-        )
-    }
-
-
-def _acknowledgement_needs_removal(
-    cmdtag: Literal["HOST", "SVC"], comments_to_be_removed: set[str]
-) -> bool:
-    return (cmdtag == "HOST" and _ack_host_comments().issubset(comments_to_be_removed)) or (
-        cmdtag == "SVC" and _ack_service_comments().issubset(comments_to_be_removed)
+def _ack_comment_ids_by_owner() -> Mapping[_CommentOwner, set[int]]:
+    query = Query(
+        columns=[Comments.host_name, Comments.service_description, Comments.id],
+        filter_expr=Comments.entry_type.equals(4),
     )
+    ids: defaultdict[_CommentOwner, set[int]] = defaultdict(set)
+    for row in query.fetchall(sites.live(), include_site_ids=True):
+        ids[_comment_owner(row)].add(row["id"])
+    return ids
+
+
+def _acknowledgement_needs_removal(row: Row, action_rows: Rows) -> bool:
+    owner = _comment_owner(row)
+    to_be_removed = {r["comment_id"] for r in action_rows if _comment_owner(r) == owner}
+    return _ack_comment_ids_by_owner().get(owner, set()) <= to_be_removed
 
 
 def command_remove_comments_confirm_dialog_additions(
@@ -2149,9 +2143,9 @@ def command_remove_comments_action(
     if row.get("comment_entry_type") == 4:  # an acknowledgement
         # NOTE: REMOVE_FOO_ACKNOWLEDGEMENT removes all non-persistent acknowledgement comments.
         # This means if we remove some acknowledgement comments, we should only fire
-        # REMOVE_FOO_ACKNOWLEDGEMENT if there are no other acknowledgement comments left.
-        comments_to_be_removed = {str(r["comment_id"]) for r in action_rows}
-        if _acknowledgement_needs_removal(cmdtag, comments_to_be_removed):
+        # REMOVE_FOO_ACKNOWLEDGEMENT if that host or service has no other acknowledgement
+        # comments left.
+        if _acknowledgement_needs_removal(row, action_rows):
             if cmdtag == "HOST":
                 rm_ack = f"REMOVE_HOST_ACKNOWLEDGEMENT;{row['host_name']}"
             else:

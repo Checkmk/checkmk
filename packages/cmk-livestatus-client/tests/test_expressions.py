@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.livestatus_client._connection import MKLivestatusQueryError
-from cmk.livestatus_client.expressions import LqSafe, LqUnsafeValueError
+from cmk.livestatus_client.expressions import has_lookaround, LqSafe, LqUnsafeValueError
 from cmk.livestatus_client.tables import Hosts
 
 
@@ -21,3 +21,16 @@ def test_lq_unsafe_value_error_is_value_error_and_livestatus_error() -> None:
 def test_dynamic_column_whitespace_raises_lq_unsafe_value_error() -> None:
     with pytest.raises(LqUnsafeValueError, match="contains whitespace"):
         Hosts.rrddata.dynamic("m1", "load1.max 1 +", 1, 2, 3, 4)
+
+
+@pytest.mark.parametrize(
+    "pattern, expected",
+    [
+        pytest.param("Pay(?= card)", True, id="look-ahead"),
+        pytest.param("Pay(?! card)", True, id="negative-look-ahead"),
+        pytest.param("(?<=Pay )card", True, id="look-behind"),
+        pytest.param("Pay (with|by)", False, id="group"),
+    ],
+)
+def test_has_lookaround(pattern: str, expected: bool) -> None:
+    assert has_lookaround(pattern) is expected

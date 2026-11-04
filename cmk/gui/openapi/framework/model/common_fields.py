@@ -14,6 +14,7 @@ from typing import Annotated, ClassVar, Literal, overload, override, Self
 
 from annotated_types import Ge
 from pydantic import (
+    AfterValidator,
     Discriminator,
     Field,
     GetCoreSchemaHandler,
@@ -38,7 +39,7 @@ from cmk.gui.openapi.framework.model.converter import folder_tree_of, TypedPlain
 from cmk.gui.openapi.framework.model.omitted import ApiOmitted
 from cmk.gui.valuespec import TimerangeValue
 from cmk.gui.watolib.hosts_and_folders import Folder, FolderTree
-from cmk.livestatus_client.expressions import NothingExpression, QueryExpression
+from cmk.livestatus_client.expressions import has_lookaround, NothingExpression, QueryExpression
 from cmk.livestatus_client.types import Column, Table
 
 type AnnotatedHostName = Annotated[
@@ -126,6 +127,18 @@ def _validate_regex(value: str) -> str:
     except re.error as e:
         raise ValueError(str(e)) from e
     return value
+
+
+def _validate_livestatus_regex(value: str) -> str:
+    _validate_regex(value)
+    if has_lookaround(value):
+        raise ValueError("Livestatus does not support look-arounds.")
+    if "\n" in value:
+        raise ValueError("The regular expression must not contain a line break.")
+    return value
+
+
+type LivestatusRegex = Annotated[str, AfterValidator(_validate_livestatus_regex)]
 
 
 class RegexString(str):

@@ -8,6 +8,7 @@ from collections.abc import Callable, Sequence
 from typing import get_args, TypeIs
 
 from cmk.gui.i18n import _
+from cmk.livestatus_client.expressions import has_lookaround
 
 from ._terms import (
     HostAddress,
@@ -46,10 +47,6 @@ _KEY_VALUE_PREFIXES = frozenset({"hl", "sl", "tg"})
 
 # Control characters and the line breaks of str.splitlines(), which count as spaces. "\r\n" is one.
 _CONTROL_CHARS = re.compile(r"\r\n|[\x00-\x1f\x7f\x85\u2028\u2029]")
-
-# Livestatus uses re2, which does not support look-arounds. Same check as validate_regex in
-# cmk.gui.utils.regex, which depends on the page and can't be used here.
-_LOOKAROUND = re.compile(r"\((\?!|\?=|\?<)")
 
 
 def parse(query: str) -> SearchSpec:
@@ -120,7 +117,7 @@ def _regex(value: str) -> str:
         raise SearchParseError(
             _('"%(value)s" is not a valid regular expression.') % {"value": value}
         ) from e
-    if _LOOKAROUND.search(pattern):
+    if has_lookaround(pattern):
         raise SearchParseError(
             _('"%(value)s" uses a look-around, which is not supported.') % {"value": value}
         )

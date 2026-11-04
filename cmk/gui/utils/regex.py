@@ -10,6 +10,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.utils.doc_reference_urls import doc_reference_url
+from cmk.livestatus_client.expressions import has_lookaround
 from cmk.web.utils.doc_references import DocReference, DocReferenceUtm
 
 
@@ -45,11 +46,7 @@ def validate_regex(value: str, varname: str | None) -> None:
             },
         )
 
-    # livestatus uses re2 and re can not validate posix pattern, so we have to
-    # check for lookaheads here
-    lookahead_pattern = r"\((\?!|\?=|\?<)"
-
-    if re.search(lookahead_pattern, value):
+    if has_lookaround(value):
         raise MKUserError(
             varname, _("Your search statement is not valid. You cannot use a look-ahead here.")
         )

@@ -15,12 +15,20 @@ It's implementation is still a bit rudimentary but supports most necessary conce
 """
 
 import abc
+import re
 from dataclasses import dataclass
-from typing import override, Self
+from typing import Final, override, Self
 
 from cmk.livestatus_client._connection import MKLivestatusQueryError
 
 Primitives = str | int | bool | float | list[str] | tuple[str, ...]
+
+_LOOKAROUND: Final = re.compile(r"\((\?!|\?=|\?<)")
+
+
+def has_lookaround(pattern: str) -> bool:
+    """Whether the regex uses a look-around, which the RE2 engine of Livestatus rejects."""
+    return _LOOKAROUND.search(pattern) is not None
 
 
 class LqUnsafeValueError(MKLivestatusQueryError, ValueError):

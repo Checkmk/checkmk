@@ -22,6 +22,7 @@ from cmk.gui.openapi.framework.model.common_fields import (
     AnnotatedFolder,
     BinaryBase64,
     columns_validator,
+    LivestatusRegex,
     parse_columns,
     parse_query_expression,
     query_expression_validator,
@@ -82,6 +83,32 @@ class TestBinaryBase64:
     def test_validate_rejects_non_bytes(self, adapter: TypeAdapter[BinaryBase64]) -> None:
         with pytest.raises(ValidationError, match="Expected bytes"):
             adapter.validate_python("not bytes")
+
+
+class TestLivestatusRegex:
+    @pytest.fixture(scope="class")
+    def adapter(self) -> TypeAdapter[LivestatusRegex]:
+        return TypeAdapter(LivestatusRegex)  # astrein: disable=pydantic-type-adapter
+
+    def test_accepts_a_regex_that_livestatus_supports(
+        self, adapter: TypeAdapter[LivestatusRegex]
+    ) -> None:
+        assert adapter.validate_python("^Pay (with|by) card$") == "^Pay (with|by) card$"
+
+    @pytest.mark.parametrize(
+        "pattern",
+        [
+            pytest.param("(", id="invalid"),
+            pytest.param("Pay(?! card)", id="look-ahead"),
+            pytest.param("(?<=Pay )card", id="look-behind"),
+            pytest.param("Pay\ncard", id="line-break"),
+        ],
+    )
+    def test_rejects_a_regex_that_livestatus_cannot_use(
+        self, adapter: TypeAdapter[LivestatusRegex], pattern: str
+    ) -> None:
+        with pytest.raises(ValidationError):
+            adapter.validate_python(pattern)
 
 
 class TestQueryExpressionValidator:

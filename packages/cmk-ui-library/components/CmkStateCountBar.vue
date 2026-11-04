@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import CmkColorSwatch from 'cmk-ui-library/components/CmkColorSwatch.vue'
 import type { Colors } from 'cmk-ui-library/components/CmkTag.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
@@ -123,10 +124,10 @@ const ariaLabel = computed<string>(() =>
         <component
           :is="entry.href === undefined ? 'span' : 'a'"
           class="cmk-state-count-bar__legend-entry"
-          :class="`cmk-state-count-bar__legend-entry--${entry.color}`"
           :href="entry.href"
           :target="entry.target"
         >
+          <CmkColorSwatch :color="`var(--state-count-bar-${entry.color})`" />
           {{ entry.label }}: {{ entry.count }}
         </component>
       </li>
@@ -136,6 +137,12 @@ const ariaLabel = computed<string>(() =>
 
 <style scoped>
 .cmk-state-count-bar {
+  --state-count-bar-success: var(--color-corporate-green-80);
+  --state-count-bar-warning: var(--color-yellow-60);
+  --state-count-bar-danger: var(--color-dark-red-60);
+  --state-count-bar-unknown: var(--color-orange-70);
+  --state-count-bar-pending: var(--color-mist-grey-80);
+
   display: flex;
   flex-direction: column;
   gap: var(--dimension-4);
@@ -176,35 +183,29 @@ const ariaLabel = computed<string>(() =>
   height: 100%;
 }
 
-.cmk-state-count-bar__segment--success,
-.cmk-state-count-bar__legend-entry--success::before {
-  background-color: var(--color-corporate-green-80);
+.cmk-state-count-bar__segment--success {
+  background-color: var(--state-count-bar-success);
 }
 
-.cmk-state-count-bar__segment--warning,
-.cmk-state-count-bar__legend-entry--warning::before {
-  background-color: var(--color-yellow-60);
+.cmk-state-count-bar__segment--warning {
+  background-color: var(--state-count-bar-warning);
 }
 
-.cmk-state-count-bar__segment--danger,
-.cmk-state-count-bar__legend-entry--danger::before {
-  background-color: var(--color-dark-red-60);
+.cmk-state-count-bar__segment--danger {
+  background-color: var(--state-count-bar-danger);
 }
 
-.cmk-state-count-bar__segment--unknown,
-.cmk-state-count-bar__legend-entry--unknown::before {
-  background-color: var(--color-orange-70);
+.cmk-state-count-bar__segment--unknown {
+  background-color: var(--state-count-bar-unknown);
 }
 
-.cmk-state-count-bar__segment--pending,
-.cmk-state-count-bar__legend-entry--pending::before {
-  background-color: var(--color-mist-grey-80);
+.cmk-state-count-bar__segment--pending {
+  background-color: var(--state-count-bar-pending);
 }
 
 .cmk-state-count-bar__segment--default,
-.cmk-state-count-bar__segment--empty,
-.cmk-state-count-bar__legend-entry--default::before {
-  background-color: var(--state-count-bar-neutral);
+.cmk-state-count-bar__segment--empty {
+  background-color: var(--state-count-bar-default);
 }
 
 .cmk-state-count-bar__legend {
@@ -225,23 +226,16 @@ const ariaLabel = computed<string>(() =>
   white-space: nowrap;
 }
 
-.cmk-state-count-bar__legend-entry::before {
-  content: '';
-  flex: 0 0 auto;
-  width: var(--dimension-2);
-  height: var(--dimension-6);
-}
-
 a.cmk-state-count-bar__legend-entry:hover,
 a.cmk-state-count-bar__total-entry:hover {
   text-decoration: underline;
 }
 
 body[data-theme='facelift'] .cmk-state-count-bar {
-  --state-count-bar-neutral: var(--color-daylight-grey-50);
+  --state-count-bar-default: var(--color-daylight-grey-50);
 }
 
 body[data-theme='modern-dark'] .cmk-state-count-bar {
-  --state-count-bar-neutral: var(--color-midnight-grey-50);
+  --state-count-bar-default: var(--color-midnight-grey-50);
 }
 </style>

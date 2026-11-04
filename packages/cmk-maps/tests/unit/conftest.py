@@ -13,8 +13,13 @@ from fastapi import APIRouter, FastAPI
 from fastapi.testclient import TestClient
 from router_client import AuthDependency, RouterClientFactory
 
+from cmk.maps.backend.api.v1 import states
 from cmk.maps.backend.connections.base import ConnectionBase
-from cmk.maps.backend.core.ratelimit import rest_read_limiter, ws_connect_limiter
+from cmk.maps.backend.core.ratelimit import (
+    kept_states_limiter,
+    rest_read_limiter,
+    ws_connect_limiter,
+)
 from cmk.maps.backend.services import map_service, state_service
 from cmk.utils import paths
 
@@ -68,6 +73,7 @@ def _clear_map_caches() -> Iterator[None]:
     map_service._CACHE.clear()  # noqa: SLF001
     map_service._LINKED.clear()  # noqa: SLF001
     state_service._state_snapshots.clear()  # noqa: SLF001
+    states._fetched.invalidate()  # noqa: SLF001
     state_service._timing_snapshots.clear()  # noqa: SLF001
     state_service._folder_tree_snapshots.clear()  # noqa: SLF001
     state_service._topology_snapshots.clear()  # noqa: SLF001
@@ -75,6 +81,7 @@ def _clear_map_caches() -> Iterator[None]:
     # Module-level rate-limiter singletons: reset so one test's request count
     # can't push another over the per-user/-IP budget.
     rest_read_limiter._calls.clear()  # noqa: SLF001
+    kept_states_limiter._calls.clear()  # noqa: SLF001
     ws_connect_limiter._calls.clear()  # noqa: SLF001
 
 

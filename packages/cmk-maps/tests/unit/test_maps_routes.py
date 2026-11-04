@@ -9,6 +9,7 @@ legacy .cfg parsing live GUI-side (the visuals store and
 ``cmk.maps.gui._cfg_import``).
 """
 
+import asyncio
 import json
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -16,14 +17,16 @@ from http import HTTPStatus
 from pathlib import Path
 from typing import override
 
+import httpx2
 import pytest
 from fake_connection import FakeConnection
 from fake_links import FakeLinkGui
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from router_client import RouterClientFactory
+from router_client import AuthDependency, RouterClientFactory
 
 from cmk.crypto.secrets import Secret
-from cmk.maps.backend.api.v1 import deps, maps
+from cmk.maps.backend.api.v1 import deps, maps, states
 from cmk.maps.backend.connections.base import GeoHost
 from cmk.maps.backend.core.auth import Principal
 from cmk.maps.backend.core.ratelimit import rest_read_limiter
@@ -360,6 +363,115 @@ class _AuthScopeSpyConnection(FakeConnection):
     ) -> dict[str, ObjectState]:
         self.hosts_query_auth_user = self._active_auth_user
         return await super().get_hosts_states(hostnames, only_hard)
+
+
+class _CountingConnection(FakeConnection):
+    connection_id = "counting"
+
+    def __init__(self) -> None:
+        self.host_queries = 0
+
+    @override
+    async def get_hosts_states(
+        self, hostnames: list[str], only_hard: bool = False
+    ) -> dict[str, ObjectState]:
+        self.host_queries += 1
+        return await super().get_hosts_states(hostnames, only_hard)
+
+
+def test_a_poll_after_the_map_was_registered_anew_asks_livestatus_again(
+    router_client: RouterClientFactory,
+) -> None:
+    counting = _CountingConnection()
+    state_service.register_connection("counting", counting)
+    overrides: dict[AuthDependency, object] = {
+        deps.get_current_user: ADMIN_PRINCIPAL,
+        deps.get_map_owner: ADMIN_PRINCIPAL.name,
+        deps.get_gui_auth: FakeLinkGui(),
+    }
+    maps_client = router_client(maps.router, "/api/v1/maps", overrides=overrides)
+    states_client = router_client(states.router, "/api/v1", overrides=overrides)
+    config = {
+        "name": "polled",
+        "connection_id": "counting",
+        "objects": [{"id": "host:h1", "type": "host", "host_name": "localhost"}],
+    }
+    try:
+        for alias in ("v1", "v2"):
+            registered = maps_client.post(
+                "/api/v1/maps/polled/register", json={"config": {**config, "alias": alias}}
+            )
+            assert registered.status_code == HTTPStatus.OK
+            assert states_client.get("/api/v1/maps/polled/states").status_code == HTTPStatus.OK
+    finally:
+        state_service.unregister_connection("counting")
+
+    # Each register answers with states of its own, and each first poll after it.
+    assert counting.host_queries == 4
+
+
+class _HeldConnection(FakeConnection):
+    connection_id = "held"
+
+    def __init__(self) -> None:
+        self.hold_next = False
+        self.held = asyncio.Event()
+        self.release = asyncio.Event()
+
+    @override
+    async def get_hosts_states(
+        self, hostnames: list[str], only_hard: bool = False
+    ) -> dict[str, ObjectState]:
+        if self.hold_next:
+            self.hold_next = False
+            self.held.set()
+            await self.release.wait()
+        return await super().get_hosts_states(hostnames, only_hard)
+
+
+def test_a_poll_after_the_map_was_registered_shows_it_although_an_older_poll_ended_later() -> None:
+    held = _HeldConnection()
+    gui = FakeLinkGui()
+    state_service.register_connection("held", held)
+    app = FastAPI()
+    app.include_router(maps.router, prefix="/api/v1/maps")
+    app.include_router(states.router, prefix="/api/v1")
+    app.dependency_overrides.update(
+        {
+            deps.get_current_user: lambda: ADMIN_PRINCIPAL,
+            deps.get_map_owner: lambda: ADMIN_PRINCIPAL.name,
+            deps.get_gui_auth: lambda: gui,
+        }
+    )
+
+    def _config(host_object: str) -> dict[str, object]:
+        return {
+            "name": "polled",
+            "connection_id": "held",
+            "objects": [{"id": host_object, "type": "host", "host_name": "localhost"}],
+        }
+
+    async def _poll_across_a_register() -> list[str]:
+        async with httpx2.AsyncClient(
+            transport=httpx2.ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            registered = await client.post(
+                "/api/v1/maps/polled/register", json={"config": _config("host:old")}
+            )
+            assert registered.status_code == HTTPStatus.OK
+            held.hold_next = True
+            older = asyncio.ensure_future(client.get("/api/v1/maps/polled/states"))
+            await held.held.wait()
+            await client.post("/api/v1/maps/polled/register", json={"config": _config("host:new")})
+            held.release.set()
+            await older
+            later = await client.get("/api/v1/maps/polled/states")
+            return [state["object_id"] for state in later.json()["states"]]
+
+    try:
+        assert asyncio.run(_poll_across_a_register()) == ["host:new"]
+    finally:
+        state_service.unregister_connection("held")
 
 
 def test_auto_objects_scopes_geo_query_to_auth_user(

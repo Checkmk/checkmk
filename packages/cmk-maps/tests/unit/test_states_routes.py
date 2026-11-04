@@ -17,8 +17,9 @@ target); the loop is bounded by unsubscribing the sole subscriber from a patched
 
 import asyncio
 import json
-from collections.abc import Callable, Iterator
+from collections.abc import Awaitable, Callable, Iterator
 from http import HTTPStatus
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import httpx2
@@ -34,7 +35,14 @@ from cmk.fastapi.sse import SentEvent
 from cmk.maps.backend.api.v1 import deps, states
 from cmk.maps.backend.app import create_app
 from cmk.maps.backend.core.auth import GuiAuth, Principal
-from cmk.maps.backend.core.ratelimit import sse_stream_limiter, ws_connect_limiter
+from cmk.maps.backend.core.middleware import CompactGZipMiddleware
+from cmk.maps.backend.core.ratelimit import (
+    kept_states_limiter,
+    RateLimiter,
+    rest_read_limiter,
+    sse_stream_limiter,
+    ws_connect_limiter,
+)
 from cmk.maps.backend.core.sse import manager, Subscriber
 from cmk.maps.backend.schemas.map import FlowView, MapConfig, RadarView
 from cmk.maps.backend.schemas.state import MapStates, ObjectState, ObjectTiming
@@ -399,6 +407,318 @@ def test_sse_rejects_when_the_concurrent_stream_cap_is_reached(client: TestClien
     finally:
         for _ in range(held):
             sse_stream_limiter.release("alice")
+
+
+_INTERVAL = 60
+
+
+class _CountedStates:
+    """States of map b1 that count how often they were fetched, and for whom."""
+
+    def __init__(self) -> None:
+        self.fetched_for: list[str | None] = []
+        self.release = asyncio.Event()
+        self.release.set()
+        self.fail = False
+        self.on_fetch: Callable[[], None] = lambda: None
+
+    async def __call__(self, cfg: MapConfig, *, auth_user: str | None, **_kw: object) -> MapStates:
+        self.fetched_for.append(auth_user)
+        await self.release.wait()
+        self.on_fetch()
+        if self.fail:
+            raise RuntimeError("Livestatus went away")
+        return MapStates(
+            map_name=cfg.name,
+            states=[
+                ObjectState(
+                    object_id="host:h1",
+                    type="host",
+                    state="UP",
+                    output=f"fetch {len(self.fetched_for)}",
+                )
+            ],
+            generated_at=0.0,
+            runtime=get_daemon_runtime(),
+        )
+
+
+@pytest.fixture
+def counted_states(monkeypatch: pytest.MonkeyPatch) -> _CountedStates:
+    fetch = _CountedStates()
+    monkeypatch.setattr(state_service, "get_map_states", fetch)
+    monkeypatch.setattr(settings_service, "get_effective_state_refresh_interval", lambda: _INTERVAL)
+    map_service.register_map("alice", MapConfig(name="b1"))
+    return fetch
+
+
+def _poll(client: TestClient, user: str, query: str = "") -> int:
+    return client.get(f"/api/v1/maps/b1/states{query}", headers=_session(user)).status_code
+
+
+def test_polls_of_one_user_within_the_interval_share_one_fetch(
+    client: TestClient, counted_states: _CountedStates
+) -> None:
+    assert [_poll(client, "alice") for _ in range(3)] == [HTTPStatus.OK] * 3
+    assert counted_states.fetched_for == ["alice"]
+
+
+def _poll_together(
+    app: FastAPI, counted_states: _CountedStates, monkeypatch: pytest.MonkeyPatch
+) -> list[int]:
+    counted_states.release.clear()
+    joined: list[object] = []
+    run = states._fetches.run  # noqa: SLF001
+
+    async def _run(
+        key: tuple[str, str | None, int],
+        fetch: Callable[[], Awaitable[states._Flight]],
+    ) -> states._Flight:
+        joined.append(key)
+        return await run(key, fetch)
+
+    monkeypatch.setattr(states._fetches, "run", _run)  # noqa: SLF001
+
+    async def _together() -> list[int]:
+        async with httpx2.AsyncClient(
+            transport=httpx2.ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            polls = [
+                asyncio.ensure_future(
+                    client.get("/api/v1/maps/b1/states", headers=_session("alice"))
+                )
+                for _ in range(3)
+            ]
+            while len(joined) < len(polls):
+                await asyncio.sleep(0)
+            counted_states.release.set()
+            return [r.status_code for r in await asyncio.gather(*polls)]
+
+    return asyncio.run(_together())
+
+
+def test_polls_that_arrive_together_share_the_fetch_under_way(
+    app: FastAPI, counted_states: _CountedStates, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert _poll_together(app, counted_states, monkeypatch) == [HTTPStatus.OK] * 3
+    assert counted_states.fetched_for == ["alice"]
+
+
+def test_polls_of_users_who_see_differently_fetch_apart(
+    client: TestClient, counted_states: _CountedStates
+) -> None:
+    _poll(client, "alice")
+    _poll(client, "bob")
+    assert counted_states.fetched_for == ["alice", "bob"]
+
+
+def test_a_poll_after_the_interval_fetches_again(
+    client: TestClient, counted_states: _CountedStates, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings_service, "get_effective_state_refresh_interval", lambda: 0)
+    _poll(client, "alice")
+    _poll(client, "alice")
+    assert counted_states.fetched_for == ["alice", "alice"]
+
+
+def test_a_poll_an_interval_after_the_query_began_fetches_again(
+    client: TestClient, counted_states: _CountedStates, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    now = [100.0]
+    monkeypatch.setattr(states, "time", SimpleNamespace(monotonic=lambda: now[0]))
+    counted_states.on_fetch = lambda: now.__setitem__(0, now[0] + _INTERVAL / 2)
+    _poll(client, "alice")
+    now[0] = 100.0 + _INTERVAL
+    _poll(client, "alice")
+    assert counted_states.fetched_for == ["alice", "alice"]
+
+
+def test_a_poll_after_a_failed_fetch_fetches_again(
+    client: TestClient, counted_states: _CountedStates
+) -> None:
+    counted_states.fail = True
+    with pytest.raises(RuntimeError):
+        _poll(client, "alice")
+    counted_states.fail = False
+    assert _poll(client, "alice") == HTTPStatus.OK
+    assert counted_states.fetched_for == ["alice", "alice"]
+
+
+def test_a_poll_with_unsaved_view_settings_fetches_them_itself(
+    client: TestClient, counted_states: _CountedStates
+) -> None:
+    map_service.register_map("alice", MapConfig(name="b1", view=RadarView()))
+    _poll(client, "alice")
+    _poll(client, "alice", "?radar_filter=hostgroup&radar_filter_value=web")
+    assert counted_states.fetched_for == ["alice", "alice"]
+
+
+def _output_of_poll(client: TestClient) -> str:
+    response = client.get("/api/v1/maps/b1/states", headers=_session("alice"))
+    return str(response.json()["states"][0]["output"])
+
+
+def _stream_ticks(
+    monkeypatch: pytest.MonkeyPatch, ticks: int, between_ticks: Callable[[], None]
+) -> None:
+    map_key = states._map_key("alice", "b1")  # noqa: SLF001
+    sub = manager.subscribe(map_key, "alice", group_key="alice")
+    done = {"ticks": 0}
+    sleep = asyncio.sleep
+
+    # Only the loop's wait between ticks: the request a test polls with in
+    # between may sleep too.
+    async def _after_tick(delay: float) -> None:
+        if delay != _INTERVAL:
+            await sleep(delay)
+            return
+        between_ticks()
+        done["ticks"] += 1
+        if done["ticks"] == ticks:
+            manager.unsubscribe(map_key, sub)
+
+    with monkeypatch.context() as patched:
+        patched.setattr(asyncio, "sleep", _after_tick)
+        asyncio.run(states._broadcast_loop(map_key, FakeLinkGui()))  # noqa: SLF001
+
+
+def test_polls_take_the_states_the_stream_fetched_after_a_poll(
+    client: TestClient, counted_states: _CountedStates, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    outputs = [_output_of_poll(client)]
+
+    _stream_ticks(monkeypatch, 2, lambda: outputs.append(_output_of_poll(client)))
+
+    assert outputs == ["fetch 1", "fetch 2", "fetch 3"]
+    assert len(counted_states.fetched_for) == 3
+
+
+def test_a_poll_while_the_stream_fetches_shares_that_fetch(
+    app: FastAPI, counted_states: _CountedStates, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    map_key = states._map_key("alice", "b1")  # noqa: SLF001
+    sub = manager.subscribe(map_key, "alice", group_key="alice")
+    counted_states.release.clear()
+    joined: list[object] = []
+    run = states._fetches.run  # noqa: SLF001
+    sleep = asyncio.sleep
+
+    async def _run(
+        key: tuple[str, str | None, int],
+        fetch: Callable[[], Awaitable[states._Flight]],
+    ) -> states._Flight:
+        joined.append(key)
+        return await run(key, fetch)
+
+    async def _after_tick(delay: float) -> None:
+        if delay != _INTERVAL:
+            await sleep(delay)
+            return
+        manager.unsubscribe(map_key, sub)
+
+    async def _poll_during_the_tick() -> httpx2.Response:
+        ticking = asyncio.ensure_future(states._broadcast_loop(map_key, FakeLinkGui()))  # noqa: SLF001
+        async with httpx2.AsyncClient(
+            transport=httpx2.ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            poll = asyncio.ensure_future(
+                client.get("/api/v1/maps/b1/states", headers=_session("alice"))
+            )
+            while len(joined) < 2:
+                await sleep(0)
+            counted_states.release.set()
+            response = await poll
+        await ticking
+        return response
+
+    monkeypatch.setattr(states._fetches, "run", _run)  # noqa: SLF001
+    monkeypatch.setattr(asyncio, "sleep", _after_tick)
+    response = asyncio.run(_poll_during_the_tick())
+
+    assert response.json()["states"][0]["output"] == "fetch 1"
+    assert len(counted_states.fetched_for) == 1
+
+
+def test_a_stream_keeps_no_states_for_polls_nobody_asked_for(
+    client: TestClient, counted_states: _CountedStates, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    outputs: list[str] = []
+
+    _stream_ticks(monkeypatch, 1, lambda: outputs.append(_output_of_poll(client)))
+
+    assert outputs == ["fetch 2"]
+    assert len(counted_states.fetched_for) == 2
+
+
+def test_polls_of_a_map_too_large_to_keep_fetch_each(
+    client: TestClient, counted_states: _CountedStates, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(states, "_FETCHED_MAX_OBJECTS", 0)
+    _poll(client, "alice")
+    _poll(client, "alice")
+    assert counted_states.fetched_for == ["alice", "alice"]
+
+
+def test_polls_of_a_map_too_large_to_keep_that_arrive_together_share_the_fetch(
+    app: FastAPI, counted_states: _CountedStates, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(states, "_FETCHED_MAX_OBJECTS", 0)
+    _poll_together(app, counted_states, monkeypatch)
+    assert counted_states.fetched_for == ["alice"]
+
+
+@pytest.mark.usefixtures("counted_states")
+def test_a_poll_through_the_compressing_middleware_is_compressed_once(app: FastAPI) -> None:
+    app.add_middleware(CompactGZipMiddleware, minimum_size=0, compresslevel=1)
+    with TestClient(app) as client:
+        response = client.get("/api/v1/maps/b1/states", headers=_session("alice"))
+    assert response.headers["content-encoding"] == "gzip"
+    assert response.json()["states"][0]["output"] == "fetch 1"
+
+
+@pytest.mark.usefixtures("counted_states")
+def test_a_poll_of_a_client_without_gzip_gets_the_states_uncompressed(client: TestClient) -> None:
+    response = client.get(
+        "/api/v1/maps/b1/states", headers={**_session("alice"), "Accept-Encoding": "identity"}
+    )
+    assert "content-encoding" not in response.headers
+    assert response.json()["states"][0]["output"] == "fetch 1"
+
+
+def _spend_read_budget_but_one(user: str, limiter: RateLimiter = rest_read_limiter) -> None:
+    for _ in range(limiter._max - len(limiter._calls[user]) - 1):  # noqa: SLF001
+        limiter.record(user)
+
+
+@pytest.mark.usefixtures("counted_states")
+def test_polls_answered_from_the_states_kept_spend_no_read_budget(client: TestClient) -> None:
+    _poll(client, "alice")
+    _spend_read_budget_but_one("alice")
+    assert [_poll(client, "alice") for _ in range(3)] == [HTTPStatus.OK] * 3
+
+
+@pytest.mark.usefixtures("counted_states")
+def test_polls_answered_from_the_states_kept_spend_a_budget_of_their_own(
+    client: TestClient,
+) -> None:
+    _poll(client, "alice")
+    _spend_read_budget_but_one("alice", kept_states_limiter)
+    assert [_poll(client, "alice") for _ in range(2)] == [
+        HTTPStatus.OK,
+        HTTPStatus.TOO_MANY_REQUESTS,
+    ]
+
+
+@pytest.mark.usefixtures("counted_states")
+def test_polls_that_fetch_spend_read_budget(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(settings_service, "get_effective_state_refresh_interval", lambda: 0)
+    _spend_read_budget_but_one("alice")
+    assert [_poll(client, "alice") for _ in range(2)] == [
+        HTTPStatus.OK,
+        HTTPStatus.TOO_MANY_REQUESTS,
+    ]
 
 
 def test_a_poll_with_unsaved_view_settings_leaves_the_registered_map_alone(

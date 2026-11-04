@@ -122,8 +122,12 @@ ws_connect_limiter = RateLimiter(max_calls=30, window_seconds=60)
 sse_stream_limiter = ConcurrencyLimiter(max_per_key=6, max_total=40)
 
 # Per-authenticated-user budget for the expensive Livestatus readers (topology,
-# metric-history, object-details, folder search/host-services, map states).
-# Keyed by the authenticated user, so one user's flood can't lock out another. 240/min
-# (4/s sustained) is far above any real UI's paint+hover+search cadence and only
-# trips on a scripted load loop driving repeated full-topology / bulk fetches.
+# metric-history, object-details, folder search/host-services, map states not
+# kept for the interval). Keyed by the authenticated user, so each user has their
+# own budget. 240/min (4/s sustained) is far above any real UI's paint+hover+search
+# cadence.
 rest_read_limiter = RateLimiter(max_calls=240, window_seconds=60)
+
+# Per-user budget for the polls the states kept for the interval answer. They
+# spare Livestatus, so it holds twenty tabs polling every second.
+kept_states_limiter = RateLimiter(max_calls=1200, window_seconds=60)

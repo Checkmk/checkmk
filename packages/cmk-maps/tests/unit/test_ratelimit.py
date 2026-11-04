@@ -109,6 +109,21 @@ def test_retry_after_unknown_key_is_zero(clock: _Clock) -> None:
     assert limiter.retry_after("never-seen") == 0.0
 
 
+def test_a_refund_takes_back_an_attempt(clock: _Clock) -> None:
+    limiter = RateLimiter(max_calls=2, window_seconds=60)
+    for _ in range(2):
+        limiter.record("k")
+    limiter.refund("k")
+    assert limiter.is_blocked("k") is False
+
+
+def test_a_refund_without_attempts_is_a_noop(clock: _Clock) -> None:
+    limiter = RateLimiter(max_calls=1, window_seconds=60)
+    limiter.refund("k")
+    limiter.record("k")
+    assert limiter.is_blocked("k") is True
+
+
 def test_pruning_evicts_empty_keys(clock: _Clock) -> None:
     limiter = RateLimiter(max_calls=5, window_seconds=60)
     limiter.record("bursty")

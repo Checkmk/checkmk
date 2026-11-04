@@ -980,7 +980,9 @@ Limits
        each open stream holds one)
    * - Daemon read routes (register, states, auto-objects, folder routes,
        topology, metric history, object details)
-     - 240 per minute and user; a refused ``register`` still registers the map; ``saved``
+     - 240 per minute and user; a poll of ``states`` the daemon answers from
+       the states it keeps for the interval counts against 1200 per minute and
+       user instead; a refused ``register`` still registers the map; ``saved``
        is not counted
    * - Connection list, health
      - Not rate-limited
@@ -998,10 +1000,17 @@ Limits
    * - Uploads
      - 2 MB (library images), 10 MB (backgrounds), 5 MB (NagVis ``.cfg``)
 
-The rate and stream limits are kept in the daemon's memory, per user
-(the 40 streams per site), and answered with HTTP 429. Too many objects are
-rejected with 422 on register; the upload and import limits are checked by the
-GUI (400). The map cache evicts silently.
+The rate and stream limits are kept in the daemon's memory, per user (the 40
+streams per site), and answered with HTTP 429. A map refused a stream polls its
+states at the state refresh interval and tries the stream again every minute.
+The daemon fetches the states of a map once per interval for all viewers who see
+the same, whether they stream or poll, so a poll costs no further Livestatus
+query. It keeps those states only for viewers who poll, for an interval from
+when their query began, as gzip-compressed JSON, for up to 100,000 objects
+together; a larger map is fetched anew for each poll that does not arrive while
+a fetch of it runs. Too many objects are rejected with 422 on register; the
+upload and import limits are checked by the GUI (400). The map cache evicts
+silently.
 
 HTTP security headers
 ---------------------
@@ -1102,8 +1111,9 @@ scope); users with ``general.see_all`` are queried without AuthUser.
 
 A hidden browser tab closes its stream after five seconds and reopens it when
 it becomes visible again. If the stream cannot be opened at all, the SPA falls
-back to polling ``states`` every 15 s. SSE events carry no ID, so a reconnect
-always starts with a fresh full state; the daemon keeps no per-client history.
+back to polling ``states`` at the state refresh interval. SSE events carry no
+ID, so a reconnect always starts with a fresh full state; the daemon keeps no
+per-client history.
 
 Editing and saving a map
 ------------------------

@@ -27,9 +27,24 @@ class TtlCache[K, V]:
     """A ``key -> value`` cache whose entries expire after a per-get TTL and
     whose size is bounded by evicting the entry set longest ago."""
 
-    def __init__(self, *, maxsize: int = 32) -> None:
+    def __init__(
+        self,
+        *,
+        maxsize: int = 32,
+        weigh: Callable[[V], int] | None = None,
+        maxweight: int | None = None,
+        expire_after: float | None = None,
+    ) -> None:
+        """``weigh``/``maxweight`` also bound what the entries hold together, for
+        values of very different size. ``expire_after`` drops entries no ``get``
+        would return any more on every ``set``, so keys that are never asked
+        again do not stay until they are evicted."""
         self._store: dict[K, tuple[float, V]] = {}
         self._maxsize = maxsize
+        self._weigh = weigh
+        self._maxweight = maxweight
+        self._weight = 0
+        self._expire_after = expire_after
 
     def get(self, key: K, *, ttl: float, now: float | None = None) -> V | None:
         """Return the cached value, or ``None`` if absent or older than ``ttl``."""
@@ -45,18 +60,40 @@ class TtlCache[K, V]:
         """Store ``value`` under ``key``, evicting the entry set longest ago when
         a *new* key would exceed ``maxsize``. Setting a key again makes it the
         newest, so a key kept fresh is never the one evicted."""
-        if self._store.pop(key, None) is None and len(self._store) >= self._maxsize:
-            self._store.pop(next(iter(self._store)))
-        self._store[key] = (time.monotonic() if now is None else now, value)
+        now = time.monotonic() if now is None else now
+        # Entries are in the order they were set, so the expired ones lead.
+        while self._expire_after is not None and self._store:
+            oldest = next(iter(self._store))
+            if now - self._store[oldest][0] < self._expire_after:
+                break
+            self._drop(oldest)
+        if not self._drop(key) and len(self._store) >= self._maxsize:
+            self._drop(next(iter(self._store)))
+        self._store[key] = (now, value)
+        if self._weigh is not None:
+            self._weight += self._weigh(value)
+            while self._maxweight is not None and self._weight > self._maxweight:
+                oldest = next(iter(self._store))
+                if oldest == key:
+                    break
+                self._drop(oldest)
 
     def pop(self, key: K) -> None:
         """Drop one entry if present (no error when absent)."""
-        self._store.pop(key, None)
+        self._drop(key)
 
     def invalidate(self, predicate: Callable[[K], bool] | None = None) -> None:
         """Drop every entry (``predicate`` is ``None``) or those whose key matches."""
         for key in [k for k in self._store if predicate is None or predicate(k)]:
-            self._store.pop(key, None)
+            self._drop(key)
+
+    def _drop(self, key: K) -> bool:
+        entry = self._store.pop(key, None)
+        if entry is None:
+            return False
+        if self._weigh is not None:
+            self._weight -= self._weigh(entry[1])
+        return True
 
     def __contains__(self, key: object) -> bool:
         return key in self._store

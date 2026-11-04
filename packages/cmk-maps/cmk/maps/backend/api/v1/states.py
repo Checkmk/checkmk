@@ -5,7 +5,9 @@
 """State endpoints + Server-Sent Events for real-time updates."""
 
 import asyncio
+import gzip
 import logging
+import math
 import time
 from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
@@ -18,6 +20,7 @@ from cmk.fastapi.gui_session import Unavailable
 from cmk.fastapi.sse import EventStream, SentEvent
 from cmk.maps.backend.api.v1.connections import auth_user_scope, build_topology_response
 from cmk.maps.backend.api.v1.deps import (
+    charge,
     get_current_user,
     get_map_viewer,
     GuiAuthDep,
@@ -30,9 +33,16 @@ from cmk.maps.backend.api.v1.types import MapName
 from cmk.maps.backend.connections.base import ServiceMatchRow, ServiceRow
 from cmk.maps.backend.core.auth import GuiAuth, Principal
 from cmk.maps.backend.core.config import settings
-from cmk.maps.backend.core.ratelimit import sse_stream_limiter, ws_connect_limiter
+from cmk.maps.backend.core.ratelimit import (
+    kept_states_limiter,
+    rest_read_limiter,
+    sse_stream_limiter,
+    ws_connect_limiter,
+)
+from cmk.maps.backend.core.single_flight import SingleFlight
 from cmk.maps.backend.core.sse import manager, Subscriber
-from cmk.maps.backend.integrations.checkmk import resolve_folder_scope
+from cmk.maps.backend.core.ttl_cache import TtlCache
+from cmk.maps.backend.integrations.checkmk import FolderScope, resolve_folder_scope
 from cmk.maps.backend.schemas.map import FlowView, FolderTreeView, MapConfig, RadarView
 from cmk.maps.backend.schemas.state import (
     FolderHostService,
@@ -68,6 +78,48 @@ _broadcast_tasks: dict[str, asyncio.Task[None]] = {}
 # Last dead-sites list pushed per (map, subscriber-group): a federation site
 # dying/recovering must reach clients even when no node-level delta exists.
 _dead_sites_snapshots: dict[tuple[str, str | None], list[str]] = {}
+
+
+@dataclass
+class _Fetched:
+    gzipped: bytes
+    objects: int
+    # Registering a map anew replaces its config, so states of the old one
+    # differ by it.
+    config: MapConfig
+    # When the query began, so a lone poller gets no states older than an interval.
+    fetched_at: float
+    polled: bool = False
+
+
+type _FetchKey = tuple[str, str | None]
+
+
+@dataclass
+class _Flight:
+    """A fetch that polls and the map's stream share."""
+
+    states: MapStates
+    fetched_at: float
+    kept: _Fetched | None = None
+
+
+# About 60 MB as JSON. A map with more objects than that alone is fetched per poll.
+_FETCHED_MAX_OBJECTS = 100_000
+
+# The latest states per (map, subscriber group), so the viewers that poll share
+# one fetch per interval with each other and with the map's stream. Kept no
+# longer than the longest state refresh interval.
+_fetched: TtlCache[_FetchKey, _Fetched] = TtlCache(
+    maxsize=256,
+    weigh=lambda fetched: fetched.objects,
+    maxweight=_FETCHED_MAX_OBJECTS,
+    expire_after=300,
+)
+# The fetch under way per (map, subscriber group). Keyed by the config's identity
+# too, so a poll after the map was registered anew does not get what a fetch of
+# its old config brings.
+_fetches: SingleFlight[tuple[str, str | None, int], _Flight] = SingleFlight()
 
 # How often an open stream asks whether its session still holds. The answer is
 # cached, so the GUI is asked again only once it has expired.
@@ -155,6 +207,98 @@ def _map_key(owner: str, name: str) -> str:
     return f"{owner}\x00{name}"
 
 
+@dataclass(frozen=True)
+class _Audience:
+    auth_user: str | None
+    # Only a foldertree map renders the Setup folders the user may read, which the
+    # monitoring scope does not cover: a see-all guest shares auth_user=None with
+    # an admin but sees fewer folders.
+    folder_scope: FolderScope | None
+
+    @property
+    def group_key(self) -> str | None:
+        if self.folder_scope is None:
+            return self.auth_user
+        return f"{self.auth_user}#{self.folder_scope.key}"
+
+
+def _audience(user: Principal, cfg: MapConfig) -> _Audience:
+    return _Audience(
+        resolve_auth_user(user),
+        resolve_folder_scope(user) if cfg.view.type == "foldertree" else None,
+    )
+
+
+def _remember(
+    key: _FetchKey, owner: str, cfg: MapConfig, states: MapStates, *, fetched_at: float
+) -> _Fetched:
+    tree_hosts = states.folder_tree.host_count if states.folder_tree is not None else 0
+    # Compressed once here rather than by the middleware for every poll.
+    fetched = _Fetched(
+        gzip.compress(states.model_dump_json().encode(), compresslevel=1, mtime=0),
+        len(states.states) + tree_hosts,
+        cfg,
+        fetched_at,
+    )
+    if fetched.objects <= _FETCHED_MAX_OBJECTS and map_service.get_map(owner, cfg.name) is cfg:
+        _fetched.set(key, fetched)
+    return fetched
+
+
+def _was_polled(key: _FetchKey) -> bool:
+    return (fetched := _fetched.get(key, ttl=math.inf)) is not None and fetched.polled
+
+
+async def _group_states(
+    key: _FetchKey,
+    owner: str,
+    cfg: MapConfig,
+    auth_user: str | None,
+    folder_scope: FolderScope | None,
+    links: LinkSource,
+) -> _Flight:
+    async def fetch() -> _Flight:
+        fetched_at = time.monotonic()
+        states = await state_service.get_map_states(
+            cfg,
+            auth_user=auth_user,
+            folder_scope=folder_scope,
+            map_owner=owner,
+            links=links,
+        )
+        return _Flight(states, fetched_at)
+
+    return await _fetches.run((*key, id(cfg)), fetch)
+
+
+def _kept(key: _FetchKey, owner: str, cfg: MapConfig, flight: _Flight) -> _Fetched:
+    """The fetch as kept for polls, compressed once for all that shared it."""
+    if flight.kept is None:
+        flight.kept = _remember(key, owner, cfg, flight.states, fetched_at=flight.fetched_at)
+    return flight.kept
+
+
+async def _shared_states(
+    cfg: MapConfig, user: Principal, audience: _Audience, links: LinkSource
+) -> bytes:
+    """The states of the current interval as gzip, fetched once for everyone polling them."""
+    owner = user.map_key_owner
+    key = (_map_key(owner, cfg.name), audience.group_key)
+    ttl = settings_service.get_effective_state_refresh_interval()
+    fetched = _fetched.get(key, ttl=ttl)
+    if fetched is None or fetched.config is not cfg or time.monotonic() - fetched.fetched_at >= ttl:
+        flight = await _group_states(
+            key, owner, cfg, audience.auth_user, audience.folder_scope, links
+        )
+        fetched = _kept(key, owner, cfg, flight)
+    else:
+        # The read budget spares Livestatus, which states kept already do not ask.
+        rest_read_limiter.refund(user.name)
+        charge(kept_states_limiter, user.name)
+    fetched.polled = True
+    return fetched.gzipped
+
+
 async def _push_topology_to(
     cfg: MapConfig,
     map_key: str,
@@ -198,6 +342,9 @@ async def _broadcast_loop(map_key: str, links: LinkSource) -> None:
     logger.debug("Broadcast loop started for map '%(map)s'", {"map": name})
     try:
         while manager.get_subscriber_count(map_key) > 0:
+            # Read fresh each tick so System-Settings changes apply without
+            # restarting the backend.
+            interval = settings_service.get_effective_state_refresh_interval()
             # Guard the whole tick: a single transient error (a Livestatus shape
             # change, one failed fetch) must not kill the loop and freeze every
             # connected viewer on stale data until someone reconnects. Log it and
@@ -221,13 +368,17 @@ async def _broadcast_loop(map_key: str, links: LinkSource) -> None:
                         # see-all guest on a foldertree map don't share a tree.
                         rep = subs[0]
                         auth_user = rep.auth_user
-                        states = await state_service.get_map_states(
-                            cfg,
-                            auth_user=auth_user,
-                            folder_scope=rep.folder_scope,
-                            map_owner=owner,
-                            links=links,
+                        key = (map_key, group_key)
+                        flight = await _group_states(
+                            key, owner, cfg, auth_user, rep.folder_scope, links
                         )
+                        states = flight.states
+                        # Only for a group that polled since the last tick, so the
+                        # cache holds nothing for maps everyone streams.
+                        if _was_polled(key):
+                            _kept(key, owner, cfg, flight)
+                        else:
+                            _fetched.pop(key)
                         to_send, removed_ids, is_full, timing = state_service.compute_states_delta(
                             map_key, group_key, states.states
                         )
@@ -282,14 +433,13 @@ async def _broadcast_loop(map_key: str, links: LinkSource) -> None:
                 )
             except Exception:
                 logger.exception("Broadcast tick error for map '%(map)s'", {"map": name})
-            # Read interval fresh each tick so System-Settings changes apply
-            # without restarting the backend.
-            await asyncio.sleep(settings_service.get_effective_state_refresh_interval())
+            await asyncio.sleep(interval)
     finally:
         _broadcast_tasks.pop(map_key, None)
         state_service.drop_topology_snapshot(map_key)
         state_service.drop_states_snapshot(map_key)
         state_service.drop_map_snapshots(_dead_sites_snapshots, map_key)
+        _fetched.invalidate(lambda key: key[0] == map_key)
         logger.debug("Broadcast loop stopped for map '%(map)s'", {"map": name})
 
 
@@ -307,14 +457,11 @@ async def map_states_response(
     cfg: MapConfig, current_user: Principal, links: LinkSource
 ) -> Response:
     """The full states of ``cfg`` as the caller may see them, pre-dumped."""
-    auth_user = resolve_auth_user(current_user)
-    # Only foldertree maps consume folder_scope; skip the permission/contact-group
-    # lookups for every other map type.
-    folder_scope = resolve_folder_scope(current_user) if cfg.view.type == "foldertree" else None
+    audience = _audience(current_user, cfg)
     states = await state_service.get_map_states(
         cfg,
-        auth_user=auth_user,
-        folder_scope=folder_scope,
+        auth_user=audience.auth_user,
+        folder_scope=audience.folder_scope,
         map_owner=current_user.map_key_owner,
         links=links,
     )
@@ -332,6 +479,10 @@ class ViewPreview:
     ft_show_empty_folders: bool
     ft_only_hard_states: bool
     ft_sites: list[str]
+
+    @property
+    def overrides(self) -> bool:
+        return self.radar_filter is not None or self.ft_override
 
     def apply(self, cfg: MapConfig) -> MapConfig:
         # Settings-preview override for radar maps. Both query params arrive
@@ -402,12 +553,25 @@ def view_preview(
 @router.get("/maps/{name}/states", response_model=MapStates)
 async def get_map_states(
     name: MapName,
+    request: Request,
     auth: GuiAuthDep,
     current_user: Principal = Depends(rate_limited_map_read),
     preview: ViewPreview = Depends(view_preview),
 ) -> Response:
-    return await map_states_response(
-        preview.apply(registered_map(current_user, name)), current_user, auth
+    cfg = registered_map(current_user, name)
+    if preview.overrides:
+        return await map_states_response(preview.apply(cfg), current_user, auth)
+    body = await _shared_states(cfg, current_user, _audience(current_user, cfg), auth)
+    if "gzip" not in request.headers.get("accept-encoding", ""):
+        return Response(
+            content=gzip.decompress(body),
+            media_type="application/json",
+            headers={"Vary": "Accept-Encoding"},
+        )
+    return Response(
+        content=body,
+        media_type="application/json",
+        headers={"Content-Encoding": "gzip", "Vary": "Accept-Encoding"},
     )
 
 
@@ -610,23 +774,18 @@ async def _subscribe_to_stream(
     owner = user.map_key_owner
     map_key = _map_key(owner, name)
 
-    auth_user = resolve_auth_user(user)
-    # Foldertree maps render a SETUP folder skeleton scoped by folder-read
-    # permission, which differs from the monitoring scope (a see-all guest shares
-    # auth_user=None with an admin but sees fewer folders). Fold that into the
-    # subscriber group key so they get separate computations; other map types
-    # group by auth_user alone.
-    folder_scope = None
-    group_key: str | None = auth_user
-    if cfg.view.type == "foldertree":
-        folder_scope = resolve_folder_scope(user)
-        group_key = f"{auth_user}#{folder_scope.key}"
+    audience = _audience(user, cfg)
 
     if not sse_stream_limiter.try_acquire(user.name):
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Too many concurrent streams"
         )
-    sub = manager.subscribe(map_key, auth_user, folder_scope=folder_scope, group_key=group_key)
+    sub = manager.subscribe(
+        map_key,
+        audience.auth_user,
+        folder_scope=audience.folder_scope,
+        group_key=audience.group_key,
+    )
     try:
         # A new subscriber must not diverge from its REST first paint on anything
         # that changed before it joined (the group snapshot already absorbed those,
@@ -642,7 +801,9 @@ async def _subscribe_to_stream(
         # deltas (topology deltas are convergent upserts, so this client reconverges
         # from the next tick's group delta on top of this full) — no group re-full.
         if cfg.view.type == "flow":
-            await _push_topology_to(cfg, map_key, auth_user, [sub], force_full=True, store=False)
+            await _push_topology_to(
+                cfg, map_key, audience.auth_user, [sub], force_full=True, store=False
+            )
 
         yield StreamSubscription(
             subscriber=sub, name=name, user=user, auth=auth, session_cookie=cookie

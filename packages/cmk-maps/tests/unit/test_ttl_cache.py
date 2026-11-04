@@ -78,3 +78,27 @@ def test_invalidate_by_predicate() -> None:
     cache.invalidate(lambda k: k == "drop")
     assert "drop" not in cache
     assert cache.get("keep", ttl=99.0, now=0.0) == 1
+
+
+def test_entries_together_stay_within_their_weight() -> None:
+    cache: TtlCache[str, list[int]] = TtlCache(maxsize=10, weigh=len, maxweight=5)
+    cache.set("a", [1, 2], now=0.0)
+    cache.set("b", [1, 2], now=0.0)
+    cache.set("c", [1, 2], now=0.0)
+    assert [k for k in "abc" if k in cache] == ["b", "c"]
+
+
+def test_an_entry_heavier_than_the_weight_is_still_kept() -> None:
+    cache: TtlCache[str, list[int]] = TtlCache(weigh=len, maxweight=1)
+    cache.set("a", [1], now=0.0)
+    cache.set("b", [1, 2, 3], now=0.0)
+    assert "a" not in cache
+    assert cache.get("b", ttl=99.0, now=0.0) == [1, 2, 3]
+
+
+def test_setting_drops_the_entries_no_get_would_return() -> None:
+    cache: TtlCache[str, int] = TtlCache(expire_after=10.0)
+    cache.set("a", 1, now=0.0)
+    cache.set("b", 2, now=5.0)
+    cache.set("c", 3, now=10.0)
+    assert ("a" in cache, "b" in cache) == (False, True)

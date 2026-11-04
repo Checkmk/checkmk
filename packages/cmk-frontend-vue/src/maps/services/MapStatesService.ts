@@ -55,13 +55,8 @@ type MapEventData<Name extends MapEvent['event']> = Extract<MapEvent, { event: N
 // Depth the detail drawer needs for the full leaf list even when the icon is
 // collapsed on the canvas.
 const AGG_DRAWER_DEPTH = 10
-// BI aggregations refresh on their own cadence: they depend on hosts/services
-// that may not be on the map (so no SSE tick reflects their change), and a
-// map of only aggregation objects gets no SSE traffic at all. A dedicated
-// interval keeps them live regardless of the daemon stream. The cadence follows
-// the global "State refresh interval" (the same knob the daemon streams state
-// at), falling back to this when the setting hasn't loaded yet.
-const AGG_POLL_FALLBACK_S = 5
+// The global "State refresh interval" until the daemon has told it.
+const STATE_REFRESH_FALLBACK_S = 5
 
 const HISTORY_MAX = 10080 // up to 7d at 1min resolution
 
@@ -121,8 +116,6 @@ function diffNotifyFolderTree(
   return current
 }
 
-/** How often the polling fallback refetches while the stream is unavailable. */
-const POLL_INTERVAL_MS = 15_000
 /** How often to test whether the stream has become reachable again. */
 const STREAM_REPROBE_INTERVAL_MS = 60_000
 /**
@@ -753,7 +746,7 @@ export class MapStatesService {
       },
       poll: {
         fetch: () => this.refresh(),
-        intervalMs: POLL_INTERVAL_MS,
+        intervalMs: this.stateRefreshMs(),
         reprobeIntervalMs: STREAM_REPROBE_INTERVAL_MS
       },
       onFallback: () => {
@@ -972,12 +965,19 @@ export class MapStatesService {
     }
   }
 
+  // Polling faster than the daemon fetches would only fetch the same states again.
+  private stateRefreshMs(): number {
+    return (this.runtime.value?.state_refresh_interval || STATE_REFRESH_FALLBACK_S) * 1000
+  }
+
+  // BI aggregations refresh on their own cadence: they depend on hosts/services
+  // that may not be on the map (so no SSE tick reflects their change), and a
+  // map of only aggregation objects gets no SSE traffic at all.
   private startAggregationTimer(): void {
     if (this.aggTimer) {
       return
     }
-    const seconds = this.runtime.value?.state_refresh_interval || AGG_POLL_FALLBACK_S
-    this.aggTimer = setInterval(() => void this.refreshAggregations(), Math.max(1, seconds) * 1000)
+    this.aggTimer = setInterval(() => void this.refreshAggregations(), this.stateRefreshMs())
   }
 
   private stopAggregationTimer(): void {

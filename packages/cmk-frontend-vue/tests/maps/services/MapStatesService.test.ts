@@ -517,6 +517,36 @@ describe('MapStatesService — hidden tab', () => {
   })
 })
 
+describe('MapStatesService — refused a stream', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    FakeEventSource.instances = []
+    vi.stubGlobal('EventSource', FakeEventSource)
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('asks for the states at the interval the daemon fetches them', async () => {
+    const atSeven = {
+      ...emptyStates,
+      runtime: { ...emptyStates.runtime, state_refresh_interval: 7 }
+    }
+    const fetchStates = vi.fn().mockResolvedValue(atSeven)
+    const store = newService(null, {}, { fetchStates })
+    await store.connectToMap('b')
+    FakeEventSource.instances[0]!.failToOpen()
+    await vi.advanceTimersByTimeAsync(0)
+    const asked = fetchStates.mock.calls.length
+
+    await vi.advanceTimersByTimeAsync(6_999)
+    expect(fetchStates).toHaveBeenCalledTimes(asked)
+    await vi.advanceTimersByTimeAsync(1)
+    expect(fetchStates).toHaveBeenCalledTimes(asked + 1)
+  })
+})
+
 describe('MapStatesService — overlapping connects', () => {
   beforeEach(() => {
     FakeEventSource.instances = []

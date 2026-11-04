@@ -101,7 +101,6 @@ def test_check_crash_dump_contains_the_given_agent_output() -> None:
             is_enforced=False,
             snmp_backend=SNMPBackendEnum.CLASSIC,
             get_agent_output=lambda: AgentRawData(b"<<<uptime>>>\n123\n"),
-            debug=True,
         )
 
     assert pop_crash_report_file("check", "agent_output") == b"<<<uptime>>>\n123\n"
@@ -118,7 +117,6 @@ def test_section_crash_dump_contains_the_given_agent_output() -> None:
             section_content=[["123"]],
             host_name=HostName("testhost"),
             get_agent_output=lambda: AgentRawData(b"<<<uptime>>>\n123\n"),
-            debug=True,
         )
 
     assert pop_crash_report_file("section", "agent_output") == b"<<<uptime>>>\n123\n"
@@ -139,7 +137,6 @@ def test_section_crash_dump_without_agent_output_attaches_none_even_if_a_cache_f
             section_content=[["123"]],
             host_name=HostName("testhost"),
             get_agent_output=lambda: None,
-            debug=True,
         )
 
     assert pop_crash_report_file("section", "agent_output") is None

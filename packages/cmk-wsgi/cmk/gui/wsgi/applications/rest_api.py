@@ -163,7 +163,7 @@ def crash_report_response(exc: Exception) -> WSGIApplication:
             cmk_version_info.get_general_version_infos(paths.omd_root), details
         ),
     )
-    CrashReportStore(debug=False).save(crash)
+    CrashReportStore().save(crash)
     # NOTE: We are always called from within an exception handler (hopefully!), but ruff can't
     # determine this statically.
     logger.exception(  # noqa: LOG004

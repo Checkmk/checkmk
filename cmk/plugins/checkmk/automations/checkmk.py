@@ -431,7 +431,6 @@ def _automation_service_discovery(
                 section_content=raw_data,
                 host_name=host_name,
                 get_agent_output=lambda: recording_fetcher.serialized(host_name),
-                debug=state.debug,
             )
 
         results[hostname] = _automation_discovery(
@@ -965,7 +964,6 @@ def _execute_discovery(
                 section_content=raw_data,
                 host_name=host_name,
                 get_agent_output=lambda: recording_fetcher.serialized(host_name),
-                debug=debug,
             ),
             host_label_plugins=HostLabelPluginMapper(
                 discovery_config=discovery_config,
@@ -1261,7 +1259,6 @@ def _execute_autodiscovery(
                         section_content=raw_data,
                         host_name=host_name,
                         get_agent_output=lambda: recording_fetcher.serialized(host_name),
-                        debug=debug,
                     )
 
                 # TODO: Add host to hosts_processed AFTER it was processed!

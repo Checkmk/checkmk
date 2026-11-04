@@ -18,6 +18,6 @@ from cmk.gui.config import Config
 
 
 def consolidate_crash_reports(_config: Config) -> None:
-    CrashReportStore(debug=False).consolidate_all_crash_dirs(
+    CrashReportStore().consolidate_all_crash_dirs(
         make_crash_report_base_path(cmk.utils.paths.omd_root)
     )

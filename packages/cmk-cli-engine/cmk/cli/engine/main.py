@@ -61,7 +61,7 @@ class CrashReport(ABCCrashReport[BaseDetails]):
         )
 
     def save(self) -> None:
-        CrashReportStore(debug=False).save(self)
+        CrashReportStore().save(self)
 
     def render(self) -> str:
         return (

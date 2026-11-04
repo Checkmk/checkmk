@@ -265,7 +265,7 @@ def create_gui_crash_report(
         details=details,
         crash_report_base_path=make_crash_report_base_path(cmk.utils.paths.omd_root),
     )
-    CrashReportStore(debug=False).save(crash)
+    CrashReportStore().save(crash)
     return crash
 
 

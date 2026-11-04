@@ -39,7 +39,7 @@ def create_crash_report_callback() -> str:
                 get_general_version_infos(omd_root), None
             ),
         )
-        CrashReportStore(debug=False).save(crash)
+        CrashReportStore().save(crash)
         return f"Please submit a crash report! (Crash-ID: {crash.ident_to_text()})"
     except Exception:
         return f"Failed to create a crash report: {traceback.format_exc()}"

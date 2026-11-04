@@ -20,7 +20,7 @@ from cmk.crash import (
 
 
 def create_crash_report(omd_root: Path) -> None:
-    CrashReportStore(debug=False).save(
+    CrashReportStore().save(
         CMKBaseCrashReport(
             crash_report_base_path=make_crash_report_base_path(omd_root),
             crash_info=CMKBaseCrashReport.make_crash_info(get_general_version_infos(omd_root)),

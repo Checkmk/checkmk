@@ -25,5 +25,5 @@ def report_crash(site_home: Path) -> str:
             version_info.get_general_version_infos(site_home), None
         ),
     )
-    CrashReportStore(debug=False).save(crash)
+    CrashReportStore().save(crash)
     return crash.ident_to_text()

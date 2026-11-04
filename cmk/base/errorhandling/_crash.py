@@ -47,7 +47,6 @@ def create_section_crash_dump(
     section_content: Sequence[object],
     host_name: HostName,
     get_agent_output: Callable[[], AgentRawData | None],
-    debug: bool,
 ) -> str:
     """Create a crash dump from an exception raised in a parse or host label function"""
 
@@ -65,7 +64,7 @@ def create_section_crash_dump(
             ),
             agent_output=get_agent_output(),
         )
-        CrashReportStore(debug=debug).save(crash)
+        CrashReportStore().save(crash)
         return f"{text} - please submit a crash report! (Crash-ID: {crash.ident_to_text()})"
     except Exception:
         return f"{text} - failed to create a crash report: {traceback.format_exc()}"
@@ -81,7 +80,6 @@ def create_check_crash_dump(
     is_enforced: bool,
     snmp_backend: SNMPBackendEnum,
     get_agent_output: Callable[[], AgentRawData | None],
-    debug: bool,
 ) -> str:
     """Create a crash dump from an exception occurred during check execution
 
@@ -109,7 +107,7 @@ def create_check_crash_dump(
             ),
             agent_output=get_agent_output(),
         )
-        CrashReportStore(debug=debug).save(crash)
+        CrashReportStore().save(crash)
         text += " (Crash-ID: %s)" % crash.ident_to_text()
         return text
     except Exception:

@@ -297,7 +297,6 @@ def _mode_inventory(
                     section_content=raw_data,
                     host_name=host_name,
                     get_agent_output=lambda: recording_fetcher.serialized(host_name),
-                    debug=global_options.debug,
                 )
 
             parameters = config_cache.inventory_config.hwsw_parameters(hostname)

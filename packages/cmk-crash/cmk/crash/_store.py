@@ -184,8 +184,7 @@ def cleanup_crash_reports(
 class CrashReportStore:
     """Caring about the persistance of crash reports in the local site"""
 
-    def __init__(self, *, debug: bool, keep_num_crashes: int = 200) -> None:
-        self._debug: Final = debug
+    def __init__(self, *, keep_num_crashes: int = 200) -> None:
         self.keep_num_crashes: Final = keep_num_crashes
 
     def save[TDetails](self, crash: ABCCrashReport[TDetails]) -> None:
@@ -282,7 +281,7 @@ class CrashReportStore:
     def _merge_into_existing[TDetails](
         self, crash: ABCCrashReport[TDetails], crash_info_path: Path
     ) -> None:
-        existing_info = json.loads(store.load_text_from_file(crash_info_path, debug=self._debug))
+        existing_info = json.loads(store.load_text_from_file(crash_info_path, debug=False))
         existing_occ = read_occurrences(existing_info)
         # ``crash`` is an individual, freshly-produced crash: a single occurrence.
         new_time = float(crash.crash_info["time"])

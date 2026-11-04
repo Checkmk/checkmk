@@ -94,7 +94,6 @@ def execute_active_check_inventory(
                 section_content=raw_data,
                 host_name=host_name,
                 get_agent_output=lambda: recording_fetcher.serialized(host_name),
-                debug=debug,
             ),
             inventory_plugins=inventory_plugins,
             run_plugin_names=EVERYTHING,

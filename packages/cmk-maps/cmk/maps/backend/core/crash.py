@@ -31,5 +31,5 @@ def create_crash_report(omd_root: Path) -> str:
             cmk_version_info.get_general_version_infos(omd_root), None
         ),
     )
-    CrashReportStore(debug=False).save(crash)
+    CrashReportStore().save(crash)
     return crash.ident_to_text()

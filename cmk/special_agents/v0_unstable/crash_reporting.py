@@ -26,7 +26,7 @@ def create_agent_crash_dump() -> str:
                 cmk_version_info.get_general_version_infos(cmk.utils.paths.omd_root), None
             ),
         )
-        CrashReportStore(debug=False).save(crash)
+        CrashReportStore().save(crash)
         return f"Agent failed - please submit a crash report! (Crash-ID: {crash.ident_to_text()})"
     except Exception:
         return f"Agent failed - failed to create a crash report: {traceback.format_exc()}"

@@ -4513,7 +4513,7 @@ def main() -> None:
         if settings.options.debug:
             raise
 
-        CrashReportStore(debug=False).save(
+        CrashReportStore().save(
             ECCrashReport(
                 crash_report_base_path=make_crash_report_base_path(omd_root),
                 crash_info=ECCrashReport.make_crash_info(version_info, None),

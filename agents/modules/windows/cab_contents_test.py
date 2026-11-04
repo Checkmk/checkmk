@@ -21,7 +21,7 @@ _EXPECTED_PRESENT = {
 
 
 @pytest.fixture(scope="module", name="cab_archive")
-def _cab_archive() -> CabArchive:
+def _cab_archive() -> CabArchive:  # type: ignore[misc]
     return CabArchive(Path(os.environ["PYTHON_CAB"]).read_bytes())
 
 

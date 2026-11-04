@@ -47,3 +47,15 @@ def test_cmk_update_license_usage(site: Site) -> None:
     # Check that no error messages were written in the licensing log.
     error_logs = site.read_file(site.logs_dir / "licensing.log")
     assert not error_logs, f"Unexpected error messages in licensing.log:\n{error_logs}"
+
+
+def test_cmk_update_license_usage_force_ignores_scheduled_next_run(site: Site) -> None:
+    next_run_path = site.licensing_dir / "next_run"
+    far_future_ts = int((datetime.now() + timedelta(days=365)).timestamp())
+    site.write_file(next_run_path, rot47(str(far_future_ts)))
+
+    p = site.run(["cmk-update-license-usage", "--force"])
+
+    p.check_returncode()
+    next_run_ts = int(rot47(site.read_file(next_run_path)))
+    assert next_run_ts < int((datetime.now() + timedelta(days=2)).timestamp())

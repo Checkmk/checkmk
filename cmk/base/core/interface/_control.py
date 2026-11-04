@@ -287,7 +287,7 @@ def _create_active_config(
     )
 
     with (
-        config_path.create(cmk.utils.paths.omd_root, debug=debug) as config_creation_context,
+        config_path.create(cmk.utils.paths.omd_root) as config_creation_context,
         _backup_objects_file(core_client),
     ):
         intermediate_config = IntermediateMonitoringConfig(

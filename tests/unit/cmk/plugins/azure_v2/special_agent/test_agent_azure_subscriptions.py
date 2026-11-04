@@ -559,3 +559,42 @@ async def test_connection_test_no_subscriptions_arg_skips_check() -> None:
 
     assert result == 0
     mock_client.request_async.assert_not_called()
+
+
+@pytest.mark.xfail(strict=True, raises=ApiError, reason="Crash group 4942")
+@pytest.mark.asyncio
+async def test_unknown_subscription_ends_with_error_message(
+    mock_api_client: AsyncMock, capsys: pytest.CaptureFixture[str]
+) -> None:
+    args = Args(
+        debug=False,
+        proxy="",
+        tenant="tenant",
+        tenant_name=None,
+        client="",
+        secret=Secret(""),
+        authority="global",
+        connection_test=False,
+        explicit_config=[],
+        require_tag=[],
+        require_tag_value=[],
+        no_subscriptions=False,
+        all_subscriptions=False,
+        subscriptions=["non_existent_subscription_id"],
+        subscriptions_require_tag=[],
+        subscriptions_require_tag_value=[],
+        unique_hostnames=None,
+        unique_hostnames_exclude_vms=False,
+    )
+    mock_api_client.request_async.return_value = RESOURCE_GROUPS_RESPONSE
+    mock_context_manager = MagicMock()
+    mock_context_manager.__aenter__.return_value = mock_api_client
+
+    with patch(
+        "cmk.plugins.azure_v2.special_agent.agent_azure_v2.BaseAsyncApiClient",
+        return_value=mock_context_manager,
+    ):
+        result = await main_async(args, Selector(args))
+
+    assert result == 2
+    assert "non_existent_subscription_id not found" in capsys.readouterr().err

@@ -5,6 +5,7 @@ load("@agent_plugins_requirements_3_13//:requirements.bzl", req_3_13 = "requirem
 load("@agent_plugins_requirements_3_8//:requirements.bzl", req_3_8 = "requirement")
 load("@agent_plugins_requirements_3_9//:requirements.bzl", req_3_9 = "requirement")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
+load("//:bazel_variables.bzl", "UV_PIP_COMPILE_ARGS")
 load("//bazel/rules:py_tests_for_python_versions.bzl", "py_tests_for_python_versions")
 
 RUNTIME_REQUIREMENTS = [
@@ -15,6 +16,7 @@ RUNTIME_REQUIREMENTS = [
 
 pip_compile(
     name = "requirements_3_8",
+    args = UV_PIP_COMPILE_ARGS,
     py3_runtime = "@python_3_8//:py3_runtime",
     requirements_in = ":requirements-in",
     requirements_txt = ":requirements_3_8.txt",
@@ -22,6 +24,7 @@ pip_compile(
 
 pip_compile(
     name = "requirements_3_9",
+    args = UV_PIP_COMPILE_ARGS,
     py3_runtime = "@python_3_9//:py3_runtime",
     requirements_in = ":requirements-in",
     requirements_txt = ":requirements_3_9.txt",
@@ -29,6 +32,7 @@ pip_compile(
 
 pip_compile(
     name = "requirements_3_10",
+    args = UV_PIP_COMPILE_ARGS,
     py3_runtime = "@python_3_10//:py3_runtime",
     requirements_in = ":requirements-in",
     requirements_txt = ":requirements_3_10.txt",
@@ -36,6 +40,7 @@ pip_compile(
 
 pip_compile(
     name = "requirements_3_11",
+    args = UV_PIP_COMPILE_ARGS,
     py3_runtime = "@python_3_11//:py3_runtime",
     requirements_in = ":requirements-in",
     requirements_txt = ":requirements_3_11.txt",
@@ -43,6 +48,7 @@ pip_compile(
 
 pip_compile(
     name = "requirements_3_12",
+    args = UV_PIP_COMPILE_ARGS,
     py3_runtime = "@python_3_12//:py3_runtime",
     requirements_in = ":requirements-in",
     requirements_txt = ":requirements_3_12.txt",
@@ -50,6 +56,7 @@ pip_compile(
 
 pip_compile(
     name = "requirements_3_13",
+    args = UV_PIP_COMPILE_ARGS,
     py3_runtime = "@python_3_13//:py3_runtime",
     requirements_in = ":requirements-in",
     requirements_txt = ":requirements_3_13.txt",

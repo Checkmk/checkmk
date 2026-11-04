@@ -375,7 +375,7 @@
     },
     "//bazel/extensions:python_cab_repositories.bzl%repos": {
       "general": {
-        "bzlTransitiveDigest": "dUkdS94kBfgDt5pmkhSUAhwYEYSoggYjFwAlohmP338=",
+        "bzlTransitiveDigest": "SaUS3lMGwWirLaXu2Q9SekrdZnpllRC5ux0LZ/Exdh4=",
         "usagesDigest": "fEM6cB4g0MZpAh1UyMDhjyj4X6uEQ1d76ZFjA/osKq4=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -460,7 +460,7 @@
     },
     "//bazel/module:wnx_repositories.bzl%repos": {
       "general": {
-        "bzlTransitiveDigest": "C1DBL4phLrx1zAMB1JcCyT1QkpleQjOSrNfsovqC71A=",
+        "bzlTransitiveDigest": "FzRQcDP/oWcdi0WI/UaIbkXzj/Gpve461hkX8TZcqX4=",
         "usagesDigest": "+3uNRdlWgsYxcq0UU9ZKlakvB/e/5uEtzxbomkqFSuI=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},

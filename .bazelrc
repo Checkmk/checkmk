@@ -120,6 +120,10 @@ common:ci --@cmk//strip=True
 # Install the venvs through the Nexus PyPI proxy, see //:pypi_proxy.
 common:ci --//:pypi_proxy
 
+# Fetch the Bazel-managed Python wheels through the Nexus PyPI proxy, see pip.parse
+# in bazel/module/py.MODULE.bazel.
+common:ci --repo_env=PIP_INDEX_URL=https://artifacts.lan.tribe29.com/repository/pypi-proxy/simple
+
 # For better performance - passes an argument `--skipLibCheck` to *every* spawn of tsc
 common --@aspect_rules_ts//ts:skipLibCheck=always
 # For more correct typechecks - honor the setting of `skipLibCheck` in the tsconfig.json file

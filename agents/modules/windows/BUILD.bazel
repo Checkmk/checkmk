@@ -6,6 +6,7 @@ load("@rules_shell//shell:sh_library.bzl", "sh_library")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
 load("@windows_python_wheels//:requirements.bzl", "all_whl_requirements")
 load("@windows_test_python_wheels//:requirements.bzl", test_whl_requirements = "all_whl_requirements")
+load("//:bazel_variables.bzl", "UV_PIP_COMPILE_ARGS")
 load("//:package_versions.bzl", "PYTHON_VERSION_WINDOWS")
 load("//bazel/rules:requirements.bzl", "compile_requirements_in")
 load(":python_cab.bzl", "python_cab", "python_msi_tree", "python_test_cab", "python_version_major_minor")
@@ -102,6 +103,7 @@ compile_requirements_in(
 
 pip_compile(
     name = "windows_requirements",
+    args = UV_PIP_COMPILE_ARGS,
     extra_args = [
         # Fail loudly if any (transitive) dep lacks a win_amd64 wheel rather
         # than silently resolving an sdist the hub cannot build.
@@ -125,6 +127,7 @@ compile_requirements_in(
 
 pip_compile(
     name = "windows_test_cab_requirements",
+    args = UV_PIP_COMPILE_ARGS,
     extra_args = ["--only-binary=:all:"],
     py3_runtime = _PY_WIN_RESOLVER_RUNTIME,
     python_platform = "x86_64-pc-windows-msvc",

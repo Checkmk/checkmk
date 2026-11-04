@@ -48,6 +48,10 @@ pip.parse(
         # See also:  https://github.com/bazelbuild/rules_python/issues/1463
         "CC": "gcc-14",
     },
+    # The wheels come from pypi.org, or from PIP_INDEX_URL when set. CI sets it to the
+    # Nexus PyPI proxy (see .bazelrc), so pypi.org outages do not fail the fetches there.
+    envsubst = ["PIP_INDEX_URL"],
+    extra_pip_args = ["--index-url=${PIP_INDEX_URL:-https://pypi.org/simple}"],
     hub_name = "cmk_requirements",
     python_version = "3.13",
     requirements_by_platform = {
@@ -131,6 +135,9 @@ use_repo(
 )
 
 pip.parse(
+    # Like cmk_requirements above.
+    envsubst = ["PIP_INDEX_URL"],
+    extra_pip_args = ["--index-url=${PIP_INDEX_URL:-https://pypi.org/simple}"],
     hub_name = "agent_plugins_requirements_3_8",
     python_version = "3.8",
     requirements_by_platform = {
@@ -139,6 +146,9 @@ pip.parse(
 )
 use_repo(pip, "agent_plugins_requirements_3_8")
 pip.parse(
+    # Like cmk_requirements above.
+    envsubst = ["PIP_INDEX_URL"],
+    extra_pip_args = ["--index-url=${PIP_INDEX_URL:-https://pypi.org/simple}"],
     hub_name = "agent_plugins_requirements_3_9",
     python_version = "3.9",
     requirements_by_platform = {
@@ -147,6 +157,9 @@ pip.parse(
 )
 use_repo(pip, "agent_plugins_requirements_3_9")
 pip.parse(
+    # Like cmk_requirements above.
+    envsubst = ["PIP_INDEX_URL"],
+    extra_pip_args = ["--index-url=${PIP_INDEX_URL:-https://pypi.org/simple}"],
     hub_name = "agent_plugins_requirements_3_10",
     python_version = "3.10",
     requirements_by_platform = {
@@ -155,6 +168,9 @@ pip.parse(
 )
 use_repo(pip, "agent_plugins_requirements_3_10")
 pip.parse(
+    # Like cmk_requirements above.
+    envsubst = ["PIP_INDEX_URL"],
+    extra_pip_args = ["--index-url=${PIP_INDEX_URL:-https://pypi.org/simple}"],
     hub_name = "agent_plugins_requirements_3_11",
     python_version = "3.11",
     requirements_by_platform = {
@@ -163,6 +179,9 @@ pip.parse(
 )
 use_repo(pip, "agent_plugins_requirements_3_11")
 pip.parse(
+    # Like cmk_requirements above.
+    envsubst = ["PIP_INDEX_URL"],
+    extra_pip_args = ["--index-url=${PIP_INDEX_URL:-https://pypi.org/simple}"],
     hub_name = "agent_plugins_requirements_3_12",
     python_version = "3.12",
     requirements_by_platform = {
@@ -171,6 +190,9 @@ pip.parse(
 )
 use_repo(pip, "agent_plugins_requirements_3_12")
 pip.parse(
+    # Like cmk_requirements above.
+    envsubst = ["PIP_INDEX_URL"],
+    extra_pip_args = ["--index-url=${PIP_INDEX_URL:-https://pypi.org/simple}"],
     hub_name = "agent_plugins_requirements_3_13",
     python_version = "3.13",
     requirements_by_platform = {

@@ -9,7 +9,7 @@ load("@repo_license//:license.bzl", "REPO_LICENSE")
 load("@rules_multirun//:defs.bzl", "multirun")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
 load("@rules_uv//uv:venv.bzl", "create_venv")
-load("//:bazel_variables.bzl", "RUFF_VERSION", "UV_VENV_ARGS")
+load("//:bazel_variables.bzl", "RUFF_VERSION", "UV_PIP_COMPILE_ARGS", "UV_VENV_ARGS")
 load("//bazel/rules:proto.bzl", "proto_library_as")
 load("//bazel/rules:requirements.bzl", "compile_requirements_in")
 
@@ -134,6 +134,7 @@ compile_requirements_in(
 
 pip_compile(
     name = "requirements",
+    args = UV_PIP_COMPILE_ARGS,
     requirements_in = ":requirements-in",
     requirements_txt = "@//:requirements.txt",
     tags = ["manual"],
@@ -158,6 +159,7 @@ compile_requirements_in(
 
 pip_compile(
     name = "community_requirements",
+    args = UV_PIP_COMPILE_ARGS,
     requirements_in = ":community-requirements-in",
     requirements_txt = ":community-requirements.txt",
     tags = ["manual"],
@@ -181,6 +183,7 @@ compile_requirements_in(
 
 pip_compile(
     name = "runtime_requirements",
+    args = UV_PIP_COMPILE_ARGS,
     requirements_in = ":runtime-requirements-in",
     requirements_txt = ":runtime-requirements.txt",
     tags = ["manual"],

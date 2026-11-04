@@ -3,7 +3,7 @@ load("@rules_pkg//pkg:deb.bzl", "pkg_deb")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mkdirs", "strip_prefix")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
 load("@rules_uv//uv:venv.bzl", "create_venv")
-load("//:bazel_variables.bzl", "UV_VENV_ARGS", "edition_deps", "edition_skel_permissions")
+load("//:bazel_variables.bzl", "UV_PIP_COMPILE_ARGS", "UV_VENV_ARGS", "edition_deps", "edition_skel_permissions")
 load("//bazel/rules:file_from_flag.bzl", "file_from_flag")
 load("//bazel/rules:git_hash_file.bzl", "git_hash_file")
 load("//bazel/rules:installed_size_from_archive.bzl", "installed_size_from_archive")
@@ -27,6 +27,7 @@ sh_binary(
 
 pip_compile(
     name = "requirements_lock",
+    args = UV_PIP_COMPILE_ARGS,
     requirements_in = ":requirements.txt",
     requirements_txt = ":requirements_lock.txt",
     tags = ["manual"],

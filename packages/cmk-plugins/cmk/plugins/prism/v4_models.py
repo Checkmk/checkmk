@@ -152,6 +152,16 @@ class StorageContainersWithStats(RootModel[list[StorageContainerWithStats]]):
     model_config = ConfigDict(frozen=True)
 
 
+class RemoteSupportConfig(V4Model):
+    is_remote_support_enabled: bool = Field(alias="isRemoteSupportEnabled")
+
+
+class ClusterRemoteSupport(V4Model):
+    """An item of the cluster list, reduced to its remote support state"""
+
+    config: RemoteSupportConfig
+
+
 class Reference(V4Model):
     ext_id: str = Field(alias="extId")
 

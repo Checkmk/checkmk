@@ -26,6 +26,7 @@ from cmk.plugins.prism.special_agent.v4_client import (
 )
 from cmk.plugins.prism.v4_models import (
     Alert,
+    ClusterRemoteSupport,
     Host,
     StorageContainer,
     StorageContainerStats,
@@ -294,6 +295,21 @@ def fetch_containers(context: FetchContext) -> Sequence[Section]:
     ]
 
 
+def fetch_remote_support(context: FetchContext) -> Sequence[Section]:
+    """Reads the cluster list, so it makes no call of its own. Prism Central lists itself
+    as a cluster, so its own state goes to the Prism Central host."""
+    return [
+        Section(
+            "prism_remote_support_v2",
+            ClusterRemoteSupport.model_validate(cluster).to_section(),
+            context.routing.host_for(ext_id)
+            if isinstance(ext_id := cluster.get("extId"), str)
+            else Unroutable("clusters without an ID"),
+        )
+        for cluster in context.clusters
+    ]
+
+
 AHV_VMS_PATH = "vmm/v4.0/ahv/config/vms"
 ESXI_VMS_PATH = "vmm/v4.0/esxi/config/vms"
 # The same fields for AHV and ESXi VMs
@@ -359,6 +375,7 @@ SECTION_FETCHERS: Sequence[Fetcher] = (
     Fetcher("alerts", fetch_alerts),
     Fetcher("containers", fetch_containers),
     Fetcher("vms", fetch_vms),
+    Fetcher("remote support", fetch_remote_support),
 )
 
 

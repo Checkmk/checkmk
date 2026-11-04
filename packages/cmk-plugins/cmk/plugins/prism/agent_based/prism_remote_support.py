@@ -19,6 +19,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.prism.lib import load_json
+from cmk.plugins.prism.v4_models import ClusterRemoteSupport
 
 Section = Mapping[Any, Any]
 
@@ -30,6 +31,18 @@ def parse_prism_remote_support(string_table: StringTable) -> Section:
 agent_section_prism_remote_support = AgentSection(
     name="prism_remote_support",
     parse_function=parse_prism_remote_support,
+)
+
+
+def parse_prism_remote_support_v2(string_table: StringTable) -> Section:
+    cluster = ClusterRemoteSupport.model_validate_json(string_table[0][0])
+    return {"enable": {"enabled": cluster.config.is_remote_support_enabled}}
+
+
+agent_section_prism_remote_support_v2 = AgentSection(
+    name="prism_remote_support_v2",
+    parsed_section_name="prism_remote_support",
+    parse_function=parse_prism_remote_support_v2,
 )
 
 

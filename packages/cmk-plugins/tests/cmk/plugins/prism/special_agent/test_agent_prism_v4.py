@@ -14,6 +14,7 @@ from urllib.parse import parse_qsl, urlsplit
 
 import pytest
 import responses
+from pydantic import ValidationError
 from responses import matchers
 
 from cmk.plugins.prism.special_agent.agent_prism import agent_prism_main, parse_arguments
@@ -28,6 +29,7 @@ from cmk.plugins.prism.special_agent.agent_prism_v4 import (
     fetch_alerts,
     fetch_containers,
     fetch_hosts,
+    fetch_remote_support,
     fetch_vms,
     FetchContext,
     Fetcher,
@@ -171,10 +173,14 @@ class FakeClock:
         return self.now
 
 
-def _routing() -> ClusterRouting:
+def _recorded_cluster_list() -> list[JsonObject]:
     clusters = recorded_clusters()["data"]
     assert isinstance(clusters, list)
-    return ClusterRouting.from_clusters(clusters, AgentMessages())
+    return clusters
+
+
+def _routing() -> ClusterRouting:
+    return ClusterRouting.from_clusters(_recorded_cluster_list(), AgentMessages())
 
 
 def _context(
@@ -880,3 +886,45 @@ def test_v4_agent_reports_unreachable_cluster_list_in_one_line(
             f"{CLUSTERS_PATH}: HTTP 401 invalid credentials\n"
         ),
     )
+
+
+def _remote_support_sections(clusters: Sequence[JsonObject]) -> Sequence[Section]:
+    routing = ClusterRouting.from_clusters(clusters, AgentMessages())
+    return fetch_remote_support(FetchContext(_context().client, clusters, routing, AgentMessages()))
+
+
+def _with_remote_support(cluster: JsonObject, enabled: bool) -> JsonObject:
+    assert isinstance(config := cluster["config"], dict)
+    return {**cluster, "config": {**config, "isRemoteSupportEnabled": enabled}}
+
+
+def test_remote_support_goes_to_its_cluster_or_prism_central_with_only_the_checked_field() -> None:
+    # Remote support is off on the whole lab, so cluster-a's is switched on
+    clusters = [
+        _with_remote_support(cluster, cluster["extId"] == CLUSTER_ID)
+        for cluster in _recorded_cluster_list()
+    ]
+
+    sections = _remote_support_sections(clusters)
+
+    assert sections == [
+        Section(
+            "prism_remote_support_v2", {"config": {"isRemoteSupportEnabled": True}}, "cluster-a"
+        ),
+        Section("prism_remote_support_v2", {"config": {"isRemoteSupportEnabled": False}}, None),
+    ]
+
+
+def test_remote_support_of_a_cluster_without_an_id_is_not_routed() -> None:
+    cluster = {"name": "cluster-a", "config": {"isRemoteSupportEnabled": False}}
+
+    sections = _remote_support_sections([cluster])
+
+    assert [section.target for section in sections] == [Unroutable("clusters without an ID")]
+
+
+def test_cluster_without_a_remote_support_state_fails_the_fetcher() -> None:
+    cluster = {"extId": CLUSTER_ID, "name": "cluster-a", "config": {}}
+
+    with pytest.raises(ValidationError):
+        _remote_support_sections([cluster])

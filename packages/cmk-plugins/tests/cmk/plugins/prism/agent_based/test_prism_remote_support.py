@@ -5,6 +5,7 @@
 
 # mypy: disable-error-code="explicit-any"
 
+import json
 from collections.abc import Mapping, Sequence
 from typing import Any
 
@@ -14,6 +15,8 @@ from cmk.agent_based.v2 import Result, Service, State
 from cmk.plugins.prism.agent_based.prism_remote_support import (
     check_prism_remote_support,
     discovery_prism_remote_support,
+    parse_prism_remote_support,
+    parse_prism_remote_support_v2,
 )
 
 SECTION = {"enable": {"duration": 0, "enabled": False}}
@@ -100,4 +103,27 @@ def test_check_prism_remote_support(  # type: ignore[misc]
             )
         )
         == expected_check_result
+    )
+
+
+def _parse_v4(enabled: bool) -> Mapping[str, Any]:
+    return parse_prism_remote_support_v2(
+        [[json.dumps({"config": {"isRemoteSupportEnabled": enabled}})]]
+    )
+
+
+def test_v4_remote_support_is_discovered_while_disabled() -> None:
+    # What the v4 agent writes for each cluster of a Prism Central 7.5 lab
+    section = _parse_v4(enabled=False)
+
+    assert list(discovery_prism_remote_support(section)) == [Service()]
+
+
+@pytest.mark.parametrize("enabled", [True, False])
+def test_v4_remote_support_gives_the_same_result_as_legacy(enabled: bool) -> None:
+    # The legacy v2 API's answer for the same state, reduced to what the check reads
+    legacy = parse_prism_remote_support([[json.dumps({"enable": {"enabled": enabled}})]])
+
+    assert list(check_prism_remote_support({"tunnel_state": False}, _parse_v4(enabled))) == list(
+        check_prism_remote_support({"tunnel_state": False}, legacy)
     )

@@ -4,14 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from collections.abc import Callable, Mapping
+import re
+from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass
 from http import HTTPStatus
 from typing import Final
 from urllib.parse import parse_qs, unquote, urlsplit
 
 import pytest
-import urllib3
+import requests
+import responses
+from requests.utils import select_proxy
 
 from cmk.notification_plugins.opsgenie_issues import main
 from cmk.testlib.notification_plugins import exit_code, explicit_password
@@ -69,9 +72,6 @@ _CMK_TEAM: Final = {"name": "cmk", "type": "team"}
 _HOST_ACK: Final = {"HOSTACKAUTHOR": "jdoe", "HOSTACKCOMMENT": "on it"}
 _SERVICE_ACK: Final = {"SERVICEACKAUTHOR": "jdoe", "SERVICEACKCOMMENT": "on it"}
 
-_CREATE_ALERT_FAILED: Final = "Exception when calling AlertApi -> create_alert: "
-_CREATE_ALERT_UNHANDLED: Final = "Unhandled exception when calling AlertApi -> create_alert: "
-
 HOST_DESCRIPTION: Final = (
     "Host: myhost\n"
     "    Event:    UP -> DOWN\n"
@@ -90,6 +90,8 @@ class SentRequest:
     query: Mapping[str, list[str]]
     body: Mapping[str, object]
     authorization: str
+    proxy: str | None
+    verify: object
 
 
 class FakeOpsgenie:
@@ -102,21 +104,23 @@ class FakeOpsgenie:
     def reply(self, method: str, path: str, status: int, payload: Mapping[str, object]) -> None:
         self._replies[(method, path)] = (status, payload)
 
-    def urlopen(self, method: str, url: str, **kw: object) -> urllib3.HTTPResponse:
+    def handle(self, request: requests.PreparedRequest) -> tuple[int, dict[str, str], str]:
+        method = str(request.method)
+        url = str(request.url)
         parts = urlsplit(url)
+        sent_with: Mapping[str, object] = getattr(request, "req_kwargs", {})
+        proxies = sent_with.get("proxies")
         path = unquote(parts.path)
-        body = kw.get("body")
-        headers = kw.get("headers")
         self.requests.append(
             SentRequest(
                 method=method,
                 host=parts.netloc,
                 path=path,
                 query=parse_qs(parts.query),
-                body=json.loads(body) if isinstance(body, str) else {},
-                authorization=(
-                    str(headers.get("Authorization")) if isinstance(headers, Mapping) else ""
-                ),
+                body=json.loads(request.body) if request.body else {},
+                authorization=request.headers.get("Authorization", ""),
+                proxy=select_proxy(url, proxies) if isinstance(proxies, Mapping) else None,
+                verify=sent_with.get("verify"),
             )
         )
         default = (
@@ -125,25 +129,23 @@ class FakeOpsgenie:
             else (HTTPStatus.ACCEPTED, _SUCCESS)
         )
         status, payload = self._replies.get((method, path), default)
-        return urllib3.HTTPResponse(
-            body=json.dumps(payload).encode(),
-            status=status,
-            reason=HTTPStatus(status).phrase,
-            preload_content=True,
-        )
+        return status, {}, json.dumps(payload)
 
     def calls(self) -> list[tuple[str, str]]:
         return [(r.method, r.path) for r in self.requests]
 
 
 @pytest.fixture(name="opsgenie")
-def fixture_opsgenie(monkeypatch: pytest.MonkeyPatch) -> FakeOpsgenie:
+def fixture_opsgenie(monkeypatch: pytest.MonkeyPatch) -> Iterator[FakeOpsgenie]:
     fake = FakeOpsgenie()
-    # opsgenie_sdk sends via urllib3, which `responses` cannot intercept.
-    monkeypatch.setattr(urllib3.PoolManager, "urlopen", fake.urlopen)
     for var in _PROXY_ENV_VARS:
         monkeypatch.delenv(var, raising=False)
-    return fake
+    with responses.RequestsMock(assert_all_requests_are_fired=False) as mock:
+        for method in ("GET", "POST", "PUT", "DELETE"):
+            mock.add_callback(
+                method, re.compile(r"https?://[^/]*opsgenie[^/]*/"), callback=fake.handle
+            )
+        yield fake
 
 
 def _body_of(opsgenie: FakeOpsgenie, method: str, path: str) -> Mapping[str, object]:
@@ -700,10 +702,12 @@ def test_unsupported_notification_type_sends_nothing(
 
 
 @pytest.mark.parametrize(
-    "status, error",
+    "status, attempts, expected_exit_code",
     [
-        pytest.param(HTTPStatus.UNAUTHORIZED, _CREATE_ALERT_FAILED, id="api_error"),
-        pytest.param(HTTPStatus.UNPROCESSABLE_ENTITY, _CREATE_ALERT_UNHANDLED, id="unhandled_error"),
+        pytest.param(HTTPStatus.UNAUTHORIZED, 1, 2, id="unauthorized"),
+        pytest.param(HTTPStatus.UNPROCESSABLE_ENTITY, 1, 2, id="rejected"),
+        pytest.param(HTTPStatus.TOO_MANY_REQUESTS, 6, 1, id="throttled_is_retried"),
+        pytest.param(HTTPStatus.SERVICE_UNAVAILABLE, 6, 1, id="server_error_is_retried"),
     ],
 )  # fmt: skip
 def test_failing_alert_creation_aborts(
@@ -711,15 +715,34 @@ def test_failing_alert_creation_aborts(
     capsys: pytest.CaptureFixture[str],
     opsgenie: FakeOpsgenie,
     status: HTTPStatus,
-    error: str,
+    attempts: int,
+    expected_exit_code: int,
 ) -> None:
     opsgenie.reply("POST", "/v2/alerts", status, _REJECTED)
     notify_context(HOST_CONTEXT)
 
     code = exit_code(main)
 
-    assert code == 2
-    assert capsys.readouterr().err.startswith(error)
+    assert code == expected_exit_code
+    assert opsgenie.calls() == [("POST", "/v2/alerts")] * attempts
+    assert capsys.readouterr().err == (
+        f"Opsgenie API call create_alert failed: {status.value} {status.phrase}\n"
+        f"Response: {json.dumps(_REJECTED)}\n"
+    )
+
+
+def test_unreachable_api_is_retried(
+    notify_context: Callable[[Mapping[str, str]], None],
+    capsys: pytest.CaptureFixture[str],
+    opsgenie: FakeOpsgenie,
+) -> None:
+    notify_context({**HOST_CONTEXT, "PARAMETER_URL": "https://unreachable.invalid"})
+
+    code = exit_code(main)
+
+    assert code == 1
+    assert capsys.readouterr().err.startswith("Opsgenie API call create_alert failed: ")
+    assert not opsgenie.requests
 
 
 def test_forbidden_alert_lookup_aborts(
@@ -733,64 +756,72 @@ def test_forbidden_alert_lookup_aborts(
     code = exit_code(main)
 
     assert code == 2
-    assert capsys.readouterr().err.startswith("Exception when calling AlertApi -> get_alert: ")
+    assert capsys.readouterr().err.startswith("Opsgenie API call get_alert failed: 403 Forbidden\n")
 
 
 @pytest.mark.parametrize(
-    "parameters, first_line",
+    "parameters, first_line, verify",
     [
-        pytest.param({}, f"Using trust store: {trusted_ca_file}\n", id="trust_store"),
-        pytest.param({"PARAMETER_IGNORE_SSL": "True"}, "Ignoring SSL certificate verification\n", id="ignore_ssl"),
+        pytest.param({}, f"Using trust store: {trusted_ca_file}\n", str(trusted_ca_file), id="trust_store"),
+        pytest.param({"PARAMETER_IGNORE_SSL": "True"}, "Ignoring SSL certificate verification\n", False, id="ignore_ssl"),
     ],
 )  # fmt: skip
-@pytest.mark.usefixtures("opsgenie")
-def test_connection_settings_are_reported(
+def test_certificate_verification_ignores_ca_bundle_from_environment(
+    monkeypatch: pytest.MonkeyPatch,
     notify_context: Callable[[Mapping[str, str]], None],
     capsys: pytest.CaptureFixture[str],
+    opsgenie: FakeOpsgenie,
     parameters: Mapping[str, str],
     first_line: str,
+    verify: object,
 ) -> None:
+    monkeypatch.setenv("REQUESTS_CA_BUNDLE", "/elsewhere.pem")
     notify_context({**HOST_CONTEXT, **parameters})
 
     main()
 
     assert capsys.readouterr().out.startswith(first_line)
+    assert [r.verify for r in opsgenie.requests] == [verify]
 
 
-@pytest.mark.usefixtures("opsgenie")
-def test_explicit_proxy_is_reported_redacted(
-    notify_context: Callable[[Mapping[str, str]], None], capsys: pytest.CaptureFixture[str]
+def test_explicit_proxy_is_used_and_reported_redacted(
+    notify_context: Callable[[Mapping[str, str]], None],
+    capsys: pytest.CaptureFixture[str],
+    opsgenie: FakeOpsgenie,
 ) -> None:
-    notify_context({**HOST_CONTEXT, "PARAMETER_PROXY_URL": "http://user:secret@proxy.lan:3128"})
+    proxy = "http://user:secret@proxy.lan:3128"
+    notify_context({**HOST_CONTEXT, "PARAMETER_PROXY_URL": proxy})
 
     main()
 
     assert capsys.readouterr().out.startswith("Using proxy: http://***@proxy.lan:3128\n")
+    assert [r.proxy for r in opsgenie.requests] == [proxy]
 
 
 @pytest.mark.parametrize(
-    "parameters, uses_proxy",
+    "parameters, proxy",
     [
-        pytest.param({}, True, id="from_environment_by_default"),
-        pytest.param({"PARAMETER_PROXY_URL": "FROM_ENVIRONMENT"}, True, id="from_environment"),
-        pytest.param({"PARAMETER_PROXY_URL": "NO_PROXY"}, False, id="no_proxy"),
-        pytest.param({"PARAMETER_URL": "http://opsgenie.internal"}, False, id="other_scheme_not_configured"),
+        pytest.param({}, "http://envproxy.lan:3128", id="from_environment_by_default"),
+        pytest.param({"PARAMETER_PROXY_URL": "FROM_ENVIRONMENT"}, "http://envproxy.lan:3128", id="from_environment"),
+        pytest.param({"PARAMETER_PROXY_URL": "NO_PROXY"}, None, id="no_proxy"),
+        pytest.param({"PARAMETER_URL": "http://opsgenie.internal"}, None, id="other_scheme_not_configured"),
     ],
 )  # fmt: skip
-@pytest.mark.usefixtures("opsgenie")
 def test_environment_proxy_selection(
     monkeypatch: pytest.MonkeyPatch,
     notify_context: Callable[[Mapping[str, str]], None],
     capsys: pytest.CaptureFixture[str],
+    opsgenie: FakeOpsgenie,
     parameters: Mapping[str, str],
-    uses_proxy: bool,
+    proxy: str | None,
 ) -> None:
     monkeypatch.setenv("HTTPS_PROXY", "http://envproxy.lan:3128")
     notify_context({**HOST_CONTEXT, **parameters})
 
     main()
 
-    assert ("Using proxy: http://envproxy.lan:3128\n" in capsys.readouterr().out) is uses_proxy
+    assert [r.proxy or None for r in opsgenie.requests] == [proxy]
+    assert ("Using proxy: " in capsys.readouterr().out) is (proxy is not None)
 
 
 def test_configured_url_replaces_default_host(

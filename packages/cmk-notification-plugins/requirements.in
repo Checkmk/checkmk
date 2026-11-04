@@ -1,5 +1,3 @@
 jinja2
-opsgenie-sdk
 requests
-tenacity
 urllib3

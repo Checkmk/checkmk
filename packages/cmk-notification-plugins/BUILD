@@ -26,7 +26,6 @@ py_library(
         "//packages/cmk-events",
         "//packages/cmk-web/cmk/web/utils",
         requirement("jinja2"),
-        requirement("opsgenie-sdk"),
         requirement("requests"),
         requirement("urllib3"),
     ],

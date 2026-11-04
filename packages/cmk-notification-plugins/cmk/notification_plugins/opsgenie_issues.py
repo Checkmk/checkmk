@@ -3,213 +3,244 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# mypy: disable-error-code="no-untyped-call"
-
 import os
 import sys
-from collections.abc import Iterator
-from contextlib import contextmanager
+from collections.abc import Mapping
+from dataclasses import dataclass
 from pprint import pformat
-from typing import assert_never, cast
+from typing import NoReturn
+from urllib.parse import quote
 
+import requests
 import urllib3
-
-# TODO The opsgenie-sdk is untyped in its current state.
-# Does not look like that typing will follow.
-from opsgenie_sdk import (  # type: ignore[attr-defined]
-    AcknowledgeAlertPayload,
-    AddNoteToAlertPayload,
-    AddTagsToAlertPayload,
-    Alert,
-    AlertApi,
-    ApiClient,
-    ApiException,
-    CloseAlertPayload,
-    Configuration,
-    CreateAlertPayload,
-    UpdateAlertDescriptionPayload,
-    UpdateAlertMessagePayload,
-)
-from opsgenie_sdk.exceptions import AuthenticationException
-from requests.utils import get_environ_proxies
-from tenacity import RetryError
-from urllib3.util import parse_url
+from requests.adapters import HTTPAdapter
+from requests.utils import get_environ_proxies, select_proxy
+from urllib3.util import Retry
 
 from cmk.events.notify_types import PluginNotificationContext
 from cmk.notification_plugins import utils
 from cmk.notification_plugins.utils import get_password_from_env_or_context
 from cmk.utils.http_proxy_config import (
     deserialize_http_proxy_config,
-    EnvironmentProxyConfig,
-    ExplicitProxyConfig,
-    NoProxyConfig,
+    HTTPProxyConfig,
     redact_proxy_url,
 )
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.paths import trusted_ca_file
 
+_DEFAULT_URL = "https://api.opsgenie.com"
+_BY_ALIAS = {"identifierType": "alias"}
+_BY_ID = {"identifierType": "id"}
+# Same policy as the former opsgenie-sdk: up to 5 retries on 429, 500, 502-599
+# and connection errors, about 15 s of backoff in total, Retry-After ignored.
+_RETRY = Retry(
+    total=5,
+    backoff_factor=0.5,
+    status_forcelist=(429, 500, *range(502, 600)),
+    allowed_methods=None,
+    respect_retry_after_header=False,
+    raise_on_status=False,
+)
 
-@contextmanager
-def _handle_api_exceptions(api_call_name: str, ignore_retry: bool = False) -> Iterator[None]:
-    try:
-        yield
-    except (ApiException, AuthenticationException) as err:
-        sys.stderr.write(f"Exception when calling AlertApi -> {api_call_name}: {err}\n")
-        sys.exit(2)
-    except Exception as e:
-        if not ignore_retry and isinstance(e, RetryError):
-            with _handle_api_exceptions(api_call_name, ignore_retry=True):
-                e.reraise()
-        sys.stderr.write(f"Unhandled exception when calling AlertApi -> {api_call_name}: {e}\n")
-        sys.exit(2)
+
+@dataclass(frozen=True)
+class ExistingAlert:
+    id: str
+    message: str
+    description: str
 
 
-# https://docs.opsgenie.com/docs/opsgenie-python-api-v2-1
+def _alert_path(identifier: str, action: str = "") -> str:
+    return f"/v2/alerts/{quote(identifier, safe='')}{action}"
+
+
+# https://docs.opsgenie.com/docs/alert-api
 class Connector:
     def __init__(
-        self, api_key: str, host_url: str | None, proxy_url: str | None, ignore_ssl: bool
+        self, api_key: str, host_url: str | None, proxy: HTTPProxyConfig, ignore_ssl: bool
     ) -> None:
-        conf = Configuration()
-        conf.api_key["Authorization"] = api_key
-        if host_url is not None:
-            conf.host = "%s" % host_url
-        if proxy_url is not None:
-            sys.stdout.write(f"Using proxy: {redact_proxy_url(proxy_url)}\n")
-            conf.proxy = proxy_url
+        self._base_url = (host_url or _DEFAULT_URL).rstrip("/")
+        self._session = requests.Session()
+        self._session.headers["Authorization"] = f"GenieKey {api_key}"
+        self._session.mount(self._base_url, HTTPAdapter(max_retries=_RETRY))
+        # Proxies and verify are passed per request, session defaults would lose
+        # against the environment (HTTPS_PROXY, REQUESTS_CA_BUNDLE).
+        self._proxies = proxy.to_requests_proxies()
+        if used_proxy := select_proxy(
+            self._base_url, self._proxies or get_environ_proxies(self._base_url)
+        ):
+            sys.stdout.write(f"Using proxy: {redact_proxy_url(used_proxy)}\n")
 
+        self._verify: bool | str
         if ignore_ssl:
             sys.stdout.write("Ignoring SSL certificate verification\n")
-            conf.verify_ssl = False
+            self._verify = False
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         else:
             sys.stdout.write(f"Using trust store: {trusted_ca_file}\n")
-            conf.ssl_ca_cert = trusted_ca_file
+            self._verify = str(trusted_ca_file)
 
         sys.stdout.flush()
 
-        api_client: ApiClient = ApiClient(configuration=conf)
-        self.alert_api = AlertApi(api_client=api_client)
+    def _send(
+        self,
+        api_call_name: str,
+        method: str,
+        path: str,
+        body: Mapping[str, object] | None,
+        params: Mapping[str, str | None],
+    ) -> requests.Response:
+        try:
+            return self._session.request(
+                method,
+                self._base_url + path,
+                json=None if body is None else {k: v for k, v in body.items() if v is not None},
+                params=params,
+                proxies=self._proxies,
+                verify=self._verify,
+                timeout=110,
+            )
+        except requests.exceptions.RequestException as e:
+            sys.stderr.write(f"Opsgenie API call {api_call_name} failed: {e}\n")
+            sys.exit(1)
 
-    def get_existing_alert(self, alias: str) -> Alert | None:
-        with _handle_api_exceptions("get_alert"):
-            try:
-                response = self.alert_api.get_alert(
-                    identifier=alias,
-                    identifier_type="alias",
-                )
-            except ApiException:
-                sys.stdout.write(f'Alert with alias "{alias}" not found.\n')
-                return None
+    def _request(
+        self,
+        api_call_name: str,
+        method: str,
+        path: str,
+        success: str,
+        *,
+        params: Mapping[str, str | None],
+        body: Mapping[str, object] | None = None,
+    ) -> None:
+        response = self._send(api_call_name, method, path, body, params)
+        if not response.ok:
+            _abort(api_call_name, response)
+        request_id = _json_object(response).get("requestId", "?")
+        sys.stdout.write(f"Request id: {request_id}, successfully {success}.\n")
 
-        alert = cast(Alert, response.data)
-        sys.stdout.write(f'Alert with alias "{alias}" found, id: {alert.id}.\n')
-        return alert
+    def get_existing_alert(self, alias: str) -> ExistingAlert | None:
+        response = self._send("get_alert", "GET", _alert_path(alias), None, _BY_ALIAS)
+        if response.status_code == requests.codes.not_found:
+            sys.stdout.write(f'Alert with alias "{alias}" not found.\n')
+            return None
+        if not response.ok:
+            _abort("get_alert", response)
+
+        data = _json_object(response).get("data")
+        alert = data if isinstance(data, Mapping) else {}
+        if not (alert_id := alert.get("id")):
+            sys.stdout.write(f'Alert with alias "{alias}" not found in response.\n')
+            return None
+        existing = ExistingAlert(
+            id=str(alert_id),
+            message=str(alert.get("message", "")),
+            description=str(alert.get("description", "")),
+        )
+        sys.stdout.write(f'Alert with alias "{alias}" found, id: {existing.id}.\n')
+        return existing
 
     def handle_alert_update_description(self, identifier: str, description: str) -> None:
-        with _handle_api_exceptions("update_alert_description"):
-            response = self.alert_api.update_alert_description(
-                identifier,
-                identifier_type="id",
-                update_alert_description_payload=(
-                    UpdateAlertDescriptionPayload(description=description)
-                ),
-            )
-
-        sys.stdout.write(
-            f"Request id: {response.request_id}, successfully updated alert description.\n"
+        self._request(
+            "update_alert_description",
+            "PUT",
+            _alert_path(identifier, "/description"),
+            "updated alert description",
+            body={"description": description},
+            params=_BY_ID,
         )
 
     def handle_alert_update_message(self, identifier: str, message: str) -> None:
-        with _handle_api_exceptions("update_alert_message"):
-            response = self.alert_api.update_alert_message(
-                identifier,
-                identifier_type="id",
-                update_alert_message_payload=(UpdateAlertMessagePayload(message=message)),
-            )
-
-        sys.stdout.write(
-            f"Request id: {response.request_id}, successfully updated alert message.\n"
+        self._request(
+            "update_alert_message",
+            "PUT",
+            _alert_path(identifier, "/message"),
+            "updated alert message",
+            body={"message": message},
+            params=_BY_ID,
         )
 
-    def handle_alert_creation(self, create_alert_payload: CreateAlertPayload) -> None:
-        with _handle_api_exceptions("create_alert"):
-            response = self.alert_api.create_alert(create_alert_payload=create_alert_payload)
-
-        sys.stdout.write(f"Request id: {response.request_id}, successfully created alert.\n")
-
-    def handle_alert_deletion(
-        self, alias: str | None, close_alert_payload: CloseAlertPayload
-    ) -> None:
-        with _handle_api_exceptions("close_alert"):
-            response = self.alert_api.close_alert(
-                identifier=alias,
-                identifier_type="alias",
-                close_alert_payload=close_alert_payload,
-            )
-
-        sys.stdout.write(f"Request id: {response.request_id}, successfully closed alert.\n")
-
-    def handle_alert_ack(
-        self, alias: str | None, acknowledge_alert_payload: AcknowledgeAlertPayload
-    ) -> None:
-        with _handle_api_exceptions("acknowledge_alert"):
-            response = self.alert_api.acknowledge_alert(
-                identifier=alias,
-                identifier_type="alias",
-                acknowledge_alert_payload=acknowledge_alert_payload,
-            )
-
-        sys.stdout.write(
-            f"Request id: {response.request_id}, successfully added acknowledgedment.\n"
+    def handle_alert_creation(self, payload: Mapping[str, object]) -> None:
+        self._request(
+            "create_alert", "POST", "/v2/alerts", "created alert", body=payload, params={}
         )
 
-    def add_note(self, alias: str, payload: AddNoteToAlertPayload) -> None:
-        with _handle_api_exceptions("add_note"):
-            response = self.alert_api.add_note(
-                identifier=alias, identifier_type="alias", add_note_to_alert_payload=payload
-            )
+    def handle_alert_deletion(self, alias: str, payload: Mapping[str, object]) -> None:
+        self._request(
+            "close_alert",
+            "POST",
+            _alert_path(alias, "/close"),
+            "closed alert",
+            params=_BY_ALIAS,
+            body=payload,
+        )
 
-        sys.stdout.write(f"Request id: {response.request_id}, successfully added note.\n")
+    def handle_alert_ack(self, alias: str, payload: Mapping[str, object]) -> None:
+        self._request(
+            "acknowledge_alert",
+            "POST",
+            _alert_path(alias, "/acknowledge"),
+            "acknowledged alert",
+            params=_BY_ALIAS,
+            body=payload,
+        )
 
-    def add_tags(self, alias: str, payload: AddTagsToAlertPayload) -> None:
-        with _handle_api_exceptions("add_tags"):
-            response = self.alert_api.add_tags(
-                identifier=alias, identifier_type="alias", add_tags_to_alert_payload=payload
-            )
+    def add_note(self, alias: str, payload: Mapping[str, object]) -> None:
+        self._request(
+            "add_note",
+            "POST",
+            _alert_path(alias, "/notes"),
+            "added note",
+            params=_BY_ALIAS,
+            body=payload,
+        )
 
-        sys.stdout.write(f"Request id: {response.request_id}, successfully added tags.\n")
+    def add_tags(self, alias: str, payload: Mapping[str, object]) -> None:
+        self._request(
+            "add_tags",
+            "POST",
+            _alert_path(alias, "/tags"),
+            "added tags",
+            params=_BY_ALIAS,
+            body=payload,
+        )
 
     def remove_tags(
         self, alias: str, tags: list[str], source: str | None, user: str | None, note: str | None
     ) -> None:
-        # The SDK sends query parameters set to None as the string "None"
-        optional = {
-            key: value
-            for key, value in (("source", source), ("user", user), ("note", note))
-            if value is not None
-        }
-        with _handle_api_exceptions("remove_tags"):
-            response = self.alert_api.remove_tags(
-                identifier=alias, identifier_type="alias", tags=tags, **optional
-            )
+        self._request(
+            "remove_tags",
+            "DELETE",
+            _alert_path(alias, "/tags"),
+            "removed tags",
+            params={
+                **_BY_ALIAS,
+                "tags": ",".join(tags),
+                "source": source,
+                "user": user,
+                "note": note,
+            },
+        )
 
-        sys.stdout.write(f"Request id: {response.request_id}, successfully removed tags.\n")
+
+def _json_object(response: requests.Response) -> Mapping[str, object]:
+    try:
+        payload = response.json()
+    except requests.exceptions.JSONDecodeError:
+        return {}
+    return payload if isinstance(payload, Mapping) else {}
 
 
-def _get_proxy_url(proxy_setting: str | None, url: str | None) -> str | None:
-    proxy = deserialize_http_proxy_config(proxy_setting)
-    if isinstance(proxy, EnvironmentProxyConfig):
-        parsed_url = parse_url(url or "https://api.opsgenie.com")
-        proxies = get_environ_proxies(parsed_url.url)
-        return None if parsed_url.scheme is None else proxies.get(parsed_url.scheme)
-
-    if isinstance(proxy, NoProxyConfig):
-        return None
-
-    if isinstance(proxy, ExplicitProxyConfig):
-        return proxy_setting
-
-    assert_never(proxy)
+def _abort(api_call_name: str, response: requests.Response) -> NoReturn:
+    sys.stderr.write(
+        f"Opsgenie API call {api_call_name} failed: {response.status_code} {response.reason}\n"
+        f"Response: {response.text}\n"
+    )
+    retry_later = (
+        response.status_code == requests.codes.too_many_requests or response.status_code >= 500
+    )
+    sys.exit(1 if retry_later else 2)
 
 
 def _get_connector(context: PluginNotificationContext) -> Connector:
@@ -221,11 +252,10 @@ def _get_connector(context: PluginNotificationContext) -> Connector:
         key="PARAMETER_PASSWORD",
         context=context,
     )
-    url = context.get("PARAMETER_URL")
     return Connector(
         api_key,
-        url,
-        _get_proxy_url(context.get("PARAMETER_PROXY_URL"), url),
+        context.get("PARAMETER_URL"),
+        deserialize_http_proxy_config(context.get("PARAMETER_PROXY_URL")),
         ignore_ssl="PARAMETER_IGNORE_SSL" in context,
     )
 
@@ -350,21 +380,21 @@ def _handle_problem(
     existing_alert = connector.get_existing_alert(alias) if integration_team else None
 
     connector.handle_alert_creation(
-        create_alert_payload=CreateAlertPayload(
-            note=note_created,
-            actions=actions_list,
-            description=desc,
-            message=msg,
-            priority=priority,
-            responders=teams_list,
-            visible_to=visible_to,
-            tags=tags_list,
-            entity=entity_value,
-            source=alert_source,
-            alias=alias,
-            user=owner,
-            details=_get_extra_properties(context),
-        )
+        {
+            "note": note_created,
+            "actions": actions_list,
+            "description": desc,
+            "message": msg,
+            "priority": priority,
+            "responders": teams_list,
+            "visibleTo": visible_to,
+            "tags": tags_list,
+            "entity": entity_value,
+            "source": alert_source,
+            "alias": alias,
+            "user": owner,
+            "details": _get_extra_properties(context),
+        }
     )
 
     if existing_alert:
@@ -387,12 +417,7 @@ def _handle_acknowledgement(
         ack_author = context["SERVICEACKAUTHOR"]
         ack_comment = context["SERVICEACKCOMMENT"]
     connector.handle_alert_ack(
-        alias=alias,
-        acknowledge_alert_payload=AcknowledgeAlertPayload(
-            source=alert_source,
-            user=ack_author,
-            note=ack_comment,
-        ),
+        alias, {"source": alert_source, "user": ack_author, "note": ack_comment}
     )
 
 
@@ -412,14 +437,7 @@ def _handle_alert_handler(
     note = f"Alert handler ({name}): {state}\nOutput: {output}"
     if len(note) > 25000:  # API limit
         note = note[:24997] + "..."
-    connector.add_note(
-        alias=alias,
-        payload=AddNoteToAlertPayload(
-            source=alert_source,
-            user=owner,
-            note=note,
-        ),
-    )
+    connector.add_note(alias, {"source": alert_source, "user": owner, "note": note})
 
 
 def main() -> None:
@@ -435,25 +453,25 @@ def main() -> None:
             _handle_problem(context, connector, alias, integration_team, alert_source, owner)
         case "RECOVERY":
             connector.handle_alert_deletion(
-                alias=alias,
-                close_alert_payload=CloseAlertPayload(
-                    source=alert_source,
-                    user=owner,
-                    note=context.get("PARAMETER_NOTE_CLOSED") or "Alert closed by Check_MK",
-                ),
+                alias,
+                {
+                    "source": alert_source,
+                    "user": owner,
+                    "note": context.get("PARAMETER_NOTE_CLOSED") or "Alert closed by Check_MK",
+                },
             )
         case "ACKNOWLEDGEMENT":
             _handle_acknowledgement(context, connector, alias, alert_source)
         case "FLAPPINGSTART" as nt:
             _requires_integration_team(nt, integration_team)
             connector.add_tags(
-                alias=alias,
-                payload=AddTagsToAlertPayload(
-                    tags=["Flapping"],
-                    source=alert_source,
-                    user=owner,
-                    note="Flapping started",
-                ),
+                alias,
+                {
+                    "tags": ["Flapping"],
+                    "source": alert_source,
+                    "user": owner,
+                    "note": "Flapping started",
+                },
             )
         case "FLAPPINGSTOP" | "FLAPPINGDISABLED" as nt:
             _requires_integration_team(nt, integration_team)
@@ -467,13 +485,13 @@ def main() -> None:
         case "DOWNTIMESTART" as nt:
             _requires_integration_team(nt, integration_team)
             connector.add_tags(
-                alias=alias,
-                payload=AddTagsToAlertPayload(
-                    tags=["Downtime"],
-                    source=alert_source,
-                    user=owner,
-                    note="Downtime started",
-                ),
+                alias,
+                {
+                    "tags": ["Downtime"],
+                    "source": alert_source,
+                    "user": owner,
+                    "note": "Downtime started",
+                },
             )
         case "DOWNTIMEEND" | "DOWNTIMECANCELLED" as nt:
             _requires_integration_team(nt, integration_team)

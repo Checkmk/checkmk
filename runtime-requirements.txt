@@ -382,7 +382,6 @@ certifi==2026.10.23 \
     #   httpx
     #   kubernetes
     #   netapp-ontap
-    #   opsgenie-sdk
     #   requests
 cffi==2.1.1 \
     --hash=sha256:046bfc24911b37851ee1b51aab8bffe713d89c68c6a057b09484ce9fd5f69b4e \
@@ -2773,12 +2772,6 @@ opentelemetry-util-http==0.66b2 \
     #   opentelemetry-instrumentation-httpx
     #   opentelemetry-instrumentation-requests
     #   opentelemetry-instrumentation-wsgi
-opsgenie-sdk==2.1.5 \
-    --hash=sha256:c38a2f0c7acbcbeb9202ced80ec857b5eda2d99919392fed4083bdfa7be32669 \
-    --hash=sha256:fe0af399030a91ec5755ecfb899965bf18fcb46e17fd2d3a4d71fa68999947e9
-    # via
-    #   -c requirements.txt
-    #   -r packages/cmk-notification-plugins/requirements.in
 oracledb==26.1.0 \
     --hash=sha256:0c2220a90d58f99b68e62a9f731dae2434880f77da97763de254f5bc5a81da30 \
     --hash=sha256:0cf48cc91399b300c9b430e28d91dca858fa4da4d0bb9b3887302ef477d8d562 \
@@ -3776,7 +3769,6 @@ python-dateutil==2.9.0.post0 \
     #   icalendar
     #   kubernetes
     #   matplotlib
-    #   opsgenie-sdk
     #   pyghmi
     #   pysaml2
     #   recurring-ical-events
@@ -4381,14 +4373,12 @@ setuptools==84.2.1 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-    #   opsgenie-sdk
 six==1.17.0 \
     --hash=sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274 \
     --hash=sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81
     # via
     #   -c requirements.txt
     #   kubernetes
-    #   opsgenie-sdk
     #   python-dateutil
 smmap==5.0.3 \
     --hash=sha256:4d9debb8b99007ae47165abc08670bd74cb74b5227dda7f643eccc4e9eb5642c \
@@ -4430,9 +4420,7 @@ tenacity==9.1.4 \
     #   -c requirements.txt
     #   -r non-free/packages/cmk-data-backend/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
-    #   -r packages/cmk-notification-plugins/requirements.in
     #   google-genai
-    #   opsgenie-sdk
 tiktoken==0.14.0 \
     --hash=sha256:087538c080e5ff421abd3a0785ed63c5111d06af98e6cd0d374dbe5969147ca3 \
     --hash=sha256:10f31e63e40313f2e518d87f7086cfa44e45f64cc14d8ae14103b41220c30a14 \
@@ -4588,7 +4576,6 @@ urllib3==2.8.0 \
     #   clickhouse-connect
     #   kubernetes
     #   netapp-ontap
-    #   opsgenie-sdk
     #   redfish
     #   requests
 urllib3[zstd]==2.8.0 \

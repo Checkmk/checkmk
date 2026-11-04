@@ -7079,10 +7079,6 @@
             "https://files.pythonhosted.org/packages/18/8d/39885564eefa43f6181acfa3d698af2f6b5fe3e64c86dce3f1b955f6397f/opentelemetry_util_http-0.66b2-py3-none-any.whl": "sha256:c4bb5d6744e60353bcaa3e325bc529a1515346b51cb4d9c8e5b730579337e06d",
             "https://files.pythonhosted.org/packages/d6/57/33566966a7bced4d02fbc672f92029184e4a743f5b531e44b4c0dc4c999b/opentelemetry_util_http-0.66b2.tar.gz": "sha256:7ba066ea609202e474679ddf1d0f753a1e6619bd206b36afaecba4bbb86e25d0"
           },
-          "opsgenie-sdk": {
-            "https://files.pythonhosted.org/packages/5d/13/ddaa92608384f64e8d0d22097e74c24e341f2b41096c52c872abfa35b63f/opsgenie-sdk-2.1.5.tar.gz": "sha256:c38a2f0c7acbcbeb9202ced80ec857b5eda2d99919392fed4083bdfa7be32669",
-            "https://files.pythonhosted.org/packages/dc/b9/4c0479fba19fabb00850e11dcb69d82471ed6b29fee1736594b4bedad2d3/opsgenie_sdk-2.1.5-py3-none-any.whl": "sha256:fe0af399030a91ec5755ecfb899965bf18fcb46e17fd2d3a4d71fa68999947e9"
-          },
           "oracledb": {
             "https://files.pythonhosted.org/packages/03/6b/87d78ec1f2df8d5530680e4dd153d314b6bee8556ff9c21ccfa7ed5d83fe/oracledb-26.1.0-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl": "sha256:fb5ae69a25c45d6fdff7ed52dc2110b59ef156beee6f82f78c8966d8d3c35a4e",
             "https://files.pythonhosted.org/packages/04/84/812c5dd5dcde8759e217e0be33a966a2db115a1e1ee5352f800893557cc3/oracledb-26.1.0-cp315-cp315-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl": "sha256:3b16e809a5409f9e4e6552fe7d7f6871e52ec4bf749c1762ce3ea57c2e6e7ebb",

@@ -1087,7 +1087,6 @@ class _SessionRefusingClient:
         raise SessionCreationError("HTTP 404: Failed to create the session")
 
 
-@pytest.mark.xfail(strict=True, raises=SessionCreationError, reason="Crash group 4952")
 def test_refused_session_is_reported_as_login_error(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:

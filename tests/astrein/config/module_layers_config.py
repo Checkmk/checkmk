@@ -963,6 +963,8 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         *PACKAGE_CCC,
         "cmk.base",
         "cmk.product_usage",
+        "cmk.utils.licensing",
+        "cmk.utils.nonfree.pro.licensing",
         "cmk.utils.paths",
     ),
     Component("cmk.product_usage"): _allow(

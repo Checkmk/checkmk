@@ -7,8 +7,10 @@ from datetime import datetime, timedelta
 
 from cmk.product_usage.schedule import (
     create_next_random_ts,
+    create_next_ts,
     get_next_run_ts,
     next_run_file_path,
+    next_run_interval,
     should_run_collection_on_schedule,
     store_next_run_ts,
 )
@@ -60,3 +62,19 @@ def test_get_next_product_usage_run_ts() -> None:
     ts_file_path.write_text("not_a_timestamp")
 
     assert get_next_run_ts(ts_file_path) is None
+
+
+def test_cloud_trial_site_plans_the_next_run_7_days_later() -> None:
+    now = datetime.now()
+
+    next_ts = create_next_ts(now, interval=next_run_interval(cloud_trial=True))
+
+    assert next_ts == int((now + timedelta(days=7)).timestamp())
+
+
+def test_other_sites_plan_the_next_run_30_days_later() -> None:
+    now = datetime.now()
+
+    next_ts = create_next_ts(now, interval=next_run_interval(cloud_trial=False))
+
+    assert next_ts == int((now + timedelta(days=30)).timestamp())

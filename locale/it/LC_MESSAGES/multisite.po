@@ -2671,6 +2671,11 @@ msgid "A provisioning of over 100% means over provisioning."
 msgstr ""
 "Un accantonamento superiore al 100% significa un accantonamento eccessivo."
 
+msgid ""
+"A refresh token that is not used for this long expires. Every refresh issues "
+"a new refresh token, so clients in active use keep working."
+msgstr ""
+
 msgid "A regular expression is required"
 msgstr "Espressione regolare richiesta"
 
@@ -3694,6 +3699,10 @@ msgid "Access token"
 msgstr "Token di accesso"
 
 msgid "Access token is required"
+msgstr "Token di accesso richiesto"
+
+#, fuzzy
+msgid "Access token lifetime"
 msgstr "Token di accesso richiesto"
 
 msgid "Access via TCP"
@@ -5404,6 +5413,11 @@ msgstr ""
 "Dopo questo tempo nello stato <i>down</i> una porta è considerata "
 "inutilizzata."
 
+msgid ""
+"After this time the user has to log in and approve the client again, however "
+"actively the session is used."
+msgstr ""
+
 msgid "Age"
 msgstr "Età"
 
@@ -6021,13 +6035,6 @@ msgstr ""
 "Tutti i dati assoluti mostrati in questa pagina si riferiscono "
 "all'intervallo di tempo da quando questo host è stato avviato."
 
-msgid ""
-"All access tokens issued to the selected clients are revoked immediately."
-msgstr ""
-
-msgid "All access tokens issued to this client are revoked immediately."
-msgstr ""
-
 msgid "All aggregations"
 msgstr "Tutte le aggregazioni"
 
@@ -6435,6 +6442,12 @@ msgstr "Tutti i servizi con una determinata descrizione"
 
 msgid "All services with this description"
 msgstr "Tutti i servizi con questa descrizione"
+
+msgid "All sessions of the selected clients are ended immediately."
+msgstr ""
+
+msgid "All sessions of this client are ended immediately."
+msgstr ""
 
 msgid ""
 "All single-host aggregations that are in non-OK state (honoring state "
@@ -7210,13 +7223,12 @@ msgid "Any"
 msgstr "qualsiasi"
 
 msgid ""
-"Any application using the selected tokens will no longer be able to access "
-"the API with them."
+"Any application using the selected sessions will no longer be able to access "
+"the API."
 msgstr ""
 
 msgid ""
-"Any application using this token will no longer be able to access the API "
-"with it."
+"Any application using this session will no longer be able to access the API."
 msgstr ""
 
 msgid ""
@@ -33305,6 +33317,11 @@ msgstr "Intervallo di pulizia"
 msgid "How"
 msgstr "Come"
 
+msgid ""
+"How long a client can call the API with one access token before it has to "
+"refresh it."
+msgstr ""
+
 msgid "How long single values or table columns are kept."
 msgstr ""
 "Per quanto tempo vengono conservati i singoli valori o le colonne della "
@@ -38224,10 +38241,6 @@ msgstr "Stato Is-Home (solo Netapp)"
 msgid "Issue type ID"
 msgstr "Tipo di problema ID"
 
-#, fuzzy
-msgid "Issued"
-msgstr "Emittente"
-
 msgid "Issued by"
 msgstr "Rilasciato da"
 
@@ -40540,6 +40553,13 @@ msgstr "Durata dei certificati"
 
 msgid "Lifetime remaining"
 msgstr "Vita rimanente"
+
+msgid ""
+"Lifetimes of the sessions that OAuth clients, such as MCP clients, open on "
+"behalf of a user. Changes to the session lifetime apply to sessions created "
+"afterwards. The refresh and access token lifetimes apply to every token "
+"issued afterwards, including refreshes of existing sessions."
+msgstr ""
 
 msgid "Limit"
 msgstr "Limitare"
@@ -49330,8 +49350,8 @@ msgid "OAUth authentication"
 msgstr "Autenticazione OAUth"
 
 #, fuzzy
-msgid "OAuth access tokens"
-msgstr "Token di accesso API"
+msgid "OAuth sessions"
+msgstr "Sessioni attive"
 
 #, fuzzy
 msgid "OAuth token"
@@ -49682,11 +49702,11 @@ msgstr "Su regole selezionate"
 msgid "On selected services"
 msgstr "Su siti selezionati"
 
-msgid "On selected sites"
-msgstr "Su siti selezionati"
-
 #, fuzzy
-msgid "On selected tokens"
+msgid "On selected sessions"
+msgstr "Sessioni rifiutate"
+
+msgid "On selected sites"
 msgstr "Su siti selezionati"
 
 msgid "On selected users"
@@ -57119,6 +57139,10 @@ msgstr "Aggiornare"
 msgid "Refresh token is required"
 msgstr "Espressione regolare richiesta"
 
+#, fuzzy
+msgid "Refresh token lifetime"
+msgstr "Espressione regolare richiesta"
+
 #, python-format
 msgid "Refreshed check configuration of host '%s'"
 msgstr "Aggiornata la configurazione di controllo dell'host '%s'"
@@ -57811,8 +57835,20 @@ msgstr "Rimosso: %s"
 msgid "Remove scheduled downtimes?"
 msgstr "Eliminare i tempi di inattività programmati?"
 
+#, fuzzy
+msgid "Remove selected sessions"
+msgstr "Sessioni rifiutate"
+
 msgid "Remove service"
 msgstr "Rimuovere il servizio"
+
+#, fuzzy
+msgid "Remove session"
+msgstr "Rimosso: %s"
+
+#, fuzzy
+msgid "Remove sessions"
+msgstr "Sessioni rifiutate"
 
 #, fuzzy
 msgid "Remove smarthost"
@@ -57856,6 +57892,10 @@ msgid "Remove this rule pack from the Extension Packages module"
 msgstr ""
 "Rimuovere questo pacchetto di regole dal modulo Pacchetti di estensioni"
 
+#, fuzzy
+msgid "Remove this session"
+msgstr "Rimuovi questa voce"
+
 msgid "Remove two-factor authentication"
 msgstr "Rimuovere l'autenticazione a due fattori"
 
@@ -57872,6 +57912,10 @@ msgstr "Rimuovere i servizi scomparsi"
 
 msgid "Removed"
 msgstr "Rimosso"
+
+#, fuzzy, python-format
+msgid "Removed %(n)d sessions."
+msgstr "Token di accesso API"
 
 #, python-format
 msgid "Removed %sgroup %s from customer %s"
@@ -57910,6 +57954,10 @@ msgstr "Rimosso il %s '%s'"
 #, python-format
 msgid "Removed the connection '%s'"
 msgstr "Rimosso il collegamento '%s'."
+
+#, fuzzy
+msgid "Removed the session."
+msgstr "Rimosso il %s '%s'"
 
 #, python-format
 msgid "Removed unpackaged extension file %s: %s"
@@ -59130,30 +59178,6 @@ msgid "Review your configuration and run preview service discovery"
 msgstr ""
 "Il rilevamento del servizio di questo host è fallito durante un precedente "
 "rilevamento di massa del servizio."
-
-#, fuzzy
-msgid "Revoke access token"
-msgstr "Token di accesso API"
-
-#, fuzzy
-msgid "Revoke selected access tokens"
-msgstr "Token di accesso API"
-
-#, fuzzy
-msgid "Revoke this access token"
-msgstr "Token di accesso API"
-
-#, fuzzy
-msgid "Revoke tokens"
-msgstr "Aggiornare"
-
-#, fuzzy, python-format
-msgid "Revoked %(n)d access tokens."
-msgstr "Token di accesso API"
-
-#, fuzzy
-msgid "Revoked the access token."
-msgstr "Token di accesso API"
 
 msgid "Rewrite application"
 msgstr "Riscrivere l'applicazione"
@@ -62490,7 +62514,15 @@ msgstr ""
 msgid "Services: %d total (%d added, %d changed, %d removed, %d kept)"
 msgstr "Servizi: %d totale (%d aggiunto, %d rimosso, %d mantenuto)"
 
+#, fuzzy
+msgid "Session created"
+msgstr "Tasso di sessione"
+
 msgid "Session idle timeout"
+msgstr "Timeout di inattività della sessione"
+
+#, fuzzy
+msgid "Session lifetime"
 msgstr "Timeout di inattività della sessione"
 
 msgid "Session management"
@@ -62505,6 +62537,10 @@ msgstr "Timeout di sessione:"
 
 msgid "Session type"
 msgstr "Tipo di sessione"
+
+#, fuzzy
+msgid "Sessions"
+msgstr "sessioni"
 
 #, fuzzy, python-format
 msgid "Set '%s' to '%s' on site %s"
@@ -70037,6 +70073,9 @@ msgstr ""
 msgid "The access token for this OAuth2 connection."
 msgstr "L'ID di questa connessione."
 
+msgid "The access token lifetime must not exceed the refresh token lifetime"
+msgstr ""
+
 #, python-format
 msgid "The action '%s' is not implemented"
 msgstr "L'azione \"%s\" non è implementata"
@@ -70224,13 +70263,12 @@ msgstr ""
 "dall'aggregazione <b>%s</b> e <b>%s</b>"
 
 msgid ""
-"The application using this token will no longer be able to access the API "
-"with it."
+"The application using this session will no longer be able to access the API."
 msgstr ""
 
 msgid ""
-"The applications using the selected tokens will no longer be able to access "
-"the API with them."
+"The applications using the selected sessions will no longer be able to "
+"access the API."
 msgstr ""
 
 msgid "The aspect of the image is preserved."
@@ -73358,6 +73396,9 @@ msgstr ""
 #, fuzzy
 msgid "The refresh token for this OAuth2 connection."
 msgstr "L'ID di questa connessione."
+
+msgid "The refresh token lifetime must not exceed the session lifetime"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -77231,7 +77272,7 @@ msgstr "Questa autorizzazione è necessaria per il modulo <i>Password</i>."
 #, fuzzy
 msgid ""
 "This permission is needed for the modules <b>Users</b>, <b>Roles</b>, "
-"<b>Contact groups</b> and <b>OAuth access tokens</b>"
+"<b>Contact groups</b> and <b>OAuth sessions</b>"
 msgstr ""
 "Questa autorizzazione è necessaria per i moduli <b>Users</b>, <b>Roles</b> e "
 "<b>Contact Groups</b>"
@@ -81055,10 +81096,6 @@ msgstr ""
 #, fuzzy
 msgid "Token invalid"
 msgstr "non valido:"
-
-#, fuzzy
-msgid "Tokens"
-msgstr "Token"
 
 msgid "Tolerance period for 'activating' state"
 msgstr "Periodo di tolleranza per lo stato di 'attivazione'"
@@ -88894,7 +88931,7 @@ msgid "View and edit the rules and aggregations in this BI pack"
 msgstr ""
 "Visualizzare e modificare le regole e le aggregazioni in questo pacchetto BI"
 
-msgid "View and revoke OAuth access tokens issued to users."
+msgid "View and revoke OAuth sessions issued to users."
 msgstr ""
 
 #, fuzzy
@@ -101712,6 +101749,42 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Issued"
+#~ msgstr "Emittente"
+
+#, fuzzy
+#~ msgid "OAuth access tokens"
+#~ msgstr "Token di accesso API"
+
+#, fuzzy
+#~ msgid "On selected tokens"
+#~ msgstr "Su siti selezionati"
+
+#, fuzzy
+#~ msgid "Revoke access token"
+#~ msgstr "Token di accesso API"
+
+#, fuzzy
+#~ msgid "Revoke selected access tokens"
+#~ msgstr "Token di accesso API"
+
+#, fuzzy
+#~ msgid "Revoke this access token"
+#~ msgstr "Token di accesso API"
+
+#, fuzzy
+#~ msgid "Revoke tokens"
+#~ msgstr "Aggiornare"
+
+#, fuzzy
+#~ msgid "Revoked the access token."
+#~ msgstr "Token di accesso API"
+
+#, fuzzy
+#~ msgid "Tokens"
+#~ msgstr "Token"
 
 #, fuzzy
 #~ msgid "Dock to the bottom"

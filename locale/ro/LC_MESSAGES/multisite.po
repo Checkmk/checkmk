@@ -2663,6 +2663,11 @@ msgstr ""
 msgid "A provisioning of over 100% means over provisioning."
 msgstr "O dotare de peste 100% înseamnă o dotare excesivă."
 
+msgid ""
+"A refresh token that is not used for this long expires. Every refresh issues "
+"a new refresh token, so clients in active use keep working."
+msgstr ""
+
 #, fuzzy
 msgid "A regular expression is required"
 msgstr "Expresie regulată de așteptat"
@@ -3723,6 +3728,10 @@ msgstr "Token de acces la API"
 
 #, fuzzy
 msgid "Access token is required"
+msgstr "ca macro numit"
+
+#, fuzzy
+msgid "Access token lifetime"
 msgstr "ca macro numit"
 
 msgid "Access via TCP"
@@ -5515,6 +5524,11 @@ msgid "After this time in the state <i>down</i> a port is considered unused."
 msgstr ""
 "După acest timp în starea <i>down</i> un port este considerat neutilizat."
 
+msgid ""
+"After this time the user has to log in and approve the client again, however "
+"actively the session is used."
+msgstr ""
+
 msgid "Age"
 msgstr "Vârsta"
 
@@ -6169,13 +6183,6 @@ msgstr ""
 "Toate datele absolute afișate pe această pagină se referă la intervalul de "
 "timp de când a fost pornită această gazdă."
 
-msgid ""
-"All access tokens issued to the selected clients are revoked immediately."
-msgstr ""
-
-msgid "All access tokens issued to this client are revoked immediately."
-msgstr ""
-
 msgid "All aggregations"
 msgstr "Toate agregările"
 
@@ -6582,6 +6589,12 @@ msgstr "Toate serviciile cu o anumită descriere"
 
 msgid "All services with this description"
 msgstr "Toate serviciile cu această descriere"
+
+msgid "All sessions of the selected clients are ended immediately."
+msgstr ""
+
+msgid "All sessions of this client are ended immediately."
+msgstr ""
 
 msgid ""
 "All single-host aggregations that are in non-OK state (honoring state "
@@ -7366,13 +7379,12 @@ msgid "Any"
 msgstr "orice"
 
 msgid ""
-"Any application using the selected tokens will no longer be able to access "
-"the API with them."
+"Any application using the selected sessions will no longer be able to access "
+"the API."
 msgstr ""
 
 msgid ""
-"Any application using this token will no longer be able to access the API "
-"with it."
+"Any application using this session will no longer be able to access the API."
 msgstr ""
 
 msgid ""
@@ -33596,6 +33608,11 @@ msgstr "Interval de menaj"
 msgid "How"
 msgstr "Cum"
 
+msgid ""
+"How long a client can call the API with one access token before it has to "
+"refresh it."
+msgstr ""
+
 msgid "How long single values or table columns are kept."
 msgstr "Cât timp sunt păstrate valorile individuale sau coloanele din tabel."
 
@@ -38539,10 +38556,6 @@ msgstr "Starea Is-Home (numai Netapp)"
 msgid "Issue type ID"
 msgstr "Tipul de problemă ID"
 
-#, fuzzy
-msgid "Issued"
-msgstr "Emitent"
-
 msgid "Issued by"
 msgstr "Emis de"
 
@@ -40855,6 +40868,13 @@ msgstr "Durata de viață a certificatelor"
 
 msgid "Lifetime remaining"
 msgstr "Durata de viață rămasă"
+
+msgid ""
+"Lifetimes of the sessions that OAuth clients, such as MCP clients, open on "
+"behalf of a user. Changes to the session lifetime apply to sessions created "
+"afterwards. The refresh and access token lifetimes apply to every token "
+"issued afterwards, including refreshes of existing sessions."
+msgstr ""
 
 msgid "Limit"
 msgstr "Limitați"
@@ -49680,8 +49700,8 @@ msgid "OAUth authentication"
 msgstr "Autentificare OAUth"
 
 #, fuzzy
-msgid "OAuth access tokens"
-msgstr "Token de acces la API"
+msgid "OAuth sessions"
+msgstr "Sesiuni active"
 
 #, fuzzy
 msgid "OAuth token"
@@ -50034,11 +50054,11 @@ msgstr "La regulile selectate"
 msgid "On selected services"
 msgstr "Pe site-uri selectate"
 
-msgid "On selected sites"
-msgstr "Pe site-uri selectate"
-
 #, fuzzy
-msgid "On selected tokens"
+msgid "On selected sessions"
+msgstr "Sesiuni respinse"
+
+msgid "On selected sites"
 msgstr "Pe site-uri selectate"
 
 msgid "On selected users"
@@ -57492,6 +57512,10 @@ msgstr "Reîmprospătare"
 msgid "Refresh token is required"
 msgstr "Expresie regulată de așteptat"
 
+#, fuzzy
+msgid "Refresh token lifetime"
+msgstr "Expresie regulată de așteptat"
+
 #, python-format
 msgid "Refreshed check configuration of host '%s'"
 msgstr "A reactualizat configurația de verificare a gazdei '%s'"
@@ -58188,8 +58212,20 @@ msgstr "Eliminat: %s"
 msgid "Remove scheduled downtimes?"
 msgstr "Eliminați perioadele de întrerupere programate?"
 
+#, fuzzy
+msgid "Remove selected sessions"
+msgstr "Sesiuni respinse"
+
 msgid "Remove service"
 msgstr "Îndepărtarea serviciului"
+
+#, fuzzy
+msgid "Remove session"
+msgstr "Eliminat: %s"
+
+#, fuzzy
+msgid "Remove sessions"
+msgstr "Sesiuni respinse"
 
 #, fuzzy
 msgid "Remove smarthost"
@@ -58232,6 +58268,10 @@ msgstr "Îndepărtați acest pachet"
 msgid "Remove this rule pack from the Extension Packages module"
 msgstr "Eliminați acest pachet de reguli din modulul Pachete de extensii"
 
+#, fuzzy
+msgid "Remove this session"
+msgstr "Eliminați această intrare"
+
 msgid "Remove two-factor authentication"
 msgstr "Îndepărtați autentificarea cu doi factori"
 
@@ -58248,6 +58288,10 @@ msgstr "Eliminarea serviciilor dispărute"
 
 msgid "Removed"
 msgstr "Eliminat"
+
+#, fuzzy, python-format
+msgid "Removed %(n)d sessions."
+msgstr "Token de acces la API"
 
 #, python-format
 msgid "Removed %sgroup %s from customer %s"
@@ -58286,6 +58330,10 @@ msgstr "Eliminat %s \"%s"
 #, python-format
 msgid "Removed the connection '%s'"
 msgstr "A fost eliminată conexiunea '%s'"
+
+#, fuzzy
+msgid "Removed the session."
+msgstr "Eliminat %s \"%s"
 
 #, python-format
 msgid "Removed unpackaged extension file %s: %s"
@@ -59501,30 +59549,6 @@ msgid "Review your configuration and run preview service discovery"
 msgstr ""
 "Descoperirea serviciilor acestei gazde a eșuat în timpul unei descoperiri de "
 "servicii în masă anterioare."
-
-#, fuzzy
-msgid "Revoke access token"
-msgstr "Token de acces la API"
-
-#, fuzzy
-msgid "Revoke selected access tokens"
-msgstr "Token de acces la API"
-
-#, fuzzy
-msgid "Revoke this access token"
-msgstr "Token de acces la API"
-
-#, fuzzy
-msgid "Revoke tokens"
-msgstr "Reîmprospătare"
-
-#, fuzzy, python-format
-msgid "Revoked %(n)d access tokens."
-msgstr "Token de acces la API"
-
-#, fuzzy
-msgid "Revoked the access token."
-msgstr "Token de acces la API"
 
 msgid "Rewrite application"
 msgstr "Rescrieți aplicația"
@@ -62918,7 +62942,15 @@ msgstr ""
 msgid "Services: %d total (%d added, %d changed, %d removed, %d kept)"
 msgstr "Servicii: %d total (%d adăugate, %d eliminate, %d păstrate)"
 
+#, fuzzy
+msgid "Session created"
+msgstr "Rata de sesiune"
+
 msgid "Session idle timeout"
+msgstr "Timpul de inactivitate al sesiunii"
+
+#, fuzzy
+msgid "Session lifetime"
 msgstr "Timpul de inactivitate al sesiunii"
 
 msgid "Session management"
@@ -62933,6 +62965,10 @@ msgstr "Sesiune timeout:"
 
 msgid "Session type"
 msgstr "Tipul de sesiune"
+
+#, fuzzy
+msgid "Sessions"
+msgstr "sesiuni"
 
 #, fuzzy, python-format
 msgid "Set '%s' to '%s' on site %s"
@@ -70509,6 +70545,9 @@ msgstr ""
 msgid "The access token for this OAuth2 connection."
 msgstr "ID-ul acestei conexiuni."
 
+msgid "The access token lifetime must not exceed the refresh token lifetime"
+msgstr ""
+
 #, python-format
 msgid "The action '%s' is not implemented"
 msgstr "Acțiunea '%s' nu este implementată"
@@ -70700,13 +70739,12 @@ msgstr ""
 "b> și <b>%s</b>."
 
 msgid ""
-"The application using this token will no longer be able to access the API "
-"with it."
+"The application using this session will no longer be able to access the API."
 msgstr ""
 
 msgid ""
-"The applications using the selected tokens will no longer be able to access "
-"the API with them."
+"The applications using the selected sessions will no longer be able to "
+"access the API."
 msgstr ""
 
 msgid "The aspect of the image is preserved."
@@ -73831,6 +73869,9 @@ msgstr ""
 #, fuzzy
 msgid "The refresh token for this OAuth2 connection."
 msgstr "ID-ul acestei conexiuni."
+
+msgid "The refresh token lifetime must not exceed the session lifetime"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -77705,7 +77746,7 @@ msgstr "Această permisiune este necesară pentru modulul <i>Passwords</i>."
 #, fuzzy
 msgid ""
 "This permission is needed for the modules <b>Users</b>, <b>Roles</b>, "
-"<b>Contact groups</b> and <b>OAuth access tokens</b>"
+"<b>Contact groups</b> and <b>OAuth sessions</b>"
 msgstr ""
 "Această permisiune este necesară pentru modulele <b>Utilizatori</b>, "
 "<b>Roles</b> și <b>Grupuri de contacte</b>."
@@ -81602,10 +81643,6 @@ msgstr ""
 #, fuzzy
 msgid "Token invalid"
 msgstr "invalidă:"
-
-#, fuzzy
-msgid "Tokens"
-msgstr "Token"
 
 msgid "Tolerance period for 'activating' state"
 msgstr "Perioada de toleranță pentru 'activarea' stării"
@@ -89515,7 +89552,7 @@ msgstr "Vizualizați și editați parametrii pentru acest serviciu"
 msgid "View and edit the rules and aggregations in this BI pack"
 msgstr "Vizualizați și editați regulile și agregările din acest pachet BI"
 
-msgid "View and revoke OAuth access tokens issued to users."
+msgid "View and revoke OAuth sessions issued to users."
 msgstr ""
 
 #, fuzzy
@@ -102447,6 +102484,42 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Issued"
+#~ msgstr "Emitent"
+
+#, fuzzy
+#~ msgid "OAuth access tokens"
+#~ msgstr "Token de acces la API"
+
+#, fuzzy
+#~ msgid "On selected tokens"
+#~ msgstr "Pe site-uri selectate"
+
+#, fuzzy
+#~ msgid "Revoke access token"
+#~ msgstr "Token de acces la API"
+
+#, fuzzy
+#~ msgid "Revoke selected access tokens"
+#~ msgstr "Token de acces la API"
+
+#, fuzzy
+#~ msgid "Revoke this access token"
+#~ msgstr "Token de acces la API"
+
+#, fuzzy
+#~ msgid "Revoke tokens"
+#~ msgstr "Reîmprospătare"
+
+#, fuzzy
+#~ msgid "Revoked the access token."
+#~ msgstr "Token de acces la API"
+
+#, fuzzy
+#~ msgid "Tokens"
+#~ msgstr "Token"
 
 #, fuzzy
 #~ msgid "Dock to the bottom"

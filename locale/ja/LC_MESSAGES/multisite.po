@@ -2598,6 +2598,11 @@ msgstr ""
 msgid "A provisioning of over 100% means over provisioning."
 msgstr "100%を超えるプロビジョニングは、過剰なプロビジョニングを意味します。"
 
+msgid ""
+"A refresh token that is not used for this long expires. Every refresh issues "
+"a new refresh token, so clients in active use keep working."
+msgstr ""
+
 msgid "A regular expression is required"
 msgstr "正規表現が必要"
 
@@ -3610,6 +3615,10 @@ msgid "Access token"
 msgstr "アクセストークン"
 
 msgid "Access token is required"
+msgstr "アクセス トークンが必要です"
+
+#, fuzzy
+msgid "Access token lifetime"
 msgstr "アクセス トークンが必要です"
 
 msgid "Access via TCP"
@@ -5274,6 +5283,11 @@ msgstr ""
 msgid "After this time in the state <i>down</i> a port is considered unused."
 msgstr "この後、<i>ダウン</i>状態になると、ポートは未使用と見なされます。"
 
+msgid ""
+"After this time the user has to log in and approve the client again, however "
+"actively the session is used."
+msgstr ""
+
 msgid "Age"
 msgstr "年数"
 
@@ -5884,14 +5898,6 @@ msgstr ""
 "このページに表示されているすべての絶対データは、このホストが起動されてからの"
 "タイムフレームを示しています。"
 
-msgid ""
-"All access tokens issued to the selected clients are revoked immediately."
-msgstr ""
-"選択されたクライアントに発行されたすべてのトークンは、直ちに無効化されます。"
-
-msgid "All access tokens issued to this client are revoked immediately."
-msgstr "このクライアントに発行されたすべてのトークンは直ちに無効化されます。"
-
 msgid "All aggregations"
 msgstr "すべての集約"
 
@@ -6279,6 +6285,15 @@ msgstr "特定の説明があるすべてのサービス"
 
 msgid "All services with this description"
 msgstr "この説明のあるすべてのサービス"
+
+#, fuzzy
+msgid "All sessions of the selected clients are ended immediately."
+msgstr ""
+"選択されたクライアントに発行されたすべてのトークンは、直ちに無効化されます。"
+
+#, fuzzy
+msgid "All sessions of this client are ended immediately."
+msgstr "このクライアントに発行されたすべてのトークンは直ちに無効化されます。"
 
 msgid ""
 "All single-host aggregations that are in non-OK state (honoring state "
@@ -7021,16 +7036,17 @@ msgstr "アンチウイルスの最終更新期間"
 msgid "Any"
 msgstr "どれか"
 
+#, fuzzy
 msgid ""
-"Any application using the selected tokens will no longer be able to access "
-"the API with them."
+"Any application using the selected sessions will no longer be able to access "
+"the API."
 msgstr ""
 "選択されたトークンを使用しているアプリケーションは、それらを使用してAPIにアク"
 "セスできなくなります。"
 
+#, fuzzy
 msgid ""
-"Any application using this token will no longer be able to access the API "
-"with it."
+"Any application using this session will no longer be able to access the API."
 msgstr ""
 "選択されたトークンを使用しているアプリケーションは、それらを使用してAPIにアク"
 "セスできなくなります。"
@@ -31539,6 +31555,11 @@ msgstr "ハウスキーピング間隔"
 msgid "How"
 msgstr "どうやって"
 
+msgid ""
+"How long a client can call the API with one access token before it has to "
+"refresh it."
+msgstr ""
+
 msgid "How long single values or table columns are kept."
 msgstr "単一の値またはテーブルのカラムを保持する期間。"
 
@@ -36297,9 +36318,6 @@ msgstr "Is-Home状態(Netappのみ)"
 msgid "Issue type ID"
 msgstr "発行タイプID"
 
-msgid "Issued"
-msgstr "発行"
-
 msgid "Issued by"
 msgstr "が発行"
 
@@ -38492,6 +38510,13 @@ msgstr "証明書の有効期限"
 
 msgid "Lifetime remaining"
 msgstr "残りの寿命"
+
+msgid ""
+"Lifetimes of the sessions that OAuth clients, such as MCP clients, open on "
+"behalf of a user. Changes to the session lifetime apply to sessions created "
+"afterwards. The refresh and access token lifetimes apply to every token "
+"issued afterwards, including refreshes of existing sessions."
+msgstr ""
 
 msgid "Limit"
 msgstr "制限"
@@ -46885,8 +46910,9 @@ msgstr "OAUTH 2.0"
 msgid "OAUth authentication"
 msgstr "OAUth認証"
 
-msgid "OAuth access tokens"
-msgstr "OAuthアクセストークン"
+#, fuzzy
+msgid "OAuth sessions"
+msgstr "アクティブセッション"
 
 msgid "OAuth token"
 msgstr "OAuth トークン"
@@ -47215,11 +47241,12 @@ msgstr "選択したルールについて"
 msgid "On selected services"
 msgstr "選択したサイトにおいて"
 
+#, fuzzy
+msgid "On selected sessions"
+msgstr "拒否されたセッション"
+
 msgid "On selected sites"
 msgstr "選択したサイト"
-
-msgid "On selected tokens"
-msgstr "選択されたトークンにおいて"
 
 msgid "On selected users"
 msgstr "選択したユーザーについて"
@@ -54119,6 +54146,10 @@ msgstr "リフレッシュ"
 msgid "Refresh token is required"
 msgstr "正規表現が必要"
 
+#, fuzzy
+msgid "Refresh token lifetime"
+msgstr "正規表現が必要"
+
 #, python-format
 msgid "Refreshed check configuration of host '%s'"
 msgstr "ホスト '%s' の確認設定を更新しました"
@@ -54782,8 +54813,20 @@ msgstr "レスポンダーを削除"
 msgid "Remove scheduled downtimes?"
 msgstr "全ての予定されたダウンタイムを削除しますか?"
 
+#, fuzzy
+msgid "Remove selected sessions"
+msgstr "拒否されたセッション"
+
 msgid "Remove service"
 msgstr "サービスを削除する"
+
+#, fuzzy
+msgid "Remove session"
+msgstr "レスポンダーを削除"
+
+#, fuzzy
+msgid "Remove sessions"
+msgstr "拒否されたセッション"
 
 msgid "Remove smarthost"
 msgstr "スマートホストを削除する"
@@ -54825,6 +54868,10 @@ msgstr "パッケージを削除"
 msgid "Remove this rule pack from the Extension Packages module"
 msgstr "このルールパックを拡張パッケージモジュールから削除します"
 
+#, fuzzy
+msgid "Remove this session"
+msgstr "このエントリを削除する"
+
 msgid "Remove two-factor authentication"
 msgstr "2要素認証の解除"
 
@@ -54840,6 +54887,10 @@ msgstr "消失したサービスを削除する"
 
 msgid "Removed"
 msgstr "削除されました"
+
+#, fuzzy, python-format
+msgid "Removed %(n)d sessions."
+msgstr "%(n)dのトークンが無効化されました。"
 
 #, python-format
 msgid "Removed %sgroup %s from customer %s"
@@ -54878,6 +54929,10 @@ msgstr "%s '%s'を削除しました"
 #, python-format
 msgid "Removed the connection '%s'"
 msgstr "接続を削除しました '%s'"
+
+#, fuzzy
+msgid "Removed the session."
+msgstr "%s '%s'を削除しました"
 
 #, python-format
 msgid "Removed unpackaged extension file %s: %s"
@@ -56068,25 +56123,6 @@ msgstr "レビューとテスト設定"
 
 msgid "Review your configuration and run preview service discovery"
 msgstr "設定を確認し、プレビューサービスディスカバリーを実行する"
-
-msgid "Revoke access token"
-msgstr "アクセストークンの無効化"
-
-msgid "Revoke selected access tokens"
-msgstr "選択したトークンを無効にする"
-
-msgid "Revoke this access token"
-msgstr "アクセストークンを無効化しました。"
-
-msgid "Revoke tokens"
-msgstr "トークンの無効化"
-
-#, python-format
-msgid "Revoked %(n)d access tokens."
-msgstr "%(n)dのトークンが無効化されました。"
-
-msgid "Revoked the access token."
-msgstr "アクセストークンを無効化しました。"
 
 msgid "Rewrite application"
 msgstr "アプリケーションを書き換える"
@@ -59278,7 +59314,15 @@ msgstr ""
 msgid "Services: %d total (%d added, %d changed, %d removed, %d kept)"
 msgstr "サービス: %d 合計 (%d 追加, %d 削除, %d 保持)"
 
+#, fuzzy
+msgid "Session created"
+msgstr "セッションレート"
+
 msgid "Session idle timeout"
+msgstr "セッションアイドルタイムアウト"
+
+#, fuzzy
+msgid "Session lifetime"
 msgstr "セッションアイドルタイムアウト"
 
 msgid "Session management"
@@ -59292,6 +59336,10 @@ msgstr "セッションタイムアウト:"
 
 msgid "Session type"
 msgstr "セッションタイプ"
+
+#, fuzzy
+msgid "Sessions"
+msgstr "セッション"
 
 #, fuzzy, python-format
 msgid "Set '%s' to '%s' on site %s"
@@ -66524,6 +66572,9 @@ msgstr ""
 msgid "The access token for this OAuth2 connection."
 msgstr "この接続のID。"
 
+msgid "The access token lifetime must not exceed the refresh token lifetime"
+msgstr ""
+
 #, python-format
 msgid "The action '%s' is not implemented"
 msgstr "アクション '%s' は実装されていません"
@@ -66723,16 +66774,17 @@ msgstr ""
 "集計タイトルは一意ではありません。\"%s\"は、<b>%s</b> と <b>%s</b>の集計に"
 "よって作成されます"
 
+#, fuzzy
 msgid ""
-"The application using this token will no longer be able to access the API "
-"with it."
+"The application using this session will no longer be able to access the API."
 msgstr ""
 "このトークンを使用しているアプリケーションは、今後このトークンを使用してAPIに"
 "アクセスできなくなります。"
 
+#, fuzzy
 msgid ""
-"The applications using the selected tokens will no longer be able to access "
-"the API with them."
+"The applications using the selected sessions will no longer be able to "
+"access the API."
 msgstr ""
 "選択されたトークンを使用しているアプリケーションは、それらを使用してAPIにアク"
 "セスできなくなります。"
@@ -69815,6 +69867,9 @@ msgstr ""
 #, fuzzy
 msgid "The refresh token for this OAuth2 connection."
 msgstr "この接続のID。"
+
+msgid "The refresh token lifetime must not exceed the session lifetime"
+msgstr ""
 
 #, python-format
 msgid ""
@@ -73596,9 +73651,10 @@ msgstr ""
 msgid "This permission is needed for the module <i>Passwords</i>."
 msgstr "この権限は<i>パスワード</i>モジュールに必要です。"
 
+#, fuzzy
 msgid ""
 "This permission is needed for the modules <b>Users</b>, <b>Roles</b>, "
-"<b>Contact groups</b> and <b>OAuth access tokens</b>"
+"<b>Contact groups</b> and <b>OAuth sessions</b>"
 msgstr ""
 "この権限は、<b>ユーザー</b>, <b>ロール</b>, <b>連絡先グループ</b> および "
 "<b>OAuthアクセストークン</b>のモジュールで必要となります"
@@ -77310,10 +77366,6 @@ msgstr ""
 #, fuzzy
 msgid "Token invalid"
 msgstr "無効:"
-
-#, fuzzy
-msgid "Tokens"
-msgstr "トークン"
 
 msgid "Tolerance period for 'activating' state"
 msgstr "”アクティブ”状態の許容期間"
@@ -84309,7 +84361,8 @@ msgstr "このサービスのパラメーターを表示および編集する"
 msgid "View and edit the rules and aggregations in this BI pack"
 msgstr "このBIパックのルールと集計を表示および編集する"
 
-msgid "View and revoke OAuth access tokens issued to users."
+#, fuzzy
+msgid "View and revoke OAuth sessions issued to users."
 msgstr "ユーザーに発行されたOAuthトークンを確認および取り消すことができます。"
 
 #, fuzzy
@@ -97088,6 +97141,34 @@ msgid ""
 msgstr ""
 "後で アクセスする場合はヘルプ ＞ Checkmkの学習 ＞ ウェルカムページ からアクセ"
 "スできます"
+
+#~ msgid "Issued"
+#~ msgstr "発行"
+
+#~ msgid "OAuth access tokens"
+#~ msgstr "OAuthアクセストークン"
+
+#~ msgid "On selected tokens"
+#~ msgstr "選択されたトークンにおいて"
+
+#~ msgid "Revoke access token"
+#~ msgstr "アクセストークンの無効化"
+
+#~ msgid "Revoke selected access tokens"
+#~ msgstr "選択したトークンを無効にする"
+
+#~ msgid "Revoke this access token"
+#~ msgstr "アクセストークンを無効化しました。"
+
+#~ msgid "Revoke tokens"
+#~ msgstr "トークンの無効化"
+
+#~ msgid "Revoked the access token."
+#~ msgstr "アクセストークンを無効化しました。"
+
+#, fuzzy
+#~ msgid "Tokens"
+#~ msgstr "トークン"
 
 #, fuzzy
 #~ msgid "Dock to the bottom"

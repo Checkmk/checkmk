@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Connection configuration API."""
 
-import asyncio
 import logging
 import time
 from collections.abc import AsyncIterator
@@ -28,6 +27,7 @@ from cmk.maps.backend.connections.base import (
 )
 from cmk.maps.backend.core.auth import Principal
 from cmk.maps.backend.core.config import settings
+from cmk.maps.backend.core.single_flight import SingleFlight
 from cmk.maps.backend.core.ttl_cache import TtlCache
 from cmk.maps.backend.schemas.connection import (
     ConnectionListEntry,
@@ -124,11 +124,7 @@ _TOPOLOGY_CACHE_MAX = 32
 _topology_cache: TtlCache[_TopologyCacheKey, list[TopologyNode]] = TtlCache(
     maxsize=_TOPOLOGY_CACHE_MAX
 )
-# Per-key locks dedupe in-flight fetches: if N tabs cache-miss simultaneously
-# only the first runs the query, the rest await the same result. Held only for
-# the fetch window (dropped in ``finally``); a completed result lives in the
-# cache, so late arrivals hit its fast path without touching the lock.
-_topology_cache_locks: dict[_TopologyCacheKey, asyncio.Lock] = {}
+_topology_fetches: SingleFlight[_TopologyCacheKey, list[TopologyNode]] = SingleFlight()
 
 
 def _filter_topology(
@@ -284,40 +280,21 @@ async def get_topology(
     if cached is not None:
         return cached
 
-    lock = _topology_cache_locks.setdefault(cache_key, asyncio.Lock())
-    try:
-        async with lock:
-            # Re-check inside the lock — a concurrent waiter may have populated it.
-            cached = _topology_cache.get(cache_key, ttl=ttl)
-            if cached is not None:
-                return cached
+    async def fetch() -> list[TopologyNode]:
+        async with auth_user_scope(connection, auth_user):
+            result = await build_topology_response(
+                connection,
+                include_services=include_services,
+                services_per_host=limit,
+                top_affected_hosts=top_k,
+                root=root,
+                child_layers=child_layers,
+                parent_layers=parent_layers,
+            )
+        _topology_cache.set(cache_key, result)
+        return result
 
-            async def _build() -> list[TopologyNode]:
-                return await build_topology_response(
-                    connection,
-                    include_services=include_services,
-                    services_per_host=limit,
-                    top_affected_hosts=top_k,
-                    root=root,
-                    child_layers=child_layers,
-                    parent_layers=parent_layers,
-                )
-
-            # auth_user is None outside CMK or for see-all callers; the
-            # contact-group wrap is a no-op on connections without contact
-            # visibility (the test backend), scoping on LivestatusConnection.
-            if auth_user is not None:
-                async with connection.with_auth_user(auth_user):
-                    result = await _build()
-            else:
-                result = await _build()
-
-            _topology_cache.set(cache_key, result)
-            return result
-    finally:
-        # The lock is only needed for the in-flight fetch; drop it once done
-        # (success or failure) so it never outlives its fetch window.
-        _topology_cache_locks.pop(cache_key, None)
+    return await _topology_fetches.run(cache_key, fetch)
 
 
 class MetricPoint(BaseModel):

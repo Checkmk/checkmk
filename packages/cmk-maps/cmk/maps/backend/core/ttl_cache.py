@@ -15,7 +15,8 @@ The TTL is passed per :meth:`get`, not fixed at construction, so a caller whose
 TTL comes from a live setting stays correct without rebuilding the cache. Time
 is ``time.monotonic()`` (never wall-clock, so it is immune to clock steps);
 ``now`` is injectable for tests. Not thread-safe and not async-locked — callers
-that need single-flight semantics wrap :meth:`get`/:meth:`set` in their own lock.
+that need single-flight semantics fetch through
+:class:`~cmk.maps.backend.core.single_flight.SingleFlight`.
 """
 
 import time

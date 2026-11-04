@@ -383,6 +383,43 @@ describe('MapStatesService — BI aggregations resolve GUI-side', () => {
     store.disconnect()
   })
 
+  it('resolves them again at the state refresh interval the daemon last named', async () => {
+    vi.useFakeTimers()
+    try {
+      const map = aMap({
+        objects: [anObject({ id: 'agg1', type: 'aggregation', aggregation_id: 'Host x' })]
+      })
+      const objects = {
+        fetchAggregationStates: vi.fn().mockResolvedValue({}),
+        fetchAggregationTree: vi.fn().mockResolvedValue({ tree: null, connection_ok: true })
+      }
+      const store = newService(map, objects)
+      await store.connectToMap('map1')
+      await vi.advanceTimersByTimeAsync(5_000)
+      FakeEventSource.instances[0]!.emit('state_update', {
+        type: 'state_update',
+        map: 'map1',
+        full: true,
+        removed_ids: [],
+        timing: [],
+        states: {
+          ...emptyStates,
+          map_name: 'map1',
+          runtime: { ...emptyStates.runtime, state_refresh_interval: 60 }
+        }
+      })
+      await vi.advanceTimersByTimeAsync(5_000)
+      const resolved = objects.fetchAggregationStates.mock.calls.length
+
+      await vi.advanceTimersByTimeAsync(59_999)
+      expect(objects.fetchAggregationStates).toHaveBeenCalledTimes(resolved)
+      await vi.advanceTimersByTimeAsync(1)
+      expect(objects.fetchAggregationStates).toHaveBeenCalledTimes(resolved + 1)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('resolves nothing when the map carries no aggregation', async () => {
     const objects = {
       fetchAggregationStates: vi.fn().mockResolvedValue({}),

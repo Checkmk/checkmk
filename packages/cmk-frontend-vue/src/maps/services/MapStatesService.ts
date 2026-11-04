@@ -249,7 +249,7 @@ export class MapStatesService {
   private folderTreeIndex = new Map<string, FolderTreeNode>()
   /** Previous foldertree host states, for deriving notifications. */
   private prevFolderHostStates: Map<string, string> | null = null
-  private aggTimer: ReturnType<typeof setInterval> | null = null
+  private aggTimer: ReturnType<typeof setTimeout> | null = null
   private postCommandTimer: ReturnType<typeof setTimeout> | null = null
   private aggInFlight = false
   private hiddenTimer: ReturnType<typeof setTimeout> | null = null
@@ -984,12 +984,17 @@ export class MapStatesService {
     if (this.aggTimer) {
       return
     }
-    this.aggTimer = setInterval(() => void this.refreshAggregations(), this.stateRefreshMs())
+    // Planned anew each round, so a changed state refresh interval applies at once.
+    this.aggTimer = setTimeout(() => {
+      this.aggTimer = null
+      void this.refreshAggregations()
+      this.startAggregationTimer()
+    }, this.stateRefreshMs())
   }
 
   private stopAggregationTimer(): void {
     if (this.aggTimer) {
-      clearInterval(this.aggTimer)
+      clearTimeout(this.aggTimer)
       this.aggTimer = null
     }
   }

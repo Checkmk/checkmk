@@ -4,7 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 // The wizard in edit mode: it loads the stored service, shows it, and writes it back through
-// the update endpoint. Both endpoints are stubbed at the network boundary (MSW).
+// the update endpoint. In create mode, it can go on to add an alert once the service is created.
+// The endpoints are stubbed at the network boundary (MSW).
 import { userEvent } from '@testing-library/user-event'
 import { cleanup, render, screen, waitFor } from '@testing-library/vue'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
@@ -45,6 +46,7 @@ const WRITTEN_EXTENSIONS = {
 }
 
 let updateRequests = 0
+let createRequests = 0
 let templateAttributesRequests = 0
 let lastBody: unknown = null
 let lastIfMatch: string | null = null
@@ -77,6 +79,14 @@ const server = useMswServer(
       value: [{ id: 'http_duration_on_web01', domainType: 'custom_service' }]
     })
   ),
+  http.post(LIST_URL, () => {
+    createRequests += 1
+    return HttpResponse.json({
+      domainType: 'custom_service',
+      id: 'custom_service_2',
+      title: 'otel.http.duration'
+    })
+  }),
   http.post(AUTOCOMPLETE_URL, () =>
     HttpResponse.json({ choices: [{ id: 'web01', value: 'web01' }] })
   ),
@@ -116,16 +126,22 @@ afterEach(() => {
   cleanup()
   resetGlobalTimeState()
   updateRequests = 0
+  createRequests = 0
   templateAttributesRequests = 0
   lastBody = null
   lastIfMatch = null
+  window.history.replaceState(null, '', window.location.pathname)
 })
 
-function renderWizard(configurationName: string | null = 'http_duration_on_web01') {
+function renderWizard(
+  configurationName: string | null = 'http_duration_on_web01',
+  createAlertUrl: string | null = null
+) {
   return render(CustomServicesWizardApp, {
     props: {
       activate_changes_url: 'wato.py?mode=changelog',
       configuration_name: configurationName,
+      create_alert_url: createAlertUrl,
       time_picker: {
         custom_time_ranges: [],
         default_time_range: 4 * 3600,
@@ -153,6 +169,30 @@ async function goToHostStep(): Promise<void> {
   await expectActiveStep('Define metric')
   await userEvent.click(await screen.findByRole('button', { name: 'Next step' }))
   await expectActiveStep('Assign to host')
+}
+
+// A fragment, as jsdom only follows those, so the page the wizard went on to shows in the hash.
+const CREATE_ALERT_URL = '#create_otel_alert'
+
+function renderNewServiceWizard(createAlertUrl: string | null = CREATE_ALERT_URL) {
+  return renderWizard(null, createAlertUrl)
+}
+
+// Takes the suggested configuration name, picks the metric and assigns the service to web01.
+async function goToHostStepOfNewService(): Promise<void> {
+  await expectActiveStep('General configuration properties')
+  const nameInput = await screen.findByRole('textbox', { name: /Configuration name/ })
+  await waitFor(() => expect(nameInput).not.toHaveValue(''))
+  await userEvent.click(screen.getByRole('button', { name: 'Next step' }))
+  await expectActiveStep('Define metric')
+  await userEvent.click(await screen.findByRole('combobox', { name: 'Metric name' }))
+  await userEvent.click(await screen.findByText('otel.http.duration (sum)'))
+  await userEvent.click(await screen.findByRole('button', { name: 'Next step' }))
+  await expectActiveStep('Assign to host')
+  const hostSelect = await screen.findByRole('combobox', { name: 'Select host' })
+  await waitFor(() => expect(hostSelect).toBeEnabled())
+  void userEvent.click(hostSelect)
+  await userEvent.click(await screen.findByRole('option', { name: 'web01' }))
 }
 
 test('starts at the metric step without the configuration name step', async () => {
@@ -330,4 +370,51 @@ test('a host name template that matches no host cannot be saved', async () => {
 
   expect(await screen.findByText(/No configured host currently matches/)).toBeTruthy()
   expect(screen.getByRole('button', { name: 'Save & activate changes' })).toBeDisabled()
+})
+
+test('a user who may not add alerts is not offered to add one', async () => {
+  renderNewServiceWizard(null)
+  await goToHostStepOfNewService()
+
+  expect(await screen.findByRole('button', { name: 'Create & activate changes' })).toBeTruthy()
+  expect(screen.queryByRole('button', { name: 'Create & add alert' })).toBeNull()
+})
+
+test('going on to add an alert creates the service, then opens the alert wizard', async () => {
+  renderNewServiceWizard()
+  await goToHostStepOfNewService()
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Create & add alert' }))
+
+  await waitFor(() => expect(window.location.hash).toBe(CREATE_ALERT_URL))
+  expect(createRequests).toBe(1)
+})
+
+test('a created service cannot be created again while the next page loads', async () => {
+  renderNewServiceWizard()
+  await goToHostStepOfNewService()
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Create & add alert' }))
+
+  await waitFor(() => expect(window.location.hash).toBe(CREATE_ALERT_URL))
+  expect(screen.getByRole('button', { name: 'Create & add alert' })).toBeDisabled()
+  expect(screen.getByRole('button', { name: 'Create & activate changes' })).toBeDisabled()
+})
+
+test('a service that cannot be created stays in the wizard instead of adding an alert', async () => {
+  server.use(
+    http.post(LIST_URL, () =>
+      HttpResponse.json(
+        { status: 400, title: 'Bad Request', detail: 'The service name is in use.' },
+        { status: 400 }
+      )
+    )
+  )
+  renderNewServiceWizard()
+  await goToHostStepOfNewService()
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Create & add alert' }))
+
+  expect(await screen.findByText(/The service name is in use/)).toBeTruthy()
+  expect(window.location.hash).toBe('')
 })

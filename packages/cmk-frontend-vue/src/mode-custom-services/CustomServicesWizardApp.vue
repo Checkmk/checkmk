@@ -116,11 +116,12 @@ async function persist(): Promise<SaveResult> {
   return await updateCustomService(configurationName, model.value, editETag.value)
 }
 
-// Persist the custom service, then go to the full activate-changes page so the
-// user can apply the pending change.
-async function saveService(): Promise<void> {
+// Persist the custom service, then go on to `target`: the full activate-changes page so the
+// user can apply the pending change, or the alert wizard, whose end activates it as well.
+async function saveService(target: string): Promise<void> {
   saveError.value = null
   saving.value = true
+  let leaving = false
   try {
     const result = await persist()
     if (result.templateError !== undefined) {
@@ -131,11 +132,14 @@ async function saveService(): Promise<void> {
       saveError.value = result.error ?? failureMessage.value
       return
     }
-    window.location.href = props.activate_changes_url
+    leaving = true
+    window.location.href = target
   } catch {
     saveError.value = failureMessage.value
   } finally {
-    saving.value = false
+    // The buttons stay disabled while the next page loads, so a second click cannot save the
+    // service again.
+    saving.value = leaving
   }
 }
 </script>
@@ -207,7 +211,15 @@ async function saveService(): Promise<void> {
             type="finish"
             :override-label="finishLabel"
             :disabled="!hostStepValid || saving"
-            @click="saveService"
+            @click="saveService(props.activate_changes_url)"
+          />
+          <CmkWizardButton
+            v-if="props.create_alert_url !== null"
+            type="other"
+            :override-label="_t('Create & add alert')"
+            icon-name="alerts"
+            :disabled="!hostStepValid || saving"
+            @click="saveService(props.create_alert_url)"
           />
           <CmkWizardButton type="previous" />
         </template>

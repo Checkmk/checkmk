@@ -13,6 +13,7 @@ from typing import override
 
 import pytest
 
+from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.translations import TranslationOptions
 from cmk.checkengine.helper_interface import AgentRawData
@@ -42,11 +43,15 @@ class TestSectionStore:
             str,
         )
 
-    def test_unreadable_store_reraises_in_debug_mode(self, tmp_path: Path) -> None:
+    def test_unreadable_store_raises_general_exception_with_the_original_error(
+        self, tmp_path: Path
+    ) -> None:
         (unreadable := tmp_path / "store").mkdir()
 
-        with pytest.raises(IsADirectoryError):
-            SectionStore[Sequence[AgentRawDataSectionElem]](unreadable).load(debug=True)
+        with pytest.raises(MKGeneralException) as excinfo:
+            SectionStore[Sequence[AgentRawDataSectionElem]](unreadable).load()
+
+        assert isinstance(excinfo.value.__context__, IsADirectoryError)
 
 
 class TestAgentParser:
@@ -96,7 +101,7 @@ class TestAgentParser:
         assert ahs.sections == {}
         assert ahs.cache_info == {}
         assert ahs.piggybacked_raw_data == {}
-        assert not store.load(debug=False)
+        assert not store.load()
 
     def test_piggy_name_as_hostname_is_piggybacked(
         self,
@@ -122,7 +127,7 @@ class TestAgentParser:
         assert ahs.cache_info == {}
         assert hostname in ahs.piggybacked_raw_data
         assert any(b"some_section" in chunk for chunk in ahs.piggybacked_raw_data[hostname])
-        assert not store.load(debug=False)
+        assert not store.load()
 
     def test_no_section_header_after_piggyback(
         self, parser: AgentParser, store: SectionStore[Sequence[AgentRawDataSectionElem]]
@@ -142,7 +147,7 @@ class TestAgentParser:
         assert ahs.sections == {}
         assert ahs.cache_info == {}
         assert ahs.piggybacked_raw_data == {HostName("piggy"): []}
-        assert not store.load(debug=False)
+        assert not store.load()
 
     def test_raw_section_populates_sections(
         self, parser: AgentParser, store: SectionStore[Sequence[AgentRawDataSectionElem]]
@@ -169,7 +174,7 @@ class TestAgentParser:
         }
         assert ahs.cache_info == {}
         assert ahs.piggybacked_raw_data == {}
-        assert not store.load(debug=False)
+        assert not store.load()
 
     def test_partial_header_is_not_a_header(
         self, parser: AgentParser, store: SectionStore[Sequence[AgentRawDataSectionElem]]
@@ -197,7 +202,7 @@ class TestAgentParser:
         }
         assert ahs.cache_info == {}
         assert ahs.piggybacked_raw_data == {}
-        assert not store.load(debug=False)
+        assert not store.load()
 
     def test_merge_split_raw_sections(
         self, parser: AgentParser, store: SectionStore[Sequence[AgentRawDataSectionElem]]
@@ -243,7 +248,7 @@ class TestAgentParser:
         }
         assert ahs.cache_info == {}
         assert ahs.piggybacked_raw_data == {}
-        assert not store.load(debug=False)
+        assert not store.load()
 
     def test_nameless_sections_are_skipped(
         self, parser: AgentParser, store: SectionStore[Sequence[AgentRawDataSectionElem]]
@@ -278,7 +283,7 @@ class TestAgentParser:
         }
         assert ahs.cache_info == {}
         assert ahs.piggybacked_raw_data == {}
-        assert not store.load(debug=False)
+        assert not store.load()
 
     def test_nameless_piggybacked_sections_are_skipped(
         self,
@@ -324,7 +329,7 @@ class TestAgentParser:
                 b"b second line",
             ]
         }
-        assert not store.load(debug=False)
+        assert not store.load()
 
     def test_unrecoverably_invalid_hosts_are_ignored(self, parser: AgentParser) -> None:
         # a too long name can't be a valid hostname -- not even after character replacements
@@ -405,7 +410,7 @@ class TestAgentParser:
         }
         assert ahs.cache_info == {}
         assert ahs.piggybacked_raw_data == {}
-        assert not store.load(debug=False)
+        assert not store.load()
 
     def test_piggyback_populates_piggyback_raw_data(
         self,
@@ -462,7 +467,7 @@ class TestAgentParser:
                 b"first line",
             ],
         }
-        assert not store.load(debug=False)
+        assert not store.load()
 
     def test_merge_split_piggyback_sections(
         self,
@@ -515,7 +520,7 @@ class TestAgentParser:
                 b"d line",
             ],
         }
-        assert not store.load(debug=False)
+        assert not store.load()
 
     def test_persist_option_populates_cache_info(
         self,
@@ -540,7 +545,7 @@ class TestAgentParser:
         assert ahs.sections == {SectionName("section"): [["first", "line"], ["second", "line"]]}
         assert ahs.cache_info == {SectionName("section"): (1000, 50)}
         assert ahs.piggybacked_raw_data == {}
-        assert store.load(debug=False) == {
+        assert store.load() == {
             SectionName("section"): (1000, 1050, [["first", "line"], ["second", "line"]]),
         }
 
@@ -582,7 +587,7 @@ class TestAgentParser:
             SectionName("persisted"): (42, 27),
         }
         assert ahs.piggybacked_raw_data == {}
-        assert store.load(debug=False) == {
+        assert store.load() == {
             SectionName("persisted"): (42, 69, [["content"]]),
         }
 
@@ -624,7 +629,7 @@ class TestAgentParser:
         }
         assert ahs.cache_info == {SectionName("selected"): (1000, 0)}
         assert ahs.piggybacked_raw_data == {}
-        assert store.load(debug=False) == {
+        assert store.load() == {
             SectionName("selected"): (
                 1000,
                 1000,
@@ -682,7 +687,7 @@ class TestAgentParser:
                 b"4th line",
             ]
         }
-        assert not store.load(debug=False)
+        assert not store.load()
 
     def test_section_lines_are_correctly_ordered_with_different_separators(
         self, parser: AgentParser, store: SectionStore[Sequence[AgentRawDataSectionElem]]
@@ -710,7 +715,7 @@ class TestAgentParser:
         }
         assert ahs.cache_info == {}
         assert ahs.piggybacked_raw_data == {}
-        assert not store.load(debug=False)
+        assert not store.load()
 
     def test_section_lines_are_correctly_ordered_with_different_separators_and_piggyback(
         self,
@@ -748,7 +753,7 @@ class TestAgentParser:
                 b"c|3",
             ],
         }
-        assert store.load(debug=False) == {}
+        assert store.load() == {}
 
 
 class ParserStateAdapter(ParserState):
@@ -1060,9 +1065,7 @@ class MockStore(SectionStore[Sequence[Sequence[str]]]):
         self._sections = copy.copy(sections)
 
     @override
-    def load(
-        self, *, debug: bool
-    ) -> MutableMapping[SectionName, tuple[int, int, Sequence[Sequence[str]]]]:
+    def load(self) -> MutableMapping[SectionName, tuple[int, int, Sequence[Sequence[str]]]]:
         return copy.copy(self._sections)
 
 
@@ -1085,7 +1088,7 @@ class TestAgentPersistentSectionHandling:
         assert not ahs.sections
         assert not ahs.cache_info
         assert not ahs.piggybacked_raw_data
-        assert section_store.load(debug=False) == {}
+        assert section_store.load() == {}
 
     def test_update_with_store_and_empty_raw_data(self) -> None:
         section_store = MockStore(
@@ -1108,7 +1111,7 @@ class TestAgentPersistentSectionHandling:
         assert ahs.sections == {SectionName("stored"): []}
         assert ahs.cache_info == {SectionName("stored"): (0, 0)}
         assert not ahs.piggybacked_raw_data
-        assert section_store.load(debug=False) == {SectionName("stored"): (0, 0, [])}
+        assert section_store.load() == {SectionName("stored"): (0, 0, [])}
 
     def test_update_with_empty_store_and_raw_data(self) -> None:
         raw_data = AgentRawData(b"<<<fresh>>>")
@@ -1128,7 +1131,7 @@ class TestAgentPersistentSectionHandling:
         assert ahs.sections == {SectionName("fresh"): []}
         assert not ahs.cache_info
         assert not ahs.piggybacked_raw_data
-        assert section_store.load(debug=False) == {}
+        assert section_store.load() == {}
 
     def test_update_with_store_and_non_persisting_raw_data(self) -> None:
         section_store = MockStore(
@@ -1154,7 +1157,7 @@ class TestAgentPersistentSectionHandling:
         }
         assert ahs.cache_info == {SectionName("stored"): (0, 0)}
         assert not ahs.piggybacked_raw_data
-        assert section_store.load(debug=False) == {SectionName("stored"): (0, 0, [])}
+        assert section_store.load() == {SectionName("stored"): (0, 0, [])}
 
     def test_update_with_store_and_persisting_raw_data(
         self, monkeypatch: pytest.MonkeyPatch
@@ -1186,7 +1189,7 @@ class TestAgentPersistentSectionHandling:
             SectionName("fresh"): (1000, -990),
         }
         assert not ahs.piggybacked_raw_data
-        assert section_store.load(debug=False) == {
+        assert section_store.load() == {
             SectionName("stored"): (0, 0, [["canned", "section"]]),
             SectionName("fresh"): (1000, 10, [["hello", "section"]]),
         }
@@ -1212,7 +1215,7 @@ class TestAgentPersistentSectionHandling:
         assert ahs.sections == {SectionName("section"): [["newest"]]}
         assert not ahs.cache_info
         assert not ahs.piggybacked_raw_data
-        assert section_store.load(debug=False) == {SectionName("section"): (0, 0, [["oldest"]])}
+        assert section_store.load() == {SectionName("section"): (0, 0, [["oldest"]])}
 
     def test_keep_outdated_false(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
@@ -1237,7 +1240,7 @@ class TestAgentPersistentSectionHandling:
         assert ahs.sections == {SectionName("another_section"): []}
         assert not ahs.cache_info
         assert not ahs.piggybacked_raw_data
-        assert section_store.load(debug=False) == {}
+        assert section_store.load() == {}
 
     def test_keep_outdated_true(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
@@ -1265,7 +1268,7 @@ class TestAgentPersistentSectionHandling:
         }
         assert ahs.cache_info == {SectionName("section"): (500, 100)}
         assert not ahs.piggybacked_raw_data
-        assert section_store.load(debug=False) == {SectionName("section"): (500, 600, [])}
+        assert section_store.load() == {SectionName("section"): (500, 600, [])}
 
 
 class TestMarkers:

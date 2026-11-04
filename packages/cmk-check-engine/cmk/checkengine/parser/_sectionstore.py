@@ -51,8 +51,8 @@ class SectionStore[T]:
             {"sections": ", ".join(str(s) for s in sections)},
         )
 
-    def load(self, *, debug: bool) -> MutableMapping[SectionName, tuple[int, int, T]]:
-        raw_sections_data = _store.load_object_from_pickle_file(self.path, default={}, debug=debug)
+    def load(self) -> MutableMapping[SectionName, tuple[int, int, T]]:
+        raw_sections_data = _store.load_object_from_pickle_file(self.path, default={}, debug=False)
         return {SectionName(k): v for k, v in raw_sections_data.items()}
 
     def update(
@@ -63,8 +63,6 @@ class SectionStore[T]:
         section_outdated: Callable[[int, int], bool],
         now: int,
         keep_outdated: bool,
-        *,
-        debug: bool,
     ) -> Mapping[SectionName, T]:
         persisted_sections = self._update(
             sections,
@@ -72,7 +70,6 @@ class SectionStore[T]:
             section_outdated,
             now=now,
             keep_outdated=keep_outdated,
-            debug=debug,
         )
         return self._add_persisted_sections(
             sections,
@@ -88,12 +85,11 @@ class SectionStore[T]:
         *,
         now: int,
         keep_outdated: bool,
-        debug: bool,
     ) -> MutableMapping[SectionName, tuple[int, int, T]]:
         # TODO: This is not race condition free when modifying the data. Either remove
         # the possible write here and simply ignore the outdated sections or lock when
         # reading and unlock after writing
-        persisted_sections = self.load(debug=debug)
+        persisted_sections = self.load()
 
         new_sections = {
             section_name: (now, persist_info, section_content)

@@ -200,7 +200,6 @@ from cmk.shared_typing.changes import (
 from cmk.utils import agent_registration, paths, render
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.paths import configuration_lockfile
-from cmk.utils.visuals import invalidate_visuals_cache
 from cmk.web.utils import escaping
 from cmk.web.utils.urls import makeuri_contextless
 
@@ -3728,8 +3727,6 @@ def _execute_changed_local_files_actions() -> None:
     # In that case, we'd have to re*start* the core.
     with _debug_log_message("Reloading services affected by MKP changes"):
         mkp_tool.reload_services_affected_by_mkp_changes()
-    with _debug_log_message("Invalidating visuals cache"):
-        invalidate_visuals_cache()
     with _debug_log_message("Requesting search index rebuild"):
         search_index.request_rebuild()
 

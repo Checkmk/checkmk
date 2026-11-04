@@ -25,7 +25,6 @@ from cmk.mkp_tool import (
 )
 from cmk.update_config.internal import ConflictMode, prompt, Resume
 from cmk.utils import paths
-from cmk.utils.visuals import invalidate_visuals_cache
 
 AGENT_BASED_PLUGINS_PREACTION_SORT_INDEX = 30
 GUI_PLUGINS_PREACTION_SORT_INDEX = 20
@@ -126,7 +125,6 @@ def _make_post_change_actions() -> Callable[[Sequence[Manifest]], None]:
     return make_post_package_change_actions(
         on_any_change=(
             reload_services_affected_by_mkp_changes,
-            invalidate_visuals_cache,
             search_index.request_rebuild,
         )
     )

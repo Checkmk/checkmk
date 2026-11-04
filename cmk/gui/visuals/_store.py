@@ -99,6 +99,11 @@ def load[TVisual: Visual](
         )
     )
 
+    # Packaged visuals are files below ~/local which are changed by MKP operations and the
+    # configuration sync outside of the GUI. They are not part of the combined cache, so these
+    # writers do not need to invalidate it. Each file is cached by the pickle cache.
+    visuals.update(_get_packaged_visuals(what, internal_to_runtime_transformer))
+
     return visuals
 
 
@@ -239,13 +244,6 @@ def _load_custom_user_visuals[TVisual: Visual](
                 % {"what": what, "visual_path": visual_path, "e": e}  # type: ignore[possibly-undefined]
             )
 
-    visuals.update(
-        _get_packaged_visuals(
-            what,
-            internal_to_runtime_transformer,
-        )
-    )
-
     return visuals
 
 
@@ -352,13 +350,11 @@ def move_visual_to_local[TVisual: Visual](
             data=visual,
             pprint_value=True,
         )
-    _CombinedVisualsCache(visual_type).invalidate_cache()
 
 
 def delete_local_file(visual_type: VisualTypeName, visual_name: str) -> None:
     visuals_path = _get_local_path(visual_type) / visual_name
     visuals_path.unlink(missing_ok=True)
-    _CombinedVisualsCache(visual_type).invalidate_cache()
 
 
 def local_file_exists(visual_type: VisualTypeName, visual_name: str) -> bool:
@@ -419,10 +415,13 @@ def visual_permissions[TVisual: Visual](
     for (_owner, name), visual in (
         _CombinedVisualsCache[TVisual](what).load(internal_to_runtime_transformer).items()
     ):
-        if visual["packaged"]:
-            yield _packaged_visual_permission(what, name, visual)
-        elif published_to_user(visual):
+        if published_to_user(visual):
             yield _visual_permission(what, name, visual)
+
+    for (_owner, name), visual in _get_packaged_visuals(
+        what, internal_to_runtime_transformer
+    ).items():
+        yield _packaged_visual_permission(what, name, visual)
 
 
 def available[TVisual: Visual](

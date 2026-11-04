@@ -3,16 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
+from pathlib import Path
 
 import pytest
 
+import cmk.utils.paths
+from cmk.ccc.store import save_object_to_file
 from cmk.ccc.user import UserId
 from cmk.gui.config import Config
 from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import Visual
 from cmk.gui.utils.roles import UserPermissions
-from cmk.gui.visuals import available_by_owner
+from cmk.gui.visuals import available_by_owner, load, visual_permissions
 
 ALPHA = UserId("alpha")
 BETA = UserId("beta")
@@ -65,3 +68,43 @@ def test_available_by_owner_is_independent_of_owner_order(
             [],
         ),
     ) == {"shared_view": {ALPHA: all_visuals[(ALPHA, "shared_view")]}}
+
+
+def _visual_from_raw(raw: dict[str, object]) -> Visual:
+    visual = _published_visual(UserId.builtin(), "")
+    visual["title"] = str(raw["title"])
+    return visual
+
+
+@pytest.fixture(name="packaged_view_path")
+def fixture_packaged_view_path() -> Iterator[Path]:
+    cmk.utils.paths.profile_dir.mkdir(parents=True, exist_ok=True)
+    path = cmk.utils.paths.local_views_dir / "packaged_view"
+    yield path
+    path.unlink(missing_ok=True)
+
+
+def test_load_returns_packaged_visual_added_after_previous_load(packaged_view_path: Path) -> None:
+    load("views", {}, _visual_from_raw)
+    save_object_to_file(
+        packaged_view_path,
+        {"packaged_view": {"title": "Packaged view", "public": True}},
+    )
+
+    visuals = load("views", {}, _visual_from_raw)
+
+    assert visuals[(UserId.builtin(), "packaged_view")]["title"] == "Packaged view"
+
+
+@pytest.mark.usefixtures("request_context")
+def test_visual_permissions_contain_permission_of_packaged_visual(
+    packaged_view_path: Path,
+) -> None:
+    save_object_to_file(
+        packaged_view_path,
+        {"packaged_view": {"title": "Packaged view", "public": True}},
+    )
+
+    permissions = visual_permissions("views", _visual_from_raw)
+
+    assert "view.packaged_view_packaged" in {p.name for p in permissions}

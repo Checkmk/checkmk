@@ -1222,7 +1222,6 @@ allows = [
   "cmk.utils.statename",
   "cmk.utils.timeperiod",
   "cmk.utils.typing_helpers",
-  "cmk.utils.visuals",
 ]
 excludes = ["cmk.gui.nonfree.pro.plugins", "cmk.gui.plugins"]
 
@@ -1409,7 +1408,6 @@ allows = [
   "cmk.utils.timeperiod",
   "cmk.utils.translations",
   "cmk.utils.unixsocket_http",
-  "cmk.utils.visuals",
   "cmk.web.htmllib",
   "cmk.web.context",
   "cmk.web.exceptions",
@@ -2148,9 +2146,6 @@ allows = []
 
 [components."cmk.utils.unixsocket_http"]
 allows = []
-
-[components."cmk.utils.visuals"]
-allows = ["cmk.utils.paths"]
 
 [components."cmk.utils.werks"]
 allows = [

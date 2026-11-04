@@ -25,9 +25,6 @@ from cmk.mkp_tool import (
     reload_services_affected_by_mkp_changes,
 )
 from cmk.utils import paths
-from cmk.utils.visuals import (
-    invalidate_visuals_cache,
-)
 
 
 def make_path_config() -> PathConfig | None:
@@ -70,7 +67,6 @@ _SITE_CONTEXT: Final = cli.SiteContext(
     post_package_change_actions=make_post_package_change_actions(
         on_any_change=(
             reload_services_affected_by_mkp_changes,
-            invalidate_visuals_cache,
             search_index.request_rebuild,
         )
     ),

@@ -236,7 +236,7 @@ def test_service_root_without_any_power_link_still_aborts() -> None:
     client = _FakeClient(_routes_without_power_link())
 
     with pytest.raises(
-        agent_redfish_power.CannotRecover, match="missing PowerEquipment information"
+        agent_redfish_power.CannotRecover, match="neither PowerEquipment nor PowerDistribution"
     ):
         agent_redfish_power.get_information(client)
 
@@ -249,7 +249,6 @@ class _LoginClient(_FakeClient):
         pass
 
 
-@pytest.mark.xfail(strict=True, raises=agent_redfish_power.CannotRecover, reason="Crash group 4825")
 def test_device_without_power_link_ends_with_error_message(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
@@ -260,4 +259,4 @@ def test_device_without_power_link_ends_with_error_message(
 
     assert agent_redfish_power.agent_redfish_main(args) == 1
 
-    assert "missing PowerEquipment information" in capsys.readouterr().err
+    assert "neither PowerEquipment nor PowerDistribution" in capsys.readouterr().err

@@ -19,7 +19,7 @@ export const MODE_COLUMN_MIN_WIDTH = 56
 export const MODE_COLUMN_MAX_WIDTH = 152
 export const FILLED_MODE_COLUMN_WIDTH = iconListWidth(MODE_ICONS_PER_ROW) + CELL_PADDING
 
-interface RowWithModes {
+export interface RowWithModes {
   modes?: readonly unknown[] | null | undefined
 }
 

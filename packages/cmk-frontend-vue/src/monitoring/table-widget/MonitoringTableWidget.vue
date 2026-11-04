@@ -3,7 +3,7 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts" generic="T, Target">
+<script setup lang="ts" generic="T extends RowWithModes, Target">
 import type { ColumnPinningState } from '@tanstack/vue-table'
 import { computed, provide } from 'vue'
 
@@ -15,6 +15,11 @@ import {
   useRowCommandRunner
 } from '@/monitoring/shared/components/action/rowCommand'
 import type { ActionOutcome } from '@/monitoring/shared/components/action/types'
+import {
+  type RowWithModes,
+  sizeModeColumn,
+  useModeColumnWidth
+} from '@/monitoring/shared/components/modeColumn'
 import { ACTIONS_COLUMN_ID } from '@/monitoring/shared/constants'
 import type { DisplayOptions } from '@/monitoring/shared/types'
 
@@ -42,9 +47,14 @@ const rowActions = computed(() =>
   props.actionOffer === undefined ? null : props.descriptor.rowActions(props.actionOffer)
 )
 
+const modeColumnWidth = useModeColumnWidth(() => props.rows)
+
 const columns = computed(() =>
-  props.descriptor.columns(
-    rowActions.value === null ? props.columnIds : [...props.columnIds, ACTIONS_COLUMN_ID]
+  sizeModeColumn(
+    props.descriptor.columns(
+      rowActions.value === null ? props.columnIds : [...props.columnIds, ACTIONS_COLUMN_ID]
+    ),
+    modeColumnWidth.value
   )
 )
 

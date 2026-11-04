@@ -137,4 +137,20 @@ describe('ServicesTableDescriptor', () => {
 
     expect(sortable.sort()).toEqual([...SORTABLE_SERVICE_COLUMNS].sort())
   })
+
+  it('caps the service name like the full page when the summary is shown', () => {
+    const name = new ServicesTableDescriptor()
+      .columns(['name', 'summary'])
+      .find((column) => columnId(column) === 'name')
+
+    expect(name?.maxSize).toBe(350)
+  })
+
+  it('uncaps the service name when the summary is not shown', () => {
+    const name = new ServicesTableDescriptor()
+      .columns(['name', 'host_name'])
+      .find((column) => columnId(column) === 'name')
+
+    expect(name?.maxSize).toBeUndefined()
+  })
 })

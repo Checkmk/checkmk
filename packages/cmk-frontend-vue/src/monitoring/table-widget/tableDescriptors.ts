@@ -12,6 +12,7 @@ import type { ComponentProps } from 'vue-component-type-helpers'
 import { buildHostColumns } from '@/monitoring/all-hosts/columns'
 import HostRow from '@/monitoring/all-hosts/components/HostRow.vue'
 import { useAllServicesColumns } from '@/monitoring/all-services/columns'
+import { uncapNameWithoutSummary } from '@/monitoring/host-services/columns'
 import HostServicesRow from '@/monitoring/host-services/components/HostServicesRow.vue'
 import type { HostEntry, ServiceEntry } from '@/monitoring/shared/api/types'
 import {
@@ -202,6 +203,10 @@ export class ServicesTableDescriptor extends MonitoringTableDescriptor<
 
   protected allColumns(): ColumnDef<ServiceEntry>[] {
     return useAllServicesColumns({ sites: [], includeSelect: false })
+  }
+
+  override columns(ids: readonly string[]): ColumnDef<ServiceEntry>[] {
+    return uncapNameWithoutSummary(super.columns(ids), { summary: ids.includes('summary') })
   }
 
   rowKey(row: ServiceEntry): string {

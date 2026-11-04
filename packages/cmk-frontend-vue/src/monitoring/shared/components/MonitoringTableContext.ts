@@ -27,7 +27,7 @@ declare module '@tanstack/vue-table' {
     /**
      * The column is never narrower than its header needs to show its label in full, along with
      * its sort icon, even while it is not sorted by, and its filter button. Not for columns with
-     * `headerHelp`, and only in tables with column pinning.
+     * `headerHelp`.
      */
     fitHeader?: boolean
     /** The stretch column absorbs all remaining width. Ignored by MonitoringTable. */

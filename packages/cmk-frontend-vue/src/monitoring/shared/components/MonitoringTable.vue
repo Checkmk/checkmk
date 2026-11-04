@@ -323,7 +323,14 @@ const firstPinnedRightIndex = computed(() =>
 
 const totalWidth = computed(() => columnLayout.value.reduce((sum, entry) => sum + entry.width, 0))
 
-const tableWidth = computed(() => (pinningEnabled.value ? `${totalWidth.value}px` : '100%'))
+// Laid out once measured, pinned or not.
+const layoutEnabled = computed(() => pinningEnabled.value || containerWidth.value !== null)
+
+const tableWidth = computed(() => (layoutEnabled.value ? `${totalWidth.value}px` : '100%'))
+
+// Columns that are all capped lay out narrower than the container. Without pinned columns the
+// browser may widen them to fill it; pinned ones need the exact widths for their offsets.
+const tableMinWidth = computed(() => (pinningEnabled.value ? 'auto' : '100%'))
 
 const columnInfos = computed<Map<string, ColumnLayoutInfo>>(() => {
   const infos = new Map<string, ColumnLayoutInfo>()
@@ -418,8 +425,12 @@ function tableRowAt(index: number): Row<T> {
       :text="_t('Check whether the site is reachable, then retry.')"
     />
     <TableSkeleton v-if="showSkeleton"></TableSkeleton>
-    <table v-else class="monitoring-table__table">
-      <colgroup v-if="pinningEnabled">
+    <table
+      v-else
+      class="monitoring-table__table"
+      :style="{ width: tableWidth, minWidth: tableMinWidth }"
+    >
+      <colgroup v-if="layoutEnabled">
         <col v-for="entry in columnLayout" :key="entry.id" :style="{ width: `${entry.width}px` }" />
       </colgroup>
       <MonitoringTableHeader
@@ -474,7 +485,6 @@ function tableRowAt(index: number): Row<T> {
 }
 
 .monitoring-table__table {
-  width: v-bind(tableWidth);
   table-layout: fixed;
   border-collapse: separate;
   border-spacing: v-bind(borderSpacing);

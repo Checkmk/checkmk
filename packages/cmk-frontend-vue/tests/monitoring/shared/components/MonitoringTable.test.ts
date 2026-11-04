@@ -18,7 +18,8 @@ import { type Ref, defineComponent, h, inject, nextTick, provide, ref } from 'vu
 import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
 import {
   COLUMN_LAYOUT_KEY,
-  MONITORING_SERVICE
+  MONITORING_SERVICE,
+  TABLE_BORDER_SPACING
 } from '@/monitoring/shared/components/MonitoringTableContext'
 import type { FetchState, MonitoringService } from '@/monitoring/shared/services/MonitoringService'
 
@@ -862,5 +863,56 @@ describe('pinned columns', () => {
     await mountPinnedTable(600)
 
     expect(probedPinnedColumns()).toEqual([])
+  })
+})
+
+describe('a table without pinned columns', () => {
+  const UNPINNED_COLUMNS: ColumnDef<Row>[] = [
+    { id: 'name', header: 'Name', enableSorting: false, minSize: 100, maxSize: 300 },
+    { id: 'summary', header: 'Summary', enableSorting: false, minSize: 200 },
+    { id: 'state', header: 'State', enableSorting: false, minSize: 80, maxSize: 120 }
+  ]
+
+  async function mountUnpinnedTable(columns: ColumnDef<Row>[]): Promise<Element> {
+    const { container } = mountTable({ columns })
+    await nextTick()
+    deliverSize(1000, 600)
+    await nextTick()
+    return container
+  }
+
+  beforeEach(() => {
+    vi.stubGlobal('ResizeObserver', FakeResizeObserver)
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    FakeResizeObserver.instances = []
+  })
+
+  const CAPPED_COLUMNS: ColumnDef<Row>[] = [
+    { id: 'name', header: 'Name', enableSorting: false, minSize: 100, maxSize: 300 },
+    { id: 'state', header: 'State', enableSorting: false, minSize: 80, maxSize: 120 }
+  ]
+
+  const table = (container: Element) => container.querySelector('table')!
+  const colWidths = (container: Element) =>
+    [...container.querySelectorAll('col')].map((col) => col.style.width)
+
+  test('gives the capped columns their maximum and the rest to the uncapped one', async () => {
+    const container = await mountUnpinnedTable(UNPINNED_COLUMNS)
+
+    expect(colWidths(container)).toEqual([
+      '300px',
+      `${1000 - 4 * TABLE_BORDER_SPACING - 300 - 120}px`,
+      '120px'
+    ])
+  })
+
+  test('fills the container even when every column is capped', async () => {
+    const container = await mountUnpinnedTable(CAPPED_COLUMNS)
+
+    expect(colWidths(container)).toEqual(['300px', '120px'])
+    expect(table(container).style.minWidth).toBe('100%')
   })
 })

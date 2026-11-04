@@ -103,7 +103,7 @@ try {
 
 
     try {
-        $cdpjobs = Get-VBRCDPPolicy | Select-Object Id, Name, NextRun, PolicyState, LastResult
+        $cdpjobs = @(Get-VBRCDPPolicy)
     }
     catch {
         Write-Host "CDP jobs not supported"
@@ -123,31 +123,34 @@ try {
         foreach ($mycdpjobs in $cdpjobs) {
             $MyCdpJobsName = $mycdpjobs.Name -replace "\'", "_" -replace " ", "_"
 
-            $MyCdpJobsNextRun = $mycdpjobs.NextRun
-            if ($MyCdpJobsNextRun -ne $null) {
-                $MyCdpJobsNextRun = ([DateTimeOffset]$MyCdpJobsNextRun).ToUnixTimeSeconds()
-            }
-            else {
-                $MyCdpJobsNextRun = "null"
-            }
-
             $MyCdpJobsPolicyState = $mycdpjobs.PolicyState
 
             # The replica lagging behind the most determines how current the policy is
-            $MyCdpJobsLastSync = ($cdpReplicas | Where-Object { $_.JobId -eq $mycdpjobs.Id -and $_.LastPointCreationTime -ne $null } | ForEach-Object { $_.LastPointCreationTime } | Sort-Object | Select-Object -First 1)
-            if ($MyCdpJobsLastSync -ne $null) {
-                $MyCdpJobsLastSync = ([DateTimeOffset]$MyCdpJobsLastSync).ToUnixTimeSeconds()
+            $MyCdpJobsLastRestorePoint = ($cdpReplicas | Where-Object { $_.JobId -eq $mycdpjobs.Id -and $_.LastPointCreationTime -ne $null } | ForEach-Object { $_.LastPointCreationTime } | Sort-Object | Select-Object -First 1)
+            if ($MyCdpJobsLastRestorePoint -ne $null) {
+                $MyCdpJobsLastRestorePoint = ([DateTimeOffset]$MyCdpJobsLastRestorePoint).ToUnixTimeSeconds()
             }
             else {
-                $MyCdpJobsLastSync = "null"
+                $MyCdpJobsLastRestorePoint = "null"
             }
 
-            $MyCdpJobsLastResult = $mycdpjobs.LastResult
-            if ($MyCdpJobsLastResult -eq $null) {
-                $MyCdpJobsLastResult = "null"
+            # CDP sessions are replaced about once a day: only finished ones have a result
+            $MyCdpJobsSessionResult = "null"
+            $MyCdpJobsSessionEnd = "null"
+            try {
+                $myCdpJobsSession = Get-VBRCDPSession -Policy $mycdpjobs -State Stopped -ErrorAction Stop | Sort-Object CreationTime -Descending | Select-Object -First 1
+                if ($myCdpJobsSession -ne $null) {
+                    $MyCdpJobsSessionResult = $myCdpJobsSession.Result
+                    if ($myCdpJobsSession.EndTime -ne $null) {
+                        $MyCdpJobsSessionEnd = ([DateTimeOffset]$myCdpJobsSession.EndTime).ToUnixTimeSeconds()
+                    }
+                }
+            }
+            catch {
+                $MyCdpJobsSessionResult = "null"
             }
 
-            $myCdpJobsText = "$myCdpJobsText" + "$MyCdpJobsName" + "|" + "$MyCdpJobsNextRun" + "|" + "$MyCdpJobsPolicyState" + "|" + "$MyCdpJobsLastSync" + "|" + "$MyCdpJobsLastResult" + "`n"
+            $myCdpJobsText = "$myCdpJobsText" + "$MyCdpJobsName" + "|null|" + "$MyCdpJobsPolicyState" + "|" + "$MyCdpJobsLastRestorePoint" + "|" + "$MyCdpJobsSessionResult" + "|" + "$MyCdpJobsSessionEnd" + "`n"
         }
 
         Write-Host $myCdpJobsText

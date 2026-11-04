@@ -34,11 +34,11 @@ class CDPState(Enum):
 
 class CDPJob(NamedTuple):
     name: str
-    next_run: float | None
     state: CDPState
     raw_state: str
-    last_sync: float | None
-    last_result: str | None
+    last_restore_point: float | None
+    last_session_result: str | None
+    last_session_end: float | None
 
 
 STATE_MAPPING: Mapping[CDPState, State] = {
@@ -89,23 +89,31 @@ def _parse_state(raw_state: str) -> CDPState:
 
 
 def _parse_line(line: Sequence[str]) -> CDPJob:
-    # Older agent plugins only send name, next run and state
-    name, next_run, state, last_sync, last_result = (
-        line if len(line) == 5 else (*line, "null", "null")
-    )
+    # The second field used to hold the next run, which CDP policies don't have.
+    # Older agent plugins send 3 fields, or 5 with the policy's result, which is always None.
+    match line:
+        case [name, _next_run, state, last_restore_point, last_session_result, last_session_end]:
+            pass
+        case [name, _next_run, state, last_restore_point, _policy_result]:
+            last_session_result, last_session_end = "null", "null"
+        case [name, _next_run, state]:
+            last_restore_point, last_session_result, last_session_end = "null", "null", "null"
+        case _:
+            raise ValueError(line)
     return CDPJob(
         name,
-        _parse_timestamp(next_run),
         _parse_state(state),
         state,
-        _parse_timestamp(last_sync),
-        None if last_result == "null" else last_result,
+        _parse_timestamp(last_restore_point),
+        None if last_session_result in ("null", "None", "") else last_session_result,
+        _parse_timestamp(last_session_end),
     )
 
 
 def parse_veeam_cdp_jobs(string_table: StringTable) -> Section:
     return {
-        job.name: job for job in (_parse_line(line) for line in string_table if len(line) in (3, 5))
+        job.name: job
+        for job in (_parse_line(line) for line in string_table if len(line) in (3, 5, 6))
     }
 
 
@@ -136,26 +144,26 @@ def check_veeam_cdp_jobs_at(
         summary=f"State: {cdp.raw_state}",
     )
 
-    if cdp.last_result is not None and cdp.last_result != "None":
+    if cdp.last_session_result is not None:
+        text = f"Last session: {cdp.last_session_result}"
+        if cdp.last_session_end is not None:
+            text += f", ended {render.datetime(cdp.last_session_end)}"
         if cdp.state is CDPState.DISABLED:
-            yield Result(state=State.OK, notice=f"Last result: {cdp.last_result}")
+            yield Result(state=State.OK, notice=text)
         else:
             yield Result(
-                state=LAST_RESULT_MAPPING.get(cdp.last_result, State.UNKNOWN),
-                summary=f"Last result: {cdp.last_result}",
+                state=LAST_RESULT_MAPPING.get(cdp.last_session_result, State.UNKNOWN),
+                summary=text,
             )
 
-    if cdp.next_run is not None:
-        yield Result(state=State.OK, summary=f"Next run: {render.datetime(cdp.next_run)}")
-
-    if cdp.last_sync is None or cdp.state is CDPState.DISABLED:
+    if cdp.last_restore_point is None or cdp.state is CDPState.DISABLED:
         return
 
-    if (age := now - cdp.last_sync) < 0:
+    if (age := now - cdp.last_restore_point) < 0:
         yield Result(
             state=State.WARN,
             summary=(
-                "The last CDP sync is in the future. "
+                "The last long-term restore point is in the future. "
                 "Please check the clocks of the Veeam server and the Checkmk server."
             ),
         )
@@ -166,7 +174,7 @@ def check_veeam_cdp_jobs_at(
         levels_upper=params["age"],
         metric_name=None,
         render_func=render.timespan,
-        label="Time since last CDP sync",
+        label="Time since last long-term restore point",
     )
 
 

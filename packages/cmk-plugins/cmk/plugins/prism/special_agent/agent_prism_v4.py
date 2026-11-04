@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from functools import partial
 from http import HTTPStatus
-from typing import NamedTuple, Protocol, Self, TextIO
+from typing import Literal, NamedTuple, Protocol, Self, TextIO
 
 from pydantic import BaseModel, ValidationError
 
@@ -43,6 +43,7 @@ from cmk.plugins.prism.v4_models import (
     StorageContainerWithStats,
     V4Model,
     Vm,
+    VmDetails,
     VmWithHostName,
 )
 from cmk.server_side_programs.v1 import AgentMessages, Storage
@@ -336,8 +337,35 @@ def fetch_remote_support(context: FetchContext) -> Sequence[Section]:
 
 AHV_VMS_PATH = "vmm/v4.0/ahv/config/vms"
 ESXI_VMS_PATH = "vmm/v4.0/esxi/config/vms"
-# The same fields for AHV and ESXi VMs
-VM_SELECT = "extId,name,powerState,description,memorySizeBytes,host/extId,cluster/extId"
+_VM_SELECT = "extId,name,powerState,description,memorySizeBytes,host/extId,cluster/extId"
+# Prism Central rejects a $select with a field the model doesn't have
+AHV_VM_SELECT = (
+    f"{_VM_SELECT},numSockets,numCoresPerSocket,protectionType,"
+    "guestTools/version,guestTools/isInstalled,guestTools/isEnabled"
+)
+ESXI_VM_SELECT = (
+    f"{_VM_SELECT},numCpus,"
+    "nutanixGuestTools/version,nutanixGuestTools/isInstalled,nutanixGuestTools/isEnabled"
+)
+
+AHV_VM_STATS_PATH = "vmm/v4.0/ahv/stats/vms"
+ESXI_VM_STATS_PATH = "vmm/v4.0/esxi/stats/vms"
+_VM_STATS_SELECT = (
+    "extId",
+    "stats/controllerAvgIoLatencyMicros",
+    "stats/controllerAvgReadIoLatencyMicros",
+    "stats/controllerAvgWriteIoLatencyMicros",
+    "stats/controllerAvgReadIoSizeKb",
+    "stats/controllerAvgWriteIoSizeKb",
+    "stats/hypervisorCpuUsagePpm",
+    "stats/hypervisorCpuReadyTimePpm",
+)
+# ESXi VMs have no guest memory usage
+AHV_VM_STATS_SELECT = (*_VM_STATS_SELECT, "stats/guestMemoryUsagePpm")
+ESXI_VM_STATS_SELECT = _VM_STATS_SELECT
+# One bucket over the whole window: LAST gives the newest value of each VM, as the legacy API
+# does. Prism Central records VM stats every 5 minutes, the window leaves room for a late one.
+VM_STATS_WINDOW = timedelta(minutes=15)
 
 
 def _host_names(hosts: Sequence[JsonObject] | PrismV4Error) -> dict[str, str]:
@@ -351,33 +379,92 @@ def _host_names(hosts: Sequence[JsonObject] | PrismV4Error) -> dict[str, str]:
     }
 
 
+def _report_partial_failure(context: FetchContext, what: str, error: PrismV4Error) -> None:
+    """A 404 means the API isn't there, any other error loses data"""
+    if error.status == HTTPStatus.NOT_FOUND:
+        context.messages.add_info(f"Could not fetch the {what}: {error}")
+    else:
+        context.messages.add_warning(f"Could not fetch the {what}: {error}")
+
+
 def _esxi_vms(context: FetchContext) -> list[JsonObject]:
     """The AHV VMs are reported even if Prism Central can't list the ESXi VMs"""
     try:
-        return context.client.list_all(ESXI_VMS_PATH, {"$select": VM_SELECT})
+        return context.client.list_all(ESXI_VMS_PATH, {"$select": ESXI_VM_SELECT})
     except PrismV4Error as e:
-        if e.status == HTTPStatus.NOT_FOUND:
-            context.messages.add_info(f"Could not fetch the ESXi VMs: {e}")
-        else:
-            context.messages.add_warning(f"Could not fetch the ESXi VMs: {e}")
+        _report_partial_failure(context, "ESXi VMs", e)
         return []
+
+
+def _vm_stats(
+    context: FetchContext, path: str, select: Sequence[str], what: str
+) -> dict[str, object] | None:
+    """The stats of each VM by extId, None if Prism Central couldn't list them. The list also
+    holds VMs that aren't in the VM list (CVMs, deleted VMs), they are never looked up."""
+    try:
+        entries = context.client.list_stats(
+            path,
+            window=VM_STATS_WINDOW,
+            sampling_interval=VM_STATS_WINDOW,
+            select=select,
+        )
+    except PrismV4Error as e:
+        _report_partial_failure(context, what, e)
+        return None
+    return {
+        ext_id: entry.get("stats")
+        for entry in entries
+        if isinstance(ext_id := entry.get("extId"), str)
+    }
+
+
+def _vm_details(
+    vm: Vm,
+    hypervisor: Literal["AHV", "ESXI"],
+    host_name: str | None,
+    stats: Mapping[str, object] | None,
+) -> Section:
+    return Section(
+        "prism_vm_v2",
+        VmDetails.model_validate(
+            {
+                "extId": vm.ext_id,
+                "name": vm.name,
+                "hypervisor": hypervisor,
+                "powerState": vm.power_state,
+                "hostName": host_name,
+                "numVcpus": vm.num_vcpus,
+                "memorySizeBytes": vm.memory_size_bytes,
+                "protectionType": vm.protection_type,
+                "guestTools": vm.guest_tools or vm.nutanix_guest_tools,
+                # A VM missing from the stats list has no stats at all
+                "stats": None if stats is None else stats.get(vm.ext_id),
+            }
+        ).to_section(),
+        # VM names aren't unique: clones keep the name of their source
+        f"{vm.name}_{vm.ext_id[:8]}",
+    )
 
 
 def fetch_vms(context: FetchContext) -> Sequence[Section]:
     """A VM that doesn't fit the model is left out, the others are reported"""
-    vms = _parse_valid(
+    ahv_vms = _parse_valid(
         Vm,
-        [*context.client.list_all(AHV_VMS_PATH, {"$select": VM_SELECT}), *_esxi_vms(context)],
+        context.client.list_all(AHV_VMS_PATH, {"$select": AHV_VM_SELECT}),
         "VM",
         "extId",
         context.messages,
     )
-    if not vms:
+    esxi_vms = _parse_valid(Vm, _esxi_vms(context), "VM", "extId", context.messages)
+    if not ahv_vms and not esxi_vms:
         return []
     host_names = _host_names(context.hosts)
 
+    def host_name(vm: Vm) -> str | None:
+        return None if vm.host is None else host_names.get(vm.host.ext_id)
+
     by_cluster: dict[str, list[dict[str, object]]] = {}
-    for vm in vms:
+    for vm in (*ahv_vms, *esxi_vms):
         by_cluster.setdefault(vm.cluster.ext_id, []).append(
             VmWithHostName(
                 extId=vm.ext_id,
@@ -385,13 +472,27 @@ def fetch_vms(context: FetchContext) -> Sequence[Section]:
                 powerState=vm.power_state,
                 description=vm.description,
                 memorySizeBytes=vm.memory_size_bytes,
-                hostName=None if vm.host is None else host_names.get(vm.host.ext_id),
+                hostName=host_name(vm),
             ).to_section()
         )
-    return [
+    sections = [
         Section("prism_vms_v2", cluster_vms, context.routing.host_for(cluster_id))
         for cluster_id, cluster_vms in by_cluster.items()
     ]
+
+    ahv_stats = (
+        _vm_stats(context, AHV_VM_STATS_PATH, AHV_VM_STATS_SELECT, "AHV VM stats")
+        if ahv_vms
+        else None
+    )
+    esxi_stats = (
+        _vm_stats(context, ESXI_VM_STATS_PATH, ESXI_VM_STATS_SELECT, "ESXi VM stats")
+        if esxi_vms
+        else None
+    )
+    sections.extend(_vm_details(vm, "AHV", host_name(vm), ahv_stats) for vm in ahv_vms)
+    sections.extend(_vm_details(vm, "ESXI", host_name(vm), esxi_stats) for vm in esxi_vms)
+    return sections
 
 
 DISKS_PATH = "clustermgmt/v4.0/config/disks"

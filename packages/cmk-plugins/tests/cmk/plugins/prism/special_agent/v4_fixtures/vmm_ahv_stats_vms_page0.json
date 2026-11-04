@@ -1,0 +1,2203 @@
+{
+  "data": [
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "88538ef2-ad2d-4298-513c-af87844f90d0",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 0,
+          "hypervisorCpuUsagePpm": 0
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "6173bf48-9a77-4b76-650a-594a2399fd6d",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 0,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 0,
+          "controllerAvgWriteIoSizeKb": 0,
+          "guestMemoryUsagePpm": 187242,
+          "hypervisorCpuReadyTimePpm": 4,
+          "hypervisorCpuUsagePpm": 557
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "16c93e0c-52d3-45ee-5952-4247c29cb036",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 0,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 0,
+          "controllerAvgWriteIoSizeKb": 0,
+          "guestMemoryUsagePpm": 188001,
+          "hypervisorCpuReadyTimePpm": 1,
+          "hypervisorCpuUsagePpm": 780
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "4baf53f7-bb8a-4c04-58b9-9fb967e5e807",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 729136,
+          "hypervisorCpuReadyTimePpm": 9,
+          "hypervisorCpuUsagePpm": 1003
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "be29f482-3fcb-408d-4d6f-33e7d3393cf1",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 581,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 581,
+          "controllerAvgWriteIoSizeKb": 6,
+          "guestMemoryUsagePpm": 743053,
+          "hypervisorCpuReadyTimePpm": 7,
+          "hypervisorCpuUsagePpm": 989
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "7eb0dfd3-eb87-4c6f-669b-1d090be65137",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 611,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 611,
+          "controllerAvgWriteIoSizeKb": 6,
+          "guestMemoryUsagePpm": 752707,
+          "hypervisorCpuReadyTimePpm": 5,
+          "hypervisorCpuUsagePpm": 2007
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "edeaa8a7-ce9c-4b91-4f56-39ce3fc94638",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 914,
+          "controllerAvgReadIoLatencyMicros": 301,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 1058,
+          "controllerAvgWriteIoSizeKb": 9,
+          "guestMemoryUsagePpm": 991532,
+          "hypervisorCpuReadyTimePpm": 66,
+          "hypervisorCpuUsagePpm": 115266
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "fa3465e1-9fc7-49b8-5e75-b7135c5ae39e",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 602,
+          "controllerAvgReadIoLatencyMicros": 264,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 758,
+          "controllerAvgWriteIoSizeKb": 12,
+          "guestMemoryUsagePpm": 992374,
+          "hypervisorCpuReadyTimePpm": 67,
+          "hypervisorCpuUsagePpm": 120667
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "4880a219-c9d4-42e2-86d3-890cb1805109",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 0,
+          "hypervisorCpuUsagePpm": 0
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "21f94e07-787b-4973-837b-e5ca2ec97d6d",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 0,
+          "hypervisorCpuUsagePpm": 0
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "449e0abc-b551-4f91-b6cb-48b64778b542",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "hypervisorCpuReadyTimePpm": 10,
+          "hypervisorCpuUsagePpm": 1115
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "58efd9b7-96da-48f4-728f-52e93a0d792a",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 0,
+          "hypervisorCpuUsagePpm": 0
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "916aff77-1794-4a26-b27f-73ed2a4cfb69",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 0,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 0,
+          "controllerAvgWriteIoSizeKb": 0,
+          "guestMemoryUsagePpm": 131009,
+          "hypervisorCpuReadyTimePpm": 7,
+          "hypervisorCpuUsagePpm": 1484
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "aaeb67c4-3b2a-4b00-90b1-3ea7e1eee3ef",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 0,
+          "hypervisorCpuUsagePpm": 0
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "2edef079-0be9-4550-ae91-4d0c42e4c354",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 744,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 744,
+          "controllerAvgWriteIoSizeKb": 8,
+          "guestMemoryUsagePpm": 785453,
+          "hypervisorCpuReadyTimePpm": 33,
+          "hypervisorCpuUsagePpm": 37720
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "95f908ea-a995-4e88-6755-e9e9bc64bc3d",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 1620,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 1620,
+          "controllerAvgWriteIoSizeKb": 6,
+          "guestMemoryUsagePpm": 838911,
+          "hypervisorCpuReadyTimePpm": 4,
+          "hypervisorCpuUsagePpm": 989
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "dc84bef6-f637-4ce9-7a58-567bcc7ed76b",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 0,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 0,
+          "controllerAvgWriteIoSizeKb": 0,
+          "guestMemoryUsagePpm": 774185,
+          "hypervisorCpuReadyTimePpm": 20,
+          "hypervisorCpuUsagePpm": 1484
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "b9642b1e-c9b6-475c-7189-a81df292238d",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 2702,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 2702,
+          "controllerAvgWriteIoSizeKb": 4,
+          "guestMemoryUsagePpm": 26827,
+          "hypervisorCpuReadyTimePpm": 5,
+          "hypervisorCpuUsagePpm": 253
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "1c44a198-c3d9-48ba-6a70-96d002a98eb3",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 0,
+          "hypervisorCpuUsagePpm": 0
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "1fc9fbba-2bf8-4254-589e-f73788283acc",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 0,
+          "hypervisorCpuUsagePpm": 0
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "acc75d64-39ab-46c1-6797-14c5402235c2",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 482223,
+          "hypervisorCpuReadyTimePpm": 0,
+          "hypervisorCpuUsagePpm": 659
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "a32bc735-612d-4547-96b1-1eaa08d68bfe",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 0,
+          "hypervisorCpuUsagePpm": 0
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "16495d08-b061-4a49-a7aa-e5182331c6b3",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 0,
+          "hypervisorCpuUsagePpm": 0
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "306f369e-1920-4938-8ad6-52f1d96888e5",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 0,
+          "hypervisorCpuUsagePpm": 0
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "f7c795b3-4f91-4826-5f11-7f388d0b3038",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 674,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 674,
+          "controllerAvgWriteIoSizeKb": 8,
+          "guestMemoryUsagePpm": 202959,
+          "hypervisorCpuReadyTimePpm": 36,
+          "hypervisorCpuUsagePpm": 10141
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "ba537122-8ad8-4ffc-7537-7cc4b23ba4fd",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 0,
+          "hypervisorCpuUsagePpm": 0
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "71413fc0-962f-43d8-6074-a0c1026cf97a",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 0,
+          "hypervisorCpuUsagePpm": 0
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "190bc4ec-acad-443c-5b70-e9e5bb702709",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 0,
+          "hypervisorCpuUsagePpm": 0
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "392d3bf0-b52b-4b0e-4bf9-2c4eeb3c59cf",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 0,
+          "hypervisorCpuUsagePpm": 0
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "7ddad8f7-f330-4e48-77a8-e6852881c0b2",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "hypervisorCpuReadyTimePpm": 422,
+          "hypervisorCpuUsagePpm": 22277
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "e2fe3368-4c0f-4678-6547-8975aa472eb2",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 796,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 796,
+          "controllerAvgWriteIoSizeKb": 6,
+          "hypervisorCpuReadyTimePpm": 138,
+          "hypervisorCpuUsagePpm": 127249
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "e658efef-ca23-4854-5b6f-81a3a8d67e0c",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "hypervisorCpuReadyTimePpm": 20,
+          "hypervisorCpuUsagePpm": 206400
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "0c9b7634-dfcb-4ff0-7a19-b79f60675fbb",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 778,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 778,
+          "controllerAvgWriteIoSizeKb": 7,
+          "hypervisorCpuReadyTimePpm": 32,
+          "hypervisorCpuUsagePpm": 101700
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "bfbfdb86-6a99-44f8-4f96-5a47de72d61c",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "hypervisorCpuReadyTimePpm": 12,
+          "hypervisorCpuUsagePpm": 204374
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "3813fa4d-93c7-47b1-8c58-b51c7fc7c39a",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 682,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 682,
+          "controllerAvgWriteIoSizeKb": 7,
+          "guestMemoryUsagePpm": 954949,
+          "hypervisorCpuReadyTimePpm": 262,
+          "hypervisorCpuUsagePpm": 34639
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "25080d64-cf64-4ab9-7260-e8a755e8f2e4",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 0,
+          "hypervisorCpuUsagePpm": 0
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "ddc84667-dc48-4ad1-6373-666323412e42",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 813,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 813,
+          "controllerAvgWriteIoSizeKb": 11,
+          "guestMemoryUsagePpm": 616417,
+          "hypervisorCpuReadyTimePpm": 119,
+          "hypervisorCpuUsagePpm": 13028
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "559ec996-a78e-40e6-7098-79c077555916",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 1058,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 1058,
+          "controllerAvgWriteIoSizeKb": 8,
+          "guestMemoryUsagePpm": 605008,
+          "hypervisorCpuReadyTimePpm": 127,
+          "hypervisorCpuUsagePpm": 11948
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "cc88fea4-ef6e-4ab2-7296-d6983b744551",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 955,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 955,
+          "controllerAvgWriteIoSizeKb": 9,
+          "hypervisorCpuReadyTimePpm": 166,
+          "hypervisorCpuUsagePpm": 125983
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "cdc4c84e-f18a-470a-59ea-f27275091ca5",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 952,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 952,
+          "controllerAvgWriteIoSizeKb": 8,
+          "hypervisorCpuReadyTimePpm": 167,
+          "hypervisorCpuUsagePpm": 157078
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "a7add369-c6ff-4061-57fd-d2dc508b3bcf",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 0,
+          "hypervisorCpuUsagePpm": 0
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "5fcd68a4-b5d8-42ef-ae42-f75ec768bb35",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 0,
+          "hypervisorCpuUsagePpm": 0
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "f9d9ed69-8f47-4ce8-8032-6f201640221f",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 0,
+          "hypervisorCpuUsagePpm": 0
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "429b70ae-d974-40a9-bad3-ca5b15c1d219",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 0,
+          "hypervisorCpuUsagePpm": 0
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "89c72045-d8f0-47fb-6e4b-da7052e84f02",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 860,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 860,
+          "controllerAvgWriteIoSizeKb": 9,
+          "hypervisorCpuReadyTimePpm": 248,
+          "hypervisorCpuUsagePpm": 11075
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "4c7299e6-aae2-4448-79e6-40f862a7d630",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 0,
+          "hypervisorCpuUsagePpm": 0
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "432d609a-03f5-434e-515d-ae7d27cc3570",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 662,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 662,
+          "controllerAvgWriteIoSizeKb": 6,
+          "hypervisorCpuReadyTimePpm": 177,
+          "hypervisorCpuUsagePpm": 129400
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "e2e38c93-08aa-4647-5e1e-2cca05af4b4f",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 786,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 786,
+          "controllerAvgWriteIoSizeKb": 8,
+          "hypervisorCpuReadyTimePpm": 39,
+          "hypervisorCpuUsagePpm": 114618
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "da405027-058d-4d91-6f19-21689efdbdab",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 948,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 948,
+          "controllerAvgWriteIoSizeKb": 6,
+          "hypervisorCpuReadyTimePpm": 168,
+          "hypervisorCpuUsagePpm": 124506
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "bfafb28f-5da3-45b1-9a1a-f20ad9893364",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 415537,
+          "hypervisorCpuReadyTimePpm": 21,
+          "hypervisorCpuUsagePpm": 886
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "6074e762-bcf6-4d5b-9917-6fcee03f386d",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 393373,
+          "hypervisorCpuReadyTimePpm": 6,
+          "hypervisorCpuUsagePpm": 2061
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "fc18ac40-a877-4cd5-a832-8c5066a8051f",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 392862,
+          "hypervisorCpuReadyTimePpm": 24,
+          "hypervisorCpuUsagePpm": 2109
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "c5da893a-7067-4ba9-6494-880d63503e37",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 867,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 867,
+          "controllerAvgWriteIoSizeKb": 10,
+          "guestMemoryUsagePpm": 923198,
+          "hypervisorCpuReadyTimePpm": 152,
+          "hypervisorCpuUsagePpm": 27508
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "0eb75f05-3582-4d7d-6bb3-b743d1413cc6",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 521,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 521,
+          "controllerAvgWriteIoSizeKb": 7,
+          "guestMemoryUsagePpm": 130885,
+          "hypervisorCpuReadyTimePpm": 415,
+          "hypervisorCpuUsagePpm": 2278
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "c015cde8-5d20-488b-4b57-203c5984af71",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 0,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 0,
+          "controllerAvgWriteIoSizeKb": 0,
+          "guestMemoryUsagePpm": 471352,
+          "hypervisorCpuReadyTimePpm": 1,
+          "hypervisorCpuUsagePpm": 501
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "8340d15d-37e5-4060-4f32-c0c3a8346378",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 469840,
+          "hypervisorCpuReadyTimePpm": 2,
+          "hypervisorCpuUsagePpm": 418
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "183ab144-bf8c-4e3d-40ee-68bd9d43042a",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 0,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 0,
+          "controllerAvgWriteIoSizeKb": 0,
+          "guestMemoryUsagePpm": 465711,
+          "hypervisorCpuReadyTimePpm": 4,
+          "hypervisorCpuUsagePpm": 292
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "d1b12842-f4cf-4054-54ff-6209b3c602f2",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 1028,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 1028,
+          "controllerAvgWriteIoSizeKb": 16,
+          "guestMemoryUsagePpm": 309272,
+          "hypervisorCpuReadyTimePpm": 66,
+          "hypervisorCpuUsagePpm": 943543
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "62a71159-adfc-4847-59e0-508fb9e2c638",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 0,
+          "hypervisorCpuUsagePpm": 0
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "81dfd976-ec94-410b-41fa-80a3e6aa1221",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 0,
+          "hypervisorCpuUsagePpm": 0
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "e36375b4-cc0e-4806-5bb1-1e71417b827f",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 0,
+          "hypervisorCpuUsagePpm": 0
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "27fc6a2a-70fb-4e8c-7169-cad3f2c72e87",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 0,
+          "hypervisorCpuUsagePpm": 0
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "7c917600-7831-45a3-4d9e-43b431a35134",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "hypervisorCpuReadyTimePpm": 89,
+          "hypervisorCpuUsagePpm": 20071
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "ad8eccce-4a16-45e4-50b6-40703eb3978e",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 725,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 725,
+          "controllerAvgWriteIoSizeKb": 7,
+          "guestMemoryUsagePpm": 596597,
+          "hypervisorCpuReadyTimePpm": 12,
+          "hypervisorCpuUsagePpm": 3847
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "a4f82174-723d-4401-7ef1-ff59829e105d",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 685,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 685,
+          "controllerAvgWriteIoSizeKb": 12,
+          "guestMemoryUsagePpm": 508536,
+          "hypervisorCpuReadyTimePpm": 135,
+          "hypervisorCpuUsagePpm": 15695
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "f0863b6f-e237-478e-76c0-a97ac42a5d73",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 1289,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 1289,
+          "controllerAvgWriteIoSizeKb": 9,
+          "guestMemoryUsagePpm": 223825,
+          "hypervisorCpuReadyTimePpm": 11,
+          "hypervisorCpuUsagePpm": 3512
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "cbb7f556-c0df-417c-7c4d-8c62bf19bfc0",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 362,
+          "controllerAvgReadIoLatencyMicros": 256,
+          "controllerAvgReadIoSizeKb": 13,
+          "controllerAvgWriteIoLatencyMicros": 398,
+          "controllerAvgWriteIoSizeKb": 5,
+          "guestMemoryUsagePpm": 282406,
+          "hypervisorCpuReadyTimePpm": 176,
+          "hypervisorCpuUsagePpm": 2362
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "31cf83c6-7624-4565-774b-2c603f0dcc9a",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 0,
+          "hypervisorCpuUsagePpm": 0
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "973f4208-6ab2-44e5-7d36-26a4c4b329a8",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 0,
+          "hypervisorCpuUsagePpm": 0
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "f412d61d-64ef-4937-545b-296feaa2c37d",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 1393,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 1393,
+          "controllerAvgWriteIoSizeKb": 89,
+          "hypervisorCpuReadyTimePpm": 168,
+          "hypervisorCpuUsagePpm": 130329
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "55c56560-e8f6-472b-78ab-307c80ab5439",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 0,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 0,
+          "controllerAvgWriteIoSizeKb": 0,
+          "guestMemoryUsagePpm": 212128,
+          "hypervisorCpuReadyTimePpm": 5,
+          "hypervisorCpuUsagePpm": 334
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "dc5132c2-cba1-4773-499d-4cfe3bccf7c4",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 0,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 0,
+          "controllerAvgWriteIoSizeKb": 0,
+          "guestMemoryUsagePpm": 598560,
+          "hypervisorCpuReadyTimePpm": 14,
+          "hypervisorCpuUsagePpm": 2700
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "6a64cd5e-f58d-451c-7d60-e3965ffa929b",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 0,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 0,
+          "controllerAvgWriteIoSizeKb": 0,
+          "guestMemoryUsagePpm": 751303,
+          "hypervisorCpuReadyTimePpm": 4,
+          "hypervisorCpuUsagePpm": 627
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "fcbcc0ad-38e6-4cf7-4057-be7bc9a03beb",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 0,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 0,
+          "controllerAvgWriteIoSizeKb": 0,
+          "guestMemoryUsagePpm": 964218,
+          "hypervisorCpuReadyTimePpm": 3,
+          "hypervisorCpuUsagePpm": 948
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "5a16cbd1-f744-4650-51f3-a49e7fa4aaa8",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 0,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 0,
+          "controllerAvgWriteIoSizeKb": 0,
+          "guestMemoryUsagePpm": 942919,
+          "hypervisorCpuReadyTimePpm": 50,
+          "hypervisorCpuUsagePpm": 1603
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "d6e0c71b-b427-4487-60d6-ca2f0952555a",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 633,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 633,
+          "controllerAvgWriteIoSizeKb": 7,
+          "guestMemoryUsagePpm": 497501,
+          "hypervisorCpuReadyTimePpm": 233,
+          "hypervisorCpuUsagePpm": 21939
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "d310c1b5-c48b-4448-65fc-a61a78e12569",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 0,
+          "hypervisorCpuUsagePpm": 0
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "eb19aed2-b08e-41bc-506f-368f9c3c3560",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 2336,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 2336,
+          "controllerAvgWriteIoSizeKb": 4,
+          "guestMemoryUsagePpm": 527891,
+          "hypervisorCpuReadyTimePpm": 19,
+          "hypervisorCpuUsagePpm": 590
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "2ab91bce-ebb5-4dbe-7110-9d08ae94b377",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 1379,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 1379,
+          "controllerAvgWriteIoSizeKb": 5,
+          "guestMemoryUsagePpm": 340918,
+          "hypervisorCpuReadyTimePpm": 17,
+          "hypervisorCpuUsagePpm": 1181
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "7befc17f-3e6f-4898-45b5-b73fb61405c1",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 742,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 742,
+          "controllerAvgWriteIoSizeKb": 4,
+          "guestMemoryUsagePpm": 348037,
+          "hypervisorCpuReadyTimePpm": 29,
+          "hypervisorCpuUsagePpm": 1940
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "f2b2e847-cb33-40dd-411d-38219fa41168",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 0,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 0,
+          "controllerAvgWriteIoSizeKb": 0,
+          "guestMemoryUsagePpm": 872527,
+          "hypervisorCpuReadyTimePpm": 3,
+          "hypervisorCpuUsagePpm": 3345
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "3951ab57-c16e-4f79-4bd4-f2b223723ae4",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 633,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 633,
+          "controllerAvgWriteIoSizeKb": 8,
+          "guestMemoryUsagePpm": 954057,
+          "hypervisorCpuReadyTimePpm": 27,
+          "hypervisorCpuUsagePpm": 6412
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "3c3e639b-9d8c-42ca-60e6-7046e95edb26",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 624,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 624,
+          "controllerAvgWriteIoSizeKb": 11,
+          "hypervisorCpuReadyTimePpm": 49,
+          "hypervisorCpuUsagePpm": 27891
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "4c6d44ab-3678-4a54-4539-6ec4ddbf5c7c",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 0,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 0,
+          "controllerAvgWriteIoSizeKb": 0,
+          "guestMemoryUsagePpm": 885383,
+          "hypervisorCpuReadyTimePpm": 48,
+          "hypervisorCpuUsagePpm": 3037
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "f5c3faf5-826a-4205-6a79-c7ad2c9da7f7",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 1027,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 1027,
+          "controllerAvgWriteIoSizeKb": 45,
+          "guestMemoryUsagePpm": 874306,
+          "hypervisorCpuReadyTimePpm": 107,
+          "hypervisorCpuUsagePpm": 160833
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "e05aa2f1-f291-4adb-5920-76c7f340193c",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 498097,
+          "hypervisorCpuReadyTimePpm": 165,
+          "hypervisorCpuUsagePpm": 8438
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "526e0cfe-52cb-4dfb-78d0-f2ddce8c6434",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 945,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 945,
+          "controllerAvgWriteIoSizeKb": 11,
+          "guestMemoryUsagePpm": 775385,
+          "hypervisorCpuReadyTimePpm": 67,
+          "hypervisorCpuUsagePpm": 932928
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "317d52b3-dc4c-4e8f-8b06-ade882061f0c",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 695,
+          "controllerAvgReadIoLatencyMicros": 431,
+          "controllerAvgReadIoSizeKb": 4,
+          "controllerAvgWriteIoLatencyMicros": 697,
+          "controllerAvgWriteIoSizeKb": 12,
+          "guestMemoryUsagePpm": 951768,
+          "hypervisorCpuReadyTimePpm": 59,
+          "hypervisorCpuUsagePpm": 15806
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "d26ebd24-ad88-4187-a72a-f137452bd121",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 837,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 837,
+          "controllerAvgWriteIoSizeKb": 9,
+          "guestMemoryUsagePpm": 931901,
+          "hypervisorCpuReadyTimePpm": 78,
+          "hypervisorCpuUsagePpm": 27849
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "8bdd1e1a-88c2-44ad-62a1-d8e3e68a6701",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 481917,
+          "hypervisorCpuReadyTimePpm": 1,
+          "hypervisorCpuUsagePpm": 334
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "e6e4b8a9-0723-4510-7015-fdce64c2579b",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 791,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 791,
+          "controllerAvgWriteIoSizeKb": 20,
+          "guestMemoryUsagePpm": 171258,
+          "hypervisorCpuReadyTimePpm": 63,
+          "hypervisorCpuUsagePpm": 10704
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "5570f96a-91ae-4043-4644-45e2860a1b90",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 1663,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 1663,
+          "controllerAvgWriteIoSizeKb": 7,
+          "guestMemoryUsagePpm": 700931,
+          "hypervisorCpuReadyTimePpm": 60,
+          "hypervisorCpuUsagePpm": 756714
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "2220d7fb-0e38-4165-5879-2acaf4625229",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 0,
+          "hypervisorCpuUsagePpm": 0
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "99cdbf92-7647-4fd3-63b8-3bdf6031d833",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 824,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 824,
+          "controllerAvgWriteIoSizeKb": 5,
+          "hypervisorCpuReadyTimePpm": 9,
+          "hypervisorCpuUsagePpm": 4014
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "52ef8f4b-4f67-4176-72c8-12189e5d97cb",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 2813,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 2813,
+          "controllerAvgWriteIoSizeKb": 64,
+          "guestMemoryUsagePpm": 126002,
+          "hypervisorCpuReadyTimePpm": 135,
+          "hypervisorCpuUsagePpm": 1856
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "da7df464-f340-4203-6a77-f0745811add0",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 0,
+          "hypervisorCpuUsagePpm": 0
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "a10a81bb-4842-4ef2-464a-af6ba4b3d8ff",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 0,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 0,
+          "controllerAvgWriteIoSizeKb": 0,
+          "guestMemoryUsagePpm": 751000,
+          "hypervisorCpuReadyTimePpm": 12,
+          "hypervisorCpuUsagePpm": 843
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "9f6c26cc-63f2-4e95-5d8b-6d82c28be729",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 0,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 0,
+          "controllerAvgWriteIoSizeKb": 0,
+          "guestMemoryUsagePpm": 731909,
+          "hypervisorCpuReadyTimePpm": 11,
+          "hypervisorCpuUsagePpm": 675
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "adbdf6e8-bf44-4e94-45c0-f8e91e0ffb59",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "controllerAvgIoLatencyMicros": 0,
+          "controllerAvgReadIoLatencyMicros": 0,
+          "controllerAvgReadIoSizeKb": 0,
+          "controllerAvgWriteIoLatencyMicros": 0,
+          "controllerAvgWriteIoSizeKb": 0,
+          "guestMemoryUsagePpm": 740763,
+          "hypervisorCpuReadyTimePpm": 13,
+          "hypervisorCpuUsagePpm": 843
+        }
+      ]
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "vmm.v4.ahv.stats.VmStats",
+      "extId": "9d6f687f-2362-4e9c-66f7-56fc29a7c7ca",
+      "stats": [
+        {
+          "$reserved": {
+            "$fv": "v4.r2"
+          },
+          "$objectType": "vmm.v4.ahv.stats.VmStatsTuple",
+          "timestamp": "2026-11-04T15:00:00Z",
+          "guestMemoryUsagePpm": 497787,
+          "hypervisorCpuReadyTimePpm": 17,
+          "hypervisorCpuUsagePpm": 843
+        }
+      ]
+    }
+  ],
+  "$reserved": {
+    "$fv": "v4.r2"
+  },
+  "$objectType": "vmm.v4.ahv.stats.ListVmStatsApiResponse",
+  "metadata": {
+    "flags": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.config.Flag",
+        "name": "hasError",
+        "value": false
+      },
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.config.Flag",
+        "name": "isPaginated",
+        "value": true
+      },
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.config.Flag",
+        "name": "isTruncated",
+        "value": false
+      }
+    ],
+    "$reserved": {
+      "$fv": "v1.r0"
+    },
+    "$objectType": "common.v1.response.ApiResponseMetadata",
+    "links": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.response.ApiLink",
+        "href": "https://prism.example.com:9440/api/vmm/v4.0/ahv/stats/vms?$select=extId,stats/timestamp,stats/controllerAvgIoLatencyMicros,stats/controllerAvgReadIoLatencyMicros,stats/controllerAvgWriteIoLatencyMicros,stats/controllerAvgReadIoSizeKb,stats/controllerAvgWriteIoSizeKb,stats/hypervisorCpuUsagePpm,stats/hypervisorCpuReadyTimePpm,stats/guestMemoryUsagePpm&$statType=LAST&$startTime=2026-11-04T14:59:52Z&$endTime=2026-11-04T15:14:52Z&$samplingInterval=900&$page=0&$limit=50",
+        "rel": "self"
+      },
+      {
+        "href": "https://prism.example.com:9440/api/vmm/v4.0/ahv/stats/vms?$select=extId,stats/timestamp,stats/controllerAvgIoLatencyMicros,stats/controllerAvgReadIoLatencyMicros,stats/controllerAvgWriteIoLatencyMicros,stats/controllerAvgReadIoSizeKb,stats/controllerAvgWriteIoSizeKb,stats/hypervisorCpuUsagePpm,stats/hypervisorCpuReadyTimePpm,stats/guestMemoryUsagePpm&$statType=LAST&$startTime=2026-11-04T14:59:52Z&$endTime=2026-11-04T15:14:52Z&$samplingInterval=900&$page=1&$limit=50",
+        "rel": "next"
+      },
+      {
+        "href": "https://prism.example.com:9440/api/vmm/v4.0/ahv/stats/vms?$select=extId,stats/timestamp,stats/controllerAvgIoLatencyMicros,stats/controllerAvgReadIoLatencyMicros,stats/controllerAvgWriteIoLatencyMicros,stats/controllerAvgReadIoSizeKb,stats/controllerAvgWriteIoSizeKb,stats/hypervisorCpuUsagePpm,stats/hypervisorCpuReadyTimePpm,stats/guestMemoryUsagePpm&$statType=LAST&$startTime=2026-11-04T14:59:52Z&$endTime=2026-11-04T15:14:52Z&$samplingInterval=900&$page=0&$limit=50",
+        "rel": "first"
+      },
+      {
+        "href": "https://prism.example.com:9440/api/vmm/v4.0/ahv/stats/vms?$select=extId,stats/timestamp,stats/controllerAvgIoLatencyMicros,stats/controllerAvgReadIoLatencyMicros,stats/controllerAvgWriteIoLatencyMicros,stats/controllerAvgReadIoSizeKb,stats/controllerAvgWriteIoSizeKb,stats/hypervisorCpuUsagePpm,stats/hypervisorCpuReadyTimePpm,stats/guestMemoryUsagePpm&$statType=LAST&$startTime=2026-11-04T14:59:52Z&$endTime=2026-11-04T15:14:52Z&$samplingInterval=900&$page=3&$limit=50",
+        "rel": "last"
+      }
+    ],
+    "totalAvailableResults": 164
+  }
+}

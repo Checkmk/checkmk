@@ -19,6 +19,7 @@ from responses import matchers
 
 from cmk.plugins.prism.special_agent.agent_prism import agent_prism_main, parse_arguments
 from cmk.plugins.prism.special_agent.agent_prism_v4 import (
+    AHV_VM_STATS_PATH,
     AHV_VMS_PATH,
     ALERTS_PATH,
     ClusterRouting,
@@ -27,6 +28,7 @@ from cmk.plugins.prism.special_agent.agent_prism_v4 import (
     CONTAINERS_PATH,
     DISK_STATS_PATH,
     DISKS_PATH,
+    ESXI_VM_STATS_PATH,
     ESXI_VMS_PATH,
     fetch_alerts,
     fetch_containers,
@@ -132,7 +134,9 @@ def _serve_recorded_containers(
 
 
 def _serve_recorded_vms(
-    api: responses.RequestsMock, esxi_vms: Sequence[object] | None = None
+    api: responses.RequestsMock,
+    esxi_vms: Sequence[object] | None = None,
+    esxi_vm_stats: Sequence[object] = (),
 ) -> None:
     """The 161 AHV VMs of the lab (anonymised) on two pages. The lab has no ESXi VMs unless
     given."""
@@ -149,6 +153,25 @@ def _serve_recorded_vms(
         else page(esxi_vms, has_next=False),
         match=[page_matcher(0)],
     )
+    _serve_recorded_vm_stats(api)
+    if esxi_vms is not None:
+        api.get(v4_url(ESXI_VM_STATS_PATH), json=page(esxi_vm_stats, has_next=False))
+
+
+def _serve_recorded_vm_stats(api: responses.RequestsMock) -> None:
+    """The stats of the AHV VMs and of the 3 CVMs of the lab, one sample each"""
+    for page_number in (0, 1):
+        api.get(
+            v4_url(AHV_VM_STATS_PATH),
+            json=_recorded(f"vmm_ahv_stats_vms_page{page_number}.json"),
+            match=[page_matcher(page_number)],
+        )
+
+
+def _vm_sections(sections: Sequence[Section]) -> dict[object, object]:
+    return {
+        section.target: section.payload for section in sections if section.name == "prism_vm_v2"
+    }
 
 
 def _recorded_host_list() -> list[JsonObject]:
@@ -666,6 +689,9 @@ def test_v4_agent_queries_only_the_v4_api(api: responses.RequestsMock) -> None:
                 f"{DISK_STATS_PATH}/{ext_id}"
                 for ext_id in _recorded("clustermgmt_stats_disks.json")
             ),
+            # Two pages, the next link of the second is past the total
+            AHV_VM_STATS_PATH,
+            AHV_VM_STATS_PATH,
         )
     )
 
@@ -831,13 +857,103 @@ def test_vms_section_holds_only_the_monitored_fields_per_cluster(
 
     sections = fetch_vms(_context(hosts=_recorded_host_list()))
 
-    assert sections == [
+    assert [section for section in sections if section.name == "prism_vms_v2"] == [
         Section(
             "prism_vms_v2",
             json.loads((FIXTURES / "section_prism_vms_v2.json").read_text()),
             "cluster-a",
         )
     ]
+
+
+def test_each_vm_gets_a_section_on_a_piggyback_host_of_its_own(
+    api: responses.RequestsMock,
+) -> None:
+    _serve_recorded_vms(api)
+
+    targets = _vm_sections(fetch_vms(_context(hosts=_recorded_host_list())))
+
+    # The CVMs in the stats list get none, vm-119 is the name of two VMs
+    assert (len(targets), [t for t in targets if str(t).startswith("vm-119_")]) == (
+        161,
+        ["vm-119_f9d9ed69", "vm-119_5fcd68a4"],
+    )
+
+
+def test_vm_section_holds_the_config_and_the_stats_of_the_vm(
+    api: responses.RequestsMock,
+) -> None:
+    _serve_recorded_vms(api)
+
+    vms = _vm_sections(fetch_vms(_context(hosts=_recorded_host_list())))
+
+    assert vms["vm-006_a725d6c8"] == {
+        "extId": "a725d6c8-92eb-4cb3-4ffe-02cba4f8848a",
+        "name": "vm-006",
+        "hypervisor": "AHV",
+        "powerState": "ON",
+        "hostName": "host-2",
+        "numVcpus": 4,
+        "memorySizeBytes": 8589934592,
+        "protectionType": "UNPROTECTED",
+        "guestTools": {"version": "4.5", "isInstalled": True, "isEnabled": True},
+        "stats": [
+            {
+                "timestamp": "2026-11-04T15:00:00Z",
+                "controllerAvgIoLatencyMicros": 1784,
+                "controllerAvgReadIoLatencyMicros": 0,
+                "controllerAvgWriteIoLatencyMicros": 1784,
+                "controllerAvgReadIoSizeKb": 0,
+                "controllerAvgWriteIoSizeKb": 12,
+                "hypervisorCpuUsagePpm": 1254,
+                "hypervisorCpuReadyTimePpm": 3,
+                "guestMemoryUsagePpm": 879062,
+            }
+        ],
+    }
+
+
+@pytest.mark.parametrize(
+    ["status", "expected_message"],
+    [
+        pytest.param(
+            HTTPStatus.NOT_FOUND,
+            ("info", f"Could not fetch the AHV VM stats: {AHV_VM_STATS_PATH}: HTTP 404 Not Found"),
+            id="no stats API",
+        ),
+        pytest.param(
+            HTTPStatus.FORBIDDEN,
+            (
+                "warning",
+                f"Could not fetch the AHV VM stats: {AHV_VM_STATS_PATH}: HTTP 403 Forbidden",
+            ),
+            id="any other error",
+        ),
+    ],
+)
+def test_vms_are_reported_without_stats_if_the_stats_cannot_be_listed(
+    api: responses.RequestsMock, status: HTTPStatus, expected_message: tuple[str, str]
+) -> None:
+    for page_number in (0, 1):
+        api.get(
+            v4_url(AHV_VMS_PATH),
+            json=_recorded(f"vmm_ahv_config_vms_page{page_number}.json"),
+            match=[page_matcher(page_number)],
+        )
+    api.get(
+        v4_url(ESXI_VMS_PATH), json=_recorded("vmm_esxi_config_vms.json"), match=[page_matcher(0)]
+    )
+    api.get(v4_url(AHV_VM_STATS_PATH), status=status, json={"message": status.phrase})
+    messages = AgentMessages()
+
+    vms = _vm_sections(fetch_vms(_context(messages, _recorded_host_list())))
+
+    with_stats = [target for target, vm in vms.items() if isinstance(vm, dict) and "stats" in vm]
+    assert (len(vms), with_stats, list(messages)) == (
+        161,
+        [],
+        [expected_message],
+    )
 
 
 def test_vms_are_reported_without_host_names_if_the_host_listing_failed(
@@ -865,6 +981,36 @@ ESXI_VM = {
     "cluster": {"$objectType": "vmm.v4.esxi.config.ClusterReference", "extId": CLUSTER_ID},
     "powerState": "SUSPENDED",
 }
+
+
+def test_esxi_vm_gets_a_section_without_memory_stats(api: responses.RequestsMock) -> None:
+    _serve_recorded_vms(
+        api,
+        esxi_vms=[{**ESXI_VM, "numCpus": 2}],
+        esxi_vm_stats=[{"extId": ESXI_VM["extId"], "stats": []}],
+    )
+
+    vms = _vm_sections(fetch_vms(_context(hosts=_recorded_host_list())))
+
+    assert vms["esxi-vm_50293f5e"] == {
+        "extId": "50293f5e-6c41-4a2b-9d3e-0f8b7c2a1d64",
+        "name": "esxi-vm",
+        "hypervisor": "ESXI",
+        "powerState": "SUSPENDED",
+        "hostName": "host-3",
+        "numVcpus": 2,
+        "memorySizeBytes": 8589934592,
+        "stats": [],
+    }
+
+
+def test_vm_missing_from_the_stats_list_gets_no_stats(api: responses.RequestsMock) -> None:
+    _serve_recorded_vms(api, esxi_vms=[ESXI_VM])
+
+    vms = _vm_sections(fetch_vms(_context(hosts=_recorded_host_list())))
+
+    assert isinstance(vm := vms["esxi-vm_50293f5e"], dict)
+    assert "stats" not in vm
 
 
 def test_esxi_vms_are_reported_with_the_ahv_vms(api: responses.RequestsMock) -> None:
@@ -911,6 +1057,7 @@ def test_ahv_vms_are_reported_if_the_esxi_vms_cannot_be_listed(
             match=[page_matcher(page_number)],
         )
     api.get(v4_url(ESXI_VMS_PATH), status=status, json={"message": status.phrase})
+    _serve_recorded_vm_stats(api)
     messages = AgentMessages()
 
     sections = fetch_vms(_context(messages))
@@ -932,6 +1079,7 @@ def test_vm_that_does_not_fit_the_model_is_skipped_with_an_info(
     api.get(
         v4_url(ESXI_VMS_PATH), json=_recorded("vmm_esxi_config_vms.json"), match=[page_matcher(0)]
     )
+    _serve_recorded_vm_stats(api)
     messages = AgentMessages()
 
     sections = fetch_vms(_context(messages, _recorded_host_list()))

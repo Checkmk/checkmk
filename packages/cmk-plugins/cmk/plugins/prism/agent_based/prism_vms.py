@@ -19,8 +19,8 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
-from cmk.plugins.prism.lib import load_json, PRISM_POWER_STATES
-from cmk.plugins.prism.v4_models import VmsWithHostNames, VmWithHostName
+from cmk.plugins.prism.lib import load_json, PRISM_POWER_STATES, v4_power_state
+from cmk.plugins.prism.v4_models import VmsWithHostNames
 
 Section = Mapping[str, Mapping[str, Any]]
 
@@ -39,10 +39,6 @@ agent_section_prism_vms = AgentSection(
 )
 
 
-def _power_state_v2(vm: VmWithHostName) -> str:
-    return "unknown" if vm.power_state == "UNDETERMINED" else vm.power_state.lower()
-
-
 def parse_prism_vms_v2(string_table: StringTable) -> Section:
     if not string_table:
         return {}
@@ -50,7 +46,7 @@ def parse_prism_vms_v2(string_table: StringTable) -> Section:
     return {
         f"{vm.name} ({vm.ext_id[:8]})": {
             "vmName": vm.name,
-            "powerState": _power_state_v2(vm),
+            "powerState": v4_power_state(vm.power_state),
             "description": vm.description,
             "hostName": vm.host_name,
             "memoryCapacityInBytes": vm.memory_size_bytes,

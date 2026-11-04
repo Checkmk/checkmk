@@ -13,6 +13,12 @@ from cmk.agent_based.v2 import StringTable
 
 PrismAPIData = dict[str, Any]
 
+
+def v4_power_state(power_state: str) -> str:
+    """The v4 power state as the legacy API reports it"""
+    return "unknown" if power_state == "UNDETERMINED" else power_state.lower()
+
+
 PRISM_POWER_STATES = {
     "on": 0,
     "unknown": 3,

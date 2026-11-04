@@ -7,6 +7,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "e36375b4-cc0e-4806-5bb1-1e71417b827f",
       "name": "vm-101",
+      "numSockets": 1,
+      "numCoresPerSocket": 8,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 8589934592,
       "cluster": {
         "$reserved": {
@@ -15,7 +18,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "OFF"
+      "powerState": "OFF",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -25,6 +29,9 @@
       "extId": "81dfd976-ec94-410b-41fa-80a3e6aa1221",
       "name": "vm-102",
       "description": "description of vm-102",
+      "numSockets": 1,
+      "numCoresPerSocket": 8,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 8589934592,
       "cluster": {
         "$reserved": {
@@ -33,7 +40,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "OFF"
+      "powerState": "OFF",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -43,6 +51,9 @@
       "extId": "62a71159-adfc-4847-59e0-508fb9e2c638",
       "name": "vm-103",
       "description": "description of vm-103",
+      "numSockets": 16,
+      "numCoresPerSocket": 1,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 34359738368,
       "cluster": {
         "$reserved": {
@@ -51,7 +62,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "OFF"
+      "powerState": "OFF",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -61,6 +73,9 @@
       "extId": "d1b12842-f4cf-4054-54ff-6209b3c602f2",
       "name": "vm-104",
       "description": "description of vm-104",
+      "numSockets": 16,
+      "numCoresPerSocket": 1,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 34359738368,
       "host": {
         "$reserved": {
@@ -76,7 +91,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -86,6 +102,9 @@
       "extId": "183ab144-bf8c-4e3d-40ee-68bd9d43042a",
       "name": "vm-105",
       "description": "description of vm-105",
+      "numSockets": 1,
+      "numCoresPerSocket": 8,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 8589934592,
       "host": {
         "$reserved": {
@@ -101,7 +120,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -111,6 +131,9 @@
       "extId": "8340d15d-37e5-4060-4f32-c0c3a8346378",
       "name": "vm-106",
       "description": "description of vm-106",
+      "numSockets": 1,
+      "numCoresPerSocket": 8,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 8589934592,
       "host": {
         "$reserved": {
@@ -126,7 +149,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -135,6 +159,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "c015cde8-5d20-488b-4b57-203c5984af71",
       "name": "vm-107",
+      "numSockets": 1,
+      "numCoresPerSocket": 8,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 8589934592,
       "host": {
         "$reserved": {
@@ -150,7 +177,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -159,6 +187,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "0eb75f05-3582-4d7d-6bb3-b743d1413cc6",
       "name": "vm-108",
+      "numSockets": 4,
+      "numCoresPerSocket": 2,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 17179869184,
       "host": {
         "$reserved": {
@@ -174,7 +205,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -184,6 +216,9 @@
       "extId": "c5da893a-7067-4ba9-6494-880d63503e37",
       "name": "vm-109",
       "description": "description of vm-109",
+      "numSockets": 2,
+      "numCoresPerSocket": 1,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 4294967296,
       "host": {
         "$reserved": {
@@ -199,7 +234,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -208,6 +244,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "fc18ac40-a877-4cd5-a832-8c5066a8051f",
       "name": "vm-110",
+      "numSockets": 8,
+      "numCoresPerSocket": 1,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 34359738368,
       "host": {
         "$reserved": {
@@ -223,7 +262,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -232,6 +272,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "6074e762-bcf6-4d5b-9917-6fcee03f386d",
       "name": "vm-111",
+      "numSockets": 8,
+      "numCoresPerSocket": 1,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 34359738368,
       "host": {
         "$reserved": {
@@ -247,7 +290,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -256,6 +300,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "bfafb28f-5da3-45b1-9a1a-f20ad9893364",
       "name": "vm-112",
+      "numSockets": 8,
+      "numCoresPerSocket": 1,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 34359738368,
       "host": {
         "$reserved": {
@@ -271,7 +318,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -280,6 +328,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "da405027-058d-4d91-6f19-21689efdbdab",
       "name": "vm-113",
+      "numSockets": 4,
+      "numCoresPerSocket": 2,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 21474836480,
       "host": {
         "$reserved": {
@@ -295,7 +346,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -304,6 +356,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "e2e38c93-08aa-4647-5e1e-2cca05af4b4f",
       "name": "vm-114",
+      "numSockets": 4,
+      "numCoresPerSocket": 2,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 21474836480,
       "host": {
         "$reserved": {
@@ -319,7 +374,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -328,6 +384,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "432d609a-03f5-434e-515d-ae7d27cc3570",
       "name": "vm-115",
+      "numSockets": 4,
+      "numCoresPerSocket": 2,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 21474836480,
       "host": {
         "$reserved": {
@@ -343,7 +402,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -352,6 +412,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "4c7299e6-aae2-4448-79e6-40f862a7d630",
       "name": "vm-116",
+      "numSockets": 8,
+      "numCoresPerSocket": 2,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 34359738368,
       "cluster": {
         "$reserved": {
@@ -360,7 +423,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "OFF"
+      "powerState": "OFF",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -369,6 +433,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "89c72045-d8f0-47fb-6e4b-da7052e84f02",
       "name": "vm-117",
+      "numSockets": 8,
+      "numCoresPerSocket": 2,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 34359738368,
       "host": {
         "$reserved": {
@@ -384,7 +451,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -393,6 +461,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "429b70ae-d974-40a9-bad3-ca5b15c1d219",
       "name": "vm-118",
+      "numSockets": 9,
+      "numCoresPerSocket": 2,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 35433480192,
       "cluster": {
         "$reserved": {
@@ -401,7 +472,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "OFF"
+      "powerState": "OFF",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -410,6 +482,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "f9d9ed69-8f47-4ce8-8032-6f201640221f",
       "name": "vm-119",
+      "numSockets": 9,
+      "numCoresPerSocket": 2,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 35433480192,
       "cluster": {
         "$reserved": {
@@ -418,7 +493,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "OFF"
+      "powerState": "OFF",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -427,6 +503,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "5fcd68a4-b5d8-42ef-ae42-f75ec768bb35",
       "name": "vm-119",
+      "numSockets": 9,
+      "numCoresPerSocket": 2,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 35433480192,
       "cluster": {
         "$reserved": {
@@ -435,7 +514,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "OFF"
+      "powerState": "OFF",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -444,6 +524,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "a7add369-c6ff-4061-57fd-d2dc508b3bcf",
       "name": "vm-120",
+      "numSockets": 32,
+      "numCoresPerSocket": 4,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 68719476736,
       "cluster": {
         "$reserved": {
@@ -452,7 +535,16 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "OFF"
+      "guestTools": {
+        "isInstalled": false,
+        "$reserved": {
+          "$fv": "v4.r2"
+        },
+        "$objectType": "vmm.v4.ahv.config.GuestTools",
+        "isEnabled": true
+      },
+      "powerState": "OFF",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -461,6 +553,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "cdc4c84e-f18a-470a-59ea-f27275091ca5",
       "name": "vm-121",
+      "numSockets": 4,
+      "numCoresPerSocket": 2,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 21474836480,
       "host": {
         "$reserved": {
@@ -476,7 +571,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -485,6 +581,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "cc88fea4-ef6e-4ab2-7296-d6983b744551",
       "name": "vm-122",
+      "numSockets": 4,
+      "numCoresPerSocket": 2,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 21474836480,
       "host": {
         "$reserved": {
@@ -500,7 +599,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -509,6 +609,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "559ec996-a78e-40e6-7098-79c077555916",
       "name": "vm-123",
+      "numSockets": 5,
+      "numCoresPerSocket": 1,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 6442450944,
       "host": {
         "$reserved": {
@@ -524,7 +627,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -533,6 +637,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "ddc84667-dc48-4ad1-6373-666323412e42",
       "name": "vm-124",
+      "numSockets": 5,
+      "numCoresPerSocket": 1,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 6442450944,
       "host": {
         "$reserved": {
@@ -548,7 +655,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -557,6 +665,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "25080d64-cf64-4ab9-7260-e8a755e8f2e4",
       "name": "vm-125",
+      "numSockets": 5,
+      "numCoresPerSocket": 1,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 6442450944,
       "cluster": {
         "$reserved": {
@@ -565,7 +676,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "OFF"
+      "powerState": "OFF",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -574,6 +686,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "3813fa4d-93c7-47b1-8c58-b51c7fc7c39a",
       "name": "vm-126",
+      "numSockets": 8,
+      "numCoresPerSocket": 1,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 34359738368,
       "host": {
         "$reserved": {
@@ -589,7 +704,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -598,6 +714,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "bfbfdb86-6a99-44f8-4f96-5a47de72d61c",
       "name": "vm-127",
+      "numSockets": 2,
+      "numCoresPerSocket": 2,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 8589934592,
       "host": {
         "$reserved": {
@@ -613,7 +732,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -622,6 +742,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "0c9b7634-dfcb-4ff0-7a19-b79f60675fbb",
       "name": "vm-128",
+      "numSockets": 4,
+      "numCoresPerSocket": 2,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 21474836480,
       "host": {
         "$reserved": {
@@ -637,7 +760,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -646,6 +770,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "e658efef-ca23-4854-5b6f-81a3a8d67e0c",
       "name": "vm-129",
+      "numSockets": 2,
+      "numCoresPerSocket": 2,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 8589934592,
       "host": {
         "$reserved": {
@@ -661,7 +788,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -670,6 +798,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "e2fe3368-4c0f-4678-6547-8975aa472eb2",
       "name": "vm-130",
+      "numSockets": 4,
+      "numCoresPerSocket": 2,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 21474836480,
       "host": {
         "$reserved": {
@@ -685,7 +816,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -694,6 +826,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "7ddad8f7-f330-4e48-77a8-e6852881c0b2",
       "name": "vm-131",
+      "numSockets": 1,
+      "numCoresPerSocket": 1,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 4294967296,
       "host": {
         "$reserved": {
@@ -709,7 +844,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -719,6 +855,9 @@
       "extId": "392d3bf0-b52b-4b0e-4bf9-2c4eeb3c59cf",
       "name": "vm-132",
       "description": "description of vm-132",
+      "numSockets": 2,
+      "numCoresPerSocket": 1,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 4294967296,
       "cluster": {
         "$reserved": {
@@ -727,7 +866,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "OFF"
+      "powerState": "OFF",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -737,6 +877,9 @@
       "extId": "190bc4ec-acad-443c-5b70-e9e5bb702709",
       "name": "vm-133",
       "description": "description of vm-133",
+      "numSockets": 2,
+      "numCoresPerSocket": 1,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 4294967296,
       "cluster": {
         "$reserved": {
@@ -745,7 +888,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "OFF"
+      "powerState": "OFF",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -755,6 +899,9 @@
       "extId": "71413fc0-962f-43d8-6074-a0c1026cf97a",
       "name": "vm-134",
       "description": "description of vm-134",
+      "numSockets": 2,
+      "numCoresPerSocket": 1,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 4294967296,
       "cluster": {
         "$reserved": {
@@ -763,7 +910,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "OFF"
+      "powerState": "OFF",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -773,6 +921,9 @@
       "extId": "ba537122-8ad8-4ffc-7537-7cc4b23ba4fd",
       "name": "vm-135",
       "description": "description of vm-135",
+      "numSockets": 2,
+      "numCoresPerSocket": 1,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 4294967296,
       "cluster": {
         "$reserved": {
@@ -781,7 +932,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "OFF"
+      "powerState": "OFF",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -790,6 +942,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "f7c795b3-4f91-4826-5f11-7f388d0b3038",
       "name": "vm-136",
+      "numSockets": 6,
+      "numCoresPerSocket": 2,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 19327352832,
       "host": {
         "$reserved": {
@@ -805,7 +960,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -814,6 +970,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "306f369e-1920-4938-8ad6-52f1d96888e5",
       "name": "vm-137",
+      "numSockets": 9,
+      "numCoresPerSocket": 1,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 35433480192,
       "cluster": {
         "$reserved": {
@@ -822,7 +981,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "OFF"
+      "powerState": "OFF",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -831,6 +991,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "16495d08-b061-4a49-a7aa-e5182331c6b3",
       "name": "vm-138",
+      "numSockets": 9,
+      "numCoresPerSocket": 1,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 35433480192,
       "cluster": {
         "$reserved": {
@@ -839,7 +1002,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "OFF"
+      "powerState": "OFF",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -848,6 +1012,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "a32bc735-612d-4547-96b1-1eaa08d68bfe",
       "name": "vm-138",
+      "numSockets": 9,
+      "numCoresPerSocket": 1,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 35433480192,
       "cluster": {
         "$reserved": {
@@ -856,7 +1023,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "OFF"
+      "powerState": "OFF",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -866,6 +1034,9 @@
       "extId": "acc75d64-39ab-46c1-6797-14c5402235c2",
       "name": "vm-139",
       "description": "description of vm-139",
+      "numSockets": 2,
+      "numCoresPerSocket": 1,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 4294967296,
       "host": {
         "$reserved": {
@@ -881,7 +1052,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -891,6 +1063,9 @@
       "extId": "1fc9fbba-2bf8-4254-589e-f73788283acc",
       "name": "vm-140",
       "description": "description of vm-140",
+      "numSockets": 2,
+      "numCoresPerSocket": 1,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 4294967296,
       "cluster": {
         "$reserved": {
@@ -899,7 +1074,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "OFF"
+      "powerState": "OFF",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -909,6 +1085,9 @@
       "extId": "1c44a198-c3d9-48ba-6a70-96d002a98eb3",
       "name": "vm-141",
       "description": "description of vm-141",
+      "numSockets": 2,
+      "numCoresPerSocket": 1,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 4294967296,
       "cluster": {
         "$reserved": {
@@ -917,7 +1096,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "OFF"
+      "powerState": "OFF",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -926,6 +1106,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "b9642b1e-c9b6-475c-7189-a81df292238d",
       "name": "vm-142",
+      "numSockets": 8,
+      "numCoresPerSocket": 1,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 38654705664,
       "host": {
         "$reserved": {
@@ -941,7 +1124,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -951,6 +1135,9 @@
       "extId": "dc84bef6-f637-4ce9-7a58-567bcc7ed76b",
       "name": "vm-143",
       "description": "description of vm-143",
+      "numSockets": 2,
+      "numCoresPerSocket": 1,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 4294967296,
       "host": {
         "$reserved": {
@@ -966,7 +1153,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -976,6 +1164,9 @@
       "extId": "95f908ea-a995-4e88-6755-e9e9bc64bc3d",
       "name": "vm-144",
       "description": "description of vm-144",
+      "numSockets": 2,
+      "numCoresPerSocket": 1,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 4294967296,
       "host": {
         "$reserved": {
@@ -991,7 +1182,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -1000,6 +1192,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "2edef079-0be9-4550-ae91-4d0c42e4c354",
       "name": "vm-145",
+      "numSockets": 8,
+      "numCoresPerSocket": 1,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 34359738368,
       "host": {
         "$reserved": {
@@ -1015,7 +1210,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -1025,6 +1221,9 @@
       "extId": "aaeb67c4-3b2a-4b00-90b1-3ea7e1eee3ef",
       "name": "vm-146",
       "description": "description of vm-146",
+      "numSockets": 5,
+      "numCoresPerSocket": 1,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 9663676416,
       "cluster": {
         "$reserved": {
@@ -1033,7 +1232,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "OFF"
+      "powerState": "OFF",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -1042,6 +1242,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "916aff77-1794-4a26-b27f-73ed2a4cfb69",
       "name": "vm-147",
+      "numSockets": 2,
+      "numCoresPerSocket": 1,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 8589934592,
       "host": {
         "$reserved": {
@@ -1057,7 +1260,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -1067,6 +1271,9 @@
       "extId": "58efd9b7-96da-48f4-728f-52e93a0d792a",
       "name": "vm-148",
       "description": "description of vm-148",
+      "numSockets": 4,
+      "numCoresPerSocket": 1,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 8589934592,
       "cluster": {
         "$reserved": {
@@ -1075,7 +1282,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "OFF"
+      "powerState": "OFF",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -1084,6 +1292,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "449e0abc-b551-4f91-b6cb-48b64778b542",
       "name": "vm-149",
+      "numSockets": 3,
+      "numCoresPerSocket": 1,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 5368709120,
       "host": {
         "$reserved": {
@@ -1099,7 +1310,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -1108,6 +1320,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "21f94e07-787b-4973-837b-e5ca2ec97d6d",
       "name": "vm-150",
+      "numSockets": 3,
+      "numCoresPerSocket": 1,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 5368709120,
       "cluster": {
         "$reserved": {
@@ -1116,7 +1331,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "OFF"
+      "powerState": "OFF",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -1125,6 +1341,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "4880a219-c9d4-42e2-86d3-890cb1805109",
       "name": "vm-150",
+      "numSockets": 3,
+      "numCoresPerSocket": 1,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 5368709120,
       "cluster": {
         "$reserved": {
@@ -1133,7 +1352,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "OFF"
+      "powerState": "OFF",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -1142,6 +1362,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "fa3465e1-9fc7-49b8-5e75-b7135c5ae39e",
       "name": "vm-151",
+      "numSockets": 2,
+      "numCoresPerSocket": 2,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 17179869184,
       "host": {
         "$reserved": {
@@ -1157,7 +1380,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -1166,6 +1390,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "edeaa8a7-ce9c-4b91-4f56-39ce3fc94638",
       "name": "vm-152",
+      "numSockets": 2,
+      "numCoresPerSocket": 2,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 17179869184,
       "host": {
         "$reserved": {
@@ -1181,7 +1408,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -1191,6 +1419,9 @@
       "extId": "7eb0dfd3-eb87-4c6f-669b-1d090be65137",
       "name": "vm-153",
       "description": "description of vm-153",
+      "numSockets": 2,
+      "numCoresPerSocket": 1,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 4294967296,
       "host": {
         "$reserved": {
@@ -1206,7 +1437,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -1216,6 +1448,9 @@
       "extId": "be29f482-3fcb-408d-4d6f-33e7d3393cf1",
       "name": "vm-154",
       "description": "description of vm-154",
+      "numSockets": 2,
+      "numCoresPerSocket": 1,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 4294967296,
       "host": {
         "$reserved": {
@@ -1231,7 +1466,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -1241,6 +1477,9 @@
       "extId": "4baf53f7-bb8a-4c04-58b9-9fb967e5e807",
       "name": "vm-155",
       "description": "description of vm-155",
+      "numSockets": 2,
+      "numCoresPerSocket": 1,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 4294967296,
       "host": {
         "$reserved": {
@@ -1256,7 +1495,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -1265,6 +1505,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "16c93e0c-52d3-45ee-5952-4247c29cb036",
       "name": "vm-156",
+      "numSockets": 3,
+      "numCoresPerSocket": 1,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 5368709120,
       "host": {
         "$reserved": {
@@ -1280,7 +1523,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -1289,6 +1533,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "6173bf48-9a77-4b76-650a-594a2399fd6d",
       "name": "vm-157",
+      "numSockets": 3,
+      "numCoresPerSocket": 1,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 5368709120,
       "host": {
         "$reserved": {
@@ -1304,7 +1551,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "ON"
+      "powerState": "ON",
+      "protectionType": "UNPROTECTED"
     },
     {
       "$reserved": {
@@ -1313,6 +1561,9 @@
       "$objectType": "vmm.v4.ahv.config.Vm",
       "extId": "88538ef2-ad2d-4298-513c-af87844f90d0",
       "name": "vm-158",
+      "numSockets": 4,
+      "numCoresPerSocket": 1,
+      "numThreadsPerCore": 1,
       "memorySizeBytes": 17179869184,
       "cluster": {
         "$reserved": {
@@ -1321,7 +1572,8 @@
         "$objectType": "vmm.v4.ahv.config.ClusterReference",
         "extId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
       },
-      "powerState": "OFF"
+      "powerState": "OFF",
+      "protectionType": "UNPROTECTED"
     }
   ],
   "$reserved": {
@@ -1365,20 +1617,20 @@
           "$fv": "v1.r0"
         },
         "$objectType": "common.v1.response.ApiLink",
-        "href": "https://prism.example.com:9440/api/vmm/v4.0/ahv/config/vms?$page=0&$limit=100&$select=name,powerState,description,memorySizeBytes,host/extId,cluster/extId",
-        "rel": "prev"
-      },
-      {
-        "href": "https://prism.example.com:9440/api/vmm/v4.0/ahv/config/vms?$page=1&$limit=100&$select=name,powerState,description,memorySizeBytes,host/extId,cluster/extId",
-        "rel": "last"
-      },
-      {
-        "href": "https://prism.example.com:9440/api/vmm/v4.0/ahv/config/vms?$page=0&$limit=100&$select=name,powerState,description,memorySizeBytes,host/extId,cluster/extId",
+        "href": "https://prism.example.com:9440/api/vmm/v4.0/ahv/config/vms?$page=0&$limit=100&$select=extId,name,powerState,description,memorySizeBytes,host/extId,cluster/extId,numSockets,numCoresPerSocket,numThreadsPerCore,protectionType,guestTools/version,guestTools/isEnabled,guestTools/isInstalled",
         "rel": "first"
       },
       {
-        "href": "https://prism.example.com:9440/api/vmm/v4.0/ahv/config/vms?$page=1&$limit=100&$select=name,powerState,description,memorySizeBytes,host/extId,cluster/extId",
+        "href": "https://prism.example.com:9440/api/vmm/v4.0/ahv/config/vms?$page=1&$limit=100&$select=extId,name,powerState,description,memorySizeBytes,host/extId,cluster/extId,numSockets,numCoresPerSocket,numThreadsPerCore,protectionType,guestTools/version,guestTools/isEnabled,guestTools/isInstalled",
         "rel": "self"
+      },
+      {
+        "href": "https://prism.example.com:9440/api/vmm/v4.0/ahv/config/vms?$page=0&$limit=100&$select=extId,name,powerState,description,memorySizeBytes,host/extId,cluster/extId,numSockets,numCoresPerSocket,numThreadsPerCore,protectionType,guestTools/version,guestTools/isEnabled,guestTools/isInstalled",
+        "rel": "prev"
+      },
+      {
+        "href": "https://prism.example.com:9440/api/vmm/v4.0/ahv/config/vms?$page=1&$limit=100&$select=extId,name,powerState,description,memorySizeBytes,host/extId,cluster/extId,numSockets,numCoresPerSocket,numThreadsPerCore,protectionType,guestTools/version,guestTools/isEnabled,guestTools/isInstalled",
+        "rel": "last"
       }
     ],
     "totalAvailableResults": 161,

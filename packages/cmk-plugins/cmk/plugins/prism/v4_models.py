@@ -10,7 +10,7 @@ The v4 agent writes them to the prism_*_v2 sections, the parse functions read th
 
 from collections.abc import Sequence
 from contextlib import suppress
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import (
     AwareDatetime,
@@ -171,8 +171,14 @@ class Reference(V4Model):
     ext_id: str = Field(alias="extId")
 
 
+class GuestTools(V4Model):
+    version: str | None = None
+    is_installed: bool | None = Field(None, alias="isInstalled")
+    is_enabled: bool | None = Field(None, alias="isEnabled")
+
+
 class Vm(V4Model):
-    """An item of the AHV or the ESXi VM list, both have these fields"""
+    """An item of the AHV or the ESXi VM list"""
 
     ext_id: str = Field(alias="extId")
     name: str
@@ -182,6 +188,22 @@ class Vm(V4Model):
     # A VM that is off runs on no host
     host: Reference | None = None
     cluster: Reference
+    # AHV only
+    num_sockets: int | None = Field(None, alias="numSockets")
+    num_cores_per_socket: int | None = Field(None, alias="numCoresPerSocket")
+    protection_type: str | None = Field(None, alias="protectionType")
+    guest_tools: GuestTools | None = Field(None, alias="guestTools")
+    # ESXi only
+    num_cpus: int | None = Field(None, alias="numCpus")
+    nutanix_guest_tools: GuestTools | None = Field(None, alias="nutanixGuestTools")
+
+    @property
+    def num_vcpus(self) -> int | None:
+        if self.num_cpus is not None:
+            return self.num_cpus
+        if self.num_sockets is None or self.num_cores_per_socket is None:
+            return None
+        return self.num_sockets * self.num_cores_per_socket
 
 
 class VmWithHostName(V4Model):
@@ -288,3 +310,52 @@ class Node(V4Model):
     config: NodeConfig
     stats: HostStats
     disks: list[NodeDisk] = []
+
+
+class VmStatsSample(V4Model):
+    timestamp: str
+    controller_avg_io_latency_micros: StrictInt | None = Field(
+        None, alias="controllerAvgIoLatencyMicros"
+    )
+    controller_avg_read_io_latency_micros: StrictInt | None = Field(
+        None, alias="controllerAvgReadIoLatencyMicros"
+    )
+    controller_avg_write_io_latency_micros: StrictInt | None = Field(
+        None, alias="controllerAvgWriteIoLatencyMicros"
+    )
+    controller_avg_read_io_size_kb: StrictInt | None = Field(
+        None, alias="controllerAvgReadIoSizeKb"
+    )
+    controller_avg_write_io_size_kb: StrictInt | None = Field(
+        None, alias="controllerAvgWriteIoSizeKb"
+    )
+    hypervisor_cpu_usage_ppm: StrictInt | None = Field(None, alias="hypervisorCpuUsagePpm")
+    hypervisor_cpu_ready_time_ppm: StrictInt | None = Field(None, alias="hypervisorCpuReadyTimePpm")
+    guest_memory_usage_ppm: StrictInt | None = Field(None, alias="guestMemoryUsagePpm")
+
+
+def _valid_vm_samples(series: object) -> list[VmStatsSample]:
+    samples: list[VmStatsSample] = []
+    for sample in series if isinstance(series, list) else []:
+        with suppress(ValidationError):
+            samples.append(VmStatsSample.model_validate(sample))
+    return samples
+
+
+type VmStatsSamples = Annotated[list[VmStatsSample], BeforeValidator(_valid_vm_samples)]
+
+
+class VmDetails(V4Model):
+    """One VM with its config and stats, for the piggyback host of the VM"""
+
+    ext_id: str = Field(alias="extId")
+    name: str
+    hypervisor: Literal["AHV", "ESXI"]
+    power_state: str = Field(alias="powerState")
+    host_name: str | None = Field(None, alias="hostName")
+    num_vcpus: int | None = Field(None, alias="numVcpus")
+    memory_size_bytes: int = Field(alias="memorySizeBytes")
+    protection_type: str | None = Field(None, alias="protectionType")
+    guest_tools: GuestTools | None = Field(None, alias="guestTools")
+    # None: Prism Central couldn't list the stats
+    stats: VmStatsSamples | None = None

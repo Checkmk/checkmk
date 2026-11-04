@@ -66,7 +66,7 @@ def _mode_automation(
                 else nullcontext(),
                 config.exit_on_config_file_load_error(debug=global_options.debug),
             ):
-                raw_config = config.load_raw_config(debug=global_options.debug)
+                raw_config = config.load_raw_config()
             automations.update(omd_root, raw_config)
         except (MKGeneralException, MKTimeout) as e:
             logger.error("Loading the configuration failed: %(error)s", {"error": e})  # noqa: TRY400

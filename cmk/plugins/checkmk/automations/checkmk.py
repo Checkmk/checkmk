@@ -2640,7 +2640,7 @@ def _automation_get_configuration(
 
     with config.exit_on_config_file_load_error(debug=state.debug):
         raw_config = config.load_raw_config(
-            config_files=config.get_config_file_paths(with_conf_d=False), debug=state.debug
+            config_files=config.get_config_file_paths(with_conf_d=False)
         )
 
     return GetConfigurationResult(

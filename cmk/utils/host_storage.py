@@ -170,8 +170,8 @@ class ABCHostsStorage[THostsReadData]:
     ) -> None:
         return self._write(self.add_file_extension(file_path), data, value_formatter)
 
-    def read(self, file_path_without_extension: Path, *, debug: bool) -> THostsReadData:
-        return self._read(self.add_file_extension(file_path_without_extension), debug=debug)
+    def read(self, file_path_without_extension: Path) -> THostsReadData:
+        return self._read(self.add_file_extension(file_path_without_extension))
 
     @abc.abstractmethod
     def _write(
@@ -180,7 +180,7 @@ class ABCHostsStorage[THostsReadData]:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def _read(self, file_path: Path, *, debug: bool) -> THostsReadData:
+    def _read(self, file_path: Path) -> THostsReadData:
         raise NotImplementedError
 
 
@@ -281,8 +281,8 @@ class StandardHostsStorage(ABCHostsStorage[str]):
         store.save_text_to_file(file_path, host_storage_fileheader() + out.getvalue())
 
     @override
-    def _read(self, file_path: Path, *, debug: bool) -> str:
-        return store.load_text_from_file(file_path, debug=debug)
+    def _read(self, file_path: Path) -> str:
+        return store.load_text_from_file(file_path, debug=False)
 
 
 class PickleHostsStorage(ABCHostsStorage[HostsData]):
@@ -298,10 +298,10 @@ class PickleHostsStorage(ABCHostsStorage[HostsData]):
             pickle_store.write_obj(asdict(data))
 
     @override
-    def _read(self, file_path: Path, *, debug: bool) -> HostsData:
+    def _read(self, file_path: Path) -> HostsData:
         return store.ObjectStore(
             file_path, serializer=store.PickleSerializer[HostsData]()
-        ).read_obj(default={}, debug=debug)
+        ).read_obj(default={}, debug=False)
 
 
 class RawHostsStorage(ABCHostsStorage[HostsData]):
@@ -315,8 +315,8 @@ class RawHostsStorage(ABCHostsStorage[HostsData]):
         store.save_text_to_file(file_path, value_formatter(data))
 
     @override
-    def _read(self, file_path: Path, *, debug: bool) -> HostsData:
-        return store.load_object_from_file(file_path, default={}, debug=debug)
+    def _read(self, file_path: Path) -> HostsData:
+        return store.load_object_from_file(file_path, default={}, debug=False)
 
 
 @cache
@@ -354,14 +354,12 @@ def apply_hosts_file_to_object(
     path_without_extension: Path,
     host_storage_loaders: list[ABCHostsStorageLoader],
     global_dict: dict[str, Any],
-    *,
-    debug: bool,
 ) -> None:
     for storage_loader in host_storage_loaders:
         if storage_loader.file_exists(path_without_extension) and storage_loader.file_valid(
             path_without_extension
         ):
-            storage_loader.read_and_apply(path_without_extension, global_dict, debug=debug)
+            storage_loader.read_and_apply(path_without_extension, global_dict)
             return
 
 
@@ -378,8 +376,8 @@ class ABCHostsStorageLoader[THostsReadData](abc.ABC):
     def file_valid(self, file_path: Path) -> bool:  # noqa: ARG002
         return True
 
-    def read_and_apply(self, file_path: Path, global_dict: dict[str, Any], *, debug: bool) -> bool:
-        return self.apply(self._storage.read(file_path, debug=debug), global_dict)
+    def read_and_apply(self, file_path: Path, global_dict: dict[str, Any]) -> bool:
+        return self.apply(self._storage.read(file_path), global_dict)
 
     @abc.abstractmethod
     def apply(self, data: THostsReadData, global_dict: dict[str, Any]) -> bool:

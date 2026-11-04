@@ -2282,7 +2282,6 @@ class Folder:
             Path(self.hosts_file_path_without_extension()),
             get_host_storage_loaders(StorageFormat.PICKLE),
             variables,
-            debug=False,
         )
         return variables
 

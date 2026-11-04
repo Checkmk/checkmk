@@ -49,3 +49,15 @@ def test_write_sections(capsys: pytest.CaptureFixture[str]) -> None:
         "",
     ]
     assert captured.err == ""
+
+
+@pytest.mark.xfail(strict=True, reason="crash group 4833")
+def test_unreachable_feed_ends_with_error_message(capsys: pytest.CaptureFixture[str]) -> None:
+    def _get_rss() -> requests.Response:
+        raise requests.ConnectionError("Connection reset by peer")
+
+    exit_code = agent_aws_status.write_section(agent_aws_status.parse_arguments([]), _get_rss)
+
+    captured = capsys.readouterr()
+    assert (exit_code, captured.out) == (1, "")
+    assert "Connection reset by peer" in captured.err

@@ -86,6 +86,11 @@ def _has_next_page(body: JsonObject) -> bool:
     )
 
 
+def _total_available(body: JsonObject) -> int | None:
+    total = _metadata(body).get("totalAvailableResults")
+    return total if isinstance(total, int) else None
+
+
 def _messages(error: object) -> str:
     """The texts of an AppMessage list or of a SchemaValidationError"""
     if isinstance(error, dict):
@@ -281,13 +286,22 @@ class PrismV4Client:
         return response
 
     def list_all(self, path: str, params: QueryParams | None = None) -> list[JsonObject]:
-        """Follow the pages of a list call as long as the API links a next one"""
+        """Follow the pages of a list call as long as the API links a next one, the page isn't
+        empty and the total isn't reached"""
         entities: list[JsonObject] = []
         page = 0
         while True:
             body = self.get(path, {**(params or {}), "$page": page, "$limit": PAGE_LIMIT})
-            entities.extend(_entities(body, path))
-            if not _has_next_page(body):
+            page_entities = _entities(body, path)
+            entities.extend(page_entities)
+            # The vmm stats lists link pages of 50 whatever $limit asks for, so their next
+            # links go on past the last entity
+            total = _total_available(body)
+            if (
+                not page_entities
+                or not _has_next_page(body)
+                or (total is not None and len(entities) >= total)
+            ):
                 return entities
             page += 1
 

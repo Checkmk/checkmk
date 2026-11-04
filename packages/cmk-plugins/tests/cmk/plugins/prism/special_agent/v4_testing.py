@@ -36,11 +36,16 @@ def v4_url(path: str) -> str:
     return f"{BASE_URL}/api/{path}"
 
 
-def page(entities: Sequence[object], *, has_next: bool) -> dict[str, object]:
+def page(
+    entities: Sequence[object], *, has_next: bool, total: int | None = None
+) -> dict[str, object]:
     links = [{"rel": "self", "href": "ignored"}]
     if has_next:
         links.append({"rel": "next", "href": "ignored"})
-    return {"data": list(entities), "metadata": {"links": links}}
+    metadata: dict[str, object] = {"links": links}
+    if total is not None:
+        metadata["totalAvailableResults"] = total
+    return {"data": list(entities), "metadata": metadata}
 
 
 def page_matcher(page_number: int) -> Matcher:

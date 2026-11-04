@@ -291,6 +291,30 @@ def test_list_all_follows_a_short_page_with_a_next_link(api: responses.RequestsM
     assert _client().list_all(VMS_PATH) == [{"extId": "first"}, {"extId": "last"}]
 
 
+def test_list_all_stops_at_an_empty_page_despite_a_next_link(
+    api: responses.RequestsMock,
+) -> None:
+    api.get(v4_url(VMS_PATH), json=page(_vms(100), has_next=True), match=[page_matcher(0)])
+    api.get(v4_url(VMS_PATH), json=page([], has_next=True), match=[page_matcher(1)])
+
+    assert len(_client().list_all(VMS_PATH)) == 100
+
+
+def test_list_all_stops_at_the_total_despite_a_next_link(api: responses.RequestsMock) -> None:
+    api.get(
+        v4_url(VMS_PATH),
+        json=page(_vms(100), has_next=True, total=164),
+        match=[page_matcher(0)],
+    )
+    api.get(
+        v4_url(VMS_PATH),
+        json=page(_vms(64), has_next=True, total=164),
+        match=[page_matcher(1)],
+    )
+
+    assert len(_client().list_all(VMS_PATH)) == 164
+
+
 def test_entity_stats_are_returned_raw_for_the_requested_window(
     api: responses.RequestsMock,
 ) -> None:

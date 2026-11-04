@@ -126,6 +126,16 @@ config_setting(
     visibility = ["//visibility:public"],
 )
 
+# The PyPI index for pip calls in genrules, as $(PIP_INDEX_URL). CI sets the
+# Nexus PyPI proxy (see bazel/rc/ci.rc), which is not reachable from outside the
+# company network.
+string_flag(
+    name = "pip_index_url",
+    build_setting_default = "https://pypi.org/simple",
+    make_variable = "PIP_INDEX_URL",
+    visibility = ["//visibility:public"],
+)
+
 # Mirrors the Jenkins DISABLE_CMK_DISTRO_PACKAGE_SIGNING job parameter: the
 # check-mk-agent .rpm bundled in //agents:agents is only signed if
 # --//bazel/rules:signing_key_file is set (see agents/BUILD). Release packages

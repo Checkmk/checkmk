@@ -14,6 +14,10 @@ common:ci --//bazel/toolchains/cc/gcc/local:gcc_path=opt
 # from pypi.org. Offer the internal Nexus proxy as a second index.
 common:ci --repo_env=PIP_EXTRA_INDEX_URL=https://artifacts.lan.tribe29.com/repository/pypi-proxy/simple
 
+# Build the OMD python3-modules from sdists downloaded through the Nexus PyPI proxy, see
+# //:pip_index_url.
+common:ci --//:pip_index_url=https://artifacts.lan.tribe29.com/repository/pypi-proxy/simple
+
 # the onwards set jobs and CPU limits shall be aligned with the k8s pod limits
 common:ci --jobs=6
 common:ci --loading_phase_threads=4

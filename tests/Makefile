@@ -362,8 +362,9 @@ $(foreach TEST,$(DOCKERABLE_TESTS),$(TEST)-docker):
 
 test-license-headers:
 	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
-	xargs $(MAX_CHARS:%=--max-chars=%) --no-run-if-empty $(PYTEST) --log-cli-level=INFO $(realpath code_quality/test_license_headers.py) \
-	--python-files;
+	    xargs --no-run-if-empty printf -- '--python-files=%s\n' | \
+	    xargs $(MAX_CHARS:%=--max-chars=%) --no-run-if-empty \
+	        $(PYTEST) --log-cli-level=INFO $(realpath code_quality/test_license_headers.py);
 
 test-requirements:
 	$(PYTEST) --log-cli-level=INFO $(realpath code_quality/test_requirements.py);
@@ -372,7 +373,10 @@ test-file-content:
 	if test -z "$$CHANGED_FILES_REL_FILE"; then \
 	    $(PYTEST) --log-cli-level=INFO $(realpath code_quality/file_content) --test-all-files ; \
 	else \
-	    cat "$$CHANGED_FILES_REL_FILE" | xargs $(MAX_CHARS:%=--max-chars=%) --no-run-if-empty $(PYTEST) --log-cli-level=INFO $(realpath code_quality/file_content) --changed-files ; \
+	    cat "$$CHANGED_FILES_REL_FILE" | \
+	        xargs --no-run-if-empty printf -- '--changed-files=%s\n' | \
+	        xargs $(MAX_CHARS:%=--max-chars=%) --no-run-if-empty \
+	            $(PYTEST) --log-cli-level=INFO $(realpath code_quality/file_content) ; \
 	fi \
 
 test-werks:

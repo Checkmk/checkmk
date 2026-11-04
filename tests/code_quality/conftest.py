@@ -12,8 +12,15 @@ from tests.code_quality.utils import ChangedFiles
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
-    parser.addoption("--python-files", nargs="*", default=[], help="python files to check")
-    parser.addoption("--changed-files", nargs="*", default=[], help="files to check")
+    # Pass file lists as "--python-files=<file>" per file, not "--python-files <files>":
+    # pytest>=9 parses the command line before this conftest is loaded and treats the
+    # bare file names as test paths, importing every conftest.py next to them.
+    parser.addoption(
+        "--python-files", nargs="*", action="extend", default=[], help="python files to check"
+    )
+    parser.addoption(
+        "--changed-files", nargs="*", action="extend", default=[], help="files to check"
+    )
     parser.addoption("--test-all-files", action="store_true", help="test all files")
 
 

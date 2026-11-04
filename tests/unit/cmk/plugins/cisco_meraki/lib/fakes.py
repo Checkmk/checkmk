@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
+from typing import NoReturn, override
+
+from meraki.exceptions import APIError
 
 from cmk.plugins.cisco_meraki.lib import schema
 from cmk.plugins.cisco_meraki.lib.type_defs import TotalPages
@@ -282,4 +285,142 @@ class FakeMerakiSDK:
 
     @property
     def wireless(self) -> _FakeWirelessSDK:
+        return self._wireless
+
+
+def _forbidden(tag: str, operation: str) -> NoReturn:
+    raise APIError({"tags": [tag], "operation": operation}, None)
+
+
+class _ForbiddenApplianceSDK:
+    def getOrganizationApplianceUplinkStatuses(
+        self,
+        organizationId: str,  # noqa: ARG002
+        total_pages: TotalPages,  # noqa: ARG002
+    ) -> Sequence[schema.RawUplinkStatuses]:
+        _forbidden("appliance", "getOrganizationApplianceUplinkStatuses")
+
+    def getOrganizationApplianceVpnStatuses(
+        self,
+        organizationId: str,  # noqa: ARG002
+        total_pages: TotalPages,  # noqa: ARG002
+    ) -> Sequence[schema.RawUplinkVpnStatuses]:
+        _forbidden("appliance", "getOrganizationApplianceVpnStatuses")
+
+    def getOrganizationApplianceUplinksUsageByNetwork(
+        self,
+        organizationId: str,  # noqa: ARG002
+        total_pages: TotalPages,  # noqa: ARG002
+        timespan: int,  # noqa: ARG002
+    ) -> Sequence[schema.RawUplinkUsage]:
+        _forbidden("appliance", "getOrganizationApplianceUplinksUsageByNetwork")
+
+    def getDeviceAppliancePerformance(self, serial: str) -> schema.RawAppliancePerformance:  # noqa: ARG002
+        _forbidden("appliance", "getDeviceAppliancePerformance")
+
+
+class _ForbiddenOrganisationsSDK(_FakeOrganisationsSDK):
+    @override
+    def getOrganizationNetworks(
+        self,
+        organizationId: str,
+        total_pages: TotalPages,
+    ) -> Sequence[schema.RawNetwork]:
+        _forbidden("organizations", "getOrganizationNetworks")
+
+    @override
+    def getOrganizationLicensesOverview(self, organizationId: str) -> schema.RawLicensesOverview:
+        _forbidden("organizations", "getOrganizationLicensesOverview")
+
+    @override
+    def getOrganizationDevices(
+        self,
+        organizationId: str,
+        total_pages: TotalPages,
+    ) -> Sequence[schema.RawDevice]:
+        _forbidden("organizations", "getOrganizationDevices")
+
+    @override
+    def getOrganizationDevicesStatuses(
+        self,
+        organizationId: str,
+        total_pages: TotalPages,
+    ) -> Sequence[schema.RawDevicesStatus]:
+        _forbidden("organizations", "getOrganizationDevicesStatuses")
+
+    @override
+    def getOrganizationApiRequestsOverviewResponseCodesByInterval(
+        self,
+        organizationId: str,
+        total_pages: TotalPages,
+        t0: str,
+        t1: str,
+    ) -> Sequence[schema.RawApiResponseCodes]:
+        _forbidden("organizations", "getOrganizationApiRequestsOverviewResponseCodesByInterval")
+
+    @override
+    def getOrganizationDevicesUplinksAddressesByDevice(
+        self,
+        organizationId: str,
+        total_pages: TotalPages,
+    ) -> Sequence[schema.RawDeviceUplinksAddress]:
+        _forbidden("organizations", "getOrganizationDevicesUplinksAddressesByDevice")
+
+
+class _ForbiddenSensorSDK:
+    def getOrganizationSensorReadingsLatest(
+        self,
+        organizationId: str,  # noqa: ARG002
+        total_pages: TotalPages,  # noqa: ARG002
+    ) -> Sequence[schema.RawSensorReadings]:
+        _forbidden("sensor", "getOrganizationSensorReadingsLatest")
+
+
+class _ForbiddenSwitchSDK:
+    def getDeviceSwitchPortsStatuses(
+        self,
+        serial: str,  # noqa: ARG002
+        timespan: int,  # noqa: ARG002
+    ) -> Sequence[schema.RawSwitchPortsStatus]:
+        _forbidden("switch", "getDeviceSwitchPortsStatuses")
+
+
+class _ForbiddenWirelessSDK:
+    def getDeviceWirelessStatus(self, serial: str) -> schema.RawWirelessDeviceStatus:  # noqa: ARG002
+        _forbidden("wireless", "getDeviceWirelessStatus")
+
+    def getOrganizationWirelessDevicesEthernetStatuses(
+        self,
+        organizationId: str,  # noqa: ARG002
+        total_pages: TotalPages,  # noqa: ARG002
+    ) -> Sequence[schema.RawWirelessEthernetStatus]:
+        _forbidden("wireless", "getOrganizationWirelessDevicesEthernetStatuses")
+
+
+class ForbiddenMerakiSDK:
+    def __init__(self) -> None:
+        self._appliance = _ForbiddenApplianceSDK()
+        self._organizations = _ForbiddenOrganisationsSDK()
+        self._sensor = _ForbiddenSensorSDK()
+        self._switch = _ForbiddenSwitchSDK()
+        self._wireless = _ForbiddenWirelessSDK()
+
+    @property
+    def appliance(self) -> _ForbiddenApplianceSDK:
+        return self._appliance
+
+    @property
+    def organizations(self) -> _ForbiddenOrganisationsSDK:
+        return self._organizations
+
+    @property
+    def sensor(self) -> _ForbiddenSensorSDK:
+        return self._sensor
+
+    @property
+    def switch(self) -> _ForbiddenSwitchSDK:
+        return self._switch
+
+    @property
+    def wireless(self) -> _ForbiddenWirelessSDK:
         return self._wireless

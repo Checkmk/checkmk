@@ -9,6 +9,7 @@ from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
+from meraki.exceptions import APIError
 from pytest import CaptureFixture
 
 from cmk.plugins.cisco_meraki.lib import agent
@@ -21,7 +22,7 @@ from tests.unit.cmk.plugins.cisco_meraki.lib.factories import (
     RawUplinkStatusesFactory,
 )
 
-from .fakes import FakeMerakiSDK
+from .fakes import FakeMerakiSDK, ForbiddenMerakiSDK
 
 _DEFAULT_ARGS = ["heute", "--apikey", "my-api-key"]
 
@@ -297,3 +298,15 @@ class TestMerakiOrganizationApplianceUplinks:
         uplinks = [s for s in org.query() if s.name == "cisco_meraki_org_appliance_uplinks"]
 
         assert [(s.piggyback, s.data["networkName"]) for s in uplinks] == [("dev1", "")]
+
+
+@pytest.mark.xfail(strict=True, raises=APIError, reason="Crash group 4840")
+def test_forbidden_organisation_requests_do_not_abort_the_agent(
+    capsys: CaptureFixture[str],
+) -> None:
+    config = MerakiConfig.build(agent.parse_arguments([*_DEFAULT_ARGS, "--no-cache"]))
+
+    agent.run(MerakiRunContext(config=config, client=MerakiClient(ForbiddenMerakiSDK(), config)))
+
+    sections = set(re.findall(r"<<<cisco_meraki_org_(\w+):sep\(0\)>>>", capsys.readouterr().out))
+    assert sections == {"organisations"}

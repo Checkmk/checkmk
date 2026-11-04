@@ -2,6 +2,7 @@
 
 load("@bazel_skylib//rules/directory:directory.bzl", "directory")
 load("@bazel_skylib//rules/directory:subdirectory.bzl", "subdirectory")
+load(":cpp_libs.bzl", "CPP_LIBS_ELF")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -103,9 +104,6 @@ filegroup(
 
 filegroup(
     name = "cpp_libs_elf",
-    srcs = [
-        "x86_64-checkmk-linux-gnu/sysroot/lib/libgcc_s.so.1",
-        "x86_64-checkmk-linux-gnu/sysroot/lib/libstdc++.so.6.0.33",
-    ],
+    srcs = ["x86_64-checkmk-linux-gnu/sysroot/lib/" + lib for lib in CPP_LIBS_ELF],
     visibility = ["//visibility:public"],
 )

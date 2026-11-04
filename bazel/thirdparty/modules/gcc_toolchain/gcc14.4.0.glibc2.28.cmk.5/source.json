@@ -3,6 +3,7 @@
   "integrity": "sha256-zYBLRJ8mFiI6EGgB0VcdMe2vzBDuaU267tS4Q1yx/8A=",
   "strip_prefix": "x86_64-checkmk-linux-gnu",
   "overlay": {
-    "BUILD.bazel": "sha256-fvBgOjBOvE9bOTFnKZRlibdlMYSX9ZvC4/DPOfnJiuo="
+    "BUILD.bazel": "sha256-P+CQ+HT3SyDJ/LF+mH10KuQ5bBzh7hQHX6obKFPoTVc=",
+    "cpp_libs.bzl": "sha256-7BSbvoz6M6Uktf11Keqg0agNleu0y/u+UEe54CkcCF0="
   }
 }

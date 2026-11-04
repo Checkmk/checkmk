@@ -149,7 +149,6 @@ def test_write_section(capsys: pytest.CaptureFixture[str]) -> None:
     assert captured.err == ""
 
 
-@pytest.mark.xfail(strict=True, raises=requests.ConnectionError, reason="crash group 4909")
 @mock.patch(
     "cmk.plugins.azure_status.special_agent.agent_azure_status.requests.get",
     mock.Mock(side_effect=requests.ConnectionError("Connection reset by peer")),

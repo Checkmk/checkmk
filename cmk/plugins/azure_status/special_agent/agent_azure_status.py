@@ -118,7 +118,13 @@ def get_azure_issues(
 
 
 def write_section(args: argparse.Namespace) -> int:
-    response = requests.get("https://status.azure.com/en-us/status/feed/", timeout=900)
+    try:
+        response = requests.get("https://status.azure.com/en-us/status/feed/", timeout=900)
+    except requests.RequestException as exc:
+        if args.debug:
+            raise
+        sys.stderr.write(f"Could not fetch the Azure status feed: {exc}\n")
+        return 1
     feed = feedparser.parse(response.text)  # type: ignore[attr-defined]
 
     selected_regions = [AZURE_REGIONS[r] for r in args.regions]
@@ -138,4 +144,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

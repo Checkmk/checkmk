@@ -407,6 +407,7 @@ allows = []
 allows = [
   "@ccc",
   "cmk.ai_control_plane.protocols",
+  "cmk.crash",
   "cmk.fastapi",
   "cmk.password_store.v1",
   "cmk.schema_manager",
@@ -418,6 +419,7 @@ allows = []
 
 [components."cmk.ai_control_plane.conversation"]
 allows = [
+  "cmk.ai_control_plane.lib.crash_reporting",
   "cmk.ai_control_plane.lib.paths",
   "cmk.ai_control_plane.protocols",
   "cmk.password_store.v1",

@@ -76,6 +76,11 @@ class BaseDashboard(CmkPage):
         """The global time picker in the top menu of the dashboard."""
         return self._menu_header.locator(GLOBAL_TIME_PICKER_SELECTOR)
 
+    @property
+    def refresh_control(self) -> Locator:
+        """The live/paused refresh control in the page header, above the dashboard menu."""
+        return self.main_area.locator(".graphing-global-refresh-control")
+
     def get_menu_button(self, button_name: str) -> Locator:
         """Get button of the top menu by its name.
 

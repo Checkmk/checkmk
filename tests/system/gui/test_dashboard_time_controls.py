@@ -10,18 +10,23 @@ and a widget showing a view renders it as a server-side page in an iframe.
 """
 
 import re
+import time
 from collections.abc import Callable, Generator, Iterator, Mapping, Sequence
 from contextlib import contextmanager
+from datetime import datetime
 from typing import Final, NamedTuple
 
 import pytest
-from playwright.sync_api import expect
+from playwright.sync_api import expect, Page, Request
 
 from tests.system.gui.testlib.playwright.pom.graphing.dashboard_graph_widget import (
     DashboardGraphWidget,
 )
 from tests.system.gui.testlib.playwright.pom.graphing.fixtures import SERVICE_WITH_GRAPHS
-from tests.system.gui.testlib.playwright.pom.graphing.global_time_picker import GlobalTimePicker
+from tests.system.gui.testlib.playwright.pom.graphing.global_time_picker import (
+    GlobalTimePicker,
+    PickerMoment,
+)
 from tests.system.gui.testlib.playwright.pom.graphing.graph_accessor import GraphAccessor
 from tests.system.gui.testlib.playwright.pom.graphing.graph_surfaces import GraphContainment
 from tests.system.gui.testlib.playwright.pom.graphing.timeseries_graph import GraphPanel
@@ -54,6 +59,26 @@ _VIEW_WIDGET_TITLE: Final = "Graphs view"
 # A classic view whose content depends on the time range: its rows are server-rendered and do
 # not take the range, but the engine graphs its painter mounts do.
 _GRAPHS_VIEW: Final = "service_graphs"
+
+_REFRESH_DASHBOARD_ID: Final = "e2e_refresh_tick_dashboard"
+_REFRESH_DASHBOARD_TITLE: Final = "E2E refresh tick dashboard"
+_REFRESH_GRAPH_TITLE: Final = "Refreshing graph"
+_REFRESH_FIGURE_TITLE: Final = "Refreshing figure"
+_REFRESH_VIEW_TITLE: Final = "Refreshing view"
+# A plain classic view: server-rendered rows and no engine graph, whose own data requests
+# would be told apart from the graph widget's only by their frame.
+_PLAIN_VIEW: Final = "allhosts"
+# The dashboard's refresh interval when the user set no preference.
+_REFRESH_INTERVAL_SECONDS: Final = 30
+# Time for a widget to answer a tick on a slow site: the view's reload goes through a message
+# to its iframe first.
+_TICK_ANSWER_SECONDS: Final = 15
+_POLL_MS: Final = 500
+# A graph fetches on its own storage grid, so its window may end up to a step past the one
+# requested; a step is a few minutes at most for a window of hours.
+_FETCH_ALIGNMENT_SECONDS: Final = 600
+# How long before the next tick the count is closed, so that tick cannot reach it.
+_NEXT_TICK_MARGIN_SECONDS: Final = 5
 
 _WIDGET_SIZE: Final = {"width": 40, "height": 20}
 _FOLLOW_DASHBOARD: Final = "dashboard"
@@ -167,6 +192,73 @@ _OVERRIDE_RANGE: Final = "Last 4 h"
 _LEGACY_FIXED_TIMERANGE: Final = "Do not follow timerange changes"
 
 
+class _FigureWidget(NamedTuple):
+    """A figure widget: its content and the compute endpoint that answers it."""
+
+    content: Mapping[str, object]
+    compute_endpoint: str
+    # Whether it draws one service's metric, and so takes the host and service filters.
+    of_one_service: bool
+
+
+# The single metric figure needs a non-free edition. The host statistics figure refreshes
+# through the same path in every edition, so the community edition is covered too.
+_REFRESHING_FIGURES: Final = [
+    pytest.param(
+        _FigureWidget(
+            {"type": "host_stats", "contextual_link": {"type": "default"}},
+            "/domain-types/dashboard/actions/compute-stats/invoke",
+            of_one_service=False,
+        ),
+        id="host_stats",
+    ),
+    pytest.param(
+        _FigureWidget(
+            {
+                "type": "single_metric",
+                "metric": "mem_used",
+                "time_range": {
+                    "type": "window",
+                    "window": "dashboard",
+                    "consolidation": "average",
+                },
+                "status_display": {"type": "text", "for_states": "not_ok"},
+                "display_range": "automatic",
+                "show_display_range_limits": False,
+                "show_delta": False,
+            },
+            "/domain-types/dashboard/actions/compute-single-metric/invoke",
+            of_one_service=True,
+        ),
+        id="single_metric",
+        marks=pytest.mark.skip_if_edition("community"),
+    ),
+]
+
+
+# A moment some time back, in the browser's time zone and to the minute, as the picker's
+# fields take it, with its epoch seconds.
+_BROWSER_MOMENT_AGO: Final = """(secondsAgo) => {
+    const moment = new Date(Date.now() - secondsAgo * 1000);
+    moment.setSeconds(0, 0);
+    return [moment.getTime() / 1000, moment.getFullYear(), moment.getMonth() + 1,
+            moment.getDate(), moment.getHours(), moment.getMinutes()];
+}"""
+
+
+def _browser_moment_ago(page: Page, seconds: int) -> tuple[float, PickerMoment]:
+    epoch, *fields = page.evaluate(_BROWSER_MOMENT_AGO, seconds)
+    return epoch, PickerMoment(*fields)
+
+
+def _requested_window_end(request: Request, window_field: str) -> object:
+    """Where the time window a data request carries in its `window_field` ends."""
+    body = request.post_data_json
+    window = body.get(window_field) if isinstance(body, dict) else None
+    assert isinstance(window, dict), f"{request.url} carried no {window_field!r}: {body!r}"
+    return window["end"]
+
+
 def _mark_document(dashboard: BaseDashboard) -> None:
     """Tag the document so a full page reload is detectable by the tag's absence."""
     dashboard.page.evaluate("window.__cmkDashboardTimeControlsMarker = true")
@@ -209,6 +301,34 @@ def _widget(
             "position": {"x": 1, "y": y},
             "size": _WIDGET_SIZE,
         },
+    }
+
+
+def _template_graph_ids(test_site: Site, host_name: str) -> list[str]:
+    """The ids of the template graphs the host's service draws."""
+    discovered = test_site.openapi.graph.discover_template_graphs(host_name, SERVICE_WITH_GRAPHS)
+    graph_ids = [
+        graph["add_to_specification"]["graph_id"]
+        for graph in discovered["graphs"]
+        if graph["add_to_specification"] is not None
+    ]
+    assert graph_ids, (
+        f"{host_name}/{SERVICE_WITH_GRAPHS} yielded no template graph: "
+        f"{discovered['no_data_message']}"
+    )
+    return graph_ids
+
+
+def _template_graph_content(graph_id: str, timerange: object) -> dict[str, object]:
+    """A template graph widget drawing the given time range.
+
+    It shows the graph time, which states the window the widget last drew.
+    """
+    return {
+        "type": "performance_graph",
+        "timerange": timerange,
+        "graph_render_options": {"show_graph_time": True},
+        "source": graph_id,
     }
 
 
@@ -279,18 +399,9 @@ def _open_graph_dashboard(
     browser.
 
     The widgets take the service's graphs in turn, starting over if there are more widgets
-    than graphs. Each shows the graph time, which states the window the widget last drew.
+    than graphs.
     """
-    discovered = test_site.openapi.graph.discover_template_graphs(host_name, SERVICE_WITH_GRAPHS)
-    graph_ids = [
-        graph["add_to_specification"]["graph_id"]
-        for graph in discovered["graphs"]
-        if graph["add_to_specification"] is not None
-    ]
-    assert graph_ids, (
-        f"{host_name}/{SERVICE_WITH_GRAPHS} yielded no template graph: "
-        f"{discovered['no_data_message']}"
-    )
+    graph_ids = _template_graph_ids(test_site, host_name)
     with _open_dashboard(
         dashboard_page,
         test_site,
@@ -299,12 +410,7 @@ def _open_graph_dashboard(
         widgets={
             f"graph_{index}": _widget(
                 widget_title,
-                {
-                    "type": "performance_graph",
-                    "timerange": timerange,
-                    "graph_render_options": {"show_graph_time": True},
-                    "source": graph_ids[index % len(graph_ids)],
-                },
+                _template_graph_content(graph_ids[index % len(graph_ids)], timerange),
                 _host_service_filters(host_name),
                 y=1 + 20 * index,
             )
@@ -431,6 +537,49 @@ def _open_new_widget_time_settings(
     return wizard
 
 
+@pytest.fixture(name="refresh_dashboard")
+def fixture_refresh_dashboard(
+    figure: _FigureWidget,
+    dashboard_page: MainDashboard,
+    test_site: Site,
+    graph_hosts_with_varying_data: list[str],
+    javascript_errors: list[str],  # noqa: ARG001
+) -> Iterator[CustomDashboard]:
+    """A dashboard of one widget per refresh path - a graph, a figure and a classic view -
+    opened in the browser.
+
+    Depends on `javascript_errors` so its listener is attached before this navigates.
+    """
+    host_name = graph_hosts_with_varying_data[0]
+    filters = _host_service_filters(host_name)
+    with _open_dashboard(
+        dashboard_page,
+        test_site,
+        dashboard_id=_REFRESH_DASHBOARD_ID,
+        title=_REFRESH_DASHBOARD_TITLE,
+        widgets={
+            "graph": _widget(
+                _REFRESH_GRAPH_TITLE,
+                _template_graph_content(
+                    _template_graph_ids(test_site, host_name)[0], _FOLLOW_DASHBOARD
+                ),
+                filters,
+                y=1,
+            ),
+            "figure": _widget(
+                _REFRESH_FIGURE_TITLE,
+                figure.content,
+                filters if figure.of_one_service else {},
+                y=21,
+            ),
+            "view": _widget(
+                _REFRESH_VIEW_TITLE, {"type": "linked_view", "view_name": _PLAIN_VIEW}, {}, y=41
+            ),
+        },
+    ) as dashboard:
+        yield dashboard
+
+
 def _wait_until_drawn(widget: DashboardGraphWidget) -> str:
     """Wait for the widget to draw its first window, and return its graph time."""
     expect(
@@ -502,7 +651,8 @@ def test_preset_selection_redraws_every_inheriting_widget_in_place(
     inheriting_dashboard: CustomDashboard, javascript_errors: list[str]
 ) -> None:
     """One preset picked in the header drives every widget following the dashboard's range,
-    which redraw in place."""
+    which redraw in place.
+    """
     first, second = (
         DashboardGraphWidget(inheriting_dashboard, title) for title in _INHERITING_WIDGET_TITLES
     )
@@ -552,7 +702,8 @@ def test_zooming_a_following_widget_zooms_the_dashboard(
     zoom_dashboard: CustomDashboard, javascript_errors: list[str]
 ) -> None:
     """A zoom in a widget following the dashboard is committed to the dashboard's range, which
-    the widget with its own range does not follow."""
+    the widget with its own range does not follow.
+    """
     gestured, sibling = (
         DashboardGraphWidget(zoom_dashboard, title) for title in _INHERITING_WIDGET_TITLES
     )
@@ -583,7 +734,8 @@ def test_resetting_the_zoom_returns_the_dashboard_to_its_preset(
     zoom_dashboard: CustomDashboard, javascript_errors: list[str]
 ) -> None:
     """Resetting a zoom in a widget following the dashboard returns the dashboard's range to the
-    preset it started on."""
+    preset it started on.
+    """
     gestured, sibling = (
         DashboardGraphWidget(zoom_dashboard, title) for title in _INHERITING_WIDGET_TITLES
     )
@@ -625,7 +777,8 @@ def test_panning_a_following_widget_pans_the_dashboard(
     zoom_dashboard: CustomDashboard, javascript_errors: list[str]
 ) -> None:
     """A pan in a widget following the dashboard is committed to the dashboard's range, which
-    the widget with its own range does not follow."""
+    the widget with its own range does not follow.
+    """
     gestured, sibling = (
         DashboardGraphWidget(zoom_dashboard, title) for title in _INHERITING_WIDGET_TITLES
     )
@@ -788,3 +941,253 @@ def test_separate_widget_range_is_kept_across_a_reload(
         timeout=10,
         condition_name=f"the widget saved with a separate range to show {_OVERRIDE_RANGE!r}",
     )
+
+
+class _RecordedRequests:
+    """The data requests of each refresh path, with when they were sent."""
+
+    def __init__(self, page: Page, figure: _FigureWidget) -> None:
+        self._page = page
+        self._figure = figure
+        self.sent: dict[str, list[tuple[float, Request]]] = {"graph": [], "figure": [], "view": []}
+
+    def __call__(self, request: Request) -> None:
+        if (kind := self._kind(request)) is not None:
+            self.sent[kind].append((time.monotonic(), request))
+
+    def _kind(self, request: Request) -> str | None:
+        if request.frame != self._page.main_frame:
+            # The view's page refetches its content with the content-only display options,
+            # which its first load does not carry.
+            if "widget_iframe_view.py" in request.url and "_display_options=" in request.url:
+                return "view"
+            return None
+        if request.url.endswith("/domain-types/graph/actions/fetch_data/invoke"):
+            return "graph"
+        if request.url.endswith(self._figure.compute_endpoint):
+            return "figure"
+        return None
+
+    def every_path_refetched(self) -> bool:
+        return all(self.sent.values())
+
+    def first_refetch(self) -> float:
+        return min(sent[0][0] for sent in self.sent.values())
+
+    def counts(self) -> dict[str, int]:
+        return {kind: len(sent) for kind, sent in self.sent.items()}
+
+    def urls(self) -> dict[str, list[str]]:
+        return {kind: [request.url for _, request in sent] for kind, sent in self.sent.items()}
+
+    def last(self, kind: str) -> Request | None:
+        return self.sent[kind][-1][1] if self.sent[kind] else None
+
+    def clear(self) -> None:
+        for sent in self.sent.values():
+            sent.clear()
+
+
+def _wait_until_rendered(dashboard: CustomDashboard) -> DashboardGraphWidget:
+    """Wait for the graph and the view to render and the figure's first compute to settle,
+    then return the graph widget."""
+    graph = DashboardGraphWidget(dashboard, _REFRESH_GRAPH_TITLE)
+    expect(graph.timestamp, "The graph widget never rendered").not_to_be_empty()
+    expect(
+        dashboard.get_widget(_REFRESH_VIEW_TITLE)
+        .frame_locator("iframe")
+        .locator("#data_container"),
+        "The view widget never rendered",
+    ).to_be_visible()
+    # The figure renders nothing a locator could wait for across both figure types; its
+    # first compute request settling stands in for it.
+    dashboard.page.wait_for_load_state("networkidle")
+    return graph
+
+
+def _wait_for_every_path(
+    page: Page, requests: _RecordedRequests, *, timeout: float, failure: str
+) -> None:
+    """Wait for every refresh path to have sent a request.
+
+    Waited out through Playwright rather than `wait_until`: the sync API only hands over the
+    requests it saw while one of its own calls runs, never during a `time.sleep`.
+    """
+    deadline = time.monotonic() + timeout
+    while not requests.every_path_refetched():
+        assert time.monotonic() < deadline, f"{failure}: {requests.counts()}"
+        page.wait_for_timeout(_POLL_MS)
+
+
+@pytest.mark.parametrize("figure", _REFRESHING_FIGURES)
+def test_every_widget_refetches_its_data_once_per_refresh_interval(
+    figure: _FigureWidget, refresh_dashboard: CustomDashboard, javascript_errors: list[str]
+) -> None:
+    """Each refresh tick has every widget fetch its data again, once.
+
+    One widget per refresh path: the graph fetches its data, the figure asks its compute
+    endpoint, and the view, told of the tick by a message to its iframe, reloads its content
+    there. Real timers, as the view's page runs a clock of its own: only requests sent after
+    the widgets rendered are counted, and the count is closed before the next tick.
+    """
+    page = refresh_dashboard.page
+    expect(
+        refresh_dashboard.refresh_control,
+        "The dashboard does not refresh live every 30 seconds",
+    ).to_contain_text(f"{_REFRESH_INTERVAL_SECONDS} sec")
+    _wait_until_rendered(refresh_dashboard)
+    requests = _RecordedRequests(page, figure)
+    page.on("request", requests)
+
+    try:
+        _wait_for_every_path(
+            page,
+            requests,
+            timeout=_REFRESH_INTERVAL_SECONDS + _TICK_ANSWER_SECONDS,
+            failure="Not every widget refetched within one refresh interval",
+        )
+        # Up to just before the next tick: a second request by then is a refetch too many.
+        count_closes = (
+            requests.first_refetch() + _REFRESH_INTERVAL_SECONDS - _NEXT_TICK_MARGIN_SECONDS
+        )
+        page.wait_for_timeout(max(0.0, count_closes - time.monotonic()) * 1000)
+    finally:
+        page.remove_listener("request", requests)
+
+    assert requests.counts() == {"graph": 1, "figure": 1, "view": 1}, (
+        f"A widget did not refetch exactly once in one refresh interval: {requests.urls()}"
+    )
+    assert not javascript_errors, f"JavaScript errors were raised: {javascript_errors}"
+
+
+def _apply_range_ending_an_hour_ago(dashboard: CustomDashboard) -> float:
+    """Apply a two-hour custom range ending an hour ago; return where it ends, in epoch
+    seconds."""
+    _start_epoch, start = _browser_moment_ago(dashboard.page, 3 * 60 * 60)
+    end_epoch, end = _browser_moment_ago(dashboard.page, 60 * 60)
+    GlobalTimePicker(dashboard.main_area).apply_custom_range(start, end)
+    return end_epoch
+
+
+@pytest.mark.parametrize("figure", _REFRESHING_FIGURES)
+def test_a_past_range_pauses_the_refresh(
+    figure: _FigureWidget, refresh_dashboard: CustomDashboard, javascript_errors: list[str]
+) -> None:
+    """A custom range that already ended cannot gain data, so it stops the live refresh."""
+    page = refresh_dashboard.page
+    expect(
+        refresh_dashboard.refresh_control, "The dashboard does not start out refreshing live"
+    ).to_contain_text(f"{_REFRESH_INTERVAL_SECONDS} sec")
+    _wait_until_rendered(refresh_dashboard)
+    _apply_range_ending_an_hour_ago(refresh_dashboard)
+    expect(
+        refresh_dashboard.refresh_control.get_by_role("button", name="Resume live refresh"),
+        "A range that already ended left the refresh running",
+    ).to_be_visible()
+    # The fetches of the picked window itself are not refreshes.
+    page.wait_for_load_state("networkidle")
+    requests = _RecordedRequests(page, figure)
+    page.on("request", requests)
+
+    try:
+        # One interval and then some: a tick still running would have fired by then.
+        page.wait_for_timeout((_REFRESH_INTERVAL_SECONDS + _NEXT_TICK_MARGIN_SECONDS) * 1000)
+    finally:
+        page.remove_listener("request", requests)
+
+    assert requests.counts() == {"graph": 0, "figure": 0, "view": 0}, (
+        f"A widget refetched although the refresh is paused: {requests.urls()}"
+    )
+    assert not javascript_errors, f"JavaScript errors were raised: {javascript_errors}"
+
+
+# Only the widgets taking the dashboard's range: the host statistics figure computes over no
+# range, and the view's rows are server-rendered without one.
+_RANGED_FIGURES: Final = [param for param in _REFRESHING_FIGURES if param.id == "single_metric"]
+
+
+@pytest.mark.parametrize("figure", _RANGED_FIGURES)
+def test_a_past_range_is_fetched_as_picked(
+    figure: _FigureWidget, refresh_dashboard: CustomDashboard, javascript_errors: list[str]
+) -> None:
+    """The widgets following the dashboard fetch the past range that was picked."""
+    page = refresh_dashboard.page
+    _wait_until_rendered(refresh_dashboard)
+    requests = _RecordedRequests(page, figure)
+    page.on("request", requests)
+
+    try:
+        end_epoch = _apply_range_ending_an_hour_ago(refresh_dashboard)
+        page.wait_for_load_state("networkidle")
+    finally:
+        page.remove_listener("request", requests)
+
+    graph_request = requests.last("graph")
+    assert graph_request is not None, "The graph widget did not fetch the picked range"
+    graph_end = _requested_window_end(graph_request, "requested_time_range")
+    assert isinstance(graph_end, int | float), f"The graph's window end is {graph_end!r}"
+    assert end_epoch <= graph_end <= end_epoch + _FETCH_ALIGNMENT_SECONDS, (
+        f"The graph widget fetched a window ending at {graph_end}, not at the picked {end_epoch}"
+    )
+    figure_request = requests.last("figure")
+    assert figure_request is not None, "The figure widget did not compute the picked range"
+    figure_end = _requested_window_end(figure_request, "time_range")
+    assert isinstance(figure_end, str), f"The figure's window end is {figure_end!r}"
+    assert datetime.fromisoformat(figure_end).timestamp() == end_epoch, (
+        f"The figure widget computed a window ending at {figure_end}, not at the picked {end_epoch}"
+    )
+    assert not javascript_errors, f"JavaScript errors were raised: {javascript_errors}"
+
+
+def _zoom(graph: DashboardGraphWidget) -> None:
+    graph.graph.drag_across_canvas(0.3, 0.7)
+
+
+def _pan(graph: DashboardGraphWidget) -> None:
+    graph.graph.drag_axis_strip(0.6, 0.3)
+
+
+@pytest.mark.parametrize("figure", _REFRESHING_FIGURES)
+@pytest.mark.parametrize("gesture", [pytest.param(_zoom, id="zoom"), pytest.param(_pan, id="pan")])
+def test_a_graph_gesture_pauses_the_refresh_until_resumed(
+    gesture: Callable[[DashboardGraphWidget], None],
+    figure: _FigureWidget,
+    refresh_dashboard: CustomDashboard,
+    javascript_errors: list[str],
+) -> None:
+    """Zooming or panning a graph picks a window of its own, which holds until Resume.
+
+    The gesture becomes the dashboard's range and pauses the refresh, so the window the user
+    is looking at stays put: no widget refreshes until Resume, which then refreshes them all.
+    """
+    page = refresh_dashboard.page
+    expect(
+        refresh_dashboard.refresh_control, "The dashboard does not start out refreshing live"
+    ).to_contain_text(f"{_REFRESH_INTERVAL_SECONDS} sec")
+    graph = _wait_until_rendered(refresh_dashboard)
+    resume = refresh_dashboard.refresh_control.get_by_role("button", name="Resume live refresh")
+
+    gesture(graph)
+
+    expect(resume, "The gesture left the refresh running").to_be_visible()
+    # The fetches of the gesture's window itself are not refreshes.
+    page.wait_for_load_state("networkidle")
+    requests = _RecordedRequests(page, figure)
+    page.on("request", requests)
+    try:
+        # One interval and then some: a tick still running would have fired by then.
+        page.wait_for_timeout((_REFRESH_INTERVAL_SECONDS + _NEXT_TICK_MARGIN_SECONDS) * 1000)
+        assert requests.counts() == {"graph": 0, "figure": 0, "view": 0}, (
+            f"A widget refreshed after the gesture, before Resume: {requests.urls()}"
+        )
+        resume.click()
+        _wait_for_every_path(
+            page,
+            requests,
+            timeout=_TICK_ANSWER_SECONDS,
+            failure="Not every widget refreshed once Resume was clicked",
+        )
+    finally:
+        page.remove_listener("request", requests)
+
+    assert not javascript_errors, f"JavaScript errors were raised: {javascript_errors}"

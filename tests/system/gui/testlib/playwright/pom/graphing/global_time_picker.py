@@ -12,6 +12,7 @@ falls back to the whole page.
 """
 
 import logging
+from typing import NamedTuple
 
 from playwright.sync_api import expect, Locator
 
@@ -20,6 +21,16 @@ from tests.system.gui.testlib.playwright.pom.page import MainArea
 logger = logging.getLogger(__name__)
 
 GLOBAL_TIME_PICKER_SELECTOR = "div.graphing-global-time-picker"
+
+
+class PickerMoment(NamedTuple):
+    """A moment as the flyout's fields take it: in the browser's time zone, to the minute."""
+
+    year: int
+    month: int
+    day: int
+    hours: int
+    minutes: int
 
 
 class GlobalTimePicker:
@@ -96,6 +107,26 @@ class GlobalTimePicker:
         logger.info("Selecting the quick range '%s'", name)
         self.trigger.click()
         self.flyout.get_by_role("radio", name=name, exact=True).click()
+        self.flyout.get_by_role("button", name="Apply", exact=True).click()
+        expect(self.flyout).to_be_hidden()
+
+    def apply_custom_range(self, start: PickerMoment, end: PickerMoment) -> None:
+        """Type a custom range into the flyout's From and To fields, then apply it.
+
+        Each field is a group of segments (day, month, year; hours, minutes) whose order
+        follows the user's date format, so they are addressed by name rather than typed in
+        sequence. Assumes a 24-hour clock: a 12-hour one adds an "AM or PM" segment.
+        """
+        logger.info("Applying the custom range %s - %s", start, end)
+        self.trigger.click()
+        for side, moment in (("From", start), ("To", end)):
+            date = self.flyout.get_by_role("group", name=f"{side} date", exact=True)
+            date.get_by_role("spinbutton", name="Day", exact=True).fill(f"{moment.day:02}")
+            date.get_by_role("spinbutton", name="Month", exact=True).fill(f"{moment.month:02}")
+            date.get_by_role("spinbutton", name="Year", exact=True).fill(f"{moment.year:04}")
+            time = self.flyout.get_by_role("group", name=f"{side} time", exact=True)
+            time.get_by_role("spinbutton", name="Hours", exact=True).fill(f"{moment.hours:02}")
+            time.get_by_role("spinbutton", name="Minutes", exact=True).fill(f"{moment.minutes:02}")
         self.flyout.get_by_role("button", name="Apply", exact=True).click()
         expect(self.flyout).to_be_hidden()
 

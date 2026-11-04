@@ -9,7 +9,11 @@ import { afterEach, beforeEach, vi } from 'vitest'
 import { nextTick } from 'vue'
 
 import GlobalRefreshControl from '@/graphing/GlobalRefreshControl/GlobalRefreshControl.vue'
-import { resetGlobalTimeState, useGlobalRefresh } from '@/graphing/GlobalTimePicker/globalTimeState'
+import {
+  initGlobalRefresh,
+  resetGlobalTimeState,
+  useGlobalRefresh
+} from '@/graphing/GlobalTimePicker/globalTimeState'
 
 const PROPS = { lastRefreshPosition: 'top' as const, intervalChoicesSeconds: [30, 60, 90] }
 
@@ -174,4 +178,63 @@ test('Resume announces that the live refresh resumed, with its interval', async 
   await waitFor(() =>
     expect(screen.getByRole('status')).toHaveTextContent('Live refresh resumed, every 60 seconds')
   )
+})
+
+describe('the interval picked is the one the clock runs on', () => {
+  // As the backend hands them over: the intervals offered, and the current one among them.
+  const BACKEND_INTERVALS_SECONDS = [1, 2, 3]
+
+  function renderLive(): ReturnType<typeof userEvent.setup> {
+    vi.useFakeTimers()
+    initGlobalRefresh({ intervalSeconds: BACKEND_INTERVALS_SECONDS[0]!, live: true })
+    render(GlobalRefreshControl, {
+      props: { ...PROPS, intervalChoicesSeconds: BACKEND_INTERVALS_SECONDS }
+    })
+    return userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
+  }
+
+  async function pick(user: ReturnType<typeof userEvent.setup>, option: string): Promise<void> {
+    await user.click(screen.getByRole('combobox', { name: 'Live refresh every' }))
+    await user.click(await screen.findByRole('option', { name: option }))
+  }
+
+  test('offers the intervals the backend sends, and turning the refresh off', async () => {
+    const user = renderLive()
+
+    await user.click(screen.getByRole('combobox', { name: 'Live refresh every' }))
+
+    await screen.findByText('3 sec')
+    expect(screen.getAllByRole('option').map((option) => option.textContent?.trim())).toEqual([
+      '1 sec',
+      '2 sec',
+      '3 sec',
+      'Turn off'
+    ])
+  })
+
+  test.each([{ seconds: 1 }, { seconds: 2 }, { seconds: 3 }])(
+    'picking $seconds sec refreshes once every $seconds seconds, not before',
+    async ({ seconds }) => {
+      const user = renderLive()
+      await pick(user, `${seconds} sec`)
+      const ticksBefore = useGlobalRefresh().refreshTick.value
+
+      vi.advanceTimersByTime(seconds * 1000 - 1)
+      const ticksJustBefore = useGlobalRefresh().refreshTick.value
+      vi.advanceTimersByTime(1)
+
+      expect(ticksJustBefore).toBe(ticksBefore)
+      expect(useGlobalRefresh().refreshTick.value).toBe(ticksBefore + 1)
+    }
+  )
+
+  test('"Turn off" stops the clock', async () => {
+    const user = renderLive()
+    await pick(user, 'Turn off')
+    const ticksBefore = useGlobalRefresh().refreshTick.value
+
+    vi.advanceTimersByTime(10 * Math.max(...BACKEND_INTERVALS_SECONDS) * 1000)
+
+    expect(useGlobalRefresh().refreshTick.value).toBe(ticksBefore)
+  })
 })

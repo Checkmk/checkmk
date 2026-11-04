@@ -44,6 +44,10 @@ SUPPORTED_PIP_CMDS: tuple[PipCommand, ...] = (
     ),  # Target is set in the wrapper script as cmd line
 )
 
+# Install from the Nexus PyPI proxy instead of pypi.org, so pypi.org outages do not fail the
+# tests. The system tests run inside the company network only.
+PIP_INDEX_URL = "https://artifacts.lan.tribe29.com/repository/pypi-proxy/simple"
+
 
 def _local_package_installation_path(site: Site) -> Path:
     return Path(f"{site.root}", "local/lib/python3")
@@ -60,7 +64,7 @@ def assert_local_package_install_path(
 
 
 def assert_install_package(cmd: list[str], package_name: str, site: Site) -> None:
-    p = site.execute(cmd, stdout=subprocess.PIPE)
+    p = site.execute([*cmd, "--index-url", PIP_INDEX_URL], stdout=subprocess.PIPE)
     install_stdout, _ = p.communicate()
 
     assert "Successfully installed" in install_stdout, install_stdout

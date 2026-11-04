@@ -64,7 +64,6 @@ py_library(
     imports = ["."],
     deps = [
         ":cmk-licensing",
-        "//cmk/utils:paths",
         "//packages/cmk-ccc:site",
         "//packages/cmk-licensing/cmk/licensing/basics",
     ],

@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import argparse
+import os
 import sys
+from pathlib import Path
 
 from cmk.ccc.site import omd_site
 from cmk.licensing.basics.paths import (
@@ -21,8 +23,6 @@ from cmk.licensing.usage import (
     Now,
     try_update_license_usage,
 )
-from cmk.utils import paths
-from cmk.utils.paths import omd_root
 
 
 def _parse_arguments() -> argparse.Namespace:
@@ -40,9 +40,19 @@ def _parse_arguments() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def _omd_root() -> Path:
+    try:
+        return Path(os.environ["OMD_ROOT"])
+    except KeyError as exc:
+        raise RuntimeError(
+            "OMD_ROOT environment variable not set. Can only be executed in a Checkmk site."
+        ) from exc
+
+
 def main() -> int:
     args = _parse_arguments()
-    logger = init_logging(paths.log_dir)
+    omd_root = _omd_root()
+    logger = init_logging(omd_root / "var" / "log")
 
     if args.force:
         get_next_run_file_path(omd_root).unlink(missing_ok=True)

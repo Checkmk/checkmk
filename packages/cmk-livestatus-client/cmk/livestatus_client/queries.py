@@ -812,3 +812,15 @@ def detailed_connection(
         yield connection
     finally:
         connection.set_prepend_site(prev)
+
+
+@contextmanager
+def site_restricted_connection(
+    connection: MultiSiteConnection, sites: OnlySites
+) -> Generator[MultiSiteConnection]:
+    previous = connection.only_sites
+    connection.set_only_sites(sites)
+    try:
+        yield connection
+    finally:
+        connection.set_only_sites(previous)

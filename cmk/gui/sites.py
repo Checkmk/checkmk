@@ -41,6 +41,7 @@ from cmk.livestatus_client import (
     SiteConfigurations,
     UnixSocketInfo,
 )
+from cmk.livestatus_client.queries import site_restricted_connection
 from cmk.utils import paths
 from cmk.utils.paths import livestatus_unix_socket
 
@@ -520,12 +521,8 @@ def only_sites(sites: None | list[SiteId] | SiteId) -> Iterator[None]:
     elif not isinstance(sites, list):
         sites = [sites]
 
-    live().set_only_sites(sites)
-
-    try:
+    with site_restricted_connection(live(), sites):
         yield
-    finally:
-        live().set_only_sites(None)
 
 
 @contextmanager

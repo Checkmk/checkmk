@@ -15,6 +15,7 @@ from cmk.livestatus_client import (
     SiteConfigurations,
     UnixSocketDetails,
 )
+from cmk.livestatus_client.testing import MockLiveStatusConnection
 
 
 def default_site_config() -> SiteConfiguration:
@@ -160,6 +161,17 @@ def test_sorted_sites() -> None:
         )
         == expected
     )
+
+
+@pytest.mark.usefixtures("load_config")
+def test_only_sites_restores_the_enclosing_restriction(
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    with mock_livestatus(), sites.only_sites(SiteId("local")):
+        with sites.only_sites(SiteId("remote")):
+            pass
+
+        assert sites.live().only_sites == [SiteId("local")]
 
 
 def _site_config(site_id: SiteId, alias: str) -> SiteConfiguration:

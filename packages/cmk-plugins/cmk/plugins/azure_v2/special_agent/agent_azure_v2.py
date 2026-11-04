@@ -3345,7 +3345,13 @@ async def main_async(args: argparse.Namespace, selector: Selector) -> int:
         exclude_vms=args.unique_hostnames_exclude_vms,
     )
 
-    subscriptions = await _get_subscriptions(args)
+    try:
+        subscriptions = await _get_subscriptions(args)
+    except ApiError as exc:
+        if args.debug:
+            raise
+        sys.stderr.write(f"{exc}\n")
+        return 2
     await collect_info(args, selector, subscriptions)
     LOGGER.debug("%(selector)s", {"selector": selector})
     return 0

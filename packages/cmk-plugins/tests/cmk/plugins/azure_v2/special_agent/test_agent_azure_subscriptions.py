@@ -562,7 +562,6 @@ async def test_connection_test_no_subscriptions_arg_skips_check() -> None:
     mock_client.request_async.assert_not_called()
 
 
-@pytest.mark.xfail(strict=True, raises=ApiError, reason="Crash group 4942")
 @pytest.mark.asyncio
 async def test_unknown_subscription_ends_with_error_message(
     mock_api_client: AsyncMock, capsys: pytest.CaptureFixture[str]

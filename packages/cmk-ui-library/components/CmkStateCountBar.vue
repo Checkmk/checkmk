@@ -27,7 +27,6 @@ interface LegendEntry {
   label: TranslatedString
   count: number
   color: StateSegment['color']
-  active: boolean
   href: string | undefined
   target: string | undefined
 }
@@ -65,7 +64,6 @@ function toEntry(
     label,
     count,
     color,
-    active: count > 0,
     href: count > 0 ? link.href : undefined,
     target: count > 0 ? link.target : undefined
   }
@@ -125,7 +123,7 @@ const ariaLabel = computed<string>(() =>
         <component
           :is="entry.href === undefined ? 'span' : 'a'"
           class="cmk-state-count-bar__legend-entry"
-          :class="entry.active ? `cmk-state-count-bar__legend-entry--${entry.color}` : undefined"
+          :class="`cmk-state-count-bar__legend-entry--${entry.color}`"
           :href="entry.href"
           :target="entry.target"
         >

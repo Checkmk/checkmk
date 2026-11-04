@@ -72,7 +72,8 @@ common:ci --remote_upload_local_results=true
 # No standard in the CI where we must explicitly differentiate between LSB and FHS.
 common:ci --@//:filesystem_layout=FILESYSTEM_LAYOUT_INVALID
 
-# Install the venvs through the Nexus PyPI proxy, see //:pypi_proxy.
+# Install the venvs and build the OMD python3-modules through the Nexus PyPI proxy, see
+# //:pypi_proxy.
 common:ci --//:pypi_proxy
 
 # Fetch the Bazel-managed Python wheels through the Nexus PyPI proxy, see pip.parse

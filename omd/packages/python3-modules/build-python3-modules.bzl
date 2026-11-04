@@ -1,4 +1,5 @@
 load("@python_modules//:requirements.bzl", "packages")
+load("//:bazel_variables.bzl", "PYPI_PROXY_INDEX_URL")
 
 def get_pip_options(module_name):
     return {
@@ -24,7 +25,12 @@ def build_python_module(name, srcs, outs, cmd, **kwargs):
         name = name,
         srcs = srcs,
         outs = outs,
-        cmd = cmd,
+        cmd = select({
+            # With //:pypi_proxy, pip downloads the sdists and their build
+            # dependencies through the proxy instead of pypi.org.
+            "//:pypi_proxy_enabled": "INDEX_URL_ARG=--index-url=%s\n" % PYPI_PROXY_INDEX_URL,
+            "//conditions:default": "INDEX_URL_ARG=\n",
+        }) + cmd,
         **kwargs
     )
 
@@ -107,6 +113,7 @@ build_cmd = """
       --no-deps \\
       --compile \\
       --isolated \\
+      $${{INDEX_URL_ARG:+"$$INDEX_URL_ARG"}} \\
       --ignore-installed \\
       --no-warn-script-location \\
       --prefix="$$HOME/$$MODULE_NAME" \\

@@ -72,7 +72,7 @@ def main(args: Sequence[str] | None = None) -> int:
                 return 0
 
             # If this is the first run after product usage analytics being enabled,
-            # we need to create a random next timestamp somewhere in the next 30 days and then exit.
+            # we need to create a random next timestamp within the first-run window and then exit.
             if not get_next_run_ts(next_run_fp):
                 next_scheduled_run_at = create_next_random_ts(now)
                 logger.info(

@@ -15,10 +15,10 @@ from cmk.product_usage.schedule import (
 from cmk.utils.paths import var_dir
 
 
-def test_create_next_random_ts() -> None:
+def test_first_run_is_planned_within_23_and_a_half_hours() -> None:
     now = datetime.now()
-    min_ts = now + timedelta(days=1)
-    max_ts = now + timedelta(days=30)
+    min_ts = now
+    max_ts = now + timedelta(hours=23, minutes=30)
 
     new_ts = create_next_random_ts(now)
 

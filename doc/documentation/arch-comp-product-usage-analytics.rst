@@ -87,7 +87,7 @@ Collection and transmission
 
 **Scheduling.**
 On each cron invocation, ``should_run_collection_on_schedule`` only lets collection proceed once a stored ``next_run`` timestamp has passed.
-That schedule is staggered per site: the first run after enabling analytics picks a random point 1-30 days out (``create_next_random_ts``), so freshly opted-in sites do not all transmit at the same moment.
+That schedule is staggered per site: the first run after enabling analytics picks a random point within the next 23.5 hours (``create_next_random_ts``), so freshly opted-in sites do not all transmit at the same moment; since cron runs every 30 minutes, that run starts within 24 hours.
 Every following run is fixed at 30 days after the previous one (``create_next_ts``).
 
 **What a due run collects:**

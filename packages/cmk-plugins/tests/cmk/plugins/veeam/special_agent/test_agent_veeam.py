@@ -2122,6 +2122,87 @@ def test_fetch_backups_reports_a_machine_that_succeeded_on_retry_as_successful(
     assert [json.loads(record)["result"] for record in records] == [{"result": "Success"}]
 
 
+def _run_with_full_run_then_retry(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+    full_run_tasks: list[dict[str, object]],
+) -> str:
+    """The full run is the job's current session in the first run, the retry
+    session (holding vm-1 only) in the second; the second run's output."""
+    _mock_jobs(api, [_job(sessionId="full-run")])
+    _mock_session_and_objects(api, "full-run", ["vm-1", "vm-2"])
+    _mock_tasks(api, full_run_tasks, session_id="full-run")
+    write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
+    capsys.readouterr()
+
+    _mock_jobs(api, [_job(sessionId="retry")])
+    _mock_session_and_objects(api, "retry", ["vm-1", "vm-2"])
+    _mock_tasks(api, [_task(name="vm-1", sessionId="retry")], session_id="retry")
+    write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
+    return capsys.readouterr().out
+
+
+def test_fetch_backups_keeps_the_objects_a_retry_session_leaves_out(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    output = _run_with_full_run_then_retry(
+        api,
+        storage,
+        capsys,
+        [
+            _task(name="vm-1", sessionId="full-run", result={"result": "Failed"}),
+            _task(name="vm-2", sessionId="full-run"),
+        ],
+    )
+
+    assert '{"name": "vm-1", "sessionId": "retry"' in output
+    assert '{"name": "vm-2", "sessionId": "full-run"' in output
+
+
+def test_fetch_backups_does_not_keep_a_task_in_progress(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    output = _run_with_full_run_then_retry(
+        api,
+        storage,
+        capsys,
+        [
+            _task(name="vm-1", sessionId="full-run"),
+            _task(name="vm-2", sessionId="full-run", state="Working"),
+        ],
+    )
+
+    assert "vm-2" not in output
+
+
+def test_fetch_backups_drops_a_kept_task_of_an_object_removed_from_the_job(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    _mock_jobs(api, [_job(sessionId="full-run")])
+    _mock_session_and_objects(api, "full-run", ["vm-1", "vm-2"])
+    _mock_tasks(
+        api,
+        [_task(name="vm-1", sessionId="full-run"), _task(name="vm-2", sessionId="full-run")],
+        session_id="full-run",
+    )
+    write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
+
+    _mock_jobs(api, [_job(sessionId="next-run")])
+    _mock_session_and_objects(api, "next-run", ["vm-1", "vm-3"])
+    _mock_tasks(api, [_task(name="vm-1", sessionId="next-run")], session_id="next-run")
+    capsys.readouterr()
+    write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
+
+    assert "vm-2" not in capsys.readouterr().out
+
+
 def test_wrong_credentials_are_reported(api: responses.RequestsMock, storage: Storage) -> None:
     api.post(
         TOKEN_URL,

@@ -826,6 +826,7 @@ class _Task:
 
     name: str
     creation_epoch: float
+    state: str | None
     record: Mapping[str, object]
     """The task as the API returned it; this is what the section shows."""
 
@@ -843,6 +844,7 @@ def _parse_backup_tasks(items: Iterable[object]) -> list[_Task]:
             _Task(
                 name=task_name,
                 creation_epoch=float("-inf") if epoch is None else epoch,
+                state=state if isinstance(state := item.get("state"), str) else None,
                 record=item,
             )
         )
@@ -1024,6 +1026,41 @@ def _newest_task_per_object(
     return newest
 
 
+LAST_TASKS_STORAGE_KEY = "last_tasks"
+
+
+class _CachedJobTasks(BaseModel):
+    tasks: Mapping[ObjectName, Mapping[str, object]]
+    """The newest finished task of each of the job's objects seen so far."""
+
+
+def _load_last_tasks_cache(storage: Storage) -> Mapping[JobId, _CachedJobTasks]:
+    try:
+        raw = json.loads(storage.read(LAST_TASKS_STORAGE_KEY, "{}"))
+    except json.JSONDecodeError:
+        return {}
+    if not isinstance(raw, dict):
+        return {}
+    cache: dict[JobId, _CachedJobTasks] = {}
+    for job_id, entry in raw.items():
+        try:
+            cache[job_id] = _CachedJobTasks.model_validate(entry)
+        except ValidationError:
+            continue
+    return cache
+
+
+def _merge_newest(
+    older: Mapping[ObjectName, _Task], newer: Mapping[ObjectName, _Task]
+) -> dict[ObjectName, _Task]:
+    """The newer task of each object, `newer`'s on a tie."""
+    merged = dict(newer)
+    for object_name, task in older.items():
+        if (other := merged.get(object_name)) is None or task.creation_epoch > other.creation_epoch:
+            merged[object_name] = task
+    return merged
+
+
 def _format_dotnet_timespan(seconds: float) -> str:
     total_seconds = int(seconds)
     days, remainder = divmod(total_seconds, 86400)
@@ -1084,6 +1121,12 @@ def fetch_backups(client: VeeamClient, name: str) -> Fetched:
     run job and pull everything since. A task session lookup that 400s/404s/500s
     leaves that job without tasks (a single-object job still falls back to its session).
 
+    A session need not hold a task for every object of a multi-object job, e.g. a
+    retry session only holds the objects it retried. So the newest finished task of
+    each object is stored per job, and an object the current session leaves out
+    keeps the one stored. A task still in progress isn't stored, as it changes in
+    place.
+
     /api/v1/jobs/states also lists jobs that aren't backup jobs, e.g. backup copy
     jobs, whose sessions hold tasks of their own `sessionType`. These are dropped
     client-side: `sessionTypeFilter=BackupJob` isn't used, as on VBR 13.0.3.63 it
@@ -1097,15 +1140,37 @@ def fetch_backups(client: VeeamClient, name: str) -> Fetched:
     job_objects = _resolve_job_object_names(client, session_to_job)
 
     records: dict[ObjectName, dict[JobId, Mapping[str, object]]] = {}
+    old_last_tasks = _load_last_tasks_cache(client.storage)
+    new_last_tasks: dict[JobId, _CachedJobTasks] = {}
     for session_id, job in session_to_job.items():
         if (job_objects_entry := job_objects.get(job.job_id)) is None:
+            if (cached := old_last_tasks.get(job.job_id)) is not None:
+                new_last_tasks[job.job_id] = cached
             continue
-        tasks = _newest_task_per_object(_session_tasks(client, session_id), job_objects_entry.names)
+        resolved_names = job_objects_entry.names
+        tasks = _newest_task_per_object(_session_tasks(client, session_id), resolved_names)
+        if len(resolved_names) > 1:
+            cached = old_last_tasks.get(job.job_id)
+            stored = _newest_task_per_object(
+                _parse_backup_tasks(cached.tasks.values() if cached else ()), resolved_names
+            )
+            finished = _merge_newest(
+                stored, {name: task for name, task in tasks.items() if task.state == "Stopped"}
+            )
+            tasks = _merge_newest(stored, tasks)
+            new_last_tasks[job.job_id] = _CachedJobTasks(
+                tasks={object_name: task.record for object_name, task in finished.items()}
+            )
         for object_name, task in tasks.items():
             records.setdefault(object_name, {})[job.job_id] = {
                 **task.record,
                 "jobName": job.job_name,
             }
+
+    client.storage.write(
+        LAST_TASKS_STORAGE_KEY,
+        json.dumps({job_id: entry.model_dump() for job_id, entry in new_last_tasks.items()}),
+    )
 
     # Single-object jobs whose session has no task at all (e.g. the
     # Linux/Windows Agent Backup gap) fall back to the job's own session: with only

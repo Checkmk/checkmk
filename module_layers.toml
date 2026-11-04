@@ -405,6 +405,7 @@ allows = []
 [components."cmk.ai_control_plane"]
 allows = [
   "@ccc",
+  "@trace",
   "cmk.ai_control_plane.protocols",
   "cmk.crash",
   "cmk.fastapi",

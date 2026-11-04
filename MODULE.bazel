@@ -695,6 +695,7 @@ http_archive(
         "//omd/packages/net-snmp/patches:0019-Fix-NULL-varbind-in-get-getnext.dif",  # submitted as https://github.com/net-snmp/net-snmp/pull/1027
         "//omd/packages/net-snmp/patches:0020-fix-bad-mib.dif",
         "//omd/packages/net-snmp/patches:0021-import-Counter64-in-NET-SNMP-PASS-MIB.dif",
+        "//omd/packages/net-snmp/patches:0022-Fix-crashes-on-Python-exceptions-during-requests.dif",  # mostly fixed upstream in 5.10.rc1, except stopping at the first pending exception in build_python_varbind()
     ],
     sha256 = "75b59d67e871aaaa31c8cef89ba7d06972782b97736b7e8c3399f36b50a8816f",
     strip_prefix = "net-snmp-5.9.1",

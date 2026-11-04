@@ -1,0 +1,259 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Checkmk <feedback@checkmk.com>
+Date: Wed, 4 Nov 2026 00:00:00 +0000
+Subject: [PATCH] Fix crashes on Python exceptions during requests
+
+The binding calls back into Python code while it processes a request,
+e.g. VarList.__iter__, VarList.__getitem__ or Varbind.__setattr__. A
+Python signal handler that raises (like a SIGALRM based timeout) runs
+in these callbacks, so an exception can become pending at several
+points. The error paths for this were broken:
+
+1. __send_sync_pdu() hands the request PDU to
+   snmp_sess_synch_response(), which always frees it.
+   netsnmp_get_or_getnext() and netsnmp_getbulk() nevertheless called
+   snmp_free_pdu(pdu) again when an exception was pending after the
+   request had been sent (and leaked the response). The double free
+   aborts with "free(): invalid pointer", "free(): invalid size" or
+   "double free or corruption" in snmp_free_var_internals().
+
+2. When PyObject_GetIter() fails, the iterator is NULL, but get,
+   getnext, walk, getbulk and set released it with Py_DECREF()
+   unconditionally, which segfaults. walk also continued with the
+   exception pending and leaked a reference for every varbind while
+   counting them.
+
+3. netsnmp_walk() released the result tuple on errors, but still
+   returned it.
+
+4. build_python_varbind() and its callers kept calling Python code
+   after a callback had raised.
+
+5. All functions returned a value while an exception was pending.
+   CPython turns this into "SystemError: ... returned a result with an
+   exception set", so the caller never got the original exception.
+
+Free the response instead of the request PDU, use Py_XDECREF() for the
+iterators, stop processing at the first pending exception, and return
+NULL in that case, so that the original exception is raised.
+
+---
+ python/netsnmp/client_intf.c | 91 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-------------------
+ 1 file changed, 72 insertions(+), 19 deletions(-)
+
+diff --git a/python/netsnmp/client_intf.c b/python/netsnmp/client_intf.c
+--- a/python/netsnmp/client_intf.c
++++ b/python/netsnmp/client_intf.c
+@@ -1402,17 +1402,22 @@
+     }
+     __get_label_iid(*str_buf, &tag, &iid, getlabel_flag);
+
+-    py_netsnmp_attr_set_string(varbind, "tag", tag, STRLEN(tag));
+-    py_netsnmp_attr_set_string(varbind, "iid", iid, STRLEN(iid));
++    /* Each attribute assignment may call Python code which raises. Do not call
++       further Python code while an exception is pending. */
++    if (py_netsnmp_attr_set_string(varbind, "tag", tag, STRLEN(tag)) < 0 ||
++        py_netsnmp_attr_set_string(varbind, "iid", iid, STRLEN(iid)) < 0)
++        return TYPE_OTHER;
+
+     __get_type_str(type, type_str);
+
+-    py_netsnmp_attr_set_string(varbind, "type", type_str, strlen(type_str));
++    if (py_netsnmp_attr_set_string(varbind, "type", type_str, strlen(type_str)) < 0)
++        return TYPE_OTHER;
+
+     *len = __snprint_value(str_buf, &str_buf_len, vars, tp, type,
+                            sprintval_flag);
+     (*str_buf)[*len] = '\0';
+-    py_netsnmp_attr_set_bytes(varbind, "val", *str_buf, *len);
++    if (py_netsnmp_attr_set_bytes(varbind, "val", *str_buf, *len) < 0)
++        return TYPE_OTHER;
+     return type;
+ }
+
+@@ -1513,7 +1518,7 @@
+ 	Py_DECREF(varbind);
+       }
+
+-      Py_DECREF(varlist_iter);
++      Py_XDECREF(varlist_iter);
+
+       if (PyErr_Occurred()) {
+ 	/* propagate error */
+@@ -1573,6 +1578,10 @@
+       }
+       type = build_python_varbind(varbind, vars, varlist_ind, sprintval_flag,
+                                   &len, &str_buf, getlabel_flag);
++      if (PyErr_Occurred()) {
++        Py_DECREF(varbind);
++        break;
++      }
+       if (type != TYPE_OTHER) {
+           /* save in return tuple as well */
+           if ((type == SNMP_ENDOFMIBVIEW) ||
+@@ -1597,12 +1606,12 @@
+ 		       NETSNMP_DS_LIB_OID_OUTPUT_FORMAT,
+ 		       old_format);
+
++    /* pdu has already been freed by __send_sync_pdu, only the response is
++       left to release - also when a Python exception is pending */
+     if (PyErr_Occurred()) {
+       /* propagate error */
+       if (verbose)
+         printf("error: get: unknown python error");
+-      snmp_free_pdu(pdu);
+-      goto done;
+     }
+
+     if (response)
+@@ -1613,6 +1622,12 @@
+   free(oid_arr);
+   if (str_buf != NULL)
+      netsnmp_free(str_buf);
++  /* An exception is pending, e.g. raised by a signal handler in one of the
++     callbacks into Python code. Raise it instead of returning a value. */
++  if (PyErr_Occurred()) {
++    Py_XDECREF(val_tuple);
++    return NULL;
++  }
+   return (val_tuple ? val_tuple : Py_BuildValue(""));
+ }
+
+@@ -1706,8 +1721,15 @@
+     varlist_len = 0;
+     while (varlist_iter && (varbind = PyIter_Next(varlist_iter))) {
+         varlist_len++;
++        Py_DECREF(varbind);
++    }
++    Py_XDECREF(varlist_iter);
++
++    if (PyErr_Occurred()) {
++      snmp_free_pdu(pdu);
++      varlist_len = 0;
++      goto done;
+     }
+-    Py_DECREF(varlist_iter);
+
+     oid_arr_len              = calloc(varlist_len, sizeof(*oid_arr_len));
+     oid_arr_broken_check_len = calloc(varlist_len,
+@@ -1868,14 +1890,20 @@
+               }
+
+               varbind = py_netsnmp_construct_varbind();
+-              if (varbind == NULL)
++              if (varbind == NULL) {
++                notdone = 0;
+                 break;
++              }
+
+-              if (varbind && build_python_varbind(varbind, vars, varlist_ind,
+-                                       sprintval_flag, &len, &str_buf, getlabel_flag) !=
+-                  TYPE_OTHER) {
++              int vb_type = build_python_varbind(varbind, vars, varlist_ind,
++                                       sprintval_flag, &len, &str_buf, getlabel_flag);
++              if (PyErr_Occurred()) {
++                  Py_DECREF(varbind);
++                  notdone = 0;
++                  break;
++              }
+
+-                  py_netsnmp_attr_set_bytes(varbind, "val", str_buf, len);
++              if (vb_type != TYPE_OTHER) {
+
+                   /* push the varbind onto the return varbinds */
+                   PyList_Append(varbinds, varbind);
+@@ -1916,7 +1944,7 @@
+       /* propagate error */
+       if (verbose)
+ 	printf("error: walk response processing: unknown python error");
+-      Py_DECREF(val_tuple);
++      Py_CLEAR(val_tuple);
+     }
+   }
+
+@@ -1932,6 +1960,12 @@
+   free(oid_arr_broken_check);
+   if (str_buf != NULL)
+      netsnmp_free(str_buf);
++  /* An exception is pending, e.g. raised by a signal handler in one of the
++     callbacks into Python code. Raise it instead of returning a value. */
++  if (PyErr_Occurred()) {
++    Py_XDECREF(val_tuple);
++    return NULL;
++  }
+   return (val_tuple ? val_tuple : Py_BuildValue(""));
+ }
+
+@@ -2035,7 +2069,7 @@
+ 	Py_DECREF(varbind);
+       }
+
+-      Py_DECREF(varbinds_iter);
++      Py_XDECREF(varbinds_iter);
+
+       if (PyErr_Occurred()) {
+ 	/* propagate error */
+@@ -2088,7 +2122,8 @@
+             /* propagate error */
+             if (verbose)
+                 printf("error: bulk: deleting old varbinds failed\n");
+-            snmp_free_pdu(pdu);
++            /* pdu has already been freed by __send_sync_pdu */
++            snmp_free_pdu(response);
+             goto done;
+         }
+
+@@ -2100,8 +2135,14 @@
+ 	      if (varbind == NULL)
+ 	        break;
+
+-          if (varbind && build_python_varbind(varbind, vars, varbind_ind,
+-                              sprintval_flag, &len, &str_buf, getlabel_flag) != TYPE_OTHER) {
++          int vb_type = build_python_varbind(varbind, vars, varbind_ind,
++                              sprintval_flag, &len, &str_buf, getlabel_flag);
++          if (PyErr_Occurred()) {
++            Py_DECREF(varbind);
++            break;
++          }
++
++          if (vb_type != TYPE_OTHER) {
+
+             /* push varbind onto varbinds */
+ 	    PyList_Append(varbinds, varbind);
+@@ -2150,6 +2191,12 @@
+   free(oid_arr);
+   if (str_buf != NULL)
+      netsnmp_free(str_buf);
++  /* An exception is pending, e.g. raised by a signal handler in one of the
++     callbacks into Python code. Raise it instead of returning a value. */
++  if (PyErr_Occurred()) {
++    Py_XDECREF(val_tuple);
++    return NULL;
++  }
+   return (val_tuple ? val_tuple : Py_BuildValue(""));
+ }
+
+@@ -2265,7 +2312,7 @@
+ 	Py_DECREF(varbind);
+       }
+
+-      Py_DECREF(varlist_iter);
++      Py_XDECREF(varlist_iter);
+
+       if (PyErr_Occurred()) {
+ 	/* propagate error */
+@@ -2292,6 +2339,12 @@
+   Py_XDECREF(varbind);
+   free(oid_arr);
+ #endif  /* NETSNMP_NO_WRITE_SUPPORT */
++  /* An exception is pending, e.g. raised by a signal handler in one of the
++     callbacks into Python code. Raise it instead of returning a value. */
++  if (PyErr_Occurred()) {
++    Py_XDECREF(ret);
++    return NULL;
++  }
+   return (ret ? ret : Py_BuildValue(""));
+ }
+
+--
+2.43.0

@@ -22,6 +22,8 @@ from typing import TypedDict
 VAR_CONNECTIONS = "maps_connections"
 VAR_LOG_LEVEL = "maps_log_level"
 VAR_STATE_REFRESH_INTERVAL = "maps_state_refresh_interval"
+# Seconds. The daemon keeps the states it fetched for polls that long.
+MAX_STATE_REFRESH_INTERVAL = 300
 
 # Prepared Livestatus site specs — maps.d/sitespecs.mk.
 VAR_SITE_SPECS = "maps_site_specs"

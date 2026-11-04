@@ -65,6 +65,7 @@ from cmk.maps.backend.schemas.stream import (
 from cmk.maps.backend.schemas.topology import TopologyNode
 from cmk.maps.backend.services import map_service, settings_service, state_service
 from cmk.maps.backend.services.map_service import LinkSource
+from cmk.maps.shared.config_vars import MAX_STATE_REFRESH_INTERVAL
 
 logger = logging.getLogger(__name__)
 
@@ -110,13 +111,12 @@ class _Flight:
 _FETCHED_MAX_OBJECTS = 100_000
 
 # The latest states per (map, subscriber group), so the viewers that poll share
-# one fetch per interval with each other and with the map's stream. Kept no
-# longer than the longest state refresh interval.
+# one fetch per interval with each other and with the map's stream.
 _fetched: TtlCache[_FetchKey, _Fetched] = TtlCache(
     maxsize=256,
     weigh=lambda fetched: fetched.objects,
     maxweight=_FETCHED_MAX_OBJECTS,
-    expire_after=300,
+    expire_after=MAX_STATE_REFRESH_INTERVAL,
 )
 # The fetch under way per (map, subscriber group). Keyed by the config's identity
 # too, so a poll after the map was registered anew does not get what a fetch of

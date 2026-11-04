@@ -13,6 +13,8 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from cmk.maps.shared.config_vars import MAX_STATE_REFRESH_INTERVAL
+
 LogLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
 
@@ -24,7 +26,7 @@ class SystemSettings(BaseModel):
     # the effective value. ``None`` means "not set in WATO" → the daemon uses its
     # env-seeded default (``core/config.py`` ``Settings``).
     log_level: LogLevel | None = None
-    state_refresh_interval: Annotated[int, Field(ge=1, le=300)] | None = None
+    state_refresh_interval: Annotated[int, Field(ge=1, le=MAX_STATE_REFRESH_INTERVAL)] | None = None
 
 
 class DaemonRuntime(BaseModel):

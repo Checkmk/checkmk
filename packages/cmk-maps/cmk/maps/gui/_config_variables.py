@@ -58,6 +58,7 @@ from cmk.maps.gui._config_domain import (
 from cmk.maps.gui._settings import connection_choices, monitoring_core
 from cmk.maps.gui.form_specs.connections import connections_list_spec
 from cmk.maps.gui.form_specs.global_settings import map_defaults_spec, object_defaults_spec
+from cmk.maps.shared.config_vars import MAX_STATE_REFRESH_INTERVAL
 from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import (
     DefaultValue,
@@ -125,7 +126,7 @@ def state_refresh_interval_form_spec() -> Integer:
             "monitoring backend."
         ),
         unit_symbol="seconds",
-        custom_validate=[NumberInRange(min_value=1, max_value=300)],
+        custom_validate=[NumberInRange(min_value=1, max_value=MAX_STATE_REFRESH_INTERVAL)],
         prefill=DefaultValue(DEFAULT_STATE_REFRESH_INTERVAL),
     )
 

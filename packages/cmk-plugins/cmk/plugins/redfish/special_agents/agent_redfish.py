@@ -33,6 +33,7 @@ from redfish.rest.v1 import (
     RestResponse,
     RetriesExhaustedError,
     ServerDownOrUnreachableError,
+    SessionCreationError,
 )
 
 from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
@@ -1025,6 +1026,8 @@ def get_session(args: argparse.Namespace) -> RedfishData:
         raise CannotRecover(f"Too many retries for connection attempt: {excp}") from excp
     except InvalidCredentialsError as excp:
         raise CannotRecover(str(excp))
+    except SessionCreationError as excp:
+        raise CannotRecover(f"Login failed: {excp}") from excp
 
     return redfishobj
 

@@ -211,7 +211,7 @@ const ariaLabel = computed<string>(() =>
 .cmk-state-count-bar__legend {
   display: flex;
   flex-flow: row wrap;
-  gap: var(--dimension-3) var(--spacing);
+  gap: var(--dimension-3) calc(var(--spacing) + var(--dimension-4));
   padding: 0;
   margin: 0;
   list-style: none;

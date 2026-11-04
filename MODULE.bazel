@@ -858,8 +858,6 @@ include("//bazel/module:js.MODULE.bazel")
 
 include("//bazel/module:oci.MODULE.bazel")
 
-include("//bazel/module:gcc.MODULE.bazel")
-
 include("//bazel/module:xwin.MODULE.bazel")
 
 include("//bazel/module:wnx.MODULE.bazel")

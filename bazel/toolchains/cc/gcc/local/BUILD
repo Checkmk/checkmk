@@ -129,16 +129,3 @@ toolchain(
     toolchain = ":linux_x86_64_toolchain",
     toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
 )
-
-# Unified targets that select the appropriate cpp libs based on gcc_path flag
-# Repositories are defined in //bazel/module/gcc.MODULE.bazel
-
-# ELF files only - for patchelf processing
-filegroup(
-    name = "cpp_libs_elf",
-    srcs = select({
-        ":opt": ["@cpp_libs_opt//:cpp_libs_elf"],
-        "//conditions:default": ["@cpp_libs_usr//:cpp_libs_elf"],
-    }),
-    visibility = ["//visibility:public"],
-)

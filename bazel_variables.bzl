@@ -18,6 +18,13 @@ UV_VENV_ARGS = UV_PYPI_PROXY_ARGS + select({
     "//conditions:default": [],
 })
 
+# uv pip compile arguments for the requirement locks: the defaults of rules_uv without
+# --emit-index-url, so the locks stay the same whichever index CI resolves them against.
+UV_PIP_COMPILE_ARGS = [
+    "--generate-hashes",
+    "--no-strip-extras",
+] + UV_PYPI_PROXY_ARGS
+
 # TODO: Re-work this with edition_deps + check for duplicate in cmk/BUILD
 edition_python_deps = {
     "cre": [],

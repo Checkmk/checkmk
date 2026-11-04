@@ -79,6 +79,10 @@ pip.parse(
         # See also:  https://github.com/bazelbuild/rules_python/issues/1463
         "CC": "gcc-14",
     },
+    # The wheels come from pypi.org, or from PIP_INDEX_URL when set. CI sets it to the
+    # Nexus PyPI proxy (see .bazelrc), so pypi.org outages do not fail the fetches there.
+    envsubst = ["PIP_INDEX_URL"],
+    extra_pip_args = ["--index-url=${PIP_INDEX_URL:-https://pypi.org/simple}"],
     hub_name = "cmk_requirements",
     python_version = PYTHON_VERSION,
     requirements_by_platform = {

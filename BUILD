@@ -7,7 +7,7 @@ load("@repo_license//:license.bzl", "REPO_LICENSE")
 load("@rules_proto//proto:defs.bzl", "proto_library")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
 load("@rules_uv//uv:venv.bzl", "create_venv")
-load("//:bazel_variables.bzl", "UV_VENV_ARGS")
+load("//:bazel_variables.bzl", "UV_PIP_COMPILE_ARGS", "UV_VENV_ARGS")
 load("//bazel/rules:copy_to_directory.bzl", "copy_to_directory")
 
 exports_files(
@@ -144,6 +144,7 @@ REQUIREMENTS_CMK = [
 
 pip_compile(
     name = "requirements_runtime",
+    args = UV_PIP_COMPILE_ARGS,
     data = REQUIREMENTS_CMK,
     requirements_in = ":_requirements_runtime.txt",
     requirements_txt = "@//:requirements_runtime_lock.txt",
@@ -153,6 +154,7 @@ pip_compile(
 
 pip_compile(
     name = "requirements_all",
+    args = UV_PIP_COMPILE_ARGS,
     data = [
         "//:requirements_dev.txt",
     ] + REQUIREMENTS_CMK,

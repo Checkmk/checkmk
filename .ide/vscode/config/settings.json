@@ -237,7 +237,10 @@
         "**/.git/objects/**": true,
         "**/.git/subtree-cache/**": true,
         "**/container_shadow_workspace_local/**": true,
-        "**/*cache*/**": true
+        "**/*cache*/**": true,
+        "**/target/**": true,
+        "**/.git/modules/**": true,
+        "**/tracevenv/**": true
       },
       "search.exclude": {
         "**/bazel-bin": true,

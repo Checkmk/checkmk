@@ -7,6 +7,7 @@ py_cmk_test(
     srcs = glob(["**/*.py"]),
     deps = [
         "//packages/cmk-plugins/cmk/plugins/bazel",
+        requirement("requests"),
         requirement("time-machine"),
     ],
 )

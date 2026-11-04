@@ -8,9 +8,11 @@ import json
 from collections.abc import Callable
 from http import HTTPStatus
 from pathlib import Path
+from typing import override
 from unittest import mock
 
 import pytest
+import requests
 
 from cmk.plugins.bazel.lib.agent import agent_bazel_cache_main, parse_arguments, VersionCache
 from cmk.server_side_programs.v1 import Storage
@@ -714,3 +716,32 @@ def test_bazel_cache_agent_output_has_bazel_cache_metrics_http(
     assert data["http_response_size_bytes_bucket_code_200_handler_metrics_method_GET_le_100"] == "0"
     assert data["http_response_size_bytes_count_code_200_handler_metrics_method_GET"] == "972"
     assert data["http_response_size_bytes_sum_code_200_handler_metrics_method_GET"] == "4.4765e+06"
+
+
+class _RateLimitedResponse(MockResponse):
+    status_code = HTTPStatus.FORBIDDEN
+
+    @override
+    @staticmethod
+    def raise_for_status() -> None:
+        raise requests.HTTPError("403 Client Error: rate limit exceeded")
+
+
+def rate_limited_tags_get(url: str, **kwargs: object) -> MockResponse:
+    if "tags" in url:
+        return _RateLimitedResponse({"message": "API rate limit exceeded"})
+    return default_requests_mock_get(url, **kwargs)
+
+
+@pytest.mark.xfail(strict=True, raises=requests.HTTPError, reason="Crash group 4705")
+@mock.patch("cmk.plugins.bazel.lib.agent.requests.get", rate_limited_tags_get)
+def test_bazel_cache_agent_output_without_version_when_tags_are_rate_limited(
+    capsys: pytest.CaptureFixture[str],
+    patched_environment: None,  # noqa: ARG001
+) -> None:
+    agent_bazel_cache_main(args=parse_arguments(["--host", "bazel-cache.tld"]))
+
+    output = capsys.readouterr().out.rstrip().split("\n")
+    assert "<<<bazel_cache_status:sep(0)>>>" in output
+    assert "<<<bazel_cache_metrics:sep(0)>>>" in output
+    assert "<<<bazel_cache_version:sep(0)>>>" not in output

@@ -94,6 +94,12 @@ class _DummyAutomationEngineSystemExit:
         raise SystemExit(1)
 
 
+_INACTIVE_RELOADER_CONFIG = ReloaderConfig(
+    active=False,
+    poll_interval=1.0,
+    cooldown_interval=5.0,
+)
+
 _EXAMPLE_AUTOMATION_PAYLOAD = AutomationPayload(
     name="dummy", args=[], stdin="", log_level=logging.INFO
 ).model_dump()
@@ -248,6 +254,32 @@ def test_automation_reloads_if_necessary(mocker: MockerFixture, cache: Cache) ->
         mock_reload_config.call_count == 2
     )
     mock_clear_caches_before_each_call.assert_called_once()
+
+
+def test_automation_retries_failed_reload(mocker: MockerFixture, cache: Cache) -> None:
+    mock_reload_config = mocker.MagicMock(side_effect=[None, RuntimeError("failed reload"), None])
+    with _make_test_client(
+        _DummyAutomationEngineSuccess(),
+        cache,
+        mock_reload_config,
+        lambda ruleset_matcher: None,
+        reloader_config=_INACTIVE_RELOADER_CONFIG,
+    ) as client:
+        cache.store_last_detected_change(time.time())
+        failed = AutomationResponse.model_validate(
+            client.post("/automation", json=_EXAMPLE_AUTOMATION_PAYLOAD).json()
+        )
+        resp = client.post("/automation", json=_EXAMPLE_AUTOMATION_PAYLOAD)
+
+    assert failed.serialized_result_or_error_code == AutomationError.UNKNOWN_ERROR
+    assert (
+        AutomationResponse.model_validate(resp.json()).serialized_result_or_error_code
+        == "dummy_serialized"
+    )
+    assert (
+        # once at application startup, then by both automations
+        mock_reload_config.call_count == 3
+    ), "The failed reload counts as loaded"
 
 
 def test_health_check(cache: Cache) -> None:

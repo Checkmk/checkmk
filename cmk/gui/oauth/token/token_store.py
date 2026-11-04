@@ -215,23 +215,18 @@ class TokenStore:
         with write_transaction(self._connection):
             reused = self._connection.execute(
                 """
-                UPDATE grants SET expires_at = :grant_expires_at
-                WHERE grant_id = (
-                    SELECT grant_id FROM grants
-                    WHERE user_id = :user_id AND client_id = :client_id
-                        AND resource IS :resource AND scope = :scope
-                        AND expires_at > :now
-                        AND NOT EXISTS (
-                            SELECT 1 FROM refresh_tokens
-                            WHERE grant_id = grants.grant_id
-                        )
-                    ORDER BY created_at DESC
-                    LIMIT 1
-                )
-                RETURNING grant_id
+                SELECT grant_id FROM grants
+                WHERE user_id = :user_id AND client_id = :client_id
+                    AND resource IS :resource AND scope = :scope
+                    AND expires_at > :now
+                    AND NOT EXISTS (
+                        SELECT 1 FROM refresh_tokens
+                        WHERE grant_id = grants.grant_id
+                    )
+                ORDER BY created_at DESC
+                LIMIT 1
                 """,
                 {
-                    "grant_expires_at": grant_expires_at,
                     "user_id": user_id,
                     "client_id": client_id,
                     "resource": resource,
@@ -241,6 +236,10 @@ class TokenStore:
             ).fetchone()
             if reused is not None:
                 grant_id = reused["grant_id"]
+                self._connection.execute(
+                    "UPDATE grants SET expires_at = ? WHERE grant_id = ?",
+                    (grant_expires_at, grant_id),
+                )
             else:
                 inserted = self._insert_grant(
                     user_id,
@@ -290,14 +289,16 @@ class TokenStore:
                 WHERE token_hash = :token_hash
                     AND rotated_at IS NULL
                     AND expires_at > :now
-                RETURNING grant_id
                 """,
                 {"now": now, "token_hash": token_hash},
-            ).fetchall()
-            if not rotated:
+            )
+            if rotated.rowcount == 0:
                 return None
+            (grant_id,) = self._connection.execute(
+                "SELECT grant_id FROM refresh_tokens WHERE token_hash = ?", (token_hash,)
+            ).fetchone()
             return self._issue_for_grant(
-                rotated[0]["grant_id"],
+                grant_id,
                 now,
                 refresh_token_expires_at_timestamp,
                 access_token_expires_at_timestamp,
@@ -478,15 +479,18 @@ class TokenStore:
     ) -> IssuedAccessToken:
         """Must run inside a write_transaction."""
         access_token = _mint_token(_ACCESS_TOKEN_PREFIX)
-        (stored_expires_at,) = self._connection.execute(
+        token_hash = _access_token_hash(access_token)
+        self._connection.execute(
             """
             INSERT INTO tokens
                 (token_hash, user_id, issued_at, expires_at, resource, scope, client_id, grant_id)
             SELECT ?, user_id, ?, MIN(?, expires_at), resource, scope, client_id, grant_id
             FROM grants WHERE grant_id = ?
-            RETURNING expires_at
             """,
-            (_access_token_hash(access_token), now, access_token_expires_at, grant_id),
+            (token_hash, now, access_token_expires_at, grant_id),
+        )
+        (stored_expires_at,) = self._connection.execute(
+            "SELECT expires_at FROM tokens WHERE token_hash = ?", (token_hash,)
         ).fetchone()
         return IssuedAccessToken(access=access_token, expires_in=stored_expires_at - now)
 
@@ -496,13 +500,17 @@ class TokenStore:
         Must run inside a write_transaction, after the issuing step inserted
         its own tokens. Tokens issued before grants existed have no grant_id.
         """
+        refresh_token_cutoff = now - int(_REFRESH_TOKEN_RETENTION.total_seconds())
         expired = self._connection.execute(
-            "DELETE FROM tokens WHERE expires_at <= ? RETURNING grant_id", (now,)
+            "SELECT grant_id FROM tokens WHERE expires_at <= ?", (now,)
         ).fetchall()
+        self._connection.execute("DELETE FROM tokens WHERE expires_at <= ?", (now,))
         purged = self._connection.execute(
-            "DELETE FROM refresh_tokens WHERE expires_at < ? RETURNING grant_id",
-            (now - int(_REFRESH_TOKEN_RETENTION.total_seconds()),),
+            "SELECT grant_id FROM refresh_tokens WHERE expires_at < ?", (refresh_token_cutoff,)
         ).fetchall()
+        self._connection.execute(
+            "DELETE FROM refresh_tokens WHERE expires_at < ?", (refresh_token_cutoff,)
+        )
         # Only the grants that just lost a token can have become empty.
         self._connection.executemany(
             """

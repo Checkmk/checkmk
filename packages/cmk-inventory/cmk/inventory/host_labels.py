@@ -27,8 +27,8 @@ class InventorizedHostLabelsStore:
             serializer=_LabelsSerializer(),
         )
 
-    def load(self, *, debug: bool) -> Mapping[str, str]:
-        return self._store.read_obj(default={}, debug=debug)
+    def load(self) -> Mapping[str, str]:
+        return self._store.read_obj(default={}, debug=False)
 
     def save(self, labels: Mapping[str, str]) -> None:
         self._store.path.parent.mkdir(parents=True, exist_ok=True)

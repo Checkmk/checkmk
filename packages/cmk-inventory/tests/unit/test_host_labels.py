@@ -10,11 +10,11 @@ from cmk.inventory.host_labels import InventorizedHostLabelsStore
 
 
 def test_inventorized_host_labels_store_load_default(tmp_path: Path) -> None:
-    assert InventorizedHostLabelsStore(HostName("host"), tmp_path).load(debug=False) == {}
+    assert InventorizedHostLabelsStore(HostName("host"), tmp_path).load() == {}
 
 
 def test_inventorized_host_labels_store_save_load_roundtrip(tmp_path: Path) -> None:
     InventorizedHostLabelsStore(HostName("host"), tmp_path).save({"cmk/inventory/product": "foo"})
-    assert InventorizedHostLabelsStore(HostName("host"), tmp_path).load(debug=False) == {
+    assert InventorizedHostLabelsStore(HostName("host"), tmp_path).load() == {
         "cmk/inventory/product": "foo"
     }

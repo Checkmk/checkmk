@@ -55,10 +55,10 @@ def rename(
     return list(actions)
 
 
-def load_tree_from_tree_path(tree_path: TreePath, *, debug: bool) -> ImmutableTree:
-    if raw_tree := store.load_text_from_file(tree_path.path, debug=debug):
+def load_tree_from_tree_path(tree_path: TreePath) -> ImmutableTree:
+    if raw_tree := store.load_text_from_file(tree_path.path, debug=False):
         return deserialize_tree(json.loads(raw_tree))
-    if raw_tree := store.load_object_from_file(tree_path.legacy, default=None, debug=debug):
+    if raw_tree := store.load_object_from_file(tree_path.legacy, default=None, debug=False):
         return deserialize_tree(raw_tree)
     return ImmutableTree()
 

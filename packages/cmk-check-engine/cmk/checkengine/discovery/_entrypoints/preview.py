@@ -150,7 +150,7 @@ def get_check_preview(
                     on_error=on_error,
                     inventorized_host_labels=InventorizedHostLabelsStore(
                         node_name, inventorized_host_labels_dir
-                    ).load(debug=debug),
+                    ).load(),
                 )
                 for node_name in cluster_nodes
             },
@@ -169,7 +169,7 @@ def get_check_preview(
                 on_error=on_error,
                 inventorized_host_labels=InventorizedHostLabelsStore(
                     host_name, inventorized_host_labels_dir
-                ).load(debug=debug),
+                ).load(),
             ),
         )
         kept_labels = {host_name: host_labels.present}

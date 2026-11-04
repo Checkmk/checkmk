@@ -1622,9 +1622,9 @@ def test_execute_active_check_inventory_stores_picked_labels(tmp_path: Path) -> 
 
     _execute_active_check_inventory(host_name, tmp_path)
 
-    assert InventorizedHostLabelsStore(host_name, tmp_path / "inventorized_host_labels").load(
-        debug=True
-    ) == {"cmk/inventory/product": "foo"}
+    assert InventorizedHostLabelsStore(host_name, tmp_path / "inventorized_host_labels").load() == {
+        "cmk/inventory/product": "foo"
+    }
 
 
 def test_execute_active_check_inventory_keeps_labels_when_processing_fails(tmp_path: Path) -> None:
@@ -1634,7 +1634,7 @@ def test_execute_active_check_inventory_keeps_labels_when_processing_fails(tmp_p
 
     _execute_active_check_inventory(host_name, tmp_path, raw_data=result.Error(Exception()))
 
-    assert store.load(debug=True) == {"cmk/inventory/product": "bar"}
+    assert store.load() == {"cmk/inventory/product": "bar"}
 
 
 def test_execute_active_check_inventory_reports_labels_not_accepted_yet(tmp_path: Path) -> None:

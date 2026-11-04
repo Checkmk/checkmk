@@ -172,7 +172,7 @@ def _commandline_discovery_on_host(
             on_error=on_error,
             inventorized_host_labels=InventorizedHostLabelsStore(
                 real_host_name, inventorized_host_labels_dir
-            ).load(debug=debug),
+            ).load(),
         ),
     )
 

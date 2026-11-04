@@ -70,7 +70,7 @@ def execute_active_check_inventory(
     debug: bool,
 ) -> Sequence[ActiveCheckResult]:
     inv_store = InventoryStore(cmk.utils.paths.omd_root)
-    previous_tree = inv_store.load_previous_inventory_tree(host_name=host_name, debug=debug)
+    previous_tree = inv_store.load_previous_inventory_tree(host_name=host_name)
 
     if host_name in hosts_config.clusters:
         result = inventory.inventorize_cluster(
@@ -114,7 +114,6 @@ def execute_active_check_inventory(
             host_name=host_name,
             previous_tree=previous_tree,
             tree=result.inventory_tree,
-            debug=debug,
         ):
             console.verbose(message)
 
@@ -126,7 +125,7 @@ def execute_active_check_inventory(
         labels_store.save(pick_labels(result.inventory_tree, label_picker_configs))
     label_results = inventory.check_inventorized_host_labels(
         parameters=parameters,
-        picked=labels_store.load(debug=debug),
+        picked=labels_store.load(),
         accepted={
             label.name: label.value
             for label in DiscoveredHostLabelsStore(host_name, discovered_host_labels_dir).load()

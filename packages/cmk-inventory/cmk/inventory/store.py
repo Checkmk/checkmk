@@ -71,7 +71,7 @@ class InventoryStore:
         self.inv_paths = InventoryPaths(omd_root)
 
     def load_inventory_tree(self, *, host_name: HostName) -> ImmutableTree:
-        return load_tree_from_tree_path(self.inv_paths.inventory_tree(host_name), debug=False)
+        return load_tree_from_tree_path(self.inv_paths.inventory_tree(host_name))
 
     def save_inventory_tree(
         self, *, host_name: HostName, tree: MutableTree | ImmutableTree, meta: SDMeta
@@ -98,7 +98,7 @@ class InventoryStore:
         tree_path_gz.legacy.unlink(missing_ok=True)
 
     def load_status_data_tree(self, *, host_name: HostName) -> ImmutableTree:
-        return load_tree_from_tree_path(self.inv_paths.status_data_tree(host_name), debug=False)
+        return load_tree_from_tree_path(self.inv_paths.status_data_tree(host_name))
 
     def save_status_data_tree(
         self, *, host_name: HostName, tree: MutableTree | ImmutableTree
@@ -131,8 +131,8 @@ class InventoryStore:
         )
         return merged_tree if tree_filters is None else filter_tree(merged_tree, tree_filters)
 
-    def load_previous_inventory_tree(self, *, host_name: HostName, debug: bool) -> ImmutableTree:
-        if tree := load_tree_from_tree_path(self.inv_paths.inventory_tree(host_name), debug=debug):
+    def load_previous_inventory_tree(self, *, host_name: HostName) -> ImmutableTree:
+        if tree := load_tree_from_tree_path(self.inv_paths.inventory_tree(host_name)):
             return tree
 
         try:
@@ -144,11 +144,11 @@ class InventoryStore:
             return ImmutableTree()
 
         return load_tree_from_tree_path(
-            TreePath.from_archive_or_delta_cache_file_path(latest_archive_file_path), debug=debug
+            TreePath.from_archive_or_delta_cache_file_path(latest_archive_file_path)
         )
 
-    def archive_inventory_tree(self, *, host_name: HostName, debug: bool) -> None:
-        archive_inventory_tree(self.inv_paths, host_name, debug=debug)
+    def archive_inventory_tree(self, *, host_name: HostName) -> None:
+        archive_inventory_tree(self.inv_paths, host_name, debug=False)
 
     def save_if_changed(
         self,
@@ -156,13 +156,12 @@ class InventoryStore:
         host_name: HostName,
         previous_tree: ImmutableTree,
         tree: MutableTree,
-        debug: bool,
     ) -> Sequence[str]:
         actions = _get_save_tree_actions(previous_tree=previous_tree, inventory_tree=tree)
         messages = list(actions.messages)
         if actions.do_archive:
             messages.append("Archive current inventory tree.")
-            self.archive_inventory_tree(host_name=host_name, debug=debug)
+            self.archive_inventory_tree(host_name=host_name)
         if actions.do_save:
             messages.append("Save new inventory tree.")
             self.save_inventory_tree(

@@ -201,7 +201,7 @@ class HistoryStore:
 
         key = (path.tree_path.path, path.tree_path.legacy)
         if key not in self._lookup:
-            self._lookup[key] = load_tree_from_tree_path(path.tree_path, debug=False)
+            self._lookup[key] = load_tree_from_tree_path(path.tree_path)
         return self._lookup[key]
 
     def _load_history_entry(

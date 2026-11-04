@@ -47,6 +47,7 @@ import { getEffectiveObjectType } from '@/maps/utils/naming'
 import { parsePerfData } from '@/maps/utils/perf'
 import { isProblemState } from '@/maps/utils/problemState'
 import { stateRank } from '@/maps/utils/stateColors'
+import { claimStreamTab } from '@/maps/utils/streamTab'
 
 type MapEvent = FastApiEvent<paths, '/api/v1/sse/maps/{name}'>
 type MapSavedListener = (mapName: string, sig: string) => void
@@ -242,6 +243,8 @@ export class MapStatesService {
   private handOverSeq = 0
   private savedRegistrations: Promise<void> = Promise.resolve()
   private readonly mapSavedListeners = new Set<MapSavedListener>()
+  // Lets a stream take over the slot of this tab's probe or reloaded page.
+  private readonly tab = claimStreamTab()
   private connectRun = 0
   private folderTreeIndex = new Map<string, FolderTreeNode>()
   /** Previous foldertree host states, for deriving notifications. */
@@ -734,7 +737,7 @@ export class MapStatesService {
 
   private async openStream(mapName: string): Promise<void> {
     this.stream = createEventStream<MapEvent>({
-      url: () => resolveStreamUrl(mapName),
+      url: () => resolveStreamUrl(mapName, this.tab.name),
       handlers: {
         state_update: (msg) => this.applyStateUpdate(msg),
         topology_update: (msg) => this.applyTopologyUpdate(msg),
@@ -742,6 +745,10 @@ export class MapStatesService {
           for (const listener of this.mapSavedListeners) {
             listener(msg.map, msg.sig)
           }
+        },
+        stream_taken: () => {
+          this.tab.rename()
+          void this.stream?.reconnect()
         }
       },
       poll: {

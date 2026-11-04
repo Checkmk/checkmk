@@ -71,7 +71,14 @@ class MapSavedMessage(BaseModel):
     sig: str
 
 
+class StreamTakenMessage(BaseModel):
+    """Another page of the browser tab's name took the stream over."""
+
+    type: Literal["stream_taken"] = "stream_taken"
+
+
 # What a client has to be able to handle on the stream.
 StreamMessage = Annotated[
-    StateUpdateMessage | TopologyUpdateMessage | MapSavedMessage, Field(discriminator="type")
+    StateUpdateMessage | TopologyUpdateMessage | MapSavedMessage | StreamTakenMessage,
+    Field(discriminator="type"),
 ]

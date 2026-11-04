@@ -16,6 +16,7 @@ target); the loop is bounded by unsubscribing the sole subscriber from a patched
 """
 
 import asyncio
+import contextlib
 import json
 from collections.abc import Awaitable, Callable, Iterator
 from http import HTTPStatus
@@ -120,6 +121,7 @@ def _clear_stream_state() -> Iterator[None]:
     manager._closed = False  # noqa: SLF001
     states._broadcast_tasks.clear()  # noqa: SLF001
     states._dead_sites_snapshots.clear()  # noqa: SLF001
+    states._tab_streams.clear()  # noqa: SLF001
 
 
 # --------------------------------------------------------------------------- #
@@ -178,6 +180,7 @@ def test_the_api_description_names_each_event_with_the_schema_of_its_data() -> N
         "state_update": "#/components/schemas/StateUpdateMessage",
         "topology_update": "#/components/schemas/TopologyUpdateMessage",
         "map_saved": "#/components/schemas/MapSavedMessage",
+        "stream_taken": "#/components/schemas/StreamTakenMessage",
     }
 
 
@@ -803,6 +806,7 @@ async def _stream_map_b1(
     leave_after_events: int | None = None,
     leave_after_keepalives: int | None = None,
     on_event: Callable[[], None] = lambda: None,
+    tab: str | None = None,
 ) -> bytes:
     """Drives the stream of map b1 as a client that calls on_event for each event it
     receives and leaves once it has received leave_after_events events or
@@ -841,7 +845,7 @@ async def _stream_map_b1(
         "path": "/api/v1/sse/maps/b1",
         "raw_path": b"/api/v1/sse/maps/b1",
         "root_path": "",
-        "query_string": b"",
+        "query_string": f"tab={tab}".encode() if tab else b"",
         "headers": [(b"cookie", f"auth_{_SITE}={user}".encode())],
         "client": ("testclient", 50000),
         "server": ("testserver", 80),
@@ -898,6 +902,102 @@ def test_sse_releases_the_subscriber_and_stream_slot_when_the_client_leaves(
         manager.get_subscriber_count(states._map_key("alice", "b1")),  # noqa: SLF001
         _free_stream_slots("alice"),
     ) == (0, free_slots)
+
+
+_TAB = "tab-0123456789ab"
+
+
+def _hold_stream_slots(user: str, count: int) -> None:
+    for _ in range(count):
+        assert sse_stream_limiter.try_acquire(user)
+
+
+def _release_stream_slots(user: str, count: int) -> None:
+    for _ in range(count):
+        sse_stream_limiter.release(user)
+
+
+async def _open_until_subscribed(app: FastAPI, user: str, tab: str) -> asyncio.Task[bytes]:
+    map_key = states._map_key("alice", "b1")  # noqa: SLF001
+    before = manager.get_subscriber_count(map_key)
+    stream = asyncio.ensure_future(_stream_map_b1(app, user, tab=tab))
+    while manager.get_subscriber_count(map_key) == before:
+        await asyncio.sleep(0)
+    return stream
+
+
+def test_sse_hands_the_slot_of_a_tabs_probe_to_the_stream_that_follows_it(
+    app: FastAPI, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(states, "_KEEPALIVE_INTERVAL", 0.01)
+    map_service.register_map("alice", MapConfig(name="b1"))
+    free_slots = _free_stream_slots("alice")
+    _hold_stream_slots("alice", free_slots - 1)
+
+    async def _probe_then_stream() -> bytes:
+        probe = await _open_until_subscribed(app, "alice", _TAB)
+        received = await _stream_map_b1(app, "alice", tab=_TAB, leave_after_keepalives=1)
+        await probe
+        return received
+
+    try:
+        received = asyncio.run(_probe_then_stream())
+    finally:
+        _release_stream_slots("alice", free_slots - 1)
+
+    assert b": ping\n\n" in received
+    assert _free_stream_slots("alice") == free_slots
+
+
+def test_sse_tells_the_stream_a_tab_took_over_that_it_was_taken(
+    app: FastAPI, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(states, "_KEEPALIVE_INTERVAL", 0.01)
+    map_service.register_map("alice", MapConfig(name="b1"))
+
+    async def _taken_over() -> bytes:
+        held = await _open_until_subscribed(app, "alice", _TAB)
+        await _stream_map_b1(app, "alice", tab=_TAB, leave_after_keepalives=1)
+        return await held
+
+    assert b"event: stream_taken\n" in asyncio.run(_taken_over())
+
+
+def test_sse_refuses_a_stream_of_another_tab_once_the_user_holds_all_slots(
+    client: TestClient,
+) -> None:
+    map_service.register_map("alice", MapConfig(name="b1"))
+    free_slots = _free_stream_slots("alice")
+    _hold_stream_slots("alice", free_slots)
+    try:
+        refused = client.get(f"/api/v1/sse/maps/b1?tab={_TAB}", headers=_session("alice"))
+    finally:
+        _release_stream_slots("alice", free_slots)
+
+    assert refused.status_code == HTTPStatus.TOO_MANY_REQUESTS
+
+
+def test_sse_hands_no_slot_to_another_user_naming_the_same_tab(app: FastAPI) -> None:
+    map_service.register_map("alice", MapConfig(name="b1"))
+    bobs_slots = _free_stream_slots("bob")
+    _hold_stream_slots("bob", bobs_slots)
+
+    async def _bob_after_alice() -> tuple[bytes, bool]:
+        alice = await _open_until_subscribed(app, "alice", _TAB)
+        bob = await _stream_map_b1(app, "bob", tab=_TAB)
+        alice_still_streams = not alice.done()
+        alice.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await alice
+        return bob, alice_still_streams
+
+    try:
+        bob, alice_still_streams = asyncio.run(_bob_after_alice())
+    finally:
+        _release_stream_slots("bob", bobs_slots)
+
+    assert b"Too many concurrent streams" in bob
+    assert alice_still_streams
 
 
 def _overflow_the_subscribers_of_b1() -> None:

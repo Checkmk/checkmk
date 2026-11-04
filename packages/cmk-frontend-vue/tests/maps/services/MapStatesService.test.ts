@@ -312,7 +312,26 @@ describe('MapStatesService — stream URL', () => {
     await store.connectToMap('b')
     const url = new URL(FakeEventSource.instances[0]!.url)
     expect(url.pathname).toMatch(/\/maps\/api\/v1\/sse\/maps\/b$/)
-    expect(url.search).toBe('')
+    expect([...url.searchParams.keys()]).toEqual(['tab'])
+  })
+
+  // The daemon hands the slot of a tab's probe to the stream that follows it.
+  it('names its tab alike on every stream it opens', async () => {
+    const store = newService()
+    await store.connectToMap('b')
+    await store.connectToMap('c')
+    const tabs = FakeEventSource.instances.map((s) => new URL(s.url).searchParams.get('tab'))
+    expect(tabs).toHaveLength(2)
+    expect(tabs[0]).toBe(tabs[1])
+  })
+
+  it('names another tab differently', async () => {
+    await newService().connectToMap('b')
+    await newService().connectToMap('b')
+    const [first, second] = FakeEventSource.instances.map((s) =>
+      new URL(s.url).searchParams.get('tab')
+    )
+    expect(first).not.toBe(second)
   })
 })
 
@@ -486,7 +505,7 @@ describe('MapStatesService — hidden tab', () => {
     setHidden(false)
     await vi.advanceTimersByTimeAsync(0)
     expect(FakeEventSource.instances).toHaveLength(2)
-    expect(FakeEventSource.instances[1]!.url).toMatch(/\/api\/v1\/sse\/maps\/b$/)
+    expect(new URL(FakeEventSource.instances[1]!.url).pathname).toMatch(/\/api\/v1\/sse\/maps\/b$/)
     store.disconnect()
   })
 
@@ -874,5 +893,16 @@ describe('MapStatesService — a saved map', () => {
     FakeEventSource.instances[0]!.emit('map_saved', { type: 'map_saved', map: 'b', sig: 'v2' })
 
     expect(listener).toHaveBeenCalledWith('b', 'v2')
+  })
+
+  it('names its tab anew when another page took the stream', async () => {
+    const store = newService()
+    await store.connectToMap('b', { config_b64: 'x', sig: 'v1' })
+    const tabOf = (source: FakeEventSource) => new URL(source.url).searchParams.get('tab')
+
+    FakeEventSource.instances[0]!.emit('stream_taken', { type: 'stream_taken' })
+
+    await vi.waitFor(() => expect(FakeEventSource.instances).toHaveLength(2))
+    expect(tabOf(FakeEventSource.instances[1]!)).not.toBe(tabOf(FakeEventSource.instances[0]!))
   })
 })

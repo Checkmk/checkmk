@@ -55,6 +55,7 @@
   "tests/maps/map/commands/useObjectActions.test.ts",
   "tests/maps/map/edit/settings/MapSettingsForm.test.ts",
   "tests/maps/map/worldmap/components/WorldMapCanvas.test.ts",
+  "tests/maps/utils/streamTab.test.ts",
   "tests/mode-host-relation-detection/ModeHostRelationDetectionApp.test.ts",
   "tests/sidebar/sidebar.test.ts",
   "tests/trial-mode-selection/TrialModeSelectionApp.test.ts",

@@ -26,10 +26,10 @@ describe('deployment base', () => {
     )
   })
 
-  it('escapes the map name in the stream URL', () => {
+  it('escapes the map name in the stream URL and names the tab', () => {
     servedAt('http://mon.example/heute/check_mk/maps.py')
-    expect(resolveStreamUrl('dc 1')).toBe(
-      'http://mon.example/heute/check_mk/maps/api/v1/sse/maps/dc%201'
+    expect(resolveStreamUrl('dc 1', 'tab-1')).toBe(
+      'http://mon.example/heute/check_mk/maps/api/v1/sse/maps/dc%201?tab=tab-1'
     )
   })
 })

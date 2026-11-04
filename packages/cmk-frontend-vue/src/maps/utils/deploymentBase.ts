@@ -31,8 +31,10 @@ export function resolveAssetBase(): string {
   return new URL('maps/', window.location.href).href
 }
 
-export function resolveStreamUrl(mapName: string): string {
-  return new URL(`${resolveDaemonBase()}/api/v1/sse/maps/${encodeURIComponent(mapName)}`).href
+export function resolveStreamUrl(mapName: string, tab: string): string {
+  const url = new URL(`${resolveDaemonBase()}/api/v1/sse/maps/${encodeURIComponent(mapName)}`)
+  url.searchParams.set('tab', tab)
+  return url.href
 }
 
 /**

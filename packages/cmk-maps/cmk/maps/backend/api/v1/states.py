@@ -10,8 +10,9 @@ import logging
 import math
 import time
 from collections.abc import AsyncIterator
+from contextlib import suppress
 from dataclasses import dataclass, field
-from typing import cast, Literal
+from typing import Annotated, cast, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from fastapi.sse import EventSourceResponse
@@ -58,6 +59,7 @@ from cmk.maps.backend.schemas.stream import (
     StateUpdateMessage,
     StreamedMapStates,
     StreamMessage,
+    StreamTakenMessage,
     TopologyUpdateMessage,
 )
 from cmk.maps.backend.schemas.topology import TopologyNode
@@ -120,6 +122,9 @@ _fetched: TtlCache[_FetchKey, _Fetched] = TtlCache(
 # too, so a poll after the map was registered anew does not get what a fetch of
 # its old config brings.
 _fetches: SingleFlight[tuple[str, str | None, int], _Flight] = SingleFlight()
+
+# What the SPA names a browser tab by (cmk-ui-library's randomId()).
+_TAB_ID_PATTERN = r"^[-a-z0-9]{16}$"
 
 # How often an open stream asks whether its session still holds. The answer is
 # cached, so the GUI is asked again only once it has expired.
@@ -760,6 +765,36 @@ async def _connect_budget(current_user: Principal = Depends(get_current_user)) -
     return current_user
 
 
+@dataclass
+class _TabStream:
+    subscriber: Subscriber
+    holds_slot: bool = True
+
+
+# The stream each browser tab holds, by (user, tab). A tab that tries the stream
+# again while polling opens a probe and then the stream; the probe's slot is only
+# freed once a proxy noticed it closed, so the stream takes it over instead.
+_tab_streams: dict[tuple[str, str], _TabStream] = {}
+
+
+def _take_slot(user: str, tab: str | None) -> None:
+    if tab is not None and (held := _tab_streams.get((user, tab))) is not None:
+        held.holds_slot = False
+        queue = held.subscriber.queue
+        # What it still had to send is of no use to a page that has to name its tab
+        # anew, and a full queue would leave no room to tell it.
+        with suppress(asyncio.QueueEmpty, asyncio.QueueShutDown):
+            while True:
+                queue.get_nowait()
+        with suppress(asyncio.QueueShutDown):
+            queue.put_nowait(MAP_EVENTS.encode(StreamTakenMessage()))
+        queue.shutdown()
+    elif not sse_stream_limiter.try_acquire(user):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Too many concurrent streams"
+        )
+
+
 async def _subscribe_to_stream(
     name: MapName,
     cookie: SessionCookieDep,
@@ -767,6 +802,7 @@ async def _subscribe_to_stream(
     # Before the viewer: resolving the map asks the GUI, which the budget is there to spare.
     _budget: Principal = Depends(_connect_budget),
     user: Principal = Depends(get_map_viewer),
+    tab: Annotated[str | None, Query(pattern=_TAB_ID_PATTERN)] = None,
 ) -> AsyncIterator[StreamSubscription]:
     # Owner = the map's REAL owner as the GUI named it for the user, never a
     # client value — so all viewers of a published map share one broadcast loop,
@@ -778,16 +814,16 @@ async def _subscribe_to_stream(
 
     audience = _audience(user, cfg)
 
-    if not sse_stream_limiter.try_acquire(user.name):
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Too many concurrent streams"
-        )
+    _take_slot(user.name, tab)
     sub = manager.subscribe(
         map_key,
         audience.auth_user,
         folder_scope=audience.folder_scope,
         group_key=audience.group_key,
     )
+    stream = _TabStream(sub)
+    if tab is not None:
+        _tab_streams[(user.name, tab)] = stream
     try:
         # A new subscriber must not diverge from its REST first paint on anything
         # that changed before it joined (the group snapshot already absorbed those,
@@ -812,7 +848,10 @@ async def _subscribe_to_stream(
         )
     finally:
         manager.unsubscribe(map_key, sub)
-        sse_stream_limiter.release(user.name)
+        if tab is not None and _tab_streams.get((user.name, tab)) is stream:
+            del _tab_streams[(user.name, tab)]
+        if stream.holds_slot:
+            sse_stream_limiter.release(user.name)
 
 
 @router.get(

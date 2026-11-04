@@ -791,27 +791,62 @@ def fetch_restore_points(limit: int = 500) -> FetchStrategy:
     return _fetch
 
 
+type JobId = str
+type SessionId = str
+type ObjectName = str
+
+
+@dataclass(frozen=True, kw_only=True)
+class _JobSession:
+    """The job a session is the current session of."""
+
+    job_id: JobId
+    job_name: str
+
+
 def _job_sessions(
     jobs: Sequence[_JobState],
     disabled_ids: Container[str],
-) -> dict[str, tuple[str, str]]:
-    """Builds `sessionId -> (job id, job name)` from each job's current session.
+) -> dict[SessionId, _JobSession]:
+    """Maps each job's current session to the job.
 
     Disabled jobs (`disabled_ids`) are excluded, like the old plug-in; a
     schedule-disabled job is still included.
     """
     return {
-        job.session_id: (job.id, job.name)
+        job.session_id: _JobSession(job_id=job.id, job_name=job.name)
         for job in jobs
         if job.id not in disabled_ids and job.session_id is not None
     }
 
 
-def _task_creation_epoch(task: Mapping[str, object]) -> float:
-    created = task.get("creationTime")
-    if isinstance(created, str) and (epoch := parse_iso8601_epoch(created)) is not None:
-        return epoch
-    return float("-inf")
+@dataclass(frozen=True, kw_only=True)
+class _Task:
+    """A backup task of GET /api/v1/sessions/{id}/taskSessions."""
+
+    name: str
+    creation_epoch: float
+    record: Mapping[str, object]
+    """The task as the API returned it; this is what the section shows."""
+
+
+def _parse_backup_tasks(items: Iterable[object]) -> list[_Task]:
+    tasks: list[_Task] = []
+    for item in items:
+        if not isinstance(item, dict) or not isinstance(task_name := item.get("name"), str):
+            continue
+        if item.get("sessionType") != "BackupJob":
+            continue
+        created = item.get("creationTime")
+        epoch = parse_iso8601_epoch(created) if isinstance(created, str) else None
+        tasks.append(
+            _Task(
+                name=task_name,
+                creation_epoch=float("-inf") if epoch is None else epoch,
+                record=item,
+            )
+        )
+    return tasks
 
 
 class _SessionResult(BaseModel):
@@ -833,7 +868,7 @@ class _SessionInfo(BaseModel):
 
 @dataclass(frozen=True, kw_only=True)
 class _JobObjects:
-    names: list[str]
+    names: list[ObjectName]
     job_name: str
     session: _SessionInfo
     """The job's current session; used for the single-object fallback in
@@ -876,8 +911,8 @@ def _load_job_object_names_cache(storage: Storage) -> Mapping[str, _CachedJobCol
 
 
 def _resolve_job_object_names(
-    client: VeeamClient, session_to_job: Mapping[str, tuple[str, str]]
-) -> dict[str, _JobObjects]:
+    client: VeeamClient, session_to_job: Mapping[SessionId, _JobSession]
+) -> dict[JobId, _JobObjects]:
     """Maps job ID -> its current session's object name(s), via
     GET /api/v1/sessions/{sessionId} -> resourceId -> GET /api/v1/backups/{id}/objects.
 
@@ -904,8 +939,9 @@ def _resolve_job_object_names(
     """
     old_cache = _load_job_object_names_cache(client.storage)
     new_cache: dict[str, _CachedJobCollection] = {}
-    objects_by_job: dict[str, _JobObjects] = {}
-    for session_id, (job_id, job_name) in session_to_job.items():
+    objects_by_job: dict[JobId, _JobObjects] = {}
+    for session_id, job in session_to_job.items():
+        job_id, job_name = job.job_id, job.job_name
         cached_entry = old_cache.get(job_id)
         if cached_entry is not None and cached_entry.session_id == session_id:
             objects_by_job[job_id] = _JobObjects(
@@ -949,6 +985,43 @@ def _resolve_job_object_names(
         json.dumps({job_id: entry.model_dump() for job_id, entry in new_cache.items()}),
     )
     return objects_by_job
+
+
+def _session_tasks(client: VeeamClient, session_id: SessionId) -> list[_Task]:
+    try:
+        items = client.get_all(
+            f"/api/v1/sessions/{session_id}/taskSessions", extra_params="&typeFilter=Backup"
+        )
+    except TerminateAgent as exc:
+        # The task sessions of an agent management session 500 ("The value of
+        # enum ESessionType is not supported") instead of coming back empty.
+        if _is_skippable(exc, extra=(HTTPStatus.INTERNAL_SERVER_ERROR,)):
+            return []
+        raise
+    return _parse_backup_tasks(items)
+
+
+def _newest_task_per_object(
+    tasks: Iterable[_Task], resolved_names: Sequence[ObjectName]
+) -> dict[ObjectName, _Task]:
+    """A single-object job takes all its tasks; a multi-object job matches by name."""
+    newest: dict[ObjectName, _Task] = {}
+    for task in tasks:
+        if len(resolved_names) == 1:
+            object_name = resolved_names[0]
+        elif task.name in resolved_names:
+            object_name = task.name
+        else:
+            continue
+        current = newest.get(object_name)
+        # TODO: ties (identical creationTime) are broken arbitrarily, by whichever
+        # task is encountered last. A real tiebreak would compare `usn` (an
+        # increasing update sequence number) instead, e.g.:
+        #     task.record.get("usn", -1) >= current.record.get("usn", -1)
+        # left out for now since such collisions are assumed to be rare.
+        if current is None or task.creation_epoch >= current.creation_epoch:
+            newest[object_name] = task
+    return newest
 
 
 def _format_dotnet_timespan(seconds: float) -> str:
@@ -1023,45 +1096,16 @@ def fetch_backups(client: VeeamClient, name: str) -> Fetched:
     }
     job_objects = _resolve_job_object_names(client, session_to_job)
 
-    groups: dict[str, list[Mapping[str, object]]] = {}
-
-    newest: dict[tuple[str, str], Mapping[str, object]] = {}
-
-    for session_id, (job_id, job_name) in session_to_job.items():
-        if job_id not in job_objects:
+    records: dict[ObjectName, dict[JobId, Mapping[str, object]]] = {}
+    for session_id, job in session_to_job.items():
+        if (job_objects_entry := job_objects.get(job.job_id)) is None:
             continue
-        try:
-            tasks = client.get_all(
-                f"/api/v1/sessions/{session_id}/taskSessions", extra_params="&typeFilter=Backup"
-            )
-        except TerminateAgent as exc:
-            # The task sessions of an agent management session 500 ("The value of
-            # enum ESessionType is not supported") instead of coming back empty.
-            if _is_skippable(exc, extra=(HTTPStatus.INTERNAL_SERVER_ERROR,)):
-                continue
-            raise
-
-        resolved_names = job_objects[job_id].names
-        for task in tasks:
-            if not isinstance(task, dict) or not isinstance(task_name := task.get("name"), str):
-                continue
-            if task.get("sessionType") != "BackupJob":
-                continue
-            if len(resolved_names) == 1:
-                object_name = resolved_names[0]
-            elif task_name in resolved_names:
-                object_name = task_name
-            else:
-                continue
-            key = (object_name, job_id)
-            current = newest.get(key)
-            # TODO: ties (identical creationTime) are broken arbitrarily, by whichever
-            # task is encountered last. A real tiebreak would compare `usn` (an
-            # increasing update sequence number) instead, e.g.:
-            #     task.get("usn", -1) >= current.get("usn", -1)
-            # left out for now since such collisions are assumed to be rare.
-            if current is None or _task_creation_epoch(task) >= _task_creation_epoch(current):
-                newest[key] = {**task, "jobName": job_name}
+        tasks = _newest_task_per_object(_session_tasks(client, session_id), job_objects_entry.names)
+        for object_name, task in tasks.items():
+            records.setdefault(object_name, {})[job.job_id] = {
+                **task.record,
+                "jobName": job.job_name,
+            }
 
     # Single-object jobs whose session has no task at all (e.g. the
     # Linux/Windows Agent Backup gap) fall back to the job's own session: with only
@@ -1069,20 +1113,17 @@ def fetch_backups(client: VeeamClient, name: str) -> Fetched:
     for job_id, job_obj in job_objects.items():
         if len(job_obj.names) != 1 or job_obj.session.state is None:
             continue
-        key = (job_obj.names[0], job_id)
-        if key not in newest:
-            newest[key] = _session_fallback_task(
+        job_records = records.setdefault(job_obj.names[0], {})
+        if job_id not in job_records:
+            job_records[job_id] = _session_fallback_task(
                 job_obj.session, job_obj.job_name, progress_by_job_id.get(job_id)
             )
-
-    for (object_name, _job_id), task in newest.items():
-        groups.setdefault(object_name, []).append(task)
 
     return Fetched(
         piggyback={
             object_name: f"<<<{name}:sep(0)>>>\n"
-            + "".join(f"{json.dumps(task)}\n" for task in object_tasks)
-            for object_name, object_tasks in groups.items()
+            + "".join(f"{json.dumps(record)}\n" for record in job_records.values())
+            for object_name, job_records in records.items()
         }
     )
 

@@ -813,6 +813,63 @@ def test_spool_file_which_cannot_be_removed_is_not_processed(
     assert _event_texts(event_status) == []
 
 
+def _add_spool_files_at_once(spool_dir: Path, *contents: bytes) -> None:
+    """
+    Adds a spool file for each of the contents, the first one oldest, all at once by making the
+    spool directory with them, so that the event server lists them together
+    """
+    incomplete = spool_dir.with_name(f".{spool_dir.name}")
+    incomplete.mkdir(parents=True)
+    for number, content in enumerate(contents):
+        # Named in the opposite order, so that only their modification times order them
+        path = incomplete / f"{len(contents) - number:03d}"
+        path.write_bytes(content)
+        os.utime(path, (number, number))
+    incomplete.rename(spool_dir)
+
+
+def test_spool_files_listed_together_are_processed_oldest_first(
+    event_console: _EventConsole,
+) -> None:
+    settings, event_status = event_console
+    texts = [f"from spool file {number}" for number in range(50)]
+
+    _add_spool_files_at_once(
+        settings.paths.spool_dir.value, *(f"{text}\n".encode() for text in texts)
+    )
+
+    assert _texts_of_events(event_status, len(texts)) == texts
+
+
+def _add_older_spool_file(path: Path) -> None:
+    # Older than the second file of the batch, so listing again before it would take this one first
+    _add_spool_file(path.parent, b"added meanwhile\n", name="added", mtime=0.5)
+
+
+def test_spool_file_added_while_processing_a_listing_waits_for_the_next_listing() -> None:
+    with _running_event_console(
+        create_history, read_spool_file=_reading_spool_files_after(_add_older_spool_file)
+    ) as (settings, event_status):
+        # Modification times 0 and 1
+        _add_spool_files_at_once(settings.paths.spool_dir.value, b"first\n", b"second\n")
+        texts = _texts_of_events(event_status, 3)
+
+    assert texts == ["first", "second", "added meanwhile"]
+
+
+@pytest.mark.parametrize("lack_resources", _LACKS_OF_RESOURCES)
+def test_spool_file_which_cannot_be_read_for_lack_of_resources_is_processed_before_newer_ones(
+    lack_resources: Callable[[Path], object],
+) -> None:
+    with _running_event_console(
+        create_history, read_spool_file=_reading_spool_files_after(lack_resources)
+    ) as (settings, event_status):
+        _add_spool_files_at_once(settings.paths.spool_dir.value, b"older\n", b"newer\n")
+        texts = _texts_of_events(event_status, 2)
+
+    assert texts == ["older", "newer"]
+
+
 def test_event_socket_takes_messages_from_a_client_bound_to_a_path(
     event_console: _EventConsole,
 ) -> None:

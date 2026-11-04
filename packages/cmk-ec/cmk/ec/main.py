@@ -358,7 +358,7 @@ def receive_datagram(sock: socket.socket) -> tuple[bytes, Any]:
 def _mtime_of_regular_file(path: Path) -> float | None:
     """
     The modification time of a regular file, possibly behind a symbolic link, with a single stat(),
-    as the event server lists the spool directory again for each spool file it processes
+    as the event server does this for each entry of the spool directory when it lists it
     """
     try:
         status = path.stat()
@@ -648,6 +648,10 @@ class EventServer(ECServerThread):
         # Entries of the spool directory other than regular files: Warned about only once while
         # they are there, also when serve() restarts.
         self._skipped_spool_entries: set[Path] = set()
+        # The spool files of the last listing of the spool directory which are still to be
+        # processed, the oldest one last: Listing it again for each of them would take quadratic
+        # time for a backlog of spool files.
+        self._spool_files: list[Path] = []
         # The spool file we last lacked the resources to read, which we warn about only once while
         # we try it again and again, and how many of these tries in a row lacked memory
         self._lacking_resources_for: tuple[Path | None, int] = (None, 0)
@@ -1065,7 +1069,7 @@ class EventServer(ECServerThread):
                 select_timeout = 0  # enable fast processing to process further files
                 try:
                     if (lines := self._read_spool_file(spool_file)) is None:
-                        # No regular file anymore, so skip it like _next_spool_file(), and a new
+                        # No regular file anymore, so skip it like _list_spool_files(), and a new
                         # file of that name starts afresh.
                         self._lacking_resources_for = (None, 0)
                         continue
@@ -1078,6 +1082,7 @@ class EventServer(ECServerThread):
                     self._lacking_resources_for = (None, 0)
                 except (OSError, MemoryError) as e:
                     if self._try_again_later(spool_file, e):
+                        self._spool_files.append(spool_file)  # Try it again first.
                         select_timeout = self._idle_timeout  # Give the resources time to be freed.
                     else:
                         self._put_aside_spool_file(spool_file, e)
@@ -1091,16 +1096,26 @@ class EventServer(ECServerThread):
 
     def _next_spool_file(self) -> Path | None:
         """
-        The oldest regular file in the spool directory which isn't ignored, if any: Reading a
-        directory would fail, and reading a FIFO would block, so it skips any other entry.
-
-        It forgets the ignored files and skipped entries which are gone, so a new file with the same
-        name is neither ignored nor skipped without a warning.
+        The oldest spool file of the last listing of the spool directory, listing it again only
+        once there is none left. A spool file may be gone or changed meanwhile, but reading it
+        copes with that, and files spooled meanwhile are newer anyway.
 
         After lacking the resources for a spool file, it takes none until it is time to try again.
         """
         if time.monotonic() < self._no_spool_files_until:
             return None
+        if not self._spool_files:
+            self._spool_files = self._list_spool_files()
+        return self._spool_files.pop() if self._spool_files else None
+
+    def _list_spool_files(self) -> list[Path]:
+        """
+        The regular files in the spool directory which aren't ignored, the oldest one last: Reading
+        a directory would fail, and reading a FIFO would block, so it skips any other entry.
+
+        It forgets the ignored files and skipped entries which are gone, so a new file with the same
+        name is neither ignored nor skipped without a warning.
+        """
         paths = list(self.settings.paths.spool_dir.value.glob("[!.]*"))
         self._ignored_spool_files.intersection_update(paths)
         self._skipped_spool_entries.intersection_update(paths)
@@ -1112,7 +1127,8 @@ class EventServer(ECServerThread):
                 self._warn_about_skipped_spool_entry(path)
             else:
                 candidates.append((mtime, path))
-        return min(candidates)[1] if candidates else None
+        # By the name for the same modification time, so the order doesn't depend on the listing
+        return [path for _mtime, path in sorted(candidates, reverse=True)]
 
     def _warn_about_skipped_spool_entry(self, path: Path) -> None:
         """Only once while it is there, as we skip it each time we list the spool directory"""

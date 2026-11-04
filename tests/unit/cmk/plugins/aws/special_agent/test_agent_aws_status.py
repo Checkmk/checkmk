@@ -51,7 +51,6 @@ def test_write_sections(capsys: pytest.CaptureFixture[str]) -> None:
     assert captured.err == ""
 
 
-@pytest.mark.xfail(strict=True, raises=requests.ConnectionError, reason="crash group 4833")
 def test_unreachable_feed_ends_with_error_message(capsys: pytest.CaptureFixture[str]) -> None:
     def _get_rss() -> requests.Response:
         raise requests.ConnectionError("Connection reset by peer")

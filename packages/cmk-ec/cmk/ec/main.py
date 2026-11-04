@@ -92,9 +92,6 @@ from .history import (
     quote_tab,
     TimedHistory,
 )
-from .history_file import FileHistory
-from .history_mongo import MongoDBHistory
-from .history_sqlite import SQLiteHistory, SQLiteSettings
 from .host_config import HostConfig
 from .log_level import VERBOSE, verbosity_to_log_level
 from .perfcounters import Perfcounters
@@ -253,13 +250,22 @@ def create_history_raw(
     event_columns: Columns,
     history_columns: Columns,
 ) -> History:
-    """Factory for History objects based on the current configuration."""
+    """Factory for History objects based on the current configuration.
+
+    It imports only the backend configured, as e.g. importing pymongo takes long.
+    """
     match config["archive_mode"]:
         case "file":
+            from .history_file import FileHistory
+
             return FileHistory(settings, config, logger, event_columns, history_columns)
         case "mongodb":
+            from .history_mongo import MongoDBHistory
+
             return MongoDBHistory(settings, config, logger, event_columns, history_columns)
         case "sqlite":
+            from .history_sqlite import SQLiteHistory, SQLiteSettings
+
             return SQLiteHistory(
                 SQLiteSettings.from_settings(
                     settings=settings,

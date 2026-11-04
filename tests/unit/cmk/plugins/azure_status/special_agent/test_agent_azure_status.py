@@ -8,6 +8,7 @@
 from unittest import mock
 
 import pytest
+import requests
 from feedparser.util import FeedParserDict  # type: ignore[import-untyped]
 
 from cmk.plugins.azure_status.lib.azure_regions import AZURE_REGIONS
@@ -145,3 +146,16 @@ def test_write_section(capsys: pytest.CaptureFixture[str]) -> None:
         'US", "North Central US", "West Europe", "Global"]}',
     ]
     assert captured.err == ""
+
+
+@pytest.mark.xfail(strict=True, raises=requests.ConnectionError, reason="crash group 4909")
+@mock.patch(
+    "cmk.plugins.azure_status.special_agent.agent_azure_status.requests.get",
+    mock.Mock(side_effect=requests.ConnectionError("Connection reset by peer")),
+)
+def test_unreachable_feed_ends_with_error_message(capsys: pytest.CaptureFixture[str]) -> None:
+    exit_code = write_section(parse_arguments(["westeurope"]))
+
+    captured = capsys.readouterr()
+    assert (exit_code, captured.out) == (1, "")
+    assert "Connection reset by peer" in captured.err

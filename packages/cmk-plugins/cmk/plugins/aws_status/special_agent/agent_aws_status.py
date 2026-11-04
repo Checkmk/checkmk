@@ -84,7 +84,13 @@ def _get_rss() -> requests.Response:
 
 
 def write_section(args: argparse.Namespace, get_rss: typing.Callable[[], requests.Response]) -> int:
-    response = get_rss()
+    try:
+        response = get_rss()
+    except requests.RequestException as exc:
+        if args.debug:
+            raise
+        sys.stderr.write(f"Could not fetch the AWS status feed: {exc}\n")
+        return 1
     section = AgentOutput(
         discovery_param=DiscoveryParam.model_validate(vars(args)),
         rss_str=response.text,

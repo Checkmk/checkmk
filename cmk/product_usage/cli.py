@@ -4,11 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import argparse
+import logging
 import sys
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
 
+from cmk.ccc.version import Edition, edition
+from cmk.licensing.handler import LicenseState
 from cmk.product_usage.collection import (
     collect_data,
     data_storage_path,
@@ -26,6 +29,7 @@ from cmk.product_usage.schedule import (
     create_next_ts,
     get_next_run_ts,
     next_run_file_path,
+    next_run_interval,
     should_run_collection_on_schedule,
     store_next_run_ts,
 )
@@ -108,9 +112,17 @@ def main(args: Sequence[str] | None = None) -> int:
             transmit_data(paths.var_dir, logger, proxy_config=proxy_config)
 
         if request.schedule:
-            next_scheduled_run_at = create_next_ts(now)
+            interval = next_run_interval(
+                cloud_trial=is_cloud_trial(
+                    edition=edition(paths.omd_root),
+                    read_license_state=_read_cloud_license_state,
+                    logger=logger,
+                )
+            )
+            next_scheduled_run_at = create_next_ts(now, interval=interval)
             logger.info(
-                "Planning the next execution at %(next_run)s", {"next_run": next_scheduled_run_at}
+                "Planning the next execution at %(next_run)s, in %(days)s days",
+                {"next_run": next_scheduled_run_at, "days": interval.days},
             )
             store_next_run_ts(next_run_fp, next_scheduled_run_at)
 
@@ -171,6 +183,33 @@ def parse_args(args: Sequence[str]) -> ProductUsageRequest:
             collect=True, store=True, upload=True, schedule=True, write_to_stdout=False
         )
     return ProductUsageRequest(collect=True, store=True, upload=True)
+
+
+def is_cloud_trial(
+    *,
+    edition: Edition,
+    read_license_state: Callable[[], LicenseState],
+    logger: logging.Logger,
+) -> bool:
+    # Read the license state only on Cloud: only Cloud has the trial schedule, and reading the
+    # state there needs the commercial Cloud licensing handler.
+    if edition is not Edition.CLOUD:
+        return False
+    try:
+        return read_license_state().has_remaining_trial_time()
+    except Exception:
+        logger.exception("Could not read the license state, assuming no Cloud trial")
+        return False
+
+
+def _read_cloud_license_state() -> LicenseState:
+    from cmk.licensing.nonfree.registry import (  # type: ignore[import-not-found, import-untyped, unused-ignore]
+        get_available_licensing_handler_factory,
+    )
+
+    # Without the commercial packages the import is untyped, so pin the type here
+    state: LicenseState = get_available_licensing_handler_factory(Edition.CLOUD)().state
+    return state
 
 
 if __name__ == "__main__":

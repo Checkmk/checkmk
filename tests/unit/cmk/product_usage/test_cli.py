@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
 from typing import Literal
 from unittest import mock
 from unittest.mock import MagicMock
@@ -10,6 +11,8 @@ from unittest.mock import MagicMock
 import pytest
 
 import cmk.product_usage.cli as product_usage_cli
+from cmk.ccc.version import Edition
+from cmk.licensing.handler import LicenseState
 from cmk.product_usage.config import load_product_usage_config, ProductUsageAnalyticsSettings
 from cmk.product_usage.exceptions import ConfigError
 from cmk.utils import http_proxy_config, paths
@@ -142,3 +145,65 @@ def test_parse_args_upload_only() -> None:
     assert product_usage_cli.parse_args(["--upload"]) == product_usage_cli.ProductUsageRequest(
         upload=True
     )
+
+
+def test_cloud_site_in_trial_is_a_cloud_trial() -> None:
+    result = product_usage_cli.is_cloud_trial(
+        edition=Edition.CLOUD,
+        read_license_state=lambda: LicenseState.TRIAL,
+        logger=logging.getLogger(__name__),
+    )
+
+    assert result is True
+
+
+def test_cloud_site_with_license_is_not_a_cloud_trial() -> None:
+    result = product_usage_cli.is_cloud_trial(
+        edition=Edition.CLOUD,
+        read_license_state=lambda: LicenseState.LICENSED,
+        logger=logging.getLogger(__name__),
+    )
+
+    assert result is False
+
+
+@pytest.mark.parametrize("edition", [e for e in Edition if e is not Edition.CLOUD])
+def test_on_prem_site_in_trial_is_not_a_cloud_trial(edition: Edition) -> None:
+    result = product_usage_cli.is_cloud_trial(
+        edition=edition,
+        read_license_state=lambda: LicenseState.TRIAL,
+        logger=logging.getLogger(__name__),
+    )
+
+    assert result is False
+
+
+def test_failing_license_read_falls_back_to_no_cloud_trial_and_logs_the_error(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    result = product_usage_cli.is_cloud_trial(
+        edition=Edition.CLOUD,
+        read_license_state=_raise_license_error,
+        logger=logging.getLogger(__name__),
+    )
+
+    assert result is False
+    assert [record.levelname for record in caplog.records] == ["ERROR"]
+
+
+@pytest.mark.parametrize("edition", [e for e in Edition if e is not Edition.CLOUD])
+def test_on_prem_site_does_not_read_the_license_state(edition: Edition) -> None:
+    product_usage_cli.is_cloud_trial(
+        edition=edition,
+        read_license_state=_fail_on_license_read,
+        logger=logging.getLogger(__name__),
+    )
+
+
+def _raise_license_error() -> LicenseState:
+    raise RuntimeError("license files missing")
+
+
+def _fail_on_license_read() -> LicenseState:
+    # pytest.fail raises a BaseException, so the gate's `except Exception` cannot swallow it
+    pytest.fail("the license state must not be read on non-Cloud editions")

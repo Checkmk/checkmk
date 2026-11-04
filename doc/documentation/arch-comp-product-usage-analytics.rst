@@ -51,7 +51,7 @@ White-box overall system
     gui ..> storage: use
 
 The ``cmk-product-usage`` command-line tool (``cmk.product_usage.cli``) is the single entry point that drives collection, local storage and transmission.
-A per-site cron job invokes it every 30 minutes, but a collection actually happens only about once every 30 days -- see `Collection and transmission`_.
+A per-site cron job invokes it every 30 minutes, but a collection actually happens only about once every 30 days (7 days on a Cloud trial site) -- see `Collection and transmission`_.
 
 **Collectors.**
 Three collectors read from Livestatus and the filesystem: check usage (``collectors/checks.py``), site info (``collectors/site_info.py``), and a previously recorded Grafana-usage snapshot (``collectors/grafana.py``).
@@ -88,7 +88,8 @@ Collection and transmission
 **Scheduling.**
 On each cron invocation, ``should_run_collection_on_schedule`` only lets collection proceed once a stored ``next_run`` timestamp has passed.
 That schedule is staggered per site: the first run after enabling analytics picks a random point within the next 23.5 hours (``create_next_random_ts``), so freshly opted-in sites do not all transmit at the same moment; since cron runs every 30 minutes, that run starts within 24 hours.
-Every following run is fixed at 30 days after the previous one (``create_next_ts``).
+Every following run is fixed at 30 days after the previous one, or 7 days on a Cloud site in trial (``create_next_ts``).
+The CLI checks whether a site is a Cloud trial (``is_cloud_trial``) only when it plans the next run: it reads the license state only on Cloud sites, through the commercial Cloud licensing handler, and falls back to the 30-day interval if that read fails.
 
 **What a due run collects:**
 
@@ -102,7 +103,7 @@ The result is wrapped in a ``SelfDescribingModel`` envelope (``{"metadata": {ver
 **Transmission and retry.**
 Transmission uploads every stored file, oldest first, and deletes a file only once its POST gets a successful response, so a failed upload's file survives to be retried.
 The Grafana-usage snapshot is cleared only once the newest file transmits successfully, since that file is the one expected to carry it.
-Because the whole ``--cron`` flow returns immediately while a run is not yet due, a failed transmission is not retried until the site's next ~30-day scheduled run, unless an admin re-runs ``cmk-product-usage --upload`` manually.
+Because the whole ``--cron`` flow returns immediately while a run is not yet due, a failed transmission is not retried until the site's next scheduled run (~30 days, or ~7 days on a Cloud trial site), unless an admin re-runs ``cmk-product-usage --upload`` manually.
 
 **Extending the collected data.**
 Add the new field to ``ProductUsageData`` in ``cmk/product_usage/schema.py``, gather it in a collector under ``cmk/product_usage/collectors/`` (a new module, or an existing one if it fits), and wire the result into ``collect_data()`` in ``cmk/product_usage/collection.py``.
@@ -137,6 +138,7 @@ This edition additionally supplies its own hint text for the global-settings for
 
 **``cloud``.**
 This edition treats analytics as opt-out rather than opt-in: deploy tooling outside this repository sets the global setting to ``enabled`` when provisioning a cloud site, and the edition calls ``disable_product_usage_analytics_popup()`` to suppress the sidebar popup, since consent is already decided before an admin ever sees it.
+Cloud sites in trial run every 7 days instead of every 30 days; to tell, the CLI reads the license state through the commercial Cloud licensing handler, which makes ``cmk.licensing`` a dependency of the CLI (see `Collection and transmission`_).
 The underlying collection, config and transmission machinery is otherwise unaffected.
 
 **Distributed setups.**
@@ -150,7 +152,7 @@ Transmission goes through this site's configured HTTP proxy (``cmk.utils.http_pr
 Risks and technical debts
 ==========================
 
-1. A failed upload is retried only at the next scheduled run, which for an already-opted-in site can be up to ~30 days later, since the whole ``--cron`` flow exits immediately while a run is not yet due; there is no short-interval backoff for a transient network failure.
+1. A failed upload is retried only at the next scheduled run, which for an already-opted-in site can be up to ~30 days later (~7 days on a Cloud trial site), since the whole ``--cron`` flow exits immediately while a run is not yet due; there is no short-interval backoff for a transient network failure.
 2. Grafana-usage detection is captured once and latched: ``store_usage_data`` returns immediately if ``grafana_usage.json`` already exists, and the file is cleared only once a transmission that included it succeeds.
    A site that toggles analytics off before ever successfully transmitting keeps a possibly stale snapshot (e.g. an outdated Grafana version) until it is eventually sent or the file is removed by hand.
 

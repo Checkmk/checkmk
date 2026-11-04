@@ -14,6 +14,8 @@ from cmk.product_usage.exceptions import InvalidTimestampError
 CRON_PERIOD = timedelta(minutes=30)
 # The first run must start within 24 hours, so it is planned at least one cron period earlier
 FIRST_RUN_WINDOW = timedelta(hours=24) - CRON_PERIOD
+STANDARD_INTERVAL = timedelta(days=30)
+CLOUD_TRIAL_INTERVAL = timedelta(days=7)
 
 
 def should_run_collection_on_schedule(var_dir: Path, dt: datetime) -> bool:
@@ -44,10 +46,10 @@ def create_next_random_ts(dt: datetime) -> int:
         raise InvalidTimestampError from exc
 
 
-def create_next_ts(dt: datetime) -> int:
-    # Returns a timestamp 30 days after the given datetime
+def create_next_ts(dt: datetime, *, interval: timedelta) -> int:
+    # Returns a timestamp one interval after the given datetime
     try:
-        return int((dt + timedelta(days=30)).timestamp())
+        return int((dt + interval).timestamp())
     except OverflowError as exc:
         raise InvalidTimestampError from exc
 
@@ -56,3 +58,7 @@ def store_next_run_ts(file_path: Path, timestamp: int) -> None:
     file_path.parent.mkdir(parents=True, exist_ok=True)
 
     store.save_text_to_file(file_path, str(timestamp))
+
+
+def next_run_interval(*, cloud_trial: bool) -> timedelta:
+    return CLOUD_TRIAL_INTERVAL if cloud_trial else STANDARD_INTERVAL

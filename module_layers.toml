@@ -1489,7 +1489,13 @@ allows = [
 ]
 
 [components."cmk.product_usage.cli"]
-allows = ["@ccc", "cmk.base", "cmk.product_usage", "cmk.utils.paths"]
+allows = [
+  "@ccc",
+  "cmk.base",
+  "cmk.licensing",
+  "cmk.product_usage",
+  "cmk.utils.paths",
+]
 
 [components."cmk.product_usage"]
 # NOTE: this is a dependency of both 'gui' and 'base',

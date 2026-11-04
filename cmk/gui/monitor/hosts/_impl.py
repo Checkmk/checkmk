@@ -200,6 +200,9 @@ class LiveStatusHostRepository:
                         notifications_enabled=bool(row["notifications_enabled"]),
                         num_comments=len(row["comments"]),
                         active_checks_disabled=_manually_disabled(row, "active_checks_enabled"),
+                        active_checks_manually_enabled=_manually_enabled(
+                            row, "active_checks_enabled"
+                        ),
                         passive_checks_disabled=_manually_disabled(
                             row, "passive_checks_enabled", column="accept_passive_checks"
                         ),
@@ -305,6 +308,7 @@ class LiveStatusHostRepository:
             notifications_enabled=bool(row["notifications_enabled"]),
             num_comments=len(row["comments"]),
             active_checks_disabled=_manually_disabled(row, "active_checks_enabled"),
+            active_checks_manually_enabled=_manually_enabled(row, "active_checks_enabled"),
             passive_checks_disabled=_manually_disabled(
                 row, "passive_checks_enabled", column="accept_passive_checks"
             ),
@@ -805,6 +809,13 @@ def _manually_disabled(
     """
     modified = cast(Collection[str], row["modified_attributes_list"])
     return attribute in modified and not row[column or attribute]
+
+
+def _manually_enabled(row: Mapping[str, object], attribute: str) -> bool:
+    """Whether a check setting was turned on by a user, as the legacy views mark it."""
+    return attribute in cast(Collection[str], row["modified_attributes_list"]) and bool(
+        row[attribute]
+    )
 
 
 def _timestamp(value: float | None) -> UnixTimestamp | None:

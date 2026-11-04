@@ -39,6 +39,7 @@ _NO_MODES = {
     "notifications_enabled": True,
     "num_comments": 0,
     "active_checks_manually_disabled": False,
+    "active_checks_manually_enabled": False,
     "passive_checks_disabled": False,
     "in_notification_period": True,
     "in_service_period": True,
@@ -99,6 +100,20 @@ def test_build_service_modes_by_id_active_checks_manually_disabled() -> None:
     ] == ["disabled"]
 
 
+def test_build_service_modes_by_id_active_checks_manually_enabled() -> None:
+    service = ServiceFactory.build(**_NO_MODES | {"active_checks_manually_enabled": True})
+    modes = build_service_modes_by_id(service, hostname=_HOSTNAME, site_id=_SITE_ID)
+
+    assert [(mode.id, mode.icon_name) for mode in modes] == [("active_checks_on", "checkmark")]
+    assert modes[0].title == "Active checks have been manually enabled for this service"
+
+
+def test_build_service_modes_active_checks_manually_enabled() -> None:
+    service = ServiceOverviewFactory.build(**_NO_MODES | {"active_checks_manually_enabled": True})
+
+    assert [mode.icon_name for mode in build_service_modes(service)] == ["checkmark"]
+
+
 def test_build_service_modes_by_id_passive_checks_disabled() -> None:
     service = ServiceFactory.build(**_NO_MODES | {"passive_checks_disabled": True})
 
@@ -149,6 +164,7 @@ def test_build_service_modes_by_id_all_modes() -> None:
         notifications_enabled=False,
         num_comments=3,
         active_checks_manually_disabled=True,
+        active_checks_manually_enabled=False,
         passive_checks_disabled=True,
         in_notification_period=False,
         in_service_period=False,
@@ -185,6 +201,7 @@ def test_build_service_modes_all_modes() -> None:
         notifications_enabled=False,
         num_comments=3,
         active_checks_manually_disabled=True,
+        active_checks_manually_enabled=False,
         passive_checks_disabled=True,
         in_notification_period=False,
         in_service_period=False,

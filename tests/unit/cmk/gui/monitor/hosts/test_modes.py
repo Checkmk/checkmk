@@ -14,6 +14,7 @@ _NO_MODES = {
     "notifications_enabled": True,
     "num_comments": 0,
     "active_checks_disabled": False,
+    "active_checks_manually_enabled": False,
     "passive_checks_disabled": False,
     "in_notification_period": True,
     "in_service_period": True,
@@ -61,6 +62,14 @@ def test_build_host_modes_active_checks_disabled() -> None:
     assert [mode.icon_name for mode in build_host_modes(host)] == ["disabled"]
 
 
+def test_build_host_modes_active_checks_manually_enabled() -> None:
+    host = HostFactory.build(**_NO_MODES | {"active_checks_manually_enabled": True})
+    modes = build_host_modes(host)
+
+    assert [(mode.id, mode.icon_name) for mode in modes] == [("active_checks_on", "checkmark")]
+    assert modes[0].title == "Active checks have been manually enabled for this host"
+
+
 def test_build_host_modes_passive_checks_disabled() -> None:
     host = HostFactory.build(**_NO_MODES | {"passive_checks_disabled": True})
 
@@ -92,6 +101,7 @@ def test_build_host_modes_all_modes() -> None:
         notifications_enabled=False,
         num_comments=1,
         active_checks_disabled=True,
+        active_checks_manually_enabled=False,
         passive_checks_disabled=True,
         in_notification_period=False,
         in_service_period=False,
@@ -118,6 +128,7 @@ def test_build_host_modes_identify_each_mode_by_a_stable_id() -> None:
         notifications_enabled=False,
         num_comments=1,
         active_checks_disabled=True,
+        active_checks_manually_enabled=False,
         passive_checks_disabled=True,
         in_notification_period=False,
         in_service_period=False,
@@ -144,6 +155,7 @@ def test_build_host_modes_state_icons_link_nowhere() -> None:
         acknowledged=True,
         notifications_enabled=False,
         active_checks_disabled=True,
+        active_checks_manually_enabled=False,
         passive_checks_disabled=True,
         in_notification_period=False,
         in_service_period=False,

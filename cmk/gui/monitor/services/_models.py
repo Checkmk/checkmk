@@ -89,6 +89,7 @@ class Service:
     notifications_enabled: bool
     num_comments: int
     active_checks_manually_disabled: bool
+    active_checks_manually_enabled: bool
     passive_checks_disabled: bool
     in_notification_period: bool
     in_service_period: bool

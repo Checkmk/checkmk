@@ -27,6 +27,7 @@ class ServiceModeId(enum.StrEnum):
     NOTIFICATIONS_OFF = "notifications_off"
     COMMENTS = "comments"
     ACTIVE_CHECKS_OFF = "active_checks_off"
+    ACTIVE_CHECKS_ON = "active_checks_on"
     PASSIVE_CHECKS_OFF = "passive_checks_off"
     OUT_OF_NOTIFICATION_PERIOD = "out_of_notification_period"
     OUT_OF_SERVICE_PERIOD = "out_of_service_period"
@@ -153,6 +154,15 @@ def build_service_modes(service: ServiceOverview) -> list[ServiceModeInfo]:
                 title=_("Active checks have been manually disabled for this service"),
             )
         )
+    if service.active_checks_manually_enabled:
+        modes.append(
+            ServiceModeInfo(
+                id=ServiceModeId.ACTIVE_CHECKS_ON,
+                icon_name="checkmark",
+                link="",
+                title=_("Active checks have been manually enabled for this service"),
+            )
+        )
     if service.passive_checks_disabled:
         modes.append(
             ServiceModeInfo(
@@ -254,6 +264,15 @@ def build_service_modes_by_id(
                 icon_name="disabled",
                 link="",
                 title=_("Active checks have been manually disabled for this service"),
+            )
+        )
+    if service.active_checks_manually_enabled:
+        modes.append(
+            ServiceModeInfo(
+                id=ServiceModeId.ACTIVE_CHECKS_ON,
+                icon_name="checkmark",
+                link="",
+                title=_("Active checks have been manually enabled for this service"),
             )
         )
     if service.passive_checks_disabled:

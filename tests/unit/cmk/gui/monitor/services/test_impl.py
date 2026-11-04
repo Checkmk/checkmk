@@ -497,14 +497,16 @@ def test_fetch_derives_stale_from_the_staleness_threshold(
 @pytest.mark.parametrize(
     "active_checks_enabled, modified_attributes_list, expected",
     [
-        pytest.param(0, ["active_checks_enabled"], True, id="a user switched them off"),
-        pytest.param(0, [], False, id="never on, as for a passive service"),
-        pytest.param(1, ["active_checks_enabled"], False, id="a user switched them back on"),
+        pytest.param(0, ["active_checks_enabled"], (True, False), id="a user switched them off"),
+        pytest.param(0, [], (False, False), id="never on, as for a passive service"),
+        pytest.param(
+            1, ["active_checks_enabled"], (False, True), id="a user switched them back on"
+        ),
     ],
 )
 @pytest.mark.usefixtures("request_context")
-def test_fetch_counts_only_a_modified_setting_as_manually_disabled(
-    active_checks_enabled: int, modified_attributes_list: list[str], expected: bool
+def test_fetch_counts_only_a_modified_setting_as_manually_switched(
+    active_checks_enabled: int, modified_attributes_list: list[str], expected: tuple[bool, bool]
 ) -> None:
     row = {
         "description": "CPU load",
@@ -545,7 +547,10 @@ def test_fetch_counts_only_a_modified_setting_as_manually_disabled(
             fields=frozenset(),
         )
 
-    assert [service.active_checks_manually_disabled for service in services] == [expected]
+    assert [
+        (service.active_checks_manually_disabled, service.active_checks_manually_enabled)
+        for service in services
+    ] == [expected]
 
 
 @pytest.mark.parametrize(

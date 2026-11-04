@@ -323,7 +323,8 @@ def get_information(redfishobj: HttpClient) -> int:
         systems_data = [{"RackPDUs": {"@odata.id": pdu_url}}]
     else:
         raise CannotRecover(
-            "ERROR: probably not a Redfish power equipment - missing PowerEquipment information"
+            "ERROR: probably not a Redfish power device - "
+            "neither PowerEquipment nor PowerDistribution information found"
         )
 
     if manager_data:
@@ -403,8 +404,13 @@ def agent_redfish_main(args: argparse.Namespace) -> int:
         sys.stderr.write(f"{_render_login_error(exc)}\n")
         return 1
 
-    get_information(redfishobj)
-    redfishobj.logout()
+    try:
+        get_information(redfishobj)
+    except CannotRecover as exc:
+        sys.stderr.write(f"{exc}\n")
+        return 1
+    finally:
+        redfishobj.logout()
 
     return 0
 

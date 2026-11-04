@@ -925,9 +925,7 @@ def _execute_discovery(
 
     with (
         set_value_store_manager(
-            ValueStoreManager(
-                host_name, AllValueStoresStore(counters_dir / host_name, debug=debug)
-            ),
+            ValueStoreManager(host_name, AllValueStoresStore(counters_dir / host_name)),
             store_changes=False,
         ) as value_store_manager,
     ):

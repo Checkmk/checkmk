@@ -3157,6 +3157,7 @@ opentelemetry-api==1.44.0 \
     #   -c constraints.txt
     #   -r cmk/requirements.in
     #   -r non-free/packages/cmk-ai-control-plane/dev-requirements.in
+    #   -r non-free/packages/cmk-ai-control-plane/requirements.in
     #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r packages/cmk-trace/requirements.in
     #   anthropic
@@ -3227,6 +3228,7 @@ opentelemetry-instrumentation-fastapi==0.65b0 \
     # via
     #   -c constraints.txt
     #   -r cmk/requirements.in
+    #   -r non-free/packages/cmk-ai-control-plane/requirements.in
 opentelemetry-instrumentation-httpx==0.65b0 \
     --hash=sha256:400f1b78afa4ee2332b5debe58e1ed1b317913d58812c952576be76660aeadb1 \
     --hash=sha256:4627aa9c6bb99bf4462c8b565b0ef6aeb9ffad95c6c92868be1ef7895de112ee

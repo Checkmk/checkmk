@@ -281,7 +281,7 @@ class SiteReplicationStatus(TypedDict, total=False):
     times: dict[str, float]
 
 
-class MKLicensingError(Exception):
+class MKLicensingError(MKGeneralException):
     pass
 
 

@@ -12,13 +12,16 @@ import pytest
 from werkzeug.test import create_environ
 
 import cmk.gui.pages
+import cmk.utils.paths
+from cmk.crash import make_crash_report_base_path
 from cmk.gui.config import Config
-from cmk.gui.http import Request
-from cmk.gui.pages import Page, PageContext, PageEndpoint
+from cmk.gui.http import Request, response
+from cmk.gui.pages import AjaxPage, Page, PageContext, PageEndpoint, PageResult
 from cmk.gui.permissions import all_permissions
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
+from cmk.gui.watolib.activate_changes import MKLicensingError
 
 
 @pytest.mark.usefixtures("monkeypatch")
@@ -81,3 +84,29 @@ def test_get_page_handler_default() -> None:
 
     handler = cmk.gui.pages.get_page_handler("123handler", dummy)
     assert handler is dummy
+
+
+class _LicenseBlockedAjaxPage(AjaxPage):
+    @override
+    def page(self, ctx: PageContext) -> PageResult:
+        raise MKLicensingError("License suspended: 'Activate changes' is blocked")
+
+
+@pytest.mark.usefixtures("request_context")
+def test_ajax_page_reports_license_block_as_error_without_crash_report() -> None:
+    _LicenseBlockedAjaxPage().handle_page(
+        PageContext(
+            config=Config(),
+            request=Request(create_environ()),
+            transactions=transactions,
+            session=session,
+            user_permissions=UserPermissions.from_config(Config(), all_permissions()),
+        )
+    )
+
+    assert response.json == {
+        "result_code": 1,
+        "result": "License suspended: 'Activate changes' is blocked",
+        "severity": "error",
+    }
+    assert not any(make_crash_report_base_path(cmk.utils.paths.omd_root).glob("gui/*"))

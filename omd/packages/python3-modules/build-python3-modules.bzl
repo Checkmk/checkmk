@@ -38,6 +38,8 @@ def build_python_module(name, srcs, outs, requirements = "", **kwargs):
             "@//bazel/toolchains/rust:rustc",
             "@//bazel/toolchains/rust:cargo",
         ],
+        # $(PIP_INDEX_URL) in the pip call.
+        toolchains = ["@//:pip_index_url"],
         cmd = select({
             "//conditions:default": build_cmd.format(
                 git_ssl_no_verify = "",
@@ -150,6 +152,7 @@ build_cmd = """
       --no-deps \\
       --compile \\
       --isolated \\
+      --index-url=$(PIP_INDEX_URL) \\
       --ignore-installed \\
       --no-warn-script-location \\
       --prefix="$$HOME/$$MODULE_NAME" \\

@@ -85,6 +85,16 @@ config_setting(
     visibility = ["//:__subpackages__"],
 )
 
+# The PyPI index for pip calls in genrules, as $(PIP_INDEX_URL). CI sets the
+# Nexus PyPI proxy (see .bazelrc), which is not reachable from outside the
+# company network.
+string_flag(
+    name = "pip_index_url",
+    build_setting_default = "https://pypi.org/simple",
+    make_variable = "PIP_INDEX_URL",
+    visibility = ["//visibility:public"],
+)
+
 # Generate `compile_commands.json` with `bazel run //:refresh_compile_commands`.
 refresh_compile_commands(
     name = "refresh_compile_commands",

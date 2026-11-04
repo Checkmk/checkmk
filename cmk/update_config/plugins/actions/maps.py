@@ -179,7 +179,7 @@ class MigrateLegacyMaps(UpdateAction):
         boards_dir = legacy_maps_dir() / "boards"
         if not boards_dir.is_dir():
             return
-        record = store.load_object_from_file(_record_path(), default={}, debug=debug)
+        record = store.load_object_from_file(_record_path(), default={}, debug=False)
         outcomes: dict[str, str] = record.get("boards", {})
         icons: dict[str, str] = record.get("icons", {})
         boards = [path for path in sorted(boards_dir.glob("*.json")) if path.stem not in outcomes]
@@ -200,7 +200,6 @@ class MigrateLegacyMaps(UpdateAction):
             record.get("pending", {}),
             outcomes,
             lambda outcomes, pending: _save_record(outcomes, icons, pending),
-            debug=debug,
         ) as maps:
             boards = [path for path in boards if path.stem not in outcomes]
             migrated = _prepare_maps(boards, maps, icons, logger)

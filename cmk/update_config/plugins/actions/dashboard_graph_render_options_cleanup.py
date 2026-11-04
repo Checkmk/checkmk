@@ -53,14 +53,14 @@ class RemoveObsoleteDashboardGraphRenderOptions(UpdateAction):
 
     @override
     def __call__(self, logger: Logger, *, debug: bool) -> None:
-        self.remove_obsolete_render_options(cmk.utils.paths.profile_dir, logger, debug=debug)
+        self.remove_obsolete_render_options(cmk.utils.paths.profile_dir, logger)
 
     @staticmethod
-    def remove_obsolete_render_options(profile_dir: Path, logger: Logger, *, debug: bool) -> None:
+    def remove_obsolete_render_options(profile_dir: Path, logger: Logger) -> None:
         cleaned = 0
         for user_dir in user_directories(profile_dir):
             path = user_dir / "user_dashboards.mk"
-            dashboards = store.load_object_from_file(path, default={}, debug=debug)
+            dashboards = store.load_object_from_file(path, default={}, debug=False)
             try:
                 stripped = _without_obsolete_render_options(_as_dict(dashboards, "the dashboards"))
             except (TypeError, KeyError) as exc:

@@ -22,14 +22,14 @@ class RenameSidebarSnapins(UpdateAction):
 
     @override
     def __call__(self, logger: Logger, *, debug: bool) -> None:
-        self.rename_snapins(cmk.utils.paths.profile_dir, logger, debug=debug)
+        self.rename_snapins(cmk.utils.paths.profile_dir, logger)
 
     @staticmethod
-    def rename_snapins(profile_dir: Path, logger: Logger, *, debug: bool) -> None:
+    def rename_snapins(profile_dir: Path, logger: Logger) -> None:
         renamed = 0
         for user_dir in user_directories(profile_dir):
             path = user_dir / "sidebar.mk"
-            config = store.load_object_from_file(path, default=None, debug=debug)
+            config = store.load_object_from_file(path, default=None, debug=False)
             if not isinstance(config, dict) or not isinstance(
                 snapins := config.get("snapins"), list
             ):

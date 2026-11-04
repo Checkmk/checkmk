@@ -99,7 +99,7 @@ class WarnInvalidBIRegexes(UpdateAction):
         if is_distributed_setup_remote_site(active_config.sites):
             return
         config = store.load_object_from_file(
-            default_config_dir / "multisite.d/wato/bi_config.bi", default=None, debug=debug
+            default_config_dir / "multisite.d/wato/bi_config.bi", default=None, debug=False
         )
         warn_invalid_bi_regexes(_list(_mapping(config).get("packs")), logger)
 

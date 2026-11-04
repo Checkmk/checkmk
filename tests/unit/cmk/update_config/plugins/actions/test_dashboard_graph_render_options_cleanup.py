@@ -47,9 +47,7 @@ def test_removes_obsolete_render_options(tmp_path: Path, obsolete_key: str) -> N
         },
     )
 
-    RemoveObsoleteDashboardGraphRenderOptions.remove_obsolete_render_options(
-        tmp_path, LOGGER, debug=True
-    )
+    RemoveObsoleteDashboardGraphRenderOptions.remove_obsolete_render_options(tmp_path, LOGGER)
 
     dashboard = literal_eval(path.read_text())["my_dashboard"]
     assert dashboard["title"] == "My dashboard"
@@ -74,9 +72,7 @@ def test_removes_obsolete_render_options_leaves_other_users_alone(tmp_path: Path
     )
     untouched_content = without_font_size.read_text()
 
-    RemoveObsoleteDashboardGraphRenderOptions.remove_obsolete_render_options(
-        tmp_path, LOGGER, debug=True
-    )
+    RemoveObsoleteDashboardGraphRenderOptions.remove_obsolete_render_options(tmp_path, LOGGER)
 
     rewritten = literal_eval(with_font_size.read_text())
     assert rewritten["d"]["widgets"]["w"]["graph_render_options"] == {}
@@ -97,9 +93,7 @@ def test_the_count_is_dashboards_not_users(
     )
 
     with caplog.at_level(logging.INFO):
-        RemoveObsoleteDashboardGraphRenderOptions.remove_obsolete_render_options(
-            tmp_path, LOGGER, debug=True
-        )
+        RemoveObsoleteDashboardGraphRenderOptions.remove_obsolete_render_options(tmp_path, LOGGER)
 
     assert "2 dashboards" in caplog.text
 
@@ -107,9 +101,7 @@ def test_the_count_is_dashboards_not_users(
 def test_a_user_without_dashboards_gets_no_file(tmp_path: Path) -> None:
     (tmp_path / "cmkadmin").mkdir()
 
-    RemoveObsoleteDashboardGraphRenderOptions.remove_obsolete_render_options(
-        tmp_path, LOGGER, debug=True
-    )
+    RemoveObsoleteDashboardGraphRenderOptions.remove_obsolete_render_options(tmp_path, LOGGER)
 
     assert not (tmp_path / "cmkadmin" / "user_dashboards.mk").exists()
 
@@ -135,8 +127,6 @@ def test_a_dashboard_it_cannot_read_fails_the_action(
     content_before = path.read_text()
 
     with pytest.raises(ValueError, match=str(path)):
-        RemoveObsoleteDashboardGraphRenderOptions.remove_obsolete_render_options(
-            tmp_path, LOGGER, debug=True
-        )
+        RemoveObsoleteDashboardGraphRenderOptions.remove_obsolete_render_options(tmp_path, LOGGER)
 
     assert path.read_text() == content_before

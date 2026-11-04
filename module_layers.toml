@@ -1616,6 +1616,7 @@ allows = [
   "cmk.graphing_engine",
   "cmk.gui",
   "cmk.licensing",
+  "cmk.ruleset_matcher",
   "cmk.update_config",
   "cmk.utils",
 ]

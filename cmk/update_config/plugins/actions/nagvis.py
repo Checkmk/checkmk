@@ -11,8 +11,8 @@ from pathlib import Path
 from typing import override
 
 from cmk.ccc.site import get_omd_config
-from cmk.ccc.version import Version
 from cmk.update_config.internal import ExpiryVersion, UpdateAction
+from cmk.update_config.lib import is_update_from_before_3_0
 from cmk.update_config.registry import update_action_registry
 from cmk.utils import paths
 
@@ -31,21 +31,6 @@ _DEMO_MAPS = frozenset(
         "demo-worldmap.cfg",
     }
 )
-
-
-def _is_update_from_before_3_0(from_version: str | None, logger: Logger) -> bool:
-    if from_version is None:
-        return False
-    try:
-        # OMD_FROM_VERSION carries the edition suffix, e.g. "2.5.0p17.ultimate"
-        base = Version.from_str(from_version.rsplit(".", 1)[0]).base
-    except ValueError:
-        logger.warning(
-            'Cannot parse OMD_FROM_VERSION "%(version)s", skipping NagVis check',
-            {"version": from_version},
-        )
-        return False
-    return base is not None and base.major < 3
 
 
 def _has_own_nagvis_maps(omd_root: Path) -> bool:
@@ -81,7 +66,7 @@ class KeepNagVisForSitesWithMaps(UpdateAction):
 
     @override
     def __call__(self, logger: Logger, *, debug: bool) -> None:
-        if not _is_update_from_before_3_0(self._from_version(), logger):
+        if not is_update_from_before_3_0(self._from_version(), logger):
             return
         if "CONFIG_NAGVIS" not in get_omd_config(self._omd_root):
             return

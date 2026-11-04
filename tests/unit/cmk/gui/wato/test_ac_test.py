@@ -20,6 +20,8 @@ from cmk.gui.wato._ac_tests import (
     ACTestApacheForwardedHeaders,
     ACTestAutomationUserSecret,
     ACTestBakeryAPI,
+    ACTestDeprecatedGUIExtensions,
+    ACTestDeprecatedLegacyGUIExtensions,
     ACTestGenericCheckHelperUsage,
     ACTestHaSIAPI,
     ACTestPasswordStoreAPI,
@@ -702,3 +704,199 @@ def test_shadowed_web_files_lists_only_the_first_files(tmp_path: Path) -> None:
     assert "js/script_09.js" in result.text
     assert "js/script_10.js" not in result.text
     assert "and 2 more" in result.text
+
+
+def _write(root: Path, rel_path: str) -> None:
+    path = root / rel_path
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.touch()
+
+
+def _gui_plugins_finding(tmp_path: Path, rel_path: str) -> ACSingleResult:
+    _write(tmp_path / "local/lib/python3/cmk/gui/plugins", rel_path)
+    [result] = ACTestDeprecatedGUIExtensions(
+        tmp_path / "local/lib/python3/cmk/gui/plugins"
+    ).execute(SiteId("NO_SITE"), Config())
+    return result
+
+
+def _legacy_gui_plugins_finding(tmp_path: Path, rel_path: str) -> ACSingleResult:
+    _write(tmp_path / "local/share/check_mk/web", rel_path)
+    [result] = ACTestDeprecatedLegacyGUIExtensions(tmp_path / "local/share/check_mk/web").execute(
+        SiteId("NO_SITE"), Config()
+    )
+    return result
+
+
+def test_gui_plugins_without_plugins(tmp_path: Path) -> None:
+    [result] = ACTestDeprecatedGUIExtensions(
+        tmp_path / "local/lib/python3/cmk/gui/plugins"
+    ).execute(SiteId("NO_SITE"), Config())
+    assert result.state is ACResultState.OK
+
+
+def test_gui_plugin_in_loaded_package_warns(tmp_path: Path) -> None:
+    result = _gui_plugins_finding(tmp_path, "views/my_view.py")
+    assert (result.state, result.text) == (
+        ACResultState.WARN,
+        (
+            f"'{tmp_path / 'local/lib/python3/cmk/gui/plugins/views/my_view.py'}'"
+            " may break with any update of Checkmk."
+            " Checkmk loads plug-ins from this folder through internal interfaces, which are"
+            " not supported for plug-ins."
+        ),
+    )
+
+
+def test_gui_plugin_in_nested_loaded_package_warns(tmp_path: Path) -> None:
+    result = _gui_plugins_finding(tmp_path, "views/icons/my_icon.py")
+    assert result.state is ACResultState.WARN
+
+
+def test_gui_plugin_in_metrics_package_names_the_graphing_api(tmp_path: Path) -> None:
+    result = _gui_plugins_finding(tmp_path, "metrics/my_metrics.py")
+    assert (result.state, result.text) == (
+        ACResultState.CRIT,
+        (
+            f"'{tmp_path / 'local/lib/python3/cmk/gui/plugins/metrics/my_metrics.py'}'"
+            " has no effect in Checkmk. Checkmk no"
+            " longer reads graphs, metrics and perf-o-meters from this folder. Re-implement it"
+            " with the supported API cmk.graphing.v1."
+        ),
+    )
+
+
+def test_gui_plugin_in_package_not_loaded_has_no_effect(tmp_path: Path) -> None:
+    result = _gui_plugins_finding(tmp_path, "config/my_config.py")
+    assert (result.state, result.text) == (
+        ACResultState.CRIT,
+        (
+            f"'{tmp_path / 'local/lib/python3/cmk/gui/plugins/config/my_config.py'}'"
+            " has no effect in Checkmk. Checkmk does"
+            " not load plug-ins from this folder."
+        ),
+    )
+
+
+def test_gui_plugins_ignore_files_other_than_python(tmp_path: Path) -> None:
+    result = _gui_plugins_finding(tmp_path, "views/README")
+    assert result.state is ACResultState.OK
+
+
+@pytest.mark.parametrize("folder", ["metrics", "perfometer", "metrics/sub"])
+def test_legacy_gui_plugin_in_graphing_folder_names_the_graphing_api(
+    tmp_path: Path, folder: str
+) -> None:
+    result = _legacy_gui_plugins_finding(tmp_path, f"plugins/{folder}/my_metrics.py")
+    assert (result.state, result.text) == (
+        ACResultState.CRIT,
+        (
+            f"'{tmp_path / 'local/share/check_mk/web/plugins' / folder / 'my_metrics.py'}'"
+            " has no effect in Checkmk."
+            " Checkmk no longer reads graphs, metrics and perf-o-meters from this folder."
+            " Re-implement it with the supported API cmk.graphing.v1."
+        ),
+    )
+
+
+def test_legacy_gui_plugin_nested_in_loaded_folder_has_no_effect(tmp_path: Path) -> None:
+    result = _legacy_gui_plugins_finding(tmp_path, "plugins/views/sub/my_view.py")
+    assert result.state is ACResultState.CRIT
+
+
+def test_legacy_gui_plugin_outside_plugins_folder_has_no_effect(tmp_path: Path) -> None:
+    result = _legacy_gui_plugins_finding(tmp_path, "htdocs/my_page.py")
+    assert result.state is ACResultState.CRIT
+
+
+@pytest.mark.parametrize("package", ["dashboard", "sidebar", "visuals", "wato"])
+def test_gui_plugin_in_each_loaded_package_warns(tmp_path: Path, package: str) -> None:
+    result = _gui_plugins_finding(tmp_path, f"{package}/my_plugin.py")
+    assert result.state is ACResultState.WARN
+
+
+def test_gui_plugin_finding_names_its_file(tmp_path: Path) -> None:
+    result = _gui_plugins_finding(tmp_path, "views/my_view.py")
+    assert result.path == tmp_path / "local/lib/python3/cmk/gui/plugins/views/my_view.py"
+
+
+def test_gui_plugin_findings_are_sorted_by_their_file(tmp_path: Path) -> None:
+    _write(tmp_path / "local/lib/python3/cmk/gui/plugins", "views/b_view.py")
+    _write(tmp_path / "local/lib/python3/cmk/gui/plugins", "views/a_view.py")
+    assert [
+        result.path
+        for result in ACTestDeprecatedGUIExtensions(
+            tmp_path / "local/lib/python3/cmk/gui/plugins"
+        ).execute(SiteId("NO_SITE"), Config())
+    ] == [
+        tmp_path / "local/lib/python3/cmk/gui/plugins/views/a_view.py",
+        tmp_path / "local/lib/python3/cmk/gui/plugins/views/b_view.py",
+    ]
+
+
+def test_gui_plugin_outside_a_package_has_no_effect(tmp_path: Path) -> None:
+    result = _gui_plugins_finding(tmp_path, "my_plugin.py")
+    assert result.state is ACResultState.CRIT
+
+
+def test_gui_plugin_nested_in_package_not_loaded_has_no_effect(tmp_path: Path) -> None:
+    result = _gui_plugins_finding(tmp_path, "config/sub/my_config.py")
+    assert result.state is ACResultState.CRIT
+
+
+def test_legacy_gui_plugins_without_plugins(tmp_path: Path) -> None:
+    [result] = ACTestDeprecatedLegacyGUIExtensions(tmp_path / "local/share/check_mk/web").execute(
+        SiteId("NO_SITE"), Config()
+    )
+    assert result.state is ACResultState.OK
+
+
+def test_legacy_gui_plugins_ignore_files_other_than_python(tmp_path: Path) -> None:
+    result = _legacy_gui_plugins_finding(tmp_path, "plugins/views/README")
+    assert result.state is ACResultState.OK
+
+
+@pytest.mark.parametrize(
+    "folder", ["config", "dashboard", "icons", "pages", "sidebar", "visuals", "wato"]
+)
+def test_legacy_gui_plugin_in_each_loaded_folder_warns(tmp_path: Path, folder: str) -> None:
+    result = _legacy_gui_plugins_finding(tmp_path, f"plugins/{folder}/my_plugin.py")
+    assert result.state is ACResultState.WARN
+
+
+def test_legacy_gui_plugin_in_loaded_folder_is_reported_with_its_reason(tmp_path: Path) -> None:
+    result = _legacy_gui_plugins_finding(tmp_path, "plugins/views/my_view.py")
+    assert (result.text, result.path) == (
+        (
+            f"'{tmp_path / 'local/share/check_mk/web/plugins/views/my_view.py'}'"
+            " may break with any update of Checkmk."
+            " Checkmk loads plug-ins from this folder through internal interfaces, which are"
+            " not supported for plug-ins."
+        ),
+        tmp_path / "local/share/check_mk/web/plugins/views/my_view.py",
+    )
+
+
+def test_legacy_gui_plugin_without_effect_is_reported_with_its_reason(tmp_path: Path) -> None:
+    result = _legacy_gui_plugins_finding(tmp_path, "plugins/my_folder/my_view.py")
+    assert result.text == (
+        f"'{tmp_path / 'local/share/check_mk/web/plugins/my_folder/my_view.py'}'"
+        " has no effect in Checkmk. Checkmk does"
+        " not load plug-ins from this folder."
+    )
+
+
+def test_legacy_gui_plugin_directly_in_plugins_folder_has_no_effect(tmp_path: Path) -> None:
+    result = _legacy_gui_plugins_finding(tmp_path, "plugins/my_view.py")
+    assert result.state is ACResultState.CRIT
+
+
+def test_gui_plugins_help_names_its_folder(tmp_path: Path) -> None:
+    assert f"'{tmp_path / 'plugins'}'" in ACTestDeprecatedGUIExtensions(tmp_path / "plugins").help()
+
+
+def test_legacy_gui_plugins_help_names_its_folder(tmp_path: Path) -> None:
+    assert (
+        f"'{tmp_path / 'web/plugins'}'"
+        in ACTestDeprecatedLegacyGUIExtensions(tmp_path / "web").help()
+    )

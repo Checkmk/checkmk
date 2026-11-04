@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+import dataclasses
 import multiprocessing
 import os
 import subprocess
@@ -39,6 +40,7 @@ from cmk.gui.watolib.analyze_configuration import (
     ACTest,
     ACTestCategories,
     ACTestRegistry,
+    gui_plugin_effect,
     try_relative_site_path,
 )
 from cmk.gui.watolib.check_mk_automations import find_unknown_check_parameter_rule_sets
@@ -1407,6 +1409,97 @@ class ACTestShadowedWebFiles(ACTest):
         )
 
 
+_LOADED_GUI_PLUGIN_PACKAGES = frozenset({"dashboard", "sidebar", "views", "visuals", "wato"})
+
+_LOADED_LEGACY_GUI_PLUGIN_FOLDERS = frozenset(
+    {"config", "dashboard", "icons", "pages", "sidebar", "views", "visuals", "wato"}
+)
+
+
+@dataclasses.dataclass(frozen=True)
+class _Assessment:
+    state: ACResultState
+    reason: str
+
+
+def _loaded_gui_plugin() -> _Assessment:
+    return _Assessment(
+        state=ACResultState.WARN,
+        reason=_(
+            "Checkmk loads plug-ins from this folder through internal interfaces, which are"
+            " not supported for plug-ins."
+        ),
+    )
+
+
+def _graphing_gui_plugin() -> _Assessment:
+    return _Assessment(
+        state=ACResultState.CRIT,
+        reason=_(
+            "Checkmk no longer reads graphs, metrics and perf-o-meters from this folder."
+            " Re-implement it with the supported API cmk.graphing.v1."
+        ),
+    )
+
+
+def _dead_gui_plugin() -> _Assessment:
+    return _Assessment(
+        state=ACResultState.CRIT,
+        reason=_("Checkmk does not load plug-ins from this folder."),
+    )
+
+
+def _assess_gui_plugin(rel_path: Path) -> _Assessment:
+    match rel_path.parts:
+        case (package, _, *_) if package in _LOADED_GUI_PLUGIN_PACKAGES:
+            return _loaded_gui_plugin()
+        case ("metrics", _, *_):
+            return _graphing_gui_plugin()
+        case _:
+            return _dead_gui_plugin()
+
+
+def _assess_legacy_gui_plugin(rel_path: Path) -> _Assessment:
+    match rel_path.parts:
+        case ("plugins", folder, _file) if folder in _LOADED_LEGACY_GUI_PLUGIN_FOLDERS:
+            return _loaded_gui_plugin()
+        case ("plugins", "metrics" | "perfometer", _, *_):
+            return _graphing_gui_plugin()
+        case _:
+            return _dead_gui_plugin()
+
+
+def _gui_plugin_result(site_id: SiteId, path: Path, assessment: _Assessment) -> ACSingleResult:
+    name = str(try_relative_site_path(site_id, path))
+    return ACSingleResult(
+        state=assessment.state,
+        text=" ".join([gui_plugin_effect(name, assessment.state), assessment.reason]),
+        site_id=site_id,
+        path=path,
+    )
+
+
+def _gui_plugin_results(
+    site_id: SiteId, assessed_plugins: Iterable[tuple[Path, _Assessment]]
+) -> Iterator[ACSingleResult]:
+    if not (
+        results := sorted(
+            (
+                _gui_plugin_result(site_id, path, assessment)
+                for path, assessment in assessed_plugins
+            ),
+            key=lambda result: str(result.path),
+        )
+    ):
+        yield ACSingleResult(
+            state=ACResultState.OK,
+            text=_("No GUI plug-ins found"),
+            site_id=site_id,
+        )
+        return
+    yield from results
+
+
 def _walk(folder: Path) -> Iterator[Path]:
     for root, _dirs, files in os.walk(folder):
         for file in files:
@@ -1415,111 +1508,88 @@ def _walk(folder: Path) -> Iterator[Path]:
 
 
 class ACTestDeprecatedGUIExtensions(ACTest):
+    def __init__(self, root: Path = local_gui_plugins_dir) -> None:
+        self._root = root
+
     @override
     def category(self) -> str:
         return ACTestCategories.deprecations
 
     @override
     def title(self) -> str:
-        return _("Deprecated GUI extensions")
+        return _("GUI plug-ins")
 
     @override
     def help(self) -> str:
         return _(
-            "GUI extensions in <tt>'%(plugins_dir)s'</tt> are marked as 'deprecated'"
-            " and will be ignored in future Checkmk versions"
-            " (official deprecation timeline not decided yet)."
-        ) % {"plugins_dir": str(local_gui_plugins_dir)}
-
-    def _get_files(self) -> Sequence[Path]:
-        try:
-            return list(_walk(local_gui_plugins_dir))
-        except FileNotFoundError:
-            return []
+            "<p>Checkmk imports the Python files in these packages below"
+            " <tt>'%(plugins_dir)s'</tt>, including their subfolders: %(packages)s. Other files"
+            " below this folder have no effect.</p>"
+            "<p>These plug-ins use internal interfaces of Checkmk. These interfaces are not"
+            " supported for plug-ins and may change with any update. Graphs, metrics and"
+            " perf-o-meters are no longer read from them and need the supported API"
+            " cmk.graphing.v1. Rule sets have the supported API cmk.rulesets.v1. Files which"
+            " use a supported API belong below <tt>cmk_addons/plugins</tt>; Checkmk finds them"
+            " here only for rule sets in <tt>wato/check_parameters</tt>, a folder for its own"
+            " rule sets.</p>"
+            "<p>Files which Checkmk fails to load are listed by the test 'Broken GUI"
+            " extensions'.</p>"
+        ) % {
+            "plugins_dir": self._root,
+            "packages": ", ".join(sorted(_LOADED_GUI_PLUGIN_PACKAGES)),
+        }
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
-        if files := self._get_files():
-            for plugin_filepath in files:
-                yield ACSingleResult(
-                    state=ACResultState.WARN,
-                    text=(
-                        _(
-                            "GUI extension in %(plugin_name)r uses an API which is marked "
-                            "as deprecated and may not work anymore due to "
-                            "unknown imports or objects (file: %(file)s)."
-                        )
-                        % {
-                            "plugin_name": plugin_filepath.parent.name,
-                            "file": try_relative_site_path(site_id, plugin_filepath),
-                        }
-                    ),
-                    site_id=site_id,
-                    path=plugin_filepath,
-                )
-            return
-
-        yield ACSingleResult(
-            state=ACResultState.OK,
-            text=_("No GUI extensions using the deprecated API"),
-            site_id=site_id,
+        yield from _gui_plugin_results(
+            site_id,
+            (
+                (path, _assess_gui_plugin(path.relative_to(self._root)))
+                for path in _walk(self._root)
+            ),
         )
 
 
 class ACTestDeprecatedLegacyGUIExtensions(ACTest):
+    def __init__(self, root: Path = local_web_dir) -> None:
+        self._root = root
+
     @override
     def category(self) -> str:
         return ACTestCategories.deprecations
 
     @override
     def title(self) -> str:
-        return _("Deprecated legacy GUI extensions")
+        return _("Legacy GUI plug-ins")
 
     @override
     def help(self) -> str:
         return _(
-            "Legacy GUI extensions in <tt>'%(web_dir)s'</tt> are marked as 'deprecated'"
-            " and will be ignored in future Checkmk versions"
-            " (official deprecation timeline not decided yet)."
-        ) % {"web_dir": str(local_web_dir)}
-
-    def _get_files(self) -> Sequence[Path]:
-        try:
-            return list(_walk(local_web_dir))
-        except FileNotFoundError:
-            return []
+            "<p>Checkmk runs the Python files placed directly in these folders below"
+            " <tt>'%(plugins_dir)s'</tt>: %(folders)s. If a <tt>.pyc</tt> file sits next to a"
+            " <tt>.py</tt> file, Checkmk runs the <tt>.pyc</tt> file instead. Files in"
+            " subfolders or in other folders have no effect.</p>"
+            "<p>These plug-ins use internal interfaces of Checkmk. These interfaces are not"
+            " supported for plug-ins and may change with any update. Graphs, metrics and"
+            " perf-o-meters are no longer read from them and need the supported API"
+            " cmk.graphing.v1. Rule sets have the supported API cmk.rulesets.v1. Files which"
+            " use a supported API have no effect here and belong below"
+            " <tt>cmk_addons/plugins</tt>.</p>"
+            "<p>Files which Checkmk fails to load are listed by the test 'Broken GUI"
+            " extensions'.</p>"
+        ) % {
+            "plugins_dir": self._root / "plugins",
+            "folders": ", ".join(sorted(_LOADED_LEGACY_GUI_PLUGIN_FOLDERS)),
+        }
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
-        if files := self._get_files():
-            for plugin_filepath in files:
-                match plugin_filepath.parent.name:
-                    case "metrics" | "perfometer" | "wato":
-                        pass  # We've been warning for those for long enough now.
-                    case _:
-                        yield ACSingleResult(
-                            state=ACResultState.WARN,
-                            text=(
-                                _(
-                                    "Legacy GUI extension in %(plugin_name)r uses an "
-                                    "API which is marked as deprecated "
-                                    "and may not work anymore due to "
-                                    "unknown imports or objects (file: %(file)s)."
-                                )
-                                % {
-                                    "plugin_name": plugin_filepath.parent.name,
-                                    "file": try_relative_site_path(site_id, plugin_filepath),
-                                }
-                            ),
-                            site_id=site_id,
-                            path=plugin_filepath,
-                        )
-            return
-
-        yield ACSingleResult(
-            state=ACResultState.OK,
-            text=_("No legacy GUI extensions using the deprecated API"),
-            site_id=site_id,
+        yield from _gui_plugin_results(
+            site_id,
+            (
+                (path, _assess_legacy_gui_plugin(path.relative_to(self._root)))
+                for path in _walk(self._root)
+            ),
         )
 
 

@@ -762,7 +762,7 @@ def test_agent_aws_elasticache_metrics_go_to_the_host_of_their_node(
 
     assert {
         result.piggyback_hostname: {row["Label"] for row in result.content} for result in results
-    } == {"node-a": {"node-a"}, "node-b": {"node-b"}}
+    } == {"node-a_region": {"node-a"}, "node-b_region": {"node-b"}}
 
 
 def test_agent_aws_elasticache_node_hosts_get_the_resource_labels(
@@ -774,7 +774,7 @@ def test_agent_aws_elasticache_node_hosts_get_the_resource_labels(
 
     # A node has the tags of its cluster.
     assert {result.piggyback_hostname: result.piggyback_host_labels for result in results} == {
-        node: {
+        f"{node}_region": {
             "cmk/aws/service": "elasticache",
             "cmk/aws/name": node,
             "cmk/aws/resource_id": node,

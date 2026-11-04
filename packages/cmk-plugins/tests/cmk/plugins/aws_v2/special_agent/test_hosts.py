@@ -194,9 +194,15 @@ def test_account_data_goes_to_the_account_host(
 
 
 def test_elasticache_node_goes_to_a_host_per_node() -> None:
-    node = ElastiCacheNode("test-redis-cluster-3-0001-001")
+    node = ElastiCacheNode("test-redis-cluster-3-0001-001", "eu-central-1")
 
-    assert target_host(node, DEFAULT_NAMING) == "test-redis-cluster-3-0001-001"
+    assert target_host(node, DEFAULT_NAMING) == "test-redis-cluster-3-0001-001_eu-central-1"
+
+
+def test_elasticache_nodes_with_the_same_id_in_two_regions_go_to_two_hosts() -> None:
+    assert target_host(ElastiCacheNode("node", "eu-central-1"), DEFAULT_NAMING) != target_host(
+        ElastiCacheNode("node", "us-east-1"), DEFAULT_NAMING
+    )
 
 
 def test_rds_instance_goes_to_a_host_per_instance() -> None:

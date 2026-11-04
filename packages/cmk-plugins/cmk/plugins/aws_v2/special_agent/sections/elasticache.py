@@ -447,7 +447,7 @@ class ElastiCache(AWSSectionCloudwatch):
         rows: Sequence[Mapping[str, object]],
         node: _ElastiCacheNodeInfo | None,
     ) -> AWSSectionResult:
-        host = self._target_host(hosts.ElastiCacheNode(node_id))
+        host = self._target_host(hosts.ElastiCacheNode(node_id, self._region))
         if node is None:
             # The node is gone from the summary since its metrics were cached.
             return AWSSectionResult(host, rows, AwsResource(service="elasticache"))

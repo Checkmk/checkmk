@@ -109,6 +109,7 @@ class ElastiCacheNode:
     """An ElastiCache node, a cache cluster in the AWS API."""
 
     node_id: str
+    region: str
 
 
 @dataclass(frozen=True)
@@ -272,7 +273,7 @@ def _s3_bucket_host(bucket: S3Bucket) -> TargetHost:
 
 
 def _elasticache_node_host(node: ElastiCacheNode) -> TargetHost:
-    return TargetHost(node.node_id)
+    return _hostname_from_name_and_region(node.node_id, node.region)
 
 
 def _rds_instance_host(instance: RDSInstance) -> TargetHost:

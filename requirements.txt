@@ -3773,6 +3773,7 @@ opentelemetry-api==1.45.2 \
     # via
     #   -r cmk/requirements.in
     #   -r non-free/packages/cmk-ai-control-plane/dev-requirements.in
+    #   -r non-free/packages/cmk-ai-control-plane/requirements.in
     #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r packages/cmk-trace/requirements.in
     #   -r packages/cmk-wsgi/requirements.in
@@ -3846,6 +3847,7 @@ opentelemetry-instrumentation-fastapi==0.66b2 \
     --hash=sha256:bd226e0196990999eef77380a64527a26f35b621e681c3cad860984ecc3c23f5
     # via
     #   -r cmk/requirements.in
+    #   -r non-free/packages/cmk-ai-control-plane/requirements.in
     #   -r packages/cmk-maps/requirements.in
 opentelemetry-instrumentation-httpx==0.66b2 \
     --hash=sha256:93e2b6ab1a505d76ec3d98abcf7e8527d4712167d6c3b5ebbb9c68d9309d9ba5 \

@@ -291,6 +291,10 @@ msgstr ""
 msgid "\"%(hostname)s\" is not a valid host name"
 msgstr "\"%(hostname)s\" is geen geldige hostnaam"
 
+#, fuzzy, python-format
+msgid "\"%(pattern)s\" is not a valid regular expression: %(error)s."
+msgstr "Ongeldige reguliere uitdrukking"
+
 #, python-format
 msgid "\"%(source)s\" and \"%(target)s\" are already related in another way."
 msgstr ""
@@ -3046,6 +3050,11 @@ msgid ""
 "A pull mode base URL and shared secret are required to test the connection."
 msgstr ""
 
+msgid ""
+"A refresh token that is not used for this long expires. Every refresh issues "
+"a new refresh token, so clients in active use keep working."
+msgstr ""
+
 #, fuzzy
 msgid "A regular expression is required"
 msgstr "Reguliere uitdrukking te verwachten in de inhoud"
@@ -3761,6 +3770,10 @@ msgid "AWS v2/SNS Limits"
 msgstr "AWS/SNS-limieten"
 
 #, fuzzy
+msgid "AWS v2/SNS topic"
+msgstr "AWS/SNS"
+
+#, fuzzy
 msgid "AWS v2/WAFV2 limits"
 msgstr "AWS/WAFV2 Grenzen"
 
@@ -4331,6 +4344,10 @@ msgstr "API Toegangstoken"
 
 #, fuzzy
 msgid "Access token is required"
+msgstr "Host succesvol aangemaakt"
+
+#, fuzzy
+msgid "Access token lifetime"
 msgstr "Host succesvol aangemaakt"
 
 msgid "Access via TCP"
@@ -6344,6 +6361,11 @@ msgstr ""
 "Na deze tijd in de status <i>down</i> wordt een poort als ongebruikt "
 "beschouwd."
 
+msgid ""
+"After this time the user has to log in and approve the client again, however "
+"actively the session is used."
+msgstr ""
+
 msgid "Age"
 msgstr "Leeftijd"
 
@@ -7018,13 +7040,6 @@ msgstr ""
 "Alle absolute gegevens die op deze pagina worden getoond, hebben betrekking "
 "op de tijd sinds deze host is opgestart."
 
-msgid ""
-"All access tokens issued to the selected clients are revoked immediately."
-msgstr ""
-
-msgid "All access tokens issued to this client are revoked immediately."
-msgstr ""
-
 msgid "All accounts in the organization"
 msgstr ""
 
@@ -7482,6 +7497,12 @@ msgstr "Alle diensten met een bepaalde omschrijving"
 
 msgid "All services with this description"
 msgstr "Alle diensten met deze beschrijving"
+
+msgid "All sessions of the selected clients are ended immediately."
+msgstr ""
+
+msgid "All sessions of this client are ended immediately."
+msgstr ""
 
 msgid ""
 "All single-host aggregations that are in non-OK state (honoring state "
@@ -8347,13 +8368,12 @@ msgid "Any"
 msgstr "elke"
 
 msgid ""
-"Any application using the selected tokens will no longer be able to access "
-"the API with them."
+"Any application using the selected sessions will no longer be able to access "
+"the API."
 msgstr ""
 
 msgid ""
-"Any application using this token will no longer be able to access the API "
-"with it."
+"Any application using this session will no longer be able to access the API."
 msgstr ""
 
 msgid ""
@@ -25439,6 +25459,10 @@ msgstr "Wijzig SLA"
 msgid "Edit aggregation"
 msgstr "Bewerk Aggregatie"
 
+#, fuzzy
+msgid "Edit alert"
+msgstr "Filter toevoegen"
+
 #, python-format
 msgid "Edit alert handler rule %(edit_nr)d"
 msgstr "Bewerk waarschuwing handler regel %(edit_nr)d"
@@ -25701,6 +25725,10 @@ msgstr "Wijzig deze regel"
 
 msgid "Edit this aggregation"
 msgstr "Bewerk deze aggregatie"
+
+#, fuzzy
+msgid "Edit this alert"
+msgstr "Dit verslag bewerken"
 
 msgid "Edit this alert handler rule"
 msgstr "Bewerk deze alert handler regel"
@@ -26406,6 +26434,19 @@ msgid ""
 "this option.<br>You can further restrict the imported tags by specifying a "
 "pattern which Checkmk searches for in the key of the AWS tag, or you can "
 "disable the import of AWS tags altogether."
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"Enable this option to import the AWS tags of the monitored resources as host "
+"labels for their piggyback hosts. The label syntax is 'cmk/aws/tag/{key}:"
+"{value}'.<br>Independent of this option, every AWS piggyback host is given "
+"the host label 'cmk/aws/account', and the host of a resource is given labels "
+"for its service, name, resource ID and region, for example 'cmk/aws/"
+"service:rds'. The piggyback hosts for EC2 instances are also given the host "
+"label 'cmk/aws/ec2:instance'.<br>You can further restrict the imported tags "
+"by specifying a pattern which Checkmk searches for in the key of the AWS "
+"tag, or you can disable the import of AWS tags altogether."
 msgstr ""
 
 msgid "Enable this package"
@@ -34902,9 +34943,6 @@ msgstr "Host hernoemen"
 msgid "Host report for multiple hosts"
 msgstr "Hostrapport voor meerdere hosts"
 
-msgid "Host running Event Console"
-msgstr "Host die Event Console uitvoert"
-
 msgid "Host search"
 msgstr "Host zoeken"
 
@@ -35320,6 +35358,11 @@ msgstr "Hoe"
 msgid ""
 "How Maps fetches metric history for graphs. CMC cores stream it over "
 "Livestatus (no credentials). Nagios / Checkmk Raw cores need the REST API."
+msgstr ""
+
+msgid ""
+"How long a client can call the API with one access token before it has to "
+"refresh it."
 msgstr ""
 
 msgid "How long single values or table columns are kept."
@@ -35966,6 +36009,10 @@ msgstr "IPv4"
 
 msgid "IPv4 address"
 msgstr "IPv4-adres"
+
+#, fuzzy
+msgid "IPv4 address of remote Event Console"
+msgstr "IP-adres van externe gebeurtenisconsole"
 
 msgid "IPv4 only"
 msgstr "Alleen IPv4"
@@ -40343,10 +40390,6 @@ msgstr "Is-Home status (alleen Netapp)"
 msgid "Issue type ID"
 msgstr "Uitgiftetype ID"
 
-#, fuzzy
-msgid "Issued"
-msgstr "Emittent"
-
 msgid "Issued by"
 msgstr "Uitgegeven door"
 
@@ -42905,6 +42948,13 @@ msgstr "Levensduur van de certificaten"
 
 msgid "Lifetime remaining"
 msgstr "Resterende levensduur"
+
+msgid ""
+"Lifetimes of the sessions that OAuth clients, such as MCP clients, open on "
+"behalf of a user. Changes to the session lifetime apply to sessions created "
+"afterwards. The refresh and access token lifetimes apply to every token "
+"issued afterwards, including refreshes of existing sessions."
+msgstr ""
 
 msgid "Limit"
 msgstr "Limiet"
@@ -49914,6 +49964,22 @@ msgstr "SNMP Context ID's"
 msgid "No custom attributes are defined yet."
 msgstr "Er zijn nog geen aangepaste attributen gedefinieerd."
 
+#, fuzzy, python-format
+msgid "No custom service configuration can be read: %(reasons)s"
+msgstr "Regel voor gastheer- en dienstconfiguratie"
+
+#, python-format
+msgid ""
+"No custom service configuration can produce a service named \"%(name)s\". A "
+"service from a \"Custom Service\" rule written by hand has no configuration "
+"behind it and cannot be previewed."
+msgstr ""
+
+msgid ""
+"No custom services are configured. A preview is only available for services "
+"created from a Telemetry metric."
+msgstr ""
+
 #, fuzzy
 msgid "No custom services yet"
 msgstr "Aangepaste diensten nota's"
@@ -52193,8 +52259,8 @@ msgid "OAUth authentication"
 msgstr "Authenticatie"
 
 #, fuzzy
-msgid "OAuth access tokens"
-msgstr "API Toegangstoken"
+msgid "OAuth sessions"
+msgstr "Actieve sessies"
 
 #, fuzzy
 msgid "OAuth token"
@@ -52551,11 +52617,11 @@ msgstr "Op geselecteerde regels"
 msgid "On selected services"
 msgstr "Op geselecteerde plaatsen"
 
-msgid "On selected sites"
-msgstr "Op geselecteerde plaatsen"
-
 #, fuzzy
-msgid "On selected tokens"
+msgid "On selected sessions"
+msgstr "Afgewezen sessies"
+
+msgid "On selected sites"
 msgstr "Op geselecteerde plaatsen"
 
 msgid "On selected users"
@@ -60293,6 +60359,10 @@ msgstr "Vernieuwen"
 msgid "Refresh token is required"
 msgstr "Vernieuwen"
 
+#, fuzzy
+msgid "Refresh token lifetime"
+msgstr "Vernieuwen"
+
 #, python-format
 msgid "Refreshed check configuration of host '%(host_name)s'"
 msgstr "Vernieuwde controleconfiguratie van host '%(host_name)s'"
@@ -61082,8 +61152,20 @@ msgstr "Verwijderd: %s"
 msgid "Remove scheduled downtimes?"
 msgstr "<b>verwijder alle geplande downtimes</b> van "
 
+#, fuzzy
+msgid "Remove selected sessions"
+msgstr "Afgewezen sessies"
+
 msgid "Remove service"
 msgstr "Service verwijderen"
+
+#, fuzzy
+msgid "Remove session"
+msgstr "Verwijder alle"
+
+#, fuzzy
+msgid "Remove sessions"
+msgstr "Afgewezen sessies"
 
 #, fuzzy
 msgid "Remove smarthost"
@@ -61133,6 +61215,10 @@ msgstr "Verwijder dit element"
 msgid "Remove this rule pack from the Extension Packages module"
 msgstr "Verwijder dit regelpakket uit de module Uitbreidingspakketten"
 
+#, fuzzy
+msgid "Remove this session"
+msgstr "Verwijder dit element"
+
 msgid "Remove two-factor authentication"
 msgstr "Twee-factor authenticatie verwijderen"
 
@@ -61153,6 +61239,10 @@ msgstr "Verwijderd"
 #, python-format
 msgid "Removed %(group_type)sgroup %(name)s from customer %(customer)s"
 msgstr "%(group_type)sgroep %(name)s verwijderd van klant %(customer)s"
+
+#, fuzzy, python-format
+msgid "Removed %(n)d sessions."
+msgstr "API Toegangstoken"
 
 #, python-format
 msgid "Removed auxiliary tag %(message)s (%(del_id)s)"
@@ -61193,6 +61283,10 @@ msgstr "Verwijderde de %(name)s '%(ident)s'"
 #, fuzzy, python-format
 msgid "Removed the connection '%(name)s'"
 msgstr "Verwijderde verbinding %s"
+
+#, fuzzy
+msgid "Removed the session."
+msgstr "Verplaats dit item"
 
 #, python-format
 msgid "Removed unpackaged extension file %(part_title)s: %(file_name)s"
@@ -62458,30 +62552,6 @@ msgstr "Configuratie op afstand"
 #, fuzzy
 msgid "Review your configuration and run preview service discovery"
 msgstr "Save & run service discovery"
-
-#, fuzzy
-msgid "Revoke access token"
-msgstr "API Toegangstoken"
-
-#, fuzzy
-msgid "Revoke selected access tokens"
-msgstr "API Toegangstoken"
-
-#, fuzzy
-msgid "Revoke this access token"
-msgstr "API Toegangstoken"
-
-#, fuzzy
-msgid "Revoke tokens"
-msgstr "Vernieuwen"
-
-#, fuzzy, python-format
-msgid "Revoked %(n)d access tokens."
-msgstr "API Toegangstoken"
-
-#, fuzzy
-msgid "Revoked the access token."
-msgstr "API Toegangstoken"
 
 msgid "Rewrite application"
 msgstr "Herschrijf toepassing"
@@ -66028,7 +66098,15 @@ msgid ""
 "removed, %(kept)d kept)"
 msgstr "Diensten: %d totaal (%d toegevoegd, %d verwijderd, %d behouden)"
 
+#, fuzzy
+msgid "Session created"
+msgstr "Sessietarief"
+
 msgid "Session idle timeout"
+msgstr "Sessie idle timeout"
+
+#, fuzzy
+msgid "Session lifetime"
 msgstr "Sessie idle timeout"
 
 #, fuzzy
@@ -66044,6 +66122,10 @@ msgstr "Sessie timeout:"
 
 msgid "Session type"
 msgstr "Sessie type"
+
+#, fuzzy
+msgid "Sessions"
+msgstr "sessies"
 
 #, fuzzy, python-format
 msgid "Set '%(title)s' to '%(state)s' on site %(site)s"
@@ -73989,6 +74071,9 @@ msgstr ""
 msgid "The access token for this OAuth2 connection."
 msgstr "Een beschrijvende titel van deze actie."
 
+msgid "The access token lifetime must not exceed the refresh token lifetime"
+msgstr ""
+
 #, python-format
 msgid "The action '%(action)s' is not implemented"
 msgstr "De actie '%(action)s' is niet geïmplementeerd"
@@ -74207,13 +74292,12 @@ msgid "The alert \"%(name)s\" does not exist any more."
 msgstr "De regelset \"%s\" bestaat niet."
 
 msgid ""
-"The application using this token will no longer be able to access the API "
-"with it."
+"The application using this session will no longer be able to access the API."
 msgstr ""
 
 msgid ""
-"The applications using the selected tokens will no longer be able to access "
-"the API with them."
+"The applications using the selected sessions will no longer be able to "
+"access the API."
 msgstr ""
 
 msgid "The aspect of the image is preserved."
@@ -76753,9 +76837,10 @@ msgstr ""
 msgid "The name of the data proxy"
 msgstr "De naam van de Data Proxy"
 
-#, fuzzy
-msgid "The name of the data store"
-msgstr "De naam van de Datastore"
+msgid ""
+"The name of the data store. If several data stores share a name, it is "
+"followed by the volume ID of the data store."
+msgstr ""
 
 msgid "The name of the database on the DBMS"
 msgstr "De naam van de database op het DBMS"
@@ -77638,6 +77723,9 @@ msgstr ""
 #, fuzzy
 msgid "The refresh token for this OAuth2 connection."
 msgstr "Een beschrijvende titel van deze actie."
+
+msgid "The refresh token lifetime must not exceed the session lifetime"
+msgstr ""
 
 #, fuzzy, python-format
 msgid ""
@@ -80035,6 +80123,10 @@ msgstr "Deze samenvoeging is bevroren"
 msgid "This aggregation is frozen. The live version has changes."
 msgstr "Deze aggregatie is momenteel ingeschakeld."
 
+#, fuzzy
+msgid "This alert cannot be read, so it cannot be edited"
+msgstr "Het cluster kan geen eigen knooppunt zijn"
+
 #, fuzzy, python-format
 msgid ""
 "This alert handler allows the remote execution of scripts and programs on "
@@ -81877,7 +81969,7 @@ msgstr "Deze toestemming is nodig voor de module <i>Wachtwoorden</i>."
 #, fuzzy
 msgid ""
 "This permission is needed for the modules <b>Users</b>, <b>Roles</b>, "
-"<b>Contact groups</b> and <b>OAuth access tokens</b>"
+"<b>Contact groups</b> and <b>OAuth sessions</b>"
 msgstr ""
 "Deze toestemming is nodig voor de modules <b>Gebruikers</b>, <b>Rollen</b> "
 "en <b>Contactgroepen</b>"
@@ -85780,10 +85872,6 @@ msgstr ""
 #, fuzzy
 msgid "Token invalid"
 msgstr "ongeldig:"
-
-#, fuzzy
-msgid "Tokens"
-msgstr "Penning"
 
 msgid "Tolerance period for 'activating' state"
 msgstr "Tolerantieperiode voor 'activerende' toestand"
@@ -94170,7 +94258,7 @@ msgid ""
 "deserialised server-side."
 msgstr ""
 
-msgid "View and revoke OAuth access tokens issued to users."
+msgid "View and revoke OAuth sessions issued to users."
 msgstr ""
 
 #, fuzzy
@@ -103565,10 +103653,6 @@ msgstr "Maak aangepaste grafiek"
 msgid "Configure and edit an existing custom graph"
 msgstr "Maak aangepaste grafiek"
 
-#, fuzzy
-msgid "Not available yet."
-msgstr "niet beschikbaar"
-
 msgid "Requires the permission \"Customize and use custom graphs\"."
 msgstr ""
 
@@ -104344,8 +104428,37 @@ msgid "Dashboard scope"
 msgstr "Dashboards"
 
 #, fuzzy
+msgid "Select a custom graph to clone."
+msgstr "Kloon aangepaste grafiek"
+
+#, fuzzy
+msgid "The linked custom graph is not available for cloning."
+msgstr "Het bestand ziet er niet uit als een geldig sleutelbestand."
+
+#, fuzzy
+msgid "Discard your changes?"
+msgstr "%d aanpassingen"
+
+msgid ""
+"You have unsaved changes to this cloned graph. Changing the graph source "
+"will discard them."
+msgstr ""
+
+#, fuzzy
+msgid "Discard changes"
+msgstr "%d aanpassingen"
+
+#, fuzzy
+msgid "Keep editing"
+msgstr "Opslaan en testen"
+
+#, fuzzy
 msgid "Next step: Widget settings"
 msgstr "Algemene eigenschappen"
+
+#, fuzzy
+msgid "Search custom graphs ..."
+msgstr "Nieuwe aangepaste grafiek..."
 
 #, fuzzy
 msgid "Data & visualization"
@@ -104363,6 +104476,14 @@ msgstr "Kloon aangepaste grafiek"
 #, fuzzy
 msgid "Select a custom graph"
 msgstr "Kloon aangepaste grafiek"
+
+#, fuzzy
+msgid "Linked to catalog graph “%{title}”"
+msgstr "Verwijder %s"
+
+#, fuzzy
+msgid "Clone & edit graph"
+msgstr "Kloon voorspellingsgrafiek"
 
 msgid ""
 "You can choose between a fixed layout or a responsive, scrollable grid "
@@ -104831,10 +104952,6 @@ msgstr "Sorteren op kolom"
 #, fuzzy
 msgid "Sort direction"
 msgstr "Afgewezen verbindingen"
-
-#, fuzzy
-msgid "Remove sorter"
-msgstr "Verwijder alle"
 
 msgid ""
 "A preview of ntop widgets is not available due to the widget size limitation"
@@ -108871,14 +108988,6 @@ msgstr "Buitenlandse wijzigingen activeren"
 msgid "You have unsaved changes. Closing now will discard them."
 msgstr ""
 
-#, fuzzy
-msgid "Discard changes"
-msgstr "%d aanpassingen"
-
-#, fuzzy
-msgid "Keep editing"
-msgstr "Opslaan en testen"
-
 msgid ""
 "No BI aggregations available. Either you are not permitted to see them or no "
 "BI aggregation is configured."
@@ -108939,6 +109048,27 @@ msgstr "Toestand knooppunt"
 #, fuzzy
 msgid "Nothing to preview"
 msgstr "Niets gelogd"
+
+msgid ""
+"This alert uses conditions the editor cannot show, for example a folder you "
+"cannot access."
+msgstr ""
+
+#, fuzzy
+msgid "Failed to load the alert."
+msgstr "Mislukt om waarde te renderen:"
+
+#, fuzzy
+msgid "Save & activate changes"
+msgstr "Veranderingen niet activeren"
+
+#, fuzzy
+msgid "Create & activate changes"
+msgstr "Veranderingen niet activeren"
+
+#, fuzzy
+msgid "Failed to save the alert."
+msgstr "Mislukt om waarde te renderen:"
 
 #, fuzzy
 msgid "Failed to create the alert."
@@ -109031,10 +109161,6 @@ msgid "Set the default levels of the selected custom services."
 msgstr "Gebruik de standaardkleur van het thema of de metriek."
 
 #, fuzzy
-msgid "Create & activate changes"
-msgstr "Veranderingen niet activeren"
-
-#, fuzzy
 msgid "Failed to create the custom service."
 msgstr "Naam van de aangepaste dienst"
 
@@ -109045,10 +109171,6 @@ msgstr "Regel voor gastheer- en dienstconfiguratie"
 #, fuzzy
 msgid "Failed to load the custom service."
 msgstr "Naam van de aangepaste dienst"
-
-#, fuzzy
-msgid "Save & activate changes"
-msgstr "Veranderingen niet activeren"
 
 #, fuzzy
 msgid "Failed to save the custom service."
@@ -113786,6 +113908,57 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "Host running Event Console"
+#~ msgstr "Host die Event Console uitvoert"
+
+#, fuzzy
+#~ msgid "Issued"
+#~ msgstr "Emittent"
+
+#, fuzzy
+#~ msgid "OAuth access tokens"
+#~ msgstr "API Toegangstoken"
+
+#, fuzzy
+#~ msgid "On selected tokens"
+#~ msgstr "Op geselecteerde plaatsen"
+
+#, fuzzy
+#~ msgid "Revoke access token"
+#~ msgstr "API Toegangstoken"
+
+#, fuzzy
+#~ msgid "Revoke selected access tokens"
+#~ msgstr "API Toegangstoken"
+
+#, fuzzy
+#~ msgid "Revoke this access token"
+#~ msgstr "API Toegangstoken"
+
+#, fuzzy
+#~ msgid "Revoke tokens"
+#~ msgstr "Vernieuwen"
+
+#, fuzzy
+#~ msgid "Revoked the access token."
+#~ msgstr "API Toegangstoken"
+
+#, fuzzy
+#~ msgid "The name of the data store"
+#~ msgstr "De naam van de Datastore"
+
+#, fuzzy
+#~ msgid "Tokens"
+#~ msgstr "Penning"
+
+#, fuzzy
+#~ msgid "Not available yet."
+#~ msgstr "niet beschikbaar"
+
+#, fuzzy
+#~ msgid "Remove sorter"
+#~ msgstr "Verwijder alle"
+
 #, fuzzy
 #~ msgid ""
 #~ "After the download, upload the license usage report to the Checkmk "
@@ -114902,10 +115075,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Delete chat"
 #~ msgstr "Hosts verwijderen"
-
-#, fuzzy
-#~ msgid "Delete chat “%{title}”?"
-#~ msgstr "Verwijder %s"
 
 #, fuzzy
 #~ msgid "Close for now"

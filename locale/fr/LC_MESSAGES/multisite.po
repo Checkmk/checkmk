@@ -286,6 +286,10 @@ msgstr ""
 msgid "\"%(hostname)s\" is not a valid host name"
 msgstr "\"%(hostname)s\" ; n'est pas un nom d'hôte valide"
 
+#, fuzzy, python-format
+msgid "\"%(pattern)s\" is not a valid regular expression: %(error)s."
+msgstr "Expression régulière invalide"
+
 #, python-format
 msgid "\"%(source)s\" and \"%(target)s\" are already related in another way."
 msgstr ""
@@ -3089,6 +3093,11 @@ msgid ""
 "A pull mode base URL and shared secret are required to test the connection."
 msgstr ""
 
+msgid ""
+"A refresh token that is not used for this long expires. Every refresh issues "
+"a new refresh token, so clients in active use keep working."
+msgstr ""
+
 #, fuzzy
 msgid "A regular expression is required"
 msgstr "Expression régulière à attendre dans le contenu"
@@ -3806,6 +3815,10 @@ msgid "AWS v2/SNS Limits"
 msgstr "Limites AWS/SNS"
 
 #, fuzzy
+msgid "AWS v2/SNS topic"
+msgstr "AWS/SNS"
+
+#, fuzzy
 msgid "AWS v2/WAFV2 limits"
 msgstr "Limites de l'AWS/WAFV2"
 
@@ -4375,6 +4388,10 @@ msgstr "Token d'accès à l'API"
 
 #, fuzzy
 msgid "Access token is required"
+msgstr "Hôte créé avec succès"
+
+#, fuzzy
+msgid "Access token lifetime"
 msgstr "Hôte créé avec succès"
 
 msgid "Access via TCP"
@@ -6388,6 +6405,11 @@ msgid "After this time in the state <i>down</i> a port is considered unused."
 msgstr ""
 "Après ce temps dans l'état <i>down</i> un port est considéré comme inutilisé."
 
+msgid ""
+"After this time the user has to log in and approve the client again, however "
+"actively the session is used."
+msgstr ""
+
 msgid "Age"
 msgstr "Âge"
 
@@ -7067,13 +7089,6 @@ msgstr ""
 "Toutes les données absolues présentées sur cette page font référence à la "
 "période de temps écoulée depuis le démarrage de cet hôte."
 
-msgid ""
-"All access tokens issued to the selected clients are revoked immediately."
-msgstr ""
-
-msgid "All access tokens issued to this client are revoked immediately."
-msgstr ""
-
 msgid "All accounts in the organization"
 msgstr ""
 
@@ -7540,6 +7555,12 @@ msgstr "Tous les services ayant une certaine description"
 
 msgid "All services with this description"
 msgstr "Tous les services avec cette description"
+
+msgid "All sessions of the selected clients are ended immediately."
+msgstr ""
+
+msgid "All sessions of this client are ended immediately."
+msgstr ""
 
 msgid ""
 "All single-host aggregations that are in non-OK state (honoring state "
@@ -8416,13 +8437,12 @@ msgid "Any"
 msgstr "tout"
 
 msgid ""
-"Any application using the selected tokens will no longer be able to access "
-"the API with them."
+"Any application using the selected sessions will no longer be able to access "
+"the API."
 msgstr ""
 
 msgid ""
-"Any application using this token will no longer be able to access the API "
-"with it."
+"Any application using this session will no longer be able to access the API."
 msgstr ""
 
 msgid ""
@@ -25638,6 +25658,10 @@ msgstr "Modifier SLA"
 msgid "Edit aggregation"
 msgstr "Modifier l'agrégation"
 
+#, fuzzy
+msgid "Edit alert"
+msgstr "Ajouter un filtre"
+
 #, python-format
 msgid "Edit alert handler rule %(edit_nr)d"
 msgstr "Modifier la règle de traitement des alertes %(edit_nr)d"
@@ -25903,6 +25927,10 @@ msgstr "Modifier cette règle"
 
 msgid "Edit this aggregation"
 msgstr "Modifier cette agrégation"
+
+#, fuzzy
+msgid "Edit this alert"
+msgstr "Modifier ce rapport"
 
 msgid "Edit this alert handler rule"
 msgstr "Modifiez cette règle de traitement des alertes"
@@ -26615,6 +26643,19 @@ msgid ""
 "this option.<br>You can further restrict the imported tags by specifying a "
 "pattern which Checkmk searches for in the key of the AWS tag, or you can "
 "disable the import of AWS tags altogether."
+msgstr ""
+
+#, python-brace-format
+msgid ""
+"Enable this option to import the AWS tags of the monitored resources as host "
+"labels for their piggyback hosts. The label syntax is 'cmk/aws/tag/{key}:"
+"{value}'.<br>Independent of this option, every AWS piggyback host is given "
+"the host label 'cmk/aws/account', and the host of a resource is given labels "
+"for its service, name, resource ID and region, for example 'cmk/aws/"
+"service:rds'. The piggyback hosts for EC2 instances are also given the host "
+"label 'cmk/aws/ec2:instance'.<br>You can further restrict the imported tags "
+"by specifying a pattern which Checkmk searches for in the key of the AWS "
+"tag, or you can disable the import of AWS tags altogether."
 msgstr ""
 
 msgid "Enable this package"
@@ -35188,9 +35229,6 @@ msgstr "Renommage de l'hôte"
 msgid "Host report for multiple hosts"
 msgstr "Rapport sur les hôtes pour plusieurs hôtes"
 
-msgid "Host running Event Console"
-msgstr "Hôte exécutant Event Console"
-
 msgid "Host search"
 msgstr "Recherche de l'hôte"
 
@@ -35606,6 +35644,11 @@ msgstr "Comment"
 msgid ""
 "How Maps fetches metric history for graphs. CMC cores stream it over "
 "Livestatus (no credentials). Nagios / Checkmk Raw cores need the REST API."
+msgstr ""
+
+msgid ""
+"How long a client can call the API with one access token before it has to "
+"refresh it."
 msgstr ""
 
 msgid "How long single values or table columns are kept."
@@ -36256,6 +36299,10 @@ msgstr "IPv4"
 
 msgid "IPv4 address"
 msgstr "Adresse IPv4"
+
+#, fuzzy
+msgid "IPv4 address of remote Event Console"
+msgstr "Adresse IP de la console d'événement distante"
 
 msgid "IPv4 only"
 msgstr "IPv4 uniquement"
@@ -40681,10 +40728,6 @@ msgstr "État d'Is-Home (Netapp uniquement)"
 msgid "Issue type ID"
 msgstr "Type de problème ID"
 
-#, fuzzy
-msgid "Issued"
-msgstr "Émetteur"
-
 msgid "Issued by"
 msgstr "Publié par"
 
@@ -43249,6 +43292,13 @@ msgstr "Durée de vie des certificats"
 
 msgid "Lifetime remaining"
 msgstr "Durée de vie restante"
+
+msgid ""
+"Lifetimes of the sessions that OAuth clients, such as MCP clients, open on "
+"behalf of a user. Changes to the session lifetime apply to sessions created "
+"afterwards. The refresh and access token lifetimes apply to every token "
+"issued afterwards, including refreshes of existing sessions."
+msgstr ""
 
 msgid "Limit"
 msgstr "Limite"
@@ -50309,6 +50359,22 @@ msgstr "IDs de contexte SNMP"
 msgid "No custom attributes are defined yet."
 msgstr "Aucun attribut personnalisé n'est encore défini."
 
+#, fuzzy, python-format
+msgid "No custom service configuration can be read: %(reasons)s"
+msgstr "Règle de configuration des hôtes et des services"
+
+#, python-format
+msgid ""
+"No custom service configuration can produce a service named \"%(name)s\". A "
+"service from a \"Custom Service\" rule written by hand has no configuration "
+"behind it and cannot be previewed."
+msgstr ""
+
+msgid ""
+"No custom services are configured. A preview is only available for services "
+"created from a Telemetry metric."
+msgstr ""
+
 #, fuzzy
 msgid "No custom services yet"
 msgstr "Notes sur les services personnalisés"
@@ -52599,8 +52665,8 @@ msgid "OAUth authentication"
 msgstr "Authentification"
 
 #, fuzzy
-msgid "OAuth access tokens"
-msgstr "Token d'accès à l'API"
+msgid "OAuth sessions"
+msgstr "Sessions actives"
 
 #, fuzzy
 msgid "OAuth token"
@@ -52959,11 +53025,11 @@ msgstr "Sur les règles sélectionnées"
 msgid "On selected services"
 msgstr "Sur des sites sélectionnés"
 
-msgid "On selected sites"
-msgstr "Sur des sites sélectionnés"
-
 #, fuzzy
-msgid "On selected tokens"
+msgid "On selected sessions"
+msgstr "Sessions rejetées"
+
+msgid "On selected sites"
 msgstr "Sur des sites sélectionnés"
 
 msgid "On selected users"
@@ -60777,6 +60843,10 @@ msgstr "Rafraîchir"
 msgid "Refresh token is required"
 msgstr "Rafraîchir"
 
+#, fuzzy
+msgid "Refresh token lifetime"
+msgstr "Rafraîchir"
+
 #, python-format
 msgid "Refreshed check configuration of host '%(host_name)s'"
 msgstr ""
@@ -61574,8 +61644,20 @@ msgstr "Supprimé : %s"
 msgid "Remove scheduled downtimes?"
 msgstr "Supprimer les temps d'arrêt programmés ?"
 
+#, fuzzy
+msgid "Remove selected sessions"
+msgstr "Sessions rejetées"
+
 msgid "Remove service"
 msgstr "Supprimer le service"
+
+#, fuzzy
+msgid "Remove session"
+msgstr "Supprimer tout"
+
+#, fuzzy
+msgid "Remove sessions"
+msgstr "Sessions rejetées"
 
 #, fuzzy
 msgid "Remove smarthost"
@@ -61625,6 +61707,10 @@ msgstr "Retirer cet élément"
 msgid "Remove this rule pack from the Extension Packages module"
 msgstr "Supprimez ce paquet de règles du module \"Extension Packages\""
 
+#, fuzzy
+msgid "Remove this session"
+msgstr "Retirer cet élément"
+
 msgid "Remove two-factor authentication"
 msgstr "Supprimer l'authentification à deux facteurs"
 
@@ -61645,6 +61731,10 @@ msgstr "Supprimé"
 #, python-format
 msgid "Removed %(group_type)sgroup %(name)s from customer %(customer)s"
 msgstr "Suppression du %(group_type)sgroup %(name)s du client %(customer)s"
+
+#, fuzzy, python-format
+msgid "Removed %(n)d sessions."
+msgstr "Token d'accès à l'API"
 
 #, python-format
 msgid "Removed auxiliary tag %(message)s (%(del_id)s)"
@@ -61686,6 +61776,10 @@ msgstr "Suppression du %(name)s '%(ident)s'"
 #, fuzzy, python-format
 msgid "Removed the connection '%(name)s'"
 msgstr "Connexion supprimée %s"
+
+#, fuzzy
+msgid "Removed the session."
+msgstr "Déplacez cette entrée"
 
 #, python-format
 msgid "Removed unpackaged extension file %(part_title)s: %(file_name)s"
@@ -62984,30 +63078,6 @@ msgstr "Configuration à distance"
 #, fuzzy
 msgid "Review your configuration and run preview service discovery"
 msgstr "Sauvegarder & ; lancer la découverte des services"
-
-#, fuzzy
-msgid "Revoke access token"
-msgstr "Token d'accès à l'API"
-
-#, fuzzy
-msgid "Revoke selected access tokens"
-msgstr "Token d'accès à l'API"
-
-#, fuzzy
-msgid "Revoke this access token"
-msgstr "Token d'accès à l'API"
-
-#, fuzzy
-msgid "Revoke tokens"
-msgstr "Rafraîchir"
-
-#, fuzzy, python-format
-msgid "Revoked %(n)d access tokens."
-msgstr "Token d'accès à l'API"
-
-#, fuzzy
-msgid "Revoked the access token."
-msgstr "Token d'accès à l'API"
 
 msgid "Rewrite application"
 msgstr "Réécriture de l'application"
@@ -66580,7 +66650,15 @@ msgid ""
 "removed, %(kept)d kept)"
 msgstr "Services : %d total (%d ajouté, %d supprimé, %d conservé)"
 
+#, fuzzy
+msgid "Session created"
+msgstr "Tarif de la session"
+
 msgid "Session idle timeout"
+msgstr "Délai d'inactivité de la session"
+
+#, fuzzy
+msgid "Session lifetime"
 msgstr "Délai d'inactivité de la session"
 
 #, fuzzy
@@ -66596,6 +66674,10 @@ msgstr "Délai d'attente de la session :"
 
 msgid "Session type"
 msgstr "Type de session"
+
+#, fuzzy
+msgid "Sessions"
+msgstr "sessions"
 
 #, fuzzy, python-format
 msgid "Set '%(title)s' to '%(state)s' on site %(site)s"
@@ -74621,6 +74703,9 @@ msgstr ""
 msgid "The access token for this OAuth2 connection."
 msgstr "Un titre descriptif de cette action."
 
+msgid "The access token lifetime must not exceed the refresh token lifetime"
+msgstr ""
+
 #, python-format
 msgid "The action '%(action)s' is not implemented"
 msgstr "L'action '%(action)s' n'est pas mise en œuvre"
@@ -74838,13 +74923,12 @@ msgid "The alert \"%(name)s\" does not exist any more."
 msgstr "Le jeu de règles \"%s\" n'existe pas."
 
 msgid ""
-"The application using this token will no longer be able to access the API "
-"with it."
+"The application using this session will no longer be able to access the API."
 msgstr ""
 
 msgid ""
-"The applications using the selected tokens will no longer be able to access "
-"the API with them."
+"The applications using the selected sessions will no longer be able to "
+"access the API."
 msgstr ""
 
 msgid "The aspect of the image is preserved."
@@ -77405,9 +77489,10 @@ msgstr ""
 msgid "The name of the data proxy"
 msgstr "Le nom du proxy de données"
 
-#, fuzzy
-msgid "The name of the data store"
-msgstr "Le nom du Datastore"
+msgid ""
+"The name of the data store. If several data stores share a name, it is "
+"followed by the volume ID of the data store."
+msgstr ""
 
 msgid "The name of the database on the DBMS"
 msgstr "Le nom de la base de données sur le SGBD"
@@ -78298,6 +78383,9 @@ msgstr ""
 #, fuzzy
 msgid "The refresh token for this OAuth2 connection."
 msgstr "Un titre descriptif de cette action."
+
+msgid "The refresh token lifetime must not exceed the session lifetime"
+msgstr ""
 
 #, fuzzy, python-format
 msgid ""
@@ -80699,6 +80787,10 @@ msgstr "Cette agrégation est gelée"
 msgid "This aggregation is frozen. The live version has changes."
 msgstr "Cette agrégation est actuellement activée."
 
+#, fuzzy
+msgid "This alert cannot be read, so it cannot be edited"
+msgstr "Le cluster ne peut pas être un nœud à part entière"
+
 #, fuzzy, python-format
 msgid ""
 "This alert handler allows the remote execution of scripts and programs on "
@@ -82567,7 +82659,7 @@ msgstr "Cette autorisation est nécessaire pour le module <i>Mots de passe</i>."
 #, fuzzy
 msgid ""
 "This permission is needed for the modules <b>Users</b>, <b>Roles</b>, "
-"<b>Contact groups</b> and <b>OAuth access tokens</b>"
+"<b>Contact groups</b> and <b>OAuth sessions</b>"
 msgstr ""
 "Cette autorisation est nécessaire pour les modules <b>Utilisateurs</b>, "
 "<b>Rôles</b> et <b>Groupes de contacts</b>"
@@ -86525,10 +86617,6 @@ msgstr ""
 #, fuzzy
 msgid "Token invalid"
 msgstr "invalide :"
-
-#, fuzzy
-msgid "Tokens"
-msgstr "Token"
 
 msgid "Tolerance period for 'activating' state"
 msgstr "Période de tolérance pour l’activation de l’état"
@@ -94992,7 +95080,7 @@ msgid ""
 "deserialised server-side."
 msgstr ""
 
-msgid "View and revoke OAuth access tokens issued to users."
+msgid "View and revoke OAuth sessions issued to users."
 msgstr ""
 
 #, fuzzy
@@ -104478,10 +104566,6 @@ msgstr "Créer un graphique personnalisé"
 msgid "Configure and edit an existing custom graph"
 msgstr "Créer un graphique personnalisé"
 
-#, fuzzy
-msgid "Not available yet."
-msgstr "non disponible"
-
 msgid "Requires the permission \"Customize and use custom graphs\"."
 msgstr ""
 
@@ -105260,8 +105344,37 @@ msgid "Dashboard scope"
 msgstr "Tableaux de bord"
 
 #, fuzzy
+msgid "Select a custom graph to clone."
+msgstr "Cloner un graphique personnalisé"
+
+#, fuzzy
+msgid "The linked custom graph is not available for cloning."
+msgstr "Le fichier ne ressemble pas à un fichier clé valide."
+
+#, fuzzy
+msgid "Discard your changes?"
+msgstr "%d changements"
+
+msgid ""
+"You have unsaved changes to this cloned graph. Changing the graph source "
+"will discard them."
+msgstr ""
+
+#, fuzzy
+msgid "Discard changes"
+msgstr "%d changements"
+
+#, fuzzy
+msgid "Keep editing"
+msgstr "Sauvegarder et tester"
+
+#, fuzzy
 msgid "Next step: Widget settings"
 msgstr "Propriétés générales"
+
+#, fuzzy
+msgid "Search custom graphs ..."
+msgstr "Nouveau graphique personnalisé..."
 
 #, fuzzy
 msgid "Data & visualization"
@@ -105279,6 +105392,14 @@ msgstr "Cloner un graphique personnalisé"
 #, fuzzy
 msgid "Select a custom graph"
 msgstr "Cloner un graphique personnalisé"
+
+#, fuzzy
+msgid "Linked to catalog graph “%{title}”"
+msgstr "Supprimer %s"
+
+#, fuzzy
+msgid "Clone & edit graph"
+msgstr "Cloner le graphique des prévisions"
 
 msgid ""
 "You can choose between a fixed layout or a responsive, scrollable grid "
@@ -105751,10 +105872,6 @@ msgstr "Tri par colonne"
 #, fuzzy
 msgid "Sort direction"
 msgstr "Connexions rejetées"
-
-#, fuzzy
-msgid "Remove sorter"
-msgstr "Supprimer tout"
 
 msgid ""
 "A preview of ntop widgets is not available due to the widget size limitation"
@@ -109799,14 +109916,6 @@ msgstr "Activer les changements étrangers"
 msgid "You have unsaved changes. Closing now will discard them."
 msgstr ""
 
-#, fuzzy
-msgid "Discard changes"
-msgstr "%d changements"
-
-#, fuzzy
-msgid "Keep editing"
-msgstr "Sauvegarder et tester"
-
 msgid ""
 "No BI aggregations available. Either you are not permitted to see them or no "
 "BI aggregation is configured."
@@ -109867,6 +109976,27 @@ msgstr "État du nœud"
 #, fuzzy
 msgid "Nothing to preview"
 msgstr "Rien n'a été enregistré"
+
+msgid ""
+"This alert uses conditions the editor cannot show, for example a folder you "
+"cannot access."
+msgstr ""
+
+#, fuzzy
+msgid "Failed to load the alert."
+msgstr "Échec du rendu de la valeur :"
+
+#, fuzzy
+msgid "Save & activate changes"
+msgstr "Ne pas activer les changements"
+
+#, fuzzy
+msgid "Create & activate changes"
+msgstr "Ne pas activer les changements"
+
+#, fuzzy
+msgid "Failed to save the alert."
+msgstr "Échec du rendu de la valeur :"
 
 #, fuzzy
 msgid "Failed to create the alert."
@@ -109960,10 +110090,6 @@ msgid "Set the default levels of the selected custom services."
 msgstr "Utilisez la couleur par défaut du thème ou de la métrique."
 
 #, fuzzy
-msgid "Create & activate changes"
-msgstr "Ne pas activer les changements"
-
-#, fuzzy
 msgid "Failed to create the custom service."
 msgstr "Nom du service personnalisé"
 
@@ -109974,10 +110100,6 @@ msgstr "Règle de configuration des hôtes et des services"
 #, fuzzy
 msgid "Failed to load the custom service."
 msgstr "Nom du service personnalisé"
-
-#, fuzzy
-msgid "Save & activate changes"
-msgstr "Ne pas activer les changements"
 
 #, fuzzy
 msgid "Failed to save the custom service."
@@ -114728,6 +114850,57 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#~ msgid "Host running Event Console"
+#~ msgstr "Hôte exécutant Event Console"
+
+#, fuzzy
+#~ msgid "Issued"
+#~ msgstr "Émetteur"
+
+#, fuzzy
+#~ msgid "OAuth access tokens"
+#~ msgstr "Token d'accès à l'API"
+
+#, fuzzy
+#~ msgid "On selected tokens"
+#~ msgstr "Sur des sites sélectionnés"
+
+#, fuzzy
+#~ msgid "Revoke access token"
+#~ msgstr "Token d'accès à l'API"
+
+#, fuzzy
+#~ msgid "Revoke selected access tokens"
+#~ msgstr "Token d'accès à l'API"
+
+#, fuzzy
+#~ msgid "Revoke this access token"
+#~ msgstr "Token d'accès à l'API"
+
+#, fuzzy
+#~ msgid "Revoke tokens"
+#~ msgstr "Rafraîchir"
+
+#, fuzzy
+#~ msgid "Revoked the access token."
+#~ msgstr "Token d'accès à l'API"
+
+#, fuzzy
+#~ msgid "The name of the data store"
+#~ msgstr "Le nom du Datastore"
+
+#, fuzzy
+#~ msgid "Tokens"
+#~ msgstr "Token"
+
+#, fuzzy
+#~ msgid "Not available yet."
+#~ msgstr "non disponible"
+
+#, fuzzy
+#~ msgid "Remove sorter"
+#~ msgstr "Supprimer tout"
+
 #, fuzzy
 #~ msgid ""
 #~ "After the download, upload the license usage report to the Checkmk "
@@ -115847,10 +116020,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Delete chat"
 #~ msgstr "Supprimer l'hôte"
-
-#, fuzzy
-#~ msgid "Delete chat “%{title}”?"
-#~ msgstr "Supprimer %s"
 
 #, fuzzy
 #~ msgid "Close for now"

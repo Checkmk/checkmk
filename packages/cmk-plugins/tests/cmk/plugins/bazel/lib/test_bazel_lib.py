@@ -733,10 +733,10 @@ def rate_limited_tags_get(url: str, **kwargs: object) -> MockResponse:
     return default_requests_mock_get(url, **kwargs)
 
 
-@pytest.mark.xfail(strict=True, raises=requests.HTTPError, reason="Crash group 4705")
 @mock.patch("cmk.plugins.bazel.lib.agent.requests.get", rate_limited_tags_get)
 def test_bazel_cache_agent_output_without_version_when_tags_are_rate_limited(
     capsys: pytest.CaptureFixture[str],
+    caplog: pytest.LogCaptureFixture,
     patched_environment: None,  # noqa: ARG001
 ) -> None:
     agent_bazel_cache_main(args=parse_arguments(["--host", "bazel-cache.tld"]))
@@ -745,3 +745,6 @@ def test_bazel_cache_agent_output_without_version_when_tags_are_rate_limited(
     assert "<<<bazel_cache_status:sep(0)>>>" in output
     assert "<<<bazel_cache_metrics:sep(0)>>>" in output
     assert "<<<bazel_cache_version:sep(0)>>>" not in output
+    assert [r.getMessage() for r in caplog.records if r.levelname == "WARNING"] == [
+        "Skipping version information: 403 Client Error: rate limit exceeded"
+    ]

@@ -9,6 +9,7 @@ import subprocess
 from collections.abc import Callable, Generator, Sequence
 from contextlib import contextmanager
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -26,6 +27,8 @@ from cmk.utils.rulesets.definition import RuleGroup
 from tests.system.singlesite.linux_test_host import create_linux_test_host
 from tests.testlib.common.utils import wait_until
 from tests.testlib.site import Site
+
+_FAIL_ONCE_MARKER: Final = "tmp/aut_helper_fail_once"
 
 
 def test_config_reloading_without_reloader(site: Site) -> None:
@@ -123,6 +126,32 @@ def test_config_reloading_on_delete(site: Site, reload_timeout: float) -> None:
         with _reload_ensurer(site) as wait_for_reload:
             site.delete_file(watched)
             wait_for_reload(reload_timeout)
+
+
+def test_config_reloading_after_failed_reload(site: Site, reload_timeout: float) -> None:
+    # One worker, so that every query reaches the worker whose reload failed.
+    with _set_automation_helper_worker_count_to_one(site):
+        last_reload_before_failure = _query_last_reload_at(site)
+        with _config_file_failing_to_load_once(site):
+            wait_until(lambda: not site.file_exists(_FAIL_ONCE_MARKER), timeout=reload_timeout)
+            # The marker goes in the middle of the load. The load blocks the worker's event loop,
+            # so /health answers only after the failed load.
+            last_reload_after_failure = _query_last_reload_at(site)
+
+            # The reloader retries a failed reload only on a newer change.
+            with ensure_cleanup(site, "etc/check_mk/conf.d/aut_helper_reload_trigger.mk") as (
+                file,
+            ):
+                site.write_file(file, "")
+                wait_until(
+                    lambda: _query_last_reload_at(site) > last_reload_after_failure,
+                    timeout=reload_timeout,
+                )
+
+    # Checked last, so that lost watches fail at the change above.
+    assert last_reload_after_failure == last_reload_before_failure, (
+        "The failed reload counts as loaded, or the worker restarted"
+    )
 
 
 def test_standard_workflow_involving_automations(site: Site) -> None:
@@ -234,6 +263,26 @@ def _set_automation_helper_worker_count_to_one(site: Site) -> Generator[None]:
 
 
 @contextmanager
+def _config_file_failing_to_load_once(site: Site) -> Generator[None]:
+    marker = site.path(_FAIL_ONCE_MARKER)
+    site.write_file(_FAIL_ONCE_MARKER, "")
+    # Fail in the automation helper only, so that no other process takes the marker.
+    site.write_file(
+        "etc/check_mk/conf.d/aut_helper_fail_once.mk",
+        f"""import os, sys
+if sys.argv[0].endswith("cmk-automation-helper") and os.path.exists("{marker}"):
+    os.remove("{marker}")
+    raise Exception("simulated config load failure")
+""",
+    )
+    try:
+        yield
+    finally:
+        site.delete_file("etc/check_mk/conf.d/aut_helper_fail_once.mk")
+        site.delete_file(_FAIL_ONCE_MARKER)
+
+
+@contextmanager
 def ensure_cleanup(site: Site, *files: str) -> Generator[tuple[str, ...]]:
     try:
         yield files
@@ -264,6 +313,10 @@ def _run_automation(site: Site, name: str, args: Sequence[str], stdin: str = "")
 
 def _query_health(site: Site) -> str:
     return site.check_output(["cmk-automation-client", "--health"])
+
+
+def _query_last_reload_at(site: Site) -> float:
+    return HealthCheckResponse.model_validate_json(_query_health(site)).last_reload_at
 
 
 def _query_analyse_service(site: Site, args: Sequence[str]) -> AnalyseServiceResult:

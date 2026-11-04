@@ -1,4 +1,4 @@
-load("@bazel_skylib//rules:common_settings.bzl", "string_flag")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag", "string_flag")
 load("@bazel_skylib//rules:copy_file.bzl", "copy_file")
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@gazelle//:def.bzl", "gazelle")
@@ -7,6 +7,7 @@ load("@repo_license//:license.bzl", "REPO_LICENSE")
 load("@rules_proto//proto:defs.bzl", "proto_library")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
 load("@rules_uv//uv:venv.bzl", "create_venv")
+load("//:bazel_variables.bzl", "UV_VENV_ARGS")
 load("//bazel/rules:copy_to_directory.bzl", "copy_to_directory")
 
 exports_files(
@@ -67,6 +68,17 @@ config_setting(
     # We really mean the license here, editions are handled differently!
     name = "gpl+enterprise_repo",
     flag_values = {":repo_license": "gpl+enterprise"},
+)
+
+# Set in CI only (see .bazelrc): the Nexus proxy is not reachable from outside.
+bool_flag(
+    name = "pypi_proxy",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "pypi_proxy_enabled",
+    flag_values = {":pypi_proxy": "True"},
 )
 
 # Generate `compile_commands.json` with `bazel run //:refresh_compile_commands`.
@@ -189,6 +201,7 @@ create_venv(
     destination_folder = ".venv",
     requirements_txt = "@//:requirements_all_lock.txt",
     site_packages_extra_files = [":sitecustomize.py"],
+    uv_args = UV_VENV_ARGS,
     whls = [
         "@rrdtool_native//:rrdtool_python_wheel",
         "//packages/cmk-werks:wheel_entrypoint_only",

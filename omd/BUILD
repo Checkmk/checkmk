@@ -5,7 +5,7 @@ load("@cmk_requirements//:requirements.bzl", "requirement")
 load("@rules_pkg//pkg:tar.bzl", "pkg_tar")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
 load("@rules_uv//uv:venv.bzl", "create_venv")
-load("//:bazel_variables.bzl", "edition_deps", "edition_skel_permissions")
+load("//:bazel_variables.bzl", "UV_VENV_ARGS", "edition_deps", "edition_skel_permissions")
 
 exports_files([
     "requirements.txt",
@@ -21,6 +21,7 @@ create_venv(
     name = "venv",
     destination_folder = "omd/.venv",
     requirements_txt = ":requirements_lock.txt",
+    uv_args = UV_VENV_ARGS,
 )
 
 [pkg_tar(

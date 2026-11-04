@@ -9,7 +9,7 @@ load("@repo_license//:license.bzl", "REPO_LICENSE")
 load("@rules_multirun//:defs.bzl", "multirun")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
 load("@rules_uv//uv:venv.bzl", "create_venv")
-load("//:bazel_variables.bzl", "RUFF_VERSION")
+load("//:bazel_variables.bzl", "RUFF_VERSION", "UV_VENV_ARGS")
 load("//bazel/rules:proto.bzl", "proto_library_as")
 load("//bazel/rules:requirements.bzl", "compile_requirements_in")
 
@@ -71,6 +71,18 @@ config_setting(
     name = "low_zstd_compression_enabled",
     flag_values = {":low_zstd_compression": "True"},
     visibility = ["//visibility:public"],
+)
+
+# Set in CI only (see .bazelrc): the Nexus proxy is not reachable from outside.
+bool_flag(
+    name = "pypi_proxy",
+    build_setting_default = False,
+)
+
+config_setting(
+    name = "pypi_proxy_enabled",
+    flag_values = {":pypi_proxy": "True"},
+    visibility = ["//:__subpackages__"],
 )
 
 # Generate `compile_commands.json` with `bazel run //:refresh_compile_commands`.
@@ -252,6 +264,7 @@ create_venv(
         "@//:gpl_repo": ":community-requirements.txt",
     }),
     site_packages_extra_files = [":sitecustomize.py"],
+    uv_args = UV_VENV_ARGS,
     whls = [
         "@rrdtool_native//:rrdtool_python_wheel",
         "//packages/cmk-shared-typing:wheel",

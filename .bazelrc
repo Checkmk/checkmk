@@ -117,6 +117,9 @@ common:ci --@cmk//distro=UNSET
 common:ci --@cmk//optimize=True
 common:ci --@cmk//strip=True
 
+# Install the venvs through the Nexus PyPI proxy, see //:pypi_proxy.
+common:ci --//:pypi_proxy
+
 # For better performance - passes an argument `--skipLibCheck` to *every* spawn of tsc
 common --@aspect_rules_ts//ts:skipLibCheck=always
 # For more correct typechecks - honor the setting of `skipLibCheck` in the tsconfig.json file

@@ -182,14 +182,15 @@ class Connector:
     def remove_tags(
         self, alias: str, tags: list[str], source: str | None, user: str | None, note: str | None
     ) -> None:
+        # The SDK sends query parameters set to None as the string "None"
+        optional = {
+            key: value
+            for key, value in (("source", source), ("user", user), ("note", note))
+            if value is not None
+        }
         with _handle_api_exceptions("remove_tags"):
             response = self.alert_api.remove_tags(
-                identifier=alias,
-                identifier_type="alias",
-                tags=tags,
-                source=source,
-                user=user,
-                note=note,
+                identifier=alias, identifier_type="alias", tags=tags, **optional
             )
 
         sys.stdout.write(f"Request id: {response.request_id}, successfully removed tags.\n")

@@ -610,11 +610,6 @@ def test_end_event_removes_tag(
     assert (query["tags"], query["note"]) == ([tag], [note])
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason='unset source and owner are passed as None and end up as the literal "None"',
-)
 def test_tag_removal_omits_unset_source_and_owner(
     notify_context: Callable[[Mapping[str, str]], None], opsgenie: FakeOpsgenie
 ) -> None:

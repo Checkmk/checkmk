@@ -450,7 +450,7 @@ class IPLookupCache:
 
     def load_persisted(self) -> None:
         try:
-            self._cache.update(self._store.read_obj(default={}, debug=self._debug))
+            self._cache.update(self._store.read_obj(default={}, debug=False))
         except MKTerminate, MKTimeout:
             # We should be more specific with the exception handler below, then we
             # could drop this special handling here
@@ -485,7 +485,7 @@ class IPLookupCache:
             return
 
         with self._store.locked():
-            self._cache.update(self._store.read_obj(default={}, debug=self._debug))
+            self._cache.update(self._store.read_obj(default={}, debug=False))
             self._cache[cache_id] = ipa
             self.save_persisted()
 

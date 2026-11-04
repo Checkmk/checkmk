@@ -12,7 +12,7 @@ from typing import Final
 import pytest
 from pytest import MonkeyPatch
 
-from cmk.ccc.exceptions import MKIPAddressLookupError
+from cmk.ccc.exceptions import MKGeneralException, MKIPAddressLookupError
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
 from cmk.utils import ip_lookup
@@ -406,10 +406,10 @@ class TestIPLookupCache:
     def test_repr(self) -> None:
         assert isinstance(repr(ip_lookup.IPLookupCache({}, debug=True)), str)
 
-    def test_unreadable_cache_file_reraises_in_debug_mode(self) -> None:
+    def test_unreadable_cache_file_raises_in_debug_mode(self) -> None:
         ip_lookup.IPLookupCache.PATH.mkdir(parents=True)
 
-        with pytest.raises(IsADirectoryError):
+        with pytest.raises(MKGeneralException):
             ip_lookup.IPLookupCache({}, debug=True).load_persisted()
 
     @pytest.mark.usefixtures("tmp_path")

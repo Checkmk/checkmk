@@ -28,6 +28,8 @@ from cmk.plugins.veeam.special_agent.agent_veeam import (
     Fetched,
     FetchStrategy,
     JOB_OBJECT_NAMES_STORAGE_KEY,
+    LOOK_BACK_MANUAL_RETRIES,
+    LOOK_BACK_SESSIONS,
     main,
     parse_arguments,
     SECTIONS,
@@ -1298,6 +1300,7 @@ def _mock_jobs(
                     "name": job["name"],
                     "type": "Backup",
                     "isDisabled": job["id"] in disabled_ids,
+                    **({"schedule": job["schedule"]} if "schedule" in job else {}),
                 }
                 for job in jobs
             ],
@@ -1459,6 +1462,7 @@ def test_fetch_backups_task_with_non_backupjob_session_type_is_dropped(
     # Two objects, so that the job has no single-object session fallback.
     _mock_session_and_objects(api, "session-1", ["vm-1", "vm-2"])
     _mock_tasks(api, [_task(sessionType="AgentDiscovery")])
+    _mock_look_back(api, [])
 
     write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
 
@@ -1493,6 +1497,7 @@ def test_fetch_backups_multi_object_job_matches_by_name_and_drops_the_rest(
         api,
         [_task(name="vm-1"), _task(name="vm-3", id="unmatched")],
     )
+    _mock_look_back(api, [])
 
     write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
 
@@ -1676,6 +1681,7 @@ def test_fetch_backups_task_sessions_404_skips_just_that_job(
     )
     _mock_session_and_objects(api, "session-2", ["vm-2"], resource_id="resource-2")
     _mock_tasks(api, [_task(name="vm-2", sessionId="session-2")], session_id="session-2")
+    _mock_look_back(api, [])
 
     write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
 
@@ -1702,6 +1708,7 @@ def test_fetch_backups_task_sessions_500_skips_just_that_job(
     )
     _mock_session_and_objects(api, "session-2", ["vm-2"], resource_id="resource-2")
     _mock_tasks(api, [_task(name="vm-2", sessionId="session-2")], session_id="session-2")
+    _mock_look_back(api, [])
 
     write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
 
@@ -2139,6 +2146,7 @@ def _run_with_full_run_then_retry(
     _mock_jobs(api, [_job(sessionId="retry")])
     _mock_session_and_objects(api, "retry", ["vm-1", "vm-2"])
     _mock_tasks(api, [_task(name="vm-1", sessionId="retry")], session_id="retry")
+    _mock_look_back(api, [])
     write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
     return capsys.readouterr().out
 
@@ -2160,6 +2168,7 @@ def test_fetch_backups_keeps_the_objects_a_retry_session_leaves_out(
 
     assert '{"name": "vm-1", "sessionId": "retry"' in output
     assert '{"name": "vm-2", "sessionId": "full-run"' in output
+    assert _look_back_requests(api) == 0
 
 
 def test_fetch_backups_does_not_keep_a_task_in_progress(
@@ -2197,10 +2206,140 @@ def test_fetch_backups_drops_a_kept_task_of_an_object_removed_from_the_job(
     _mock_jobs(api, [_job(sessionId="next-run")])
     _mock_session_and_objects(api, "next-run", ["vm-1", "vm-3"])
     _mock_tasks(api, [_task(name="vm-1", sessionId="next-run")], session_id="next-run")
+    _mock_look_back(api, [])
     capsys.readouterr()
     write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
 
     assert "vm-2" not in capsys.readouterr().out
+
+
+def _mock_look_back(
+    api: responses.RequestsMock,
+    session_ids: list[str],
+    job_id: str = "job-id-1",
+    sessions: int = LOOK_BACK_SESSIONS,
+) -> None:
+    api.get(
+        f"{URL}/api/v1/sessions?jobIdFilter={job_id}&typeFilter=BackupJob"
+        f"&orderColumn=CreationTime&orderAsc=false&limit={sessions + 1}",
+        json={
+            "data": [{"id": session_id} for session_id in session_ids],
+            "pagination": {"total": len(session_ids)},
+        },
+    )
+
+
+def _look_back_requests(api: responses.RequestsMock) -> int:
+    return sum("jobIdFilter" in str(call.request.url) for call in api.calls)
+
+
+def test_fetch_backups_looks_back_for_the_objects_a_first_seen_retry_session_leaves_out(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    # The retry session only holds the object that failed in the full run before it.
+    _mock_jobs(api, [_job(sessionId="retry")])
+    _mock_session_and_objects(api, "retry", ["vm-1", "vm-2"])
+    _mock_tasks(api, [_task(name="vm-1", sessionId="retry")], session_id="retry")
+    _mock_look_back(api, ["retry", "full-run"])
+    _mock_tasks(
+        api,
+        [
+            _task(name="vm-1", sessionId="full-run", result={"result": "Failed"}),
+            _task(name="vm-2", sessionId="full-run"),
+        ],
+        session_id="full-run",
+    )
+
+    write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
+
+    output = capsys.readouterr().out
+    assert (
+        '<<<<vm-1>>>>\n<<<veeam_backups:sep(0)>>>\n{"name": "vm-1", "sessionId": "retry"' in output
+    )
+    assert (
+        '<<<<vm-2>>>>\n<<<veeam_backups:sep(0)>>>\n{"name": "vm-2", "sessionId": "full-run"'
+        in output
+    )
+
+
+def test_fetch_backups_does_not_look_back_for_a_session_with_every_object(
+    api: responses.RequestsMock, storage: Storage
+) -> None:
+    _mock_jobs(api, [_job()])
+    _mock_session_and_objects(api, "session-1", ["vm-1", "vm-2"])
+    _mock_tasks(api, [_task(name="vm-1"), _task(name="vm-2")])
+
+    write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
+
+    assert _look_back_requests(api) == 0
+
+
+def test_fetch_backups_looks_back_at_a_limited_number_of_sessions(
+    api: responses.RequestsMock,
+    storage: Storage,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    earlier = [f"earlier-{n}" for n in range(LOOK_BACK_SESSIONS + 1)]
+    _mock_jobs(api, [_job()])
+    _mock_session_and_objects(api, "session-1", ["vm-1", "vm-never-backed-up"])
+    _mock_tasks(api, [_task(name="vm-1")])
+    _mock_look_back(api, earlier)
+    for session_id in earlier:
+        _mock_tasks(api, [_task(name="vm-1", sessionId=session_id)], session_id=session_id)
+
+    write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
+
+    assert "vm-never-backed-up" not in capsys.readouterr().out
+    assert len(_task_requests(api)) == 1 + LOOK_BACK_SESSIONS
+
+
+def _retry(*, is_enabled: bool, retry_count: int) -> dict[str, object]:
+    return {"retry": {"isEnabled": is_enabled, "retryCount": retry_count, "awaitMinutes": 10}}
+
+
+def test_fetch_backups_looks_back_as_many_sessions_as_the_job_retries_plus_manual_ones(
+    api: responses.RequestsMock, storage: Storage
+) -> None:
+    earlier = [f"earlier-{n}" for n in range(10)]
+    _mock_jobs(api, [_job(schedule=_retry(is_enabled=True, retry_count=1))])
+    _mock_session_and_objects(api, "session-1", ["vm-1", "vm-never-backed-up"])
+    _mock_tasks(api, [_task(name="vm-1")])
+    _mock_look_back(api, earlier, sessions=1 + LOOK_BACK_MANUAL_RETRIES)
+    for session_id in earlier:
+        _mock_tasks(api, [_task(name="vm-1", sessionId=session_id)], session_id=session_id)
+
+    write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
+
+    assert len(_task_requests(api)) == 1 + 1 + LOOK_BACK_MANUAL_RETRIES
+
+
+def test_fetch_backups_does_not_look_back_for_a_job_without_retries(
+    api: responses.RequestsMock, storage: Storage
+) -> None:
+    _mock_jobs(api, [_job(schedule=_retry(is_enabled=False, retry_count=3))])
+    _mock_session_and_objects(api, "session-1", ["vm-1", "vm-2"])
+    _mock_tasks(api, [_task(name="vm-1")])
+
+    write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
+
+    assert _look_back_requests(api) == 0
+
+
+def test_fetch_backups_looks_back_once_per_current_session(
+    api: responses.RequestsMock, storage: Storage
+) -> None:
+    _mock_jobs(api, [_job(sessionId="retry")])
+    _mock_session_and_objects(api, "retry", ["vm-1", "vm-never-backed-up"])
+    _mock_tasks(api, [_task(name="vm-1", sessionId="retry")], session_id="retry")
+    _mock_look_back(api, ["full-run"])
+    _mock_tasks(api, [_task(name="vm-1", sessionId="full-run")], session_id="full-run")
+
+    for _run in range(2):
+        write_sections(_client(_auth(storage), storage), [("veeam_backups", fetch_backups)])
+
+    assert _look_back_requests(api) == 1
 
 
 def test_wrong_credentials_are_reported(api: responses.RequestsMock, storage: Storage) -> None:

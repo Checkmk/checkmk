@@ -15,7 +15,7 @@ import json
 import logging
 import sys
 import time
-from collections.abc import Callable, Container, Iterable, Mapping, Sequence
+from collections.abc import Callable, Collection, Container, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from http import HTTPStatus
 from typing import override
@@ -496,11 +496,21 @@ class _SessionProgress(_ApiItem):
     transferred_size: int | None = None
 
 
+class _JobRetry(_ApiItem):
+    is_enabled: bool | None = None
+    retry_count: int | None = None
+
+
+class _JobSchedule(_ApiItem):
+    retry: _JobRetry | None = None
+
+
 class _Job(_ApiItem):
     """An item of GET /api/v1/jobs."""
 
     id: str
     is_disabled: bool
+    schedule: _JobSchedule | None = None
 
 
 def _disabled_job_ids(client: VeeamClient) -> frozenset[str]:
@@ -1032,6 +1042,8 @@ LAST_TASKS_STORAGE_KEY = "last_tasks"
 class _CachedJobTasks(BaseModel):
     tasks: Mapping[ObjectName, Mapping[str, object]]
     """The newest finished task of each of the job's objects seen so far."""
+    looked_back_in: SessionId | None = None
+    """The job's current session when `_look_back` was last done."""
 
 
 def _load_last_tasks_cache(storage: Storage) -> Mapping[JobId, _CachedJobTasks]:
@@ -1059,6 +1071,68 @@ def _merge_newest(
         if (other := merged.get(object_name)) is None or task.creation_epoch > other.creation_epoch:
             merged[object_name] = task
     return merged
+
+
+LOOK_BACK_SESSIONS = 10
+"""For a job whose retry settings are unknown."""
+LOOK_BACK_MANUAL_RETRIES = 2
+"""Retries started by hand, on top of the job's own."""
+
+
+def _look_back_sessions(job: _Job) -> int:
+    """Each retry session only holds the objects still failing, so the last full run
+    is as many sessions back as there were retries. Sessions carry no retry marker
+    to stop at, so this also bounds the requests for an object in none of them."""
+    retry = job.schedule.retry if job.schedule else None
+    if retry is None or retry.is_enabled is None:
+        return LOOK_BACK_SESSIONS
+    if not retry.is_enabled:
+        return 0
+    if retry.retry_count is None:
+        return LOOK_BACK_SESSIONS
+    return retry.retry_count + LOOK_BACK_MANUAL_RETRIES
+
+
+class _SessionRef(_ApiItem):
+    """An item of GET /api/v1/sessions."""
+
+    id: SessionId
+
+
+def _look_back(
+    client: VeeamClient,
+    job_id: JobId,
+    current_session_id: SessionId,
+    resolved_names: Sequence[ObjectName],
+    object_names: Collection[ObjectName],
+    sessions: int,
+) -> dict[ObjectName, _Task]:
+    """The newest task of each of `object_names` (some of the multi-object job's
+    `resolved_names`) in the job's latest earlier sessions, at most `sessions` of
+    them."""
+    try:
+        page = client.get(
+            f"/api/v1/sessions?jobIdFilter={job_id}&typeFilter=BackupJob"
+            f"&orderColumn=CreationTime&orderAsc=false&limit={sessions + 1}"
+        )
+    except TerminateAgent as exc:
+        if _is_skippable(exc):
+            return {}
+        raise
+    items = page.get("data") if isinstance(page, dict) else None
+    earlier_session_ids = [
+        session.id
+        for session in _parse_items(_SessionRef, items if isinstance(items, list) else [])
+        if session.id != current_session_id
+    ]
+    found: dict[ObjectName, _Task] = {}
+    for session_id in earlier_session_ids[:sessions]:
+        tasks = _newest_task_per_object(_session_tasks(client, session_id), resolved_names)
+        # Sessions come newest first, so an object's task found earlier is newer.
+        found = {name: task for name, task in tasks.items() if name in object_names} | found
+        if len(found) == len(object_names):
+            break
+    return found
 
 
 def _format_dotnet_timespan(seconds: float) -> str:
@@ -1125,7 +1199,10 @@ def fetch_backups(client: VeeamClient, name: str) -> Fetched:
     retry session only holds the objects it retried. So the newest finished task of
     each object is stored per job, and an object the current session leaves out
     keeps the one stored. A task still in progress isn't stored, as it changes in
-    place.
+    place. An object without a stored task (e.g. on the first run) takes its newest
+    task from the job's latest earlier sessions (`_look_back`), once per current
+    session. How many sessions back follows the job's retry settings
+    (`_look_back_sessions`); a job without retries never looks back.
 
     /api/v1/jobs/states also lists jobs that aren't backup jobs, e.g. backup copy
     jobs, whose sessions hold tasks of their own `sessionType`. These are dropped
@@ -1138,6 +1215,10 @@ def fetch_backups(client: VeeamClient, name: str) -> Fetched:
         job.id: job.session_progress for job in jobs if job.session_progress is not None
     }
     job_objects = _resolve_job_object_names(client, session_to_job)
+    look_back_sessions = {
+        job.id: _look_back_sessions(job)
+        for job in _parse_items(_Job, client.get_all("/api/v1/jobs"))
+    }
 
     records: dict[ObjectName, dict[JobId, Mapping[str, object]]] = {}
     old_last_tasks = _load_last_tasks_cache(client.storage)
@@ -1158,8 +1239,19 @@ def fetch_backups(client: VeeamClient, name: str) -> Fetched:
                 stored, {name: task for name, task in tasks.items() if task.state == "Stopped"}
             )
             tasks = _merge_newest(stored, tasks)
+            looked_back_in = cached.looked_back_in if cached else None
+            missing = {name for name in resolved_names if name not in tasks}
+            sessions = look_back_sessions.get(job.job_id, LOOK_BACK_SESSIONS)
+            if missing and sessions and looked_back_in != session_id:
+                found = _look_back(
+                    client, job.job_id, session_id, resolved_names, missing, sessions
+                )
+                tasks |= found
+                finished |= {name: task for name, task in found.items() if task.state == "Stopped"}
+                looked_back_in = session_id
             new_last_tasks[job.job_id] = _CachedJobTasks(
-                tasks={object_name: task.record for object_name, task in finished.items()}
+                tasks={object_name: task.record for object_name, task in finished.items()},
+                looked_back_in=looked_back_in,
             )
         for object_name, task in tasks.items():
             records.setdefault(object_name, {})[job.job_id] = {

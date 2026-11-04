@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { GlobalTimePickerProps } from 'cmk-shared-typing/typescript/global_time_picker'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, onScopeDispose, ref, watch } from 'vue'
 
@@ -23,7 +24,11 @@ import {
 import { useRequestedTimeRange } from '@/graphing/composables/useRequestedTimeRange'
 import type { PanelKey } from '@/graphing/types'
 import { type Preview, fetchPreview } from '@/mode-alerts/preview-client'
-import { type LevelColors, thresholdLines } from '@/mode-alerts/threshold-lines'
+import {
+  type LevelColors,
+  hasPredictiveLevels,
+  thresholdLines
+} from '@/mode-alerts/threshold-lines'
 import type { ServiceNameMatch, ThresholdsValue } from '@/mode-alerts/types'
 import PreviewGraphFrame from '@/mode-custom-services/PreviewGraphFrame.vue'
 
@@ -147,6 +152,8 @@ const previewNotice = computed<GraphNoticeDescriptor | null>(() => {
   return notice ? { variant: 'info', message: _t('Nothing to preview'), description: notice } : null
 })
 
+const hidesPredictiveLevels = computed(() => hasPredictiveLevels(props.thresholds))
+
 const notice = computed(
   () =>
     fetchNotice.value ??
@@ -156,20 +163,36 @@ const notice = computed(
 </script>
 
 <template>
-  <PreviewGraphFrame
-    v-model:time-picker-range="timePickerRange"
-    v-model:figure-width="figureWidth"
-    :time-picker="timePicker"
-    :title="pattern"
-    :metrics="metrics"
-    :data-time-range="preview?.time_range"
-    :horizontal-lines="horizontalLines"
-    :requested-time-range="requestedTimeRange"
-    :range-change="rangeChange"
-    :panel-key="PANEL_KEY"
-    :notice="notice"
-    @update:requested-time-range="setRequestedTimeRange($event, PANEL_KEY)"
-    @inspect="pauseRefresh"
-    @retry="refetch"
-  />
+  <div class="mode-alerts-alert-preview-graph">
+    <PreviewGraphFrame
+      v-model:time-picker-range="timePickerRange"
+      v-model:figure-width="figureWidth"
+      :time-picker="timePicker"
+      :title="pattern"
+      :metrics="metrics"
+      :data-time-range="preview?.time_range"
+      :horizontal-lines="horizontalLines"
+      :requested-time-range="requestedTimeRange"
+      :range-change="rangeChange"
+      :panel-key="PANEL_KEY"
+      :notice="notice"
+      @update:requested-time-range="setRequestedTimeRange($event, PANEL_KEY)"
+      @inspect="pauseRefresh"
+      @retry="refetch"
+    />
+    <CmkAlert
+      v-if="hidesPredictiveLevels"
+      variant="warning"
+      size="small"
+      :text="_t('Predictive thresholds cannot be shown in this graph.')"
+    />
+  </div>
 </template>
+
+<style scoped>
+.mode-alerts-alert-preview-graph {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-4);
+}
+</style>

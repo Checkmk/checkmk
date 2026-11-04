@@ -33,6 +33,12 @@ function fixedLevels(value: LevelsValue | undefined): {
   return { warning, critical }
 }
 
+export function hasPredictiveLevels(thresholds: ThresholdsValue): boolean {
+  return [thresholds.upper_levels, thresholds.lower_levels].some(
+    (value) => value?.[0] === 'predictive'
+  )
+}
+
 export function thresholdLines(
   thresholds: ThresholdsValue,
   unit: HorizontalLine['unit'],

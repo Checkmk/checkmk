@@ -157,6 +157,29 @@ test('predictive levels are not drawn', async () => {
   expect(screen.queryByRole('button', { name: 'Critical' })).toBeNull()
 })
 
+test.each(['upper_levels', 'lower_levels'] as const)(
+  'predictive %s say that they cannot be shown in the graph',
+  async (bound) => {
+    renderStep({
+      [bound]: [
+        'predictive',
+        { period: 'day', horizon: 90, levels: ['absolute', [5, 10]], bound: null }
+      ]
+    })
+
+    expect(
+      await screen.findByText('Predictive thresholds cannot be shown in this graph.')
+    ).toBeVisible()
+  }
+)
+
+test('fixed levels need no note about the graph', async () => {
+  renderStep({ upper_levels: ['fixed', [80, 90]] })
+
+  await waitFor(() => expect(legendRow('Warning')).toHaveTextContent(/80\s*ms/))
+  expect(screen.queryByText('Predictive thresholds cannot be shown in this graph.')).toBeNull()
+})
+
 test('editing a level moves its line without loading the data again', async () => {
   vi.useFakeTimers({ shouldAdvanceTime: true })
   try {

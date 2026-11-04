@@ -49,9 +49,10 @@ The architecture depends on the deployment scenario (on-premise vs. cloud).
 On-premise, once enabled, ClickHouse runs as an :doc:`OMD <arch-comp-omd>` service.
 It only accepts connections from localhost (127.0.0.1, and ::1 if IPv6 is available).
 Authentication happens via mTLS using the site certificate.
-Three dedicated accounts are used: ``checkmk_write_only`` (OTel collector ingestion),
-``checkmk_read_only`` (fetcher, DCD connector, self-monitoring, special agents for custom query monitoring, and custom graphing), and
-``checkmk_read_write`` (schema manager DDL).
+Each feature uses its own accounts ``checkmk_<feature>_<site>_<role>``: ``write_only`` (OTel collector ingestion),
+``read_only`` (fetcher, DCD connector, self-monitoring, special agents for custom query monitoring, and custom graphing), and
+``read_write`` (schema manager DDL).
+``checkmk_read_write`` provisions the databases and accounts of the features during activation.
 
 In the cloud deployment, ClickHouse runs externally, as a shared service.
 Authentication happens via username and password, using the same three accounts.

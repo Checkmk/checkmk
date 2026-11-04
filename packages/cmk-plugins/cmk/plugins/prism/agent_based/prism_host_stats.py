@@ -97,10 +97,11 @@ def check_prism_host_stats_cpu(params: Mapping[str, Any], section: Section) -> C
         state=State.OK,
         notice="Sockets: %d" % num_sockets,
     )
-    yield Result(
-        state=State.OK,
-        notice="Cores/socket: %d" % int(num_cores / num_sockets),
-    )
+    if num_sockets:
+        yield Result(
+            state=State.OK,
+            notice="Cores/socket: %d" % int(num_cores / num_sockets),
+        )
     yield Result(
         state=State.OK,
         notice="Threads: %d" % num_threads,

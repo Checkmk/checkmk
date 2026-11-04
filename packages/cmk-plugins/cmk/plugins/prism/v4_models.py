@@ -8,6 +8,7 @@
 The v4 agent writes them to the prism_*_v2 sections, the parse functions read them back.
 """
 
+from collections.abc import Sequence
 from contextlib import suppress
 from typing import Annotated
 
@@ -104,6 +105,10 @@ def _complete_samples(series: object) -> list[Sample]:
 type Samples = Annotated[list[Sample], BeforeValidator(_complete_samples)]
 
 
+def newest(samples: Sequence[Sample]) -> int | None:
+    return max(samples, key=lambda sample: sample.timestamp).value if samples else None
+
+
 class StorageContainerStats(V4Model):
     """The stats of one storage container, as time series
 
@@ -190,3 +195,96 @@ class VmWithHostName(V4Model):
 
 class VmsWithHostNames(RootModel[list[VmWithHostName]]):
     model_config = ConfigDict(frozen=True)
+
+
+class NodeConfig(V4Model):
+    number_of_cpu_sockets: int | None = Field(None, alias="numberOfCpuSockets")
+    number_of_cpu_cores: int | None = Field(None, alias="numberOfCpuCores")
+    number_of_cpu_threads: int | None = Field(None, alias="numberOfCpuThreads")
+    memory_size_bytes: int | None = Field(None, alias="memorySizeBytes")
+
+
+class HostCluster(V4Model):
+    uuid: str
+
+
+class ListedHost(NodeConfig):
+    """An item of the host list"""
+
+    ext_id: str = Field(alias="extId")
+    host_name: str | None = Field(None, alias="hostName")
+    cluster: HostCluster | None = None
+
+
+class HostStats(V4Model):
+    """The stats of one host, as time series"""
+
+    controller_avg_io_latency_usecs: Samples = Field(
+        default_factory=list, alias="controllerAvgIoLatencyUsecs"
+    )
+    controller_avg_read_io_latency_usecs: Samples = Field(
+        default_factory=list, alias="controllerAvgReadIoLatencyUsecs"
+    )
+    controller_avg_write_io_latency_usecs: Samples = Field(
+        default_factory=list, alias="controllerAvgWriteIoLatencyUsecs"
+    )
+    controller_read_io_bandwidth_kbps: Samples = Field(
+        default_factory=list, alias="controllerReadIoBandwidthKbps"
+    )
+    controller_write_io_bandwidth_kbps: Samples = Field(
+        default_factory=list, alias="controllerWriteIoBandwidthKbps"
+    )
+    controller_num_read_iops: Samples = Field(default_factory=list, alias="controllerNumReadIops")
+    controller_num_write_iops: Samples = Field(default_factory=list, alias="controllerNumWriteIops")
+    hypervisor_cpu_usage_ppm: Samples = Field(default_factory=list, alias="hypervisorCpuUsagePpm")
+    cpu_capacity_hz: Samples = Field(default_factory=list, alias="cpuCapacityHz")
+    aggregate_hypervisor_memory_usage_ppm: Samples = Field(
+        default_factory=list, alias="aggregateHypervisorMemoryUsagePpm"
+    )
+    storage_capacity_bytes: Samples = Field(default_factory=list, alias="storageCapacityBytes")
+    free_physical_storage_bytes: Samples = Field(
+        default_factory=list, alias="freePhysicalStorageBytes"
+    )
+
+
+class DiskAdvanceConfig(V4Model):
+    is_unhealthy: bool | None = Field(None, alias="isUnhealthy")
+    is_mounted: bool | None = Field(None, alias="isMounted")
+
+
+class DiskConfig(V4Model):
+    location: int | None = None
+    model: str | None = None
+    serial_number: str | None = Field(None, alias="serialNumber")
+    storage_tier: str | None = Field(None, alias="storageTier")
+    disk_advance_config: DiskAdvanceConfig = Field(DiskAdvanceConfig(), alias="diskAdvanceConfig")
+
+
+class ListedDisk(DiskConfig):
+    """An item of the disk list"""
+
+    ext_id: str = Field(alias="extId")
+    node_ext_id: str | None = Field(None, alias="nodeExtId")
+
+
+class DiskStats(V4Model):
+    """The stats of one disk, as time series
+
+    The stats endpoint ignores $select, the model picks the fields itself.
+    """
+
+    disk_capacity_bytes: Samples = Field(default_factory=list, alias="diskCapacityBytes")
+    disk_free_bytes: Samples = Field(default_factory=list, alias="diskFreeBytes")
+
+
+class NodeDisk(V4Model):
+    config: DiskConfig
+    stats: DiskStats = DiskStats()
+
+
+class Node(V4Model):
+    """A host with its stats and disks, as written to prism_host_v2"""
+
+    config: NodeConfig
+    stats: HostStats
+    disks: list[NodeDisk] = []

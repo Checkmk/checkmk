@@ -1,0 +1,332 @@
+{
+  "config": {
+    "numberOfCpuSockets": 2,
+    "numberOfCpuCores": 64,
+    "numberOfCpuThreads": 128,
+    "memorySizeBytes": 1622495199232
+  },
+  "stats": {
+    "controllerAvgIoLatencyUsecs": [
+      {
+        "value": 802,
+        "timestamp": "2026-11-04T07:18:30Z"
+      },
+      {
+        "value": 831,
+        "timestamp": "2026-11-04T07:18:00Z"
+      }
+    ],
+    "controllerAvgReadIoLatencyUsecs": [
+      {
+        "value": 0,
+        "timestamp": "2026-11-04T07:18:30Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-11-04T07:18:00Z"
+      }
+    ],
+    "controllerAvgWriteIoLatencyUsecs": [
+      {
+        "value": 802,
+        "timestamp": "2026-11-04T07:18:30Z"
+      },
+      {
+        "value": 831,
+        "timestamp": "2026-11-04T07:18:00Z"
+      }
+    ],
+    "controllerReadIoBandwidthKbps": [
+      {
+        "value": 0,
+        "timestamp": "2026-11-04T07:18:30Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-11-04T07:18:00Z"
+      }
+    ],
+    "controllerWriteIoBandwidthKbps": [
+      {
+        "value": 411,
+        "timestamp": "2026-11-04T07:18:30Z"
+      },
+      {
+        "value": 479,
+        "timestamp": "2026-11-04T07:18:00Z"
+      }
+    ],
+    "controllerNumReadIops": [
+      {
+        "value": 0,
+        "timestamp": "2026-11-04T07:18:30Z"
+      },
+      {
+        "value": 0,
+        "timestamp": "2026-11-04T07:18:00Z"
+      }
+    ],
+    "controllerNumWriteIops": [
+      {
+        "value": 43,
+        "timestamp": "2026-11-04T07:18:30Z"
+      },
+      {
+        "value": 45,
+        "timestamp": "2026-11-04T07:18:00Z"
+      }
+    ],
+    "hypervisorCpuUsagePpm": [
+      {
+        "value": 520557,
+        "timestamp": "2026-11-04T07:18:30Z"
+      },
+      {
+        "value": 528966,
+        "timestamp": "2026-11-04T07:18:00Z"
+      }
+    ],
+    "cpuCapacityHz": [
+      {
+        "value": 246016000000,
+        "timestamp": "2025-12-13T04:15:38.215809Z"
+      }
+    ],
+    "aggregateHypervisorMemoryUsagePpm": [
+      {
+        "value": 396449,
+        "timestamp": "2026-11-04T07:18:30Z"
+      },
+      {
+        "value": 396449,
+        "timestamp": "2026-11-04T07:18:00Z"
+      }
+    ],
+    "storageCapacityBytes": [
+      {
+        "value": 21426395490720,
+        "timestamp": "2026-11-04T07:18:30Z"
+      },
+      {
+        "value": 21426395490720,
+        "timestamp": "2026-11-04T07:18:00Z"
+      }
+    ],
+    "freePhysicalStorageBytes": [
+      {
+        "value": 20333374919675,
+        "timestamp": "2026-11-04T07:18:30Z"
+      },
+      {
+        "value": 20333377699835,
+        "timestamp": "2026-11-04T07:18:00Z"
+      }
+    ]
+  },
+  "disks": [
+    {
+      "config": {
+        "location": 4097,
+        "model": "KIOXIA KCD8XRUG3T84",
+        "serialNumber": "DISKSERIAL14",
+        "storageTier": "SSD_PCIE",
+        "diskAdvanceConfig": {
+          "isUnhealthy": false,
+          "isMounted": true
+        }
+      },
+      "stats": {
+        "diskCapacityBytes": [
+          {
+            "value": 3394549302994,
+            "timestamp": "2026-11-04T07:18:30Z"
+          },
+          {
+            "value": 3394549302994,
+            "timestamp": "2026-11-04T07:18:00Z"
+          }
+        ],
+        "diskFreeBytes": [
+          {
+            "value": 3297591668964,
+            "timestamp": "2026-11-04T07:18:30Z"
+          },
+          {
+            "value": 3297591668964,
+            "timestamp": "2026-11-04T07:18:00Z"
+          }
+        ]
+      }
+    },
+    {
+      "config": {
+        "location": 4099,
+        "model": "KIOXIA KCD8XRUG3T84",
+        "serialNumber": "DISKSERIAL16",
+        "storageTier": "SSD_PCIE",
+        "diskAdvanceConfig": {
+          "isUnhealthy": false,
+          "isMounted": true
+        }
+      },
+      "stats": {
+        "diskCapacityBytes": [
+          {
+            "value": 3659324221183,
+            "timestamp": "2026-11-04T07:18:30Z"
+          },
+          {
+            "value": 3659324221183,
+            "timestamp": "2026-11-04T07:18:00Z"
+          }
+        ],
+        "diskFreeBytes": [
+          {
+            "value": 3435979767829,
+            "timestamp": "2026-11-04T07:18:30Z"
+          },
+          {
+            "value": 3435980789781,
+            "timestamp": "2026-11-04T07:18:00Z"
+          }
+        ]
+      }
+    },
+    {
+      "config": {
+        "location": 4101,
+        "model": "KIOXIA KCD8XRUG3T84",
+        "serialNumber": "DISKSERIAL18",
+        "storageTier": "SSD_PCIE",
+        "diskAdvanceConfig": {
+          "isUnhealthy": false,
+          "isMounted": true
+        }
+      },
+      "stats": {
+        "diskCapacityBytes": [
+          {
+            "value": 3659324221183,
+            "timestamp": "2026-11-04T07:18:30Z"
+          },
+          {
+            "value": 3659324221183,
+            "timestamp": "2026-11-04T07:18:00Z"
+          }
+        ],
+        "diskFreeBytes": [
+          {
+            "value": 3433700339230,
+            "timestamp": "2026-11-04T07:18:30Z"
+          },
+          {
+            "value": 3433701086750,
+            "timestamp": "2026-11-04T07:18:00Z"
+          }
+        ]
+      }
+    },
+    {
+      "config": {
+        "location": 4100,
+        "model": "KIOXIA KCD8XRUG3T84",
+        "serialNumber": "DISKSERIAL17",
+        "storageTier": "SSD_PCIE",
+        "diskAdvanceConfig": {
+          "isUnhealthy": false,
+          "isMounted": true
+        }
+      },
+      "stats": {
+        "diskCapacityBytes": [
+          {
+            "value": 3394549302994,
+            "timestamp": "2026-11-04T07:18:30Z"
+          },
+          {
+            "value": 3394549302994,
+            "timestamp": "2026-11-04T07:18:00Z"
+          }
+        ],
+        "diskFreeBytes": [
+          {
+            "value": 3297174389018,
+            "timestamp": "2026-11-04T07:18:30Z"
+          },
+          {
+            "value": 3297174389018,
+            "timestamp": "2026-11-04T07:18:00Z"
+          }
+        ]
+      }
+    },
+    {
+      "config": {
+        "location": 4098,
+        "model": "KIOXIA KCD8XRUG3T84",
+        "serialNumber": "DISKSERIAL15",
+        "storageTier": "SSD_PCIE",
+        "diskAdvanceConfig": {
+          "isUnhealthy": false,
+          "isMounted": true
+        }
+      },
+      "stats": {
+        "diskCapacityBytes": [
+          {
+            "value": 3659324221183,
+            "timestamp": "2026-11-04T07:18:30Z"
+          },
+          {
+            "value": 3659324221183,
+            "timestamp": "2026-11-04T07:18:00Z"
+          }
+        ],
+        "diskFreeBytes": [
+          {
+            "value": 3434687512370,
+            "timestamp": "2026-11-04T07:18:30Z"
+          },
+          {
+            "value": 3434687775538,
+            "timestamp": "2026-11-04T07:18:00Z"
+          }
+        ]
+      }
+    },
+    {
+      "config": {
+        "location": 4096,
+        "model": "KIOXIA KCD8XRUG3T84",
+        "serialNumber": "DISKSERIAL13",
+        "storageTier": "SSD_PCIE",
+        "diskAdvanceConfig": {
+          "isUnhealthy": false,
+          "isMounted": true
+        }
+      },
+      "stats": {
+        "diskCapacityBytes": [
+          {
+            "value": 3659324221183,
+            "timestamp": "2026-11-04T07:18:30Z"
+          },
+          {
+            "value": 3659324221183,
+            "timestamp": "2026-11-04T07:18:00Z"
+          }
+        ],
+        "diskFreeBytes": [
+          {
+            "value": 3434241242264,
+            "timestamp": "2026-11-04T07:18:30Z"
+          },
+          {
+            "value": 3434241989784,
+            "timestamp": "2026-11-04T07:18:00Z"
+          }
+        ]
+      }
+    }
+  ]
+}

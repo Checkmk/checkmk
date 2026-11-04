@@ -6,7 +6,7 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from contextlib import suppress
 from typing import Any
 
@@ -26,7 +26,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.lib.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
 from cmk.plugins.prism.lib import load_json
 from cmk.plugins.prism.v4_models import (
-    Sample,
+    newest,
     StorageContainerStats,
     StorageContainersWithStats,
 )
@@ -48,21 +48,17 @@ agent_section_prism_containers = AgentSection(
 )
 
 
-def _newest(samples: Sequence[Sample]) -> int | None:
-    return max(samples, key=lambda sample: sample.timestamp).value if samples else None
-
-
 def _usage_stats_v2(stats: StorageContainerStats) -> dict[str, str]:
     # v4 counts every replica, the legacy API only what is usable
-    replication_factor = _newest(stats.storage_replication_factor)
-    dedup = _newest(stats.data_reduction_dedup_saving_ratio_ppm)
+    replication_factor = newest(stats.storage_replication_factor)
+    dedup = newest(stats.data_reduction_dedup_saving_ratio_ppm)
     # -1 is how the legacy API reports an unknown ratio, the check then leaves it out
     usage_stats = {"data_reduction.dedup.saving_ratio_ppm": str(-1 if dedup is None else dedup)}
     for legacy_key, samples in (
         ("storage.user_capacity_bytes", stats.storage_capacity_bytes),
         ("storage.user_free_bytes", stats.storage_free_bytes),
     ):
-        if (value := _newest(samples)) is not None and replication_factor:
+        if (value := newest(samples)) is not None and replication_factor:
             usage_stats[legacy_key] = str(value // replication_factor)
     return usage_stats
 

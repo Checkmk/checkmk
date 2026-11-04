@@ -25,10 +25,13 @@ from cmk.plugins.prism.special_agent.agent_prism_v4 import (
     CLUSTERS_PATH,
     CONTAINER_STATS_PATH,
     CONTAINERS_PATH,
+    DISK_STATS_PATH,
+    DISKS_PATH,
     ESXI_VMS_PATH,
     fetch_alerts,
     fetch_containers,
     fetch_hosts,
+    fetch_nodes,
     fetch_remote_support,
     fetch_vms,
     FetchContext,
@@ -152,6 +155,79 @@ def _recorded_host_list() -> list[JsonObject]:
     """The hosts of the lab (anonymised), as agent_prism_v4_main lists them"""
     assert isinstance(hosts := recorded_hosts()["data"], list)
     return hosts
+
+
+# The hosts of recorded_hosts() by extId, with the host and disk stats of the same lab
+RECORDED_NODES = {
+    "247a477f-b32f-4fc1-83a6-c73172169e73": "host-3",
+    "24bce4ff-ea77-4f52-84b2-438552e227be": "host-1",
+    "387a54c1-7286-49aa-9602-a7e8e889f63c": "host-2",
+}
+HOST_STATS_FIELDS = (
+    "controllerAvgIoLatencyUsecs,controllerAvgReadIoLatencyUsecs,"
+    "controllerAvgWriteIoLatencyUsecs,controllerReadIoBandwidthKbps,"
+    "controllerWriteIoBandwidthKbps,controllerNumReadIops,controllerNumWriteIops,"
+    "hypervisorCpuUsagePpm,cpuCapacityHz,aggregateHypervisorMemoryUsagePpm,"
+    "storageCapacityBytes,freePhysicalStorageBytes"
+)
+
+
+def _host_stats_path(host_id: str) -> str:
+    return f"clustermgmt/v4.0/stats/clusters/{CLUSTER_ID}/hosts/{host_id}"
+
+
+def _serve_recorded_nodes(
+    api: responses.RequestsMock,
+    statuses: Mapping[str, HTTPStatus] = MappingProxyType({}),
+) -> None:
+    """The stats of a host or disk (by extId) can be answered with an error"""
+    api.get(
+        v4_url(DISKS_PATH),
+        json=_recorded("clustermgmt_config_disks.json"),
+        match=[
+            page_matcher(0),
+            matchers.query_param_matcher(
+                {
+                    "$select": "location,model,serialNumber,storageTier,diskAdvanceConfig,"
+                    "extId,nodeExtId"
+                },
+                strict_match=False,
+            ),
+        ],
+    )
+    for host_id, response in _recorded("clustermgmt_stats_hosts.json").items():
+        _serve_stats(
+            api,
+            _host_stats_path(host_id),
+            response,
+            statuses.get(host_id, HTTPStatus.OK),
+            {"$select": HOST_STATS_FIELDS, "$samplingInterval": "30"},
+        )
+    for disk_id, response in _recorded("clustermgmt_stats_disks.json").items():
+        _serve_stats(
+            api,
+            f"{DISK_STATS_PATH}/{disk_id}",
+            response,
+            statuses.get(disk_id, HTTPStatus.OK),
+            {"$samplingInterval": "30"},
+        )
+
+
+def _serve_stats(
+    api: responses.RequestsMock,
+    path: str,
+    response: object,
+    status: HTTPStatus,
+    query: dict[str, str],
+) -> None:
+    if status is not HTTPStatus.OK:
+        api.get(v4_url(path), status=status, json={"message": status.phrase})
+        return
+    api.get(
+        v4_url(path),
+        json=response,
+        match=[matchers.query_param_matcher(query, strict_match=False)],
+    )
 
 
 def _container_names_and_messages(
@@ -568,6 +644,7 @@ def test_v4_agent_queries_only_the_v4_api(api: responses.RequestsMock) -> None:
     api.get(v4_url(ALERTS_PATH), json=recorded_alerts(), match=[page_matcher(0)])
     _serve_recorded_containers(api)
     _serve_recorded_vms(api)
+    _serve_recorded_nodes(api)
 
     agent_prism_main(parse_arguments(_v4_args()))
 
@@ -583,6 +660,12 @@ def test_v4_agent_queries_only_the_v4_api(api: responses.RequestsMock) -> None:
             AHV_VMS_PATH,
             AHV_VMS_PATH,
             ESXI_VMS_PATH,
+            DISKS_PATH,
+            *(_host_stats_path(ext_id) for ext_id in RECORDED_NODES),
+            *(
+                f"{DISK_STATS_PATH}/{ext_id}"
+                for ext_id in _recorded("clustermgmt_stats_disks.json")
+            ),
         )
     )
 
@@ -928,3 +1011,158 @@ def test_cluster_without_a_remote_support_state_fails_the_fetcher() -> None:
 
     with pytest.raises(ValidationError):
         _remote_support_sections([cluster])
+
+
+def _payload_of(host: str, sections: Sequence[Section]) -> object:
+    return next(section.payload for section in sections if section.target == host)
+
+
+def _disk_stats_of(section: Section) -> list[object]:
+    assert isinstance(section.payload, dict)
+    return [disk["stats"] for disk in section.payload["disks"]]
+
+
+def _disk_serials(section: Section) -> list[str]:
+    assert isinstance(section.payload, dict)
+    return sorted(disk["config"]["serialNumber"] for disk in section.payload["disks"])
+
+
+def test_each_node_goes_to_a_host_of_its_name_with_only_the_checked_fields(
+    api: responses.RequestsMock,
+) -> None:
+    """Each series keeps all samples of the window, the parse function picks the newest"""
+    _serve_recorded_nodes(api)
+
+    sections = fetch_nodes(_context(hosts=_recorded_host_list()))
+
+    assert [(section.name, section.target) for section in sections] == [
+        ("prism_host_v2", "host-3"),
+        ("prism_host_v2", "host-1"),
+        ("prism_host_v2", "host-2"),
+    ]
+    assert _payload_of("host-2", sections) == _recorded("section_prism_host_v2.json")
+
+
+def test_node_gets_the_disks_of_its_own(api: responses.RequestsMock) -> None:
+    _serve_recorded_nodes(api)
+
+    assert {
+        section.target: _disk_serials(section)
+        for section in fetch_nodes(_context(hosts=_recorded_host_list()))
+    } == {
+        host: [f"DISKSERIAL{number:02d}" for number in range(first, first + 6)]
+        for host, first in (("host-3", 1), ("host-1", 7), ("host-2", 13))
+    }
+
+
+HOST_1 = "24bce4ff-ea77-4f52-84b2-438552e227be"
+
+
+def test_node_that_no_longer_exists_is_left_out(api: responses.RequestsMock) -> None:
+    _serve_recorded_nodes(api, statuses={HOST_1: HTTPStatus.NOT_FOUND})
+    api.assert_all_requests_are_fired = False
+
+    assert [section.target for section in fetch_nodes(_context(hosts=_recorded_host_list()))] == [
+        "host-3",
+        "host-2",
+    ]
+
+
+def test_not_found_for_every_node_fails_the_fetcher(api: responses.RequestsMock) -> None:
+    host_stats = _recorded("clustermgmt_stats_hosts.json")
+    _serve_recorded_nodes(api, statuses=dict.fromkeys(host_stats, HTTPStatus.NOT_FOUND))
+    api.assert_all_requests_are_fired = False
+
+    with pytest.raises(PrismV4Error, match="every host"):
+        fetch_nodes(_context(hosts=_recorded_host_list()))
+
+
+def test_nodes_without_a_cluster_give_no_sections(api: responses.RequestsMock) -> None:
+    hosts = [
+        {key: value for key, value in host.items() if key != "cluster"}
+        for host in _recorded_host_list()
+    ]
+    _serve_recorded_nodes(api)
+    api.assert_all_requests_are_fired = False
+
+    assert fetch_nodes(_context(hosts=hosts)) == []
+
+
+def test_nodes_fail_if_the_host_list_failed() -> None:
+    error = PrismV4Error("clustermgmt/v4.0/config/hosts: timed out")
+
+    with pytest.raises(PrismV4Error, match="timed out"):
+        fetch_nodes(_context(hosts=error))
+
+
+def test_disk_stats_of_a_node_left_out_are_not_fetched(api: responses.RequestsMock) -> None:
+    _serve_recorded_nodes(api, statuses={HOST_1: HTTPStatus.NOT_FOUND})
+    api.assert_all_requests_are_fired = False
+    disks = _recorded("clustermgmt_config_disks.json")["data"]
+    assert isinstance(disks, list)
+
+    fetch_nodes(_context(hosts=_recorded_host_list()))
+
+    fetched = {
+        (call.request.url or "").split("?")[0]
+        for call in api.calls
+        if DISK_STATS_PATH in (call.request.url or "")
+    }
+    assert fetched == {
+        v4_url(f"{DISK_STATS_PATH}/{disk['extId']}")
+        for disk in disks
+        if disk["nodeExtId"] != HOST_1
+    }
+
+
+def test_disk_that_no_longer_exists_is_kept_without_stats(api: responses.RequestsMock) -> None:
+    _serve_recorded_nodes(
+        api, statuses={"1ff5a5d9-e42a-4413-9f4e-f70b38fe4c44": HTTPStatus.NOT_FOUND}
+    )
+
+    assert isinstance(
+        host_2 := _payload_of("host-2", fetch_nodes(_context(hosts=_recorded_host_list()))), dict
+    )
+    assert [disk["stats"] for disk in host_2["disks"] if disk["config"]["location"] == 4097] == [
+        {"diskCapacityBytes": [], "diskFreeBytes": []}
+    ]
+
+
+def test_host_stats_error_other_than_not_found_fails_the_fetcher(
+    api: responses.RequestsMock,
+) -> None:
+    _serve_recorded_nodes(
+        api, statuses={"387a54c1-7286-49aa-9602-a7e8e889f63c": HTTPStatus.FORBIDDEN}
+    )
+    api.assert_all_requests_are_fired = False
+
+    with pytest.raises(PrismV4Error):
+        fetch_nodes(_context(hosts=_recorded_host_list()))
+
+
+def test_disk_stats_error_loses_only_the_disk_stats_with_a_warning(
+    api: responses.RequestsMock,
+) -> None:
+    disk_stats = _recorded("clustermgmt_stats_disks.json")
+    _serve_recorded_nodes(api, statuses=dict.fromkeys(disk_stats, HTTPStatus.FORBIDDEN))
+    api.assert_all_requests_are_fired = False
+    messages = AgentMessages()
+
+    sections = fetch_nodes(_context(messages, _recorded_host_list()))
+
+    assert {section.target: _disk_stats_of(section) for section in sections} == dict.fromkeys(
+        ("host-3", "host-1", "host-2"), [{"diskCapacityBytes": [], "diskFreeBytes": []}] * 6
+    )
+    assert [state for state, _text in messages] == ["warning"]
+
+
+def test_node_without_a_name_is_not_routed(api: responses.RequestsMock) -> None:
+    hosts = [
+        {key: value for key, value in host.items() if key != "hostName"}
+        for host in _recorded_host_list()
+    ]
+    _serve_recorded_nodes(api)
+
+    assert {section.target for section in fetch_nodes(_context(hosts=hosts))} == {
+        Unroutable("hosts without a name")
+    }

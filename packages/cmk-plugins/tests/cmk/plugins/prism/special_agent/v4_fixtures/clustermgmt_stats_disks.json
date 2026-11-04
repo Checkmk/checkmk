@@ -1,0 +1,738 @@
+{
+  "1ff5a5d9-e42a-4413-9f4e-f70b38fe4c44": {
+    "data": {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.stats.DiskStats",
+      "diskUsagePpm": [
+        {
+          "value": 28562,
+          "timestamp": "2026-11-04T07:18:00Z"
+        },
+        {
+          "value": 28563,
+          "timestamp": "2026-11-04T07:16:30Z"
+        }
+      ],
+      "diskCapacityBytes": [
+        {
+          "value": 3394549302994,
+          "timestamp": "2026-11-04T07:18:30Z"
+        },
+        {
+          "value": 3394549302994,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ],
+      "diskFreeBytes": [
+        {
+          "value": 3297591668964,
+          "timestamp": "2026-11-04T07:18:30Z"
+        },
+        {
+          "value": 3297591668964,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ]
+    },
+    "$reserved": {
+      "$fv": "v4.r2"
+    },
+    "$objectType": "clustermgmt.v4.stats.GetDiskStatsApiResponse"
+  },
+  "38335161-6996-4547-9db7-93b6184cd4f8": {
+    "data": {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.stats.DiskStats",
+      "diskUsagePpm": [
+        {
+          "value": 152818,
+          "timestamp": "2026-11-04T07:15:30Z"
+        }
+      ],
+      "diskCapacityBytes": [
+        {
+          "value": 3394549302994,
+          "timestamp": "2026-11-04T07:18:30Z"
+        },
+        {
+          "value": 3394549302994,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ],
+      "diskFreeBytes": [
+        {
+          "value": 2875800735668,
+          "timestamp": "2026-11-04T07:18:30Z"
+        },
+        {
+          "value": 2875800735668,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ]
+    },
+    "$reserved": {
+      "$fv": "v4.r2"
+    },
+    "$objectType": "clustermgmt.v4.stats.GetDiskStatsApiResponse"
+  },
+  "411ca187-5e5f-493f-9b6e-f6b0fa6ed641": {
+    "data": {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.stats.DiskStats",
+      "diskUsagePpm": [
+        {
+          "value": 153154,
+          "timestamp": "2026-11-04T07:15:30Z"
+        }
+      ],
+      "diskCapacityBytes": [
+        {
+          "value": 3394549302994,
+          "timestamp": "2026-11-04T07:18:30Z"
+        },
+        {
+          "value": 3394549302994,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ],
+      "diskFreeBytes": [
+        {
+          "value": 2874657912469,
+          "timestamp": "2026-11-04T07:18:30Z"
+        },
+        {
+          "value": 2874657789589,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ]
+    },
+    "$reserved": {
+      "$fv": "v4.r2"
+    },
+    "$objectType": "clustermgmt.v4.stats.GetDiskStatsApiResponse"
+  },
+  "5ca809ac-775e-4d59-891e-9218c17beeef": {
+    "data": {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.stats.DiskStats",
+      "diskUsagePpm": [
+        {
+          "value": 212647,
+          "timestamp": "2026-11-04T07:17:30Z"
+        },
+        {
+          "value": 212646,
+          "timestamp": "2026-11-04T07:15:30Z"
+        }
+      ],
+      "diskCapacityBytes": [
+        {
+          "value": 3659324221183,
+          "timestamp": "2026-11-04T07:18:30Z"
+        },
+        {
+          "value": 3659324221183,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ],
+      "diskFreeBytes": [
+        {
+          "value": 2881178174680,
+          "timestamp": "2026-11-04T07:18:30Z"
+        },
+        {
+          "value": 2881178674392,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ]
+    },
+    "$reserved": {
+      "$fv": "v4.r2"
+    },
+    "$objectType": "clustermgmt.v4.stats.GetDiskStatsApiResponse"
+  },
+  "62fca765-9cd9-42d6-b79f-969b1f390006": {
+    "data": {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.stats.DiskStats",
+      "diskUsagePpm": [
+        {
+          "value": 202882,
+          "timestamp": "2026-11-04T07:19:30Z"
+        },
+        {
+          "value": 202881,
+          "timestamp": "2026-11-04T07:17:30Z"
+        }
+      ],
+      "diskCapacityBytes": [
+        {
+          "value": 3659324221183,
+          "timestamp": "2026-11-04T07:18:30Z"
+        },
+        {
+          "value": 3659324221183,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ],
+      "diskFreeBytes": [
+        {
+          "value": 2916913810974,
+          "timestamp": "2026-11-04T07:18:30Z"
+        },
+        {
+          "value": 2916914149918,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ]
+    },
+    "$reserved": {
+      "$fv": "v4.r2"
+    },
+    "$objectType": "clustermgmt.v4.stats.GetDiskStatsApiResponse"
+  },
+  "70b82532-5a89-4e28-8c08-0623b77d65a6": {
+    "data": {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.stats.DiskStats",
+      "diskUsagePpm": [
+        {
+          "value": 202621,
+          "timestamp": "2026-11-04T07:19:30Z"
+        },
+        {
+          "value": 202620,
+          "timestamp": "2026-11-04T07:15:30Z"
+        }
+      ],
+      "diskCapacityBytes": [
+        {
+          "value": 3659324221183,
+          "timestamp": "2026-11-04T07:18:30Z"
+        },
+        {
+          "value": 3659324221183,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ],
+      "diskFreeBytes": [
+        {
+          "value": 2917869035830,
+          "timestamp": "2026-11-04T07:18:30Z"
+        },
+        {
+          "value": 2917869559094,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ]
+    },
+    "$reserved": {
+      "$fv": "v4.r2"
+    },
+    "$objectType": "clustermgmt.v4.stats.GetDiskStatsApiResponse"
+  },
+  "71fb8a95-e5f5-4e34-b570-b2b390d5c06b": {
+    "data": {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.stats.DiskStats",
+      "diskUsagePpm": [
+        {
+          "value": 212743,
+          "timestamp": "2026-11-04T07:18:00Z"
+        },
+        {
+          "value": 212742,
+          "timestamp": "2026-11-04T07:15:30Z"
+        }
+      ],
+      "diskCapacityBytes": [
+        {
+          "value": 3659324221183,
+          "timestamp": "2026-11-04T07:18:30Z"
+        },
+        {
+          "value": 3659324221183,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ],
+      "diskFreeBytes": [
+        {
+          "value": 2880828159337,
+          "timestamp": "2026-11-04T07:18:30Z"
+        },
+        {
+          "value": 2880828367209,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ]
+    },
+    "$reserved": {
+      "$fv": "v4.r2"
+    },
+    "$objectType": "clustermgmt.v4.stats.GetDiskStatsApiResponse"
+  },
+  "9172a796-49eb-4181-a514-aca205a84ba1": {
+    "data": {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.stats.DiskStats",
+      "diskUsagePpm": [
+        {
+          "value": 202751,
+          "timestamp": "2026-11-04T07:18:30Z"
+        },
+        {
+          "value": 202750,
+          "timestamp": "2026-11-04T07:15:30Z"
+        }
+      ],
+      "diskCapacityBytes": [
+        {
+          "value": 3659324221183,
+          "timestamp": "2026-11-04T07:18:30Z"
+        },
+        {
+          "value": 3659324221183,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ],
+      "diskFreeBytes": [
+        {
+          "value": 2917392111988,
+          "timestamp": "2026-11-04T07:18:30Z"
+        },
+        {
+          "value": 2917392625012,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ]
+    },
+    "$reserved": {
+      "$fv": "v4.r2"
+    },
+    "$objectType": "clustermgmt.v4.stats.GetDiskStatsApiResponse"
+  },
+  "96379f77-6f08-4fea-978c-0b8e61e8188b": {
+    "data": {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.stats.DiskStats",
+      "diskUsagePpm": [
+        {
+          "value": 148799,
+          "timestamp": "2026-11-04T07:15:30Z"
+        }
+      ],
+      "diskCapacityBytes": [
+        {
+          "value": 3394549302994,
+          "timestamp": "2026-11-04T07:18:30Z"
+        },
+        {
+          "value": 3394549302994,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ],
+      "diskFreeBytes": [
+        {
+          "value": 2889443760141,
+          "timestamp": "2026-11-04T07:18:30Z"
+        },
+        {
+          "value": 2889443700749,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ]
+    },
+    "$reserved": {
+      "$fv": "v4.r2"
+    },
+    "$objectType": "clustermgmt.v4.stats.GetDiskStatsApiResponse"
+  },
+  "9880b614-1cb6-4380-9466-24f4175f5708": {
+    "data": {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.stats.DiskStats",
+      "diskUsagePpm": [
+        {
+          "value": 149284,
+          "timestamp": "2026-11-04T07:19:00Z"
+        },
+        {
+          "value": 149283,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ],
+      "diskCapacityBytes": [
+        {
+          "value": 3394549302994,
+          "timestamp": "2026-11-04T07:18:30Z"
+        },
+        {
+          "value": 3394549302994,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ],
+      "diskFreeBytes": [
+        {
+          "value": 2887798383211,
+          "timestamp": "2026-11-04T07:18:30Z"
+        },
+        {
+          "value": 2887798383211,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ]
+    },
+    "$reserved": {
+      "$fv": "v4.r2"
+    },
+    "$objectType": "clustermgmt.v4.stats.GetDiskStatsApiResponse"
+  },
+  "98d5171a-e7f9-4c8d-9c69-50b8b1ebd5cb": {
+    "data": {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.stats.DiskStats",
+      "diskUsagePpm": [
+        {
+          "value": 212774,
+          "timestamp": "2026-11-04T07:15:30Z"
+        }
+      ],
+      "diskCapacityBytes": [
+        {
+          "value": 3659324221183,
+          "timestamp": "2026-11-04T07:18:30Z"
+        },
+        {
+          "value": 3659324221183,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ],
+      "diskFreeBytes": [
+        {
+          "value": 2880713363483,
+          "timestamp": "2026-11-04T07:18:30Z"
+        },
+        {
+          "value": 2880713946139,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ]
+    },
+    "$reserved": {
+      "$fv": "v4.r2"
+    },
+    "$objectType": "clustermgmt.v4.stats.GetDiskStatsApiResponse"
+  },
+  "acd38994-c278-4306-83d6-2148d3ea7483": {
+    "data": {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.stats.DiskStats",
+      "diskUsagePpm": [
+        {
+          "value": 212841,
+          "timestamp": "2026-11-04T07:18:00Z"
+        },
+        {
+          "value": 212840,
+          "timestamp": "2026-11-04T07:15:30Z"
+        }
+      ],
+      "diskCapacityBytes": [
+        {
+          "value": 3659324221183,
+          "timestamp": "2026-11-04T07:18:30Z"
+        },
+        {
+          "value": 3659324221183,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ],
+      "diskFreeBytes": [
+        {
+          "value": 2880468737344,
+          "timestamp": "2026-11-04T07:18:30Z"
+        },
+        {
+          "value": 2880468754752,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ]
+    },
+    "$reserved": {
+      "$fv": "v4.r2"
+    },
+    "$objectType": "clustermgmt.v4.stats.GetDiskStatsApiResponse"
+  },
+  "b09f6ac3-6b9b-43ac-a9e7-7e22f58e47b0": {
+    "data": {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.stats.DiskStats",
+      "diskUsagePpm": [
+        {
+          "value": 61034,
+          "timestamp": "2026-11-04T07:18:00Z"
+        },
+        {
+          "value": 61033,
+          "timestamp": "2026-11-04T07:15:30Z"
+        }
+      ],
+      "diskCapacityBytes": [
+        {
+          "value": 3659324221183,
+          "timestamp": "2026-11-04T07:18:30Z"
+        },
+        {
+          "value": 3659324221183,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ],
+      "diskFreeBytes": [
+        {
+          "value": 3435979767829,
+          "timestamp": "2026-11-04T07:18:30Z"
+        },
+        {
+          "value": 3435980789781,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ]
+    },
+    "$reserved": {
+      "$fv": "v4.r2"
+    },
+    "$objectType": "clustermgmt.v4.stats.GetDiskStatsApiResponse"
+  },
+  "b6bc907e-68e2-43ca-8d4d-3d0e688c60fa": {
+    "data": {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.stats.DiskStats",
+      "diskUsagePpm": [
+        {
+          "value": 202815,
+          "timestamp": "2026-11-04T07:20:00Z"
+        },
+        {
+          "value": 202814,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ],
+      "diskCapacityBytes": [
+        {
+          "value": 3659324221183,
+          "timestamp": "2026-11-04T07:18:30Z"
+        },
+        {
+          "value": 3659324221183,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ],
+      "diskFreeBytes": [
+        {
+          "value": 2917160947384,
+          "timestamp": "2026-11-04T07:18:30Z"
+        },
+        {
+          "value": 2917161497272,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ]
+    },
+    "$reserved": {
+      "$fv": "v4.r2"
+    },
+    "$objectType": "clustermgmt.v4.stats.GetDiskStatsApiResponse"
+  },
+  "c3444d13-da6c-4543-824a-5e2bf98f82fe": {
+    "data": {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.stats.DiskStats",
+      "diskUsagePpm": [
+        {
+          "value": 61656,
+          "timestamp": "2026-11-04T07:17:30Z"
+        },
+        {
+          "value": 61656,
+          "timestamp": "2026-11-04T07:15:30Z"
+        }
+      ],
+      "diskCapacityBytes": [
+        {
+          "value": 3659324221183,
+          "timestamp": "2026-11-04T07:18:30Z"
+        },
+        {
+          "value": 3659324221183,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ],
+      "diskFreeBytes": [
+        {
+          "value": 3433700339230,
+          "timestamp": "2026-11-04T07:18:30Z"
+        },
+        {
+          "value": 3433701086750,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ]
+    },
+    "$reserved": {
+      "$fv": "v4.r2"
+    },
+    "$objectType": "clustermgmt.v4.stats.GetDiskStatsApiResponse"
+  },
+  "c3a0f690-d077-419d-9773-07fa2b341156": {
+    "data": {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.stats.DiskStats",
+      "diskUsagePpm": [
+        {
+          "value": 28685,
+          "timestamp": "2026-11-04T07:15:30Z"
+        }
+      ],
+      "diskCapacityBytes": [
+        {
+          "value": 3394549302994,
+          "timestamp": "2026-11-04T07:18:30Z"
+        },
+        {
+          "value": 3394549302994,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ],
+      "diskFreeBytes": [
+        {
+          "value": 3297174389018,
+          "timestamp": "2026-11-04T07:18:30Z"
+        },
+        {
+          "value": 3297174389018,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ]
+    },
+    "$reserved": {
+      "$fv": "v4.r2"
+    },
+    "$objectType": "clustermgmt.v4.stats.GetDiskStatsApiResponse"
+  },
+  "cf021cfe-57e2-4214-9e43-321ee7a3dfb2": {
+    "data": {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.stats.DiskStats",
+      "diskUsagePpm": [
+        {
+          "value": 61388,
+          "timestamp": "2026-11-04T07:19:30Z"
+        },
+        {
+          "value": 61387,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ],
+      "diskCapacityBytes": [
+        {
+          "value": 3659324221183,
+          "timestamp": "2026-11-04T07:18:30Z"
+        },
+        {
+          "value": 3659324221183,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ],
+      "diskFreeBytes": [
+        {
+          "value": 3434687512370,
+          "timestamp": "2026-11-04T07:18:30Z"
+        },
+        {
+          "value": 3434687775538,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ]
+    },
+    "$reserved": {
+      "$fv": "v4.r2"
+    },
+    "$objectType": "clustermgmt.v4.stats.GetDiskStatsApiResponse"
+  },
+  "ed780c11-2c5b-4497-9613-5a942b132d9b": {
+    "data": {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.stats.DiskStats",
+      "diskUsagePpm": [
+        {
+          "value": 61510,
+          "timestamp": "2026-11-04T07:20:00Z"
+        },
+        {
+          "value": 61508,
+          "timestamp": "2026-11-04T07:15:30Z"
+        }
+      ],
+      "diskCapacityBytes": [
+        {
+          "value": 3659324221183,
+          "timestamp": "2026-11-04T07:18:30Z"
+        },
+        {
+          "value": 3659324221183,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ],
+      "diskFreeBytes": [
+        {
+          "value": 3434241242264,
+          "timestamp": "2026-11-04T07:18:30Z"
+        },
+        {
+          "value": 3434241989784,
+          "timestamp": "2026-11-04T07:18:00Z"
+        }
+      ]
+    },
+    "$reserved": {
+      "$fv": "v4.r2"
+    },
+    "$objectType": "clustermgmt.v4.stats.GetDiskStatsApiResponse"
+  }
+}

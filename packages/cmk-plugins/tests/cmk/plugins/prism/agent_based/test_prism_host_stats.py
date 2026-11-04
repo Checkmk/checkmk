@@ -179,6 +179,17 @@ def test_check_prism_host_stats_cpu(  # type: ignore[misc]
     )
 
 
+@pytest.mark.usefixtures("empty_value_store")
+def test_cpu_without_socket_count_is_checked_without_cores_per_socket() -> None:
+    section = {"stats": {"hypervisor_cpu_usage_ppm": "500000"}}
+
+    assert [
+        result.details
+        for result in check_prism_host_stats_cpu(params={}, section=section)
+        if isinstance(result, Result) and not result.summary
+    ][-2:] == ["Sockets: 0", "Threads: 0"]
+
+
 @pytest.mark.parametrize(
     ["params", "section", "expected_check_result"],
     [

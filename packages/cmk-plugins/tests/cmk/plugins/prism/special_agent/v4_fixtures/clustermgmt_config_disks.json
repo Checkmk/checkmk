@@ -1,0 +1,833 @@
+{
+  "data": [
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.Disk",
+      "extId": "1ff5a5d9-e42a-4413-9f4e-f70b38fe4c44",
+      "links": [
+        {
+          "$reserved": {
+            "$fv": "v1.r0"
+          },
+          "$objectType": "common.v1.response.ApiLink",
+          "href": "https://prism.example.com:9440/api/clustermgmt/v4.0/config/disks/1ff5a5d9-e42a-4413-9f4e-f70b38fe4c44",
+          "rel": "disk"
+        }
+      ],
+      "nodeExtId": "387a54c1-7286-49aa-9602-a7e8e889f63c",
+      "location": 4097,
+      "serialNumber": "DISKSERIAL14",
+      "model": "KIOXIA KCD8XRUG3T84",
+      "storageTier": "SSD_PCIE",
+      "diskAdvanceConfig": {
+        "$reserved": {
+          "$fv": "v4.r2"
+        },
+        "$objectType": "clustermgmt.v4.config.DiskAdvanceConfig",
+        "isSelfEncryptingDrive": false,
+        "isSelfManagedNvme": true,
+        "isBootDisk": true,
+        "hasBootPartitionsOnly": false,
+        "isSpdkManaged": false,
+        "isOnline": true,
+        "isMarkedForRemoval": false,
+        "isDataMigrated": false,
+        "isUnhealthy": false,
+        "isSuspectedUnhealthy": false,
+        "isMounted": true,
+        "isUnderDiagnosis": false,
+        "isDiagnosticInfoAvailable": false,
+        "isErrorFoundInLog": false,
+        "isPlannedOutage": false
+      }
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.Disk",
+      "extId": "38335161-6996-4547-9db7-93b6184cd4f8",
+      "links": [
+        {
+          "$reserved": {
+            "$fv": "v1.r0"
+          },
+          "$objectType": "common.v1.response.ApiLink",
+          "href": "https://prism.example.com:9440/api/clustermgmt/v4.0/config/disks/38335161-6996-4547-9db7-93b6184cd4f8",
+          "rel": "disk"
+        }
+      ],
+      "nodeExtId": "247a477f-b32f-4fc1-83a6-c73172169e73",
+      "location": 4099,
+      "serialNumber": "DISKSERIAL04",
+      "model": "KIOXIA KCD8XRUG3T84",
+      "storageTier": "SSD_PCIE",
+      "diskAdvanceConfig": {
+        "$reserved": {
+          "$fv": "v4.r2"
+        },
+        "$objectType": "clustermgmt.v4.config.DiskAdvanceConfig",
+        "isSelfEncryptingDrive": false,
+        "isSelfManagedNvme": true,
+        "isBootDisk": true,
+        "hasBootPartitionsOnly": false,
+        "isSpdkManaged": false,
+        "isOnline": true,
+        "isMarkedForRemoval": false,
+        "isDataMigrated": false,
+        "isUnhealthy": false,
+        "isSuspectedUnhealthy": false,
+        "isMounted": true,
+        "isUnderDiagnosis": false,
+        "isDiagnosticInfoAvailable": false,
+        "isErrorFoundInLog": false,
+        "isPlannedOutage": false
+      }
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.Disk",
+      "extId": "411ca187-5e5f-493f-9b6e-f6b0fa6ed641",
+      "links": [
+        {
+          "$reserved": {
+            "$fv": "v1.r0"
+          },
+          "$objectType": "common.v1.response.ApiLink",
+          "href": "https://prism.example.com:9440/api/clustermgmt/v4.0/config/disks/411ca187-5e5f-493f-9b6e-f6b0fa6ed641",
+          "rel": "disk"
+        }
+      ],
+      "nodeExtId": "247a477f-b32f-4fc1-83a6-c73172169e73",
+      "location": 4096,
+      "serialNumber": "DISKSERIAL01",
+      "model": "KIOXIA KCD8XRUG3T84",
+      "storageTier": "SSD_PCIE",
+      "diskAdvanceConfig": {
+        "$reserved": {
+          "$fv": "v4.r2"
+        },
+        "$objectType": "clustermgmt.v4.config.DiskAdvanceConfig",
+        "isSelfEncryptingDrive": false,
+        "isSelfManagedNvme": true,
+        "isBootDisk": true,
+        "hasBootPartitionsOnly": false,
+        "isSpdkManaged": false,
+        "isOnline": true,
+        "isMarkedForRemoval": false,
+        "isDataMigrated": false,
+        "isUnhealthy": false,
+        "isSuspectedUnhealthy": false,
+        "isMounted": true,
+        "isUnderDiagnosis": false,
+        "isDiagnosticInfoAvailable": false,
+        "isErrorFoundInLog": false,
+        "isPlannedOutage": false
+      }
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.Disk",
+      "extId": "5ca809ac-775e-4d59-891e-9218c17beeef",
+      "links": [
+        {
+          "$reserved": {
+            "$fv": "v1.r0"
+          },
+          "$objectType": "common.v1.response.ApiLink",
+          "href": "https://prism.example.com:9440/api/clustermgmt/v4.0/config/disks/5ca809ac-775e-4d59-891e-9218c17beeef",
+          "rel": "disk"
+        }
+      ],
+      "nodeExtId": "247a477f-b32f-4fc1-83a6-c73172169e73",
+      "location": 4100,
+      "serialNumber": "DISKSERIAL05",
+      "model": "KIOXIA KCD8XRUG3T84",
+      "storageTier": "SSD_PCIE",
+      "diskAdvanceConfig": {
+        "$reserved": {
+          "$fv": "v4.r2"
+        },
+        "$objectType": "clustermgmt.v4.config.DiskAdvanceConfig",
+        "isSelfEncryptingDrive": false,
+        "isSelfManagedNvme": true,
+        "isBootDisk": false,
+        "hasBootPartitionsOnly": false,
+        "isSpdkManaged": true,
+        "isOnline": true,
+        "isMarkedForRemoval": false,
+        "isDataMigrated": false,
+        "isUnhealthy": false,
+        "isSuspectedUnhealthy": false,
+        "isMounted": true,
+        "isUnderDiagnosis": false,
+        "isDiagnosticInfoAvailable": false,
+        "isErrorFoundInLog": false,
+        "isPlannedOutage": false
+      }
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.Disk",
+      "extId": "62fca765-9cd9-42d6-b79f-969b1f390006",
+      "links": [
+        {
+          "$reserved": {
+            "$fv": "v1.r0"
+          },
+          "$objectType": "common.v1.response.ApiLink",
+          "href": "https://prism.example.com:9440/api/clustermgmt/v4.0/config/disks/62fca765-9cd9-42d6-b79f-969b1f390006",
+          "rel": "disk"
+        }
+      ],
+      "nodeExtId": "24bce4ff-ea77-4f52-84b2-438552e227be",
+      "location": 4100,
+      "serialNumber": "DISKSERIAL11",
+      "model": "KIOXIA KCD8XRUG3T84",
+      "storageTier": "SSD_PCIE",
+      "diskAdvanceConfig": {
+        "$reserved": {
+          "$fv": "v4.r2"
+        },
+        "$objectType": "clustermgmt.v4.config.DiskAdvanceConfig",
+        "isSelfEncryptingDrive": false,
+        "isSelfManagedNvme": true,
+        "isBootDisk": false,
+        "hasBootPartitionsOnly": false,
+        "isSpdkManaged": true,
+        "isOnline": true,
+        "isMarkedForRemoval": false,
+        "isDataMigrated": false,
+        "isUnhealthy": false,
+        "isSuspectedUnhealthy": false,
+        "isMounted": true,
+        "isUnderDiagnosis": false,
+        "isDiagnosticInfoAvailable": false,
+        "isErrorFoundInLog": false,
+        "isPlannedOutage": false
+      }
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.Disk",
+      "extId": "70b82532-5a89-4e28-8c08-0623b77d65a6",
+      "links": [
+        {
+          "$reserved": {
+            "$fv": "v1.r0"
+          },
+          "$objectType": "common.v1.response.ApiLink",
+          "href": "https://prism.example.com:9440/api/clustermgmt/v4.0/config/disks/70b82532-5a89-4e28-8c08-0623b77d65a6",
+          "rel": "disk"
+        }
+      ],
+      "nodeExtId": "24bce4ff-ea77-4f52-84b2-438552e227be",
+      "location": 4099,
+      "serialNumber": "DISKSERIAL10",
+      "model": "KIOXIA KCD8XRUG3T84",
+      "storageTier": "SSD_PCIE",
+      "diskAdvanceConfig": {
+        "$reserved": {
+          "$fv": "v4.r2"
+        },
+        "$objectType": "clustermgmt.v4.config.DiskAdvanceConfig",
+        "isSelfEncryptingDrive": false,
+        "isSelfManagedNvme": true,
+        "isBootDisk": false,
+        "hasBootPartitionsOnly": false,
+        "isSpdkManaged": true,
+        "isOnline": true,
+        "isMarkedForRemoval": false,
+        "isDataMigrated": false,
+        "isUnhealthy": false,
+        "isSuspectedUnhealthy": false,
+        "isMounted": true,
+        "isUnderDiagnosis": false,
+        "isDiagnosticInfoAvailable": false,
+        "isErrorFoundInLog": false,
+        "isPlannedOutage": false
+      }
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.Disk",
+      "extId": "71fb8a95-e5f5-4e34-b570-b2b390d5c06b",
+      "links": [
+        {
+          "$reserved": {
+            "$fv": "v1.r0"
+          },
+          "$objectType": "common.v1.response.ApiLink",
+          "href": "https://prism.example.com:9440/api/clustermgmt/v4.0/config/disks/71fb8a95-e5f5-4e34-b570-b2b390d5c06b",
+          "rel": "disk"
+        }
+      ],
+      "nodeExtId": "247a477f-b32f-4fc1-83a6-c73172169e73",
+      "location": 4101,
+      "serialNumber": "DISKSERIAL06",
+      "model": "KIOXIA KCD8XRUG3T84",
+      "storageTier": "SSD_PCIE",
+      "diskAdvanceConfig": {
+        "$reserved": {
+          "$fv": "v4.r2"
+        },
+        "$objectType": "clustermgmt.v4.config.DiskAdvanceConfig",
+        "isSelfEncryptingDrive": false,
+        "isSelfManagedNvme": true,
+        "isBootDisk": false,
+        "hasBootPartitionsOnly": false,
+        "isSpdkManaged": true,
+        "isOnline": true,
+        "isMarkedForRemoval": false,
+        "isDataMigrated": false,
+        "isUnhealthy": false,
+        "isSuspectedUnhealthy": false,
+        "isMounted": true,
+        "isUnderDiagnosis": false,
+        "isDiagnosticInfoAvailable": false,
+        "isErrorFoundInLog": false,
+        "isPlannedOutage": false
+      }
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.Disk",
+      "extId": "9172a796-49eb-4181-a514-aca205a84ba1",
+      "links": [
+        {
+          "$reserved": {
+            "$fv": "v1.r0"
+          },
+          "$objectType": "common.v1.response.ApiLink",
+          "href": "https://prism.example.com:9440/api/clustermgmt/v4.0/config/disks/9172a796-49eb-4181-a514-aca205a84ba1",
+          "rel": "disk"
+        }
+      ],
+      "nodeExtId": "24bce4ff-ea77-4f52-84b2-438552e227be",
+      "location": 4097,
+      "serialNumber": "DISKSERIAL08",
+      "model": "KIOXIA KCD8XRUG3T84",
+      "storageTier": "SSD_PCIE",
+      "diskAdvanceConfig": {
+        "$reserved": {
+          "$fv": "v4.r2"
+        },
+        "$objectType": "clustermgmt.v4.config.DiskAdvanceConfig",
+        "isSelfEncryptingDrive": false,
+        "isSelfManagedNvme": true,
+        "isBootDisk": false,
+        "hasBootPartitionsOnly": false,
+        "isSpdkManaged": true,
+        "isOnline": true,
+        "isMarkedForRemoval": false,
+        "isDataMigrated": false,
+        "isUnhealthy": false,
+        "isSuspectedUnhealthy": false,
+        "isMounted": true,
+        "isUnderDiagnosis": false,
+        "isDiagnosticInfoAvailable": false,
+        "isErrorFoundInLog": false,
+        "isPlannedOutage": false
+      }
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.Disk",
+      "extId": "96379f77-6f08-4fea-978c-0b8e61e8188b",
+      "links": [
+        {
+          "$reserved": {
+            "$fv": "v1.r0"
+          },
+          "$objectType": "common.v1.response.ApiLink",
+          "href": "https://prism.example.com:9440/api/clustermgmt/v4.0/config/disks/96379f77-6f08-4fea-978c-0b8e61e8188b",
+          "rel": "disk"
+        }
+      ],
+      "nodeExtId": "24bce4ff-ea77-4f52-84b2-438552e227be",
+      "location": 4096,
+      "serialNumber": "DISKSERIAL07",
+      "model": "KIOXIA KCD8XRUG3T84",
+      "storageTier": "SSD_PCIE",
+      "diskAdvanceConfig": {
+        "$reserved": {
+          "$fv": "v4.r2"
+        },
+        "$objectType": "clustermgmt.v4.config.DiskAdvanceConfig",
+        "isSelfEncryptingDrive": false,
+        "isSelfManagedNvme": true,
+        "isBootDisk": true,
+        "hasBootPartitionsOnly": false,
+        "isSpdkManaged": false,
+        "isOnline": true,
+        "isMarkedForRemoval": false,
+        "isDataMigrated": false,
+        "isUnhealthy": false,
+        "isSuspectedUnhealthy": false,
+        "isMounted": true,
+        "isUnderDiagnosis": false,
+        "isDiagnosticInfoAvailable": false,
+        "isErrorFoundInLog": false,
+        "isPlannedOutage": false
+      }
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.Disk",
+      "extId": "9880b614-1cb6-4380-9466-24f4175f5708",
+      "links": [
+        {
+          "$reserved": {
+            "$fv": "v1.r0"
+          },
+          "$objectType": "common.v1.response.ApiLink",
+          "href": "https://prism.example.com:9440/api/clustermgmt/v4.0/config/disks/9880b614-1cb6-4380-9466-24f4175f5708",
+          "rel": "disk"
+        }
+      ],
+      "nodeExtId": "24bce4ff-ea77-4f52-84b2-438552e227be",
+      "location": 4098,
+      "serialNumber": "DISKSERIAL09",
+      "model": "KIOXIA KCD8XRUG3T84",
+      "storageTier": "SSD_PCIE",
+      "diskAdvanceConfig": {
+        "$reserved": {
+          "$fv": "v4.r2"
+        },
+        "$objectType": "clustermgmt.v4.config.DiskAdvanceConfig",
+        "isSelfEncryptingDrive": false,
+        "isSelfManagedNvme": true,
+        "isBootDisk": true,
+        "hasBootPartitionsOnly": false,
+        "isSpdkManaged": false,
+        "isOnline": true,
+        "isMarkedForRemoval": false,
+        "isDataMigrated": false,
+        "isUnhealthy": false,
+        "isSuspectedUnhealthy": false,
+        "isMounted": true,
+        "isUnderDiagnosis": false,
+        "isDiagnosticInfoAvailable": false,
+        "isErrorFoundInLog": false,
+        "isPlannedOutage": false
+      }
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.Disk",
+      "extId": "98d5171a-e7f9-4c8d-9c69-50b8b1ebd5cb",
+      "links": [
+        {
+          "$reserved": {
+            "$fv": "v1.r0"
+          },
+          "$objectType": "common.v1.response.ApiLink",
+          "href": "https://prism.example.com:9440/api/clustermgmt/v4.0/config/disks/98d5171a-e7f9-4c8d-9c69-50b8b1ebd5cb",
+          "rel": "disk"
+        }
+      ],
+      "nodeExtId": "247a477f-b32f-4fc1-83a6-c73172169e73",
+      "location": 4097,
+      "serialNumber": "DISKSERIAL02",
+      "model": "KIOXIA KCD8XRUG3T84",
+      "storageTier": "SSD_PCIE",
+      "diskAdvanceConfig": {
+        "$reserved": {
+          "$fv": "v4.r2"
+        },
+        "$objectType": "clustermgmt.v4.config.DiskAdvanceConfig",
+        "isSelfEncryptingDrive": false,
+        "isSelfManagedNvme": true,
+        "isBootDisk": false,
+        "hasBootPartitionsOnly": false,
+        "isSpdkManaged": true,
+        "isOnline": true,
+        "isMarkedForRemoval": false,
+        "isDataMigrated": false,
+        "isUnhealthy": false,
+        "isSuspectedUnhealthy": false,
+        "isMounted": true,
+        "isUnderDiagnosis": false,
+        "isDiagnosticInfoAvailable": false,
+        "isErrorFoundInLog": false,
+        "isPlannedOutage": false
+      }
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.Disk",
+      "extId": "acd38994-c278-4306-83d6-2148d3ea7483",
+      "links": [
+        {
+          "$reserved": {
+            "$fv": "v1.r0"
+          },
+          "$objectType": "common.v1.response.ApiLink",
+          "href": "https://prism.example.com:9440/api/clustermgmt/v4.0/config/disks/acd38994-c278-4306-83d6-2148d3ea7483",
+          "rel": "disk"
+        }
+      ],
+      "nodeExtId": "247a477f-b32f-4fc1-83a6-c73172169e73",
+      "location": 4098,
+      "serialNumber": "DISKSERIAL03",
+      "model": "KIOXIA KCD8XRUG3T84",
+      "storageTier": "SSD_PCIE",
+      "diskAdvanceConfig": {
+        "$reserved": {
+          "$fv": "v4.r2"
+        },
+        "$objectType": "clustermgmt.v4.config.DiskAdvanceConfig",
+        "isSelfEncryptingDrive": false,
+        "isSelfManagedNvme": true,
+        "isBootDisk": false,
+        "hasBootPartitionsOnly": false,
+        "isSpdkManaged": true,
+        "isOnline": true,
+        "isMarkedForRemoval": false,
+        "isDataMigrated": false,
+        "isUnhealthy": false,
+        "isSuspectedUnhealthy": false,
+        "isMounted": true,
+        "isUnderDiagnosis": false,
+        "isDiagnosticInfoAvailable": false,
+        "isErrorFoundInLog": false,
+        "isPlannedOutage": false
+      }
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.Disk",
+      "extId": "b09f6ac3-6b9b-43ac-a9e7-7e22f58e47b0",
+      "links": [
+        {
+          "$reserved": {
+            "$fv": "v1.r0"
+          },
+          "$objectType": "common.v1.response.ApiLink",
+          "href": "https://prism.example.com:9440/api/clustermgmt/v4.0/config/disks/b09f6ac3-6b9b-43ac-a9e7-7e22f58e47b0",
+          "rel": "disk"
+        }
+      ],
+      "nodeExtId": "387a54c1-7286-49aa-9602-a7e8e889f63c",
+      "location": 4099,
+      "serialNumber": "DISKSERIAL16",
+      "model": "KIOXIA KCD8XRUG3T84",
+      "storageTier": "SSD_PCIE",
+      "diskAdvanceConfig": {
+        "$reserved": {
+          "$fv": "v4.r2"
+        },
+        "$objectType": "clustermgmt.v4.config.DiskAdvanceConfig",
+        "isSelfEncryptingDrive": false,
+        "isSelfManagedNvme": true,
+        "isBootDisk": false,
+        "hasBootPartitionsOnly": false,
+        "isSpdkManaged": true,
+        "isOnline": true,
+        "isMarkedForRemoval": false,
+        "isDataMigrated": false,
+        "isUnhealthy": false,
+        "isSuspectedUnhealthy": false,
+        "isMounted": true,
+        "isUnderDiagnosis": false,
+        "isDiagnosticInfoAvailable": false,
+        "isErrorFoundInLog": false,
+        "isPlannedOutage": false
+      }
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.Disk",
+      "extId": "b6bc907e-68e2-43ca-8d4d-3d0e688c60fa",
+      "links": [
+        {
+          "$reserved": {
+            "$fv": "v1.r0"
+          },
+          "$objectType": "common.v1.response.ApiLink",
+          "href": "https://prism.example.com:9440/api/clustermgmt/v4.0/config/disks/b6bc907e-68e2-43ca-8d4d-3d0e688c60fa",
+          "rel": "disk"
+        }
+      ],
+      "nodeExtId": "24bce4ff-ea77-4f52-84b2-438552e227be",
+      "location": 4101,
+      "serialNumber": "DISKSERIAL12",
+      "model": "KIOXIA KCD8XRUG3T84",
+      "storageTier": "SSD_PCIE",
+      "diskAdvanceConfig": {
+        "$reserved": {
+          "$fv": "v4.r2"
+        },
+        "$objectType": "clustermgmt.v4.config.DiskAdvanceConfig",
+        "isSelfEncryptingDrive": false,
+        "isSelfManagedNvme": true,
+        "isBootDisk": false,
+        "hasBootPartitionsOnly": false,
+        "isSpdkManaged": true,
+        "isOnline": true,
+        "isMarkedForRemoval": false,
+        "isDataMigrated": false,
+        "isUnhealthy": false,
+        "isSuspectedUnhealthy": false,
+        "isMounted": true,
+        "isUnderDiagnosis": false,
+        "isDiagnosticInfoAvailable": false,
+        "isErrorFoundInLog": false,
+        "isPlannedOutage": false
+      }
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.Disk",
+      "extId": "c3444d13-da6c-4543-824a-5e2bf98f82fe",
+      "links": [
+        {
+          "$reserved": {
+            "$fv": "v1.r0"
+          },
+          "$objectType": "common.v1.response.ApiLink",
+          "href": "https://prism.example.com:9440/api/clustermgmt/v4.0/config/disks/c3444d13-da6c-4543-824a-5e2bf98f82fe",
+          "rel": "disk"
+        }
+      ],
+      "nodeExtId": "387a54c1-7286-49aa-9602-a7e8e889f63c",
+      "location": 4101,
+      "serialNumber": "DISKSERIAL18",
+      "model": "KIOXIA KCD8XRUG3T84",
+      "storageTier": "SSD_PCIE",
+      "diskAdvanceConfig": {
+        "$reserved": {
+          "$fv": "v4.r2"
+        },
+        "$objectType": "clustermgmt.v4.config.DiskAdvanceConfig",
+        "isSelfEncryptingDrive": false,
+        "isSelfManagedNvme": true,
+        "isBootDisk": false,
+        "hasBootPartitionsOnly": false,
+        "isSpdkManaged": true,
+        "isOnline": true,
+        "isMarkedForRemoval": false,
+        "isDataMigrated": false,
+        "isUnhealthy": false,
+        "isSuspectedUnhealthy": false,
+        "isMounted": true,
+        "isUnderDiagnosis": false,
+        "isDiagnosticInfoAvailable": false,
+        "isErrorFoundInLog": false,
+        "isPlannedOutage": false
+      }
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.Disk",
+      "extId": "c3a0f690-d077-419d-9773-07fa2b341156",
+      "links": [
+        {
+          "$reserved": {
+            "$fv": "v1.r0"
+          },
+          "$objectType": "common.v1.response.ApiLink",
+          "href": "https://prism.example.com:9440/api/clustermgmt/v4.0/config/disks/c3a0f690-d077-419d-9773-07fa2b341156",
+          "rel": "disk"
+        }
+      ],
+      "nodeExtId": "387a54c1-7286-49aa-9602-a7e8e889f63c",
+      "location": 4100,
+      "serialNumber": "DISKSERIAL17",
+      "model": "KIOXIA KCD8XRUG3T84",
+      "storageTier": "SSD_PCIE",
+      "diskAdvanceConfig": {
+        "$reserved": {
+          "$fv": "v4.r2"
+        },
+        "$objectType": "clustermgmt.v4.config.DiskAdvanceConfig",
+        "isSelfEncryptingDrive": false,
+        "isSelfManagedNvme": true,
+        "isBootDisk": true,
+        "hasBootPartitionsOnly": false,
+        "isSpdkManaged": false,
+        "isOnline": true,
+        "isMarkedForRemoval": false,
+        "isDataMigrated": false,
+        "isUnhealthy": false,
+        "isSuspectedUnhealthy": false,
+        "isMounted": true,
+        "isUnderDiagnosis": false,
+        "isDiagnosticInfoAvailable": false,
+        "isErrorFoundInLog": false,
+        "isPlannedOutage": false
+      }
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.Disk",
+      "extId": "cf021cfe-57e2-4214-9e43-321ee7a3dfb2",
+      "links": [
+        {
+          "$reserved": {
+            "$fv": "v1.r0"
+          },
+          "$objectType": "common.v1.response.ApiLink",
+          "href": "https://prism.example.com:9440/api/clustermgmt/v4.0/config/disks/cf021cfe-57e2-4214-9e43-321ee7a3dfb2",
+          "rel": "disk"
+        }
+      ],
+      "nodeExtId": "387a54c1-7286-49aa-9602-a7e8e889f63c",
+      "location": 4098,
+      "serialNumber": "DISKSERIAL15",
+      "model": "KIOXIA KCD8XRUG3T84",
+      "storageTier": "SSD_PCIE",
+      "diskAdvanceConfig": {
+        "$reserved": {
+          "$fv": "v4.r2"
+        },
+        "$objectType": "clustermgmt.v4.config.DiskAdvanceConfig",
+        "isSelfEncryptingDrive": false,
+        "isSelfManagedNvme": true,
+        "isBootDisk": false,
+        "hasBootPartitionsOnly": false,
+        "isSpdkManaged": true,
+        "isOnline": true,
+        "isMarkedForRemoval": false,
+        "isDataMigrated": false,
+        "isUnhealthy": false,
+        "isSuspectedUnhealthy": false,
+        "isMounted": true,
+        "isUnderDiagnosis": false,
+        "isDiagnosticInfoAvailable": false,
+        "isErrorFoundInLog": false,
+        "isPlannedOutage": false
+      }
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.Disk",
+      "extId": "ed780c11-2c5b-4497-9613-5a942b132d9b",
+      "links": [
+        {
+          "$reserved": {
+            "$fv": "v1.r0"
+          },
+          "$objectType": "common.v1.response.ApiLink",
+          "href": "https://prism.example.com:9440/api/clustermgmt/v4.0/config/disks/ed780c11-2c5b-4497-9613-5a942b132d9b",
+          "rel": "disk"
+        }
+      ],
+      "nodeExtId": "387a54c1-7286-49aa-9602-a7e8e889f63c",
+      "location": 4096,
+      "serialNumber": "DISKSERIAL13",
+      "model": "KIOXIA KCD8XRUG3T84",
+      "storageTier": "SSD_PCIE",
+      "diskAdvanceConfig": {
+        "$reserved": {
+          "$fv": "v4.r2"
+        },
+        "$objectType": "clustermgmt.v4.config.DiskAdvanceConfig",
+        "isSelfEncryptingDrive": false,
+        "isSelfManagedNvme": true,
+        "isBootDisk": false,
+        "hasBootPartitionsOnly": false,
+        "isSpdkManaged": true,
+        "isOnline": true,
+        "isMarkedForRemoval": false,
+        "isDataMigrated": false,
+        "isUnhealthy": false,
+        "isSuspectedUnhealthy": false,
+        "isMounted": true,
+        "isUnderDiagnosis": false,
+        "isDiagnosticInfoAvailable": false,
+        "isErrorFoundInLog": false,
+        "isPlannedOutage": false
+      }
+    }
+  ],
+  "$reserved": {
+    "$fv": "v4.r2"
+  },
+  "$objectType": "clustermgmt.v4.config.ListDisksApiResponse",
+  "metadata": {
+    "flags": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.config.Flag",
+        "name": "hasError",
+        "value": false
+      },
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.config.Flag",
+        "name": "isPaginated",
+        "value": true
+      },
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.config.Flag",
+        "name": "isTruncated",
+        "value": false
+      }
+    ],
+    "$reserved": {
+      "$fv": "v1.r0"
+    },
+    "$objectType": "common.v1.response.ApiResponseMetadata",
+    "links": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.response.ApiLink",
+        "href": "https://prism.example.com:9440/api/clustermgmt/v4.0/config/disks?$limit=100&$page=0&$select=...",
+        "rel": "first"
+      },
+      {
+        "href": "https://prism.example.com:9440/api/clustermgmt/v4.0/config/disks?$limit=100&$page=0&$select=...",
+        "rel": "self"
+      },
+      {
+        "href": "https://prism.example.com:9440/api/clustermgmt/v4.0/config/disks?$limit=100&$page=0&$select=...",
+        "rel": "last"
+      }
+    ],
+    "totalAvailableResults": 18
+  }
+}

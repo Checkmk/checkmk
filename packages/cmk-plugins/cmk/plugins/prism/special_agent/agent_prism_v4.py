@@ -8,15 +8,17 @@
 import json
 import logging
 import sys
+import threading
 import time
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import timedelta
+from functools import partial
 from http import HTTPStatus
 from typing import NamedTuple, Protocol, Self, TextIO
 
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from cmk.plugins.prism.special_agent.session import base_url
 from cmk.plugins.prism.special_agent.v4_client import (
@@ -27,7 +29,15 @@ from cmk.plugins.prism.special_agent.v4_client import (
 from cmk.plugins.prism.v4_models import (
     Alert,
     ClusterRemoteSupport,
+    DiskConfig,
+    DiskStats,
     Host,
+    HostStats,
+    ListedDisk,
+    ListedHost,
+    Node,
+    NodeConfig,
+    NodeDisk,
     StorageContainer,
     StorageContainerStats,
     StorageContainerWithStats,
@@ -182,6 +192,10 @@ def fetch_alerts(context: FetchContext) -> Sequence[Section]:
     return [Section("prism_alerts_v2", alerts, target) for target, alerts in by_target.items()]
 
 
+def _fields(model: type[BaseModel]) -> list[str]:
+    return [f.alias or name for name, f in model.model_fields.items()]
+
+
 CONTAINERS_PATH = "clustermgmt/v4.0/config/storage-containers"
 CONTAINER_STATS_PATH = "clustermgmt/v4.0/stats/storage-containers"
 # Prism Central computes the dedup ratio every 6 hours
@@ -208,10 +222,35 @@ def _parse_valid[M: V4Model](
     return entities
 
 
-# The rate limits of the client set the pace, this only bounds the calls in flight: together
-# with the threads of the other fetchers it stays within the 10 connections requests keeps
-# open per host, and still reaches 10 calls per second at 0.6 s per call
+# The rate limits of the client set the pace, this only bounds the calls in flight: shared by
+# all fetchers and together with their own calls it stays within the 10 connections requests
+# keeps open per host, and still reaches 10 calls per second at 0.6 s per call
 STATS_WORKERS = 6
+_STATS_CALLS = threading.BoundedSemaphore(STATS_WORKERS)
+
+
+def _fetch_each[T, R](items: Sequence[T], fetch_one: Callable[[T], R]) -> list[R]:
+    """One call per item, in parallel
+
+    The first call goes before the other calls of the batch (other fetchers may be calling
+    meanwhile): it learns the rate limit of its endpoint, and if it fails, the others would
+    fail the same way one after another.
+    """
+
+    def bounded(item: T) -> R:
+        with _STATS_CALLS:
+            return fetch_one(item)
+
+    if not items:
+        return []
+    first = bounded(items[0])
+    pool = ThreadPoolExecutor(max_workers=STATS_WORKERS)
+    try:
+        futures = [pool.submit(bounded, item) for item in items[1:]]
+        return [first, *(future.result() for future in futures)]
+    finally:
+        # After an error, the calls not started yet would only fail the same way
+        pool.shutdown(cancel_futures=True)
 
 
 def _container_stats(
@@ -244,11 +283,7 @@ def fetch_containers(context: FetchContext) -> Sequence[Section]:
         StorageContainer,
         context.client.list_all(
             CONTAINERS_PATH,
-            {
-                "$select": ",".join(
-                    f.alias or name for name, f in StorageContainer.model_fields.items()
-                )
-            },
+            {"$select": ",".join(_fields(StorageContainer))},
         ),
         "storage container",
         "containerExtId",
@@ -256,18 +291,7 @@ def fetch_containers(context: FetchContext) -> Sequence[Section]:
     )
     if not containers:
         return []
-    # The first call goes alone: it learns the rate limit, and if it fails, the others would
-    # fail the same way one after another
-    first_stats = _container_stats(context, containers[0])
-    pool = ThreadPoolExecutor(max_workers=STATS_WORKERS)
-    try:
-        futures = [
-            pool.submit(_container_stats, context, container) for container in containers[1:]
-        ]
-        all_stats = [first_stats, *(future.result() for future in futures)]
-    finally:
-        # After an error, the calls not started yet would only fail the same way
-        pool.shutdown(cancel_futures=True)
+    all_stats = _fetch_each(containers, partial(_container_stats, context))
     if all(stats is None for stats in all_stats):
         # Deletions don't hit every container at once, the stats endpoint itself is missing
         raise PrismV4Error("Prism Central returned 404 for the stats of every storage container")
@@ -370,12 +394,108 @@ def fetch_vms(context: FetchContext) -> Sequence[Section]:
     ]
 
 
+DISKS_PATH = "clustermgmt/v4.0/config/disks"
+DISK_STATS_PATH = "clustermgmt/v4.0/stats/disks"
+# Prism Central samples the host and disk stats every 30 s and publishes them about 90 s late
+NODE_STATS_WINDOW = timedelta(minutes=5)
+NODE_STATS_SAMPLING = timedelta(seconds=30)
+
+
+def _host_stats(context: FetchContext, host: ListedHost) -> HostStats | None:
+    """None if the host has no cluster or is gone since it was listed"""
+    if host.cluster is None:
+        return None
+    try:
+        return HostStats.model_validate(
+            context.client.entity_stats(
+                f"clustermgmt/v4.0/stats/clusters/{host.cluster.uuid}/hosts/{host.ext_id}",
+                window=NODE_STATS_WINDOW,
+                sampling_interval=NODE_STATS_SAMPLING,
+                select=_fields(HostStats),
+            )
+        )
+    except PrismV4Error as e:
+        if e.status != HTTPStatus.NOT_FOUND:
+            raise
+        LOGGER.info(
+            "host %(name)s no longer exists: %(error)s", {"name": host.host_name, "error": e}
+        )
+        return None
+
+
+def _disk_stats(context: FetchContext, disk: ListedDisk) -> DiskStats:
+    """No stats if the disk is gone since it was listed"""
+    try:
+        return DiskStats.model_validate(
+            context.client.entity_stats(
+                f"{DISK_STATS_PATH}/{disk.ext_id}",
+                window=NODE_STATS_WINDOW,
+                sampling_interval=NODE_STATS_SAMPLING,
+            )
+        )
+    except PrismV4Error as e:
+        if e.status != HTTPStatus.NOT_FOUND:
+            raise
+        LOGGER.info("disk %(id)s no longer exists: %(error)s", {"id": disk.ext_id, "error": e})
+        return DiskStats()
+
+
+def _all_disk_stats(context: FetchContext, disks: Sequence[ListedDisk]) -> list[DiskStats]:
+    """Only the storage tier summary needs them, so a failure loses only that"""
+    try:
+        return _fetch_each(disks, partial(_disk_stats, context))
+    except PrismV4Error as e:
+        context.messages.add_warning(f"Could not fetch the disk stats: {e}")
+        return [DiskStats() for _disk in disks]
+
+
+def fetch_nodes(context: FetchContext) -> Sequence[Section]:
+    """Each host goes to a piggyback host of its own name, with its stats and disks"""
+    if isinstance(context.hosts, PrismV4Error):
+        raise context.hosts
+    listed_hosts = [ListedHost.model_validate(host) for host in context.hosts]
+    all_stats = _fetch_each(listed_hosts, partial(_host_stats, context))
+    if any(host.cluster for host in listed_hosts) and all(stats is None for stats in all_stats):
+        # Deletions don't hit every host at once, the stats endpoint itself is missing
+        raise PrismV4Error("Prism Central returned 404 for the stats of every host")
+    hosts = [
+        (host, stats)
+        for host, stats in zip(listed_hosts, all_stats, strict=True)
+        if stats is not None
+    ]
+    host_ids = {host.ext_id for host, _stats in hosts}
+    disks = [
+        disk
+        for raw in context.client.list_all(DISKS_PATH, {"$select": ",".join(_fields(ListedDisk))})
+        if (disk := ListedDisk.model_validate(raw)).node_ext_id in host_ids
+    ]
+
+    disks_by_node: dict[str | None, list[NodeDisk]] = {}
+    for disk, disk_stats in zip(disks, _all_disk_stats(context, disks), strict=True):
+        disks_by_node.setdefault(disk.node_ext_id, []).append(
+            NodeDisk(config=DiskConfig.model_validate(disk.to_section()), stats=disk_stats)
+        )
+    return [
+        Section(
+            "prism_host_v2",
+            Node(
+                config=NodeConfig.model_validate(host.to_section()),
+                stats=stats,
+                disks=disks_by_node.get(host.ext_id, []),
+            ).to_section(),
+            Unroutable("hosts without a name") if host.host_name is None else host.host_name,
+        )
+        for host, stats in hosts
+    ]
+
+
 SECTION_FETCHERS: Sequence[Fetcher] = (
     Fetcher("hosts", fetch_hosts),
     Fetcher("alerts", fetch_alerts),
     Fetcher("containers", fetch_containers),
     Fetcher("vms", fetch_vms),
     Fetcher("remote support", fetch_remote_support),
+    Fetcher("nodes", fetch_nodes),
 )
 
 

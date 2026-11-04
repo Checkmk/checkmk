@@ -41,8 +41,8 @@ pylint==3.3.2 # used by test/Makefile's test-pylint target
 pylint-pydantic==0.3.4
 pylsp-mypy==0.6.9 # mypy plugin for python-lsp-server
 pymongo<4.9  # used by mk_mongodb agent plugin # 4.9 has no pymongo.database.Database anymore
-pytest==9.1.1
-pytest-asyncio==1.3.0  # faciliate testing of async code
+pytest==8.3.4
+pytest-asyncio==0.25.3  # faciliate testing of async code
 pytest-benchmark==5.2.3 # used by performance tests
 pytest-html==4.1.1 # used to generate HTML reports for test suites
 pytest-mock==3.14.0 # used by quite a few unit/integration tests via the mocker fixture
@@ -51,7 +51,7 @@ pytest-xdist==3.6.1 # used to limit number of procs in e2e tests
 pytest-check==2.5.2 # used to queue failed assertions and continue test execution
 pytest-opentelemetry==1.0.1 # instrument pytest runs
 pytest-repeat==0.9.3 # used to rerun system tests
-pytest-playwright==0.7.2 # used for gui_e2e tests
+pytest-playwright==0.7.1 # used for gui_e2e tests
 python-lsp-server==1.12.0 # Note: There are extras, but the default seems sensible.
 requirements-parser==0.11.0 # used to parse requirements.txt file for testing
 responses==0.25.3 # used for unit tests

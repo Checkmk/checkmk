@@ -18,6 +18,7 @@ from typing import Any
 from unittest import mock
 
 import pytest
+from redfish.rest.v1 import SessionCreationError  # type: ignore[import-untyped]
 
 from cmk.utils import paths
 
@@ -1079,3 +1080,20 @@ def test_get_information_keeps_cached_dependents_of_unavailable_section(
     _run(redfishobj)
 
     assert f"<<<redfish_drives:sep(0):cached({cached_at},300)>>>" in capsys.readouterr().out
+
+
+class _SessionRefusingClient:
+    def login(self, **_kw: str) -> None:
+        raise SessionCreationError("HTTP 404: Failed to create the session")
+
+
+@pytest.mark.xfail(strict=True, raises=SessionCreationError, reason="Crash group 4952")
+def test_refused_session_is_reported_as_login_error(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setattr(agent_redfish.ClientSession, "DIR", tmp_path)
+    monkeypatch.setattr(agent_redfish, "redfish_client", lambda **_kw: _SessionRefusingClient())
+    args = agent_redfish.parse_arguments(["-u", "user", "--password", "secret", "bmc"])
+
+    with pytest.raises(CannotRecover, match="Login failed"):
+        agent_redfish.get_session(args)

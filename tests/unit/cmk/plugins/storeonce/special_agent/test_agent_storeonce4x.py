@@ -10,6 +10,7 @@ from http import HTTPStatus
 import pytest
 import responses
 import time_machine
+from oauthlib.oauth2 import MissingTokenError  # type: ignore[import-untyped,unused-ignore]
 
 from cmk.password_store.v1 import Secret
 from cmk.plugins.storeonce.special_agent.agent_storeonce4x import (
@@ -181,3 +182,23 @@ def test_agent_storeonce4x_main_nested_section_yields_members_and_details(
     appliances = _parse_agent_output(capsys.readouterr().out)["appliances"]
 
     assert [json.loads(line) for line in appliances] == [_MEMBERS, _DASHBOARD]
+
+
+@pytest.mark.xfail(strict=True, raises=MissingTokenError, reason="Crash group 4759")
+@responses.activate
+def test_agent_storeonce4x_main_reports_rejected_login(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    responses.add(
+        responses.POST,
+        f"https://{HOST}:{PORT}/pml/login/authenticate",
+        json={"message": "Either the username or password is incorrect", "severity": "error"},
+        status=HTTPStatus.UNAUTHORIZED,
+    )
+
+    return_code = agent_storeonce4x_main(
+        parse_arguments(["--user", USER, "--password", SECRET, "-p", PORT, HOST])
+    )
+
+    assert return_code == 1
+    assert "Login failed" in capsys.readouterr().err

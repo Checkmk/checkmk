@@ -219,21 +219,45 @@ def test_unreachable_rackpdu_collection_does_not_crash() -> None:
     assert agent_redfish_power.get_information(client) == 0
 
 
+def _routes_without_power_link() -> Mapping[str, object]:
+    return {
+        "/redfish/v1": {
+            "@odata.id": "/redfish/v1",
+            "@odata.type": "#ServiceRoot.v1_16_1.ServiceRoot",
+            "Managers": {"@odata.id": "/redfish/v1/Managers"},
+        },
+        "/redfish/v1/Managers": MANAGER_COLLECTION,
+        "/redfish/v1/Managers/manager": MANAGER,
+    }
+
+
 def test_service_root_without_any_power_link_still_aborts() -> None:
     """Devices that are genuinely not power equipment keep the clear error."""
-    client = _FakeClient(
-        {
-            "/redfish/v1": {
-                "@odata.id": "/redfish/v1",
-                "@odata.type": "#ServiceRoot.v1_16_1.ServiceRoot",
-                "Managers": {"@odata.id": "/redfish/v1/Managers"},
-            },
-            "/redfish/v1/Managers": MANAGER_COLLECTION,
-            "/redfish/v1/Managers/manager": MANAGER,
-        }
-    )
+    client = _FakeClient(_routes_without_power_link())
 
     with pytest.raises(
         agent_redfish_power.CannotRecover, match="missing PowerEquipment information"
     ):
         agent_redfish_power.get_information(client)
+
+
+class _LoginClient(_FakeClient):
+    def login(self, auth: str) -> None:
+        pass
+
+    def logout(self) -> None:
+        pass
+
+
+@pytest.mark.xfail(strict=True, raises=agent_redfish_power.CannotRecover, reason="Crash group 4825")
+def test_device_without_power_link_ends_with_error_message(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """A device that is no power equipment is a configuration error, not a crash."""
+    client = _LoginClient(_routes_without_power_link())
+    monkeypatch.setattr(agent_redfish_power, "redfish_client", lambda **_kwargs: client)
+    args = agent_redfish_power.parse_arguments(["-u", "user", "--password", "secret", "pdu"])
+
+    assert agent_redfish_power.agent_redfish_main(args) == 1
+
+    assert "missing PowerEquipment information" in capsys.readouterr().err

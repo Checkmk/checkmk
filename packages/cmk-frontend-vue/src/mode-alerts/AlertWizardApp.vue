@@ -141,6 +141,7 @@ async function saveAlert(): Promise<void> {
         :index="2"
         :is-completed="() => currentStep > 2"
         :is-first="editing"
+        :prefilled="editing"
       />
 
       <ThresholdsStep

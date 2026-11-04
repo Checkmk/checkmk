@@ -284,6 +284,16 @@ test('editing an alert opens on its services, prefilled', async () => {
   expect(screen.getByRole('combobox', { name: 'Folder' })).toHaveTextContent('Main/Linux')
 })
 
+test('editing an alert lists the services it matches without changing anything', async () => {
+  serveStoredAlert()
+  renderApp('latency_too_high')
+
+  await waitForServicesStep()
+
+  expect(await screen.findByText(/Matching services/)).toHaveTextContent('(1)')
+  expect(screen.getByText('web01')).toBeInTheDocument()
+})
+
 test('saving an edited alert sends the update guarded by its ETag, without its name', async () => {
   serveStoredAlert()
   const sent: { body: unknown; ifMatch: string | null }[] = []

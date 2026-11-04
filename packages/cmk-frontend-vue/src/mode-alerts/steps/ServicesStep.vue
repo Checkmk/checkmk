@@ -20,7 +20,7 @@ import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequi
 import { CmkApiError } from 'cmk-ui-library/lib/error'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import useId from 'cmk-ui-library/lib/useId'
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import { FormEdit, type ValidationMessages } from '@/form'
 
@@ -47,9 +47,15 @@ const { _t } = usei18n()
 const {
   conditionsSpec,
   folderPaths,
-  isFirst = false
+  isFirst = false,
+  prefilled = false
 } = defineProps<
-  CmkWizardStepProps & { conditionsSpec: FormSpec; folderPaths: FolderPaths; isFirst?: boolean }
+  CmkWizardStepProps & {
+    conditionsSpec: FormSpec
+    folderPaths: FolderPaths
+    isFirst?: boolean
+    prefilled?: boolean
+  }
 >()
 
 const model = defineModel<AlertModel>({ required: true })
@@ -169,6 +175,14 @@ watch(
     debounceTimer = setTimeout(() => void search(), SEARCH_DEBOUNCE_MS)
   }
 )
+
+// The watch above only searches on a change, so a stored alert would show no matches until
+// the user edits something.
+onMounted(() => {
+  if (prefilled) {
+    void search()
+  }
+})
 
 onBeforeUnmount(cancelPendingSearch)
 

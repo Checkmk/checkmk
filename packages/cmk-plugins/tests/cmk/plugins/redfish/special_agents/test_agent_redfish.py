@@ -22,6 +22,7 @@ from typing import Any
 from unittest import mock
 
 import pytest
+from redfish.rest.v1 import SessionCreationError  # type: ignore[import-not-found]
 
 from cmk.plugins.redfish.special_agents import agent_redfish
 from cmk.server_side_programs.v1 import Storage
@@ -1097,3 +1098,20 @@ def test_client_session_loadf_ignores_empty_session_file(
     Storage(agent_redfish.AGENT, "bmc-1").write("session", "")
 
     assert agent_redfish.ClientSession.loadf("bmc-1") is None
+
+
+class _SessionRefusingClient:
+    def login(self, **_kw: str) -> None:
+        raise SessionCreationError("HTTP 404: Failed to create the session")
+
+
+@pytest.mark.xfail(strict=True, raises=SessionCreationError, reason="Crash group 4952")
+def test_refused_session_is_reported_as_login_error(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("SERVER_SIDE_PROGRAM_STORAGE_PATH", str(tmp_path))
+    monkeypatch.setattr(agent_redfish, "redfish_client", lambda **_kw: _SessionRefusingClient())
+    args = agent_redfish.parse_arguments(["-u", "user", "--password", "secret", "bmc"])
+
+    with pytest.raises(agent_redfish.CannotRecover, match="Login failed"):
+        agent_redfish.get_session(args)

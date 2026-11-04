@@ -129,55 +129,32 @@ def get_elb_sections() -> ELBSections:
 
 
 elb_params = [
-    (
-        None,
-        (None, None),
-        ["LoadBalancerName-0", "LoadBalancerName-1", "LoadBalancerName-2"],
-        ["LoadBalancerName-0", "LoadBalancerName-1"],
-    ),
-    (None, (["FOO"], ["BAR"]), [], []),
-    (
-        None,
-        (["Key-0"], ["Value-0"]),
-        ["LoadBalancerName-0", "LoadBalancerName-1"],
-        ["LoadBalancerName-0", "LoadBalancerName-1"],
-    ),
-    (
-        None,
-        (["Key-0", "Key-0"], ["Value-0", "Bar"]),
-        ["LoadBalancerName-0", "LoadBalancerName-1"],
-        ["LoadBalancerName-0", "LoadBalancerName-1"],
-    ),
-    (["LoadBalancerName-0"], (None, None), ["LoadBalancerName-0"], ["LoadBalancerName-0"]),
-    (
-        ["LoadBalancerName-0", "Foobar"],
-        (None, None),
-        ["LoadBalancerName-0"],
-        ["LoadBalancerName-0"],
-    ),
+    (None, (None, None), ["LoadBalancerName-0", "LoadBalancerName-1", "LoadBalancerName-2"]),
+    (None, (["FOO"], ["BAR"]), []),
+    (None, (["Key-0"], ["Value-0"]), ["LoadBalancerName-0", "LoadBalancerName-1"]),
+    (None, (["Key-0", "Key-0"], ["Value-0", "Bar"]), ["LoadBalancerName-0", "LoadBalancerName-1"]),
+    (["LoadBalancerName-0"], (None, None), ["LoadBalancerName-0"]),
+    (["LoadBalancerName-0", "Foobar"], (None, None), ["LoadBalancerName-0"]),
     (
         ["LoadBalancerName-0", "LoadBalancerName-1"],
         (None, None),
-        ["LoadBalancerName-0", "LoadBalancerName-1"],
         ["LoadBalancerName-0", "LoadBalancerName-1"],
     ),
     (
         ["LoadBalancerName-0", "LoadBalancerName-2"],
         (None, None),
         ["LoadBalancerName-0", "LoadBalancerName-2"],
-        ["LoadBalancerName-0"],
     ),
-    (["LoadBalancerName-2"], (["FOO"], ["BAR"]), ["LoadBalancerName-2"], []),
+    (["LoadBalancerName-2"], (["FOO"], ["BAR"]), ["LoadBalancerName-2"]),
 ]
 
 
-@pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elb_params)
+@pytest.mark.parametrize("names,tags,found_instances", elb_params)
 def test_agent_aws_elb_limits(
     get_elb_sections: ELBSections,
     names: Sequence[str] | None,
     tags: OverallTags,
     found_instances: Sequence[str],  # noqa: ARG001
-    found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
     elb_limits, _elb_summary, _elb_health, _elb = get_elb_sections(names, tags)
     elb_limits_results = elb_limits.run().results
@@ -223,13 +200,12 @@ def test_agent_aws_elb_metrics_go_to_the_host_of_their_load_balancer(
     ]
 
 
-@pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elb_params)
+@pytest.mark.parametrize("names,tags,found_instances", elb_params)
 def test_agent_aws_elb_summary(
     get_elb_sections: ELBSections,
     names: Sequence[str] | None,
     tags: OverallTags,
     found_instances: Sequence[str],
-    found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
     elb_limits, elb_summary, _elb_health, _elb = get_elb_sections(names, tags)
     _elb_limits_results = elb_limits.run().results
@@ -249,13 +225,12 @@ def test_agent_aws_elb_summary(
         assert len(elb_summary_results) == 0
 
 
-@pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elb_params)
+@pytest.mark.parametrize("names,tags,found_instances", elb_params)
 def test_agent_aws_elb_health(
     get_elb_sections: ELBSections,
     names: Sequence[str] | None,
     tags: OverallTags,
     found_instances: Sequence[str],
-    found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
     elb_limits, elb_summary, elb_health, _elb = get_elb_sections(names, tags)
     _elb_limits_results = elb_limits.run().results
@@ -270,13 +245,12 @@ def test_agent_aws_elb_health(
         assert result.piggyback_hostname != ACCOUNT_HOST
 
 
-@pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elb_params)
+@pytest.mark.parametrize("names,tags,found_instances", elb_params)
 def test_agent_aws_elb(
     get_elb_sections: ELBSections,
     names: Sequence[str] | None,
     tags: OverallTags,
     found_instances: Sequence[str],
-    found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
     elb_limits, elb_summary, _elb_health, elb = get_elb_sections(names, tags)
     _elb_limits_results = elb_limits.run().results
@@ -293,13 +267,12 @@ def test_agent_aws_elb(
         assert len(result.content) == 13
 
 
-@pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elb_params)
+@pytest.mark.parametrize("names,tags,found_instances", elb_params)
 def test_agent_aws_elb_summary_without_limits(
     get_elb_sections: ELBSections,
     names: Sequence[str] | None,
     tags: OverallTags,
     found_instances: Sequence[str],
-    found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
     _elb_limits, elb_summary, _elb_health, _elb = get_elb_sections(names, tags)
     elb_summary_results = elb_summary.run().results
@@ -318,13 +291,12 @@ def test_agent_aws_elb_summary_without_limits(
         assert len(elb_summary_results) == 0
 
 
-@pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elb_params)
+@pytest.mark.parametrize("names,tags,found_instances", elb_params)
 def test_agent_aws_elb_health_without_limits(
     get_elb_sections: ELBSections,
     names: Sequence[str] | None,
     tags: OverallTags,
     found_instances: Sequence[str],
-    found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
     _elb_limits, elb_summary, elb_health, _elb = get_elb_sections(names, tags)
     _elb_summary_results = elb_summary.run().results
@@ -338,13 +310,12 @@ def test_agent_aws_elb_health_without_limits(
         assert result.piggyback_hostname != ACCOUNT_HOST
 
 
-@pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elb_params)
+@pytest.mark.parametrize("names,tags,found_instances", elb_params)
 def test_agent_aws_elb_without_limits(
     get_elb_sections: ELBSections,
     names: Sequence[str] | None,
     tags: OverallTags,
     found_instances: Sequence[str],
-    found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
     _elb_limits, elb_summary, _elb_health, elb = get_elb_sections(names, tags)
     _elb_summary_results = elb_summary.run().results

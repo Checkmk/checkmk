@@ -183,30 +183,29 @@ def get_ec2_sections() -> EC2Sections:
 
 
 ec2_params = [
-    (None, (None, None), 3, 1),
-    (None, (["Key-0"], ["Value-0"]), 1, 1),
-    (None, (["Key-X"], ["Value-0"]), 0, 0),
-    (None, (["Key-0"], ["Value-X"]), 0, 0),
-    (None, (["Key-0"], ["Value-1"]), 0, 0),
-    (None, (["Key-1", "Key-1"], ["Value-0", "Value-1"]), 1, 1),
-    (None, (["Key-0", "Key-0"], ["Value-0", "Value-1"]), 1, 1),
-    (["InstanceId-0"], (None, None), 1, 1),
-    (["InstanceId-0", "Foo", "Bar"], (None, None), 1, 1),
-    (["InstanceId-0", "InstanceId-1"], (None, None), 2, 1),
-    (["InstanceId-0", "InstanceId-1", "Foo", "Bar"], (None, None), 2, 1),
-    (["InstanceId-0", "InstanceId-1", "InstanceId-2"], (None, None), 3, 1),
-    (["InstanceId-0", "InstanceId-1", "InstanceId-2", "Foo", "Bar"], (None, None), 3, 1),
-    (["Foo", "Bar"], (None, None), 0, 0),
+    (None, (None, None), 3),
+    (None, (["Key-0"], ["Value-0"]), 1),
+    (None, (["Key-X"], ["Value-0"]), 0),
+    (None, (["Key-0"], ["Value-X"]), 0),
+    (None, (["Key-0"], ["Value-1"]), 0),
+    (None, (["Key-1", "Key-1"], ["Value-0", "Value-1"]), 1),
+    (None, (["Key-0", "Key-0"], ["Value-0", "Value-1"]), 1),
+    (["InstanceId-0"], (None, None), 1),
+    (["InstanceId-0", "Foo", "Bar"], (None, None), 1),
+    (["InstanceId-0", "InstanceId-1"], (None, None), 2),
+    (["InstanceId-0", "InstanceId-1", "Foo", "Bar"], (None, None), 2),
+    (["InstanceId-0", "InstanceId-1", "InstanceId-2"], (None, None), 3),
+    (["InstanceId-0", "InstanceId-1", "InstanceId-2", "Foo", "Bar"], (None, None), 3),
+    (["Foo", "Bar"], (None, None), 0),
 ]
 
 
-@pytest.mark.parametrize("names,tags,found_ec2,found_ec2_with_labels", ec2_params)
+@pytest.mark.parametrize("names,tags,found_ec2", ec2_params)
 def test_agent_aws_ec2_limits(
     get_ec2_sections: EC2Sections,
     names: Sequence[str] | None,
     tags: OverallTags,
     found_ec2: int,  # noqa: ARG001
-    found_ec2_with_labels: int,  # noqa: ARG001
 ) -> None:
     ec2_limits, _ec2_summary, _ec2_security_groups, _ec2 = get_ec2_sections(names, tags)
     ec2_limits_results = ec2_limits.run().results
@@ -250,13 +249,12 @@ def test_agent_aws_ec2_limits_vpc_limit(
     assert limits_by_key[key].limit == expected_limit
 
 
-@pytest.mark.parametrize("names,tags,found_ec2,found_ec2_with_labels", ec2_params)
+@pytest.mark.parametrize("names,tags,found_ec2", ec2_params)
 def test_agent_aws_ec2_summary(
     get_ec2_sections: EC2Sections,
     names: Sequence[str] | None,
     tags: OverallTags,
     found_ec2: int,
-    found_ec2_with_labels: int,  # noqa: ARG001
 ) -> None:
     ec2_limits, ec2_summary, _ec2_security_groups, _ec2 = get_ec2_sections(names, tags)
     _ec2_limits_results = ec2_limits.run().results
@@ -277,13 +275,12 @@ def test_agent_aws_ec2_summary(
         assert len(ec2_summary_results) == 0
 
 
-@pytest.mark.parametrize("names,tags,found_ec2,found_ec2_with_labels", ec2_params)
+@pytest.mark.parametrize("names,tags,found_ec2", ec2_params)
 def test_agent_aws_ec2_security_groups(
     get_ec2_sections: EC2Sections,
     names: Sequence[str] | None,
     tags: OverallTags,
     found_ec2: int,
-    found_ec2_with_labels: int,  # noqa: ARG001
 ) -> None:
     ec2_limits, ec2_summary, ec2_security_groups, _ec2 = get_ec2_sections(names, tags)
     _ec2_limits_results = ec2_limits.run().results
@@ -300,13 +297,12 @@ def test_agent_aws_ec2_security_groups(
         assert result.piggyback_hostname != ACCOUNT_HOST
 
 
-@pytest.mark.parametrize("names,tags,found_ec2,found_ec2_with_labels", ec2_params)
+@pytest.mark.parametrize("names,tags,found_ec2", ec2_params)
 def test_agent_aws_ec2(
     get_ec2_sections: EC2Sections,
     names: Sequence[str] | None,
     tags: OverallTags,
     found_ec2: int,
-    found_ec2_with_labels: int,  # noqa: ARG001
 ) -> None:
     ec2_limits, ec2_summary, _ec2_security_groups, ec2 = get_ec2_sections(names, tags)
     _ec2_limits_results = ec2_limits.run().results
@@ -427,7 +423,7 @@ def test_agent_aws_ec2_security_groups_go_to_the_host_of_their_instance(
     ]
 
 
-@pytest.mark.parametrize("names,tags,found_ec2,found_ec2_with_labels", ec2_params)
+@pytest.mark.parametrize("names,tags,found_ec2", ec2_params)
 @pytest.mark.parametrize(
     "skip_entities",
     [
@@ -440,7 +436,6 @@ def test_agent_aws_ec2_no_crash_when_keys_missing(
     names: Sequence[str] | None,
     tags: OverallTags,
     found_ec2: int,  # noqa: ARG001
-    found_ec2_with_labels: int,  # noqa: ARG001
     skip_entities: Mapping[str, Collection[str]],
 ) -> None:
     ec2_limits, ec2_summary, _ec2_security_groups, _ec2 = get_ec2_sections(

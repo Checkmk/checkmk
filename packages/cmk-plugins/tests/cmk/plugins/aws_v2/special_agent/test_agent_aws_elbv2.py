@@ -267,55 +267,32 @@ def check_target_group_errors_results(
 
 
 elbv2_params = [
-    (
-        None,
-        (None, None),
-        ["LoadBalancerName-0", "LoadBalancerName-1", "LoadBalancerName-2"],
-        ["LoadBalancerName-0", "LoadBalancerName-1"],
-    ),
-    (None, (["FOO"], ["BAR"]), [], []),
-    (
-        None,
-        (["Key-0"], ["Value-0"]),
-        ["LoadBalancerName-0", "LoadBalancerName-1"],
-        ["LoadBalancerName-0", "LoadBalancerName-1"],
-    ),
-    (
-        None,
-        (["Key-0", "Key-0"], ["Value-0", "Bar"]),
-        ["LoadBalancerName-0", "LoadBalancerName-1"],
-        ["LoadBalancerName-0", "LoadBalancerName-1"],
-    ),
-    (["LoadBalancerName-0"], (None, None), ["LoadBalancerName-0"], ["LoadBalancerName-0"]),
-    (
-        ["LoadBalancerName-0", "Foobar"],
-        (None, None),
-        ["LoadBalancerName-0"],
-        ["LoadBalancerName-0"],
-    ),
+    (None, (None, None), ["LoadBalancerName-0", "LoadBalancerName-1", "LoadBalancerName-2"]),
+    (None, (["FOO"], ["BAR"]), []),
+    (None, (["Key-0"], ["Value-0"]), ["LoadBalancerName-0", "LoadBalancerName-1"]),
+    (None, (["Key-0", "Key-0"], ["Value-0", "Bar"]), ["LoadBalancerName-0", "LoadBalancerName-1"]),
+    (["LoadBalancerName-0"], (None, None), ["LoadBalancerName-0"]),
+    (["LoadBalancerName-0", "Foobar"], (None, None), ["LoadBalancerName-0"]),
     (
         ["LoadBalancerName-0", "LoadBalancerName-1"],
         (None, None),
-        ["LoadBalancerName-0", "LoadBalancerName-1"],
         ["LoadBalancerName-0", "LoadBalancerName-1"],
     ),
     (
         ["LoadBalancerName-0", "LoadBalancerName-2"],
         (None, None),
         ["LoadBalancerName-0", "LoadBalancerName-2"],
-        ["LoadBalancerName-0"],
     ),
-    (["LoadBalancerName-2"], (["FOO"], ["BAR"]), ["LoadBalancerName-2"], []),
+    (["LoadBalancerName-2"], (["FOO"], ["BAR"]), ["LoadBalancerName-2"]),
 ]
 
 
-@pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elbv2_params)
+@pytest.mark.parametrize("names,tags,found_instances", elbv2_params)
 def test_agent_aws_elbv2_limits(
     get_elbv2_sections: ELBv2Sections,
     names: Sequence[str] | None,
     tags: OverallTags,
     found_instances: Sequence[str],  # noqa: ARG001
-    found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
     elbv2_limits = get_elbv2_sections(names, tags).elbv2_limits
     elbv2_limits_results = elbv2_limits.run().results
@@ -360,13 +337,12 @@ def test_agent_aws_elbv2_target_groups_go_to_the_host_of_their_load_balancer(
     ]
 
 
-@pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elbv2_params)
+@pytest.mark.parametrize("names,tags,found_instances", elbv2_params)
 def test_agent_aws_elbv2_summary(
     get_elbv2_sections: ELBv2Sections,
     names: Sequence[str] | None,
     tags: OverallTags,
     found_instances: Sequence[str],
-    found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
     elbv2_sections = get_elbv2_sections(names, tags)
     elbv2_summary = elbv2_sections.elbv2_summary
@@ -387,13 +363,12 @@ def test_agent_aws_elbv2_summary(
         assert len(elbv2_summary_results) == 0
 
 
-@pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elbv2_params)
+@pytest.mark.parametrize("names,tags,found_instances", elbv2_params)
 def test_agent_aws_elbv2_target_groups(
     get_elbv2_sections: ELBv2Sections,
     names: Sequence[str] | None,
     tags: OverallTags,
     found_instances: Sequence[str],
-    found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
     elbv2_sections = get_elbv2_sections(names, tags)
     elbv2_sections.elbv2_limits.run()
@@ -409,13 +384,12 @@ def test_agent_aws_elbv2_target_groups(
         assert result.piggyback_hostname != ACCOUNT_HOST
 
 
-@pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elbv2_params)
+@pytest.mark.parametrize("names,tags,found_instances", elbv2_params)
 def test_agent_aws_elbv2_application(
     get_elbv2_sections: ELBv2Sections,
     names: Sequence[str] | None,
     tags: OverallTags,
     found_instances: Sequence[str],
-    found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
     elbv2_sections = get_elbv2_sections(names, tags)
     elbv2_sections.elbv2_limits.run()
@@ -457,13 +431,12 @@ def test_agent_aws_elbv2_application(
         )
 
 
-@pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elbv2_params)
+@pytest.mark.parametrize("names,tags,found_instances", elbv2_params)
 def test_agent_aws_elbv2_network(
     get_elbv2_sections: ELBv2Sections,
     names: Sequence[str] | None,
     tags: OverallTags,
     found_instances: Sequence[str],
-    found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
     elbv2_sections = get_elbv2_sections(names, tags)
     elbv2_sections.elbv2_limits.run()
@@ -481,13 +454,12 @@ def test_agent_aws_elbv2_network(
         assert len(result.content) == 12
 
 
-@pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elbv2_params)
+@pytest.mark.parametrize("names,tags,found_instances", elbv2_params)
 def test_agent_aws_elbv2_summary_without_limits(
     get_elbv2_sections: ELBv2Sections,
     names: Sequence[str] | None,
     tags: OverallTags,
     found_instances: Sequence[str],
-    found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
     elbv2_sections = get_elbv2_sections(names, tags)
     elbv2_summary = elbv2_sections.elbv2_summary
@@ -507,13 +479,12 @@ def test_agent_aws_elbv2_summary_without_limits(
         assert len(elbv2_summary_results) == 0
 
 
-@pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elbv2_params)
+@pytest.mark.parametrize("names,tags,found_instances", elbv2_params)
 def test_agent_aws_elbv2_target_groups_without_limits(
     get_elbv2_sections: ELBv2Sections,
     names: Sequence[str] | None,
     tags: OverallTags,
     found_instances: Sequence[str],
-    found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
     elbv2_sections = get_elbv2_sections(names, tags)
     elbv2_sections.elbv2_summary.run()
@@ -528,13 +499,12 @@ def test_agent_aws_elbv2_target_groups_without_limits(
         assert result.piggyback_hostname != ACCOUNT_HOST
 
 
-@pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elbv2_params)
+@pytest.mark.parametrize("names,tags,found_instances", elbv2_params)
 def test_agent_aws_elbv2_application_without_limits(
     get_elbv2_sections: ELBv2Sections,
     names: Sequence[str] | None,
     tags: OverallTags,
     found_instances: Sequence[str],
-    found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
     elbv2_sections = get_elbv2_sections(names, tags)
     elbv2_summary_results = elbv2_sections.elbv2_summary.run().results
@@ -576,13 +546,12 @@ def test_agent_aws_elbv2_application_without_limits(
         )
 
 
-@pytest.mark.parametrize("names,tags,found_instances,found_instances_with_labels", elbv2_params)
+@pytest.mark.parametrize("names,tags,found_instances", elbv2_params)
 def test_agent_aws_elbv2_network_without_limits(
     get_elbv2_sections: ELBv2Sections,
     names: Sequence[str] | None,
     tags: OverallTags,
     found_instances: Sequence[str],
-    found_instances_with_labels: Sequence[str],  # noqa: ARG001
 ) -> None:
     elbv2_sections = get_elbv2_sections(names, tags)
     elbv2_sections.elbv2_summary.run()

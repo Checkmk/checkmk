@@ -12,9 +12,11 @@ It is also a pytest plugin: registered from a conftest's `pytest_addoption` (see
 session in the monitor and stops the run cleanly when the timeout hits.
 """
 
+import faulthandler
 import multiprocessing
 import os
 import signal
+import threading
 import time
 from collections.abc import Callable, Iterator
 from types import FrameType, TracebackType
@@ -30,11 +32,16 @@ from tests.testlib.pytest_helpers.diagnostics import add_process_snapshot
 class SessionTimeoutError(BaseException): ...
 
 
+_MONITOR_JOIN_TIMEOUT = 5.0
+
+
 class MonitorTimeout:
     def __init__(
         self,
         timeout: int,
         timeout_handler: Callable[[int, FrameType | None], None] | None = None,
+        exit_after_grace: int | None = None,
+        dump_fd: int = 2,
     ):
         """Contextmanager to monitor duration of a code snippet.
 
@@ -47,6 +54,12 @@ class MonitorTimeout:
             \\-> monitor - M1 -> timeout! -/
         ```
 
+        If `exit_after_grace` is set and the process is still alive `exit_after_grace`
+        seconds after the timeout, it dumps the stacks of all threads to `dump_fd` and
+        exits hard with pytest's "interrupted" exit code. This bounds a shutdown that
+        wedges after the timeout, including the joins of threads and child processes at
+        interpreter exit.
+
         NOTE: `timeout` of `<= 0` disables timeout monitoring.
         """
         # defaults
@@ -55,6 +68,8 @@ class MonitorTimeout:
         self._pytest_pid = os.getpid()
         # interface
         self._timeout = timeout
+        self._exit_after_grace = exit_after_grace
+        self._dump_fd = dump_fd
         # NOTE: Things don't work out-of-the-box here for Python 3.14's default start method
         # "forkserver", see
         # https://docs.python.org/3/library/multiprocessing.html#the-spawn-and-forkserver-start-methods
@@ -118,13 +133,29 @@ class MonitorTimeout:
         children.reverse()
         for child in children:
             if child.pid != self._process.pid:
-                # sudo is needed: child processes (e.g. site commands) may run as root.
-                run(["kill", f"-{signal.SIGINT}", str(child.pid)], sudo=True, check=False)
+                _interrupt(child.pid)
+
+    def _stop_monitor(self) -> None:
+        """Stop and reap the monitor, so that interpreter exit has no child to wait for."""
+        self._process.terminate()
+        self._process.join(_MONITOR_JOIN_TIMEOUT)
+        if self._process.is_alive():
+            self._process.kill()
+            self._process.join(_MONITOR_JOIN_TIMEOUT)
 
     def __enter__(self) -> Self:
         if self._timeout > 0:
             signal.signal(signal.SIGINT, self._timeout_handler)
             self._process.start()
+            if self._exit_after_grace is not None:
+                # A thread rather than faulthandler.dump_traceback_later(): pytest cancels
+                # that timer whenever a test fails.
+                threading.Thread(
+                    target=_exit_after,
+                    args=(self._timeout + self._exit_after_grace, self._dump_fd),
+                    name="session-timeout-watchdog",
+                    daemon=True,
+                ).start()
         return self
 
     def __exit__(
@@ -133,9 +164,35 @@ class MonitorTimeout:
         exc_val: BaseException | None,
         exc_tb: TracebackType | None,
     ) -> None:
-        if self._timeout > 0:
-            self._process.terminate()
+        if self._timeout <= 0:
+            return
+        try:
+            # A timeout signal arriving now must not abort the cleanup below.
+            signal.signal(signal.SIGINT, signal.SIG_IGN)
+        finally:
+            self._stop_monitor()
             signal.signal(signal.SIGINT, self._sigint_handler)
+
+
+def _interrupt(pid: int) -> None:
+    try:
+        os.kill(pid, signal.SIGINT)
+    except ProcessLookupError:
+        pass
+    except PermissionError:
+        # Child processes (e.g. site commands) may run as root.
+        run(["kill", f"-{signal.SIGINT}", str(pid)], sudo=True, check=False)
+
+
+def _exit_after(seconds: float, dump_fd: int) -> None:
+    time.sleep(seconds)
+    try:
+        os.write(
+            dump_fd, b"\nThe run outlived its session timeout and grace period; forcing exit.\n"
+        )
+        faulthandler.dump_traceback(file=dump_fd, all_threads=True)
+    finally:
+        os._exit(pytest.ExitCode.INTERRUPTED)
 
 
 class FunctionTimeout(MonitorTimeout):
@@ -155,6 +212,9 @@ class FunctionTimeout(MonitorTimeout):
 
 
 SESSION_TIMEOUT_OPTION = "--session-timeout"
+# Time the run gets after the session timeout to tear down and exit before it is killed.
+SESSION_SHUTDOWN_GRACE = 900
+_STDERR_FD = pytest.StashKey[int]()
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -168,6 +228,12 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     )
 
 
+def pytest_configure(config: pytest.Config) -> None:
+    # Capture is suspended here, so fd 2 is the real stderr; later, during a test, it is
+    # pytest's capture file. Never closed: a forced exit may need it until the very end.
+    config.stash[_STDERR_FD] = os.dup(2)
+
+
 @pytest.fixture(scope="session", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def _session_timeout(pytestconfig: pytest.Config) -> Iterator[None]:
     timeout_duration = (
@@ -177,7 +243,11 @@ def _session_timeout(pytestconfig: pytest.Config) -> Iterator[None]:
         )
         else 0
     )
-    with MonitorTimeout(timeout=timeout_duration):
+    with MonitorTimeout(
+        timeout=timeout_duration,
+        exit_after_grace=SESSION_SHUTDOWN_GRACE,
+        dump_fd=pytestconfig.stash[_STDERR_FD],
+    ):
         yield
 
 

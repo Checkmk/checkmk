@@ -6,15 +6,19 @@
 """Unit tests for :mod:`tests.testlib.pytest_helpers.timeouts`.
 
 timeout_detected logic, _default_timeout_handler branching, and _is_pytest_alive()
-are exercised here. The full timeout-fires path (os.kill to self) requires a subprocess
-and is not covered at this level.
+are exercised here. The tests that let the timeout fire signal the test process
+itself, or a forked child where the process must exit.
 """
 
+import contextlib
+import multiprocessing
 import signal
+import subprocess
+import time
 from unittest.mock import MagicMock, patch
 
 import pytest
-from psutil import STATUS_ZOMBIE
+from psutil import Process, STATUS_ZOMBIE
 
 from tests.testlib.pytest_helpers.timeouts import MonitorTimeout, SessionTimeoutError
 
@@ -61,3 +65,57 @@ def test_is_pytest_alive_returns_false_for_zombie_process() -> None:
     mock_proc.status.return_value = STATUS_ZOMBIE
     with patch("tests.testlib.pytest_helpers.timeouts.Process", return_value=mock_proc):
         assert not monitor._is_pytest_alive()
+
+
+def _ends_within(process: subprocess.Popen[bytes], seconds: float) -> bool:
+    try:
+        process.wait(timeout=seconds)
+    except subprocess.TimeoutExpired:
+        return False
+    return True
+
+
+def test_timeout_interrupts_a_running_child_process() -> None:
+    # No check of the exit status: where SIGCHLD is ignored (as in CI), the kernel
+    # reaps the child and Popen reports 0 instead of -SIGINT.
+    with pytest.raises(SessionTimeoutError), MonitorTimeout(timeout=1):
+        child = subprocess.Popen(["sleep", "60"])
+        child.wait()
+        time.sleep(60)
+
+    assert _ends_within(child, seconds=5)
+
+
+def test_no_monitor_process_outlives_the_block() -> None:
+    children_before = Process().children()
+
+    with MonitorTimeout(timeout=100):
+        pass
+
+    assert Process().children() == children_before
+
+
+def _timed_out_run_with_wedged_shutdown() -> None:
+    with contextlib.suppress(SessionTimeoutError), MonitorTimeout(timeout=1, exit_after_grace=1):
+        time.sleep(60)
+    time.sleep(60)
+
+
+def _run_with_wedged_shutdown() -> int | None:
+    run = multiprocessing.get_context("fork").Process(target=_timed_out_run_with_wedged_shutdown)
+    run.start()
+    run.join(timeout=30)
+    run.kill()
+    return run.exitcode
+
+
+def test_wedged_shutdown_after_the_timeout_is_ended_by_force() -> None:
+    exitcode = _run_with_wedged_shutdown()
+
+    assert exitcode == pytest.ExitCode.INTERRUPTED
+
+
+def test_forced_exit_dumps_the_stack_of_the_wedged_code(capfd: pytest.CaptureFixture[str]) -> None:
+    _run_with_wedged_shutdown()
+
+    assert "_timed_out_run_with_wedged_shutdown" in capfd.readouterr().err

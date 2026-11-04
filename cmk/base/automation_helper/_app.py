@@ -73,9 +73,15 @@ class _State:
             self.loading_result = self.reload_config(self.plugins, self.get_builtin_host_labels)
             self.last_reload_at = time_right_before_reload
         except (Exception, BaseException) as e:
-            LOGGER.error("[reloader] Error reloading configuration: %s", e)
+            LOGGER.error("Error reloading configuration: %s", _reload_error_cause(e), exc_info=e)
             if not continue_on_error:
                 raise
+
+
+def _reload_error_cause(error: BaseException) -> BaseException:
+    # `config.load()` turns an error in a config file into `sys.exit(1)`, raised while
+    # handling that error.
+    return error.__context__ if isinstance(error, SystemExit) and error.__context__ else error
 
 
 @dataclass(frozen=True)
@@ -178,8 +184,12 @@ async def _reloader_task(
     delayer_factory: Callable[[float], Awaitable[None]] = asyncio.sleep,
 ) -> None:
     LOGGER.info("[reloader] Operational")
+    # After a failed reload, retry only for a newer change instead of every cooldown. Meanwhile,
+    # the automations retry and report the error.
+    last_attempted_change = float("-inf")
     while True:
-        if (cached_last_change := _retrieve_last_change(cache)) < state.last_reload_at:
+        cached_last_change = _retrieve_last_change(cache)
+        if cached_last_change < state.last_reload_at or cached_last_change <= last_attempted_change:
             await delayer_factory(config.poll_interval)
             continue
 
@@ -204,6 +214,8 @@ async def _reloader_task(
                     # Do not let the reloader fail (and stop).
                     # We will try again on the next change, and report failure in the automation endpoint.
                     state.load_new(continue_on_error=True)
+                    # Read before the load, so a change recorded during the load counts as newer.
+                    last_attempted_change = cached_last_change
                     break
 
             else:
@@ -259,7 +271,7 @@ def _execute_automation_endpoint(
             return AutomationResponse(
                 serialized_result_or_error_code=AutomationError.UNKNOWN_ERROR,
                 stdout="",
-                stderr=f"Error reloading configuration: {e}",
+                stderr=f"Error reloading configuration: {_reload_error_cause(e)}",
             )
 
     buffer_stdout = io.StringIO()

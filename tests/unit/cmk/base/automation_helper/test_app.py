@@ -7,10 +7,11 @@
 # mypy: disable-error-code="no-untyped-def"
 
 import asyncio
+import errno
 import logging
 import sys
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from typing import NoReturn, override
 
@@ -92,6 +93,28 @@ class _DummyAutomationEngineSystemExit:
         sys.stdout.write("stdout_system_exit")
         sys.stderr.write("stderr_system_exit")
         raise SystemExit(1)
+
+
+class _ConfigLoader:
+    """Fails the way `config.load()` does: an error in a config file ends in `sys.exit(1)`."""
+
+    def __init__(self, errors: Iterable[Exception | None]) -> None:
+        self._errors = iter(errors)
+
+    def __call__(
+        self,
+        plugins: AgentBasedPlugins,
+        get_builtin_host_labels: Callable[[SiteId], Labels],
+    ) -> LoadingResult:
+        if (error := next(self._errors)) is not None:
+            try:
+                raise error
+            except Exception:
+                sys.exit(1)
+        return LoadingResult(
+            loaded_config=EMPTY_CONFIG,
+            config_cache=ConfigCache(EMPTY_CONFIG, get_builtin_host_labels),
+        )
 
 
 _INACTIVE_RELOADER_CONFIG = ReloaderConfig(
@@ -282,6 +305,43 @@ def test_automation_retries_failed_reload(mocker: MockerFixture, cache: Cache) -
     ), "The failed reload counts as loaded"
 
 
+def test_automation_reports_failed_reload(cache: Cache) -> None:
+    with _make_test_client(
+        _DummyAutomationEngineSuccess(),
+        cache,
+        _ConfigLoader(
+            [
+                None,
+                FileNotFoundError(errno.ENOENT, "No such file or directory", "conf.d/vanished.mk"),
+            ]
+        ),
+        lambda ruleset_matcher: None,
+        reloader_config=_INACTIVE_RELOADER_CONFIG,
+    ) as client:
+        cache.store_last_detected_change(time.time())
+        resp = client.post("/automation", json=_EXAMPLE_AUTOMATION_PAYLOAD)
+
+    assert AutomationResponse.model_validate(resp.json()) == AutomationResponse(
+        serialized_result_or_error_code=AutomationError.UNKNOWN_ERROR,
+        stdout="",
+        stderr="Error reloading configuration: "
+        "[Errno 2] No such file or directory: 'conf.d/vanished.mk'",
+    )
+
+
+def test_application_starts_despite_failed_initial_load(cache: Cache) -> None:
+    with _make_test_client(
+        _DummyAutomationEngineSuccess(),
+        cache,
+        _ConfigLoader([SyntaxError("invalid syntax")]),
+        lambda ruleset_matcher: None,
+        reloader_config=_INACTIVE_RELOADER_CONFIG,
+    ) as client:
+        resp = client.get("/health")
+
+    assert HealthCheckResponse.model_validate(resp.json()).last_reload_at == 0
+
+
 def test_health_check(cache: Cache) -> None:
     loaded_config = EMPTY_CONFIG
     with _make_test_client(
@@ -439,6 +499,171 @@ async def test_reloader_takes_state_into_account(mocker: MockerFixture, cache: C
     mock_reload_callback.assert_not_called()
     assert state.last_reload_at == 3
     assert lock.counter == 1
+
+
+@pytest.mark.asyncio
+async def test_reloader_retries_failed_reload_only_on_newer_change(cache: Cache) -> None:
+    state = _State(
+        last_reload_at=1,
+        automation_or_reload_lock=asyncio.Lock(),
+        reload_config=_ConfigLoader([SyntaxError("invalid syntax"), None]),
+        plugins=AgentBasedPlugins.empty(),
+        loading_result=None,
+        get_builtin_host_labels=get_builtin_host_labels,
+    )
+    mock_delay_state = _MockDelayState(
+        call_counter=0,
+        current_delay=0.0,
+        wake_up=asyncio.Event(),
+    )
+    reloader_task = asyncio.create_task(
+        _reloader_task(
+            config=ReloaderConfig(
+                active=True,
+                poll_interval=1.0,
+                cooldown_interval=5.0,
+            ),
+            cache=cache,
+            state=state,
+            delayer_factory=lambda delay: _mock_delay(mock_delay_state, delay),
+        )
+    )
+
+    # poll
+    await _wait_for_mock_delay(mock_delay_state, 1)
+    cache.store_last_detected_change(state.last_reload_at + 1)
+    mock_delay_state.wake_up.set()
+    # cooldown, followed by the failing reload
+    await _wait_for_mock_delay(mock_delay_state, 2)
+    mock_delay_state.wake_up.set()
+    # the reloader survives and polls instead of retrying the same change
+    await asyncio.wait_for(_wait_for_mock_delay(mock_delay_state, 3), timeout=1)
+    assert mock_delay_state.current_delay == 1.0, (
+        "The reloader retried a change that already failed"
+    )
+    assert state.last_reload_at == 1
+    mock_delay_state.wake_up.set()
+    await _wait_for_mock_delay(mock_delay_state, 4)
+    assert mock_delay_state.current_delay == 1.0, (
+        "The reloader retried a change that already failed"
+    )
+
+    # a newer change is retried after its cooldown
+    cache.store_last_detected_change(state.last_reload_at + 2)
+    mock_delay_state.wake_up.set()
+    await _wait_for_mock_delay(mock_delay_state, 5)
+    assert mock_delay_state.current_delay == 5.0, "The reloader did not retry a newer change"
+    mock_delay_state.wake_up.set()
+    await _wait_for_mock_delay(mock_delay_state, 6)
+
+    reloader_task.cancel()
+    assert state.last_reload_at > 1
+
+
+@pytest.mark.asyncio
+async def test_reloader_retries_change_recorded_during_failed_reload(cache: Cache) -> None:
+    config_loader = _ConfigLoader([SyntaxError("invalid syntax"), None])
+
+    def load_while_a_config_file_changes(
+        plugins: AgentBasedPlugins,
+        get_builtin_host_labels: Callable[[SiteId], Labels],
+    ) -> LoadingResult:
+        cache.store_last_detected_change(3)
+        return config_loader(plugins, get_builtin_host_labels)
+
+    state = _State(
+        last_reload_at=1,
+        automation_or_reload_lock=asyncio.Lock(),
+        reload_config=load_while_a_config_file_changes,
+        plugins=AgentBasedPlugins.empty(),
+        loading_result=None,
+        get_builtin_host_labels=get_builtin_host_labels,
+    )
+    mock_delay_state = _MockDelayState(
+        call_counter=0,
+        current_delay=0.0,
+        wake_up=asyncio.Event(),
+    )
+    reloader_task = asyncio.create_task(
+        _reloader_task(
+            config=ReloaderConfig(
+                active=True,
+                poll_interval=1.0,
+                cooldown_interval=5.0,
+            ),
+            cache=cache,
+            state=state,
+            delayer_factory=lambda delay: _mock_delay(mock_delay_state, delay),
+        )
+    )
+
+    # poll
+    await _wait_for_mock_delay(mock_delay_state, 1)
+    cache.store_last_detected_change(2)
+    mock_delay_state.wake_up.set()
+    # cooldown, followed by the failing reload, during which a newer change is recorded
+    await _wait_for_mock_delay(mock_delay_state, 2)
+    mock_delay_state.wake_up.set()
+    # the newer change gets its own cooldown and a retry
+    await asyncio.wait_for(_wait_for_mock_delay(mock_delay_state, 3), timeout=1)
+    assert mock_delay_state.current_delay == 5.0, (
+        "The reloader ignored a change recorded during the failed reload"
+    )
+    mock_delay_state.wake_up.set()
+    await _wait_for_mock_delay(mock_delay_state, 4)
+
+    reloader_task.cancel()
+    assert state.last_reload_at > 1
+
+
+@pytest.mark.asyncio
+async def test_reloader_retries_failed_initial_load_once(
+    mocker: MockerFixture, cache: Cache
+) -> None:
+    mock_reload_config = mocker.MagicMock(
+        side_effect=_ConfigLoader([SyntaxError("invalid syntax")])
+    )
+    state = _State(
+        # as after a failed load at application startup
+        last_reload_at=0,
+        automation_or_reload_lock=asyncio.Lock(),
+        reload_config=mock_reload_config,
+        plugins=AgentBasedPlugins.empty(),
+        loading_result=None,
+        get_builtin_host_labels=get_builtin_host_labels,
+    )
+    mock_delay_state = _MockDelayState(
+        call_counter=0,
+        current_delay=0.0,
+        wake_up=asyncio.Event(),
+    )
+    reloader_task = asyncio.create_task(
+        _reloader_task(
+            config=ReloaderConfig(
+                active=True,
+                poll_interval=1.0,
+                cooldown_interval=5.0,
+            ),
+            cache=cache,
+            state=state,
+            delayer_factory=lambda delay: _mock_delay(mock_delay_state, delay),
+        )
+    )
+
+    # no change was ever recorded, but nothing is loaded either: cooldown, then the failing reload
+    await _wait_for_mock_delay(mock_delay_state, 1)
+    assert mock_delay_state.current_delay == 5.0
+    mock_delay_state.wake_up.set()
+    # the reloader polls instead of retrying
+    await asyncio.wait_for(_wait_for_mock_delay(mock_delay_state, 2), timeout=1)
+    assert mock_delay_state.current_delay == 1.0, "The reloader retried the failed load"
+    mock_delay_state.wake_up.set()
+    await _wait_for_mock_delay(mock_delay_state, 3)
+    assert mock_delay_state.current_delay == 1.0, "The reloader retried the failed load"
+
+    reloader_task.cancel()
+    mock_reload_config.assert_called_once()
+    assert state.last_reload_at == 0
 
 
 @dataclass

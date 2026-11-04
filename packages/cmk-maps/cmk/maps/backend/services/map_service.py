@@ -50,12 +50,16 @@ def register_map(owner: str, cfg: MapConfig) -> None:
 
 
 def get_map(owner: str, name: str) -> MapConfig | None:
-    """The map registered under exactly this owner."""
+    """The map registered under exactly this owner.
+
+    Every viewer and request of the map shares it, so callers derive a changed
+    config with ``model_copy(update=...)`` instead of changing it.
+    """
     with _CACHE_GUARD:
         cached = _CACHE.get((owner, name))
         if cached is not None:
             _CACHE.move_to_end((owner, name))
-    return cached.model_copy(deep=True) if cached is not None else None
+    return cached
 
 
 # Maps fetched only because a link names them. Kept apart, so they never push a
@@ -104,5 +108,5 @@ async def find_link_targets(
                     _LINKED.popitem(last=False)
             cfg = _CACHE.get(key) or _LINKED.get(key, (0.0, None))[1]
         if cfg is not None:
-            found[name] = (target.owner, cfg.model_copy(deep=True))
+            found[name] = (target.owner, cfg)
     return found

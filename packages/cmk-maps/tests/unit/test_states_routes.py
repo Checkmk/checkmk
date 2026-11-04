@@ -36,7 +36,7 @@ from cmk.maps.backend.app import create_app
 from cmk.maps.backend.core.auth import GuiAuth, Principal
 from cmk.maps.backend.core.ratelimit import sse_stream_limiter, ws_connect_limiter
 from cmk.maps.backend.core.sse import manager, Subscriber
-from cmk.maps.backend.schemas.map import FlowView, MapConfig
+from cmk.maps.backend.schemas.map import FlowView, MapConfig, RadarView
 from cmk.maps.backend.schemas.state import MapStates, ObjectState, ObjectTiming
 from cmk.maps.backend.schemas.stream import StreamMessage
 from cmk.maps.backend.services import map_service, settings_service, state_service
@@ -399,6 +399,19 @@ def test_sse_rejects_when_the_concurrent_stream_cap_is_reached(client: TestClien
     finally:
         for _ in range(held):
             sse_stream_limiter.release("alice")
+
+
+def test_a_poll_with_unsaved_view_settings_leaves_the_registered_map_alone(
+    client: TestClient,
+) -> None:
+    map_service.register_map("alice", MapConfig(name="b1", view=RadarView()))
+    client.get(
+        "/api/v1/maps/b1/states?radar_filter=hostgroup&radar_filter_value=web",
+        headers=_session("alice"),
+    )
+    registered = map_service.get_map("alice", "b1")
+    assert registered is not None
+    assert registered.view == RadarView()
 
 
 def _subscription(gui: _GUI, user: str) -> states.StreamSubscription:

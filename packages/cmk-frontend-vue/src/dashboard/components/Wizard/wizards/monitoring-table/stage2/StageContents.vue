@@ -297,11 +297,7 @@ function goNext() {
               </div>
             </template>
           </CmkList>
-          <CmkButton
-            variant="secondary"
-            :disabled="unsortedColumns.length === 0"
-            @click="addSorter"
-          >
+          <CmkButton variant="optional" :disabled="unsortedColumns.length === 0" @click="addSorter">
             {{ _t('Add sorter') }}
           </CmkButton>
         </FieldComponent>

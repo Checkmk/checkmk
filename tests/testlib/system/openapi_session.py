@@ -2806,6 +2806,22 @@ class CustomServiceAPI(BaseAPI):
             raise UnexpectedResponse.from_response(response)
         return [str(service["id"]) for service in response.json()["value"]]
 
+    def update(
+        self,
+        configuration_name: str,
+        host_assignment: Mapping[str, object],
+        configuration: Mapping[str, object],
+        etag: str = "*",
+    ) -> None:
+        response = self.session.put(
+            f"objects/custom_service/{configuration_name}",
+            api_version=APIVersion.UNSTABLE,
+            headers={"If-Match": etag},
+            json={"host_assignment": host_assignment, "configuration": configuration},
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+
     def get(self, configuration_name: str) -> dict[str, Any]:
         response = self.session.get(
             f"objects/custom_service/{configuration_name}", api_version=APIVersion.UNSTABLE

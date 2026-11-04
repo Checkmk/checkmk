@@ -33,6 +33,7 @@ def netsnmp_workspace():
             "//omd/packages/net-snmp/patches:0018-update-user-information-for-python.dif",
             "//omd/packages/net-snmp/patches:0019-Fix-NULL-varbind-in-get-getnext.dif",  # submitted as https://github.com/net-snmp/net-snmp/pull/1027
             "//omd/packages/net-snmp/patches:0020-fix-bad-mib.dif",
+            "//omd/packages/net-snmp/patches:0021-Fix-crashes-on-Python-exceptions-during-requests.dif",  # mostly fixed upstream in 5.10.rc1, except stopping at the first pending exception in build_python_varbind()
         ],
         patch_args = ["-p1"],
         patch_tool = "patch",

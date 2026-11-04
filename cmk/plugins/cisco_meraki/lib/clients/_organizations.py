@@ -59,7 +59,11 @@ class OrganizationsClient:
             return []
 
     def get_devices(self, id: str, /) -> Sequence[schema.RawDevice]:
-        return self._sdk.getOrganizationDevices(id, total_pages="all")
+        try:
+            return self._sdk.getOrganizationDevices(id, total_pages="all")
+        except APIError as e:
+            log.LOGGER.debug("Organisation ID: %r: Get devices: %r", id, e)
+            return []
 
     def get_device_statuses(self, id: str, /) -> Sequence[schema.RawDevicesStatus]:
         try:

@@ -9,7 +9,6 @@ from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
-from meraki.exceptions import APIError  # type: ignore[import-untyped]
 from pytest import CaptureFixture
 
 from cmk.plugins.cisco_meraki.lib import agent
@@ -286,7 +285,6 @@ class TestMerakiOrganizationApplianceUplinks:
         assert [(s.piggyback, s.data["networkName"]) for s in uplinks] == [("dev1", "")]
 
 
-@pytest.mark.xfail(strict=True, raises=APIError, reason="Crash group 4840")
 def test_forbidden_organisation_requests_do_not_abort_the_agent(
     capsys: CaptureFixture[str],
 ) -> None:

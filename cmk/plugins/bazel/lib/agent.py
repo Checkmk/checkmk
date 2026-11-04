@@ -81,10 +81,11 @@ class VersionCache:
     ) -> BazelVersionInfo | None:
         try:
             resp = requests.get(tags_url, timeout=30)
-        except requests.exceptions.RequestException:
+            resp.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            LOGGER.warning("Skipping version information: %(error)s", {"error": e})
             return None
         timestamp = time.time()
-        resp.raise_for_status()
         items = resp.json()
         versions = {
             item["commit"]["sha"]: SemanticVersion.from_string(item["name"]) for item in items

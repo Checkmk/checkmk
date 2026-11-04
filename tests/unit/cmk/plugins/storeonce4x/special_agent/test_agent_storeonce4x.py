@@ -9,7 +9,6 @@ import json
 import pytest
 import responses
 import time_machine
-from oauthlib.oauth2 import MissingTokenError
 
 from cmk.password_store.v1_unstable import Secret
 from cmk.plugins.storeonce4x.special_agent.agent_storeonce4x import (
@@ -181,7 +180,6 @@ def test_agent_storeonce4x_main_nested_section_yields_members_and_details(
     assert [json.loads(line) for line in appliances] == [_MEMBERS, _DASHBOARD]
 
 
-@pytest.mark.xfail(strict=True, raises=MissingTokenError, reason="Crash group 4759")
 @responses.activate
 def test_agent_storeonce4x_main_reports_rejected_login(
     capsys: pytest.CaptureFixture[str],

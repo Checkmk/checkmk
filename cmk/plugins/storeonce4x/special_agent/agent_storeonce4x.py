@@ -21,7 +21,7 @@ from types import GeneratorType
 from typing import Any, TypedDict
 
 import urllib3
-from oauthlib.oauth2 import LegacyApplicationClient
+from oauthlib.oauth2 import LegacyApplicationClient, OAuth2Error
 from requests_oauthlib import OAuth2Session  # type: ignore[attr-defined]
 
 from cmk.password_store.v1_unstable import parser_add_secret_option, resolve_secret_option, Secret
@@ -262,13 +262,19 @@ def agent_storeonce4x_main(args: argparse.Namespace) -> int:
     if not args.verify_ssl:
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-    oauth_session = StoreOnceOauth2Session(
-        args.host,
-        args.port,
-        args.user,
-        resolve_secret_option(args, PASSWORD_OPTION),
-        args.verify_ssl,
-    )
+    try:
+        oauth_session = StoreOnceOauth2Session(
+            args.host,
+            args.port,
+            args.user,
+            resolve_secret_option(args, PASSWORD_OPTION),
+            args.verify_ssl,
+        )
+    except OAuth2Error as exc:
+        if args.debug:
+            raise
+        sys.stderr.write(f"Login failed, please check the username and password: {exc}\n")
+        return 1
 
     for section_basename, function in SECTIONS:
         sys.stdout.write(f"<<<storeonce4x_{section_basename}:sep(0)>>>\n")

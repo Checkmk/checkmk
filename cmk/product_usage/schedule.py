@@ -10,6 +10,11 @@ from pathlib import Path
 from cmk.ccc import store
 from cmk.product_usage.exceptions import InvalidTimestampError
 
+# The cron job (etc/cron.d/cmk_collect_transmit_product_usage_analytics) runs this often
+CRON_PERIOD = timedelta(minutes=30)
+# The first run must start within 24 hours, so it is planned at least one cron period earlier
+FIRST_RUN_WINDOW = timedelta(hours=24) - CRON_PERIOD
+
 
 def should_run_collection_on_schedule(var_dir: Path, dt: datetime) -> bool:
     next_run_fp = next_run_file_path(var_dir)
@@ -34,11 +39,10 @@ def get_next_run_ts(file_path: Path) -> datetime | None:
 
 
 def create_next_random_ts(dt: datetime) -> int:
-    # Creates and returns a timestamp between 1 and 30 days from the given datetime
+    # Creates and returns a random timestamp within FIRST_RUN_WINDOW from the given datetime
     try:
-        start = dt + timedelta(days=1)
-        end = dt + timedelta(days=30)
-        return random.randrange(int(start.timestamp()), int(end.timestamp()), 60)
+        end = dt + FIRST_RUN_WINDOW
+        return random.randrange(int(dt.timestamp()), int(end.timestamp()), 60)
     except (OverflowError, OSError, ValueError, TypeError) as exc:
         raise InvalidTimestampError from exc
 

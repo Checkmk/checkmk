@@ -72,6 +72,14 @@ export class MapStatesApi {
     })
   }
 
+  /** Hands the daemon the map just saved, without asking for its states. */
+  public async registerSavedOnly(name: string, signed: SignedBytes): Promise<void> {
+    await this.client.POST('/api/v1/maps/{name}/saved', {
+      params: { path: { name } },
+      body: { config_b64: signed.config_b64, sig: signed.sig }
+    })
+  }
+
   /**
    * Registers the caller's own map with unsaved edits, for the editor preview.
    * The config is not stored yet, so the GUI cannot sign it; the daemon accepts

@@ -55,7 +55,8 @@ function captioned(signed: SignedMap): MapConfig {
   return cfg
 }
 
-export type SavedListener = (name: string, signed: SignedBytes) => void
+/** ``restored``: the stored version shown again after a save was refused. */
+export type SavedListener = (name: string, signed: SignedBytes, restored: boolean) => void
 
 /** The view fields an operator can change from the map itself. */
 export interface ViewChoices {
@@ -275,6 +276,10 @@ export class MapService {
     this.currentMapAccess.value = signed.access
     this.currentMap.value = cfg
     this.shownSig = signed.sig
+    if (sig === null) {
+      // The daemon may still hold the refused edit; it is to show this version.
+      this.notifySaved(name, signed, true)
+    }
     await this.loadAutoObjects(name, true)
   }
 
@@ -555,6 +560,12 @@ export class MapService {
     return { deleted, failed }
   }
 
+  private notifySaved(name: string, signed: SignedBytes, restored: boolean): void {
+    for (const listener of this.savedListeners) {
+      listener(name, signed, restored)
+    }
+  }
+
   /** Resolves to what failed, or ``null``. */
   private async persist(map: MapConfig): Promise<unknown> {
     this.persists += 1
@@ -566,9 +577,7 @@ export class MapService {
       if (this.currentMap.value === map) {
         this.shownSig = signed.sig
       }
-      for (const listener of this.savedListeners) {
-        listener(map.name, signed)
-      }
+      this.notifySaved(map.name, signed, false)
       return null
     } catch (e: unknown) {
       return e

@@ -243,6 +243,22 @@ def test_open_views_hear_which_version_an_editor_registers(
     assert _saved_events(sub) == [{"type": "map_saved", "map": "streamed", "sig": signed["sig"]}]
 
 
+def test_a_save_registered_without_states_tells_the_open_views_and_answers_none(
+    router_client: RouterClientFactory, site_secret_file: Path
+) -> None:
+    site_secret_file.write_bytes(_SECRET.reveal())
+    client = _client(router_client, ADMIN_PRINCIPAL, owner="admin")
+    signed = sign_config({"name": "streamed", "alias": "v2"}, _SECRET.hmac, owner="admin")
+    sub = manager.subscribe("admin\x00streamed", None)
+    try:
+        resp = client.post("/api/v1/maps/streamed/saved", json=signed)
+    finally:
+        manager.unsubscribe("admin\x00streamed", sub)
+
+    assert (resp.status_code, resp.content) == (HTTPStatus.NO_CONTENT, b"")
+    assert _saved_events(sub) == [{"type": "map_saved", "map": "streamed", "sig": signed["sig"]}]
+
+
 def test_opening_a_map_tells_no_view(
     router_client: RouterClientFactory, site_secret_file: Path
 ) -> None:

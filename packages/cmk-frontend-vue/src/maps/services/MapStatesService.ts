@@ -42,6 +42,7 @@ import type {
   TopologyTiming
 } from '@/maps/types/api'
 import { resolveStreamUrl } from '@/maps/utils/deploymentBase'
+import { mapOwnerKind } from '@/maps/utils/mapVisibility'
 import { getEffectiveObjectType } from '@/maps/utils/naming'
 import { parsePerfData } from '@/maps/utils/perf'
 import { isProblemState } from '@/maps/utils/problemState'
@@ -260,14 +261,17 @@ export class MapStatesService {
   private paused = false
 
   public constructor(
-    private readonly api: Pick<MapStatesApi, 'register' | 'registerEdit' | 'fetchStates'>,
+    private readonly api: Pick<
+      MapStatesApi,
+      'register' | 'registerEdit' | 'registerSavedOnly' | 'fetchStates'
+    >,
     private readonly connectionsApi: Pick<ConnectionsApi, 'fetchMetricHistory'>,
     private readonly objectsApi: Pick<
       MonitoringObjectsApi,
       'fetchAggregationStates' | 'fetchAggregationTree'
     >,
-    private readonly auth: Pick<MapsAuthService, 'refresh'>,
-    private readonly maps: Pick<MapService, 'currentMap' | 'getSignedMap'>
+    private readonly auth: Pick<MapsAuthService, 'refresh' | 'user'>,
+    private readonly maps: Pick<MapService, 'currentMap' | 'currentMapAccess' | 'getSignedMap'>
   ) {
     watch(
       this.connected,
@@ -357,6 +361,11 @@ export class MapStatesService {
     if (!this.currentMap || map.name !== this.currentMap) {
       return
     }
+    // The daemon takes unsaved edits of the user's own maps only; another
+    // user's map shows its edits once they are saved.
+    if (!this.ownsCurrentMap()) {
+      return
+    }
     await this.handOver(this.currentMap, () => this.api.registerEdit(map, this.viewPreview()))
     // The new config may have added or removed aggregation objects; resolve now
     // rather than waiting for the next interval tick.
@@ -365,16 +374,39 @@ export class MapStatesService {
 
   /**
    * Hands the daemon the open map as it was just saved, which tells every other
-   * view of it to show the saved version.
+   * view of it to show the saved version. ``restored`` is the stored version
+   * shown again after a save was refused, which no other view needs to hear of.
    */
-  public registerSaved(mapName: string, signed: SignedBytes): Promise<void> {
+  public registerSaved(
+    mapName: string,
+    signed: SignedBytes,
+    { restored = false }: { restored?: boolean } = {}
+  ): Promise<void> {
     // One after the other, so the daemon ends up with the version saved last.
-    const registered = this.savedRegistrations.then(() => {
+    const registered = this.savedRegistrations.then(async () => {
       if (this.currentMap !== mapName) {
         // Saved on the way out: the views still open need to hear of it.
-        return this.api
-          .register(mapName, signed, { radar: null, folder: null }, { saved: true })
-          .then(() => undefined)
+        return this.api.registerSavedOnly(mapName, signed)
+      }
+      if (restored) {
+        return this.handOver(
+          mapName,
+          () => this.api.register(mapName, signed, this.viewPreview()),
+          this.signedRegistration(mapName)
+        )
+      }
+      if (this.ownsCurrentMap()) {
+        // The daemon resolved the edits as they were made, so the states are known.
+        this.registration = this.signedRegistration(mapName)
+        try {
+          await this.api.registerSavedOnly(mapName, signed)
+        } catch (e: unknown) {
+          // A daemon that lost the map gets it again from the next fetch.
+          if (!isDaemonBusy(e)) {
+            throw e
+          }
+        }
+        return
       }
       return this.handOver(
         mapName,
@@ -390,6 +422,11 @@ export class MapStatesService {
   public onMapSaved(listener: MapSavedListener): () => void {
     this.mapSavedListeners.add(listener)
     return () => this.mapSavedListeners.delete(listener)
+  }
+
+  private ownsCurrentMap(): boolean {
+    const access = this.maps.currentMapAccess.value
+    return !!access && mapOwnerKind(access, this.auth.user.value?.user_id) === 'you'
   }
 
   private signedRegistration(
@@ -421,7 +458,7 @@ export class MapStatesService {
     } catch (e: unknown) {
       // Registered or not, a daemon that is busy or failed the states is asked
       // for them as before; the fetch hands the map over again if it has to.
-      if (!(e instanceof CmkApiError && (e.statusCode === 429 || e.statusCode >= 500))) {
+      if (!isDaemonBusy(e)) {
         throw e
       }
     }
@@ -1048,4 +1085,9 @@ function aggregationState(
     max_attempts: 0,
     ...fields
   }
+}
+
+/** A daemon that is busy or failed, as opposed to one that refused the request. */
+function isDaemonBusy(e: unknown): boolean {
+  return e instanceof CmkApiError && (e.statusCode === 429 || e.statusCode >= 500)
 }

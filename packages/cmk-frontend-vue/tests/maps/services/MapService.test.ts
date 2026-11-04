@@ -308,6 +308,24 @@ describe('MapService', () => {
     await vi.waitFor(() => expect(store.currentMap.value?.alias).toBe('Map 1'), { timeout: 2000 })
   })
 
+  it('hands the stored map to its listeners after a save in the background was refused', async () => {
+    server.use(
+      http.put('*/api/internal/objects/map/:name', () =>
+        HttpResponse.json({ title: 'Bad Request', detail: 'refused' }, { status: 400 })
+      )
+    )
+    const store = newService()
+    const onSaved = vi.fn()
+    store.onSaved(onSaved)
+    await store.fetchMap('map1')
+    store.currentMap.value!.alias = 'refused'
+    store.scheduleSave()
+
+    await vi.waitFor(() => expect(onSaved).toHaveBeenCalled(), { timeout: 2000 })
+
+    expect(onSaved).toHaveBeenCalledWith('map1', expect.objectContaining({ sig: 'cw' }), true)
+  })
+
   it('keeps the edit of a save in the background that did not get through', async () => {
     server.use(
       http.put('*/api/internal/objects/map/:name', () =>
@@ -459,7 +477,7 @@ describe('MapService', () => {
 
     await store.flushSave()
 
-    expect(listener).toHaveBeenCalledWith('map1', { config_b64: sampleConfigB64, sig: 'cw' })
+    expect(listener).toHaveBeenCalledWith('map1', { config_b64: sampleConfigB64, sig: 'cw' }, false)
   })
 
   describe('showSaved()', () => {

@@ -290,6 +290,10 @@ describe('useMapLifecycle', () => {
     services.maps.scheduleSave()
     await services.maps.flushSave()
 
-    expect(registerSaved).toHaveBeenCalledWith('dc1', { config_b64: 'e30', sig: 'saved' })
+    expect(registerSaved).toHaveBeenCalledWith(
+      'dc1',
+      { config_b64: 'e30', sig: 'saved' },
+      { restored: false }
+    )
   })
 })

@@ -417,6 +417,10 @@ session cookie, see `Authentication`_.
        state. Takes the same settings-preview parameters as
        ``v1/maps/{name}/states``; they change only the answer, not the stored
        config. See `Map configs in the daemon`_.
+   * - POST
+     - ``v1/maps/{name}/saved``
+     - Like ``register`` for a signed config just saved, without the state:
+       tells the open streams of the map which version is saved.
    * - GET
      - ``v1/maps/{name}/states``
      - Full state of all objects of a registered map.
@@ -967,7 +971,8 @@ Limits
        each open stream holds one)
    * - Daemon read routes (register, states, auto-objects, folder routes,
        topology, metric history, object details)
-     - 240 per minute and user; a refused ``register`` still registers the map
+     - 240 per minute and user; a refused ``register`` still registers the map; ``saved``
+       is not counted
    * - Connection list, health
      - Not rate-limited
    * - Registered map configs
@@ -1103,13 +1108,16 @@ foreign or built-in map, the live preview of new objects fails.
 Saving sends ``PUT objects/map/{name}``. The GUI validates the config against the REST
 model, clamps the visibility and writes the owner's ``user_maps.mk`` under a
 file lock, and answers with the signed config, which the SPA registers with the
-daemon. If the user may save that map, as the GUI decides it (their own map
+daemon. For the user's own map it asks for no states, as the daemon resolved the
+edits when they were made; for another user's map it does. If the user may save
+that map, as the GUI decides it (their own map
 with ``general.edit_map``, another user's with ``general.edit_foreign_map``),
 the daemon sends ``map_saved`` with the signature of that config to every open
 stream of the map. A view that shows another version and holds no unsaved
 edits loads the map again, so a viewer or a wall does not keep showing states
-under labels the map no longer has. A map saved through the REST API reaches
-open views only when it is opened again.
+under labels the map no longer has. A background save the GUI refuses shows
+the saved version again and registers it. A map saved through the REST API
+reaches open views only when it is opened again.
 
 Running a command
 -----------------

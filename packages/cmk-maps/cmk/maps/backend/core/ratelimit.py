@@ -53,6 +53,14 @@ class RateLimiter:
             self._prune_key(key, now - self._window)
             self._calls[key].append(now)
 
+    def refund(self, key: str) -> None:
+        """Take back the latest attempt recorded for key."""
+        with self._lock:
+            if q := self._calls.get(key):
+                q.pop()
+                if not q:
+                    del self._calls[key]
+
     def retry_after(self, key: str) -> float:
         """Seconds until the oldest recorded attempt falls outside the window."""
         now = time.monotonic()

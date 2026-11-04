@@ -214,8 +214,8 @@ export function useMapLifecycle(source: {
     }
   })
 
-  const stopHandingOverSaves = maps.onSaved((name, signed) => {
-    states.registerSaved(name, signed).catch((error: unknown) => {
+  const stopHandingOverSaves = maps.onSaved((name, signed, restored) => {
+    states.registerSaved(name, signed, { restored }).catch((error: unknown) => {
       report(error, 'Live update failed')
     })
   })

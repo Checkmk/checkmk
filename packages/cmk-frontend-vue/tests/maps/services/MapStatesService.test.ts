@@ -5,7 +5,7 @@
  */
 import { CmkApiError } from 'cmk-ui-library/lib/error'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import type { ConnectionsApi } from '@/maps/api/connections'
 import type { SignedMap } from '@/maps/api/mapConfig'
@@ -79,20 +79,27 @@ const freshlySigned: SignedMap = {
   map_link_titles: {}
 }
 
+type StatesApi = Pick<
+  MapStatesApi,
+  'register' | 'registerEdit' | 'registerSavedOnly' | 'fetchStates'
+>
+
 function newService(
   map: MapConfig | null = null,
   objectOverrides: Partial<
     Pick<MonitoringObjectsApi, 'fetchAggregationStates' | 'fetchAggregationTree'>
   > = {},
-  statesOverrides: Partial<Pick<MapStatesApi, 'register' | 'registerEdit' | 'fetchStates'>> = {},
+  statesOverrides: Partial<StatesApi> = {},
   session: {
     refresh?: Pick<MapsAuthService, 'refresh'>['refresh']
     getSignedMap?: Pick<MapService, 'getSignedMap'>['getSignedMap']
+    mapOwner?: string
   } = {}
 ): MapStatesService {
-  const statesApi: Pick<MapStatesApi, 'register' | 'registerEdit' | 'fetchStates'> = {
+  const statesApi: StatesApi = {
     register: vi.fn().mockResolvedValue(emptyStates),
     registerEdit: vi.fn().mockResolvedValue(emptyStates),
+    registerSavedOnly: vi.fn().mockResolvedValue(undefined),
     fetchStates: vi.fn().mockResolvedValue(emptyStates),
     ...statesOverrides
   }
@@ -104,9 +111,20 @@ function newService(
     fetchAggregationTree: vi.fn().mockResolvedValue({ tree: null, connection_ok: true }),
     ...objectOverrides
   }
-  const auth = { refresh: session.refresh ?? vi.fn().mockResolvedValue(true) }
+  const auth = {
+    refresh: session.refresh ?? vi.fn().mockResolvedValue(true),
+    user: computed(() => ({
+      user_id: 'me',
+      is_admin: true,
+      language: 'en',
+      can_configure: true,
+      can_create_maps: true,
+      command_permissions: []
+    }))
+  }
   const service = new MapStatesService(statesApi, connections, objects, auth, {
     currentMap: ref(map),
+    currentMapAccess: ref(aMapAccess({ owner: session.mapOwner ?? 'me' })),
     getSignedMap: session.getSignedMap ?? vi.fn().mockResolvedValue(freshlySigned)
   })
   services.push(service)
@@ -637,6 +655,16 @@ describe('MapStatesService — opening a map', () => {
     expect(store.getState('h2')?.state).toBe('UP')
   })
 
+  it("does not hand the daemon an unsaved edit of another user's map", async () => {
+    const registerEdit = vi.fn().mockResolvedValue(emptyStates)
+    const store = newService(aMap({ name: 'b' }), {}, { registerEdit }, { mapOwner: 'someone' })
+    await store.connectToMap('b', { config_b64: 'x', sig: 'y' })
+
+    await store.reregister(aMap({ name: 'b' }))
+
+    expect(registerEdit).not.toHaveBeenCalled()
+  })
+
   it('asks registering for the states of a settings preview', async () => {
     const registerEdit = vi.fn().mockResolvedValue(emptyStates)
     const store = newService(aMap({ name: 'b' }), {}, { registerEdit })
@@ -751,9 +779,9 @@ describe('MapStatesService — a saved map', () => {
 
   const saved = { config_b64: 's', sig: 'v2' }
 
-  it('hands the daemon the open map as it was saved', async () => {
+  it("hands the daemon another user's open map as it was saved, with its states", async () => {
     const register = vi.fn().mockResolvedValue(emptyStates)
-    const store = newService(null, {}, { register })
+    const store = newService(null, {}, { register }, { mapOwner: 'someone' })
     await store.connectToMap('b', { config_b64: 'x', sig: 'v1' })
 
     await store.registerSaved('b', saved)
@@ -766,19 +794,45 @@ describe('MapStatesService — a saved map', () => {
     )
   })
 
-  it('hands the daemon a map saved on the way out of it', async () => {
+  it("hands the daemon the user's own open map as it was saved, without asking for its states", async () => {
+    const register = vi.fn().mockResolvedValue(emptyStates)
+    const registerSavedOnly = vi.fn().mockResolvedValue(undefined)
+    const store = newService(null, {}, { register, registerSavedOnly })
+    await store.connectToMap('b', { config_b64: 'x', sig: 'v1' })
+    register.mockClear()
+
+    await store.registerSaved('b', saved)
+
+    expect(registerSavedOnly).toHaveBeenCalledWith('b', saved)
+    expect(register).not.toHaveBeenCalled()
+  })
+
+  it('hands the daemon the stored map shown again after a refused save, with its states', async () => {
     const register = vi.fn().mockResolvedValue(emptyStates)
     const store = newService(null, {}, { register })
+    await store.connectToMap('b', { config_b64: 'x', sig: 'v1' })
+
+    await store.registerSaved('b', saved, { restored: true })
+
+    expect(register).toHaveBeenLastCalledWith('b', saved, { radar: null, folder: null })
+  })
+
+  it('carries on when the daemon is busy with a save of the own map', async () => {
+    const registerSavedOnly = vi.fn().mockRejectedValue(new CmkApiError('HTTP 503', null, '', 503))
+    const store = newService(null, {}, { registerSavedOnly })
+    await store.connectToMap('b', { config_b64: 'x', sig: 'v1' })
+
+    await expect(store.registerSaved('b', saved)).resolves.toBeUndefined()
+  })
+
+  it('hands the daemon a map saved on the way out of it, without asking for its states', async () => {
+    const registerSavedOnly = vi.fn().mockResolvedValue(undefined)
+    const store = newService(null, {}, { registerSavedOnly }, { mapOwner: 'someone' })
     await store.connectToMap('other', { config_b64: 'x', sig: 'v1' })
 
     await store.registerSaved('b', saved)
 
-    expect(register).toHaveBeenLastCalledWith(
-      'b',
-      saved,
-      { radar: null, folder: null },
-      { saved: true }
-    )
+    expect(registerSavedOnly).toHaveBeenCalledWith('b', saved)
   })
 
   it('tells which version the stream says was saved', async () => {

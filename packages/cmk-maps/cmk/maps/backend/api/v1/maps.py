@@ -73,6 +73,43 @@ class RegisterRequest(BaseModel):
     saved: bool = False
 
 
+class SavedRequest(BaseModel):
+    """A GUI-signed map that was just saved."""
+
+    config_b64: str
+    sig: str
+
+
+def _register_signed(
+    name: str, config_b64: str, sig: str, owner: str | None, current_user: Principal, *, saved: bool
+) -> tuple[str, MapConfig]:
+    """The owner the map is registered under, and its config."""
+    if owner is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Map '{name}' not found")
+    try:
+        raw = verify_map_config(config_b64, sig, owner=owner)
+    except InvalidSignature as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Invalid map signature"
+        ) from exc
+    # A stored map can carry a value the GUI persisted but the schema rejects
+    # (e.g. an object_filter without a ``Filter:`` header). Surface that as a 422
+    # rather than letting the ValidationError reach the generic 500 crash handler.
+    try:
+        cfg = MapConfig.model_validate(raw)
+    except ValidationError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid map config"
+        ) from exc
+    # The owner was resolved for ``name``, so the signed config must be that map's.
+    if cfg.name != name:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Map name mismatch")
+    map_service.register_map(owner, cfg)
+    if saved and current_user.may_save(owner):
+        tell_map_saved(owner, name, sig)
+    return owner, cfg
+
+
 @router.post("/{name}/register", response_model=MapStates)
 async def register_map(
     name: MapName,
@@ -98,32 +135,14 @@ async def register_map(
     they may see.
     """
     if body.config_b64 is not None and body.sig is not None:
-        if owner is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Map '{name}' not found"
-            )
-        try:
-            raw = verify_map_config(body.config_b64, body.sig, owner=owner)
-        except InvalidSignature as exc:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN, detail="Invalid map signature"
-            ) from exc
-        # A stored map can carry a value the GUI persisted but the schema rejects
-        # (e.g. an object_filter without a ``Filter:`` header). Surface that as a 422
-        # rather than letting the ValidationError reach the generic 500 crash handler.
-        try:
-            cfg = MapConfig.model_validate(raw)
-        except ValidationError as exc:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid map config"
-            ) from exc
-        # The owner was resolved for ``name``, so a signed blob for another map of
-        # the same owner can't be relayed under this name.
-        if cfg.name != name:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Map name mismatch")
-        map_service.register_map(owner, cfg)
-        if body.saved and within_budget and current_user.may_save(owner):
-            tell_map_saved(owner, name, body.sig)
+        owner, cfg = _register_signed(
+            name,
+            body.config_b64,
+            body.sig,
+            owner,
+            current_user,
+            saved=body.saved and within_budget,
+        )
         if not within_budget:
             charge(rest_read_limiter, current_user.name)
         return await map_states_response(
@@ -162,6 +181,25 @@ async def register_map(
     raise HTTPException(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Missing map config"
     )
+
+
+@router.post("/{name}/saved", status_code=status.HTTP_204_NO_CONTENT, response_class=Response)
+async def register_saved_map(
+    name: MapName,
+    body: SavedRequest,
+    # Counted, never refused here: a spent budget still registers the map, but
+    # its open views are not told.
+    within_budget: bool = Depends(within_read_budget),
+    current_user: Principal = Depends(get_current_user),
+    owner: str | None = Depends(get_map_owner),
+) -> Response:
+    """Cache the map just saved and tell its open views which version is saved,
+    like ``register`` but without its states, for a view that shows them already."""
+    _register_signed(name, body.config_b64, body.sig, owner, current_user, saved=within_budget)
+    # Only the states would ask Livestatus.
+    if within_budget:
+        rest_read_limiter.refund(current_user.name)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get("/{name}/auto-objects", response_model=list[MapElement])

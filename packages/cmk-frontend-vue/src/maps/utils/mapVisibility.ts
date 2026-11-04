@@ -22,7 +22,10 @@ export function mapVisibility(map: MapRead): MapVisibility {
   return 'private'
 }
 
-export function mapOwnerKind(map: MapRead, currentUserId: string | undefined): MapOwnerKind {
+export function mapOwnerKind(
+  map: Pick<MapRead, 'owner' | 'is_builtin'>,
+  currentUserId: string | undefined
+): MapOwnerKind {
   if (map.is_builtin) {
     return 'builtin'
   }

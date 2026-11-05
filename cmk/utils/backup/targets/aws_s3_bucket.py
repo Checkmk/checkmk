@@ -5,7 +5,7 @@
 
 # mypy: disable-error-code="no-untyped-call"
 
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator, Sequence
 from pathlib import Path
 from typing import Final, NotRequired, ReadOnly, TypedDict
 
@@ -70,9 +70,21 @@ class S3Bucket:
 
     def objects(self) -> Iterator[Path]:
         paginator = self.client.get_paginator("list_objects_v2")
-        for page in paginator.paginate(Bucket=self.bucket.name):
-            for obj in page["Contents"]:
-                yield Path(obj["Key"])
+        return _object_keys(paginator.paginate(Bucket=self.bucket.name))
+
+
+class _ListedObject(TypedDict):
+    Key: str
+
+
+class _ListObjectsPage(TypedDict, total=False):
+    Contents: Sequence[_ListedObject]
+
+
+def _object_keys(pages: Iterable[_ListObjectsPage]) -> Iterator[Path]:
+    for page in pages:
+        for obj in page["Contents"]:
+            yield Path(obj["Key"])
 
 
 def _client_args(params: S3Params, secret: str) -> dict[str, str]:

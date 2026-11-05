@@ -77,7 +77,6 @@ def test_button_url(args: str, expected: HTML, request_context: None) -> None:
     assert format_plugin_output(args, request=request, must_escape=False) == expected
 
 
-@pytest.mark.xfail(strict=True, reason="crash group 4972")
 @pytest.mark.usefixtures("request_context")
 def test_host_row_without_service_data_uses_host_escaping_option() -> None:
     row = {

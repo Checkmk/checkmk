@@ -965,10 +965,10 @@ Limits
    * - Concurrent SSE streams
      - 6 per user, 40 per site (the site Apache has 64 worker processes, and
        each open stream holds one)
-   * - Daemon read routes (register, states, folder routes, topology, metric
-       history, object details)
+   * - Daemon read routes (register, states, auto-objects, folder routes,
+       topology, metric history, object details)
      - 240 per minute and user; a refused ``register`` still registers the map
-   * - Auto-objects, connection list, health
+   * - Connection list, health
      - Not rate-limited
    * - Registered map configs
      - 1024 (LRU)

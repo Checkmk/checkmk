@@ -261,6 +261,22 @@ def test_auto_objects_scopes_geo_query_to_auth_user(
         state_service.unregister_connection("spy")
 
 
+def test_auto_objects_counts_against_the_read_budget(
+    router_client: RouterClientFactory,
+) -> None:
+    map_service.register_map(
+        "bob",
+        MapConfig(name="world", connection_id="live_1", view=WorldmapView(auto_source="all_hosts")),
+    )
+    client = _client(router_client, Principal(name="bob"), owner="bob")
+    for _ in range(rest_read_limiter._max):  # noqa: SLF001
+        rest_read_limiter.record("bob")
+
+    resp = client.get("/api/v1/maps/world/auto-objects")
+
+    assert resp.status_code == HTTPStatus.TOO_MANY_REQUESTS
+
+
 def test_auto_objects_is_404_for_a_map_the_user_does_not_see(
     router_client: RouterClientFactory,
 ) -> None:

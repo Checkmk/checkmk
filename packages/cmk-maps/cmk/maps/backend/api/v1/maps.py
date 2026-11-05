@@ -26,8 +26,8 @@ from cmk.maps.backend.api.v1.deps import (
     charge,
     get_current_user,
     get_map_owner,
-    get_map_viewer,
     GuiAuthDep,
+    rate_limited_map_read,
     registered_map,
     resolve_auth_user,
     within_read_budget,
@@ -157,7 +157,7 @@ async def register_map(
 
 @router.get("/{name}/auto-objects", response_model=list[MapElement])
 async def get_auto_objects(
-    name: MapName, current_user: Principal = Depends(get_map_viewer)
+    name: MapName, current_user: Principal = Depends(rate_limited_map_read)
 ) -> list[MapElement]:
     """Return objects synthesised from a worldmap automap source.
 

@@ -194,7 +194,8 @@ class GuiAuth:
             session_cookie, required_permissions=_PERMISSIONS, include_contact_groups=True
         ):
             case Identity() as identity:
-                if not identity.permissions[_USE_PERMISSION]:
+                # The GUI's Livestatus client refuses a user name with a line break too.
+                if not identity.permissions[_USE_PERMISSION] or "\n" in identity.user_id:
                     return Forbidden()
                 principal = _principal(identity)
                 self._principals.put(session_cookie, principal, now=now)

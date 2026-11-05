@@ -10,6 +10,7 @@ pinned as well as what it makes of the answers.
 
 import asyncio
 import json
+from collections.abc import Mapping
 from http import HTTPStatus
 from pathlib import Path
 
@@ -48,12 +49,14 @@ class _GUI:
         return self.answers[request.url.path]
 
 
-def _identified(**permissions: bool) -> httpx2.Response:
+def _identified(
+    user_id: str = "jdoe", *, permissions: Mapping[str, bool] | None = None
+) -> httpx2.Response:
     return httpx2.Response(
         HTTPStatus.OK,
         json={
-            "user_id": "jdoe",
-            "permissions": {**_ALL_PERMISSIONS, **permissions},
+            "user_id": user_id,
+            "permissions": {**_ALL_PERMISSIONS, **(permissions or {})},
             "contact_groups": ["linux"],
         },
     )
@@ -93,7 +96,13 @@ def test_the_user_comes_with_what_the_gui_says_about_them() -> None:
 
 
 def test_a_user_without_maps_is_forbidden() -> None:
-    gui = _GUI({_IDENTIFY: _identified(**{"maps.use": False})})
+    gui = _GUI({_IDENTIFY: _identified(permissions={"maps.use": False})})
+
+    assert asyncio.run(_auth(gui).principal(_COOKIE, now=0.0)) == Forbidden()
+
+
+def test_a_user_name_with_a_line_break_is_forbidden() -> None:
+    gui = _GUI({_IDENTIFY: _identified("jdoe\n")})
 
     assert asyncio.run(_auth(gui).principal(_COOKIE, now=0.0)) == Forbidden()
 
@@ -122,7 +131,7 @@ def test_the_user_is_kept_for_a_session_until_the_ttl_has_passed() -> None:
 
 
 def test_a_forbidden_user_is_asked_about_again() -> None:
-    gui = _GUI({_IDENTIFY: _identified(**{"maps.use": False})})
+    gui = _GUI({_IDENTIFY: _identified(permissions={"maps.use": False})})
     auth = _auth(gui)
 
     async def _ask_twice() -> None:

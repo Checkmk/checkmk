@@ -13,6 +13,7 @@ import pytest
 import cmk.ccc.store
 from cmk.ccc.hostaddress import HostName
 from cmk.inventory.paths import has_archive, InventoryPaths
+from cmk.inventory.retention import RawIntervalFromConfig, update_from_previous
 from cmk.inventory.serialization import (
     deserialize_tree,
     make_meta,
@@ -23,7 +24,6 @@ from cmk.inventory.serialization import (
 )
 from cmk.inventory.store import InventoryStore, RawInventoryStore, rename
 from cmk.inventory.trees import (
-    _MutableAttributes,
     ImmutableAttributes,
     ImmutableTree,
     MutableTree,
@@ -505,12 +505,25 @@ def _previous_tree(value: str) -> ImmutableTree:
     return ImmutableTree(attributes=ImmutableAttributes(pairs={SDKey("key"): value}))
 
 
-def _current_tree(value: str, update_results: Sequence[str] = ()) -> MutableTree:
-    return MutableTree(
-        attributes=_MutableAttributes(
-            pairs={SDKey("key"): value}, update_results=list(update_results)
-        )
+def _current_tree(value: str) -> MutableTree:
+    tree = MutableTree()
+    tree.add(path=(), pairs=[{SDKey("key"): value}])
+    return tree
+
+
+def _retained_tree(value: str) -> MutableTree:
+    tree = _current_tree(value)
+    update_from_previous(
+        tree,
+        now=0,
+        previous_tree=ImmutableTree(),
+        raw_intervals_from_config=[
+            RawIntervalFromConfig(interval=30, visible_raw_path="", attributes="all")
+        ],
+        pairs_cache_info={(): (10, 20)},
+        columns_cache_info={},
     )
+    return tree
 
 
 def _save_if_changed(
@@ -536,7 +549,7 @@ def _save_if_changed(
         pytest.param(_previous_tree("same"), _current_tree("same"), (False, False), id="unchanged"),
         pytest.param(
             _previous_tree("same"),
-            _current_tree("same", ["Update result"]),
+            _retained_tree("same"),
             (False, True),
             id="unchanged-with-update-results",
         ),
@@ -557,9 +570,7 @@ def test_save_if_changed(
 
 
 def test_save_if_changed_reports_the_update_results(tmp_path: Path) -> None:
-    assert _save_if_changed(
-        tmp_path, _previous_tree("same"), _current_tree("same", ["Update result"])
-    ) == [
-        "Updated inventory tree:\n  Path '':\n    Update result",
+    assert _save_if_changed(tmp_path, _previous_tree("same"), _retained_tree("same")) == [
+        "Updated inventory tree:\n  Path '':\n    [Attributes] Keep until: key (60)",
         "Save new inventory tree.",
     ]

@@ -25,12 +25,9 @@ from cmk.inventory.label_picker import (
     pick_labels,
 )
 from cmk.inventory.trees import (
-    _MutableAttributes,
-    _MutableTable,
     MutableTree,
     SDKey,
     SDNodeName,
-    SDRowIdent,
     SDValue,
 )
 
@@ -59,40 +56,17 @@ def _config(
 
 
 def _tree_with_attributes(pairs: Mapping[SDKey, SDValue]) -> MutableTree:
-    return MutableTree(
-        path=(),
-        nodes_by_name={
-            SDNodeName("hardware"): MutableTree(
-                path=(SDNodeName("hardware"),),
-                nodes_by_name={
-                    SDNodeName("os"): MutableTree(
-                        path=(SDNodeName("hardware"), SDNodeName("os")),
-                        attributes=_MutableAttributes(pairs=dict(pairs)),
-                    ),
-                },
-            ),
-        },
-    )
+    tree = MutableTree()
+    tree.add(path=(SDNodeName("hardware"), SDNodeName("os")), pairs=[pairs])
+    return tree
 
 
-def _tree_with_table(rows_by_ident: Mapping[SDRowIdent, dict[SDKey, SDValue]]) -> MutableTree:
-    return MutableTree(
-        path=(),
-        nodes_by_name={
-            SDNodeName("hardware"): MutableTree(
-                path=(SDNodeName("hardware"),),
-                nodes_by_name={
-                    SDNodeName("os"): MutableTree(
-                        path=(SDNodeName("hardware"), SDNodeName("os")),
-                        table=_MutableTable(
-                            key_columns=[SDKey("name")],
-                            rows_by_ident=dict(rows_by_ident),
-                        ),
-                    ),
-                },
-            ),
-        },
+def _tree_with_table(rows: Sequence[Mapping[SDKey, SDValue]]) -> MutableTree:
+    tree = MutableTree()
+    tree.add(
+        path=(SDNodeName("hardware"), SDNodeName("os")), key_columns=[SDKey("name")], rows=rows
     )
+    return tree
 
 
 @pytest.mark.parametrize(
@@ -213,10 +187,10 @@ def test_pick_labels_from_attributes(
 def test_pick_labels_from_table_first_row_wins() -> None:
     assert pick_labels(
         _tree_with_table(
-            {
-                ("value2",): {SDKey("name"): "value2"},
-                ("value1",): {SDKey("name"): "value1"},
-            }
+            [
+                {SDKey("name"): "value2"},
+                {SDKey("name"): "value1"},
+            ]
         ),
         [
             _config(
@@ -236,10 +210,10 @@ def test_pick_labels_from_table_first_row_wins() -> None:
 def test_pick_labels_from_table_cross_column_with_row_filter() -> None:
     assert pick_labels(
         _tree_with_table(
-            {
-                ("apache2",): {SDKey("name"): "apache2", SDKey("version"): "2.4"},
-                ("nginx",): {SDKey("name"): "nginx", SDKey("version"): "1.18"},
-            }
+            [
+                {SDKey("name"): "apache2", SDKey("version"): "2.4"},
+                {SDKey("name"): "nginx", SDKey("version"): "1.18"},
+            ]
         ),
         [
             _config(
@@ -449,10 +423,10 @@ def test_pick_labels_drops_an_empty_replacement() -> None:
 def test_pick_labels_from_table_skips_rows_without_the_column() -> None:
     assert pick_labels(
         _tree_with_table(
-            {
-                ("apache2",): {SDKey("name"): "apache2"},
-                ("nginx",): {SDKey("name"): "nginx", SDKey("version"): "1.18"},
-            }
+            [
+                {SDKey("name"): "apache2"},
+                {SDKey("name"): "nginx", SDKey("version"): "1.18"},
+            ]
         ),
         [_config(columns=[_column()])],
     ) == {"cmk/inventory/label-name": "1.18"}
@@ -461,14 +435,14 @@ def test_pick_labels_from_table_skips_rows_without_the_column() -> None:
 def test_pick_labels_row_selection_skips_rows_without_the_filter_column() -> None:
     assert pick_labels(
         _tree_with_table(
-            {
-                ("apache2",): {SDKey("name"): "apache2", SDKey("version"): "2.4"},
-                ("nginx",): {
+            [
+                {SDKey("name"): "apache2", SDKey("version"): "2.4"},
+                {
                     SDKey("name"): "nginx",
                     SDKey("vendor"): "F5",
                     SDKey("version"): "1.18",
                 },
-            }
+            ]
         ),
         [
             _config(
@@ -495,21 +469,16 @@ def test_pick_labels_first_configuration_wins_for_the_same_label_name() -> None:
     ) == {"cmk/inventory/label-name": "1"}
 
 
+def _tree_with_two_nodes() -> MutableTree:
+    tree = MutableTree()
+    tree.add(path=(SDNodeName("hardware"),), pairs=[{SDKey("key"): "hardware"}])
+    tree.add(path=(SDNodeName("software"),), pairs=[{SDKey("key"): "software"}])
+    return tree
+
+
 def test_pick_labels_combines_configurations_of_different_paths() -> None:
     assert pick_labels(
-        MutableTree(
-            path=(),
-            nodes_by_name={
-                SDNodeName("hardware"): MutableTree(
-                    path=(SDNodeName("hardware"),),
-                    attributes=_MutableAttributes(pairs={SDKey("key"): "hardware"}),
-                ),
-                SDNodeName("software"): MutableTree(
-                    path=(SDNodeName("software"),),
-                    attributes=_MutableAttributes(pairs={SDKey("key"): "software"}),
-                ),
-            },
-        ),
+        _tree_with_two_nodes(),
         [
             _config(path="hardware", attributes=[_attribute(label_name="hw")]),
             _config(path="software", attributes=[_attribute(label_name="sw")]),
@@ -517,23 +486,20 @@ def test_pick_labels_combines_configurations_of_different_paths() -> None:
     ) == {"cmk/inventory/hw": "hardware", "cmk/inventory/sw": "software"}
 
 
+def _software_tree_with_attributes_and_table() -> MutableTree:
+    tree = MutableTree()
+    tree.add(
+        path=(SDNodeName("software"),),
+        pairs=[{SDKey("key"): "value"}],
+        key_columns=[SDKey("name")],
+        rows=[{SDKey("name"): "nginx", SDKey("version"): "1.18"}],
+    )
+    return tree
+
+
 def test_pick_labels_from_single_values_and_table_columns_of_one_node() -> None:
     assert pick_labels(
-        MutableTree(
-            path=(),
-            nodes_by_name={
-                SDNodeName("software"): MutableTree(
-                    path=(SDNodeName("software"),),
-                    attributes=_MutableAttributes(pairs={SDKey("key"): "value"}),
-                    table=_MutableTable(
-                        key_columns=[SDKey("name")],
-                        rows_by_ident={
-                            ("nginx",): {SDKey("name"): "nginx", SDKey("version"): "1.18"}
-                        },
-                    ),
-                ),
-            },
-        ),
+        _software_tree_with_attributes_and_table(),
         [
             _config(
                 path="software",

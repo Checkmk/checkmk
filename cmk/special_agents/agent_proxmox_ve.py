@@ -439,7 +439,7 @@ def _backup_timezone(
         return node_timezones[all_vms[vmid]["node"]]
     except KeyError:
         # get the first value of the first key
-        return next(iter(node_timezones.values()))
+        return next(iter(node_timezones.values()), "UTC")
 
 
 def agent_proxmox_ve_main(args: Args) -> int:

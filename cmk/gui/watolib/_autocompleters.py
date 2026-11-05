@@ -62,7 +62,7 @@ def tag_group_opt_autocompleter(config: Config, value: str, params: dict) -> lis
     grouped: list[Choice] = []
 
     for tag_group in config.tags.tag_groups:
-        if tag_group.id == params["group_id"]:
+        if tag_group.id == params.get("group_id"):
             grouped.append(("", ""))
             for grouped_tag in tag_group.tags:
                 tag_id = "" if grouped_tag.id is None else grouped_tag.id

@@ -3,14 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
 
 from cmk.gui.config import Config
 from cmk.gui.watolib._autocompleters import tag_group_opt_autocompleter
 from cmk.ruleset_matcher.tags import get_effective_tag_config, TagConfigSpec
 
 
-@pytest.mark.xfail(strict=True, reason="crash group 4943")
 def test_tags_without_a_selected_group_offer_no_choices() -> None:
     config = Config(tags=get_effective_tag_config(TagConfigSpec(tag_groups=[], aux_tags=[])))
 

@@ -143,6 +143,33 @@ def test_failed_reload_is_logged_with_its_cause(site: Site, reload_timeout: floa
         )
 
 
+def test_config_reloading_after_failed_reload(site: Site, reload_timeout: float) -> None:
+    # One worker, so that every query reaches the worker whose reload failed.
+    with _set_automation_helper_worker_count_to_one(site):
+        last_reload_before_failure = _query_last_reload_at(site)
+        with _config_file_failing_to_load_once(site):
+            wait_until(
+                lambda: not site.file_exists(_FAIL_ONCE_MARKER),
+                timeout=reload_timeout,
+                condition_name="Failed to reload",
+            )
+            # The marker goes in the middle of the load. The load blocks the worker's event loop,
+            # so /health answers only after the failed load.
+            last_reload_after_failure = _query_last_reload_at(site)
+
+            with (
+                ensure_cleanup(site, "etc/check_mk/conf.d/aut_helper_reload_trigger.mk") as (file,),
+                _reload_ensurer(site) as wait_for_reload,
+            ):
+                site.write_file(file, "")
+                wait_for_reload(reload_timeout)
+
+    # Checked last, so that a change that is no longer noticed fails above, where it shows.
+    assert last_reload_after_failure == last_reload_before_failure, (
+        "The failed reload counts as loaded, or the worker restarted"
+    )
+
+
 def test_standard_workflow_involving_automations(site: Site) -> None:
     hostname = "aut-helper-test-host"
     try:

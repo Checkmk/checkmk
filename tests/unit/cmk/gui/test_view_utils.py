@@ -75,3 +75,16 @@ from cmk.gui.view_utils import format_plugin_output
 )
 def test_button_url(args: str, expected: HTML, request_context: None) -> None:
     assert format_plugin_output(args, request=request, must_escape=False) == expected
+
+
+@pytest.mark.xfail(strict=True, reason="crash group 4972")
+@pytest.mark.usefixtures("request_context")
+def test_host_row_without_service_data_uses_host_escaping_option() -> None:
+    row = {
+        "host_custom_variables": {"ESCAPE_PLUGIN_OUTPUT": "0"},
+        "service_custom_variables": None,
+    }
+
+    assert format_plugin_output(
+        "<b>OK</b>", request=request, must_escape=False, row=row
+    ) == HTML.without_escaping("<b>OK</b>")

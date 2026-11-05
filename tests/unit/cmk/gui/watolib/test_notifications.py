@@ -10,7 +10,10 @@ from typing import cast
 import pytest
 
 from cmk.ccc import store, version
-from cmk.gui.rest_api_types.notifications_rule_types import APINotifyPlugin
+from cmk.gui.rest_api_types.notifications_rule_types import (
+    APINotifyPlugin,
+    CheckboxNotificationBulking,
+)
 from cmk.gui.rest_api_types.notifications_types import get_plugin_from_api_request
 from cmk.gui.watolib.notifications import (
     ContactSelection,
@@ -18,12 +21,14 @@ from cmk.gui.watolib.notifications import (
     NotificationRule,
 )
 from cmk.utils.notify_types import (
+    AlwaysBulkParameters,
     EventRule,
     NotificationParameterGeneralInfos,
     NotificationParameterID,
     NotificationParameterItem,
     NotificationParameterSpecs,
     NotificationRuleID,
+    NotifyBulkType,
     NotifyPluginParamsDict,
     PluginOptions,
 )
@@ -338,3 +343,11 @@ def test_custom_plugin_from_api_request_normalizes_postprocessed_lists() -> None
     assert params["api_key"] == ("cmk_postprocessed", "stored_password", ("ringring_api", ""))
     # genuine lists must stay lists so they are exported to the plug-in unchanged
     assert params["recipients"] == ["+491234", "+495678"]
+
+
+def test_bulk_settings_in_old_format_are_read_as_always_bulk() -> None:
+    bulk_params = AlwaysBulkParameters(interval=60, count=1000, groupby=["host"])
+
+    assert CheckboxNotificationBulking.from_mk_file_format(
+        cast(NotifyBulkType, bulk_params)
+    ) == CheckboxNotificationBulking.from_mk_file_format(("always", bulk_params))

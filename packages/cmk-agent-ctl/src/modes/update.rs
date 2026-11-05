@@ -119,62 +119,53 @@ fn run_cycle(
 
     println!("{}", report_fetch(&fetched));
 
-    match fetched {
+    match &fetched {
+        FetchOutcome::NotPossible | FetchOutcome::Superseded => {}
         FetchOutcome::UpToDate(_) | FetchOutcome::NoPackage => updater.clear_last_error()?,
         FetchOutcome::SourceUnavailable => updater.record_source_unavailable()?,
-        _ => {}
-    }
-
-    #[cfg(unix)]
-    if let FetchOutcome::Spooled {
-        path,
-        signatures,
-        hash,
-        ..
-    } = &fetched
-    {
-        updater.store_pending_hash(hash)?;
-        let outcome = updater.install_update(path, signatures);
-        if !matches!(outcome, Ok(InstallOutcome::HandedOver)) {
-            if let Err(error) = updater.clear_pending_hash() {
-                log::warn!("Could not clear the pending installation: {error:#}");
+        #[cfg(unix)]
+        FetchOutcome::Spooled {
+            path,
+            signatures,
+            hash,
+            ..
+        } => {
+            updater.store_pending_hash(hash)?;
+            let outcome = updater.install_update(path, signatures);
+            if !matches!(outcome, Ok(InstallOutcome::HandedOver)) {
+                if let Err(error) = updater.clear_pending_hash() {
+                    log::warn!("Could not clear the pending installation: {error:#}");
+                }
             }
-        }
 
-        println!("{}", report_install(outcome?, path));
-    }
-    // Nothing on Windows checks the signature again, so an unverified package stays put.
-    #[cfg(windows)]
-    if let FetchOutcome::Spooled {
-        path,
-        hash,
-        signature: SignatureCheck::Required,
-        ..
-    } = &fetched
-    {
-        updater.store_pending_hash(hash)?;
-        let handed_over = updater.hand_over_msi(path);
-        if handed_over.is_err() {
-            if let Err(error) = updater.clear_pending_hash() {
-                log::warn!("Could not clear the pending installation: {error:#}");
-            }
+            println!("{}", report_install(outcome?, path));
         }
-        println!(
-            "The Windows agent service installs it from {}",
-            handed_over?.display()
-        );
-    }
-    #[cfg(windows)]
-    if let FetchOutcome::Spooled {
-        path,
-        signature: SignatureCheck::Skip,
-        ..
-    } = &fetched
-    {
-        println!(
-            "Unverified packages are not installed on Windows, {} stays where it is",
-            path.display()
-        );
+        #[cfg(windows)]
+        FetchOutcome::Spooled {
+            path,
+            hash,
+            signature,
+            ..
+        } => match signature {
+            SignatureCheck::Required => {
+                updater.store_pending_hash(hash)?;
+                let handed_over = updater.hand_over_msi(path);
+                if handed_over.is_err() {
+                    if let Err(error) = updater.clear_pending_hash() {
+                        log::warn!("Could not clear the pending installation: {error:#}");
+                    }
+                }
+                println!(
+                    "The Windows agent service installs it from {}",
+                    handed_over?.display()
+                );
+            }
+            // Nothing on Windows checks the signature again, so an unverified package stays put.
+            SignatureCheck::Skip => println!(
+                "Unverified packages are not installed on Windows, {} stays where it is",
+                path.display()
+            ),
+        },
     }
     Ok(())
 }

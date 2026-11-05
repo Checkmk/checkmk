@@ -20,38 +20,22 @@ from ._fixtures import (
 )
 
 
-def test_compare_tree_with_itself_1() -> None:
-    empty_root = empty_immutable_tree()
-    delta_tree = compare_trees(empty_root, empty_root)
-    stats = delta_tree.get_stats()
-    assert stats["new"] == 0
-    assert stats["changed"] == 0
-    assert stats["removed"] == 0
-
-
-def test_compare_tree_with_itself_2() -> None:
-    filled_root = filled_immutable_tree()
-    delta_tree = compare_trees(filled_root, filled_root)
-    stats = delta_tree.get_stats()
-    assert stats["new"] == 0
-    assert stats["changed"] == 0
-    assert stats["removed"] == 0
-
-
-def test_compare_tree_1() -> None:
-    delta_tree = compare_trees(empty_immutable_tree(), filled_immutable_tree())
-    stats = delta_tree.get_stats()
-    assert stats["new"] == 0
-    assert stats["changed"] == 0
-    assert stats["removed"] == 12
-
-
-def test_compare_tree_2() -> None:
-    delta_tree = compare_trees(filled_immutable_tree(), empty_immutable_tree())
-    stats = delta_tree.get_stats()
-    assert stats["new"] == 12
-    assert stats["changed"] == 0
-    assert stats["removed"] == 0
+@pytest.mark.parametrize(
+    "left, right, expected_counts",
+    [
+        pytest.param(empty_immutable_tree(), empty_immutable_tree(), (0, 0, 0), id="empty-itself"),
+        pytest.param(
+            filled_immutable_tree(), filled_immutable_tree(), (0, 0, 0), id="filled-itself"
+        ),
+        pytest.param(empty_immutable_tree(), filled_immutable_tree(), (0, 0, 12), id="all-removed"),
+        pytest.param(filled_immutable_tree(), empty_immutable_tree(), (12, 0, 0), id="all-new"),
+    ],
+)
+def test_compare_trees_counts_new_changed_and_removed_entries(
+    left: ImmutableTree, right: ImmutableTree, expected_counts: tuple[int, int, int]
+) -> None:
+    stats = compare_trees(left, right).get_stats()
+    assert (stats["new"], stats["changed"], stats["removed"]) == expected_counts
 
 
 @pytest.mark.parametrize(
@@ -91,7 +75,7 @@ def test_compare_tree_2() -> None:
         ),
     ],
 )
-def test_difference_pairs(
+def test_compare_trees_counts_pair_changes(
     previous_pairs: Mapping[SDKey, str],
     current_pairs: Mapping[SDKey, str],
     result: tuple[int, int, int],
@@ -155,7 +139,7 @@ def test_difference_pairs(
         ),
     ],
 )
-def test_difference_rows(
+def test_compare_trees_counts_row_changes(
     previous_rows: Sequence[Mapping[SDKey, str | int]],
     current_rows: Sequence[Mapping[SDKey, str | int]],
     result: tuple[int, int, int],
@@ -166,13 +150,7 @@ def test_difference_rows(
     current_tree = MutableTree()
     current_tree.add(path=(), key_columns=[SDKey("id")], rows=current_rows)
 
-    delta_tree = compare_trees(immutable_tree(current_tree), immutable_tree(previous_tree))
-    if any(result):
-        assert len(delta_tree) > 0
-    else:
-        assert len(delta_tree) == 0
-
-    stats = delta_tree.get_stats()
+    stats = compare_trees(immutable_tree(current_tree), immutable_tree(previous_tree)).get_stats()
     assert (stats["new"], stats["changed"], stats["removed"]) == result
 
 
@@ -186,7 +164,7 @@ def test_difference_rows(
         ({"id": "id1", "val": "val"}, {"id": "id2", "val": "val"}, {"id", "val"}),
     ],
 )
-def test_difference_rows_keys(
+def test_compare_trees_lists_the_keys_of_changed_rows(
     previous_row: Mapping[SDKey, str],
     current_row: Mapping[SDKey, str],
     expected_keys: set[str],
@@ -269,7 +247,7 @@ def test_compare_real_trees(
     assert (stats["new"], stats["changed"], stats["removed"]) == result
 
 
-def test_compare_trees_pairs() -> None:
+def test_compare_trees_reports_new_removed_and_changed_pairs() -> None:
     assert compare_trees(
         deserialize_tree(
             {
@@ -292,7 +270,7 @@ def test_compare_trees_pairs() -> None:
     }
 
 
-def test_compare_trees_rows() -> None:
+def test_compare_trees_reports_a_changed_row_with_its_unchanged_values() -> None:
     assert compare_trees(
         deserialize_tree(
             {

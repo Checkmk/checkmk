@@ -189,3 +189,33 @@ def test_each_source_gets_its_own_max_cache_age(source: HostName, expected: int)
         _eval_effective_time_settings(rule_per_source, HostAddress("vm2"), source).max_cache_age
         == expected
     )
+
+
+def _exemption(*conditions: tuple[str, str], **values: object) -> Mapping[str, object]:
+    return {"piggybacked_hostname_conditions": list(conditions), **values}
+
+
+@pytest.mark.parametrize(
+    "rule, piggybacked, expected",
+    [
+        pytest.param({"global_max_cache_age": 100, "per_piggybacked_host": [_exemption(("exact_match", "vm1"), max_cache_age=50)]}, "vm1", _EffectiveTimeSettings(max_cache_age=50), id="exact match: matching host"),
+        pytest.param({"global_max_cache_age": 100, "per_piggybacked_host": [_exemption(("exact_match", "vm1"), max_cache_age=50)]}, "vm2", _EffectiveTimeSettings(max_cache_age=100), id="exact match: other host"),
+        pytest.param({"per_piggybacked_host": [_exemption(("regular_expression", "vm"), max_cache_age=10)]}, "vmware", _EffectiveTimeSettings(max_cache_age=10), id="regex matches start"),
+        pytest.param({"per_piggybacked_host": [_exemption(("regular_expression", "vm"), max_cache_age=10)]}, "my-vm", _EffectiveTimeSettings(), id="regex not anchored elsewhere"),
+        pytest.param({"per_piggybacked_host": [_exemption(("exact_match", "vm1"), ("exact_match", "vm2"), max_cache_age=10)]}, "vm1", _EffectiveTimeSettings(max_cache_age=10), id="several conditions: first"),
+        pytest.param({"per_piggybacked_host": [_exemption(("exact_match", "vm1"), ("exact_match", "vm2"), max_cache_age=10)]}, "vm2", _EffectiveTimeSettings(max_cache_age=10), id="several conditions: second"),
+        pytest.param({"global_max_cache_age": 100, "per_piggybacked_host": [_exemption(("regular_expression", "^db"), max_cache_age=10)]}, "web1", _EffectiveTimeSettings(max_cache_age=100), id="non-matching regex: source value"),
+        pytest.param({"per_piggybacked_host": [_exemption(("exact_match", "vm1"), max_cache_age=10), _exemption(("regular_expression", "vm"), max_cache_age=20)]}, "vm1", _EffectiveTimeSettings(max_cache_age=10), id="first matching exemption wins"),
+        pytest.param({"global_max_cache_age": 100, "global_validity": _VALIDITY, "per_piggybacked_host": [_exemption(("exact_match", "vm1"), max_cache_age="global", validity={"period": 5})]}, "vm1", _EffectiveTimeSettings(max_cache_age=100, validity_period=5, validity_state=2), id="each value falls back separately"),
+        pytest.param({"global_validity": _VALIDITY, "per_piggybacked_host": [_exemption(("exact_match", "vm1"), max_cache_age=50)]}, "vm1", _EffectiveTimeSettings(max_cache_age=50, validity_period=60, validity_state=2), id="exemption without validity keeps source validity"),
+    ],
+)  # fmt: skip
+def test_exemption_for_piggybacked_host(
+    rule: Mapping[str, object], piggybacked: str, expected: _EffectiveTimeSettings
+) -> None:
+    assert (
+        _eval_effective_time_settings(
+            {HostName("src"): rule}, HostAddress(piggybacked), HostName("src")
+        )
+        == expected
+    )

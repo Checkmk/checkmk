@@ -60,6 +60,26 @@
     width: 100%;
   }
 
+  &.data tr.data > td {
+    vertical-align: top;
+  }
+
+  td.object,
+  td.summary {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  td.object {
+    min-width: 120px;
+    max-width: 300px;
+  }
+
+  td.summary {
+    min-width: 200px;
+    max-width: 600px;
+  }
+
   img {
     float: none;
     width: 14px;

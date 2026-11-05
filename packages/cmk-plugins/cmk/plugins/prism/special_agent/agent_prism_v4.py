@@ -35,6 +35,7 @@ from cmk.plugins.prism.v4_models import (
     HostStats,
     ListedDisk,
     ListedHost,
+    ListedHostNic,
     Node,
     NodeConfig,
     NodeDisk,
@@ -590,6 +591,46 @@ def fetch_nodes(context: FetchContext) -> Sequence[Section]:
     ]
 
 
+HOST_NICS_PATH = "clustermgmt/v4.0/config/host-nics"
+
+
+def fetch_host_nics(context: FetchContext) -> Sequence[Section]:
+    """Each host with a cluster goes to a piggyback host of its own name, like its node
+    section, even without NICs, so a NIC that is gone doesn't keep its service"""
+    if isinstance(context.hosts, PrismV4Error):
+        raise context.hosts
+    hosts = [
+        host
+        for host in (ListedHost.model_validate(raw) for raw in context.hosts)
+        if host.cluster is not None
+    ]
+    by_host: dict[str, list[dict[str, object]]] = {host.ext_id: [] for host in hosts}
+    unknown: list[dict[str, object]] = []
+    for nic in _parse_valid(
+        ListedHostNic,
+        context.client.list_all(HOST_NICS_PATH, {"$select": ",".join(_fields(ListedHostNic))}),
+        "host NIC",
+        "extId",
+        context.messages,
+    ):
+        by_host.get(nic.node_uuid or "", unknown).append(
+            nic.model_dump(mode="json", by_alias=True, exclude_none=True, exclude={"node_uuid"})
+        )
+    sections = [
+        Section(
+            "prism_host_networks_v2",
+            by_host[host.ext_id],
+            Unroutable("hosts without a name") if host.host_name is None else host.host_name,
+        )
+        for host in hosts
+    ]
+    if unknown:
+        sections.append(
+            Section("prism_host_networks_v2", unknown, Unroutable("host NICs without a known host"))
+        )
+    return sections
+
+
 SECTION_FETCHERS: Sequence[Fetcher] = (
     Fetcher("hosts", fetch_hosts),
     Fetcher("alerts", fetch_alerts),
@@ -597,6 +638,7 @@ SECTION_FETCHERS: Sequence[Fetcher] = (
     Fetcher("vms", fetch_vms),
     Fetcher("remote support", fetch_remote_support),
     Fetcher("nodes", fetch_nodes),
+    Fetcher("host NICs", fetch_host_nics),
 )
 
 

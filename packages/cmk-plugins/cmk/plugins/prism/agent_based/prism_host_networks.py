@@ -22,6 +22,7 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.lib import interfaces
+from cmk.plugins.prism.v4_models import HostNics
 
 
 class Stats(pydantic.BaseModel):
@@ -46,9 +47,41 @@ class RawData(pydantic.BaseModel):
     stats: Stats
 
 
-class InterfaceElement(NamedTuple):
+class _Nic(NamedTuple):
     name: str
-    data: RawData
+    mac_address: str | None
+    link_speed_in_kbps: int | None
+    is_up: bool
+    rates: interfaces.Rates
+
+
+def _name(name: str | None, mac_address: str | None) -> str:
+    if name:
+        return name
+    # try to provide stable sorting without name
+    return f"unknown_{mac_address}" if mac_address else "unknown"
+
+
+def _section(
+    nics: Iterable[_Nic], timestamp: float
+) -> interfaces.Section[interfaces.InterfaceWithRates]:
+    return [
+        interfaces.InterfaceWithRates(
+            attributes=interfaces.Attributes(
+                index=str(index),
+                descr=nic.name,
+                alias=nic.name,
+                type="6",
+                speed=0 if not nic.link_speed_in_kbps else nic.link_speed_in_kbps * 1000,
+                oper_status="1" if nic.is_up else "2",
+                phys_address=interfaces.mac_address_from_hexstring(nic.mac_address or ""),
+            ),
+            rates=nic.rates,
+            get_rate_errors=[],
+            timestamp=timestamp,
+        )
+        for index, nic in enumerate(sorted(nics, key=lambda nic: nic.name))
+    ]
 
 
 def parse_prism_host_networks_pure(
@@ -60,49 +93,35 @@ def parse_prism_host_networks_pure(
     except IndexError, json.decoder.JSONDecodeError, pydantic.ValidationError:
         return []
 
-    def generator() -> Iterable[InterfaceElement]:
-        for element in data:
-            name = element.name
-            if not name:
-                # try to provide stable sorting without name
-                name = f"unknown_{element.mac_address}" if element.mac_address else "unknown"
-            yield InterfaceElement(name, element)
-
-    return [
-        interfaces.InterfaceWithRates(
-            attributes=interfaces.Attributes(
-                index=str(index),
-                descr=name,
-                alias=name,
-                type="6",
-                speed=(
-                    0 if not raw_data.link_speed_in_kbps else raw_data.link_speed_in_kbps * 1000
+    return _section(
+        (
+            _Nic(
+                name=_name(raw_data.name, raw_data.mac_address),
+                mac_address=raw_data.mac_address,
+                link_speed_in_kbps=raw_data.link_speed_in_kbps,
+                is_up=bool(raw_data.link_speed_in_kbps),
+                rates=interfaces.Rates(
+                    # assuming a 30 seconds window in which those counters are accumulated.
+                    # could be verified via /get/hosts/{uuid}/host_nics/{pnic_id}/stats
+                    # https://www.nutanix.dev/api_references/prism-v2-0/#/3a7cca6f493d6-list-host-host-nic-stats
+                    in_octets=raw_data.stats.in_octets / 30,
+                    in_ucast=raw_data.stats.in_ucast / 30,
+                    in_mcast=raw_data.stats.in_mcast / 30,
+                    in_bcast=raw_data.stats.in_bcast / 30,
+                    in_disc=raw_data.stats.in_disc / 30,
+                    in_err=raw_data.stats.in_err / 30,
+                    out_octets=raw_data.stats.out_octets / 30,
+                    out_ucast=raw_data.stats.out_ucast / 30,
+                    out_mcast=raw_data.stats.out_mcast / 30,
+                    out_bcast=raw_data.stats.out_bcast / 30,
+                    out_disc=raw_data.stats.out_disc / 30,
+                    out_err=raw_data.stats.out_err / 30,
                 ),
-                oper_status=("1" if raw_data.link_speed_in_kbps else "2"),
-                phys_address=interfaces.mac_address_from_hexstring(raw_data.mac_address or ""),
-            ),
-            rates=interfaces.Rates(
-                # assuming a 30 seconds window in which those counters are accumulated.
-                # could be verified via /get/hosts/{uuid}/host_nics/{pnic_id}/stats
-                # https://www.nutanix.dev/api_references/prism-v2-0/#/3a7cca6f493d6-list-host-host-nic-stats
-                in_octets=raw_data.stats.in_octets / 30,
-                in_ucast=raw_data.stats.in_ucast / 30,
-                in_mcast=raw_data.stats.in_mcast / 30,
-                in_bcast=raw_data.stats.in_bcast / 30,
-                in_disc=raw_data.stats.in_disc / 30,
-                in_err=raw_data.stats.in_err / 30,
-                out_octets=raw_data.stats.out_octets / 30,
-                out_ucast=raw_data.stats.out_ucast / 30,
-                out_mcast=raw_data.stats.out_mcast / 30,
-                out_bcast=raw_data.stats.out_bcast / 30,
-                out_disc=raw_data.stats.out_disc / 30,
-                out_err=raw_data.stats.out_err / 30,
-            ),
-            get_rate_errors=[],
-            timestamp=timestamp,
-        )
-        for index, (name, raw_data) in enumerate(sorted(generator()))
-    ]
+            )
+            for raw_data in data
+        ),
+        timestamp,
+    )
 
 
 def parse_prism_host_networks(
@@ -114,6 +133,36 @@ def parse_prism_host_networks(
 agent_section_prism_host_networks = AgentSection(
     name="prism_host_networks",
     parse_function=parse_prism_host_networks,
+)
+
+
+def parse_prism_host_networks_v2(
+    string_table: StringTable,
+) -> interfaces.Section[interfaces.InterfaceWithRates]:
+    """The v4 API has no traffic counters, so the interfaces come without rates"""
+    if not string_table:
+        return []
+    return _section(
+        (
+            _Nic(
+                name=_name(nic.name, nic.mac_address),
+                mac_address=nic.mac_address,
+                link_speed_in_kbps=nic.link_speed_in_kbps,
+                is_up=bool(nic.link_speed_in_kbps)
+                if nic.interface_status is None
+                else nic.interface_status == "1",
+                rates=interfaces.Rates(),
+            )
+            for nic in HostNics.model_validate_json(string_table[0][0]).root
+        ),
+        time.time(),
+    )
+
+
+agent_section_prism_host_networks_v2 = AgentSection(
+    name="prism_host_networks_v2",
+    parsed_section_name="prism_host_networks",
+    parse_function=parse_prism_host_networks_v2,
 )
 
 

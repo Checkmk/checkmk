@@ -32,6 +32,7 @@ from cmk.plugins.prism.special_agent.agent_prism_v4 import (
     ESXI_VMS_PATH,
     fetch_alerts,
     fetch_containers,
+    fetch_host_nics,
     fetch_hosts,
     fetch_nodes,
     fetch_remote_support,
@@ -39,6 +40,7 @@ from cmk.plugins.prism.special_agent.agent_prism_v4 import (
     FetchContext,
     Fetcher,
     FetchSchedule,
+    HOST_NICS_PATH,
     HOSTS_PATH,
     run_fetchers,
     Section,
@@ -668,6 +670,7 @@ def test_v4_agent_queries_only_the_v4_api(api: responses.RequestsMock) -> None:
     _serve_recorded_containers(api)
     _serve_recorded_vms(api)
     _serve_recorded_nodes(api)
+    _serve_recorded_host_nics(api)
 
     agent_prism_main(parse_arguments(_v4_args()))
 
@@ -692,6 +695,7 @@ def test_v4_agent_queries_only_the_v4_api(api: responses.RequestsMock) -> None:
             # Two pages, the next link of the second is past the total
             AHV_VM_STATS_PATH,
             AHV_VM_STATS_PATH,
+            HOST_NICS_PATH,
         )
     )
 
@@ -1314,3 +1318,123 @@ def test_node_without_a_name_is_not_routed(api: responses.RequestsMock) -> None:
     assert {section.target for section in fetch_nodes(_context(hosts=hosts))} == {
         Unroutable("hosts without a name")
     }
+
+
+def _serve_recorded_host_nics(
+    api: responses.RequestsMock, nics: Sequence[object] | None = None
+) -> None:
+    """The 24 NICs of the lab's three hosts (anonymised), unless given"""
+    api.get(
+        v4_url(HOST_NICS_PATH),
+        json=_recorded("clustermgmt_config_host_nics.json")
+        if nics is None
+        else page(nics, has_next=False),
+        match=[
+            page_matcher(0),
+            matchers.query_param_matcher(
+                {"$select": "name,macAddress,linkSpeedInKbps,interfaceStatus,nodeUuid"},
+                strict_match=False,
+            ),
+        ],
+    )
+
+
+def _nic_names(sections: Sequence[Section]) -> dict[object, list[object]]:
+    names: dict[object, list[object]] = {}
+    for section in sections:
+        assert isinstance(section.payload, list)
+        names[section.target] = sorted(nic["name"] for nic in section.payload)
+    return names
+
+
+def test_each_host_gets_its_nics_with_only_the_checked_fields(
+    api: responses.RequestsMock,
+) -> None:
+    _serve_recorded_host_nics(api)
+
+    sections = fetch_host_nics(_context(hosts=_recorded_host_list()))
+
+    assert {section.name for section in sections} == {"prism_host_networks_v2"}
+    assert _nic_names(sections) == dict.fromkeys(
+        ("host-1", "host-2", "host-3"), [f"eth{number}" for number in range(8)]
+    )
+    assert _payload_of("host-2", sections) == _recorded("section_prism_host_networks_v2.json")
+
+
+def test_host_without_nics_gets_an_empty_section(api: responses.RequestsMock) -> None:
+    _serve_recorded_host_nics(api, nics=[])
+
+    assert _nic_names(fetch_host_nics(_context(hosts=_recorded_host_list()))) == dict.fromkeys(
+        ("host-1", "host-2", "host-3"), []
+    )
+
+
+def test_nic_of_an_unknown_host_is_not_routed(api: responses.RequestsMock) -> None:
+    _serve_recorded_host_nics(
+        api,
+        nics=[
+            {"extId": "nic-1", "name": "eth0", "nodeUuid": "unknown-host"},
+            {"extId": "nic-2", "name": "eth1"},
+        ],
+    )
+
+    assert _nic_names(fetch_host_nics(_context(hosts=_recorded_host_list())))[
+        Unroutable("host NICs without a known host")
+    ] == ["eth0", "eth1"]
+
+
+def test_host_nics_fail_if_the_host_list_failed() -> None:
+    error = PrismV4Error("clustermgmt/v4.0/config/hosts: timed out")
+
+    with pytest.raises(PrismV4Error, match="timed out"):
+        fetch_host_nics(_context(hosts=error))
+
+
+def test_nic_that_does_not_fit_the_model_is_skipped_with_an_info(
+    api: responses.RequestsMock,
+) -> None:
+    _serve_recorded_host_nics(
+        api,
+        nics=[
+            {"extId": "nic-1", "name": "eth0", "nodeUuid": HOST_1, "linkSpeedInKbps": "fast"},
+            {"extId": "nic-2", "name": "eth1", "nodeUuid": HOST_1},
+        ],
+    )
+    messages = AgentMessages()
+
+    sections = fetch_host_nics(_context(messages, _recorded_host_list()))
+
+    assert _nic_names(sections)["host-1"] == ["eth1"]
+    assert list(messages) == [
+        (
+            "info",
+            "Skipped host NIC 'eth0': Prism Central reports no valid linkSpeedInKbps for it",
+        )
+    ]
+
+
+def test_host_without_a_cluster_gets_no_nics_section(api: responses.RequestsMock) -> None:
+    hosts = [
+        {key: value for key, value in host.items() if key != "cluster"}
+        if host["extId"] == HOST_1
+        else host
+        for host in _recorded_host_list()
+    ]
+    _serve_recorded_host_nics(api)
+
+    assert set(_nic_names(fetch_host_nics(_context(hosts=hosts)))) == {
+        "host-2",
+        "host-3",
+        Unroutable("host NICs without a known host"),
+    }
+
+
+def test_hosts_sharing_a_name_get_a_nics_section_each(api: responses.RequestsMock) -> None:
+    hosts = [{**host, "hostName": "host"} for host in _recorded_host_list()]
+    _serve_recorded_host_nics(api)
+
+    assert [
+        (section.target, len(section.payload))
+        for section in fetch_host_nics(_context(hosts=hosts))
+        if isinstance(section.payload, list)
+    ] == [("host", 8)] * 3

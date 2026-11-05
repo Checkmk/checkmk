@@ -1,0 +1,50 @@
+[
+  {
+    "name": "eth5",
+    "macAddress": "0a:0b:0c:0d:02:05",
+    "linkSpeedInKbps": 100000000,
+    "interfaceStatus": "1"
+  },
+  {
+    "name": "eth4",
+    "macAddress": "0a:0b:0c:0d:02:04",
+    "linkSpeedInKbps": 100000000,
+    "interfaceStatus": "1"
+  },
+  {
+    "name": "eth2",
+    "macAddress": "0a:0b:0c:0d:02:02",
+    "linkSpeedInKbps": 0,
+    "interfaceStatus": "0"
+  },
+  {
+    "name": "eth6",
+    "macAddress": "0a:0b:0c:0d:02:06",
+    "linkSpeedInKbps": 100000000,
+    "interfaceStatus": "1"
+  },
+  {
+    "name": "eth1",
+    "macAddress": "0a:0b:0c:0d:02:01",
+    "linkSpeedInKbps": 0,
+    "interfaceStatus": "0"
+  },
+  {
+    "name": "eth3",
+    "macAddress": "0a:0b:0c:0d:02:03",
+    "linkSpeedInKbps": 0,
+    "interfaceStatus": "0"
+  },
+  {
+    "name": "eth0",
+    "macAddress": "0a:0b:0c:0d:02:00",
+    "linkSpeedInKbps": 0,
+    "interfaceStatus": "0"
+  },
+  {
+    "name": "eth7",
+    "macAddress": "0a:0b:0c:0d:02:07",
+    "linkSpeedInKbps": 100000000,
+    "interfaceStatus": "1"
+  }
+]

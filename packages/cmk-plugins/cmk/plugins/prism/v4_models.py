@@ -359,3 +359,23 @@ class VmDetails(V4Model):
     guest_tools: GuestTools | None = Field(None, alias="guestTools")
     # None: Prism Central couldn't list the stats
     stats: VmStatsSamples | None = None
+
+
+class HostNic(V4Model):
+    """A physical NIC of a host, as written to prism_host_networks_v2"""
+
+    name: str | None = None
+    mac_address: str | None = Field(None, alias="macAddress")
+    link_speed_in_kbps: int | None = Field(None, alias="linkSpeedInKbps")
+    # "1": up
+    interface_status: str | None = Field(None, alias="interfaceStatus")
+
+
+class ListedHostNic(HostNic):
+    """An item of the host NIC list"""
+
+    node_uuid: str | None = Field(None, alias="nodeUuid")
+
+
+class HostNics(RootModel[list[HostNic]]):
+    model_config = ConfigDict(frozen=True)

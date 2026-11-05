@@ -1,0 +1,347 @@
+{
+  "data": [
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.HostNic",
+      "extId": "4bc095e4-30c3-4a46-8125-1cc636875c70",
+      "name": "eth2",
+      "macAddress": "0a:0b:0c:0d:01:02",
+      "interfaceStatus": "0",
+      "linkSpeedInKbps": 0,
+      "nodeUuid": "24bce4ff-ea77-4f52-84b2-438552e227be"
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.HostNic",
+      "extId": "b3f078da-1e97-49a6-8d90-86c5a1abc142",
+      "name": "eth5",
+      "macAddress": "0a:0b:0c:0d:02:05",
+      "interfaceStatus": "1",
+      "linkSpeedInKbps": 100000000,
+      "nodeUuid": "387a54c1-7286-49aa-9602-a7e8e889f63c"
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.HostNic",
+      "extId": "db8bd5b0-996b-4ca3-96dd-52f538e13246",
+      "name": "eth7",
+      "macAddress": "0a:0b:0c:0d:01:07",
+      "interfaceStatus": "1",
+      "linkSpeedInKbps": 100000000,
+      "nodeUuid": "24bce4ff-ea77-4f52-84b2-438552e227be"
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.HostNic",
+      "extId": "39ed13be-c7e6-4942-9b82-232c9ed82eec",
+      "name": "eth4",
+      "macAddress": "0a:0b:0c:0d:03:04",
+      "interfaceStatus": "1",
+      "linkSpeedInKbps": 100000000,
+      "nodeUuid": "247a477f-b32f-4fc1-83a6-c73172169e73"
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.HostNic",
+      "extId": "cb892da1-8009-4234-b723-19428fe614b5",
+      "name": "eth2",
+      "macAddress": "0a:0b:0c:0d:03:02",
+      "interfaceStatus": "0",
+      "linkSpeedInKbps": 0,
+      "nodeUuid": "247a477f-b32f-4fc1-83a6-c73172169e73"
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.HostNic",
+      "extId": "24428e2c-88a3-47f9-9e31-ed15e2577f63",
+      "name": "eth3",
+      "macAddress": "0a:0b:0c:0d:03:03",
+      "interfaceStatus": "0",
+      "linkSpeedInKbps": 0,
+      "nodeUuid": "247a477f-b32f-4fc1-83a6-c73172169e73"
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.HostNic",
+      "extId": "34547e9c-f2b8-4d3d-9c04-58bb40b32d80",
+      "name": "eth7",
+      "macAddress": "0a:0b:0c:0d:03:07",
+      "interfaceStatus": "1",
+      "linkSpeedInKbps": 100000000,
+      "nodeUuid": "247a477f-b32f-4fc1-83a6-c73172169e73"
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.HostNic",
+      "extId": "a5087c6d-34af-437c-9fea-cc5185b62240",
+      "name": "eth4",
+      "macAddress": "0a:0b:0c:0d:02:04",
+      "interfaceStatus": "1",
+      "linkSpeedInKbps": 100000000,
+      "nodeUuid": "387a54c1-7286-49aa-9602-a7e8e889f63c"
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.HostNic",
+      "extId": "d19eca10-314d-465d-8868-0a4de0a08abf",
+      "name": "eth0",
+      "macAddress": "0a:0b:0c:0d:01:00",
+      "interfaceStatus": "0",
+      "linkSpeedInKbps": 0,
+      "nodeUuid": "24bce4ff-ea77-4f52-84b2-438552e227be"
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.HostNic",
+      "extId": "ab530bf9-89ce-4333-bf84-f78aa44ad09a",
+      "name": "eth6",
+      "macAddress": "0a:0b:0c:0d:01:06",
+      "interfaceStatus": "1",
+      "linkSpeedInKbps": 100000000,
+      "nodeUuid": "24bce4ff-ea77-4f52-84b2-438552e227be"
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.HostNic",
+      "extId": "3653bb63-35bf-478d-bd5b-e1dfe1cf414c",
+      "name": "eth0",
+      "macAddress": "0a:0b:0c:0d:03:00",
+      "interfaceStatus": "0",
+      "linkSpeedInKbps": 0,
+      "nodeUuid": "247a477f-b32f-4fc1-83a6-c73172169e73"
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.HostNic",
+      "extId": "22dbdc46-b4b3-473b-aba3-8ae99871dcdf",
+      "name": "eth1",
+      "macAddress": "0a:0b:0c:0d:03:01",
+      "interfaceStatus": "0",
+      "linkSpeedInKbps": 0,
+      "nodeUuid": "247a477f-b32f-4fc1-83a6-c73172169e73"
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.HostNic",
+      "extId": "4b8a3fe3-cc11-4a0c-a0e0-2ef476a0cba8",
+      "name": "eth2",
+      "macAddress": "0a:0b:0c:0d:02:02",
+      "interfaceStatus": "0",
+      "linkSpeedInKbps": 0,
+      "nodeUuid": "387a54c1-7286-49aa-9602-a7e8e889f63c"
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.HostNic",
+      "extId": "f5f6a3ee-3b0a-4aef-9c4c-ac69bef7c467",
+      "name": "eth6",
+      "macAddress": "0a:0b:0c:0d:02:06",
+      "interfaceStatus": "1",
+      "linkSpeedInKbps": 100000000,
+      "nodeUuid": "387a54c1-7286-49aa-9602-a7e8e889f63c"
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.HostNic",
+      "extId": "bde515c3-83ad-4d18-8980-ee00e323accf",
+      "name": "eth1",
+      "macAddress": "0a:0b:0c:0d:02:01",
+      "interfaceStatus": "0",
+      "linkSpeedInKbps": 0,
+      "nodeUuid": "387a54c1-7286-49aa-9602-a7e8e889f63c"
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.HostNic",
+      "extId": "793643eb-252d-440f-8b02-e9f40014a63e",
+      "name": "eth1",
+      "macAddress": "0a:0b:0c:0d:01:01",
+      "interfaceStatus": "0",
+      "linkSpeedInKbps": 0,
+      "nodeUuid": "24bce4ff-ea77-4f52-84b2-438552e227be"
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.HostNic",
+      "extId": "68717b0a-d278-4083-9fcb-04f056550936",
+      "name": "eth3",
+      "macAddress": "0a:0b:0c:0d:01:03",
+      "interfaceStatus": "0",
+      "linkSpeedInKbps": 0,
+      "nodeUuid": "24bce4ff-ea77-4f52-84b2-438552e227be"
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.HostNic",
+      "extId": "5a8bda1a-9a30-468c-ae86-ec08f0c3f0cc",
+      "name": "eth3",
+      "macAddress": "0a:0b:0c:0d:02:03",
+      "interfaceStatus": "0",
+      "linkSpeedInKbps": 0,
+      "nodeUuid": "387a54c1-7286-49aa-9602-a7e8e889f63c"
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.HostNic",
+      "extId": "c5151d5b-c5bc-443f-8a41-b3548a0d50f3",
+      "name": "eth4",
+      "macAddress": "0a:0b:0c:0d:01:04",
+      "interfaceStatus": "1",
+      "linkSpeedInKbps": 100000000,
+      "nodeUuid": "24bce4ff-ea77-4f52-84b2-438552e227be"
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.HostNic",
+      "extId": "f7adbf88-f02f-4e0e-806b-232b7da7bf4b",
+      "name": "eth0",
+      "macAddress": "0a:0b:0c:0d:02:00",
+      "interfaceStatus": "0",
+      "linkSpeedInKbps": 0,
+      "nodeUuid": "387a54c1-7286-49aa-9602-a7e8e889f63c"
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.HostNic",
+      "extId": "78dbd60c-5627-46fa-ae82-999705c6906d",
+      "name": "eth7",
+      "macAddress": "0a:0b:0c:0d:02:07",
+      "interfaceStatus": "1",
+      "linkSpeedInKbps": 100000000,
+      "nodeUuid": "387a54c1-7286-49aa-9602-a7e8e889f63c"
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.HostNic",
+      "extId": "456d39ff-fa39-4311-97b3-32b37b2a4cd8",
+      "name": "eth5",
+      "macAddress": "0a:0b:0c:0d:01:05",
+      "interfaceStatus": "1",
+      "linkSpeedInKbps": 100000000,
+      "nodeUuid": "24bce4ff-ea77-4f52-84b2-438552e227be"
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.HostNic",
+      "extId": "212f8a96-9e6c-425d-aa30-c3f44ca2f740",
+      "name": "eth5",
+      "macAddress": "0a:0b:0c:0d:03:05",
+      "interfaceStatus": "1",
+      "linkSpeedInKbps": 100000000,
+      "nodeUuid": "247a477f-b32f-4fc1-83a6-c73172169e73"
+    },
+    {
+      "$reserved": {
+        "$fv": "v4.r2"
+      },
+      "$objectType": "clustermgmt.v4.config.HostNic",
+      "extId": "869b9c97-d82e-4285-8c5a-b69622eb6b06",
+      "name": "eth6",
+      "macAddress": "0a:0b:0c:0d:03:06",
+      "interfaceStatus": "1",
+      "linkSpeedInKbps": 100000000,
+      "nodeUuid": "247a477f-b32f-4fc1-83a6-c73172169e73"
+    }
+  ],
+  "$reserved": {
+    "$fv": "v4.r2"
+  },
+  "$objectType": "clustermgmt.v4.config.ListHostNicsApiResponse",
+  "metadata": {
+    "flags": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.config.Flag",
+        "name": "hasError",
+        "value": false
+      },
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.config.Flag",
+        "name": "isPaginated",
+        "value": true
+      },
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.config.Flag",
+        "name": "isTruncated",
+        "value": false
+      }
+    ],
+    "$reserved": {
+      "$fv": "v1.r0"
+    },
+    "$objectType": "common.v1.response.ApiResponseMetadata",
+    "links": [
+      {
+        "$reserved": {
+          "$fv": "v1.r0"
+        },
+        "$objectType": "common.v1.response.ApiLink",
+        "href": "https://prism.example.com:9440/api/clustermgmt/v4.0/config/host-nics?$limit=100&$page=0&$select=...",
+        "rel": "first"
+      },
+      {
+        "href": "https://prism.example.com:9440/api/clustermgmt/v4.0/config/host-nics?$limit=100&$page=0&$select=...",
+        "rel": "self"
+      },
+      {
+        "href": "https://prism.example.com:9440/api/clustermgmt/v4.0/config/host-nics?$limit=100&$page=0&$select=...",
+        "rel": "last"
+      }
+    ],
+    "totalAvailableResults": 24
+  }
+}

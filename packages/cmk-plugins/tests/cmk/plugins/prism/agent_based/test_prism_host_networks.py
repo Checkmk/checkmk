@@ -7,6 +7,7 @@
 
 import json
 from collections.abc import Mapping, Sequence
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -17,6 +18,7 @@ from cmk.plugins.prism.agent_based.prism_host_networks import (
     _check_prism_host_network,
     discovery_prism_host_networks,
     parse_prism_host_networks_pure,
+    parse_prism_host_networks_v2,
 )
 
 RAW = [
@@ -224,3 +226,67 @@ def test_check_prism_host_networks(  # type: ignore[misc]
         )
         == expected_check_result
     )
+
+
+# The NICs of one host of a Prism Central 7.5 lab (anonymised), as the v4 agent writes them
+RECORDED_SECTION_V2 = (
+    Path(__file__).parent.parent
+    / "special_agent"
+    / "v4_fixtures"
+    / "section_prism_host_networks_v2.json"
+)
+
+
+def _parse_v2(nics: object) -> interfaces.Section[interfaces.InterfaceWithRates]:
+    return parse_prism_host_networks_v2([[json.dumps(nics)]])
+
+
+def test_v2_nics_have_no_rates() -> None:
+    section = _parse_v2(json.loads(RECORDED_SECTION_V2.read_text()))
+
+    assert [(nic.attributes.descr, nic.attributes.oper_status) for nic in section] == [
+        *((f"eth{number}", "2") for number in range(4)),
+        *((f"eth{number}", "1") for number in range(4, 8)),
+    ]
+    assert {nic.rates for nic in section} == {interfaces.Rates()}
+
+
+def test_v2_up_nics_are_discovered() -> None:
+    section = _parse_v2(json.loads(RECORDED_SECTION_V2.read_text()))
+
+    assert [
+        service.item
+        for service in discovery_prism_host_networks(
+            [interfaces.DISCOVERY_DEFAULT_PARAMETERS], section
+        )
+    ] == ["4", "5", "6", "7"]
+
+
+def test_v2_nic_shows_state_mac_and_speed_without_traffic() -> None:
+    section = _parse_v2(json.loads(RECORDED_SECTION_V2.read_text()))
+
+    assert list(
+        _check_prism_host_network(
+            "4",
+            {"discovered_speed": 100000000000, "discovered_oper_status": ["1"]},
+            section,
+            value_store={},
+        )
+    ) == [
+        Result(
+            state=State.OK, summary="[eth4]", details="Index: 4\nDescription: eth4\nAlias: eth4"
+        ),
+        Result(state=State.OK, summary="(up)", details="Operational state: up"),
+        Result(state=State.OK, summary="MAC: 0A:0B:0C:0D:02:04"),
+        Result(state=State.OK, summary="Speed: 100 GBit/s"),
+    ]
+
+
+def test_v2_nic_that_is_not_up_is_down_even_with_a_link_speed() -> None:
+    section = _parse_v2([{"name": "eth0", "linkSpeedInKbps": 10000000, "interfaceStatus": "0"}])
+
+    assert [nic.attributes.oper_status for nic in section] == ["2"]
+
+
+def test_v2_empty_section_has_no_nics() -> None:
+    assert parse_prism_host_networks_v2([]) == []

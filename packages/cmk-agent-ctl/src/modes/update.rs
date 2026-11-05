@@ -614,7 +614,9 @@ mod tests {
         fn test_a_site_that_does_not_answer_is_asked_again_by_the_next_cycle() {
             let host = Host::new();
             let first_silent_then_answering = ScriptedApi::new(vec![
-                Err(ApiError::Other(anyhow::anyhow!("connection refused"))),
+                Err(ApiError::Communication(anyhow::anyhow!(
+                    "connection refused"
+                ))),
                 no_package(),
             ]);
 
@@ -644,7 +646,7 @@ mod tests {
         fn test_a_source_latched_by_501_stays_latched() {
             let host = Host::new();
             let first_501_then_upgraded = ScriptedApi::new(vec![
-                Err(ApiError::Status {
+                Err(ApiError::ResponseStatus {
                     status: http::StatusCode::NOT_IMPLEMENTED,
                     body: None,
                 }),

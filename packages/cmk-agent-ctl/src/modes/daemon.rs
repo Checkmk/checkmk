@@ -48,7 +48,7 @@ pub fn daemon(
         &baked_cas,
     );
 
-    // create channels, 3x TX + 1x RX to "synchronize" thread stops on failure
+    // create channels, 4x TX + 1x RX to "synchronize" thread stops on failure
     let (tx_push, rx) = mpsc::channel();
     let tx_pull = tx_push.clone();
     let tx_renew_certificate = tx_push.clone();
@@ -71,11 +71,11 @@ pub fn daemon(
         tx_pull.send(pull::fn_thread(pull_config)).unwrap();
     });
 
-    let reg_copy = registry.clone();
+    let reg_clone = registry.clone();
     let config_clone = client_config.clone();
     thread::spawn(move || {
         tx_renew_certificate
-            .send(renew_certificate::fn_thread(reg_copy, config_clone))
+            .send(renew_certificate::fn_thread(reg_clone, config_clone))
             .unwrap();
     });
 

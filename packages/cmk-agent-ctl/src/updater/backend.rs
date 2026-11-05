@@ -595,12 +595,12 @@ enum PackageDownload {
 
 /// An [`Updater`] that holds `update.lock`, loaded after taking it.
 ///
-/// Only a locked updater changes the update state, so no process writes the
-/// state back from a copy that another process changed in the meantime.
-/// Dropping it releases the lock.
+/// All mutations to the underlying state happen through here.
+/// It holds a lock so that writes are serialised between
+/// a user-run command and the daemonised version.
 pub struct WritableUpdater {
     updater: Updater,
-    _lock: File,
+    _serialisation_lock: File,
 }
 
 impl std::ops::Deref for WritableUpdater {
@@ -774,7 +774,7 @@ impl WritableUpdater {
 
 /// The update configuration, as this run found it.
 #[derive(Debug)]
-enum ConfigState {
+enum ConfigLoadOutcome {
     /// No file: agent updates are not configured for this host.
     Absent,
 
@@ -790,7 +790,7 @@ enum ConfigState {
 /// [`Updater::is_configured`], [`Updater::is_operational`] and
 /// [`Updater::summary`].
 pub struct Updater {
-    config: ConfigState,
+    config: ConfigLoadOutcome,
     state: UpdateState,
     agent_info: Option<AgentInfo>,
     load_error: Option<Error>,
@@ -814,11 +814,11 @@ impl Updater {
     pub fn new(paths: &PathResolver) -> Self {
         let mut load_error = None;
         let config = match UpdaterConfig::load_if_configured(&paths.updater_config_path) {
-            Ok(None) => ConfigState::Absent,
-            Ok(Some(config)) => ConfigState::Loaded(config),
+            Ok(None) => ConfigLoadOutcome::Absent,
+            Ok(Some(config)) => ConfigLoadOutcome::Loaded(config),
             Err(error) => {
                 log::warn!("Continuing without updater configuration: {error:#}");
-                ConfigState::Broken(error)
+                ConfigLoadOutcome::Broken(error)
             }
         };
         if !paths.updater_state_path.exists() {
@@ -918,7 +918,7 @@ impl Updater {
         let lock = Self::lock(paths)?;
         Ok(WritableUpdater {
             updater: Self::new(paths),
-            _lock: lock,
+            _serialisation_lock: lock,
         })
     }
 
@@ -960,9 +960,9 @@ impl Updater {
                 .as_ref()
                 .map_or_else(String::new, |error| format!(", error '{error:#}'")),
             match &self.config {
-                ConfigState::Absent => String::from("not configured"),
-                ConfigState::Broken(error) => format!("broken: {error:#}"),
-                ConfigState::Loaded(config) => format!(
+                ConfigLoadOutcome::Absent => String::from("not configured"),
+                ConfigLoadOutcome::Broken(error) => format!("broken: {error:#}"),
+                ConfigLoadOutcome::Loaded(config) => format!(
                     "activated: {}, interval {}",
                     config.activated, config.interval
                 ),
@@ -989,17 +989,17 @@ impl Updater {
     /// If a configuration is deployed but failed to load.
     pub fn is_configured(&self) -> AnyhowResult<bool> {
         match &self.config {
-            ConfigState::Absent => Ok(false),
-            ConfigState::Broken(error) => Err(anyhow!("{error:#}")),
-            ConfigState::Loaded(_) => Ok(true),
+            ConfigLoadOutcome::Absent => Ok(false),
+            ConfigLoadOutcome::Broken(error) => Err(anyhow!("{error:#}")),
+            ConfigLoadOutcome::Loaded(_) => Ok(true),
         }
     }
 
     /// The configuration, if it loaded.
     fn loaded_config(&self) -> Option<&UpdaterConfig> {
         match &self.config {
-            ConfigState::Loaded(config) => Some(config),
-            ConfigState::Absent | ConfigState::Broken(_) => None,
+            ConfigLoadOutcome::Loaded(config) => Some(config),
+            ConfigLoadOutcome::Absent | ConfigLoadOutcome::Broken(_) => None,
         }
     }
 
@@ -1036,11 +1036,9 @@ impl Updater {
             return self.awaits_migration(registry);
         };
         log::info!(
-            "{} of the registered connections can serve agent updates, using the {} \
-             connection to {}: the site authenticates this host by the client \
-             certificate of {}, so the updater needs neither a registration nor a \
-             secret of its own",
-            connection::candidates(registry).count(),
+            "Using the {} connection to {}, the recorded update source: the site \
+             authenticates this host by the client certificate of {}, so the updater \
+             needs neither a registration nor a secret of its own",
             selected.mode,
             selected.site_id,
             selected.connection.trust.uuid
@@ -1255,15 +1253,16 @@ impl Updater {
 
     /// The connection to run an update over, if the updater may run at all.
     ///
-    /// The updater reuses the controller's registration. It picks one of the
-    /// registered connections and talks to that site over the connection's mTLS
-    /// channel, where the receiver authenticates the host by the client
-    /// certificate and resolves its UUID to a host name.
+    /// The updater reuses the controller's registration. It talks to the site
+    /// of the recorded update source over that connection's mTLS channel, where
+    /// the receiver authenticates the host by the client certificate and
+    /// resolves its UUID to a host name.
     ///
     /// # Returns
     ///
-    /// `None`, with the reason logged, when the updater is not operational or
-    /// no registered connection can reach a site. Whether automatic updates are
+    /// `None`, with the reason logged, when the updater is not operational, no
+    /// update source is recorded, its site serves no agent updates, or its
+    /// connection is no longer registered. Whether automatic updates are
     /// activated is none of its business - that governs the automatic cycle,
     /// not what an operator may ask for by hand.
     fn find_update_connection<'a>(
@@ -1365,7 +1364,7 @@ impl Updater {
             },
         ) {
             Ok(status) => Ok(UpdateAvailabilityStatus::Available(status)),
-            Err(ApiError::Status {
+            Err(ApiError::ResponseStatus {
                 status: http::StatusCode::NOT_IMPLEMENTED,
                 ..
             }) => Ok(UpdateAvailabilityStatus::Unavailable),
@@ -1445,11 +1444,11 @@ impl Updater {
             },
         ) {
             Ok(bytes) => bytes,
-            Err(ApiError::Status {
+            Err(ApiError::ResponseStatus {
                 status: http::StatusCode::NOT_IMPLEMENTED,
                 ..
             }) => return Ok(PackageDownload::Unavailable),
-            Err(ApiError::Status {
+            Err(ApiError::ResponseStatus {
                 status: http::StatusCode::CONFLICT,
                 ..
             }) => return Ok(PackageDownload::Superseded),
@@ -1524,9 +1523,9 @@ impl Updater {
     /// updater as healthy while the integrated one is broken.
     pub fn agent_updates(&self, registry: &Registry) -> Option<section::AgentUpdates> {
         let config_error = match &self.config {
-            ConfigState::Absent => return None,
-            ConfigState::Broken(error) => Some(format!("{error:#}")),
-            ConfigState::Loaded(_) => None,
+            ConfigLoadOutcome::Absent => return None,
+            ConfigLoadOutcome::Broken(error) => Some(format!("{error:#}")),
+            ConfigLoadOutcome::Loaded(_) => None,
         };
         Some(section::AgentUpdates::new(
             &self.state,
@@ -2440,7 +2439,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     #[test]
     fn test_summary_reports_config_and_hash_but_no_signature_keys() {
         let updater = Updater {
-            config: ConfigState::Loaded(UpdaterConfig {
+            config: ConfigLoadOutcome::Loaded(UpdaterConfig {
                 signature_keys: vec![String::from(SIGNATURE_KEY)],
                 ..some_config().unwrap()
             }),
@@ -2522,7 +2521,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     fn test_agent_updates_of_a_broken_configuration_carry_the_load_error() {
         let registry = registry_with_one_connection();
         let updater = Updater {
-            config: ConfigState::Broken(Error::msg("no valid TOML")),
+            config: ConfigLoadOutcome::Broken(Error::msg("no valid TOML")),
             ..updater_with_source(None, some_agent_info())
         };
 
@@ -2536,7 +2535,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     fn test_agent_updates_report_the_configuration_error_before_the_cycle_error() {
         let registry = registry_with_one_connection();
         let updater = Updater {
-            config: ConfigState::Broken(Error::msg("no valid TOML")),
+            config: ConfigLoadOutcome::Broken(Error::msg("no valid TOML")),
             state: UpdateState {
                 last_error: Some(String::from("receiver unreachable")),
                 ..UpdateState::default()
@@ -2615,7 +2614,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     /// The state plays no role for [`Updater::is_operational`].
     fn updater(config: Option<UpdaterConfig>, agent_info: Option<AgentInfo>) -> Updater {
         Updater {
-            config: config.map_or(ConfigState::Absent, ConfigState::Loaded),
+            config: config.map_or(ConfigLoadOutcome::Absent, ConfigLoadOutcome::Loaded),
             state: UpdateState::default(),
             agent_info,
             load_error: None,
@@ -2660,7 +2659,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     fn writable_in(dir: &tempfile::TempDir, state: UpdateState) -> WritableUpdater {
         WritableUpdater {
             updater: updater_in(dir, state),
-            _lock: File::create(dir.path().join("update.lock")).unwrap(),
+            _serialisation_lock: File::create(dir.path().join("update.lock")).unwrap(),
         }
     }
 
@@ -2772,7 +2771,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         let dir = tempfile::TempDir::new().unwrap();
         write_python_updater_state(&dir);
         let updater = Updater {
-            config: ConfigState::Loaded(UpdaterConfig {
+            config: ConfigLoadOutcome::Loaded(UpdaterConfig {
                 activated: false,
                 ..some_config().unwrap()
             }),
@@ -2858,8 +2857,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             base_url: &reqwest::Url,
             connection: &TrustedConnection,
             body: &agent_receiver_api::UpdateStatusBody<'_>,
-        ) -> AnyhowResult<agent_receiver_api::UpdateStatusResponse, agent_receiver_api::ApiError>
-        {
+        ) -> Result<UpdateStatusResponse, ApiError> {
             *self.request.borrow_mut() = Some(RecordedRequest {
                 url: base_url.to_string(),
                 uuid: connection.uuid.to_string(),
@@ -2895,11 +2893,8 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             _base_url: &reqwest::Url,
             _connection: &TrustedConnection,
             _body: &agent_receiver_api::UpdateStatusBody<'_>,
-        ) -> AnyhowResult<agent_receiver_api::UpdateStatusResponse, agent_receiver_api::ApiError>
-        {
-            Err(agent_receiver_api::ApiError::Other(Error::msg(
-                "connection refused",
-            )))
+        ) -> Result<UpdateStatusResponse, ApiError> {
+            Err(ApiError::Communication(Error::msg("connection refused")))
         }
 
         fn download_agent(
@@ -2907,10 +2902,8 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             _base_url: &reqwest::Url,
             _connection: &TrustedConnection,
             _body: &agent_receiver_api::AgentDownloadBody<'_>,
-        ) -> AnyhowResult<Vec<u8>, agent_receiver_api::ApiError> {
-            Err(agent_receiver_api::ApiError::Other(Error::msg(
-                "connection refused",
-            )))
+        ) -> Result<Vec<u8>, ApiError> {
+            Err(ApiError::Communication(Error::msg("connection refused")))
         }
     }
 
@@ -2937,8 +2930,8 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         }
     }
 
-    fn refused(status: http::StatusCode) -> agent_receiver_api::ApiError {
-        agent_receiver_api::ApiError::Status { status, body: None }
+    fn refused(status: http::StatusCode) -> ApiError {
+        ApiError::ResponseStatus { status, body: None }
     }
 
     impl agent_receiver_api::AgentUpdate for RefusingApi {
@@ -2947,8 +2940,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             _base_url: &reqwest::Url,
             _connection: &TrustedConnection,
             _body: &agent_receiver_api::UpdateStatusBody<'_>,
-        ) -> AnyhowResult<agent_receiver_api::UpdateStatusResponse, agent_receiver_api::ApiError>
-        {
+        ) -> Result<UpdateStatusResponse, ApiError> {
             match self.status {
                 Some(code) => Err(refused(code)),
                 None => Ok(offered(Some(TARGET_HASH))),
@@ -3212,6 +3204,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         assert!(api.request.borrow().is_none());
     }
 
+    /// TC-AU-078: without a recorded source, the check asks no site.
     #[test]
     fn test_check_without_a_recorded_source_asks_nobody() {
         let registry = registry_with_one_connection();
@@ -3225,7 +3218,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         assert!(api.request.borrow().is_none());
     }
 
-    /// Once the site answered 501, the source gets no more requests.
+    /// TC-AU-079: once the site answered 501, the source gets no more requests.
     #[test]
     fn test_check_with_an_unavailable_source_asks_nobody() {
         let registry = registry_with_one_connection();
@@ -3247,8 +3240,8 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         assert!(api.request.borrow().is_none());
     }
 
-    /// Another registered connection does not stand in for a source whose own
-    /// connection is gone.
+    /// TC-AU-078: another registered connection does not stand in for a source
+    /// whose own connection is gone.
     #[test]
     fn test_check_whose_source_connection_is_gone_asks_nobody() {
         let registry = registry_with_the_connections_of(&[(OTHER_SITE, &other_source())]);
@@ -3262,6 +3255,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         assert!(api.request.borrow().is_none());
     }
 
+    /// TC-AU-079: a 501 makes the check report the source unavailable.
     #[test]
     fn test_check_reports_a_site_without_agent_updates() {
         let registry = registry_with_one_connection();
@@ -3771,6 +3765,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         );
     }
 
+    /// TC-AU-079: a 501 makes the fetch report the source unavailable.
     #[test]
     fn test_fetch_update_reports_a_site_without_agent_updates() {
         let dir = tempfile::TempDir::new().unwrap();
@@ -3824,7 +3819,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         assert!(!dir.path().join(PACKAGE_DIR).exists());
     }
 
-    /// A 404 may be temporary, so it is an error like any other.
+    /// TC-AU-006: a 404 may be temporary, so it is an error like any other.
     #[test]
     fn test_fetch_update_fails_on_a_404() {
         let dir = tempfile::TempDir::new().unwrap();
@@ -4076,8 +4071,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             _base_url: &reqwest::Url,
             connection: &TrustedConnection,
             body: &agent_receiver_api::UpdateStatusBody<'_>,
-        ) -> AnyhowResult<agent_receiver_api::UpdateStatusResponse, agent_receiver_api::ApiError>
-        {
+        ) -> Result<UpdateStatusResponse, ApiError> {
             self.status_bodies
                 .borrow_mut()
                 .push(serde_json::to_value(body).unwrap());

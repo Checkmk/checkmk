@@ -3,7 +3,7 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use super::{certs, config, types};
-use anyhow::{Context, Result as AnyhowResult};
+use anyhow::{Context, Result};
 use http::StatusCode;
 use reqwest::header::AUTHORIZATION;
 use serde::{Deserialize, Serialize};
@@ -130,20 +130,20 @@ struct ErrorResponse {
 #[derive(Debug)]
 pub enum ApiError {
     /// The site answered, but not with the expected status.
-    Status {
+    ResponseStatus {
         status: StatusCode,
         body: Option<String>,
     },
-    Other(anyhow::Error),
+    Communication(anyhow::Error),
 }
 
 impl std::fmt::Display for ApiError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ApiError::Status { status, body } => {
+            ApiError::ResponseStatus { status, body } => {
                 f.write_str(&Api::error_response_description(*status, body.clone()))
             }
-            ApiError::Other(error) => write!(f, "{error}"),
+            ApiError::Communication(error) => write!(f, "{error}"),
         }
     }
 }
@@ -151,21 +151,21 @@ impl std::fmt::Display for ApiError {
 impl std::error::Error for ApiError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
-            ApiError::Status { .. } => None,
-            ApiError::Other(error) => error.source(),
+            ApiError::ResponseStatus { .. } => None,
+            ApiError::Communication(error) => error.source(),
         }
     }
 }
 
 impl From<anyhow::Error> for ApiError {
     fn from(error: anyhow::Error) -> Self {
-        ApiError::Other(error)
+        ApiError::Communication(error)
     }
 }
 
 impl From<reqwest::Error> for ApiError {
     fn from(error: reqwest::Error) -> Self {
-        ApiError::Other(error.into())
+        ApiError::Communication(error.into())
     }
 }
 
@@ -252,7 +252,7 @@ pub trait AgentUpdate {
         base_url: &reqwest::Url,
         connection: &config::TrustedConnection,
         body: &UpdateStatusBody<'_>,
-    ) -> AnyhowResult<UpdateStatusResponse, ApiError>;
+    ) -> Result<UpdateStatusResponse, ApiError>;
 
     /// Fetch the agent package itself, unverified.
     fn download_agent(
@@ -260,7 +260,7 @@ pub trait AgentUpdate {
         base_url: &reqwest::Url,
         connection: &config::TrustedConnection,
         body: &AgentDownloadBody<'_>,
-    ) -> AnyhowResult<Vec<u8>, ApiError>;
+    ) -> Result<Vec<u8>, ApiError>;
 }
 
 pub trait Registration {
@@ -272,7 +272,7 @@ pub trait Registration {
         uuid: &uuid::Uuid,
         csr: &str,
         host_name: &str,
-    ) -> AnyhowResult<RegisterExistingResponse>;
+    ) -> Result<RegisterExistingResponse>;
 
     fn register_new(
         &self,
@@ -282,7 +282,7 @@ pub trait Registration {
         uuid: &uuid::Uuid,
         csr: &str,
         agent_labels: &types::AgentLabels,
-    ) -> AnyhowResult<RegisterNewResponse>;
+    ) -> Result<RegisterNewResponse>;
 
     fn register_new_ongoing(
         &self,
@@ -290,7 +290,7 @@ pub trait Registration {
         root_cert: &str,
         credentials: &types::Credentials,
         uuid: &uuid::Uuid,
-    ) -> AnyhowResult<RegisterNewOngoingResponse>;
+    ) -> Result<RegisterNewOngoingResponse>;
 }
 
 pub trait AgentData {
@@ -300,7 +300,7 @@ pub trait AgentData {
         connection: &config::TrustedConnection,
         compression_algorithm: &str,
         monitoring_data: &[u8],
-    ) -> AnyhowResult<()>;
+    ) -> Result<()>;
 }
 
 pub trait RegistrationStatusV2 {
@@ -308,7 +308,7 @@ pub trait RegistrationStatusV2 {
         &self,
         base_url: &reqwest::Url,
         connection: &config::TrustedConnection,
-    ) -> AnyhowResult<RegistrationStatusV2Response>;
+    ) -> Result<RegistrationStatusV2Response>;
 }
 
 pub trait RenewCertificate {
@@ -317,7 +317,7 @@ pub trait RenewCertificate {
         base_url: &reqwest::Url,
         connection: &config::TrustedConnection,
         csr: String,
-    ) -> AnyhowResult<RenewCertificateResponse>;
+    ) -> Result<RenewCertificateResponse>;
 }
 
 pub struct Api {
@@ -325,10 +325,7 @@ pub struct Api {
 }
 
 impl Api {
-    fn endpoint_url(
-        base_url: &reqwest::Url,
-        endpoint_segments: &[&str],
-    ) -> AnyhowResult<reqwest::Url> {
+    fn endpoint_url(base_url: &reqwest::Url, endpoint_segments: &[&str]) -> Result<reqwest::Url> {
         // The API of reqwest::Url for extending existing urls is strange (reqwest::Url::join), see
         // also https://github.com/servo/rust-url/issues/333
         reqwest::Url::parse(
@@ -347,7 +344,7 @@ impl Api {
     ) -> Result<T, ApiError> {
         let status = response.status();
         if status != StatusCode::OK {
-            return Err(ApiError::Status {
+            return Err(ApiError::ResponseStatus {
                 status,
                 body: response.text().ok(),
             });
@@ -375,7 +372,7 @@ impl Api {
     fn response_bytes(response: reqwest::blocking::Response) -> Result<Vec<u8>, ApiError> {
         let status = response.status();
         if status != StatusCode::OK {
-            return Err(ApiError::Status {
+            return Err(ApiError::ResponseStatus {
                 status,
                 body: response.text().ok(),
             });
@@ -391,7 +388,7 @@ impl Api {
         if status == StatusCode::NO_CONTENT {
             Ok(())
         } else {
-            Err(ApiError::Status {
+            Err(ApiError::ResponseStatus {
                 status,
                 body: response.text().ok(),
             })
@@ -405,7 +402,7 @@ impl RenewCertificate for Api {
         base_url: &reqwest::Url,
         connection: &config::TrustedConnection,
         csr: String,
-    ) -> AnyhowResult<RenewCertificateResponse> {
+    ) -> Result<RenewCertificateResponse> {
         Ok(Self::deserialize_json_response(
             certs::client(
                 Some(connection.tls_handshake_credentials()?),
@@ -431,7 +428,7 @@ impl Registration for Api {
         uuid: &uuid::Uuid,
         csr: &str,
         host_name: &str,
-    ) -> AnyhowResult<RegisterExistingResponse> {
+    ) -> Result<RegisterExistingResponse> {
         let endpoint = match credentials {
             types::Credentials::OneTimeToken { .. } => "register_existing_token",
             _ => "register_existing",
@@ -457,7 +454,7 @@ impl Registration for Api {
         uuid: &uuid::Uuid,
         csr: &str,
         agent_labels: &types::AgentLabels,
-    ) -> AnyhowResult<RegisterNewResponse> {
+    ) -> Result<RegisterNewResponse> {
         self.call_registration_init_endpoint(
             Self::endpoint_url(base_url, &["register_new"])?,
             root_certs,
@@ -477,7 +474,7 @@ impl Registration for Api {
         root_cert: &str,
         credentials: &types::Credentials,
         uuid: &uuid::Uuid,
-    ) -> AnyhowResult<RegisterNewOngoingResponse> {
+    ) -> Result<RegisterNewOngoingResponse> {
         Ok(Self::deserialize_json_response(
             Self::apply_registration_auth(
                 certs::client(
@@ -508,7 +505,7 @@ impl Api {
         credentials: &types::Credentials,
         body: &impl Serialize,
         deserializer: fn(&str) -> serde_json::Result<T>,
-    ) -> AnyhowResult<T>
+    ) -> Result<T>
     where
         T: Deserialize<'a>,
     {
@@ -553,7 +550,7 @@ impl AgentData for Api {
         connection: &config::TrustedConnection,
         compression_algorithm: &str,
         monitoring_data: &[u8],
-    ) -> AnyhowResult<()> {
+    ) -> Result<()> {
         Ok(Api::check_response_204(
             certs::client(
                 Some(connection.tls_handshake_credentials()?),
@@ -583,7 +580,7 @@ impl RegistrationStatusV2 for Api {
         &self,
         base_url: &reqwest::Url,
         connection: &config::TrustedConnection,
-    ) -> AnyhowResult<RegistrationStatusV2Response> {
+    ) -> Result<RegistrationStatusV2Response> {
         Ok(Self::deserialize_json_response(
             certs::client(
                 Some(connection.tls_handshake_credentials()?),
@@ -605,7 +602,7 @@ impl AgentUpdate for Api {
         base_url: &reqwest::Url,
         connection: &config::TrustedConnection,
         body: &UpdateStatusBody<'_>,
-    ) -> AnyhowResult<UpdateStatusResponse, ApiError> {
+    ) -> Result<UpdateStatusResponse, ApiError> {
         Self::deserialize_json_response(
             certs::client(
                 Some(connection.tls_handshake_credentials()?),
@@ -627,7 +624,7 @@ impl AgentUpdate for Api {
         base_url: &reqwest::Url,
         connection: &config::TrustedConnection,
         body: &AgentDownloadBody<'_>,
-    ) -> AnyhowResult<Vec<u8>, ApiError> {
+    ) -> Result<Vec<u8>, ApiError> {
         Self::response_bytes(
             certs::client(
                 Some(connection.tls_handshake_credentials()?),

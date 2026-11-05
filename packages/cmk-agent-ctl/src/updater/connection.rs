@@ -43,9 +43,6 @@ pub(super) fn candidates(registry: &Registry) -> impl Iterator<Item = UpdateConn
 
 /// The registered connection that carries `uuid`, the UUID of the update source.
 ///
-/// The registration recorded which connection serves the updates, so there is
-/// nothing to choose: the source's UUID names it.
-///
 /// # Returns
 ///
 /// `None` if no registered connection carries `uuid` anymore, for example after

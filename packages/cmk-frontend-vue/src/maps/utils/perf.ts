@@ -19,8 +19,9 @@ export function parsePerfData(raw: string): PerfMetric[] {
     return []
   }
   const metrics: PerfMetric[] = []
-  // Split on whitespace, but labels can be quoted: 'label with space'=value
-  const parts = raw.match(/(?:'[^']+'|[^\s]+)=[^\s]*/g) ?? []
+  // Split on whitespace, but labels can be quoted: 'label with space'=value.
+  // Each match takes a whole part, so a long one without a metric is read once.
+  const parts = raw.match(/'[^']*'=\S*|\S+/g) ?? []
   for (const part of parts) {
     const eq = part.indexOf('=')
     if (eq < 0) {

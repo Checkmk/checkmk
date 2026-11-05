@@ -48,6 +48,18 @@ describe('parsePerfData', () => {
     expect(result[0]!.value).toBe(75)
     expect(result[0]!.unit).toBe('%')
   })
+
+  it('skips the parts that carry no metric', () => {
+    expect(parsePerfData('OK [check_cpu] load1=0.5').map((m) => m.label)).toEqual(['load1'])
+  })
+
+  it('reads an unmatched quote as part of its word', () => {
+    expect(parsePerfData("'unclosed a=1 'b c'=2").map((m) => m.label)).toEqual(['a', 'b c'])
+  })
+
+  it('parses a long part without a metric in linear time', () => {
+    expect(parsePerfData('a'.repeat(1 << 18))).toEqual([])
+  })
 })
 
 describe('getMetric', () => {

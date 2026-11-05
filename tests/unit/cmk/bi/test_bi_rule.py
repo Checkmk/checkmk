@@ -156,9 +156,6 @@ _ALL_CHILDREN = (None, "CPU", "Memory")
             (),
             True,
             id="always CRIT, no child out of service period",
-            marks=pytest.mark.xfail(
-                strict=True, reason="unreachable count_ok levels leak into the service period"
-            ),
         ),
         pytest.param(
             _ALWAYS_CRIT_LEVELS,
@@ -171,18 +168,12 @@ _ALL_CHILDREN = (None, "CPU", "Memory")
             ("CPU",),
             True,
             id="always CRIT, one child out of service period",
-            marks=pytest.mark.xfail(
-                strict=True, reason="unreachable count_ok levels leak into the service period"
-            ),
         ),
         pytest.param(
             _AT_BEST_WARN_LEVELS,
             ("CPU",),
             True,
             id="at best WARN, one child out of service period",
-            marks=pytest.mark.xfail(
-                strict=True, reason="unreachable count_ok levels leak into the service period"
-            ),
         ),
         pytest.param(
             _AT_BEST_WARN_LEVELS,
@@ -218,9 +209,6 @@ def test_count_ok_unreachable_levels_do_not_leave_service_period(
             (),
             False,
             id="always CRIT, no child in downtime",
-            marks=pytest.mark.xfail(
-                strict=True, reason="unreachable count_ok levels leak into the downtime"
-            ),
         ),
         pytest.param(
             _ALWAYS_CRIT_LEVELS, _ALL_CHILDREN, True, id="always CRIT, all children in downtime"
@@ -230,9 +218,6 @@ def test_count_ok_unreachable_levels_do_not_leave_service_period(
             ("CPU",),
             False,
             id="always CRIT, one child in downtime",
-            marks=pytest.mark.xfail(
-                strict=True, reason="unreachable count_ok levels leak into the downtime"
-            ),
         ),
         pytest.param(
             _AT_BEST_WARN_LEVELS, _ALL_CHILDREN, True, id="at best WARN, all children in downtime"
@@ -257,7 +242,6 @@ def test_count_ok_unreachable_levels_do_not_cause_downtime(
     assert result.actual_result.in_downtime is expected_in_downtime
 
 
-@pytest.mark.xfail(strict=True, reason="unreachable count_ok levels leak into the downtime")
 def test_count_ok_warn_baseline_is_not_downtime_when_escalating_as_warn(
     bi_status_fetcher: BIStatusFetcher,
 ) -> None:
@@ -282,17 +266,11 @@ def test_count_ok_warn_baseline_is_not_downtime_when_escalating_as_warn(
             "in_service_period",
             True,
             id="parent stays in service period",
-            marks=pytest.mark.xfail(
-                strict=True, reason="unreachable count_ok levels leak into the service period"
-            ),
         ),
         pytest.param(
             "in_downtime",
             False,
             id="parent is not in downtime",
-            marks=pytest.mark.xfail(
-                strict=True, reason="unreachable count_ok levels leak into the downtime"
-            ),
         ),
     ],
 )

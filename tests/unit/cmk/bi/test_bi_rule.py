@@ -290,6 +290,94 @@ def test_count_ok_unreachable_levels_do_not_leak_into_parent(
     assert getattr(result.actual_result, flag) is expected
 
 
+@pytest.mark.parametrize(
+    "levels, acknowledged, expected_acknowledged",
+    [
+        pytest.param(_ALWAYS_CRIT_LEVELS, (), False, id="always CRIT, no child acknowledged"),
+        pytest.param(
+            _ALWAYS_CRIT_LEVELS,
+            _ALL_CHILDREN,
+            True,
+            id="always CRIT, all children acknowledged",
+            marks=pytest.mark.xfail(
+                strict=True, reason="unreachable count_ok levels block the acknowledgement"
+            ),
+        ),
+        pytest.param(
+            _ALWAYS_CRIT_LEVELS, ("CPU",), False, id="always CRIT, one child acknowledged"
+        ),
+        pytest.param(
+            _AT_BEST_WARN_LEVELS,
+            _ALL_CHILDREN,
+            True,
+            id="at best WARN, all children acknowledged",
+            marks=pytest.mark.xfail(
+                strict=True, reason="unreachable count_ok levels block the acknowledgement"
+            ),
+        ),
+    ],
+)
+def test_count_ok_unreachable_levels_do_not_block_acknowledgement(
+    bi_status_fetcher: BIStatusFetcher,
+    levels: tuple[int, int],
+    acknowledged: Collection[ServiceName | None],
+    expected_acknowledged: bool,
+) -> None:
+    """CMK-40898: unreachable levels must not block the acknowledgement."""
+    bi_status_fetcher.states = _status_info(crit=_ALL_CHILDREN, acknowledged=acknowledged)
+
+    result = _make_count_ok_rule(*levels).compute(
+        _make_computation_options(downtime_only_on_full_problem_coverage=False),
+        bi_status_fetcher,
+    )
+
+    assert result is not None
+    assert result.actual_result.acknowledged is expected_acknowledged
+
+
+@pytest.mark.parametrize(
+    "levels, in_downtime, expected_in_downtime",
+    [
+        pytest.param(_ALWAYS_CRIT_LEVELS, (), False, id="always CRIT, no child in downtime"),
+        pytest.param(
+            _ALWAYS_CRIT_LEVELS,
+            _ALL_CHILDREN,
+            True,
+            id="always CRIT, all children in downtime",
+            marks=pytest.mark.xfail(
+                strict=True, reason="unreachable count_ok levels block the full-coverage downtime"
+            ),
+        ),
+        pytest.param(_ALWAYS_CRIT_LEVELS, ("CPU",), False, id="always CRIT, one child in downtime"),
+        pytest.param(
+            _AT_BEST_WARN_LEVELS,
+            _ALL_CHILDREN,
+            True,
+            id="at best WARN, all children in downtime",
+            marks=pytest.mark.xfail(
+                strict=True, reason="unreachable count_ok levels block the full-coverage downtime"
+            ),
+        ),
+    ],
+)
+def test_count_ok_unreachable_levels_do_not_block_full_coverage_downtime(
+    bi_status_fetcher: BIStatusFetcher,
+    levels: tuple[int, int],
+    in_downtime: Collection[ServiceName | None],
+    expected_in_downtime: bool,
+) -> None:
+    """CMK-40898: unreachable levels must not block the full-coverage downtime."""
+    bi_status_fetcher.states = _status_info(crit=_ALL_CHILDREN, in_downtime=in_downtime)
+
+    result = _make_count_ok_rule(*levels).compute(
+        _make_computation_options(downtime_only_on_full_problem_coverage=True),
+        bi_status_fetcher,
+    )
+
+    assert result is not None
+    assert result.actual_result.in_downtime is expected_in_downtime
+
+
 def _make_count_ok_rule(levels_ok: int, levels_warn: int) -> BICompiledRule:
     aggr_config = BIAggregationFunctionCountOKSerialized(
         type="count_ok",
@@ -316,30 +404,33 @@ def _status_info(
     *,
     out_of_service_period: Collection[ServiceName | None] = (),
     in_downtime: Collection[ServiceName | None] = (),
+    crit: Collection[ServiceName | None] = (),
+    acknowledged: Collection[ServiceName | None] = (),
 ) -> BIStatusInfo:
-    """All children OK; the host is the child None.
+    """Children are OK unless CRIT; the host is the child None.
 
-    Host downtime (not service period) also applies to services.
+    Host downtime (not service period) also applies to services. A DOWN host
+    is CRIT in BI.
     """
     return {
         BIHostSpec(site_id=_SITE_ID, host_name=_HOST_NAME): BIHostStatusInfoRow(
-            state=0,
+            state=int(None in crit),
             has_been_checked=True,
-            hard_state=0,
+            hard_state=int(None in crit),
             plugin_output="",
             scheduled_downtime_depth=int(None in in_downtime),
             in_service_period=None not in out_of_service_period,
-            acknowledged=False,
+            acknowledged=None in acknowledged,
             services_with_fullstate={
                 service: BIServiceWithFullState(
-                    state=0,
+                    state=2 if service in crit else 0,
                     has_been_checked=True,
                     plugin_output="",
-                    hard_state=0,
+                    hard_state=2 if service in crit else 0,
                     current_attempt=1,
                     max_check_attempts=1,
                     scheduled_downtime_depth=int(service in in_downtime),
-                    acknowledged=False,
+                    acknowledged=service in acknowledged,
                     in_service_period=service not in out_of_service_period,
                 )
                 for service in _ALL_CHILDREN

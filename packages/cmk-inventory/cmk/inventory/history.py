@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import contextlib
 import json
 from collections.abc import Iterator, Sequence
 from dataclasses import dataclass
@@ -21,6 +20,7 @@ from .paths import (
     InventoryPaths,
     parse_archive_timestamp,
     parse_delta_cache_timestamps,
+    tree_mtime,
     TreePath,
 )
 from .serialization import (
@@ -160,22 +160,8 @@ class HistoryStore:
                 yield Error(file_path)
 
         tree_path = self.inv_paths.inventory_tree(host_name)
-        try:
-            yield OK(
-                _HistoryPath(
-                    tree_path=tree_path,
-                    timestamp=int(tree_path.path.stat().st_mtime),
-                )
-            )
-        except FileNotFoundError:
-            # TODO CMK-23408
-            with contextlib.suppress(FileNotFoundError):
-                yield OK(
-                    _HistoryPath(
-                        tree_path=tree_path,
-                        timestamp=int(tree_path.legacy.stat().st_mtime),
-                    )
-                )
+        if (timestamp := tree_mtime(tree_path)) is not None:
+            yield OK(_HistoryPath(tree_path=tree_path, timestamp=timestamp))
 
     def _collect_history_paths(
         self, *, host_name: HostName

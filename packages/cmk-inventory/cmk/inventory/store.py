@@ -9,7 +9,6 @@ import json
 import os
 import shutil
 from collections.abc import Sequence
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
@@ -17,7 +16,7 @@ from cmk.ccc import store
 from cmk.ccc.hostaddress import HostName
 
 from .merging import merge_trees
-from .paths import InventoryPaths, parse_archive_timestamp, TreePath, TreePathGz
+from .paths import InventoryPaths, parse_archive_timestamp, tree_mtime, TreePath, TreePathGz
 from .serialization import (
     deserialize_tree,
     parse_from_raw_status_data_tree,
@@ -33,21 +32,12 @@ def rename(
     omd_root: Path, *, old_host_name: HostName, new_host_name: HostName
 ) -> Sequence[Literal["inv", "invarch"]]:
     inv_paths = InventoryPaths(omd_root)
-    old_inv_tree_path = inv_paths.inventory_tree(HostName(old_host_name))
-    old_inv_tree_path_gz = inv_paths.inventory_tree_gz(HostName(old_host_name))
-    old_stat_tree_path = inv_paths.status_data_tree(HostName(old_host_name))
-    new_inv_tree_path = inv_paths.inventory_tree(HostName(new_host_name))
-    new_inv_tree_path_gz = inv_paths.inventory_tree_gz(HostName(new_host_name))
-    new_stat_tree_path = inv_paths.status_data_tree(HostName(new_host_name))
     actions: set[Literal["inv", "invarch"]] = set()
-    for old_file_path, new_file_path in [
-        (old_inv_tree_path.path, new_inv_tree_path.path),
-        (old_inv_tree_path.legacy, new_inv_tree_path.legacy),
-        (old_inv_tree_path_gz.path, new_inv_tree_path_gz.path),
-        (old_inv_tree_path_gz.legacy, new_inv_tree_path_gz.legacy),
-        (old_stat_tree_path.path, new_stat_tree_path.path),
-        (old_stat_tree_path.legacy, new_stat_tree_path.legacy),
-    ]:
+    for old_file_path, new_file_path in zip(
+        inv_paths.host_tree_files(HostName(old_host_name)),
+        inv_paths.host_tree_files(HostName(new_host_name)),
+        strict=True,
+    ):
         try:
             old_file_path.rename(new_file_path)
             actions.add("inv")
@@ -96,32 +86,15 @@ def save_raw_tree_gz(tree_path_gz: TreePathGz, meta_and_raw_tree: SDMetaAndRawTr
     store.save_bytes_to_file(tree_path_gz.path, buf.getvalue())
 
 
-@dataclass(frozen=True)
-class _TreePathMTime:
-    mtime: float
-    is_json: bool
-
-
-def _compute_mtime(tree_path: TreePath) -> _TreePathMTime | None:
-    try:
-        return _TreePathMTime(tree_path.path.stat().st_mtime, True)
-    except FileNotFoundError:
-        # TODO CMK-23408
-        try:
-            return _TreePathMTime(tree_path.legacy.stat().st_mtime, False)
-        except FileNotFoundError:
-            return None
-
-
 def _archive_inventory_tree(inv_paths: InventoryPaths, host_name: HostName, *, debug: bool) -> None:
     tree_path = inv_paths.inventory_tree(host_name)
-    if (tree_path_mtime := _compute_mtime(tree_path)) is None:
+    if (mtime := tree_mtime(tree_path)) is None:
         return
 
     tree_path_gz = inv_paths.inventory_tree_gz(host_name)
-    archive_tree = inv_paths.archive_tree(host_name, int(tree_path_mtime.mtime))
+    archive_tree = inv_paths.archive_tree(host_name, mtime)
 
-    if tree_path_mtime.is_json:
+    if tree_path.path.exists():
         inv_paths.archive_host(host_name).mkdir(parents=True, exist_ok=True)
         tree_path.path.rename(archive_tree.path)
         tree_path_gz.path.unlink(missing_ok=True)

@@ -83,6 +83,19 @@ class InventoryPaths:
             legacy=self.status_data_dir / _file_name(host_name),
         )
 
+    def host_tree_files(self, host_name: HostName) -> Sequence[Path]:
+        inventory_tree = self.inventory_tree(host_name)
+        inventory_tree_gz = self.inventory_tree_gz(host_name)
+        status_data_tree = self.status_data_tree(host_name)
+        return [
+            inventory_tree.path,
+            inventory_tree.legacy,
+            inventory_tree_gz.path,
+            inventory_tree_gz.legacy,
+            status_data_tree.path,
+            status_data_tree.legacy,
+        ]
+
     def archive_host(self, host_name: HostName) -> Path:
         return self.archive_dir / _file_name(host_name)
 
@@ -110,6 +123,15 @@ def collect_files(directory: Path) -> Sequence[Path]:
         return list(directory.iterdir())
     except FileNotFoundError:
         return []
+
+
+def tree_mtime(tree_path: TreePath) -> int | None:
+    for file_path in (tree_path.path, tree_path.legacy):
+        try:
+            return int(file_path.stat().st_mtime)
+        except FileNotFoundError:
+            continue
+    return None
 
 
 def has_inventory_tree(inv_paths: InventoryPaths, host_name: HostName) -> bool:

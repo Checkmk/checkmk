@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+import os
 from collections.abc import Callable
 from pathlib import Path
 
@@ -16,6 +17,7 @@ from cmk.inventory.paths import (
     InventoryPaths,
     parse_archive_timestamp,
     parse_delta_cache_timestamps,
+    tree_mtime,
     TreePath,
     TreePathGz,
 )
@@ -204,3 +206,41 @@ def test_has_history(
 
 def test_has_no_history(tmp_path: Path) -> None:
     assert not has_history(InventoryPaths(tmp_path), HostName("host"))
+
+
+def test_host_tree_files(tmp_path: Path) -> None:
+    assert [
+        str(p.relative_to(tmp_path))
+        for p in InventoryPaths(tmp_path).host_tree_files(HostName("host"))
+    ] == [
+        "var/check_mk/inventory/host.json",
+        "var/check_mk/inventory/host",
+        "var/check_mk/inventory/host.json.gz",
+        "var/check_mk/inventory/host.gz",
+        "tmp/check_mk/status_data/host.json",
+        "tmp/check_mk/status_data/host",
+    ]
+
+
+def _touch_tree_files(
+    tmp_path: Path, *, json_mtime: int | None, legacy_mtime: int | None
+) -> TreePath:
+    tree_path = InventoryPaths(tmp_path).inventory_tree(HostName("host"))
+    tree_path.path.parent.mkdir(parents=True)
+    for file_path, mtime in ((tree_path.path, json_mtime), (tree_path.legacy, legacy_mtime)):
+        if mtime is not None:
+            file_path.touch()
+            os.utime(file_path, (mtime, mtime))
+    return tree_path
+
+
+def test_tree_mtime_prefers_the_json_file(tmp_path: Path) -> None:
+    assert tree_mtime(_touch_tree_files(tmp_path, json_mtime=100, legacy_mtime=200)) == 100
+
+
+def test_tree_mtime_falls_back_to_the_legacy_file(tmp_path: Path) -> None:
+    assert tree_mtime(_touch_tree_files(tmp_path, json_mtime=None, legacy_mtime=200)) == 200
+
+
+def test_tree_mtime_without_a_tree_file(tmp_path: Path) -> None:
+    assert tree_mtime(_touch_tree_files(tmp_path, json_mtime=None, legacy_mtime=None)) is None

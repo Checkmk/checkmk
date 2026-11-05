@@ -5,12 +5,14 @@
 
 import datetime as dt
 import json
+from http import HTTPStatus
 
 import pytest
 
 from cmk.livestatus_client.testing import MockLiveStatusConnection
+from tests.testlib.unit.gui.openapi_monitoring import site_configurations
 from tests.testlib.unit.rest_api_client import ClientRegistry
-from tests.unit.cmk.web_test_app import WebTestAppForCMK
+from tests.unit.cmk.web_test_app import SetConfig, WebTestAppForCMK
 
 
 @pytest.mark.usefixtures("with_host")
@@ -55,7 +57,6 @@ def test_openapi_acknowledge_all_services(
     )
 
     if acknowledgement_sent:
-        live.expect_query([f"GET hosts\nColumns: name\nFilter: name = {host_name}"])
         live.expect_query(
             f"COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;{host_name};{service};2;1;1;test123-...;Hello world!;",
             match_type="ellipsis",
@@ -133,7 +134,6 @@ def test_openapi_acknowledge_specific_service(
     )
 
     if acknowledgement_sent:
-        live.expect_query("GET hosts\nColumns: name\nFilter: name = heute")
         live.expect_query(
             f"COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;heute;{service};2;1;1;test123-...;Hello world!;",
             match_type="ellipsis",
@@ -199,10 +199,9 @@ def test_openapi_acknowledge_host(
     )
 
     live.expect_query(f"GET hosts\nColumns: name\nFilter: name = {host_name}")
-    live.expect_query(f"GET hosts\nColumns: state\nFilter: name = {host_name}")
+    live.expect_query(f"GET hosts\nColumns: name state\nFilter: name = {host_name}")
 
     if acknowledgement_sent:
-        live.expect_query(f"GET hosts\nColumns: name\nFilter: name = {host_name}")
         live.expect_query(
             f"COMMAND [...] ACKNOWLEDGE_HOST_PROBLEM;{host_name};2;1;1;test123-...;Hello world!;",
             match_type="ellipsis",
@@ -256,12 +255,10 @@ def test_openapi_bulk_acknowledge(
         ]
     )
 
-    live.expect_query("GET hosts\nColumns: name\nFilter: name = heute")
     live.expect_query(
         "COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;heute;Memory;2;1;1;test123-...;Hello world!;",
         match_type="ellipsis",
     )
-    live.expect_query("GET hosts\nColumns: name\nFilter: name = example.com")
     live.expect_query(
         "COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;example.com;CPU load;2;1;1;test123-...;Hello world!;",
         match_type="ellipsis",
@@ -451,7 +448,6 @@ def test_openapi_acknowledge_host_with_query(
     )
 
     live.expect_query("GET hosts\nColumns: name\nFilter: state = 1")
-    live.expect_query("GET hosts\nColumns: name\nFilter: name = example.com")
     live.expect_query(
         "COMMAND [...] ACKNOWLEDGE_HOST_PROBLEM;example.com;1;0;0;test123...;Acknowledged;",
         match_type="ellipsis",
@@ -544,8 +540,7 @@ def test_openapi_acknowledge_host_with_expire_on(
     live.expect_query(  # request data validation
         "GET hosts\nColumns: name\nFilter: name = example.com"
     )
-    live.expect_query("GET hosts\nColumns: state\nFilter: name = example.com")
-    live.expect_query("GET hosts\nColumns: name\nFilter: name = example.com")
+    live.expect_query("GET hosts\nColumns: name state\nFilter: name = example.com")
     live.expect_query(
         f"COMMAND [...] ACKNOWLEDGE_HOST_PROBLEM;example.com;1;0;0;test123-...;Acknowledged;{int(in_the_future.timestamp())}",
         match_type="ellipsis",
@@ -779,3 +774,78 @@ def test_openapi_remove_acknowledgement_for_service_group(
 
     with live:
         clients.Acknowledge.remove_for_service_group("routers")
+
+
+_ACKNOWLEDGED = {"sticky": False, "notify": False, "persistent": False, "comment": "Acknowledged"}
+
+
+@pytest.mark.usefixtures("with_host")
+def test_host_acknowledgement_by_name_goes_to_each_site_that_monitors_the_host(
+    clients: ClientRegistry,
+    set_config: SetConfig,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    for site_id in ("NO_SITE", "remote"):
+        mock_livestatus.add_table("hosts", [{"name": "heute", "state": 1}], site=site_id)
+    mock_livestatus.expect_query("GET hosts\nColumns: name\nFilter: name = heute")
+    mock_livestatus.expect_query("GET hosts\nColumns: name state\nFilter: name = heute")
+    for site_id in ("NO_SITE", "remote"):
+        mock_livestatus.expect_query(
+            "COMMAND [...] ACKNOWLEDGE_HOST_PROBLEM;heute;1;0;0;...;Acknowledged;",
+            match_type="ellipsis",
+            sites=[site_id],
+        )
+
+    with (
+        set_config(sites=site_configurations(["NO_SITE", "remote", "local"])),
+        mock_livestatus(expect_status_query=True),
+    ):
+        resp = clients.Acknowledge.request(
+            "post",
+            url="/domain-types/acknowledge/collections/host",
+            body={"acknowledge_type": "host", "host_name": "heute", **_ACKNOWLEDGED},
+        )
+
+    assert resp.status_code == HTTPStatus.NO_CONTENT
+
+
+@pytest.mark.usefixtures("with_host")
+def test_service_acknowledgement_by_name_goes_only_to_the_site_with_the_problem(
+    clients: ClientRegistry,
+    set_config: SetConfig,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    for site_id, state in (("NO_SITE", 0), ("remote", 2)):
+        mock_livestatus.add_table("hosts", [{"name": "heute"}], site=site_id)
+        mock_livestatus.add_table(
+            "services",
+            [{"host_name": "heute", "description": "CPU load", "state": state}],
+            site=site_id,
+        )
+    mock_livestatus.expect_query("GET hosts\nColumns: name\nFilter: name = heute")
+    mock_livestatus.expect_query(
+        "GET services\nColumns: host_name description state"
+        "\nFilter: host_name = heute\nFilter: description = CPU load\nAnd: 2"
+    )
+    mock_livestatus.expect_query(
+        "COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;heute;CPU load;...",
+        match_type="ellipsis",
+        sites=["remote"],
+    )
+
+    with (
+        set_config(sites=site_configurations(["NO_SITE", "remote", "local"])),
+        mock_livestatus(expect_status_query=True),
+    ):
+        resp = clients.Acknowledge.request(
+            "post",
+            url="/domain-types/acknowledge/collections/service",
+            body={
+                "acknowledge_type": "service",
+                "host_name": "heute",
+                "service_description": "CPU load",
+                **_ACKNOWLEDGED,
+            },
+        )
+
+    assert resp.status_code == HTTPStatus.NO_CONTENT

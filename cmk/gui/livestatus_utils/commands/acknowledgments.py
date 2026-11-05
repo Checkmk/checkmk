@@ -11,7 +11,6 @@ from livestatus import MultiSiteConnection
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
-from cmk.gui.livestatus_utils.commands.downtimes import QueryException
 from cmk.gui.logged_in import user as _user
 from cmk.livestatus_client import (
     AcknowledgeHostProblem,
@@ -24,7 +23,6 @@ from cmk.livestatus_client import (
     tables,
 )
 from cmk.livestatus_client.queries import detailed_connection, Query
-from cmk.livestatus_client.tables import Hosts
 
 
 def _acknowledge_problem(
@@ -117,6 +115,7 @@ def remove_acknowledgement(
 
 def acknowledge_service_problem(
     connection: MultiSiteConnection,
+    site_id: SiteId,
     host_name: HostName,
     service_description: str,
     sticky: bool = False,
@@ -133,6 +132,7 @@ def acknowledge_service_problem(
 
     Args:
         connection: A livestatus connection object.
+        site_id: Site ID of the service.
         host_name: Host name for which this acknowledgement is for.
         service_description: Service name for which this acknowledgement is for.
         sticky: If set, only a state-change to the UP/OK state will discard the acknowledgement.
@@ -151,21 +151,18 @@ def acknowledge_service_problem(
 
         >>> cmd = "COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;example.com;drain;1;0;0;;;"
         >>> with simple_expect() as live:
-        ...     _ = live.expect_query("GET hosts\\nColumns: name\\nFilter: name = example.com")
         ...     _ = live.expect_query(cmd, match_type="ellipsis")
-        ...     acknowledge_service_problem(live, 'example.com', 'drain')
+        ...     acknowledge_service_problem(live, 'NO_SITE', 'example.com', 'drain')
 
         Not authenticated users can't call this function:
 
             >>> with mock_site(), application_and_request_context():
-            ...     acknowledge_service_problem(live, 'example.com', 'drain')   # doctest: +ELLIPSIS
+            ...     acknowledge_service_problem(live, 'NO_SITE', 'example.com', 'drain')   # doctest: +ELLIPSIS
             Traceback (most recent call last):
             ...
             cmk.gui.exceptions.MKAuthException: ...
     """
     _user.need_permission("action.acknowledge")
-
-    site_id = _query_site(connection, host_name)
 
     _acknowledge_problem(
         connection,
@@ -238,6 +235,7 @@ def acknowledge_servicegroup_problem(
 
 def acknowledge_host_problem(
     connection: MultiSiteConnection,
+    site_id: SiteId,
     host_name: HostName,
     sticky: bool = False,
     notify: bool = False,
@@ -253,6 +251,7 @@ def acknowledge_host_problem(
 
     Args:
         connection: A livestatus connection object.
+        site_id: Site ID of the host.
         host_name: Host name for which this acknowledgement is for.
         sticky: If set, only a state-change to the UP/OK state will discard the acknowledgement.
                 Otherwise, it will be discarded on any state-change.
@@ -270,22 +269,18 @@ def acknowledge_host_problem(
 
         >>> cmd = "COMMAND [...] ACKNOWLEDGE_HOST_PROBLEM;example.com;1;0;0;;;"
         >>> with simple_expect() as live:
-        ...     _ = live.expect_query("GET hosts\\nColumns: name\\nFilter: name = example.com")
         ...     _ = live.expect_query(cmd, match_type="ellipsis")
-        ...     acknowledge_host_problem(live, 'example.com')
+        ...     acknowledge_host_problem(live, 'NO_SITE', 'example.com')
 
         Not authenticated users can't call this function:
 
             >>> with mock_site(), application_and_request_context():
-            ...     acknowledge_host_problem(live, 'example.com')   # doctest: +ELLIPSIS
+            ...     acknowledge_host_problem(live, 'NO_SITE', 'example.com')   # doctest: +ELLIPSIS
             Traceback (most recent call last):
             ...
             cmk.gui.exceptions.MKAuthException: ...
     """
     _user.need_permission("action.acknowledge")
-
-    with detailed_connection(connection) as conn:
-        site_id = Query([Hosts.name], Hosts.name.equals(host_name)).value(conn)
 
     _acknowledge_problem(
         connection,
@@ -351,11 +346,3 @@ def acknowledge_hostgroup_problem(
                 comment=comment,
                 expire_on=expire_on,
             )
-
-
-def _query_site(connection: MultiSiteConnection, host_name: str) -> SiteId:
-    with detailed_connection(connection) as conn:
-        site_id = Query([Hosts.name], Hosts.name.equals(host_name)).first_value(conn)
-        if not isinstance(site_id, str):
-            raise QueryException
-    return SiteId(site_id)

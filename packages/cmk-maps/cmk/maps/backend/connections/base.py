@@ -24,6 +24,10 @@ class QueryRefusedError(Exception):
     """The monitoring backend refused the query itself; the connection has logged why."""
 
 
+class QueryTimeoutError(Exception):
+    """The monitoring backend did not answer within the query timeout."""
+
+
 class TopologyRow(TypedDict):
     """One host in the topology view (parent-child flow-graph).
 

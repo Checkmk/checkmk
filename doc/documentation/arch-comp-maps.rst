@@ -1052,6 +1052,8 @@ Logs, traces and crash reports
 * Unhandled exceptions become Checkmk crash reports in
   ``var/check_mk/crashes/maps/``. They contain the local variables of the
   innermost frame; values with sensitive-looking names are redacted.
+  A query Livestatus refuses is answered with 502, one it does not answer
+  within ``MAPS_CONNECTION_QUERY_TIMEOUT`` with 504; neither is a crash.
 
 Unauthenticated surface
 -----------------------
@@ -1165,7 +1167,9 @@ Daemon lifecycle
 * ``etc/init.d/maps`` runs ``bin/cmk-maps-server``, which starts one
   **uvicorn** process on ``tmp/run/maps.sock``. Exactly one process by design: SSE
   subscribers, broadcast loops, caches and rate limiters live in process
-  memory. Blocking Livestatus calls run in threads (``asyncio.to_thread``).
+  memory. Blocking Livestatus calls run in a thread pool of their connection
+  (``MAPS_CONNECTION_POOL_SIZE``, 20), so a site that never answers holds
+  only that pool and the default executor stays free.
   The daemon starts before Apache (``rc.d/84-maps``).
 * At start the daemon applies the log level, activates the configured
   connections (or the built-in local one) and refuses to start if no connection

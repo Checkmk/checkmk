@@ -11,6 +11,10 @@ must not reconfigure logging or install tracing instrumentation. Everything
 that touches the running site lives in :mod:`cmk.maps.backend.main`.
 """
 
+from http import HTTPStatus
+
+from fastapi import Request
+from fastapi.responses import JSONResponse
 from starlette.middleware.body_limit import RequestBodyLimitMiddleware
 from starlette.middleware.gzip import DEFAULT_EXCLUDED_CONTENT_TYPES
 from starlette.types import Lifespan
@@ -22,6 +26,7 @@ from cmk.maps.backend.api.v1 import (
     maps,
     states,
 )
+from cmk.maps.backend.connections.base import QueryRefusedError, QueryTimeoutError
 from cmk.maps.backend.core.middleware import CompactGZipMiddleware, SecurityHeadersMiddleware
 from cmk.maps.backend.core.version import APP_VERSION
 
@@ -78,6 +83,21 @@ def create_app(*, lifespan: Lifespan[FastAPI] | None = None) -> FastAPI:
     app.include_router(maps.router, prefix="/api/v1/maps", tags=["maps"])
     app.include_router(states.router, prefix="/api/v1", tags=["states"])
     app.include_router(connections.router, prefix="/api/v1/connections", tags=["connections"])
+
+    # The monitoring backend failed, not the daemon: no crash report.
+    @app.exception_handler(QueryRefusedError)
+    async def _refused(_request: Request, _exc: QueryRefusedError) -> JSONResponse:
+        return JSONResponse(
+            status_code=HTTPStatus.BAD_GATEWAY,
+            content={"detail": "The monitoring backend refused the query"},
+        )
+
+    @app.exception_handler(QueryTimeoutError)
+    async def _timed_out(_request: Request, _exc: QueryTimeoutError) -> JSONResponse:
+        return JSONResponse(
+            status_code=HTTPStatus.GATEWAY_TIMEOUT,
+            content={"detail": "The monitoring backend did not answer in time"},
+        )
 
     @app.get(_HEALTH_PATH)
     async def health_check() -> dict[str, str]:

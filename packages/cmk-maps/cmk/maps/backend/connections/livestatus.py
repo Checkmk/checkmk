@@ -13,9 +13,10 @@ import re
 import ssl
 import threading
 import time
-from collections.abc import AsyncIterator, Iterable, Mapping, Sequence
+from collections.abc import AsyncIterator, Callable, Iterable, Mapping, Sequence
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import asynccontextmanager
-from contextvars import ContextVar
+from contextvars import ContextVar, copy_context
 from datetime import datetime, UTC
 from functools import lru_cache
 from http import HTTPStatus
@@ -42,6 +43,7 @@ from cmk.maps.backend.connections.base import (
     GeoHost,
     MetricHistoryResult,
     QueryRefusedError,
+    QueryTimeoutError,
     ServiceMatchRow,
     ServiceRow,
     TopologyRow,
@@ -539,7 +541,11 @@ class LivestatusConnection(ConnectionBase):
         self._checkmk_url = checkmk_url
         self._automation_user = automation_user
         self._automation_secret = automation_secret
-        self._semaphore = asyncio.Semaphore(settings.connection_pool_size)
+        # Own threads: a query that never gets an answer keeps its thread after
+        # the timeout, and the default executor also resolves the GUI's address.
+        self._query_executor = ThreadPoolExecutor(
+            max_workers=settings.connection_pool_size, thread_name_prefix="maps-livestatus"
+        )
         # Separate, tighter cap on bulk-services fan-out so 500-host top-K
         # fetches don't blast the unix-socket listen backlog (EAGAIN). Held
         # at chunk granularity in get_hosts_services_batch.
@@ -1765,20 +1771,12 @@ class LivestatusConnection(ConnectionBase):
             raise QueryRefusedError(reason)
         try:
             if self._sites:
-                async with self._semaphore:
-                    rows = await asyncio.wait_for(
-                        asyncio.to_thread(self._run_multisite_sync, query),
-                        timeout=settings.connection_query_timeout,
-                    )
+                rows = await self._in_query_thread(self._run_multisite_sync, query)
                 return [
                     (str(row[0]) if row and isinstance(row[0], str) else None, row[1:])
                     for row in rows
                 ]
-            async with self._semaphore:
-                single_rows = await asyncio.wait_for(
-                    asyncio.to_thread(self._run_singlesite_sync, query),
-                    timeout=settings.connection_query_timeout,
-                )
+            single_rows = await self._in_query_thread(self._run_singlesite_sync, query)
             return [(None, r) for r in single_rows]
         except Exception as e:
             if (refusal := _refusal(e)) is None:
@@ -1786,6 +1784,16 @@ class LivestatusConnection(ConnectionBase):
             reason = _shortened(str(refusal), _REFUSAL_REASON_MAX_CHARS)
             self._note_refused_query(key, query, reason)
             raise QueryRefusedError(reason) from None
+
+    async def _in_query_thread[T](self, run: Callable[[str], T], query: str) -> T:
+        loop = asyncio.get_running_loop()
+        try:
+            return await asyncio.wait_for(
+                loop.run_in_executor(self._query_executor, copy_context().run, run, query),
+                timeout=settings.connection_query_timeout,
+            )
+        except TimeoutError:
+            raise QueryTimeoutError from None
 
     def _note_refused_query(self, key: tuple[bytes, str | None], query: str, reason: str) -> None:
         # An expired entry stays until evicted, so each query is warned about once.
@@ -1825,7 +1833,7 @@ class LivestatusConnection(ConnectionBase):
     def _run_singlesite_sync(self, lql: str) -> list[LivestatusRow]:
         """Sync single-site query via Checkmks ``SingleSiteConnection``.
 
-        Must run in a worker thread (``asyncio.to_thread``); the client is
+        Must run in a query thread (``_in_query_thread``); the client is
         sync. The client adds OutputFormat/ResponseHeader framing itself, so
         *lql* is the bare query — same contract as ``_run_multisite_sync``.
         """
@@ -1864,7 +1872,7 @@ class LivestatusConnection(ConnectionBase):
     ) -> list[list[object]]:
         """Sync federated query via Checkmks ``MultiSiteConnection``.
 
-        Must run in a worker thread (``asyncio.to_thread``); ``MultiSiteConnection``
+        Must run in a query thread (``_in_query_thread``); ``MultiSiteConnection``
         is sync. ``AuthUser:`` is sent per-query so the cached connection isn't
         mutated across concurrent users.
         """

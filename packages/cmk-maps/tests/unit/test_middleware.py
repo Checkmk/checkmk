@@ -11,6 +11,7 @@ Request bodies are bounded before the session check, because the proxied path
 has no Apache body limit. A request the browser marks as sent by another site
 is refused before it reaches a route. The event stream is gzip-compressed with
 every event flushed on its own, so compression never holds an event back.
+A failing monitoring backend is answered as a gateway error, not as a crash.
 """
 
 import asyncio
@@ -28,6 +29,7 @@ from starlette.types import Message, Receive, Scope, Send
 
 from cmk.fastapi import FastAPI
 from cmk.maps.backend.app import create_app, MAX_REQUEST_BODY_BYTES
+from cmk.maps.backend.connections.base import QueryRefusedError, QueryTimeoutError
 from cmk.maps.backend.core.middleware import _CONTENT_SECURITY_POLICY, SecurityHeadersMiddleware
 
 _JSON = {"Content-Type": "application/json"}
@@ -200,3 +202,26 @@ def test_compression_looks_back_no_further_than_its_small_window() -> None:
 
     assert zlib.decompress(body, zlib.MAX_WBITS | 16) == block * 2
     assert len(body) > len(block) * 2
+
+
+@pytest.mark.parametrize(
+    ("error", "status"),
+    [
+        (QueryRefusedError("unknown column"), HTTPStatus.BAD_GATEWAY),
+        (QueryTimeoutError(), HTTPStatus.GATEWAY_TIMEOUT),
+    ],
+)
+def test_a_failing_monitoring_backend_is_a_gateway_error(
+    error: Exception, status: HTTPStatus
+) -> None:
+    app = create_app()
+
+    @app.get("/api/v1/fails")
+    async def _fails() -> None:
+        raise error
+
+    resp = TestClient(app, raise_server_exceptions=False).get(
+        "/api/v1/fails", headers={"Sec-Fetch-Site": "same-origin"}
+    )
+
+    assert resp.status_code == status

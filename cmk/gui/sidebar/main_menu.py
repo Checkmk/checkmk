@@ -259,6 +259,8 @@ def ajax_message_read(ctx: PageContext) -> None:
 class PageAjaxSidebarChangesMenu(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
+        if not (user.may("wato.activate") or user.may("wato.see_pending_changes")):
+            raise MKAuthException(_("You are not allowed to see the pending changes"))
         return {
             "number_of_pending_changes": ActivateChanges.get_number_of_pending_changes(
                 sites=list(activation_sites(ctx.config.sites)),
@@ -283,8 +285,11 @@ class PageAjaxSitesAndChanges(AjaxPage):
             licensing information.
 
         Raises:
+            MKAuthException: If the user may neither activate nor see pending changes.
             MKUserError: If ``activation_id`` is present but not a valid UUID string.
         """
+        if not (user.may("wato.activate") or user.may("wato.see_pending_changes")):
+            raise MKAuthException(_("You are not allowed to see the pending changes"))
         # validate_uuid_str rejects non-UUID strings; the value is used to
         # construct file paths so validation guards against path traversal.
         raw_activation_id = ctx.request.get_ascii_input("activation_id")

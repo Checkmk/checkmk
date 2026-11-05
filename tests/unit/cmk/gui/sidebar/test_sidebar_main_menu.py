@@ -21,11 +21,12 @@ from cmk.gui.main_menu_types import (
     MainMenuLinkItem,
     MainMenuToggleItem,
 )
-from cmk.gui.pages import PageContext
+from cmk.gui.pages import AjaxPage, PageContext
 from cmk.gui.permissions import all_permissions
 from cmk.gui.sidebar.main_menu import (
     ajax_message_read,
     MainMenuConfigCreator,
+    PageAjaxSidebarChangesMenu,
     PageAjaxSidebarGetMessages,
     PageAjaxSidebarGetUnackIncompWerks,
     PageAjaxSitesAndChanges,
@@ -568,6 +569,45 @@ def test_sites_and_changes_without_an_activation_id(
         PageAjaxSitesAndChanges().page(_page_context(load_config))
 
     assert recorder.activation_ids == [None]
+
+
+@pytest.mark.parametrize(
+    "granted",
+    [
+        pytest.param("wato.activate", id="activate"),
+        pytest.param("wato.see_pending_changes", id="see_pending_changes"),
+    ],
+)
+def test_sites_and_changes_are_served_with_either_permission(
+    monkeypatch: pytest.MonkeyPatch, load_config: Config, granted: str
+) -> None:
+    recorder = _PopoutRecorder()
+    with monkeypatch.context() as m:
+        m.setattr(user, "may", lambda permission: permission == granted)
+        m.setattr(
+            "cmk.gui.watolib.activate_changes.ActivateChanges."
+            "get_all_data_required_for_activation_popout",
+            recorder,
+        )
+        PageAjaxSitesAndChanges().page(_page_context(load_config))
+
+    assert recorder.activation_ids == [None]
+
+
+@pytest.mark.parametrize(
+    "page",
+    [
+        pytest.param(PageAjaxSitesAndChanges(), id="sites_and_changes"),
+        pytest.param(PageAjaxSidebarChangesMenu(), id="number_of_pending_changes"),
+    ],
+)
+def test_pending_changes_need_a_permission_to_see_them(
+    monkeypatch: pytest.MonkeyPatch, load_config: Config, page: AjaxPage
+) -> None:
+    with monkeypatch.context() as m:
+        m.setattr(user, "may", lambda permission: False)  # noqa: ARG005
+        with pytest.raises(MKAuthException):
+            page.page(_page_context(load_config))
 
 
 @dataclasses.dataclass

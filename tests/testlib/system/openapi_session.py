@@ -2475,6 +2475,10 @@ class GraphAPI(BaseAPI):
             },
         )
 
+    def discover_inline_custom_graph(self, definition: Mapping[str, object]) -> dict[str, Any]:
+        """The graph drawn from a custom graph definition, as a dashboard widget holds one."""
+        return self._post("discover_custom_graphs", {"type": "inline", "definition": definition})
+
     def fetch_data(
         self,
         internal: Mapping[str, Any],
@@ -2695,7 +2699,7 @@ class CustomGraphAPI(BaseAPI):
 
 
 class DashboardAPI(BaseAPI):
-    """Dashboards created through the relative-grid REST model and read through the responsive one.
+    """Dashboards created through the relative-grid REST model and read through either grid model.
 
     Only registered at ``APIVersion.UNSTABLE``, unlike most of this session's other
     sub-clients (``INTERNAL``): the endpoints themselves have no stable version yet.
@@ -2716,10 +2720,17 @@ class DashboardAPI(BaseAPI):
             )
         return parsed
 
+    def get_relative_grid_dashboard(self, dashboard_id: str) -> dict[str, Any] | None:
+        """The relative-grid dashboard this ID resolves to for the requesting user, or None."""
+        return self._get_grid_dashboard("dashboard_relative_grid", dashboard_id)
+
     def get_responsive_grid_dashboard(self, dashboard_id: str) -> dict[str, Any] | None:
         """The responsive dashboard this ID resolves to for the requesting user, or None."""
+        return self._get_grid_dashboard("dashboard_responsive_grid", dashboard_id)
+
+    def _get_grid_dashboard(self, domain_type: str, dashboard_id: str) -> dict[str, Any] | None:
         response = self.session.get(
-            f"objects/dashboard_responsive_grid/{dashboard_id}",
+            f"objects/{domain_type}/{dashboard_id}",
             api_version=APIVersion.UNSTABLE,
         )
         if response.status_code not in (HTTPStatus.OK, HTTPStatus.NOT_FOUND):

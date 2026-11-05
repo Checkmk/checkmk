@@ -2496,3 +2496,18 @@ def test_defaults_are_loaded(plugin: dict[str, Any], clients: ClientRegistry) ->
             ),
         )
     )
+
+
+@pytest.mark.xfail(strict=True, reason="crash group 4795")
+def test_create_rule_rejects_built_in_plugin_with_custom_parameters(
+    clients: ClientRegistry,
+) -> None:
+    config = notification_rule_request_example()
+    config["notification_method"]["notify_plugin"] = {
+        "option": PluginOptions.WITH_CUSTOM_PARAMS,
+        "plugin_params": {"plugin_name": "mail"},
+    }
+
+    resp = clients.RuleNotification.create(rule_config=config, expect_ok=False)
+
+    resp.assert_status_code(400)

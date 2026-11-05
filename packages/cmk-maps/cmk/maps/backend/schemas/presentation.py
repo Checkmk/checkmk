@@ -27,6 +27,7 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from cmk.maps.shared.map_payload import (
+    PRESENTATION_ELEMENTS_MAX,
     PresentationObjectType,
     PresentationTheme,
 )
@@ -238,7 +239,7 @@ class PresentationView(BaseModel):
     # layered over ``background`` / the theme default by the renderer. Same
     # scheme guard as ImageElement.src so it can't carry a data:/js: payload.
     background_image: str | None = None
-    elements: list[PresentationElement] = []
+    elements: list[PresentationElement] = Field(default=[], max_length=PRESENTATION_ELEMENTS_MAX)
     problems_only: bool = False
 
     @field_validator("background")

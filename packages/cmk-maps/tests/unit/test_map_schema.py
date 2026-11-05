@@ -4,10 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Unit tests for the daemon's map schema (validation/migration)."""
 
+from collections.abc import Callable
+
 import pytest
 from pydantic import ValidationError
 
 from cmk.maps.backend.schemas.map import MapConfig, MapElement, WorldmapView
+from cmk.maps.shared.map_payload import (
+    BUNDLE_HOSTS_MAX,
+    FLOW_POSITIONS_MAX,
+    MAP_OBJECTS_MAX,
+    PRESENTATION_ELEMENTS_MAX,
+)
 
 
 def test_object_filter_without_filter_header_is_rejected() -> None:
@@ -127,3 +135,41 @@ def test_background_color_that_is_no_color_is_rejected() -> None:
     # It ends up in the canvas' inline style.
     with pytest.raises(ValidationError):
         MapConfig.model_validate({"name": "m", "background_color": "red; background: url(x)"})
+
+
+def _hosts(count: int) -> dict[str, object]:
+    return {"objects": [{"id": f"h{i}", "type": "host"} for i in range(count)]}
+
+
+def _positions(count: int) -> dict[str, object]:
+    return {
+        "view": {"type": "flow", "positions": {f"h{i}": {"x": 0, "y": 0} for i in range(count)}}
+    }
+
+
+def _bundle(count: int) -> dict[str, object]:
+    bundle = {"id": "b", "type": "dyngroup", "bundle_kind": "static"}
+    return {"objects": [{**bundle, "bundle_hosts": [f"h{i}" for i in range(count)]}]}
+
+
+def _slide(count: int) -> dict[str, object]:
+    elements = [{"kind": "shape", "id": f"s{i}"} for i in range(count)]
+    return {"view": {"type": "presentation", "elements": elements}}
+
+
+@pytest.mark.parametrize(
+    ("entries", "limit"),
+    [
+        pytest.param(_hosts, MAP_OBJECTS_MAX, id="objects"),
+        pytest.param(_positions, FLOW_POSITIONS_MAX, id="flow-positions"),
+        pytest.param(_bundle, BUNDLE_HOSTS_MAX, id="bundle-hosts"),
+        pytest.param(_slide, PRESENTATION_ELEMENTS_MAX, id="slide-elements"),
+    ],
+)
+def test_a_map_takes_a_limited_number_of_entries(
+    entries: Callable[[int], dict[str, object]], limit: int
+) -> None:
+    MapConfig.model_validate({"name": "m", **entries(limit)})
+
+    with pytest.raises(ValidationError):
+        MapConfig.model_validate({"name": "m", **entries(limit + 1)})

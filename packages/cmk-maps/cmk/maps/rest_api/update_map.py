@@ -35,6 +35,7 @@ from cmk.maps.rest_api.utils import (
     RW_PERMISSIONS,
     serialize_map,
     spec_from_map,
+    validate_map_size,
     validate_object_filters,
     validate_object_ids,
     validate_visibility,
@@ -88,6 +89,7 @@ def update_map_v1(
             )
         target_owner = user_id
     spec = spec_from_map(body.config)
+    validate_map_size(spec)
     validate_object_filters(spec, page.config.map_spec)
 
     # Preserve the stored visibility of the written instance when the request

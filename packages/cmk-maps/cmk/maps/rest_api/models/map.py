@@ -44,11 +44,15 @@ from cmk.maps.shared.geo import LAT_LIMIT, LNG_LIMIT, MAX_ZOOM
 from cmk.maps.shared.map_payload import (
     BackgroundPosition,
     BackgroundStyle,
+    BUNDLE_HOSTS_MAX,
     ClickAction,
+    FLOW_POSITIONS_MAX,
     LinePerfdataLabel,
     LineStyle,
+    MAP_OBJECTS_MAX,
     MonitoredObjectType,
     ObjectType,
+    PRESENTATION_ELEMENTS_MAX,
     PresentationObjectType,
     PresentationTheme,
     RenderMode,
@@ -455,7 +459,9 @@ class MapFlowView:
         example=5,
         default_factory=ApiOmitted,
     )
-    positions: dict[str, MapFlowNodePosition] | ApiOmitted = api_field(
+    positions: (
+        Annotated[dict[str, MapFlowNodePosition], Field(max_length=FLOW_POSITIONS_MAX)] | ApiOmitted
+    ) = api_field(
         description="Pinned host positions from operator drags.",
         example={"web-01": {"x": 120.0, "y": 80.0}},
         default_factory=ApiOmitted,
@@ -514,7 +520,9 @@ class MapPresentationView:
     width: int = api_field(description="Slide stage width in pixels.", example=1920)
     height: int = api_field(description="Slide stage height in pixels.", example=1080)
     theme: PresentationTheme = api_field(description="Slide theme.", example="midnight")
-    elements: list[MapPresentationElement] = api_field(
+    elements: Annotated[
+        list[MapPresentationElement], Field(max_length=PRESENTATION_ELEMENTS_MAX)
+    ] = api_field(
         description="Design elements on the slide.",
         example=[{"kind": "text", "id": "t1", "transform": {}, "text": "Title", "font_size": 24}],
     )
@@ -636,7 +644,7 @@ class MapObjectBundle:
     kind: Literal["static", "location"] | None | ApiOmitted = api_field(
         description="Geo bundle kind.", example="location", default_factory=ApiOmitted
     )
-    hosts: list[str] | None | ApiOmitted = api_field(
+    hosts: Annotated[list[str], Field(max_length=BUNDLE_HOSTS_MAX)] | None | ApiOmitted = api_field(
         description="Bundle member hosts.", example=["web-01", "web-02"], default_factory=ApiOmitted
     )
     precision: int | None | ApiOmitted = api_field(
@@ -953,7 +961,7 @@ class MapConfig:
     view: MapView = api_field(
         description="Map view (renderer + geometry).", example={"type": "static"}
     )
-    objects: list[MapElement] = api_field(
+    objects: Annotated[list[MapElement], Field(max_length=MAP_OBJECTS_MAX)] = api_field(
         description="Placed objects (static/flow/worldmap/radar maps).",
         example=[
             {

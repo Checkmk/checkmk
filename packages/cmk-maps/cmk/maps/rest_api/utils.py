@@ -48,6 +48,7 @@ from cmk.maps.shared.map_payload import (
     BackgroundPosition,
     BackgroundStyle,
     ClickAction,
+    MAP_CONFIG_MAX_BYTES,
     RenderMode,
 )
 from cmk.web.utils import permission_verification as permissions
@@ -323,6 +324,15 @@ def validate_object_ids(config: MapConfig) -> None:
             status=HTTPStatus.BAD_REQUEST,
             title="Duplicate object id",
             detail=f"Each object needs its own id, used more than once: {', '.join(repeated)}",
+        )
+
+
+def validate_map_size(spec: Mapping[str, object]) -> None:
+    if len(json.dumps(spec, default=str).encode()) > MAP_CONFIG_MAX_BYTES:
+        raise RestAPIRequestGeneralException(
+            status=HTTPStatus.BAD_REQUEST,
+            title="The map is too large",
+            detail=f"A map takes at most {MAP_CONFIG_MAX_BYTES // (1024 * 1024)} MiB.",
         )
 
 

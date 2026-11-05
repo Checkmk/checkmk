@@ -32,6 +32,7 @@ from cmk.maps.rest_api.utils import (
     RW_PERMISSIONS,
     serialize_map,
     spec_from_map,
+    validate_map_size,
     validate_object_filters,
     validate_object_ids,
     validate_visibility,
@@ -63,6 +64,7 @@ def create_map_v1(api_context: ApiContext, body: MapRequest) -> ApiResponse[MapO
         )
     validate_object_ids(body.config)
     spec = spec_from_map(body.config)
+    validate_map_size(spec)
     validate_object_filters(spec, {})
     if not isinstance(body.visibility, ApiOmitted):
         validate_visibility(body.visibility)

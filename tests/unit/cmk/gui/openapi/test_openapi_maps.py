@@ -19,6 +19,7 @@ import pytest
 from cmk.ccc.user import UserId
 from cmk.maps.rest_api import utils
 from cmk.maps.rest_api.internal import signed_maps
+from cmk.maps.shared.map_payload import MAP_CONFIG_MAX_BYTES, MAP_OBJECTS_MAX
 from tests.testlib.unit.rest_api_client import ClientRegistry, Response
 
 
@@ -428,6 +429,30 @@ def test_an_object_id_used_twice_is_refused(clients: ClientRegistry) -> None:
 
     resp.assert_status_code(HTTPStatus.BAD_REQUEST)
     assert "h1" in resp.json["detail"]
+
+
+def test_a_map_with_more_objects_than_the_daemon_takes_is_refused(
+    clients: ClientRegistry,
+) -> None:
+    objects = [_host_object(f"o{i}") for i in range(MAP_OBJECTS_MAX + 1)]
+
+    clients.Maps.create(config=_map("map1", objects=objects), expect_ok=False).assert_status_code(
+        HTTPStatus.BAD_REQUEST
+    )
+
+
+def test_a_map_past_the_size_a_stored_one_takes_is_refused(clients: ClientRegistry) -> None:
+    clients.Maps.create(
+        config=_map("map1", alias="A" * MAP_CONFIG_MAX_BYTES), expect_ok=False
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
+
+
+def test_a_save_past_the_size_a_stored_map_takes_is_refused(clients: ClientRegistry) -> None:
+    clients.Maps.create(config=_STATIC_MAP)
+
+    _edit(
+        clients, {**_STATIC_MAP, "alias": "A" * MAP_CONFIG_MAX_BYTES}, "*", expect_ok=False
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_object_rejects_null_for_non_nullable_line_fields(clients: ClientRegistry) -> None:

@@ -32,9 +32,12 @@ from cmk.maps.shared.map_name import MAP_NAME_MAX_LENGTH, MAP_NAME_PATTERN
 from cmk.maps.shared.map_payload import (
     BackgroundPosition,
     BackgroundStyle,
+    BUNDLE_HOSTS_MAX,
     ClickAction,
+    FLOW_POSITIONS_MAX,
     LinePerfdataLabel,
     LineStyle,
+    MAP_OBJECTS_MAX,
     MonitoredObjectType,
     ObjectType,
     RenderMode,
@@ -177,7 +180,7 @@ class FlowView(BaseModel):
     # Pinned host positions from operator drags. Key is the host name; missing
     # hosts fall back to the force-simulation layout. Service-node positions
     # are derived from their host and not persisted.
-    positions: dict[str, FlowNodePosition] = {}
+    positions: dict[str, FlowNodePosition] = Field(default={}, max_length=FLOW_POSITIONS_MAX)
     # Service-node layout chosen by the operator. None = use UI default.
     service_layout: Literal["off", "donut", "fan", "orbit", "row"] | None = None
     problems_only: bool = False
@@ -279,7 +282,7 @@ class MapElement(BaseModel):
     # Set ⇒ this dyngroup is a geo "bundle": worst-state folds host + service
     # severities, and the worldmap automap suppresses the member hosts' markers.
     bundle_kind: Literal["static", "location"] | None = None
-    bundle_hosts: list[str] | None = None
+    bundle_hosts: list[str] | None = Field(default=None, max_length=BUNDLE_HOSTS_MAX)
     # None ⇒ exact coordinate match (5 decimals ≈ 1 m).
     bundle_precision: int | None = Field(default=None, ge=0, le=8)
     # 0 = root only, hard cap 10 levels — see backend.app.services.state_service.
@@ -391,11 +394,7 @@ class MapConfig(BaseModel):
     canvas_width: int | None = None
     canvas_height: int | None = None
     view: MapView = StaticView()
-    # Capped like the bulk-op name lists: ``register`` is authentication-only, so
-    # an unbounded object list would let one caller pin large payloads in the
-    # streaming cache. 5000 is far above any hand-curated map yet bounds a
-    # pathological payload.
-    objects: list[MapElement] = Field(default=[], max_length=5000)
+    objects: list[MapElement] = Field(default=[], max_length=MAP_OBJECTS_MAX)
 
     @field_validator("background_color")
     @classmethod
@@ -439,7 +438,7 @@ class MapElementUpdate(BaseModel):
     object_types: Literal["host", "service"] | None = None
     object_filter: str | None = None
     bundle_kind: Literal["static", "location"] | None = None
-    bundle_hosts: list[str] | None = None
+    bundle_hosts: list[str] | None = Field(default=None, max_length=BUNDLE_HOSTS_MAX)
     bundle_precision: int | None = Field(default=None, ge=0, le=8)
     expand_depth: int | None = Field(default=None, ge=0, le=10)
     only_hard_states: bool | None = None

@@ -997,8 +997,14 @@ Limits
      - Not rate-limited
    * - Registered map configs
      - 1024 (LRU)
-   * - Objects per map
-     - 5000 in the daemon; the REST model has no cap
+   * - Stored map
+     - 4 MiB as JSON
+   * - Objects per map, elements per presentation slide
+     - 5000
+   * - Pinned flow positions per map
+     - 10,000
+   * - Hosts per geo bundle
+     - 1000
    * - Maps a state fetch follows through links
      - 256; further links stay pending, marked stale
    * - Metric history window
@@ -1023,9 +1029,10 @@ once per interval for all viewers who see the same, whether they stream or poll,
 so a poll costs no further Livestatus query. It keeps those states only for
 viewers who poll, for an interval from when their query began, as
 gzip-compressed JSON, for up to 100,000 objects together; a larger map is
-fetched anew for each poll that does not arrive while a fetch of it runs. Too
-many objects are rejected with 422 on register; the upload and import limits are
-checked by the GUI (400). The map cache evicts silently.
+fetched anew for each poll that does not arrive while a fetch of it runs. The
+REST API refuses a map past these limits with 400; the daemon refuses the same
+entries with 422 on register, and the upload and import limits are checked by
+the GUI (400). The map cache evicts silently.
 
 HTTP security headers
 ---------------------

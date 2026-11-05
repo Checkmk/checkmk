@@ -115,6 +115,15 @@ RadarFilter = Literal["hostgroup", "servicegroup", "all_hosts", "all_services"]
 # The daemon generates objects with this id prefix and never stores them.
 AUTO_OBJECT_ID_PREFIX: Final = "auto:"
 
+# Every state update resolves each of them.
+MAP_OBJECTS_MAX: Final = 5000
+PRESENTATION_ELEMENTS_MAX: Final = MAP_OBJECTS_MAX
+FLOW_POSITIONS_MAX: Final = 10000
+BUNDLE_HOSTS_MAX: Final = 1000
+# Every page that lists the maps loads each stored one, and the daemon takes its
+# signed config, a third larger in base64, in a request of at most 16 MiB.
+MAP_CONFIG_MAX_BYTES: Final = 4 * 1024 * 1024
+
 PresentationTheme = Literal["midnight", "paper", "ops", "aurora"]
 
 PresentationObjectType = Literal["host", "service", "hostgroup", "servicegroup", "aggregation"]

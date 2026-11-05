@@ -1,0 +1,13 @@
+{
+  "name": "prism-central",
+  "config": {
+    "buildInfo": {
+      "version": "7.5",
+      "fullVersion": "el8.5-release-ganges-7.5.1.1-stable-3913420c7d0acd705632ce88e39eef1e61a71f6b"
+    },
+    "clusterFunction": ["PRISM_CENTRAL"]
+  },
+  "nodes": {
+    "numberOfNodes": 1
+  }
+}

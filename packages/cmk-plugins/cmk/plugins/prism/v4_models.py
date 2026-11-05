@@ -172,6 +172,66 @@ class StorageContainersWithStats(RootModel[list[StorageContainerWithStats]]):
     model_config = ConfigDict(frozen=True)
 
 
+class BuildInfo(V4Model):
+    version: str | None = None
+    full_version: str | None = Field(None, alias="fullVersion")
+
+
+class ClusterConfig(V4Model):
+    build_info: BuildInfo = Field(BuildInfo(), alias="buildInfo")
+    cluster_function: list[str] | None = Field(None, alias="clusterFunction")
+
+    @property
+    def is_prism_central(self) -> bool:
+        return "PRISM_CENTRAL" in (self.cluster_function or [])
+
+
+class ClusterNodes(V4Model):
+    number_of_nodes: int | None = Field(None, alias="numberOfNodes")
+
+
+class Cluster(V4Model):
+    """An item of the cluster list"""
+
+    ext_id: str = Field(alias="extId")
+    name: str | None = None
+    config: ClusterConfig = ClusterConfig()
+    nodes: ClusterNodes = ClusterNodes()
+
+
+class ClusterStats(V4Model):
+    """The stats of one cluster, as time series"""
+
+    hypervisor_cpu_usage_ppm: Samples = Field(
+        default_factory=list,
+        alias="hypervisorCpuUsagePpm",
+    )
+    aggregate_hypervisor_memory_usage_ppm: Samples = Field(
+        default_factory=list,
+        alias="aggregateHypervisorMemoryUsagePpm",
+    )
+    io_bandwidth_kbps: Samples = Field(
+        default_factory=list,
+        alias="ioBandwidthKbps",
+    )
+    controller_num_iops: Samples = Field(
+        default_factory=list,
+        alias="controllerNumIops",
+    )
+    controller_avg_io_latency_usecs: Samples = Field(
+        default_factory=list,
+        alias="controllerAvgIoLatencyUsecs",
+    )
+
+
+class ClusterWithStats(V4Model):
+    name: str | None = None
+    config: ClusterConfig = ClusterConfig()
+    nodes: ClusterNodes = ClusterNodes()
+    # None if Prism Central has no stats for the cluster
+    stats: ClusterStats | None = None
+
+
 class RemoteSupportConfig(V4Model):
     is_remote_support_enabled: bool = Field(alias="isRemoteSupportEnabled")
 

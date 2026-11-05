@@ -5,7 +5,7 @@
 import io
 import json
 from collections.abc import Callable, Mapping, Sequence
-from datetime import timedelta
+from datetime import datetime, timedelta
 from http import HTTPStatus
 from pathlib import Path
 from types import MappingProxyType
@@ -21,6 +21,7 @@ from cmk.plugins.prism.special_agent.agent_prism_v4 import (
     AHV_VM_STATS_PATH,
     AHV_VMS_PATH,
     ALERTS_PATH,
+    CLUSTER_STATS_PATH,
     ClusterRouting,
     CLUSTERS_PATH,
     CONTAINER_STATS_PATH,
@@ -30,6 +31,7 @@ from cmk.plugins.prism.special_agent.agent_prism_v4 import (
     ESXI_VM_STATS_PATH,
     ESXI_VMS_PATH,
     fetch_alerts,
+    fetch_clusters,
     fetch_containers,
     fetch_ha,
     fetch_host_nics,
@@ -274,6 +276,26 @@ def _container_names_and_messages(
 CLUSTER_ID = "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
 PRISM_CENTRAL_ID = "0806a141-8916-471b-99fd-b5119ff280ef"
 CLUSTER_HOST = "cluster-a_55ec3615"
+
+
+def _serve_cluster_stats(api: responses.RequestsMock, status: HTTPStatus = HTTPStatus.OK) -> None:
+    """The stats of cluster-a, or an error instead"""
+    _serve_stats(
+        api,
+        f"{CLUSTER_STATS_PATH}/{CLUSTER_ID}",
+        _recorded("clustermgmt_stats_clusters_cluster-a.json"),
+        status,
+        {"$samplingInterval": "30"},
+    )
+
+
+def _cluster_section(name: str) -> dict[str, object]:
+    """What the v4 agent writes for a cluster of the lab"""
+    return _recorded(f"section_prism_info_v2_{name}.json")
+
+
+def _cluster_section_without_stats(name: str) -> dict[str, object]:
+    return {key: value for key, value in _cluster_section(name).items() if key != "stats"}
 
 
 class FakeClock:
@@ -693,6 +715,7 @@ def test_v4_agent_queries_only_the_v4_api(api: responses.RequestsMock) -> None:
     _serve_recorded_vms(api)
     _serve_recorded_nodes(api)
     _serve_recorded_host_nics(api)
+    _serve_cluster_stats(api)
 
     agent_prism_main(parse_arguments(_v4_args()))
 
@@ -718,6 +741,7 @@ def test_v4_agent_queries_only_the_v4_api(api: responses.RequestsMock) -> None:
             AHV_VM_STATS_PATH,
             AHV_VM_STATS_PATH,
             HOST_NICS_PATH,
+            f"{CLUSTER_STATS_PATH}/{CLUSTER_ID}",
         )
     )
 
@@ -1529,3 +1553,161 @@ def test_disk_without_a_pool_is_left_out(api: responses.RequestsMock) -> None:
 
     assert isinstance(pools := sections[0].payload, list)
     assert [len(pool["disks"]) for pool in pools] == [17]
+
+
+def _cluster_context(messages: AgentMessages | None = None) -> FetchContext:
+    return FetchContext(
+        _context().client,
+        _recorded_cluster_list(),
+        _routing(),
+        AgentMessages() if messages is None else messages,
+    )
+
+
+def test_cluster_info_goes_to_its_cluster_or_prism_central_with_only_the_checked_fields(
+    api: responses.RequestsMock,
+) -> None:
+    """Each stats series keeps all samples of the window, the parse function picks the newest"""
+    _serve_cluster_stats(api)
+
+    sections = fetch_clusters(_cluster_context())
+
+    assert sections == [
+        Section("prism_info_v2", _cluster_section("cluster-a"), CLUSTER_HOST),
+        Section("prism_info_v2", _cluster_section("prism-central"), None),
+    ]
+
+
+def test_cluster_stats_are_the_last_samples_of_five_minutes_every_30_seconds(
+    api: responses.RequestsMock,
+) -> None:
+    _serve_cluster_stats(api)
+
+    fetch_clusters(_cluster_context())
+
+    query = _sent_query(api)
+    assert (
+        query["$samplingInterval"],
+        query["$statType"],
+        datetime.fromisoformat(query["$endTime"]) - datetime.fromisoformat(query["$startTime"]),
+    ) == ("30", "LAST", timedelta(minutes=5))
+
+
+def test_cluster_stats_select_no_fields(api: responses.RequestsMock) -> None:
+    """Prism Central fails the whole call for a selected field it doesn't know"""
+    _serve_cluster_stats(api)
+
+    fetch_clusters(_cluster_context())
+
+    assert "$select" not in _sent_query(api)
+
+
+def test_prism_central_stats_are_not_requested(
+    api: responses.RequestsMock,
+) -> None:
+    """Prism Central refuses the stats of its own entry"""
+    _serve_cluster_stats(api)
+
+    fetch_clusters(_cluster_context())
+
+    assert [call.request.path_url.split("?")[0] for call in api.calls] == [
+        f"/api/{CLUSTER_STATS_PATH}/{CLUSTER_ID}"
+    ]
+
+
+def test_cluster_without_stats_is_reported_without_them_with_an_info(
+    api: responses.RequestsMock,
+) -> None:
+    _serve_cluster_stats(api, status=HTTPStatus.NOT_FOUND)
+    messages = AgentMessages()
+
+    sections = fetch_clusters(_cluster_context(messages))
+
+    assert (sections[0].payload, list(messages)) == (
+        _cluster_section_without_stats("cluster-a"),
+        [
+            (
+                "info",
+                (
+                    "Could not fetch the stats of 1 of 1 clusters: "
+                    f"{CLUSTER_STATS_PATH}/{CLUSTER_ID}: HTTP 404 Not Found"
+                ),
+            )
+        ],
+    )
+
+
+def test_failing_cluster_stats_cost_only_that_cluster_its_stats_with_a_warning(
+    api: responses.RequestsMock,
+) -> None:
+    _serve_cluster_stats(api, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+    messages = AgentMessages()
+
+    sections = fetch_clusters(_cluster_context(messages))
+
+    assert (sections, list(messages)) == (
+        [
+            Section("prism_info_v2", _cluster_section_without_stats("cluster-a"), CLUSTER_HOST),
+            Section("prism_info_v2", _cluster_section("prism-central"), None),
+        ],
+        [
+            (
+                "warning",
+                (
+                    "Could not fetch the stats of 1 of 1 clusters: "
+                    f"{CLUSTER_STATS_PATH}/{CLUSTER_ID}: HTTP 500 Internal Server Error"
+                ),
+            )
+        ],
+    )
+
+
+def test_failing_stats_of_several_clusters_are_reported_once(
+    api: responses.RequestsMock,
+) -> None:
+    recorded = {cluster["extId"]: cluster for cluster in _recorded_cluster_list()}
+    failing = {
+        "000645cc-2b3a-3b1c-06a8-7cc255ec36bb": HTTPStatus.INTERNAL_SERVER_ERROR,
+        "000645cc-2b3a-3b1c-06a8-7cc255ec36cc": HTTPStatus.FORBIDDEN,
+    }
+    clusters = [
+        recorded[PRISM_CENTRAL_ID],
+        recorded[CLUSTER_ID],
+        *(
+            {**recorded[CLUSTER_ID], "extId": ext_id, "name": f"cluster-{ext_id[-2:]}"}
+            for ext_id in failing
+        ),
+    ]
+    _serve_cluster_stats(api)
+    for ext_id, status in failing.items():
+        api.get(
+            v4_url(f"{CLUSTER_STATS_PATH}/{ext_id}"), status=status, json={"message": status.phrase}
+        )
+    messages = AgentMessages()
+
+    fetch_clusters(
+        FetchContext(_context().client, clusters, ClusterRouting.from_clusters(clusters), messages)
+    )
+
+    assert list(messages) == [
+        (
+            "warning",
+            (
+                "Could not fetch the stats of 2 of 3 clusters: "
+                f"{CLUSTER_STATS_PATH}/000645cc-2b3a-3b1c-06a8-7cc255ec36bb: "
+                "HTTP 500 Internal Server Error"
+            ),
+        )
+    ]
+
+
+def test_cluster_that_does_not_fit_the_model_is_skipped_with_an_info() -> None:
+    messages = AgentMessages()
+    context = FetchContext(_context().client, [{"name": "broken"}], _routing(), messages)
+
+    sections = fetch_clusters(context)
+
+    assert (sections, list(messages)) == (
+        [],
+        [("info", "Skipped cluster 'broken': Prism Central reports no valid extId for it")],
+    )

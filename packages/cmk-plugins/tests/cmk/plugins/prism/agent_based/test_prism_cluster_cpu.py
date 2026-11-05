@@ -5,16 +5,17 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.plugins.prism.agent_based.prism_cluster_cpu import (
     check_prism_cluster_cpu,
     discovery_prism_cluster_cpu,
 )
+from cmk.plugins.prism.agent_based.prism_info import parse_prism_info_v2
 
 
 @pytest.fixture
@@ -130,4 +131,16 @@ def test_check_prism_cluster_cpu_crit() -> None:
     ) == [
         Result(state=State.CRIT, summary="Total CPU: 95.00% (warn/crit at 80.00%/90.00%)"),
         Metric("util", 95.0, levels=(80.0, 90.0), boundaries=(0.0, None)),
+    ]
+
+
+@pytest.mark.usefixtures("empty_value_store")
+def test_v4_cluster_cpu_is_its_newest_sample(
+    v4_cluster_section: Callable[[str], StringTable],
+) -> None:
+    section = parse_prism_info_v2(v4_cluster_section("cluster-a"))
+
+    assert list(check_prism_cluster_cpu(params={}, section=section)) == [
+        Result(state=State.OK, summary="Total CPU: 46.53%"),
+        Metric("util", 46.5267, boundaries=(0.0, None)),
     ]

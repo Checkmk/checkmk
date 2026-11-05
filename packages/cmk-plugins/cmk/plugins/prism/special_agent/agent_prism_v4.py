@@ -28,7 +28,10 @@ from cmk.plugins.prism.special_agent.v4_client import (
 )
 from cmk.plugins.prism.v4_models import (
     Alert,
+    Cluster,
     ClusterRemoteSupport,
+    ClusterStats,
+    ClusterWithStats,
     DiskConfig,
     DiskStats,
     HaHost,
@@ -282,6 +285,30 @@ def _fetch_each[T, R](items: Sequence[T], fetch_one: Callable[[T], R]) -> list[R
         pool.shutdown(cancel_futures=True)
 
 
+def _fetch_each_reporting[T, R](
+    context: FetchContext,
+    items: Sequence[T],
+    fetch_one: Callable[[T], R],
+    what: str,
+    entities: str,
+) -> list[R | PrismV4Error]:
+    """One call per item like _fetch_each, but a failing call doesn't stop the others: its error
+    takes the item's place, and the first error is reported once"""
+
+    def guarded(item: T) -> R | PrismV4Error:
+        try:
+            return fetch_one(item)
+        except PrismV4Error as e:
+            return e
+
+    results = _fetch_each(items, guarded)
+    if errors := [result for result in results if isinstance(result, PrismV4Error)]:
+        _report_partial_failure(
+            context, f"{what} of {len(errors)} of {len(items)} {entities}", errors[0]
+        )
+    return results
+
+
 def _container_stats(
     context: FetchContext, container: StorageContainer
 ) -> StorageContainerStats | None:
@@ -360,6 +387,54 @@ def fetch_remote_support(context: FetchContext) -> Sequence[Section]:
             else Unroutable("clusters without an ID"),
         )
         for cluster in context.clusters
+    ]
+
+
+CLUSTER_STATS_PATH = "clustermgmt/v4.0/stats/clusters"
+# Prism Central samples the cluster stats every 30 s, the newest sample is the current value
+CLUSTER_STATS_WINDOW = timedelta(minutes=5)
+CLUSTER_STATS_SAMPLING = timedelta(seconds=30)
+
+
+def _cluster_stats(context: FetchContext, cluster: Cluster) -> ClusterStats:
+    # No $select: for a field it doesn't know, Prism Central fails the whole call with 500
+    # (CLU-10007). Without it, a missing field only costs its own service.
+    return ClusterStats.model_validate(
+        context.client.entity_stats(
+            f"{CLUSTER_STATS_PATH}/{cluster.ext_id}",
+            window=CLUSTER_STATS_WINDOW,
+            sampling_interval=CLUSTER_STATS_SAMPLING,
+        )
+    )
+
+
+def fetch_clusters(context: FetchContext) -> Sequence[Section]:
+    """Every cluster of the list, Prism Central included but without stats. A cluster that
+    doesn't fit the model is left out. A failed stats call costs only its cluster the stats: the
+    cluster list already holds the rest of its section."""
+    clusters = _parse_valid(Cluster, context.clusters, "cluster", "extId", context.messages)
+    # Prism Central refuses the stats of its own entry with 400 (CLU-10008)
+    with_stats = [cluster for cluster in clusters if not cluster.config.is_prism_central]
+    results = _fetch_each_reporting(
+        context, with_stats, partial(_cluster_stats, context), "stats", "clusters"
+    )
+    stats_by_id = {
+        cluster.ext_id: result
+        for cluster, result in zip(with_stats, results, strict=True)
+        if isinstance(result, ClusterStats)
+    }
+    return [
+        Section(
+            "prism_info_v2",
+            ClusterWithStats(
+                name=cluster.name,
+                config=cluster.config,
+                nodes=cluster.nodes,
+                stats=stats_by_id.get(cluster.ext_id),
+            ).to_section(),
+            context.routing.host_for(cluster.ext_id),
+        )
+        for cluster in clusters
     ]
 
 
@@ -702,6 +777,7 @@ SECTION_FETCHERS: Sequence[Fetcher] = (
     Fetcher("host NICs", fetch_host_nics),
     Fetcher("storage pools", fetch_storage_pools),
     Fetcher("HA", fetch_ha),
+    Fetcher("clusters", fetch_clusters),
 )
 
 

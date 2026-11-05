@@ -5,16 +5,18 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from collections.abc import Mapping, Sequence
+import json
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.plugins.prism.agent_based.prism_cluster_io import (
     check_prism_cluster_io,
     discovery_prism_cluster_io,
 )
+from cmk.plugins.prism.agent_based.prism_info import parse_prism_info_v2
 
 SECTION = {
     "stats": {
@@ -111,3 +113,32 @@ def test_check_prism_cluster_io(  # type: ignore[misc]
         )
         == expected_check_result
     )
+
+
+IO_PARAMS = {"io": (500.0, 1000.0), "iops": (10000, 20000), "iolat": (500.0, 1000.0)}
+
+
+def test_v4_cluster_io_is_its_newest_samples(
+    v4_cluster_section: Callable[[str], StringTable],
+) -> None:
+    section = parse_prism_info_v2(v4_cluster_section("cluster-a"))
+
+    assert list(check_prism_cluster_io(params=IO_PARAMS, section=section)) == [
+        Result(state=State.OK, summary="I/O Bandwidth: 0.96 MB/s"),
+        Metric("prism_cluster_iobw", 0.9594, levels=(500.0, 1000.0)),
+        Result(state=State.OK, summary="IOPS: 0.02"),
+        Metric("prism_cluster_iops", 0.0237, levels=(10000.0, 20000.0)),
+        Result(state=State.OK, summary="I/O Latency: 1.0 ms"),
+        Metric("prism_cluster_iolatency", 1.009, levels=(500.0, 1000.0)),
+    ]
+
+
+def test_v4_idle_cluster_shows_its_io_bandwidth_like_the_legacy_api() -> None:
+    idle = {"stats": {"ioBandwidthKbps": [{"value": 0, "timestamp": "2026-10-28T15:00:00Z"}]}}
+
+    section = parse_prism_info_v2([[json.dumps(idle)]])
+
+    assert list(check_prism_cluster_io(params=IO_PARAMS, section=section)) == [
+        Result(state=State.OK, summary="I/O Bandwidth: 0.00 MB/s"),
+        Metric("prism_cluster_iobw", 0.0, levels=(500.0, 1000.0)),
+    ]

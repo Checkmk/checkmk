@@ -5,16 +5,17 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.plugins.prism.agent_based.prism_cluster_mem import (
     check_prism_cluster_mem,
     discovery_prism_cluster_mem,
 )
+from cmk.plugins.prism.agent_based.prism_info import parse_prism_info_v2
 
 SECTION = {
     "stats": {
@@ -108,3 +109,14 @@ def test_check_prism_cluster_mem(  # type: ignore[misc]
         )
         == expected_check_result
     )
+
+
+def test_v4_cluster_memory_is_its_newest_sample(
+    v4_cluster_section: Callable[[str], StringTable],
+) -> None:
+    section = parse_prism_info_v2(v4_cluster_section("cluster-a"))
+
+    assert list(check_prism_cluster_mem(params={"levels": (70.0, 80.0)}, section=section)) == [
+        Result(state=State.OK, summary="Total Memory Usage: 45.11%"),
+        Metric("prism_cluster_mem_used", 45.1139, levels=(70.0, 80.0), boundaries=(0.0, 100.0)),
+    ]

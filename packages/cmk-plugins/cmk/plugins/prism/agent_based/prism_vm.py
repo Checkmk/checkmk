@@ -94,8 +94,9 @@ def host_label_prism_vm(section: Section) -> HostLabelGenerator:  # noqa: ARG001
 
     Labels:
         cmk/nutanix/object:
-            This label is set to either "control_plane" for the host with the special agent, "node"
-            for Nutanix nodes or "vm" for VMs hosted in Nutanix.
+            This label is set to "control_plane" for the host with the special agent and, with the
+            v4 API, for the host of each Nutanix cluster. It is set to "node" for Nutanix nodes and
+            to "vm" for VMs hosted in Nutanix.
 
     """
     yield HostLabel("cmk/nutanix/object", "vm")

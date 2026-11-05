@@ -1,0 +1,185 @@
+{
+  "name": "cluster-a",
+  "config": {
+    "buildInfo": {
+      "version": "7.5",
+      "fullVersion": "el8.5-release-ganges-7.5.0.6-stable-909c09d4325aa41a6c58efd7cbc477aac04d04be"
+    },
+    "clusterFunction": ["AOS"]
+  },
+  "nodes": {
+    "numberOfNodes": 3
+  },
+  "stats": {
+    "hypervisorCpuUsagePpm": [
+      {
+        "value": 465267,
+        "timestamp": "2026-11-05T14:56:30Z"
+      },
+      {
+        "value": 472759,
+        "timestamp": "2026-11-05T14:56:00Z"
+      },
+      {
+        "value": 465811,
+        "timestamp": "2026-11-05T14:55:30Z"
+      },
+      {
+        "value": 469810,
+        "timestamp": "2026-11-05T14:55:00Z"
+      },
+      {
+        "value": 465232,
+        "timestamp": "2026-11-05T14:54:30Z"
+      },
+      {
+        "value": 469395,
+        "timestamp": "2026-11-05T14:54:00Z"
+      },
+      {
+        "value": 466340,
+        "timestamp": "2026-11-05T14:53:30Z"
+      },
+      {
+        "value": 470923,
+        "timestamp": "2026-11-05T14:53:00Z"
+      }
+    ],
+    "aggregateHypervisorMemoryUsagePpm": [
+      {
+        "value": 451139,
+        "timestamp": "2026-11-05T14:56:30Z"
+      },
+      {
+        "value": 451139,
+        "timestamp": "2026-11-05T14:56:00Z"
+      },
+      {
+        "value": 451139,
+        "timestamp": "2026-11-05T14:55:30Z"
+      },
+      {
+        "value": 451139,
+        "timestamp": "2026-11-05T14:55:00Z"
+      },
+      {
+        "value": 451139,
+        "timestamp": "2026-11-05T14:54:30Z"
+      },
+      {
+        "value": 451139,
+        "timestamp": "2026-11-05T14:54:00Z"
+      },
+      {
+        "value": 451139,
+        "timestamp": "2026-11-05T14:53:30Z"
+      },
+      {
+        "value": 451139,
+        "timestamp": "2026-11-05T14:53:00Z"
+      }
+    ],
+    "ioBandwidthKbps": [
+      {
+        "value": 9594,
+        "timestamp": "2026-11-05T14:56:30Z"
+      },
+      {
+        "value": 4809,
+        "timestamp": "2026-11-05T14:56:00Z"
+      },
+      {
+        "value": 2920,
+        "timestamp": "2026-11-05T14:55:30Z"
+      },
+      {
+        "value": 2808,
+        "timestamp": "2026-11-05T14:55:00Z"
+      },
+      {
+        "value": 2869,
+        "timestamp": "2026-11-05T14:54:30Z"
+      },
+      {
+        "value": 2955,
+        "timestamp": "2026-11-05T14:54:00Z"
+      },
+      {
+        "value": 3048,
+        "timestamp": "2026-11-05T14:53:30Z"
+      },
+      {
+        "value": 2973,
+        "timestamp": "2026-11-05T14:53:00Z"
+      }
+    ],
+    "controllerNumIops": [
+      {
+        "value": 237,
+        "timestamp": "2026-11-05T14:56:30Z"
+      },
+      {
+        "value": 250,
+        "timestamp": "2026-11-05T14:56:00Z"
+      },
+      {
+        "value": 233,
+        "timestamp": "2026-11-05T14:55:30Z"
+      },
+      {
+        "value": 246,
+        "timestamp": "2026-11-05T14:55:00Z"
+      },
+      {
+        "value": 215,
+        "timestamp": "2026-11-05T14:54:30Z"
+      },
+      {
+        "value": 239,
+        "timestamp": "2026-11-05T14:54:00Z"
+      },
+      {
+        "value": 227,
+        "timestamp": "2026-11-05T14:53:30Z"
+      },
+      {
+        "value": 235,
+        "timestamp": "2026-11-05T14:53:00Z"
+      }
+    ],
+    "controllerAvgIoLatencyUsecs": [
+      {
+        "value": 1009,
+        "timestamp": "2026-11-05T14:56:30Z"
+      },
+      {
+        "value": 870,
+        "timestamp": "2026-11-05T14:56:00Z"
+      },
+      {
+        "value": 767,
+        "timestamp": "2026-11-05T14:55:30Z"
+      },
+      {
+        "value": 946,
+        "timestamp": "2026-11-05T14:55:00Z"
+      },
+      {
+        "value": 850,
+        "timestamp": "2026-11-05T14:54:30Z"
+      },
+      {
+        "value": 868,
+        "timestamp": "2026-11-05T14:54:00Z"
+      },
+      {
+        "value": 776,
+        "timestamp": "2026-11-05T14:53:30Z"
+      },
+      {
+        "value": 845,
+        "timestamp": "2026-11-05T14:53:00Z"
+      }
+    ]
+  }
+}

@@ -1228,15 +1228,20 @@ class ModeCreateCluster(CreateHostMode):
             raise MKGeneralException(_("Can not clone a regular host as cluster host"))
 
 
-class PageAjaxPingHost(AjaxPage):
+class _SiteAjaxPage(AjaxPage):
+    @staticmethod
+    def _unknown_site_error(ctx: PageContext, site_id: SiteId) -> str | None:
+        if site_id in ctx.config.sites:
+            return None
+        return _("Unknown site: %(site)s") % {"site": site_id}
+
+
+class PageAjaxPingHost(_SiteAjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
         site_id = request.get_validated_type_input(SiteId, "site_id", deflt=omd_site())
-        if site_id not in ctx.config.sites:
-            return {
-                "status_code": 99,
-                "message": _("Unknown site: %(site)s") % {"site": site_id},
-            }
+        if (error := self._unknown_site_error(ctx, site_id)) is not None:
+            return {"status_code": 99, "message": error}
         cmd = request.get_validated_type_input(PingHostCmd, "cmd", PingHostCmd.PING)
         ip_or_dns_name: HostName | str = unquote(
             request.get_ascii_input_mandatory("ip_or_dns_name")
@@ -1273,12 +1278,15 @@ class PageAjaxPingHost(AjaxPage):
         }
 
 
-class PageAjaxDiagCmkAgent(AjaxPage):
+class PageAjaxDiagCmkAgent(_SiteAjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
         api_request = ctx.request.get_request()
+        site_id = SiteId(api_request["site_id"])
+        if (error := self._unknown_site_error(ctx, site_id)) is not None:
+            return {"status_code": 99, "output": error}
         result = diag_cmk_agent(
-            automation_config=make_automation_config(ctx.config.sites[api_request["site_id"]]),
+            automation_config=make_automation_config(ctx.config.sites[site_id]),
             diag_cmk_agent_input=DiagCmkAgentInput(
                 host_name=api_request["host_name"],
                 ip_address=api_request["ipaddress"],
@@ -1295,10 +1303,13 @@ class PageAjaxDiagCmkAgent(AjaxPage):
         }
 
 
-class PageAjaxDiagSnmp(AjaxPage):
+class PageAjaxDiagSnmp(_SiteAjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
         api_request = ctx.request.get_request()
+        site_id = SiteId(api_request["site_id"])
+        if (error := self._unknown_site_error(ctx, site_id)) is not None:
+            return {"status_code": 99, "output": error}
 
         # Parse SNMP credentials from forwarded form fields using the ValueSpec
         snmp_community: str | None = None
@@ -1337,7 +1348,7 @@ class PageAjaxDiagSnmp(AjaxPage):
                 snmpv3_privacy_password = credentials[5]
 
         result = diag_snmp(
-            automation_config=make_automation_config(ctx.config.sites[api_request["site_id"]]),
+            automation_config=make_automation_config(ctx.config.sites[site_id]),
             diag_snmp_input=DiagSnmpInput(
                 host_name=HostName(api_request["host_name"]),
                 ip_address=api_request.get("ipaddress", ""),
@@ -1363,10 +1374,12 @@ class PageAjaxDiagSnmp(AjaxPage):
         }
 
 
-class PageAjaxAgentReceiverPort(AjaxPage):
+class PageAjaxAgentReceiverPort(_SiteAjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
         site_id = SiteId(ctx.request.get_str_input_mandatory("site_id"))
+        if self._unknown_site_error(ctx, site_id) is not None:
+            return {"port": get_agent_receiver_port(omd_root), "is_default": True}
         site_config = ctx.config.sites[site_id]
         if site_is_local(site_config):
             return {"port": get_agent_receiver_port(omd_root), "is_default": False}

@@ -6,12 +6,12 @@
 import { CmkApiError } from 'cmk-ui-library/lib/error'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
-import { type Ref, reactive, ref } from 'vue'
+import { type Ref, type ShallowRef, reactive, ref, shallowRef } from 'vue'
 
 import type { MapConfigApi, SignedBytes, SignedMap } from '@/maps/api/mapConfig'
 import type { MapStatesApi } from '@/maps/api/mapStates'
 import { isAutoObjectId } from '@/maps/api/wire'
-import { saveFailureText } from '@/maps/shared/errorText'
+import { isConflict, saveFailureText } from '@/maps/shared/errorText'
 import type {
   CfgImport,
   FolderTreeView,
@@ -55,6 +55,12 @@ function captioned(signed: SignedMap): MapConfig {
   return cfg
 }
 
+/** A save refused as made on a version older than the stored one. */
+export interface SaveConflict {
+  name: string
+  failure: unknown
+}
+
 /** ``restored``: the stored version shown again after a save was refused. */
 export type SavedListener = (name: string, signed: SignedBytes, restored: boolean) => void
 
@@ -84,6 +90,11 @@ export class MapService {
   public readonly error: Ref<string | null> = ref(null)
   /** Why the last save failed; the map stays open with it. */
   public readonly saveError: Ref<{ text: TranslatedString } | null> = ref(null)
+  /**
+   * The open map was saved elsewhere since it was shown, so its edits are kept,
+   * unsaved, until the operator reloads it or overwrites the other save.
+   */
+  public readonly saveConflict: ShallowRef<SaveConflict | null> = shallowRef(null)
   /**
    * Where the open map's auto-source hosts are: ``loading`` from the load of a
    * geo map with an auto source until {@link loadAutoObjects} settles. Only
@@ -118,6 +129,15 @@ export class MapService {
   private prefetched: { name: string; signed: Promise<SignedMap> } | null = null
   /** The signature of the saved version the open map shows. */
   private shownSig: string | null = null
+  /**
+   * What ``saveConflict`` shows, read here instead: a read of the ref inside a
+   * caller's effect, such as the one loading the open map, would make it follow it.
+   */
+  private conflict: SaveConflict | null = null
+  /** By map name, the ETag of the version its next save is made on. */
+  private readonly etags = new Map<string, string>()
+  /** One save after the other, so each is made on the version the one before stored. */
+  private saving: Promise<unknown> = Promise.resolve()
   private persists = 0
   private readonly savedListeners = new Set<SavedListener>()
 
@@ -187,6 +207,11 @@ export class MapService {
     this.currentMapAccess.value = null
     this.shownSig = null
     this.autoObjects.value = 'none'
+    if (this.conflict) {
+      // Left without a choice: the edits it kept go with the map.
+      this.setConflict(null)
+      this.pendingSaveMap = null
+    }
     try {
       const prefetched = this.prefetched?.name === name ? this.prefetched.signed : null
       this.prefetched = null
@@ -210,6 +235,7 @@ export class MapService {
       this.autoObjects.value = hasAutoSource(cfg.view) ? 'loading' : 'none'
       this.currentMap.value = cfg
       this.shownSig = signed.sig
+      this.etags.set(name, signed.etag)
     } catch (e: unknown) {
       if (seq === this.fetchSeq) {
         this.error.value = e instanceof Error ? e.message : _t('Failed to load map')
@@ -276,6 +302,7 @@ export class MapService {
     this.currentMapAccess.value = signed.access
     this.currentMap.value = cfg
     this.shownSig = signed.sig
+    this.etags.set(name, signed.etag)
     if (sig === null) {
       // The daemon may still hold the refused edit; it is to show this version.
       this.notifySaved(name, signed, true)
@@ -345,8 +372,41 @@ export class MapService {
     return this.api.get(name)
   }
 
+  /** Shows the map as it is saved, for a view the daemon refused an older version of. */
+  public showStored(name: string): Promise<void> {
+    return this.loadSaved(name, null)
+  }
+
+  /** Answers a save conflict by showing the other save, dropping the kept edits. */
+  public async reloadOnConflict(): Promise<void> {
+    const conflict = this.conflict
+    if (!conflict) {
+      return
+    }
+    this.setConflict(null)
+    this.pendingSaveMap = null
+    await this.loadSaved(conflict.name, null)
+  }
+
+  /** Answers a save conflict by storing the kept edits over the other save. */
+  public async overwriteOnConflict(): Promise<void> {
+    const conflict = this.conflict
+    if (!conflict) {
+      return
+    }
+    this.setConflict(null)
+    const map = this.pendingSaveMap ?? this.currentMap.value
+    this.pendingSaveMap = null
+    if (map?.name === conflict.name) {
+      this.report(await this.persist(map, '*'))
+    }
+  }
+
   public scheduleSave(): void {
     this.pendingSaveMap = this.currentMap.value
+    if (this.conflict) {
+      return
+    }
     if (this.saveTimer) {
       clearTimeout(this.saveTimer)
     }
@@ -387,6 +447,9 @@ export class MapService {
       clearTimeout(this.saveTimer)
       this.saveTimer = null
     }
+    if (this.conflict) {
+      return this.conflict.failure
+    }
     const map = this.pendingSaveMap
     this.pendingSaveMap = null
     const failure = map ? await this.persist(map) : null
@@ -399,7 +462,8 @@ export class MapService {
   private report(failure: unknown): void {
     // A new one each time, so a save refused again for the same reason is told again.
     this.saveError.value =
-      failure === null
+      // The conflict notice tells of a conflict over the open map.
+      failure === null || failure === this.conflict?.failure
         ? null
         : { text: saveFailureText(failure, usei18n()._t('Failed to save map')) }
   }
@@ -459,6 +523,7 @@ export class MapService {
 
   public async deleteMap(name: string): Promise<void> {
     await this.api.delete(name)
+    this.etags.delete(name)
     this.maps.value = this.maps.value.filter((m) => m.name !== name)
   }
 
@@ -472,10 +537,18 @@ export class MapService {
     updates: Partial<MapConfig>,
     envelope?: MapEnvelope
   ): Promise<MapConfig> {
-    const base =
-      this.currentMap.value?.name === name ? this.currentMap.value : await this.getMap(name)
-    const merged: MapConfig = { ...base, ...updates }
-    const { access, signed } = await this.api.update(merged, envelope)
+    const open = this.currentMap.value?.name === name ? this.currentMap.value : null
+    const base = open ? { config: open, etag: null } : await this.api.get(name)
+    const merged: MapConfig = { ...base.config, ...updates }
+    const { access, signed, etag } = await this.queued(() =>
+      // The open map's, read once the saves before it stored theirs.
+      this.api.update(merged, envelope, base.etag ?? this.etagOf(name))
+    )
+    this.etags.set(name, etag)
+    if (open !== null && this.pendingSaveMap === open) {
+      // The edits waiting to be saved are in ``merged`` too, which now carries the ETag.
+      this.pendingSaveMap = merged
+    }
     if (this.currentMap.value?.name === name) {
       this.currentMap.value = merged
       this.currentMapAccess.value = access
@@ -533,7 +606,11 @@ export class MapService {
     if (!overwrite && this.maps.value.some((m) => m.name === map.name)) {
       throw new Error(`Map '${map.name}' already exists`)
     }
-    await (overwrite ? this.api.update(map) : this.api.create(map))
+    if (overwrite) {
+      this.etags.set(map.name, (await this.api.update(map, undefined, '*')).etag)
+    } else {
+      await this.api.create(map)
+    }
     await this.fetchMaps()
   }
 
@@ -566,22 +643,54 @@ export class MapService {
     }
   }
 
-  /** Resolves to what failed, or ``null``. */
-  private async persist(map: MapConfig): Promise<unknown> {
+  private setConflict(conflict: SaveConflict | null): void {
+    this.conflict = conflict
+    this.saveConflict.value = conflict
+  }
+
+  private etagOf(name: string): string {
+    return this.etags.get(name) ?? '*'
+  }
+
+  private queued<T>(save: () => Promise<T>): Promise<T> {
+    const saved = this.saving.then(save)
+    this.saving = saved.catch(() => undefined)
+    return saved
+  }
+
+  /** Resolves to what failed, or ``null``. ``ifMatch`` defaults to the version shown. */
+  private persist(map: MapConfig, ifMatch?: string): Promise<unknown> {
+    // Counted when asked for, so a caller's snapshot taken right after sees it.
     this.persists += 1
-    try {
-      // Updated in place: the server resolves own/foreign/built-in by name and
-      // preserves the stored visibility when it is omitted, which is what a
-      // routine autosave wants.
-      const { signed } = await this.api.update(map)
-      if (this.currentMap.value === map) {
-        this.shownSig = signed.sig
+    return this.queued(async () => {
+      const conflict = this.conflict
+      if (conflict && ifMatch === undefined && conflict.name === map.name) {
+        // Queued behind the save that met the conflict: it would only meet it again.
+        return conflict.failure
       }
-      this.notifySaved(map.name, signed, false)
-      return null
-    } catch (e: unknown) {
-      return e
-    }
+      try {
+        // Updated in place: the server resolves own/foreign/built-in by name and
+        // preserves the stored visibility when it is omitted, which is what a
+        // routine autosave wants.
+        const { signed, etag } = await this.api.update(
+          map,
+          undefined,
+          ifMatch ?? this.etagOf(map.name)
+        )
+        this.etags.set(map.name, etag)
+        if (this.currentMap.value === map) {
+          this.shownSig = signed.sig
+        }
+        this.notifySaved(map.name, signed, false)
+        return null
+      } catch (e: unknown) {
+        if (isConflict(e) && this.currentMap.value === map) {
+          this.pendingSaveMap = map
+          this.setConflict({ name: map.name, failure: e })
+        }
+        return e
+      }
+    })
   }
 }
 

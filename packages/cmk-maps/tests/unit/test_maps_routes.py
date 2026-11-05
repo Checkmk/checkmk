@@ -524,3 +524,24 @@ def test_auto_objects_is_404_for_a_map_the_user_does_not_see(
     resp = client.get("/api/v1/maps/world/auto-objects")
 
     assert resp.status_code == HTTPStatus.NOT_FOUND
+
+
+@pytest.mark.parametrize("route", ["register", "saved"])
+def test_a_config_signed_before_the_registered_one_is_refused(
+    router_client: RouterClientFactory, site_secret_file: Path, route: str
+) -> None:
+    site_secret_file.write_bytes(_SECRET.reveal())
+    client = _client(router_client, ADMIN_PRINCIPAL, owner="admin")
+    newer = sign_config({"name": "streamed", "version": 2}, _SECRET.hmac, owner="admin")
+    older = sign_config({"name": "streamed", "version": 1}, _SECRET.hmac, owner="admin")
+    client.post("/api/v1/maps/streamed/saved", json=newer)
+    sub = manager.subscribe("admin\x00streamed", None)
+    try:
+        resp = client.post(f"/api/v1/maps/streamed/{route}", json=older)
+    finally:
+        manager.unsubscribe("admin\x00streamed", sub)
+
+    assert resp.status_code == HTTPStatus.CONFLICT
+    assert _saved_events(sub) == []
+    cached = map_service.get_map("admin", "streamed")
+    assert cached is not None and cached.version == 2

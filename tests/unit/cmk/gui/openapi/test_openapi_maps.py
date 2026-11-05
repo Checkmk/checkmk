@@ -19,7 +19,7 @@ import pytest
 from cmk.ccc.user import UserId
 from cmk.maps.rest_api import utils
 from cmk.maps.rest_api.internal import signed_maps
-from tests.testlib.unit.rest_api_client import ClientRegistry
+from tests.testlib.unit.rest_api_client import ClientRegistry, Response
 
 
 def _map(name: str, **overrides: object) -> dict[str, object]:
@@ -170,6 +170,53 @@ def test_update_with_stale_etag_returns_412(clients: ClientRegistry) -> None:
     clients.Maps.edit(
         "map1", config=_STATIC_MAP, etag="invalid_etag", expect_ok=False
     ).assert_status_code(HTTPStatus.PRECONDITION_FAILED)
+
+
+def _edit(
+    clients: ClientRegistry, config: dict[str, object], if_match: str, *, expect_ok: bool = True
+) -> Response:
+    return clients.Maps.request(
+        "put",
+        url=f"/objects/map/{config['name']}",
+        body={"config": config},
+        headers={"If-Match": if_match},
+        expect_ok=expect_ok,
+    )
+
+
+def test_every_save_sets_a_later_version_than_the_one_sent(clients: ClientRegistry) -> None:
+    sent = 2**53
+    clients.Maps.create(config={**_STATIC_MAP, "version": sent})
+    created = clients.Maps.get("map1").json["extensions"]["config"]["version"]
+
+    clients.Maps.edit("map1", config={**_STATIC_MAP, "version": sent}, etag="star")
+    saved = clients.Maps.get("map1").json["extensions"]["config"]["version"]
+
+    assert created < saved < sent
+
+
+def test_a_save_against_the_signed_map_opened_is_refused_once_another_landed(
+    clients: ClientRegistry,
+) -> None:
+    clients.Maps.create(config=_STATIC_MAP)
+    opened = clients.Maps.get_signed_map("map1").headers["ETag"]
+
+    _edit(clients, {**_STATIC_MAP, "alias": "First"}, opened)
+    _edit(clients, {**_STATIC_MAP, "alias": "Second"}, opened, expect_ok=False).assert_status_code(
+        HTTPStatus.PRECONDITION_FAILED
+    )
+    assert clients.Maps.get("map1").json["extensions"]["config"]["alias"] == "First"
+
+
+def test_a_save_against_a_builtin_is_refused_once_it_was_customized(
+    clients: ClientRegistry,
+) -> None:
+    builtin = clients.Maps.get_signed_map("all_hosts").headers["ETag"]
+
+    _edit(clients, _map("all_hosts", alias="First"), builtin)
+    _edit(clients, _map("all_hosts", alias="Second"), builtin, expect_ok=False).assert_status_code(
+        HTTPStatus.PRECONDITION_FAILED
+    )
 
 
 def test_update_missing_returns_404(clients: ClientRegistry) -> None:

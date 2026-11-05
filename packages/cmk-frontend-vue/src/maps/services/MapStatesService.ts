@@ -244,6 +244,8 @@ export class MapStatesService {
   private registration: (() => Promise<MapStates>) | null = null
   private handOverSeq = 0
   private savedRegistrations: Promise<void> = Promise.resolve()
+  /** The map shown as stored once the daemon held a later version, until it takes one again. */
+  private reloadedAsOlder: string | null = null
   private readonly mapSavedListeners = new Set<MapSavedListener>()
   // Lets a stream take over the slot of this tab's probe or reloaded page.
   private readonly tab = claimStreamTab()
@@ -270,7 +272,10 @@ export class MapStatesService {
       'fetchAggregationStates' | 'fetchAggregationTree'
     >,
     private readonly auth: Pick<MapsAuthService, 'refresh' | 'user'>,
-    private readonly maps: Pick<MapService, 'currentMap' | 'currentMapAccess' | 'getSignedMap'>
+    private readonly maps: Pick<
+      MapService,
+      'currentMap' | 'currentMapAccess' | 'getSignedMap' | 'showStored'
+    >
   ) {
     watch(
       this.connected,
@@ -409,7 +414,7 @@ export class MapStatesService {
           await this.api.registerSavedOnly(mapName, signed)
         } catch (e: unknown) {
           // A daemon that lost the map gets it again from the next fetch.
-          if (!isDaemonBusy(e)) {
+          if (!isDaemonBusy(e) && !this.showStoredOnRefusal(mapName, e)) {
             throw e
           }
         }
@@ -462,10 +467,12 @@ export class MapStatesService {
     let registered: MapStates | null = null
     try {
       registered = await registration()
+      this.reloadedAsOlder = null
     } catch (e: unknown) {
       // Registered or not, a daemon that is busy or failed the states is asked
       // for them as before; the fetch hands the map over again if it has to.
-      if (!isDaemonBusy(e)) {
+      // One holding a later version shows the states of that one meanwhile.
+      if (!isDaemonBusy(e) && !this.showStoredOnRefusal(mapName, e)) {
         throw e
       }
     }
@@ -479,6 +486,20 @@ export class MapStatesService {
     } else {
       await this.refresh()
     }
+  }
+
+  /**
+   * The daemon holds a later version of the map than the one handed over: shows
+   * the stored one, which registers it. Once only, so a stored version the
+   * daemon still refuses is reported rather than loaded again and again.
+   */
+  private showStoredOnRefusal(mapName: string, e: unknown): boolean {
+    if (!holdsLaterVersion(e) || this.reloadedAsOlder === mapName) {
+      return false
+    }
+    this.reloadedAsOlder = mapName
+    void this.maps.showStored(mapName).catch(() => undefined)
+    return true
   }
 
   public dispose(): void {
@@ -1130,6 +1151,11 @@ function aggregationState(
     max_attempts: 0,
     ...fields
   }
+}
+
+/** A daemon holding a later version of the map than the one handed over. */
+function holdsLaterVersion(e: unknown): boolean {
+  return e instanceof CmkApiError && e.statusCode === 409
 }
 
 /** A daemon that is busy or failed, as opposed to one that refused the request. */

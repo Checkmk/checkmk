@@ -11,6 +11,8 @@ model and Activate Changes replication — like graph collections. The list/edit
 stays maps-own (the SPA); only the storage and permission plumbing is shared.
 """
 
+import time
+from collections.abc import Callable
 from pathlib import Path
 
 import cmk.utils.paths
@@ -96,6 +98,18 @@ def _own_instances(owner: UserId) -> pagetypes.OverridableInstances[MapPage]:
     return own
 
 
+def _stamped(map_spec: MapSpec, stored: MapPage | None) -> MapSpec:
+    """``map_spec`` with the version this save stores, whatever the caller sent.
+
+    Later than the stored one, so the daemon can tell an older signed config from
+    the saved one, and no earlier than now, so a map deleted and created again
+    does not start over below a config signed before.
+    """
+    previous = stored.config.map_spec.get("version") if stored else None
+    floor = previous + 1 if isinstance(previous, int) else 0
+    return {**map_spec, "version": max(floor, time.time_ns() // 1_000_000)}
+
+
 def create_map(
     owner: UserId,
     name: MapName,
@@ -116,7 +130,7 @@ def create_map(
     :func:`save_map` does it: the REST endpoint reads the map back right after
     creating it.
     """
-    page = MapPage(map_config_from_spec(owner, name, map_spec, public, hidden))
+    page = MapPage(map_config_from_spec(owner, name, _stamped(map_spec, None), public, hidden))
     with store.locked(user_maps_path(owner)):
         instances = _own_instances(owner)
         if instances.has_instance((owner, name)):
@@ -133,6 +147,7 @@ def save_map(
     map_spec: MapSpec,
     public: VisualPublic | None,
     hidden: bool = False,
+    verify: Callable[[MapPage | None], None] = lambda _stored: None,
 ) -> None:
     """Persist ``map_spec`` as ``owner``'s map ``name`` with the given envelope.
 
@@ -144,10 +159,19 @@ def save_map(
     The request-memoized set is updated too, so a read later in *this* request
     (the REST update endpoint renders the saved map) sees the new state without
     re-reading the file.
+
+    ``verify`` gets the stored map, or ``None``, inside the lock and raises to
+    refuse the save, so no other save can land between its check and the write.
     """
-    page = MapPage(map_config_from_spec(owner, name, map_spec, public, hidden))
     with store.locked(user_maps_path(owner)):
         instances = _own_instances(owner)
+        stored = (
+            instances.instance((owner, name)) if instances.has_instance((owner, name)) else None
+        )
+        verify(stored)
+        page = MapPage(
+            map_config_from_spec(owner, name, _stamped(map_spec, stored), public, hidden)
+        )
         instances.add_instance((owner, name), page)
         MapPage.save_user_instances(instances, _user_permissions(), owner)
     _instances().add_instance((owner, name), page)

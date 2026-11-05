@@ -34,7 +34,7 @@ afterEach(() => {
 })
 
 describe('useMapViewState — a map that can be saved', () => {
-  it('writes the chosen drawing into the map and saves it', () => {
+  it('writes the chosen drawing into the map and saves it', async () => {
     const config = { ...aMap('writable-saves'), view: { type: 'foldertree' } } as MapConfig
     const services = openMap(config, true)
 
@@ -42,7 +42,7 @@ describe('useMapViewState — a map that can be saved', () => {
     state.folderView.value = 'list'
 
     expect(config.view).toMatchObject({ default_view: 'list' })
-    vi.advanceTimersByTime(400)
+    await vi.advanceTimersByTimeAsync(400)
     expect(services.apis.mapConfig.update).toHaveBeenCalled()
   })
 

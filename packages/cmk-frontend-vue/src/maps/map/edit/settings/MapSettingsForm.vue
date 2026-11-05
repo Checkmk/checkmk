@@ -56,6 +56,7 @@ import { useStagedBackgroundImage } from '@/maps/map/edit/settings/useStagedBack
 import { useMaps, useMapsApis, useNavigation, useToast } from '@/maps/services/context'
 import MapsConfirmDialog from '@/maps/shared/components/MapsConfirmDialog.vue'
 import MapsUnsavedChangesDialog from '@/maps/shared/components/MapsUnsavedChangesDialog.vue'
+import { isConflict } from '@/maps/shared/errorText'
 import type { MapRead, MapView } from '@/maps/types/api'
 import { asFormSpecSchema } from '@/maps/utils/formSpec'
 import { describeFieldProblems, toFormValidation } from '@/maps/utils/formValidation'
@@ -440,7 +441,7 @@ async function save(): Promise<void> {
 
 /** What to tell the operator about a failed save. */
 function messageFor(error: unknown): string {
-  if (error instanceof CmkApiError && error.statusCode === 409) {
+  if (isConflict(error)) {
     return _t(
       'Map changed elsewhere — close and reopen to apply your edit on top of the latest version.'
     )

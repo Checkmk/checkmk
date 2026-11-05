@@ -69,7 +69,14 @@ function signedMap(
     objects: [],
     ...extra
   })
-  return { config, config_b64: 'cfg', sig: 'sig', access: aMapAccess(access), map_link_titles: {} }
+  return {
+    config,
+    config_b64: 'cfg',
+    sig: 'sig',
+    access: aMapAccess(access),
+    map_link_titles: {},
+    etag: '"etag"'
+  }
 }
 
 let services: ReturnType<typeof fakeMapsServices>

@@ -104,7 +104,8 @@ def _register_signed(
     # The owner was resolved for ``name``, so the signed config must be that map's.
     if cfg.name != name:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Map name mismatch")
-    map_service.register_map(owner, cfg)
+    if not map_service.register_signed_map(owner, cfg):
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="The map was saved since")
     if saved and current_user.may_save(owner):
         tell_map_saved(owner, name, sig)
     return owner, cfg

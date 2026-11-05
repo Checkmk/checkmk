@@ -16,6 +16,7 @@ This is also where the map's own design values are declared, on the view root,
 so every painter below inherits one set of them.
 -->
 <script setup lang="ts">
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkBreadcrumb, { type BreadcrumbItem } from 'cmk-ui-library/components/CmkBreadcrumb'
 import CmkLoading from 'cmk-ui-library/components/CmkLoading.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
@@ -930,6 +931,23 @@ function closeBulkAckModal(sent: boolean): void {
         :dead-site-hosts="deadSiteHostsOf(mapConfig.view)"
       />
 
+      <CmkAlert
+        v-if="mapsStore.saveConflict.value"
+        class="maps-map-view__save-conflict"
+        variant="warning"
+        :heading="_t('Someone else saved this map')"
+        :text="
+          _t(
+            'Your changes since then are not saved. Reload the map to see theirs, or overwrite them with yours.'
+          )
+        "
+        :main-button="{ title: _t('Reload'), onclick: () => void mapsStore.reloadOnConflict() }"
+        :optional-button="{
+          title: _t('Overwrite'),
+          onclick: () => void mapsStore.overwriteOnConflict()
+        }"
+      />
+
       <!-- Shared detail drawer for static / worldmap / radar maps -->
       <DetailDrawer
         v-if="!isFlowmap"
@@ -1116,6 +1134,15 @@ function closeBulkAckModal(sent: boolean): void {
   max-width: calc(100% - 2 * var(--dimension-6));
   transform: translateX(-50%);
   pointer-events: none;
+}
+
+.maps-map-view__save-conflict {
+  position: absolute;
+  top: var(--dimension-6);
+  left: 50%;
+  z-index: 7;
+  max-width: calc(100% - 2 * var(--dimension-6));
+  transform: translateX(-50%);
 }
 
 .maps-map-view__loading {

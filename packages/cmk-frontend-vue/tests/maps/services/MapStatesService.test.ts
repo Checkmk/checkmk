@@ -76,7 +76,8 @@ const freshlySigned: SignedMap = {
   config_b64: 'fresh',
   sig: 'fresh-sig',
   access: aMapAccess({ owner: '' }),
-  map_link_titles: {}
+  map_link_titles: {},
+  etag: '"fresh"'
 }
 
 type StatesApi = Pick<
@@ -93,6 +94,7 @@ function newService(
   session: {
     refresh?: Pick<MapsAuthService, 'refresh'>['refresh']
     getSignedMap?: Pick<MapService, 'getSignedMap'>['getSignedMap']
+    showStored?: Pick<MapService, 'showStored'>['showStored']
     mapOwner?: string
   } = {}
 ): MapStatesService {
@@ -125,7 +127,8 @@ function newService(
   const service = new MapStatesService(statesApi, connections, objects, auth, {
     currentMap: isRef(map) ? map : ref(map),
     currentMapAccess: ref(aMapAccess({ owner: session.mapOwner ?? 'me' })),
-    getSignedMap: session.getSignedMap ?? vi.fn().mockResolvedValue(freshlySigned)
+    getSignedMap: session.getSignedMap ?? vi.fn().mockResolvedValue(freshlySigned),
+    showStored: session.showStored ?? vi.fn().mockResolvedValue(undefined)
   })
   services.push(service)
   return service
@@ -882,6 +885,37 @@ describe('MapStatesService — a daemon that lost the map', () => {
 
     await vi.waitFor(() => expect(FakeEventSource.instances).toHaveLength(2))
     expect(store.streamAvailable.value).toBe(true)
+  })
+})
+
+describe('MapStatesService — a daemon holding a later version', () => {
+  beforeEach(() => {
+    FakeEventSource.instances = []
+    vi.stubGlobal('EventSource', FakeEventSource)
+  })
+
+  const refused = () => new CmkApiError('HTTP 409', null, '', 409)
+
+  it('shows the map as stored instead', async () => {
+    const register = vi.fn().mockRejectedValue(refused())
+    const showStored = vi.fn().mockResolvedValue(undefined)
+    const store = newService(null, {}, { register }, { showStored })
+
+    await store.connectToMap('b', { config_b64: 'x', sig: 'older' })
+
+    expect(showStored).toHaveBeenCalledWith('b')
+  })
+
+  it('reports a stored version it still refuses rather than loading it again', async () => {
+    const register = vi.fn().mockRejectedValue(refused())
+    const showStored = vi.fn().mockResolvedValue(undefined)
+    const store = newService(null, {}, { register }, { showStored })
+    await store.connectToMap('b', { config_b64: 'x', sig: 'older' })
+
+    await expect(
+      store.registerSaved('b', { config_b64: 'x', sig: 'stored' }, { restored: true })
+    ).rejects.toThrow('HTTP 409')
+    expect(showStored).toHaveBeenCalledTimes(1)
   })
 })
 

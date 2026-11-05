@@ -9,6 +9,7 @@ The map shape is validated by the Maps daemon (``MapConfig`` in
 mirror and the opaque ``map_spec`` dict that the pagetype store persists.
 """
 
+import hashlib
 import json
 from collections import Counter
 from collections.abc import Callable, Iterator, Mapping
@@ -447,7 +448,12 @@ def map_etag(page: MapPage) -> ETag:
             "name": cfg.name,
             "owner": str(cfg.owner),
             "public": _public_key(cfg.public),
-            "spec": dict(cfg.map_spec),
+            "hidden": cfg.hidden,
+            # One digest of the whole spec: ``ETag`` hashes a dict value by value in
+            # Python, which costs a large map milliseconds on every open.
+            "spec": hashlib.sha256(
+                json.dumps(cfg.map_spec, sort_keys=True, default=str).encode()
+            ).hexdigest(),
         }
     )
 

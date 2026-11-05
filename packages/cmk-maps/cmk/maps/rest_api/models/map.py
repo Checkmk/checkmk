@@ -1007,7 +1007,7 @@ class MapConfig:
         description="Map-wide default stacking order.", example=1, default_factory=ApiOmitted
     )
     version: int | ApiOmitted = api_field(
-        description="Monotonic version for optimistic locking.",
+        description="Set by the server on every save, which ignores a value sent.",
         example=1,
         default_factory=ApiOmitted,
     )

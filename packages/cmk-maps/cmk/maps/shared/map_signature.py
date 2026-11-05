@@ -29,8 +29,9 @@ HmacFn = Callable[[bytes], bytes]
 
 # Domain-separation prefix: the site-internal secret signs other things too, so a
 # map-config signature has an input space of its own. ``v2`` folds the map owner
-# into the signed input (see :func:`_map_sig_input`).
-MAP_SIG_CONTEXT = b"maps-map-config:v2:"
+# into the signed input (see :func:`_map_sig_input`); ``v3`` signs only versions
+# the GUI set, which the daemon orders saves by.
+MAP_SIG_CONTEXT = b"maps-map-config:v3:"
 
 
 class InvalidSignature(Exception):

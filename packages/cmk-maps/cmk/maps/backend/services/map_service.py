@@ -34,6 +34,12 @@ _CACHE: OrderedDict[tuple[str, str], MapConfig] = OrderedDict()
 _CACHE_GUARD = threading.Lock()
 
 
+# The highest version of each map registered signed. Kept for more maps than the
+# cache holds, so a map pushed out of it still refuses an older config.
+_SIGNED_VERSIONS_MAX_ENTRIES = 10 * _CACHE_MAX_ENTRIES
+_SIGNED_VERSIONS: OrderedDict[tuple[str, str], int] = OrderedDict()
+
+
 def register_map(owner: str, cfg: MapConfig) -> None:
     """Cache a GUI-owned map config in memory for state streaming.
 
@@ -43,10 +49,30 @@ def register_map(owner: str, cfg: MapConfig) -> None:
     the stream.
     """
     with _CACHE_GUARD:
-        _CACHE[(owner, cfg.name)] = cfg
-        _CACHE.move_to_end((owner, cfg.name))
-        while len(_CACHE) > _CACHE_MAX_ENTRIES:
-            _CACHE.popitem(last=False)
+        _cache(owner, cfg)
+
+
+def register_signed_map(owner: str, cfg: MapConfig) -> bool:
+    """Like :func:`register_map` for a config the GUI signed, unless one with a
+    later version was registered: return whether it was."""
+    key = (owner, cfg.name)
+    with _CACHE_GUARD:
+        if cfg.version < _SIGNED_VERSIONS.get(key, cfg.version):
+            return False
+        _put_bounded(_SIGNED_VERSIONS, key, cfg.version, _SIGNED_VERSIONS_MAX_ENTRIES)
+        _cache(owner, cfg)
+    return True
+
+
+def _cache(owner: str, cfg: MapConfig) -> None:
+    _put_bounded(_CACHE, (owner, cfg.name), cfg, _CACHE_MAX_ENTRIES)
+
+
+def _put_bounded[K, V](entries: OrderedDict[K, V], key: K, value: V, limit: int) -> None:
+    entries[key] = value
+    entries.move_to_end(key)
+    while len(entries) > limit:
+        entries.popitem(last=False)
 
 
 def get_map(owner: str, name: str) -> MapConfig | None:

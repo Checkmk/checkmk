@@ -125,13 +125,14 @@ describe('api client — map CRUD via the Checkmk REST API', () => {
     }
     server.use(
       restApiHttp.get('/objects/maps_signed_map/{name}', ({ response }) =>
-        response(200).json(signedMap)
+        response(200).json(signedMap, { headers: { ETag: '"shown"' } })
       )
     )
 
     const signed = await api.get('map1')
 
     expect(signed.sig).toBe('deadbeef')
+    expect(signed.etag).toBe('"shown"')
     expect(signed.config).toEqual(staticMap)
     expect(signed.access).toEqual({
       owner: 'alice',
@@ -148,7 +149,7 @@ describe('api client — map CRUD via the Checkmk REST API', () => {
     server.use(
       restApiHttp.post('/domain-types/map/collections/all', async ({ request, response }) => {
         seen.push(await snapshot(request))
-        return response(200).json(storedMap)
+        return response(200).json(storedMap, { headers: { ETag: '"stored"' } })
       })
     )
 
@@ -190,15 +191,30 @@ describe('api client — map CRUD via the Checkmk REST API', () => {
     server.use(
       restApiHttp.put('/objects/map/{name}', async ({ request, response }) => {
         seen.push(await snapshot(request))
-        return response(200).json(storedMap)
+        return response(200).json(storedMap, { headers: { ETag: '"stored"' } })
       })
     )
 
-    await api.update(staticMap)
+    await api.update(staticMap, undefined, '*')
 
     expect(seen[0]!.method).toBe('PUT')
     expect(seen[0]!.headers.get('If-Match')).toBe('*')
     expect(JSON.parse(seen[0]!.body)).toEqual({ config: staticMap })
+  })
+
+  it('sends the ETag the edit was made on and hands back the one stored', async () => {
+    const seen: SeenRequest[] = []
+    server.use(
+      restApiHttp.put('/objects/map/{name}', async ({ request, response }) => {
+        seen.push(await snapshot(request))
+        return response(200).json(storedMap, { headers: { ETag: '"stored"' } })
+      })
+    )
+
+    const saved = await api.update(staticMap, undefined, '"shown"')
+
+    expect(seen[0]!.headers.get('If-Match')).toBe('"shown"')
+    expect(saved.etag).toBe('"stored"')
   })
 
   it('strips transient auto:* and site objects from the persisted wire config', async () => {
@@ -206,7 +222,7 @@ describe('api client — map CRUD via the Checkmk REST API', () => {
     server.use(
       restApiHttp.put('/objects/map/{name}', async ({ request, response }) => {
         seen.push(await snapshot(request))
-        return response(200).json(storedMap)
+        return response(200).json(storedMap, { headers: { ETag: '"stored"' } })
       })
     )
 
@@ -223,7 +239,7 @@ describe('api client — map CRUD via the Checkmk REST API', () => {
       ]
     } as MapConfig
 
-    await api.update(mapWithTransient)
+    await api.update(mapWithTransient, undefined, '*')
 
     // The wire config groups each object's flat fields into nested sub-objects
     // (``position``/``link`` always present, ``binding`` etc. only when set), so

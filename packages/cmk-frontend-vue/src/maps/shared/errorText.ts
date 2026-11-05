@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { CmkApiError } from 'cmk-ui-library/lib/error'
-import { untranslated } from 'cmk-ui-library/lib/i18n'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
 import { describeFieldProblems } from '@/maps/utils/formValidation'
@@ -32,6 +32,9 @@ export function saveFailureText(
   fallback: TranslatedString,
   objectId?: string
 ): TranslatedString {
+  if (isConflict(error)) {
+    return usei18n()._t('Someone else saved the map meanwhile.')
+  }
   if (!(error instanceof CmkApiError) || typeof error.body !== 'object' || error.body === null) {
     return errorText(error, fallback)
   }
@@ -45,4 +48,9 @@ export function saveFailureText(
     return untranslated(own && detail.startsWith(own) ? detail.slice(own.length) : detail)
   }
   return errorText(error, fallback)
+}
+
+/** Someone else saved the map since the version the save was made on. */
+export function isConflict(failure: unknown): failure is CmkApiError {
+  return failure instanceof CmkApiError && failure.statusCode === 412
 }

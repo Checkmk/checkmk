@@ -23,6 +23,7 @@ from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.openapi.utils import ProblemException, RestAPIRequestGeneralException
 from cmk.maps.gui._pages import _authorized_public
+from cmk.maps.gui.pagetype import MapPage
 from cmk.maps.gui.store import get_own_map, save_map
 from cmk.maps.rest_api.endpoint_family import MAPS_FAMILY
 from cmk.maps.rest_api.models.request_models import MapRequest
@@ -86,8 +87,6 @@ def update_map_v1(
                 detail="Creating or customizing maps requires the edit permission.",
             )
         target_owner = user_id
-    if api_context.etag.enabled:
-        api_context.etag.verify(map_etag(page))
     spec = spec_from_map(body.config)
     validate_object_filters(spec, page.config.map_spec)
 
@@ -109,8 +108,14 @@ def update_map_v1(
         if isinstance(body.visibility, ApiOmitted)
         else body.visibility.hide_in_monitor_menu
     )
+
+    def verify(stored: MapPage | None) -> None:
+        # Against what is stored now; with no own copy yet, the built-in it customizes.
+        if api_context.etag.enabled:
+            api_context.etag.verify(map_etag(stored or page))
+
     try:
-        save_map(target_owner, name, spec, public, hidden)
+        save_map(target_owner, name, spec, public, hidden, verify=verify)
     except MKGeneralException as exc:
         # A failed store write (disk full, unwritable profile) would otherwise
         # surface as an uncaught 500 with a crash report; answer a clean error.

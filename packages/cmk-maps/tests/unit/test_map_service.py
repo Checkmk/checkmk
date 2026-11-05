@@ -45,3 +45,12 @@ def test_a_fetched_link_target_is_fetched_again_after_a_while(
     asyncio.run(map_service.find_link_targets(gui, "alice", ["net"]))
 
     assert gui.held == [set(), set()]
+
+
+def test_an_unsaved_preview_lets_no_older_signed_config_in() -> None:
+    assert map_service.register_signed_map("alice", MapConfig(name="net", version=2))
+    map_service.register_map("alice", MapConfig(name="net", alias="preview"))
+
+    assert not map_service.register_signed_map("alice", MapConfig(name="net", version=1))
+    assert map_service.register_signed_map("alice", MapConfig(name="net", version=2))
+    assert map_service.register_signed_map("bob", MapConfig(name="net", version=1))

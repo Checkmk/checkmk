@@ -9,6 +9,8 @@ the signed bytes for the daemon. The SPA renders from the signed bytes, so it
 fetches only those.
 """
 
+from dataclasses import replace
+from http import HTTPStatus
 from typing import Annotated
 
 from cmk.gui.logged_in import user
@@ -21,6 +23,7 @@ from cmk.gui.openapi.framework import (
     PathParam,
     VersionedEndpoint,
 )
+from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.maps.gui._capabilities import sign_map_config
 from cmk.maps.gui.pagetype import MapPage
@@ -28,6 +31,7 @@ from cmk.maps.gui.store import get_permitted_map
 from cmk.maps.rest_api.internal.endpoint_family import MAPS_INTERNAL_FAMILY
 from cmk.maps.rest_api.internal.models.response_models import MapsSignedMapResponse
 from cmk.maps.rest_api.utils import (
+    map_etag,
     map_from_spec,
     NO_CONFIG_CHANGE,
     PERMISSIONS,
@@ -70,12 +74,14 @@ def show_signed_map_v1(
         str,
         PathParam(description="The unique name of the map.", example="datacenter-muc"),
     ],
-) -> MapsSignedMapResponse:
+) -> ApiResponse[MapsSignedMapResponse]:
     """Show a map's signed config"""
     user.need_permission("maps.use")
     page = permitted_map_or_404(name)
     with representable_map(name):
-        return _serialize_signed_map(page, can_edit=page.may_edit(), can_delete=page.may_delete())
+        body = _serialize_signed_map(page, can_edit=page.may_edit(), can_delete=page.may_delete())
+    # What a save of the map opened sends back, so it is refused if another came first.
+    return ApiResponse(status_code=HTTPStatus.OK, body=body, etag=map_etag(page))
 
 
 ENDPOINT_SHOW_SIGNED_MAP = VersionedEndpoint(
@@ -86,6 +92,6 @@ ENDPOINT_SHOW_SIGNED_MAP = VersionedEndpoint(
     ),
     permissions=EndpointPermissions(required=PERMISSIONS),
     doc=EndpointDoc(family=MAPS_INTERNAL_FAMILY.name),
-    behavior=NO_CONFIG_CHANGE,
+    behavior=replace(NO_CONFIG_CHANGE, etag="output"),
     versions={APIVersion.INTERNAL: EndpointHandler(handler=show_signed_map_v1)},
 )

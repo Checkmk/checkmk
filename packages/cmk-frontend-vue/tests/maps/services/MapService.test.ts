@@ -7,6 +7,7 @@ import { useMswServer } from 'cmk-ui-library/vitest.msw'
 // eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
 import { HttpResponse, delay, http } from 'msw'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { nextTick, watchEffect } from 'vue'
 
 import { MapConfigApi } from '@/maps/api/mapConfig'
 import { MapStatesApi } from '@/maps/api/mapStates'
@@ -125,6 +126,8 @@ const mapObjectResponse = {
   links: []
 }
 
+const shown = { headers: { ETag: '"shown"' } }
+
 const signedMapResponse = {
   owner: '',
   visibility: { publish: 'private', hide_in_monitor_menu: false },
@@ -141,6 +144,7 @@ const signedMapResponse = {
 let listCalls: number
 let getCalls: string[]
 let saveRequests: { config: MapConfig; visibility?: unknown }[]
+let ifMatches: (string | null)[]
 let deletedNames: string[]
 
 const server = useMswServer(
@@ -150,15 +154,18 @@ const server = useMswServer(
   }),
   http.get('*/api/internal/objects/maps_signed_map/:name', ({ params }) => {
     getCalls.push(String(params['name']))
-    return HttpResponse.json(signedMapResponse)
+    return HttpResponse.json(signedMapResponse, shown)
   }),
   http.post('*/api/internal/domain-types/map/collections/all', async ({ request }) => {
     saveRequests.push(JSON.parse(await request.text()))
     return HttpResponse.json(mapObjectResponse)
   }),
   http.put('*/api/internal/objects/map/:name', async ({ request }) => {
+    ifMatches.push(request.headers.get('If-Match'))
     saveRequests.push(JSON.parse(await request.text()))
-    return HttpResponse.json(mapObjectResponse)
+    return HttpResponse.json(mapObjectResponse, {
+      headers: { ETag: `"saved-${saveRequests.length}"` }
+    })
   }),
   http.delete('*/api/internal/objects/map/:name', ({ params }) => {
     deletedNames.push(String(params['name']))
@@ -170,8 +177,13 @@ beforeEach(() => {
   listCalls = 0
   getCalls = []
   saveRequests = []
+  ifMatches = []
   deletedNames = []
 })
+
+const saveConflict = http.put('*/api/internal/objects/map/:name', () =>
+  HttpResponse.json({ title: 'Precondition failed', detail: "ETag didn't match." }, { status: 412 })
+)
 
 function newService(): MapService {
   return new MapService(new MapConfigApi(), new MapStatesApi(createMapsDaemonClient()))
@@ -343,6 +355,81 @@ describe('MapService', () => {
     expect(store.currentMap.value?.alias).toBe('kept')
   })
 
+  it('saves each version on the one the save before stored', async () => {
+    const store = newService()
+    await store.fetchMap('map1')
+
+    store.scheduleSave()
+    const first = store.flushSave()
+    store.scheduleSave()
+    await Promise.all([first, store.flushSave()])
+
+    expect(ifMatches).toEqual(['"shown"', '"saved-1"'])
+  })
+
+  describe('a save someone else saved before', () => {
+    async function conflicted(): Promise<MapService> {
+      const store = newService()
+      await store.fetchMap('map1')
+      server.use(saveConflict)
+      store.currentMap.value!.alias = 'mine'
+      store.scheduleSave()
+      await store.flushSave()
+      server.resetHandlers()
+      return store
+    }
+
+    it('leaves an effect that opened the map alone', async () => {
+      const store = newService()
+      let opened = 0
+      const stop = watchEffect(() => {
+        opened += 1
+        void store.fetchMap('map1')
+      })
+      await vi.waitFor(() => expect(store.currentMap.value).not.toBeNull())
+      server.use(saveConflict)
+      store.scheduleSave()
+      await store.flushSave()
+      await nextTick()
+      stop()
+
+      expect(opened).toBe(1)
+      expect(store.saveConflict.value?.name).toBe('map1')
+    })
+
+    it('keeps the edits unsaved until the operator chooses', async () => {
+      const store = await conflicted()
+
+      store.scheduleSave()
+      await new Promise((resolve) => setTimeout(resolve, 500))
+
+      expect(store.saveConflict.value?.name).toBe('map1')
+      expect(store.saveError.value).toBeNull()
+      expect(store.currentMap.value?.alias).toBe('mine')
+      expect(ifMatches).toEqual([])
+    })
+
+    it('shows the other save on a reload', async () => {
+      const store = await conflicted()
+
+      await store.reloadOnConflict()
+
+      expect(store.saveConflict.value).toBeNull()
+      expect(store.currentMap.value?.alias).toBe('Map 1')
+      expect(ifMatches).toEqual([])
+    })
+
+    it('stores the edits over the other save on an overwrite', async () => {
+      const store = await conflicted()
+
+      await store.overwriteOnConflict()
+
+      expect(store.saveConflict.value).toBeNull()
+      expect(ifMatches).toEqual(['*'])
+      expect(saveRequests.at(-1)!.config.alias).toBe('mine')
+    })
+  })
+
   it('cloneMap() keeps the clone out of the Monitor menu where its source is', async () => {
     const store = newService()
     await store.fetchMaps()
@@ -368,7 +455,7 @@ describe('MapService', () => {
           .replace(/\+/g, '-')
           .replace(/\//g, '_')
           .replace(/=+$/, '')
-        return HttpResponse.json({ ...signedMapResponse, config_b64: b64 })
+        return HttpResponse.json({ ...signedMapResponse, config_b64: b64 }, shown)
       })
     )
     // Start the slow map first, then a fast one — the fast load resolves first
@@ -392,16 +479,19 @@ describe('MapService', () => {
     })
     server.use(
       http.get('*/api/internal/objects/maps_signed_map/:name', () =>
-        HttpResponse.json({
-          ...signedMapResponse,
-          config_b64: btoa(JSON.stringify(cfg))
-            .replace(/\+/g, '-')
-            .replace(/\//g, '_')
-            .replace(/=+$/, ''),
-          // ``private-map`` is one the requesting user may not see, so the
-          // server left it out.
-          map_link_titles: { 'dc-2': 'Datacenter 2' }
-        })
+        HttpResponse.json(
+          {
+            ...signedMapResponse,
+            config_b64: btoa(JSON.stringify(cfg))
+              .replace(/\+/g, '-')
+              .replace(/\//g, '_')
+              .replace(/=+$/, ''),
+            // ``private-map`` is one the requesting user may not see, so the
+            // server left it out.
+            map_link_titles: { 'dc-2': 'Datacenter 2' }
+          },
+          shown
+        )
       )
     )
 
@@ -443,7 +533,7 @@ describe('MapService', () => {
           failFirst = false
           return HttpResponse.json({ title: 'Unavailable' }, { status: 503 })
         }
-        return HttpResponse.json(signedMapResponse)
+        return HttpResponse.json(signedMapResponse, shown)
       })
     )
 
@@ -497,7 +587,7 @@ describe('MapService', () => {
       server.use(
         http.get('*/api/internal/objects/maps_signed_map/:name', ({ params }) => {
           getCalls.push(String(params['name']))
-          return HttpResponse.json({ ...signedMapResponse, sig })
+          return HttpResponse.json({ ...signedMapResponse, sig }, shown)
         })
       )
     }
@@ -576,6 +666,15 @@ describe('MapService', () => {
       public: false,
       hide_in_monitor_menu: false
     })
+  })
+
+  it('saveMapMetadata() on a map that is not open leaves nothing to save', async () => {
+    const store = newService()
+
+    await store.saveMapMetadata('map1', { alias: 'renamed' })
+    await store.flushSave()
+
+    expect(saveRequests).toHaveLength(1)
   })
 
   it('createMap() persists via the REST API and appends in place', async () => {

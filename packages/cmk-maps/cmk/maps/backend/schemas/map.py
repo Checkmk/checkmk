@@ -382,9 +382,8 @@ class MapConfig(BaseModel):
     # NagVis' global default). Default 1 preserves the historic per-object
     # default; the cfg importer writes 10 to match NagVis exactly.
     default_z: int = 1
-    # Monotonically incremented per persisted change. Compared against the
-    # client's ``If-Match`` header on update; mismatch returns 409 Conflict so
-    # two operators editing the same map don't silently lose changes.
+    # Set by the GUI on every save, rising, so ``register`` refuses a config
+    # signed before the one it holds.
     version: int = 0
     # Locks the percent-positioning divisor: without a persisted size the reload
     # re-derives a larger one from padded extents, re-anchoring every object when

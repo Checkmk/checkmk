@@ -24,10 +24,14 @@ export interface SignedBytes {
   sig: string
 }
 
-/** What a save stored: the viewer's access to the map and its signed bytes. */
+/**
+ * What a save stored: the viewer's access to the map, its signed bytes and the
+ * ETag the next save of it sends.
+ */
 export interface SavedMap {
   access: MapAccess
   signed: SignedBytes
+  etag: string
 }
 
 /**
@@ -44,6 +48,8 @@ export interface SignedMap extends SignedBytes {
    * inside them: the signature covers the stored config.
    */
   map_link_titles: Record<string, string>
+  /** What a save of this version sends, so it is refused once another landed. */
+  etag: string
 }
 
 type RawSignedMap = components['schemas']['MapsSignedMapResponse']
@@ -59,14 +65,24 @@ function b64urlToString(b64url: string): string {
   return new TextDecoder().decode(Uint8Array.from(bin, (c) => c.charCodeAt(0)))
 }
 
-function decodeSignedMap(raw: RawSignedMap): SignedMap {
+function decodeSignedMap(raw: RawSignedMap, etag: string): SignedMap {
   return {
     config: JSON.parse(b64urlToString(raw.config_b64)) as MapConfig,
     config_b64: raw.config_b64,
     sig: raw.sig,
     access: accessFromWire(raw),
-    map_link_titles: raw.map_link_titles
+    map_link_titles: raw.map_link_titles,
+    etag
   }
+}
+
+// Both endpoints declare an ETag, so a response without one leaves nothing to save against.
+function requireEtag(response: Response): string {
+  const etag = response.headers.get('ETag')
+  if (etag === null) {
+    throw new Error('The response carries no ETag')
+  }
+  return etag
 }
 
 export class MapConfigApi {
@@ -88,24 +104,28 @@ export class MapConfigApi {
    * override — so no owner travels with the request. Omitting the envelope
    * preserves the stored sharing scope and Monitor menu choice, which is what a
    * routine autosave wants.
-   * ``If-Match: *`` opts out of optimistic locking: the SPA is the only editing
-   * surface and carries the map's own ``version``.
+   * ``ifMatch`` is the ETag of the version the edit was made on, refused with 412
+   * once another save landed; ``*`` stores it regardless.
    */
-  public async update(map: MapConfig, envelope?: MapEnvelope): Promise<SavedMap> {
-    const saved = unwrap(
-      await client.PUT('/objects/map/{name}', {
-        params: {
-          path: { name: map.name },
-          header: { 'If-Match': '*', 'Content-Type': 'application/json' }
-        },
-        body: mapRequestBody(map, envelope)
-      })
-    )
+  public async update(
+    map: MapConfig,
+    envelope: MapEnvelope | undefined,
+    ifMatch: string
+  ): Promise<SavedMap> {
+    const result = await client.PUT('/objects/map/{name}', {
+      params: {
+        path: { name: map.name },
+        header: { 'If-Match': ifMatch, 'Content-Type': 'application/json' }
+      },
+      body: mapRequestBody(map, envelope)
+    })
+    const saved = unwrap(result)
     // What was stored, not what was asked for: the server narrows the sharing
     // scope to what the user may publish, and saving a built-in makes it own.
     return {
       access: accessFromWire(saved.extensions),
-      signed: { config_b64: saved.extensions.config_b64, sig: saved.extensions.sig }
+      signed: { config_b64: saved.extensions.config_b64, sig: saved.extensions.sig },
+      etag: requireEtag(result.response)
     }
   }
 
@@ -119,9 +139,10 @@ export class MapConfigApi {
    * verbatim, and the viewer's access to it.
    */
   public async get(name: string): Promise<SignedMap> {
-    return decodeSignedMap(
-      unwrap(await client.GET('/objects/maps_signed_map/{name}', { params: { path: { name } } }))
-    )
+    const result = await client.GET('/objects/maps_signed_map/{name}', {
+      params: { path: { name } }
+    })
+    return decodeSignedMap(unwrap(result), requireEtag(result.response))
   }
 
   /** Deletes a map. Built-ins are refused and a foreign map needs the permission. */

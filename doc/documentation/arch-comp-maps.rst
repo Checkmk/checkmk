@@ -677,8 +677,8 @@ Trust boundaries
    environment are ignored, so the secret does not leave the site. The GUI
    signs map configs with ``etc/site_internal.secret``; the browser carries
    them to the daemon, which verifies the signature against the owner the GUI
-   names. The browser can therefore replay a config it received, but cannot
-   alter it.
+   names. The browser can therefore relay a config it received again, but
+   cannot alter it, nor have it replace a later one.
 3. **Daemon → Livestatus.** Livestatus enforces contact-group visibility for
    every query that carries ``AuthUser``. The daemon adds it from the user the
    GUI named for the session, never from request parameters.
@@ -797,11 +797,15 @@ config with ``POST v1/maps/{name}/register``. The daemon keeps registered config
 memory (LRU, 1024 entries), keyed by the map's owner and name.
 
 * **Signed config** (the normal case): the GUI signs a domain prefix
-  (``maps-map-config:v2:``), the owner and the canonical config JSON (which
+  (``maps-map-config:v3:``), the owner and the canonical config JSON (which
   contains the name). The daemon checks the signature against the owner the
   GUI names for the map in the path, and that the config's name is that name.
   So a viewer can neither modify a config nor file one signed for another owner
-  or map under a shared key.
+  or map under a shared key. Every save sets the config's ``version``, later
+  than the stored one and no earlier than the time in milliseconds. The daemon
+  keeps the highest version it registered per map (10,240 maps, until it
+  restarts) and answers ``409`` to an older one, which the SPA answers by
+  loading the saved map again.
 * **Unsigned config** (editor preview): accepted only with ``may_edit`` and only
   if the name means the caller's own map to the GUI. It lets the editor preview
   unsaved changes.
@@ -1136,10 +1140,13 @@ bundle, whose members include the hosts at its coordinates. The daemon
 accepts the unsigned config only for the user's own maps; while editing a
 foreign or built-in map, the live preview of new objects fails.
 
-Saving sends ``PUT objects/map/{name}``. The GUI validates the config against the REST
-model, clamps the visibility and writes the owner's ``user_maps.mk`` under a
-file lock, and answers with the signed config, which the SPA registers with the
-daemon. For the user's own map it asks for no states, as the daemon resolved the
+Saving sends ``PUT objects/map/{name}`` with the ETag of the version the editor
+shows in ``If-Match``. The GUI validates the config against the REST model,
+clamps the visibility and, under a file lock, compares the ETag with the stored
+map and writes the owner's ``user_maps.mk``. If someone else saved the map in
+between, it answers ``412``: the editor stops saving and offers to load the
+saved map or to overwrite it. Otherwise it answers with the signed config,
+which the SPA registers with the daemon. For the user's own map it asks for no states, as the daemon resolved the
 edits when they were made; for another user's map it does. If the user may save
 that map, as the GUI decides it (their own map
 with ``general.edit_map``, another user's with ``general.edit_foreign_map``),

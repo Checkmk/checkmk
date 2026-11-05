@@ -545,6 +545,22 @@ class _CustomGraphWidgetWizard(BaseWidgetWizard):
     widget_group_name: str | None = "Custom graphs"
     sidebar_title = "Custom graphs"
 
+    def set_widget_title(self, title: str) -> None:
+        """Replace the widget's default title, which only names the graph once it is drawn.
+
+        Args:
+            title: the title the widget shows.
+        """
+        panel = (
+            self.locator()
+            .locator(".cmk-catalog-panel")
+            .filter(has=self.page.locator(".cmk-catalog-panel__header", has_text="Widget settings"))
+        )
+        row = panel.locator(".table-form-row").filter(
+            has=self.page.get_by_text("Title", exact=True)
+        )
+        row.get_by_role("textbox").fill(title)
+
 
 class LinkCustomGraphWidgetWizard(_CustomGraphWidgetWizard):
     """Represents the widget wizard sidebar linking a custom graph of the graph catalog.

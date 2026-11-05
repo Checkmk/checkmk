@@ -10,13 +10,14 @@
 Registered for discovery in ``tests/system/gui/conftest.py``.
 """
 
+import json
 import time
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from typing import Final, NamedTuple
 
 import pytest
-from playwright.sync_api import Page
+from playwright.sync_api import Page, Response
 
 from tests.system.gui.testlib.playwright.pom.graphing.dashboard_graph_widget import (
     DashboardGraphWidget,
@@ -36,7 +37,10 @@ from tests.system.gui.testlib.playwright.pom.monitor.hosts_dashboard import Linu
 from tests.system.gui.testlib.playwright.pom.monitor.service import ServicePage
 from tests.system.gui.testlib.playwright.pom.monitor.service_search import ServiceSearchPage
 from tests.system.gui.testlib.playwright.pom.monitor.services_of_host import ServicesOfHostPage
-from tests.system.gui.testlib.playwright.timeouts import TIMEOUT_SLOW_DASHBOARD_LOAD_MS
+from tests.system.gui.testlib.playwright.timeouts import (
+    TIMEOUT_EXPECT_CHANGES,
+    TIMEOUT_SLOW_DASHBOARD_LOAD_MS,
+)
 from tests.testlib.common.utils2 import is_cleanup_enabled
 from tests.testlib.system.site import ADMIN_USER, Site
 
@@ -56,6 +60,8 @@ SCATTERPLOT_WIDGET_TITLE = "Total agent execution time"
 # The collection every user starts out with; adding to it clones it for the acting user.
 _BUILTIN_COLLECTION_NAME: Final = "default"
 _BUILTIN_COLLECTION_TITLE: Final = "My graphs"
+
+SAVED_CUSTOM_GRAPH_TITLE: Final = "E2E saved graph"
 
 _COLLECTION_FAMILY: Final = "graph_collection"
 _COLLECTION_USER_CONFIG: Final = "user_graph_collections.mk"
@@ -211,9 +217,52 @@ def fixture_saved_custom_graph(
         rrd_metric_source.metrics[0].name,
     )
     with _custom_graph(
-        test_site, "e2e_saved_graph", "E2E saved graph", [data_source], public=True
+        test_site, "e2e_saved_graph", SAVED_CUSTOM_GRAPH_TITLE, [data_source], public=True
     ) as name:
         yield name
+
+
+@pytest.fixture(name="custom_graph_to_delete")
+def fixture_custom_graph_to_delete(
+    test_site: Site, rrd_metric_source: RrdMetricSource
+) -> Iterator[tuple[str, str]]:
+    """The name and title of a saved custom graph for a test to delete.
+
+    Like `saved_custom_graph`, but only deleted afterwards if the test did not already do so.
+    """
+    name, title = "e2e_graph_to_delete", "E2E graph to delete"
+    data_source = test_site.openapi.custom_graph.rrd_metric_data_source(
+        "A",
+        rrd_metric_source.host_name,
+        rrd_metric_source.service_name,
+        rrd_metric_source.metrics[0].name,
+    )
+    with _as_admin_user(test_site):
+        test_site.openapi.custom_graph.create(name, title, [data_source], public=True)
+    try:
+        yield name, title
+    finally:
+        with _as_admin_user(test_site):
+            if test_site.openapi.custom_graph.get(name) is not None:
+                test_site.openapi.custom_graph.delete(name)
+
+
+def delete_custom_graph(test_site: Site, name: str) -> None:
+    """Delete a custom graph the fixtures above created, as the user owning it."""
+    with _as_admin_user(test_site):
+        test_site.openapi.custom_graph.delete(name)
+
+
+def custom_graph_data_sources(test_site: Site, name: str) -> list[object]:
+    """The data sources of a custom graph of the user the browser logs in as."""
+    with _as_admin_user(test_site):
+        graph = test_site.openapi.custom_graph.get(name)
+    if graph is None:
+        raise AssertionError(f"There is no custom graph named {name!r}")
+    data_sources = graph["content"]["data_sources"]
+    if not isinstance(data_sources, list):
+        raise AssertionError(f"Custom graph {name!r} has malformed data sources: {graph!r}")
+    return data_sources
 
 
 @pytest.fixture(name="custom_graph_for_editing")
@@ -299,6 +348,62 @@ def fixture_javascript_errors(dashboard_page: MainDashboard) -> Iterator[list[st
     errors: list[str] = []
     dashboard_page.page.on("pageerror", lambda error: errors.append(str(error)))
     yield errors
+
+
+_GRAPH_DATA_URL = "/domain-types/custom_graph/actions/fetch_data/invoke"
+
+_FETCH_POLL_INTERVAL_MS = 250
+_FETCH_POLL_ATTEMPTS = int(TIMEOUT_EXPECT_CHANGES * 1000 / _FETCH_POLL_INTERVAL_MS)
+
+
+@pytest.fixture(name="graph_data_requests")
+def fixture_graph_data_requests(dashboard_page: MainDashboard) -> Iterator[list[Response]]:
+    """Responses to the graph-data endpoint, in the order the page received them."""
+    responses: list[Response] = []
+
+    def collect(response: Response) -> None:
+        if _GRAPH_DATA_URL in response.url:
+            responses.append(response)
+
+    dashboard_page.page.on("response", collect)
+    yield responses
+    dashboard_page.page.remove_listener("response", collect)
+
+
+def _requested_source_count(response: Response) -> int | None:
+    """How many data sources the request behind `response` asked to be drawn.
+
+    `None` when the request does not state it, so a body of an unexpected shape is reported
+    as such rather than raising out of the wait below.
+    """
+    try:
+        body = json.loads(response.request.post_data or "")
+    except ValueError:
+        return None
+    sources = body.get("content", {}).get("data_sources")
+    return None if sources is None else len(sources)
+
+
+def wait_for_preview_fetch(page: Page, responses: list[Response], source_count: int) -> None:
+    """Wait until the preview fetched data for exactly `source_count` data sources.
+
+    The fetch trails the definition change that triggers it, so the row is in the table
+    before the request that redraws the graph is on the wire.
+
+    Waits through the page rather than by sleeping: Playwright only dispatches the events
+    feeding `responses` while the driver is being called, so a plain sleep would sit out
+    the whole timeout without ever seeing the fetch land.
+    """
+    for _ in range(_FETCH_POLL_ATTEMPTS):
+        if any(_requested_source_count(response) == source_count for response in responses):
+            return
+        page.wait_for_timeout(_FETCH_POLL_INTERVAL_MS)
+    # Naming what it did ask for turns "the graph never loaded" into a specific claim.
+    raise AssertionError(
+        f"The preview never fetched data for {source_count} data source(s). "
+        f"The {len(responses)} request(s) it made asked for "
+        f"{[_requested_source_count(response) for response in responses]}."
+    )
 
 
 @pytest.fixture(name="requested_urls")

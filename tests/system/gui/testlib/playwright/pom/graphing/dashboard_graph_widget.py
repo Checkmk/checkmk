@@ -96,6 +96,16 @@ class DashboardGraphWidget:
         """
         return self.figure.locator(".graphing-graph-figure__notice")
 
+    @property
+    def legend_names(self) -> Locator:
+        """The series names the compact legend lists, one per drawn series.
+
+        Widgets added through the wizard show this legend unless it was switched off.
+        """
+        return self.widget.get_by_role("group", name="Graph metrics").locator(
+            ".graphing-graph-legend-compact__name"
+        )
+
     def wait_until_rendered(self) -> None:
         """Wait for the graph to be on screen.
 

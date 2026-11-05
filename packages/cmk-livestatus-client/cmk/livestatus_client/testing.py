@@ -292,7 +292,9 @@ program_start num_hosts num_services max_long_output_size core_pid edition'
         single_conn: MockSingleSiteConnection
         show_columns = _show_columns(query)
         output_format = pick_header(query, "OutputFormat", "json")
-        for conn_number, single_conn in enumerate(self.connections.values(), start=0):
+        for conn_number, single_conn in enumerate(
+            (conn for conn in self.connections.values() if not conn.unreachable), start=0
+        ):
             for row_number, row in enumerate(single_conn.result_of_next_query(query)[0], start=0):
                 # We only want to see the column descriptions once. For all the other sites,
                 # we skip these.

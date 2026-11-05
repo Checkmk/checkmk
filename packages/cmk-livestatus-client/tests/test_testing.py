@@ -6,7 +6,11 @@
 import pytest
 
 from cmk.livestatus_client import MultiSiteConnection
-from cmk.livestatus_client.testing import mock_livestatus_communication, mock_site_configurations
+from cmk.livestatus_client.testing import (
+    mock_livestatus_communication,
+    mock_site_configurations,
+    MockLiveStatusConnection,
+)
 
 
 def test_an_unreachable_site_is_listed_among_the_dead_sites() -> None:
@@ -45,3 +49,13 @@ def test_a_command_is_rejected_when_the_first_site_is_unreachable() -> None:
 
         with pytest.raises(ValueError, match="NO_SITE"):
             live.expect_query("COMMAND [1] DISABLE_NOTIFICATIONS")
+
+
+def test_the_combined_result_leaves_out_an_unreachable_site() -> None:
+    live = MockLiveStatusConnection()
+    live.set_sites(["NO_SITE", "remote"])
+    live.add_table("hosts", [{"name": "heute"}])
+    live.make_site_unreachable("remote")
+    live.expect_query("GET hosts\nColumns: name")
+
+    assert live.result_of_next_query("GET hosts\nColumns: name")[0] == [["heute"]]

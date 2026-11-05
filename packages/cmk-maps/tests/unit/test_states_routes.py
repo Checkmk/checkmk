@@ -44,6 +44,7 @@ from cmk.maps.backend.core.ratelimit import (
     ws_connect_limiter,
 )
 from cmk.maps.backend.core.sse import manager, Subscriber
+from cmk.maps.backend.integrations.checkmk import FolderScope
 from cmk.maps.backend.schemas.map import FlowView, MapConfig, RadarView
 from cmk.maps.backend.schemas.state import MapStates, ObjectState, ObjectTiming
 from cmk.maps.backend.schemas.stream import StreamMessage
@@ -932,3 +933,12 @@ def test_sse_releases_the_subscriber_and_stream_slot_when_the_daemon_stops(app: 
         manager.get_subscriber_count(states._map_key("alice", "b1")),  # noqa: SLF001
         _free_stream_slots("alice"),
     ) == (0, free_slots)
+
+
+def test_a_see_all_user_shares_no_folder_tree_with_a_user_named_none() -> None:
+    scope = FolderScope(see_all=False, groups=frozenset({"ops"}))
+
+    see_all = states._Audience(None, scope).group_key  # noqa: SLF001
+    named_none = states._Audience("None", scope).group_key  # noqa: SLF001
+
+    assert see_all != named_none

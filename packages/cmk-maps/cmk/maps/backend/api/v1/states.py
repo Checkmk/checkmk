@@ -219,7 +219,9 @@ class _Audience:
     def group_key(self) -> str | None:
         if self.folder_scope is None:
             return self.auth_user
-        return f"{self.auth_user}#{self.folder_scope.key}"
+        # NUL for a see-all user, as no user name holds it, while "None" is one.
+        user = "\x00" if self.auth_user is None else self.auth_user
+        return f"{user}\x00{self.folder_scope.key}"
 
 
 def _audience(user: Principal, cfg: MapConfig) -> _Audience:

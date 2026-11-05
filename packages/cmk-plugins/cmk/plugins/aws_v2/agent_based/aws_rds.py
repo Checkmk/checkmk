@@ -26,8 +26,7 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.aws_v2.lib import (
     aws_get_counts_rate_human_readable,
     aws_rds_service_item,
-    AWSSectionMetrics,
-    discover_aws_generic,
+    discover_aws_generic_single,
     extract_aws_metrics_by_labels,
     parse_aws,
 )
@@ -44,8 +43,12 @@ def _ignore_results_if_missing_data() -> Generator[None]:
         raise IgnoreResultsError("Currently no data from AWS") from exc
 
 
-def parse_aws_rds(string_table: StringTable) -> AWSSectionMetrics:
-    section: dict[str, Mapping[str, Any]] = {}
+Section = Mapping[str, Any]
+"""The metrics of one instance, with its ID, region and allocated storage"""
+
+
+def parse_aws_rds(string_table: StringTable) -> Section | None:
+    instances: list[MutableMapping[str, Any]] = []
     for metrics in extract_aws_metrics_by_labels(
         [
             "CPUUtilization",
@@ -79,12 +82,9 @@ def parse_aws_rds(string_table: StringTable) -> AWSSectionMetrics:
     ).values():
         with suppress(KeyError):
             metrics["AllocatedStorage"] *= 1.074e9
-
-        section.setdefault(
-            aws_rds_service_item(metrics["DBInstanceIdentifier"], metrics["Region"]),
-            metrics,
-        )
-    return section
+        instances.append(metrics)
+    # Each instance is a host of its own, so the section has the metrics of one instance.
+    return next(iter(instances), None)
 
 
 agent_section_aws_v2_rds = AgentSection(
@@ -103,35 +103,32 @@ agent_section_aws_v2_rds = AgentSection(
 #   '----------------------------------------------------------------------'
 
 
-def discover_aws_rds_network_io(section: AWSSectionMetrics) -> DiscoveryResult:
-    yield from discover_aws_generic(
+def discover_aws_rds_network_io(section: Section) -> DiscoveryResult:
+    yield from discover_aws_generic_single(
         section,
         ["NetworkReceiveThroughput", "NetworkTransmitThroughput"],
     )
 
 
 def check_aws_rds_network_io(
-    item: str,
     params: Mapping[str, Any],
-    section: AWSSectionMetrics,
+    section: Section,
 ) -> CheckResult:
-    metrics = section.get(item)
-    if metrics is None:
-        return
-
     with _ignore_results_if_missing_data():
+        # The interface keeps the name that was the item, so the output does not change.
+        name = aws_rds_service_item(section["DBInstanceIdentifier"], section["Region"])
         interface = interfaces.InterfaceWithRatesAndAverages.from_interface_with_counters_or_rates(
             interfaces.InterfaceWithRates(
                 attributes=interfaces.Attributes(
                     index="0",
-                    descr=item,
-                    alias=metrics.get("DBInstanceIdentifier", item),
+                    descr=name,
+                    alias=section["DBInstanceIdentifier"],
                     type="1",
                     oper_status="1",
                 ),
                 rates=interfaces.Rates(
-                    in_octets=metrics["NetworkReceiveThroughput"],
-                    out_octets=metrics["NetworkTransmitThroughput"],
+                    in_octets=section["NetworkReceiveThroughput"],
+                    out_octets=section["NetworkTransmitThroughput"],
                 ),
                 get_rate_errors=[],
                 timestamp=time.time(),
@@ -140,15 +137,15 @@ def check_aws_rds_network_io(
             params=params,
         )
 
-    yield from interfaces.check_single_interface(item, params, interface)
+    yield from interfaces.check_single_interface(name, params, interface)
 
 
 check_plugin_aws_v2_rds_network_io = CheckPlugin(
     name="aws_v2_rds_network_io",
     sections=["aws_v2_rds"],
-    service_name="AWS/RDS %s Network IO",
+    service_name="AWS/RDS Network IO",
     discovery_function=discover_aws_rds_network_io,
-    check_ruleset_name="interfaces",
+    check_ruleset_name="aws_v2_rds_network_io",
     check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
     check_function=check_aws_rds_network_io,
 )
@@ -164,8 +161,8 @@ check_plugin_aws_v2_rds_network_io = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_aws_rds_disk_io(section: AWSSectionMetrics) -> DiscoveryResult:
-    yield from discover_aws_generic(
+def discover_aws_rds_disk_io(section: Section) -> DiscoveryResult:
+    yield from discover_aws_generic_single(
         section,
         [
             "DiskQueueDepth",
@@ -180,14 +177,10 @@ def discover_aws_rds_disk_io(section: AWSSectionMetrics) -> DiscoveryResult:
 
 
 def check_aws_rds_disk_io(
-    item: str,
     params: Mapping[str, Any],
-    section: AWSSectionMetrics,
+    section: Section,
 ) -> CheckResult:
     disk_data: MutableMapping[str, float] = {}
-
-    if (metrics := section.get(item)) is None:
-        return
 
     for key, metric_key, scale in [
         ("read_ios", "ReadIOPS", 1.0),
@@ -197,7 +190,7 @@ def check_aws_rds_disk_io(
         ("read_latency", "ReadLatency", 1000.0),
         ("write_latency", "WriteLatency", 1000.0),
     ]:
-        if (metric := metrics.get(metric_key)) is None:
+        if (metric := section.get(metric_key)) is None:
             continue
         disk_data[key] = metric * scale
 
@@ -211,11 +204,11 @@ def check_aws_rds_disk_io(
 
 check_plugin_aws_v2_rds_disk_io = CheckPlugin(
     name="aws_v2_rds_disk_io",
-    service_name="AWS/RDS %s Disk IO",
+    service_name="AWS/RDS Disk IO",
     check_function=check_aws_rds_disk_io,
     discovery_function=discover_aws_rds_disk_io,
     check_default_parameters={},
-    check_ruleset_name="diskstat",
+    check_ruleset_name="aws_v2_rds_disk_io",
     sections=["aws_v2_rds"],
 )
 
@@ -230,20 +223,17 @@ check_plugin_aws_v2_rds_disk_io = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_aws_rds(section: AWSSectionMetrics) -> DiscoveryResult:
-    yield from discover_aws_generic(
+def discover_aws_rds(section: Section) -> DiscoveryResult:
+    yield from discover_aws_generic_single(
         section,
         ["CPUUtilization"],
     )
 
 
-def check_aws_rds(item: str, params: Mapping[str, Any], section: AWSSectionMetrics) -> CheckResult:
-    if (metrics := section.get(item)) is None:
-        return
-
+def check_aws_rds(params: Mapping[str, Any], section: Section) -> CheckResult:
     with _ignore_results_if_missing_data():
         yield from check_cpu_util(
-            util=metrics["CPUUtilization"],
+            util=section["CPUUtilization"],
             params=params,
             value_store=get_value_store(),
             this_time=time.time(),
@@ -252,9 +242,9 @@ def check_aws_rds(item: str, params: Mapping[str, Any], section: AWSSectionMetri
 
 check_plugin_aws_v2_rds = CheckPlugin(
     name="aws_v2_rds",
-    service_name="AWS/RDS %s CPU Utilization",
+    service_name="AWS/RDS CPU Utilization",
     check_default_parameters={"levels": (80.0, 90.0)},
-    check_ruleset_name="cpu_utilization_multiitem",
+    check_ruleset_name="aws_v2_rds_cpu_utilization",
     check_function=check_aws_rds,
     discovery_function=discover_aws_rds,
 )
@@ -270,19 +260,16 @@ check_plugin_aws_v2_rds = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_aws_rds_agent_jobs(section: AWSSectionMetrics) -> DiscoveryResult:
-    yield from discover_aws_generic(
+def discover_aws_rds_agent_jobs(section: Section) -> DiscoveryResult:
+    yield from discover_aws_generic_single(
         section,
         ["FailedSQLServerAgentJobsCount"],
     )
 
 
-def check_aws_rds_agent_jobs(item: str, section: AWSSectionMetrics) -> CheckResult:
-    if (metrics := section.get(item)) is None:
-        return
-
+def check_aws_rds_agent_jobs(section: Section) -> CheckResult:
     with _ignore_results_if_missing_data():
-        failed_agent_jobs = metrics["FailedSQLServerAgentJobsCount"]
+        failed_agent_jobs = section["FailedSQLServerAgentJobsCount"]
 
     if failed_agent_jobs > 0:
         yield Result(
@@ -299,7 +286,7 @@ def check_aws_rds_agent_jobs(item: str, section: AWSSectionMetrics) -> CheckResu
 
 check_plugin_aws_v2_rds_agent_jobs = CheckPlugin(
     name="aws_v2_rds_agent_jobs",
-    service_name="AWS/RDS %s SQL Server Agent Jobs",
+    service_name="AWS/RDS SQL Server Agent Jobs",
     check_function=check_aws_rds_agent_jobs,
     discovery_function=discover_aws_rds_agent_jobs,
     sections=["aws_v2_rds"],
@@ -333,8 +320,8 @@ check_plugin_aws_v2_rds_agent_jobs = CheckPlugin(
 # usage remains above baseline.
 
 
-def discover_aws_rds_cpu_credits(section: AWSSectionMetrics) -> DiscoveryResult:
-    yield from discover_aws_generic(
+def discover_aws_rds_cpu_credits(section: Section) -> DiscoveryResult:
+    yield from discover_aws_generic_single(
         section,
         [
             "CPUCreditUsage",
@@ -344,16 +331,12 @@ def discover_aws_rds_cpu_credits(section: AWSSectionMetrics) -> DiscoveryResult:
 
 
 def check_aws_rds_cpu_credits(
-    item: str,
     params: Mapping[str, Any],
-    section: AWSSectionMetrics,
+    section: Section,
 ) -> CheckResult:
-    if (metrics := section.get(item)) is None:
-        return
-
     with _ignore_results_if_missing_data():
-        cpu_credit_usage = metrics["CPUCreditUsage"]
-        cpu_credit_balance = metrics["CPUCreditBalance"]
+        cpu_credit_usage = section["CPUCreditUsage"]
+        cpu_credit_balance = section["CPUCreditBalance"]
 
     yield Result(state=State.OK, summary=f"CPU Credit Usage: {cpu_credit_usage:.2f}")
 
@@ -364,7 +347,7 @@ def check_aws_rds_cpu_credits(
         label="CPU Credit Balance",
     )
 
-    if burst_balance := metrics.get("BurstBalance"):
+    if burst_balance := section.get("BurstBalance"):
         yield from check_levels_v1(
             value=burst_balance,
             metric_name="aws_burst_balance",
@@ -376,7 +359,7 @@ def check_aws_rds_cpu_credits(
 
 check_plugin_aws_v2_rds_cpu_credits = CheckPlugin(
     name="aws_v2_rds_cpu_credits",
-    service_name="AWS/RDS %s CPU Credits",
+    service_name="AWS/RDS CPU Credits",
     check_function=check_aws_rds_cpu_credits,
     discovery_function=discover_aws_rds_cpu_credits,
     check_default_parameters={},
@@ -395,27 +378,23 @@ check_plugin_aws_v2_rds_cpu_credits = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_aws_rds_bin_log_usage(section: AWSSectionMetrics) -> DiscoveryResult:
-    yield from discover_aws_generic(
+def discover_aws_rds_bin_log_usage(section: Section) -> DiscoveryResult:
+    yield from discover_aws_generic_single(
         section,
         ["BinLogDiskUsage"],
     )
 
 
 def check_aws_rds_bin_log_usage(
-    item: str,
     params: Mapping[str, Any],
-    section: AWSSectionMetrics,
+    section: Section,
 ) -> CheckResult:
-    if (metrics := section.get(item)) is None:
-        return
-
     with _ignore_results_if_missing_data():
-        bin_log_usage = metrics["BinLogDiskUsage"]
+        bin_log_usage = section["BinLogDiskUsage"]
 
     yield Result(state=State.OK, summary=render.bytes(bin_log_usage))
 
-    if (allocated_storage := metrics.get("AllocatedStorage")) is None or allocated_storage == 0.0:
+    if (allocated_storage := section.get("AllocatedStorage")) is None or allocated_storage == 0.0:
         yield Result(state=State.WARN, summary="Cannot calculate usage")
         return
 
@@ -434,7 +413,7 @@ check_plugin_aws_v2_rds_bin_log_usage = CheckPlugin(
     discovery_function=discover_aws_rds_bin_log_usage,
     check_default_parameters={},
     check_ruleset_name="aws_v2_rds_disk_usage",
-    service_name="AWS/RDS %s Binary Log Usage",
+    service_name="AWS/RDS Binary Log Usage",
     sections=["aws_v2_rds"],
 )
 
@@ -455,30 +434,26 @@ check_plugin_aws_v2_rds_bin_log_usage = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_aws_rds_transaction_logs_usage(section: AWSSectionMetrics) -> DiscoveryResult:
-    yield from discover_aws_generic(
+def discover_aws_rds_transaction_logs_usage(section: Section) -> DiscoveryResult:
+    yield from discover_aws_generic_single(
         section,
         ["TransactionLogsDiskUsage"],
     )
 
 
 def check_aws_rds_transaction_logs_usage(
-    item: str,
     params: Mapping[str, Any],
-    section: AWSSectionMetrics,
+    section: Section,
 ) -> CheckResult:
-    if (metrics := section.get(item)) is None:
-        return
-
     with _ignore_results_if_missing_data():
-        transaction_logs_space = metrics["TransactionLogsDiskUsage"]
+        transaction_logs_space = section["TransactionLogsDiskUsage"]
 
     yield Result(
         state=State.OK,
         summary=render.bytes(transaction_logs_space),
     )
 
-    if (allocated_storage := metrics.get("AllocatedStorage")) is None or allocated_storage == 0.0:
+    if (allocated_storage := section.get("AllocatedStorage")) is None or allocated_storage == 0.0:
         yield Result(
             state=State.WARN,
             summary="Cannot calculate usage",
@@ -493,7 +468,7 @@ def check_aws_rds_transaction_logs_usage(
         render_func=render.percent,
     )
 
-    if generation := metrics.get("TransactionLogsGeneration"):
+    if generation := section.get("TransactionLogsGeneration"):
         yield Result(
             state=State.OK,
             summary=f"Generation rate: {render.iobandwidth(generation)}",
@@ -502,7 +477,7 @@ def check_aws_rds_transaction_logs_usage(
 
 check_plugin_aws_v2_rds_transaction_logs_usage = CheckPlugin(
     name="aws_v2_rds_transaction_logs_usage",
-    service_name="AWS/RDS %s Transaction Logs Usage",
+    service_name="AWS/RDS Transaction Logs Usage",
     check_function=check_aws_rds_transaction_logs_usage,
     discovery_function=discover_aws_rds_transaction_logs_usage,
     check_default_parameters={},
@@ -527,27 +502,23 @@ check_plugin_aws_v2_rds_transaction_logs_usage = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_aws_rds_replication_slot_usage(section: AWSSectionMetrics) -> DiscoveryResult:
-    yield from discover_aws_generic(
+def discover_aws_rds_replication_slot_usage(section: Section) -> DiscoveryResult:
+    yield from discover_aws_generic_single(
         section,
         ["ReplicationSlotDiskUsage"],
     )
 
 
 def check_aws_rds_replication_slot_usage(
-    item: str,
     params: Mapping[str, Any],
-    section: AWSSectionMetrics,
+    section: Section,
 ) -> CheckResult:
-    if (metrics := section.get(item)) is None:
-        return
-
     with _ignore_results_if_missing_data():
-        replication_slot_space = metrics["ReplicationSlotDiskUsage"]
+        replication_slot_space = section["ReplicationSlotDiskUsage"]
 
     yield Result(state=State.OK, summary=render.bytes(replication_slot_space))
 
-    if (allocated_storage := metrics.get("AllocatedStorage")) is None or allocated_storage == 0.0:
+    if (allocated_storage := section.get("AllocatedStorage")) is None or allocated_storage == 0.0:
         yield Result(state=State.WARN, summary="Cannot calculate usage")
         return
 
@@ -562,7 +533,7 @@ def check_aws_rds_replication_slot_usage(
 
 check_plugin_aws_v2_rds_replication_slot_usage = CheckPlugin(
     name="aws_v2_rds_replication_slot_usage",
-    service_name="AWS/RDS %s Replication Slot Usage",
+    service_name="AWS/RDS Replication Slot Usage",
     check_function=check_aws_rds_replication_slot_usage,
     discovery_function=discover_aws_rds_replication_slot_usage,
     check_default_parameters={},
@@ -581,24 +552,20 @@ check_plugin_aws_v2_rds_replication_slot_usage = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_aws_rds_connections(section: AWSSectionMetrics) -> DiscoveryResult:
-    yield from discover_aws_generic(
+def discover_aws_rds_connections(section: Section) -> DiscoveryResult:
+    yield from discover_aws_generic_single(
         section,
         ["DatabaseConnections"],
     )
 
 
 def check_aws_rds_connections(
-    item: str,
     params: Mapping[str, Any],
-    section: AWSSectionMetrics,
+    section: Section,
 ) -> CheckResult:
-    if (metrics := section.get(item)) is None:
-        return
-
     with _ignore_results_if_missing_data():
         yield from check_levels_v1(
-            value=metrics["DatabaseConnections"],
+            value=section["DatabaseConnections"],
             metric_name="aws_rds_connections",
             levels_upper=params.get("levels"),
             label="In use",
@@ -607,7 +574,7 @@ def check_aws_rds_connections(
 
 check_plugin_aws_v2_rds_connections = CheckPlugin(
     name="aws_v2_rds_connections",
-    service_name="AWS/RDS %s Connections",
+    service_name="AWS/RDS Connections",
     sections=["aws_v2_rds"],
     check_function=check_aws_rds_connections,
     discovery_function=discover_aws_rds_connections,
@@ -626,23 +593,19 @@ check_plugin_aws_v2_rds_connections = CheckPlugin(
 #   '----------------------------------------------------------------------'
 
 
-def discover_aws_rds_replica_lag(section: AWSSectionMetrics) -> DiscoveryResult:
-    yield from discover_aws_generic(
+def discover_aws_rds_replica_lag(section: Section) -> DiscoveryResult:
+    yield from discover_aws_generic_single(
         section,
         ["ReplicaLag"],
     )
 
 
 def check_aws_rds_replica_lag(
-    item: str,
     params: Mapping[str, Any],
-    section: AWSSectionMetrics,
+    section: Section,
 ) -> CheckResult:
-    if (metrics := section.get(item)) is None:
-        return
-
     with _ignore_results_if_missing_data():
-        replica_lag = metrics["ReplicaLag"]
+        replica_lag = section["ReplicaLag"]
 
     yield from check_levels_v1(
         value=replica_lag,
@@ -652,7 +615,7 @@ def check_aws_rds_replica_lag(
         label="Lag",
     )
 
-    if (oldest_replica_lag_space := metrics.get("OldestReplicationSlotLag")) is not None:
+    if (oldest_replica_lag_space := section.get("OldestReplicationSlotLag")) is not None:
         yield from check_levels_v1(
             value=oldest_replica_lag_space,
             metric_name="aws_rds_oldest_replication_slot_lag",
@@ -664,7 +627,7 @@ def check_aws_rds_replica_lag(
 
 check_plugin_aws_v2_rds_replica_lag = CheckPlugin(
     name="aws_v2_rds_replica_lag",
-    service_name="AWS/RDS %s Replica Lag",
+    service_name="AWS/RDS Replica Lag",
     check_function=check_aws_rds_replica_lag,
     discovery_function=discover_aws_rds_replica_lag,
     check_default_parameters={},

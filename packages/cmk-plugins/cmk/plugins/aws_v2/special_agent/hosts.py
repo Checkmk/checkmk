@@ -115,6 +115,7 @@ class ElastiCacheNode:
 @dataclass(frozen=True)
 class RDSInstance:
     instance_id: str
+    region: str
 
 
 @dataclass(frozen=True)
@@ -277,7 +278,7 @@ def _elasticache_node_host(node: ElastiCacheNode) -> TargetHost:
 
 
 def _rds_instance_host(instance: RDSInstance) -> TargetHost:
-    return TargetHost(instance.instance_id)
+    return _hostname_from_name_and_region(instance.instance_id, instance.region)
 
 
 def _sns_topic_host(topic: SNSTopic) -> TargetHost:

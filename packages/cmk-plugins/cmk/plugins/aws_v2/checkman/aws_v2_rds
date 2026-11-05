@@ -10,13 +10,9 @@ description:
  special agent {Amazon Web Services (AWS) v2}.
 
  Upper default levels are set to 80, 90 percent. These levels are
- configurable via the rule "CPU utilization of Devices with Modules".
-
-item:
- Name of the instance and region name (to avoid duplicate services
- in case of multi-region monitoring).
+ configurable via the rule "AWS v2/RDS CPU utilization".
 
 discovery:
- Each instance is a piggyback host with the name {<instance ID>}.
+ Each instance is a piggyback host with the name {<instance ID>_<region>}.
  One service is created on this host if all required metrics
  (CPUUtilization) are given.

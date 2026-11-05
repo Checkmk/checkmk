@@ -16,6 +16,13 @@ from cmk.gui.form_specs.unstable.legacy_converter import (
     Tuple,
 )
 from cmk.gui.form_specs.unstable.legacy_converter.generators import TupleLevels
+from cmk.gui.i18n import _
+from cmk.gui.plugins.wato.check_parameters.interfaces import _parameter_valuespec_if
+from cmk.gui.plugins.wato.utils import (
+    CheckParameterRulespecWithoutItem,
+    rulespec_registry,
+    RulespecGroupCheckParametersApplications,
+)
 from cmk.plugins.aws_deprecated.constants import (  # astrein: disable=module-layers
     AWS_EC2_INST_FAMILIES,
     AWS_EC2_INST_TYPES,
@@ -27,7 +34,7 @@ from cmk.rulesets.internal.form_specs import (
     CascadingSingleChoiceExtended,
     CascadingSingleChoiceLayout,
 )
-from cmk.rulesets.v1 import Help, Message, Title
+from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
     CascadingSingleChoiceElement,
@@ -40,9 +47,15 @@ from cmk.rulesets.v1.form_specs import (
     FormSpec,
     IECMagnitude,
     Integer,
+    LevelDirection,
+    Levels,
     List,
     Percentage,
+    PredictiveLevels,
+    SIMagnitude,
     String,
+    TimeMagnitude,
+    TimeSpan,
     validators,
 )
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostAndItemCondition, HostCondition, Topic
@@ -1599,9 +1612,7 @@ rule_spec_aws_v2_rds_cpu_credits = CheckParameters(
     parameter_form=lambda: Dictionary(
         elements={**_fs_cpu_credits_balance(), **_fs_burst_balance()}
     ),
-    condition=HostAndItemCondition(
-        item_title=Title("Instance identifier & region"), item_form=_item_spec_aws_rds()
-    ),
+    condition=HostCondition(),
 )
 
 
@@ -1659,9 +1670,7 @@ rule_spec_aws_v2_rds_disk_usage = CheckParameters(
     title=Title("AWS v2/RDS disk usage"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_rds_disk_usage,
-    condition=HostAndItemCondition(
-        item_title=Title("Instance identifier & region"), item_form=_item_spec_aws_rds()
-    ),
+    condition=HostCondition(),
 )
 
 
@@ -1719,9 +1728,7 @@ rule_spec_aws_v2_rds_connections = CheckParameters(
     title=Title("AWS v2/RDS connections"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_rds_connections,
-    condition=HostAndItemCondition(
-        item_title=Title("Instance identifier & region"), item_form=_item_spec_aws_rds()
-    ),
+    condition=HostCondition(),
 )
 
 
@@ -1784,9 +1791,181 @@ rule_spec_aws_v2_rds_replica_lag = CheckParameters(
     title=Title("AWS v2/RDS replica lag"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_rds_replica_lag,
-    condition=HostAndItemCondition(
-        item_title=Title("Instance identifier & region"), item_form=_item_spec_aws_rds()
-    ),
+    condition=HostCondition(),
+)
+
+
+def _parameter_form_spec_aws_v2_rds_cpu_utilization() -> Dictionary:
+    return Dictionary(
+        help_text=Help(
+            "The CPU utilization sums up the percentages of CPU time that is used "
+            "for user processes and kernel routines over all available cores within "
+            "the last check interval. The possible range is from 0% to 100%"
+        ),
+        elements={
+            "levels": DictElement(
+                parameter_form=TupleLevels(
+                    title=Title("Alert on too high CPU utilization"),
+                    elements=[
+                        Percentage(
+                            title=Title("Warning at a utilization of"),
+                            prefill=DefaultValue(80.0),
+                        ),
+                        Percentage(
+                            title=Title("Critical at a utilization of"),
+                            prefill=DefaultValue(90.0),
+                        ),
+                    ],
+                ),
+            ),
+            "average": DictElement(
+                parameter_form=Integer(
+                    title=Title("Averaging"),
+                    help_text=Help(
+                        "Average the CPU utilization over the specified time period before "
+                        "levels are applied."
+                    ),
+                    label=Label("Compute average over last "),
+                    unit_symbol="minutes",
+                    prefill=DefaultValue(15),
+                    custom_validate=(validators.NumberInRange(min_value=1),),
+                ),
+            ),
+        },
+    )
+
+
+rule_spec_aws_v2_rds_cpu_utilization = CheckParameters(
+    name="aws_v2_rds_cpu_utilization",
+    title=Title("AWS v2/RDS CPU utilization"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_v2_rds_cpu_utilization,
+    condition=HostCondition(),
+)
+
+
+_MB = 1000**2
+
+
+def _parameter_form_spec_aws_v2_rds_disk_io() -> Dictionary:
+    # The elements of the rule "Disk I/O levels" for the metrics that RDS reports.
+    return Dictionary(
+        elements={
+            "read_throughput": DictElement(
+                parameter_form=Levels(
+                    title=Title("Read throughput"),
+                    form_spec_template=DataSize(
+                        label=Label("/sec"), displayed_magnitudes=[SIMagnitude.MEGA]
+                    ),
+                    level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=DefaultValue((50 * _MB, 100 * _MB)),
+                    predictive=PredictiveLevels(
+                        reference_metric="disk_read_throughput",
+                        prefill_abs_diff=DefaultValue((0.0, 0.0)),
+                    ),
+                ),
+            ),
+            "write_throughput": DictElement(
+                parameter_form=Levels(
+                    title=Title("Write throughput"),
+                    form_spec_template=DataSize(
+                        label=Label("/sec"), displayed_magnitudes=[SIMagnitude.MEGA]
+                    ),
+                    level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=DefaultValue((50 * _MB, 100 * _MB)),
+                    predictive=PredictiveLevels(
+                        reference_metric="disk_write_throughput",
+                        prefill_abs_diff=DefaultValue((0.0, 0.0)),
+                    ),
+                ),
+            ),
+            "read_latency": DictElement(
+                parameter_form=Levels(
+                    title=Title("Disk read latency"),
+                    form_spec_template=TimeSpan(displayed_magnitudes=[TimeMagnitude.MILLISECOND]),
+                    level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=DefaultValue((0.08, 0.16)),
+                    predictive=PredictiveLevels(
+                        reference_metric="disk_read_latency",
+                        prefill_abs_diff=DefaultValue((0.0, 0.0)),
+                    ),
+                ),
+            ),
+            "write_latency": DictElement(
+                parameter_form=Levels(
+                    title=Title("Disk write latency"),
+                    form_spec_template=TimeSpan(displayed_magnitudes=[TimeMagnitude.MILLISECOND]),
+                    level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=DefaultValue((0.08, 0.16)),
+                    predictive=PredictiveLevels(
+                        reference_metric="disk_write_latency",
+                        prefill_abs_diff=DefaultValue((0.0, 0.0)),
+                    ),
+                ),
+            ),
+            "average": DictElement(
+                parameter_form=TimeSpan(
+                    title=Title("Averaging"),
+                    displayed_magnitudes=[
+                        TimeMagnitude.DAY,
+                        TimeMagnitude.HOUR,
+                        TimeMagnitude.MINUTE,
+                        TimeMagnitude.SECOND,
+                    ],
+                    help_text=Help(
+                        "When averaging is set, then all of the disk's metrics are averaged "
+                        "over the selected interval - rather then the check interval. This allows "
+                        "you to make your monitoring less reactive to short peaks. But it will also "
+                        "introduce a loss of accuracy in your graphs. "
+                    ),
+                    prefill=DefaultValue(300.0),
+                ),
+            ),
+            "read_ios": DictElement(
+                parameter_form=Levels(
+                    title=Title("Read operations"),
+                    form_spec_template=Float(unit_symbol="1/s"),
+                    level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=DefaultValue((400.0, 600.0)),
+                    predictive=PredictiveLevels(
+                        reference_metric="disk_read_ios",
+                        prefill_abs_diff=DefaultValue((0.0, 0.0)),
+                    ),
+                ),
+            ),
+            "write_ios": DictElement(
+                parameter_form=Levels(
+                    title=Title("Write operations"),
+                    form_spec_template=Float(unit_symbol="1/s"),
+                    level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=DefaultValue((300.0, 400.0)),
+                    predictive=PredictiveLevels(
+                        reference_metric="disk_write_ios",
+                        prefill_abs_diff=DefaultValue((0.0, 0.0)),
+                    ),
+                ),
+            ),
+        },
+    )
+
+
+rule_spec_aws_v2_rds_disk_io = CheckParameters(
+    name="aws_v2_rds_disk_io",
+    title=Title("AWS v2/RDS disk IO"),
+    topic=Topic.APPLICATIONS,
+    parameter_form=_parameter_form_spec_aws_v2_rds_disk_io,
+    condition=HostCondition(),
+)
+
+
+rulespec_registry.register(
+    CheckParameterRulespecWithoutItem(
+        check_group_name="aws_v2_rds_network_io",
+        group=RulespecGroupCheckParametersApplications,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec_if,
+        title=lambda: _("AWS v2/RDS network IO"),
+    )
 )
 
 

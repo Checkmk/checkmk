@@ -206,6 +206,12 @@ def test_elasticache_nodes_with_the_same_id_in_two_regions_go_to_two_hosts() -> 
 
 
 def test_rds_instance_goes_to_a_host_per_instance() -> None:
-    instance = RDSInstance("mydb")
+    instance = RDSInstance("mydb", "eu-central-1")
 
-    assert target_host(instance, DEFAULT_NAMING) == "mydb"
+    assert target_host(instance, DEFAULT_NAMING) == "mydb_eu-central-1"
+
+
+def test_rds_instances_with_the_same_id_in_two_regions_go_to_two_hosts() -> None:
+    assert target_host(RDSInstance("mydb", "eu-central-1"), DEFAULT_NAMING) != target_host(
+        RDSInstance("mydb", "us-east-1"), DEFAULT_NAMING
+    )

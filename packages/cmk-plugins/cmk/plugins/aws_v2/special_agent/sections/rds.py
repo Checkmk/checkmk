@@ -38,7 +38,7 @@ ON_INSTANCE_HOST = "CmkOnInstanceHost"
 
 
 def _rds_instance(instance: Mapping[str, object]) -> hosts.RDSInstance:
-    return hosts.RDSInstance(str(instance["DBInstanceIdentifier"]))
+    return hosts.RDSInstance(str(instance["DBInstanceIdentifier"]), str(instance["Region"]))
 
 
 def _instance_resource(instance: Mapping[str, Any]) -> AwsResource:
@@ -345,7 +345,7 @@ class RDS(AWSSectionCloudwatch):
         rows: Sequence[Mapping[str, object]],
         instance: Mapping[str, Any] | None,
     ) -> AWSSectionResult:
-        host = self._target_host(hosts.RDSInstance(instance_id))
+        host = self._target_host(hosts.RDSInstance(instance_id, self._region))
         if instance is None:
             # The instance is gone from the summary since its metrics were cached.
             return AWSSectionResult(host, rows, AwsResource(service="rds"))

@@ -232,9 +232,9 @@ def test_agent_aws_rds(
     assert rds.name == "rds"
 
     # 21 metrics per instance, each instance on its own host
-    assert {
-        result.piggyback_hostname: len(result.content) for result in rds_results
-    } == dict.fromkeys(found_instances, 21)
+    assert {result.piggyback_hostname: len(result.content) for result in rds_results} == {
+        f"{instance}_region": 21 for instance in found_instances
+    }
 
 
 @pytest.mark.parametrize(
@@ -274,9 +274,9 @@ def test_agent_aws_rds_summary_reaches_each_instance_host_with_only_its_instance
         for result in rds_summary_results
         if result.piggyback_hostname != ACCOUNT_HOST
     } == {
-        "DBInstanceIdentifier-0": [("DBInstanceIdentifier-0", True)],
-        "DBInstanceIdentifier-1": [("DBInstanceIdentifier-1", True)],
-        "DBInstanceIdentifier-2": [("DBInstanceIdentifier-2", True)],
+        "DBInstanceIdentifier-0_region": [("DBInstanceIdentifier-0", True)],
+        "DBInstanceIdentifier-1_region": [("DBInstanceIdentifier-1", True)],
+        "DBInstanceIdentifier-2_region": [("DBInstanceIdentifier-2", True)],
     }
 
 
@@ -313,7 +313,7 @@ def test_agent_aws_rds_instance_hosts_get_the_resource_labels(
         for result in results
         if result.piggyback_hostname != ACCOUNT_HOST
     } == {
-        f"DBInstanceIdentifier-{i}": {
+        f"DBInstanceIdentifier-{i}_region": {
             "cmk/aws/service": "rds",
             "cmk/aws/name": f"DBInstanceIdentifier-{i}",
             "cmk/aws/resource_id": f"DbiResourceId-{i}",

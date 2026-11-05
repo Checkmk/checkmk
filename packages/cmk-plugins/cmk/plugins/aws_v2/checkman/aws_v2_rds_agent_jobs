@@ -12,11 +12,7 @@ description:
 
  The service goes {WARN} if at least one jobs fails.
 
-item:
- Name of the instance and region name (to avoid duplicate services
- in case of multi-region monitoring).
-
 discovery:
- Each instance is a piggyback host with the name {<instance ID>}.
+ Each instance is a piggyback host with the name {<instance ID>_<region>}.
  One service is created on this host if the required metrics
  (FailedSQLServerAgentJobsCount) are given.

@@ -12,11 +12,7 @@ description:
  No default levels are set. Upper levels are configurable via the
  rule "AWS v2/RDS Disk Usage".
 
-item:
- Name of the instance and region name (to avoid duplicate services
- in case of multi-region monitoring).
-
 discovery:
- Each instance is a piggyback host with the name {<instance ID>}.
+ Each instance is a piggyback host with the name {<instance ID>_<region>}.
  One service is created on this host if all required metrics
  (BinLogDiskUsage) are given.

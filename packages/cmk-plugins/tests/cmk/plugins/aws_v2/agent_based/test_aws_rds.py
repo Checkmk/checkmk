@@ -33,30 +33,28 @@ from cmk.plugins.aws_v2.agent_based.aws_rds import (
     discover_aws_rds_replication_slot_usage,
     discover_aws_rds_transaction_logs_usage,
     parse_aws_rds,
+    Section,
 )
-from cmk.plugins.aws_v2.lib import AWSSectionMetrics
 
-SECTION = {
-    "database-1 [eu-central-1]": {
-        "BinLogDiskUsage": 1783.4,
-        "DBInstanceIdentifier": "database-1",
-        "AllocatedStorage": 21480000000.0,
-        "Region": "eu-central-1",
-        "BurstBalance": 100.0,
-        "CPUUtilization": 2.3550349634157652,
-        "CPUCreditUsage": 0.116523,
-        "CPUCreditBalance": 0.403469,
-        "DatabaseConnections": 0.0,
-        "DiskQueueDepth": 0.0002666533349034978,
-        "NetworkReceiveThroughput": 417.41570964272285,
-        "NetworkTransmitThroughput": 2671.1907577121706,
-        "ReadIOPS": 0.23333527781018573,
-        "ReadLatency": 4e-05,
-        "ReadThroughput": 136.53447113007437,
-        "WriteIOPS": 0.3249847523733059,
-        "WriteLatency": 0.00024792140430921573,
-        "WriteThroughput": 3338.060601250865,
-    },
+SECTION: Section = {
+    "BinLogDiskUsage": 1783.4,
+    "DBInstanceIdentifier": "database-1",
+    "AllocatedStorage": 21480000000.0,
+    "Region": "eu-central-1",
+    "BurstBalance": 100.0,
+    "CPUUtilization": 2.3550349634157652,
+    "CPUCreditUsage": 0.116523,
+    "CPUCreditBalance": 0.403469,
+    "DatabaseConnections": 0.0,
+    "DiskQueueDepth": 0.0002666533349034978,
+    "NetworkReceiveThroughput": 417.41570964272285,
+    "NetworkTransmitThroughput": 2671.1907577121706,
+    "ReadIOPS": 0.23333527781018573,
+    "ReadLatency": 4e-05,
+    "ReadThroughput": 136.53447113007437,
+    "WriteIOPS": 0.3249847523733059,
+    "WriteLatency": 0.00024792140430921573,
+    "WriteThroughput": 3338.060601250865,
 }
 
 
@@ -3073,7 +3071,6 @@ def empty_value_store(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_check_aws_rds_network_io() -> None:
     assert list(
         check_aws_rds_network_io(
-            "database-1 [eu-central-1]",
             {},
             SECTION,
         )
@@ -3097,7 +3094,7 @@ def test_check_aws_rds_network_io() -> None:
     [
         pytest.param(
             SECTION,
-            [Service(item="database-1 [eu-central-1]")],
+            [Service()],
             id="For every disk in the section a Service is discovered.",
         ),
         pytest.param(
@@ -3108,7 +3105,7 @@ def test_check_aws_rds_network_io() -> None:
     ],
 )
 def test_aws_ec2_disk_io_discovery(
-    section: Mapping[str, Mapping[str, float]],
+    section: Section,
     discovery_result: Sequence[Service],
 ) -> None:
     assert list(discover_aws_rds_disk_io(section)) == discovery_result
@@ -3118,7 +3115,6 @@ def test_aws_ec2_disk_io_discovery(
 def test_check_aws_rds_disk_io() -> None:
     check_result = list(
         check_aws_rds_disk_io(
-            item="database-1 [eu-central-1]",
             params={},
             section=SECTION,
         )
@@ -3140,23 +3136,12 @@ def test_check_aws_rds_disk_io() -> None:
     ]
 
 
-def test_check_aws_rds_disk_io_item_not_foung() -> None:
-    check_result = list(
-        check_aws_rds_disk_io(
-            item="item_not_found",
-            params={},
-            section=SECTION,
-        )
-    )
-    assert not check_result
-
-
 @pytest.mark.parametrize(
     "section, discovery_result",
     [
         pytest.param(
-            {"disk": {"CPUUtilization": 99}},
-            [Service(item="disk")],
+            {"CPUUtilization": 99},
+            [Service()],
             id="For every disk in the section a Service with no item is discovered.",
         ),
         pytest.param(
@@ -3167,7 +3152,7 @@ def test_check_aws_rds_disk_io_item_not_foung() -> None:
     ],
 )
 def test_aws_rds_discovery(
-    section: AWSSectionMetrics,
+    section: Section,
     discovery_result: Sequence[Service],
 ) -> None:
     assert list(discover_aws_rds(section)) == discovery_result
@@ -3178,7 +3163,7 @@ def test_aws_rds_discovery(
     "section, params, expected_check_result",
     [
         pytest.param(
-            {"disk": {"CPUUtilization": 99}},
+            {"CPUUtilization": 99},
             {},
             [
                 Result(state=State.OK, summary="Total CPU: 99.00%"),
@@ -3187,7 +3172,7 @@ def test_aws_rds_discovery(
             id="If the ruleset is initialized and left blank, the result always be OK and display the appropriate description.",
         ),
         pytest.param(
-            {"disk": {"CPUUtilization": 70}},
+            {"CPUUtilization": 70},
             {"util": (90.0, 95.0)},
             [
                 Result(state=State.OK, summary="Total CPU: 70.00%"),
@@ -3196,7 +3181,7 @@ def test_aws_rds_discovery(
             id="If the CPU Utilization is below the set boundaries, the result is OK and the appropriate description is displayed.",
         ),
         pytest.param(
-            {"disk": {"CPUUtilization": 91}},
+            {"CPUUtilization": 91},
             {"util": (90.0, 95.0)},
             [
                 Result(state=State.WARN, summary="Total CPU: 91.00% (warn/crit at 90.00%/95.00%)"),
@@ -3205,7 +3190,7 @@ def test_aws_rds_discovery(
             id="If the CPU Utilization is above the set warning level, the result is WARN and the appropriate description is displayed.",
         ),
         pytest.param(
-            {"disk": {"CPUUtilization": 99}},
+            {"CPUUtilization": 99},
             {"util": (90.0, 95.0)},
             [
                 Result(state=State.CRIT, summary="Total CPU: 99.00% (warn/crit at 90.00%/95.00%)"),
@@ -3216,13 +3201,12 @@ def test_aws_rds_discovery(
     ],
 )
 def test_check_aws_rds(  # type: ignore[misc]
-    section: AWSSectionMetrics,
+    section: Section,
     params: Mapping[str, Any],
     expected_check_result: Sequence[Result | Metric],
 ) -> None:
     check_result = list(
         check_aws_rds(
-            item="disk",
             params=params,
             section=section,
         )
@@ -3230,22 +3214,12 @@ def test_check_aws_rds(  # type: ignore[misc]
     assert check_result == expected_check_result
 
 
-def test_check_aws_rds_item_not_found() -> None:
-    assert not list(
-        check_aws_rds(
-            item="disk",
-            params={},
-            section={},
-        )
-    )
-
-
 @pytest.mark.parametrize(
     "section, discovery_result",
     [
         pytest.param(
-            {"disk": {"FailedSQLServerAgentJobsCount": 99}},
-            [Service(item="disk")],
+            {"FailedSQLServerAgentJobsCount": 99},
+            [Service()],
             id="For every disk in the section a Service with no item is discovered.",
         ),
         pytest.param(
@@ -3256,27 +3230,17 @@ def test_check_aws_rds_item_not_found() -> None:
     ],
 )
 def test_aws_rds_agent_jobs_discovery(
-    section: Mapping[str, Mapping[str, float]],
+    section: Section,
     discovery_result: Sequence[Service],
 ) -> None:
     assert list(discover_aws_rds_agent_jobs(section)) == discovery_result
-
-
-def test_check_aws_rds_agent_jobs_item_not_found() -> None:
-    assert not list(
-        check_aws_rds_agent_jobs(
-            item="disk",
-            section={},
-        )
-    )
 
 
 def test_check_aws_rds_agent_jobs_metric_not_found() -> None:
     with pytest.raises(IgnoreResultsError):
         list(
             check_aws_rds_agent_jobs(
-                item="disk",
-                section={"disk": {"CPUUtilization": 1}},
+                section={"CPUUtilization": 1},
             )
         )
 
@@ -3285,14 +3249,14 @@ def test_check_aws_rds_agent_jobs_metric_not_found() -> None:
     "section, expected_check_result",
     [
         pytest.param(
-            {"disk": {"FailedSQLServerAgentJobsCount": 1.0}},
+            {"FailedSQLServerAgentJobsCount": 1.0},
             [
                 Result(state=State.WARN, summary="Rate of failing jobs: 1.000/s"),
             ],
             id="If there are any FailedSQLServerAgentJobs, the check state turn to WARN and provides a description with more information.",
         ),
         pytest.param(
-            {"disk": {"FailedSQLServerAgentJobsCount": 0.0}},
+            {"FailedSQLServerAgentJobsCount": 0.0},
             [
                 Result(state=State.OK, summary="Rate of failing jobs: 0.000/s"),
             ],
@@ -3301,12 +3265,11 @@ def test_check_aws_rds_agent_jobs_metric_not_found() -> None:
     ],
 )
 def test_check_aws_rds_agent_jobs(
-    section: Mapping[str, Mapping[str, float]],
+    section: Section,
     expected_check_result: Sequence[Result | Metric],
 ) -> None:
     check_result = list(
         check_aws_rds_agent_jobs(
-            item="disk",
             section=section,
         )
     )
@@ -3317,8 +3280,8 @@ def test_check_aws_rds_agent_jobs(
     "section, discovery_result",
     [
         pytest.param(
-            {"disk": {"CPUCreditUsage": 99, "CPUCreditBalance": 2}},
-            [Service(item="disk")],
+            {"CPUCreditUsage": 99, "CPUCreditBalance": 2},
+            [Service()],
             id="For every disk in the section a Service with no item is discovered.",
         ),
         pytest.param(
@@ -3329,29 +3292,18 @@ def test_check_aws_rds_agent_jobs(
     ],
 )
 def test_aws_rds_cpu_credits_discovery(
-    section: Mapping[str, Mapping[str, float]],
+    section: Section,
     discovery_result: Sequence[Service],
 ) -> None:
     assert list(discover_aws_rds_cpu_credits(section)) == discovery_result
-
-
-def test_check_aws_rds_cpu_credits_item_not_found() -> None:
-    assert not list(
-        check_aws_rds_cpu_credits(
-            item="disk",
-            params={},
-            section={},
-        )
-    )
 
 
 def test_check_aws_rds_cpu_credits_metric_not_found() -> None:
     with pytest.raises(IgnoreResultsError):
         list(
             check_aws_rds_cpu_credits(
-                item="disk",
                 params={},
-                section={"disk": {"CPUUtilization": 1}},
+                section={"CPUUtilization": 1},
             )
         )
 
@@ -3360,7 +3312,7 @@ def test_check_aws_rds_cpu_credits_metric_not_found() -> None:
     "section, params, expected_check_result",
     [
         pytest.param(
-            {"disk": {"CPUCreditUsage": 99, "CPUCreditBalance": 30, "BurstBalance": 30}},
+            {"CPUCreditUsage": 99, "CPUCreditBalance": 30, "BurstBalance": 30},
             {"balance_levels_lower": (10, 5), "burst_balance_levels_lower": (10, 5)},
             [
                 Result(state=State.OK, summary="CPU Credit Usage: 99.00"),
@@ -3372,7 +3324,7 @@ def test_check_aws_rds_cpu_credits_metric_not_found() -> None:
             id="If the levels are above the warn/crit levels, the check state will be OK with a appropriate description.",
         ),
         pytest.param(
-            {"disk": {"CPUCreditUsage": 99, "CPUCreditBalance": 8, "BurstBalance": 8}},
+            {"CPUCreditUsage": 99, "CPUCreditBalance": 8, "BurstBalance": 8},
             {"balance_levels_lower": (10, 5), "burst_balance_levels_lower": (10, 5)},
             [
                 Result(state=State.OK, summary="CPU Credit Usage: 99.00"),
@@ -3389,7 +3341,7 @@ def test_check_aws_rds_cpu_credits_metric_not_found() -> None:
             id="If the levels are below the warn levels, the check state will be WARN with a appropriate description.",
         ),
         pytest.param(
-            {"disk": {"CPUCreditUsage": 99, "CPUCreditBalance": 3, "BurstBalance": 3}},
+            {"CPUCreditUsage": 99, "CPUCreditBalance": 3, "BurstBalance": 3},
             {"balance_levels_lower": (10, 5), "burst_balance_levels_lower": (10, 5)},
             [
                 Result(state=State.OK, summary="CPU Credit Usage: 99.00"),
@@ -3406,7 +3358,7 @@ def test_check_aws_rds_cpu_credits_metric_not_found() -> None:
             id="If the levels are below the warn levels, the check state will be WARN with a appropriate description.",
         ),
         pytest.param(
-            {"disk": {"CPUCreditUsage": 99, "CPUCreditBalance": 30}},
+            {"CPUCreditUsage": 99, "CPUCreditBalance": 30},
             {"balance_levels_lower": (10, 5), "burst_balance_levels_lower": (10, 5)},
             [
                 Result(state=State.OK, summary="CPU Credit Usage: 99.00"),
@@ -3421,13 +3373,12 @@ def test_check_aws_rds_cpu_credits_metric_not_found() -> None:
     ],
 )
 def test_check_aws_rds_cpu_credits(  # type: ignore[misc]
-    section: Mapping[str, Mapping[str, float]],
+    section: Section,
     params: Mapping[str, Any],
     expected_check_result: Sequence[Result | Metric],
 ) -> None:
     check_result = list(
         check_aws_rds_cpu_credits(
-            item="disk",
             params=params,
             section=section,
         )
@@ -3442,8 +3393,8 @@ def test_check_aws_rds_cpu_credits(  # type: ignore[misc]
     "section, discovery_result",
     [
         pytest.param(
-            {"disk": {"BinLogDiskUsage": 60.0}},
-            [Service(item="disk")],
+            {"BinLogDiskUsage": 60.0},
+            [Service()],
             id="For every disk in the section a Service with no item is discovered.",
         ),
         pytest.param(
@@ -3454,29 +3405,18 @@ def test_check_aws_rds_cpu_credits(  # type: ignore[misc]
     ],
 )
 def test_aws_rds_bin_log_usage_discovery(
-    section: Mapping[str, Mapping[str, float]],
+    section: Section,
     discovery_result: Sequence[Service],
 ) -> None:
     assert list(discover_aws_rds_bin_log_usage(section)) == discovery_result
-
-
-def test_check_aws_rds_bin_log_usage_item_not_found() -> None:
-    assert not list(
-        check_aws_rds_bin_log_usage(
-            item="disk",
-            params={},
-            section={},
-        )
-    )
 
 
 def test_check_aws_rds_bin_log_usage_metric_not_found() -> None:
     with pytest.raises(IgnoreResultsError):
         list(
             check_aws_rds_bin_log_usage(
-                item="disk",
                 params={},
-                section={"disk": {"CPUUtilization": 1}},
+                section={"CPUUtilization": 1},
             )
         )
 
@@ -3484,9 +3424,8 @@ def test_check_aws_rds_bin_log_usage_metric_not_found() -> None:
 def test_check_aws_rds_bin_log_usage_no_allocated_storage() -> None:
     check_result = list(
         check_aws_rds_bin_log_usage(
-            item="disk",
             params={},
-            section={"disk": {"BinLogDiskUsage": 60.0}},
+            section={"BinLogDiskUsage": 60.0},
         )
     )
     assert check_result == [
@@ -3498,9 +3437,8 @@ def test_check_aws_rds_bin_log_usage_no_allocated_storage() -> None:
 def test_check_aws_rds_bin_log_usage_allocated_storage_is_zero() -> None:
     check_result = list(
         check_aws_rds_bin_log_usage(
-            item="disk",
             params={},
-            section={"disk": {"BinLogDiskUsage": 60.0, "AllocatedStorage": 0.0}},
+            section={"BinLogDiskUsage": 60.0, "AllocatedStorage": 0.0},
         )
     )
     assert check_result == [
@@ -3513,7 +3451,7 @@ def test_check_aws_rds_bin_log_usage_allocated_storage_is_zero() -> None:
     "section, params, expected_check_result",
     [
         pytest.param(
-            {"disk": {"BinLogDiskUsage": 60.0, "AllocatedStorage": 4000.0}},
+            {"BinLogDiskUsage": 60.0, "AllocatedStorage": 4000.0},
             {"levels": (90, 95)},
             [
                 Result(state=State.OK, summary="60 B"),
@@ -3523,7 +3461,7 @@ def test_check_aws_rds_bin_log_usage_allocated_storage_is_zero() -> None:
             id="If the BinLogDiskUsage levels are below the warn/crit levels, the check state will be OK with a appropriate description.",
         ),
         pytest.param(
-            {"disk": {"BinLogDiskUsage": 60.0, "AllocatedStorage": 65.0}},
+            {"BinLogDiskUsage": 60.0, "AllocatedStorage": 65.0},
             {"levels": (90, 95)},
             [
                 Result(state=State.OK, summary="60 B"),
@@ -3533,7 +3471,7 @@ def test_check_aws_rds_bin_log_usage_allocated_storage_is_zero() -> None:
             id="If the BinLogDiskUsage levels are above the warn levels, the check state will be WARN with a appropriate description.",
         ),
         pytest.param(
-            {"disk": {"BinLogDiskUsage": 60.0, "AllocatedStorage": 60.0}},
+            {"BinLogDiskUsage": 60.0, "AllocatedStorage": 60.0},
             {"levels": (90, 95)},
             [
                 Result(state=State.OK, summary="60 B"),
@@ -3545,13 +3483,12 @@ def test_check_aws_rds_bin_log_usage_allocated_storage_is_zero() -> None:
     ],
 )
 def test_check_aws_rds_bin_log_usage(  # type: ignore[misc]
-    section: Mapping[str, Mapping[str, float]],
+    section: Section,
     params: Mapping[str, Any],
     expected_check_result: Sequence[Result | Metric],
 ) -> None:
     check_result = list(
         check_aws_rds_bin_log_usage(
-            item="disk",
             params=params,
             section=section,
         )
@@ -3566,8 +3503,8 @@ def test_check_aws_rds_bin_log_usage(  # type: ignore[misc]
     "section, discovery_result",
     [
         pytest.param(
-            {"disk": {"TransactionLogsDiskUsage": 60.0}},
-            [Service(item="disk")],
+            {"TransactionLogsDiskUsage": 60.0},
+            [Service()],
             id="For every disk in the section a Service with no item is discovered.",
         ),
         pytest.param(
@@ -3578,29 +3515,18 @@ def test_check_aws_rds_bin_log_usage(  # type: ignore[misc]
     ],
 )
 def test_aws_rds_transaction_logs_usage_discovery(
-    section: Mapping[str, Mapping[str, float]],
+    section: Section,
     discovery_result: Sequence[Service],
 ) -> None:
     assert list(discover_aws_rds_transaction_logs_usage(section)) == discovery_result
-
-
-def test_check_aws_rds_transaction_logs_usage_item_not_found() -> None:
-    assert not list(
-        check_aws_rds_transaction_logs_usage(
-            item="disk",
-            params={},
-            section={},
-        )
-    )
 
 
 def test_check_aws_rds_transaction_logs_usage_metric_not_found() -> None:
     with pytest.raises(IgnoreResultsError):
         list(
             check_aws_rds_transaction_logs_usage(
-                item="disk",
                 params={},
-                section={"disk": {"CPUUtilization": 1}},
+                section={"CPUUtilization": 1},
             )
         )
 
@@ -3608,9 +3534,8 @@ def test_check_aws_rds_transaction_logs_usage_metric_not_found() -> None:
 def test_check_aws_rds_transaction_logs_usage_no_allocated_storage() -> None:
     check_result = list(
         check_aws_rds_transaction_logs_usage(
-            item="disk",
             params={},
-            section={"disk": {"TransactionLogsDiskUsage": 60.0}},
+            section={"TransactionLogsDiskUsage": 60.0},
         )
     )
     assert check_result == [
@@ -3622,9 +3547,8 @@ def test_check_aws_rds_transaction_logs_usage_no_allocated_storage() -> None:
 def test_check_aws_rds_transaction_logs_usage_allocated_storage_is_zero() -> None:
     check_result = list(
         check_aws_rds_transaction_logs_usage(
-            item="disk",
             params={},
-            section={"disk": {"TransactionLogsDiskUsage": 60.0, "AllocatedStorage": 0.0}},
+            section={"TransactionLogsDiskUsage": 60.0, "AllocatedStorage": 0.0},
         )
     )
     assert check_result == [
@@ -3637,7 +3561,7 @@ def test_check_aws_rds_transaction_logs_usage_allocated_storage_is_zero() -> Non
     "section, params, expected_check_result",
     [
         pytest.param(
-            {"disk": {"TransactionLogsDiskUsage": 60.0, "AllocatedStorage": 4000.0}},
+            {"TransactionLogsDiskUsage": 60.0, "AllocatedStorage": 4000.0},
             {"levels": (90, 95)},
             [
                 Result(state=State.OK, summary="60 B"),
@@ -3647,7 +3571,7 @@ def test_check_aws_rds_transaction_logs_usage_allocated_storage_is_zero() -> Non
             id="If the TransactionLogsDiskUsage levels are below the warn/crit levels, the check state will be OK with a appropriate description.",
         ),
         pytest.param(
-            {"disk": {"TransactionLogsDiskUsage": 60.0, "AllocatedStorage": 65.0}},
+            {"TransactionLogsDiskUsage": 60.0, "AllocatedStorage": 65.0},
             {"levels": (90, 95)},
             [
                 Result(state=State.OK, summary="60 B"),
@@ -3659,7 +3583,7 @@ def test_check_aws_rds_transaction_logs_usage_allocated_storage_is_zero() -> Non
             id="If the TransactionLogsDiskUsage levels are above the warn levels, the check state will be WARN with a appropriate description.",
         ),
         pytest.param(
-            {"disk": {"TransactionLogsDiskUsage": 60.0, "AllocatedStorage": 60.0}},
+            {"TransactionLogsDiskUsage": 60.0, "AllocatedStorage": 60.0},
             {"levels": (90, 95)},
             [
                 Result(state=State.OK, summary="60 B"),
@@ -3670,11 +3594,9 @@ def test_check_aws_rds_transaction_logs_usage_allocated_storage_is_zero() -> Non
         ),
         pytest.param(
             {
-                "disk": {
-                    "TransactionLogsDiskUsage": 60.0,
-                    "AllocatedStorage": 60.0,
-                    "TransactionLogsGeneration": 10.0,
-                }
+                "TransactionLogsDiskUsage": 60.0,
+                "AllocatedStorage": 60.0,
+                "TransactionLogsGeneration": 10.0,
             },
             {"levels": (90, 95)},
             [
@@ -3688,13 +3610,12 @@ def test_check_aws_rds_transaction_logs_usage_allocated_storage_is_zero() -> Non
     ],
 )
 def test_check_aws_rds_transaction_logs_usage(  # type: ignore[misc]
-    section: Mapping[str, Mapping[str, float]],
+    section: Section,
     params: Mapping[str, Any],
     expected_check_result: Sequence[Result | Metric],
 ) -> None:
     check_result = list(
         check_aws_rds_transaction_logs_usage(
-            item="disk",
             params=params,
             section=section,
         )
@@ -3709,8 +3630,8 @@ def test_check_aws_rds_transaction_logs_usage(  # type: ignore[misc]
     "section, discovery_result",
     [
         pytest.param(
-            {"disk": {"ReplicationSlotDiskUsage": 60.0}},
-            [Service(item="disk")],
+            {"ReplicationSlotDiskUsage": 60.0},
+            [Service()],
             id="For every disk in the section a Service with no item is discovered.",
         ),
         pytest.param(
@@ -3721,29 +3642,18 @@ def test_check_aws_rds_transaction_logs_usage(  # type: ignore[misc]
     ],
 )
 def test_aws_rds_replication_slot_usage_discovery(
-    section: Mapping[str, Mapping[str, float]],
+    section: Section,
     discovery_result: Sequence[Service],
 ) -> None:
     assert list(discover_aws_rds_replication_slot_usage(section)) == discovery_result
-
-
-def test_check_aws_rds_replication_slot_usage_item_not_found() -> None:
-    assert not list(
-        check_aws_rds_replication_slot_usage(
-            item="disk",
-            params={},
-            section={},
-        )
-    )
 
 
 def test_check_aws_rds_replication_slot_usage_metric_not_found() -> None:
     with pytest.raises(IgnoreResultsError):
         list(
             check_aws_rds_replication_slot_usage(
-                item="disk",
                 params={},
-                section={"disk": {"CPUUtilization": 1}},
+                section={"CPUUtilization": 1},
             )
         )
 
@@ -3751,9 +3661,8 @@ def test_check_aws_rds_replication_slot_usage_metric_not_found() -> None:
 def test_check_aws_rds_replication_slot_usage_no_allocated_storage() -> None:
     check_result = list(
         check_aws_rds_replication_slot_usage(
-            item="disk",
             params={},
-            section={"disk": {"ReplicationSlotDiskUsage": 60.0}},
+            section={"ReplicationSlotDiskUsage": 60.0},
         )
     )
     assert check_result == [
@@ -3765,9 +3674,8 @@ def test_check_aws_rds_replication_slot_usage_no_allocated_storage() -> None:
 def test_check_aws_rds_replication_slot_usage_allocated_storage_is_zero() -> None:
     check_result = list(
         check_aws_rds_replication_slot_usage(
-            item="disk",
             params={},
-            section={"disk": {"ReplicationSlotDiskUsage": 60.0, "AllocatedStorage": 0.0}},
+            section={"ReplicationSlotDiskUsage": 60.0, "AllocatedStorage": 0.0},
         )
     )
     assert check_result == [
@@ -3780,7 +3688,7 @@ def test_check_aws_rds_replication_slot_usage_allocated_storage_is_zero() -> Non
     "section, params, expected_check_result",
     [
         pytest.param(
-            {"disk": {"ReplicationSlotDiskUsage": 60.0, "AllocatedStorage": 4000.0}},
+            {"ReplicationSlotDiskUsage": 60.0, "AllocatedStorage": 4000.0},
             {"levels": (90, 95)},
             [
                 Result(state=State.OK, summary="60 B"),
@@ -3790,7 +3698,7 @@ def test_check_aws_rds_replication_slot_usage_allocated_storage_is_zero() -> Non
             id="If the ReplicationSlotDiskUsage levels are below the warn/crit levels, the check state will be OK with a appropriate description.",
         ),
         pytest.param(
-            {"disk": {"ReplicationSlotDiskUsage": 60.0, "AllocatedStorage": 65.0}},
+            {"ReplicationSlotDiskUsage": 60.0, "AllocatedStorage": 65.0},
             {"levels": (90, 95)},
             [
                 Result(state=State.OK, summary="60 B"),
@@ -3802,7 +3710,7 @@ def test_check_aws_rds_replication_slot_usage_allocated_storage_is_zero() -> Non
             id="If the ReplicationSlotDiskUsage levels are above the warn levels, the check state will be WARN with a appropriate description.",
         ),
         pytest.param(
-            {"disk": {"ReplicationSlotDiskUsage": 60.0, "AllocatedStorage": 60.0}},
+            {"ReplicationSlotDiskUsage": 60.0, "AllocatedStorage": 60.0},
             {"levels": (90, 95)},
             [
                 Result(state=State.OK, summary="60 B"),
@@ -3814,13 +3722,12 @@ def test_check_aws_rds_replication_slot_usage_allocated_storage_is_zero() -> Non
     ],
 )
 def test_check_aws_rds_replication_slot_usage(  # type: ignore[misc]
-    section: Mapping[str, Mapping[str, float]],
+    section: Section,
     params: Mapping[str, Any],
     expected_check_result: Sequence[Result | Metric],
 ) -> None:
     check_result = list(
         check_aws_rds_replication_slot_usage(
-            item="disk",
             params=params,
             section=section,
         )
@@ -3835,8 +3742,8 @@ def test_check_aws_rds_replication_slot_usage(  # type: ignore[misc]
     "section, discovery_result",
     [
         pytest.param(
-            {"disk": {"DatabaseConnections": 10.0}},
-            [Service(item="disk")],
+            {"DatabaseConnections": 10.0},
+            [Service()],
             id="For every disk in the section a Service with no item is discovered.",
         ),
         pytest.param(
@@ -3847,27 +3754,17 @@ def test_check_aws_rds_replication_slot_usage(  # type: ignore[misc]
     ],
 )
 def test_aws_rds_connections_discovery(
-    section: Mapping[str, Mapping[str, float]],
+    section: Section,
     discovery_result: Sequence[Service],
 ) -> None:
     assert list(discover_aws_rds_connections(section)) == discovery_result
-
-
-def test_check_aws_rds_connections_item_not_found() -> None:
-    assert not list(
-        check_aws_rds_connections(
-            item="disk",
-            params={},
-            section={},
-        )
-    )
 
 
 @pytest.mark.parametrize(
     "section, params, expected_check_result",
     [
         pytest.param(
-            {"disk": {"DatabaseConnections": 10.0}},
+            {"DatabaseConnections": 10.0},
             {"levels": (90, 95)},
             [
                 Result(state=State.OK, summary="In use: 10.00"),
@@ -3876,7 +3773,7 @@ def test_check_aws_rds_connections_item_not_found() -> None:
             id="If the levels are below the warn/crit levels, the check state will be OK with a appropriate description.",
         ),
         pytest.param(
-            {"disk": {"DatabaseConnections": 92.0}},
+            {"DatabaseConnections": 92.0},
             {"levels": (90, 95)},
             [
                 Result(state=State.WARN, summary="In use: 92.00 (warn/crit at 90.00/95.00)"),
@@ -3885,7 +3782,7 @@ def test_check_aws_rds_connections_item_not_found() -> None:
             id="If the levels are above the warn levels, the check state will be WARN with a appropriate description.",
         ),
         pytest.param(
-            {"disk": {"DatabaseConnections": 97.0}},
+            {"DatabaseConnections": 97.0},
             {"levels": (90, 95)},
             [
                 Result(state=State.CRIT, summary="In use: 97.00 (warn/crit at 90.00/95.00)"),
@@ -3896,13 +3793,12 @@ def test_check_aws_rds_connections_item_not_found() -> None:
     ],
 )
 def test_check_aws_rds_connections(  # type: ignore[misc]
-    section: Mapping[str, Mapping[str, float]],
+    section: Section,
     params: Mapping[str, Any],
     expected_check_result: Sequence[Result | Metric],
 ) -> None:
     check_result = list(
         check_aws_rds_connections(
-            item="disk",
             params=params,
             section=section,
         )
@@ -3914,8 +3810,8 @@ def test_check_aws_rds_connections(  # type: ignore[misc]
     "section, discovery_result",
     [
         pytest.param(
-            {"disk": {"ReplicaLag": 10.0}},
-            [Service(item="disk")],
+            {"ReplicaLag": 10.0},
+            [Service()],
             id="For every disk in the section a Service with no item is discovered.",
         ),
         pytest.param(
@@ -3926,27 +3822,17 @@ def test_check_aws_rds_connections(  # type: ignore[misc]
     ],
 )
 def test_aws_rds_replica_lag_discovery(
-    section: Mapping[str, Mapping[str, float]],
+    section: Section,
     discovery_result: Sequence[Service],
 ) -> None:
     assert list(discover_aws_rds_replica_lag(section)) == discovery_result
-
-
-def test_check_aws_rds_replica_lag_item_not_found() -> None:
-    assert not list(
-        check_aws_rds_replica_lag(
-            item="disk",
-            params={},
-            section={},
-        )
-    )
 
 
 @pytest.mark.parametrize(
     "section, params, expected_check_result",
     [
         pytest.param(
-            {"disk": {"ReplicaLag": 10.0}},
+            {"ReplicaLag": 10.0},
             {"lag_levels": (60, 120)},
             [
                 Result(state=State.OK, summary="Lag: 10 seconds"),
@@ -3955,7 +3841,7 @@ def test_check_aws_rds_replica_lag_item_not_found() -> None:
             id="If the levels are below the warn/crit levels, the check state will be OK with a appropriate description.",
         ),
         pytest.param(
-            {"disk": {"ReplicaLag": 92.0}},
+            {"ReplicaLag": 92.0},
             {"lag_levels": (60, 120)},
             [
                 Result(
@@ -3967,7 +3853,7 @@ def test_check_aws_rds_replica_lag_item_not_found() -> None:
             id="If the levels are above the warn levels, the check state will be WARN with a appropriate description.",
         ),
         pytest.param(
-            {"disk": {"ReplicaLag": 125.0}},
+            {"ReplicaLag": 125.0},
             {"lag_levels": (60, 120)},
             [
                 Result(
@@ -3979,7 +3865,7 @@ def test_check_aws_rds_replica_lag_item_not_found() -> None:
             id="If the levels are above the crit levels, the check state will be CRIT with a appropriate description.",
         ),
         pytest.param(
-            {"disk": {"ReplicaLag": 125.0, "OldestReplicationSlotLag": 120}},
+            {"ReplicaLag": 125.0, "OldestReplicationSlotLag": 120},
             {"lag_levels": (60, 120)},
             [
                 Result(
@@ -3995,13 +3881,12 @@ def test_check_aws_rds_replica_lag_item_not_found() -> None:
     ],
 )
 def test_check_aws_rds_replica_lag(  # type: ignore[misc]
-    section: Mapping[str, Mapping[str, float]],
+    section: Section,
     params: Mapping[str, Any],
     expected_check_result: Sequence[Result | Metric],
 ) -> None:
     check_result = list(
         check_aws_rds_replica_lag(
-            item="disk",
             params=params,
             section=section,
         )

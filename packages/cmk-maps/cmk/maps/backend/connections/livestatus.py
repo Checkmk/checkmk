@@ -10,12 +10,14 @@ import hashlib
 import logging
 import math
 import re
+import ssl
 import threading
 import time
 from collections.abc import AsyncIterator, Iterable, Mapping, Sequence
 from contextlib import asynccontextmanager
 from contextvars import ContextVar
 from datetime import datetime, UTC
+from functools import lru_cache
 from http import HTTPStatus
 from pathlib import Path
 from typing import cast, Literal, override, TYPE_CHECKING
@@ -498,6 +500,15 @@ def _build_details(
         for r in downtime_rows
     ]
     return d
+
+
+# Read again once Activate Changes wrote the site's trusted authorities anew.
+@lru_cache(maxsize=1)
+def _trusted_cas(ca_file: str, _mtime: int) -> ssl.SSLContext:
+    # The site's authorities on top of the system's, as Livestatus over TLS.
+    context = ssl.create_default_context()
+    context.load_verify_locations(ca_file)
+    return context
 
 
 class LivestatusConnection(ConnectionBase):
@@ -1195,7 +1206,7 @@ class LivestatusConnection(ConnectionBase):
         series: dict[str, list[tuple[float, float, str]]] = {}
         titles: dict[str, str] = {}
         try:
-            async with httpx.AsyncClient(verify=self._tls_verify, timeout=self._timeout) as client:
+            async with httpx.AsyncClient(verify=self._rest_tls, timeout=self._timeout) as client:
                 for metric_id in metric_names[:5]:
                     body = {
                         "time_range": {"start": start_dt, "end": end_dt},
@@ -1266,7 +1277,7 @@ class LivestatusConnection(ConnectionBase):
         # columns in the JSON body.
         url = base_url + "/api/1.0/domain-types/service/collections/all"
         try:
-            async with httpx.AsyncClient(verify=self._tls_verify, timeout=self._timeout) as client:
+            async with httpx.AsyncClient(verify=self._rest_tls, timeout=self._timeout) as client:
                 resp = await client.post(
                     url,
                     headers={
@@ -1771,6 +1782,17 @@ class LivestatusConnection(ConnectionBase):
                 timeout=settings.connection_query_timeout,
             )
         return [(None, r) for r in single_rows]
+
+    @property
+    def _rest_tls(self) -> ssl.SSLContext | bool:
+        """The site's trusted certificate authorities, as for Livestatus over TLS."""
+        if not self._tls_verify:
+            return False
+        try:
+            mtime = Path(self._ss_ca_file).stat().st_mtime_ns
+        except FileNotFoundError:
+            return True
+        return _trusted_cas(self._ss_ca_file, mtime)
 
     def _make_singlesite_connection(self) -> SingleSiteConnection:
         """Fresh connection per call so no socket is shared across worker threads."""

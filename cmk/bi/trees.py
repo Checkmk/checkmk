@@ -477,11 +477,12 @@ class BICompiledRule(ABCBICompiledNode):
                     == 0
                 )
         else:
-            downtime_state = self.aggregation_function.aggregate(
-                [2 if result.in_downtime else 0 for result in results]
+            in_downtime = self._flag_propagates(
+                [result.in_downtime for result in results],
+                min_state=(
+                    BIState.WARN if computation_options.escalate_downtimes_as_warn else BIState.CRIT
+                ),
             )
-            minimum_downtime_state = 1 if computation_options.escalate_downtimes_as_warn else 2
-            in_downtime = downtime_state >= minimum_downtime_state
 
         is_acknowledged = False
         if state != 0:
@@ -492,11 +493,8 @@ class BICompiledRule(ABCBICompiledNode):
                 == 0
             )
 
-        in_service_period = (
-            self.aggregation_function.aggregate(
-                [0 if result.in_service_period else 2 for result in results]
-            )
-            == 0
+        out_of_service_period = self._flag_propagates(
+            [not result.in_service_period for result in results], min_state=BIState.WARN
         )
 
         return NodeComputeResult(
@@ -505,10 +503,24 @@ class BICompiledRule(ABCBICompiledNode):
             acknowledged=is_acknowledged,
             # TODO: fix str casting in later commit
             output=self.properties.state_messages.get(str(state), ""),
-            in_service_period=in_service_period,
+            in_service_period=not out_of_service_period,
             state_messages=self.properties.state_messages,
             custom_infos={},
         )
+
+    def _flag_propagates(self, flags: Sequence[bool], min_state: BIState) -> bool:
+        """Whether the flagged children alone push this rule to at least min_state.
+
+        Aggregation functions only operate on states, so flags are encoded as
+        states (flagged as CRIT, all others as OK) and fed through this rule's
+        own aggregation function. Flags thus propagate with the same semantics
+        as states: e.g. for "worst" a single flagged child suffices, for "best"
+        a single unflagged child prevents propagation.
+        """
+        flagged_state = self.aggregation_function.aggregate(
+            [BIState.CRIT if flag else BIState.OK for flag in flags]
+        )
+        return flagged_state >= min_state
 
     @classmethod
     def schema(cls) -> type[BICompiledRuleSchema]:

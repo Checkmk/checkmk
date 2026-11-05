@@ -5,7 +5,7 @@
  */
 import { CmkApiError } from 'cmk-ui-library/lib/error'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { computed, ref } from 'vue'
+import { type Ref, computed, isRef, ref } from 'vue'
 
 import type { ConnectionsApi } from '@/maps/api/connections'
 import type { SignedMap } from '@/maps/api/mapConfig'
@@ -85,7 +85,7 @@ type StatesApi = Pick<
 >
 
 function newService(
-  map: MapConfig | null = null,
+  map: MapConfig | null | Ref<MapConfig | null> = null,
   objectOverrides: Partial<
     Pick<MonitoringObjectsApi, 'fetchAggregationStates' | 'fetchAggregationTree'>
   > = {},
@@ -123,7 +123,7 @@ function newService(
     }))
   }
   const service = new MapStatesService(statesApi, connections, objects, auth, {
-    currentMap: ref(map),
+    currentMap: isRef(map) ? map : ref(map),
     currentMapAccess: ref(aMapAccess({ owner: session.mapOwner ?? 'me' })),
     getSignedMap: session.getSignedMap ?? vi.fn().mockResolvedValue(freshlySigned)
   })
@@ -418,6 +418,59 @@ describe('MapStatesService — BI aggregations resolve GUI-side', () => {
     } finally {
       vi.useRealTimers()
     }
+  })
+
+  it('resolves them once the map reaches the store after its registration', async () => {
+    const objects = {
+      fetchAggregationStates: vi.fn().mockResolvedValue({}),
+      fetchAggregationTree: vi.fn().mockResolvedValue({ tree: null, connection_ok: true })
+    }
+    const currentMap = ref<MapConfig | null>(null)
+    const store = newService(currentMap, objects)
+
+    await store.connectToMap('map1')
+    currentMap.value = aMap({
+      name: 'map1',
+      objects: [anObject({ id: 'agg1', type: 'aggregation', aggregation_id: 'Host x' })]
+    })
+
+    await vi.waitFor(() => expect(objects.fetchAggregationStates).toHaveBeenCalledWith(['Host x']))
+    store.disconnect()
+  })
+
+  it('resolves an edit of its aggregations while an earlier resolve is pending', async () => {
+    let answerFirst: (states: Record<string, unknown>) => void = () => {}
+    const objects = {
+      fetchAggregationStates: vi
+        .fn()
+        .mockReturnValueOnce(new Promise((resolve) => (answerFirst = resolve)))
+        .mockResolvedValue({
+          'Host x': { state: 'OK', output: '', acknowledged: false, in_downtime: false },
+          'Host y': { state: 'WARNING', output: '', acknowledged: false, in_downtime: false }
+        }),
+      fetchAggregationTree: vi.fn().mockResolvedValue({ tree: null, connection_ok: true })
+    }
+    const currentMap = ref<MapConfig | null>(
+      aMap({
+        name: 'map1',
+        objects: [anObject({ id: 'agg1', type: 'aggregation', aggregation_id: 'Host x' })]
+      })
+    )
+    const store = newService(currentMap, objects)
+    await store.connectToMap('map1')
+    await vi.waitFor(() => expect(objects.fetchAggregationStates).toHaveBeenCalledTimes(1))
+
+    currentMap.value!.objects.push(
+      anObject({ id: 'agg2', type: 'aggregation', aggregation_id: 'Host y' })
+    )
+
+    await vi.waitFor(() => expect(store.getState('agg2')?.state).toBe('WARNING'))
+    answerFirst({
+      'Host x': { state: 'CRITICAL', output: '', acknowledged: false, in_downtime: false }
+    })
+    await new Promise((resolve) => setTimeout(resolve, 10))
+    expect(store.getState('agg1')?.state).toBe('OK')
+    store.disconnect()
   })
 
   it('resolves nothing when the map carries no aggregation', async () => {

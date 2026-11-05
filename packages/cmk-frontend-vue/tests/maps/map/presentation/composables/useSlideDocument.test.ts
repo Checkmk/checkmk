@@ -9,7 +9,7 @@ import { useSlideDocument } from '@/maps/map/presentation/composables/useSlideDo
 import { createElement } from '@/maps/map/presentation/elements'
 import type { MapConfig, PresentationView } from '@/maps/types/api'
 
-import { newMapView } from '../../../support/fixtures'
+import { aMap, newMapView } from '../../../support/fixtures'
 import { fakeMapsServices, runWithServices } from '../../../support/services'
 
 /**
@@ -32,7 +32,7 @@ function storedView(): PresentationView {
 
 function makeConfig(): MapConfig {
   const view: PresentationView = { ...newMapView('presentation'), elements: [] } as PresentationView
-  return { name: 'pres1', alias: 'P', connection_id: 'live_1', version: 3, view } as MapConfig
+  return aMap({ name: 'pres1', alias: 'P', version: 3, view })
 }
 
 describe('useSlideDocument', () => {

@@ -9,16 +9,12 @@ import { useMapViewState } from '@/maps/map/composables/useMapViewState'
 import type { MapsServices } from '@/maps/services/context'
 import type { MapConfig } from '@/maps/types/api'
 
-import { aMapAccess } from '../../support/fixtures'
+import { aMap as aFixtureMap, aMapAccess } from '../../support/fixtures'
 import { fakeMapsServices, runWithServices } from '../../support/services'
 
 /** The choices are held on the map service, so each case gets a fresh set. */
 function aMap(name: string): MapConfig {
-  return {
-    name,
-    alias: name,
-    view: { type: 'static' }
-  } as MapConfig
+  return aFixtureMap({ name, alias: name, view: { type: 'static' } as MapConfig['view'] })
 }
 
 function openMap(config: MapConfig, canEdit: boolean, preview = false): MapsServices {

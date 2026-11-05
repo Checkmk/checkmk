@@ -251,7 +251,8 @@ export class MapStatesService {
   private prevFolderHostStates: Map<string, string> | null = null
   private aggTimer: ReturnType<typeof setTimeout> | null = null
   private postCommandTimer: ReturnType<typeof setTimeout> | null = null
-  private aggInFlight = false
+  /** The aggregations being resolved, as `aggregationsKey` names them. */
+  private aggInFlight: string | null = null
   private hiddenTimer: ReturnType<typeof setTimeout> | null = null
   /** True while the tab is hidden and the stream and aggregation poll are closed. */
   private paused = false
@@ -275,6 +276,17 @@ export class MapStatesService {
         this.hadLiveStates.value ||= connected
       },
       { flush: 'sync' }
+    )
+    // Whichever way the map's aggregations change: the map reaching the store
+    // after its registration, an edit, another view's save. The first
+    // registration of a map resolves them itself.
+    watch(
+      () => aggregationsKey(this.maps.currentMap.value),
+      () => {
+        if (this.maps.currentMap.value?.name === this.currentMap && !this.initialLoad.value) {
+          void this.refreshAggregations()
+        }
+      }
     )
   }
 
@@ -363,9 +375,6 @@ export class MapStatesService {
       return
     }
     await this.handOver(this.currentMap, () => this.api.registerEdit(map, this.viewPreview()))
-    // The new config may have added or removed aggregation objects; resolve now
-    // rather than waiting for the next interval tick.
-    void this.refreshAggregations()
   }
 
   /**
@@ -1005,20 +1014,16 @@ export class MapStatesService {
    * entries — the daemon does not stream them.
    */
   private async refreshAggregations(): Promise<void> {
-    if (this.aggInFlight) {
+    const map = this.maps.currentMap.value
+    const key = aggregationsKey(map)
+    if (!map || this.aggInFlight === key) {
       return
     }
-    const map = this.maps.currentMap.value
-    const aggObjects = (map?.objects ?? []).filter(
-      (o): o is MapElement & { aggregation_id: string } =>
-        getEffectiveObjectType(o) === 'aggregation' &&
-        typeof o.aggregation_id === 'string' &&
-        o.aggregation_id.length > 0
-    )
+    const aggObjects = aggregationObjects(map)
     if (!aggObjects.length) {
       return
     }
-    this.aggInFlight = true
+    this.aggInFlight = key
     try {
       const ids = [...new Set(aggObjects.map((o) => o.aggregation_id))]
       const raw = await this.objectsApi.fetchAggregationStates(ids)
@@ -1035,6 +1040,10 @@ export class MapStatesService {
           treeByAgg.set(aggId, tree)
         })
       )
+      // Another map is shown by now, or an edit changed its aggregations.
+      if (aggregationsKey(this.maps.currentMap.value) !== key) {
+        return
+      }
       for (const o of aggObjects) {
         const state = raw[o.aggregation_id]
         this.states.value[o.id] = state
@@ -1052,7 +1061,9 @@ export class MapStatesService {
       // Leave existing entries in place on a transient failure; the next tick
       // retries. The daemon stream's own health is tracked by `connected`.
     } finally {
-      this.aggInFlight = false
+      if (this.aggInFlight === key) {
+        this.aggInFlight = null
+      }
     }
   }
 
@@ -1069,6 +1080,25 @@ export class MapStatesService {
     }
     this.metricValues.value[objectId] = values
   }
+}
+
+function aggregationObjects(map: MapConfig): (MapElement & { aggregation_id: string })[] {
+  return map.objects.filter(
+    (o): o is MapElement & { aggregation_id: string } =>
+      getEffectiveObjectType(o) === 'aggregation' &&
+      typeof o.aggregation_id === 'string' &&
+      o.aggregation_id.length > 0
+  )
+}
+
+/** What resolving a map's aggregations asks for, the map's name included. */
+function aggregationsKey(map: MapConfig | null): string {
+  return map
+    ? JSON.stringify([
+        map.name,
+        aggregationObjects(map).map((o) => [o.id, o.aggregation_id, (o.expand_depth ?? 0) > 0])
+      ])
+    : ''
 }
 
 /**

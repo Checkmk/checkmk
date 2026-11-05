@@ -310,6 +310,8 @@ allows = [
   # the payload of the section the telemetry metrics fetcher writes
   "cmk.telemetry.custom_query_section",
   "cmk.telemetry.host_name_template_validation",
+  # the unit a series is shown in, shared with the alert wizard's preview
+  "cmk.telemetry.series_unit",
   # the service name a series gets, shared with the alert wizard's preview
   "cmk.telemetry.service_name_template",
 ]
@@ -2201,6 +2203,7 @@ allows = [
   "cmk.telemetry.host_name_template",
   "cmk.telemetry.host_name_template_resolution",
   "cmk.telemetry.host_name_template_validation",
+  "cmk.telemetry.series_unit",
   "cmk.telemetry.service_name_template",
   "cmk.utils.global_ident_type",
   "cmk.utils.paths",

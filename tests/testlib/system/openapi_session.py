@@ -2643,6 +2643,28 @@ class CustomGraphAPI(BaseAPI):
             )
         return parsed
 
+    def get(self, name: str, owner: str | None = None) -> dict[str, Any] | None:
+        """The graph's metadata and content, or None if there is no such graph.
+
+        Without `owner`, the graph is looked up among the requesting user's own graphs.
+        """
+        response = self.session.get(
+            f"objects/custom_graph/{name}",
+            api_version=APIVersion.UNSTABLE,
+            params=None if owner is None else {"owner": owner},
+        )
+        if response.status_code not in (HTTPStatus.OK, HTTPStatus.NOT_FOUND):
+            raise UnexpectedResponse.from_response(response)
+        if response.status_code == HTTPStatus.NOT_FOUND:
+            return None
+        parsed = response.json()
+        extensions = parsed.get("extensions") if isinstance(parsed, dict) else None
+        if not isinstance(extensions, dict):
+            raise UnexpectedResponse(
+                response.status_code, f"expected a JSON object with extensions, got {parsed!r}"
+            )
+        return extensions
+
     def delete(self, name: str) -> None:
         response = self.session.delete(
             f"objects/custom_graph/{name}",

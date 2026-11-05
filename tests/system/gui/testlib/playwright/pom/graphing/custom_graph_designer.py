@@ -10,10 +10,14 @@ editing its definition with "mode=edit".
 
 This page takes the graph to show as a mandatory parameter, so it is reached by URL: even
 the "build a graph from scratch" cases need a saved graph to open.
+
+The dashboard's embedded custom graph wizards embed the same designer body, see
+``EmbeddedCustomGraphDesigner``.
 """
 
 import logging
 import re
+from abc import ABC, abstractmethod
 from typing import override
 from urllib.parse import urljoin
 
@@ -27,10 +31,11 @@ from tests.system.gui.testlib.playwright.pom.graphing.timeseries_graph import (
     GraphStat,
     TimeSeriesGraph,
 )
-from tests.system.gui.testlib.playwright.pom.page import CmkPage
+from tests.system.gui.testlib.playwright.pom.page import CmkPage, MainArea
 
 logger = logging.getLogger(__name__)
 
+_BODY_SELECTOR = ".graphing-designer-body"
 _PREVIEW_SELECTOR = ".graphing-designer-body__preview"
 _LEGEND_ROW_SELECTOR = ".graphing-graph-legend__row"
 _LEGEND_STAT_SELECTOR = ".graphing-graph-legend__stat"
@@ -56,83 +61,56 @@ _CREATE_CUSTOM_SERVICE = "Create custom service"
 _SELECT_HOST_FIELD = "Select host"
 
 
-class CustomGraphDesigner(CmkPage):
-    """The custom graph designer, in either view or edit mode."""
+class DesignerBody(ABC):
+    """The designer's preview and tables, wherever the designer body is mounted."""
 
-    def __init__(
-        self,
-        page: Page,
-        graph_name: str,
-        *,
-        edit: bool = False,
-        navigate_to_page: bool = True,
-    ) -> None:
-        self.graph_name = graph_name
-        self._edit = edit
-        super().__init__(page=page, navigate_to_page=navigate_to_page)
+    page: Page
 
-    @override
-    def navigate(self) -> None:
-        mode = "&mode=edit" if self._edit else ""
-        logger.info(
-            "Navigate to the custom graph designer for '%s' in %s mode",
-            self.graph_name,
-            "edit" if self._edit else "view",
-        )
-        self.goto(urljoin(self.page.url, f"custom_graph.py?name={self.graph_name}{mode}"))
-        self.validate_page()
+    @property
+    @abstractmethod
+    def _document(self) -> MainArea:
+        """The document holding the body; dropdown lists and slide-ins are portalled to it."""
 
-    @override
-    def validate_page(self) -> None:
-        logger.info("Validate that current page is the custom graph designer")
-        self.page.wait_for_url(url=re.compile(r"(?<!edit_)custom_graph\.py"), wait_until="load")
-        # The app shows a loading icon until the graph definition and the filter
-        # definitions have arrived; the body only mounts once both are in.
-        expect(
-            self.main_area.locator(".graphing-designer-body"),
-            "The custom graph designer never finished loading its graph",
-        ).to_be_visible()
-
-    @override
-    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
-        return DropdownListNameToID()
+    @abstractmethod
+    def _scope(self, selector: str | None = None) -> Locator:
+        """`selector` within the designer body, or the body itself without one."""
 
     @property
     def preview(self) -> Locator:
         """The graph the new engine rendered for this graph definition."""
-        return self.main_area.locator(_PREVIEW_SELECTOR)
+        return self._scope(_PREVIEW_SELECTOR)
 
     @property
     def graph(self) -> TimeSeriesGraph:
         """The graph the preview draws, with the same canvas and axes as on any other surface."""
         return TimeSeriesGraph(
-            self.preview.locator(".graphing-time-series-graph"), self.page, self.main_area
+            self.preview.locator(".graphing-time-series-graph"), self.page, self._document
         )
 
     @property
     def legend_rows(self) -> Locator:
         """One row per drawn metric; rendered in view mode only."""
-        return self.main_area.locator(_LEGEND_ROW_SELECTOR)
+        return self._scope(_LEGEND_ROW_SELECTOR)
 
     @property
     def error_notices(self) -> Locator:
         """The engine's error state, shown over the graph when it cannot be drawn."""
-        return self.main_area.locator(SURFACE_NOTICE_ERROR_SELECTOR)
+        return self._scope(SURFACE_NOTICE_ERROR_SELECTOR)
 
     @property
     def source_rows(self) -> Locator:
         """One row per data source in the metrics selection tab (edit mode only)."""
-        return self.main_area.locator(_METRICS_TABLE_SELECTOR).locator(_SOURCE_ROW_SELECTOR)
+        return self._scope(_METRICS_TABLE_SELECTOR).locator(_SOURCE_ROW_SELECTOR)
 
     @property
     def appearance_source_rows(self) -> Locator:
         """One row per data source in the graph appearance tab (edit mode only)."""
-        return self.main_area.locator(_APPEARANCE_TABLE_SELECTOR).locator(_SOURCE_ROW_SELECTOR)
+        return self._scope(_APPEARANCE_TABLE_SELECTOR).locator(_SOURCE_ROW_SELECTOR)
 
     @property
     def appearance_series_rows(self) -> Locator:
         """One row per series a source resolved to, under the source's own row."""
-        return self.main_area.locator(_APPEARANCE_SERIES_ROW_SELECTOR)
+        return self._scope(_APPEARANCE_SERIES_ROW_SELECTOR)
 
     def cell_of(self, row: Locator, column_id: str) -> Locator:
         """The cell a table row holds for the column named `column_id`."""
@@ -158,7 +136,7 @@ class CustomGraphDesigner(CmkPage):
         """
         logger.info("Add RRD metric '%s/%s/%s'", host_name, service_name, metric_title)
         rows_before = self.source_rows.count()
-        self.main_area.locator(_ADD_SOURCE_SELECTOR).click()
+        self._scope(_ADD_SOURCE_SELECTOR).click()
         # The source types are a fixed list, offered in full and without a filter box.
         self._select_suggestion(self._open_suggestions(_RRD_SOURCE), _RRD_SOURCE)
         expect(
@@ -167,7 +145,7 @@ class CustomGraphDesigner(CmkPage):
         ).to_have_count(rows_before + 1)
 
         # The new row is appended and auto-expanded, so its form is the last one.
-        form = self.main_area.locator().get_by_role("group", name=_SOURCE_FORM_NAME).last
+        form = self._scope().get_by_role("group", name=_SOURCE_FORM_NAME).last
         self._fill_autocompleter(form, "Host name", host_name)
         self._fill_autocompleter(form, "Service", service_name)
         self._fill_autocompleter(form, "Service metric", metric_title)
@@ -181,7 +159,7 @@ class CustomGraphDesigner(CmkPage):
         """
         logger.info("Add telemetry metrics metric '%s (%s)'", metric_name, metric_type)
         rows_before = self.source_rows.count()
-        self.main_area.locator(_ADD_SOURCE_SELECTOR).click()
+        self._scope(_ADD_SOURCE_SELECTOR).click()
         # The source types are a fixed list, offered in full and without a filter box.
         self._select_suggestion(
             self._open_suggestions(_TELEMETRY_METRICS_SOURCE), _TELEMETRY_METRICS_SOURCE
@@ -192,7 +170,7 @@ class CustomGraphDesigner(CmkPage):
         ).to_have_count(rows_before + 1)
 
         # The new row is appended and auto-expanded, so its form is the last one.
-        form = self.main_area.locator().get_by_role("group", name=_SOURCE_FORM_NAME).last
+        form = self._scope().get_by_role("group", name=_SOURCE_FORM_NAME).last
         self._fill_autocompleter(
             form,
             _METRIC_NAME_FIELD,
@@ -204,9 +182,9 @@ class CustomGraphDesigner(CmkPage):
     def show_graph_appearance(self) -> None:
         """Switch to the tab listing each source's resolved series and their statistics."""
         logger.info("Switch to the '%s' tab", _GRAPH_APPEARANCE_TAB)
-        self.main_area.locator().get_by_role("tab", name=_GRAPH_APPEARANCE_TAB, exact=True).click()
+        self._scope().get_by_role("tab", name=_GRAPH_APPEARANCE_TAB, exact=True).click()
         expect(
-            self.main_area.locator(_APPEARANCE_TABLE_SELECTOR),
+            self._scope(_APPEARANCE_TABLE_SELECTOR),
             f"The '{_GRAPH_APPEARANCE_TAB}' tab did not show its table",
         ).to_be_visible()
 
@@ -217,7 +195,7 @@ class CustomGraphDesigner(CmkPage):
         """
         logger.info("Open the '%s' slide-in", _CREATE_CUSTOM_SERVICE)
         row.get_by_role("button", name=_CREATE_CUSTOM_SERVICE, exact=True).click()
-        dialog = self.main_area.locator().get_by_role("dialog", name=_CREATE_CUSTOM_SERVICE)
+        dialog = self._document.locator().get_by_role("dialog", name=_CREATE_CUSTOM_SERVICE)
         expect(dialog, f"The '{_CREATE_CUSTOM_SERVICE}' slide-in did not open").to_be_visible()
         return dialog
 
@@ -230,15 +208,6 @@ class CustomGraphDesigner(CmkPage):
             dialog,
             f"The '{_CREATE_CUSTOM_SERVICE}' slide-in did not close after saving",
         ).not_to_be_visible()
-
-    def save(self) -> None:
-        """Commit the edited definition; the designer returns to view mode."""
-        logger.info("Save the custom graph definition")
-        self.main_area.locator().get_by_role("button", name="Save", exact=True).click()
-        expect(
-            self.main_area.locator().get_by_role("button", name="Edit custom graph", exact=True),
-            "The designer stayed in edit mode after saving",
-        ).to_be_visible()
 
     def _fill_autocompleter(
         self,
@@ -276,7 +245,7 @@ class CustomGraphDesigner(CmkPage):
 
     def _open_suggestions(self, title: str) -> Locator:
         """The dropdown list that is currently open; portalled, so not under its field."""
-        suggestions = self.main_area.locator(_SUGGESTIONS_SELECTOR)
+        suggestions = self._document.locator(_SUGGESTIONS_SELECTOR)
         expect(suggestions, f"No dropdown opened to offer {title!r}").to_be_visible()
         return suggestions
 
@@ -285,3 +254,92 @@ class CustomGraphDesigner(CmkPage):
         option = suggestions.locator(f"[role='option'][aria-label='{title}']")
         expect(option, f"No suggestion titled {title!r} was offered").to_be_visible()
         option.click()
+
+
+class CustomGraphDesigner(CmkPage, DesignerBody):
+    """The custom graph designer, in either view or edit mode."""
+
+    def __init__(
+        self,
+        page: Page,
+        graph_name: str,
+        *,
+        edit: bool = False,
+        navigate_to_page: bool = True,
+    ) -> None:
+        self.graph_name = graph_name
+        self._edit = edit
+        super().__init__(page=page, navigate_to_page=navigate_to_page)
+
+    @override
+    def navigate(self) -> None:
+        mode = "&mode=edit" if self._edit else ""
+        logger.info(
+            "Navigate to the custom graph designer for '%s' in %s mode",
+            self.graph_name,
+            "edit" if self._edit else "view",
+        )
+        self.goto(urljoin(self.page.url, f"custom_graph.py?name={self.graph_name}{mode}"))
+        self.validate_page()
+
+    @override
+    def validate_page(self) -> None:
+        logger.info("Validate that current page is the custom graph designer")
+        self.page.wait_for_url(url=re.compile(r"(?<!edit_)custom_graph\.py"), wait_until="load")
+        # The app shows a loading icon until the graph definition and the filter
+        # definitions have arrived; the body only mounts once both are in.
+        expect(
+            self.main_area.locator(_BODY_SELECTOR),
+            "The custom graph designer never finished loading its graph",
+        ).to_be_visible()
+
+    @override
+    def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
+        return DropdownListNameToID()
+
+    @property
+    @override
+    def _document(self) -> MainArea:
+        return self.main_area
+
+    @override
+    def _scope(self, selector: str | None = None) -> Locator:
+        # The page holds a single designer body, so the whole main area stands in for it.
+        return self.main_area.locator(selector)
+
+    def save(self) -> None:
+        """Commit the edited definition; the designer returns to view mode."""
+        logger.info("Save the custom graph definition")
+        self.main_area.locator().get_by_role("button", name="Save", exact=True).click()
+        expect(
+            self.main_area.locator().get_by_role("button", name="Edit custom graph", exact=True),
+            "The designer stayed in edit mode after saving",
+        ).to_be_visible()
+
+
+class EmbeddedCustomGraphDesigner(DesignerBody):
+    """The designer body a dashboard wizard embeds, always in edit mode.
+
+    Scoped to its body: the dashboard behind the wizard draws graphs and legends of its own.
+    """
+
+    def __init__(self, page: Page, container: Locator) -> None:
+        self.page = page
+        self._container = container
+        self._main_area = MainArea(page, DropdownListNameToID())
+
+    @property
+    @override
+    def _document(self) -> MainArea:
+        return self._main_area
+
+    @override
+    def _scope(self, selector: str | None = None) -> Locator:
+        body = self._container.locator(_BODY_SELECTOR)
+        return body.locator(selector) if selector else body
+
+    def expect_loaded(self) -> None:
+        """Wait for the designer body; it mounts once its configuration has arrived."""
+        expect(
+            self._scope(), "The embedded custom graph designer never finished loading"
+        ).to_be_visible()

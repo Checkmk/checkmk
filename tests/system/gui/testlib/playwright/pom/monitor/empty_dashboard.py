@@ -9,6 +9,7 @@ from playwright.sync_api import expect, Locator
 
 from tests.system.gui.testlib.playwright.pom.monitor.custom_dashboard import CustomDashboard
 from tests.system.gui.testlib.playwright.pom.sidebar.widget_wizard_sidebar import (
+    AddWidgetSidebar,
     BaseWidgetWizard,
     WizardDialogName,
 )
@@ -62,7 +63,25 @@ class EmptyDashboard(CustomDashboard):
         Returns:
             The wizard object of the open sidebar.
         """
+        if (group_name := wizard_class.widget_group_name) is not None:
+            return self._open_grouped_widget_wizard(wizard_class, group_name)
         self._get_button_to_add_widget_by_type(wizard_class).click()
         wizard = wizard_class(WizardDialogName.ADD_WIDGET, self.page)
         wizard.expect_to_be_visible()
         return wizard
+
+    def _open_grouped_widget_wizard[W: BaseWidgetWizard](
+        self, wizard_class: type[W], group_name: str
+    ) -> W:
+        """Open a wizard offered inside a group, which the region shows as a single card.
+
+        The card opens the 'Add widget' sidebar on the group, headed by the group's name
+        rather than the sidebar title, so the sidebar is not validated as on its top level.
+        """
+        self.add_widget_buttons_container.get_by_role("link", name=group_name).click()
+        add_widget_sidebar = AddWidgetSidebar(self.page, validate_sidebar=False)
+        expect(
+            add_widget_sidebar.locator().get_by_role("heading", name=group_name, exact=True),
+            message=f"The card did not open the '{group_name}' group",
+        ).to_be_visible()
+        return add_widget_sidebar.select_widget_wizard(wizard_class)

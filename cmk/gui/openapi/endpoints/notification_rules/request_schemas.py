@@ -2574,6 +2574,13 @@ class CustomPlugin(BaseSchema):
         dif: dict[str, Any] = {k: v for k, v in original_data.items() if k not in data}
         plugin_name = data["plugin_name"]
 
+        if plugin_name in PluginSelector.type_schemas:
+            raise ValidationError(
+                f"{plugin_name} is a built-in plug-in, use the option "
+                f"'{PluginOptions.WITH_PARAMS.value}'",
+                field_name="plugin_name",
+            )
+
         if plugin_name not in [n for (n, _) in user_script_choices("notifications")]:
             raise ValidationError(f"{plugin_name} does not exist")
 

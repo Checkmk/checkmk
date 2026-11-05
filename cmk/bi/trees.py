@@ -432,14 +432,9 @@ class BICompiledRule(ABCBICompiledNode):
         state = self.aggregation_function.aggregate([result.state for result in results])
 
         if computation_options.downtime_only_on_full_problem_coverage:
-            in_downtime = False
-            if state != 0:
-                in_downtime = (
-                    self.aggregation_function.aggregate(
-                        [0 if result.in_downtime else result.state for result in results]
-                    )
-                    == 0
-                )
+            in_downtime = self._flags_cover_problem(
+                state, results, [result.in_downtime for result in results]
+            )
         else:
             in_downtime = self._flag_propagates(
                 [result.in_downtime for result in results],
@@ -450,14 +445,9 @@ class BICompiledRule(ABCBICompiledNode):
                 ),
             )
 
-        is_acknowledged = False
-        if state != 0:
-            is_acknowledged = (
-                self.aggregation_function.aggregate(
-                    [0 if result.acknowledged else result.state for result in results]
-                )
-                == 0
-            )
+        is_acknowledged = self._flags_cover_problem(
+            state, results, [result.acknowledged for result in results]
+        )
 
         out_of_service_period = self._flag_propagates(
             [not result.in_service_period for result in results], min_state=BIStates.WARN
@@ -474,6 +464,32 @@ class BICompiledRule(ABCBICompiledNode):
             {},
         )
 
+    def _flags_cover_problem(
+        self, state: int, results: Sequence[NodeComputeResult], flags: Sequence[bool]
+    ) -> bool:
+        """Whether this rule's problem is caused only by flagged children.
+
+        Flagged children are treated as OK, all others keep their state. The problem
+        is covered if that brings the rule back to its baseline (all children OK).
+        See below for rules that are never OK, e.g. count_ok requiring more OK nodes
+        than there are children.
+        """
+        baseline = self.aggregation_function.aggregate([BIStates.OK] * len(flags))
+
+        if self._never_ok_regardless_of_children(baseline, len(flags)):
+            return all(flags)
+
+        # The rule is no worse than with all children OK: either it is OK, or its
+        # problem stems from the rule itself (e.g. at best WARN), so there is
+        # nothing the flagged children could cover
+        if state == baseline:
+            return False
+
+        covered_state = self.aggregation_function.aggregate(
+            [BIStates.OK if flag else result.state for result, flag in zip(results, flags)]
+        )
+        return covered_state == baseline
+
     def _flag_propagates(self, flags: Sequence[bool], min_state: int) -> bool:
         """Whether the flagged children make this rule worse than it already is.
 
@@ -488,17 +504,22 @@ class BICompiledRule(ABCBICompiledNode):
         OK, e.g. count_ok requiring more OK nodes than there are children.
         """
         baseline = self.aggregation_function.aggregate([BIStates.OK] * len(flags))
-        all_flagged = self.aggregation_function.aggregate([BIStates.CRIT] * len(flags))
 
-        if baseline != BIStates.OK and all_flagged == baseline:
-            # The rule can't be satisfied and its children make no difference, so it
-            # inherits a flag only if every child has it (e.g. a whole-host downtime)
+        if self._never_ok_regardless_of_children(baseline, len(flags)):
             return all(flags)
 
         flagged_state = self.aggregation_function.aggregate(
             [BIStates.CRIT if flag else BIStates.OK for flag in flags]
         )
         return flagged_state > baseline and flagged_state >= min_state
+
+    def _never_ok_regardless_of_children(self, baseline: int, num_children: int) -> bool:
+        """Whether the rule can't be satisfied and its children make no difference.
+
+        baseline is the rule's state with all children OK.
+        """
+        all_crit = self.aggregation_function.aggregate([BIStates.CRIT] * num_children)
+        return baseline != BIStates.OK and all_crit == baseline
 
     @classmethod
     def schema(cls) -> type[BICompiledRuleSchema]:

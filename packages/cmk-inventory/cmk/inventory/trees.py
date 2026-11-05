@@ -226,35 +226,24 @@ class _MutableAttributes:
         filter_func: Callable[[SDKey], bool],
         retention_interval: RetentionInterval,
     ) -> None:
-        compared_keys = DictKeys.compare(
-            left=set(
-                get_filtered_dict(
-                    previous.pairs,
-                    _make_retentions_filter_func(
-                        filter_func=filter_func,
-                        intervals_by_key=previous.retentions,
-                        now=now,
-                    ),
-                )
-            ),
-            right=set(get_filtered_dict(self.pairs, filter_func)),
+        retention_filter = _make_retentions_filter_func(
+            filter_func=filter_func, intervals_by_key=previous.retentions, now=now
         )
+        current_keys = {k for k in self.pairs if filter_func(k)}
+        restored = {
+            k: v for k, v in previous.pairs.items() if retention_filter(k) and k not in current_keys
+        }
+        retentions = {
+            **{k: RetentionInterval.from_previous(previous.retentions[k]) for k in restored},
+            **dict.fromkeys(current_keys, retention_interval),
+        }
 
-        pairs: dict[SDKey, SDValue] = {}
-        retentions: dict[SDKey, RetentionInterval] = {}
-        for key in compared_keys.only_left:
-            pairs.setdefault(key, previous.pairs[key])
-            retentions[key] = RetentionInterval.from_previous(previous.retentions[key])
-
-        for key in compared_keys.both.union(compared_keys.only_right):
-            retentions[key] = retention_interval
-
-        if pairs:
-            self.add(pairs)
+        if restored:
+            self.add(restored)
             self.update_results.append(
                 _format_update_result_attrs(
                     title="Added pairs",
-                    message=", ".join(sorted(pairs)),
+                    message=", ".join(sorted(restored)),
                 )
             )
 
@@ -345,65 +334,29 @@ class _MutableTable:
             for ident, row in self.rows_by_ident.items()
             if (filtered_row := get_filtered_dict(row, filter_func))
         }
-        compared_row_idents = DictKeys.compare(
-            left=set(previous_filtered_rows),
-            right=set(current_filtered_rows),
-        )
-
         retentions: dict[SDRowIdent, dict[SDKey, RetentionInterval]] = {}
-        for ident in compared_row_idents.only_left:
-            previous_row: dict[SDKey, SDValue] = {}
-            for key, value in previous_filtered_rows[ident].items():
-                previous_row.setdefault(key, value)
-                retentions.setdefault(ident, {})[key] = RetentionInterval.from_previous(
-                    previous.retentions[ident][key]
-                )
+        for ident, previous_row in previous_filtered_rows.items():
+            current_row = current_filtered_rows.get(ident, {})
+            if not (restored := {k: v for k, v in previous_row.items() if k not in current_row}):
+                continue
 
-            if previous_row:
-                previous_row |= {k: previous.rows_by_ident[ident][k] for k in previous.key_columns}
-                self._add_row(ident, previous_row)
-                self.update_results.append(
-                    _format_update_result_table(
-                        ident=ident,
-                        title="Added row",
-                        message=", ".join(sorted(previous_row)),
-                    )
+            retentions[ident] = {
+                k: RetentionInterval.from_previous(previous.retentions[ident][k]) for k in restored
+            }
+            row = restored | {k: previous.rows_by_ident[ident][k] for k in previous.key_columns}
+            if ident in current_filtered_rows:
+                row |= {k: self.rows_by_ident[ident][k] for k in self.key_columns}
+            self._add_row(ident, row)
+            self.update_results.append(
+                _format_update_result_table(
+                    ident=ident,
+                    title="Added row",
+                    message=", ".join(sorted(row)),
                 )
-
-        for ident in compared_row_idents.both:
-            compared_keys = DictKeys.compare(
-                left=set(previous_filtered_rows[ident]),
-                right=set(current_filtered_rows[ident]),
             )
-            row: dict[SDKey, SDValue] = {}
-            for key in compared_keys.only_left:
-                row.setdefault(key, previous.rows_by_ident[ident][key])
-                retentions.setdefault(ident, {})[key] = RetentionInterval.from_previous(
-                    previous.retentions[ident][key]
-                )
 
-            for key in compared_keys.both.union(compared_keys.only_right):
-                retentions.setdefault(ident, {})[key] = retention_interval
-
-            if row:
-                row.update(
-                    {
-                        **{k: previous.rows_by_ident[ident][k] for k in previous.key_columns},
-                        **{k: self.rows_by_ident[ident][k] for k in self.key_columns},
-                    }
-                )
-                self._add_row(ident, row)
-                self.update_results.append(
-                    _format_update_result_table(
-                        ident=ident,
-                        title="Added row",
-                        message=", ".join(sorted(row)),
-                    )
-                )
-
-        for ident in compared_row_idents.only_right:
-            for key in current_filtered_rows[ident]:
-                retentions.setdefault(ident, {})[key] = retention_interval
+        for ident, current_row in current_filtered_rows.items():
+            retentions.setdefault(ident, {}).update(dict.fromkeys(current_row, retention_interval))
 
         if retentions:
             self.retentions = retentions

@@ -7,13 +7,11 @@ from collections.abc import Iterable, Iterator
 
 import pytest
 
-from cmk.ccc.crash_reporting import make_crash_report_base_path
 from cmk.gui.form_specs.visitors._utils import option_id
 from cmk.gui.watolib import password_store
 from cmk.shared_typing.configuration_entity import ConfigEntityType
-from cmk.utils import paths
 from cmk.utils.password_store import lookup, Password, password_store_path
-from tests.testlib.unit.rest_api_client import ClientRegistry, RestApiException
+from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
 @pytest.fixture
@@ -349,17 +347,6 @@ def test_create_password_existing_passwords_still_exist(
     assert lookup(password_store_path(), "existing_password_id") == "ShouldStillExist"
 
 
-@pytest.fixture
-def discard_rest_api_crash_reports() -> Iterator[None]:
-    yield
-    for crash_file in (make_crash_report_base_path(paths.omd_root) / "rest_api").glob(
-        "*/crash.info"
-    ):
-        crash_file.unlink()
-
-
-@pytest.mark.usefixtures("discard_rest_api_crash_reports")
-@pytest.mark.xfail(raises=RestApiException, strict=True, reason="crash group 4770")
 def test_password_schema_offers_contact_groups_with_hyphens(clients: ClientRegistry) -> None:
     clients.ContactGroup.create(name="web-admins", alias="Web admins")
 

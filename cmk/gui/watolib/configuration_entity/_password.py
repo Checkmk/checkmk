@@ -12,8 +12,16 @@ from cmk.gui.form_specs import (
     RawFrontendData,
     VisitorOptions,
 )
-from cmk.gui.form_specs.unstable import Catalog, CommentTextArea, Topic, TopicElement
+from cmk.gui.form_specs.unstable import (
+    Catalog,
+    CommentTextArea,
+    SingleChoiceElementExtended,
+    SingleChoiceExtended,
+    Topic,
+    TopicElement,
+)
 from cmk.gui.form_specs.unstable.legacy_converter import SimplePassword
+from cmk.gui.form_specs.unstable.multiple_choice import MultipleChoiceElementExtended
 from cmk.gui.form_specs.unstable.validators import not_empty
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.watolib.passwords import (
@@ -29,9 +37,6 @@ from cmk.rulesets.v1.form_specs import (
     DefaultValue,
     FixedValue,
     MultipleChoice,
-    MultipleChoiceElement,
-    SingleChoice,
-    SingleChoiceElement,
     String,
 )
 from cmk.rulesets.v1.form_specs.validators import ValidationError
@@ -115,9 +120,9 @@ def get_password_slidein_schema(user: LoggedInUser) -> Catalog:
                                 CascadingSingleChoiceElement(
                                     name="contact_group",
                                     title=Title("Members of the contact group:"),
-                                    parameter_form=SingleChoice(
+                                    parameter_form=SingleChoiceExtended(
                                         elements=[
-                                            SingleChoiceElement(
+                                            SingleChoiceElementExtended(
                                                 name=name,
                                                 title=Title(  # astrein: disable=localization-checker
                                                     title
@@ -146,7 +151,7 @@ def get_password_slidein_schema(user: LoggedInUser) -> Catalog:
                                 "other groups of users to make them able to use a password in checks."
                             ),
                             elements=[
-                                MultipleChoiceElement(
+                                MultipleChoiceElementExtended(
                                     name=name,
                                     title=Title(title),  # astrein: disable=localization-checker
                                 )

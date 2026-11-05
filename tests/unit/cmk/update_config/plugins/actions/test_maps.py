@@ -630,6 +630,33 @@ def test_an_unclean_icon_that_is_not_copied_does_not_fail_the_board(admin: UserI
     assert _view(spec)["background_image"] == "logo_1.png"
 
 
+def test_a_slide_image_that_names_no_image_file_is_dropped(admin: UserId) -> None:
+    # Stored flat, as the REST model's ``transform`` is only nested on the wire.
+    image = {
+        "kind": "image",
+        "id": "i1",
+        "x": 0,
+        "y": 0,
+        "w": 100,
+        "h": 100,
+        "rotation": 0,
+        "z": 0,
+        "opacity": 1,
+        "locked": False,
+        "hidden": False,
+        "src": "/grafana/render/d-solo/x",
+        "fit": "contain",
+    }
+    view = _presentation_view(background_image="https://intranet/logo.png?v=2", elements=[image])
+
+    spec = _migrated(admin, "legacy", _complete_map(view=view)).config.map_spec
+
+    elements = _view(spec)["elements"]
+    assert isinstance(elements, list)
+    assert _view(spec)["background_image"] is None
+    assert elements[0]["src"] is None
+
+
 def test_a_data_element_follows_its_icon_to_the_new_name(admin: UserId) -> None:
     _write_maps_icon("rack.png", _PNG + b"maps")
     _write_legacy_file("images/rack.png", _PNG)

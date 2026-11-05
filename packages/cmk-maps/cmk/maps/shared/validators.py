@@ -38,19 +38,17 @@ _URL_SCHEME = re.compile(r"^([a-zA-Z][a-zA-Z0-9+.\-]*):")
 # starting with "-" arrives as an option (``ssh://-oProxyCommand=…@host`` runs a
 # command), and whitespace or a percent escape hides one argument inside another.
 _OS_HANDLER_SCHEMES = frozenset({"ssh", "telnet", "rdp", "vnc"})
-_AUTHORITY_END = re.compile(r"[/?#]")
+_OS_HANDLER_URL = re.compile(
+    r"(?://)?(?:[A-Za-z0-9_.~][A-Za-z0-9_.~-]*@)?"
+    r"(?:[A-Za-z0-9_][A-Za-z0-9_.-]*|\[[0-9A-Fa-f:.]+\])(?::[0-9]{1,5})?"
+    r"(?:[/?#][^\s%\\]*)?"
+)
 
 
 def _validate_os_handler_authority(rest: str) -> None:
-    """Reject an authority a remote-access handler would read as options."""
-    authority = _AUTHORITY_END.split(rest.removeprefix("//"), 1)[0]
-    userinfo, _, host = authority.rpartition("@")
-    if not host:
-        raise ValueError("Remote access URL needs a host")
-    if userinfo.startswith("-") or host.startswith("-"):
-        raise ValueError("Remote access URL must not start its user or host with '-'")
-    if any(c.isspace() for c in authority) or "%" in authority:
-        raise ValueError("Remote access URL must not escape or split its host")
+    """Reject a remote access URL a handler could read as more than [user@]host[:port]."""
+    if not _OS_HANDLER_URL.fullmatch(rest):
+        raise ValueError("Remote access URL must start with [user@]host[:port]")
 
 
 def validate_user_url(value: str | None) -> str | None:
@@ -63,9 +61,9 @@ def validate_user_url(value: str | None) -> str | None:
     if _CONTROL_CHARS.search(s):
         raise ValueError("URL must not contain control characters")
     # Protocol-relative URLs (``//host/...``) inherit the page scheme and point
-    # off-site — reject them so a relative-looking value can't become an
-    # open-redirect / off-site resource load.
-    if s.startswith("//"):
+    # off-site.
+    # A browser reads a backslash in a web URL as a slash.
+    if s.replace("\\", "/").startswith("//"):
         raise ValueError("Protocol-relative URLs are not allowed")
     m = _URL_SCHEME.match(s)
     if m:
@@ -90,6 +88,31 @@ def coerce_user_url(value: object) -> object:
         return None
     try:
         return validate_user_url(value)
+    except ValueError:
+        return None
+
+
+# An image is requested with the viewer's session, so one outside the image
+# library must name an image file rather than a page of the site.
+_IMAGE_FILE_URL = re.compile(r"[^?#\\]*\.(?:png|gif|jpe?g|svg|webp|bmp|ico)", re.IGNORECASE)
+
+
+def validate_image_url(value: str | None) -> str | None:
+    """An image-library filename, or a URL of an image file."""
+    url = validate_user_url(value)
+    if url and set(url) & {"/", ":"} and not _IMAGE_FILE_URL.fullmatch(url):
+        raise ValueError("An image URL must name an image file")
+    return url
+
+
+def coerce_image_url(value: object) -> object:
+    """``None`` for an image URL ``validate_image_url`` refuses, as ``coerce_user_url``."""
+    if value is None or value == "":
+        return value
+    if not isinstance(value, str):
+        return None
+    try:
+        return validate_image_url(value)
     except ValueError:
         return None
 

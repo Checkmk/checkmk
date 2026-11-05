@@ -19,7 +19,7 @@ export function stripCheckmkBase(checkmkUrl: string | null | undefined): string 
   if (!checkmkUrl) {
     return ''
   }
-  if (/^[a-z][a-z0-9+.-]*:/i.test(checkmkUrl) && !isSafeUrl(checkmkUrl)) {
+  if (!isSafeUrl(checkmkUrl)) {
     console.warn(`stripCheckmkBase: blocked unsafe URL scheme: ${checkmkUrl}`)
     return ''
   }

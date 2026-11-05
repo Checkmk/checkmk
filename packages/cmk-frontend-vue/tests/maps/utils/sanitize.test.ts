@@ -76,6 +76,35 @@ describe('sanitizeTemplateHtml', () => {
     )
   })
 
+  it('drops remote-access links that are more than user, host and port', () => {
+    for (const href of [
+      'ssh://switch01:-oProxyCommand=x',
+      'ssh:\\\\-oProxyCommand=x',
+      'rdp://ops@h\\x'
+    ]) {
+      expect(sanitizeTemplateHtml(`<a href="${href}">x</a>`)).toBe(
+        '<a rel="noopener noreferrer nofollow" target="_blank">x</a>'
+      )
+    }
+    expect(sanitizeTemplateHtml('<a href="ssh://ops@switch01:2222/-not-an-option">x</a>')).toBe(
+      '<a href="ssh://ops@switch01:2222/-not-an-option" rel="noopener noreferrer nofollow" target="_blank">x</a>'
+    )
+  })
+
+  it('keeps only image sources that name an image file', () => {
+    for (const src of [
+      'logout.py',
+      '/heute/check_mk/logout.py',
+      '/x.png?a=1',
+      './logout.py#.png'
+    ]) {
+      expect(sanitizeTemplateHtml(`<img src="${src}" alt="x" />`)).toBe('<img alt="x" />')
+    }
+    expect(sanitizeTemplateHtml('<img src="host.svg" alt="x" />')).toBe(
+      '<img src="host.svg" alt="x" />'
+    )
+  })
+
   it('strips script tags entirely', () => {
     expect(sanitizeTemplateHtml('before<script>alert(1)</script>after')).toBe('beforeafter')
   })
@@ -116,6 +145,9 @@ describe('sanitizeTemplateHtml', () => {
     ).toBe('<div>x</div>')
     expect(
       sanitizeTemplateHtml('<div style="background-color:url/**/(https://evil.example)">x</div>')
+    ).toBe('<div>x</div>')
+    expect(
+      sanitizeTemplateHtml('<div style="background-color:red\nurl(https://evil.example)">x</div>')
     ).toBe('<div>x</div>')
     // Values that legitimately carry parens or a minus stay allowed.
     expect(sanitizeTemplateHtml('<div style="color:rgb(1, 2, 3);margin:-4px">x</div>')).toBe(

@@ -15,6 +15,7 @@ import type {
 import { imageAssetUrl } from '@/maps/utils/assetUrl'
 import { resolveAssetBase } from '@/maps/utils/deploymentBase'
 import type { TranslateFn } from '@/maps/utils/dropdownOptions'
+import { isImageFileUrl } from '@/maps/utils/sanitize'
 
 import { bindingLabel } from './binding'
 
@@ -69,8 +70,11 @@ export function resolveImageRef(ref: string | null | undefined): string {
   if (!ref) {
     return ''
   }
-  if (IMAGE_URL_RE.test(ref)) {
+  if (/^(data|blob):/.test(ref)) {
     return ref
+  }
+  if (IMAGE_URL_RE.test(ref)) {
+    return isImageFileUrl(ref) ? ref : ''
   }
   return imageAssetUrl(ref)
 }

@@ -30,7 +30,7 @@ from cmk.maps.shared.map_payload import (
     PresentationObjectType,
     PresentationTheme,
 )
-from cmk.maps.shared.validators import validate_color, validate_user_url
+from cmk.maps.shared.validators import validate_color, validate_image_url
 
 # font-family reaches an inline style on the frontend; keep CSS-breaking
 # characters (;{}()<>/:) out so it can't escape the property like the color
@@ -48,7 +48,7 @@ def _validate_font_family(value: str | None) -> str | None:
 
 
 def _validate_image_src(value: str | None) -> str | None:
-    return validate_user_url(value)
+    return validate_image_url(value)
 
 
 class ElementDisplay(BaseModel):

@@ -58,6 +58,7 @@ from cmk.maps.shared.validators import (
     coerce_url_target,
     MAX_ROTATION_POOLS,
     validate_color,
+    validate_image_url,
     validate_rotation_pool,
     validate_user_url,
 )
@@ -75,6 +76,7 @@ _Color = Annotated[str, AfterValidator(validate_color)]
 # so the REST write boundary is never laxer. Both pass ``None``/``""`` through.
 _UserUrl = Annotated[str, AfterValidator(validate_user_url)]
 _UrlTarget = Annotated[str, BeforeValidator(coerce_url_target)]
+_ImageUrl = Annotated[str, AfterValidator(validate_image_url)]
 # Uploaded icon / background filenames — drop anything that could leave the asset
 # dir. Coerces like the daemon: the model also validates stored maps on read.
 _AssetRef = Annotated[str | None, BeforeValidator(coerce_asset_ref)]
@@ -127,7 +129,7 @@ class MapElementDisplay:
     mode: Literal["icon", "text", "gadget"] = api_field(
         description="Render mode for the data element.", example="icon"
     )
-    image: _UserUrl | None | ApiOmitted = api_field(
+    image: _ImageUrl | None | ApiOmitted = api_field(
         description="Icon image (store filename or URL).",
         example="icon_server",
         default_factory=ApiOmitted,
@@ -286,7 +288,7 @@ class MapImageElement:
     name: str | None | ApiOmitted = api_field(
         description="Editor display name.", example="Logo", default_factory=ApiOmitted
     )
-    src: _UserUrl | None | ApiOmitted = api_field(
+    src: _ImageUrl | None | ApiOmitted = api_field(
         description="Image source (store filename or URL).",
         example="/logo.png",
         default_factory=ApiOmitted,
@@ -519,7 +521,7 @@ class MapPresentationView:
     background: _Color | None | ApiOmitted = api_field(
         description="Background color.", example="#0f172a", default_factory=ApiOmitted
     )
-    background_image: _UserUrl | None | ApiOmitted = api_field(
+    background_image: _ImageUrl | None | ApiOmitted = api_field(
         description="Background image (store filename or URL).",
         example="floorplan.png",
         default_factory=ApiOmitted,

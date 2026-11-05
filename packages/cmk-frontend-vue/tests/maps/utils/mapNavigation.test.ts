@@ -12,6 +12,7 @@ import {
   buildServiceStateViewUrl,
   hostStateOn,
   openUrl,
+  stripCheckmkBase,
   svcStateOn
 } from '@/maps/utils/mapNavigation'
 import { newMapElement } from '@/maps/utils/model'
@@ -42,6 +43,21 @@ describe('buildCheckmkUrl', () => {
     const inner = new URL(url!, 'http://h').searchParams.get('start_url') ?? ''
     expect(inner).toContain('view_name=hostgroup')
     expect(inner).toContain('hostgroup=web')
+  })
+})
+
+describe('stripCheckmkBase', () => {
+  it('drops an unsafe scheme behind leading whitespace', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    expect(stripCheckmkBase(' javascript:alert(1)//check_mk')).toBe('')
+
+    expect(warn).toHaveBeenCalled()
+    warn.mockRestore()
+  })
+
+  it('keeps the site part of a Checkmk URL', () => {
+    expect(stripCheckmkBase('http://h/SITE/check_mk/')).toBe('http://h/SITE')
   })
 })
 

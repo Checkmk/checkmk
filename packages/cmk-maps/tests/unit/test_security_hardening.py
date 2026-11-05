@@ -37,8 +37,37 @@ from cmk.maps.shared.validators import (
     coerce_url_target,
     coerce_user_url,
     is_valid_map_name,
+    validate_image_url,
     validate_user_url,
 )
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param("floorplan.png", id="library-filename"),
+        pytest.param("logout.py", id="library-filename-of-any-kind"),
+        pytest.param("/heute/check_mk/images/logo.PNG", id="image-path"),
+        pytest.param("https://example.com/logo.svg", id="image-url"),
+    ],
+)
+def test_validate_image_url_accepts_images(value: str) -> None:
+    assert validate_image_url(value) == value
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param("/heute/check_mk/logout.py", id="page"),
+        pytest.param("../check_mk/logout.py", id="relative-page"),
+        pytest.param("/logo.png?reload=1", id="query"),
+        pytest.param("./logout.py#.png", id="fragment"),
+    ],
+)
+def test_validate_image_url_rejects_other_urls(value: str) -> None:
+    with pytest.raises(ValueError):
+        validate_image_url(value)
+
 
 # --- validate_user_url: scheme allowlist + rejection ---
 
@@ -78,6 +107,7 @@ def test_validate_user_url_accepts_allowlisted(url: str | None) -> None:
         pytest.param("about:blank", id="about"),
         # Protocol-relative URLs inherit the page scheme and point off-site.
         pytest.param("//cdn.example.com/x", id="protocol-relative"),
+        pytest.param("/\\cdn.example.com/x", id="protocol-relative-backslash"),
         # Browsers strip ASCII control chars when parsing, so these would still
         # execute on click — the validator must reject them outright.
         pytest.param("java\tscript:alert(1)", id="tab-in-scheme"),
@@ -102,6 +132,9 @@ def test_validate_user_url_rejects_dangerous(url: str) -> None:
         pytest.param("vnc://kvm01%20-evil", id="escaped-space"),
         pytest.param("ssh://kvm01 -evil", id="literal-space"),
         pytest.param("ssh://", id="no-host"),
+        pytest.param("ssh://switch01:-oProxyCommand=curl", id="option-as-port"),
+        pytest.param("ssh:\\\\-oProxyCommand=curl", id="backslashes"),
+        pytest.param("ssh://ops@switch01/x\\-o", id="backslash-in-path"),
     ],
 )
 def test_validate_user_url_rejects_remote_handler_arguments(url: str) -> None:

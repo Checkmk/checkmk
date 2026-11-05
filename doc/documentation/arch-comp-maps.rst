@@ -806,7 +806,8 @@ Monitoring data and templates
   ``height`` on images and ``target``, ``rel`` on links; a fixed set of CSS properties whose values
   may not contain ``url(``, backslashes or comments). Links get
   ``rel="noopener noreferrer nofollow"`` and ``target="_blank"``; images may
-  only use relative (same-origin) sources. The template containers use
+  only use relative (same-origin) sources that name an image file (no query,
+  no fragment), since the browser sends the viewer's session along. The template containers use
   ``contain: paint``, ``max-height: 40vh`` and ``overflow: auto`` so that a
   template cannot cover the map. Maps' own code renders HTML with ``v-html`` in
   exactly three places: the two template containers and static icon SVGs
@@ -816,17 +817,20 @@ Monitoring data and templates
 URLs
   Object links, hover links, graph URLs, presentation images and tile URLs are
   validated on the server (``cmk.maps.shared.validators``): at most 4096
-  characters, no control characters, no leading ``//``, schemes limited to
-  http, https, mailto, tel, ssh, telnet, rdp, vnc and ftp. For ssh, telnet, rdp
-  and vnc the user and host may not start with ``-`` and may not contain
-  whitespace or ``%`` (so no options can be passed to the local handler). The
-  link target is coerced to ``_blank`` or ``_self`` on the server.
+  characters, no control characters, no leading ``//`` (or ``/\``), schemes
+  limited to http, https, mailto, tel, ssh, telnet, rdp, vnc and ftp. For ssh,
+  telnet, rdp and vnc the URL starts with ``[user@]host[:port]`` (user and host
+  not starting with ``-``, a numeric port) and has no whitespace, ``%`` or
+  backslash, so no options can be passed to the local handler. Presentation
+  images outside the image library must name an image file; the update drops
+  an OrbVis image that does not. The link target is coerced to ``_blank`` or
+  ``_self`` on the server.
 
   Before opening a link, the SPA checks again, but more narrowly: it normalizes
   the URL like the browser does, parses it and checks the scheme and the
   handler authority. Object icons and map backgrounds must be bare file names;
-  presentation images may be URLs (http(s), ``data:``, ``blob:`` or a site
-  path). Embedded graphs accept only http(s) or relative URLs and are shown as
+  presentation images may be URLs of an image file (http(s) or a site path)
+  or ``data:``/``blob:`` URLs. Embedded graphs accept only http(s) or relative URLs and are shown as
   an image or, if the author chose so, in an iframe with
   ``sandbox="allow-scripts"`` (no ``allow-same-origin``).
 

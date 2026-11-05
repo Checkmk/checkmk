@@ -29,6 +29,11 @@ export const SAFE_URL_SCHEMES = [
 // Mirrors _validate_os_handler_authority in cmk/maps/shared/validators.py.
 const OS_HANDLER_SCHEMES = ['ssh:', 'telnet:', 'rdp:', 'vnc:']
 
+// [user@]host[:port], then nothing a handler could read as an argument.
+// Mirrors _OS_HANDLER_URL in cmk/maps/shared/validators.py.
+const OS_HANDLER_URL =
+  /^(?:\/\/)?(?:[A-Za-z0-9_.~][A-Za-z0-9_.~-]*@)?(?:[A-Za-z0-9_][A-Za-z0-9_.-]*|\[[0-9A-Fa-f:.]+\])(?::[0-9]{1,5})?(?:[/?#][^\s%\\]*)?$/
+
 export function hasSafeUrlAuthority(url: string): boolean {
   // A browser strips ASCII tab/newline/CR from anywhere in a URL and trims
   // leading control characters and spaces before it parses the scheme, so parse
@@ -39,13 +44,16 @@ export function hasSafeUrlAuthority(url: string): boolean {
   if (!OS_HANDLER_SCHEMES.includes(scheme)) {
     return true
   }
-  const authority = normalized.slice(scheme.length).replace(/^\/\//, '').split(/[/?#]/)[0] ?? ''
-  const at = authority.lastIndexOf('@')
-  const userinfo = at < 0 ? '' : authority.slice(0, at)
-  const host = authority.slice(at + 1)
-  return (
-    host !== '' && !userinfo.startsWith('-') && !host.startsWith('-') && !/[\s%]/.test(authority)
-  )
+  return OS_HANDLER_URL.test(normalized.slice(scheme.length))
+}
+
+// The browser loads an image with the viewer's session, so one outside the
+// image library must name an image file.
+// Mirrors _IMAGE_FILE_URL in cmk/maps/shared/validators.py.
+const IMAGE_FILE_URL = /^[^?#\\]*\.(?:png|gif|jpe?g|svg|webp|bmp|ico)$/i
+
+export function isImageFileUrl(url: string): boolean {
+  return IMAGE_FILE_URL.test(url.trim())
 }
 
 // Allowlist for user-defined hover/context templates. Interpolated monitoring
@@ -57,7 +65,7 @@ export function hasSafeUrlAuthority(url: string): boolean {
 // template containers is what blocks an overlay.
 // url(...) is rejected to prevent exfiltration pings on render, in the escaped
 // and commented spellings a browser still reads as one too.
-const SAFE_STYLE_VALUE = [/^(?!.*(?:url\s*\(|\\|\/\*))[^;{}]*$/i]
+const SAFE_STYLE_VALUE = [/^(?![\s\S]*(?:url\s*\(|\\|\/\*))[^;{}]*$/i]
 
 const TEMPLATE_SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
   allowedTags: [
@@ -105,6 +113,10 @@ const TEMPLATE_SANITIZE_OPTIONS: sanitizeHtml.IOptions = {
         delete hardened.href
       }
       return { tagName, attribs: hardened }
+    },
+    img: (tagName, attribs) => {
+      const { src, ...rest } = attribs
+      return { tagName, attribs: src !== undefined && isImageFileUrl(src) ? attribs : rest }
     }
   },
   // <img> may only load same-origin/relative URLs — an external src would be a

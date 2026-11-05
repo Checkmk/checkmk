@@ -43,7 +43,7 @@ from cmk.maps.shared.map_payload import (
     OBJECT_FIELD_DEFAULTS,
     RADAR_VIEW_FIELD_DEFAULTS,
 )
-from cmk.maps.shared.validators import rgb_to_hex
+from cmk.maps.shared.validators import coerce_image_url, rgb_to_hex
 
 
 def legacy_maps_dir() -> Path:
@@ -131,6 +131,7 @@ def legacy_map_to_spec(
     spec["name"] = name
     _rename_icon_refs(spec, renamed_icons)
     _translate_legacy_keys(spec)
+    _drop_images_that_name_no_file(spec)
     _count_bundle_services(spec)
     _drop_member_patterns(spec)
     _retarget_connections(spec, foreign)
@@ -223,6 +224,26 @@ def _translate_legacy_keys(spec: dict[str, object]) -> None:
         migrate_weathermap(obj)
         if "graph_metric" in obj:
             obj["graph_metric"] = coerce_graph_metric(obj["graph_metric"])
+
+
+def _drop_images_that_name_no_file(spec: dict[str, object]) -> None:
+    """OrbVis loaded an image from any URL; Maps only from one of an image file."""
+
+    def drop(holder: object, key: str) -> None:
+        if isinstance(holder, dict) and holder.get(key) and coerce_image_url(holder[key]) is None:
+            holder[key] = None
+
+    for obj in _dict_objects(spec):
+        drop(obj.get("display"), "image")
+    view = spec.get("view")
+    if not isinstance(view, dict) or view.get("type") != "presentation":
+        return
+    drop(view, "background_image")
+    elements = view.get("elements")
+    for element in elements if isinstance(elements, list) else []:
+        drop(element, "src")
+        if isinstance(element, dict):
+            drop(element.get("display"), "image")
 
 
 def _count_bundle_services(spec: dict[str, object]) -> None:

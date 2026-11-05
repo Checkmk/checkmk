@@ -187,6 +187,21 @@ def test_presentation_map_discriminated_union_roundtrips(clients: ClientRegistry
     assert {el["kind"] for el in elements} == {"shape", "text"}
 
 
+def test_a_presentation_background_must_name_an_image_file(clients: ClientRegistry) -> None:
+    slide = _map(
+        "slide2",
+        view={
+            "type": "presentation",
+            "width": 1920,
+            "height": 1080,
+            "theme": "midnight",
+            "elements": [],
+            "background_image": "/heute/check_mk/logout.py",
+        },
+    )
+    clients.Maps.create(config=slide, expect_ok=False).assert_status_code(HTTPStatus.BAD_REQUEST)
+
+
 def test_show_map_with_unrepresentable_stored_spec_returns_clean_409(
     clients: ClientRegistry, monkeypatch: pytest.MonkeyPatch
 ) -> None:

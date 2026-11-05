@@ -244,17 +244,16 @@ def test_rest_model_keeps_presentation_image_urls(ref: str) -> None:
     map_from_spec(dense)
 
 
+@pytest.mark.parametrize("ref", ["javascript:alert(1)", "/heute/check_mk/logout.py"])
 @pytest.mark.parametrize("field", ["background_image", "src", "display"])
-def test_rest_model_rejects_script_urls_in_presentation_images(field: str) -> None:
+def test_rest_model_rejects_presentation_images_that_name_no_image(field: str, ref: str) -> None:
     dense = DaemonMapConfig.model_validate(_PRESENTATION_MAP).model_dump(mode="json")
     view = dense["view"]
     if field == "background_image":
-        view["background_image"] = "javascript:alert(1)"
+        view["background_image"] = ref
     elif field == "src":
-        next(e for e in view["elements"] if e["kind"] == "image")["src"] = "javascript:alert(1)"
+        next(e for e in view["elements"] if e["kind"] == "image")["src"] = ref
     else:
-        next(e for e in view["elements"] if e["kind"] == "data")["display"]["image"] = (
-            "javascript:alert(1)"
-        )
+        next(e for e in view["elements"] if e["kind"] == "data")["display"]["image"] = ref
     with pytest.raises(ValidationError):
         map_from_spec(dense)

@@ -12,6 +12,7 @@ Map/object authoring defaults are GUI-owned now (see the GUI-side
 """
 
 import logging
+import os
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -91,6 +92,51 @@ def test_daemon_runtime_falls_back_to_the_env_defaults(
     )
 
 
+def _write_unnoticed(path: Path, content: str) -> None:
+    """Rewrite ``path`` keeping its modification time, as if it had not changed."""
+    mtime = path.stat()
+    path.write_text(content)
+    os.utime(path, ns=(mtime.st_atime_ns, mtime.st_mtime_ns))
+
+
+def test_unchanged_globals_are_not_read_again(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_maps_wato(tmp_path, global_mk="maps_state_refresh_interval = 5\n")
+    monkeypatch.setattr(checkmk_globals, "_maps_wato_dir", lambda: tmp_path)
+    checkmk_globals.load_maps_globals()
+
+    _write_unnoticed(tmp_path / "global.mk", "maps_state_refresh_interval = 30\n")
+
+    assert checkmk_globals.load_maps_globals()[VAR_STATE_REFRESH_INTERVAL] == 5
+
+
+def test_globals_written_anew_are_read_again(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_maps_wato(tmp_path, global_mk="maps_state_refresh_interval = 5\n")
+    monkeypatch.setattr(checkmk_globals, "_maps_wato_dir", lambda: tmp_path)
+    checkmk_globals.load_maps_globals()
+
+    global_mk = tmp_path / "global.mk"
+    global_mk.write_text("maps_state_refresh_interval = 30\n")
+    os.utime(global_mk, ns=(0, global_mk.stat().st_mtime_ns + 1))
+
+    assert checkmk_globals.load_maps_globals()[VAR_STATE_REFRESH_INTERVAL] == 30
+
+
+def test_a_sitespecific_file_written_later_is_read(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_maps_wato(tmp_path, global_mk="maps_state_refresh_interval = 5\n")
+    monkeypatch.setattr(checkmk_globals, "_maps_wato_dir", lambda: tmp_path)
+    checkmk_globals.load_maps_globals()
+
+    _write_maps_wato(tmp_path, sitespecific_mk="maps_state_refresh_interval = 30\n")
+
+    assert checkmk_globals.load_maps_globals()[VAR_STATE_REFRESH_INTERVAL] == 30
+
+
 @pytest.fixture(name="root_log_level")
 def fixture_root_log_level() -> Iterator[None]:
     root = logging.getLogger()
@@ -109,6 +155,7 @@ def test_a_changed_log_level_is_applied_without_a_restart(
 
     global_mk = tmp_path / "global.mk"
     global_mk.write_text("maps_log_level = 'WARNING'\n")
+    os.utime(global_mk, ns=(0, global_mk.stat().st_mtime_ns + 1))
     settings_service.get_effective_state_refresh_interval()
 
     assert logging.getLogger().level == logging.WARNING

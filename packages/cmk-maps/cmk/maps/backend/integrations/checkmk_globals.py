@@ -20,6 +20,7 @@ value.
 """
 
 import logging
+from functools import lru_cache
 from pathlib import Path
 
 from cmk.maps.backend.core.config import settings
@@ -64,9 +65,27 @@ def load_maps_globals() -> dict[str, object]:
     value.
     """
     wato_dir = _maps_wato_dir()
+    # Activate Changes sends the daemon no reload, so every request asks for them;
+    # the files are read again only once one changed, as mknotifyd does.
+    mtimes = tuple(_mtime_ns(path) for path in _config_file_paths(wato_dir))
+    return dict(_read_maps_globals(wato_dir, mtimes))
+
+
+def _config_file_paths(wato_dir: Path) -> tuple[Path, ...]:
+    return (wato_dir / "global.mk", wato_dir / "sitespecific.mk")
+
+
+def _mtime_ns(path: Path) -> int | None:
+    try:
+        return path.stat().st_mtime_ns
+    except FileNotFoundError:
+        return None
+
+
+@lru_cache(maxsize=1)
+def _read_maps_globals(wato_dir: Path, _mtimes: tuple[int | None, ...]) -> dict[str, object]:
     ns: dict[str, object] = dict.fromkeys(_MAPS_VARS, _ABSENT)
-    for name in ("global.mk", "sitespecific.mk"):
-        path = wato_dir / name
+    for path in _config_file_paths(wato_dir):
         if not path.is_file():
             continue
         try:

@@ -267,13 +267,12 @@ class _MutableAttributes:
 
     def update(
         self,
+        *,
         now: int,
         previous: ImmutableAttributes,
-        interval: int,
-        choice: _SDRetentionFilterChoice,
+        filter_func: Callable[[SDKey], bool],
+        retention_interval: RetentionInterval,
     ) -> None:
-        filter_func = make_filter_func(choice.choice)
-        retention_interval = RetentionInterval.from_config(*choice.cache_info, interval)
         compared_keys = DictKeys.compare(
             left=set(
                 get_filtered_dict(
@@ -367,13 +366,12 @@ class _MutableTable:
 
     def update(
         self,
+        *,
         now: int,
         previous: ImmutableTable,
-        interval: int,
-        choice: _SDRetentionFilterChoice,
+        filter_func: Callable[[SDKey], bool],
+        retention_interval: RetentionInterval,
     ) -> None:
-        filter_func = make_filter_func(choice.choice)
-        retention_interval = RetentionInterval.from_config(*choice.cache_info, interval)
         self._add_key_columns(previous.key_columns)
         previous_filtered_rows = {
             ident: filtered_row
@@ -522,19 +520,37 @@ class MutableTree:
         if key_columns and rows:
             node.table.add(key_columns, rows)
 
-    def update(
+    def update_attributes(
         self,
         *,
+        path: SDPath,
         now: int,
         previous_tree: ImmutableTree,
-        choices: SDRetentionFilterChoices,
+        filter_func: Callable[[SDKey], bool],
+        retention_interval: RetentionInterval,
     ) -> None:
-        node = self._setdefault_node(choices.path)
-        previous_node = previous_tree.get_tree(choices.path)
-        for c in choices.pairs:
-            node.attributes.update(now, previous_node.attributes, choices.interval, c)
-        for c in choices.columns:
-            node.table.update(now, previous_node.table, choices.interval, c)
+        self._setdefault_node(path).attributes.update(
+            now=now,
+            previous=previous_tree.get_tree(path).attributes,
+            filter_func=filter_func,
+            retention_interval=retention_interval,
+        )
+
+    def update_table(
+        self,
+        *,
+        path: SDPath,
+        now: int,
+        previous_tree: ImmutableTree,
+        filter_func: Callable[[SDKey], bool],
+        retention_interval: RetentionInterval,
+    ) -> None:
+        self._setdefault_node(path).table.update(
+            now=now,
+            previous=previous_tree.get_tree(path).table,
+            filter_func=filter_func,
+            retention_interval=retention_interval,
+        )
 
     def _setdefault_node(self, path: SDPath) -> MutableTree:
         node = self
@@ -567,6 +583,31 @@ class MutableTree:
             if update_results := node.get_update_results():
                 by_path.update({p: list(rs) for p, rs in update_results.items()})
         return by_path
+
+
+def update_tree(
+    tree: MutableTree,
+    *,
+    now: int,
+    previous_tree: ImmutableTree,
+    choices: SDRetentionFilterChoices,
+) -> None:
+    for c in choices.pairs:
+        tree.update_attributes(
+            path=choices.path,
+            now=now,
+            previous_tree=previous_tree,
+            filter_func=make_filter_func(c.choice),
+            retention_interval=RetentionInterval.from_config(*c.cache_info, choices.interval),
+        )
+    for c in choices.columns:
+        tree.update_table(
+            path=choices.path,
+            now=now,
+            previous_tree=previous_tree,
+            filter_func=make_filter_func(c.choice),
+            retention_interval=RetentionInterval.from_config(*c.cache_info, choices.interval),
+        )
 
 
 def _parse_choice(

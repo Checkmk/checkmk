@@ -42,6 +42,7 @@ from cmk.inventory.trees import (
     SDNodeName,
     SDPath,
     SDValue,
+    update_tree,
 )
 
 from .parser import group_by_host, HostSections, ParserFunction
@@ -513,7 +514,7 @@ def _may_update(
         pairs_cache_info=_collect_cache_info(items_of_inventory_plugins, Attributes),
         columns_cache_info=_collect_cache_info(items_of_inventory_plugins, TableRow),
     ):
-        inventory_tree.update(now=now, previous_tree=previous_tree, choices=choices)
+        update_tree(inventory_tree, now=now, previous_tree=previous_tree, choices=choices)
 
 
 def _check_fetched_data_or_trees(

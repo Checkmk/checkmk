@@ -25,6 +25,7 @@ from cmk.inventory.trees import (
     SDRetentionFilterChoices,
     SDValue,
     sort_missing_values_first,
+    update_tree,
 )
 
 from ._fixtures import (
@@ -69,7 +70,7 @@ def _updated_tree(
         pairs_cache_info=pairs_cache_info,
         columns_cache_info={},
     ):
-        tree.update(now=now, previous_tree=ImmutableTree(), choices=choices)
+        update_tree(tree, now=now, previous_tree=ImmutableTree(), choices=choices)
     return tree
 
 
@@ -412,7 +413,7 @@ def test_update_attributes_from_previous() -> None:
     choices = SDRetentionFilterChoices(path=(), interval=6)
     choices.add_pairs_choice(choice="all", cache_info=(4, 5))
 
-    current_tree_.update(now=0, previous_tree=previous_tree, choices=choices)
+    update_tree(current_tree_, now=0, previous_tree=previous_tree, choices=choices)
     assert current_tree_.get_update_results() == {
         (): [
             "[Attributes] Added pairs: a2",
@@ -456,7 +457,7 @@ def test_update_from_previous_1() -> None:
     choices = SDRetentionFilterChoices(path=(), interval=6)
     choices.add_columns_choice(choice="all", cache_info=(4, 5))
 
-    current_tree_.update(now=0, previous_tree=previous_tree, choices=choices)
+    update_tree(current_tree_, now=0, previous_tree=previous_tree, choices=choices)
     assert current_tree_.get_update_results() == {
         (): [
             "[Table] 'KC': Added row: c2, kc",
@@ -501,7 +502,7 @@ def test_update_from_previous_2() -> None:
     )
     choices = SDRetentionFilterChoices(path=(), interval=6)
     choices.add_columns_choice(choice=[SDKey("c2"), SDKey("c3")], cache_info=(4, 5))
-    current_tree_.update(now=0, previous_tree=previous_tree, choices=choices)
+    update_tree(current_tree_, now=0, previous_tree=previous_tree, choices=choices)
     assert current_tree_.get_update_results() == {
         (): [
             "[Table] 'KC': Added row: c2, kc",

@@ -18,7 +18,7 @@ import { computed, ref } from 'vue'
 import TrialModeSelectionDialogFooter from '../components/TrialModeSelectionDialogFooter.vue'
 import TrialModeSelectionScreenHeading from '../components/TrialModeSelectionScreenHeading.vue'
 import TrialModeSelectionStepIndicator from '../components/TrialModeSelectionStepIndicator.vue'
-import { LEGAL_LINKS } from '../legalLinks'
+import { LEGAL_LINKS, MARKETING_EMAIL } from '../legalLinks'
 
 const email = defineModel<string>('email', { required: true })
 
@@ -55,34 +55,52 @@ interface LegalNoticeLink {
 type LegalNoticeSegment = LegalNoticeLink | { text: string }
 
 /**
- * The consent notice stays one msgid for the same reason, with more riding on it: it
- * carries four links, and a translator has to be free to reorder the sentence around all
- * of them. The placeholder is kept in the split, so each link lands where the translation
- * puts it rather than where English did; one that no longer matches falls through as
- * literal text instead of a hole in the sentence.
+ * Each notice stays one msgid, so a translator is free to reorder the sentence around
+ * its links. The placeholder is kept in the split, so each link lands where the
+ * translation puts it rather than where English did; one that no longer matches falls
+ * through as literal text instead of a hole in the sentence.
  */
 const legalNoticeLinks = computed(
   (): Record<string, LegalNoticeLink> => ({
     '%{terms}': { href: LEGAL_LINKS.terms, label: _t('Terms & Conditions') },
     '%{eula}': { href: LEGAL_LINKS.eula, label: _t('EULA') },
     '%{privacy_policy}': { href: LEGAL_LINKS.privacy, label: _t('Privacy Policy') },
-    '%{checkmk_group}': { href: LEGAL_LINKS.checkmk_group, label: _t('Checkmk group companies') }
+    '%{checkmk_group}': { href: LEGAL_LINKS.checkmk_group, label: _t('Checkmk group companies') },
+    '%{email}': {
+      href: LEGAL_LINKS.marketing_email,
+      label: _t('email'),
+      ariaLabel: _t('Email %{address} to unsubscribe', { address: MARKETING_EMAIL })
+    },
+    '%{privacy_notice}': { href: LEGAL_LINKS.privacy, label: _t('Privacy Notice') }
   })
 )
 
-const legalNoticeSegments = computed((): LegalNoticeSegment[] =>
-  _t(
-    `By starting the trial, I agree to the %{terms} and the %{eula}. I have
-    noted the %{privacy_policy}. In exchange for this free trial, I agree to
-    receive information about Checkmk products and services (incl. newsletter,
-    events and customer surveys) from the %{checkmk_group} by email and telephone,
-    and that Checkmk may analyse my interaction with these emails (opens and
-    clicks) to improve its marketing. I understand that this consent is the
-    condition for receiving the trial free of charge. I can unsubscribe at any time
-    via email.`
-  )
-    .split(/(%\{\w+\})/)
-    .map((part) => legalNoticeLinks.value[part] ?? { text: part })
+function toSegments(notice: string): LegalNoticeSegment[] {
+  return notice.split(/(%\{\w+\})/).map((part) => legalNoticeLinks.value[part] ?? { text: part })
+}
+
+const legalNotices = computed((): LegalNoticeSegment[][] =>
+  [
+    _t(
+      `By starting the trial, I agree to the %{terms} and the %{eula}. I have
+      noted the %{privacy_policy}.`
+    ),
+    _t(
+      `In exchange for this free trial, I agree to receive information about
+      Checkmk products and services (incl. newsletter, events and customer
+      surveys) from the %{checkmk_group} by email and telephone, and that
+      Checkmk may analyse my interaction with these emails (opens and clicks)
+      to improve its marketing. I understand that this consent is the
+      condition for receiving the trial free of charge. I can unsubscribe at
+      any time via %{email}.`
+    ),
+    _t(
+      `We check the email address you provide against external sources to
+      confirm that it belongs to a business contact and to complete the
+      details of your organisation and role. Further information and your
+      right to object: %{privacy_notice}.`
+    )
+  ].map(toSegments)
 )
 
 function submit(): void {
@@ -145,19 +163,30 @@ function clearErrors(): void {
     </CmkParagraph>
 
     <!-- Not a second checkbox: pressing "Send code" is the agreement. -->
-    <CmkParagraph class="trial-mode-selection-email-entry__legal">
-      <template v-for="(segment, index) in legalNoticeSegments" :key="index"
-        ><CmkLink
-          v-if="'href' in segment"
-          class="trial-mode-selection-email-entry__inline-link"
-          :href="segment.href"
-          :aria-label="segment.ariaLabel"
-          target="_blank"
-          rel="noopener"
-          >{{ segment.label }}</CmkLink
-        ><template v-else>{{ segment.text }}</template></template
+    <div class="trial-mode-selection-email-entry__legal">
+      <CmkParagraph
+        v-for="(notice, noticeIndex) in legalNotices"
+        :key="noticeIndex"
+        class="trial-mode-selection-email-entry__legal-notice"
       >
-    </CmkParagraph>
+        <!--
+          Every link opens in a new tab, mailto: included: a webmail handler such as
+          Gmail would otherwise replace this dialog and lose the user's progress.
+          Browsers close the blank tab themselves when a desktop mail client takes over.
+        -->
+        <template v-for="(segment, index) in notice" :key="index"
+          ><CmkLink
+            v-if="'href' in segment"
+            class="trial-mode-selection-email-entry__inline-link"
+            :href="segment.href"
+            :aria-label="segment.ariaLabel"
+            target="_blank"
+            rel="noopener"
+            >{{ segment.label }}</CmkLink
+          ><template v-else>{{ segment.text }}</template></template
+        >
+      </CmkParagraph>
+    </div>
 
     <TrialModeSelectionDialogFooter @back="emit('back')">
       <CmkButton variant="success" @click="submit">{{ _t('Send code') }}</CmkButton>
@@ -185,11 +214,18 @@ function clearErrors(): void {
 }
 
 .trial-mode-selection-email-entry__legal {
-  color: var(--font-color-dimmed);
-  font-size: var(--font-size-small);
   margin-top: var(--dimension-6);
   padding-top: var(--dimension-5);
   border-top: 1px solid var(--ux-theme-6);
+}
+
+.trial-mode-selection-email-entry__legal-notice {
+  color: var(--font-color-dimmed);
+  font-size: var(--font-size-small);
+}
+
+.trial-mode-selection-email-entry__legal-notice + .trial-mode-selection-email-entry__legal-notice {
+  margin-top: var(--dimension-4);
 }
 
 /* `.cmk-link` is `display: flex; width: 100%`, which would break these out of the

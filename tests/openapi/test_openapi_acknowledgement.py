@@ -62,7 +62,6 @@ def test_openapi_acknowledge_all_services(
     )
 
     if acknowledgement_sent:
-        live.expect_query([f"GET hosts\nColumns: name\nFilter: name = {host_name}"])
         live.expect_query(
             f"COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;{host_name};{service};2;1;1;test123-...;Hello world!;",
             match_type="ellipsis",
@@ -142,7 +141,6 @@ def test_openapi_acknowledge_specific_service(
     )
 
     if acknowledgement_sent:
-        live.expect_query("GET hosts\nColumns: name\nFilter: name = heute")
         live.expect_query(
             f"COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;heute;{service};2;1;1;test123-...;Hello world!;",
             match_type="ellipsis",
@@ -208,10 +206,9 @@ def test_openapi_acknowledge_host(
     )
 
     live.expect_query(f"GET hosts\nColumns: name\nFilter: name = {host_name}")
-    live.expect_query(f"GET hosts\nColumns: state\nFilter: name = {host_name}")
+    live.expect_query(f"GET hosts\nColumns: name state\nFilter: name = {host_name}")
 
     if acknowledgement_sent:
-        live.expect_query(f"GET hosts\nColumns: name\nFilter: name = {host_name}")
         live.expect_query(
             f"COMMAND [...] ACKNOWLEDGE_HOST_PROBLEM;{host_name};2;1;1;test123-...;Hello world!;",
             match_type="ellipsis",
@@ -267,12 +264,10 @@ def test_openapi_bulk_acknowledge(
         ]
     )
 
-    live.expect_query("GET hosts\nColumns: name\nFilter: name = heute")
     live.expect_query(
         "COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;heute;Memory;2;1;1;test123-...;Hello world!;",
         match_type="ellipsis",
     )
-    live.expect_query("GET hosts\nColumns: name\nFilter: name = example.com")
     live.expect_query(
         "COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;example.com;CPU load;2;1;1;test123-...;Hello world!;",
         match_type="ellipsis",
@@ -462,7 +457,6 @@ def test_openapi_acknowledge_host_with_query(
     )
 
     live.expect_query("GET hosts\nColumns: name\nFilter: state = 1")
-    live.expect_query("GET hosts\nColumns: name\nFilter: name = example.com")
     live.expect_query(
         "COMMAND [...] ACKNOWLEDGE_HOST_PROBLEM;example.com;1;0;0;test123...;Acknowledged;",
         match_type="ellipsis",
@@ -555,8 +549,7 @@ def test_openapi_acknowledge_host_with_expire_on(
     live.expect_query(  # request data validation
         "GET hosts\nColumns: name\nFilter: name = example.com"
     )
-    live.expect_query("GET hosts\nColumns: state\nFilter: name = example.com")
-    live.expect_query("GET hosts\nColumns: name\nFilter: name = example.com")
+    live.expect_query("GET hosts\nColumns: name state\nFilter: name = example.com")
     live.expect_query(
         f"COMMAND [...] ACKNOWLEDGE_HOST_PROBLEM;example.com;1;0;0;test123-...;Acknowledged;{int(in_the_future.timestamp())}",
         match_type="ellipsis",
@@ -827,7 +820,6 @@ def test_host_acknowledgement_is_executed_for_a_user_of_the_default_user_role(
     clients.Acknowledge.set_credentials(*with_user)
     mock_livestatus.add_table("hosts", [{"name": "heute", "state": 1}])
     mock_livestatus.expect_query(_heute_by_name_for(with_user[0]))
-    mock_livestatus.expect_query(_heute_by_name_for(with_user[0]))
     mock_livestatus.expect_query(
         "COMMAND [...] ACKNOWLEDGE_HOST_PROBLEM;heute;1;0;0;...;Acknowledged;",
         match_type="ellipsis",
@@ -843,23 +835,27 @@ def test_host_acknowledgement_is_executed_for_a_user_of_the_default_user_role(
     assert resp.status_code == HTTPStatus.NO_CONTENT
 
 
+@pytest.mark.parametrize(
+    "monitoring_sites", [("remote",), ("NO_SITE", "remote")], ids=["one_site", "two_sites"]
+)
 def test_host_acknowledgement_goes_to_the_site_that_monitors_the_host(
     clients: ClientRegistry,
     set_config: SetConfig,
     mock_livestatus: MockLiveStatusConnection,
+    monitoring_sites: tuple[str, ...],
 ) -> None:
     # The mock keeps one expectation queue per site, so a command sent to the wrong site
     # finds nothing waiting for it there and fails the test.
     for site_id in mock_livestatus.sites:
-        rows = [{"name": "gestern", "state": 1}] if site_id == "remote" else []
+        rows = [{"name": "gestern", "state": 1}] if site_id in monitoring_sites else []
         mock_livestatus.add_table("hosts", rows, site=site_id)
     mock_livestatus.expect_query("GET hosts\nColumns: name\nFilter: name = gestern")
-    mock_livestatus.expect_query("GET hosts\nColumns: name\nFilter: name = gestern")
-    mock_livestatus.expect_query(
-        "COMMAND [...] ACKNOWLEDGE_HOST_PROBLEM;gestern;1;0;0;...;Acknowledged;",
-        match_type="ellipsis",
-        sites=["remote"],
-    )
+    for site_id in monitoring_sites:
+        mock_livestatus.expect_query(
+            "COMMAND [...] ACKNOWLEDGE_HOST_PROBLEM;gestern;1;0;0;...;Acknowledged;",
+            match_type="ellipsis",
+            sites=[site_id],
+        )
 
     with (
         set_config(sites=site_configurations(["NO_SITE", "remote", "local"])),
@@ -905,15 +901,19 @@ def test_service_acknowledgement_is_refused_without_the_acknowledge_permission(
     assert "Acknowledge" in resp.json["detail"]
 
 
+@pytest.mark.parametrize(
+    "monitoring_sites", [("remote",), ("NO_SITE", "remote")], ids=["one_site", "two_sites"]
+)
 def test_service_acknowledgement_goes_to_the_site_that_monitors_the_host(
     clients: ClientRegistry,
     set_config: SetConfig,
     mock_livestatus: MockLiveStatusConnection,
+    monitoring_sites: tuple[str, ...],
 ) -> None:
     # The mock keeps one expectation queue per site, so a command sent to the wrong site
     # finds nothing waiting for it there and fails the test.
     for site_id in mock_livestatus.sites:
-        on_this_site = site_id == "remote"
+        on_this_site = site_id in monitoring_sites
         hosts = [{"name": "gestern"}] if on_this_site else []
         services = (
             [{"host_name": "gestern", "description": "Memory", "state": 2}] if on_this_site else []
@@ -924,12 +924,12 @@ def test_service_acknowledgement_goes_to_the_site_that_monitors_the_host(
         "GET services\nColumns: host_name description state"
         "\nFilter: host_name = gestern\nFilter: description = Memory\nAnd: 2"
     )
-    mock_livestatus.expect_query("GET hosts\nColumns: name\nFilter: name = gestern")
-    mock_livestatus.expect_query(
-        "COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;gestern;Memory;...",
-        match_type="ellipsis",
-        sites=["remote"],
-    )
+    for site_id in monitoring_sites:
+        mock_livestatus.expect_query(
+            "COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;gestern;Memory;...",
+            match_type="ellipsis",
+            sites=[site_id],
+        )
 
     with (
         set_config(sites=site_configurations(["NO_SITE", "remote", "local"])),
@@ -961,7 +961,6 @@ def test_service_acknowledgement_skips_the_selected_services_without_a_problem(
         "GET services\nColumns: host_name description state\nFilter: host_name = heute"
         "\nFilter: description = CPU load\nFilter: description = Memory\nOr: 2\nAnd: 2"
     )
-    mock_livestatus.expect_query("GET hosts\nColumns: name\nFilter: name = heute")
     mock_livestatus.expect_query(
         "COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;heute;CPU load;...",
         match_type="ellipsis",
@@ -975,6 +974,81 @@ def test_service_acknowledgement_skips_the_selected_services_without_a_problem(
         )
 
     assert resp.status_code == HTTPStatus.NO_CONTENT
+
+
+@pytest.mark.usefixtures("with_host")
+def test_host_acknowledgement_by_name_goes_to_each_site_that_monitors_the_host(
+    clients: ClientRegistry,
+    set_config: SetConfig,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    for site_id in ("NO_SITE", "remote"):
+        mock_livestatus.add_table("hosts", [{"name": "heute", "state": 1}], site=site_id)
+    mock_livestatus.expect_query("GET hosts\nColumns: name\nFilter: name = heute")
+    mock_livestatus.expect_query("GET hosts\nColumns: name state\nFilter: name = heute")
+    for site_id in ("NO_SITE", "remote"):
+        mock_livestatus.expect_query(
+            "COMMAND [...] ACKNOWLEDGE_HOST_PROBLEM;heute;1;0;0;...;Acknowledged;",
+            match_type="ellipsis",
+            sites=[site_id],
+        )
+
+    with (
+        set_config(sites=site_configurations(["NO_SITE", "remote", "local"])),
+        mock_livestatus(expect_status_query=True),
+    ):
+        resp = clients.Acknowledge.request(
+            "post",
+            url="/domain-types/acknowledge/collections/host",
+            body={"acknowledge_type": "host", "host_name": "heute", **_ACKNOWLEDGED},
+        )
+
+    assert resp.status_code == HTTPStatus.NO_CONTENT
+
+
+@pytest.mark.usefixtures("with_host")
+def test_service_acknowledgement_by_name_goes_only_to_the_site_with_the_problem(
+    clients: ClientRegistry,
+    set_config: SetConfig,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    for site_id, state in (("NO_SITE", 0), ("remote", 2)):
+        mock_livestatus.add_table("hosts", [{"name": "heute"}], site=site_id)
+        mock_livestatus.add_table(
+            "services",
+            [{"host_name": "heute", "description": "CPU load", "state": state}],
+            site=site_id,
+        )
+    mock_livestatus.expect_query("GET hosts\nColumns: name\nFilter: name = heute")
+    mock_livestatus.expect_query(
+        "GET services\nColumns: host_name description state"
+        "\nFilter: host_name = heute\nFilter: description = CPU load\nAnd: 2"
+    )
+    mock_livestatus.expect_query(
+        "COMMAND [...] ACKNOWLEDGE_SVC_PROBLEM;heute;CPU load;...",
+        match_type="ellipsis",
+        sites=["remote"],
+    )
+
+    with (
+        set_config(sites=site_configurations(["NO_SITE", "remote", "local"])),
+        mock_livestatus(expect_status_query=True),
+    ):
+        resp = clients.Acknowledge.request(
+            "post",
+            url="/domain-types/acknowledge/collections/service",
+            body={
+                "acknowledge_type": "service",
+                "host_name": "heute",
+                "service_description": "CPU load",
+                **_ACKNOWLEDGED,
+            },
+        )
+
+    assert resp.status_code == HTTPStatus.NO_CONTENT
+
+
+_ACKNOWLEDGED = {"sticky": False, "notify": False, "persistent": False, "comment": "Acknowledged"}
 
 
 def _acknowledge_service_of(host_name: str, *services: str) -> dict[str, object]:
@@ -993,10 +1067,7 @@ def _acknowledge_service_of(host_name: str, *services: str) -> dict[str, object]
                 },
             ],
         },
-        "sticky": False,
-        "notify": False,
-        "persistent": False,
-        "comment": "Acknowledged",
+        **_ACKNOWLEDGED,
     }
 
 
@@ -1009,8 +1080,5 @@ def _acknowledge_host_named(host_name: str) -> dict[str, object]:
     return {
         "acknowledge_type": "host_by_query",
         "query": {"op": "=", "left": "hosts.name", "right": host_name},
-        "sticky": False,
-        "notify": False,
-        "persistent": False,
-        "comment": "Acknowledged",
+        **_ACKNOWLEDGED,
     }

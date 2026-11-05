@@ -100,23 +100,31 @@ def set_acknowledgement_on_hosts(params: Mapping[str, Any]) -> Response:
 
     if acknowledge_type == "host":
         name = body["host_name"]
-        host_state = Query([Hosts.state], Hosts.name == name).value(live)
-        if not host_state:
+        problem_hosts = [
+            host
+            for host in Query([Hosts.name, Hosts.state], Hosts.name == name).fetchall(
+                live, include_site_ids=True
+            )
+            if host.state
+        ]
+        if not problem_hosts:
             raise ProblemException(
                 status=HTTPStatus.UNPROCESSABLE_ENTITY,
                 title=f"Host {name!r} has no problem.",
                 detail="You can't acknowledge a problem that doesn't exist.",
             )
-        acknowledge_host_problem(
-            live,
-            name,
-            sticky=sticky,
-            notify=notify,
-            persistent=persistent,
-            user=user.ident,
-            comment=comment,
-            expire_on=expire_on,
-        )
+        for host in problem_hosts:
+            acknowledge_host_problem(
+                live,
+                host.site,
+                host.name,
+                sticky=sticky,
+                notify=notify,
+                persistent=persistent,
+                user=user.ident,
+                comment=comment,
+                expire_on=expire_on,
+            )
     elif acknowledge_type == "hostgroup":
         host_group = body["hostgroup_name"]
         try:
@@ -138,7 +146,7 @@ def set_acknowledgement_on_hosts(params: Mapping[str, Any]) -> Response:
             )
     elif acknowledge_type == "host_by_query":
         query = body["query"]
-        hosts = Query([Hosts.name], query).fetchall(live)
+        hosts = Query([Hosts.name], query).fetchall(live, include_site_ids=True)
         if not hosts:
             raise ProblemException(
                 status=HTTPStatus.UNPROCESSABLE_ENTITY,
@@ -148,6 +156,7 @@ def set_acknowledgement_on_hosts(params: Mapping[str, Any]) -> Response:
         for host in hosts:
             acknowledge_host_problem(
                 live,
+                host.site,
                 host.name,
                 sticky=sticky,
                 notify=notify,
@@ -196,33 +205,36 @@ def set_acknowledgement_on_services(params: Mapping[str, Any]) -> Response:
     if acknowledge_type == "service":
         description: str = unquote(body["service_description"])
         host_name: str = body["host_name"]
-        service = Query(
+        services = Query(
             [Services.host_name, Services.description, Services.state],
             And(Services.host_name == host_name, Services.description == description),
-        ).first(live)
-        if not service:
+        ).fetchall(live, include_site_ids=True)
+        if not services:
             raise ProblemException(
                 status=HTTPStatus.BAD_REQUEST,
                 title="Service not found",
                 detail=f"Service {description!r}@{host_name!r} could not be found.",
             )
-        if not service.state:
+        problem_services = [service for service in services if service.state]
+        if not problem_services:
             raise ProblemException(
                 status=HTTPStatus.UNPROCESSABLE_ENTITY,
                 title="This service has no problem",
                 detail=f"Service {description!r}@{host_name!r} has no problem.",
             )
-        acknowledge_service_problem(
-            live,
-            service.host_name,
-            service.description,
-            sticky=sticky,
-            notify=notify,
-            persistent=persistent,
-            user=user.ident,
-            comment=comment,
-            expire_on=expire_on,
-        )
+        for service in problem_services:
+            acknowledge_service_problem(
+                live,
+                service.site,
+                service.host_name,
+                service.description,
+                sticky=sticky,
+                notify=notify,
+                persistent=persistent,
+                user=user.ident,
+                comment=comment,
+                expire_on=expire_on,
+            )
     elif acknowledge_type == "servicegroup":
         service_group = body["servicegroup_name"]
         try:
@@ -246,7 +258,7 @@ def set_acknowledgement_on_services(params: Mapping[str, Any]) -> Response:
         services = Query(
             [Services.host_name, Services.description, Services.state],
             body["query"],
-        ).fetchall(live)
+        ).fetchall(live, include_site_ids=True)
         if not services:
             raise ProblemException(
                 status=HTTPStatus.UNPROCESSABLE_ENTITY,
@@ -261,6 +273,7 @@ def set_acknowledgement_on_services(params: Mapping[str, Any]) -> Response:
                 continue
             acknowledge_service_problem(
                 live,
+                service.site,
                 service.host_name,
                 service.description,
                 sticky=sticky,

@@ -29,6 +29,7 @@ from cmk.gui.monitor.command import (
     notification_rules_url,
 )
 from cmk.gui.monitor.export import EXPORT_EVENT, MonitorReportExportMenu
+from cmk.gui.monitor.shared import any_custom_icons
 from cmk.gui.page_menu import (
     make_simple_link,
     PageMenu,
@@ -182,6 +183,7 @@ class MonitorAllHostsPage(Page):
                     show_relations=LiveStatusHostRepository(
                         connection=sites.live()
                     ).has_any_relations(),
+                    show_indicators=any_custom_icons(sites.live(), "host"),
                     legacy_view_button=MonitoringPageLinkButton(
                         url=makeuri_contextless(
                             ctx.request,

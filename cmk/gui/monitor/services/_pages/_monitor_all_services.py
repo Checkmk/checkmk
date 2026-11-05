@@ -7,6 +7,7 @@ from typing import override
 
 from cmk.ccc.site import omd_site
 from cmk.ccc.version import edition
+from cmk.gui import sites
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.header import make_header
 from cmk.gui.htmllib.html import html
@@ -28,6 +29,7 @@ from cmk.gui.monitor.export import EXPORT_EVENT, MonitorExportMenu
 from cmk.gui.monitor.services._ai_explain import ai_explain
 from cmk.gui.monitor.services._api._limits import LIMIT_TIERS
 from cmk.gui.monitor.services._supported_actions import SERVICE_SUPPORTED_ACTIONS
+from cmk.gui.monitor.shared import any_custom_icons
 from cmk.gui.page_menu import PageMenu
 from cmk.gui.pages import Page, PageContext
 from cmk.gui.pagetypes import PagetypeTopics
@@ -156,6 +158,7 @@ class MonitorAllServicesPage(Page):
                     ],
                     notification_rules_url=notification_rules_url(ctx.config),
                     downtime_presets_url=downtime_presets_url(ctx.config),
+                    show_indicators=any_custom_icons(sites.live(), "service"),
                     legacy_view_button=MonitoringPageLinkButton(
                         url=makeuri_contextless(
                             ctx.request,

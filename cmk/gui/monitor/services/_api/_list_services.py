@@ -302,6 +302,8 @@ ENDPOINT_LIST_ALL_SERVICES = VersionedEndpoint(
                     permissions.OkayToIgnorePerm("general.ignore_hard_limit"),
                     permissions.OkayToIgnorePerm("general.see_crash_reports"),
                     permissions.OkayToIgnorePerm("action.reschedule"),
+                    # Checked per custom icon of a row, for the rows that ask for theirs.
+                    permissions.PrefixPerm("icons_and_actions"),
                 ]
             )
         )

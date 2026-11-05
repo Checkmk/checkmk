@@ -26,7 +26,7 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.visual_link import url_to_visual
 from cmk.ruleset_matcher.tags import TagID
 from cmk.web.utils.html import HTML
-from cmk.web.utils.icons import DynamicIcon, IconNames, StaticIcon
+from cmk.web.utils.icons import DynamicIcon, DynamicIconName, IconNames, StaticIcon
 from cmk.web.utils.urls import makeuri, makeuri_contextless
 
 from ..graph import cmk_graph_url
@@ -113,15 +113,9 @@ def _render_icon_image_icon(
     custom_vars: Mapping[str, str],  # noqa: ARG001
     user_permissions: UserPermissions,  # noqa: ARG001
     icon_config: IconConfig,  # noqa: ARG001
-) -> HTML | None:
+) -> DynamicIconName | None:
     img = row[what + "_icon_image"]
-    if not img:
-        return None
-
-    if img.endswith(".png"):
-        img = img[:-4]
-
-    return html.render_icon(img)
+    return DynamicIconName(img.removesuffix(".png")) if img else None
 
 
 IconImageIcon = Icon(

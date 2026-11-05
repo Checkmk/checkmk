@@ -15,7 +15,13 @@ from cmk.gui.monitor.hosts._api._filters import SiteScopedFilter
 from cmk.gui.monitor.hosts._api._list_hosts import _handle_list_hosts
 from cmk.gui.monitor.hosts._models import HostOptionalField
 from cmk.gui.monitor.hosts.table import HostTable, InvalidFilterError, MonitorFolders
-from cmk.gui.monitor.shared import AndNode, HostState, NumericCondition, StringCondition
+from cmk.gui.monitor.shared import (
+    AndNode,
+    HostState,
+    IconSource,
+    NumericCondition,
+    StringCondition,
+)
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.unit.gui.setup_git_test_helper import (
@@ -97,6 +103,37 @@ def test_handle_list_hosts_omits_the_graphs_link_when_not_asked_for() -> None:
     response = _handle_list_hosts(host_repo, host_repo.count_total(), fields=frozenset())
 
     assert [host.graphs_link for host in response.hosts] == [ApiOmitted()]
+
+
+@pytest.mark.usefixtures("with_admin_login", "icon_files")
+def test_handle_list_hosts_lists_the_custom_icons_when_asked_for() -> None:
+    hosts = [
+        HostFactory.build(
+            icon_source=IconSource(actions="", icon_image="logo.png", host_address="10.0.0.1")
+        )
+    ]
+    host_repo = get_fake_host_repository(hosts=hosts)
+    response = _handle_list_hosts(
+        host_repo, host_repo.count_total(), fields=frozenset({HostOptionalField.CUSTOM_ICONS})
+    )
+
+    assert [
+        [icon.icon_name for icon in host.custom_icons]
+        for host in response.hosts
+        if not isinstance(host.custom_icons, ApiOmitted)
+    ] == [["logo"]]
+
+
+def test_handle_list_hosts_omits_the_custom_icons_when_not_asked_for() -> None:
+    hosts = [
+        HostFactory.build(
+            icon_source=IconSource(actions="", icon_image="logo.png", host_address="10.0.0.1")
+        )
+    ]
+    host_repo = get_fake_host_repository(hosts=hosts)
+    response = _handle_list_hosts(host_repo, host_repo.count_total(), fields=frozenset())
+
+    assert [host.custom_icons for host in response.hosts] == [ApiOmitted()]
 
 
 @pytest.mark.usefixtures("with_admin_login")

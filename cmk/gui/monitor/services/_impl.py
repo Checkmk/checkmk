@@ -26,6 +26,7 @@ from cmk.gui.livestatus_utils.commands.comment import add_service_comment
 from cmk.gui.livestatus_utils.commands.downtimes import recur_mode, RecurMode
 from cmk.gui.monitor.command import ModifiableAttribute
 from cmk.gui.monitor.hosts import reader_unavailable_sites
+from cmk.gui.monitor.shared import IconSource
 from cmk.gui.monitor.site_scope import MonitorSites
 from cmk.livestatus_client import (
     ChangeServiceModifiedAttributes,
@@ -167,6 +168,7 @@ class LiveStatusHostServicesRepository:
             perf_data=row["perf_data"],
             check_command=row["check_command"],
             has_graphs=row["pnpgraph_present"] == 1,
+            icon_source=None,
             active_checks_enabled=bool(row["active_checks_enabled"]),
             check_type=CheckType(row["check_type"]),
             cached_at=int(row["cached_at"]) or None,
@@ -386,6 +388,15 @@ def _fetch_services(
                     has_graphs=(
                         row["pnpgraph_present"] == 1 if "pnpgraph_present" in row else None
                     ),
+                    icon_source=(
+                        IconSource(
+                            actions=row["custom_variables"].get("ACTIONS", ""),
+                            icon_image=row["icon_image"],
+                            host_address=row["host_address"],
+                        )
+                        if "icon_image" in row
+                        else None
+                    ),
                     active_checks_enabled=bool(row["active_checks_enabled"]),
                     check_type=CheckType(row["check_type"]),
                     cached_at=int(row["cached_at"]) or None,
@@ -431,6 +442,11 @@ _OPTIONAL_COLUMNS: Mapping[ServiceOptionalField, tuple[Column, ...]] = {
     ServiceOptionalField.CONTACT_GROUPS: (Services.contact_groups,),
     ServiceOptionalField.GROUPS: (Services.groups,),
     ServiceOptionalField.GRAPHS_LINK: (Services.pnpgraph_present,),
+    ServiceOptionalField.CUSTOM_ICONS: (
+        Services.custom_variables,
+        Services.icon_image,
+        Services.host_address,
+    ),
 }
 
 

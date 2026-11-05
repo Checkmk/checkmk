@@ -12,7 +12,13 @@ from pydantic import PlainValidator
 from cmk.ccc.site import SiteId
 from cmk.gui import sites
 from cmk.gui.monitor.setup_folders import SetupFolderSource
-from cmk.gui.monitor.shared import FILTER_NODE, FilterNode, HostStateLabel
+from cmk.gui.monitor.shared import (
+    custom_icons,
+    CustomIcon,
+    FILTER_NODE,
+    FilterNode,
+    HostStateLabel,
+)
 from cmk.gui.monitor.site_scope import MonitorSite, MonitorSites
 from cmk.gui.monitor.table_widget import TableRows
 from cmk.gui.openapi.framework import (
@@ -210,6 +216,14 @@ class HostEntry:
         example="view.py?view_name=host_graphs&site=local&host=web-server-01",
         default_factory=ApiOmitted,
     )
+    custom_icons: list[CustomIcon] | ApiOmitted = api_field(
+        description=(
+            "Custom icons of this host: the icons without an action, and the actions shown in "
+            "the row. Omitted when the host has none, or when not asked for."
+        ),
+        example=[],
+        default_factory=ApiOmitted,
+    )
     num_relations: int | ApiOmitted = api_field(
         description=(
             "Number of hosts related to this host via the Setup 'Relations' feature (management "
@@ -281,6 +295,21 @@ class HostEntry:
             graphs_link=included(
                 HostOptionalField.GRAPHS_LINK,
                 host_view_link("host_graphs", host) if host.has_graphs else None,
+            ),
+            custom_icons=included(
+                HostOptionalField.CUSTOM_ICONS,
+                None
+                if host.icon_source is None
+                else list(
+                    custom_icons(
+                        "host",
+                        site_id=host.site_id,
+                        host_name=host.name,
+                        service_name=None,
+                        source=host.icon_source,
+                    )
+                )
+                or None,
             ),
             num_relations=included(HostOptionalField.NUM_RELATIONS, host.num_relations),
             setup_access=included(HostOptionalField.SETUP_ACCESS, host.setup_access),
@@ -627,6 +656,8 @@ def make_endpoint_list_hosts(setup_folders: SetupFolderSource) -> VersionedEndpo
                         # Read while titling a folder, on an installation that keeps the folders a
                         # user may not read out of sight.
                         permissions.OkayToIgnorePerm("wato.see_all_folders"),
+                        # Checked per custom icon of a row, for the rows that ask for theirs.
+                        permissions.PrefixPerm("icons_and_actions"),
                     ]
                 )
             )

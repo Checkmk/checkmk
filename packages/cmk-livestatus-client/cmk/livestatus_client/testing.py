@@ -1189,7 +1189,8 @@ def make_reducer_func(line: str) -> ReduceFunc:
 def evaluate_filter(query: str, result: ResultList) -> ResultList:
     """Filter a list of dictionaries according to the filters of a LiveStatus query.
 
-    The filters will be extracted from the query. And: and Or: directives are also supported.
+    The filters will be extracted from the query. And:, Or: and Negate: directives are also
+    supported.
 
     Currently, only standard "Filter:" directives are supported, not StatsFilter: etc.
 
@@ -1228,6 +1229,10 @@ def evaluate_filter(query: str, result: ResultList) -> ResultList:
         >>> evaluate_filter(q, data)
         [{'name': 'heute', 'state': 0}, {'name': 'morgen', 'state': 1}]
 
+        >>> q = "GET hosts\\nFilter: name = heute\\nNegate:\\nFilter: state > 0\\nAnd: 2"
+        >>> evaluate_filter(q, data)
+        [{'name': 'morgen', 'state': 1}]
+
         >>> q = "GET hosts\\nFilter: name ~ heu"
         >>> evaluate_filter(q, data)
         [{'name': 'heute', 'state': 0}]
@@ -1245,6 +1250,8 @@ def evaluate_filter(query: str, result: ResultList) -> ResultList:
             count = int(count_)
             filters, params = filters[:-count], filters[-count:]
             filters.append(COMBINATORS[op](params))
+        elif line.startswith("Negate:"):
+            filters.append(not_(filters.pop()))
 
     if not filters:
         # No filtering requested. Dump all the data.
@@ -1308,6 +1315,22 @@ def or_(filters: list[FilterKeyFunc]) -> FilterKeyFunc:
         return any(filt(entry) for filt in filters)
 
     return _or_impl
+
+
+def not_(filt: FilterKeyFunc) -> FilterKeyFunc:
+    """Negate a filter, as "Negate:" does for the filter on top of the stack.
+
+    Examples:
+
+        >>> not_(lambda x: True)({})
+        False
+
+    """
+
+    def _not_impl(entry: dict[str, Any]) -> bool:
+        return not filt(entry)
+
+    return _not_impl
 
 
 COMBINATORS: dict[str, Callable[[list[FilterKeyFunc]], FilterKeyFunc]] = {

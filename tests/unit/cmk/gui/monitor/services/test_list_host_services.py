@@ -29,6 +29,7 @@ from cmk.gui.monitor.services.table import (
     HostServicesTable,
     InvalidServiceFilterError,
 )
+from cmk.gui.monitor.shared import IconSource
 from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from tests.testlib.unit.gui.setup_git_test_helper import (
@@ -110,6 +111,31 @@ def test_handle_list_services_omits_the_graphs_link_of_a_service_without_graphs(
     response = _handle_list_services(services_repo, hostname=KNOWN_HOSTNAME, site_id=_SITE_ID)
 
     assert [service.graphs_link for service in response.services] == [ApiOmitted()]
+
+
+@pytest.mark.usefixtures("with_admin_login", "icon_files")
+def test_handle_list_services_lists_the_custom_icons_read_for_a_service() -> None:
+    services = [
+        ServiceFactory.build(
+            icon_source=IconSource(actions="", icon_image="logo.png", host_address="10.0.0.1")
+        )
+    ]
+    services_repo = get_fake_host_services_repository(services=services)
+    response = _handle_list_services(services_repo, hostname=KNOWN_HOSTNAME, site_id=_SITE_ID)
+
+    assert [
+        [icon.icon_name for icon in service.custom_icons]
+        for service in response.services
+        if not isinstance(service.custom_icons, ApiOmitted)
+    ] == [["logo"]]
+
+
+def test_handle_list_services_omits_the_custom_icons_when_not_read() -> None:
+    services = [ServiceFactory.build(icon_source=None)]
+    services_repo = get_fake_host_services_repository(services=services)
+    response = _handle_list_services(services_repo, hostname=KNOWN_HOSTNAME, site_id=_SITE_ID)
+
+    assert [service.custom_icons for service in response.services] == [ApiOmitted()]
 
 
 def test_handle_list_services_meta_round_trips_hostname_and_site() -> None:

@@ -6,6 +6,7 @@
 from collections.abc import Iterator, Sequence, Set
 from contextlib import contextmanager
 
+from polyfactory import Use
 from polyfactory.factories import DataclassFactory
 
 from cmk.ccc.user import UserId
@@ -19,6 +20,7 @@ from cmk.gui.monitor.services._models import (
 )
 from cmk.gui.monitor.services._repositories import HostServicesRepository
 from cmk.gui.monitor.services._sorting import service_sorter
+from cmk.gui.monitor.shared import IconSource
 from cmk.gui.permissions import all_permissions
 from cmk.gui.role_types import BuiltInUserRole
 from cmk.gui.session_context import UserContext
@@ -33,6 +35,8 @@ class ServiceFactory(DataclassFactory[Service]):
     # A service built here stands for one whose columns were all read, so the
     # optional-when-unread fields always carry a value.
     __allow_none_optionals__ = False
+    # Random custom icon ids and images would match nothing; a service without custom icons.
+    icon_source = Use(lambda: IconSource(actions="", icon_image="", host_address=""))
 
 
 class ServiceOverviewFactory(DataclassFactory[ServiceOverview]):

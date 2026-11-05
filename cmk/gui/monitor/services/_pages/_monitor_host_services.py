@@ -11,6 +11,7 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import Edition as ProductEdition
 from cmk.ccc.version import edition
+from cmk.gui import sites
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_topic_breadcrumb
 from cmk.gui.config import Config
 from cmk.gui.header import make_header
@@ -38,6 +39,7 @@ from cmk.gui.monitor.services._page_menu import build_page_menu, HostMenus
 from cmk.gui.monitor.services._supported_actions import SERVICE_SUPPORTED_ACTIONS
 from cmk.gui.monitor.services.page_url import host_services_url
 from cmk.gui.monitor.setup_folders import SetupFolderSource
+from cmk.gui.monitor.shared import any_custom_icons
 from cmk.gui.pages import Page, PageContext
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.utils.roles import UserPermissions
@@ -217,6 +219,7 @@ class MonitorHostServicesPage(Page):
                     ],
                     notification_rules_url=notification_rules_url(ctx.config),
                     downtime_presets_url=downtime_presets_url(ctx.config),
+                    show_indicators=any_custom_icons(sites.live(), "service", host_name=hostname),
                     legacy_view_button=MonitoringPageLinkButton(
                         url=makeuri_contextless(
                             ctx.request,

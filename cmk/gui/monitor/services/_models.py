@@ -18,6 +18,7 @@ import re
 from collections.abc import Mapping
 from typing import assert_never, Literal, NewType, override, Self
 
+from cmk.gui.monitor.shared import IconSource
 from cmk.ruleset_matcher.labels import LabelSource
 
 type UnixTimestamp = int
@@ -104,6 +105,8 @@ class Service:
     # Whether the core has recorded time series for this service, which is what its graphs show -
     # None when the caller did not ask.
     has_graphs: bool | None
+    # What the custom icons of the service are made of - None when the caller did not ask.
+    icon_source: IconSource | None
     # The raw livestatus column, unlike ``active_checks_manually_disabled`` above, which says only
     # whether active checks were switched off by hand.
     active_checks_enabled: bool
@@ -183,6 +186,7 @@ class ServiceOptionalField(enum.StrEnum):
     CONTACT_GROUPS = "contact_groups"
     GROUPS = "groups"
     GRAPHS_LINK = "graphs_link"
+    CUSTOM_ICONS = "custom_icons"
 
     @classmethod
     def options(cls) -> str:

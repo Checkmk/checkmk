@@ -6,6 +6,7 @@
 from collections.abc import Iterator, Sequence, Set
 from contextlib import contextmanager
 
+from polyfactory import Use
 from polyfactory.decorators import post_generated
 from polyfactory.factories import DataclassFactory
 
@@ -21,6 +22,7 @@ from cmk.gui.monitor.hosts._models import (
     UnixTimestamp,
 )
 from cmk.gui.monitor.hosts._repositories import EventRepository, HostRepository
+from cmk.gui.monitor.shared import IconSource
 from cmk.gui.permissions import all_permissions
 from cmk.gui.role_types import BuiltInUserRole
 from cmk.gui.session_context import UserContext
@@ -55,6 +57,8 @@ class HostFactory(DataclassFactory[Host]):
     # A host built here stands for one whose columns were all read, so the optional-when-unread
     # fields always carry a value.
     __allow_none_optionals__ = False
+    # Random custom icon ids and images would match nothing; a host without custom icons.
+    icon_source = Use(lambda: IconSource(actions="", icon_image="", host_address=""))
 
 
 def get_fake_host_repository(

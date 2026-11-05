@@ -12,6 +12,7 @@ from pydantic import PlainValidator, ValidationError
 from cmk.ccc.site import SiteId
 from cmk.gui import sites
 from cmk.gui.graphing import registered_perfometers
+from cmk.gui.monitor.shared import custom_icons, CustomIcon
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
@@ -154,6 +155,14 @@ class HostServiceEntry:
         example="view.py?view_name=service_graphs&site=local&host=web-server-01&service=CPU+load",
         default_factory=ApiOmitted,
     )
+    custom_icons: list[CustomIcon] | ApiOmitted = api_field(
+        description=(
+            "Custom icons of this service: the icons without an action, and the actions shown in "
+            "the row. Omitted when the service has none, or when not asked for."
+        ),
+        example=[],
+        default_factory=ApiOmitted,
+    )
     reschedule: ServiceRescheduleOffer | ApiOmitted = api_field(
         description=(
             "What rescheduling this service does. Omitted for users who may not reschedule."
@@ -203,6 +212,20 @@ class HostServiceEntry:
             )
             if service.has_graphs
             else ApiOmitted(),
+            custom_icons=(
+                None
+                if service.icon_source is None
+                else list(
+                    custom_icons(
+                        "service",
+                        site_id=service.site_id,
+                        host_name=service.host_name,
+                        service_name=service.name,
+                        source=service.icon_source,
+                    )
+                )
+            )
+            or ApiOmitted(),
             reschedule=build_reschedule_offer(service) or ApiOmitted(),
         )
 
@@ -436,6 +459,8 @@ ENDPOINT_LIST_HOST_SERVICES = VersionedEndpoint(
                     permissions.OkayToIgnorePerm("general.ignore_hard_limit"),
                     permissions.OkayToIgnorePerm("general.see_crash_reports"),
                     permissions.OkayToIgnorePerm("action.reschedule"),
+                    # Checked per custom icon of a row, for the rows that ask for theirs.
+                    permissions.PrefixPerm("icons_and_actions"),
                 ]
             )
         )

@@ -27,7 +27,7 @@ from cmk.gui.livestatus_utils.commands.comment import add_host_comment
 from cmk.gui.livestatus_utils.commands.downtimes import child_hosts, recur_mode, RecurMode
 from cmk.gui.logged_in import user
 from cmk.gui.monitor.command import ModifiableAttribute
-from cmk.gui.monitor.shared import folder_files_matching, HostState
+from cmk.gui.monitor.shared import folder_files_matching, HostState, IconSource
 from cmk.gui.monitor.site_scope import MonitorSites
 from cmk.gui.sites import SiteStates
 from cmk.gui.utils.host_relation_kinds import kind_accepts
@@ -222,6 +222,15 @@ class LiveStatusHostRepository:
                         stale=row["staleness"] >= active_config.staleness_threshold,
                         has_graphs=(
                             row["pnpgraph_present"] == 1 if "pnpgraph_present" in row else None
+                        ),
+                        icon_source=(
+                            IconSource(
+                                actions=row["custom_variables"].get("ACTIONS", ""),
+                                icon_image=row["icon_image"],
+                                host_address=row["address"],
+                            )
+                            if "icon_image" in row
+                            else None
                         ),
                         last_check=_timestamp(row.get("last_check")),
                         last_state_change=_timestamp(row.get("last_state_change")),
@@ -908,6 +917,7 @@ _OPTIONAL_COLUMNS: Mapping[HostOptionalField, tuple[Column, ...]] = {
     HostOptionalField.GROUPS: (Hosts.groups,),
     HostOptionalField.SETUP_ACCESS: (Hosts.filename,),
     HostOptionalField.GRAPHS_LINK: (Hosts.pnpgraph_present,),
+    HostOptionalField.CUSTOM_ICONS: (Hosts.custom_variables, Hosts.icon_image, Hosts.address),
 }
 
 # The optional field a sort column needs read, or ``None`` when every query reads it anyway.

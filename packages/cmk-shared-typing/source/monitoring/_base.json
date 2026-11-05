@@ -4,6 +4,10 @@
   "title": "Monitoring - Base Structure",
   "required": ["limit_tiers"],
   "properties": {
+    "show_indicators": {
+      "type": "boolean",
+      "default": false
+    },
     "poll_interval_ms": {
       "type": "number",
       "default": 30000

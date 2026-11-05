@@ -31,6 +31,7 @@ from cmk.gui.monitor.hosts._models import (
     HostSortDirection,
     MAX_RESOLVED_RELATIONS,
 )
+from cmk.gui.monitor.shared import IconSource
 from cmk.gui.monitor.site_scope import MonitorSite, MonitorSites
 from cmk.gui.sites import SiteStates, SiteStatus
 from cmk.livestatus_client.testing import expect_single_query, MockLiveStatusConnection
@@ -367,6 +368,26 @@ def test_fetch_offers_graphs_only_for_a_host_with_recorded_time_series(
         )
 
     assert [host.has_graphs for host in hosts] == [expected]
+
+
+@pytest.mark.usefixtures("request_context")
+def test_fetch_reads_what_the_custom_icons_are_made_of() -> None:
+    row = _host_row(
+        custom_variables={"ACTIONS": "wiki,ticket"}, icon_image="logo.png", address="10.0.0.1"
+    )
+    with expect_single_query("GET hosts", tables={"hosts": [row]}) as live:
+        hosts = LiveStatusHostRepository(connection=live).fetch(
+            limit=None,
+            query="",
+            sorters=[],
+            filters=HostFilter(""),
+            fields=frozenset({HostOptionalField.CUSTOM_ICONS}),
+            visible_relations=None,
+        )
+
+    assert [host.icon_source for host in hosts] == [
+        IconSource(actions="wiki,ticket", icon_image="logo.png", host_address="10.0.0.1")
+    ]
 
 
 @pytest.mark.usefixtures("request_context")

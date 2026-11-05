@@ -17,7 +17,7 @@ import enum
 from collections.abc import Mapping
 from typing import assert_never, NewType, override, Self
 
-from cmk.gui.monitor.shared import HostState, HostStateLabel
+from cmk.gui.monitor.shared import HostState, HostStateLabel, IconSource
 from cmk.gui.utils.host_relations import RelationDirection
 from cmk.ruleset_matcher.labels import LabelSource
 
@@ -150,6 +150,8 @@ class Host:
     has_graphs: bool | None = None
     """Whether the core has recorded time series for the host, which is what its graphs show -
     None when the caller did not ask."""
+    icon_source: IconSource | None = None
+    """What the custom icons of the host are made of - None when the caller did not ask."""
 
     @property
     def state_label(self) -> HostStateLabel:
@@ -176,6 +178,7 @@ class HostOptionalField(enum.StrEnum):
     GROUPS = "groups"
     SETUP_ACCESS = "setup_access"
     GRAPHS_LINK = "graphs_link"
+    CUSTOM_ICONS = "custom_icons"
 
     @classmethod
     def options(cls) -> str:

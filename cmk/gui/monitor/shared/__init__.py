@@ -6,6 +6,7 @@
 """The filter tree of the hosts listing and its Livestatus rendering, shared by every monitoring
 page that filters by host, e.g. the services listing by the host of each service."""
 
+from ._custom_icons import any_custom_icons, custom_icons, CustomIcon, IconSource
 from ._host_filters import (
     AndNode,
     BooleanCondition,
@@ -44,9 +45,12 @@ from ._validators import validate_label_pairs, validate_uniqueness, validate_uni
 
 __all__ = [
     "AndNode",
+    "any_custom_icons",
     "BooleanCondition",
     "BooleanField",
     "ConditionNode",
+    "custom_icons",
+    "CustomIcon",
     "FILTER_NODE",
     "FilterNode",
     "FolderCondition",
@@ -56,6 +60,7 @@ __all__ = [
     "folders_titled",
     "HostState",
     "HostStateLabel",
+    "IconSource",
     "LabelChoiceCondition",
     "LabelField",
     "livestatus_filter_lines",

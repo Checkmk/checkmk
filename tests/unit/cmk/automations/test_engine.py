@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import override
@@ -19,7 +19,7 @@ from cmk.automations.internal import (
     AutomationState,
     NoState,
 )
-from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.exceptions import MKGeneralException, MKTimeout
 
 
 class _Result(AutomationResult):
@@ -31,6 +31,11 @@ class _Result(AutomationResult):
     @override
     def serialize(self, for_cmk_version: str) -> str:
         return "dummy"
+
+
+@dataclass
+class _EchoResult(_Result):
+    args: list[str]
 
 
 def _result_named(name: str) -> type[_Result]:
@@ -66,17 +71,38 @@ class _RecordingFactory:
         return state
 
 
+type _Handler = Callable[[_RecordingState, list[str]], _Result]
+
+
 def _handle(_state: _RecordingState, _args: list[str]) -> _Result:
     return _Result()
 
 
+def _echo(_state: _RecordingState, args: list[str]) -> _EchoResult:
+    return _EchoResult(args)
+
+
+def _returning(result: _Result) -> _Handler:
+    def handle(_state: _RecordingState, _args: list[str]) -> _Result:
+        return result
+
+    return handle
+
+
+def _failing_with(error: Exception) -> _Handler:
+    def handle(_state: _RecordingState, _args: list[str]) -> _Result:
+        raise error
+
+    return handle
+
+
 def _automation(
-    name: str, state_factory: _RecordingFactory
+    name: str, state_factory: _RecordingFactory, handler: _Handler = _handle
 ) -> Automation[_RecordingState, _Result]:
     return Automation(
         name=AutomationID(name),
         state_factory=state_factory,
-        handler=_handle,
+        handler=handler,
         result=_result_named(name),
     )
 
@@ -190,15 +216,7 @@ def test_handler_output_does_not_reach_stdout(capsys: pytest.CaptureFixture[str]
         return _Result()
 
     engine = _loaded_engine(
-        [
-            Automation(
-                name=AutomationID("chatty"),
-                state_factory=_RecordingFactory(),
-                handler=chatty_handler,
-                result=_result_named("chatty"),
-            )
-        ],
-        debug=True,
+        [_automation("chatty", _RecordingFactory(), chatty_handler)], debug=True
     )
 
     engine.execute(AutomationID("chatty"), [])
@@ -212,36 +230,90 @@ def test_output_of_a_failing_handler_reaches_stdout(capsys: pytest.CaptureFixtur
         raise MKGeneralException("broken")
 
     engine = _loaded_engine(
-        [
-            Automation(
-                name=AutomationID("failing"),
-                state_factory=_RecordingFactory(),
-                handler=failing_handler,
-                result=_result_named("failing"),
-            )
-        ],
-        debug=False,
+        [_automation("failing", _RecordingFactory(), failing_handler)], debug=False
     )
 
-    assert engine.execute(AutomationID("failing"), []) is AutomationError.KNOWN_ERROR
+    engine.execute(AutomationID("failing"), [])
+
     assert capsys.readouterr().out == "chatter"
 
 
-def test_a_failing_automation_raises_under_debug() -> None:
-    def failing_handler(_state: _RecordingState, _args: list[str]) -> _Result:
-        raise MKGeneralException("broken")
-
+def test_the_handler_result_is_returned_as_is() -> None:
+    result = _Result()
     engine = _loaded_engine(
-        [
-            Automation(
-                name=AutomationID("failing"),
-                state_factory=_RecordingFactory(),
-                handler=failing_handler,
-                result=_result_named("failing"),
-            )
-        ],
-        debug=True,
+        [_automation("a", _RecordingFactory(), _returning(result))], debug=False
     )
 
-    with pytest.raises(MKGeneralException, match="broken"):
+    assert engine.execute(AutomationID("a"), []) is result
+
+
+def test_an_unknown_automation_is_a_known_error() -> None:
+    engine = _loaded_engine([_automation("a", _RecordingFactory())], debug=False)
+
+    assert engine.execute(AutomationID("unknown"), []) is AutomationError.KNOWN_ERROR
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(MKGeneralException("broken"), id="general"),
+        pytest.param(MKTimeout("too slow"), id="timeout"),
+    ],
+)
+def test_an_anticipated_failure_is_a_known_error(error: Exception) -> None:
+    engine = _loaded_engine(
+        [_automation("failing", _RecordingFactory(), _failing_with(error))], debug=False
+    )
+
+    assert engine.execute(AutomationID("failing"), []) is AutomationError.KNOWN_ERROR
+
+
+def test_a_crash_is_an_unknown_error() -> None:
+    engine = _loaded_engine(
+        [_automation("failing", _RecordingFactory(), _failing_with(ValueError("bug")))],
+        debug=False,
+    )
+
+    assert engine.execute(AutomationID("failing"), []) is AutomationError.UNKNOWN_ERROR
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        pytest.param(MKGeneralException("broken"), id="general"),
+        pytest.param(MKTimeout("too slow"), id="timeout"),
+        pytest.param(ValueError("bug"), id="crash"),
+    ],
+)
+def test_a_failing_automation_raises_under_debug(error: Exception) -> None:
+    engine = _loaded_engine(
+        [_automation("failing", _RecordingFactory(), _failing_with(error))], debug=True
+    )
+
+    with pytest.raises(type(error)) as raised:
         engine.execute(AutomationID("failing"), [])
+
+    assert raised.value is error
+
+
+def test_a_leading_timeout_is_not_passed_to_the_handler() -> None:
+    engine = _loaded_engine([_automation("echo", _RecordingFactory(), _echo)], debug=True)
+
+    assert engine.execute(AutomationID("echo"), ["--timeout", "60", "host"]) == _EchoResult(
+        ["host"]
+    )
+
+
+@pytest.mark.parametrize(
+    "args",
+    [
+        pytest.param(["host"], id="no timeout"),
+        pytest.param(["host", "--timeout", "60"], id="timeout not leading"),
+    ],
+)
+def test_arguments_without_a_leading_timeout_reach_the_handler_unchanged(
+    args: list[str],
+) -> None:
+    engine = _loaded_engine([_automation("echo", _RecordingFactory(), _echo)], debug=True)
+
+    assert engine.execute(AutomationID("echo"), list(args)) == _EchoResult(args)

@@ -14,6 +14,9 @@ from ._constants import LogicalPath
 from ._types import AgentConfig
 
 _DEFAULT_AGENT = "default"
+# Keep in sync with the prefill of the rule "Customize agent package". The rule sets cannot
+# import from the bakery, so the default directory exists in both places.
+_DEFAULT_INSTALLATION_DIRECTORY = "/opt/checkmk/agent"
 
 
 class AgentControllerTargetArch(Enum):
@@ -259,9 +262,16 @@ class DeploymentModeProvider:
         )
         if _is_classic_file_deployment(agconf):
             self._legacy_agent_user = agconf.get("agent_user", {}).get("user")
-        elif (
+            return
+
+        # Without the rule, the host takes the default single-directory layout, and with it
+        # the default deployment mode set above.
+        if (customize_agent_package := agconf.get("customize_agent_package")) is None:
+            return
+
+        if (
             deployment_config := CustomizeAgentPackageConfig.model_validate(
-                agconf["customize_agent_package"]
+                customize_agent_package
             ).deployment_mode
         ) is not None:
             self.deployment_config = deployment_config
@@ -297,11 +307,24 @@ class DeploymentModeProvider:
 
 
 def _is_classic_file_deployment(agconf: AgentConfig) -> bool:
-    # TODO CMK-40619: without "classic_file_deployment", hosts get the single directory deployment.
-    return agconf.get("customize_agent_package") is None
+    """Whether the host spreads the agent files over the file system, as before Checkmk 3.0.
+
+    Only the deprecated rule "Use classic file deployment" keeps a host on that layout.
+    "Customize agent package" wins over it, and a host without either rule gets the
+    single-directory layout.
+    """
+    if agconf.get("customize_agent_package") is not None:
+        return False
+
+    # The rule has no options, so a matching rule contributes an empty mapping.
+    return "classic_file_deployment" in agconf
 
 
 def _parse_directory_config(agconf: AgentConfig) -> DirectoryConfig:
     if _is_classic_file_deployment(agconf):
         return AgentPathsConfig.model_validate(agconf["agent_paths"])
-    return CustomizeAgentPackageConfig.model_validate(agconf["customize_agent_package"]).directory
+
+    if (customize_agent_package := agconf.get("customize_agent_package")) is None:
+        return SingleDirectoryConfig(installation_directory=_DEFAULT_INSTALLATION_DIRECTORY)
+
+    return CustomizeAgentPackageConfig.model_validate(customize_agent_package).directory

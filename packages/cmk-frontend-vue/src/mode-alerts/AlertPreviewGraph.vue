@@ -172,6 +172,7 @@ const notice = computed(
       :metrics="metrics"
       :data-time-range="preview?.time_range"
       :horizontal-lines="horizontalLines"
+      fit-horizontal-lines
       :requested-time-range="requestedTimeRange"
       :range-change="rangeChange"
       :panel-key="PANEL_KEY"

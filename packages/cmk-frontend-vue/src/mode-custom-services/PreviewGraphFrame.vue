@@ -26,6 +26,7 @@ defineProps<{
   metrics: Metric[]
   dataTimeRange: TimeRange | undefined
   horizontalLines: HorizontalLine[]
+  fitHorizontalLines?: boolean
   requestedTimeRange: RequestedTimeRange
   rangeChange: RangeChange | undefined
   panelKey: PanelKey
@@ -67,6 +68,7 @@ function onPanelTimeRange(requested: RequestedTimeRange): void {
       :metrics="metrics"
       :data-time-range="dataTimeRange"
       :horizontal-lines="horizontalLines"
+      :fit-horizontal-lines="fitHorizontalLines"
       :requested-time-range="requestedTimeRange"
       :panel-key="panelKey"
       :range-change="rangeChange"

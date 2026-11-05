@@ -132,6 +132,17 @@ test('the lower levels are drawn as lower warning and critical lines', async () 
   expect(legendRow('Critical (lower)')).toHaveTextContent(/10\s*ms/)
 })
 
+// The graph's own tests cover what fitting does; drawing it here needs d3 transitions jsdom lacks.
+test('the graph fits its value axis to the threshold lines', async () => {
+  renderStep({ upper_levels: ['fixed', [800, 900]] })
+
+  await waitFor(() => expect(legendRow('Critical')).toHaveTextContent(/900\s*ms/))
+  expect(document.querySelector('time-series-graph-stub')).toHaveAttribute(
+    'fithorizontallines',
+    'true'
+  )
+})
+
 test('a level that is not set yet is not drawn', async () => {
   renderStep({ upper_levels: ['fixed', [80, '']] })
 

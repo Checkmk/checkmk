@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Literal
+from typing import cast, Literal
 
 import pytest
 from pytest_mock import MockerFixture
@@ -384,3 +384,14 @@ def test_rule_for_all_events_sets_no_event_conditions() -> None:
 
     assert "match_host_event" not in event_rule
     assert "match_service_event" not in event_rule
+
+
+@pytest.mark.xfail(strict=True, reason="crash group 4387")
+def test_bulk_settings_in_old_format_are_read_as_always_bulk() -> None:
+    rule = mail_rule("plain")
+    rule["bulk"] = cast(NotifyBulkType, _ALWAYS_BULK)
+
+    assert migrate_to_event_rule(migrate_to_notification_quick_setup_spec(rule))["bulk"] == (
+        "always",
+        _ALWAYS_BULK,
+    )

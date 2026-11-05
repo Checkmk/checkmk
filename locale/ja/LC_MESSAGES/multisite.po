@@ -7722,7 +7722,10 @@ msgstr ""
 "CloudFrontリソースの前にあるWAFの\"eu-central-1\"や\"CloudFront\"などのAWS"
 "リージョン名"
 
-msgid "An IAM role name has 1 to 64 characters: letters, digits and _+=,.@-"
+msgid ""
+"An IAM role name has 1 to 64 characters: letters, digits and _+=,.@-. A path "
+"in front of it ends with a slash and does not start with one, for example "
+"monitoring/CheckmkMonitoring."
 msgstr ""
 
 msgid ""
@@ -10450,7 +10453,8 @@ msgstr "バックアップID"
 msgid "Backups"
 msgstr "バックアップ"
 
-msgid "Backups (piggybacked to the protected machine)"
+#, fuzzy
+msgid "Backups (on one piggyback host per protected machine)"
 msgstr "バックアップ（保護対象マシンごと）"
 
 msgid "Backups CRITICAL"
@@ -12950,27 +12954,11 @@ msgstr ""
 
 #, python-format
 msgid ""
-"Cannot load HW/SW inventory of %(host_name)s. Please remove the corrupted "
-"inventory or status data tree files."
-msgstr ""
-"%(host_name)sのHW/SWインベントリを読み込めません。破損したインベントリまたは"
-"ステータスデータツリーファイルを削除してください。"
-
-#, python-format
-msgid ""
 "Cannot load HW/SW inventory of %(hosts)s. Please remove the corrupted "
 "inventory or status data tree files."
 msgstr ""
 "%(hosts)sのHW/SWインベントリを読み込めません。破損したインベントリまたはス"
 "テータスデータツリーファイルを削除してください。"
-
-#, python-format
-msgid ""
-"Cannot load HW/SW inventory tree of host %(host_name)s. Please remove the "
-"corrupted file."
-msgstr ""
-"ホストのHW/SWインベントリツリー %(host_name)s をロードできません。破損した"
-"ファイルを削除してください。"
 
 #, python-format
 msgid "Cannot look up the time periods: %(error)s"
@@ -14494,12 +14482,11 @@ msgid ""
 "AWS SDK: environment variables, the files in <tt>~/.aws</tt> of the site "
 "user, and the instance profile or EKS Pod Identity when Checkmk runs on AWS. "
 "Recommended on AWS, because AWS renews the instance profile and EKS Pod "
-"Identity credentials itself.<br>Both can be combined with an IAM role. The "
-"agent then assumes this role and monitors the account the role belongs to. "
-"The AWS CloudTrail log shows these calls with the session name <tt>checkmk-"
-"&lt;site&gt;</tt>.<br>Only the choices without an IAM role can monitor a "
-"list of accounts: each account role must be assumed directly from the "
-"credentials."
+"Identity credentials itself.<br>To monitor through an IAM role, choose "
+"<b>Explicit list of account IDs</b> under <b>Accounts</b>, and enter the "
+"account and the name of the role. The agent then assumes the role in that "
+"account. The AWS CloudTrail log shows these calls with the session name "
+"<tt>checkmk-&lt;site&gt;</tt>."
 msgstr ""
 
 msgid "Choose if this rule applies to plug-ins or local checks"
@@ -20123,9 +20110,6 @@ msgstr "デフォルト(%(style)s)"
 
 msgid "Default AWS credentials"
 msgstr "デフォルトのAWS認証情報"
-
-msgid "Default AWS credentials + IAM role"
-msgstr "デフォルトのAWS認証情報 + IAMロール"
 
 msgid "Default BI visualization settings"
 msgstr "デフォルトのBI視覚化設定"
@@ -28351,7 +28335,10 @@ msgstr ""
 "平日ごとに、 <tt>23:39</tt> の形式で、時間帯を有効にしない、1、または複数の時"
 "間帯を設定できます。"
 
-msgid "For example <tt>CheckmkMonitoring</tt>."
+msgid ""
+"For example <tt>CheckmkMonitoring</tt>. If the role has a path, put the path "
+"in front of the name, without the leading slash, for example <tt>monitoring/"
+"CheckmkMonitoring</tt>."
 msgstr ""
 
 msgid "For example <tt>VMware vSphere 5 Standard</tt>"
@@ -43217,10 +43204,11 @@ msgstr "最大接続待ち時間。"
 msgid "Max. waiting time for a response."
 msgstr "最大応答待ち時間。"
 
-msgid "Max.&nbsp;Vers.: "
-msgstr "最大 ＆nbsp; バージョン: "
-
 msgid "Max.&nbsp;Version:"
+msgstr "最大 &nbsp; バージョン:"
+
+#, fuzzy
+msgid "Max.&nbsp;Version: "
 msgstr "最大 &nbsp; バージョン:"
 
 msgid "Maximal age"
@@ -44976,14 +44964,15 @@ msgstr ""
 "り、何が監視されるか）は、エージェントのヘルムチャートを介してクラスタ自体で"
 "設定されます。したがって、ここには Kubernetes 固有の設定はありません。"
 
+#, fuzzy
 msgid ""
 "Monitor a Veeam Backup & Replication server through its REST API. Nothing is "
 "installed on the backup server, so this also works for the Veeam software "
-"appliance, where the Checkmk agent cannot run. Use a dedicated account whose "
-"role can read the data you want to monitor; some services require a more "
-"privileged role, and the agent stops when it cannot read a service. Do not "
-"configure an administrator account: it could also delete backups, trigger "
-"restores and read stored encryption passwords."
+"appliance, where the Checkmk agent cannot run. Use a dedicated account with "
+"the least privileged role that can read the services you need. Some services "
+"can only be read with an administrator account. Such an account can also "
+"delete backups and start restores, so only use one if you need these "
+"services."
 msgstr ""
 "Veeam Backup & Replication サーバーは、その REST API を通じて監視できます。"
 "バックアップサーバーには何もインストールされないため、Checkmkエージェントを実"
@@ -47289,6 +47278,18 @@ msgstr "検索なし"
 
 msgid "No search, specify list of arguments"
 msgstr "検索なし、引数のリストを指定"
+
+#, python-format
+msgid ""
+"No series belongs to a service matching \"%(pattern)s\". Their services are "
+"named %(names)s and %(count)d more."
+msgstr ""
+
+#, python-format
+msgid ""
+"No series belongs to a service matching \"%(pattern)s\". Their services are "
+"named %(names)s."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -60999,14 +61000,15 @@ msgstr ""
 msgid ""
 "Select which data the special agent fetches from the backup server. Deselect "
 "services you do not need, for example ones your monitoring account has no "
-"permission for. A service that is selected but cannot be fetched makes the "
-"agent fail, so that you can correct the selection or the permissions. Most "
-"services are created on the host this rule applies to. \"Backups\" and "
-"\"Restore points\" are instead delivered via piggyback to one host per "
-"protected machine, named after the machine in its Veeam backup chain. Create "
-"these hosts, for example with the dynamic host management, or map the names "
-"to existing hosts with the rule \"Host name translation for piggybacked "
-"hosts\". Without such a host, these services are not created."
+"permission for. A selected service the account may not read is left out, and "
+"the Check_MK service shows a warning naming it, so that you can correct the "
+"selection or the permissions. Any other error while fetching makes the agent "
+"fail. Most services are created on the host this rule applies to. "
+"\"Backups\" and \"Restore points\" are instead delivered via piggyback to "
+"one host per protected machine, named after the machine in its Veeam backup "
+"chain. Create these hosts, for example with the dynamic host management, or "
+"map the names to existing hosts with the rule \"Host name translation for "
+"piggybacked hosts\". Without such a host, these services are not created."
 msgstr ""
 
 msgid "Selected"
@@ -70609,6 +70611,11 @@ msgstr "カスタムロゴ%(logo_name)sが削除されました。"
 #, python-format
 msgid "The custom service \"%(name)s\" does not exist any more."
 msgstr "カスタムサービス \"%(name)s\" は現在存在しません。"
+
+msgid ""
+"The custom services that could produce this service returned no data for the "
+"selected time range."
+msgstr ""
 
 #, python-format
 msgid "The customer ID %(customer_id)s does not exist."
@@ -97241,6 +97248,10 @@ msgstr "利用可能なAIアクションの取得に失敗しました。後ほ�
 msgid "Something went wrong. Please try again later."
 msgstr "問題が発生しました。後ほど再度お試しください。"
 
+#, fuzzy
+msgid "Dashboard not cloned"
+msgstr "ダッシュボードが複製されました。"
+
 msgid "Dashboard cloned as responsive"
 msgstr "レスポンシブ対応として複製したダッシュボード"
 
@@ -108205,6 +108216,28 @@ msgid ""
 msgstr ""
 "後で アクセスする場合はヘルプ ＞ Checkmkの学習 ＞ ウェルカムページ からアクセ"
 "スできます"
+
+#, python-format
+#~ msgid ""
+#~ "Cannot load HW/SW inventory of %(host_name)s. Please remove the corrupted "
+#~ "inventory or status data tree files."
+#~ msgstr ""
+#~ "%(host_name)sのHW/SWインベントリを読み込めません。破損したインベントリまた"
+#~ "はステータスデータツリーファイルを削除してください。"
+
+#, python-format
+#~ msgid ""
+#~ "Cannot load HW/SW inventory tree of host %(host_name)s. Please remove the "
+#~ "corrupted file."
+#~ msgstr ""
+#~ "ホストのHW/SWインベントリツリー %(host_name)s をロードできません。破損した"
+#~ "ファイルを削除してください。"
+
+#~ msgid "Default AWS credentials + IAM role"
+#~ msgstr "デフォルトのAWS認証情報 + IAMロール"
+
+#~ msgid "Max.&nbsp;Vers.: "
+#~ msgstr "最大 ＆nbsp; バージョン: "
 
 #~ msgid "Host running Event Console"
 #~ msgstr "イベントコンソールを実行しているホスト"

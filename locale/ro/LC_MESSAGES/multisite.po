@@ -8112,7 +8112,10 @@ msgstr ""
 "Un nume de regiune AWS, cum ar fi 'eu-central-1' sau 'CloudFront' pentru WAF-"
 "urile din fața resurselor CloudFront"
 
-msgid "An IAM role name has 1 to 64 characters: letters, digits and _+=,.@-"
+msgid ""
+"An IAM role name has 1 to 64 characters: letters, digits and _+=,.@-. A path "
+"in front of it ends with a slash and does not start with one, for example "
+"monitoring/CheckmkMonitoring."
 msgstr ""
 
 #, fuzzy
@@ -11170,7 +11173,7 @@ msgstr "Backup-ID"
 msgid "Backups"
 msgstr "Copii de rezervă"
 
-msgid "Backups (piggybacked to the protected machine)"
+msgid "Backups (on one piggyback host per protected machine)"
 msgstr ""
 
 #, fuzzy
@@ -13843,27 +13846,11 @@ msgstr ""
 
 #, fuzzy, python-format
 msgid ""
-"Cannot load HW/SW inventory of %(host_name)s. Please remove the corrupted "
-"inventory or status data tree files."
-msgstr ""
-"Nu se pot încărca intrările din istoricul inventarului HW/SW %s. Vă rugăm să "
-"eliminați fișierele corupte."
-
-#, fuzzy, python-format
-msgid ""
 "Cannot load HW/SW inventory of %(hosts)s. Please remove the corrupted "
 "inventory or status data tree files."
 msgstr ""
 "Nu se pot încărca intrările din istoricul inventarului HW/SW %s. Vă rugăm să "
 "eliminați fișierele corupte."
-
-#, fuzzy, python-format
-msgid ""
-"Cannot load HW/SW inventory tree of host %(host_name)s. Please remove the "
-"corrupted file."
-msgstr ""
-"Nu se pot încărca arborii de inventar HW/SW %s. Vă rugăm să eliminați "
-"fișierele corupte."
 
 #, fuzzy, python-format
 msgid "Cannot look up the time periods: %(error)s"
@@ -15509,12 +15496,11 @@ msgid ""
 "AWS SDK: environment variables, the files in <tt>~/.aws</tt> of the site "
 "user, and the instance profile or EKS Pod Identity when Checkmk runs on AWS. "
 "Recommended on AWS, because AWS renews the instance profile and EKS Pod "
-"Identity credentials itself.<br>Both can be combined with an IAM role. The "
-"agent then assumes this role and monitors the account the role belongs to. "
-"The AWS CloudTrail log shows these calls with the session name <tt>checkmk-"
-"&lt;site&gt;</tt>.<br>Only the choices without an IAM role can monitor a "
-"list of accounts: each account role must be assumed directly from the "
-"credentials."
+"Identity credentials itself.<br>To monitor through an IAM role, choose "
+"<b>Explicit list of account IDs</b> under <b>Accounts</b>, and enter the "
+"account and the name of the role. The agent then assumes the role in that "
+"account. The AWS CloudTrail log shows these calls with the session name "
+"<tt>checkmk-&lt;site&gt;</tt>."
 msgstr ""
 
 #, fuzzy
@@ -21464,10 +21450,6 @@ msgstr "Implicit (%(style)s)"
 
 #, fuzzy
 msgid "Default AWS credentials"
-msgstr "Acreditări implicite"
-
-#, fuzzy
-msgid "Default AWS credentials + IAM role"
 msgstr "Acreditări implicite"
 
 msgid "Default BI visualization settings"
@@ -30141,7 +30123,10 @@ msgstr ""
 "multe intervale de timp în formatul <tt>23:39</tt>, în care ar trebui să fie "
 "activă perioada de timp."
 
-msgid "For example <tt>CheckmkMonitoring</tt>."
+msgid ""
+"For example <tt>CheckmkMonitoring</tt>. If the role has a path, put the path "
+"in front of the name, without the leading slash, for example <tt>monitoring/"
+"CheckmkMonitoring</tt>."
 msgstr ""
 
 msgid "For example <tt>VMware vSphere 5 Standard</tt>"
@@ -46113,10 +46098,11 @@ msgstr "Timpul maxim de așteptare pentru o conexiune."
 msgid "Max. waiting time for a response."
 msgstr "Timpul maxim de așteptare pentru un răspuns."
 
-msgid "Max.&nbsp;Vers.: "
-msgstr "Max.&nbsp;Vers.: "
-
 msgid "Max.&nbsp;Version:"
+msgstr "Max.&nbsp;Versiune:"
+
+#, fuzzy
+msgid "Max.&nbsp;Version: "
 msgstr "Max.&nbsp;Versiune:"
 
 msgid "Maximal age"
@@ -47978,11 +47964,11 @@ msgstr ""
 msgid ""
 "Monitor a Veeam Backup & Replication server through its REST API. Nothing is "
 "installed on the backup server, so this also works for the Veeam software "
-"appliance, where the Checkmk agent cannot run. Use a dedicated account whose "
-"role can read the data you want to monitor; some services require a more "
-"privileged role, and the agent stops when it cannot read a service. Do not "
-"configure an administrator account: it could also delete backups, trigger "
-"restores and read stored encryption passwords."
+"appliance, where the Checkmk agent cannot run. Use a dedicated account with "
+"the least privileged role that can read the services you need. Some services "
+"can only be read with an administrator account. Such an account can also "
+"delete backups and start restores, so only use one if you need these "
+"services."
 msgstr ""
 
 msgid "Monitor all files in folder"
@@ -50504,6 +50490,18 @@ msgstr "Fără căutare"
 
 msgid "No search, specify list of arguments"
 msgstr "Fără căutare, specificați lista de argumente"
+
+#, python-format
+msgid ""
+"No series belongs to a service matching \"%(pattern)s\". Their services are "
+"named %(names)s and %(count)d more."
+msgstr ""
+
+#, python-format
+msgid ""
+"No series belongs to a service matching \"%(pattern)s\". Their services are "
+"named %(names)s."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -65250,14 +65248,15 @@ msgstr ""
 msgid ""
 "Select which data the special agent fetches from the backup server. Deselect "
 "services you do not need, for example ones your monitoring account has no "
-"permission for. A service that is selected but cannot be fetched makes the "
-"agent fail, so that you can correct the selection or the permissions. Most "
-"services are created on the host this rule applies to. \"Backups\" and "
-"\"Restore points\" are instead delivered via piggyback to one host per "
-"protected machine, named after the machine in its Veeam backup chain. Create "
-"these hosts, for example with the dynamic host management, or map the names "
-"to existing hosts with the rule \"Host name translation for piggybacked "
-"hosts\". Without such a host, these services are not created."
+"permission for. A selected service the account may not read is left out, and "
+"the Check_MK service shows a warning naming it, so that you can correct the "
+"selection or the permissions. Any other error while fetching makes the agent "
+"fail. Most services are created on the host this rule applies to. "
+"\"Backups\" and \"Restore points\" are instead delivered via piggyback to "
+"one host per protected machine, named after the machine in its Veeam backup "
+"chain. Create these hosts, for example with the dynamic host management, or "
+"map the names to existing hosts with the rule \"Host name translation for "
+"piggybacked hosts\". Without such a host, these services are not created."
 msgstr ""
 
 msgid "Selected"
@@ -75394,6 +75393,11 @@ msgstr "Logo-ul personalizat %(logo_name)s a fost șters."
 #, fuzzy, python-format
 msgid "The custom service \"%(name)s\" does not exist any more."
 msgstr "Setul de reguli \"%s\" nu există."
+
+msgid ""
+"The custom services that could produce this service returned no data for the "
+"selected time range."
+msgstr ""
 
 #, python-format
 msgid "The customer ID %(customer_id)s does not exist."
@@ -103422,6 +103426,10 @@ msgstr ""
 "de căutare."
 
 #, fuzzy
+msgid "Dashboard not cloned"
+msgstr "Tabloul de bord"
+
+#, fuzzy
 msgid "Dashboard cloned as responsive"
 msgstr "Tabloul de bord"
 
@@ -114451,6 +114459,29 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy, python-format
+#~ msgid ""
+#~ "Cannot load HW/SW inventory of %(host_name)s. Please remove the corrupted "
+#~ "inventory or status data tree files."
+#~ msgstr ""
+#~ "Nu se pot încărca intrările din istoricul inventarului HW/SW %s. Vă rugăm "
+#~ "să eliminați fișierele corupte."
+
+#, fuzzy, python-format
+#~ msgid ""
+#~ "Cannot load HW/SW inventory tree of host %(host_name)s. Please remove the "
+#~ "corrupted file."
+#~ msgstr ""
+#~ "Nu se pot încărca arborii de inventar HW/SW %s. Vă rugăm să eliminați "
+#~ "fișierele corupte."
+
+#, fuzzy
+#~ msgid "Default AWS credentials + IAM role"
+#~ msgstr "Acreditări implicite"
+
+#~ msgid "Max.&nbsp;Vers.: "
+#~ msgstr "Max.&nbsp;Vers.: "
 
 #~ msgid "Host running Event Console"
 #~ msgstr "Gazda care rulează Event Console"

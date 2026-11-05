@@ -49,7 +49,7 @@ from cmk.inventory.config import (
     LabelPickerLabeling,
     LabelPickerSource,
 )
-from cmk.inventory.label_picker import InventorizedHostLabelsStore
+from cmk.inventory.host_labels import InventorizedHostLabelsStore
 from cmk.inventory.serialization import (
     deserialize_tree,
     serialize_tree,

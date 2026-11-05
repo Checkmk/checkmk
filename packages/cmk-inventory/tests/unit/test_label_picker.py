@@ -4,11 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
-from pathlib import Path
 
 import pytest
 
-from cmk.ccc.hostaddress import HostName
 from cmk.inventory.config import (
     LabelPickerConfig,
     LabelPickerConfigAttribute,
@@ -22,7 +20,7 @@ from cmk.inventory.config import (
     LabelPickerLabeling,
     LabelPickerSource,
 )
-from cmk.inventory.label_picker import InventorizedHostLabelsStore, pick_labels
+from cmk.inventory.label_picker import pick_labels
 from cmk.inventory.trees import (
     MutableTree,
     SDKey,
@@ -507,14 +505,3 @@ def test_pick_labels_from_single_values_and_table_columns_of_one_node() -> None:
             )
         ],
     ) == {"cmk/inventory/single": "value", "cmk/inventory/label-name": "1.18"}
-
-
-def test_inventorized_host_labels_store_load_default(tmp_path: Path) -> None:
-    assert InventorizedHostLabelsStore(HostName("host"), tmp_path).load(debug=False) == {}
-
-
-def test_inventorized_host_labels_store_save_load_roundtrip(tmp_path: Path) -> None:
-    InventorizedHostLabelsStore(HostName("host"), tmp_path).save({"cmk/inventory/product": "foo"})
-    assert InventorizedHostLabelsStore(HostName("host"), tmp_path).load(debug=False) == {
-        "cmk/inventory/product": "foo"
-    }

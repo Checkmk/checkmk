@@ -46,7 +46,7 @@ from cmk.checkengine.fetchers.piggyback import PiggybackFetcher
 from cmk.checkengine.specs.checkresults import ServiceState
 from cmk.checkengine.submitters import ServiceDetails
 from cmk.discover_plugins import PluginLocation
-from cmk.inventory.label_picker import InventorizedHostLabelsStore
+from cmk.inventory.host_labels import InventorizedHostLabelsStore
 from cmk.plugins.checkmk.automations import checkmk
 from cmk.relay_protocols.tasks import AdHocActiveCheckTask, AdHocSiteStores
 from cmk.ruleset_matcher.labels import LabelSource

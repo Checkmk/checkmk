@@ -38,7 +38,10 @@ py_library(
 
 py_library(
     name = "label_picker",
-    srcs = ["cmk/inventory/label_picker.py"],
+    srcs = [
+        "cmk/inventory/host_labels.py",
+        "cmk/inventory/label_picker.py",
+    ],
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [

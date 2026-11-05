@@ -107,7 +107,7 @@ from cmk.checkengine.sectionparser import (
 from cmk.checkengine.snmplib import SNMPRawDataElem
 from cmk.checkengine.specs.checkresults import ActiveCheckResult
 from cmk.discover_plugins import PluginLocation
-from cmk.inventory.label_picker import InventorizedHostLabelsStore
+from cmk.inventory.host_labels import InventorizedHostLabelsStore
 from cmk.ruleset_matcher.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.ruleset_matcher.ruleset_name import RuleSetName
 from cmk.utils.everythingtype import EVERYTHING

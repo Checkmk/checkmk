@@ -52,7 +52,7 @@ from cmk.checkengine.specs.parameters import (
     TimespecificParametersPreview,
 )
 from cmk.checkengine.summarize import SummarizerFunction
-from cmk.inventory.label_picker import InventorizedHostLabelsStore
+from cmk.inventory.host_labels import InventorizedHostLabelsStore
 from cmk.ruleset_matcher.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.servicename import Item
 

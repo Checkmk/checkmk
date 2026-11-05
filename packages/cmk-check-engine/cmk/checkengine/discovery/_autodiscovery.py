@@ -31,7 +31,7 @@ from cmk.checkengine.sectionparser import (
     store_piggybacked_sections,
 )
 from cmk.checkengine.summarize import SummarizerFunction
-from cmk.inventory.label_picker import InventorizedHostLabelsStore
+from cmk.inventory.host_labels import InventorizedHostLabelsStore
 from cmk.ruleset_matcher.labels import DiscoveredHostLabelsStore, HostLabel, merge_cluster_labels
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.servicename import ServiceName

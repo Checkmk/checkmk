@@ -241,6 +241,8 @@ ENDPOINT_COMPUTE_MONITORING_TABLE = VersionedEndpoint(
                 permissions.Optional(permissions.Perm("wato.seeall")),
                 permissions.Optional(permissions.Perm("wato.hosts")),
                 permissions.Optional(permissions.Perm("wato.rulesets")),
+                # Checked per custom icon of a row.
+                permissions.Optional(permissions.PrefixPerm("icons_and_actions")),
             ]
         )
     ),

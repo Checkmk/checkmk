@@ -95,16 +95,19 @@ class MonitoringTableSpec[R]:
     host_offer: RowOffer | None = None
 
 
-def _graphs_link_field[F](api_context: ApiContext, graphs_link: F) -> frozenset[F]:
+def _session_fields[F](api_context: ApiContext, *fields: F) -> frozenset[F]:
     # The viewer of a shared dashboard has no session, to open the graphs page or load their
-    # preview with, so a row only links to its graphs for a logged-in viewer.
+    # preview with, nor to be checked for the permission of a custom icon, so a row only links to
+    # its graphs and shows its custom icons for a logged-in viewer.
     if _reads_shared_dashboard(api_context):
         return frozenset()
-    return frozenset({graphs_link})
+    return frozenset(fields)
 
 
 def _host_row_fields(api_context: ApiContext) -> frozenset[HostOptionalField]:
-    fields = _graphs_link_field(api_context, HostOptionalField.GRAPHS_LINK)
+    fields = _session_fields(
+        api_context, HostOptionalField.GRAPHS_LINK, HostOptionalField.CUSTOM_ICONS
+    )
     # A row linking into Setup says whether the user may open its host there.
     if _host_setup_links(api_context):
         return fields | {HostOptionalField.SETUP_ACCESS}
@@ -130,7 +133,9 @@ MONITORING_TABLES: Final[
         infos=["host", "service"],
         source=lambda api_context: ServiceTable(
             api_context.config.sites,
-            row_fields=_graphs_link_field(api_context, ServiceOptionalField.GRAPHS_LINK),
+            row_fields=_session_fields(
+                api_context, ServiceOptionalField.GRAPHS_LINK, ServiceOptionalField.CUSTOM_ICONS
+            ),
         ),
         row_offer=_SERVICE_OFFER,
         host_offer=_HOST_OFFER,

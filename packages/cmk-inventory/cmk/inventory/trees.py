@@ -7,8 +7,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Literal, NewType, override
 
-from ._choices import get_filtered_dict
-from ._dict_keys import DictKeys
+from ._dict_keys import DictKeys, get_filtered_dict
 
 SDNodeName = NewType("SDNodeName", str)
 SDPath = tuple[SDNodeName, ...]

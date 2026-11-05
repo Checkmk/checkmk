@@ -21,7 +21,6 @@ py_library(
 py_library(
     name = "model",
     srcs = [
-        "cmk/inventory/_choices.py",
         "cmk/inventory/_dict_keys.py",
         "cmk/inventory/_legacy.py",
         "cmk/inventory/delta.py",

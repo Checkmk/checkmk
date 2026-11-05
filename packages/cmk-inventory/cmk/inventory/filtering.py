@@ -7,7 +7,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence, Set
 from dataclasses import dataclass, field
 from typing import Literal, NotRequired, TypedDict
 
-from ._choices import consolidate_filter_funcs, get_filtered_dict
+from ._dict_keys import get_filtered_dict
 from .delta import ImmutableDeltaAttributes, ImmutableDeltaTable, ImmutableDeltaTree
 from .raw_paths import InventoryPath, parse_internal_raw_path
 from .trees import (
@@ -19,6 +19,24 @@ from .trees import (
     SDNodeName,
     SDPath,
 )
+
+
+def make_filter_func[CT: str](
+    choice: Literal["nothing", "all"] | Sequence[CT],
+) -> Callable[[CT], bool]:
+    match choice:
+        case "nothing":
+            return lambda _k: False
+        case "all":
+            return lambda _k: True
+        case _:
+            return lambda k: k in choice
+
+
+def consolidate_filter_funcs[CT: str](
+    choices: Sequence[Literal["nothing", "all"] | Sequence[CT]],
+) -> Callable[[CT], bool]:
+    return lambda kn: any(make_filter_func(c)(kn) for c in choices)
 
 
 @dataclass(frozen=True)

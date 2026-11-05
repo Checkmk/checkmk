@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Literal, TypedDict
 
-from ._choices import make_filter_func
+from .filtering import make_filter_func
 from .trees import (
     ImmutableTree,
     MutableTree,

@@ -105,3 +105,16 @@ class TestDetermineMustEscape:
     def test_trusted_site_returns_false(self) -> None:
         sites = cast(SiteConfigurations, {"mysite": {"is_trusted": True}})
         assert determine_must_escape(sites, {"site": "mysite"}) is False
+
+
+@pytest.mark.xfail(strict=True, reason="crash group 4972")
+@pytest.mark.usefixtures("request_context")
+def test_host_row_without_service_data_uses_host_escaping_option() -> None:
+    row = {
+        "host_custom_variables": {"ESCAPE_PLUGIN_OUTPUT": "0"},
+        "service_custom_variables": None,
+    }
+
+    assert format_plugin_output(
+        "<b>OK</b>", request=request, must_escape=False, row=row
+    ) == HTML.without_escaping("<b>OK</b>")

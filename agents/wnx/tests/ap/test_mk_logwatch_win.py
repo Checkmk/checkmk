@@ -16,6 +16,7 @@ import os
 import re
 import sys
 from collections.abc import Mapping, Sequence
+from pathlib import Path
 
 import pytest
 
@@ -181,8 +182,8 @@ def test_options_setter_regex(
     assert opt.regex.flags == expected_flags
 
 
-def test_get_config_files(tmpdir: str) -> None:
-    fake_config_dir = os.path.join(str(tmpdir), "test")
+def test_get_config_files(tmp_path: Path) -> None:
+    fake_config_dir = os.path.join(str(tmp_path), "test")
     os.mkdir(fake_config_dir)
 
     logwatch_d_dir = os.path.join(fake_config_dir, "logwatch.d")
@@ -397,10 +398,10 @@ def test_get_status_filename(
     ],
 )
 def test_state_load(
-    tmpdir: str | bytes, state_data: str, state_dict: Mapping[str, Mapping[str, object]]
+    tmp_path: Path, state_data: str, state_dict: Mapping[str, Mapping[str, object]]
 ) -> None:
     # setup for reading
-    file_path = os.path.join(str(tmpdir), "logwatch.state.testcase")
+    file_path = os.path.join(str(tmp_path), "logwatch.state.testcase")
 
     # In case the file is not created yet, read should not raise
     state = lw.State(file_path).read()
@@ -440,9 +441,9 @@ def test_state_load(
         },
     ],
 )
-def test_state_write(tmpdir: str | bytes, state_dict: Mapping[str, Mapping[str, object]]) -> None:
+def test_state_write(tmp_path: Path, state_dict: Mapping[str, Mapping[str, object]]) -> None:
     # setup for writing
-    file_path = os.path.join(str(tmpdir), "logwatch.state.testcase")
+    file_path = os.path.join(str(tmp_path), "logwatch.state.testcase")
     state = lw.State(file_path)
     assert not state._data
 
@@ -628,10 +629,10 @@ def _latin_1_encoding():
     ],
 )
 def test_non_ascii_line_processing(
-    tmpdir, monkeypatch, use_specific_encoding, lines, expected_result
+    tmp_path, monkeypatch, use_specific_encoding, lines, expected_result
 ):
     # Write test logfile first
-    log_path = os.path.join(str(tmpdir), "testlog")
+    log_path = os.path.join(str(tmp_path), "testlog")
     with open(log_path, "wb") as f:
         f.write(b"\n".join(lines) + b"\n")
 
@@ -832,7 +833,7 @@ def test_filter_consecutive_duplicates(
 
 
 @pytest.fixture
-def fake_filesystem(tmpdir):
+def fake_filesystem(tmp_path):
     root = [
         # name     | type  | content/target
         ("file.log", "file", None),
@@ -886,13 +887,13 @@ def fake_filesystem(tmpdir):
         else:
             os.link(source, obj_path)
 
-    create_recursively(str(tmpdir), "root", "dir", root)
+    create_recursively(str(tmp_path), "root", "dir", root)
 
-    return os.path.join(str(tmpdir), "root")
+    return os.path.join(str(tmp_path), "root")
 
 
-def test_process_batches(tmpdir, mocker):
-    mocker.patch.object(lw, "MK_VARDIR", str(tmpdir))
+def test_process_batches(tmp_path, mocker):
+    mocker.patch.object(lw, "MK_VARDIR", str(tmp_path))
     lw.process_batches(
         [lw.ensure_text_type(l) for l in ["line1", "line2"]],
         "batch_id",
@@ -902,7 +903,7 @@ def test_process_batches(tmpdir, mocker):
     )
     assert os.path.isfile(
         os.path.join(
-            str(tmpdir),
+            str(tmp_path),
             "logwatch-batches",
             "__remote" if os.name == "nt" else "::remote",
             "logwatch-batch-file-batch_id",
@@ -914,16 +915,16 @@ def _get_file_info(tmp_path, file_name):
     return lw.get_file_info(os.path.join(str(tmp_path), "root", file_name))
 
 
-def test_get_uniq_id_one_file(fake_filesystem, tmpdir):
-    file_id, sz = _get_file_info(tmpdir, "file.log")
+def test_get_uniq_id_one_file(fake_filesystem, tmp_path):
+    file_id, sz = _get_file_info(tmp_path, "file.log")
     assert file_id > 1
     assert sz == 0
-    assert (file_id, sz) == _get_file_info(tmpdir, "file.log")
+    assert (file_id, sz) == _get_file_info(tmp_path, "file.log")
 
 
-def test_get_uniq_id_with_hard_link(fake_filesystem, tmpdir):
+def test_get_uniq_id_with_hard_link(fake_filesystem, tmp_path):
     info = [
-        _get_file_info(tmpdir, f)
+        _get_file_info(tmp_path, f)
         for f in ("file.log", "hard_linked_file.log", "hard_link_to_file.log")
     ]
     assert {s for (_, s) in info} == {0}
@@ -932,6 +933,6 @@ def test_get_uniq_id_with_hard_link(fake_filesystem, tmpdir):
     assert info[1][0] == info[2][0]
 
 
-def test_main(tmpdir, mocker):
-    mocker.patch.object(lw, "MK_VARDIR", str(tmpdir))
+def test_main(tmp_path, mocker):
+    mocker.patch.object(lw, "MK_VARDIR", str(tmp_path))
     lw.main()

@@ -85,8 +85,8 @@ def _run_mockup_raritan_server(tmp_dump_dir: Path) -> Iterator[int]:
 
 
 @pytest.fixture(scope="session", name="tmp_dump_dir")
-def _make_dump_dir(tmpdir_factory: pytest.TempdirFactory) -> Iterator[Path]:
-    dump_dir = Path(tmpdir_factory.mktemp("dumps"))
+def _make_dump_dir(tmp_path_factory: pytest.TempPathFactory) -> Iterator[Path]:
+    dump_dir = tmp_path_factory.mktemp("dumps")
     try:
         yield dump_dir
     finally:
@@ -106,12 +106,12 @@ def _make_mockup_server(tmp_dump_dir: Path, dataset: str, port: int) -> Iterator
 
 
 @contextmanager
-def _unpack_dump(dataset: str, tmpdir: Path) -> Iterator[Path]:
+def _unpack_dump(dataset: str, dump_dir: Path) -> Iterator[Path]:
     dump = MOCKUP_DUMPS_DIR / f"{dataset}.tgz"
-    target = tmpdir / dataset
+    target = dump_dir / dataset
 
     with tarfile.open(dump, "r:gz") as tar:
-        tar.extractall(path=tmpdir)
+        tar.extractall(path=dump_dir)
 
     try:
         yield target

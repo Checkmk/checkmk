@@ -239,6 +239,11 @@ addopts = [
   "-p no:faker",
   "-p no:schemathesis",
   "-p no:hypothesispytest",
+  # Keep the py.path based tmpdir/testdir fixtures out, use tmp_path instead
+  "-p no:legacypath",
+  # pytest-recording reads the legacypath-only Node.fspath, and no suite
+  # using this config records cassettes (cmk-werks has its own)
+  "-p no:recording",
 ]
 markers = [
   "checks: Run all existing test cases for checks.",

@@ -95,10 +95,10 @@ def check_prism_vms(item: str, params: Mapping[str, Any], section: Section) -> C
     message = f"with status {state_text} - on Host {host_name}"
     yield Result(state=State(state), summary=message)
 
-    notice = f"Memory {memory},\nDescription {vm_desc}"
+    yield Result(state=State.OK, notice=f"Memory {memory}")
+    yield Result(state=State.OK, notice=f"Description {vm_desc}")
     if prot_domain is not None:
-        notice += f",\nProtection Domain {prot_domain}"
-    yield Result(state=State(0), notice=notice)
+        yield Result(state=State.OK, notice=f"Protection Domain {prot_domain}")
 
 
 check_plugin_prism_vms = CheckPlugin(

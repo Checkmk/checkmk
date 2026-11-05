@@ -86,10 +86,8 @@ def test_discovery_prism_vms(  # type: ignore[misc]
             SECTION,
             [
                 Result(state=State.WARN, summary="with status off - on Host None"),
-                Result(
-                    state=State.OK,
-                    notice="Memory 32.0 GiB,\nDescription None",
-                ),
+                Result(state=State.OK, notice="Memory 32.0 GiB"),
+                Result(state=State.OK, notice="Description None"),
             ],
             id="If the VM is not in expected state, the check result is WARN.",
         ),
@@ -99,10 +97,8 @@ def test_discovery_prism_vms(  # type: ignore[misc]
             SECTION,
             [
                 Result(state=State.OK, summary="with status on - on Host SRV-AHV-01"),
-                Result(
-                    state=State.OK,
-                    notice="Memory 16.0 GiB,\nDescription None",
-                ),
+                Result(state=State.OK, notice="Memory 16.0 GiB"),
+                Result(state=State.OK, notice="Description None"),
             ],
             id="If the VM is in expected state, the check result is OK.",
         ),
@@ -155,10 +151,8 @@ def test_v4_running_vm_shows_its_host() -> None:
 
     assert list(check_prism_vms("vm-001 (1f195358)", {"system_state": "on"}, section)) == [
         Result(state=State.OK, summary="with status on - on Host host-2"),
-        Result(
-            state=State.OK,
-            notice="Memory 76.0 GiB,\nDescription description of vm-001",
-        ),
+        Result(state=State.OK, notice="Memory 76.0 GiB"),
+        Result(state=State.OK, notice="Description description of vm-001"),
     ]
 
 

@@ -143,6 +143,7 @@ py_cmk_test(
         ":utils",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-crypto",
+        requirement("botocore"),
     ],
 )
 

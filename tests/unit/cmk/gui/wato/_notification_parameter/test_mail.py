@@ -10,7 +10,6 @@ from cmk.gui.utils.rule_specs.legacy_converter import convert_to_legacy_valuespe
 from cmk.gui.wato._notification_parameter._mail import form_spec_mail
 
 
-@pytest.mark.xfail(strict=True, reason="crash group 4880")
 @pytest.mark.usefixtures("request_context", "patch_theme")
 def test_mail_parameters_with_unknown_settings_are_shown() -> None:
     valuespec = convert_to_legacy_valuespec(form_spec_mail(), translate_to_current_language)

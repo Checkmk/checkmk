@@ -330,21 +330,15 @@ class ConfigDomainCACertificates(ABCConfigDomain):
         config_before: TrustedCertificateAuthorities | None,
         config_after: TrustedCertificateAuthorities,
     ) -> None:
-        if config_before is None:
-            current_certs = {}
-        else:
-            current_certs = {
-                (cert := ConfigDomainCACertificates._load_cert(value)).fingerprint(
-                    HashAlgorithm.Sha256
-                ): cert
-                for value in config_before["trusted_cas"] or []
-            }
-
+        current_certs = {
+            cert.fingerprint(HashAlgorithm.Sha256): cert
+            for cert in ConfigDomainCACertificates._load_certs(
+                [] if config_before is None else config_before["trusted_cas"] or []
+            )
+        }
         new_certs = {
-            (cert := ConfigDomainCACertificates._load_cert(value)).fingerprint(
-                HashAlgorithm.Sha256
-            ): cert
-            for value in config_after["trusted_cas"]
+            cert.fingerprint(HashAlgorithm.Sha256): cert
+            for cert in ConfigDomainCACertificates._load_certs(config_after["trusted_cas"])
         }
 
         added_certs = [

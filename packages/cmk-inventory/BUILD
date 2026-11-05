@@ -28,6 +28,7 @@ py_library(
         "cmk/inventory/filtering.py",
         "cmk/inventory/merging.py",
         "cmk/inventory/raw_paths.py",
+        "cmk/inventory/retention.py",
         "cmk/inventory/serialization.py",
         "cmk/inventory/trees.py",
     ],

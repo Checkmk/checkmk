@@ -12,7 +12,7 @@ from cmk.ccc.hostaddress import HostName, Hosts
 from cmk.checkengine.inventory import HWSWInventoryParameters
 from cmk.checkengine.plugins import InventoryPlugin
 from cmk.inventory.label_picker import LabelPickerConfig
-from cmk.inventory.trees import RawIntervalFromConfig
+from cmk.inventory.retention import RawIntervalFromConfig
 from cmk.ruleset_matcher.labels import LabelManager
 from cmk.ruleset_matcher.matcher import RulesetMatcher
 

@@ -31,13 +31,9 @@ from cmk.checkengine.specs.checkresults import ActiveCheckResult
 from cmk.checkengine.summarize import SummarizerFunction
 from cmk.inventory.label_picker import InventorizedHostLabelsStore, LabelPickerConfig, pick_labels
 from cmk.inventory.paths import InventoryPaths
+from cmk.inventory.retention import RawIntervalFromConfig
 from cmk.inventory.store import InventoryStore, make_meta
-from cmk.inventory.trees import (
-    ImmutableTree,
-    MutableTree,
-    RawIntervalFromConfig,
-    SDPath,
-)
+from cmk.inventory.trees import ImmutableTree, MutableTree, SDPath
 from cmk.ruleset_matcher.labels import DiscoveredHostLabelsStore
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.log import console

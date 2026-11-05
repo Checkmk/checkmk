@@ -33,17 +33,12 @@ from cmk.checkengine.plugins import (
 )
 from cmk.checkengine.specs.checkresults import ActiveCheckResult
 from cmk.inventory.paths import InventoryPaths
-from cmk.inventory.trees import (
-    ImmutableTree,
+from cmk.inventory.retention import (
     make_retention_filter_choices,
-    MutableTree,
     RawIntervalFromConfig,
-    SDKey,
-    SDNodeName,
-    SDPath,
-    SDValue,
     update_tree,
 )
+from cmk.inventory.trees import ImmutableTree, MutableTree, SDKey, SDNodeName, SDPath, SDValue
 
 from .parser import group_by_host, HostSections, ParserFunction
 from .sectionparser import (

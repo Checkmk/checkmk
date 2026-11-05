@@ -97,7 +97,7 @@ def _mark_changes_unwatched() -> None:
 def _store_changes_unwatched(cache: Cache, *, unwatched: bool) -> None:
     try:
         cache.store_changes_unwatched(unwatched=unwatched)
-    # not only CacheError: Redis may time out, too, and an error in the thread marking would be lost
+    # not only CacheError: an error in the thread marking would be lost
     except Exception:
         LOGGER.exception("[watcher] Error while storing whether changes may go unnoticed")
 

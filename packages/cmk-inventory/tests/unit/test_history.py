@@ -4,12 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+import os
 from pathlib import Path
 
 import cmk.ccc.store
 from cmk.ccc.hostaddress import HostName
+from cmk.inventory.delta import SDDeltaValue
 from cmk.inventory.filtering import SDFilterChoice
-from cmk.inventory.history import HistoryStore
+from cmk.inventory.history import History, HistoryStore
 from cmk.inventory.serialization import SDRawDeltaTree, SDRawTree
 from cmk.inventory.trees import SDKey, SDNodeName
 
@@ -100,7 +102,7 @@ def test_load_history_reports_a_delta_cache_file_with_an_unknown_name(tmp_path: 
         delta_tree_filters=None,
     )
 
-    assert list(history.corrupted) == [file_path]
+    assert history.corrupted == ["inventory_delta_cache/hostname/not-a-timestamp.json"]
 
 
 def test_load_history_reports_an_unreadable_delta_cache_file(tmp_path: Path) -> None:
@@ -112,7 +114,7 @@ def test_load_history_reports_an_unreadable_delta_cache_file(tmp_path: Path) -> 
         delta_tree_filters=None,
     )
 
-    assert list(history.corrupted) == [file_path]
+    assert history.corrupted == ["inventory_delta_cache/hostname/1_2.json"]
 
 
 def test_load_history_reports_an_empty_legacy_delta_cache_file(tmp_path: Path) -> None:
@@ -125,7 +127,7 @@ def test_load_history_reports_an_empty_legacy_delta_cache_file(tmp_path: Path) -
         delta_tree_filters=None,
     )
 
-    assert list(history.corrupted) == [file_path]
+    assert history.corrupted == ["inventory_delta_cache/hostname/1_2"]
 
 
 def _raw_tree_with_other_node(value: str) -> SDRawTree:
@@ -167,23 +169,91 @@ def _save_archive(tmp_path: Path, count: int) -> None:
         )
 
 
-def test_load_latest_history_loads_only_the_newest_entry(tmp_path: Path) -> None:
+def test_load_latest_delta_tree_is_the_one_of_the_newest_entry(tmp_path: Path) -> None:
     _save_archive(tmp_path, 3)
 
-    history = HistoryStore(tmp_path).load_latest(HostName("hostname"), delta_tree_filters=None)
+    assert HistoryStore(tmp_path).load_latest_delta_tree(
+        HostName("hostname"), delta_tree_filters=None
+    ).attributes.pairs == {SDKey("key"): SDDeltaValue(old="val-1", new="val-2")}
 
-    assert [e.current_timestamp for e in history.entries] == [2]
+
+def test_load_latest_delta_tree_without_an_archive_is_empty(tmp_path: Path) -> None:
+    cmk.ccc.store.save_object_to_file(tmp_path / "var/check_mk/inventory/hostname", raw_tree("val"))
+
+    assert not HistoryStore(tmp_path).load_latest_delta_tree(
+        HostName("hostname"), delta_tree_filters=None
+    )
 
 
-def test_load_history_at_a_timestamp_loads_only_its_entry(tmp_path: Path) -> None:
+def test_load_delta_tree_at_a_timestamp_loads_its_entry(tmp_path: Path) -> None:
     _save_archive(tmp_path, 3)
 
-    history = HistoryStore(tmp_path).load_at(HostName("hostname"), 1, delta_tree_filters=None)
+    found = HistoryStore(tmp_path).load_delta_tree_at(
+        HostName("hostname"), 1, delta_tree_filters=None
+    )
 
-    assert history is not None and [e.current_timestamp for e in history.entries] == [1]
+    assert found is not None and (found[0].attributes.pairs, found[1]) == (
+        {SDKey("key"): SDDeltaValue(old="val-0", new="val-1")},
+        [],
+    )
 
 
-def test_load_history_at_an_unknown_timestamp_finds_nothing(tmp_path: Path) -> None:
+def test_load_delta_tree_at_an_unknown_timestamp_finds_nothing(tmp_path: Path) -> None:
     _save_archive(tmp_path, 3)
 
-    assert HistoryStore(tmp_path).load_at(HostName("hostname"), 5, delta_tree_filters=None) is None
+    assert (
+        HistoryStore(tmp_path).load_delta_tree_at(HostName("hostname"), 5, delta_tree_filters=None)
+        is None
+    )
+
+
+def test_load_history_of_a_host_without_history(tmp_path: Path) -> None:
+    assert HistoryStore(tmp_path).load(HostName("hostname"), delta_tree_filters=None) == History(
+        entries=[], corrupted=[]
+    )
+
+
+def _save_archive_and_current_tree(tmp_path: Path) -> None:
+    for idx, raw in enumerate(
+        [{"inv": "attr-0"}, {"inv": "attr-1"}, {"inv-2": "attr"}, {"inv": "attr-3"}]
+    ):
+        cmk.ccc.store.save_object_to_file(
+            tmp_path / f"var/check_mk/inventory_archive/hostname/{idx}", raw
+        )
+    current_tree = tmp_path / "var/check_mk/inventory/hostname"
+    cmk.ccc.store.save_object_to_file(current_tree, {"inv": "attr"})
+    os.utime(current_tree, (100, 100))
+
+
+def test_load_history_counts_the_changes(tmp_path: Path) -> None:
+    _save_archive_and_current_tree(tmp_path)
+
+    history = HistoryStore(tmp_path).load(HostName("hostname"), delta_tree_filters=None)
+
+    assert [(e.new, e.changed, e.removed) for e in history.entries] == [
+        (1, 0, 0),
+        (0, 1, 0),
+        (1, 0, 1),
+        (1, 0, 1),
+        (0, 1, 0),
+    ]
+
+
+def test_load_history_caches_the_deltas_between_archived_trees(tmp_path: Path) -> None:
+    _save_archive_and_current_tree(tmp_path)
+
+    HistoryStore(tmp_path).load(HostName("hostname"), delta_tree_filters=None)
+
+    assert sorted(
+        fp.name for fp in (tmp_path / "var/check_mk/inventory_delta_cache/hostname").iterdir()
+    ) == ["0_1.json", "1_2.json", "2_3.json", "None_0.json"]
+
+
+def test_load_history_reports_an_archive_file_with_an_unknown_name(tmp_path: Path) -> None:
+    archive_dir = tmp_path / "var/check_mk/inventory_archive/hostname"
+    archive_dir.mkdir(parents=True)
+    (archive_dir / "foo").touch()
+
+    history = HistoryStore(tmp_path).load(HostName("hostname"), delta_tree_filters=None)
+
+    assert history.corrupted == ["inventory_archive/hostname/foo"]

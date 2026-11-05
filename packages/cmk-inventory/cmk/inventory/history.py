@@ -108,13 +108,13 @@ class HistoryEntry:
 @dataclass(frozen=True)
 class History:
     entries: Sequence[HistoryEntry]
-    corrupted: Sequence[Path]
+    corrupted: Sequence[str]
 
 
-def sort_corrupted_history_files(
-    archive_dir: Path, corrupted_history_files: Sequence[Path]
+def _sort_corrupted_history_files(
+    archive_dir: Path, corrupted_history_files: set[Path]
 ) -> Sequence[str]:
-    return sorted([str(fp.relative_to(archive_dir.parent)) for fp in set(corrupted_history_files)])
+    return sorted(str(fp.relative_to(archive_dir.parent)) for fp in corrupted_history_files)
 
 
 class HistoryStore:
@@ -302,8 +302,9 @@ class HistoryStore:
             else:
                 corrupted.update(entry_result.error)
 
+        sorted_corrupted = _sort_corrupted_history_files(self.inv_paths.archive_dir, corrupted)
         if delta_tree_filters is None:
-            return History(entries=entries, corrupted=list(corrupted))
+            return History(entries=entries, corrupted=sorted_corrupted)
 
         return History(
             entries=[
@@ -315,7 +316,7 @@ class HistoryStore:
                 for e in entries
                 if (d := filter_delta_tree(e.delta_tree, delta_tree_filters))
             ],
-            corrupted=list(corrupted),
+            corrupted=sorted_corrupted,
         )
 
     def load(
@@ -324,20 +325,25 @@ class HistoryStore:
         paths, corrupted = self._collect_paths(host_name)
         return self._load_entries(host_name, paths, corrupted, delta_tree_filters)
 
-    def load_latest(
+    def load_latest_delta_tree(
         self, host_name: HostName, *, delta_tree_filters: Sequence[SDFilterChoice] | None
-    ) -> History:
+    ) -> ImmutableDeltaTree:
         paths, corrupted = self._collect_paths(host_name)
-        return self._load_entries(host_name, paths[-1:], corrupted, delta_tree_filters)
+        history = self._load_entries(host_name, paths[-1:], corrupted, delta_tree_filters)
+        return history.entries[0].delta_tree if history.entries else ImmutableDeltaTree()
 
-    def load_at(
+    def load_delta_tree_at(
         self,
         host_name: HostName,
         timestamp: int,
         *,
         delta_tree_filters: Sequence[SDFilterChoice] | None,
-    ) -> History | None:
+    ) -> tuple[ImmutableDeltaTree, Sequence[str]] | None:
         paths, corrupted = self._collect_paths(host_name)
         if not (found := [p for p in paths if p.current_timestamp == timestamp]):
             return None
-        return self._load_entries(host_name, found[:1], corrupted, delta_tree_filters)
+        history = self._load_entries(host_name, found[:1], corrupted, delta_tree_filters)
+        return (
+            history.entries[0].delta_tree if history.entries else ImmutableDeltaTree(),
+            history.corrupted,
+        )

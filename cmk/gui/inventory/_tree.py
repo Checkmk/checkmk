@@ -25,7 +25,7 @@ from cmk.inventory.filtering import (
     make_filter_choices_from_contact_groups,
     SDFilterChoice,
 )
-from cmk.inventory.history import HistoryEntry, HistoryStore, sort_corrupted_history_files
+from cmk.inventory.history import HistoryEntry, HistoryStore
 from cmk.inventory.store import InventoryStore
 from cmk.inventory.trees import ImmutableTree
 
@@ -138,32 +138,28 @@ def inventory_of_host(
 
 
 def load_latest_delta_tree(history_store: HistoryStore, hostname: HostName) -> ImmutableDeltaTree:
-    history = history_store.load_latest(hostname, delta_tree_filters=_permitted_filter_choices())
-    return history.entries[0].delta_tree if history.entries else ImmutableDeltaTree()
+    return history_store.load_latest_delta_tree(
+        hostname, delta_tree_filters=_permitted_filter_choices()
+    )
 
 
 def load_delta_tree(
     history_store: HistoryStore, hostname: HostName, timestamp: int
 ) -> tuple[ImmutableDeltaTree, Sequence[str]]:
-    """Load inventory history and compute delta tree of a specific timestamp"""
-    history = history_store.load_at(
-        hostname, timestamp, delta_tree_filters=_permitted_filter_choices()
-    )
-    if history is None:
+    if (
+        found := history_store.load_delta_tree_at(
+            hostname, timestamp, delta_tree_filters=_permitted_filter_choices()
+        )
+    ) is None:
         raise MKGeneralException(
             _("Found no history entry at the time of '%(timestamp)s' for the host '%(hostname)s'")
             % {"timestamp": timestamp, "hostname": hostname}
         )
-    return (
-        history.entries[0].delta_tree if history.entries else ImmutableDeltaTree(),
-        sort_corrupted_history_files(history_store.inv_paths.archive_dir, history.corrupted),
-    )
+    return found
 
 
 def get_history(
     history_store: HistoryStore, hostname: HostName
 ) -> tuple[Sequence[HistoryEntry], Sequence[str]]:
     history = history_store.load(hostname, delta_tree_filters=_permitted_filter_choices())
-    return history.entries, sort_corrupted_history_files(
-        history_store.inv_paths.archive_dir, history.corrupted
-    )
+    return history.entries, history.corrupted

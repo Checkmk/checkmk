@@ -86,6 +86,8 @@ const filteredSuggestions = computed<Array<Suggestion>>(() =>
 )
 const activeSuggestion: Ref<Suggestion | null> = ref(null) // null means no suggestion is highlighted, (no suggestions are selectable)
 const isSelectedSuggestionSetAsFilter = ref(false)
+// Once the user typed, the filter is theirs: a late response must not put the selection back.
+const isFilterEditedByUser = ref(false)
 
 function scrollCurrentActiveIntoView(): void {
   if (suggestionRefs.value === null) {
@@ -260,7 +262,8 @@ async function handleSuggestionsUpdate(
     if (
       newSuggestions.type === 'callback-filtered' &&
       !hasNoSelection &&
-      !isSelectedSuggestionSetAsFilter.value
+      !isSelectedSuggestionSetAsFilter.value &&
+      !isFilterEditedByUser.value
     ) {
       filterString.value = foundSuggestion?.title ?? newSelectedSuggestion.getName()
       isSelectedSuggestionSetAsFilter.value = true
@@ -390,6 +393,7 @@ defineExpose({
         v-model="filterString"
         :aria-label="_t('filter')"
         type="text"
+        @input="isFilterEditedByUser = true"
         @blur="inputLostFocus"
         @keydown.escape.prevent="emit('blur')"
       />

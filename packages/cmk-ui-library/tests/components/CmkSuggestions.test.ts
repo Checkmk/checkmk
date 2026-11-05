@@ -505,6 +505,33 @@ test('callback-filtered mode: a slow stale response does not overwrite the lates
   expect(screen.getAllByRole('option')).toHaveLength(3)
 })
 
+test('callback-filtered mode: typing before the first response keeps the typed filter', async () => {
+  const user = userEvent.setup()
+  const pendingResolvers = new Map<string, (response: Response) => void>()
+  const querySuggestions = (query: string) =>
+    new Promise<Response>((resolve) => pendingResolvers.set(query, resolve))
+
+  render(CmkSuggestions, {
+    props: {
+      selectedSuggestion: new SelectionWithTitle('option2', 'Option Two'),
+      suggestions: { type: 'callback-filtered', querySuggestions },
+      role: 'option'
+    }
+  })
+
+  const input = screen.getByRole('textbox', { name: 'filter' })
+  await waitFor(() => expect(pendingResolvers.has('Option Two')).toBe(true))
+
+  await user.clear(input)
+  await user.type(input, 'Opt')
+  pendingResolvers.get('Option Two')!(new Response([{ name: 'option2', title: 'Option Two' }]))
+  await waitFor(() => expect(pendingResolvers.has('Opt')).toBe(true))
+  pendingResolvers.get('Opt')!(new Response(flatSuggestions))
+  await new Promise((resolve) => setTimeout(resolve))
+
+  expect((input as HTMLInputElement).value).toBe('Opt')
+})
+
 test('keyboard navigation skips headers and clicking a header does not select', async () => {
   const user = userEvent.setup()
   const { emitted } = render(CmkSuggestions, {

@@ -468,14 +468,9 @@ class BICompiledRule(ABCBICompiledNode):
         state = self.aggregation_function.aggregate([result.state for result in results])
 
         if computation_options.downtime_only_on_full_problem_coverage:
-            in_downtime = False
-            if state != 0:
-                in_downtime = (
-                    self.aggregation_function.aggregate(
-                        [0 if result.in_downtime else result.state for result in results]
-                    )
-                    == 0
-                )
+            in_downtime = self._flags_cover_problem(
+                state, results, [result.in_downtime for result in results]
+            )
         else:
             in_downtime = self._flag_propagates(
                 [result.in_downtime for result in results],
@@ -484,14 +479,9 @@ class BICompiledRule(ABCBICompiledNode):
                 ),
             )
 
-        is_acknowledged = False
-        if state != 0:
-            is_acknowledged = (
-                self.aggregation_function.aggregate(
-                    [0 if result.acknowledged else result.state for result in results]
-                )
-                == 0
-            )
+        is_acknowledged = self._flags_cover_problem(
+            state, results, [result.acknowledged for result in results]
+        )
 
         out_of_service_period = self._flag_propagates(
             [not result.in_service_period for result in results], min_state=BIState.WARN
@@ -507,6 +497,20 @@ class BICompiledRule(ABCBICompiledNode):
             state_messages=self.properties.state_messages,
             custom_infos={},
         )
+
+    def _flags_cover_problem(
+        self, state: int, results: Sequence[NodeComputeResult], flags: Sequence[bool]
+    ) -> bool:
+        """Whether this rule's problem is caused only by flagged children.
+
+        Flagged children are treated as OK, all others keep their state.
+        """
+        if state == BIState.OK:
+            return False
+        covered_state = self.aggregation_function.aggregate(
+            [BIState.OK if flag else result.state for result, flag in zip(results, flags)]
+        )
+        return covered_state == BIState.OK
 
     def _flag_propagates(self, flags: Sequence[bool], min_state: BIState) -> bool:
         """Whether the flagged children make this rule worse than it already is.

@@ -4,13 +4,18 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from pathlib import Path, PurePosixPath
 
 import pytest
 
 from cmk.ccc.hostaddress import HostName
-from cmk.diagnostics.internal import CollectContext, CollectWarning, GeneratedContent
+from cmk.diagnostics.internal import (
+    CollectContext,
+    CollectWarning,
+    DumpItem,
+    GeneratedContent,
+)
 from cmk.inventory.serialization import deserialize_tree, make_meta
 from cmk.inventory.store import InventoryStore
 from cmk.plugins.inventory.diagnostics.checkmk_overview import (
@@ -74,7 +79,7 @@ def test_checkmk_overview_no_checkmk_node(tmp_path: Path) -> None:
         )
 
 
-def test_checkmk_overview_content(tmp_path: Path) -> None:
+def _overview_items(tmp_path: Path) -> Sequence[DumpItem]:
     InventoryStore(tmp_path).save_inventory_tree(
         host_name=HostName("checkmk-server-name"),
         tree=deserialize_tree(
@@ -119,46 +124,67 @@ def test_checkmk_overview_content(tmp_path: Path) -> None:
         meta=make_meta(do_archive=False),
     )
 
-    items = list(
+    return list(
         diagnostics_plugin_checkmk_overview.handler(
             _make_context(tmp_path, checkmk_server_host="checkmk-server-name")
         )
     )
 
-    assert len(items) == 1
-    arcname, generated = items[0].path, items[0].content
-    assert arcname == PurePosixPath("checkmk_overview")
-    assert isinstance(generated, GeneratedContent)
-    content = json.loads(generated.data)
 
-    assert content["Nodes"]["cluster"]["Attributes"]["Pairs"] == {
-        "is_cluster": False,
+def _overview_content(item: DumpItem) -> object:
+    if not isinstance(item.content, GeneratedContent):
+        raise TypeError(item.content)
+    return json.loads(item.content.data)
+
+
+def test_checkmk_overview_dumps_one_file(tmp_path: Path) -> None:
+    assert [item.path for item in _overview_items(tmp_path)] == [PurePosixPath("checkmk_overview")]
+
+
+def test_checkmk_overview_dumps_the_checkmk_node(tmp_path: Path) -> None:
+    assert _overview_content(_overview_items(tmp_path)[0]) == {
+        "Attributes": {
+            "Pairs": {"agent_version": "1.7.0i1", "num_sites": 1, "num_versions": 2},
+        },
+        "Table": {},
+        "Nodes": {
+            "cluster": {
+                "Attributes": {"Pairs": {"is_cluster": False}},
+                "Table": {},
+                "Nodes": {},
+            },
+            "sites": {
+                "Attributes": {},
+                "Table": {
+                    "KeyColumns": ["autostart", "site", "used_version"],
+                    "Rows": [
+                        {"autostart": False, "site": "heute", "used_version": "2020.06.09.cee"}
+                    ],
+                },
+                "Nodes": {},
+            },
+            "versions": {
+                "Attributes": {},
+                "Table": {
+                    "KeyColumns": ["demo", "edition", "num_sites", "number", "version"],
+                    "Rows": [
+                        {
+                            "demo": False,
+                            "edition": "cee",
+                            "num_sites": 0,
+                            "number": "2020.06.07",
+                            "version": "2020.06.07.cee",
+                        },
+                        {
+                            "demo": False,
+                            "edition": "cee",
+                            "num_sites": 1,
+                            "number": "2020.06.09",
+                            "version": "2020.06.09.cee",
+                        },
+                    ],
+                },
+                "Nodes": {},
+            },
+        },
     }
-
-    assert content["Nodes"]["sites"]["Table"]["Rows"] == [
-        {
-            "autostart": False,
-            "site": "heute",
-            "used_version": "2020.06.09.cee",
-        },
-    ]
-
-    rows = content["Nodes"]["versions"]["Table"]["Rows"]
-    assert len(rows) == 2
-    for row in [
-        {
-            "demo": False,
-            "edition": "cee",
-            "num_sites": 0,
-            "number": "2020.06.07",
-            "version": "2020.06.07.cee",
-        },
-        {
-            "demo": False,
-            "edition": "cee",
-            "num_sites": 1,
-            "number": "2020.06.09",
-            "version": "2020.06.09.cee",
-        },
-    ]:
-        assert row in rows

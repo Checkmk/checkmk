@@ -170,3 +170,22 @@ def test_source_settings_for_piggybacked_host(
     expected: _EffectiveTimeSettings,
 ) -> None:
     assert _eval_effective_time_settings(rule_per_source, HostAddress("vm1"), source) == expected
+
+
+@pytest.mark.parametrize(
+    "source, expected",
+    [
+        pytest.param(HostName("srcA"), 100, id="srcA"),
+        pytest.param(HostName("srcB"), 200, id="srcB"),
+        pytest.param(HostName("srcC"), _GLOBAL_MAX_CACHE_AGE, id="srcC without rule"),
+    ],
+)  # fmt: skip
+def test_each_source_gets_its_own_max_cache_age(source: HostName, expected: int) -> None:
+    rule_per_source = {
+        HostName("srcA"): {"global_max_cache_age": 100},
+        HostName("srcB"): {"global_max_cache_age": 200},
+    }
+    assert (
+        _eval_effective_time_settings(rule_per_source, HostAddress("vm2"), source).max_cache_age
+        == expected
+    )

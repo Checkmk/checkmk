@@ -432,7 +432,8 @@ mod tests {
         use super::*;
         use crate::agent_receiver_api::{
             AgentDownloadBody, AgentUpdate, ApiError, RegistrationStatusV2,
-            RegistrationStatusV2Response, UpdateStatusBody, UpdateStatusResponse,
+            RegistrationStatusV2Response, RegistrationStatusV2ResponseRegistered, UpdateStatusBody,
+            UpdateStatusResponse,
         };
         use crate::config::test_helpers::TestRegistry;
         use crate::config::{ConnectionMode, JSONLoader, TrustedConnection};
@@ -448,6 +449,7 @@ mod tests {
         struct ScriptedApi {
             answers: RefCell<Vec<Result<UpdateStatusResponse, ApiError>>>,
             reported_errors: RefCell<Vec<Option<String>>>,
+            registered_host_name: Option<&'static str>,
         }
 
         impl ScriptedApi {
@@ -455,6 +457,15 @@ mod tests {
                 Self {
                     answers: RefCell::new(answers),
                     reported_errors: RefCell::new(Vec::new()),
+                    registered_host_name: None,
+                }
+            }
+
+            /// The site registered the connection for `host_name`.
+            fn registering_the_host_as(self, host_name: &'static str) -> Self {
+                Self {
+                    registered_host_name: Some(host_name),
+                    ..self
                 }
             }
 
@@ -494,7 +505,15 @@ mod tests {
                 _base_url: &reqwest::Url,
                 _connection: &TrustedConnection,
             ) -> AnyhowResult<RegistrationStatusV2Response> {
-                panic!("the host has an update source, so nothing migrates")
+                let host_name = self
+                    .registered_host_name
+                    .expect("the host has an update source, so nothing migrates");
+                Ok(RegistrationStatusV2Response::Registered(
+                    RegistrationStatusV2ResponseRegistered {
+                        hostname: String::from(host_name),
+                        connection_mode: ConnectionMode::Pull,
+                    },
+                ))
             }
         }
 
@@ -551,6 +570,26 @@ mod tests {
                     paths,
                     registry,
                 }
+            }
+
+            /// A host without an update source, whose Python updater was
+            /// registered as `host_name` with the site of the one connection.
+            fn registered_by_the_python_updater_as(host_name: &str) -> Self {
+                let host = Self::new();
+                UpdateState::default()
+                    .save(&host.paths.updater_state_path)
+                    .unwrap();
+                let legacy_state = &host.paths.python_updater_state_path;
+                fs::create_dir_all(legacy_state.parent().unwrap()).unwrap();
+                fs::write(
+                    legacy_state,
+                    format!(
+                        "{{'host_name': '{host_name}', 'server': 'server', 'site': 'site', \
+                         'host_secret': 'the-host-secret'}}\n"
+                    ),
+                )
+                .unwrap();
+                host
             }
 
             /// One cycle. The `update` mode and the daemon both load the
@@ -620,6 +659,36 @@ mod tests {
             assert_eq!(first_501_then_upgraded.reported_errors().len(), 1);
             let state = host.state();
             assert!(!state.source.as_ref().unwrap().available, "{state:?}");
+        }
+
+        /// CMK-39502, TC-AU-090: the Python updater registered the host under
+        /// its FQDN, the site knows it under its short name. The cycle records
+        /// the error and leaves the Python updater's state file alone, so the
+        /// next cycle tries again.
+        #[test]
+        fn test_a_legacy_registration_under_another_host_name_is_retried_by_the_next_cycle() {
+            let host = Host::registered_by_the_python_updater_as("myhost.example.com");
+            let legacy_state = fs::read(&host.paths.python_updater_state_path).unwrap();
+            let site_knowing_the_short_name =
+                ScriptedApi::new(vec![]).registering_the_host_as("myhost");
+
+            let failed = host.cycle(&site_knowing_the_short_name);
+            let failed_state = host.state();
+            let retried = host.cycle(&site_knowing_the_short_name);
+
+            assert!(failed.is_err(), "{failed:?}");
+            let error = failed_state.last_error.unwrap_or_default();
+            assert!(
+                error.contains("server/site registered this host as myhost"),
+                "{error:?}"
+            );
+            assert_eq!(failed_state.source, None);
+            assert!(retried.is_err(), "{retried:?}");
+            assert_eq!(host.state().last_error, Some(error));
+            assert_eq!(
+                fs::read(&host.paths.python_updater_state_path).unwrap(),
+                legacy_state
+            );
         }
     }
 }

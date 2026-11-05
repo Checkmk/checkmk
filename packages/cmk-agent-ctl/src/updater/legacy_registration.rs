@@ -120,7 +120,8 @@ mod tests {
     /// `LEGACY_HOST_SECRET` of the site's tests, in
     /// `tests/unit/cmk/gui/nonfree/pro/agent_bakery/testlib.py`.
     const SECRET: &str = "the-host-secret-of-the-legacy-registration";
-    const UUID: &str = "2da62f8f-9e4a-4b1b-8b3a-1c1a0b0f1a01";
+    /// `CONTROLLER_UUID` of the site's tests, in the same file.
+    const UUID: &str = "34e4c967-1591-4883-8cdf-0e335b09618d";
 
     fn registration() -> LegacyRegistration {
         LegacyRegistration {
@@ -235,16 +236,17 @@ mod tests {
         }
     }
 
-    /// CMK-39502: the proof is the HMAC that the site computes, as Python's
-    /// `hmac.new(secret, f"cmk-agent-update-migration:{site}:{uuid}", sha256).hexdigest()`.
+    /// CMK-39502, TC-AU-110: the proof is the one the site accepts. The site's
+    /// `test_status_accepts_the_proof_of_a_legacy_registration_for_the_calling_site`
+    /// asserts the same vector, with `remote` as the calling site.
     #[test]
     fn test_proof_matches_the_site() {
         assert_eq!(
             registration().migration_proof(
-                &SiteID::from_str("checkmk.example.com/mysite").unwrap(),
+                &SiteID::from_str("checkmk.example.com/remote").unwrap(),
                 &uuid()
             ),
-            "3646567c79cf813effaf47ffe59e9987ee92a34c2e61ce57dea9e817b0c3d78d"
+            "2b4c17c2000fff5538d77b7dad229c7ed8be217c2c675e4a0d7d588ee0bfa215"
         );
     }
 

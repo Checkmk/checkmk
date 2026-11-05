@@ -10,7 +10,12 @@ from pathlib import Path
 
 import pytest
 
-from cmk.special_agents.agent_proxmox_ve import BackupInfo, BackupTask, collect_vm_backup_info
+from cmk.special_agents.agent_proxmox_ve import (
+    _backup_timezone,
+    BackupInfo,
+    BackupTask,
+    collect_vm_backup_info,
+)
 
 
 @pytest.mark.parametrize(
@@ -514,6 +519,11 @@ def test_parsing_backuped_log_formats(
     assert backup_task.backup_data["1"]["backup_amount"] == expected_backup_amount
     assert backup_task.backup_data["1"]["backup_total"] == expected_backup_total
     assert backup_task.backup_data["1"]["backup_time"] == expected_backup_time
+
+
+@pytest.mark.xfail(strict=True, raises=StopIteration, reason="Crash group 4661")
+def test_backup_timezone_without_any_node_timezone() -> None:
+    assert _backup_timezone("100", {"100": {"node": "pve1"}}, {}) == "UTC"
 
 
 if __name__ == "__main__":

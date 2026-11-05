@@ -41,6 +41,7 @@ import type { MonitoringCommandsPayload } from '@/monitoring/shared/components/a
 import type { MonitoringActionRegistry } from '@/monitoring/shared/components/action/registry'
 import type { MonitoringAction } from '@/monitoring/shared/components/action/types'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
+import { menuEntryIcon } from '@/monitoring/shared/components/customIcon'
 
 /** What a page sends about the host commands and the Setup links it offers. */
 export interface HostActionsPayload extends MonitoringCommandsPayload {
@@ -98,7 +99,7 @@ export function useHostActions(payload: HostActionsPayload): HostActions {
       ...items.map((item) => ({
         id: `${item.title}|${item.url}`,
         label: item.title as TranslatedString,
-        icon: item.icon_name as SimpleIcons,
+        icon: menuEntryIcon(item),
         url: item.url,
         target: item.target
       }))

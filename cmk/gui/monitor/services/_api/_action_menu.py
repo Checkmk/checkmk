@@ -24,6 +24,7 @@ from cmk.gui.display_options import display_options
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.log import logger
+from cmk.gui.monitor.shared import resolved_icon
 from cmk.gui.openapi.framework import (
     APIVersion,
     EndpointBehavior,
@@ -46,6 +47,7 @@ from cmk.gui.view_utils import replace_action_url_macros, transform_action_url
 from cmk.gui.views.icon.base import IconConfig
 from cmk.gui.views.icon.entries import get_icons, IconEntry, query_icon_row
 from cmk.livestatus_client import MKLivestatusNotFoundError
+from cmk.shared_typing import icon as st
 from cmk.utils.servicename import ServiceName
 from cmk.web.utils import permission_verification as permissions
 from cmk.web.utils.icons import DynamicIcon, StaticIcon
@@ -65,6 +67,11 @@ class ServiceActionMenuItem:
         default_factory=ApiOmitted,
     )
     icon_name: str = api_field(description="Icon to render for this action", example="logwatch")
+    icon_path: str | ApiOmitted = api_field(
+        description="Path of an uploaded icon, omitted for a built-in one",
+        example="images/icons/wiki.png",
+        default_factory=ApiOmitted,
+    )
     title: str = api_field(description="Label shown for the action", example="Open log file viewer")
     url: str = api_field(
         description="URL the action links to",
@@ -102,9 +109,11 @@ def _serialize_entry(entry: IconEntry, row: Row) -> ServiceActionMenuItem | None
         # JavaScript command actions (e.g. reschedule) cannot be rendered as a native link.
         return None
 
+    icon = resolved_icon(entry.icon_name)
     return ServiceActionMenuItem(
         ident=entry.ident if entry.ident else ApiOmitted(),
         icon_name=_icon_name(entry.icon_name),
+        icon_path=icon.path if isinstance(icon, st.UserIcon) else ApiOmitted(),
         title=entry.title or "",
         url=url,
         target=target_frame if target_frame else ApiOmitted(),

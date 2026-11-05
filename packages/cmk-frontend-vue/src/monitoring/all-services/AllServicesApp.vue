@@ -41,6 +41,7 @@ import {
   useTimestampColumnWidth
 } from '@/monitoring/shared/components/timestampColumns'
 import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
+import { sizeActionsColumn, useInlineCustomActionCount } from '@/monitoring/shared/customActions'
 import {
   displayOptionsWriter,
   readDisplayOptionsFromUrl,
@@ -134,6 +135,7 @@ const allServicesService = new AllServicesService(servicesApi, getKeyShortcutSer
 })
 
 const modeColumnSize = useModeColumnWidth(() => allServicesService.items.value)
+const inlineCustomActions = useInlineCustomActionCount(() => allServicesService.items.value)
 const initialDisplayOptions = readDisplayOptionsFromUrl(window.location.search)
 const displayOptions = usePersistentRef(
   buildDisplayOptionsStorageKey({
@@ -154,13 +156,16 @@ const timestampColumnWidth = useTimestampColumnWidth(
 )
 
 const tableColumns = computed(() =>
-  sizeModeColumn(
-    timestampColumnsAsShown(
-      uncapNameWithoutSummary(columns, allServicesService.columnVisibility.value),
-      displayOptions.value.timestampFormat,
-      timestampColumnWidth.value
+  sizeActionsColumn(
+    sizeModeColumn(
+      timestampColumnsAsShown(
+        uncapNameWithoutSummary(columns, allServicesService.columnVisibility.value),
+        displayOptions.value.timestampFormat,
+        timestampColumnWidth.value
+      ),
+      modeColumnSize.value
     ),
-    modeColumnSize.value
+    inlineCustomActions.value
   )
 )
 

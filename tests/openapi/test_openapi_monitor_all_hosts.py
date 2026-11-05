@@ -1214,6 +1214,8 @@ class TestMonitorHostActionMenuQueryParamValidation:
         assert resp.status_code == HTTPStatus.BAD_REQUEST
 
 
+# The entries resolve their icons in the theme, which has no icon files here.
+@pytest.mark.usefixtures("patch_theme")
 class TestMonitorHostActionMenu:
     def test_missing_host_returns_404(
         self,

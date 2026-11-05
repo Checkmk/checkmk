@@ -2342,6 +2342,8 @@ class TestMonitorHostServicesReschedule:
         assert resp.json["rescheduled"] == 2
 
 
+# The entries resolve their icons in the theme, which has no icon files here.
+@pytest.mark.usefixtures("patch_theme")
 class TestMonitorServiceActionMenu:
     def test_unknown_site_is_rejected(self, clients: ClientRegistry) -> None:
         resp = clients.MonitorHosts.service_action_menu(

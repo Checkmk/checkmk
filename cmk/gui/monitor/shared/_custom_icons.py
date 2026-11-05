@@ -28,7 +28,7 @@ from cmk.livestatus_client.expressions import And, Or
 from cmk.livestatus_client.queries import Query
 from cmk.livestatus_client.tables import Hosts, Services
 from cmk.shared_typing import icon as st
-from cmk.web.utils.icons import DynamicIconName, StaticIcon
+from cmk.web.utils.icons import DynamicIcon, DynamicIconName, StaticIcon
 
 _ICON_IMAGE = "icon_image"
 
@@ -148,21 +148,21 @@ def _icon_row(
     }
 
 
+def resolved_icon(icon: StaticIcon | DynamicIcon) -> st.DefaultIcon | st.UserIcon:
+    """A built-in or an uploaded icon, as the current theme has it; an emblem is left out."""
+    resolved = resolve_icon_name(
+        DynamicIconName(str(icon.icon)) if isinstance(icon, StaticIcon) else icon, theme
+    )
+    return resolved.icon if isinstance(resolved, st.EmblemIcon) else resolved
+
+
 def _custom_icon(
     what: Literal["host", "service"], row: Row, entry: IconEntry, toplevel: bool
 ) -> CustomIcon | None:
     url, target = (None, None) if entry.url_spec is None else transform_action_url(entry.url_spec)
     if url is not None and (not toplevel or url.startswith("onclick:")):
         return None
-    resolved = resolve_icon_name(
-        (
-            DynamicIconName(str(entry.icon_name.icon))
-            if isinstance(entry.icon_name, StaticIcon)
-            else entry.icon_name
-        ),
-        theme,
-    )
-    icon = resolved.icon if isinstance(resolved, st.EmblemIcon) else resolved
+    icon = resolved_icon(entry.icon_name)
     return CustomIcon(
         ident=entry.ident or "",
         title=entry.title or "",

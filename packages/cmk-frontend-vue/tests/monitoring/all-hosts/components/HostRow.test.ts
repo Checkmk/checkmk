@@ -582,3 +582,42 @@ test.each<{ overrides: Partial<HostEntry>; case: string }>([
 
   expect(screen.queryByRole('link', { name: 'Edit host' })).not.toBeInTheDocument()
 })
+
+const customAction = (ident: string): NonNullable<HostEntry['custom_icons']>[number] => ({
+  ident,
+  title: `Open ${ident}`,
+  icon_name: 'wiki',
+  url: `https://${ident}.example.com`,
+  target: '_blank'
+})
+
+test('shows a custom action left of the Setup links', () => {
+  mountRow(makeHost({ setup_access: true, custom_icons: [customAction('wiki')] }), makeTableRow(), {
+    rowActions: [EDIT_HOST]
+  })
+
+  const custom = screen.getByRole('link', { name: 'Open wiki' })
+  expect(custom).toHaveAttribute('href', 'https://wiki.example.com')
+  expect(custom).toHaveAttribute('target', '_blank')
+  expect(custom.compareDocumentPosition(screen.getByRole('link', { name: 'Edit host' }))).toBe(
+    Node.DOCUMENT_POSITION_FOLLOWING
+  )
+})
+
+test('leaves custom actions beyond two to the action menu', async () => {
+  mountRow(
+    makeHost({ custom_icons: [customAction('a'), customAction('b'), customAction('c')] }),
+    makeTableRow()
+  )
+
+  expect(screen.queryByRole('link', { name: 'Open c' })).not.toBeInTheDocument()
+  await userEvent.click(screen.getByRole('button', { name: 'More actions' }))
+  expect(await screen.findByRole('menuitem', { name: 'Open c' })).toBeInTheDocument()
+})
+
+test('shows a custom icon without an action as an indicator, not as an action', () => {
+  mountRow(makeHost({ custom_icons: [{ ident: 'plain', title: 'Plain icon', icon_name: 'wiki' }] }))
+
+  expect(screen.queryByRole('link', { name: 'Plain icon' })).not.toBeInTheDocument()
+  expect(screen.getByRole('img', { name: 'Plain icon' })).toBeInTheDocument()
+})

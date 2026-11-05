@@ -34,6 +34,7 @@ import {
   indicatorIcons
 } from '@/monitoring/shared/components/modeColumn'
 import { ACTIONS_COLUMN_ID } from '@/monitoring/shared/constants'
+import { customActions, withCustomActions } from '@/monitoring/shared/customActions'
 import { formatDisplayTimestamp } from '@/monitoring/shared/formatTimestamp'
 import {
   groupCondition,
@@ -102,15 +103,20 @@ function toggleSelected(selected: boolean): void {
   props.tableRow.toggleSelected(selected)
 }
 
-const actionButtons = computed<CellAction[]>(() => [
-  ...props.rowActions.map((action) => ({
-    ...action,
-    url: action.url?.replace('{service}', encodeURIComponent(props.row.name))
-  })),
-  ...(props.aiExplain
-    ? [{ id: AI_EXPLAIN_ACTION_ID, label: _t('Explain with AI'), icon: 'sparkle' as const }]
-    : [])
-])
+const actionButtons = computed(() =>
+  withCustomActions(
+    [
+      ...props.rowActions.map((action) => ({
+        ...action,
+        url: action.url?.replace('{service}', encodeURIComponent(props.row.name))
+      })),
+      ...(props.aiExplain
+        ? [{ id: AI_EXPLAIN_ACTION_ID, label: _t('Explain with AI'), icon: 'sparkle' as const }]
+        : [])
+    ],
+    customActions(props.row.custom_icons)
+  )
+)
 
 function onActionSelect(action: CellAction): void {
   if (action.id === AI_EXPLAIN_ACTION_ID) {
@@ -261,10 +267,10 @@ const serviceGroups = computed(() => toNameItems(props.row.groups ?? []))
     @click="emit('openGraphs', row)"
   />
   <ActionsCell
-    v-if="(actionMenuLoader || actionButtons.length > 0) && hasColumn(ACTIONS_COLUMN_ID)"
+    v-if="(actionMenuLoader || actionButtons.actions.length > 0) && hasColumn(ACTIONS_COLUMN_ID)"
     :column-id="ACTIONS_COLUMN_ID"
-    :actions="actionButtons"
-    :max-visible="actionButtons.length"
+    :actions="actionButtons.actions"
+    :max-visible="actionButtons.maxVisible"
     :load="actionMenuLoader"
     :busy="busy"
     @select="onActionSelect"

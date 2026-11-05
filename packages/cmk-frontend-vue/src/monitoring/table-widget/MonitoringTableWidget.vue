@@ -21,6 +21,7 @@ import {
   useModeColumnWidth
 } from '@/monitoring/shared/components/modeColumn'
 import { ACTIONS_COLUMN_ID } from '@/monitoring/shared/constants'
+import { sizeActionsColumn, useInlineCustomActionCount } from '@/monitoring/shared/customActions'
 import type { DisplayOptions } from '@/monitoring/shared/types'
 
 import type { WidgetTableState } from './WidgetTableState'
@@ -48,13 +49,17 @@ const rowActions = computed(() =>
 )
 
 const modeColumnWidth = useModeColumnWidth(() => props.rows)
+const inlineCustomActions = useInlineCustomActionCount(() => props.rows)
 
 const columns = computed(() =>
-  sizeModeColumn(
-    props.descriptor.columns(
-      rowActions.value === null ? props.columnIds : [...props.columnIds, ACTIONS_COLUMN_ID]
+  sizeActionsColumn(
+    sizeModeColumn(
+      props.descriptor.columns(
+        rowActions.value === null ? props.columnIds : [...props.columnIds, ACTIONS_COLUMN_ID]
+      ),
+      modeColumnWidth.value
     ),
-    modeColumnWidth.value
+    inlineCustomActions.value
   )
 )
 

@@ -25,6 +25,7 @@ import {
   indicatorIcons
 } from '@/monitoring/shared/components/modeColumn'
 import { ACTIONS_COLUMN_ID } from '@/monitoring/shared/constants'
+import { customActions, withCustomActions } from '@/monitoring/shared/customActions'
 import { formatDisplayTimestamp } from '@/monitoring/shared/formatTimestamp'
 import { hostServicesPageUrl } from '@/monitoring/shared/hostServicesPageUrl'
 import {
@@ -76,11 +77,14 @@ const SERVICE_COUNT_MIN_WIDTH = 35
 
 const hostRef = computed(() => hostRefOf(props.row))
 
-const actionButtons = computed<CellAction[]>(() =>
-  (props.row.setup_access === true ? props.rowActions : []).map((action) => ({
-    ...action,
-    url: action.url?.replace('{host}', encodeURIComponent(props.row.name))
-  }))
+const actionButtons = computed(() =>
+  withCustomActions(
+    (props.row.setup_access === true ? props.rowActions : []).map((action) => ({
+      ...action,
+      url: action.url?.replace('{host}', encodeURIComponent(props.row.name))
+    })),
+    customActions(props.row.custom_icons)
+  )
 )
 
 function onActionSelect(action: CellAction): void {
@@ -281,10 +285,10 @@ const lastStateChange = computed(() =>
   <StringCell v-if="hasColumn('customer')" column-id="customer" :value="row.customer" />
 
   <ActionsCell
-    v-if="(loadActionMenu || actionButtons.length > 0) && hasColumn(ACTIONS_COLUMN_ID)"
+    v-if="(loadActionMenu || actionButtons.actions.length > 0) && hasColumn(ACTIONS_COLUMN_ID)"
     :column-id="ACTIONS_COLUMN_ID"
-    :actions="actionButtons"
-    :max-visible="actionButtons.length"
+    :actions="actionButtons.actions"
+    :max-visible="actionButtons.maxVisible"
     :load="loadActionMenu ? () => loadActionMenu!(hostRef) : undefined"
     :busy="busy"
     @select="onActionSelect"

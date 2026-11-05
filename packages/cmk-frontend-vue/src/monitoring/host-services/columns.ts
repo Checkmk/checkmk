@@ -24,7 +24,8 @@ import type {
   StringInputFilter
 } from '@/monitoring/shared/components/filter/types'
 import { indicatorColumn } from '@/monitoring/shared/components/modeColumn'
-import { ACTIONS_COLUMN_ID, ACTIONS_HEADER_WIDTH } from '@/monitoring/shared/constants'
+import { ACTIONS_COLUMN_ID } from '@/monitoring/shared/constants'
+import { actionsColumnWidth } from '@/monitoring/shared/customActions'
 import { columnId } from '@/monitoring/shared/tableState/schema'
 
 /**
@@ -63,13 +64,6 @@ const ROW_FIELDS = [
  */
 export function requestedServiceFields(visibility: VisibilityState): ServiceOptionalField[] {
   return [...visibleServiceFields(visibility), ...ROW_FIELDS]
-}
-
-const ACTION_BUTTON_WIDTH = 25
-const ACTIONS_MENU_WIDTH = 50
-
-function actionsColumnWidth(inlineActions: number): number {
-  return Math.max(ACTIONS_HEADER_WIDTH, ACTIONS_MENU_WIDTH + inlineActions * ACTION_BUTTON_WIDTH)
 }
 
 export interface HostServicesColumnOptions {
@@ -117,6 +111,8 @@ export function useHostServicesColumns<Row extends HostServiceEntry = HostServic
   showIndicators = false
 }: HostServicesColumnOptions): ColumnDef<Row>[] {
   const { _t } = usei18n()
+
+  const actionsWidth = actionsColumnWidth(inlineActions)
 
   const stateFilter: CheckboxListWithFlagsFilter<'state', 'is_flapping' | 'stale'> = {
     type: 'checkbox-list-with-flags',
@@ -337,8 +333,8 @@ export function useHostServicesColumns<Row extends HostServiceEntry = HostServic
       header: _t('Actions'),
       enableSorting: false,
       enableHiding: false,
-      minSize: actionsColumnWidth(inlineActions),
-      maxSize: actionsColumnWidth(inlineActions),
+      minSize: actionsWidth,
+      maxSize: actionsWidth,
       meta: { justify: 'right' }
     }
   ]

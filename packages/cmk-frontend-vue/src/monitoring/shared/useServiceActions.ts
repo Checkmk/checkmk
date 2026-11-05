@@ -45,6 +45,7 @@ import type { MonitoringCommandsPayload } from '@/monitoring/shared/components/a
 import type { MonitoringActionRegistry } from '@/monitoring/shared/components/action/registry'
 import type { MonitoringAction } from '@/monitoring/shared/components/action/types'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
+import { menuEntryIcon } from '@/monitoring/shared/components/customIcon'
 
 export interface ServiceActions {
   /** The commands the user may run on a service, as buttons of the action bar. */
@@ -88,7 +89,7 @@ export function useServiceActions(payload: MonitoringCommandsPayload): ServiceAc
     return items.map((item) => ({
       id: `${item.title}|${item.url}`,
       label: item.title as TranslatedString,
-      icon: item.icon_name as SimpleIcons,
+      icon: menuEntryIcon(item),
       url: item.url,
       target: item.target,
       ident: item.ident

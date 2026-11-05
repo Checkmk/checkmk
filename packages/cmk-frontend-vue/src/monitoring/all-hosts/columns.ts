@@ -23,7 +23,8 @@ import type {
   StringInputFilter
 } from '@/monitoring/shared/components/filter/types'
 import { MODE_COLUMN_ID, indicatorColumn } from '@/monitoring/shared/components/modeColumn'
-import { ACTIONS_COLUMN_ID, ACTIONS_HEADER_WIDTH } from '@/monitoring/shared/constants'
+import { ACTIONS_COLUMN_ID } from '@/monitoring/shared/constants'
+import { actionsColumnWidth } from '@/monitoring/shared/customActions'
 import { columnId } from '@/monitoring/shared/tableState/schema'
 
 export interface HostColumnOptions {
@@ -149,6 +150,9 @@ export function buildHostColumns({
   showIndicators = false
 }: HostColumnOptions): ColumnDef<HostEntry>[] {
   const { _t } = usei18n()
+
+  // A host row has one inline button, the link into Setup.
+  const actionsWidth = actionsColumnWidth(1)
 
   const stateFilter: CheckboxListWithFlagsFilter<'state', 'is_flapping' | 'stale'> = {
     type: 'checkbox-list-with-flags',
@@ -541,8 +545,8 @@ export function buildHostColumns({
       id: ACTIONS_COLUMN_ID,
       header: _t('Actions'),
       enableSorting: false,
-      minSize: ACTIONS_HEADER_WIDTH,
-      maxSize: ACTIONS_HEADER_WIDTH,
+      minSize: actionsWidth,
+      maxSize: actionsWidth,
       meta: { justify: 'right' }
     } satisfies ColumnDef<HostEntry>
   ]

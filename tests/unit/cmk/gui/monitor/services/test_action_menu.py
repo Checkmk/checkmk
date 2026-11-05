@@ -18,6 +18,9 @@ from cmk.gui.type_defs import Row
 from cmk.gui.views.icon.entries import IconEntry
 from cmk.web.utils.icons import DynamicIconName, DynamicIconWithEmblem, IconNames, StaticIcon
 
+# The icons are resolved in the theme of the request, which needs its icon files.
+pytestmark = pytest.mark.usefixtures("request_context", "icon_files")
+
 
 @pytest.fixture(name="passthrough_macros")
 def _passthrough_macros(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -84,6 +87,32 @@ def test_serialize_entry_keeps_the_ident() -> None:
     item = _serialize_entry(entry, {})
     assert item is not None
     assert item.ident == "wato"
+
+
+@pytest.mark.usefixtures("passthrough_macros")
+def test_serialize_entry_carries_the_path_of_an_uploaded_icon() -> None:
+    entry = IconEntry(
+        sort_index=30,
+        icon_name=DynamicIconName("logo"),
+        title="Uploaded",
+        url_spec="https://example.com",
+    )
+    item = _serialize_entry(entry, {})
+    assert item is not None
+    assert (item.icon_name, item.icon_path) == ("logo", "images/icons/logo.png")
+
+
+@pytest.mark.usefixtures("passthrough_macros")
+def test_serialize_entry_omits_the_path_of_a_built_in_icon() -> None:
+    entry = IconEntry(
+        sort_index=30,
+        icon_name=DynamicIconName("wiki"),
+        title="Built in",
+        url_spec="https://example.com",
+    )
+    item = _serialize_entry(entry, {})
+    assert item is not None
+    assert (item.icon_name, item.icon_path) == ("wiki", ApiOmitted())
 
 
 @pytest.mark.usefixtures("passthrough_macros")

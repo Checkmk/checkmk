@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 
 <script lang="ts">
+import type { DynamicIcon } from 'cmk-shared-typing/typescript/icon'
 import type {
   CmkMultitoneIconColor,
   CmkMultitoneIconNames,
@@ -18,11 +19,13 @@ export interface MultitoneActionIcon {
   emblem?: IconEmblems | undefined
 }
 
-// A bare name is a themed bitmap icon, an object is an inline multitone SVG.
-export type ActionIcon = SimpleIcons | MultitoneActionIcon
+// A bare name is a themed bitmap icon, an object is an inline multitone SVG or, for a custom
+// action, an icon the user picked.
+export type ActionIcon = SimpleIcons | MultitoneActionIcon | DynamicIcon
 </script>
 
 <script setup lang="ts">
+import CmkDynamicIcon from 'cmk-ui-library/components/CmkIcon/CmkDynamicIcon/CmkDynamicIcon.vue'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon/CmkIcon.vue'
 import CmkIconEmblem from 'cmk-ui-library/components/CmkIcon/CmkIconEmblem.vue'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
@@ -32,8 +35,9 @@ withDefaults(defineProps<{ icon: ActionIcon; size?: IconSizeNames }>(), { size: 
 </script>
 
 <template>
-  <CmkIconEmblem v-if="typeof icon !== 'string'" :emblem="icon.emblem">
+  <CmkIcon v-if="typeof icon === 'string'" :name="icon" :size="size" />
+  <CmkDynamicIcon v-else-if="'type' in icon" :spec="icon" :size="size" />
+  <CmkIconEmblem v-else :emblem="icon.emblem">
     <CmkMultitoneIcon :name="icon.name" :primary-color="icon.color" :size="size" />
   </CmkIconEmblem>
-  <CmkIcon v-else :name="icon" :size="size" />
 </template>

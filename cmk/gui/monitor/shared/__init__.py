@@ -6,7 +6,7 @@
 """The filter tree of the hosts listing and its Livestatus rendering, shared by every monitoring
 page that filters by host, e.g. the services listing by the host of each service."""
 
-from ._custom_icons import any_custom_icons, custom_icons, CustomIcon, IconSource
+from ._custom_icons import any_custom_icons, custom_icons, CustomIcon, IconSource, resolved_icon
 from ._host_filters import (
     AndNode,
     BooleanCondition,
@@ -51,6 +51,7 @@ __all__ = [
     "ConditionNode",
     "custom_icons",
     "CustomIcon",
+    "resolved_icon",
     "FILTER_NODE",
     "FilterNode",
     "FolderCondition",

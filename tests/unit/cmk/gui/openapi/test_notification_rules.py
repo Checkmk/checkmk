@@ -2498,7 +2498,6 @@ def test_defaults_are_loaded(plugin: dict[str, Any], clients: ClientRegistry) ->
     )
 
 
-@pytest.mark.xfail(strict=True, reason="crash group 4795")
 def test_create_rule_rejects_built_in_plugin_with_custom_parameters(
     clients: ClientRegistry,
 ) -> None:

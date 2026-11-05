@@ -46,6 +46,7 @@ from cmk.utils import paths
 from cmk.utils.notify_types import (
     CaseStateStr,
     EmailBodyElementsType,
+    get_builtin_plugin_names,
     GroupbyType,
     IlertPriorityType,
     IncidentStateStr,
@@ -2472,7 +2473,7 @@ class CustomPlugin(BaseSchema):
     plugin_name = fields.String(
         required=True,
         description="The custom plug-in name",
-        example="mail",
+        example="my_custom_script",
     )
 
     @pre_load
@@ -2488,6 +2489,13 @@ class CustomPlugin(BaseSchema):
     ) -> dict[str, Any]:
         dif: dict[str, Any] = {k: v for k, v in original_data.items() if k not in data}
         plugin_name = data["plugin_name"]
+
+        if plugin_name in get_builtin_plugin_names():
+            raise ValidationError(
+                f"{plugin_name} is a built-in plug-in, use the option "
+                f"'{PluginOptions.WITH_PARAMS.value}'",
+                field_name="plugin_name",
+            )
 
         if plugin_name not in [n for (n, _) in user_script_choices("notifications")]:
             raise ValidationError(f"{plugin_name} does not exist")

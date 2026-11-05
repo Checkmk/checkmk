@@ -116,6 +116,18 @@ class ImmutableTable:
         ]
 
 
+def _have_equal_nodes(
+    left: Mapping[SDNodeName, ImmutableTree | MutableTree],
+    right: Mapping[SDNodeName, ImmutableTree | MutableTree],
+) -> bool:
+    compared_node_names = DictKeys.compare(left=set(left), right=set(right))
+    return (
+        not any(left[n] for n in compared_node_names.only_left)
+        and not any(right[n] for n in compared_node_names.only_right)
+        and all(left[n] == right[n] for n in compared_node_names.both)
+    )
+
+
 @dataclass(frozen=True, kw_only=True)
 class ImmutableTree:
     path: SDPath = ()
@@ -134,22 +146,10 @@ class ImmutableTree:
         if not isinstance(other, MutableTree | ImmutableTree):
             return NotImplemented
 
-        if self.attributes != other.attributes or self.table != other.table:
-            return False
-
-        compared_node_names = DictKeys.compare(
-            left=set(self.nodes_by_name),
-            right=set(other.nodes_by_name),
-        )
-
-        if any(self.nodes_by_name[n] for n in compared_node_names.only_left):
-            return False
-
-        if any(other.nodes_by_name[n] for n in compared_node_names.only_right):
-            return False
-
-        return all(
-            self.nodes_by_name[n] == other.nodes_by_name[n] for n in compared_node_names.both
+        return (
+            self.attributes == other.attributes
+            and self.table == other.table
+            and _have_equal_nodes(self.nodes_by_name, other.nodes_by_name)
         )
 
     def get_attribute(self, path: SDPath, key: SDKey) -> SDValue:
@@ -365,22 +365,10 @@ class MutableTree:
         if not isinstance(other, MutableTree | ImmutableTree):
             return NotImplemented
 
-        if self.attributes != other.attributes or self.table != other.table:
-            return False
-
-        compared_node_names = DictKeys.compare(
-            left=set(self.nodes_by_name),
-            right=set(other.nodes_by_name),
-        )
-
-        if any(self.nodes_by_name[n] for n in compared_node_names.only_left):
-            return False
-
-        if any(other.nodes_by_name[n] for n in compared_node_names.only_right):
-            return False
-
-        return all(
-            self.nodes_by_name[n] == other.nodes_by_name[n] for n in compared_node_names.both
+        return (
+            self.attributes == other.attributes
+            and self.table == other.table
+            and _have_equal_nodes(self.nodes_by_name, other.nodes_by_name)
         )
 
     def add(

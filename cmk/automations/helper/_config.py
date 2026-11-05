@@ -31,6 +31,7 @@ class Schedule(BaseModel, frozen=True):
 
 class WatcherConfig(BaseModel, frozen=True):
     schedules: Sequence[Schedule]
+    check_interval: float  # seconds between the checks that watchdog's threads still run
 
 
 class ReloaderConfig(BaseModel, frozen=True):
@@ -105,7 +106,8 @@ def default_config(
                     recursive=False,
                     patterns=["**/stored_passwords"],
                 ),
-            ]
+            ],
+            check_interval=10.0,
         ),
         reloader_config=ReloaderConfig(
             active=True,

@@ -31,7 +31,7 @@ LOGGER = logging.getLogger(__name__)
 @contextlib.contextmanager
 def run(config: WatcherConfig, cache: Cache) -> Generator[None]:
     LOGGER.info("[watcher] Initializing")
-    with _marking_unwatched_changes(cache):
+    with _logging_errors_ending_threads(), _marking_unwatched_changes(cache):
         try:
             observer = _start_observer(config, cache)
         except Exception as e:
@@ -41,7 +41,8 @@ def run(config: WatcherConfig, cache: Cache) -> Generator[None]:
             raise
         LOGGER.info("[watcher] Operational")
         try:
-            yield
+            with _checking_threads(observer, cache, interval=config.check_interval):
+                yield
         finally:
             LOGGER.info("[watcher] Shutting down")
             try:
@@ -54,6 +55,31 @@ def run(config: WatcherConfig, cache: Cache) -> Generator[None]:
                 LOGGER.exception("[watcher] Error while shutting down")
                 raise
             LOGGER.info("[watcher] Shutdown complete")
+
+
+@contextlib.contextmanager
+def _logging_errors_ending_threads() -> Generator[None]:
+    """Log an error that ends a thread of this process while in this context, with its traceback.
+
+    Python writes it to stderr otherwise, which daemonize() discards, so it would be lost why one of
+    watchdog's threads has ended.
+    """
+    previous = threading.excepthook
+
+    def log_error(args: threading.ExceptHookArgs) -> None:
+        if args.exc_type is SystemExit:  # ignored by Python's own hook, too
+            return
+        LOGGER.error(
+            "Thread %(thread)s has ended with an error",
+            {"thread": "<unknown>" if args.thread is None else args.thread.name},
+            exc_info=args.exc_value,
+        )
+
+    threading.excepthook = log_error
+    try:
+        yield
+    finally:
+        threading.excepthook = previous
 
 
 class _Running:
@@ -100,6 +126,64 @@ def _store_changes_unwatched(cache: Cache, *, unwatched: bool) -> None:
     # not only CacheError: an error in the thread marking would be lost
     except Exception:
         LOGGER.exception("[watcher] Error while storing whether changes may go unnoticed")
+
+
+@contextlib.contextmanager
+def _checking_threads(observer: BaseObserver, cache: Cache, *, interval: float) -> Generator[None]:
+    """Check every *interval* seconds that watchdog's threads still run, while in this context."""
+    stopped = threading.Event()
+    checker = threading.Thread(
+        target=_check_threads,
+        args=(observer, cache, interval, stopped),
+        name="watcher-check",
+        daemon=True,
+    )
+    checker.start()
+    try:
+        yield
+    finally:
+        stopped.set()
+        checker.join()
+
+
+def _check_threads(
+    observer: BaseObserver, cache: Cache, interval: float, stopped: threading.Event
+) -> None:
+    """Mark in *cache* that changes may go unnoticed once one of watchdog's threads has ended, so
+    that each automation reloads the configuration until the automation helper restarts.
+
+    The patched watchdog marks errors in its callbacks itself. This covers any other end of a
+    thread, e.g. of the reader thread by an error while reading the events, or of the emitter of a
+    scheduled directory when that directory itself is deleted. Restarting the observer would not
+    revive the reader thread, which all watches of the process share.
+
+    It stores the mark again at every check, as the site's Redis keeps nothing on disk: a restart
+    of Redis alone would forget it.
+    """
+    ended: str | None = None
+    while not stopped.wait(interval):
+        if ended is None and (ended := _ended_thread(observer)) is not None:
+            LOGGER.error(
+                "[watcher] watchdog's %(thread)s has ended, so each automation reloads the"
+                " configuration until the automation helper restarts",
+                {"thread": ended},
+            )
+        if ended is not None:
+            _store_changes_unwatched(cache, unwatched=True)
+
+
+def _ended_thread(observer: BaseObserver) -> str | None:
+    """The first of watchdog's threads found to have ended, if any."""
+    from watchdog.observers.inotify_c import InotifyFD
+
+    if not InotifyFD.get_instance().is_alive():
+        return "reader thread"
+    if not observer.is_alive():
+        return "dispatcher thread"
+    for emitter in observer.emitters:
+        if not emitter.is_alive():
+            return f"emitter thread for {emitter.watch.path}"
+    return None
 
 
 def _start_observer(config: WatcherConfig, cache: Cache) -> BaseObserver:

@@ -552,6 +552,93 @@ def test_every_automation_requires_a_reload_after_watchdog_fails_to_handle_an_ev
     assert cache.reload_required(last_reload=time.time())
 
 
+def test_every_automation_requires_a_reload_after_watchdog_stopped_reading(
+    tmp_path: Path, cache: Cache, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from watchdog.observers.inotify_c import InotifyFD
+
+    watcher_config = _checked_often(_site_watcher_config(tmp_path))
+    reader = Mock(spec=InotifyFD)
+    reader.is_alive.return_value = False
+
+    with run_watcher(watcher_config, cache):
+        # watchdog's process-wide reader is a boundary we cannot inject.
+        monkeypatch.setattr(InotifyFD, "_instance", reader)
+        _wait_for_reload_required(cache)
+
+    assert cache.reload_required(last_reload=time.time())
+
+
+def test_every_automation_requires_a_reload_after_a_watched_directory_was_deleted(
+    tmp_path: Path, cache: Cache
+) -> None:
+    watcher_config = _checked_often(_site_watcher_config(tmp_path))
+
+    with run_watcher(watcher_config, cache):
+        (tmp_path / "var" / "check_mk" / "autochecks").rmdir()
+        _wait_for_reload_required(cache)
+
+    assert cache.reload_required(last_reload=time.time())
+
+
+def test_ended_watchdog_thread_is_logged(
+    caplog: pytest.LogCaptureFixture, tmp_path: Path, cache: Cache
+) -> None:
+    watcher_config = _checked_often(_site_watcher_config(tmp_path))
+    autochecks = tmp_path / "var" / "check_mk" / "autochecks"
+
+    with run_watcher(watcher_config, cache):
+        autochecks.rmdir()
+        _wait_for_log(caplog, "has ended")
+
+    assert f"[watcher] watchdog's emitter thread for {autochecks} has ended," in caplog.text
+
+
+def test_every_automation_requires_a_reload_after_redis_restarted_once_a_watchdog_thread_ended(
+    tmp_path: Path,
+) -> None:
+    watcher_config = _checked_often(_site_watcher_config(tmp_path))
+    client = FakeRedis()
+    cache = Cache.setup(client=client)
+
+    with run_watcher(watcher_config, cache):
+        (tmp_path / "var" / "check_mk" / "autochecks").rmdir()
+        _wait_for_reload_required(cache)
+        client.flushall()  # as a restart of the site's Redis does, which keeps nothing on disk
+        _wait_for_reload_required(cache)
+
+    assert cache.reload_required(last_reload=time.time())
+
+
+def test_error_ending_a_thread_is_logged_while_the_watcher_runs(
+    caplog: pytest.LogCaptureFixture, tmp_path: Path, cache: Cache
+) -> None:
+    watcher_config = _site_watcher_config(tmp_path)
+    error = OSError(errno.EIO, "simulated read error")
+
+    with run_watcher(watcher_config, cache):
+        _run_thread_failing_with(error, name="failing")
+
+    assert ("Thread failing has ended with an error", error) in [
+        (record.getMessage(), record.exc_info and record.exc_info[1]) for record in caplog.records
+    ]
+
+
+def test_error_ending_a_thread_is_left_to_the_previous_hook_after_the_watcher_stopped(
+    tmp_path: Path, cache: Cache, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    watcher_config = _site_watcher_config(tmp_path)
+    error = OSError(errno.EIO, "simulated read error")
+    handled: list[BaseException | None] = []
+    monkeypatch.setattr(threading, "excepthook", lambda args: handled.append(args.exc_value))
+
+    with run_watcher(watcher_config, cache):
+        pass
+    _run_thread_failing_with(error, name="failing")
+
+    assert handled == [error]
+
+
 def test_change_is_detected_while_redis_hangs_on_marking_changes_unwatched(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -690,6 +777,22 @@ def _site_watcher_config(omd_root: Path) -> WatcherConfig:
     for schedule in config.schedules:
         schedule.path.mkdir(parents=True, exist_ok=True)
     return config
+
+
+def _checked_often(config: WatcherConfig) -> WatcherConfig:
+    """*config*, but checking watchdog's threads often enough for a test."""
+    return config.model_copy(update={"check_interval": 0.01})
+
+
+def _run_thread_failing_with(error: Exception, *, name: str) -> None:
+    """Run a thread named *name* that ends with *error*, until it has ended."""
+
+    def fail() -> None:
+        raise error
+
+    thread = threading.Thread(target=fail, name=name)
+    thread.start()
+    thread.join()
 
 
 def _use_up_inotify_watches(

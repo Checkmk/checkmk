@@ -154,7 +154,7 @@ def _make_test_client(
             worker_log=dev_null,
             num_workers=0,
         ),
-        watcher_config=WatcherConfig(schedules=[]),
+        watcher_config=WatcherConfig(schedules=[], check_interval=10.0),
         reloader_config=reloader_config,
     )
     return TestClient(

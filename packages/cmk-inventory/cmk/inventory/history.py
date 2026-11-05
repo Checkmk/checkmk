@@ -23,12 +23,12 @@ from .paths import (
     tree_mtime,
     TreePath,
 )
+from .raw_store import load_tree_from_tree_path
 from .serialization import (
     deserialize_delta_cache_entry,
     SDRawDeltaCacheEntry,
     serialize_delta_cache_entry,
 )
-from .store import load_tree_from_tree_path
 from .trees import ImmutableTree
 
 

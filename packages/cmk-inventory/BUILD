@@ -68,6 +68,7 @@ py_library(
     name = "store",
     srcs = [
         "cmk/inventory/history.py",
+        "cmk/inventory/raw_store.py",
         "cmk/inventory/store.py",
     ],
     imports = ["."],

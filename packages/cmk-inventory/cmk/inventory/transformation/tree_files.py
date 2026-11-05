@@ -16,8 +16,8 @@ from typing import TypedDict
 import cmk.ccc.store
 from cmk.ccc.hostaddress import HostName
 from cmk.inventory.paths import collect_files, InventoryPaths, TreePath, TreePathGz
+from cmk.inventory.raw_store import save_raw_tree, save_raw_tree_gz
 from cmk.inventory.serialization import parse_from_gzipped
-from cmk.inventory.store import save_raw_tree, save_raw_tree_gz
 
 _KILO = 1000
 _NUMBER_OF_BUNDLES = 200

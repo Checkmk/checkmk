@@ -188,7 +188,7 @@ from cmk.discover_plugins import (
     PluginGroup,
     plugins_local_path,
 )
-from cmk.inventory import store as inventory_store
+from cmk.inventory import raw_store as inventory_raw_store
 from cmk.inventory.paths import InventoryPaths
 from cmk.licensing.handler import LicensingHandler
 from cmk.monitoring_config.internal import MonitoringConfigBuilder
@@ -1661,7 +1661,7 @@ class AutomationRenameHosts:
 
         # HW/SW Inventory
         actions.extend(
-            inventory_store.rename(
+            inventory_raw_store.rename(
                 cmk.utils.paths.omd_root,
                 old_host_name=HostName(oldname),
                 new_host_name=HostName(newname),

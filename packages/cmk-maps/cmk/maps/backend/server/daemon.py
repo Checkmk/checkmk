@@ -106,6 +106,7 @@ def main() -> None:
                 http=StreamClosingProtocol,
                 timeout_graceful_shutdown=_SHUTDOWN_TIMEOUT,
                 log_config=None,
+                server_header=False,
             )
     except Exception:
         logger.exception("The Maps daemon stopped with an error")

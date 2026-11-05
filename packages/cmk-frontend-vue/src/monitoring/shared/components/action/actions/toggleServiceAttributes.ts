@@ -8,15 +8,14 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
 import type { ModifiableAttribute } from '@/monitoring/shared/api/actions/modifiedAttributes'
 import type { ServiceRef } from '@/monitoring/shared/api/types'
-import { type ToggleAttributeValues } from '@/monitoring/shared/components/action/actions/ToggleAttributeForm.vue'
-import { createToggleAttributeAction } from '@/monitoring/shared/components/action/actions/toggleAttribute'
-import type { MonitoringAction } from '@/monitoring/shared/components/action/types'
+import {
+  type ToggleActions,
+  createToggleAttributeAction,
+  toggleActionsByCommand
+} from '@/monitoring/shared/components/action/actions/toggleAttribute'
 
 /** Enabling and disabling notifications, active and passive checks of the selected services. */
-export function useToggleServiceAttributesActions(): MonitoringAction<
-  ToggleAttributeValues,
-  ServiceRef
->[] {
+export function useToggleServiceAttributesActions(): ToggleActions<ServiceRef> {
   const { _t, _tn } = usei18n()
   const successMessages: Record<
     ModifiableAttribute,
@@ -60,7 +59,7 @@ export function useToggleServiceAttributesActions(): MonitoringAction<
           )
   }
 
-  return (Object.keys(successMessages) as ModifiableAttribute[]).map((attribute) =>
+  return toggleActionsByCommand((attribute) =>
     createToggleAttributeAction<ServiceRef>({
       attribute,
       toggle: (api, targets, toggled, enabled) => api.toggleServices(targets, toggled, enabled),

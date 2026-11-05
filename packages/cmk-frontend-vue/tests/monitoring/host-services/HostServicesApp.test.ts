@@ -5,7 +5,6 @@
  */
 import userEvent from '@testing-library/user-event'
 import { fireEvent, render, screen, within } from '@testing-library/vue'
-import type { MonitoringActionIdent } from 'cmk-shared-typing/typescript/monitoring/action_ident'
 import type {
   MonitoringAction,
   MonitoringHostServicesApp
@@ -1320,25 +1319,20 @@ describe('export', () => {
   })
 })
 
-test('offers the further service commands in the "More" menu, the missing ones disabled', async () => {
+test('offers the further service commands in the "More" menu', async () => {
   const user = userEvent.setup()
   mockServices([makeApiEntry()])
   renderApp({
     actions: [
       { ident: 'acknowledge', title: 'Acknowledge problems', icon: 'ack' },
-      // A command outside the shared types, as a newer backend could send, that no page implements.
-      {
-        ident: 'not_implemented' as MonitoringActionIdent,
-        title: 'Not implemented',
-        icon: 'archive'
-      }
+      { ident: 'add_comment', title: 'Add comment', icon: 'comment' }
     ]
   })
 
   await user.click(await screen.findByRole('checkbox', { name: 'Select all rows' }))
   await user.click(screen.getByRole('button', { name: 'More' }))
 
-  expect(await screen.findByRole('menuitem', { name: 'Not implemented' })).toHaveAttribute(
+  expect(await screen.findByRole('menuitem', { name: 'Add comment' })).not.toHaveAttribute(
     'data-disabled'
   )
   expect(screen.queryByRole('menuitem', { name: 'Acknowledge problems' })).not.toBeInTheDocument()

@@ -36,7 +36,11 @@ beforeEach(() => {
 
 test('offers notifications, active and passive checks as the legacy commands', () => {
   expect(
-    useToggleHostAttributesActions().map((action) => [action.id, action.title, action.formProps])
+    Object.values(useToggleHostAttributesActions()).map((action) => [
+      action.id,
+      action.title,
+      action.formProps
+    ])
   ).toEqual([
     ['notifications', 'Enable / Disable notifications', { label: 'Notifications' }],
     ['toggle_active_checks', 'Enable / Disable active checks', { label: 'Active checks' }],
@@ -45,15 +49,15 @@ test('offers notifications, active and passive checks as the legacy commands', (
 })
 
 test('enables by default', () => {
-  const [notifications] = useToggleHostAttributesActions()
+  const { notifications } = useToggleHostAttributesActions()
 
-  expect(notifications!.defaultValues()).toEqual({ enabled: true })
+  expect(notifications.defaultValues()).toEqual({ enabled: true })
 })
 
 test('says notifications were disabled for the selected host', async () => {
-  const [notifications] = useToggleHostAttributesActions()
+  const { notifications } = useToggleHostAttributesActions()
 
-  expect(await notifications!.perform([HOST], { enabled: false })).toEqual({
+  expect(await notifications.perform([HOST], { enabled: false })).toEqual({
     variant: 'success',
     message: 'Disabled notifications for the selected host'
   })
@@ -65,7 +69,7 @@ test('says notifications were disabled for the selected host', async () => {
 
 test('says passive checks were enabled for the selected services', async () => {
   mockModified(2)
-  const passiveChecks = useToggleServiceAttributesActions()[2]!
+  const passiveChecks = useToggleServiceAttributesActions().toggle_passive_checks
 
   expect(
     await passiveChecks.perform(
@@ -84,7 +88,7 @@ test('reports a refused change as an error', async () => {
     error: {},
     response: new Response(null, { status: 403 })
   } as never)
-  const activeChecks = useToggleHostAttributesActions()[1]!
+  const activeChecks = useToggleHostAttributesActions().toggle_active_checks
 
   expect(await activeChecks.perform([HOST], { enabled: false })).toMatchObject({
     variant: 'error',

@@ -3,30 +3,43 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { HostActionIdent } from 'cmk-shared-typing/typescript/monitoring/action_ident'
 import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon/types'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
 import { HostActionMenuApi } from '@/monitoring/shared/api/hostActionMenu'
 import type { HostRef } from '@/monitoring/shared/api/types'
-import { acknowledgeDefaults } from '@/monitoring/shared/components/action/actions/acknowledge'
+import {
+  ACK_ACTION_ID,
+  acknowledgeDefaults
+} from '@/monitoring/shared/components/action/actions/acknowledge'
 import { useAcknowledgeHostsAction } from '@/monitoring/shared/components/action/actions/acknowledgeHosts'
+import { COMMENT_ACTION_ID } from '@/monitoring/shared/components/action/actions/comment'
 import { useCommentHostsAction } from '@/monitoring/shared/components/action/actions/commentHosts'
+import { CUSTOM_NOTIFICATION_ACTION_ID } from '@/monitoring/shared/components/action/actions/customNotification'
+import { FAKE_CHECK_RESULT_ACTION_ID } from '@/monitoring/shared/components/action/actions/fakeCheckResult'
 import { useFakeHostCheckResultsAction } from '@/monitoring/shared/components/action/actions/fakeHostCheckResults'
 import { useNotifyHostsAction } from '@/monitoring/shared/components/action/actions/notifyHosts'
+import {
+  REMOVE_ACK_ACTION_ID,
+  REMOVE_DOWNTIMES_ACTION_ID
+} from '@/monitoring/shared/components/action/actions/remove'
 import { useRemoveHostAcknowledgementsAction } from '@/monitoring/shared/components/action/actions/removeHostAcknowledgements'
 import { useRemoveHostDowntimesAction } from '@/monitoring/shared/components/action/actions/removeHostDowntimes'
 import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/actions/reschedule'
 import { useRescheduleHostsAction } from '@/monitoring/shared/components/action/actions/rescheduleHosts'
 import { useResetHostModifiedAttributesAction } from '@/monitoring/shared/components/action/actions/resetHostModifiedAttributes'
-import { downtimePresets } from '@/monitoring/shared/components/action/actions/scheduleDowntime'
+import { RESET_MODIFIED_ATTRIBUTES_ACTION_ID } from '@/monitoring/shared/components/action/actions/resetModifiedAttributes'
+import {
+  SCHEDULE_DOWNTIME_ACTION_ID,
+  downtimePresets
+} from '@/monitoring/shared/components/action/actions/scheduleDowntime'
 import { useScheduleHostDowntimeAction } from '@/monitoring/shared/components/action/actions/scheduleHostDowntime'
 import { useToggleHostAttributesActions } from '@/monitoring/shared/components/action/actions/toggleHostAttributes'
 import { barActions } from '@/monitoring/shared/components/action/barActions'
 import type { MonitoringCommandsPayload } from '@/monitoring/shared/components/action/commandsPayload'
-import {
-  type MonitoringActionRegistry,
-  createActionRegistry
-} from '@/monitoring/shared/components/action/registry'
+import type { MonitoringActionRegistry } from '@/monitoring/shared/components/action/registry'
+import type { MonitoringAction } from '@/monitoring/shared/components/action/types'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 
 /** What a page sends about the host commands and the Setup links it offers. */
@@ -92,30 +105,31 @@ export function useHostActions(payload: HostActionsPayload): HostActions {
     ]
   }
 
-  const registry = createActionRegistry([
-    useAcknowledgeHostsAction(
+  // Keyed by every host command the backend may offer, so the type check finds one left out.
+  const registry: MonitoringActionRegistry = {
+    [ACK_ACTION_ID]: useAcknowledgeHostsAction(
       {
         presetsUrl: payload.acknowledge_presets_url ?? null,
         notificationRulesUrl: payload.notification_rules_url ?? null
       },
       acknowledgeDefaults(payload.acknowledge_defaults)
     ),
-    useRescheduleHostsAction(),
-    useScheduleHostDowntimeAction(
+    [RESCHEDULE_ACTION_ID]: useRescheduleHostsAction(),
+    [SCHEDULE_DOWNTIME_ACTION_ID]: useScheduleHostDowntimeAction(
       payload.downtime_recurrences ?? [],
       downtimePresets(payload.downtime_presets),
       payload.downtime_presets_url ?? null
     ),
-    useCommentHostsAction(),
-    useNotifyHostsAction(),
-    useFakeHostCheckResultsAction(),
-    useRemoveHostAcknowledgementsAction(),
-    useRemoveHostDowntimesAction(),
+    [COMMENT_ACTION_ID]: useCommentHostsAction(),
+    [CUSTOM_NOTIFICATION_ACTION_ID]: useNotifyHostsAction(),
+    [FAKE_CHECK_RESULT_ACTION_ID]: useFakeHostCheckResultsAction(),
+    [REMOVE_ACK_ACTION_ID]: useRemoveHostAcknowledgementsAction(),
+    [REMOVE_DOWNTIMES_ACTION_ID]: useRemoveHostDowntimesAction(),
     ...useToggleHostAttributesActions(),
-    useResetHostModifiedAttributesAction()
-  ])
+    [RESET_MODIFIED_ATTRIBUTES_ACTION_ID]: useResetHostModifiedAttributesAction()
+  } satisfies Record<HostActionIdent, MonitoringAction<unknown, HostRef>>
 
-  const { bar, more } = barActions(permitted, registry)
+  const { bar, more } = barActions(permitted)
 
   return { permittedActions: bar, moreActions: more, rowActions, registry, loadActionMenu }
 }

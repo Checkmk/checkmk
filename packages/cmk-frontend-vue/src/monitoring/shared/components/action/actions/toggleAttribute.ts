@@ -23,6 +23,25 @@ export const TOGGLE_ACTION_IDS = {
   passive_checks: 'toggle_passive_checks'
 } as const satisfies Readonly<Record<ModifiableAttribute, MonitoringActionIdent>>
 
+/** The toggle actions of a kind of target, keyed by the command each one runs. */
+export type ToggleActions<Target> = {
+  [A in ModifiableAttribute as (typeof TOGGLE_ACTION_IDS)[A]]: MonitoringAction<
+    ToggleAttributeValues,
+    Target
+  >
+}
+
+/** Keys the action for each attribute by its command, the way a page's registry holds it. */
+export function toggleActionsByCommand<Target>(
+  toggleAction: (attribute: ModifiableAttribute) => MonitoringAction<ToggleAttributeValues, Target>
+): ToggleActions<Target> {
+  return {
+    [TOGGLE_ACTION_IDS.notifications]: toggleAction('notifications'),
+    [TOGGLE_ACTION_IDS.active_checks]: toggleAction('active_checks'),
+    [TOGGLE_ACTION_IDS.passive_checks]: toggleAction('passive_checks')
+  }
+}
+
 export interface ToggleKindConfig<Target> {
   attribute: ModifiableAttribute
   toggle(

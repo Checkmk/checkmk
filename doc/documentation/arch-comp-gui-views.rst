@@ -158,7 +158,8 @@ Interfaces
   ``SERVICE_SUPPORTED_ACTIONS`` straight from the generated enums, and the
   frontend types its actions with them. Every ID needs a command in the
   command registry for its object type and an action in the frontend; a
-  unit test fails if the backend has no command for one.
+  unit test fails if the backend has no command for one, and the type check
+  of the frontend fails if it has no action for one.
 
 Coexistence
 -----------

@@ -41,24 +41,14 @@ test('offers neither rescheduling nor a selection without permitted actions', ()
   expect(actions.mayActOnSelection).toBe(false)
 })
 
-test('offers the commands implemented for services', () => {
+test('keys every service command by its own ID', () => {
   const actions = useServiceActions({})
 
-  expect(Object.keys(actions.registry)).toEqual([
-    'acknowledge',
-    'reschedule',
-    'schedule_downtimes',
-    'add_comment',
-    'send_custom_notification',
-    'fake_check_result',
-    'remove_acknowledgments',
-    'remove_downtimes_hosts_services',
-    'notifications',
-    'toggle_active_checks',
-    'toggle_passive_checks',
-    'clear_modified_attributes',
-    'ec_archive_events_of_host'
-  ])
+  const keyedByAnotherId = Object.entries(actions.registry).filter(
+    ([ident, action]) => action.id !== ident
+  )
+
+  expect(keyedByAnotherId).toEqual([])
 })
 
 test('lists the action-menu links of a service as menu entries', async () => {

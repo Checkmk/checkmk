@@ -66,6 +66,8 @@ def show_metric_info_v1(
 ) -> MapsMetricInfoResponse:
     """Resolve raw perfdata against the metric registry"""
     user.need_permission("maps.use")
+    if len(body.perf_data) > MAX_PERF_DATA_LENGTH:
+        return _EMPTY
     # Graph groups are opt-in: the graph evaluation identifies the object, and
     # only graph widgets / the graph picker need them.
     context = None

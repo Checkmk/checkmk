@@ -20,6 +20,7 @@ from cmk.maps.rest_api.internal.models.request_models import (
     MAX_PERF_DATA_LENGTH,
 )
 from cmk.maps.rest_api.internal.models.response_models import MapsMetricInfoResponse
+from cmk.maps.shared.map_payload import MAP_OBJECTS_MAX
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
 
@@ -125,6 +126,25 @@ def test_bulk_metric_info_resolves_oversized_perf_data_to_nothing(
         {"perfometer": None, "metrics": {}},
         clients.Maps.resolve_metric_info(load).json,
     ]
+
+
+def test_oversized_perf_data_resolves_to_nothing(clients: ClientRegistry) -> None:
+    load = "load1=0.5;;;0; "
+    oversized = load * (MAX_PERF_DATA_LENGTH // len(load) + 1)
+
+    resp = clients.Maps.resolve_metric_info(
+        {"perf_data": oversized, "check_command": "check_mk-cpu_loads"}
+    )
+
+    assert resp.json == {"perfometer": None, "metrics": {}}
+
+
+def test_aggregation_states_refuse_more_aggregations_than_a_map_holds(
+    clients: ClientRegistry,
+) -> None:
+    clients.Maps.get_aggregation_states(
+        [f"a{i}" for i in range(MAP_OBJECTS_MAX + 1)], expect_ok=False
+    ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
 def test_bulk_metric_info_isolates_an_entry_that_fails() -> None:

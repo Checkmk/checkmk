@@ -28,6 +28,7 @@ from cmk.maps.gui._commands import MapCommandVerb
 from cmk.maps.gui._images import MAX_BACKGROUND_BYTES, MAX_ICON_BYTES
 from cmk.maps.shared.map_links import CACHED_MAP_REFS_MAX, LINKED_MAPS_MAX
 from cmk.maps.shared.map_name import MAP_NAME_MAX_LENGTH, MAP_NAME_PATTERN
+from cmk.maps.shared.map_payload import MAP_OBJECTS_MAX
 
 # A site the caller may see. ``should_be_authorized`` rather than ``should_exist``
 # so a restricted user cannot enumerate the sites they may not see (werks 18993,
@@ -119,7 +120,8 @@ class MapsAggregationTreeRequest:
 
 @api_model
 class MapsAggregationStatesRequest:
-    aggregation_ids: list[str] = api_field(
+    # The client asks for the aggregations of one map's objects.
+    aggregation_ids: Annotated[list[str], Field(max_length=MAP_OBJECTS_MAX)] = api_field(
         description="Resolved BI aggregation names to compute the state for.",
         example=["Host heute"],
     )

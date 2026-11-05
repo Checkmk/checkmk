@@ -16,6 +16,7 @@ from tests.testlib.system.host_under_test import HostUnderTest
 logger = logging.getLogger(__name__)
 
 CONTROLLER_UNIT = "cmk-agent-ctl-daemon.service"
+INSTALLER_SOCKET_UNIT = "cmk-agent-ctl-installer.socket"
 AGENT_SOCKET_UNIT = "check-mk-agent.socket"
 AGENT_SOCKET = PurePosixPath("/run/check-mk-agent.socket")
 

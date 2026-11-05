@@ -103,7 +103,8 @@ test.each(['community', 'ultimatemt'] as const)(
       'num_services_crit',
       'num_services_unknown',
       'num_services_pending',
-      'graphs_link'
+      'graphs_link',
+      'custom_icons'
     ])
   }
 )
@@ -514,7 +515,7 @@ test('posts the shown columns and the listing to the instant PDF report', async 
 
   document.dispatchEvent(new CustomEvent(EXPORT_EVENT, { detail: 'pdf' }))
 
-  expect(posted[0]!.cols).toBe('state,modes,name,address')
+  expect(posted[0]!.cols).toBe('state,name,address')
   expect(JSON.parse(posted[0]!.body!)).toMatchObject({ sort: ['name:asc'] })
 })
 

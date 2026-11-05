@@ -34,7 +34,7 @@ export function buildAllServicesColumnPinning({
   includeSelect
 }: HostServicesColumnOptions): ColumnPinningState {
   return {
-    left: [...(includeSelect ? ['select'] : []), 'state', MODE_COLUMN_ID, 'name'],
+    left: [...(includeSelect ? ['select'] : []), 'state', 'name'],
     right: [ACTIONS_COLUMN_ID]
   }
 }
@@ -87,11 +87,12 @@ export function useAllServicesColumns({
       ? { ...column, meta: { ...column.meta, hidden: true } }
       : column
   )
-  const summaryIndex = serviceColumns.findIndex((column) => columnId(column) === 'summary')
+  // The host and site follow the summary and its indicators.
+  const indicatorIndex = serviceColumns.findIndex((column) => columnId(column) === MODE_COLUMN_ID)
   return [
-    ...serviceColumns.slice(0, summaryIndex + 1),
+    ...serviceColumns.slice(0, indicatorIndex + 1),
     hostColumn,
     siteColumn,
-    ...serviceColumns.slice(summaryIndex + 1)
+    ...serviceColumns.slice(indicatorIndex + 1)
   ]
 }

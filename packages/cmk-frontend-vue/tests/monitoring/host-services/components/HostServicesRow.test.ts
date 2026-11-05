@@ -675,6 +675,7 @@ test('renders the host and site of a row that names its host after the summary',
   expect(cells.slice(cells.indexOf('name'), cells.indexOf('site_id') + 1)).toEqual([
     'name',
     'summary',
+    'modes',
     'host_name',
     'site_id'
   ])

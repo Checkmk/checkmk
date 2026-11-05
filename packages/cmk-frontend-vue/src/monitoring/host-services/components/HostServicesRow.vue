@@ -22,13 +22,17 @@ import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/acti
 import ActionsCell, { type CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import CheckboxCell from '@/monitoring/shared/components/cell/CheckboxCell.vue'
 import HostCell from '@/monitoring/shared/components/cell/HostCell.vue'
-import IconCell from '@/monitoring/shared/components/cell/IconCell.vue'
+import IndicatorCell from '@/monitoring/shared/components/cell/IndicatorCell.vue'
 import LabelCell from '@/monitoring/shared/components/cell/LabelCell.vue'
 import PerfometerCell from '@/monitoring/shared/components/cell/PerfometerCell.vue'
 import StateCell from '@/monitoring/shared/components/cell/StateCell.vue'
 import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
 import GraphsLink from '@/monitoring/shared/components/graphs/GraphsLink.vue'
-import { MODE_COLUMN_ID, MODE_ICONS_PER_ROW } from '@/monitoring/shared/components/modeColumn'
+import {
+  MODE_COLUMN_ID,
+  MODE_ICONS_PER_ROW,
+  indicatorIcons
+} from '@/monitoring/shared/components/modeColumn'
 import { ACTIONS_COLUMN_ID } from '@/monitoring/shared/constants'
 import { formatDisplayTimestamp } from '@/monitoring/shared/formatTimestamp'
 import {
@@ -179,12 +183,6 @@ const serviceGroups = computed(() => toNameItems(props.row.groups ?? []))
     :flapping="row.is_flapping"
     :stale="row.stale"
   />
-  <IconCell
-    v-if="hasColumn(MODE_COLUMN_ID)"
-    :column-id="MODE_COLUMN_ID"
-    :icons="row.modes ?? []"
-    :max-per-row="MODE_ICONS_PER_ROW"
-  />
   <StringCell
     v-if="hasColumn('name')"
     column-id="name"
@@ -208,6 +206,13 @@ const serviceGroups = computed(() => toNameItems(props.row.groups ?? []))
     :value="row.summary"
     state-markers
     title-only-when-cut
+  />
+  <IndicatorCell
+    v-if="hasColumn(MODE_COLUMN_ID)"
+    :column-id="MODE_COLUMN_ID"
+    :modes="row.modes ?? []"
+    :icons="indicatorIcons(row)"
+    :max="MODE_ICONS_PER_ROW"
   />
   <template v-if="host">
     <HostCell

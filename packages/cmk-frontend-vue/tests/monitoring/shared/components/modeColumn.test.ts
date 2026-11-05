@@ -13,6 +13,7 @@ import {
   MODE_COLUMN_MAX_WIDTH,
   MODE_COLUMN_MIN_WIDTH,
   MODE_ICONS_PER_ROW,
+  indicatorIcons,
   sizeModeColumn,
   useModeColumnWidth
 } from '@/monitoring/shared/components/modeColumn'
@@ -81,4 +82,15 @@ test('sizing leaves the other columns alone', () => {
   ]
 
   expect(sizeModeColumn(columns, MODE_COLUMN_MIN_WIDTH)[0]).toStrictEqual(columns[0])
+})
+
+test('custom icons with an action are left to the actions column', () => {
+  const icons = indicatorIcons({
+    custom_icons: [
+      { ident: 'plain', title: 'Plain', icon_name: 'wiki' },
+      { ident: 'action', title: 'Action', icon_name: 'wiki', url: 'https://wiki' }
+    ]
+  })
+
+  expect(icons.map((icon) => icon.ident)).toEqual(['plain'])
 })

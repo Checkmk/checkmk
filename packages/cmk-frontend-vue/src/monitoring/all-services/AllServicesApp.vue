@@ -94,7 +94,8 @@ const aiExplain = props.ai_explain ?? false
 
 const columns = useAllServicesColumns({
   includeSelect: serviceListing.mayActOnSelection,
-  sites: props.sites
+  sites: props.sites,
+  showIndicators: props.show_indicators ?? false
 })
 const columnPinning = buildAllServicesColumnPinning({
   includeSelect: serviceListing.mayActOnSelection

@@ -17,12 +17,13 @@ const SITES = [
 ]
 
 describe('useAllServicesColumns', () => {
-  test('puts the host and its site right after the summary', () => {
+  test('puts the host and its site right after the summary and its indicators', () => {
     const ids = useAllServicesColumns({ includeSelect: false, sites: SITES }).map(columnId)
 
     expect(ids.slice(ids.indexOf('name'), ids.indexOf('site_id') + 1)).toEqual([
       'name',
       'summary',
+      'modes',
       'host_name',
       'site_id'
     ])
@@ -60,7 +61,6 @@ describe('useAllServicesColumns', () => {
     expect(buildAllServicesColumnPinning({ includeSelect: true }).left).toEqual([
       'select',
       'state',
-      'modes',
       'name'
     ])
   })

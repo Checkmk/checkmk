@@ -131,7 +131,8 @@ const aiExplain = props.ai_explain ?? false
 
 const columns = useHostServicesColumns({
   includeSelect: serviceListing.mayActOnSelection,
-  inlineActions: rowActionButtons.length + (aiExplain ? 1 : 0)
+  inlineActions: rowActionButtons.length + (aiExplain ? 1 : 0),
+  showIndicators: props.show_indicators ?? false
 })
 const columnPinning = buildHostServicesColumnPinning({
   includeSelect: serviceListing.mayActOnSelection

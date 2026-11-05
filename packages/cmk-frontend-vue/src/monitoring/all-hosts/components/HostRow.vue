@@ -13,13 +13,17 @@ import { COLUMN_LAYOUT_KEY } from '@/monitoring/shared/components/MonitoringTabl
 import ActionsCell, { type CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import type { CellLink } from '@/monitoring/shared/components/cell/BaseCell.vue'
 import CheckboxCell from '@/monitoring/shared/components/cell/CheckboxCell.vue'
-import IconCell from '@/monitoring/shared/components/cell/IconCell.vue'
+import IndicatorCell from '@/monitoring/shared/components/cell/IndicatorCell.vue'
 import LabelCell from '@/monitoring/shared/components/cell/LabelCell.vue'
 import NumberCell from '@/monitoring/shared/components/cell/NumberCell.vue'
 import StateCell from '@/monitoring/shared/components/cell/StateCell.vue'
 import StringCell from '@/monitoring/shared/components/cell/StringCell.vue'
 import GraphsLink from '@/monitoring/shared/components/graphs/GraphsLink.vue'
-import { MODE_COLUMN_ID, MODE_ICONS_PER_ROW } from '@/monitoring/shared/components/modeColumn'
+import {
+  MODE_COLUMN_ID,
+  MODE_ICONS_PER_ROW,
+  indicatorIcons
+} from '@/monitoring/shared/components/modeColumn'
 import { ACTIONS_COLUMN_ID } from '@/monitoring/shared/constants'
 import { formatDisplayTimestamp } from '@/monitoring/shared/formatTimestamp'
 import { hostServicesPageUrl } from '@/monitoring/shared/hostServicesPageUrl'
@@ -139,12 +143,6 @@ const lastStateChange = computed(() =>
     :flapping="row.is_flapping"
     :stale="row.stale"
   />
-  <IconCell
-    v-if="hasColumn(MODE_COLUMN_ID)"
-    :column-id="MODE_COLUMN_ID"
-    :icons="row.modes ?? []"
-    :max-per-row="MODE_ICONS_PER_ROW"
-  />
   <StringCell
     v-if="hasColumn('name')"
     column-id="name"
@@ -174,6 +172,13 @@ const lastStateChange = computed(() =>
     column-id="address"
     :value="row.address"
     :title-only-when-cut="true"
+  />
+  <IndicatorCell
+    v-if="hasColumn(MODE_COLUMN_ID)"
+    :column-id="MODE_COLUMN_ID"
+    :modes="row.modes ?? []"
+    :icons="indicatorIcons(row)"
+    :max="MODE_ICONS_PER_ROW"
   />
   <StringCell v-if="hasColumn('folder')" column-id="folder" :value="row.folder" />
   <StringCell v-if="hasColumn('site_id')" column-id="site_id" :value="row.site_id" />

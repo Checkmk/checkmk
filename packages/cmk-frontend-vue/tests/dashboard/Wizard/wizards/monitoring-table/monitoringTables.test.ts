@@ -17,9 +17,9 @@ describe('defaultMonitoringTableContent', () => {
       table: 'hosts',
       columns: [
         'state',
-        'modes',
         'name',
         'address',
+        'modes',
         'num_services',
         'num_services_ok',
         'num_services_warn',

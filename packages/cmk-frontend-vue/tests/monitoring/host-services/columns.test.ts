@@ -65,10 +65,11 @@ afterEach(() => {
   vi.useRealTimers()
 })
 
-test('the labels, tags, contact and group columns start hidden', () => {
+test('the indicator, labels, tags, contact and group columns start hidden', () => {
   const service = makeService()
 
   expect(service.defaultColumnVisibility).toEqual({
+    modes: false,
     labels: false,
     tags: false,
     contacts: false,
@@ -88,8 +89,11 @@ test('a column the user shows asks for its field again', () => {
   ).toEqual(['contact_groups'])
 })
 
-test('every row asks for its graphs link, whichever columns are shown', () => {
-  expect(requestedServiceFields(makeService().columnVisibility.value)).toEqual(['graphs_link'])
+test('every row asks for its graphs link and custom icons, whichever columns are shown', () => {
+  expect(requestedServiceFields(makeService().columnVisibility.value)).toEqual([
+    'graphs_link',
+    'custom_icons'
+  ])
 })
 
 test('the state column reads as the one in the hosts listing', () => {
@@ -161,11 +165,7 @@ test('the mode column filter no longer offers flapping, which moved to the state
 
 test('the select column is neither rendered nor pinned when no action is permitted', () => {
   expect(serviceColumns(false).map(columnId)).not.toContain('select')
-  expect(buildHostServicesColumnPinning({ includeSelect: false }).left).toEqual([
-    'state',
-    'modes',
-    'name'
-  ])
+  expect(buildHostServicesColumnPinning({ includeSelect: false }).left).toEqual(['state', 'name'])
 })
 
 test('the hidden columns stay on offer in the picker', () => {

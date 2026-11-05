@@ -23,7 +23,7 @@ import type {
   DateTimeRangeFilter,
   StringInputFilter
 } from '@/monitoring/shared/components/filter/types'
-import { MODE_COLUMN_ID } from '@/monitoring/shared/components/modeColumn'
+import { indicatorColumn } from '@/monitoring/shared/components/modeColumn'
 import { ACTIONS_COLUMN_ID, ACTIONS_HEADER_WIDTH } from '@/monitoring/shared/constants'
 import { columnId } from '@/monitoring/shared/tableState/schema'
 
@@ -48,8 +48,14 @@ export function visibleServiceFields(visibility: VisibilityState): ServiceOption
   return OPTIONAL_FIELD_COLUMNS.filter((field) => visibility[field] !== false)
 }
 
-/** Fields every row reads, whichever columns the table shows, for the graphs beside its name. */
-const ROW_FIELDS = ['graphs_link'] as const satisfies readonly ServiceOptionalField[]
+/**
+ * Fields every row reads, whichever columns the table shows: the graphs beside its name, and its
+ * custom icons, which also carry actions.
+ */
+const ROW_FIELDS = [
+  'graphs_link',
+  'custom_icons'
+] as const satisfies readonly ServiceOptionalField[]
 
 /**
  * The service optional fields the table asks the API for: those of the columns it shows, and
@@ -73,6 +79,8 @@ export interface HostServicesColumnOptions {
    */
   includeSelect: boolean
   inlineActions?: number
+  /** Whether to show the Indicator column by default; set when any service has custom icons. */
+  showIndicators?: boolean
 }
 
 /**
@@ -83,7 +91,7 @@ export function buildHostServicesColumnPinning({
   includeSelect
 }: HostServicesColumnOptions): ColumnPinningState {
   return {
-    left: [...(includeSelect ? ['select'] : []), 'state', MODE_COLUMN_ID, 'name'],
+    left: [...(includeSelect ? ['select'] : []), 'state', 'name'],
     right: [ACTIONS_COLUMN_ID]
   }
 }
@@ -105,7 +113,8 @@ type ServiceModeField =
 
 export function useHostServicesColumns<Row extends HostServiceEntry = HostServiceEntry>({
   includeSelect,
-  inlineActions = 0
+  inlineActions = 0,
+  showIndicators = false
 }: HostServicesColumnOptions): ColumnDef<Row>[] {
   const { _t } = usei18n()
 
@@ -232,12 +241,6 @@ export function useHostServicesColumns<Row extends HostServiceEntry = HostServic
       meta: { filter: stateFilter }
     },
     {
-      accessorKey: MODE_COLUMN_ID,
-      header: _t('Mode'),
-      enableSorting: false,
-      meta: { justify: 'left', filter: modesFilter }
-    },
-    {
       accessorKey: 'name',
       header: _t('Service'),
       sortDescFirst: false,
@@ -254,6 +257,7 @@ export function useHostServicesColumns<Row extends HostServiceEntry = HostServic
       // Grows faster than the service name, since extra width saves a long summary more lines.
       meta: { filter: summaryFilter, grow: 6 }
     },
+    indicatorColumn<Row, ServiceModeField>(modesFilter, showIndicators),
     {
       accessorKey: 'last_state_change',
       header: _t('State age'),

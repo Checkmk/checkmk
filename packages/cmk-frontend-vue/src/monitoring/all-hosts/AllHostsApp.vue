@@ -98,7 +98,8 @@ const columns = buildHostColumns({
   includeSelect: mayActOnSelection,
   showCustomer,
   sites: props.sites,
-  showRelations: props.show_relations ?? false
+  showRelations: props.show_relations ?? false,
+  showIndicators: props.show_indicators ?? false
 })
 const columnPinning = buildHostColumnPinning({ includeSelect: mayActOnSelection })
 
@@ -150,8 +151,13 @@ const hostService = new HostService(hostApi, getKeyShortcutServiceInstance(), {
       }
     }
   ],
-  // Every row offers its graphs from the host name, whichever columns are shown.
-  rowFields: ['graphs_link', ...(rowActionButtons.length > 0 ? (['setup_access'] as const) : [])]
+  // Every row offers its graphs from the host name and its custom actions, whichever columns are
+  // shown.
+  rowFields: [
+    'graphs_link',
+    'custom_icons',
+    ...(rowActionButtons.length > 0 ? (['setup_access'] as const) : [])
+  ]
 })
 
 const modeColumnSize = useModeColumnWidth(() => hostService.items.value)

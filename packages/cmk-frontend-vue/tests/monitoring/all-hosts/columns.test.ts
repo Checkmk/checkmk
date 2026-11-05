@@ -88,6 +88,7 @@ test('the optional columns are offered in the picker, abbreviated headers spelle
   expect(offered).toEqual([
     { id: 'alias', label: 'Host alias' },
     { id: 'address', label: 'IP address' },
+    { id: 'modes', label: 'Indicator' },
     { id: 'folder', label: 'Folder' },
     { id: 'site_id', label: 'Site' },
     { id: 'last_check', label: 'Check age' },
@@ -111,6 +112,7 @@ test('most offered columns are shown on first use, but alias, folder, the timest
 
   expect(service.defaultColumnVisibility).toEqual({
     alias: false,
+    modes: false,
     folder: false,
     site_id: false,
     last_check: false,
@@ -128,10 +130,10 @@ test('the fixed columns keep their position around the optional ones', () => {
   expect(columnIds()).toEqual([
     'select',
     'state',
-    'modes',
     'name',
     'alias',
     'address',
+    'modes',
     'folder',
     'site_id',
     'last_check',
@@ -152,11 +154,11 @@ test('the fixed columns keep their position around the optional ones', () => {
 })
 
 test('every hideable column asks for its field while nothing is hidden', () => {
-  // site_id is always present in every API response, so it is not an optional
-  // field and does not appear in visibleHostFields.
+  // site_id and the modes are always present in every API response, so they are not optional
+  // fields and do not appear in visibleHostFields.
   const optionalFieldColumns = makeService({ showRelations: true })
     .toggleableColumns.map((column) => column.id)
-    .filter((id) => id !== 'site_id')
+    .filter((id) => id !== 'site_id' && id !== 'modes')
 
   expect(requestedFields({}, { showRelations: true })).toEqual(optionalFieldColumns)
 })
@@ -191,7 +193,11 @@ test('the actions column is rendered and pinned for a user permitted no command'
 
 test('the select column is neither rendered nor pinned when no action is permitted', () => {
   expect(columnIds({ includeSelect: false })).not.toContain('select')
-  expect(buildHostColumnPinning({ includeSelect: false }).left).toEqual(['state', 'modes', 'name'])
+  expect(buildHostColumnPinning({ includeSelect: false }).left).toEqual(['state', 'name'])
+})
+
+test('the indicator column is shown on first use when any host has custom icons', () => {
+  expect(makeService({ showIndicators: true }).defaultColumnVisibility).not.toHaveProperty('modes')
 })
 
 test('the site column filter offers the configured sites as options', () => {

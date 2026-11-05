@@ -44,6 +44,8 @@ export type ServiceMode = components['schemas']['ServiceModeInfo']
 
 export type EventIcon = components['schemas']['EventIcon']
 
+export type CustomIcon = components['schemas']['CustomIcon']
+
 /** An icon rendered with its title as tooltip, hyperlinked only when it carries a link. */
 export interface MonitoringIcon {
   icon_name: string

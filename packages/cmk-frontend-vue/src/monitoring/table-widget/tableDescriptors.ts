@@ -122,10 +122,10 @@ export class HostsTableDescriptor extends MonitoringTableDescriptor<
 
   readonly columnIds = [
     'state',
-    'modes',
     'name',
     'alias',
     'address',
+    'modes',
     'folder',
     'site_id',
     'last_check',
@@ -148,7 +148,9 @@ export class HostsTableDescriptor extends MonitoringTableDescriptor<
       includeSelect: false,
       showCustomer: true,
       sites: [],
-      showRelations: false
+      showRelations: false,
+      // A dashboard is configured by hand, so it shows the indicators unless deselected there.
+      showIndicators: true
     })
   }
 
@@ -184,9 +186,9 @@ export class ServicesTableDescriptor extends MonitoringTableDescriptor<
 
   readonly columnIds = [
     'state',
-    'modes',
     'name',
     'summary',
+    'modes',
     'host_name',
     'last_state_change',
     'last_check',
@@ -199,7 +201,7 @@ export class ServicesTableDescriptor extends MonitoringTableDescriptor<
   ]
 
   protected allColumns(): ColumnDef<ServiceEntry>[] {
-    return useAllServicesColumns({ sites: [], includeSelect: false })
+    return useAllServicesColumns({ sites: [], includeSelect: false, showIndicators: true })
   }
 
   override columns(ids: readonly string[]): ColumnDef<ServiceEntry>[] {

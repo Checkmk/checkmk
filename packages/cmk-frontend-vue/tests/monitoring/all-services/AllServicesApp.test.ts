@@ -128,7 +128,7 @@ test('lists the services of every host sorted by site, host and service by defau
       body: {
         limit: 1000,
         sort: ['site_id:asc', 'host_name:asc', 'name:asc'],
-        fields: ['graphs_link']
+        fields: ['graphs_link', 'custom_icons']
       }
     })
   )
@@ -169,7 +169,7 @@ test('requests the services by host name alone on a click of the Host header', a
   expect(servicesPost).toHaveBeenLastCalledWith(
     SERVICES_PATH,
     expect.objectContaining({
-      body: { limit: 1000, sort: ['host_name:asc'], fields: ['graphs_link'] }
+      body: { limit: 1000, sort: ['host_name:asc'], fields: ['graphs_link', 'custom_icons'] }
     })
   )
 })

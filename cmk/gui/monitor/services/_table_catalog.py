@@ -13,9 +13,9 @@ from ._models import ALL_SERVICES_DEFAULT_SORT, ServiceOptionalField, ServiceSor
 
 _HOST_SERVICES_COLUMNS: Final[dict[str, TableColumn[ServiceOptionalField]]] = {
     "state": TableColumn(_l("State")),
-    "modes": TableColumn(_l("Mode")),
     "name": TableColumn(_l("Service")),
     "summary": TableColumn(_l("Summary")),
+    "modes": TableColumn(_l("Indicator")),
     "last_state_change": TableColumn(_l("Last state change")),
     "last_check": TableColumn(_l("Last check")),
     "labels": TableColumn(_l("Labels"), ServiceOptionalField.LABELS),

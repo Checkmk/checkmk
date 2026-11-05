@@ -22,7 +22,7 @@ import type {
   NumericFilter,
   StringInputFilter
 } from '@/monitoring/shared/components/filter/types'
-import { MODE_COLUMN_ID } from '@/monitoring/shared/components/modeColumn'
+import { MODE_COLUMN_ID, indicatorColumn } from '@/monitoring/shared/components/modeColumn'
 import { ACTIONS_COLUMN_ID, ACTIONS_HEADER_WIDTH } from '@/monitoring/shared/constants'
 import { columnId } from '@/monitoring/shared/tableState/schema'
 
@@ -41,6 +41,8 @@ export interface HostColumnOptions {
   sites: readonly Site[]
   /** Whether to offer the relations column; set when any visible host carries a relation. */
   showRelations: boolean
+  /** Whether to show the Indicator column by default; set when any host has custom icons. */
+  showIndicators?: boolean
 }
 
 /**
@@ -74,9 +76,9 @@ const OPTIONAL_FIELD_COLUMNS = [
  * The customer is one of them because the API derives it from the site, which every host
  * carries anyway.
  */
-const ALWAYS_FETCHED_HIDEABLE_COLUMNS = ['site_id', 'customer'] as const
+const ALWAYS_FETCHED_HIDEABLE_COLUMNS = ['site_id', 'customer', MODE_COLUMN_ID] as const
 
-/** The boolean host fields the Mode column renders as icons and offers as filters. */
+/** The boolean host fields the Indicator column renders as icons and offers as filters. */
 type HostModeField =
   | 'in_downtime'
   | 'acknowledged'
@@ -127,7 +129,7 @@ export function buildHostColumnPinning({
   includeSelect
 }: Pick<HostColumnOptions, 'includeSelect'>): ColumnPinningState {
   return {
-    left: [...(includeSelect ? ['select'] : []), 'state', MODE_COLUMN_ID, 'name'],
+    left: [...(includeSelect ? ['select'] : []), 'state', 'name'],
     right: [ACTIONS_COLUMN_ID]
   }
 }
@@ -143,7 +145,8 @@ export function buildHostColumns({
   includeSelect,
   showCustomer,
   sites,
-  showRelations
+  showRelations,
+  showIndicators = false
 }: HostColumnOptions): ColumnDef<HostEntry>[] {
   const { _t } = usei18n()
 
@@ -324,12 +327,6 @@ export function buildHostColumns({
       meta: { filter: stateFilter }
     },
     {
-      accessorKey: MODE_COLUMN_ID,
-      header: _t('Mode'),
-      enableSorting: false,
-      meta: { justify: 'left', filter: modesFilter }
-    },
-    {
       accessorKey: 'name',
       header: _t('Host'),
       sortDescFirst: false,
@@ -367,6 +364,7 @@ export function buildHostColumns({
       maxSize: 300,
       meta: { filter: addressFilter }
     },
+    indicatorColumn<HostEntry, HostModeField>(modesFilter, showIndicators),
     {
       accessorKey: 'folder',
       header: _t('Folder'),

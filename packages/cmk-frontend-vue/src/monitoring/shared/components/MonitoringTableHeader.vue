@@ -175,7 +175,8 @@ function toggleSort(table: Table<T>, column: Column<T, unknown>, event: MouseEve
 }
 
 function columnLabel(column: Column<T, unknown>): string {
-  return column.columnDef.header?.toString() ?? column.id
+  const header = column.columnDef.header
+  return typeof header === 'string' ? header : (column.columnDef.meta?.pickerLabel ?? column.id)
 }
 
 function filterButtonLabel(column: Column<T, unknown>, isActive: boolean): string {

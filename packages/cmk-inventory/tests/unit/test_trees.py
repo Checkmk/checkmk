@@ -8,6 +8,7 @@ from collections.abc import Iterable, Mapping, Sequence
 import pytest
 
 from cmk.ccc.hostaddress import HostName
+from cmk.inventory.serialization import deserialize_tree
 from cmk.inventory.trees import (
     compare_sd_values,
     ImmutableTree,
@@ -399,3 +400,57 @@ def test_compare_sd_values(val_a: SDValue, val_b: SDValue, result: int) -> None:
 def test_compare_sd_values_rejects_mixed_types() -> None:
     with pytest.raises(TypeError):
         compare_sd_values("a", 1)
+
+
+_NODE_PATH = (SDNodeName("node"),)
+
+
+def _tree_with_attribute_and_row() -> MutableTree:
+    tree = MutableTree()
+    tree.add(
+        path=_NODE_PATH,
+        pairs=[{SDKey("key"): "value"}],
+        key_columns=[SDKey("id")],
+        rows=[{SDKey("id"): "1"}],
+    )
+    return tree
+
+
+def test_mutable_tree_get_attribute() -> None:
+    assert _tree_with_attribute_and_row().get_attribute(_NODE_PATH, SDKey("key")) == "value"
+
+
+def test_mutable_tree_get_attribute_of_an_unknown_path() -> None:
+    assert (
+        _tree_with_attribute_and_row().get_attribute((SDNodeName("other"),), SDKey("key")) is None
+    )
+
+
+def test_mutable_tree_has_table() -> None:
+    assert _tree_with_attribute_and_row().has_table(_NODE_PATH)
+
+
+def test_mutable_tree_has_no_table_without_rows() -> None:
+    tree = MutableTree()
+    tree.add(path=_NODE_PATH, pairs=[{SDKey("key"): "value"}])
+    assert not tree.has_table(_NODE_PATH)
+
+
+def test_rows_with_retentions() -> None:
+    tree = deserialize_tree(
+        {
+            "Attributes": {},
+            "Table": {
+                "KeyColumns": ["id"],
+                "Rows": [{"id": "1", "value": "x"}],
+                "Retentions": {("1",): {"value": (1, 2, 3)}},
+            },
+            "Nodes": {},
+        }
+    )
+    assert tree.table.rows_with_retentions == [
+        {
+            SDKey("id"): ("1", None),
+            SDKey("value"): ("x", RetentionInterval(1, 2, 3, "current")),
+        }
+    ]

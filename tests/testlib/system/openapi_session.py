@@ -2895,9 +2895,24 @@ class AlertsAPI(BaseAPI):
     def get(self, configuration_name: str) -> dict[str, Any] | None:
         """The alert named `configuration_name`, or None if there is none.
 
-        Looked up in the collection: the REST API has no endpoint for a single alert.
+        Raises if the alert exists but cannot be read; the REST API answers 404 for that too.
         """
-        return next((alert for alert in self.get_all() if alert["id"] == configuration_name), None)
+        response = self.session.get(
+            f"objects/telemetry_alert/{configuration_name}", api_version=APIVersion.UNSTABLE
+        )
+        if (
+            response.status_code == HTTPStatus.NOT_FOUND
+            and response.json().get("title") == "Alert not found"
+        ):
+            return None
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        parsed = response.json()
+        if not isinstance(parsed, dict):
+            raise UnexpectedResponse(
+                response.status_code, f"expected a JSON object, got {parsed!r}"
+            )
+        return parsed
 
     def delete(self, configuration_name: str, missing_ok: bool = False) -> None:
         response = self.session.delete(

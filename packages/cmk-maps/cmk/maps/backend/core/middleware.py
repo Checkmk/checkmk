@@ -9,7 +9,7 @@ inspection can short-circuit without materialising a Request object.
 """
 
 import zlib
-from typing import override
+from typing import Final, override
 
 from starlette.datastructures import Headers
 from starlette.middleware.gzip import GZipMiddleware, GZipResponder
@@ -20,6 +20,14 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 # therefore safe everywhere.
 _CONTENT_SECURITY_POLICY = (
     b"default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; sandbox"
+)
+
+SECURITY_HEADERS: Final = (
+    (b"x-content-type-options", b"nosniff"),
+    (b"x-frame-options", b"SAMEORIGIN"),
+    (b"referrer-policy", b"no-referrer"),
+    (b"x-xss-protection", b"1; mode=block"),
+    (b"content-security-policy", _CONTENT_SECURITY_POLICY),
 )
 
 
@@ -36,14 +44,7 @@ class SecurityHeadersMiddleware:
 
         async def send_with_headers(message: Message) -> None:
             if message["type"] == "http.response.start":
-                headers = list(message.get("headers", []))
-                headers += [
-                    (b"x-content-type-options", b"nosniff"),
-                    (b"x-frame-options", b"SAMEORIGIN"),
-                    (b"referrer-policy", b"no-referrer"),
-                    (b"x-xss-protection", b"1; mode=block"),
-                    (b"content-security-policy", _CONTENT_SECURITY_POLICY),
-                ]
+                headers = [*message.get("headers", []), *SECURITY_HEADERS]
                 message = {**message, "headers": headers}
             await send(message)
 

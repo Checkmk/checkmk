@@ -37,6 +37,7 @@ from cmk.maps.backend.app import create_app
 from cmk.maps.backend.core.auth import GuiAuth
 from cmk.maps.backend.core.config import settings
 from cmk.maps.backend.core.crash import create_crash_report
+from cmk.maps.backend.core.middleware import SECURITY_HEADERS
 from cmk.maps.backend.core.version import APP_VERSION
 from cmk.maps.backend.services import connection_service, settings_service
 from cmk.maps.backend.services.state_service import list_connection_ids
@@ -142,9 +143,11 @@ async def _handle_unhandled_exception(request: Request, exc: Exception) -> JSONR
         {"path": request.url.path, "crash_id": crash_id},
         exc_info=exc,
     )
+    # Starlette answers it outside every middleware.
     return JSONResponse(
         status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
         content={"detail": "Internal server error", "crash_id": crash_id},
+        headers={name.decode(): value.decode() for name, value in SECURITY_HEADERS},
     )
 
 

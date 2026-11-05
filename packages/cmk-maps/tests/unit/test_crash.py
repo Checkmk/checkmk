@@ -55,3 +55,16 @@ def test_unhandled_request_exception_returns_500_with_crash_id(
         "detail": "Internal server error",
         "crash_id": "deadbeef-crash-id",
     }
+
+
+def test_a_crash_is_answered_with_the_security_headers(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(main, "create_crash_report", lambda _omd_root: "deadbeef-crash-id")
+
+    @main.app.get("/test-crash-headers")
+    async def _boom() -> None:
+        raise RuntimeError("boom")
+
+    response = TestClient(main.app, raise_server_exceptions=False).get("/test-crash-headers")
+
+    assert response.headers["x-content-type-options"] == "nosniff"
+    assert response.headers["content-security-policy"].startswith("default-src 'none'")

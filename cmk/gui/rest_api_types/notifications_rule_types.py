@@ -2216,6 +2216,9 @@ class CheckboxNotificationBulking:
         if data is None:
             return cls()
 
+        if isinstance(data, dict):
+            data = ("always", data)
+
         when_to_bulk, bulk_params = data
         subject_for_bulk_notifications = CheckboxWithStrValue.from_mk_file_format(
             bulk_params.get("bulk_subject")

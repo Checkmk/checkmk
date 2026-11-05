@@ -14,13 +14,16 @@ from tests.unit.cmk.web_test_app import SetConfig
 from cmk.ccc import store
 
 from cmk.utils.notify_types import (
+    AlwaysBulkParameters,
     NotificationParameterGeneralInfos,
     NotificationParameterID,
     NotificationParameterItem,
     NotificationParameterSpecs,
+    NotifyBulkType,
     NotifyPluginParamsDict,
 )
 
+from cmk.gui.rest_api_types.notifications_rule_types import CheckboxNotificationBulking
 from cmk.gui.watolib.notifications import NotificationParameterConfigFile
 
 
@@ -53,3 +56,11 @@ def test_notification_parameter_config_file_preserves_parameter_order(
         target_path, key="notification_parameter", default={}, lock=False
     )
     assert list(loaded["mail"].keys()) == ids
+
+
+def test_bulk_settings_in_old_format_are_read_as_always_bulk() -> None:
+    bulk_params = AlwaysBulkParameters(interval=60, count=1000, groupby=["host"])
+
+    assert CheckboxNotificationBulking.from_mk_file_format(
+        cast(NotifyBulkType, bulk_params)
+    ) == CheckboxNotificationBulking.from_mk_file_format(("always", bulk_params))

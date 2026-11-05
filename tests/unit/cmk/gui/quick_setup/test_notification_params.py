@@ -304,7 +304,6 @@ def test_do_not_match_ec_alerts_keeps_excluding_ec_alerts_after_a_round_trip(
     ]
 
 
-@pytest.mark.xfail(strict=True, reason="crash group 4387")
 def test_bulk_settings_in_old_format_are_read_as_always_bulk() -> None:
     bulk = AlwaysBulkParameters(interval=60, count=1000, groupby=["host"])
     rule = _do_not_match_ec_alerts_event_rule()

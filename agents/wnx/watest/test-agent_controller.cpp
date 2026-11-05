@@ -13,6 +13,7 @@
 #include "watest/test_tools.h"
 #include "wnx/agent_controller.h"
 #include "wnx/cfg.h"
+#include "wnx/upgrade.h"
 
 using namespace std::chrono_literals;
 namespace fs = std::filesystem;
@@ -184,9 +185,10 @@ public:
     }
 
     /// The file as the bakery writes it, with `activated` set to `value`.
+    /// The text-mode stream in activatedBy() turns `\n` into the bakery's CRLF.
     static std::string baked(std::string_view value) {
         return fmt::format(
-            "# Controlled by Check_MK Agent Bakery.\n"
+            "{}\n"
             "# This file is managed via WATO, do not edit manually or you\n"
             "# lose your changes next time when you update the agent.\n"
             "\n"
@@ -196,7 +198,7 @@ public:
             R"(    "-----BEGIN CERTIFICATE-----\nabc==\n-----END CERTIFICATE-----\n",)"
             "\n"
             "]\n",
-            value);
+            cfg::upgrade::kBakeryMarker, value);
     }
 
 private:

@@ -17,6 +17,10 @@
 #include "logger.h"
 
 namespace cma::cfg::upgrade {
+/// The first line of AGENT_FILE_HEADER in
+/// packages/cmk-plugin-apis/cmk/bakery/internal/_constants.py, which the
+/// bakery writes at the top of the configuration files it generates. Test
+/// fixtures that stand for a baked file take their header from here.
 constexpr std::string_view kBakeryMarker =
     "# Created by Check_MK Agent Bakery.";
 

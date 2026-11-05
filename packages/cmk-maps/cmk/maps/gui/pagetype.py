@@ -16,9 +16,12 @@ route stays the SPA mount.
 from collections.abc import Mapping
 from typing import override, Self
 
-from cmk.gui import pagetypes
+from cmk.gui import pagetypes, site_config
+from cmk.gui.config import active_config
 from cmk.gui.i18n import _
+from cmk.gui.logged_in import user
 from cmk.gui.pages import PageHandler
+from cmk.gui.utils.roles import UserPermissions
 from cmk.maps.gui.builtin_maps import builtin_map_configs
 from cmk.maps.gui.type_defs import MapConfig, MapModel
 from cmk.web.utils.icons import DynamicIcon, IconNames, StaticIcon
@@ -63,6 +66,20 @@ class MapPage(pagetypes.Overridable[MapConfig]):
     @classmethod
     def type_name(cls) -> str:
         return "map"
+
+    @override
+    def is_published_to_me(self, user_permissions: UserPermissions) -> bool:
+        # The base class reads every share list as contact groups; a map shared
+        # to sites reaches the users of those sites, as a shared view does.
+        public = self.config.public
+        if not (isinstance(public, tuple) and public[0] == "sites"):
+            return super().is_published_to_me(user_permissions)
+        if not user.may(f"general.see_user_{self.type_name()}"):
+            return False
+        sites = user.authorized_sites(site_config.enabled_sites(active_config.sites))
+        return bool(set(sites).intersection(public[1])) and self.publish_is_allowed(
+            user_permissions
+        )
 
     @override
     @classmethod

@@ -10,6 +10,7 @@ import cmk.utils.paths
 from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
 from cmk.gui.permissions import all_permissions
+from cmk.gui.session_context import UserContext
 from cmk.gui.utils.roles import UserPermissions
 from cmk.maps.gui import store
 from cmk.maps.gui.pagetype import MapPage
@@ -193,3 +194,18 @@ def test_writing_a_map_touches_only_the_owners_file(
         for path in cmk.utils.paths.profile_dir.rglob("user_maps.mk")
     }
     assert written == {f"{with_admin_login}/user_maps.mk", f"{other}/user_maps.mk"}
+
+
+def test_a_map_shared_to_sites_reaches_the_users_of_those_sites(
+    request_context: None,  # noqa: ARG001
+    with_admin_login: UserId,
+    with_user: tuple[UserId, str],
+) -> None:
+    [site_id] = active_config.sites
+    store.save_map(with_admin_login, "local", _map("local"), public=("sites", [site_id]))
+    store.save_map(with_admin_login, "remote", _map("remote"), public=("sites", ["remote"]))
+
+    with UserContext(with_user[0], _user_permissions()):
+        shared = {page.name() for page in store.get_permitted_maps() if not page.is_builtin()}
+
+    assert shared == {"local"}

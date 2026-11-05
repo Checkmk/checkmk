@@ -3,10 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import gzip
 import json
 import os
-from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
@@ -15,19 +13,13 @@ import cmk.ccc.store
 from cmk.ccc.hostaddress import HostName
 from cmk.inventory.serialization import (
     deserialize_tree,
+    make_meta,
+    parse_from_gzipped,
+    SDMetaAndRawTree,
     SDRawTree,
     serialize_tree,
 )
-from cmk.inventory.store import (
-    InventoryStore,
-    make_meta,
-    parse_from_gzipped,
-    parse_from_raw_status_data_tree,
-    RawInventoryStore,
-    rename,
-    SDMeta,
-    SDMetaAndRawTree,
-)
+from cmk.inventory.store import InventoryStore, RawInventoryStore, rename
 from cmk.inventory.trees import MutableTree, SDKey, SDNodeName
 
 from ._fixtures import gzipped_json, gzipped_repr, inventory_store, raw_tree
@@ -326,73 +318,6 @@ def test_save_inventory_tree_writes_the_meta(tmp_path: Path, do_archive: bool) -
     assert meta_and_raw_tree["raw_tree"]["Nodes"] == expected_raw_tree["Nodes"]
 
 
-@pytest.mark.parametrize(
-    "raw, expected",
-    [
-        pytest.param(
-            {"Attributes": {}, "Table": {}, "Nodes": {}},
-            SDMetaAndRawTree(
-                meta=SDMeta(version="1", do_archive=True),
-                raw_tree=SDRawTree(Attributes={}, Table={}, Nodes={}),
-            ),
-            id="missing-version:missing-meta",
-        ),
-        pytest.param(
-            {
-                "meta_version": "0",
-                "meta_do_archive": True,
-                "Attributes": {},
-                "Table": {},
-                "Nodes": {},
-            },
-            SDMetaAndRawTree(
-                meta=SDMeta(version="1", do_archive=True),
-                raw_tree=SDRawTree(Attributes={}, Table={}, Nodes={}),
-            ),
-            id="version=0:do-archive",
-        ),
-        pytest.param(
-            {
-                "meta_version": "0",
-                "meta_do_archive": False,
-                "Attributes": {},
-                "Table": {},
-                "Nodes": {},
-            },
-            SDMetaAndRawTree(
-                meta=SDMeta(version="1", do_archive=False),
-                raw_tree=SDRawTree(Attributes={}, Table={}, Nodes={}),
-            ),
-            id="version=0:do-not-archive",
-        ),
-        pytest.param(
-            {
-                "meta": {"version": "1", "do_archive": True},
-                "raw_tree": {"Attributes": {}, "Table": {}, "Nodes": {}},
-            },
-            SDMetaAndRawTree(
-                meta=SDMeta(version="1", do_archive=True),
-                raw_tree=SDRawTree(Attributes={}, Table={}, Nodes={}),
-            ),
-            id="version=1:do-archive",
-        ),
-        pytest.param(
-            {
-                "meta": {"version": "1", "do_archive": False},
-                "raw_tree": {"Attributes": {}, "Table": {}, "Nodes": {}},
-            },
-            SDMetaAndRawTree(
-                meta=SDMeta(version="1", do_archive=False),
-                raw_tree=SDRawTree(Attributes={}, Table={}, Nodes={}),
-            ),
-            id="version=1:do-archive",
-        ),
-    ],
-)
-def test_parse_from_gzipped(raw: Mapping[str, object], expected: SDMetaAndRawTree) -> None:
-    assert parse_from_gzipped(gzip.compress(json.dumps(raw).encode())) == expected
-
-
 def _save_meta_and_raw_inventory_tree(tmp_path: Path, timestamp: int) -> SDMetaAndRawTree:
     meta_and_raw_tree = SDMetaAndRawTree(meta=make_meta(do_archive=True), raw_tree=raw_tree("val"))
     RawInventoryStore(tmp_path).save_meta_and_raw_inventory_tree(
@@ -421,16 +346,6 @@ def test_save_meta_and_raw_inventory_tree_is_read_back_from_the_gzipped_tree(
         parse_from_gzipped((tmp_path / "var/check_mk/inventory/hostname.json.gz").read_bytes())
         == meta_and_raw_tree
     )
-
-
-def test_parse_from_raw_status_data_tree() -> None:
-    tree = raw_tree("val")
-    assert parse_from_raw_status_data_tree(json.dumps(tree).encode()) == deserialize_tree(tree)
-
-
-def test_parse_from_raw_status_data_tree_legacy() -> None:
-    tree = raw_tree("val")
-    assert parse_from_raw_status_data_tree(repr(tree).encode()) == deserialize_tree(tree)
 
 
 @pytest.mark.parametrize(
@@ -539,36 +454,6 @@ def test_load_previous_inventory_tree_without_any_tree_is_empty(tmp_path: Path) 
     assert not InventoryStore(tmp_path).load_previous_inventory_tree(
         host_name=HostName("hostname"), debug=False
     )
-
-
-@pytest.mark.parametrize(
-    "raw",
-    [
-        pytest.param(["Attributes", "Table", "Nodes"], id="no-dict"),
-        pytest.param({"meta": "1", "raw_tree": {}}, id="meta-no-dict"),
-        pytest.param(
-            {"meta": {"version": 1, "do_archive": True}, "raw_tree": {}}, id="version-no-str"
-        ),
-        pytest.param(
-            {"meta": {"version": "1", "do_archive": 1}, "raw_tree": {}}, id="do-archive-no-bool"
-        ),
-        pytest.param(
-            {"meta": {"version": "1", "do_archive": True}, "raw_tree": []}, id="raw-tree-no-dict"
-        ),
-    ],
-)
-def test_parse_from_gzipped_rejects_a_malformed_tree(raw: object) -> None:
-    with pytest.raises(TypeError):
-        parse_from_gzipped(gzip.compress(json.dumps(raw).encode()))
-
-
-def test_parse_from_gzipped_rejects_an_unknown_version() -> None:
-    with pytest.raises(ValueError):
-        parse_from_gzipped(
-            gzip.compress(
-                json.dumps({"meta": {"version": "2", "do_archive": True}, "raw_tree": {}}).encode()
-            )
-        )
 
 
 def _tree_with(key: str, value: str) -> SDRawTree:

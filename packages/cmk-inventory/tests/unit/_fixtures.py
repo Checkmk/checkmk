@@ -12,11 +12,13 @@ from cmk.inventory.delta import ImmutableDeltaTree
 from cmk.inventory.serialization import (
     deserialize_delta_tree,
     deserialize_tree,
+    make_meta,
+    SDMetaAndRawTree,
     SDRawDeltaTree,
     SDRawTree,
     serialize_tree,
 )
-from cmk.inventory.store import InventoryStore, make_meta, SDMetaAndRawTree
+from cmk.inventory.store import InventoryStore
 from cmk.inventory.trees import ImmutableTree, MutableTree, SDKey, SDNodeName
 
 

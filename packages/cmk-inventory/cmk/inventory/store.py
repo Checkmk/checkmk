@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import ast
 import gzip
 import io
 import json
@@ -12,14 +11,21 @@ import shutil
 from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal, TypedDict
+from typing import Literal
 
 from cmk.ccc import store
 from cmk.ccc.hostaddress import HostName
 
 from .merging import merge_trees
 from .paths import InventoryPaths, parse_archive_timestamp, TreePath, TreePathGz
-from .serialization import deserialize_tree, SDRawTree, serialize_tree
+from .serialization import (
+    deserialize_tree,
+    parse_from_raw_status_data_tree,
+    SDMeta,
+    SDMetaAndRawTree,
+    SDRawTree,
+    serialize_tree,
+)
 from .trees import ImmutableTree, MutableTree
 
 
@@ -77,16 +83,6 @@ def load_tree_from_tree_path(tree_path: TreePath, *, debug: bool) -> ImmutableTr
     return ImmutableTree()
 
 
-class SDMeta(TypedDict):
-    version: Literal["1"]
-    do_archive: bool
-
-
-class SDMetaAndRawTree(TypedDict):
-    meta: SDMeta
-    raw_tree: SDRawTree
-
-
 def save_raw_tree(tree_path: TreePath, raw_tree: SDRawTree) -> None:
     tree_path.path.parent.mkdir(parents=True, exist_ok=True)
     store.save_text_to_file(tree_path.path, json.dumps(raw_tree) + "\n")
@@ -140,71 +136,6 @@ def _archive_inventory_tree(inv_paths: InventoryPaths, host_name: HostName, *, d
         store.save_text_to_file(archive_tree.path, json.dumps(raw_tree))
         tree_path.legacy.unlink(missing_ok=True)
         tree_path_gz.legacy.unlink(missing_ok=True)
-
-
-def make_meta(*, do_archive: bool) -> SDMeta:
-    return SDMeta(version="1", do_archive=do_archive)
-
-
-def _parse_raw_meta(raw_meta: object) -> SDMeta:
-    if not isinstance(raw_meta, dict):
-        raise TypeError(raw_meta)
-    if not isinstance(version := raw_meta.get("version"), str):
-        raise TypeError(version)
-    if not isinstance(do_archive := raw_meta.get("do_archive"), bool):
-        raise TypeError(do_archive)
-    match version:
-        case "1":
-            return SDMeta(version=version, do_archive=do_archive)
-        case _:
-            raise ValueError(version)
-
-
-def _parse_raw_tree(raw_tree: object) -> SDRawTree:
-    if not isinstance(raw_tree, dict):
-        raise TypeError(raw_tree)
-    return SDRawTree(
-        Attributes=raw_tree.get("Attributes", {}),
-        Table=raw_tree.get("Table", {}),
-        Nodes=raw_tree.get("Nodes", {}),
-    )
-
-
-def _parse_from_unzipped(raw: object) -> SDMetaAndRawTree:
-    if not isinstance(raw, dict):
-        raise TypeError(raw)
-    if set(raw) == {"meta", "raw_tree"}:
-        return SDMetaAndRawTree(
-            meta=_parse_raw_meta(raw.get("meta")),
-            raw_tree=_parse_raw_tree(raw.get("raw_tree")),
-        )
-    return SDMetaAndRawTree(
-        meta=SDMeta(
-            version="1",
-            do_archive=raw.get("meta_do_archive", True),
-        ),
-        raw_tree=SDRawTree(
-            Attributes=raw.get("Attributes", {}),
-            Table=raw.get("Table", {}),
-            Nodes=raw.get("Nodes", {}),
-        ),
-    )
-
-
-def _parse_dump(dump: bytes) -> object:
-    try:
-        return json.loads(dump.decode("utf-8"))
-    except json.JSONDecodeError:
-        # TODO CMK-23408
-        return ast.literal_eval(dump.decode("utf-8"))
-
-
-def parse_from_gzipped(gzipped: bytes) -> SDMetaAndRawTree:
-    return _parse_from_unzipped(_parse_dump(gzip.GzipFile(fileobj=io.BytesIO(gzipped)).read()))
-
-
-def parse_from_raw_status_data_tree(dump: bytes) -> ImmutableTree:
-    return deserialize_tree(_parse_dump(dump))
 
 
 class RawInventoryStore:

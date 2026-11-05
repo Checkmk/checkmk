@@ -8,7 +8,7 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.ccc.hostaddress import HostName
-from cmk.inventory.delta import compare_trees, SDDeltaValue
+from cmk.inventory.delta import compare_trees, ImmutableDeltaTable, SDDeltaValue
 from cmk.inventory.serialization import deserialize_tree
 from cmk.inventory.trees import ImmutableTree, MutableTree, SDKey, SDNodeName
 
@@ -333,3 +333,25 @@ def test_a_node_only_in_the_previous_tree_is_removed() -> None:
     assert delta_tree.get_tree((SDNodeName("node"),)).attributes.pairs == {
         SDKey("key"): SDDeltaValue(old="value", new=None)
     }
+
+
+def test_an_unchanged_table_has_no_key_columns() -> None:
+    previous_tree = MutableTree()
+    previous_tree.add(
+        path=(),
+        pairs=[{SDKey("key"): "old"}],
+        key_columns=[SDKey("id")],
+        rows=[{SDKey("id"): "1", SDKey("value"): "same"}],
+    )
+    current_tree = MutableTree()
+    current_tree.add(
+        path=(),
+        pairs=[{SDKey("key"): "new"}],
+        key_columns=[SDKey("id")],
+        rows=[{SDKey("id"): "1", SDKey("value"): "same"}],
+    )
+
+    assert (
+        compare_trees(immutable_tree(current_tree), immutable_tree(previous_tree)).table
+        == ImmutableDeltaTable()
+    )

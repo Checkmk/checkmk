@@ -190,7 +190,7 @@ def _compare_tables(left: ImmutableTable, right: ImmutableTable) -> ImmutableDel
         rows.append({k: _encode_as_removed(v) for k, v in right.rows_by_ident[ident].items()})
 
     return ImmutableDeltaTable(
-        key_columns=sorted(set(left.key_columns).union(right.key_columns)),
+        key_columns=sorted(set(left.key_columns).union(right.key_columns)) if rows else [],
         rows=rows,
     )
 

@@ -25,10 +25,9 @@ _ABSOLUTE_PATH_VALIDATOR = validators.MatchRegex(
 def _form_spec() -> Dictionary:
     return Dictionary(
         help_text=Help(
-            "The agent installation path configuration now simplifies to one single directory,"
-            " which can be configured with the new <i>Customize agent package</i> rule set."
-            "<br>When configuring <i>Customize agent package</i>, matching rules from"
-            " this rule set will be ignored."
+            "These paths apply only to hosts that match the rule <i>Use classic file"
+            " deployment</i>. All other hosts get the single directory deployment, which can be"
+            " configured with the rule set <i>Customize agent package</i>."
             "<br><b>Note</b>: When updating agents to the new directory structure, please keep"
             " this rule set until the agent update is done. The agent package will read the"
             " old installation paths to migrate your files to the new directory structure."

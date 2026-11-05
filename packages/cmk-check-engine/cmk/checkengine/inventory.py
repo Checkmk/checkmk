@@ -32,7 +32,12 @@ from cmk.checkengine.plugins import (
     SectionName,
 )
 from cmk.checkengine.specs.checkresults import ActiveCheckResult
-from cmk.inventory.paths import InventoryPaths
+from cmk.inventory.paths import (
+    has_archive,
+    has_inventory_tree,
+    has_status_data_tree,
+    InventoryPaths,
+)
 from cmk.inventory.retention import (
     make_retention_filter_choices,
     RawIntervalFromConfig,
@@ -244,14 +249,11 @@ def _no_data_or_files(
     omd_root: Path,
 ) -> bool:
     inv_paths = InventoryPaths(omd_root)
-    archive_host = inv_paths.archive_host(host_name)
     return (
         not any(hs.sections or hs.piggybacked_raw_data for hs in host_sections)
-        and not inv_paths.inventory_tree(host_name).path.exists()
-        and not inv_paths.inventory_tree(host_name).legacy.exists()
-        and not inv_paths.status_data_tree(host_name).path.exists()
-        and not inv_paths.status_data_tree(host_name).legacy.exists()
-        and (not archive_host.exists() or not any(archive_host.iterdir()))
+        and not has_inventory_tree(inv_paths, host_name)
+        and not has_status_data_tree(inv_paths, host_name)
+        and not has_archive(inv_paths, host_name)
     )
 
 

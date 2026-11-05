@@ -139,6 +139,11 @@ def has_inventory_tree(inv_paths: InventoryPaths, host_name: HostName) -> bool:
     return tree_path.path.exists() or tree_path.legacy.exists()
 
 
+def has_status_data_tree(inv_paths: InventoryPaths, host_name: HostName) -> bool:
+    tree_path = inv_paths.status_data_tree(host_name)
+    return tree_path.path.exists() or tree_path.legacy.exists()
+
+
 def _has_files(directory: Path) -> bool:
     try:
         return any(directory.iterdir())
@@ -146,10 +151,12 @@ def _has_files(directory: Path) -> bool:
         return False
 
 
+def has_archive(inv_paths: InventoryPaths, host_name: HostName) -> bool:
+    return _has_files(inv_paths.archive_host(host_name))
+
+
 def has_history(inv_paths: InventoryPaths, host_name: HostName) -> bool:
-    return _has_files(inv_paths.archive_host(host_name)) or _has_files(
-        inv_paths.delta_cache_host(host_name)
-    )
+    return has_archive(inv_paths, host_name) or _has_files(inv_paths.delta_cache_host(host_name))
 
 
 def parse_archive_timestamp(file_path: Path) -> int:

@@ -12,8 +12,10 @@ import pytest
 
 from cmk.ccc.hostaddress import HostName, HostNameValidationError
 from cmk.inventory.paths import (
+    has_archive,
     has_history,
     has_inventory_tree,
+    has_status_data_tree,
     InventoryPaths,
     parse_archive_timestamp,
     parse_delta_cache_timestamps,
@@ -185,6 +187,36 @@ def test_has_inventory_tree_of_a_legacy_file(tmp_path: Path) -> None:
 
 def test_has_no_inventory_tree(tmp_path: Path) -> None:
     assert not has_inventory_tree(InventoryPaths(tmp_path), HostName("host"))
+
+
+@pytest.mark.parametrize("legacy", [False, True])
+def test_has_status_data_tree(tmp_path: Path, legacy: bool) -> None:
+    inv_paths = InventoryPaths(tmp_path)
+    inv_paths.status_data_dir.mkdir(parents=True)
+    tree_path = inv_paths.status_data_tree(HostName("host"))
+    (tree_path.legacy if legacy else tree_path.path).touch()
+    assert has_status_data_tree(inv_paths, HostName("host"))
+
+
+def test_has_no_status_data_tree(tmp_path: Path) -> None:
+    assert not has_status_data_tree(InventoryPaths(tmp_path), HostName("host"))
+
+
+def test_has_archive(tmp_path: Path) -> None:
+    inv_paths = InventoryPaths(tmp_path)
+    inv_paths.archive_host(HostName("host")).mkdir(parents=True)
+    (inv_paths.archive_host(HostName("host")) / "123.json").touch()
+    assert has_archive(inv_paths, HostName("host"))
+
+
+def test_has_no_archive_in_an_empty_directory(tmp_path: Path) -> None:
+    inv_paths = InventoryPaths(tmp_path)
+    inv_paths.archive_host(HostName("host")).mkdir(parents=True)
+    assert not has_archive(inv_paths, HostName("host"))
+
+
+def test_has_no_archive(tmp_path: Path) -> None:
+    assert not has_archive(InventoryPaths(tmp_path), HostName("host"))
 
 
 @pytest.mark.parametrize(

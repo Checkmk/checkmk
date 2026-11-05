@@ -6,84 +6,24 @@
 import json
 from collections.abc import Iterator, Mapping, Sequence
 from pathlib import Path
-from typing import Literal, TypedDict
 
 from cmk.ccc import store
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.regex import regex
 
+from .config import (
+    LabelPickerCaseConversion,
+    LabelPickerConfig,
+    LabelPickerConfigReplaceRule,
+    LabelPickerConfigRowFilter,
+    LabelPickerConfigValueMatchOrReplace,
+)
 from .trees import (
     MutableTree,
     SDKey,
     SDNodeName,
     SDValue,
 )
-
-type LabelPickerCaseConversion = Literal["no_conversion", "lower", "upper"]
-
-
-class LabelPickerConfigCaseConversion(TypedDict):
-    label: LabelPickerCaseConversion
-    value: LabelPickerCaseConversion
-
-
-class LabelPickerConfigValueMatch(TypedDict):
-    value_match: str
-
-
-class LabelPickerConfigReplaceRule(TypedDict):
-    value_match: str
-    value_replacement: str
-
-
-type LabelPickerConfigValueMatchOrReplace = (
-    tuple[Literal["use_value"], None]
-    | tuple[Literal["use_value_if_matches"], LabelPickerConfigValueMatch]
-    | tuple[Literal["match_and_replace_value"], Sequence[LabelPickerConfigReplaceRule]]
-)
-
-
-class LabelPickerConfigAttribute(TypedDict):
-    label_name: str
-    key_match: str
-    value_match: LabelPickerConfigValueMatchOrReplace
-
-
-class LabelPickerConfigRowMatch(TypedDict):
-    column: str
-    value_match: str
-
-
-type LabelPickerConfigRowFilter = (
-    tuple[Literal["all_rows"], None] | tuple[Literal["matching_rows"], LabelPickerConfigRowMatch]
-)
-
-
-class LabelPickerConfigColumn(TypedDict):
-    label_name: str
-    column: str
-    row_filter: LabelPickerConfigRowFilter
-    value_match: LabelPickerConfigValueMatchOrReplace
-
-
-class LabelPickerSource(TypedDict):
-    path: str
-    attributes: Sequence[LabelPickerConfigAttribute]
-    columns: Sequence[LabelPickerConfigColumn]
-
-
-class LabelPickerLabeling(TypedDict):
-    label_prefix: str
-    case_conversion: LabelPickerConfigCaseConversion
-
-
-class LabelPickerConfig(TypedDict):
-    source: LabelPickerSource
-    labeling: LabelPickerLabeling
-
-
-class LabelPickerRuleValue(TypedDict):
-    configs: Sequence[LabelPickerConfig]
 
 
 def _convert_case(text: str, conversion: LabelPickerCaseConversion) -> str:

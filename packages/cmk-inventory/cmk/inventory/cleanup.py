@@ -9,10 +9,16 @@ import re
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal, Protocol, TypedDict
+from typing import Literal, Protocol
 
 from cmk.ccc.hostaddress import HostName
 
+from .config import (
+    InvCleanupParams,
+    InvCleanupParamsChoice,
+    InvCleanupParamsDefaultCombined,
+    InvCleanupParamsOfHosts,
+)
 from .paths import (
     collect_files,
     InventoryPaths,
@@ -21,36 +27,6 @@ from .paths import (
     tree_mtime,
     TreePath,
 )
-
-
-class InvCleanupParamsCombined(TypedDict):
-    strategy: Literal["and", "or"]
-    file_age: int
-    number_of_history_entries: int
-
-
-type _InvCleanupParamsChoice = (
-    tuple[Literal["file_age"], int]
-    | tuple[Literal["number_of_history_entries"], int]
-    | tuple[Literal["combined"], InvCleanupParamsCombined]
-)
-
-
-class InvCleanupParamsOfHosts(TypedDict):
-    regex_or_explicit: Sequence[str]
-    parameters: _InvCleanupParamsChoice
-
-
-class InvCleanupParamsDefaultCombined(TypedDict):
-    strategy: Literal["and"]
-    file_age: int
-    number_of_history_entries: int
-
-
-class InvCleanupParams(TypedDict):
-    for_hosts: Sequence[InvCleanupParamsOfHosts]
-    default: InvCleanupParamsDefaultCombined | None
-    abandoned_file_age: int
 
 
 def matches(*, regex_or_name: str, host_name: HostName) -> bool:
@@ -170,7 +146,7 @@ class _ParamFileAgeNumberHistoryEntries:
 
 
 def _compute_params(
-    params: _InvCleanupParamsChoice,
+    params: InvCleanupParamsChoice,
 ) -> _CleanupParams:
     match params[0]:
         case "file_age":

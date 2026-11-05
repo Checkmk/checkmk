@@ -42,14 +42,14 @@ from cmk.checkengine.sectionparser import SectionPlugin
 from cmk.checkengine.snmplib import SNMPRawData
 from cmk.checkengine.specs.checkresults import ActiveCheckResult
 from cmk.discover_plugins import PluginLocation
-from cmk.inventory.label_picker import (
-    InventorizedHostLabelsStore,
+from cmk.inventory.config import (
     LabelPickerConfig,
     LabelPickerConfigAttribute,
     LabelPickerConfigCaseConversion,
     LabelPickerLabeling,
     LabelPickerSource,
 )
+from cmk.inventory.label_picker import InventorizedHostLabelsStore
 from cmk.inventory.serialization import (
     deserialize_tree,
     serialize_tree,

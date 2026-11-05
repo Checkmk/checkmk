@@ -9,14 +9,13 @@ from collections.abc import Mapping, Sequence
 import pytest
 
 from cmk.ccc.hostaddress import HostName
+from cmk.inventory.config import InventoryPathsConfig, PermittedPath
 from cmk.inventory.delta import ImmutableDeltaTree, SDDeltaValue
 from cmk.inventory.filtering import (
     filter_delta_tree,
     filter_tree,
-    InventoryPathsConfig,
     make_filter_choices_from_api_request_paths,
     make_filter_choices_from_contact_groups,
-    PermittedPath,
     SDFilterChoice,
 )
 from cmk.inventory.trees import ImmutableTree, SDKey, SDNodeName, SDPath

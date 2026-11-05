@@ -12,8 +12,9 @@ import pytest
 
 import cmk.ccc.store
 from cmk.ccc.hostaddress import HostName
+from cmk.inventory.config import RawIntervalFromConfig
 from cmk.inventory.paths import has_archive, InventoryPaths
-from cmk.inventory.retention import RawIntervalFromConfig, update_from_previous
+from cmk.inventory.retention import update_from_previous
 from cmk.inventory.serialization import (
     deserialize_tree,
     make_meta,

@@ -22,6 +22,7 @@ py_library(
     name = "model",
     srcs = [
         "cmk/inventory/_dict_keys.py",
+        "cmk/inventory/config.py",
         "cmk/inventory/delta.py",
         "cmk/inventory/filtering.py",
         "cmk/inventory/merging.py",
@@ -85,6 +86,7 @@ py_library(
     imports = ["."],
     visibility = ["//visibility:public"],
     deps = [
+        ":model",
         ":package",
         ":paths",
         "//packages/cmk-ccc:hostaddress",

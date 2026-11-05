@@ -28,9 +28,9 @@ from cmk.checkengine.plugins import (
 from cmk.checkengine.sectionparser import SectionPlugin
 from cmk.checkengine.specs.checkresults import ActiveCheckResult
 from cmk.checkengine.summarize import SummarizerFunction
-from cmk.inventory.label_picker import InventorizedHostLabelsStore, LabelPickerConfig, pick_labels
+from cmk.inventory.config import LabelPickerConfig, RawIntervalFromConfig
+from cmk.inventory.label_picker import InventorizedHostLabelsStore, pick_labels
 from cmk.inventory.paths import InventoryPaths
-from cmk.inventory.retention import RawIntervalFromConfig
 from cmk.inventory.store import InventoryStore
 from cmk.ruleset_matcher.labels import DiscoveredHostLabelsStore
 from cmk.utils.everythingtype import EVERYTHING

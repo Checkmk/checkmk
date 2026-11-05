@@ -11,14 +11,12 @@ from pathlib import Path
 import pytest
 
 from cmk.ccc.hostaddress import HostName
-from cmk.inventory.cleanup import (
-    filter_inventory_cleanup_parameters,
+from cmk.inventory.cleanup import filter_inventory_cleanup_parameters, InventoryCleanup, matches
+from cmk.inventory.config import (
     InvCleanupParams,
     InvCleanupParamsCombined,
     InvCleanupParamsDefaultCombined,
     InvCleanupParamsOfHosts,
-    InventoryCleanup,
-    matches,
 )
 from cmk.inventory.paths import InventoryPaths, TreePath, TreePathGz
 

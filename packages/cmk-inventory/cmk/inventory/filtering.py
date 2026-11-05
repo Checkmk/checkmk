@@ -5,9 +5,10 @@
 
 from collections.abc import Callable, Iterable, Mapping, Sequence, Set
 from dataclasses import dataclass, field
-from typing import Literal, NotRequired, TypedDict
+from typing import Literal
 
 from ._dict_keys import get_filtered_dict
+from .config import InventoryPathsConfig, NothingOrChoices, PermittedPath
 from .delta import ImmutableDeltaAttributes, ImmutableDeltaTable, ImmutableDeltaTree
 from .raw_paths import InventoryPath, parse_internal_raw_path, parse_visible_raw_path
 from .trees import ImmutableAttributes, ImmutableTable, ImmutableTree, SDKey, SDNodeName, SDPath
@@ -154,16 +155,6 @@ def make_filter_choices_from_api_request_paths(
     ]
 
 
-NothingOrChoices = Literal["nothing"] | tuple[Literal["choices"], Sequence[str]]
-
-
-class PermittedPath(TypedDict):
-    visible_raw_path: str
-    attributes: NotRequired[NothingOrChoices]
-    columns: NotRequired[NothingOrChoices]
-    nodes: NotRequired[NothingOrChoices]
-
-
 def _transform_attribute[T](
     f: Callable[[str], T], x: NothingOrChoices | None
 ) -> Literal["nothing", "all"] | Sequence[T]:
@@ -187,11 +178,6 @@ def _make_filter_choices_from_permitted_paths(
         for entry in permitted_paths
         if entry.get("visible_raw_path")
     ]
-
-
-InventoryPathsConfig = (
-    Literal["allow_all", "forbid_all"] | tuple[Literal["paths"], list[PermittedPath]]
-)
 
 
 def make_filter_choices_from_contact_groups(

@@ -9,8 +9,7 @@ from pathlib import Path
 import pytest
 
 from cmk.ccc.hostaddress import HostName
-from cmk.inventory.label_picker import (
-    InventorizedHostLabelsStore,
+from cmk.inventory.config import (
     LabelPickerConfig,
     LabelPickerConfigAttribute,
     LabelPickerConfigCaseConversion,
@@ -22,8 +21,8 @@ from cmk.inventory.label_picker import (
     LabelPickerConfigValueMatchOrReplace,
     LabelPickerLabeling,
     LabelPickerSource,
-    pick_labels,
 )
+from cmk.inventory.label_picker import InventorizedHostLabelsStore, pick_labels
 from cmk.inventory.trees import (
     MutableTree,
     SDKey,

@@ -13,7 +13,7 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.sites import live
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoMultiConfigFile
-from cmk.inventory.filtering import InventoryPathsConfig
+from cmk.inventory.config import InventoryPathsConfig
 from cmk.utils import paths
 
 ContactGroupUsageFinder = Callable[[GroupName, GlobalSettings], list[tuple[str, str]]]

@@ -5,8 +5,9 @@
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Literal, TypedDict
+from typing import Literal
 
+from .config import RawIntervalFromConfig
 from .filtering import make_filter_func
 from .raw_paths import parse_visible_raw_path
 from .trees import (
@@ -16,16 +17,6 @@ from .trees import (
     SDKey,
     SDPath,
 )
-
-
-class _RawIntervalFromConfigMandatory(TypedDict):
-    interval: int
-    visible_raw_path: str
-
-
-class RawIntervalFromConfig(_RawIntervalFromConfigMandatory, total=False):
-    attributes: Literal["all"] | tuple[str, list[str]]
-    columns: Literal["all"] | tuple[str, list[str]]
 
 
 @dataclass(frozen=True)

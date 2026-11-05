@@ -86,7 +86,7 @@ from cmk.gui.watolib.pending_changes import (
     PendingChanges,
     PendingChangesStore,
 )
-from cmk.inventory.filtering import InventoryPathsConfig, NothingOrChoices, PermittedPath
+from cmk.inventory.config import InventoryPathsConfig, NothingOrChoices, PermittedPath
 from cmk.livestatus_client import SiteConfigurations
 from cmk.utils import paths
 from cmk.web.utils import permission_verification as permissions

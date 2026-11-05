@@ -6,10 +6,8 @@
 from collections.abc import Mapping, Sequence
 from typing import Literal
 
-from cmk.inventory.retention import (
-    RawIntervalFromConfig,
-    update_from_previous,
-)
+from cmk.inventory.config import RawIntervalFromConfig
+from cmk.inventory.retention import update_from_previous
 from cmk.inventory.serialization import deserialize_tree
 from cmk.inventory.trees import (
     ImmutableTree,

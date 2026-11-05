@@ -25,8 +25,7 @@ from cmk.events.notify_types import (
     Contact,
     ContactName,
 )
-from cmk.inventory.label_picker import LabelPickerRuleValue
-from cmk.inventory.retention import RawIntervalFromConfig
+from cmk.inventory.config import LabelPickerRuleValue, RawIntervalFromConfig
 from cmk.ruleset_matcher.labels import Labels
 from cmk.ruleset_matcher.matcher import RuleSpec
 from cmk.utils.host_storage import FolderAttributesForBase

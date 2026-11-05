@@ -53,10 +53,7 @@ from cmk.gui.watolib.rulesets import FolderRulesets
 from cmk.gui.watolib.sites import site_management_registry
 from cmk.gui.watolib.tags import TagConfigFile
 from cmk.gui.watolib.utils import multisite_dir, wato_root_dir
-from cmk.inventory.cleanup import (
-    InvCleanupParams,
-    InvCleanupParamsDefaultCombined,
-)
+from cmk.inventory.config import InvCleanupParams, InvCleanupParamsDefaultCombined
 from cmk.livestatus_client import SiteConfiguration, SiteConfigurations
 from cmk.ruleset_matcher.labels import BuiltinLabelsKey, update_builtin_host_labels
 from cmk.ruleset_matcher.tags import sample_tag_config, TagConfig

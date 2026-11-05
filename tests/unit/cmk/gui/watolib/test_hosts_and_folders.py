@@ -44,7 +44,12 @@ from cmk.gui.watolib import hosts_and_folders
 from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.host_match_item_generator import MatchItemGeneratorHosts
-from cmk.gui.watolib.hosts_and_folders import EffectiveAttributes, Folder, folder_tree
+from cmk.gui.watolib.hosts_and_folders import (
+    EffectiveAttributes,
+    Folder,
+    folder_from_request,
+    folder_tree,
+)
 from cmk.utils.redis import disable_redis
 
 
@@ -1300,3 +1305,11 @@ def test_subfolder_cache_invalidated() -> None:
     # subfolders are part of the tree
     with pytest.raises(AssertionError):
         assert subfolder.effective_attributes()["alias"] == "other_alias"
+
+
+@pytest.mark.xfail(strict=True, raises=ValueError, reason="crash group 4626")
+def test_folder_of_an_invalid_host_name_is_the_root_folder() -> None:
+    assert (
+        folder_from_request(var_folder=None, host_name="invalid host name")
+        == folder_tree().root_folder()
+    )

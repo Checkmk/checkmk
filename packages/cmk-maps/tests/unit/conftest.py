@@ -74,6 +74,7 @@ def _clear_map_caches() -> Iterator[None]:
     map_service._LINKED.clear()  # noqa: SLF001
     state_service._state_snapshots.clear()  # noqa: SLF001
     states._fetched.invalidate()  # noqa: SLF001
+    states._topologies.invalidate()  # noqa: SLF001
     state_service._timing_snapshots.clear()  # noqa: SLF001
     state_service._folder_tree_snapshots.clear()  # noqa: SLF001
     state_service._topology_snapshots.clear()  # noqa: SLF001

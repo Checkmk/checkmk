@@ -220,6 +220,8 @@ export class MapStatesService {
    * the preview.
    */
   public readonly folderOverride: Ref<FolderTreeOverride | null> = ref(null)
+  /** Counts the hand-overs of the open map, so a client without the stream asks again. */
+  public readonly handedOver: Ref<number> = ref(0)
   /** The knobs the daemon is running on, as it reported them with the last tick. */
   public readonly runtime: Ref<DaemonRuntime | null> = ref(null)
 
@@ -471,6 +473,7 @@ export class MapStatesService {
     if (handOver !== this.handOverSeq || this.currentMap !== mapName) {
       return
     }
+    this.handedOver.value++
     if (registered) {
       this.applyStates(registered)
     } else {

@@ -319,7 +319,7 @@ describe('FlowMapView', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const services = fakeMapsServices()
     openFlowMap(services)
-    vi.mocked(services.apis.connections.fetchTopology).mockRejectedValue(new Error('daemon gone'))
+    vi.mocked(services.apis.mapStates.fetchTopology).mockRejectedValue(new Error('daemon gone'))
     const { container, unmount } = render(FlowMapView, {
       props: baseProps,
       global: { ...provideServices(services).global, stubs }
@@ -339,6 +339,45 @@ describe('FlowMapView', () => {
 
     unmount()
     warn.mockRestore()
+  })
+
+  it('polls the topology of the map it shows once the stream is lost', async () => {
+    const services = fakeMapsServices()
+    openFlowMap(services)
+    const { unmount } = render(FlowMapView, {
+      props: baseProps,
+      global: { ...provideServices(services).global, stubs }
+    })
+    await waitForNodes()
+
+    services.states.streamAvailable.value = false
+
+    await waitFor(() =>
+      expect(services.apis.mapStates.fetchTopology).toHaveBeenCalledWith(baseProps.config.name)
+    )
+
+    unmount()
+  })
+
+  it('asks for the topology again once an edit was handed over without the stream', async () => {
+    const services = fakeMapsServices()
+    openFlowMap(services)
+    const { unmount } = render(FlowMapView, {
+      props: baseProps,
+      global: { ...provideServices(services).global, stubs }
+    })
+    await waitForNodes()
+    services.states.streamAvailable.value = false
+    await waitFor(() => expect(services.apis.mapStates.fetchTopology).toHaveBeenCalled())
+    const asked = vi.mocked(services.apis.mapStates.fetchTopology).mock.calls.length
+
+    services.states.handedOver.value++
+
+    await waitFor(() =>
+      expect(vi.mocked(services.apis.mapStates.fetchTopology).mock.calls.length).toBe(asked + 1)
+    )
+
+    unmount()
   })
 
   it('says so, rather than drawing nothing, when the map has no connection', async () => {

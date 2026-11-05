@@ -110,8 +110,7 @@ const {
   fetchTopology
 } = useTopologyFeed({
   connectionId: () => connectionId.value,
-  flowView: () => flowView.value,
-  withServices: () => needsServices(serviceLayout.value)
+  mapName: () => props.config?.name ?? ''
 })
 
 // The worst-affected hosts, given a wider halo and a glow on the map. Only
@@ -404,6 +403,7 @@ function onSelectHost(hostName: string): void {
 const resetKey = computed(() => {
   const view = flowView.value
   return [
+    props.config?.name ?? '',
     connectionId.value,
     view?.root ?? '',
     view?.child_layers ?? '',
@@ -421,15 +421,6 @@ watch(resetKey, () => {
   closeDetail()
   selection.clear()
   void fetchTopology({ reset: true })
-})
-
-// Which services the backend has to send depends on the layout. Over the live
-// stream the topology arrives with them regardless, so the switch is then a
-// pure matter of drawing and the canvas handles it alone.
-watch(serviceLayout, () => {
-  if (!statesStore.streamAvailable.value) {
-    void fetchTopology()
-  }
 })
 </script>
 

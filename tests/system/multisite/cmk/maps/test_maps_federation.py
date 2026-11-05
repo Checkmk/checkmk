@@ -103,33 +103,40 @@ def _maps_url(site: Site, path: str) -> str:
     return site.url_for_path(f"/{site.id}/check_mk/maps{path}")
 
 
-def _first_connection_id(central_site: Site, web: CMKWebSession) -> str:
-    response = web.session.get(
-        _maps_url(central_site, "/api/v1/connections"), timeout=_HTTP_TIMEOUT
+# The built-in flow map, which shows the topology of all hosts.
+_FLOW_MAP = "infrastructure"
+
+
+def _register_flow_map(central_site: Site, web: CMKWebSession) -> None:
+    signed = web.session.get(
+        central_site.url_for_path(
+            f"/{central_site.id}/check_mk/api/internal/objects/maps_signed_map/{_FLOW_MAP}"
+        ),
+        timeout=_HTTP_TIMEOUT,
+    )
+    signed.raise_for_status()
+    response = web.session.post(
+        _maps_url(central_site, f"/api/v1/maps/{_FLOW_MAP}/register"),
+        json={"config_b64": signed.json()["config_b64"], "sig": signed.json()["sig"]},
+        headers={"Sec-Fetch-Site": "same-origin"},
+        timeout=_HTTP_TIMEOUT,
     )
     response.raise_for_status()
-    connections = response.json()
-    assert connections, "no Maps connection registered on the central site"
-    return str(connections[0]["id"])
 
 
-def _topology_nodes(
-    central_site: Site, web: CMKWebSession, connection_id: str
-) -> list[dict[str, object]]:
+def _topology_nodes(central_site: Site, web: CMKWebSession) -> list[dict[str, object]]:
     response = web.session.get(
-        _maps_url(central_site, f"/api/v1/connections/{connection_id}/topology"),
+        _maps_url(central_site, f"/api/v1/maps/{_FLOW_MAP}/topology"),
         timeout=_HTTP_TIMEOUT,
     )
     response.raise_for_status()
     return list(response.json())
 
 
-def _remote_host_visible(
-    central_site: Site, remote_site: Site, web: CMKWebSession, connection_id: str
-) -> bool:
+def _remote_host_visible(central_site: Site, remote_site: Site, web: CMKWebSession) -> bool:
     return any(
         node.get("name") == _HOST_NAME and node.get("site_id") == remote_site.id
-        for node in _topology_nodes(central_site, web, connection_id)
+        for node in _topology_nodes(central_site, web)
     )
 
 
@@ -142,14 +149,12 @@ def test_maps_daemon_federates_remote_site_hosts(
 ) -> None:
     web = CMKWebSession(central_site)
     web.login()
-    connection_id = _first_connection_id(central_site, web)
+    _register_flow_map(central_site, web)
 
     # The daemon started single-socket (the remote was connected afterwards), so
-    # reaching the remote host proves it adopted the fan-out specs live. Timeout
-    # comfortably exceeds the daemon's topology cache TTL so a pre-federation
-    # cache entry can expire and be rebuilt.
+    # reaching the remote host proves it adopted the fan-out specs live.
     wait_until(
-        lambda: _remote_host_visible(central_site, remote_site, web, connection_id),
+        lambda: _remote_host_visible(central_site, remote_site, web),
         timeout=120,
         interval=3,
         condition_name=(
@@ -159,7 +164,7 @@ def test_maps_daemon_federates_remote_site_hosts(
 
     # Federation is additive, not a swap: the central site's own hosts must stay
     # visible alongside the remote's.
-    site_ids = {node.get("site_id") for node in _topology_nodes(central_site, web, connection_id)}
+    site_ids = {node.get("site_id") for node in _topology_nodes(central_site, web)}
     assert remote_site.id in site_ids
     assert central_site.id in site_ids
 

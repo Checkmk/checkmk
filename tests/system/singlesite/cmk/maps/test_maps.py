@@ -59,9 +59,29 @@ def _first_connection_id(site: Site, web: CMKWebSession) -> str:
     return str(connections[0]["id"])
 
 
-def _topology_nodes(site: Site, web: CMKWebSession, connection_id: str) -> list[dict[str, object]]:
+# The built-in flow map, which shows the topology of all hosts.
+_FLOW_MAP = "infrastructure"
+
+
+def _register_flow_map(site: Site, web: CMKWebSession) -> None:
+    session = _gui_session(web)
+    signed = session.get(
+        site.url_for_path(f"/{site.id}/check_mk/api/internal/objects/maps_signed_map/{_FLOW_MAP}"),
+        timeout=_TIMEOUT,
+    )
+    signed.raise_for_status()
+    response = session.post(
+        _maps_url(site, f"/api/v1/maps/{_FLOW_MAP}/register"),
+        json={"config_b64": signed.json()["config_b64"], "sig": signed.json()["sig"]},
+        headers={"Sec-Fetch-Site": "same-origin"},
+        timeout=_TIMEOUT,
+    )
+    response.raise_for_status()
+
+
+def _topology_nodes(site: Site, web: CMKWebSession) -> list[dict[str, object]]:
     response = _gui_session(web).get(
-        _maps_url(site, f"/api/v1/connections/{connection_id}/topology"), timeout=_TIMEOUT
+        _maps_url(site, f"/api/v1/maps/{_FLOW_MAP}/topology"), timeout=_TIMEOUT
     )
     response.raise_for_status()
     return list(response.json())
@@ -159,13 +179,12 @@ def test_maps_daemon_topology_includes_monitored_host(
 ) -> None:
     # The daemon fans a Livestatus query out over the connection and returns the
     # site's hosts as topology nodes. The host we just activated must show up,
-    # tagged with the site it is monitored by. Wait past the daemon's topology
-    # cache TTL so a pre-activation (empty) cache entry can expire and rebuild.
-    connection_id = _first_connection_id(site, web)
+    # tagged with the site it is monitored by.
+    _register_flow_map(site, web)
     wait_until(
         lambda: any(
             node.get("name") == monitored_host and node.get("site_id") == site.id
-            for node in _topology_nodes(site, web, connection_id)
+            for node in _topology_nodes(site, web)
         ),
         timeout=60,
         interval=3,

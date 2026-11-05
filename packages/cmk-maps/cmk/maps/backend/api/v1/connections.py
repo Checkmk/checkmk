@@ -8,7 +8,6 @@ import logging
 import time
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from dataclasses import dataclass
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
@@ -26,9 +25,6 @@ from cmk.maps.backend.connections.base import (
     TopologyRow,
 )
 from cmk.maps.backend.core.auth import Principal
-from cmk.maps.backend.core.config import settings
-from cmk.maps.backend.core.single_flight import SingleFlight
-from cmk.maps.backend.core.ttl_cache import TtlCache
 from cmk.maps.backend.schemas.connection import (
     ConnectionListEntry,
     to_list_entry,
@@ -103,28 +99,6 @@ def _sorted_truncated_services(svcs: list[ServiceRow], limit: int) -> tuple[list
     if limit <= 0 or len(ordered) <= limit:
         return ordered, 0
     return ordered[:limit], len(ordered) - limit
-
-
-# Topology cache: short TTL so concurrent browser tabs share a single
-# Livestatus round-trip. Reuses the TTL/eviction shape from
-# LivestatusConnection._services_summary_cache (livestatus.py:567+).
-@dataclass(frozen=True)
-class _TopologyCacheKey:
-    connection_id: str
-    root: str | None
-    child_layers: int | None
-    parent_layers: int | None
-    include_services: bool
-    services_per_host: int
-    top_affected_hosts: int
-    auth_user: str | None
-
-
-_TOPOLOGY_CACHE_MAX = 32
-_topology_cache: TtlCache[_TopologyCacheKey, list[TopologyNode]] = TtlCache(
-    maxsize=_TOPOLOGY_CACHE_MAX
-)
-_topology_fetches: SingleFlight[_TopologyCacheKey, list[TopologyNode]] = SingleFlight()
 
 
 def _filter_topology(
@@ -219,82 +193,6 @@ async def build_topology_response(
             )
         )
     return result
-
-
-@router.get("/{connection_id}/topology", response_model=list[TopologyNode])
-async def get_topology(
-    connection_id: str,
-    include_services: bool = Query(False),
-    root: str | None = Query(None),
-    child_layers: int | None = Query(None, ge=-1, le=20),
-    parent_layers: int | None = Query(None, ge=-1, le=20),
-    services_per_host: int | None = Query(None, ge=0, le=500),
-    top_affected_hosts: int | None = Query(None, ge=0, le=1000),
-    current_user: Principal = Depends(rate_limited_read),
-) -> list[TopologyNode]:
-    """Return host topology for flow map rendering.
-
-    For ``include_services=True`` only the top-K hosts (ranked by problem
-    count, default ``settings.flow_map_top_affected_hosts``) are bulk-fetched
-    via ``get_hosts_services_batch``; their per-host service list is capped by
-    ``services_per_host``/``settings.flow_map_max_services_per_host`` and the
-    surplus reported as ``services_truncated_count``. Hosts outside the top-K
-    have ``services_omitted=True`` and render donut-only from
-    ``services_summary``. Successive calls within
-    ``settings.flow_map_topology_cache_ttl`` reuse the cached result.
-
-    Result rows are scoped to the caller's Livestatus contact groups (admins
-    and ``general.see_all`` users see everything). The cache key includes the
-    auth-user, so per-tab cache hits never leak rows across users.
-    """
-    connection = get_connection(connection_id)
-    if connection is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Connection not registered"
-        )
-
-    limit = (
-        services_per_host
-        if services_per_host is not None
-        else settings.flow_map_max_services_per_host
-    )
-    top_k = (
-        top_affected_hosts
-        if top_affected_hosts is not None
-        else settings.flow_map_top_affected_hosts
-    )
-    auth_user = resolve_auth_user(current_user)
-    cache_key = _TopologyCacheKey(
-        connection_id=connection_id,
-        root=root,
-        child_layers=child_layers,
-        parent_layers=parent_layers,
-        include_services=include_services,
-        services_per_host=limit,
-        top_affected_hosts=top_k,
-        auth_user=auth_user,
-    )
-    ttl = settings.flow_map_topology_cache_ttl
-
-    cached = _topology_cache.get(cache_key, ttl=ttl)
-    if cached is not None:
-        return cached
-
-    async def fetch() -> list[TopologyNode]:
-        async with auth_user_scope(connection, auth_user):
-            result = await build_topology_response(
-                connection,
-                include_services=include_services,
-                services_per_host=limit,
-                top_affected_hosts=top_k,
-                root=root,
-                child_layers=child_layers,
-                parent_layers=parent_layers,
-            )
-        _topology_cache.set(cache_key, result)
-        return result
-
-    return await _topology_fetches.run(cache_key, fetch)
 
 
 class MetricPoint(BaseModel):

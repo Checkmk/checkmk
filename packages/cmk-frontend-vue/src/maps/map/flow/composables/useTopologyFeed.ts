@@ -7,14 +7,12 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { onMounted, onUnmounted, readonly, ref, watch } from 'vue'
 
 import { useMapsApis, useStates } from '@/maps/services/context'
-import type { FlowView, TopologyNode } from '@/maps/types/api'
+import type { TopologyNode } from '@/maps/types/api'
 
 interface TopologyFeedOptions {
   /** Empty while the map has no connection configured. */
   connectionId: () => string
-  flowView: () => FlowView | null | undefined
-  /** Whether the current service layout needs per-service detail in the fetch. */
-  withServices: () => boolean
+  mapName: () => string
 }
 
 /**
@@ -25,14 +23,14 @@ interface TopologyFeedOptions {
  *
  * Fallback: when the stream never opens (a reverse proxy that will not pass
  * `text/event-stream`), the states store reports it unavailable and this polls
- * `/topology` every 15 s, pausing while the tab is hidden. The poll timer +
+ * the map's `/topology` every 15 s, pausing while the tab is hidden. The poll timer +
  * bootstrap timer + visibilitychange listener are owned and cleaned up here;
  * the view and the canvas keep their own lifecycles.
  */
 export function useTopologyFeed(options: TopologyFeedOptions) {
-  const { connectionId, flowView, withServices } = options
+  const { connectionId, mapName } = options
   const { _t } = usei18n()
-  const { connections: connectionsApi } = useMapsApis()
+  const { mapStates } = useMapsApis()
   const statesStore = useStates()
 
   const nodes = ref<TopologyNode[]>([])
@@ -60,14 +58,7 @@ export function useTopologyFeed(options: TopologyFeedOptions) {
     }
     const seq = ++fetchSeq
     try {
-      const view = flowView()
-      const topo = await connectionsApi.fetchTopology(connectionId(), withServices(), {
-        root: view?.root ?? null,
-        childLayers: view?.child_layers ?? null,
-        parentLayers: view?.parent_layers ?? null,
-        topAffectedHosts: view?.top_affected_hosts ?? null,
-        servicesPerHost: view?.max_services_per_host ?? null
-      })
+      const topo = await mapStates.fetchTopology(mapName())
       if (seq !== fetchSeq) {
         return
       }
@@ -104,6 +95,17 @@ export function useTopologyFeed(options: TopologyFeedOptions) {
       loading.value = false
     },
     { deep: false }
+  )
+
+  // The daemon builds the topology from the map it holds, so an edit handed
+  // over is shown without waiting for the next poll.
+  watch(
+    () => statesStore.handedOver.value,
+    () => {
+      if (!statesStore.streamAvailable.value) {
+        void fetchTopology()
+      }
+    }
   )
 
   // Polling-fallback timer (only used without a stream). Tab-visibility

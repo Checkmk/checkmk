@@ -21,6 +21,7 @@ import json
 from collections.abc import Awaitable, Callable, Iterator
 from http import HTTPStatus
 from types import SimpleNamespace
+from typing import override
 from unittest.mock import MagicMock
 
 import httpx2
@@ -35,6 +36,7 @@ from cmk.fastapi.gui_session import GuiLoopback
 from cmk.fastapi.sse import SentEvent
 from cmk.maps.backend.api.v1 import deps, states
 from cmk.maps.backend.app import create_app
+from cmk.maps.backend.connections.base import TopologyRow
 from cmk.maps.backend.core.auth import GuiAuth, Principal
 from cmk.maps.backend.core.middleware import CompactGZipMiddleware
 from cmk.maps.backend.core.ratelimit import (
@@ -320,6 +322,81 @@ def test_pushed_topology_is_queued_as_a_topology_update_event() -> None:
 
     event = sub.queue.get_nowait()
     assert (event.event, json.loads(event.raw_data or "")["map"]) == ("topology_update", "b1")
+
+
+class _CountedTopology(FakeConnection):
+    def __init__(self) -> None:
+        super().__init__()
+        self.fetches = 0
+
+    @override
+    async def get_topology(self) -> list[TopologyRow]:
+        self.fetches += 1
+        return await super().get_topology()
+
+
+@pytest.fixture(name="counted_topology")
+def fixture_counted_topology() -> Iterator[_CountedTopology]:
+    connection = _CountedTopology()
+    state_service.register_connection("live_1", connection)
+    yield connection
+    state_service.unregister_connection("live_1")
+
+
+def _flow_map(**view: object) -> MapConfig:
+    return MapConfig(name="b1", connection_id="live_1", view=FlowView.model_validate(view))
+
+
+def test_a_new_stream_gets_the_topology_its_group_fetched_in_this_interval(
+    counted_topology: _CountedTopology,
+) -> None:
+    cfg = _flow_map()
+    map_key = states._map_key("alice", "b1")  # noqa: SLF001
+    streaming, joining = manager.subscribe(map_key, None), manager.subscribe(map_key, None)
+    asyncio.run(
+        states._push_topology_to(cfg, map_key, None, [streaming], force_full=False)  # noqa: SLF001
+    )
+
+    asyncio.run(
+        states._push_topology_to(  # noqa: SLF001
+            cfg, map_key, None, [joining], force_full=True, store=False
+        )
+    )
+
+    assert counted_topology.fetches == 1
+    assert joining.queue.get_nowait().event == "topology_update"
+
+
+def test_the_topology_of_a_flow_map_is_fetched_once_per_interval(
+    client: TestClient, counted_topology: _CountedTopology
+) -> None:
+    map_service.register_map("alice", _flow_map())
+
+    for _ in range(2):
+        response = client.get("/api/v1/maps/b1/topology", headers=_session("alice"))
+        assert response.status_code == HTTPStatus.OK
+
+    assert counted_topology.fetches == 1
+
+
+@pytest.mark.usefixtures("counted_topology")
+def test_the_topology_reaches_as_far_as_the_map_says(client: TestClient) -> None:
+    map_service.register_map("alice", _flow_map(root="switch01", child_layers=1, parent_layers=0))
+
+    response = client.get(
+        "/api/v1/maps/b1/topology?root=router01&child_layers=-1", headers=_session("alice")
+    )
+
+    assert {node["name"] for node in response.json()} == {"switch01", "fileserver", "mailserver"}
+
+
+@pytest.mark.usefixtures("counted_topology")
+def test_a_map_that_is_no_flow_map_has_no_topology(client: TestClient) -> None:
+    map_service.register_map("alice", MapConfig(name="b1", view=RadarView()))
+
+    response = client.get("/api/v1/maps/b1/topology", headers=_session("alice"))
+
+    assert response.status_code == HTTPStatus.NOT_FOUND
 
 
 # --------------------------------------------------------------------------- #

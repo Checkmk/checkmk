@@ -19,7 +19,8 @@ import type {
   FolderTreeOverride,
   MapConfig,
   MapElement,
-  MapStates
+  MapStates,
+  TopologyNode
 } from '@/maps/types/api'
 
 /**
@@ -108,6 +109,11 @@ export class MapStatesApi {
     return (await this.client.GET('/api/v1/maps/{name}/auto-objects', {
       params: { path: { name } }
     })) as unknown as MapElement[]
+  }
+
+  /** The topology of a flow map as its stream carries it, for a client without the stream. */
+  public async fetchTopology(name: string): Promise<TopologyNode[]> {
+    return this.client.GET('/api/v1/maps/{name}/topology', { params: { path: { name } } })
   }
 
   /**

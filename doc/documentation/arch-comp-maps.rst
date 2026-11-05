@@ -438,15 +438,17 @@ reaches the browser without delay.
      - ``v1/maps/{name}/folder-search``
      - Service search in a folder-tree map.
    * - GET
+     - ``v1/maps/{name}/topology``
+     - The parent/child topology of a flow map, as far as the map reaches, for a
+       client without the stream. Fetched once per interval for all viewers of
+       the map who see the same, shared with the stream.
+   * - GET
      - ``v1/sse/maps/{name}``
      - The live state stream (SSE).
    * - GET
      - ``v1/connections``
      - The configured connections. Needs ``may_edit`` or ``configure``;
        technical fields only with ``configure``, secrets never.
-   * - GET
-     - ``v1/connections/{id}/topology``
-     - Parent/child topology for flow maps.
    * - GET
      - ``v1/connections/{id}/metric-history``
      - Metric time series for the object detail panel.

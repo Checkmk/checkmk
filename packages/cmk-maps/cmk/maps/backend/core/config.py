@@ -28,16 +28,6 @@ def _env_int(key: str, default: int) -> int:
         return default
 
 
-def _env_float(key: str, default: float) -> float:
-    raw = os.environ.get(key)
-    if raw is None:
-        return default
-    try:
-        return float(raw)
-    except ValueError:
-        return default
-
-
 def _normalize_log_level(value: str) -> Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
     upper = value.strip().upper()
     if upper in _LOG_LEVELS:
@@ -75,9 +65,6 @@ class Settings(BaseModel):
 
     flow_map_max_services_per_host: int = Field(
         default_factory=lambda: _env_int("MAPS_FLOW_MAX_SERVICES_PER_HOST", 50), ge=0
-    )
-    flow_map_topology_cache_ttl: float = Field(
-        default_factory=lambda: _env_float("MAPS_FLOW_TOPOLOGY_CACHE_TTL", 20.0)
     )
     # Mirror cmk.gui.nodevis: only fetch service detail for the top-K hosts
     # ranked by problem count.

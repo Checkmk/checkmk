@@ -123,6 +123,27 @@ _fetched: TtlCache[_FetchKey, _Fetched] = TtlCache(
 # its old config brings.
 _fetches: SingleFlight[tuple[str, str | None, int], _Flight] = SingleFlight()
 
+
+@dataclass(frozen=True)
+class _Topology:
+    config: MapConfig
+    nodes: list[TopologyNode]
+
+
+type _TopologyKey = tuple[str, str | None]
+
+# The latest topology per (flow map, auth user), so a new stream and a client
+# without one get what the map's stream fetched in this interval.
+_topologies: TtlCache[_TopologyKey, _Topology] = TtlCache(
+    maxsize=256,
+    weigh=lambda topology: sum(1 + len(node.services) for node in topology.nodes),
+    maxweight=_FETCHED_MAX_OBJECTS,
+    expire_after=MAX_STATE_REFRESH_INTERVAL,
+)
+_topology_fetches: SingleFlight[tuple[str, str | None, int], list[TopologyNode] | None] = (
+    SingleFlight()
+)
+
 # What the SPA names a browser tab by (cmk-ui-library's randomId()).
 _TAB_ID_PATTERN = r"^[-a-z0-9]{16}$"
 
@@ -306,6 +327,25 @@ async def _shared_states(
     return fetched.gzipped
 
 
+async def _group_topology(
+    map_key: str, cfg: MapConfig, auth_user: str | None, *, fresh: bool
+) -> list[TopologyNode] | None:
+    """The topology of the map for the group, fetched once per interval unless ``fresh``."""
+    key = (map_key, auth_user)
+    if not fresh:
+        ttl = settings_service.get_effective_state_refresh_interval()
+        if (kept := _topologies.get(key, ttl=ttl)) is not None and kept.config is cfg:
+            return kept.nodes
+
+    async def fetch() -> list[TopologyNode] | None:
+        nodes = await _fetch_topology_for_user(cfg, auth_user)
+        if nodes is not None:
+            _topologies.set(key, _Topology(cfg, nodes))
+        return nodes
+
+    return await _topology_fetches.run((*key, id(cfg)), fetch)
+
+
 async def _push_topology_to(
     cfg: MapConfig,
     map_key: str,
@@ -317,7 +357,8 @@ async def _push_topology_to(
 ) -> None:
     if not targets:
         return
-    nodes = await _fetch_topology_for_user(cfg, auth_user)
+    # A newcomer gets what the group's stream fetched in this interval.
+    nodes = await _group_topology(map_key, cfg, auth_user, fresh=store)
     if nodes is None:
         return
     delta = state_service.compute_topology_delta(
@@ -580,6 +621,29 @@ async def get_map_states(
         media_type="application/json",
         headers={"Content-Encoding": "gzip", "Vary": "Accept-Encoding"},
     )
+
+
+@router.get("/maps/{name}/topology", response_model=list[TopologyNode])
+async def get_map_topology(
+    name: MapName, current_user: Principal = Depends(rate_limited_map_read)
+) -> list[TopologyNode]:
+    """The topology of a flow map as its stream carries it, for a client without the stream."""
+    cfg = registered_map(current_user, name)
+    if not isinstance(cfg.view, FlowView):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Map '{name}' is no flow map"
+        )
+    nodes = await _group_topology(
+        _map_key(current_user.map_key_owner, cfg.name),
+        cfg,
+        resolve_auth_user(current_user),
+        fresh=False,
+    )
+    if nodes is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="The topology is unavailable"
+        )
+    return nodes
 
 
 @router.get("/maps/{name}/folder-host-services", response_model=list[FolderHostService])

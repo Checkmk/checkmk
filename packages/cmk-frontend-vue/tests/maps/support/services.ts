@@ -125,10 +125,11 @@ export function fakeMapsServices(
   })
   const mapStates = stubApi(new MapStatesApi(daemon), {
     fetchAutoObjects: [],
+    fetchTopology: [],
     fetchFolderHostServices: [],
     searchFolderServices: { matches: [], truncated: false, limit: 0 }
   })
-  const connectionsApi = stubApi(new ConnectionsApi(daemon), { list: [], fetchTopology: [] })
+  const connectionsApi = stubApi(new ConnectionsApi(daemon), { list: [] })
   const objects = stubApi(new MonitoringObjectsApi(), {
     fetchFolders: [],
     fetchSites: [],

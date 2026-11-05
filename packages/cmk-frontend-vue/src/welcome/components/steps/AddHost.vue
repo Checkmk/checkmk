@@ -15,7 +15,7 @@ import CmkWizardStep from 'cmk-ui-library/components/CmkWizard/CmkWizardStep.vue
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import usePersistentRef from 'cmk-ui-library/lib/usePersistentRef'
-import { type Ref, ref } from 'vue'
+import { type Ref, computed, ref } from 'vue'
 
 import StepCardsRow from '@/welcome/components/steps/components/StepCardsRow.vue'
 import StepHeading from '@/welcome/components/steps/components/StepHeading.vue'
@@ -52,6 +52,22 @@ function openRelaySetup(): void {
     window.location.href = props.cards.relays
   }
 }
+
+// Checkmk Cloud reaches network devices and Proxmox VE only through a relay,
+// so their cards stay greyed out until a relay exists. Without the relay
+// feature the flag is not sent, and nothing is greyed out.
+const cloudWithoutRelay = computed(
+  () => useCseSlideout.value && props.cards.relay_configured === false
+)
+const relayFirstCardProps = computed(() =>
+  cloudWithoutRelay.value
+    ? {
+        subtitle: _t('Set up a Checkmk Relay first'),
+        subtitleColor: 'secondary' as const,
+        disabled: true
+      }
+    : {}
+)
 
 // One msgid for the whole sentence, so translations can move the link.
 const relayNoteParts = _tp(
@@ -106,7 +122,7 @@ a cloud account or an application. Checkmk finds its services automatically.`
           </div>
 
           <CmkAlert
-            v-if="useCseSlideout && cards.relays"
+            v-if="cloudWithoutRelay"
             variant="info"
             :heading="_t('Network devices and virtualization need a Checkmk Relay')"
             :text="
@@ -117,13 +133,14 @@ a cloud account or an application. Checkmk finds its services automatically.`
             :main-button="{ title: _t('Set up Checkmk Relay'), onclick: openRelaySetup }"
           />
 
-          <div v-if="cards.network_devices">
+          <div v-if="cards.network_devices || cloudWithoutRelay">
             <StepHeading>{{ _t('Network devices') }}</StepHeading>
             <StepCardsRow>
               <CmkLinkCard
                 icon-name="networking"
                 :title="_t('Switches, routers, firewalls & other SNMP devices')"
-                :url="cards.network_devices"
+                :url="cloudWithoutRelay ? undefined : cards.network_devices"
+                v-bind="relayFirstCardProps"
                 :open-in-new-tab="false"
               />
             </StepCardsRow>
@@ -142,7 +159,8 @@ a cloud account or an application. Checkmk finds its services automatically.`
               <CmkLinkCard
                 icon-name="proxmox-ve"
                 :title="_t('Proxmox VE')"
-                :url="cards.proxmox_quick_setup"
+                :url="cloudWithoutRelay ? undefined : cards.proxmox_quick_setup"
+                v-bind="relayFirstCardProps"
                 :open-in-new-tab="false"
               />
               <CmkLinkCard

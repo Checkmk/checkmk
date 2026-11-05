@@ -26,7 +26,14 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.welcome.pages import get_welcome_data, register
-from cmk.gui.welcome.registry import welcome_card_registry, WelcomeCardCallback, WelcomeCardUrl
+from cmk.gui.welcome.registry import (
+    welcome_card_registry,
+    welcome_flag_registry,
+    WelcomeCardCallback,
+    WelcomeCardDynamicUrl,
+    WelcomeCardUrl,
+    WelcomeFlag,
+)
 from cmk.shared_typing.welcome import FinishedEnum, WelcomeCards
 
 
@@ -78,14 +85,18 @@ def fixture_pages() -> PageRegistry:
 
 @pytest.fixture(name="without_edition_cards")
 def fixture_without_edition_cards() -> Iterator[None]:
-    registered = list(welcome_card_registry.values())
+    cards, flags = list(welcome_card_registry.values()), list(welcome_flag_registry.values())
     welcome_card_registry.clear()
+    welcome_flag_registry.clear()
     try:
         yield
     finally:
         welcome_card_registry.clear()
-        for card in registered:
+        welcome_flag_registry.clear()
+        for card in cards:
             welcome_card_registry.register(card)
+        for flag in flags:
+            welcome_flag_registry.register(flag)
 
 
 def _cards() -> WelcomeCards:
@@ -150,6 +161,58 @@ def test_card_registered_with_a_callback_yields_its_callback_id(
     )
 
     assert _cards().relays == "open_relay_dialog"
+
+
+def test_dynamic_card_links_to_the_vars_it_computes(
+    with_admin_login: UserId,
+    without_edition_cards: None,
+) -> None:
+    welcome_card_registry.register(
+        WelcomeCardDynamicUrl(
+            id="network_devices",
+            make_vars=lambda: [("mode", "newhost"), ("relayid", "relay1")],
+            filename="wato.py",
+        )
+    )
+
+    url = _cards().network_devices
+
+    assert url is not None
+    assert "mode=newhost" in url
+    assert "relayid=relay1" in url
+
+
+def test_dynamic_card_without_vars_has_no_link(
+    with_admin_login: UserId,
+    without_edition_cards: None,
+) -> None:
+    welcome_card_registry.register(
+        WelcomeCardDynamicUrl(
+            id="network_devices",
+            make_vars=lambda: None,
+            filename="wato.py",
+        )
+    )
+
+    assert _cards().network_devices is None
+
+
+@pytest.mark.parametrize("configured", [True, False])
+def test_relay_flag_says_what_the_registered_flag_says(
+    with_admin_login: UserId,
+    without_edition_cards: None,
+    configured: bool,
+) -> None:
+    welcome_flag_registry.register(WelcomeFlag(id="relay_configured", value=lambda: configured))
+
+    assert _cards().relay_configured is configured
+
+
+def test_relay_flag_is_not_sent_without_the_relay_feature(
+    with_admin_login: UserId,
+    without_edition_cards: None,
+) -> None:
+    assert _cards().relay_configured is None
 
 
 def test_card_without_a_registered_entry_has_no_link(

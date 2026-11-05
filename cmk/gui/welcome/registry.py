@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
@@ -23,10 +24,42 @@ class WelcomeCardCallback:
     callback_id: str
 
 
-class WelcomeCardRegistry(Registry[WelcomeCardUrl | WelcomeCardCallback]):
+@dataclass
+class WelcomeCardDynamicUrl:
+    """A card whose URL depends on the current configuration.
+
+    make_vars returns None if the card should not be shown right now.
+    """
+
+    id: str
+    make_vars: Callable[[], list[HTTPVariable] | None]
+    filename: str
+
+
+type WelcomeCard = WelcomeCardUrl | WelcomeCardCallback | WelcomeCardDynamicUrl
+
+
+class WelcomeCardRegistry(Registry[WelcomeCard]):
     @override
-    def plugin_name(self, instance: WelcomeCardUrl | WelcomeCardCallback) -> str:
+    def plugin_name(self, instance: WelcomeCard) -> str:
         return instance.id
 
 
 welcome_card_registry = WelcomeCardRegistry()
+
+
+@dataclass(frozen=True)
+class WelcomeFlag:
+    """A fact about the site the welcome page adapts to, e.g. whether a relay is configured."""
+
+    id: str
+    value: Callable[[], bool]
+
+
+class WelcomeFlagRegistry(Registry[WelcomeFlag]):
+    @override
+    def plugin_name(self, instance: WelcomeFlag) -> str:
+        return instance.id
+
+
+welcome_flag_registry = WelcomeFlagRegistry()

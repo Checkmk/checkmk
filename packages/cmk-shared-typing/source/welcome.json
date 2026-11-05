@@ -36,6 +36,7 @@
         "add_host": { "type": "string" },
         "network_devices": { "type": "string" },
         "relays": { "type": "string" },
+        "relay_configured": { "type": "boolean" },
         "aws_quick_setup": { "type": "string" },
         "azure_quick_setup": { "type": "string" },
         "gcp_quick_setup": { "type": "string" },

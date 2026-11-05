@@ -15,7 +15,12 @@ from cmk.gui.pages import AjaxPage, PageContext, PageEndpoint, PageRegistry, Pag
 from cmk.gui.top_heading import show_license_banner, show_license_expiry
 from cmk.gui.utils.doc_reference_urls import doc_reference_url
 from cmk.gui.wato.pages.user_profile.main_menu import set_user_attribute
-from cmk.gui.welcome.registry import welcome_card_registry, WelcomeCardCallback
+from cmk.gui.welcome.registry import (
+    welcome_card_registry,
+    welcome_flag_registry,
+    WelcomeCardCallback,
+    WelcomeCardDynamicUrl,
+)
 from cmk.gui.welcome.utils import WELCOME_PERMISSIONS
 from cmk.shared_typing.welcome import FinishedEnum, StageInformation, WelcomeCards, WelcomePage
 from cmk.web.utils.doc_references import DocReference, DocReferenceUtm
@@ -58,10 +63,19 @@ def _make_url_or_callback_from_registry(
     if isinstance(url, WelcomeCardCallback):
         return url.callback_id
 
+    if isinstance(url, WelcomeCardDynamicUrl):
+        if (addvars := url.make_vars()) is None:
+            return None
+        return _make_url(addvars=addvars, filename=url.filename)
+
     return _make_url(
         addvars=url.vars,
         filename=url.filename,
     )
+
+
+def _flag_from_registry(identifier: str) -> bool | None:
+    return None if (flag := welcome_flag_registry.get(identifier)) is None else flag.value()
 
 
 def _ajax_mark_step_as_complete(ctx: PageContext) -> None:  # noqa: ARG001
@@ -197,6 +211,7 @@ def get_welcome_data() -> WelcomePage:
             relays=_make_url_or_callback_from_registry(
                 identifier="relays",
             ),
+            relay_configured=_flag_from_registry("relay_configured"),
             aws_quick_setup=_make_url(
                 addvars=[
                     ("mode", "new_special_agent_configuration"),

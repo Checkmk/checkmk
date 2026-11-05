@@ -1145,14 +1145,17 @@ class ModeCreateHost(CreateHostMode):
         if prefill := request.get_ascii_input("prefill"):
             match prefill:  # type: ignore[exhaustive-match]
                 case "snmp":
+                    attributes = HostAttributes(
+                        tag_snmp_ds="snmp-v2",
+                        tag_agent="no-agent",
+                        snmp_community="",
+                    )
+                    if relay_id := request.get_str_input("relayid"):
+                        attributes["relay"] = relay_id
                     return Host(
                         folder=folder_from_request(tree, request.var("folder"), host_name),
                         host_name=host_name,
-                        attributes=HostAttributes(
-                            tag_snmp_ds="snmp-v2",
-                            tag_agent="no-agent",
-                            snmp_community="",
-                        ),
+                        attributes=attributes,
                         cluster_nodes=None,
                     )
                 case "relay":

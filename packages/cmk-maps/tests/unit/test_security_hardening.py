@@ -403,6 +403,12 @@ def test_authuser_header_is_lqencoded(monkeypatch: pytest.MonkeyPatch, tmp_path:
     assert "\nStats:" not in headers
 
 
+@pytest.mark.parametrize("line_break", ["\r", "\x0b", "\x0c", "\x1c", "\x85", " ", " "])
+def test_query_keeps_a_value_with_a_line_break_in_its_header(line_break: str) -> None:
+    lql = f"GET hosts\nColumns: name\nFilter: name = a{line_break}{line_break}GET status\n"
+    assert str(livestatus._lql_to_query(lql)) == lql  # noqa: SLF001
+
+
 def _automation_connection() -> livestatus.LivestatusConnection:
     return livestatus.LivestatusConnection(
         socket_path="/var/run/live",

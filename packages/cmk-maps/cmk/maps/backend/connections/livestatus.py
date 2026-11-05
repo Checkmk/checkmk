@@ -330,9 +330,10 @@ def _lql_to_query(lql: str) -> Query:
     """
     from cmk.livestatus_client import Query, QuerySpecification
 
-    # strip("\n"), not strip(): an empty filter value ("Filter: name != \n")
-    # carries a meaningful trailing space on the last line.
-    lines = lql.strip("\n").splitlines()
+    # At "\n" only, as Livestatus ends a line, so a value with another line break
+    # stays in its header; strip("\n"), not strip(), as an empty filter value
+    # ("Filter: name != \n") carries a meaningful trailing space.
+    lines = lql.strip("\n").split("\n")
     if not lines or not lines[0].startswith("GET "):
         return Query(lql)
     columns: list[str] = []

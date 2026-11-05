@@ -302,7 +302,7 @@ def test_filter_inventory_cleanup_parameters(
     )
 
 
-def test_nothing_to_do(tmp_path: Path) -> None:
+def test_cleanup_without_history_creates_no_history_directory(tmp_path: Path) -> None:
     inv_paths = InventoryPaths(tmp_path)
     archive_host = inv_paths.archive_host(HostName("hostname"))
     delta_cache_host = inv_paths.delta_cache_host(HostName("hostname"))
@@ -317,11 +317,13 @@ def test_nothing_to_do(tmp_path: Path) -> None:
         now=100,
         logger=null_logger(),
     )
-    assert not archive_host.exists()
-    assert not delta_cache_host.exists()
+    assert (
+        archive_host.exists(),
+        delta_cache_host.exists(),
+    ) == (False, False)
 
 
-def test_only_archive_host(tmp_path: Path) -> None:
+def test_cleanup_keeps_an_empty_archive_directory(tmp_path: Path) -> None:
     inv_paths = InventoryPaths(tmp_path)
     archive_host = inv_paths.archive_host(HostName("hostname"))
     archive_host.mkdir(parents=True, exist_ok=True)
@@ -337,11 +339,13 @@ def test_only_archive_host(tmp_path: Path) -> None:
         now=100,
         logger=null_logger(),
     )
-    assert archive_host.exists()
-    assert not delta_cache_host.exists()
+    assert (
+        archive_host.exists(),
+        delta_cache_host.exists(),
+    ) == (True, False)
 
 
-def test_only_delta_cache_host_exists(tmp_path: Path) -> None:
+def test_cleanup_keeps_an_empty_delta_cache_directory(tmp_path: Path) -> None:
     inv_paths = InventoryPaths(tmp_path)
     archive_host = inv_paths.archive_host(HostName("hostname"))
     delta_cache_host = inv_paths.delta_cache_host(HostName("hostname"))
@@ -357,11 +361,13 @@ def test_only_delta_cache_host_exists(tmp_path: Path) -> None:
         now=100,
         logger=null_logger(),
     )
-    assert not archive_host.exists()
-    assert delta_cache_host.exists()
+    assert (
+        archive_host.exists(),
+        delta_cache_host.exists(),
+    ) == (False, True)
 
 
-def test_both_exist(tmp_path: Path) -> None:
+def test_cleanup_keeps_both_empty_history_directories(tmp_path: Path) -> None:
     inv_paths = InventoryPaths(tmp_path)
     archive_host = inv_paths.archive_host(HostName("hostname"))
     archive_host.mkdir(parents=True, exist_ok=True)
@@ -378,8 +384,10 @@ def test_both_exist(tmp_path: Path) -> None:
         now=100,
         logger=null_logger(),
     )
-    assert archive_host.exists()
-    assert delta_cache_host.exists()
+    assert (
+        archive_host.exists(),
+        delta_cache_host.exists(),
+    ) == (True, True)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -456,10 +464,12 @@ def test_legacy_one_archive(tmp_path: Path) -> None:
         now=101,
         logger=null_logger(),
     )
-    assert files.inventory_tree.legacy.exists()
-    assert files.inventory_tree_gz.legacy.exists()
-    assert files.status_data_tree.legacy.exists()
-    assert files.archive_tree.legacy.exists()
+    assert (
+        files.inventory_tree.legacy.exists(),
+        files.inventory_tree_gz.legacy.exists(),
+        files.status_data_tree.legacy.exists(),
+        files.archive_tree.legacy.exists(),
+    ) == (True, True, True, True)
 
 
 def test_legacy_one_archive_file_file_age(tmp_path: Path) -> None:
@@ -479,10 +489,12 @@ def test_legacy_one_archive_file_file_age(tmp_path: Path) -> None:
         now=101,
         logger=null_logger(),
     )
-    assert files.inventory_tree.legacy.exists()
-    assert files.inventory_tree_gz.legacy.exists()
-    assert files.status_data_tree.legacy.exists()
-    assert not files.archive_tree.legacy.exists()
+    assert (
+        files.inventory_tree.legacy.exists(),
+        files.inventory_tree_gz.legacy.exists(),
+        files.status_data_tree.legacy.exists(),
+        files.archive_tree.legacy.exists(),
+    ) == (True, True, True, False)
 
 
 def test_legacy_one_archive_file_number_of_history_entries(tmp_path: Path) -> None:
@@ -502,10 +514,12 @@ def test_legacy_one_archive_file_number_of_history_entries(tmp_path: Path) -> No
         now=101,
         logger=null_logger(),
     )
-    assert files.inventory_tree.legacy.exists()
-    assert files.inventory_tree_gz.legacy.exists()
-    assert files.status_data_tree.legacy.exists()
-    assert files.archive_tree.legacy.exists()
+    assert (
+        files.inventory_tree.legacy.exists(),
+        files.inventory_tree_gz.legacy.exists(),
+        files.status_data_tree.legacy.exists(),
+        files.archive_tree.legacy.exists(),
+    ) == (True, True, True, True)
 
 
 def test_legacy_one_archive_file_file_age_and_number_of_history_entries(tmp_path: Path) -> None:
@@ -532,10 +546,12 @@ def test_legacy_one_archive_file_file_age_and_number_of_history_entries(tmp_path
         now=101,
         logger=null_logger(),
     )
-    assert files.inventory_tree.legacy.exists()
-    assert files.inventory_tree_gz.legacy.exists()
-    assert files.status_data_tree.legacy.exists()
-    assert not files.archive_tree.legacy.exists()
+    assert (
+        files.inventory_tree.legacy.exists(),
+        files.inventory_tree_gz.legacy.exists(),
+        files.status_data_tree.legacy.exists(),
+        files.archive_tree.legacy.exists(),
+    ) == (True, True, True, False)
 
 
 def test_legacy_one_archive_file_file_age_or_number_of_history_entries(tmp_path: Path) -> None:
@@ -562,10 +578,12 @@ def test_legacy_one_archive_file_file_age_or_number_of_history_entries(tmp_path:
         now=101,
         logger=null_logger(),
     )
-    assert files.inventory_tree.legacy.exists()
-    assert files.inventory_tree_gz.legacy.exists()
-    assert files.status_data_tree.legacy.exists()
-    assert not files.archive_tree.legacy.exists()
+    assert (
+        files.inventory_tree.legacy.exists(),
+        files.inventory_tree_gz.legacy.exists(),
+        files.status_data_tree.legacy.exists(),
+        files.archive_tree.legacy.exists(),
+    ) == (True, True, True, False)
 
 
 def _legacy_setup_files(tmp_path: Path, host_name: HostName, *, timestamp: int) -> _Files:
@@ -643,18 +661,20 @@ def test_legacy_file_age(tmp_path: Path) -> None:
         now=101,
         logger=null_logger(),
     )
-    assert files.inventory_tree.legacy.exists()
-    assert files.inventory_tree_gz.legacy.exists()
-    assert files.status_data_tree.legacy.exists()
-    assert not files.archive_tree_1.legacy.exists()
-    assert not files.archive_tree_2.legacy.exists()
-    assert files.archive_tree_3.legacy.exists()
-    assert files.archive_tree_4.legacy.exists()
-    assert not files.delta_cache_tree_None_1.legacy.exists()
-    assert not files.delta_cache_tree_1_2.legacy.exists()
-    assert not files.delta_cache_tree_2_3.legacy.exists()
-    assert files.delta_cache_tree_3_4.legacy.exists()
-    assert not files.delta_cache_tree_4_ts.legacy.exists()
+    assert (
+        files.inventory_tree.legacy.exists(),
+        files.inventory_tree_gz.legacy.exists(),
+        files.status_data_tree.legacy.exists(),
+        files.archive_tree_1.legacy.exists(),
+        files.archive_tree_2.legacy.exists(),
+        files.archive_tree_3.legacy.exists(),
+        files.archive_tree_4.legacy.exists(),
+        files.delta_cache_tree_None_1.legacy.exists(),
+        files.delta_cache_tree_1_2.legacy.exists(),
+        files.delta_cache_tree_2_3.legacy.exists(),
+        files.delta_cache_tree_3_4.legacy.exists(),
+        files.delta_cache_tree_4_ts.legacy.exists(),
+    ) == (True, True, True, False, False, True, True, False, False, False, True, False)
 
 
 def test_legacy_number_of_history_entries(tmp_path: Path) -> None:
@@ -674,18 +694,20 @@ def test_legacy_number_of_history_entries(tmp_path: Path) -> None:
         now=101,
         logger=null_logger(),
     )
-    assert files.inventory_tree.legacy.exists()
-    assert files.inventory_tree_gz.legacy.exists()
-    assert files.status_data_tree.legacy.exists()
-    assert not files.archive_tree_1.legacy.exists()
-    assert files.archive_tree_2.legacy.exists()
-    assert files.archive_tree_3.legacy.exists()
-    assert files.archive_tree_4.legacy.exists()
-    assert not files.delta_cache_tree_None_1.legacy.exists()
-    assert not files.delta_cache_tree_1_2.legacy.exists()
-    assert files.delta_cache_tree_2_3.legacy.exists()
-    assert files.delta_cache_tree_3_4.legacy.exists()
-    assert not files.delta_cache_tree_4_ts.legacy.exists()
+    assert (
+        files.inventory_tree.legacy.exists(),
+        files.inventory_tree_gz.legacy.exists(),
+        files.status_data_tree.legacy.exists(),
+        files.archive_tree_1.legacy.exists(),
+        files.archive_tree_2.legacy.exists(),
+        files.archive_tree_3.legacy.exists(),
+        files.archive_tree_4.legacy.exists(),
+        files.delta_cache_tree_None_1.legacy.exists(),
+        files.delta_cache_tree_1_2.legacy.exists(),
+        files.delta_cache_tree_2_3.legacy.exists(),
+        files.delta_cache_tree_3_4.legacy.exists(),
+        files.delta_cache_tree_4_ts.legacy.exists(),
+    ) == (True, True, True, False, True, True, True, False, False, True, True, False)
 
 
 def test_legacy_file_age_and_number_of_history_entries(tmp_path: Path) -> None:
@@ -712,18 +734,20 @@ def test_legacy_file_age_and_number_of_history_entries(tmp_path: Path) -> None:
         now=101,
         logger=null_logger(),
     )
-    assert files.inventory_tree.legacy.exists()
-    assert files.inventory_tree_gz.legacy.exists()
-    assert files.status_data_tree.legacy.exists()
-    assert not files.archive_tree_1.legacy.exists()
-    assert files.archive_tree_2.legacy.exists()
-    assert files.archive_tree_3.legacy.exists()
-    assert files.archive_tree_4.legacy.exists()
-    assert not files.delta_cache_tree_None_1.legacy.exists()
-    assert not files.delta_cache_tree_1_2.legacy.exists()
-    assert files.delta_cache_tree_2_3.legacy.exists()
-    assert files.delta_cache_tree_3_4.legacy.exists()
-    assert not files.delta_cache_tree_4_ts.legacy.exists()
+    assert (
+        files.inventory_tree.legacy.exists(),
+        files.inventory_tree_gz.legacy.exists(),
+        files.status_data_tree.legacy.exists(),
+        files.archive_tree_1.legacy.exists(),
+        files.archive_tree_2.legacy.exists(),
+        files.archive_tree_3.legacy.exists(),
+        files.archive_tree_4.legacy.exists(),
+        files.delta_cache_tree_None_1.legacy.exists(),
+        files.delta_cache_tree_1_2.legacy.exists(),
+        files.delta_cache_tree_2_3.legacy.exists(),
+        files.delta_cache_tree_3_4.legacy.exists(),
+        files.delta_cache_tree_4_ts.legacy.exists(),
+    ) == (True, True, True, False, True, True, True, False, False, True, True, False)
 
 
 def test_legacy_file_age_or_number_of_history_entries(tmp_path: Path) -> None:
@@ -750,18 +774,20 @@ def test_legacy_file_age_or_number_of_history_entries(tmp_path: Path) -> None:
         now=101,
         logger=null_logger(),
     )
-    assert files.inventory_tree.legacy.exists()
-    assert files.inventory_tree_gz.legacy.exists()
-    assert files.status_data_tree.legacy.exists()
-    assert not files.archive_tree_1.legacy.exists()
-    assert not files.archive_tree_2.legacy.exists()
-    assert files.archive_tree_3.legacy.exists()
-    assert files.archive_tree_4.legacy.exists()
-    assert not files.delta_cache_tree_None_1.legacy.exists()
-    assert not files.delta_cache_tree_1_2.legacy.exists()
-    assert not files.delta_cache_tree_2_3.legacy.exists()
-    assert files.delta_cache_tree_3_4.legacy.exists()
-    assert not files.delta_cache_tree_4_ts.legacy.exists()
+    assert (
+        files.inventory_tree.legacy.exists(),
+        files.inventory_tree_gz.legacy.exists(),
+        files.status_data_tree.legacy.exists(),
+        files.archive_tree_1.legacy.exists(),
+        files.archive_tree_2.legacy.exists(),
+        files.archive_tree_3.legacy.exists(),
+        files.archive_tree_4.legacy.exists(),
+        files.delta_cache_tree_None_1.legacy.exists(),
+        files.delta_cache_tree_1_2.legacy.exists(),
+        files.delta_cache_tree_2_3.legacy.exists(),
+        files.delta_cache_tree_3_4.legacy.exists(),
+        files.delta_cache_tree_4_ts.legacy.exists(),
+    ) == (True, True, True, False, False, True, True, False, False, False, True, False)
 
 
 def test_legacy_abandoned_file_age_youngest_too_old(tmp_path: Path) -> None:
@@ -777,32 +803,61 @@ def test_legacy_abandoned_file_age_youngest_too_old(tmp_path: Path) -> None:
         now=101,
         logger=null_logger(),
     )
-    assert known_files.inventory_tree.legacy.exists()
-    assert known_files.inventory_tree_gz.legacy.exists()
-    assert known_files.status_data_tree.legacy.exists()
-    assert known_files.archive_tree_1.legacy.exists()
-    assert known_files.archive_tree_2.legacy.exists()
-    assert known_files.archive_tree_3.legacy.exists()
-    assert known_files.archive_tree_4.legacy.exists()
-    assert known_files.delta_cache_tree_None_1.legacy.exists()
-    assert known_files.delta_cache_tree_1_2.legacy.exists()
-    assert known_files.delta_cache_tree_2_3.legacy.exists()
-    assert known_files.delta_cache_tree_3_4.legacy.exists()
-    assert known_files.delta_cache_tree_4_ts.legacy.exists()
-    assert not unknown_files.inventory_tree.legacy.exists()
-    assert not unknown_files.inventory_tree_gz.legacy.exists()
-    assert not unknown_files.status_data_tree.legacy.exists()
-    assert not unknown_files.archive_tree_1.legacy.exists()
-    assert not unknown_files.archive_tree_2.legacy.exists()
-    assert not unknown_files.archive_tree_3.legacy.exists()
-    assert not unknown_files.archive_tree_4.legacy.exists()
-    assert not unknown_files.archive_tree_4.legacy.parent.exists()
-    assert not unknown_files.delta_cache_tree_None_1.legacy.exists()
-    assert not unknown_files.delta_cache_tree_1_2.legacy.exists()
-    assert not unknown_files.delta_cache_tree_2_3.legacy.exists()
-    assert not unknown_files.delta_cache_tree_3_4.legacy.exists()
-    assert not unknown_files.delta_cache_tree_4_ts.legacy.exists()
-    assert not unknown_files.delta_cache_tree_4_ts.legacy.parent.exists()
+    assert (
+        known_files.inventory_tree.legacy.exists(),
+        known_files.inventory_tree_gz.legacy.exists(),
+        known_files.status_data_tree.legacy.exists(),
+        known_files.archive_tree_1.legacy.exists(),
+        known_files.archive_tree_2.legacy.exists(),
+        known_files.archive_tree_3.legacy.exists(),
+        known_files.archive_tree_4.legacy.exists(),
+        known_files.delta_cache_tree_None_1.legacy.exists(),
+        known_files.delta_cache_tree_1_2.legacy.exists(),
+        known_files.delta_cache_tree_2_3.legacy.exists(),
+        known_files.delta_cache_tree_3_4.legacy.exists(),
+        known_files.delta_cache_tree_4_ts.legacy.exists(),
+        unknown_files.inventory_tree.legacy.exists(),
+        unknown_files.inventory_tree_gz.legacy.exists(),
+        unknown_files.status_data_tree.legacy.exists(),
+        unknown_files.archive_tree_1.legacy.exists(),
+        unknown_files.archive_tree_2.legacy.exists(),
+        unknown_files.archive_tree_3.legacy.exists(),
+        unknown_files.archive_tree_4.legacy.exists(),
+        unknown_files.archive_tree_4.legacy.parent.exists(),
+        unknown_files.delta_cache_tree_None_1.legacy.exists(),
+        unknown_files.delta_cache_tree_1_2.legacy.exists(),
+        unknown_files.delta_cache_tree_2_3.legacy.exists(),
+        unknown_files.delta_cache_tree_3_4.legacy.exists(),
+        unknown_files.delta_cache_tree_4_ts.legacy.exists(),
+        unknown_files.delta_cache_tree_4_ts.legacy.parent.exists(),
+    ) == (
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+    )
 
 
 def test_legacy_abandoned_file_age_youngest_not_too_old(tmp_path: Path) -> None:
@@ -818,30 +873,57 @@ def test_legacy_abandoned_file_age_youngest_not_too_old(tmp_path: Path) -> None:
         now=101,
         logger=null_logger(),
     )
-    assert known_files.inventory_tree.legacy.exists()
-    assert known_files.inventory_tree_gz.legacy.exists()
-    assert known_files.status_data_tree.legacy.exists()
-    assert known_files.archive_tree_1.legacy.exists()
-    assert known_files.archive_tree_2.legacy.exists()
-    assert known_files.archive_tree_3.legacy.exists()
-    assert known_files.archive_tree_4.legacy.exists()
-    assert known_files.delta_cache_tree_None_1.legacy.exists()
-    assert known_files.delta_cache_tree_1_2.legacy.exists()
-    assert known_files.delta_cache_tree_2_3.legacy.exists()
-    assert known_files.delta_cache_tree_3_4.legacy.exists()
-    assert known_files.delta_cache_tree_4_ts.legacy.exists()
-    assert unknown_files.inventory_tree.legacy.exists()
-    assert unknown_files.inventory_tree_gz.legacy.exists()
-    assert unknown_files.status_data_tree.legacy.exists()
-    assert unknown_files.archive_tree_1.legacy.exists()
-    assert unknown_files.archive_tree_2.legacy.exists()
-    assert unknown_files.archive_tree_3.legacy.exists()
-    assert unknown_files.archive_tree_4.legacy.exists()
-    assert unknown_files.delta_cache_tree_None_1.legacy.exists()
-    assert unknown_files.delta_cache_tree_1_2.legacy.exists()
-    assert unknown_files.delta_cache_tree_2_3.legacy.exists()
-    assert unknown_files.delta_cache_tree_3_4.legacy.exists()
-    assert unknown_files.delta_cache_tree_4_ts.legacy.exists()
+    assert (
+        known_files.inventory_tree.legacy.exists(),
+        known_files.inventory_tree_gz.legacy.exists(),
+        known_files.status_data_tree.legacy.exists(),
+        known_files.archive_tree_1.legacy.exists(),
+        known_files.archive_tree_2.legacy.exists(),
+        known_files.archive_tree_3.legacy.exists(),
+        known_files.archive_tree_4.legacy.exists(),
+        known_files.delta_cache_tree_None_1.legacy.exists(),
+        known_files.delta_cache_tree_1_2.legacy.exists(),
+        known_files.delta_cache_tree_2_3.legacy.exists(),
+        known_files.delta_cache_tree_3_4.legacy.exists(),
+        known_files.delta_cache_tree_4_ts.legacy.exists(),
+        unknown_files.inventory_tree.legacy.exists(),
+        unknown_files.inventory_tree_gz.legacy.exists(),
+        unknown_files.status_data_tree.legacy.exists(),
+        unknown_files.archive_tree_1.legacy.exists(),
+        unknown_files.archive_tree_2.legacy.exists(),
+        unknown_files.archive_tree_3.legacy.exists(),
+        unknown_files.archive_tree_4.legacy.exists(),
+        unknown_files.delta_cache_tree_None_1.legacy.exists(),
+        unknown_files.delta_cache_tree_1_2.legacy.exists(),
+        unknown_files.delta_cache_tree_2_3.legacy.exists(),
+        unknown_files.delta_cache_tree_3_4.legacy.exists(),
+        unknown_files.delta_cache_tree_4_ts.legacy.exists(),
+    ) == (
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+    )
 
 
 def _legacy_setup_files_no_history(
@@ -887,33 +969,63 @@ def test_legacy_abandoned_file_age_remaining_files_too_old(tmp_path: Path) -> No
         now=101,
         logger=null_logger(),
     )
-    assert known_files.inventory_tree.legacy.exists()
-    assert known_files.inventory_tree_gz.legacy.exists()
-    assert known_files.status_data_tree.legacy.exists()
-    assert known_files.archive_tree_1.legacy.exists()
-    assert known_files.archive_tree_2.legacy.exists()
-    assert known_files.archive_tree_3.legacy.exists()
-    assert known_files.archive_tree_4.legacy.exists()
-    assert known_files.delta_cache_tree_None_1.legacy.exists()
-    assert known_files.delta_cache_tree_1_2.legacy.exists()
-    assert known_files.delta_cache_tree_2_3.legacy.exists()
-    assert known_files.delta_cache_tree_3_4.legacy.exists()
-    assert known_files.delta_cache_tree_4_ts.legacy.exists()
-    assert unknown_files.inventory_tree.legacy.exists()
-    assert unknown_files.inventory_tree_gz.legacy.exists()
-    assert unknown_files.status_data_tree.legacy.exists()
-    assert unknown_files.archive_tree_1.legacy.exists()
-    assert unknown_files.archive_tree_2.legacy.exists()
-    assert unknown_files.archive_tree_3.legacy.exists()
-    assert unknown_files.archive_tree_4.legacy.exists()
-    assert unknown_files.delta_cache_tree_None_1.legacy.exists()
-    assert unknown_files.delta_cache_tree_1_2.legacy.exists()
-    assert unknown_files.delta_cache_tree_2_3.legacy.exists()
-    assert unknown_files.delta_cache_tree_3_4.legacy.exists()
-    assert unknown_files.delta_cache_tree_4_ts.legacy.exists()
-    assert not unknown_files_no_history.inventory_tree.legacy.exists()
-    assert not unknown_files_no_history.inventory_tree_gz.legacy.exists()
-    assert not unknown_files_no_history.status_data_tree.legacy.exists()
+    assert (
+        known_files.inventory_tree.legacy.exists(),
+        known_files.inventory_tree_gz.legacy.exists(),
+        known_files.status_data_tree.legacy.exists(),
+        known_files.archive_tree_1.legacy.exists(),
+        known_files.archive_tree_2.legacy.exists(),
+        known_files.archive_tree_3.legacy.exists(),
+        known_files.archive_tree_4.legacy.exists(),
+        known_files.delta_cache_tree_None_1.legacy.exists(),
+        known_files.delta_cache_tree_1_2.legacy.exists(),
+        known_files.delta_cache_tree_2_3.legacy.exists(),
+        known_files.delta_cache_tree_3_4.legacy.exists(),
+        known_files.delta_cache_tree_4_ts.legacy.exists(),
+        unknown_files.inventory_tree.legacy.exists(),
+        unknown_files.inventory_tree_gz.legacy.exists(),
+        unknown_files.status_data_tree.legacy.exists(),
+        unknown_files.archive_tree_1.legacy.exists(),
+        unknown_files.archive_tree_2.legacy.exists(),
+        unknown_files.archive_tree_3.legacy.exists(),
+        unknown_files.archive_tree_4.legacy.exists(),
+        unknown_files.delta_cache_tree_None_1.legacy.exists(),
+        unknown_files.delta_cache_tree_1_2.legacy.exists(),
+        unknown_files.delta_cache_tree_2_3.legacy.exists(),
+        unknown_files.delta_cache_tree_3_4.legacy.exists(),
+        unknown_files.delta_cache_tree_4_ts.legacy.exists(),
+        unknown_files_no_history.inventory_tree.legacy.exists(),
+        unknown_files_no_history.inventory_tree_gz.legacy.exists(),
+        unknown_files_no_history.status_data_tree.legacy.exists(),
+    ) == (
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        False,
+        False,
+        False,
+    )
 
 
 def test_legacy_abandoned_file_age_remaining_files_not_too_old(tmp_path: Path) -> None:
@@ -932,33 +1044,63 @@ def test_legacy_abandoned_file_age_remaining_files_not_too_old(tmp_path: Path) -
         now=101,
         logger=null_logger(),
     )
-    assert known_files.inventory_tree.legacy.exists()
-    assert known_files.inventory_tree_gz.legacy.exists()
-    assert known_files.status_data_tree.legacy.exists()
-    assert known_files.archive_tree_1.legacy.exists()
-    assert known_files.archive_tree_2.legacy.exists()
-    assert known_files.archive_tree_3.legacy.exists()
-    assert known_files.archive_tree_4.legacy.exists()
-    assert known_files.delta_cache_tree_None_1.legacy.exists()
-    assert known_files.delta_cache_tree_1_2.legacy.exists()
-    assert known_files.delta_cache_tree_2_3.legacy.exists()
-    assert known_files.delta_cache_tree_3_4.legacy.exists()
-    assert known_files.delta_cache_tree_4_ts.legacy.exists()
-    assert unknown_files.inventory_tree.legacy.exists()
-    assert unknown_files.inventory_tree_gz.legacy.exists()
-    assert unknown_files.status_data_tree.legacy.exists()
-    assert unknown_files.archive_tree_1.legacy.exists()
-    assert unknown_files.archive_tree_2.legacy.exists()
-    assert unknown_files.archive_tree_3.legacy.exists()
-    assert unknown_files.archive_tree_4.legacy.exists()
-    assert unknown_files.delta_cache_tree_None_1.legacy.exists()
-    assert unknown_files.delta_cache_tree_1_2.legacy.exists()
-    assert unknown_files.delta_cache_tree_2_3.legacy.exists()
-    assert unknown_files.delta_cache_tree_3_4.legacy.exists()
-    assert unknown_files.delta_cache_tree_4_ts.legacy.exists()
-    assert unknown_files_no_history.inventory_tree.legacy.exists()
-    assert unknown_files_no_history.inventory_tree_gz.legacy.exists()
-    assert unknown_files_no_history.status_data_tree.legacy.exists()
+    assert (
+        known_files.inventory_tree.legacy.exists(),
+        known_files.inventory_tree_gz.legacy.exists(),
+        known_files.status_data_tree.legacy.exists(),
+        known_files.archive_tree_1.legacy.exists(),
+        known_files.archive_tree_2.legacy.exists(),
+        known_files.archive_tree_3.legacy.exists(),
+        known_files.archive_tree_4.legacy.exists(),
+        known_files.delta_cache_tree_None_1.legacy.exists(),
+        known_files.delta_cache_tree_1_2.legacy.exists(),
+        known_files.delta_cache_tree_2_3.legacy.exists(),
+        known_files.delta_cache_tree_3_4.legacy.exists(),
+        known_files.delta_cache_tree_4_ts.legacy.exists(),
+        unknown_files.inventory_tree.legacy.exists(),
+        unknown_files.inventory_tree_gz.legacy.exists(),
+        unknown_files.status_data_tree.legacy.exists(),
+        unknown_files.archive_tree_1.legacy.exists(),
+        unknown_files.archive_tree_2.legacy.exists(),
+        unknown_files.archive_tree_3.legacy.exists(),
+        unknown_files.archive_tree_4.legacy.exists(),
+        unknown_files.delta_cache_tree_None_1.legacy.exists(),
+        unknown_files.delta_cache_tree_1_2.legacy.exists(),
+        unknown_files.delta_cache_tree_2_3.legacy.exists(),
+        unknown_files.delta_cache_tree_3_4.legacy.exists(),
+        unknown_files.delta_cache_tree_4_ts.legacy.exists(),
+        unknown_files_no_history.inventory_tree.legacy.exists(),
+        unknown_files_no_history.inventory_tree_gz.legacy.exists(),
+        unknown_files_no_history.status_data_tree.legacy.exists(),
+    ) == (
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+    )
 
 
 def _setup_one_archive_file(tmp_path: Path, *, timestamp: int) -> _OneArchiveFile:
@@ -1004,10 +1146,12 @@ def test_one_archive(tmp_path: Path) -> None:
         now=101,
         logger=null_logger(),
     )
-    assert files.inventory_tree.path.exists()
-    assert files.inventory_tree_gz.path.exists()
-    assert files.status_data_tree.path.exists()
-    assert files.archive_tree.path.exists()
+    assert (
+        files.inventory_tree.path.exists(),
+        files.inventory_tree_gz.path.exists(),
+        files.status_data_tree.path.exists(),
+        files.archive_tree.path.exists(),
+    ) == (True, True, True, True)
 
 
 def test_one_archive_file_file_age(tmp_path: Path) -> None:
@@ -1027,10 +1171,12 @@ def test_one_archive_file_file_age(tmp_path: Path) -> None:
         now=101,
         logger=null_logger(),
     )
-    assert files.inventory_tree.path.exists()
-    assert files.inventory_tree_gz.path.exists()
-    assert files.status_data_tree.path.exists()
-    assert not files.archive_tree.path.exists()
+    assert (
+        files.inventory_tree.path.exists(),
+        files.inventory_tree_gz.path.exists(),
+        files.status_data_tree.path.exists(),
+        files.archive_tree.path.exists(),
+    ) == (True, True, True, False)
 
 
 def test_one_archive_file_number_of_history_entries(tmp_path: Path) -> None:
@@ -1050,10 +1196,12 @@ def test_one_archive_file_number_of_history_entries(tmp_path: Path) -> None:
         now=101,
         logger=null_logger(),
     )
-    assert files.inventory_tree.path.exists()
-    assert files.inventory_tree_gz.path.exists()
-    assert files.status_data_tree.path.exists()
-    assert files.archive_tree.path.exists()
+    assert (
+        files.inventory_tree.path.exists(),
+        files.inventory_tree_gz.path.exists(),
+        files.status_data_tree.path.exists(),
+        files.archive_tree.path.exists(),
+    ) == (True, True, True, True)
 
 
 def test_one_archive_file_file_age_and_number_of_history_entries(tmp_path: Path) -> None:
@@ -1080,10 +1228,12 @@ def test_one_archive_file_file_age_and_number_of_history_entries(tmp_path: Path)
         now=101,
         logger=null_logger(),
     )
-    assert files.inventory_tree.path.exists()
-    assert files.inventory_tree_gz.path.exists()
-    assert files.status_data_tree.path.exists()
-    assert not files.archive_tree.path.exists()
+    assert (
+        files.inventory_tree.path.exists(),
+        files.inventory_tree_gz.path.exists(),
+        files.status_data_tree.path.exists(),
+        files.archive_tree.path.exists(),
+    ) == (True, True, True, False)
 
 
 def test_one_archive_file_file_age_or_number_of_history_entries(tmp_path: Path) -> None:
@@ -1110,10 +1260,12 @@ def test_one_archive_file_file_age_or_number_of_history_entries(tmp_path: Path) 
         now=101,
         logger=null_logger(),
     )
-    assert files.inventory_tree.path.exists()
-    assert files.inventory_tree_gz.path.exists()
-    assert files.status_data_tree.path.exists()
-    assert not files.archive_tree.path.exists()
+    assert (
+        files.inventory_tree.path.exists(),
+        files.inventory_tree_gz.path.exists(),
+        files.status_data_tree.path.exists(),
+        files.archive_tree.path.exists(),
+    ) == (True, True, True, False)
 
 
 def _setup_files(tmp_path: Path, host_name: HostName, *, timestamp: int) -> _Files:
@@ -1191,18 +1343,20 @@ def test_file_age(tmp_path: Path) -> None:
         now=101,
         logger=null_logger(),
     )
-    assert files.inventory_tree.path.exists()
-    assert files.inventory_tree_gz.path.exists()
-    assert files.status_data_tree.path.exists()
-    assert not files.archive_tree_1.path.exists()
-    assert not files.archive_tree_2.path.exists()
-    assert files.archive_tree_3.path.exists()
-    assert files.archive_tree_4.path.exists()
-    assert not files.delta_cache_tree_None_1.path.exists()
-    assert not files.delta_cache_tree_1_2.path.exists()
-    assert not files.delta_cache_tree_2_3.path.exists()
-    assert files.delta_cache_tree_3_4.path.exists()
-    assert not files.delta_cache_tree_4_ts.path.exists()
+    assert (
+        files.inventory_tree.path.exists(),
+        files.inventory_tree_gz.path.exists(),
+        files.status_data_tree.path.exists(),
+        files.archive_tree_1.path.exists(),
+        files.archive_tree_2.path.exists(),
+        files.archive_tree_3.path.exists(),
+        files.archive_tree_4.path.exists(),
+        files.delta_cache_tree_None_1.path.exists(),
+        files.delta_cache_tree_1_2.path.exists(),
+        files.delta_cache_tree_2_3.path.exists(),
+        files.delta_cache_tree_3_4.path.exists(),
+        files.delta_cache_tree_4_ts.path.exists(),
+    ) == (True, True, True, False, False, True, True, False, False, False, True, False)
 
 
 def test_number_of_history_entries(tmp_path: Path) -> None:
@@ -1222,18 +1376,20 @@ def test_number_of_history_entries(tmp_path: Path) -> None:
         now=101,
         logger=null_logger(),
     )
-    assert files.inventory_tree.path.exists()
-    assert files.inventory_tree_gz.path.exists()
-    assert files.status_data_tree.path.exists()
-    assert not files.archive_tree_1.path.exists()
-    assert files.archive_tree_2.path.exists()
-    assert files.archive_tree_3.path.exists()
-    assert files.archive_tree_4.path.exists()
-    assert not files.delta_cache_tree_None_1.path.exists()
-    assert not files.delta_cache_tree_1_2.path.exists()
-    assert files.delta_cache_tree_2_3.path.exists()
-    assert files.delta_cache_tree_3_4.path.exists()
-    assert not files.delta_cache_tree_4_ts.path.exists()
+    assert (
+        files.inventory_tree.path.exists(),
+        files.inventory_tree_gz.path.exists(),
+        files.status_data_tree.path.exists(),
+        files.archive_tree_1.path.exists(),
+        files.archive_tree_2.path.exists(),
+        files.archive_tree_3.path.exists(),
+        files.archive_tree_4.path.exists(),
+        files.delta_cache_tree_None_1.path.exists(),
+        files.delta_cache_tree_1_2.path.exists(),
+        files.delta_cache_tree_2_3.path.exists(),
+        files.delta_cache_tree_3_4.path.exists(),
+        files.delta_cache_tree_4_ts.path.exists(),
+    ) == (True, True, True, False, True, True, True, False, False, True, True, False)
 
 
 def test_file_age_and_number_of_history_entries(tmp_path: Path) -> None:
@@ -1260,18 +1416,20 @@ def test_file_age_and_number_of_history_entries(tmp_path: Path) -> None:
         now=101,
         logger=null_logger(),
     )
-    assert files.inventory_tree.path.exists()
-    assert files.inventory_tree_gz.path.exists()
-    assert files.status_data_tree.path.exists()
-    assert not files.archive_tree_1.path.exists()
-    assert files.archive_tree_2.path.exists()
-    assert files.archive_tree_3.path.exists()
-    assert files.archive_tree_4.path.exists()
-    assert not files.delta_cache_tree_None_1.path.exists()
-    assert not files.delta_cache_tree_1_2.path.exists()
-    assert files.delta_cache_tree_2_3.path.exists()
-    assert files.delta_cache_tree_3_4.path.exists()
-    assert not files.delta_cache_tree_4_ts.path.exists()
+    assert (
+        files.inventory_tree.path.exists(),
+        files.inventory_tree_gz.path.exists(),
+        files.status_data_tree.path.exists(),
+        files.archive_tree_1.path.exists(),
+        files.archive_tree_2.path.exists(),
+        files.archive_tree_3.path.exists(),
+        files.archive_tree_4.path.exists(),
+        files.delta_cache_tree_None_1.path.exists(),
+        files.delta_cache_tree_1_2.path.exists(),
+        files.delta_cache_tree_2_3.path.exists(),
+        files.delta_cache_tree_3_4.path.exists(),
+        files.delta_cache_tree_4_ts.path.exists(),
+    ) == (True, True, True, False, True, True, True, False, False, True, True, False)
 
 
 def test_file_age_or_number_of_history_entries(tmp_path: Path) -> None:
@@ -1298,18 +1456,20 @@ def test_file_age_or_number_of_history_entries(tmp_path: Path) -> None:
         now=101,
         logger=null_logger(),
     )
-    assert files.inventory_tree.path.exists()
-    assert files.inventory_tree_gz.path.exists()
-    assert files.status_data_tree.path.exists()
-    assert not files.archive_tree_1.path.exists()
-    assert not files.archive_tree_2.path.exists()
-    assert files.archive_tree_3.path.exists()
-    assert files.archive_tree_4.path.exists()
-    assert not files.delta_cache_tree_None_1.path.exists()
-    assert not files.delta_cache_tree_1_2.path.exists()
-    assert not files.delta_cache_tree_2_3.path.exists()
-    assert files.delta_cache_tree_3_4.path.exists()
-    assert not files.delta_cache_tree_4_ts.path.exists()
+    assert (
+        files.inventory_tree.path.exists(),
+        files.inventory_tree_gz.path.exists(),
+        files.status_data_tree.path.exists(),
+        files.archive_tree_1.path.exists(),
+        files.archive_tree_2.path.exists(),
+        files.archive_tree_3.path.exists(),
+        files.archive_tree_4.path.exists(),
+        files.delta_cache_tree_None_1.path.exists(),
+        files.delta_cache_tree_1_2.path.exists(),
+        files.delta_cache_tree_2_3.path.exists(),
+        files.delta_cache_tree_3_4.path.exists(),
+        files.delta_cache_tree_4_ts.path.exists(),
+    ) == (True, True, True, False, False, True, True, False, False, False, True, False)
 
 
 def test_abandoned_file_age_youngest_too_old(tmp_path: Path) -> None:
@@ -1325,32 +1485,61 @@ def test_abandoned_file_age_youngest_too_old(tmp_path: Path) -> None:
         now=101,
         logger=null_logger(),
     )
-    assert known_files.inventory_tree.path.exists()
-    assert known_files.inventory_tree_gz.path.exists()
-    assert known_files.status_data_tree.path.exists()
-    assert known_files.archive_tree_1.path.exists()
-    assert known_files.archive_tree_2.path.exists()
-    assert known_files.archive_tree_3.path.exists()
-    assert known_files.archive_tree_4.path.exists()
-    assert known_files.delta_cache_tree_None_1.path.exists()
-    assert known_files.delta_cache_tree_1_2.path.exists()
-    assert known_files.delta_cache_tree_2_3.path.exists()
-    assert known_files.delta_cache_tree_3_4.path.exists()
-    assert known_files.delta_cache_tree_4_ts.path.exists()
-    assert not unknown_files.inventory_tree.path.exists()
-    assert not unknown_files.inventory_tree_gz.path.exists()
-    assert not unknown_files.status_data_tree.path.exists()
-    assert not unknown_files.archive_tree_1.path.exists()
-    assert not unknown_files.archive_tree_2.path.exists()
-    assert not unknown_files.archive_tree_3.path.exists()
-    assert not unknown_files.archive_tree_4.path.exists()
-    assert not unknown_files.archive_tree_4.path.parent.exists()
-    assert not unknown_files.delta_cache_tree_None_1.path.exists()
-    assert not unknown_files.delta_cache_tree_1_2.path.exists()
-    assert not unknown_files.delta_cache_tree_2_3.path.exists()
-    assert not unknown_files.delta_cache_tree_3_4.path.exists()
-    assert not unknown_files.delta_cache_tree_4_ts.path.exists()
-    assert not unknown_files.delta_cache_tree_4_ts.path.parent.exists()
+    assert (
+        known_files.inventory_tree.path.exists(),
+        known_files.inventory_tree_gz.path.exists(),
+        known_files.status_data_tree.path.exists(),
+        known_files.archive_tree_1.path.exists(),
+        known_files.archive_tree_2.path.exists(),
+        known_files.archive_tree_3.path.exists(),
+        known_files.archive_tree_4.path.exists(),
+        known_files.delta_cache_tree_None_1.path.exists(),
+        known_files.delta_cache_tree_1_2.path.exists(),
+        known_files.delta_cache_tree_2_3.path.exists(),
+        known_files.delta_cache_tree_3_4.path.exists(),
+        known_files.delta_cache_tree_4_ts.path.exists(),
+        unknown_files.inventory_tree.path.exists(),
+        unknown_files.inventory_tree_gz.path.exists(),
+        unknown_files.status_data_tree.path.exists(),
+        unknown_files.archive_tree_1.path.exists(),
+        unknown_files.archive_tree_2.path.exists(),
+        unknown_files.archive_tree_3.path.exists(),
+        unknown_files.archive_tree_4.path.exists(),
+        unknown_files.archive_tree_4.path.parent.exists(),
+        unknown_files.delta_cache_tree_None_1.path.exists(),
+        unknown_files.delta_cache_tree_1_2.path.exists(),
+        unknown_files.delta_cache_tree_2_3.path.exists(),
+        unknown_files.delta_cache_tree_3_4.path.exists(),
+        unknown_files.delta_cache_tree_4_ts.path.exists(),
+        unknown_files.delta_cache_tree_4_ts.path.parent.exists(),
+    ) == (
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+    )
 
 
 def test_abandoned_file_age_youngest_not_too_old(tmp_path: Path) -> None:
@@ -1366,30 +1555,57 @@ def test_abandoned_file_age_youngest_not_too_old(tmp_path: Path) -> None:
         now=101,
         logger=null_logger(),
     )
-    assert known_files.inventory_tree.path.exists()
-    assert known_files.inventory_tree_gz.path.exists()
-    assert known_files.status_data_tree.path.exists()
-    assert known_files.archive_tree_1.path.exists()
-    assert known_files.archive_tree_2.path.exists()
-    assert known_files.archive_tree_3.path.exists()
-    assert known_files.archive_tree_4.path.exists()
-    assert known_files.delta_cache_tree_None_1.path.exists()
-    assert known_files.delta_cache_tree_1_2.path.exists()
-    assert known_files.delta_cache_tree_2_3.path.exists()
-    assert known_files.delta_cache_tree_3_4.path.exists()
-    assert known_files.delta_cache_tree_4_ts.path.exists()
-    assert unknown_files.inventory_tree.path.exists()
-    assert unknown_files.inventory_tree_gz.path.exists()
-    assert unknown_files.status_data_tree.path.exists()
-    assert unknown_files.archive_tree_1.path.exists()
-    assert unknown_files.archive_tree_2.path.exists()
-    assert unknown_files.archive_tree_3.path.exists()
-    assert unknown_files.archive_tree_4.path.exists()
-    assert unknown_files.delta_cache_tree_None_1.path.exists()
-    assert unknown_files.delta_cache_tree_1_2.path.exists()
-    assert unknown_files.delta_cache_tree_2_3.path.exists()
-    assert unknown_files.delta_cache_tree_3_4.path.exists()
-    assert unknown_files.delta_cache_tree_4_ts.path.exists()
+    assert (
+        known_files.inventory_tree.path.exists(),
+        known_files.inventory_tree_gz.path.exists(),
+        known_files.status_data_tree.path.exists(),
+        known_files.archive_tree_1.path.exists(),
+        known_files.archive_tree_2.path.exists(),
+        known_files.archive_tree_3.path.exists(),
+        known_files.archive_tree_4.path.exists(),
+        known_files.delta_cache_tree_None_1.path.exists(),
+        known_files.delta_cache_tree_1_2.path.exists(),
+        known_files.delta_cache_tree_2_3.path.exists(),
+        known_files.delta_cache_tree_3_4.path.exists(),
+        known_files.delta_cache_tree_4_ts.path.exists(),
+        unknown_files.inventory_tree.path.exists(),
+        unknown_files.inventory_tree_gz.path.exists(),
+        unknown_files.status_data_tree.path.exists(),
+        unknown_files.archive_tree_1.path.exists(),
+        unknown_files.archive_tree_2.path.exists(),
+        unknown_files.archive_tree_3.path.exists(),
+        unknown_files.archive_tree_4.path.exists(),
+        unknown_files.delta_cache_tree_None_1.path.exists(),
+        unknown_files.delta_cache_tree_1_2.path.exists(),
+        unknown_files.delta_cache_tree_2_3.path.exists(),
+        unknown_files.delta_cache_tree_3_4.path.exists(),
+        unknown_files.delta_cache_tree_4_ts.path.exists(),
+    ) == (
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+    )
 
 
 def _setup_files_no_history(
@@ -1435,33 +1651,63 @@ def test_abandoned_file_age_remaining_files_too_old(tmp_path: Path) -> None:
         now=101,
         logger=null_logger(),
     )
-    assert known_files.inventory_tree.path.exists()
-    assert known_files.inventory_tree_gz.path.exists()
-    assert known_files.status_data_tree.path.exists()
-    assert known_files.archive_tree_1.path.exists()
-    assert known_files.archive_tree_2.path.exists()
-    assert known_files.archive_tree_3.path.exists()
-    assert known_files.archive_tree_4.path.exists()
-    assert known_files.delta_cache_tree_None_1.path.exists()
-    assert known_files.delta_cache_tree_1_2.path.exists()
-    assert known_files.delta_cache_tree_2_3.path.exists()
-    assert known_files.delta_cache_tree_3_4.path.exists()
-    assert known_files.delta_cache_tree_4_ts.path.exists()
-    assert unknown_files.inventory_tree.path.exists()
-    assert unknown_files.inventory_tree_gz.path.exists()
-    assert unknown_files.status_data_tree.path.exists()
-    assert unknown_files.archive_tree_1.path.exists()
-    assert unknown_files.archive_tree_2.path.exists()
-    assert unknown_files.archive_tree_3.path.exists()
-    assert unknown_files.archive_tree_4.path.exists()
-    assert unknown_files.delta_cache_tree_None_1.path.exists()
-    assert unknown_files.delta_cache_tree_1_2.path.exists()
-    assert unknown_files.delta_cache_tree_2_3.path.exists()
-    assert unknown_files.delta_cache_tree_3_4.path.exists()
-    assert unknown_files.delta_cache_tree_4_ts.path.exists()
-    assert not unknown_files_no_history.inventory_tree.path.exists()
-    assert not unknown_files_no_history.inventory_tree_gz.path.exists()
-    assert not unknown_files_no_history.status_data_tree.path.exists()
+    assert (
+        known_files.inventory_tree.path.exists(),
+        known_files.inventory_tree_gz.path.exists(),
+        known_files.status_data_tree.path.exists(),
+        known_files.archive_tree_1.path.exists(),
+        known_files.archive_tree_2.path.exists(),
+        known_files.archive_tree_3.path.exists(),
+        known_files.archive_tree_4.path.exists(),
+        known_files.delta_cache_tree_None_1.path.exists(),
+        known_files.delta_cache_tree_1_2.path.exists(),
+        known_files.delta_cache_tree_2_3.path.exists(),
+        known_files.delta_cache_tree_3_4.path.exists(),
+        known_files.delta_cache_tree_4_ts.path.exists(),
+        unknown_files.inventory_tree.path.exists(),
+        unknown_files.inventory_tree_gz.path.exists(),
+        unknown_files.status_data_tree.path.exists(),
+        unknown_files.archive_tree_1.path.exists(),
+        unknown_files.archive_tree_2.path.exists(),
+        unknown_files.archive_tree_3.path.exists(),
+        unknown_files.archive_tree_4.path.exists(),
+        unknown_files.delta_cache_tree_None_1.path.exists(),
+        unknown_files.delta_cache_tree_1_2.path.exists(),
+        unknown_files.delta_cache_tree_2_3.path.exists(),
+        unknown_files.delta_cache_tree_3_4.path.exists(),
+        unknown_files.delta_cache_tree_4_ts.path.exists(),
+        unknown_files_no_history.inventory_tree.path.exists(),
+        unknown_files_no_history.inventory_tree_gz.path.exists(),
+        unknown_files_no_history.status_data_tree.path.exists(),
+    ) == (
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        False,
+        False,
+        False,
+    )
 
 
 def test_abandoned_file_age_remaining_files_not_too_old(tmp_path: Path) -> None:
@@ -1480,33 +1726,63 @@ def test_abandoned_file_age_remaining_files_not_too_old(tmp_path: Path) -> None:
         now=101,
         logger=null_logger(),
     )
-    assert known_files.inventory_tree.path.exists()
-    assert known_files.inventory_tree_gz.path.exists()
-    assert known_files.status_data_tree.path.exists()
-    assert known_files.archive_tree_1.path.exists()
-    assert known_files.archive_tree_2.path.exists()
-    assert known_files.archive_tree_3.path.exists()
-    assert known_files.archive_tree_4.path.exists()
-    assert known_files.delta_cache_tree_None_1.path.exists()
-    assert known_files.delta_cache_tree_1_2.path.exists()
-    assert known_files.delta_cache_tree_2_3.path.exists()
-    assert known_files.delta_cache_tree_3_4.path.exists()
-    assert known_files.delta_cache_tree_4_ts.path.exists()
-    assert unknown_files.inventory_tree.path.exists()
-    assert unknown_files.inventory_tree_gz.path.exists()
-    assert unknown_files.status_data_tree.path.exists()
-    assert unknown_files.archive_tree_1.path.exists()
-    assert unknown_files.archive_tree_2.path.exists()
-    assert unknown_files.archive_tree_3.path.exists()
-    assert unknown_files.archive_tree_4.path.exists()
-    assert unknown_files.delta_cache_tree_None_1.path.exists()
-    assert unknown_files.delta_cache_tree_1_2.path.exists()
-    assert unknown_files.delta_cache_tree_2_3.path.exists()
-    assert unknown_files.delta_cache_tree_3_4.path.exists()
-    assert unknown_files.delta_cache_tree_4_ts.path.exists()
-    assert unknown_files_no_history.inventory_tree.path.exists()
-    assert unknown_files_no_history.inventory_tree_gz.path.exists()
-    assert unknown_files_no_history.status_data_tree.path.exists()
+    assert (
+        known_files.inventory_tree.path.exists(),
+        known_files.inventory_tree_gz.path.exists(),
+        known_files.status_data_tree.path.exists(),
+        known_files.archive_tree_1.path.exists(),
+        known_files.archive_tree_2.path.exists(),
+        known_files.archive_tree_3.path.exists(),
+        known_files.archive_tree_4.path.exists(),
+        known_files.delta_cache_tree_None_1.path.exists(),
+        known_files.delta_cache_tree_1_2.path.exists(),
+        known_files.delta_cache_tree_2_3.path.exists(),
+        known_files.delta_cache_tree_3_4.path.exists(),
+        known_files.delta_cache_tree_4_ts.path.exists(),
+        unknown_files.inventory_tree.path.exists(),
+        unknown_files.inventory_tree_gz.path.exists(),
+        unknown_files.status_data_tree.path.exists(),
+        unknown_files.archive_tree_1.path.exists(),
+        unknown_files.archive_tree_2.path.exists(),
+        unknown_files.archive_tree_3.path.exists(),
+        unknown_files.archive_tree_4.path.exists(),
+        unknown_files.delta_cache_tree_None_1.path.exists(),
+        unknown_files.delta_cache_tree_1_2.path.exists(),
+        unknown_files.delta_cache_tree_2_3.path.exists(),
+        unknown_files.delta_cache_tree_3_4.path.exists(),
+        unknown_files.delta_cache_tree_4_ts.path.exists(),
+        unknown_files_no_history.inventory_tree.path.exists(),
+        unknown_files_no_history.inventory_tree_gz.path.exists(),
+        unknown_files_no_history.status_data_tree.path.exists(),
+    ) == (
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+        True,
+    )
 
 
 def test_file_age_removes_an_archive_file_dated_at_the_epoch(tmp_path: Path) -> None:

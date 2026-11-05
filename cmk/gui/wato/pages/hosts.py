@@ -25,7 +25,7 @@ from cmk.automations.results import (
     SnmpV3SecurityLevel,
 )
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName, HostNameValidationError
 from cmk.ccc.site import get_agent_receiver_port, omd_site, SiteId
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition, omd_version
@@ -1207,7 +1207,7 @@ class ModeCreateCluster(CreateHostMode):
                 request.get_ascii_input_mandatory(cls.VAR_HOST)
             )
             host_name = HostName(host_name)
-        except MKUserError:
+        except MKUserError, HostNameValidationError:
             host_name = HostName("")
         return Host(
             folder=folder_from_request(tree, request.var("folder"), host_name),

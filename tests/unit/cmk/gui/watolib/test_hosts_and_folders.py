@@ -3622,7 +3622,6 @@ def test_edit_records_a_change_for_both_hosts(tree: FolderTree) -> None:
     assert {entry["action_name"] for entry in recorded} == {"edit-host", "mirror-relation"}
 
 
-@pytest.mark.xfail(strict=True, raises=ValueError, reason="crash group 4626")
 def test_folder_of_an_invalid_host_name_is_the_root_folder(tree: FolderTree) -> None:
     assert (
         folder_from_request(tree, var_folder=None, host_name="invalid host name")

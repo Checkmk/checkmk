@@ -59,7 +59,7 @@ import cmk.utils.paths
 from cmk.automations.internal import AutomationResult
 from cmk.ccc import store
 from cmk.ccc.exceptions import MKGeneralException
-from cmk.ccc.hostaddress import HostName
+from cmk.ccc.hostaddress import HostName, HostNameValidationError
 from cmk.ccc.plugin_registry import Registry
 from cmk.ccc.regex import regex, WATO_FOLDER_PATH_NAME_CHARS
 from cmk.ccc.site import omd_site, SiteId
@@ -2033,7 +2033,11 @@ def folder_from_request(
     else:
         folder = tree.root_folder()
         if host_name is not None:  # find host with full scan. Expensive operation
-            host = tree.host(HostName(host_name))
+            try:
+                valid_host_name = HostName(host_name)
+            except HostNameValidationError:
+                return folder
+            host = tree.host(valid_host_name)
             if host:
                 folder = host.folder()
 

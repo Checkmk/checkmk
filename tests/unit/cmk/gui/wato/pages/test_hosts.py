@@ -10,7 +10,6 @@ from cmk.gui.wato.pages.hosts import ModeCreateCluster
 from cmk.gui.watolib.hosts_and_folders import FolderTree
 
 
-@pytest.mark.xfail(strict=True, raises=ValueError, reason="crash group 4524")
 @pytest.mark.usefixtures("request_context")
 def test_new_cluster_with_an_invalid_name_starts_without_a_name(tree: FolderTree) -> None:
     request.set_var("host", "host name")

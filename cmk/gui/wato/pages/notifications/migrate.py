@@ -297,6 +297,8 @@ def _get_notification_method(event_rule: EventRule) -> NotificationMethod:
 
             return timeperiod_bulk
 
+        if isinstance(notifybulk, dict):
+            return "always", _get_always_bulk(notifybulk)  # type: ignore[unreachable]
         if notifybulk[0] == "always":
             return "always", _get_always_bulk(notifybulk[1])
         return "timeperiod", (

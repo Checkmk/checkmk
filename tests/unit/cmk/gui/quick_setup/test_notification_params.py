@@ -386,7 +386,6 @@ def test_rule_for_all_events_sets_no_event_conditions() -> None:
     assert "match_service_event" not in event_rule
 
 
-@pytest.mark.xfail(strict=True, reason="crash group 4387")
 def test_bulk_settings_in_old_format_are_read_as_always_bulk() -> None:
     rule = mail_rule("plain")
     rule["bulk"] = cast(NotifyBulkType, _ALWAYS_BULK)

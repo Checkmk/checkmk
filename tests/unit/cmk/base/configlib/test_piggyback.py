@@ -7,9 +7,15 @@ import dataclasses
 import time
 from collections.abc import Mapping
 from pathlib import Path
+from typing import NamedTuple
+
+import pytest
 
 from cmk.base.configlib.loaded_config import BaseConfig
-from cmk.base.configlib.piggyback import guess_piggybacked_hosts_time_settings
+from cmk.base.configlib.piggyback import (
+    guess_piggybacked_hosts_time_settings,
+    make_piggyback_time_settings,
+)
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.piggyback import backend as piggyback_backend
 from cmk.ruleset_matcher.matcher import RulesetMatcher, RuleSpec
@@ -102,3 +108,65 @@ def test_sources_under_ip_not_found_without_ip_address() -> None:
     )
 
     assert _source_entry(source) not in result
+
+
+_GLOBAL_MAX_CACHE_AGE = 6666
+
+
+class _EffectiveTimeSettings(NamedTuple):
+    max_cache_age: int = _GLOBAL_MAX_CACHE_AGE
+    validity_period: int = 0
+    validity_state: int = 0
+
+
+def _eval_effective_time_settings(
+    rule_per_source: Mapping[HostName, Mapping[str, object]],
+    piggybacked: HostAddress,
+    source: HostName,
+) -> _EffectiveTimeSettings:
+    sources = sorted({*rule_per_source, source})
+    config_from_rules = dataclasses.replace(
+        EMPTY_CONFIG,
+        piggyback_max_cachefile_age=_GLOBAL_MAX_CACHE_AGE,
+        piggybacked_host_files=[
+            RuleSpec(value=value, condition={"host_name": [name]}, id=f"rule-{name}")
+            for name, value in rule_per_source.items()
+        ],
+    )
+    matcher = RulesetMatcher(
+        host_tags={name: {} for name in sources},
+        host_paths={},
+        all_configured_hosts=frozenset(sources),
+        clusters_of={},
+        nodes_of={},
+    )
+    piggyback_config = piggyback_backend.Config(
+        piggybacked,
+        make_piggyback_time_settings(config_from_rules, matcher, lambda _: {}, sources),
+    )
+    return _EffectiveTimeSettings(
+        max_cache_age=piggyback_config.max_cache_age(source),
+        validity_period=piggyback_config.validity_period(source),
+        validity_state=piggyback_config.validity_state(source),
+    )
+
+
+_VALIDITY = {"period": 60, "check_mk_state": 2}
+
+
+@pytest.mark.parametrize(
+    "rule_per_source, source, expected",
+    [
+        pytest.param({}, HostName("src"), _EffectiveTimeSettings(), id="no rule: global default"),
+        pytest.param({HostName("src"): {"global_max_cache_age": "global"}}, HostName("src"), _EffectiveTimeSettings(), id="'global' falls back to global default"),
+        pytest.param({HostName("src"): {"global_max_cache_age": 100}}, HostName("src"), _EffectiveTimeSettings(max_cache_age=100), id="explicit max cache age"),
+        pytest.param({HostName("src"): {"global_validity": _VALIDITY}}, HostName("src"), _EffectiveTimeSettings(validity_period=60, validity_state=2), id="source validity"),
+        pytest.param({HostName("src"): {"global_validity": _VALIDITY}}, HostName("other"), _EffectiveTimeSettings(), id="validity not applied to other source"),
+    ],
+)  # fmt: skip
+def test_source_settings_for_piggybacked_host(
+    rule_per_source: Mapping[HostName, Mapping[str, object]],
+    source: HostName,
+    expected: _EffectiveTimeSettings,
+) -> None:
+    assert _eval_effective_time_settings(rule_per_source, HostAddress("vm1"), source) == expected

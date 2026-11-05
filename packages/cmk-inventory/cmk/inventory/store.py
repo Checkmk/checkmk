@@ -9,6 +9,7 @@ from pathlib import Path
 
 from cmk.ccc.hostaddress import HostName
 
+from .filtering import filter_tree, SDFilterChoice
 from .merging import merge_trees
 from .paths import InventoryPaths, parse_archive_timestamp, TreePath
 from .raw_store import (
@@ -114,9 +115,13 @@ class InventoryStore:
         tree_path.legacy.unlink(missing_ok=True)
 
     def load_merged_tree(
-        self, *, host_name: HostName, raw_status_data_tree: bytes
+        self,
+        *,
+        host_name: HostName,
+        raw_status_data_tree: bytes,
+        tree_filters: Sequence[SDFilterChoice] | None,
     ) -> ImmutableTree:
-        return merge_trees(
+        merged_tree = merge_trees(
             self.load_inventory_tree(host_name=host_name),
             (
                 parse_from_raw_status_data_tree(raw_status_data_tree)
@@ -124,6 +129,7 @@ class InventoryStore:
                 else self.load_status_data_tree(host_name=host_name)
             ),
         )
+        return merged_tree if tree_filters is None else filter_tree(merged_tree, tree_filters)
 
     def load_previous_inventory_tree(self, *, host_name: HostName, debug: bool) -> ImmutableTree:
         if tree := load_tree_from_tree_path(self.inv_paths.inventory_tree(host_name), debug=debug):

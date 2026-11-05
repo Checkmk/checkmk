@@ -13,6 +13,7 @@ import pytest
 import cmk.ccc.store
 from cmk.ccc.hostaddress import HostName
 from cmk.inventory.config import RawIntervalFromConfig
+from cmk.inventory.filtering import SDFilterChoice
 from cmk.inventory.paths import has_archive, InventoryPaths
 from cmk.inventory.retention import update_from_previous
 from cmk.inventory.serialization import (
@@ -352,7 +353,7 @@ def test_load_merged_tree_merges_the_status_data_file(tmp_path: Path) -> None:
     _save_inventory_and_status_data_trees(store, HostName("hostname"))
 
     assert store.load_merged_tree(
-        host_name=HostName("hostname"), raw_status_data_tree=b""
+        host_name=HostName("hostname"), raw_status_data_tree=b"", tree_filters=None
     ) == deserialize_tree(
         SDRawTree(Attributes={"Pairs": {SDKey("inv"): "1", SDKey("file"): "2"}}, Table={}, Nodes={})
     )
@@ -365,9 +366,23 @@ def test_load_merged_tree_prefers_the_raw_status_data_to_the_file(tmp_path: Path
     assert store.load_merged_tree(
         host_name=HostName("hostname"),
         raw_status_data_tree=json.dumps(_tree_with("raw", "3")).encode(),
+        tree_filters=None,
     ) == deserialize_tree(
         SDRawTree(Attributes={"Pairs": {SDKey("inv"): "1", SDKey("raw"): "3"}}, Table={}, Nodes={})
     )
+
+
+def test_load_merged_tree_keeps_only_the_filtered_keys(tmp_path: Path) -> None:
+    store = InventoryStore(tmp_path)
+    _save_inventory_and_status_data_trees(store, HostName("hostname"))
+
+    assert store.load_merged_tree(
+        host_name=HostName("hostname"),
+        raw_status_data_tree=b"",
+        tree_filters=[
+            SDFilterChoice(path=(), pairs=[SDKey("file")], columns="nothing", nodes="nothing")
+        ],
+    ) == deserialize_tree(SDRawTree(Attributes={"Pairs": {SDKey("file"): "2"}}, Table={}, Nodes={}))
 
 
 def _previous_tree(value: str) -> ImmutableTree:

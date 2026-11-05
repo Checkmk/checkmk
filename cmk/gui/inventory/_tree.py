@@ -76,13 +76,11 @@ def load_tree(*, host_name: HostName, raw_status_data_tree: bytes) -> ImmutableT
     if not host_name:
         return ImmutableTree()
 
-    merged_tree = InventoryStore(cmk.utils.paths.omd_root).load_merged_tree(
-        host_name=host_name, raw_status_data_tree=raw_status_data_tree
+    return InventoryStore(cmk.utils.paths.omd_root).load_merged_tree(
+        host_name=host_name,
+        raw_status_data_tree=raw_status_data_tree,
+        tree_filters=_permitted_filter_choices(),
     )
-    if (filters := _permitted_filter_choices()) is not None:
-        return filter_tree(merged_tree, filters)
-
-    return merged_tree
 
 
 def load_tree_of_host(

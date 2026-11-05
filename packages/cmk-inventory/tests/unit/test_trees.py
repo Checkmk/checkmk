@@ -69,65 +69,82 @@ def test_equality_with_non_empty_nodes(
     assert left == right
 
 
-def test_get_tree_empty() -> None:
-    root = empty_immutable_tree()
-    assert len(root) == 0
-    assert root.get_tree((SDNodeName("path-to-nta"),)).path == ("path-to-nta",)
-    assert root.get_tree((SDNodeName("path-to-nta"), SDNodeName("nt"))).path == (
-        "path-to-nta",
-        "nt",
-    )
-    assert root.get_tree((SDNodeName("path-to-nta"), SDNodeName("na"))).path == (
-        "path-to-nta",
-        "na",
-    )
-    assert root.get_tree((SDNodeName("path-to-nta"), SDNodeName("ta"))).path == (
-        "path-to-nta",
-        "ta",
-    )
+_NTA = SDNodeName("path-to-nta")
+_NODE_PATHS = [
+    pytest.param((_NTA,), id="nta"),
+    pytest.param((_NTA, SDNodeName("nt")), id="nt"),
+    pytest.param((_NTA, SDNodeName("na")), id="na"),
+    pytest.param((_NTA, SDNodeName("ta")), id="ta"),
+]
 
 
-def test_get_tree_not_empty() -> None:
-    root = filled_immutable_tree()
-    nta = root.get_tree((SDNodeName("path-to-nta"),))
-    nt = root.get_tree((SDNodeName("path-to-nta"), SDNodeName("nt")))
-    na = root.get_tree((SDNodeName("path-to-nta"), SDNodeName("na")))
-    ta = root.get_tree((SDNodeName("path-to-nta"), SDNodeName("ta")))
-    assert len(root) == 12
-    assert len(nta) == 12
-    assert len(nt) == 4
-    assert len(na) == 2
-    assert len(ta) == 6
-
-    assert nta.path == ("path-to-nta",)
-    assert nt.path == ("path-to-nta", "nt")
-    assert root.get_attribute((SDNodeName("path-to-nta"), SDNodeName("nt")), SDKey("foo")) is None
-    nt_rows = root.get_rows((SDNodeName("path-to-nta"), SDNodeName("nt")))
-    for row in [
-        {"nt0": "NT 00", "nt1": "NT 01"},
-        {"nt0": "NT 10", "nt1": "NT 11"},
-    ]:
-        assert row in nt_rows
-
-    assert na.path == ("path-to-nta", "na")
-    assert root.get_attribute((SDNodeName("path-to-nta"), SDNodeName("na")), SDKey("na0")) == "NA 0"
-    assert root.get_attribute((SDNodeName("path-to-nta"), SDNodeName("na")), SDKey("na1")) == "NA 1"
-    assert root.get_attribute((SDNodeName("path-to-nta"), SDNodeName("na")), SDKey("foo")) is None
-    assert not root.get_rows((SDNodeName("path-to-nta"), SDNodeName("na")))
-
-    assert ta.path == ("path-to-nta", "ta")
-    assert root.get_attribute((SDNodeName("path-to-nta"), SDNodeName("ta")), SDKey("ta0")) == "TA 0"
-    assert root.get_attribute((SDNodeName("path-to-nta"), SDNodeName("ta")), SDKey("ta1")) == "TA 1"
-    assert root.get_attribute((SDNodeName("path-to-nta"), SDNodeName("ta")), SDKey("foo")) is None
-    ta_rows = root.get_rows((SDNodeName("path-to-nta"), SDNodeName("ta")))
-    for row in [
-        {"ta0": "TA 00", "ta1": "TA 01"},
-        {"ta0": "TA 10", "ta1": "TA 11"},
-    ]:
-        assert row in ta_rows
+def test_an_empty_tree_has_no_entries() -> None:
+    assert len(empty_immutable_tree()) == 0
 
 
-def test_add_or_rows() -> None:
+@pytest.mark.parametrize("path", _NODE_PATHS)
+def test_get_tree_of_an_empty_tree_keeps_the_path(path: SDPath) -> None:
+    assert empty_immutable_tree().get_tree(path).path == path
+
+
+@pytest.mark.parametrize("path", _NODE_PATHS)
+def test_get_tree_of_a_filled_tree_keeps_the_path(path: SDPath) -> None:
+    assert filled_immutable_tree().get_tree(path).path == path
+
+
+@pytest.mark.parametrize(
+    "path, expected_len",
+    [
+        pytest.param((), 12, id="root"),
+        pytest.param((_NTA,), 12, id="nta"),
+        pytest.param((_NTA, SDNodeName("nt")), 4, id="nt"),
+        pytest.param((_NTA, SDNodeName("na")), 2, id="na"),
+        pytest.param((_NTA, SDNodeName("ta")), 6, id="ta"),
+    ],
+)
+def test_a_filled_tree_counts_the_entries_below_a_node(path: SDPath, expected_len: int) -> None:
+    assert len(filled_immutable_tree().get_tree(path)) == expected_len
+
+
+@pytest.mark.parametrize(
+    "path, key, expected_value",
+    [
+        pytest.param((_NTA, SDNodeName("nt")), SDKey("foo"), None, id="nt-unknown"),
+        pytest.param((_NTA, SDNodeName("na")), SDKey("na0"), "NA 0", id="na-0"),
+        pytest.param((_NTA, SDNodeName("na")), SDKey("na1"), "NA 1", id="na-1"),
+        pytest.param((_NTA, SDNodeName("na")), SDKey("foo"), None, id="na-unknown"),
+        pytest.param((_NTA, SDNodeName("ta")), SDKey("ta0"), "TA 0", id="ta-0"),
+        pytest.param((_NTA, SDNodeName("ta")), SDKey("ta1"), "TA 1", id="ta-1"),
+        pytest.param((_NTA, SDNodeName("ta")), SDKey("foo"), None, id="ta-unknown"),
+    ],
+)
+def test_get_attribute_of_a_filled_tree(path: SDPath, key: SDKey, expected_value: SDValue) -> None:
+    assert filled_immutable_tree().get_attribute(path, key) == expected_value
+
+
+@pytest.mark.parametrize(
+    "path, expected_rows",
+    [
+        pytest.param(
+            (_NTA, SDNodeName("nt")),
+            [{"nt0": "NT 00", "nt1": "NT 01"}, {"nt0": "NT 10", "nt1": "NT 11"}],
+            id="nt",
+        ),
+        pytest.param((_NTA, SDNodeName("na")), [], id="na"),
+        pytest.param(
+            (_NTA, SDNodeName("ta")),
+            [{"ta0": "TA 00", "ta1": "TA 01"}, {"ta0": "TA 10", "ta1": "TA 11"}],
+            id="ta",
+        ),
+    ],
+)
+def test_get_rows_of_a_filled_tree(
+    path: SDPath, expected_rows: Sequence[Mapping[str, str]]
+) -> None:
+    assert filled_immutable_tree().get_rows(path) == expected_rows
+
+
+def test_add_counts_the_added_pairs_and_rows() -> None:
     root = filled_mutable_tree()
     root.add(
         path=(SDNodeName("path-to-nta"), SDNodeName("node")),
@@ -196,15 +213,14 @@ def test_load_real_tree(tree_name: HostName) -> None:
         HostName("tree_new_heute"),
     ],
 )
-def test_real_tree_is_equal(tree_name_x: HostName, tree_name_y: HostName) -> None:
+def test_real_trees_are_equal_only_to_themselves(
+    tree_name_x: HostName, tree_name_y: HostName
+) -> None:
     inv_store = inventory_store()
     tree_x = inv_store.load_inventory_tree(host_name=tree_name_x)
     tree_y = inv_store.load_inventory_tree(host_name=tree_name_y)
 
-    if tree_name_x == tree_name_y:
-        assert tree_x == tree_y
-    else:
-        assert tree_x != tree_y
+    assert (tree_x == tree_y) == (tree_name_x == tree_name_y)
 
 
 def test_real_tree_order() -> None:
@@ -231,7 +247,7 @@ def test_real_tree_order() -> None:
         (HostName("tree_new_heute"), 16653),
     ],
 )
-def test_count_entries(tree_name: HostName, result: int) -> None:
+def test_a_real_tree_counts_its_entries(tree_name: HostName, result: int) -> None:
     assert len(inventory_store().load_inventory_tree(host_name=tree_name)) == result
 
 
@@ -270,14 +286,14 @@ def test_count_entries(tree_name: HostName, result: int) -> None:
         ),
     ],
 )
-def test_get_node(
+def test_a_real_tree_has_content_only_below_its_known_nodes(
     tree_name: HostName, edges_t: Iterable[SDNodeName], edges_f: Iterable[SDNodeName]
 ) -> None:
     tree = inventory_store().load_inventory_tree(host_name=tree_name)
-    for edge_t in edges_t:
-        assert len(tree.get_tree((edge_t,))) > 0
-    for edge_f in edges_f:
-        assert len(tree.get_tree((edge_f,))) == 0
+    assert {e: len(tree.get_tree((e,))) > 0 for e in [*edges_t, *edges_f]} == {
+        **dict.fromkeys(edges_t, True),
+        **dict.fromkeys(edges_f, False),
+    }
 
 
 @pytest.mark.parametrize(
@@ -291,7 +307,7 @@ def test_get_node(
         (HostName("tree_old_heute"), 3),
     ],
 )
-def test_amount_of_nodes(tree_name: HostName, amount_of_nodes: int) -> None:
+def test_a_real_tree_counts_its_top_level_nodes(tree_name: HostName, amount_of_nodes: int) -> None:
     tree = inventory_store().load_inventory_tree(host_name=tree_name)
     assert len(list(tree.nodes_by_name.values())) == amount_of_nodes
 

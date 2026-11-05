@@ -10,7 +10,6 @@ import pytest
 from cmk.ccc.hostaddress import HostName
 from cmk.inventory.delta import SDDeltaValue
 from cmk.inventory.filtering import (
-    _make_filter_choices_from_permitted_paths,
     filter_delta_tree,
     filter_tree,
     InventoryPathsConfig,
@@ -587,10 +586,10 @@ def test_filter_networking_tree_empty() -> None:
         ),
     ],
 )
-def test_make_filter_choices_from_permitted_paths(
+def test_make_filter_choices_from_contact_groups_translates_a_permitted_path(
     entry: PermittedPath, expected_filter_choice: SDFilterChoice
 ) -> None:
-    assert _make_filter_choices_from_permitted_paths([entry])[0] == expected_filter_choice
+    assert make_filter_choices_from_contact_groups([("paths", [entry])]) == [expected_filter_choice]
 
 
 _PATHS_A = PermittedPath(visible_raw_path="a")
@@ -628,4 +627,7 @@ def test_make_filter_choices_from_contact_groups_permits_nothing(
 def test_make_filter_choices_from_contact_groups_joins_the_paths() -> None:
     assert make_filter_choices_from_contact_groups(
         [("paths", [_PATHS_A]), "forbid_all", ("paths", [_PATHS_B])]
-    ) == _make_filter_choices_from_permitted_paths([_PATHS_A, _PATHS_B])
+    ) == [
+        SDFilterChoice(path=(SDNodeName("a"),), pairs="all", columns="all", nodes="all"),
+        SDFilterChoice(path=(SDNodeName("b"),), pairs="all", columns="all", nodes="all"),
+    ]

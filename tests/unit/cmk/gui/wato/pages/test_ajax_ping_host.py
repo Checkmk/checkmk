@@ -12,7 +12,6 @@ from cmk.gui.session import session
 from cmk.gui.wato.pages.hosts import PageAjaxPingHost
 
 
-@pytest.mark.xfail(raises=KeyError, strict=True, reason="crash group 4931")
 @pytest.mark.usefixtures("request_context", "with_admin_login")
 def test_ping_via_an_unknown_site_reports_an_error() -> None:
     request.set_var("_csrf_token", str(session.session_info.csrf_token))

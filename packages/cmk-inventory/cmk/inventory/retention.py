@@ -35,7 +35,7 @@ class _SDRetentionFilterChoice:
 
 
 @dataclass(frozen=True, kw_only=True)
-class SDRetentionFilterChoices:
+class _SDRetentionFilterChoices:
     path: SDPath
     interval: int
     _pairs: list[_SDRetentionFilterChoice] = field(default_factory=list)
@@ -60,12 +60,12 @@ class SDRetentionFilterChoices:
         self._columns.append(_SDRetentionFilterChoice(choice, cache_info))
 
 
-def update_tree(
+def _update_tree(
     tree: MutableTree,
     *,
     now: int,
     previous_tree: ImmutableTree,
-    choices: SDRetentionFilterChoices,
+    choices: _SDRetentionFilterChoices,
 ) -> None:
     for c in choices.pairs:
         tree.update_attributes(
@@ -91,23 +91,23 @@ def _parse_choice(
     return [SDKey(k) for k in raw_choice[-1]] if isinstance(raw_choice, tuple) else raw_choice
 
 
-def make_retention_filter_choices(
+def _make_retention_filter_choices(
     *,
     now: int,
     raw_intervals_from_config: Sequence[RawIntervalFromConfig],
     pairs_cache_info: Mapping[SDPath, tuple[int, int] | None],
     columns_cache_info: Mapping[SDPath, tuple[int, int] | None],
-) -> Sequence[SDRetentionFilterChoices]:
+) -> Sequence[_SDRetentionFilterChoices]:
     def cache_info(
         by_path: Mapping[SDPath, tuple[int, int] | None], path: SDPath
     ) -> tuple[int, int]:
         return (now, 0) if (ci := by_path.get(path)) is None else ci
 
-    choices_by_path: dict[SDPath, SDRetentionFilterChoices] = {}
+    choices_by_path: dict[SDPath, _SDRetentionFilterChoices] = {}
     for entry in raw_intervals_from_config:
         path = parse_visible_raw_path(entry["visible_raw_path"])
         choices = choices_by_path.setdefault(
-            path, SDRetentionFilterChoices(path=path, interval=entry["interval"])
+            path, _SDRetentionFilterChoices(path=path, interval=entry["interval"])
         )
         if attributes := entry.get("attributes"):
             choices.add_pairs_choice(
@@ -120,3 +120,21 @@ def make_retention_filter_choices(
                 cache_info=cache_info(columns_cache_info, path),
             )
     return list(choices_by_path.values())
+
+
+def update_from_previous(
+    tree: MutableTree,
+    *,
+    now: int,
+    previous_tree: ImmutableTree,
+    raw_intervals_from_config: Sequence[RawIntervalFromConfig],
+    pairs_cache_info: Mapping[SDPath, tuple[int, int] | None],
+    columns_cache_info: Mapping[SDPath, tuple[int, int] | None],
+) -> None:
+    for choices in _make_retention_filter_choices(
+        now=now,
+        raw_intervals_from_config=raw_intervals_from_config,
+        pairs_cache_info=pairs_cache_info,
+        columns_cache_info=columns_cache_info,
+    ):
+        _update_tree(tree, now=now, previous_tree=previous_tree, choices=choices)

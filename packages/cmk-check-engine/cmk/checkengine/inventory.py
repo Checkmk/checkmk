@@ -38,11 +38,7 @@ from cmk.inventory.paths import (
     has_status_data_tree,
     InventoryPaths,
 )
-from cmk.inventory.retention import (
-    make_retention_filter_choices,
-    RawIntervalFromConfig,
-    update_tree,
-)
+from cmk.inventory.retention import RawIntervalFromConfig, update_from_previous
 from cmk.inventory.trees import ImmutableTree, MutableTree, SDKey, SDNodeName, SDPath, SDValue
 
 from .parser import group_by_host, HostSections, ParserFunction
@@ -505,13 +501,14 @@ def _may_update(
     if not raw_intervals_from_config:
         return
 
-    for choices in make_retention_filter_choices(
+    update_from_previous(
+        inventory_tree,
         now=now,
+        previous_tree=previous_tree,
         raw_intervals_from_config=raw_intervals_from_config,
         pairs_cache_info=_collect_cache_info(items_of_inventory_plugins, Attributes),
         columns_cache_info=_collect_cache_info(items_of_inventory_plugins, TableRow),
-    ):
-        update_tree(inventory_tree, now=now, previous_tree=previous_tree, choices=choices)
+    )
 
 
 def _check_fetched_data_or_trees(

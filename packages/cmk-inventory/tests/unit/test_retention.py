@@ -6,10 +6,10 @@
 from collections.abc import Mapping, Sequence
 
 from cmk.inventory.retention import (
-    make_retention_filter_choices,
+    _SDRetentionFilterChoices,
+    _update_tree,
     RawIntervalFromConfig,
-    SDRetentionFilterChoices,
-    update_tree,
+    update_from_previous,
 )
 from cmk.inventory.serialization import deserialize_tree
 from cmk.inventory.trees import (
@@ -51,13 +51,14 @@ def _updated_tree(
         key_columns=[SDKey("c0")],
         rows=[{SDKey("c0"): "row 0", SDKey("c1"): "value 1"}],
     )
-    for choices in make_retention_filter_choices(
+    update_from_previous(
+        tree,
         now=now,
+        previous_tree=ImmutableTree(),
         raw_intervals_from_config=_retention_config(),
         pairs_cache_info=pairs_cache_info,
         columns_cache_info={},
-    ):
-        update_tree(tree, now=now, previous_tree=ImmutableTree(), choices=choices)
+    )
     return tree
 
 
@@ -120,10 +121,10 @@ def test_update_attributes_from_previous() -> None:
         path=(),
         pairs=[{SDKey("a1"): "A1: cur", SDKey("a3"): "A3: only cur"}],
     )
-    choices = SDRetentionFilterChoices(path=(), interval=6)
+    choices = _SDRetentionFilterChoices(path=(), interval=6)
     choices.add_pairs_choice(choice="all", cache_info=(4, 5))
 
-    update_tree(current_tree_, now=0, previous_tree=previous_tree, choices=choices)
+    _update_tree(current_tree_, now=0, previous_tree=previous_tree, choices=choices)
     assert current_tree_.get_update_results() == {
         (): [
             "[Attributes] Added pairs: a2",
@@ -164,10 +165,10 @@ def test_update_from_previous_1() -> None:
             {SDKey("kc"): "KC", SDKey("c1"): "C1: cur", SDKey("c3"): "C3: only cur"},
         ],
     )
-    choices = SDRetentionFilterChoices(path=(), interval=6)
+    choices = _SDRetentionFilterChoices(path=(), interval=6)
     choices.add_columns_choice(choice="all", cache_info=(4, 5))
 
-    update_tree(current_tree_, now=0, previous_tree=previous_tree, choices=choices)
+    _update_tree(current_tree_, now=0, previous_tree=previous_tree, choices=choices)
     assert current_tree_.get_update_results() == {
         (): [
             "[Table] 'KC': Added row: c2, kc",
@@ -210,9 +211,9 @@ def test_update_from_previous_2() -> None:
             {SDKey("kc"): "KC", SDKey("c3"): "C3: only cur"},
         ],
     )
-    choices = SDRetentionFilterChoices(path=(), interval=6)
+    choices = _SDRetentionFilterChoices(path=(), interval=6)
     choices.add_columns_choice(choice=[SDKey("c2"), SDKey("c3")], cache_info=(4, 5))
-    update_tree(current_tree_, now=0, previous_tree=previous_tree, choices=choices)
+    _update_tree(current_tree_, now=0, previous_tree=previous_tree, choices=choices)
     assert current_tree_.get_update_results() == {
         (): [
             "[Table] 'KC': Added row: c2, kc",

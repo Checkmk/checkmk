@@ -443,6 +443,16 @@ def test_archive_inventory_tree_moves_the_tree_dated_by_its_mtime(tmp_path: Path
     ]
 
 
+def test_raw_store_archives_the_tree_dated_by_its_remote_timestamp(tmp_path: Path) -> None:
+    _save_meta_and_raw_inventory_tree(tmp_path, 123)
+
+    RawInventoryStore(tmp_path).archive_inventory_tree(host_name=HostName("hostname"), debug=False)
+
+    assert list((tmp_path / "var/check_mk/inventory_archive/hostname").iterdir()) == [
+        tmp_path / "var/check_mk/inventory_archive/hostname/123.json"
+    ]
+
+
 def test_load_previous_inventory_tree_prefers_the_current_tree(tmp_path: Path) -> None:
     cmk.ccc.store.save_text_to_file(
         tmp_path / "var/check_mk/inventory/hostname.json", json.dumps(raw_tree("current"))

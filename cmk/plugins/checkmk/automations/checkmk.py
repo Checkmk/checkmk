@@ -2395,10 +2395,6 @@ class AutomationDeleteHosts(ABCDeleteHosts):
 
     @override
     def _single_file_paths(self, hostname: HostName) -> list[str]:
-        inv_paths = InventoryPaths(cmk.utils.paths.omd_root)
-        tree_path = inv_paths.inventory_tree(hostname)
-        tree_path_gz = inv_paths.inventory_tree_gz(hostname)
-        status_data_tree = inv_paths.status_data_tree(hostname)
         return [
             f"{precompiled_hostchecks_dir / hostname}",
             f"{precompiled_hostchecks_dir / hostname}.py",
@@ -2410,12 +2406,8 @@ class AutomationDeleteHosts(ABCDeleteHosts):
             f"{var_dir}/persisted/{hostname}",
             f"{var_dir}/agent_deployment/{hostname}",
         ] + [
-            str(tree_path.path),
-            str(tree_path.legacy),
-            str(tree_path_gz.path),
-            str(tree_path_gz.legacy),
-            str(status_data_tree.path),
-            str(status_data_tree.legacy),
+            str(file_path)
+            for file_path in InventoryPaths(cmk.utils.paths.omd_root).host_tree_files(hostname)
         ]
 
     @override

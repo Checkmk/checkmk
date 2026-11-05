@@ -55,7 +55,7 @@ def _serialize_signed_map(
     signed = sign_map_config(spec, owner=str(cfg.owner))
     return MapsSignedMapResponse(
         owner=str(cfg.owner),
-        visibility=visibility_from_public(cfg.public, cfg.hidden),
+        visibility=visibility_from_public(cfg.public, cfg.hidden, can_edit=can_edit),
         is_builtin=page.is_builtin(),
         can_edit=can_edit,
         can_delete=can_delete,

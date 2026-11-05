@@ -24,7 +24,7 @@ class MapVisibility:
     )
     groups: list[str] | ApiOmitted = api_field(
         description="Contact-group or site ids the map is shared with "
-        "(only for publish=contact_groups/sites).",
+        "(only for publish=contact_groups/sites, and only if the requesting user may edit the map).",
         default_factory=ApiOmitted,
     )
     hide_in_monitor_menu: bool = api_field(description="Hide this map in the `Monitor` menu.")

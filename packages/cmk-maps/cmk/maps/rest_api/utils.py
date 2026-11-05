@@ -19,7 +19,7 @@ from typing import Final, get_args
 from pydantic import TypeAdapter, ValidationError
 
 from cmk.gui.openapi.framework import EndpointBehavior, ETag
-from cmk.gui.openapi.framework.model import json_dump_without_omitted
+from cmk.gui.openapi.framework.model import ApiOmitted, json_dump_without_omitted
 from cmk.gui.openapi.framework.model.base_models import LinkModel
 from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.openapi.utils import RestAPIRequestGeneralException
@@ -292,11 +292,18 @@ def spec_from_map(map_cfg: MapConfig) -> dict[str, object]:
     return nested
 
 
-def visibility_from_public(public: VisualPublic | None, hidden: bool) -> MapVisibility:
+def visibility_from_public(
+    public: VisualPublic | None, hidden: bool, *, can_edit: bool
+) -> MapVisibility:
+    """The sharing scope; whom it is shared with only for a user who may change it."""
     if public is True:
         return MapVisibility(publish="all", hide_in_monitor_menu=hidden)
     if isinstance(public, tuple) and public[0] in ("contact_groups", "sites"):
-        return MapVisibility(publish=public[0], groups=list(public[1]), hide_in_monitor_menu=hidden)
+        return MapVisibility(
+            publish=public[0],
+            groups=list(public[1]) if can_edit else ApiOmitted(),
+            hide_in_monitor_menu=hidden,
+        )
     return MapVisibility(publish="private", hide_in_monitor_menu=hidden)
 
 
@@ -521,7 +528,7 @@ def serialize_map(page: MapPage, *, can_edit: bool, can_delete: bool) -> MapObje
         title=cfg.title or cfg.name,
         extensions=MapExtensions(
             owner=str(cfg.owner),
-            visibility=visibility_from_public(cfg.public, cfg.hidden),
+            visibility=visibility_from_public(cfg.public, cfg.hidden, can_edit=can_edit),
             is_builtin=page.is_builtin(),
             can_edit=can_edit,
             can_delete=can_delete,
@@ -567,7 +574,7 @@ def serialize_map_list_entry(page: MapPage, *, can_edit: bool, can_delete: bool)
         title=cfg.title or cfg.name,
         extensions=MapListExtensions(
             owner=str(cfg.owner),
-            visibility=visibility_from_public(cfg.public, cfg.hidden),
+            visibility=visibility_from_public(cfg.public, cfg.hidden, can_edit=can_edit),
             is_builtin=page.is_builtin(),
             can_edit=can_edit,
             can_delete=can_delete,

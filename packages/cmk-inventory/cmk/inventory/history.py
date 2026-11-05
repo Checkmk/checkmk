@@ -23,7 +23,11 @@ from .paths import (
     parse_delta_cache_timestamps,
     TreePath,
 )
-from .serialization import deserialize_delta_tree, SDRawDeltaTree, serialize_delta_tree
+from .serialization import (
+    deserialize_delta_cache_entry,
+    SDRawDeltaCacheEntry,
+    serialize_delta_cache_entry,
+)
 from .store import load_tree_from_tree_path
 from .trees import ImmutableTree
 
@@ -70,16 +74,16 @@ class HistoryEntry:
         *,
         previous_timestamp: int,
         current_timestamp: int,
-        raw: tuple[int, int, int, SDRawDeltaTree],
+        raw: SDRawDeltaCacheEntry,
     ) -> HistoryEntry:
-        new, changed, removed, raw_delta_tree = raw
+        new, changed, removed, delta_tree = deserialize_delta_cache_entry(raw)
         return cls(
             previous_timestamp=previous_timestamp,
             current_timestamp=current_timestamp,
             new=new,
             changed=changed,
             removed=removed,
-            delta_tree=deserialize_delta_tree(raw_delta_tree),
+            delta_tree=delta_tree,
         )
 
     @classmethod
@@ -275,11 +279,11 @@ class HistoryStore:
         store.save_text_to_file(
             delta_cache_tree.path,
             json.dumps(
-                (
-                    history_entry.new,
-                    history_entry.changed,
-                    history_entry.removed,
-                    serialize_delta_tree(history_entry.delta_tree),
+                serialize_delta_cache_entry(
+                    new=history_entry.new,
+                    changed=history_entry.changed,
+                    removed=history_entry.removed,
+                    delta_tree=history_entry.delta_tree,
                 )
             ),
         )

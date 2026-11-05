@@ -360,6 +360,22 @@ def deserialize_delta_tree(raw_tree: SDRawDeltaTree) -> ImmutableDeltaTree:
     return _deserialize_delta_tree(path=(), raw_tree=raw_tree)
 
 
+SDRawDeltaCacheEntry = tuple[int, int, int, SDRawDeltaTree]
+
+
+def serialize_delta_cache_entry(
+    *, new: int, changed: int, removed: int, delta_tree: ImmutableDeltaTree
+) -> SDRawDeltaCacheEntry:
+    return (new, changed, removed, serialize_delta_tree(delta_tree))
+
+
+def deserialize_delta_cache_entry(
+    raw: SDRawDeltaCacheEntry,
+) -> tuple[int, int, int, ImmutableDeltaTree]:
+    new, changed, removed, raw_delta_tree = raw
+    return new, changed, removed, deserialize_delta_tree(raw_delta_tree)
+
+
 class SDMeta(TypedDict):
     version: Literal["1"]
     do_archive: bool

@@ -12,6 +12,7 @@ import pytest
 
 from cmk.inventory.delta import compare_trees, ImmutableDeltaTree
 from cmk.inventory.serialization import (
+    deserialize_delta_cache_entry,
     deserialize_delta_tree,
     deserialize_tree,
     parse_from_gzipped,
@@ -20,6 +21,7 @@ from cmk.inventory.serialization import (
     SDMetaAndRawTree,
     SDRawDeltaTree,
     SDRawTree,
+    serialize_delta_cache_entry,
     serialize_delta_tree,
     serialize_tree,
 )
@@ -35,6 +37,7 @@ from cmk.inventory.trees import (
 from ._fixtures import (
     empty_immutable_tree,
     empty_mutable_tree,
+    filled_delta_tree,
     filled_immutable_tree,
     filled_mutable_tree,
     raw_tree,
@@ -525,3 +528,10 @@ def test_parse_from_gzipped_rejects_an_unknown_version() -> None:
                 json.dumps({"meta": {"version": "2", "do_archive": True}, "raw_tree": {}}).encode()
             )
         )
+
+
+def test_delta_cache_entry_round_trip() -> None:
+    delta_tree = filled_delta_tree()
+    assert deserialize_delta_cache_entry(
+        serialize_delta_cache_entry(new=1, changed=2, removed=3, delta_tree=delta_tree)
+    ) == (1, 2, 3, delta_tree)

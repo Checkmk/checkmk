@@ -4,17 +4,20 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Tests for the maps-as-pagetypes storage (standard per-user pagetype store)."""
 
+import copy
+
 import pytest
 
 import cmk.utils.paths
 from cmk.ccc.user import UserId
-from cmk.gui.config import active_config
+from cmk.gui.config import active_config, Config
 from cmk.gui.permissions import all_permissions
 from cmk.gui.session_context import UserContext
 from cmk.gui.utils.roles import UserPermissions
 from cmk.maps.gui import store
 from cmk.maps.gui.pagetype import MapPage
 from cmk.maps.gui.type_defs import map_config_from_spec
+from tests.testlib.unit.gui.web_test_app import SetConfig
 
 
 def _user_permissions() -> UserPermissions:
@@ -194,6 +197,47 @@ def test_writing_a_map_touches_only_the_owners_file(
         for path in cmk.utils.paths.profile_dir.rglob("user_maps.mk")
     }
     assert written == {f"{with_admin_login}/user_maps.mk", f"{other}/user_maps.mk"}
+
+
+def test_a_builtin_map_the_user_may_not_see_is_not_found_by_name(
+    request_context: None,  # noqa: ARG001
+    with_user: tuple[UserId, str],
+    set_config: SetConfig,
+    load_config: Config,
+) -> None:
+    roles = copy.deepcopy(load_config.roles)
+    roles["user"]["permissions"] = {**roles["user"].get("permissions", {}), "map.all_hosts": False}
+
+    with (
+        set_config(roles=roles),
+        UserContext(with_user[0], UserPermissions.from_config(active_config, all_permissions())),
+    ):
+        assert store.get_permitted_map("all_hosts") is None
+
+
+def test_a_map_published_under_the_name_of_a_hidden_builtin_is_hidden_too(
+    request_context: None,  # noqa: ARG001
+    with_admin_login: UserId,
+    with_user: tuple[UserId, str],
+    set_config: SetConfig,
+    load_config: Config,
+) -> None:
+    roles = copy.deepcopy(load_config.roles)
+    roles["user"]["permissions"] = {**roles["user"].get("permissions", {}), "map.all_hosts": False}
+    roles["admin"]["permissions"] = {
+        **roles["admin"].get("permissions", {}),
+        "general.force_map": False,
+    }
+    store.save_map(with_admin_login, "all_hosts", _map("all_hosts"), public=True)
+
+    with (
+        set_config(roles=roles),
+        UserContext(with_user[0], UserPermissions.from_config(active_config, all_permissions())),
+    ):
+        found = store.get_permitted_map("all_hosts")
+        listed = [page for page in store.get_permitted_maps() if page.name() == "all_hosts"]
+
+    assert (found, listed) == (None, [])
 
 
 def test_a_map_shared_to_sites_reaches_the_users_of_those_sites(

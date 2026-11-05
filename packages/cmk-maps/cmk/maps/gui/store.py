@@ -58,7 +58,12 @@ def get_menu_maps(user_permissions: UserPermissions | None = None) -> list[MapPa
 
 def get_permitted_map(name: MapName) -> MapPage | None:
     """The single map ``name`` resolves to for the logged-in user (or ``None``)."""
-    return _instances().find_page(name, _user_permissions())
+    page = _instances().find_page(name, _user_permissions())
+    # The core's lookup by name returns a built-in without its own permission,
+    # which the list of the maps applies.
+    if page is not None and page.is_builtin() and not page.may_see():
+        return None
+    return page
 
 
 def get_own_map(owner: UserId, name: MapName) -> MapPage | None:

@@ -100,21 +100,7 @@ class ImmutableTable:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, _MutableTable | ImmutableTable):
             return NotImplemented
-
-        compared_row_idents = DictKeys.compare(
-            left=set(self.rows_by_ident),
-            right=set(other.rows_by_ident),
-        )
-
-        if compared_row_idents.only_left:
-            return False
-
-        if compared_row_idents.only_right:
-            return False
-
-        return all(
-            self.rows_by_ident[i] == other.rows_by_ident[i] for i in compared_row_idents.both
-        )
+        return self.rows_by_ident == other.rows_by_ident
 
     @property
     def rows(self) -> Sequence[Mapping[SDKey, SDValue]]:
@@ -277,21 +263,7 @@ class _MutableTable:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, _MutableTable | ImmutableTable):
             return NotImplemented
-
-        compared_row_idents = DictKeys.compare(
-            left=set(self.rows_by_ident),
-            right=set(other.rows_by_ident),
-        )
-
-        if compared_row_idents.only_left:
-            return False
-
-        if compared_row_idents.only_right:
-            return False
-
-        return all(
-            self.rows_by_ident[i] == other.rows_by_ident[i] for i in compared_row_idents.both
-        )
+        return self.rows_by_ident == other.rows_by_ident
 
     def _add_key_columns(self, key_columns: Iterable[SDKey]) -> None:
         self.key_columns = sorted(set(self.key_columns).union(key_columns))

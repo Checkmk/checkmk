@@ -323,6 +323,11 @@ _UNEQUAL_TREES = [
         id="row-only-right",
     ),
     pytest.param(
+        _tree_with(rows=[{SDKey("key"): "row", SDKey("value"): "left"}]),
+        _tree_with(rows=[{SDKey("key"): "row", SDKey("value"): "right"}]),
+        id="row-with-different-values",
+    ),
+    pytest.param(
         _tree_with(path=(SDNodeName("node"),), pairs=[{SDKey("key"): "value"}]),
         _tree_with(),
         id="node-only-left",

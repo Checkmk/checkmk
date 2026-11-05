@@ -6,8 +6,6 @@
 from collections.abc import Mapping, Sequence
 
 from cmk.inventory.retention import (
-    _SDRetentionFilterChoices,
-    _update_tree,
     RawIntervalFromConfig,
     update_from_previous,
 )
@@ -121,10 +119,16 @@ def test_update_attributes_from_previous() -> None:
         path=(),
         pairs=[{SDKey("a1"): "A1: cur", SDKey("a3"): "A3: only cur"}],
     )
-    choices = _SDRetentionFilterChoices(path=(), interval=6)
-    choices.add_pairs_choice(choice="all", cache_info=(4, 5))
-
-    _update_tree(current_tree_, now=0, previous_tree=previous_tree, choices=choices)
+    update_from_previous(
+        current_tree_,
+        now=0,
+        previous_tree=previous_tree,
+        raw_intervals_from_config=[
+            RawIntervalFromConfig(interval=6, visible_raw_path="", attributes="all")
+        ],
+        pairs_cache_info={(): (4, 5)},
+        columns_cache_info={(): (4, 5)},
+    )
     assert current_tree_.get_update_results() == {
         (): [
             "[Attributes] Added pairs: a2",
@@ -165,10 +169,16 @@ def test_update_from_previous_1() -> None:
             {SDKey("kc"): "KC", SDKey("c1"): "C1: cur", SDKey("c3"): "C3: only cur"},
         ],
     )
-    choices = _SDRetentionFilterChoices(path=(), interval=6)
-    choices.add_columns_choice(choice="all", cache_info=(4, 5))
-
-    _update_tree(current_tree_, now=0, previous_tree=previous_tree, choices=choices)
+    update_from_previous(
+        current_tree_,
+        now=0,
+        previous_tree=previous_tree,
+        raw_intervals_from_config=[
+            RawIntervalFromConfig(interval=6, visible_raw_path="", columns="all")
+        ],
+        pairs_cache_info={(): (4, 5)},
+        columns_cache_info={(): (4, 5)},
+    )
     assert current_tree_.get_update_results() == {
         (): [
             "[Table] 'KC': Added row: c2, kc",
@@ -211,9 +221,18 @@ def test_update_from_previous_2() -> None:
             {SDKey("kc"): "KC", SDKey("c3"): "C3: only cur"},
         ],
     )
-    choices = _SDRetentionFilterChoices(path=(), interval=6)
-    choices.add_columns_choice(choice=[SDKey("c2"), SDKey("c3")], cache_info=(4, 5))
-    _update_tree(current_tree_, now=0, previous_tree=previous_tree, choices=choices)
+    update_from_previous(
+        current_tree_,
+        now=0,
+        previous_tree=previous_tree,
+        raw_intervals_from_config=[
+            RawIntervalFromConfig(
+                interval=6, visible_raw_path="", columns=("choices", ["c2", "c3"])
+            )
+        ],
+        pairs_cache_info={(): (4, 5)},
+        columns_cache_info={(): (4, 5)},
+    )
     assert current_tree_.get_update_results() == {
         (): [
             "[Table] 'KC': Added row: c2, kc",

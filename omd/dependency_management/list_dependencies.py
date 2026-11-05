@@ -78,10 +78,10 @@ class PackageMetadataAttributes(BaseModel):
 # by a bare pkg:pypi/<name>@<version>.
 #
 # We only do this for pypi, where the same name and version really is the same package:
-# the wheels which carry a purl all come from the cmk_requirements hub, whose
-# requirements.txt pins pypi.org, and no requirements file of ours declares a second
-# index.  For other purl types we have no such knowledge, so we leave their qualifiers
-# alone.
+# the wheels which carry a purl all come from the cmk_requirements hub, which fetches
+# them from rules_python's default index, pypi.org, and no requirements file of ours
+# declares another index.  For other purl types we have no such knowledge, so we leave
+# their qualifiers alone.
 _WHEEL_ARTIFACT_QUALIFIERS = ("file_name", "repository_url")
 
 # gazelle's go_deps qualifies module purls with the go.sum `checksum`.  As with the

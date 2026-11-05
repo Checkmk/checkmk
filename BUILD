@@ -13,6 +13,7 @@ load("@repo_license//:license.bzl", "REPO_LICENSE")
 load("@rules_multirun//:defs.bzl", "multirun")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
 load("@rules_uv//uv:venv.bzl", "create_venv")
+load("//:bazel_variables.bzl", "PYPI_PROXY_INDEX_URL", "UV_PIP_COMPILE_ARGS")
 load("//bazel/rules:deploy.bzl", "CLOUD_WHEELS", "COMMUNITY_WHEELS", "PRO_WHEELS", "ULTIMATEMT_WHEELS", "ULTIMATE_WHEELS", "deploy_python", "deploy_python_drift_test")
 load("//bazel/rules:proto.bzl", "proto_library_as")
 load("//bazel/rules:requirements.bzl", "compile_requirements_in")
@@ -134,6 +135,12 @@ string_flag(
     build_setting_default = "https://pypi.org/simple",
     make_variable = "PIP_INDEX_URL",
     visibility = ["//visibility:public"],
+)
+
+config_setting(
+    name = "pypi_proxy_enabled",
+    flag_values = {":pip_index_url": PYPI_PROXY_INDEX_URL},
+    visibility = ["//:__subpackages__"],
 )
 
 # Mirrors the Jenkins DISABLE_CMK_DISTRO_PACKAGE_SIGNING job parameter: the
@@ -271,6 +278,7 @@ compile_requirements_in(
 
 pip_compile(
     name = "requirements",
+    args = UV_PIP_COMPILE_ARGS,
     requirements_in = ":requirements-in",
     requirements_txt = "@//:requirements.txt",
     tags = ["manual"],
@@ -294,6 +302,7 @@ compile_requirements_in(
 
 pip_compile(
     name = "community_requirements",
+    args = UV_PIP_COMPILE_ARGS,
     requirements_in = ":community-requirements-in",
     requirements_txt = ":community-requirements.txt",
     tags = ["manual"],
@@ -317,6 +326,7 @@ compile_requirements_in(
 
 pip_compile(
     name = "runtime_requirements",
+    args = UV_PIP_COMPILE_ARGS,
     requirements_in = ":runtime-requirements-in",
     requirements_txt = ":runtime-requirements.txt",
     tags = ["manual"],

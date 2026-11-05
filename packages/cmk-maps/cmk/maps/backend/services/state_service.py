@@ -1301,6 +1301,11 @@ def _build_folder_tree(data: FolderTreeData, fv: FolderTreeView) -> FolderTreeNo
         root_path = by_id if by_id is not None else (cand if cand in nodes else "")
     root = nodes.get(root_path) or nodes[""]
     finalize(root)
+    if root.is_empty and not root.permitted and root is not nodes[""]:
+        # A root the user may not read and sees no host in reads as one that does
+        # not exist, so its title stays as hidden as the folder.
+        root = nodes[""]
+        finalize(root)
 
     # problems_severity narrows what problems_only keeps: "critical" only
     # retains CRITICAL/DOWN/UNREACHABLE — on typical sites nearly every host

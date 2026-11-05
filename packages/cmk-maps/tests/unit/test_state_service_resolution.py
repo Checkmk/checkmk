@@ -1730,3 +1730,38 @@ def test_foldertree_no_services_by_default(test_conn: FakeConnection) -> None:  
     assert result.folder_tree is not None
     host = _find_node(result.folder_tree, "datacenters/muc/localhost")
     assert host is not None and not host.children
+
+
+@pytest.mark.parametrize(
+    ("root_folder", "permitted", "title"),
+    [
+        pytest.param("secret", False, "Main", id="unreadable and empty"),
+        pytest.param("missing", True, "Main", id="missing"),
+        pytest.param("secret", True, "Secret", id="readable and empty"),
+    ],
+)
+def test_a_root_folder_the_user_may_not_read_and_sees_nothing_in_reads_as_missing(
+    test_conn: FakeConnection,
+    monkeypatch: pytest.MonkeyPatch,
+    root_folder: str,
+    permitted: bool,
+    title: str,
+) -> None:
+    async def _fake_folder_tree(
+        *,
+        only_hard: bool = False,  # noqa: ARG001
+        sites: list[str] | None = None,  # noqa: ARG001
+    ) -> FolderTreeData:
+        return FolderTreeData(
+            folders=[
+                {"path": "", "title": "Main", "permitted": True},
+                {"path": "secret", "title": "Secret", "permitted": permitted},
+            ],
+            hosts=[],
+        )
+
+    monkeypatch.setattr(test_conn, "get_folder_tree", _fake_folder_tree)
+    result = asyncio.run(get_map_states(_folder_map({"root_folder": root_folder}), map_owner=""))
+
+    assert result.folder_tree is not None
+    assert result.folder_tree.title == title

@@ -107,6 +107,7 @@ py_test(
     main = ":__test__.py",
     deps = [
         ":__test__",
+        requirement("botocore"),
         requirement("coverage"),
         requirement("fastapi"),
         requirement("httpx"),

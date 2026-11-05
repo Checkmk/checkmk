@@ -299,9 +299,6 @@ def test_count_ok_unreachable_levels_do_not_leak_into_parent(
             _ALL_CHILDREN,
             True,
             id="always CRIT, all children acknowledged",
-            marks=pytest.mark.xfail(
-                strict=True, reason="unreachable count_ok levels block the acknowledgement"
-            ),
         ),
         pytest.param(
             _ALWAYS_CRIT_LEVELS, ("CPU",), False, id="always CRIT, one child acknowledged"
@@ -311,9 +308,6 @@ def test_count_ok_unreachable_levels_do_not_leak_into_parent(
             _ALL_CHILDREN,
             True,
             id="at best WARN, all children acknowledged",
-            marks=pytest.mark.xfail(
-                strict=True, reason="unreachable count_ok levels block the acknowledgement"
-            ),
         ),
     ],
 )
@@ -344,9 +338,6 @@ def test_count_ok_unreachable_levels_do_not_block_acknowledgement(
             _ALL_CHILDREN,
             True,
             id="always CRIT, all children in downtime",
-            marks=pytest.mark.xfail(
-                strict=True, reason="unreachable count_ok levels block the full-coverage downtime"
-            ),
         ),
         pytest.param(_ALWAYS_CRIT_LEVELS, ("CPU",), False, id="always CRIT, one child in downtime"),
         pytest.param(
@@ -354,9 +345,6 @@ def test_count_ok_unreachable_levels_do_not_block_acknowledgement(
             _ALL_CHILDREN,
             True,
             id="at best WARN, all children in downtime",
-            marks=pytest.mark.xfail(
-                strict=True, reason="unreachable count_ok levels block the full-coverage downtime"
-            ),
         ),
     ],
 )

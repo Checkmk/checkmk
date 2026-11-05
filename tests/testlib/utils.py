@@ -387,7 +387,7 @@ def daemon(
         try:
             yield daemon_proc
         finally:
-            daemon_rc = daemon_proc.returncode
+            daemon_rc = daemon_proc.poll()
             if daemon_rc is None:
                 logger.info("Terminating %s daemon...", name_for_logging)
                 _terminate_daemon(daemon_proc, termination_mode, sudo)

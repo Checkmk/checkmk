@@ -9,6 +9,7 @@ import shutil
 import signal
 import subprocess
 import traceback
+import warnings
 from collections.abc import Iterable, Mapping, Sequence
 from copy import deepcopy
 from dataclasses import dataclass, field
@@ -16,6 +17,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any, NewType, override
 
+from cryptography.x509 import load_pem_x509_certificate
 from pydantic import BaseModel
 
 import cmk.ccc.version as cmk_version
@@ -352,22 +354,12 @@ class ConfigDomainCACertificates(ABCConfigDomain):
         config_before: TrustedCertificateAuthorities | None,
         config_after: TrustedCertificateAuthorities,
     ) -> None:
-        if config_before is None:
-            current_certs = {}
-        else:
-            current_certs = {
-                (cert := Certificate.load_pem(CertificatePEM(value))).fingerprint(
-                    HashAlgorithm.Sha256
-                ): cert
-                for value in config_before["trusted_cas"] or []
-            }
-
-        new_certs = {
-            (cert := Certificate.load_pem(CertificatePEM(value))).fingerprint(
-                HashAlgorithm.Sha256
-            ): cert
-            for value in config_after["trusted_cas"]
-        }
+        current_certs = ConfigDomainCACertificates._audited_certs_by_fingerprint(
+            [] if config_before is None else config_before["trusted_cas"] or []
+        )
+        new_certs = ConfigDomainCACertificates._audited_certs_by_fingerprint(
+            config_after["trusted_cas"]
+        )
 
         added_certs = [
             new_certs[fingerprint] for fingerprint in new_certs if fingerprint not in current_certs
@@ -396,6 +388,15 @@ class ConfigDomainCACertificates(ABCConfigDomain):
                     cert=cert,
                 )
             )
+
+    @staticmethod
+    def _audited_certs_by_fingerprint(trusted_cas: Sequence[str]) -> dict[bytes, Certificate]:
+        certs: dict[bytes, Certificate] = {}
+        for cert_str in trusted_cas:
+            with warnings.catch_warnings(record=True, category=UserWarning):
+                cert = Certificate(load_pem_x509_certificate(CertificatePEM(cert_str).bytes))
+            certs[cert.fingerprint(HashAlgorithm.Sha256)] = cert
+        return certs
 
     @override
     def config_file(self, site_specific: bool) -> Path:

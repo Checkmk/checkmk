@@ -19,7 +19,6 @@ from omdlib.contexts import SiteContext
 
 from cmk.ccc.site import SiteId
 from cmk.ccc.store import load_text_from_file
-from cmk.crypto.certificate import Certificate, CertificatePEM, NegativeSerialException
 from cmk.gui.watolib import config_domains
 from cmk.gui.watolib.config_domains import ConfigDomainCACertificates, ConfigDomainOMD
 
@@ -342,7 +341,6 @@ def test_load_cert_ignores_negative_serials(mocker: MockerFixture) -> None:
     )
 
 
-@pytest.mark.xfail(strict=True, raises=NegativeSerialException, reason="crash group 4374")
 @pytest.mark.parametrize(
     "trusted_cas_before, trusted_cas_after, event",
     [
@@ -360,14 +358,13 @@ def test_load_cert_ignores_negative_serials(mocker: MockerFixture) -> None:
         ),
     ],
 )
-def test_log_changes_skips_cas_with_negative_serials(
+def test_log_changes_audits_cas_with_negative_serials(
     request_context: None,
     mocker: MockerFixture,
     trusted_cas_before: list[str] | None,
     trusted_cas_after: list[str],
     event: str,
 ) -> None:
-    logger_mock = mocker.patch.object(config_domains, "logger")
     log_security_event_mock = mocker.patch.object(config_domains, "log_security_event")
 
     ConfigDomainCACertificates.log_changes(
@@ -378,13 +375,9 @@ def test_log_changes_skips_cas_with_negative_serials(
     )
 
     assert [
-        (call.args[0].summary, call.args[0].details["fingerprint"])
+        (call.args[0].summary, call.args[0].details["subject"])
         for call in log_security_event_mock.call_args_list
-    ] == [(event, Certificate.load_pem(CertificatePEM(remote1_newer)).show_fingerprint())]
-    logger_mock.warning.assert_called_once_with(
-        "There is a certificate %r with a negative serial number in the trusted certificate authorities! Ignoring that...",
-        "CN=Test,O=Internet Widgits Pty Ltd,ST=Some-State,C=DE",
-    )
+    ] == [(event, "Site 'heute_remote_1' local CA"), (event, "Test")]
 
 
 def test_default_globals_reports_fixed_mcp_defaults(mocker: MockerFixture, tmp_path: Path) -> None:

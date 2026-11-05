@@ -41,7 +41,6 @@ def test_check_path_absolute(mocked_home: Path) -> None:
     _check_path(str(mocked_home / "tmp" / "debug" / "foo"))
 
 
-@pytest.mark.xfail(strict=True, raises=json.JSONDecodeError, reason="Crash groups 4930, 4653")
 def test_json_cached_data_starts_over_on_truncated_cache(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

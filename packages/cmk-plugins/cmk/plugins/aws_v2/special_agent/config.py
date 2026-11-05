@@ -84,7 +84,7 @@ class CloudFrontHostAssignment(Enum):
 class HostNaming:
     """The rule settings that the host names of AWS resources depend on.
 
-    See hosts.target_host, which is the only reader.
+    See hosts.target_host. The CloudFront section also reads cloudfront for its name.
     """
 
     ec2: NamingConvention

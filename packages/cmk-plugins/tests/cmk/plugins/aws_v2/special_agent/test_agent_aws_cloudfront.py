@@ -368,6 +368,24 @@ def test_agent_aws_cloudfront(
 
 
 @pytest.mark.parametrize(
+    "host_assignment, section_name",
+    [
+        (CloudFrontHostAssignment.account, "cloudfront_cloudwatch"),
+        (CloudFrontHostAssignment.origin_domain, "cloudfront_cloudwatch"),
+        (CloudFrontHostAssignment.distribution, "cloudfront_distribution"),
+    ],
+)
+def test_agent_aws_cloudfront_section_of_a_distribution_host_has_its_own_name(
+    get_cloudfront_sections: CloudFrontSections,
+    host_assignment: CloudFrontHostAssignment,
+    section_name: str,
+) -> None:
+    _cloudfront_summary, cloudfront = get_cloudfront_sections(None, (None, None), host_assignment)
+
+    assert cloudfront.name == section_name
+
+
+@pytest.mark.parametrize(
     "tag_import, expected_tags",
     [
         (

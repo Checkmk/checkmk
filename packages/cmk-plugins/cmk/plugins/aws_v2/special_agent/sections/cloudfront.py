@@ -14,7 +14,7 @@ from typing import override
 from botocore.client import BaseClient
 
 from .. import hosts
-from ..config import AWSConfig
+from ..config import AWSConfig, CloudFrontHostAssignment
 from ..labels import AwsResource
 from .core import (
     AWSColleagueContents,
@@ -109,9 +109,26 @@ class CloudFrontSummary(AWSSection):
 
 
 class CloudFront(AWSSectionCloudwatch):
+    def __init__(
+        self,
+        client: BaseClient,
+        region: str,
+        config: AWSConfig,
+        distributor: ResultDistributor | None = None,
+    ) -> None:
+        # Set before the base class reads the name.
+        self._own_host_per_distribution = (
+            config.host_naming.cloudfront is CloudFrontHostAssignment.distribution
+        )
+        super().__init__(client, region, config, distributor=distributor)
+
     @property
     @override
     def name(self) -> str:
+        # A host of one distribution gets a section of its own, so that its service has no
+        # item. A host of the account or of an origin domain can have several distributions.
+        if self._own_host_per_distribution:
+            return "cloudfront_distribution"
         return "cloudfront_cloudwatch"
 
     @property

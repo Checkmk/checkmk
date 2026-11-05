@@ -256,6 +256,7 @@ FROZEN_SERVICE_NAMES: Final[Mapping[str, str]] = {
     "aws_sns_summary": "AWS/SNS Summary",
     "aws_status": "AWS Status %s",
     "aws_v2_cloudfront": "AWS/CloudFront %s distribution",
+    "aws_v2_cloudfront_distribution": "AWS/CloudFront distribution",
     "aws_v2_cloudwatch_alarms": "AWS/CloudWatch Alarms",
     "aws_v2_cloudwatch_alarms_limits": "AWS/CloudWatch Alarms Limits %s",
     "aws_v2_costs_and_usage": "AWS/CE %s",

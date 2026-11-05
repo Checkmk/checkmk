@@ -237,7 +237,9 @@ def test_is_valid_image_name_accepts_plain_names(name: str) -> None:
     assert is_valid_image_name(name)
 
 
-@pytest.mark.parametrize("name", ["../escape", "a/b.png", "a\\b.png", "", ".", ".."])
+@pytest.mark.parametrize(
+    "name", ["../escape", "a/b.png", "a\\b.png", "", ".", "..", "a\x00.png", "a\n.png"]
+)
 def test_is_valid_image_name_rejects_traversal_and_separators(name: str) -> None:
     assert not is_valid_image_name(name)
 

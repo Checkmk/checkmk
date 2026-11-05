@@ -35,8 +35,14 @@ _UNSAFE_STEM_CHARS = re.compile(r"[^a-zA-Z0-9_\-]")
 
 
 def is_valid_image_name(name: str) -> bool:
-    """Reject path separators and the traversal specials in a stored image name."""
-    return "/" not in name and "\\" not in name and name not in ("", ".", "..")
+    """Reject path separators, control characters and the traversal specials in a stored
+    image name."""
+    return (
+        "/" not in name
+        and "\\" not in name
+        and name not in ("", ".", "..")
+        and not any(ord(c) < 0x20 or ord(c) == 0x7F for c in name)
+    )
 
 
 def safe_image_stem(filename: str | None) -> str:

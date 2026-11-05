@@ -90,6 +90,34 @@ def _is_builtin(name: str) -> bool:
     return name in _builtin_names()
 
 
+@lru_cache
+def _shipped_bytes(name: str) -> bytes:
+    return (_BUILTIN_DIR / name).read_bytes()
+
+
+def _is_shipped(name: str, contents: bytes) -> bool:
+    return _is_builtin(name) and _shipped_bytes(name) == contents
+
+
+def _holds_builtin(path: Path) -> bool:
+    """Whether the stored file is the shipped icon, not an upload that took its name
+    before the icon shipped.
+
+    A copy seeded from an icon a later release changed counts as no built-in
+    either: deleting it seeds the current icon on the next page load. Its name
+    stays reserved for uploads.
+    """
+    if not _is_builtin(path.name):
+        return False
+    stat = path.stat()
+    return _stored_is_shipped(path, stat.st_mtime_ns, stat.st_size)
+
+
+@lru_cache(maxsize=1024)
+def _stored_is_shipped(path: Path, _mtime: int, size: int) -> bool:
+    return size == len(_shipped_bytes(path.name)) and _is_shipped(path.name, path.read_bytes())
+
+
 def seed_builtin_images() -> None:
     """Copy missing built-in icons into the served images dir (non-destructive).
 
@@ -161,9 +189,8 @@ def require_valid_image_name(name: str) -> None:
 def image_list() -> list[ImageListEntry]:
     """The site's image library: built-in icons plus user uploads."""
     seed_builtin_images()
-    builtins = _builtin_names()
     return [
-        ImageListEntry(name=f.name, url=f"images/{f.name}", builtin=f.name in builtins)
+        ImageListEntry(name=f.name, url=f"images/{f.name}", builtin=_holds_builtin(f))
         for f in sorted(_images_dir().iterdir())
         if f.is_file() and f.suffix.lower() in ICON_SUFFIXES
     ]
@@ -237,7 +264,7 @@ def icon_name_for(name: str, contents: bytes, planned: Mapping[str, bytes] | Non
 
     ``planned`` holds icons, by name, that are to be added and count as in the library.
     """
-    if _is_builtin(name) and (_BUILTIN_DIR / name).read_bytes() == contents:
+    if _is_shipped(name, contents):
         return name
     images_dir = _images_dir()
     stem, suffix = Path(name).stem, Path(name).suffix
@@ -273,8 +300,6 @@ def delete_image(name: str, force: bool) -> list[ImageUsageEntry]:
     and asks again with ``force``.
     """
     require_valid_image_name(name)
-    if _is_builtin(name):
-        raise MKUserError("name", _("Built-in images cannot be deleted."))
     d = _images_dir().resolve()
     # Resolve strictly + compare via is_relative_to so a symlink pointing
     # outside the images dir is caught (str.startswith could be tricked).
@@ -284,6 +309,8 @@ def delete_image(name: str, force: bool) -> list[ImageUsageEntry]:
         raise MKUserError("name", _("Image '%(name)s' not found.") % {"name": name}) from None
     if not path.is_relative_to(d):
         raise MKUserError("name", _("Invalid filename."))
+    if _holds_builtin(path):
+        raise MKUserError("name", _("Built-in images cannot be deleted."))
     if not force and (usage := find_image_usage(name)):
         return usage
     path.unlink()

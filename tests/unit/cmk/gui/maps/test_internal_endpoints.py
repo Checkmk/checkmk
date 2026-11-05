@@ -14,6 +14,7 @@ from http import HTTPStatus
 
 import pytest
 
+import cmk.utils.paths
 from cmk.ccc.user import UserId
 from cmk.gui.config import Config
 from cmk.livestatus_client.testing import MockLiveStatusConnection
@@ -212,6 +213,27 @@ def test_an_uploaded_image_joins_the_library(clients: ClientRegistry) -> None:
 def test_an_unused_image_is_deleted(clients: ClientRegistry) -> None:
     clients.Maps.upload_image("rack.png", "image/png", _PNG)
     clients.Maps.delete_image("rack.png").assert_status_code(HTTPStatus.NO_CONTENT)
+
+
+def test_a_builtin_image_is_kept(clients: ClientRegistry) -> None:
+    images = clients.Maps.get_images().json["images"]
+    assert any(image["name"] == "bell.svg" and image["builtin"] for image in images)
+
+    clients.Maps.delete_image("bell.svg", expect_ok=False).assert_status_code(
+        HTTPStatus.BAD_REQUEST
+    )
+
+
+def test_an_image_uploaded_under_a_name_a_builtin_takes_later_is_the_uploads(
+    clients: ClientRegistry,
+) -> None:
+    images_dir = cmk.utils.paths.omd_root / "var/maps/images"
+    images_dir.mkdir(parents=True, exist_ok=True)
+    (images_dir / "bell.svg").write_bytes(b'<svg xmlns="http://www.w3.org/2000/svg"/>')
+
+    images = clients.Maps.get_images().json["images"]
+    assert [image["builtin"] for image in images if image["name"] == "bell.svg"] == [False]
+    clients.Maps.delete_image("bell.svg").assert_status_code(HTTPStatus.NO_CONTENT)
 
 
 def test_an_image_in_use_is_kept_with_the_maps_using_it(clients: ClientRegistry) -> None:

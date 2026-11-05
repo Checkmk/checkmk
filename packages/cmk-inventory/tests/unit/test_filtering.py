@@ -10,10 +10,12 @@ import pytest
 from cmk.ccc.hostaddress import HostName
 from cmk.inventory.delta import SDDeltaValue
 from cmk.inventory.filtering import (
+    _make_filter_choices_from_permitted_paths,
     filter_delta_tree,
     filter_tree,
+    InventoryPathsConfig,
     make_filter_choices_from_api_request_paths,
-    make_filter_choices_from_permitted_paths,
+    make_filter_choices_from_contact_groups,
     PermittedPath,
     SDFilterChoice,
 )
@@ -588,4 +590,42 @@ def test_filter_networking_tree_empty() -> None:
 def test_make_filter_choices_from_permitted_paths(
     entry: PermittedPath, expected_filter_choice: SDFilterChoice
 ) -> None:
-    assert make_filter_choices_from_permitted_paths([entry])[0] == expected_filter_choice
+    assert _make_filter_choices_from_permitted_paths([entry])[0] == expected_filter_choice
+
+
+_PATHS_A = PermittedPath(visible_raw_path="a")
+_PATHS_B = PermittedPath(visible_raw_path="b")
+
+
+@pytest.mark.parametrize(
+    "configs",
+    [
+        pytest.param([], id="no-contact-group"),
+        pytest.param([None], id="unconfigured"),
+        pytest.param(["allow_all"], id="allow-all"),
+        pytest.param([("paths", [_PATHS_A]), "allow_all"], id="allow-all-wins"),
+    ],
+)
+def test_make_filter_choices_from_contact_groups_permits_everything(
+    configs: Sequence[InventoryPathsConfig | None],
+) -> None:
+    assert make_filter_choices_from_contact_groups(configs) is None
+
+
+@pytest.mark.parametrize(
+    "configs",
+    [
+        pytest.param(["forbid_all"], id="forbid-all"),
+        pytest.param([("paths", [])], id="no-paths"),
+    ],
+)
+def test_make_filter_choices_from_contact_groups_permits_nothing(
+    configs: Sequence[InventoryPathsConfig | None],
+) -> None:
+    assert make_filter_choices_from_contact_groups(configs) == []
+
+
+def test_make_filter_choices_from_contact_groups_joins_the_paths() -> None:
+    assert make_filter_choices_from_contact_groups(
+        [("paths", [_PATHS_A]), "forbid_all", ("paths", [_PATHS_B])]
+    ) == _make_filter_choices_from_permitted_paths([_PATHS_A, _PATHS_B])

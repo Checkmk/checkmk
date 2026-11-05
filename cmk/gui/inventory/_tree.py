@@ -22,8 +22,7 @@ from cmk.gui.utils.user_errors import user_errors
 from cmk.inventory.delta import ImmutableDeltaTree
 from cmk.inventory.filtering import (
     filter_tree,
-    make_filter_choices_from_permitted_paths,
-    PermittedPath,
+    make_filter_choices_from_contact_groups,
     SDFilterChoice,
 )
 from cmk.inventory.history import HistoryEntry, HistoryStore, sort_corrupted_history_files
@@ -32,47 +31,12 @@ from cmk.inventory.trees import ImmutableTree
 
 
 @request_memoize()
-def _get_permitted_inventory_paths() -> Sequence[PermittedPath] | None:
-    """
-    Returns either a list of permitted paths or
-    None in case the user is allowed to see the whole tree.
-    """
-
-    user_groups = [] if user.id is None else userdb.contactgroups_of_user(user.id)
-
-    if not user_groups:
-        return None
-
-    forbid_whole_tree = False
-    permitted_paths = []
-    for user_group in user_groups:
-        inventory_paths = active_config.multisite_contactgroups.get(user_group, {}).get(
-            "inventory_paths"
-        )
-        if inventory_paths is None:
-            # Old configuration: no paths configured means 'allow_all'
-            return None
-
-        if inventory_paths == "allow_all":
-            return None
-
-        if inventory_paths == "forbid_all":
-            forbid_whole_tree = True
-            continue
-
-        permitted_paths.extend(inventory_paths[1])
-
-    if forbid_whole_tree and not permitted_paths:
-        return []
-
-    return permitted_paths
-
-
 def _permitted_filter_choices() -> Sequence[SDFilterChoice] | None:
-    return (
-        None
-        if (permitted_paths := _get_permitted_inventory_paths()) is None
-        else make_filter_choices_from_permitted_paths(permitted_paths)
+    return make_filter_choices_from_contact_groups(
+        [
+            active_config.multisite_contactgroups.get(group, {}).get("inventory_paths")
+            for group in ([] if user.id is None else userdb.contactgroups_of_user(user.id))
+        ]
     )
 
 

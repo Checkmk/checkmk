@@ -5,7 +5,7 @@
 
 from collections.abc import Callable, Mapping
 from pathlib import Path
-from typing import cast, Literal, NotRequired, override, TypedDict
+from typing import cast, NotRequired, override, TypedDict
 
 from cmk.ccc.plugin_registry import Registry
 from cmk.gui.groups import AllGroupSpecs, GroupName, GroupSpec, GroupSpecs, GroupType
@@ -13,7 +13,7 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.sites import live
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.simple_config_file import ConfigFileRegistry, WatoMultiConfigFile
-from cmk.inventory.filtering import PermittedPath
+from cmk.inventory.filtering import InventoryPathsConfig
 from cmk.utils import paths
 
 ContactGroupUsageFinder = Callable[[GroupName, GlobalSettings], list[tuple[str, str]]]
@@ -27,8 +27,6 @@ class ContactGroupUsageFinderRegistry(Registry[ContactGroupUsageFinder]):
 
 contact_group_usage_finder_registry = ContactGroupUsageFinderRegistry()
 
-InventoryPaths = Literal["allow_all", "forbid_all"] | tuple[Literal["paths"], list[PermittedPath]]
-
 
 class GroupAliases(TypedDict):
     define_hostgroups: dict[GroupName, str]
@@ -41,7 +39,7 @@ class GroupConfig(TypedDict):
 
 
 class ContactGroupConfig(GroupConfig):
-    inventory_paths: NotRequired[InventoryPaths]
+    inventory_paths: NotRequired[InventoryPathsConfig]
     nagvis_maps: NotRequired[list[str]]
 
 

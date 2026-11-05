@@ -79,17 +79,14 @@ from cmk.gui.watolib.groups import (
     GroupInUseException,
     UnknownGroupException,
 )
-from cmk.gui.watolib.groups_io import (
-    InventoryPaths,
-    load_contact_group_information,
-)
+from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.gui.watolib.hosts_and_folders import make_folder_tree
 from cmk.gui.watolib.pending_changes import (
     index_update_change_hook,
     PendingChanges,
     PendingChangesStore,
 )
-from cmk.inventory.filtering import NothingOrChoices, PermittedPath
+from cmk.inventory.filtering import InventoryPathsConfig, NothingOrChoices, PermittedPath
 from cmk.livestatus_client import SiteConfigurations
 from cmk.utils import paths
 from cmk.web.utils import permission_verification as permissions
@@ -131,7 +128,7 @@ def _paths_from_api(raw_paths: list[APIPermittedPath]) -> Iterable[PermittedPath
         yield path
 
 
-def _inventory_paths_from_api(inventory_paths: APIInventoryPaths | None) -> InventoryPaths:
+def _inventory_paths_from_api(inventory_paths: APIInventoryPaths | None) -> InventoryPathsConfig:
     match inventory_paths:
         case None:
             return "allow_all"
@@ -175,7 +172,7 @@ def _paths_to_api(permitted_paths: Iterable[PermittedPath]) -> Iterable[APIPermi
         }
 
 
-def _inventory_paths_to_api(inventory_paths: InventoryPaths | None) -> APIInventoryPaths:
+def _inventory_paths_to_api(inventory_paths: InventoryPathsConfig | None) -> APIInventoryPaths:
     match inventory_paths:
         case None | "allow_all":
             return {"type": "allow_all"}

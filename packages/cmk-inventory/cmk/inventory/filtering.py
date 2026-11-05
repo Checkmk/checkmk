@@ -174,7 +174,7 @@ def _transform_attribute[T](
     return [f(y) for y in x[1]]
 
 
-def make_filter_choices_from_permitted_paths(
+def _make_filter_choices_from_permitted_paths(
     permitted_paths: Sequence[PermittedPath],
 ) -> Sequence[SDFilterChoice]:
     return [
@@ -187,6 +187,28 @@ def make_filter_choices_from_permitted_paths(
         for entry in permitted_paths
         if entry.get("visible_raw_path")
     ]
+
+
+InventoryPathsConfig = (
+    Literal["allow_all", "forbid_all"] | tuple[Literal["paths"], list[PermittedPath]]
+)
+
+
+def make_filter_choices_from_contact_groups(
+    configs: Sequence[InventoryPathsConfig | None],
+) -> Sequence[SDFilterChoice] | None:
+    if not configs:
+        return None
+    permitted_paths: list[PermittedPath] = []
+    for config in configs:
+        match config:
+            case None | "allow_all":
+                return None
+            case "forbid_all":
+                continue
+            case ("paths", paths):
+                permitted_paths.extend(paths)
+    return _make_filter_choices_from_permitted_paths(permitted_paths)
 
 
 def filter_tree(tree: ImmutableTree, filters: Iterable[SDFilterChoice]) -> ImmutableTree:

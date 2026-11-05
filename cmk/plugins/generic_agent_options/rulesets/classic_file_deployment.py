@@ -12,6 +12,7 @@ from cmk.rulesets.v1.rule_specs import AgentConfig
 
 
 def _form_spec() -> Dictionary:
+    # TODO CMK-40619: name narrowing the conditions and deleting the rule as ways to move hosts.
     return Dictionary(
         help_text=Help(
             "Hosts that match this rule keep the classic file deployment. The classic file"
@@ -25,10 +26,8 @@ def _form_spec() -> Dictionary:
             " agent package.<br>"
             "The rule set <i>Customize agent package</i> takes precedence over this rule set."
             " A host that matches both gets the single directory deployment.<br>"
-            "Hosts without a rule get the single directory deployment. To move hosts, narrow"
-            " the conditions of this rule, delete the rule, or add a rule <i>Customize agent"
-            " package</i> for them.<br>"
-            "Checkmk 3.1 will remove the classic file deployment."
+            "Checkmk 3.1 will remove the classic file deployment. To move hosts to the single"
+            " directory deployment, add a rule <i>Customize agent package</i> for them."
         ),
         elements={},
     )

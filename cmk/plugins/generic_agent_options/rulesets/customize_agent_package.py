@@ -151,13 +151,13 @@ def _directory_form() -> Dictionary:
                 parameter_form=String(
                     title=Title("Directory for Checkmk agent"),
                     help_text=Help(
-                        "All files of the agent package are placed below this directory.<br>"
+                        "Instead of the classic approach of distributing the agent package's"
+                        " files over multiple places on the file system, all files of the"
+                        " package will be placed below this directory.<br>"
                         "<b>Note</b>: Some files, like systemd units, will still be generated"
                         " outside of this directory for proper operation of the agent"
                         " installation."
                     ),
-                    # Keep in sync with _DEFAULT_INSTALLATION_DIRECTORY in cmk.bakery.internal,
-                    # which a rule set cannot import.
                     prefill=DefaultValue("/opt/checkmk/agent"),
                 ),
                 required=True,
@@ -218,8 +218,9 @@ def _agent_controller_arch_form() -> SingleChoice:
 def _parameter_form() -> Dictionary:
     return Dictionary(
         help_text=Help(
-            "The Checkmk agent installs its files below a single directory. This rule sets"
-            " that directory, and the user that the agent runs as."
+            "This rule allows you to customize the user and installation directory of the agent."
+            " When using this rule, all agent files will be installed into a directory defined in"
+            " this rule."
         ),
         elements={
             "directory": DictElement(parameter_form=_directory_form(), required=True),
@@ -244,7 +245,7 @@ def _migrate(obj: object) -> Mapping[str, object]:
 
 rule_spec_customize_agent_package = AgentConfig(
     name="customize_agent_package",
-    title=Title("Customize agent package (Linux, Solaris, AIX)"),
+    title=Title("Customize agent package (Linux; Solaris and AIX: experimental)"),
     topic=TOPIC_LINUX_UNIX_AGENT_OPTIONS,
     parameter_form=_parameter_form,
 )

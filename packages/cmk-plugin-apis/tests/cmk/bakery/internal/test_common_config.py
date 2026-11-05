@@ -48,8 +48,7 @@ def test_get_unix_agent_paths_keeper_multi_directory() -> None:
             "lib": "/lib",
             "var": "/var",
             "tmp": "/tmp",
-        },
-        "classic_file_deployment": {},
+        }
     }
     keeper = get_unix_agent_paths_keeper(agconf)
     # Should be UnixMultipleDirectoryKeeper
@@ -85,8 +84,7 @@ def test_multi_directory_all_paths() -> None:
             "lib": "/opt/cmk/lib",
             "var": "/opt/cmk/var",
             "tmp": "/opt/cmk/tmp",
-        },
-        "classic_file_deployment": {},
+        }
     }
     provider = TargetPathsProvider(agconf)
     mapping = provider.get_target_path_mapping()
@@ -171,27 +169,6 @@ def test_customize_agent_package_wins_over_classic_file_deployment() -> None:
     )
 
 
-def test_without_rule_single_directory_layout_is_default() -> None:
-    """CMK-40619 AC1"""
-    provider = TargetPathsProvider(
-        {
-            # default_agent_config() sets these for every host, as the source of the migration.
-            "agent_paths": {
-                "bin": "/usr/bin",
-                "config": "/etc/check_mk",
-                "lib": "/usr/lib/check_mk_agent",
-                "var": "/var/lib/check_mk_agent",
-            },
-        }
-    )
-
-    assert provider.get_installdir() == Path("/opt/checkmk/agent/default")
-    mapping = provider.get_target_path_mapping()
-    assert mapping[LogicalPath.BIN] == Path("/opt/checkmk/agent/default/package/bin")
-    assert mapping[LogicalPath.CONFIG] == Path("/opt/checkmk/agent/default/package/config")
-    assert mapping[LogicalPath.VAR] == Path("/opt/checkmk/agent/default/runtime")
-
-
 def test_multi_directory_no_tmp() -> None:
     agconf = {
         "agent_paths": {
@@ -200,8 +177,7 @@ def test_multi_directory_no_tmp() -> None:
             "lib": "/lib",
             "var": "/var",
             # no tmp
-        },
-        "classic_file_deployment": {},
+        }
     }
     provider = TargetPathsProvider(agconf)
     assert provider.get_tmpdir() is None
@@ -225,14 +201,14 @@ def test_single_directory_custom_tmpdir() -> None:
 
 
 def test_invalid_config_missing_agent_paths() -> None:
-    agconf: AgentConfig = {"classic_file_deployment": {}}
+    agconf: AgentConfig = {}
     with pytest.raises(KeyError):
         TargetPathsProvider(agconf)
 
 
 def test_deployment_mode_provider_legacy_agent_user() -> None:
     """CMK-40617 AC4, AC6"""
-    agconf = {"agent_user": {"user": "legacyuser"}, "classic_file_deployment": {}}
+    agconf = {"agent_user": {"user": "legacyuser"}}
     provider = DeploymentModeProvider(agconf)
     assert provider.get_agent_user() == "legacyuser"
     assert provider.get_agent_controller_user() == "cmk-agent"
@@ -240,11 +216,10 @@ def test_deployment_mode_provider_legacy_agent_user() -> None:
     assert provider.get_agent_controller_gid() is None
 
 
-def test_without_rule_legacy_agent_user_no_longer_applies() -> None:
-    """CMK-40619 AC1"""
+def test_deployment_mode_provider_new_agent_user() -> None:
     agconf = {"agent_user": {"user": "legacyuser"}}
     provider = DeploymentModeProvider(agconf)
-    assert provider.get_agent_user() == "root"
+    assert provider.get_agent_user() == "legacyuser"
     assert provider.get_agent_controller_user() == "cmk-agent"
     assert provider.get_agent_user_gid() is None
     assert provider.get_agent_controller_gid() is None

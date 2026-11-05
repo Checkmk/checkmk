@@ -129,7 +129,7 @@ py_cmk_test(
     # the e2e tests each run the CLI in a subprocess, which does not fit into "small"
     size = "medium",
     srcs = glob(["tests/**/*.py"]),
-    args = ["--block-network"],
+    args = ["--disable-socket"],
     deps = [
         ":cmk-werk-ids-server",
         ":site",
@@ -140,7 +140,7 @@ py_cmk_test(
         requirement("lxml"),
         requirement("requests"),
         requirement("rich"),
-        requirement("pytest-recording"),
+        requirement("pytest-socket"),
     ],
 )
 

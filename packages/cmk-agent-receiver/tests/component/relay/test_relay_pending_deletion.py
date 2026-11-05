@@ -129,7 +129,7 @@ def test_relay_pending_deletion_submit_data_ok(
     relay_in_pending_deletion: tuple[RelayID, RelayConfig],
     test_client: TestClient,
     site_context: Config,
-    tmpdir: Path,
+    tmp_path: Path,
     site: SiteMock,
 ) -> None:
     """Verify that a relay in PENDING_DELETION can still push monitoring data successfully.
@@ -146,7 +146,7 @@ def test_relay_pending_deletion_submit_data_ok(
     relay_id, serial_folder = relay_in_pending_deletion
     monitoring_data = _make_monitoring_data(serial_folder.serial.value)
 
-    socket_path = f"{tmpdir}/{secrets.token_urlsafe(8)}.sock"
+    socket_path = f"{tmp_path}/{secrets.token_urlsafe(8)}.sock"
     with (
         patch.object(Config, "raw_data_socket", socket_path),
         create_socket(socket_path=socket_path, socket_timeout=TEST_SOCKET_TIMEOUT) as ms,

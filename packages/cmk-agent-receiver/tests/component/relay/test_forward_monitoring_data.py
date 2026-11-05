@@ -268,7 +268,7 @@ def test_socket_path_not_exists(
     relay_config: RelayConfig,
     test_client: TestClient,
     site: SiteMock,
-    tmpdir: Path,
+    tmp_path: Path,
 ) -> None:
     """Verify that missing socket path errors (ENOENT) are handled correctly and return a 502 BAD_GATEWAY response.
 
@@ -281,7 +281,7 @@ def test_socket_path_not_exists(
     monitoring_data = create_monitoring_data(relay_config.serial, payload)
 
     # Use a socket path that doesn't exist
-    nonexistent_socket = f"{tmpdir}/nonexistent-{secrets.token_urlsafe(8)}.sock"
+    nonexistent_socket = f"{tmp_path}/nonexistent-{secrets.token_urlsafe(8)}.sock"
 
     with patch.object(Config, "raw_data_socket", nonexistent_socket):
         relay = RelayClient(test_client, site.site_name, relay_id)
@@ -423,8 +423,8 @@ def relay_id(test_client: TestClient, user: User, site: SiteMock) -> str:
 
 
 @pytest.fixture
-def socket_path(tmpdir: Path) -> Iterator[str]:
-    socket_path = f"{tmpdir}/{secrets.token_urlsafe(8)}-test.sock"
+def socket_path(tmp_path: Path) -> Iterator[str]:
+    socket_path = f"{tmp_path}/{secrets.token_urlsafe(8)}-test.sock"
     with patch.object(Config, "raw_data_socket", socket_path):
         yield socket_path
 

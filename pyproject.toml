@@ -262,6 +262,8 @@ addopts = [
   # Disable a few plugins which slow down the pytest startup even when not used
   "-p no:faker",
   "-p no:hypothesispytest",
+  # Keep the py.path based tmpdir/testdir fixtures out, use tmp_path instead
+  "-p no:legacypath",
 ]
 markers = [
   "checks: Run all existing test cases for checks.",

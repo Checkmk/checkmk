@@ -124,5 +124,5 @@ def test_socket_busy_queuing(socket_path: str) -> None:
 
 
 @pytest.fixture
-def socket_path(tmpdir: Path) -> str:
-    return f"{tmpdir}/{secrets.token_urlsafe(8)}-test.sock"
+def socket_path(tmp_path: Path) -> str:
+    return f"{tmp_path}/{secrets.token_urlsafe(8)}-test.sock"

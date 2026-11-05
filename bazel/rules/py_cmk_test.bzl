@@ -15,6 +15,7 @@ def py_cmk_test(
     Always sets --import-mode=importlib so tests are isolated from each other
     and work correctly with namespace packages and duplicate test filenames.
     Always keeps pytest from collecting the generated runner, see below.
+    Always disables pytest's legacypath plugin (tmpdir and other py.path APIs).
     Always enables the built-in pytest entry-point and makes pytest and
     coverage available as deps.
 
@@ -49,6 +50,9 @@ def py_cmk_test(
         args = [
             "--import-mode=importlib",
             "--ignore-glob=*pytest_main.py",
+            # Keep the py.path based tmpdir/testdir fixtures out, use tmp_path.
+            "-p",
+            "no:legacypath",
         ] + args + extra_args,
         data = data + extra_data,
         deps = deps + extra_deps + [

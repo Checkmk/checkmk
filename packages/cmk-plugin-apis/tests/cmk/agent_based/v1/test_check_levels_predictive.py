@@ -46,9 +46,9 @@ def test_check_levels_predictive_default_render_func() -> None:
     assert result.summary.startswith("42.42")
 
 
-def test_check_levels_predictive_prediction_exists(tmpdir: Path) -> None:
+def test_check_levels_predictive_prediction_exists(tmp_path: Path) -> None:
     metric_name = "my_test_metric"
-    template = str(tmpdir / "testfile")
+    template = str(tmp_path / "testfile")
     _result = next(
         check_levels_predictive(
             42.42,
@@ -60,10 +60,10 @@ def test_check_levels_predictive_prediction_exists(tmpdir: Path) -> None:
     assert not Path(template).exists()
 
 
-def test_check_levels_predictive_prediction_not_found(tmpdir: Path) -> None:
+def test_check_levels_predictive_prediction_not_found(tmp_path: Path) -> None:
     other_metric_name = "my_other_test_metric"
     metric_name = "my_test_metric"
-    template = str(tmpdir / "testfile")
+    template = str(tmp_path / "testfile")
     _result = next(
         check_levels_predictive(
             42.42,

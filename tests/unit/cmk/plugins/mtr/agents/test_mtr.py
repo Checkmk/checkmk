@@ -6,7 +6,7 @@
 # Agent plugins still need to support Python 3.4
 # ruff: noqa: UP035  # PEP 585 (Type Hinting Generics In Standard Collections) is a Python 3.9 feature
 
-import os
+from pathlib import Path
 from typing import Sequence
 
 import pytest
@@ -145,9 +145,9 @@ def test_error_from_trailer(fields: Sequence[str], expected_error: str) -> None:
     assert mtr.error_from_trailer(fields) == expected_error
 
 
-def test_error_survives_a_status_file_round_trip(tmpdir: object, monkeypatch: MonkeyPatch) -> None:
+def test_error_survives_a_status_file_round_trip(tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
     """An error has to outlive the run that saw it - mtr is not restarted every time."""
-    monkeypatch.setattr(mtr, "status_filename", os.path.join(str(tmpdir), "mtr.state"))
+    monkeypatch.setattr(mtr, "status_filename", str(tmp_path / "mtr.state"))
     status = {
         "broken.example.com": {"hops": {}, "lasttime": 1758196800, "error": "mtr: boom"},
         "fine.example.com": {

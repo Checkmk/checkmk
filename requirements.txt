@@ -5012,7 +5012,6 @@ pytest==9.2.0 \
     #   pytest-mock
     #   pytest-playwright
     #   pytest-random-order
-    #   pytest-recording
     #   pytest-repeat
     #   pytest-rerunfailures
     #   pytest-socket
@@ -5078,10 +5077,6 @@ pytest-random-order==1.2.0 \
     #   -r packages/cmk-agent-receiver/dev-requirements.in
     #   -r packages/cmk-cli-engine/dev-requirements.in
     #   -r tests/dev-requirements.in
-pytest-recording==0.14.0 \
-    --hash=sha256:175f62a71da36c0a019dbee47f92b9fa4c72dea18e215da1488282e8d4d08b35 \
-    --hash=sha256:419f1a9325827987043d01a33a26dcafa69c1744521e1ed1ffa7c7b5fabc865c
-    # via -r packages/cmk-werks/dev-requirements.in
 pytest-repeat==0.9.4 \
     --hash=sha256:c1738b4e412a6f3b3b9e0b8b29fcd7a423e50f87381ad9307ef6f5a8601139f3 \
     --hash=sha256:d92ac14dfaa6ffcfe6917e5d16f0c9bc82380c135b03c2a5f412d2637f224485
@@ -5099,6 +5094,7 @@ pytest-socket==0.8.1 \
     #   -r non-free/packages/cmk-mcp/dev-requirements.in
     #   -r non-free/packages/cmk-relay-engine/dev-requirements.in
     #   -r packages/cmk-agent-receiver/dev-requirements.in
+    #   -r packages/cmk-werks/dev-requirements.in
 python-active-directory==2.0.1 \
     --hash=sha256:023d5d47fa1fc966527d63d73b6c3864a233c236e3e258f9af778e73549230e0 \
     --hash=sha256:119f0acf9d4cba8ee99639602969214757100a12f3fafe6a6083ead56bfc655b \
@@ -6677,7 +6673,6 @@ vcrpy==9.4.0 \
     # via
     #   -r packages/cmk-plugin-apis/requirements.in
     #   cmk-werk-zeug
-    #   pytest-recording
 virtualenv==21.15.2 \
     --hash=sha256:dbd886e6e5689eb4dde6a9bbc478ad14b4fc8ed0852690d8273ccfb8c467f635 \
     --hash=sha256:fb8c62c7c328e0238061c721068f06b7bc6bd10f7a0f5987195cef1008837ee6

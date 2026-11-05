@@ -6,20 +6,19 @@
 # mypy: disable-error-code="no-untyped-call"
 # mypy: disable-error-code="type-arg"
 
-import os
-from typing import Union
+from pathlib import Path
 
 from _pytest.capture import CaptureFixture
 
 from cmk.plugins.collection.agents import isc_dhcpd
 
 
-def test_parse_config_emits_pool_ranges(tmpdir: Union[str, bytes], capsys: CaptureFixture) -> None:  # noqa: UP007  # PEP 604 (Allow writing union types as X | Y) is a Python 3.10 feature
-    included_file = os.path.join(str(tmpdir), "included.conf")
+def test_parse_config_emits_pool_ranges(tmp_path: Path, capsys: CaptureFixture) -> None:
+    included_file = str(tmp_path / "included.conf")
     with open(included_file, "w") as f:
         f.write("range 10.0.0.100 10.0.0.200;\n")
 
-    conf_file = os.path.join(str(tmpdir), "dhcpd.conf")
+    conf_file = str(tmp_path / "dhcpd.conf")
     with open(conf_file, "w") as f:
         f.write('include "%s";\n' % included_file)
         f.write("option domain-name-servers 10.0.0.1;\n")

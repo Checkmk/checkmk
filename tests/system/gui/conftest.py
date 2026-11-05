@@ -214,7 +214,7 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
     """
     items.sort(
         key=lambda item: (
-            str(item.fspath),
+            str(item.path),
             getattr(item, "originalname", item.name.split("[")[0]),
         )
     )

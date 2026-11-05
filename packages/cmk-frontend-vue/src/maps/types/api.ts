@@ -296,8 +296,6 @@ export type MapListView = 'cards' | 'table'
 // cadence on the next tick.
 export type DaemonRuntime = Daemon['DaemonRuntime']
 
-export type LogLevel = DaemonRuntime['log_level']
-
 export type ObjectTiming = Daemon['ObjectTiming']
 
 export type ServiceTiming = Daemon['ServiceTiming']

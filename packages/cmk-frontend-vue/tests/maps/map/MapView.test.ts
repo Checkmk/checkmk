@@ -449,7 +449,7 @@ const noStates: MapStates = {
   connection_ok: true,
   dead_sites: [],
   folder_tree: null,
-  runtime: { log_level: 'INFO', state_refresh_interval: 5 }
+  runtime: { state_refresh_interval: 5 }
 }
 
 describe('MapView – unreachable sites', () => {
@@ -464,7 +464,7 @@ describe('MapView – unreachable sites', () => {
       connection_ok: true,
       dead_sites: ['remote'],
       folder_tree: null,
-      runtime: { log_level: 'INFO', state_refresh_interval: 5 }
+      runtime: { state_refresh_interval: 5 }
     })
   })
 

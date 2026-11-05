@@ -165,9 +165,9 @@ class ConnectionListEntry(BaseModel):
     socket_path: str | None
     host: str | None
     port: int | None
-    tls: bool
-    tls_verify: bool
-    timeout: float
+    tls: bool | None
+    tls_verify: bool | None
+    timeout: float | None
     checkmk_url: str | None
     automation_user: str | None
     automation_secret: str | None
@@ -187,10 +187,10 @@ def to_list_entry(cfg: ConnectionConfig, *, full: bool) -> ConnectionListEntry:
         socket_path=cfg.socket_path if full else None,
         host=cfg.host if full else None,
         port=cfg.port if full else None,
-        tls=cfg.tls,
-        tls_verify=cfg.tls_verify,
-        timeout=cfg.timeout,
+        tls=cfg.tls if full else None,
+        tls_verify=cfg.tls_verify if full else None,
+        timeout=cfg.timeout if full else None,
         checkmk_url=cfg.checkmk_url,
         automation_user=cfg.automation_user if full else None,
-        automation_secret=REDACTED_SECRET if cfg.automation_secret else None,
+        automation_secret=REDACTED_SECRET if full and cfg.automation_secret else None,
     )

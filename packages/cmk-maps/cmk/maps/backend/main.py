@@ -91,7 +91,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     _init_tracing()
 
-    settings_service.apply_log_level(settings_service.get_system_settings().log_level)
+    # Reading the settings applies the configured log level.
+    settings_service.get_system_settings()
 
     # Connections come from the WATO ``maps_connections`` global (read-only);
     # connection_service falls back to a built-in local-site connection when none

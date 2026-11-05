@@ -11,6 +11,8 @@ Map/object authoring defaults are GUI-owned now (see the GUI-side
 ``test_settings.py``), so their flatten is no longer tested here.
 """
 
+import logging
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -75,9 +77,7 @@ def test_daemon_runtime_resolves_the_wato_globals(
         global_mk="maps_log_level = 'WARNING'\nmaps_state_refresh_interval = 12\n",
     )
     monkeypatch.setattr(checkmk_globals, "_maps_wato_dir", lambda: tmp_path)
-    runtime = settings_service.get_daemon_runtime()
-    assert runtime.state_refresh_interval == 12
-    assert runtime.log_level == "WARNING"
+    assert settings_service.get_daemon_runtime().state_refresh_interval == 12
 
 
 def test_daemon_runtime_falls_back_to_the_env_defaults(
@@ -86,6 +86,29 @@ def test_daemon_runtime_falls_back_to_the_env_defaults(
     # Nothing configured in WATO: the client still gets concrete values rather
     # than the ``None``s ``SystemSettings`` models for "unset".
     monkeypatch.setattr(checkmk_globals, "_maps_wato_dir", lambda: tmp_path)
-    runtime = settings_service.get_daemon_runtime()
-    assert runtime.state_refresh_interval == settings.state_refresh_interval
-    assert runtime.log_level == settings.log_level
+    assert settings_service.get_daemon_runtime().state_refresh_interval == (
+        settings.state_refresh_interval
+    )
+
+
+@pytest.fixture(name="root_log_level")
+def fixture_root_log_level() -> Iterator[None]:
+    root = logging.getLogger()
+    level = root.level
+    yield
+    root.setLevel(level)
+
+
+@pytest.mark.usefixtures("root_log_level")
+def test_a_changed_log_level_is_applied_without_a_restart(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _write_maps_wato(tmp_path, global_mk="maps_log_level = 'INFO'\n")
+    monkeypatch.setattr(checkmk_globals, "_maps_wato_dir", lambda: tmp_path)
+    settings_service.get_effective_state_refresh_interval()
+
+    global_mk = tmp_path / "global.mk"
+    global_mk.write_text("maps_log_level = 'WARNING'\n")
+    settings_service.get_effective_state_refresh_interval()
+
+    assert logging.getLogger().level == logging.WARNING

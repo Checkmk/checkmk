@@ -41,4 +41,3 @@ class DaemonRuntime(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     state_refresh_interval: int
-    log_level: LogLevel

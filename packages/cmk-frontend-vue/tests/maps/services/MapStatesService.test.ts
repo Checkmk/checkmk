@@ -59,7 +59,7 @@ const emptyStates: MapStates = {
   connection_ok: true,
   dead_sites: [],
   folder_tree: null,
-  runtime: { log_level: 'INFO', state_refresh_interval: 5 }
+  runtime: { state_refresh_interval: 5 }
 }
 
 // Every service is torn down after its test: an undisconnected one keeps its

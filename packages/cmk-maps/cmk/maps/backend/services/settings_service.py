@@ -16,7 +16,7 @@ import logging
 
 from cmk.maps.backend.core.config import settings
 from cmk.maps.backend.integrations import checkmk_globals
-from cmk.maps.backend.schemas.settings import DaemonRuntime, LogLevel, SystemSettings
+from cmk.maps.backend.schemas.settings import DaemonRuntime, SystemSettings
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,16 @@ def get_system_settings() -> SystemSettings:
     The two runtime knobs are individual scalar global settings, so they need no
     form-shape conversion. ``None`` (not set in WATO) is handled by the
     ``get_effective_*`` helpers, which fall back to the env-seeded defaults.
+
+    Activate Changes sends the daemon no reload, so a changed log level is
+    applied here, as mknotifyd does once it reads its changed configuration.
     """
+    system_settings = _read_system_settings()
+    apply_log_level(system_settings.log_level)
+    return system_settings
+
+
+def _read_system_settings() -> SystemSettings:
     g = checkmk_globals.load_maps_globals()
     try:
         # The .mk namespace is untyped, so let pydantic do the narrowing; a bad
@@ -55,17 +64,13 @@ def apply_log_level(level: str | None) -> None:
     """Apply *level* to the root logger. Falls back to env-derived default when None."""
     effective = level or settings.log_level
     numeric = getattr(logging, effective, logging.INFO)
-    logging.getLogger().setLevel(numeric)
+    root = logging.getLogger()
+    if root.level == numeric:
+        return
+    root.setLevel(numeric)
     logger.info("Log level set to %(level)s", {"level": effective})
-
-
-def get_effective_log_level() -> LogLevel:
-    return get_system_settings().log_level or settings.log_level
 
 
 def get_daemon_runtime() -> DaemonRuntime:
     """The resolved runtime knobs, as shipped to the client with every states payload."""
-    return DaemonRuntime(
-        state_refresh_interval=get_effective_state_refresh_interval(),
-        log_level=get_effective_log_level(),
-    )
+    return DaemonRuntime(state_refresh_interval=get_effective_state_refresh_interval())

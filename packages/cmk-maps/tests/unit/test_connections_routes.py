@@ -122,6 +122,10 @@ def test_list_backends_hides_transport_without_configure(
     assert body[0]["port"] is None
     assert body[0]["socket_path"] is None
     assert body[0]["automation_user"] is None
+    assert body[0]["tls"] is None
+    assert body[0]["tls_verify"] is None
+    assert body[0]["timeout"] is None
+    assert body[0]["automation_secret"] is None
     assert "supersecret" not in resp.text
 
 

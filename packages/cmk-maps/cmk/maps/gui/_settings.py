@@ -263,7 +263,10 @@ _OSM_TILE_SOURCES = ["https://tile.openstreetmap.org/", "https://*.tile.openstre
 
 # A CSP source expression has to be a bare scheme://host[:port]; ``add_csp_source``
 # rejects anything else, and an unusable global must not take the page down with it.
-_CSP_HOST = re.compile(r"^[A-Za-z0-9.\-*]+(?::[0-9]{1,5})?$")
+# A wildcard only stands for the subdomains of a domain, never for any host.
+_CSP_HOST = re.compile(
+    r"^(?:[A-Za-z0-9-]+|(?:\*\.)?[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+)(?::[0-9]{1,5})?$"
+)
 
 
 def _csp_source(tile_url: str) -> str | None:

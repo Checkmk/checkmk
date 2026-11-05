@@ -162,6 +162,9 @@ def test_tile_csp_sources_adds_the_configured_server(
         # A source expression with whitespace/";" would make add_csp_source raise
         # and take the whole page down — such a global is dropped instead.
         pytest.param("https://evil one;/{z}/{x}/{y}.png", id="not-a-host"),
+        pytest.param("https://*/{z}/{x}/{y}.png", id="any-host"),
+        pytest.param("https://*.com/{z}/{x}/{y}.png", id="any-host-of-a-top-level-domain"),
+        pytest.param("https://tiles.*.example.com/{z}/{x}/{y}.png", id="inner-wildcard"),
     ],
 )
 def test_tile_csp_sources_drops_an_unusable_global(

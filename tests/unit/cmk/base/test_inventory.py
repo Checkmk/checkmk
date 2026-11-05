@@ -51,7 +51,6 @@ from cmk.inventory.label_picker import (
     LabelPickerSource,
 )
 from cmk.inventory.serialization import (
-    _serialize_retention_interval,
     deserialize_tree,
     serialize_tree,
 )
@@ -67,6 +66,17 @@ from cmk.inventory.trees import (
 )
 from cmk.ruleset_matcher.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.everythingtype import EVERYTHING
+
+
+def _raw_retention_interval(
+    interval: RetentionInterval,
+) -> tuple[int, int, int, Literal["previous", "current"]]:
+    return (
+        interval.cached_at,
+        interval.cache_interval,
+        interval.retention_interval,
+        interval.source,
+    )
 
 
 def _make_immutable_tree(tree: MutableTree) -> ImmutableTree:
@@ -372,7 +382,7 @@ def test__inventorize_real_host_only_intervals(
                 "foo2": "bar2",
             },
             "Retentions": {
-                k: _serialize_retention_interval(v) for k, v in attrs_expected_retentions.items()
+                k: _raw_retention_interval(v) for k, v in attrs_expected_retentions.items()
             },
         }
     else:
@@ -387,7 +397,7 @@ def test__inventorize_real_host_only_intervals(
     if table_expected_retentions:
         table_retentions = {
             "Retentions": {
-                i: {k: _serialize_retention_interval(v) for k, v in ri.items()}
+                i: {k: _raw_retention_interval(v) for k, v in ri.items()}
                 for i, ri in table_expected_retentions.items()
             }
         }
@@ -583,7 +593,7 @@ def test__inventorize_real_host_raw_cache_info_and_only_intervals(
                 "foo2": "bar2",
             },
             "Retentions": {
-                k: _serialize_retention_interval(v) for k, v in attrs_expected_retentions.items()
+                k: _raw_retention_interval(v) for k, v in attrs_expected_retentions.items()
             },
         }
     else:
@@ -598,7 +608,7 @@ def test__inventorize_real_host_raw_cache_info_and_only_intervals(
     if table_expected_retentions:
         table_retentions = {
             "Retentions": {
-                i: {k: _serialize_retention_interval(v) for k, v in ri.items()}
+                i: {k: _raw_retention_interval(v) for k, v in ri.items()}
                 for i, ri in table_expected_retentions.items()
             }
         }
@@ -691,7 +701,7 @@ def _make_tree_or_items(
                             "Attributes": {
                                 "Pairs": {"old": "Key", "keys": "Previous Keys"},
                                 "Retentions": {
-                                    k: _serialize_retention_interval(v)
+                                    k: _raw_retention_interval(v)
                                     for k, v in previous_attributes_retentions.items()
                                 },
                             },
@@ -716,7 +726,7 @@ def _make_tree_or_items(
                                     },
                                 ],
                                 "Retentions": {
-                                    i: {k: _serialize_retention_interval(v) for k, v in ri.items()}
+                                    i: {k: _raw_retention_interval(v) for k, v in ri.items()}
                                     for i, ri in previous_table_retentions.items()
                                 },
                             },

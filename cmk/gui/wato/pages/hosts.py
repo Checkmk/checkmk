@@ -1232,6 +1232,11 @@ class PageAjaxPingHost(AjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
         site_id = request.get_validated_type_input(SiteId, "site_id", deflt=omd_site())
+        if site_id not in ctx.config.sites:
+            return {
+                "status_code": 99,
+                "message": _("Unknown site: %(site)s") % {"site": site_id},
+            }
         cmd = request.get_validated_type_input(PingHostCmd, "cmd", PingHostCmd.PING)
         ip_or_dns_name: HostName | str = unquote(
             request.get_ascii_input_mandatory("ip_or_dns_name")

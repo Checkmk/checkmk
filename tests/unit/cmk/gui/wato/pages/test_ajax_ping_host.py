@@ -15,7 +15,6 @@ from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.hosts import PageAjaxPingHost
 
 
-@pytest.mark.xfail(strict=True, raises=KeyError, reason="crash group 4931")
 @pytest.mark.usefixtures("request_context")
 def test_ping_via_an_unknown_site_reports_an_error() -> None:
     request.set_var("site_id", "gone")

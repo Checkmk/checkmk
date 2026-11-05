@@ -124,6 +124,8 @@ export interface GraphPanelProps {
   minValueAxisWidth?: number | undefined
   horizontalLines?: HorizontalLine[]
   shadedRegions?: ShadedRegion[]
+  /** Widens the automatic value range so that every shown horizontal line is on the plot. */
+  fitHorizontalLines?: boolean
   // Outer figure dimensions (plot area + axis/label margins). The renderer derives
   // the plot (canvas) size by subtracting its margins.
   figureWidth: number

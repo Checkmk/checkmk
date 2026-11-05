@@ -263,6 +263,7 @@ const legendAlignedWithPlot = computed(() =>
             :metrics="visibleMetrics"
             :horizontal_lines="visibleHorizontalLines"
             :shaded_regions="shadedRegions ?? []"
+            :fit-horizontal-lines="fitHorizontalLines"
             :value-range="viewValueRange"
             :zoom-mode="zoomMode"
             :size="{ width: figureWidth, height: figureHeight, mode: 'fixed' }"

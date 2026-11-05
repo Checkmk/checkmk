@@ -315,7 +315,12 @@ function draw(): void {
     measureLabel
   )
 
-  const [autoYMin, autoYMax] = composedValueDomain(props.metrics, composed, props.shaded_regions)
+  const [autoYMin, autoYMax] = composedValueDomain(
+    props.metrics,
+    composed,
+    props.shaded_regions,
+    props.fitHorizontalLines ? props.horizontal_lines : []
+  )
 
   const explicitRange = props.options.y_axis?.explicit_range || null
   const [rawYMin, rawYMax] = props.valueRange
@@ -541,6 +546,7 @@ watch(
     props.curveInterpolator,
     props.binUnit,
     props.horizontal_lines,
+    props.fitHorizontalLines,
     props.highlightedMetricNames,
     plotWidth.value,
     props.showTimeAxis,

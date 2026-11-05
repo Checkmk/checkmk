@@ -62,6 +62,8 @@ export interface TimeSeriesGraphProps extends Pick<CmkTimeSeriesGraph, 'size' | 
   metrics: Metric[]
   horizontal_lines: HorizontalLine[]
   shaded_regions: ShadedRegion[]
+  /** Widens the automatic value range so that every horizontal line is on the plot. */
+  fitHorizontalLines?: boolean
   consolidationFunction?: ConsolidationFn
   curveInterpolator?: LineInterpolator
   /** The unit bar metrics are binned by; null while the graph holds no bar metric. */

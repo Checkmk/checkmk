@@ -15,7 +15,12 @@ import type {
   StackedColumn,
   StackedSeries
 } from '@/graphing/components/TimeSeriesGraph/render/stacked'
-import type { Metric, ShadedRegion, TimeRange } from '@/graphing/components/TimeSeriesGraph/types'
+import type {
+  HorizontalLine,
+  Metric,
+  ShadedRegion,
+  TimeRange
+} from '@/graphing/components/TimeSeriesGraph/types'
 
 const STEP = 10
 const DATA_RANGE: TimeRange = { start: 0, end: 100, step: STEP }
@@ -181,6 +186,26 @@ describe('composedValueDomain', () => {
     const [, yMax] = composedValueDomain(metrics, compose(metrics), [region])
 
     expect(yMax).toBeGreaterThanOrEqual(50)
+  })
+
+  test('a horizontal line below every metric still fits inside the domain', () => {
+    const metrics = [makeMetric([40, 50])]
+    const line: HorizontalLine = {
+      name: 'warn-lower',
+      title: 'Warning (lower)',
+      value: 10,
+      unit: {
+        notation: 'decimal',
+        symbol: '',
+        precision: { type: 'auto', digits: 2 },
+        convertible: true
+      },
+      color: '#ffd000'
+    }
+
+    const [yMin] = composedValueDomain(metrics, compose(metrics), [], [line])
+
+    expect(yMin).toBeLessThanOrEqual(10)
   })
 
   test.each([

@@ -12,7 +12,11 @@ import { defineComponent, ref } from 'vue'
 
 import TimeSeriesGraph from '@/graphing/components/TimeSeriesGraph/TimeSeriesGraph.vue'
 import { measureAxisLabel } from '@/graphing/components/TimeSeriesGraph/axes/labelWidth'
-import type { Metric, TimeSeriesGraphProps } from '@/graphing/components/TimeSeriesGraph/types'
+import type {
+  HorizontalLine,
+  Metric,
+  TimeSeriesGraphProps
+} from '@/graphing/components/TimeSeriesGraph/types'
 import { AXIS_CLASSES } from '@/graphing/components/TimeSeriesGraph/useAxes'
 import {
   CANVAS_MARGIN_LEFT,
@@ -749,6 +753,43 @@ describe('TimeSeriesGraph — placing the pin by clicking the plot', () => {
         expect(Math.max(...ticks)).toBeLessThanOrEqual(6)
       })
     })
+  })
+})
+
+describe('TimeSeriesGraph — horizontal lines and the value axis', () => {
+  // The data runs from 1 to 5, so a line at 40 is far above it.
+  const FAR_ABOVE_THE_DATA: HorizontalLine = {
+    name: 'crit',
+    title: 'Critical',
+    value: 40,
+    unit: UNIT,
+    color: '#ff3232'
+  }
+
+  function drawnLineY(container: Element): number {
+    const line = container.querySelector('g.graphing-time-series-graph__horizontal-lines line')
+    return Number(line?.getAttribute('y1'))
+  }
+
+  function plotHeightPx(container: Element): number {
+    return parseFloat(plotCanvasStyle(container).height)
+  }
+
+  test('draws a line above the data off the plot by default', () => {
+    const { container } = renderComponent({ horizontal_lines: [FAR_ABOVE_THE_DATA] })
+
+    expect(drawnLineY(container)).toBeLessThan(0)
+  })
+
+  test('widens the value axis to a line above the data when asked to fit the lines', () => {
+    const { container } = renderComponent({
+      horizontal_lines: [FAR_ABOVE_THE_DATA],
+      fitHorizontalLines: true
+    })
+
+    const y = drawnLineY(container)
+    expect(y).toBeGreaterThanOrEqual(0)
+    expect(y).toBeLessThanOrEqual(plotHeightPx(container))
   })
 })
 

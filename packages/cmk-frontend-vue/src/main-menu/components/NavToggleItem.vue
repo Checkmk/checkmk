@@ -65,7 +65,7 @@ const altHint = computed(() => mainMenu.isAltHinted(props.item.shortcut))
 .mm-nav-toggle-item__li {
   width: 100%;
   height: 56px;
-  border-left: var(--dimension-3) solid transparent;
+  border-left: var(--dimension-2) solid transparent;
   font-size: var(--font-size-small);
   display: flex;
   box-sizing: border-box;
@@ -73,7 +73,7 @@ const altHint = computed(() => mainMenu.isAltHinted(props.item.shortcut))
   --mm-nav-toggle-item-active-color: var(--success);
 
   &.mm-nav-toggle-item__li--highlight-ai {
-    --mm-nav-toggle-item-active-color: var(--ai-purple);
+    --mm-nav-toggle-item-active-color: var(--border-color-purple);
   }
 
   &:hover,
@@ -110,8 +110,8 @@ const altHint = computed(() => mainMenu.isAltHinted(props.item.shortcut))
     }
   }
 
-  &.mm-nav-toggle-item__li--active button {
-    color: var(--mm-nav-toggle-item-active-color);
+  &.mm-nav-toggle-item__li--active {
+    background-color: var(--ux-theme-1);
   }
 
   &.mm-nav-toggle-item__li--small {

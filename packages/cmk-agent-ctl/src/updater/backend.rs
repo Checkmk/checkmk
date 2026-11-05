@@ -1875,6 +1875,9 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         assert_eq!(saved.last_error, None);
     }
 
+    /// CMK-40789, TC-AU-044: on Windows the controller learns the outcome of a
+    /// hand-off only from the installed hash on a later cycle. A hash that still
+    /// differs from `pending_hash` is a failed installation.
     #[test]
     fn test_settle_pending_install_records_the_failed_install() {
         let dir = tempfile::TempDir::new().unwrap();
@@ -1890,6 +1893,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
 
         let saved = UpdateState::load(&updater.state_path).unwrap();
         assert_eq!(saved.pending_hash, None);
+        assert_eq!(saved.last_update, None);
         assert_eq!(
             saved.last_error.unwrap(),
             "The installation of agent package fedcba9876543210 did not take effect, \
@@ -2125,6 +2129,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         assert!(AgentInfo::load(&dir.path().join("missing")).is_err());
     }
 
+    /// CMK-40789, TC-AU-048: `checkmk.dat` carries the installed hash on Windows.
     #[cfg(windows)]
     #[test]
     fn test_load_agent_info_from_dat() {

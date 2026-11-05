@@ -6,6 +6,7 @@
 import asyncio
 import io
 import logging
+import math
 import sys
 import time
 from collections.abc import AsyncGenerator, Awaitable, Callable, Iterator, Mapping
@@ -96,7 +97,7 @@ class _ApplicationDependencies:
 
 
 class HealthCheckResponse(BaseModel, frozen=True):
-    last_reload_at: float
+    last_reload_at: float | None  # None until the configuration was loaded successfully
 
 
 def make_application(
@@ -168,9 +169,7 @@ async def _lifespan(app: FastAPI) -> AsyncGenerator[None]:
         with dependencies.state.exclusive():
             try:
                 dependencies.state.load()
-            except SystemExit:
-                logger.warning("Failed to reload configuration. Shutting down")
-            except Exception:
+            except Exception, SystemExit:
                 logger.exception("Error reloading configuration")
 
         reloader_task = asyncio.create_task(
@@ -215,8 +214,12 @@ async def _reloader_task(
     # "activate changes" produces a burst of updates (one per touched file). Reloading
     # on the first event would thrash the workers during bulk changes, so we debounce:
     # poll for a change, then wait for the change stream to go quiet before reloading once.
+    # After a failed reload, wait for a newer change instead of retrying every cooldown, which
+    # would log the same error every few seconds. Meanwhile, the automations retry and report it.
+    last_attempted_change = float("-inf")
     while True:
-        if (cached_last_change := _get_last_change()) < state.last_reload_at:
+        cached_last_change = _get_last_change()
+        if cached_last_change < state.last_reload_at or cached_last_change <= last_attempted_change:
             await delayer_factory(config.poll_interval)
             continue
 
@@ -239,10 +242,10 @@ async def _reloader_task(
                     try:
                         if state.reload_if_required():
                             logger.info("Triggering reload")
-                    except SystemExit:
-                        logger.error("Failed to reload configuration. Shutting down")  # noqa: TRY400
-                    except Exception:
+                    except Exception, SystemExit:
                         logger.exception("Error reloading configuration")
+                # Read before the reload, so a change recorded during the reload counts as newer.
+                last_attempted_change = cached_last_change
                 break
 
             # More changes arrived mid-cooldown (e.g. a bulk activation still in
@@ -360,4 +363,8 @@ def _redirect_stdin(stream: io.StringIO) -> Iterator[None]:
 
 async def _health_endpoint(request: Request) -> HealthCheckResponse:
     dependencies: _ApplicationDependencies = request.app.state.dependencies
-    return HealthCheckResponse(last_reload_at=dependencies.state.last_reload_at)
+    last_reload_at = dependencies.state.last_reload_at
+    # JSON has no infinity, so a -inf would reach the client as null anyway.
+    return HealthCheckResponse(
+        last_reload_at=None if math.isinf(last_reload_at) else last_reload_at
+    )

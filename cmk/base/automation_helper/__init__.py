@@ -115,5 +115,6 @@ def _application() -> FastAPI:
 
 
 def _reload_automation_config() -> Mapping[str, object]:
-    with config.exit_on_config_file_load_error(debug=False):
-        return config.load_raw_config()
+    # Let a ConfigFileLoadError through: it names the file and the error, which the helper logs and
+    # reports to the automations.
+    return config.load_raw_config()

@@ -8,7 +8,7 @@ import asyncio
 import logging
 import sys
 import time
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field
 from http import HTTPStatus
 from pathlib import Path
@@ -110,6 +110,24 @@ class _RecordingAutomationEngine(_DummyAutomationEngineSuccess):
         self.updates.append((omd_root, raw_config))
 
 
+class _ConfigLoader:
+    """Loads an empty configuration, or fails with the next of *errors* that is not None."""
+
+    def __init__(self, errors: Iterable[Exception | None]) -> None:
+        self._errors = iter(errors)
+
+    def __call__(self) -> Mapping[str, object]:
+        if (error := next(self._errors)) is not None:
+            raise error
+        return {}
+
+
+def _query_last_reload_at(client: TestClient) -> float:
+    last_reload_at = HealthCheckResponse.model_validate(client.get("/health").json()).last_reload_at
+    assert last_reload_at is not None, "The configuration was never loaded"
+    return last_reload_at
+
+
 _EXAMPLE_AUTOMATION_PAYLOAD = AutomationPayload(
     name=AutomationID("dummy"), args=[], stdin="", log_level=logging.INFO, for_cmk_version="2.4.0"
 ).model_dump()
@@ -162,17 +180,12 @@ def test_reloader_is_running(mocker: MockerFixture, cache: Cache) -> None:
             cooldown_interval=0.0,
         ),
     ) as client:
-        current_last_reload_at = HealthCheckResponse.model_validate(
-            client.get("/health").json()
-        ).last_reload_at
+        current_last_reload_at = _query_last_reload_at(client)
         now = time.time()
         assert now > current_last_reload_at
         cache.store_last_detected_change(now)
         wait_until(
-            lambda: (
-                HealthCheckResponse.model_validate(client.get("/health").json()).last_reload_at
-                > current_last_reload_at
-            ),
+            lambda: _query_last_reload_at(client) > current_last_reload_at,
             timeout=0.25,
             interval=0.025,
         )
@@ -281,15 +294,10 @@ def test_automation_reloads_if_necessary(mocker: MockerFixture, cache: Cache) ->
         cache,
         mock_reload_config,
     ) as client:
-        last_reload_before_cache_update = HealthCheckResponse.model_validate(
-            client.get("/health").json()
-        ).last_reload_at
+        last_reload_before_cache_update = _query_last_reload_at(client)
         cache.store_last_detected_change(time.time())
         client.post("/automation", json=_EXAMPLE_AUTOMATION_PAYLOAD)
-        assert (
-            HealthCheckResponse.model_validate(client.get("/health").json()).last_reload_at
-            > last_reload_before_cache_update
-        )
+        assert _query_last_reload_at(client) > last_reload_before_cache_update
 
     assert (
         # once at application startup, once when the endpoint is called
@@ -344,7 +352,22 @@ def test_health_check(cache: Cache) -> None:
         resp = client.get("/health")
 
     assert resp.status_code == HTTPStatus.OK
-    assert HealthCheckResponse.model_validate(resp.json()).last_reload_at < time.time()
+    last_reload_at = HealthCheckResponse.model_validate(resp.json()).last_reload_at
+    assert last_reload_at is not None
+    assert last_reload_at < time.time()
+
+
+def test_health_check_reports_no_reload_before_the_first_successful_one(cache: Cache) -> None:
+    with _make_test_client(
+        _DummyAutomationEngineSuccess(),
+        cache,
+        _ConfigLoader([RuntimeError("broken config")]),
+        reloader_config=ReloaderConfig(active=False, poll_interval=1.0, cooldown_interval=5.0),
+    ) as client:
+        resp = client.get("/health")
+
+    assert resp.status_code == HTTPStatus.OK
+    assert HealthCheckResponse.model_validate_json(resp.text).last_reload_at is None
 
 
 @pytest.mark.asyncio
@@ -483,6 +506,116 @@ async def test_reloader_takes_state_into_account(mocker: MockerFixture) -> None:
     reloader_task.cancel()
     mock_reload_callback.assert_not_called()
     assert cache.reload_decisions == [3]
+
+
+@pytest.mark.asyncio
+async def test_reloader_retries_failed_reload_only_on_newer_change(cache: Cache) -> None:
+    state = _State(
+        engine=_DummyAutomationEngineSuccess(),
+        omd_root=Path("/dev/null"),
+        reload_config=_ConfigLoader([RuntimeError("broken config"), None]),
+        last_reload_at=1,
+        changes_cache=cache,
+    )
+    mock_delay_state = _MockDelayState(
+        call_counter=0,
+        current_delay=0.0,
+        wake_up=asyncio.Event(),
+    )
+    reloader_task = asyncio.create_task(
+        _reloader_task(
+            config=ReloaderConfig(
+                active=True,
+                poll_interval=1.0,
+                cooldown_interval=5.0,
+            ),
+            state=state,
+            delayer_factory=lambda delay: _mock_delay(mock_delay_state, delay),
+            logger=logging.getLogger(),
+        )
+    )
+
+    # poll
+    await _wait_for_mock_delay(mock_delay_state, 1)
+    cache.store_last_detected_change(state.last_reload_at + 1)
+    mock_delay_state.wake_up.set()
+    # cooldown, followed by the failing reload
+    await _wait_for_mock_delay(mock_delay_state, 2)
+    mock_delay_state.wake_up.set()
+    # the reloader polls instead of retrying the same change
+    await asyncio.wait_for(_wait_for_mock_delay(mock_delay_state, 3), timeout=1)
+    assert mock_delay_state.current_delay == 1.0, (
+        "The reloader retried a change that already failed"
+    )
+    assert state.last_reload_at == 1
+    mock_delay_state.wake_up.set()
+    await _wait_for_mock_delay(mock_delay_state, 4)
+    assert mock_delay_state.current_delay == 1.0, (
+        "The reloader retried a change that already failed"
+    )
+
+    # a newer change is retried after its cooldown
+    cache.store_last_detected_change(state.last_reload_at + 2)
+    mock_delay_state.wake_up.set()
+    await _wait_for_mock_delay(mock_delay_state, 5)
+    assert mock_delay_state.current_delay == 5.0, "The reloader did not retry a newer change"
+    mock_delay_state.wake_up.set()
+    await _wait_for_mock_delay(mock_delay_state, 6)
+
+    reloader_task.cancel()
+    assert state.last_reload_at > 1
+
+
+@pytest.mark.asyncio
+async def test_reloader_retries_change_recorded_during_failed_reload(cache: Cache) -> None:
+    config_loader = _ConfigLoader([RuntimeError("broken config"), None])
+
+    def load_while_a_config_file_changes() -> Mapping[str, object]:
+        cache.store_last_detected_change(3)
+        return config_loader()
+
+    state = _State(
+        engine=_DummyAutomationEngineSuccess(),
+        omd_root=Path("/dev/null"),
+        reload_config=load_while_a_config_file_changes,
+        last_reload_at=1,
+        changes_cache=cache,
+    )
+    mock_delay_state = _MockDelayState(
+        call_counter=0,
+        current_delay=0.0,
+        wake_up=asyncio.Event(),
+    )
+    reloader_task = asyncio.create_task(
+        _reloader_task(
+            config=ReloaderConfig(
+                active=True,
+                poll_interval=1.0,
+                cooldown_interval=5.0,
+            ),
+            state=state,
+            delayer_factory=lambda delay: _mock_delay(mock_delay_state, delay),
+            logger=logging.getLogger(),
+        )
+    )
+
+    # poll
+    await _wait_for_mock_delay(mock_delay_state, 1)
+    cache.store_last_detected_change(2)
+    mock_delay_state.wake_up.set()
+    # cooldown, followed by the failing reload, during which a config file changes
+    await _wait_for_mock_delay(mock_delay_state, 2)
+    mock_delay_state.wake_up.set()
+    # the newer change gets its own cooldown and a retry
+    await asyncio.wait_for(_wait_for_mock_delay(mock_delay_state, 3), timeout=1)
+    assert mock_delay_state.current_delay == 5.0, (
+        "The reloader ignored a change recorded during the failed reload"
+    )
+    mock_delay_state.wake_up.set()
+    await _wait_for_mock_delay(mock_delay_state, 4)
+
+    reloader_task.cancel()
+    assert state.last_reload_at > 1
 
 
 def _make_state(cache: Cache) -> _State:

@@ -7,6 +7,7 @@
 from collections.abc import Callable, Generator, Sequence
 from contextlib import contextmanager
 from pathlib import Path
+from typing import Final
 
 import pytest
 
@@ -24,6 +25,10 @@ from cmk.ruleset_matcher.definition import RuleGroup
 from tests.system.singlesite.linux_test_host import create_linux_test_host
 from tests.testlib.common.utils import wait_until
 from tests.testlib.system.site import Site
+
+_FAILING_CONFIG_FILE: Final = "etc/check_mk/conf.d/aut_helper_fail_once.mk"
+_FAIL_ONCE_MARKER: Final = "tmp/aut_helper_fail_once"
+_WORKER_LOG: Final = "var/log/automation-helper/automation-helper.log"
 
 
 def test_config_reloading_without_reloader(site: Site) -> None:
@@ -121,6 +126,21 @@ def test_config_reloading_on_delete(site: Site, reload_timeout: float) -> None:
         with _reload_ensurer(site) as wait_for_reload:
             site.delete_file(watched)
             wait_for_reload(reload_timeout)
+
+
+def test_failed_reload_is_logged_with_its_cause(site: Site, reload_timeout: float) -> None:
+    earlier_log = len(site.read_file(_WORKER_LOG))
+    cause = (
+        f"Cannot read in configuration file {site.path(_FAILING_CONFIG_FILE)}:"
+        " simulated config load failure"
+    )
+
+    with _config_file_failing_to_load_once(site):
+        wait_until(
+            lambda: cause in site.read_file(_WORKER_LOG)[earlier_log:],
+            timeout=reload_timeout,
+            condition_name="Logged the cause of the failed reload",
+        )
 
 
 def test_standard_workflow_involving_automations(site: Site) -> None:
@@ -242,6 +262,26 @@ def ensure_cleanup(site: Site, *files: str) -> Generator[tuple[str, ...]]:
             site.delete_file(filename)
 
 
+@contextmanager
+def _config_file_failing_to_load_once(site: Site) -> Generator[None]:
+    marker = site.path(_FAIL_ONCE_MARKER)
+    site.write_file(_FAIL_ONCE_MARKER, "")
+    # Fail in the automation helper only, so that no other process takes the marker.
+    site.write_file(
+        _FAILING_CONFIG_FILE,
+        f"""import os, sys
+if sys.argv[0].endswith("cmk-automation-helper") and os.path.exists("{marker}"):
+    os.remove("{marker}")
+    raise Exception("simulated config load failure")
+""",
+    )
+    try:
+        yield
+    finally:
+        site.delete_file(_FAILING_CONFIG_FILE)
+        site.delete_file(_FAIL_ONCE_MARKER)
+
+
 @pytest.fixture(scope="module")
 def reload_timeout() -> float:
     reloader_configuration = default_config(
@@ -276,18 +316,19 @@ def _query_analyse_service(site: Site, args: Sequence[str]) -> AnalyseServiceRes
     )
 
 
+def _query_last_reload_at(site: Site) -> float:
+    last_reload_at = HealthCheckResponse.model_validate_json(_query_health(site)).last_reload_at
+    assert last_reload_at is not None, "The automation helper never loaded the configuration"
+    return last_reload_at
+
+
 @contextmanager
 def _reload_ensurer(site: Site) -> Generator[Callable[[float], None]]:
-    last_reload_timestamp = HealthCheckResponse.model_validate_json(
-        _query_health(site)
-    ).last_reload_at
+    last_reload_timestamp = _query_last_reload_at(site)
 
     def _wait_for_reload(timeout: float) -> None:
         wait_until(
-            lambda: (
-                HealthCheckResponse.model_validate_json(_query_health(site)).last_reload_at
-                > last_reload_timestamp
-            ),
+            lambda: _query_last_reload_at(site) > last_reload_timestamp,
             timeout=timeout,
             condition_name="Reloaded automation-helper",
         )

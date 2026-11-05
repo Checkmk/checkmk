@@ -281,6 +281,8 @@ class QueryDataTimeSeries:
     time_series: TimeSeries
     id: str
     attributes: Mapping[AttributeGroup, Mapping[str, str]]
+    unit: str
+    """The unit the backend stores for the series, empty if it has none."""
 
 
 @dataclass(frozen=True, kw_only=True)

@@ -12,7 +12,6 @@ from cmk.inventory.trees import (
     compare_sd_values,
     ImmutableTree,
     MutableTree,
-    parse_visible_raw_path,
     RetentionInterval,
     SDKey,
     SDNodeName,
@@ -294,17 +293,6 @@ def test_get_node(
 def test_amount_of_nodes(tree_name: HostName, amount_of_nodes: int) -> None:
     tree = inventory_store().load_inventory_tree(host_name=tree_name)
     assert len(list(tree.nodes_by_name.values())) == amount_of_nodes
-
-
-@pytest.mark.parametrize(
-    "raw_path, expected_path",
-    [
-        ("", ()),
-        ("path-to.node_1", ("path-to", "node_1")),
-    ],
-)
-def test_parse_visible_tree_path(raw_path: str, expected_path: SDPath) -> None:
-    assert parse_visible_raw_path(raw_path) == expected_path
 
 
 def _tree_with(

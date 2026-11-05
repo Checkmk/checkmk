@@ -9,16 +9,8 @@ from typing import Literal, NotRequired, TypedDict
 
 from ._dict_keys import get_filtered_dict
 from .delta import ImmutableDeltaAttributes, ImmutableDeltaTable, ImmutableDeltaTree
-from .raw_paths import InventoryPath, parse_internal_raw_path
-from .trees import (
-    ImmutableAttributes,
-    ImmutableTable,
-    ImmutableTree,
-    parse_visible_raw_path,
-    SDKey,
-    SDNodeName,
-    SDPath,
-)
+from .raw_paths import InventoryPath, parse_internal_raw_path, parse_visible_raw_path
+from .trees import ImmutableAttributes, ImmutableTable, ImmutableTree, SDKey, SDNodeName, SDPath
 
 
 def make_filter_func[CT: str](

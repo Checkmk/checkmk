@@ -8,10 +8,10 @@ from dataclasses import dataclass, field
 from typing import Literal, TypedDict
 
 from .filtering import make_filter_func
+from .raw_paths import parse_visible_raw_path
 from .trees import (
     ImmutableTree,
     MutableTree,
-    parse_visible_raw_path,
     RetentionInterval,
     SDKey,
     SDPath,

@@ -5,8 +5,13 @@
 
 import pytest
 
-from cmk.inventory.raw_paths import InventoryPath, parse_internal_raw_path, TreeSource
-from cmk.inventory.trees import SDKey, SDNodeName
+from cmk.inventory.raw_paths import (
+    InventoryPath,
+    parse_internal_raw_path,
+    parse_visible_raw_path,
+    TreeSource,
+)
+from cmk.inventory.trees import SDKey, SDNodeName, SDPath
 
 
 @pytest.mark.parametrize(
@@ -124,3 +129,14 @@ def test_parse_tree_path(
     inventory_path = parse_internal_raw_path(raw_path)
     assert inventory_path == expected_path
     assert inventory_path.node_name == expected_node_name
+
+
+@pytest.mark.parametrize(
+    "raw_path, expected_path",
+    [
+        ("", ()),
+        ("path-to.node_1", ("path-to", "node_1")),
+    ],
+)
+def test_parse_visible_tree_path(raw_path: str, expected_path: SDPath) -> None:
+    assert parse_visible_raw_path(raw_path) == expected_path

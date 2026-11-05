@@ -61,3 +61,7 @@ def parse_internal_raw_path(raw: str) -> InventoryPath:
         source=source,
         key=SDKey(path[-1]),
     )
+
+
+def parse_visible_raw_path(raw_path: str) -> SDPath:
+    return tuple(SDNodeName(part) for part in raw_path.split(".") if part)

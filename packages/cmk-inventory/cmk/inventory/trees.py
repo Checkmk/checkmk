@@ -68,10 +68,6 @@ def compare_sd_values(val_a: SDValue, val_b: SDValue) -> int:
     raise TypeError(val_a, val_b)
 
 
-def parse_visible_raw_path(raw_path: str) -> SDPath:
-    return tuple(SDNodeName(part) for part in raw_path.split(".") if part)
-
-
 def make_row_ident(key_columns: Sequence[SDKey], row: Mapping[SDKey, SDValue]) -> SDRowIdent:
     return tuple(row[k] for k in key_columns if k in row)
 

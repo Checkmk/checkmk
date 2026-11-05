@@ -22,7 +22,12 @@ from cmk.gui.watolib.passwords import (
     sorted_contact_group_choices,
 )
 from cmk.gui.watolib.pending_changes import PendingChanges
-from cmk.rulesets.internal.form_specs import SimplePassword
+from cmk.rulesets.internal.form_specs import (
+    MultipleChoiceElementExtended,
+    SimplePassword,
+    SingleChoiceElementExtended,
+    SingleChoiceExtended,
+)
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
@@ -30,9 +35,6 @@ from cmk.rulesets.v1.form_specs import (
     DefaultValue,
     FixedValue,
     MultipleChoice,
-    MultipleChoiceElement,
-    SingleChoice,
-    SingleChoiceElement,
     String,
 )
 from cmk.rulesets.v1.form_specs.validators import ValidationError
@@ -116,9 +118,9 @@ def get_password_slidein_schema(user: LoggedInUser) -> Catalog:
                                 CascadingSingleChoiceElement(
                                     name="contact_group",
                                     title=Title("Members of the contact group:"),
-                                    parameter_form=SingleChoice(
+                                    parameter_form=SingleChoiceExtended(
                                         elements=[
-                                            SingleChoiceElement(
+                                            SingleChoiceElementExtended(
                                                 name=name,
                                                 title=Title(  # astrein: disable=localization
                                                     title
@@ -147,7 +149,7 @@ def get_password_slidein_schema(user: LoggedInUser) -> Catalog:
                                 "other groups of users to make them able to use a password in checks."
                             ),
                             elements=[
-                                MultipleChoiceElement(
+                                MultipleChoiceElementExtended(
                                     name=name,
                                     title=Title(title),  # astrein: disable=localization
                                 )

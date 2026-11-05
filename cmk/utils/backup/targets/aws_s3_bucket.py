@@ -83,7 +83,7 @@ class _ListObjectsPage(TypedDict, total=False):
 
 def _object_keys(pages: Iterable[_ListObjectsPage]) -> Iterator[Path]:
     for page in pages:
-        for obj in page["Contents"]:
+        for obj in page.get("Contents", ()):
             yield Path(obj["Key"])
 
 

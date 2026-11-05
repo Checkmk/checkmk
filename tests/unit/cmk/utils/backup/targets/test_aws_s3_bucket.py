@@ -70,7 +70,6 @@ def fixture_stubber(bucket: S3Bucket) -> Iterator[Stubber]:
     stubber.assert_no_pending_responses()
 
 
-@pytest.mark.xfail(strict=True, raises=KeyError, reason="crash group 4938")
 def test_empty_bucket_has_no_objects(bucket: S3Bucket, stubber: Stubber) -> None:
     stubber.add_response(
         "list_objects_v2",

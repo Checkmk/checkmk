@@ -5,7 +5,6 @@
 
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from pathlib import Path
-from typing import NamedTuple
 
 import cmk.utils.paths
 from cmk.base.errorhandling import (
@@ -32,53 +31,10 @@ from cmk.checkengine.summarize import SummarizerFunction
 from cmk.inventory.label_picker import InventorizedHostLabelsStore, LabelPickerConfig, pick_labels
 from cmk.inventory.paths import InventoryPaths
 from cmk.inventory.retention import RawIntervalFromConfig
-from cmk.inventory.serialization import make_meta
 from cmk.inventory.store import InventoryStore
-from cmk.inventory.trees import ImmutableTree, MutableTree, SDPath
 from cmk.ruleset_matcher.labels import DiscoveredHostLabelsStore
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.log import console
-
-
-class _SaveTreeActions(NamedTuple):
-    do_archive: bool
-    do_save: bool
-
-
-def _render_update_results(
-    update_results: Mapping[SDPath, Sequence[str]],
-) -> str:
-    lines = ["Updated inventory tree:"]
-    for path, messages in update_results.items():
-        lines.append(f"  Path '{' > '.join(path)}':")
-        lines.extend(f"    {r}" for r in sorted(messages))
-    return "\n".join(lines) + "\n"
-
-
-def _get_save_tree_actions(
-    *,
-    previous_tree: ImmutableTree,
-    inventory_tree: MutableTree,
-) -> _SaveTreeActions:
-    if not inventory_tree:
-        # Archive current inventory tree file if it exists. Important for host inventory icon
-        console.verbose("No inventory tree.")
-        return _SaveTreeActions(do_archive=True, do_save=False)
-
-    if not previous_tree:
-        console.verbose("New inventory tree.")
-        return _SaveTreeActions(do_archive=False, do_save=True)
-
-    if has_changed := previous_tree != inventory_tree:
-        console.verbose("Inventory tree has changed.")
-
-    if update_results := inventory_tree.get_update_results():
-        console.verbose_no_lf(_render_update_results(update_results))
-
-    return _SaveTreeActions(
-        do_archive=has_changed,
-        do_save=(has_changed or len(update_results) > 0),
-    )
 
 
 def _schedule_host_labels_rediscovery(
@@ -154,21 +110,13 @@ def execute_active_check_inventory(
         AutoQueue(inv_paths.auto_dir).remove(host_name)
 
     if not (result.processing_failed or result.no_data_or_files):
-        save_tree_actions = _get_save_tree_actions(
+        for message in inv_store.save_if_changed(
+            host_name=host_name,
             previous_tree=previous_tree,
-            inventory_tree=result.inventory_tree,
-        )
-        # The order of archive or save is important:
-        if save_tree_actions.do_archive:
-            console.verbose("Archive current inventory tree.")
-            inv_store.archive_inventory_tree(host_name=host_name, debug=debug)
-        if save_tree_actions.do_save:
-            console.verbose("Save new inventory tree.")
-            inv_store.save_inventory_tree(
-                host_name=host_name,
-                tree=result.inventory_tree,
-                meta=make_meta(do_archive=save_tree_actions.do_archive),
-            )
+            tree=result.inventory_tree,
+            debug=debug,
+        ):
+            console.verbose(message)
 
     if host_name in hosts_config.clusters:
         return result.check_results

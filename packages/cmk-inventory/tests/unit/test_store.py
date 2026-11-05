@@ -5,12 +5,14 @@
 
 import json
 import os
+from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
 
 import cmk.ccc.store
 from cmk.ccc.hostaddress import HostName
+from cmk.inventory.paths import has_archive, InventoryPaths
 from cmk.inventory.serialization import (
     deserialize_tree,
     make_meta,
@@ -20,7 +22,14 @@ from cmk.inventory.serialization import (
     serialize_tree,
 )
 from cmk.inventory.store import InventoryStore, RawInventoryStore, rename
-from cmk.inventory.trees import MutableTree, SDKey, SDNodeName
+from cmk.inventory.trees import (
+    _MutableAttributes,
+    ImmutableAttributes,
+    ImmutableTree,
+    MutableTree,
+    SDKey,
+    SDNodeName,
+)
 
 from ._fixtures import gzipped_json, gzipped_repr, inventory_store, raw_tree
 
@@ -490,3 +499,67 @@ def test_load_merged_tree_prefers_the_raw_status_data_to_the_file(tmp_path: Path
     ) == deserialize_tree(
         SDRawTree(Attributes={"Pairs": {SDKey("inv"): "1", SDKey("raw"): "3"}}, Table={}, Nodes={})
     )
+
+
+def _previous_tree(value: str) -> ImmutableTree:
+    return ImmutableTree(attributes=ImmutableAttributes(pairs={SDKey("key"): value}))
+
+
+def _current_tree(value: str, update_results: Sequence[str] = ()) -> MutableTree:
+    return MutableTree(
+        attributes=_MutableAttributes(
+            pairs={SDKey("key"): value}, update_results=list(update_results)
+        )
+    )
+
+
+def _save_if_changed(
+    tmp_path: Path, previous_tree: ImmutableTree, tree: MutableTree
+) -> Sequence[str]:
+    store = InventoryStore(tmp_path)
+    if previous_tree:
+        store.save_inventory_tree(
+            host_name=HostName("host"), tree=previous_tree, meta=make_meta(do_archive=False)
+        )
+        store.inv_paths.inventory_marker_file.unlink()
+    return store.save_if_changed(
+        host_name=HostName("host"), previous_tree=previous_tree, tree=tree, debug=False
+    )
+
+
+@pytest.mark.parametrize(
+    "previous_tree, tree, archived_and_saved",
+    [
+        pytest.param(_previous_tree("old"), MutableTree(), (True, False), id="no-tree"),
+        pytest.param(ImmutableTree(), _current_tree("new"), (False, True), id="new-tree"),
+        pytest.param(_previous_tree("old"), _current_tree("new"), (True, True), id="changed"),
+        pytest.param(_previous_tree("same"), _current_tree("same"), (False, False), id="unchanged"),
+        pytest.param(
+            _previous_tree("same"),
+            _current_tree("same", ["Update result"]),
+            (False, True),
+            id="unchanged-with-update-results",
+        ),
+    ],
+)
+def test_save_if_changed(
+    tmp_path: Path,
+    previous_tree: ImmutableTree,
+    tree: MutableTree,
+    archived_and_saved: tuple[bool, bool],
+) -> None:
+    _save_if_changed(tmp_path, previous_tree, tree)
+    inv_paths = InventoryPaths(tmp_path)
+    assert (
+        has_archive(inv_paths, HostName("host")),
+        inv_paths.inventory_marker_file.exists(),
+    ) == archived_and_saved
+
+
+def test_save_if_changed_reports_the_update_results(tmp_path: Path) -> None:
+    assert _save_if_changed(
+        tmp_path, _previous_tree("same"), _current_tree("same", ["Update result"])
+    ) == [
+        "Updated inventory tree:\n  Path '':\n    Update result",
+        "Save new inventory tree.",
+    ]

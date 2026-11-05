@@ -8,7 +8,8 @@ import io
 import json
 import os
 import shutil
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
@@ -19,13 +20,14 @@ from .merging import merge_trees
 from .paths import InventoryPaths, parse_archive_timestamp, tree_mtime, TreePath, TreePathGz
 from .serialization import (
     deserialize_tree,
+    make_meta,
     parse_from_raw_status_data_tree,
     SDMeta,
     SDMetaAndRawTree,
     SDRawTree,
     serialize_tree,
 )
-from .trees import ImmutableTree, MutableTree
+from .trees import ImmutableTree, MutableTree, SDPath
 
 
 def rename(
@@ -132,6 +134,44 @@ class RawInventoryStore:
         _archive_inventory_tree(self.inv_paths, host_name, debug=debug)
 
 
+def _render_update_results(update_results: Mapping[SDPath, Sequence[str]]) -> str:
+    lines = ["Updated inventory tree:"]
+    for path, messages in update_results.items():
+        lines.append(f"  Path '{' > '.join(path)}':")
+        lines.extend(f"    {r}" for r in sorted(messages))
+    return "\n".join(lines)
+
+
+@dataclass(frozen=True, kw_only=True)
+class _SaveTreeActions:
+    do_archive: bool
+    do_save: bool
+    messages: Sequence[str]
+
+
+def _get_save_tree_actions(
+    *, previous_tree: ImmutableTree, inventory_tree: MutableTree
+) -> _SaveTreeActions:
+    if not inventory_tree:
+        return _SaveTreeActions(do_archive=True, do_save=False, messages=["No inventory tree."])
+
+    if not previous_tree:
+        return _SaveTreeActions(do_archive=False, do_save=True, messages=["New inventory tree."])
+
+    messages = []
+    if has_changed := previous_tree != inventory_tree:
+        messages.append("Inventory tree has changed.")
+
+    if update_results := inventory_tree.get_update_results():
+        messages.append(_render_update_results(update_results))
+
+    return _SaveTreeActions(
+        do_archive=has_changed,
+        do_save=(has_changed or len(update_results) > 0),
+        messages=messages,
+    )
+
+
 class InventoryStore:
     def __init__(self, omd_root: Path) -> None:
         self.inv_paths = InventoryPaths(omd_root)
@@ -210,3 +250,25 @@ class InventoryStore:
 
     def archive_inventory_tree(self, *, host_name: HostName, debug: bool) -> None:
         _archive_inventory_tree(self.inv_paths, host_name, debug=debug)
+
+    def save_if_changed(
+        self,
+        *,
+        host_name: HostName,
+        previous_tree: ImmutableTree,
+        tree: MutableTree,
+        debug: bool,
+    ) -> Sequence[str]:
+        actions = _get_save_tree_actions(previous_tree=previous_tree, inventory_tree=tree)
+        messages = list(actions.messages)
+        if actions.do_archive:
+            messages.append("Archive current inventory tree.")
+            self.archive_inventory_tree(host_name=host_name, debug=debug)
+        if actions.do_save:
+            messages.append("Save new inventory tree.")
+            self.save_inventory_tree(
+                host_name=host_name,
+                tree=tree,
+                meta=make_meta(do_archive=actions.do_archive),
+            )
+        return messages

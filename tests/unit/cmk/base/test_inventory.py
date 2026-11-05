@@ -14,8 +14,6 @@ import pytest
 import cmk.ccc.resulttype as result
 from cmk.agent_based.v1 import Attributes, TableRow
 from cmk.base.inventory import (
-    _get_save_tree_actions,
-    _SaveTreeActions,
     execute_active_check_inventory,
 )
 from cmk.ccc.cpu_tracking import Snapshot
@@ -58,7 +56,6 @@ from cmk.inventory.serialization import (
     serialize_tree,
 )
 from cmk.inventory.trees import (
-    _MutableAttributes,
     ImmutableAttributes,
     ImmutableTable,
     ImmutableTree,
@@ -1441,81 +1438,6 @@ def test__check_fetched_data_or_trees_only_cluster_property(
             )
         )
         == active_check_results
-    )
-
-
-@pytest.mark.parametrize(
-    "previous_tree, inventory_tree, expected_save_tree_actions",
-    [
-        (
-            deserialize_tree(
-                {
-                    "Attributes": {"Pairs": {"key": "old value"}},
-                    "Table": {},
-                    "Nodes": {},
-                }
-            ),
-            # No further impact, may not be realistic here
-            MutableTree(),
-            _SaveTreeActions(do_archive=True, do_save=False),
-        ),
-        (
-            ImmutableTree(),
-            MutableTree(attributes=_MutableAttributes(pairs={SDKey("key"): "value"})),
-            _SaveTreeActions(do_archive=False, do_save=True),
-        ),
-        (
-            deserialize_tree(
-                {
-                    "Attributes": {"Pairs": {"key": "old value"}},
-                    "Table": {},
-                    "Nodes": {},
-                }
-            ),
-            MutableTree(attributes=_MutableAttributes(pairs={SDKey("key"): "new value"})),
-            _SaveTreeActions(do_archive=True, do_save=True),
-        ),
-        (
-            deserialize_tree(
-                {
-                    "Attributes": {"Pairs": {"key": "old value"}},
-                    "Table": {},
-                    "Nodes": {},
-                }
-            ),
-            MutableTree(
-                attributes=_MutableAttributes(
-                    pairs={SDKey("key"): "new value"},
-                    update_results=["Update result"],
-                ),
-            ),
-            _SaveTreeActions(do_archive=True, do_save=True),
-        ),
-        (
-            deserialize_tree({"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}),
-            MutableTree(attributes=_MutableAttributes(pairs={SDKey("key"): "value"})),
-            _SaveTreeActions(do_archive=False, do_save=False),
-        ),
-        (
-            deserialize_tree({"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}),
-            MutableTree(
-                attributes=_MutableAttributes(
-                    pairs={SDKey("key"): "value"},
-                    update_results=["Update result"],
-                ),
-            ),
-            _SaveTreeActions(do_archive=False, do_save=True),
-        ),
-    ],
-)
-def test_save_tree_actions(
-    previous_tree: ImmutableTree,
-    inventory_tree: MutableTree,
-    expected_save_tree_actions: _SaveTreeActions,
-) -> None:
-    assert (
-        _get_save_tree_actions(previous_tree=previous_tree, inventory_tree=inventory_tree)
-        == expected_save_tree_actions
     )
 
 

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from dataclasses import dataclass
 
+from cmk.rulesets.internal.form_specs import ListExtended
 from cmk.rulesets.v1.form_specs import MultilineText
 
 
@@ -14,3 +15,8 @@ class CACertificate(MultilineText):
     Renders a text area which can also be filled by uploading a file or by
     fetching the certificate from a server.
     """
+
+
+@dataclass(frozen=True, kw_only=True)
+class CACertificates(ListExtended[str]):
+    element_template: CACertificate

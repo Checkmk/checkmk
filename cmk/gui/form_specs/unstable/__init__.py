@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from .binary_condition_choices import BinaryConditionChoices
-from .ca_certificate import CACertificate
+from .ca_certificate import CACertificate, CACertificates
 from .catalog import Catalog, Topic, TopicElement, TopicGroup
 from .comment_text_area import CommentTextArea
 from .condition_choices import ConditionChoices
@@ -25,6 +25,7 @@ from .validators import id_validators, not_empty
 __all__ = [
     "BinaryConditionChoices",
     "CACertificate",
+    "CACertificates",
     "Catalog",
     "CommentTextArea",
     "ConditionChoices",

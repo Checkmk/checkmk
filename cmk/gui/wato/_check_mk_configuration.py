@@ -23,6 +23,7 @@ from cmk.gui.form_specs.generators.host_address import HostAddressValidator
 from cmk.gui.form_specs.generators.log_level import LogLevelChoice
 from cmk.gui.form_specs.unstable import (
     CACertificate,
+    CACertificates,
     id_validators,
     LegacyValueSpec,
     not_empty,
@@ -2138,7 +2139,7 @@ def _use_system_wide_cas_element() -> fs.DictElement[bool]:
 def _trusted_cas_list_element(title: Title) -> fs.DictElement[Sequence[str]]:
     return fs.DictElement(
         required=True,
-        parameter_form=ListExtended(
+        parameter_form=CACertificates(
             title=title,
             help_text=Help(
                 "Only accepting HTTPS connections with a server which certificate "

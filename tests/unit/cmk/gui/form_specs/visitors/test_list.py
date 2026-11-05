@@ -27,6 +27,7 @@ from cmk.rulesets.v1.form_specs import (
     SingleChoice,
     SingleChoiceElement,
 )
+from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 
 @pytest.fixture(name="spec")
@@ -78,3 +79,10 @@ def test_list(  # type: ignore[misc]
     assert visitor.validate(value) == []
     assert visitor.to_vue(value)[1] == expected_frontend_value
     assert visitor.to_disk(value) == expected_disk_value
+
+
+def test_a_list_of_values_without_summaries_sends_none(spec: List) -> None:
+    list_spec, _value = get_visitor(
+        spec, VisitorOptions(migrate_values=False, mask_values=False)
+    ).to_vue(RawDiskData(["choice1"]))
+    assert isinstance(list_spec, shared_type_defs.List) and list_spec.element_summaries is None

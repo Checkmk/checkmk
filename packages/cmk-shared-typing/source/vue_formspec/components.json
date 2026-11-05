@@ -306,6 +306,12 @@
             },
             "no_element_label": {
               "type": "string"
+            },
+            "element_summaries": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/value_summary"
+              }
             }
           },
           "required": [
@@ -617,6 +623,37 @@
         }
       },
       "required": ["and_x_more"]
+    },
+    "value_summary_detail": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": ["title", "text"]
+    },
+    "value_summary": {
+      "type": "object",
+      "properties": {
+        "value": {},
+        "label": {
+          "type": ["string", "null"]
+        },
+        "detail_groups": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/value_summary_detail"
+            }
+          }
+        }
+      },
+      "required": ["value", "label", "detail_groups"]
     },
     "checkbox_list_choice": {
       "type": "object",

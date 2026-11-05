@@ -8,13 +8,15 @@ data within the Checkmk ecosystem."""
 import contextlib
 import re
 import socket
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
+from functools import lru_cache
 from pathlib import Path
 from typing import NamedTuple
 
 from OpenSSL import crypto, SSL
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.crypto import MKCryptoException
 from cmk.crypto.certificate import Certificate, CertificatePEM
 
 _PEM_RE = re.compile(
@@ -22,18 +24,26 @@ _PEM_RE = re.compile(
 )
 
 
-def raw_certificates_from_file(path: Path) -> list[str]:
+def raw_certificates(content: str) -> Sequence[str]:
+    return [
+        certificate
+        for match in _PEM_RE.finditer(content)
+        if (certificate := match.group(0)).isascii()
+    ]
+
+
+@lru_cache(maxsize=256)
+def load_certificate(pem: str) -> Certificate | None:
     try:
-        # Some users use comments in certificate files e.g. to write the content of the
-        # certificate outside of encapsulation boundaries. We only want to extract the
-        # certificates between the encapsulation boundaries which have to be 7-bit ASCII
-        # characters.
+        return Certificate.load_pem(CertificatePEM(pem))
+    except MKCryptoException:
+        return None
+
+
+def raw_certificates_from_file(path: Path) -> Sequence[str]:
+    try:
         with path.open("r", encoding="ascii", errors="surrogateescape") as f:
-            return [
-                content
-                for match in _PEM_RE.finditer(f.read())
-                if (content := match.group(0)).isascii()
-            ]
+            return raw_certificates(f.read())
     except FileNotFoundError:
         # Silently ignore e.g. dangling symlinks
         return []

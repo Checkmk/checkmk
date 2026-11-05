@@ -14,13 +14,15 @@ button depends on the ``general.server_side_requests`` permission.
 import pytest
 
 from cmk.ccc.user import UserId
+from cmk.crypto.certificate import CertificateWithPrivateKey
 from cmk.gui.config import Config
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
-from cmk.gui.form_specs.unstable import CACertificate
+from cmk.gui.form_specs.unstable import CACertificate, CACertificates
 from cmk.gui.permissions import all_permissions
 from cmk.gui.session_context import UserContext
 from cmk.gui.utils.roles import UserPermissions
 from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1.form_specs import DefaultValue
 from cmk.shared_typing import vue_formspec_components as shared_type_defs
 
 # Self signed test CA, valid until 2126.
@@ -107,3 +109,67 @@ def test_to_vue_hides_fetch_without_permission(
         ).to_vue(RawDiskData(CA_PEM))
     assert isinstance(vue_spec, shared_type_defs.CaCertificate)
     assert vue_spec.allow_fetch is False
+
+
+def _list_spec(pems: list[str], element: CACertificate) -> shared_type_defs.FormSpec:
+    spec, _value = get_visitor(
+        CACertificates(element_template=element, prefill=DefaultValue([])),
+        VisitorOptions(migrate_values=False, mask_values=False),
+    ).to_vue(RawDiskData(pems))
+    return spec
+
+
+@pytest.mark.usefixtures("request_context")
+def test_a_list_of_certificates_summarizes_each_certificate(spec: CACertificate) -> None:
+    list_spec = _list_spec([CA_PEM], spec)
+    assert isinstance(list_spec, shared_type_defs.List) and list_spec.element_summaries == [
+        shared_type_defs.ValueSummary(
+            value=CA_PEM,
+            label=None,
+            detail_groups=[
+                [
+                    shared_type_defs.ValueSummaryDetail(title="Subject", text="CN=Test CA"),
+                    shared_type_defs.ValueSummaryDetail(title="Issuer", text="CN=Test CA"),
+                    shared_type_defs.ValueSummaryDetail(
+                        title="Validity", text="2026-08-19 to 2126-07-26"
+                    ),
+                    shared_type_defs.ValueSummaryDetail(
+                        title="Fingerprint",
+                        text="7C:19:13:DA:71:2D:2E:20:E9:F7:4B:46:A6:8B:AB:48:76:C6:A2:DF:12:43:"
+                        "21:16:F7:85:B5:DE:55:97:FA:37",
+                    ),
+                ]
+            ],
+        )
+    ]
+
+
+@pytest.mark.usefixtures("request_context")
+def test_a_certificate_chain_is_summarized_per_certificate(spec: CACertificate) -> None:
+    second_ca = (
+        CertificateWithPrivateKey.generate_self_signed(
+            common_name="Second CA", organization="test", key_size=1024
+        )
+        .certificate.dump_pem()
+        .str
+    )
+    list_spec = _list_spec([CA_PEM + second_ca], spec)
+    assert isinstance(list_spec, shared_type_defs.List) and [
+        details[0].text
+        for summary in list_spec.element_summaries or []
+        for details in summary.detail_groups
+    ] == ["CN=Test CA", "O=test,CN=Second CA"]
+
+
+@pytest.mark.usefixtures("request_context")
+def test_an_unreadable_certificate_is_summarized_as_such(spec: CACertificate) -> None:
+    list_spec = _list_spec(["not a certificate"], spec)
+    assert isinstance(list_spec, shared_type_defs.List) and list_spec.element_summaries == [
+        shared_type_defs.ValueSummary(
+            value="not a certificate",
+            label=None,
+            detail_groups=[
+                [shared_type_defs.ValueSummaryDetail(title="Certificate", text="Unreadable")]
+            ],
+        )
+    ]

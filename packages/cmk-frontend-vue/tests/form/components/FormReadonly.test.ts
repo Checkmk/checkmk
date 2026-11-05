@@ -489,6 +489,100 @@ test.each(['dual_list_choice', 'checkbox_list_choice'] as const)(
   }
 )
 
+const certificateSpec: FormSpec.CaCertificate = {
+  type: 'ca_certificate',
+  title: 'Certificate',
+  help: '',
+  validators: [],
+  label: null,
+  input_hint: null,
+  allow_fetch: false
+}
+
+function certificateList(elementSummaries: FormSpec.ValueSummary[]): FormSpec.List {
+  return {
+    type: 'list',
+    title: 'Certificates',
+    help: '',
+    validators: [],
+    element_template: certificateSpec,
+    element_default_value: '',
+    editable_order: false,
+    add_element_label: 'Add',
+    remove_element_label: 'Remove',
+    no_element_label: 'No certificates',
+    element_summaries: elementSummaries
+  }
+}
+
+test('FormReadonly shows the summary of each list element in the order of the value', () => {
+  render(FormReadonly, {
+    props: {
+      spec: certificateList([
+        {
+          value: 'pem 2',
+          label: null,
+          detail_groups: [[{ title: 'Certificate', text: 'Unreadable' }]]
+        },
+        {
+          value: 'pem 1',
+          label: 'Added',
+          detail_groups: [[{ title: 'Subject', text: 'CN=Test CA' }]]
+        }
+      ]),
+      backendValidation: [],
+      data: ['pem 1', 'pem 2']
+    }
+  })
+  expect(screen.getAllByRole('row').map((row) => row.textContent)).toEqual([
+    'Added:Subject:CN=Test CA',
+    'Subject:CN=Test CA',
+    'Certificate:Unreadable',
+    'Certificate:Unreadable'
+  ])
+})
+
+test('FormReadonly shows every certificate of a chain', () => {
+  render(FormReadonly, {
+    props: {
+      spec: certificateList([
+        {
+          value: 'chain',
+          label: 'Added',
+          detail_groups: [
+            [{ title: 'Subject', text: 'CN=Intermediate' }],
+            [{ title: 'Subject', text: 'CN=Root' }]
+          ]
+        }
+      ]),
+      backendValidation: [],
+      data: ['chain']
+    }
+  })
+  expect(screen.getAllByRole('row').map((row) => row.textContent)).toEqual([
+    'Added:Subject:CN=IntermediateSubject:CN=Root',
+    'Subject:CN=Intermediate',
+    'Subject:CN=Root'
+  ])
+})
+
+test('FormReadonly ignores summaries that do not describe the shown value', () => {
+  render(FormReadonly, {
+    props: {
+      spec: certificateList([
+        {
+          value: 'other pem',
+          label: 'Added',
+          detail_groups: [[{ title: 'Subject', text: 'CN=Other' }]]
+        }
+      ]),
+      backendValidation: [],
+      data: ['shown pem']
+    }
+  })
+  expect(screen.queryByText('CN=Other')).not.toBeInTheDocument()
+})
+
 const telemetryMetricsCustomQuerySpec: FormSpec.TelemetryMetricsCustomQuery = {
   type: 'telemetry_metrics_custom_query',
   title: 'mbTitle',

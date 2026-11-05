@@ -42,7 +42,8 @@ import type {
   TimeSpan,
   TimeSpecific,
   Tuple,
-  TwoColumnDictionary
+  TwoColumnDictionary,
+  ValueSummary
 } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import type { DualListElement } from 'cmk-ui-library/components/CmkDualList'
 import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
@@ -428,6 +429,56 @@ function renderDualListChoice(formSpec: DualListChoice, value: DualListElement[]
   )
 }
 
+interface LabelledRow {
+  label: string | null
+  content: string | VNode
+}
+
+function renderLabelledRows(rows: LabelledRow[]): VNode {
+  return h(
+    'table',
+    { class: 'form-readonly__labelled-rows' },
+    rows.map((row) =>
+      h(
+        'tr',
+        row.label === null
+          ? [h('td', [row.content])]
+          : [h('td', `${row.label}:`), h('td', [row.content])]
+      )
+    )
+  )
+}
+
+function describes(summary: ValueSummary | undefined, value: unknown): boolean {
+  return summary !== undefined && JSON.stringify(summary.value) === JSON.stringify(value)
+}
+
+function summariesOf(summaries: ValueSummary[], values: unknown[]): ValueSummary[] | null {
+  const matched = values.map((value, index) =>
+    describes(summaries[index], value)
+      ? summaries[index]
+      : summaries.find((summary) => describes(summary, value))
+  )
+  return matched.every((summary) => summary !== undefined) ? matched : null
+}
+
+function renderValueSummaries(summaries: ValueSummary[]): VNode {
+  return renderLabelledRows(
+    summaries.map((summary) => ({
+      label: summary.label,
+      content: h(
+        'div',
+        { class: 'form-readonly__detail-groups' },
+        summary.detail_groups.map((details) =>
+          renderLabelledRows(
+            details.map((detail) => ({ label: detail.title, content: detail.text }))
+          )
+        )
+      )
+    }))
+  )
+}
+
 function renderCheckboxListChoice(
   formSpec: CheckboxListChoice,
   value: CheckboxListChoiceElement[]
@@ -711,6 +762,13 @@ function renderList(
   )
   if (value.length === 0) {
     return h('div', [formSpec.no_element_label])
+  }
+  const summaries =
+    formSpec.element_summaries && backendValidation.length === 0
+      ? summariesOf(formSpec.element_summaries, value)
+      : null
+  if (summaries !== null) {
+    return renderValueSummaries(summaries)
   }
   const listResults = []
   listValidations.forEach((validation: string) => {
@@ -1074,6 +1132,22 @@ table.form-readonly__table {
   &.form-readonly__multiple-choice__max-entries::before {
     content: '';
   }
+}
+
+.form-readonly__labelled-rows td {
+  vertical-align: top;
+  overflow-wrap: anywhere;
+
+  &:first-child:not(:last-child) {
+    padding-right: 8px;
+    white-space: nowrap;
+  }
+}
+
+.form-readonly__detail-groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-4);
 }
 
 .form-readonly__list {

@@ -81,9 +81,16 @@ class ListVisitor[T](
                     translate_to_current_language
                 ),
                 editable_order=self.form_spec.editable_order,
+                element_summaries=self._element_summaries(list_values),
             ),
             list_values,
         )
+
+    def _element_summaries(
+        self,
+        element_values: Sequence[object],  # noqa: ARG002
+    ) -> Sequence[shared_type_defs.ValueSummary] | None:
+        return None
 
     @override
     def _validate(

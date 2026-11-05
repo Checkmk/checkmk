@@ -23,9 +23,6 @@ def test_parents_validator(sample_host: str) -> None:
     assert result.parents == [HostName(sample_host)]
 
 
-@pytest.mark.xfail(
-    strict=True, raises=(AttributeError, TypeError), reason="crash groups 4850, 4878"
-)
 @pytest.mark.parametrize(
     "attribute",
     ["snmp_community", "management_snmp_community", "management_ipmi_credentials"],

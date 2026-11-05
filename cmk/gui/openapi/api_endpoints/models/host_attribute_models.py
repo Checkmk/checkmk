@@ -325,7 +325,7 @@ class HostViewAttributeModel(
             snmp_community=BaseHostAttributeModel.snmp_community_from_internal(
                 value["snmp_community"]
             )
-            if "snmp_community" in value
+            if value.get("snmp_community") is not None
             else ApiOmitted(),
             metrics_association=(
                 "disabled"
@@ -381,12 +381,12 @@ class HostViewAttributeModel(
             management_snmp_community=SNMPCredentialsConverter.from_internal(
                 value["management_snmp_community"]
             )
-            if "management_snmp_community" in value
+            if value.get("management_snmp_community") is not None
             else ApiOmitted(),
             management_ipmi_credentials=IPMIParametersModel.from_internal(
                 value["management_ipmi_credentials"]
             )
-            if "management_ipmi_credentials" in value
+            if value.get("management_ipmi_credentials") is not None
             else ApiOmitted(),
             tag_agent=value.get("tag_agent", ApiOmitted()),
             tag_piggyback=value.get("tag_piggyback", ApiOmitted()),

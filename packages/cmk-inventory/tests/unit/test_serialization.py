@@ -10,7 +10,7 @@ from typing import Literal
 
 import pytest
 
-from cmk.inventory.delta import compare_trees, ImmutableDeltaTree
+from cmk.inventory.delta import compare_trees, ImmutableDeltaTree, SDDeltaValue
 from cmk.inventory.serialization import (
     deserialize_delta_cache_entry,
     deserialize_delta_tree,
@@ -40,6 +40,7 @@ from ._fixtures import (
     filled_delta_tree,
     filled_immutable_tree,
     filled_mutable_tree,
+    immutable_tree,
     raw_tree,
 )
 
@@ -48,107 +49,68 @@ def test_serialize_empty_mut_tree() -> None:
     assert serialize_tree(empty_mutable_tree()) == {"Attributes": {}, "Table": {}, "Nodes": {}}
 
 
-def test_serialize_filled_mut_tree() -> None:
-    raw_tree = serialize_tree(filled_mutable_tree())
-    assert not raw_tree["Attributes"]
-    assert not raw_tree["Table"]
-    assert not raw_tree["Nodes"][SDNodeName("path-to-nta")]["Attributes"]
-    assert not raw_tree["Nodes"][SDNodeName("path-to-nta")]["Table"]
-
-    assert raw_tree["Nodes"][SDNodeName("path-to-nta")]["Nodes"][SDNodeName("na")]["Attributes"][
-        "Pairs"
-    ] == {
-        "na0": "NA 0",
-        "na1": "NA 1",
-    }
-    assert not raw_tree["Nodes"][SDNodeName("path-to-nta")]["Nodes"][SDNodeName("na")]["Table"]
-    assert not raw_tree["Nodes"][SDNodeName("path-to-nta")]["Nodes"][SDNodeName("na")]["Nodes"]
-
-    assert not raw_tree["Nodes"][SDNodeName("path-to-nta")]["Nodes"][SDNodeName("nt")]["Attributes"]
-    assert raw_tree["Nodes"][SDNodeName("path-to-nta")]["Nodes"][SDNodeName("nt")]["Table"][
-        "KeyColumns"
-    ] == ["nt0"]
-    nt_rows = raw_tree["Nodes"][SDNodeName("path-to-nta")]["Nodes"][SDNodeName("nt")]["Table"][
-        "Rows"
-    ]
-    assert len(nt_rows) == 2
-    for row in [
-        {"nt0": "NT 00", "nt1": "NT 01"},
-        {"nt0": "NT 10", "nt1": "NT 11"},
-    ]:
-        assert row in nt_rows
-    assert not raw_tree["Nodes"][SDNodeName("path-to-nta")]["Nodes"][SDNodeName("nt")]["Nodes"]
-
-    assert raw_tree["Nodes"][SDNodeName("path-to-nta")]["Nodes"][SDNodeName("ta")]["Attributes"][
-        "Pairs"
-    ] == {
-        "ta0": "TA 0",
-        "ta1": "TA 1",
-    }
-    assert raw_tree["Nodes"][SDNodeName("path-to-nta")]["Nodes"][SDNodeName("ta")]["Table"][
-        "KeyColumns"
-    ] == ["ta0"]
-    ta_rows = raw_tree["Nodes"][SDNodeName("path-to-nta")]["Nodes"][SDNodeName("ta")]["Table"][
-        "Rows"
-    ]
-    assert len(ta_rows) == 2
-    for row in [
-        {"ta0": "TA 00", "ta1": "TA 01"},
-        {"ta0": "TA 10", "ta1": "TA 11"},
-    ]:
-        assert row in ta_rows
-    assert not raw_tree["Nodes"][SDNodeName("path-to-nta")]["Nodes"][SDNodeName("ta")]["Nodes"]
-
-
-def test_deserialize_empty_imm_tree() -> None:
-    assert deserialize_tree({}) == MutableTree()
-    assert deserialize_tree({}) == ImmutableTree()
-
-
-def test_deserialize_filled_imm_tree() -> None:
-    tree = deserialize_tree(
-        {
+_FILLED_RAW_TREE: Mapping[str, object] = {
+    "Attributes": {},
+    "Table": {},
+    "Nodes": {
+        "path-to-nta": {
             "Attributes": {},
-            "Table": {},
             "Nodes": {
-                "path-to-nta": {
-                    "Attributes": {},
-                    "Nodes": {
-                        "na": {
-                            "Attributes": {"Pairs": {"na0": "NA 0", "na1": "NA 1"}},
-                            "Nodes": {},
-                            "Table": {},
-                        },
-                        "nt": {
-                            "Attributes": {},
-                            "Nodes": {},
-                            "Table": {
-                                "KeyColumns": ["nt0"],
-                                "Rows": [
-                                    {"nt0": "NT 00", "nt1": "NT 01"},
-                                    {"nt0": "NT 10", "nt1": "NT 11"},
-                                ],
-                            },
-                        },
-                        "ta": {
-                            "Attributes": {"Pairs": {"ta0": "TA 0", "ta1": "TA 1"}},
-                            "Nodes": {},
-                            "Table": {
-                                "KeyColumns": ["ta0"],
-                                "Rows": [
-                                    {"ta0": "TA 00", "ta1": "TA 01"},
-                                    {"ta0": "TA 10", "ta1": "TA 11"},
-                                ],
-                            },
-                        },
-                    },
+                "na": {
+                    "Attributes": {"Pairs": {"na0": "NA 0", "na1": "NA 1"}},
+                    "Nodes": {},
                     "Table": {},
-                }
+                },
+                "nt": {
+                    "Attributes": {},
+                    "Nodes": {},
+                    "Table": {
+                        "KeyColumns": ["nt0"],
+                        "Rows": [
+                            {"nt0": "NT 00", "nt1": "NT 01"},
+                            {"nt0": "NT 10", "nt1": "NT 11"},
+                        ],
+                    },
+                },
+                "ta": {
+                    "Attributes": {"Pairs": {"ta0": "TA 0", "ta1": "TA 1"}},
+                    "Nodes": {},
+                    "Table": {
+                        "KeyColumns": ["ta0"],
+                        "Rows": [
+                            {"ta0": "TA 00", "ta1": "TA 01"},
+                            {"ta0": "TA 10", "ta1": "TA 11"},
+                        ],
+                    },
+                },
             },
+            "Table": {},
         }
-    )
-    assert tree == filled_mutable_tree()
-    assert tree == filled_immutable_tree()
+    },
+}
+
+
+def test_serialize_filled_mutable_tree() -> None:
+    assert serialize_tree(filled_mutable_tree()) == _FILLED_RAW_TREE
+
+
+@pytest.mark.parametrize(
+    "tree",
+    [pytest.param(MutableTree(), id="mutable"), pytest.param(ImmutableTree(), id="immutable")],
+)
+def test_deserialize_an_empty_raw_tree(tree: MutableTree | ImmutableTree) -> None:
+    assert deserialize_tree({}) == tree
+
+
+@pytest.mark.parametrize(
+    "tree",
+    [
+        pytest.param(filled_mutable_tree(), id="mutable"),
+        pytest.param(filled_immutable_tree(), id="immutable"),
+    ],
+)
+def test_deserialize_a_filled_raw_tree(tree: MutableTree | ImmutableTree) -> None:
+    assert deserialize_tree(_FILLED_RAW_TREE) == tree
 
 
 def test_serialize_empty_delta_tree() -> None:
@@ -159,204 +121,201 @@ def test_serialize_empty_delta_tree() -> None:
     }
 
 
-def test_serialize_filled_delta_tree() -> None:
-    raw_tree = serialize_delta_tree(compare_trees(empty_immutable_tree(), filled_immutable_tree()))
-    assert not raw_tree["Attributes"]
-    assert not raw_tree["Table"]
-    assert not raw_tree["Nodes"][SDNodeName("path-to-nta")]["Attributes"]
-    assert not raw_tree["Nodes"][SDNodeName("path-to-nta")]["Table"]
+_FILLED_RAW_DELTA_TREE = SDRawDeltaTree(
+    Attributes={},
+    Nodes={
+        SDNodeName("path-to-nta"): SDRawDeltaTree(
+            Attributes={},
+            Nodes={
+                SDNodeName("na"): SDRawDeltaTree(
+                    Attributes={
+                        "Pairs": {
+                            SDKey("na0"): ("NA 0", None),
+                            SDKey("na1"): ("NA 1", None),
+                        }
+                    },
+                    Nodes={},
+                    Table={},
+                ),
+                SDNodeName("nt"): SDRawDeltaTree(
+                    Attributes={},
+                    Nodes={},
+                    Table={
+                        "KeyColumns": [SDKey("nt0")],
+                        "Rows": [
+                            {SDKey("nt0"): ("NT 00", None), SDKey("nt1"): ("NT 01", None)},
+                            {SDKey("nt0"): ("NT 10", None), SDKey("nt1"): ("NT 11", None)},
+                        ],
+                    },
+                ),
+                SDNodeName("ta"): SDRawDeltaTree(
+                    Attributes={
+                        "Pairs": {
+                            SDKey("ta0"): ("TA 0", None),
+                            SDKey("ta1"): ("TA 1", None),
+                        }
+                    },
+                    Nodes={},
+                    Table={
+                        "KeyColumns": [SDKey("ta0")],
+                        "Rows": [
+                            {SDKey("ta0"): ("TA 00", None), SDKey("ta1"): ("TA 01", None)},
+                            {SDKey("ta0"): ("TA 10", None), SDKey("ta1"): ("TA 11", None)},
+                        ],
+                    },
+                ),
+            },
+            Table={},
+        )
+    },
+    Table={},
+)
 
-    assert raw_tree["Nodes"][SDNodeName("path-to-nta")]["Nodes"][SDNodeName("na")]["Attributes"][
-        "Pairs"
-    ] == {
-        "na0": ("NA 0", None),
-        "na1": ("NA 1", None),
-    }
-    assert not raw_tree["Nodes"][SDNodeName("path-to-nta")]["Nodes"][SDNodeName("na")]["Table"]
-    assert not raw_tree["Nodes"][SDNodeName("path-to-nta")]["Nodes"][SDNodeName("na")]["Nodes"]
 
-    assert not raw_tree["Nodes"][SDNodeName("path-to-nta")]["Nodes"][SDNodeName("nt")]["Attributes"]
-    assert raw_tree["Nodes"][SDNodeName("path-to-nta")]["Nodes"][SDNodeName("nt")]["Table"][
-        "KeyColumns"
-    ] == ["nt0"]
-    nt_rows = raw_tree["Nodes"][SDNodeName("path-to-nta")]["Nodes"][SDNodeName("nt")]["Table"][
-        "Rows"
-    ]
-    assert len(nt_rows) == 2
-    for row in [
-        {"nt0": ("NT 00", None), "nt1": ("NT 01", None)},
-        {"nt0": ("NT 10", None), "nt1": ("NT 11", None)},
-    ]:
-        assert row in nt_rows
-    assert not raw_tree["Nodes"][SDNodeName("path-to-nta")]["Nodes"][SDNodeName("nt")]["Nodes"]
+def test_serialize_a_compared_delta_tree() -> None:
+    tree = MutableTree()
+    tree.add(
+        path=(SDNodeName("node"),),
+        pairs=[{SDKey("key"): "value"}],
+        key_columns=[SDKey("col0")],
+        rows=[{SDKey("col0"): "value 0", SDKey("col1"): "value 1"}],
+    )
 
-    assert raw_tree["Nodes"][SDNodeName("path-to-nta")]["Nodes"][SDNodeName("ta")]["Attributes"][
-        "Pairs"
-    ] == {
-        "ta0": ("TA 0", None),
-        "ta1": ("TA 1", None),
-    }
-    assert raw_tree["Nodes"][SDNodeName("path-to-nta")]["Nodes"][SDNodeName("ta")]["Table"][
-        "KeyColumns"
-    ] == ["ta0"]
-    ta_rows = raw_tree["Nodes"][SDNodeName("path-to-nta")]["Nodes"][SDNodeName("ta")]["Table"][
-        "Rows"
-    ]
-    assert len(ta_rows) == 2
-    for row in [
-        {"ta0": ("TA 00", None), "ta1": ("TA 01", None)},
-        {"ta0": ("TA 10", None), "ta1": ("TA 11", None)},
-    ]:
-        assert row in ta_rows
-    assert not raw_tree["Nodes"][SDNodeName("path-to-nta")]["Nodes"][SDNodeName("ta")]["Nodes"]
+    assert serialize_delta_tree(
+        compare_trees(ImmutableTree(), immutable_tree(tree))
+    ) == SDRawDeltaTree(
+        Attributes={},
+        Table={},
+        Nodes={
+            SDNodeName("node"): SDRawDeltaTree(
+                Attributes={"Pairs": {SDKey("key"): ("value", None)}},
+                Table={
+                    "KeyColumns": [SDKey("col0")],
+                    "Rows": [{SDKey("col0"): ("value 0", None), SDKey("col1"): ("value 1", None)}],
+                },
+                Nodes={},
+            )
+        },
+    )
+
+
+def test_serialize_a_deserialized_delta_tree_gives_the_raw_tree_back() -> None:
+    assert (
+        serialize_delta_tree(deserialize_delta_tree(_FILLED_RAW_DELTA_TREE))
+        == _FILLED_RAW_DELTA_TREE
+    )
 
 
 def test_deserialize_empty_delta_tree() -> None:
     assert len(ImmutableDeltaTree()) == 0
 
 
-def test_deserialize_filled_delta_tree() -> None:
-    delta_tree = deserialize_delta_tree(
-        SDRawDeltaTree(
-            Attributes={},
-            Nodes={
-                SDNodeName("path-to-nta"): SDRawDeltaTree(
-                    Attributes={},
-                    Nodes={
-                        SDNodeName("na"): SDRawDeltaTree(
-                            Attributes={
-                                "Pairs": {
-                                    SDKey("na0"): ("NA 0", None),
-                                    SDKey("na1"): ("NA 1", None),
-                                }
-                            },
-                            Nodes={},
-                            Table={},
-                        ),
-                        SDNodeName("nt"): SDRawDeltaTree(
-                            Attributes={},
-                            Nodes={},
-                            Table={
-                                "KeyColumns": [SDKey("nt0")],
-                                "Rows": [
-                                    {SDKey("nt0"): ("NT 00", None), SDKey("nt1"): ("NT 01", None)},
-                                    {SDKey("nt0"): ("NT 10", None), SDKey("nt1"): ("NT 11", None)},
-                                ],
-                            },
-                        ),
-                        SDNodeName("ta"): SDRawDeltaTree(
-                            Attributes={
-                                "Pairs": {
-                                    SDKey("ta0"): ("TA 0", None),
-                                    SDKey("ta1"): ("TA 1", None),
-                                }
-                            },
-                            Nodes={},
-                            Table={
-                                "KeyColumns": [SDKey("ta0")],
-                                "Rows": [
-                                    {SDKey("ta0"): ("TA 00", None), SDKey("ta1"): ("TA 01", None)},
-                                    {SDKey("ta0"): ("TA 10", None), SDKey("ta1"): ("TA 11", None)},
-                                ],
-                            },
-                        ),
-                    },
-                    Table={},
-                )
-            },
-            Table={},
-        )
-    )
-    assert len(delta_tree) == 12
+def test_deserialize_a_filled_raw_delta_tree() -> None:
+    delta_tree = deserialize_delta_tree(_FILLED_RAW_DELTA_TREE)
     stats = delta_tree.get_stats()
-    assert stats["new"] == 0
-    assert stats["changed"] == 0
-    assert stats["removed"] == 12
+    assert (len(delta_tree), stats["new"], stats["changed"], stats["removed"]) == (12, 0, 0, 12)
 
 
-def test_legacy_tree() -> None:
-    raw_tree = {
-        "path-to": {
-            "idx-node": [
-                {
-                    "idx-attr": "value",
-                    "idx-enum": ["v1", 1.0, 2, None],
-                    "idx-table": [{"idx-col": "value"}],
-                    "idx-sub-node": {
-                        "foo-node": {
-                            "foo-attr": "value",
-                        },
-                    },
-                    "idx-sub-idx-node": [
+def test_deserialize_a_legacy_tree() -> None:
+    raw: Mapping[str, object] = serialize_tree(
+        deserialize_tree(
+            {
+                "path-to": {
+                    "idx-node": [
                         {
-                            "bar-node": {
-                                "bar-attr": "value",
+                            "idx-attr": "value",
+                            "idx-enum": ["v1", 1.0, 2, None],
+                            "idx-table": [{"idx-col": "value"}],
+                            "idx-sub-node": {
+                                "foo-node": {
+                                    "foo-attr": "value",
+                                },
                             },
+                            "idx-sub-idx-node": [
+                                {
+                                    "bar-node": {
+                                        "bar-attr": "value",
+                                    },
+                                },
+                            ],
                         },
                     ],
+                    "node": {"attr": "value"},
+                    "table": [{"col": "value"}],
                 },
-            ],
-            "node": {"attr": "value"},
-            "table": [{"col": "value"}],
+            }
+        )
+    )
+    assert raw == {
+        "Attributes": {},
+        "Table": {},
+        "Nodes": {
+            "path-to": {
+                "Attributes": {},
+                "Table": {},
+                "Nodes": {
+                    "idx-node": {
+                        "Attributes": {},
+                        "Table": {},
+                        "Nodes": {
+                            "0": {
+                                "Attributes": {
+                                    "Pairs": {"idx-attr": "value", "idx-enum": "v1, 1.0, 2"}
+                                },
+                                "Table": {},
+                                "Nodes": {
+                                    "idx-table": {
+                                        "Attributes": {},
+                                        "Table": {
+                                            "KeyColumns": ["idx-col"],
+                                            "Rows": [{"idx-col": "value"}],
+                                        },
+                                        "Nodes": {},
+                                    },
+                                    "idx-sub-node": {
+                                        "Attributes": {},
+                                        "Table": {},
+                                        "Nodes": {
+                                            "foo-node": {
+                                                "Attributes": {"Pairs": {"foo-attr": "value"}},
+                                                "Table": {},
+                                                "Nodes": {},
+                                            }
+                                        },
+                                    },
+                                    "idx-sub-idx-node": {
+                                        "Attributes": {},
+                                        "Table": {},
+                                        "Nodes": {
+                                            "0": {
+                                                "Attributes": {},
+                                                "Table": {},
+                                                "Nodes": {
+                                                    "bar-node": {
+                                                        "Attributes": {
+                                                            "Pairs": {"bar-attr": "value"}
+                                                        },
+                                                        "Table": {},
+                                                        "Nodes": {},
+                                                    }
+                                                },
+                                            }
+                                        },
+                                    },
+                                },
+                            }
+                        },
+                    },
+                    "node": {"Attributes": {"Pairs": {"attr": "value"}}, "Table": {}, "Nodes": {}},
+                    "table": {
+                        "Attributes": {},
+                        "Table": {"KeyColumns": ["col"], "Rows": [{"col": "value"}]},
+                        "Nodes": {},
+                    },
+                },
+            }
         },
     }
-
-    tree = deserialize_tree(raw_tree)
-
-    idx_node_attr = tree.get_tree((SDNodeName("path-to"), SDNodeName("idx-node"), SDNodeName("0")))
-    assert len(idx_node_attr) > 0
-    assert idx_node_attr.attributes.pairs == {"idx-attr": "value", "idx-enum": "v1, 1.0, 2"}
-    assert not idx_node_attr.table.rows_by_ident
-    assert not idx_node_attr.table.rows
-
-    idx_sub_idx_node_attr = tree.get_tree(
-        (
-            SDNodeName("path-to"),
-            SDNodeName("idx-node"),
-            SDNodeName("0"),
-            SDNodeName("idx-sub-idx-node"),
-            SDNodeName("0"),
-            SDNodeName("bar-node"),
-        )
-    )
-    assert len(idx_sub_idx_node_attr) > 0
-    assert idx_sub_idx_node_attr.attributes.pairs == {"bar-attr": "value"}
-    assert not idx_sub_idx_node_attr.table.rows_by_ident
-    assert not idx_sub_idx_node_attr.table.rows
-
-    idx_sub_node_attr = tree.get_tree(
-        (
-            SDNodeName("path-to"),
-            SDNodeName("idx-node"),
-            SDNodeName("0"),
-            SDNodeName("idx-sub-node"),
-            SDNodeName("foo-node"),
-        )
-    )
-    assert len(idx_sub_node_attr) > 0
-    assert idx_sub_node_attr.attributes.pairs == {"foo-attr": "value"}
-    assert not idx_sub_node_attr.table.rows_by_ident
-    assert not idx_sub_node_attr.table.rows
-
-    idx_table = tree.get_tree(
-        (SDNodeName("path-to"), SDNodeName("idx-node"), SDNodeName("0"), SDNodeName("idx-table"))
-    )
-    assert len(idx_table) > 0
-    assert not idx_table.attributes.pairs
-    assert idx_table.table.rows_by_ident == {("value",): {"idx-col": "value"}}
-    assert idx_table.table.rows == [{"idx-col": "value"}]
-
-    attr_node = tree.get_tree((SDNodeName("path-to"), SDNodeName("node")))
-    assert len(attr_node) > 0
-    assert attr_node.attributes.pairs == {"attr": "value"}
-    assert not attr_node.table.rows_by_ident
-    assert not attr_node.table.rows
-
-    table_node = tree.get_tree((SDNodeName("path-to"), SDNodeName("table")))
-    assert len(table_node) > 0
-    assert not table_node.attributes.pairs
-    assert table_node.table.rows_by_ident == {("value",): {"col": "value"}}
-    assert table_node.table.rows == [{"col": "value"}]
 
 
 @pytest.mark.parametrize(
@@ -404,9 +363,9 @@ def test_deserialize_delta_tree_with_attributes_key() -> None:
         Table={},
         Nodes={},
     )
-    delta_tree = deserialize_delta_tree(raw_delta_tree)
-    assert delta_tree.attributes.pairs[SDKey("k")].old is None
-    assert delta_tree.attributes.pairs[SDKey("k")].new == "v"
+    assert deserialize_delta_tree(raw_delta_tree).attributes.pairs == {
+        SDKey("k"): SDDeltaValue(old=None, new="v")
+    }
 
 
 def test_deserialize_tree_rejects_a_raw_tree_that_is_no_dict() -> None:

@@ -247,9 +247,11 @@ def fixture_custom_graph_to_delete(
                 test_site.openapi.custom_graph.delete(name)
 
 
-def delete_custom_graph(test_site: Site, name: str) -> None:
-    """Delete a custom graph the fixtures above created, as the user owning it."""
+def delete_custom_graph(test_site: Site, name: str, *, ignore_missing: bool = False) -> None:
+    """Delete a custom graph of the user the browser logs in as."""
     with _as_admin_user(test_site):
+        if ignore_missing and test_site.openapi.custom_graph.get(name) is None:
+            return
         test_site.openapi.custom_graph.delete(name)
 
 

@@ -123,12 +123,11 @@ from cmk.inventory.trees import SDKey, SDNodeName, SDPath
         ),
     ],
 )
-def test_parse_tree_path(
+def test_parse_internal_raw_path(
     raw_path: str, expected_path: InventoryPath, expected_node_name: str
 ) -> None:
     inventory_path = parse_internal_raw_path(raw_path)
-    assert inventory_path == expected_path
-    assert inventory_path.node_name == expected_node_name
+    assert (inventory_path, inventory_path.node_name) == (expected_path, expected_node_name)
 
 
 @pytest.mark.parametrize(

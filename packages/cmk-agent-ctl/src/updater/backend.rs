@@ -2274,6 +2274,58 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             .contains(&format!("{:?}", paths.updater_config_path)));
     }
 
+    /// CMK-40789, TC-AU-048: on Windows the reported installed hash comes from
+    /// `install\checkmk.dat`, because there is no `agent_info.json`.
+    #[cfg(windows)]
+    #[test]
+    fn test_agent_updates_report_the_installed_hash_from_checkmk_dat() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let paths = artifact_paths(&dir);
+        fs::write(&paths.updater_config_path, UPDATER_CONFIG_TOML).unwrap();
+        fs::write(dir.path().join("install").join("checkmk.dat"), CHECKMK_DAT).unwrap();
+
+        let entry = entry_of(Updater::new(&paths), &registry_with_one_connection());
+
+        assert_eq!(entry["aghash"], INSTALLED_HASH);
+    }
+
+    /// CMK-40789, TC-AU-045: `InstallCapFile` unpacks the file into the home
+    /// directory, and the controller has to read it from there. The content is
+    /// what the bakery writes for Windows.
+    #[cfg(windows)]
+    #[test]
+    fn test_updater_reads_the_update_config_from_the_home_dir() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let paths = artifact_paths(&dir);
+        fs::write(
+            dir.path().join("cmk-agent-ctl-update.toml"),
+            concat!(
+                "# Created by Check_MK Agent Bakery.\r\n",
+                "# This file is managed via WATO, do not edit manually or you\r\n",
+                "# lose your changes next time when you update the agent.\r\n",
+                "\r\n",
+                "activated = true\r\n",
+                "interval = 3600\r\n",
+                "signature_keys = [\r\n",
+                "    \"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE-----\\n\",\r\n",
+                "]\r\n",
+            ),
+        )
+        .unwrap();
+
+        let updater = Updater::new(&paths);
+
+        assert_eq!(
+            updater.loaded_config().unwrap(),
+            &UpdaterConfig {
+                activated: true,
+                interval: 3600,
+                signature_keys: vec![String::from(SIGNATURE_KEY)],
+                installer_socket: None,
+            }
+        );
+    }
+
     /// The lock is real: no other handle can take it while the writable
     /// updater lives, and one can once it is dropped. `artifact_paths` leaves
     /// the download directory missing, so taking the lock has to create it.

@@ -206,6 +206,24 @@ class MockLiveStatusConnection:
             ...     )[0]
             [['/wato/hosts.mk', 1]]
 
+        A row query returns at most the rows that Limit allows:
+
+            >>> live = MockLiveStatusConnection()
+            >>> _ = live.expect_query("GET hosts\\nColumns: name\\nLimit: 1")
+            >>> with live(expect_status_query=False):
+            ...     live.result_of_next_query("GET hosts\\nColumns: name\\nLimit: 1")[0]
+            [['heute']]
+
+        A sorted query keeps all rows, because the mock does not sort:
+
+            >>> live = MockLiveStatusConnection()
+            >>> _ = live.expect_query("GET hosts\\nColumns: name\\nOrderBy: name\\nLimit: 1")
+            >>> with live(expect_status_query=False):
+            ...     live.result_of_next_query(
+            ...         "GET hosts\\nColumns: name\\nOrderBy: name\\nLimit: 1"
+            ...     )[0]
+            [['heute'], ['example.com']]
+
         This example will fail due to missing queries:
 
             >>> live = MockLiveStatusConnection()
@@ -547,6 +565,13 @@ def execute_query(
 
         # Filtering and Aggregating
         filtered_dicts = evaluate_filter(query, tables[table].get(site_name, []))
+        # The mock neither sorts nor cuts the input of Stats, so these queries keep all rows.
+        if (
+            not reducers
+            and not pick_header(query, "OrderBy", "")
+            and (limit := pick_header(query, "Limit", ""))
+        ):
+            filtered_dicts = filtered_dicts[: int(limit)]
         result_dicts = _aggregate(reducers, query_columns, filtered_dicts)
         row_columns = query_columns if reducers else columns
 

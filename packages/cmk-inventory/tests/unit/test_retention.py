@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
+from typing import Literal
 
 from cmk.inventory.retention import (
     RawIntervalFromConfig,
@@ -103,152 +104,140 @@ def test_retention_filter_defaults_an_unset_cache_info() -> None:
     }
 
 
-def test_update_attributes_from_previous() -> None:
-    previous_tree = deserialize_tree(
-        {
-            "Attributes": {
-                "Pairs": {"a1": "A1: prev", "a2": "A2: only prev"},
-                "Retentions": {"a1": (1, 2, 3), "a2": (1, 2, 3)},
-            },
-            "Table": {},
-            "Nodes": {},
-        }
-    )
-    current_tree_ = MutableTree()
-    current_tree_.add(
-        path=(),
-        pairs=[{SDKey("a1"): "A1: cur", SDKey("a3"): "A3: only cur"}],
-    )
+def _update_from(
+    current_tree: MutableTree, previous_tree: ImmutableTree, raw_interval: RawIntervalFromConfig
+) -> MutableTree:
     update_from_previous(
-        current_tree_,
+        current_tree,
         now=0,
         previous_tree=previous_tree,
-        raw_intervals_from_config=[
-            RawIntervalFromConfig(interval=6, visible_raw_path="", attributes="all")
-        ],
+        raw_intervals_from_config=[raw_interval],
         pairs_cache_info={(): (4, 5)},
         columns_cache_info={(): (4, 5)},
     )
-    assert current_tree_.get_update_results() == {
+    return current_tree
+
+
+def _tree_with_updated_attributes() -> MutableTree:
+    current_tree = MutableTree()
+    current_tree.add(path=(), pairs=[{SDKey("a1"): "A1: cur", SDKey("a3"): "A3: only cur"}])
+    return _update_from(
+        current_tree,
+        deserialize_tree(
+            {
+                "Attributes": {
+                    "Pairs": {"a1": "A1: prev", "a2": "A2: only prev"},
+                    "Retentions": {"a1": (1, 2, 3), "a2": (1, 2, 3)},
+                },
+                "Table": {},
+                "Nodes": {},
+            }
+        ),
+        RawIntervalFromConfig(interval=6, visible_raw_path="", attributes="all"),
+    )
+
+
+def test_update_reports_the_restored_pairs() -> None:
+    assert _tree_with_updated_attributes().get_update_results() == {
         (): [
             "[Attributes] Added pairs: a2",
             "[Attributes] Keep until: a1 (15), a2 (6), a3 (15)",
         ]
     }
 
-    current_tree = immutable_tree(current_tree_)
-    assert current_tree.attributes.pairs == {
-        "a1": "A1: cur",
-        "a2": "A2: only prev",
-        "a3": "A3: only cur",
-    }
-    assert current_tree.attributes.retentions == {
-        "a1": RetentionInterval(4, 5, 6, "current"),
-        "a2": RetentionInterval(1, 2, 3, "previous"),
-        "a3": RetentionInterval(4, 5, 6, "current"),
-    }
 
-
-def test_update_from_previous_1() -> None:
-    previous_tree = deserialize_tree(
+def test_update_restores_the_retained_pairs() -> None:
+    attributes = immutable_tree(_tree_with_updated_attributes()).attributes
+    assert (attributes.pairs, attributes.retentions) == (
+        {"a1": "A1: cur", "a2": "A2: only prev", "a3": "A3: only cur"},
         {
-            "Attributes": {},
-            "Table": {
-                "KeyColumns": ["kc"],
-                "Rows": [{"kc": "KC", "c1": "C1: prev C1", "c2": "C2: only prev"}],
-                "Retentions": {("KC",): {"c1": (1, 2, 3), "c2": (1, 2, 3)}},
-            },
-            "Nodes": {},
-        }
+            "a1": RetentionInterval(4, 5, 6, "current"),
+            "a2": RetentionInterval(1, 2, 3, "previous"),
+            "a3": RetentionInterval(4, 5, 6, "current"),
+        },
     )
-    current_tree_ = MutableTree()
-    current_tree_.add(
-        path=(),
-        key_columns=[SDKey("kc")],
-        rows=[
-            {SDKey("kc"): "KC", SDKey("c1"): "C1: cur", SDKey("c3"): "C3: only cur"},
-        ],
+
+
+def _tree_with_updated_row(
+    current_row: Mapping[SDKey, str], columns: Literal["all"] | tuple[str, list[str]]
+) -> MutableTree:
+    current_tree = MutableTree()
+    current_tree.add(path=(), key_columns=[SDKey("kc")], rows=[current_row])
+    return _update_from(
+        current_tree,
+        deserialize_tree(
+            {
+                "Attributes": {},
+                "Table": {
+                    "KeyColumns": ["kc"],
+                    "Rows": [{"kc": "KC", "c1": "C1: prev C1", "c2": "C2: only prev"}],
+                    "Retentions": {("KC",): {"c1": (1, 2, 3), "c2": (1, 2, 3)}},
+                },
+                "Nodes": {},
+            }
+        ),
+        RawIntervalFromConfig(interval=6, visible_raw_path="", columns=columns),
     )
-    update_from_previous(
-        current_tree_,
-        now=0,
-        previous_tree=previous_tree,
-        raw_intervals_from_config=[
-            RawIntervalFromConfig(interval=6, visible_raw_path="", columns="all")
-        ],
-        pairs_cache_info={(): (4, 5)},
-        columns_cache_info={(): (4, 5)},
+
+
+def _tree_with_all_columns_retained() -> MutableTree:
+    return _tree_with_updated_row(
+        {SDKey("kc"): "KC", SDKey("c1"): "C1: cur", SDKey("c3"): "C3: only cur"}, "all"
     )
-    assert current_tree_.get_update_results() == {
+
+
+def _tree_with_chosen_columns_retained() -> MutableTree:
+    return _tree_with_updated_row(
+        {SDKey("kc"): "KC", SDKey("c3"): "C3: only cur"}, ("choices", ["c2", "c3"])
+    )
+
+
+def test_update_reports_the_restored_columns_of_a_row() -> None:
+    assert _tree_with_all_columns_retained().get_update_results() == {
         (): [
             "[Table] 'KC': Added row: c2, kc",
             "[Table] 'KC': Keep until: c1 (15), c2 (6), c3 (15), kc (15)",
         ]
     }
 
-    current_tree = immutable_tree(current_tree_)
-    assert current_tree.table.key_columns == ["kc"]
-    assert current_tree.table.retentions == {
-        ("KC",): {
-            "c1": RetentionInterval(4, 5, 6, "current"),
-            "c2": RetentionInterval(1, 2, 3, "previous"),
-            "c3": RetentionInterval(4, 5, 6, "current"),
-            "kc": RetentionInterval(4, 5, 6, "current"),
-        }
-    }
-    assert current_tree.get_rows(()) == [
-        {"c1": "C1: cur", "c2": "C2: only prev", "c3": "C3: only cur", "kc": "KC"}
-    ]
 
-
-def test_update_from_previous_2() -> None:
-    previous_tree = deserialize_tree(
+def test_update_restores_the_retained_columns_of_a_row() -> None:
+    table = immutable_tree(_tree_with_all_columns_retained()).table
+    assert (table.key_columns, table.rows, table.retentions) == (
+        ["kc"],
+        [{"c1": "C1: cur", "c2": "C2: only prev", "c3": "C3: only cur", "kc": "KC"}],
         {
-            "Attributes": {},
-            "Table": {
-                "KeyColumns": ["kc"],
-                "Rows": [{"kc": "KC", "c1": "C1: prev C1", "c2": "C2: only prev"}],
-                "Retentions": {("KC",): {"c1": (1, 2, 3), "c2": (1, 2, 3)}},
-            },
-            "Nodes": {},
-        }
+            ("KC",): {
+                "c1": RetentionInterval(4, 5, 6, "current"),
+                "c2": RetentionInterval(1, 2, 3, "previous"),
+                "c3": RetentionInterval(4, 5, 6, "current"),
+                "kc": RetentionInterval(4, 5, 6, "current"),
+            }
+        },
     )
-    current_tree_ = MutableTree()
-    current_tree_.add(
-        path=(),
-        key_columns=[SDKey("kc")],
-        rows=[
-            {SDKey("kc"): "KC", SDKey("c3"): "C3: only cur"},
-        ],
-    )
-    update_from_previous(
-        current_tree_,
-        now=0,
-        previous_tree=previous_tree,
-        raw_intervals_from_config=[
-            RawIntervalFromConfig(
-                interval=6, visible_raw_path="", columns=("choices", ["c2", "c3"])
-            )
-        ],
-        pairs_cache_info={(): (4, 5)},
-        columns_cache_info={(): (4, 5)},
-    )
-    assert current_tree_.get_update_results() == {
+
+
+def test_update_reports_only_the_chosen_columns() -> None:
+    assert _tree_with_chosen_columns_retained().get_update_results() == {
         (): [
             "[Table] 'KC': Added row: c2, kc",
             "[Table] 'KC': Keep until: c2 (6), c3 (15)",
         ],
     }
 
-    current_tree = immutable_tree(current_tree_)
-    assert current_tree.table.key_columns == ["kc"]
-    assert current_tree.table.retentions == {
-        ("KC",): {
-            "c2": RetentionInterval(1, 2, 3, "previous"),
-            "c3": RetentionInterval(4, 5, 6, "current"),
-        }
-    }
-    assert current_tree.get_rows(()) == [{"c2": "C2: only prev", "c3": "C3: only cur", "kc": "KC"}]
+
+def test_update_restores_only_the_chosen_columns() -> None:
+    table = immutable_tree(_tree_with_chosen_columns_retained()).table
+    assert (table.key_columns, table.rows, table.retentions) == (
+        ["kc"],
+        [{"c2": "C2: only prev", "c3": "C3: only cur", "kc": "KC"}],
+        {
+            ("KC",): {
+                "c2": RetentionInterval(1, 2, 3, "previous"),
+                "c3": RetentionInterval(4, 5, 6, "current"),
+            }
+        },
+    )
 
 
 def test_update_from_previous_restores_nothing_of_a_row_present_again() -> None:

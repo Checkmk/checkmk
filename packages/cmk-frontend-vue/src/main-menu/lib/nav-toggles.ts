@@ -4,11 +4,11 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { NavItemIdEnum } from 'cmk-shared-typing/typescript/main_menu'
-import type { OneColorIcons } from 'cmk-ui-library/components/CmkIcon/types'
+import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon/types'
 import { shallowReactive } from 'vue'
 
 export interface NavToggle {
-  icon: OneColorIcons
+  icon: SimpleIcons
   highlight?: 'default' | 'ai'
   isActive: () => boolean
   toggle: () => void

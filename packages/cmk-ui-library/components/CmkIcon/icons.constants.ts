@@ -37,6 +37,7 @@ import lightIconAggrSvg from '~cmk-frontend/themes/facelift/images/icon_aggr.svg
 import lightIconAggrSingleSvg from '~cmk-frontend/themes/facelift/images/icon_aggr_single.svg?url&no-inline'
 import lightIconAggrSingleProblemSvg from '~cmk-frontend/themes/facelift/images/icon_aggr_single_problem.svg?url&no-inline'
 import lightIconAggrcompPng from '~cmk-frontend/themes/facelift/images/icon_aggrcomp.png?url&no-inline'
+import lightIconAiAssistantMenuSvg from '~cmk-frontend/themes/facelift/images/icon_ai_assistant_menu.svg?url&no-inline'
 import lightIconAixTgzSvg from '~cmk-frontend/themes/facelift/images/icon_aix_tgz.svg?url&no-inline'
 import lightIconAlertOverviewSvg from '~cmk-frontend/themes/facelift/images/icon_alert-overview.svg?url&no-inline'
 import lightIconAlertPng from '~cmk-frontend/themes/facelift/images/icon_alert.png?url&no-inline'
@@ -885,6 +886,7 @@ export const unthemedIcons: Partial<Record<IconNames | '2fa' | '2fa-backup-codes
   'aggr-single': lightIconAggrSingleSvg,
   'aggr-single-problem': lightIconAggrSingleProblemSvg,
   aggrcomp: lightIconAggrcompPng,
+  'ai-assistant-menu': lightIconAiAssistantMenuSvg,
   'aix-tgz': lightIconAixTgzSvg,
   alert: lightIconAlertPng,
   'alert-ack': lightIconAlertAckPng,

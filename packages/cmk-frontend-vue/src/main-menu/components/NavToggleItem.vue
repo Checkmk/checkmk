@@ -6,7 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import type { NavToggleItem } from 'cmk-shared-typing/typescript/main_menu'
-import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
+import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkKeyboardKey from 'cmk-ui-library/components/CmkKeyboardKey.vue'
 import { computed, onBeforeUnmount } from 'vue'
 
@@ -45,12 +45,7 @@ const altHint = computed(() => mainMenu.isAltHinted(props.item.shortcut))
     :title="item.hint || item.title"
   >
     <button type="button" :aria-pressed="active" @click="navToggle.toggle()">
-      <CmkMultitoneIcon
-        :name="navToggle.icon"
-        :primary-color="{ custom: 'currentColor' }"
-        size="large"
-        class="mm-nav-toggle-item__icon"
-      />
+      <CmkIcon :name="navToggle.icon" size="xxlarge" class="mm-nav-toggle-item__icon" />
       <CmkKeyboardKey
         v-if="mainMenu.showKeyHints.value"
         :keyboard-key="mainMenu.getNavShortCutInfo(item.shortcut)"

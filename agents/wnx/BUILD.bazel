@@ -417,6 +417,11 @@ exports_files(
     visibility = ["//agents/windows/plugins:__pkg__"],
 )
 
+exports_files(
+    ["include/wnx/upgrade.h"],
+    visibility = ["//tests/integration/windows_agent:__pkg__"],
+)
+
 # The exes //agents/wnx:check_mk_agent_msi embeds: signed whenever signing
 # credentials are given, like the exes run.ps1 signs before linking the MSI
 # (Start-BinarySigning). Needs --//bazel/rules:azure_signing_credentials_file,

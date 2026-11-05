@@ -113,6 +113,10 @@ class EngineConfig(UserEngineConfig):
     third_party_log_level: LogLevel = LogLevel.CRITICAL
     # Certificate rotation check frequency in seconds (24 hours)
     cert_rotation_schedule: float = 24 * 60 * 60
+    # Bounds in seconds of the random gap between two certificate renewal attempts
+    # (6 and 24 hours)
+    cert_renewal_min_retry_gap: float = 6 * 60 * 60
+    cert_renewal_max_retry_gap: float = 24 * 60 * 60
     # Relay status check frequency in seconds (1 minute)
     relay_status_schedule: float = 60
     # Minimum interval between site version update triggers in seconds (1 minute)

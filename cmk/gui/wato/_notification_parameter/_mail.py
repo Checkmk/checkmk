@@ -37,11 +37,19 @@ from ._helpers import _get_url_prefix_setting
 
 
 def form_spec_mail(edition: Edition) -> DictionaryExtended:
+    elements = _parameter_elements(is_cloud=edition == Edition.CLOUD)
+    ignored_elements = ("no_floating_graphs",)
+
+    def _keep_known_settings(value: object) -> Mapping[str, object]:
+        assert isinstance(value, dict)
+        return {k: v for k, v in value.items() if k in elements or k in ignored_elements}
+
     # TODO register Cloud specific version
     return DictionaryExtended(
         title=Title("HTML email parameters"),
-        elements=_parameter_elements(is_cloud=edition == Edition.CLOUD),
-        ignored_elements=("no_floating_graphs",),
+        elements=elements,
+        ignored_elements=ignored_elements,
+        migrate=_keep_known_settings,
     )
 
 

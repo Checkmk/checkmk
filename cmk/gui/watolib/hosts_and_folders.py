@@ -1220,7 +1220,11 @@ def folder_from_request(var_folder: str | None = None, host_name: str | None = N
     else:
         folder = folder_tree().root_folder()
         if host_name is not None:  # find host with full scan. Expensive operation
-            host = Host.host(HostName(host_name))
+            try:
+                valid_host_name = HostName(host_name)
+            except ValueError:
+                return folder
+            host = Host.host(valid_host_name)
             if host:
                 folder = host.folder()
 

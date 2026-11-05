@@ -1307,7 +1307,6 @@ def test_subfolder_cache_invalidated() -> None:
         assert subfolder.effective_attributes()["alias"] == "other_alias"
 
 
-@pytest.mark.xfail(strict=True, raises=ValueError, reason="crash group 4626")
 def test_folder_of_an_invalid_host_name_is_the_root_folder() -> None:
     assert (
         folder_from_request(var_folder=None, host_name="invalid host name")

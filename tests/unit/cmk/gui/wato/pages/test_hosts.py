@@ -9,7 +9,6 @@ from cmk.gui.http import request
 from cmk.gui.wato.pages.hosts import ModeCreateCluster
 
 
-@pytest.mark.xfail(strict=True, raises=ValueError, reason="crash group 4524")
 @pytest.mark.usefixtures("with_admin_login", "load_config")
 def test_new_cluster_with_an_invalid_name_starts_without_a_name() -> None:
     request.set_var("host", "host name")

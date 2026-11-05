@@ -1109,7 +1109,7 @@ class ModeCreateCluster(CreateHostMode):
                 request.get_ascii_input_mandatory(cls.VAR_HOST)
             )
             host_name = HostName(host_name)
-        except MKUserError:
+        except (MKUserError, ValueError):
             host_name = HostName("")
         return Host(
             folder=folder_from_request(request.var("folder"), host_name),

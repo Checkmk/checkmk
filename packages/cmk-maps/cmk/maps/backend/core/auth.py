@@ -112,6 +112,11 @@ class Principal:
             return False
         return self.may_edit if owner == self.name else self.may_edit_foreign
 
+    def may_preview(self, owner: str) -> bool:
+        """Whether this user may have the states of unsaved view settings of the
+        map ``owner`` owns: who may save it, a built-in as their own."""
+        return self.may_save(owner) or (not owner and self.may_edit)
+
     def viewing(self, owner: str, name: str) -> Principal:
         return dataclasses.replace(self, map_owner=owner, map_name=name)
 

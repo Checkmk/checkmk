@@ -23,6 +23,7 @@ from cmk.maps.backend.api.v1.connections import auth_user_scope, build_topology_
 from cmk.maps.backend.api.v1.deps import (
     charge,
     get_current_user,
+    get_map_owner,
     get_map_viewer,
     GuiAuthDep,
     rate_limited_map_read,
@@ -576,6 +577,8 @@ class ViewPreview:
 
 
 def view_preview(
+    current_user: Annotated[Principal, Depends(get_current_user)],
+    owner: Annotated[str | None, Depends(get_map_owner)],
     radar_filter: str | None = None,
     radar_filter_value: str | None = None,
     ft_override: bool = False,
@@ -584,7 +587,7 @@ def view_preview(
     ft_only_hard_states: bool = False,
     ft_sites: list[str] = Query(default_factory=list),
 ) -> ViewPreview:
-    return ViewPreview(
+    preview = ViewPreview(
         radar_filter=radar_filter,
         radar_filter_value=radar_filter_value,
         ft_override=ft_override,
@@ -593,6 +596,13 @@ def view_preview(
         ft_only_hard_states=ft_only_hard_states,
         ft_sites=ft_sites,
     )
+    # The settings preview is the only sender, and only who may save the map opens it.
+    if preview.overrides and not (owner is not None and current_user.may_preview(owner)):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only a user who may save the map previews its unsaved view",
+        )
+    return preview
 
 
 # Returns a pre-dumped Response (passed through untouched) instead of a model:

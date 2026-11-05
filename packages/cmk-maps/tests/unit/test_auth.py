@@ -301,3 +301,20 @@ def test_a_name_no_map_can_have_is_not_asked_about(name: str) -> None:
     assert [body for _path, body in gui.requests] == [
         {"names": ["net"], "cached": [], "user_id": "jdoe"}
     ]
+
+
+@pytest.mark.parametrize(
+    ("user", "owner", "expected"),
+    [
+        pytest.param(Principal(name="a", may_edit=True), "a", True, id="own map"),
+        pytest.param(Principal(name="a"), "a", False, id="own map without edit"),
+        pytest.param(Principal(name="a", may_edit=True), "b", False, id="foreign map"),
+        pytest.param(Principal(name="a", may_edit_foreign=True), "b", True, id="foreign editor"),
+        pytest.param(Principal(name="a", may_edit=True), "", True, id="built-in customized"),
+        pytest.param(Principal(name="a"), "", False, id="built-in without edit"),
+    ],
+)
+def test_who_may_preview_a_map_is_who_may_save_it(
+    user: Principal, owner: str, expected: bool
+) -> None:
+    assert user.may_preview(owner) is expected

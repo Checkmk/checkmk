@@ -76,6 +76,7 @@ class _GUI:
     def __init__(self) -> None:
         self.logged_out: set[str] = set()
         self.unpublished: set[str] = set()
+        self.editors: set[str] = set()
         self.down = False
 
     def handle(self, request: httpx2.Request) -> httpx2.Response:
@@ -92,7 +93,10 @@ class _GUI:
                 HTTPStatus.OK,
                 json={
                     "user_id": body["session_cookie"],
-                    "permissions": _PERMISSIONS,
+                    "permissions": {
+                        **_PERMISSIONS,
+                        "general.edit_map": body["session_cookie"] in self.editors,
+                    },
                     "contact_groups": [],
                 },
             )
@@ -626,8 +630,9 @@ def test_a_poll_after_a_failed_fetch_fetches_again(
 
 
 def test_a_poll_with_unsaved_view_settings_fetches_them_itself(
-    client: TestClient, counted_states: _CountedStates
+    client: TestClient, counted_states: _CountedStates, gui: _GUI
 ) -> None:
+    gui.editors.add("alice")
     map_service.register_map("alice", MapConfig(name="b1", view=RadarView()))
     _poll(client, "alice")
     _poll(client, "alice", "?radar_filter=hostgroup&radar_filter_value=web")
@@ -803,13 +808,15 @@ def test_polls_that_fetch_spend_read_budget(
 
 
 def test_a_poll_with_unsaved_view_settings_leaves_the_registered_map_alone(
-    client: TestClient,
+    client: TestClient, gui: _GUI
 ) -> None:
+    gui.editors.add("alice")
     map_service.register_map("alice", MapConfig(name="b1", view=RadarView()))
-    client.get(
+    response = client.get(
         "/api/v1/maps/b1/states?radar_filter=hostgroup&radar_filter_value=web",
         headers=_session("alice"),
     )
+    assert response.status_code == HTTPStatus.OK
     registered = map_service.get_map("alice", "b1")
     assert registered is not None
     assert registered.view == RadarView()
@@ -1110,6 +1117,23 @@ def test_sse_releases_the_subscriber_and_stream_slot_when_the_daemon_stops(app: 
         manager.get_subscriber_count(states._map_key("alice", "b1")),  # noqa: SLF001
         _free_stream_slots("alice"),
     ) == (0, free_slots)
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        pytest.param("?radar_filter=hostgroup&radar_filter_value=web", id="radar"),
+        pytest.param("?ft_override=true&ft_root_folder=linux", id="folder tree"),
+    ],
+)
+def test_only_who_may_save_the_map_polls_unsaved_view_settings(
+    client: TestClient, gui: _GUI, query: str
+) -> None:
+    gui.editors.add("bob")
+    map_service.register_map("alice", MapConfig(name="b1", view=RadarView()))
+
+    assert _poll(client, "bob", query) == HTTPStatus.FORBIDDEN
+    assert _poll(client, "bob") == HTTPStatus.OK
 
 
 def test_a_see_all_user_shares_no_folder_tree_with_a_user_named_none() -> None:

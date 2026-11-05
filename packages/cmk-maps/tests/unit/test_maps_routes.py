@@ -545,3 +545,35 @@ def test_a_config_signed_before_the_registered_one_is_refused(
     assert _saved_events(sub) == []
     cached = map_service.get_map("admin", "streamed")
     assert cached is not None and cached.version == 2
+
+
+@pytest.mark.parametrize(
+    ("viewer", "status_code"),
+    [
+        pytest.param(Principal(name="viewer", see_all=True), HTTPStatus.FORBIDDEN, id="viewer"),
+        pytest.param(
+            Principal(name="viewer", may_edit_foreign=True, see_all=True),
+            HTTPStatus.OK,
+            id="may save it",
+        ),
+    ],
+)
+def test_only_who_may_save_the_map_registers_it_with_unsaved_view_settings(
+    router_client: RouterClientFactory,
+    site_secret_file: Path,
+    viewer: Principal,
+    status_code: HTTPStatus,
+) -> None:
+    site_secret_file.write_bytes(_SECRET.reveal())
+    client = _client(router_client, viewer, owner="admin")
+    signed = sign_config(
+        {"name": "streamed", "view": {"type": "radar"}}, _SECRET.hmac, owner="admin"
+    )
+
+    resp = client.post(
+        "/api/v1/maps/streamed/register",
+        params={"radar_filter": "hostgroup", "radar_filter_value": "web"},
+        json=signed,
+    )
+
+    assert resp.status_code == status_code

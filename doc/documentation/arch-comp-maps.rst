@@ -426,7 +426,10 @@ reaches the browser without delay.
        tells the open streams of the map which version is saved.
    * - GET
      - ``v1/maps/{name}/states``
-     - Full state of all objects of a registered map.
+     - Full state of all objects of a registered map. The settings preview
+       passes the unsaved view settings of a radar or folder-tree map as
+       parameters; they are taken only from a user who may save the map (a
+       built-in one with ``general.edit_map``), anyone else gets ``403``.
    * - GET
      - ``v1/maps/{name}/auto-objects``
      - Hosts with geo coordinates for world maps that place hosts

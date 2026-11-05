@@ -135,8 +135,11 @@ def _consolidate_escaping_options(row: Row | None, shall_escape: bool) -> bool:
     # ESCAPE_PLUGIN_OUTPUT (set by host / service ruleset) to override the global
     # setting.
     if row:
-        host_custom_variables: dict = row.get("host_custom_variables", {})
-        custom_variables = row.get("service_custom_variables", host_custom_variables)
+        host_custom_variables: dict = row.get("host_custom_variables") or {}
+        service_custom_variables: dict | None = row.get("service_custom_variables")
+        custom_variables = (
+            host_custom_variables if service_custom_variables is None else service_custom_variables
+        )
         if "ESCAPE_PLUGIN_OUTPUT" in custom_variables:
             escape_plugin_output: bool = custom_variables["ESCAPE_PLUGIN_OUTPUT"] == "1"
             return escape_plugin_output

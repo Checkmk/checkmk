@@ -107,7 +107,6 @@ class TestDetermineMustEscape:
         assert determine_must_escape(sites, {"site": "mysite"}) is False
 
 
-@pytest.mark.xfail(strict=True, reason="crash group 4972")
 @pytest.mark.usefixtures("request_context")
 def test_host_row_without_service_data_uses_host_escaping_option() -> None:
     row = {

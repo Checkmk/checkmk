@@ -71,6 +71,12 @@ def test_cfg_to_map_keeps_a_closing_brace_inside_a_value() -> None:
     assert host.get("host_name") == "h1"
 
 
+def test_cfg_to_map_reads_a_long_textbox_of_unclosed_tags_in_linear_time() -> None:
+    text = "<font size" * 50_000
+    [textbox] = cfg_to_map(f"define textbox {{\n    text = {text}\n}}\n", "test")["objects"]
+    assert textbox["label"]["text"] == text
+
+
 def test_cfg_to_map_drops_a_block_that_a_define_cuts_short() -> None:
     content = "define host {\n    host_name = h1\ndefine host {\n    host_name = h2\n}\n"
     assert [o.get("host_name") for o in cfg_to_map(content, "test")["objects"]] == ["h2"]

@@ -759,7 +759,8 @@ class _HtmlStyle(TypedDict, total=False):
 def _extract_html_style(html: str) -> _HtmlStyle:
     """Pull color/font-size/weight/text-align from inline HTML in a textbox."""
     out: _HtmlStyle = {}
-    m = re.search(r'<font[^>]*color=["\']([^"\']+)', html, re.IGNORECASE)
+    # "[^<>]" stops a tag at the next "<", which keeps the search linear in the text.
+    m = re.search(r'<font[^<>]*color=["\']([^"\']+)', html, re.IGNORECASE)
     if not m:
         # Lookbehind keeps `background-color:` from matching as a `color:` suffix.
         m = re.search(r'(?<![-\w])color\s*:\s*([^;"\']+)', html, re.IGNORECASE)
@@ -773,7 +774,7 @@ def _extract_html_style(html: str) -> _HtmlStyle:
                 out["size"] = int(float(v[:-2]))
         elif v in _FONT_SIZE_KEYWORD:
             out["size"] = _FONT_SIZE_KEYWORD[v]
-    elif m := re.search(r'<font[^>]*\bsize=["\']?([1-7])', html, re.IGNORECASE):
+    elif m := re.search(r'<font[^<>]*\bsize=["\']?([1-7])', html, re.IGNORECASE):
         out["size"] = _FONT_SIZE_HTML[m.group(1)]
     if re.search(r"<b\b", html, re.IGNORECASE) or re.search(
         r"font-weight\s*:\s*bold", html, re.IGNORECASE
@@ -790,7 +791,7 @@ def _handle_textbox(p: dict[str, str], raw_id: str) -> _ImportObject:
     if raw_text:
         html_style = _extract_html_style(raw_text)
         raw_text = re.sub(r"<br\s*/?>", "\n", raw_text, flags=re.IGNORECASE)
-        raw_text = re.sub(r"<[^>]+>", "", raw_text)
+        raw_text = re.sub(r"<[^<>]+>", "", raw_text)
         # NagVis label text treats &nbsp; as a plain space (not U+00A0).
         raw_text = html.unescape(raw_text).replace("\xa0", " ")
     width = (

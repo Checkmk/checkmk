@@ -249,3 +249,50 @@ def test_update_from_previous_2() -> None:
         }
     }
     assert current_tree.get_rows(()) == [{"c2": "C2: only prev", "c3": "C3: only cur", "kc": "KC"}]
+
+
+def test_update_from_previous_restores_nothing_of_a_row_present_again() -> None:
+    previous_tree = deserialize_tree(
+        {
+            "Attributes": {},
+            "Table": {
+                "KeyColumns": ["kc"],
+                "Rows": [{"kc": "KC", "c1": "C1: prev"}],
+                "Retentions": {("KC",): {"c1": (1, 2, 3)}},
+            },
+            "Nodes": {},
+        }
+    )
+    current_tree = MutableTree()
+    current_tree.add(
+        path=(), key_columns=[SDKey("kc")], rows=[{SDKey("kc"): "KC", SDKey("c1"): "C1: cur"}]
+    )
+    update_from_previous(
+        current_tree,
+        now=0,
+        previous_tree=previous_tree,
+        raw_intervals_from_config=[
+            RawIntervalFromConfig(interval=6, visible_raw_path="", columns="all")
+        ],
+        pairs_cache_info={},
+        columns_cache_info={(): (4, 5)},
+    )
+    assert current_tree.get_update_results() == {(): ["[Table] 'KC': Keep until: c1 (15), kc (15)"]}
+
+
+def test_update_results_of_a_child_node() -> None:
+    tree = MutableTree()
+    tree.add(path=(SDNodeName("node"),), pairs=[{SDKey("key"): "value"}])
+    update_from_previous(
+        tree,
+        now=0,
+        previous_tree=ImmutableTree(),
+        raw_intervals_from_config=[
+            RawIntervalFromConfig(interval=30, visible_raw_path="node", attributes="all")
+        ],
+        pairs_cache_info={(SDNodeName("node"),): (10, 20)},
+        columns_cache_info={},
+    )
+    assert tree.get_update_results() == {
+        (SDNodeName("node"),): ["[Attributes] Keep until: key (60)"]
+    }

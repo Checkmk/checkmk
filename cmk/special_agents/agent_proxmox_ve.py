@@ -431,6 +431,17 @@ def fetch_backup_data(
         )  #
 
 
+def _backup_timezone(
+    vmid: str, all_vms: Mapping[str, Mapping[str, Any]], node_timezones: Mapping[str, str]
+) -> str:
+    try:
+        # Happens when the VM has backup data but is not in all_vms
+        return node_timezones[all_vms[vmid]["node"]]
+    except KeyError:
+        # get the first value of the first key
+        return next(iter(node_timezones.values()))
+
+
 def agent_proxmox_ve_main(args: Args) -> int:
     """Fetches and writes selected information formatted as agent output to stdout"""
     with ProxmoxVeAPI(
@@ -527,12 +538,7 @@ def agent_proxmox_ve_main(args: Args) -> int:
 
     #  overwrite all the start time strings with timezone aware start strings
     for vmid in logged_backup_data:
-        try:
-            # Happens when the VM has backup data but is not in all_vms
-            tz = node_timezones[all_vms[vmid]["node"]]
-        except KeyError:
-            # get the first value of the first key
-            tz = next(iter(node_timezones.values()))
+        tz = _backup_timezone(vmid, all_vms, node_timezones)
         logged_backup_data[vmid]["started_time"] = date_to_utc(
             logged_backup_data[vmid]["started_time"], tz
         )

@@ -292,3 +292,12 @@ def test_load_cert_ignores_negative_serials(mocker: MockerFixture) -> None:
 
 def test_load_cert() -> None:
     assert config_domains.ConfigDomainCACertificates()._load_cert(remote2) is not None
+
+
+@pytest.mark.xfail(
+    strict=True, raises=config_domains._NegativeSerialException, reason="crash group 4374"
+)
+def test_log_changes_skips_cas_with_negative_serials() -> None:
+    ConfigDomainCACertificates.log_changes(
+        None, {"use_system_wide_cas": False, "trusted_cas": [negative_serial]}
+    )

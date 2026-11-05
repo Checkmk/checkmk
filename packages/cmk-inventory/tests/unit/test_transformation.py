@@ -31,7 +31,7 @@ def test_transformation_nothing_to_do(tmp_path: Path) -> None:
     )
 
 
-def test_transform_inventory_tree(tmp_path: Path) -> None:
+def test_transform_replaces_the_legacy_inventory_trees(tmp_path: Path) -> None:
     tree = raw_tree("val")
     gzipped = gzipped_repr(tree)
     cmk.ccc.store.save_object_to_file(tmp_path / "var/check_mk/inventory/hostname", tree)
@@ -45,13 +45,15 @@ def test_transform_inventory_tree(tmp_path: Path) -> None:
         all_host_names=["hostname"],
     )
 
-    assert not (tmp_path / "var/check_mk/inventory/hostname").exists()
-    assert not (tmp_path / "var/check_mk/inventory/hostname.gz").exists()
-    assert (tmp_path / "var/check_mk/inventory/hostname.json").exists()
-    assert (tmp_path / "var/check_mk/inventory/hostname.json.gz").exists()
+    assert (
+        (tmp_path / "var/check_mk/inventory/hostname").exists(),
+        (tmp_path / "var/check_mk/inventory/hostname.gz").exists(),
+        (tmp_path / "var/check_mk/inventory/hostname.json").exists(),
+        (tmp_path / "var/check_mk/inventory/hostname.json.gz").exists(),
+    ) == (False, False, True, True)
 
 
-def test_transform_status_data_tree(tmp_path: Path) -> None:
+def test_transform_replaces_the_legacy_status_data_tree(tmp_path: Path) -> None:
     tree = raw_tree("val")
     cmk.ccc.store.save_object_to_file(tmp_path / "tmp/check_mk/status_data/hostname", tree)
 
@@ -63,11 +65,13 @@ def test_transform_status_data_tree(tmp_path: Path) -> None:
         all_host_names=["hostname"],
     )
 
-    assert not (tmp_path / "tmp/check_mk/status_data/hostname").exists()
-    assert (tmp_path / "tmp/check_mk/status_data/hostname.json").exists()
+    assert (
+        (tmp_path / "tmp/check_mk/status_data/hostname").exists(),
+        (tmp_path / "tmp/check_mk/status_data/hostname.json").exists(),
+    ) == (False, True)
 
 
-def test_transform_archive_tree(tmp_path: Path) -> None:
+def test_transform_replaces_the_legacy_archive_tree(tmp_path: Path) -> None:
     tree = raw_tree("val")
     cmk.ccc.store.save_object_to_file(
         tmp_path / "var/check_mk/inventory_archive/hostname/123", tree
@@ -81,11 +85,13 @@ def test_transform_archive_tree(tmp_path: Path) -> None:
         all_host_names=["hostname"],
     )
 
-    assert not (tmp_path / "var/check_mk/inventory_archive/hostname/123").exists()
-    assert (tmp_path / "var/check_mk/inventory_archive/hostname/123.json").exists()
+    assert (
+        (tmp_path / "var/check_mk/inventory_archive/hostname/123").exists(),
+        (tmp_path / "var/check_mk/inventory_archive/hostname/123.json").exists(),
+    ) == (False, True)
 
 
-def test_transform_delta_cache_tree(tmp_path: Path) -> None:
+def test_transform_replaces_the_legacy_delta_cache_tree(tmp_path: Path) -> None:
     tree = raw_tree("val")
     cmk.ccc.store.save_object_to_file(
         tmp_path / "var/check_mk/inventory_delta_cache/hostname/123_456", tree
@@ -99,8 +105,10 @@ def test_transform_delta_cache_tree(tmp_path: Path) -> None:
         all_host_names=["hostname"],
     )
 
-    assert not (tmp_path / "var/check_mk/inventory_delta_cache/hostname/123_456").exists()
-    assert (tmp_path / "var/check_mk/inventory_delta_cache/hostname/123_456.json").exists()
+    assert (
+        (tmp_path / "var/check_mk/inventory_delta_cache/hostname/123_456").exists(),
+        (tmp_path / "var/check_mk/inventory_delta_cache/hostname/123_456.json").exists(),
+    ) == (False, True)
 
 
 def test_transformation_results_store_is_empty_without_a_file(tmp_path: Path) -> None:

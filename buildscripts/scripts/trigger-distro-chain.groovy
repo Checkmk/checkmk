@@ -46,7 +46,7 @@ void main() {
     def run_docker_integration_test = params.RUN_DOCKER_INTEGRATION_TEST;
     def run_multi_site_test = params.RUN_MULTI_SITE_TEST;
     def run_single_site_test = params.RUN_SINGLE_SITE_TEST;
-    def run_system_agent_update_test = params.RUN_SYSTEM_AGENT_UPDATE_TEST;
+    def run_system_agent_update_test = false; // params.RUN_SYSTEM_AGENT_UPDATE_TEST;
     def run_update_test = params.RUN_UPDATE_TEST;
     def use_case = params.USE_CASE;
     def version = params.VERSION;

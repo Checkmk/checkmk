@@ -496,13 +496,15 @@ class ModeAuditLog(WatoMode[AuditLogRequestData]):
                     )
                 if self._show_object:
                     table.cell(
-                        _("Object"), render_object_ref(entry.object_ref) or "", css=["narrow"]
+                        _("Object"),
+                        render_object_ref(entry.object_ref) or "",
+                        css=["narrow object"],
                     )
 
                 text = HTML.without_escaping(
                     escaping.escape_text(entry.text).replace("\n", "<br>\n")
                 )
-                table.cell(_("Summary"), text)
+                table.cell(_("Summary"), text, css=["summary"])
 
                 if self._show_details:
                     diff_text = HTML.without_escaping(

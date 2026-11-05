@@ -69048,8 +69048,10 @@ msgstr "サービス名に示されているクラスターリソースの名前
 msgid "The name of the data proxy"
 msgstr "Data Proxyの名前"
 
-msgid "The name of the data store"
-msgstr "データストアの名前"
+msgid ""
+"The name of the data store. If several data stores share a name, it is "
+"followed by the volume ID of the data store."
+msgstr ""
 
 msgid "The name of the database on the DBMS"
 msgstr "DBMS上のデータベースの名前"
@@ -97141,6 +97143,9 @@ msgid ""
 msgstr ""
 "後で アクセスする場合はヘルプ ＞ Checkmkの学習 ＞ ウェルカムページ からアクセ"
 "スできます"
+
+#~ msgid "The name of the data store"
+#~ msgstr "データストアの名前"
 
 #~ msgid "Issued"
 #~ msgstr "発行"

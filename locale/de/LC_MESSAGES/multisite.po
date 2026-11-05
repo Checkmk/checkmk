@@ -70370,8 +70370,10 @@ msgstr ""
 msgid "The name of the data proxy"
 msgstr "Der Name des Datenproxies"
 
-msgid "The name of the data store"
-msgstr "Der Name des Datenspeichers"
+msgid ""
+"The name of the data store. If several data stores share a name, it is "
+"followed by the volume ID of the data store."
+msgstr ""
 
 msgid "The name of the database on the DBMS"
 msgstr "Der Name der Datenbank innerhalb des DMBS"
@@ -98647,6 +98649,9 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#~ msgid "The name of the data store"
+#~ msgstr "Der Name des Datenspeichers"
 
 #, fuzzy
 #~ msgid "Issued"

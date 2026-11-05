@@ -73049,9 +73049,10 @@ msgstr ""
 msgid "The name of the data proxy"
 msgstr "Numele proxy-ului de date"
 
-#, fuzzy
-msgid "The name of the data store"
-msgstr "Numele depozitului de date"
+msgid ""
+"The name of the data store. If several data stores share a name, it is "
+"followed by the volume ID of the data store."
+msgstr ""
 
 msgid "The name of the database on the DBMS"
 msgstr "Numele bazei de date din SGBD"
@@ -102484,6 +102485,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "The name of the data store"
+#~ msgstr "Numele depozitului de date"
 
 #, fuzzy
 #~ msgid "Issued"

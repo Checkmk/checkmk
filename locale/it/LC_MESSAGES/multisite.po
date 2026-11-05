@@ -72560,9 +72560,10 @@ msgstr ""
 msgid "The name of the data proxy"
 msgstr "Il nome del Data Proxy"
 
-#, fuzzy
-msgid "The name of the data store"
-msgstr "Il nome del Datastore"
+msgid ""
+"The name of the data store. If several data stores share a name, it is "
+"followed by the volume ID of the data store."
+msgstr ""
 
 msgid "The name of the database on the DBMS"
 msgstr "Il nome del database sul DBMS"
@@ -101749,6 +101750,10 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "The name of the data store"
+#~ msgstr "Il nome del Datastore"
 
 #, fuzzy
 #~ msgid "Issued"

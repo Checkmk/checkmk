@@ -127,10 +127,60 @@ _SAFE_DATA_URI_PREFIXES = (
 # in and run external SVG.
 _SVG_LOCAL_HREF_ONLY_TAGS = frozenset({"use", "image", "feimage"})
 
-# A <style> block can pull external CSS via @import or url(...), leaking the
-# viewer's IP and enabling CSS-based exfiltration. Reject remote references while
-# still allowing local url(#gradient) / url(data:...) paints.
-_CSS_EXTERNAL_REF = re.compile(r"@import|url\(\s*['\"]?\s*(?:https?:|//|file:)", re.IGNORECASE)
+# CSS (a <style> block, a style attribute, a paint attribute like fill) can load
+# a resource via @import, url(...) or an image function; an image loads nothing
+# external. Read as the browser does, escapes and comments resolved, only local
+# url(#gradient) and embedded raster paints pass.
+_CSS_ESCAPE = re.compile(r"\\(?:([0-9a-fA-F]{1,6})\s?|(.))", re.DOTALL)
+# A function is its name right before the parenthesis, so free text like
+# "image (2)" in an attribute is none.
+_CSS_LOADER = re.compile(r"@import|\b(?:image-set|image|cross-fade|element)\(", re.IGNORECASE)
+# Each part stops at its delimiter, so the search stays linear in the text.
+_CSS_URL = re.compile(r"""url\(\s*(?:"([^"]*)"|'([^']*)'|([^()"'\s]*))\s*\)""", re.IGNORECASE)
+
+
+def _css_char(match: re.Match[str]) -> str:
+    if (code := match.group(1)) is None:
+        return match.group(2)
+    return chr(int(code, 16)) if 0 < int(code, 16) <= 0x10FFFF else "\ufffd"
+
+
+def _css_plain(css: str) -> str:
+    """The CSS with escapes decoded and comments dropped, in one pass from the left
+    as a browser reads it: an escape never opens a comment, a string never holds one."""
+    out: list[str] = []
+    quote: str | None = None
+    i = 0
+    while i < len(css):
+        char = css[i]
+        if char == "\\" and (escape := _CSS_ESCAPE.match(css, i)):
+            out.append(_css_char(escape))
+            i = escape.end()
+            continue
+        if quote:
+            if char in (quote, "\n"):
+                quote = None
+        elif char in "\"'":
+            quote = char
+        elif css.startswith("/*", i):
+            end = css.find("*/", i + 2)
+            i = len(css) if end < 0 else end + 2
+            out.append(" ")
+            continue
+        out.append(char)
+        i += 1
+    return "".join(out)
+
+
+def _css_is_local(css: str) -> bool:
+    plain = _css_plain(css)
+    if _CSS_LOADER.search(plain):
+        return False
+    urls = [next(part for part in m.groups() if part is not None) for m in _CSS_URL.finditer(plain)]
+    if len(urls) != plain.lower().count("url("):
+        return False
+    return all(_href_is_safe(url, local_only=True) for url in urls)
+
 
 # ElementTree silently drops XML processing instructions, so the element walk
 # below never sees a leading ``<?xml-stylesheet ...?>`` PI — yet the original
@@ -196,16 +246,14 @@ def is_safe_svg(content: bytes) -> bool:
         # ``itertext()``, not ``.text``: a child inside <style> pushes the rest
         # into its ``tail``, so ``<style><x/>@import url(…)</style>`` would slip
         # past while the browser still applies the rule.
-        if local_tag == "style" and _CSS_EXTERNAL_REF.search("".join(elem.itertext())):
+        if local_tag == "style" and not _css_is_local("".join(elem.itertext())):
             return False
         local_only = local_tag in _SVG_LOCAL_HREF_ONLY_TAGS
         for attr_name, attr_val in elem.attrib.items():
             local_attr = attr_name.rsplit("}", 1)[-1].lower()
             if local_attr.startswith(_SVG_FORBIDDEN_ATTR_PREFIXES):
                 return False
-            # A `style` attribute carries CSS just like a <style> block, so it can
-            # pull an external paint server / @import the same way — check it too.
-            if local_attr == "style" and _CSS_EXTERNAL_REF.search(attr_val):
+            if not _css_is_local(attr_val):
                 return False
             if local_attr == "href" and not _href_is_safe(attr_val, local_only=local_only):
                 return False

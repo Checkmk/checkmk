@@ -145,12 +145,55 @@ def test_is_safe_svg_accepts_plain_svg() -> None:
             b"<style><x><y/></x>rect{fill:url(https://evil.example/x.png)}</style></svg>",
             id="css-remote-url-in-nested-tail",
         ),
+        pytest.param(
+            b'<svg xmlns="http://www.w3.org/2000/svg">'
+            b"<style>@\\69mport 'https://evil.example/x.css';</style></svg>",
+            id="css-escaped-import",
+        ),
+        pytest.param(
+            b'<svg xmlns="http://www.w3.org/2000/svg">'
+            b"<style>rect{fill:u\\72l(https://evil.example/x.png)}</style></svg>",
+            id="css-escaped-url",
+        ),
+        pytest.param(
+            b'<svg xmlns="http://www.w3.org/2000/svg">'
+            b"<style>a{content:'/*'} rect{fill:url(https://evil.example/x.png)} b{content:'*/'}"
+            b"</style></svg>",
+            id="css-comment-opener-in-string",
+        ),
+        pytest.param(
+            b'<svg xmlns="http://www.w3.org/2000/svg">'
+            b"<style>\\/\\* {} rect{fill:url(https://evil.example/x.png)} \\*\\/ {}</style></svg>",
+            id="css-escaped-comment-opener",
+        ),
+        pytest.param(
+            b'<svg xmlns="http://www.w3.org/2000/svg">'
+            b"<style>rect{background:image-set('https://evil.example/x.png' 1x)}</style></svg>",
+            id="css-image-set",
+        ),
+        pytest.param(
+            b'<svg xmlns="http://www.w3.org/2000/svg">'
+            b'<rect fill="url(https://evil.example/x.svg#p)"/></svg>',
+            id="remote-paint-attribute",
+        ),
+        pytest.param(
+            b'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">'
+            b'<use xlink:href="https://evil.example/x.svg#i"/></svg>',
+            id="remote-namespaced-use",
+        ),
         pytest.param(b"<html><body/></html>", id="non-svg-root"),
         pytest.param(b"<svg><rect></svg", id="malformed-xml"),
     ],
 )
 def test_is_safe_svg_rejects_xss_vectors(content: bytes) -> None:
     assert not is_safe_svg(content)
+
+
+def test_is_safe_svg_checks_a_long_run_of_unclosed_urls_in_linear_time() -> None:
+    style = b"url(" * 50_000
+    assert not is_safe_svg(
+        b'<svg xmlns="http://www.w3.org/2000/svg"><style>' + style + b"</style></svg>"
+    )
 
 
 @pytest.mark.parametrize(
@@ -168,6 +211,20 @@ def test_is_safe_svg_rejects_xss_vectors(content: bytes) -> None:
         pytest.param(
             b'<svg xmlns="http://www.w3.org/2000/svg"><style>rect{fill:url(#grad)}</style></svg>',
             id="css-local-url",
+        ),
+        pytest.param(
+            b'<svg xmlns="http://www.w3.org/2000/svg"><rect fill="url(#grad)"/></svg>',
+            id="local-paint-attribute",
+        ),
+        pytest.param(
+            b'<svg xmlns="http://www.w3.org/2000/svg"'
+            b' xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"'
+            b' sodipodi:docname="image (2).svg"/>',
+            id="editor-file-name-like-a-css-function",
+        ),
+        pytest.param(
+            b'<svg xmlns="http://www.w3.org/2000/svg"><g aria-label="element (1)"/></svg>',
+            id="label-like-a-css-function",
         ),
     ],
 )

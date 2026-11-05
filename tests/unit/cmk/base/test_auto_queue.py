@@ -14,42 +14,44 @@ from cmk.utils.hostaddress import HostName
 
 
 @pytest.fixture(name="auto_queue")
-def auto_queue_fixture(tmpdir: Path) -> Iterator[AutoQueue]:
-    adq = AutoQueue(tmpdir)
+def auto_queue_fixture(tmp_path: Path) -> Iterator[AutoQueue]:
+    adq = AutoQueue(tmp_path)
     (adq.path / HostName("most")).touch()
     (adq.path / HostName("lost")).touch()
     yield adq
 
 
 class TestAutoQueue:
-    def test_len(self, tmpdir: Path, auto_queue: AutoQueue) -> None:
-        assert len(AutoQueue(tmpdir / "dir2")) == 0
+    def test_len(self, tmp_path: Path, auto_queue: AutoQueue) -> None:
+        assert len(AutoQueue(tmp_path / "dir2")) == 0
         assert len(auto_queue) == 2
 
-    def test_bool(self, tmpdir: Path, auto_queue: AutoQueue) -> None:
-        assert not AutoQueue(tmpdir / "dir2")
+    def test_bool(self, tmp_path: Path, auto_queue: AutoQueue) -> None:
+        assert not AutoQueue(tmp_path / "dir2")
         assert auto_queue
 
-    def test_oldest_empty(self, tmpdir: Path) -> None:
-        assert AutoQueue(tmpdir).oldest() is None
+    def test_oldest_empty(self, tmp_path: Path) -> None:
+        assert AutoQueue(tmp_path).oldest() is None
 
     def test_oldest_populated(self, auto_queue: AutoQueue) -> None:
         assert isinstance(auto_queue.oldest(), float)
 
-    def test_queued_empty(self, tmpdir: Path, auto_queue: AutoQueue) -> None:
-        auto_queue = AutoQueue(tmpdir / "dir2")
+    def test_queued_empty(self, tmp_path: Path, auto_queue: AutoQueue) -> None:
+        auto_queue = AutoQueue(tmp_path / "dir2")
         assert not auto_queue
 
     def test_queued_populated(self, auto_queue: AutoQueue) -> None:
         assert set(auto_queue) == {HostName("most"), HostName("lost")}
 
-    def test_add(self, tmpdir: Path, auto_queue: AutoQueue) -> None:
-        auto_queue = AutoQueue(tmpdir / "dir2")
+    def test_add(self, tmp_path: Path, auto_queue: AutoQueue) -> None:
+        auto_queue = AutoQueue(tmp_path / "dir2")
         auto_queue.add(HostName("most"))
         assert list(auto_queue) == [HostName("most")]
 
-    def test_add_existing(self, tmpdir: Path, auto_queue: AutoQueue, mocker: MockerFixture) -> None:
-        auto_queue = AutoQueue(tmpdir / "dir2")
+    def test_add_existing(
+        self, tmp_path: Path, auto_queue: AutoQueue, mocker: MockerFixture
+    ) -> None:
+        auto_queue = AutoQueue(tmp_path / "dir2")
         auto_queue.add(HostName("most"))
 
         mock_touch = mocker.patch.object(Path, "touch")

@@ -44,15 +44,15 @@ class TestStoredWalkSNMPBackend:
     def test_compare_oids(self, a: str, b: str, result: int) -> None:
         assert StoredWalkSNMPBackend._compare_oids(a, b) == result
 
-    def test_read_walk_data(self, tmpdir: Path) -> None:
+    def test_read_walk_data(self, tmp_path: Path) -> None:
         assert StoredWalkSNMPBackend.read_walk_from_path(
-            tmpdir / "walkdata" / "1.txt", logging.getLogger("test")
+            tmp_path / "walkdata" / "1.txt", logging.getLogger("test")
         ) == [
             ".1.2.3 foo\n",
             ".1.2.4 bar\nfoobar\n",
         ]
         assert StoredWalkSNMPBackend.read_walk_from_path(
-            tmpdir / "walkdata" / "2.txt", logging.getLogger("test")
+            tmp_path / "walkdata" / "2.txt", logging.getLogger("test")
         ) == [
             ".1.2.3 foo\n\n\n",
             ".1.2.5 test\n",
@@ -60,9 +60,9 @@ class TestStoredWalkSNMPBackend:
 
 
 @pytest.fixture
-def create_files(tmpdir):
-    tmpdir.mkdir("walkdata")
-    p1 = (tmpdir / "walkdata").join("1.txt")
-    p1.write(".1.2.3 foo\n.1.2.4 bar\nfoobar\n")
-    p2 = (tmpdir / "walkdata").join("2.txt")
-    p2.write(".1.2.3 foo\n\n\n.1.2.5 test\n")
+def create_files(tmp_path: Path) -> None:
+    (tmp_path / "walkdata").mkdir()
+    p1 = tmp_path / "walkdata" / "1.txt"
+    p1.write_text(".1.2.3 foo\n.1.2.4 bar\nfoobar\n")
+    p2 = tmp_path / "walkdata" / "2.txt"
+    p2.write_text(".1.2.3 foo\n\n\n.1.2.5 test\n")

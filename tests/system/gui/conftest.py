@@ -140,7 +140,7 @@ def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
     """
 
     def function_key(item: pytest.Item) -> tuple[str, str]:
-        return str(item.fspath), getattr(item, "originalname", item.name.split("[")[0])
+        return str(item.path), getattr(item, "originalname", item.name.split("[")[0])
 
     first_position: dict[tuple[str, str], int] = {}
     for position, item in enumerate(items):

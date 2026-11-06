@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-import os
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -183,27 +182,6 @@ def test_load_previous_inventory_tree(tmp_path: Path) -> None:
     ) == (deserialize_tree(tree), True, False)
 
 
-def test_archive_inventory_tree(tmp_path: Path) -> None:
-    host_name = HostName("hostname")
-    tree = raw_tree("val")
-    gzipped = gzipped_repr(tree)
-    cmk.ccc.store.save_object_to_file(tmp_path / "var/check_mk/inventory/hostname", tree)
-    cmk.ccc.store.save_bytes_to_file(tmp_path / "var/check_mk/inventory/hostname.gz", gzipped)
-
-    inv_store = InventoryStore(tmp_path)
-    inv_store.archive_inventory_tree(host_name=host_name)
-    assert (
-        (tmp_path / "var/check_mk/inventory/hostname").exists(),
-        (tmp_path / "var/check_mk/inventory/hostname.gz").exists(),
-        (tmp_path / "var/check_mk/inventory/hostname.json").exists(),
-        (tmp_path / "var/check_mk/inventory/hostname.json.gz").exists(),
-        {
-            tuple(p.suffixes)
-            for p in (tmp_path / "var/check_mk/inventory_archive/hostname").iterdir()
-        },
-    ) == (False, False, False, False, {(".json",)})
-
-
 @pytest.mark.parametrize(
     "do_archive",
     [
@@ -293,24 +271,6 @@ def test_save_and_load_real_tree(tree_name: HostName, tmp_path: Path) -> None:
         meta=make_meta(do_archive=False),
     )
     assert inv_store.load_inventory_tree(host_name=HostName("foo")) == orig_tree
-
-
-def test_archive_inventory_tree_without_a_tree_archives_nothing(tmp_path: Path) -> None:
-    InventoryStore(tmp_path).archive_inventory_tree(host_name=HostName("hostname"))
-
-    assert not (tmp_path / "var/check_mk/inventory_archive/hostname").exists()
-
-
-def test_archive_inventory_tree_moves_the_tree_dated_by_its_mtime(tmp_path: Path) -> None:
-    tree_file_path = tmp_path / "var/check_mk/inventory/hostname.json"
-    cmk.ccc.store.save_text_to_file(tree_file_path, json.dumps(raw_tree("val")))
-    os.utime(tree_file_path, (123, 123))
-
-    InventoryStore(tmp_path).archive_inventory_tree(host_name=HostName("hostname"))
-
-    assert list((tmp_path / "var/check_mk/inventory_archive/hostname").iterdir()) == [
-        tmp_path / "var/check_mk/inventory_archive/hostname/123.json"
-    ]
 
 
 def test_load_previous_inventory_tree_prefers_the_current_tree(tmp_path: Path) -> None:

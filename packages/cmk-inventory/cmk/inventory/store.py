@@ -147,9 +147,6 @@ class InventoryStore:
             TreePath.from_archive_or_delta_cache_file_path(latest_archive_file_path)
         )
 
-    def archive_inventory_tree(self, *, host_name: HostName) -> None:
-        archive_inventory_tree(self.inv_paths, host_name, debug=False)
-
     def save_if_changed(
         self,
         *,
@@ -161,7 +158,7 @@ class InventoryStore:
         messages = list(actions.messages)
         if actions.do_archive:
             messages.append("Archive current inventory tree.")
-            self.archive_inventory_tree(host_name=host_name)
+            archive_inventory_tree(self.inv_paths, host_name, debug=False)
         if actions.do_save:
             messages.append("Save new inventory tree.")
             self.save_inventory_tree(

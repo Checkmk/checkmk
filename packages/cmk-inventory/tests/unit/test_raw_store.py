@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+import os
 from collections.abc import Sequence
 from pathlib import Path
 
@@ -153,6 +154,44 @@ def test_rename_without_history_reports_only_the_renamed_trees(tmp_path: Path) -
 
 def test_raw_store_archives_the_tree_dated_by_its_remote_timestamp(tmp_path: Path) -> None:
     _save_meta_and_raw_inventory_tree(tmp_path, 123)
+
+    RawInventoryStore(tmp_path).archive_inventory_tree(host_name=HostName("hostname"), debug=False)
+
+    assert list((tmp_path / "var/check_mk/inventory_archive/hostname").iterdir()) == [
+        tmp_path / "var/check_mk/inventory_archive/hostname/123.json"
+    ]
+
+
+def test_archive_inventory_tree(tmp_path: Path) -> None:
+    host_name = HostName("hostname")
+    tree = raw_tree("val")
+    gzipped = gzipped_repr(tree)
+    cmk.ccc.store.save_object_to_file(tmp_path / "var/check_mk/inventory/hostname", tree)
+    cmk.ccc.store.save_bytes_to_file(tmp_path / "var/check_mk/inventory/hostname.gz", gzipped)
+
+    RawInventoryStore(tmp_path).archive_inventory_tree(host_name=host_name, debug=False)
+    assert (
+        (tmp_path / "var/check_mk/inventory/hostname").exists(),
+        (tmp_path / "var/check_mk/inventory/hostname.gz").exists(),
+        (tmp_path / "var/check_mk/inventory/hostname.json").exists(),
+        (tmp_path / "var/check_mk/inventory/hostname.json.gz").exists(),
+        {
+            tuple(p.suffixes)
+            for p in (tmp_path / "var/check_mk/inventory_archive/hostname").iterdir()
+        },
+    ) == (False, False, False, False, {(".json",)})
+
+
+def test_archive_inventory_tree_without_a_tree_archives_nothing(tmp_path: Path) -> None:
+    RawInventoryStore(tmp_path).archive_inventory_tree(host_name=HostName("hostname"), debug=False)
+
+    assert not (tmp_path / "var/check_mk/inventory_archive/hostname").exists()
+
+
+def test_archive_inventory_tree_moves_the_tree_dated_by_its_mtime(tmp_path: Path) -> None:
+    tree_file_path = tmp_path / "var/check_mk/inventory/hostname.json"
+    cmk.ccc.store.save_text_to_file(tree_file_path, json.dumps(raw_tree("val")))
+    os.utime(tree_file_path, (123, 123))
 
     RawInventoryStore(tmp_path).archive_inventory_tree(host_name=HostName("hostname"), debug=False)
 

@@ -26,6 +26,7 @@ import { FormEdit, type ValidationMessages } from '@/form'
 
 import CustomServiceSelect from '@/mode-alerts/CustomServiceSelect.vue'
 import { formSpecErrors } from '@/mode-alerts/conditions-validation'
+import { type ServiceUnit, fetchServiceUnits } from '@/mode-alerts/preview-client'
 import {
   MAX_MATCHES,
   type ServiceMatches,
@@ -88,6 +89,11 @@ const selectedServiceName = computed({
 const matches = ref<ServiceMatches | null>(null)
 const searching = ref(false)
 const searchError = ref<string | null>(null)
+const unitsError = ref<string | null>(null)
+// The unit of each service the latest search matched, `null` until they are fetched or when
+// fetching them failed.
+const serviceUnits = ref<ServiceUnit[] | null>(null)
+let unitsRequest: Promise<ServiceUnit[] | null> | null = null
 const displayErrors = ref(false)
 const conditionsValidation = ref<ValidationMessages>([])
 const showAllMatches = ref(false)
@@ -135,6 +141,9 @@ async function search(): Promise<void> {
     }
     matches.value = result
     showAllMatches.value = false
+    if (result.services.length > 0) {
+      void loadUnits(token)
+    }
   } catch (error) {
     if (token !== searchToken) {
       return
@@ -171,6 +180,9 @@ watch(
     matches.value = null
     searching.value = false
     searchError.value = null
+    unitsError.value = null
+    serviceUnits.value = null
+    unitsRequest = null
     cancelPendingSearch()
     debounceTimer = setTimeout(() => void search(), SEARCH_DEBOUNCE_MS)
   }
@@ -196,7 +208,63 @@ async function validate(): Promise<boolean> {
   if (matches.value === null) {
     await search()
   }
-  return searchError.value === null && (matches.value?.services.length ?? 0) > 0
+  if (searchError.value !== null || (matches.value?.services.length ?? 0) === 0) {
+    return false
+  }
+  return await haveOneUnit()
+}
+
+function loadUnits(token: number): Promise<ServiceUnit[] | null> {
+  const request = fetchServiceUnits(model.value.matchType, servicePattern(model.value)).catch(
+    // The threshold step shows the same fetch error with its graph, so it need not block here.
+    () => null
+  )
+  unitsRequest = request
+  void request.then((units) => {
+    if (token === searchToken) {
+      serviceUnits.value = units
+    }
+  })
+  return request
+}
+
+function unitLabel(unit: string): string {
+  return unit === '' ? _t('no unit') : unit
+}
+
+function unitOf(serviceName: string): string | null {
+  const units = (serviceUnits.value ?? [])
+    .filter((entry) => entry.service_name === serviceName)
+    .map((entry) => unitLabel(entry.unit))
+  return units.length === 0 ? null : units.join(', ')
+}
+
+// The preview applies no conditions, so it can report services the list leaves out. A truncated
+// list does not show every match, so then all units count.
+function listedUnits(units: ServiceUnit[]): ServiceUnit[] {
+  if (matches.value === null || matches.value.truncated) {
+    return units
+  }
+  const listed = new Set(matches.value.services.map((service) => service.serviceName))
+  return units.filter((entry) => listed.has(entry.service_name))
+}
+
+async function haveOneUnit(): Promise<boolean> {
+  const token = searchToken
+  unitsError.value = null
+  const units = await (unitsRequest ?? loadUnits(token))
+  if (token !== searchToken) {
+    return false
+  }
+  const distinct = [...new Set(listedUnits(units ?? []).map((entry) => entry.unit))].sort()
+  if (distinct.length <= 1) {
+    return true
+  }
+  unitsError.value = _t(
+    'The selected services have different units: %{units}. You must select services with the same units to set levels on them.',
+    { units: distinct.map(unitLabel).join(', ') }
+  )
+  return false
 }
 </script>
 
@@ -304,12 +372,20 @@ async function validate(): Promise<boolean> {
                 v-for="service in visibleMatches"
                 :key="`${service.hostName}:${service.serviceName}`"
               >
-                <span>{{ service.serviceName }}</span>
+                <span class="mode-alerts-services-step__name">{{ service.serviceName }}</span>
+                <span
+                  v-if="unitOf(service.serviceName) !== null"
+                  class="mode-alerts-services-step__unit"
+                >
+                  {{ unitOf(service.serviceName) }}
+                </span>
                 <span class="mode-alerts-services-step__host">{{ service.hostName }}</span>
               </li>
             </ul>
           </CmkScrollContainer>
         </div>
+
+        <CmkAlert v-if="unitsError" variant="error" :text="untranslated(unitsError)" />
       </div>
     </template>
 
@@ -374,7 +450,13 @@ async function validate(): Promise<boolean> {
   padding: var(--dimension-2) 0;
 }
 
+.mode-alerts-services-step__name {
+  flex: 1;
+}
+
+.mode-alerts-services-step__unit,
 .mode-alerts-services-step__host {
   color: var(--font-color-dimmed);
+  white-space: nowrap;
 }
 </style>

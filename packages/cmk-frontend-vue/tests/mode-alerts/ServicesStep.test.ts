@@ -9,7 +9,7 @@ import {
   type WizardContext,
   wizardContextProvider
 } from 'cmk-ui-library/components/CmkWizard/utils.ts'
-import { useMswServer } from 'cmk-ui-library/vitest.msw'
+import { untypedHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
 // eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
 import { HttpResponse, http } from 'msw'
 import { afterEach, expect, test, vi } from 'vitest'
@@ -21,6 +21,7 @@ import { type AlertModel, emptyAlert } from '@/mode-alerts/types'
 import { CONDITIONS_SPEC, FOLDER_PATHS, MAIN_FOLDER } from './conditions-spec'
 
 const ENDPOINT = `${location.protocol}//${location.host}/api/internal/domain-types/service/collections/all`
+const PREVIEW_ENDPOINT = `${location.protocol}//${location.host}/api/internal/domain-types/telemetry_alert/actions/preview_data/invoke`
 
 // The services the endpoint reports for any search, so a test only has to say whether
 // something matched.
@@ -36,6 +37,21 @@ function collection(services: Array<[string, string]>) {
   }
 }
 
+// The service names and units the preview draws for any service name.
+let units: Array<[string, string]> = []
+
+function preview(units: Array<[string, string]>) {
+  return {
+    time_range: { start: 0, end: 3600, step: 60 },
+    metrics: [],
+    horizontal_lines: [],
+    service_units: units.map(([serviceName, unit]) => ({ service_name: serviceName, unit })),
+    notice: null,
+    warnings: [],
+    errors: []
+  }
+}
+
 // The query of the latest search, to tell which conditions it applied.
 let lastQuery: unknown = null
 
@@ -43,12 +59,14 @@ const server = useMswServer(
   http.post(ENDPOINT, async ({ request }) => {
     lastQuery = await request.json()
     return HttpResponse.json(collection(matching))
-  })
+  }),
+  untypedHttp.post(PREVIEW_ENDPOINT, () => HttpResponse.json(preview(units)))
 )
 
 afterEach(() => {
   cleanup()
   matching = []
+  units = []
   lastQuery = null
 })
 
@@ -262,6 +280,118 @@ test('at least one matching service continues to the next step', async () => {
   const { navigation } = renderStep({
     servicePattern: 'HTTP request duration'
   })
+
+  await userEvent.click(screen.getByRole('button', { name: /next step/i }))
+
+  await waitFor(() => {
+    expect(navigation.next).toHaveBeenCalled()
+  })
+})
+
+test('services in different units block navigation and name the units', async () => {
+  matching = [
+    ['web01', 'HTTP request duration'],
+    ['web01', 'HTTP queue length']
+  ]
+  units = [
+    ['HTTP request duration', 'ms'],
+    ['HTTP queue length', '']
+  ]
+  const { navigation } = renderStep({ matchType: 'regex', servicePattern: 'HTTP' })
+
+  await userEvent.click(screen.getByRole('button', { name: /next step/i }))
+
+  await waitFor(() => {
+    expect(screen.getByText(/different units: no unit, ms/)).toBeInTheDocument()
+  })
+  expect(navigation.next).not.toHaveBeenCalled()
+})
+
+test('each matching service shows its unit, so the user can tell the services apart', async () => {
+  matching = [
+    ['web01', 'HTTP request duration'],
+    ['web01', 'HTTP queue length']
+  ]
+  units = [
+    ['HTTP request duration', 'ms'],
+    ['HTTP queue length', '']
+  ]
+  renderStep()
+
+  await typeServiceName('HTTP')
+
+  expect(await screen.findByText('ms')).toBeInTheDocument()
+  expect(screen.getByText('no unit')).toBeInTheDocument()
+})
+
+test('a service without recent data shows no unit', async () => {
+  matching = [['web01', 'HTTP request duration']]
+  renderStep()
+
+  await pickServiceName('HTTP request duration')
+
+  await waitFor(() => expect(screen.getByText('web01')).toBeInTheDocument())
+  await settle()
+  expect(screen.queryByText('no unit')).not.toBeInTheDocument()
+})
+
+test('one service name in different units blocks navigation', async () => {
+  matching = [
+    ['web01', 'HTTP request duration'],
+    ['web02', 'HTTP request duration']
+  ]
+  units = [
+    ['HTTP request duration', ''],
+    ['HTTP request duration', 'ms']
+  ]
+  const { navigation } = renderStep({ servicePattern: 'HTTP request duration' })
+
+  await userEvent.click(screen.getByRole('button', { name: /next step/i }))
+
+  await waitFor(() => {
+    expect(screen.getByText(/different units: no unit, ms/)).toBeInTheDocument()
+  })
+  expect(navigation.next).not.toHaveBeenCalled()
+})
+
+test('services the conditions leave out of the list do not block navigation', async () => {
+  matching = [['web01', 'HTTP request duration']]
+  units = [
+    ['HTTP request duration', 'ms'],
+    ['HTTP queue length', '']
+  ]
+  const { navigation } = renderStep({ matchType: 'regex', servicePattern: 'HTTP' })
+
+  await userEvent.click(screen.getByRole('button', { name: /next step/i }))
+
+  await waitFor(() => {
+    expect(navigation.next).toHaveBeenCalled()
+  })
+})
+
+test('with a truncated list, the units of all services count', async () => {
+  matching = Array.from({ length: 201 }, (_, index): [string, string] => [
+    `web${index}`,
+    'HTTP request duration'
+  ])
+  units = [
+    ['HTTP request duration', 'ms'],
+    ['HTTP queue length', '']
+  ]
+  const { navigation } = renderStep({ matchType: 'regex', servicePattern: 'HTTP' })
+
+  await userEvent.click(screen.getByRole('button', { name: /next step/i }))
+
+  await waitFor(() => {
+    expect(screen.getByText(/different units: no unit, ms/)).toBeInTheDocument()
+  })
+  expect(navigation.next).not.toHaveBeenCalled()
+})
+
+test('a failing unit check does not block navigation', async () => {
+  matching = [['web01', 'HTTP request duration']]
+  server.use(untypedHttp.post(PREVIEW_ENDPOINT, () => HttpResponse.json({}, { status: 500 })))
+  const { navigation } = renderStep({ servicePattern: 'HTTP request duration' })
 
   await userEvent.click(screen.getByRole('button', { name: /next step/i }))
 

@@ -11,6 +11,10 @@ import type { RequestedTimeRange } from '@/graphing/types'
 import type { ServiceNameMatch } from '@/mode-alerts/types'
 
 export type Preview = components['schemas']['AlertPreviewModel']
+export type ServiceUnit = components['schemas']['ServiceUnitModel']
+
+const UNIT_CHECK_RANGE_SECONDS = 4 * 3600
+const UNIT_CHECK_STEP_SECONDS = 60
 
 function problemDetail(error: CmkApiError): string {
   const body = error.body
@@ -51,4 +55,14 @@ export async function fetchPreview(
     }
     throw error
   }
+}
+
+/** The unit of each custom service the service match draws, an empty string for no unit. */
+export async function fetchServiceUnits(
+  match: ServiceNameMatch,
+  pattern: string
+): Promise<ServiceUnit[]> {
+  const end = Math.floor(Date.now() / 1000)
+  const range = { start: end - UNIT_CHECK_RANGE_SECONDS, end }
+  return (await fetchPreview(match, pattern, range, UNIT_CHECK_STEP_SECONDS)).service_units
 }

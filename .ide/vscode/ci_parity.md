@@ -106,9 +106,9 @@ Achieve the same outcome locally in the IDE as with Bazel in CI.
 
 ## HTML / Jinja (.html, .jinja2)
 
-| Task       | CI (Bazel)                | Local (VSCode)                               | Parity | Notes                                                                                                             |
-| ---------- | ------------------------- | -------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------- |
-| Formatting | djlint (via bazel format) | djlint extension (`monosans.djlint`) on save | Match  | Extension uses venv djlint binary (`djlint.useVenv`), same version (1.36.4) as CI. Both use defaults (no config). |
+| Task       | CI (Bazel)                | Local (VSCode)                               | Parity | Notes                                                                                                                                 |
+| ---------- | ------------------------- | -------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Formatting | djlint (via bazel format) | djlint extension (`monosans.djlint`) on save | Match  | Extension uses venv djlint binary (`djlint.useVenv`), same version as CI (pinned in requirements.txt). Both use defaults (no config). |
 
 ## Markdown (.md)
 

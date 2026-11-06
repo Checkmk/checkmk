@@ -9,9 +9,11 @@ from typing import Final
 
 import pytest
 
-from cmk.cli.engine.call import call
-from cmk.cli.engine.discovery import _named_after_its_variable, make_command, make_option
-from cmk.cli.engine.readers import parse_sub_options
+from cmk.cli.engine.call import call as cli_call
+from cmk.cli.engine.discovery import _named_after_its_variable as _cli_named_after_its_variable
+from cmk.cli.engine.discovery import make_command as cli_make_command
+from cmk.cli.engine.discovery import make_option as cli_make_option
+from cmk.cli.engine.readers import parse_sub_options as cli_parse_sub_options
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
@@ -19,7 +21,7 @@ from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Option as CLIOption
-from cmk.cli.internal import Options
+from cmk.cli.internal import Options as CLIOptions
 from cmk.discover_plugins import PluginLocation
 
 from ._logger import null_logger
@@ -28,12 +30,12 @@ from ._logger import null_logger
 _OMD_ROOT: Final = Path("/omd/sites/mysite")
 
 
-def _handler(_context: CLIContext, _options: Options, _args: CLIArgs) -> CLIExitCode:
+def _handler(_context: CLIContext, _options: CLIOptions, _args: CLIArgs) -> CLIExitCode:
     return CLIExitCode.SUCCESS
 
 
 def test_make_option_keeps_deprecated_long_options() -> None:
-    option = make_option(
+    option = cli_make_option(
         CLIOption(
             long="plugins",
             help="Restrict to the given plug-ins",
@@ -46,7 +48,7 @@ def test_make_option_keeps_deprecated_long_options() -> None:
 
 
 def test_make_command_parses_sub_options_with_conversion() -> None:
-    command = make_command(
+    command = cli_make_command(
         CLICommand(
             name="snmpwalk",
             long="snmpwalk",
@@ -63,7 +65,7 @@ def test_make_command_parses_sub_options_with_conversion() -> None:
             ],
         )
     )
-    assert parse_sub_options(
+    assert cli_parse_sub_options(
         command.sub_options, [("--oid", "iso"), ("--verbose", ""), ("--verbose", "")], null_logger()
     ) == {
         "oid": "ISO",
@@ -94,11 +96,11 @@ def test_call_shapes_the_positional_arguments(
 ) -> None:
     seen: list[CLIArgs] = []
 
-    def _record(_context: CLIContext, _options: Options, args: CLIArgs) -> CLIExitCode:
+    def _record(_context: CLIContext, _options: CLIOptions, args: CLIArgs) -> CLIExitCode:
         seen.append(args)
         return CLIExitCode.ERROR
 
-    command = make_command(
+    command = cli_make_command(
         CLICommand(
             name="thing",
             long="thing",
@@ -107,11 +109,11 @@ def test_call_shapes_the_positional_arguments(
             arguments=arguments,
         )
     )
-    exit_status = call(
+    exit_status = cli_call(
         CLIContext(omd_root=_OMD_ROOT, global_options=CLIGlobalOptions(), logger=null_logger()),
         command,
         argument,
-        parse_sub_options(command.sub_options, [("--thing", argument)], null_logger()),
+        cli_parse_sub_options(command.sub_options, [("--thing", argument)], null_logger()),
         ["ARG", "more"],
         lambda *_args: nullcontext(),
     )
@@ -128,4 +130,6 @@ def test_a_command_not_named_after_its_variable_is_rejected() -> None:
     )
 
     with pytest.raises(ValueError, match="not named after its command"):
-        _named_after_its_variable(PluginLocation("family.cli.demo", "cli_command_other"), command)
+        _cli_named_after_its_variable(
+            PluginLocation("family.cli.demo", "cli_command_other"), command
+        )

@@ -10,10 +10,10 @@ from cmk.cli.engine.commands import GetoptCommand
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
-from cmk.cli.internal import Options
+from cmk.cli.internal import Options as CLIOptions
 
 type CommandTracer = Callable[
-    [CLIContext, GetoptCommand, Options, CLIArgs], AbstractContextManager[None]
+    [CLIContext, GetoptCommand, CLIOptions, CLIArgs], AbstractContextManager[None]
 ]
 
 
@@ -21,7 +21,7 @@ def call(
     context: CLIContext,
     command: GetoptCommand,
     arg: str,
-    sub_options: Options,
+    sub_options: CLIOptions,
     all_args: Sequence[str],
     traced: CommandTracer,
 ) -> CLIExitCode:

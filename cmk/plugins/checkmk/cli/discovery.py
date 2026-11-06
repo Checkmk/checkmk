@@ -57,7 +57,9 @@ from cmk.checkengine.parser import NO_SELECTION
 from cmk.checkengine.plugins import CheckPluginName, SectionName
 from cmk.checkengine.snmplib import SNMPSectionName
 from cmk.checkengine.specs.checkresults import ActiveCheckResult, ServiceState
-from cmk.cli.engine.readers import option_count, option_names, option_string
+from cmk.cli.engine.readers import option_count as cli_option_count
+from cmk.cli.engine.readers import option_names as cli_option_names
+from cmk.cli.engine.readers import option_string as cli_option_string
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
@@ -65,7 +67,7 @@ from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Option as CLIOption
-from cmk.cli.internal import Options
+from cmk.cli.internal import Options as CLIOptions
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
 from cmk.server_side_calls_backend import load_secrets_file
 from cmk.utils import ip_lookup
@@ -105,7 +107,7 @@ def _write_active_check_result(check_result: ActiveCheckResult) -> ServiceState:
 
 
 def _mode_check_discovery(
-    omd_root: Path, global_options: CLIGlobalOptions, options: Options, args: CLIArgs
+    omd_root: Path, global_options: CLIGlobalOptions, options: CLIOptions, args: CLIArgs
 ) -> CLIExitCode:
     app = make_app(omd_root)
     fake_dns = fake_dns_address(options)
@@ -324,7 +326,7 @@ def _mode_check_discovery(
         )
 
 
-def _run_check_discovery(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_check_discovery(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_check_discovery(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
@@ -381,15 +383,15 @@ def _discovery_options(parsed: Mapping[str, object]) -> DiscoveryOptions:
     if "usewalk" in parsed:
         options["usewalk"] = True
     if "snmp-backend" in parsed:
-        options["snmp-backend"] = option_string(parsed, "snmp-backend") or ""
+        options["snmp-backend"] = cli_option_string(parsed, "snmp-backend") or ""
     if "detect-sections" in parsed:
-        options["detect-sections"] = option_names(parsed, "detect-sections", SectionName)
+        options["detect-sections"] = cli_option_names(parsed, "detect-sections", SectionName)
     if "plugins" in parsed:
-        options["plugins"] = option_names(parsed, "plugins", CheckPluginName)
+        options["plugins"] = cli_option_names(parsed, "plugins", CheckPluginName)
     if "detect-plugins" in parsed:
-        options["detect-plugins"] = option_names(parsed, "detect-plugins", str)
+        options["detect-plugins"] = cli_option_names(parsed, "detect-plugins", str)
     if "discover" in parsed:
-        options["discover"] = option_count(parsed, "discover")
+        options["discover"] = cli_option_count(parsed, "discover")
     if "only-host-labels" in parsed:
         options["only-host-labels"] = True
     return options
@@ -422,7 +424,7 @@ def _preprocess_hostnames(
 
 
 def _mode_discover(
-    omd_root: Path, global_options: CLIGlobalOptions, parsed: Options, args: CLIArgs
+    omd_root: Path, global_options: CLIGlobalOptions, parsed: CLIOptions, args: CLIArgs
 ) -> CLIExitCode:
     app = make_app(omd_root)
     fake_dns = fake_dns_address(parsed)
@@ -644,7 +646,7 @@ def _mode_discover(
         return CLIExitCode.FAILURE if any_failed else CLIExitCode.SUCCESS
 
 
-def _run_discover(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_discover(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_discover(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:

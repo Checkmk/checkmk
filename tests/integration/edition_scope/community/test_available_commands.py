@@ -3,13 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.cli.engine.commands import Commands
-from cmk.cli.engine.discovery import discover_commands
-from cmk.cli.engine.options import general_options
+from cmk.cli.engine.commands import Commands as CLICommands
+from cmk.cli.engine.discovery import discover_commands as cli_discover_commands
+from cmk.cli.engine.options import general_options as cli_general_options
 
 
 def test_available_commands() -> None:
-    assert {m.long_option for m in discover_commands()} == {
+    assert {m.long_option for m in cli_discover_commands()} == {
         "automation",
         "browse-man",
         "check",
@@ -44,4 +44,4 @@ def test_available_commands() -> None:
 def test_no_two_commands_claim_the_same_option() -> None:
     # Commands() rejects a collision; nothing else sees one, because the names above
     # are a set and a duplicate would collapse into it.
-    Commands(plugins=discover_commands(), general_options=general_options())
+    CLICommands(plugins=cli_discover_commands(), general_options=cli_general_options())

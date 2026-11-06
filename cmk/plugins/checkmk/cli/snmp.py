@@ -27,7 +27,7 @@ from cmk.checkengine.snmplib import (
     SNMPHostConfig,
     walk_all_contexts_for_export,
 )
-from cmk.cli.engine.readers import option_strings
+from cmk.cli.engine.readers import option_strings as cli_option_strings
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
@@ -35,7 +35,7 @@ from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Option as CLIOption
-from cmk.cli.internal import Options
+from cmk.cli.internal import Options as CLIOptions
 from cmk.utils import ip_lookup
 from cmk.utils.log import console
 
@@ -58,7 +58,7 @@ def _make_local_mibs_dir(omd_root: Path) -> Path:
 
 
 def _mode_snmptranslate(
-    _omd_root: Path, _global_options: CLIGlobalOptions, _options: Options, args: CLIArgs
+    _omd_root: Path, _global_options: CLIGlobalOptions, _options: CLIOptions, args: CLIArgs
 ) -> CLIExitCode:
     walk_filename = args[0]
     if not walk_filename:
@@ -111,7 +111,7 @@ def _mode_snmptranslate(
     return CLIExitCode.SUCCESS
 
 
-def _run_snmptranslate(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_snmptranslate(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_snmptranslate(context.omd_root, context.global_options, options, args)
     except MKGeneralException as e:
@@ -210,11 +210,11 @@ def _make_backend(snmp_config: SNMPHostConfig) -> SNMPBackend:
 
 
 def _mode_snmpwalk(
-    _omd_root: Path, global_options: CLIGlobalOptions, options: Options, hostnames: CLIArgs
+    _omd_root: Path, global_options: CLIGlobalOptions, options: CLIOptions, hostnames: CLIArgs
 ) -> CLIExitCode:
     fake_dns = fake_dns_address(options)
-    oids = option_strings(options, "oid")
-    extra_oids = option_strings(options, "extraoid")
+    oids = cli_option_strings(options, "oid")
+    extra_oids = cli_option_strings(options, "extraoid")
     if oids and extra_oids:
         raise MKGeneralException("You cannot specify --oid and --extraoid at the same time.")
 
@@ -256,7 +256,7 @@ def _mode_snmpwalk(
     return CLIExitCode.SUCCESS
 
 
-def _run_snmpwalk(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_snmpwalk(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_snmpwalk(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
@@ -315,7 +315,7 @@ cli_command_snmpwalk = CLICommand(
 
 
 def _mode_snmpget(
-    _omd_root: Path, global_options: CLIGlobalOptions, options: Options, args: CLIArgs
+    _omd_root: Path, global_options: CLIGlobalOptions, options: CLIOptions, args: CLIArgs
 ) -> CLIExitCode:
     fake_dns = fake_dns_address(options)
     if not args:
@@ -367,7 +367,7 @@ def _mode_snmpget(
     return CLIExitCode.SUCCESS
 
 
-def _run_snmpget(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_snmpget(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_snmpget(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:

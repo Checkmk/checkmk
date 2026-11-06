@@ -7,11 +7,12 @@ import logging
 
 import pytest
 
-from cmk.cli.engine.arguments import parse, RunCommand
-from cmk.cli.engine.commands import Commands
-from cmk.cli.engine.discovery import make_command
-from cmk.cli.engine.options import general_options
-from cmk.cli.engine.readers import parse_sub_options
+from cmk.cli.engine.arguments import parse as cli_parse
+from cmk.cli.engine.arguments import RunCommand as CLIRunCommand
+from cmk.cli.engine.commands import Commands as CLICommands
+from cmk.cli.engine.discovery import make_command as cli_make_command
+from cmk.cli.engine.options import general_options as cli_general_options
+from cmk.cli.engine.readers import parse_sub_options as cli_parse_sub_options
 from cmk.cli.internal import Command as CLICommand
 from cmk.plugins.checkmk.cli.check import cli_command_check
 from cmk.plugins.checkmk.cli.core_config import (
@@ -51,15 +52,15 @@ from cmk.plugins.checkmk.cli.snmp import cli_command_snmpget, cli_command_snmpwa
     ids=lambda command: command.long,
 )
 def test_a_command_looking_up_addresses_takes_fake_dns(command: CLICommand) -> None:
-    parsed = parse(
-        Commands(plugins=[make_command(command)], general_options=general_options()),
+    parsed = cli_parse(
+        CLICommands(plugins=[cli_make_command(command)], general_options=cli_general_options()),
         ["cmk", "--fake-dns", "1.2.3.4", f"--{command.long}", "myhost"],
     )
 
-    assert isinstance(parsed, RunCommand)
+    assert isinstance(parsed, CLIRunCommand)
     assert (
-        parse_sub_options(parsed.command.sub_options, parsed.options, logging.getLogger(__name__))[
-            "fake-dns"
-        ]
+        cli_parse_sub_options(
+            parsed.command.sub_options, parsed.options, logging.getLogger(__name__)
+        )["fake-dns"]
         == "1.2.3.4"
     )

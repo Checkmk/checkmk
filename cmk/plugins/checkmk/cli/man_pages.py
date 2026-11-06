@@ -15,14 +15,14 @@ from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Option as CLIOption
-from cmk.cli.internal import Options
+from cmk.cli.internal import Options as CLIOptions
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.licensing.basics.finder import blocked_feature_files
 from cmk.utils.paths import omd_root
 
 
 def _mode_man(
-    _omd_root: Path, global_options: CLIGlobalOptions, options: Options, args: CLIArgs
+    _omd_root: Path, global_options: CLIGlobalOptions, options: CLIOptions, args: CLIArgs
 ) -> CLIExitCode:
     from cmk.utils import man_pages
 
@@ -58,7 +58,7 @@ def _mode_man(
     return CLIExitCode.SUCCESS
 
 
-def _run_man(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_man(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_man(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
@@ -94,7 +94,7 @@ cli_command_man = CLICommand(
 
 
 def _mode_browse_man(
-    _omd_root: Path, global_options: CLIGlobalOptions, _options: Options, _args: CLIArgs
+    _omd_root: Path, global_options: CLIGlobalOptions, _options: CLIOptions, _args: CLIArgs
 ) -> CLIExitCode:
     from cmk.utils import man_pages
 
@@ -109,7 +109,7 @@ def _mode_browse_man(
     return CLIExitCode.SUCCESS
 
 
-def _run_browse_man(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_browse_man(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_browse_man(context.omd_root, context.global_options, options, args)
     except MKGeneralException as e:

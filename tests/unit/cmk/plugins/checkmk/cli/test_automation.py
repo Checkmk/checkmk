@@ -14,11 +14,12 @@ from cmk.automations.backends import SubprocessExecutor
 from cmk.automations.engine import AutomationError
 from cmk.automations.internal import AutomationID
 from cmk.ccc.exceptions import MKBailOut
-from cmk.cli.engine.arguments import parse, RunCommand
-from cmk.cli.engine.commands import Commands
-from cmk.cli.engine.discovery import make_command
-from cmk.cli.engine.options import general_options
-from cmk.cli.engine.readers import parse_sub_options
+from cmk.cli.engine.arguments import parse as cli_parse
+from cmk.cli.engine.arguments import RunCommand as CLIRunCommand
+from cmk.cli.engine.commands import Commands as CLICommands
+from cmk.cli.engine.discovery import make_command as cli_make_command
+from cmk.cli.engine.options import general_options as cli_general_options
+from cmk.cli.engine.readers import parse_sub_options as cli_parse_sub_options
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
@@ -35,13 +36,16 @@ def test_the_version_of_a_subprocess_automation_reaches_the_cli() -> None:
         )
     )
 
-    parsed = parse(
-        Commands(plugins=[make_command(cli_command_automation)], general_options=general_options()),
+    parsed = cli_parse(
+        CLICommands(
+            plugins=[cli_make_command(cli_command_automation)],
+            general_options=cli_general_options(),
+        ),
         argv,
     )
 
-    assert isinstance(parsed, RunCommand)
-    assert parse_sub_options(
+    assert isinstance(parsed, CLIRunCommand)
+    assert cli_parse_sub_options(
         parsed.command.sub_options, parsed.options, logging.getLogger(__name__)
     ) == {"for-cmk-version": "2.4.0p1"}
     assert parsed.arguments == ["service-discovery-preview", "myhost"]

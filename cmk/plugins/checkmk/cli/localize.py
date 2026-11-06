@@ -17,7 +17,7 @@ from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
-from cmk.cli.internal import Options
+from cmk.cli.internal import Options as CLIOptions
 from cmk.utils.log import VERBOSE
 
 __all__ = ["cli_command_localize"]
@@ -36,7 +36,7 @@ class LocalizeException(MKException):
 domain = "multisite"
 
 
-def _mode_localize(_context: CLIContext, _options: Options, args: CLIArgs) -> CLIExitCode:
+def _mode_localize(_context: CLIContext, _options: CLIOptions, args: CLIArgs) -> CLIExitCode:
     return do_localize(list(args))
 
 

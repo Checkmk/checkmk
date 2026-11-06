@@ -30,14 +30,14 @@ from cmk.checkengine.helper_interface import FetcherType
 from cmk.checkengine.parser import make_parser, NO_SELECTION, parse_raw_data, SectionStore
 from cmk.checkengine.source_builder import SourceBuilder
 from cmk.checkengine.summarize import summarize
-from cmk.cli.engine.output import write_stdout
+from cmk.cli.engine.output import write_stdout as cli_write_stdout
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
-from cmk.cli.internal import Options
+from cmk.cli.internal import Options as CLIOptions
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
 from cmk.server_side_calls_backend import ExecutableFinder, load_secrets_file
 from cmk.utils import ip_lookup, timeperiod
@@ -68,7 +68,7 @@ from .options import (
 
 
 def _mode_dump_agent(
-    omd_root: Path, global_options: CLIGlobalOptions, options: Options, args: CLIArgs
+    omd_root: Path, global_options: CLIGlobalOptions, options: CLIOptions, args: CLIArgs
 ) -> CLIExitCode:
     app = make_app(omd_root)
     fake_dns = fake_dns_address(options)
@@ -275,7 +275,7 @@ def _mode_dump_agent(
                 assert raw_data.ok is not None
                 output.append(raw_data.ok)
 
-        write_stdout(b"".join(output).decode(errors="surrogateescape"))
+        cli_write_stdout(b"".join(output).decode(errors="surrogateescape"))
         for warn in warnings:
             console.warning(warn, file=sys.stderr)
         for err in errors:
@@ -284,7 +284,7 @@ def _mode_dump_agent(
         return CLIExitCode.FAILURE if errors else CLIExitCode.SUCCESS
 
 
-def _run_dump_agent(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_dump_agent(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_dump_agent(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
@@ -324,7 +324,7 @@ cli_command_dump_agent = CLICommand(
 
 
 def _mode_dump_hosts(
-    _omd_root: Path, global_options: CLIGlobalOptions, options: Options, args: CLIArgs
+    _omd_root: Path, global_options: CLIGlobalOptions, options: CLIOptions, args: CLIArgs
 ) -> CLIExitCode:
     fake_dns = fake_dns_address(options)
     hostlist: Iterable[HostName] = host_addresses(args)
@@ -395,7 +395,7 @@ def _mode_dump_hosts(
         return CLIExitCode.SUCCESS
 
 
-def _run_dump_hosts(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_dump_hosts(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_dump_hosts(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:

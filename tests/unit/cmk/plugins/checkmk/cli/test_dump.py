@@ -29,12 +29,12 @@ from cmk.checkengine.snmp_backend_builder import make_backend
 from cmk.checkengine.snmp_backends.classic import ClassicSNMPBackend
 from cmk.checkengine.snmp_backends.stored_walk import StoredWalkSNMPBackend
 from cmk.checkengine.sources._sources import SNMPSource
-from cmk.cli.engine.call import call
-from cmk.cli.engine.discovery import make_command
+from cmk.cli.engine.call import call as cli_call
+from cmk.cli.engine.discovery import make_command as cli_make_command
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
-from cmk.cli.internal import Options
+from cmk.cli.internal import Options as CLIOptions
 from cmk.plugins.checkmk.cli import dump
 from cmk.plugins.checkmk.cli.dump import cli_command_dump_agent
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
@@ -158,13 +158,13 @@ class TestDumpAgent:
     ) -> None:
         _patch_fetcher_trigger(monkeypatch, raw_data)
 
-        call(
+        cli_call(
             CLIContext(
                 omd_root=_OMD_ROOT,
                 global_options=CLIGlobalOptions(),
                 logger=logging.getLogger(__name__),
             ),
-            make_command(cli_command_dump_agent),
+            cli_make_command(cli_command_dump_agent),
             hostname,
             {},
             [],
@@ -188,13 +188,13 @@ class TestDumpAgent:
             b'{"level": "warning", "message": "Section foo denied"}\n',
         )
 
-        exit_code = call(
+        exit_code = cli_call(
             CLIContext(
                 omd_root=_OMD_ROOT,
                 global_options=CLIGlobalOptions(),
                 logger=logging.getLogger(__name__),
             ),
-            make_command(cli_command_dump_agent),
+            cli_make_command(cli_command_dump_agent),
             hostname,
             {},
             [],
@@ -214,13 +214,13 @@ class TestDumpAgent:
     ) -> None:
         _patch_fetcher_trigger(monkeypatch, Exception("Something broke"))
 
-        exit_code = call(
+        exit_code = cli_call(
             CLIContext(
                 omd_root=_OMD_ROOT,
                 global_options=CLIGlobalOptions(),
                 logger=logging.getLogger(__name__),
             ),
-            make_command(cli_command_dump_agent),
+            cli_make_command(cli_command_dump_agent),
             hostname,
             {},
             [],
@@ -303,7 +303,7 @@ class TestDumpAgentSnmpBackend:
     def test_the_snmp_backend_option_selects_the_backend(
         self,
         hostname: HostName,
-        options: Options,
+        options: CLIOptions,
         expected_backend_type: type,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
@@ -328,13 +328,13 @@ class TestDumpAgentSnmpBackend:
         monkeypatch.setattr(SNMPSource, "__init__", capturing_snmp_source_init)
 
         _patch_fetcher_trigger(monkeypatch, b"")
-        call(
+        cli_call(
             CLIContext(
                 omd_root=_OMD_ROOT,
                 global_options=CLIGlobalOptions(),
                 logger=logging.getLogger(__name__),
             ),
-            make_command(cli_command_dump_agent),
+            cli_make_command(cli_command_dump_agent),
             hostname,
             options,
             [],

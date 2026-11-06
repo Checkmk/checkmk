@@ -13,8 +13,8 @@ import pytest
 
 import cmk.utils.paths
 from cmk.ccc.hostaddress import HostAddress
-from cmk.cli.engine.call import call
-from cmk.cli.engine.discovery import make_command
+from cmk.cli.engine.call import call as cli_call
+from cmk.cli.engine.discovery import make_command as cli_make_command
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
@@ -68,13 +68,13 @@ def test_cleanup_piggyback_removes_files_beyond_configured_max_age(
     _store_aged(tmp_path, "aged-out", age=_LONG_MAX_AGE + 600)
     _store_aged(tmp_path, "still-valid", age=_LONG_MAX_AGE - 600)
 
-    exit_code = call(
+    exit_code = cli_call(
         CLIContext(
             omd_root=tmp_path,
             global_options=CLIGlobalOptions(),
             logger=logging.getLogger(__name__),
         ),
-        make_command(cli_command_cleanup_piggyback),
+        cli_make_command(cli_command_cleanup_piggyback),
         "",
         {},
         [],

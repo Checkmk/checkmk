@@ -9,11 +9,12 @@ from collections.abc import Iterator
 
 import pytest
 
-from cmk.cli.engine.output import _pager_environment, write_paged
+from cmk.cli.engine.output import _pager_environment as _cli_pager_environment
+from cmk.cli.engine.output import write_paged as cli_write_paged
 
 
 def test_a_redirected_help_is_written_to_stdout(capsys: pytest.CaptureFixture[str]) -> None:
-    write_paged("the help\n")
+    cli_write_paged("the help\n")
 
     assert capsys.readouterr().out == "the help\n"
 
@@ -24,7 +25,7 @@ def test_a_help_on_a_terminal_is_written_through_the_pager(
     monkeypatch.setenv("PAGER", "cat")
     monkeypatch.setattr(sys.stdout, "isatty", lambda: True)
 
-    write_paged("the help\n")
+    cli_write_paged("the help\n")
 
     assert capfd.readouterr().out == "the help\n"
 
@@ -35,7 +36,7 @@ def test_a_missing_pager_falls_back_to_stdout(
     monkeypatch.setenv("PAGER", "no-such-pager-on-this-system")
     monkeypatch.setattr(sys.stdout, "isatty", lambda: True)
 
-    write_paged("the help\n")
+    cli_write_paged("the help\n")
 
     assert capsys.readouterr().out == "the help\n"
 
@@ -57,14 +58,14 @@ def test_an_interrupt_leaves_the_pager_to_clean_up_after_itself(
     monkeypatch.setattr(sys.stdout, "isatty", lambda: True)
     signal.signal(signal.SIGINT, signal.default_int_handler)
 
-    write_paged("the help\n")
+    cli_write_paged("the help\n")
 
     assert capfd.readouterr().out == "the help\n"
 
 
 def test_a_users_own_less_options_are_kept_after_ours() -> None:
-    assert _pager_environment({"LESS": "--tabs=4"})["LESS"].endswith("$ --tabs=4")
+    assert _cli_pager_environment({"LESS": "--tabs=4"})["LESS"].endswith("$ --tabs=4")
 
 
 def test_a_page_that_fits_the_screen_is_not_held_open() -> None:
-    assert "--quit-if-one-screen" in _pager_environment({})["LESS"].split()
+    assert "--quit-if-one-screen" in _cli_pager_environment({})["LESS"].split()

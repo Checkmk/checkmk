@@ -19,7 +19,7 @@ from cmk.checkengine.plugins import (
 from cmk.checkengine.snmplib import (
     SNMPBackendEnum,
 )
-from cmk.cli.engine.readers import option_string
+from cmk.cli.engine.readers import option_string as cli_option_string
 from cmk.cli.internal import Option as CLIOption
 from cmk.utils.check_utils import maincheckify
 
@@ -107,7 +107,7 @@ FAKE_DNS_OPTION: Final = CLIOption(
 
 
 def fake_dns_address(options: Mapping[str, object]) -> HostAddress | None:
-    raw_address = option_string(options, FAKE_DNS_OPTION.long)
+    raw_address = cli_option_string(options, FAKE_DNS_OPTION.long)
     return None if raw_address is None else host_address(raw_address)
 
 

@@ -7,15 +7,16 @@ from typing import NoReturn
 
 import pytest
 
-from cmk.cli.engine.commands import Commands, GetoptCommand
+from cmk.cli.engine.commands import Commands as CLICommands
+from cmk.cli.engine.commands import GetoptCommand as CLIGetoptCommand
 
 
 def _never(*_args: object, **_kwargs: object) -> NoReturn:
     raise AssertionError("the command must not run")
 
 
-def _command(long_option: str, short_option: str | None = None) -> GetoptCommand:
-    return GetoptCommand(
+def _command(long_option: str, short_option: str | None = None) -> CLIGetoptCommand:
+    return CLIGetoptCommand(
         name=long_option,
         long_option=long_option,
         short_option=short_option,
@@ -26,14 +27,14 @@ def _command(long_option: str, short_option: str | None = None) -> GetoptCommand
 
 def test_two_commands_cannot_claim_the_same_long_option() -> None:
     with pytest.raises(ValueError, match="'twice'"):
-        Commands(plugins=[_command("twice"), _command("twice")], general_options=[])
+        CLICommands(plugins=[_command("twice"), _command("twice")], general_options=[])
 
 
 def test_two_commands_cannot_claim_the_same_short_option() -> None:
     with pytest.raises(ValueError, match="'x'"):
-        Commands(plugins=[_command("one", "x"), _command("other", "x")], general_options=[])
+        CLICommands(plugins=[_command("one", "x"), _command("other", "x")], general_options=[])
 
 
 def test_a_command_cannot_claim_the_built_in_help_option() -> None:
     with pytest.raises(ValueError, match="'help'"):
-        Commands(plugins=[_command("help")], general_options=[])
+        CLICommands(plugins=[_command("help")], general_options=[])

@@ -7,7 +7,7 @@ import textwrap
 from collections.abc import Mapping, Sequence
 from typing import Final, override
 
-from cmk.cli.internal import CommandHandler
+from cmk.cli.internal import CommandHandler as CLICommandHandler
 
 from .options import HELP_OPTION, Option, OptionName
 
@@ -18,7 +18,7 @@ class GetoptCommand(Option):
         *,
         name: str,
         long_option: OptionName,
-        handler_function: CommandHandler,
+        handler_function: CLICommandHandler,
         short_help: str,
         short_option: OptionName | None = None,
         argument: bool = False,

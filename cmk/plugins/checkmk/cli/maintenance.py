@@ -15,14 +15,14 @@ from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.checkengine.discovery import remove_autochecks_of_host
-from cmk.cli.engine.output import write_stdout
+from cmk.cli.engine.output import write_stdout as cli_write_stdout
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
-from cmk.cli.internal import Options
+from cmk.cli.internal import Options as CLIOptions
 from cmk.inventory.paths import InventoryPaths
 from cmk.piggyback import backend as piggyback_backend
 from cmk.utils import ip_lookup
@@ -42,7 +42,7 @@ from .options import fake_dns_address, FAKE_DNS_OPTION, host_addresses
 
 
 def _mode_update_dns_cache(
-    _omd_root: Path, global_options: CLIGlobalOptions, options: Options, _args: CLIArgs
+    _omd_root: Path, global_options: CLIGlobalOptions, options: CLIOptions, _args: CLIArgs
 ) -> CLIExitCode:
     fake_dns = fake_dns_address(options)
     loading_result = config.load(validate_hosts=True, debug=global_options.debug)
@@ -62,7 +62,7 @@ def _mode_update_dns_cache(
     return CLIExitCode.SUCCESS
 
 
-def _run_update_dns_cache(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_update_dns_cache(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_update_dns_cache(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
@@ -93,7 +93,7 @@ cli_command_update_dns_cache = CLICommand(
 
 
 def _mode_cleanup_piggyback(
-    omd_root: Path, global_options: CLIGlobalOptions, _options: Options, _args: CLIArgs
+    omd_root: Path, global_options: CLIGlobalOptions, _options: CLIOptions, _args: CLIArgs
 ) -> CLIExitCode:
     loaded_config = config.load(validate_hosts=True, debug=global_options.debug).loaded_config
     piggyback_backend.cleanup_piggyback_files(
@@ -105,7 +105,7 @@ def _mode_cleanup_piggyback(
     return CLIExitCode.SUCCESS
 
 
-def _run_cleanup_piggyback(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_cleanup_piggyback(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_cleanup_piggyback(context.omd_root, context.global_options, options, args)
     except MKGeneralException as e:
@@ -135,7 +135,7 @@ cli_command_cleanup_piggyback = CLICommand(
 
 
 def _mode_flush(
-    _omd_root: Path, global_options: CLIGlobalOptions, _options: Options, args: CLIArgs
+    _omd_root: Path, global_options: CLIGlobalOptions, _options: CLIOptions, args: CLIArgs
 ) -> CLIExitCode:
     hosts = host_addresses(args)
     plugins = load_checks(debug=global_options.debug)
@@ -163,13 +163,13 @@ def _mode_flush(
         )
 
     for host in hosts:
-        write_stdout("%-20s: " % host)
+        cli_write_stdout("%-20s: " % host)
         flushed = False
 
         # counters
         try:
             (cmk.utils.paths.counters_dir / host).unlink()
-            write_stdout(tty.bold + tty.blue + " counters")
+            cli_write_stdout(tty.bold + tty.blue + " counters")
             flushed = True
         except OSError:
             pass
@@ -187,14 +187,14 @@ def _mode_flush(
                     except OSError:
                         pass
             if d == 1:
-                write_stdout(tty.bold + tty.green + " cache")
+                cli_write_stdout(tty.bold + tty.green + " cache")
             elif d > 1:
-                write_stdout(tty.bold + tty.green + " cache(%d)" % d)
+                cli_write_stdout(tty.bold + tty.green + " cache(%d)" % d)
 
         # piggy files from this as source host
         d = piggyback_backend.remove_source_status_file(host, cmk.utils.paths.omd_root)
         if d:
-            write_stdout(tty.bold + tty.magenta + " piggyback(1)")
+            cli_write_stdout(tty.bold + tty.magenta + " piggyback(1)")
 
         # logfiles
         log_dir = cmk.utils.paths.logwatch_dir / host
@@ -209,7 +209,7 @@ def _mode_flush(
                     except OSError:
                         pass
             if d > 0:
-                write_stdout(tty.bold + tty.magenta + " logfiles(%d)" % d)
+                cli_write_stdout(tty.bold + tty.magenta + " logfiles(%d)" % d)
 
         # autochecks
         count = sum(
@@ -225,23 +225,23 @@ def _mode_flush(
         # config_cache.remove_autochecks(host)
         if count:
             flushed = True
-            write_stdout(tty.bold + tty.cyan + " autochecks(%d)" % count)
+            cli_write_stdout(tty.bold + tty.cyan + " autochecks(%d)" % count)
 
         # inventory
         tree_path = InventoryPaths(cmk.utils.paths.omd_root).inventory_tree(host)
         if tree_path.path.exists() or tree_path.legacy.exists():
             tree_path.path.unlink(missing_ok=True)
             tree_path.legacy.unlink(missing_ok=True)
-            write_stdout(tty.bold + tty.yellow + " inventory")
+            cli_write_stdout(tty.bold + tty.yellow + " inventory")
 
         if not flushed:
-            write_stdout("(nothing)")
+            cli_write_stdout("(nothing)")
 
-        write_stdout(tty.normal + "\n")
+        cli_write_stdout(tty.normal + "\n")
     return CLIExitCode.SUCCESS
 
 
-def _run_flush(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_flush(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_flush(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:

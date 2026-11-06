@@ -25,7 +25,7 @@ from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
-from cmk.cli.internal import Options
+from cmk.cli.internal import Options as CLIOptions
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
 from cmk.server_side_calls_backend import load_secrets_file
 from cmk.utils import config_warnings, ip_lookup, timeperiod
@@ -46,7 +46,7 @@ from .options import fake_dns_address, FAKE_DNS_OPTION, host_addresses
 
 
 def _mode_dump_nagios_config(
-    omd_root: Path, global_options: CLIGlobalOptions, options: Options, raw_host_names: CLIArgs
+    omd_root: Path, global_options: CLIGlobalOptions, options: CLIOptions, raw_host_names: CLIArgs
 ) -> CLIExitCode:
     app = make_app(omd_root)
     fake_dns = fake_dns_address(options)
@@ -134,7 +134,7 @@ def _mode_dump_nagios_config(
     return CLIExitCode.SUCCESS
 
 
-def _run_dump_nagios_config(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_dump_nagios_config(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_dump_nagios_config(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
@@ -200,7 +200,7 @@ def _make_configured_notify_relay(
 
 
 def _mode_update(
-    omd_root: Path, global_options: CLIGlobalOptions, options: Options, _args: CLIArgs
+    omd_root: Path, global_options: CLIGlobalOptions, options: CLIOptions, _args: CLIArgs
 ) -> CLIExitCode:
     app = make_app(omd_root)
     fake_dns = fake_dns_address(options)
@@ -287,7 +287,7 @@ def _mode_update(
     return CLIExitCode.SUCCESS
 
 
-def _run_update(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_update(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_update(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
@@ -328,7 +328,7 @@ cli_command_update = CLICommand(
 
 
 def _mode_restart(
-    omd_root: Path, global_options: CLIGlobalOptions, options: Options, raw_host_names: CLIArgs
+    omd_root: Path, global_options: CLIGlobalOptions, options: CLIOptions, raw_host_names: CLIArgs
 ) -> CLIExitCode:
     app = make_app(omd_root)
     fake_dns = fake_dns_address(options)
@@ -408,7 +408,7 @@ def _mode_restart(
     return CLIExitCode.SUCCESS
 
 
-def _run_restart(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_restart(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_restart(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
@@ -448,7 +448,7 @@ cli_command_restart = CLICommand(
 
 
 def _mode_reload(
-    omd_root: Path, global_options: CLIGlobalOptions, options: Options, raw_host_names: CLIArgs
+    omd_root: Path, global_options: CLIGlobalOptions, options: CLIOptions, raw_host_names: CLIArgs
 ) -> CLIExitCode:
     app = make_app(omd_root)
     fake_dns = fake_dns_address(options)
@@ -528,7 +528,7 @@ def _mode_reload(
     return CLIExitCode.SUCCESS
 
 
-def _run_reload(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_reload(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_reload(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:

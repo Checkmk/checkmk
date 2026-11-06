@@ -36,7 +36,7 @@ from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Option as CLIOption
-from cmk.cli.internal import Options
+from cmk.cli.internal import Options as CLIOptions
 from cmk.utils import timeperiod
 from cmk.utils.http_proxy_config import make_http_proxy_getter
 
@@ -58,7 +58,7 @@ def _notification_exit_code(returncode: object) -> CLIExitCode:
 
 
 def _mode_notify(
-    omd_root: Path, global_options: CLIGlobalOptions, parsed: Options, args: CLIArgs
+    omd_root: Path, global_options: CLIGlobalOptions, parsed: CLIOptions, args: CLIArgs
 ) -> CLIExitCode:
     options = _notify_flags(parsed)
     edition = edition_of_site(omd_root)
@@ -95,7 +95,7 @@ def _mode_notify(
     return _notification_exit_code(exit_status)
 
 
-def _run_notify(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_notify(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_notify(context.omd_root, context.global_options, options, args)
     except MKTerminate:

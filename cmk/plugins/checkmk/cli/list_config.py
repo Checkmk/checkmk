@@ -28,7 +28,7 @@ from cmk.checkengine.plugins import (
     CheckPlugin,
     SNMPSectionPlugin,
 )
-from cmk.cli.engine.output import write_stdout
+from cmk.cli.engine.output import write_stdout as cli_write_stdout
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
@@ -36,7 +36,7 @@ from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Option as CLIOption
-from cmk.cli.internal import Options
+from cmk.cli.internal import Options as CLIOptions
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.ruleset_matcher.tags import HostTags, TagID
 from cmk.ruleset_matcher.tuple_rulesets import hosttags_match_taglist
@@ -86,7 +86,7 @@ def _list_all_hosts(
 
 
 def _mode_list_hosts(
-    _omd_root: Path, global_options: CLIGlobalOptions, options: Options, args: CLIArgs
+    _omd_root: Path, global_options: CLIGlobalOptions, options: CLIOptions, args: CLIArgs
 ) -> CLIExitCode:
     loading_result = config.load(validate_hosts=True, debug=global_options.debug)
     config_cache = loading_result.config_cache
@@ -108,7 +108,7 @@ def _mode_list_hosts(
     return CLIExitCode.SUCCESS
 
 
-def _run_list_hosts(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_list_hosts(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_list_hosts(context.omd_root, context.global_options, options, args)
     except MKGeneralException as e:
@@ -171,7 +171,7 @@ def _list_all_hosts_with_tags(
 
 
 def _mode_list_tag(
-    _omd_root: Path, global_options: CLIGlobalOptions, _options: Options, args: CLIArgs
+    _omd_root: Path, global_options: CLIGlobalOptions, _options: CLIOptions, args: CLIArgs
 ) -> CLIExitCode:
     loading_result = config.load(validate_hosts=True, debug=global_options.debug)
     hosts = _list_all_hosts_with_tags(
@@ -180,13 +180,13 @@ def _mode_list_tag(
         loading_result.hosts_config,
         loading_result.host_tags,
     )
-    write_stdout("\n".join(sorted(hosts)))
+    cli_write_stdout("\n".join(sorted(hosts)))
     if hosts:
-        write_stdout("\n")
+        cli_write_stdout("\n")
     return CLIExitCode.SUCCESS
 
 
-def _run_list_tag(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_list_tag(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_list_tag(context.omd_root, context.global_options, options, args)
     except MKGeneralException as e:
@@ -258,7 +258,7 @@ def _get_ds_type(
 
 
 def _mode_list_checks(
-    _omd_root: Path, global_options: CLIGlobalOptions, _options: Options, _args: CLIArgs
+    _omd_root: Path, global_options: CLIGlobalOptions, _options: CLIOptions, _args: CLIArgs
 ) -> CLIExitCode:
     from cmk.utils import man_pages
 
@@ -302,11 +302,11 @@ def _mode_list_checks(
     ]
 
     for e in sorted(table, key=lambda e: e.name):
-        write_stdout(f"{e.render_tty()}\n")
+        cli_write_stdout(f"{e.render_tty()}\n")
     return CLIExitCode.SUCCESS
 
 
-def _run_list_checks(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_list_checks(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_list_checks(context.omd_root, context.global_options, options, args)
     except MKGeneralException as e:

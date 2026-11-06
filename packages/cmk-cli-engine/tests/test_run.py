@@ -13,22 +13,21 @@ from types import FrameType
 
 import pytest
 
-from cmk.cli.engine.call import CommandTracer
-from cmk.cli.engine.commands import GetoptCommand
-from cmk.cli.engine.discovery import make_command
-from cmk.cli.engine.run import (
-    dispatch,
-    enable_file_logging,
-    log_level,
-    run,
-    Runtime,
-)
+from cmk.cli.engine.call import CommandTracer as CLICommandTracer
+from cmk.cli.engine.commands import GetoptCommand as CLIGetoptCommand
+from cmk.cli.engine.discovery import make_command as cli_make_command
+from cmk.cli.engine.run import dispatch as cli_dispatch
+from cmk.cli.engine.run import enable_file_logging as cli_enable_file_logging
+from cmk.cli.engine.run import log_level as cli_log_level
+from cmk.cli.engine.run import run as cli_run
+from cmk.cli.engine.run import Runtime as CLIRuntime
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Command as CLICommand
-from cmk.cli.internal import CommandHandler, Options
+from cmk.cli.internal import CommandHandler as CLICommandHandler
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import Option as CLIOption
+from cmk.cli.internal import Options as CLIOptions
 
 from ._logger import null_logger
 
@@ -68,7 +67,7 @@ def _raising(exception: BaseException) -> Callable[[], CLIExitCode]:
 def _dispatch(
     command: Callable[[], CLIExitCode], reporter: FakeCrashReporter | None = None
 ) -> CLIExitCode:
-    return dispatch(command, null_logger(), reporter or FakeCrashReporter(), debug=False)
+    return cli_dispatch(command, null_logger(), reporter or FakeCrashReporter(), debug=False)
 
 
 def test_the_exit_status_of_a_command_that_succeeds_is_its_own() -> None:
@@ -117,14 +116,16 @@ def test_an_unexpected_exception_is_reported() -> None:
 
 def test_a_debugged_exception_is_raised_through() -> None:
     with pytest.raises(ValueError):
-        dispatch(_raising(ValueError("unexpected")), null_logger(), FakeCrashReporter(), debug=True)
+        cli_dispatch(
+            _raising(ValueError("unexpected")), null_logger(), FakeCrashReporter(), debug=True
+        )
 
 
 def test_a_debugged_exception_is_not_reported() -> None:
     reporter = FakeCrashReporter()
 
     with pytest.raises(ValueError):
-        dispatch(_raising(ValueError("unexpected")), null_logger(), reporter, debug=True)
+        cli_dispatch(_raising(ValueError("unexpected")), null_logger(), reporter, debug=True)
 
     assert reporter.reports == 0
 
@@ -144,26 +145,26 @@ def test_an_interruption_says_so_in_the_log(caplog: pytest.LogCaptureFixture) ->
 
 
 def test_without_verbosity_the_log_level_is_info() -> None:
-    assert log_level(0) == logging.INFO
+    assert cli_log_level(0) == logging.INFO
 
 
 def test_one_verbosity_is_more_than_info() -> None:
-    assert logging.DEBUG < log_level(1) < logging.INFO
+    assert logging.DEBUG < cli_log_level(1) < logging.INFO
 
 
 def test_two_verbosities_are_debug() -> None:
-    assert log_level(2) == logging.DEBUG
+    assert cli_log_level(2) == logging.DEBUG
 
 
 def test_more_verbosity_than_we_know_stays_debug() -> None:
-    assert log_level(23) == logging.DEBUG
+    assert cli_log_level(23) == logging.DEBUG
 
 
 def test_file_logging_writes_to_the_given_file(tmp_path: Path) -> None:
     logger = logging.getLogger("test_file_logging_writes_to_the_given_file")
     path = tmp_path / "logs" / "cmk.log"
 
-    enable_file_logging(str(path), logger)
+    cli_enable_file_logging(str(path), logger)
     logger.error("a message")
 
     assert "a message" in path.read_text()
@@ -173,29 +174,29 @@ def test_file_logging_replaces_the_handlers_it_finds(tmp_path: Path) -> None:
     logger = logging.getLogger("test_file_logging_replaces_the_handlers_it_finds")
     logger.addHandler(logging.NullHandler())
 
-    enable_file_logging(str(tmp_path / "cmk.log"), logger)
+    cli_enable_file_logging(str(tmp_path / "cmk.log"), logger)
 
     assert len(logger.handlers) == 1
 
 
-def _command(handler: CommandHandler) -> GetoptCommand:
-    return make_command(
+def _command(handler: CLICommandHandler) -> CLIGetoptCommand:
+    return cli_make_command(
         CLICommand(name="demo", long="demo", handler_function=handler, help="Demonstrate")
     )
 
 
 def _runtime(
-    commands: Sequence[GetoptCommand] = (),
+    commands: Sequence[CLIGetoptCommand] = (),
     *,
-    trace_command: CommandTracer = lambda *_args: nullcontext(),
+    trace_command: CLICommandTracer = lambda *_args: nullcontext(),
     on_sigint: Callable[[int, FrameType | None], object] = signal.default_int_handler,
     enable_profiling: Callable[[], None] = lambda: None,
     write_profile: Callable[[Path], None] = lambda _path: None,
     page: Callable[[str], None] = lambda _text: None,
     write: Callable[[str], None] = lambda _text: None,
     logger: logging.Logger = null_logger(),
-) -> Runtime:
-    return Runtime(
+) -> CLIRuntime:
+    return CLIRuntime(
         discover=lambda: commands,
         trace_command=trace_command,
         on_sigint=on_sigint,
@@ -208,16 +209,16 @@ def _runtime(
     )
 
 
-def _run(argv: Sequence[str], runtime: Runtime) -> int:
+def _run(argv: Sequence[str], runtime: CLIRuntime) -> int:
     previous = signal.getsignal(signal.SIGINT)
     try:
-        return run(_SITE, argv, {}, runtime)
+        return cli_run(_SITE, argv, {}, runtime)
     finally:
         signal.signal(signal.SIGINT, previous)
 
 
-def _numbered(handler: CommandHandler) -> GetoptCommand:
-    return make_command(
+def _numbered(handler: CLICommandHandler) -> CLIGetoptCommand:
+    return cli_make_command(
         CLICommand(
             name="demo",
             long="demo",
@@ -236,9 +237,9 @@ def _numbered(handler: CommandHandler) -> GetoptCommand:
 
 
 def test_a_sub_option_reaches_the_command_converted() -> None:
-    seen: list[Options] = []
+    seen: list[CLIOptions] = []
 
-    def remember(_context: CLIContext, sub: Options, _args: CLIArgs) -> CLIExitCode:
+    def remember(_context: CLIContext, sub: CLIOptions, _args: CLIArgs) -> CLIExitCode:
         seen.append(sub)
         return CLIExitCode.SUCCESS
 
@@ -280,7 +281,7 @@ def test_a_sub_option_argument_the_conversion_rejects_is_raised_through_under_de
 def test_a_command_is_handed_the_site_root() -> None:
     seen: list[Path] = []
 
-    def remember(context: CLIContext, _sub: Options, _args: CLIArgs) -> CLIExitCode:
+    def remember(context: CLIContext, _sub: CLIOptions, _args: CLIArgs) -> CLIExitCode:
         seen.append(context.omd_root)
         return CLIExitCode.SUCCESS
 
@@ -292,7 +293,7 @@ def test_a_command_is_handed_the_site_root() -> None:
 def test_a_command_reports_through_the_engines_logger() -> None:
     seen: list[logging.Logger] = []
 
-    def remember(context: CLIContext, _sub: Options, _args: CLIArgs) -> CLIExitCode:
+    def remember(context: CLIContext, _sub: CLIOptions, _args: CLIArgs) -> CLIExitCode:
         seen.append(context.logger)
         return CLIExitCode.SUCCESS
 
@@ -343,7 +344,7 @@ def _ignored_sigint() -> Iterator[None]:
         signal.signal(signal.SIGINT, previous)
 
 
-def _interrupting(_context: CLIContext, _sub: Options, _args: CLIArgs) -> CLIExitCode:
+def _interrupting(_context: CLIContext, _sub: CLIOptions, _args: CLIArgs) -> CLIExitCode:
     signal.raise_signal(signal.SIGINT)
     return CLIExitCode.SUCCESS
 
@@ -368,7 +369,7 @@ class FakeCommandTracer:
         self.traced: list[str] = []
 
     def __call__(
-        self, _context: CLIContext, command: GetoptCommand, _options: Options, _args: CLIArgs
+        self, _context: CLIContext, command: CLIGetoptCommand, _options: CLIOptions, _args: CLIArgs
     ) -> nullcontext[None]:
         self.traced.append(command.name)
         return nullcontext()
@@ -415,7 +416,7 @@ def test_verbosity_raises_the_log_level() -> None:
 
     _run(["cmk", "-v", "--help"], runtime)
 
-    assert runtime.logger.level == log_level(1)
+    assert runtime.logger.level == cli_log_level(1)
 
 
 def test_profiling_is_enabled_on_request() -> None:
@@ -446,5 +447,5 @@ def test_the_profile_is_written_even_when_the_command_raises() -> None:
     assert len(written.calls) == 1
 
 
-def _failing(_context: CLIContext, _sub_options: Options, _args: CLIArgs) -> CLIExitCode:
+def _failing(_context: CLIContext, _sub_options: CLIOptions, _args: CLIArgs) -> CLIExitCode:
     raise ValueError("no such host")

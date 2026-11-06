@@ -8,15 +8,17 @@ from contextlib import contextmanager, nullcontext
 from pathlib import Path
 from typing import Final
 
-from cmk.cli.engine.call import call, CommandTracer
-from cmk.cli.engine.commands import GetoptCommand
-from cmk.cli.engine.options import Option
-from cmk.cli.engine.readers import parse_sub_options
+from cmk.cli.engine.call import call as cli_call
+from cmk.cli.engine.call import CommandTracer as CLICommandTracer
+from cmk.cli.engine.commands import GetoptCommand as CLIGetoptCommand
+from cmk.cli.engine.options import Option as CLIOption
+from cmk.cli.engine.readers import parse_sub_options as cli_parse_sub_options
 from cmk.cli.internal import Args as CLIArgs
-from cmk.cli.internal import CommandHandler, Options
+from cmk.cli.internal import CommandHandler as CLICommandHandler
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
+from cmk.cli.internal import Options as CLIOptions
 
 from ._logger import null_logger
 
@@ -27,27 +29,27 @@ _CONTEXT: Final = CLIContext(
     logger=null_logger(),
 )
 
-_SUB_OPTIONS: Final = [Option(long_option="flag", short_help="a flag")]
+_SUB_OPTIONS: Final = [CLIOption(long_option="flag", short_help="a flag")]
 
 
 class _Recorder:
     def __init__(self, exit_code: CLIExitCode = CLIExitCode.SUCCESS) -> None:
-        self.calls: list[tuple[CLIContext, Options, CLIArgs]] = []
+        self.calls: list[tuple[CLIContext, CLIOptions, CLIArgs]] = []
         self._exit_code = exit_code
 
-    def __call__(self, context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
+    def __call__(self, context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
         self.calls.append((context, options, args))
         return self._exit_code
 
 
 def _command(
-    handler: CommandHandler,
+    handler: CLICommandHandler,
     *,
     argument: bool = False,
     argument_optional: bool = False,
-    sub_options: Sequence[Option] = (),
-) -> GetoptCommand:
-    return GetoptCommand(
+    sub_options: Sequence[CLIOption] = (),
+) -> CLIGetoptCommand:
+    return CLIGetoptCommand(
         name="test_command",
         long_option="test-command",
         handler_function=handler,
@@ -60,17 +62,17 @@ def _command(
 
 
 def _call(
-    command: GetoptCommand,
+    command: CLIGetoptCommand,
     argument: str = "",
     *,
     arguments: Sequence[str] = (),
-    traced: CommandTracer = lambda *_args: nullcontext(),
+    traced: CLICommandTracer = lambda *_args: nullcontext(),
 ) -> CLIExitCode:
-    return call(
+    return cli_call(
         _CONTEXT,
         command,
         argument,
-        parse_sub_options(command.sub_options, [("--flag", "")], null_logger()),
+        cli_parse_sub_options(command.sub_options, [("--flag", "")], null_logger()),
         arguments,
         traced,
     )
@@ -137,7 +139,7 @@ def test_the_handler_runs_inside_the_commands_trace() -> None:
         yield
         events.append("trace ends")
 
-    def handler(_context: CLIContext, _options: Options, _args: CLIArgs) -> CLIExitCode:
+    def handler(_context: CLIContext, _options: CLIOptions, _args: CLIArgs) -> CLIExitCode:
         events.append("handler")
         return CLIExitCode.SUCCESS
 
@@ -147,10 +149,10 @@ def test_the_handler_runs_inside_the_commands_trace() -> None:
 
 
 def test_the_trace_sees_what_the_handler_is_handed() -> None:
-    seen: list[tuple[CLIContext, GetoptCommand, Options, CLIArgs]] = []
+    seen: list[tuple[CLIContext, CLIGetoptCommand, CLIOptions, CLIArgs]] = []
 
     def traced(
-        context: CLIContext, command: GetoptCommand, options: Options, args: CLIArgs
+        context: CLIContext, command: CLIGetoptCommand, options: CLIOptions, args: CLIArgs
     ) -> nullcontext[None]:
         seen.append((context, command, options, args))
         return nullcontext()

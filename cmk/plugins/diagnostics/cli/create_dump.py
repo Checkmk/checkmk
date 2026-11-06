@@ -23,14 +23,14 @@ from cmk.base.diagnostics import (
 )
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
-from cmk.cli.engine.readers import option_string
+from cmk.cli.engine.readers import option_string as cli_option_string
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Option as CLIOption
-from cmk.cli.internal import Options
+from cmk.cli.internal import Options as CLIOptions
 from cmk.diagnostics.engine import DumpSelection, resolve_selection
 from cmk.diagnostics.internal import DiagnosticsPlugin, Sensitivity, Topic
 
@@ -53,9 +53,9 @@ class _CliSelection:
 def _cli_selection(parsed: Mapping[str, object]) -> _CliSelection:
     return _CliSelection(
         list_plugins="list" in parsed,
-        all_topics=option_string(parsed, "all-topics"),
-        plugins=option_string(parsed, "plugins"),
-        checkmk_server_host=option_string(parsed, "checkmk-server-host") or "",
+        all_topics=cli_option_string(parsed, "all-topics"),
+        plugins=cli_option_string(parsed, "plugins"),
+        checkmk_server_host=cli_option_string(parsed, "checkmk-server-host") or "",
     )
 
 
@@ -109,7 +109,7 @@ def _print_available_plugins(catalogue: Mapping[str, DiagnosticsPlugin]) -> None
 
 
 def _mode_create_diagnostics_dump(
-    _omd_root: Path, global_options: CLIGlobalOptions, parsed: Options, _args: CLIArgs
+    _omd_root: Path, global_options: CLIGlobalOptions, parsed: CLIOptions, _args: CLIArgs
 ) -> CLIExitCode:
     options = _cli_selection(parsed)
 
@@ -142,7 +142,7 @@ def _mode_create_diagnostics_dump(
 
 
 def _run_create_diagnostics_dump(
-    context: CLIContext, options: Options, args: CLIArgs
+    context: CLIContext, options: CLIOptions, args: CLIArgs
 ) -> CLIExitCode:
     try:
         return _mode_create_diagnostics_dump(

@@ -14,7 +14,7 @@ import cmk.utils.paths
 from cmk import trace
 from cmk.automations.engine import AutomationError
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTimeout
-from cmk.cli.engine.readers import option_string
+from cmk.cli.engine.readers import option_string as cli_option_string
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
@@ -22,7 +22,7 @@ from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Option as CLIOption
-from cmk.cli.internal import Options
+from cmk.cli.internal import Options as CLIOptions
 from cmk.profiling import backend as profiling
 
 logger = logging.getLogger(__name__)
@@ -38,7 +38,7 @@ def _automation_error_exit_code(error: AutomationError) -> CLIExitCode:
 
 
 def _mode_automation(
-    omd_root: Path, global_options: CLIGlobalOptions, options: Options, args: CLIArgs
+    omd_root: Path, global_options: CLIGlobalOptions, options: CLIOptions, args: CLIArgs
 ) -> CLIExitCode:
     from cmk.automations.engine import Automations, discover_automations
     from cmk.automations.internal import AutomationID
@@ -91,7 +91,7 @@ def _mode_automation(
         return CLIExitCode.SUCCESS
 
 
-def _run_automation(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_automation(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_automation(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
@@ -101,9 +101,9 @@ def _run_automation(context: CLIContext, options: Options, args: CLIArgs) -> CLI
         return CLIExitCode.UNKNOWN
 
 
-def _for_cmk_version(options: Options) -> str:
+def _for_cmk_version(options: CLIOptions) -> str:
     """The version to serialize the result for, checked before the automation runs"""
-    if (for_cmk_version := option_string(options, "for-cmk-version")) is None:
+    if (for_cmk_version := cli_option_string(options, "for-cmk-version")) is None:
         return cmk_version.__version__
     try:
         cmk_version.Version.from_str(for_cmk_version)

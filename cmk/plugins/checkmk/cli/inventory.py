@@ -42,7 +42,8 @@ from cmk.checkengine.parser import NO_SELECTION
 from cmk.checkengine.plugins import InventoryPluginName, SectionName
 from cmk.checkengine.snmplib import SNMPSectionName
 from cmk.checkengine.specs.checkresults import ActiveCheckResult
-from cmk.cli.engine.readers import option_names, option_string
+from cmk.cli.engine.readers import option_names as cli_option_names
+from cmk.cli.engine.readers import option_string as cli_option_string
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
@@ -50,7 +51,7 @@ from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Option as CLIOption
-from cmk.cli.internal import Options
+from cmk.cli.internal import Options as CLIOptions
 from cmk.inventory.paths import InventoryPaths
 from cmk.inventory.store import InventoryStore
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
@@ -111,20 +112,20 @@ def _inventory_options(parsed: Mapping[str, object]) -> InventoryOptions:
     if "usewalk" in parsed:
         options["usewalk"] = True
     if "snmp-backend" in parsed:
-        options["snmp-backend"] = option_string(parsed, "snmp-backend") or ""
+        options["snmp-backend"] = cli_option_string(parsed, "snmp-backend") or ""
     if "force" in parsed:
         options["force"] = True
     if "detect-sections" in parsed:
-        options["detect-sections"] = option_names(parsed, "detect-sections", SectionName)
+        options["detect-sections"] = cli_option_names(parsed, "detect-sections", SectionName)
     if "plugins" in parsed:
-        options["plugins"] = option_names(parsed, "plugins", InventoryPluginName)
+        options["plugins"] = cli_option_names(parsed, "plugins", InventoryPluginName)
     if "detect-plugins" in parsed:
-        options["detect-plugins"] = option_names(parsed, "detect-plugins", str)
+        options["detect-plugins"] = cli_option_names(parsed, "detect-plugins", str)
     return options
 
 
 def _mode_inventory(
-    omd_root: Path, global_options: CLIGlobalOptions, parsed: Options, args: CLIArgs
+    omd_root: Path, global_options: CLIGlobalOptions, parsed: CLIOptions, args: CLIArgs
 ) -> CLIExitCode:
     app = make_app(omd_root)
     fake_dns = fake_dns_address(parsed)
@@ -350,7 +351,7 @@ def _mode_inventory(
         return CLIExitCode.SUCCESS
 
 
-def _run_inventory(context: CLIContext, options: Options, args: CLIArgs) -> CLIExitCode:
+def _run_inventory(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
     try:
         return _mode_inventory(context.omd_root, context.global_options, options, args)
     except (MKBailOut, MKGeneralException) as e:
@@ -391,7 +392,7 @@ cli_command_inventory = CLICommand(
 
 
 def _mode_inventorize_marked_hosts(
-    omd_root: Path, global_options: CLIGlobalOptions, options: Options, _args: CLIArgs
+    omd_root: Path, global_options: CLIGlobalOptions, options: CLIOptions, _args: CLIArgs
 ) -> CLIExitCode:
     app = make_app(omd_root)
     fake_dns = fake_dns_address(options)
@@ -579,7 +580,7 @@ def _mode_inventorize_marked_hosts(
 
 
 def _run_inventorize_marked_hosts(
-    context: CLIContext, options: Options, args: CLIArgs
+    context: CLIContext, options: CLIOptions, args: CLIArgs
 ) -> CLIExitCode:
     try:
         return _mode_inventorize_marked_hosts(

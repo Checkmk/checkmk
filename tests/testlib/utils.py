@@ -374,16 +374,22 @@ def daemon(
     name_for_logging: str,
     termination_mode: DaemonTerminationMode,
     sudo: bool,
+    output_file: Path,
 ) -> Iterator[subprocess.Popen[str]]:
-    with execute(
-        cmd,
-        sudo=sudo,
-        shell=False,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        start_new_session=True,
-    ) as daemon_proc:
+    # The output goes to a file, not a pipe: nobody reads a pipe while the daemon runs, so the
+    # daemon would block on its next write once the pipe is full.
+    with (
+        output_file.open("w") as output,
+        execute(
+            cmd,
+            sudo=sudo,
+            shell=False,
+            stdout=output,
+            stderr=subprocess.STDOUT,
+            text=True,
+            start_new_session=True,
+        ) as daemon_proc,
+    ):
         try:
             yield daemon_proc
         finally:
@@ -391,8 +397,8 @@ def daemon(
             if daemon_rc is None:
                 logger.info("Terminating %s daemon...", name_for_logging)
                 _terminate_daemon(daemon_proc, termination_mode, sudo)
-            stdout, _stderr = daemon_proc.communicate(timeout=5)
-            logger.info("Output from %s daemon:\n%s", name_for_logging, stdout)
+            daemon_proc.wait(timeout=5)
+            logger.info("Output from %s daemon:\n%s", name_for_logging, output_file.read_text())
             assert daemon_rc is None, (
                 f"{name_for_logging} daemon unexpectedly exited (RC={daemon_rc})!"
             )

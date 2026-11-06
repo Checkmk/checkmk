@@ -148,8 +148,13 @@ def download_and_install_agent_package(site: Site, tmp_dir: Path) -> Path:
 
 
 @contextlib.contextmanager
-def agent_controller_daemon(ctl_path: Path) -> Iterator[subprocess.Popen[str] | None]:
-    """Manually take over systemds job if we are in a container (where we have no systemd)."""
+def agent_controller_daemon(
+    ctl_path: Path, tmp_dir: Path
+) -> Iterator[subprocess.Popen[str] | None]:
+    """Manually take over systemds job if we are in a container (where we have no systemd).
+
+    tmp_dir receives the output of tests/scripts/agent_controller_daemon.py, if it runs.
+    """
     if not is_containerized():
         yield None
         return
@@ -166,6 +171,7 @@ def agent_controller_daemon(ctl_path: Path) -> Iterator[subprocess.Popen[str] | 
         name_for_logging="agent controller",
         termination_mode=DaemonTerminationMode.GROUP,
         sudo=True,
+        output_file=tmp_dir / "agent_controller_output.txt",
     ) as agent_ctl_daemon:
         # wait for a dump being returned successfully, which may not work immediately
         # after starting the agent controller, so we retry for some time

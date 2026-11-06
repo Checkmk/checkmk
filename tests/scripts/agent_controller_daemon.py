@@ -8,15 +8,12 @@
 
 import argparse
 import contextlib
-import logging
 import socketserver
 import subprocess
 import sys
 from collections.abc import Iterator
 from multiprocessing import Process
 from pathlib import Path
-
-logger = logging.getLogger(__name__)
 
 
 def parse_args() -> argparse.Namespace:
@@ -70,13 +67,9 @@ def _provide_agent_unix_socket() -> Iterator[None]:
 
 
 def _run_controller_daemon(ctl_path: Path) -> Iterator[subprocess.Popen]:
-    with subprocess.Popen(
-        [ctl_path.as_posix(), "daemon"],
-        stderr=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        close_fds=True,
-        encoding="utf-8",
-    ) as proc:
+    # The controller writes to the output of this script, which the caller collects. A pipe would
+    # block the controller once full, since nobody reads it while the controller runs.
+    with subprocess.Popen([ctl_path.as_posix(), "daemon"], close_fds=True) as proc:
         try:
             yield proc
         finally:
@@ -85,9 +78,6 @@ def _run_controller_daemon(ctl_path: Path) -> Iterator[subprocess.Popen]:
                 proc.wait(timeout=5)
             except subprocess.TimeoutExpired:
                 proc.kill()
-            stdout, stderr = proc.communicate()
-            logger.info("Stdout from controller daemon process:\n%s", stdout)
-            logger.info("Stderr from controller daemon process:\n%s", stderr)
 
 
 @contextlib.contextmanager

@@ -29,7 +29,6 @@ from typing import override
 from cmk.ccc import store
 from cmk.gui.role_types import UserRoleBase
 from cmk.gui.userdb import load_users
-from cmk.maps.gui._images import delete_background_files
 from cmk.maps.gui.legacy_maps import (
     copy_legacy_background,
     copy_legacy_icons,
@@ -156,7 +155,7 @@ def _prepare_maps(
                 "Every update tries again until the file is fixed or removed.",
                 {"file": path.relative_to(paths.omd_root), "error": exc},
             )
-            delete_background_files(maps.admin, name)
+            maps.discard_backgrounds(name)
             continue
         migrated[board] = name
         if dropped:

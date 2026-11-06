@@ -1312,7 +1312,17 @@ import of the editor:
   named like a board the OrbVis migration just stored becomes
   ``<name>_legacy``. A character Maps does not take
   in a name becomes ``_``, as in the editor's import. The outcome per map is
-  recorded in ``var/maps/nagvis_maps_migration.mk``.
+  recorded in ``var/maps/nagvis_maps_migration.mk``, together with the owner
+  and name it was last stored as (``migrated_as``).
+* ``cmk-migrate-maps`` (``cmk.update_config.migrate_maps``) runs the same
+  migration on a running site, optionally for given maps only. With ``-f`` it
+  migrates recorded maps again: one whose ``migrated_as`` map still exists
+  among the owner's maps replaces it under its name, also if it was changed
+  in Maps since; any other is migrated like a new one, so a map that existed
+  before the migration is never replaced. As the site runs, it adds a pending
+  change instead of the update's forced sync, so the next activation brings the
+  maps and role permissions to the sites. On a remote site it does nothing and
+  points to the central site.
 * Visibility: NagVis shows a map to roles with ``nagvis.*_*_*`` or
   ``nagvis.Map_view_*``, and to roles with ``nagvis.Map_view`` whose user is in
   a contact group listing the map (``nagvis_maps``). Maps requires both the

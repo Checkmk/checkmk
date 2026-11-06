@@ -407,17 +407,15 @@ def store_background(owner: str, map_name: str, suffix: str, contents: bytes) ->
     Returns the filename the map's ``background_image`` refers to. ``map_name`` must
     be a valid map name (see :func:`_bg_stem`).
     """
-    bg_dir = _backgrounds_dir()
-    stem = _bg_stem(owner, map_name)
-    stored = f"{stem}.{secrets.token_urlsafe(16)}{suffix}"
-    dest = bg_dir / stored
-
-    store.save_bytes_to_file(dest, contents)
+    stored = _write_background(owner, map_name, suffix, contents)
     # Map config holds only one filename; drop other-format siblings.
-    written = dest.resolve()
-    for stale in bg_dir.glob(f"{stem}.*"):
-        if stale.resolve() != written:
-            stale.unlink(missing_ok=True)
+    delete_background_files(owner, map_name, keep=stored)
+    return stored
+
+
+def _write_background(owner: str, map_name: str, suffix: str, contents: bytes) -> str:
+    stored = f"{_bg_stem(owner, map_name)}.{secrets.token_urlsafe(16)}{suffix}"
+    store.save_bytes_to_file(_backgrounds_dir() / stored, contents)
     return stored
 
 
@@ -425,14 +423,16 @@ def import_background(owner: str, map_name: str, ref: str, contents: bytes) -> s
     """Store the image file ``ref`` as the background of ``owner``'s map, if it is one.
 
     For a migration, which brings its files without an upload: the same name and
-    content checks, but no size limit. Returns what :func:`store_background` does.
+    content checks, but no size limit. Returns what :func:`store_background` does,
+    but keeps the map's other background files: the migration drops them once the
+    map is stored, so a map it fails to replace keeps its background.
     """
     suffix = Path(ref).suffix.lower()
     if not (
         is_valid_image_name(ref) and suffix in BACKGROUND_SUFFIXES and is_valid_image(contents)
     ):
         return None
-    return store_background(owner, map_name, suffix, contents)
+    return _write_background(owner, map_name, suffix, contents)
 
 
 def delete_background(map_name: str) -> None:
@@ -440,8 +440,9 @@ def delete_background(map_name: str) -> None:
     delete_background_files(_editable_map_owner(map_name), map_name)
 
 
-def delete_background_files(owner: str, map_name: str) -> None:
-    """Remove every background file of ``owner``'s map (owner already resolved).
+def delete_background_files(owner: str, map_name: str, *, keep: str | None = None) -> None:
+    """Remove every background file of ``owner``'s map but ``keep`` (owner already
+    resolved).
 
     For callers that have already resolved the real owner (e.g. deleting a foreign
     map, where the caller may delete but not edit it, so ``_editable_map_owner``
@@ -451,4 +452,5 @@ def delete_background_files(owner: str, map_name: str) -> None:
         return
     bg_dir = _backgrounds_dir()
     for f in bg_dir.glob(f"{_bg_stem(owner, map_name)}.*"):
-        f.unlink(missing_ok=True)
+        if f.name != keep:
+            f.unlink(missing_ok=True)

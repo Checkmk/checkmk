@@ -3,16 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""One-time migration of NagVis maps into Checkmk Maps.
+"""Migration of NagVis maps into Checkmk Maps, on update and by ``cmk-migrate-maps``.
 
 See "Update from NagVis" in ``doc/documentation/arch-comp-maps.rst``. What became of
 each map, ``migrated`` or ``skipped``, is recorded in
 ``var/maps/nagvis_maps_migration.mk``; a later run only looks at maps not recorded
-there. A map that could not be migrated is not recorded, so every update tries it
-again.
+there, unless forced. A map that could not be migrated is not recorded, so every
+update tries it again.
 """
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass, field
 from logging import Logger
 from pathlib import Path
@@ -27,7 +27,6 @@ from cmk.gui.userdb import load_users, UserRolesConfigFile
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.maps.gui._cfg_import import map_name_from_filename
-from cmk.maps.gui._images import delete_background_files
 from cmk.maps.gui.nagvis_maps import (
     copy_nagvis_background,
     nagvis_maps_dir,
@@ -56,10 +55,6 @@ from cmk.utils.log import VERBOSE
 
 def _record_path() -> Path:
     return paths.omd_root / "var" / "maps" / "nagvis_maps_migration.mk"
-
-
-def _save_record(outcomes: Mapping[str, str], pending: Mapping[str, str]) -> None:
-    store.save_object_to_file(_record_path(), {"maps": outcomes, "pending": pending})
 
 
 @dataclass(frozen=True)
@@ -157,12 +152,17 @@ class _Migrated:
 def _prepare_maps(
     files: Sequence[Path],
     maps: AdminMaps,
+    earlier: Mapping[str, str],
+    replace: Mapping[str, str],
     config: NagVisConfig,
     access: _NagVisAccess | None,
     logger: Logger,
 ) -> _Migrated:
     """Add each NagVis map to the admin's maps; skipped ones enter the outcomes.
 
+    ``earlier`` holds the name each map of an earlier run still has, by NagVis name;
+    links follow those names too. A map in ``replace`` takes the place of the
+    admin's map of the name given there.
     A map that failed is left for the next run. Without ``access`` the maps stay
     private to the admin.
     """
@@ -172,13 +172,15 @@ def _prepare_maps(
         nagvis_name = path.stem
         # NagVis allows more characters in a map name, a dot for one.
         valid_name = map_name_from_filename(path.name)
-        name = maps.taken.target(valid_name)
-        if maps.taken.taken(name):
+        replacing = replace.get(nagvis_name)
+        name = replacing or maps.taken.target(valid_name)
+        if not replacing and maps.taken.taken(name):
             logger.warning(
                 "NagVis map %(map)r is not migrated: a map named %(name)r already exists.",
                 {"map": nagvis_name, "name": name},
             )
-            maps.outcomes[nagvis_name] = "skipped"
+            # A forced run keeps a map migrated before as such.
+            maps.outcomes.setdefault(nagvis_name, "skipped")
             continue
         try:
             map_cfg, warnings = read_nagvis_map(path, name, config)
@@ -192,11 +194,18 @@ def _prepare_maps(
             spec = spec_from_map(map_from_spec(dict(map_cfg)))
         except Exception as exc:
             logger.warning(
-                "Could not migrate NagVis map %(file)s: %(error)s. "
-                "Every update tries again until the file is fixed or removed.",
-                {"file": path.relative_to(paths.omd_root), "error": exc},
+                "Could not migrate NagVis map %(file)s: %(error)s. %(next)s",
+                {
+                    "file": path.relative_to(paths.omd_root),
+                    "error": exc,
+                    "next": (
+                        f"Its earlier migration {name!r} is kept."
+                        if replacing
+                        else "Every update tries again until the file is fixed or removed."
+                    ),
+                },
             )
-            delete_background_files(maps.admin, name)
+            maps.discard_backgrounds(name)
             continue
         public: VisualPublic = False
         migrated.seeing[name] = None
@@ -213,7 +222,7 @@ def _prepare_maps(
                 f"Its name becomes {valid_name!r}, as a map name takes only letters, digits, "
                 "underscores and hyphens."
             )
-        if name != valid_name:
+        if name != valid_name and not replacing:
             warnings.append(f"It is migrated as {name!r}: a map of that name already exists.")
         for warning in warnings:
             logger.warning(
@@ -224,80 +233,130 @@ def _prepare_maps(
             "Prepared NagVis map %(name)r for %(admin)s.",
             {"name": name, "admin": maps.admin},
         )
-    follow_renames(maps, pages, migrated.names)
+    follow_renames(maps, pages, {**earlier, **migrated.names})
     return migrated
+
+
+@dataclass(frozen=True)
+class NagVisMigration:
+    # The NagVis names of the maps the run stored.
+    migrated: Sequence[str]
+    # Whether every map of the run was migrated, none skipped, failed or unknown.
+    complete: bool
+
+
+def migrate_nagvis_maps(
+    logger: Logger, *, only: Collection[str] = (), force: bool = False
+) -> NagVisMigration:
+    """Migrate the NagVis maps not recorded yet.
+
+    ``only`` limits the run to these NagVis maps. With ``force`` the recorded ones are
+    migrated again, and a map the admin still has from an earlier run is replaced,
+    also if it was changed in Maps since; any other map keeps its name.
+    """
+    sources = {path.stem: path for path in sorted(nagvis_maps_dir().glob("*.cfg"))}
+    unknown = sorted(set(only) - sources.keys())
+    for nagvis_name in unknown:
+        logger.error("There is no NagVis map %(map)r.", {"map": nagvis_name})
+    files = [path for nagvis_name, path in sources.items() if not only or nagvis_name in only]
+    record = store.load_object_from_file(_record_path(), default={}, debug=False)
+    outcomes: dict[str, str] = record.get("maps", {})
+    # The admin and the name each map was last stored as, by NagVis name.
+    migrated_as: dict[str, tuple[str, str]] = record.get("migrated_as", {})
+    if not force:
+        for path in files:
+            if path.stem in only and path.stem in outcomes:
+                logger.info(
+                    "NagVis map %(map)r is recorded as %(outcome)s and left untouched.",
+                    {"map": path.stem, "outcome": outcomes[path.stem]},
+                )
+        files = [path for path in files if path.stem not in outcomes]
+    if not files:
+        return NagVisMigration((), complete=not unknown)
+
+    admin = migration_owner(load_users())
+    if admin is None:
+        logger.warning(
+            "Cannot migrate %(count)d NagVis map(s): no user with the admin role "
+            "found. They are migrated once an admin exists.",
+            {"count": len(files)},
+        )
+        return NagVisMigration((), complete=False)
+
+    def save_record(outcomes: Mapping[str, str], pending: Mapping[str, str]) -> None:
+        migrated_as.update((source, (admin, name)) for source, name in pending.items())
+        store.save_object_to_file(
+            _record_path(), {"maps": outcomes, "pending": pending, "migrated_as": migrated_as}
+        )
+
+    config = read_nagvis_config()
+    access = _nagvis_access() if config.checkmk_permissions else None
+    with admin_maps(admin, record.get("pending", {}), outcomes, save_record) as maps:
+        if not force:
+            files = [path for path in files if path.stem not in outcomes]
+        earlier = {
+            source: name
+            for source, (owner, name) in migrated_as.items()
+            if owner == admin and outcomes.get(source) == "migrated" and name in maps.own
+        }
+        migrated = _prepare_maps(
+            files, maps, earlier, earlier if force else {}, config, access, logger
+        )
+        shape_warnings = maps.store(
+            migrated.names,
+            lambda roles: _grant_map_visibility(roles, migrated.seeing),
+            migrated.shapes,
+        )
+
+    for warning in shape_warnings:
+        logger.warning(warning)
+    result = NagVisMigration(
+        tuple(migrated.names),
+        complete=not unknown and all(path.stem in migrated.names for path in files),
+    )
+    if not migrated.names:
+        return result
+    logger.info(
+        "Migrated %(count)d NagVis map(s) to %(admin)s.",
+        {"count": len(migrated.names), "admin": admin},
+    )
+    if admin != SITE_ADMIN:
+        logger.warning(
+            "The migrated NagVis maps belong to %(admin)s, as there is no admin "
+            "%(site_admin)s. Deleting %(admin)s removes these maps.",
+            {"admin": admin, "site_admin": SITE_ADMIN},
+        )
+    if access is None:
+        logger.warning(
+            "NagVis does not use the Checkmk roles and contact groups for access on "
+            "this site. The migrated maps are visible only to %(admin)s; publish them "
+            "in Maps as needed.",
+            {"admin": admin},
+        )
+    elif lacking := sorted(
+        role_id
+        for role_id in access.without_maps
+        if any(seeing and role_id in seeing for seeing in migrated.seeing.values())
+    ):
+        logger.warning(
+            "The role(s) %(roles)s could see NagVis maps, but lack the permission "
+            "'Use Checkmk Maps' or 'See user maps' and do not see them in Maps.",
+            {"roles": ", ".join(lacking)},
+        )
+    for pool, spec in sorted(config.pools.items()):
+        if spec.urls and spec.maps & migrated.names.keys():
+            logger.warning(
+                "The NagVis rotation pool %(pool)r also shows %(urls)s. Maps rotates "
+                "only through maps and leaves these out.",
+                {"pool": pool, "urls": ", ".join(spec.urls)},
+            )
+    return result
 
 
 class MigrateNagVisMaps(UpdateAction):
     @override
     def __call__(self, logger: Logger, *, debug: bool) -> None:
-        maps_dir = nagvis_maps_dir()
-        if not maps_dir.is_dir():
-            return
-        record = store.load_object_from_file(_record_path(), default={}, debug=False)
-        outcomes: dict[str, str] = record.get("maps", {})
-        files = [path for path in sorted(maps_dir.glob("*.cfg")) if path.stem not in outcomes]
-        if not files:
-            return
-
-        admin = migration_owner(load_users())
-        if admin is None:
-            logger.warning(
-                "Cannot migrate %(count)d NagVis map(s): no user with the admin role "
-                "found. They will be migrated by a later update once an admin exists.",
-                {"count": len(files)},
-            )
-            return
-
-        config = read_nagvis_config()
-        access = _nagvis_access() if config.checkmk_permissions else None
-        with admin_maps(admin, record.get("pending", {}), outcomes, _save_record) as maps:
-            files = [path for path in files if path.stem not in outcomes]
-            migrated = _prepare_maps(files, maps, config, access, logger)
-            shape_warnings = maps.store(
-                migrated.names,
-                lambda roles: _grant_map_visibility(roles, migrated.seeing),
-                migrated.shapes,
-            )
-
-        for warning in shape_warnings:
-            logger.warning(warning)
-        if not migrated.names:
-            return
-        logger.info(
-            "Migrated %(count)d NagVis map(s) to %(admin)s.",
-            {"count": len(migrated.names), "admin": admin},
-        )
-        if admin != SITE_ADMIN:
-            logger.warning(
-                "The migrated NagVis maps belong to %(admin)s, as there is no admin "
-                "%(site_admin)s. Deleting %(admin)s removes these maps.",
-                {"admin": admin, "site_admin": SITE_ADMIN},
-            )
-        if access is None:
-            logger.warning(
-                "NagVis does not use the Checkmk roles and contact groups for access on "
-                "this site. The migrated maps are visible only to %(admin)s; publish them "
-                "in Maps as needed.",
-                {"admin": admin},
-            )
-        elif lacking := sorted(
-            role_id
-            for role_id in access.without_maps
-            if any(seeing and role_id in seeing for seeing in migrated.seeing.values())
-        ):
-            logger.warning(
-                "The role(s) %(roles)s could see NagVis maps, but lack the permission "
-                "'Use Checkmk Maps' or 'See user maps' and do not see them in Maps.",
-                {"roles": ", ".join(lacking)},
-            )
-        for pool, spec in sorted(config.pools.items()):
-            if spec.urls and spec.maps & migrated.names.keys():
-                logger.warning(
-                    "The NagVis rotation pool %(pool)r also shows %(urls)s. Maps rotates "
-                    "only through maps and leaves these out.",
-                    {"pool": pool, "urls": ", ".join(spec.urls)},
-                )
+        migrate_nagvis_maps(logger)
 
 
 update_action_registry.register(

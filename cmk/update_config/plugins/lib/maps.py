@@ -103,11 +103,18 @@ class AdminMaps:
 
     admin: UserId
     own: dict[str, dict[str, object]]
+    # The background file of each map in ``own`` as it was on disk.
+    backgrounds: Mapping[str, str | None]
     # What became of each source; the migrated are entered by ``store``.
     outcomes: dict[str, str]
     # Its ``own`` grows by each map a run migrates.
     taken: TakenNames
     save_record: Callable[[Mapping[str, str], Mapping[str, str]], None]
+
+    def discard_backgrounds(self, name: str) -> None:
+        """Remove the background files copied for the map ``name``; a map stored
+        before keeps its own."""
+        delete_background_files(self.admin, name, keep=self.backgrounds.get(name))
 
     def store(
         self,
@@ -125,8 +132,9 @@ class AdminMaps:
         next run takes a stored map as migrated; so do the shapes, which it would not
         add again. On failure the backgrounds copied for the migrated maps and the
         shapes added are removed: the next run copies them again, and for another
-        owner these would be orphaned. Shapes a stopped run added are not among
-        them; the next run that stores the maps uses them.
+        owner these would be orphaned; a replaced map keeps the background it had.
+        Shapes a stopped run added are not among them; the next run that stores the
+        maps uses them. Once stored, a map's other background files are dropped.
         """
         if not migrated:
             self.save_record(self.outcomes, {})
@@ -142,23 +150,27 @@ class AdminMaps:
         except Exception:
             for name in migrated.values():
                 with suppress(OSError):
-                    delete_background_files(self.admin, name)
+                    self.discard_backgrounds(name)
             if shapes:
                 shapes.remove_added()
             raise
         self.outcomes.update(dict.fromkeys(migrated, "migrated"))
         self.save_record(self.outcomes, {})
+        for name in migrated.values():
+            # A file left over is only unused.
+            with suppress(OSError):
+                delete_background_files(self.admin, name, keep=_background(self.own[name]))
         return warnings
 
 
 def follow_renames(
     maps: AdminMaps, pages: Mapping[str, MapConfig], migrated: Mapping[str, str]
 ) -> None:
-    """Point the links among a run's maps at the names their targets migrated as.
+    """Point the links of a run's maps at the names their targets migrated as.
 
-    ``pages`` holds the run's maps by name, ``migrated`` the name of each by
-    source; a link names its target by source. The record keeps no names, so a
-    link between maps of different runs keeps its source name.
+    ``pages`` holds the run's maps by name, ``migrated`` the name each source
+    migrated as; a link names its target by source, so a link to a source not
+    in ``migrated`` keeps that name.
     """
     renamed = {source: name for source, name in migrated.items() if source != name}
     if not renamed:
@@ -173,6 +185,12 @@ def follow_renames(
             maps.own[name] = MapPage(page).serialize()
 
 
+def _background(page: Mapping[str, object] | None) -> str | None:
+    spec = page.get("map_spec") if page else None
+    ref = spec.get("background_image") if isinstance(spec, dict) else None
+    return ref if isinstance(ref, str) else None
+
+
 @contextmanager
 def admin_maps(
     admin: UserId,
@@ -184,7 +202,8 @@ def admin_maps(
     ``outcomes``; the rest is tried again.
 
     Before storing, a run notes in ``pending`` the name each source is stored as. That
-    name was free then, so a map of it among the admin's own is the one stored.
+    name was free then, or held the source's earlier result, so a map of it among the
+    admin's own is the source's.
     ``save_record(outcomes, pending)`` writes the run's record.
     """
     maps_path = user_maps_path(admin)
@@ -197,7 +216,14 @@ def admin_maps(
         for source, name in pending.items():
             if name in own:
                 outcomes[source] = "migrated"
-        yield AdminMaps(admin, own, outcomes, TakenNames.load(admin, own), save_record)
+        yield AdminMaps(
+            admin,
+            own,
+            {name: _background(page) for name, page in own.items()},
+            outcomes,
+            TakenNames.load(admin, own),
+            save_record,
+        )
 
 
 def base_role(role_id: str, role: UserRoleBase) -> str:

@@ -6,6 +6,7 @@
 import logging
 import os
 from collections.abc import Iterator, Mapping
+from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
@@ -18,9 +19,12 @@ from cmk.gui.logged_in import save_user_file
 from cmk.gui.userdb import UserRolesConfigFile
 from cmk.gui.watolib.groups_io import load_group_information, save_group_information
 from cmk.maps.gui.pagetype import MapPage
-from cmk.maps.gui.store import get_own_map
+from cmk.maps.gui.store import get_own_map, user_maps_path
 from cmk.update_config.internal import ExpiryVersion
-from cmk.update_config.plugins.actions.nagvis_maps import MigrateNagVisMaps
+from cmk.update_config.plugins.actions.nagvis_maps import (
+    migrate_nagvis_maps,
+    MigrateNagVisMaps,
+)
 from cmk.utils import paths
 from tests.testlib.unit.gui.users import create_and_destroy_user
 
@@ -81,6 +85,16 @@ def _migrated(admin: UserId, name: str, *blocks: str) -> MapPage:
     page = get_own_map(admin, name)
     assert page is not None
     return page
+
+
+@contextmanager
+def _maps_unwritable(admin: UserId) -> Iterator[None]:
+    profile = paths.profile_dir / admin
+    profile.chmod(0o500)
+    try:
+        yield
+    finally:
+        profile.chmod(0o770)
 
 
 def _objects(page: MapPage) -> list[dict[str, object]]:
@@ -166,13 +180,8 @@ def test_a_shape_is_removed_when_its_map_cannot_be_stored(admin: UserId) -> None
     _write_map("office", "define shape {\nicon=cloud.png\nx=1\ny=1\n}")
     # An existing store file: the store lock opens it, only writing it fails.
     save_user_file("user_maps", {}, admin)
-    profile = paths.profile_dir / admin
-    profile.chmod(0o500)
-    try:
-        with pytest.raises(MKGeneralException):
-            _action()(_LOGGER, debug=True)
-    finally:
-        profile.chmod(0o770)
+    with _maps_unwritable(admin), pytest.raises(MKGeneralException):
+        _action()(_LOGGER, debug=True)
 
     assert not (paths.omd_root / "var" / "maps" / "images" / "cloud.png").exists()
 
@@ -187,13 +196,8 @@ def test_a_shape_in_the_library_before_stays_when_its_map_cannot_be_stored(
     _write_nagvis_image("shapes", "cloud.png")
     _write_map("office", "define shape {\nicon=cloud.png\nx=1\ny=1\n}")
     save_user_file("user_maps", {}, admin)
-    profile = paths.profile_dir / admin
-    profile.chmod(0o500)
-    try:
-        with pytest.raises(MKGeneralException):
-            _action()(_LOGGER, debug=True)
-    finally:
-        profile.chmod(0o770)
+    with _maps_unwritable(admin), pytest.raises(MKGeneralException):
+        _action()(_LOGGER, debug=True)
 
     assert library_image.read_bytes() == _PNG
 
@@ -250,8 +254,9 @@ def test_a_map_whose_fallback_name_is_taken_too_is_skipped() -> None:
     _action()(_LOGGER, debug=True)
     store.save_object_to_file(_record_path(), {})
 
-    _action()(_LOGGER, debug=True)
+    result = migrate_nagvis_maps(_LOGGER)
 
+    assert not result.complete
     assert _outcomes()["office"] == "skipped"
 
 
@@ -295,6 +300,30 @@ def test_a_link_follows_its_map_to_the_cleaned_name(admin: UserId) -> None:
     assert [obj["map_name"] for obj in _objects(page)] == ["core_switches"]
 
 
+def test_a_link_follows_its_map_to_the_name_an_earlier_run_gave_it(admin: UserId) -> None:
+    save_user_file("user_maps", {"office": {"title": "Own"}}, admin)
+    _write_map("office", _HOST)
+    _action()(_LOGGER, debug=True)
+
+    page = _migrated(admin, "overview", "define map {\nmap_name=office\nx=10\ny=20\n}")
+
+    assert [obj["map_name"] for obj in _objects(page)] == ["office_legacy"]
+
+
+def test_a_forced_run_of_a_single_map_keeps_its_link_to_the_fallback_name(
+    admin: UserId,
+) -> None:
+    save_user_file("user_maps", {"office": {"title": "Own"}}, admin)
+    _write_map("office", _HOST)
+    _write_map("overview", "define map {\nmap_name=office\nx=10\ny=20\n}")
+    _action()(_LOGGER, debug=True)
+
+    migrate_nagvis_maps(_LOGGER, only=["overview"], force=True)
+
+    own = store.load_object_from_file(user_maps_path(admin), default={}, debug=True)
+    assert [obj["map_name"] for obj in own["overview"]["map_spec"]["objects"]] == ["office_legacy"]
+
+
 def test_a_long_name_is_shortened_for_its_fallback(admin: UserId) -> None:
     name = "a" * 100
     save_user_file("user_maps", {name: {"title": "Own"}}, admin)
@@ -336,6 +365,169 @@ def test_a_map_a_stopped_run_did_not_store_is_migrated_again(admin: UserId) -> N
     _migrated(admin, "office", _HOST)
 
     assert _outcomes() == {"office": "migrated"}
+
+
+# --- running it again ------------------------------------------------------
+
+
+def test_a_forced_run_replaces_the_earlier_migration(admin: UserId) -> None:
+    _write_map("office", "define global {\nalias=First\n}")
+    _action()(_LOGGER, debug=True)
+    _write_map("office", "define global {\nalias=Second\n}")
+
+    assert migrate_nagvis_maps(_LOGGER, force=True).complete
+
+    page = get_own_map(admin, "office")
+    assert page is not None
+    assert page.config.map_spec["alias"] == "Second"
+    assert get_own_map(admin, "office_legacy") is None
+
+
+def test_a_forced_run_never_replaces_a_map_created_otherwise(admin: UserId) -> None:
+    save_user_file("user_maps", {"office": {"title": "Own"}}, admin)
+    _write_map("office", "define global {\nalias=First\n}")
+    _action()(_LOGGER, debug=True)
+    _write_map("office", "define global {\nalias=Second\n}")
+
+    migrate_nagvis_maps(_LOGGER, force=True)
+
+    assert store.load_object_from_file(user_maps_path(admin), default={}, debug=True)["office"] == {
+        "title": "Own"
+    }
+    legacy = get_own_map(admin, "office_legacy")
+    assert legacy is not None
+    assert legacy.config.map_spec["alias"] == "Second"
+
+
+def test_a_forced_run_replaces_the_earlier_migration_changed_in_maps(admin: UserId) -> None:
+    _migrated(admin, "office", "define global {\nalias=First\n}")
+    own = store.load_object_from_file(user_maps_path(admin), default={}, debug=True)
+    own["office"]["title"] = "Edited in Maps"
+    save_user_file("user_maps", own, admin)
+    _write_map("office", "define global {\nalias=Second\n}")
+
+    migrate_nagvis_maps(_LOGGER, force=True)
+
+    own = store.load_object_from_file(user_maps_path(admin), default={}, debug=True)
+    assert own["office"]["map_spec"]["alias"] == "Second"
+    assert "office_legacy" not in own
+
+
+def test_a_forced_run_that_cannot_migrate_a_map_again_keeps_it_recorded_as_migrated(
+    admin: UserId,
+) -> None:
+    _write_map("office", _HOST)
+    save_user_file("user_maps", {"office": {}, "office_legacy": {}}, admin)
+    store.save_object_to_file(
+        _record_path(),
+        {"maps": {"office": "migrated"}, "migrated_as": {"office": ("bob", "office")}},
+    )
+
+    migrate_nagvis_maps(_LOGGER, force=True)
+
+    assert _outcomes() == {"office": "migrated"}
+
+
+@_NOT_ROOT
+def test_a_forced_run_that_fails_keeps_the_earlier_background(admin: UserId) -> None:
+    _write_nagvis_image("maps", "office.png")
+    page = _migrated(admin, "office", "define global {\nmap_image=office.png\n}")
+    background = (
+        paths.omd_root / "var/maps/backgrounds" / str(page.config.map_spec["background_image"])
+    )
+    locked = _write_map("office", "")
+    locked.chmod(0o000)
+    try:
+        result = migrate_nagvis_maps(_LOGGER, force=True)
+    finally:
+        locked.chmod(0o600)
+
+    assert not result.complete
+    assert background.read_bytes() == _PNG
+
+
+@_NOT_ROOT
+def test_a_forced_run_that_cannot_store_keeps_only_the_earlier_background(
+    admin: UserId,
+) -> None:
+    _write_nagvis_image("maps", "office.png")
+    page = _migrated(admin, "office", "define global {\nmap_image=office.png\n}")
+    background = (
+        paths.omd_root / "var/maps/backgrounds" / str(page.config.map_spec["background_image"])
+    )
+    with _maps_unwritable(admin), pytest.raises(MKGeneralException):
+        migrate_nagvis_maps(_LOGGER, force=True)
+
+    assert list(background.parent.iterdir()) == [background]
+
+
+@_NOT_ROOT
+def test_a_forced_run_after_one_that_could_not_store_replaces_the_earlier_migration(
+    admin: UserId,
+) -> None:
+    _migrated(admin, "office", "define global {\nalias=First\n}")
+    _write_map("office", "define global {\nalias=Second\n}")
+    with _maps_unwritable(admin), pytest.raises(MKGeneralException):
+        migrate_nagvis_maps(_LOGGER, force=True)
+
+    migrate_nagvis_maps(_LOGGER, force=True)
+
+    own = store.load_object_from_file(user_maps_path(admin), default={}, debug=True)
+    assert own["office"]["map_spec"]["alias"] == "Second"
+    assert "office_legacy" not in own
+
+
+def test_a_forced_run_drops_a_background_the_map_no_longer_has(admin: UserId) -> None:
+    _write_nagvis_image("maps", "office.png")
+    page = _migrated(admin, "office", "define global {\nmap_image=office.png\n}")
+    background = (
+        paths.omd_root / "var/maps/backgrounds" / str(page.config.map_spec["background_image"])
+    )
+    _write_map("office", _HOST)
+
+    migrate_nagvis_maps(_LOGGER, force=True)
+
+    assert not background.exists()
+
+
+def test_a_forced_run_keeps_only_the_new_background(admin: UserId) -> None:
+    _write_nagvis_image("maps", "office.png")
+    _migrated(admin, "office", "define global {\nmap_image=office.png\n}")
+
+    migrate_nagvis_maps(_LOGGER, force=True)
+
+    stored = store.load_object_from_file(user_maps_path(admin), default={}, debug=True)["office"]
+    backgrounds = paths.omd_root / "var/maps/backgrounds"
+    assert list(backgrounds.iterdir()) == [backgrounds / stored["map_spec"]["background_image"]]
+
+
+@pytest.mark.usefixtures("with_admin")
+def test_only_the_given_maps_are_migrated() -> None:
+    _write_map("office", _HOST)
+    _write_map("lab", _HOST)
+
+    migrate_nagvis_maps(_LOGGER, only=["office"])
+
+    assert _outcomes() == {"office": "migrated"}
+
+
+def test_a_given_migrated_map_is_left_untouched(admin: UserId) -> None:
+    _write_map("office", "define global {\nalias=First\n}")
+    _action()(_LOGGER, debug=True)
+    _write_map("office", "define global {\nalias=Second\n}")
+
+    assert migrate_nagvis_maps(_LOGGER, only=["office"]).complete
+
+    page = get_own_map(admin, "office")
+    assert page is not None
+    assert page.config.map_spec["alias"] == "First"
+
+
+@pytest.mark.usefixtures("with_admin")
+def test_a_run_given_an_unknown_map_fails() -> None:
+    _write_map("office", _HOST)
+
+    assert not migrate_nagvis_maps(_LOGGER, only=["office", "gone"]).complete
 
 
 # --- who sees it ------------------------------------------------------------

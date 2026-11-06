@@ -37,6 +37,7 @@ from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Option as CLIOption
 from cmk.cli.internal import Options as CLIOptions
+from cmk.cli.internal import untyped_request as cli_untyped_request
 from cmk.utils import timeperiod
 from cmk.utils.http_proxy_config import make_http_proxy_getter
 
@@ -151,17 +152,19 @@ def _do_notify_via_automation(options: dict[str, bool], args: list[str]) -> CLIE
 cli_command_notify = CLICommand(
     name="notify",
     long="notify",
-    handler_function=_run_notify,
+    handler=_run_notify,
     arguments=CLIArguments("MODE", optional=True),
-    sub_options=[
-        CLIOption(
-            long="log-to-stdout",
-            help="Also write log messages to console",
-        ),
-        CLIOption(
-            long="keepalive",
-            help="Execute in keepalive mode (Commercial editions only)",
-        ),
-    ],
+    request=cli_untyped_request(
+        [
+            CLIOption(
+                long="log-to-stdout",
+                help="Also write log messages to console",
+            ),
+            CLIOption(
+                long="keepalive",
+                help="Execute in keepalive mode (Commercial editions only)",
+            ),
+        ]
+    ),
     help="Used to send notifications from core",
 )

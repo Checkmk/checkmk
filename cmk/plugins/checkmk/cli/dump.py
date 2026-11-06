@@ -38,6 +38,7 @@ from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Options as CLIOptions
+from cmk.cli.internal import untyped_request as cli_untyped_request
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
 from cmk.server_side_calls_backend import ExecutableFinder, load_secrets_file
 from cmk.utils import ip_lookup, timeperiod
@@ -298,9 +299,9 @@ cli_command_dump_agent = CLICommand(
     name="dump_agent",
     long="dump-agent",
     short="d",
-    handler_function=_run_dump_agent,
+    handler=_run_dump_agent,
     arguments=CLIArguments("HOSTNAME|ADDRESS"),
-    sub_options=[*FETCHER_OPTIONS[:3], SNMP_BACKEND_OPTION, FAKE_DNS_OPTION],
+    request=cli_untyped_request([*FETCHER_OPTIONS[:3], SNMP_BACKEND_OPTION, FAKE_DNS_OPTION]),
     help="Show raw information from agent",
     description=[
         (
@@ -409,9 +410,9 @@ cli_command_dump = CLICommand(
     name="dump",
     long="dump",
     short="D",
-    handler_function=_run_dump_hosts,
+    handler=_run_dump_hosts,
     arguments=CLIArguments("H1 H2...", optional=True),
-    sub_options=[FAKE_DNS_OPTION],
+    request=cli_untyped_request([FAKE_DNS_OPTION]),
     help="Dump info about all or some hosts",
     description=[
         (

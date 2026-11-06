@@ -12,6 +12,7 @@ from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import Options as CLIOptions
+from cmk.cli.internal import untyped_request as cli_untyped_request
 
 
 def _mode_version(context: CLIContext, _options: CLIOptions, _args: CLIArgs) -> CLIExitCode:
@@ -47,6 +48,7 @@ cli_command_version = CLICommand(
     name="version",
     long="version",
     short="V",
-    handler_function=_mode_version,
+    request=cli_untyped_request(),
+    handler=_mode_version,
     help="Print the version of Checkmk",
 )

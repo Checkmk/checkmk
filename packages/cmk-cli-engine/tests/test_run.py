@@ -13,6 +13,7 @@ from types import FrameType
 
 import pytest
 
+from cmk.cli.engine.arguments import RunCommand as CLIRunCommand
 from cmk.cli.engine.call import CommandTracer as CLICommandTracer
 from cmk.cli.engine.commands import GetoptCommand as CLIGetoptCommand
 from cmk.cli.engine.discovery import make_command as cli_make_command
@@ -28,6 +29,7 @@ from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import Option as CLIOption
 from cmk.cli.internal import Options as CLIOptions
+from cmk.cli.internal import untyped_request as cli_untyped_request
 
 from ._logger import null_logger
 
@@ -181,7 +183,13 @@ def test_file_logging_replaces_the_handlers_it_finds(tmp_path: Path) -> None:
 
 def _command(handler: CLICommandHandler) -> CLIGetoptCommand:
     return cli_make_command(
-        CLICommand(name="demo", long="demo", handler_function=handler, help="Demonstrate")
+        CLICommand(
+            name="demo",
+            long="demo",
+            request=cli_untyped_request(),
+            handler=handler,
+            help="Demonstrate",
+        )
     )
 
 
@@ -222,16 +230,18 @@ def _numbered(handler: CLICommandHandler) -> CLIGetoptCommand:
         CLICommand(
             name="demo",
             long="demo",
-            handler_function=handler,
+            handler=handler,
             help="Demonstrate",
-            sub_options=[
-                CLIOption(
-                    long="number",
-                    help="A number",
-                    argument="N",
-                    parse=int,
-                )
-            ],
+            request=cli_untyped_request(
+                [
+                    CLIOption(
+                        long="number",
+                        help="A number",
+                        argument="N",
+                        parse=int,
+                    )
+                ]
+            ),
         )
     )
 
@@ -369,9 +379,9 @@ class FakeCommandTracer:
         self.traced: list[str] = []
 
     def __call__(
-        self, _context: CLIContext, command: CLIGetoptCommand, _options: CLIOptions, _args: CLIArgs
+        self, _context: CLIContext, run_command: CLIRunCommand, _args: CLIArgs
     ) -> nullcontext[None]:
-        self.traced.append(command.name)
+        self.traced.append(run_command.command.name)
         return nullcontext()
 
 

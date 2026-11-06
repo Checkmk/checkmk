@@ -4,14 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import textwrap
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from typing import Final
 
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 
 OptionSpec = str
 OptionName = str
-ConvertFunction = Callable[[str], object]
 type GetoptOptions = Sequence[tuple[OptionSpec, str]]
 
 
@@ -28,7 +27,6 @@ class Option:
         # *single* parameter, see their intrinsic relations below.
         argument: bool = False,
         argument_descr: str | None = None,
-        argument_conv: ConvertFunction | None = None,
         argument_optional: bool = False,
         repeat: bool = False,
         # ----------------------------------------------------------------------
@@ -38,8 +36,6 @@ class Option:
 
         # We have an argument description if and only if we have an argument.
         assert (argument_descr is not None) == argument
-        # Having a conversion function implies that we have an argument.
-        assert (argument_conv is None) or argument
         # Being optional implies that we actually have an argument.
         assert not argument_optional or argument
 
@@ -51,7 +47,6 @@ class Option:
         self.repeat = repeat
         self.argument = argument
         self.argument_descr = argument_descr
-        self.argument_conv = argument_conv
         self.argument_optional = argument_optional
 
     @property

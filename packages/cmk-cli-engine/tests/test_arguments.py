@@ -14,18 +14,19 @@ from cmk.cli.engine.arguments import RunCommand as CLIRunCommand
 from cmk.cli.engine.arguments import ShowHelp as CLIShowHelp
 from cmk.cli.engine.commands import Commands as CLICommands
 from cmk.cli.engine.commands import GetoptCommand as CLIGetoptCommand
+from cmk.cli.engine.discovery import make_command as cli_make_command
 from cmk.cli.engine.options import general_options as cli_general_options
-from cmk.cli.engine.options import Option as CLIOption
-from cmk.cli.engine.readers import parse_sub_options as cli_parse_sub_options
-from cmk.cli.internal import Args as CLIArgs
-from cmk.cli.internal import Context as CLIContext
-from cmk.cli.internal import Options as CLIOptions
+from cmk.cli.engine.options import Option as CLIGetoptOption
+from cmk.cli.internal import Arguments as CLIArguments
+from cmk.cli.internal import Command as CLICommand
+from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import Option as CLIOption
+from cmk.cli.internal import Reader as CLIReader
+from cmk.cli.internal import untyped_request as cli_untyped_request
 
-from ._logger import null_logger
 
-
-def _unreachable(_context: CLIContext, _options: CLIOptions, _args: CLIArgs) -> NoReturn:
-    raise AssertionError("parsing must not run the command")
+def _unreachable(_reader: CLIReader) -> NoReturn:
+    raise AssertionError("parsing must not bind the command")
 
 
 _COMMAND_ARGUMENT: Final = "myhost"
@@ -36,21 +37,21 @@ _PLAIN: Final = CLIGetoptCommand(
     name="plain",
     long_option="plain",
     short_option="p",
-    handler_function=_unreachable,
+    bind=_unreachable,
     short_help="takes no argument",
 )
 
 _OTHER_PLAIN: Final = CLIGetoptCommand(
     name="other_plain",
     long_option="other-plain",
-    handler_function=_unreachable,
+    bind=_unreachable,
     short_help="takes no argument either",
 )
 
 _WITH_ARGUMENT: Final = CLIGetoptCommand(
     name="with_argument",
     long_option="with-argument",
-    handler_function=_unreachable,
+    bind=_unreachable,
     argument=True,
     argument_descr="HOST",
     short_help="needs exactly one argument",
@@ -58,36 +59,35 @@ _WITH_ARGUMENT: Final = CLIGetoptCommand(
 
 # The engine runs this one when the command line names no command at all, so the
 # name is not free to choose.
-_CHECK: Final = CLIGetoptCommand(
-    name="check",
-    long_option="check",
-    short_option="c",
-    handler_function=_unreachable,
-    argument=True,
-    argument_descr="HOSTS",
-    argument_optional=True,
-    sub_options=[
-        CLIOption(long_option="keepalive", short_help="the option that implies this command"),
-        # The short spelling is the command's own on purpose: in "-cc" the first
-        # selects the command, and both count towards the option.
-        CLIOption(long_option="counted", short_option="c", repeat=True, short_help="counts"),
-        CLIOption(
-            long_option="collected",
-            argument=True,
-            argument_descr="VALUE",
-            repeat=True,
-            short_help="collects every argument",
+_CHECK: Final = cli_make_command(
+    CLICommand(
+        name="check",
+        long="check",
+        short="c",
+        handler=lambda *_args: CLIExitCode.SUCCESS,
+        arguments=CLIArguments("HOSTS", optional=True),
+        request=cli_untyped_request(
+            [
+                CLIOption(long="keepalive", help="the option that implies this command"),
+                # The short spelling is the command's own on purpose: in "-cc" the first
+                # selects the command, and both count towards the option.
+                CLIOption(long="counted", short="c", repeat=True, help="counts"),
+                CLIOption(
+                    long="collected",
+                    argument="VALUE",
+                    repeat=True,
+                    help="collects every argument",
+                ),
+                CLIOption(
+                    long="renamed",
+                    argument="VALUE",
+                    deprecated_names=frozenset({"legacy-name"}),
+                    help="takes an argument",
+                ),
+            ]
         ),
-        CLIOption(
-            long_option="converted",
-            argument=True,
-            argument_descr="VALUE",
-            argument_conv=str.upper,
-            deprecated_long_options={"legacy-name"},
-            short_help="converts its argument",
-        ),
-    ],
-    short_help="the implicit command",
+        help="the implicit command",
+    )
 )
 
 _COMMANDS: Final = CLICommands(
@@ -96,7 +96,7 @@ _COMMANDS: Final = CLICommands(
 )
 
 
-def _general_option_argv(option: CLIOption) -> Sequence[str]:
+def _general_option_argv(option: CLIGetoptOption) -> Sequence[str]:
     if option.argument:
         return [f"--{option.long_option}={_ARGUMENT_EVERY_CONVERSION_ACCEPTS}"]
     return [f"--{option.long_option}"]
@@ -120,9 +120,7 @@ def test_a_sub_option_reaches_its_command() -> None:
     parsed = cli_parse(_COMMANDS, ["cmk", "--check", "--keepalive"])
 
     assert isinstance(parsed, CLIRunCommand)
-    assert "keepalive" in cli_parse_sub_options(
-        parsed.command.sub_options, parsed.options, null_logger()
-    )
+    assert ("--keepalive", "") in parsed.options
 
 
 def test_a_bare_command_shows_the_help() -> None:
@@ -163,43 +161,27 @@ def test_an_optional_command_argument_stays_in_the_positional_arguments() -> Non
     assert (parsed.argument, parsed.arguments) == ("", ["host1", "host2"])
 
 
-def test_a_repeated_sub_option_is_counted() -> None:
+def test_a_repeated_short_spelling_selects_the_command_and_stays_an_option() -> None:
     parsed = cli_parse(_COMMANDS, ["cmk", "-cc", "myhost"])
 
     assert isinstance(parsed, CLIRunCommand)
-    assert parsed.command is _CHECK
-    assert cli_parse_sub_options(parsed.command.sub_options, parsed.options, null_logger()) == {
-        "counted": 2
-    }
+    assert (parsed.command, parsed.options) == (_CHECK, [("-c", ""), ("-c", "")])
 
 
-def test_a_repeated_sub_option_argument_is_collected() -> None:
+def test_a_repeated_sub_option_argument_is_kept_every_time() -> None:
     parsed = cli_parse(
         _COMMANDS, ["cmk", "--check", "--collected=.1.1", "--collected=.1.2", "myhost"]
     )
 
     assert isinstance(parsed, CLIRunCommand)
-    assert cli_parse_sub_options(parsed.command.sub_options, parsed.options, null_logger()) == {
-        "collected": (".1.1", ".1.2")
-    }
+    assert parsed.options == [("--check", ""), ("--collected", ".1.1"), ("--collected", ".1.2")]
 
 
-def test_a_sub_option_argument_is_converted() -> None:
-    parsed = cli_parse(_COMMANDS, ["cmk", "--check", "--converted=value", "myhost"])
-
-    assert isinstance(parsed, CLIRunCommand)
-    assert cli_parse_sub_options(parsed.command.sub_options, parsed.options, null_logger()) == {
-        "converted": "VALUE"
-    }
-
-
-def test_a_deprecated_sub_option_reaches_the_option_it_replaces() -> None:
+def test_a_deprecated_sub_option_is_kept_under_its_own_spelling() -> None:
     parsed = cli_parse(_COMMANDS, ["cmk", "--check", "--legacy-name=value", "myhost"])
 
     assert isinstance(parsed, CLIRunCommand)
-    assert cli_parse_sub_options(parsed.command.sub_options, parsed.options, null_logger()) == {
-        "converted": "VALUE"
-    }
+    assert parsed.options == [("--check", ""), ("--legacy-name", "value")]
 
 
 def test_one_argument_runs_the_implicit_check_command() -> None:
@@ -253,7 +235,7 @@ def test_the_rejection_names_the_program_as_it_was_called() -> None:
 
 
 @pytest.mark.parametrize("option", cli_general_options(), ids=lambda option: option.name)
-def test_a_general_option_does_not_select_a_command(option: CLIOption) -> None:
+def test_a_general_option_does_not_select_a_command(option: CLIGetoptOption) -> None:
     parsed = cli_parse(_COMMANDS, ["cmk", *_general_option_argv(option), "myhost"])
 
     assert isinstance(parsed, CLIRunCommand)
@@ -261,7 +243,7 @@ def test_a_general_option_does_not_select_a_command(option: CLIOption) -> None:
 
 
 @pytest.mark.parametrize("option", cli_general_options(), ids=lambda option: option.name)
-def test_a_general_option_is_handed_back_for_processing(option: CLIOption) -> None:
+def test_a_general_option_is_handed_back_for_processing(option: CLIGetoptOption) -> None:
     parsed = cli_parse(_COMMANDS, ["cmk", *_general_option_argv(option), "myhost"])
 
     assert isinstance(parsed, CLIRunCommand)

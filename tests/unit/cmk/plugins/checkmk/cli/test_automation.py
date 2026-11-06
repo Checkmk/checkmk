@@ -16,10 +16,11 @@ from cmk.automations.internal import AutomationID
 from cmk.ccc.exceptions import MKBailOut
 from cmk.cli.engine.arguments import parse as cli_parse
 from cmk.cli.engine.arguments import RunCommand as CLIRunCommand
+from cmk.cli.engine.commands import bind as cli_bind
 from cmk.cli.engine.commands import Commands as CLICommands
 from cmk.cli.engine.discovery import make_command as cli_make_command
 from cmk.cli.engine.options import general_options as cli_general_options
-from cmk.cli.engine.readers import parse_sub_options as cli_parse_sub_options
+from cmk.cli.engine.readers import ParsedOptions as CLIParsedOptions
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
@@ -45,9 +46,7 @@ def test_the_version_of_a_subprocess_automation_reaches_the_cli() -> None:
     )
 
     assert isinstance(parsed, CLIRunCommand)
-    assert cli_parse_sub_options(
-        parsed.command.sub_options, parsed.options, logging.getLogger(__name__)
-    ) == {"for-cmk-version": "2.4.0p1"}
+    assert ("--for-cmk-version", "2.4.0p1") in parsed.options
     assert parsed.arguments == ["service-discovery-preview", "myhost"]
 
 
@@ -59,21 +58,22 @@ def _context(global_options: CLIGlobalOptions) -> CLIContext:
     )
 
 
+def _restart_with_version(context: CLIContext, version: str) -> CLIExitCode:
+    bound = cli_bind(
+        cli_command_automation,
+        CLIParsedOptions([("--for-cmk-version", version)], logging.getLogger(__name__)),
+    )
+    return bound(context, ["restart"])
+
+
 def test_an_invalid_version_is_rejected_before_the_automation_runs() -> None:
     with pytest.raises(MKBailOut, match="--for-cmk-version"):
         # Running "restart" for real would fail without a site: the error must come first.
-        cli_command_automation.handler_function(
-            _context(CLIGlobalOptions(debug=True)), {"for-cmk-version": "foo"}, ["restart"]
-        )
+        _restart_with_version(_context(CLIGlobalOptions(debug=True)), "foo")
 
 
 def test_an_invalid_version_exits_three() -> None:
-    assert (
-        cli_command_automation.handler_function(
-            _context(CLIGlobalOptions()), {"for-cmk-version": "foo"}, ["restart"]
-        )
-        == CLIExitCode.UNKNOWN
-    )
+    assert _restart_with_version(_context(CLIGlobalOptions()), "foo") == CLIExitCode.UNKNOWN
 
 
 def test_an_invalid_version_is_reported_through_the_context_logger() -> None:
@@ -82,10 +82,9 @@ def test_an_invalid_version_is_reported_through_the_context_logger() -> None:
     logger.propagate = False
     logger.handlers = [recorded]
 
-    cli_command_automation.handler_function(
+    _restart_with_version(
         CLIContext(omd_root=Path("/nonexistent"), global_options=CLIGlobalOptions(), logger=logger),
-        {"for-cmk-version": "foo"},
-        ["restart"],
+        "foo",
     )
 
     assert recorded.buffer[0].getMessage().startswith("--for-cmk-version:")

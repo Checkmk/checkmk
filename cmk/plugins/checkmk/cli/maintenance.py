@@ -23,6 +23,7 @@ from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Options as CLIOptions
+from cmk.cli.internal import untyped_request as cli_untyped_request
 from cmk.inventory.paths import InventoryPaths
 from cmk.piggyback import backend as piggyback_backend
 from cmk.utils import ip_lookup
@@ -75,8 +76,8 @@ def _run_update_dns_cache(context: CLIContext, options: CLIOptions, args: CLIArg
 cli_command_update_dns_cache = CLICommand(
     name="update_dns_cache",
     long="update-dns-cache",
-    handler_function=_run_update_dns_cache,
-    sub_options=[FAKE_DNS_OPTION],
+    handler=_run_update_dns_cache,
+    request=cli_untyped_request([FAKE_DNS_OPTION]),
     help="Update IP address lookup cache",
 )
 
@@ -118,7 +119,8 @@ def _run_cleanup_piggyback(context: CLIContext, options: CLIOptions, args: CLIAr
 cli_command_cleanup_piggyback = CLICommand(
     name="cleanup_piggyback",
     long="cleanup-piggyback",
-    handler_function=_run_cleanup_piggyback,
+    request=cli_untyped_request(),
+    handler=_run_cleanup_piggyback,
     help="Cleanup outdated piggyback files",
 )
 
@@ -254,7 +256,8 @@ def _run_flush(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIEx
 cli_command_flush = CLICommand(
     name="flush",
     long="flush",
-    handler_function=_run_flush,
+    request=cli_untyped_request(),
+    handler=_run_flush,
     arguments=CLIArguments("HOST1 HOST2...", optional=True),
     help="Flush all data of some or all hosts",
     description=[

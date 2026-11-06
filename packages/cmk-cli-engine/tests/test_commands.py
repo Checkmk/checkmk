@@ -20,7 +20,7 @@ def _command(long_option: str, short_option: str | None = None) -> CLIGetoptComm
         name=long_option,
         long_option=long_option,
         short_option=short_option,
-        handler_function=_never,
+        bind=_never,
         short_help="a command under test",
     )
 

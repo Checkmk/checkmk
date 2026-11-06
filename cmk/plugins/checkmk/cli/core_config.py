@@ -26,6 +26,7 @@ from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Options as CLIOptions
+from cmk.cli.internal import untyped_request as cli_untyped_request
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
 from cmk.server_side_calls_backend import load_secrets_file
 from cmk.utils import config_warnings, ip_lookup, timeperiod
@@ -148,9 +149,9 @@ cli_command_nagios_config = CLICommand(
     name="nagios_config",
     long="nagios-config",
     short="N",
-    handler_function=_run_dump_nagios_config,
+    handler=_run_dump_nagios_config,
     arguments=CLIArguments("HOST1 HOST2...", optional=True),
-    sub_options=[FAKE_DNS_OPTION],
+    request=cli_untyped_request([FAKE_DNS_OPTION]),
     help="Output Nagios configuration",
     description=[
         (
@@ -301,8 +302,8 @@ cli_command_update = CLICommand(
     name="update",
     long="update",
     short="U",
-    handler_function=_run_update,
-    sub_options=[FAKE_DNS_OPTION],
+    handler=_run_update,
+    request=cli_untyped_request([FAKE_DNS_OPTION]),
     help="Create core config",
     description=[
         (
@@ -422,9 +423,9 @@ cli_command_restart = CLICommand(
     name="restart",
     long="restart",
     short="R",
-    handler_function=_run_restart,
+    handler=_run_restart,
     arguments=CLIArguments("[HostA, HostB]", optional=True),
-    sub_options=[FAKE_DNS_OPTION],
+    request=cli_untyped_request([FAKE_DNS_OPTION]),
     help="Create core config + core restart",
     description=[
         (
@@ -542,9 +543,9 @@ cli_command_reload = CLICommand(
     name="reload",
     long="reload",
     short="O",
-    handler_function=_run_reload,
+    handler=_run_reload,
     arguments=CLIArguments("[HostA, HostB]", optional=True),
-    sub_options=[FAKE_DNS_OPTION],
+    request=cli_untyped_request([FAKE_DNS_OPTION]),
     help="Create core config + core reload",
     description=[
         (

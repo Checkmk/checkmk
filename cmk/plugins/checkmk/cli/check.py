@@ -27,6 +27,7 @@ from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Option as CLIOption
 from cmk.cli.internal import Options as CLIOptions
+from cmk.cli.internal import untyped_request as cli_untyped_request
 from cmk.server_side_calls_backend import load_secrets_file
 
 from .agent_based import extract_plugin_selection, load_checks
@@ -176,26 +177,28 @@ def _run_check(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIEx
 cli_command_check = CLICommand(
     name="check",
     long="check",
-    handler_function=_run_check,
+    handler=_run_check,
     arguments=CLIArguments("HOST [IPADDRESS]", optional=True),
-    sub_options=[
-        *FETCHER_OPTIONS,
-        SNMP_BACKEND_OPTION,
-        CLIOption(
-            long="no-submit",
-            short="n",
-            help="Do not submit results to core, do not save counters",
-        ),
-        CLIOption(
-            long="perfdata",
-            short="p",
-            help="Also show performance data (use with -v)",
-        ),
-        option_sections,
-        get_plugins_option(CheckPluginName),
-        option_detect_plugins,
-        FAKE_DNS_OPTION,
-    ],
+    request=cli_untyped_request(
+        [
+            *FETCHER_OPTIONS,
+            SNMP_BACKEND_OPTION,
+            CLIOption(
+                long="no-submit",
+                short="n",
+                help="Do not submit results to core, do not save counters",
+            ),
+            CLIOption(
+                long="perfdata",
+                short="p",
+                help="Also show performance data (use with -v)",
+            ),
+            option_sections,
+            get_plugins_option(CheckPluginName),
+            option_detect_plugins,
+            FAKE_DNS_OPTION,
+        ]
+    ),
     help="Check all services on the given HOST",
     description=[
         (

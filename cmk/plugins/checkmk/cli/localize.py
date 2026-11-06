@@ -18,6 +18,7 @@ from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import Options as CLIOptions
+from cmk.cli.internal import untyped_request as cli_untyped_request
 from cmk.utils.log import VERBOSE
 
 __all__ = ["cli_command_localize"]
@@ -43,7 +44,8 @@ def _mode_localize(_context: CLIContext, _options: CLIOptions, args: CLIArgs) ->
 cli_command_localize = CLICommand(
     name="localize",
     long="localize",
-    handler_function=_mode_localize,
+    request=cli_untyped_request(),
+    handler=_mode_localize,
     arguments=CLIArguments("COMMAND", optional=True),
     help="Do localization operations",
     description=[

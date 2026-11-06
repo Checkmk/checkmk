@@ -52,6 +52,7 @@ from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Option as CLIOption
 from cmk.cli.internal import Options as CLIOptions
+from cmk.cli.internal import untyped_request as cli_untyped_request
 from cmk.inventory.paths import InventoryPaths
 from cmk.inventory.store import InventoryStore
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
@@ -365,21 +366,23 @@ cli_command_inventory = CLICommand(
     name="inventory",
     long="inventory",
     short="i",
-    handler_function=_run_inventory,
+    handler=_run_inventory,
     arguments=CLIArguments("HOST1 HOST2...", optional=True),
-    sub_options=[
-        *FETCHER_OPTIONS,
-        SNMP_BACKEND_OPTION,
-        CLIOption(
-            long="force",
-            short="f",
-            help="Use cached agent data even if it's outdated.",
-        ),
-        option_sections,
-        get_plugins_option(InventoryPluginName),
-        option_detect_plugins,
-        FAKE_DNS_OPTION,
-    ],
+    request=cli_untyped_request(
+        [
+            *FETCHER_OPTIONS,
+            SNMP_BACKEND_OPTION,
+            CLIOption(
+                long="force",
+                short="f",
+                help="Use cached agent data even if it's outdated.",
+            ),
+            option_sections,
+            get_plugins_option(InventoryPluginName),
+            option_detect_plugins,
+            FAKE_DNS_OPTION,
+        ]
+    ),
     help="Do a HW/SW Inventory on some or all hosts",
     description=[
         (
@@ -596,8 +599,8 @@ def _run_inventorize_marked_hosts(
 cli_command_inventorize_marked_hosts = CLICommand(
     name="inventorize_marked_hosts",
     long="inventorize-marked-hosts",
-    handler_function=_run_inventorize_marked_hosts,
-    sub_options=[*FETCHER_OPTIONS, SNMP_BACKEND_OPTION, FAKE_DNS_OPTION],
+    handler=_run_inventorize_marked_hosts,
+    request=cli_untyped_request([*FETCHER_OPTIONS, SNMP_BACKEND_OPTION, FAKE_DNS_OPTION]),
     help="Run inventory for hosts which previously had no tree data",
     description=[
         "Run actual service HW/SW Inventory on all hosts that had no tree data",

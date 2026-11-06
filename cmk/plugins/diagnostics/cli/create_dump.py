@@ -31,6 +31,7 @@ from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Option as CLIOption
 from cmk.cli.internal import Options as CLIOptions
+from cmk.cli.internal import untyped_request as cli_untyped_request
 from cmk.diagnostics.engine import DumpSelection, resolve_selection
 from cmk.diagnostics.internal import DiagnosticsPlugin, Sensitivity, Topic
 
@@ -158,31 +159,33 @@ def _run_create_diagnostics_dump(
 cli_command_create_diagnostics_dump = CLICommand(
     name="create_diagnostics_dump",
     long="create-diagnostics-dump",
-    handler_function=_run_create_diagnostics_dump,
-    sub_options=[
-        CLIOption(
-            long="list",
-            help="List the available topics and plugins and exit",
-        ),
-        CLIOption(
-            long="all-topics",
-            help=(
-                "Select all plugins of all topics up to the given sensitivity threshold "
-                "(off, low, medium or high)"
+    handler=_run_create_diagnostics_dump,
+    request=cli_untyped_request(
+        [
+            CLIOption(
+                long="list",
+                help="List the available topics and plugins and exit",
             ),
-            argument="THRESHOLD",
-        ),
-        CLIOption(
-            long="plugins",
-            help="Additionally select the given plugins, regardless of topic thresholds",
-            argument="NAME,NAME...",
-        ),
-        CLIOption(
-            long="checkmk-server-host",
-            help=("The name of the host monitoring the Checkmk server; needed by some plugins"),
-            argument="HOST",
-        ),
-    ],
+            CLIOption(
+                long="all-topics",
+                help=(
+                    "Select all plugins of all topics up to the given sensitivity threshold "
+                    "(off, low, medium or high)"
+                ),
+                argument="THRESHOLD",
+            ),
+            CLIOption(
+                long="plugins",
+                help="Additionally select the given plugins, regardless of topic thresholds",
+                argument="NAME,NAME...",
+            ),
+            CLIOption(
+                long="checkmk-server-host",
+                help=("The name of the host monitoring the Checkmk server; needed by some plugins"),
+                argument="HOST",
+            ),
+        ]
+    ),
     help="Create diagnostics dump",
     description=[
         (

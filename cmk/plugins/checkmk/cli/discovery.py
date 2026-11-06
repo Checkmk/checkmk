@@ -68,6 +68,7 @@ from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Option as CLIOption
 from cmk.cli.internal import Options as CLIOptions
+from cmk.cli.internal import untyped_request as cli_untyped_request
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
 from cmk.server_side_calls_backend import load_secrets_file
 from cmk.utils import ip_lookup
@@ -339,9 +340,9 @@ def _run_check_discovery(context: CLIContext, options: CLIOptions, args: CLIArgs
 cli_command_check_discovery = CLICommand(
     name="check_discovery",
     long="check-discovery",
-    handler_function=_run_check_discovery,
+    handler=_run_check_discovery,
     arguments=CLIArguments("HOSTNAME"),
-    sub_options=[*FETCHER_OPTIONS, SNMP_BACKEND_OPTION, FAKE_DNS_OPTION],
+    request=cli_untyped_request([*FETCHER_OPTIONS, SNMP_BACKEND_OPTION, FAKE_DNS_OPTION]),
     help="Check for not yet monitored services",
     description=[
         (
@@ -660,27 +661,29 @@ cli_command_discover = CLICommand(
     name="discover",
     long="discover",
     short="I",
-    handler_function=_run_discover,
+    handler=_run_discover,
     arguments=CLIArguments("[-I] HOST1 HOST2...", optional=True),
-    sub_options=[
-        *FETCHER_OPTIONS,
-        SNMP_BACKEND_OPTION,
-        CLIOption(
-            long="discover",
-            short="I",
-            help="Delete existing services before starting discovery",
-            repeat=True,
-        ),
-        option_sections,
-        get_plugins_option(CheckPluginName),
-        option_detect_plugins,
-        CLIOption(
-            long="only-host-labels",
-            short="L",
-            help="Restrict discovery to host labels only",
-        ),
-        FAKE_DNS_OPTION,
-    ],
+    request=cli_untyped_request(
+        [
+            *FETCHER_OPTIONS,
+            SNMP_BACKEND_OPTION,
+            CLIOption(
+                long="discover",
+                short="I",
+                help="Delete existing services before starting discovery",
+                repeat=True,
+            ),
+            option_sections,
+            get_plugins_option(CheckPluginName),
+            option_detect_plugins,
+            CLIOption(
+                long="only-host-labels",
+                short="L",
+                help="Restrict discovery to host labels only",
+            ),
+            FAKE_DNS_OPTION,
+        ]
+    ),
     help="Find new services",
     description=[
         (

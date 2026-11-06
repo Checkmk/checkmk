@@ -8,17 +8,22 @@ from contextlib import contextmanager, nullcontext
 from pathlib import Path
 from typing import Final
 
+from cmk.cli.engine.arguments import RunCommand as CLIRunCommand
 from cmk.cli.engine.call import call as cli_call
 from cmk.cli.engine.call import CommandTracer as CLICommandTracer
 from cmk.cli.engine.commands import GetoptCommand as CLIGetoptCommand
-from cmk.cli.engine.options import Option as CLIOption
-from cmk.cli.engine.readers import parse_sub_options as cli_parse_sub_options
+from cmk.cli.engine.discovery import make_command as cli_make_command
+from cmk.cli.engine.readers import ParsedOptions as CLIParsedOptions
 from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Arguments as CLIArguments
+from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import CommandHandler as CLICommandHandler
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
+from cmk.cli.internal import Option as CLIOption
 from cmk.cli.internal import Options as CLIOptions
+from cmk.cli.internal import untyped_request as cli_untyped_request
 
 from ._logger import null_logger
 
@@ -29,7 +34,7 @@ _CONTEXT: Final = CLIContext(
     logger=null_logger(),
 )
 
-_SUB_OPTIONS: Final = [CLIOption(long_option="flag", short_help="a flag")]
+_SUB_OPTIONS: Final = [CLIOption(long="flag", help="a flag")]
 
 
 class _Recorder:
@@ -45,20 +50,25 @@ class _Recorder:
 def _command(
     handler: CLICommandHandler,
     *,
-    argument: bool = False,
-    argument_optional: bool = False,
+    arguments: CLIArguments | None = None,
     sub_options: Sequence[CLIOption] = (),
 ) -> CLIGetoptCommand:
-    return CLIGetoptCommand(
-        name="test_command",
-        long_option="test-command",
-        handler_function=handler,
-        short_help="a command under test",
-        argument=argument,
-        argument_descr="HOST" if argument else None,
-        argument_optional=argument_optional,
-        sub_options=sub_options,
+    return cli_make_command(
+        CLICommand(
+            name="test_command",
+            long="test-command",
+            handler=handler,
+            help="a command under test",
+            arguments=arguments,
+            request=cli_untyped_request(sub_options),
+        )
     )
+
+
+def _run_command(
+    command: CLIGetoptCommand, argument: str, arguments: Sequence[str]
+) -> CLIRunCommand:
+    return CLIRunCommand(command, argument, [("--flag", "")], arguments)
 
 
 def _call(
@@ -68,12 +78,11 @@ def _call(
     arguments: Sequence[str] = (),
     traced: CLICommandTracer = lambda *_args: nullcontext(),
 ) -> CLIExitCode:
+    run_command = _run_command(command, argument, arguments)
     return cli_call(
         _CONTEXT,
-        command,
-        argument,
-        cli_parse_sub_options(command.sub_options, [("--flag", "")], null_logger()),
-        arguments,
+        run_command,
+        command.bind(CLIParsedOptions(run_command.options, null_logger())),
         traced,
     )
 
@@ -93,7 +102,9 @@ def test_a_command_without_argument_receives_no_arguments() -> None:
 def test_a_required_argument_reaches_the_handler() -> None:
     handler = _Recorder()
 
-    _call(_command(handler, argument=True), "myhost", arguments=["myhost", "other"])
+    _call(
+        _command(handler, arguments=CLIArguments("HOST")), "myhost", arguments=["myhost", "other"]
+    )
 
     assert [args for _context, _options, args in handler.calls] == [["myhost"]]
 
@@ -101,7 +112,10 @@ def test_a_required_argument_reaches_the_handler() -> None:
 def test_the_positional_arguments_reach_the_handler() -> None:
     handler = _Recorder()
 
-    _call(_command(handler, argument=True, argument_optional=True), arguments=["host1", "host2"])
+    _call(
+        _command(handler, arguments=CLIArguments("HOST", optional=True)),
+        arguments=["host1", "host2"],
+    )
 
     assert [args for _context, _options, args in handler.calls] == [["host1", "host2"]]
 
@@ -149,16 +163,14 @@ def test_the_handler_runs_inside_the_commands_trace() -> None:
 
 
 def test_the_trace_sees_what_the_handler_is_handed() -> None:
-    seen: list[tuple[CLIContext, CLIGetoptCommand, CLIOptions, CLIArgs]] = []
+    seen: list[tuple[CLIContext, CLIRunCommand, CLIArgs]] = []
 
-    def traced(
-        context: CLIContext, command: CLIGetoptCommand, options: CLIOptions, args: CLIArgs
-    ) -> nullcontext[None]:
-        seen.append((context, command, options, args))
+    def traced(context: CLIContext, run_command: CLIRunCommand, args: CLIArgs) -> nullcontext[None]:
+        seen.append((context, run_command, args))
         return nullcontext()
 
-    command = _command(_Recorder(), argument=True, sub_options=_SUB_OPTIONS)
+    command = _command(_Recorder(), arguments=CLIArguments("HOST"), sub_options=_SUB_OPTIONS)
 
     _call(command, "myhost", arguments=["myhost"], traced=traced)
 
-    assert seen == [(_CONTEXT, command, {"flag": True}, ["myhost"])]
+    assert seen == [(_CONTEXT, _run_command(command, "myhost", ["myhost"]), ["myhost"])]

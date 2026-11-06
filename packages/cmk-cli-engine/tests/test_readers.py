@@ -7,47 +7,136 @@ import logging
 
 import pytest
 
-from cmk.cli.engine.options import Option as CLIOption
 from cmk.cli.engine.readers import option_count as cli_option_count
 from cmk.cli.engine.readers import option_names as cli_option_names
 from cmk.cli.engine.readers import option_string as cli_option_string
 from cmk.cli.engine.readers import option_strings as cli_option_strings
-from cmk.cli.engine.readers import parse_sub_options as cli_parse_sub_options
+from cmk.cli.engine.readers import ParsedOptions as CLIParsedOptions
+from cmk.cli.engine.readers import RecordedOptions as CLIRecordedOptions
+from cmk.cli.internal import Count as CLICount
+from cmk.cli.internal import Flag as CLIFlag
+from cmk.cli.internal import Value as CLIValue
+from cmk.cli.internal import Values as CLIValues
 
 from ._logger import null_logger
 
+_FLAG = CLIFlag(long="flag", short="f", help="a flag")
 
-def test_an_argument_to_a_flag_option_is_rejected() -> None:
-    option = CLIOption(long_option="flag", short_help="a flag")
+_COUNTED_COUNT = CLICount(long="counted", short="c", help="counts")
 
-    with pytest.raises(ValueError):
-        cli_parse_sub_options([option], [("--flag", "a value")], null_logger())
+_NUMBER_VALUE = CLIValue(long="number", help="a number", placeholder="N", parse=int)
+
+_NUMBERS_VALUES = CLIValues(long="numbers", help="numbers", placeholder="N", parse=int)
+
+_PLUGINS_FLAG = CLIFlag(long="plugins", help="the plugins", deprecated_names=frozenset({"checks"}))
+
+
+def test_a_flag_that_was_given_reads_true() -> None:
+    assert CLIParsedOptions([("--flag", "")], null_logger()).flag(_FLAG)
+
+
+def test_a_flag_that_was_not_given_reads_false() -> None:
+    assert not CLIParsedOptions([("--other", "")], null_logger()).flag(_FLAG)
+
+
+def test_a_flag_is_found_under_its_short_spelling() -> None:
+    assert CLIParsedOptions([("-f", "")], null_logger()).flag(_FLAG)
+
+
+def test_a_counted_option_counts_every_spelling() -> None:
+    assert (
+        CLIParsedOptions([("-c", ""), ("--counted", "")], null_logger()).count(_COUNTED_COUNT) == 2
+    )
+
+
+def test_a_counted_option_that_was_not_given_reads_zero() -> None:
+    assert CLIParsedOptions([], null_logger()).count(_COUNTED_COUNT) == 0
+
+
+def test_a_value_is_parsed() -> None:
+    assert CLIParsedOptions([("--number", "5")], null_logger()).value(_NUMBER_VALUE) == 5
+
+
+def test_the_last_of_repeated_values_wins() -> None:
+    assert (
+        CLIParsedOptions([("--number", "5"), ("--number", "7")], null_logger()).value(_NUMBER_VALUE)
+        == 7
+    )
+
+
+def test_a_value_that_was_not_given_reads_none() -> None:
+    assert CLIParsedOptions([], null_logger()).value(_NUMBER_VALUE) is None
+
+
+def test_values_are_parsed_in_order() -> None:
+    assert CLIParsedOptions([("--numbers", "5"), ("--numbers", "3")], null_logger()).values(
+        _NUMBERS_VALUES
+    ) == (5, 3)
+
+
+def test_values_that_were_not_given_read_empty() -> None:
+    assert CLIParsedOptions([], null_logger()).values(_NUMBERS_VALUES) == ()
 
 
 def test_an_option_argument_the_conversion_rejects_is_reported() -> None:
-    option = CLIOption(
-        long_option="number",
-        short_help="a number",
-        argument=True,
-        argument_descr="N",
-        argument_conv=int,
-    )
+    with pytest.raises(ValueError, match="--number: Invalid argument"):
+        CLIParsedOptions([("--number", "not a number")], null_logger()).value(_NUMBER_VALUE)
 
-    with pytest.raises(ValueError):
-        cli_parse_sub_options([option], [("--number", "not a number")], null_logger())
+
+def test_a_deprecated_option_reaches_the_option_it_replaces() -> None:
+    assert CLIParsedOptions([("--checks", "")], null_logger()).flag(_PLUGINS_FLAG)
 
 
 def test_a_deprecated_option_warns_about_the_one_it_replaces(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    option = CLIOption(
-        long_option="plugins", short_help="the plugins", deprecated_long_options={"checks"}
-    )
-
     with caplog.at_level(logging.WARNING):
-        cli_parse_sub_options([option], [("--checks", "")], logging.getLogger("cmk.test"))
+        CLIParsedOptions([("--checks", "")], logging.getLogger("cmk.test")).flag(_PLUGINS_FLAG)
 
     assert caplog.messages == ["'--checks' is deprecated in favour of option 'plugins'"]
+
+
+def test_the_recorder_reads_every_kind_as_absent() -> None:
+    recorded = CLIRecordedOptions()
+
+    assert (
+        recorded.flag(_FLAG),
+        recorded.count(_COUNTED_COUNT),
+        recorded.value(_NUMBER_VALUE),
+        recorded.values(_NUMBERS_VALUES),
+    ) == (False, 0, None, ())
+
+
+def test_the_recorder_keeps_the_options_in_reading_order() -> None:
+    recorded = CLIRecordedOptions()
+    recorded.values(_NUMBERS_VALUES)
+    recorded.flag(_FLAG)
+
+    assert [option.name for option in recorded.options] == ["numbers", "flag"]
+
+
+def test_the_recorder_keeps_what_the_help_and_the_parser_need() -> None:
+    recorded = CLIRecordedOptions()
+    recorded.flag(_FLAG)
+    recorded.count(_COUNTED_COUNT)
+    recorded.value(_NUMBER_VALUE)
+    recorded.values(_NUMBERS_VALUES)
+
+    assert [
+        (option.options(), option.argument_descr, option.repeat) for option in recorded.options
+    ] == [
+        (["-f", "--flag"], None, False),
+        (["-c", "--counted"], None, True),
+        (["--number"], "N", False),
+        (["--numbers"], "N", True),
+    ]
+
+
+def test_the_recorder_keeps_the_deprecated_spellings() -> None:
+    recorded = CLIRecordedOptions()
+    recorded.flag(_PLUGINS_FLAG)
+
+    assert recorded.options[0].long_getopt_specs() == ["plugins", "checks"]
 
 
 def test_a_missing_string_option_has_no_value() -> None:

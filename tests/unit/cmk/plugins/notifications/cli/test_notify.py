@@ -9,6 +9,8 @@ from pathlib import Path
 import pytest
 
 from cmk.ccc.version import Edition
+from cmk.cli.engine.commands import bind as cli_bind
+from cmk.cli.engine.readers import ParsedOptions as CLIParsedOptions
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
@@ -21,14 +23,15 @@ def test_spool_file_of_commercial_site_fails_without_automation_helper(
     if test_edition is Edition.COMMUNITY:
         pytest.skip("Spooling via the automation helper is a commercial feature")
 
+    bound = cli_bind(cli_command_notify, CLIParsedOptions([], logging.getLogger(__name__)))
+
     assert (
-        cli_command_notify.handler_function(
+        bound(
             CLIContext(
                 omd_root=tmp_path,
                 global_options=CLIGlobalOptions(),
                 logger=logging.getLogger(__name__),
             ),
-            {},
             ["spoolfile", "/no/such/spoolfile"],
         )
         == CLIExitCode.FAILURE

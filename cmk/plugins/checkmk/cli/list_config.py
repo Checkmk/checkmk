@@ -37,6 +37,7 @@ from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Option as CLIOption
 from cmk.cli.internal import Options as CLIOptions
+from cmk.cli.internal import untyped_request as cli_untyped_request
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.ruleset_matcher.tags import HostTags, TagID
 from cmk.ruleset_matcher.tuple_rulesets import hosttags_match_taglist
@@ -122,18 +123,20 @@ cli_command_list_hosts = CLICommand(
     name="list_hosts",
     long="list-hosts",
     short="l",
-    handler_function=_run_list_hosts,
+    handler=_run_list_hosts,
     arguments=CLIArguments("G1 G2...", optional=True),
-    sub_options=[
-        CLIOption(
-            long="all-sites",
-            help="Include hosts of foreign sites",
-        ),
-        CLIOption(
-            long="include-offline",
-            help="Include offline hosts",
-        ),
-    ],
+    request=cli_untyped_request(
+        [
+            CLIOption(
+                long="all-sites",
+                help="Include hosts of foreign sites",
+            ),
+            CLIOption(
+                long="include-offline",
+                help="Include offline hosts",
+            ),
+        ]
+    ),
     help="Print list of all hosts or members of host groups",
     description=[
         (
@@ -199,7 +202,8 @@ def _run_list_tag(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CL
 cli_command_list_tag = CLICommand(
     name="list_tag",
     long="list-tag",
-    handler_function=_run_list_tag,
+    request=cli_untyped_request(),
+    handler=_run_list_tag,
     arguments=CLIArguments("TAG1 TAG2...", optional=True),
     help="List hosts having certain tags",
     description=["Prints all hosts that have all of the specified tags at once."],
@@ -320,6 +324,7 @@ cli_command_list_checks = CLICommand(
     name="list_checks",
     long="list-checks",
     short="L",
-    handler_function=_run_list_checks,
+    request=cli_untyped_request(),
+    handler=_run_list_checks,
     help="List all available Check_MK checks",
 )

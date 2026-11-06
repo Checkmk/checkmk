@@ -4,12 +4,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import textwrap
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import Final, override
 
-from cmk.cli.internal import CommandHandler as CLICommandHandler
+from cmk.cli.internal import Args as CLIArgs
+from cmk.cli.internal import Command as CLICommand
+from cmk.cli.internal import Context as CLIContext
+from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import Reader as CLIReader
 
 from .options import HELP_OPTION, Option, OptionName
+
+type BoundCommand = Callable[[CLIContext, CLIArgs], CLIExitCode]
+"""A command's handler with the command's request already read"""
 
 
 class GetoptCommand(Option):
@@ -18,7 +25,7 @@ class GetoptCommand(Option):
         *,
         name: str,
         long_option: OptionName,
-        handler_function: CLICommandHandler,
+        bind: Callable[[CLIReader], BoundCommand],
         short_help: str,
         short_option: OptionName | None = None,
         argument: bool = False,
@@ -36,7 +43,7 @@ class GetoptCommand(Option):
             argument_optional=argument_optional,
         )
         self._name: Final = name
-        self.handler_function = handler_function
+        self.bind = bind
         self.long_help = long_help
         self.sub_options = sub_options
 
@@ -92,6 +99,12 @@ class GetoptCommand(Option):
             text.append("    Additional options:\n\n%s" % "\n".join(sub_texts))
 
         return "\n\n".join(text)
+
+
+def bind[R](command: CLICommand[R], reader: CLIReader) -> BoundCommand:
+    """Read the command's request and return its handler with the request bound in"""
+    request = command.request(reader)
+    return lambda context, args: command.handler(context, request, args)
 
 
 def _map_options(commands: Sequence[GetoptCommand]) -> Mapping[OptionName, GetoptCommand]:

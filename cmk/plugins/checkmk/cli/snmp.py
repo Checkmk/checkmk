@@ -36,6 +36,7 @@ from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Option as CLIOption
 from cmk.cli.internal import Options as CLIOptions
+from cmk.cli.internal import untyped_request as cli_untyped_request
 from cmk.utils import ip_lookup
 from cmk.utils.log import console
 
@@ -124,7 +125,8 @@ def _run_snmptranslate(context: CLIContext, options: CLIOptions, args: CLIArgs) 
 cli_command_snmptranslate = CLICommand(
     name="snmptranslate",
     long="snmptranslate",
-    handler_function=_run_snmptranslate,
+    request=cli_untyped_request(),
+    handler=_run_snmptranslate,
     arguments=CLIArguments("HOST"),
     help="Do snmptranslate on walk",
     description=[
@@ -269,27 +271,29 @@ def _run_snmpwalk(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CL
 cli_command_snmpwalk = CLICommand(
     name="snmpwalk",
     long="snmpwalk",
-    handler_function=_run_snmpwalk,
+    handler=_run_snmpwalk,
     arguments=CLIArguments("HOST1 HOST2...", optional=True),
-    sub_options=[
-        SNMP_BACKEND_OPTION,
-        CLIOption(
-            long="extraoid",
-            argument="A",
-            repeat=True,
-            help="Walk also on this OID, in addition to mib-2 and "
-            "enterprises. You can specify this option multiple "
-            "times.",
-        ),
-        CLIOption(
-            long="oid",
-            argument="A",
-            repeat=True,
-            help="Walk on this OID instead of mib-2 and enterprises. "
-            "You can specify this option multiple times.",
-        ),
-        FAKE_DNS_OPTION,
-    ],
+    request=cli_untyped_request(
+        [
+            SNMP_BACKEND_OPTION,
+            CLIOption(
+                long="extraoid",
+                argument="A",
+                repeat=True,
+                help="Walk also on this OID, in addition to mib-2 and "
+                "enterprises. You can specify this option multiple "
+                "times.",
+            ),
+            CLIOption(
+                long="oid",
+                argument="A",
+                repeat=True,
+                help="Walk on this OID instead of mib-2 and enterprises. "
+                "You can specify this option multiple times.",
+            ),
+            FAKE_DNS_OPTION,
+        ]
+    ),
     help="Do snmpwalk on one or more hosts",
     description=[
         "Does a complete snmpwalk for the specified hosts both "
@@ -380,9 +384,9 @@ def _run_snmpget(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLI
 cli_command_snmpget = CLICommand(
     name="snmpget",
     long="snmpget",
-    handler_function=_run_snmpget,
+    handler=_run_snmpget,
     arguments=CLIArguments("OID [HOST1 HOST2...]", optional=True),
-    sub_options=[SNMP_BACKEND_OPTION, FAKE_DNS_OPTION],
+    request=cli_untyped_request([SNMP_BACKEND_OPTION, FAKE_DNS_OPTION]),
     help="Fetch single OID from one or multiple hosts",
     description=[
         (

@@ -9,11 +9,11 @@ from typing import Final
 
 import pytest
 
+from cmk.cli.engine.arguments import RunCommand as CLIRunCommand
 from cmk.cli.engine.call import call as cli_call
 from cmk.cli.engine.discovery import _named_after_its_variable as _cli_named_after_its_variable
 from cmk.cli.engine.discovery import make_command as cli_make_command
-from cmk.cli.engine.discovery import make_option as cli_make_option
-from cmk.cli.engine.readers import parse_sub_options as cli_parse_sub_options
+from cmk.cli.engine.readers import ParsedOptions as CLIParsedOptions
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
@@ -22,6 +22,7 @@ from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Option as CLIOption
 from cmk.cli.internal import Options as CLIOptions
+from cmk.cli.internal import untyped_request as cli_untyped_request
 from cmk.discover_plugins import PluginLocation
 
 from ._logger import null_logger
@@ -34,43 +35,65 @@ def _handler(_context: CLIContext, _options: CLIOptions, _args: CLIArgs) -> CLIE
     return CLIExitCode.SUCCESS
 
 
-def test_make_option_keeps_deprecated_long_options() -> None:
-    option = cli_make_option(
-        CLIOption(
-            long="plugins",
-            help="Restrict to the given plug-ins",
-            argument="PLUGINS",
-            deprecated_names=frozenset({"checks"}),
-        )
-    )
-    assert option.long_getopt_specs() == ["plugins=", "checks="]
-    assert option.is_deprecated_option("--checks")
-
-
-def test_make_command_parses_sub_options_with_conversion() -> None:
+def test_make_command_records_the_options_a_command_declares() -> None:
     command = cli_make_command(
         CLICommand(
             name="snmpwalk",
             long="snmpwalk",
-            handler_function=_handler,
+            handler=_handler,
             help="Walk",
-            sub_options=[
-                CLIOption(
-                    long="oid",
-                    help="Walk the given OID",
-                    argument="OID",
-                    parse=str.upper,
-                ),
-                CLIOption(long="verbose", help="Be verbose", repeat=True),
-            ],
+            request=cli_untyped_request(
+                [
+                    CLIOption(
+                        long="oid",
+                        help="Walk the given OID",
+                        argument="OID",
+                        deprecated_names=frozenset({"object"}),
+                    ),
+                    CLIOption(long="verbose", help="Be verbose", repeat=True),
+                ]
+            ),
         )
     )
-    assert cli_parse_sub_options(
-        command.sub_options, [("--oid", "iso"), ("--verbose", ""), ("--verbose", "")], null_logger()
-    ) == {
-        "oid": "ISO",
-        "verbose": 2,
-    }
+    assert command.long_getopt_specs() == ["snmpwalk", "oid=", "object=", "verbose"]
+
+
+def test_a_commands_handler_receives_its_options_converted() -> None:
+    seen: list[CLIOptions] = []
+
+    def _record(_context: CLIContext, options: CLIOptions, _args: CLIArgs) -> CLIExitCode:
+        seen.append(options)
+        return CLIExitCode.SUCCESS
+
+    command = cli_make_command(
+        CLICommand(
+            name="snmpwalk",
+            long="snmpwalk",
+            handler=_record,
+            help="Walk",
+            request=cli_untyped_request(
+                [
+                    CLIOption(
+                        long="oid",
+                        help="Walk the given OID",
+                        argument="OID",
+                        parse=str.upper,
+                    ),
+                    CLIOption(long="verbose", help="Be verbose", repeat=True),
+                ]
+            ),
+        )
+    )
+    bound = command.bind(
+        CLIParsedOptions([("--oid", "iso"), ("--verbose", ""), ("--verbose", "")], null_logger())
+    )
+
+    bound(
+        CLIContext(omd_root=_OMD_ROOT, global_options=CLIGlobalOptions(), logger=null_logger()),
+        [],
+    )
+
+    assert seen == [{"oid": "ISO", "verbose": 2}]
 
 
 @pytest.mark.parametrize(
@@ -104,17 +127,22 @@ def test_call_shapes_the_positional_arguments(
         CLICommand(
             name="thing",
             long="thing",
-            handler_function=_record,
+            request=cli_untyped_request(),
+            handler=_record,
             help="Do the thing",
             arguments=arguments,
         )
     )
-    exit_status = cli_call(
-        CLIContext(omd_root=_OMD_ROOT, global_options=CLIGlobalOptions(), logger=null_logger()),
+    run_command = CLIRunCommand(
         command,
         argument,
-        cli_parse_sub_options(command.sub_options, [("--thing", argument)], null_logger()),
+        [("--thing", argument)],
         ["ARG", "more"],
+    )
+    exit_status = cli_call(
+        CLIContext(omd_root=_OMD_ROOT, global_options=CLIGlobalOptions(), logger=null_logger()),
+        run_command,
+        command.bind(CLIParsedOptions(run_command.options, null_logger())),
         lambda *_args: nullcontext(),
     )
     assert exit_status == CLIExitCode.ERROR
@@ -125,7 +153,8 @@ def test_a_command_not_named_after_its_variable_is_rejected() -> None:
     command = CLICommand(
         name="demo",
         long="demo",
-        handler_function=_handler,
+        request=cli_untyped_request(),
+        handler=_handler,
         help="Demonstrate",
     )
 

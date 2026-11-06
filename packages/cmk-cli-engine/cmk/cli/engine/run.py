@@ -20,7 +20,7 @@ from cmk.cli.engine.commands import Commands, GetoptCommand
 from cmk.cli.engine.discovery import discover_commands
 from cmk.cli.engine.options import general_options, Option, parse_general_options
 from cmk.cli.engine.output import write_paged, write_stdout
-from cmk.cli.engine.readers import parse_sub_options
+from cmk.cli.engine.readers import ParsedOptions
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 
@@ -151,7 +151,7 @@ def run(
             runtime.page(commands.help())
             return CLIExitCode.SUCCESS
         try:
-            sub_options = parse_sub_options(parsed.command.sub_options, parsed.options, logger)
+            bound = parsed.command.bind(ParsedOptions(parsed.options, logger))
         except ValueError as e:
             logger.error("%(error)s", {"error": e})  # noqa: TRY400
             if global_options.debug:
@@ -159,10 +159,8 @@ def run(
             return CLIExitCode.UNKNOWN
         return call(
             CLIContext(omd_root=omd_root, global_options=global_options, logger=logger),
-            parsed.command,
-            parsed.argument,
-            sub_options,
-            parsed.arguments,
+            parsed,
+            bound,
             runtime.trace_command,
         )
 

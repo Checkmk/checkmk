@@ -29,12 +29,13 @@ from cmk.checkengine.snmp_backend_builder import make_backend
 from cmk.checkengine.snmp_backends.classic import ClassicSNMPBackend
 from cmk.checkengine.snmp_backends.stored_walk import StoredWalkSNMPBackend
 from cmk.checkengine.sources._sources import SNMPSource
+from cmk.cli.engine.arguments import RunCommand as CLIRunCommand
 from cmk.cli.engine.call import call as cli_call
 from cmk.cli.engine.discovery import make_command as cli_make_command
+from cmk.cli.engine.readers import ParsedOptions as CLIParsedOptions
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
-from cmk.cli.internal import Options as CLIOptions
 from cmk.plugins.checkmk.cli import dump
 from cmk.plugins.checkmk.cli.dump import cli_command_dump_agent
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
@@ -57,6 +58,17 @@ class _MockFetcherTrigger(PlainFetcherTrigger):
 
 
 _OMD_ROOT: Final = Path("/omd/sites/mysite")
+
+
+def _dump_agent(hostname: HostName, options: list[tuple[str, str]]) -> CLIExitCode:
+    logger = logging.getLogger(__name__)
+    parsed = CLIRunCommand(cli_make_command(cli_command_dump_agent), hostname, options, [])
+    return cli_call(
+        CLIContext(omd_root=_OMD_ROOT, global_options=CLIGlobalOptions(), logger=logger),
+        parsed,
+        parsed.command.bind(CLIParsedOptions(options, logger)),
+        lambda *_args: nullcontext(),
+    )
 
 
 def _patch_fetcher_trigger(monkeypatch: pytest.MonkeyPatch, fetched: bytes | Exception) -> None:
@@ -158,18 +170,7 @@ class TestDumpAgent:
     ) -> None:
         _patch_fetcher_trigger(monkeypatch, raw_data)
 
-        cli_call(
-            CLIContext(
-                omd_root=_OMD_ROOT,
-                global_options=CLIGlobalOptions(),
-                logger=logging.getLogger(__name__),
-            ),
-            cli_make_command(cli_command_dump_agent),
-            hostname,
-            {},
-            [],
-            lambda *_args: nullcontext(),
-        )
+        _dump_agent(hostname, [])
 
         assert capsys.readouterr().out == raw_data.decode()
 
@@ -188,18 +189,7 @@ class TestDumpAgent:
             b'{"level": "warning", "message": "Section foo denied"}\n',
         )
 
-        exit_code = cli_call(
-            CLIContext(
-                omd_root=_OMD_ROOT,
-                global_options=CLIGlobalOptions(),
-                logger=logging.getLogger(__name__),
-            ),
-            cli_make_command(cli_command_dump_agent),
-            hostname,
-            {},
-            [],
-            lambda *_args: nullcontext(),
-        )
+        exit_code = _dump_agent(hostname, [])
 
         assert exit_code == CLIExitCode.SUCCESS
         assert capsys.readouterr().err == "WARNING [agent]: Success, Section foo denied\n"
@@ -214,18 +204,7 @@ class TestDumpAgent:
     ) -> None:
         _patch_fetcher_trigger(monkeypatch, Exception("Something broke"))
 
-        exit_code = cli_call(
-            CLIContext(
-                omd_root=_OMD_ROOT,
-                global_options=CLIGlobalOptions(),
-                logger=logging.getLogger(__name__),
-            ),
-            cli_make_command(cli_command_dump_agent),
-            hostname,
-            {},
-            [],
-            lambda *_args: nullcontext(),
-        )
+        exit_code = _dump_agent(hostname, [])
 
         assert exit_code == CLIExitCode.FAILURE
         assert capsys.readouterr().err == "ERROR [agent]: Something broke\n"
@@ -296,14 +275,16 @@ class TestDumpAgentSnmpBackend:
     @pytest.mark.parametrize(
         ["options", "expected_backend_type"],
         [
-            pytest.param({}, ClassicSNMPBackend, id="default"),
-            pytest.param({"snmp-backend": "stored-walk"}, StoredWalkSNMPBackend, id="stored-walk"),
+            pytest.param([], ClassicSNMPBackend, id="default"),
+            pytest.param(
+                [("--snmp-backend", "stored-walk")], StoredWalkSNMPBackend, id="stored-walk"
+            ),
         ],
     )
     def test_the_snmp_backend_option_selects_the_backend(
         self,
         hostname: HostName,
-        options: CLIOptions,
+        options: list[tuple[str, str]],
         expected_backend_type: type,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
@@ -328,18 +309,7 @@ class TestDumpAgentSnmpBackend:
         monkeypatch.setattr(SNMPSource, "__init__", capturing_snmp_source_init)
 
         _patch_fetcher_trigger(monkeypatch, b"")
-        cli_call(
-            CLIContext(
-                omd_root=_OMD_ROOT,
-                global_options=CLIGlobalOptions(),
-                logger=logging.getLogger(__name__),
-            ),
-            cli_make_command(cli_command_dump_agent),
-            hostname,
-            options,
-            [],
-            lambda *_args: nullcontext(),
-        )
+        _dump_agent(hostname, options)
 
         # Open the SNMP fetcher manually to drive make_backend
         assert len(captured_sources) == 1

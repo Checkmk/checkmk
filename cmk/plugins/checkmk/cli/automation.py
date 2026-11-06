@@ -23,6 +23,7 @@ from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Option as CLIOption
 from cmk.cli.internal import Options as CLIOptions
+from cmk.cli.internal import untyped_request as cli_untyped_request
 from cmk.profiling import backend as profiling
 
 logger = logging.getLogger(__name__)
@@ -115,17 +116,19 @@ def _for_cmk_version(options: CLIOptions) -> str:
 cli_command_automation = CLICommand(
     name="automation",
     long="automation",
-    handler_function=_run_automation,
+    handler=_run_automation,
     arguments=CLIArguments("COMMAND...", optional=True),
     help="Internal helper to invoke Check_MK actions",
-    sub_options=[
-        CLIOption(
-            long="for-cmk-version",
-            argument="VERSION",
-            help=(
-                "Serialize the result for a site running this Checkmk version"
-                " (default: the version of this site)"
+    request=cli_untyped_request(
+        [
+            CLIOption(
+                long="for-cmk-version",
+                argument="VERSION",
+                help=(
+                    "Serialize the result for a site running this Checkmk version"
+                    " (default: the version of this site)"
+                ),
             ),
-        ),
-    ],
+        ]
+    ),
 )

@@ -16,6 +16,7 @@ from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Option as CLIOption
 from cmk.cli.internal import Options as CLIOptions
+from cmk.cli.internal import untyped_request as cli_untyped_request
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.licensing.basics.finder import blocked_feature_files
 from cmk.utils.paths import omd_root
@@ -72,16 +73,18 @@ cli_command_man = CLICommand(
     name="man",
     long="man",
     short="M",
-    handler_function=_run_man,
+    handler=_run_man,
     arguments=CLIArguments("CHECKTYPE", optional=True),
-    sub_options=[
-        CLIOption(
-            long="renderer",
-            short="r",
-            argument="RENDERER",
-            help="Use the given renderer: 'console' or 'nowiki'. Defaults to 'console'.",
-        ),
-    ],
+    request=cli_untyped_request(
+        [
+            CLIOption(
+                long="renderer",
+                short="r",
+                argument="RENDERER",
+                help="Use the given renderer: 'console' or 'nowiki'. Defaults to 'console'.",
+            ),
+        ]
+    ),
     help="Show manpage for check CHECKTYPE",
     description=[
         (
@@ -123,6 +126,7 @@ cli_command_browse_man = CLICommand(
     name="browse_man",
     long="browse-man",
     short="m",
-    handler_function=_run_browse_man,
+    request=cli_untyped_request(),
+    handler=_run_browse_man,
     help="Open interactive manpage browser",
 )

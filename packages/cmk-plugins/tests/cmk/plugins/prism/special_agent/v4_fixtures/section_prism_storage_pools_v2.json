@@ -1,0 +1,457 @@
+[
+  {
+    "extId": "64b62dc3-b8a9-47c1-9026-3af2009d231e",
+    "disks": [
+      {
+        "storageTier": "SSD_PCIE",
+        "stats": {
+          "diskCapacityBytes": [
+            {
+              "value": 3394549302994,
+              "timestamp": "2026-11-04T07:18:30Z"
+            },
+            {
+              "value": 3394549302994,
+              "timestamp": "2026-11-04T07:18:00Z"
+            }
+          ],
+          "diskFreeBytes": [
+            {
+              "value": 3297591668964,
+              "timestamp": "2026-11-04T07:18:30Z"
+            },
+            {
+              "value": 3297591668964,
+              "timestamp": "2026-11-04T07:18:00Z"
+            }
+          ]
+        }
+      },
+      {
+        "storageTier": "SSD_PCIE",
+        "stats": {
+          "diskCapacityBytes": [
+            {
+              "value": 3394549302994,
+              "timestamp": "2026-11-04T07:18:30Z"
+            },
+            {
+              "value": 3394549302994,
+              "timestamp": "2026-11-04T07:18:00Z"
+            }
+          ],
+          "diskFreeBytes": [
+            {
+              "value": 2875800735668,
+              "timestamp": "2026-11-04T07:18:30Z"
+            },
+            {
+              "value": 2875800735668,
+              "timestamp": "2026-11-04T07:18:00Z"
+            }
+          ]
+        }
+      },
+      {
+        "storageTier": "SSD_PCIE",
+        "stats": {
+          "diskCapacityBytes": [
+            {
+              "value": 3394549302994,
+              "timestamp": "2026-11-04T07:18:30Z"
+            },
+            {
+              "value": 3394549302994,
+              "timestamp": "2026-11-04T07:18:00Z"
+            }
+          ],
+          "diskFreeBytes": [
+            {
+              "value": 2874657912469,
+              "timestamp": "2026-11-04T07:18:30Z"
+            },
+            {
+              "value": 2874657789589,
+              "timestamp": "2026-11-04T07:18:00Z"
+            }
+          ]
+        }
+      },
+      {
+        "storageTier": "SSD_PCIE",
+        "stats": {
+          "diskCapacityBytes": [
+            {
+              "value": 3659324221183,
+              "timestamp": "2026-11-04T07:18:30Z"
+            },
+            {
+              "value": 3659324221183,
+              "timestamp": "2026-11-04T07:18:00Z"
+            }
+          ],
+          "diskFreeBytes": [
+            {
+              "value": 2881178174680,
+              "timestamp": "2026-11-04T07:18:30Z"
+            },
+            {
+              "value": 2881178674392,
+              "timestamp": "2026-11-04T07:18:00Z"
+            }
+          ]
+        }
+      },
+      {
+        "storageTier": "SSD_PCIE",
+        "stats": {
+          "diskCapacityBytes": [
+            {
+              "value": 3659324221183,
+              "timestamp": "2026-11-04T07:18:30Z"
+            },
+            {
+              "value": 3659324221183,
+              "timestamp": "2026-11-04T07:18:00Z"
+            }
+          ],
+          "diskFreeBytes": [
+            {
+              "value": 2916913810974,
+              "timestamp": "2026-11-04T07:18:30Z"
+            },
+            {
+              "value": 2916914149918,
+              "timestamp": "2026-11-04T07:18:00Z"
+            }
+          ]
+        }
+      },
+      {
+        "storageTier": "SSD_PCIE",
+        "stats": {
+          "diskCapacityBytes": [
+            {
+              "value": 3659324221183,
+              "timestamp": "2026-11-04T07:18:30Z"
+            },
+            {
+              "value": 3659324221183,
+              "timestamp": "2026-11-04T07:18:00Z"
+            }
+          ],
+          "diskFreeBytes": [
+            {
+              "value": 2917869035830,
+              "timestamp": "2026-11-04T07:18:30Z"
+            },
+            {
+              "value": 2917869559094,
+              "timestamp": "2026-11-04T07:18:00Z"
+            }
+          ]
+        }
+      },
+      {
+        "storageTier": "SSD_PCIE",
+        "stats": {
+          "diskCapacityBytes": [
+            {
+              "value": 3659324221183,
+              "timestamp": "2026-11-04T07:18:30Z"
+            },
+            {
+              "value": 3659324221183,
+              "timestamp": "2026-11-04T07:18:00Z"
+            }
+          ],
+          "diskFreeBytes": [
+            {
+              "value": 2880828159337,
+              "timestamp": "2026-11-04T07:18:30Z"
+            },
+            {
+              "value": 2880828367209,
+              "timestamp": "2026-11-04T07:18:00Z"
+            }
+          ]
+        }
+      },
+      {
+        "storageTier": "SSD_PCIE",
+        "stats": {
+          "diskCapacityBytes": [
+            {
+              "value": 3659324221183,
+              "timestamp": "2026-11-04T07:18:30Z"
+            },
+            {
+              "value": 3659324221183,
+              "timestamp": "2026-11-04T07:18:00Z"
+            }
+          ],
+          "diskFreeBytes": [
+            {
+              "value": 2917392111988,
+              "timestamp": "2026-11-04T07:18:30Z"
+            },
+            {
+              "value": 2917392625012,
+              "timestamp": "2026-11-04T07:18:00Z"
+            }
+          ]
+        }
+      },
+      {
+        "storageTier": "SSD_PCIE",
+        "stats": {
+          "diskCapacityBytes": [
+            {
+              "value": 3394549302994,
+              "timestamp": "2026-11-04T07:18:30Z"
+            },
+            {
+              "value": 3394549302994,
+              "timestamp": "2026-11-04T07:18:00Z"
+            }
+          ],
+          "diskFreeBytes": [
+            {
+              "value": 2889443760141,
+              "timestamp": "2026-11-04T07:18:30Z"
+            },
+            {
+              "value": 2889443700749,
+              "timestamp": "2026-11-04T07:18:00Z"
+            }
+          ]
+        }
+      },
+      {
+        "storageTier": "SSD_PCIE",
+        "stats": {
+          "diskCapacityBytes": [
+            {
+              "value": 3394549302994,
+              "timestamp": "2026-11-04T07:18:30Z"
+            },
+            {
+              "value": 3394549302994,
+              "timestamp": "2026-11-04T07:18:00Z"
+            }
+          ],
+          "diskFreeBytes": [
+            {
+              "value": 2887798383211,
+              "timestamp": "2026-11-04T07:18:30Z"
+            },
+            {
+              "value": 2887798383211,
+              "timestamp": "2026-11-04T07:18:00Z"
+            }
+          ]
+        }
+      },
+      {
+        "storageTier": "SSD_PCIE",
+        "stats": {
+          "diskCapacityBytes": [
+            {
+              "value": 3659324221183,
+              "timestamp": "2026-11-04T07:18:30Z"
+            },
+            {
+              "value": 3659324221183,
+              "timestamp": "2026-11-04T07:18:00Z"
+            }
+          ],
+          "diskFreeBytes": [
+            {
+              "value": 2880713363483,
+              "timestamp": "2026-11-04T07:18:30Z"
+            },
+            {
+              "value": 2880713946139,
+              "timestamp": "2026-11-04T07:18:00Z"
+            }
+          ]
+        }
+      },
+      {
+        "storageTier": "SSD_PCIE",
+        "stats": {
+          "diskCapacityBytes": [
+            {
+              "value": 3659324221183,
+              "timestamp": "2026-11-04T07:18:30Z"
+            },
+            {
+              "value": 3659324221183,
+              "timestamp": "2026-11-04T07:18:00Z"
+            }
+          ],
+          "diskFreeBytes": [
+            {
+              "value": 2880468737344,
+              "timestamp": "2026-11-04T07:18:30Z"
+            },
+            {
+              "value": 2880468754752,
+              "timestamp": "2026-11-04T07:18:00Z"
+            }
+          ]
+        }
+      },
+      {
+        "storageTier": "SSD_PCIE",
+        "stats": {
+          "diskCapacityBytes": [
+            {
+              "value": 3659324221183,
+              "timestamp": "2026-11-04T07:18:30Z"
+            },
+            {
+              "value": 3659324221183,
+              "timestamp": "2026-11-04T07:18:00Z"
+            }
+          ],
+          "diskFreeBytes": [
+            {
+              "value": 3435979767829,
+              "timestamp": "2026-11-04T07:18:30Z"
+            },
+            {
+              "value": 3435980789781,
+              "timestamp": "2026-11-04T07:18:00Z"
+            }
+          ]
+        }
+      },
+      {
+        "storageTier": "SSD_PCIE",
+        "stats": {
+          "diskCapacityBytes": [
+            {
+              "value": 3659324221183,
+              "timestamp": "2026-11-04T07:18:30Z"
+            },
+            {
+              "value": 3659324221183,
+              "timestamp": "2026-11-04T07:18:00Z"
+            }
+          ],
+          "diskFreeBytes": [
+            {
+              "value": 2917160947384,
+              "timestamp": "2026-11-04T07:18:30Z"
+            },
+            {
+              "value": 2917161497272,
+              "timestamp": "2026-11-04T07:18:00Z"
+            }
+          ]
+        }
+      },
+      {
+        "storageTier": "SSD_PCIE",
+        "stats": {
+          "diskCapacityBytes": [
+            {
+              "value": 3659324221183,
+              "timestamp": "2026-11-04T07:18:30Z"
+            },
+            {
+              "value": 3659324221183,
+              "timestamp": "2026-11-04T07:18:00Z"
+            }
+          ],
+          "diskFreeBytes": [
+            {
+              "value": 3433700339230,
+              "timestamp": "2026-11-04T07:18:30Z"
+            },
+            {
+              "value": 3433701086750,
+              "timestamp": "2026-11-04T07:18:00Z"
+            }
+          ]
+        }
+      },
+      {
+        "storageTier": "SSD_PCIE",
+        "stats": {
+          "diskCapacityBytes": [
+            {
+              "value": 3394549302994,
+              "timestamp": "2026-11-04T07:18:30Z"
+            },
+            {
+              "value": 3394549302994,
+              "timestamp": "2026-11-04T07:18:00Z"
+            }
+          ],
+          "diskFreeBytes": [
+            {
+              "value": 3297174389018,
+              "timestamp": "2026-11-04T07:18:30Z"
+            },
+            {
+              "value": 3297174389018,
+              "timestamp": "2026-11-04T07:18:00Z"
+            }
+          ]
+        }
+      },
+      {
+        "storageTier": "SSD_PCIE",
+        "stats": {
+          "diskCapacityBytes": [
+            {
+              "value": 3659324221183,
+              "timestamp": "2026-11-04T07:18:30Z"
+            },
+            {
+              "value": 3659324221183,
+              "timestamp": "2026-11-04T07:18:00Z"
+            }
+          ],
+          "diskFreeBytes": [
+            {
+              "value": 3434687512370,
+              "timestamp": "2026-11-04T07:18:30Z"
+            },
+            {
+              "value": 3434687775538,
+              "timestamp": "2026-11-04T07:18:00Z"
+            }
+          ]
+        }
+      },
+      {
+        "storageTier": "SSD_PCIE",
+        "stats": {
+          "diskCapacityBytes": [
+            {
+              "value": 3659324221183,
+              "timestamp": "2026-11-04T07:18:30Z"
+            },
+            {
+              "value": 3659324221183,
+              "timestamp": "2026-11-04T07:18:00Z"
+            }
+          ],
+          "diskFreeBytes": [
+            {
+              "value": 3434241242264,
+              "timestamp": "2026-11-04T07:18:30Z"
+            },
+            {
+              "value": 3434241989784,
+              "timestamp": "2026-11-04T07:18:00Z"
+            }
+          ]
+        }
+      }
+    ]
+  }
+]

@@ -5,16 +5,19 @@
 
 # mypy: disable-error-code="explicit-any"
 
+import json
 from collections.abc import Mapping, Sequence
+from pathlib import Path
 from typing import Any
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, Service, State
+from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.plugins.lib.df import FILESYSTEM_DEFAULT_PARAMS
 from cmk.plugins.prism.agent_based.prism_storage_pools import (
     check_prism_storage_pools,
     discovery_prism_storage_pools,
+    parse_prism_storage_pools_v2,
 )
 
 
@@ -125,3 +128,88 @@ def test_check_prism_storage_pools(  # type: ignore[misc]
         )
         == expected_check_result
     )
+
+
+# What the v4 agent writes for the storage pool recorded on a Prism Central 7.5 lab: its 18 disks
+RECORDED_V4_SECTION = [
+    [
+        (
+            Path(__file__).parent.parent
+            / "special_agent"
+            / "v4_fixtures"
+            / "section_prism_storage_pools_v2.json"
+        ).read_text()
+    ]
+]
+
+
+def _v4_pool(*disks: tuple[str, int, int]) -> StringTable:
+    """One pool with a disk per (storage tier, capacity, free bytes)"""
+
+    def series(value: int) -> list[dict[str, object]]:
+        return [{"value": value, "timestamp": "2026-11-05T09:09:30Z"}]
+
+    return [
+        [
+            json.dumps(
+                [
+                    {
+                        "extId": "64b62dc3-b8a9-47c1-9026-3af2009d231e",
+                        "disks": [
+                            {
+                                "storageTier": tier,
+                                "stats": {
+                                    "diskCapacityBytes": series(capacity),
+                                    "diskFreeBytes": series(free),
+                                },
+                            }
+                            for tier, capacity, free in disks
+                        ],
+                    }
+                ]
+            )
+        ]
+    ]
+
+
+def _v4_results(section: Mapping[str, Any]) -> list[Result]:
+    return [
+        result
+        for result in check_prism_storage_pools(
+            item="64b62dc3", params=FILESYSTEM_DEFAULT_PARAMS, section=section
+        )
+        if isinstance(result, Result)
+    ]
+
+
+def test_v4_pool_is_discovered_by_the_start_of_its_id() -> None:
+    section = parse_prism_storage_pools_v2(RECORDED_V4_SECTION)
+
+    assert list(discovery_prism_storage_pools(section)) == [Service(item="64b62dc3")]
+
+
+@pytest.mark.usefixtures("empty_value_store")
+def test_v4_pool_shows_the_sum_of_its_disks() -> None:
+    section = parse_prism_storage_pools_v2(RECORDED_V4_SECTION)
+
+    assert _v4_results(section) == [
+        Result(state=State.OK, summary="Used: 14.35% - 8.39 TiB of 58.5 TiB"),
+        Result(state=State.OK, summary="SSD capacity: 58.5 TiB, SSD free: 50.1 TiB"),
+    ]
+
+
+@pytest.mark.usefixtures("empty_value_store")
+def test_v4_pool_shows_each_tier_and_counts_other_tiers_only_in_the_total() -> None:
+    section = parse_prism_storage_pools_v2(
+        _v4_pool(
+            ("SSD_SATA", 4 * 1024**4, 3 * 1024**4),
+            ("DAS_SATA", 8 * 1024**4, 2 * 1024**4),
+            ("HDD", 4 * 1024**4, 3 * 1024**4),
+        )
+    )
+
+    assert _v4_results(section) == [
+        Result(state=State.OK, summary="Used: 50.00% - 8.00 TiB of 16.0 TiB"),
+        Result(state=State.OK, summary="SAS/SATA capacity: 8.00 TiB, SAS/SATA free: 2.00 TiB"),
+        Result(state=State.OK, summary="SSD capacity: 4.00 TiB, SSD free: 3.00 TiB"),
+    ]

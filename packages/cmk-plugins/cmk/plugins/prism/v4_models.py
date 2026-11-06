@@ -314,6 +314,22 @@ class Node(V4Model):
     disks: list[NodeDisk] = []
 
 
+class PoolDisk(V4Model):
+    storage_tier: str | None = Field(None, alias="storageTier")
+    stats: DiskStats = DiskStats()
+
+
+class StoragePool(V4Model):
+    """A storage pool with its disks, as written to prism_storage_pools_v2"""
+
+    ext_id: str = Field(alias="extId")
+    disks: list[PoolDisk] = []
+
+
+class StoragePools(RootModel[list[StoragePool]]):
+    model_config = ConfigDict(frozen=True)
+
+
 class VmStatsSample(V4Model):
     timestamp: str
     controller_avg_io_latency_micros: StrictInt | None = Field(

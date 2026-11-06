@@ -24,7 +24,8 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.lib.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
-from cmk.plugins.prism.lib import load_json
+from cmk.plugins.prism.lib import load_json, sum_newest, tier_usage_stats
+from cmk.plugins.prism.v4_models import StoragePool, StoragePools
 
 Section = Mapping[str, Mapping[str, Any]]
 
@@ -40,6 +41,33 @@ def parse_prism_storage_pools(string_table: StringTable) -> Section:
 agent_section_prism_storage_pools = AgentSection(
     name="prism_storage_pools",
     parse_function=parse_prism_storage_pools,
+)
+
+
+def _usage_stats_v2(pool: StoragePool) -> dict[str, str]:
+    usage_stats = {
+        "storage.capacity_bytes": str(
+            sum_newest(disk.stats.disk_capacity_bytes for disk in pool.disks)
+        ),
+        "storage.free_bytes": str(sum_newest(disk.stats.disk_free_bytes for disk in pool.disks)),
+    }
+    return usage_stats | tier_usage_stats([(disk.storage_tier, disk.stats) for disk in pool.disks])
+
+
+def parse_prism_storage_pools_v2(string_table: StringTable) -> Section:
+    if not string_table:
+        return {}
+    # v4 has no pool name. Each cluster has its own host, so the start of the ID is unique on it.
+    return {
+        pool.ext_id[:8]: {"usageStats": _usage_stats_v2(pool)}
+        for pool in StoragePools.model_validate_json(string_table[0][0]).root
+    }
+
+
+agent_section_prism_storage_pools_v2 = AgentSection(
+    name="prism_storage_pools_v2",
+    parsed_section_name="prism_storage_pools",
+    parse_function=parse_prism_storage_pools_v2,
 )
 
 

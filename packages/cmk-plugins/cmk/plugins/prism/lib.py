@@ -7,11 +7,40 @@
 # mypy: disable-error-code="no-any-return"
 
 import json
+from collections.abc import Iterable, Sequence
 from typing import Any
 
 from cmk.agent_based.v2 import StringTable
+from cmk.plugins.prism.v4_models import DiskStats, newest, Samples
 
 PrismAPIData = dict[str, Any]
+
+
+def _legacy_tier(tier: str | None) -> str | None:
+    """The legacy API knows only these two tiers, others count toward neither"""
+    if tier is None:
+        return None
+    if tier.startswith("SSD"):
+        return "ssd"
+    return "das-sata" if tier == "DAS_SATA" else None
+
+
+def sum_newest(samples: Iterable[Samples]) -> int:
+    return sum(value for series in samples if (value := newest(series)) is not None)
+
+
+def tier_usage_stats(disks: Sequence[tuple[str | None, DiskStats]]) -> dict[str, str]:
+    """The usage stats of the legacy API per storage tier, from the tier and stats of each disk"""
+    usage_stats: dict[str, str] = {}
+    for tier in ("ssd", "das-sata"):
+        stats = [disk_stats for disk_tier, disk_stats in disks if _legacy_tier(disk_tier) == tier]
+        usage_stats[f"storage_tier.{tier}.capacity_bytes"] = str(
+            sum_newest(disk_stats.disk_capacity_bytes for disk_stats in stats)
+        )
+        usage_stats[f"storage_tier.{tier}.free_bytes"] = str(
+            sum_newest(disk_stats.disk_free_bytes for disk_stats in stats)
+        )
+    return usage_stats
 
 
 def v4_power_state(power_state: str) -> str:

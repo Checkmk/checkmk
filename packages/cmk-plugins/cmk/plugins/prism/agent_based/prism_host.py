@@ -5,12 +5,11 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from collections.abc import Iterable
 from typing import Any
 
 from cmk.agent_based.v2 import AgentSection, HostLabel, HostLabelGenerator, StringTable
-from cmk.plugins.prism.lib import load_json
-from cmk.plugins.prism.v4_models import HostStats, newest, Node, NodeDisk, Samples
+from cmk.plugins.prism.lib import load_json, tier_usage_stats
+from cmk.plugins.prism.v4_models import HostStats, newest, Node, NodeDisk
 
 Section = dict[str, Any]
 
@@ -83,19 +82,6 @@ def _stats_v2(stats: HostStats) -> dict[str, str]:
     return legacy
 
 
-def _legacy_tier(tier: str | None) -> str | None:
-    """The legacy API knows only these two tiers, others count toward neither"""
-    if tier is None:
-        return None
-    if tier.startswith("SSD"):
-        return "ssd"
-    return "das-sata" if tier == "DAS_SATA" else None
-
-
-def _sum(samples: Iterable[Samples]) -> int:
-    return sum(value for series in samples if (value := newest(series)) is not None)
-
-
 def _usage_stats_v2(node: Node) -> dict[str, str]:
     legacy: dict[str, str] = {}
     for legacy_key, samples in (
@@ -103,15 +89,9 @@ def _usage_stats_v2(node: Node) -> dict[str, str]:
         ("storage.free_bytes", node.stats.free_physical_storage_bytes),
     ):
         legacy[legacy_key] = _legacy_value(newest(samples))
-    for tier in ("ssd", "das-sata"):
-        disks = [disk for disk in node.disks if _legacy_tier(disk.config.storage_tier) == tier]
-        legacy[f"storage_tier.{tier}.capacity_bytes"] = str(
-            _sum(disk.stats.disk_capacity_bytes for disk in disks)
-        )
-        legacy[f"storage_tier.{tier}.free_bytes"] = str(
-            _sum(disk.stats.disk_free_bytes for disk in disks)
-        )
-    return legacy
+    return legacy | tier_usage_stats(
+        [(disk.config.storage_tier, disk.stats) for disk in node.disks]
+    )
 
 
 def _disk_hardware_config_v2(disk: NodeDisk) -> dict[str, object] | None:

@@ -191,6 +191,160 @@ def test_filter_compares_the_default_of_a_column_missing_in_an_event(
 
 
 @pytest.mark.parametrize(
+    "line_boundary",
+    [
+        pytest.param("\r", id="carriage return"),
+        pytest.param("\v", id="vertical tab"),
+        pytest.param("\x1c", id="file separator"),
+        pytest.param("\x85", id="next line"),
+        pytest.param("\u2028", id="line separator"),
+        pytest.param("\u2029", id="paragraph separator"),
+    ],
+)
+def test_only_a_newline_ends_a_header_line(
+    event_status: EventStatus, status_server: StatusServer, line_boundary: str
+) -> None:
+    text = f"a{line_boundary}Limit: 0"
+    event_status.new_event(new_event({"text": text}))
+
+    texts = query_texts_of_events(status_server, f"Filter: event_text = {text}")
+
+    assert texts == {text}
+
+
+@pytest.mark.parametrize(
+    "whitespace",
+    [
+        pytest.param("\x1c", id="file separator"),
+        pytest.param("\x85", id="next line"),
+        pytest.param("\xa0", id="no-break space"),
+        pytest.param("\u2028", id="line separator"),
+    ],
+)
+def test_filter_value_keeps_what_only_python_takes_as_whitespace(
+    event_status: EventStatus, status_server: StatusServer, whitespace: str
+) -> None:
+    event_status.new_event(new_event({"text": f"{whitespace}x{whitespace}"}))
+    event_status.new_event(new_event({"text": "x"}))
+
+    texts = query_texts_of_events(status_server, f"Filter: event_text = {whitespace}x{whitespace}")
+
+    assert texts == {f"{whitespace}x{whitespace}"}
+
+
+@pytest.mark.parametrize(
+    "filter_line",
+    [
+        pytest.param("Filter: event_text = x", id="spaces"),
+        pytest.param("Filter: event_text  =  x", id="several spaces"),
+        pytest.param("Filter:\tevent_text\t=\tx", id="tabs"),
+        pytest.param("Filter: event_text = \v\fx", id="other ASCII whitespace"),
+    ],
+)
+def test_filter_line_is_split_at_ascii_whitespace_like_in_livestatus(
+    event_status: EventStatus, status_server: StatusServer, filter_line: str
+) -> None:
+    for text in ["x", " x", "\tx"]:
+        event_status.new_event(new_event({"text": text}))
+
+    texts = query_texts_of_events(status_server, filter_line)
+
+    assert texts == {"x"}
+
+
+@pytest.mark.parametrize(
+    "whitespace",
+    [
+        pytest.param(" ", id="space"),
+        pytest.param("\t", id="tab"),
+        pytest.param("\v\f", id="other ASCII whitespace"),
+    ],
+)
+def test_whitespace_at_the_end_of_a_line_is_dropped_like_in_livestatus(
+    event_status: EventStatus, status_server: StatusServer, whitespace: str
+) -> None:
+    event_status.new_event(new_event({"text": "x"}))
+    event_status.new_event(new_event({"text": f"x{whitespace}"}))
+
+    texts = query_texts_of_events(status_server, f"Filter: event_text = x{whitespace}")
+
+    assert texts == {"x"}
+
+
+def test_query_with_crlf_line_endings_is_understood(
+    event_status: EventStatus, status_server: StatusServer
+) -> None:
+    event_status.new_event(new_event({"text": "x"}))
+    event_status.new_event(new_event({"text": "y"}))
+    status_socket = FakeStatusSocket(
+        b"GET events\r\nColumns: event_text\r\nFilter: event_text = x\r\n"
+    )
+
+    status_server.handle_client(status_socket, True, "127.0.0.1")
+
+    assert status_socket.get_response() == [["event_text"], ["x"]]
+
+
+def test_in_operator_splits_its_list_at_ascii_whitespace_only(
+    event_status: EventStatus, status_server: StatusServer
+) -> None:
+    for text in ["a\xa0b", "a", "b", "c"]:
+        event_status.new_event(new_event({"text": text}))
+
+    texts = query_texts_of_events(status_server, "Filter: event_text in a\xa0b\tc")
+
+    assert texts == {"a\xa0b", "c"}
+
+
+@pytest.mark.parametrize(
+    "method_line",
+    [
+        pytest.param("GET\xa0events", id="no-break space"),
+        pytest.param("GET\tevents", id="tab"),
+    ],
+)
+def test_method_is_followed_by_a_space_like_in_livestatus(
+    status_server: StatusServer, method_line: str
+) -> None:
+    with pytest.raises(MKClientError, match="Invalid query"):
+        query_status_server(status_server, method_line)
+
+
+def test_lines_with_only_whitespace_are_ignored_like_in_livestatus(
+    event_status: EventStatus, status_server: StatusServer
+) -> None:
+    event_status.new_event(new_event({"text": "x"}))
+
+    status_socket = query_status_server(status_server, "GET events\n \t\nColumns: event_text\n\v")
+
+    assert status_socket.get_response() == [["event_text"], ["x"]]
+
+
+def test_request_starting_with_an_empty_line_is_empty_like_in_livestatus(
+    status_server: StatusServer,
+) -> None:
+    with pytest.raises(MKClientError, match="Invalid query"):
+        query_status_server(status_server, "GET events\n\n\nGET status")
+
+
+@pytest.mark.parametrize(
+    "columns_line",
+    [
+        pytest.param("Columns: event_text event_host", id="space"),
+        pytest.param("Columns:  event_text  event_host", id="several spaces"),
+        pytest.param("Columns:\tevent_text\tevent_host", id="tabs"),
+        pytest.param("Columns:\v\fevent_text\v\fevent_host", id="other ASCII whitespace"),
+    ],
+)
+def test_columns_are_split_at_ascii_whitespace_like_in_livestatus(
+    status_server: StatusServer, columns_line: str
+) -> None:
+    status_socket = query_status_server(status_server, f"GET events\n{columns_line}")
+
+    assert status_socket.get_response() == [["event_text", "event_host"]]
+
+
+@pytest.mark.parametrize(
     "operator_name",
     [
         pytest.param("~", id="regex matches"),

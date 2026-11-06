@@ -9,6 +9,7 @@
 import abc
 import operator
 import re
+import string
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 from logging import Logger
@@ -94,15 +95,50 @@ class StatusTable:
         return [(None if index is None else row[index]) for index in requested_column_indexes]
 
 
+# The whitespace of Livestatus, i.e. of C's isspace() in the C locale
+_ASCII_WHITESPACE = string.whitespace
+
+
+def _ascii_split(text: str) -> list[str]:
+    """Like str.split() without a separator, but only at the whitespace of Livestatus"""
+    stripped = text.strip(_ASCII_WHITESPACE)
+    return re.split(r"\s+", stripped, flags=re.ASCII) if stripped else []
+
+
+def request_lines(request: bytes) -> list[str]:
+    """Splits a request of a client into its lines
+
+    Only "\\n" ends a line, while str.splitlines() splits at other line boundaries like
+    U+2028, too. With those, a value in a header line, e.g. the regex of a filter, could
+    inject further header lines. Like Livestatus, we drop ASCII whitespace at the end of
+    each line, which includes the "\\r" of CRLF line endings, and lines with only
+    whitespace. Note that Queries ends a request at "\\n\\n" only, not at "\\r\\n\\r\\n", so a
+    client using CRLF line endings has to end the request with "\\n\\n" or by closing its
+    side of the connection."""
+    raw_lines = request.decode("utf-8").removesuffix("\n").split("\n")
+    if raw_lines[0] == "":
+        # An empty line ends a request, so like in Livestatus, this request is empty.
+        return []
+    lines = (line.rstrip(_ASCII_WHITESPACE) for line in raw_lines)
+    return [line for line in lines if line]
+
+
+def _method_and_argument(raw_query: list[str]) -> tuple[str, str]:
+    """Splits the first line of a query like Livestatus: A space ends the method, and
+    the argument starts after any further ASCII whitespace."""
+    method, space, argument = (raw_query[0] if raw_query else "").partition(" ")
+    argument = argument.lstrip(_ASCII_WHITESPACE)
+    if not space or not argument:
+        raise MKClientError("Invalid query. Need GET/COMMAND plus argument(s)")
+    return method, argument
+
+
 class Query:
     @staticmethod
     def make(
         get_table: Callable[[str], StatusTable], raw_query: list[str], logger: Logger
     ) -> Query:
-        parts = raw_query[0].split(None, 1)
-        if len(parts) != 2:
-            raise MKClientError("Invalid query. Need GET/COMMAND plus argument(s)")
-        method = parts[0]
+        method, _argument = _method_and_argument(raw_query)
         if method == "GET":
             return QueryGET(get_table, raw_query, logger)
         if method == "REPLICATE":
@@ -113,10 +149,7 @@ class Query:
 
     def __init__(self, raw_query: list[str], logger: Logger) -> None:  # noqa: ARG002
         self.output_format = "python"
-        parts = raw_query[0].split(None, 1)
-        if len(parts) != 2:
-            raise MKClientError("Invalid query. Need GET/COMMAND plus argument(s)")
-        self.__method, self.method_arg = parts
+        self.__method, self.method_arg = _method_and_argument(raw_query)
 
     @override
     def __repr__(self) -> str:
@@ -169,6 +202,12 @@ _filter_operators: dict[str, tuple[OperatorName, Callable[[Any, Any], bool]]] = 
 }
 
 
+# The column, the operator and the argument, split like Livestatus does: Only ASCII
+# whitespace separates them, and it isn't part of the argument's start. With re.ASCII,
+# \s is exactly _ASCII_WHITESPACE.
+_FILTER_LINE = re.compile(r"\s*(\S+)\s+(\S+)\s*(.*)", re.ASCII | re.DOTALL)
+
+
 def operator_for(name: str) -> tuple[OperatorName, Callable[[Any, Any], bool]]:
     name_and_func = _filter_operators.get(name)
     if name_and_func is None:
@@ -191,8 +230,8 @@ class QueryGET(Query):
     def _parse_header_lines(self, raw_query: list[str], logger: Logger) -> None:
         for line in raw_query[1:]:
             try:
-                header, argument = line.rstrip("\n").split(":", 1)
-                self._parse_header_line(header, argument.lstrip(" "), logger)
+                header, argument = line.split(":", 1)
+                self._parse_header_line(header, argument.lstrip(_ASCII_WHITESPACE), logger)
             except Exception as e:
                 raise MKClientError(f"Invalid header line '{line.rstrip()}'") from e
 
@@ -204,7 +243,7 @@ class QueryGET(Query):
                 )
             self.output_format = argument
         elif header == "Columns":
-            self.requested_columns = argument.split(" ")
+            self.requested_columns = _ascii_split(argument)
         elif header == "Filter":
             self.filters.append(self._parse_filter(argument))
         elif header == "Limit":
@@ -215,13 +254,14 @@ class QueryGET(Query):
     def _parse_filter(self, textspec: str) -> QueryFilter:
         """Examples:
         id = 17
-        name ~= This is some .* text
+        name ~ This is some .* text
         host_name =
-        """
-        parts = textspec.split(None, 2)
-        if len(parts) == 2:
-            parts.append("")
-        column, operator_name, raw_argument = parts
+
+        Like in Livestatus, only ASCII whitespace separates the parts, so the argument
+        keeps other whitespace of Python at its start, e.g. a no-break space."""
+        if (match := _FILTER_LINE.fullmatch(textspec)) is None:
+            raise MKClientError(f"Invalid filter: {textspec}")
+        column, operator_name, raw_argument = match[1], match[2], match[3]
 
         try:
             convert = self.table.column_types[column]
@@ -239,7 +279,7 @@ class QueryGET(Query):
         # here (for performance reasons) because argument is already unicode.
         # TODO: Fix the typing chaos below!
         argument = (
-            [convert(arg) for arg in raw_argument.split()]  # type: ignore[call-arg]
+            [convert(arg) for arg in _ascii_split(raw_argument)]  # type: ignore[call-arg]
             if op_name == "in"
             else convert(raw_argument)  # type: ignore[call-arg]
         )

@@ -102,6 +102,7 @@ from .query import (
     QueryCOMMAND,
     QueryGET,
     QueryREPLICATE,
+    request_lines,
     StatusTable,
 )
 from .rule_matcher import (
@@ -2727,7 +2728,7 @@ class StatusServer(ECServerThread):
             with self._event_status.lock:
                 # Reloading the configuration closes the previous history while holding the lock,
                 # so parse the query only now, when its table can't be that history anymore.
-                query = Query.make(self.table, request.decode("utf-8").splitlines(), self._logger)
+                query = Query.make(self.table, request_lines(request), self._logger)
                 self._logger.log(VERBOSE, "Client livestatus query: %(query)r", {"query": query})
 
                 # TODO: What we really want is a method in Query returning a response instead of this dispatching horror.

@@ -19,7 +19,7 @@ import pytest
 
 from cmk.ec.history import quote_tab
 from cmk.ec.main import Queries, StatusTableEvents
-from cmk.ec.query import MKClientError, Query, QueryGET
+from cmk.ec.query import MKClientError, Query, QueryGET, request_lines
 
 Event = Mapping[str, object]
 
@@ -46,9 +46,7 @@ class _StatusRequestHandler(socketserver.BaseRequestHandler):
         for request in Queries(self.request):
             try:
                 query = Query.make(
-                    lambda _name: table,
-                    request.decode("utf-8").splitlines(),
-                    logging.getLogger(__name__),
+                    lambda _name: table, request_lines(request), logging.getLogger(__name__)
                 )
             except MKClientError:
                 return  # Like the Event Console, close the connection without an answer.

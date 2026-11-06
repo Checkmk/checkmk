@@ -36,8 +36,12 @@ def _installed_agent_ctl_in_unknown_state(
 
 
 @pytest.fixture(name="agent_ctl", scope="module")
-def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
-    with agent_controller_daemon(installed_agent_ctl_in_unknown_state):
+def _agent_ctl(
+    installed_agent_ctl_in_unknown_state: Path, tmp_path_factory: pytest.TempPathFactory
+) -> Iterator[Path]:
+    with agent_controller_daemon(
+        installed_agent_ctl_in_unknown_state, tmp_path_factory.mktemp("agent_controller")
+    ):
         yield installed_agent_ctl_in_unknown_state
 
 

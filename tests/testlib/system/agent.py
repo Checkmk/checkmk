@@ -185,13 +185,15 @@ def download_agent_package(
 
 
 @contextlib.contextmanager
-def agent_controller_daemon(ctl_path: Path) -> Iterator[None]:
+def agent_controller_daemon(ctl_path: Path, tmp_dir: Path) -> Iterator[None]:
     """Make sure the agent controller and the agent socket are up for the duration.
 
     In a container with systemd both are units that the agent package enabled and started. In a
     container without systemd, tests/scripts/agent_controller_daemon.py takes their place. Both
     mechanisms delete all registrations of the controller, so outside a container nothing is
     done.
+
+    tmp_dir receives the output of tests/scripts/agent_controller_daemon.py, if it runs.
     """
     if not is_containerized():
         logger.warning(
@@ -203,12 +205,12 @@ def agent_controller_daemon(ctl_path: Path) -> Iterator[None]:
         with systemd_managed_agent_controller(_LOCAL_HOST, ctl_path):
             yield
     else:
-        with _shimmed_agent_controller(ctl_path):
+        with _shimmed_agent_controller(ctl_path, tmp_dir / "agent_controller_output.txt"):
             yield
 
 
 @contextlib.contextmanager
-def _shimmed_agent_controller(ctl_path: Path) -> Iterator[None]:
+def _shimmed_agent_controller(ctl_path: Path, output_file: Path) -> Iterator[None]:
     logger.info("Running agent controller daemon...")
     with daemon(
         [
@@ -221,6 +223,7 @@ def _shimmed_agent_controller(ctl_path: Path) -> Iterator[None]:
         name_for_logging="agent controller",
         termination_mode=DaemonTerminationMode.GROUP,
         sudo=True,
+        output_file=output_file,
     ):
         # wait for a dump being returned successfully, which may not work immediately
         # after starting the agent controller, so we retry for some time

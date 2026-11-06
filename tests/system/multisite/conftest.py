@@ -135,8 +135,8 @@ def _installed_agent_ctl_in_unknown_state(central_site: Site, tmp_path: Path) ->
 
 
 @pytest.fixture(name="agent_ctl", scope="function")
-def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
-    with agent_controller_daemon(installed_agent_ctl_in_unknown_state):
+def _agent_ctl(installed_agent_ctl_in_unknown_state: Path, tmp_path: Path) -> Iterator[Path]:
+    with agent_controller_daemon(installed_agent_ctl_in_unknown_state, tmp_path):
         yield installed_agent_ctl_in_unknown_state
 
 

@@ -10,6 +10,7 @@ Our application should depend only interfaces as arguments, but receive a concre
 when instantiated.
 """
 
+import datetime as dt
 from collections.abc import Callable, Collection, Mapping, Sequence, Set
 from typing import cast
 
@@ -17,6 +18,10 @@ from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui.config import active_config
+from cmk.gui.livestatus_utils.commands.acknowledgments import (
+    acknowledge_service_problem,
+    remove_acknowledgement,
+)
 from cmk.gui.monitor.command import ModifiableAttribute
 from cmk.gui.monitor.hosts import reader_unavailable_sites
 from cmk.gui.monitor.site_scope import MonitorSites
@@ -506,6 +511,86 @@ class LiveStatusServiceActions:
                 ChangeServiceModifiedAttributes(HostName(target.host_name), 0, target.description),
                 SiteId(target.site_id),
             )
+
+    def acknowledge(
+        self,
+        targets: Sequence[ServiceTarget],
+        *,
+        author: UserId,
+        comment: str,
+        sticky: bool,
+        persistent: bool,
+        notify: bool,
+        expire_on: dt.datetime | None,
+    ) -> int:
+        problems = [target for target, state in self._found(targets).items() if state]
+        for target in problems:
+            acknowledge_service_problem(
+                self._connection,
+                SiteId(target.site_id),
+                HostName(target.host_name),
+                target.description,
+                sticky=sticky,
+                notify=notify,
+                persistent=persistent,
+                user=author,
+                comment=comment,
+                expire_on=expire_on,
+            )
+        return len(problems)
+
+    def remove_acknowledgements(self, targets: Sequence[ServiceTarget]) -> int:
+        visible = self._visible(targets)
+        for target in visible:
+            remove_acknowledgement(
+                self._connection,
+                SiteId(target.site_id),
+                HostName(target.host_name),
+                target.description,
+            )
+        return len(visible)
+
+    def _found(self, targets: Sequence[ServiceTarget]) -> dict[ServiceTarget, int]:
+        if not (visible := self._visible(targets)):
+            raise ServiceNotFoundError("None of the services was found.")
+        return visible
+
+    def _visible(self, targets: Sequence[ServiceTarget]) -> dict[ServiceTarget, int]:
+        """The targets the user may see, the only ones a command may reach, with their states."""
+        if not targets:
+            return {}
+        wanted = set(targets)
+        rows = Query(
+            [Services.host_name, Services.description, Services.state],
+            _match(targets, Services.host_name, Services.description),
+        ).fetchall(self._connection, include_site_ids=True, only_sites=_sites_of(targets))
+        return {
+            target: row.state
+            for row in rows
+            if (
+                target := ServiceTarget(
+                    site_id=row.site, host_name=row.host_name, description=row.description
+                )
+            )
+            in wanted
+        }
+
+
+def _match(
+    targets: Sequence[ServiceTarget], host_column: Column, description_column: Column
+) -> QueryExpression:
+    return Or(
+        *(
+            And(host_column == host_name, description_column == description)
+            for host_name, description in dict.fromkeys(
+                (target.host_name, target.description) for target in targets
+            )
+        )
+    )
+
+
+def _sites_of(targets: Sequence[ServiceTarget]) -> list[SiteId]:
+    return sorted({SiteId(target.site_id) for target in targets})
 
 
 # The command disabling an attribute, then the one enabling it, indexed by `enabled`.

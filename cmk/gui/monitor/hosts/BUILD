@@ -11,6 +11,7 @@ py_library(
     deps = [
         "//cmk/gui:config",
         "//cmk/gui:customer",
+        "//cmk/gui/livestatus_utils/commands",
         "//cmk/gui/monitor/command",
         "//cmk/gui/monitor/export",
         "//cmk/gui/monitor/legacy_context",

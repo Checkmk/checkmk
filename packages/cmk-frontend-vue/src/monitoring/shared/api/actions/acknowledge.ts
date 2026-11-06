@@ -3,15 +3,10 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 
-import { hostNameQuery, serviceQuery } from '@/monitoring/shared/api/actions/query'
-import type { ServiceRef } from '@/monitoring/shared/api/types'
-
-export type AcknowledgeHostQueryProblem = components['schemas']['AcknowledgeHostQueryProblem']
-
-export type AcknowledgeServiceQueryProblem = components['schemas']['AcknowledgeServiceQueryProblem']
+import { serviceTargets } from '@/monitoring/shared/api/actions/targets'
+import type { HostRef, ServiceRef } from '@/monitoring/shared/api/types'
 
 export interface AcknowledgeOptions {
   comment: string
@@ -22,53 +17,47 @@ export interface AcknowledgeOptions {
 }
 
 export class AcknowledgeApi {
-  public async acknowledgeHosts(hostNames: string[], options: AcknowledgeOptions): Promise<void> {
-    const body: AcknowledgeHostQueryProblem = {
-      acknowledge_type: 'host_by_query',
-      query: hostNameQuery(hostNames),
-      ...this.commonFields(options)
-    }
-    unwrap(
-      await client.POST('/domain-types/acknowledge/collections/host', {
+  public async acknowledgeHosts(hosts: HostRef[], options: AcknowledgeOptions): Promise<number> {
+    const response = unwrap(
+      await client.POST('/monitor/hosts/actions/acknowledge', {
         params: { header: { 'Content-Type': 'application/json' } },
-        body
+        body: { hosts, ...this.commonFields(options) }
       })
     )
+    return response.acknowledged
   }
 
   public async acknowledgeServices(
     services: ServiceRef[],
     options: AcknowledgeOptions
-  ): Promise<void> {
-    const body: AcknowledgeServiceQueryProblem = {
-      acknowledge_type: 'service_by_query',
-      query: serviceQuery(services),
-      ...this.commonFields(options)
-    }
-    unwrap(
-      await client.POST('/domain-types/acknowledge/collections/service', {
+  ): Promise<number> {
+    const response = unwrap(
+      await client.POST('/monitor/services/actions/acknowledge', {
         params: { header: { 'Content-Type': 'application/json' } },
-        body
+        body: { services: serviceTargets(services), ...this.commonFields(options) }
       })
     )
+    return response.acknowledged
   }
 
-  public async removeHostAcknowledgements(hostNames: string[]): Promise<void> {
-    unwrap(
-      await client.POST('/domain-types/acknowledge/actions/delete/invoke', {
+  public async removeHostAcknowledgements(hosts: HostRef[]): Promise<number> {
+    const response = unwrap(
+      await client.POST('/monitor/hosts/actions/remove_acknowledgements', {
         params: { header: { 'Content-Type': 'application/json' } },
-        body: { acknowledge_type: 'host_by_query', query: hostNameQuery(hostNames) }
+        body: { hosts }
       })
     )
+    return response.removed
   }
 
-  public async removeServiceAcknowledgements(services: ServiceRef[]): Promise<void> {
-    unwrap(
-      await client.POST('/domain-types/acknowledge/actions/delete/invoke', {
+  public async removeServiceAcknowledgements(services: ServiceRef[]): Promise<number> {
+    const response = unwrap(
+      await client.POST('/monitor/services/actions/remove_acknowledgements', {
         params: { header: { 'Content-Type': 'application/json' } },
-        body: { acknowledge_type: 'service_by_query', query: serviceQuery(services) }
+        body: { services: serviceTargets(services) }
       })
     )
+    return response.removed
   }
 
   private commonFields(options: AcknowledgeOptions) {

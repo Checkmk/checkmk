@@ -18,7 +18,7 @@ export function useRemoveHostAcknowledgementsAction(): MonitoringAction<
   const api = new AcknowledgeApi()
 
   return createRemoveAcknowledgementsAction<HostRef>({
-    run: (targets) => api.removeHostAcknowledgements(targets.map((target) => target.name)),
+    run: (targets) => api.removeHostAcknowledgements(targets),
     successMessage: (count) =>
       _tn(
         'Removed acknowledgement of the selected host',

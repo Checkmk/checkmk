@@ -9,6 +9,7 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        "//cmk/gui/livestatus_utils/commands",
         "//cmk/gui/monitor/command",
         "//cmk/gui/monitor/export",
         "//cmk/gui/monitor/hosts",

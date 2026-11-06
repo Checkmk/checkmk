@@ -10,7 +10,8 @@ Our application should depend only interfaces as arguments, but receive a concre
 when instantiated.
 """
 
-from collections.abc import Callable, Collection, Container, Mapping, Sequence, Set
+import datetime as dt
+from collections.abc import Callable, Collection, Container, Iterable, Mapping, Sequence, Set
 from typing import cast
 
 from cmk.ccc.hostaddress import HostName
@@ -18,6 +19,10 @@ from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui import sites
 from cmk.gui.config import active_config
+from cmk.gui.livestatus_utils.commands.acknowledgments import (
+    acknowledge_host_problem,
+    remove_acknowledgement,
+)
 from cmk.gui.logged_in import user
 from cmk.gui.monitor.command import ModifiableAttribute
 from cmk.gui.monitor.shared import folder_files_matching, HostState
@@ -593,6 +598,64 @@ class LiveStatusHostActions:
             client.command(
                 ECDeleteEventsOfHost(HostName(target.host_name), author), SiteId(target.site_id)
             )
+
+    def acknowledge(
+        self,
+        targets: Sequence[HostTarget],
+        *,
+        author: UserId,
+        comment: str,
+        sticky: bool,
+        persistent: bool,
+        notify: bool,
+        expire_on: dt.datetime | None,
+    ) -> int:
+        visible = self._found(targets)
+        for target in visible:
+            acknowledge_host_problem(
+                self._connection,
+                SiteId(target.site_id),
+                HostName(target.host_name),
+                sticky=sticky,
+                notify=notify,
+                persistent=persistent,
+                user=author,
+                comment=comment,
+                expire_on=expire_on,
+            )
+        return len(visible)
+
+    def remove_acknowledgements(self, targets: Sequence[HostTarget]) -> int:
+        visible = self._visible(targets)
+        for target in visible:
+            remove_acknowledgement(
+                self._connection, SiteId(target.site_id), HostName(target.host_name)
+            )
+        return len(visible)
+
+    def _found(self, targets: Sequence[HostTarget]) -> list[HostTarget]:
+        if not (visible := self._visible(targets)):
+            raise HostNotFoundError("None of the hosts was found.")
+        return visible
+
+    def _visible(self, targets: Sequence[HostTarget]) -> list[HostTarget]:
+        """The targets the user may see, the only ones a command may reach."""
+        if not targets:
+            return []
+        wanted = set(targets)
+        names = dict.fromkeys(target.host_name for target in targets)
+        rows = Query([Hosts.name], Or(*(Hosts.name == name for name in names))).fetchall(
+            self._connection, include_site_ids=True, only_sites=_sites_of(targets)
+        )
+        return [
+            target
+            for row in rows
+            if (target := HostTarget(site_id=row.site, host_name=row.name)) in wanted
+        ]
+
+
+def _sites_of(targets: Iterable[HostTarget]) -> list[SiteId]:
+    return sorted({SiteId(target.site_id) for target in targets})
 
 
 # The command disabling an attribute, then the one enabling it, indexed by `enabled`.

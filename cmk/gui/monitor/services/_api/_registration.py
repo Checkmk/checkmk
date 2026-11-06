@@ -7,6 +7,7 @@ from cmk.gui.monitor.setup_folders import SetupFolderSource
 from cmk.gui.openapi.framework.registry import VersionedEndpointRegistry
 from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegistry
 
+from ._acknowledge import ENDPOINT_ACKNOWLEDGE, ENDPOINT_REMOVE_ACKNOWLEDGEMENTS
 from ._action_menu import ENDPOINT_GET_SERVICE_ACTION_MENU
 from ._custom_notification import ENDPOINT_SEND_CUSTOM_NOTIFICATION
 from ._fake_check_result import ENDPOINT_FAKE_CHECK_RESULT
@@ -37,3 +38,5 @@ def register_endpoints(
     versioned_endpoint_registry.register(ENDPOINT_FAKE_CHECK_RESULT)
     versioned_endpoint_registry.register(ENDPOINT_TOGGLE_ATTRIBUTE)
     versioned_endpoint_registry.register(ENDPOINT_RESET_MODIFIED_ATTRIBUTES)
+    versioned_endpoint_registry.register(ENDPOINT_ACKNOWLEDGE)
+    versioned_endpoint_registry.register(ENDPOINT_REMOVE_ACKNOWLEDGEMENTS)

@@ -7,7 +7,6 @@ import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { AcknowledgeApi } from '@/monitoring/shared/api/actions/acknowledge'
-import type { ServiceRef } from '@/monitoring/shared/api/types'
 
 const CONTENT_TYPE = { params: { header: { 'Content-Type': 'application/json' } } }
 
@@ -18,84 +17,46 @@ const BASE_OPTIONS = {
   notify: true
 }
 
+// A host name two sites monitor: each row must keep its own site.
+const HOSTS = [
+  { site_id: 'local', name: 'web-1' },
+  { site_id: 'remote', name: 'web-1' }
+]
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let postSpy: any
+
+beforeEach(() => {
+  postSpy = vi.spyOn(client, 'POST').mockResolvedValue({
+    data: { acknowledged: 2 },
+    error: undefined,
+    response: new Response(null, { status: 200 })
+  } as never)
+})
+
 describe('AcknowledgeApi.acknowledgeHosts', () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let postSpy: any
+  it('posts each host with its site and returns the count', async () => {
+    expect(await new AcknowledgeApi().acknowledgeHosts(HOSTS, BASE_OPTIONS)).toBe(2)
 
-  beforeEach(() => {
-    postSpy = vi.spyOn(client, 'POST')
-  })
-
-  function mockNoContent(): void {
-    postSpy.mockResolvedValueOnce({
-      data: undefined,
-      error: undefined,
-      response: new Response(null, { status: 204 })
-    } as never)
-  }
-
-  it('acknowledges multiple hosts in a single host_by_query request', async () => {
-    mockNoContent()
-
-    await new AcknowledgeApi().acknowledgeHosts(['db-1', 'web-1'], BASE_OPTIONS)
-
-    expect(postSpy).toHaveBeenCalledTimes(1)
-    expect(postSpy).toHaveBeenCalledWith('/domain-types/acknowledge/collections/host', {
+    expect(postSpy).toHaveBeenCalledWith('/monitor/hosts/actions/acknowledge', {
       ...CONTENT_TYPE,
-      body: {
-        acknowledge_type: 'host_by_query',
-        query: {
-          op: 'or',
-          expr: [
-            { op: '=', left: 'name', right: 'db-1' },
-            { op: '=', left: 'name', right: 'web-1' }
-          ]
-        },
-        comment: 'expected downtime',
-        sticky: true,
-        persistent: false,
-        notify: true
-      }
-    })
-  })
-
-  it('builds a single-condition query for one host', async () => {
-    mockNoContent()
-
-    await new AcknowledgeApi().acknowledgeHosts(['db-1'], BASE_OPTIONS)
-
-    expect(postSpy).toHaveBeenCalledWith('/domain-types/acknowledge/collections/host', {
-      ...CONTENT_TYPE,
-      body: {
-        acknowledge_type: 'host_by_query',
-        query: { op: 'or', expr: [{ op: '=', left: 'name', right: 'db-1' }] },
-        comment: 'expected downtime',
-        sticky: true,
-        persistent: false,
-        notify: true
-      }
+      body: { hosts: HOSTS, ...BASE_OPTIONS }
     })
   })
 
   it('includes expire_on when an expiry is provided', async () => {
-    mockNoContent()
-
-    await new AcknowledgeApi().acknowledgeHosts(['db-1'], {
+    await new AcknowledgeApi().acknowledgeHosts(HOSTS, {
       ...BASE_OPTIONS,
       expireOn: '2026-05-20T07:30:00.000Z'
     })
 
-    const body = postSpy.mock.calls[0][1].body
-    expect(body.expire_on).toBe('2026-05-20T07:30:00.000Z')
+    expect(postSpy.mock.calls[0][1].body.expire_on).toBe('2026-05-20T07:30:00.000Z')
   })
 
   it('omits expire_on when no expiry is provided', async () => {
-    mockNoContent()
+    await new AcknowledgeApi().acknowledgeHosts(HOSTS, BASE_OPTIONS)
 
-    await new AcknowledgeApi().acknowledgeHosts(['db-1'], BASE_OPTIONS)
-
-    const body = postSpy.mock.calls[0][1].body
-    expect(body).not.toHaveProperty('expire_on')
+    expect(postSpy.mock.calls[0][1].body).not.toHaveProperty('expire_on')
   })
 
   it('throws when the response is not ok', async () => {
@@ -105,123 +66,28 @@ describe('AcknowledgeApi.acknowledgeHosts', () => {
       response: new Response('', { status: 403, statusText: 'Forbidden' })
     } as never)
 
-    await expect(new AcknowledgeApi().acknowledgeHosts(['db-1'], BASE_OPTIONS)).rejects.toThrow()
+    await expect(new AcknowledgeApi().acknowledgeHosts(HOSTS, BASE_OPTIONS)).rejects.toThrow()
   })
 })
 
-function service(hostName: string, description: string): ServiceRef {
-  return { host: { site_id: 'local', name: hostName }, description }
-}
-
 describe('AcknowledgeApi.acknowledgeServices', () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let postSpy: any
+  it('posts each service with the site of its host and returns the count', async () => {
+    expect(
+      await new AcknowledgeApi().acknowledgeServices(
+        HOSTS.map((host) => ({ host, description: 'CPU load' })),
+        BASE_OPTIONS
+      )
+    ).toBe(2)
 
-  beforeEach(() => {
-    postSpy = vi.spyOn(client, 'POST')
-  })
-
-  function mockNoContent(): void {
-    postSpy.mockResolvedValueOnce({
-      data: undefined,
-      error: undefined,
-      response: new Response(null, { status: 204 })
-    } as never)
-  }
-
-  it('scopes the query of a single host to the selected descriptions', async () => {
-    mockNoContent()
-
-    await new AcknowledgeApi().acknowledgeServices(
-      [service('web-1', 'CPU load'), service('web-1', 'Memory')],
-      BASE_OPTIONS
-    )
-
-    expect(postSpy).toHaveBeenCalledTimes(1)
-    expect(postSpy).toHaveBeenCalledWith('/domain-types/acknowledge/collections/service', {
+    expect(postSpy).toHaveBeenCalledWith('/monitor/services/actions/acknowledge', {
       ...CONTENT_TYPE,
       body: {
-        acknowledge_type: 'service_by_query',
-        query: {
-          op: 'and',
-          expr: [
-            { op: '=', left: 'host_name', right: 'web-1' },
-            {
-              op: 'or',
-              expr: [
-                { op: '=', left: 'description', right: 'CPU load' },
-                { op: '=', left: 'description', right: 'Memory' }
-              ]
-            }
-          ]
-        },
-        comment: 'expected downtime',
-        sticky: true,
-        persistent: false,
-        notify: true
+        services: [
+          { site_id: 'local', host_name: 'web-1', name: 'CPU load' },
+          { site_id: 'remote', host_name: 'web-1', name: 'CPU load' }
+        ],
+        ...BASE_OPTIONS
       }
     })
-  })
-
-  it('matches the services of several hosts, each by its own host', async () => {
-    mockNoContent()
-
-    await new AcknowledgeApi().acknowledgeServices(
-      [service('web-1', 'CPU load'), service('web-2', 'Memory')],
-      BASE_OPTIONS
-    )
-
-    expect(postSpy.mock.calls[0][1].body.query).toEqual({
-      op: 'or',
-      expr: [
-        {
-          op: 'and',
-          expr: [
-            { op: '=', left: 'host_name', right: 'web-1' },
-            { op: 'or', expr: [{ op: '=', left: 'description', right: 'CPU load' }] }
-          ]
-        },
-        {
-          op: 'and',
-          expr: [
-            { op: '=', left: 'host_name', right: 'web-2' },
-            { op: 'or', expr: [{ op: '=', left: 'description', right: 'Memory' }] }
-          ]
-        }
-      ]
-    })
-  })
-
-  it('includes expire_on when an expiry is provided', async () => {
-    mockNoContent()
-
-    await new AcknowledgeApi().acknowledgeServices([service('web-1', 'CPU load')], {
-      ...BASE_OPTIONS,
-      expireOn: '2026-05-20T07:30:00.000Z'
-    })
-
-    const body = postSpy.mock.calls[0][1].body
-    expect(body.expire_on).toBe('2026-05-20T07:30:00.000Z')
-  })
-
-  it('omits expire_on when no expiry is provided', async () => {
-    mockNoContent()
-
-    await new AcknowledgeApi().acknowledgeServices([service('web-1', 'CPU load')], BASE_OPTIONS)
-
-    const body = postSpy.mock.calls[0][1].body
-    expect(body).not.toHaveProperty('expire_on')
-  })
-
-  it('throws when the response is not ok', async () => {
-    postSpy.mockResolvedValueOnce({
-      data: undefined,
-      error: {},
-      response: new Response('', { status: 403, statusText: 'Forbidden' })
-    } as never)
-
-    await expect(
-      new AcknowledgeApi().acknowledgeServices([service('web-1', 'CPU load')], BASE_OPTIONS)
-    ).rejects.toThrow()
   })
 })

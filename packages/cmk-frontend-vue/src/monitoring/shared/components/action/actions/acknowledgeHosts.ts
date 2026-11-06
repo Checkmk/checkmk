@@ -24,11 +24,7 @@ export function useAcknowledgeHostsAction(
     targetKind: 'host',
     links,
     defaults,
-    async acknowledge(api, targets, options) {
-      const hostNames = targets.map((target) => target.name)
-      await api.acknowledgeHosts(hostNames, options)
-      return hostNames.length
-    },
+    acknowledge: (api, targets, options) => api.acknowledgeHosts(targets, options),
     successMessage: (count) =>
       _tn(
         'Acknowledged the problem of the selected host',

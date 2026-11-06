@@ -11,52 +11,43 @@ import { RemoveDowntimeApi } from '@/monitoring/shared/api/actions/downtime'
 
 const CONTENT_TYPE = { params: { header: { 'Content-Type': 'application/json' } } }
 
+// A host name two sites monitor: each row must keep its own site.
+const HOSTS = [
+  { site_id: 'local', name: 'web-1' },
+  { site_id: 'remote', name: 'web-1' }
+]
+const SERVICES = HOSTS.map((host) => ({ host, description: 'CPU load' }))
+const SERVICE_TARGETS = [
+  { site_id: 'local', host_name: 'web-1', name: 'CPU load' },
+  { site_id: 'remote', host_name: 'web-1', name: 'CPU load' }
+]
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let postSpy: any
 
 beforeEach(() => {
   postSpy = vi.spyOn(client, 'POST').mockResolvedValue({
-    data: undefined,
+    data: { removed: 2 },
     error: undefined,
-    response: new Response(null, { status: 204 })
+    response: new Response(null, { status: 200 })
   } as never)
 })
 
-test('removes the acknowledgements of the hosts by a query on their names', async () => {
-  await new AcknowledgeApi().removeHostAcknowledgements(['db-1', 'web-1'])
+test('removes the acknowledgements of the hosts, each on its site', async () => {
+  expect(await new AcknowledgeApi().removeHostAcknowledgements(HOSTS)).toBe(2)
 
-  expect(postSpy).toHaveBeenCalledWith('/domain-types/acknowledge/actions/delete/invoke', {
+  expect(postSpy).toHaveBeenCalledWith('/monitor/hosts/actions/remove_acknowledgements', {
     ...CONTENT_TYPE,
-    body: {
-      acknowledge_type: 'host_by_query',
-      query: {
-        op: 'or',
-        expr: [
-          { op: '=', left: 'name', right: 'db-1' },
-          { op: '=', left: 'name', right: 'web-1' }
-        ]
-      }
-    }
+    body: { hosts: HOSTS }
   })
 })
 
-test('removes the acknowledgements of the services of the host', async () => {
-  await new AcknowledgeApi().removeServiceAcknowledgements([
-    { host: { name: 'db-1', site_id: 'local' }, description: 'CPU load' }
-  ])
+test('removes the acknowledgements of the services, each on the site of its host', async () => {
+  expect(await new AcknowledgeApi().removeServiceAcknowledgements(SERVICES)).toBe(2)
 
-  expect(postSpy).toHaveBeenCalledWith('/domain-types/acknowledge/actions/delete/invoke', {
+  expect(postSpy).toHaveBeenCalledWith('/monitor/services/actions/remove_acknowledgements', {
     ...CONTENT_TYPE,
-    body: {
-      acknowledge_type: 'service_by_query',
-      query: {
-        op: 'and',
-        expr: [
-          { op: '=', left: 'host_name', right: 'db-1' },
-          { op: 'or', expr: [{ op: '=', left: 'description', right: 'CPU load' }] }
-        ]
-      }
-    }
+    body: { services: SERVICE_TARGETS }
   })
 })
 

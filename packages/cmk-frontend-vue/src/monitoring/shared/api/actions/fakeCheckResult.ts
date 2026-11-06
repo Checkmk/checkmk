@@ -6,6 +6,7 @@
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 
+import { serviceTargets } from '@/monitoring/shared/api/actions/targets'
 import type { HostRef, ServiceRef } from '@/monitoring/shared/api/types'
 
 type HostCheckState = components['schemas']['FakeCheckResultRequestBody']['state']
@@ -42,11 +43,7 @@ export class FakeCheckResultApi {
       await client.POST('/monitor/services/actions/fake_check_result', {
         params: { header: { 'Content-Type': 'application/json' } },
         body: {
-          services: services.map((service) => ({
-            site_id: service.host.site_id,
-            host_name: service.host.name,
-            name: service.description
-          })),
+          services: serviceTargets(services),
           state: options.state as ServiceCheckState,
           plugin_output: options.pluginOutput,
           metrics: options.metrics

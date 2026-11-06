@@ -24,10 +24,7 @@ export function useAcknowledgeServicesAction(
     targetKind: 'service',
     links,
     defaults,
-    async acknowledge(api, targets, options) {
-      await api.acknowledgeServices(targets, options)
-      return targets.length
-    },
+    acknowledge: (api, targets, options) => api.acknowledgeServices(targets, options),
     successMessage: (count) =>
       _tn(
         'Acknowledged the problem of the selected service',

@@ -5,6 +5,7 @@
  */
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 
+import { serviceTargets } from '@/monitoring/shared/api/actions/targets'
 import type { HostRef, ServiceRef } from '@/monitoring/shared/api/types'
 
 export interface CustomNotificationOptions {
@@ -34,11 +35,7 @@ export class CustomNotificationApi {
       await client.POST('/monitor/services/actions/custom_notification', {
         params: { header: { 'Content-Type': 'application/json' } },
         body: {
-          services: services.map((service) => ({
-            site_id: service.host.site_id,
-            host_name: service.host.name,
-            name: service.description
-          })),
+          services: serviceTargets(services),
           ...options
         }
       })

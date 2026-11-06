@@ -605,12 +605,8 @@ test('removes the acknowledgement of the selected host after confirming it', asy
     await screen.findByText('Removed acknowledgement of the selected host')
   ).toBeInTheDocument()
   expect(postSpy).toHaveBeenCalledWith(
-    '/domain-types/acknowledge/actions/delete/invoke',
-    expect.objectContaining({
-      body: expect.objectContaining({
-        query: { op: 'or', expr: [{ op: '=', left: 'name', right: 'web-1' }] }
-      })
-    })
+    '/monitor/hosts/actions/remove_acknowledgements',
+    expect.objectContaining({ body: { hosts: [{ site_id: 'local', name: 'web-1' }] } })
   )
 })
 
@@ -628,7 +624,7 @@ test('cancelling the confirmation removes nothing', async () => {
 
   expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   expect(postSpy).not.toHaveBeenCalledWith(
-    '/domain-types/acknowledge/actions/delete/invoke',
+    '/monitor/hosts/actions/remove_acknowledgements',
     expect.anything()
   )
 })

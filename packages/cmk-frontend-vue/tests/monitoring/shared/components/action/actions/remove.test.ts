@@ -19,9 +19,9 @@ let postSpy: any
 
 beforeEach(() => {
   postSpy = vi.spyOn(client, 'POST').mockResolvedValue({
-    data: undefined,
+    data: { removed: 1 },
     error: undefined,
-    response: new Response(null, { status: 204 })
+    response: new Response(null, { status: 200 })
   } as never)
 })
 

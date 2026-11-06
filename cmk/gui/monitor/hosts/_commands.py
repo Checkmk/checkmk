@@ -7,6 +7,7 @@
 Each command should have a skinny interface for easy testing. One interface for each command group.
 """
 
+import datetime as dt
 from collections.abc import Sequence
 from typing import Protocol
 
@@ -51,6 +52,29 @@ class HostAttributeModifier(Protocol):
 
     def reset_modified_attributes(self, targets: Sequence[HostTarget]) -> None:
         """Undo what such toggles changed for each target, back to its configuration."""
+        ...
+
+
+class HostAcknowledger(Protocol):
+    def acknowledge(
+        self,
+        targets: Sequence[HostTarget],
+        *,
+        author: UserId,
+        comment: str,
+        sticky: bool,
+        persistent: bool,
+        notify: bool,
+        expire_on: dt.datetime | None,
+    ) -> int:
+        """Acknowledge each visible target on its site, returning how many.
+
+        Raises HostNotFoundError if none of the targets is found.
+        """
+        ...
+
+    def remove_acknowledgements(self, targets: Sequence[HostTarget]) -> int:
+        """Remove the acknowledgement of each visible target on its site, returning how many."""
         ...
 
 

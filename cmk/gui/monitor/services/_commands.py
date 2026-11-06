@@ -7,6 +7,7 @@
 Each command should have a skinny interface for easy testing. One interface for each command group.
 """
 
+import datetime as dt
 from collections.abc import Sequence
 from typing import Protocol
 
@@ -53,4 +54,27 @@ class ServiceAttributeModifier(Protocol):
 
     def reset_modified_attributes(self, targets: Sequence[ServiceTarget]) -> None:
         """Undo what such toggles changed for each target, back to its configuration."""
+        ...
+
+
+class ServiceAcknowledger(Protocol):
+    def acknowledge(
+        self,
+        targets: Sequence[ServiceTarget],
+        *,
+        author: UserId,
+        comment: str,
+        sticky: bool,
+        persistent: bool,
+        notify: bool,
+        expire_on: dt.datetime | None,
+    ) -> int:
+        """Acknowledge each visible target with a problem on its site, returning how many.
+
+        Raises ServiceNotFoundError if none of the targets is found.
+        """
+        ...
+
+    def remove_acknowledgements(self, targets: Sequence[ServiceTarget]) -> int:
+        """Remove the acknowledgement of each visible target on its site, returning how many."""
         ...

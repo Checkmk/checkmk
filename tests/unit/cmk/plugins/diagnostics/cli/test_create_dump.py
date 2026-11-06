@@ -15,6 +15,7 @@ from cmk.plugins.diagnostics.cli.create_dump import (
     _ALL_TOPICS_VALUE,
     _CHECKMK_SERVER_HOST_VALUE,
     _cli_selection,
+    _LIST_FLAG,
     _PLUGINS_VALUE,
     CliSelection,
 )
@@ -22,6 +23,7 @@ from cmk.plugins.diagnostics.cli.create_dump import (
 
 def test_the_selection_is_read_from_the_command_line() -> None:
     given: Mapping[CLIDeclaration, Sequence[str]] = {
+        _LIST_FLAG: [""],
         _ALL_TOPICS_VALUE: ["low"],
         _PLUGINS_VALUE: ["b_high,a_low"],
         _CHECKMK_SERVER_HOST_VALUE: ["my_server"],
@@ -30,7 +32,7 @@ def test_the_selection_is_read_from_the_command_line() -> None:
     assert _cli_selection(
         CLIReader(lambda declaration: given.get(declaration, ()))
     ) == CliSelection(
-        list_plugins=False,
+        list_plugins=True,
         all_topics=Sensitivity.LOW,
         plugins=("b_high", "a_low"),
         checkmk_server_host="my_server",

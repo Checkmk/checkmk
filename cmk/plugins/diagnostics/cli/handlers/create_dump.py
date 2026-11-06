@@ -4,8 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Protocol
 
 import cmk.utils.paths
 from cmk.base.config import exit_on_config_file_load_error, load_raw_config
@@ -19,7 +21,6 @@ from cmk.ccc.i18n import _
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
-from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Handler as CLIHandler
 from cmk.diagnostics.engine import DumpSelection, resolve_selection
 from cmk.diagnostics.internal import DiagnosticsPlugin, Sensitivity, Topic
@@ -64,51 +65,63 @@ def _print_available_plugins(catalogue: Mapping[str, DiagnosticsPlugin]) -> None
             )
 
 
-def _mode_create_diagnostics_dump(
-    _omd_root: Path, global_options: CLIGlobalOptions, options: CliSelection, _args: CLIArgs
-) -> CLIExitCode:
-    with exit_on_config_file_load_error(debug=global_options.debug):
+type _LoadCatalogue = Callable[[], Mapping[str, DiagnosticsPlugin]]
+
+
+class _CreateDump(Protocol):
+    def __call__(self, omd_root: Path, selection: DumpSelection, *, debug: bool) -> Path | None: ...
+
+
+def _load_catalogue() -> Mapping[str, DiagnosticsPlugin]:
+    return load_plugin_catalogue(logger=ConsoleLogger())
+
+
+def _create_dump(omd_root: Path, selection: DumpSelection, *, debug: bool) -> Path | None:
+    with exit_on_config_file_load_error(debug=debug):
         raw_config = load_raw_config()
 
-    # NOTE: All the stuff is logged on this level only, which is below the default WARNING level.
-    catalogue = load_plugin_catalogue(logger=ConsoleLogger())
-
-    if options.list_plugins:
-        _print_available_plugins(catalogue)
-        return CLIExitCode.SUCCESS
-
     dump = create_diagnostics_dump_v2(
-        omd_root=cmk.utils.paths.omd_root,
+        omd_root=omd_root,
         diagnostics_dir=cmk.utils.paths.diagnostics_dir,
-        selection=_resolve_cli_selection(catalogue, options),
+        selection=selection,
         raw_config=raw_config,
     )
-    logger = ConsoleLogger()
-    logger.section_step("Creating diagnostics dump", verbose=False)
-    if dump.tarfile_created:
-        logger.filepath(
-            dump.tarfile_path.relative_to(cmk.utils.paths.omd_root),
-            verbose=False,
-        )
-    else:
-        logger.message("No dump")
-    return CLIExitCode.SUCCESS
+    return dump.tarfile_path if dump.tarfile_created else None
 
 
-def _run_create_diagnostics_dump(
-    context: CLIContext, options: CliSelection, args: CLIArgs
-) -> CLIExitCode:
-    try:
-        return _mode_create_diagnostics_dump(
-            context.omd_root, context.global_options, options, args
-        )
-    except MKGeneralException as e:
-        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
-        if context.global_options.debug:
-            raise
-        return CLIExitCode.UNKNOWN
+@dataclass(frozen=True, kw_only=True)
+class _CreateDiagnosticsDumpCommand:
+    load_catalogue: _LoadCatalogue
+    create_dump: _CreateDump
+
+    def run(self, context: CLIContext, options: CliSelection, _args: CLIArgs) -> CLIExitCode:
+        try:
+            catalogue = self.load_catalogue()
+
+            if options.list_plugins:
+                _print_available_plugins(catalogue)
+                return CLIExitCode.SUCCESS
+
+            tarfile_path = self.create_dump(
+                context.omd_root,
+                _resolve_cli_selection(catalogue, options),
+                debug=context.global_options.debug,
+            )
+            logger = ConsoleLogger()
+            logger.section_step("Creating diagnostics dump", verbose=False)
+            if tarfile_path is None:
+                logger.message("No dump")
+            else:
+                logger.filepath(tarfile_path.relative_to(context.omd_root), verbose=False)
+            return CLIExitCode.SUCCESS
+        except MKGeneralException as e:
+            context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
+            if context.global_options.debug:
+                raise
+            return CLIExitCode.UNKNOWN
 
 
 cli_handler_create_diagnostics_dump = CLIHandler(
-    command=cli_command_create_diagnostics_dump, run=_run_create_diagnostics_dump
+    command=cli_command_create_diagnostics_dump,
+    run=_CreateDiagnosticsDumpCommand(load_catalogue=_load_catalogue, create_dump=_create_dump).run,
 )

@@ -6,7 +6,7 @@ import logging
 import re
 from typing import Literal, override
 
-from playwright.sync_api import expect, Locator
+from playwright.sync_api import expect, Locator, Page
 
 from tests.system.gui.testlib.playwright.helpers import DropdownListNameToID
 from tests.system.gui.testlib.playwright.pom.graphing.graph_accessor import (
@@ -29,24 +29,13 @@ _LEVEL_TITLES: dict[LevelsBound, tuple[str, str]] = {
 }
 
 
-class AddAlert(CmkPage):
-    """Represent the page `Setup -> Events -> Alerts -> Add alert`.
+class AlertWizard(CmkPage):
+    """The wizard of an alert: name the alert, select the custom services, define thresholds.
 
-    Hosts the creation wizard: naming the alert, selecting the custom services it
-    applies to, then defining its thresholds.
+    Editing an alert opens it at the services step; the alert name stays as it is.
     """
 
-    page_title = "Add alert"
-
-    @override
-    def navigate(self) -> None:
-        logger.info("Navigate to '%s' page", self.page_title)
-        alerts_page = Alerts(self.page)
-        self.click_and_wait_for_navigation(
-            alerts_page.add_alert_button,
-            frame_url=re.compile("mode=create_otel_alert"),
-        )
-        self.validate_page()
+    page_title: str
 
     @override
     def validate_page(self) -> None:
@@ -147,6 +136,30 @@ class AddAlert(CmkPage):
         )
 
     @property
+    def explicit_hosts_checkbox(self) -> Locator:
+        return self.active_step.get_by_role("checkbox", name="Explicit hosts", exact=True)
+
+    @property
+    def _explicit_hosts(self) -> Locator:
+        return self.active_step.get_by_role("group", name="Explicit hosts", exact=True)
+
+    def select_explicit_host(self, host_name: str) -> None:
+        """Restrict the alert to the hosts listed explicitly, starting with `host_name`."""
+        logger.info("Restrict the alert to the explicit host '%s'", host_name)
+        self.explicit_hosts_checkbox.check()
+        host_select = self._explicit_hosts.get_by_role("combobox").first
+        expect(
+            host_select, "No host can be entered after enabling 'Explicit hosts'"
+        ).to_be_visible()
+        host_select.click()
+        option = self._explicit_hosts.get_by_role("listbox").get_by_role(
+            "option", name=host_name, exact=True
+        )
+        expect(option, f"No host named {host_name!r} was offered").to_be_visible()
+        option.click()
+        expect(host_select, f"Host {host_name!r} was not selected").to_have_text(host_name)
+
+    @property
     def matching_services_heading(self) -> Locator:
         """The heading of the matching services, with their count: "Matching services (2)".
 
@@ -189,34 +202,34 @@ class AddAlert(CmkPage):
     def _levels(self, bound: LevelsBound) -> Locator:
         return self.active_step.get_by_role("group", name=f"{bound} levels", exact=True)
 
+    def levels_checkbox(self, bound: LevelsBound) -> Locator:
+        return self._levels(bound).get_by_role("checkbox", name=f"{bound} levels", exact=True)
+
+    def levels_type_select(self, bound: LevelsBound) -> Locator:
+        return self._levels(bound).get_by_role("combobox", name=f"{bound} levels", exact=True)
+
+    def fixed_levels(self, bound: LevelsBound) -> tuple[Locator, Locator]:
+        """The warning and critical input of the fixed `bound` levels."""
+        warning_title, critical_title = _LEVEL_TITLES[bound]
+        levels = self._levels(bound)
+        return (
+            levels.get_by_role("spinbutton", name=warning_title, exact=True),
+            levels.get_by_role("spinbutton", name=critical_title, exact=True),
+        )
+
     def set_fixed_levels(self, bound: LevelsBound, warning: float, critical: float) -> None:
         """Enable the `bound` levels and set them to fixed warning and critical levels."""
         logger.info("Set fixed %s levels to %s/%s", bound.lower(), warning, critical)
-        levels = self._levels(bound)
-        levels.get_by_role("checkbox", name=f"{bound} levels", exact=True).check()
-        levels_type = levels.get_by_role("combobox", name=f"{bound} levels", exact=True)
+        self.levels_checkbox(bound).check()
+        levels_type = self.levels_type_select(bound)
         levels_type.click()
         self._pick_suggestion("Fixed levels")
         expect(levels_type, f"Fixed {bound.lower()} levels were not selected").to_contain_text(
             "Fixed levels"
         )
-        warning_title, critical_title = _LEVEL_TITLES[bound]
-        levels.get_by_role("spinbutton", name=warning_title, exact=True).fill(str(warning))
-        levels.get_by_role("spinbutton", name=critical_title, exact=True).fill(str(critical))
-
-    @property
-    def create_and_activate_button(self) -> Locator:
-        return self.active_step.get_by_role("button", name="Create & activate changes", exact=True)
-
-    def create_alert(self) -> None:
-        """Create the alert and follow the wizard to the 'Activate changes' page.
-
-        The alert is created, but the changes are not activated yet.
-        """
-        logger.info("Create the alert")
-        self.click_and_wait_for_navigation(
-            self.create_and_activate_button, frame_url=re.compile("mode=changelog")
-        )
+        warning_input, critical_input = self.fixed_levels(bound)
+        warning_input.fill(str(warning))
+        critical_input.fill(str(critical))
 
     # Dropdowns of every step
 
@@ -232,3 +245,67 @@ class AddAlert(CmkPage):
         option = self._open_suggestions.get_by_role("option", name=title, exact=True)
         expect(option, f"No suggestion titled {title!r} was offered").to_be_visible()
         option.click()
+
+
+class AddAlert(AlertWizard):
+    """Represent the page `Setup -> Events -> Alerts -> Add alert`."""
+
+    page_title = "Add alert"
+
+    @override
+    def navigate(self) -> None:
+        logger.info("Navigate to '%s' page", self.page_title)
+        alerts_page = Alerts(self.page)
+        self.click_and_wait_for_navigation(
+            alerts_page.add_alert_button,
+            frame_url=re.compile("mode=create_otel_alert"),
+        )
+        self.validate_page()
+
+    @property
+    def create_and_activate_button(self) -> Locator:
+        return self.active_step.get_by_role("button", name="Create & activate changes", exact=True)
+
+    def create_alert(self) -> None:
+        """Create the alert and follow the wizard to the 'Activate changes' page.
+
+        The alert is created, but the changes are not activated yet.
+        """
+        logger.info("Create the alert")
+        self.click_and_wait_for_navigation(
+            self.create_and_activate_button, frame_url=re.compile("mode=changelog")
+        )
+
+
+class EditAlert(AlertWizard):
+    """Represent the page `Setup -> Events -> Alerts -> Edit alert`."""
+
+    page_title = "Edit alert"
+
+    def __init__(self, page: Page, alert_name: str, navigate_to_page: bool = True) -> None:
+        self.alert_name = alert_name
+        super().__init__(page, navigate_to_page)
+
+    @override
+    def navigate(self) -> None:
+        logger.info("Navigate to '%s' page of '%s'", self.page_title, self.alert_name)
+        alerts_page = Alerts(self.page)
+        self.click_and_wait_for_navigation(
+            alerts_page.edit_button(self.alert_name),
+            frame_url=re.compile("mode=edit_otel_alert"),
+        )
+        self.validate_page()
+
+    @property
+    def save_and_activate_button(self) -> Locator:
+        return self.active_step.get_by_role("button", name="Save & activate changes", exact=True)
+
+    def save_alert(self) -> None:
+        """Save the alert and follow the wizard to the 'Activate changes' page.
+
+        The alert is saved, but the changes are not activated yet.
+        """
+        logger.info("Save the alert")
+        self.click_and_wait_for_navigation(
+            self.save_and_activate_button, frame_url=re.compile("mode=changelog")
+        )

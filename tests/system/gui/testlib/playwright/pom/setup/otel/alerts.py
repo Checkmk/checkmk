@@ -71,6 +71,9 @@ class Alerts(CmkPage):
         headers = [header.strip() for header in header_cells.all_inner_texts()]
         return self.alert_row(alert_name).locator("td").nth(headers.index(column))
 
+    def edit_button(self, alert_name: str) -> Locator:
+        return self.alert_row(alert_name).get_by_role("link", name="Edit this alert", exact=True)
+
     def delete_button(self, alert_name: str) -> Locator:
         return self.alert_row(alert_name).get_by_role("link", name="Delete this alert", exact=True)
 

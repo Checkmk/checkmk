@@ -31,6 +31,7 @@ from cmk.plugins.prism.special_agent.agent_prism_v4 import (
     ESXI_VMS_PATH,
     fetch_alerts,
     fetch_containers,
+    fetch_ha,
     fetch_host_nics,
     fetch_hosts,
     fetch_nodes,
@@ -552,6 +553,27 @@ def test_failed_host_listing_is_reported_by_the_hosts_fetcher() -> None:
 
     with pytest.raises(PrismV4Error) as raised:
         fetch_hosts(_context(hosts=error))
+
+    assert raised.value is error
+
+
+def test_hypervisors_go_to_their_cluster_for_the_ha_state() -> None:
+    assert fetch_ha(_context(hosts=_recorded_host_list())) == [
+        Section("prism_ha_v2", _recorded("section_prism_ha_v2.json"), "cluster-a")
+    ]
+
+
+def test_hypervisors_without_a_cluster_are_not_routed() -> None:
+    assert [section.target for section in fetch_ha(_context(hosts=[{"hostName": "host-1"}]))] == [
+        Unroutable("hosts without a cluster")
+    ]
+
+
+def test_failed_host_listing_is_reported_by_the_ha_fetcher() -> None:
+    error = PrismV4Error("clustermgmt/v4.0/config/hosts: HTTP 403 Permission denied")
+
+    with pytest.raises(PrismV4Error) as raised:
+        fetch_ha(_context(hosts=error))
 
     assert raised.value is error
 

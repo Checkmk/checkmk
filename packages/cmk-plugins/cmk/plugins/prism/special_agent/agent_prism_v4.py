@@ -31,6 +31,7 @@ from cmk.plugins.prism.v4_models import (
     ClusterRemoteSupport,
     DiskConfig,
     DiskStats,
+    HaHost,
     Host,
     HostStats,
     ListedDisk,
@@ -182,17 +183,20 @@ def _cluster_uuid(host: JsonObject) -> str | None:
     return uuid if isinstance(uuid, str) else None
 
 
-def fetch_hosts(context: FetchContext) -> Sequence[Section]:
+def _host_sections_by_cluster(
+    context: FetchContext, name: str, model: type[V4Model]
+) -> Sequence[Section]:
+    """The listed hosts as the model, one section per cluster on the host of the cluster"""
     if isinstance(context.hosts, PrismV4Error):
         raise context.hosts
     by_cluster: dict[str | None, list[dict[str, object]]] = {}
     for host in context.hosts:
         by_cluster.setdefault(_cluster_uuid(host), []).append(
-            Host.model_validate(host).to_section()
+            model.model_validate(host).to_section()
         )
     return [
         Section(
-            "prism_hosts_v2",
+            name,
             hosts,
             Unroutable("hosts without a cluster")
             if cluster_id is None
@@ -200,6 +204,16 @@ def fetch_hosts(context: FetchContext) -> Sequence[Section]:
         )
         for cluster_id, hosts in by_cluster.items()
     ]
+
+
+def fetch_hosts(context: FetchContext) -> Sequence[Section]:
+    return _host_sections_by_cluster(context, "prism_hosts_v2", Host)
+
+
+def fetch_ha(context: FetchContext) -> Sequence[Section]:
+    """v4 has no HA object: the parse function derives the HA state from the hypervisors of
+    the cluster's hosts"""
+    return _host_sections_by_cluster(context, "prism_ha_v2", HaHost)
 
 
 def fetch_alerts(context: FetchContext) -> Sequence[Section]:
@@ -699,6 +713,7 @@ SECTION_FETCHERS: Sequence[Fetcher] = (
     Fetcher("nodes", fetch_nodes),
     Fetcher("host NICs", fetch_host_nics),
     Fetcher("storage pools", fetch_storage_pools),
+    Fetcher("HA", fetch_ha),
 )
 
 

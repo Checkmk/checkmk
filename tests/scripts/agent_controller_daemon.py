@@ -89,7 +89,7 @@ def _run_controller_daemon(ctl_path: Path) -> Iterator[subprocess.Popen]:
             proc.terminate()
             try:
                 proc.wait(timeout=5)
-            except TimeoutError:
+            except subprocess.TimeoutExpired:
                 proc.kill()
             stdout, stderr = proc.communicate()
             logger.info("Stdout from controller daemon process:\n%s", stdout)

@@ -34,6 +34,7 @@ use serde::{Deserialize, Serialize};
 use serde_with::DisplayFromStr;
 use std::fs;
 use std::fs::File;
+use std::fs::TryLockError;
 use std::io;
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
@@ -955,7 +956,17 @@ impl Updater {
             .write(true)
             .truncate(false)
             .open(paths.updater_package_dir.join("update.lock"))?;
-        file.lock()?;
+
+        match file.try_lock() {
+            Ok(()) => {}
+            Err(TryLockError::WouldBlock) => {
+                log::warn!("Waiting for the update lock, another update run holds it");
+                // sometimes the lock can be held longer
+                // if the installer is running
+                file.lock()?;
+            }
+            Err(TryLockError::Error(e)) => return Err(e.into()),
+        }
         Ok(file)
     }
 
@@ -2439,6 +2450,24 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         drop(updater);
 
         assert!(File::open(&lock_path).unwrap().try_lock().is_ok());
+    }
+
+    /// Another handle holding the lock makes `writable` wait, not fail.
+    #[test]
+    fn test_writable_waits_for_the_lock_and_then_takes_it() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let paths = artifact_paths(&dir);
+        fs::create_dir_all(&paths.updater_package_dir).unwrap();
+        let held = File::create(paths.updater_package_dir.join("update.lock")).unwrap();
+        held.lock().unwrap();
+
+        let waiting = std::thread::spawn(move || Updater::writable(&paths).map(|_| ()));
+        std::thread::sleep(Duration::from_millis(50));
+        assert!(!waiting.is_finished());
+
+        drop(held);
+
+        assert!(waiting.join().unwrap().is_ok());
     }
 
     /// The contract with `CheckForUpdateFile` in `agents/wnx`: the agent service

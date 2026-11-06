@@ -24,6 +24,7 @@ from requests import JSONDecodeError
 
 import cmk.utils.password_store
 from cmk.ccc import site
+from cmk.ccc.jsontype import JsonPayload
 from cmk.events.notification_result import NotificationContext
 from cmk.events.notify import find_wato_folder
 from cmk.events.notify_types import PluginNotificationContext
@@ -335,7 +336,7 @@ def get_password_from_env_or_context(key: str, context: dict[str, str] | None = 
 
 
 def post_request(
-    message_constructor: Callable[[dict[str, str]], dict[str, str | object]],
+    message_constructor: Callable[[dict[str, str]], Mapping[str, JsonPayload]],
     url: str | None = None,
     headers: dict[str, str] | None = None,
 ) -> requests.Response:

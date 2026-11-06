@@ -7,6 +7,7 @@
 
 import base64
 
+from cmk.ccc.jsontype import JsonPayload
 from cmk.notification_plugins.utils import get_password_from_env_or_context as passwords
 from cmk.notification_plugins.utils import post_request, process_by_matchers, StateInfo
 
@@ -22,7 +23,7 @@ def _signl4_url() -> str:
     return f"https://connect.signl4.com/webhook/{password}"
 
 
-def _signl4_msg(context: dict[str, str]) -> dict[str, object]:
+def _signl4_msg(context: dict[str, str]) -> dict[str, JsonPayload]:
     host_name = context["HOSTNAME"]
     service_desc = context.get("SERVICEDESC", "")
     host_state = ""

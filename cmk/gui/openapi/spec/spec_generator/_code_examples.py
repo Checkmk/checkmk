@@ -16,7 +16,7 @@ import json
 import re
 from collections.abc import Mapping, Sequence
 from http import HTTPStatus
-from typing import Any, cast, NamedTuple
+from typing import Any, NamedTuple
 
 import jinja2
 from apispec import APISpec
@@ -343,9 +343,8 @@ def _httpie_request_body_lines(prefix: str, field: JsonObject, lines: list[str])
             case list():
                 lines.append(prefix + key + ":=" + "'" + json.dumps(example) + "'")
             case dict():
-                nested = cast(dict, example)
                 _httpie_request_body_lines(
-                    f"{prefix}{key}", {f"[{key}]": val for key, val in nested.items()}, lines
+                    f"{prefix}{key}", {f"[{key}]": val for key, val in example.items()}, lines
                 )
             case _:
                 raise ValueError(f"Value of unexpected type: {example} of type {type(example)}")

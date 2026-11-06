@@ -3,12 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from http import HTTPStatus
 from typing import Final
 
 import requests
 
 import cmk.ccc.resulttype as result
+from cmk.ccc.jsontype import JsonPayload
 from cmk.gui.i18n import _
 from cmk.utils import paths, unixsocket_http
 
@@ -30,12 +32,12 @@ class JobSchedulerClient:
         return self._request("GET", f"{self._BASE_URL}/{endpoint}")
 
     def post(
-        self, endpoint: str, json: dict[str, object]
+        self, endpoint: str, json: Mapping[str, JsonPayload]
     ) -> result.Result[requests.Response, StartupError]:
         return self._request("POST", f"{self._BASE_URL}/{endpoint}", json)
 
     def _request(
-        self, method: str, url: str, json: dict[str, object] | None = None
+        self, method: str, url: str, json: Mapping[str, JsonPayload] | None = None
     ) -> result.Result[requests.Response, StartupError]:
         try:
             response = self._session.request(method, url, json=json, timeout=30)

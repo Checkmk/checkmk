@@ -25,14 +25,14 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 PASSWORD_OPTION = "password"
 
+# Copies of cmk.ccc.jsontype, which this package can't import; see there for why there are two.
+# JsonSerializable is for the section data we hand to json.dumps() ourselves, JsonPayload for the
+# json= parameter of requests.
 type JsonSerializable = (
-    Mapping[str, "JsonSerializable"]
-    | Sequence["JsonSerializable"]
-    | str
-    | int
-    | float
-    | bool
-    | None
+    dict[str, JsonSerializable] | list[JsonSerializable] | str | int | float | bool | None
+)
+type JsonPayload = (
+    Mapping[str, JsonPayload] | Sequence[JsonPayload] | str | int | float | bool | None
 )
 DEFAULT_HTTP_TIMEOUT = 60
 
@@ -134,7 +134,7 @@ def section_alerts(
         url_alerts_in_range = f"{url}%since={str(alerts_since_argument)}"
         num_of_alerts_in_range = _do_get(url_alerts_in_range, args, session).json().get("total", 0)
 
-    alerts = {
+    alerts: dict[str, JsonSerializable] = {
         "alerts": {
             "num_of_alerts": num_of_alerts,
             "has_since_argument": bool(alerts_since_argument),
@@ -224,7 +224,7 @@ def section_nodes(
     # Add inputstate data
     url_nodes = _get_base_url(args) + "/cluster/inputstates"
     node_inputstates = _do_get(url_nodes, args, session).json()
-    node_list = []
+    node_list: list[JsonSerializable] = []
 
     for node_id, node_data in value.items():
         current_node_data = {node_id: node_data.copy()}
@@ -278,7 +278,7 @@ def section_sources(
         url_sources_in_range = f"{url}?range={str(source_since_argument)}"
         sources_in_range = _do_get(url_sources_in_range, args, session).json().get("sources", {})
 
-    results = {}
+    results: dict[str, JsonSerializable] = {}
     for source, messages in sources_response.get("sources", {}).items():
         source_section = {
             "messages": messages,
@@ -320,7 +320,7 @@ def section_events(
             .get("total_events", 0)
         )
 
-    events = {
+    events: dict[str, JsonSerializable] = {
         "events": {
             "num_of_events": num_of_events,
             "has_since_argument": bool(events_since_argument),
@@ -348,7 +348,7 @@ def _do_post(
     url: str,
     args: argparse.Namespace,
     session: requests.Session,
-    json: Mapping[str, object] | None = None,
+    json: Mapping[str, JsonPayload] | None = None,
 ) -> requests.Response:
     response = session.post(
         url,

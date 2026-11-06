@@ -23,6 +23,7 @@ py_library(
     ],
     deps = [
         "//cmk/utils",
+        "//packages/cmk-ccc:jsontype",
         "//packages/cmk-events",
         "//packages/cmk-web/cmk/web/utils",
         requirement("jinja2"),

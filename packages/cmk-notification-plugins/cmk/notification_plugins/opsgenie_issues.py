@@ -17,6 +17,7 @@ from requests.adapters import HTTPAdapter
 from requests.utils import get_environ_proxies, select_proxy
 from urllib3.util import Retry
 
+from cmk.ccc.jsontype import JsonPayload
 from cmk.events.notify_types import PluginNotificationContext
 from cmk.notification_plugins import utils
 from cmk.notification_plugins.utils import get_password_from_env_or_context
@@ -87,7 +88,7 @@ class Connector:
         api_call_name: str,
         method: str,
         path: str,
-        body: Mapping[str, object] | None,
+        body: Mapping[str, JsonPayload] | None,
         params: Mapping[str, str | None],
     ) -> requests.Response:
         try:
@@ -112,7 +113,7 @@ class Connector:
         success: str,
         *,
         params: Mapping[str, str | None],
-        body: Mapping[str, object] | None = None,
+        body: Mapping[str, JsonPayload] | None = None,
     ) -> None:
         response = self._send(api_call_name, method, path, body, params)
         if not response.ok:
@@ -161,12 +162,12 @@ class Connector:
             params=_BY_ID,
         )
 
-    def handle_alert_creation(self, payload: Mapping[str, object]) -> None:
+    def handle_alert_creation(self, payload: Mapping[str, JsonPayload]) -> None:
         self._request(
             "create_alert", "POST", "/v2/alerts", "created alert", body=payload, params={}
         )
 
-    def handle_alert_deletion(self, alias: str, payload: Mapping[str, object]) -> None:
+    def handle_alert_deletion(self, alias: str, payload: Mapping[str, JsonPayload]) -> None:
         self._request(
             "close_alert",
             "POST",
@@ -176,7 +177,7 @@ class Connector:
             body=payload,
         )
 
-    def handle_alert_ack(self, alias: str, payload: Mapping[str, object]) -> None:
+    def handle_alert_ack(self, alias: str, payload: Mapping[str, JsonPayload]) -> None:
         self._request(
             "acknowledge_alert",
             "POST",
@@ -186,7 +187,7 @@ class Connector:
             body=payload,
         )
 
-    def add_note(self, alias: str, payload: Mapping[str, object]) -> None:
+    def add_note(self, alias: str, payload: Mapping[str, JsonPayload]) -> None:
         self._request(
             "add_note",
             "POST",
@@ -196,7 +197,7 @@ class Connector:
             body=payload,
         )
 
-    def add_tags(self, alias: str, payload: Mapping[str, object]) -> None:
+    def add_tags(self, alias: str, payload: Mapping[str, JsonPayload]) -> None:
         self._request(
             "add_tags",
             "POST",

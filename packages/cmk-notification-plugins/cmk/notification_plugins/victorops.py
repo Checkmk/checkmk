@@ -9,6 +9,7 @@ Send notification messages to Splunk On-Call
 Create a JSON message to be sent to Splunk On-Call REST API
 """
 
+from cmk.ccc.jsontype import JsonPayload
 from cmk.notification_plugins.utils import (
     host_url_from_context,
     post_request,
@@ -27,7 +28,7 @@ def _translate_states(state: str) -> str:
     return state  # This is WARNING
 
 
-def _victorops_msg(context: dict[str, str]) -> dict[str, object]:
+def _victorops_msg(context: dict[str, str]) -> dict[str, JsonPayload]:
     """Build the message for VictorOps"""
 
     if context.get("WHAT") == "SERVICE":

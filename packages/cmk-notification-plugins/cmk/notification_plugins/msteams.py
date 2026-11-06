@@ -5,6 +5,7 @@
 from collections.abc import Iterable
 from http import HTTPStatus
 
+from cmk.ccc.jsontype import JsonPayload
 from cmk.events.notify_types import PluginNotificationContext
 from cmk.notification_plugins.utils import (
     host_url_from_context,
@@ -34,7 +35,7 @@ MAP_TYPES: dict[str, str] = {
 
 def _msteams_msg(
     context: PluginNotificationContext,
-) -> dict[str, object]:
+) -> dict[str, JsonPayload]:
     title, summary, details, subtitle = _get_text_fields(context, notify_what := context["WHAT"])
     actions = []
     if info_url := (
@@ -137,7 +138,9 @@ def _get_text_fields(
     )
 
 
-def _get_details(context: PluginNotificationContext, details: str) -> Iterable[dict[str, object]]:
+def _get_details(
+    context: PluginNotificationContext, details: str
+) -> Iterable[dict[str, JsonPayload]]:
     full_details = substitute_context(details, context).replace("\\n", "\n\n")
     add_separator = False
     for segment in full_details.split("\n\n"):
@@ -152,7 +155,7 @@ def _get_details(context: PluginNotificationContext, details: str) -> Iterable[d
             yield {"type": "TextBlock", "text": segment, "wrap": True, "spacing": "none"}
 
 
-def _get_section_facts(context: PluginNotificationContext) -> Iterable[dict[str, object]]:
+def _get_section_facts(context: PluginNotificationContext) -> Iterable[dict[str, JsonPayload]]:
     section_facts = []
     if "PARAMETER_AFFECTED_HOST_GROUPS" in context and (groups := context.get("HOSTGROUPNAMES")):
         section_facts.append({"title": "Affected host groups", "value": groups})

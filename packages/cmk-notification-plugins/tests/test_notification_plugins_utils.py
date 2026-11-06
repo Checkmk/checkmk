@@ -812,7 +812,7 @@ _WEBHOOK_URL = "https://hook.example.com/notify"
 _POST_CONTEXT = {"WHAT": "HOST", "NOTIFICATIONTYPE": "PROBLEM", "HOSTNAME": "host1"}
 
 
-def _message(context: dict[str, str]) -> dict[str, str | object]:
+def _message(context: dict[str, str]) -> dict[str, str]:
     return {"text": f"{context['HOSTNAME']} is down"}
 
 

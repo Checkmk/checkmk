@@ -14,6 +14,7 @@ from dataclasses import dataclass
 
 from urllib3.util import parse_url
 
+from cmk.ccc.jsontype import JsonPayload
 from cmk.events.notify_types import PluginNotificationContext
 from cmk.notification_plugins.utils import (
     host_url_from_context,
@@ -84,7 +85,7 @@ class OptionalLink:
 
         return self.text
 
-    def block_kit(self, bold: bool = False) -> dict[str, object]:
+    def block_kit(self, bold: bool = False) -> dict[str, JsonPayload]:
         if self.url:
             return {
                 "type": "link",
@@ -108,7 +109,7 @@ class CommonContent:
     def contacts_markdown(self) -> str:
         return "Please take a look: " + ", ".join(map("@{}".format, self.contacts))
 
-    def contacts_block_kit(self) -> Iterable[dict[str, object]]:
+    def contacts_block_kit(self) -> Iterable[dict[str, JsonPayload]]:
         if not self.contacts:
             return
 
@@ -162,7 +163,7 @@ def _is_slack(url: str) -> bool:
     return isinstance(parsed.host, str) and parsed.host.endswith("slack.com")
 
 
-def _message(context: PluginNotificationContext) -> dict[str, object]:
+def _message(context: PluginNotificationContext) -> dict[str, JsonPayload]:
     common = _get_common_content(context)
     url = retrieve_from_passwordstore(context["PARAMETER_WEBHOOK_URL"])
     if _is_slack(url):
@@ -171,9 +172,9 @@ def _message(context: PluginNotificationContext) -> dict[str, object]:
     return _mattermost_msg(context, common)
 
 
-def _slack_msg(context: PluginNotificationContext, common: CommonContent) -> dict[str, object]:
+def _slack_msg(context: PluginNotificationContext, common: CommonContent) -> dict[str, JsonPayload]:
     """Build the message for slack"""
-    elements: list[dict[str, object]] = []
+    elements: list[dict[str, JsonPayload]] = []
     if emoji := _get_emoji(context["NOTIFICATIONTYPE"], common.state):
         elements.append({"type": "emoji", "name": emoji})
         extra_space = " "
@@ -228,7 +229,9 @@ def _slack_msg(context: PluginNotificationContext, common: CommonContent) -> dic
     }
 
 
-def _mattermost_msg(context: PluginNotificationContext, common: CommonContent) -> dict[str, object]:
+def _mattermost_msg(
+    context: PluginNotificationContext, common: CommonContent
+) -> dict[str, JsonPayload]:
     """Build the message for mattermost"""
     attachment = {
         "color": _get_color(context["NOTIFICATIONTYPE"], common.state),

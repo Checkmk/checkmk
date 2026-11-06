@@ -46,6 +46,12 @@ def check_hr_cpu(params: Mapping[str, Any], section: StringTable) -> CheckResult
                 summary=f"Cannot parse processor load of core {index}: got {line[0]!r} (expected integer)",
             )
             continue
+        if not 0 <= core_util <= 100:
+            yield Result(
+                state=State.UNKNOWN,
+                summary=f"Implausible processor load of core {index}: got {core_util} (expected 0..100)",
+            )
+            continue
         cores.append(("core%d" % index, core_util))
         util += core_util
         num_cpus += 1

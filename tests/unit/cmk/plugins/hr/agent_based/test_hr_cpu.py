@@ -112,3 +112,56 @@ def test_check_hr_cpu_unparsable_processor_load(
     with time_machine.travel("2026-01-01 00:00:00", tick=False):
         result = list(check_hr_cpu({"util": (80.0, 90.0)}, parsed))
     assert result == expected_output
+
+
+@pytest.mark.parametrize(
+    ("parsed", "expected_output"),
+    [
+        pytest.param(
+            [["45326"], ["-993"]],
+            [
+                Result(
+                    state=State.UNKNOWN,
+                    summary="Implausible processor load of core 0: got 45326 (expected 0..100)",
+                ),
+                Result(
+                    state=State.UNKNOWN,
+                    summary="Implausible processor load of core 1: got -993 (expected 0..100)",
+                ),
+            ],
+            id="all_cores_out_of_range",
+        ),
+        pytest.param(
+            [["20"], ["124733"]],
+            [
+                Result(
+                    state=State.UNKNOWN,
+                    summary="Implausible processor load of core 1: got 124733 (expected 0..100)",
+                ),
+                Result(state=State.OK, summary="Total CPU: 20.00%"),
+                Metric("util", 20.0, levels=(80.0, 90.0), boundaries=(0.0, None)),
+            ],
+            id="one_of_two_cores_out_of_range",
+        ),
+        pytest.param(
+            [["0"], ["100"]],
+            [
+                Result(state=State.OK, summary="Total CPU: 50.00%"),
+                Metric("util", 50.0, levels=(80.0, 90.0), boundaries=(0.0, None)),
+            ],
+            id="range_limits_are_valid",
+        ),
+    ],
+)
+def test_check_hr_cpu_out_of_range_processor_load(
+    parsed: StringTable,
+    expected_output: CheckResult,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # The Windows SNMP service occasionally reports processor loads far outside 0..100.
+    value_store: dict[str, object] = {}
+    monkeypatch.setattr(hr_cpu_plugin, "get_value_store", lambda: value_store)
+
+    with time_machine.travel("2026-01-01 00:00:00", tick=False):
+        result = list(check_hr_cpu({"util": (80.0, 90.0)}, parsed))
+    assert result == expected_output

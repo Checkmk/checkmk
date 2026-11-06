@@ -9,7 +9,7 @@ line into a selection of diagnostics plug-ins.
 """
 
 import sys
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
@@ -23,15 +23,14 @@ from cmk.base.diagnostics import (
 )
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
-from cmk.cli.engine.readers import option_string as cli_option_string
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import Flag as CLIFlag
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
-from cmk.cli.internal import Option as CLIOption
-from cmk.cli.internal import Options as CLIOptions
-from cmk.cli.internal import untyped_request as cli_untyped_request
+from cmk.cli.internal import Reader as CLIReader
+from cmk.cli.internal import Value as CLIValue
 from cmk.diagnostics.engine import DumpSelection, resolve_selection
 from cmk.diagnostics.internal import DiagnosticsPlugin, Sensitivity, Topic
 
@@ -43,53 +42,80 @@ _CLI_THRESHOLDS: Final[Mapping[str, Sensitivity | None]] = {
 }
 
 
-@dataclass(frozen=True)
+def _parse_threshold(argument: str) -> Sensitivity | None:
+    try:
+        return _CLI_THRESHOLDS[argument]
+    except KeyError:
+        raise ValueError(argument) from None
+
+
+def _parse_plugin_names(argument: str) -> Sequence[str]:
+    return tuple(argument.split(","))
+
+
+_LIST_FLAG: Final = CLIFlag(
+    long="list",
+    help="List the available topics and plugins and exit",
+)
+
+_ALL_TOPICS_VALUE: Final = CLIValue(
+    long="all-topics",
+    help=(
+        "Select all plugins of all topics up to the given sensitivity threshold "
+        "(off, low, medium or high)"
+    ),
+    placeholder="THRESHOLD",
+    parse=_parse_threshold,
+)
+
+_PLUGINS_VALUE: Final = CLIValue(
+    long="plugins",
+    help="Additionally select the given plugins, regardless of topic thresholds",
+    placeholder="NAME,NAME...",
+    parse=_parse_plugin_names,
+)
+
+_CHECKMK_SERVER_HOST_VALUE: Final = CLIValue(
+    long="checkmk-server-host",
+    help="The name of the host monitoring the Checkmk server; needed by some plugins",
+    placeholder="HOST",
+    parse=str,
+)
+
+
+@dataclass(frozen=True, kw_only=True)
 class _CliSelection:
     list_plugins: bool
-    all_topics: str | None
-    plugins: str | None
-    checkmk_server_host: str
+    all_topics: Sensitivity | None
+    plugins: Sequence[str]
+    checkmk_server_host: str | None
 
 
-def _cli_selection(parsed: Mapping[str, object]) -> _CliSelection:
+def _cli_selection(options: CLIReader) -> _CliSelection:
     return _CliSelection(
-        list_plugins="list" in parsed,
-        all_topics=cli_option_string(parsed, "all-topics"),
-        plugins=cli_option_string(parsed, "plugins"),
-        checkmk_server_host=cli_option_string(parsed, "checkmk-server-host") or "",
+        list_plugins=options.flag(_LIST_FLAG),
+        all_topics=options.value(_ALL_TOPICS_VALUE),
+        plugins=options.value(_PLUGINS_VALUE) or (),
+        checkmk_server_host=options.value(_CHECKMK_SERVER_HOST_VALUE),
     )
-
-
-def _parse_cli_threshold(raw: str) -> Sensitivity | None:
-    try:
-        return _CLI_THRESHOLDS[raw]
-    except KeyError:
-        raise MKGeneralException(
-            "Invalid sensitivity threshold {!r} (allowed: {})".format(
-                raw, ", ".join(_CLI_THRESHOLDS)
-            )
-        ) from None
 
 
 def _resolve_cli_selection(
     catalogue: Mapping[str, DiagnosticsPlugin], options: _CliSelection
 ) -> DumpSelection:
-    default_threshold = (
-        _parse_cli_threshold(options.all_topics) if options.all_topics is not None else None
-    )
     thresholds: dict[Topic, Sensitivity | None] = dict.fromkeys(
-        (plugin.topic for plugin in catalogue.values()), default_threshold
+        (plugin.topic for plugin in catalogue.values()), options.all_topics
     )
 
     selected = set(resolve_selection(catalogue.values(), thresholds))
-    for name in options.plugins.split(",") if options.plugins is not None else []:
+    for name in options.plugins:
         if name not in catalogue:
             raise MKGeneralException("Unknown plugin %r (see --list for available plugins)" % name)
         selected.add(name)
 
     return DumpSelection(
         plugins=sorted(selected),
-        checkmk_server_host=options.checkmk_server_host,
+        checkmk_server_host=options.checkmk_server_host or "",
     )
 
 
@@ -110,10 +136,8 @@ def _print_available_plugins(catalogue: Mapping[str, DiagnosticsPlugin]) -> None
 
 
 def _mode_create_diagnostics_dump(
-    _omd_root: Path, global_options: CLIGlobalOptions, parsed: CLIOptions, _args: CLIArgs
+    _omd_root: Path, global_options: CLIGlobalOptions, options: _CliSelection, _args: CLIArgs
 ) -> CLIExitCode:
-    options = _cli_selection(parsed)
-
     with exit_on_config_file_load_error(debug=global_options.debug):
         raw_config = load_raw_config()
 
@@ -143,7 +167,7 @@ def _mode_create_diagnostics_dump(
 
 
 def _run_create_diagnostics_dump(
-    context: CLIContext, options: CLIOptions, args: CLIArgs
+    context: CLIContext, options: _CliSelection, args: CLIArgs
 ) -> CLIExitCode:
     try:
         return _mode_create_diagnostics_dump(
@@ -159,33 +183,8 @@ def _run_create_diagnostics_dump(
 cli_command_create_diagnostics_dump = CLICommand(
     name="create_diagnostics_dump",
     long="create-diagnostics-dump",
+    request=_cli_selection,
     handler=_run_create_diagnostics_dump,
-    request=cli_untyped_request(
-        [
-            CLIOption(
-                long="list",
-                help="List the available topics and plugins and exit",
-            ),
-            CLIOption(
-                long="all-topics",
-                help=(
-                    "Select all plugins of all topics up to the given sensitivity threshold "
-                    "(off, low, medium or high)"
-                ),
-                argument="THRESHOLD",
-            ),
-            CLIOption(
-                long="plugins",
-                help="Additionally select the given plugins, regardless of topic thresholds",
-                argument="NAME,NAME...",
-            ),
-            CLIOption(
-                long="checkmk-server-host",
-                help=("The name of the host monitoring the Checkmk server; needed by some plugins"),
-                argument="HOST",
-            ),
-        ]
-    ),
     help="Create diagnostics dump",
     description=[
         (

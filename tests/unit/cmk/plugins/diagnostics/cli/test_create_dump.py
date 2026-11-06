@@ -3,10 +3,20 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
+
 import pytest
 
+from cmk.cli.engine.commands import bind as cli_bind
+from cmk.cli.engine.readers import ParsedOptions as CLIParsedOptions
+from cmk.cli.engine.readers import RecordedOptions as CLIRecordedOptions
 from cmk.diagnostics.internal import DiagnosticsPlugin, Help, Sensitivity, Topic
-from cmk.plugins.diagnostics.cli import create_dump
+from cmk.plugins.diagnostics.cli.create_dump import (
+    _cli_selection,
+    _CliSelection,
+    _resolve_cli_selection,
+    cli_command_create_diagnostics_dump,
+)
 
 
 def _make_cli_plugin(
@@ -36,24 +46,60 @@ _CLI_CATALOGUE = {
 }
 
 
-def test_resolve_cli_selection() -> None:
-    # no options: only 'always' plugins run (empty explicit selection)
-    assert (
-        create_dump._resolve_cli_selection(  # noqa: SLF001
-            _CLI_CATALOGUE,
-            create_dump._cli_selection({}),  # noqa: SLF001
-        ).plugins
-        == []
+def test_create_diagnostics_dump_declares_its_options_in_help_order() -> None:
+    recorded = CLIRecordedOptions()
+    cli_command_create_diagnostics_dump.request(recorded)
+
+    assert [option.name for option in recorded.options] == [
+        "list",
+        "all-topics",
+        "plugins",
+        "checkmk-server-host",
+    ]
+
+
+def test_the_selection_is_read_from_the_command_line() -> None:
+    options = CLIParsedOptions(
+        [
+            ("--all-topics", "low"),
+            ("--plugins", "b_high,a_low"),
+            ("--checkmk-server-host", "my_server"),
+        ],
+        logging.getLogger(__name__),
     )
 
-    selection = create_dump._resolve_cli_selection(  # noqa: SLF001
+    assert _cli_selection(options) == _CliSelection(
+        list_plugins=False,
+        all_topics=Sensitivity.LOW,
+        plugins=("b_high", "a_low"),
+        checkmk_server_host="my_server",
+    )
+
+
+def test_an_unknown_threshold_is_rejected_before_the_command_runs() -> None:
+    with pytest.raises(ValueError, match="--all-topics: Invalid argument"):
+        cli_bind(
+            cli_command_create_diagnostics_dump,
+            CLIParsedOptions([("--all-topics", "extreme")], logging.getLogger(__name__)),
+        )
+
+
+def test_without_a_selection_only_always_plugins_run() -> None:
+    selection = _CliSelection(
+        list_plugins=False, all_topics=None, plugins=(), checkmk_server_host=None
+    )
+
+    assert _resolve_cli_selection(_CLI_CATALOGUE, selection).plugins == []
+
+
+def test_resolve_cli_selection() -> None:
+    selection = _resolve_cli_selection(
         _CLI_CATALOGUE,
-        create_dump._cli_selection(  # noqa: SLF001
-            {
-                "all-topics": "low",
-                "plugins": "b_high",
-                "checkmk-server-host": "my_server",
-            }
+        _CliSelection(
+            list_plugins=False,
+            all_topics=Sensitivity.LOW,
+            plugins=("b_high",),
+            checkmk_server_host="my_server",
         ),
     )
     assert selection.checkmk_server_host == "my_server"
@@ -65,12 +111,9 @@ def test_resolve_cli_selection() -> None:
 
 def test_resolve_cli_selection_rejects_unknown() -> None:
     with pytest.raises(Exception, match="Unknown plugin"):
-        create_dump._resolve_cli_selection(  # noqa: SLF001
+        _resolve_cli_selection(
             _CLI_CATALOGUE,
-            create_dump._cli_selection({"plugins": "nope"}),  # noqa: SLF001
-        )
-    with pytest.raises(Exception, match="Invalid sensitivity"):
-        create_dump._resolve_cli_selection(  # noqa: SLF001
-            _CLI_CATALOGUE,
-            create_dump._cli_selection({"all-topics": "extreme"}),  # noqa: SLF001
+            _CliSelection(
+                list_plugins=False, all_topics=None, plugins=("nope",), checkmk_server_host=None
+            ),
         )

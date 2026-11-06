@@ -13,7 +13,7 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.agent_based.v2 import Metric, Result, State
+from cmk.agent_based.v2 import Metric, Result, Service, State
 from cmk.plugins.aws_v2.agent_based.aws_glacier import (
     check_aws_glacier_archives,
     check_aws_glacier_summary,
@@ -84,17 +84,13 @@ def parsed_fixture(string_table: list[list[str]]) -> Mapping[str, GlacierVault]:
 
 
 def test_discover_aws_glacier(parsed: Mapping[str, GlacierVault]) -> None:
-    """Test vault discovery finds both vaults"""
-    discovered = list(discover_aws_glacier(parsed))
-    assert len(discovered) == 2
-    vault_names = [service.item for service in discovered]
-    assert "axi_empty_vault" in vault_names
-    assert "axi_vault" in vault_names
+    """Test discovery of an empty vault on its own host"""
+    assert list(discover_aws_glacier(parsed["axi_empty_vault"])) == [Service()]
 
 
 def test_check_aws_glacier_archives_axi_empty_vault(parsed: Mapping[str, GlacierVault]) -> None:
     """Test archives check for empty vault with minimal data"""
-    result = list(check_aws_glacier_archives("axi_empty_vault", {}, parsed))
+    result = list(check_aws_glacier_archives({}, parsed["axi_empty_vault"]))
 
     assert result == [
         Result(state=State.OK, summary="Vault size: 12 B"),
@@ -106,7 +102,7 @@ def test_check_aws_glacier_archives_axi_empty_vault(parsed: Mapping[str, Glacier
 
 def test_check_aws_glacier_archives_axi_vault(parsed: Mapping[str, GlacierVault]) -> None:
     """Test archives check for vault with archives but zero size"""
-    result = list(check_aws_glacier_archives("axi_vault", {}, parsed))
+    result = list(check_aws_glacier_archives({}, parsed["axi_vault"]))
 
     assert result == [
         Result(state=State.OK, summary="Vault size: 0 B"),

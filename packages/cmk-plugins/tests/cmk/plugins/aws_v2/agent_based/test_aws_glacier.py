@@ -16,6 +16,7 @@ from cmk.plugins.aws_v2.agent_based.aws_glacier import (
     discover_aws_glacier,
     Params,
     parse_aws_glacier,
+    parse_aws_glacier_vault,
 )
 
 
@@ -115,12 +116,7 @@ from cmk.plugins.aws_v2.agent_based.aws_glacier import (
                     '"Complete"}]',
                 ]
             ],
-            [
-                Service(item="axi_empty_vault"),
-                Service(item="axi_vault"),
-                Service(item="fake_vault_1"),
-                Service(item="fake_vault_2"),
-            ],
+            [Service()],
         ),
     ],
 )
@@ -128,13 +124,13 @@ def test_discover_aws_glacier(
     string_table: StringTable, expected_discoveries: Sequence[Service]
 ) -> None:
     """Test discovery function for aws_glacier check."""
-    parsed = parse_aws_glacier(string_table)
-    result = list(discover_aws_glacier(parsed))
-    assert sorted(result, key=str) == sorted(expected_discoveries, key=str)
+    parsed = parse_aws_glacier_vault(string_table)
+    assert parsed is not None
+    assert list(discover_aws_glacier(parsed)) == expected_discoveries
 
 
 @pytest.mark.parametrize(
-    "item, params, string_table, expected_results",
+    "vault_name, params, string_table, expected_results",
     [
         (
             "axi_empty_vault",
@@ -547,12 +543,12 @@ def test_discover_aws_glacier(
     ],
 )
 def test_check_aws_glacier(
-    item: str,
+    vault_name: str,
     params: Params,
     string_table: StringTable,
     expected_results: Sequence[object],
 ) -> None:
     """Test check function for aws_glacier check."""
-    parsed = parse_aws_glacier(string_table)
-    result = list(check_aws_glacier(item, params, parsed))
+    # The host of the vault gets the data of this vault only.
+    result = list(check_aws_glacier(params, parse_aws_glacier(string_table)[vault_name]))
     assert result == expected_results

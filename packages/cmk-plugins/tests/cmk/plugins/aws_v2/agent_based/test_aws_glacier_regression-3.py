@@ -17,7 +17,6 @@ from cmk.agent_based.v2 import Metric, Result, State
 from cmk.plugins.aws_v2.agent_based.aws_glacier import (
     check_aws_glacier_archives,
     check_aws_glacier_summary,
-    discover_aws_glacier,
     discover_aws_glacier_summary,
     GlacierVault,
     parse_aws_glacier,
@@ -103,16 +102,6 @@ def test_parse_aws_glacier(string_table: list[list[str]]) -> None:
     assert axi_vault.number_of_archives == 0
 
 
-def test_discover_aws_glacier(parsed: Mapping[str, GlacierVault]) -> None:
-    """Test vault discovery finds both empty vaults"""
-    discovered = list(discover_aws_glacier(parsed))
-
-    assert len(discovered) == 2
-    vault_names = [service.item for service in discovered]
-    assert "axi_empty_vault" in vault_names
-    assert "axi_vault" in vault_names
-
-
 def test_discover_aws_glacier_summary(parsed: Mapping[str, GlacierVault]) -> None:
     """Test summary discovery creates summary item"""
     discovered = list(discover_aws_glacier_summary(parsed))
@@ -123,7 +112,7 @@ def test_discover_aws_glacier_summary(parsed: Mapping[str, GlacierVault]) -> Non
 
 def test_check_aws_glacier_archives_axi_empty_vault(parsed: Mapping[str, GlacierVault]) -> None:
     """Test archives check for first empty vault"""
-    result = list(check_aws_glacier_archives("axi_empty_vault", {}, parsed))
+    result = list(check_aws_glacier_archives({}, parsed["axi_empty_vault"]))
 
     assert result == [
         Result(state=State.OK, summary="Vault size: 0 B"),
@@ -135,7 +124,7 @@ def test_check_aws_glacier_archives_axi_empty_vault(parsed: Mapping[str, Glacier
 
 def test_check_aws_glacier_archives_axi_vault(parsed: Mapping[str, GlacierVault]) -> None:
     """Test archives check for second empty vault"""
-    result = list(check_aws_glacier_archives("axi_vault", {}, parsed))
+    result = list(check_aws_glacier_archives({}, parsed["axi_vault"]))
 
     assert result == [
         Result(state=State.OK, summary="Vault size: 0 B"),
@@ -143,14 +132,6 @@ def test_check_aws_glacier_archives_axi_vault(parsed: Mapping[str, GlacierVault]
         Result(state=State.OK, summary="Number of archives: 0"),
         Metric("aws_glacier_num_archives", 0.0),
     ]
-
-
-def test_check_aws_glacier_archives_nonexistent_vault(parsed: Mapping[str, GlacierVault]) -> None:
-    """Test check function with non-existent vault returns None"""
-    result = list(check_aws_glacier_archives("nonexistent", {}, parsed))
-
-    # Should return empty list when vault doesn't exist
-    assert len(result) == 0
 
 
 def test_check_aws_glacier_summary(parsed: Mapping[str, GlacierVault]) -> None:

@@ -422,7 +422,7 @@ rule_spec_aws_v2_glacier_vault_archives = CheckParameters(
     title=Title("AWS v2/Glacier vault objects"),
     topic=Topic.APPLICATIONS,
     parameter_form=_parameter_form_spec_aws_glacier_vaults,
-    condition=HostAndItemCondition(item_title=Title("Vault name")),
+    condition=HostCondition(),
 )
 
 

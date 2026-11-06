@@ -155,16 +155,8 @@ def test_parse_aws_glacier(parsed: Mapping[str, GlacierVault]) -> None:
 
 
 def test_discover_aws_glacier(parsed: Mapping[str, GlacierVault]) -> None:
-    """Test discovery of AWS Glacier vaults"""
-    result = list(discover_aws_glacier(parsed))
-
-    expected = [
-        Service(item="axi_empty_vault"),
-        Service(item="axi_vault"),
-        Service(item="fake_vault_1"),
-        Service(item="fake_vault_2"),
-    ]
-    assert sorted(result, key=str) == sorted(expected, key=str)
+    """Test discovery of an AWS Glacier vault on its own host"""
+    assert list(discover_aws_glacier(parsed["axi_vault"])) == [Service()]
 
 
 def test_discover_aws_glacier_summary(parsed: Mapping[str, GlacierVault]) -> None:
@@ -175,7 +167,7 @@ def test_discover_aws_glacier_summary(parsed: Mapping[str, GlacierVault]) -> Non
 
 def test_check_aws_glacier_empty_vault(parsed: Mapping[str, GlacierVault]) -> None:
     """Test check function for empty vault"""
-    result = list(check_aws_glacier_archives("axi_empty_vault", {}, parsed))
+    result = list(check_aws_glacier_archives({}, parsed["axi_empty_vault"]))
 
     assert result == [
         Result(state=State.OK, summary="Vault size: 0 B"),
@@ -187,7 +179,7 @@ def test_check_aws_glacier_empty_vault(parsed: Mapping[str, GlacierVault]) -> No
 
 def test_check_aws_glacier_vault_with_data(parsed: Mapping[str, GlacierVault]) -> None:
     """Test check function for vault with data"""
-    result = list(check_aws_glacier_archives("fake_vault_1", {}, parsed))
+    result = list(check_aws_glacier_archives({}, parsed["fake_vault_1"]))
 
     assert result == [
         Result(state=State.OK, summary="Vault size: 22.5 GB"),
@@ -199,7 +191,7 @@ def test_check_aws_glacier_vault_with_data(parsed: Mapping[str, GlacierVault]) -
 
 def test_check_aws_glacier_smaller_vault(parsed: Mapping[str, GlacierVault]) -> None:
     """Test check function for smaller vault"""
-    result = list(check_aws_glacier_archives("fake_vault_2", {}, parsed))
+    result = list(check_aws_glacier_archives({}, parsed["fake_vault_2"]))
 
     assert result == [
         Result(state=State.OK, summary="Vault size: 117 MB"),
@@ -219,9 +211,3 @@ def test_check_aws_glacier_summary(parsed: Mapping[str, GlacierVault]) -> None:
         Result(state=State.OK, summary="Largest vault: fake_vault_1 (22.5 GB)"),
         Metric("aws_glacier_largest_vault_size", 22548578304.0),
     ]
-
-
-def test_check_aws_glacier_nonexistent_vault() -> None:
-    """Test check function with non-existent vault"""
-    result = list(check_aws_glacier_archives("nonexistent", {}, {}))
-    assert len(result) == 0

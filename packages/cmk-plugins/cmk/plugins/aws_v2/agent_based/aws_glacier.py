@@ -49,6 +49,11 @@ def parse_aws_glacier(string_table: StringTable) -> Section:
     return parsed_by_vault
 
 
+def parse_aws_glacier_vault(string_table: StringTable) -> GlacierVault | None:
+    # Each vault is a host of its own, so the section has the data of one vault.
+    return next(iter(parse_aws_glacier(string_table).values()), None)
+
+
 def _vault_size_levels(params: Params) -> LevelsT[float]:
     # The ruleset still stores the legacy levels format: either a (warn, crit)
     # tuple or a tuple consisting solely of `None`s ("no levels").
@@ -75,34 +80,30 @@ def _vault_size_levels(params: Params) -> LevelsT[float]:
 #   '----------------------------------------------------------------------'
 
 
-def discover_aws_glacier(section: Section) -> DiscoveryResult:
-    for vault_name in section:
-        yield Service(item=vault_name)
+def discover_aws_glacier(section: GlacierVault) -> DiscoveryResult:  # noqa: ARG001
+    yield Service()
 
 
-def check_aws_glacier_archives(item: str, params: Params, section: Section) -> CheckResult:
-    if (data := section.get(item)) is None:
-        return
-
+def check_aws_glacier_archives(params: Params, section: GlacierVault) -> CheckResult:
     yield from check_levels(
-        data.size_in_bytes,
+        section.size_in_bytes,
         metric_name="aws_glacier_vault_size",
         levels_upper=_vault_size_levels(params),
         render_func=render.disksize,
         label="Vault size",
     )
 
-    num_archives = data.number_of_archives
+    num_archives = section.number_of_archives
     yield Result(state=State.OK, summary=f"Number of archives: {int(num_archives)}")
     yield Metric("aws_glacier_num_archives", num_archives)
 
-    if tag_infos := [f"{key}: {value}" for key, value in (data.tagging or {}).items()]:
+    if tag_infos := [f"{key}: {value}" for key, value in (section.tagging or {}).items()]:
         yield Result(state=State.OK, summary=f"[Tags]: {', '.join(tag_infos)}")
 
 
 agent_section_aws_v2_glacier = AgentSection(
     name="aws_v2_glacier",
-    parse_function=parse_aws_glacier,
+    parse_function=parse_aws_glacier_vault,
 )
 
 agent_section_aws_v2_glacier_summary = AgentSection(
@@ -113,7 +114,7 @@ agent_section_aws_v2_glacier_summary = AgentSection(
 
 check_plugin_aws_v2_glacier = CheckPlugin(
     name="aws_v2_glacier",
-    service_name="AWS/Glacier Vault: %s",
+    service_name="AWS/Glacier Vault",
     discovery_function=discover_aws_glacier,
     check_function=check_aws_glacier_archives,
     check_ruleset_name="aws_v2_glacier_vault_archives",

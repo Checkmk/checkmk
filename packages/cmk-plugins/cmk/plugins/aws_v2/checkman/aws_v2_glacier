@@ -4,20 +4,19 @@ catalog: cloud/aws
 license: GPLv2
 distribution: check_mk
 description:
- This check monitors the archives of AWS/Glacier vaults and reports
+ This check monitors the archives of an AWS/Glacier vault and reports
+
+ - the size of the vault
 
  - the number of archives
 
- - size of the vault
+ - the tags of the vault
 
  To make this check work you have to configure the related
  special agent {Amazon Web Services (AWS) v2}.
 
- There are no default levels set for the vault size.
- Upper levels are configurable.
-
-item:
- Name of the vault.
+ There are no default levels. Upper levels on the vault size
+ are configurable via the rule "AWS v2/Glacier vault objects".
 
 discovery:
  Each vault is a piggyback host with the name {<vault name>}.

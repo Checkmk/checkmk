@@ -13,7 +13,6 @@ from urllib.parse import quote_plus
 import httpx
 from pydantic import BaseModel
 from pydantic_core import from_json
-from requests.auth import HTTPBasicAuth
 
 _ACCOUNT_ID = "_account_id"
 PROJECT_NAME = "check_mk"
@@ -100,9 +99,11 @@ class GerritClient:
     GERRIT_API_DOCs: Final = f"{GERRIT_BASE_URL}/Documentation/rest-api-changes.html"
     GERRIT_URL: Final = f"{GERRIT_BASE_URL}/a"
 
-    def __init__(self, user: str, http_creds: str) -> None:
+    def __init__(
+        self, user: str, http_creds: str, *, transport: httpx.BaseTransport | None = None
+    ) -> None:
         super().__init__()
-        self._client = httpx.Client(auth=HTTPBasicAuth(user, http_creds))
+        self._client = httpx.Client(auth=httpx.BasicAuth(user, http_creds), transport=transport)
         self._changes_api: Final = ChangesAPI(self)
 
     @staticmethod

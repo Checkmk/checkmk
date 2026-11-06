@@ -13,10 +13,11 @@ use crate::updater::{CheckOutcome, FetchOutcome, SignatureCheck, Updater, Writab
 use crate::{agent_receiver_api, misc, setup};
 use anyhow::Result as AnyhowResult;
 use log::warn;
+use rand::Rng;
 #[cfg(unix)]
 use std::path::Path;
 use std::thread;
-use std::time::Instant;
+use std::time::{Duration, Instant, SystemTime};
 
 /// Ask the site which agent package it has for this host, and report it.
 ///
@@ -231,8 +232,12 @@ fn report_fetch(outcome: &FetchOutcome) -> String {
 }
 
 /// The update thread of the daemon: one cycle per interval, while automatic
-/// updates are activated, after a random delay at start. Tests skip the delay
-/// with `DEBUG_NO_UPDATE_START_DELAY`.
+/// updates are activated. A new host checks after a random delay of up to a
+/// minute, then waits a random part of the interval, so hosts started together
+/// spread over it. A restart keeps the schedule, except the one an install
+/// causes: that host checks within a minute to confirm the install, and its
+/// schedule moves to that check. Tests skip the wait at start with
+/// `DEBUG_NO_UPDATE_START_DELAY`.
 ///
 /// The lock is taken only for a cycle that runs, so a host without automatic
 /// updates never touches the download directory. A failed cycle, a lock that
@@ -243,19 +248,40 @@ pub fn fn_thread(
     mut registry: Registry,
     client_config: ClientConfig,
 ) -> AnyhowResult<()> {
+    let updater = Updater::new(&paths);
     if !setup::update_start_delay_disabled() {
-        misc::sleep_randomly();
+        match start_delay(
+            updater.next_check(),
+            updater.has_pending_install(),
+            updater.interval(),
+            SystemTime::now(),
+        ) {
+            Some(delay) => thread::sleep(delay),
+            None => misc::sleep_randomly(),
+        }
     }
 
     loop {
         let begin = Instant::now();
+        let began_at = SystemTime::now();
         registry.refresh()?;
         let updater = Updater::new(&paths);
         let interval = updater.interval();
+        let wait_time = if updater.next_check().is_none() {
+            // A random part of the interval: the factor is in 0..1.
+            interval.mul_f64(rand::thread_rng().gen::<f64>())
+        } else {
+            interval
+        };
 
         if updater.handle_update_cycle(&registry) {
             match Updater::writable(&paths) {
                 Ok(mut updater) => {
+                    // Save this now: installing an agent restarts the controller,
+                    // so code after update() may not run.
+                    if let Err(error) = updater.record_next_check(began_at + wait_time) {
+                        warn!("Could not record the next check. {error:#}");
+                    }
                     if let Err(result) = update(
                         &mut updater,
                         &registry,
@@ -269,8 +295,23 @@ pub fn fn_thread(
             }
         }
 
-        thread::sleep(interval.saturating_sub(begin.elapsed()));
+        thread::sleep(wait_time.saturating_sub(begin.elapsed()));
     }
+}
+
+/// Until the recorded next check, at most one interval. None for a new or an
+/// overdue host, and for one with an install to confirm: those start after a
+/// random delay instead.
+fn start_delay(
+    next_check: Option<SystemTime>,
+    install_pending: bool,
+    interval: Duration,
+    now: SystemTime,
+) -> Option<Duration> {
+    if install_pending {
+        return None;
+    }
+    Some(next_check?.duration_since(now).ok()?.min(interval))
 }
 
 /// What the hand-over to the privileged install step did, in the line the mode
@@ -296,6 +337,60 @@ fn report_install(outcome: InstallOutcome, path: &Path) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    const HOUR: Duration = Duration::from_secs(3600);
+
+    #[test]
+    fn test_a_new_host_starts_after_a_random_delay() {
+        assert_eq!(start_delay(None, false, HOUR, SystemTime::now()), None);
+    }
+
+    #[test]
+    fn test_a_restarted_host_waits_until_its_next_check() {
+        let now = SystemTime::now();
+
+        let wait = start_delay(Some(now + Duration::from_secs(600)), false, HOUR, now);
+
+        assert_eq!(wait, Some(Duration::from_secs(600)));
+    }
+
+    #[test]
+    fn test_a_host_due_now_starts_without_delay() {
+        let now = SystemTime::now();
+
+        assert_eq!(
+            start_delay(Some(now), false, HOUR, now),
+            Some(Duration::ZERO)
+        );
+    }
+
+    #[test]
+    fn test_an_overdue_host_starts_after_a_random_delay() {
+        let now = SystemTime::now();
+
+        let wait = start_delay(Some(now - Duration::from_secs(600)), false, HOUR, now);
+
+        assert_eq!(wait, None);
+    }
+
+    /// A clock that jumped back, or an interval the rule shortened.
+    #[test]
+    fn test_a_host_waits_at_most_one_interval() {
+        let now = SystemTime::now();
+
+        let wait = start_delay(Some(now + 2 * HOUR), false, HOUR, now);
+
+        assert_eq!(wait, Some(HOUR));
+    }
+
+    #[test]
+    fn test_a_host_with_an_install_to_confirm_starts_after_a_random_delay() {
+        let now = SystemTime::now();
+
+        let wait = start_delay(Some(now + Duration::from_secs(600)), true, HOUR, now);
+
+        assert_eq!(wait, None);
+    }
 
     const TARGET_HASH: &str = "fedcba9876543210";
     const INSTALLED_HASH: &str = "0123456789abcdef";

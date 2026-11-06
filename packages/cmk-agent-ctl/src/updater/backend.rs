@@ -154,6 +154,7 @@ pub struct UpdateSource {
 ///
 /// A missing state file is equivalent to the default state, so the first run on
 /// a freshly installed host needs no bootstrapping.
+#[serde_with::serde_as]
 #[derive(Serialize, Deserialize, Debug, Default, PartialEq, Eq, Clone)]
 pub struct UpdateState {
     /// The connection the updater uses. Absent until one was recorded.
@@ -164,6 +165,10 @@ pub struct UpdateState {
 
     /// Unix timestamp of the last completed agent installation.
     pub last_update: Option<u64>,
+
+    /// When the daemon's next cycle is due. Kept across restarts.
+    #[serde_as(as = "Option<serde_with::TimestampSeconds<i64>>")]
+    pub next_check: Option<SystemTime>,
 
     /// Hash of a package whose installation has been triggered but whose
     /// outcome is not known yet. The installation restarts the controller, so
@@ -754,6 +759,11 @@ impl WritableUpdater {
         self.state.save(&self.state_path)
     }
 
+    pub fn record_next_check(&mut self, due: SystemTime) -> AnyhowResult<()> {
+        self.state.next_check = Some(due);
+        self.state.save(&self.state_path)
+    }
+
     /// Prove the registration of the Python agent updater to the sites of its
     /// candidate connections in turn, on a host without an update source.
     /// The first connection whose site accepts the proof becomes the update
@@ -1064,6 +1074,14 @@ impl Updater {
                 .map_or(DEFAULT_INTERVAL, |config| config.interval),
         )
         .max(MIN_INTERVAL)
+    }
+
+    pub fn next_check(&self) -> Option<SystemTime> {
+        self.state.next_check
+    }
+
+    pub fn has_pending_install(&self) -> bool {
+        self.state.pending_hash.is_some()
     }
 
     /// Integrated updater main action.
@@ -1798,6 +1816,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             source: Some(some_source()),
             last_check: Some(1759276800),
             last_update: Some(1759190400),
+            next_check: Some(UNIX_EPOCH + Duration::from_secs(1759280400)),
             pending_hash: Some(String::from("0123456789abcdef")),
             last_error: Some(String::from("boom")),
         };
@@ -2147,6 +2166,21 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         updater.record_answer(&answer).unwrap();
 
         assert_eq!(updater.state.last_check, Some(1_759_276_800));
+    }
+
+    #[test]
+    fn test_record_next_check_saves_it() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let mut updater = writable_in(&dir, UpdateState::default());
+
+        let due = UNIX_EPOCH + Duration::from_secs(1_759_276_800);
+
+        updater.record_next_check(due).unwrap();
+
+        assert_eq!(
+            UpdateState::load(&updater.state_path).unwrap().next_check,
+            Some(due)
+        );
     }
 
     /// The note is written before the hand-over, which may not return.

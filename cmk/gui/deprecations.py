@@ -37,6 +37,7 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.analyze_configuration import (
     ACResultState,
     ACTestResult,
+    gui_plugin_effect,
     perform_tests,
 )
 from cmk.livestatus_client import SiteConfigurations
@@ -297,6 +298,43 @@ class _ACTestResultProblemFile(_ACTestResultProblem):
         )
 
 
+class _ACTestResultProblemGUIPlugin(_ACTestResultProblem):
+    @override
+    def _create_info(self, version: str) -> str:
+        return ""
+
+    @override
+    def _create_recommendation(self) -> HTML | str:
+        return _("The details below give the reason.")
+
+
+class _ACTestResultProblemGUIPluginFile(_ACTestResultProblemGUIPlugin):
+    @override
+    def _create_title(self) -> str:
+        return _("Plug-in: %(ident)s") % {"ident": self.ident}
+
+    @override
+    def _create_error_box_message(self, version: str, state: ACResultState) -> str:
+        return gui_plugin_effect(self.ident, state)
+
+
+class _ACTestResultProblemGUIPluginPackage(_ACTestResultProblemGUIPlugin):
+    @override
+    def _create_title(self) -> str:
+        return _("Extension package: %(ident)s") % {"ident": self.ident}
+
+    @override
+    def _create_error_box_message(self, version: str, state: ACResultState) -> str:
+        match state:
+            case ACResultState.CRIT:
+                return _("The extension package contains plug-ins which have no effect in Checkmk.")
+            case _:
+                return _(
+                    "The extension package contains plug-ins which may break with any update of"
+                    " Checkmk."
+                )
+
+
 class _ACTestResultProblemUnsorted(_ACTestResultProblem):
     @override
     def _create_title(self) -> str:
@@ -347,49 +385,62 @@ class _ACTestResultProblemUnsorted(_ACTestResultProblem):
         return _("We highly recommend solving this issue already in your installation.")
 
 
+_GUI_PLUGIN_TEST_IDS = frozenset(
+    {"ACTestDeprecatedGUIExtensions", "ACTestDeprecatedLegacyGUIExtensions"}
+)
+
+_PACKAGE_MANAGEMENT_TEST_IDS = _GUI_PLUGIN_TEST_IDS | {
+    "ACTestDeprecatedPNPTemplates",
+    "ACTestUnknownCheckParameterRuleSets",
+}
+
+
 def _find_ac_test_result_problems(
     filtered_ac_test_results: Mapping[SiteId, Sequence[ACTestResult]],
     manifests_by_path: Mapping[Path, Manifest],
 ) -> Sequence[_ACTestResultProblem]:
-    problem_by_ident: dict[str, _ACTestResultProblem] = {}
+    problem_by_key: dict[tuple[type[_ACTestResultProblem], str], _ACTestResultProblem] = {}
     for site_id, ac_test_results in filtered_ac_test_results.items():
         for ac_test_result in ac_test_results:
             if ac_test_result.path:
                 path = _try_rel_path(site_id, ac_test_result.path)
+                package_problem: type[_ACTestResultProblem]
+                file_problem: type[_ACTestResultProblem]
+                if ac_test_result.test_id in _GUI_PLUGIN_TEST_IDS:
+                    package_problem = _ACTestResultProblemGUIPluginPackage
+                    file_problem = _ACTestResultProblemGUIPluginFile
+                else:
+                    package_problem = _ACTestResultProblemMKP
+                    file_problem = _ACTestResultProblemFile
 
                 if manifest := manifests_by_path.get(path):
-                    problem = problem_by_ident.setdefault(
-                        manifest.name,
-                        _ACTestResultProblemMKP(manifest.name, _NotificationCategory.manage_mkps),
+                    problem = problem_by_key.setdefault(
+                        (package_problem, manifest.name),
+                        package_problem(manifest.name, _NotificationCategory.manage_mkps),
                     )
                 else:
-                    problem = problem_by_ident.setdefault(
-                        str(path),
-                        _ACTestResultProblemFile(str(path), _NotificationCategory.manage_mkps),
+                    problem = problem_by_key.setdefault(
+                        (file_problem, str(path)),
+                        file_problem(str(path), _NotificationCategory.manage_mkps),
                     )
 
             else:
                 match ac_test_result.test_id:
-                    case (
-                        "ACTestUnknownCheckParameterRuleSets"
-                        | "ACTestDeprecatedGUIExtensions"
-                        | "ACTestDeprecatedLegacyGUIExtensions"
-                        | "ACTestDeprecatedPNPTemplates"
-                    ):
+                    case test_id if test_id in _PACKAGE_MANAGEMENT_TEST_IDS:
                         notification_category = _NotificationCategory.manage_mkps
                     case "ACTestDeprecatedRuleSets":
                         notification_category = _NotificationCategory.rule_sets
                     case _:
                         notification_category = _NotificationCategory.log
 
-                problem = problem_by_ident.setdefault(
-                    ac_test_result.text,
+                problem = problem_by_key.setdefault(
+                    (_ACTestResultProblemUnsorted, ac_test_result.text),
                     _ACTestResultProblemUnsorted(ac_test_result.text, notification_category),
                 )
 
             problem.add_ac_test_result(site_id, ac_test_result)
 
-    return list(problem_by_ident.values())
+    return list(problem_by_key.values())
 
 
 @dataclass(frozen=True)

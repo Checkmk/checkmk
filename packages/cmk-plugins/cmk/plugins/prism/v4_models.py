@@ -287,6 +287,8 @@ class ListedDisk(DiskConfig):
 
     ext_id: str = Field(alias="extId")
     node_ext_id: str | None = Field(None, alias="nodeExtId")
+    storage_pool_ext_id: str | None = Field(None, alias="storagePoolExtId")
+    cluster_ext_id: str | None = Field(None, alias="clusterExtId")
 
 
 class DiskStats(V4Model):

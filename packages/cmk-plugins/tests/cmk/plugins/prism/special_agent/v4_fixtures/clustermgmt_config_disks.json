@@ -17,6 +17,8 @@
         }
       ],
       "nodeExtId": "387a54c1-7286-49aa-9602-a7e8e889f63c",
+      "storagePoolExtId": "64b62dc3-b8a9-47c1-9026-3af2009d231e",
+      "clusterExtId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615",
       "location": 4097,
       "serialNumber": "DISKSERIAL14",
       "model": "KIOXIA KCD8XRUG3T84",
@@ -60,6 +62,8 @@
         }
       ],
       "nodeExtId": "247a477f-b32f-4fc1-83a6-c73172169e73",
+      "storagePoolExtId": "64b62dc3-b8a9-47c1-9026-3af2009d231e",
+      "clusterExtId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615",
       "location": 4099,
       "serialNumber": "DISKSERIAL04",
       "model": "KIOXIA KCD8XRUG3T84",
@@ -103,6 +107,8 @@
         }
       ],
       "nodeExtId": "247a477f-b32f-4fc1-83a6-c73172169e73",
+      "storagePoolExtId": "64b62dc3-b8a9-47c1-9026-3af2009d231e",
+      "clusterExtId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615",
       "location": 4096,
       "serialNumber": "DISKSERIAL01",
       "model": "KIOXIA KCD8XRUG3T84",
@@ -146,6 +152,8 @@
         }
       ],
       "nodeExtId": "247a477f-b32f-4fc1-83a6-c73172169e73",
+      "storagePoolExtId": "64b62dc3-b8a9-47c1-9026-3af2009d231e",
+      "clusterExtId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615",
       "location": 4100,
       "serialNumber": "DISKSERIAL05",
       "model": "KIOXIA KCD8XRUG3T84",
@@ -189,6 +197,8 @@
         }
       ],
       "nodeExtId": "24bce4ff-ea77-4f52-84b2-438552e227be",
+      "storagePoolExtId": "64b62dc3-b8a9-47c1-9026-3af2009d231e",
+      "clusterExtId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615",
       "location": 4100,
       "serialNumber": "DISKSERIAL11",
       "model": "KIOXIA KCD8XRUG3T84",
@@ -232,6 +242,8 @@
         }
       ],
       "nodeExtId": "24bce4ff-ea77-4f52-84b2-438552e227be",
+      "storagePoolExtId": "64b62dc3-b8a9-47c1-9026-3af2009d231e",
+      "clusterExtId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615",
       "location": 4099,
       "serialNumber": "DISKSERIAL10",
       "model": "KIOXIA KCD8XRUG3T84",
@@ -275,6 +287,8 @@
         }
       ],
       "nodeExtId": "247a477f-b32f-4fc1-83a6-c73172169e73",
+      "storagePoolExtId": "64b62dc3-b8a9-47c1-9026-3af2009d231e",
+      "clusterExtId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615",
       "location": 4101,
       "serialNumber": "DISKSERIAL06",
       "model": "KIOXIA KCD8XRUG3T84",
@@ -318,6 +332,8 @@
         }
       ],
       "nodeExtId": "24bce4ff-ea77-4f52-84b2-438552e227be",
+      "storagePoolExtId": "64b62dc3-b8a9-47c1-9026-3af2009d231e",
+      "clusterExtId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615",
       "location": 4097,
       "serialNumber": "DISKSERIAL08",
       "model": "KIOXIA KCD8XRUG3T84",
@@ -361,6 +377,8 @@
         }
       ],
       "nodeExtId": "24bce4ff-ea77-4f52-84b2-438552e227be",
+      "storagePoolExtId": "64b62dc3-b8a9-47c1-9026-3af2009d231e",
+      "clusterExtId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615",
       "location": 4096,
       "serialNumber": "DISKSERIAL07",
       "model": "KIOXIA KCD8XRUG3T84",
@@ -404,6 +422,8 @@
         }
       ],
       "nodeExtId": "24bce4ff-ea77-4f52-84b2-438552e227be",
+      "storagePoolExtId": "64b62dc3-b8a9-47c1-9026-3af2009d231e",
+      "clusterExtId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615",
       "location": 4098,
       "serialNumber": "DISKSERIAL09",
       "model": "KIOXIA KCD8XRUG3T84",
@@ -447,6 +467,8 @@
         }
       ],
       "nodeExtId": "247a477f-b32f-4fc1-83a6-c73172169e73",
+      "storagePoolExtId": "64b62dc3-b8a9-47c1-9026-3af2009d231e",
+      "clusterExtId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615",
       "location": 4097,
       "serialNumber": "DISKSERIAL02",
       "model": "KIOXIA KCD8XRUG3T84",
@@ -490,6 +512,8 @@
         }
       ],
       "nodeExtId": "247a477f-b32f-4fc1-83a6-c73172169e73",
+      "storagePoolExtId": "64b62dc3-b8a9-47c1-9026-3af2009d231e",
+      "clusterExtId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615",
       "location": 4098,
       "serialNumber": "DISKSERIAL03",
       "model": "KIOXIA KCD8XRUG3T84",
@@ -533,6 +557,8 @@
         }
       ],
       "nodeExtId": "387a54c1-7286-49aa-9602-a7e8e889f63c",
+      "storagePoolExtId": "64b62dc3-b8a9-47c1-9026-3af2009d231e",
+      "clusterExtId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615",
       "location": 4099,
       "serialNumber": "DISKSERIAL16",
       "model": "KIOXIA KCD8XRUG3T84",
@@ -576,6 +602,8 @@
         }
       ],
       "nodeExtId": "24bce4ff-ea77-4f52-84b2-438552e227be",
+      "storagePoolExtId": "64b62dc3-b8a9-47c1-9026-3af2009d231e",
+      "clusterExtId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615",
       "location": 4101,
       "serialNumber": "DISKSERIAL12",
       "model": "KIOXIA KCD8XRUG3T84",
@@ -619,6 +647,8 @@
         }
       ],
       "nodeExtId": "387a54c1-7286-49aa-9602-a7e8e889f63c",
+      "storagePoolExtId": "64b62dc3-b8a9-47c1-9026-3af2009d231e",
+      "clusterExtId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615",
       "location": 4101,
       "serialNumber": "DISKSERIAL18",
       "model": "KIOXIA KCD8XRUG3T84",
@@ -662,6 +692,8 @@
         }
       ],
       "nodeExtId": "387a54c1-7286-49aa-9602-a7e8e889f63c",
+      "storagePoolExtId": "64b62dc3-b8a9-47c1-9026-3af2009d231e",
+      "clusterExtId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615",
       "location": 4100,
       "serialNumber": "DISKSERIAL17",
       "model": "KIOXIA KCD8XRUG3T84",
@@ -705,6 +737,8 @@
         }
       ],
       "nodeExtId": "387a54c1-7286-49aa-9602-a7e8e889f63c",
+      "storagePoolExtId": "64b62dc3-b8a9-47c1-9026-3af2009d231e",
+      "clusterExtId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615",
       "location": 4098,
       "serialNumber": "DISKSERIAL15",
       "model": "KIOXIA KCD8XRUG3T84",
@@ -748,6 +782,8 @@
         }
       ],
       "nodeExtId": "387a54c1-7286-49aa-9602-a7e8e889f63c",
+      "storagePoolExtId": "64b62dc3-b8a9-47c1-9026-3af2009d231e",
+      "clusterExtId": "000645cc-2b3a-3b1c-06a8-7cc255ec3615",
       "location": 4096,
       "serialNumber": "DISKSERIAL13",
       "model": "KIOXIA KCD8XRUG3T84",

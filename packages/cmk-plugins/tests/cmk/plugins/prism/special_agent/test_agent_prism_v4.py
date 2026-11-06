@@ -214,7 +214,7 @@ def _serve_recorded_nodes(
             matchers.query_param_matcher(
                 {
                     "$select": "location,model,serialNumber,storageTier,diskAdvanceConfig,"
-                    "extId,nodeExtId"
+                    "extId,nodeExtId,storagePoolExtId,clusterExtId"
                 },
                 strict_match=False,
             ),

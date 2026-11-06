@@ -634,6 +634,34 @@ mod tests {
             assert!(state.source.unwrap().available);
         }
 
+        /// CMK-39594, TC-AU-068: `last_check` records the last answer of the
+        /// site, not the last attempt.
+        #[test]
+        fn test_a_site_that_does_not_answer_leaves_the_last_check() {
+            let host = Host::new();
+            UpdateState {
+                last_check: Some(1_759_276_800),
+                ..host.state()
+            }
+            .save(&host.paths.updater_state_path)
+            .unwrap();
+            let silent = ScriptedApi::new(
+                (0..3)
+                    .map(|_| {
+                        Err(ApiError::Communication(anyhow::anyhow!(
+                            "connection refused"
+                        )))
+                    })
+                    .collect(),
+            );
+
+            for _ in 0..3 {
+                assert!(host.cycle(&silent).is_err());
+            }
+
+            assert_eq!(host.state().last_check, Some(1_759_276_800));
+        }
+
         /// TC-AU-070: a source latched unavailable by a 501 does not resume when the site answers again
         #[test]
         fn test_a_source_latched_by_501_stays_latched() {

@@ -5,8 +5,8 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from collections.abc import Mapping
-from typing import Any
+from collections.abc import Collection, Mapping
+from typing import Any, Literal
 
 from cmk.agent_based.v2 import (
     AgentSection,
@@ -19,8 +19,9 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 from cmk.plugins.prism.lib import load_json
+from cmk.plugins.prism.v4_models import HaHosts
 
-Section = Mapping[str, Mapping[str, Any]]
+Section = Mapping[str, Any]
 
 
 def parse_prism_ha(string_table: StringTable) -> Section:
@@ -30,6 +31,69 @@ def parse_prism_ha(string_table: StringTable) -> Section:
 agent_section_prism_ha = AgentSection(
     name="prism_ha",
     parse_function=parse_prism_ha,
+)
+
+# v4 has no HA object, the cluster's HA state follows from the hypervisor states of its hosts
+_HEALING_STATES = frozenset(
+    {
+        "HA_FAILOVER_SOURCE",
+        "HA_FAILOVER_TARGET",
+        "HA_HEALING_SOURCE",
+        "HA_HEALING_TARGET",
+        "ENTERING_MAINTENANCE_MODE_FROM_HA_FAILOVER",
+    }
+)
+_RESERVED_STATES = frozenset({"RESERVED_FOR_HA_FAILOVER"})
+_KNOWN_STATES = (
+    _HEALING_STATES
+    | _RESERVED_STATES
+    | {
+        "ACROPOLIS_NORMAL",
+        # The reservation isn't in place yet
+        "RESERVING_FOR_HA_FAILOVER",
+        "ENTERING_MAINTENANCE_MODE",
+        "ENTERED_MAINTENANCE_MODE",
+    }
+)
+
+
+def _ha_state_v2(
+    states: Collection[str],
+) -> Literal["HighlyAvailable", "Healing", "BestEffort", "Unknown"]:
+    if not states:
+        # Unlike legacy, the service stays and goes UNKNOWN, so missing host states show
+        return "Unknown"
+    if any(state in _HEALING_STATES for state in states):
+        return "Healing"
+    if any(state in _RESERVED_STATES for state in states):
+        return "HighlyAvailable"
+    return "BestEffort"
+
+
+def parse_prism_ha_v2(string_table: StringTable) -> Section:
+    if not string_table:
+        return {}
+    hosts = HaHosts.model_validate_json(string_table[0][0]).root
+    # Like the legacy agent, HA is only monitored on clusters of AHV hosts
+    if not hosts or any(host.hypervisor.hypervisor_type != "AHV" for host in hosts):
+        return {}
+    return {
+        # v4 can't tell whether HA is enabled
+        "failover_enabled": True,
+        "ha_state": _ha_state_v2(
+            [
+                state
+                for host in hosts
+                if (state := host.hypervisor.state) is not None and state in _KNOWN_STATES
+            ]
+        ),
+    }
+
+
+agent_section_prism_ha_v2 = AgentSection(
+    name="prism_ha_v2",
+    parsed_section_name="prism_ha",
+    parse_function=parse_prism_ha_v2,
 )
 
 

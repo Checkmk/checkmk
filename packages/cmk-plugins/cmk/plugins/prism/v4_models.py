@@ -48,6 +48,21 @@ class Hosts(RootModel[list[Host]]):
     model_config = ConfigDict(frozen=True)
 
 
+class HaHypervisor(V4Model):
+    hypervisor_type: str | None = Field(None, alias="type")
+    state: str | None = None
+
+
+class HaHost(V4Model):
+    """The hypervisor of a host, as written to prism_ha_v2"""
+
+    hypervisor: HaHypervisor = HaHypervisor()
+
+
+class HaHosts(RootModel[list[HaHost]]):
+    model_config = ConfigDict(frozen=True)
+
+
 class AlertParameterValue(V4Model):
     string_value: str | None = Field(None, alias="stringValue")
     int_value: int | None = Field(None, alias="intValue")

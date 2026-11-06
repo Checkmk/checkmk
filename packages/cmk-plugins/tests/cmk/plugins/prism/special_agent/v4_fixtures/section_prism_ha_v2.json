@@ -1,0 +1,20 @@
+[
+  {
+    "hypervisor": {
+      "type": "AHV",
+      "state": "ACROPOLIS_NORMAL"
+    }
+  },
+  {
+    "hypervisor": {
+      "type": "AHV",
+      "state": "ACROPOLIS_NORMAL"
+    }
+  },
+  {
+    "hypervisor": {
+      "type": "AHV",
+      "state": "ACROPOLIS_NORMAL"
+    }
+  }
+]

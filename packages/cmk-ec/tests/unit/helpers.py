@@ -11,6 +11,8 @@ import time
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, override
 
+import pytest
+
 from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ec.config import Config, Count, Replication, Rule, ServiceLevel
 from cmk.ec.core_queries import HostInfo
@@ -25,6 +27,66 @@ HOUR = 3600
 INTERVAL_START = 475_000 * HOUR
 START = INTERVAL_START + 100.0  # a bit after the start of an hour
 MASTER = ("master.example.com", 6558)  # of a replication slave
+
+# Events whose first times are their texts, for TIME_FILTER_CASES
+EVENTS_WITH_FIRST_TIMES: Sequence[Event] = [
+    Event(text=text, first=float(text))
+    for text in ["-1.5", "-0.5", "0.5", "4.5", "5.0", "5.5", "6.0"]
+]
+
+# Filters on the first times of these events and the texts of the events they select, like
+# in Livestatus, which compares the times truncated to integers
+TIME_FILTER_CASES = [
+    pytest.param("=",  "5",  {"5.0", "5.5"},                                   id="equal"),
+    pytest.param("!=", "5",  {"-1.5", "-0.5", "0.5", "4.5", "6.0"},            id="not equal"),
+    pytest.param("<",  "5",  {"-1.5", "-0.5", "0.5", "4.5"},                   id="less"),
+    pytest.param("<=", "5",  {"-1.5", "-0.5", "0.5", "4.5", "5.0", "5.5"},     id="less or equal"),
+    pytest.param(">",  "5",  {"6.0"},                                          id="greater"),
+    pytest.param(">=", "5",  {"5.0", "5.5", "6.0"},                            id="greater or equal"),
+    pytest.param("=",  "0",  {"-0.5", "0.5"},                                  id="truncated toward zero"),
+    pytest.param("<",  "0",  {"-1.5"},                                         id="less than zero"),
+    pytest.param(">",  "-1", {"-0.5", "0.5", "4.5", "5.0", "5.5", "6.0"},      id="greater than a negative number"),
+    pytest.param("<=", "-1", {"-1.5"},                                         id="less or equal to a negative number"),
+]  # fmt: skip
+
+# Events with contact groups, a list column, for LIST_FILTER_CASES. Like an archived orphan,
+# i.e. an event that no rule matched, the one with the text "missing" has none at all. For
+# Livestatus, a last empty string is lost, so it sees ["ops", ""] as ["ops"].
+EVENTS_WITH_CONTACT_GROUPS: Sequence[Event] = [
+    Event(text="missing"),
+    Event(text="none", contact_groups=None),
+    Event(text="empty", contact_groups=[]),
+    Event(text="admins", contact_groups=["admins", "ops"]),
+    Event(text="Admins", contact_groups=["Admins"]),
+    Event(text="empty string", contact_groups=[""]),
+    Event(text="last empty", contact_groups=["ops", ""]),
+    Event(text="first empty", contact_groups=["", "ops"]),
+]
+
+_ALL = {event["text"] for event in EVENTS_WITH_CONTACT_GROUPS}
+
+# Filters on the contact groups and the texts of the events they select, like in Livestatus
+LIST_FILTER_CASES = [
+    pytest.param("=",   "",         {"missing", "none", "empty", "empty string"},      id="empty"),
+    pytest.param("=",   "admins",   set(),                                             id="equal tests only for emptiness"),
+    pytest.param("!=",  "",         {"admins", "Admins", "last empty", "first empty"}, id="not empty"),
+    pytest.param("!=",  "admins",   set(),                                             id="not equal tests only for emptiness"),
+    pytest.param(">=",  "admins",   {"admins"},                                        id="contains"),
+    pytest.param(">=",  "adm",      set(),                                             id="contains only whole elements"),
+    pytest.param(">=",  "",         {"first empty"},                                   id="contains an empty string before the last element"),
+    pytest.param("<",   "admins",   _ALL - {"admins"},                                 id="doesn't contain"),
+    pytest.param("<",   "",         _ALL - {"first empty"},                            id="doesn't contain an empty string before the last element"),
+    pytest.param("<=",  "ADMINS",   {"admins", "Admins"},                              id="contains ignoring case"),
+    pytest.param(">",   "ADMINS",   _ALL - {"admins", "Admins"},                       id="doesn't contain ignoring case"),
+    pytest.param("~",   "^adm",     {"admins"},                                        id="an element matches"),
+    pytest.param("~",   "^(ops)?$", {"admins", "last empty", "first empty"},           id="an element or an empty string before the last one matches"),
+    pytest.param("!~",  "^adm",     _ALL - {"admins"},                                 id="no element matches"),
+    pytest.param("~~",  "^ADM",     {"admins", "Admins"},                              id="an element matches ignoring case"),
+    pytest.param("!~~", "^ADM",     _ALL - {"admins", "Admins"},                       id="no element matches ignoring case"),
+    pytest.param("!~~", "^$",       _ALL - {"first empty"},                            id="no empty string before the last element matches"),
+    pytest.param("=~",  "admins",   set(),                                             id="equal ignoring case never holds"),
+    pytest.param("!=~", "admins",   set(),                                             id="not equal ignoring case never holds"),
+]  # fmt: skip
 
 
 class FakeStatusSocket(socket.socket):

@@ -9,10 +9,18 @@ import pytest
 
 import cmk.ec.export as ec
 from cmk.ccc.hostaddress import HostName
-from cmk.ec.main import EventStatus, StatusServer
+from cmk.ec.main import EventStatus, StatusServer, StatusTableEvents
 from cmk.ec.query import MKClientError
 
-from .helpers import FakeStatusSocket, new_event, query_status_server
+from .helpers import (
+    EVENTS_WITH_CONTACT_GROUPS,
+    EVENTS_WITH_FIRST_TIMES,
+    FakeStatusSocket,
+    LIST_FILTER_CASES,
+    new_event,
+    query_status_server,
+    TIME_FILTER_CASES,
+)
 
 
 def test_handle_client(status_server: StatusServer) -> None:
@@ -342,6 +350,304 @@ def test_columns_are_split_at_ascii_whitespace_like_in_livestatus(
     status_socket = query_status_server(status_server, f"GET events\n{columns_line}")
 
     assert status_socket.get_response() == [["event_text", "event_host"]]
+
+
+def test_empty_columns_header_requests_all_columns_like_in_livestatus(
+    status_server: StatusServer,
+) -> None:
+    status_socket = query_status_server(status_server, "GET events\nColumns:")
+
+    assert status_socket.get_response() == [[name for name, _default in StatusTableEvents.columns]]
+
+
+def test_columns_of_several_headers_add_up_like_in_livestatus(status_server: StatusServer) -> None:
+    status_socket = query_status_server(
+        status_server, "GET events\nColumns: event_text\nColumns:\nColumns: event_host"
+    )
+
+    assert status_socket.get_response() == [["event_text", "event_host"]]
+
+
+def test_header_without_colon_has_no_argument_like_in_livestatus(
+    status_server: StatusServer,
+) -> None:
+    status_socket = query_status_server(status_server, "GET events\nColumns")
+
+    assert status_socket.get_response() == [[name for name, _default in StatusTableEvents.columns]]
+
+
+@pytest.mark.parametrize(
+    "output_format_line",
+    [
+        pytest.param("OutputFormat:\tplain", id="tab"),
+        pytest.param("OutputFormat: plain python", id="further argument"),
+    ],
+)
+def test_output_format_is_the_first_argument_like_in_livestatus(
+    status_server: StatusServer, output_format_line: str
+) -> None:
+    status_socket = query_status_server(
+        status_server, f"GET events\nColumns: event_text\n{output_format_line}"
+    )
+
+    assert status_socket.get_raw_response() == b"event_text\n"
+
+
+@pytest.mark.parametrize(
+    "limit_line",
+    [
+        pytest.param("Limit:\t1", id="tab"),
+        pytest.param("Limit: 1 2", id="further argument"),
+    ],
+)
+def test_limit_is_the_first_argument_like_in_livestatus(
+    event_status: EventStatus, status_server: StatusServer, limit_line: str
+) -> None:
+    for text in ["x", "y"]:
+        event_status.new_event(new_event({"text": text}))
+
+    texts = query_texts_of_events(status_server, limit_line)
+
+    assert len(texts) == 1
+
+
+@pytest.mark.parametrize(
+    "limit",
+    [
+        pytest.param("-1", id="negative"),
+        pytest.param("+1", id="plus sign"),
+        pytest.param("1_000", id="underscore"),
+        pytest.param("\xa01", id="no-break space"),
+        pytest.param("١", id="arabic-indic digit"),
+        pytest.param("2147483648", id="more than 31 bits"),
+        pytest.param("9" * 5000, id="more digits than int() takes"),
+    ],
+)
+def test_limit_is_a_non_negative_int_like_in_livestatus(
+    status_server: StatusServer, limit: str
+) -> None:
+    with pytest.raises(MKClientError, match="Invalid header line"):
+        query_status_server(status_server, f"GET events\nLimit: {limit}")
+
+
+def test_limit_minus_zero_is_zero_like_in_livestatus(
+    event_status: EventStatus, status_server: StatusServer
+) -> None:
+    event_status.new_event(new_event({"text": "x"}))
+
+    texts = query_texts_of_events(status_server, "Limit: -0")
+
+    assert texts == set()
+
+
+def test_limit_with_more_digits_than_int_takes_is_like_in_livestatus(
+    event_status: EventStatus, status_server: StatusServer
+) -> None:
+    event_status.new_event(new_event({"text": "x"}))
+    event_status.new_event(new_event({"text": "y"}))
+
+    texts = query_texts_of_events(status_server, f"Limit: {'0' * 5000}1")
+
+    assert len(texts) == 1
+
+
+@pytest.mark.parametrize(
+    "operator_name, expected_texts",
+    [
+        pytest.param("!<", {"2", "3"}, id="not less"),
+        pytest.param("!>=", {"1"}, id="not greater or equal"),
+        pytest.param("!>", {"1", "2"}, id="not greater"),
+        pytest.param("!<=", {"3"}, id="not less or equal"),
+    ],
+)
+def test_negated_ordering_operators_are_aliases_like_in_livestatus(
+    event_status: EventStatus,
+    status_server: StatusServer,
+    operator_name: str,
+    expected_texts: set[str],
+) -> None:
+    for count in [1, 2, 3]:
+        event_status.new_event(new_event({"text": str(count), "count": count}))
+
+    texts = query_texts_of_events(status_server, f"Filter: event_count {operator_name} 2")
+
+    assert texts == expected_texts
+
+
+@pytest.mark.parametrize(
+    "value, expected_count",
+    [
+        pytest.param("5abc", 5, id="trailing garbage"),
+        pytest.param("abc", 0, id="no number"),
+        pytest.param("1_000", 1, id="underscore"),
+        pytest.param("١", 0, id="arabic-indic digit"),
+        pytest.param("99999999999", 1215752191, id="more than 32 bits"),
+        pytest.param("-99999999999", -1215752191, id="more than 32 bits, negative"),
+        pytest.param("9" * 5000, -1, id="more digits than int() takes"),
+        pytest.param("0" * 5000 + "5", 5, id="more leading zeros than int() takes"),
+    ],
+)
+def test_int_filter_value_is_parsed_like_atoi_in_livestatus(
+    event_status: EventStatus, status_server: StatusServer, value: str, expected_count: int
+) -> None:
+    for count in [-1215752191, -1, 0, 1, 5, 1000, 1215752191]:
+        event_status.new_event(new_event({"text": str(count), "count": count}))
+
+    texts = query_texts_of_events(status_server, f"Filter: event_count = {value}")
+
+    assert texts == {str(expected_count)}
+
+
+@pytest.mark.parametrize(
+    "value, expected_text",
+    [
+        pytest.param("0", "not in downtime", id="false"),
+        pytest.param("1", "in downtime", id="true"),
+    ],
+)
+def test_bool_filter_value_is_parsed_like_an_int_in_livestatus(
+    event_status: EventStatus, status_server: StatusServer, value: str, expected_text: str
+) -> None:
+    event_status.new_event(new_event({"text": "not in downtime", "host_in_downtime": False}))
+    event_status.new_event(new_event({"text": "in downtime", "host_in_downtime": True}))
+
+    texts = query_texts_of_events(status_server, f"Filter: event_host_in_downtime = {value}")
+
+    assert texts == {expected_text}
+
+
+@pytest.mark.parametrize(
+    "value, expected_texts",
+    [
+        pytest.param("1.5", {"1", "2", "1e9"}, id="fraction"),
+        pytest.param("2e9", {"2", "1e9"}, id="exponent"),
+    ],
+)
+def test_time_filter_value_is_parsed_like_atoi_in_livestatus(
+    event_status: EventStatus, status_server: StatusServer, value: str, expected_texts: set[str]
+) -> None:
+    for text, first in [("1", 1.0), ("2", 2.0), ("1e9", 1e9)]:
+        event_status.new_event(new_event({"text": text, "first": first}))
+
+    texts = query_texts_of_events(status_server, f"Filter: event_first >= {value}")
+
+    assert texts == expected_texts
+
+
+# Without any messages, the rate is 0.0, so these filters would select the status the other
+# way round if their value became 0.
+@pytest.mark.parametrize(
+    "filter_line, selected",
+    [
+        pytest.param("Filter: status_message_rate >= 1e3x",   False, id="trailing garbage"),
+        pytest.param("Filter: status_message_rate > -0x1p-2", True,  id="hexadecimal"),
+        pytest.param("Filter: status_message_rate > -inf",    True,  id="infinity"),
+        pytest.param("Filter: status_message_rate > abc",     False, id="no number"),
+    ],
+)  # fmt: skip
+def test_double_filter_value_is_parsed_like_atof_in_livestatus(
+    status_server: StatusServer, filter_line: str, selected: bool
+) -> None:
+    status_socket = query_status_server(
+        status_server, f"GET status\nColumns: status_message_rate\n{filter_line}"
+    )
+
+    _header, *rows = status_socket.get_response()
+    assert bool(rows) is selected
+
+
+@pytest.mark.parametrize(
+    "header_line",
+    [
+        pytest.param("Or: 2", id="Or"),
+        pytest.param("Negate:", id="Negate"),
+        pytest.param("Stats: event_state = 0", id="Stats"),
+        pytest.param("AuthUser: alice", id="AuthUser"),
+        # Unlike Livestatus, even if the EC behaves like that anyway
+        pytest.param("ColumnHeaders: on", id="ColumnHeaders"),
+        pytest.param("KeepAlive: on", id="KeepAlive"),
+        pytest.param("Filter :event_id = 1", id="space in front of the colon"),
+    ],
+)
+def test_header_not_implemented_by_the_event_console_is_rejected(
+    status_server: StatusServer, header_line: str
+) -> None:
+    with pytest.raises(MKClientError, match="Invalid header line"):
+        query_status_server(status_server, f"GET events\n{header_line}")
+
+
+@pytest.mark.parametrize("operator_name, argument, expected_texts", LIST_FILTER_CASES)
+def test_list_column_filter_works_like_in_livestatus(
+    event_status: EventStatus,
+    status_server: StatusServer,
+    operator_name: str,
+    argument: str,
+    expected_texts: set[str],
+) -> None:
+    for event in EVENTS_WITH_CONTACT_GROUPS:
+        event_status.new_event(new_event(event))
+
+    texts = query_texts_of_events(
+        status_server, f"Filter: event_contact_groups {operator_name} {argument}"
+    )
+
+    assert texts == expected_texts
+
+
+def test_in_operator_is_rejected_for_list_columns(status_server: StatusServer) -> None:
+    with pytest.raises(MKClientError, match="Invalid header line"):
+        query_status_server(status_server, "GET events\nFilter: event_contact_groups in admins")
+
+
+@pytest.mark.parametrize(
+    "filter_line",
+    [
+        pytest.param("Filter: event_count < 0",          id="large value wraps to a negative one"),
+        pytest.param("Filter: event_count = 3000000000", id="both values wrap"),
+    ],
+)  # fmt: skip
+def test_int_row_value_is_compared_as_32_bits_like_in_livestatus(
+    event_status: EventStatus, status_server: StatusServer, filter_line: str
+) -> None:
+    event_status.new_event(new_event({"text": "small", "count": 5}))
+    event_status.new_event(new_event({"text": "large", "count": 3_000_000_000}))
+
+    texts = query_texts_of_events(status_server, filter_line)
+
+    assert texts == {"large"}
+
+
+@pytest.mark.parametrize("operator_name, argument, expected_texts", TIME_FILTER_CASES)
+def test_time_filter_compares_the_truncated_time_like_livestatus(
+    event_status: EventStatus,
+    status_server: StatusServer,
+    operator_name: str,
+    argument: str,
+    expected_texts: set[str],
+) -> None:
+    for event in EVENTS_WITH_FIRST_TIMES:
+        event_status.new_event(new_event(event))
+
+    texts = query_texts_of_events(status_server, f"Filter: event_first {operator_name} {argument}")
+
+    assert texts == expected_texts
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        pytest.param("GET events\nFilter: event_state ~ 2",              id="regex on an int column"),
+        pytest.param("GET events\nFilter: event_host_in_downtime !~~ 1", id="regex on a bool column"),
+        pytest.param("GET events\nFilter: event_first =~ 1",             id="equal ignoring case on a time column"),
+        pytest.param("GET status\nFilter: status_message_rate ~ 1",      id="regex on a double column"),
+        pytest.param("GET events\nFilter: event_state in 1 2",           id="in on an int column"),
+    ],
+)  # fmt: skip
+def test_string_operator_is_rejected_for_other_columns(
+    status_server: StatusServer, query: str
+) -> None:
+    with pytest.raises(MKClientError, match="Invalid header line"):
+        query_status_server(status_server, query)
 
 
 @pytest.mark.parametrize(

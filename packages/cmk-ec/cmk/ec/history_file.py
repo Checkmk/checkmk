@@ -19,7 +19,7 @@ from .config import Config
 from .event import Event, scrub_string
 from .history import _log_event, ActiveHistoryPeriod, get_logfile, History, HistoryWhat, quote_tab
 from .log_level import VERBOSE
-from .query import Columns, OperatorName, QueryFilter, QueryGET
+from .query import Columns, OperatorName, QueryFilter, QueryGET, time_conditions
 from .settings import Settings
 
 
@@ -90,10 +90,7 @@ class FileHistory(History):
         time_filters = [
             (f.operator_name, f.argument) for f in filters if f.column_name.split("_")[-1] == "time"
         ]
-        time_range = (
-            _greatest_lower_bound_for_filters(time_filters),
-            _least_upper_bound_for_filters(time_filters),
-        )
+        time_range = _time_range(time_filters)
         self._logger.debug("time range: %(time_range)r", {"time_range": time_range})
 
         # We do not want to open all files. So our strategy is:
@@ -243,48 +240,24 @@ def _grep_pattern(argument: str) -> str:
     return f"-e {shlex.quote(argument)}"
 
 
-def _greatest_lower_bound_for_filters(
-    filters: Iterable[tuple[OperatorName, float]],
-) -> float | None:
-    result: float | None = None
-    for operator, value in filters:
-        glb = _greatest_lower_bound_for_filter(operator, value)
-        if glb is not None:
-            result = glb if result is None else max(result, glb)
-    return result
+def _time_range(
+    time_filters: Iterable[tuple[OperatorName, int]],
+) -> tuple[float | None, float | None]:
+    """An interval with all the times which the filters select, for skipping history files
 
-
-def _greatest_lower_bound_for_filter(operator: OperatorName, value: float) -> float | None:
-    match operator:
-        case "=":
-            return value
-        case ">=":
-            return value
-        case ">":
-            return value + 1
-        case "!=" | "~" | "!~" | "=~" | "!=~" | "~~" | "!~~" | "<" | "<=" | "in":
-            return None
-
-
-def _least_upper_bound_for_filters(filters: Iterable[tuple[OperatorName, float]]) -> float | None:
-    result: float | None = None
-    for operator, value in filters:
-        lub = _least_upper_bound_for_filter(operator, value)
-        if lub is not None:
-            result = lub if result is None else min(result, lub)
-    return result
-
-
-def _least_upper_bound_for_filter(operator: OperatorName, value: float) -> float | None:
-    match operator:
-        case "=":
-            return value
-        case "<":
-            return value - 1
-        case "<=":
-            return value
-        case "!=" | "~" | "!~" | "=~" | "!=~" | "~~" | "!~~" | ">=" | ">" | "in":
-            return None
+    Like Livestatus, the filters compare the times truncated to integers, so e.g. "<= 5"
+    holds for 5.9, too, and "= 0" for -0.5, see time_conditions(). "!=" has no bounds."""
+    lower: float | None = None
+    upper: float | None = None
+    for operator_name, value in time_filters:
+        if operator_name == "!=":
+            continue
+        for condition, bound in time_conditions(operator_name, value):
+            if condition in {">", ">="}:
+                lower = bound if lower is None else max(lower, bound)
+            else:
+                upper = bound if upper is None else min(upper, bound)
+    return lower, upper
 
 
 def _intersects(

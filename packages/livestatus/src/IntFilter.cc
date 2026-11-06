@@ -17,8 +17,7 @@
 #include "livestatus/opids.h"
 
 // We parse the value leniently, e.g. "5.0" as 5, so we keep the int we actually
-// compare with as the filter's value, e.g. for forwarding it to the EC, which
-// isn't lenient.
+// compare with as the filter's value, e.g. for forwarding it to the EC.
 IntFilter::IntFilter(Kind kind, std::string columnName, function_type f,
                      RelationalOperator relOp, const std::string &value)
     : ColumnFilter{kind, std::move(columnName), relOp,

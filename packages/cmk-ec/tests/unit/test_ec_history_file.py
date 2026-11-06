@@ -30,6 +30,13 @@ from cmk.ec.history_file import (
 from cmk.ec.main import StatusTableHistory
 from cmk.ec.query import QueryFilter, QueryGET, StatusTable
 
+from .helpers import (
+    EVENTS_WITH_CONTACT_GROUPS,
+    EVENTS_WITH_FIRST_TIMES,
+    LIST_FILTER_CASES,
+    TIME_FILTER_CASES,
+)
+
 
 def test_file_add_get(history: FileHistory) -> None:
     """Add 2 documents to history, get filtered result with 1 document."""
@@ -58,6 +65,49 @@ def test_file_add_get(history: FileHistory) -> None:
     column_index = get_table("history").column_names.index
     assert row[column_index("history_what")] == "NEW"
     assert row[column_index("event_host")] == "ABC1"
+
+
+@pytest.mark.parametrize("operator_name, argument, expected_texts", TIME_FILTER_CASES)
+def test_time_filter_compares_the_truncated_time_like_livestatus(
+    history: FileHistory, operator_name: str, argument: str, expected_texts: set[str]
+) -> None:
+    for event in EVENTS_WITH_FIRST_TIMES:
+        history.add(event=event, what="NEW")
+    logger = logging.getLogger("cmk.mkeventd")
+    table = StatusTableHistory(logger, history)
+    query = QueryGET(
+        lambda _name: table,
+        [
+            "GET history",
+            "Columns: event_text",
+            f"Filter: event_first {operator_name} {argument}",
+        ],
+        logger,
+    )
+
+    _header, *rows = table.query(query)
+
+    assert {text for (text,) in rows} == expected_texts
+
+
+# Like in Livestatus, the time 1500000000.5 counts as 1500000000.
+@pytest.mark.parametrize("time_filter", ["= 1500000000", "<= 1500000000", "< 1500000001"])
+def test_history_file_with_entries_of_the_filtered_second_is_searched(
+    history: FileHistory, time_filter: str
+) -> None:
+    with time_machine.travel(1_500_000_000.5, tick=False):
+        history.add(event=ec.Event(text="in the second"), what="NEW")
+    logger = logging.getLogger("cmk.mkeventd")
+    table = StatusTableHistory(logger, history)
+    query = QueryGET(
+        lambda _name: table,
+        ["GET history", "Columns: event_text", f"Filter: history_time {time_filter}"],
+        logger,
+    )
+
+    _header, *rows = table.query(query)
+
+    assert rows == [["in the second"]]
 
 
 @pytest.mark.parametrize(
@@ -113,6 +163,29 @@ def test_regex_filter_selects_all_history_entries_whose_value_matches(
     query = QueryGET(
         lambda _name: table,
         ["GET history", "Columns: event_text", f"Filter: event_text {operator_name} {argument}"],
+        logger,
+    )
+
+    _header, *rows = table.query(query)
+
+    assert {text for (text,) in rows} == expected_texts
+
+
+@pytest.mark.parametrize("operator_name, argument, expected_texts", LIST_FILTER_CASES)
+def test_list_column_filter_works_like_in_livestatus(
+    history: FileHistory, operator_name: str, argument: str, expected_texts: set[str]
+) -> None:
+    for event in EVENTS_WITH_CONTACT_GROUPS:
+        history.add(event=event, what="NEW")
+    logger = logging.getLogger("cmk.mkeventd")
+    table = StatusTableHistory(logger, history)
+    query = QueryGET(
+        lambda _name: table,
+        [
+            "GET history",
+            "Columns: event_text",
+            f"Filter: event_contact_groups {operator_name} {argument}",
+        ],
         logger,
     )
 

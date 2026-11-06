@@ -15,6 +15,13 @@ from cmk.ec.history_sqlite import filters_to_sqlite_query, SQLiteHistory
 from cmk.ec.main import StatusTableHistory
 from cmk.ec.query import QueryFilter, QueryGET, StatusTable
 
+from .helpers import (
+    EVENTS_WITH_CONTACT_GROUPS,
+    EVENTS_WITH_FIRST_TIMES,
+    LIST_FILTER_CASES,
+    TIME_FILTER_CASES,
+)
+
 
 def in_memory_db() -> sqlite3.Connection:
     con = sqlite3.connect(":memory:")
@@ -281,6 +288,29 @@ def test_negated_filter_selects_history_entries_without_a_value(
     assert {text for (text,) in rows} == {"unknown", "other"}
 
 
+@pytest.mark.parametrize("operator_name, argument, expected_texts", LIST_FILTER_CASES)
+def test_list_column_filter_works_like_in_livestatus(
+    history_sqlite: SQLiteHistory, operator_name: str, argument: str, expected_texts: set[str]
+) -> None:
+    for event in EVENTS_WITH_CONTACT_GROUPS:
+        history_sqlite.add(event=event, what="NEW")
+    logger = logging.getLogger("cmk.mkeventd")
+    table = StatusTableHistory(logger, history_sqlite)
+    query = QueryGET(
+        lambda _name: table,
+        [
+            "GET history",
+            "Columns: event_text",
+            f"Filter: event_contact_groups {operator_name} {argument}",
+        ],
+        logger,
+    )
+
+    _header, *rows = table.query(query)
+
+    assert {text for (text,) in rows} == expected_texts
+
+
 def test_filtered_history_query_with_limit_returns_only_that_many_newest_entries(
     history_sqlite: SQLiteHistory,
 ) -> None:
@@ -297,6 +327,29 @@ def test_filtered_history_query_with_limit_returns_only_that_many_newest_entries
     _header, *rows = table.query(query)
 
     assert rows == [["four"], ["three"]]
+
+
+@pytest.mark.parametrize("operator_name, argument, expected_texts", TIME_FILTER_CASES)
+def test_time_filter_compares_the_truncated_time_like_livestatus(
+    history_sqlite: SQLiteHistory, operator_name: str, argument: str, expected_texts: set[str]
+) -> None:
+    for event in EVENTS_WITH_FIRST_TIMES:
+        history_sqlite.add(event=event, what="NEW")
+    logger = logging.getLogger("cmk.mkeventd")
+    table = StatusTableHistory(logger, history_sqlite)
+    query = QueryGET(
+        lambda _name: table,
+        [
+            "GET history",
+            "Columns: event_text",
+            f"Filter: event_first {operator_name} {argument}",
+        ],
+        logger,
+    )
+
+    _header, *rows = table.query(query)
+
+    assert {text for (text,) in rows} == expected_texts
 
 
 def test_history_query_with_empty_in_filter_returns_no_entries(

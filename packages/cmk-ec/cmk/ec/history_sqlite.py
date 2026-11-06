@@ -24,7 +24,7 @@ from .config import Config
 from .event import Event
 from .history import History, HistoryWhat
 from .log_level import VERBOSE
-from .query import Columns, QueryFilter, QueryGET
+from .query import Columns, LIST_COLUMNS, QueryFilter, QueryGET, TIME_COLUMNS, time_conditions
 from .settings import Options, Paths, Settings
 
 TABLE_COLUMNS: Final = (
@@ -113,13 +113,17 @@ def filters_to_sqlite_query(filters: Iterable[QueryFilter]) -> tuple[str, list[o
         if adjusted_column_name not in TABLE_COLUMNS:
             raise ValueError(f"Filter {f.column_name} not implemented for SQLite")
 
-        if f.operator_name == "in":
-            query_arguments.extend(f.argument)
+        if f.column_name in LIST_COLUMNS:
+            condition, arguments = _list_filter_to_sqlite_filter(f, adjusted_column_name)
+        elif f.column_name in TIME_COLUMNS:
+            condition, arguments = _time_filter_to_sqlite_filter(f, adjusted_column_name)
         else:
-            query_arguments.append(f.argument)
+            condition = query_filter_to_sqlite_filter(f, adjusted_column_name)
+            arguments = list(f.argument) if f.operator_name == "in" else [f.argument]
 
         query_columns.add(adjusted_column_name)
-        query_conditions.append(query_filter_to_sqlite_filter(f, adjusted_column_name))
+        query_conditions.append(condition)
+        query_arguments.extend(arguments)
 
     return (
         f"SELECT * FROM history {'WHERE' if query_conditions else ''} {' AND '.join(query_conditions)}",  # nosec B608 # BNS:6b6392
@@ -156,6 +160,61 @@ def query_filter_to_sqlite_filter(f: QueryFilter, adjusted_column_name: str) -> 
             return f"{adjusted_column_name} <= ?"
         case "in":
             return f"{adjusted_column_name} in ({','.join(['?'] * len(f.argument))})"
+
+
+def _time_filter_to_sqlite_filter(
+    f: QueryFilter, adjusted_column_name: str
+) -> tuple[str, list[object]]:
+    """The condition and its arguments for a filter on a time column, which compares the time
+    truncated to an integer like Livestatus, see time_conditions() in cmk.ec.query. Unlike
+    CAST(), the conditions on the time itself can use the index of the column."""
+    conditions = time_conditions(f.operator_name, f.argument)
+    condition = " AND ".join(f"{adjusted_column_name} {op} ?" for op, _value in conditions)
+    if f.operator_name == "!=":
+        # Like IS NOT for the other columns, keep NULLs, just like Python's != keeps None.
+        condition = f"({adjusted_column_name} IS NULL OR NOT ({condition}))"
+    return condition, [value for _op, value in conditions]
+
+
+def _list_filter_to_sqlite_filter(
+    f: QueryFilter, adjusted_column_name: str
+) -> tuple[str, list[object]]:
+    """The condition and its arguments for a filter on a list column, i.e. a JSON array, which
+    work like in Livestatus, see _list_predicate() in cmk.ec.query"""
+    # The history stores the default "" for an event without the column, e.g. an archived
+    # orphan, which json_each() rejects as malformed JSON, so it becomes NULL, i.e. no elements.
+    column = f"NULLIF({adjusted_column_name}, '')"
+    # Like for Livestatus, a last empty string is no element, see _list_elements() in
+    # cmk.ec.query.
+    elements = (
+        f"SELECT value FROM json_each({column})"  # nosec B608 # BNS:6b6392
+        f" WHERE NOT (key = json_array_length({column}) - 1 AND value IS '')"
+    )
+    # The whole element ignoring case, like =~ for the other columns
+    whole_element = rf"\A{re.escape(str(f.argument))}\Z"
+    match f.operator_name:
+        case "=" if f.argument == "":
+            return f"NOT EXISTS ({elements})", []
+        case "!=" if f.argument == "":
+            return f"EXISTS ({elements})", []
+        case ">=":
+            return f"EXISTS ({elements} AND value = ?)", [f.argument]
+        case "<":
+            return f"NOT EXISTS ({elements} AND value = ?)", [f.argument]
+        case "<=":
+            return f"EXISTS ({elements} AND regexp_nocase(?, value))", [whole_element]
+        case ">":
+            return f"NOT EXISTS ({elements} AND regexp_nocase(?, value))", [whole_element]
+        case "~":
+            return f"EXISTS ({elements} AND value REGEXP ?)", [f.argument]
+        case "!~":
+            return f"NOT EXISTS ({elements} AND value REGEXP ?)", [f.argument]
+        case "~~":
+            return f"EXISTS ({elements} AND regexp_nocase(?, value))", [f.argument]
+        case "!~~":
+            return f"NOT EXISTS ({elements} AND regexp_nocase(?, value))", [f.argument]
+        case _:  # = and != with a value, =~ and !=~
+            return "0", []
 
 
 @dataclass

@@ -7,6 +7,7 @@
 
 
 import abc
+import math
 import operator
 import re
 import string
@@ -41,6 +42,8 @@ Columns = Sequence[tuple[str, float | int | str | Sequence[object]]]
 # - When loading the status file add the possibly missing column to all
 #   loaded events (load_status())
 # - Maybe add matching/rewriting for the new column
+# - add it to TIME_COLUMNS or LIST_COLUMNS below if Livestatus has it as a time or
+#   a list column
 # - write the actual code using the new column
 # web:
 # - Add column painter for the new column
@@ -104,6 +107,124 @@ def _ascii_split(text: str) -> list[str]:
     """Like str.split() without a separator, but only at the whitespace of Livestatus"""
     stripped = text.strip(_ASCII_WHITESPACE)
     return re.split(r"\s+", stripped, flags=re.ASCII) if stripped else []
+
+
+def _first_argument(text: str) -> str:
+    """The first of the arguments separated by ASCII whitespace, like in Livestatus"""
+    return (_ascii_split(text) or [""])[0]
+
+
+def _non_negative_integer(text: str) -> int:
+    """Like nextNonNegativeIntegerArgument() of Livestatus, which uses std::from_chars(): An
+    optional minus and ASCII digits, at most 2**31 - 1 and not negative. int() takes e.g.
+    "+1", "1_000" or "\\u0661", too, but at most 4300 digits, even with leading zeros."""
+    digits = text.removeprefix("-").lstrip("0")
+    if (
+        re.fullmatch("-?[0-9]+", text) is None
+        or len(digits) > 10
+        or not 0 <= (value := int(digits or "0") * (-1 if text.startswith("-") else 1)) < 2**31
+    ):
+        raise MKClientError(f"Expected a non-negative integer instead of '{text}'")
+    return value
+
+
+# With re.ASCII, \s is exactly _ASCII_WHITESPACE.
+_ATOI = re.compile(r"\s*([+-]?)([0-9]+)", re.ASCII)
+
+
+def _int32(number: int) -> int:
+    """Like strtol() clamps a number to 64 bits and a conversion to int32_t keeps its lower
+    32 bits, which Livestatus does for the values of filters and rows of int columns"""
+    clamped = min(max(number, -(2**63)), 2**63 - 1)
+    return (clamped + 2**31) % 2**32 - 2**31
+
+
+def _atoi(text: str) -> int:
+    """Like atoi() of glibc, which Livestatus uses for the values of int and time columns:
+    The number at the start, else 0, as a 32-bit int."""
+    if (match := _ATOI.match(text)) is None:
+        return 0
+    sign, digits = match[1], match[2].lstrip("0")
+    # More digits are beyond the 64 bits anyway, and int() takes at most 4300.
+    magnitude = int(digits or "0") if len(digits) <= 19 else 2**64
+    return _int32(-magnitude if sign == "-" else magnitude)
+
+
+_ATOF = re.compile(
+    r"""\s*
+    (?P<number>[+-]?(?:
+        (?P<hex>0[xX](?:[0-9a-fA-F]+\.?[0-9a-fA-F]*|\.[0-9a-fA-F]+)(?:[pP][+-]?[0-9]+)?)
+        | (?:[0-9]+\.?[0-9]*|\.[0-9]+)(?:[eE][+-]?[0-9]+)?
+        | [iI][nN][fF](?:[iI][nN][iI][tT][yY])?
+        | [nN][aA][nN](?:\([0-9a-zA-Z_]*\))?
+    ))""",
+    re.VERBOSE | re.ASCII,
+)
+
+
+def _atof(text: str) -> float:
+    """Like atof() of glibc in the C locale, which Livestatus uses for the values of double
+    columns: The number at the start, also hexadecimal, infinite or NaN, else 0"""
+    if (match := _ATOF.match(text)) is None:
+        return 0.0
+    number = match["number"]
+    if match["hex"] is not None:
+        try:
+            return float.fromhex(number)
+        except OverflowError:  # strtod() returns an infinity instead
+            return float("-inf" if number.startswith("-") else "inf")
+    return float(number.partition("(")[0])
+
+
+# The float columns which Livestatus has as time columns, the others are double columns.
+TIME_COLUMNS = frozenset(
+    {"event_first", "event_last", "history_time", "status_replication_last_sync"}
+)
+
+# The columns which Livestatus has as list columns, see TableEventConsole*.cc. Their
+# filters work like in Livestatus, see _list_predicate().
+LIST_COLUMNS = frozenset(
+    {
+        "event_contact_groups",
+        "event_match_groups",
+        "event_match_groups_syslog_application",
+        "status_event_limit_active_hosts",
+        "status_event_limit_active_rules",
+    }
+)
+
+
+def _filter_value(column_name: str, column_type: type[Any], text: str) -> object:
+    """Converts the value of a filter like Livestatus, which has our bool columns as int
+    columns, parses numbers via atoi() and atof(), and takes the value of a list column
+    as it is"""
+    if column_name in LIST_COLUMNS:
+        return text
+    if issubclass(column_type, int):
+        return _atoi(text)
+    if issubclass(column_type, float):
+        return _atoi(text) if column_name in TIME_COLUMNS else _atof(text)
+    return column_type(text)
+
+
+def _int_of_row(value: object) -> object:
+    """Like Livestatus gets an int or a bool from us: via atol() as an int32_t"""
+    return _int32(value) if isinstance(value, int) else value
+
+
+def _time_of_row(value: object) -> object:
+    """Like Livestatus gets a time from us: as a time_t, i.e. truncated to an integer"""
+    return int(value) if isinstance(value, float) and math.isfinite(value) else value
+
+
+def _row_value(column_name: str, column_type: type[Any]) -> Callable[[object], object] | None:
+    """How to make the value of a row like the one of Livestatus for comparing it with the
+    value of a filter, None if it is the same already"""
+    if issubclass(column_type, int):
+        return _int_of_row
+    if issubclass(column_type, float) and column_name in TIME_COLUMNS:
+        return _time_of_row
+    return None
 
 
 def request_lines(request: bytes) -> list[str]:
@@ -221,8 +342,95 @@ _filter_operators: dict[str, _Operator] = {
     ">=": (">=", _unchanged, operator.ge),
     ">": (">", _unchanged, operator.gt),
     "<=": ("<=", _unchanged, operator.le),
+    # aliases of Livestatus
+    "!<": (">=", _unchanged, operator.ge),
+    "!>=": ("<", _unchanged, operator.lt),
+    "!>": ("<=", _unchanged, operator.le),
+    "!<=": (">", _unchanged, operator.gt),
+    # Unlike the other operators, Livestatus doesn't know this one.
     "in": ("in", _lowered_set, filter_operator_in),
 }
+
+
+# The operators which only string columns have, see _parse_filter(). List columns have
+# their own, see _list_predicate().
+_STRING_OPERATORS = frozenset({"~", "!~", "=~", "!=~", "~~", "!~~", "in"})
+
+
+TimeCondition = tuple[Literal["<", "<=", ">", ">="], int]
+
+
+def _truncated_at_least(value: int) -> TimeCondition:
+    """The condition on a time for being at least the value when truncated"""
+    return (">=", value) if value > 0 else (">", value - 1)
+
+
+def _truncated_less_than(value: int) -> TimeCondition:
+    """The condition on a time for being less than the value when truncated"""
+    return ("<", value) if value > 0 else ("<=", value - 1)
+
+
+def time_conditions(operator_name: OperatorName, value: int) -> list[TimeCondition]:
+    """The conditions on a time which hold together exactly when the time truncated to an
+    integer, like Livestatus has it, satisfies a filter with the operator and the value. For
+    the histories, which filter times themselves. For !=, they are the conditions for =."""
+    match operator_name:
+        case "=" | "!=":
+            return [_truncated_at_least(value), _truncated_less_than(value + 1)]
+        case ">=":
+            return [_truncated_at_least(value)]
+        case ">":
+            return [_truncated_at_least(value + 1)]
+        case "<":
+            return [_truncated_less_than(value)]
+        case "<=":
+            return [_truncated_less_than(value + 1)]
+        case _:
+            raise ValueError(f"Operator '{operator_name}' not implemented for time columns")
+
+
+def _list_elements(value: object) -> Sequence[object]:
+    """The elements of a value of a list column like Livestatus gets them: None and a missing
+    value ("") have none, and a last empty string is lost, see quote_tab() in cmk.ec.history
+    and ec::split_list() of Livestatus."""
+    if isinstance(value, str) or not isinstance(value, Iterable):
+        return ()
+    # No copy for the usual lists and tuples, this runs for every event.
+    elements = value if isinstance(value, Sequence) else tuple(value)
+    return elements[:-1] if elements and elements[-1] == "" else elements
+
+
+def _has_element(value: object, predicate: Callable[[str], object]) -> bool:
+    return any(isinstance(e, str) and predicate(e) for e in _list_elements(value))
+
+
+def _list_predicate(operator_name: OperatorName, argument: str) -> Callable[[object], bool]:
+    """Filters a list column like ListFilter of Livestatus: = and != test only whether the
+    list is empty, >= and <= whether it contains the argument, <= ignoring case, < and >
+    the opposite, the regex operators whether an element matches, and =~ and !=~ never
+    hold. There's no "in" for list columns."""
+    match operator_name:
+        case "=":
+            return lambda value: argument == "" and not _has_element(value, lambda _e: True)
+        case "!=":
+            return lambda value: argument == "" and _has_element(value, lambda _e: True)
+        case ">=":
+            return lambda value: _has_element(value, lambda e: e == argument)
+        case "<":
+            return lambda value: not _has_element(value, lambda e: e == argument)
+        case "<=" | ">":
+            equal = re.compile(re.escape(argument), re.IGNORECASE).fullmatch
+            contained = operator_name == "<="
+            return lambda value: _has_element(value, equal) == contained
+        case "~" | "!~" | "~~" | "!~~":
+            flags = re.IGNORECASE if operator_name in {"~~", "!~~"} else re.NOFLAG
+            search = re.compile(argument, flags).search
+            matching = operator_name in {"~", "~~"}
+            return lambda value: _has_element(value, search) == matching
+        case "=~" | "!=~":
+            return lambda _value: False
+        case "in":
+            raise MKClientError("The operator 'in' is not implemented for list columns")
 
 
 # The column, the operator and the argument, split like Livestatus does: Only ASCII
@@ -243,35 +451,43 @@ class QueryGET(Query):
     ) -> None:
         super().__init__(raw_query, logger)
         self.table = get_table(self.method_arg)
-        self.requested_columns = self.table.column_names
+        self.requested_columns: list[str] = []
         # NOTE: history's _get_mongodb and _get_files access filters and limits directly.
         self.filters: list[QueryFilter] = []
         self.limit: int | None = None
-        self._parse_header_lines(raw_query, logger)
+        self._parse_header_lines(raw_query)
+        # Like in Livestatus, no columns at all means all of them.
+        if not self.requested_columns:
+            self.requested_columns = self.table.column_names
 
-    def _parse_header_lines(self, raw_query: list[str], logger: Logger) -> None:
+    def _parse_header_lines(self, raw_query: list[str]) -> None:
         for line in raw_query[1:]:
             try:
-                header, argument = line.split(":", 1)
-                self._parse_header_line(header, argument.lstrip(_ASCII_WHITESPACE), logger)
+                # Like in Livestatus, a line without a colon is a header without argument.
+                header, _colon, argument = line.partition(":")
+                self._parse_header_line(header, argument.lstrip(_ASCII_WHITESPACE))
             except Exception as e:
                 raise MKClientError(f"Invalid header line '{line.rstrip()}'") from e
 
-    def _parse_header_line(self, header: str, argument: str, logger: Logger) -> None:
+    def _parse_header_line(self, header: str, argument: str) -> None:
         if header == "OutputFormat":
-            if argument not in {"python", "plain", "json"}:
+            output_format = _first_argument(argument)
+            if output_format not in {"python", "plain", "json"}:
                 raise MKClientError(
-                    f'Invalid output format "{argument}" (allowed are: python, plain, json)'
+                    f'Invalid output format "{output_format}" (allowed are: python, plain, json)'
                 )
-            self.output_format = argument
+            self.output_format = output_format
         elif header == "Columns":
-            self.requested_columns = _ascii_split(argument)
+            # Like in Livestatus, the columns of several headers add up.
+            self.requested_columns += _ascii_split(argument)
         elif header == "Filter":
             self.filters.append(self._parse_filter(argument))
         elif header == "Limit":
-            self.limit = int(argument)
+            self.limit = _non_negative_integer(_first_argument(argument))
         else:
-            logger.info("Ignoring not-implemented header %(header)s", {"header": header})
+            # Like Livestatus does for unknown headers, we reject the ones we don't
+            # implement, e.g. "Or:", instead of answering something else than asked for.
+            raise MKClientError(f"Undefined request header '{header}'")
 
     def _parse_filter(self, textspec: str) -> QueryFilter:
         """Examples:
@@ -286,33 +502,49 @@ class QueryGET(Query):
         column, operator_name, raw_argument = match[1], match[2], match[3]
 
         try:
-            convert = self.table.column_types[column]
+            column_type = self.table.column_types[column]
         except KeyError as e:
             raise MKClientError(
                 f"Unknown column: {column} (Available are: {self.table.column_names})"
             ) from e
 
         op_name, prepare, compare = _operator(operator_name)
+        if (
+            op_name in _STRING_OPERATORS
+            and column not in LIST_COLUMNS
+            and not issubclass(column_type, str)
+        ):
+            # Livestatus uses the regex operators as bit mask operators for int columns, and
+            # they select nothing for double columns. Fail now instead of in the middle of
+            # the reply, where the client can't tell a failure from the end of the reply.
+            raise MKClientError(f"Operator '{op_name}' not implemented for column '{column}'")
         # TODO: BUG: The query is decoded to unicode after receiving it from
         # the socket. The columns with type str (initialized with "") will apply
         # str(argument) here and convert the value back to str! This will crash
         # when the filter contains non ascii characters!
         # Fix this by making the default values unicode and skip unicode conversion
         # here (for performance reasons) because argument is already unicode.
-        # TODO: Fix the typing chaos below!
         argument = (
-            [convert(arg) for arg in _ascii_split(raw_argument)]  # type: ignore[call-arg]
+            [_filter_value(column, column_type, arg) for arg in _ascii_split(raw_argument)]
             if op_name == "in"
-            else convert(raw_argument)  # type: ignore[call-arg]
+            else _filter_value(column, column_type, raw_argument)
         )
         # Prepared once instead of for each row. A regex fails to compile now instead of
         # in the middle of the reply, where the client can't tell a failure from its end.
-        prepared = prepare(argument)
+        prepared = prepare(argument) if column not in LIST_COLUMNS else None
+        row_value = _row_value(column, column_type)
+        predicate: Callable[[object], bool] = (
+            _list_predicate(op_name, raw_argument)
+            if column in LIST_COLUMNS
+            else (lambda x: compare(x, prepared))
+            if row_value is None
+            else (lambda x: compare(row_value(x), prepared))
+        )
 
         return QueryFilter(
             column_name=column,
             operator_name=op_name,
-            predicate=lambda x: compare(x, prepared),
+            predicate=predicate,
             argument=argument,
         )
 

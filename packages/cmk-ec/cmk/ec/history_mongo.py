@@ -17,7 +17,7 @@ from typing import Any, Literal, override
 from .config import Config
 from .event import Event
 from .history import _log_event, History
-from .query import Columns, QueryFilter, QueryGET
+from .query import Columns, QueryFilter, QueryGET, TIME_COLUMNS, time_conditions
 from .settings import Settings
 
 HistoryWhat = Literal[
@@ -90,7 +90,7 @@ class MongoDBHistory(History):
 
         # Construct the mongodb filtering specification. We could fetch all information
         # and do filtering on this data, but this would be way too inefficient.
-        mongo_query = filters_to_mongo_query(query.filters)
+        mongo_query = filters_to_mongo_query(query.filters, dict(self._event_columns))
 
         result = self._mongodb.db.ec_archive.find(mongo_query).sort("time", -1)
 
@@ -134,7 +134,7 @@ class MongoDBHistory(History):
 
 
 def filters_to_mongo_query(
-    filters: Iterable[QueryFilter],
+    filters: Iterable[QueryFilter], event_defaults: Mapping[str, object]
 ) -> dict[str, object]:
     """Construct the mongodb filtering specification."""
     mongo_query: dict[str, object] = {}
@@ -148,7 +148,14 @@ def filters_to_mongo_query(
                 key = "_id"
         else:
             raise Exception(f"Filter {f.column_name} not implemented for MongoDB")
-        mongo_filter = query_filter_to_mongo_filter(f)
+        mongo_filter: str | dict[str, object]
+        if f.column_name in TIME_COLUMNS:
+            mongo_filter = _time_filter_to_mongo_filter(f)
+        # The default of an event column tells its type, the history columns have none.
+        elif isinstance(event_defaults.get(f.column_name), bool):
+            mongo_filter = _bool_filter_to_mongo_filter(f)
+        else:
+            mongo_filter = query_filter_to_mongo_filter(f)
         # A key can occur only once in a query document, so further conditions
         # for the same key need an explicit $and.
         if key in mongo_query:
@@ -189,6 +196,25 @@ def query_filter_to_mongo_filter(f: QueryFilter) -> str | dict[str, object]:
             return {"$lte": f.argument}
         case "in":
             return {"$in": f.argument}
+
+
+_MONGO_COMPARISONS = {"<": "$lt", "<=": "$lte", ">": "$gt", ">=": "$gte"}
+
+
+def _time_filter_to_mongo_filter(f: QueryFilter) -> dict[str, object]:
+    """A filter on a time column, which compares the time truncated to an integer like
+    Livestatus, see time_conditions() in cmk.ec.query"""
+    conditions: dict[str, object] = {
+        _MONGO_COMPARISONS[op]: value for op, value in time_conditions(f.operator_name, f.argument)
+    }
+    return {"$not": conditions} if f.operator_name == "!=" else conditions
+
+
+def _bool_filter_to_mongo_filter(f: QueryFilter) -> dict[str, object]:
+    """A filter on a bool column, which Livestatus has as an int column, so its value is an
+    int, but in MongoDB, no boolean equals a number. So we select the booleans the filter
+    selects."""
+    return {"$in": [value for value in (False, True) if f.predicate(value)]}
 
 
 def _case_insensitive_equality(argument: str) -> re.Pattern[str]:

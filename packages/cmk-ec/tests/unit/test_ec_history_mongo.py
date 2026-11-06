@@ -12,9 +12,13 @@ import pytest
 
 import cmk.ec.export as ec
 from cmk.ccc.hostaddress import HostName
+from cmk.ec.history import History
+from cmk.ec.history_file import FileHistory
 from cmk.ec.history_mongo import filters_to_mongo_query, MongoDBHistory
-from cmk.ec.main import StatusTableHistory
+from cmk.ec.main import StatusTableEvents, StatusTableHistory
 from cmk.ec.query import OperatorName, QueryFilter, QueryGET, StatusTable
+
+from .helpers import EVENTS_WITH_FIRST_TIMES, TIME_FILTER_CASES
 
 requires_mongodb = pytest.mark.skipif(
     os.getenv("MONGODB_CONNECTION_STRING") is None,
@@ -90,6 +94,23 @@ def test_history_query_applies_all_filters_on_the_same_column(
     assert rows == [[2]]
 
 
+EVENT_DEFAULTS = dict(StatusTableEvents.columns)
+
+
+def history_query(history: History, *filter_lines: str) -> QueryGET:
+    logger = logging.getLogger("cmk.mkeventd")
+    return QueryGET(
+        lambda _name: StatusTableHistory(logger, history),
+        ["GET history", "Columns: event_text", *filter_lines],
+        logger,
+    )
+
+
+def mongo_query_for(history: FileHistory, *filter_lines: str) -> dict[str, object]:
+    """The MongoDB query for filters parsed like for any history, without needing a MongoDB"""
+    return filters_to_mongo_query(history_query(history, *filter_lines).filters, EVENT_DEFAULTS)
+
+
 def test_filters_to_mongo_query() -> None:
     """Filters become proper mongo query"""
 
@@ -161,7 +182,7 @@ def test_filters_to_mongo_query() -> None:
         "owner": {"$in": "foobar"},
         "_id": {"$in": "some text"},
     }
-    assert filters_to_mongo_query(filters) == expected_output
+    assert filters_to_mongo_query(filters, EVENT_DEFAULTS) == expected_output
 
 
 def test_all_filters_on_the_same_column_end_up_in_the_mongo_query() -> None:
@@ -174,7 +195,7 @@ def test_all_filters_on_the_same_column_end_up_in_the_mongo_query() -> None:
         ),
     ]
 
-    assert filters_to_mongo_query(filters) == {
+    assert filters_to_mongo_query(filters, EVENT_DEFAULTS) == {
         "event.id": {"$gte": 2},
         "$and": [{"event.id": {"$lte": 4}}],
     }
@@ -187,7 +208,7 @@ def mongo_filter_for(operator_name: OperatorName, argument: str) -> object:
         predicate=lambda _: True,
         argument=argument,
     )
-    return filters_to_mongo_query([query_filter])["event.text"]
+    return filters_to_mongo_query([query_filter], EVENT_DEFAULTS)["event.text"]
 
 
 def mongo_regex_for(operator_name: OperatorName, argument: str) -> re.Pattern[str]:
@@ -234,6 +255,71 @@ def test_negated_filter_becomes_negated_mongo_query(
     assert mongo_filter_for(operator_name, "a.b") == expected
 
 
+DOWNTIME = "event.host_in_downtime"
+
+
+@pytest.mark.parametrize(
+    "filter_line, expected",
+    [
+        pytest.param("Filter: event_host_in_downtime = 1",  {DOWNTIME: {"$in": [True]}},  id="true"),
+        pytest.param("Filter: event_host_in_downtime = 0",  {DOWNTIME: {"$in": [False]}}, id="false"),
+        pytest.param("Filter: event_host_in_downtime != 0", {DOWNTIME: {"$in": [True]}},  id="not false"),
+        pytest.param("Filter: event_host_in_downtime > 1",  {DOWNTIME: {"$in": []}},      id="nothing"),
+    ],
+)  # fmt: skip
+def test_bool_filter_becomes_mongo_query_for_the_booleans_it_selects(
+    history: FileHistory, filter_line: str, expected: dict[str, object]
+) -> None:
+    """MongoDB stores booleans, which equal no number"""
+    assert mongo_query_for(history, filter_line) == expected
+
+
+@pytest.mark.parametrize(
+    "operator_name, expected",
+    [
+        pytest.param("=",  {"$gte": 5, "$lt": 6},           id="equal"),
+        pytest.param("!=", {"$not": {"$gte": 5, "$lt": 6}}, id="not equal"),
+        pytest.param("<",  {"$lt": 5},                      id="less"),
+        pytest.param("<=", {"$lt": 6},                      id="less or equal"),
+        pytest.param(">",  {"$gte": 6},                     id="greater"),
+        pytest.param(">=", {"$gte": 5},                     id="greater or equal"),
+    ],
+)  # fmt: skip
+def test_time_filter_becomes_mongo_query_for_the_truncated_time(
+    history: FileHistory, operator_name: OperatorName, expected: dict[str, object]
+) -> None:
+    """Like Livestatus, which truncates the times to integers, see TIME_FILTER_CASES"""
+    assert mongo_query_for(history, f"Filter: history_time {operator_name} 5") == {"time": expected}
+
+
+@requires_mongodb
+@pytest.mark.parametrize("value, expected_texts", [("0", {"no"}), ("1", {"yes"})])
+def test_bool_filter_value_is_parsed_like_an_int_in_livestatus(
+    history_mongo: MongoDBHistory, value: str, expected_texts: set[str]
+) -> None:
+    history_mongo.add(event=ec.Event(text="no", host_in_downtime=False), what="NEW")
+    history_mongo.add(event=ec.Event(text="yes", host_in_downtime=True), what="NEW")
+    query = history_query(history_mongo, f"Filter: event_host_in_downtime = {value}")
+
+    _header, *rows = query.table.query(query)
+
+    assert {text for (text,) in rows} == expected_texts
+
+
+@requires_mongodb
+@pytest.mark.parametrize("operator_name, argument, expected_texts", TIME_FILTER_CASES)
+def test_time_filter_compares_the_truncated_time_like_livestatus(
+    history_mongo: MongoDBHistory, operator_name: str, argument: str, expected_texts: set[str]
+) -> None:
+    for event in EVENTS_WITH_FIRST_TIMES:
+        history_mongo.add(event=event, what="NEW")
+    query = history_query(history_mongo, f"Filter: event_first {operator_name} {argument}")
+
+    _header, *rows = query.table.query(query)
+
+    assert {text for (text,) in rows} == expected_texts
+
+
 def test_filters_to_mongo_query_Exception() -> None:
     """Exception on a column name not starting with "event_" or "history_"."""
 
@@ -246,5 +332,6 @@ def test_filters_to_mongo_query_Exception() -> None:
                     predicate=lambda _: True,
                     argument="test_event",
                 )
-            ]
+            ],
+            EVENT_DEFAULTS,
         )

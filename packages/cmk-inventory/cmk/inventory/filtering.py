@@ -29,7 +29,8 @@ def make_filter_func[CT: str](
 def consolidate_filter_funcs[CT: str](
     choices: Sequence[Literal["nothing", "all"] | Sequence[CT]],
 ) -> Callable[[CT], bool]:
-    return lambda kn: any(make_filter_func(c)(kn) for c in choices)
+    filter_funcs = [make_filter_func(c) for c in choices]
+    return lambda kn: any(f(kn) for f in filter_funcs)
 
 
 @dataclass(frozen=True)
@@ -41,91 +42,92 @@ class SDFilterChoice:
 
 
 @dataclass(frozen=True, kw_only=True)
-class _FilterTree:
-    _filter_choices_by_name: dict[SDNodeName, _FilterTree] = field(default_factory=dict)
-    _filter_choices_pairs: list[Literal["nothing", "all"] | Sequence[SDKey]] = field(
-        default_factory=list
-    )
-    _filter_choices_columns: list[Literal["nothing", "all"] | Sequence[SDKey]] = field(
-        default_factory=list
-    )
-    _filter_choices_nodes: list[Literal["nothing", "all"] | Sequence[SDNodeName]] = field(
-        default_factory=list
-    )
-
-    @property
-    def filters_by_name(self) -> Mapping[SDNodeName, _FilterTree]:
-        return self._filter_choices_by_name
+class _SDFilterTrie:
+    keep_pair: Callable[[SDKey], bool] | None
+    keep_column: Callable[[SDKey], bool] | None
+    keep_node: Callable[[SDNodeName], bool]
+    children: Mapping[SDNodeName, _SDFilterTrie]
 
     def filter_pairs[VT_co](self, pairs: Mapping[SDKey, VT_co]) -> Mapping[SDKey, VT_co]:
-        return (
-            get_filtered_dict(pairs, consolidate_filter_funcs(self._filter_choices_pairs))
-            if self._filter_choices_pairs
-            else pairs
-        )
+        return pairs if self.keep_pair is None else get_filtered_dict(pairs, self.keep_pair)
 
     def filter_row[VT_co](self, row: Mapping[SDKey, VT_co]) -> Mapping[SDKey, VT_co]:
-        return (
-            get_filtered_dict(row, consolidate_filter_funcs(self._filter_choices_columns))
-            if self._filter_choices_columns
-            else row
-        )
+        return row if self.keep_column is None else get_filtered_dict(row, self.keep_column)
 
     def filter_node_names(self, node_names: Set[SDNodeName]) -> Set[SDNodeName]:
-        filter_nodes = consolidate_filter_funcs(self._filter_choices_nodes)
-        return {n for n in node_names if filter_nodes(n)}.union(self.filters_by_name)
+        return {n for n in node_names if self.keep_node(n)}.union(self.children)
+
+    def child(self, name: SDNodeName) -> _SDFilterTrie:
+        return self.children.get(name, _EMPTY_FILTER_TRIE)
+
+
+@dataclass
+class _SDFilterTrieBuilder:
+    pairs: list[Literal["nothing", "all"] | Sequence[SDKey]] = field(default_factory=list)
+    columns: list[Literal["nothing", "all"] | Sequence[SDKey]] = field(default_factory=list)
+    nodes: list[Literal["nothing", "all"] | Sequence[SDNodeName]] = field(default_factory=list)
+    children: dict[SDNodeName, _SDFilterTrieBuilder] = field(default_factory=dict)
 
     def append(self, path: SDPath, filter_choice: SDFilterChoice) -> None:
         if path:
-            self._filter_choices_by_name.setdefault(path[0], _FilterTree()).append(
+            self.children.setdefault(path[0], _SDFilterTrieBuilder()).append(
                 path[1:], filter_choice
             )
             return
-        self._filter_choices_pairs.append(filter_choice.pairs)
-        self._filter_choices_columns.append(filter_choice.columns)
-        self._filter_choices_nodes.append(filter_choice.nodes)
+        self.pairs.append(filter_choice.pairs)
+        self.columns.append(filter_choice.columns)
+        self.nodes.append(filter_choice.nodes)
+
+    def build(self) -> _SDFilterTrie:
+        return _SDFilterTrie(
+            keep_pair=consolidate_filter_funcs(self.pairs) if self.pairs else None,
+            keep_column=consolidate_filter_funcs(self.columns) if self.columns else None,
+            keep_node=consolidate_filter_funcs(self.nodes),
+            children={name: child.build() for name, child in self.children.items()},
+        )
 
 
-def _make_filter_tree(filters: Iterable[SDFilterChoice]) -> _FilterTree:
-    filter_tree_ = _FilterTree()
+_EMPTY_FILTER_TRIE = _SDFilterTrieBuilder().build()
+
+
+def _make_filter_trie(filters: Iterable[SDFilterChoice]) -> _SDFilterTrie:
+    builder = _SDFilterTrieBuilder()
     for f in filters:
-        filter_tree_.append(f.path, f)
-    return filter_tree_
+        builder.append(f.path, f)
+    return builder.build()
 
 
-def _filter_attributes(
-    attributes: ImmutableAttributes, filter_tree_: _FilterTree
-) -> ImmutableAttributes:
+def _filter_attributes(attributes: ImmutableAttributes, trie: _SDFilterTrie) -> ImmutableAttributes:
     return ImmutableAttributes(
-        pairs=filter_tree_.filter_pairs(attributes.pairs),
+        pairs=trie.filter_pairs(attributes.pairs),
         retentions=attributes.retentions,
     )
 
 
-def _filter_table(table: ImmutableTable, filter_tree_: _FilterTree) -> ImmutableTable:
+def _filter_table(table: ImmutableTable, trie: _SDFilterTrie) -> ImmutableTable:
     return ImmutableTable(
         key_columns=table.key_columns,
         rows_by_ident={
             ident: filtered_row
             for ident, row in table.rows_by_ident.items()
-            if (filtered_row := filter_tree_.filter_row(row))
+            if (filtered_row := trie.filter_row(row))
         },
         retentions=table.retentions,
     )
 
 
-def _filter_tree(tree: ImmutableTree, filter_tree_: _FilterTree) -> ImmutableTree:
+def _filter_tree(tree: ImmutableTree, trie: _SDFilterTrie) -> ImmutableTree:
     return ImmutableTree(
         path=tree.path,
-        attributes=_filter_attributes(tree.attributes, filter_tree_),
-        table=_filter_table(tree.table, filter_tree_),
+        attributes=_filter_attributes(tree.attributes, trie),
+        table=_filter_table(tree.table, trie),
         nodes_by_name={
             name: filtered_node
-            for name in filter_tree_.filter_node_names(set(tree.nodes_by_name))
+            for name in trie.filter_node_names(set(tree.nodes_by_name))
             if (
                 filtered_node := _filter_tree(
                     tree.nodes_by_name.get(name, ImmutableTree(path=tree.path + (name,))),
-                    filter_tree_.filters_by_name.get(name, _FilterTree()),
+                    trie.child(name),
                 )
             )
         },
@@ -198,36 +200,34 @@ def make_filter_choices_from_contact_groups(
 
 
 def filter_tree(tree: ImmutableTree, filters: Iterable[SDFilterChoice]) -> ImmutableTree:
-    return _filter_tree(tree, _make_filter_tree(filters))
+    return _filter_tree(tree, _make_filter_trie(filters))
 
 
 def _filter_delta_attributes(
-    attributes: ImmutableDeltaAttributes, filter_tree_: _FilterTree
+    attributes: ImmutableDeltaAttributes, trie: _SDFilterTrie
 ) -> ImmutableDeltaAttributes:
-    return ImmutableDeltaAttributes(pairs=filter_tree_.filter_pairs(attributes.pairs))
+    return ImmutableDeltaAttributes(pairs=trie.filter_pairs(attributes.pairs))
 
 
-def _filter_delta_table(
-    table: ImmutableDeltaTable, filter_tree_: _FilterTree
-) -> ImmutableDeltaTable:
+def _filter_delta_table(table: ImmutableDeltaTable, trie: _SDFilterTrie) -> ImmutableDeltaTable:
     return ImmutableDeltaTable(
         key_columns=table.key_columns,
-        rows=[filtered_row for row in table.rows if (filtered_row := filter_tree_.filter_row(row))],
+        rows=[filtered_row for row in table.rows if (filtered_row := trie.filter_row(row))],
     )
 
 
-def _filter_delta_tree(tree: ImmutableDeltaTree, filter_tree_: _FilterTree) -> ImmutableDeltaTree:
+def _filter_delta_tree(tree: ImmutableDeltaTree, trie: _SDFilterTrie) -> ImmutableDeltaTree:
     return ImmutableDeltaTree(
         path=tree.path,
-        attributes=_filter_delta_attributes(tree.attributes, filter_tree_),
-        table=_filter_delta_table(tree.table, filter_tree_),
+        attributes=_filter_delta_attributes(tree.attributes, trie),
+        table=_filter_delta_table(tree.table, trie),
         nodes_by_name={
             name: filtered_node
-            for name in filter_tree_.filter_node_names(set(tree.nodes_by_name))
+            for name in trie.filter_node_names(set(tree.nodes_by_name))
             if (
                 filtered_node := _filter_delta_tree(
                     tree.nodes_by_name.get(name, ImmutableDeltaTree(path=tree.path + (name,))),
-                    filter_tree_.filters_by_name.get(name, _FilterTree()),
+                    trie.child(name),
                 )
             )
         },
@@ -237,4 +237,4 @@ def _filter_delta_tree(tree: ImmutableDeltaTree, filter_tree_: _FilterTree) -> I
 def filter_delta_tree(
     tree: ImmutableDeltaTree, filters: Iterable[SDFilterChoice]
 ) -> ImmutableDeltaTree:
-    return _filter_delta_tree(tree, _make_filter_tree(filters))
+    return _filter_delta_tree(tree, _make_filter_trie(filters))

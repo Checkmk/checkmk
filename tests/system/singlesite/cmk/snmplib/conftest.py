@@ -45,6 +45,7 @@ class ProcessDef(NamedTuple):
     with_sudo: bool
     port: int
     process: subprocess.Popen
+    output_file: Path
 
 
 @pytest.fixture(name="snmp_data_dir", scope="session")
@@ -110,10 +111,11 @@ def _define_process(
         env_override.update({key: os.environ[key] for key in ("HOME",)})
         logger.debug("overriding snmpsim-command-responder process env with: %r", env_override)
 
-    return ProcessDef(
-        with_sudo=bool(as_user),
-        port=port,
-        process=subprocess.Popen(
+    # The output goes to a file, not a pipe: nobody reads a pipe while snmpsim runs, so snmpsim
+    # would block on its next write once the pipe is full.
+    output_file = proc_tmp_path / "output.txt"
+    with output_file.open("w") as output:
+        process = subprocess.Popen(
             command_prefix
             + [
                 f"{repo_path()}/.venv/bin/snmpsim-command-responder",
@@ -134,12 +136,15 @@ def _define_process(
             ]
             + auth,
             close_fds=True,
-            # Capture output to return the error message for debugging purposes
-            stdout=subprocess.PIPE,
+            stdout=output,
             stderr=subprocess.STDOUT,
-            text=True,
             env=env_override,
-        ),
+        )
+    return ProcessDef(
+        with_sudo=bool(as_user),
+        port=port,
+        process=process,
+        output_file=output_file,
     )
 
 
@@ -203,9 +208,7 @@ def _is_listening(process_def: ProcessDef) -> bool:
             exitcode,
         )
 
-        # stderr is piped to stdout, so we can rely on only showing stdout
-        for line in p.stdout or []:
-            logger.error(line)
+        logger.error(process_def.output_file.read_text())
 
     process = _snmpsimd_process(process_def)
     snmpsimd_proc_found = process is not None
@@ -241,10 +244,9 @@ def _is_listening(process_def: ProcessDef) -> bool:
             )
 
     if snmpsimd_died:
-        # assert p.stdout is not None
-        # output = p.stdout.read()
-        output = "foobar"
-        raise RuntimeError(f"snmpsimd died. Exit code: {exitcode}; output: {output}")
+        raise RuntimeError(
+            f"snmpsimd died. Exit code: {exitcode}; output: {process_def.output_file.read_text()}"
+        )
 
     logger.debug("snmpsimd is running")
 

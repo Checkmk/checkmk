@@ -5,8 +5,9 @@
  */
 import defaultClient, { type createClient, unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 
-import { hostNameQuery, serviceQuery } from '@/monitoring/shared/api/actions/query'
-import type { ServiceRef } from '@/monitoring/shared/api/types'
+import { hostNameQuery } from '@/monitoring/shared/api/actions/query'
+import { serviceTargets } from '@/monitoring/shared/api/actions/targets'
+import type { HostRef, ServiceRef } from '@/monitoring/shared/api/types'
 
 /** The intervals the downtime API repeats a downtime on, `fixed` being no repeat at all. */
 export type DowntimeRecur =
@@ -81,66 +82,71 @@ export class ScheduleDowntimeApi {
         body: {
           downtime_type: 'host_by_query',
           query: hostNameQuery(hostNames),
-          start_time: options.startTime,
-          end_time: options.endTime,
-          recur: options.recur,
-          duration: options.durationMinutes,
-          comment: options.comment
-        }
-      })
-    )
-  }
-
-  public async scheduleServiceDowntime(
-    services: ServiceRef[],
-    options: ScheduleDowntimeOptions
-  ): Promise<void> {
-    unwrap(
-      await this.client.POST('/domain-types/downtime/collections/service', {
-        params: { header: { 'Content-Type': 'application/json' } },
-        body: {
-          downtime_type: 'service_by_query',
-          query: serviceQuery(services),
-          start_time: options.startTime,
-          end_time: options.endTime,
-          recur: options.recur,
-          duration: options.durationMinutes,
-          comment: options.comment
+          ...downtimeFields(options)
         }
       })
     )
   }
 }
 
-export class RemoveDowntimeApi {
-  /** Removes the downtimes of the hosts themselves, not those of their services. */
-  public async removeHostDowntimes(hostNames: string[]): Promise<void> {
-    unwrap(
-      await defaultClient.POST('/domain-types/downtime/actions/delete/invoke', {
+/** Downtimes for the rows of the monitoring pages, each sent to the site of its row. */
+export class DowntimeApi {
+  public async scheduleHostDowntime(
+    hosts: HostRef[],
+    options: ScheduleDowntimeOptions,
+    includeChildHosts: boolean
+  ): Promise<number> {
+    const response = unwrap(
+      await defaultClient.POST('/monitor/hosts/actions/schedule_downtime', {
         params: { header: { 'Content-Type': 'application/json' } },
-        body: {
-          delete_type: 'query',
-          query: {
-            op: 'and',
-            expr: [
-              { op: '=', left: 'is_service', right: '0' },
-              hostNameQuery(hostNames, 'host_name')
-            ]
-          }
-        }
+        body: { hosts, ...downtimeFields(options), include_child_hosts: includeChildHosts }
       })
     )
+    return response.scheduled
   }
 
-  public async removeServiceDowntimes(services: ServiceRef[]): Promise<void> {
-    unwrap(
-      await defaultClient.POST('/domain-types/downtime/actions/delete/invoke', {
+  public async scheduleServiceDowntime(
+    services: ServiceRef[],
+    options: ScheduleDowntimeOptions
+  ): Promise<number> {
+    const response = unwrap(
+      await defaultClient.POST('/monitor/services/actions/schedule_downtime', {
         params: { header: { 'Content-Type': 'application/json' } },
-        body: {
-          delete_type: 'query',
-          query: serviceQuery(services, 'service_description')
-        }
+        body: { services: serviceTargets(services), ...downtimeFields(options) }
       })
     )
+    return response.scheduled
+  }
+
+  /** Removes the downtimes of the hosts themselves, not those of their services. */
+  public async removeHostDowntimes(hosts: HostRef[]): Promise<number> {
+    const response = unwrap(
+      await defaultClient.POST('/monitor/hosts/actions/remove_downtimes', {
+        params: { header: { 'Content-Type': 'application/json' } },
+        body: { hosts }
+      })
+    )
+    return response.removed
+  }
+
+  public async removeServiceDowntimes(services: ServiceRef[]): Promise<number> {
+    const response = unwrap(
+      await defaultClient.POST('/monitor/services/actions/remove_downtimes', {
+        params: { header: { 'Content-Type': 'application/json' } },
+        body: { services: serviceTargets(services) }
+      })
+    )
+    return response.removed
+  }
+}
+
+/** The fields of the downtime endpoints that carry the options. */
+export function downtimeFields(options: ScheduleDowntimeOptions) {
+  return {
+    comment: options.comment,
+    start_time: options.startTime,
+    end_time: options.endTime,
+    recur: options.recur,
+    duration: options.durationMinutes
   }
 }

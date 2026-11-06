@@ -22,7 +22,8 @@ import { API_ROOT } from 'cmk-ui-library/lib/rest-api-client/constants'
 import { stripCheckmkBase } from '@/maps/utils/mapNavigation'
 import {
   ScheduleDowntimeApi,
-  type ScheduleDowntimeOptions
+  type ScheduleDowntimeOptions,
+  downtimeFields
 } from '@/monitoring/shared/api/actions/downtime'
 import { hostNameQuery } from '@/monitoring/shared/api/actions/query'
 
@@ -63,17 +64,6 @@ function restClient(checkmkUrl: string | null): RestClient {
   const created = createClient({ baseUrl })
   restClients.set(baseUrl, created)
   return created
-}
-
-/** The downtime fields every endpoint takes. */
-function downtimeFields(options: ScheduleDowntimeOptions) {
-  return {
-    start_time: options.startTime,
-    end_time: options.endTime,
-    comment: options.comment,
-    duration: options.durationMinutes,
-    recur: options.recur
-  }
 }
 
 /** A comment that does not outlive a core restart, as the endpoints default to. */

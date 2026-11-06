@@ -11,6 +11,7 @@ from ._acknowledge import ENDPOINT_ACKNOWLEDGE, ENDPOINT_REMOVE_ACKNOWLEDGEMENTS
 from ._action_menu import ENDPOINT_GET_HOST_ACTION_MENU
 from ._archive_events import ENDPOINT_ARCHIVE_EVENTS
 from ._custom_notification import ENDPOINT_SEND_CUSTOM_NOTIFICATION
+from ._downtime import ENDPOINT_REMOVE_DOWNTIMES, ENDPOINT_SCHEDULE_DOWNTIME
 from ._events import ENDPOINT_GET_HOST_EVENTS
 from ._fake_check_result import ENDPOINT_FAKE_CHECK_RESULT
 from ._family import MONITOR_HOSTS_FAMILY
@@ -42,3 +43,5 @@ def register_endpoints(
     versioned_endpoint_registry.register(ENDPOINT_ARCHIVE_EVENTS)
     versioned_endpoint_registry.register(ENDPOINT_ACKNOWLEDGE)
     versioned_endpoint_registry.register(ENDPOINT_REMOVE_ACKNOWLEDGEMENTS)
+    versioned_endpoint_registry.register(ENDPOINT_SCHEDULE_DOWNTIME)
+    versioned_endpoint_registry.register(ENDPOINT_REMOVE_DOWNTIMES)

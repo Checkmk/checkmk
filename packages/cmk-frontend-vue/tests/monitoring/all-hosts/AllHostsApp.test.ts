@@ -599,6 +599,11 @@ test('removes the acknowledgement of the selected host after confirming it', asy
   const alert = await screen.findByRole('alert')
   expect(alert).toHaveTextContent('Selected hosts: 2 | Total hosts: 2')
   expect(alert).toHaveTextContent('Acknowledgements: 1')
+  postSpy.mockResolvedValueOnce({
+    data: { removed: 1 },
+    error: undefined,
+    response: new Response(null, { status: 200 })
+  } as never)
   await user.click(screen.getByRole('button', { name: 'Remove acknowledgements' }))
 
   expect(

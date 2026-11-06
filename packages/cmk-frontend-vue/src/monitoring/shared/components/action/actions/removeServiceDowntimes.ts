@@ -5,7 +5,7 @@
  */
 import usei18n from 'cmk-ui-library/lib/i18n'
 
-import { RemoveDowntimeApi } from '@/monitoring/shared/api/actions/downtime'
+import { DowntimeApi } from '@/monitoring/shared/api/actions/downtime'
 import type { ServiceRef } from '@/monitoring/shared/api/types'
 import { createRemoveDowntimesAction } from '@/monitoring/shared/components/action/actions/remove'
 import type { MonitoringAction } from '@/monitoring/shared/components/action/types'
@@ -15,7 +15,7 @@ export function useRemoveServiceDowntimesAction(): MonitoringAction<
   ServiceRef
 > {
   const { _t, _tn } = usei18n()
-  const api = new RemoveDowntimeApi()
+  const api = new DowntimeApi()
 
   return createRemoveDowntimesAction<ServiceRef>({
     run: (targets) => api.removeServiceDowntimes(targets),

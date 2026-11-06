@@ -7,6 +7,7 @@ import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
+  DowntimeApi,
   ScheduleDowntimeApi,
   type ScheduleDowntimeOptions
 } from '@/monitoring/shared/api/actions/downtime'
@@ -127,64 +128,50 @@ describe('ScheduleDowntimeApi.resolveChildHosts', () => {
   })
 })
 
-describe('ScheduleDowntimeApi.scheduleServiceDowntime', () => {
+describe('DowntimeApi', () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let postSpy: any
 
   beforeEach(() => {
-    postSpy = vi.spyOn(client, 'POST')
-    postSpy.mockResolvedValue({
-      data: undefined,
+    postSpy = vi.spyOn(client, 'POST').mockResolvedValue({
+      data: { scheduled: 3 },
       error: undefined,
-      response: new Response(null, { status: 204 })
+      response: new Response(null, { status: 200 })
     } as never)
   })
 
-  it('schedules the downtime for the services of several hosts in one request', async () => {
-    await new ScheduleDowntimeApi().scheduleServiceDowntime(
-      [
-        { host: { site_id: 'local', name: 'web-1' }, description: 'CPU load' },
-        { host: { site_id: 'local', name: 'web-2' }, description: 'Memory' },
-        { host: { site_id: 'local', name: 'web-1' }, description: 'Uptime' }
-      ],
+  const FIELDS = {
+    comment: OPTIONS.comment,
+    start_time: OPTIONS.startTime,
+    end_time: OPTIONS.endTime,
+    recur: OPTIONS.recur,
+    duration: OPTIONS.durationMinutes
+  }
+
+  it('schedules the downtime for each host on its site, children included on request', async () => {
+    const hosts = [
+      { site_id: 'local', name: 'web-1' },
+      { site_id: 'remote', name: 'web-1' }
+    ]
+
+    expect(await new DowntimeApi().scheduleHostDowntime(hosts, OPTIONS, true)).toBe(3)
+    expect(postSpy).toHaveBeenCalledWith('/monitor/hosts/actions/schedule_downtime', {
+      ...CONTENT_TYPE,
+      body: { hosts, ...FIELDS, include_child_hosts: true }
+    })
+  })
+
+  it('schedules the downtime for each service on the site of its host', async () => {
+    await new DowntimeApi().scheduleServiceDowntime(
+      [{ host: { site_id: 'remote', name: 'web-1' }, description: 'CPU load' }],
       OPTIONS
     )
 
-    expect(postSpy).toHaveBeenCalledTimes(1)
-    expect(postSpy).toHaveBeenCalledWith('/domain-types/downtime/collections/service', {
+    expect(postSpy).toHaveBeenCalledWith('/monitor/services/actions/schedule_downtime', {
       ...CONTENT_TYPE,
       body: {
-        downtime_type: 'service_by_query',
-        query: {
-          op: 'or',
-          expr: [
-            {
-              op: 'and',
-              expr: [
-                { op: '=', left: 'host_name', right: 'web-1' },
-                {
-                  op: 'or',
-                  expr: [
-                    { op: '=', left: 'description', right: 'CPU load' },
-                    { op: '=', left: 'description', right: 'Uptime' }
-                  ]
-                }
-              ]
-            },
-            {
-              op: 'and',
-              expr: [
-                { op: '=', left: 'host_name', right: 'web-2' },
-                { op: 'or', expr: [{ op: '=', left: 'description', right: 'Memory' }] }
-              ]
-            }
-          ]
-        },
-        start_time: OPTIONS.startTime,
-        end_time: OPTIONS.endTime,
-        recur: OPTIONS.recur,
-        duration: OPTIONS.durationMinutes,
-        comment: OPTIONS.comment
+        services: [{ site_id: 'remote', host_name: 'web-1', name: 'CPU load' }],
+        ...FIELDS
       }
     })
   })

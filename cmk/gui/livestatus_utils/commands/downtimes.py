@@ -791,14 +791,14 @@ def _schedule_downtime(
     # TODO: provide reference documents for recurring magic numbers
     _user.need_permission("action.downtimes")
 
-    recur_mode = _recur_mode(recur, duration)
+    mode = recur_mode(recur, duration)
     cmd: Command
     if command == DOWNTIME.SCHEDULE_HOST:
         cmd = ScheduleHostDowntime(
             host_name=host_or_group,
             start_time=start_time,
             end_time=end_time,
-            recur_mode=recur_mode,
+            recur_mode=mode,
             trigger_id=trigger_id,
             duration=60 * duration,
             user=user_id,
@@ -811,7 +811,7 @@ def _schedule_downtime(
             host_name=host_or_group,
             start_time=start_time,
             end_time=end_time,
-            recur_mode=recur_mode,
+            recur_mode=mode,
             trigger_id=trigger_id,
             duration=60 * duration,
             user=user_id,
@@ -826,7 +826,7 @@ def _schedule_downtime(
     )
 
 
-def _recur_mode(recur: RecurMode, duration: int) -> int:
+def recur_mode(recur: RecurMode, duration: int) -> int:
     """Translate the recur-mode to livestatus' internally used magic-numbers.
 
     The numbers are defined like this:

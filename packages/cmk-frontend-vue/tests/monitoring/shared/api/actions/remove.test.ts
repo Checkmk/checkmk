@@ -7,7 +7,7 @@ import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { beforeEach, expect, test, vi } from 'vitest'
 
 import { AcknowledgeApi } from '@/monitoring/shared/api/actions/acknowledge'
-import { RemoveDowntimeApi } from '@/monitoring/shared/api/actions/downtime'
+import { DowntimeApi } from '@/monitoring/shared/api/actions/downtime'
 
 const CONTENT_TYPE = { params: { header: { 'Content-Type': 'application/json' } } }
 
@@ -51,53 +51,20 @@ test('removes the acknowledgements of the services, each on the site of its host
   })
 })
 
-test('removes only the downtimes of the hosts themselves', async () => {
-  await new RemoveDowntimeApi().removeHostDowntimes(['db-1'])
+test('removes the downtimes of the hosts, each on its site', async () => {
+  expect(await new DowntimeApi().removeHostDowntimes(HOSTS)).toBe(2)
 
-  expect(postSpy).toHaveBeenCalledWith('/domain-types/downtime/actions/delete/invoke', {
+  expect(postSpy).toHaveBeenCalledWith('/monitor/hosts/actions/remove_downtimes', {
     ...CONTENT_TYPE,
-    body: {
-      delete_type: 'query',
-      query: {
-        op: 'and',
-        expr: [
-          { op: '=', left: 'is_service', right: '0' },
-          { op: 'or', expr: [{ op: '=', left: 'host_name', right: 'db-1' }] }
-        ]
-      }
-    }
+    body: { hosts: HOSTS }
   })
 })
 
-test('removes the downtimes of the services, matched by host and service', async () => {
-  await new RemoveDowntimeApi().removeServiceDowntimes([
-    { host: { name: 'db-1', site_id: 'local' }, description: 'CPU load' },
-    { host: { name: 'web-1', site_id: 'remote' }, description: 'Memory' }
-  ])
+test('removes the downtimes of the services, each on the site of its host', async () => {
+  expect(await new DowntimeApi().removeServiceDowntimes(SERVICES)).toBe(2)
 
-  expect(postSpy).toHaveBeenCalledWith('/domain-types/downtime/actions/delete/invoke', {
+  expect(postSpy).toHaveBeenCalledWith('/monitor/services/actions/remove_downtimes', {
     ...CONTENT_TYPE,
-    body: {
-      delete_type: 'query',
-      query: {
-        op: 'or',
-        expr: [
-          {
-            op: 'and',
-            expr: [
-              { op: '=', left: 'host_name', right: 'db-1' },
-              { op: 'or', expr: [{ op: '=', left: 'service_description', right: 'CPU load' }] }
-            ]
-          },
-          {
-            op: 'and',
-            expr: [
-              { op: '=', left: 'host_name', right: 'web-1' },
-              { op: 'or', expr: [{ op: '=', left: 'service_description', right: 'Memory' }] }
-            ]
-          }
-        ]
-      }
-    }
+    body: { services: SERVICE_TARGETS }
   })
 })

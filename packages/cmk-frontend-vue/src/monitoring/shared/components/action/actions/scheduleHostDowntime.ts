@@ -31,14 +31,8 @@ export function useScheduleHostDowntimeAction(
     recurrences,
     presets,
     presetsUrl,
-    async schedule(api, targets, values, options) {
-      const hostNames = targets.map((target) => target.name)
-      if (values.includeChildHosts) {
-        hostNames.push(...(await api.resolveChildHosts(hostNames)))
-      }
-      await api.scheduleDowntime(hostNames, options)
-      return hostNames.length
-    },
+    schedule: (api, targets, values, options) =>
+      api.scheduleHostDowntime(targets, options, values.includeChildHosts),
     successMessage: (count) =>
       _tn(
         'Scheduled a downtime for %{count} host',

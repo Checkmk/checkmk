@@ -39,6 +39,11 @@ test('says the modified attributes of the selected host were reset', async () =>
 })
 
 test('says the modified attributes of the selected services were reset', async () => {
+  vi.mocked(client.POST).mockResolvedValueOnce({
+    data: { modified: 2 },
+    error: undefined,
+    response: new Response(null, { status: 200 })
+  } as never)
   const services = [
     { host: DB, description: 'CPU load' },
     { host: DB, description: 'Memory' }

@@ -22,12 +22,14 @@ from cmk.gui.livestatus_utils.commands.acknowledgments import (
     acknowledge_service_problem,
     remove_acknowledgement,
 )
+from cmk.gui.livestatus_utils.commands.downtimes import recur_mode, RecurMode
 from cmk.gui.monitor.command import ModifiableAttribute
 from cmk.gui.monitor.hosts import reader_unavailable_sites
 from cmk.gui.monitor.site_scope import MonitorSites
 from cmk.livestatus_client import (
     ChangeServiceModifiedAttributes,
     Command,
+    DeleteServiceDowntime,
     DisablePassiveServiceChecks,
     DisableServiceCheck,
     DisableServiceNotifications,
@@ -39,11 +41,12 @@ from cmk.livestatus_client import (
     NotificationOption,
     ProcessServiceCheckResult,
     ScheduleForcedServiceCheck,
+    ScheduleServiceDowntime,
     SendCustomServiceNotification,
 )
 from cmk.livestatus_client.expressions import And, NothingExpression, Or, QueryExpression
 from cmk.livestatus_client.queries import detailed_connection, Query
-from cmk.livestatus_client.tables import Hosts, Services
+from cmk.livestatus_client.tables import Downtimes, Hosts, Services
 from cmk.livestatus_client.types import Column
 from cmk.ruleset_matcher.labels import BuiltinLabelsKey
 
@@ -549,6 +552,55 @@ class LiveStatusServiceActions:
                 target.description,
             )
         return len(visible)
+
+    def schedule_downtime(
+        self,
+        targets: Sequence[ServiceTarget],
+        *,
+        author: UserId,
+        comment: str,
+        start_time: dt.datetime,
+        end_time: dt.datetime,
+        recur: RecurMode,
+        duration_minutes: int,
+    ) -> int:
+        visible = self._found(targets)
+        client = LivestatusClient(self._connection)
+        mode = recur_mode(recur, duration_minutes)
+        for target in visible:
+            client.command(
+                ScheduleServiceDowntime(
+                    host_name=HostName(target.host_name),
+                    description=target.description,
+                    start_time=start_time,
+                    end_time=end_time,
+                    recur_mode=mode,
+                    trigger_id=0,
+                    duration=60 * duration_minutes,
+                    user=author,
+                    comment=comment,
+                ),
+                SiteId(target.site_id),
+            )
+        return len(visible)
+
+    def remove_downtimes(self, targets: Sequence[ServiceTarget]) -> int:
+        wanted = set(targets)
+        rows = Query(
+            [Downtimes.id, Downtimes.host_name, Downtimes.service_description],
+            _match(targets, Downtimes.host_name, Downtimes.service_description),
+        ).fetchall(self._connection, include_site_ids=True, only_sites=_sites_of(targets))
+        client = LivestatusClient(self._connection)
+        removed: set[ServiceTarget] = set()
+        for row in rows:
+            target = ServiceTarget(
+                site_id=row.site, host_name=row.host_name, description=row.service_description
+            )
+            # A site may also monitor a service of a name selected only on another site.
+            if target in wanted:
+                client.command(DeleteServiceDowntime(row.id), SiteId(row.site))
+                removed.add(target)
+        return len(removed)
 
     def _found(self, targets: Sequence[ServiceTarget]) -> dict[ServiceTarget, int]:
         if not (visible := self._visible(targets)):

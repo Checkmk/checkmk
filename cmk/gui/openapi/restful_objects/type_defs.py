@@ -311,6 +311,8 @@ CmkEndpointName = Literal[
     "cmk/reset_modified_attributes",
     "cmk/archive_events",
     "cmk/remove_acknowledgements",
+    "cmk/schedule_downtime",
+    "cmk/remove_downtimes",
 ]
 
 RestfulEndpointName = Literal[

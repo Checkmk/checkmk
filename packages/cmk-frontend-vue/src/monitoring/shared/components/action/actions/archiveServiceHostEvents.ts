@@ -46,11 +46,11 @@ export function useArchiveServiceHostEventsAction(): MonitoringAction<
     },
     {
       run: (services) => api.archiveHostEvents(hostsOf(services)),
-      successMessage: (_count, services) =>
+      successMessage: (count) =>
         _tn(
           'Events are archived for the selected host',
           'Events are archived for the selected hosts',
-          hostsOf(services).length
+          count
         ),
       errorHeading: _t('Could not archive the events of the selected hosts')
     }

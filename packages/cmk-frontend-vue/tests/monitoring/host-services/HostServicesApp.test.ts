@@ -1361,22 +1361,18 @@ test('removes the downtime of the selected service after confirming it', async (
   await user.click(await screen.findByRole('menuitem', { name: 'Remove downtimes' }))
 
   expect(await screen.findByRole('alert')).toHaveTextContent('Downtimes: 1')
+  postSpy.mockResolvedValueOnce({
+    data: { removed: 1 },
+    error: undefined,
+    response: new Response(null, { status: 200 })
+  } as never)
   await user.click(screen.getByRole('button', { name: 'Remove downtimes' }))
 
   expect(await screen.findByText('Removed downtime of the selected service')).toBeInTheDocument()
   expect(postSpy).toHaveBeenCalledWith(
-    '/domain-types/downtime/actions/delete/invoke',
+    '/monitor/services/actions/remove_downtimes',
     expect.objectContaining({
-      body: {
-        delete_type: 'query',
-        query: {
-          op: 'and',
-          expr: [
-            { op: '=', left: 'host_name', right: 'web-1' },
-            { op: 'or', expr: [{ op: '=', left: 'service_description', right: 'CPU load' }] }
-          ]
-        }
-      }
+      body: { services: [{ site_id: 'local', host_name: 'web-1', name: 'CPU load' }] }
     })
   )
 })
@@ -1397,6 +1393,11 @@ test('archives the events of the host of the selected services after confirming 
   expect(await screen.findByRole('alert')).toHaveTextContent(
     'All events of the host will be removed from the open events list.'
   )
+  postSpy.mockResolvedValueOnce({
+    data: { archived: 1 },
+    error: undefined,
+    response: new Response(null, { status: 200 })
+  } as never)
   await user.click(screen.getByRole('button', { name: 'Archive events' }))
 
   expect(await screen.findByText('Events are archived for the selected host')).toBeInTheDocument()

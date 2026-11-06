@@ -23,6 +23,7 @@ from cmk.gui.livestatus_utils.commands.acknowledgments import (
     acknowledge_host_problem,
     remove_acknowledgement,
 )
+from cmk.gui.livestatus_utils.commands.downtimes import child_hosts, recur_mode, RecurMode
 from cmk.gui.logged_in import user
 from cmk.gui.monitor.command import ModifiableAttribute
 from cmk.gui.monitor.shared import folder_files_matching, HostState
@@ -38,6 +39,7 @@ from cmk.gui.utils.host_relations import (
 from cmk.livestatus_client import (
     ChangeHostModifiedAttributes,
     Command,
+    DeleteHostDowntime,
     DisableHostCheck,
     DisableHostNotifications,
     DisablePassiveHostChecks,
@@ -50,11 +52,12 @@ from cmk.livestatus_client import (
     NotificationOption,
     ProcessHostCheckResult,
     ScheduleForcedHostCheck,
+    ScheduleHostDowntime,
     SendCustomHostNotification,
 )
 from cmk.livestatus_client.expressions import And, NothingExpression, Or, QueryExpression
 from cmk.livestatus_client.queries import detailed_connection, Query, ResultRow
-from cmk.livestatus_client.tables import Hosts, Log
+from cmk.livestatus_client.tables import Downtimes, Hosts, Log
 from cmk.livestatus_client.types import Column
 from cmk.ruleset_matcher.labels import BuiltinLabelsKey
 
@@ -633,6 +636,59 @@ class LiveStatusHostActions:
             )
         return len(visible)
 
+    def child_hosts(self, targets: Sequence[HostTarget]) -> list[HostTarget]:
+        return [
+            HostTarget(site_id=site_id, host_name=child)
+            for site_id, names in _names_by_site(targets).items()
+            for child in child_hosts(self._connection, SiteId(site_id), names, recurse=True)
+        ]
+
+    def schedule_downtime(
+        self,
+        targets: Sequence[HostTarget],
+        *,
+        author: UserId,
+        comment: str,
+        start_time: dt.datetime,
+        end_time: dt.datetime,
+        recur: RecurMode,
+        duration_minutes: int,
+    ) -> int:
+        visible = self._found(targets)
+        client = LivestatusClient(self._connection)
+        mode = recur_mode(recur, duration_minutes)
+        for target in visible:
+            client.command(
+                ScheduleHostDowntime(
+                    host_name=HostName(target.host_name),
+                    start_time=start_time,
+                    end_time=end_time,
+                    recur_mode=mode,
+                    trigger_id=0,
+                    duration=60 * duration_minutes,
+                    user=author,
+                    comment=comment,
+                ),
+                SiteId(target.site_id),
+            )
+        return len(visible)
+
+    def remove_downtimes(self, targets: Sequence[HostTarget]) -> int:
+        wanted = set(targets)
+        names = dict.fromkeys(target.host_name for target in targets)
+        rows = Query(
+            [Downtimes.id, Downtimes.host_name],
+            And(Downtimes.is_service == 0, Or(*(Downtimes.host_name == name for name in names))),
+        ).fetchall(self._connection, include_site_ids=True, only_sites=_sites_of(targets))
+        client = LivestatusClient(self._connection)
+        removed: set[HostTarget] = set()
+        for row in rows:
+            # A site may also monitor a host of a name selected only on another site.
+            if (target := HostTarget(site_id=row.site, host_name=row.host_name)) in wanted:
+                client.command(DeleteHostDowntime(row.id), SiteId(row.site))
+                removed.add(target)
+        return len(removed)
+
     def _found(self, targets: Sequence[HostTarget]) -> list[HostTarget]:
         if not (visible := self._visible(targets)):
             raise HostNotFoundError("None of the hosts was found.")
@@ -656,6 +712,13 @@ class LiveStatusHostActions:
 
 def _sites_of(targets: Iterable[HostTarget]) -> list[SiteId]:
     return sorted({SiteId(target.site_id) for target in targets})
+
+
+def _names_by_site(targets: Iterable[HostTarget]) -> dict[str, list[str]]:
+    names: dict[str, list[str]] = {}
+    for target in targets:
+        names.setdefault(target.site_id, []).append(target.host_name)
+    return names
 
 
 # The command disabling an attribute, then the one enabling it, indexed by `enabled`.

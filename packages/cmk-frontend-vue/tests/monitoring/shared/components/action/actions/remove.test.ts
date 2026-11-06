@@ -33,6 +33,11 @@ test('says the acknowledgement of the selected host was removed', async () => {
 })
 
 test('says the downtimes of the selected services were removed', async () => {
+  postSpy.mockResolvedValueOnce({
+    data: { removed: 2 },
+    error: undefined,
+    response: new Response(null, { status: 200 })
+  } as never)
   expect(
     await useRemoveServiceDowntimesAction().perform(
       [

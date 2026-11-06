@@ -31,10 +31,7 @@ export function useScheduleServiceDowntimeAction(
     recurrences,
     presets,
     presetsUrl,
-    async schedule(api, targets, _values, options) {
-      await api.scheduleServiceDowntime(targets, options)
-      return targets.length
-    },
+    schedule: (api, targets, _values, options) => api.scheduleServiceDowntime(targets, options),
     successMessage: (count) =>
       _tn(
         'Scheduled a downtime for %{count} service',

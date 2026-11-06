@@ -9,8 +9,8 @@ import type { MonitoringAction } from '../types'
 import { commandFailed } from './feedback'
 
 export interface ConfirmedKindConfig<Target> {
-  run(targets: Target[]): Promise<unknown>
-  successMessage(count: number, targets: readonly Target[]): TranslatedString
+  run(targets: Target[]): Promise<number>
+  successMessage(count: number): TranslatedString
   errorHeading: TranslatedString
 }
 
@@ -25,8 +25,8 @@ export function createConfirmedAction<Target>(
     defaultValues: () => ({}),
     perform: async (targets: Target[]) => {
       try {
-        await config.run(targets)
-        return { variant: 'success', message: config.successMessage(targets.length, targets) }
+        const count = await config.run(targets)
+        return { variant: 'success', message: config.successMessage(count) }
       } catch {
         return commandFailed(config.errorHeading)
       }

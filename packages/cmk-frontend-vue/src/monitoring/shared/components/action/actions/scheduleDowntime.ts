@@ -6,10 +6,7 @@
 import usei18n from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
-import {
-  ScheduleDowntimeApi,
-  type ScheduleDowntimeOptions
-} from '@/monitoring/shared/api/actions/downtime'
+import { DowntimeApi, type ScheduleDowntimeOptions } from '@/monitoring/shared/api/actions/downtime'
 
 import type { ActionOutcome, ActionTargetKind, MonitoringAction } from '../types'
 import ScheduleDowntimeForm, {
@@ -78,7 +75,7 @@ export interface ScheduleDowntimeKindConfig<Target> {
   targetKind: ActionTargetKind
   /** Perform the API call for the resolved targets and return the count actually acted on. */
   schedule(
-    api: ScheduleDowntimeApi,
+    api: DowntimeApi,
     targets: Target[],
     values: ScheduleDowntimeFormValues,
     options: ScheduleDowntimeOptions
@@ -98,7 +95,7 @@ export function createScheduleDowntimeAction<Target>(
   config: ScheduleDowntimeKindConfig<Target>
 ): MonitoringAction<ScheduleDowntimeFormValues, Target> {
   const { _t } = usei18n()
-  const api = new ScheduleDowntimeApi()
+  const api = new DowntimeApi()
 
   return {
     id: SCHEDULE_DOWNTIME_ACTION_ID,

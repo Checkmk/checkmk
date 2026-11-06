@@ -12,6 +12,7 @@ from collections.abc import Sequence
 from typing import Protocol
 
 from cmk.ccc.user import UserId
+from cmk.gui.livestatus_utils.commands.downtimes import RecurMode
 from cmk.gui.monitor.command import ModifiableAttribute
 
 from ._models import RescheduleTarget, ServiceTarget
@@ -77,4 +78,27 @@ class ServiceAcknowledger(Protocol):
 
     def remove_acknowledgements(self, targets: Sequence[ServiceTarget]) -> int:
         """Remove the acknowledgement of each visible target on its site, returning how many."""
+        ...
+
+
+class ServiceDowntimeScheduler(Protocol):
+    def schedule_downtime(
+        self,
+        targets: Sequence[ServiceTarget],
+        *,
+        author: UserId,
+        comment: str,
+        start_time: dt.datetime,
+        end_time: dt.datetime,
+        recur: RecurMode,
+        duration_minutes: int,
+    ) -> int:
+        """Schedule a downtime for each visible target on its site, returning how many.
+
+        Raises ServiceNotFoundError if none of the targets is found.
+        """
+        ...
+
+    def remove_downtimes(self, targets: Sequence[ServiceTarget]) -> int:
+        """Remove the downtimes of the targets on their sites, returning for how many."""
         ...

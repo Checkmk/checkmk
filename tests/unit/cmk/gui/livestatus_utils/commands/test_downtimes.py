@@ -264,15 +264,15 @@ def test_del_service_downtime(mock_livestatus: MockLiveStatusConnection) -> None
 
 
 def test_recur_mode_fixed_no_duration() -> None:
-    assert downtimes._recur_mode("fixed", 0) == 1  # noqa: SLF001
+    assert downtimes.recur_mode("fixed", 0) == 1
 
 
 def test_recur_mode_fixed_with_duration() -> None:
-    assert downtimes._recur_mode("fixed", 30) == 0  # noqa: SLF001
+    assert downtimes.recur_mode("fixed", 30) == 0
 
 
 def test_recur_mode_second_week_no_duration() -> None:
-    assert downtimes._recur_mode("second_week", 0) == 9  # noqa: SLF001
+    assert downtimes.recur_mode("second_week", 0) == 9
 
 
 def test_deduplicate_list() -> None:

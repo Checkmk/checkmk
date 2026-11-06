@@ -12,6 +12,7 @@ from collections.abc import Sequence
 from typing import Protocol
 
 from cmk.ccc.user import UserId
+from cmk.gui.livestatus_utils.commands.downtimes import RecurMode
 from cmk.gui.monitor.command import ModifiableAttribute
 
 from ._models import HostTarget, RescheduleTarget
@@ -75,6 +76,33 @@ class HostAcknowledger(Protocol):
 
     def remove_acknowledgements(self, targets: Sequence[HostTarget]) -> int:
         """Remove the acknowledgement of each visible target on its site, returning how many."""
+        ...
+
+
+class HostDowntimeScheduler(Protocol):
+    def child_hosts(self, targets: Sequence[HostTarget]) -> list[HostTarget]:
+        """The children of the targets, recursively, each looked up on its parent's site."""
+        ...
+
+    def schedule_downtime(
+        self,
+        targets: Sequence[HostTarget],
+        *,
+        author: UserId,
+        comment: str,
+        start_time: dt.datetime,
+        end_time: dt.datetime,
+        recur: RecurMode,
+        duration_minutes: int,
+    ) -> int:
+        """Schedule a downtime for each visible target on its site, returning how many.
+
+        Raises HostNotFoundError if none of the targets is found.
+        """
+        ...
+
+    def remove_downtimes(self, targets: Sequence[HostTarget]) -> int:
+        """Remove the downtimes of the targets, not of their services, returning for how many."""
         ...
 
 

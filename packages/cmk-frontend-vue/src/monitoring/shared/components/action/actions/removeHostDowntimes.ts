@@ -5,17 +5,17 @@
  */
 import usei18n from 'cmk-ui-library/lib/i18n'
 
-import { RemoveDowntimeApi } from '@/monitoring/shared/api/actions/downtime'
+import { DowntimeApi } from '@/monitoring/shared/api/actions/downtime'
 import type { HostRef } from '@/monitoring/shared/api/types'
 import { createRemoveDowntimesAction } from '@/monitoring/shared/components/action/actions/remove'
 import type { MonitoringAction } from '@/monitoring/shared/components/action/types'
 
 export function useRemoveHostDowntimesAction(): MonitoringAction<Record<string, never>, HostRef> {
   const { _t, _tn } = usei18n()
-  const api = new RemoveDowntimeApi()
+  const api = new DowntimeApi()
 
   return createRemoveDowntimesAction<HostRef>({
-    run: (targets) => api.removeHostDowntimes(targets.map((target) => target.name)),
+    run: (targets) => api.removeHostDowntimes(targets),
     successMessage: (count) =>
       _tn(
         'Removed downtime of the selected host',

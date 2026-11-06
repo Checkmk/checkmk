@@ -55,6 +55,7 @@ const server = useMswServer(
       time_range: { start: 0, end: 180, step: 60 },
       metrics: [DURATION],
       horizontal_lines: [],
+      service_units: [{ service_name: 'web01 HTTP request duration', unit: 'ms' }],
       notice: null,
       warnings: [],
       errors: []

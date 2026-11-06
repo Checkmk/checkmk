@@ -36,6 +36,7 @@ const server = useMswServer(
       time_range: { start: 0, end: 3600, step: 60 },
       metrics: [],
       horizontal_lines: [],
+      service_units: [],
       notice: null,
       warnings: [],
       errors: []

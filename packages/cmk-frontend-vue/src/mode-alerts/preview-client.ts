@@ -43,6 +43,7 @@ export async function fetchPreview(
         time_range: requestedTimeRange,
         metrics: [],
         horizontal_lines: [],
+        service_units: [],
         notice: problemDetail(error),
         warnings: [],
         errors: []

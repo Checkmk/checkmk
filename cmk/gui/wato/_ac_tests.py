@@ -42,6 +42,7 @@ from cmk.gui.watolib.analyze_configuration import (
     ACTestCategories,
     ACTestRegistry,
     gui_plugin_effect,
+    local_plugin_roots,
     try_relative_site_path,
 )
 from cmk.gui.watolib.check_mk_automations import find_unknown_check_parameter_rule_sets
@@ -1765,6 +1766,11 @@ class ACTestHaSIAPI(ABCACTestPluginAPIs):
     @override
     def content_patterns(self) -> tuple[str, ...]:
         return ("inventory_displayhints.update",)
+
+    @override
+    def plugin_roots(self) -> Iterator[Path]:
+        yield from local_plugin_roots()
+        yield local_gui_plugins_dir / "views"
 
 
 class ACTestBakeryAPI(ABCACTestPluginAPIs):

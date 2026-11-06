@@ -547,12 +547,15 @@ class ABCACTestPluginAPIs(ACTest):
             " Please migrate the plug-ins to the new API."
         ) % {
             "description": self._describe(),
-            "folders": "', '".join(str(r) for r in local_plugin_roots()),
+            "folders": "', '".join(str(r) for r in self.plugin_roots()),
         }
+
+    def plugin_roots(self) -> Iterator[Path]:
+        return local_plugin_roots()
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
-        yield from self.make_outdated_plugin_api_results(site_id, local_plugin_roots())
+        yield from self.make_outdated_plugin_api_results(site_id, self.plugin_roots())
 
     def make_outdated_plugin_api_results(
         self, site_id: SiteId, roots: Iterable[Path]

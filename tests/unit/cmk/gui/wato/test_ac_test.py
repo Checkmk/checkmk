@@ -39,7 +39,7 @@ from cmk.gui.watolib.analyze_configuration import (
     MAX_SCANNED_FILE_SIZE,
 )
 from cmk.livestatus_client.testing import MockLiveStatusConnection
-from cmk.utils.paths import local_lib_dir, local_web_dir
+from cmk.utils.paths import local_gui_plugins_dir, local_lib_dir, local_web_dir
 
 
 @pytest.mark.usefixtures("request_context")
@@ -619,8 +619,15 @@ def test_outdated_plugin_apis_help_renders(test: type[ABCACTestPluginAPIs]) -> N
 
 
 def test_local_plugin_roots_contain_legacy_views_folder() -> None:
-    """The HW/SW inventory display hints only live in the legacy views folder"""
     assert local_web_dir / "plugins" / "views" in list(local_plugin_roots())
+
+
+def test_display_hints_are_looked_for_in_gui_plugins_views_folder() -> None:
+    assert local_gui_plugins_dir / "views" in list(ACTestHaSIAPI().plugin_roots())
+
+
+def test_other_plugin_apis_are_not_looked_for_in_gui_plugins_views_folder() -> None:
+    assert local_gui_plugins_dir / "views" not in list(ACTestBakeryAPI().plugin_roots())
 
 
 def test_local_plugin_roots_contain_legacy_bakery_folder() -> None:

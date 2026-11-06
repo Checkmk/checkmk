@@ -39,9 +39,11 @@ from cmk.plugins.prism.v4_models import (
     Node,
     NodeConfig,
     NodeDisk,
+    PoolDisk,
     StorageContainer,
     StorageContainerStats,
     StorageContainerWithStats,
+    StoragePool,
     V4Model,
     Vm,
     VmDetails,
@@ -665,6 +667,34 @@ def fetch_host_nics(context: FetchContext) -> Sequence[Section]:
     return sections
 
 
+def fetch_storage_pools(context: FetchContext) -> Sequence[Section]:
+    """v4 has no storage pool object: each pool goes to the host of its cluster with its disks.
+    Without the disk stats a pool has nothing to report, so their error fails the fetcher."""
+    disks = context.disks.get(partial(_fetch_disks, context))
+    if isinstance(disks.stats, PrismV4Error):
+        raise disks.stats
+    by_cluster: dict[str | None, dict[str, list[PoolDisk]]] = {}
+    for disk, stats in zip(disks.listed, disks.stats, strict=True):
+        if disk.storage_pool_ext_id is None:
+            continue
+        by_cluster.setdefault(disk.cluster_ext_id, {}).setdefault(
+            disk.storage_pool_ext_id, []
+        ).append(PoolDisk.model_validate({"storageTier": disk.storage_tier, "stats": stats}))
+    return [
+        Section(
+            "prism_storage_pools_v2",
+            [
+                StoragePool.model_validate({"extId": pool_id, "disks": pool_disks}).to_section()
+                for pool_id, pool_disks in pools.items()
+            ],
+            Unroutable("storage pools without a cluster")
+            if cluster_id is None
+            else context.routing.host_for(cluster_id),
+        )
+        for cluster_id, pools in by_cluster.items()
+    ]
+
+
 SECTION_FETCHERS: Sequence[Fetcher] = (
     Fetcher("hosts", fetch_hosts),
     Fetcher("alerts", fetch_alerts),
@@ -673,6 +703,7 @@ SECTION_FETCHERS: Sequence[Fetcher] = (
     Fetcher("remote support", fetch_remote_support),
     Fetcher("nodes", fetch_nodes),
     Fetcher("host NICs", fetch_host_nics),
+    Fetcher("storage pools", fetch_storage_pools),
 )
 
 

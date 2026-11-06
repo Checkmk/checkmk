@@ -36,6 +36,7 @@ from cmk.plugins.prism.special_agent.agent_prism_v4 import (
     fetch_hosts,
     fetch_nodes,
     fetch_remote_support,
+    fetch_storage_pools,
     fetch_vms,
     FetchContext,
     Fetcher,
@@ -206,6 +207,22 @@ def _serve_recorded_nodes(
     statuses: Mapping[str, HTTPStatus] = MappingProxyType({}),
 ) -> None:
     """The stats of a host or disk (by extId) can be answered with an error"""
+    for host_id, response in _recorded("clustermgmt_stats_hosts.json").items():
+        _serve_stats(
+            api,
+            _host_stats_path(host_id),
+            response,
+            statuses.get(host_id, HTTPStatus.OK),
+            {"$select": HOST_STATS_FIELDS, "$samplingInterval": "30"},
+        )
+    _serve_recorded_disks(api, statuses)
+
+
+def _serve_recorded_disks(
+    api: responses.RequestsMock,
+    statuses: Mapping[str, HTTPStatus] = MappingProxyType({}),
+) -> None:
+    """The stats of a disk (by extId) can be answered with an error"""
     api.get(
         v4_url(DISKS_PATH),
         json=_recorded("clustermgmt_config_disks.json"),
@@ -220,14 +237,6 @@ def _serve_recorded_nodes(
             ),
         ],
     )
-    for host_id, response in _recorded("clustermgmt_stats_hosts.json").items():
-        _serve_stats(
-            api,
-            _host_stats_path(host_id),
-            response,
-            statuses.get(host_id, HTTPStatus.OK),
-            {"$select": HOST_STATS_FIELDS, "$samplingInterval": "30"},
-        )
     for disk_id, response in _recorded("clustermgmt_stats_disks.json").items():
         _serve_stats(
             api,
@@ -1449,3 +1458,61 @@ def test_hosts_sharing_a_name_get_a_nics_section_each(api: responses.RequestsMoc
         for section in fetch_host_nics(_context(hosts=hosts))
         if isinstance(section.payload, list)
     ] == [("host", 8)] * 3
+
+
+def test_storage_pool_goes_to_the_host_of_its_cluster_with_its_disks(
+    api: responses.RequestsMock,
+) -> None:
+    """Each series keeps all samples of the window, the parse function picks the newest"""
+    _serve_recorded_disks(api)
+
+    assert fetch_storage_pools(_context()) == [
+        Section(
+            "prism_storage_pools_v2",
+            _recorded("section_prism_storage_pools_v2.json"),
+            "cluster-a",
+        )
+    ]
+
+
+def test_storage_pools_and_nodes_share_the_disks(api: responses.RequestsMock) -> None:
+    _serve_recorded_nodes(api)
+    context = _context(hosts=_recorded_host_list())
+
+    fetch_storage_pools(context)
+    fetch_nodes(context)
+
+    assert _disk_calls(api) == 19
+
+
+def test_disk_stats_error_fails_the_storage_pools_and_warns_on_the_nodes(
+    api: responses.RequestsMock,
+) -> None:
+    disk_stats = _recorded("clustermgmt_stats_disks.json")
+    _serve_recorded_nodes(api, statuses=dict.fromkeys(disk_stats, HTTPStatus.FORBIDDEN))
+    api.assert_all_requests_are_fired = False
+    messages = AgentMessages()
+    context = _context(messages, _recorded_host_list())
+
+    with pytest.raises(PrismV4Error, match="403"):
+        fetch_storage_pools(context)
+    fetch_nodes(context)
+
+    assert [state for state, _text in messages] == ["warning"]
+
+
+def test_disk_without_a_pool_is_left_out(api: responses.RequestsMock) -> None:
+    disks = _recorded("clustermgmt_config_disks.json")
+    assert isinstance(listed := disks["data"], list)
+    api.get(
+        v4_url(DISKS_PATH),
+        json={**disks, "data": [{**listed[0], "storagePoolExtId": None}, *listed[1:]]},
+        match=[page_matcher(0)],
+    )
+    for disk_id, response in _recorded("clustermgmt_stats_disks.json").items():
+        _serve_stats(api, f"{DISK_STATS_PATH}/{disk_id}", response, HTTPStatus.OK, {})
+
+    sections = fetch_storage_pools(_context())
+
+    assert isinstance(pools := sections[0].payload, list)
+    assert [len(pool["disks"]) for pool in pools] == [17]

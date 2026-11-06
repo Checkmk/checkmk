@@ -28,6 +28,7 @@ MOCK_PASSWORD = "mock-veeam-password"
 
 BACKUP_SERVER_PORT = 9419  # Of a real server; the mock listens on a free port.
 PASSWORD_ID = "veeam"
+AGENT_PLUGIN_OUTPUT_FILE = "var/check_mk/veeam_agent_plugin_output"
 
 
 @dataclass(frozen=True)
@@ -103,18 +104,56 @@ def _veeam_password(
     site.openapi.passwords.delete(PASSWORD_ID)
 
 
+@pytest.fixture(name="agent_plugin_output", scope="module")
+def _agent_plugin_output() -> str | None:
+    """What the PowerShell agent plug-in reports for the backup server, if it also runs there.
+
+    A test module overrides this to feed the backup server host by both the plug-in and
+    the special agent.
+    """
+    return None
+
+
+@pytest.fixture(name="agent_plugin_rule", scope="module")
+def _agent_plugin_rule(
+    site: Site,
+    agent_plugin_output: str | None,
+    activate_changes_on_teardown: None,  # noqa: ARG001  # Needed for the teardown
+) -> Iterator[None]:
+    """The rule that feeds the backup server host the agent plug-in's output, if any."""
+    if agent_plugin_output is None:
+        yield
+        return
+    logger.info("Feed the backup server host the output of the agent plug-in")
+    site.write_file(AGENT_PLUGIN_OUTPUT_FILE, agent_plugin_output)
+    rule_id = site.openapi.rules.create(
+        value=f'cat "{site.path(AGENT_PLUGIN_OUTPUT_FILE)}"',
+        ruleset_name="datasource_programs",
+        folder="/",
+        conditions={"host_name": {"match_on": [BACKUP_SERVER_HOST_NAME], "operator": "one_of"}},
+    )
+    yield
+    site.openapi.rules.delete(rule_id)
+    site.delete_file(AGENT_PLUGIN_OUTPUT_FILE)
+
+
 @pytest.fixture(name="backup_server_host", scope="module")
 def _backup_server_host(
     site: Site,
     veeam_server: VeeamServer,
+    agent_plugin_output: str | None,
     activate_changes_on_teardown: None,  # noqa: ARG001  # Needed for the teardown
 ) -> Iterator[None]:
-    """The host of the Veeam backup server, monitored via the special agent."""
+    """The host of the Veeam backup server, monitored via the special agent, and via the
+    agent plug-in if it runs there."""
     logger.info("Create the host for the Veeam backup server")
     site.openapi.hosts.create(
         hostname=BACKUP_SERVER_HOST_NAME,
         folder="/",
-        attributes={"ipaddress": veeam_server.address, "tag_agent": "special-agents"},
+        attributes={
+            "ipaddress": veeam_server.address,
+            "tag_agent": "special-agents" if agent_plugin_output is None else "all-agents",
+        },
     )
     yield
     site.openapi.hosts.delete(BACKUP_SERVER_HOST_NAME)
@@ -199,6 +238,7 @@ def _set_up_veeam_monitoring_via_special_agent(
     backup_server_host: None,  # noqa: ARG001  # Needed for the setup
     protected_machine_host: None,  # noqa: ARG001  # Needed for the setup
     special_agent_rule: None,  # noqa: ARG001  # Needed for the setup
+    agent_plugin_rule: None,  # noqa: ARG001  # Needed for the setup
     inventory_rule: None,  # noqa: ARG001  # Needed for the setup
 ) -> None:
     """Monitor a Veeam backup server and a machine it protects via the Veeam special agent.

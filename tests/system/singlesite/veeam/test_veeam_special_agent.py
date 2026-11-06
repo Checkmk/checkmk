@@ -13,6 +13,9 @@ record new responses.
 The special agent connects as the Veeam Administrator user, so the expected values are
 what an administrator sees. They describe the real server at the time of recording: if
 the real server changes, update them here and re-record the responses.
+
+The backup server is also fed the output of the PowerShell agent plug-in, so the tests
+show that the services of both are discovered side by side.
 """
 
 import re
@@ -35,6 +38,29 @@ BACKUP_SERVER_NAME = "EC2AMAZ-C4O89E0"
 BACKUP_SERVER_PLATFORM = "Windows"
 BACKUP_SERVER_EDITION = "EnterprisePlus"
 BACKUP_SERVER_BUILD_VERSION = "13.0.3.63"
+
+# What the PowerShell agent plug-in reports for one backup job and the machine it protects.
+AGENT_PLUGIN_OUTPUT = "\n".join(
+    [
+        "<<<veeam_jobs:sep(9)>>>",
+        "Successful_job\tBackup\tStopped\tSuccess\t01.02.2026 20:05:45\t01.02.2026 20:10:45",
+        f"<<<<{PROTECTED_MACHINE_HOST_NAME}>>>>",
+        "<<<veeam_client:sep(9)>>>",
+        "Status\tSuccess",
+        "JobName\tSuccessful_job",
+        "TotalSizeByte\t100",
+        "ReadSizeByte\t80",
+        "TransferedSizeByte\t60",
+        "StartTime\t01.02.2026 20:05:45",
+        "LastBackupAge\t3600.0",
+        "DurationDDHHMMSS\t00:00:05:00",
+        "AvgSpeedBps\t100",
+        f"DisplayName\t{PROTECTED_MACHINE_HOST_NAME}",
+        f"BackupServer\t{BACKUP_SERVER_NAME}",
+        "<<<<>>>>",
+        "",
+    ]
+)
 
 
 @dataclass(frozen=True)
@@ -96,6 +122,7 @@ EXPECTED_BACKUP_SERVER_SERVICES: Mapping[str, ExpectedServiceResult | None] = {
             r"Type: FileBackup\b",
         ],
     ),
+    "VEEAM Job Successful_job": ExpectedServiceResult(0, [r"Result: Success\b", r"Type: Backup\b"]),
     "Veeam Backup job Successful_job": ExpectedServiceResult(
         0,
         [
@@ -157,6 +184,7 @@ EXPECTED_PROTECTED_MACHINE_SERVICES: Mapping[str, ExpectedServiceResult | None] 
         0, [r"\[piggyback\] Successfully processed from source 'veeam-server'"]
     ),
     "Check_MK Discovery": None,
+    "VEEAM Client Successful_job": ExpectedServiceResult(0, [r"Status: Success\b"]),
     "Veeam Backup Successful_job": ExpectedServiceResult(0, [r"Status: Success\b"]),
     "Veeam Restore points": ExpectedServiceResult(
         0,
@@ -167,6 +195,11 @@ EXPECTED_PROTECTED_MACHINE_SERVICES: Mapping[str, ExpectedServiceResult | None] 
         ],
     ),
 }
+
+
+@pytest.fixture(name="agent_plugin_output", scope="module")
+def _agent_plugin_output() -> str:
+    return AGENT_PLUGIN_OUTPUT
 
 
 @pytest.fixture(name="veeam_account", scope="module")

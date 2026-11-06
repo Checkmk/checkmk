@@ -12,7 +12,7 @@ import threading
 import time
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import timedelta
 from functools import partial
 from http import HTTPStatus
@@ -129,6 +129,33 @@ def _is_prism_central(cluster: JsonObject) -> bool:
     return isinstance(config, dict) and "PRISM_CENTRAL" in (config.get("clusterFunction") or [])
 
 
+class FetchOnce[T]:
+    """Data that several fetchers need: the first get() fetches it, every later get() of the
+    run returns the same result or raises the same error"""
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._result: tuple[T] | Exception | None = None
+
+    def get(self, fetch: Callable[[], T]) -> T:
+        with self._lock:
+            if self._result is None:
+                try:
+                    self._result = (fetch(),)
+                except Exception as e:
+                    self._result = e
+        if isinstance(self._result, Exception):
+            raise self._result
+        return self._result[0]
+
+
+@dataclass(frozen=True)
+class Disks:
+    listed: Sequence[ListedDisk]
+    # Of each listed disk, in the same order
+    stats: Sequence[DiskStats] | PrismV4Error
+
+
 @dataclass(frozen=True)
 class FetchContext:
     client: PrismV4Client
@@ -138,6 +165,7 @@ class FetchContext:
     # Listed once for all fetchers. If the listing failed, fetch_hosts reports the error and
     # fetch_vms reports the VMs without host names.
     hosts: Sequence[JsonObject] | PrismV4Error = ()
+    disks: FetchOnce[Disks] = field(default_factory=FetchOnce)
 
 
 @dataclass(frozen=True)
@@ -542,13 +570,24 @@ def _disk_stats(context: FetchContext, disk: ListedDisk) -> DiskStats:
         return DiskStats()
 
 
-def _all_disk_stats(context: FetchContext, disks: Sequence[ListedDisk]) -> list[DiskStats]:
-    """Only the storage tier summary needs them, so a failure loses only that"""
+def _fetch_disks(context: FetchContext) -> Disks:
+    """A failing stats call fails only the stats, the disks are still listed"""
+    listed = [
+        ListedDisk.model_validate(raw)
+        for raw in context.client.list_all(DISKS_PATH, {"$select": ",".join(_fields(ListedDisk))})
+    ]
     try:
-        return _fetch_each(disks, partial(_disk_stats, context))
+        return Disks(listed, _fetch_each(listed, partial(_disk_stats, context)))
     except PrismV4Error as e:
-        context.messages.add_warning(f"Could not fetch the disk stats: {e}")
-        return [DiskStats() for _disk in disks]
+        return Disks(listed, e)
+
+
+def _node_disk_stats(context: FetchContext, disks: Disks) -> Sequence[DiskStats]:
+    """Only the storage tier summary needs them, so a failure loses only that"""
+    if isinstance(disks.stats, PrismV4Error):
+        context.messages.add_warning(f"Could not fetch the disk stats: {disks.stats}")
+        return [DiskStats() for _disk in disks.listed]
+    return disks.stats
 
 
 def fetch_nodes(context: FetchContext) -> Sequence[Section]:
@@ -565,15 +604,10 @@ def fetch_nodes(context: FetchContext) -> Sequence[Section]:
         for host, stats in zip(listed_hosts, all_stats, strict=True)
         if stats is not None
     ]
-    host_ids = {host.ext_id for host, _stats in hosts}
-    disks = [
-        disk
-        for raw in context.client.list_all(DISKS_PATH, {"$select": ",".join(_fields(ListedDisk))})
-        if (disk := ListedDisk.model_validate(raw)).node_ext_id in host_ids
-    ]
+    disks = context.disks.get(partial(_fetch_disks, context))
 
     disks_by_node: dict[str | None, list[NodeDisk]] = {}
-    for disk, disk_stats in zip(disks, _all_disk_stats(context, disks), strict=True):
+    for disk, disk_stats in zip(disks.listed, _node_disk_stats(context, disks), strict=True):
         disks_by_node.setdefault(disk.node_ext_id, []).append(
             NodeDisk(config=DiskConfig.model_validate(disk.to_section()), stats=disk_stats)
         )

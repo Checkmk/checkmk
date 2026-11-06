@@ -1247,24 +1247,35 @@ def test_nodes_fail_if_the_host_list_failed() -> None:
         fetch_nodes(_context(hosts=error))
 
 
-def test_disk_stats_of_a_node_left_out_are_not_fetched(api: responses.RequestsMock) -> None:
-    _serve_recorded_nodes(api, statuses={HOST_1: HTTPStatus.NOT_FOUND})
-    api.assert_all_requests_are_fired = False
-    disks = _recorded("clustermgmt_config_disks.json")["data"]
-    assert isinstance(disks, list)
-
-    fetch_nodes(_context(hosts=_recorded_host_list()))
-
-    fetched = {
-        (call.request.url or "").split("?")[0]
+def _disk_calls(api: responses.RequestsMock) -> int:
+    return sum(
+        f"/api/{DISKS_PATH}" in (call.request.url or "")
+        or f"/api/{DISK_STATS_PATH}/" in (call.request.url or "")
         for call in api.calls
-        if DISK_STATS_PATH in (call.request.url or "")
-    }
-    assert fetched == {
-        v4_url(f"{DISK_STATS_PATH}/{disk['extId']}")
-        for disk in disks
-        if disk["nodeExtId"] != HOST_1
-    }
+    )
+
+
+def test_disks_are_fetched_once_per_run(api: responses.RequestsMock) -> None:
+    _serve_recorded_nodes(api)
+    context = _context(hosts=_recorded_host_list())
+
+    first = fetch_nodes(context)
+
+    # The disk list and the stats of each of its 18 disks
+    assert (_disk_calls(api), fetch_nodes(context), _disk_calls(api)) == (19, first, 19)
+
+
+def test_failed_disk_list_is_not_fetched_again(api: responses.RequestsMock) -> None:
+    api.get(v4_url(DISKS_PATH), status=HTTPStatus.FORBIDDEN, json={"message": "Forbidden"})
+    context = _context()
+
+    errors = []
+    for _run in range(2):
+        with pytest.raises(PrismV4Error) as error:
+            fetch_nodes(context)
+        errors.append(error.value)
+
+    assert (_disk_calls(api), errors[0] is errors[1]) == (1, True)
 
 
 def test_disk_that_no_longer_exists_is_kept_without_stats(api: responses.RequestsMock) -> None:

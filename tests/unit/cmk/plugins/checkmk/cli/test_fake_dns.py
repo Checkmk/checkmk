@@ -11,7 +11,6 @@ from cmk.cli.engine.commands import Commands as CLICommands
 from cmk.cli.engine.discovery import make_command as cli_make_command
 from cmk.cli.engine.options import general_options as cli_general_options
 from cmk.cli.internal import Command as CLICommand
-from cmk.cli.internal import Options as CLIOptions
 from cmk.plugins.checkmk.cli.check import cli_command_check
 from cmk.plugins.checkmk.cli.core_config import (
     cli_command_nagios_config,
@@ -49,7 +48,7 @@ from cmk.plugins.checkmk.cli.snmp import cli_command_snmpget, cli_command_snmpwa
     ],
     ids=lambda command: command.long,
 )
-def test_a_command_looking_up_addresses_takes_fake_dns(command: CLICommand[CLIOptions]) -> None:
+def test_a_command_looking_up_addresses_takes_fake_dns[R](command: CLICommand[R]) -> None:
     parsed = cli_parse(
         CLICommands(plugins=[cli_make_command(command)], general_options=cli_general_options()),
         ["cmk", "--fake-dns", "1.2.3.4", f"--{command.long}", "myhost"],

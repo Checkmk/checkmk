@@ -241,6 +241,10 @@ def _read_options(sub_options: Sequence[Option], reader: Reader) -> Options:
     }
 
 
+def no_options(_options: Reader) -> None:
+    """The request of a command without options"""
+
+
 def untyped_request(sub_options: Sequence[Option] = ()) -> Callable[[Reader], Options]:
     """The request of a command whose handler reads its options from the untyped mapping"""
     return partial(_read_options, sub_options)
@@ -331,6 +335,7 @@ __all__ = [
     "ExitCode",
     "Flag",
     "GlobalOptions",
+    "no_options",
     "Reader",
     "Options",
     "untyped_request",

@@ -6,16 +6,18 @@
 
 import subprocess
 import sys
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
+from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
+from typing import Final
 
 import cmk.ccc.cleanup
 import cmk.utils.paths
 from cmk.base import config
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
-from cmk.ccc.hostaddress import HostName
+from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.helper_interface import SourceType
 from cmk.checkengine.snmp_backend_builder import BackendError, make_backend
 from cmk.checkengine.snmplib import (
@@ -23,24 +25,24 @@ from cmk.checkengine.snmplib import (
     OID,
     oids_to_walk,
     SNMPBackend,
+    SNMPBackendEnum,
     SNMPContext,
     SNMPHostConfig,
     walk_all_contexts_for_export,
 )
-from cmk.cli.engine.readers import option_strings as cli_option_strings
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
-from cmk.cli.internal import Option as CLIOption
-from cmk.cli.internal import Options as CLIOptions
-from cmk.cli.internal import untyped_request as cli_untyped_request
+from cmk.cli.internal import no_options as cli_no_options
+from cmk.cli.internal import Reader as CLIReader
+from cmk.cli.internal import Values as CLIValues
 from cmk.utils import ip_lookup
 from cmk.utils.log import console
 
-from .options import fake_dns_address, FAKE_DNS_OPTION, parse_snmp_backend, SNMP_BACKEND_OPTION
+from .options import FAKE_DNS_VALUE, SNMP_BACKEND_VALUE
 
 # .
 #   .--snmptranslate-------------------------------------------------------.
@@ -59,7 +61,7 @@ def _make_local_mibs_dir(omd_root: Path) -> Path:
 
 
 def _mode_snmptranslate(
-    _omd_root: Path, _global_options: CLIGlobalOptions, _options: CLIOptions, args: CLIArgs
+    _omd_root: Path, _global_options: CLIGlobalOptions, args: CLIArgs
 ) -> CLIExitCode:
     walk_filename = args[0]
     if not walk_filename:
@@ -112,9 +114,9 @@ def _mode_snmptranslate(
     return CLIExitCode.SUCCESS
 
 
-def _run_snmptranslate(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
+def _run_snmptranslate(context: CLIContext, _request: None, args: CLIArgs) -> CLIExitCode:
     try:
-        return _mode_snmptranslate(context.omd_root, context.global_options, options, args)
+        return _mode_snmptranslate(context.omd_root, context.global_options, args)
     except MKGeneralException as e:
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
@@ -125,7 +127,7 @@ def _run_snmptranslate(context: CLIContext, options: CLIOptions, args: CLIArgs) 
 cli_command_snmptranslate = CLICommand(
     name="snmptranslate",
     long="snmptranslate",
-    request=cli_untyped_request(),
+    request=cli_no_options,
     handler=_run_snmptranslate,
     arguments=CLIArguments("HOST"),
     help="Do snmptranslate on walk",
@@ -211,31 +213,58 @@ def _make_backend(snmp_config: SNMPHostConfig) -> SNMPBackend:
         raise MKGeneralException(str(exc)) from exc
 
 
+_EXTRA_OIDS_VALUES: Final = CLIValues(
+    long="extraoid",
+    placeholder="A",
+    help="Walk also on this OID, in addition to mib-2 and "
+    "enterprises. You can specify this option multiple "
+    "times.",
+    parse=OID,
+)
+
+_OIDS_VALUES: Final = CLIValues(
+    long="oid",
+    placeholder="A",
+    help="Walk on this OID instead of mib-2 and enterprises. "
+    "You can specify this option multiple times.",
+    parse=OID,
+)
+
+
+@dataclass(frozen=True, kw_only=True)
+class _WalkRequest:
+    backend: SNMPBackendEnum | None
+    extra_oids: Sequence[OID]
+    oids: Sequence[OID]
+    fake_dns: HostAddress | None
+
+
+def _walk_request(options: CLIReader) -> _WalkRequest:
+    return _WalkRequest(
+        backend=options.value(SNMP_BACKEND_VALUE),
+        extra_oids=options.values(_EXTRA_OIDS_VALUES),
+        oids=options.values(_OIDS_VALUES),
+        fake_dns=options.value(FAKE_DNS_VALUE),
+    )
+
+
 def _mode_snmpwalk(
-    _omd_root: Path, global_options: CLIGlobalOptions, options: CLIOptions, hostnames: CLIArgs
+    _omd_root: Path, global_options: CLIGlobalOptions, request: _WalkRequest, hostnames: CLIArgs
 ) -> CLIExitCode:
-    fake_dns = fake_dns_address(options)
-    oids = cli_option_strings(options, "oid")
-    extra_oids = cli_option_strings(options, "extraoid")
-    if oids and extra_oids:
+    if request.oids and request.extra_oids:
         raise MKGeneralException("You cannot specify --oid and --extraoid at the same time.")
 
     walk_options: _SNMPWalkOptions = {}
-    if oids:
-        walk_options["oids"] = list(oids)
-    if extra_oids:
-        walk_options["extraoids"] = list(extra_oids)
-
-    try:
-        snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
-    except ValueError as exc:
-        raise MKBailOut("Unknown SNMP backend") from exc
+    if request.oids:
+        walk_options["oids"] = list(request.oids)
+    if request.extra_oids:
+        walk_options["extraoids"] = list(request.extra_oids)
 
     if not hostnames:
         raise MKBailOut("Please specify host names to walk on.")
 
     config_cache = config.load(validate_hosts=True, debug=global_options.debug).config_cache
-    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
+    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=request.fake_dns)
     ip_address_of = ip_lookup.make_lookup_ip_address(ip_lookup_config)
 
     for hostname in (HostName(hn) for hn in hostnames):
@@ -248,7 +277,7 @@ def _mode_snmpwalk(
             raise MKGeneralException("Failed to gather IP address of %s" % hostname)
 
         snmp_config = config_cache.make_snmp_config(
-            hostname, ip_family, ipaddress, SourceType.HOST, backend_override=snmp_backend_override
+            hostname, ip_family, ipaddress, SourceType.HOST, backend_override=request.backend
         )
         _do_snmpwalk(
             walk_options,
@@ -258,9 +287,9 @@ def _mode_snmpwalk(
     return CLIExitCode.SUCCESS
 
 
-def _run_snmpwalk(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
+def _run_snmpwalk(context: CLIContext, request: _WalkRequest, args: CLIArgs) -> CLIExitCode:
     try:
-        return _mode_snmpwalk(context.omd_root, context.global_options, options, args)
+        return _mode_snmpwalk(context.omd_root, context.global_options, request, args)
     except (MKBailOut, MKGeneralException) as e:
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
@@ -271,29 +300,9 @@ def _run_snmpwalk(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CL
 cli_command_snmpwalk = CLICommand(
     name="snmpwalk",
     long="snmpwalk",
+    request=_walk_request,
     handler=_run_snmpwalk,
     arguments=CLIArguments("HOST1 HOST2...", optional=True),
-    request=cli_untyped_request(
-        [
-            SNMP_BACKEND_OPTION,
-            CLIOption(
-                long="extraoid",
-                argument="A",
-                repeat=True,
-                help="Walk also on this OID, in addition to mib-2 and "
-                "enterprises. You can specify this option multiple "
-                "times.",
-            ),
-            CLIOption(
-                long="oid",
-                argument="A",
-                repeat=True,
-                help="Walk on this OID instead of mib-2 and enterprises. "
-                "You can specify this option multiple times.",
-            ),
-            FAKE_DNS_OPTION,
-        ]
-    ),
     help="Do snmpwalk on one or more hosts",
     description=[
         "Does a complete snmpwalk for the specified hosts both "
@@ -318,22 +327,29 @@ cli_command_snmpwalk = CLICommand(
 #   '----------------------------------------------------------------------'
 
 
+@dataclass(frozen=True, kw_only=True)
+class _GetRequest:
+    backend: SNMPBackendEnum | None
+    fake_dns: HostAddress | None
+
+
+def _get_request(options: CLIReader) -> _GetRequest:
+    return _GetRequest(
+        backend=options.value(SNMP_BACKEND_VALUE), fake_dns=options.value(FAKE_DNS_VALUE)
+    )
+
+
 def _mode_snmpget(
-    _omd_root: Path, global_options: CLIGlobalOptions, options: CLIOptions, args: CLIArgs
+    _omd_root: Path, global_options: CLIGlobalOptions, request: _GetRequest, args: CLIArgs
 ) -> CLIExitCode:
-    fake_dns = fake_dns_address(options)
     if not args:
         raise MKBailOut("You need to specify an OID.")
-    try:
-        snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
-    except ValueError as exc:
-        raise MKBailOut("Unknown SNMP backend") from exc
 
     loading_result = config.load(validate_hosts=True, debug=global_options.debug)
     config_cache = loading_result.config_cache
     hosts_config = loading_result.hosts_config
 
-    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
+    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=request.fake_dns)
     ip_address_of = ip_lookup.make_lookup_ip_address(ip_lookup_config)
     oid, *hostnames = args
 
@@ -361,7 +377,7 @@ def _mode_snmpget(
             ip_family,
             ipaddress,
             SourceType.HOST,
-            backend_override=snmp_backend_override,
+            backend_override=request.backend,
         )
         backend = _make_backend(snmp_config)
         value = get_single_oid(
@@ -371,9 +387,9 @@ def _mode_snmpget(
     return CLIExitCode.SUCCESS
 
 
-def _run_snmpget(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
+def _run_snmpget(context: CLIContext, request: _GetRequest, args: CLIArgs) -> CLIExitCode:
     try:
-        return _mode_snmpget(context.omd_root, context.global_options, options, args)
+        return _mode_snmpget(context.omd_root, context.global_options, request, args)
     except (MKBailOut, MKGeneralException) as e:
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
@@ -384,9 +400,9 @@ def _run_snmpget(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLI
 cli_command_snmpget = CLICommand(
     name="snmpget",
     long="snmpget",
+    request=_get_request,
     handler=_run_snmpget,
     arguments=CLIArguments("OID [HOST1 HOST2...]", optional=True),
-    request=cli_untyped_request([SNMP_BACKEND_OPTION, FAKE_DNS_OPTION]),
     help="Fetch single OID from one or multiple hosts",
     description=[
         (

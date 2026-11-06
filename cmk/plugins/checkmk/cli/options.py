@@ -21,6 +21,7 @@ from cmk.checkengine.snmplib import (
 )
 from cmk.cli.engine.readers import option_string as cli_option_string
 from cmk.cli.internal import Option as CLIOption
+from cmk.cli.internal import Value as CLIValue
 from cmk.utils.check_utils import maincheckify
 
 
@@ -93,17 +94,34 @@ FETCHER_OPTIONS: Final = [
     ),
 ]
 
-SNMP_BACKEND_OPTION: Final = CLIOption(
+
+def _untyped_option(value: CLIValue[object]) -> CLIOption:
+    return CLIOption(
+        long=value.long,
+        help=value.help,
+        short=value.short,
+        argument=value.placeholder,
+        deprecated_names=value.deprecated_names,
+    )
+
+
+SNMP_BACKEND_VALUE: Final = CLIValue(
     long="snmp-backend",
     help="Override default SNMP backend",
-    argument="inline|classic|stored-walk",
+    placeholder="inline|classic|stored-walk",
+    parse=parse_snmp_backend,
 )
 
-FAKE_DNS_OPTION: Final = CLIOption(
+SNMP_BACKEND_OPTION: Final = _untyped_option(SNMP_BACKEND_VALUE)
+
+FAKE_DNS_VALUE: Final = CLIValue(
     long="fake-dns",
     help="Fake IP addresses of all hosts to be IP. This prevents DNS lookups.",
-    argument="IP",
+    placeholder="IP",
+    parse=HostAddress,
 )
+
+FAKE_DNS_OPTION: Final = _untyped_option(FAKE_DNS_VALUE)
 
 
 def fake_dns_address(options: Mapping[str, object]) -> HostAddress | None:

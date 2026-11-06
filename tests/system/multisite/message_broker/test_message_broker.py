@@ -63,7 +63,7 @@ class TestCMKBrokerTest:
     def test_pong(self, central_site: Site) -> None:
         """Test if we can pong"""
         with rabbitmq_info_on_failure([central_site]), broker_pong(central_site) as pong:
-            assert pong.returncode is None  # it's running
+            assert pong.poll() is None  # it's running
 
     def test_pong_received_message(self, central_site: Site, remote_site: Site) -> None:
         """Test if the `pong_received_message` works as intended"""

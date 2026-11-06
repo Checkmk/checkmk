@@ -72,11 +72,10 @@ def broker_pong(site: Site) -> Iterator[subprocess.Popen]:  # type: ignore[misc]
     try:
         yield pong
     finally:
-        if pong.returncode is not None:
+        if pong.poll() is not None:
             err = f"`cmk-broker-test` stopped unexpectedly on {site.id}"
             logger.error(err)
-            logger.error("stdout: %s", pong.stdout)
-            logger.error("stderr: %s", pong.stderr)
+            logger.error("stdout: %s", pong.stdout.read())
             raise RuntimeError(err)
         site.run(["kill", "-s", "SIGINT", str(pid)])
         pong.wait(timeout=3)

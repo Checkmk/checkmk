@@ -4405,6 +4405,7 @@ pydantic==2.14.3 \
     #   -r packages/cmk-backup/requirements.in
     #   -r packages/cmk-fastapi/requirements.in
     #   -r packages/cmk-flags/requirements.in
+    #   -r packages/cmk-licensing/requirements.in
     #   -r packages/cmk-maps/requirements.in
     #   -r packages/cmk-messaging/requirements.in
     #   -r packages/cmk-mkp-tool/requirements.in

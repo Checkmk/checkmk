@@ -43,6 +43,7 @@ py_library(
         "//packages/cmk-livestatus-client",
         "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-plugin-apis:licensing",
+        requirement("pydantic"),
         requirement("python-dateutil"),
     ],
 )

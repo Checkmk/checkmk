@@ -24,11 +24,9 @@ from cmk.cli.internal import Option as CLIOption
 from cmk.discover_plugins import discover_all_plugins, PluginGroup, PluginLocation
 
 OptionSpec = str
-Argument = str
 OptionName = str
 ConvertFunction = Callable[[str], object]
-Options = list[tuple[OptionSpec, Argument]]
-Arguments = Sequence[str]
+type GetoptOptions = Sequence[tuple[OptionSpec, str]]
 
 
 def write_stdout(txt: str) -> None:
@@ -127,11 +125,11 @@ class Option:
 
 
 def parse_sub_options(
-    sub_options: Sequence[Option], all_opts: Options, logger: logging.Logger
+    sub_options: Sequence[Option], all_opts: GetoptOptions, logger: logging.Logger
 ) -> Mapping[OptionName, object]:
     options: dict[OptionName, object] = {}
     counts: Counter[OptionName] = Counter()
-    collected: dict[OptionName, list[Argument]] = {}
+    collected: dict[OptionName, list[str]] = {}
 
     for o, a in all_opts:
         for option in sub_options:
@@ -216,7 +214,7 @@ def option_names[NameT](
             raise TypeError(f"--{name}: invalid argument {value!r}")
 
 
-class Command(Option):
+class GetoptCommand(Option):
     def __init__(
         self,
         *,
@@ -313,10 +311,10 @@ def make_option(option: CLIOption) -> Option:
     )
 
 
-def make_command(command: CLICommand) -> Command:
+def make_command(command: CLICommand) -> GetoptCommand:
     """Build the engine's command from its API declaration"""
     arguments = command.arguments
-    return Command(
+    return GetoptCommand(
         name=command.name,
         long_option=command.long,
         handler_function=command.handler_function,
@@ -352,7 +350,7 @@ def general_options() -> Sequence[Option]:
     return [_VERBOSE_OPTION, _DEBUG_OPTION, _PROFILE_OPTION]
 
 
-def parse_general_options(all_opts: Options) -> CLIGlobalOptions:
+def parse_general_options(all_opts: GetoptOptions) -> CLIGlobalOptions:
     """Collect the general options from the parsed command line"""
     verbosity = 0
     debug = False
@@ -373,7 +371,7 @@ def _named_after_its_variable(location: PluginLocation, command: CLICommand) -> 
     return command
 
 
-def discover_commands() -> Sequence[Command]:
+def discover_commands() -> Sequence[GetoptCommand]:
     discovered = discover_all_plugins(
         PluginGroup.CLI,
         cli_entry_point_prefixes(),
@@ -429,14 +427,14 @@ def write_paged(txt: str) -> None:
 HELP_OPTION: Final = Option(long_option="help", short_option="h", short_help="Print this help")
 
 
-def _map_options(commands: Sequence[Command]) -> Mapping[OptionName, Command]:
+def _map_options(commands: Sequence[GetoptCommand]) -> Mapping[OptionName, GetoptCommand]:
     """Map every spelling of every command to it, rejecting a collision.
 
     Two commands claiming the same option would otherwise shadow one another
     silently, and the one that loses simply could not be invoked.
     """
     reserved = {HELP_OPTION.long_option, HELP_OPTION.short_option}
-    mapped: dict[OptionName, Command] = {}
+    mapped: dict[OptionName, GetoptCommand] = {}
     for command in commands:
         for name in (command.long_option, command.short_option):
             if name is None:
@@ -455,15 +453,15 @@ class Commands:
     def __init__(
         self,
         *,
-        plugins: Sequence[Command],
+        plugins: Sequence[GetoptCommand],
         general_options: Sequence[Option],
     ) -> None:
         super().__init__()
-        self._command_map: Mapping[OptionName, Command] = _map_options(plugins)
+        self._command_map: Mapping[OptionName, GetoptCommand] = _map_options(plugins)
         self._commands = plugins
         self._general_options = general_options
 
-    def find(self, name: OptionName) -> Command | None:
+    def find(self, name: OptionName) -> GetoptCommand | None:
         return self._command_map.get(name)
 
     def short_getopt_specs(self) -> str:

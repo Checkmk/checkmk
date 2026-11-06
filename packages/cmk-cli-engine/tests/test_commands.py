@@ -13,8 +13,8 @@ import pytest
 
 from cmk.cli.engine.commands import (
     _pager_environment,
-    Command,
     Commands,
+    GetoptCommand,
     Option,
     option_count,
     option_names,
@@ -164,8 +164,8 @@ def _never(*_args: object, **_kwargs: object) -> NoReturn:
     raise AssertionError("the command must not run")
 
 
-def _command(long_option: str, short_option: str | None = None) -> Command:
-    return Command(
+def _command(long_option: str, short_option: str | None = None) -> GetoptCommand:
+    return GetoptCommand(
         name=long_option,
         long_option=long_option,
         short_option=short_option,

@@ -14,7 +14,7 @@ from types import FrameType
 import pytest
 
 from cmk.cli.engine.call import CommandTracer
-from cmk.cli.engine.commands import Command, make_command
+from cmk.cli.engine.commands import GetoptCommand, make_command
 from cmk.cli.engine.run import (
     dispatch,
     enable_file_logging,
@@ -177,14 +177,14 @@ def test_file_logging_replaces_the_handlers_it_finds(tmp_path: Path) -> None:
     assert len(logger.handlers) == 1
 
 
-def _command(handler: CommandHandler) -> Command:
+def _command(handler: CommandHandler) -> GetoptCommand:
     return make_command(
         CLICommand(name="demo", long="demo", handler_function=handler, help="Demonstrate")
     )
 
 
 def _runtime(
-    commands: Sequence[Command] = (),
+    commands: Sequence[GetoptCommand] = (),
     *,
     trace_command: CommandTracer = lambda *_args: nullcontext(),
     on_sigint: Callable[[int, FrameType | None], object] = signal.default_int_handler,
@@ -215,7 +215,7 @@ def _run(argv: Sequence[str], runtime: Runtime) -> int:
         signal.signal(signal.SIGINT, previous)
 
 
-def _numbered(handler: CommandHandler) -> Command:
+def _numbered(handler: CommandHandler) -> GetoptCommand:
     return make_command(
         CLICommand(
             name="demo",
@@ -367,7 +367,7 @@ class FakeCommandTracer:
         self.traced: list[str] = []
 
     def __call__(
-        self, _context: CLIContext, command: Command, _options: Options, _args: CLIArgs
+        self, _context: CLIContext, command: GetoptCommand, _options: Options, _args: CLIArgs
     ) -> nullcontext[None]:
         self.traced.append(command.name)
         return nullcontext()

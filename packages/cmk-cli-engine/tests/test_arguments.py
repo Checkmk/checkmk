@@ -10,9 +10,9 @@ import pytest
 
 from cmk.cli.engine.arguments import InvalidArguments, parse, RunCommand, ShowHelp
 from cmk.cli.engine.commands import (
-    Command,
     Commands,
     general_options,
+    GetoptCommand,
     Option,
     parse_sub_options,
 )
@@ -31,7 +31,7 @@ _COMMAND_ARGUMENT: Final = "myhost"
 
 _ARGUMENT_EVERY_CONVERSION_ACCEPTS: Final = "inline"
 
-_PLAIN: Final = Command(
+_PLAIN: Final = GetoptCommand(
     name="plain",
     long_option="plain",
     short_option="p",
@@ -39,14 +39,14 @@ _PLAIN: Final = Command(
     short_help="takes no argument",
 )
 
-_OTHER_PLAIN: Final = Command(
+_OTHER_PLAIN: Final = GetoptCommand(
     name="other_plain",
     long_option="other-plain",
     handler_function=_unreachable,
     short_help="takes no argument either",
 )
 
-_WITH_ARGUMENT: Final = Command(
+_WITH_ARGUMENT: Final = GetoptCommand(
     name="with_argument",
     long_option="with-argument",
     handler_function=_unreachable,
@@ -57,7 +57,7 @@ _WITH_ARGUMENT: Final = Command(
 
 # The engine runs this one when the command line names no command at all, so the
 # name is not free to choose.
-_CHECK: Final = Command(
+_CHECK: Final = GetoptCommand(
     name="check",
     long_option="check",
     short_option="c",

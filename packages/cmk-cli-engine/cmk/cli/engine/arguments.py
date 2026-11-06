@@ -8,7 +8,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Final
 
-from .commands import Argument, Command, Commands, HELP_OPTION, Options
+from .commands import Commands, GetoptCommand, GetoptOptions, HELP_OPTION
 
 _IMPLICIT_CHECK_ARGUMENT_LIMIT: Final = 2
 _IMPLICIT_CHECK_COMMAND: Final = "check"
@@ -16,15 +16,15 @@ _IMPLICIT_CHECK_COMMAND: Final = "check"
 
 @dataclass(frozen=True)
 class RunCommand:
-    command: Command
-    argument: Argument
-    options: Options
+    command: GetoptCommand
+    argument: str
+    options: GetoptOptions
     arguments: Sequence[str]
 
 
 @dataclass(frozen=True)
 class ShowHelp:
-    options: Options
+    options: GetoptOptions
 
 
 @dataclass(frozen=True)
@@ -32,7 +32,7 @@ class InvalidArguments:
     message: str
 
 
-def _is_implicit_check(options: Options, arguments: Sequence[str]) -> bool:
+def _is_implicit_check(options: GetoptOptions, arguments: Sequence[str]) -> bool:
     return (0 < len(arguments) <= _IMPLICIT_CHECK_ARGUMENT_LIMIT) or any(
         option == "--keepalive" for option, _argument in options
     )

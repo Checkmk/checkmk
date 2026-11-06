@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Final
 
 from cmk.cli.engine.call import call, CommandTracer
-from cmk.cli.engine.commands import Command, Option, parse_sub_options
+from cmk.cli.engine.commands import GetoptCommand, Option, parse_sub_options
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import CommandHandler, Options
 from cmk.cli.internal import Context as CLIContext
@@ -44,8 +44,8 @@ def _command(
     argument: bool = False,
     argument_optional: bool = False,
     sub_options: Sequence[Option] = (),
-) -> Command:
-    return Command(
+) -> GetoptCommand:
+    return GetoptCommand(
         name="test_command",
         long_option="test-command",
         handler_function=handler,
@@ -58,7 +58,7 @@ def _command(
 
 
 def _call(
-    command: Command,
+    command: GetoptCommand,
     argument: str = "",
     *,
     arguments: Sequence[str] = (),
@@ -145,10 +145,10 @@ def test_the_handler_runs_inside_the_commands_trace() -> None:
 
 
 def test_the_trace_sees_what_the_handler_is_handed() -> None:
-    seen: list[tuple[CLIContext, Command, Options, CLIArgs]] = []
+    seen: list[tuple[CLIContext, GetoptCommand, Options, CLIArgs]] = []
 
     def traced(
-        context: CLIContext, command: Command, options: Options, args: CLIArgs
+        context: CLIContext, command: GetoptCommand, options: Options, args: CLIArgs
     ) -> nullcontext[None]:
         seen.append((context, command, options, args))
         return nullcontext()

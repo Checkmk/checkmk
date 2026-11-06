@@ -17,10 +17,10 @@ from typing import Final
 from cmk.ccc.log import CMKFormatter
 from cmk.cli.engine.call import call, CommandTracer
 from cmk.cli.engine.commands import (
-    Command,
     Commands,
     discover_commands,
     general_options,
+    GetoptCommand,
     Option,
     parse_general_options,
     parse_sub_options,
@@ -82,7 +82,7 @@ _LOG_FILE_OPTION: Final = Option(
 class Runtime:
     """What the command line reaches for besides its arguments, injectable one by one"""
 
-    discover: Callable[[], Sequence[Command]] = discover_commands
+    discover: Callable[[], Sequence[GetoptCommand]] = discover_commands
     trace_command: CommandTracer
     on_sigint: Callable[[int, FrameType | None], object] = signal.default_int_handler
     crash_reporter_for: Callable[[Path, Sequence[str], Mapping[str, str]], CrashReporter]

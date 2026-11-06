@@ -153,25 +153,93 @@ std::vector<std::string> split_columns(const std::string &line) {
 void usage() {
     reply_and_exit(
         State::unknown,
-        "Usage: check_mkevents [-s SOCKETPATH] [-H REMOTE:PORT] [-a] [-l|-L] HOST [APPLICATION]\n"
+        "Usage: check_mkevents [-s SOCKETPATH] [-H REMOTE:PORT] [-a] [-l|-L] [-q] HOST [APPLICATION]\n"
         " -a    do not take acknowledged events into account.\n"
         " -l    show last log message in summary/short output\n"
         " -L    show last log message in details/long output\n"
+        " -q    take a backslash in HOST as quoting a following slash or backslash.\n"
         " HOST  may be a hostname, and IP address or hostname/IP-address.");
 }
 
-std::string prepare_host_match_list(const char *s) {
-    const char *scan = s;
-    std::string result;
-    while (*scan != 0) {
-        if (*scan == '/') {
-            result += " ";
+// Splits a host specification like "myhost/10.1.2.3" at the slashes. If it is
+// quoted, a backslash quotes a following slash or backslash, e.g. in
+// "Router A\/B".
+std::vector<std::string> split_host_spec(const std::string &spec, bool quoted) {
+    std::vector<std::string> hosts{""};
+    for (size_t i = 0; i < spec.size(); i++) {
+        if (quoted && spec[i] == '\\' && i + 1 < spec.size() &&
+            (spec[i + 1] == '/' || spec[i + 1] == '\\')) {
+            hosts.back() += spec[++i];
+        } else if (spec[i] == '/') {
+            hosts.emplace_back();
         } else {
-            result += *scan;
+            hosts.back() += spec[i];
         }
-        scan++;
+    }
+    return hosts;
+}
+
+// Drops the quoting of a host specification for showing it.
+std::string unquote_host_spec(const std::string &spec, bool quoted) {
+    const auto hosts = split_host_spec(spec, quoted);
+    std::string result = hosts.front();
+    for (size_t i = 1; i < hosts.size(); i++) {
+        result += "/" + hosts[i];
     }
     return result;
+}
+
+// Host names and IP addresses consist of these characters only.
+bool is_plain_host(const std::string &host) {
+    return host.find_first_not_of(
+               "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+               "0123456789.-_:") == std::string::npos;
+}
+
+std::string quote_regex(const std::string &s) {
+    std::string result;
+    for (char c : s) {
+        if (std::string_view{R"(\.^$*+?{}[]|())"}.find(c) !=
+            std::string_view::npos) {
+            result += '\\';
+        }
+        result += c;
+    }
+    return result;
+}
+
+// The event console drops whitespace around the value of a filter, so a single
+// host loses it, and so does a host of a list.
+std::string strip_whitespace(const std::string &s) {
+    const char *const whitespace = " \t\n\v\f\r";
+    const auto first = s.find_first_not_of(whitespace);
+    return first == std::string::npos
+               ? ""
+               : s.substr(first, s.find_last_not_of(whitespace) - first + 1);
+}
+
+std::string host_filter(const std::string &spec, bool quoted) {
+    auto hosts = split_host_spec(spec, quoted);
+    if (hosts.size() == 1) {
+        return "Filter: event_host =~ " + hosts[0] + "\n";
+    }
+    // The event console splits the argument of "in" at whitespace, so we can
+    // use it, which is faster than a regex, for plain hosts only.
+    std::string in_list;
+    std::string regex;
+    bool all_plain = true;
+    for (const auto &spec_host : hosts) {
+        const auto host = strip_whitespace(spec_host);
+        if (host.empty()) {
+            continue;
+        }
+        all_plain = all_plain && is_plain_host(host);
+        in_list += (in_list.empty() ? "" : " ") + host;
+        regex += (regex.empty() ? "" : "|") + quote_regex(host);
+    }
+    // Unlike $, \Z doesn't match in front of a newline at the end, too.
+    return all_plain ? "Filter: event_host in " + in_list + "\n"
+                     : "Filter: event_host ~~ ^(?:" + regex + ")\\Z\n";
 }
 
 int main(int argc, char **argv) {
@@ -182,6 +250,7 @@ int main(int argc, char **argv) {
     bool ignore_acknowledged = false;
     bool last_log_in_summary = false;
     bool last_log_in_details = false;
+    bool host_spec_quoted = false;
     std::string unixsocket_path;
 
     int argc_count = argc;
@@ -202,6 +271,9 @@ int main(int argc, char **argv) {
             argc_count--;
         } else if (strcmp("-L", argv[i]) == 0) {
             last_log_in_details = true;
+            argc_count--;
+        } else if (strcmp("-q", argv[i]) == 0) {
+            host_spec_quoted = true;
             argc_count--;
         } else if (argc_count > 2) {
             host = argv[i];
@@ -303,15 +375,8 @@ int main(int argc, char **argv) {
     query_message += "GET events\n";
     query_message += "Columns: event_phase event_state event_text\n";
 
-    query_message += "Filter: event_host ";
-    if (strchr(host, '/') != nullptr) {
-        query_message += "in ";
-        query_message += prepare_host_match_list(host);
-    } else {
-        query_message += "=~ ";
-        query_message += host;
-    }
-    query_message += "\nFilter: event_phase in open ack\n";
+    query_message += host_filter(host, host_spec_quoted);
+    query_message += "Filter: event_phase in open ack\n";
     query_message += "OutputFormat: plain\n";
 
     if (application != nullptr) {
@@ -454,7 +519,9 @@ int main(int argc, char **argv) {
     if (count == 0) {
         std::string app =
             application == nullptr ? "" : (std::string(application) + " on ");
-        reply_and_exit(State::ok, "no events for " + app + host);
+        reply_and_exit(
+            State::ok,
+            "no events for " + app + unquote_host_spec(host, host_spec_quoted));
     }
 
     std::cout << worst_state << " - ";

@@ -32,6 +32,11 @@ def get_mkevents_description(params: MKEventsParams, macros: Mapping[str, str]) 
     return "Events"
 
 
+def _quote_host(host: str) -> str:
+    """With -q, check_mkevents takes a backslash as quoting a slash or a backslash"""
+    return host.replace("\\", "\\\\").replace("/", "\\/")
+
+
 def generate_mkevents_command(
     params: MKEventsParams,
     host_config: HostConfig,
@@ -54,10 +59,13 @@ def generate_mkevents_command(
             args.append("-L")
 
     if isinstance(params.hostspec, list):
-        hostspecs = "/".join(params.hostspec)
-        args.append(replace_macros(hostspecs, host_config.macros))
+        args.append("-q")
+        hostspec = "/".join(
+            _quote_host(replace_macros(host, host_config.macros)) for host in params.hostspec
+        )
     else:
-        args.append(replace_macros(params.hostspec, host_config.macros))
+        hostspec = replace_macros(params.hostspec, host_config.macros)
+    args.append(hostspec)
 
     if params.application is not None:
         args.append(params.application)

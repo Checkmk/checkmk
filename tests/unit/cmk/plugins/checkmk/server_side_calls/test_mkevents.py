@@ -14,11 +14,21 @@ from cmk.server_side_calls.v1 import HostConfig
 @pytest.mark.parametrize(
     "params,expected_args",
     [
-        (
+        pytest.param(
             {"hostspec": ["$HOSTNAME$", "$HOSTADDRESS$"], "show_last_log": "details"},
-            ["-L", "hostname/ipaddress"],
+            ["-L", "-q", "hostname/ipaddress"],
+            id="host list with the last log in the details",
         ),
-        ({"hostspec": "foobar", "show_last_log": "no"}, ["foobar"]),
+        pytest.param(
+            {"hostspec": ["$HOSTNAME$", "$HOSTALIAS$"], "show_last_log": "no"},
+            ["-q", "hostname/Router A\\/B\\\\C"],
+            id="host list quoting slashes and backslashes",
+        ),
+        pytest.param(
+            {"hostspec": "foobar", "show_last_log": "no"},
+            ["foobar"],
+            id="host",
+        ),
     ],
 )
 def test_check_mkevents_argument_parsing(
@@ -29,7 +39,11 @@ def test_check_mkevents_argument_parsing(
         params,
         HostConfig(
             name="hostname",
-            macros={"$HOSTNAME$": "hostname", "$HOSTADDRESS$": "ipaddress"},
+            macros={
+                "$HOSTNAME$": "hostname",
+                "$HOSTADDRESS$": "ipaddress",
+                "$HOSTALIAS$": "Router A/B\\C",
+            },
         ),
     )
     assert command.command_arguments == expected_args

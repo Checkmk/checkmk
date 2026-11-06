@@ -4,15 +4,19 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+import shlex
 from collections.abc import Mapping, Sequence
 from typing import Literal, NamedTuple
 
 import pytest
 
 import cmk.gui.mkeventd.icon as mkeventd_icon
+from cmk.ccc.site import omd_site
+from cmk.gui import sites
 from cmk.gui.type_defs import Row
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.icon import icon_and_action_registry, IconConfig
+from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.ruleset_matcher.tags import TagID
 
 
@@ -334,15 +338,14 @@ def test_icon_options(
     """Creation of title and url for links to event console entries of host"""
     icon = icon_and_action_registry["mkeventd"]
 
-    def _get_dummy_hostname(args: Sequence[str], row: Row) -> str:
-        args_splitted = args[0].split("/")
-        if args_splitted[0] == "$HOSTNAME$":
+    def _get_dummy_hostname(hosts: Sequence[str], row: Row) -> str:
+        if hosts[0] == "$HOSTNAME$":
             return str(row["host_name"])
-        if args_splitted[0] == "$HOSTADDRESS$":
+        if hosts[0] == "$HOSTADDRESS$":
             return str(row["host_address"])
-        if args_splitted[0] == "$HOSTALIAS$":
+        if hosts[0] == "$HOSTALIAS$":
             return "my_alias"
-        return args[0]
+        return "/".join(hosts)
 
     monkeypatch.setattr(
         mkeventd_icon,
@@ -366,4 +369,143 @@ def test_icon_options(
             ),
         )
         == result
+    )
+
+
+_CMC_VERSION = "Check_MK 2.5.0"
+_NAGIOS_VERSION = "3.5.0"
+
+
+def _render_icon(site: str, check_command: str, alias: str = "my_alias") -> object:
+    return icon_and_action_registry["mkeventd"].render(
+        "service",
+        {
+            "site": site,
+            "host_name": "heute",
+            "host_address": "127.0.0.1",
+            "host_alias": alias,
+            "service_check_command": check_command,
+        },
+        [],
+        {},
+        UserPermissions({}, {}, {}, []),
+        IconConfig(
+            wato_enabled=True,
+            mkeventd_enabled=True,
+            multisite_draw_ruleicon=True,
+            staleness_threshold=1.5,
+            debug=True,
+        ),
+    )
+
+
+@pytest.mark.parametrize(
+    "program_version, check_command, alias",
+    [
+        pytest.param(
+            _CMC_VERSION,
+            r"check_mk_active-mkevents!'-q' 'heute/Router A\/B' 'my_app'",
+            "Router A/B",
+            id="slash, cmc",
+        ),
+        pytest.param(
+            _NAGIOS_VERSION,
+            r"check_mk_active-mkevents!'-q' 'heute/Router A\\/B' 'my_app'",
+            "Router A/B",
+            id="slash, nagios",
+        ),
+        # Only Nagios doubles the backslashes of check_mkevents' quoting.
+        pytest.param(
+            _CMC_VERSION,
+            r"check_mk_active-mkevents!'-q' 'heute/\\\\fs1\\share' 'my_app'",
+            r"\\fs1\share",
+            id="backslashes, cmc",
+        ),
+        pytest.param(
+            _NAGIOS_VERSION,
+            r"check_mk_active-mkevents!'-q' 'heute/\\\\\\\\fs1\\\\share' 'my_app'",
+            r"\\fs1\share",
+            id="backslashes, nagios",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_quoted_host_list_with_the_alias_is_the_monitored_host(
+    mock_livestatus: MockLiveStatusConnection, program_version: str, check_command: str, alias: str
+) -> None:
+    # The GUI connects to a remote site only if it knows the site's edition.
+    site = omd_site()
+    mock_livestatus.set_sites([site])
+    mock_livestatus.tables["status"][site][0]["program_version"] = program_version
+
+    with mock_livestatus(expect_status_query=True):
+        sites.live()  # The view has fetched its rows before it renders the icons.
+        rendered = _render_icon(site, check_command, alias)
+
+    assert rendered == IconRenderResult(
+        name="mkeventd",
+        title='Events of application "my_app" on host heute',
+        url=f"view.py?event_application=my_app&host=heute&site={site}&view_name=ec_events_of_monhost",
+    )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_title_shows_a_host_specification_without_quoting_as_it_is() -> None:
+    rendered = _render_icon("heute", r"check_mk_active-mkevents!'Router A\/B' 'my_app'")
+
+    assert rendered == IconRenderResult(
+        name="mkeventd",
+        title=r'Events of application "my_app" on host Router A\/B',
+        url="view.py?event_application=my_app&event_host=Router+A%5C%2FB&host=Router+A%5C%2FB&site=heute&view_name=ec_events_of_host",
+    )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_whitespace_and_empty_hosts_in_a_host_list_dont_count_like_for_the_check() -> None:
+    rendered = _render_icon(
+        "heute", "check_mk_active-mkevents!'-q' ' heute / 127.0.0.1 /' 'my_app'"
+    )
+
+    assert rendered == IconRenderResult(
+        name="mkeventd",
+        title='Events of application "my_app" on host heute',
+        url="view.py?event_application=my_app&host=heute&site=heute&view_name=ec_events_of_monhost",
+    )
+
+
+@pytest.mark.parametrize(
+    "program_version, check_command",
+    [
+        pytest.param(_CMC_VERSION, r"check_mk_active-mkevents!'heute' 'a\\b'", id="cmc"),
+        # Only Nagios doubles the backslashes of the application.
+        pytest.param(_NAGIOS_VERSION, r"check_mk_active-mkevents!'heute' 'a\\\\b'", id="nagios"),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_application_with_backslashes_is_the_regex_of_the_check(
+    mock_livestatus: MockLiveStatusConnection, program_version: str, check_command: str
+) -> None:
+    site = omd_site()
+    mock_livestatus.set_sites([site])
+    mock_livestatus.tables["status"][site][0]["program_version"] = program_version
+
+    with mock_livestatus(expect_status_query=True):
+        sites.live()  # The view has fetched its rows before it renders the icons.
+        rendered = _render_icon(site, check_command)
+
+    assert rendered == IconRenderResult(
+        name="mkeventd",
+        title=r'Events of application "a\\b" on host heute',
+        url=f"view.py?event_application=a%5C%5Cb&host=heute&site={site}&view_name=ec_events_of_monhost",
+    )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_application_with_apostrophes_is_the_regex_of_the_check() -> None:
+    rendered = _render_icon("heute", "check_mk_active-mkevents!'heute' " + shlex.quote("'my_app'"))
+
+    assert rendered == IconRenderResult(
+        name="mkeventd",
+        title="Events of application \"'my_app'\" on host heute",
+        url="view.py?event_application=%27my_app%27&host=heute&site=heute&view_name=ec_events_of_monhost",
     )

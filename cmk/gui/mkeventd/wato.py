@@ -5594,7 +5594,11 @@ def _valuespec_active_checks_mkevents() -> Dictionary:
                         "using the host name, the IP address, or the host alias. This is due to the "
                         "fact that various event sources (e.g. syslog, snmptrapd) may refer to the "
                         "same host using different specification methods. Alternatively, you can "
-                        "specify an explicit host for which to show events."
+                        "specify an explicit host for which to show events. In an explicit "
+                        "specification, a slash separates several hosts, e.g. "
+                        "<tt>myhost/10.1.2.3</tt>. Macros like <tt>$HOSTALIAS$</tt> are inserted "
+                        "as they are, so if the alias of a host contains a slash, "
+                        "match the alias with the list above instead."
                     ),
                 ),
             ),

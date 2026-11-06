@@ -229,3 +229,63 @@ def test_vertical_bar_is_replaced_like_in_checkmk(socket_path: Path) -> None:
     result = _check_events(socket_path, events, "-l", "myhost")
 
     assert result.stdout == "OK - 1 events (1 unacknowledged), Last line: a❘b\n"
+
+
+def _events_of_hosts(*hosts: str) -> Sequence[Event]:
+    return [{"host": host, "phase": "open", "state": 0, "text": host} for host in hosts]
+
+
+def test_host_list_matches_its_hosts(socket_path: Path) -> None:
+    events = _events_of_hosts("myhost", "10.1.2.3", "otherhost")
+
+    result = _check_events(socket_path, events, "myhost/10.1.2.3")
+
+    assert result.stdout == "OK - 2 events (2 unacknowledged)\n"
+
+
+def test_host_with_spaces_in_host_list_matches_only_itself(socket_path: Path) -> None:
+    events = _events_of_hosts("DB server 1", "DB server 1\n", "db", "server", "1")
+
+    result = _check_events(socket_path, events, "-l", "myhost/DB server 1")
+
+    assert result.stdout == "OK - 1 events (1 unacknowledged), Last line: DB server 1\n"
+
+
+def test_whitespace_around_a_single_host_is_ignored(socket_path: Path) -> None:
+    events = _events_of_hosts("DB server", " DB server ")
+
+    result = _check_events(socket_path, events, "-l", " DB server ")
+
+    assert result.stdout == "OK - 1 events (1 unacknowledged), Last line: DB server\n"
+
+
+def test_whitespace_around_a_host_in_a_host_list_is_ignored_like_for_a_single_one(
+    socket_path: Path,
+) -> None:
+    events = _events_of_hosts("DB server", " DB server ")
+
+    result = _check_events(socket_path, events, "-l", "myhost/ DB server ")
+
+    assert result.stdout == "OK - 1 events (1 unacknowledged), Last line: DB server\n"
+
+
+def test_quoted_slash_belongs_to_the_host(socket_path: Path) -> None:
+    events = _events_of_hosts("Router A/B", "B")
+
+    result = _check_events(socket_path, events, "-l", "-q", "myhost/Router A\\/B")
+
+    assert result.stdout == "OK - 1 events (1 unacknowledged), Last line: Router A/B\n"
+
+
+def test_no_events_shows_the_hosts_of_a_host_list_unquoted(socket_path: Path) -> None:
+    result = _check_events(socket_path, [], "-q", "myhost/Router A\\/B")
+
+    assert result.stdout == "OK - no events for myhost/Router A/B\n"
+
+
+def test_backslash_is_part_of_the_host_without_quoting(socket_path: Path) -> None:
+    events = _events_of_hosts("\\\\fs1", "\\fs1")
+
+    result = _check_events(socket_path, events, "-l", "\\\\fs1")
+
+    assert result.stdout == "OK - 1 events (1 unacknowledged), Last line: \\\\fs1\n"

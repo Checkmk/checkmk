@@ -66,7 +66,7 @@ export const panelConfig = {
     title: 'Height (px)',
     initialState: 200
   }
-} satisfies PanelConfigFor<typeof CmkStatsFigure, 'value' | 'filters'> & {
+} satisfies PanelConfigFor<typeof CmkStatsFigure, 'value' | 'filters' | 'deferredLinkUrl'> & {
   family: ListPropDef<StatsFamily>
   scenario: ListPropDef<Scenario>
   linked: BoolPropDef
@@ -91,9 +91,10 @@ import type { ResolvedLink, Stats, StatsPart } from '@/dashboard/types/widget'
 
 defineProps<{ screenshotMode: boolean }>()
 
-const propState = new PanelStateCreator<typeof CmkStatsFigure, 'value' | 'filters'>().createRef(
-  panelConfig
-)
+const propState = new PanelStateCreator<
+  typeof CmkStatsFigure,
+  'value' | 'filters' | 'deferredLinkUrl'
+>().createRef(panelConfig)
 
 type Category = StatsPart['category']
 

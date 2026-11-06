@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { nextTick } from 'vue'
 
 import CmkStatsFigure from '@/dashboard/components/figures/CmkStatsFigure.vue'
-import type { LinkProperties, Stats } from '@/dashboard/types/widget'
+import type { LinkProperties, Stats, StatsLinkPart } from '@/dashboard/types/widget'
 
 function hostStateKey(variable: string): LinkProperties {
   return { links: [{ hoststate: { status: 'encoded', variables: { [variable]: 'on' } } }] }
@@ -36,6 +36,18 @@ const HOST_STATS: Stats = {
 const TABLE_BOX = { x: -20, y: 0, width: 100, height: 100 }
 const HEXAGON_WIDTH = 48 * Math.sqrt(3)
 const GROUP_GAP = 12
+
+const DEFERRED_SITES: LinkProperties = { links: [{ sites: { status: 'deferred' } }] }
+
+const DEFERRED_HOST_STATS: Stats = {
+  ...HOST_STATS,
+  parts: HOST_STATS.parts.map((part) => ({ ...part, link_properties: DEFERRED_SITES })),
+  total: { ...HOST_STATS.total, link_properties: DEFERRED_SITES }
+}
+
+function pageOfPart(part: StatsLinkPart, linkIndex: number): string {
+  return `dashboard_stats_link.py?part=${part}&link_index=${linkIndex}`
+}
 
 function renderFigure(width = 400) {
   return render(CmkStatsFigure, {
@@ -102,6 +114,27 @@ describe('CmkStatsFigure', () => {
       'view.py?view_name=searchhost&hst1=on&filled_in=filter&_show_filter_form=1'
     )
     expect(screen.getAllByRole('link')).toHaveLength(5)
+  })
+
+  it('leads each part with deferred filters to the page that values them for that part', () => {
+    render(CmkStatsFigure, {
+      props: {
+        value: DEFERRED_HOST_STATS,
+        width: 400,
+        height: 200,
+        filters: {},
+        deferredLinkUrl: pageOfPart
+      }
+    })
+
+    expect(screen.getByRole('link', { name: /Down/ })).toHaveAttribute(
+      'href',
+      'dashboard_stats_link.py?part=down&link_index=0'
+    )
+    expect(screen.getByRole('link', { name: /Total/ })).toHaveAttribute(
+      'href',
+      'dashboard_stats_link.py?part=total&link_index=0'
+    )
   })
 
   it('sizes its root SVG and view box from its props', () => {

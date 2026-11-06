@@ -8,6 +8,7 @@ Makes its slot a link: one entry leads straight to it, several open a menu of th
 the slot as it is. The slot learns whether there are several, so it can show the menu arrow.
 -->
 <script setup lang="ts">
+import { useInjectDashboardEditing } from '@/dashboard/composables/useDashboardEditing'
 import type { ContextualLinkEntry } from '@/dashboard/lib/contextualLinkUrl'
 
 import ContextualLinkChooser from './ContextualLinkChooser.vue'
@@ -23,11 +24,23 @@ defineProps<{
 const open = defineModel<boolean>('open', { default: false })
 
 defineSlots<{ default(props: { several: boolean }): unknown }>()
+
+// While the dashboard is edited, a link only shows that it is there: following it would leave
+// the unsaved changes, and a click on it would get in the way of moving the widget.
+const editing = useInjectDashboardEditing()
 </script>
 
 <template>
+  <component
+    :is="inSvg ? 'g' : 'span'"
+    v-if="editing && entries.length > 0"
+    class="db-contextual-link-anchor db-contextual-link-anchor--editing"
+    :title="title"
+  >
+    <slot :several="entries.length > 1" />
+  </component>
   <a
-    v-if="entries.length === 1"
+    v-else-if="entries.length === 1"
     class="db-contextual-link-anchor"
     :href="entries[0]!.href"
     :title="title"
@@ -60,6 +73,10 @@ defineSlots<{ default(props: { several: boolean }): unknown }>()
   cursor: pointer;
 }
 
+.db-contextual-link-anchor--editing {
+  cursor: inherit;
+}
+
 .db-contextual-link-anchor__text {
   font-weight: var(--font-weight-semibold);
 }
@@ -70,7 +87,12 @@ defineSlots<{ default(props: { several: boolean }): unknown }>()
   opacity: 0.7;
 }
 
-.db-contextual-link-anchor:is(:hover, :focus-visible, [data-state='open']) {
+.db-contextual-link-anchor:is(
+  :hover,
+  :focus-visible,
+  [data-state='open'],
+  .db-contextual-link-anchor--editing
+) {
   .db-contextual-link-anchor__text {
     text-decoration: underline;
   }

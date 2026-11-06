@@ -292,6 +292,17 @@ def filter_http_vars_for_simple_label_group(
     )
 
 
+def filter_http_vars_for_label_groups(
+    label_groups: LabelGroups, object_type: Literal["host", "service"]
+) -> FilterHTTPVariables:
+    """Return HTTP vars for the label groups of type <object_type>.
+
+    >>> filter_http_vars_for_label_groups([("and", [("and", "os:linux"), ("or", "os:aix")])], "host")
+    {'host_labels_count': '1', 'host_labels_1_vs_count': '2', 'host_labels_1_bool': 'and', 'host_labels_indexof_1': '1', 'host_labels_1_vs_1_bool': 'and', 'host_labels_1_vs_1_vs': 'os:linux', 'host_labels_1_vs_indexof_1': '1', 'host_labels_1_vs_2_bool': 'or', 'host_labels_1_vs_2_vs': 'os:aix', 'host_labels_1_vs_indexof_2': '2'}
+    """
+    return _parse_label_groups_to_http_vars(label_groups, object_type)
+
+
 def parse_label_groups_from_http_vars(prefix: str, value: FilterHTTPVariables) -> LabelGroups:
     label_groups: list = []
     groups_count: int = _get_validated_count_value(f"{prefix}_count", value)

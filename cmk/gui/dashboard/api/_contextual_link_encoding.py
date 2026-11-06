@@ -14,6 +14,7 @@ from cmk.gui.visuals.filter.drilldowns import RowValues
 
 from .model.contextual_link import VisualLocation
 from .model.link_properties import (
+    DeferredFilter,
     DroppedFilter,
     EncodedFilter,
     FilterResult,
@@ -59,16 +60,39 @@ def link_properties_for(
     links: Sequence[EffectiveLink],
     native_key: Mapping[FilterName, FilterHTTPVariables],
     row: RowValues | None = None,
+    deferred: Container[FilterName] = (),
 ) -> LinkProperties:
     """One map per link: the native click key, or the configured filters, valued from the
-    native key first and then from the row."""
+    native key first and then from the row. `deferred` filters wait for a click."""
+    rows = [] if row is None else [row]
     return LinkProperties(
         links=[
             _encoded(native_key)
             if link.filters is None
             else {
-                filter_name: _encoded_filter(filter_name, keys, native_key, row)
+                filter_name: DeferredFilter(status="deferred")
+                if filter_name in deferred
+                else _encoded_filter(filter_name, keys, native_key, rows)
                 for filter_name, keys in filter_keys(link.filters).items()
+            }
+            for link in links
+        ]
+    )
+
+
+def deferred_link_properties(
+    links: Sequence[EffectiveLink],
+    native_key: Mapping[FilterName, FilterHTTPVariables],
+    rows: Sequence[RowValues],
+    deferred: Container[FilterName],
+) -> LinkProperties:
+    """Per link, its `deferred` filters, valued from all rows a click stands for."""
+    return LinkProperties(
+        links=[
+            {
+                filter_name: _encoded_filter(filter_name, keys, native_key, rows)
+                for filter_name, keys in filter_keys(link.filters or []).items()
+                if filter_name in deferred
             }
             for link in links
         ]
@@ -94,10 +118,15 @@ def link_columns(
 
 
 def with_link_columns(
-    columns: Sequence[ColumnName], links: Sequence[EffectiveLink]
+    columns: Sequence[ColumnName],
+    links: Sequence[EffectiveLink],
+    valued: Container[FilterName] = (),
 ) -> list[ColumnName]:
-    """The columns a widget queries, plus those its links' filters read."""
-    return [*columns, *(column for column in link_columns(links) if column not in columns)]
+    """The widget's columns plus those its links' filters read, except `valued` ones."""
+    return [
+        *columns,
+        *(column for column in link_columns(links, valued) if column not in columns),
+    ]
 
 
 def _encoded(key: Mapping[FilterName, FilterHTTPVariables]) -> dict[FilterName, FilterResult]:
@@ -111,15 +140,15 @@ def _encoded_filter(
     filter_name: FilterName,
     keys: Sequence[str],
     native_key: Mapping[FilterName, FilterHTTPVariables],
-    row: RowValues | None,
+    rows: Sequence[RowValues],
 ) -> FilterResult:
     if filter_name not in filter_registry:
         return DroppedFilter(status="dropped", reason="not_available")
     if (variables := native_key.get(filter_name)) is not None:
         return EncodedFilter(status="encoded", variables=dict(variables))
     missing = list(keys)
-    if row is not None and (drilldown := filter_drilldown(filter_name)) is not None:
-        variables, missing = drilldown.carried(row, keys)
+    if rows and (drilldown := filter_drilldown(filter_name)) is not None:
+        variables, missing = drilldown.carried(rows, keys)
     missing_keys: list[str] | ApiOmitted = missing or ApiOmitted()
     if variables is None:
         return DroppedFilter(status="dropped", reason=drop_reason(keys), missing_keys=missing_keys)

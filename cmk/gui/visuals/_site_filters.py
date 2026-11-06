@@ -113,6 +113,10 @@ class SiteFilter(Filter):
         return {"site": row["site"]}
 
 
+def _site(row: drilldowns.RowValues) -> list[str]:
+    return [] if (site := drilldowns.value(row, "site")) is None else [site]
+
+
 def default_site_filter_heading_info(value: FilterHTTPVariables) -> str | None:
     current_value = value.get("site")
     try:
@@ -133,7 +137,7 @@ class MultipleSitesFilter(SiteFilter):
             query_filter=query_filters.Query(ident="sites", request_vars=["sites"]),
             description=_l("Associative selection of multiple sites"),
             heading_info=heading_info,
-            drilldown=drilldowns.text("sites", "site"),
+            drilldown=drilldowns.multi_value("sites", ["site"], _site),
         )
         self._site_choices = site_choices
 

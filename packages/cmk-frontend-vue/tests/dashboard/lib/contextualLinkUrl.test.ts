@@ -5,8 +5,12 @@
  */
 import { describe, expect, it } from 'vitest'
 
-import { contextualLinkUrl } from '@/dashboard/lib/contextualLinkUrl'
-import type { ResolvedLink } from '@/dashboard/types/widget'
+import {
+  contextualLinkEntries,
+  contextualLinkUrl,
+  statsLinkUrl
+} from '@/dashboard/lib/contextualLinkUrl'
+import type { LinkProperties, ResolvedLink } from '@/dashboard/types/widget'
 
 const SEARCHHOST: ResolvedLink = {
   title: 'All hosts',
@@ -22,6 +26,10 @@ const DOWN_HOSTS = {
 
 function variablesOf(url: string): Record<string, string> {
   return Object.fromEntries(new URL(url, 'http://localhost/check_mk/').searchParams)
+}
+
+const DOWN_HOSTS_OF_DEFERRED_SITES: LinkProperties = {
+  links: [{ ...DOWN_HOSTS, sites: { status: 'deferred' } }]
 }
 
 describe('contextualLinkUrl', () => {
@@ -148,5 +156,70 @@ describe('contextualLinkUrl', () => {
     const url = contextualLinkUrl({ ...SEARCHHOST, include_time_range: true }, {}, {}, null)
 
     expect(Object.keys(variablesOf(url))).toEqual(['view_name', 'filled_in', '_show_filter_form'])
+  })
+})
+
+describe('contextualLinkEntries', () => {
+  it('leads a link with a deferred filter to the page that values it', () => {
+    const entries = contextualLinkEntries(
+      [SEARCHHOST],
+      DOWN_HOSTS_OF_DEFERRED_SITES,
+      {},
+      null,
+      (linkIndex) => `dashboard_stats_link.py?link_index=${linkIndex}`
+    )
+
+    expect(entries).toEqual([{ title: 'All hosts', href: 'dashboard_stats_link.py?link_index=0' }])
+  })
+
+  it('builds the URL of a link without deferred filters itself', () => {
+    const entries = contextualLinkEntries([SEARCHHOST], { links: [DOWN_HOSTS] }, {}, null, () => {
+      throw new Error('not called')
+    })
+
+    expect(entries).toEqual([
+      {
+        title: 'All hosts',
+        href: 'view.py?view_name=searchhost&hst1=on&filled_in=filter&_show_filter_form=1'
+      }
+    ])
+  })
+
+  it('leaves out a deferred filter without a page to value it', () => {
+    const [entry] = contextualLinkEntries([SEARCHHOST], DOWN_HOSTS_OF_DEFERRED_SITES, {}, null)
+
+    const variables = variablesOf(entry!.href)
+
+    expect(variables).not.toHaveProperty('sites')
+    expect(variables._dropped_filters).toBe('sites:no_value')
+  })
+})
+
+describe('statsLinkUrl', () => {
+  it('names the widget, the clicked part and the link, with the effective context', () => {
+    const url = statsLinkUrl(
+      { name: 'main', owner: 'admin' },
+      'widget-1',
+      'down',
+      1,
+      { siteopt: { site: 'heute' } },
+      null
+    )
+
+    expect(url.startsWith('dashboard_stats_link.py?')).toBe(true)
+    expect(variablesOf(url)).toEqual({
+      dashboard_name: 'main',
+      dashboard_owner: 'admin',
+      widget_id: 'widget-1',
+      part: 'down',
+      link_index: '1',
+      context: '{"siteopt":{"site":"heute"}}'
+    })
+  })
+
+  it('names the page it leaves', () => {
+    const url = statsLinkUrl({ name: 'main', owner: '' }, 'widget-1', 'total', 0, {}, 'Overview')
+
+    expect(variablesOf(url)._drilled_from).toBe('Overview')
   })
 })

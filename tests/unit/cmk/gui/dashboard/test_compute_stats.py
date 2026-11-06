@@ -100,6 +100,8 @@ _ALL_HOSTS = {
     "show_filter_form": True,
 }
 
+_DEFERRED = {"status": "deferred"}
+
 _NOT_IN_DOWNTIME = {
     "status": "encoded",
     "variables": {"is_host_scheduled_downtime_depth": "0"},
@@ -133,6 +135,32 @@ def _compute_services(
     live.expect_query(query)
     with live:
         return clients.DashboardClient.compute_widget("compute-stats", body)
+
+
+def _custom_link_body(
+    widget_type: str, *filter_ids: str, context: dict[str, object] | None = None
+) -> dict[str, object]:
+    return {
+        "source": explicit_source(
+            {
+                "type": widget_type,
+                "contextual_link": {
+                    "type": "custom",
+                    "links": [
+                        {
+                            "title": "Problems",
+                            "location": {"type": "views", "name": "allhosts"},
+                            "filters": [{"filter_id": filter_id} for filter_id in filter_ids],
+                            "include_context": False,
+                            "include_time_range": False,
+                            "show_filter_form": False,
+                        }
+                    ],
+                },
+            },
+            context,
+        )
+    }
 
 
 def _counts(response: Response) -> list[int]:
@@ -353,35 +381,32 @@ def test_inherited_yields_one_link_with_the_native_click_key(
     }
 
 
-def test_a_custom_link_carries_the_state_its_part_names(
+def test_a_custom_link_defers_the_filters_that_need_the_objects_of_a_part(
     clients: ClientRegistry, mock_livestatus: MockLiveStatusConnection
 ) -> None:
-    body: dict[str, object] = {
-        "source": explicit_source(
-            {
-                "type": "host_stats",
-                "contextual_link": {
-                    "type": "custom",
-                    "links": [
-                        {
-                            "title": "Down hosts",
-                            "location": {"type": "views", "name": "allhosts"},
-                            "filters": [{"filter_id": "hoststate"}],
-                            "include_context": False,
-                            "include_time_range": False,
-                            "show_filter_form": False,
-                        }
-                    ],
-                },
-            }
-        )
-    }
+    value = _compute_hosts(
+        clients,
+        mock_livestatus,
+        _custom_link_body("host_stats", "hoststate", "sites", "hostgroups"),
+    ).json["value"]
 
-    value = _compute_hosts(clients, mock_livestatus, body).json["value"]
-
-    assert [link["title"] for link in value["links"]] == ["Down hosts"]
     assert value["parts"][3]["link_properties"] == {
-        "links": [{"hoststate": {"status": "encoded", "variables": {"hst1": "on"}}}]
+        "links": [
+            {
+                "hoststate": {"status": "encoded", "variables": {"hst1": "on"}},
+                "sites": _DEFERRED,
+                "hostgroups": _DEFERRED,
+            }
+        ]
+    }
+    assert value["total"]["link_properties"] == {
+        "links": [
+            {
+                "hoststate": {"status": "dropped", "reason": "no_value"},
+                "sites": _DEFERRED,
+                "hostgroups": _DEFERRED,
+            }
+        ]
     }
 
 

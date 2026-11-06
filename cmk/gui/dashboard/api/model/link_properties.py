@@ -51,7 +51,16 @@ class DroppedFilter:
     )
 
 
-type FilterResult = Annotated[EncodedFilter | DroppedFilter, Discriminator("status")]
+@api_model
+class DeferredFilter:
+    status: Literal["deferred"] = api_field(
+        description="The filter takes the values of the clicked element's objects on click."
+    )
+
+
+type FilterResult = Annotated[
+    EncodedFilter | DroppedFilter | DeferredFilter, Discriminator("status")
+]
 
 
 @api_model

@@ -29,6 +29,7 @@ from .page_edit_dashboard import page_edit_dashboard
 from .page_edit_dashboards import page_edit_dashboards, PAGE_EDIT_DASHBOARDS_LINK
 from .page_show_dashboard import page_dashboard_app
 from .page_show_shared_dashboard import SharedDashboardPage
+from .page_stats_link import PAGE_STATS_LINK, page_stats_link
 from .page_view_widget import (
     ViewWidgetEditPage,
     ViewWidgetIFramePage,
@@ -55,6 +56,7 @@ def register(
     page_registry.register(PageEndpoint("widget_iframe_view", ViewWidgetIFramePage()))
     page_registry.register(PageEndpoint("widget_edit_view", ViewWidgetEditPage()))
     page_registry.register(PageEndpoint("dashboard", page_dashboard_app))
+    page_registry.register(PageEndpoint(PAGE_STATS_LINK, page_stats_link))
     token_authenticated_page_registry.register(
         TokenAuthenticatedEndpoint("shared_dashboard", SharedDashboardPage())
     )

@@ -140,7 +140,7 @@ def _inherited_url(
 ) -> str:
     object_filters = _object_filters(row, object_infos)
     # The clicked object goes last, so it wins over the same filter in the context.
-    return _target_url(
+    return target_url(
         location,
         {**context, **object_filters},
         show_filter_form=show_filter_form,
@@ -164,7 +164,7 @@ def _custom_url(
         if (carried_filter := carried.get(filter_name)) is None:
             dropped.append(Dropped(filter_name, "not_available"))
             continue
-        variables, missing = carried_filter.drilldown.carried(row, carried_filter.keys)
+        variables, missing = carried_filter.drilldown.carried([row], carried_filter.keys)
         if variables is not None:
             valued[filter_name] = variables
         if missing:
@@ -172,7 +172,7 @@ def _custom_url(
         elif variables is None:
             dropped.append(Dropped(filter_name, "no_value"))
     filters = {**context, **valued}
-    return _target_url(
+    return target_url(
         location,
         filters,
         show_filter_form=show_filter_form,
@@ -186,7 +186,7 @@ def _custom_url(
     )
 
 
-def _target_url(
+def target_url(
     location: VisualLocation,
     context: VisualContext,
     *,

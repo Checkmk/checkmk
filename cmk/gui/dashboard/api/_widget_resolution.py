@@ -150,15 +150,23 @@ def _resolve_explicit[C: BaseWidgetContent](
             title="Forbidden",
             detail="A token caller may only name a saved widget.",
         )
+    return resolve_viewed_widget(
+        source.content, source.context, api_context.config.user_permissions(), built_in_link
+    )
+
+
+def resolve_viewed_widget[C: BaseWidgetContent](
+    content: C,
+    context: VisualContext,
+    user_permissions: UserPermissions,
+    built_in_link: Callable[[C, VisualContext], EffectiveLink | None],
+) -> ResolvedWidget[C]:
+    """Resolve a widget the logged-in user views, with the links the user may follow."""
     return ResolvedWidget(
-        content=source.content,
-        context=source.context,
-        infos=_infos(source.content.to_internal(), source.context),
-        links=_effective_links(
-            source.content,
-            built_in_link(source.content, source.context),
-            api_context.config.user_permissions(),
-        ),
+        content=content,
+        context=context,
+        infos=_infos(content.to_internal(), context),
+        links=_effective_links(content, built_in_link(content, context), user_permissions),
     )
 
 

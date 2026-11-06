@@ -8,7 +8,13 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, shallowRef, useTemplateRef, watchPostEffect } from 'vue'
 
 import ContextualLinkTrigger from '@/dashboard/components/ContextualLinkTrigger.vue'
-import type { LinkProperties, Stats, StatsPart, VisualContext } from '@/dashboard/types/widget'
+import type {
+  LinkProperties,
+  Stats,
+  StatsLinkPart,
+  StatsPart,
+  VisualContext
+} from '@/dashboard/types/widget'
 
 import StateRingsHexagon, { type StateRingPart } from './lib/StateRingsHexagon.vue'
 import SvgLinkArrow from './lib/SvgLinkArrow.vue'
@@ -19,6 +25,8 @@ const props = defineProps<{
   width: number
   height: number
   filters: VisualContext
+  /** The URL of a link with deferred filters, by the clicked part or the total. */
+  deferredLinkUrl?: ((part: StatsLinkPart, linkIndex: number) => string) | undefined
 }>()
 
 const { _t } = usei18n()
@@ -51,7 +59,7 @@ function ringLabel(part: StateRingPart): string {
 }
 
 interface Row {
-  key: string
+  key: StatsLinkPart
   count: number
   title: string
   color: string
@@ -131,6 +139,7 @@ const tableOrigin = computed(() => ({
         :links="value.links"
         :link-properties="row.linkProperties"
         :filters="filters"
+        :deferred-href="deferredLinkUrl && ((linkIndex) => deferredLinkUrl!(row.key, linkIndex))"
       >
         <g :transform="`translate(0, ${index * ROW_HEIGHT})`">
           <text

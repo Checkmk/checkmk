@@ -18,6 +18,8 @@ const props = defineProps<{
   filters: VisualContext
   /** Opens the menu of several below this element instead of below the link. */
   reference?: HTMLElement | null | undefined
+  /** The URL of a link with deferred filters, by the link's index. */
+  deferredHref?: ((linkIndex: number) => string) | undefined
 }>()
 
 const open = defineModel<boolean>('open', { default: false })
@@ -27,7 +29,13 @@ defineSlots<{ default(props: { several: boolean }): unknown }>()
 const drillDownSource = useInjectDrillDownSource()
 
 const entries = computed(() =>
-  contextualLinkEntries(props.links, props.linkProperties, props.filters, drillDownSource.value)
+  contextualLinkEntries(
+    props.links,
+    props.linkProperties,
+    props.filters,
+    drillDownSource.value,
+    props.deferredHref
+  )
 )
 </script>
 

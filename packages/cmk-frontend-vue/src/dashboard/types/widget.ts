@@ -106,6 +106,8 @@ export type HostOrServiceState = components['schemas']['HostOrServiceState']
 export type StateSummaryContent = components['schemas']['StateSummaryContent']
 export type StateSummary = components['schemas']['StateSummary']
 export type StatsPart = components['schemas']['StatsPart']
+/** A part of a statistics widget, or its total. */
+export type StatsLinkPart = StatsPart['category'] | 'total'
 export type AlertTimelineContent = components['schemas']['AlertTimelineContent']
 export type NotificationTimelineContent = components['schemas']['NotificationTimelineContent']
 /** Either timeline widget; they share their render modes and their computed count. */

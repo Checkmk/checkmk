@@ -9,6 +9,7 @@ import { describe, expect, it } from 'vitest'
 import { defineComponent, h, ref } from 'vue'
 
 import ContextualLinkTrigger from '@/dashboard/components/ContextualLinkTrigger.vue'
+import { useProvideDashboardEditing } from '@/dashboard/composables/useDashboardEditing'
 import { useProvideDrillDownSource } from '@/dashboard/composables/useDrillDownSource'
 import type { LinkProperties, ResolvedLink } from '@/dashboard/types/widget'
 
@@ -26,8 +27,39 @@ const SEARCHSVC: ResolvedLink = {
   location: { type: 'views', name: 'searchsvc' }
 }
 
+const DEFERRED_SITES: LinkProperties = { links: [{ sites: { status: 'deferred' } }] }
+
 const DOWN_HOSTS: LinkProperties = {
   links: [{ hoststate: { status: 'encoded', variables: { hst1: 'on' } } }, {}]
+}
+
+function deferredHref(linkIndex: number): string {
+  return `dashboard_stats_link.py?link_index=${linkIndex}`
+}
+
+function renderDeferredTrigger(links: ResolvedLink[], linkProperties: LinkProperties) {
+  return render(ContextualLinkTrigger, {
+    props: { links, linkProperties, filters: {}, deferredHref },
+    slots: { default: '<span>Down</span>' }
+  })
+}
+
+function renderTriggerWhileEditing(links: ResolvedLink[]) {
+  const dashboard = defineComponent({
+    setup() {
+      useProvideDashboardEditing(ref(true))
+      return () =>
+        h(
+          ContextualLinkTrigger,
+          { links, linkProperties: DOWN_HOSTS, filters: {} },
+          {
+            default: ({ several }: { several: boolean }) =>
+              h('span', several ? 'Down, several' : 'Down')
+          }
+        )
+    }
+  })
+  return render(dashboard)
 }
 
 function renderTrigger(links: ResolvedLink[], linkProperties: LinkProperties = DOWN_HOSTS) {
@@ -147,5 +179,48 @@ describe('ContextualLinkTrigger', () => {
       'href',
       'view.py?view_name=searchsvc&filled_in=filter&_show_filter_form=1'
     )
+  })
+
+  it('leads a link with deferred filters to the page that values them', () => {
+    renderDeferredTrigger([SEARCHHOST], DEFERRED_SITES)
+
+    expect(screen.getByRole('link', { name: 'Down' })).toHaveAttribute(
+      'href',
+      'dashboard_stats_link.py?link_index=0'
+    )
+  })
+
+  it('offers a link with deferred filters in a menu of several by its page', async () => {
+    renderDeferredTrigger([SEARCHHOST, SEARCHSVC], {
+      links: [{}, { sites: { status: 'deferred' } }]
+    })
+
+    await userEvent.click(screen.getByText('Down'))
+    await screen.findByRole('menu')
+
+    expect(screen.getByRole('menuitem', { name: 'All hosts' })).toHaveAttribute(
+      'href',
+      'view.py?view_name=searchhost&filled_in=filter&_show_filter_form=1'
+    )
+    expect(screen.getByRole('menuitem', { name: 'All services' })).toHaveAttribute(
+      'href',
+      'dashboard_stats_link.py?link_index=1'
+    )
+  })
+
+  it('marks its slot as a link without leading anywhere while the dashboard is edited', () => {
+    renderTriggerWhileEditing([SEARCHHOST])
+
+    expect(screen.queryByRole('link')).toBeNull()
+    expect(screen.getByText('Down').closest('.db-contextual-link-anchor--editing')).not.toBeNull()
+  })
+
+  it('tells its slot of several links but opens no menu while the dashboard is edited', async () => {
+    renderTriggerWhileEditing([SEARCHHOST, SEARCHSVC])
+
+    await userEvent.click(screen.getByText('Down, several'))
+
+    expect(screen.queryByRole('button')).toBeNull()
+    expect(screen.queryByRole('menu')).toBeNull()
   })
 })

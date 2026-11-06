@@ -9,11 +9,11 @@ from cmk.gui.dashboard.type_defs import StatsDashletConfig
 from cmk.gui.openapi.framework.model import api_field, api_model
 
 from ..context_filters import (
+    AGGREGATE_FILTER_REPLACEMENTS,
     AGGREGATE_HOST_FILTER_ADAPTER,
     AGGREGATE_SERVICE_FILTER_ADAPTER,
     AggregateHostContextFilter,
     AggregateServiceContextFilter,
-    RETIRED_AGGREGATE_FILTERS,
 )
 from ..contextual_link import (
     AnyContextualLinkSpec,
@@ -55,7 +55,7 @@ class HostStatsContent(_LinkedStatsContent):
             contextual_link=contextual_link_from_internal(
                 config.get("contextual_link"),
                 AGGREGATE_HOST_FILTER_ADAPTER,
-                RETIRED_AGGREGATE_FILTERS,
+                AGGREGATE_FILTER_REPLACEMENTS,
             ),
         )
 
@@ -85,7 +85,7 @@ class ServiceStatsContent(_LinkedStatsContent):
             contextual_link=contextual_link_from_internal(
                 config.get("contextual_link"),
                 AGGREGATE_SERVICE_FILTER_ADAPTER,
-                RETIRED_AGGREGATE_FILTERS,
+                AGGREGATE_FILTER_REPLACEMENTS,
             ),
         )
 

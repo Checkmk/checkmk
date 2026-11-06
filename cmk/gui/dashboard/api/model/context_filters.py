@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from typing import Annotated, Literal
 
 from pydantic import Discriminator, StringConstraints, TypeAdapter
@@ -157,13 +158,26 @@ class ServiceTagContextFilter(_KeyedContextFilter):
     filter_id: Literal["service_tags"] = api_field(description="A tag of the clicked service.")
 
 
-# A click that yields a set of hosts: only the state, which the clicked part names itself.
-type AggregateHostContextFilter = HostStateContextFilter
+# Plain unions, so sets built on them stay flat. These filters take the values of all objects.
+_AggregateHostFilters = (
+    SitesContextFilter
+    | WatoFoldersContextFilter
+    | HostGroupsContextFilter
+    | HostStateContextFilter
+    | HostLabelContextFilter
+)
+_AggregateServiceFilters = (
+    _AggregateHostFilters
+    | ServiceStateContextFilter
+    | ServiceHardStateContextFilter
+    | ServiceLabelContextFilter
+)
 
-# A click that yields a set of services, which also carry their hosts' state.
-type AggregateServiceContextFilter = Annotated[
-    HostStateContextFilter | ServiceStateContextFilter, Discriminator("filter_id")
-]
+# A click that yields a set of hosts: only filters valued from all of them.
+type AggregateHostContextFilter = Annotated[_AggregateHostFilters, Discriminator("filter_id")]
+
+# A click that yields a set of services, which also carry their hosts' filters.
+type AggregateServiceContextFilter = Annotated[_AggregateServiceFilters, Discriminator("filter_id")]
 
 # The single-value filters first, so the editor lists them first.
 _ObjectHostFilters = (
@@ -171,26 +185,20 @@ _ObjectHostFilters = (
     | WatoFolderContextFilter
     | HostStateContextFilter
     | HostGroupContextFilter
-    | SitesContextFilter
-    | WatoFoldersContextFilter
-    | HostGroupsContextFilter
-    | HostLabelContextFilter
+    | _AggregateHostFilters
     | HostNameContextFilter
     | HostAttributeContextFilter
     | HostTagContextFilter
     | HostAuxTagContextFilter
 )
 
-# A click that yields one host: its site, folder, state, groups, labels, name, attributes and
-# tags.
+# A click that yields one host: the aggregate filters plus its own single-value ones.
 type ObjectHostContextFilter = Annotated[_ObjectHostFilters, Discriminator("filter_id")]
 
 # A click that yields one service, which also carries its host's filters.
 type ObjectServiceContextFilter = Annotated[
     _ObjectHostFilters
-    | ServiceStateContextFilter
-    | ServiceHardStateContextFilter
-    | ServiceLabelContextFilter
+    | _AggregateServiceFilters
     | ServiceGroupContextFilter
     | ServiceNameContextFilter
     | ServiceAttributeContextFilter
@@ -198,10 +206,13 @@ type ObjectServiceContextFilter = Annotated[
     Discriminator("filter_id"),
 ]
 
-# A statistics link stored while statistics offered these filters leaves them out.
-RETIRED_AGGREGATE_FILTERS: frozenset[FilterName] = frozenset(
-    {"siteopt", "wato_folder", "opthostgroup", "optservicegroup"}
-)
+# Older statistics links: single-value filters read as their multi-value one, None drops them.
+AGGREGATE_FILTER_REPLACEMENTS: Mapping[FilterName, FilterName | None] = {
+    "siteopt": "sites",
+    "wato_folder": "wato_folders",
+    "opthostgroup": "hostgroups",
+    "optservicegroup": None,
+}
 
 
 # The stored form of a filter is its API form, so each set reads back through its own union.

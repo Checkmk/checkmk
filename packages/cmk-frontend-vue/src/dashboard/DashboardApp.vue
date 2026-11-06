@@ -44,6 +44,7 @@ import CloneDashboardWizard from '@/dashboard/components/Wizard/CloneDashboardWi
 import CreateDashboardWizard from '@/dashboard/components/Wizard/CreateDashboardWizard.vue'
 import WizardSelector from '@/dashboard/components/WizardSelector/WizardSelector.vue'
 import { widgetTypeToSelectorMatcher } from '@/dashboard/components/WizardSelector/utils.ts'
+import { useProvideDashboardEditing } from '@/dashboard/composables/useDashboardEditing'
 import { useDashboardFilters } from '@/dashboard/composables/useDashboardFilters.ts'
 import { useDashboardTimeControl } from '@/dashboard/composables/useDashboardTimeControl'
 import { useDashboardVisualTitle } from '@/dashboard/composables/useDashboardVisualTitle.ts'
@@ -325,6 +326,7 @@ const dashboardVisualTitle = useDashboardVisualTitle(
 )
 
 useProvideDrillDownSource(dashboardVisualTitle)
+useProvideDashboardEditing(isDashboardEditingMode)
 
 watch(dashboardVisualTitle, (newTitle) => {
   // We only set the title for the current document.

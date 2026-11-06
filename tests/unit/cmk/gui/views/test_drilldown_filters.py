@@ -10,6 +10,7 @@ import pytest
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.http import request
 from cmk.gui.type_defs import FilterHTTPVariables, FilterName
+from cmk.gui.utils.labels import parse_label_groups_from_http_vars
 from cmk.gui.views.drilldown_filters import (
     drilldown_filters,
     Dropped,
@@ -36,6 +37,16 @@ _HOST_ROW: RowValues = {
     "host_groups": ["linux"],
     "host_labels": {"cmk/os_family": "linux", "env": "prod"},
     "host_tags": {"criticality": "prod", "snmp_ds": "no-snmp", "tcp": "tcp"},
+}
+
+_OTHER_HOST_ROW: RowValues = {
+    "site": "stable",
+    "host_name": "win01",
+    "host_state": 0,
+    "host_has_been_checked": 1,
+    "host_filename": "/wato/servers/windows/hosts.mk",
+    "host_groups": ["windows"],
+    "host_labels": {"cmk/os_family": "windows", "env": "prod"},
 }
 
 
@@ -502,14 +513,56 @@ def test_drilldowns_name_the_key_a_filter_takes(
 def test_drilldowns_carry_the_keys_the_row_has_and_name_the_others() -> None:
     row = {"host_tags": {"ip-v4": "ip-v4", "checkmk-agent": "checkmk-agent"}}
 
-    assert _drilldown("host_auxtags").carried(row, ["ip-v4", "ip-v6", "checkmk-agent"]) == (
+    assert _drilldown("host_auxtags").carried([row], ["ip-v4", "ip-v6", "checkmk-agent"]) == (
         {"host_auxtags_0": "ip-v4", "host_auxtags_1": "checkmk-agent"},
         ["ip-v6"],
     )
 
 
 def test_drilldowns_carry_nothing_when_the_row_has_none_of_the_keys() -> None:
-    assert _drilldown("host_auxtags").carried({"host_tags": {}}, ["ip-v6"]) == (None, ["ip-v6"])
+    assert _drilldown("host_auxtags").carried([{"host_tags": {}}], ["ip-v6"]) == (None, ["ip-v6"])
+
+
+@pytest.mark.parametrize(
+    "filter_name, expected",
+    [
+        pytest.param("sites", {"sites": "heute|stable"}, id="sites"),
+        pytest.param(
+            "wato_folders", {"wato_folders": "servers/linux|servers/windows"}, id="folders"
+        ),
+        pytest.param("hostgroups", {"hostgroups": "linux|windows"}, id="host groups"),
+        pytest.param("hoststate", {"hst0": "on", "hst1": "on"}, id="host states"),
+    ],
+)
+def test_drilldowns_merge_the_values_of_several_rows(
+    filter_name: FilterName, expected: FilterHTTPVariables
+) -> None:
+    assert _drilldown(filter_name).carried([_HOST_ROW, _OTHER_HOST_ROW], []) == (expected, [])
+
+
+def test_drilldowns_merge_a_folder_with_the_main_folder_into_all_folders() -> None:
+    main_folder_row = {"host_filename": "/wato/hosts.mk"}
+
+    assert _drilldown("wato_folders").carried([_HOST_ROW, main_folder_row], []) == (
+        {"wato_folders": ""},
+        [],
+    )
+
+
+def test_drilldowns_merge_the_labels_of_several_rows_into_any_of_their_values() -> None:
+    variables, missing = _drilldown("host_labels").carried(
+        [_HOST_ROW, _OTHER_HOST_ROW], ["cmk/os_family"]
+    )
+
+    assert variables is not None
+    assert parse_label_groups_from_http_vars("host_labels", variables) == [
+        ("and", [("and", "cmk/os_family:linux"), ("or", "cmk/os_family:windows")])
+    ]
+    assert missing == []
+
+
+def test_drilldowns_drop_a_single_value_filter_for_several_rows() -> None:
+    assert _drilldown("siteopt").carried([_HOST_ROW, _OTHER_HOST_ROW], []) == (None, [])
 
 
 def test_drilldowns_each_have_a_valued_case() -> None:

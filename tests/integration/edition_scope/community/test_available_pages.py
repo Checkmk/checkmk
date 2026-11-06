@@ -80,6 +80,7 @@ def test_registered_pages() -> None:
         "pagetype_topics",
         "edit_pagetype_topic",
         "dashboard",
+        "dashboard_stats_link",
         "download_agent_output",
         "download_certificate",
         "download_local_agent_plugin",

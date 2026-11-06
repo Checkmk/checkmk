@@ -494,7 +494,9 @@ def register_host_and_service_group_filters(filter_registry: FilterRegistry) -> 
             ),
             options=all_groups,  # type: ignore[arg-type]
             group=FilterGroup.HOST_PROPERTIES,
-            drilldown=drilldowns.multi_value("hostgroups", "host_groups"),
+            drilldown=drilldowns.multi_value(
+                "hostgroups", ["host_groups"], drilldowns.list_items("host_groups")
+            ),
         )
     )
 

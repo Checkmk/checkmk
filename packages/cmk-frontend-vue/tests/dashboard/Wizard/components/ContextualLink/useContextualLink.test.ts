@@ -17,7 +17,7 @@ const SEARCHHOST: VisualLocation = { type: 'views', name: 'searchhost' }
 const LINUX_DASHBOARD: VisualLocation = { type: 'dashboards', name: 'linux' }
 const HOST_STATISTICS_OPTIONS: ContextualLinkOptions = {
   modes: ['default', 'inherited', 'custom'],
-  filters: ['hoststate'],
+  filters: ['sites', 'wato_folders', 'hostgroups', 'hoststate', 'host_labels'],
   filter_keys: {}
 }
 
@@ -121,7 +121,7 @@ describe('useContextualLink', () => {
         {
           title: 'Down hosts',
           location: LINUX_DASHBOARD,
-          filters: [{ filter_id: 'hoststate' }],
+          filters: [{ filter_id: 'wato_folders' }],
           include_context: true,
           include_time_range: false,
           show_filter_form: true

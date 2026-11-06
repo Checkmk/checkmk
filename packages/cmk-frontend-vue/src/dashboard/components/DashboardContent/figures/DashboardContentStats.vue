@@ -6,7 +6,9 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import CmkStatsFigure from '@/dashboard/components/figures/CmkStatsFigure.vue'
 import { useComputedWidget } from '@/dashboard/composables/useComputedWidget'
-import type { StatsContent } from '@/dashboard/types/widget'
+import { useInjectDrillDownSource } from '@/dashboard/composables/useDrillDownSource'
+import { statsLinkUrl } from '@/dashboard/lib/contextualLinkUrl'
+import type { StatsContent, StatsLinkPart } from '@/dashboard/types/widget'
 import { dashboardAPI } from '@/dashboard/utils'
 
 import type { ContentProps } from '../types'
@@ -14,6 +16,18 @@ import WidgetFigureFrame from './WidgetFigureFrame.vue'
 
 const props = defineProps<ContentProps<StatsContent>>()
 const { state, retry } = useComputedWidget(props, dashboardAPI.computeStats)
+const drillDownSource = useInjectDrillDownSource()
+
+function deferredLinkUrl(part: StatsLinkPart, linkIndex: number): string {
+  return statsLinkUrl(
+    props.dashboardKey,
+    props.widget_id,
+    part,
+    linkIndex,
+    props.effective_filter_context.filters,
+    drillDownSource.value
+  )
+}
 </script>
 
 <template>
@@ -29,6 +43,7 @@ const { state, retry } = useComputedWidget(props, dashboardAPI.computeStats)
         :width="width"
         :height="height"
         :filters="effective_filter_context.filters"
+        :deferred-link-url="deferredLinkUrl"
       />
     </template>
   </WidgetFigureFrame>

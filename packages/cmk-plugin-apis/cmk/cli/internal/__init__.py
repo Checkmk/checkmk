@@ -18,7 +18,6 @@ import logging
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
-from functools import partial
 from pathlib import Path
 from typing import Protocol
 
@@ -41,13 +40,6 @@ class ExitCode(Enum):
     BROKEN_PIPE = 141
     """128 + SIGPIPE, as a shell reports a command whose reader went away"""
 
-
-type Options = Mapping[str, object]
-"""The parsed sub-options of a command, keyed by their long option name.
-
-A flag is ``True``, a repeated flag its count, an option with an argument its
-(converted) argument, a repeated one a tuple of all its arguments.
-"""
 
 type Args = Sequence[str]
 """The positional arguments of a command.
@@ -89,10 +81,6 @@ class Context:
     global_options: GlobalOptions
     logger: logging.Logger
     """Where the command reports what the engine would report, e.g. its errors"""
-
-
-type CommandHandler = Callable[[Context, Options, Args], ExitCode]
-"""The signature of a command's handler; it returns the exit status."""
 
 
 @dataclass(frozen=True)
@@ -155,99 +143,8 @@ class Reader(Protocol):
     def values[T](self, option: Values[T]) -> Sequence[T]: ...
 
 
-@dataclass(frozen=True, kw_only=True)
-class Option:
-    """A sub-option of a :class:`Command`, handed to the command's handler as part of its options.
-
-    An option can either
-    a) have an argument (with ``repeat``, every value is collected),
-    b) have no argument and count its occurrences (``repeat``), or
-    c) have no argument (its presence is passed as ``True``).
-    """
-
-    long: str
-    help: str
-    short: str | None = None
-    argument: str | None = None
-    """What the help shows in the argument's place; ``None`` for an option without argument"""
-    parse: Callable[[str], object] | None = None
-    argument_optional: bool = False
-    repeat: bool = False
-    deprecated_names: frozenset[str] = frozenset()
-
-    def __post_init__(self) -> None:
-        if self.argument is None and (self.parse is not None or self.argument_optional):
-            raise ValueError(f"--{self.long} parses or makes optional an argument it does not take")
-
-
-def _read_option(reader: Reader, option: Option) -> object | None:
-    match option.argument:
-        case None if option.repeat:
-            return (
-                reader.count(
-                    Count(
-                        long=option.long,
-                        help=option.help,
-                        short=option.short,
-                        deprecated_names=option.deprecated_names,
-                    )
-                )
-                or None
-            )
-        case None:
-            given = reader.flag(
-                Flag(
-                    long=option.long,
-                    help=option.help,
-                    short=option.short,
-                    deprecated_names=option.deprecated_names,
-                )
-            )
-            return True if given else None
-        case str() as argument if option.repeat:
-            return (
-                tuple(
-                    reader.values(
-                        Values(
-                            long=option.long,
-                            help=option.help,
-                            short=option.short,
-                            deprecated_names=option.deprecated_names,
-                            placeholder=argument,
-                            parse=option.parse or str,
-                        )
-                    )
-                )
-                or None
-            )
-        case str() as argument:
-            return reader.value(
-                Value(
-                    long=option.long,
-                    help=option.help,
-                    short=option.short,
-                    deprecated_names=option.deprecated_names,
-                    placeholder=argument,
-                    parse=option.parse or str,
-                )
-            )
-
-
-def _read_options(sub_options: Sequence[Option], reader: Reader) -> Options:
-    return {
-        option.long: value
-        for option in sub_options
-        if (value := _read_option(reader, option)) is not None
-    }
-
-
 def no_options(_options: Reader) -> None:
     """The request of a command without options"""
-
-
-def untyped_request(sub_options: Sequence[Option] = ()) -> Callable[[Reader], Options]:
-    """The request of a command whose handler reads its options from the untyped mapping"""
-    return partial(_read_options, sub_options)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -327,9 +224,7 @@ __all__ = [
     "Args",
     "Arguments",
     "Command",
-    "Option",
     "Context",
-    "CommandHandler",
     "Count",
     "entry_point_prefixes",
     "ExitCode",
@@ -337,8 +232,6 @@ __all__ = [
     "GlobalOptions",
     "no_options",
     "Reader",
-    "Options",
-    "untyped_request",
     "Value",
     "Values",
 ]

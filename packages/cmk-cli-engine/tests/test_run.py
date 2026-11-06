@@ -10,6 +10,7 @@ from collections.abc import Callable, Iterator, Sequence
 from contextlib import nullcontext
 from pathlib import Path
 from types import FrameType
+from typing import Final
 
 import pytest
 
@@ -24,12 +25,11 @@ from cmk.cli.engine.run import run as cli_run
 from cmk.cli.engine.run import Runtime as CLIRuntime
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Command as CLICommand
-from cmk.cli.internal import CommandHandler as CLICommandHandler
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
-from cmk.cli.internal import Option as CLIOption
-from cmk.cli.internal import Options as CLIOptions
-from cmk.cli.internal import untyped_request as cli_untyped_request
+from cmk.cli.internal import no_options as cli_no_options
+from cmk.cli.internal import Reader as CLIReader
+from cmk.cli.internal import Value as CLIValue
 
 from ._logger import null_logger
 
@@ -181,14 +181,10 @@ def test_file_logging_replaces_the_handlers_it_finds(tmp_path: Path) -> None:
     assert len(logger.handlers) == 1
 
 
-def _command(handler: CLICommandHandler) -> CLIGetoptCommand:
+def _command(handler: Callable[[CLIContext, None, CLIArgs], CLIExitCode]) -> CLIGetoptCommand:
     return cli_make_command(
         CLICommand(
-            name="demo",
-            long="demo",
-            request=cli_untyped_request(),
-            handler=handler,
-            help="Demonstrate",
+            name="demo", long="demo", request=cli_no_options, handler=handler, help="Demonstrate"
         )
     )
 
@@ -225,37 +221,37 @@ def _run(argv: Sequence[str], runtime: CLIRuntime) -> int:
         signal.signal(signal.SIGINT, previous)
 
 
-def _numbered(handler: CLICommandHandler) -> CLIGetoptCommand:
+_NUMBER_VALUE: Final = CLIValue(long="number", help="A number", placeholder="N", parse=int)
+
+
+def _number_request(options: CLIReader) -> int | None:
+    return options.value(_NUMBER_VALUE)
+
+
+def _numbered(
+    handler: Callable[[CLIContext, int | None, CLIArgs], CLIExitCode],
+) -> CLIGetoptCommand:
     return cli_make_command(
         CLICommand(
             name="demo",
             long="demo",
+            request=_number_request,
             handler=handler,
             help="Demonstrate",
-            request=cli_untyped_request(
-                [
-                    CLIOption(
-                        long="number",
-                        help="A number",
-                        argument="N",
-                        parse=int,
-                    )
-                ]
-            ),
         )
     )
 
 
-def test_a_sub_option_reaches_the_command_converted() -> None:
-    seen: list[CLIOptions] = []
+def test_a_sub_option_reaches_the_command_parsed() -> None:
+    seen: list[int | None] = []
 
-    def remember(_context: CLIContext, sub: CLIOptions, _args: CLIArgs) -> CLIExitCode:
-        seen.append(sub)
+    def remember(_context: CLIContext, number: int | None, _args: CLIArgs) -> CLIExitCode:
+        seen.append(number)
         return CLIExitCode.SUCCESS
 
     _run(["cmk", "--demo", "--number", "5"], _runtime([_numbered(remember)]))
 
-    assert seen == [{"number": 5}]
+    assert seen == [5]
 
 
 def test_a_command_reports_its_own_exit_status() -> None:
@@ -291,7 +287,7 @@ def test_a_sub_option_argument_the_conversion_rejects_is_raised_through_under_de
 def test_a_command_is_handed_the_site_root() -> None:
     seen: list[Path] = []
 
-    def remember(context: CLIContext, _sub: CLIOptions, _args: CLIArgs) -> CLIExitCode:
+    def remember(context: CLIContext, _request: None, _args: CLIArgs) -> CLIExitCode:
         seen.append(context.omd_root)
         return CLIExitCode.SUCCESS
 
@@ -303,7 +299,7 @@ def test_a_command_is_handed_the_site_root() -> None:
 def test_a_command_reports_through_the_engines_logger() -> None:
     seen: list[logging.Logger] = []
 
-    def remember(context: CLIContext, _sub: CLIOptions, _args: CLIArgs) -> CLIExitCode:
+    def remember(context: CLIContext, _request: None, _args: CLIArgs) -> CLIExitCode:
         seen.append(context.logger)
         return CLIExitCode.SUCCESS
 
@@ -354,7 +350,7 @@ def _ignored_sigint() -> Iterator[None]:
         signal.signal(signal.SIGINT, previous)
 
 
-def _interrupting(_context: CLIContext, _sub: CLIOptions, _args: CLIArgs) -> CLIExitCode:
+def _interrupting(_context: CLIContext, _request: None, _args: CLIArgs) -> CLIExitCode:
     signal.raise_signal(signal.SIGINT)
     return CLIExitCode.SUCCESS
 
@@ -457,5 +453,5 @@ def test_the_profile_is_written_even_when_the_command_raises() -> None:
     assert len(written.calls) == 1
 
 
-def _failing(_context: CLIContext, _sub_options: CLIOptions, _args: CLIArgs) -> CLIExitCode:
+def _failing(_context: CLIContext, _request: None, _args: CLIArgs) -> CLIExitCode:
     raise ValueError("no such host")

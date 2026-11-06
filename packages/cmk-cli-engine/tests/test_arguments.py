@@ -16,13 +16,15 @@ from cmk.cli.engine.commands import Commands as CLICommands
 from cmk.cli.engine.commands import GetoptCommand as CLIGetoptCommand
 from cmk.cli.engine.discovery import make_command as cli_make_command
 from cmk.cli.engine.options import general_options as cli_general_options
-from cmk.cli.engine.options import Option as CLIGetoptOption
+from cmk.cli.engine.options import Option as CLIOption
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
+from cmk.cli.internal import Count as CLICount
 from cmk.cli.internal import ExitCode as CLIExitCode
-from cmk.cli.internal import Option as CLIOption
+from cmk.cli.internal import Flag as CLIFlag
 from cmk.cli.internal import Reader as CLIReader
-from cmk.cli.internal import untyped_request as cli_untyped_request
+from cmk.cli.internal import Value as CLIValue
+from cmk.cli.internal import Values as CLIValues
 
 
 def _unreachable(_reader: CLIReader) -> NoReturn:
@@ -57,6 +59,37 @@ _WITH_ARGUMENT: Final = CLIGetoptCommand(
     short_help="needs exactly one argument",
 )
 
+_KEEPALIVE_FLAG: Final = CLIFlag(long="keepalive", help="the option that implies this command")
+
+# The short spelling is the command's own on purpose: in "-cc" the first
+# selects the command, and both count towards the option.
+_COUNTED_COUNT: Final = CLICount(long="counted", short="c", help="counts")
+
+_COLLECTED_VALUES: Final = CLIValues(
+    long="collected",
+    placeholder="VALUE",
+    help="collects every argument",
+    parse=str,
+)
+
+_RENAMED_VALUE: Final = CLIValue(
+    long="renamed",
+    placeholder="VALUE",
+    deprecated_names=frozenset({"legacy-name"}),
+    help="takes an argument",
+    parse=str,
+)
+
+
+def _check_request(options: CLIReader) -> tuple[bool, int, Sequence[str], str | None]:
+    return (
+        options.flag(_KEEPALIVE_FLAG),
+        options.count(_COUNTED_COUNT),
+        options.values(_COLLECTED_VALUES),
+        options.value(_RENAMED_VALUE),
+    )
+
+
 # The engine runs this one when the command line names no command at all, so the
 # name is not free to choose.
 _CHECK: Final = cli_make_command(
@@ -64,28 +97,9 @@ _CHECK: Final = cli_make_command(
         name="check",
         long="check",
         short="c",
+        request=_check_request,
         handler=lambda *_args: CLIExitCode.SUCCESS,
         arguments=CLIArguments("HOSTS", optional=True),
-        request=cli_untyped_request(
-            [
-                CLIOption(long="keepalive", help="the option that implies this command"),
-                # The short spelling is the command's own on purpose: in "-cc" the first
-                # selects the command, and both count towards the option.
-                CLIOption(long="counted", short="c", repeat=True, help="counts"),
-                CLIOption(
-                    long="collected",
-                    argument="VALUE",
-                    repeat=True,
-                    help="collects every argument",
-                ),
-                CLIOption(
-                    long="renamed",
-                    argument="VALUE",
-                    deprecated_names=frozenset({"legacy-name"}),
-                    help="takes an argument",
-                ),
-            ]
-        ),
         help="the implicit command",
     )
 )
@@ -96,7 +110,7 @@ _COMMANDS: Final = CLICommands(
 )
 
 
-def _general_option_argv(option: CLIGetoptOption) -> Sequence[str]:
+def _general_option_argv(option: CLIOption) -> Sequence[str]:
     if option.argument:
         return [f"--{option.long_option}={_ARGUMENT_EVERY_CONVERSION_ACCEPTS}"]
     return [f"--{option.long_option}"]
@@ -235,7 +249,7 @@ def test_the_rejection_names_the_program_as_it_was_called() -> None:
 
 
 @pytest.mark.parametrize("option", cli_general_options(), ids=lambda option: option.name)
-def test_a_general_option_does_not_select_a_command(option: CLIGetoptOption) -> None:
+def test_a_general_option_does_not_select_a_command(option: CLIOption) -> None:
     parsed = cli_parse(_COMMANDS, ["cmk", *_general_option_argv(option), "myhost"])
 
     assert isinstance(parsed, CLIRunCommand)
@@ -243,7 +257,7 @@ def test_a_general_option_does_not_select_a_command(option: CLIGetoptOption) -> 
 
 
 @pytest.mark.parametrize("option", cli_general_options(), ids=lambda option: option.name)
-def test_a_general_option_is_handed_back_for_processing(option: CLIGetoptOption) -> None:
+def test_a_general_option_is_handed_back_for_processing(option: CLIOption) -> None:
     parsed = cli_parse(_COMMANDS, ["cmk", *_general_option_argv(option), "myhost"])
 
     assert isinstance(parsed, CLIRunCommand)

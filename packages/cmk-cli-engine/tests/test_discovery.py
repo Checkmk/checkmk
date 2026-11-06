@@ -18,11 +18,12 @@ from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
+from cmk.cli.internal import Count as CLICount
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
-from cmk.cli.internal import Option as CLIOption
-from cmk.cli.internal import Options as CLIOptions
-from cmk.cli.internal import untyped_request as cli_untyped_request
+from cmk.cli.internal import no_options as cli_no_options
+from cmk.cli.internal import Reader as CLIReader
+from cmk.cli.internal import Value as CLIValue
 from cmk.discover_plugins import PluginLocation
 
 from ._logger import null_logger
@@ -31,7 +32,22 @@ from ._logger import null_logger
 _OMD_ROOT: Final = Path("/omd/sites/mysite")
 
 
-def _handler(_context: CLIContext, _options: CLIOptions, _args: CLIArgs) -> CLIExitCode:
+_OID_VALUE: Final = CLIValue(
+    long="oid",
+    help="Walk the given OID",
+    placeholder="OID",
+    deprecated_names=frozenset({"object"}),
+    parse=str.upper,
+)
+
+_VERBOSE_COUNT: Final = CLICount(long="verbose", help="Be verbose")
+
+
+def _walk_request(options: CLIReader) -> tuple[str | None, int]:
+    return options.value(_OID_VALUE), options.count(_VERBOSE_COUNT)
+
+
+def _handler(_context: CLIContext, _request: tuple[str | None, int], _args: CLIArgs) -> CLIExitCode:
     return CLIExitCode.SUCCESS
 
 
@@ -40,48 +56,30 @@ def test_make_command_records_the_options_a_command_declares() -> None:
         CLICommand(
             name="snmpwalk",
             long="snmpwalk",
+            request=_walk_request,
             handler=_handler,
             help="Walk",
-            request=cli_untyped_request(
-                [
-                    CLIOption(
-                        long="oid",
-                        help="Walk the given OID",
-                        argument="OID",
-                        deprecated_names=frozenset({"object"}),
-                    ),
-                    CLIOption(long="verbose", help="Be verbose", repeat=True),
-                ]
-            ),
         )
     )
     assert command.long_getopt_specs() == ["snmpwalk", "oid=", "object=", "verbose"]
 
 
-def test_a_commands_handler_receives_its_options_converted() -> None:
-    seen: list[CLIOptions] = []
+def test_a_commands_handler_receives_its_request_parsed() -> None:
+    seen: list[tuple[str | None, int]] = []
 
-    def _record(_context: CLIContext, options: CLIOptions, _args: CLIArgs) -> CLIExitCode:
-        seen.append(options)
+    def _record(
+        _context: CLIContext, request: tuple[str | None, int], _args: CLIArgs
+    ) -> CLIExitCode:
+        seen.append(request)
         return CLIExitCode.SUCCESS
 
     command = cli_make_command(
         CLICommand(
             name="snmpwalk",
             long="snmpwalk",
+            request=_walk_request,
             handler=_record,
             help="Walk",
-            request=cli_untyped_request(
-                [
-                    CLIOption(
-                        long="oid",
-                        help="Walk the given OID",
-                        argument="OID",
-                        parse=str.upper,
-                    ),
-                    CLIOption(long="verbose", help="Be verbose", repeat=True),
-                ]
-            ),
         )
     )
     bound = command.bind(
@@ -93,7 +91,7 @@ def test_a_commands_handler_receives_its_options_converted() -> None:
         [],
     )
 
-    assert seen == [{"oid": "ISO", "verbose": 2}]
+    assert seen == [("ISO", 2)]
 
 
 @pytest.mark.parametrize(
@@ -119,7 +117,7 @@ def test_call_shapes_the_positional_arguments(
 ) -> None:
     seen: list[CLIArgs] = []
 
-    def _record(_context: CLIContext, _options: CLIOptions, args: CLIArgs) -> CLIExitCode:
+    def _record(_context: CLIContext, _request: None, args: CLIArgs) -> CLIExitCode:
         seen.append(args)
         return CLIExitCode.ERROR
 
@@ -127,7 +125,7 @@ def test_call_shapes_the_positional_arguments(
         CLICommand(
             name="thing",
             long="thing",
-            request=cli_untyped_request(),
+            request=cli_no_options,
             handler=_record,
             help="Do the thing",
             arguments=arguments,
@@ -153,8 +151,8 @@ def test_a_command_not_named_after_its_variable_is_rejected() -> None:
     command = CLICommand(
         name="demo",
         long="demo",
-        request=cli_untyped_request(),
-        handler=_handler,
+        request=cli_no_options,
+        handler=lambda *_args: CLIExitCode.SUCCESS,
         help="Demonstrate",
     )
 

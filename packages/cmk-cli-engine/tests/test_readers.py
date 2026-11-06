@@ -7,10 +7,6 @@ import logging
 
 import pytest
 
-from cmk.cli.engine.readers import option_count as cli_option_count
-from cmk.cli.engine.readers import option_names as cli_option_names
-from cmk.cli.engine.readers import option_string as cli_option_string
-from cmk.cli.engine.readers import option_strings as cli_option_strings
 from cmk.cli.engine.readers import ParsedOptions as CLIParsedOptions
 from cmk.cli.engine.readers import RecordedOptions as CLIRecordedOptions
 from cmk.cli.internal import Count as CLICount
@@ -137,31 +133,3 @@ def test_the_recorder_keeps_the_deprecated_spellings() -> None:
     recorded.flag(_PLUGINS_FLAG)
 
     assert recorded.options[0].long_getopt_specs() == ["plugins", "checks"]
-
-
-def test_a_missing_string_option_has_no_value() -> None:
-    assert cli_option_string({}, "snmp-backend") is None
-
-
-def test_a_string_option_that_is_not_a_string_is_rejected() -> None:
-    with pytest.raises(TypeError):
-        cli_option_string({"snmp-backend": 23}, "snmp-backend")
-
-
-def test_a_counted_option_that_was_never_given_is_rejected() -> None:
-    with pytest.raises(TypeError):
-        cli_option_count({}, "discover")
-
-
-def test_a_name_of_the_wrong_type_is_rejected() -> None:
-    with pytest.raises(TypeError):
-        cli_option_names({"plugins": {23}}, "plugins", str)
-
-
-def test_a_missing_collected_option_has_no_values() -> None:
-    assert cli_option_strings({}, "oid") == ()
-
-
-def test_collected_values_that_are_not_strings_are_rejected() -> None:
-    with pytest.raises(TypeError):
-        cli_option_strings({"oid": (23,)}, "oid")

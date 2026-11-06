@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Sequence
 from typing import Protocol
 
 from cmk.cli.internal import Count as CLICount
@@ -12,7 +12,7 @@ from cmk.cli.internal import Flag as CLIFlag
 from cmk.cli.internal import Value as CLIValue
 from cmk.cli.internal import Values as CLIValues
 
-from .options import GetoptOptions, Option, OptionName, OptionSpec
+from .options import GetoptOptions, Option, OptionSpec
 
 
 class _OptionDeclaration(Protocol):
@@ -126,47 +126,3 @@ class ParsedOptions:
             _parse(option.parse, spec, argument)
             for spec, argument in self._given(_values_option(option))
         )
-
-
-def option_string(parsed: Mapping[OptionName, object], name: OptionName) -> str | None:
-    match parsed.get(name):
-        case None:
-            return None
-        case str() as value:
-            return value
-        case value:
-            raise TypeError(f"--{name}: invalid argument {value!r}")
-
-
-def option_strings(parsed: Mapping[OptionName, object], name: OptionName) -> Sequence[str]:
-    match parsed.get(name):
-        case None:
-            return ()
-        case tuple() as value:
-            strings = tuple(element for element in value if isinstance(element, str))
-            if len(strings) == len(value):
-                return strings
-            raise TypeError(f"--{name}: invalid argument {value!r}")
-        case value:
-            raise TypeError(f"--{name}: invalid argument {value!r}")
-
-
-def option_count(parsed: Mapping[OptionName, object], name: OptionName) -> int:
-    match parsed.get(name):
-        case int() as value:
-            return value
-        case value:
-            raise TypeError(f"--{name}: invalid argument {value!r}")
-
-
-def option_names[NameT](
-    parsed: Mapping[OptionName, object], name: OptionName, type_: type[NameT]
-) -> frozenset[NameT]:
-    match parsed.get(name):
-        case set() | frozenset() as value:
-            names = frozenset(element for element in value if isinstance(element, type_))
-            if len(names) == len(value):
-                return names
-            raise TypeError(f"--{name}: invalid argument {value!r}")
-        case value:
-            raise TypeError(f"--{name}: invalid argument {value!r}")

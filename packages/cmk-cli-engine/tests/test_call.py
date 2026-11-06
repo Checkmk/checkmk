@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator, Sequence
+from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager, nullcontext
 from pathlib import Path
 from typing import Final
@@ -17,13 +17,12 @@ from cmk.cli.engine.readers import ParsedOptions as CLIParsedOptions
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
-from cmk.cli.internal import CommandHandler as CLICommandHandler
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import Flag as CLIFlag
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
-from cmk.cli.internal import Option as CLIOption
-from cmk.cli.internal import Options as CLIOptions
-from cmk.cli.internal import untyped_request as cli_untyped_request
+from cmk.cli.internal import no_options as cli_no_options
+from cmk.cli.internal import Reader as CLIReader
 
 from ._logger import null_logger
 
@@ -34,33 +33,37 @@ _CONTEXT: Final = CLIContext(
     logger=null_logger(),
 )
 
-_SUB_OPTIONS: Final = [CLIOption(long="flag", help="a flag")]
+_FLAG: Final = CLIFlag(long="flag", help="a flag")
+
+
+def _flag_request(options: CLIReader) -> bool:
+    return options.flag(_FLAG)
 
 
 class _Recorder:
     def __init__(self, exit_code: CLIExitCode = CLIExitCode.SUCCESS) -> None:
-        self.calls: list[tuple[CLIContext, CLIOptions, CLIArgs]] = []
+        self.calls: list[tuple[CLIContext, object, CLIArgs]] = []
         self._exit_code = exit_code
 
-    def __call__(self, context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
-        self.calls.append((context, options, args))
+    def __call__(self, context: CLIContext, request: object, args: CLIArgs) -> CLIExitCode:
+        self.calls.append((context, request, args))
         return self._exit_code
 
 
 def _command(
-    handler: CLICommandHandler,
+    handler: Callable[[CLIContext, object, CLIArgs], CLIExitCode],
     *,
     arguments: CLIArguments | None = None,
-    sub_options: Sequence[CLIOption] = (),
+    request: Callable[[CLIReader], object] = cli_no_options,
 ) -> CLIGetoptCommand:
     return cli_make_command(
         CLICommand(
             name="test_command",
             long="test-command",
+            request=request,
             handler=handler,
             help="a command under test",
             arguments=arguments,
-            request=cli_untyped_request(sub_options),
         )
     )
 
@@ -120,20 +123,20 @@ def test_the_positional_arguments_reach_the_handler() -> None:
     assert [args for _context, _options, args in handler.calls] == [["host1", "host2"]]
 
 
-def test_the_sub_options_reach_the_handler() -> None:
+def test_the_request_reaches_the_handler() -> None:
     handler = _Recorder()
 
-    _call(_command(handler, sub_options=_SUB_OPTIONS))
+    _call(_command(handler, request=_flag_request))
 
-    assert [options for _context, options, _args in handler.calls] == [{"flag": True}]
+    assert [request for _context, request, _args in handler.calls] == [True]
 
 
-def test_a_command_without_sub_options_receives_none() -> None:
+def test_a_command_without_options_receives_the_empty_request() -> None:
     handler = _Recorder()
 
     _call(_command(handler))
 
-    assert [options for _context, options, _args in handler.calls] == [{}]
+    assert [request for _context, request, _args in handler.calls] == [None]
 
 
 def test_the_context_reaches_the_handler() -> None:
@@ -153,7 +156,7 @@ def test_the_handler_runs_inside_the_commands_trace() -> None:
         yield
         events.append("trace ends")
 
-    def handler(_context: CLIContext, _options: CLIOptions, _args: CLIArgs) -> CLIExitCode:
+    def handler(_context: CLIContext, _request: object, _args: CLIArgs) -> CLIExitCode:
         events.append("handler")
         return CLIExitCode.SUCCESS
 
@@ -169,7 +172,7 @@ def test_the_trace_sees_what_the_handler_is_handed() -> None:
         seen.append((context, run_command, args))
         return nullcontext()
 
-    command = _command(_Recorder(), arguments=CLIArguments("HOST"), sub_options=_SUB_OPTIONS)
+    command = _command(_Recorder(), arguments=CLIArguments("HOST"), request=_flag_request)
 
     _call(command, "myhost", arguments=["myhost"], traced=traced)
 

@@ -19,7 +19,7 @@ from cmk.checkengine.plugins import (
 from cmk.checkengine.snmplib import (
     SNMPBackendEnum,
 )
-from cmk.cli.engine.commands import option_string
+from cmk.cli.engine.readers import option_string
 from cmk.cli.internal import Option as CLIOption
 from cmk.utils.check_utils import maincheckify
 

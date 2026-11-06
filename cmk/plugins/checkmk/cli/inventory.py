@@ -42,7 +42,7 @@ from cmk.checkengine.parser import NO_SELECTION
 from cmk.checkengine.plugins import InventoryPluginName, SectionName
 from cmk.checkengine.snmplib import SNMPSectionName
 from cmk.checkengine.specs.checkresults import ActiveCheckResult
-from cmk.cli.engine.commands import option_names, option_string
+from cmk.cli.engine.readers import option_names, option_string
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand

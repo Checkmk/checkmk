@@ -8,7 +8,10 @@ import logging
 import pytest
 
 from cmk.cli.engine.arguments import parse, RunCommand
-from cmk.cli.engine.commands import Commands, general_options, make_command, parse_sub_options
+from cmk.cli.engine.commands import Commands
+from cmk.cli.engine.discovery import make_command
+from cmk.cli.engine.options import general_options
+from cmk.cli.engine.readers import parse_sub_options
 from cmk.cli.internal import Command as CLICommand
 from cmk.plugins.checkmk.cli.check import cli_command_check
 from cmk.plugins.checkmk.cli.core_config import (

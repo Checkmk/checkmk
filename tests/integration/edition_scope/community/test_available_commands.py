@@ -3,7 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.cli.engine.commands import Commands, discover_commands, general_options
+from cmk.cli.engine.commands import Commands
+from cmk.cli.engine.discovery import discover_commands
+from cmk.cli.engine.options import general_options
 
 
 def test_available_commands() -> None:

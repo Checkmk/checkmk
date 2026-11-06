@@ -28,9 +28,7 @@ from cmk.checkengine.plugins import (
     CheckPlugin,
     SNMPSectionPlugin,
 )
-from cmk.cli.engine.commands import (
-    write_stdout,
-)
+from cmk.cli.engine.output import write_stdout
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand

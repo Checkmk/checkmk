@@ -9,13 +9,9 @@ from typing import Final, NoReturn
 import pytest
 
 from cmk.cli.engine.arguments import InvalidArguments, parse, RunCommand, ShowHelp
-from cmk.cli.engine.commands import (
-    Commands,
-    general_options,
-    GetoptCommand,
-    Option,
-    parse_sub_options,
-)
+from cmk.cli.engine.commands import Commands, GetoptCommand
+from cmk.cli.engine.options import general_options, Option
+from cmk.cli.engine.readers import parse_sub_options
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import Options

@@ -14,7 +14,8 @@ from types import FrameType
 import pytest
 
 from cmk.cli.engine.call import CommandTracer
-from cmk.cli.engine.commands import GetoptCommand, make_command
+from cmk.cli.engine.commands import GetoptCommand
+from cmk.cli.engine.discovery import make_command
 from cmk.cli.engine.run import (
     dispatch,
     enable_file_logging,

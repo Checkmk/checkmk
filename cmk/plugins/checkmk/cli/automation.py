@@ -14,7 +14,7 @@ import cmk.utils.paths
 from cmk import trace
 from cmk.automations.engine import AutomationError
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTimeout
-from cmk.cli.engine.commands import option_string
+from cmk.cli.engine.readers import option_string
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand

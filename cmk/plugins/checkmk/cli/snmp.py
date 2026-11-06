@@ -27,7 +27,7 @@ from cmk.checkengine.snmplib import (
     SNMPHostConfig,
     walk_all_contexts_for_export,
 )
-from cmk.cli.engine.commands import option_strings
+from cmk.cli.engine.readers import option_strings
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand

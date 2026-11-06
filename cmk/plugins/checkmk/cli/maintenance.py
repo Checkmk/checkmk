@@ -15,7 +15,7 @@ from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.checkengine.discovery import remove_autochecks_of_host
-from cmk.cli.engine.commands import write_stdout
+from cmk.cli.engine.output import write_stdout
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand

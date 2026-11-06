@@ -30,7 +30,7 @@ from cmk.checkengine.snmp_backends.classic import ClassicSNMPBackend
 from cmk.checkengine.snmp_backends.stored_walk import StoredWalkSNMPBackend
 from cmk.checkengine.sources._sources import SNMPSource
 from cmk.cli.engine.call import call
-from cmk.cli.engine.commands import make_command
+from cmk.cli.engine.discovery import make_command
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions

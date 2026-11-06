@@ -14,7 +14,7 @@ import pytest
 import cmk.utils.paths
 from cmk.ccc.hostaddress import HostAddress
 from cmk.cli.engine.call import call
-from cmk.cli.engine.commands import make_command
+from cmk.cli.engine.discovery import make_command
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions

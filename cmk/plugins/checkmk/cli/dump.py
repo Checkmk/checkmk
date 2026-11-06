@@ -30,7 +30,7 @@ from cmk.checkengine.helper_interface import FetcherType
 from cmk.checkengine.parser import make_parser, NO_SELECTION, parse_raw_data, SectionStore
 from cmk.checkengine.source_builder import SourceBuilder
 from cmk.checkengine.summarize import summarize
-from cmk.cli.engine.commands import write_stdout
+from cmk.cli.engine.output import write_stdout
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand

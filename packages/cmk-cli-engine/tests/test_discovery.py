@@ -10,12 +10,8 @@ from typing import Final
 import pytest
 
 from cmk.cli.engine.call import call
-from cmk.cli.engine.commands import (
-    _named_after_its_variable,
-    make_command,
-    make_option,
-    parse_sub_options,
-)
+from cmk.cli.engine.discovery import _named_after_its_variable, make_command, make_option
+from cmk.cli.engine.readers import parse_sub_options
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand

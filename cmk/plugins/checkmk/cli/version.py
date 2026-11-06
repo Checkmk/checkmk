@@ -6,9 +6,7 @@
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.version import edition
-from cmk.cli.engine.commands import (
-    write_stdout,
-)
+from cmk.cli.engine.output import write_stdout
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext

@@ -9,7 +9,9 @@ from pathlib import Path
 from typing import Final
 
 from cmk.cli.engine.call import call, CommandTracer
-from cmk.cli.engine.commands import GetoptCommand, Option, parse_sub_options
+from cmk.cli.engine.commands import GetoptCommand
+from cmk.cli.engine.options import Option
+from cmk.cli.engine.readers import parse_sub_options
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import CommandHandler, Options
 from cmk.cli.internal import Context as CLIContext

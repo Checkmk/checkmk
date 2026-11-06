@@ -23,7 +23,7 @@ from cmk.base.diagnostics import (
 )
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.i18n import _
-from cmk.cli.engine.commands import option_string
+from cmk.cli.engine.readers import option_string
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext

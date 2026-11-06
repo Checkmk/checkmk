@@ -16,17 +16,11 @@ from typing import Final
 
 from cmk.ccc.log import CMKFormatter
 from cmk.cli.engine.call import call, CommandTracer
-from cmk.cli.engine.commands import (
-    Commands,
-    discover_commands,
-    general_options,
-    GetoptCommand,
-    Option,
-    parse_general_options,
-    parse_sub_options,
-    write_paged,
-    write_stdout,
-)
+from cmk.cli.engine.commands import Commands, GetoptCommand
+from cmk.cli.engine.discovery import discover_commands
+from cmk.cli.engine.options import general_options, Option, parse_general_options
+from cmk.cli.engine.output import write_paged, write_stdout
+from cmk.cli.engine.readers import parse_sub_options
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 

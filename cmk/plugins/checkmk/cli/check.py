@@ -17,7 +17,7 @@ from cmk.base.checking import run_checking
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.checkengine.fetcher_utils.secrets import AdHocSecrets, StoredSecrets
 from cmk.checkengine.plugins import CheckPluginName, SectionName
-from cmk.cli.engine.commands import option_names, option_string
+from cmk.cli.engine.readers import option_names, option_string
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand

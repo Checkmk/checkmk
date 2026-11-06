@@ -7,10 +7,11 @@
 import contextlib
 import itertools
 import sys
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from contextlib import suppress
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal, TypedDict
+from typing import Final
 
 import cmk.utils.password_store
 import cmk.utils.paths
@@ -42,7 +43,7 @@ from cmk.base.errorhandling import (
 from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.cpu_tracking import CPUTracker
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, OnError
-from cmk.ccc.hostaddress import HostName, Hosts
+from cmk.ccc.hostaddress import HostAddress, HostName, Hosts
 from cmk.checkengine.checking import make_timing_results
 from cmk.checkengine.discovery import (
     AutochecksStore,
@@ -55,20 +56,17 @@ from cmk.checkengine.fetchers.snmp import NoSelectedSNMPSections, SNMPFetcherCon
 from cmk.checkengine.filecache import FileCacheOptions, MaxAge
 from cmk.checkengine.parser import NO_SELECTION
 from cmk.checkengine.plugins import CheckPluginName, SectionName
-from cmk.checkengine.snmplib import SNMPSectionName
+from cmk.checkengine.snmplib import SNMPBackendEnum, SNMPSectionName
 from cmk.checkengine.specs.checkresults import ActiveCheckResult, ServiceState
-from cmk.cli.engine.readers import option_count as cli_option_count
-from cmk.cli.engine.readers import option_names as cli_option_names
-from cmk.cli.engine.readers import option_string as cli_option_string
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
+from cmk.cli.internal import Count as CLICount
 from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import Flag as CLIFlag
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
-from cmk.cli.internal import Option as CLIOption
-from cmk.cli.internal import Options as CLIOptions
-from cmk.cli.internal import untyped_request as cli_untyped_request
+from cmk.cli.internal import Reader as CLIReader
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
 from cmk.server_side_calls_backend import load_secrets_file
 from cmk.utils import ip_lookup
@@ -77,16 +75,15 @@ from cmk.utils.log import console
 from .agent_based import extract_plugin_selection, load_checks
 from .exit_code import state_exit_code
 from .options import (
-    fake_dns_address,
-    FAKE_DNS_OPTION,
-    FETCHER_OPTIONS,
-    get_plugins_option,
-    handle_fetcher_options,
+    FAKE_DNS_VALUE,
+    file_cache_request,
+    FileCacheRequest,
     host_address,
-    option_detect_plugins,
-    option_sections,
-    parse_snmp_backend,
-    SNMP_BACKEND_OPTION,
+    make_file_cache_options,
+    plugin_selection_request,
+    PluginSelectionRequest,
+    SNMP_BACKEND_VALUE,
+    USEWALK_FLAG,
 )
 
 # .
@@ -107,18 +104,30 @@ def _write_active_check_result(check_result: ActiveCheckResult) -> ServiceState:
     return check_result.state
 
 
+@dataclass(frozen=True, kw_only=True)
+class _CheckDiscoveryRequest:
+    file_cache: FileCacheRequest
+    usewalk: bool
+    snmp_backend: SNMPBackendEnum | None
+    fake_dns: HostAddress | None
+
+
+def _check_discovery_request(options: CLIReader) -> _CheckDiscoveryRequest:
+    return _CheckDiscoveryRequest(
+        file_cache=file_cache_request(options),
+        usewalk=options.flag(USEWALK_FLAG),
+        snmp_backend=options.value(SNMP_BACKEND_VALUE),
+        fake_dns=options.value(FAKE_DNS_VALUE),
+    )
+
+
 def _mode_check_discovery(
-    omd_root: Path, global_options: CLIGlobalOptions, options: CLIOptions, args: CLIArgs
+    omd_root: Path, global_options: CLIGlobalOptions, request: _CheckDiscoveryRequest, args: CLIArgs
 ) -> CLIExitCode:
     app = make_app(omd_root)
-    fake_dns = fake_dns_address(options)
     raw_host_name = args[0]
     hostname = host_address(raw_host_name)
-    file_cache_options = handle_fetcher_options(options)
-    try:
-        snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
-    except ValueError as exc:
-        raise MKBailOut("Unknown SNMP backend") from exc
+    file_cache_options = make_file_cache_options(request.file_cache)
 
     # We do not resolve the `latest` link here, as any given serial might be removed by the core.
     latest_config_path = VersionedConfigPath.make_latest_path(cmk.utils.paths.omd_root)
@@ -172,7 +181,7 @@ def _mode_check_discovery(
             label_manager.labels_of_host,
             loaded_config.discovery_parameters,
         )
-        ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
+        ip_lookup_config = config_cache.ip_lookup_config(fake_dns=request.fake_dns)
         ip_address_of = ip_lookup.ConfiguredIPLookup(
             ip_lookup.make_lookup_ip_address(ip_lookup_config),
             allow_empty=hosts_config.clusters,
@@ -198,7 +207,7 @@ def _mode_check_discovery(
                     on_error=OnError.RAISE,
                     missing_sys_description=config_cache.missing_sys_description,
                     selected_sections=NoSelectedSNMPSections(),
-                    backend_override=snmp_backend_override,
+                    backend_override=request.snmp_backend,
                     base_path=cmk.utils.paths.omd_root,
                     relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
                     relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
@@ -206,7 +215,7 @@ def _mode_check_discovery(
                     caching_config=make_parsed_snmp_fetch_intervals_config(
                         loaded_config, ruleset_matcher, label_manager.labels_of_host
                     ),
-                    force_stored_walks=bool(options.get("usewalk", False)),
+                    force_stored_walks=request.usewalk,
                     debug=global_options.debug,
                 ),
             ),
@@ -327,9 +336,11 @@ def _mode_check_discovery(
         )
 
 
-def _run_check_discovery(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
+def _run_check_discovery(
+    context: CLIContext, request: _CheckDiscoveryRequest, args: CLIArgs
+) -> CLIExitCode:
     try:
-        return _mode_check_discovery(context.omd_root, context.global_options, options, args)
+        return _mode_check_discovery(context.omd_root, context.global_options, request, args)
     except (MKBailOut, MKGeneralException) as e:
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
@@ -340,9 +351,9 @@ def _run_check_discovery(context: CLIContext, options: CLIOptions, args: CLIArgs
 cli_command_check_discovery = CLICommand(
     name="check_discovery",
     long="check-discovery",
+    request=_check_discovery_request,
     handler=_run_check_discovery,
     arguments=CLIArguments("HOSTNAME"),
-    request=cli_untyped_request([*FETCHER_OPTIONS, SNMP_BACKEND_OPTION, FAKE_DNS_OPTION]),
     help="Check for not yet monitored services",
     description=[
         (
@@ -355,47 +366,40 @@ cli_command_check_discovery = CLICommand(
 )
 
 
-DiscoveryOptions = TypedDict(
-    "DiscoveryOptions",
-    {
-        "cache": Literal[True],
-        "snmp-backend": str,
-        "no-cache": Literal[True],
-        "no-tcp": Literal[True],
-        "usewalk": Literal[True],
-        "detect-sections": frozenset[SectionName],
-        "plugins": frozenset[CheckPluginName],
-        "detect-plugins": frozenset[str],
-        "discover": int,
-        "only-host-labels": bool,
-    },
-    total=False,
+_DISCOVER_COUNT: Final = CLICount(
+    long="discover",
+    short="I",
+    help="Delete existing services before starting discovery",
+)
+
+_ONLY_HOST_LABELS_FLAG: Final = CLIFlag(
+    long="only-host-labels",
+    short="L",
+    help="Restrict discovery to host labels only",
 )
 
 
-def _discovery_options(parsed: Mapping[str, object]) -> DiscoveryOptions:
-    options = DiscoveryOptions()
-    if "cache" in parsed:
-        options["cache"] = True
-    if "no-cache" in parsed:
-        options["no-cache"] = True
-    if "no-tcp" in parsed:
-        options["no-tcp"] = True
-    if "usewalk" in parsed:
-        options["usewalk"] = True
-    if "snmp-backend" in parsed:
-        options["snmp-backend"] = cli_option_string(parsed, "snmp-backend") or ""
-    if "detect-sections" in parsed:
-        options["detect-sections"] = cli_option_names(parsed, "detect-sections", SectionName)
-    if "plugins" in parsed:
-        options["plugins"] = cli_option_names(parsed, "plugins", CheckPluginName)
-    if "detect-plugins" in parsed:
-        options["detect-plugins"] = cli_option_names(parsed, "detect-plugins", str)
-    if "discover" in parsed:
-        options["discover"] = cli_option_count(parsed, "discover")
-    if "only-host-labels" in parsed:
-        options["only-host-labels"] = True
-    return options
+@dataclass(frozen=True, kw_only=True)
+class _DiscoverRequest:
+    file_cache: FileCacheRequest
+    usewalk: bool
+    snmp_backend: SNMPBackendEnum | None
+    discover: int
+    plugin_selection: PluginSelectionRequest[CheckPluginName]
+    only_host_labels: bool
+    fake_dns: HostAddress | None
+
+
+def _discover_request(options: CLIReader) -> _DiscoverRequest:
+    return _DiscoverRequest(
+        file_cache=file_cache_request(options),
+        usewalk=options.flag(USEWALK_FLAG),
+        snmp_backend=options.value(SNMP_BACKEND_VALUE),
+        discover=options.count(_DISCOVER_COUNT),
+        plugin_selection=plugin_selection_request(options, CheckPluginName),
+        only_host_labels=options.flag(_ONLY_HOST_LABELS_FLAG),
+        fake_dns=options.value(FAKE_DNS_VALUE),
+    )
 
 
 def _preprocess_hostnames(
@@ -425,11 +429,9 @@ def _preprocess_hostnames(
 
 
 def _mode_discover(
-    omd_root: Path, global_options: CLIGlobalOptions, parsed: CLIOptions, args: CLIArgs
+    omd_root: Path, global_options: CLIGlobalOptions, request: _DiscoverRequest, args: CLIArgs
 ) -> CLIExitCode:
     app = make_app(omd_root)
-    fake_dns = fake_dns_address(parsed)
-    options = _discovery_options(parsed)
     plugins = load_checks(debug=global_options.debug)
     loading_result = config.load(validate_hosts=True, debug=global_options.debug)
     loaded_config = loading_result.loaded_config
@@ -465,7 +467,7 @@ def _mode_discover(
         plugins.check_plugins,
         label_manager.labels_of_service,
     )
-    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
+    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=request.fake_dns)
     ip_address_of = ip_lookup.ConfiguredIPLookup(
         ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
@@ -487,17 +489,15 @@ def _mode_discover(
         if hostnames
         else contextlib.nullcontext()
     ):
-        file_cache_options = handle_fetcher_options(options, defaults=file_cache_options)
-        try:
-            snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
-        except ValueError as exc:
-            raise MKBailOut("Unknown SNMP backend") from exc
+        file_cache_options = make_file_cache_options(
+            request.file_cache, defaults=file_cache_options
+        )
 
         on_error = OnError.RAISE if global_options.debug else OnError.WARN
         selected_sections, run_plugin_names = extract_plugin_selection(
-            detect_plugins=options.get("detect-plugins"),
-            detect_sections=options.get("detect-sections"),
-            selected_plugins=options.get("plugins"),
+            detect_plugins=request.plugin_selection.detect_plugins,
+            detect_sections=request.plugin_selection.detect_sections,
+            selected_plugins=request.plugin_selection.plugins,
             plugins=plugins.check_plugins,
             sections=itertools.chain(
                 plugins.agent_sections.values(), plugins.snmp_sections.values()
@@ -539,7 +539,7 @@ def _mode_discover(
                             if n in plugins.snmp_sections
                         )
                     ),
-                    backend_override=snmp_backend_override,
+                    backend_override=request.snmp_backend,
                     base_path=cmk.utils.paths.omd_root,
                     relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
                     relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
@@ -547,7 +547,7 @@ def _mode_discover(
                     caching_config=make_parsed_snmp_fetch_intervals_config(
                         loaded_config, ruleset_matcher, label_manager.labels_of_host
                     ),
-                    force_stored_walks=bool(options.get("usewalk", False)),
+                    force_stored_walks=request.usewalk,
                     debug=global_options.debug,
                 ),
             ),
@@ -591,7 +591,7 @@ def _mode_discover(
                 resolve_nodes=lambda hn: hosts_config.clusters.get(hn, ()),
                 hosts_config=hosts_config,
                 config_cache=config_cache,
-                only_host_labels="only-host-labels" in options,
+                only_host_labels=request.only_host_labels,
             )
         ):
             if hostname not in known_hosts:
@@ -634,8 +634,8 @@ def _mode_discover(
                     config_cache, plugins.check_plugins, service_name_config
                 ),
                 enforced_services=enforced_services_table(hostname),
-                arg_only_new=options["discover"] == 1,
-                only_host_labels="only-host-labels" in options,
+                arg_only_new=request.discover == 1,
+                only_host_labels=request.only_host_labels,
                 on_error=on_error,
                 autochecks_dir=cmk.utils.paths.autochecks_dir,
                 discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
@@ -647,9 +647,9 @@ def _mode_discover(
         return CLIExitCode.FAILURE if any_failed else CLIExitCode.SUCCESS
 
 
-def _run_discover(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
+def _run_discover(context: CLIContext, request: _DiscoverRequest, args: CLIArgs) -> CLIExitCode:
     try:
-        return _mode_discover(context.omd_root, context.global_options, options, args)
+        return _mode_discover(context.omd_root, context.global_options, request, args)
     except (MKBailOut, MKGeneralException) as e:
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
@@ -661,29 +661,9 @@ cli_command_discover = CLICommand(
     name="discover",
     long="discover",
     short="I",
+    request=_discover_request,
     handler=_run_discover,
     arguments=CLIArguments("[-I] HOST1 HOST2...", optional=True),
-    request=cli_untyped_request(
-        [
-            *FETCHER_OPTIONS,
-            SNMP_BACKEND_OPTION,
-            CLIOption(
-                long="discover",
-                short="I",
-                help="Delete existing services before starting discovery",
-                repeat=True,
-            ),
-            option_sections,
-            get_plugins_option(CheckPluginName),
-            option_detect_plugins,
-            CLIOption(
-                long="only-host-labels",
-                short="L",
-                help="Restrict discovery to host labels only",
-            ),
-            FAKE_DNS_OPTION,
-        ]
-    ),
     help="Find new services",
     description=[
         (

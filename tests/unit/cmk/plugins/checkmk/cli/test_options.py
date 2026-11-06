@@ -3,21 +3,30 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
-
-from cmk.ccc.exceptions import MKBailOut
-from cmk.ccc.hostaddress import HostAddress
-from cmk.plugins.checkmk.cli.options import fake_dns_address
+from cmk.checkengine.filecache import FileCacheOptions
+from cmk.plugins.checkmk.cli.options import FileCacheRequest, make_file_cache_options
 
 
-def test_no_fake_dns_option_leaves_the_lookup_alone() -> None:
-    assert fake_dns_address({}) is None
+def test_without_cache_options_the_defaults_stand() -> None:
+    assert make_file_cache_options(
+        FileCacheRequest(cache=False, no_cache=False, no_tcp=False),
+        defaults=FileCacheOptions(disabled=True),
+    ) == FileCacheOptions(disabled=True)
 
 
-def test_the_fake_dns_option_is_a_host_address() -> None:
-    assert fake_dns_address({"fake-dns": "1.2.3.4"}) == HostAddress("1.2.3.4")
+def test_cache_uses_outdated_cache_files() -> None:
+    assert make_file_cache_options(
+        FileCacheRequest(cache=True, no_cache=False, no_tcp=False)
+    ) == FileCacheOptions(disabled=False, use_outdated=True)
 
 
-def test_an_invalid_fake_dns_address_is_refused() -> None:
-    with pytest.raises(MKBailOut):
-        fake_dns_address({"fake-dns": "not an address!"})
+def test_no_cache_disables_the_cache() -> None:
+    assert make_file_cache_options(
+        FileCacheRequest(cache=False, no_cache=True, no_tcp=False)
+    ) == FileCacheOptions(disabled=True, use_outdated=False)
+
+
+def test_no_tcp_uses_only_cache_files() -> None:
+    assert make_file_cache_options(
+        FileCacheRequest(cache=False, no_cache=False, no_tcp=True)
+    ) == FileCacheOptions(disabled=False, use_outdated=True, use_only_cache=True)

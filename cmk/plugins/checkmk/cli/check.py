@@ -4,10 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """The "cmk --check" command."""
 
+import dataclasses
 import itertools
-from collections.abc import Mapping
 from pathlib import Path
-from typing import Literal, TypedDict
+from typing import Final
 
 import cmk.utils.password_store
 import cmk.utils.paths
@@ -15,33 +15,31 @@ from cmk.base import config
 from cmk.base.app import make_app
 from cmk.base.checking import run_checking
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
+from cmk.ccc.hostaddress import HostAddress
 from cmk.checkengine.fetcher_utils.secrets import AdHocSecrets, StoredSecrets
-from cmk.checkengine.plugins import CheckPluginName, SectionName
-from cmk.cli.engine.readers import option_names as cli_option_names
-from cmk.cli.engine.readers import option_string as cli_option_string
+from cmk.checkengine.plugins import CheckPluginName
+from cmk.checkengine.snmplib import SNMPBackendEnum
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import Flag as CLIFlag
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
-from cmk.cli.internal import Option as CLIOption
-from cmk.cli.internal import Options as CLIOptions
-from cmk.cli.internal import untyped_request as cli_untyped_request
+from cmk.cli.internal import Reader as CLIReader
 from cmk.server_side_calls_backend import load_secrets_file
 
 from .agent_based import extract_plugin_selection, load_checks
 from .exit_code import state_exit_code
 from .options import (
-    fake_dns_address,
-    FAKE_DNS_OPTION,
-    FETCHER_OPTIONS,
-    get_plugins_option,
-    handle_fetcher_options,
-    option_detect_plugins,
-    option_sections,
-    parse_snmp_backend,
-    SNMP_BACKEND_OPTION,
+    FAKE_DNS_VALUE,
+    file_cache_request,
+    FileCacheRequest,
+    make_file_cache_options,
+    plugin_selection_request,
+    PluginSelectionRequest,
+    SNMP_BACKEND_VALUE,
+    USEWALK_FLAG,
 )
 
 # .
@@ -55,55 +53,46 @@ from .options import (
 #   '----------------------------------------------------------------------'
 
 
-CheckingOptions = TypedDict(
-    "CheckingOptions",
-    {
-        "cache": Literal[True],
-        "snmp-backend": str,
-        "no-cache": Literal[True],
-        "no-tcp": Literal[True],
-        "usewalk": Literal[True],
-        "no-submit": bool,
-        "perfdata": bool,
-        "detect-sections": frozenset[SectionName],
-        "plugins": frozenset[CheckPluginName],
-        "detect-plugins": frozenset[str],
-    },
-    total=False,
+_NO_SUBMIT_FLAG: Final = CLIFlag(
+    long="no-submit",
+    short="n",
+    help="Do not submit results to core, do not save counters",
+)
+
+_PERFDATA_FLAG: Final = CLIFlag(
+    long="perfdata",
+    short="p",
+    help="Also show performance data (use with -v)",
 )
 
 
-def _checking_options(parsed: Mapping[str, object]) -> CheckingOptions:
-    options = CheckingOptions()
-    if "cache" in parsed:
-        options["cache"] = True
-    if "no-cache" in parsed:
-        options["no-cache"] = True
-    if "no-tcp" in parsed:
-        options["no-tcp"] = True
-    if "usewalk" in parsed:
-        options["usewalk"] = True
-    if "snmp-backend" in parsed:
-        options["snmp-backend"] = cli_option_string(parsed, "snmp-backend") or ""
-    if "no-submit" in parsed:
-        options["no-submit"] = True
-    if "perfdata" in parsed:
-        options["perfdata"] = True
-    if "detect-sections" in parsed:
-        options["detect-sections"] = cli_option_names(parsed, "detect-sections", SectionName)
-    if "plugins" in parsed:
-        options["plugins"] = cli_option_names(parsed, "plugins", CheckPluginName)
-    if "detect-plugins" in parsed:
-        options["detect-plugins"] = cli_option_names(parsed, "detect-plugins", str)
-    return options
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class CheckingRequest:
+    file_cache: FileCacheRequest
+    usewalk: bool
+    snmp_backend: SNMPBackendEnum | None
+    no_submit: bool
+    perfdata: bool
+    plugin_selection: PluginSelectionRequest[CheckPluginName]
+    fake_dns: HostAddress | None
+
+
+def _checking_request(options: CLIReader) -> CheckingRequest:
+    return CheckingRequest(
+        file_cache=file_cache_request(options),
+        usewalk=options.flag(USEWALK_FLAG),
+        snmp_backend=options.value(SNMP_BACKEND_VALUE),
+        no_submit=options.flag(_NO_SUBMIT_FLAG),
+        perfdata=options.flag(_PERFDATA_FLAG),
+        plugin_selection=plugin_selection_request(options, CheckPluginName),
+        fake_dns=options.value(FAKE_DNS_VALUE),
+    )
 
 
 def _mode_check(
-    omd_root: Path, global_options: CLIGlobalOptions, parsed: CLIOptions, args: CLIArgs
+    omd_root: Path, global_options: CLIGlobalOptions, request: CheckingRequest, args: CLIArgs
 ) -> CLIExitCode:
     app = make_app(omd_root)
-    fake_dns = fake_dns_address(parsed)
-    options = _checking_options(parsed)
     plugins = load_checks(debug=global_options.debug)
     loading_result = config.load(validate_hosts=True, debug=global_options.debug)
     loaded_config = loading_result.loaded_config
@@ -112,14 +101,10 @@ def _mode_check(
 
     secrets = load_secrets_file(cmk.utils.password_store.pending_secrets_path_site())
 
-    try:
-        snmp_backend = parse_snmp_backend(options.get("snmp-backend"))
-    except ValueError as exc:
-        raise MKBailOut("Unknown SNMP backend") from exc
     selected_sections, run_plugin_names = extract_plugin_selection(
-        detect_plugins=options.get("detect-plugins"),
-        detect_sections=options.get("detect-sections"),
-        selected_plugins=options.get("plugins"),
+        detect_plugins=request.plugin_selection.detect_plugins,
+        detect_sections=request.plugin_selection.detect_sections,
+        selected_plugins=request.plugin_selection.plugins,
         plugins=plugins.check_plugins,
         sections=itertools.chain(plugins.agent_sections.values(), plugins.snmp_sections.values()),
         type_=CheckPluginName,
@@ -141,13 +126,13 @@ def _mode_check(
             debug=global_options.debug,
         ),
         args,
-        file_cache_options=handle_fetcher_options(options),
-        snmp_backend=snmp_backend,
-        usewalk=bool(options.get("usewalk", False)),
+        file_cache_options=make_file_cache_options(request.file_cache),
+        snmp_backend=request.snmp_backend,
+        usewalk=request.usewalk,
         selected_sections=selected_sections,
         run_plugin_names=run_plugin_names,
-        dry_run=options.get("no-submit", False),
-        show_perfdata=options.get("perfdata", False),
+        dry_run=request.no_submit,
+        show_perfdata=request.perfdata,
         secrets_config_relay=AdHocSecrets(
             path=cmk.utils.password_store.generate_ad_hoc_secrets_path(
                 cmk.utils.paths.relative_tmp_dir
@@ -157,16 +142,16 @@ def _mode_check(
         secrets_config_site=StoredSecrets(
             path=cmk.utils.password_store.pending_secrets_path_site(), secrets=secrets
         ),
-        fake_dns=fake_dns,
         trusted_ca_file=cmk.utils.paths.trusted_ca_file,
+        fake_dns=request.fake_dns,
         debug=global_options.debug,
     )
     return state_exit_code(state)
 
 
-def _run_check(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
+def _run_check(context: CLIContext, request: CheckingRequest, args: CLIArgs) -> CLIExitCode:
     try:
-        return _mode_check(context.omd_root, context.global_options, options, args)
+        return _mode_check(context.omd_root, context.global_options, request, args)
     except (MKBailOut, MKGeneralException) as e:
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
@@ -177,28 +162,9 @@ def _run_check(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIEx
 cli_command_check = CLICommand(
     name="check",
     long="check",
+    request=_checking_request,
     handler=_run_check,
     arguments=CLIArguments("HOST [IPADDRESS]", optional=True),
-    request=cli_untyped_request(
-        [
-            *FETCHER_OPTIONS,
-            SNMP_BACKEND_OPTION,
-            CLIOption(
-                long="no-submit",
-                short="n",
-                help="Do not submit results to core, do not save counters",
-            ),
-            CLIOption(
-                long="perfdata",
-                short="p",
-                help="Also show performance data (use with -v)",
-            ),
-            option_sections,
-            get_plugins_option(CheckPluginName),
-            option_detect_plugins,
-            FAKE_DNS_OPTION,
-        ]
-    ),
     help="Check all services on the given HOST",
     description=[
         (

@@ -11,15 +11,12 @@ from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
-from cmk.cli.internal import Options as CLIOptions
-from cmk.cli.internal import untyped_request as cli_untyped_request
+from cmk.cli.internal import no_options as cli_no_options
 
 _DEPRECATION_MSG = "This command is no longer supported. Please use `mkp%s` instead."
 
 
-def _fail_with_deprecation_msg(
-    _context: CLIContext, _options: CLIOptions, argv: CLIArgs
-) -> CLIExitCode:
+def _fail_with_deprecation_msg(_context: CLIContext, _request: None, argv: CLIArgs) -> CLIExitCode:
     sys.stdout.write(_DEPRECATION_MSG % " ".join(("", *argv)) + "\n")
     return CLIExitCode.FAILURE
 
@@ -28,7 +25,7 @@ cli_command_package = CLICommand(
     name="package",
     long="package",
     short="P",
-    request=cli_untyped_request(),
+    request=cli_no_options,
     handler=_fail_with_deprecation_msg,
     arguments=CLIArguments("COMMAND", optional=True),
     help="DEPRECATED: Do package operations",

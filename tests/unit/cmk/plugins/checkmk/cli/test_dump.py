@@ -28,16 +28,25 @@ from cmk.checkengine.fetchers.piggyback import PiggybackFetcher
 from cmk.checkengine.snmp_backend_builder import make_backend
 from cmk.checkengine.snmp_backends.classic import ClassicSNMPBackend
 from cmk.checkengine.snmp_backends.stored_walk import StoredWalkSNMPBackend
+from cmk.checkengine.snmplib import SNMPBackendEnum
 from cmk.checkengine.sources._sources import SNMPSource
 from cmk.cli.engine.arguments import RunCommand as CLIRunCommand
 from cmk.cli.engine.call import call as cli_call
 from cmk.cli.engine.discovery import make_command as cli_make_command
 from cmk.cli.engine.readers import ParsedOptions as CLIParsedOptions
+from cmk.cli.engine.readers import RecordedOptions as CLIRecordedOptions
+from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.plugins.checkmk.cli import dump
-from cmk.plugins.checkmk.cli.dump import cli_command_dump_agent
+from cmk.plugins.checkmk.cli.dump import (
+    _dump_agent_request,
+    _DumpAgentRequest,
+    cli_command_dump,
+    cli_command_dump_agent,
+)
+from cmk.plugins.checkmk.cli.options import FileCacheRequest
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
 from tests.testlib.unit.base_configuration_scenario import Scenario
 from tests.testlib.unit.empty_config import EMPTY_CONFIG
@@ -58,6 +67,38 @@ class _MockFetcherTrigger(PlainFetcherTrigger):
 
 
 _OMD_ROOT: Final = Path("/omd/sites/mysite")
+
+
+def _declared[R](command: CLICommand[R]) -> list[str]:
+    recorded = CLIRecordedOptions()
+    command.request(recorded)
+    return [option.name for option in recorded.options]
+
+
+def test_dump_agent_declares_its_options_in_help_order() -> None:
+    assert _declared(cli_command_dump_agent) == [
+        "cache",
+        "no-cache",
+        "no-tcp",
+        "snmp-backend",
+        "fake-dns",
+    ]
+
+
+def test_dump_declares_the_fake_dns_option_alone() -> None:
+    assert _declared(cli_command_dump) == ["fake-dns"]
+
+
+def test_the_dump_agent_request_is_read_from_the_command_line() -> None:
+    options = CLIParsedOptions(
+        [("--no-tcp", ""), ("--snmp-backend", "stored-walk")], logging.getLogger(__name__)
+    )
+
+    assert _dump_agent_request(options) == _DumpAgentRequest(
+        file_cache=FileCacheRequest(cache=False, no_cache=False, no_tcp=True),
+        snmp_backend=SNMPBackendEnum.STORED_WALK,
+        fake_dns=None,
+    )
 
 
 def _dump_agent(hostname: HostName, options: list[tuple[str, str]]) -> CLIExitCode:

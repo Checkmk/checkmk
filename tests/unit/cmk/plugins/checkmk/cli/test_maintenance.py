@@ -17,15 +17,38 @@ from cmk.cli.engine.arguments import RunCommand as CLIRunCommand
 from cmk.cli.engine.call import call as cli_call
 from cmk.cli.engine.discovery import make_command as cli_make_command
 from cmk.cli.engine.readers import ParsedOptions as CLIParsedOptions
+from cmk.cli.engine.readers import RecordedOptions as CLIRecordedOptions
+from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.piggyback import backend
-from cmk.plugins.checkmk.cli.maintenance import cli_command_cleanup_piggyback
+from cmk.plugins.checkmk.cli.maintenance import (
+    cli_command_cleanup_piggyback,
+    cli_command_flush,
+    cli_command_update_dns_cache,
+)
 from cmk.ruleset_matcher.matcher import RuleSpec
 
 _SHORT_MAX_AGE = 60
 _LONG_MAX_AGE = 7200
+
+
+@pytest.mark.parametrize(
+    ["command", "expected"],
+    [
+        pytest.param(cli_command_update_dns_cache, ["fake-dns"], id="update-dns-cache"),
+        pytest.param(cli_command_cleanup_piggyback, [], id="cleanup-piggyback"),
+        pytest.param(cli_command_flush, [], id="flush"),
+    ],
+)
+def test_a_maintenance_command_declares_its_options[R](
+    command: CLICommand[R], expected: list[str]
+) -> None:
+    recorded = CLIRecordedOptions()
+    command.request(recorded)
+
+    assert [option.name for option in recorded.options] == expected
 
 
 def _write_main_mk(
@@ -69,7 +92,6 @@ def test_cleanup_piggyback_removes_files_beyond_configured_max_age(
     _write_main_mk(max_cache_file_age, rules)
     _store_aged(tmp_path, "aged-out", age=_LONG_MAX_AGE + 600)
     _store_aged(tmp_path, "still-valid", age=_LONG_MAX_AGE - 600)
-
     logger = logging.getLogger(__name__)
     parsed = CLIRunCommand(cli_make_command(cli_command_cleanup_piggyback), "", [], [])
 

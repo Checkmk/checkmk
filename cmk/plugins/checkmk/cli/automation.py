@@ -8,22 +8,21 @@ import logging
 import sys
 from contextlib import nullcontext, suppress
 from pathlib import Path
+from typing import Final
 
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
 from cmk import trace
 from cmk.automations.engine import AutomationError
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTimeout
-from cmk.cli.engine.readers import option_string as cli_option_string
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
-from cmk.cli.internal import Option as CLIOption
-from cmk.cli.internal import Options as CLIOptions
-from cmk.cli.internal import untyped_request as cli_untyped_request
+from cmk.cli.internal import Reader as CLIReader
+from cmk.cli.internal import Value as CLIValue
 from cmk.profiling import backend as profiling
 
 logger = logging.getLogger(__name__)
@@ -38,8 +37,28 @@ def _automation_error_exit_code(error: AutomationError) -> CLIExitCode:
             return CLIExitCode.ERROR
 
 
+def _parse_version(argument: str) -> str:
+    cmk_version.Version.from_str(argument)
+    return argument
+
+
+_FOR_CMK_VERSION_VALUE: Final = CLIValue(
+    long="for-cmk-version",
+    placeholder="VERSION",
+    help=(
+        "Serialize the result for a site running this Checkmk version"
+        " (default: the version of this site)"
+    ),
+    parse=_parse_version,
+)
+
+
+def _for_cmk_version_request(options: CLIReader) -> str | None:
+    return options.value(_FOR_CMK_VERSION_VALUE)
+
+
 def _mode_automation(
-    omd_root: Path, global_options: CLIGlobalOptions, options: CLIOptions, args: CLIArgs
+    omd_root: Path, global_options: CLIGlobalOptions, requested_version: str | None, args: CLIArgs
 ) -> CLIExitCode:
     from cmk.automations.engine import Automations, discover_automations
     from cmk.automations.internal import AutomationID
@@ -50,7 +69,7 @@ def _mode_automation(
         raise MKBailOut("You need to provide arguments")
 
     name, automation_args = AutomationID(args[0]), list(args[1:])
-    for_cmk_version = _for_cmk_version(options)
+    for_cmk_version = cmk_version.__version__ if requested_version is None else requested_version
     automations = Automations(discover_automations(), debug=global_options.debug)
     with tracer.span(
         f"mode_automation[{name}]",
@@ -92,9 +111,11 @@ def _mode_automation(
         return CLIExitCode.SUCCESS
 
 
-def _run_automation(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
+def _run_automation(
+    context: CLIContext, requested_version: str | None, args: CLIArgs
+) -> CLIExitCode:
     try:
-        return _mode_automation(context.omd_root, context.global_options, options, args)
+        return _mode_automation(context.omd_root, context.global_options, requested_version, args)
     except (MKBailOut, MKGeneralException) as e:
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
@@ -102,33 +123,11 @@ def _run_automation(context: CLIContext, options: CLIOptions, args: CLIArgs) -> 
         return CLIExitCode.UNKNOWN
 
 
-def _for_cmk_version(options: CLIOptions) -> str:
-    """The version to serialize the result for, checked before the automation runs"""
-    if (for_cmk_version := cli_option_string(options, "for-cmk-version")) is None:
-        return cmk_version.__version__
-    try:
-        cmk_version.Version.from_str(for_cmk_version)
-    except ValueError as e:
-        raise MKBailOut(f"--for-cmk-version: {e}") from e
-    return for_cmk_version
-
-
 cli_command_automation = CLICommand(
     name="automation",
     long="automation",
+    request=_for_cmk_version_request,
     handler=_run_automation,
     arguments=CLIArguments("COMMAND...", optional=True),
     help="Internal helper to invoke Check_MK actions",
-    request=cli_untyped_request(
-        [
-            CLIOption(
-                long="for-cmk-version",
-                argument="VERSION",
-                help=(
-                    "Serialize the result for a site running this Checkmk version"
-                    " (default: the version of this site)"
-                ),
-            ),
-        ]
-    ),
 )

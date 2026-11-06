@@ -6,6 +6,7 @@
 
 import sys
 from pathlib import Path
+from typing import Final, Literal
 
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.cli.internal import Args as CLIArgs
@@ -14,16 +15,41 @@ from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
-from cmk.cli.internal import Option as CLIOption
-from cmk.cli.internal import Options as CLIOptions
-from cmk.cli.internal import untyped_request as cli_untyped_request
+from cmk.cli.internal import no_options as cli_no_options
+from cmk.cli.internal import Reader as CLIReader
+from cmk.cli.internal import Value as CLIValue
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.licensing.basics.finder import blocked_feature_files
 from cmk.utils.paths import omd_root
 
+type _Renderer = Literal["console", "nowiki"]
+
+
+def _parse_renderer(argument: str) -> _Renderer:
+    match argument:
+        case "console":
+            return "console"
+        case "nowiki":
+            return "nowiki"
+        case other:
+            raise ValueError(other)
+
+
+_RENDERER_VALUE: Final = CLIValue(
+    long="renderer",
+    short="r",
+    placeholder="RENDERER",
+    help="Use the given renderer: 'console' or 'nowiki'. Defaults to 'console'.",
+    parse=_parse_renderer,
+)
+
+
+def _renderer_request(options: CLIReader) -> _Renderer | None:
+    return options.value(_RENDERER_VALUE)
+
 
 def _mode_man(
-    _omd_root: Path, global_options: CLIGlobalOptions, options: CLIOptions, args: CLIArgs
+    _omd_root: Path, global_options: CLIGlobalOptions, requested: _Renderer | None, args: CLIArgs
 ) -> CLIExitCode:
     from cmk.utils import man_pages
 
@@ -41,13 +67,11 @@ def _mode_man(
 
     man_page = man_pages.parse_man_page(args[0], man_page_path, debug=global_options.debug)
     renderer: type[man_pages.ConsoleManPageRenderer] | type[man_pages.NowikiManPageRenderer]
-    match options.get("renderer", "console"):
-        case "console":
+    match requested:
+        case "console" | None:
             renderer = man_pages.ConsoleManPageRenderer
         case "nowiki":
             renderer = man_pages.NowikiManPageRenderer
-        case other:
-            raise ValueError(other)
 
     try:
         rendered = renderer(man_page).render_page()
@@ -59,9 +83,9 @@ def _mode_man(
     return CLIExitCode.SUCCESS
 
 
-def _run_man(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
+def _run_man(context: CLIContext, requested: _Renderer | None, args: CLIArgs) -> CLIExitCode:
     try:
-        return _mode_man(context.omd_root, context.global_options, options, args)
+        return _mode_man(context.omd_root, context.global_options, requested, args)
     except (MKBailOut, MKGeneralException) as e:
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
@@ -75,16 +99,7 @@ cli_command_man = CLICommand(
     short="M",
     handler=_run_man,
     arguments=CLIArguments("CHECKTYPE", optional=True),
-    request=cli_untyped_request(
-        [
-            CLIOption(
-                long="renderer",
-                short="r",
-                argument="RENDERER",
-                help="Use the given renderer: 'console' or 'nowiki'. Defaults to 'console'.",
-            ),
-        ]
-    ),
+    request=_renderer_request,
     help="Show manpage for check CHECKTYPE",
     description=[
         (
@@ -97,7 +112,7 @@ cli_command_man = CLICommand(
 
 
 def _mode_browse_man(
-    _omd_root: Path, global_options: CLIGlobalOptions, _options: CLIOptions, _args: CLIArgs
+    _omd_root: Path, global_options: CLIGlobalOptions, _request: None, _args: CLIArgs
 ) -> CLIExitCode:
     from cmk.utils import man_pages
 
@@ -112,9 +127,9 @@ def _mode_browse_man(
     return CLIExitCode.SUCCESS
 
 
-def _run_browse_man(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
+def _run_browse_man(context: CLIContext, request: None, args: CLIArgs) -> CLIExitCode:
     try:
-        return _mode_browse_man(context.omd_root, context.global_options, options, args)
+        return _mode_browse_man(context.omd_root, context.global_options, request, args)
     except MKGeneralException as e:
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
@@ -126,7 +141,7 @@ cli_command_browse_man = CLICommand(
     name="browse_man",
     long="browse-man",
     short="m",
-    request=cli_untyped_request(),
+    request=cli_no_options,
     handler=_run_browse_man,
     help="Open interactive manpage browser",
 )

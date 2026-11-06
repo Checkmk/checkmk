@@ -14,6 +14,7 @@ from cmk.base import config
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
+from cmk.ccc.hostaddress import HostAddress
 from cmk.checkengine.discovery import remove_autochecks_of_host
 from cmk.cli.engine.output import write_stdout as cli_write_stdout
 from cmk.cli.internal import Args as CLIArgs
@@ -22,14 +23,13 @@ from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
-from cmk.cli.internal import Options as CLIOptions
-from cmk.cli.internal import untyped_request as cli_untyped_request
+from cmk.cli.internal import no_options as cli_no_options
 from cmk.inventory.paths import InventoryPaths
 from cmk.piggyback import backend as piggyback_backend
 from cmk.utils import ip_lookup
 
 from .agent_based import load_checks
-from .options import fake_dns_address, FAKE_DNS_OPTION, host_addresses
+from .options import fake_dns_request, host_addresses
 
 # .
 #   .--update-dns-cache----------------------------------------------------.
@@ -43,9 +43,8 @@ from .options import fake_dns_address, FAKE_DNS_OPTION, host_addresses
 
 
 def _mode_update_dns_cache(
-    _omd_root: Path, global_options: CLIGlobalOptions, options: CLIOptions, _args: CLIArgs
+    _omd_root: Path, global_options: CLIGlobalOptions, fake_dns: HostAddress | None, _args: CLIArgs
 ) -> CLIExitCode:
-    fake_dns = fake_dns_address(options)
     loading_result = config.load(validate_hosts=True, debug=global_options.debug)
     config_cache = loading_result.config_cache
     hosts_config = loading_result.hosts_config
@@ -63,9 +62,11 @@ def _mode_update_dns_cache(
     return CLIExitCode.SUCCESS
 
 
-def _run_update_dns_cache(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
+def _run_update_dns_cache(
+    context: CLIContext, fake_dns: HostAddress | None, args: CLIArgs
+) -> CLIExitCode:
     try:
-        return _mode_update_dns_cache(context.omd_root, context.global_options, options, args)
+        return _mode_update_dns_cache(context.omd_root, context.global_options, fake_dns, args)
     except (MKBailOut, MKGeneralException) as e:
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
@@ -77,7 +78,7 @@ cli_command_update_dns_cache = CLICommand(
     name="update_dns_cache",
     long="update-dns-cache",
     handler=_run_update_dns_cache,
-    request=cli_untyped_request([FAKE_DNS_OPTION]),
+    request=fake_dns_request,
     help="Update IP address lookup cache",
 )
 
@@ -94,7 +95,7 @@ cli_command_update_dns_cache = CLICommand(
 
 
 def _mode_cleanup_piggyback(
-    omd_root: Path, global_options: CLIGlobalOptions, _options: CLIOptions, _args: CLIArgs
+    omd_root: Path, global_options: CLIGlobalOptions, _request: None, _args: CLIArgs
 ) -> CLIExitCode:
     loaded_config = config.load(validate_hosts=True, debug=global_options.debug).loaded_config
     piggyback_backend.cleanup_piggyback_files(
@@ -106,9 +107,9 @@ def _mode_cleanup_piggyback(
     return CLIExitCode.SUCCESS
 
 
-def _run_cleanup_piggyback(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
+def _run_cleanup_piggyback(context: CLIContext, request: None, args: CLIArgs) -> CLIExitCode:
     try:
-        return _mode_cleanup_piggyback(context.omd_root, context.global_options, options, args)
+        return _mode_cleanup_piggyback(context.omd_root, context.global_options, request, args)
     except MKGeneralException as e:
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
@@ -119,7 +120,7 @@ def _run_cleanup_piggyback(context: CLIContext, options: CLIOptions, args: CLIAr
 cli_command_cleanup_piggyback = CLICommand(
     name="cleanup_piggyback",
     long="cleanup-piggyback",
-    request=cli_untyped_request(),
+    request=cli_no_options,
     handler=_run_cleanup_piggyback,
     help="Cleanup outdated piggyback files",
 )
@@ -137,7 +138,7 @@ cli_command_cleanup_piggyback = CLICommand(
 
 
 def _mode_flush(
-    _omd_root: Path, global_options: CLIGlobalOptions, _options: CLIOptions, args: CLIArgs
+    _omd_root: Path, global_options: CLIGlobalOptions, _request: None, args: CLIArgs
 ) -> CLIExitCode:
     hosts = host_addresses(args)
     plugins = load_checks(debug=global_options.debug)
@@ -243,9 +244,9 @@ def _mode_flush(
     return CLIExitCode.SUCCESS
 
 
-def _run_flush(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
+def _run_flush(context: CLIContext, request: None, args: CLIArgs) -> CLIExitCode:
     try:
-        return _mode_flush(context.omd_root, context.global_options, options, args)
+        return _mode_flush(context.omd_root, context.global_options, request, args)
     except (MKBailOut, MKGeneralException) as e:
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
@@ -256,7 +257,7 @@ def _run_flush(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIEx
 cli_command_flush = CLICommand(
     name="flush",
     long="flush",
-    request=cli_untyped_request(),
+    request=cli_no_options,
     handler=_run_flush,
     arguments=CLIArguments("HOST1 HOST2...", optional=True),
     help="Flush all data of some or all hosts",

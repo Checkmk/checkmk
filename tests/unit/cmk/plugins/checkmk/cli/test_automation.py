@@ -5,15 +5,12 @@
 
 import logging
 import shlex
-from logging.handlers import BufferingHandler
-from pathlib import Path
 
 import pytest
 
 from cmk.automations.backends import SubprocessExecutor
 from cmk.automations.engine import AutomationError
 from cmk.automations.internal import AutomationID
-from cmk.ccc.exceptions import MKBailOut
 from cmk.cli.engine.arguments import parse as cli_parse
 from cmk.cli.engine.arguments import RunCommand as CLIRunCommand
 from cmk.cli.engine.commands import bind as cli_bind
@@ -21,10 +18,13 @@ from cmk.cli.engine.commands import Commands as CLICommands
 from cmk.cli.engine.discovery import make_command as cli_make_command
 from cmk.cli.engine.options import general_options as cli_general_options
 from cmk.cli.engine.readers import ParsedOptions as CLIParsedOptions
-from cmk.cli.internal import Context as CLIContext
+from cmk.cli.engine.readers import RecordedOptions as CLIRecordedOptions
 from cmk.cli.internal import ExitCode as CLIExitCode
-from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
-from cmk.plugins.checkmk.cli.automation import _automation_error_exit_code, cli_command_automation
+from cmk.plugins.checkmk.cli.automation import (
+    _automation_error_exit_code,
+    _for_cmk_version_request,
+    cli_command_automation,
+)
 
 
 def test_the_version_of_a_subprocess_automation_reaches_the_cli() -> None:
@@ -50,44 +50,25 @@ def test_the_version_of_a_subprocess_automation_reaches_the_cli() -> None:
     assert parsed.arguments == ["service-discovery-preview", "myhost"]
 
 
-def _context(global_options: CLIGlobalOptions) -> CLIContext:
-    return CLIContext(
-        omd_root=Path("/nonexistent"),
-        global_options=global_options,
-        logger=logging.getLogger(__name__),
-    )
+def test_automation_declares_the_version_option_alone() -> None:
+    recorded = CLIRecordedOptions()
+    cli_command_automation.request(recorded)
+
+    assert [option.name for option in recorded.options] == ["for-cmk-version"]
 
 
-def _restart_with_version(context: CLIContext, version: str) -> CLIExitCode:
-    bound = cli_bind(
-        cli_command_automation,
-        CLIParsedOptions([("--for-cmk-version", version)], logging.getLogger(__name__)),
-    )
-    return bound(context, ["restart"])
+def test_the_requested_version_is_read_from_the_command_line() -> None:
+    options = CLIParsedOptions([("--for-cmk-version", "2.4.0p1")], logging.getLogger(__name__))
+
+    assert _for_cmk_version_request(options) == "2.4.0p1"
 
 
 def test_an_invalid_version_is_rejected_before_the_automation_runs() -> None:
-    with pytest.raises(MKBailOut, match="--for-cmk-version"):
-        # Running "restart" for real would fail without a site: the error must come first.
-        _restart_with_version(_context(CLIGlobalOptions(debug=True)), "foo")
-
-
-def test_an_invalid_version_exits_three() -> None:
-    assert _restart_with_version(_context(CLIGlobalOptions()), "foo") == CLIExitCode.UNKNOWN
-
-
-def test_an_invalid_version_is_reported_through_the_context_logger() -> None:
-    recorded = BufferingHandler(capacity=10)
-    logger = logging.getLogger(f"{__name__}.recorded")
-    logger.propagate = False
-    logger.handlers = [recorded]
-
-    _restart_with_version(
-        CLIContext(omd_root=Path("/nonexistent"), global_options=CLIGlobalOptions(), logger=logger),
-        "foo",
-    )
-
-    assert recorded.buffer[0].getMessage().startswith("--for-cmk-version:")
+    with pytest.raises(ValueError, match="--for-cmk-version: Invalid argument"):
+        cli_bind(
+            cli_command_automation,
+            CLIParsedOptions([("--for-cmk-version", "foo")], logging.getLogger(__name__)),
+        )
 
 
 @pytest.mark.parametrize(

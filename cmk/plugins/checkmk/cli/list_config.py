@@ -11,9 +11,10 @@ import dataclasses
 import enum
 import itertools
 import sys
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Sequence
 from contextlib import suppress
 from pathlib import Path
+from typing import Final
 
 from cmk.base import config
 from cmk.base.config import ConfigCache
@@ -34,10 +35,10 @@ from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import Flag as CLIFlag
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
-from cmk.cli.internal import Option as CLIOption
-from cmk.cli.internal import Options as CLIOptions
-from cmk.cli.internal import untyped_request as cli_untyped_request
+from cmk.cli.internal import no_options as cli_no_options
+from cmk.cli.internal import Reader as CLIReader
 from cmk.discover_plugins import discover_families, PluginGroup
 from cmk.ruleset_matcher.tags import HostTags, TagID
 from cmk.ruleset_matcher.tuple_rulesets import hosttags_match_taglist
@@ -47,28 +48,51 @@ from cmk.server_side_calls_backend import (
 
 from .agent_based import load_checks
 
-
 # TODO: Does not care about internal group "check_mk"
+_ALL_SITES_FLAG: Final = CLIFlag(
+    long="all-sites",
+    help="Include hosts of foreign sites",
+)
+
+_INCLUDE_OFFLINE_FLAG: Final = CLIFlag(
+    long="include-offline",
+    help="Include offline hosts",
+)
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class _ListHostsRequest:
+    all_sites: bool
+    include_offline: bool
+
+
+def _list_hosts_request(options: CLIReader) -> _ListHostsRequest:
+    return _ListHostsRequest(
+        all_sites=options.flag(_ALL_SITES_FLAG),
+        include_offline=options.flag(_INCLUDE_OFFLINE_FLAG),
+    )
+
+
 def _list_all_hosts(
     config_cache: ConfigCache,
     hosts_config: Hosts,
     core_objects_config: config.CoreObjectsConfig,
     hostgroups: Sequence[str],
-    options: Mapping[str, object],
+    request: _ListHostsRequest,
 ) -> list[HostName]:
     hostnames: Iterable[HostName]
 
-    all_sites = options.get("all-sites")
-    offline = "include-offline" in options
-
-    if all_sites:
+    if request.all_sites:
         hostnames = filter(
-            lambda hn: offline or config_cache.is_online(hn),
+            lambda hn: request.include_offline or config_cache.is_online(hn),
             itertools.chain(hosts_config.hosts, hosts_config.clusters, hosts_config.shadow_hosts),
         )
     else:
         hostnames = filter(
-            lambda hn: config_cache.is_active(hn) and (offline or config_cache.is_online(hn)),
+            lambda hn: (
+                config_cache.is_active(hn)
+                and (request.include_offline or config_cache.is_online(hn))
+            ),
             itertools.chain(hosts_config.hosts, hosts_config.clusters),
         )
 
@@ -87,7 +111,7 @@ def _list_all_hosts(
 
 
 def _mode_list_hosts(
-    _omd_root: Path, global_options: CLIGlobalOptions, options: CLIOptions, args: CLIArgs
+    _omd_root: Path, global_options: CLIGlobalOptions, request: _ListHostsRequest, args: CLIArgs
 ) -> CLIExitCode:
     loading_result = config.load(validate_hosts=True, debug=global_options.debug)
     config_cache = loading_result.config_cache
@@ -101,7 +125,7 @@ def _mode_list_hosts(
         loading_result.hosts_config,
         core_objects_config,
         args,
-        options,
+        request,
     )
     with suppress(IOError):
         sys.stdout.write("\n".join(hosts) + "\n")
@@ -109,9 +133,9 @@ def _mode_list_hosts(
     return CLIExitCode.SUCCESS
 
 
-def _run_list_hosts(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
+def _run_list_hosts(context: CLIContext, request: _ListHostsRequest, args: CLIArgs) -> CLIExitCode:
     try:
-        return _mode_list_hosts(context.omd_root, context.global_options, options, args)
+        return _mode_list_hosts(context.omd_root, context.global_options, request, args)
     except MKGeneralException as e:
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
@@ -125,18 +149,7 @@ cli_command_list_hosts = CLICommand(
     short="l",
     handler=_run_list_hosts,
     arguments=CLIArguments("G1 G2...", optional=True),
-    request=cli_untyped_request(
-        [
-            CLIOption(
-                long="all-sites",
-                help="Include hosts of foreign sites",
-            ),
-            CLIOption(
-                long="include-offline",
-                help="Include offline hosts",
-            ),
-        ]
-    ),
+    request=_list_hosts_request,
     help="Print list of all hosts or members of host groups",
     description=[
         (
@@ -174,7 +187,7 @@ def _list_all_hosts_with_tags(
 
 
 def _mode_list_tag(
-    _omd_root: Path, global_options: CLIGlobalOptions, _options: CLIOptions, args: CLIArgs
+    _omd_root: Path, global_options: CLIGlobalOptions, _request: None, args: CLIArgs
 ) -> CLIExitCode:
     loading_result = config.load(validate_hosts=True, debug=global_options.debug)
     hosts = _list_all_hosts_with_tags(
@@ -189,9 +202,9 @@ def _mode_list_tag(
     return CLIExitCode.SUCCESS
 
 
-def _run_list_tag(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
+def _run_list_tag(context: CLIContext, request: None, args: CLIArgs) -> CLIExitCode:
     try:
-        return _mode_list_tag(context.omd_root, context.global_options, options, args)
+        return _mode_list_tag(context.omd_root, context.global_options, request, args)
     except MKGeneralException as e:
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
@@ -202,7 +215,7 @@ def _run_list_tag(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CL
 cli_command_list_tag = CLICommand(
     name="list_tag",
     long="list-tag",
-    request=cli_untyped_request(),
+    request=cli_no_options,
     handler=_run_list_tag,
     arguments=CLIArguments("TAG1 TAG2...", optional=True),
     help="List hosts having certain tags",
@@ -262,7 +275,7 @@ def _get_ds_type(
 
 
 def _mode_list_checks(
-    _omd_root: Path, global_options: CLIGlobalOptions, _options: CLIOptions, _args: CLIArgs
+    _omd_root: Path, global_options: CLIGlobalOptions, _request: None, _args: CLIArgs
 ) -> CLIExitCode:
     from cmk.utils import man_pages
 
@@ -310,9 +323,9 @@ def _mode_list_checks(
     return CLIExitCode.SUCCESS
 
 
-def _run_list_checks(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
+def _run_list_checks(context: CLIContext, request: None, args: CLIArgs) -> CLIExitCode:
     try:
-        return _mode_list_checks(context.omd_root, context.global_options, options, args)
+        return _mode_list_checks(context.omd_root, context.global_options, request, args)
     except MKGeneralException as e:
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
@@ -324,7 +337,7 @@ cli_command_list_checks = CLICommand(
     name="list_checks",
     long="list-checks",
     short="L",
-    request=cli_untyped_request(),
+    request=cli_no_options,
     handler=_run_list_checks,
     help="List all available Check_MK checks",
 )

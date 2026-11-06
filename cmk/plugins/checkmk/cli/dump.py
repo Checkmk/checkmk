@@ -8,6 +8,7 @@ import itertools
 import logging
 import sys
 from collections.abc import Iterable
+from dataclasses import dataclass
 from pathlib import Path
 
 import cmk.base.dump_host
@@ -20,7 +21,7 @@ from cmk.base.config import handle_ip_lookup_failure
 from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, OnError
-from cmk.ccc.hostaddress import HostName
+from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.checkengine.fetcher_abc import Mode as FetchMode
 from cmk.checkengine.fetcher_utils.secrets import AdHocSecrets, StoredSecrets
 from cmk.checkengine.fetchers.snmp import NoSelectedSNMPSections, SNMPFetcherConfig
@@ -28,6 +29,7 @@ from cmk.checkengine.fetchers.tcp import TLSConfig
 from cmk.checkengine.filecache import MaxAge
 from cmk.checkengine.helper_interface import FetcherType
 from cmk.checkengine.parser import make_parser, NO_SELECTION, parse_raw_data, SectionStore
+from cmk.checkengine.snmplib import SNMPBackendEnum
 from cmk.checkengine.source_builder import SourceBuilder
 from cmk.checkengine.summarize import summarize
 from cmk.cli.engine.output import write_stdout as cli_write_stdout
@@ -37,8 +39,7 @@ from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
-from cmk.cli.internal import Options as CLIOptions
-from cmk.cli.internal import untyped_request as cli_untyped_request
+from cmk.cli.internal import Reader as CLIReader
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
 from cmk.server_side_calls_backend import ExecutableFinder, load_secrets_file
 from cmk.utils import ip_lookup, timeperiod
@@ -47,14 +48,14 @@ from cmk.utils.log import console
 
 from .agent_based import load_checks
 from .options import (
-    fake_dns_address,
-    FAKE_DNS_OPTION,
-    FETCHER_OPTIONS,
-    handle_fetcher_options,
+    fake_dns_request,
+    FAKE_DNS_VALUE,
+    file_cache_request,
+    FileCacheRequest,
     host_address,
     host_addresses,
-    parse_snmp_backend,
-    SNMP_BACKEND_OPTION,
+    make_file_cache_options,
+    SNMP_BACKEND_VALUE,
 )
 
 # .
@@ -68,19 +69,28 @@ from .options import (
 #   '----------------------------------------------------------------------'
 
 
+@dataclass(frozen=True, kw_only=True)
+class _DumpAgentRequest:
+    file_cache: FileCacheRequest
+    snmp_backend: SNMPBackendEnum | None
+    fake_dns: HostAddress | None
+
+
+def _dump_agent_request(options: CLIReader) -> _DumpAgentRequest:
+    return _DumpAgentRequest(
+        file_cache=file_cache_request(options),
+        snmp_backend=options.value(SNMP_BACKEND_VALUE),
+        fake_dns=options.value(FAKE_DNS_VALUE),
+    )
+
+
 def _mode_dump_agent(
-    omd_root: Path, global_options: CLIGlobalOptions, options: CLIOptions, args: CLIArgs
+    omd_root: Path, global_options: CLIGlobalOptions, request: _DumpAgentRequest, args: CLIArgs
 ) -> CLIExitCode:
     app = make_app(omd_root)
-    fake_dns = fake_dns_address(options)
     raw_host_name = args[0]
     hostname = host_address(raw_host_name)
-    file_cache_options = handle_fetcher_options(options)
-
-    try:
-        snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
-    except ValueError as exc:
-        raise MKBailOut("Unknown SNMP backend") from exc
+    file_cache_options = make_file_cache_options(request.file_cache)
 
     plugins = load_checks(debug=global_options.debug)
     loading_result = config.load(validate_hosts=True, debug=global_options.debug)
@@ -111,7 +121,7 @@ def _mode_dump_agent(
     relay_id = config.get_relay_id(host_labels)
     fetcher_trigger = app.make_fetcher_trigger(relay_id, cmk.utils.paths.trusted_ca_file)
 
-    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
+    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=request.fake_dns)
     ip_family = ip_lookup_config.default_address_family(hostname)
     ip_address_of_bare = ip_lookup.make_lookup_ip_address(ip_lookup_config)
     ip_address_of = ip_lookup.ConfiguredIPLookup(
@@ -168,7 +178,7 @@ def _mode_dump_agent(
                     on_error=OnError.RAISE,
                     missing_sys_description=config_cache.missing_sys_description,
                     selected_sections=NoSelectedSNMPSections(),
-                    backend_override=snmp_backend_override,
+                    backend_override=request.snmp_backend,
                     base_path=cmk.utils.paths.omd_root,
                     relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
                     relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
@@ -178,8 +188,7 @@ def _mode_dump_agent(
                         config_cache.ruleset_matcher,
                         config_cache.label_manager.labels_of_host,
                     ),
-                    # Note: 'usewalk' is not in the options of this mode. We use options.get() just for consistency.
-                    force_stored_walks=bool(options.get("usewalk", False)),
+                    force_stored_walks=False,
                     debug=global_options.debug,
                 ),
             ),
@@ -285,9 +294,9 @@ def _mode_dump_agent(
         return CLIExitCode.FAILURE if errors else CLIExitCode.SUCCESS
 
 
-def _run_dump_agent(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
+def _run_dump_agent(context: CLIContext, request: _DumpAgentRequest, args: CLIArgs) -> CLIExitCode:
     try:
-        return _mode_dump_agent(context.omd_root, context.global_options, options, args)
+        return _mode_dump_agent(context.omd_root, context.global_options, request, args)
     except (MKBailOut, MKGeneralException) as e:
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
@@ -299,9 +308,9 @@ cli_command_dump_agent = CLICommand(
     name="dump_agent",
     long="dump-agent",
     short="d",
+    request=_dump_agent_request,
     handler=_run_dump_agent,
     arguments=CLIArguments("HOSTNAME|ADDRESS"),
-    request=cli_untyped_request([*FETCHER_OPTIONS[:3], SNMP_BACKEND_OPTION, FAKE_DNS_OPTION]),
     help="Show raw information from agent",
     description=[
         (
@@ -325,9 +334,8 @@ cli_command_dump_agent = CLICommand(
 
 
 def _mode_dump_hosts(
-    _omd_root: Path, global_options: CLIGlobalOptions, options: CLIOptions, args: CLIArgs
+    _omd_root: Path, global_options: CLIGlobalOptions, fake_dns: HostAddress | None, args: CLIArgs
 ) -> CLIExitCode:
-    fake_dns = fake_dns_address(options)
     hostlist: Iterable[HostName] = host_addresses(args)
     logger = logging.getLogger("cmk.base.modes")  # this might go nowhere.
     plugins = load_checks(debug=global_options.debug)
@@ -396,9 +404,11 @@ def _mode_dump_hosts(
         return CLIExitCode.SUCCESS
 
 
-def _run_dump_hosts(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
+def _run_dump_hosts(
+    context: CLIContext, fake_dns: HostAddress | None, args: CLIArgs
+) -> CLIExitCode:
     try:
-        return _mode_dump_hosts(context.omd_root, context.global_options, options, args)
+        return _mode_dump_hosts(context.omd_root, context.global_options, fake_dns, args)
     except (MKBailOut, MKGeneralException) as e:
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
@@ -412,7 +422,7 @@ cli_command_dump = CLICommand(
     short="D",
     handler=_run_dump_hosts,
     arguments=CLIArguments("H1 H2...", optional=True),
-    request=cli_untyped_request([FAKE_DNS_OPTION]),
+    request=fake_dns_request,
     help="Dump info about all or some hosts",
     description=[
         (

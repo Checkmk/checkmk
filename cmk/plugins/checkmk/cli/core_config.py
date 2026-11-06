@@ -18,6 +18,7 @@ from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.base.core import interface as core_interface
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
+from cmk.ccc.hostaddress import HostAddress
 from cmk.ccc.store import activation_lock
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Arguments as CLIArguments
@@ -25,15 +26,13 @@ from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
-from cmk.cli.internal import Options as CLIOptions
-from cmk.cli.internal import untyped_request as cli_untyped_request
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
 from cmk.server_side_calls_backend import load_secrets_file
 from cmk.utils import config_warnings, ip_lookup, timeperiod
 from cmk.utils.log import console
 
 from .agent_based import load_checks
-from .options import fake_dns_address, FAKE_DNS_OPTION, host_addresses
+from .options import fake_dns_request, host_addresses
 
 # .
 #   .--nagios-config-------------------------------------------------------.
@@ -47,10 +46,12 @@ from .options import fake_dns_address, FAKE_DNS_OPTION, host_addresses
 
 
 def _mode_dump_nagios_config(
-    omd_root: Path, global_options: CLIGlobalOptions, options: CLIOptions, raw_host_names: CLIArgs
+    omd_root: Path,
+    global_options: CLIGlobalOptions,
+    fake_dns: HostAddress | None,
+    raw_host_names: CLIArgs,
 ) -> CLIExitCode:
     app = make_app(omd_root)
-    fake_dns = fake_dns_address(options)
     args = host_addresses(raw_host_names)
 
     from cmk.base.core.nagios import create_config
@@ -135,9 +136,11 @@ def _mode_dump_nagios_config(
     return CLIExitCode.SUCCESS
 
 
-def _run_dump_nagios_config(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
+def _run_dump_nagios_config(
+    context: CLIContext, fake_dns: HostAddress | None, args: CLIArgs
+) -> CLIExitCode:
     try:
-        return _mode_dump_nagios_config(context.omd_root, context.global_options, options, args)
+        return _mode_dump_nagios_config(context.omd_root, context.global_options, fake_dns, args)
     except (MKBailOut, MKGeneralException) as e:
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
@@ -151,7 +154,7 @@ cli_command_nagios_config = CLICommand(
     short="N",
     handler=_run_dump_nagios_config,
     arguments=CLIArguments("HOST1 HOST2...", optional=True),
-    request=cli_untyped_request([FAKE_DNS_OPTION]),
+    request=fake_dns_request,
     help="Output Nagios configuration",
     description=[
         (
@@ -201,10 +204,9 @@ def _make_configured_notify_relay(
 
 
 def _mode_update(
-    omd_root: Path, global_options: CLIGlobalOptions, options: CLIOptions, _args: CLIArgs
+    omd_root: Path, global_options: CLIGlobalOptions, fake_dns: HostAddress | None, _args: CLIArgs
 ) -> CLIExitCode:
     app = make_app(omd_root)
-    fake_dns = fake_dns_address(options)
     plugins = load_checks(debug=global_options.debug)
     loading_result = config.load(validate_hosts=True, debug=global_options.debug)
     loaded_config = loading_result.loaded_config
@@ -288,9 +290,9 @@ def _mode_update(
     return CLIExitCode.SUCCESS
 
 
-def _run_update(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
+def _run_update(context: CLIContext, fake_dns: HostAddress | None, args: CLIArgs) -> CLIExitCode:
     try:
-        return _mode_update(context.omd_root, context.global_options, options, args)
+        return _mode_update(context.omd_root, context.global_options, fake_dns, args)
     except (MKBailOut, MKGeneralException) as e:
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
@@ -303,7 +305,7 @@ cli_command_update = CLICommand(
     long="update",
     short="U",
     handler=_run_update,
-    request=cli_untyped_request([FAKE_DNS_OPTION]),
+    request=fake_dns_request,
     help="Create core config",
     description=[
         (
@@ -329,10 +331,12 @@ cli_command_update = CLICommand(
 
 
 def _mode_restart(
-    omd_root: Path, global_options: CLIGlobalOptions, options: CLIOptions, raw_host_names: CLIArgs
+    omd_root: Path,
+    global_options: CLIGlobalOptions,
+    fake_dns: HostAddress | None,
+    raw_host_names: CLIArgs,
 ) -> CLIExitCode:
     app = make_app(omd_root)
-    fake_dns = fake_dns_address(options)
     args = host_addresses(raw_host_names)
     plugins = load_checks(debug=global_options.debug)
     loading_result = config.load(validate_hosts=True, debug=global_options.debug)
@@ -409,9 +413,9 @@ def _mode_restart(
     return CLIExitCode.SUCCESS
 
 
-def _run_restart(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
+def _run_restart(context: CLIContext, fake_dns: HostAddress | None, args: CLIArgs) -> CLIExitCode:
     try:
-        return _mode_restart(context.omd_root, context.global_options, options, args)
+        return _mode_restart(context.omd_root, context.global_options, fake_dns, args)
     except (MKBailOut, MKGeneralException) as e:
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
@@ -425,7 +429,7 @@ cli_command_restart = CLICommand(
     short="R",
     handler=_run_restart,
     arguments=CLIArguments("[HostA, HostB]", optional=True),
-    request=cli_untyped_request([FAKE_DNS_OPTION]),
+    request=fake_dns_request,
     help="Create core config + core restart",
     description=[
         (
@@ -449,10 +453,12 @@ cli_command_restart = CLICommand(
 
 
 def _mode_reload(
-    omd_root: Path, global_options: CLIGlobalOptions, options: CLIOptions, raw_host_names: CLIArgs
+    omd_root: Path,
+    global_options: CLIGlobalOptions,
+    fake_dns: HostAddress | None,
+    raw_host_names: CLIArgs,
 ) -> CLIExitCode:
     app = make_app(omd_root)
-    fake_dns = fake_dns_address(options)
     args = host_addresses(raw_host_names)
     plugins = load_checks(debug=global_options.debug)
     loading_result = config.load(validate_hosts=True, debug=global_options.debug)
@@ -529,9 +535,9 @@ def _mode_reload(
     return CLIExitCode.SUCCESS
 
 
-def _run_reload(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
+def _run_reload(context: CLIContext, fake_dns: HostAddress | None, args: CLIArgs) -> CLIExitCode:
     try:
-        return _mode_reload(context.omd_root, context.global_options, options, args)
+        return _mode_reload(context.omd_root, context.global_options, fake_dns, args)
     except (MKBailOut, MKGeneralException) as e:
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
@@ -545,7 +551,7 @@ cli_command_reload = CLICommand(
     short="O",
     handler=_run_reload,
     arguments=CLIArguments("[HostA, HostB]", optional=True),
-    request=cli_untyped_request([FAKE_DNS_OPTION]),
+    request=fake_dns_request,
     help="Create core config + core reload",
     description=[
         (

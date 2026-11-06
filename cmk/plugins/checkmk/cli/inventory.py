@@ -8,9 +8,9 @@ import contextlib
 import dataclasses
 import itertools
 import time
-from collections.abc import Container, Mapping, Sequence
+from collections.abc import Container, Sequence
 from pathlib import Path
-from typing import Literal, TypedDict
+from typing import Final
 
 import cmk.ccc.cleanup
 import cmk.livestatus_client as livestatus
@@ -30,7 +30,7 @@ from cmk.base.errorhandling import create_section_crash_dump, RecordingFetcher
 from cmk.base.inventory import execute_active_check_inventory
 from cmk.ccc.config_path import VersionedConfigPath
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTimeout, OnError
-from cmk.ccc.hostaddress import HostName
+from cmk.ccc.hostaddress import HostAddress, HostName
 from cmk.ccc.timeout import Timeout
 from cmk.checkengine import inventory
 from cmk.checkengine.auto_queue import AutoQueue
@@ -40,19 +40,16 @@ from cmk.checkengine.fetcher_utils.secrets import AdHocSecrets, StoredSecrets
 from cmk.checkengine.fetchers.snmp import NoSelectedSNMPSections, SNMPFetcherConfig
 from cmk.checkengine.parser import NO_SELECTION
 from cmk.checkengine.plugins import InventoryPluginName, SectionName
-from cmk.checkengine.snmplib import SNMPSectionName
+from cmk.checkengine.snmplib import SNMPBackendEnum, SNMPSectionName
 from cmk.checkengine.specs.checkresults import ActiveCheckResult
-from cmk.cli.engine.readers import option_names as cli_option_names
-from cmk.cli.engine.readers import option_string as cli_option_string
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import Flag as CLIFlag
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
-from cmk.cli.internal import Option as CLIOption
-from cmk.cli.internal import Options as CLIOptions
-from cmk.cli.internal import untyped_request as cli_untyped_request
+from cmk.cli.internal import Reader as CLIReader
 from cmk.inventory.paths import InventoryPaths
 from cmk.inventory.store import InventoryStore
 from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
@@ -63,15 +60,14 @@ from cmk.utils.log import console, section
 
 from .agent_based import extract_plugin_selection, load_checks
 from .options import (
-    fake_dns_address,
-    FAKE_DNS_OPTION,
-    FETCHER_OPTIONS,
-    get_plugins_option,
-    handle_fetcher_options,
-    option_detect_plugins,
-    option_sections,
-    parse_snmp_backend,
-    SNMP_BACKEND_OPTION,
+    FAKE_DNS_VALUE,
+    file_cache_request,
+    FileCacheRequest,
+    make_file_cache_options,
+    plugin_selection_request,
+    PluginSelectionRequest,
+    SNMP_BACKEND_VALUE,
+    USEWALK_FLAG,
 )
 
 # .
@@ -85,57 +81,39 @@ from .options import (
 #   '----------------------------------------------------------------------'
 
 
-InventoryOptions = TypedDict(
-    "InventoryOptions",
-    {
-        "cache": Literal[True],
-        "snmp-backend": str,
-        "no-cache": Literal[True],
-        "no-tcp": Literal[True],
-        "usewalk": Literal[True],
-        "force": bool,
-        "detect-sections": frozenset[SectionName],
-        "plugins": frozenset[InventoryPluginName],
-        "detect-plugins": frozenset[str],
-    },
-    total=False,
+_FORCE_FLAG: Final = CLIFlag(
+    long="force",
+    short="f",
+    help="Use cached agent data even if it's outdated.",
 )
 
 
-def _inventory_options(parsed: Mapping[str, object]) -> InventoryOptions:
-    options = InventoryOptions()
-    if "cache" in parsed:
-        options["cache"] = True
-    if "no-cache" in parsed:
-        options["no-cache"] = True
-    if "no-tcp" in parsed:
-        options["no-tcp"] = True
-    if "usewalk" in parsed:
-        options["usewalk"] = True
-    if "snmp-backend" in parsed:
-        options["snmp-backend"] = cli_option_string(parsed, "snmp-backend") or ""
-    if "force" in parsed:
-        options["force"] = True
-    if "detect-sections" in parsed:
-        options["detect-sections"] = cli_option_names(parsed, "detect-sections", SectionName)
-    if "plugins" in parsed:
-        options["plugins"] = cli_option_names(parsed, "plugins", InventoryPluginName)
-    if "detect-plugins" in parsed:
-        options["detect-plugins"] = cli_option_names(parsed, "detect-plugins", str)
-    return options
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class _InventoryRequest:
+    file_cache: FileCacheRequest
+    usewalk: bool
+    snmp_backend: SNMPBackendEnum | None
+    force: bool
+    plugin_selection: PluginSelectionRequest[InventoryPluginName]
+    fake_dns: HostAddress | None
+
+
+def _inventory_request(options: CLIReader) -> _InventoryRequest:
+    return _InventoryRequest(
+        file_cache=file_cache_request(options),
+        usewalk=options.flag(USEWALK_FLAG),
+        snmp_backend=options.value(SNMP_BACKEND_VALUE),
+        force=options.flag(_FORCE_FLAG),
+        plugin_selection=plugin_selection_request(options, InventoryPluginName),
+        fake_dns=options.value(FAKE_DNS_VALUE),
+    )
 
 
 def _mode_inventory(
-    omd_root: Path, global_options: CLIGlobalOptions, parsed: CLIOptions, args: CLIArgs
+    omd_root: Path, global_options: CLIGlobalOptions, request: _InventoryRequest, args: CLIArgs
 ) -> CLIExitCode:
     app = make_app(omd_root)
-    fake_dns = fake_dns_address(parsed)
-    options = _inventory_options(parsed)
-    file_cache_options = handle_fetcher_options(options)
-    try:
-        snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
-    except ValueError as exc:
-        raise MKBailOut("Unknown SNMP backend") from exc
+    file_cache_options = make_file_cache_options(request.file_cache)
 
     plugins = load_checks(debug=global_options.debug)
     loading_result = config.load(validate_hosts=True, debug=global_options.debug)
@@ -159,7 +137,7 @@ def _mode_inventory(
         plugins.check_plugins,
         label_manager.labels_of_service,
     )
-    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
+    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=request.fake_dns)
     ip_address_of = ip_lookup.ConfiguredIPLookup(
         ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
@@ -187,13 +165,13 @@ def _mode_inventory(
         if args
         else contextlib.nullcontext()
     ):
-        if "force" in options:
+        if request.force:
             file_cache_options = dataclasses.replace(file_cache_options, keep_outdated=True)
 
         selected_sections, run_plugin_names = extract_plugin_selection(
-            detect_plugins=options.get("detect-plugins"),
-            detect_sections=options.get("detect-sections"),
-            selected_plugins=options.get("plugins"),
+            detect_plugins=request.plugin_selection.detect_plugins,
+            detect_sections=request.plugin_selection.detect_sections,
+            selected_plugins=request.plugin_selection.plugins,
             plugins=plugins.inventory_plugins,
             sections=itertools.chain(
                 plugins.agent_sections.values(), plugins.snmp_sections.values()
@@ -224,7 +202,7 @@ def _mode_inventory(
                             if n in plugins.snmp_sections
                         )
                     ),
-                    backend_override=snmp_backend_override,
+                    backend_override=request.snmp_backend,
                     base_path=cmk.utils.paths.omd_root,
                     relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
                     relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
@@ -232,7 +210,7 @@ def _mode_inventory(
                     caching_config=make_parsed_snmp_fetch_intervals_config(
                         loaded_config, ruleset_matcher, label_manager.labels_of_host
                     ),
-                    force_stored_walks=bool(options.get("usewalk", False)),
+                    force_stored_walks=request.usewalk,
                     debug=global_options.debug,
                 ),
             ),
@@ -244,7 +222,7 @@ def _mode_inventory(
             get_ip_stack_config=ip_lookup_config.ip_stack_config,
             ip_address_of=ip_address_of,
             ip_address_of_mandatory=mandatory_ip_lookup(
-                usewalk=bool(options.get("usewalk", False)), ip_lookup_config=ip_lookup_config
+                usewalk=request.usewalk, ip_lookup_config=ip_lookup_config
             ),
             ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
             mode=(
@@ -352,9 +330,9 @@ def _mode_inventory(
         return CLIExitCode.SUCCESS
 
 
-def _run_inventory(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
+def _run_inventory(context: CLIContext, request: _InventoryRequest, args: CLIArgs) -> CLIExitCode:
     try:
-        return _mode_inventory(context.omd_root, context.global_options, options, args)
+        return _mode_inventory(context.omd_root, context.global_options, request, args)
     except (MKBailOut, MKGeneralException) as e:
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
         if context.global_options.debug:
@@ -366,23 +344,9 @@ cli_command_inventory = CLICommand(
     name="inventory",
     long="inventory",
     short="i",
+    request=_inventory_request,
     handler=_run_inventory,
     arguments=CLIArguments("HOST1 HOST2...", optional=True),
-    request=cli_untyped_request(
-        [
-            *FETCHER_OPTIONS,
-            SNMP_BACKEND_OPTION,
-            CLIOption(
-                long="force",
-                short="f",
-                help="Use cached agent data even if it's outdated.",
-            ),
-            option_sections,
-            get_plugins_option(InventoryPluginName),
-            option_detect_plugins,
-            FAKE_DNS_OPTION,
-        ]
-    ),
     help="Do a HW/SW Inventory on some or all hosts",
     description=[
         (
@@ -394,16 +358,31 @@ cli_command_inventory = CLICommand(
 )
 
 
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class _InventorizeMarkedHostsRequest:
+    file_cache: FileCacheRequest
+    usewalk: bool
+    snmp_backend: SNMPBackendEnum | None
+    fake_dns: HostAddress | None
+
+
+def _inventorize_marked_hosts_request(options: CLIReader) -> _InventorizeMarkedHostsRequest:
+    return _InventorizeMarkedHostsRequest(
+        file_cache=file_cache_request(options),
+        usewalk=options.flag(USEWALK_FLAG),
+        snmp_backend=options.value(SNMP_BACKEND_VALUE),
+        fake_dns=options.value(FAKE_DNS_VALUE),
+    )
+
+
 def _mode_inventorize_marked_hosts(
-    omd_root: Path, global_options: CLIGlobalOptions, options: CLIOptions, _args: CLIArgs
+    omd_root: Path,
+    global_options: CLIGlobalOptions,
+    request: _InventorizeMarkedHostsRequest,
+    _args: CLIArgs,
 ) -> CLIExitCode:
     app = make_app(omd_root)
-    fake_dns = fake_dns_address(options)
-    file_cache_options = handle_fetcher_options(options)
-    try:
-        snmp_backend_override = parse_snmp_backend(options.get("snmp-backend"))
-    except ValueError as exc:
-        raise MKBailOut("Unknown SNMP backend") from exc
+    file_cache_options = make_file_cache_options(request.file_cache)
 
     if not (queue := AutoQueue(InventoryPaths(cmk.utils.paths.omd_root).auto_dir)):
         console.verbose("Autoinventory: No hosts marked by inventory check")
@@ -434,7 +413,7 @@ def _mode_inventorize_marked_hosts(
         plugins.check_plugins,
         label_manager.labels_of_service,
     )  # not obvious to me why/if we *really* need this
-    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
+    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=request.fake_dns)
     ip_address_of = ip_lookup.ConfiguredIPLookup(
         ip_lookup.make_lookup_ip_address(ip_lookup_config),
         allow_empty=hosts_config.clusters,
@@ -468,7 +447,7 @@ def _mode_inventorize_marked_hosts(
                 on_error=OnError.RAISE,
                 missing_sys_description=config_cache.missing_sys_description,
                 selected_sections=(NoSelectedSNMPSections()),
-                backend_override=snmp_backend_override,
+                backend_override=request.snmp_backend,
                 base_path=cmk.utils.paths.var_dir,
                 relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
                 relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
@@ -476,7 +455,7 @@ def _mode_inventorize_marked_hosts(
                 caching_config=make_parsed_snmp_fetch_intervals_config(
                     loaded_config, ruleset_matcher, label_manager.labels_of_host
                 ),
-                force_stored_walks=bool(options.get("usewalk", False)),
+                force_stored_walks=request.usewalk,
                 debug=global_options.debug,
             ),
         ),
@@ -488,7 +467,7 @@ def _mode_inventorize_marked_hosts(
         get_ip_stack_config=ip_lookup_config.ip_stack_config,
         ip_address_of=ip_address_of,
         ip_address_of_mandatory=mandatory_ip_lookup(
-            usewalk=bool(options.get("usewalk", False)), ip_lookup_config=ip_lookup_config
+            usewalk=request.usewalk, ip_lookup_config=ip_lookup_config
         ),
         ip_address_of_mgmt=ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config),
         mode=FetchMode.INVENTORY,
@@ -583,11 +562,11 @@ def _mode_inventorize_marked_hosts(
 
 
 def _run_inventorize_marked_hosts(
-    context: CLIContext, options: CLIOptions, args: CLIArgs
+    context: CLIContext, request: _InventorizeMarkedHostsRequest, args: CLIArgs
 ) -> CLIExitCode:
     try:
         return _mode_inventorize_marked_hosts(
-            context.omd_root, context.global_options, options, args
+            context.omd_root, context.global_options, request, args
         )
     except (MKBailOut, MKGeneralException) as e:
         context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
@@ -599,8 +578,8 @@ def _run_inventorize_marked_hosts(
 cli_command_inventorize_marked_hosts = CLICommand(
     name="inventorize_marked_hosts",
     long="inventorize-marked-hosts",
+    request=_inventorize_marked_hosts_request,
     handler=_run_inventorize_marked_hosts,
-    request=cli_untyped_request([*FETCHER_OPTIONS, SNMP_BACKEND_OPTION, FAKE_DNS_OPTION]),
     help="Run inventory for hosts which previously had no tree data",
     description=[
         "Run actual service HW/SW Inventory on all hosts that had no tree data",

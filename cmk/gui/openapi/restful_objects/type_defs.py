@@ -313,6 +313,7 @@ CmkEndpointName = Literal[
     "cmk/remove_acknowledgements",
     "cmk/schedule_downtime",
     "cmk/remove_downtimes",
+    "cmk/add_comment",
 ]
 
 RestfulEndpointName = Literal[

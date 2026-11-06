@@ -518,9 +518,9 @@ test('posts the shown columns and the listing to the instant PDF report', async 
   expect(JSON.parse(posted[0]!.body!)).toMatchObject({ sort: ['name:asc'] })
 })
 
-test('adds a comment to the selected host from the "More" menu', async () => {
+test('adds a comment to the selected host on its own site from the "More" menu', async () => {
   const user = userEvent.setup()
-  mockHosts([makeHost()])
+  mockHosts([makeHost({ site_id: 'remote' })])
   renderApp('community', {
     actions: [{ ident: 'add_comment', title: 'Add comment', icon: 'comment' }]
   })
@@ -534,12 +534,19 @@ test('adds a comment to the selected host from the "More" menu', async () => {
   // swallowing the click that would focus the field.
   screen.getByPlaceholderText('Enter a comment…').focus()
   await user.keyboard('Disk swap planned')
+  postSpy.mockResolvedValueOnce({
+    data: { commented: 1 },
+    error: undefined,
+    response: new Response(null, { status: 200 })
+  } as never)
   await user.click(screen.getByRole('button', { name: 'Add comment' }))
 
   expect(await screen.findByText('Added comment to the selected host')).toBeInTheDocument()
   expect(postSpy).toHaveBeenCalledWith(
-    '/domain-types/comment/collections/host',
-    expect.objectContaining({ body: expect.objectContaining({ comment: 'Disk swap planned' }) })
+    '/monitor/hosts/actions/add_comment',
+    expect.objectContaining({
+      body: { hosts: [{ site_id: 'remote', name: 'web-1' }], comment: 'Disk swap planned' }
+    })
   )
 })
 

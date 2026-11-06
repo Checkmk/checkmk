@@ -15,51 +15,37 @@ let postSpy: any
 
 beforeEach(() => {
   postSpy = vi.spyOn(client, 'POST').mockResolvedValue({
-    data: undefined,
+    data: { commented: 2 },
     error: undefined,
-    response: new Response(null, { status: 204 })
+    response: new Response(null, { status: 200 })
   } as never)
 })
 
-test('comments the hosts by a query on their names, persistently', async () => {
-  await new CommentApi().commentHosts(['db-1', 'web-1'], 'Disk swap planned')
+test('comments the hosts, each on its site', async () => {
+  const hosts = [
+    { site_id: 'local', name: 'web-1' },
+    { site_id: 'remote', name: 'web-1' }
+  ]
 
-  expect(postSpy).toHaveBeenCalledWith('/domain-types/comment/collections/host', {
+  expect(await new CommentApi().commentHosts(hosts, 'Disk swap planned')).toBe(2)
+
+  expect(postSpy).toHaveBeenCalledWith('/monitor/hosts/actions/add_comment', {
     ...CONTENT_TYPE,
-    body: {
-      comment_type: 'host_by_query',
-      query: {
-        op: 'or',
-        expr: [
-          { op: '=', left: 'name', right: 'db-1' },
-          { op: '=', left: 'name', right: 'web-1' }
-        ]
-      },
-      comment: 'Disk swap planned',
-      persistent: true
-    }
+    body: { hosts, comment: 'Disk swap planned' }
   })
 })
 
-test('comments the services of the host by a query on their names, persistently', async () => {
+test('comments the services, each on the site of its host', async () => {
   await new CommentApi().commentServices(
-    [{ host: { name: 'db-1', site_id: 'local' }, description: 'CPU load' }],
+    [{ host: { name: 'web-1', site_id: 'remote' }, description: 'CPU load' }],
     'Known spike'
   )
 
-  expect(postSpy).toHaveBeenCalledWith('/domain-types/comment/collections/service', {
+  expect(postSpy).toHaveBeenCalledWith('/monitor/services/actions/add_comment', {
     ...CONTENT_TYPE,
     body: {
-      comment_type: 'service_by_query',
-      query: {
-        op: 'and',
-        expr: [
-          { op: '=', left: 'host_name', right: 'db-1' },
-          { op: 'or', expr: [{ op: '=', left: 'description', right: 'CPU load' }] }
-        ]
-      },
-      comment: 'Known spike',
-      persistent: true
+      services: [{ site_id: 'remote', host_name: 'web-1', name: 'CPU load' }],
+      comment: 'Known spike'
     }
   })
 })

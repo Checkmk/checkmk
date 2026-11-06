@@ -14,11 +14,7 @@ export function useCommentHostsAction(): MonitoringAction<CommentValues, HostRef
   const { _t, _tn } = usei18n()
 
   return createCommentAction<HostRef>({
-    comment: (api, targets, comment) =>
-      api.commentHosts(
-        targets.map((target) => target.name),
-        comment
-      ),
+    comment: (api, targets, comment) => api.commentHosts(targets, comment),
     successMessage: (count) =>
       _tn('Added comment to the selected host', 'Added comments to the selected hosts', count),
     errorHeading: _t('Could not add the comments to the selected hosts')

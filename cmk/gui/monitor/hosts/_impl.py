@@ -23,6 +23,7 @@ from cmk.gui.livestatus_utils.commands.acknowledgments import (
     acknowledge_host_problem,
     remove_acknowledgement,
 )
+from cmk.gui.livestatus_utils.commands.comment import add_host_comment
 from cmk.gui.livestatus_utils.commands.downtimes import child_hosts, recur_mode, RecurMode
 from cmk.gui.logged_in import user
 from cmk.gui.monitor.command import ModifiableAttribute
@@ -688,6 +689,20 @@ class LiveStatusHostActions:
                 client.command(DeleteHostDowntime(row.id), SiteId(row.site))
                 removed.add(target)
         return len(removed)
+
+    def add_comment(self, targets: Sequence[HostTarget], *, author: UserId, comment: str) -> int:
+        visible = self._found(targets)
+        for target in visible:
+            add_host_comment(
+                self._connection,
+                HostName(target.host_name),
+                comment,
+                SiteId(target.site_id),
+                # Like the classic command, a comment survives a restart of the core.
+                persistent=True,
+                user=author,
+            )
+        return len(visible)
 
     def _found(self, targets: Sequence[HostTarget]) -> list[HostTarget]:
         if not (visible := self._visible(targets)):

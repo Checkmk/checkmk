@@ -16,9 +16,9 @@ let postSpy: any
 
 beforeEach(() => {
   postSpy = vi.spyOn(client, 'POST').mockResolvedValue({
-    data: undefined,
+    data: { commented: 1 },
     error: undefined,
-    response: new Response(null, { status: 204 })
+    response: new Response(null, { status: 200 })
   } as never)
 })
 
@@ -32,6 +32,11 @@ test('says the comment was added to the selected host', async () => {
 })
 
 test('says the comments were added to the selected services', async () => {
+  postSpy.mockResolvedValueOnce({
+    data: { commented: 2 },
+    error: undefined,
+    response: new Response(null, { status: 200 })
+  } as never)
   const action = useCommentServicesAction()
 
   expect(

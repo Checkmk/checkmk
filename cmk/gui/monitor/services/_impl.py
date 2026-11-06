@@ -22,6 +22,7 @@ from cmk.gui.livestatus_utils.commands.acknowledgments import (
     acknowledge_service_problem,
     remove_acknowledgement,
 )
+from cmk.gui.livestatus_utils.commands.comment import add_service_comment
 from cmk.gui.livestatus_utils.commands.downtimes import recur_mode, RecurMode
 from cmk.gui.monitor.command import ModifiableAttribute
 from cmk.gui.monitor.hosts import reader_unavailable_sites
@@ -601,6 +602,21 @@ class LiveStatusServiceActions:
                 client.command(DeleteServiceDowntime(row.id), SiteId(row.site))
                 removed.add(target)
         return len(removed)
+
+    def add_comment(self, targets: Sequence[ServiceTarget], *, author: UserId, comment: str) -> int:
+        visible = self._found(targets)
+        for target in visible:
+            add_service_comment(
+                self._connection,
+                HostName(target.host_name),
+                target.description,
+                comment,
+                SiteId(target.site_id),
+                # Like the classic command, a comment survives a restart of the core.
+                persistent=True,
+                user=author,
+            )
+        return len(visible)
 
     def _found(self, targets: Sequence[ServiceTarget]) -> dict[ServiceTarget, int]:
         if not (visible := self._visible(targets)):

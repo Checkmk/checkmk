@@ -102,3 +102,12 @@ class ServiceDowntimeScheduler(Protocol):
     def remove_downtimes(self, targets: Sequence[ServiceTarget]) -> int:
         """Remove the downtimes of the targets on their sites, returning for how many."""
         ...
+
+
+class ServiceCommenter(Protocol):
+    def add_comment(self, targets: Sequence[ServiceTarget], *, author: UserId, comment: str) -> int:
+        """Add the comment to each visible target on its site, returning how many.
+
+        Raises ServiceNotFoundError if none of the targets is found.
+        """
+        ...

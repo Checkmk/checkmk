@@ -106,6 +106,15 @@ class HostDowntimeScheduler(Protocol):
         ...
 
 
+class HostCommenter(Protocol):
+    def add_comment(self, targets: Sequence[HostTarget], *, author: UserId, comment: str) -> int:
+        """Add the comment to each visible target on its site, returning how many.
+
+        Raises HostNotFoundError if none of the targets is found.
+        """
+        ...
+
+
 class HostEventArchiver(Protocol):
     def archive_events(self, targets: Sequence[HostTarget], *, author: UserId) -> None:
         """Archive the open Event Console events of each target on its site."""

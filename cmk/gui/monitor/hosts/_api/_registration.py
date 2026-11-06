@@ -10,6 +10,7 @@ from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegist
 from ._acknowledge import ENDPOINT_ACKNOWLEDGE, ENDPOINT_REMOVE_ACKNOWLEDGEMENTS
 from ._action_menu import ENDPOINT_GET_HOST_ACTION_MENU
 from ._archive_events import ENDPOINT_ARCHIVE_EVENTS
+from ._comment import ENDPOINT_ADD_COMMENT
 from ._custom_notification import ENDPOINT_SEND_CUSTOM_NOTIFICATION
 from ._downtime import ENDPOINT_REMOVE_DOWNTIMES, ENDPOINT_SCHEDULE_DOWNTIME
 from ._events import ENDPOINT_GET_HOST_EVENTS
@@ -45,3 +46,4 @@ def register_endpoints(
     versioned_endpoint_registry.register(ENDPOINT_REMOVE_ACKNOWLEDGEMENTS)
     versioned_endpoint_registry.register(ENDPOINT_SCHEDULE_DOWNTIME)
     versioned_endpoint_registry.register(ENDPOINT_REMOVE_DOWNTIMES)
+    versioned_endpoint_registry.register(ENDPOINT_ADD_COMMENT)

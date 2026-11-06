@@ -5,38 +5,27 @@
  */
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 
-import { hostNameQuery, serviceQuery } from '@/monitoring/shared/api/actions/query'
-import type { ServiceRef } from '@/monitoring/shared/api/types'
-
-// Like the legacy command, a comment survives a restart of the core.
-const PERSISTENT = true
+import { serviceTargets } from '@/monitoring/shared/api/actions/targets'
+import type { HostRef, ServiceRef } from '@/monitoring/shared/api/types'
 
 export class CommentApi {
-  public async commentHosts(hostNames: string[], comment: string): Promise<void> {
-    unwrap(
-      await client.POST('/domain-types/comment/collections/host', {
+  public async commentHosts(hosts: HostRef[], comment: string): Promise<number> {
+    const response = unwrap(
+      await client.POST('/monitor/hosts/actions/add_comment', {
         params: { header: { 'Content-Type': 'application/json' } },
-        body: {
-          comment_type: 'host_by_query',
-          query: hostNameQuery(hostNames),
-          comment,
-          persistent: PERSISTENT
-        }
+        body: { hosts, comment }
       })
     )
+    return response.commented
   }
 
-  public async commentServices(services: ServiceRef[], comment: string): Promise<void> {
-    unwrap(
-      await client.POST('/domain-types/comment/collections/service', {
+  public async commentServices(services: ServiceRef[], comment: string): Promise<number> {
+    const response = unwrap(
+      await client.POST('/monitor/services/actions/add_comment', {
         params: { header: { 'Content-Type': 'application/json' } },
-        body: {
-          comment_type: 'service_by_query',
-          query: serviceQuery(services),
-          comment,
-          persistent: PERSISTENT
-        }
+        body: { services: serviceTargets(services), comment }
       })
     )
+    return response.commented
   }
 }

@@ -15,7 +15,7 @@ import { commandFailed } from './feedback'
 export const COMMENT_ACTION_ID = 'add_comment'
 
 export interface CommentKindConfig<Target> {
-  comment(api: CommentApi, targets: Target[], comment: string): Promise<void>
+  comment(api: CommentApi, targets: Target[], comment: string): Promise<number>
   successMessage(count: number): TranslatedString
   errorHeading: TranslatedString
 }
@@ -35,8 +35,8 @@ export function createCommentAction<Target>(
     defaultValues: () => ({ comment: '' }),
     perform: async (targets: Target[], values: CommentValues) => {
       try {
-        await config.comment(api, targets, values.comment.trim())
-        return { variant: 'success', message: config.successMessage(targets.length) }
+        const count = await config.comment(api, targets, values.comment.trim())
+        return { variant: 'success', message: config.successMessage(count) }
       } catch {
         return commandFailed(config.errorHeading)
       }

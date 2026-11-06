@@ -4048,7 +4048,7 @@ class FolderLookupCache:
         if not cache_path.exists() or cache_path.stat().st_size == 0:
             self.build()
         try:
-            return store.load_object_from_pickle_file(cache_path, default={}, debug=False)
+            return store.load_object_from_pickle_file(cache_path, default={})
         except (TypeError, pickle.UnpicklingError) as e:
             logger.warning(
                 "Unable to read folder_lookup_cache from disk: %(error)s", {"error": str(e)}

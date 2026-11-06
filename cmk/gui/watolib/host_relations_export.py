@@ -96,7 +96,7 @@ def _write_export_file(path: Path, macro_values: dict[str, str]) -> bool:
         lines.append(f"explicit_host_conf[{RELATIONS_MACRO!r}].update({macro_values!r})\n")
     content = "".join(lines)
 
-    if store.load_text_from_file(path, debug=False) == content:
+    if store.load_text_from_file(path) == content:
         return False
     store.save_text_to_file(path, content)
     return True

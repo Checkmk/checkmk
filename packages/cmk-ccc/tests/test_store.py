@@ -205,7 +205,7 @@ def test_save_data_to_file(tmp_path: Path, data: None | Sequence[str | int]) -> 
 def test_save_text_to_file(tmp_path: Path, data: str) -> None:
     path = tmp_path / "lala"
     store.save_text_to_file(path, data)
-    assert store.load_text_from_file(path, debug=False) == data
+    assert store.load_text_from_file(path) == data
 
 
 def test_load_object_from_file_null_bytes(tmp_path: Path) -> None:
@@ -226,7 +226,7 @@ def test_load_world_writable_file(tmp_path: Path, permissions: int) -> None:
     with pytest.raises(MKGeneralException, match="Refusing to read world writable file"):
         store.load_object_from_file(path, default=object(), debug=False)
     with pytest.raises(MKGeneralException, match="Refusing to read world writable file"):
-        store.load_text_from_file(path, default="", debug=False)
+        store.load_text_from_file(path, default="")
 
 
 @pytest.mark.parametrize(

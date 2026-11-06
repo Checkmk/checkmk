@@ -229,24 +229,22 @@ def load_object_from_file(path: Path, *, default: Any, debug: bool, lock: bool =
             return default
 
 
-def load_object_from_pickle_file(
-    path: Path, *, default: Any, debug: bool, lock: bool = False
-) -> Any:
+def load_object_from_pickle_file(path: Path, *, default: Any, lock: bool = False) -> Any:
     with (
         tracer.simple_span("load_object_from_pickle_file", path),
         _leave_locked_unless_exception(path) if lock else nullcontext(),
     ):
         return ObjectStore(path, serializer=PickleSerializer()).read_obj(
-            default=default, debug=debug
+            default=default, debug=False
         )
 
 
-def load_text_from_file(path: Path, *, debug: bool, default: str = "", lock: bool = False) -> str:
+def load_text_from_file(path: Path, *, default: str = "", lock: bool = False) -> str:
     with (
         tracer.simple_span("load_text_from_file", path),
         _leave_locked_unless_exception(path) if lock else nullcontext(),
     ):
-        return ObjectStore(path, serializer=TextSerializer()).read_obj(default=default, debug=debug)
+        return ObjectStore(path, serializer=TextSerializer()).read_obj(default=default, debug=False)
 
 
 def load_bytes_from_file(path: Path, *, default: bytes, debug: bool) -> bytes:
@@ -324,7 +322,7 @@ def try_load_file_from_pickle_cache(
     try:
         if pickle_path.stat().st_mtime > path.stat().st_mtime:
             # Use pickled version since this file is newer and therefore valid
-            return load_object_from_pickle_file(pickle_path, default=default, debug=False)
+            return load_object_from_pickle_file(pickle_path, default=default)
     except FileNotFoundError, pickle.UnpicklingError:
         pass
 

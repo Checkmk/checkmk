@@ -282,7 +282,7 @@ class StandardHostsStorage(ABCHostsStorage[str]):
 
     @override
     def _read(self, file_path: Path) -> str:
-        return store.load_text_from_file(file_path, debug=False)
+        return store.load_text_from_file(file_path)
 
 
 class PickleHostsStorage(ABCHostsStorage[HostsData]):

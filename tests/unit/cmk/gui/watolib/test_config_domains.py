@@ -224,10 +224,7 @@ class TestConfigDomainCACertificates:
         expected_file_content: str,
     ) -> None:
         mocked_ca_config.update_trust_stores(ca_settings)
-        assert (
-            load_text_from_file(mocked_ca_config.trusted_cas_file, debug=True)
-            == expected_file_content
-        )
+        assert load_text_from_file(mocked_ca_config.trusted_cas_file) == expected_file_content
 
     def test_settings_change_updates_the_trust_store_from_the_local_site(
         self,
@@ -239,7 +236,7 @@ class TestConfigDomainCACertificates:
             after={omd_site(): _ca_globals(use_system_wide_cas=True)},
         ):
             pass
-        assert load_text_from_file(mocked_ca_config.trusted_cas_file, debug=True) == (
+        assert load_text_from_file(mocked_ca_config.trusted_cas_file) == (
             "system_cert_1\nsystem_cert_2"
         )
 

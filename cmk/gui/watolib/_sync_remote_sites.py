@@ -125,7 +125,6 @@ class LastAuditLogTimestampsStore:
         raw_timestamps = store.load_text_from_file(
             self._path,
             default="{}",
-            debug=False,
         )
 
         try:

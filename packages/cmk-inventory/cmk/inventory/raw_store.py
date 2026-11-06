@@ -56,7 +56,7 @@ def rename(
 
 
 def load_tree_from_tree_path(tree_path: TreePath) -> ImmutableTree:
-    if raw_tree := store.load_text_from_file(tree_path.path, debug=False):
+    if raw_tree := store.load_text_from_file(tree_path.path):
         return deserialize_tree(json.loads(raw_tree))
     if raw_tree := store.load_object_from_file(tree_path.legacy, default=None, debug=False):
         return deserialize_tree(raw_tree)

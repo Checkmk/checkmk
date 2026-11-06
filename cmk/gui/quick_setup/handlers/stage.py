@@ -252,7 +252,7 @@ class StageActionResult(BaseModel, frozen=False):
         work_dir = Path(BackgroundJobDefines.base_dir) / job_id
         if not os.path.exists(work_dir):
             raise MKJobNotFoundException(None, _("Stage action result not found"))
-        content = store.load_text_from_file(cls._file_path(work_dir), debug=False)
+        content = store.load_text_from_file(cls._file_path(work_dir))
         try:
             return cls.model_validate_json(content)
         except ValidationError as e:

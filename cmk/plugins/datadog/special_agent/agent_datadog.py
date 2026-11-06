@@ -322,7 +322,6 @@ class IDStore[TID: (str, int)]:
                 load_text_from_file(
                     self.path,
                     default="[]",
-                    debug=False,
                 )
             )
         )

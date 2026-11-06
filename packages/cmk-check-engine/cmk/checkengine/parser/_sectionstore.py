@@ -52,7 +52,7 @@ class SectionStore[T]:
         )
 
     def load(self) -> MutableMapping[SectionName, tuple[int, int, T]]:
-        raw_sections_data = _store.load_object_from_pickle_file(self.path, default={}, debug=False)
+        raw_sections_data = _store.load_object_from_pickle_file(self.path, default={})
         return {SectionName(k): v for k, v in raw_sections_data.items()}
 
     def update(

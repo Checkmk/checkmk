@@ -211,7 +211,7 @@ class HistoryStore:
             case HistoryDeltaPath():
                 try:
                     raw = (
-                        json.loads(store.load_text_from_file(path.file_path, debug=False))
+                        json.loads(store.load_text_from_file(path.file_path))
                         if path.file_path.suffix == ".json"
                         else store.load_object_from_file(path.file_path, default=None, debug=False)
                     )

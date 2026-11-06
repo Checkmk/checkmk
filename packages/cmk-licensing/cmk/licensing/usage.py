@@ -330,7 +330,7 @@ def _get_cloud_counter() -> HostsOrServicesCloudCounter:
 
 
 def _get_next_run_ts(file_path: Path) -> int:
-    return int(rot47(store.load_text_from_file(file_path, default="_", debug=False)))
+    return int(rot47(store.load_text_from_file(file_path, default="_")))
 
 
 def _create_next_run_ts(now: Now) -> int:

@@ -11,8 +11,9 @@ line into a call into it, or hands the work to the automation helper.
 import ast
 import logging
 import sys
-from collections.abc import Mapping
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Final
 
 import cmk.livestatus_client as livestatus
 import cmk.utils.paths
@@ -34,18 +35,37 @@ from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import Flag as CLIFlag
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
-from cmk.cli.internal import Option as CLIOption
-from cmk.cli.internal import Options as CLIOptions
-from cmk.cli.internal import untyped_request as cli_untyped_request
+from cmk.cli.internal import Reader as CLIReader
 from cmk.utils import timeperiod
 from cmk.utils.http_proxy_config import make_http_proxy_getter
 
 logger = logging.getLogger("cmk.base.notify")
 
 
-def _notify_flags(parsed: Mapping[str, object]) -> dict[str, bool]:
-    return dict.fromkeys(parsed, True)
+_LOG_TO_STDOUT_FLAG: Final = CLIFlag(
+    long="log-to-stdout",
+    help="Also write log messages to console",
+)
+
+_KEEPALIVE_FLAG: Final = CLIFlag(
+    long="keepalive",
+    help="Execute in keepalive mode (Commercial editions only)",
+)
+
+
+@dataclass(frozen=True, kw_only=True)
+class _NotifyRequest:
+    log_to_stdout: bool
+    keepalive: bool
+
+
+def _notify_request(options: CLIReader) -> _NotifyRequest:
+    return _NotifyRequest(
+        log_to_stdout=options.flag(_LOG_TO_STDOUT_FLAG),
+        keepalive=options.flag(_KEEPALIVE_FLAG),
+    )
 
 
 def _notification_exit_code(returncode: object) -> CLIExitCode:
@@ -59,23 +79,22 @@ def _notification_exit_code(returncode: object) -> CLIExitCode:
 
 
 def _mode_notify(
-    omd_root: Path, global_options: CLIGlobalOptions, parsed: CLIOptions, args: CLIArgs
+    omd_root: Path, global_options: CLIGlobalOptions, request: _NotifyRequest, args: CLIArgs
 ) -> CLIExitCode:
-    options = _notify_flags(parsed)
     edition = edition_of_site(omd_root)
     community_edition = edition is Edition.COMMUNITY
     if not community_edition and "spoolfile" in args:
-        return _do_notify_via_automation(options=options, args=list(args))
+        return _do_notify_via_automation(log_to_stdout=request.log_to_stdout, args=list(args))
 
-    if keepalive := not community_edition and "keepalive" in options:
+    if keepalive := not community_edition and request.keepalive:
         raise_mkterminate_on_sigint()
 
     with store.lock_checkmk_configuration(cmk.utils.paths.configuration_lockfile):
         loading_result = config.load(validate_hosts=False, debug=global_options.debug)
 
     exit_status = do_notify(
-        options,
         list(args),
+        log_to_stdout=request.log_to_stdout,
         notification_config=make_notification_config(
             edition,
             loading_result.loaded_config,
@@ -96,9 +115,9 @@ def _mode_notify(
     return _notification_exit_code(exit_status)
 
 
-def _run_notify(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIExitCode:
+def _run_notify(context: CLIContext, request: _NotifyRequest, args: CLIArgs) -> CLIExitCode:
     try:
-        return _mode_notify(context.omd_root, context.global_options, options, args)
+        return _mode_notify(context.omd_root, context.global_options, request, args)
     except MKTerminate:
         context.logger.error("<Interrupted>")  # noqa: TRY400
         return CLIExitCode.INTERRUPTED
@@ -109,11 +128,9 @@ def _run_notify(context: CLIContext, options: CLIOptions, args: CLIArgs) -> CLIE
         return CLIExitCode.UNKNOWN
 
 
-def _do_notify_via_automation(options: dict[str, bool], args: list[str]) -> CLIExitCode:
-    log_to_stdout = False
-    if options.get("log-to-stdout"):
+def _do_notify_via_automation(*, log_to_stdout: bool, args: list[str]) -> CLIExitCode:
+    if log_to_stdout:
         args.insert(0, "--log-to-stdout")
-        log_to_stdout = True
 
     try:
         result = HelperExecutor().execute(
@@ -152,19 +169,8 @@ def _do_notify_via_automation(options: dict[str, bool], args: list[str]) -> CLIE
 cli_command_notify = CLICommand(
     name="notify",
     long="notify",
+    request=_notify_request,
     handler=_run_notify,
     arguments=CLIArguments("MODE", optional=True),
-    request=cli_untyped_request(
-        [
-            CLIOption(
-                long="log-to-stdout",
-                help="Also write log messages to console",
-            ),
-            CLIOption(
-                long="keepalive",
-                help="Execute in keepalive mode (Commercial editions only)",
-            ),
-        ]
-    ),
     help="Used to send notifications from core",
 )

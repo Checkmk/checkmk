@@ -367,9 +367,9 @@ Available commands:
 # keepalive mode (used by CMC), sends out one notifications from
 # several possible sources or sends out all ripe bulk notifications.
 def do_notify(
-    options: dict[str, bool],
     args: list[str],
     *,
+    log_to_stdout: bool,
     notification_config: NotificationConfig,
     define_servicegroups: Mapping[str, str],
     get_http_proxy: events.ProxyGetter,
@@ -381,7 +381,7 @@ def do_notify(
     debug: bool,
 ) -> int | None:
     global _log_to_stdout, notify_mode
-    _log_to_stdout = options.get("log-to-stdout", _log_to_stdout)
+    _log_to_stdout = log_to_stdout
 
     notification_logdir.mkdir(parents=True, exist_ok=True)
     notification_spooldir.mkdir(parents=True, exist_ok=True)

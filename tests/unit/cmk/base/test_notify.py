@@ -2389,8 +2389,8 @@ def _do_notify(
     config_contacts: Mapping[ContactName, Contact] = _HARRY,
 ) -> int | None:
     return notify.do_notify(
-        {},
         args,
+        log_to_stdout=False,
         notification_config=notification_config,
         define_servicegroups={},
         get_http_proxy=_environment_proxy,

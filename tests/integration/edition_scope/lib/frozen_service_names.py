@@ -62,6 +62,7 @@ FROZEN_SERVICE_NAMES: Final[Mapping[str, str]] = {
     "alcatel_cpu_aos7": "CPU utilization",
     "alcatel_fans": "Fan %s",
     "alcatel_fans_aos7": "Fan %s",
+    "alcatel_memory": "Memory",
     "alcatel_power": "Power Supply %s",
     "alcatel_power_aos7": "Power Supply %s",
     "alcatel_temp": "Temperature %s",

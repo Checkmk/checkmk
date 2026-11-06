@@ -1,0 +1,20 @@
+title: Alcatel Switches: Memory Usage
+agents: snmp
+catalog: hw/network/alcatel
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the memory usage of Alcatel OmniSwitch switches in percent.
+
+ On switches running AOS 7 or later, the check uses the latest memory value
+ of the first module (healthModuleMemoryLatest). On switches running an
+ older AOS release, it uses the latest memory value of the device
+ (healthDeviceMemoryLatest).
+
+ The check is {WARN} at 80% and {CRIT} at 90% memory usage. These levels can
+ be configured with the rule "Memory utilization".
+
+ The check uses the ALCATEL-IND1-HEALTH-MIB.
+
+discovery:
+ One service is created.

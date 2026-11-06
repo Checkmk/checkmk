@@ -43,11 +43,11 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib.analyze_configuration import (
     ACResultState,
     ACTestResult,
+    gui_plugin_effect,
     perform_tests,
 )
 from cmk.mkp_tool import get_stored_manifests, Manifest, PackageStore, PathConfig
 from cmk.utils import paths
-from cmk.utils.html import replace_state_markers
 
 
 @dataclass(frozen=True)
@@ -216,7 +216,10 @@ class _ACTestResultProblem:
 
         html_code = HTMLWriter.render_h2(self._create_title())
         if error_box_message := self._create_error_box_message(version, overall_state):
-            html_code += HTMLWriter.render_div(error_box_message, class_="error")
+            html_code += HTMLWriter.render_div(
+                error_box_message,
+                class_="error" if overall_state is ACResultState.CRIT else "warning",
+            )
 
         if info := self._create_info(version):
             html_code += HTMLWriter.render_p(info)
@@ -238,20 +241,20 @@ class _ACTestResultProblem:
             match state:
                 case ACResultState.CRIT:
                     state_td = HTMLWriter.render_td(
-                        HTML(replace_state_markers("(!!)"), escape=False),
-                        class_="state svcstate",
+                        HTMLWriter.render_span("CRIT", class_="state_rounded_fill"),
+                        class_="state svcstate state2",
                     )
                 case ACResultState.WARN:
                     state_td = HTMLWriter.render_td(
-                        HTML(replace_state_markers("(!)"), escape=False),
-                        class_="state svcstate",
+                        HTMLWriter.render_span("WARN", class_="state_rounded_fill"),
+                        class_="state svcstate state1",
                     )
                 case _:
                     state_td = HTMLWriter.render_td("")
 
             table_content += HTMLWriter.render_tr(
                 HTMLWriter.render_td(text) + state_td,
-                class_="even0" if idx % 2 == 0 else "odd0",
+                class_=["data", "even0" if idx % 2 == 0 else "odd0"],
             )
 
         html_code += HTMLWriter.render_table(table_content, class_="data table")
@@ -307,26 +310,61 @@ class _ACTestResultProblemFile(_ACTestResultProblem):
         )
 
 
+class _ACTestResultProblemGUIPlugin(_ACTestResultProblem):
+    @override
+    def _create_info(self, version: str) -> str:
+        return ""
+
+    @override
+    def _create_recommendation(self) -> HTML | str:
+        return _("The details below give the reason.")
+
+
+class _ACTestResultProblemGUIPluginFile(_ACTestResultProblemGUIPlugin):
+    @override
+    def _create_title(self) -> str:
+        return _("Plug-in: %(ident)s") % {"ident": self.ident}
+
+    @override
+    def _create_error_box_message(self, version: str, state: ACResultState) -> str:
+        return gui_plugin_effect(self.ident, state)
+
+
+class _ACTestResultProblemGUIPluginPackage(_ACTestResultProblemGUIPlugin):
+    @override
+    def _create_title(self) -> str:
+        return _("Extension package: %(ident)s") % {"ident": self.ident}
+
+    @override
+    def _create_error_box_message(self, version: str, state: ACResultState) -> str:
+        match state:
+            case ACResultState.CRIT:
+                return _("The extension package contains plug-ins which have no effect in Checkmk.")
+            case _:
+                return _(
+                    "The extension package contains plug-ins which may break with any update of"
+                    " Checkmk."
+                )
+
+
 class _ACTestResultProblemUnsorted(_ACTestResultProblem):
     @override
     def _create_title(self) -> str:
         return self.ident
 
-    @property
-    def _is_unknown_check_params_rule_set_problem(self) -> bool:
-        return all(
-            r.test_id == "ACTestUnknownCheckParameterRuleSets"
-            for rs in self._ac_test_results.values()
-            for r in rs
-        )
+    def _is_problem_of(self, test_id: str) -> bool:
+        return all(r.test_id == test_id for rs in self._ac_test_results.values() for r in rs)
 
     @override
     def _create_error_box_message(self, version: str, state: ACResultState) -> str:
-        return (
-            ""
-            if self._is_unknown_check_params_rule_set_problem
-            else super()._create_error_box_message(version, state)
-        )
+        if self._is_problem_of("ACTestUnknownCheckParameterRuleSets"):
+            return _("These rules have no effect in Checkmk %(version)s.") % {"version": version}
+        if self._is_problem_of("ACTestDeprecatedRuleSets"):
+            return _(
+                "These rules work in Checkmk %(version)s, but not after the update to the next"
+                " major version."
+            ) % {"version": version}
+        return super()._create_error_box_message(version, state)
 
     @override
     def _create_info(self, version: str) -> str:
@@ -334,7 +372,7 @@ class _ACTestResultProblemUnsorted(_ACTestResultProblem):
 
     @override
     def _create_recommendation(self) -> HTML | str:
-        if self._is_unknown_check_params_rule_set_problem:
+        if self._is_problem_of("ACTestUnknownCheckParameterRuleSets"):
             return HTMLWriter.render_p(
                 _(
                     "This configuration has no effect in the current installation. It may be"
@@ -352,57 +390,79 @@ class _ACTestResultProblemUnsorted(_ACTestResultProblem):
                     ),
                 ),
             )
+        if self._is_problem_of("ACTestDeprecatedRuleSets"):
+            return _(
+                "Migrate the rules to the successor of the rule set or remove them before the"
+                " update. The Werk which deprecated the rule set describes its successor."
+            )
         return _("We highly recommend solving this issue already in your installation.")
+
+
+_GUI_PLUGIN_TEST_IDS = frozenset(
+    {
+        "ACTestBrokenGUIExtension",
+        "ACTestDeprecatedGUIExtensions",
+        "ACTestDeprecatedLegacyGUIExtensions",
+        "ACTestDeprecatedPNPTemplates",
+    }
+)
+
+_PACKAGE_MANAGEMENT_TEST_IDS = _GUI_PLUGIN_TEST_IDS | {
+    "ACTestDeprecatedBakeryPlugins",
+    "ACTestDeprecatedCheckManpages",
+    "ACTestDeprecatedCheckPlugins",
+    "ACTestDeprecatedInventoryPlugins",
+    "ACTestDeprecatedV1CheckPlugins",
+    "ACTestUnknownCheckParameterRuleSets",
+}
 
 
 def _find_ac_test_result_problems(
     filtered_ac_test_results: Mapping[SiteId, Sequence[ACTestResult]],
     manifests_by_path: Mapping[Path, Manifest],
 ) -> Sequence[_ACTestResultProblem]:
-    problem_by_ident: dict[str, _ACTestResultProblem] = {}
+    problem_by_key: dict[tuple[type[_ACTestResultProblem], str], _ACTestResultProblem] = {}
     for site_id, ac_test_results in filtered_ac_test_results.items():
         for ac_test_result in ac_test_results:
             if ac_test_result.path:
                 path = _try_rel_path(site_id, ac_test_result.path)
+                package_problem: type[_ACTestResultProblem]
+                file_problem: type[_ACTestResultProblem]
+                if ac_test_result.test_id in _GUI_PLUGIN_TEST_IDS:
+                    package_problem = _ACTestResultProblemGUIPluginPackage
+                    file_problem = _ACTestResultProblemGUIPluginFile
+                else:
+                    package_problem = _ACTestResultProblemMKP
+                    file_problem = _ACTestResultProblemFile
 
                 if manifest := manifests_by_path.get(path):
-                    problem = problem_by_ident.setdefault(
-                        manifest.name,
-                        _ACTestResultProblemMKP(manifest.name, _NotificationCategory.manage_mkps),
+                    problem = problem_by_key.setdefault(
+                        (package_problem, manifest.name),
+                        package_problem(manifest.name, _NotificationCategory.manage_mkps),
                     )
                 else:
-                    problem = problem_by_ident.setdefault(
-                        str(path),
-                        _ACTestResultProblemFile(str(path), _NotificationCategory.manage_mkps),
+                    problem = problem_by_key.setdefault(
+                        (file_problem, str(path)),
+                        file_problem(str(path), _NotificationCategory.manage_mkps),
                     )
 
             else:
                 match ac_test_result.test_id:
-                    case (
-                        "ACTestUnknownCheckParameterRuleSets"
-                        | "ACTestDeprecatedV1CheckPlugins"
-                        | "ACTestDeprecatedCheckPlugins"
-                        | "ACTestDeprecatedInventoryPlugins"
-                        | "ACTestDeprecatedBakeryPlugins"
-                        | "ACTestDeprecatedCheckManpages"
-                        | "ACTestDeprecatedGUIExtensions"
-                        | "ACTestDeprecatedLegacyGUIExtensions"
-                        | "ACTestDeprecatedPNPTemplates"
-                    ):
+                    case test_id if test_id in _PACKAGE_MANAGEMENT_TEST_IDS:
                         notification_category = _NotificationCategory.manage_mkps
                     case "ACTestDeprecatedRuleSets":
                         notification_category = _NotificationCategory.rule_sets
                     case _:
                         notification_category = _NotificationCategory.log
 
-                problem = problem_by_ident.setdefault(
-                    ac_test_result.text,
+                problem = problem_by_key.setdefault(
+                    (_ACTestResultProblemUnsorted, ac_test_result.text),
                     _ACTestResultProblemUnsorted(ac_test_result.text, notification_category),
                 )
 
             problem.add_ac_test_result(site_id, ac_test_result)
 
-    return list(problem_by_ident.values())
+    return list(problem_by_key.values())
 
 
 @dataclass(frozen=True)

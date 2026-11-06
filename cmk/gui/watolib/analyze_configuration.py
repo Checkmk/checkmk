@@ -466,6 +466,14 @@ def try_relative_site_path(site_id: SiteId, abs_path: Path) -> Path:
         return abs_path
 
 
+def gui_plugin_effect(name: str, state: ACResultState) -> str:
+    match state:
+        case ACResultState.CRIT:
+            return _("'%(name)s' has no effect in Checkmk.") % {"name": name}
+        case _:
+            return _("'%(name)s' may break with any update of Checkmk.") % {"name": name}
+
+
 def compute_deprecation_result(
     *,
     version: str,

@@ -1191,6 +1191,7 @@ class ConfigCache:
             self._loaded_config.host_labels,
             builtin_host_labels_file=builtin_host_labels_file,
             discovered_host_labels_dir=discovered_host_labels_dir,
+            debug=debug,
         )
         self.clustering = make_clustering_config(
             self._loaded_config,

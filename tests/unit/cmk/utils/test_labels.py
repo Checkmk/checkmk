@@ -42,7 +42,7 @@ def test_update_builtin_host_labels_merges(builtin_host_labels_file: Path) -> No
     # the merge writer must preserve keys written by the others.
     update_builtin_host_labels(builtin_host_labels_file, {BuiltinLabelsKey.SITE: "site_a"})
     update_builtin_host_labels(builtin_host_labels_file, {BuiltinLabelsKey.CUSTOMER: "provider"})
-    assert BuiltinHostLabelsStore(builtin_host_labels_file).load() == {
+    assert BuiltinHostLabelsStore(builtin_host_labels_file).load(debug=False) == {
         "cmk/site": "site_a",
         "cmk/customer": "provider",
     }
@@ -58,7 +58,7 @@ def test_discovered_host_labels_store_file_path(discovered_host_labels_dir: Path
 def test_discovered_host_labels_store_load_default(discovered_host_labels_dir: Path) -> None:
     store = DiscoveredHostLabelsStore(HostName("host"), discovered_host_labels_dir)
     assert not store.file_path.exists()
-    assert not store.load()
+    assert not store.load(debug=False)
 
 
 def test_discovered_host_labels_store_keeps_missing_plugin_name(
@@ -66,7 +66,7 @@ def test_discovered_host_labels_store_keeps_missing_plugin_name(
 ) -> None:
     store = DiscoveredHostLabelsStore(HostName("host"), discovered_host_labels_dir)
     store.save([HostLabel("name", "value", None)])
-    assert store.load() == [HostLabel("name", "value", None)]
+    assert store.load(debug=False) == [HostLabel("name", "value", None)]
 
 
 class _LabelConfig(ABCLabelConfig):
@@ -109,9 +109,26 @@ class TestLabelManager:
             explicit_host_labels={},
             discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
             builtin_host_labels_file=builtin_host_labels_file,
+            debug=False,
         )
         assert label_manager.labels_of_host(HostName("host-a")) == {"cmk/site": "site_a"}
         assert label_manager.labels_of_host(HostName("host-b")) == {"cmk/site": "site_a"}
+
+    def test_unreadable_discovered_labels_raise_the_original_error_in_debug_mode(
+        self, discovered_host_labels_dir: Path, builtin_host_labels_file: Path
+    ) -> None:
+        (discovered_host_labels_dir / "host.mk").mkdir(parents=True)
+        label_manager = LabelManager(
+            label_config=_LabelConfig(),
+            nodes_of={},
+            explicit_host_labels={},
+            discovered_host_labels_dir=discovered_host_labels_dir,
+            builtin_host_labels_file=builtin_host_labels_file,
+            debug=True,
+        )
+
+        with pytest.raises(IsADirectoryError):
+            label_manager.labels_of_host(HostName("host"))
 
     def test_host_label_merge_prio(self, builtin_host_labels_file: Path) -> None:
         BuiltinHostLabelsStore(builtin_host_labels_file).save({"prio-1": "builtin-value"})
@@ -132,6 +149,7 @@ class TestLabelManager:
             },
             discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
             builtin_host_labels_file=builtin_host_labels_file,
+            debug=False,
         )
 
         assert label_manager.labels_of_host(HostName("horst")) == {
@@ -161,6 +179,7 @@ class TestLabelManager:
             explicit_host_labels={},
             discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
             builtin_host_labels_file=builtin_host_labels_file,
+            debug=False,
         )
 
         assert label_manager.labels_of_service(test_host, "CPU load", {}) == {
@@ -187,6 +206,7 @@ class TestLabelManager:
             explicit_host_labels={},
             discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
             builtin_host_labels_file=builtin_host_labels_file,
+            debug=False,
         )
 
         service_description = "CPU load"

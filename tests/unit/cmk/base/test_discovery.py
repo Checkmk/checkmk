@@ -1765,7 +1765,7 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
     assert found == _EXPECTED_SERVICES
 
     store = DiscoveredHostLabelsStore(testhost, cmk.utils.paths.discovered_host_labels_dir)
-    assert store.load() == _EXPECTED_HOST_LABELS
+    assert store.load(debug=False) == _EXPECTED_HOST_LABELS
 
 
 class _FailingFetcher(FetcherFunction):
@@ -1911,7 +1911,9 @@ def test_commandline_discovery_ii_keeps_services_and_labels_when_a_source_failed
         ServiceID(_TEST_PLUGIN_NAME, "item_new"),
         ServiceID(_TEST_PLUGIN_NAME, "of_failed_source"),
     }
-    assert DiscoveredHostLabelsStore(host_name, labels_dir).load() == [label_of_failed_source]
+    assert DiscoveredHostLabelsStore(host_name, labels_dir).load(debug=False) == [
+        label_of_failed_source
+    ]
 
 
 # ---------------------------------------------------------------------------
@@ -1985,7 +1987,7 @@ def test_commandline_discovery_discovers_inventorized_host_labels(tmp_path: Path
         debug=True,
     )
 
-    assert DiscoveredHostLabelsStore(host_name, tmp_path / "host_labels").load() == [
+    assert DiscoveredHostLabelsStore(host_name, tmp_path / "host_labels").load(debug=False) == [
         HostLabel("cmk/inventory/product", "foo", None)
     ]
 
@@ -2637,7 +2639,7 @@ def test__perform_host_label_discovery_on_realhost(
         preexisting=(
             DiscoveredHostLabelsStore(
                 scenario.hostname, cmk.utils.paths.discovered_host_labels_dir
-            ).load()
+            ).load(debug=False)
             if discovery_test_case.load_labels
             else ()
         ),
@@ -2723,7 +2725,7 @@ def test__perform_host_label_discovery_on_cluster(
             {
                 node: DiscoveredHostLabelsStore(
                     node, cmk.utils.paths.discovered_host_labels_dir
-                ).load()
+                ).load(debug=False)
                 for node in nodes
             }
             if discovery_test_case.load_labels

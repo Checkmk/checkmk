@@ -171,7 +171,9 @@ def main(argv: Sequence[str] | None = None) -> None:
             all_plugins = load_all_plugins(raise_errors=False)
 
             # The builtin host labels are read from the file the LabelManager also uses.
-            builtin_host_labels = BuiltinHostLabelsStore(paths.builtin_host_labels_file).load()
+            builtin_host_labels = BuiltinHostLabelsStore(paths.builtin_host_labels_file).load(
+                debug=False
+            )
 
             loaded_config_result = load(validate_hosts=False, debug=False)
 

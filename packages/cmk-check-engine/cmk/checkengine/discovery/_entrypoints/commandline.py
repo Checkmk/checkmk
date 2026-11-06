@@ -161,7 +161,7 @@ def _commandline_discovery_on_host(
 
     host_labels = QualifiedDiscovery[HostLabel](
         preexisting=(
-            DiscoveredHostLabelsStore(real_host_name, discovered_host_labels_dir).load()
+            DiscoveredHostLabelsStore(real_host_name, discovered_host_labels_dir).load(debug=debug)
             if load_labels
             else ()
         ),

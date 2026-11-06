@@ -155,13 +155,17 @@ def get_check_preview(
                 for node_name in cluster_nodes
             },
             existing_host_labels={
-                node_name: DiscoveredHostLabelsStore(node_name, discovered_host_labels_dir).load()
+                node_name: DiscoveredHostLabelsStore(node_name, discovered_host_labels_dir).load(
+                    debug=debug
+                )
                 for node_name in cluster_nodes
             },
         )
     else:
         host_labels = QualifiedDiscovery[HostLabel](
-            preexisting=DiscoveredHostLabelsStore(host_name, discovered_host_labels_dir).load(),
+            preexisting=DiscoveredHostLabelsStore(host_name, discovered_host_labels_dir).load(
+                debug=debug
+            ),
             current=discover_host_labels(
                 host_name,
                 host_label_plugins,

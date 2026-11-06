@@ -188,7 +188,9 @@ def automation_discovery(
 
         if settings.update_host_labels and not is_cluster:
             host_labels = QualifiedDiscovery[HostLabel](
-                preexisting=DiscoveredHostLabelsStore(host_name, discovered_host_labels_dir).load(),
+                preexisting=DiscoveredHostLabelsStore(host_name, discovered_host_labels_dir).load(
+                    debug=debug
+                ),
                 current=discover_host_labels(
                     host_name,
                     host_label_plugins,
@@ -211,12 +213,16 @@ def automation_discovery(
             unchanged_labels = (
                 merge_cluster_labels(
                     [
-                        DiscoveredHostLabelsStore(node, discovered_host_labels_dir).load()
+                        DiscoveredHostLabelsStore(node, discovered_host_labels_dir).load(
+                            debug=debug
+                        )
                         for node in cluster_nodes
                     ]
                 )
                 if is_cluster
-                else DiscoveredHostLabelsStore(host_name, discovered_host_labels_dir).load()
+                else DiscoveredHostLabelsStore(host_name, discovered_host_labels_dir).load(
+                    debug=debug
+                )
             )
             host_labels = QualifiedDiscovery(
                 preexisting=unchanged_labels,

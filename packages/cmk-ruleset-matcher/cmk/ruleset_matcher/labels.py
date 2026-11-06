@@ -191,14 +191,14 @@ class DiscoveredHostLabelsStore:
         )
         self.file_path: Final = self._store.path
 
-    def load(self) -> Sequence[HostLabel]:
+    def load(self, *, debug: bool) -> Sequence[HostLabel]:
         return [
             HostLabel(
                 name,
                 raw["value"],
                 None if (raw_name := raw["plugin_name"]) is None else str(raw_name),
             )
-            for name, raw in self._store.read_obj(default={}, debug=False).items()
+            for name, raw in self._store.read_obj(default={}, debug=debug).items()
         ]
 
     def save(self, labels: Iterable[HostLabel]) -> None:
@@ -243,8 +243,8 @@ class BuiltinHostLabelsStore:
         self.file_path: Final = self._store.path
         self.locked: Final = self._store.locked
 
-    def load(self) -> Labels:
-        return self._store.read_obj(default={}, debug=False)
+    def load(self, *, debug: bool) -> Labels:
+        return self._store.read_obj(default={}, debug=debug)
 
     def save(self, labels: Labels) -> None:
         self.file_path.parent.mkdir(parents=True, exist_ok=True)
@@ -260,7 +260,7 @@ def update_builtin_host_labels(file_path: Path, labels: BuiltinLabels) -> None:
     """
     store = BuiltinHostLabelsStore(file_path)
     with store.locked():
-        store.save({**store.load(), **{str(k): v for k, v in labels.items()}})
+        store.save({**store.load(debug=False), **{str(k): v for k, v in labels.items()}})
 
 
 # Label group specific types
@@ -320,11 +320,13 @@ class LabelManager:
         *,
         discovered_host_labels_dir: Path,
         builtin_host_labels_file: Path,
+        debug: bool,
     ) -> None:
         self._nodes_of: Final = nodes_of
         self._label_config: Final = label_config
         self._discovered_host_labels_dir = discovered_host_labels_dir
         self._builtin_host_labels_file = builtin_host_labels_file
+        self._debug = debug
         self.explicit_host_labels: Mapping[HostName, Labels] = explicit_host_labels
 
         self.__labels_of_host: dict[HostName, Labels] = {}
@@ -370,17 +372,21 @@ class LabelManager:
         if self.__builtin_host_labels is None:
             self.__builtin_host_labels = BuiltinHostLabelsStore(
                 self._builtin_host_labels_file
-            ).load()
+            ).load(debug=self._debug)
         return self.__builtin_host_labels
 
     # I am not sure if this really should be public, currently the checkengine needs it
     def discovered_labels_of_host(self, hostname: HostName) -> Sequence[HostLabel]:
         return (
-            DiscoveredHostLabelsStore(hostname, self._discovered_host_labels_dir).load()
+            DiscoveredHostLabelsStore(hostname, self._discovered_host_labels_dir).load(
+                debug=self._debug
+            )
             if (nodes := self._nodes_of.get(hostname)) is None
             else merge_cluster_labels(
                 [
-                    DiscoveredHostLabelsStore(node, self._discovered_host_labels_dir).load()
+                    DiscoveredHostLabelsStore(node, self._discovered_host_labels_dir).load(
+                        debug=self._debug
+                    )
                     for node in nodes
                 ]
             )

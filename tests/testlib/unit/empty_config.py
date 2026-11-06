@@ -57,6 +57,7 @@ def make_trivial_label_manager() -> LabelManager:
         {},
         builtin_host_labels_file=cmk.utils.paths.builtin_host_labels_file,
         discovered_host_labels_dir=cmk.utils.paths.discovered_host_labels_dir,
+        debug=False,
     )
 
 

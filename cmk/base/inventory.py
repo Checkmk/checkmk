@@ -128,7 +128,9 @@ def execute_active_check_inventory(
         picked=labels_store.load(),
         accepted={
             label.name: label.value
-            for label in DiscoveredHostLabelsStore(host_name, discovered_host_labels_dir).load()
+            for label in DiscoveredHostLabelsStore(host_name, discovered_host_labels_dir).load(
+                debug=debug
+            )
             if is_inventorized(label)
         },
     )

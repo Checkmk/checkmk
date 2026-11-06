@@ -80,7 +80,7 @@ def test_discovered_host_labels_store_save(discovered_host_labels_dir: Path) -> 
 
     store.save(labels)
     assert store.file_path.exists()
-    assert store.load() == labels
+    assert store.load(debug=False) == labels
 
 
 def test_label() -> None:

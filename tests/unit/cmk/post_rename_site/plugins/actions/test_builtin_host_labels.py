@@ -28,7 +28,7 @@ def test_update_builtin_host_labels_site_refreshes_site_and_preserves_customer(
     )
 
     # cmk/site is refreshed to the new site id; cmk/customer (unaffected by a rename) is kept.
-    assert BuiltinHostLabelsStore(labels_file).load() == {
+    assert BuiltinHostLabelsStore(labels_file).load(debug=False) == {
         "cmk/site": "new_site",
         "cmk/customer": "customer1",
     }

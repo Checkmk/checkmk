@@ -1622,49 +1622,51 @@ class ACTestDeprecatedLegacyGUIExtensions(ACTest):
 
 
 class ACTestDeprecatedPNPTemplates(ACTest):
+    def __init__(self, templates_dir: Path = local_pnp_templates_dir) -> None:
+        self._templates_dir = templates_dir
+
     @override
     def category(self) -> str:
         return ACTestCategories.deprecations
 
     @override
     def title(self) -> str:
-        return _("Deprecated PNP templates")
+        return _("PNP templates")
 
     @override
     def help(self) -> str:
         return _(
-            "PNP templates in <tt>'%(templates_dir)s'</tt> are marked as 'deprecated'"
-            " and will be ignored in future Checkmk versions"
-            " (official deprecation timeline not decided yet)."
-        ) % {"templates_dir": str(local_pnp_templates_dir)}
+            "Checkmk no longer reads PNP templates from <tt>'%(templates_dir)s'</tt> and its"
+            " subfolders, so they have no effect. Graphs need the supported API"
+            " cmk.graphing.v1."
+        ) % {"templates_dir": self._templates_dir}
 
     def _get_files(self) -> Sequence[Path]:
-        try:
-            return list(local_pnp_templates_dir.iterdir())
-        except FileNotFoundError:
-            return []
+        return sorted(p for p in self._templates_dir.rglob("*") if p.is_file())
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
         if files := self._get_files():
-            for plugin_filepath in files:
+            for path in files:
                 yield ACSingleResult(
                     state=ACResultState.CRIT,
-                    text=(
-                        _(
-                            "PNP template uses an API which was removed in an earlier"
-                            " Checkmk version (file: %(file)s)."
-                        )
-                        % {"file": try_relative_site_path(site_id, plugin_filepath)}
+                    text=" ".join(
+                        [
+                            gui_plugin_effect(
+                                str(try_relative_site_path(site_id, path)), ACResultState.CRIT
+                            ),
+                            _("Checkmk no longer reads PNP templates."),
+                            _("Re-implement it with the supported API cmk.graphing.v1."),
+                        ]
                     ),
                     site_id=site_id,
-                    path=plugin_filepath,
+                    path=path,
                 )
             return
 
         yield ACSingleResult(
             state=ACResultState.OK,
-            text=_("No PNP templates using the deprecated API"),
+            text=_("No PNP templates found"),
             site_id=site_id,
         )
 

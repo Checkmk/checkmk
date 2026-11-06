@@ -393,13 +393,11 @@ _GUI_PLUGIN_TEST_IDS = frozenset(
         "ACTestBrokenGUIExtension",
         "ACTestDeprecatedGUIExtensions",
         "ACTestDeprecatedLegacyGUIExtensions",
+        "ACTestDeprecatedPNPTemplates",
     }
 )
 
-_PACKAGE_MANAGEMENT_TEST_IDS = _GUI_PLUGIN_TEST_IDS | {
-    "ACTestDeprecatedPNPTemplates",
-    "ACTestUnknownCheckParameterRuleSets",
-}
+_PACKAGE_MANAGEMENT_TEST_IDS = _GUI_PLUGIN_TEST_IDS | {"ACTestUnknownCheckParameterRuleSets"}
 
 
 def _find_ac_test_result_problems(

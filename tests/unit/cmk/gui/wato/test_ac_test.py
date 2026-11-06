@@ -23,6 +23,7 @@ from cmk.gui.wato._ac_tests import (
     ACTestBrokenGUIExtension,
     ACTestDeprecatedGUIExtensions,
     ACTestDeprecatedLegacyGUIExtensions,
+    ACTestDeprecatedPNPTemplates,
     ACTestGenericCheckHelperUsage,
     ACTestHaSIAPI,
     ACTestPasswordStoreAPI,
@@ -1003,3 +1004,42 @@ def test_every_broken_gui_extension_is_reported() -> None:
             " file 'var/log/web.log' shows the details."
         ),
     ]
+
+
+_PNP_TEMPLATES_DIR = "local/share/check_mk/pnp-templates"
+
+
+def test_pnp_template_has_no_effect(tmp_path: Path) -> None:
+    _write(tmp_path / _PNP_TEMPLATES_DIR, "check_mk-my_check.php")
+    [result] = ACTestDeprecatedPNPTemplates(tmp_path / _PNP_TEMPLATES_DIR).execute(
+        SiteId("NO_SITE"), Config()
+    )
+    assert (result.state, result.text, result.path) == (
+        ACResultState.CRIT,
+        (
+            f"'{tmp_path}/local/share/check_mk/pnp-templates/check_mk-my_check.php' has no"
+            " effect in Checkmk. Checkmk no longer reads PNP templates. Re-implement it with"
+            " the supported API cmk.graphing.v1."
+        ),
+        tmp_path / "local/share/check_mk/pnp-templates/check_mk-my_check.php",
+    )
+
+
+def test_pnp_templates_are_reported_in_order_including_subfolders(tmp_path: Path) -> None:
+    for rel_path in ("check_mk-b.php", "foo/check_mk-c.php", "check_mk-a.php"):
+        _write(tmp_path / _PNP_TEMPLATES_DIR, rel_path)
+    results = ACTestDeprecatedPNPTemplates(tmp_path / _PNP_TEMPLATES_DIR).execute(
+        SiteId("NO_SITE"), Config()
+    )
+    assert [result.path for result in results] == [
+        tmp_path / "local/share/check_mk/pnp-templates/check_mk-a.php",
+        tmp_path / "local/share/check_mk/pnp-templates/check_mk-b.php",
+        tmp_path / "local/share/check_mk/pnp-templates/foo/check_mk-c.php",
+    ]
+
+
+def test_without_pnp_templates(tmp_path: Path) -> None:
+    [result] = ACTestDeprecatedPNPTemplates(tmp_path / _PNP_TEMPLATES_DIR).execute(
+        SiteId("NO_SITE"), Config()
+    )
+    assert result.state is ACResultState.OK

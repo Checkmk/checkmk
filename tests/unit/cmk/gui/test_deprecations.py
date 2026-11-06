@@ -739,6 +739,22 @@ def test_gui_plugin_of_the_gui_plugins_test_is_reported_by_its_file() -> None:
     ]
 
 
+def test_pnp_template_is_reported_as_a_plugin_without_effect() -> None:
+    finding = _site_gui_plugin_finding(
+        "ACTestDeprecatedPNPTemplates",
+        SiteId("site_id"),
+        "local/share/check_mk/pnp-templates/check_mk-my_check.php",
+        ACResultState.CRIT,
+    )
+    assert _find_ac_test_result_problems({SiteId("site_id"): [finding]}, {}) == [
+        _ACTestResultProblemGUIPluginFile(
+            ident="local/share/check_mk/pnp-templates/check_mk-my_check.php",
+            notification_category=_NotificationCategory.manage_mkps,
+            _ac_test_results={SiteId("site_id"): [finding]},
+        )
+    ]
+
+
 def test_gui_plugin_on_several_sites_is_one_problem() -> None:
     finding_a, finding_b = (
         _site_gui_plugin_finding(

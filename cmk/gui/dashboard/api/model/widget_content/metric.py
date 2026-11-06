@@ -37,9 +37,7 @@ from cmk.gui.openapi.framework.model.common_fields import (
 from cmk.gui.type_defs import GraphLegendStyle
 
 from ..context_filters import (
-    OBJECT_HOST_FILTER_ADAPTER,
     OBJECT_SERVICE_FILTER_ADAPTER,
-    ObjectHostContextFilter,
     ObjectServiceContextFilter,
 )
 from ..contextual_link import (
@@ -485,8 +483,8 @@ class TopListContent(_BaseMetricContent):
         description="Display highest or lowest values."
     )
     limit_to: int = api_field(description="Limit the number of entries in the top list.")
-    # Host filters only: both cells name the row's host, but the host cell names no service.
-    contextual_link: ContextualLinkSpec[ObjectHostContextFilter] = api_field(
+    # Only the service cell carries the service filters.
+    contextual_link: ContextualLinkSpec[ObjectServiceContextFilter] = api_field(
         description="Where a click on a host or service name leads."
     )
 
@@ -505,7 +503,7 @@ class TopListContent(_BaseMetricContent):
             ranking_order=config["ranking_order"],
             limit_to=config["limit_to"],
             contextual_link=contextual_link_from_internal(
-                config.get("contextual_link"), OBJECT_HOST_FILTER_ADAPTER
+                config.get("contextual_link"), OBJECT_SERVICE_FILTER_ADAPTER
             ),
         )
 

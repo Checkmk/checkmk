@@ -313,10 +313,9 @@ def test_an_inventory_click_may_carry_the_host_name_in_a_custom_link() -> None:
     assert "host" in options.filters
 
 
-def test_a_top_list_offers_a_custom_link_with_the_filters_of_its_host() -> None:
+def test_a_top_list_offers_a_custom_link_with_the_filters_of_its_host_and_service() -> None:
     options = TopListContent.contextual_link_options()
 
     assert options is not None
     assert options.modes == ["default", "inherited", "custom"]
-    assert {"host", "host_labels", "wato_folder"} <= set(options.filters)
-    assert "service" not in options.filters
+    assert {"host", "host_labels", "wato_folder", "service", "svcstate"} <= set(options.filters)

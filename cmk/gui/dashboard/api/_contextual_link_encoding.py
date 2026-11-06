@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Container, Mapping, Sequence
 from dataclasses import dataclass
 
 from cmk.gui.openapi.framework.model import ApiOmitted
@@ -75,15 +75,18 @@ def link_properties_for(
     )
 
 
-def link_columns(links: Sequence[EffectiveLink]) -> list[ColumnName]:
-    """The columns a row needs for the filters the links configure. Not the site, which comes
-    with every row."""
+def link_columns(
+    links: Sequence[EffectiveLink], valued: Container[FilterName] = ()
+) -> list[ColumnName]:
+    """The columns a row needs for the filters the links configure, except those already
+    `valued`. Not the site, which comes with every row."""
     return sorted(
         {
             column
             for link in links
             for filter_config in link.filters or []
-            if (drilldown := filter_drilldown(filter_config["filter_id"])) is not None
+            if filter_config["filter_id"] not in valued
+            and (drilldown := filter_drilldown(filter_config["filter_id"])) is not None
             for column in drilldown.columns
         }
         - {"site"}

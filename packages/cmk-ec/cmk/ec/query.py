@@ -56,6 +56,8 @@ class StatusTable:
     name: ClassVar[str]
     prefix: ClassVar[str]
     columns: ClassVar[Columns]
+    # Whether _enumerate() returns only the rows which the filters of the query select
+    filters_itself: ClassVar[bool] = False
 
     @abc.abstractmethod
     def _enumerate(self, query: QueryGET) -> Iterable[Sequence[object]]:
@@ -82,9 +84,7 @@ class StatusTable:
         for row in self._enumerate(query):
             if query.limit is not None and num_rows >= query.limit:
                 break  # The maximum number of rows has been reached
-            # Apply filters
-            # TODO: History filtering is done in history load code. Check for improvements
-            if query.table.name == "history" or query.filter_row(row):
+            if self.filters_itself or query.filter_row(row):
                 yield self._build_result_row(row, requested_column_indexes)
                 num_rows += 1
 
@@ -124,10 +124,7 @@ class Query:
 
 
 def filter_operator_in(a: str, b: Iterable[str]) -> bool:
-    """Implemented as a named function, as it is used in a second filter
-    cmk.ec.main: StatusTableEvents._enumerate
-    not implemented as regex/IGNORECASE due to performance.
-    """
+    """Whether a is in b ignoring case. A regex with IGNORECASE would be slower."""
     return a.lower() in {e.lower() for e in b}
 
 
@@ -189,8 +186,6 @@ class QueryGET(Query):
         # NOTE: history's _get_mongodb and _get_files access filters and limits directly.
         self.filters: list[QueryFilter] = []
         self.limit: int | None = None
-        # NOTE: StatusTableEvents uses only_host for optimization.
-        self.only_host: set[Any] | None = None
         self._parse_header_lines(raw_query, logger)
 
     def _parse_header_lines(self, raw_query: list[str], logger: Logger) -> None:
@@ -211,11 +206,7 @@ class QueryGET(Query):
         elif header == "Columns":
             self.requested_columns = argument.split(" ")
         elif header == "Filter":
-            f = self._parse_filter(argument)
-            # Needed for later optimization (check_mkevents)
-            if f.column_name == "event_host" and f.operator_name == "in":
-                self.only_host = set(f.argument)
-            self.filters.append(f)
+            self.filters.append(self._parse_filter(argument))
         elif header == "Limit":
             self.limit = int(argument)
         else:

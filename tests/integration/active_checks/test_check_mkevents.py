@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""Runs check_mkevents against a fake status socket answering with the Event Console's query code"""
+"""Runs check_mkevents against a fake status socket with the events table of the Event Console"""
 
 import logging
 import os
@@ -13,40 +13,31 @@ import tempfile
 import threading
 from collections.abc import Iterator, Mapping, Sequence
 from pathlib import Path
-from typing import ClassVar, override
+from typing import override
 
 import pytest
 
 from cmk.ec.history import quote_tab
 from cmk.ec.main import Queries, StatusTableEvents
-from cmk.ec.query import Columns, MKClientError, Query, QueryGET, StatusTable
+from cmk.ec.query import MKClientError, Query, QueryGET
 
 Event = Mapping[str, object]
 
 
-class _EventsTable(StatusTable):
-    name = "events"
-    prefix = "event"
-    columns: ClassVar[Columns] = StatusTableEvents.columns
-
-    def __init__(self, events: Sequence[Event]) -> None:
-        super().__init__(logging.getLogger(__name__))
-        self._events = events
-
-    @override
-    def _enumerate(self, query: QueryGET) -> Iterator[Sequence[object]]:
-        for event in self._events:
-            yield [
-                event.get(name.removeprefix("event_"), default) for name, default in self.columns
-            ]
+def _events_table(events: Sequence[Event]) -> StatusTableEvents:
+    return StatusTableEvents(logging.getLogger(__name__), lambda: events)
 
 
 class _StatusServer(socketserver.UnixStreamServer):
     def __init__(self, socket_path: Path, events: Sequence[Event]) -> None:
         super().__init__(str(socket_path), _StatusRequestHandler)
-        self.table = _EventsTable(events)
+        self.table = _events_table(events)
 
 
+# Only the events table is the real one: The loop over the queries, the plain output and closing
+# the connection without an answer on a client error are copies of StatusServer.handle_client()
+# and _answer_query(), so a change there doesn't show up in these tests. A real StatusServer would
+# need the settings, the config, the history and the event server the unit tests of cmk-ec build.
 class _StatusRequestHandler(socketserver.BaseRequestHandler):
     @override
     def handle(self) -> None:

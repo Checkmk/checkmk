@@ -97,7 +97,6 @@ from .log_level import VERBOSE, verbosity_to_log_level
 from .perfcounters import Perfcounters
 from .query import (
     Columns,
-    filter_operator_in,
     MKClientError,
     Query,
     QueryCOMMAND,
@@ -2372,6 +2371,7 @@ class Queries:
 class StatusTableEvents(StatusTable):
     name = "events"
     prefix = "event"
+    filters_itself = True
     columns: ClassVar[Columns] = [
         ("event_id", 1),
         ("event_count", 1),
@@ -2400,18 +2400,28 @@ class StatusTableEvents(StatusTable):
         ("event_match_groups_syslog_application", ""),  # introduced in 1.5.0i2
     ]
 
-    def __init__(self, logger: Logger, event_status: EventStatus) -> None:
+    def __init__(
+        self, logger: Logger, get_events: Callable[[], Iterable[Mapping[str, object]]]
+    ) -> None:
         super().__init__(logger)
-        self._event_status = event_status
+        self._get_events = get_events
         # NOTE: We depend on the dict insertion order below, but this is guaranteed for Python >= 3.7.
         self._columns_dict = dict(self.columns)
 
     @override
     def _enumerate(self, query: QueryGET) -> Iterable[Sequence[object]]:
-        for event in self._event_status.get_events():
-            # Optimize filters that are set by the check_mkevents active check. Since users
-            # may have a lot of those checks running, it is a good idea to optimize this.
-            if not query.only_host or filter_operator_in(event["host"], query.only_host):
+        # Filtering an event takes much less time than building its row, e.g. for the
+        # filters of check_mkevents, which select only a few of many events. The row has
+        # the values of the event, so the filters select the same.
+        filters = [
+            (f.predicate, f.column_name[6:], self._columns_dict[f.column_name])
+            for f in query.filters
+        ]
+        for event in self._get_events():
+            for predicate, key, default in filters:  # faster than all() with a generator
+                if not predicate(event.get(key, default)):
+                    break
+            else:
                 yield [
                     event.get(column_name[6:], default)
                     for column_name, default in self._columns_dict.items()
@@ -2421,6 +2431,7 @@ class StatusTableEvents(StatusTable):
 class StatusTableHistory(StatusTable):
     name = "history"
     prefix = "history"
+    filters_itself = True  # The history filters the entries while reading them.
     columns: ClassVar[Columns] = list(
         itertools.chain(
             [
@@ -2518,7 +2529,7 @@ class StatusServer(ECServerThread):
         self._tcp_socket: socket.socket | None = None
         self._reopen_sockets = False
 
-        self._table_events = StatusTableEvents(logger, event_status)
+        self._table_events = StatusTableEvents(logger, event_status.get_events)
         self._table_history = StatusTableHistory(logger, history)
         self._table_rules = StatusTableRules(logger, event_status)
         self._table_status = StatusTableStatus(logger, event_server)

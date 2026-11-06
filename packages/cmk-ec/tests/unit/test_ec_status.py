@@ -179,6 +179,17 @@ def test_negated_filter_selects_events_without_a_value(
     assert texts == {"unknown", "other"}
 
 
+def test_filter_compares_the_default_of_a_column_missing_in_an_event(
+    event_status: EventStatus, status_server: StatusServer
+) -> None:
+    event_status.new_event(new_event({"text": "without owner"}))
+    event_status.new_event(new_event({"text": "with owner", "owner": "admin"}))
+
+    texts = query_texts_of_events(status_server, "Filter: event_owner =")
+
+    assert texts == {"without owner"}
+
+
 @pytest.mark.parametrize(
     "operator_name",
     [

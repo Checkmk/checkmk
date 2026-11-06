@@ -12,8 +12,8 @@ from collections.abc import Iterator, Mapping
 import pytest
 from pytest import CaptureFixture
 
+from cmk.ccc.jsontype import JsonSerializable
 from cmk.utils import log
-from cmk.utils.jsontype import JsonSerializable
 from cmk.utils.security_event import log_security_event, SecurityEvent
 
 

@@ -109,7 +109,7 @@ py_library(
         "//packages/cmk-shared-typing:cmk_shared_typing_py",
         "//packages/cmk-web/cmk/web/utils",
         requirement("flask"),
-        "//cmk/utils:security_event",
+        "//packages/cmk-ccc:jsontype",
     ],
 )
 

@@ -1073,7 +1073,6 @@ allows = [
   "cmk.gui.community_registration",
   "cmk.gui.nonfree",
   "cmk.licensing.basics.options",
-  "cmk.utils.jsontype",
   "cmk.utils.paths",
 ]
 
@@ -1207,7 +1206,6 @@ allows = [
   "cmk.utils.dateutils",
   "cmk.utils.global_ident_type",
   "cmk.utils.http_proxy_config",
-  "cmk.utils.jsontype",
   "cmk.utils.keypair_store",
   "cmk.utils.local_secrets",
   "cmk.utils.log",
@@ -1386,7 +1384,6 @@ allows = [
   "cmk.utils.html",
   "cmk.utils.http_proxy_config",
   "cmk.utils.ip_lookup",
-  "cmk.utils.jsontype",
   "cmk.utils.keypair_store",
   "cmk.ruleset_matcher",
   "cmk.utils.local_secrets",
@@ -2014,9 +2011,6 @@ allows = [
   "cmk.utils.paths",
 ]
 
-[components."cmk.utils.jsontype"]
-allows = []
-
 [components."cmk.utils.keypair_store"]
 allows = ["@crypto", "cmk.ccc.store", "cmk.ccc.user"]
 
@@ -2058,7 +2052,7 @@ allows = [
 allows = ["@crypto", "cmk.ccc.store", "cmk.ccc.user", "cmk.utils.paths"]
 
 [components."cmk.utils.log"]
-allows = ["cmk.ccc.log", "cmk.ccc.tty", "cmk.utils.jsontype", "cmk.utils.paths"]
+allows = ["cmk.ccc.log", "cmk.ccc.tty", "cmk.utils.paths"]
 
 [components."cmk.utils.macros"]
 allows = []
@@ -2151,7 +2145,7 @@ allows = ["cmk.ccc.i18n"]
 allows = []
 
 [components."cmk.utils.security_event"]
-allows = ["cmk.utils.jsontype", "cmk.utils.paths"]
+allows = ["cmk.ccc.jsontype", "cmk.utils.paths"]
 
 [components."cmk.utils.servicename"]
 allows = []

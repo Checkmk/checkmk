@@ -10,7 +10,7 @@
 import json
 from typing import override
 
-from cmk.utils.jsontype import JsonSerializable
+from cmk.ccc.jsontype import JsonSerializable
 
 
 class CustomObjectJSONEncoder(json.JSONEncoder):

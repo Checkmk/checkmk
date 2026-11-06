@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import assert_never, Literal
 
-from cmk.utils.jsontype import JsonSerializable
+from cmk.ccc.jsontype import JsonSerializable
 from cmk.utils.paths import log_dir
 
 

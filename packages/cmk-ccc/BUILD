@@ -34,6 +34,13 @@ py_library(
 )
 
 py_library(
+    name = "jsontype",
+    srcs = ["cmk/ccc/jsontype.py"],
+    imports = ["."],
+    visibility = ["//visibility:public"],
+)
+
+py_library(
     name = "config-path",
     srcs = ["cmk/ccc/config_path.py"],
     imports = ["."],
@@ -225,6 +232,7 @@ _ALL = [
     "hostaddress",
     "i18n",
     "inotify",
+    "jsontype",
     "log",
     "observer",
     "plugin-registry",

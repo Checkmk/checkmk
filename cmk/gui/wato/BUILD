@@ -137,6 +137,7 @@ py_library(
         "//packages/cmk-backup:gui",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
+        "//packages/cmk-ccc:jsontype",
         "//packages/cmk-ccc:plugin-registry",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:store",

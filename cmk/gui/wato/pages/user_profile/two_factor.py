@@ -34,6 +34,7 @@ from fido2.webauthn import (
 )
 
 from cmk.ccc.exceptions import MKGeneralException
+from cmk.ccc.jsontype import JsonSerializable
 from cmk.ccc.site import omd_site
 from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
@@ -104,7 +105,6 @@ from cmk.gui.wato.pages._user_security_message import (
 )
 from cmk.gui.watolib.mode import redirect
 from cmk.livestatus_client import SiteConfigurations
-from cmk.utils.jsontype import JsonSerializable
 from cmk.utils.security_event import log_security_event
 from cmk.web.utils.confirm_links import make_confirm_delete_link
 from cmk.web.utils.doc_references import DocReference

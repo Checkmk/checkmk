@@ -29,10 +29,7 @@ py_library(
 
 py_library(
     name = "security_event",
-    srcs = [
-        "jsontype.py",
-        "security_event.py",
-    ],
+    srcs = ["security_event.py"],
     visibility = [
         "//bin:__subpackages__",
         "//cmk:__subpackages__",
@@ -42,7 +39,10 @@ py_library(
         "//packages:__subpackages__",
         "//tests:__subpackages__",
     ],
-    deps = [":paths"],
+    deps = [
+        ":paths",
+        "//packages/cmk-ccc:jsontype",
+    ],
 )
 
 py_library(
@@ -173,7 +173,6 @@ py_library(
             "**/nonfree/**",
             "caching_redis.py",
             "encryption.py",
-            "jsontype.py",
             "man_pages.py",
             "msi_engine.py",
             "msi_patch.py",

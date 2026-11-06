@@ -26,6 +26,7 @@ py_cmk_test(
         "//cmk/utils:redis",
         "//cmk/utils:werks",
         "//packages/cmk-ccc:exceptions",
+        "//packages/cmk-ccc:jsontype",
         "//packages/cmk-crypto",
         "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-relay-protocols",

@@ -5,8 +5,6 @@
 
 #include "livestatus/TableEventConsole.h"
 
-#include <algorithm>
-#include <array>
 #include <chrono>
 #include <cstdlib>
 #include <ctime>
@@ -78,30 +76,23 @@ bool isUnderstoodByEC(ColumnType type, RelationalOperator op) {
     return false;  // unreachable
 }
 
-// See https://docs.python.org/3/library/stdtypes.html#str.splitlines
-constexpr auto python_line_boundaries = std::to_array<std::string_view>({
-    "\n",
-    "\r",
-    "\v",
-    "\f",
-    "\x1c",
-    "\x1d",
-    "\x1e",
-    "\u0085",
-    "\u2028",
-    "\u2029",
-});
-
-// The EC splits a request into lines via Python's str.splitlines(), which
-// splits at more than just \n. So a value containing such a line boundary would
-// inject header lines into the request, e.g. a Columns: header without the
-// columns needed for authorization. Note that we only accept UTF-8 requests, so
-// we can simply search for the UTF-8 encoded line boundaries.
+// The EC splits a request into lines at \n only, and like we do, it drops
+// whitespace at the end of each line and in front of the value of a filter, see
+// request_lines() and _FILTER_LINE in cmk/ec/query.py. So a value containing \n
+// would inject header lines into the request, e.g. a Columns: header without
+// the columns needed for authorization, and a value starting or ending with
+// whitespace would lose it, so the EC would filter by another value. Our own
+// requests can't contain such values, because we split them at \n and strip
+// whitespace at the end of each line and in front of a value, but we don't
+// want to rely on that here.
 bool isSafeForEC(std::string_view value) {
-    return std::ranges::none_of(
-        python_line_boundaries, [value](std::string_view boundary) {
-            return value.find(boundary) != std::string_view::npos;
-        });
+    const auto is_whitespace = [](char c) {
+        return std::string_view{mk::whitespace}.find(c) !=
+               std::string_view::npos;
+    };
+    return value.find('\n') == std::string_view::npos &&
+           (value.empty() ||
+            (!is_whitespace(value.front()) && !is_whitespace(value.back())));
 }
 
 class ECTableConnection : public EventConsoleConnection {

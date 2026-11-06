@@ -240,22 +240,62 @@ TEST_F(TableEventConsoleTest, ForwardsNonASCIIValues) {
     EXPECT_EQ(filtersSentToEC(filters), filters);
 }
 
-// The EC would split such a value into several lines, so it could inject header
-// lines into the request.
-class ValueWithAPythonLineBoundary
+// The EC splits a request at \n only, so the other line boundaries of Python's
+// str.splitlines() are just part of the value.
+class ValueWithAnotherLineBoundary
     : public TableEventConsoleTest,
       public ::testing::WithParamInterface<std::string> {};
 
-TEST_P(ValueWithAPythonLineBoundary, IsDropped) {
-    EXPECT_EQ(filtersSentToEC({"Filter: event_text != x" + GetParam() +
-                               "Columns: event_text"}),
-              std::vector<std::string>{});
+TEST_P(ValueWithAnotherLineBoundary, IsForwarded) {
+    const std::vector<std::string> filters{"Filter: event_text != x" +
+                                           GetParam() + "Columns: event_text"};
+
+    EXPECT_EQ(filtersSentToEC(filters), filters);
 }
 
-INSTANTIATE_TEST_SUITE_P(TableEventConsoleTest, ValueWithAPythonLineBoundary,
+INSTANTIATE_TEST_SUITE_P(TableEventConsoleTest, ValueWithAnotherLineBoundary,
                          ::testing::Values("\r", "\v", "\f", "\x1c", "\x1d",
                                            "\x1e", "\u0085", "\u2028",
                                            "\u2029"));
+
+// The rest of the value would be a header line of its own in the EC request.
+TEST_F(TableEventConsoleTest, DropsValueWithNewline) {
+    EXPECT_EQ(filtersSentToEC({"Filter: event_text != x\nColumns: event_text"}),
+              std::vector<std::string>{});
+}
+
+// The EC drops whitespace at the end of a line, so it would filter by another
+// value.
+class ValueEndingWithWhitespace
+    : public TableEventConsoleTest,
+      public ::testing::WithParamInterface<std::string> {};
+
+TEST_P(ValueEndingWithWhitespace, IsDropped) {
+    EXPECT_EQ(filtersSentToEC({"Filter: event_text != x" + GetParam()}),
+              std::vector<std::string>{});
+}
+
+INSTANTIATE_TEST_SUITE_P(TableEventConsoleTest, ValueEndingWithWhitespace,
+                         ::testing::Values(" ", "\t", "\v", "\f", "\r"));
+
+// Like we do, the EC drops only ASCII whitespace at the start of a value, so a
+// value starting with whitespace that only Python knows can go to the EC, too.
+class ValueStartingWithPythonWhitespace
+    : public TableEventConsoleTest,
+      public ::testing::WithParamInterface<std::string> {};
+
+TEST_P(ValueStartingWithPythonWhitespace, IsForwarded) {
+    const std::vector<std::string> filters{
+        "Filter: event_text != " + GetParam() + "x"};
+
+    EXPECT_EQ(filtersSentToEC(filters), filters);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    TableEventConsoleTest, ValueStartingWithPythonWhitespace,
+    ::testing::Values("\x1c", "\x1d", "\x1e", "\x1f", "\u0085", "\u00a0",
+                      "\u1680", "\u2000", "\u200a", "\u2028", "\u2029",
+                      "\u202f", "\u205f", "\u3000"));
 
 TEST_F(TableEventConsoleTest, ForwardsEqualityAndOrderingFiltersOnEventId) {
     const std::vector<std::string> filters{

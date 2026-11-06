@@ -21,6 +21,7 @@ py_cmk_test(
         "//cmk/gui/watolib",
         "//cmk/plugins",
         "//cmk/plugins/diagnostics/cli",
+        "//cmk/plugins/diagnostics/cli/handlers",
         "//packages/cmk-check-engine:specs",
         "//packages/cmk-plugin-apis:cli",
         "//packages/cmk-plugins:azure_deprecated",

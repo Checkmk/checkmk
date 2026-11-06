@@ -41,6 +41,7 @@ py_library(
         "//cmk/plugins/checkmk/post_rename_site",
         "//cmk/plugins/diagnostics/automations",
         "//cmk/plugins/diagnostics/cli",
+        "//cmk/plugins/diagnostics/cli/handlers",
         "//cmk/plugins/notifications/automations",
         "//cmk/plugins/notifications/cli",
         "//cmk/plugins/notifications/cli/handlers",

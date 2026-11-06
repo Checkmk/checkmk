@@ -42,6 +42,7 @@ from cmk.ruleset_matcher.tuple_rulesets import hosttags_match_taglist
 from cmk.server_side_calls_backend import (
     load_active_checks,
 )
+from cmk.utils import man_pages
 
 from .agent_based import load_checks
 
@@ -221,8 +222,6 @@ def _get_ds_type(
 def _mode_list_checks(
     _omd_root: Path, global_options: CLIGlobalOptions, _request: None, _args: CLIArgs
 ) -> CLIExitCode:
-    from cmk.utils import man_pages
-
     plugins = load_checks(debug=global_options.debug)
     section_plugins: Iterable[AgentSectionPlugin | SNMPSectionPlugin] = [
         *plugins.agent_sections.values(),

@@ -11,8 +11,11 @@ from pathlib import Path
 import cmk.ccc.version as cmk_version
 import cmk.utils.paths
 from cmk import trace
-from cmk.automations.engine import AutomationError
+from cmk.automations.engine import AutomationError, Automations, discover_automations
+from cmk.automations.internal import AutomationID
+from cmk.base import config
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException, MKTimeout
+from cmk.ccc.store import lock_checkmk_configuration
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
@@ -39,11 +42,6 @@ def _automation_error_exit_code(error: AutomationError) -> CLIExitCode:
 def _mode_automation(
     omd_root: Path, global_options: CLIGlobalOptions, requested_version: str | None, args: CLIArgs
 ) -> CLIExitCode:
-    from cmk.automations.engine import Automations, discover_automations
-    from cmk.automations.internal import AutomationID
-    from cmk.base import config
-    from cmk.ccc.store import lock_checkmk_configuration
-
     if not args:
         raise MKBailOut("You need to provide arguments")
 

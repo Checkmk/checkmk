@@ -15,6 +15,7 @@ from cmk.base import config
 from cmk.base.app import make_app
 from cmk.base.configlib.servicename import make_final_service_name_config
 from cmk.base.core import interface as core_interface
+from cmk.base.core.nagios import create_config, NagiosCoreConfig
 from cmk.ccc import tty
 from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.ccc.hostaddress import HostAddress
@@ -47,9 +48,6 @@ def _mode_dump_nagios_config(
 ) -> CLIExitCode:
     app = make_app(omd_root)
     args = host_addresses(raw_host_names)
-
-    from cmk.base.core.nagios import create_config
-    from cmk.base.core.nagios._create_config import NagiosCoreConfig
 
     plugins = load_checks(debug=global_options.debug)
     loading_result = config.load(validate_hosts=True, debug=global_options.debug)

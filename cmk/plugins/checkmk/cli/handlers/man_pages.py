@@ -19,14 +19,13 @@ from cmk.plugins.checkmk.cli.man_pages import (
     cli_command_man,
     Renderer,
 )
+from cmk.utils import man_pages
 from cmk.utils.paths import omd_root
 
 
 def _mode_man(
     _omd_root: Path, global_options: CLIGlobalOptions, requested: Renderer | None, args: CLIArgs
 ) -> CLIExitCode:
-    from cmk.utils import man_pages
-
     man_page_path_map = man_pages.make_man_page_path_map(
         discover_families(raise_errors=global_options.debug),
         PluginGroup.CHECKMAN.value,
@@ -70,8 +69,6 @@ def _run_man(context: CLIContext, requested: Renderer | None, args: CLIArgs) -> 
 def _mode_browse_man(
     _omd_root: Path, global_options: CLIGlobalOptions, _request: None, _args: CLIArgs
 ) -> CLIExitCode:
-    from cmk.utils import man_pages
-
     man_pages.print_man_page_browser(
         man_pages.load_man_page_catalog(
             discover_families(raise_errors=global_options.debug),

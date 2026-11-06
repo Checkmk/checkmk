@@ -3858,6 +3858,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         assert!(!dir.path().join(PACKAGE_DIR).exists());
     }
 
+    /// TC-AU-006: a site that does not answer at all is an error like any other.
     #[test]
     fn test_fetch_update_names_the_site_that_did_not_answer() {
         let registry = registry_with_one_connection();
@@ -3893,8 +3894,8 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         assert_eq!(outcome, FetchOutcome::SourceUnavailable);
     }
 
-    /// The site may stop serving agent updates between the status request and
-    /// the download.
+    /// TC-AU-079: the site may stop serving agent updates between the status
+    /// request and the download.
     #[test]
     fn test_fetch_update_reports_a_site_that_stopped_serving_the_download() {
         let dir = tempfile::TempDir::new().unwrap();

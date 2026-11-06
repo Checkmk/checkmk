@@ -77,13 +77,15 @@ def create_special_agent_rule(
     )
 
 
-def run_mockup_server(*, dataset_path: Path, port: int) -> subprocess.Popen:
-    return subprocess.Popen(
-        ["python3", _MOCKUP_SERVER_FILE, "--port", f"{port}", "-D", dataset_path],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.PIPE,
-        text=True,
-    )
+def run_mockup_server(*, dataset_path: Path, port: int, log_file: Path) -> subprocess.Popen:
+    # The server logs requests to stderr and its own messages to stdout. A pipe would block the
+    # server once full, since nobody reads it while the server runs.
+    with log_file.open("w") as log:
+        return subprocess.Popen(
+            ["python3", _MOCKUP_SERVER_FILE, "--port", f"{port}", "-D", dataset_path],
+            stdout=log,
+            stderr=subprocess.STDOUT,
+        )
 
 
 class Service(BaseModel, frozen=True):

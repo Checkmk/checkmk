@@ -94,15 +94,15 @@ def _make_dump_dir(tmp_path_factory: pytest.TempPathFactory) -> Iterator[Path]:
 
 
 def _make_mockup_server(tmp_dump_dir: Path, dataset: str, port: int) -> Iterator[int]:
+    log_file = tmp_dump_dir / f"{dataset}.log"
     with _unpack_dump(dataset, tmp_dump_dir) as dump_path:
-        with run_mockup_server(dataset_path=dump_path, port=port) as server:
+        with run_mockup_server(dataset_path=dump_path, port=port, log_file=log_file) as server:
             try:
                 yield port
             finally:
                 server.terminate()
                 if server.wait():
-                    assert server.stderr is not None
-                    logger.error(server.stderr.read())
+                    logger.error(log_file.read_text())
 
 
 @contextmanager

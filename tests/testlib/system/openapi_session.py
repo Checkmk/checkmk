@@ -244,8 +244,8 @@ class CMKOpenApiSession(requests.Session):
     @override
     def request(  # type: ignore[override]
         self,
-        method: str | bytes,
-        url: str | bytes,
+        method: str,
+        url: str,
         *args: Any,
         api_version: APIVersion | None = None,
         timeout: float | tuple[float, float] | tuple[float, None] | None = 300.0,
@@ -255,8 +255,6 @@ class CMKOpenApiSession(requests.Session):
         Suggested method to use a base url with a requests.Session
         see https://github.com/psf/requests/issues/2554#issuecomment-109341010
         """
-        assert isinstance(method, str)  # HACK
-        assert isinstance(url, str)  # HACK
         kwargs["timeout"] = timeout
 
         if not url.startswith("http://"):
@@ -285,7 +283,6 @@ class CMKOpenApiSession(requests.Session):
                 )
 
         if response.status_code == HTTPStatus.UNAUTHORIZED:
-            assert isinstance(self.headers["Authorization"], str)  # HACK
             raise AuthorizationFailed(
                 f"Authorization failed on site {self.site}",
                 response.headers,

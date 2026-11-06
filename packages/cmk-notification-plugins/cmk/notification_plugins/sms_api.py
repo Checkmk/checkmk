@@ -5,7 +5,7 @@
 
 
 import sys
-from collections.abc import Callable, MutableMapping
+from collections.abc import Callable
 from dataclasses import dataclass
 from http import HTTPStatus
 from typing import NoReturn, Self
@@ -47,7 +47,7 @@ class RequestParameter:
     recipient: str
     url: str
     verify: bool
-    proxies: MutableMapping[str, str] | None
+    proxies: dict[str, str] | None
     user: str
     pwd: str
     timeout: float

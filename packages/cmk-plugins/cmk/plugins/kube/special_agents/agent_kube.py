@@ -845,8 +845,10 @@ def _collect_api_data(
         ) from e
     except requests.RequestException as e:
         if e.request is not None:
+            url = e.request.url
             raise ClusterConnectionError(
-                f"Failed to establish a connection at URL {e.request.url} "
+                "Failed to establish a connection at URL "
+                f"{url.decode() if isinstance(url, bytes) else url} "
             ) from e
         raise ClusterConnectionError("Failed to establish a connection.") from e
 

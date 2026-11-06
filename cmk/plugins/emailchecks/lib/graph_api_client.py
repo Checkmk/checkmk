@@ -72,7 +72,7 @@ class GraphApiClient:
         # Needed to initialize the storage directory
         self._storage.write("created", "true")
 
-        self._headers: dict[str, str | bytes] = {}
+        self._headers: dict[str, str] = {}
         self._session: requests.Session | None = None
         self._session_closed = False
 

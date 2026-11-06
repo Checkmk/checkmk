@@ -148,7 +148,7 @@ def fetch_ha(
     try:
         return session_manager.get(f"{base_url_v2}/ha")
     except requests.exceptions.HTTPError as e:
-        if e.response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR:
+        if e.response is not None and e.response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR:
             LOGGING.warning("HA endpoint not available, assuming non-HA setup")
             return {}
         raise e

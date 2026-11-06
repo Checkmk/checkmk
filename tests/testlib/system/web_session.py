@@ -57,7 +57,7 @@ class CMKWebSession:
 
     def request(  # type: ignore[no-untyped-def]
         self,
-        method: str | bytes,
+        method: str,
         path: str,
         expected_code: int = HTTPStatus.OK,
         *,

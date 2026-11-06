@@ -18,7 +18,7 @@ It lives shares the same check plugins as the legacy agent_kube special agent.
 import argparse
 import logging
 import sys
-from collections.abc import MutableMapping, Sequence
+from collections.abc import Sequence
 
 import requests
 import urllib3
@@ -37,7 +37,7 @@ USER_AGENT = f"checkmk-special-{AGENT}-{__version__}"
 LOGGER = logging.getLogger("agent_kube_v2")
 
 
-def _to_requests_proxies(raw: str) -> MutableMapping[str, str]:
+def _to_requests_proxies(raw: str) -> dict[str, str]:
     match raw:
         case "NO_PROXY":
             return {"http": "", "https": ""}

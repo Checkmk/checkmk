@@ -5549,6 +5549,7 @@ requests==2.34.2 \
     #   sphinxcontrib-spelling
     #   tiktoken
     #   twine
+    #   types-docker
 requests-ntlm==1.3.0 \
     --hash=sha256:4c7534a7d0e482bb0928531d621be4b2c74ace437e88c5a357ceb7452d25a510 \
     --hash=sha256:b29cc2462623dffdf9b88c43e180ccb735b4007228a542220e882c58ae56c668
@@ -6303,9 +6304,9 @@ typeguard==4.6.0 \
     --hash=sha256:79878165bb86f2cf5d41d159a0ff1792a796cf496882d2fe1b1c6c7049b9cdd7 \
     --hash=sha256:e7414f09111317de3e335de92cd397c5c0ca00b1cc1676de12e1d444a79b3f21
     # via inflect
-types-docker==7.2.0.20261006 \
-    --hash=sha256:866041971a378a226edd095a4a55d3924e51d9d15faea5beeeef256f86f2320d \
-    --hash=sha256:bd2fc6c302bce7c0caeb06b6e60f7738085fc15f7f5be540b917f6dd33b36619
+types-docker==7.2.0.20261102 \
+    --hash=sha256:a5fda816dfc909be4a65892c87983ca007e461cb6fb46aba6481547304de0ebe \
+    --hash=sha256:af141295dfc2760f2452fed89988ecfd86e2a66411206eb7c190aadc41d10e12
     # via -r tests/dev-requirements.in
 types-docutils==0.23.0.20261030 \
     --hash=sha256:1e19e751868a108d2a96b72013fe3aac29d7f0b8737dd0722cbc8c92ce398352 \
@@ -6388,10 +6389,6 @@ types-reportlab==5.0.0.20261008 \
     --hash=sha256:736b2edf636a624bd0989e058cbdee9575604cc80371549488fff40e27bb3b32 \
     --hash=sha256:d34b4d9147eed7facb04594fbae59ba3d49294f8b4267ff05bcefcce0c07f499
     # via -r tests/dev-requirements.in
-types-requests==2.33.0.20261030 \
-    --hash=sha256:06cfc2e92399bf46eda78a65cd0e2203d29ebbeede78b4ab0a5922f749ce1492 \
-    --hash=sha256:42d75eb02ed0f8220904c8fc08d3129742e7fce42fd5cf706395c8bb4c0ad990
-    # via types-docker
 types-s3transfer==0.19.3 \
     --hash=sha256:6843143f3b79e3cb73e58b6f45738e28e88d9f681fd32cc5ef7fa16f0c193356 \
     --hash=sha256:99422ef028a5f854cd92d1e72cf4208bd0569f68a87936ca02fb9f91a68cdcd3
@@ -6621,7 +6618,6 @@ urllib3==2.8.0 \
     #   responses
     #   twine
     #   types-docker
-    #   types-requests
 urllib3[zstd]==2.8.0 \
     --hash=sha256:0cf3cae568d36aa9576b28dfb35f11328f1cb974ca7647d9475ebb86c75ac6e3 \
     --hash=sha256:63bf2ead4c879426ebf22ef2a781eeb4aa3b4ae798a0435506f8687fd5bb9b63

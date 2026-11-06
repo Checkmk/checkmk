@@ -20,7 +20,7 @@ import logging
 import re
 import sys
 from collections import defaultdict, UserDict
-from collections.abc import Collection, Iterator, Mapping, MutableMapping, Sequence
+from collections.abc import Collection, Iterator, Mapping, Sequence
 from typing import Any, Final, override
 from urllib.parse import urljoin
 
@@ -89,7 +89,7 @@ class HostnameDict(UserDict):
         super().__setitem__(key, value)
 
 
-def deserialize_http_proxy_config(serialized_config: str | None) -> MutableMapping[str, str] | None:
+def deserialize_http_proxy_config(serialized_config: str | None) -> dict[str, str] | None:
     match serialized_config:
         case None | "FROM_ENVIRONMENT":
             return None

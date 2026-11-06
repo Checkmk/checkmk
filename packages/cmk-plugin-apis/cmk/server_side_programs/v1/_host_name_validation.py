@@ -5,11 +5,11 @@
 
 # mypy: disable-error-code="explicit-any"
 
-from typing import Any, Never, override
+from typing import Any, override
 
 from requests.adapters import DEFAULT_POOLBLOCK, HTTPAdapter
 from requests.models import PreparedRequest, Response
-from urllib3.connection import HTTPSConnection
+from urllib3.connectionpool import HTTPConnectionPool, HTTPSConnectionPool
 from urllib3.poolmanager import PoolManager
 
 
@@ -41,14 +41,18 @@ class HostnameValidationAdapter(HTTPAdapter):
         super().__init__()
 
     @override
-    def cert_verify(self, conn: HTTPSConnection, url: Never, verify: Never, cert: Never) -> None:
-        """Verify a SSL certificate. This method should not be called from user code.
-
-        Since the superclass method is untyped anyway, we type the arguments as Never
-        to indicate that this function should not be called in normal usage.
-        """
-        conn.assert_hostname = self._reference_hostname
-        super().cert_verify(conn, url, verify, cert)  # type: ignore[no-untyped-call]
+    def cert_verify(
+        self,
+        conn: HTTPConnectionPool,
+        url: str,
+        verify: bool | str,
+        cert: str | tuple[str, str] | None,
+    ) -> None:
+        """Verify a SSL certificate. This method should not be called from user code."""
+        # Mounted on an http:// prefix, the adapter gets plain HTTP pools, too.
+        if isinstance(conn, HTTPSConnectionPool):
+            conn.assert_hostname = self._reference_hostname
+        super().cert_verify(conn, url, verify, cert)
 
     @override
     def init_poolmanager(

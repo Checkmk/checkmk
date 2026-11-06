@@ -159,7 +159,7 @@ class HttpSession(Protocol):
         url: str,
         *,
         headers: Mapping[str, str] | None = None,
-        json: Mapping[str, object] | None = None,
+        json: Mapping[str, int] | None = None,
         timeout: float,
     ) -> requests.Response: ...
 

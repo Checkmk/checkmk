@@ -825,7 +825,9 @@ def test_post_request_sends_message_to_webhook_from_context(
 
     utils.post_request(_message)
 
-    assert json.loads(responses.calls[0].request.body or b"") == {"text": "host1 is down"}
+    body = responses.calls[0].request.body
+    assert isinstance(body, str | bytes)
+    assert json.loads(body) == {"text": "host1 is down"}
 
 
 @responses.activate
@@ -1030,7 +1032,9 @@ def test_render_cmk_graphs_authenticates_with_site_internal_secret(
 
     utils.render_cmk_graphs(_GRAPH_CONTEXT)
 
-    assert responses.calls[0].request.headers["Authorization"].startswith("InternalToken ")
+    authorization = responses.calls[0].request.headers["Authorization"]
+    assert isinstance(authorization, str)
+    assert authorization.startswith("InternalToken ")
 
 
 @responses.activate

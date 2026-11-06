@@ -443,6 +443,7 @@ py_cmk_test(
     deps = [
         ":server_side_programs",
         requirement("requests"),
+        requirement("urllib3"),
     ],
 )
 

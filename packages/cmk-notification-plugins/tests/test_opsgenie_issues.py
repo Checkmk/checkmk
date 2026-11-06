@@ -111,6 +111,9 @@ class FakeOpsgenie:
         sent_with: Mapping[str, object] = getattr(request, "req_kwargs", {})
         proxies = sent_with.get("proxies")
         path = unquote(parts.path)
+        assert request.body is None or isinstance(request.body, str | bytes)
+        authorization = request.headers.get("Authorization", "")
+        assert isinstance(authorization, str)
         self.requests.append(
             SentRequest(
                 method=method,
@@ -118,8 +121,8 @@ class FakeOpsgenie:
                 path=path,
                 query=parse_qs(parts.query),
                 body=json.loads(request.body) if request.body else {},
-                authorization=request.headers.get("Authorization", ""),
-                proxy=select_proxy(url, proxies) if isinstance(proxies, Mapping) else None,
+                authorization=authorization,
+                proxy=select_proxy(url, proxies) if isinstance(proxies, dict) else None,
                 verify=sent_with.get("verify"),
             )
         )

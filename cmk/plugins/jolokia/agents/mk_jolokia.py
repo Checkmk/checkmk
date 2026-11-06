@@ -53,8 +53,8 @@ try:
 
     # These days urllib3 would be included directly, but we leave it as it is for the moment
     # for compatibility reasons - at least for the agent plugin here.
-    # The type: ignore carries unused-ignore because the requests stub only declares
-    # requests.packages.urllib3 in some of the mypy targets this file is checked in.
+    # requests creates requests.packages.urllib3 only at runtime, so mypy doesn't know it,
+    # unless another module in the same mypy run (e.g. requests_toolbelt) imports it, too.
     from requests.packages import urllib3  # type: ignore[attr-defined, unused-ignore]
 except ImportError:
     sys.stdout.write(

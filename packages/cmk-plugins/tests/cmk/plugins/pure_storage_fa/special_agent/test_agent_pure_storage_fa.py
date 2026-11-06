@@ -4,10 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from http import HTTPStatus
 
 import pytest
+import requests
 import responses
 
 from cmk.plugins.pure_storage_fa.special_agent.agent_pure_storage_fa import (
@@ -24,6 +25,23 @@ def _api() -> Iterator[responses.RequestsMock]:
         api.post(f"{API}/2.0/login", headers={"x-auth-token": "token"})
         api.get(f"{API}/api_version", json={"version": ["2.0", "2.2"]})
         yield api
+
+
+def _sent_verify(request: requests.PreparedRequest) -> object:
+    sent_with: Mapping[str, object] = getattr(request, "req_kwargs", {})
+    return sent_with.get("verify")
+
+
+def test_no_cert_check_wins_over_requests_ca_bundle(
+    api: responses.RequestsMock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("REQUESTS_CA_BUNDLE", "/etc/ssl/certs/site-ca.pem")
+
+    agent_pure_storage_fa(
+        parse_arguments(["--apitoken", "secret", "--no-cert-check", "flasharray"])
+    )
+
+    assert {_sent_verify(call.request) for call in api.calls} == {False}
 
 
 def test_failed_section_is_skipped(

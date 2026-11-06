@@ -7,6 +7,7 @@ py_cmk_test(
     srcs = glob(["**/*.py"]),
     deps = [
         "//packages/cmk-plugins/cmk/plugins/pure_storage_fa",
+        requirement("requests"),
         requirement("responses"),
     ],
 )

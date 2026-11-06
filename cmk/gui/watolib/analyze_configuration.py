@@ -427,3 +427,11 @@ def merge_tests(
         for site_id, test_results_of_site in test_results_by_site_id.items()
         if (merged := list(_merge_test_results_of_site(site_id, test_results_of_site)))
     }
+
+
+def gui_plugin_effect(name: str, state: ACResultState) -> str:
+    match state:
+        case ACResultState.CRIT:
+            return _("'%(name)s' has no effect in Checkmk.") % {"name": name}
+        case _:
+            return _("'%(name)s' may break with any update of Checkmk.") % {"name": name}

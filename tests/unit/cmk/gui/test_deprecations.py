@@ -15,6 +15,8 @@ from cmk.utils.user import UserId
 from cmk.gui.deprecations import (
     _ACTestResultProblem,
     _ACTestResultProblemFile,
+    _ACTestResultProblemGUIPluginFile,
+    _ACTestResultProblemGUIPluginPackage,
     _ACTestResultProblemMKP,
     _ACTestResultProblemUnsorted,
     _filter_ac_test_results,
@@ -505,6 +507,381 @@ def test__find_ac_test_result_problems(
     assert _find_ac_test_result_problems(ac_test_results_by_site_id, manifests_by_path) == problems
 
 
+def _gui_plugin_finding(state: ACResultState) -> ACTestResult:
+    return ACTestResult(
+        state,
+        "text",
+        "ACTestDeprecatedLegacyGUIExtensions",
+        "deprecations",
+        "Title",
+        "Help",
+        SiteId("site_id"),
+        Path("/omd/sites/site_id/local/share/check_mk/web/plugins/views/file.py"),
+    )
+
+
+def test_gui_plugin_is_reported_by_its_file() -> None:
+    finding = _gui_plugin_finding(ACResultState.WARN)
+    assert _find_ac_test_result_problems({SiteId("site_id"): [finding]}, {}) == [
+        _ACTestResultProblemGUIPluginFile(
+            ident="local/share/check_mk/web/plugins/views/file.py",
+            notification_category=_NotificationCategory.manage_mkps,
+            _ac_test_results={SiteId("site_id"): [finding]},
+        )
+    ]
+
+
+def test_broken_gui_extension_is_reported_as_gui_plug_in() -> None:
+    finding = ACTestResult(
+        ACResultState.CRIT,
+        "text",
+        "ACTestBrokenGUIExtension",
+        "deprecations",
+        "Title",
+        "Help",
+        SiteId("site_id"),
+        Path("/omd/sites/site_id/local/share/check_mk/web/plugins/views/file.py"),
+    )
+    assert _find_ac_test_result_problems({SiteId("site_id"): [finding]}, {}) == [
+        _ACTestResultProblemGUIPluginFile(
+            ident="local/share/check_mk/web/plugins/views/file.py",
+            notification_category=_NotificationCategory.manage_mkps,
+            _ac_test_results={SiteId("site_id"): [finding]},
+        )
+    ]
+
+
+def test_broken_gui_extension_without_its_file_goes_to_the_package_managers() -> None:
+    finding = ACTestResult(
+        ACResultState.CRIT,
+        "text",
+        "ACTestBrokenGUIExtension",
+        "deprecations",
+        "Title",
+        "Help",
+        SiteId("site_id"),
+        None,
+    )
+    assert _find_ac_test_result_problems({SiteId("site_id"): [finding]}, {}) == [
+        _ACTestResultProblemUnsorted(
+            ident="text",
+            notification_category=_NotificationCategory.manage_mkps,
+            _ac_test_results={SiteId("site_id"): [finding]},
+        )
+    ]
+
+
+def test_deprecated_rule_set_message() -> None:
+    problem = _ACTestResultProblemUnsorted(
+        ident="A text",
+        notification_category=_NotificationCategory.rule_sets,
+        _ac_test_results={
+            SiteId("site_id"): [
+                ACTestResult(
+                    ACResultState.WARN,
+                    "A text",
+                    "ACTestDeprecatedRuleSets",
+                    "deprecations",
+                    "Title",
+                    "Help",
+                    SiteId("site_id"),
+                    None,
+                ),
+            ],
+        },
+    )
+    assert (
+        '<div class="warning">These rules work in Checkmk 2.3.0, but not after the update to the'
+        " next major version.</div><p>Migrate the rules to the successor of the rule set or"
+        " remove them before the update. The Werk which deprecated the rule set describes its"
+        " successor.</p>"
+    ) in str(problem.html("2.3.0"))
+
+
+_PACKAGE_WITH_GUI_PLUGIN = Manifest(
+    title="Package",
+    name=PackageName("package"),
+    description="",
+    version=PackageVersion("1.0.0"),
+    version_packaged="2.4.0-2025.03.05",
+    version_min_required="2.4.0-2025.03.05",
+    version_usable_until=None,
+    author="cmkadmin",
+    download_url="",
+    files={
+        PackagePart("web"): [Path("plugins/views/file.py")],
+        PackagePart("cmk_addons_plugins"): [Path("family/server_side_calls/agent.py")],
+    },
+)
+
+
+def test_gui_plugins_of_an_extension_package_are_grouped_by_the_package() -> None:
+    finding = _gui_plugin_finding(ACResultState.CRIT)
+    assert _find_ac_test_result_problems(
+        {SiteId("site_id"): [finding]},
+        {Path("local/share/check_mk/web/plugins/views/file.py"): _PACKAGE_WITH_GUI_PLUGIN},
+    ) == [
+        _ACTestResultProblemGUIPluginPackage(
+            ident="package",
+            notification_category=_NotificationCategory.manage_mkps,
+            _ac_test_results={SiteId("site_id"): [finding]},
+        )
+    ]
+
+
+def test_gui_plugins_and_other_findings_of_a_package_are_reported_apart() -> None:
+    gui_plugin_finding = _gui_plugin_finding(ACResultState.CRIT)
+    plugin_api_finding = ACTestResult(
+        ACResultState.CRIT,
+        "text",
+        "ACTestSpecialAgentsAPI",
+        "deprecations",
+        "Title",
+        "Help",
+        SiteId("site_id"),
+        Path(
+            "/omd/sites/site_id/local/lib/python3/cmk_addons/plugins/family/server_side_calls/agent.py"
+        ),
+    )
+    assert _find_ac_test_result_problems(
+        {SiteId("site_id"): [gui_plugin_finding, plugin_api_finding]},
+        {
+            Path("local/share/check_mk/web/plugins/views/file.py"): _PACKAGE_WITH_GUI_PLUGIN,
+            Path(
+                "local/lib/python3/cmk_addons/plugins/family/server_side_calls/agent.py"
+            ): _PACKAGE_WITH_GUI_PLUGIN,
+        },
+    ) == [
+        _ACTestResultProblemGUIPluginPackage(
+            ident="package",
+            notification_category=_NotificationCategory.manage_mkps,
+            _ac_test_results={SiteId("site_id"): [gui_plugin_finding]},
+        ),
+        _ACTestResultProblemMKP(
+            ident="package",
+            notification_category=_NotificationCategory.manage_mkps,
+            _ac_test_results={SiteId("site_id"): [plugin_api_finding]},
+        ),
+    ]
+
+
+@pytest.mark.parametrize(
+    "problem, text",
+    [
+        pytest.param(
+            _ACTestResultProblemGUIPluginFile(
+                ident="ident",
+                notification_category=_NotificationCategory.manage_mkps,
+                _ac_test_results={SiteId("site_id"): [_gui_plugin_finding(ACResultState.CRIT)]},
+            ),
+            "&#x27;ident&#x27; has no effect in Checkmk.",
+            id="file-without-effect",
+        ),
+        pytest.param(
+            _ACTestResultProblemGUIPluginFile(
+                ident="ident",
+                notification_category=_NotificationCategory.manage_mkps,
+                _ac_test_results={SiteId("site_id"): [_gui_plugin_finding(ACResultState.CRIT)]},
+            ),
+            "The details below give the reason.",
+            id="file-refers-to-the-details",
+        ),
+        pytest.param(
+            _ACTestResultProblemGUIPluginPackage(
+                ident="package",
+                notification_category=_NotificationCategory.manage_mkps,
+                _ac_test_results={SiteId("site_id"): [_gui_plugin_finding(ACResultState.CRIT)]},
+            ),
+            "The extension package contains plug-ins which have no effect in Checkmk.",
+            id="package-without-effect",
+        ),
+    ],
+)
+def test_gui_plugin_message(problem: _ACTestResultProblem, text: str) -> None:
+    assert text in str(problem.html("2.3.0"))
+
+
+def _site_gui_plugin_finding(
+    test_id: str, site_id: SiteId, rel_path: str, state: ACResultState
+) -> ACTestResult:
+    return ACTestResult(
+        state,
+        "text",
+        test_id,
+        "deprecations",
+        "Title",
+        "Help",
+        site_id,
+        Path("/omd/sites", site_id, rel_path),
+    )
+
+
+def _rendered_messages(
+    results_by_site: Mapping[SiteId, Sequence[ACTestResult]],
+    manifests_by_path: Mapping[Path, Manifest],
+) -> Sequence[str]:
+    return [
+        str(problem.html("2.3.0"))
+        for problem in _find_ac_test_result_problems(results_by_site, manifests_by_path)
+    ]
+
+
+def test_gui_plugin_of_the_gui_plugins_test_is_reported_by_its_file() -> None:
+    finding = _site_gui_plugin_finding(
+        "ACTestDeprecatedGUIExtensions",
+        SiteId("site_id"),
+        "local/lib/python3/cmk/gui/plugins/views/file.py",
+        ACResultState.WARN,
+    )
+    assert _find_ac_test_result_problems({SiteId("site_id"): [finding]}, {}) == [
+        _ACTestResultProblemGUIPluginFile(
+            ident="local/lib/python3/cmk/gui/plugins/views/file.py",
+            notification_category=_NotificationCategory.manage_mkps,
+            _ac_test_results={SiteId("site_id"): [finding]},
+        )
+    ]
+
+
+def test_pnp_template_is_reported_as_a_plugin_without_effect() -> None:
+    finding = _site_gui_plugin_finding(
+        "ACTestDeprecatedPNPTemplates",
+        SiteId("site_id"),
+        "local/share/check_mk/pnp-templates/check_mk-my_check.php",
+        ACResultState.CRIT,
+    )
+    assert _find_ac_test_result_problems({SiteId("site_id"): [finding]}, {}) == [
+        _ACTestResultProblemGUIPluginFile(
+            ident="local/share/check_mk/pnp-templates/check_mk-my_check.php",
+            notification_category=_NotificationCategory.manage_mkps,
+            _ac_test_results={SiteId("site_id"): [finding]},
+        )
+    ]
+
+
+def test_gui_plugin_on_several_sites_is_one_problem() -> None:
+    finding_a, finding_b = (
+        _site_gui_plugin_finding(
+            "ACTestDeprecatedLegacyGUIExtensions",
+            site_id,
+            "local/share/check_mk/web/plugins/views/file.py",
+            ACResultState.WARN,
+        )
+        for site_id in (SiteId("site_a"), SiteId("site_b"))
+    )
+    assert _find_ac_test_result_problems(
+        {SiteId("site_a"): [finding_a], SiteId("site_b"): [finding_b]}, {}
+    ) == [
+        _ACTestResultProblemGUIPluginFile(
+            ident="local/share/check_mk/web/plugins/views/file.py",
+            notification_category=_NotificationCategory.manage_mkps,
+            _ac_test_results={SiteId("site_a"): [finding_a], SiteId("site_b"): [finding_b]},
+        )
+    ]
+
+
+def test_gui_plugin_file_message() -> None:
+    finding = _site_gui_plugin_finding(
+        "ACTestDeprecatedLegacyGUIExtensions",
+        SiteId("site_id"),
+        "local/share/check_mk/web/plugins/views/file.py",
+        ACResultState.WARN,
+    )
+    assert _rendered_messages({SiteId("site_id"): [finding]}, {}) == [
+        (
+            "<h2>Plug-in: local/share/check_mk/web/plugins/views/file.py</h2>"
+            '<div class="warning">&#x27;local/share/check_mk/web/plugins/views/file.py&#x27; may'
+            " break with any update of Checkmk.</div>"
+            "<p>The details below give the reason.</p>"
+            "<p>Affected sites: site_id</p>"
+            "<p>Details:</p>"
+            '<table class="data table"><tr class="data even0"><td>text</td>'
+            '<td class="state svcstate state1"><span class="state_rounded_fill">WARN</span></td></tr></table>'
+        )
+    ]
+
+
+def test_gui_plugin_package_message() -> None:
+    finding = _site_gui_plugin_finding(
+        "ACTestDeprecatedLegacyGUIExtensions",
+        SiteId("site_id"),
+        "local/share/check_mk/web/plugins/views/file.py",
+        ACResultState.WARN,
+    )
+    assert _rendered_messages(
+        {SiteId("site_id"): [finding]},
+        {Path("local/share/check_mk/web/plugins/views/file.py"): _PACKAGE_WITH_GUI_PLUGIN},
+    ) == [
+        (
+            "<h2>Extension package: package</h2>"
+            '<div class="warning">The extension package contains plug-ins which may break with'
+            " any update of Checkmk.</div>"
+            "<p>The details below give the reason.</p>"
+            "<p>Affected sites: site_id</p>"
+            "<p>Details:</p>"
+            '<table class="data table"><tr class="data even0"><td>text</td>'
+            '<td class="state svcstate state1"><span class="state_rounded_fill">WARN</span></td></tr></table>'
+        )
+    ]
+
+
+_PACKAGE_WITH_TWO_GUI_PLUGINS = Manifest(
+    title="Package",
+    name=PackageName("package"),
+    description="",
+    version=PackageVersion("1.0.0"),
+    version_packaged="2.4.0-2025.03.05",
+    version_min_required="2.4.0-2025.03.05",
+    version_usable_until=None,
+    author="cmkadmin",
+    download_url="",
+    files={PackagePart("web"): [Path("plugins/views/file.py"), Path("plugins/metrics/file.py")]},
+)
+
+
+def test_gui_plugin_package_message_describes_its_worst_plugin() -> None:
+    findings = [
+        _site_gui_plugin_finding(
+            "ACTestDeprecatedLegacyGUIExtensions",
+            SiteId("site_id"),
+            f"local/share/check_mk/web/plugins/{folder}/file.py",
+            state,
+        )
+        for folder, state in (("views", ACResultState.WARN), ("metrics", ACResultState.CRIT))
+    ]
+    [message] = _rendered_messages(
+        {SiteId("site_id"): findings},
+        {
+            Path(f"local/share/check_mk/web/plugins/{folder}/file.py"): (
+                _PACKAGE_WITH_TWO_GUI_PLUGINS
+            )
+            for folder in ("views", "metrics")
+        },
+    )
+    assert (
+        '<div class="error">The extension package contains plug-ins which have no effect in'
+        " Checkmk.</div>"
+    ) in message
+
+
+def test_broken_gui_extension_of_an_extension_package_is_grouped_by_the_package() -> None:
+    finding = _site_gui_plugin_finding(
+        "ACTestBrokenGUIExtension",
+        SiteId("site_id"),
+        "local/share/check_mk/web/plugins/views/file.py",
+        ACResultState.CRIT,
+    )
+    assert _find_ac_test_result_problems(
+        {SiteId("site_id"): [finding]},
+        {Path("local/share/check_mk/web/plugins/views/file.py"): _PACKAGE_WITH_GUI_PLUGIN},
+    ) == [
+        _ACTestResultProblemGUIPluginPackage(
+            ident="package",
+            notification_category=_NotificationCategory.manage_mkps,
+            _ac_test_results={SiteId("site_id"): [finding]},
+        )
+    ]
+
+
 @pytest.mark.parametrize(
     "problem, title, box",
     [
@@ -663,6 +1040,35 @@ def test_render_problem(problem: _ACTestResultProblem, title: str, box: str) -> 
 
 
 @pytest.mark.parametrize(
+    "state, box_html",
+    [
+        pytest.param(ACResultState.CRIT, '<div class="error">', id="crit"),
+        pytest.param(ACResultState.WARN, '<div class="warning">', id="warn"),
+    ],
+)
+def test_render_problem_shows_the_box(state: ACResultState, box_html: str) -> None:
+    problem = _ACTestResultProblemUnsorted(
+        ident="A text",
+        notification_category=_NotificationCategory.manage_mkps,
+        _ac_test_results={
+            SiteId("site_id"): [
+                ACTestResult(
+                    state,
+                    "A text",
+                    "test_id",
+                    "deprecations",
+                    "Title",
+                    "Help",
+                    SiteId("site_id"),
+                    None,
+                ),
+            ],
+        },
+    )
+    assert box_html in str(problem.html("2.3.0"))
+
+
+@pytest.mark.parametrize(
     "problems, users, result",
     [
         pytest.param(
@@ -719,7 +1125,7 @@ def test_render_problem(problem: _ACTestResultProblem, title: str, box: str) -> 
                             [],
                         ),
                     ],
-                    content='<h2>A text</h2><div class="error">This may partially work in Checkmk 2.3.0 but might not work from the next major version onwards.</div><p>We highly recommend solving this issue already in your installation.</p><p>Affected sites: site_id</p><p>Details:</p><table class="data table"><tr class="even0"><td>A text</td><td class="state svcstate"><b class="stmark state1">WARN</b></td></tr></table>',
+                    content='<h2>A text</h2><div class="warning">This may partially work in Checkmk 2.3.0 but might not work from the next major version onwards.</div><p>We highly recommend solving this issue already in your installation.</p><p>Affected sites: site_id</p><p>Details:</p><table class="data table"><tr class="data even0"><td>A text</td><td class="state svcstate state1"><span class="state_rounded_fill">WARN</span></td></tr></table>',
                 ),
             ],
             id="manage-mkps",
@@ -766,7 +1172,7 @@ def test_render_problem(problem: _ACTestResultProblem, title: str, box: str) -> 
                             [],
                         ),
                     ],
-                    content='<h2>A text</h2><div class="error">This may partially work in Checkmk 2.3.0 but might not work from the next major version onwards.</div><p>We highly recommend solving this issue already in your installation.</p><p>Affected sites: site_id</p><p>Details:</p><table class="data table"><tr class="even0"><td>A text</td><td class="state svcstate"><b class="stmark state1">WARN</b></td></tr></table>',
+                    content='<h2>A text</h2><div class="warning">This may partially work in Checkmk 2.3.0 but might not work from the next major version onwards.</div><p>We highly recommend solving this issue already in your installation.</p><p>Affected sites: site_id</p><p>Details:</p><table class="data table"><tr class="data even0"><td>A text</td><td class="state svcstate state1"><span class="state_rounded_fill">WARN</span></td></tr></table>',
                 ),
             ],
             id="unsorted",
@@ -813,7 +1219,8 @@ def test_render_problem(problem: _ACTestResultProblem, title: str, box: str) -> 
                             sent_messages=[],
                         ),
                     ],
-                    content="<h2>A text</h2><p>This configuration has no effect in the "
+                    content='<h2>A text</h2><div class="warning">These rules have no effect in'
+                    " Checkmk 2.3.0.</div><p>This configuration has no effect in the "
                     "current installation. It may be associated with an older "
                     "version of Checkmk or an unused extension package, in which "
                     "case it can be safely removed. Alternatively, it might belong "
@@ -822,8 +1229,8 @@ def test_render_problem(problem: _ACTestResultProblem, title: str, box: str) -> 
                     'href="wato.py?mode=unknown_rulesets">unknown rulesets</a> '
                     "page in case you want to remove the rule.</p><p>Affected "
                     'sites: site_id</p><p>Details:</p><table class="data '
-                    'table"><tr class="even0"><td>A text</td><td class="state '
-                    'svcstate"><b class="stmark state1">WARN</b></td></tr></table>',
+                    'table"><tr class="data even0"><td>A text</td><td class="state '
+                    'svcstate state1"><span class="state_rounded_fill">WARN</span></td></tr></table>',
                 ),
             ],
             id="rule-sets",

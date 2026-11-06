@@ -396,7 +396,7 @@ py_library(
         "//cmk/gui/userdb",
         "//cmk/gui/utils:middle",
         "//cmk/gui/watolib",
-        "//cmk/utils",
+        "//cmk/utils:paths",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:user",

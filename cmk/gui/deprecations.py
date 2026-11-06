@@ -42,7 +42,6 @@ from cmk.gui.watolib.analyze_configuration import (
 from cmk.livestatus_client import SiteConfigurations
 from cmk.mkp_tool import get_stored_manifests, Manifest, PackageStore, PathConfig
 from cmk.utils import paths
-from cmk.utils.html import replace_state_markers
 from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeuri_contextless
 
@@ -210,7 +209,10 @@ class _ACTestResultProblem:
 
         html_code = HTMLWriter.render_h2(self._create_title())
         if error_box_message := self._create_error_box_message(version, overall_state):
-            html_code += HTMLWriter.render_div(error_box_message, class_="error")
+            html_code += HTMLWriter.render_div(
+                error_box_message,
+                class_="error" if overall_state is ACResultState.CRIT else "warning",
+            )
 
         if info := self._create_info(version):
             html_code += HTMLWriter.render_p(info)
@@ -232,20 +234,20 @@ class _ACTestResultProblem:
             match state:
                 case ACResultState.CRIT:
                     state_td = HTMLWriter.render_td(
-                        HTML(replace_state_markers("(!!)"), escape=False),
-                        class_="state svcstate",
+                        HTMLWriter.render_span("CRIT", class_="state_rounded_fill"),
+                        class_="state svcstate state2",
                     )
                 case ACResultState.WARN:
                     state_td = HTMLWriter.render_td(
-                        HTML(replace_state_markers("(!)"), escape=False),
-                        class_="state svcstate",
+                        HTMLWriter.render_span("WARN", class_="state_rounded_fill"),
+                        class_="state svcstate state1",
                     )
                 case _:
                     state_td = HTMLWriter.render_td("")
 
             table_content += HTMLWriter.render_tr(
                 HTMLWriter.render_td(text) + state_td,
-                class_="even0" if idx % 2 == 0 else "odd0",
+                class_=["data", "even0" if idx % 2 == 0 else "odd0"],
             )
 
         html_code += HTMLWriter.render_table(table_content, class_="data table")

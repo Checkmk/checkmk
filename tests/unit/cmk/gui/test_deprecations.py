@@ -660,6 +660,35 @@ def test_render_problem(problem: _ACTestResultProblem, title: str, box: str) -> 
 
 
 @pytest.mark.parametrize(
+    "state, box_html",
+    [
+        pytest.param(ACResultState.CRIT, '<div class="error">', id="crit"),
+        pytest.param(ACResultState.WARN, '<div class="warning">', id="warn"),
+    ],
+)
+def test_render_problem_shows_the_box(state: ACResultState, box_html: str) -> None:
+    problem = _ACTestResultProblemUnsorted(
+        ident="A text",
+        notification_category=_NotificationCategory.manage_mkps,
+        _ac_test_results={
+            SiteId("site_id"): [
+                ACTestResult(
+                    state,
+                    "A text",
+                    "test_id",
+                    "deprecations",
+                    "Title",
+                    "Help",
+                    SiteId("site_id"),
+                    None,
+                ),
+            ],
+        },
+    )
+    assert box_html in str(problem.html("2.3.0"))
+
+
+@pytest.mark.parametrize(
     "problems, users, result",
     [
         pytest.param(
@@ -716,7 +745,7 @@ def test_render_problem(problem: _ACTestResultProblem, title: str, box: str) -> 
                             [],
                         ),
                     ],
-                    content='<h2>A text</h2><div class="error">This may partially work in Checkmk 2.3.0 but might not work from the next major version onwards.</div><p>We highly recommend solving this issue already in your installation.</p><p>Affected sites: site_id</p><p>Details:</p><table class="data table"><tr class="even0"><td>A text</td><td class="state svcstate"><b class="stmark state1">WARN</b></td></tr></table>',
+                    content='<h2>A text</h2><div class="warning">This may partially work in Checkmk 2.3.0 but might not work from the next major version onwards.</div><p>We highly recommend solving this issue already in your installation.</p><p>Affected sites: site_id</p><p>Details:</p><table class="data table"><tr class="data even0"><td>A text</td><td class="state svcstate state1"><span class="state_rounded_fill">WARN</span></td></tr></table>',
                 ),
             ],
             id="manage-mkps",
@@ -763,7 +792,7 @@ def test_render_problem(problem: _ACTestResultProblem, title: str, box: str) -> 
                             [],
                         ),
                     ],
-                    content='<h2>A text</h2><div class="error">This may partially work in Checkmk 2.3.0 but might not work from the next major version onwards.</div><p>We highly recommend solving this issue already in your installation.</p><p>Affected sites: site_id</p><p>Details:</p><table class="data table"><tr class="even0"><td>A text</td><td class="state svcstate"><b class="stmark state1">WARN</b></td></tr></table>',
+                    content='<h2>A text</h2><div class="warning">This may partially work in Checkmk 2.3.0 but might not work from the next major version onwards.</div><p>We highly recommend solving this issue already in your installation.</p><p>Affected sites: site_id</p><p>Details:</p><table class="data table"><tr class="data even0"><td>A text</td><td class="state svcstate state1"><span class="state_rounded_fill">WARN</span></td></tr></table>',
                 ),
             ],
             id="unsorted",
@@ -819,8 +848,8 @@ def test_render_problem(problem: _ACTestResultProblem, title: str, box: str) -> 
                     'href="wato.py?mode=unknown_rulesets">unknown rule sets</a> '
                     "page in case you want to remove the rule.</p><p>Affected "
                     'sites: site_id</p><p>Details:</p><table class="data '
-                    'table"><tr class="even0"><td>A text</td><td class="state '
-                    'svcstate"><b class="stmark state1">WARN</b></td></tr></table>',
+                    'table"><tr class="data even0"><td>A text</td><td class="state '
+                    'svcstate state1"><span class="state_rounded_fill">WARN</span></td></tr></table>',
                 ),
             ],
             id="rule-sets",

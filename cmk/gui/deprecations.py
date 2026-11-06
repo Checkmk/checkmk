@@ -386,7 +386,11 @@ class _ACTestResultProblemUnsorted(_ACTestResultProblem):
 
 
 _GUI_PLUGIN_TEST_IDS = frozenset(
-    {"ACTestDeprecatedGUIExtensions", "ACTestDeprecatedLegacyGUIExtensions"}
+    {
+        "ACTestBrokenGUIExtension",
+        "ACTestDeprecatedGUIExtensions",
+        "ACTestDeprecatedLegacyGUIExtensions",
+    }
 )
 
 _PACKAGE_MANAGEMENT_TEST_IDS = _GUI_PLUGIN_TEST_IDS | {

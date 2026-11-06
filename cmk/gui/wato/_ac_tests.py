@@ -8,7 +8,7 @@ import dataclasses
 import multiprocessing
 import os
 import subprocess
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from pathlib import Path
 from typing import override
 
@@ -25,6 +25,7 @@ from cmk.gui import userdb
 from cmk.gui.config import active_config, Config
 from cmk.gui.http import request
 from cmk.gui.i18n import _, ungettext
+from cmk.gui.legacy_plugins import get_failed_plugins
 from cmk.gui.permissions import all_permissions
 from cmk.gui.site_config import (
     distributed_setup_remote_sites,
@@ -1199,6 +1200,18 @@ class ACTestSizeOfExtensions(ACTest):
 
 
 class ACTestBrokenGUIExtension(ACTest):
+    def __init__(
+        self,
+        failed_plugins: Callable[
+            [], Sequence[tuple[Path, str, str, BaseException]]
+        ] = get_failed_plugins,
+        legacy_plugins_dir: Path = local_web_dir / "plugins",
+        gui_plugins_dir: Path = local_gui_plugins_dir,
+    ) -> None:
+        self._failed_plugins = failed_plugins
+        self._legacy_plugins_dir = legacy_plugins_dir
+        self._gui_plugins_dir = gui_plugins_dir
+
     @override
     def category(self) -> str:
         return ACTestCategories.deprecations
@@ -1217,23 +1230,38 @@ class ACTestBrokenGUIExtension(ACTest):
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
-        from cmk.gui.legacy_plugins import get_failed_plugins
-
-        errors = get_failed_plugins()
-        if not errors:
+        if not (failed_plugins := self._failed_plugins()):
             yield ACSingleResult(
                 state=ACResultState.OK,
                 text=_("No broken extensions were found."),
                 site_id=site_id,
             )
+            return
 
-        for plugin_filepath, gui_part, plugin_file, error in errors:
+        for plugin_filepath, gui_part, plugin_name, error in failed_plugins:
+            path = (
+                plugin_filepath
+                if plugin_filepath.parent.parent == self._legacy_plugins_dir
+                or plugin_filepath.is_relative_to(self._gui_plugins_dir)
+                else None
+            )
+            name = (
+                f"{gui_part}/{plugin_name}"
+                if path is None
+                else str(try_relative_site_path(site_id, path))
+            )
             yield ACSingleResult(
                 state=ACResultState.CRIT,
-                text=_('Loading "%(gui_part)s/%(plugin_file)s" failed: %(error)s')
-                % {"gui_part": gui_part, "plugin_file": plugin_file, "error": error},
+                text=" ".join(
+                    [
+                        gui_plugin_effect(name, ACResultState.CRIT),
+                        _("Checkmk fails to load it: %(error)s.")
+                        % {"error": str(error).rstrip(".")},
+                        _("The log file 'var/log/web.log' shows the details."),
+                    ]
+                ),
                 site_id=site_id,
-                path=plugin_filepath,
+                path=path,
             )
 
 

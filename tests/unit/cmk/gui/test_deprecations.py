@@ -528,6 +528,46 @@ def test_gui_plugin_is_reported_by_its_file() -> None:
     ]
 
 
+def test_broken_gui_extension_is_reported_as_gui_plug_in() -> None:
+    finding = ACTestResult(
+        ACResultState.CRIT,
+        "text",
+        "ACTestBrokenGUIExtension",
+        "deprecations",
+        "Title",
+        "Help",
+        SiteId("site_id"),
+        Path("/omd/sites/site_id/local/share/check_mk/web/plugins/views/file.py"),
+    )
+    assert _find_ac_test_result_problems({SiteId("site_id"): [finding]}, {}) == [
+        _ACTestResultProblemGUIPluginFile(
+            ident="local/share/check_mk/web/plugins/views/file.py",
+            notification_category=_NotificationCategory.manage_mkps,
+            _ac_test_results={SiteId("site_id"): [finding]},
+        )
+    ]
+
+
+def test_broken_gui_extension_without_its_file_goes_to_the_package_managers() -> None:
+    finding = ACTestResult(
+        ACResultState.CRIT,
+        "text",
+        "ACTestBrokenGUIExtension",
+        "deprecations",
+        "Title",
+        "Help",
+        SiteId("site_id"),
+        None,
+    )
+    assert _find_ac_test_result_problems({SiteId("site_id"): [finding]}, {}) == [
+        _ACTestResultProblemUnsorted(
+            ident="text",
+            notification_category=_NotificationCategory.manage_mkps,
+            _ac_test_results={SiteId("site_id"): [finding]},
+        )
+    ]
+
+
 _PACKAGE_WITH_GUI_PLUGIN = Manifest(
     title="Package",
     name=PackageName("package"),
@@ -775,6 +815,25 @@ def test_gui_plugin_package_message_describes_its_worst_plugin() -> None:
         '<div class="error">The extension package contains plug-ins which have no effect in'
         " Checkmk.</div>"
     ) in message
+
+
+def test_broken_gui_extension_of_an_extension_package_is_grouped_by_the_package() -> None:
+    finding = _site_gui_plugin_finding(
+        "ACTestBrokenGUIExtension",
+        SiteId("site_id"),
+        "local/share/check_mk/web/plugins/views/file.py",
+        ACResultState.CRIT,
+    )
+    assert _find_ac_test_result_problems(
+        {SiteId("site_id"): [finding]},
+        {Path("local/share/check_mk/web/plugins/views/file.py"): _PACKAGE_WITH_GUI_PLUGIN},
+    ) == [
+        _ACTestResultProblemGUIPluginPackage(
+            ident="package",
+            notification_category=_NotificationCategory.manage_mkps,
+            _ac_test_results={SiteId("site_id"): [finding]},
+        )
+    ]
 
 
 @pytest.mark.parametrize(

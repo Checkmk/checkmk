@@ -20,6 +20,7 @@ from cmk.gui.wato._ac_tests import (
     ACTestApacheForwardedHeaders,
     ACTestAutomationUserSecret,
     ACTestBakeryAPI,
+    ACTestBrokenGUIExtension,
     ACTestDeprecatedGUIExtensions,
     ACTestDeprecatedLegacyGUIExtensions,
     ACTestGenericCheckHelperUsage,
@@ -900,3 +901,105 @@ def test_legacy_gui_plugins_help_names_its_folder(tmp_path: Path) -> None:
         f"'{tmp_path / 'web/plugins'}'"
         in ACTestDeprecatedLegacyGUIExtensions(tmp_path / "web").help()
     )
+
+
+_LEGACY_PLUGINS_DIR = Path("/omd/sites/NO_SITE/local/share/check_mk/web/plugins")
+
+_GUI_PLUGINS_DIR = Path("/omd/sites/NO_SITE/local/lib/python3/cmk/gui/plugins")
+
+
+def _broken_gui_extension_finding(path: Path) -> ACSingleResult:
+    def failed_plugins() -> Sequence[tuple[Path, str, str, BaseException]]:
+        return [(path, "views", "my_view", NameError("name 'x' is not defined"))]
+
+    [result] = ACTestBrokenGUIExtension(
+        failed_plugins, _LEGACY_PLUGINS_DIR, _GUI_PLUGINS_DIR
+    ).execute(SiteId("NO_SITE"), Config())
+    return result
+
+
+def test_broken_legacy_gui_plugin_is_named_by_its_file() -> None:
+    path = Path("/omd/sites/NO_SITE/local/share/check_mk/web/plugins/views/my_view.py")
+    result = _broken_gui_extension_finding(path)
+    assert (result.state, result.text, result.path) == (
+        ACResultState.CRIT,
+        (
+            "'local/share/check_mk/web/plugins/views/my_view.py' has no effect in Checkmk."
+            " Checkmk fails to load it: name 'x' is not defined. The log file"
+            " 'var/log/web.log' shows the details."
+        ),
+        path,
+    )
+
+
+def test_broken_gui_plugin_is_named_by_its_file() -> None:
+    path = Path("/omd/sites/NO_SITE/local/lib/python3/cmk/gui/plugins/views/my_view.py")
+    assert _broken_gui_extension_finding(path).path == path
+
+
+def test_broken_gui_extension_error_ending_with_a_period() -> None:
+    def failed_plugins() -> Sequence[tuple[Path, str, str, BaseException]]:
+        return [(Path("a.py"), "views", "a_view", NameError("Some error."))]
+
+    [result] = ACTestBrokenGUIExtension(
+        failed_plugins, _LEGACY_PLUGINS_DIR, _GUI_PLUGINS_DIR
+    ).execute(SiteId("NO_SITE"), Config())
+    assert result.text == (
+        "'views/a_view' has no effect in Checkmk. Checkmk fails to load it: Some error. The log"
+        " file 'var/log/web.log' shows the details."
+    )
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        pytest.param(
+            Path("/omd/sites/NO_SITE/lib/python3/cmk/gui/rule_specs/legacy_converter.py"),
+            id="traceback-frame",
+        ),
+        pytest.param(Path("cmk_addons/plugins/family/rulesets/my_rule_set.py"), id="module-path"),
+        pytest.param(
+            Path("/omd/sites/NO_SITE/share/check_mk/web/plugins/views/my_view.py"),
+            id="shipped-legacy-plugin",
+        ),
+    ],
+)
+def test_broken_gui_extension_without_its_file_is_named_by_the_plugin(path: Path) -> None:
+    result = _broken_gui_extension_finding(path)
+    assert (result.state, result.text, result.path) == (
+        ACResultState.CRIT,
+        (
+            "'views/my_view' has no effect in Checkmk. Checkmk fails to load it: name 'x' is"
+            " not defined. The log file 'var/log/web.log' shows the details."
+        ),
+        None,
+    )
+
+
+def test_without_broken_gui_extensions() -> None:
+    [result] = ACTestBrokenGUIExtension(list).execute(SiteId("NO_SITE"), Config())
+    assert result.state is ACResultState.OK
+
+
+def test_every_broken_gui_extension_is_reported() -> None:
+    def failed_plugins() -> Sequence[tuple[Path, str, str, BaseException]]:
+        return [
+            (Path("a.py"), "views", "a_view", NameError("a")),
+            (Path("b.py"), "sidebar", "b_snapin", NameError("b")),
+        ]
+
+    assert [
+        result.text
+        for result in ACTestBrokenGUIExtension(
+            failed_plugins, _LEGACY_PLUGINS_DIR, _GUI_PLUGINS_DIR
+        ).execute(SiteId("NO_SITE"), Config())
+    ] == [
+        (
+            "'views/a_view' has no effect in Checkmk. Checkmk fails to load it: a. The log file"
+            " 'var/log/web.log' shows the details."
+        ),
+        (
+            "'sidebar/b_snapin' has no effect in Checkmk. Checkmk fails to load it: b. The log"
+            " file 'var/log/web.log' shows the details."
+        ),
+    ]

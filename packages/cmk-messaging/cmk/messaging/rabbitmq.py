@@ -407,12 +407,15 @@ def update_and_activate_rabbitmq_definitions(omd_root: Path, logger: Logger) -> 
     if not rabbitmqctl_running():
         return
 
-    # run in parallel
-    for process in [
-        *_start_cleanup_unused_definitions(old_definitions, new_definitions),
-        _start_import_new_definitions(definitions_file),
-    ]:
-        (logger.info if process.wait() == 0 else logger.error)(_format_process(process))
+    # The commands of a stage run in parallel, but a stage only starts after the previous one
+    # has finished: Overlapping them is racy, e.g. delete_vhost stops the shovels of the vhost
+    # itself and aborts halfway if a concurrent clear_parameter has just stopped one of them,
+    # leaving a vhost without its default exchanges behind.
+    for stage in (
+        *_cleanup_unused_definitions_stages(old_definitions, new_definitions),
+        [("import_definitions", str(definitions_file))],
+    ):
+        _run_in_parallel(stage, logger)
 
     if set(old_definitions.parameters) - set(new_definitions.parameters):
         # avoid zombie shovels
@@ -420,37 +423,45 @@ def update_and_activate_rabbitmq_definitions(omd_root: Path, logger: Logger) -> 
         rabbitmqctl_process(("start_app",), wait=True)
 
 
-def _start_cleanup_unused_definitions(
+def _cleanup_unused_definitions_stages(
     old_definitions: Definitions, new_definitions: Definitions
-) -> Iterator[subprocess.Popen[str]]:
+) -> Iterator[Sequence[tuple[str, ...]]]:
     # currently only shovels, but we don't have to care here
     # delete shovels before deleting e.g. users to avoid shovels trying to connect using deleted
     # resources
-    for param in set(old_definitions.parameters) - set(new_definitions.parameters):
-        yield rabbitmqctl_process(
-            ("clear_parameter", "-p", param.vhost, param.component, param.name), wait=False
-        )
+    yield [
+        ("clear_parameter", "-p", param.vhost, param.component, param.name)
+        for param in set(old_definitions.parameters) - set(new_definitions.parameters)
+    ]
 
-    for queue in {
-        binding.destination
-        for binding in old_definitions.bindings
-        if binding.destination_type == "queue" and binding not in new_definitions.bindings
-    }:
-        # removed bindings are not correctly actualized in rabbitmq
-        # we delete the queue to remove the bindings
-        yield rabbitmqctl_process(("delete_queue", queue), wait=False)
+    # removed bindings are not correctly actualized in rabbitmq
+    # we delete the queue to remove the bindings
+    yield [
+        ("delete_queue", queue)
+        for queue in {
+            binding.destination
+            for binding in old_definitions.bindings
+            if binding.destination_type == "queue" and binding not in new_definitions.bindings
+        }
+    ]
 
-    for vhost in {v.name for v in old_definitions.vhosts} - {
-        v.name for v in new_definitions.vhosts
-    }:
-        yield rabbitmqctl_process(("delete_vhost", vhost), wait=False)
+    yield [
+        ("delete_vhost", vhost)
+        for vhost in {v.name for v in old_definitions.vhosts}
+        - {v.name for v in new_definitions.vhosts}
+    ]
 
-    for user in {u.name for u in old_definitions.users} - {u.name for u in new_definitions.users}:
-        yield rabbitmqctl_process(("delete_user", user), wait=False)
+    yield [
+        ("delete_user", user)
+        for user in {u.name for u in old_definitions.users}
+        - {u.name for u in new_definitions.users}
+    ]
 
 
-def _start_import_new_definitions(definitions_file: Path) -> subprocess.Popen[str]:
-    return rabbitmqctl_process(("import_definitions", str(definitions_file)), wait=False)
+def _run_in_parallel(commands: Sequence[tuple[str, ...]], logger: Logger) -> None:
+    # start all processes before waiting for any of them
+    for process in [rabbitmqctl_process(cmd, wait=False) for cmd in commands]:
+        (logger.info if process.wait() == 0 else logger.error)(_format_process(process))
 
 
 def rabbitmqctl_running() -> bool:

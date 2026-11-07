@@ -5,7 +5,6 @@
 
 # mypy: disable-error-code="explicit-any"
 
-import re
 import shlex
 import subprocess
 import threading
@@ -20,6 +19,7 @@ from .event import Event, scrub_string
 from .history import _log_event, ActiveHistoryPeriod, get_logfile, History, HistoryWhat, quote_tab
 from .log_level import VERBOSE
 from .query import Columns, OperatorName, QueryFilter, QueryGET, time_conditions
+from .regex_translation import grep_regex, is_literal_regex, translated_text
 from .settings import Settings
 
 
@@ -166,7 +166,7 @@ def _date_and_time(timestamp: float) -> str:
     return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp))
 
 
-# Please note: Keep this in sync with packages/neb/src/TableEventConsole.cc.
+# Please note: Keep this in sync with packages/livestatus/src/TableEventConsole.cc.
 _GREPABLE_COLUMNS = {
     "event_id",
     "event_text",
@@ -193,20 +193,31 @@ def _grep_pipeline(filters: Iterable[QueryFilter]) -> list[str]:
     >>> _grep_pipeline([QueryFilter("event_core_host", '=', lambda x: True, '|| ping')])
     ["grep -F -e '|| ping'"]
 
-    >>> _grep_pipeline([QueryFilter("event_host", '~~', lambda x: True, 'www.example.com')])
-    ['grep -E -i -e www.example.com']
+    >>> _grep_pipeline([QueryFilter("event_host", '~~', lambda x: True, 'db.s')])
+    ["grep -E -e '(D|d)(B|b).{1,4}(S|s|ſ)'"]
 
     >>> _grep_pipeline([QueryFilter("event_text", '~', lambda x: True, '^disk')])
     []
 
     """
-    return [
-        command
-        for f in filters
-        if f.column_name in _GREPABLE_COLUMNS
-        for command in [_grep_command(f.operator_name, str(f.argument))]
-        if command is not None
-    ]
+    commands: list[str] = []
+    size = 0
+    for f in filters:
+        if f.column_name not in _GREPABLE_COLUMNS:
+            continue
+        if (command := _grep_command(f.operator_name, str(f.argument))) is None:
+            continue
+        command_size = len(command.encode()) + len(" | ")
+        if size + command_size <= _MAX_GREP_PIPELINE_BYTES:
+            commands.append(command)
+            size += command_size
+    return commands
+
+
+# The shell gets the whole pipeline as a single argument, which Linux limits to 128 KiB. As
+# grep only prefilters, we leave out the greps beyond this, e.g. for a long =~ argument,
+# whose case variants take up to 9 bytes per character.
+_MAX_GREP_PIPELINE_BYTES = 64 * 1024
 
 
 def _grep_command(operator_name: OperatorName, argument: str) -> str | None:
@@ -214,26 +225,20 @@ def _grep_command(operator_name: OperatorName, argument: str) -> str | None:
     # the whole line, so "grep -v" would drop lines where any other column
     # matches, and regex anchors would refer to the line instead of the
     # column. Furthermore, grep doesn't understand all of Python's regex syntax,
-    # so we only prefilter regexes which mean the same for both.
+    # so we only prefilter regexes which mean the same for both, see grep_regex().
+    if "\0" in argument:  # A command can't contain it.
+        return None
     match operator_name:
         case "=":
             return f"grep -F {_grep_pattern(argument)}"
-        case "~" if _is_grep_compatible(argument):
-            return f"grep -E {_grep_pattern(argument)}"
+        case "~" if is_literal_regex(argument):
+            return f"grep -E {_grep_pattern(grep_regex(argument, ignore_case=False))}"
         case "=~":
-            return f"grep -F -i {_grep_pattern(argument)}"
-        case "~~" if _is_grep_compatible(argument):
-            return f"grep -E -i {_grep_pattern(argument)}"
+            return f"grep -E {_grep_pattern(translated_text(argument, ignore_case=True))}"
+        case "~~" if is_literal_regex(argument):
+            return f"grep -E {_grep_pattern(grep_regex(argument, ignore_case=True))}"
         case "!=" | "~" | "!~" | "!=~" | "~~" | "!~~" | "<" | ">=" | ">" | "<=" | "in":
             return None
-
-
-# Literal characters and dots, escaped or not, like in host names or IP addresses
-_GREP_COMPATIBLE_REGEX = re.compile(r"(?:[^.^$*+?{}\[\]\\|()]|\\?\.)*")
-
-
-def _is_grep_compatible(regex: str) -> bool:
-    return _GREP_COMPATIBLE_REGEX.fullmatch(regex) is not None
 
 
 def _grep_pattern(argument: str) -> str:
@@ -319,6 +324,7 @@ def convert_history_line(history_columns: Sequence[tuple[str, Any]], values: lis
     values[15] = int(values[15])  # event_pid
     values[16] = int(values[16])  # event_priority
     values[17] = int(values[17])  # event_facility
+    values[18] = _none_if_missing(values[18])  # event_rule_id
     values[19] = int(values[19])  # event_state
     values[22] = _unsplit(values[22])  # event_match_groups
     num_values = len(values)
@@ -334,6 +340,8 @@ def convert_history_line(history_columns: Sequence[tuple[str, Any]], values: lis
         values.append(history_columns[26][1])
     if num_values <= 27:  # event_core_host
         values.append(history_columns[27][1])
+    else:
+        values[27] = _none_if_missing(values[27])
     if num_values <= 28:  # event_host_in_downtime
         values.append(history_columns[28][1])
     else:
@@ -342,6 +350,11 @@ def convert_history_line(history_columns: Sequence[tuple[str, Any]], values: lis
         values.append(history_columns[29][1])
     else:
         values[29] = _unsplit(values[29])
+
+
+def _none_if_missing(s: str) -> str | None:
+    """A value which may be missing, i.e. None, which quote_tab() writes as \\2"""
+    return None if s == "\2" else s
 
 
 def _unsplit(s: Any) -> Any:

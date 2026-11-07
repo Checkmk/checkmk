@@ -5,7 +5,9 @@
 
 #include "livestatus/TableEventConsole.h"
 
+#include <cctype>
 #include <chrono>
+#include <cstddef>
 #include <cstdlib>
 #include <ctime>
 #include <filesystem>
@@ -32,6 +34,7 @@
 #include "livestatus/Query.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
+#include "livestatus/StringFilter.h"
 #include "livestatus/StringUtils.h"
 #include "livestatus/TimeColumn.h"
 #include "livestatus/User.h"
@@ -53,25 +56,150 @@ const std::vector<std::string> grepping_filters = {
 
 // Livestatus and the EC agree on an operator's meaning only for some column
 // types: Livestatus uses the regex operators as bit mask operators for int
-// columns, and the EC can't compare a missing string (None) via an ordering
-// operator.
+// columns. We order strings by their UTF-8 bytes, the EC by their code points,
+// which is the same. A missing string needs a check of its own, see
+// ecDropsMissingStringsWeSelect(), and so does a regex, see
+// isRegexUnderstoodByEC(). The EC folds case a bit more than we do, e.g. "ı"
+// and "i", which is fine as long as it selects more, but for !=~ and !~~, it
+// would drop rows which we select.
 bool isUnderstoodByEC(ColumnType type, RelationalOperator op) {
     switch (op) {
         case RelationalOperator::equal:
         case RelationalOperator::not_equal:
-            return type == ColumnType::int_ || type == ColumnType::string;
-        case RelationalOperator::matches:
-        case RelationalOperator::doesnt_match:
-        case RelationalOperator::equal_icase:
-        case RelationalOperator::not_equal_icase:
-        case RelationalOperator::matches_icase:
-        case RelationalOperator::doesnt_match_icase:
-            return type == ColumnType::string;
         case RelationalOperator::less:
         case RelationalOperator::greater_or_equal:
         case RelationalOperator::greater:
         case RelationalOperator::less_or_equal:
-            return type == ColumnType::int_;
+            return type == ColumnType::int_ || type == ColumnType::string;
+        case RelationalOperator::matches:
+        case RelationalOperator::doesnt_match:
+        case RelationalOperator::equal_icase:
+        case RelationalOperator::matches_icase:
+            return type == ColumnType::string;
+        case RelationalOperator::not_equal_icase:
+        case RelationalOperator::doesnt_match_icase:
+            return false;
+    }
+    return false;  // unreachable
+}
+
+// Whether two equal characters, the start of "--", "&&", "||" or "~~", follow
+// at the position, which Python warns about in a character class, because they
+// may become set operations.
+bool isSetOperationAt(std::string_view regex, size_t pos) {
+    return pos + 1 < regex.size() && regex[pos] == regex[pos + 1] &&
+           std::string_view{"-&|~"}.find(regex[pos]) != std::string_view::npos;
+}
+
+// Python's re module, which the EC uses, understands only some regexes like
+// RE2, which we use: Python doesn't know e.g. "\p{L}", "\Q...\E" or "(?U)",
+// its "\b", "\d", "\s" and "\w" cover Unicode, not only ASCII, it takes
+// "[[:digit:]]" as another character class, and it allows more repetitions in
+// "{...}". So we forward only regexes of literal characters, ".", "^", "$",
+// "|", groups without "(?", ASCII punctuation escaped by a backslash, the
+// quantifiers "*", "+" and "?", also lazy, after something to repeat, and
+// character classes without "[" or a backslash inside. Python's parser recurses
+// into groups and fails at a few hundred nested ones, which RE2 allows, so we
+// forward at most 100 nested groups. When ignoring case, the EC folds a bit
+// more than we do, so it selects more, except for a negated character class,
+// e.g. "[^ı]" doesn't select "I". Python's "$" matches in front of a final
+// newline, too, but a value with a newline would break the reply of the EC.
+// NOLINTNEXTLINE(readability-function-cognitive-complexity)
+bool isRegexUnderstoodByEC(std::string_view regex, bool ignore_case) {
+    constexpr int max_nesting = 100;
+    bool repeatable = false;  // whether a quantifier may follow
+    int nesting = 0;          // of the groups around the current position
+    for (size_t i = 0; i < regex.size(); i++) {
+        switch (regex[i]) {
+            case '\\':
+                if (i + 1 == regex.size() ||
+                    std::ispunct(static_cast<unsigned char>(regex[i + 1])) ==
+                        0) {
+                    return false;
+                }
+                i++;
+                repeatable = true;
+                break;
+            case '*':
+            case '+':
+            case '?':
+                if (!repeatable) {
+                    return false;
+                }
+                if (i + 1 < regex.size() && regex[i + 1] == '?') {
+                    i++;  // lazy
+                }
+                repeatable = false;
+                break;
+            case '(':
+                nesting++;
+                if ((i + 1 < regex.size() && regex[i + 1] == '?') ||
+                    nesting > max_nesting) {
+                    return false;
+                }
+                repeatable = false;
+                break;
+            case ')':
+                nesting--;
+                repeatable = true;
+                break;
+            case '^':
+            case '$':
+            case '|':
+                repeatable = false;
+                break;
+            case '{':
+            case '}':
+                return false;
+            case '[':
+                i++;
+                if (i < regex.size() && regex[i] == '^') {
+                    if (ignore_case) {
+                        return false;
+                    }
+                    i++;
+                }
+                // A "]" right at the start would be a member, too.
+                if (i < regex.size() && regex[i] == ']') {
+                    return false;
+                }
+                for (; i < regex.size() && regex[i] != ']'; i++) {
+                    if (regex[i] == '[' || regex[i] == '\\' ||
+                        isSetOperationAt(regex, i)) {
+                        return false;
+                    }
+                }
+                if (i == regex.size()) {
+                    return false;
+                }
+                repeatable = true;
+                break;
+            default:  // a literal byte, maybe of a UTF-8 sequence, or "."
+                repeatable = true;
+                break;
+        }
+    }
+    return true;
+}
+
+// Whether the EC understands the value of a filter on a string like we do.
+bool isValueUnderstoodByEC(RelationalOperator op, std::string_view value) {
+    switch (op) {
+        case RelationalOperator::matches:
+        case RelationalOperator::doesnt_match:
+            return isRegexUnderstoodByEC(value, false);
+        case RelationalOperator::matches_icase:
+        case RelationalOperator::doesnt_match_icase:
+            return isRegexUnderstoodByEC(value, true);
+        case RelationalOperator::equal:
+        case RelationalOperator::not_equal:
+        case RelationalOperator::equal_icase:
+        case RelationalOperator::not_equal_icase:
+        case RelationalOperator::less:
+        case RelationalOperator::greater_or_equal:
+        case RelationalOperator::greater:
+        case RelationalOperator::less_or_equal:
+            return true;
     }
     return false;  // unreachable
 }
@@ -93,6 +221,35 @@ bool isSafeForEC(std::string_view value) {
     return value.find('\n') == std::string_view::npos &&
            (value.empty() ||
             (!is_whitespace(value.front()) && !is_whitespace(value.back())));
+}
+
+// The EC selects a missing string (None), e.g. the core host of an event of a
+// host unknown to the core, only with its negated operators, while we see it as
+// "\002". So with a filter selecting "\002", e.g. "~ ." or "< m", the EC would
+// drop rows which we select.
+bool ecDropsMissingStringsWeSelect(RelationalOperator op,
+                                   const std::string &value,
+                                   const ICore &core) {
+    switch (op) {
+        case RelationalOperator::not_equal:
+        case RelationalOperator::doesnt_match:
+        case RelationalOperator::not_equal_icase:
+        case RelationalOperator::doesnt_match_icase:
+            return false;
+        case RelationalOperator::equal:
+        case RelationalOperator::matches:
+        case RelationalOperator::equal_icase:
+        case RelationalOperator::matches_icase:
+        case RelationalOperator::less:
+        case RelationalOperator::greater_or_equal:
+        case RelationalOperator::greater:
+        case RelationalOperator::less_or_equal:
+            return StringFilter{Filter::Kind::row, "",
+                                [](Row /*row*/) { return std::string{"\002"}; },
+                                op, value}
+                .accepts(Row{nullptr}, NoAuthUser{}, 0s, core);
+    }
+    return false;  // unreachable
 }
 
 class ECTableConnection : public EventConsoleConnection {
@@ -183,7 +340,10 @@ private:
             const auto type = table_->column(column_name, *mc_)->type();
             for (const auto &[op, value] : restrictions) {
                 const bool forward =
-                    isUnderstoodByEC(type, op) && isSafeForEC(value);
+                    isUnderstoodByEC(type, op) && isSafeForEC(value) &&
+                    (type != ColumnType::string ||
+                     (isValueUnderstoodByEC(op, value) &&
+                      !ecDropsMissingStringsWeSelect(op, value, *mc_)));
                 Debug(mc_->loggerLivestatus())
                     << "column " << table_->name() << "." << column_name
                     << " is restricted by " << op << " " << value

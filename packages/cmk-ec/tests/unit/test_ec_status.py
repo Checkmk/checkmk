@@ -152,6 +152,7 @@ def query_texts_of_events(status_server: StatusServer, filter_line: str) -> set[
         pytest.param("=~", id="equal ignoring case"),
         pytest.param("~", id="regex matches"),
         pytest.param("~~", id="regex matches ignoring case"),
+        pytest.param("in", id="in"),
     ],
 )
 def test_filter_does_not_select_events_without_a_value(
@@ -185,6 +186,35 @@ def test_negated_filter_selects_events_without_a_value(
     texts = query_texts_of_events(status_server, f"Filter: event_core_host {operator_name} myhost")
 
     assert texts == {"unknown", "other"}
+
+
+# Like NULL in SQL, a missing value isn't ordered, so even "!<", i.e. ">=", doesn't select it.
+@pytest.mark.parametrize(
+    "operator_name, expected_texts",
+    [
+        pytest.param("<",   {"mine"},  id="less"),
+        pytest.param("<=",  {"mine"},  id="less or equal"),
+        pytest.param(">",   {"other"}, id="greater"),
+        pytest.param(">=",  {"other"}, id="greater or equal"),
+        pytest.param("!<",  {"other"}, id="not less"),
+        pytest.param("!<=", {"other"}, id="not less or equal"),
+        pytest.param("!>",  {"mine"},  id="not greater"),
+        pytest.param("!>=", {"mine"},  id="not greater or equal"),
+    ],
+)  # fmt: skip
+def test_ordering_filter_does_not_select_events_without_a_value(
+    event_status: EventStatus,
+    status_server: StatusServer,
+    operator_name: str,
+    expected_texts: set[str],
+) -> None:
+    event_status.new_event(new_event({"text": "unknown", "core_host": None}))
+    event_status.new_event(new_event({"text": "mine", "core_host": HostName("myhost")}))
+    event_status.new_event(new_event({"text": "other", "core_host": HostName("otherhost")}))
+
+    texts = query_texts_of_events(status_server, f"Filter: event_core_host {operator_name} n")
+
+    assert texts == expected_texts
 
 
 def test_filter_compares_the_default_of_a_column_missing_in_an_event(

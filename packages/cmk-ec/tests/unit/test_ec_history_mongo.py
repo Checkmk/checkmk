@@ -7,6 +7,7 @@
 import logging
 import os
 import re
+from unittest import mock
 
 import pytest
 
@@ -18,7 +19,12 @@ from cmk.ec.history_mongo import filters_to_mongo_query, MongoDBHistory
 from cmk.ec.main import StatusTableEvents, StatusTableHistory
 from cmk.ec.query import OperatorName, QueryFilter, QueryGET, StatusTable
 
-from .helpers import EVENTS_WITH_FIRST_TIMES, TIME_FILTER_CASES
+from .helpers import (
+    EVENTS_WITH_CONTACT_GROUPS,
+    EVENTS_WITH_FIRST_TIMES,
+    LIST_FILTER_CASES,
+    TIME_FILTER_CASES,
+)
 
 requires_mongodb = pytest.mark.skipif(
     os.getenv("MONGODB_CONNECTION_STRING") is None,
@@ -111,148 +117,83 @@ def mongo_query_for(history: FileHistory, *filter_lines: str) -> dict[str, objec
     return filters_to_mongo_query(history_query(history, *filter_lines).filters, EVENT_DEFAULTS)
 
 
-def test_filters_to_mongo_query() -> None:
-    """Filters become proper mongo query"""
-
-    filters = [
-        QueryFilter(
-            column_name="event_text",
-            operator_name="=",
-            predicate=lambda _: True,
-            argument="test_event",
-        ),
-        QueryFilter(
-            column_name="event_time",
-            operator_name="<",
-            predicate=lambda _: True,
-            argument=1234,
-        ),
-        QueryFilter(
-            column_name="event_delay_until",
-            operator_name="<=",
-            predicate=lambda _: True,
-            argument=120,
-        ),
-        QueryFilter(
-            column_name="event_comment",
-            operator_name="~",
-            predicate=lambda _: True,
-            argument="test",
-        ),
-        QueryFilter(
-            column_name="event_location",
-            operator_name="=~",
-            predicate=lambda _: True,
-            argument="seattle",
-        ),
-        QueryFilter(
-            column_name="event_phase",
-            operator_name="~~",
-            predicate=lambda _: True,
-            argument="test",
-        ),
-        QueryFilter(
-            column_name="event_owner",
-            operator_name="in",
-            predicate=lambda _: True,
-            argument=["foo", "bar"],
-        ),
-        QueryFilter(
-            column_name="history_owner",
-            operator_name="in",
-            predicate=lambda _: True,
-            argument="foobar",
-        ),
-        QueryFilter(
-            column_name="history_line",
-            operator_name="in",
-            predicate=lambda _: True,
-            argument="some text",
-        ),
-    ]
-
-    expected_output = {
-        "event.text": "test_event",
-        "event.time": {"$lt": 1234},
-        "event.delay_until": {"$lte": 120},
-        "event.comment": {"$regex": "test", "$options": ""},
-        "event.location": {"$regex": re.compile(r"\Aseattle\z", re.IGNORECASE)},
-        "event.phase": {"$regex": "test", "$options": "i"},
-        "event.owner": {"$in": ["foo", "bar"]},
-        "owner": {"$in": "foobar"},
-        "_id": {"$in": "some text"},
-    }
-    assert filters_to_mongo_query(filters, EVENT_DEFAULTS) == expected_output
-
-
-def test_all_filters_on_the_same_column_end_up_in_the_mongo_query() -> None:
-    filters = [
-        QueryFilter(
-            column_name="event_id", operator_name=">=", predicate=lambda _: True, argument=2
-        ),
-        QueryFilter(
-            column_name="event_id", operator_name="<=", predicate=lambda _: True, argument=4
-        ),
-    ]
-
-    assert filters_to_mongo_query(filters, EVENT_DEFAULTS) == {
-        "event.id": {"$gte": 2},
-        "$and": [{"event.id": {"$lte": 4}}],
-    }
-
-
-def mongo_filter_for(operator_name: OperatorName, argument: str) -> object:
-    query_filter = QueryFilter(
-        column_name="event_text",
-        operator_name=operator_name,
-        predicate=lambda _: True,
-        argument=argument,
-    )
-    return filters_to_mongo_query([query_filter], EVENT_DEFAULTS)["event.text"]
-
-
-def mongo_regex_for(operator_name: OperatorName, argument: str) -> re.Pattern[str]:
-    match mongo_filter := mongo_filter_for(operator_name, argument):
-        case {"$regex": re.Pattern() as regex}:
-            return regex
-        case _:
-            raise AssertionError(f"no regex in MongoDB filter {mongo_filter!r}")
+def or_missing(key: str, conditions: dict[str, object]) -> dict[str, object]:
+    """The conditions or no value, e.g. for an event without the field, i.e. with its default"""
+    return {"$or": [conditions, {key: None}]}
 
 
 @pytest.mark.parametrize(
-    "value, expected",
+    "filter_line, expected",
     [
-        pytest.param("a.b",   True,  id="same value"),
-        pytest.param("A.B",   True,  id="value differs in case"),
-        pytest.param("axb",   False, id="value matches the argument only as a regex"),
-        pytest.param("xa.bx", False, id="value contains the argument"),
-        pytest.param("a.b\n", False, id="value has a trailing newline"),
+        pytest.param("Filter: event_text = disk",  {"event.text": "disk"},                                    id="equal"),
+        pytest.param("Filter: event_text = ",      or_missing("event.text", {"event.text": ""}),               id="equal to the default"),
+        pytest.param("Filter: event_text != disk", or_missing("event.text", {"event.text": {"$ne": "disk"}}),  id="not equal"),
+        pytest.param("Filter: event_text >= m",    {"event.text": {"$gte": "m"}},                             id="greater or equal"),
+        pytest.param("Filter: event_count < 5",    or_missing("event.count", {"event.count": {"$lt": 5}}),     id="selecting the default"),
+        pytest.param("Filter: history_who <= m",   {"who": {"$lte": "m"}},                                    id="history column, never missing"),
+        pytest.param("Filter: history_line > 5",   {"_id": {"$gt": 5}},                                       id="history line"),
     ],
 )  # fmt: skip
-def test_case_insensitive_equality_filter_matches_only_the_whole_value_ignoring_case(
-    value: str, expected: bool
+def test_filter_becomes_mongo_query(
+    history: FileHistory, filter_line: str, expected: dict[str, object]
 ) -> None:
-    regex = mongo_regex_for("=~", "a.b")
-
-    assert bool(regex.search(value)) is expected
+    assert mongo_query_for(history, filter_line) == expected
 
 
-def test_negated_case_insensitive_equality_filter_negates_the_same_regex() -> None:
-    assert mongo_filter_for("!=~", "a.b") == {"$not": mongo_regex_for("=~", "a.b")}
-
-
+# MongoDB's regexes are PCRE's, which understand only some of ours alike and fold case
+# differently, it rejects a regex with a NUL, and its "in" respects case.
 @pytest.mark.parametrize(
-    "operator_name, expected",
+    "filter_spec",
     [
-        pytest.param("!=",  {"$ne": "a.b"},                             id="not equal"),
-        pytest.param("!~",  {"$not": re.compile("a.b")},                id="regex does not match"),
-        pytest.param("!~~", {"$not": re.compile("a.b", re.IGNORECASE)}, id="regex does not match ignoring case"),
+        pytest.param(r"~ \d",            id="class escape"),
+        pytest.param("~ a{2}",           id="counted repetition"),
+        pytest.param("~ (?i)a",          id="flag"),
+        pytest.param("~ [:alpha:]",      id="POSIX syntax for PCRE"),
+        pytest.param("!~~ [^a]",         id="negated class folding case"),
+        pytest.param("~ a\0b",           id="NUL"),
+        pytest.param("=~ a\0b",          id="NUL ignoring case"),
+        pytest.param("in a b",           id="in"),
     ],
 )  # fmt: skip
-def test_negated_filter_becomes_negated_mongo_query(
-    operator_name: OperatorName, expected: dict[str, object]
+def test_filter_mongodb_cant_apply_like_we_do_is_left_out(
+    history: FileHistory, filter_spec: str
 ) -> None:
-    assert mongo_filter_for(operator_name, "a.b") == expected
+    assert mongo_query_for(history, f"Filter: event_text {filter_spec}") == {}
+
+
+TEXT = "event.text"
+KELVIN_SIGN = "K"
+LONG_S = "ſ"
+
+
+# MongoDB doesn't fold case itself, the alternatives are the characters which Python's re
+# takes as equal, e.g. "s" and the long s, and [^\n] and (?=\n?\z) are Python's "." and "$".
+@pytest.mark.parametrize(
+    "filter_spec, expected",
+    [
+        pytest.param(r"~ a.b\.c",          {TEXT: {"$regex": r"a[^\n]b\.c"}},                         id="regex"),
+        pytest.param("~~ k.s",             {TEXT: {"$regex": rf"(K|k|{KELVIN_SIGN})[^\n](S|s|{LONG_S})"}}, id="regex ignoring case"),
+        pytest.param("=~ a.b",             {TEXT: {"$regex": r"\A(A|a)\.(B|b)\z"}},                   id="equality ignoring case"),
+        pytest.param("!~ a.b",             or_missing(TEXT, {TEXT: {"$not": re.compile(r"a[^\n]b")}}), id="negated regex"),
+        pytest.param("!~~ a",              or_missing(TEXT, {TEXT: {"$not": re.compile("(A|a)")}}),   id="negated regex ignoring case"),
+        pytest.param("!=~ a",              or_missing(TEXT, {TEXT: {"$not": re.compile(r"\A(A|a)\z")}}), id="negated equality ignoring case"),
+        pytest.param(r"~ ^db[0-9]+\.x$",   {TEXT: {"$regex": r"^db[0-9]+\.x(?=\n?\z)"}},              id="anchors, class and quantifier"),
+        pytest.param("~~ ^db[0-9]",        {TEXT: {"$regex": "^(D|d)(B|b)[0-9]"}},                   id="class not folding case, ignoring case"),
+        pytest.param("~~ [ks]+",           {TEXT: {"$regex": f"(?:[ks]|K|S|{LONG_S}|{KELVIN_SIGN})+"}}, id="class folding case"),
+        pytest.param("!~ (disk|cpu)s*?",   or_missing(TEXT, {TEXT: {"$not": re.compile("(disk|cpu)s*?")}}), id="negated group and lazy quantifier"),
+    ],
+)  # fmt: skip
+def test_regex_filter_becomes_an_exact_mongo_regex(
+    history: FileHistory, filter_spec: str, expected: dict[str, object]
+) -> None:
+    assert mongo_query_for(history, f"Filter: event_text {filter_spec}") == expected
+
+
+def test_all_filters_on_the_same_column_end_up_in_the_mongo_query(history: FileHistory) -> None:
+    assert mongo_query_for(history, "Filter: history_line >= 2", "Filter: history_line <= 4") == {
+        "_id": {"$gte": 2},
+        "$and": [{"_id": {"$lte": 4}}],
+    }
 
 
 DOWNTIME = "event.host_in_downtime"
@@ -261,10 +202,10 @@ DOWNTIME = "event.host_in_downtime"
 @pytest.mark.parametrize(
     "filter_line, expected",
     [
-        pytest.param("Filter: event_host_in_downtime = 1",  {DOWNTIME: {"$in": [True]}},  id="true"),
-        pytest.param("Filter: event_host_in_downtime = 0",  {DOWNTIME: {"$in": [False]}}, id="false"),
-        pytest.param("Filter: event_host_in_downtime != 0", {DOWNTIME: {"$in": [True]}},  id="not false"),
-        pytest.param("Filter: event_host_in_downtime > 1",  {DOWNTIME: {"$in": []}},      id="nothing"),
+        pytest.param("Filter: event_host_in_downtime = 1",  {DOWNTIME: {"$in": [True]}},                        id="true"),
+        pytest.param("Filter: event_host_in_downtime = 0",  or_missing(DOWNTIME, {DOWNTIME: {"$in": [False]}}), id="false or missing"),
+        pytest.param("Filter: event_host_in_downtime != 0", or_missing(DOWNTIME, {DOWNTIME: {"$in": [True]}}),  id="not false or None"),
+        pytest.param("Filter: event_host_in_downtime > 1",  {DOWNTIME: {"$in": []}},                            id="nothing"),
     ],
 )  # fmt: skip
 def test_bool_filter_becomes_mongo_query_for_the_booleans_it_selects(
@@ -314,6 +255,136 @@ def test_time_filter_compares_the_truncated_time_like_livestatus(
     for event in EVENTS_WITH_FIRST_TIMES:
         history_mongo.add(event=event, what="NEW")
     query = history_query(history_mongo, f"Filter: event_first {operator_name} {argument}")
+
+    _header, *rows = query.table.query(query)
+
+    assert {text for (text,) in rows} == expected_texts
+
+
+@requires_mongodb
+@pytest.mark.parametrize(
+    "filter_line, expected_texts",
+    [
+        pytest.param("Filter: event_core_host = ",  {"orphan"},                              id="no value counts as the default"),
+        pytest.param("Filter: event_host in WEB01", {"web01"},                               id="in ignores case"),
+        pytest.param("Filter: event_text =~ KAPI",  {"kapı"},                                id="equality ignoring case"),
+        pytest.param("Filter: event_text !=~ KAPI", {"orphan", "web01", "٣", "Bärlauch"},    id="negated equality ignoring case"),
+        pytest.param("Filter: event_text ~~ PI",    {"kapı"},                                id="regex ignoring case"),
+        pytest.param("Filter: event_text !~~ PI",   {"orphan", "web01", "٣", "Bärlauch"},    id="negated regex ignoring case"),
+        pytest.param("Filter: event_text ~ B.r",    {"Bärlauch"},                            id="dot for a character of several bytes"),
+        pytest.param("Filter: event_text !~ B.r",   {"orphan", "web01", "kapı", "٣"},        id="negated regex"),
+        pytest.param(r"Filter: event_text ~ ^\d$",  {"٣"},                                   id="regex"),
+        pytest.param("Filter: event_text ~ ^w.b[0-9]+$",   {"web01"},                        id="anchors, class and quantifier"),
+        pytest.param("Filter: event_text ~~ ^WEB[0-9]+$",  {"web01"},                        id="class not folding case, ignoring case"),
+        pytest.param("Filter: event_text ~~ ^[A-Z]AP",     {"kapı"},                         id="class folding case"),
+        pytest.param("Filter: event_text !~~ ^[A-Z]AP",    {"orphan", "web01", "٣", "Bärlauch"}, id="negated regex with a class folding case"),
+        pytest.param("Filter: event_text !~ ^(kapı|٣)$",   {"orphan", "web01", "Bärlauch"},  id="negated group"),
+        pytest.param("Filter: event_text ~ [:alpha:]",     {"orphan", "kapı", "Bärlauch"},   id="POSIX syntax for PCRE"),
+        pytest.param("Filter: event_text ~ \0",            set(),                            id="NUL"),
+        pytest.param("Filter: event_text ~~ " + "x" * 7000, set(),                           id="too long with the case variants"),
+    ],
+)  # fmt: skip
+def test_filter_selects_like_for_the_events(
+    history_mongo: MongoDBHistory, filter_line: str, expected_texts: set[str]
+) -> None:
+    # Like an archived orphan, i.e. an event that no rule matched, it has no core host.
+    history_mongo.add(event=ec.Event(text="orphan", host=HostName("orphan")), what="ORPHANED")
+    history_mongo.add(
+        event=ec.Event(text="web01", host=HostName("web01"), core_host=HostName("web01")),
+        what="NEW",
+    )
+    for text in ("kapı", "٣", "Bärlauch"):
+        history_mongo.add(
+            event=ec.Event(text=text, host=HostName("other"), core_host=HostName("other")),
+            what="NEW",
+        )
+    query = history_query(history_mongo, filter_line)
+
+    _header, *rows = query.table.query(query)
+
+    assert {text for (text,) in rows} == expected_texts
+
+
+# MongoDB can't compile some of the regexes we translate for it, though they are much shorter
+# than its limit of 32764 bytes, e.g. one with a group of case variants for each character.
+@requires_mongodb
+@pytest.mark.parametrize(
+    "filter_spec",
+    [
+        pytest.param("=~ " + "A" * 5000,                 id="too large with the case variants"),
+        pytest.param("~ ^" + "[ab]" * 2500,              id="too large with the classes"),
+        pytest.param("~ " + "(" * 300 + "a" + ")" * 300, id="too deeply nested"),
+    ],
+)  # fmt: skip
+def test_filter_with_a_regex_mongodb_cant_compile_works(
+    history_mongo: MongoDBHistory, filter_spec: str
+) -> None:
+    for text in ("a" * 5000, "other"):
+        history_mongo.add(event=ec.Event(text=text), what="NEW")
+    query = history_query(history_mongo, f"Filter: event_text {filter_spec}")
+
+    _header, *rows = query.table.query(query)
+
+    assert rows == [["a" * 5000]]
+
+
+@requires_mongodb
+def test_limit_counts_only_the_entries_the_filters_select(history_mongo: MongoDBHistory) -> None:
+    for text in ("Bärlauch", "other", "newest"):
+        history_mongo.add(event=ec.Event(text=text), what="NEW")
+    query = history_query(history_mongo, "Filter: event_text ~~ ^b", "Limit: 1")
+
+    _header, *rows = query.table.query(query)
+
+    assert rows == [["Bärlauch"]]
+
+
+GROUPS = "event.contact_groups"
+
+
+def contains(element: str) -> dict[str, object]:
+    return {GROUPS: {"$elemMatch": {"$eq": element}}}
+
+
+def lacks(element: str) -> dict[str, object]:
+    return {"$nor": [contains(element)]}
+
+
+@pytest.mark.parametrize(
+    "operator_name, argument, expected",
+    [
+        pytest.param("=",   "",       or_missing(GROUPS, {GROUPS: {"$in": [None, [], [""]]}}), id="empty"),
+        pytest.param("=",   "admins", {GROUPS: {"$in": []}},                                  id="equal tests only for emptiness"),
+        pytest.param("!=",  "",       {GROUPS: {"$nin": [None, [], [""]]}},                   id="not empty"),
+        pytest.param("!=",  "admins", {GROUPS: {"$in": []}},                                  id="not equal tests only for emptiness"),
+        pytest.param(">=",  "admins", contains("admins"),                                     id="contains"),
+        pytest.param(">=",  "",       {"$expr": mock.ANY},                                    id="contains an empty string before the last element"),
+        pytest.param("<",   "admins", or_missing(GROUPS, lacks("admins")),                    id="doesn't contain"),
+        pytest.param("=~",  "admins", {GROUPS: {"$in": []}},                                  id="equal ignoring case never holds"),
+        pytest.param("!=~", "admins", {GROUPS: {"$in": []}},                                  id="not equal ignoring case never holds"),
+        pytest.param("<=",  "admins", {},                                                     id="contains ignoring case, left out"),
+        pytest.param(">",   "admins", {},                                                     id="doesn't contain ignoring case, left out"),
+        pytest.param("~",   "^adm",   {},                                                     id="regex, left out"),
+        pytest.param("!~~", "^adm",   {},                                                     id="regex ignoring case, left out"),
+    ],
+)  # fmt: skip
+def test_list_column_filter_becomes_mongo_query_like_in_livestatus(
+    history: FileHistory, operator_name: OperatorName, argument: str, expected: dict[str, object]
+) -> None:
+    """See LIST_FILTER_CASES"""
+    filter_line = f"Filter: event_contact_groups {operator_name} {argument}"
+
+    assert mongo_query_for(history, filter_line) == expected
+
+
+@requires_mongodb
+@pytest.mark.parametrize("operator_name, argument, expected_texts", LIST_FILTER_CASES)
+def test_list_column_filter_works_like_in_livestatus(
+    history_mongo: MongoDBHistory, operator_name: str, argument: str, expected_texts: set[str]
+) -> None:
+    for event in EVENTS_WITH_CONTACT_GROUPS:
+        history_mongo.add(event=event, what="NEW")
+    query = history_query(history_mongo, f"Filter: event_contact_groups {operator_name} {argument}")
 
     _header, *rows = query.table.query(query)
 

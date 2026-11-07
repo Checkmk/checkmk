@@ -91,6 +91,45 @@ def test_eq_tilde_different_strings_do_not_match(
     assert _selects(event_status, status_server, "hello", "=~ world") is False
 
 
+# Unlike str.lower(), RE2 in Livestatus folds these together, too.
+@pytest.mark.parametrize(
+    "value, argument",
+    [
+        pytest.param("100 µs", "100 μs", id="micro sign and mu"),
+        pytest.param("ſ", "S",           id="long s"),
+        pytest.param("Σ", "ς",           id="final sigma"),
+    ],
+)  # fmt: skip
+def test_eq_tilde_folds_case_like_livestatus(
+    event_status: EventStatus, status_server: StatusServer, value: str, argument: str
+) -> None:
+    assert _selects(event_status, status_server, value, f"=~ {argument}") is True
+
+
+KELVIN_SIGN = "K"
+
+
+# Like =~, e.g. for check_mkevents, which uses "in" for several hosts and =~ for a single one
+@pytest.mark.parametrize(
+    "value, argument, expected",
+    [
+        pytest.param("kapı", "KAPI",      True,  id="dotless i"),
+        pytest.param("ſ",    "S",         True,  id="long s"),
+        pytest.param("k",    KELVIN_SIGN, True,  id="ASCII value, Kelvin sign"),
+        pytest.param("Bär",  "BÄR",       True,  id="non-ASCII letter"),
+        pytest.param("ss",   "ß",         False, id="no folding to several characters"),
+    ],
+)  # fmt: skip
+def test_in_folds_case_like_eq_tilde(
+    event_status: EventStatus,
+    status_server: StatusServer,
+    value: str,
+    argument: str,
+    expected: bool,
+) -> None:
+    assert _selects(event_status, status_server, value, f"in other {argument}") is expected
+
+
 @pytest.mark.parametrize(
     "operator_name, value, argument, expected",
     [
@@ -98,6 +137,7 @@ def test_eq_tilde_different_strings_do_not_match(
         pytest.param("!=",  "Hello", "hello", True,  id="not equal, value differs in case"),
         pytest.param("!=~", "Hello", "hello", False, id="not equal ignoring case, value differs in case"),
         pytest.param("!=~", "Hello", "world", True,  id="not equal ignoring case, different value"),
+        pytest.param("!=~", "µs",    "μs",    False, id="not equal ignoring case, value folds like in Livestatus"),
         pytest.param("!~",  "Hello", "^He",   False, id="regex does not match, matching value"),
         pytest.param("!~",  "Hello", "^he",   True,  id="regex does not match, value differs in case"),
         pytest.param("!~~", "Hello", "^he",   False, id="regex does not match ignoring case, value differs in case"),

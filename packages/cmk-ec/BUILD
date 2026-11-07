@@ -98,6 +98,7 @@ py_library(
         "cmk/ec/mkp.py",
         "cmk/ec/perfcounters.py",
         "cmk/ec/query.py",
+        "cmk/ec/regex_translation.py",
         "cmk/ec/rule_matcher.py",
         "cmk/ec/rule_packs.py",
         "cmk/ec/settings.py",

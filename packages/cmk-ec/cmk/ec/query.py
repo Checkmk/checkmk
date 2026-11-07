@@ -19,6 +19,8 @@ from typing import Any, ClassVar, Literal, override
 
 from cmk.ccc.exceptions import MKException
 
+from .regex_translation import case_folded
+
 
 class MKClientError(MKException):
     pass
@@ -286,8 +288,8 @@ def _unchanged(argument: Any) -> Any:
     return argument
 
 
-def _lowered_set(arguments: Iterable[str]) -> AbstractSet[str]:
-    return {argument.lower() for argument in arguments}
+def _case_folded_set(arguments: Iterable[str]) -> AbstractSet[str]:
+    return {case_folded(argument) for argument in arguments}
 
 
 def _regex(argument: str) -> re.Pattern[str]:
@@ -298,10 +300,10 @@ def _regex_ignoring_case(argument: str) -> re.Pattern[str]:
     return re.compile(argument, re.IGNORECASE)
 
 
-def filter_operator_in(a: str, b: AbstractSet[str]) -> bool:
-    """Whether a is in b ignoring case, where b is lowered, see _lowered_set(). A regex with
-    IGNORECASE would be slower."""
-    return a.lower() in b
+def filter_operator_in(a: str | None, b: AbstractSet[str]) -> bool:
+    """Whether a is in b ignoring case like =~, where b is case-folded, see _case_folded_set().
+    A regex with IGNORECASE would be slower. A missing value is in no set, see _matches()."""
+    return a is not None and case_folded(a) in b
 
 
 # None stands for a missing value, which neither matches nor equals anything, so
@@ -310,8 +312,29 @@ def _matches(value: str | None, regex: re.Pattern[str]) -> bool:
     return value is not None and regex.search(value) is not None
 
 
-def _equals_ignoring_case(value: str | None, lowered: str) -> bool:
-    return value is not None and value.lower() == lowered
+# Unlike str.lower(), case_folded() folds e.g. "µ" and "μ" or "ſ" and "s" together, like RE2
+# does for Livestatus. It even folds a bit more, e.g. "ı" and "i", so Livestatus forwards only
+# =~ to us, not !=~.
+def _equals_ignoring_case(value: str | None, folded: str) -> bool:
+    return value is not None and case_folded(value) == folded
+
+
+# A missing value isn't ordered either, so no ordering operator selects it, not even "!<",
+# which is just another name for ">=". That's like NULL in SQL, e.g. in the SQLite history.
+def _less(value: Any, argument: Any) -> bool:
+    return value is not None and value < argument
+
+
+def _less_or_equal(value: Any, argument: Any) -> bool:
+    return value is not None and value <= argument
+
+
+def _greater(value: Any, argument: Any) -> bool:
+    return value is not None and value > argument
+
+
+def _greater_or_equal(value: Any, argument: Any) -> bool:
+    return value is not None and value >= argument
 
 
 OperatorName = Literal["=", "!=", "~", "!~", "=~", "!=~", "~~", "!~~", "<", ">=", ">", "<=", "in"]
@@ -334,21 +357,21 @@ _filter_operators: dict[str, _Operator] = {
     "!=": ("!=", _unchanged, operator.ne),
     "~": ("~", _regex, _matches),
     "!~": ("!~", _regex, lambda a, b: not _matches(a, b)),
-    "=~": ("=~", str.lower, _equals_ignoring_case),
-    "!=~": ("!=~", str.lower, lambda a, b: not _equals_ignoring_case(a, b)),
+    "=~": ("=~", case_folded, _equals_ignoring_case),
+    "!=~": ("!=~", case_folded, lambda a, b: not _equals_ignoring_case(a, b)),
     "~~": ("~~", _regex_ignoring_case, _matches),
     "!~~": ("!~~", _regex_ignoring_case, lambda a, b: not _matches(a, b)),
-    "<": ("<", _unchanged, operator.lt),
-    ">=": (">=", _unchanged, operator.ge),
-    ">": (">", _unchanged, operator.gt),
-    "<=": ("<=", _unchanged, operator.le),
+    "<": ("<", _unchanged, _less),
+    ">=": (">=", _unchanged, _greater_or_equal),
+    ">": (">", _unchanged, _greater),
+    "<=": ("<=", _unchanged, _less_or_equal),
     # aliases of Livestatus
-    "!<": (">=", _unchanged, operator.ge),
-    "!>=": ("<", _unchanged, operator.lt),
-    "!>": ("<=", _unchanged, operator.le),
-    "!<=": (">", _unchanged, operator.gt),
+    "!<": (">=", _unchanged, _greater_or_equal),
+    "!>=": ("<", _unchanged, _less),
+    "!>": ("<=", _unchanged, _less_or_equal),
+    "!<=": (">", _unchanged, _greater),
     # Unlike the other operators, Livestatus doesn't know this one.
-    "in": ("in", _lowered_set, filter_operator_in),
+    "in": ("in", _case_folded_set, filter_operator_in),
 }
 
 
@@ -419,9 +442,11 @@ def _list_predicate(operator_name: OperatorName, argument: str) -> Callable[[obj
         case "<":
             return lambda value: not _has_element(value, lambda e: e == argument)
         case "<=" | ">":
-            equal = re.compile(re.escape(argument), re.IGNORECASE).fullmatch
+            folded = case_folded(argument)
             contained = operator_name == "<="
-            return lambda value: _has_element(value, equal) == contained
+            return lambda value: (
+                _has_element(value, lambda e: case_folded(e) == folded) == contained
+            )
         case "~" | "!~" | "~~" | "!~~":
             flags = re.IGNORECASE if operator_name in {"~~", "!~~"} else re.NOFLAG
             search = re.compile(argument, flags).search

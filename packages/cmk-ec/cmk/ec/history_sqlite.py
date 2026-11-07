@@ -5,6 +5,7 @@
 
 """EC History sqlite backend."""
 
+import contextlib
 import itertools
 import json
 import os
@@ -94,10 +95,10 @@ def configure_sqlite_types() -> None:
 
 
 def filters_to_sqlite_query(filters: Iterable[QueryFilter]) -> tuple[str, list[object]]:
-    """
-    Construct the sqlite filtering specification.
+    """A query for at least the entries which the filters select, so the caller has to apply
+    the filters, too: It leaves out "in", which ignores case, unlike IN of SQL. Like
+    MongoDBHistory, SQLiteHistory.get() applies all filters then.
 
-    Used in SQLiteHistory.get() method.
     Always return all columns, since they are filtered elsewhere.
     """
     query_columns: set[str] = set()
@@ -113,13 +114,9 @@ def filters_to_sqlite_query(filters: Iterable[QueryFilter]) -> tuple[str, list[o
         if adjusted_column_name not in TABLE_COLUMNS:
             raise ValueError(f"Filter {f.column_name} not implemented for SQLite")
 
-        if f.column_name in LIST_COLUMNS:
-            condition, arguments = _list_filter_to_sqlite_filter(f, adjusted_column_name)
-        elif f.column_name in TIME_COLUMNS:
-            condition, arguments = _time_filter_to_sqlite_filter(f, adjusted_column_name)
-        else:
-            condition = query_filter_to_sqlite_filter(f, adjusted_column_name)
-            arguments = list(f.argument) if f.operator_name == "in" else [f.argument]
+        if (condition_and_arguments := _sqlite_condition(f, adjusted_column_name)) is None:
+            continue
+        condition, arguments = condition_and_arguments
 
         query_columns.add(adjusted_column_name)
         query_conditions.append(condition)
@@ -131,7 +128,35 @@ def filters_to_sqlite_query(filters: Iterable[QueryFilter]) -> tuple[str, list[o
     )
 
 
-def query_filter_to_sqlite_filter(f: QueryFilter, adjusted_column_name: str) -> str:
+def _sqlite_condition(f: QueryFilter, adjusted_column_name: str) -> tuple[str, list[object]] | None:
+    """The condition for the filter and its arguments, None if SQLite can't apply it exactly"""
+    if f.column_name in LIST_COLUMNS:
+        return _list_filter_to_sqlite_filter(f, adjusted_column_name)
+    if f.column_name in TIME_COLUMNS:
+        return _time_filter_to_sqlite_filter(f, adjusted_column_name)
+    condition = query_filter_to_sqlite_filter(f, adjusted_column_name)
+    return None if condition is None else (condition, _arguments(f))
+
+
+def _whole(argument: str) -> str:
+    """The argument as a regex to match a whole value with, for regexp_nocase(), which folds
+    case like =~ in cmk.ec.query, unlike COLLATE NOCASE, which folds only ASCII letters"""
+    return rf"\A{re.escape(argument)}\Z"
+
+
+def _arguments(f: QueryFilter) -> list[object]:
+    """The arguments for the condition of query_filter_to_sqlite_filter()"""
+    match f.operator_name:
+        case "=~" | "!=~":
+            return [_whole(f.argument)]
+        case _:
+            return [f.argument]
+
+
+def query_filter_to_sqlite_filter(f: QueryFilter, adjusted_column_name: str) -> str | None:
+    """The condition for a filter on a column which is neither a list nor a time, None if
+    SQLite can't apply it exactly. For the ints, we compare their lower 32 bits like
+    Livestatus, which are all the bits of the IDs and counts of events in practice."""
     match f.operator_name:
         case "=":
             return f"{adjusted_column_name} = ?"
@@ -143,9 +168,9 @@ def query_filter_to_sqlite_filter(f: QueryFilter, adjusted_column_name: str) -> 
         case "!~":
             return f"{adjusted_column_name} NOT REGEXP ?"
         case "=~":
-            return f"{adjusted_column_name} = ? COLLATE NOCASE"
+            return f"regexp_nocase(?, {adjusted_column_name})"
         case "!=~":
-            return f"{adjusted_column_name} IS NOT ? COLLATE NOCASE"
+            return f"NOT regexp_nocase(?, {adjusted_column_name})"
         case "~~":
             return f"regexp_nocase(?, {adjusted_column_name})"
         case "!~~":
@@ -159,7 +184,7 @@ def query_filter_to_sqlite_filter(f: QueryFilter, adjusted_column_name: str) -> 
         case "<=":
             return f"{adjusted_column_name} <= ?"
         case "in":
-            return f"{adjusted_column_name} in ({','.join(['?'] * len(f.argument))})"
+            return None
 
 
 def _time_filter_to_sqlite_filter(
@@ -191,7 +216,7 @@ def _list_filter_to_sqlite_filter(
         f" WHERE NOT (key = json_array_length({column}) - 1 AND value IS '')"
     )
     # The whole element ignoring case, like =~ for the other columns
-    whole_element = rf"\A{re.escape(str(f.argument))}\Z"
+    whole_element = _whole(str(f.argument))
     match f.operator_name:
         case "=" if f.argument == "":
             return f"NOT EXISTS ({elements})", []
@@ -390,16 +415,23 @@ class SQLiteHistory(History):
 
         Always return all columns, since they are filtered elsewhere.
         """
+        # SQLite selects at least the entries which the filters select, and we apply them,
+        # too, so they work like for the other histories. Only then the limit counts.
         sqlite_query, sqlite_arguments = filters_to_sqlite_query(query.filters)
         # Newest entries first, just like the other history backends
         sqlite_query += " ORDER BY line DESC"
-        if query.limit is not None:
-            sqlite_query += " LIMIT ?"
-            sqlite_arguments.append(query.limit + 1)
-        with self.conn as connection:
-            cur = connection.cursor()
-            cur.execute(sqlite_query, sqlite_arguments)
-            return cur.fetchall()
+        entries: list[Sequence[object]] = []
+        with (
+            self.conn as connection,
+            contextlib.closing(connection.execute(sqlite_query, sqlite_arguments)) as cursor,
+        ):
+            for row in cursor:
+                # Like the other histories, at most one entry more than the limit
+                if query.limit is not None and len(entries) > query.limit:
+                    break
+                if query.filter_row(row):
+                    entries.append(row)
+        return entries
 
     @override
     def housekeeping(self) -> None:

@@ -510,6 +510,15 @@ def replace_groups(text: str, origtext: str, match_groups: MatchGroups) -> str:
     return _GROUP_REFERENCE.sub(replacement, text)
 
 
+def _rewritten(text: str, origtext: str, match_groups: MatchGroups) -> str:
+    """A text rewritten by a rule, see replace_groups(), with spaces instead of tabs
+
+    Like for the text of a message, see scrub_string(): Livestatus gets a tab as a space, see
+    quote_tab(), so a filter it forwards to us would compare with another value than it does.
+    A host name can't contain whitespace anyway."""
+    return scrub_string(replace_groups(text, origtext, match_groups))
+
+
 class MKSignalException(BaseException):
     """Tells the main thread about a signal, see SignalHandler
 
@@ -1977,18 +1986,18 @@ class EventServer(ECServerThread):
             event["first"] = event["time"]
         event["last"] = event["time"]
         if "set_comment" in rule:
-            event["comment"] = replace_groups(rule["set_comment"], event["text"], match_groups)
+            event["comment"] = _rewritten(rule["set_comment"], event["text"], match_groups)
         if "set_text" in rule:
-            event["text"] = replace_groups(rule["set_text"], event["text"], match_groups)
+            event["text"] = _rewritten(rule["set_text"], event["text"], match_groups)
         if "set_host" in rule:
             event["orig_host"] = event["host"]
             event["host"] = HostName(replace_groups(rule["set_host"], event["host"], match_groups))
         if "set_application" in rule:
-            event["application"] = replace_groups(
+            event["application"] = _rewritten(
                 rule["set_application"], event["application"], match_groups
             )
         if "set_contact" in rule and "contact" not in event:
-            event["contact"] = replace_groups(
+            event["contact"] = _rewritten(
                 rule["set_contact"], event.get("contact", ""), match_groups
             )
 
@@ -2861,10 +2870,12 @@ class StatusServer(ECServerThread):
                         f"You cannot acknowledge event {event_id}, it is {event['phase']}."
                     )
                     continue
+            # Spaces instead of tabs, like for the rewritten texts, see _rewritten(). A user ID
+            # can't contain one, so like the other commands, we take the owner as it is.
             if comment:
-                event["comment"] = comment
+                event["comment"] = scrub_string(comment)
             if contact:
-                event["contact"] = contact
+                event["contact"] = scrub_string(contact)
             if user:
                 event["owner"] = user
             self._history.add(event, "UPDATE", user)
@@ -3618,9 +3629,7 @@ class EventStatus:
                     event["text"] = new_event["text"]
                     # TODO: This is a hack and partial copy-n-paste from rewrite_events...
                     if "set_text" in rule:
-                        event["text"] = replace_groups(
-                            rule["set_text"], event["text"], match_groups
-                        )
+                        event["text"] = _rewritten(rule["set_text"], event["text"], match_groups)
                     event["time"] = new_event["time"]
                     event["last"] = new_event["time"]
                     event["priority"] = new_event["priority"]
@@ -3687,7 +3696,7 @@ class EventStatus:
         if "cancel_application" not in rule:
             application = new_event["application"]
             if "set_application" in rule:
-                application = replace_groups(rule["set_application"], application, match_groups)
+                application = _rewritten(rule["set_application"], application, match_groups)
             if event["application"] != application:
                 if debug:
                     self._logger.info(

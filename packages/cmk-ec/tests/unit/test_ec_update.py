@@ -40,6 +40,18 @@ def test_update_event(
     assert event_status.events()[0]["contact"] == "test_contact_name"
 
 
+# Livestatus gets a tab as a space, so the filters it forwards to us have to see a space, too.
+def test_update_replaces_tabs_by_spaces_like_in_messages(
+    event_status: EventStatus, status_server: StatusServer
+) -> None:
+    event_status.new_event(new_event(ec.Event(host=HostName("host_1"))))
+    s = FakeStatusSocket(b"COMMAND UPDATE;1;testuser;1;test\tcomment;test\tcontact")
+    status_server.handle_client(s, True, "127.0.0.1")
+
+    event = event_status.events()[0]
+    assert (event["comment"], event["contact"]) == ("test comment", "test contact")
+
+
 @pytest.mark.parametrize("test_phase", ["delayed", "closed", "counting"])
 def test_update_events_that_cant_be_acked(
     event_status: EventStatus,

@@ -110,6 +110,70 @@ def test_history_file_with_entries_of_the_filtered_second_is_searched(
     assert rows == [["in the second"]]
 
 
+# grep pre-filters the history files, but its -i and "." depend on the locale, and its -i
+# folds case unlike Python, e.g. not "k" and the Kelvin sign, not even in C.UTF-8.
+@pytest.mark.parametrize("locale_name", ["C", "C.UTF-8"])
+@pytest.mark.parametrize(
+    "filter_spec, text",
+    [
+        pytest.param("=~ äpfel",  "Äpfel",      id="non-ASCII letter ignoring case"),
+        pytest.param("=~ 300 k",  "300 K", id="Kelvin sign ignoring case"),
+        pytest.param("~~ stra.e", "Straße",     id="dot for a non-ASCII letter ignoring case"),
+        pytest.param("~ a.c",     "aäc",        id="dot for a non-ASCII letter"),
+    ],
+)  # fmt: skip
+def test_pre_filter_of_history_files_keeps_the_entries_python_selects(
+    history: FileHistory,
+    monkeypatch: pytest.MonkeyPatch,
+    locale_name: str,
+    filter_spec: str,
+    text: str,
+) -> None:
+    monkeypatch.setenv("LC_ALL", locale_name)  # for grep
+    for event_text in (text, "other"):
+        history.add(event=ec.Event(text=event_text), what="NEW")
+    logger = logging.getLogger("cmk.mkeventd")
+    table = StatusTableHistory(logger, history)
+    query = QueryGET(
+        lambda _name: table,
+        ["GET history", "Columns: event_text", f"Filter: event_text {filter_spec}"],
+        logger,
+    )
+
+    _header, *rows = table.query(query)
+
+    assert rows == [[text]]
+
+
+_LONG_TEXT = "x" * 30_000
+
+
+# The shell gets the grep pipeline as a single argument, which Linux limits to 128 KiB and
+# which can't contain a NUL. As grep only pre-filters, the filters work without it, too.
+@pytest.mark.parametrize(
+    "filter_lines, expected_texts",
+    [
+        pytest.param([f"Filter: event_text =~ {_LONG_TEXT.upper()}"],    {_LONG_TEXT}, id="long argument"),
+        pytest.param([f"Filter: event_text ~~ {'X' * 10_000}"] * 3,       {_LONG_TEXT}, id="long arguments together"),
+        pytest.param(["Filter: event_text = a\0b"],                       set(),        id="NUL"),
+    ],
+)  # fmt: skip
+def test_filter_works_without_the_pre_filter_the_shell_cant_take(
+    history: FileHistory, filter_lines: list[str], expected_texts: set[str]
+) -> None:
+    for event_text in (_LONG_TEXT, "other"):
+        history.add(event=ec.Event(text=event_text), what="NEW")
+    logger = logging.getLogger("cmk.mkeventd")
+    table = StatusTableHistory(logger, history)
+    query = QueryGET(
+        lambda _name: table, ["GET history", "Columns: event_text", *filter_lines], logger
+    )
+
+    _header, *rows = table.query(query)
+
+    assert {text for (text,) in rows} == expected_texts
+
+
 @pytest.mark.parametrize(
     "operator_name, argument, expected_texts",
     [
@@ -192,6 +256,55 @@ def test_list_column_filter_works_like_in_livestatus(
     _header, *rows = table.query(query)
 
     assert {text for (text,) in rows} == expected_texts
+
+
+# The file stores a missing value as "\2", but like in the other histories, it neither matches
+# nor equals anything, and it isn't ordered.
+@pytest.mark.parametrize(
+    "operator_and_argument, expected_texts",
+    [
+        pytest.param("~ .",  {"mine", "other"}, id="regex matches"),
+        pytest.param("~~ ^", {"mine", "other"}, id="regex matches ignoring case"),
+        pytest.param("< n",  {"mine"},          id="less"),
+        pytest.param("!> n", {"mine"},          id="not greater"),
+        pytest.param("!~ .", {"unknown"},       id="regex does not match"),
+    ],
+)  # fmt: skip
+def test_filter_on_a_missing_core_host_works_like_in_the_other_histories(
+    history: FileHistory, operator_and_argument: str, expected_texts: set[str]
+) -> None:
+    history.add(event=ec.Event(text="unknown", core_host=None), what="NEW")
+    history.add(event=ec.Event(text="mine", core_host=HostName("mine")), what="NEW")
+    history.add(event=ec.Event(text="other", core_host=HostName("other")), what="NEW")
+    logger = logging.getLogger("cmk.mkeventd")
+    table = StatusTableHistory(logger, history)
+    query = QueryGET(
+        lambda _name: table,
+        ["GET history", "Columns: event_text", f"Filter: event_core_host {operator_and_argument}"],
+        logger,
+    )
+
+    _header, *rows = table.query(query)
+
+    assert {text for (text,) in rows} == expected_texts
+
+
+def test_filter_on_a_missing_rule_id_works_like_in_the_other_histories(
+    history: FileHistory,
+) -> None:
+    history.add(event=ec.Event(text="unknown", rule_id=None), what="NEW")
+    history.add(event=ec.Event(text="mine", rule_id="mine"), what="NEW")
+    logger = logging.getLogger("cmk.mkeventd")
+    table = StatusTableHistory(logger, history)
+    query = QueryGET(
+        lambda _name: table,
+        ["GET history", "Columns: event_text", "Filter: event_rule_id ~ ."],
+        logger,
+    )
+
+    _header, *rows = table.query(query)
+
+    assert {text for (text,) in rows} == {"mine"}
 
 
 def test_current_history_period(config: Config) -> None:

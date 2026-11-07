@@ -213,25 +213,117 @@ TEST_F(TableEventConsoleTest, ForwardsEqualityAndRegexFiltersOnStrings) {
         "Filter: event_text ~ ^disk",       //
         "Filter: event_text !~ ^net",       //
         "Filter: event_text =~ DISK FULL",  //
-        "Filter: event_text !=~ DISK",      //
-        "Filter: event_text ~~ ^DISK",      //
-        "Filter: event_text !~~ ^NET",
+        "Filter: event_text ~~ ^DISK",
     };
 
     EXPECT_EQ(filtersSentToEC(filters), filters);
 }
 
-class OrderingFilterOnStrings
-    : public TableEventConsoleTest,
-      public ::testing::WithParamInterface<std::string> {};
-
-TEST_P(OrderingFilterOnStrings, IsDropped) {
-    EXPECT_EQ(filtersSentToEC({"Filter: event_host " + GetParam() + " m"}),
+// The EC folds case a bit more than we do, e.g. "ı" and "i", so it would drop
+// e.g. "kapı" for "!=~ KAPI", which we select.
+TEST_F(TableEventConsoleTest, DropsNegatedEqualityIgnoringCaseOnStrings) {
+    EXPECT_EQ(filtersSentToEC({"Filter: event_text !=~ DISK"}),
               std::vector<std::string>{});
 }
 
-INSTANTIATE_TEST_SUITE_P(TableEventConsoleTest, OrderingFilterOnStrings,
-                         ::testing::Values("<", ">=", ">", "<="));
+// Like for !=~, the EC would drop e.g. "kapı" for "!~~ KAPI".
+TEST_F(TableEventConsoleTest, DropsNegatedRegexIgnoringCaseOnStrings) {
+    EXPECT_EQ(filtersSentToEC({"Filter: event_text !~~ ^NET"}),
+              std::vector<std::string>{});
+}
+
+// The EC's regexes of Python understand these unlike our RE2 or not at all,
+// e.g. "\d" covers all Unicode digits there. With !~, the EC can't drop a
+// missing value, so only the regex counts.
+class RegexUnderstoodOtherwiseByEC
+    : public TableEventConsoleTest,
+      public ::testing::WithParamInterface<std::string> {};
+
+TEST_P(RegexUnderstoodOtherwiseByEC, IsDropped) {
+    EXPECT_EQ(filtersSentToEC({"Filter: event_text !~ " + GetParam()}),
+              std::vector<std::string>{});
+}
+
+INSTANTIATE_TEST_SUITE_P(TableEventConsoleTest, RegexUnderstoodOtherwiseByEC,
+                         ::testing::Values(R"(\p{Lu})", R"(\Qa.b\E)", "(?U)a+",
+                                           "[[:digit:]]", R"(\bdisk)", R"(\d)",
+                                           "a{2}", "^*", "[a&&b]"));
+
+TEST_F(TableEventConsoleTest, ForwardsRegexesUnderstoodLikeByUs) {
+    const std::vector<std::string> filters{
+        R"(Filter: event_text !~ ^web[0-9]+\.example\.com$)",
+        "Filter: event_text !~ (disk|cpu)+ full?",
+        "Filter: event_text !~ Äpfel.*?x",
+        "Filter: event_text ~~ ^db[0-9] server",
+    };
+
+    EXPECT_EQ(filtersSentToEC(filters), filters);
+}
+
+// When ignoring case, the EC folds a bit more than we do, so "[^ı]" doesn't
+// select "I" there, unlike here.
+TEST_F(TableEventConsoleTest, DropsNegatedCharacterClassIgnoringCase) {
+    EXPECT_EQ(filtersSentToEC({"Filter: event_text ~~ ^x[^ı]"}),
+              std::vector<std::string>{});
+}
+
+namespace {
+std::string nestedGroups(size_t depth) {
+    return std::string(depth, '(') + "x" + std::string(depth, ')');
+}
+}  // namespace
+
+// Python's parser recurses into groups and fails at a few hundred nested ones,
+// which RE2 allows. Groups one after the other don't add up.
+TEST_F(TableEventConsoleTest, ForwardsRegexesWithUpTo100NestedGroups) {
+    const std::vector<std::string> filters{
+        "Filter: event_text ~ " + nestedGroups(100) + nestedGroups(100),
+    };
+
+    EXPECT_EQ(filtersSentToEC(filters), filters);
+}
+
+TEST_F(TableEventConsoleTest, DropsRegexesWithMoreNestedGroups) {
+    EXPECT_EQ(filtersSentToEC({"Filter: event_text ~ " + nestedGroups(101)}),
+              std::vector<std::string>{});
+}
+
+// We order strings by their UTF-8 bytes, the EC by their code points, which is
+// the same.
+TEST_F(TableEventConsoleTest, ForwardsOrderingFiltersOnStrings) {
+    const std::vector<std::string> filters{
+        "Filter: event_host >= m",  //
+        "Filter: event_host > m",   //
+        "Filter: event_host >= \u00c5",
+    };
+
+    EXPECT_EQ(filtersSentToEC(filters), filters);
+}
+
+// We see a missing value of the EC, e.g. the core host of an event of a host
+// unknown to the core, as "\002", which these filters select. The EC doesn't
+// select a missing value with them, so it would drop such events.
+class FilterSelectingAMissingValue
+    : public TableEventConsoleTest,
+      public ::testing::WithParamInterface<std::string> {};
+
+TEST_P(FilterSelectingAMissingValue, IsDropped) {
+    EXPECT_EQ(filtersSentToEC({"Filter: event_core_host " + GetParam()}),
+              std::vector<std::string>{});
+}
+
+INSTANTIATE_TEST_SUITE_P(TableEventConsoleTest, FilterSelectingAMissingValue,
+                         ::testing::Values("~ .", "~", "~~ ^", "= \002",
+                                           "=~ \002", "< m", "<= m",
+                                           ">=", "> \001"));
+
+// The EC selects a missing value with the negated filters, so it can't drop an
+// event we select.
+TEST_F(TableEventConsoleTest, ForwardsNegatedFilterNotSelectingAMissingValue) {
+    const std::vector<std::string> filters{"Filter: event_core_host !~ ."};
+
+    EXPECT_EQ(filtersSentToEC(filters), filters);
+}
 
 // The UTF-8 encoding of \u00c5 contains the byte 0x85, but not \u0085.
 TEST_F(TableEventConsoleTest, ForwardsNonASCIIValues) {

@@ -58,6 +58,26 @@ def test_rule_rewrites_the_event(
     assert expected.items() <= event_status.events()[0].items()
 
 
+# Livestatus gets a tab as a space, so the filters it forwards to us have to see a space, too.
+@pytest.mark.parametrize(
+    "rewriting, expected",
+    [
+        pytest.param({"set_text": "disk\tfull"},       {"text": "disk full"},          id="text"),
+        pytest.param({"set_comment": "see\tticket"},   {"comment": "see ticket"},      id="comment"),
+        pytest.param({"set_application": "my\tapp"},   {"application": "my app"},      id="application"),
+        pytest.param({"set_contact": "Harry\tHirsch"}, {"contact": "Harry Hirsch"},    id="contact"),
+    ],
+)  # fmt: skip
+def test_rule_rewrites_tabs_to_spaces_like_in_messages(
+    event_server: EventServer, event_status: EventStatus, rewriting: ec.Rule, expected: ec.Event
+) -> None:
+    use_rules(event_server, new_rule(rewriting))
+
+    process_message(event_server, ec.Event(text="disk full", host=HostName("fileserver")))
+
+    assert expected.items() <= event_status.events()[0].items()
+
+
 def test_rule_rewrites_the_event_with_the_matched_groups(
     event_server: EventServer, event_status: EventStatus
 ) -> None:
@@ -370,3 +390,42 @@ def test_only_events_with_the_same_match_groups_are_cancelled(
     process_message(event_server, ec.Event(text=cancelling_text))
 
     assert [event["rule_id"] for event in event_status.events()] == expected_rule_ids
+
+
+def test_events_with_a_rewritten_application_with_a_tab_are_cancelled(
+    event_server: EventServer, event_status: EventStatus
+) -> None:
+    use_rules(
+        event_server,
+        new_rule(
+            {
+                "id": "disk",
+                "match": "disk failed",
+                "match_ok": "disk ok",
+                "set_application": "my\tapp",
+            }
+        ),
+    )
+    process_message(event_server, ec.Event(text="disk failed"))
+
+    process_message(event_server, ec.Event(text="disk ok"))
+
+    assert event_status.events() == []
+
+
+def test_rewritten_text_of_a_cancelled_event_gets_spaces_instead_of_tabs(
+    event_server: EventServer, history: RecordingHistory
+) -> None:
+    use_rules(
+        event_server,
+        new_rule(
+            {"id": "disk", "match": "disk failed", "match_ok": "disk ok", "set_text": "\\0\there"}
+        ),
+    )
+    process_message(event_server, ec.Event(text="disk failed"))
+
+    process_message(event_server, ec.Event(text="disk ok"))
+
+    assert [event["text"] for what, event in history.entries if what == "CANCELLED"] == [
+        "disk ok here"
+    ]

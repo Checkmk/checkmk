@@ -14,7 +14,7 @@ from typing import Literal
 from cmk.ccc.site import SiteId
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
-from cmk.gui.sites import get_alias_of_host, SiteStatus, states
+from cmk.gui.sites import SiteStatus, states
 from cmk.gui.type_defs import Row
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.views.icon import Icon, IconConfig
@@ -137,7 +137,7 @@ def _get_hostname(hosts: Sequence[str], row: Row) -> str:
     if first == "$HOSTADDRESS$":
         return row["host_address"]
     if first == "$HOSTALIAS$":
-        return get_alias_of_host(row["site"], row["host_name"])
+        return row["host_alias"]
     return "/".join(hosts)
 
 

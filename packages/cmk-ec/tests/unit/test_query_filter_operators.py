@@ -6,65 +6,89 @@
 
 import pytest
 
-from cmk.ec.query import MKClientError, operator_for
+from cmk.ec.main import EventStatus, StatusServer
+from cmk.ec.query import MKClientError
+
+from .helpers import new_event, query_status_server
 
 
-def test_tilde_tilde_lowercase_pattern_matches_mixed_case_value() -> None:
-    _, cmp = operator_for("~~")
-    assert cmp("Hello World", "hello") is True
+def _selects(
+    event_status: EventStatus, status_server: StatusServer, value: str, filter_spec: str
+) -> bool:
+    """Whether the filter on the text of an event selects the event with the value as text"""
+    event_status.new_event(new_event({"text": value}))
+    _header, *rows = query_status_server(
+        status_server, f"GET events\nColumns: event_text\nFilter: event_text {filter_spec}"
+    ).get_response()
+    return value in {text for (text,) in rows}
 
 
-def test_tilde_tilde_lowercase_pattern_matches_uppercase_value() -> None:
-    _, cmp = operator_for("~~")
-    assert cmp("HELLO WORLD", "hello") is True
+def test_tilde_tilde_lowercase_pattern_matches_mixed_case_value(
+    event_status: EventStatus, status_server: StatusServer
+) -> None:
+    assert _selects(event_status, status_server, "Hello World", "~~ hello") is True
 
 
-def test_tilde_tilde_uppercase_pattern_matches_lowercase_value() -> None:
-    _, cmp = operator_for("~~")
-    assert cmp("hello world", "HELLO") is True
+def test_tilde_tilde_lowercase_pattern_matches_uppercase_value(
+    event_status: EventStatus, status_server: StatusServer
+) -> None:
+    assert _selects(event_status, status_server, "HELLO WORLD", "~~ hello") is True
 
 
-def test_tilde_tilde_regex_with_mixed_case_components() -> None:
-    _, cmp = operator_for("~~")
-    assert cmp("FooBar", "foo.*bar") is True
+def test_tilde_tilde_uppercase_pattern_matches_lowercase_value(
+    event_status: EventStatus, status_server: StatusServer
+) -> None:
+    assert _selects(event_status, status_server, "hello world", "~~ HELLO") is True
 
 
-def test_tilde_tilde_no_match() -> None:
-    _, cmp = operator_for("~~")
-    assert cmp("hello", "xyz") is False
+def test_tilde_tilde_regex_with_mixed_case_components(
+    event_status: EventStatus, status_server: StatusServer
+) -> None:
+    assert _selects(event_status, status_server, "FooBar", "~~ foo.*bar") is True
 
 
-def test_tilde_tilde_anchored_pattern_matches_lowercase_start() -> None:
-    _, cmp = operator_for("~~")
-    assert cmp("Hello", "^he") is True
+def test_tilde_tilde_no_match(event_status: EventStatus, status_server: StatusServer) -> None:
+    assert _selects(event_status, status_server, "hello", "~~ xyz") is False
 
 
-def test_tilde_tilde_differs_from_case_sensitive_tilde() -> None:
-    _, case_sensitive = operator_for("~")
-    _, case_insensitive = operator_for("~~")
-
-    assert case_sensitive("Hello", "hello") is False
-    assert case_insensitive("Hello", "hello") is True
+def test_tilde_tilde_anchored_pattern_matches_lowercase_start(
+    event_status: EventStatus, status_server: StatusServer
+) -> None:
+    assert _selects(event_status, status_server, "Hello", "~~ ^he") is True
 
 
-def test_tilde_tilde_keeps_the_meaning_of_uppercase_regex_escapes() -> None:
-    _, cmp = operator_for("~~")
-    assert cmp("Disk full", r"^\S+ full$") is True
+def test_tilde_tilde_differs_from_case_sensitive_tilde(
+    event_status: EventStatus, status_server: StatusServer
+) -> None:
+    case_sensitive = _selects(event_status, status_server, "Hello", "~ hello")
+    case_insensitive = _selects(event_status, status_server, "Hello", "~~ hello")
+
+    assert case_sensitive is False
+    assert case_insensitive is True
 
 
-def test_eq_tilde_differs_only_in_case() -> None:
-    _, cmp = operator_for("=~")
-    assert cmp("Hello", "hello") is True
+def test_tilde_tilde_keeps_the_meaning_of_uppercase_regex_escapes(
+    event_status: EventStatus, status_server: StatusServer
+) -> None:
+    assert _selects(event_status, status_server, "Disk full", r"~~ ^\S+ full$") is True
 
 
-def test_eq_tilde_all_uppercase_equals_all_lowercase() -> None:
-    _, cmp = operator_for("=~")
-    assert cmp("HELLO", "hello") is True
+def test_eq_tilde_differs_only_in_case(
+    event_status: EventStatus, status_server: StatusServer
+) -> None:
+    assert _selects(event_status, status_server, "Hello", "=~ hello") is True
 
 
-def test_eq_tilde_different_strings_do_not_match() -> None:
-    _, cmp = operator_for("=~")
-    assert cmp("hello", "world") is False
+def test_eq_tilde_all_uppercase_equals_all_lowercase(
+    event_status: EventStatus, status_server: StatusServer
+) -> None:
+    assert _selects(event_status, status_server, "HELLO", "=~ hello") is True
+
+
+def test_eq_tilde_different_strings_do_not_match(
+    event_status: EventStatus, status_server: StatusServer
+) -> None:
+    assert _selects(event_status, status_server, "hello", "=~ world") is False
 
 
 @pytest.mark.parametrize(
@@ -81,12 +105,18 @@ def test_eq_tilde_different_strings_do_not_match() -> None:
     ],
 )  # fmt: skip
 def test_negated_operator_holds_only_if_the_value_does_not_match(
-    operator_name: str, value: str, argument: str, expected: bool
+    event_status: EventStatus,
+    status_server: StatusServer,
+    operator_name: str,
+    value: str,
+    argument: str,
+    expected: bool,
 ) -> None:
-    _, cmp = operator_for(operator_name)
-    assert cmp(value, argument) is expected
+    assert _selects(event_status, status_server, value, f"{operator_name} {argument}") is expected
 
 
-def test_unknown_operator_raises() -> None:
-    with pytest.raises(MKClientError, match="Unknown filter operator"):
-        operator_for("??")
+def test_unknown_operator_raises(status_server: StatusServer) -> None:
+    with pytest.raises(MKClientError, match="Invalid header line") as excinfo:
+        query_status_server(status_server, "GET events\nFilter: event_text ?? x")
+
+    assert "Unknown filter operator" in str(excinfo.value.__cause__)

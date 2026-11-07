@@ -11,6 +11,7 @@ import operator
 import re
 import string
 from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Set as AbstractSet
 from dataclasses import dataclass
 from logging import Logger
 from typing import Any, ClassVar, Literal, override
@@ -156,19 +157,40 @@ class Query:
         return self.__method + " " + self.method_arg
 
 
-def filter_operator_in(a: str, b: Iterable[str]) -> bool:
-    """Whether a is in b ignoring case. A regex with IGNORECASE would be slower."""
-    return a.lower() in {e.lower() for e in b}
+# The operators compare the value of a row with the argument of a filter, which they prepare
+# only once for all rows, e.g. by compiling a regex, see _filter_operators.
+
+
+def _unchanged(argument: Any) -> Any:
+    return argument
+
+
+def _lowered_set(arguments: Iterable[str]) -> AbstractSet[str]:
+    return {argument.lower() for argument in arguments}
+
+
+def _regex(argument: str) -> re.Pattern[str]:
+    return re.compile(argument)
+
+
+def _regex_ignoring_case(argument: str) -> re.Pattern[str]:
+    return re.compile(argument, re.IGNORECASE)
+
+
+def filter_operator_in(a: str, b: AbstractSet[str]) -> bool:
+    """Whether a is in b ignoring case, where b is lowered, see _lowered_set(). A regex with
+    IGNORECASE would be slower."""
+    return a.lower() in b
 
 
 # None stands for a missing value, which neither matches nor equals anything, so
 # the negated operators select it, just like operator.ne does.
-def _matches(value: str | None, regex: str, flags: re.RegexFlag = re.NOFLAG) -> bool:
-    return value is not None and re.search(regex, value, flags) is not None
+def _matches(value: str | None, regex: re.Pattern[str]) -> bool:
+    return value is not None and regex.search(value) is not None
 
 
-def _equals_ignoring_case(value: str | None, argument: str) -> bool:
-    return value is not None and value.lower() == argument.lower()
+def _equals_ignoring_case(value: str | None, lowered: str) -> bool:
+    return value is not None and value.lower() == lowered
 
 
 OperatorName = Literal["=", "!=", "~", "!~", "=~", "!=~", "~~", "!~~", "<", ">=", ">", "<=", "in"]
@@ -184,21 +206,22 @@ class QueryFilter:
 
 # NOTE: mypy is currently too dumb to narrow down a type via "in" or "get()", so we have to work
 # around that somehow: We either duplicate the operator names below or we introduce a case in
-# operator_for(). We're choosing evil no. 1... :-/
-_filter_operators: dict[str, tuple[OperatorName, Callable[[Any, Any], bool]]] = {
-    "=": ("=", operator.eq),
-    "!=": ("!=", operator.ne),
-    "~": ("~", _matches),
-    "!~": ("!~", lambda a, b: not _matches(a, b)),
-    "=~": ("=~", _equals_ignoring_case),
-    "!=~": ("!=~", lambda a, b: not _equals_ignoring_case(a, b)),
-    "~~": ("~~", lambda a, b: _matches(a, b, re.IGNORECASE)),
-    "!~~": ("!~~", lambda a, b: not _matches(a, b, re.IGNORECASE)),
-    "<": ("<", operator.lt),
-    ">=": (">=", operator.ge),
-    ">": (">", operator.gt),
-    "<=": ("<=", operator.le),
-    "in": ("in", filter_operator_in),
+# _operator(). We're choosing evil no. 1... :-/
+_Operator = tuple[OperatorName, Callable[[Any], Any], Callable[[Any, Any], bool]]
+_filter_operators: dict[str, _Operator] = {
+    "=": ("=", _unchanged, operator.eq),
+    "!=": ("!=", _unchanged, operator.ne),
+    "~": ("~", _regex, _matches),
+    "!~": ("!~", _regex, lambda a, b: not _matches(a, b)),
+    "=~": ("=~", str.lower, _equals_ignoring_case),
+    "!=~": ("!=~", str.lower, lambda a, b: not _equals_ignoring_case(a, b)),
+    "~~": ("~~", _regex_ignoring_case, _matches),
+    "!~~": ("!~~", _regex_ignoring_case, lambda a, b: not _matches(a, b)),
+    "<": ("<", _unchanged, operator.lt),
+    ">=": (">=", _unchanged, operator.ge),
+    ">": (">", _unchanged, operator.gt),
+    "<=": ("<=", _unchanged, operator.le),
+    "in": ("in", _lowered_set, filter_operator_in),
 }
 
 
@@ -208,11 +231,10 @@ _filter_operators: dict[str, tuple[OperatorName, Callable[[Any, Any], bool]]] = 
 _FILTER_LINE = re.compile(r"\s*(\S+)\s+(\S+)\s*(.*)", re.ASCII | re.DOTALL)
 
 
-def operator_for(name: str) -> tuple[OperatorName, Callable[[Any, Any], bool]]:
-    name_and_func = _filter_operators.get(name)
-    if name_and_func is None:
+def _operator(name: str) -> _Operator:
+    if (op := _filter_operators.get(name)) is None:
         raise MKClientError(f"Unknown filter operator '{name}'")
-    return name_and_func
+    return op
 
 
 class QueryGET(Query):
@@ -270,7 +292,7 @@ class QueryGET(Query):
                 f"Unknown column: {column} (Available are: {self.table.column_names})"
             ) from e
 
-        op_name, operator_function = operator_for(operator_name)
+        op_name, prepare, compare = _operator(operator_name)
         # TODO: BUG: The query is decoded to unicode after receiving it from
         # the socket. The columns with type str (initialized with "") will apply
         # str(argument) here and convert the value back to str! This will crash
@@ -283,15 +305,14 @@ class QueryGET(Query):
             if op_name == "in"
             else convert(raw_argument)  # type: ignore[call-arg]
         )
-        # Fail now instead of in the middle of the reply, where the client
-        # can't tell a failure from the end of the reply.
-        if op_name in {"~", "!~", "~~", "!~~"} and isinstance(argument, str):
-            re.compile(argument)
+        # Prepared once instead of for each row. A regex fails to compile now instead of
+        # in the middle of the reply, where the client can't tell a failure from its end.
+        prepared = prepare(argument)
 
         return QueryFilter(
             column_name=column,
             operator_name=op_name,
-            predicate=lambda x: operator_function(x, argument),
+            predicate=lambda x: compare(x, prepared),
             argument=argument,
         )
 

@@ -99,3 +99,26 @@ def test_changestate_of_partially_existing_multiple_events(
         status_server.handle_client(s, True, "127.0.0.1")
 
     assert event_status.events()[0]["state"] == 3
+
+
+@pytest.mark.parametrize(
+    "state",
+    [
+        pytest.param("4", id="too big"),
+        pytest.param("-1", id="negative"),
+        pytest.param("x", id="no number"),
+        pytest.param("", id="empty"),
+        pytest.param(" 1", id="leading space"),
+        pytest.param("+1", id="sign"),
+    ],
+)
+def test_invalid_state_is_rejected_without_changing_the_event(
+    event_status: EventStatus, status_server: StatusServer, state: str
+) -> None:
+    event_status.new_event(new_event(ec.Event(host=HostName("ABC1"), text="event text", state=1)))
+    s = FakeStatusSocket(f"COMMAND CHANGESTATE;1;testuser;{state}".encode())
+
+    with pytest.raises(MKClientError, match="Invalid state"):
+        status_server.handle_client(s, True, "127.0.0.1")
+
+    assert event_status.events()[0]["state"] == 1

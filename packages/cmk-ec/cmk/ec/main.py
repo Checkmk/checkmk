@@ -2868,13 +2868,18 @@ class StatusServer(ECServerThread):
 
     def handle_command_changestate(self, arguments: list[str]) -> None:
         event_ids, user, newstate = arguments
+        # Checked before changing any event. int() alone would accept e.g. 4, " 1" or "+1", and
+        # check_mkevents reports an event with a state other than 0 to 3 as an invalid answer.
+        if newstate not in {"0", "1", "2", "3"}:
+            raise MKClientError(f"Invalid state '{newstate}', expected 0, 1, 2 or 3")
+        state = int(newstate)
         failures = list[str]()
         for event_id in event_ids.split(","):
             event = self._event_status.event(int(event_id))
             if not event:
                 failures.append(f"No event with id {event_id}.")
                 continue
-            event["state"] = int(newstate)
+            event["state"] = state
             if user:
                 event["owner"] = user
             self._history.add(event, "CHANGESTATE", user)

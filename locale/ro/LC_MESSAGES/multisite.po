@@ -85668,6 +85668,10 @@ msgid "Unknown site (%s)"
 msgstr "Site necunoscut (%s)"
 
 #, fuzzy, python-format
+msgid "Unknown site: %(site)s"
+msgstr "Site necunoscut %s"
+
+#, fuzzy, python-format
 msgid "Unknown site: %s"
 msgstr "Site necunoscut %s"
 
@@ -101533,6 +101537,11 @@ msgstr ""
 msgid "The answer ended before it was complete."
 msgstr ""
 
+msgid ""
+"The last answer could not be saved and is not part of this conversation. Ask "
+"again if you still need it."
+msgstr ""
+
 msgid "The answer was cut off because it reached the length limit."
 msgstr ""
 
@@ -101552,6 +101561,10 @@ msgstr ""
 #, fuzzy
 msgid "The assistant could not reach the monitoring data of the site."
 msgstr "Autentificarea nu este permisă pe acest site."
+
+msgid ""
+"The conversation is too long to continue. Please start a new conversation."
+msgstr ""
 
 msgid "No chats yet"
 msgstr ""

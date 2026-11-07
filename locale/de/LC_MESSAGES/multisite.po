@@ -4,9 +4,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-10-30 10:16+0000\n"
+"PO-Revision-Date: 2026-11-07 10:31+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
 "de/>\n"
 "Language: de\n"
@@ -14,7 +14,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 2026.9.1\n"
+"X-Generator: Weblate 2026.11.1\n"
 
 msgid " "
 msgstr " "
@@ -4203,7 +4203,7 @@ msgid "Active time range"
 msgstr "Aktiver Zeitraum"
 
 msgid "Active undo blocks"
-msgstr ""
+msgstr "Aktive Undo-Blöcke"
 
 msgid "Active unit"
 msgstr "Aktive Einheit"
@@ -7047,7 +7047,7 @@ msgid "An alias or description of this group."
 msgstr "Ein Alias oder eine Beschreibung dieser Gruppe."
 
 msgid "An application is requesting access to this Checkmk site."
-msgstr ""
+msgstr "Eine Anwendung fordert Zugriff auf diese Checkmk-Instanz an."
 
 msgid "An empty value is not allowed here"
 msgstr "Ein leerer Wert ist hier nicht erlaubt"
@@ -49489,7 +49489,7 @@ msgid "Oracle instance"
 msgstr "Oracle-Instanz"
 
 msgid "Oracle instance (single-database dashboard link)"
-msgstr ""
+msgstr "Oracle-Instanz (Link zum Einzeldatenbank-Dashboard)"
 
 msgid "Oracle instances"
 msgstr "Oracle-Instanzen"
@@ -82504,6 +82504,10 @@ msgstr "Unbekannte Instanz %s"
 msgid "Unknown site (%s)"
 msgstr "Unbekannte Instanz (%s)"
 
+#, fuzzy, python-format
+msgid "Unknown site: %(site)s"
+msgstr "Unbekannte Instanz: %s"
+
 #, python-format
 msgid "Unknown site: %s"
 msgstr "Unbekannte Instanz: %s"
@@ -97616,6 +97620,11 @@ msgstr ""
 msgid "The answer ended before it was complete."
 msgstr ""
 
+msgid ""
+"The last answer could not be saved and is not part of this conversation. Ask "
+"again if you still need it."
+msgstr ""
+
 msgid "The answer was cut off because it reached the length limit."
 msgstr ""
 
@@ -97635,6 +97644,10 @@ msgstr ""
 #, fuzzy
 msgid "The assistant could not reach the monitoring data of the site."
 msgstr "Der Host %s wird auf dieser Instanz nicht überwacht."
+
+msgid ""
+"The conversation is too long to continue. Please start a new conversation."
+msgstr ""
 
 msgid "No chats yet"
 msgstr ""

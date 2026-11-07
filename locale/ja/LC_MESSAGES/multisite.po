@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-11-02 08:21+0000\n"
+"PO-Revision-Date: 2026-11-06 06:02+0000\n"
 "Language-Team: Japanese <https://translate.checkmk.com/projects/checkmk/dev/"
 "ja/>\n"
 "Language: ja\n"
@@ -14,7 +14,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 2026.9.1\n"
+"X-Generator: Weblate 2026.11.1\n"
 
 msgid " "
 msgstr " "
@@ -3604,6 +3604,10 @@ msgstr "AWS v2/ElastiCache 接続"
 msgid "AWS v2/ElastiCache limits"
 msgstr "AWS v2/ElastiCacherの制限"
 
+#, fuzzy
+msgid "AWS v2/ElastiCache replication"
+msgstr "AWS v2/ElastiCache 接続"
+
 msgid "AWS v2/Glacier limits"
 msgstr "AWS v2/Glacierの制限"
 
@@ -3625,14 +3629,26 @@ msgstr "AWS v2/Lambda パフォーマンス"
 msgid "AWS v2/RDS CPU credits"
 msgstr "AWS v2/RDS CPUクレジット"
 
+#, fuzzy
+msgid "AWS v2/RDS CPU utilization"
+msgstr "AWS v2/ElastiCache CPU利用率"
+
 msgid "AWS v2/RDS connections"
 msgstr "AWS v2/RDS接続"
+
+#, fuzzy
+msgid "AWS v2/RDS disk IO"
+msgstr "AWS v2/RDSディスクの使用量"
 
 msgid "AWS v2/RDS disk usage"
 msgstr "AWS v2/RDSディスクの使用量"
 
 msgid "AWS v2/RDS limits"
 msgstr "AWS v2/RDSの制限"
+
+#, fuzzy
+msgid "AWS v2/RDS network IO"
+msgstr "AWS v2/RDS接続"
 
 msgid "AWS v2/RDS replica lag"
 msgstr "AWS v2/RDSレプリカラグ"
@@ -4667,6 +4683,14 @@ msgstr "この %(what)sのアクティブチェックは手動で無効になっ
 #, python-format
 msgid "Active checks have been manually enabled for this %(what)s!"
 msgstr "この %(what)s に対してアクティブチェックが手動で有効になっています！"
+
+#, fuzzy
+msgid "Active checks have been manually enabled for this host"
+msgstr "このホストに対して、アクティブチェックが手動で無効化されています"
+
+#, fuzzy
+msgid "Active checks have been manually enabled for this service"
+msgstr "この %(what)sのアクティブチェックは手動で無効になっています"
 
 msgid "Active connections"
 msgstr "アクティブな接続"
@@ -6834,6 +6858,18 @@ msgid ""
 msgstr ""
 "ホスト '%(host)s' のすべてのイベントがオープンイベントリストから削除されま"
 "す。アーカイブにはまだアクセスできます。"
+
+#, fuzzy
+msgid ""
+"All files of the agent package are placed below this directory.<br><b>Note</"
+"b>: Some files, like systemd units, will still be generated outside of this "
+"directory for proper operation of the agent installation."
+msgstr ""
+"従来の方法のように、エージェントパッケージのファイルをファイルシステム内の複"
+"数の場所に分散させる代わりに、パッケージのすべてのファイルはこのディレクトリ"
+"の下に配置されます。<br><b>注意</b>：システムDユニットなど、エージェントのイ"
+"ンストールが正常に動作するように、一部のファイルはこのディレクトリ外で生成さ"
+"れます。"
 
 msgid "All flows"
 msgstr "すべてのフロー"
@@ -18515,7 +18551,7 @@ msgid "Credits remaining"
 msgstr "クレジット残"
 
 msgid "Cricital at"
-msgstr "でクリティカル"
+msgstr "クリティカル"
 
 msgid "Crit/Down"
 msgstr "クリティカル/ダウン"
@@ -18540,7 +18576,7 @@ msgid "Critical area"
 msgstr "クリティカルエリア"
 
 msgid "Critical at"
-msgstr "でクリティカル"
+msgstr "クリティカル"
 
 msgid "Critical at USD per day"
 msgstr "CRIT：1日あたりのUSD"
@@ -18573,7 +18609,7 @@ msgid "Critical at failure count"
 msgstr "故障時のクリティカルなカウント"
 
 msgid "Critical at l/s"
-msgstr "l/sでクリティカル"
+msgstr "l/sにおけるクリティカル"
 
 msgid "Critical at or above"
 msgstr "以上でクリティカル"
@@ -18649,7 +18685,7 @@ msgid "Critical level for remaining"
 msgstr "残りのクリティカルレベル"
 
 msgid "Critical level is at least"
-msgstr "少なくともクリティカルレベルです"
+msgstr "クリティカルレベルは少なくとも"
 
 msgid "Critical level is at most"
 msgstr "最大でもクリティカルレベルです"
@@ -19172,7 +19208,8 @@ msgstr "%(what_plural)s をカスタマイズして使用する"
 msgid "Customize GUI design"
 msgstr "GUIデザインをカスタマイズする"
 
-msgid "Customize agent package (Linux; Solaris and AIX: experimental)"
+#, fuzzy
+msgid "Customize agent package (Linux, Solaris, AIX)"
 msgstr ""
 "エージェントパッケージのカスタマイズ（Linux；Solaris および AIX：実験的機能）"
 
@@ -33082,9 +33119,10 @@ msgid ""
 "Keep the rules of <i>Installation paths for agent files</i> until the "
 "migrated hosts have installed their new agent package.<br>The rule set "
 "<i>Customize agent package</i> takes precedence over this rule set. A host "
-"that matches both gets the single directory deployment.<br>Checkmk 3.1 will "
-"remove the classic file deployment. To move hosts to the single directory "
-"deployment, add a rule <i>Customize agent package</i> for them."
+"that matches both gets the single directory deployment.<br>Hosts without a "
+"rule get the single directory deployment. To move hosts, narrow the "
+"conditions of this rule, delete the rule, or add a rule <i>Customize agent "
+"package</i> for them.<br>Checkmk 3.1 will remove the classic file deployment."
 msgstr ""
 
 msgid "Hosts that need an agent update"
@@ -33225,6 +33263,14 @@ msgid ""
 "Checkmk asks OpenAI not to store responses; providers keep requests for "
 "abuse monitoring either way. Turn caching off for a base URL without caching "
 "support."
+msgstr ""
+
+msgid ""
+"How long the special agent waits for the backup server to answer a single "
+"request to the REST API. The timeout applies to each request, not to the "
+"whole agent run. If you raise it above 60 seconds, raise the check interval "
+"of the host's Check_MK service accordingly, so that the agent has enough "
+"time to complete all its calls."
 msgstr ""
 
 msgid "How long to alert after the most recent watch error."
@@ -34579,10 +34625,11 @@ msgstr ""
 "は、チェックで正しいフォーム要素を識別できるように、ここにフォームの名前を入"
 "力する必要があります。"
 
+#, fuzzy
 msgid ""
 "If this Managed Robot is to be deployed on Linux and RCC is to be used, it "
 "is important to set a user context other than root using the \"Customize "
-"agent package (Linux; Solaris and AIX: experimental)\" rule."
+"agent package (Linux, Solaris, AIX)\" rule."
 msgstr ""
 "このマネージドロボットをLinuxにデプロイし、RCCを使用する場合は、「エージェン"
 "トパッケージのカスタマイズ（Linux；SolarisおよびAIX：実験的）」ルールを使用し"
@@ -35889,7 +35936,7 @@ msgid "Impose limits on the size of the database"
 msgstr "データベースのサイズに制限を課す"
 
 msgid "In"
-msgstr "に"
+msgstr "イン"
 
 msgid "In / out"
 msgstr "イン/アウト"
@@ -37061,19 +37108,6 @@ msgstr ""
 "て、個々のホストおよびサービスに対して選択的にエスケープを無効にすることを強"
 "く推奨します。ルールセットには、構成された値が通知コンテキストでアクセス可能"
 "であるという追加の利点があります。"
-
-msgid ""
-"Instead of the classic approach of distributing the agent package's files "
-"over multiple places on the file system, all files of the package will be "
-"placed below this directory.<br><b>Note</b>: Some files, like systemd units, "
-"will still be generated outside of this directory for proper operation of "
-"the agent installation."
-msgstr ""
-"従来の方法のように、エージェントパッケージのファイルをファイルシステム内の複"
-"数の場所に分散させる代わりに、パッケージのすべてのファイルはこのディレクトリ"
-"の下に配置されます。<br><b>注意</b>：システムDユニットなど、エージェントのイ"
-"ンストールが正常に動作するように、一部のファイルはこのディレクトリ外で生成さ"
-"れます。"
 
 msgid ""
 "Instead of using the regular logwatch check all lines received by logwatch "
@@ -40396,7 +40430,7 @@ msgid "Limit event lifetime"
 msgstr "イベントの有効期間を制限する"
 
 msgid "Limit for upper bound dynamic levels"
-msgstr "ダイナミックレベルの上限のリミット"
+msgstr "動的レベル上限のリミット"
 
 msgid "Limit from AWS API"
 msgstr "AWS APIからの制限"
@@ -41615,7 +41649,7 @@ msgid "Low: No sound/vibration but show pop-up"
 msgstr "低:音/バイブレーションはありませんが、ポップアップが表示されます"
 
 msgid "Lower"
-msgstr "少ない"
+msgstr "下限"
 
 msgid "Lower Temperature Levels"
 msgstr "より低い温度レベル"
@@ -45420,13 +45454,19 @@ msgstr "その他のオプション"
 msgid "More than %(count)d results"
 msgstr "%(count)dを超える結果"
 
+#, fuzzy
 msgid ""
 "More than one value can arrive for the same metric on the same host in a "
-"single check, for example from several identical instances of a resource, or "
-"from multiple resources grouped onto one host. Checkmk merges them into one "
-"value. 'Average' suits percentages like CPU, 'Sum' suits counts like "
-"requests, 'Max' catches the worst case, 'Min' the best case. If a metric is "
-"reported only once, every option behaves the same."
+"single check, for example one value per Azure dimension (such as one per API "
+"name), from several identical instances of a resource, or from multiple "
+"resources grouped onto one host. Checkmk merges them into one value. 'By "
+"statistic' merges each statistic according to its meaning: the minimum of "
+"the minimums, the maximum of the maximums, the sum of the totals and counts, "
+"and the average of each value weighted by its count. Use one of the other "
+"options to merge every statistic of a metric in the same way: 'Average' "
+"suits percentages like CPU, 'Sum' suits counts like requests, 'Max' catches "
+"the worst case, 'Min' the best case. If a metric is reported only once, "
+"every option behaves the same."
 msgstr ""
 "1回のチェックにおいて、同じホスト上の同じメトリックに対して複数の値が返される"
 "場合があります。例えば、同一のリソースの複数のインスタンスから、あるいは1つの"
@@ -57904,6 +57944,10 @@ msgstr "メトリックを要求する"
 msgid "Request rate"
 msgstr "リクエストレート"
 
+#, fuzzy
+msgid "Request timeout"
+msgstr "リクエスト方法"
+
 msgid "Request transfer rate"
 msgstr "リクエスト転送レート"
 
@@ -68825,6 +68869,11 @@ msgstr ""
 "ションでサービスのインストールを無効にできます。\n"
 
 msgid ""
+"The Checkmk agent installs its files below a single directory. This rule "
+"sets that directory, and the user that the agent runs as."
+msgstr ""
+
+msgid ""
 "The Checkmk agent supports a feature called real-time checks where it sends "
 "status updates of specific monitoring information more often than the "
 "regular check interval of the host, for example in an interval of 1 second. "
@@ -69652,23 +69701,6 @@ msgstr ""
 "て、コントローラーがそのCAを信頼している必要があります。このサイトと接続のな"
 "いホストは影響を受けないため、1つのルールですべてのサイトのCAをリストすること"
 "ができます。"
-
-msgid ""
-"The agent installation path configuration now simplifies to one single "
-"directory, which can be configured with the new <i>Customize agent package</"
-"i> rule set.<br>When configuring <i>Customize agent package</i>, matching "
-"rules from this rule set will be ignored.<br><b>Note</b>: When updating "
-"agents to the new directory structure, please keep this rule set until the "
-"agent update is done. The agent package will read the old installation paths "
-"to migrate your files to the new directory structure."
-msgstr ""
-"エージェントのインストールパス設定は、現在、単一のディレクトリに簡素化され、"
-"新しい<i>Customize エージェント パッケージ</i> ルールセットで設定可能です。"
-"<br><i>Customize エージェント パッケージ</i>を設定する際、このルールセットの"
-"対応ルールは無視されます。<br><b>注意</b>： エージェントを新しいディレクトリ"
-"構造に更新する際は、エージェントの更新が完了するまでこのルールセットを保持し"
-"てください。エージェント パッケージは、古いインストールパスを読み取り、ファイ"
-"ルを新しいディレクトリ構造に移行します。"
 
 msgid ""
 "The agent plug-in <tt>mk_filestats</tt> monitors a configured set of files "
@@ -75278,6 +75310,24 @@ msgstr ""
 "これらのオプションは、Robot Frameworkの最も一般的なコマンドラインパラメータを"
 "指定します。他のパラメータを使うには、\"引数ファイル\" オプションを使います。"
 
+#, fuzzy
+msgid ""
+"These paths apply only to hosts that match the rule <i>Use classic file "
+"deployment</i>. All other hosts get the single directory deployment, which "
+"can be configured with the rule set <i>Customize agent package</i>."
+"<br><b>Note</b>: When updating agents to the new directory structure, please "
+"keep this rule set until the agent update is done. The agent package will "
+"read the old installation paths to migrate your files to the new directory "
+"structure."
+msgstr ""
+"エージェントのインストールパス設定は、現在、単一のディレクトリに簡素化され、"
+"新しい<i>Customize エージェント パッケージ</i> ルールセットで設定可能です。"
+"<br><i>Customize エージェント パッケージ</i>を設定する際、このルールセットの"
+"対応ルールは無視されます。<br><b>注意</b>： エージェントを新しいディレクトリ"
+"構造に更新する際は、エージェントの更新が完了するまでこのルールセットを保持し"
+"てください。エージェント パッケージは、古いインストールパスを読み取り、ファイ"
+"ルを新しいディレクトリ構造に移行します。"
+
 msgid ""
 "These rule sets are configured in your site, but marked as deprecated. They "
 "still work, but need to be migrated to their successor or be removed before "
@@ -78113,15 +78163,6 @@ msgid ""
 msgstr "このルールを使用すると、特定のVSIDの最大接続数を構成できます。"
 
 msgid ""
-"This rule allows you to customize the user and installation directory of the "
-"agent. When using this rule, all agent files will be installed into a "
-"directory defined in this rule."
-msgstr ""
-"このルールを使用すると、エージェントのユーザーディレクトリとインストールディ"
-"レクトリをカスタマイズできます。このルールを使用する場合、すべてのエージェン"
-"トファイルは、このルールで定義されたディレクトリにインストールされます。"
-
-msgid ""
 "This rule allows you to restrict the access to the Checkmk agent to certain "
 "IP addresses and networks. Usually you configure just the IP addresses of "
 "your Checkmk servers here. You can enter either IP addresses in the form "
@@ -79295,13 +79336,15 @@ msgstr ""
 "Pythonモジュール <tt>pyrfc</tt> （これ自体、SAP NetWeaver RFC SDKを必要としま"
 "す）を手動でインストールする必要があります。"
 
+#, fuzzy
 msgid ""
 "This rule set will only set the agent user to the configured value.<br>It "
-"will not take care of further needed permissions on the target system."
-"<br>Please use the new rule set <i>Customize agent package</i> instead, "
-"which offers a proper non-root agent installation.<br> When configuring "
-"<i>Customize agent package</i>, matching rules from this rule set will be "
-"ignored.<br>"
+"will not take care of further needed permissions on the target system.<br>It "
+"applies only to hosts that match the rule <i>Use classic file deployment</"
+"i>. All other hosts get the single directory deployment, where the agent "
+"runs as root unless the rule set <i>Customize agent package</i> configures "
+"another user.<br>Please use <i>Customize agent package</i> instead, which "
+"offers a proper non-root agent installation.<br>"
 msgstr ""
 "このルールセットは、エージェントユーザーを設定された値に設定しなおすだけであ"
 "る。<br>ターゲットシステムでさらに必要な権限の処理は行いません。<br>代わり"
@@ -80610,10 +80653,6 @@ msgstr "最後のバックアップが終了してからの時間"
 msgid "Time since last AD Connect sync"
 msgstr "最後のADConnect同期からの時間"
 
-#, fuzzy
-msgid "Time since last CDP sync"
-msgstr "前回同期からの時間"
-
 msgid "Time since last NTPMessage"
 msgstr "最後のNTPメッセージからの時間"
 
@@ -80638,6 +80677,10 @@ msgstr "前回のレポートからの経過時間"
 
 msgid "Time since last garbage collection"
 msgstr "最後のガベージコレクションからの時間"
+
+#, fuzzy
+msgid "Time since last long-term restore point"
+msgstr "前回のレポートからの経過時間"
 
 msgid "Time since last reported"
 msgstr "前回のレポートからの経過時間"
@@ -84971,6 +85014,10 @@ msgstr "不明なサイト(%s)"
 msgid "Unknown site: %(raw_site)s"
 msgstr "不明なサイト: %(raw_site)s"
 
+#, fuzzy, python-format
+msgid "Unknown site: %(site)s"
+msgstr "不明なサイト: %(raw_site)s"
+
 #, python-format
 msgid "Unknown tag group \"%(tag_group_id)s\""
 msgstr "不明なタググループ \"%(tag_group_id)s\""
@@ -85379,7 +85426,7 @@ msgid "Uploaded files"
 msgstr "アップロードされたファイル"
 
 msgid "Upper"
-msgstr "アッパー"
+msgstr "上限"
 
 msgid "Upper Temperature Levels"
 msgstr "上限温度レベル"
@@ -86134,9 +86181,8 @@ msgstr ""
 msgid "Upper: %(levels)s"
 msgstr "上位レベル"
 
-#, fuzzy
 msgid "Uppercase"
-msgstr "アッパー"
+msgstr "大文字"
 
 msgid "Uptime"
 msgstr "稼働時間"
@@ -88485,7 +88531,7 @@ msgid "Veeam: Scale-out repository"
 msgstr "Veeam：スケールアウトリポジトリ"
 
 #, fuzzy
-msgid "Veeam: Time since last CDP sync"
+msgid "Veeam: Time since last CDP long-term restore point"
 msgstr "Veeam: 最後のCDPランからの時間"
 
 msgid "Veeam: Time since last backup"
@@ -94350,6 +94396,10 @@ msgstr "組み込みの役割"
 msgid "busy workers"
 msgstr "ビジーワーカー"
 
+#, fuzzy
+msgid "by statistic"
+msgstr "DNS統計"
+
 msgid "bytes/sec"
 msgstr "バイト/秒"
 
@@ -98575,6 +98625,78 @@ msgstr "次のステップ：すべての設定を確認"
 msgid "Search custom graphs ..."
 msgstr "新しいカスタムグラフ..."
 
+#, fuzzy
+msgid "Enter a title."
+msgstr "有限の数値を入力してください。"
+
+#, fuzzy
+msgid "Enter an ID."
+msgstr "内部ID"
+
+#, fuzzy
+msgid ""
+"Start with a letter or an underscore, then use only letters, digits, hyphens "
+"(-) and underscores (_)."
+msgstr ""
+"使用可能な文字は、アルファベット、数字、ハイフン（-）、アンダースコア（_）の"
+"みです"
+
+#, fuzzy
+msgid "You already have a custom graph with this ID."
+msgstr "ID <b>%(name)s</b>のエレメントが既にあります"
+
+msgid "Select at least one site."
+msgstr "少なくとも1つのサイトを選択してください。"
+
+#, fuzzy
+msgid "Select at least one contact group."
+msgstr "少なくとも1つの連絡先グループを追加してください。"
+
+#, fuzzy
+msgid "No sites available."
+msgstr "利用可能なユーザーはいません"
+
+#, fuzzy
+msgid "No contact groups available."
+msgstr "利用可能なオプションはありません"
+
+#, fuzzy
+msgid "Could not load the sites."
+msgstr "結果を読み込めませんでした"
+
+#, fuzzy
+msgid "Could not load the contact groups."
+msgstr "この接続を削除することはできません。"
+
+#, fuzzy
+msgid "The graph could not be saved."
+msgstr "グループベースDNが見つかりませんでした。"
+
+#, fuzzy
+msgid "Save to custom graph catalog"
+msgstr "カスタムグラフを追加する"
+
+msgid "Save this graph to the catalog to make it reusable across dashboards."
+msgstr ""
+
+msgid "Provide a title and unique ID."
+msgstr ""
+
+#, fuzzy
+msgid "Make this custom graph available for other users"
+msgstr "この %s を他のユーザーが利用できるようにする"
+
+msgid "Save to catalog & save widget"
+msgstr ""
+
+#, fuzzy
+msgid "Save to catalog & place widget"
+msgstr "ウィジェットの追加と配置"
+
+#, fuzzy
+msgid "Save to graph catalog"
+msgstr "グラフの時間設定"
+
 msgid "Data & visualization"
 msgstr "データと可視化"
 
@@ -98620,13 +98742,6 @@ msgstr "「もっと表示」が有効な場合のみ表示"
 
 msgid "Show in dashboard name dropdown"
 msgstr "ダッシュボード名のドロップダウンに表示"
-
-#, fuzzy
-msgid "Select at least one contact group."
-msgstr "少なくとも1つの連絡先グループを追加してください。"
-
-msgid "Select at least one site."
-msgstr "少なくとも1つのサイトを選択してください。"
 
 msgid "Dashboard settings of %{name}"
 msgstr "%{name}のダッシュボード設定"
@@ -103107,6 +103222,9 @@ msgstr "ノードの状態"
 msgid "Nothing to preview"
 msgstr "何も記録されません"
 
+msgid "Predictive thresholds cannot be shown in this graph."
+msgstr ""
+
 msgid ""
 "This alert uses conditions the editor cannot show, for example a folder you "
 "cannot access."
@@ -103249,6 +103367,10 @@ msgstr "単一のメトリック"
 #, fuzzy
 msgid "Assign to host"
 msgstr "ホストに割り当てる"
+
+#, fuzzy
+msgid "Create & add alert"
+msgstr "作成"
 
 msgid "No metric selected."
 msgstr "メトリックが選択されていません。"
@@ -105583,6 +105705,10 @@ msgstr "ホスト/サービス"
 msgid "Search services…"
 msgstr "サービスを検索…"
 
+#, fuzzy
+msgid "Running the command…"
+msgstr "プレーンテキストによる通信"
+
 msgid "This action runs immediately and has no further options."
 msgstr "この操作は即座に実行され、その他のオプションはありません。"
 
@@ -105792,6 +105918,19 @@ msgstr[0] "選択したサービスのダウンタイムをスケジュールで
 msgid "Could not remove the downtimes of the selected services"
 msgstr "選択したサービスのダウンタイムをスケジュールできませんでした"
 
+msgid ""
+"The check was rescheduled, but its result could not be read. It will show "
+"once the page refreshes."
+msgstr ""
+
+msgid ""
+"The check did not run within %{seconds} second. It will still run as "
+"scheduled, and its result will show once the page refreshes."
+msgid_plural ""
+"The check did not run within %{seconds} seconds. It will still run as "
+"scheduled, and its result will show once the page refreshes."
+msgstr[0] ""
+
 #, fuzzy
 msgid ""
 "Execution will be spread across custom time period to avoid network overload."
@@ -105819,9 +105958,21 @@ msgstr ""
 msgid "Enter the number of minutes over which the checks should be spread."
 msgstr "パラメーターを使用する期間を指定します。"
 
+msgid "The check of %{host} has run"
+msgstr ""
+
 #, fuzzy
 msgid "Could not reschedule the checks for the selected hosts"
 msgstr "選択したホストのチェックを再スケジュールできませんでした"
+
+msgid ""
+"The \"Check_MK\" service of %{host} has run, and with it the services it "
+"updates"
+msgstr ""
+
+#, fuzzy
+msgid "The check of \"%{service}\" on %{host} has run"
+msgstr "%{host}上の「%{service}」に関するデータはありません"
 
 msgid "Could not reschedule the checks for the selected services"
 msgstr "選択したサービスのチェックを再スケジュールできませんでした"
@@ -108217,6 +108368,20 @@ msgstr ""
 "後で アクセスする場合はヘルプ ＞ Checkmkの学習 ＞ ウェルカムページ からアクセ"
 "スできます"
 
+#~ msgid ""
+#~ "This rule allows you to customize the user and installation directory of "
+#~ "the agent. When using this rule, all agent files will be installed into a "
+#~ "directory defined in this rule."
+#~ msgstr ""
+#~ "このルールを使用すると、エージェントのユーザーディレクトリとインストール"
+#~ "ディレクトリをカスタマイズできます。このルールを使用する場合、すべてのエー"
+#~ "ジェントファイルは、このルールで定義されたディレクトリにインストールされま"
+#~ "す。"
+
+#, fuzzy
+#~ msgid "Time since last CDP sync"
+#~ msgstr "前回同期からの時間"
+
 #, python-format
 #~ msgid ""
 #~ "Cannot load HW/SW inventory of %(host_name)s. Please remove the corrupted "
@@ -110181,10 +110346,6 @@ msgstr ""
 #~ msgstr "アラートの作成機能は、今後ここで利用可能になる予定です。"
 
 #, fuzzy
-#~ msgid "Create alert"
-#~ msgstr "作成"
-
-#, fuzzy
 #~ msgid "Name the alert and select services"
 #~ msgstr "全てのホストとサービスを表示"
 
@@ -110886,10 +111047,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "No service groups configured in this site"
 #~ msgstr "イベントコンソールの構成をこのサイトに複製します"
-
-#, fuzzy
-#~ msgid "No groups available"
-#~ msgstr "利用可能なオプションはありません"
 
 #~ msgid "(ntopng integration disabled)"
 #~ msgstr "(ntopng 統合が無効です)"
@@ -112997,10 +113154,6 @@ msgstr ""
 #, python-format
 #~ msgid "Make %s visible and usable for other users."
 #~ msgstr "%s を表示して、他のユーザーが使用できるようにします。"
-
-#, python-format
-#~ msgid "Make this %s available for other users"
-#~ msgstr "この %s を他のユーザーが利用できるようにする"
 
 #, python-format
 #~ msgid "Modified user role '%s'"

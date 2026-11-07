@@ -3713,6 +3713,10 @@ msgid "AWS v2/ElastiCache limits"
 msgstr "Límites de AWS/ElastiCache"
 
 #, fuzzy
+msgid "AWS v2/ElastiCache replication"
+msgstr "Conexiones AWS/ElastiCache"
+
+#, fuzzy
 msgid "AWS v2/Glacier limits"
 msgstr "Límites de AWS/Glaciar"
 
@@ -3741,8 +3745,16 @@ msgid "AWS v2/RDS CPU credits"
 msgstr "Créditos de CPU de AWS/RDS"
 
 #, fuzzy
+msgid "AWS v2/RDS CPU utilization"
+msgstr "Utilización de la CPU de AWS/ElastiCache"
+
+#, fuzzy
 msgid "AWS v2/RDS connections"
 msgstr "Conexiones AWS/RDS"
+
+#, fuzzy
+msgid "AWS v2/RDS disk IO"
+msgstr "Uso del disco de AWS/RDS"
 
 #, fuzzy
 msgid "AWS v2/RDS disk usage"
@@ -3751,6 +3763,10 @@ msgstr "Uso del disco de AWS/RDS"
 #, fuzzy
 msgid "AWS v2/RDS limits"
 msgstr "Límites de AWS/RDS"
+
+#, fuzzy
+msgid "AWS v2/RDS network IO"
+msgstr "Conexiones AWS/RDS"
 
 #, fuzzy
 msgid "AWS v2/RDS replica lag"
@@ -4879,6 +4895,18 @@ msgstr ""
 msgid "Active checks have been manually enabled for this %(what)s!"
 msgstr ""
 "¡Las comprobaciones activas se han activado manualmente para este %(what)s!"
+
+#, fuzzy
+msgid "Active checks have been manually enabled for this host"
+msgstr ""
+"¡Las comprobaciones activas se han desactivado manualmente para este %"
+"(what)s!"
+
+#, fuzzy
+msgid "Active checks have been manually enabled for this service"
+msgstr ""
+"¡Las comprobaciones activas se han desactivado manualmente para este %"
+"(what)s!"
 
 msgid "Active connections"
 msgstr "Conexiones activas"
@@ -7214,6 +7242,12 @@ msgid ""
 msgstr ""
 "Todos los eventos del host '%(host)s' serán eliminados de la lista de "
 "eventos abiertos. Aún puede acceder a ellos en el archivo."
+
+msgid ""
+"All files of the agent package are placed below this directory.<br><b>Note</"
+"b>: Some files, like systemd units, will still be generated outside of this "
+"directory for proper operation of the agent installation."
+msgstr ""
 
 msgid "All flows"
 msgstr "Todos los flujos"
@@ -20516,7 +20550,7 @@ msgid "Customize GUI design"
 msgstr "Personalizar el diseño de la interfaz gráfica de usuario"
 
 #, fuzzy
-msgid "Customize agent package (Linux; Solaris and AIX: experimental)"
+msgid "Customize agent package (Linux, Solaris, AIX)"
 msgstr "Nombre de los paquetes del agente (Linux, UNIX)"
 
 #, python-format
@@ -35471,9 +35505,10 @@ msgid ""
 "Keep the rules of <i>Installation paths for agent files</i> until the "
 "migrated hosts have installed their new agent package.<br>The rule set "
 "<i>Customize agent package</i> takes precedence over this rule set. A host "
-"that matches both gets the single directory deployment.<br>Checkmk 3.1 will "
-"remove the classic file deployment. To move hosts to the single directory "
-"deployment, add a rule <i>Customize agent package</i> for them."
+"that matches both gets the single directory deployment.<br>Hosts without a "
+"rule get the single directory deployment. To move hosts, narrow the "
+"conditions of this rule, delete the rule, or add a rule <i>Customize agent "
+"package</i> for them.<br>Checkmk 3.1 will remove the classic file deployment."
 msgstr ""
 
 msgid "Hosts that need an agent update"
@@ -35623,6 +35658,14 @@ msgid ""
 "Checkmk asks OpenAI not to store responses; providers keep requests for "
 "abuse monitoring either way. Turn caching off for a base URL without caching "
 "support."
+msgstr ""
+
+msgid ""
+"How long the special agent waits for the backup server to answer a single "
+"request to the REST API. The timeout applies to each request, not to the "
+"whole agent run. If you raise it above 60 seconds, raise the check interval "
+"of the host's Check_MK service accordingly, so that the agent has enough "
+"time to complete all its calls."
 msgstr ""
 
 msgid "How long to alert after the most recent watch error."
@@ -37041,7 +37084,7 @@ msgstr ""
 msgid ""
 "If this Managed Robot is to be deployed on Linux and RCC is to be used, it "
 "is important to set a user context other than root using the \"Customize "
-"agent package (Linux; Solaris and AIX: experimental)\" rule."
+"agent package (Linux, Solaris, AIX)\" rule."
 msgstr ""
 
 msgid ""
@@ -39649,14 +39692,6 @@ msgstr ""
 "la salida del servicio\". Los conjuntos de reglas tienen la ventaja "
 "adicional de que el valor configurado es accesible en el contexto de la "
 "notificación."
-
-msgid ""
-"Instead of the classic approach of distributing the agent package's files "
-"over multiple places on the file system, all files of the package will be "
-"placed below this directory.<br><b>Note</b>: Some files, like systemd units, "
-"will still be generated outside of this directory for proper operation of "
-"the agent installation."
-msgstr ""
 
 msgid ""
 "Instead of using the regular logwatch check all lines received by logwatch "
@@ -48644,11 +48679,16 @@ msgstr "Más de %(count)d resultados"
 
 msgid ""
 "More than one value can arrive for the same metric on the same host in a "
-"single check, for example from several identical instances of a resource, or "
-"from multiple resources grouped onto one host. Checkmk merges them into one "
-"value. 'Average' suits percentages like CPU, 'Sum' suits counts like "
-"requests, 'Max' catches the worst case, 'Min' the best case. If a metric is "
-"reported only once, every option behaves the same."
+"single check, for example one value per Azure dimension (such as one per API "
+"name), from several identical instances of a resource, or from multiple "
+"resources grouped onto one host. Checkmk merges them into one value. 'By "
+"statistic' merges each statistic according to its meaning: the minimum of "
+"the minimums, the maximum of the maximums, the sum of the totals and counts, "
+"and the average of each value weighted by its count. Use one of the other "
+"options to merge every statistic of a metric in the same way: 'Average' "
+"suits percentages like CPU, 'Sum' suits counts like requests, 'Max' catches "
+"the worst case, 'Min' the best case. If a metric is reported only once, "
+"every option behaves the same."
 msgstr ""
 
 msgid "Most recent events"
@@ -62267,6 +62307,10 @@ msgid "Request rate"
 msgstr "Solicitar tarifa"
 
 #, fuzzy
+msgid "Request timeout"
+msgstr "Método de solicitud"
+
+#, fuzzy
 msgid "Request transfer rate"
 msgstr "Solicitar tarifa"
 
@@ -73920,6 +73964,11 @@ msgstr ""
 "opcionalmente la instalación del servicio, por ejemplo, si se conecta al "
 "agente a través de SSH.\n"
 
+msgid ""
+"The Checkmk agent installs its files below a single directory. This rule "
+"sets that directory, and the user that the agent runs as."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "The Checkmk agent supports a feature called real-time checks where it sends "
@@ -74742,16 +74791,6 @@ msgid ""
 "to a site: it must be trusted by the controller's connection with the site "
 "you select here. Hosts that have no connection with this site are not "
 "affected, which lets you list the CAs of all your sites in a single rule."
-msgstr ""
-
-msgid ""
-"The agent installation path configuration now simplifies to one single "
-"directory, which can be configured with the new <i>Customize agent package</"
-"i> rule set.<br>When configuring <i>Customize agent package</i>, matching "
-"rules from this rule set will be ignored.<br><b>Note</b>: When updating "
-"agents to the new directory structure, please keep this rule set until the "
-"agent update is done. The agent package will read the old installation paths "
-"to migrate your files to the new directory structure."
 msgstr ""
 
 #, fuzzy
@@ -80269,6 +80308,16 @@ msgid ""
 msgstr ""
 
 msgid ""
+"These paths apply only to hosts that match the rule <i>Use classic file "
+"deployment</i>. All other hosts get the single directory deployment, which "
+"can be configured with the rule set <i>Customize agent package</i>."
+"<br><b>Note</b>: When updating agents to the new directory structure, please "
+"keep this rule set until the agent update is done. The agent package will "
+"read the old installation paths to migrate your files to the new directory "
+"structure."
+msgstr ""
+
+msgid ""
 "These rule sets are configured in your site, but marked as deprecated. They "
 "still work, but need to be migrated to their successor or be removed before "
 "the update to the next major release. There should be a Werk for each of "
@@ -83220,12 +83269,6 @@ msgstr ""
 "Esta regla permite configurar el número de conexiones máximas para un VSID "
 "determinado."
 
-msgid ""
-"This rule allows you to customize the user and installation directory of the "
-"agent. When using this rule, all agent files will be installed into a "
-"directory defined in this rule."
-msgstr ""
-
 #, fuzzy
 msgid ""
 "This rule allows you to restrict the access to the Checkmk agent to certain "
@@ -84438,11 +84481,12 @@ msgstr ""
 
 msgid ""
 "This rule set will only set the agent user to the configured value.<br>It "
-"will not take care of further needed permissions on the target system."
-"<br>Please use the new rule set <i>Customize agent package</i> instead, "
-"which offers a proper non-root agent installation.<br> When configuring "
-"<i>Customize agent package</i>, matching rules from this rule set will be "
-"ignored.<br>"
+"will not take care of further needed permissions on the target system.<br>It "
+"applies only to hosts that match the rule <i>Use classic file deployment</"
+"i>. All other hosts get the single directory deployment, where the agent "
+"runs as root unless the rule set <i>Customize agent package</i> configures "
+"another user.<br>Please use <i>Customize agent package</i> instead, which "
+"offers a proper non-root agent installation.<br>"
 msgstr ""
 
 #, fuzzy
@@ -85834,10 +85878,6 @@ msgstr "Tiempo desde el final de la última copia de seguridad"
 msgid "Time since last AD Connect sync"
 msgstr "Tiempo transcurrido desde la última sincronización de AD Connect"
 
-#, fuzzy
-msgid "Time since last CDP sync"
-msgstr "Tiempo transcurrido desde la última sincronización"
-
 msgid "Time since last NTPMessage"
 msgstr "Tiempo transcurrido desde el último NTPMessage"
 
@@ -85864,6 +85904,10 @@ msgstr "Tiempo desde el último punto de control"
 #, fuzzy
 msgid "Time since last garbage collection"
 msgstr "Tiempo transcurrido desde la última finalización con éxito"
+
+#, fuzzy
+msgid "Time since last long-term restore point"
+msgstr "Tiempo desde el último punto de control"
 
 #, fuzzy
 msgid "Time since last reported"
@@ -90842,6 +90886,10 @@ msgid "Unknown site: %(raw_site)s"
 msgstr "Sitio desconocido %s"
 
 #, fuzzy, python-format
+msgid "Unknown site: %(site)s"
+msgstr "Sitio desconocido %s"
+
+#, fuzzy, python-format
 msgid "Unknown tag group \"%(tag_group_id)s\""
 msgstr "Grupo de etiquetas desconocido \"%s\""
 
@@ -94704,7 +94752,7 @@ msgid "Veeam: Scale-out repository"
 msgstr ""
 
 #, fuzzy
-msgid "Veeam: Time since last CDP sync"
+msgid "Veeam: Time since last CDP long-term restore point"
 msgstr "Veeam: Tiempo desde la última copia de seguridad"
 
 msgid "Veeam: Time since last backup"
@@ -100751,6 +100799,10 @@ msgid "busy workers"
 msgstr "trabajadores ocupados"
 
 #, fuzzy
+msgid "by statistic"
+msgstr "Estadísticas del DNS"
+
+#, fuzzy
 msgid "bytes/sec"
 msgstr "bytes/s"
 
@@ -105228,6 +105280,77 @@ msgid "Search custom graphs ..."
 msgstr "Nuevo gráfico personalizado..."
 
 #, fuzzy
+msgid "Enter a title."
+msgstr "Nombre de archivo no válido"
+
+#, fuzzy
+msgid "Enter an ID."
+msgstr "Identificación interna"
+
+#, fuzzy
+msgid ""
+"Start with a letter or an underscore, then use only letters, digits, hyphens "
+"(-) and underscores (_)."
+msgstr "Utilice aquí sólo letras minúsculas, dígitos y guiones bajos."
+
+#, fuzzy
+msgid "You already have a custom graph with this ID."
+msgstr "Ya tienes un elemento con el ID <b>%(name)s</b>"
+
+#, fuzzy
+msgid "Select at least one site."
+msgstr "Seleccione al menos un elemento"
+
+#, fuzzy
+msgid "Select at least one contact group."
+msgstr "Por favor, añada al menos un nodo hijo."
+
+#, fuzzy
+msgid "No sites available."
+msgstr "Puertos disponibles"
+
+#, fuzzy
+msgid "No contact groups available."
+msgstr "No hay información disponible"
+
+#, fuzzy
+msgid "Could not load the sites."
+msgstr "No se puede eliminar esta conexión."
+
+#, fuzzy
+msgid "Could not load the contact groups."
+msgstr "No se puede eliminar esta conexión."
+
+#, fuzzy
+msgid "The graph could not be saved."
+msgstr "No se ha podido encontrar el DN de la base del grupo."
+
+#, fuzzy
+msgid "Save to custom graph catalog"
+msgstr "Editar gráfico personalizado"
+
+msgid "Save this graph to the catalog to make it reusable across dashboards."
+msgstr ""
+
+msgid "Provide a title and unique ID."
+msgstr ""
+
+#, fuzzy
+msgid "Make this custom graph available for other users"
+msgstr "Poner este %s a disposición de otros usuarios"
+
+msgid "Save to catalog & save widget"
+msgstr ""
+
+#, fuzzy
+msgid "Save to catalog & place widget"
+msgstr "Añadir objetivo"
+
+#, fuzzy
+msgid "Save to graph catalog"
+msgstr "Utilizar el título del gráfico"
+
+#, fuzzy
 msgid "Data & visualization"
 msgstr "Visualización de BI"
 
@@ -105273,14 +105396,6 @@ msgstr "Sólo mostrar el %s si mostrar más está activo"
 #, fuzzy
 msgid "Show in dashboard name dropdown"
 msgstr "Desde el almacén de contraseñas"
-
-#, fuzzy
-msgid "Select at least one contact group."
-msgstr "Por favor, añada al menos un nodo hijo."
-
-#, fuzzy
-msgid "Select at least one site."
-msgstr "Seleccione al menos un elemento"
 
 #, fuzzy
 msgid "Dashboard settings of %{name}"
@@ -109821,6 +109936,9 @@ msgstr "Estado del nodo"
 msgid "Nothing to preview"
 msgstr "Nada registrado"
 
+msgid "Predictive thresholds cannot be shown in this graph."
+msgstr ""
+
 msgid ""
 "This alert uses conditions the editor cannot show, for example a folder you "
 "cannot access."
@@ -109960,6 +110078,10 @@ msgstr "Métrica única"
 #, fuzzy
 msgid "Assign to host"
 msgstr "Asignar al grupo"
+
+#, fuzzy
+msgid "Create & add alert"
+msgstr "Creado en"
 
 #, fuzzy
 msgid "No metric selected."
@@ -112196,6 +112318,10 @@ msgstr "host/Servicio"
 msgid "Search services…"
 msgstr "Coincidir con los Servicios"
 
+#, fuzzy
+msgid "Running the command…"
+msgstr "Comunicación en texto plano"
+
 msgid "This action runs immediately and has no further options."
 msgstr ""
 
@@ -112417,6 +112543,20 @@ msgid "Could not remove the downtimes of the selected services"
 msgstr "El host/servicio debe tener uno de los contactos seleccionados."
 
 msgid ""
+"The check was rescheduled, but its result could not be read. It will show "
+"once the page refreshes."
+msgstr ""
+
+msgid ""
+"The check did not run within %{seconds} second. It will still run as "
+"scheduled, and its result will show once the page refreshes."
+msgid_plural ""
+"The check did not run within %{seconds} seconds. It will still run as "
+"scheduled, and its result will show once the page refreshes."
+msgstr[0] ""
+msgstr[1] ""
+
+msgid ""
 "Execution will be spread across custom time period to avoid network overload."
 msgstr ""
 
@@ -112441,9 +112581,20 @@ msgstr ""
 "Especifica en qué periodo de tiempo se creará un nuevo archivo para el "
 "historial de eventos."
 
+msgid "The check of %{host} has run"
+msgstr ""
+
 #, fuzzy
 msgid "Could not reschedule the checks for the selected hosts"
 msgstr "El host/servicio debe tener uno de los contactos seleccionados."
+
+msgid ""
+"The \"Check_MK\" service of %{host} has run, and with it the services it "
+"updates"
+msgstr ""
+
+msgid "The check of \"%{service}\" on %{host} has run"
+msgstr ""
 
 #, fuzzy
 msgid "Could not reschedule the checks for the selected services"
@@ -114704,6 +114855,10 @@ msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
 
+#, fuzzy
+#~ msgid "Time since last CDP sync"
+#~ msgstr "Tiempo transcurrido desde la última sincronización"
+
 #, fuzzy, python-format
 #~ msgid ""
 #~ "Cannot load HW/SW inventory of %(host_name)s. Please remove the corrupted "
@@ -116259,10 +116414,6 @@ msgstr ""
 #~ msgstr "Acciones personalizadas que estarán disponibles para la alerta."
 
 #, fuzzy
-#~ msgid "Create alert"
-#~ msgstr "Creado en"
-
-#, fuzzy
 #~ msgid "Name the alert and select services"
 #~ msgstr "Ver todos los hosts y servicios"
 
@@ -116949,10 +117100,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "No service groups configured in this site"
 #~ msgstr "Replicar la configuración de la Consola de Eventos a este sitio"
-
-#, fuzzy
-#~ msgid "No groups available"
-#~ msgstr "No hay información disponible"
 
 #, fuzzy
 #~ msgid "(ntopng integration disabled)"
@@ -118878,10 +119025,6 @@ msgstr ""
 #, python-format
 #~ msgid "Make %s visible and usable for other users."
 #~ msgstr "Haz que %s sea visible y utilizable para otros usuarios."
-
-#, python-format
-#~ msgid "Make this %s available for other users"
-#~ msgstr "Poner este %s a disposición de otros usuarios"
 
 #, python-format
 #~ msgid "Modified user role '%s'"

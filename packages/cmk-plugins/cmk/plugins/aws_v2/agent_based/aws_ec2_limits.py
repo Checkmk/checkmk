@@ -81,7 +81,7 @@ def _check_unlisted_instance_types(region_data: Sequence[Sequence[Any]]) -> Chec
         yield Metric(f"aws_ec2_{resource_key}", amount)
         usage[resource_key.removeprefix(_INSTANCE_TYPE_PREFIX)] = amount
     yield Result(
-        state=State.OK,
+        state=State.WARN,
         summary="%d unrecognized instance type%s (limits not checked)"
         % (len(usage), "" if len(usage) == 1 else "s"),
         details="Instance types unknown to Checkmk, no limits checked: %s"

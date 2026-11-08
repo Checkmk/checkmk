@@ -26,7 +26,6 @@ from cmk.plugins.aws_deprecated.lib import (
 )
 
 DEFAULT_LEVELS = (None, 80.0, 90.0)
-_INSTANCE_TYPE_PREFIX = "running_ondemand_instances_"
 
 default_running_ondemand_instances = [
     (inst_type, DEFAULT_LEVELS) for inst_type in aws_types.AWS_EC2_INST_TYPES
@@ -35,6 +34,23 @@ default_running_ondemand_instances = [
 default_running_ondemand_instance_families = [
     (f"{inst_fam}_vcpu", DEFAULT_LEVELS) for inst_fam in aws_types.AWS_EC2_INST_FAMILIES
 ]
+
+DEFAULT_PARAMS = {
+    "vpc_elastic_ip_addresses": DEFAULT_LEVELS,
+    "elastic_ip_addresses": DEFAULT_LEVELS,
+    "vpc_sec_group_rules": DEFAULT_LEVELS,
+    "vpc_sec_groups": DEFAULT_LEVELS,
+    "if_vpc_sec_group": DEFAULT_LEVELS,
+    "spot_inst_requests": DEFAULT_LEVELS,
+    "active_spot_fleet_requests": DEFAULT_LEVELS,
+    "spot_fleet_total_target_capacity": DEFAULT_LEVELS,
+    "running_ondemand_instances_total": DEFAULT_LEVELS,
+    "running_ondemand_instances": default_running_ondemand_instances,
+    "running_ondemand_instances_vcpus": default_running_ondemand_instance_families,
+    "unknown_instance_types_state": int(State.WARN),
+}
+
+_INSTANCE_TYPE_PREFIX = "running_ondemand_instances_"
 
 
 def _transform_ec2_limits(params: Mapping[str, Any]) -> dict[str, Any]:
@@ -66,14 +82,20 @@ def check_aws_ec2_limits(
     listed_data = [row for row in region_data if not _is_unlisted_instance_type(row[0], limits)]
     unlisted_data = [row for row in region_data if _is_unlisted_instance_type(row[0], limits)]
     yield from check_aws_limits_legacy("ec2", limits, listed_data)
-    yield from _check_unlisted_instance_types(unlisted_data)
+    yield from _check_unlisted_instance_types(
+        unlisted_data,
+        State(params["unknown_instance_types_state"]),
+    )
 
 
 def _is_unlisted_instance_type(resource_key: str, limits: Mapping[str, Any]) -> bool:
     return resource_key.startswith(_INSTANCE_TYPE_PREFIX) and resource_key not in limits
 
 
-def _check_unlisted_instance_types(region_data: Sequence[Sequence[Any]]) -> CheckResult:
+def _check_unlisted_instance_types(
+    region_data: Sequence[Sequence[Any]],
+    not_found_state: State,
+) -> CheckResult:
     if not region_data:
         return
     usage: dict[str, int] = {}
@@ -81,7 +103,7 @@ def _check_unlisted_instance_types(region_data: Sequence[Sequence[Any]]) -> Chec
         yield Metric(f"aws_ec2_{resource_key}", amount)
         usage[resource_key.removeprefix(_INSTANCE_TYPE_PREFIX)] = amount
     yield Result(
-        state=State.WARN,
+        state=not_found_state,
         summary="%d unrecognized instance type%s (limits not checked)"
         % (len(usage), "" if len(usage) == 1 else "s"),
         details="Instance types unknown to Checkmk, no limits checked: %s"
@@ -106,17 +128,5 @@ check_plugin_aws_ec2_limits = CheckPlugin(
     discovery_function=discover_aws_ec2_limits,
     check_function=check_aws_ec2_limits,
     check_ruleset_name="aws_ec2_limits",
-    check_default_parameters={
-        "vpc_elastic_ip_addresses": (None, 80.0, 90.0),
-        "elastic_ip_addresses": (None, 80.0, 90.0),
-        "vpc_sec_group_rules": (None, 80.0, 90.0),
-        "vpc_sec_groups": (None, 80.0, 90.0),
-        "if_vpc_sec_group": (None, 80.0, 90.0),
-        "spot_inst_requests": (None, 80.0, 90.0),
-        "active_spot_fleet_requests": (None, 80.0, 90.0),
-        "spot_fleet_total_target_capacity": (None, 80.0, 90.0),
-        "running_ondemand_instances_total": (None, 80.0, 90.0),
-        "running_ondemand_instances": default_running_ondemand_instances,
-        "running_ondemand_instances_vcpus": default_running_ondemand_instance_families,
-    },
+    check_default_parameters=DEFAULT_PARAMS,
 )

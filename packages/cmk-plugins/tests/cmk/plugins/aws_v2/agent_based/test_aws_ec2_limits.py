@@ -13,6 +13,7 @@ import pytest
 from cmk.agent_based.v2 import Metric, Result, Service, State, StringTable
 from cmk.plugins.aws_v2.agent_based.aws_ec2_limits import (
     check_aws_ec2_limits,
+    DEFAULT_PARAMS,
     discover_aws_ec2_limits,
 )
 from cmk.plugins.aws_v2.lib import parse_aws_limits_generic
@@ -228,6 +229,7 @@ def test_discover_aws_ec2_limits(
                 "elastic_ip_addresses": (None, 80.0, 90.0),
                 "running_ondemand_instances_total": (None, 80.0, 90.0),
                 "vpc_sec_groups": (None, 80.0, 90.0),
+                "unknown_instance_types_state": int(State.WARN),
             },
             [['[["vpc_elastic_ip_addresses",', '"TITLE",', "10,", "1,", '"REGION"]]']],
             [
@@ -262,7 +264,7 @@ def test_unlisted_instance_type_reports_usage_without_levels() -> None:
         ]
     )
 
-    results = list(check_aws_ec2_limits("REGION", {}, section))
+    results = list(check_aws_ec2_limits("REGION", DEFAULT_PARAMS, section))
 
     assert results == [
         Metric("aws_ec2_running_ondemand_instances_unlisted.xlarge", 40.0),
@@ -292,7 +294,7 @@ def test_listed_instance_type_keeps_levels_next_to_unlisted_type() -> None:
         ]
     )
 
-    results = list(check_aws_ec2_limits("REGION", {}, section))
+    results = list(check_aws_ec2_limits("REGION", DEFAULT_PARAMS, section))
 
     assert results == [
         Metric("aws_ec2_running_ondemand_instances_a1.xlarge", 19.0),
@@ -327,10 +329,32 @@ def test_summary_counts_the_unlisted_instance_types() -> None:
         ]
     )
 
-    results = list(check_aws_ec2_limits("REGION", {}, section))
+    results = list(check_aws_ec2_limits("REGION", DEFAULT_PARAMS, section))
 
     assert results[-1] == Result(
         state=State.WARN,
         summary="2 unrecognized instance types (limits not checked)",
         details="Instance types unknown to Checkmk, no limits checked: unlisted.xlarge (3), unlisted.2xlarge (5)",
     )
+
+
+def test_unlisted_instance_types_report_the_configured_state() -> None:
+    section = parse_aws_limits_generic(
+        [
+            [
+                '[["running_ondemand_instances_unlisted.xlarge",',
+                '"Running On-Demand unlisted.xlarge Instances",',
+                "20,",
+                "40,",
+                '"REGION"]]',
+            ]
+        ]
+    )
+
+    results = list(
+        check_aws_ec2_limits(
+            "REGION", {**DEFAULT_PARAMS, "unknown_instance_types_state": int(State.OK)}, section
+        )
+    )
+
+    assert isinstance(results[-1], Result) and results[-1].state == State.OK

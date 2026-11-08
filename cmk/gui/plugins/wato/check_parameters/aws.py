@@ -52,6 +52,7 @@ from cmk.rulesets.v1.form_specs import (
     List,
     Percentage,
     PredictiveLevels,
+    ServiceState,
     SIMagnitude,
     String,
     TimeMagnitude,
@@ -967,6 +968,18 @@ def _parameter_form_spec_aws_ec2_limits() -> Dictionary:
                 parameter_form=_vs_limits_vcpu_families()
             ),
             "running_ondemand_instances": DictElement(parameter_form=_vs_limits_inst_types()),
+            "unknown_instance_types_state": DictElement(
+                parameter_form=ServiceState(
+                    title=Title("State if running instance types are unknown to Checkmk"),
+                    help_text=Help(
+                        "Checkmk does not check limits on EC2 instance types that it does not "
+                        "know about. By default in this case, it will emit a warning so that "
+                        "you are aware that the limits of these instances are unmonitored. You "
+                        "can select a different service state for this scenario here."
+                    ),
+                    prefill=DefaultValue(ServiceState.WARN),
+                ),
+            ),
         }
     )
 

@@ -31,7 +31,7 @@ from cmk.maps.gui._cfg_import import (
     map_name_from_filename,
     resolve_connection_ids,
 )
-from cmk.maps.shared.map_payload import MapObject, MapPayload
+from cmk.maps.shared.map_payload import MapDisplay, MapObject, MapPayload
 
 
 def _coord(v: str) -> int:
@@ -961,7 +961,78 @@ def test_view_type_gadget_without_url_defaults_to_gauge() -> None:
         "}\n"
     )
     obj = _first_obj(cfg_to_map(content, "x"))
-    assert obj["display"] == {"mode": "gadget", "gadget_type": "gauge", "gadget_metric": None}
+    assert obj["display"] == {
+        "mode": "gadget",
+        "gadget_type": "gauge",
+        "gadget_metric": None,
+        "image_size": 220,
+    }
+
+
+def _gadget_display(gadget_options: str) -> MapDisplay:
+    content = (
+        "define service {\n    host_name = h\n    service_description = CPU\n"
+        f"    x = 0\n    y = 0\n    view_type = gadget\n{gadget_options}}}\n"
+    )
+    return _first_obj(cfg_to_map(content, "x"))["display"]
+
+
+def test_a_bar_gadget_is_as_high_as_nagvis_draws_it() -> None:
+    assert _gadget_display("    gadget_url = std_bar.php\n") == {
+        "mode": "gadget",
+        "gadget_type": "bar",
+        "gadget_metric": None,
+        "image_size": 227,
+    }
+
+
+def test_a_gadget_scale_scales_the_gadget() -> None:
+    assert (
+        _gadget_display("    gadget_url = std_speedometer2.php\n    gadget_scale = 50\n").get(
+            "image_size"
+        )
+        == 110
+    )
+
+
+@pytest.mark.parametrize(
+    ("gadget_options", "size"),
+    [
+        pytest.param(
+            "    gadget_url = std_speedometer.php\n    gadget_scale = 50\n", 220, id="speedometer"
+        ),
+        pytest.param(
+            "    gadget_url = std_html_bar.php\n    gadget_scale = 50\n", 136, id="html bar"
+        ),
+        pytest.param("    gadget_url = std_bar.php\n    gadget_scale = 0\n", 227, id="no scale"),
+    ],
+)
+def test_a_gadget_nagvis_draws_at_one_size_keeps_it(gadget_options: str, size: int) -> None:
+    assert _gadget_display(gadget_options).get("image_size") == size
+
+
+def test_a_gadget_scale_is_capped() -> None:
+    assert (
+        _gadget_display("    gadget_url = std_speedometer2.php\n    gadget_scale = 1000000\n").get(
+            "image_size"
+        )
+        == 2200
+    )
+
+
+@pytest.mark.parametrize(
+    "gadget_options, label_y",
+    [
+        pytest.param("", 155, id="gauge"),
+        pytest.param("    gadget_url = std_bar.php\n", 98, id="bar"),
+    ],
+)
+def test_a_gadget_label_stands_below_the_gadget(gadget_options: str, label_y: int) -> None:
+    content = (
+        "define service {\n    host_name = h\n    service_description = CPU\n"
+        f"    x = 0\n    y = 0\n    view_type = gadget\n{gadget_options}    label_show = 1\n}}\n"
+    )
+    assert _first_obj(cfg_to_map(content, "x"))["label"]["y"] == label_y
 
 
 def test_worldmap_global_becomes_geo_view() -> None:
@@ -1130,7 +1201,12 @@ def test_fixture_service_gadget(all_objects_map: MapPayload) -> None:
     o = _by_id(all_objects_map, "service_s00002")
     # gadget_url=std_speedometer.php must map to Maps gadget_type=gauge
     # (otherwise the gauge renders empty because no metric is selected).
-    assert o["display"] == {"mode": "gadget", "gadget_type": "gauge", "gadget_metric": None}
+    assert o["display"] == {
+        "mode": "gadget",
+        "gadget_type": "gauge",
+        "gadget_metric": None,
+        "image_size": 220,
+    }
 
 
 def test_fixture_service_with_view_type_line_becomes_line(

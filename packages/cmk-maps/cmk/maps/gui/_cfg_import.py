@@ -101,6 +101,25 @@ _GADGET_URL_MAP: dict[str, GadgetType] = {
     "rawNumbers.php": "value",
 }
 
+# How large NagVis draws its stock gadgets at gadget_scale 100, width and height.
+_NAGVIS_GADGET_SIZES: dict[str, tuple[int, int]] = {
+    "std_speedometer.php": (220, 110),
+    "std_speedometer2.php": (220, 110),
+    "std_bar.php": (400, 50),
+    "std_html_bar.php": (100, 30),
+}
+# NagVis draws them at one size whatever the gadget_scale.
+_UNSCALED_GADGETS = frozenset({"std_speedometer.php", "std_html_bar.php"})
+# Ten times NagVis' size; a larger one would only make the canvas huge.
+_GADGET_SCALE_MAX = 1000
+# The share of a bar gadget's size Maps draws its track at (GadgetRenderer.vue).
+_BAR_TRACK_SHARE = 0.22
+# How high Maps draws a gadget with a one-line caption (GadgetRenderer.vue): a bar
+# as a share of its size, a gauge as a share plus the caption at the small font.
+_BAR_HEIGHT_SHARE = 0.43
+_GAUGE_HEIGHT_SHARE = 0.65
+_GAUGE_CAPTION_HEIGHT = 12
+
 
 # ---------------------------------------------------------------------------
 # Parser
@@ -840,15 +859,39 @@ def _build_display(p: dict[str, str]) -> MapDisplay:
         return {"mode": "text"}
     if view_type != "gadget":
         return {"mode": "icon"}
-    # Legacy default for an unset gadget_url is the speedometer; render as gauge.
     # Unknown values fall back to icon so the object stays visible.
-    gadget_url = p.get("gadget_url", "").strip()
-    gadget_type = _GADGET_URL_MAP.get(gadget_url)
-    if gadget_type is None and gadget_url == "":
-        gadget_type = "gauge"
-    if gadget_type is None:
+    if (gadget_type := _GADGET_URL_MAP.get(_gadget_url(p))) is None:
         return {"mode": "icon"}
-    return {"mode": "gadget", "gadget_type": gadget_type, "gadget_metric": None}
+    display: MapDisplay = {"mode": "gadget", "gadget_type": gadget_type, "gadget_metric": None}
+    # Maps sizes a gadget by its width and grows the height with it, so a gauge
+    # gets NagVis' width and a bar its height.
+    if (drawn := _nagvis_gadget_size(p)) is not None:
+        width, height = drawn
+        display["image_size"] = round(height / _BAR_TRACK_SHARE) if gadget_type == "bar" else width
+    return display
+
+
+def _gadget_url(p: dict[str, str]) -> str:
+    # NagVis draws a gadget without a gadget_url as the speedometer.
+    return p.get("gadget_url", "").strip() or "std_speedometer.php"
+
+
+def _nagvis_gadget_size(p: dict[str, str]) -> tuple[int, int] | None:
+    """How large NagVis draws the stock gadget, ``None`` for any other."""
+    gadget_url = _gadget_url(p)
+    if (size := _NAGVIS_GADGET_SIZES.get(gadget_url)) is None:
+        return None
+    scale = min(_int(p.get("gadget_scale"), 100), _GADGET_SCALE_MAX)
+    if gadget_url in _UNSCALED_GADGETS or scale <= 0:
+        scale = 100
+    width, height = size
+    return width * scale // 100, height * scale // 100
+
+
+def _drawn_gadget_height(gadget_type: str, size: int) -> int:
+    if gadget_type == "bar":
+        return round(size * _BAR_HEIGHT_SHARE)
+    return round(size * _GAUGE_HEIGHT_SHARE) + _GAUGE_CAPTION_HEIGHT
 
 
 def _apply_type_specific(obj: MapObject, block_type: str, p: dict[str, str]) -> None:
@@ -896,6 +939,8 @@ def _handle_monitor_block(
     icon_size = map_icon_size
     if display["mode"] == "icon" and (own := ICONSET_SIZE.get(p.get("iconset", ""))):
         display["image_size"] = icon_size = own
+    elif display["mode"] == "gadget" and (size := display.get("image_size")):
+        icon_size = _drawn_gadget_height(display["gadget_type"], size)
     payload: MapObject = {
         "id": f"{maps_type}_{raw_id}",
         "type": maps_type,

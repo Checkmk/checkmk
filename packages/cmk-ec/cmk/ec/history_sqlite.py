@@ -12,6 +12,7 @@ import os
 import re
 import sqlite3
 import stat
+import threading
 import time
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
@@ -295,12 +296,18 @@ class SQLiteHistory(History):
         logger: Logger,
         event_columns: Columns,
         history_columns: Columns,
+        *,
+        lock: contextlib.AbstractContextManager[object] | None = None,
     ):
         self._settings = settings
         self._config = config
         self._logger = logger.getChild("sqlite")
         self._event_columns = event_columns
         self._history_columns = history_columns
+        # VACUUM fails while a query reads from the connection, so the housekeeping of the
+        # main thread waits for the queries of the status server. Only tests pass a lock, e.g.
+        # to see when the housekeeping waits.
+        self._lock = threading.Lock() if lock is None else lock
         self._last_housekeeping = 0.0
         self._page_size = 4096
 
@@ -422,6 +429,7 @@ class SQLiteHistory(History):
         sqlite_query += " ORDER BY line DESC"
         entries: list[Sequence[object]] = []
         with (
+            self._lock,
             self.conn as connection,
             contextlib.closing(connection.execute(sqlite_query, sqlite_arguments)) as cursor,
         ):
@@ -446,11 +454,12 @@ class SQLiteHistory(History):
             "SQLite history housekeeping: deleting events before %(cutoff)s",
             {"cutoff": datetime.fromtimestamp(delta).isoformat()},
         )
-        with self.conn as connection:
-            cur = connection.cursor()
-            cur.execute("DELETE FROM history WHERE time <= ?;", (delta,))
-        # should be executed outside of the transaction
-        self._vacuum()
+        with self._lock:
+            with self.conn as connection:
+                cur = connection.cursor()
+                cur.execute("DELETE FROM history WHERE time <= ?;", (delta,))
+            # should be executed outside of the transaction
+            self._vacuum()
         self._last_housekeeping = now
 
     def _vacuum(self) -> None:

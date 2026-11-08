@@ -5,14 +5,17 @@
 
 import logging
 import sqlite3
+import threading
+from pathlib import Path
 from typing import Literal
 
 import pytest
 
 import cmk.ec.export as ec
 from cmk.ccc.hostaddress import HostName
-from cmk.ec.history_sqlite import filters_to_sqlite_query, SQLiteHistory
-from cmk.ec.main import StatusTableHistory
+from cmk.ec.config import Config
+from cmk.ec.history_sqlite import filters_to_sqlite_query, SQLiteHistory, SQLiteSettings
+from cmk.ec.main import StatusTableEvents, StatusTableHistory
 from cmk.ec.query import QueryFilter, QueryGET, StatusTable
 
 from .helpers import (
@@ -534,3 +537,66 @@ def test_housekeeping(history_sqlite: SQLiteHistory) -> None:
         history_sqlite.housekeeping()
         cur.execute("SELECT count(*) FROM history;")
         assert cur.fetchone()["count(*)"] == 1
+
+
+class _WatchedLock:
+    """A lock which tells via the event when a thread has to wait for it"""
+
+    def __init__(self, waiting: threading.Event) -> None:
+        self._lock = threading.Lock()
+        self._waiting = waiting
+
+    def __enter__(self) -> None:
+        if not self._lock.acquire(blocking=False):
+            self._waiting.set()
+            self._lock.acquire()
+
+    def __exit__(self, *exc_info: object) -> None:
+        self._lock.release()
+
+
+def test_housekeeping_during_a_query_vacuums_the_database(
+    settings: ec.Settings, config: Config, tmp_path: Path
+) -> None:
+    # Set once the housekeeping waits for the query or is done, e.g. failed
+    waiting_or_done = threading.Event()
+    history = SQLiteHistory(
+        SQLiteSettings.from_settings(settings, database=tmp_path / "history.sqlite"),
+        # The housekeeping deletes all entries and always vacuums.
+        config | {"archive_mode": "sqlite", "history_lifetime": 0, "sqlite_freelist_size": 0},
+        logging.getLogger("cmk.mkeventd"),
+        StatusTableEvents.columns,
+        StatusTableHistory.columns,
+        lock=_WatchedLock(waiting_or_done),
+    )
+    for _ in range(100):  # pages for the housekeeping to free
+        history.add(event=ec.Event(text="x" * 1000), what="NEW")
+    errors: list[Exception] = []
+
+    def housekeeping() -> None:
+        try:
+            history.housekeeping()
+        except Exception as e:
+            errors.append(e)
+        finally:
+            waiting_or_done.set()
+
+    housekeeper = threading.Thread(target=housekeeping)
+
+    def start_housekeeping_at_the_first_entry(_text: object) -> bool:
+        if housekeeper.ident is None:
+            housekeeper.start()
+            assert waiting_or_done.wait(timeout=30), "housekeeping neither waited nor finished"
+        return True
+
+    logger = logging.getLogger("cmk.mkeventd")
+    query = QueryGET(lambda _name: StatusTableHistory(logger, history), ["GET history"], logger)
+    # A filter selecting all entries, which starts the housekeeping while the query reads them
+    query.filters.append(QueryFilter("event_text", "!=", start_housekeeping_at_the_first_entry, ""))
+
+    history.get(query)
+    housekeeper.join()
+    free_pages = history.conn.execute("PRAGMA freelist_count").fetchone()[0]
+    history.close()
+
+    assert (errors, free_pages) == ([], 0)

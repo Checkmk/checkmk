@@ -751,7 +751,7 @@ check_directory_modes() {
         "${installdir}/package/bin 755" \
         "${installdir}/package/plugins 755" \
         "${installdir}/package/agent 750" \
-        "${installdir}/package/config 750" \
+        "${installdir}/package/config 751" \
         "${installdir}/package/local 750" \
         "${installdir}/package/scripts 750" \
         "${installdir}/runtime 751" \

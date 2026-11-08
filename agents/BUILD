@@ -25,7 +25,8 @@ _BIN_DIR = _INSTALL_DIR + "/package/bin"
 # Directory modes, named after UnixSingleDirectoryKeeper's own constants.
 _ACCESSIBLE_FOR_OTHERS = "0755"
 
-# runtime and runtime/job, so that mk-job can traverse to runtime/job/<user>.
+# runtime and runtime/job, so that mk-job can traverse to runtime/job/<user>,
+# and package/config, so that mk_oracle can read sqlnet.ora as the Oracle user.
 _TRAVERSABLE_FOR_OTHERS = "0751"
 
 _FORBIDDEN_FOR_OTHERS = "0750"
@@ -303,6 +304,7 @@ pkg_mkdirs(
     name = "agent_pkg_dirs_traversable",
     attributes = pkg_attributes(mode = _TRAVERSABLE_FOR_OTHERS),
     dirs = [
+        _PACKAGE_PREFIX + "/config",
         _RUNTIME_PREFIX,
         _RUNTIME_PREFIX + "/job",
     ],
@@ -315,7 +317,6 @@ pkg_mkdirs(
     attributes = pkg_attributes(mode = _FORBIDDEN_FOR_OTHERS),
     dirs = [
         _PACKAGE_PREFIX + "/agent",
-        _PACKAGE_PREFIX + "/config",
         _PACKAGE_PREFIX + "/local",
         _PACKAGE_PREFIX + "/scripts",
         _RUNTIME_PREFIX + "/controller",

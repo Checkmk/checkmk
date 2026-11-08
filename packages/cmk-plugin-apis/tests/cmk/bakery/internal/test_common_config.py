@@ -353,12 +353,12 @@ def test_unix_single_directory_keeper_make_package_structure(tmp_path: Path) -> 
         assert mode(base / "package" / "bin") == 0o755
         assert mode(base / "package" / "plugins") == 0o755
         # Traversable for others (0o751)
+        assert mode(base / "package" / "config") == 0o751
         assert mode(base / "runtime") == 0o751
         assert mode(base / "runtime" / "job") == 0o751
         # Forbidden for others (0o750)
         assert mode(base / "package" / "agent") == 0o750
         assert mode(base / "package" / "local") == 0o750
-        assert mode(base / "package" / "config") == 0o750
         assert mode(base / "package" / "scripts") == 0o750
         assert mode(base / "runtime" / "log") == 0o750
         assert mode(base / "runtime" / "spool") == 0o750

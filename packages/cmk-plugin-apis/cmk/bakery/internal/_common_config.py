@@ -197,7 +197,10 @@ class UnixSingleDirectoryKeeper:
         )
         (package_dir / "agent").mkdir(mode=self.FORBIDDEN_FOR_OTHERS, exist_ok=True, parents=True)
         (package_dir / "local").mkdir(mode=self.FORBIDDEN_FOR_OTHERS, exist_ok=True, parents=True)
-        (package_dir / "config").mkdir(mode=self.FORBIDDEN_FOR_OTHERS, exist_ok=True, parents=True)
+        # mk_oracle reads sqlnet.ora here as the owner of the Oracle binaries.
+        (package_dir / "config").mkdir(
+            mode=self.TRAVERSABLE_FOR_OTHERS, exist_ok=True, parents=True
+        )
         (package_dir / "scripts").mkdir(mode=self.FORBIDDEN_FOR_OTHERS, exist_ok=True, parents=True)
 
         # mk-job runs as an arbitrary user and writes to runtime/job/<user>.

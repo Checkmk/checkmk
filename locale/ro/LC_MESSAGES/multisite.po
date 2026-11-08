@@ -7804,6 +7804,13 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Allows listing the pending changes through the REST API without the "
+"permission to activate them. Users who may activate changes can always list "
+"them. The GUI shows pending changes to every user with access to Setup, "
+"regardless of this permission."
+msgstr ""
+
+msgid ""
 "Allows querying telemetry metrics from the custom graph editor. When "
 "disabled, only RRD-based metrics are available in the custom graph editor, "
 "and graphs containing telemetry metrics queries cannot be displayed."
@@ -64831,6 +64838,10 @@ msgstr "Vedeți sugestii pentru a vă îmbunătăți instalarea Checkmk"
 msgid "See packaged %(what_plural)s"
 msgstr "A se vedea ambalate %(what_plural)s"
 
+#, fuzzy
+msgid "See pending changes"
+msgstr "Nu există modificări în curs de desfășurare"
+
 msgid "See stale objects in tactical overview"
 msgstr "Vedeți obiectele învechite în prezentarea tactică"
 
@@ -74757,6 +74768,12 @@ msgid ""
 "shipped in the commercial editions, calls the respective libraries directly "
 "via their Python bindings and reduces the load on the monitoring host "
 "significantly. Only the backends this installation provides are offered here."
+msgstr ""
+
+#, python-format
+msgid ""
+"The background image %(image)s is not part of the map file. After saving the "
+"map, upload it in the map's settings under Background image."
 msgstr ""
 
 msgid "The backup codes associated with your account have been reset."
@@ -96027,7 +96044,11 @@ msgid ""
 "using the host name, the IP address, or the host alias. This is due to the "
 "fact that various event sources (e.g. syslog, snmptrapd) may refer to the "
 "same host using different specification methods. Alternatively, you can "
-"specify an explicit host for which to show events."
+"specify an explicit host for which to show events. In an explicit "
+"specification, a slash separates several hosts, e.g. <tt>myhost/10.1.2.3</"
+"tt>. Macros like <tt>$HOSTALIAS$</tt> are inserted as they are, so if the "
+"alias of a host contains a slash, match the alias with the list above "
+"instead."
 msgstr ""
 "Atunci când interogați starea evenimentului, puteți asocia evenimentele cu o "
 "anumită gazdă folosind numele de gazdă, adresa IP sau aliasul de gazdă. "
@@ -107577,6 +107598,14 @@ msgid "Site unreachable: %{sites} — its hosts are missing from the map"
 msgstr "gazda este inaccesibilă sau are servicii necunoscute"
 
 #, fuzzy
+msgid "Connection lost — showing last known state"
+msgstr "gazda este inaccesibilă sau are servicii necunoscute"
+
+#, fuzzy
+msgid "No connection — states unknown"
+msgstr "Setați timeout-ul conexiunii"
+
+#, fuzzy
 msgid "next check in %{duration}"
 msgstr "Durata de verificare a gazdei"
 
@@ -107618,8 +107647,8 @@ msgid "Exit full screen"
 msgstr "Se potrivește la ecran"
 
 #, fuzzy
-msgid "Connection lost — showing last known state"
-msgstr "gazda este inaccesibilă sau are servicii necunoscute"
+msgid "Connecting…"
+msgstr "Conexiune"
 
 msgid "Live"
 msgstr ""
@@ -108918,6 +108947,14 @@ msgstr "Fetch a eșuat"
 msgid "Loading map…"
 msgstr "Opțiuni de etichetare"
 
+msgid "Someone else saved this map"
+msgstr ""
+
+msgid ""
+"Your changes since then are not saved. Reload the map to see theirs, or "
+"overwrite them with yours."
+msgstr ""
+
 #, fuzzy
 msgid "Delete %{n} objects?"
 msgstr "Pe obiecte selectate"
@@ -109503,12 +109540,12 @@ msgid "Failed to load map"
 msgstr "Operațiuni de indexare eșuate"
 
 #, fuzzy
-msgid "delete failed"
-msgstr "Profil implicit"
-
-#, fuzzy
 msgid "Failed to save map"
 msgstr "Raport eșecuri la rezervă"
+
+#, fuzzy
+msgid "delete failed"
+msgstr "Profil implicit"
 
 #, fuzzy
 msgid "Live connection failed"
@@ -109538,6 +109575,9 @@ msgid "Discard unsaved changes?"
 msgstr "Eliminarea modificărilor străine"
 
 msgid "You have unsaved changes. Closing now will discard them."
+msgstr ""
+
+msgid "Someone else saved the map meanwhile."
 msgstr ""
 
 msgid ""
@@ -120439,9 +120479,6 @@ msgstr ""
 #~ "și istoricul disponibilității - aceste redenumiri sunt dezactivate în mod "
 #~ "implicit pentru instalațiile existente. Aici puteți trece la noile "
 #~ "descrieri pentru tipurile de verificări selectate"
-
-#~ msgid "No pending changes"
-#~ msgstr "Nu există modificări în curs de desfășurare"
 
 #, fuzzy
 #~ msgid "Sites with changes: %{n}"

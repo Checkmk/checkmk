@@ -7843,6 +7843,13 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Allows listing the pending changes through the REST API without the "
+"permission to activate them. Users who may activate changes can always list "
+"them. The GUI shows pending changes to every user with access to Setup, "
+"regardless of this permission."
+msgstr ""
+
+msgid ""
 "Allows querying telemetry metrics from the custom graph editor. When "
 "disabled, only RRD-based metrics are available in the custom graph editor, "
 "and graphs containing telemetry metrics queries cannot be displayed."
@@ -65136,6 +65143,10 @@ msgstr "Vea consejos para mejorar su instalación de Checkmk"
 msgid "See packaged %(what_plural)s"
 msgstr "Ver paquete %(what_plural)s"
 
+#, fuzzy
+msgid "See pending changes"
+msgstr "No hay cambios pendientes"
+
 msgid "See stale objects in tactical overview"
 msgstr "Ver objetos obsoletos en el resumen táctico"
 
@@ -75055,6 +75066,12 @@ msgid ""
 "shipped in the commercial editions, calls the respective libraries directly "
 "via their Python bindings and reduces the load on the monitoring host "
 "significantly. Only the backends this installation provides are offered here."
+msgstr ""
+
+#, python-format
+msgid ""
+"The background image %(image)s is not part of the map file. After saving the "
+"map, upload it in the map's settings under Background image."
 msgstr ""
 
 msgid "The backup codes associated with your account have been reset."
@@ -96387,7 +96404,11 @@ msgid ""
 "using the host name, the IP address, or the host alias. This is due to the "
 "fact that various event sources (e.g. syslog, snmptrapd) may refer to the "
 "same host using different specification methods. Alternatively, you can "
-"specify an explicit host for which to show events."
+"specify an explicit host for which to show events. In an explicit "
+"specification, a slash separates several hosts, e.g. <tt>myhost/10.1.2.3</"
+"tt>. Macros like <tt>$HOSTALIAS$</tt> are inserted as they are, so if the "
+"alias of a host contains a slash, match the alias with the list above "
+"instead."
 msgstr ""
 "Al consultar el estado de los eventos, puede hacer coincidir los eventos con "
 "un host en particular utilizando el nombre del host, la dirección IP o el "
@@ -107926,6 +107947,14 @@ msgid "Site unreachable: %{sites} — its hosts are missing from the map"
 msgstr "los hosts son inalcanzables o tienen servicios desconocidos"
 
 #, fuzzy
+msgid "Connection lost — showing last known state"
+msgstr "los hosts son inalcanzables o tienen servicios desconocidos"
+
+#, fuzzy
+msgid "No connection — states unknown"
+msgstr "Establecer el tiempo de espera de la conexión"
+
+#, fuzzy
 msgid "next check in %{duration}"
 msgstr "Duración de la comprobación del host"
 
@@ -107967,8 +107996,8 @@ msgid "Exit full screen"
 msgstr "Datos enviados"
 
 #, fuzzy
-msgid "Connection lost — showing last known state"
-msgstr "los hosts son inalcanzables o tienen servicios desconocidos"
+msgid "Connecting…"
+msgstr "Conexión"
 
 msgid "Live"
 msgstr ""
@@ -109254,6 +109283,14 @@ msgstr "Fallo en la búsqueda"
 msgid "Loading map…"
 msgstr "Opciones de etiquetado"
 
+msgid "Someone else saved this map"
+msgstr ""
+
+msgid ""
+"Your changes since then are not saved. Reload the map to see theirs, or "
+"overwrite them with yours."
+msgstr ""
+
 #, fuzzy
 msgid "Delete %{n} objects?"
 msgstr "En los objetos seleccionados"
@@ -109838,12 +109875,12 @@ msgid "Failed to load map"
 msgstr "Operaciones de índice fallidas"
 
 #, fuzzy
-msgid "delete failed"
-msgstr "Perfil de usuario por defecto"
-
-#, fuzzy
 msgid "Failed to save map"
 msgstr "Ratio de fallos en el recambio"
+
+#, fuzzy
+msgid "delete failed"
+msgstr "Perfil de usuario por defecto"
 
 #, fuzzy
 msgid "Live connection failed"
@@ -109873,6 +109910,9 @@ msgid "Discard unsaved changes?"
 msgstr "Activar los cambios en el extranjero"
 
 msgid "You have unsaved changes. Closing now will discard them."
+msgstr ""
+
+msgid "Someone else saved the map meanwhile."
 msgstr ""
 
 msgid ""
@@ -120647,9 +120687,6 @@ msgstr ""
 #~ "disponibilidad-, estos cambios de nombre están desactivados por defecto "
 #~ "para las instalaciones existentes. Aquí puede cambiar a las nuevas "
 #~ "descripciones para los tipos de comprobación seleccionados"
-
-#~ msgid "No pending changes"
-#~ msgstr "No hay cambios pendientes"
 
 #, fuzzy
 #~ msgid "Sites with changes: %{n}"

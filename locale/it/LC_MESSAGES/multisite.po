@@ -7673,6 +7673,13 @@ msgid ""
 msgstr ""
 
 msgid ""
+"Allows listing the pending changes through the REST API without the "
+"permission to activate them. Users who may activate changes can always list "
+"them. The GUI shows pending changes to every user with access to Setup, "
+"regardless of this permission."
+msgstr ""
+
+msgid ""
 "Allows querying telemetry metrics from the custom graph editor. When "
 "disabled, only RRD-based metrics are available in the custom graph editor, "
 "and graphs containing telemetry metrics queries cannot be displayed."
@@ -64437,6 +64444,10 @@ msgstr "Vedi i suggerimenti su come migliorare la tua installazione di Checkmk"
 msgid "See packaged %(what_plural)s"
 msgstr "Vedi pacchetto %(what_plural)s"
 
+#, fuzzy
+msgid "See pending changes"
+msgstr "Nessun cambiamento in sospeso"
+
 msgid "See stale objects in tactical overview"
 msgstr "Vedere gli oggetti stantii nella panoramica tattica"
 
@@ -74269,6 +74280,12 @@ msgid ""
 "shipped in the commercial editions, calls the respective libraries directly "
 "via their Python bindings and reduces the load on the monitoring host "
 "significantly. Only the backends this installation provides are offered here."
+msgstr ""
+
+#, python-format
+msgid ""
+"The background image %(image)s is not part of the map file. After saving the "
+"map, upload it in the map's settings under Background image."
 msgstr ""
 
 msgid "The backup codes associated with your account have been reset."
@@ -95482,7 +95499,11 @@ msgid ""
 "using the host name, the IP address, or the host alias. This is due to the "
 "fact that various event sources (e.g. syslog, snmptrapd) may refer to the "
 "same host using different specification methods. Alternatively, you can "
-"specify an explicit host for which to show events."
+"specify an explicit host for which to show events. In an explicit "
+"specification, a slash separates several hosts, e.g. <tt>myhost/10.1.2.3</"
+"tt>. Macros like <tt>$HOSTALIAS$</tt> are inserted as they are, so if the "
+"alias of a host contains a slash, match the alias with the list above "
+"instead."
 msgstr ""
 "Quando si interroga lo stato degli eventi, è possibile abbinare gli eventi "
 "ad un particolare host usando il nome dell'host, l'indirizzo IP o l'alias "
@@ -106983,6 +107004,14 @@ msgid "Site unreachable: %{sites} — its hosts are missing from the map"
 msgstr "gli host non sono raggiungibili o hanno servizi sconosciuti"
 
 #, fuzzy
+msgid "Connection lost — showing last known state"
+msgstr "gli host non sono raggiungibili o hanno servizi sconosciuti"
+
+#, fuzzy
+msgid "No connection — states unknown"
+msgstr "Impostare il timeout della connessione"
+
+#, fuzzy
 msgid "next check in %{duration}"
 msgstr "Durata del controllo dell'host"
 
@@ -107024,8 +107053,8 @@ msgid "Exit full screen"
 msgstr "Adatta allo schermo"
 
 #, fuzzy
-msgid "Connection lost — showing last known state"
-msgstr "gli host non sono raggiungibili o hanno servizi sconosciuti"
+msgid "Connecting…"
+msgstr "Connessione"
 
 msgid "Live"
 msgstr ""
@@ -108310,6 +108339,14 @@ msgstr "Fetch fallito"
 msgid "Loading map…"
 msgstr "Opzioni di etichettatura"
 
+msgid "Someone else saved this map"
+msgstr ""
+
+msgid ""
+"Your changes since then are not saved. Reload the map to see theirs, or "
+"overwrite them with yours."
+msgstr ""
+
 #, fuzzy
 msgid "Delete %{n} objects?"
 msgstr "Sugli oggetti selezionati"
@@ -108894,12 +108931,12 @@ msgid "Failed to load map"
 msgstr "Operazioni di indice non riuscite"
 
 #, fuzzy
-msgid "delete failed"
-msgstr "Profilo predefinito"
-
-#, fuzzy
 msgid "Failed to save map"
 msgstr "Rapporto fallimento/risparmio"
+
+#, fuzzy
+msgid "delete failed"
+msgstr "Profilo predefinito"
 
 #, fuzzy
 msgid "Live connection failed"
@@ -108929,6 +108966,9 @@ msgid "Discard unsaved changes?"
 msgstr "Scartare le modifiche estranee"
 
 msgid "You have unsaved changes. Closing now will discard them."
+msgstr ""
+
+msgid "Someone else saved the map meanwhile."
 msgstr ""
 
 msgid ""
@@ -119709,9 +119749,6 @@ msgstr ""
 #~ "ridenominazioni sono disabilitate per impostazione predefinita per le "
 #~ "installazioni esistenti. Qui è possibile passare alle nuove descrizioni "
 #~ "per i tipi di controllo selezionati"
-
-#~ msgid "No pending changes"
-#~ msgstr "Nessun cambiamento in sospeso"
 
 #, fuzzy
 #~ msgid "Sites with changes: %{n}"

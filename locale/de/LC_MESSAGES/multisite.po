@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-10-30 10:15+0000\n"
+"PO-Revision-Date: 2026-11-07 06:01+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/de/"
 ">\n"
 "Language: de\n"
@@ -14,7 +14,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 2026.9.1\n"
+"X-Generator: Weblate 2026.11.1\n"
 
 msgid " "
 msgstr " "
@@ -4934,7 +4934,7 @@ msgid "Active time range"
 msgstr "Aktiver Zeitraum"
 
 msgid "Active undo blocks"
-msgstr ""
+msgstr "Aktive Undo-Blöcke"
 
 msgid "Active unit"
 msgstr "Aktive Einheit"
@@ -7667,6 +7667,13 @@ msgid ""
 "collection interval and cache retention set for the in-cluster agent."
 msgstr ""
 
+msgid ""
+"Allows listing the pending changes through the REST API without the "
+"permission to activate them. Users who may activate changes can always list "
+"them. The GUI shows pending changes to every user with access to Setup, "
+"regardless of this permission."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "Allows querying telemetry metrics from the custom graph editor. When "
@@ -8060,7 +8067,7 @@ msgid "An alias or description of this group."
 msgstr "Ein Alias oder eine Beschreibung dieser Gruppe."
 
 msgid "An application is requesting access to this Checkmk site."
-msgstr ""
+msgstr "Eine Anwendung fordert Zugriff auf diese Checkmk-Instanz an."
 
 msgid "An empty value is not allowed here"
 msgstr "Ein leerer Wert ist hier nicht erlaubt"
@@ -16891,6 +16898,7 @@ msgstr ""
 #. weblate-flags: read-only, domain-specific
 msgid "Configure the data backend with the pending settings of this site"
 msgstr ""
+"Daten-Backend mit den ausstehenden Einstellungen dieser Instanz konfigurieren"
 
 msgid ""
 "Configure the discovery of services monitoring network interfaces and switch "
@@ -17121,7 +17129,7 @@ msgid "Configures Event Console logging and diagnostic settings"
 msgstr "Event Console: Protokolle & Diagnose"
 
 msgid "Configures behavior of the config workflow itself"
-msgstr ""
+msgstr "Konfiguriert das Verhalten des Konfigurationsablaufs selbst"
 
 msgid "Configures broad GUI look, behavior, and performance"
 msgstr ""
@@ -27710,7 +27718,7 @@ msgstr ""
 "die PGA-Metriken an"
 
 msgid "Extreme Networks ExtremeCloud IQ"
-msgstr ""
+msgstr "Extreme Networks ExtremeCloud IQ"
 
 msgid "ExtremeCloud IQ password"
 msgstr "Passwort für ExtremeCloud IQ"
@@ -28615,7 +28623,7 @@ msgstr "Auslastung von Dateisystemen"
 
 #, python-format
 msgid "File too large (max %(limit)d MB)."
-msgstr ""
+msgstr "Datei zu groß (max. %(limit)d MB)."
 
 #, python-format
 msgid ""
@@ -52319,7 +52327,7 @@ msgid "Oracle instance"
 msgstr "Oracle-Instanz"
 
 msgid "Oracle instance (single-database dashboard link)"
-msgstr ""
+msgstr "Oracle-Instanz (Link zum Einzeldatenbank-Dashboard)"
 
 msgid "Oracle instances"
 msgstr "Oracle-Instanzen"
@@ -54385,7 +54393,7 @@ msgstr "Perzentil"
 
 #, python-format
 msgid "Percentile %(percentile)s of %(operand)s"
-msgstr ""
+msgstr "Perzentil %(percentile)s von %(operand)s"
 
 msgid "Percentual levels"
 msgstr "Prozentuale Schwellen"
@@ -57038,7 +57046,7 @@ msgid "Quantum Storage Status"
 msgstr "Quantum Speicher Status"
 
 msgid "Quarantine LDAP users before deletion"
-msgstr ""
+msgstr "LDAP-Benutzer vor dem Löschen unter Quarantäne stellen"
 
 msgid "Quarantine Usage"
 msgstr "Auslastung der Quarantäne"
@@ -57046,6 +57054,8 @@ msgstr "Auslastung der Quarantäne"
 msgid ""
 "Quarantine users that vanished from the directory instead of deleting them"
 msgstr ""
+"Aus dem Verzeichnis verschwundene Benutzer unter Quarantäne stellen, statt "
+"sie zu löschen"
 
 #, python-format
 msgid "Quarantined since %(date)s (source: %(source)s); %(deletion)s"
@@ -62237,6 +62247,10 @@ msgstr "Hinweise zur Verbesserung der Checkmk-Installation sehen"
 #, python-format
 msgid "See packaged %(what_plural)s"
 msgstr "Siehe paketierte %(what_plural)s"
+
+#, fuzzy
+msgid "See pending changes"
+msgstr "Keine ausstehende Änderungen"
 
 msgid "See stale objects in tactical overview"
 msgstr "Veraltete Objekte in taktischer Übersicht sehen"
@@ -72004,6 +72018,12 @@ msgid ""
 "shipped in the commercial editions, calls the respective libraries directly "
 "via their Python bindings and reduces the load on the monitoring host "
 "significantly. Only the backends this installation provides are offered here."
+msgstr ""
+
+#, python-format
+msgid ""
+"The background image %(image)s is not part of the map file. After saving the "
+"map, upload it in the map's settings under Background image."
 msgstr ""
 
 msgid "The backup codes associated with your account have been reset."
@@ -92718,12 +92738,17 @@ msgstr ""
 "kritischen Status. Man muss auch eine geeignete Option aus dem obigen "
 "Abschnitt \"Alternative Ping-Adresse\" auswählen."
 
+#, fuzzy
 msgid ""
 "When querying the event status, you can match events to a particular host "
 "using the host name, the IP address, or the host alias. This is due to the "
 "fact that various event sources (e.g. syslog, snmptrapd) may refer to the "
 "same host using different specification methods. Alternatively, you can "
-"specify an explicit host for which to show events."
+"specify an explicit host for which to show events. In an explicit "
+"specification, a slash separates several hosts, e.g. <tt>myhost/10.1.2.3</"
+"tt>. Macros like <tt>$HOSTALIAS$</tt> are inserted as they are, so if the "
+"alias of a host contains a slash, match the alias with the list above "
+"instead."
 msgstr ""
 "Bei der Abfrage des Ereignisstatus können Sie Ereignisse einem bestimmten "
 "Host über den Host-Namen, die IP-Adresse oder den Host-Alias zuordnen. Dies "
@@ -102597,7 +102622,7 @@ msgid "Formula input"
 msgstr "Formel"
 
 msgid "Type a formula or select metrics and operators"
-msgstr ""
+msgstr "Geben Sie eine Formel ein oder wählen Sie Metriken und Operatoren aus"
 
 #, fuzzy
 msgid "Calculations"
@@ -103500,11 +103525,13 @@ msgid "Design a slide for a status wall from text, shapes and live states"
 msgstr ""
 
 msgid "Map ID is too long (max %{max} characters)"
-msgstr ""
+msgstr "Karten-ID ist zu lang (max. %{max} Zeichen)"
 
 msgid ""
 "Some characters were removed (umlauts, punctuation, symbols are not allowed)"
 msgstr ""
+"Einige Zeichen wurden entfernt (Umlaute, Satzzeichen und Symbole sind nicht "
+"erlaubt)"
 
 #, fuzzy
 msgid "A map with this ID already exists"
@@ -103523,11 +103550,13 @@ msgid "My map"
 msgstr "Makro hinzufügen"
 
 msgid "Map ID"
-msgstr ""
+msgstr "Karten-ID"
 
 msgid ""
 "This name has no letters or digits to fill in an ID from. Enter a map ID."
 msgstr ""
+"Dieser Name enthält keine Buchstaben oder Ziffern, aus denen eine ID "
+"gebildet werden kann. Geben Sie eine Karten-ID ein."
 
 msgid ""
 "The ID is used in the URL of the map and is filled in from the display name. "
@@ -104006,6 +104035,14 @@ msgid "Site unreachable: %{sites} — its hosts are missing from the map"
 msgstr "Host ist unerreichbar oder hat unbekannte Services"
 
 #, fuzzy
+msgid "Connection lost — showing last known state"
+msgstr "Host ist unerreichbar oder hat unbekannte Services"
+
+#, fuzzy
+msgid "No connection — states unknown"
+msgstr "SNMP-Verbindungstest läuft"
+
+#, fuzzy
 msgid "next check in %{duration}"
 msgstr "Dauer des Host-Checks"
 
@@ -104047,8 +104084,8 @@ msgid "Exit full screen"
 msgstr "An den Bildschirm anpassen"
 
 #, fuzzy
-msgid "Connection lost — showing last known state"
-msgstr "Host ist unerreichbar oder hat unbekannte Services"
+msgid "Connecting…"
+msgstr "Verbindung"
 
 msgid "Live"
 msgstr ""
@@ -105091,7 +105128,7 @@ msgstr[0] "%{n} Stunde"
 msgstr[1] "%{n} Stunden"
 
 msgid "Donut"
-msgstr ""
+msgstr "Donut"
 
 #, fuzzy
 msgid "Fan"
@@ -105335,6 +105372,14 @@ msgstr "Anfrage fehlgeschlagen"
 #, fuzzy
 msgid "Loading map…"
 msgstr "Lädt Optionen…"
+
+msgid "Someone else saved this map"
+msgstr ""
+
+msgid ""
+"Your changes since then are not saved. Reload the map to see theirs, or "
+"overwrite them with yours."
+msgstr ""
 
 #, fuzzy
 msgid "Delete %{n} objects?"
@@ -105920,12 +105965,12 @@ msgid "Failed to load map"
 msgstr "Laden der Optionen ist fehlgeschlagen"
 
 #, fuzzy
-msgid "delete failed"
-msgstr "Standard-Profil"
-
-#, fuzzy
 msgid "Failed to save map"
 msgstr "Verhältnis von Failed zu Spare"
+
+#, fuzzy
+msgid "delete failed"
+msgstr "Standard-Profil"
 
 #, fuzzy
 msgid "Live connection failed"
@@ -105955,6 +106000,9 @@ msgid "Discard unsaved changes?"
 msgstr "Fremde Änderungen verwerfen"
 
 msgid "You have unsaved changes. Closing now will discard them."
+msgstr ""
+
+msgid "Someone else saved the map meanwhile."
 msgstr ""
 
 msgid ""
@@ -117043,9 +117091,6 @@ msgstr ""
 #~ "Verfügbarkeitshistorie - sind diese Umbenennungen für existierende "
 #~ "Installationen standardmäßig deaktiviert. Hier können Sie auf die neuen "
 #~ "Beschreibungen für ausgewählte Check-Typen umschalten."
-
-#~ msgid "No pending changes"
-#~ msgstr "Keine ausstehende Änderungen"
 
 #~ msgid "Sites with changes: %{n}"
 #~ msgstr "Instanzen mit Änderungen: %{n}"

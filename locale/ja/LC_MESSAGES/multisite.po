@@ -7426,6 +7426,13 @@ msgstr ""
 "キャッシュ保持期間に合わせてレベルを設定することを推奨します。"
 
 msgid ""
+"Allows listing the pending changes through the REST API without the "
+"permission to activate them. Users who may activate changes can always list "
+"them. The GUI shows pending changes to every user with access to Setup, "
+"regardless of this permission."
+msgstr ""
+
+msgid ""
 "Allows querying telemetry metrics from the custom graph editor. When "
 "disabled, only RRD-based metrics are available in the custom graph editor, "
 "and graphs containing telemetry metrics queries cannot be displayed."
@@ -60568,6 +60575,10 @@ msgstr "Checkmkのインストールを改善するためのヒントを参照�
 msgid "See packaged %(what_plural)s"
 msgstr "パッケージを見る%(what_plural)s"
 
+#, fuzzy
+msgid "See pending changes"
+msgstr "保留中の変更はありません"
+
 msgid "See stale objects in tactical overview"
 msgstr "戦術的概要(Tactical Overview)の古くなったオブジェクトを見る"
 
@@ -69975,6 +69986,12 @@ msgstr ""
 "されているインラインSNMPバックエンドは、Pythonバインディングを介して各ライブ"
 "ラリを直接呼び出し、監視ホストへの負荷を大幅に軽減します。ここでは、このイン"
 "ストールで提供されるバックエンドのみが選択可能です。"
+
+#, python-format
+msgid ""
+"The background image %(image)s is not part of the map file. After saving the "
+"map, upload it in the map's settings under Background image."
+msgstr ""
 
 msgid "The backup codes associated with your account have been reset."
 msgstr "ご登録のアカウントに関連するバックアップコードがリセットされました。"
@@ -90113,12 +90130,17 @@ msgstr ""
 "は、常にクリティカルステータスになります。上記の\"pingの代替アドレス\"から適"
 "切なオプションを選択する必要もあります。"
 
+#, fuzzy
 msgid ""
 "When querying the event status, you can match events to a particular host "
 "using the host name, the IP address, or the host alias. This is due to the "
 "fact that various event sources (e.g. syslog, snmptrapd) may refer to the "
 "same host using different specification methods. Alternatively, you can "
-"specify an explicit host for which to show events."
+"specify an explicit host for which to show events. In an explicit "
+"specification, a slash separates several hosts, e.g. <tt>myhost/10.1.2.3</"
+"tt>. Macros like <tt>$HOSTALIAS$</tt> are inserted as they are, so if the "
+"alias of a host contains a slash, match the alias with the list above "
+"instead."
 msgstr ""
 "イベントステータスをクエリする場合、ホスト名、IPアドレス、またはホストエイリ"
 "アスを使用して、イベントを特定のホストと照合できます。これは、さまざまなイベ"
@@ -101209,6 +101231,13 @@ msgstr ""
 "サイトに接続できません：%{sites} — ホストの最後に確認された状態を表示していま"
 "す"
 
+msgid "Connection lost — showing last known state"
+msgstr "接続切断 — 最後に確認された状態を表示中"
+
+#, fuzzy
+msgid "No connection — states unknown"
+msgstr "接続タイムアウトを設定する"
+
 #, fuzzy
 msgid "next check in %{duration}"
 msgstr "ホストチェック期間"
@@ -101250,8 +101279,9 @@ msgstr "MUTED(通知オフ)"
 msgid "Exit full screen"
 msgstr "スクリーンに合わせる"
 
-msgid "Connection lost — showing last known state"
-msgstr "接続切断 — 最後に確認された状態を表示中"
+#, fuzzy
+msgid "Connecting…"
+msgstr "接続"
 
 msgid "Live"
 msgstr "Live"
@@ -102551,6 +102581,14 @@ msgstr "フェッチに失敗しました"
 msgid "Loading map…"
 msgstr "オプションの読み込み中…"
 
+msgid "Someone else saved this map"
+msgstr ""
+
+msgid ""
+"Your changes since then are not saved. Reload the map to see theirs, or "
+"overwrite them with yours."
+msgstr ""
+
 msgid "Delete %{n} objects?"
 msgstr "%{n} 個のオブジェクトを削除しますか？"
 
@@ -103124,12 +103162,12 @@ msgid "Failed to load map"
 msgstr "グラフの読み込みに失敗しました："
 
 #, fuzzy
-msgid "delete failed"
-msgstr "デフォルトのプロファイル"
-
-#, fuzzy
 msgid "Failed to save map"
 msgstr "比率を惜しまない"
+
+#, fuzzy
+msgid "delete failed"
+msgstr "デフォルトのプロファイル"
 
 #, fuzzy
 msgid "Live connection failed"
@@ -103163,6 +103201,9 @@ msgid "You have unsaved changes. Closing now will discard them."
 msgstr ""
 "このページには未保存の変更があります。このままページを離れると、変更内容は破"
 "棄されます。"
+
+msgid "Someone else saved the map meanwhile."
+msgstr ""
 
 msgid ""
 "No BI aggregations available. Either you are not permitted to see them or no "
@@ -114836,9 +114877,6 @@ msgstr ""
 #~ "可用性履歴など、多くの影響があるため、これらの名前変更は、既存のインストー"
 #~ "ルではデフォルトで無効になっています。ここで、選択したチェックタイプの新し"
 #~ "い説明に切り替えることができます"
-
-#~ msgid "No pending changes"
-#~ msgstr "保留中の変更はありません"
 
 #, fuzzy
 #~ msgid "Sites with changes: %{n}"

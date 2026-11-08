@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-11-06 18:31+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
@@ -7789,6 +7789,13 @@ msgid ""
 "aggregator's cache, it is considered missing and reports the specified "
 "missing payload state. It is recommended to match levels here with your "
 "collection interval and cache retention set for the in-cluster agent."
+msgstr ""
+
+msgid ""
+"Allows listing the pending changes through the REST API without the "
+"permission to activate them. Users who may activate changes can always list "
+"them. The GUI shows pending changes to every user with access to Setup, "
+"regardless of this permission."
 msgstr ""
 
 msgid ""
@@ -64656,6 +64663,10 @@ msgstr "Veja dicas de como melhorar a sua instalação Checkmk"
 msgid "See packaged %(what_plural)s"
 msgstr "Ver pacote %(what_plural)s"
 
+#, fuzzy
+msgid "See pending changes"
+msgstr "Sem alterações pendentes"
+
 msgid "See stale objects in tactical overview"
 msgstr "Ver objectos obsoletos na síntese táctica"
 
@@ -74481,6 +74492,12 @@ msgid ""
 "shipped in the commercial editions, calls the respective libraries directly "
 "via their Python bindings and reduces the load on the monitoring host "
 "significantly. Only the backends this installation provides are offered here."
+msgstr ""
+
+#, python-format
+msgid ""
+"The background image %(image)s is not part of the map file. After saving the "
+"map, upload it in the map's settings under Background image."
 msgstr ""
 
 msgid "The backup codes associated with your account have been reset."
@@ -95644,7 +95661,11 @@ msgid ""
 "using the host name, the IP address, or the host alias. This is due to the "
 "fact that various event sources (e.g. syslog, snmptrapd) may refer to the "
 "same host using different specification methods. Alternatively, you can "
-"specify an explicit host for which to show events."
+"specify an explicit host for which to show events. In an explicit "
+"specification, a slash separates several hosts, e.g. <tt>myhost/10.1.2.3</"
+"tt>. Macros like <tt>$HOSTALIAS$</tt> are inserted as they are, so if the "
+"alias of a host contains a slash, match the alias with the list above "
+"instead."
 msgstr ""
 "Ao consultar o status do evento, você pode combinar eventos com um "
 "determinado host usando o nome do host, o endereço IP ou o pseudônimo do "
@@ -100104,7 +100125,6 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
-#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -100590,7 +100610,6 @@ msgstr ""
 msgid "hosts"
 msgstr "hospedeiros"
 
-#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""
@@ -107111,6 +107130,14 @@ msgid "Site unreachable: %{sites} — its hosts are missing from the map"
 msgstr "o anfitrião está inacessível ou tem serviços desconhecidos"
 
 #, fuzzy
+msgid "Connection lost — showing last known state"
+msgstr "o anfitrião está inacessível ou tem serviços desconhecidos"
+
+#, fuzzy
+msgid "No connection — states unknown"
+msgstr "Definir o tempo limite de conexão"
+
+#, fuzzy
 msgid "next check in %{duration}"
 msgstr "Duração do cheque do anfitrião"
 
@@ -107152,8 +107179,8 @@ msgid "Exit full screen"
 msgstr "Dados enviados"
 
 #, fuzzy
-msgid "Connection lost — showing last known state"
-msgstr "o anfitrião está inacessível ou tem serviços desconhecidos"
+msgid "Connecting…"
+msgstr "Ligação"
 
 msgid "Live"
 msgstr ""
@@ -108439,6 +108466,14 @@ msgstr "O Fetch falhou"
 msgid "Loading map…"
 msgstr "Opções de Rotulagem"
 
+msgid "Someone else saved this map"
+msgstr ""
+
+msgid ""
+"Your changes since then are not saved. Reload the map to see theirs, or "
+"overwrite them with yours."
+msgstr ""
+
 #, fuzzy
 msgid "Delete %{n} objects?"
 msgstr "Em objetos selecionados"
@@ -109023,12 +109058,12 @@ msgid "Failed to load map"
 msgstr "Operações de índice falhadas"
 
 #, fuzzy
-msgid "delete failed"
-msgstr "Perfil de usuário predefinido"
-
-#, fuzzy
 msgid "Failed to save map"
 msgstr "Relação falha/reserva"
+
+#, fuzzy
+msgid "delete failed"
+msgstr "Perfil de usuário predefinido"
 
 #, fuzzy
 msgid "Live connection failed"
@@ -109058,6 +109093,9 @@ msgid "Discard unsaved changes?"
 msgstr "Rejeitar alterações estrangeiras"
 
 msgid "You have unsaved changes. Closing now will discard them."
+msgstr ""
+
+msgid "Someone else saved the map meanwhile."
 msgstr ""
 
 msgid ""
@@ -119740,9 +119778,6 @@ msgstr ""
 #~ "dados de desempenho e histórico de disponibilidade - estas renomeações "
 #~ "são desactivadas por defeito para as instalações existentes. Aqui pode "
 #~ "mudar para as novas descrições dos tipos de verificação seleccionados"
-
-#~ msgid "No pending changes"
-#~ msgstr "Sem alterações pendentes"
 
 #, fuzzy
 #~ msgid "Sites with changes: %{n}"

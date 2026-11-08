@@ -159,6 +159,7 @@ py_cmk_test(
     deps = [
         ":cmk-ec",
         ":forwarder",
+        requirement("pymongo"),
         requirement("time-machine"),
     ],
 )

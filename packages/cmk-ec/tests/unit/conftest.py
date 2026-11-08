@@ -8,10 +8,12 @@
 import logging
 import os
 import threading
+import uuid
 from collections.abc import Iterator
 from pathlib import Path
 from unittest import mock
 
+import pymongo
 import pytest
 
 import cmk.ec.export as ec
@@ -83,9 +85,15 @@ def fixture_history(settings: ec.Settings, config: Config) -> FileHistory:
 
 
 @pytest.fixture(name="history_mongo")
-def fixture_history_mongo(settings: ec.Settings, config: Config) -> Iterator[MongoDBHistory]:
+def fixture_history_mongo(
+    settings: ec.Settings, config: Config, monkeypatch: pytest.MonkeyPatch
+) -> Iterator[MongoDBHistory]:
     """history_mongo with connection config file mocked"""
 
+    # The history uses the database named like the site. With a database of its own, a test
+    # needs no site, leaves the history of a site alone and doesn't meet other test runs.
+    database = f"cmk_ec_unit_tests_{uuid.uuid4().hex}"
+    monkeypatch.setenv("OMD_SITE", database)
     connection_string = os.getenv("MONGODB_CONNECTION_STRING") or ""
 
     connection_opts = (
@@ -105,7 +113,9 @@ def fixture_history_mongo(settings: ec.Settings, config: Config) -> Iterator[Mon
         )
         assert isinstance(history, MongoDBHistory)
         yield history
-        history.flush()
+        history.close()
+    with pymongo.MongoClient(*connection_opts) as client:
+        client.drop_database(database)
 
 
 @pytest.fixture(name="history_sqlite")

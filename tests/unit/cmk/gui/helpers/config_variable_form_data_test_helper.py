@@ -1717,6 +1717,7 @@ CASES: Mapping[str, list[Case] | EditionDependentDefault] = {
             ),
         ),
     ],
+    "ai_control_plane_send_usage_data": CHECKBOX_CASES,
     "alert_handler_event_types": [
         CasePass("configured", ["checkresult", "statechange"]),
         CaseMigrates(

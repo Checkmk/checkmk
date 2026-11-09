@@ -10,13 +10,22 @@ import pytest
 from cmk.gui.inventory._tree import InventoryPath, TreeSource
 from cmk.gui.inventory.filters import FilterInvText
 from cmk.gui.views.inventory._display_hints import (
-    _wrap_paint_function,
+    _PaintFunctionAdapter,
+    _PaintNumber,
     AttributeDisplayHint,
     ColumnDisplayHint,
     NodeDisplayHint,
+    PaintFunctionFromAPI,
     Table,
 )
-from cmk.gui.views.inventory._paint_functions import inv_paint_generic
+from cmk.gui.views.inventory._paint_functions import (
+    inv_paint_age,
+    inv_paint_bytes,
+    inv_paint_date,
+    inv_paint_date_and_time,
+    inv_paint_generic,
+    inv_paint_volt,
+)
 from cmk.gui.views.inventory._tree_renderer import (
     _replace_title_placeholders,
     _SDDeltaItem,
@@ -24,6 +33,7 @@ from cmk.gui.views.inventory._tree_renderer import (
     _SDItemsSorter,
     SDItem,
 )
+from cmk.gui.views.inventory.registry import PaintFunction
 from cmk.inventory.structured_data import (
     ImmutableAttributes,
     ImmutableDeltaAttributes,
@@ -33,7 +43,16 @@ from cmk.inventory.structured_data import (
     SDDeltaValue,
     SDKey,
     SDPath,
+    SDValue,
 )
+from cmk.inventory_ui.v1_unstable import AgeNotation as AgeNotationFromAPI
+from cmk.inventory_ui.v1_unstable import DecimalNotation as DecimalNotationFromAPI
+from cmk.inventory_ui.v1_unstable import IECNotation as IECNotationFromAPI
+from cmk.inventory_ui.v1_unstable import NumberField as NumberFieldFromAPI
+from cmk.inventory_ui.v1_unstable import SINotation as SINotationFromAPI
+from cmk.inventory_ui.v1_unstable import StrictPrecision as StrictPrecisionFromAPI
+from cmk.inventory_ui.v1_unstable import Title as TitleFromAPI
+from cmk.inventory_ui.v1_unstable import Unit as UnitFromAPI
 
 
 @pytest.mark.parametrize(
@@ -71,7 +90,7 @@ from cmk.inventory.structured_data import (
                         title="SID",
                         value="SID 1",
                         retention_interval=None,
-                        paint_function=_wrap_paint_function(inv_paint_generic),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                         icon_path_svc_problems="",
                     ),
                     SDItem(
@@ -79,7 +98,7 @@ from cmk.inventory.structured_data import (
                         title="Flashback",
                         value="Flashback 1",
                         retention_interval=None,
-                        paint_function=_wrap_paint_function(inv_paint_generic),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                         icon_path_svc_problems="",
                     ),
                     SDItem(
@@ -87,7 +106,7 @@ from cmk.inventory.structured_data import (
                         title="Other",
                         value="Other 1",
                         retention_interval=None,
-                        paint_function=_wrap_paint_function(inv_paint_generic),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                         icon_path_svc_problems="",
                     ),
                 ],
@@ -97,7 +116,7 @@ from cmk.inventory.structured_data import (
                         title="SID",
                         value="SID 2",
                         retention_interval=RetentionInterval(1, 2, 3, "previous"),
-                        paint_function=_wrap_paint_function(inv_paint_generic),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                         icon_path_svc_problems="",
                     ),
                     SDItem(
@@ -105,7 +124,7 @@ from cmk.inventory.structured_data import (
                         title="Flashback",
                         value="Flashback 2",
                         retention_interval=None,
-                        paint_function=_wrap_paint_function(inv_paint_generic),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                         icon_path_svc_problems="",
                     ),
                     SDItem(
@@ -113,7 +132,7 @@ from cmk.inventory.structured_data import (
                         title="Other",
                         value="Other 2",
                         retention_interval=None,
-                        paint_function=_wrap_paint_function(inv_paint_generic),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                         icon_path_svc_problems="",
                     ),
                 ],
@@ -140,31 +159,31 @@ def test_sort_table_rows_displayhint(
                         title="SID",
                         short_title="",
                         long_title="",
-                        paint_function=_wrap_paint_function(inv_paint_generic),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     ),
                     SDKey("changed"): ColumnDisplayHint(
                         title="Changed",
                         short_title="",
                         long_title="",
-                        paint_function=_wrap_paint_function(inv_paint_generic),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     ),
                     SDKey("foo"): ColumnDisplayHint(
                         title="Foo",
                         short_title="",
                         long_title="",
-                        paint_function=_wrap_paint_function(inv_paint_generic),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     ),
                     SDKey("flashback"): ColumnDisplayHint(
                         title="Flashback",
                         short_title="",
                         long_title="",
-                        paint_function=_wrap_paint_function(inv_paint_generic),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     ),
                     SDKey("other"): ColumnDisplayHint(
                         title="Other",
                         short_title="",
                         long_title="",
-                        paint_function=_wrap_paint_function(inv_paint_generic),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     ),
                 }
             ),
@@ -230,14 +249,14 @@ def test_sort_table_rows_displayhint(
                         title="SID",
                         old="SID 2",
                         new="SID 2",
-                        paint_function=_wrap_paint_function(inv_paint_generic),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     ),
                     _SDDeltaItem(
                         key=SDKey("flashback"),
                         title="Flashback",
                         old="Flashback 21",
                         new="Flashback 22",
-                        paint_function=_wrap_paint_function(inv_paint_generic),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     ),
                 ],
             ],
@@ -273,28 +292,28 @@ def test_sort_table_rows_displayhint(
                         title="SID",
                         old="SID 1",
                         new=None,
-                        paint_function=_wrap_paint_function(inv_paint_generic),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     ),
                     _SDDeltaItem(
                         key=SDKey("changed"),
                         title="Changed",
                         old="Changed 11",
                         new="Changed 12",
-                        paint_function=_wrap_paint_function(inv_paint_generic),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     ),
                     _SDDeltaItem(
                         key=SDKey("flashback"),
                         title="Flashback",
                         old=None,
                         new="Flashback 1",
-                        paint_function=_wrap_paint_function(inv_paint_generic),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     ),
                     _SDDeltaItem(
                         key=SDKey("other"),
                         title="Other",
                         old="Other 1",
                         new="Other 1",
-                        paint_function=_wrap_paint_function(inv_paint_generic),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     ),
                 ],
                 [
@@ -303,28 +322,28 @@ def test_sort_table_rows_displayhint(
                         title="SID",
                         old="SID 2",
                         new=None,
-                        paint_function=_wrap_paint_function(inv_paint_generic),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     ),
                     _SDDeltaItem(
                         key=SDKey("changed"),
                         title="Changed",
                         old="Changed 21",
                         new="Changed 22",
-                        paint_function=_wrap_paint_function(inv_paint_generic),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     ),
                     _SDDeltaItem(
                         key=SDKey("flashback"),
                         title="Flashback",
                         old=None,
                         new="Flashback 2",
-                        paint_function=_wrap_paint_function(inv_paint_generic),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     ),
                     _SDDeltaItem(
                         key=SDKey("other"),
                         title="Other",
                         old="Other 2",
                         new="Other 2",
-                        paint_function=_wrap_paint_function(inv_paint_generic),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     ),
                 ],
             ],
@@ -360,28 +379,28 @@ def test_sort_table_rows_displayhint(
                         title="SID",
                         old="SID 1",
                         new=None,
-                        paint_function=_wrap_paint_function(inv_paint_generic),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     ),
                     _SDDeltaItem(
                         key=SDKey("changed"),
                         title="Changed",
                         old="Changed 11",
                         new="Changed 12",
-                        paint_function=_wrap_paint_function(inv_paint_generic),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     ),
                     _SDDeltaItem(
                         key=SDKey("flashback"),
                         title="Flashback",
                         old=None,
                         new="Flashback 1",
-                        paint_function=_wrap_paint_function(inv_paint_generic),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     ),
                     _SDDeltaItem(
                         key=SDKey("other"),
                         title="Other",
                         old="Other 1",
                         new="Other 1",
-                        paint_function=_wrap_paint_function(inv_paint_generic),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     ),
                 ],
                 [
@@ -390,28 +409,28 @@ def test_sort_table_rows_displayhint(
                         title="SID",
                         old="SID 2",
                         new=None,
-                        paint_function=_wrap_paint_function(inv_paint_generic),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     ),
                     _SDDeltaItem(
                         key=SDKey("changed"),
                         title="Changed",
                         old="Changed 21",
                         new="Changed 22",
-                        paint_function=_wrap_paint_function(inv_paint_generic),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     ),
                     _SDDeltaItem(
                         key=SDKey("flashback"),
                         title="Flashback",
                         old=None,
                         new="Flashback 2",
-                        paint_function=_wrap_paint_function(inv_paint_generic),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     ),
                     _SDDeltaItem(
                         key=SDKey("other"),
                         title="Other",
                         old="Other 2",
                         new="Other 2",
-                        paint_function=_wrap_paint_function(inv_paint_generic),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     ),
                 ],
             ],
@@ -437,31 +456,31 @@ def test_sort_delta_table_rows_displayhint(
                         title="SID",
                         short_title="",
                         long_title="",
-                        paint_function=_wrap_paint_function(inv_paint_generic),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     ),
                     SDKey("changed"): ColumnDisplayHint(
                         title="Changed",
                         short_title="",
                         long_title="",
-                        paint_function=_wrap_paint_function(inv_paint_generic),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     ),
                     SDKey("foo"): ColumnDisplayHint(
                         title="Foo",
                         short_title="",
                         long_title="",
-                        paint_function=_wrap_paint_function(inv_paint_generic),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     ),
                     SDKey("flashback"): ColumnDisplayHint(
                         title="Flashback",
                         short_title="",
                         long_title="",
-                        paint_function=_wrap_paint_function(inv_paint_generic),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     ),
                     SDKey("other"): ColumnDisplayHint(
                         title="Other",
                         short_title="",
                         long_title="",
-                        paint_function=_wrap_paint_function(inv_paint_generic),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     ),
                 }
             ),
@@ -500,7 +519,7 @@ def test_sort_delta_table_rows_displayhint(
                     title="A",
                     value="A",
                     retention_interval=None,
-                    paint_function=_wrap_paint_function(inv_paint_generic),
+                    paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     icon_path_svc_problems="",
                 ),
                 SDItem(
@@ -508,7 +527,7 @@ def test_sort_delta_table_rows_displayhint(
                     title="B",
                     value="B",
                     retention_interval=None,
-                    paint_function=_wrap_paint_function(inv_paint_generic),
+                    paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     icon_path_svc_problems="",
                 ),
                 SDItem(
@@ -516,7 +535,7 @@ def test_sort_delta_table_rows_displayhint(
                     title="D",
                     value="D",
                     retention_interval=None,
-                    paint_function=_wrap_paint_function(inv_paint_generic),
+                    paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     icon_path_svc_problems="",
                 ),
                 SDItem(
@@ -524,7 +543,7 @@ def test_sort_delta_table_rows_displayhint(
                     title="C",
                     value="C",
                     retention_interval=RetentionInterval(1, 2, 3, "previous"),
-                    paint_function=_wrap_paint_function(inv_paint_generic),
+                    paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     icon_path_svc_problems="",
                 ),
             ],
@@ -549,7 +568,7 @@ def test_sort_attributes_pairs_displayhint(
                     title="A",
                     short_title="",
                     long_title="",
-                    paint_function=_wrap_paint_function(inv_paint_generic),
+                    paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     sort_function=lambda *args: 0,
                     filter=FilterInvText(
                         ident="inv_a",
@@ -567,7 +586,7 @@ def test_sort_attributes_pairs_displayhint(
                     title="B",
                     short_title="",
                     long_title="",
-                    paint_function=_wrap_paint_function(inv_paint_generic),
+                    paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     sort_function=lambda *args: 0,
                     filter=FilterInvText(
                         ident="inv_b",
@@ -585,7 +604,7 @@ def test_sort_attributes_pairs_displayhint(
                     title="D",
                     short_title="",
                     long_title="",
-                    paint_function=_wrap_paint_function(inv_paint_generic),
+                    paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     sort_function=lambda *args: 0,
                     filter=FilterInvText(
                         ident="inv_d",
@@ -603,7 +622,7 @@ def test_sort_attributes_pairs_displayhint(
                     title="C",
                     short_title="",
                     long_title="",
-                    paint_function=_wrap_paint_function(inv_paint_generic),
+                    paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     sort_function=lambda *args: 0,
                     filter=FilterInvText(
                         ident="inv_c",
@@ -652,21 +671,21 @@ def test_sort_attributes_pairs_displayhint(
                     title="A",
                     old="A1",
                     new="A2",
-                    paint_function=_wrap_paint_function(inv_paint_generic),
+                    paint_function=_PaintFunctionAdapter(inv_paint_generic),
                 ),
                 _SDDeltaItem(
                     key=SDKey("b"),
                     title="B",
                     old="B",
                     new=None,
-                    paint_function=_wrap_paint_function(inv_paint_generic),
+                    paint_function=_PaintFunctionAdapter(inv_paint_generic),
                 ),
                 _SDDeltaItem(
                     key=SDKey("d"),
                     title="D",
                     old=None,
                     new="D",
-                    paint_function=_wrap_paint_function(inv_paint_generic),
+                    paint_function=_PaintFunctionAdapter(inv_paint_generic),
                 ),
             ],
         ),
@@ -690,7 +709,7 @@ def test_sort_delta_attributes_pairs_displayhint(
                     title="A",
                     short_title="",
                     long_title="",
-                    paint_function=_wrap_paint_function(inv_paint_generic),
+                    paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     sort_function=lambda *args: 0,
                     filter=FilterInvText(
                         ident="inv_a",
@@ -708,7 +727,7 @@ def test_sort_delta_attributes_pairs_displayhint(
                     title="B",
                     short_title="",
                     long_title="",
-                    paint_function=_wrap_paint_function(inv_paint_generic),
+                    paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     sort_function=lambda *args: 0,
                     filter=FilterInvText(
                         ident="inv_b",
@@ -726,7 +745,7 @@ def test_sort_delta_attributes_pairs_displayhint(
                     title="D",
                     short_title="",
                     long_title="",
-                    paint_function=_wrap_paint_function(inv_paint_generic),
+                    paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     sort_function=lambda *args: 0,
                     filter=FilterInvText(
                         ident="inv_d",
@@ -744,7 +763,7 @@ def test_sort_delta_attributes_pairs_displayhint(
                     title="C",
                     short_title="",
                     long_title="",
-                    paint_function=_wrap_paint_function(inv_paint_generic),
+                    paint_function=_PaintFunctionAdapter(inv_paint_generic),
                     sort_function=lambda *args: 0,
                     filter=FilterInvText(
                         ident="inv_c",
@@ -808,3 +827,226 @@ def test__replace_title_placeholders(
         )
         == expected_title
     )
+
+
+def _painted_change(
+    paint_function: PaintFunctionFromAPI, old: SDValue, new: SDValue
+) -> Sequence[str]:
+    return [
+        str(html_value)
+        for html_value in _SDDeltaItem(
+            key=SDKey("key"),
+            title="Title",
+            old=old,
+            new=new,
+            paint_function=paint_function,
+        )
+        .compute_td_spec(0)
+        .html_values
+    ]
+
+
+@pytest.mark.parametrize(
+    "unit, old, new, expected",
+    [
+        pytest.param(
+            UnitFromAPI(IECNotationFromAPI("B")),
+            3.123 * 2**30,
+            3.124 * 2**30,
+            [
+                '<span class="invold">3.123 GiB</span>',
+                '<span class="invnew">3.124 GiB</span>',
+            ],
+            id="change in the third decimal",
+        ),
+        pytest.param(
+            UnitFromAPI(SINotationFromAPI("B")),
+            1.5 * 10**12,
+            1.5 * 10**12 + 10**7,
+            [
+                '<span class="invold">1.5 TB</span>',
+                '<span class="invnew">1.50001 TB</span>',
+            ],
+            id="small change of a big number",
+        ),
+        pytest.param(
+            UnitFromAPI(SINotationFromAPI("s")),
+            0.0012345,
+            0.0012346,
+            [
+                '<span class="invold">1.234 ms</span>',
+                '<span class="invnew">1.235 ms</span>',
+            ],
+            id="small change of a small number",
+        ),
+        pytest.param(
+            UnitFromAPI(DecimalNotationFromAPI(""), StrictPrecisionFromAPI(0)),
+            1.5,
+            2.5,
+            ['<span class="invold">1.5</span>', '<span class="invnew">2.5</span>'],
+            id="values rounding alike",
+        ),
+        pytest.param(
+            UnitFromAPI(DecimalNotationFromAPI(""), StrictPrecisionFromAPI(0)),
+            1.45,
+            2.44,
+            ['<span class="invold">1</span>', '<span class="invnew">2</span>'],
+            id="values rounding apart",
+        ),
+        pytest.param(
+            UnitFromAPI(IECNotationFromAPI("B")),
+            5 * 2**40,
+            5 * 2**40 + 1,
+            [
+                '<span class="invold">5 TiB</span>',
+                '<span class="invnew">5.0000000000009 TiB</span>',
+            ],
+            id="increase beyond the digits of a label",
+        ),
+        pytest.param(
+            UnitFromAPI(IECNotationFromAPI("B")),
+            5 * 2**40 + 1,
+            6 * 2**40,
+            ['<span class="invold">5 TiB</span>', '<span class="invnew">6 TiB</span>'],
+            id="change telling apart within the digits of a label",
+        ),
+        pytest.param(
+            UnitFromAPI(DecimalNotationFromAPI("")),
+            0.1 + 0.2,
+            0.3,
+            [
+                '<span class="invold">0.30000000000000004</span>',
+                '<span class="invnew">0.3</span>',
+            ],
+            id="change at the last digit of a float",
+        ),
+        pytest.param(
+            UnitFromAPI(IECNotationFromAPI("B")),
+            5 * 2**40 + 1,
+            5 * 2**40,
+            [
+                '<span class="invold">5.0000000000009 TiB</span>',
+                '<span class="invnew">5 TiB</span>',
+            ],
+            id="decrease beyond the digits of a label",
+        ),
+        pytest.param(
+            UnitFromAPI(AgeNotationFromAPI()),
+            -(10**8),
+            -(10**8) + 1,
+            [
+                '<span class="invold">3 y 62 d</span>',
+                '<span class="invnew">3 y 62 d <span class="muted_text">(-1 s)</span></span>',
+            ],
+            id="newer timestamp of an age in whole parts",
+        ),
+    ],
+)
+def test_change_of_a_unit_value_is_painted_with_the_digits_telling_both_apart(
+    unit: UnitFromAPI, old: float, new: float, expected: Sequence[str]
+) -> None:
+    assert (
+        _painted_change(
+            _PaintNumber(NumberFieldFromAPI(TitleFromAPI("Value"), render=unit)), old, new
+        )
+        == expected
+    )
+
+
+@pytest.mark.parametrize(
+    "paint_function, old, new, expected",
+    [
+        pytest.param(
+            inv_paint_bytes,
+            3354228736,
+            3354228737,
+            [
+                '<span class="invold">3.123868942 GiB</span>',
+                '<span class="invnew">3.123868943 GiB</span>',
+            ],
+            id="bytes increase with more digits",
+        ),
+        pytest.param(
+            inv_paint_bytes,
+            3354228737,
+            3354228736,
+            [
+                '<span class="invold">3.123868943 GiB</span>',
+                '<span class="invnew">3.123868942 GiB</span>',
+            ],
+            id="bytes decrease with more digits",
+        ),
+        pytest.param(
+            inv_paint_generic,
+            1.5,
+            1.5001,
+            ['<span class="invold">1.5</span>', '<span class="invnew">1.5001</span>'],
+            id="generic number with more digits",
+        ),
+        pytest.param(
+            inv_paint_volt,
+            12.31,
+            12.34,
+            ['<span class="invold">12.31 V</span>', '<span class="invnew">12.34 V</span>'],
+            id="voltage with more digits",
+        ),
+        pytest.param(
+            inv_paint_age,
+            60.2,
+            60.4,
+            [
+                '<span class="invold">60 s</span>',
+                '<span class="invnew">60 s <span class="muted_text">(+200 ms)</span></span>',
+            ],
+            id="age",
+        ),
+        pytest.param(
+            inv_paint_date,
+            1762700000,
+            1762700060,
+            [
+                f'<span class="invold">{inv_paint_date(1762700000)[1]}</span>',
+                (
+                    f'<span class="invnew">{inv_paint_date(1762700060)[1]} '
+                    '<span class="muted_text">(+60 s)</span></span>'
+                ),
+            ],
+            id="date",
+        ),
+        pytest.param(
+            inv_paint_date_and_time,
+            1762700000.25,
+            1762700000.75,
+            [
+                f'<span class="invold">{inv_paint_date_and_time(1762700000.25)[1]}</span>',
+                (
+                    f'<span class="invnew">{inv_paint_date_and_time(1762700000.75)[1]} '
+                    '<span class="muted_text">(+500 ms)</span></span>'
+                ),
+            ],
+            id="date and time",
+        ),
+        pytest.param(
+            inv_paint_generic,
+            "a",
+            "a ",
+            ['<span class="invold">a</span>', '<span class="invnew">a </span>'],
+            id="text",
+        ),
+    ],
+)
+def test_change_of_a_legacy_value_painted_alike_shows_the_difference(
+    paint_function: PaintFunction, old: SDValue, new: SDValue, expected: Sequence[str]
+) -> None:
+    assert _painted_change(_PaintFunctionAdapter(paint_function), old, new) == expected
+
+
+def test_change_of_a_rendered_number_painted_alike_shows_the_difference() -> None:
+    assert _painted_change(
+        _PaintNumber(NumberFieldFromAPI(TitleFromAPI("Date"), render=lambda _value: "2025-11-09")),
+        1762700000,
+        1762700060,
+    ) == [
+        '<span class="invold">2025-11-09</span>',
+        '<span class="invnew">2025-11-09 <span class="muted_text">(+60)</span></span>',
+    ]

@@ -24,12 +24,14 @@ from cmk.gui.views.inventory._display_hints import (
     _decorate_sort_function,
     _PaintBool,
     _PaintChoice,
+    _PaintFunctionAdapter,
     _PaintNumber,
     _PaintText,
     _parse_view_name,
+    _render_difference,
+    _render_legacy_difference,
     _SortFunctionChoice,
     _SortFunctionText,
-    _wrap_paint_function,
     AttributeDisplayHint,
     ColumnDisplayHint,
     ColumnDisplayHintOfView,
@@ -45,6 +47,7 @@ from cmk.gui.views.inventory._paint_functions import (
     inv_paint_number,
     inv_paint_service_status,
     inv_paint_size,
+    inv_paint_timestamp_as_age,
 )
 from cmk.gui.views.inventory.registry import inventory_displayhints
 from cmk.inventory.structured_data import SDKey, SDNodeName, SDPath
@@ -62,6 +65,7 @@ from cmk.inventory_ui.v1_unstable import SINotation as SINotationFromAPI
 from cmk.inventory_ui.v1_unstable import (
     StandardScientificNotation as StandardScientificNotationFromAPI,
 )
+from cmk.inventory_ui.v1_unstable import StrictPrecision as StrictPrecisionFromAPI
 from cmk.inventory_ui.v1_unstable import TextField as TextFieldFromAPI
 from cmk.inventory_ui.v1_unstable import TimeNotation as TimeNotationFromAPI
 from cmk.inventory_ui.v1_unstable import Title as TitleFromAPI
@@ -1178,16 +1182,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         title="",
                         short_title="",
                         long_title="",
-                        paint_function=lambda *args: (
-                            TDStyles(
-                                css_class="",
-                                text_align="",
-                                background_color="",
-                                color="",
-                                prevent_line_break=False,
-                            ),
-                            "",
-                        ),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                         sort_function=lambda *args: 0,
                         filter=FilterInvText(
                             ident="inv_hardware_cpu_arch",
@@ -1205,16 +1200,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         title="",
                         short_title="",
                         long_title="",
-                        paint_function=lambda *args: (
-                            TDStyles(
-                                css_class="",
-                                text_align="",
-                                background_color="",
-                                color="",
-                                prevent_line_break=False,
-                            ),
-                            "",
-                        ),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                         sort_function=lambda *args: 0,
                         filter=FilterInvText(
                             ident="inv_hardware_cpu_max_speed",
@@ -1232,16 +1218,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         title="",
                         short_title="",
                         long_title="",
-                        paint_function=lambda *args: (
-                            TDStyles(
-                                css_class="",
-                                text_align="",
-                                background_color="",
-                                color="",
-                                prevent_line_break=False,
-                            ),
-                            "",
-                        ),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                         sort_function=lambda *args: 0,
                         filter=FilterInvText(
                             ident="inv_hardware_cpu_model",
@@ -1259,16 +1236,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         title="",
                         short_title="",
                         long_title="",
-                        paint_function=lambda *args: (
-                            TDStyles(
-                                css_class="",
-                                text_align="",
-                                background_color="",
-                                color="",
-                                prevent_line_break=False,
-                            ),
-                            "",
-                        ),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                         sort_function=lambda *args: 0,
                         filter=FilterInvText(
                             ident="inv_hardware_cpu_type",
@@ -1286,16 +1254,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         title="",
                         short_title="",
                         long_title="",
-                        paint_function=lambda *args: (
-                            TDStyles(
-                                css_class="",
-                                text_align="",
-                                background_color="",
-                                color="",
-                                prevent_line_break=False,
-                            ),
-                            "",
-                        ),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                         sort_function=lambda *args: 0,
                         filter=FilterInvText(
                             ident="inv_hardware_cpu_threads",
@@ -1313,16 +1272,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         title="",
                         short_title="",
                         long_title="",
-                        paint_function=lambda *args: (
-                            TDStyles(
-                                css_class="",
-                                text_align="",
-                                background_color="",
-                                color="",
-                                prevent_line_break=False,
-                            ),
-                            "",
-                        ),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                         sort_function=lambda *args: 0,
                         filter=FilterInvText(
                             ident="inv_hardware_cpu_smt_threads",
@@ -1340,16 +1290,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         title="",
                         short_title="",
                         long_title="",
-                        paint_function=lambda *args: (
-                            TDStyles(
-                                css_class="",
-                                text_align="",
-                                background_color="",
-                                color="",
-                                prevent_line_break=False,
-                            ),
-                            "",
-                        ),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                         sort_function=lambda *args: 0,
                         filter=FilterInvText(
                             ident="inv_hardware_cpu_cpu_max_capa",
@@ -1367,16 +1308,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         title="",
                         short_title="",
                         long_title="",
-                        paint_function=lambda *args: (
-                            TDStyles(
-                                css_class="",
-                                text_align="",
-                                background_color="",
-                                color="",
-                                prevent_line_break=False,
-                            ),
-                            "",
-                        ),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                         sort_function=lambda *args: 0,
                         filter=FilterInvText(
                             ident="inv_hardware_cpu_cpus",
@@ -1394,16 +1326,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         title="",
                         short_title="",
                         long_title="",
-                        paint_function=lambda *args: (
-                            TDStyles(
-                                css_class="",
-                                text_align="",
-                                background_color="",
-                                color="",
-                                prevent_line_break=False,
-                            ),
-                            "",
-                        ),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                         sort_function=lambda *args: 0,
                         filter=FilterInvText(
                             ident="inv_hardware_cpu_logical_cpus",
@@ -1421,16 +1344,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         title="",
                         short_title="",
                         long_title="",
-                        paint_function=lambda *args: (
-                            TDStyles(
-                                css_class="",
-                                text_align="",
-                                background_color="",
-                                color="",
-                                prevent_line_break=False,
-                            ),
-                            "",
-                        ),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                         sort_function=lambda *args: 0,
                         filter=FilterInvText(
                             ident="inv_hardware_cpu_cores",
@@ -1448,16 +1362,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         title="",
                         short_title="",
                         long_title="",
-                        paint_function=lambda *args: (
-                            TDStyles(
-                                css_class="",
-                                text_align="",
-                                background_color="",
-                                color="",
-                                prevent_line_break=False,
-                            ),
-                            "",
-                        ),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                         sort_function=lambda *args: 0,
                         filter=FilterInvText(
                             ident="inv_hardware_cpu_cores_per_cpu",
@@ -1475,16 +1380,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         title="",
                         short_title="",
                         long_title="",
-                        paint_function=lambda *args: (
-                            TDStyles(
-                                css_class="",
-                                text_align="",
-                                background_color="",
-                                color="",
-                                prevent_line_break=False,
-                            ),
-                            "",
-                        ),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                         sort_function=lambda *args: 0,
                         filter=FilterInvText(
                             ident="inv_hardware_cpu_threads_per_cpu",
@@ -1502,16 +1398,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         title="",
                         short_title="",
                         long_title="",
-                        paint_function=lambda *args: (
-                            TDStyles(
-                                css_class="",
-                                text_align="",
-                                background_color="",
-                                color="",
-                                prevent_line_break=False,
-                            ),
-                            "",
-                        ),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                         sort_function=lambda *args: 0,
                         filter=FilterInvText(
                             ident="inv_hardware_cpu_cache_size",
@@ -1529,16 +1416,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         title="",
                         short_title="",
                         long_title="",
-                        paint_function=lambda *args: (
-                            TDStyles(
-                                css_class="",
-                                text_align="",
-                                background_color="",
-                                color="",
-                                prevent_line_break=False,
-                            ),
-                            "",
-                        ),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                         sort_function=lambda *args: 0,
                         filter=FilterInvText(
                             ident="inv_hardware_cpu_bus_speed",
@@ -1556,16 +1434,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         title="",
                         short_title="",
                         long_title="",
-                        paint_function=lambda *args: (
-                            TDStyles(
-                                css_class="",
-                                text_align="",
-                                background_color="",
-                                color="",
-                                prevent_line_break=False,
-                            ),
-                            "",
-                        ),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                         sort_function=lambda *args: 0,
                         filter=FilterInvText(
                             ident="inv_hardware_cpu_voltage",
@@ -1583,16 +1452,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         title="",
                         short_title="",
                         long_title="",
-                        paint_function=lambda *args: (
-                            TDStyles(
-                                css_class="",
-                                text_align="",
-                                background_color="",
-                                color="",
-                                prevent_line_break=False,
-                            ),
-                            "",
-                        ),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                         sort_function=lambda *args: 0,
                         filter=FilterInvText(
                             ident="inv_hardware_cpu_sharing_mode",
@@ -1610,16 +1470,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         title="",
                         short_title="",
                         long_title="",
-                        paint_function=lambda *args: (
-                            TDStyles(
-                                css_class="",
-                                text_align="",
-                                background_color="",
-                                color="",
-                                prevent_line_break=False,
-                            ),
-                            "",
-                        ),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                         sort_function=lambda *args: 0,
                         filter=FilterInvText(
                             ident="inv_hardware_cpu_implementation_mode",
@@ -1637,16 +1488,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                         title="",
                         short_title="",
                         long_title="",
-                        paint_function=lambda *args: (
-                            TDStyles(
-                                css_class="",
-                                text_align="",
-                                background_color="",
-                                color="",
-                                prevent_line_break=False,
-                            ),
-                            "",
-                        ),
+                        paint_function=_PaintFunctionAdapter(inv_paint_generic),
                         sort_function=lambda *args: 0,
                         filter=FilterInvText(
                             ident="inv_hardware_cpu_entitlement",
@@ -1686,16 +1528,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                             title="",
                             short_title="",
                             long_title="",
-                            paint_function=lambda *args: (
-                                TDStyles(
-                                    css_class="",
-                                    text_align="",
-                                    background_color="",
-                                    color="",
-                                    prevent_line_break=False,
-                                ),
-                                "",
-                            ),
+                            paint_function=_PaintFunctionAdapter(inv_paint_generic),
                             sort_function=lambda *args: 0,
                             filter=FilterInvtableText(
                                 inv_info="invdockerimages",
@@ -1708,16 +1541,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                             title="",
                             short_title="",
                             long_title="",
-                            paint_function=lambda *args: (
-                                TDStyles(
-                                    css_class="",
-                                    text_align="",
-                                    background_color="",
-                                    color="",
-                                    prevent_line_break=False,
-                                ),
-                                "",
-                            ),
+                            paint_function=_PaintFunctionAdapter(inv_paint_generic),
                             sort_function=lambda *args: 0,
                             filter=FilterInvtableText(
                                 inv_info="invdockerimages",
@@ -1730,16 +1554,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                             title="",
                             short_title="",
                             long_title="",
-                            paint_function=lambda *args: (
-                                TDStyles(
-                                    css_class="",
-                                    text_align="",
-                                    background_color="",
-                                    color="",
-                                    prevent_line_break=False,
-                                ),
-                                "",
-                            ),
+                            paint_function=_PaintFunctionAdapter(inv_paint_generic),
                             sort_function=lambda *args: 0,
                             filter=FilterInvtableText(
                                 inv_info="invdockerimages",
@@ -1752,16 +1567,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                             title="",
                             short_title="",
                             long_title="",
-                            paint_function=lambda *args: (
-                                TDStyles(
-                                    css_class="",
-                                    text_align="",
-                                    background_color="",
-                                    color="",
-                                    prevent_line_break=False,
-                                ),
-                                "",
-                            ),
+                            paint_function=_PaintFunctionAdapter(inv_paint_generic),
                             sort_function=lambda *args: 0,
                             filter=FilterInvtableText(
                                 inv_info="invdockerimages",
@@ -1774,16 +1580,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                             title="",
                             short_title="",
                             long_title="",
-                            paint_function=lambda *args: (
-                                TDStyles(
-                                    css_class="",
-                                    text_align="",
-                                    background_color="",
-                                    color="",
-                                    prevent_line_break=False,
-                                ),
-                                "",
-                            ),
+                            paint_function=_PaintFunctionAdapter(inv_paint_generic),
                             sort_function=lambda *args: 0,
                             filter=FilterInvtableText(
                                 inv_info="invdockerimages",
@@ -1796,16 +1593,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                             title="",
                             short_title="",
                             long_title="",
-                            paint_function=lambda *args: (
-                                TDStyles(
-                                    css_class="",
-                                    text_align="",
-                                    background_color="",
-                                    color="",
-                                    prevent_line_break=False,
-                                ),
-                                "",
-                            ),
+                            paint_function=_PaintFunctionAdapter(inv_paint_generic),
                             sort_function=lambda *args: 0,
                             filter=FilterInvtableText(
                                 inv_info="invdockerimages",
@@ -1818,16 +1606,7 @@ def test__cmp_inv_generic(val_a: object, val_b: object, result: int) -> None:
                             title="",
                             short_title="",
                             long_title="",
-                            paint_function=lambda *args: (
-                                TDStyles(
-                                    css_class="",
-                                    text_align="",
-                                    background_color="",
-                                    color="",
-                                    prevent_line_break=False,
-                                ),
-                                "",
-                            ),
+                            paint_function=_PaintFunctionAdapter(inv_paint_generic),
                             sort_function=lambda *args: 0,
                             filter=FilterInvtableText(
                                 inv_info="invdockerimages",
@@ -1950,16 +1729,7 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                             title="",
                             short_title="",
                             long_title="",
-                            paint_function=lambda *args: (
-                                TDStyles(
-                                    css_class="",
-                                    text_align="",
-                                    background_color="",
-                                    color="",
-                                    prevent_line_break=False,
-                                ),
-                                "",
-                            ),
+                            paint_function=_PaintFunctionAdapter(inv_paint_generic),
                             sort_function=lambda *args: 0,
                             filter=FilterInvtableText(
                                 inv_info="invdockercontainers",
@@ -1972,16 +1742,7 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                             title="",
                             short_title="",
                             long_title="",
-                            paint_function=lambda *args: (
-                                TDStyles(
-                                    css_class="",
-                                    text_align="",
-                                    background_color="",
-                                    color="",
-                                    prevent_line_break=False,
-                                ),
-                                "",
-                            ),
+                            paint_function=_PaintFunctionAdapter(inv_paint_generic),
                             sort_function=lambda *args: 0,
                             filter=FilterInvtableText(
                                 inv_info="invdockercontainers",
@@ -1994,16 +1755,7 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                             title="",
                             short_title="",
                             long_title="",
-                            paint_function=lambda *args: (
-                                TDStyles(
-                                    css_class="",
-                                    text_align="",
-                                    background_color="",
-                                    color="",
-                                    prevent_line_break=False,
-                                ),
-                                "",
-                            ),
+                            paint_function=_PaintFunctionAdapter(inv_paint_generic),
                             sort_function=lambda *args: 0,
                             filter=FilterInvtableText(
                                 inv_info="invdockercontainers",
@@ -2016,16 +1768,7 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                             title="",
                             short_title="",
                             long_title="",
-                            paint_function=lambda *args: (
-                                TDStyles(
-                                    css_class="",
-                                    text_align="",
-                                    background_color="",
-                                    color="",
-                                    prevent_line_break=False,
-                                ),
-                                "",
-                            ),
+                            paint_function=_PaintFunctionAdapter(inv_paint_generic),
                             sort_function=lambda *args: 0,
                             filter=FilterInvtableText(
                                 inv_info="invdockercontainers",
@@ -2038,16 +1781,7 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                             title="",
                             short_title="",
                             long_title="",
-                            paint_function=lambda *args: (
-                                TDStyles(
-                                    css_class="",
-                                    text_align="",
-                                    background_color="",
-                                    color="",
-                                    prevent_line_break=False,
-                                ),
-                                "",
-                            ),
+                            paint_function=_PaintFunctionAdapter(inv_paint_generic),
                             sort_function=lambda *args: 0,
                             filter=FilterInvtableText(
                                 inv_info="invdockercontainers",
@@ -2060,16 +1794,7 @@ def test_make_node_displayhint(path: SDPath, expected_node_hint: NodeDisplayHint
                             title="",
                             short_title="",
                             long_title="",
-                            paint_function=lambda *args: (
-                                TDStyles(
-                                    css_class="",
-                                    text_align="",
-                                    background_color="",
-                                    color="",
-                                    prevent_line_break=False,
-                                ),
-                                "",
-                            ),
+                            paint_function=_PaintFunctionAdapter(inv_paint_generic),
                             sort_function=lambda *args: 0,
                             filter=FilterInvtableText(
                                 inv_info="invdockercontainers",
@@ -2128,7 +1853,7 @@ def test_make_node_displayhint_from_hint(
                 title="Key",
                 short_title="Key",
                 long_title="Key",
-                paint_function=_wrap_paint_function(inv_paint_generic),
+                paint_function=_PaintFunctionAdapter(inv_paint_generic),
             ),
         ),
         (
@@ -2138,7 +1863,7 @@ def test_make_node_displayhint_from_hint(
                 title="Key",
                 short_title="Key",
                 long_title="Node ➤ Key",
-                paint_function=_wrap_paint_function(inv_paint_generic),
+                paint_function=_PaintFunctionAdapter(inv_paint_generic),
             ),
         ),
     ],
@@ -2164,7 +1889,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
                 title="Operational status",
                 short_title="Operational status",
                 long_title="Network interfaces ➤ Operational status",
-                paint_function=_wrap_paint_function(inv_paint_if_oper_status),
+                paint_function=_PaintFunctionAdapter(inv_paint_if_oper_status),
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter=FilterInvtableText(
                     inv_info="invinterface",
@@ -2181,7 +1906,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
                 title="CMC status",
                 short_title="CMC status",
                 long_title="Checkmk sites ➤ CMC status",
-                paint_function=_wrap_paint_function(inv_paint_service_status),
+                paint_function=_PaintFunctionAdapter(inv_paint_service_status),
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter=FilterInvtableText(
                     inv_info="invcmksites",
@@ -2218,7 +1943,7 @@ def test_make_column_displayhint_of_view(
                 title="Bar",
                 short_title="Bar",
                 long_title="Foo ➤ Bar",
-                paint_function=_wrap_paint_function(inv_paint_generic),
+                paint_function=_PaintFunctionAdapter(inv_paint_generic),
             ),
         ),
     ],
@@ -2246,7 +1971,7 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
                 title="Package version",
                 short_title="Package version",
                 long_title="Software packages ➤ Package version",
-                paint_function=_wrap_paint_function(inv_paint_generic),
+                paint_function=_PaintFunctionAdapter(inv_paint_generic),
                 sort_function=_decorate_sort_function(cmp_version),
                 filter=FilterInvtableText(
                     inv_info="invswpac",
@@ -2262,7 +1987,7 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
                 title="Version",
                 short_title="Version",
                 long_title="Software packages ➤ Version",
-                paint_function=_wrap_paint_function(inv_paint_generic),
+                paint_function=_PaintFunctionAdapter(inv_paint_generic),
                 sort_function=_decorate_sort_function(cmp_version),
                 filter=FilterInvtableText(
                     inv_info="invswpac",
@@ -2278,7 +2003,7 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
                 title="Index",
                 short_title="Index",
                 long_title="Network interfaces ➤ Index",
-                paint_function=_wrap_paint_function(inv_paint_number),
+                paint_function=_PaintFunctionAdapter(inv_paint_number),
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter=FilterInvtableText(
                     inv_info="invinterface",
@@ -2294,7 +2019,7 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
                 title="Operational status",
                 short_title="Operational status",
                 long_title="Network interfaces ➤ Operational status",
-                paint_function=_wrap_paint_function(inv_paint_if_oper_status),
+                paint_function=_PaintFunctionAdapter(inv_paint_if_oper_status),
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter=FilterInvtableText(
                     inv_info="invinterface",
@@ -2336,7 +2061,7 @@ def test_make_column_displayhint_of_view_from_hint(
                 title="Key",
                 short_title="Key",
                 long_title="Key",
-                paint_function=_wrap_paint_function(inv_paint_generic),
+                paint_function=_PaintFunctionAdapter(inv_paint_generic),
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter=FilterInvText(
                     ident="inv_key",
@@ -2358,7 +2083,7 @@ def test_make_column_displayhint_of_view_from_hint(
                 title="Size",
                 short_title="Size",
                 long_title="Block devices ➤ Size",
-                paint_function=_wrap_paint_function(inv_paint_size),
+                paint_function=_PaintFunctionAdapter(inv_paint_size),
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter=FilterInvText(
                     ident="inv_hardware_storage_disks_size",
@@ -2380,7 +2105,7 @@ def test_make_column_displayhint_of_view_from_hint(
                 title="Key",
                 short_title="Key",
                 long_title="Node ➤ Key",
-                paint_function=_wrap_paint_function(inv_paint_generic),
+                paint_function=_PaintFunctionAdapter(inv_paint_generic),
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter=FilterInvText(
                     ident="inv_path_to_node_key",
@@ -2419,7 +2144,7 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
                 title="Bar",
                 short_title="Bar",
                 long_title="Foo ➤ Bar",
-                paint_function=_wrap_paint_function(inv_paint_generic),
+                paint_function=_PaintFunctionAdapter(inv_paint_generic),
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter=FilterInvText(
                     ident="inv_foo_bar",
@@ -2440,7 +2165,7 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
                 title="CPU architecture",
                 short_title="CPU architecture",
                 long_title="Processor ➤ CPU architecture",
-                paint_function=_wrap_paint_function(inv_paint_generic),
+                paint_function=_PaintFunctionAdapter(inv_paint_generic),
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter=FilterInvText(
                     ident="inv_hardware_cpu_arch",
@@ -2461,7 +2186,7 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
                 title="Product",
                 short_title="Product",
                 long_title="System ➤ Product",
-                paint_function=_wrap_paint_function(inv_paint_generic),
+                paint_function=_PaintFunctionAdapter(inv_paint_generic),
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter=FilterInvText(
                     ident="inv_hardware_system_product",
@@ -2697,3 +2422,16 @@ def test_sort_choice() -> None:
     )
     assert _decorate_sort_function(_SortFunctionChoice(choice_field))(1, 2) == 1
     assert _decorate_sort_function(_SortFunctionChoice(choice_field))(2, 1) == -1
+
+
+def test_newer_timestamp_shown_as_age_is_a_smaller_age() -> None:
+    assert _render_legacy_difference(inv_paint_timestamp_as_age, 60) == "-60 s"
+
+
+def test_difference_rendering_like_zero_gets_more_digits_and_keeps_its_unit() -> None:
+    assert (
+        _render_difference(
+            UnitFromAPI(DecimalNotationFromAPI("B"), StrictPrecisionFromAPI(2)), 0.001
+        )
+        == "+0.001 B"
+    )

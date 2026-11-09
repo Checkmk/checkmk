@@ -186,6 +186,18 @@ class NotationFormatter(abc.ABC):
             ),
         ).render()
 
+    def render_uncapped(self, value: int | float) -> str:
+        return Formatted(
+            sign="" if value >= 0 else "-",
+            parts=list(
+                self._postformat(
+                    self._preformat(abs(value)),
+                    lambda exponent, digits: max(exponent + 1, digits),
+                    False,
+                )
+            ),
+        ).render()
+
     @abc.abstractmethod
     def _compute_small_y_label_atoms(self, max_y: int | float) -> Sequence[int | float]: ...
 

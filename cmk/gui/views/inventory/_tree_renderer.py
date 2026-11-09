@@ -228,8 +228,9 @@ class _SDDeltaItem:
             )
 
         if self.old is not None and self.new is not None:
-            _td_styles, rendered_old_value = self.paint_function(now, self.old)
-            td_styles, rendered_new_value = self.paint_function(now, self.new)
+            td_styles, rendered_old_value, rendered_new_value = self.paint_function.paint_change(
+                now, self.old, self.new
+            )
             return TDSpec(
                 css_classes=[td_styles.css_class] if td_styles.css_class else [],
                 text_align="",

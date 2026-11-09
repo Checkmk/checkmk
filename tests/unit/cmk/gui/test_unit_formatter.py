@@ -864,3 +864,10 @@ def test_render_y_labels_small_range_large_offset() -> None:
 )
 def test__stringify_small_decimal_number(value: float, expected: str) -> None:
     assert _stringify_small_decimal_number(value) == expected
+
+
+def test_render_uncapped_keeps_digits_beyond_those_of_a_label() -> None:
+    assert (
+        IECFormatter("B", StrictPrecision(digits=13)).render_uncapped(5 * 2**40 + 1)
+        == "5.0000000000009 TiB"
+    )

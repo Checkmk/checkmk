@@ -17,7 +17,7 @@ from cmk.ccc.log import CMKFormatter
 from cmk.cli.engine.call import call, CommandTracer
 from cmk.cli.engine.commands import Commands, GetoptCommand
 from cmk.cli.engine.discovery import discover_commands
-from cmk.cli.engine.options import general_options, Option, parse_general_options
+from cmk.cli.engine.options import general_options, LOG_FILE_OPTION, parse_general_options
 from cmk.cli.engine.output import write_paged, write_stdout
 from cmk.cli.engine.readers import ParsedOptions
 from cmk.cli.internal import Context as CLIContext
@@ -61,14 +61,6 @@ def configure_logging() -> logging.Logger:
 
 type CrashReporter = Callable[[], str]
 """Saves a crash report and returns the message to print instead of a traceback"""
-
-
-_LOG_FILE_OPTION: Final = Option(
-    long_option="log-file",
-    short_help="Log to the given file (with timestamps) instead of stderr",
-    argument=True,
-    argument_descr="PATH",
-)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -118,7 +110,7 @@ def run(
 
     commands = Commands(
         plugins=runtime.discover(),
-        general_options=[*general_options(), _LOG_FILE_OPTION],
+        general_options=general_options(),
     )
 
     parsed = parse(commands, argv)
@@ -127,7 +119,7 @@ def run(
         return CLIExitCode.UNKNOWN.value
 
     for option, argument in parsed.options:
-        if option in _LOG_FILE_OPTION.options():
+        if option in LOG_FILE_OPTION.options():
             enable_file_logging(argument, runtime.logger)
     global_options = parse_general_options(parsed.options)
     if global_options.verbosity:

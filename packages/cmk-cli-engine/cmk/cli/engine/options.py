@@ -109,9 +109,16 @@ _PROFILE_OPTION = Option(
     short_help="Enable profiling mode",
 )
 
+LOG_FILE_OPTION: Final = Option(
+    long_option="log-file",
+    short_help="Log to the given file (with timestamps) instead of stderr",
+    argument=True,
+    argument_descr="PATH",
+)
+
 
 def general_options() -> Sequence[Option]:
-    return [_VERBOSE_OPTION, _DEBUG_OPTION, _PROFILE_OPTION]
+    return [_VERBOSE_OPTION, _DEBUG_OPTION, _PROFILE_OPTION, LOG_FILE_OPTION]
 
 
 def parse_general_options(all_opts: GetoptOptions) -> CLIGlobalOptions:

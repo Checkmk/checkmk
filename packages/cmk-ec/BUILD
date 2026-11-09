@@ -93,7 +93,6 @@ py_library(
         "cmk/ec/history_mongo.py",
         "cmk/ec/history_sqlite.py",
         "cmk/ec/host_config.py",
-        "cmk/ec/log_level.py",
         "cmk/ec/main.py",
         "cmk/ec/mkp.py",
         "cmk/ec/perfcounters.py",

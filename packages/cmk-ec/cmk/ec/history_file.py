@@ -14,10 +14,11 @@ from logging import Logger
 from pathlib import Path
 from typing import Any, override
 
+from cmk.ccc.log import VERBOSE
+
 from .config import Config
 from .event import Event, scrub_string
 from .history import _log_event, ActiveHistoryPeriod, get_logfile, History, HistoryWhat, quote_tab
-from .log_level import VERBOSE
 from .query import Columns, OperatorName, QueryFilter, QueryGET, time_conditions
 from .regex_translation import grep_regex, is_literal_regex, translated_text
 from .settings import Settings

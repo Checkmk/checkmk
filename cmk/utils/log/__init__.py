@@ -3,14 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.ccc.log import VERBOSE, verbosity_to_log_level
+
 from . import console
-from ._level import VERBOSE
 from ._log import (
     logger,
     setup_console_logging,
     setup_logging_handler,
     setup_watched_file_logging_handler,
-    verbosity_to_log_level,
 )
 
 __all__ = [

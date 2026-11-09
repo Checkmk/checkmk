@@ -9,6 +9,7 @@ import time
 from collections.abc import Iterable, Mapping, Sequence
 from logging import Logger
 
+from cmk.ccc.log import VERBOSE
 from cmk.events import event_context
 
 from .config import Action, Config, EMailActionConfig, Rule, ScriptActionConfig
@@ -16,7 +17,6 @@ from .core_queries import Connection, query_contactgroups_members, query_status_
 from .event import Event
 from .history import History
 from .host_config import HostConfig
-from .log_level import VERBOSE
 from .settings import Settings
 
 

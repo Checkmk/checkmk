@@ -19,8 +19,6 @@ from cmk.cli.engine.commands import DiscoveredCommand as CLIDiscoveredCommand
 from cmk.cli.engine.discovery import make_command as cli_make_command
 from cmk.cli.engine.run import CommandTracer as CLICommandTracer
 from cmk.cli.engine.run import dispatch as cli_dispatch
-from cmk.cli.engine.run import enable_file_logging as cli_enable_file_logging
-from cmk.cli.engine.run import log_level as cli_log_level
 from cmk.cli.engine.run import run as cli_run
 from cmk.cli.engine.run import Runtime as CLIRuntime
 from cmk.cli.internal import Args as CLIArgs
@@ -144,41 +142,6 @@ def test_an_interruption_says_so_in_the_log(caplog: pytest.LogCaptureFixture) ->
         _dispatch(_raising(KeyboardInterrupt()))
 
     assert "<Interrupted>" in caplog.text
-
-
-def test_without_verbosity_the_log_level_is_info() -> None:
-    assert cli_log_level(0) == logging.INFO
-
-
-def test_one_verbosity_is_more_than_info() -> None:
-    assert logging.DEBUG < cli_log_level(1) < logging.INFO
-
-
-def test_two_verbosities_are_debug() -> None:
-    assert cli_log_level(2) == logging.DEBUG
-
-
-def test_more_verbosity_than_we_know_stays_debug() -> None:
-    assert cli_log_level(23) == logging.DEBUG
-
-
-def test_file_logging_writes_to_the_given_file(tmp_path: Path) -> None:
-    logger = logging.getLogger("test_file_logging_writes_to_the_given_file")
-    path = tmp_path / "logs" / "cmk.log"
-
-    cli_enable_file_logging(path, logger)
-    logger.error("a message")
-
-    assert "a message" in path.read_text()
-
-
-def test_file_logging_replaces_the_handlers_it_finds(tmp_path: Path) -> None:
-    logger = logging.getLogger("test_file_logging_replaces_the_handlers_it_finds")
-    logger.addHandler(logging.NullHandler())
-
-    cli_enable_file_logging(tmp_path / "cmk.log", logger)
-
-    assert len(logger.handlers) == 1
 
 
 def _command(handler: Callable[[CLIContext, None, CLIArgs], CLIExitCode]) -> CLIDiscoveredCommand:
@@ -481,7 +444,7 @@ def test_verbosity_raises_the_log_level() -> None:
 
     _run(["cmk", "-v", "--help"], runtime)
 
-    assert runtime.logger.level == cli_log_level(1)
+    assert logging.DEBUG < runtime.logger.level < logging.INFO
 
 
 def test_without_verbosity_the_logger_is_reset_to_info() -> None:

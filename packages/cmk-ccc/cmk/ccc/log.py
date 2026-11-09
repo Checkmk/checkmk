@@ -5,11 +5,61 @@
 
 import logging
 from datetime import datetime
-from typing import override
+from logging.handlers import WatchedFileHandler
+from pathlib import Path
+from typing import Final, override
 
 __all__ = [
     "CMKFormatter",
+    "log_to_watched_file",
+    "VERBOSE",
+    "verbosity_to_log_level",
 ]
+
+# Just for reference, the predefined logging levels:
+#
+# syslog/CMC    Python         added to Python
+# --------------------------------------------
+# emerg  0
+# alert  1
+# crit   2      CRITICAL 50
+# err    3      ERROR    40
+# warn   4      WARNING  30                 <= default level in Python
+# notice 5                                  <= default level in CMC
+# info   6      INFO     20
+#                              VERBOSE  15
+# debug  7      DEBUG    10
+#
+# NOTE: VERBOSE is a bit confusing and suffers from the not-invented-here
+# syndrome. If we really insist on 3 verbosity levels (normal, verbose, very
+# verbose), we should probably do the following:
+#
+#    * Nuke VERBOSE.
+#    * Introduce NOTICE (25).
+#    * Make NOTICE the default level.
+#    * Optionally introduce EMERGENCY (70) and ALERT (60) for consistency.
+#
+# This would make our whole logging story much more consistent internally
+# (code) and externally (GUI always offers the same levels). Nevertheless, we
+# should keep in mind that the Python documentation strongly discourages
+# introducing new log levels, at least for libraries. OTOH, with 3 verbosity
+# levels, this would force us to log normal stuff with a WARNING level, which
+# looks wrong.
+
+# We need an additional log level between INFO and DEBUG to reflect the
+# verbose() and vverbose() mechanisms of Checkmk.
+VERBOSE: Final = 15
+logging.addLevelName(VERBOSE, "VERBOSE")
+
+
+def verbosity_to_log_level(verbosity: int) -> int:
+    match verbosity:
+        case 0:
+            return logging.INFO
+        case 1:
+            return VERBOSE
+        case _:
+            return logging.DEBUG
 
 
 class CMKFormatter(logging.Formatter):
@@ -83,3 +133,10 @@ class CMKFormatter(logging.Formatter):
             .astimezone()
             .isoformat(sep=" ", timespec="milliseconds")
         )
+
+
+def log_to_watched_file(logger: logging.Logger, path: Path) -> None:
+    handler = WatchedFileHandler(path)
+    handler.setFormatter(CMKFormatter())
+    del logger.handlers[:]
+    logger.addHandler(handler)

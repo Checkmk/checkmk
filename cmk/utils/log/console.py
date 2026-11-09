@@ -7,7 +7,7 @@ import logging
 import sys
 from typing import TextIO
 
-from ._level import VERBOSE as VERBOSE
+from cmk.ccc.log import VERBOSE as VERBOSE
 
 # NOTE: We abuse the log level of this logger as a global variable!
 _console = logging.getLogger("cmk.base.console")

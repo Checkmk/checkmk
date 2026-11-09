@@ -19,11 +19,11 @@ from unittest.mock import Mock
 import pytest
 
 import cmk.ec.export as ec
+from cmk.ccc.log import VERBOSE
 from cmk.ccc.site import SiteId
 from cmk.ec.config import Config, EMailAction, EMailActionConfig, ScriptAction, ScriptActionConfig
 from cmk.ec.helpers import ECLock
 from cmk.ec.history import History
-from cmk.ec.log_level import VERBOSE
 from cmk.ec.main import (
     create_history,
     default_slave_status_master,

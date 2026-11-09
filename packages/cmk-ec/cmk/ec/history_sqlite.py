@@ -22,10 +22,11 @@ from pathlib import Path
 from shutil import disk_usage
 from typing import Final, Literal, override
 
+from cmk.ccc.log import VERBOSE
+
 from .config import Config
 from .event import Event
 from .history import History, HistoryWhat
-from .log_level import VERBOSE
 from .query import Columns, LIST_COLUMNS, QueryFilter, QueryGET, TIME_COLUMNS, time_conditions
 from .settings import Options, Paths, Settings
 

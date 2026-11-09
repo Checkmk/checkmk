@@ -27,8 +27,9 @@ import pysnmp.smi.rfc1902
 import pysnmp.smi.view
 from pyasn1.type.base import SimpleAsn1Type
 
+from cmk.ccc.log import VERBOSE
+
 from .config import AuthenticationProtocol, Config, PrivacyProtocol
-from .log_level import VERBOSE
 from .settings import Paths, Settings
 
 VarBind = tuple[pysnmp.proto.rfc1902.ObjectName, SimpleAsn1Type]

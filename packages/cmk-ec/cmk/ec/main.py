@@ -46,7 +46,7 @@ import cmk.ccc.daemon
 import cmk.ccc.profile
 import cmk.ccc.store
 from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.ccc.log import CMKFormatter
+from cmk.ccc.log import CMKFormatter, VERBOSE, verbosity_to_log_level
 from cmk.ccc.site import omd_site, SiteId
 from cmk.ccc.version_info import get_general_version_infos
 from cmk.crash import ABCCrashReport, CrashReportStore, make_crash_report_base_path
@@ -93,7 +93,6 @@ from .history import (
     TimedHistory,
 )
 from .host_config import HostConfig
-from .log_level import VERBOSE, verbosity_to_log_level
 from .perfcounters import Perfcounters
 from .query import (
     Columns,

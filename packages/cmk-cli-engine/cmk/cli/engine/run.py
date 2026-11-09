@@ -9,12 +9,10 @@ import sys
 from collections.abc import Callable, Mapping, Sequence
 from contextlib import AbstractContextManager
 from dataclasses import dataclass, field
-from logging.handlers import WatchedFileHandler
 from pathlib import Path
 from types import FrameType
-from typing import Final
 
-from cmk.ccc.log import CMKFormatter
+from cmk.ccc.log import log_to_watched_file, verbosity_to_log_level
 from cmk.cli.engine.commands import Commands, DiscoveredCommand
 from cmk.cli.engine.discovery import discover_commands
 from cmk.cli.engine.output import write_paged, write_stdout
@@ -27,25 +25,10 @@ from .arguments import InvalidArguments, parse, rejection, RunCommand, ShowHelp
 
 type CommandTracer = Callable[[CLIContext, RunCommand], AbstractContextManager[None]]
 
-_VERBOSE: Final = 15
-
-
-def log_level(verbosity: int) -> int:
-    match verbosity:
-        case 0:
-            return logging.INFO
-        case 1:
-            return _VERBOSE
-        case _:
-            return logging.DEBUG
-
 
 def enable_file_logging(path: Path, logger: logging.Logger) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    handler = WatchedFileHandler(path)
-    handler.setFormatter(CMKFormatter())
-    del logger.handlers[:]
-    logger.addHandler(handler)
+    log_to_watched_file(logger, path)
 
 
 def configure_logging() -> logging.Logger:
@@ -104,7 +87,7 @@ def dispatch(
 def _apply_global_options(global_options: CLIGlobalOptions, runtime: Runtime) -> None:
     if global_options.log_file is not None:
         runtime.log_to_file(global_options.log_file, runtime.logger)
-    runtime.logger.setLevel(log_level(global_options.verbosity))
+    runtime.logger.setLevel(verbosity_to_log_level(global_options.verbosity))
     if global_options.profile:
         runtime.enable_profiling()
         runtime.logger.debug("Enabled profiling")

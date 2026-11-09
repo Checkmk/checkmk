@@ -5,12 +5,13 @@
 
 import datetime
 import logging
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import pytest
 import time_machine
 
-from cmk.ccc.log import CMKFormatter
+from cmk.ccc.log import CMKFormatter, log_to_watched_file, VERBOSE, verbosity_to_log_level
 
 
 def _record() -> logging.LogRecord:
@@ -113,3 +114,42 @@ def test_cmk_formatter_message_only_takes_precedence() -> None:
         )
         == "the message"
     )
+
+
+def test_the_verbose_level_has_a_name() -> None:
+    assert logging.getLevelName(VERBOSE) == "VERBOSE"
+
+
+def test_without_verbosity_the_log_level_is_info() -> None:
+    assert verbosity_to_log_level(0) == logging.INFO
+
+
+def test_one_verbosity_is_the_verbose_level() -> None:
+    assert verbosity_to_log_level(1) == VERBOSE
+
+
+def test_two_verbosities_are_debug() -> None:
+    assert verbosity_to_log_level(2) == logging.DEBUG
+
+
+def test_more_verbosity_than_we_know_stays_debug() -> None:
+    assert verbosity_to_log_level(23) == logging.DEBUG
+
+
+def test_watched_file_logging_writes_to_the_given_file(tmp_path: Path) -> None:
+    logger = logging.getLogger("test_watched_file_logging_writes_to_the_given_file")
+    path = tmp_path / "cmk.log"
+
+    log_to_watched_file(logger, path)
+    logger.error("a message")
+
+    assert "a message" in path.read_text()
+
+
+def test_watched_file_logging_replaces_the_handlers_it_finds(tmp_path: Path) -> None:
+    logger = logging.getLogger("test_watched_file_logging_replaces_the_handlers_it_finds")
+    logger.addHandler(logging.NullHandler())
+
+    log_to_watched_file(logger, tmp_path / "cmk.log")
+
+    assert len(logger.handlers) == 1

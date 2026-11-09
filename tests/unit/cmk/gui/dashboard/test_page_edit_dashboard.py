@@ -45,7 +45,6 @@ def _stored_responsive_dashboard() -> DashboardConfig:
 
 
 @pytest.mark.usefixtures("request_context")
-@pytest.mark.xfail(strict=True, raises=KeyError, reason="crash group 4957")
 def test_editing_the_properties_keeps_the_layout_and_the_embedded_views() -> None:
     stored = _stored_responsive_dashboard()
 
@@ -55,3 +54,13 @@ def test_editing_the_properties_keeps_the_layout_and_the_embedded_views() -> Non
         stored["layout"],
         stored["embedded_views"],
     )
+
+
+@pytest.mark.usefixtures("request_context")
+def test_editing_the_properties_keeps_the_sharing_token() -> None:
+    stored = _stored_responsive_dashboard()
+    stored["public_token_id"] = "token"
+
+    edited = create_dashboard(stored, {})  # type: ignore[typeddict-item]
+
+    assert edited.get("public_token_id") == "token"

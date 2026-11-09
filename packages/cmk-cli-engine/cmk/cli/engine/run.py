@@ -9,8 +9,10 @@ import sys
 from collections.abc import Callable, Mapping, Sequence
 from contextlib import AbstractContextManager
 from dataclasses import dataclass, field
+from functools import partial
 from pathlib import Path
 from types import FrameType
+from typing import assert_never
 
 from cmk.ccc.log import log_to_watched_file, verbosity_to_log_level
 from cmk.cli.internal import Context as CLIContext
@@ -93,6 +95,23 @@ def _apply_global_options(global_options: CLIGlobalOptions, runtime: Runtime) ->
         runtime.logger.debug("Enabled profiling")
 
 
+def _show_help(commands: Commands, runtime: Runtime) -> CLIExitCode:
+    runtime.page(commands.help())
+    return CLIExitCode.SUCCESS
+
+
+def _run_command(
+    run_command: RunCommand, context: CLIContext, argv: Sequence[str], runtime: Runtime
+) -> CLIExitCode:
+    try:
+        bound = run_command.command.bind(ParsedOptions(run_command.options, context.logger))
+    except ValueError as error:
+        runtime.write(rejection(argv, error))
+        return CLIExitCode.UNKNOWN
+    with runtime.trace_command(context, run_command):
+        return bound(context, run_command.args)
+
+
 def run(
     omd_root: Path,
     argv: Sequence[str],
@@ -104,35 +123,25 @@ def run(
     commands = Commands(plugins=runtime.discover())
     logger = runtime.logger.getChild("base")
 
-    parsed = parse(commands, argv, logger)
-    if isinstance(parsed, InvalidArguments):
-        runtime.write(parsed.message)
-        return CLIExitCode.UNKNOWN.value
+    match parse(commands, argv, logger):
+        case InvalidArguments(message=message):
+            runtime.write(message)
+            return CLIExitCode.UNKNOWN.value
+        case ShowHelp(global_options=global_options):
+            command = partial(_show_help, commands, runtime)
+        case RunCommand(global_options=global_options) as run_command:
+            context = CLIContext(omd_root=omd_root, global_options=global_options, logger=logger)
+            command = partial(_run_command, run_command, context, argv, runtime)
+        case unexpected:
+            assert_never(unexpected)
 
-    request = parsed
-    _apply_global_options(request.global_options, runtime)
-
-    def command() -> CLIExitCode:
-        if isinstance(request, ShowHelp):
-            runtime.page(commands.help())
-            return CLIExitCode.SUCCESS
-        try:
-            bound = request.command.bind(ParsedOptions(request.options, logger))
-        except ValueError as error:
-            runtime.write(rejection(argv, error))
-            return CLIExitCode.UNKNOWN
-        context = CLIContext(
-            omd_root=omd_root, global_options=request.global_options, logger=logger
-        )
-        with runtime.trace_command(context, request):
-            return bound(context, request.args)
-
+    _apply_global_options(global_options, runtime)
     try:
         return dispatch(
             command,
             logger,
             runtime.crash_reporter_for(omd_root, argv, environ),
-            debug=request.global_options.debug,
+            debug=global_options.debug,
         ).value
     finally:
         runtime.write_profile(omd_root)

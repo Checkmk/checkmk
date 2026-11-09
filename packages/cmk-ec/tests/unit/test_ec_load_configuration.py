@@ -21,6 +21,7 @@ import pytest
 import cmk.ec.export as ec
 from cmk.ccc.log import VERBOSE
 from cmk.ccc.site import SiteId
+from cmk.ec.actions import ActionRunner
 from cmk.ec.config import Config, EMailAction, EMailActionConfig, ScriptAction, ScriptActionConfig
 from cmk.ec.helpers import ECLock
 from cmk.ec.history import History
@@ -55,6 +56,7 @@ from .helpers import (
     query_status_server,
     RecordingHistory,
     replication_slave_config,
+    wait_until_exists,
 )
 
 _REPLICATION = ec.Replication(connect_timeout=10, interval=60, master=("master", 6558))
@@ -252,6 +254,7 @@ def test_reload_completes_although_the_status_cannot_be_saved(
     history: History,
     event_status: EventStatus,
     status_server: StatusServer,
+    action_runner: ActionRunner,
     reload: _Reload,
 ) -> None:
     # A directory in place of its file prevents saving the status, e.g. after forgetting the hits of
@@ -269,6 +272,7 @@ def test_reload_completes_although_the_status_cannot_be_saved(
     event_status.new_event(new_event(ec.Event(text="disk full")))
 
     query_status_server(status_server, "COMMAND ACTION;1;harry;ticket")
+    action_runner.stop(timeout=30)  # i.e. wait for the action
 
     assert ticket_file.read_text() == "disk full"
 
@@ -285,6 +289,49 @@ def _ticket_action(ticket_file: Path) -> ScriptAction:
             ScriptActionConfig(script=f'printf %s "$CMK_TEXT" > {shlex.quote(str(ticket_file))}'),
         ),
     )
+
+
+def test_action_finishing_after_a_reload_is_recorded_in_the_new_history(
+    tmp_path: Path,
+    settings: ec.Settings,
+    history: History,
+    event_status: EventStatus,
+    status_server: StatusServer,
+    action_runner: ActionRunner,
+    reload: _Reload,
+) -> None:
+    # Running until the test releases it
+    running = tmp_path / "running"
+    released = tmp_path / "released"
+    action = ScriptAction(
+        id="wait",
+        title="Wait for the test",
+        hidden=False,
+        disabled=False,
+        action=(
+            "script",
+            ScriptActionConfig(
+                script=f"touch {shlex.quote(str(running))}; "
+                f"until [ -e {shlex.quote(str(released))} ]; do sleep 0.01; done"
+            ),
+        ),
+    )
+    activate_config(settings, f"actions = [{action!r}]\n")
+    # In SQLite, like by default, as recording in a closed SQLite history fails
+    history = reload(history)
+    event_status.new_event(new_event(ec.Event(text="disk full")))
+    query_status_server(status_server, "COMMAND ACTION;1;harry;wait")
+    wait_until_exists(running)
+
+    # Closing the history in use when the action was triggered
+    reload(history)
+    released.touch()
+    action_runner.stop(timeout=30)  # i.e. wait for the action
+
+    status_socket = query_status_server(
+        status_server, "GET history\nColumns: history_what\nFilter: history_what = SCRIPT"
+    )
+    assert status_socket.get_response() == [["history_what"], ["SCRIPT"]]
 
 
 @pytest.fixture(name="sqlite_history")
@@ -477,6 +524,7 @@ def fixture_snmp_trap_receiving_event_server(
     history: History,
     event_status: EventStatus,
     core_connection: FakeConnection,
+    action_runner: ActionRunner,
 ) -> EventServer:
     """An event server receiving SNMP traps, without opening the socket for them"""
     return EventServer(
@@ -491,6 +539,7 @@ def fixture_snmp_trap_receiving_event_server(
         StatusTableEvents.columns,
         core_connection,
         SiteId("hurz"),
+        action_runner,
         create_pipes_and_sockets=False,
     )
 
@@ -536,6 +585,7 @@ def test_reload_completes_although_the_replication_status_cannot_be_updated(
     history: History,
     event_status: EventStatus,
     status_server: StatusServer,
+    action_runner: ActionRunner,
     reload: _Reload,
 ) -> None:
     # A directory in place of its file e.g. prevents an EC which isn't a replication slave from
@@ -547,6 +597,7 @@ def test_reload_completes_although_the_replication_status_cannot_be_updated(
     event_status.new_event(new_event(ec.Event(text="disk full")))
 
     query_status_server(status_server, "COMMAND ACTION;1;harry;ticket")
+    action_runner.stop(timeout=30)  # i.e. wait for the action
 
     assert ticket_file.read_text() == "disk full"
 

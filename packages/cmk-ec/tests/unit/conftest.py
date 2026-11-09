@@ -8,8 +8,9 @@
 import logging
 import os
 import threading
+import time
 import uuid
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from pathlib import Path
 from unittest import mock
 
@@ -18,6 +19,7 @@ import pytest
 
 import cmk.ec.export as ec
 from cmk.ccc.site import SiteId
+from cmk.ec.actions import ActionRunner
 from cmk.ec.config import Config
 from cmk.ec.helpers import ECLock
 from cmk.ec.history import History
@@ -38,7 +40,7 @@ from cmk.ec.main import (
 from cmk.ec.perfcounters import Perfcounters
 from cmk.ec.settings import create_settings
 
-from .helpers import FakeConnection
+from .helpers import FakeConnection, MakeStatusServer
 
 
 @pytest.fixture(name="settings")
@@ -177,6 +179,19 @@ def fixture_event_status(
     )
 
 
+@pytest.fixture(name="action_runner")
+def fixture_action_runner(
+    request: pytest.FixtureRequest, history: History
+) -> Iterator[ActionRunner]:
+    """A started runner of the commands of actions, which a test stops to wait for them, recording
+    them in the history fixture. Indirect parametrization limits the pending commands."""
+    limit = {"max_pending": request.param} if hasattr(request, "param") else {}
+    action_runner = ActionRunner(logging.getLogger("cmk.mkeventd"), history, **limit)
+    action_runner.start()
+    yield action_runner
+    action_runner.stop(timeout=30)
+
+
 @pytest.fixture(name="event_server")
 def fixture_event_server(
     settings: ec.Settings,
@@ -187,6 +202,7 @@ def fixture_event_server(
     history: History,
     event_status: EventStatus,
     core_connection: FakeConnection,
+    action_runner: ActionRunner,
 ) -> Iterator[EventServer]:
     event_server = EventServer(
         logging.getLogger("cmk.mkeventd.EventServer"),
@@ -200,14 +216,15 @@ def fixture_event_server(
         StatusTableEvents.columns,
         core_connection,
         SiteId("hurz"),
+        action_runner,
         create_pipes_and_sockets=False,
     )
     yield event_server
     event_server.close_pipe()
 
 
-@pytest.fixture(name="status_server")
-def fixture_status_server(
+@pytest.fixture(name="make_status_server")
+def fixture_make_status_server(
     settings: ec.Settings,
     config: Config,
     slave_status: SlaveStatus,
@@ -219,21 +236,37 @@ def fixture_status_server(
     terminate_main_event: threading.Event,
     reload_config_event: threading.Event,
     core_connection: FakeConnection,
-) -> Iterator[StatusServer]:
-    status_server = StatusServer(
-        logging.getLogger("cmk.mkeventd.StatusServer"),
-        settings,
-        config,
-        slave_status,
-        perfcounters,
-        lock_configuration,
-        history,
-        event_status,
-        event_server,
-        terminate_main_event,
-        reload_config_event,
-        core_connection,
-    )
-    yield status_server
-    status_server.close_unix_socket()
-    status_server.close_tcp_socket()
+    action_runner: ActionRunner,
+) -> Iterator[MakeStatusServer]:
+    """Makes the status server, see MakeStatusServer, at most once per test: It binds its socket."""
+    status_servers: list[StatusServer] = []
+
+    def make_status_server(clock: Callable[[], float]) -> StatusServer:
+        status_server = StatusServer(
+            logging.getLogger("cmk.mkeventd.StatusServer"),
+            settings,
+            config,
+            slave_status,
+            perfcounters,
+            lock_configuration,
+            history,
+            event_status,
+            event_server,
+            terminate_main_event,
+            reload_config_event,
+            core_connection,
+            action_runner,
+            clock=clock,
+        )
+        status_servers.append(status_server)
+        return status_server
+
+    yield make_status_server
+    for status_server in status_servers:
+        status_server.close_unix_socket()
+        status_server.close_tcp_socket()
+
+
+@pytest.fixture(name="status_server")
+def fixture_status_server(make_status_server: MakeStatusServer) -> StatusServer:
+    return make_status_server(time.monotonic)

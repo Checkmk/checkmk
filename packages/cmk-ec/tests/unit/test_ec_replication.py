@@ -22,6 +22,7 @@ import pytest
 import time_machine
 
 import cmk.ec.export as ec
+from cmk.ec.actions import ActionRunner
 from cmk.ec.config import Config, ScriptAction, ScriptActionConfig
 from cmk.ec.helpers import ECLock
 from cmk.ec.history import History
@@ -456,6 +457,7 @@ def test_slave_which_took_over_executes_the_actions_of_its_master(
     tmp_path: Path,
     event_status: EventStatus,
     status_server: StatusServer,
+    action_runner: ActionRunner,
     config: Config,
     history: History,
     slave_status: SlaveStatus,
@@ -480,6 +482,7 @@ def test_slave_which_took_over_executes_the_actions_of_its_master(
     event_status.new_event(new_event(ec.Event(text="disk full")))
 
     query_status_server(status_server, "COMMAND ACTION;1;harry;ticket")
+    action_runner.stop(timeout=30)  # i.e. wait for the action
 
     assert ticket_file.read_text() == "disk full"
 

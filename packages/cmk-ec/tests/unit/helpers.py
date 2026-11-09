@@ -8,10 +8,12 @@
 import array
 import ast
 import fcntl
+import os
 import socket
 import termios
 import time
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
+from pathlib import Path
 from typing import Any, override
 
 import pytest
@@ -122,6 +124,10 @@ class FakeStatusSocket(socket.socket):
 
     def get_raw_response(self) -> bytes:
         return self._response
+
+
+# Makes a status server with the given clock for CREATE, see the fixture make_status_server
+type MakeStatusServer = Callable[[Callable[[], float]], StatusServer]
 
 
 def query_status_server(
@@ -268,10 +274,26 @@ def _bytes_in_pipe(fd: int) -> int:
     return buffer[0]
 
 
+def wait_until_exists(path: Path) -> None:
+    deadline = time.monotonic() + 30
+    while not path.exists():
+        assert time.monotonic() < deadline, f"{path} doesn't exist"
+        time.sleep(0.01)
+
+
+def put_on_path(monkeypatch: pytest.MonkeyPatch, directory: Path, name: str, script: str) -> None:
+    """Puts a command of the name running the shell script into the directory, first on the PATH"""
+    command = directory / name
+    directory.mkdir()
+    command.write_text(f"#!/bin/sh\n{script}\n")
+    command.chmod(0o755)
+    monkeypatch.setenv("PATH", f"{directory}{os.pathsep}{os.environ['PATH']}")
+
+
 class FakeConnection:
     """A monitoring core answering the Livestatus queries of the Event Console
 
-    All columns of its status are 0, so e.g. notifications are disabled and no test accidentally
+    All columns of its status are 0, unless notifications are enabled, so no test accidentally
     tries to notify via Checkmk. The EC copes with failing queries itself, e.g. it assumes that
     notifications are enabled, so the queries the core can't answer are recorded, too.
     The host configuration is read only once, so set the hosts before using them.
@@ -280,12 +302,18 @@ class FakeConnection:
     def __init__(self) -> None:
         self.hosts: list[HostInfo] = []
         self.hosts_in_downtime: set[HostName] = set()
+        self.notifications_enabled = False
         self.unexpected_queries: list[str] = []
 
     def query(self, query: str) -> Sequence[Sequence[Any]]:
         match query.splitlines():
             case ["GET status", columns, *_headers] if columns.startswith("Columns: "):
-                return [[0 for _column in columns.removeprefix("Columns: ").split()]]
+                return [
+                    [
+                        int(self.notifications_enabled) if column == "enable_notifications" else 0
+                        for column in columns.removeprefix("Columns: ").split()
+                    ]
+                ]
             case [
                 "GET hosts",
                 "Columns: name alias address custom_variables contacts contact_groups groups",

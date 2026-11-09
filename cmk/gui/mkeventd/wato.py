@@ -647,8 +647,12 @@ def _macros_help() -> Help:
 
 def _vars_help() -> Help:
     return Help(
-        "This script will be executed using the BASH shell. This information is available "
-        "as environment variables:%(variables)s"
+        "This script will be executed using the BASH shell. If it still runs after a minute, "
+        "the Event Console kills it, together with the processes it started, unless they run in "
+        "a process group of their own, e.g. started with <tt>setsid</tt>. As the Event Console "
+        "waits for the output of the script, too, start a lengthy task in the background, with "
+        "its output redirected, e.g. <tt>command >/dev/null 2>&1 &</tt>. This information is "
+        "available as environment variables:%(variables)s"
     ) % {"variables": _macros_and_vars_list(lambda name: f"CMK_{name}")}
 
 
@@ -1047,7 +1051,7 @@ def _vs_mkeventd_rule(
             "autodelete",
             Checkbox(
                 title=_("Automatic deletion"),
-                label=_("Delete event immediately after the actions"),
+                label=_("Delete event right after triggering its actions"),
                 help=_(
                     "Incoming messages might trigger actions (when configured above), "
                     "afterwards only an entry in the event history will be left. There "
@@ -4704,6 +4708,11 @@ ConfigVariableEventConsoleActions = ConfigVariable(
                                 name="email",
                                 title=Title("Send email"),
                                 parameter_form=fs.Dictionary(
+                                    help_text=Help(
+                                        "The Event Console sends the email with the <tt>mail</tt> "
+                                        "command. If the command still runs after a minute, the "
+                                        "Event Console kills it."
+                                    ),
                                     elements={
                                         "to": DictElement(
                                             required=True,

@@ -5,8 +5,12 @@
 
 import contextlib
 import errno
+import fcntl
 import logging
+import math
 import os
+import resource
+import shlex
 import socket
 import subprocess
 import tempfile
@@ -19,7 +23,8 @@ import pytest
 
 import cmk.ec.export as ec
 from cmk.ccc.site import SiteId
-from cmk.ec.config import Config
+from cmk.ec.actions import ActionRunner
+from cmk.ec.config import Action, Config, ScriptAction, ScriptActionConfig
 from cmk.ec.helpers import ECLock, MAX_EVENT_SOCKET_MESSAGE_SIZE, MAX_MESSAGE_SIZE
 from cmk.ec.history import History
 from cmk.ec.main import (
@@ -101,20 +106,27 @@ def _running_event_console(
     *,
     idle_timeout: float = _EVENT_SERVER_DELAY,
     read_spool_file: _SpoolFileReader = read_spool_file,
+    rules: Sequence[ec.Rule] = (_MATCHING_ALL,),
+    actions: Sequence[Action] = (),
+    actions_timeout: float = _TERMINATE_TIMEOUT / 2,
+    while_terminating: Callable[[], None] | None = None,
 ) -> Iterator[_EventConsole]:
-    """A running event server, wired up like by main(), opening an event for each message"""
+    """A running event server, wired up like by main(), by default opening an event for each
+    message. The given function runs once it has been told to terminate."""
     # Unix socket paths are limited to ~108 bytes, which pytest's tmp_path may exceed.
     with tempfile.TemporaryDirectory(dir="/tmp") as omd_root:
         settings = create_settings("1.2.3i45", Path(omd_root), ["mkeventd"])
         settings.paths.event_pipe.value.parent.mkdir(parents=True)
         logger = logging.getLogger("cmk.mkeventd")
         # Unlike SQLite, recording the history in files leaves nothing open after the test.
-        config = make_config(ec.default_config()) | {"archive_mode": "file"}
+        config = make_config(ec.default_config() | {"actions": actions}) | {"archive_mode": "file"}
         history = make_history(
             settings, config, logger, StatusTableEvents.columns, StatusTableHistory.columns
         )
         perfcounters = Perfcounters(logger.getChild("lock.perfcounters"))
         core = _CoreWithoutHosts()
+        action_runner = ActionRunner(logger, history)
+        action_runner.start()
         event_status = EventStatus(
             settings, config, perfcounters, history, logger.getChild("EventStatus"), core
         )
@@ -130,11 +142,13 @@ def _running_event_console(
             StatusTableEvents.columns,
             core,
             SiteId("hurz"),
+            action_runner,
             idle_timeout=idle_timeout,
             read_spool_file=read_spool_file,
             restart_delay=_EVENT_SERVER_DELAY,
+            actions_timeout=actions_timeout,
         )
-        event_server.compile_rules([ec.default_rule_pack([_MATCHING_ALL])])
+        event_server.compile_rules([ec.default_rule_pack(rules)])
         # So that an event server which doesn't terminate fails the test instead of hanging it
         event_server.daemon = True
         event_server.start()
@@ -147,7 +161,12 @@ def _running_event_console(
             # the server accepted the connection and closed it on terminating in the meantime.
             with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as event_socket:
                 event_socket.connect(str(settings.paths.event_socket.value))
-            event_server.join(_TERMINATE_TIMEOUT)
+            try:
+                if while_terminating is not None:
+                    while_terminating()
+            finally:
+                event_server.join(_TERMINATE_TIMEOUT)
+                action_runner.stop(_TERMINATE_TIMEOUT)
         if event_server.is_alive():
             pytest.fail(f"the event server doesn't terminate within {_TERMINATE_TIMEOUT} s")
         # The event server closes the event pipe when it terminates, so it doesn't leak.
@@ -359,6 +378,204 @@ def test_event_pipe_that_cannot_be_removed_on_terminating_is_logged(
         pipe.mkdir()
 
     assert _logged_errors(caplog) == ["Cannot clean up event pipe"]
+
+
+def test_action_writing_more_into_the_event_pipe_than_it_holds_doesnt_hang_the_event_server() -> (
+    None
+):
+    # Lines of more than two pages for an event pipe of a single page, so that the script waits for
+    # the event server. The message tells it the path of the pipe.
+    count = 2 * resource.getpagesize() // 1000 + 1
+    filling = ScriptAction(
+        id="fill",
+        title="Fill the event pipe",
+        hidden=False,
+        disabled=False,
+        action=(
+            "script",
+            ScriptActionConfig(
+                script=(
+                    "padding=$(printf %01000d 0)\n"
+                    f'for i in $(seq {count}); do echo "from the action $i $padding"; done'
+                    ' > "${CMK_TEXT#fill }"'
+                )
+            ),
+        ),
+    )
+    rules = [_MATCHING_ALL | ec.Rule(id="fill", match="^fill ", actions=["fill"]), _MATCHING_ALL]
+    with _running_event_console(create_history, rules=rules, actions=[filling]) as (
+        settings,
+        event_status,
+    ):
+        pipe = settings.paths.event_pipe.value
+        writer = os.open(pipe, os.O_WRONLY | os.O_NONBLOCK)
+        try:
+            fcntl.fcntl(writer, fcntl.F_SETPIPE_SZ, resource.getpagesize())
+        finally:
+            os.close(writer)
+
+        _write_to_event_pipe(settings, f"fill {pipe}\n".encode())
+        texts = _texts_of_events(event_status, 1 + count)
+
+    assert texts == [
+        f"fill {pipe}",
+        *(f"from the action {i} {'0' * 1000}" for i in range(1, count + 1)),
+    ]
+
+
+def test_actions_unfinished_on_terminating_can_still_write_into_the_event_pipe(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.INFO, logger="cmk.mkeventd")
+    # Writes into the event pipe, whose path comes with the message, once released on terminating
+    release = tmp_path / "release"
+    os.mkfifo(release)
+    action = _script_action(
+        f'read line < {shlex.quote(str(release))}\necho "from the action" > "${{CMK_TEXT#act }}"'
+    )
+    rules = [
+        _MATCHING_ALL | ec.Rule(id="act", match="^act ", actions=[action["id"]]),
+        _MATCHING_ALL,
+    ]
+
+    def release_the_action() -> None:
+        _wait_until_logged(caplog, "Waiting for unfinished actions")
+        _release(release)
+
+    with _running_event_console(
+        create_history,
+        rules=rules,
+        actions=[action],
+        # However long the test takes to release the action
+        actions_timeout=math.inf,
+        while_terminating=release_the_action,
+    ) as (settings, event_status):
+        pipe = settings.paths.event_pipe.value
+        _write_to_event_pipe(settings, f"act {pipe}\n".encode())
+        _texts_of_events(event_status, 1)  # i.e. once the action is triggered
+
+    assert _event_texts(event_status) == [f"act {pipe}", "from the action"]
+
+
+def test_actions_unfinished_on_terminating_hold_it_up_only_until_their_timeout(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    release = tmp_path / "release"
+    os.mkfifo(release)
+    action = _script_action(f"read line < {shlex.quote(str(release))}")
+    pipe: Path | None = None
+
+    def release_the_action() -> None:
+        # Only once the event server went on terminating without it, removing the event pipe
+        event_pipe = pipe
+        assert event_pipe is not None
+        assert _eventually(lambda: not event_pipe.exists()), "the event pipe is still there"
+        _release(release)
+
+    with _running_event_console(
+        create_history,
+        rules=[_MATCHING_ALL | ec.Rule(actions=[action["id"]])],
+        actions=[action],
+        actions_timeout=_EVENT_SERVER_DELAY,
+        while_terminating=release_the_action,
+    ) as (settings, event_status):
+        pipe = settings.paths.event_pipe.value
+        _write_to_event_pipe(settings, b"something happened\n")
+        _texts_of_events(event_status, 1)  # i.e. once the action is triggered
+
+    assert _logged_warnings(caplog) == [
+        "Not waiting any longer for unfinished actions after 0.01 s, removing the event pipe"
+    ]
+
+
+def test_event_server_failing_while_waiting_for_unfinished_actions_goes_on_waiting(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.INFO, logger="cmk.mkeventd")
+    # Writes into the event pipe, whose path comes with the message, once released on terminating
+    release = tmp_path / "release"
+    os.mkfifo(release)
+    action = _script_action(
+        f'read line < {shlex.quote(str(release))}\necho "from the action" > "${{CMK_TEXT#act }}"'
+    )
+    rules = [
+        _MATCHING_ALL | ec.Rule(id="act", match="^act ", actions=[action["id"]]),
+        _MATCHING_ALL,
+    ]
+    event_consoles: list[_EventConsole] = []  # known once the Event Console runs
+
+    def fail_and_release_the_action() -> None:
+        settings, event_status = event_consoles[0]
+        _wait_until_logged(caplog, "Waiting for unfinished actions")
+        # Reading it fails the 1st time, which restarts serving like any error.
+        spool_dir = settings.paths.spool_dir.value
+        spool_dir.mkdir(parents=True, exist_ok=True)
+        _add_spool_file(spool_dir, b"from the spool file\n")
+        _texts_of_events(event_status, 2)  # i.e. once it serves again
+        _release(release)
+
+    with _running_event_console(
+        create_history,
+        read_spool_file=_reading_spool_files_after(_break_event_server),
+        rules=rules,
+        actions=[action],
+        # However long the test takes to release the action
+        actions_timeout=math.inf,
+        while_terminating=fail_and_release_the_action,
+    ) as event_console:
+        event_consoles.append(event_console)
+        settings, event_status = event_console
+        pipe = settings.paths.event_pipe.value
+        _write_to_event_pipe(settings, f"act {pipe}\n".encode())
+        _texts_of_events(event_status, 1)  # i.e. once the action is triggered
+
+    assert (_logged_errors(caplog), _event_texts(event_status)) == (
+        ["Exception in EventServer server"],
+        [f"act {pipe}", "from the spool file", "from the action"],
+    )
+
+
+def _break_event_server(_path: Path) -> NoReturn:
+    raise RuntimeError("broken")
+
+
+def _script_action(script: str) -> ScriptAction:
+    return ScriptAction(
+        id="script",
+        title="Run a script",
+        hidden=False,
+        disabled=False,
+        action=("script", ScriptActionConfig(script=script)),
+    )
+
+
+def _wait_until_logged(caplog: pytest.LogCaptureFixture, beginning: str) -> None:
+    deadline = time.monotonic() + _RECEIVE_TIMEOUT
+    while not any(message.startswith(beginning) for message in caplog.messages):
+        assert time.monotonic() < deadline, f"nothing logged beginning with {beginning!r}"
+        time.sleep(0.01)
+
+
+def _release(fifo: Path) -> None:
+    """Lets a script go on which waits for a line from the FIFO"""
+    writer = _open_once_read(fifo)
+    try:
+        os.write(writer, b"\n")
+    finally:
+        os.close(writer)
+
+
+def _open_once_read(fifo: Path) -> int:
+    """Opens the FIFO for writing once somebody opens it for reading, but doesn't wait for good"""
+    deadline = time.monotonic() + _RECEIVE_TIMEOUT
+    while True:
+        try:
+            # Without a reader, opening a FIFO for writing without blocking fails with ENXIO.
+            return os.open(fifo, os.O_WRONLY | os.O_NONBLOCK)
+        except OSError as e:
+            if e.errno != errno.ENXIO or time.monotonic() >= deadline:
+                raise
+            time.sleep(0.01)
 
 
 def _add_spool_file(

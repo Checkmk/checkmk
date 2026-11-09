@@ -5,8 +5,14 @@
 """Commands sent to the status socket of the EC"""
 
 import ast
+import fcntl
+import itertools
+import math
 import os
+import resource
 import threading
+import time
+from collections.abc import Callable
 from typing import Literal
 
 import pytest
@@ -17,7 +23,14 @@ from cmk.ec.history import History
 from cmk.ec.main import EventServer, EventStatus, SlaveStatus, StatusServer
 from cmk.ec.query import MKClientError
 
-from .helpers import new_event, query_status_server, replication_slave_config
+from .helpers import (
+    FakeStatusSocket,
+    MakeStatusServer,
+    new_event,
+    query_status_server,
+    replication_slave_config,
+    wait_until_bytes_in_pipe,
+)
 
 
 def _command(status_server: StatusServer, command: str, *, allow_commands: bool = True) -> None:
@@ -157,6 +170,186 @@ def test_created_message_for_an_event_pipe_nobody_reads_is_an_error(
 
     with pytest.raises(MKClientError, match="No such device or address"):
         _command(status_server, "CREATE;disk /var full; 98% used")
+
+
+def test_created_message_that_cannot_be_written_gets_no_answer(
+    status_server: StatusServer,
+) -> None:
+    # Like after the event server removed the event pipe on terminating
+    status_socket = FakeStatusSocket(b"COMMAND CREATE;disk /var full; 98% used")
+
+    with pytest.raises(MKClientError, match="No such file or directory"):
+        status_server.handle_client(status_socket, True, "127.0.0.1")
+
+    assert status_socket.get_raw_response() == b""
+
+
+def test_created_message_waits_for_room_in_the_event_pipe_without_holding_the_lock(
+    settings: ec.Settings,
+    event_server: EventServer,
+    event_status: EventStatus,
+    status_server: StatusServer,
+) -> None:
+    event_server.create_pipe()
+    path = settings.paths.event_pipe.value
+    reader = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
+    try:
+        # A pipe of two pages, one of them full, and a message longer than a page, so that a part
+        # goes in
+        page_size = fcntl.fcntl(reader, fcntl.F_SETPIPE_SZ, 2 * resource.getpagesize()) // 2
+        filler = b"x" * page_size
+        writer = os.open(path, os.O_WRONLY | os.O_NONBLOCK)
+        try:
+            os.write(writer, filler)
+        finally:
+            os.close(writer)
+        message = "y" * (page_size + 1000)
+        # A daemon thread doesn't keep pytest from exiting if it stays blocked.
+        thread = threading.Thread(
+            target=_command, args=(status_server, f"CREATE;{message}"), daemon=True
+        )
+        thread.start()
+        wait_until_bytes_in_pipe(reader, 2 * page_size)
+
+        # The event server needs the lock to process what it reads from the pipe.
+        assert event_status.lock.acquire(timeout=30), "CREATE holds the lock while waiting"
+        event_status.lock.release()
+        received = os.read(reader, 65536)
+        thread.join(timeout=30)
+        received += os.read(reader, 65536)
+    finally:
+        os.close(reader)
+
+    assert received == filler + f"{message}\n".encode()
+
+
+def test_created_message_for_an_event_pipe_staying_full_is_an_error(
+    settings: ec.Settings, event_server: EventServer, make_status_server: MakeStatusServer
+) -> None:
+    event_server.create_pipe()
+    filler = _fill_event_pipe(settings)
+    status_server = make_status_server(_clock_running_out_after_the_start())
+
+    with pytest.raises(MKClientError, match="Still full after 5 seconds"):
+        _command(status_server, "CREATE;disk /var full; 98% used")
+
+    assert _read_event_pipe(settings) == filler
+
+
+def test_created_message_waits_for_room_in_a_full_event_pipe(
+    settings: ec.Settings, event_server: EventServer, make_status_server: MakeStatusServer
+) -> None:
+    event_server.create_pipe()
+    filler = _fill_event_pipe(settings)
+    clock = _ClockStandingStill()
+    errors: list[Exception] = []
+    # A daemon thread doesn't keep pytest from exiting if it stays blocked.
+    thread = threading.Thread(
+        target=_command_recording_errors,
+        args=(make_status_server(clock), "CREATE;disk /var full; 98% used", errors),
+        daemon=True,
+    )
+
+    thread.start()
+    waited = clock.asked_again.wait(timeout=30)  # i.e. making room only once CREATE waits for it
+    received = _read_event_pipe(settings)
+    thread.join(timeout=30)
+    received += _read_event_pipe(settings)
+
+    assert (waited, errors, clock.jumped, received) == (
+        True,
+        [],
+        False,
+        filler + b"disk /var full; 98% used\n",
+    )
+
+
+def test_created_message_begun_is_finished_after_the_deadline(
+    settings: ec.Settings, event_server: EventServer, make_status_server: MakeStatusServer
+) -> None:
+    event_server.create_pipe()
+    path = settings.paths.event_pipe.value
+    reader = os.open(path, os.O_RDONLY | os.O_NONBLOCK)
+    try:
+        # A pipe of two pages, one of them full, and a message longer than a page, so that a part
+        # goes in
+        page_size = fcntl.fcntl(reader, fcntl.F_SETPIPE_SZ, 2 * resource.getpagesize()) // 2
+        filler = b"x" * page_size
+        writer = os.open(path, os.O_WRONLY | os.O_NONBLOCK)
+        try:
+            os.write(writer, filler)
+        finally:
+            os.close(writer)
+        message = "y" * (page_size + 1000)
+        errors: list[Exception] = []
+        # A daemon thread doesn't keep pytest from exiting if it stays blocked.
+        thread = threading.Thread(
+            target=_command_recording_errors,
+            args=(
+                make_status_server(_clock_running_out_after_the_start()),
+                f"CREATE;{message}",
+                errors,
+            ),
+            daemon=True,
+        )
+
+        thread.start()
+        wait_until_bytes_in_pipe(reader, 2 * page_size)
+        received = os.read(reader, 65536)
+        thread.join(timeout=30)
+        received += os.read(reader, 65536)
+    finally:
+        os.close(reader)
+
+    assert (errors, received) == ([], filler + f"{message}\n".encode())
+
+
+def _fill_event_pipe(settings: ec.Settings) -> bytes:
+    """Fills the event pipe, which then holds a single page, returning what's in it"""
+    writer = os.open(settings.paths.event_pipe.value, os.O_WRONLY | os.O_NONBLOCK)
+    try:
+        filler = b"x" * fcntl.fcntl(writer, fcntl.F_SETPIPE_SZ, resource.getpagesize())
+        os.write(writer, filler)
+    finally:
+        os.close(writer)
+    return filler
+
+
+def _clock_running_out_after_the_start() -> Callable[[], float]:
+    """A clock running out any timeout once asked again, i.e. once CREATE waits for room"""
+    times = itertools.chain([0.0], itertools.repeat(math.inf))
+    return lambda: next(times)
+
+
+class _ClockStandingStill:
+    """
+    A clock standing still, which tells when it gets asked again, i.e. once CREATE waits for room,
+    but jumps past any timeout after 30 s of real time, so that a failing test doesn't hang
+    """
+
+    def __init__(self) -> None:
+        self._real_deadline = time.monotonic() + 30
+        self._asked = 0
+        self.asked_again = threading.Event()
+        self.jumped = False
+
+    def __call__(self) -> float:
+        self._asked += 1
+        if self._asked > 1:
+            self.asked_again.set()
+        if time.monotonic() < self._real_deadline:
+            return 0.0
+        self.jumped = True
+        return math.inf
+
+
+def _command_recording_errors(
+    status_server: StatusServer, command: str, errors: list[Exception]
+) -> None:
+    try:
+        _command(status_server, command)
+    except Exception as e:
+        errors.append(e)
 
 
 def _read_event_pipe(settings: ec.Settings) -> bytes:

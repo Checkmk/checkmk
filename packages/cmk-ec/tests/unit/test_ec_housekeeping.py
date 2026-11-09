@@ -5,24 +5,22 @@
 """Periodic housekeeping of the events: timeouts, expected messages and downtimes"""
 
 import logging
-import signal
 import time
-from collections.abc import Iterator, Sequence
+from collections.abc import Sequence
 from typing import Literal
+from unittest.mock import Mock
 
 import pytest
 import time_machine
 
 import cmk.ec.export as ec
 from cmk.ccc.hostaddress import HostName
-from cmk.ec.config import Config, ScriptAction, ScriptActionConfig
+from cmk.ec.actions import ActionRunner
 from cmk.ec.event import EventPhase
 from cmk.ec.history import HistoryWhat
 from cmk.ec.main import (
     EventServer,
     EventStatus,
-    MKSignalException,
-    SignalHandler,
     StatusServer,
 )
 
@@ -364,74 +362,57 @@ def test_missing_expected_message_is_merged_into_an_event_from_before_the_rule_e
     assert [event.get("count", 1) for event in event_status.events()] == [2]
 
 
-@pytest.fixture(name="signalling_action")
-def fixture_signalling_action(
-    event_server: EventServer, config: Config, history: RecordingHistory
-) -> Iterator[str]:
-    """Returns the ID of an action letting a signal arrive at the EC while the EC waits for it,
-    like "omd stop" does"""
-    action = ScriptAction(
-        id="slow",
-        title="A slow script",
-        hidden=False,
-        disabled=False,
-        action=("script", ScriptActionConfig(script="kill -USR1 $PPID; exec sleep 10")),
-    )
-    event_server.reload_configuration(
-        config | {"actions": [action], "action": {"slow": action}}, history
-    )
-    previous_handler = signal.signal(
-        signal.SIGUSR1, SignalHandler(logging.getLogger("cmk.mkeventd"))
-    )
-    yield action["id"]
-    signal.signal(signal.SIGUSR1, previous_handler)
+@pytest.fixture(name="action_runner")
+def fixture_action_runner() -> Mock:
+    """Runs nothing, as housekeeping triggers only actions failing to trigger here"""
+    return Mock(spec=ActionRunner)
 
 
-def test_signal_while_running_an_action_is_passed_on(
-    event_server: EventServer, signalling_action: str
-) -> None:
-    use_rules(event_server, new_rule({"delay": 60, "actions": [signalling_action]}))
-    with time_machine.travel(START, tick=False) as traveller:
-        process_message(event_server)
-        # The delayed event opens now, running the action.
-        traveller.shift(60)
-
-        with pytest.raises(MKSignalException):
-            event_server.do_housekeeping()
+@pytest.fixture(name="action_failing_to_trigger")
+def fixture_action_failing_to_trigger(core_connection: FakeConnection, action_runner: Mock) -> str:
+    """Returns the name of an action whose triggering fails with an OSError"""
+    core_connection.notifications_enabled = True
+    action_runner.run.side_effect = OSError("cannot trigger the action")
+    return "@NOTIFY"
 
 
-def test_events_closed_before_a_signal_interrupts_the_housekeeping_are_removed(
-    event_server: EventServer, event_status: EventStatus, signalling_action: str
+def test_events_closed_before_triggering_an_action_fails_are_removed(
+    event_server: EventServer, event_status: EventStatus, action_failing_to_trigger: str
 ) -> None:
     use_rules(
         event_server,
         new_rule({"id": "expiring", "match": "disk full", "livetime": (60, ["open"])}),
         new_rule(
-            {"id": "delayed", "match": "backup failed", "delay": 60, "actions": [signalling_action]}
+            {
+                "id": "delayed",
+                "match": "backup failed",
+                "delay": 60,
+                "actions": [action_failing_to_trigger],
+            }
         ),
     )
     with time_machine.travel(START, tick=False) as traveller:
         process_message(event_server, ec.Event(text="disk full"))
         process_message(event_server, ec.Event(text="backup failed"))
-        # The 1st event expires now, before the delayed 2nd one opens, running the action.
+        # The 1st event expires now, before triggering the action of the delayed 2nd one fails.
         traveller.shift(60)
 
-        with pytest.raises(MKSignalException):
+        with pytest.raises(OSError):
             event_server.do_housekeeping()
 
     assert [event["rule_id"] for event in event_status.events()] == ["delayed"]
 
 
-def test_interval_without_the_expected_message_is_checked_only_once_despite_a_signal(
-    event_server: EventServer, event_status: EventStatus, signalling_action: str
+def test_interval_without_the_expected_message_is_checked_only_once_although_triggering_its_action_fails(
+    event_server: EventServer, event_status: EventStatus, action_failing_to_trigger: str
 ) -> None:
     expect = ec.Expect(interval=HOUR, count=1, merge="never")
-    use_rules(event_server, new_rule({"expect": expect, "actions": [signalling_action]}))
+    use_rules(event_server, new_rule({"expect": expect, "actions": [action_failing_to_trigger]}))
     with time_machine.travel(START, tick=False) as traveller:
         event_server.do_housekeeping()
         traveller.shift(HOUR)
-        # The event about the missing message opens, running the action.
-        with pytest.raises(MKSignalException):
+        # The event about the missing message opens, failing to trigger its action.
+        with pytest.raises(OSError):
             event_server.do_housekeeping()
         use_rules(event_server, new_rule({"expect": expect}))  # without the action
 
@@ -443,36 +424,36 @@ def test_interval_without_the_expected_message_is_checked_only_once_despite_a_si
     ]
 
 
-def test_autodeleting_rule_deletes_its_delayed_event_despite_a_signal(
-    event_server: EventServer, event_status: EventStatus, signalling_action: str
+def test_autodeleting_rule_deletes_its_delayed_event_although_triggering_its_action_fails(
+    event_server: EventServer, event_status: EventStatus, action_failing_to_trigger: str
 ) -> None:
-    rule = new_rule({"delay": 60, "autodelete": True, "actions": [signalling_action]})
+    rule = new_rule({"delay": 60, "autodelete": True, "actions": [action_failing_to_trigger]})
     use_rules(event_server, rule)
     with time_machine.travel(START, tick=False) as traveller:
         process_message(event_server)
-        # The delayed event opens now, running the action.
+        # The delayed event opens now, failing to trigger its action.
         traveller.shift(60)
 
-        with pytest.raises(MKSignalException):
+        with pytest.raises(OSError):
             event_server.do_housekeeping()
 
     assert event_status.events() == []
 
 
-def test_autodeleting_rule_deletes_its_event_about_a_missing_message_despite_a_signal(
-    event_server: EventServer, event_status: EventStatus, signalling_action: str
+def test_autodeleting_rule_deletes_its_event_about_a_missing_message_although_triggering_its_action_fails(
+    event_server: EventServer, event_status: EventStatus, action_failing_to_trigger: str
 ) -> None:
     expect = ec.Expect(interval=HOUR, count=1, merge="open")
     use_rules(
         event_server,
-        new_rule({"expect": expect, "autodelete": True, "actions": [signalling_action]}),
+        new_rule({"expect": expect, "autodelete": True, "actions": [action_failing_to_trigger]}),
     )
     with time_machine.travel(START, tick=False) as traveller:
         event_server.do_housekeeping()
-        # The event about the missing message opens now, running the action.
+        # The event about the missing message opens now, failing to trigger its action.
         traveller.shift(HOUR)
 
-        with pytest.raises(MKSignalException):
+        with pytest.raises(OSError):
             event_server.do_housekeeping()
 
     assert event_status.events() == []

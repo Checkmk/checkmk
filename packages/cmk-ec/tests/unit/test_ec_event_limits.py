@@ -5,13 +5,16 @@
 """Limits for the number of open events"""
 
 import logging
+import shlex
 import time
+from pathlib import Path
 
 import pytest
 import time_machine
 
 import cmk.ec.export as ec
 from cmk.ccc.hostaddress import HostName
+from cmk.ec.actions import ActionRunner
 from cmk.ec.config import Config
 from cmk.ec.event import LimitKind
 from cmk.ec.main import EventServer, EventStatus, StatusServer
@@ -25,9 +28,11 @@ from .helpers import (
     new_host,
     new_rule,
     process_message,
+    put_on_path,
     query_status_server,
     RecordingHistory,
     START,
+    wait_until_exists,
 )
 
 
@@ -270,6 +275,55 @@ def test_reached_limit_creates_an_overflow_event(
     _process_messages(event_server, "1st", "2nd", "3rd", "4th")
 
     assert _texts_of_events(event_status) == ["1st", "<overflow>", "2nd"]
+
+
+@pytest.mark.parametrize(
+    "action_runner", [pytest.param(1, id="room for a single pending command")], indirect=True
+)
+def test_reached_limit_notifies_although_too_many_actions_are_pending(
+    event_server: EventServer,
+    config: Config,
+    history: RecordingHistory,
+    core_connection: FakeConnection,
+    action_runner: ActionRunner,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    notification = tmp_path / "notification"
+    put_on_path(monkeypatch, tmp_path / "bin", "cmk", f"cat > {shlex.quote(str(notification))}")
+    core_connection.notifications_enabled = True
+    # A command running until the test releases it, and one pending meanwhile
+    running = tmp_path / "running"
+    released = tmp_path / "released"
+    _run_script(
+        action_runner,
+        f"touch {shlex.quote(str(running))}; "
+        f"until [ -e {shlex.quote(str(released))} ]; do sleep 0.01; done",
+    )
+    wait_until_exists(running)
+    _run_script(action_runner, "true")
+    _configure(
+        event_server,
+        config,
+        history,
+        _only_limit("by_rule", ec.EventLimit(action="stop_overflow_notify", limit=1)),
+    )
+
+    _process_messages(event_server, "1st")
+    released.touch()
+    action_runner.stop(timeout=30)
+
+    assert notification.exists()
+
+
+def _run_script(action_runner: ActionRunner, script: str) -> None:
+    action_runner.run(
+        args=["/bin/sh"],
+        input_=script,
+        env=None,
+        description="executing script",
+        logger=logging.getLogger("cmk.mkeventd"),
+    )
 
 
 @pytest.mark.parametrize("kind", _LIMIT_KINDS)

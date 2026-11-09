@@ -55,7 +55,13 @@ from cmk.ccc.version_info import get_general_version_infos
 from cmk.crash import ABCCrashReport, CrashReportStore, make_crash_report_base_path
 from cmk.livestatus_client import LocalConnection
 
-from .actions import do_event_action, do_event_actions, do_notify, event_has_opened
+from .actions import (
+    ActionRunner,
+    do_event_action,
+    do_event_actions,
+    do_notify,
+    event_has_opened,
+)
 from .config import (
     Config,
     ConfigFromWATO,
@@ -230,7 +236,7 @@ class ECServerThread(threading.Thread):
         self._logger.info("Starting up")
         setthreadtitle(self.name)
         try:
-            while not self._terminate_event.is_set():
+            while self._keep_serving():
                 try:
                     with cmk.ccc.profile.Profile(
                         enabled=self._profiling_enabled, profile_file=str(self._profile_file)
@@ -250,6 +256,10 @@ class ECServerThread(threading.Thread):
 
     def terminate(self) -> None:
         self._terminate_event.set()
+
+    def _keep_serving(self) -> bool:
+        """Tells whether to go on serving, i.e. until told to terminate"""
+        return not self._terminate_event.is_set()
 
 
 def create_history_raw(
@@ -620,11 +630,13 @@ class EventServer(ECServerThread):
         event_columns: Columns,
         connection: Connection,
         omd_site: SiteId,
+        action_runner: ActionRunner,
         *,
         create_pipes_and_sockets: bool = True,
         idle_timeout: float = 1.0,
         read_spool_file: Callable[[Path], Iterable[bytes] | None] = read_spool_file,
         restart_delay: float = 1.0,
+        actions_timeout: float = 30.0,
     ) -> None:
         super().__init__(
             name="EventServer",
@@ -639,6 +651,10 @@ class EventServer(ECServerThread):
         # How long serve() waits for messages before it looks for spool files again, as nothing
         # wakes it up for these. Only tests pass a shorter one, to take less time.
         self._idle_timeout = idle_timeout
+        # Waiting for unfinished actions on terminating, see _keep_serving()
+        self._actions_timeout = actions_timeout
+        self._terminating_since: float | None = None
+        self._gave_up_waiting_for_actions = False
         self._pipe: _EventPipe | None = None
         # Kept for the next data from the pipe, also when serve() restarts, like the pipe itself
         self._unprocessed_pipe: Unprocessed = Incomplete()
@@ -677,6 +693,8 @@ class EventServer(ECServerThread):
 
         self._connection = connection
         self._omd_site = omd_site
+        # Shared with the status server and the main thread
+        self._action_runner = action_runner
         self.host_config = HostConfig(self._logger, self._connection)
         self._perfcounters = perfcounters
         self._lock_configuration = lock_configuration
@@ -1038,6 +1056,33 @@ class EventServer(ECServerThread):
         self._client_sockets.clear()
 
     @override
+    def _keep_serving(self) -> bool:
+        """
+        Tells whether to go on serving: Until told to terminate, then while actions are unfinished,
+        as they may write into the event pipe, but at most for the timeout of actions
+        """
+        if super()._keep_serving():
+            return True
+        if self._gave_up_waiting_for_actions or not self._action_runner.unfinished():
+            return False
+        now = time.monotonic()
+        if self._terminating_since is None:
+            self._terminating_since = now
+            self._logger.info(
+                "Waiting for unfinished actions before removing the event pipe, as they may write "
+                "into it"
+            )
+        if now < self._terminating_since + self._actions_timeout:
+            return True
+        self._logger.warning(
+            "Not waiting any longer for unfinished actions after %(timeout)s s, removing the event "
+            "pipe",
+            {"timeout": self._actions_timeout},
+        )
+        self._gave_up_waiting_for_actions = True
+        return False
+
+    @override
     def serve(self) -> None:
         # We just read()/recvfrom() these, so we create no new FDs via them.
         pipe_reader = None if self._pipe is None else self._pipe.reader
@@ -1051,7 +1096,7 @@ class EventServer(ECServerThread):
         # the right thing here.
         stream_sockets = [f for f in (self._syslog_tcp, self._eventsocket) if f is not None]
         select_timeout = self._idle_timeout
-        while not self._terminate_event.is_set():
+        while self._keep_serving():
             try:
                 readable: list[FileDescr | socket.socket] = select.select(
                     pipe_and_datagram_sockets
@@ -1359,8 +1404,8 @@ class EventServer(ECServerThread):
            and whose lifetime is elapsed.
         """
         now = time.time()
-        # Remove each event right when closing it, so a signal interrupting the actions of a later
-        # event leaves no closed event behind. Hence iterate over a copy of the events.
+        # Remove each event right when closing it, so an exception while opening a later event
+        # leaves no closed event behind. Hence iterate over a copy of the events.
         for event in self._event_status.events()[:]:
             rule = self._rule_by_id.get(self._event_status.creating_rule_id(event))
 
@@ -1544,9 +1589,9 @@ class EventServer(ECServerThread):
                         self._handle_absent_event(rule, expect, 0, interval_start)
 
                 finally:
-                    # Do not forget to switch to next interval, even if a signal interrupts the
-                    # actions of the event about the missing messages: Checking the same interval
-                    # again would open another such event.
+                    # Do not forget to switch to next interval, even if an exception interrupts
+                    # opening the event about the missing messages: Checking the same interval again
+                    # would open another such event.
                     self._event_status.start_next_interval(rule["id"], interval)
 
     def _handle_absent_event(
@@ -1662,6 +1707,8 @@ class EventServer(ECServerThread):
                 omd_site_id=self._omd_site,
                 is_active_time_period=self._time_period.active,
             )
+        # Without the locks, as it waits until an action is recorded in the previous history
+        self._action_runner.use_history(history)
 
     def compile_rules(self, rule_packs: Sequence[ECRulePack]) -> None:
         """Precompile regular expressions and similar stuff."""
@@ -1868,7 +1915,12 @@ class EventServer(ECServerThread):
                     return
                 if outcome is MatchOutcome.CANCEL_EVENTS:
                     self._event_status.cancel_events(
-                        self, self._event_columns, event, result.match_groups, rule
+                        self,
+                        self._event_columns,
+                        event,
+                        result.match_groups,
+                        rule,
+                        action_runner=self._action_runner,
                     )
                     return
 
@@ -1946,14 +1998,12 @@ class EventServer(ECServerThread):
             self._event_status.archive_event(event)
 
     def _open_event(self, rule: Rule, event: Event, *, holding_lock: bool) -> None:
-        """Executes the actions of the rule for the event it has just opened
+        """Triggers the actions of the rule for the event it has just opened
 
-        If the rule deletes its events automatically, the event gets deleted afterwards, even if a
-        signal interrupts the actions.
+        An automatically deleted event gets deleted right afterwards, even on an exception.
         """
         try:
             event_has_opened(
-                self._history,
                 self.settings,
                 self._config,
                 self._logger,
@@ -1962,6 +2012,7 @@ class EventServer(ECServerThread):
                 self._event_columns,
                 rule,
                 event,
+                action_runner=self._action_runner,
             )
         finally:
             if rule.get("autodelete"):
@@ -2250,7 +2301,15 @@ class EventServer(ECServerThread):
 
         if "notify" in action:
             self._logger.info("  Creating overflow notification")
-            do_notify(self.host_config, self._logger, self._connection, overflow_event)
+            do_notify(
+                self.host_config,
+                self._logger,
+                self._connection,
+                overflow_event,
+                action_runner=self._action_runner,
+                # It matters most in a flood of events, and there's at most one per limit.
+                droppable=False,
+            )
 
     # protected by self._event_status.lock
     def _get_event_limit(
@@ -2574,6 +2633,10 @@ class StatusTableStatus(StatusTable):
 #   '----------------------------------------------------------------------'
 
 
+# How long CREATE waits for room in a full event pipe, holding up other queries
+_CREATE_TIMEOUT = 5.0  # seconds
+
+
 class StatusServer(ECServerThread):
     """Responding to status and command requests via the UNIX/TCP sockets."""
 
@@ -2591,6 +2654,9 @@ class StatusServer(ECServerThread):
         terminate_main_event: threading.Event,
         reload_config_event: threading.Event,
         connection: Connection,
+        action_runner: ActionRunner,
+        *,
+        clock: Callable[[], float] = time.monotonic,
     ) -> None:
         super().__init__(
             name="StatusServer",
@@ -2618,6 +2684,9 @@ class StatusServer(ECServerThread):
         self._terminate_main_event = terminate_main_event
         self._reload_config_event = reload_config_event
         self._connection = connection
+        self._action_runner = action_runner
+        # Only tests pass another clock for the deadline of CREATE.
+        self._clock = clock
 
         self.open_unix_socket()
         self.open_tcp_socket()
@@ -2806,6 +2875,7 @@ class StatusServer(ECServerThread):
         self, client_socket: socket.socket, allow_commands: bool, client_ip: str
     ) -> None:
         for request in Queries(client_socket):
+            created_event: bytes | None = None
             with self._event_status.lock:
                 # Reloading the configuration closes the previous history while holding the lock,
                 # so parse the query only now, when its table can't be that history anymore.
@@ -2818,18 +2888,31 @@ class StatusServer(ECServerThread):
                 elif isinstance(query, QueryREPLICATE):
                     response = self.handle_replicate(query.method_arg, client_ip)
                 elif isinstance(query, QueryCOMMAND):
-                    self.handle_command_request(query.method_arg, allow_commands)
+                    created_event = self.handle_command_request(query.method_arg, allow_commands)
                     response = None
                 else:
                     raise NotImplementedError  # can never happen
 
-                try:
-                    self._answer_query(client_socket, query, response)
-                except OSError as e:
-                    if e.errno != errno.EPIPE:
-                        raise
+                if not isinstance(query, QueryCOMMAND):
+                    self._answer_unless_client_is_gone(client_socket, query, response)
+
+            if isinstance(query, QueryCOMMAND):
+                # Without the lock, which the event server needs to make room in the pipe, but
+                # before answering, so that the client gets the error
+                if created_event is not None:
+                    self._write_to_event_pipe(created_event)
+                self._answer_unless_client_is_gone(client_socket, query, response)
 
         client_socket.close()  # TODO: This should be in a finally somehow.
+
+    def _answer_unless_client_is_gone(
+        self, client_socket: socket.socket, query: Query, response: Response
+    ) -> None:
+        try:
+            self._answer_query(client_socket, query, response)
+        except OSError as e:
+            if e.errno != errno.EPIPE:
+                raise
 
     def _answer_query(self, client_socket: socket.socket, query: Query, response: Response) -> None:
         """
@@ -2860,8 +2943,9 @@ class StatusServer(ECServerThread):
     def _answer_query_python(self, client_socket: socket.socket, response: Response) -> None:
         client_socket.sendall((repr(response) + "\n").encode("utf-8"))
 
-    # All commands are already locked with self._event_status.lock
-    def handle_command_request(self, commandline: str, allow_commands: bool) -> None:
+    # All commands are already locked with self._event_status.lock. Returns the line of an event
+    # to create, which the caller writes to the event pipe without the lock.
+    def handle_command_request(self, commandline: str, allow_commands: bool) -> bytes | None:
         if not allow_commands:
             raise MKClientError("Sorry. Commands are disallowed via TCP")
         self._logger.info("Executing command: %(commandline)s", {"commandline": commandline})
@@ -2869,6 +2953,7 @@ class StatusServer(ECServerThread):
         command = parts[0]
         replication_allow_command(self._config, command, self._slave_status)
         arguments = parts[1:]
+        created_event: bytes | None = None
         if command == "DELETE":
             self.handle_command_delete(arguments)
         elif command == "DELETE_EVENTS_OF_HOST":
@@ -2889,7 +2974,7 @@ class StatusServer(ECServerThread):
         elif command == "UPDATE":
             self.handle_command_update(arguments)
         elif command == "CREATE":
-            self.handle_command_create(arguments)
+            created_event = self.handle_command_create(arguments)
         elif command == "CHANGESTATE":
             self.handle_command_changestate(arguments)
         elif command == "ACTION":
@@ -2898,6 +2983,7 @@ class StatusServer(ECServerThread):
             self.handle_command_switchmode(arguments)
         else:
             raise MKClientError(f"Unknown command {command}")
+        return created_event
 
     def handle_command_delete(self, arguments: list[str]) -> None:
         if len(arguments) != 2:
@@ -2954,11 +3040,12 @@ class StatusServer(ECServerThread):
         if failures:
             raise MKClientError(" ".join(failures))
 
-    def handle_command_create(self, arguments: list[str]) -> None:
+    def handle_command_create(self, arguments: list[str]) -> bytes:
         # Would rather use process_syslog_messages(), but we are already
         # holding self._event_status.lock and it's sub functions are setting
         # self._event_status.lock too. The lock can not be allocated twice.
-        self._write_to_event_pipe(f"{';'.join(arguments)}\n".encode())
+        # So handle_client() writes it to the event pipe once it has released the lock.
+        return f"{';'.join(arguments)}\n".encode()
 
     def _write_to_event_pipe(self, line: bytes) -> None:
         # Without O_CREAT, which would create a file where the terminating event server removed the
@@ -2970,15 +3057,24 @@ class StatusServer(ECServerThread):
                 # Writing to a regular file would overwrite it from its start.
                 if not stat.S_ISFIFO(os.fstat(fd).st_mode):
                     raise MKClientError(f"Cannot write to event pipe '{path}': Not a FIFO")
-                self._write_waiting_for_room(fd, line)
+                if not self._write_waiting_for_room(fd, line):
+                    raise MKClientError(
+                        f"Cannot write to event pipe '{path}': Still full after "
+                        f"{_CREATE_TIMEOUT:g} seconds. Is the Event Console overloaded?"
+                    )
             finally:
                 os.close(fd)
         except OSError as e:
             # Logged in one line, like a client error: It's no bug, e.g. while terminating.
             raise MKClientError(f"Cannot write to event pipe '{path}': {e.strerror}") from e
 
-    def _write_waiting_for_room(self, fd: int, line: bytes) -> None:
-        """Writes the line, waiting for room as long as it takes, like a blocking write"""
+    def _write_waiting_for_room(self, fd: int, line: bytes) -> bool:
+        """
+        Writes the line, waiting for room until the deadline, or for good once a part of a line
+        longer than PIPE_BUF is in: The next writer's line mustn't get glued to it, see pipe(7).
+        Returns whether the line is in the pipe.
+        """
+        deadline = self._clock() + _CREATE_TIMEOUT
         poller = select.poll()
         poller.register(fd, select.POLLOUT)
         rest = memoryview(line)
@@ -2989,7 +3085,13 @@ class StatusServer(ECServerThread):
             except BlockingIOError:
                 pass
             # Until there is room or the reader is gone, which makes writing fail then
-            poller.poll()
+            if len(rest) < len(line):
+                poller.poll()
+            elif (left := deadline - self._clock()) > 0:
+                poller.poll(left * 1000)
+            else:
+                return False
+        return True
 
     def handle_command_changestate(self, arguments: list[str]) -> None:
         event_ids, user, newstate = arguments
@@ -3054,6 +3156,7 @@ class StatusServer(ECServerThread):
                     event,
                     user,
                     is_cancelling=False,
+                    action_runner=self._action_runner,
                 )
             else:
                 # TODO: This locking doesn't make sense: We use the config outside of the lock below, too.
@@ -3067,7 +3170,6 @@ class StatusServer(ECServerThread):
                     action = actions[action_id]
                 if event:
                     do_event_action(
-                        self._history,
                         self.settings,
                         self._config,
                         self._logger,
@@ -3075,6 +3177,7 @@ class StatusServer(ECServerThread):
                         action,
                         event,
                         user,
+                        action_runner=self._action_runner,
                     )
 
     def handle_command_switchmode(self, arguments: list[str]) -> None:
@@ -3710,6 +3813,8 @@ class EventStatus:
         new_event: Event,
         match_groups: MatchGroups,
         rule: Rule,
+        *,
+        action_runner: ActionRunner,
     ) -> None:
         """
         Cancel all events the belong to a certain rule id and are
@@ -3748,7 +3853,6 @@ class EventStatus:
                             )
                         else:
                             do_event_actions(
-                                self._history,
                                 self.settings,
                                 self._config,
                                 self._logger,
@@ -3758,6 +3862,7 @@ class EventStatus:
                                 actions,
                                 event,
                                 is_cancelling=True,
+                                action_runner=action_runner,
                             )
 
                     to_delete.append(event)
@@ -4473,8 +4578,9 @@ def reload_configuration(
     event_status.reload_configuration(config, new_history)
     status_server.reload_configuration(config, new_history)
     # Once a status query still reading it is answered, only the event server may still use the
-    # previous history, e.g. to record an action it started before the reload. With SQLite,
-    # recording that then fails, which the history logs, while MongoDB reconnects.
+    # previous history where it doesn't hold the lock, e.g. to record that an event reached its
+    # count. With SQLite, recording that then fails, which the history logs, while MongoDB
+    # reconnects.
     with event_status.lock:
         try:
             history.close()
@@ -4548,6 +4654,7 @@ def main() -> None:
             settings, config, perfcounters, history, logger.getChild("EventStatus"), connection
         )
         lock_configuration = ECLock(logger.getChild("lock.configuration"))
+        action_runner = ActionRunner(logger, history)
         event_server = EventServer(
             logger.getChild("EventServer"),
             settings,
@@ -4560,6 +4667,7 @@ def main() -> None:
             StatusTableEvents.columns,
             connection,
             omd_site(),
+            action_runner,
         )
         terminate_main_event = threading.Event()
         reload_config_event = threading.Event()
@@ -4576,6 +4684,7 @@ def main() -> None:
             terminate_main_event,
             reload_config_event,
             connection,
+            action_runner,
         )
 
         event_status.load_status(event_server)
@@ -4594,6 +4703,7 @@ def main() -> None:
             signal.signal(signal.SIGTERM, signal_handler)
 
             # Now let's go...
+            action_runner.start()
             run_eventd(
                 terminate_main_event,
                 settings,
@@ -4618,6 +4728,11 @@ def main() -> None:
 
             logger.log(VERBOSE, "Saving final event state")
             event_status.save_status()
+
+            # Those triggered by the rest of the event pipe, see EventServer._keep_serving(), well
+            # before "omd stop" kills the EC after a minute
+            logger.log(VERBOSE, "Running pending actions")
+            action_runner.stop(timeout=10)
 
             logger.log(VERBOSE, "Cleaning up sockets")
             settings.paths.unix_socket.value.unlink()

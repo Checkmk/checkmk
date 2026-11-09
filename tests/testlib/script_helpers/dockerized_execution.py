@@ -61,7 +61,9 @@ def execute_tests_in_container(
     logger.info("Docker version: %s", info["ServerVersion"])
 
     container_env = _container_env(version)
-    image_name_with_tag = _create_cmk_image(client, distro_name, docker_tag, version, container_env)
+    image_name_with_tag, image_is_new = _create_cmk_image(
+        client, distro_name, docker_tag, version, container_env
+    )
 
     # Start the container
     container: docker.Container
@@ -90,7 +92,9 @@ def execute_tests_in_container(
         _prepare_testuser(container, _TESTUSER)
         _prepare_git_overlay(container, "/git-lowerdir", "/git", _TESTUSER)
         _cleanup_previous_virtual_environment(container, container_env)
-        _reuse_persisted_virtual_environment(container, container_env, _TESTUSER)
+        _reuse_persisted_virtual_environment(
+            container, container_env, _TESTUSER, venv_is_current=image_is_new
+        )
 
         if interactive:
             logger.info("+-------------------------------------------------")
@@ -276,7 +280,8 @@ def _create_cmk_image(
     docker_tag: str,
     version: CMKVersion,
     container_env: Mapping[str, str],
-) -> str:
+) -> tuple[str, bool]:
+    """Return the name of the test image, and whether it was built from the current checkout"""
     base_image_name_with_tag = f"{_DOCKER_REGISTRY}/{distro_name}:{docker_tag}"
     logger.info("Prepare distro-specific base image [%s]", base_image_name_with_tag)
     if not (base_image := _get_or_load_image(client, base_image_name_with_tag)):
@@ -308,7 +313,7 @@ def _create_cmk_image(
             # We found something locally or remote and ensured it's available locally.
             # Only use it when it's based on the latest available base image. Otherwise
             # skip it. The following code will re-build one based on the current base image
-            return image_name_with_tag  # already found, nothing to do.
+            return image_name_with_tag, False  # already found, nothing to do.
 
     logger.info("Build test image [%s] from [%s]", image_name_with_tag, base_image_name_with_tag)
 
@@ -403,7 +408,7 @@ def _create_cmk_image(
         else:
             logger.info("Skipping upload to registry (%s)", image.short_id)
 
-    return image_name_with_tag
+    return image_name_with_tag, True
 
 
 def _is_based_on_current_base_image(image: Image, base_image: Image | None) -> bool:
@@ -858,9 +863,16 @@ def _persist_virtual_environment(
 
 
 def _reuse_persisted_virtual_environment(
-    container: docker.Container, container_env: Mapping[str, str], test_user: str
+    container: docker.Container,
+    container_env: Mapping[str, str],
+    test_user: str,
+    venv_is_current: bool,
 ) -> None:
-    """Copy /.venv to /git/.venv to reuse previous venv during testing"""
+    """Copy /.venv to /git/.venv to reuse previous venv during testing
+
+    When the image was built from the current checkout, its venv is reused as it is. Otherwise it
+    is updated, which means installing every package again.
+    """
     if (
         _exec_run(
             container,
@@ -879,6 +891,9 @@ def _reuse_persisted_virtual_environment(
             environment=container_env,
             stream=True,
         )
+        if venv_is_current:
+            logger.info("Image was built from the current checkout, reusing its venv as it is")
+            return
 
     if _mirror_reachable():
         #  Only try to update when the mirror is available, otherwise continue with the current

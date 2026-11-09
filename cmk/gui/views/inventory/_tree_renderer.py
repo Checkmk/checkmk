@@ -52,6 +52,7 @@ from ._display_hints import (
     DisplayHints,
     inv_display_hints,
     NodeDisplayHint,
+    PaintedChangeFromAPI,
     PaintFunctionFromAPI,
     PaintResultFromAPI,
     TableWithView,
@@ -197,6 +198,39 @@ class SDItem:
         )
 
 
+def _paint_value(paint_function: PaintFunctionFromAPI) -> PaintFunctionFromAPI:
+    return paint_function
+
+
+def _with_raw_value(rendered_value: str | HTML, value: SDValue) -> str | HTML:
+    if not rendered_value:
+        return rendered_value
+    return (
+        HTML.with_escaping(rendered_value)
+        + " "
+        + HTMLWriter.render_span(f"({value})", css="muted_text")
+    )
+
+
+class _PaintValueAndRawValue:
+    def __init__(self, paint_function: PaintFunctionFromAPI) -> None:
+        self._paint_function = paint_function
+
+    def __call__(self, now: float, value: SDValue) -> PaintResultFromAPI:
+        td_styles, rendered_value = self._paint_function(now, value)
+        return td_styles, _with_raw_value(rendered_value, value)
+
+    def paint_change(self, now: float, old: SDValue, new: SDValue) -> PaintedChangeFromAPI:
+        td_styles, rendered_old_value, rendered_new_value = self._paint_function.paint_change(
+            now, old, new
+        )
+        return (
+            td_styles,
+            _with_raw_value(rendered_old_value, old),
+            _with_raw_value(rendered_new_value, new),
+        )
+
+
 @dataclass(frozen=True, kw_only=True)
 class _SDDeltaItem:
     key: SDKey
@@ -240,8 +274,9 @@ class _SDDeltaItem:
             )
 
         if self.old is not None and self.new is not None:
-            _td_styles, rendered_old_value = self.paint_function(now, self.old)
-            td_styles, rendered_new_value = self.paint_function(now, self.new)
+            td_styles, rendered_old_value, rendered_new_value = self.paint_function.paint_change(
+                now, self.old, self.new
+            )
             return TDSpec(
                 css_classes=[td_styles.css_class] if td_styles.css_class else [],
                 text_align="",
@@ -256,25 +291,6 @@ class _SDDeltaItem:
             )
 
         raise NotImplementedError
-
-
-def _paint_value(paint_function: PaintFunctionFromAPI) -> PaintFunctionFromAPI:
-    return paint_function
-
-
-def _paint_value_and_raw_value(paint_function: PaintFunctionFromAPI) -> PaintFunctionFromAPI:
-    def _paint(now: float, value: SDValue) -> PaintResultFromAPI:
-        td_styles, rendered_value = paint_function(now, value)
-        if not rendered_value:
-            return td_styles, rendered_value
-        return (
-            td_styles,
-            HTML.with_escaping(rendered_value)
-            + " "
-            + HTMLWriter.render_span(f"({value})", css="muted_text"),
-        )
-
-    return _paint
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -540,7 +556,7 @@ class TreeRenderer:
         self._request = request
         self._show_internal_tree_paths = show_internal_tree_paths
         self._decorate_paint_function = (
-            _paint_value_and_raw_value if show_internal_tree_paths else _paint_value
+            _PaintValueAndRawValue if show_internal_tree_paths else _paint_value
         )
 
     def _get_header(self, title: str, key_info: str) -> HTML:

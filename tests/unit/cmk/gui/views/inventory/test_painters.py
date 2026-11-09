@@ -13,7 +13,7 @@ from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.view_utils import CSVExportError
 from cmk.gui.views.inventory import NodeDisplayHint
 from cmk.gui.views.inventory._display_hints import (
-    _wrap_paint_function,
+    _PaintFunctionAdapter,
     ColumnDisplayHintOfView,
     Table,
 )
@@ -62,7 +62,7 @@ def _column_hint() -> ColumnDisplayHintOfView:
         title="Col",
         short_title="Col",
         long_title="Table > Col",
-        paint_function=_wrap_paint_function(inv_paint_generic),
+        paint_function=_PaintFunctionAdapter(inv_paint_generic),
         sort_function=lambda *args: 0,  # noqa: ARG005
         filter=FilterInvtableText(inv_info="invtable", ident="invtable_col", title="Col"),
     )

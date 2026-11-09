@@ -1046,6 +1046,10 @@ def test_render_keeps_the_unit_precision_without_a_resolution() -> None:
     assert SIFormatter("B", "auto", 2).render(1_196_000) == "1.2 MB"
 
 
+def test_render_uncapped_keeps_digits_beyond_those_of_a_label() -> None:
+    assert IECFormatter("B", "strict", 13).render_uncapped(5 * 2**40 + 1) == "5.0000000000009 TiB"
+
+
 def test_render_y_labels_labels_no_range_across_zero() -> None:
     assert (
         DecimalFormatter(symbol="u", precision_kind="auto", digits=2).render_y_labels(

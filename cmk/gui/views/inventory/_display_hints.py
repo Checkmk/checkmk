@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import itertools
+import math
+import sys
 from collections.abc import (
     Callable,
     Iterable,
@@ -11,10 +14,12 @@ from collections.abc import (
     Sequence,
 )
 from dataclasses import dataclass, field
-from typing import assert_never, Literal, overload
+from typing import assert_never, Final, Literal, overload, Protocol
 
+import cmk.utils.render
 from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, PluginGroup
 from cmk.gui.color import Color, parse_color_from_api
+from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _, _l
 from cmk.gui.ifaceoper import interface_oper_states, interface_port_types
 from cmk.gui.inventory.filters import (
@@ -78,12 +83,14 @@ from cmk.web.utils.unit_formatter import (
     DecimalFormatter,
     EngineeringScientificFormatter,
     IECFormatter,
+    NotationFormatter,
     PrecisionKind,
     SIFormatter,
     StandardScientificFormatter,
     TimeFormatter,
 )
 
+from . import _paint_functions
 from ._paint_functions import inv_paint_generic
 from .registry import (
     inv_paint_functions,
@@ -154,12 +161,150 @@ class TDStyles:
 
 
 PaintResultFromAPI = tuple[TDStyles, str | HTML]
-PaintFunctionFromAPI = Callable[[float, SDValue], PaintResultFromAPI]
 
 
-def _wrap_paint_function(paint_function: PaintFunction) -> PaintFunctionFromAPI:
-    def _wrap(_now: float, value: SDValue) -> PaintResultFromAPI:
-        css_class, rendered_value = paint_function(value)
+PaintedChangeFromAPI = tuple[TDStyles, str | HTML, str | HTML]
+
+
+class PaintFunctionFromAPI(Protocol):
+    def __call__(self, now: float, value: SDValue, /) -> PaintResultFromAPI: ...
+
+    def paint_change(self, now: float, old: SDValue, new: SDValue) -> PaintedChangeFromAPI: ...
+
+
+def _paint_each(
+    paint_function: PaintFunctionFromAPI, now: float, old: SDValue, new: SDValue
+) -> PaintedChangeFromAPI:
+    _td_styles, rendered_old_value = paint_function(now, old)
+    td_styles, rendered_new_value = paint_function(now, new)
+    return td_styles, rendered_old_value, rendered_new_value
+
+
+def _with_difference(rendered_value: str | HTML, rendered_difference: str) -> HTML:
+    return (
+        HTML.with_escaping(rendered_value)
+        + " "
+        + HTMLWriter.render_span(f"({rendered_difference})", css="muted_text")
+    )
+
+
+def _numbers_of(old: SDValue, new: SDValue) -> tuple[int | float, int | float] | None:
+    match old, new:
+        case (bool(), _) | (_, bool()):
+            return None
+        case (int() | float() as old_number, int() | float() as new_number):
+            return old_number, new_number
+        case _:
+            return None
+
+
+def _sign_of(difference: int | float) -> str:
+    return "+" if difference > 0 else "-"
+
+
+def _render_plain_difference(difference: int | float) -> str:
+    magnitude = abs(difference)
+    rendered_magnitude = str(magnitude) if isinstance(magnitude, int) else f"{magnitude:g}"
+    return f"{_sign_of(difference)}{rendered_magnitude}"
+
+
+def _render_duration(duration: int | float) -> str:
+    return f"{_sign_of(duration)}{cmk.utils.render.approx_age(abs(duration))}"
+
+
+_ROUND_TRIP_DIGITS: Final = math.ceil(1 + sys.float_info.mant_dig * math.log10(2))
+
+
+def _render_rounded(value: int | float, digits: int) -> str:
+    return str(round(value, digits))
+
+
+def _render_volt(value: int | float, digits: int) -> str:
+    return f"{round(value, digits)} V"
+
+
+def _render_bytes(value: int | float, digits: int) -> str:
+    return cmk.utils.render.fmt_number_with_precision(
+        value,
+        precision=digits,
+        drop_zeroes=True,
+        unit_prefix_type=cmk.utils.render.IECUnitPrefixes,
+        unit="B",
+    )
+
+
+def _render_hz(value: int | float, digits: int) -> str:
+    return cmk.utils.render.fmt_number_with_precision(
+        value, precision=digits, drop_zeroes=True, unit="Hz"
+    )
+
+
+def _render_nic_speed(value: int | float, digits: int) -> str:
+    return cmk.utils.render.fmt_number_with_precision(
+        value, precision=digits, drop_zeroes=True, unit="bit/s"
+    )
+
+
+@dataclass(frozen=True)
+class _LegacyPrecision:
+    digits: int
+    render: Callable[[int | float, int], str]
+
+
+def _legacy_precision(paint_function: PaintFunction) -> _LegacyPrecision | None:
+    match paint_function:
+        case _paint_functions.inv_paint_generic:
+            return _LegacyPrecision(digits=2, render=_render_rounded)
+        case _paint_functions.inv_paint_volt:
+            return _LegacyPrecision(digits=1, render=_render_volt)
+        case _paint_functions.inv_paint_bytes:
+            return _LegacyPrecision(digits=0, render=_render_bytes)
+        case _paint_functions.inv_paint_bytes_rounded | _paint_functions.inv_paint_size:
+            return _LegacyPrecision(digits=2, render=_render_bytes)
+        case _paint_functions.inv_paint_hz:
+            return _LegacyPrecision(digits=2, render=_render_hz)
+        case _paint_functions.inv_paint_nic_speed:
+            return _LegacyPrecision(digits=2, render=_render_nic_speed)
+        case _:
+            return None
+
+
+def _render_legacy_change(
+    paint_function: PaintFunction, old: int | float, new: int | float
+) -> tuple[str, str] | None:
+    precision = _legacy_precision(paint_function)
+    if precision is None:
+        return None
+    rendered_pairs = (
+        (precision.render(old, digits), precision.render(new, digits))
+        for digits in range(precision.digits, max(precision.digits, _ROUND_TRIP_DIGITS) + 1)
+    )
+    return next((pair for pair in rendered_pairs if pair[0] != pair[1]), None)
+
+
+def _render_legacy_difference(paint_function: PaintFunction, difference: int | float) -> str:
+    match paint_function:
+        case (
+            _paint_functions.inv_paint_age
+            | _paint_functions.inv_paint_date
+            | _paint_functions.inv_paint_date_and_time
+        ):
+            return _render_duration(difference)
+        case (
+            _paint_functions.inv_paint_timestamp_as_age
+            | _paint_functions.inv_paint_timestamp_as_age_days
+        ):
+            return _render_duration(-difference)
+        case _:
+            return ""
+
+
+class _PaintFunctionAdapter:
+    def __init__(self, paint_function: PaintFunction) -> None:
+        self._paint_function = paint_function
+
+    def __call__(self, _now: float, value: SDValue) -> PaintResultFromAPI:
+        css_class, rendered_value = self._paint_function(value)
         return (
             TDStyles(
                 css_class=css_class,
@@ -171,7 +316,27 @@ def _wrap_paint_function(paint_function: PaintFunction) -> PaintFunctionFromAPI:
             rendered_value,
         )
 
-    return _wrap
+    def paint_change(self, now: float, old: SDValue, new: SDValue) -> PaintedChangeFromAPI:
+        painted = _paint_each(self, now, old, new)
+        td_styles, rendered_old_value, rendered_new_value = painted
+        numbers = _numbers_of(old, new)
+        if rendered_old_value != rendered_new_value or numbers is None:
+            return painted
+        old_number, new_number = numbers
+        if (
+            rendered := _render_legacy_change(self._paint_function, old_number, new_number)
+        ) is not None:
+            return td_styles, *rendered
+        rendered_difference = _render_legacy_difference(
+            self._paint_function, new_number - old_number
+        )
+        if not rendered_difference:
+            return painted
+        return (
+            td_styles,
+            rendered_old_value,
+            _with_difference(rendered_new_value, rendered_difference),
+        )
 
 
 def _set_text_color(bg_color: Color) -> Color:
@@ -228,7 +393,7 @@ class _PaintBool:
 
     def __call__(self, now: float, value: SDValue) -> PaintResultFromAPI:
         if not isinstance(value, bool):
-            return _wrap_paint_function(inv_paint_generic)(now, value)
+            return _PaintFunctionAdapter(inv_paint_generic)(now, value)
         return (
             _compute_td_styles(
                 self._field.style(value),
@@ -238,8 +403,11 @@ class _PaintBool:
             _make_str(self._field.render_true if value else self._field.render_false),
         )
 
+    def paint_change(self, now: float, old: SDValue, new: SDValue) -> PaintedChangeFromAPI:
+        return _paint_each(self, now, old, new)
 
-def _render_unit(unit: UnitFromAPI, value: int | float, now: float) -> str:
+
+def _make_formatter(unit: UnitFromAPI, digits: int) -> NotationFormatter:
     precision_kind: PrecisionKind
     match unit.precision:
         case AutoPrecisionFromAPI():
@@ -248,39 +416,91 @@ def _render_unit(unit: UnitFromAPI, value: int | float, now: float) -> str:
             precision_kind = "strict"
         case _:
             assert_never(unit.precision)
-    digits = unit.precision.digits
 
     match unit.notation:
         case DecimalNotationFromAPI():
             return DecimalFormatter(
                 symbol=unit.notation.symbol, precision_kind=precision_kind, digits=digits
-            ).render(value)
+            )
         case SINotationFromAPI():
             return SIFormatter(
                 symbol=unit.notation.symbol, precision_kind=precision_kind, digits=digits
-            ).render(value)
+            )
         case IECNotationFromAPI():
             return IECFormatter(
                 symbol=unit.notation.symbol, precision_kind=precision_kind, digits=digits
-            ).render(value)
+            )
         case StandardScientificNotationFromAPI():
             return StandardScientificFormatter(
                 symbol=unit.notation.symbol, precision_kind=precision_kind, digits=digits
-            ).render(value)
+            )
         case EngineeringScientificNotationFromAPI():
             return EngineeringScientificFormatter(
                 symbol=unit.notation.symbol, precision_kind=precision_kind, digits=digits
-            ).render(value)
-        case TimeNotationFromAPI():
+            )
+        case TimeNotationFromAPI() | AgeNotationFromAPI():
             return TimeFormatter(
                 symbol=unit.notation.symbol, precision_kind=precision_kind, digits=digits
-            ).render(value)
-        case AgeNotationFromAPI():
-            return TimeFormatter(
-                symbol=unit.notation.symbol, precision_kind=precision_kind, digits=digits
-            ).render(now - value)
+            )
         case _:
             assert_never(unit.notation)
+
+
+def _shown_value(unit: UnitFromAPI, value: int | float, now: float) -> int | float:
+    match unit.notation:
+        case AgeNotationFromAPI():
+            return now - value
+        case _:
+            return value
+
+
+def _render_unit(unit: UnitFromAPI, value: int | float, now: float) -> str:
+    return _make_formatter(unit, unit.precision.digits).render(_shown_value(unit, value, now))
+
+
+def _render_unit_change(
+    unit: UnitFromAPI, old: int | float, new: int | float, now: float
+) -> tuple[str, str]:
+    rendered = (_render_unit(unit, old, now), _render_unit(unit, new, now))
+    if rendered[0] != rendered[1]:
+        return rendered
+    shown_old = _shown_value(unit, old, now)
+    shown_new = _shown_value(unit, new, now)
+    unit_digits = unit.precision.digits
+    formatters = (
+        _make_formatter(unit, digits)
+        for digits in range(unit_digits, max(unit_digits, _ROUND_TRIP_DIGITS) + 1)
+    )
+    rendered_pairs = (
+        (formatter.render_uncapped(shown_old), formatter.render_uncapped(shown_new))
+        for formatter in formatters
+    )
+    return next((pair for pair in rendered_pairs if pair[0] != pair[1]), rendered)
+
+
+def _render_difference(unit: UnitFromAPI, difference: int | float) -> str:
+    match unit.notation:
+        case AgeNotationFromAPI():
+            shown_difference = -difference
+        case _:
+            shown_difference = difference
+    magnitude = abs(shown_difference)
+    unit_digits = unit.precision.digits
+    formatter = _make_formatter(unit, unit_digits)
+    rendered_zero = formatter.render(magnitude * 0)
+    rendered_magnitudes = itertools.chain(
+        (formatter.render(magnitude),),
+        (
+            _make_formatter(unit, digits).render_uncapped(magnitude)
+            for digits in range(unit_digits, max(unit_digits, _ROUND_TRIP_DIGITS) + 1)
+        ),
+    )
+    rendered_magnitude = next(
+        (rendered for rendered in rendered_magnitudes if rendered != rendered_zero), None
+    )
+    if rendered_magnitude is None:
+        return _render_plain_difference(shown_difference)
+    return f"{_sign_of(shown_difference)}{rendered_magnitude}"
 
 
 class _PaintNumber:
@@ -293,7 +513,7 @@ class _PaintNumber:
 
     def __call__(self, now: float, value: SDValue) -> PaintResultFromAPI:
         if not isinstance(value, (int | float)):
-            return _wrap_paint_function(inv_paint_generic)(now, value)
+            return _PaintFunctionAdapter(inv_paint_generic)(now, value)
 
         match self._field.render:
             case c if callable(c):
@@ -303,13 +523,51 @@ class _PaintNumber:
             case _:
                 assert_never(self._field.render)
 
+        return self._td_styles(value), rendered_value
+
+    def _td_styles(self, value: int | float) -> TDStyles:
+        return _compute_td_styles(
+            self._field.style(value),
+            self.default_alignment,
+            prevent_line_break=True,
+        )
+
+    def paint_change(self, now: float, old: SDValue, new: SDValue) -> PaintedChangeFromAPI:
+        match old, new, self._field.render:
+            case (
+                int() | float() as old_number,
+                int() | float() as new_number,
+                UnitFromAPI() as unit,
+            ):
+                return self._paint_unit_change(now, old_number, new_number, unit)
+            case (int() | float() as old_number, int() | float() as new_number, _):
+                return self._paint_rendered_change(now, old_number, new_number)
+            case _:
+                return _paint_each(self, now, old, new)
+
+    def _paint_rendered_change(
+        self, now: float, old: int | float, new: int | float
+    ) -> PaintedChangeFromAPI:
+        painted = _paint_each(self, now, old, new)
+        td_styles, rendered_old_value, rendered_new_value = painted
+        if rendered_old_value != rendered_new_value:
+            return painted
         return (
-            _compute_td_styles(
-                self._field.style(value),
-                self.default_alignment,
-                prevent_line_break=True,
-            ),
-            rendered_value,
+            td_styles,
+            rendered_old_value,
+            _with_difference(rendered_new_value, _render_plain_difference(new - old)),
+        )
+
+    def _paint_unit_change(
+        self, now: float, old: int | float, new: int | float, unit: UnitFromAPI
+    ) -> PaintedChangeFromAPI:
+        rendered_old_value, rendered_new_value = _render_unit_change(unit, old, new, now)
+        if rendered_old_value != rendered_new_value:
+            return self._td_styles(new), rendered_old_value, rendered_new_value
+        return (
+            self._td_styles(new),
+            rendered_old_value,
+            _with_difference(rendered_new_value, _render_difference(unit, new - old)),
         )
 
 
@@ -323,7 +581,7 @@ class _PaintText:
 
     def __call__(self, now: float, value: SDValue) -> PaintResultFromAPI:
         if not isinstance(value, str):
-            return _wrap_paint_function(inv_paint_generic)(now, value)
+            return _PaintFunctionAdapter(inv_paint_generic)(now, value)
         return (
             _compute_td_styles(
                 self._field.style(value),
@@ -332,6 +590,9 @@ class _PaintText:
             ),
             _make_str(_make_str(self._field.render(value))),
         )
+
+    def paint_change(self, now: float, old: SDValue, new: SDValue) -> PaintedChangeFromAPI:
+        return _paint_each(self, now, old, new)
 
 
 type _Styles = Iterable[AlignmentFromAPI | BackgroundColorFromAPI | LabelColorFromAPI]
@@ -361,7 +622,7 @@ class _PaintChoice:
 
     def __call__(self, now: float, value: SDValue) -> PaintResultFromAPI:
         if not isinstance(value, (int | float | str)):
-            return _wrap_paint_function(inv_paint_generic)(now, value)
+            return _PaintFunctionAdapter(inv_paint_generic)(now, value)
         return (
             _compute_td_styles(
                 _style_of(self._field, value),
@@ -374,6 +635,9 @@ class _PaintChoice:
                 else _make_str(rendered)
             ),
         )
+
+    def paint_change(self, now: float, old: SDValue, new: SDValue) -> PaintedChangeFromAPI:
+        return _paint_each(self, now, old, new)
 
 
 def _make_paint_function(
@@ -947,7 +1211,7 @@ def _parse_attr_field_from_legacy(
             title if (short_title := legacy_hint.get("short")) is None else str(short_title)
         ),
         long_title=long_title,
-        paint_function=_wrap_paint_function(paint_function),
+        paint_function=_PaintFunctionAdapter(paint_function),
         sort_function=sort_missing_values_first(legacy_hint.get("sort", compare_sd_values)),
         filter=_make_attribute_filter_from_legacy_hint(
             path=path,
@@ -983,7 +1247,7 @@ def _parse_col_field_from_legacy(
             title if (short_title := legacy_hint.get("short")) is None else str(short_title)
         ),
         long_title=_make_long_title(node_title, title),
-        paint_function=_wrap_paint_function(paint_function),
+        paint_function=_PaintFunctionAdapter(paint_function),
     )
 
 
@@ -1149,7 +1413,7 @@ def _parse_col_field_from_legacy_of_view(
             title if (short_title := legacy_hint.get("short")) is None else str(short_title)
         ),
         long_title=long_title,
-        paint_function=_wrap_paint_function(paint_function),
+        paint_function=_PaintFunctionAdapter(paint_function),
         sort_function=sort_missing_values_first(legacy_hint.get("sort", compare_sd_values)),
         filter=_parse_col_filter_from_legacy(
             table_view_name=table_view_name,
@@ -1253,7 +1517,7 @@ class NodeDisplayHint:
                 title=title,
                 short_title=title,
                 long_title=long_title,
-                paint_function=_wrap_paint_function(
+                paint_function=_PaintFunctionAdapter(
                     inv_paint_functions["inv_paint_generic"]["func"]
                 ),
                 sort_function=sort_missing_values_first(compare_sd_values),
@@ -1276,7 +1540,7 @@ class NodeDisplayHint:
                 title=title,
                 short_title=title,
                 long_title=_make_long_title(self.title if self.path else "", title),
-                paint_function=_wrap_paint_function(
+                paint_function=_PaintFunctionAdapter(
                     inv_paint_functions["inv_paint_generic"]["func"]
                 ),
             )

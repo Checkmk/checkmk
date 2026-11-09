@@ -7,7 +7,7 @@ from cmk.gui.config import active_config
 from cmk.gui.http import request
 from cmk.gui.inventory.filters import FilterInvText
 from cmk.gui.views.inventory._display_hints import (
-    _wrap_paint_function,
+    _PaintFunctionAdapter,
     AttributeDisplayHint,
 )
 from cmk.gui.views.inventory._paint_functions import inv_paint_generic
@@ -25,7 +25,7 @@ def test_attribute_sorter_ranks_two_missing_values_equal() -> None:
         title="Product",
         short_title="Product",
         long_title=long_title,
-        paint_function=_wrap_paint_function(inv_paint_generic),
+        paint_function=_PaintFunctionAdapter(inv_paint_generic),
         sort_function=sort_missing_values_first(compare_sd_values),
         filter=FilterInvText(
             ident=name,

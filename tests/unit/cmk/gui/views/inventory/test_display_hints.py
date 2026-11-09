@@ -17,12 +17,14 @@ from cmk.gui.views.inventory._display_hints import (
     _make_title_function,
     _PaintBool,
     _PaintChoice,
+    _PaintFunctionAdapter,
     _PaintNumber,
     _PaintText,
     _parse_view_name,
+    _render_difference,
+    _render_legacy_difference,
     _SortFunctionChoice,
     _SortFunctionText,
-    _wrap_paint_function,
     AttributeDisplayHint,
     ColumnDisplayHint,
     DisplayHints,
@@ -31,6 +33,7 @@ from cmk.gui.views.inventory._display_hints import (
 )
 from cmk.gui.views.inventory._paint_functions import (
     inv_paint_generic,
+    inv_paint_timestamp_as_age,
 )
 from cmk.inventory.raw_paths import InventoryPath, parse_internal_raw_path, TreeSource
 from cmk.inventory.trees import (
@@ -54,6 +57,7 @@ from cmk.inventory_ui.v1 import SINotation as SINotationFromAPI
 from cmk.inventory_ui.v1 import (
     StandardScientificNotation as StandardScientificNotationFromAPI,
 )
+from cmk.inventory_ui.v1 import StrictPrecision as StrictPrecisionFromAPI
 from cmk.inventory_ui.v1 import TextField as TextFieldFromAPI
 from cmk.inventory_ui.v1 import TimeNotation as TimeNotationFromAPI
 from cmk.inventory_ui.v1 import Title as TitleFromAPI
@@ -204,7 +208,7 @@ def test_make_node_displayhint_from_hint(
                 title="Key",
                 short_title="Key",
                 long_title="Key",
-                paint_function=_wrap_paint_function(inv_paint_generic),
+                paint_function=_PaintFunctionAdapter(inv_paint_generic),
             ),
         ),
         (
@@ -214,7 +218,7 @@ def test_make_node_displayhint_from_hint(
                 title="Key",
                 short_title="Key",
                 long_title="Node ➤ Key",
-                paint_function=_wrap_paint_function(inv_paint_generic),
+                paint_function=_PaintFunctionAdapter(inv_paint_generic),
             ),
         ),
     ],
@@ -238,7 +242,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
                 title="Bar",
                 short_title="Bar",
                 long_title="Foo ➤ Bar",
-                paint_function=_wrap_paint_function(inv_paint_generic),
+                paint_function=_PaintFunctionAdapter(inv_paint_generic),
             ),
         ),
     ],
@@ -267,7 +271,7 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
                 title="Key",
                 short_title="Key",
                 long_title="Key",
-                paint_function=_wrap_paint_function(inv_paint_generic),
+                paint_function=_PaintFunctionAdapter(inv_paint_generic),
                 sort_function=sort_missing_values_first(compare_sd_values),
                 filter=FilterInvText(
                     ident="inv_key",
@@ -289,7 +293,7 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
                 title="Key",
                 short_title="Key",
                 long_title="Node ➤ Key",
-                paint_function=_wrap_paint_function(inv_paint_generic),
+                paint_function=_PaintFunctionAdapter(inv_paint_generic),
                 sort_function=sort_missing_values_first(compare_sd_values),
                 filter=FilterInvText(
                     ident="inv_path_to_node_key",
@@ -328,7 +332,7 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
                 title="Bar",
                 short_title="Bar",
                 long_title="Foo ➤ Bar",
-                paint_function=_wrap_paint_function(inv_paint_generic),
+                paint_function=_PaintFunctionAdapter(inv_paint_generic),
                 sort_function=sort_missing_values_first(compare_sd_values),
                 filter=FilterInvText(
                     ident="inv_foo_bar",
@@ -349,7 +353,7 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
                 title="Product",
                 short_title="Product",
                 long_title="System ➤ Product",
-                paint_function=_wrap_paint_function(inv_paint_generic),
+                paint_function=_PaintFunctionAdapter(inv_paint_generic),
                 sort_function=sort_missing_values_first(compare_sd_values),
                 filter=FilterInvText(
                     ident="inv_hardware_system_product",
@@ -644,3 +648,16 @@ def test__make_title_function_of_a_plain_legacy_title() -> None:
 
 def test__make_title_function_without_a_legacy_title() -> None:
     assert _make_title_function({})("some_key") == "Some Key"
+
+
+def test_newer_timestamp_shown_as_age_is_a_smaller_age() -> None:
+    assert _render_legacy_difference(inv_paint_timestamp_as_age, 60) == "-60 s"
+
+
+def test_difference_rendering_like_zero_gets_more_digits_and_keeps_its_unit() -> None:
+    assert (
+        _render_difference(
+            UnitFromAPI(DecimalNotationFromAPI("B"), StrictPrecisionFromAPI(2)), 0.001
+        )
+        == "+0.001 B"
+    )

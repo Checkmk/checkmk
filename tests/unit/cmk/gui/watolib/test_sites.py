@@ -531,7 +531,7 @@ def test_replication_status_is_fetched_from_all_sites(
                 "version": "3.0.0",
                 "edition": "pro",
                 "license_state": "",
-                "omd_status": {"apache": 0},
+                "omd_status": {"rabbitmq": 0},
             },
             SiteId("remote_2"): error,
         },
@@ -539,7 +539,7 @@ def test_replication_status_is_fetched_from_all_sites(
 
     assert statuses[SiteId("remote_1")].success
     assert statuses[SiteId("remote_1")].response == PingResult(
-        version="3.0.0", edition="pro", omd_status={"apache": 0}, license_state=None
+        version="3.0.0", edition="pro", omd_status={"rabbitmq": 0}, license_state=None
     )
     assert statuses[SiteId("remote_2")] == ReplicationStatus(
         site_id=SiteId("remote_2"), success=False, response=error
@@ -557,7 +557,7 @@ def test_malformed_ping_response_fails_only_the_affected_site(
                 "version": "3.0.0",
                 "edition": "pro",
                 "license_state": "",
-                "omd_status": {"apache": 0},
+                "omd_status": {"rabbitmq": 0},
             },
         },
     )

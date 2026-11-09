@@ -56,6 +56,7 @@ from cmk.ruleset_matcher.definition import RuleGroup, RuleGroupType
 from cmk.utils.paths import (
     local_gui_plugins_dir,
     local_pnp_templates_dir,
+    local_root,
     local_web_dir,
     web_dir,
 )
@@ -1200,18 +1201,23 @@ class ACTestSizeOfExtensions(ACTest):
         )
 
 
+def _local_plugin_file(plugin_filepath: Path, site_local_root: Path) -> Path | None:
+    if plugin_filepath.is_absolute():
+        return plugin_filepath if plugin_filepath.is_relative_to(site_local_root) else None
+    module_file = site_local_root / "lib/python3" / plugin_filepath
+    return module_file if module_file.is_file() else None
+
+
 class ACTestBrokenGUIExtension(ACTest):
     def __init__(
         self,
         failed_plugins: Callable[
             [], Sequence[tuple[Path, str, str, BaseException]]
         ] = get_failed_plugins,
-        legacy_plugins_dir: Path = local_web_dir / "plugins",
-        gui_plugins_dir: Path = local_gui_plugins_dir,
+        site_local_root: Path = local_root,
     ) -> None:
         self._failed_plugins = failed_plugins
-        self._legacy_plugins_dir = legacy_plugins_dir
-        self._gui_plugins_dir = gui_plugins_dir
+        self._local_root = site_local_root
 
     @override
     def category(self) -> str:
@@ -1240,12 +1246,7 @@ class ACTestBrokenGUIExtension(ACTest):
             return
 
         for plugin_filepath, gui_part, plugin_name, error in failed_plugins:
-            path = (
-                plugin_filepath
-                if plugin_filepath.parent.parent == self._legacy_plugins_dir
-                or plugin_filepath.is_relative_to(self._gui_plugins_dir)
-                else None
-            )
+            path = _local_plugin_file(plugin_filepath, self._local_root)
             name = (
                 f"{gui_part}/{plugin_name}"
                 if path is None

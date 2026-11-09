@@ -911,18 +911,16 @@ def test_legacy_gui_plugins_help_names_its_folder(tmp_path: Path) -> None:
     )
 
 
-_LEGACY_PLUGINS_DIR = Path("/omd/sites/NO_SITE/local/share/check_mk/web/plugins")
-
-_GUI_PLUGINS_DIR = Path("/omd/sites/NO_SITE/local/lib/python3/cmk/gui/plugins")
+_LOCAL_ROOT = Path("/omd/sites/NO_SITE/local")
 
 
-def _broken_gui_extension_finding(path: Path) -> ACSingleResult:
+def _broken_gui_extension_finding(path: Path, local_root: Path = _LOCAL_ROOT) -> ACSingleResult:
     def failed_plugins() -> Sequence[tuple[Path, str, str, BaseException]]:
         return [(path, "views", "my_view", NameError("name 'x' is not defined"))]
 
-    [result] = ACTestBrokenGUIExtension(
-        failed_plugins, _LEGACY_PLUGINS_DIR, _GUI_PLUGINS_DIR
-    ).execute(SiteId("NO_SITE"), Config())
+    [result] = ACTestBrokenGUIExtension(failed_plugins, local_root).execute(
+        SiteId("NO_SITE"), Config()
+    )
     return result
 
 
@@ -940,18 +938,32 @@ def test_broken_legacy_gui_plugin_is_named_by_its_file() -> None:
     )
 
 
-def test_broken_gui_plugin_is_named_by_its_file() -> None:
-    path = Path("/omd/sites/NO_SITE/local/lib/python3/cmk/gui/plugins/views/my_view.py")
+@pytest.mark.parametrize(
+    "path",
+    [
+        pytest.param(
+            Path("/omd/sites/NO_SITE/local/lib/python3/cmk/gui/plugins/views/my_view.py"),
+            id="gui-plugin",
+        ),
+        pytest.param(
+            Path(
+                "/omd/sites/NO_SITE/local/lib/python3/cmk_addons/plugins/my_family/rulesets/my_rule.py"
+            ),
+            id="rule-spec-of-an-extension-package",
+        ),
+    ],
+)
+def test_broken_local_file_is_named_by_its_file(path: Path) -> None:
     assert _broken_gui_extension_finding(path).path == path
 
 
-def test_broken_gui_extension_error_ending_with_a_period() -> None:
+def test_broken_gui_extension_error_ending_with_a_period(tmp_path: Path) -> None:
     def failed_plugins() -> Sequence[tuple[Path, str, str, BaseException]]:
         return [(Path("a.py"), "views", "a_view", NameError("Some error."))]
 
-    [result] = ACTestBrokenGUIExtension(
-        failed_plugins, _LEGACY_PLUGINS_DIR, _GUI_PLUGINS_DIR
-    ).execute(SiteId("NO_SITE"), Config())
+    [result] = ACTestBrokenGUIExtension(failed_plugins, tmp_path).execute(
+        SiteId("NO_SITE"), Config()
+    )
     assert result.text == (
         "'views/a_view' has no effect in Checkmk. Checkmk fails to load it: Some error. The log"
         " file 'var/log/web.log' shows the details."
@@ -965,7 +977,6 @@ def test_broken_gui_extension_error_ending_with_a_period() -> None:
             Path("/omd/sites/NO_SITE/lib/python3/cmk/gui/rule_specs/legacy_converter.py"),
             id="traceback-frame",
         ),
-        pytest.param(Path("cmk_addons/plugins/family/rulesets/my_rule_set.py"), id="module-path"),
         pytest.param(
             Path("/omd/sites/NO_SITE/share/check_mk/web/plugins/views/my_view.py"),
             id="shipped-legacy-plugin",
@@ -984,12 +995,34 @@ def test_broken_gui_extension_without_its_file_is_named_by_the_plugin(path: Path
     )
 
 
+_RULE_SET_MODULE_PATH = Path("cmk_addons/plugins/my_family/rulesets/my_rule.py")
+
+
+def test_broken_module_of_a_local_file_is_named_by_its_file(tmp_path: Path) -> None:
+    _write(tmp_path / "lib/python3", str(_RULE_SET_MODULE_PATH))
+    assert (
+        _broken_gui_extension_finding(_RULE_SET_MODULE_PATH, tmp_path).path
+        == tmp_path / "lib/python3" / _RULE_SET_MODULE_PATH
+    )
+
+
+def test_broken_module_without_a_local_file_is_named_by_the_plugin(tmp_path: Path) -> None:
+    result = _broken_gui_extension_finding(_RULE_SET_MODULE_PATH, tmp_path)
+    assert (result.text, result.path) == (
+        (
+            "'views/my_view' has no effect in Checkmk. Checkmk fails to load it: name 'x' is"
+            " not defined. The log file 'var/log/web.log' shows the details."
+        ),
+        None,
+    )
+
+
 def test_without_broken_gui_extensions() -> None:
     [result] = ACTestBrokenGUIExtension(list).execute(SiteId("NO_SITE"), Config())
     assert result.state is ACResultState.OK
 
 
-def test_every_broken_gui_extension_is_reported() -> None:
+def test_every_broken_gui_extension_is_reported(tmp_path: Path) -> None:
     def failed_plugins() -> Sequence[tuple[Path, str, str, BaseException]]:
         return [
             (Path("a.py"), "views", "a_view", NameError("a")),
@@ -998,9 +1031,9 @@ def test_every_broken_gui_extension_is_reported() -> None:
 
     assert [
         result.text
-        for result in ACTestBrokenGUIExtension(
-            failed_plugins, _LEGACY_PLUGINS_DIR, _GUI_PLUGINS_DIR
-        ).execute(SiteId("NO_SITE"), Config())
+        for result in ACTestBrokenGUIExtension(failed_plugins, tmp_path).execute(
+            SiteId("NO_SITE"), Config()
+        )
     ] == [
         (
             "'views/a_view' has no effect in Checkmk. Checkmk fails to load it: a. The log file"

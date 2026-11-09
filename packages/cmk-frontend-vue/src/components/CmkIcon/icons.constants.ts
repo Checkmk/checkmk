@@ -774,7 +774,8 @@ export const oneColorIcons = [
   'clock',
   'megaphone',
   'sparkle',
-  'wrench'
+  'wrench',
+  'user-guide'
 ] as const
 export const twoColorIcons = ['aggr', 'experiment'] as const
 

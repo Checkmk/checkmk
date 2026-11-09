@@ -62,6 +62,7 @@ SOURCES_COMMON = [
     "welcome.json",
     "agent_slideout.json",
     "product_usage_analytics.json",
+    "robotmk_explorer.json",
     "trial_mode_selection_props.json",
     "trial_mode_selection_request.json",
     "trial_mode_verification_request.json",

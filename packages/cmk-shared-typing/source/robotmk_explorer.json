@@ -1,0 +1,9 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ExplorerApp",
+  "type": "object",
+  "properties": {
+    "global_time_picker": { "$ref": "global_time_picker.json#" }
+  },
+  "required": ["global_time_picker"]
+}

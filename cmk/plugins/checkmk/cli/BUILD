@@ -44,7 +44,6 @@ py_library(
         "//packages/cmk-licensing/cmk/licensing/basics",
         "//packages/cmk-plugin-apis:cli",
         "//packages/cmk-plugin-apis:discover_plugins",
-        "//packages/cmk-profiling:backend",
         "//packages/cmk-ruleset-matcher",
         "//packages/cmk-trace",
     ],

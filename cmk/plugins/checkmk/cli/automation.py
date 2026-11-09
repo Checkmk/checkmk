@@ -23,7 +23,6 @@ from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Reader as CLIReader
 from cmk.cli.internal import Value as CLIValue
-from cmk.profiling import backend as profiling
 
 logger = logging.getLogger(__name__)
 tracer = trace.get_tracer()
@@ -99,10 +98,7 @@ def _mode_automation(
                 raise
             return _automation_error_exit_code(AutomationError.UNKNOWN_ERROR)
 
-        try:
-            result = automations.execute(name, automation_args)
-        finally:
-            profiling.output_profile(cmk.utils.paths.profiles_dir)
+        result = automations.execute(name, automation_args)
         if isinstance(result, AutomationError):
             return _automation_error_exit_code(result)
         with suppress(IOError):

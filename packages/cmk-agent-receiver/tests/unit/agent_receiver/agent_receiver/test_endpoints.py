@@ -372,7 +372,7 @@ def test_register_new_folder_missing(
     assert oct(stat.S_IMODE((config.r4r_dir / "NEW").stat().st_mode)) == "0o770"
 
 
-def test_register_new_folder_missing_cse(
+def test_register_new_folder_missing_cloud(
     mocker: MockerFixture,
     client: TestClient,
     uuid: UUID4,

@@ -55,7 +55,7 @@ logger = logging.getLogger()
 build_path = repo_path() / "docker_image"
 image_prefix = "docker-tests"
 DISTRO_CODENAME: Final = "noble"  # ubuntu-24.04
-cse_config_root = Path("/tmp/cmk-docker-test/cse-config-volume")
+cloud_config_root = Path("/tmp/cmk-docker-test/cse-config-volume")
 IMAGE_BUILD_TIMEOUT_SECS = 30 * 60
 
 
@@ -391,7 +391,7 @@ class CheckmkApp:
         self.ports = ports
         _volumes = volumes or []
         if self.package_info.edition.is_cloud_edition():
-            _volumes += self._get_cse_volumes(cse_config_root)
+            _volumes += self._get_cloud_volumes(cloud_config_root)
         self.volumes = _volumes if _volumes else None
         self.volumes_from = volumes_from
 
@@ -437,7 +437,7 @@ class CheckmkApp:
                 " to fix this, then restart your computer and try again."
             ) from e
 
-        edition_setup(self.package_info.edition).prepare_host(cse_config_root)
+        edition_setup(self.package_info.edition).prepare_host(cloud_config_root)
 
         try:
             if self.name is None:
@@ -531,11 +531,11 @@ class CheckmkApp:
             self._remove_volumes()
 
     @staticmethod
-    def _get_cse_volumes(config_root: Path) -> list[str]:
-        cse_config_dir = Path("etc/cse")
-        cse_config_on_local_machine = config_root / cse_config_dir
-        cse_config_on_container = Path("/") / cse_config_dir
-        return [f"{cse_config_on_local_machine}:{cse_config_on_container}:ro"]
+    def _get_cloud_volumes(config_root: Path) -> list[str]:
+        cloud_config_dir = Path("etc/cse")
+        cloud_config_on_local_machine = config_root / cloud_config_dir
+        cloud_config_on_container = Path("/") / cloud_config_dir
+        return [f"{cloud_config_on_local_machine}:{cloud_config_on_container}:ro"]
 
     def __enter__(self) -> Self:
         return self

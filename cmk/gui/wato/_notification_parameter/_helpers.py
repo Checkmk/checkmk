@@ -64,7 +64,7 @@ def local_site_url() -> str:
 
 
 def _get_url_prefix_setting(
-    is_cse: bool = False, default_value: str = "automatic_https", group_title: str | None = None
+    is_cloud: bool = False, default_value: str = "automatic_https", group_title: str | None = None
 ) -> DictElement[Any]:
     return DictElement(
         group=DictGroupExtended(
@@ -113,7 +113,7 @@ def _get_url_prefix_setting(
             migrate=_migrate_url_prefix,
             prefill=DefaultValue(default_value),
         ),
-        render_only=is_cse,
+        render_only=is_cloud,
     )
 
 

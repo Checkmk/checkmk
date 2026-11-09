@@ -60,12 +60,12 @@ def _page_menu_entries_related(
     page_name: str,
     show_shortcuts: bool = True,
 ) -> Iterator[PageMenuEntry]:
-    is_cse_edition = edition == Edition.CLOUD
+    is_cloud_edition = edition == Edition.CLOUD
     is_remote_site = is_distributed_setup_remote_site(sites)
 
     must_change_password = request.get_ascii_input("reason") in ("expired", "enforced")
 
-    if page_name != "user_change_pw" and not is_cse_edition and not is_remote_site:
+    if page_name != "user_change_pw" and not is_cloud_edition and not is_remote_site:
         yield PageMenuEntry(
             title=_("Change password"),
             icon_name=StaticIcon(IconNames.topic_change_password),
@@ -76,7 +76,7 @@ def _page_menu_entries_related(
     if (
         page_name != "user_two_factor_overview"
         and user.may("general.manage_2fa")
-        and not is_cse_edition
+        and not is_cloud_edition
         and not must_change_password
     ):
         yield PageMenuEntry(

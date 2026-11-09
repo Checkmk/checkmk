@@ -2913,7 +2913,7 @@ class ContactSelection(BaseSchema):
         return data
 
     @post_load
-    def _validate_explicit_email_addresses_not_in_cse(  # type: ignore[misc]
+    def _validate_explicit_email_addresses_not_in_cloud(  # type: ignore[misc]
         self, data: dict[str, Any], **_kwargs: Any
     ) -> dict[str, Any]:
         """Forbid explicit_email_addresses in Cloud edition"""

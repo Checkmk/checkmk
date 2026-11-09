@@ -40,29 +40,29 @@ def form_spec_mail(edition: Edition) -> DictionaryExtended:
     # TODO register Cloud specific version
     return DictionaryExtended(
         title=Title("HTML email parameters"),
-        elements=_parameter_elements(is_cse=edition == Edition.CLOUD),
+        elements=_parameter_elements(is_cloud=edition == Edition.CLOUD),
         ignored_elements=("no_floating_graphs",),
     )
 
 
-def _parameter_elements(is_cse: bool) -> dict[str, DictElement[Any]]:
+def _parameter_elements(is_cloud: bool) -> dict[str, DictElement[Any]]:
     return (
-        _settings_elements(is_cse)
-        | _header_elements(is_cse)
+        _settings_elements(is_cloud)
+        | _header_elements(is_cloud)
         | _content_elements()
         | _testing_elements()
         | _bulk_elements()
     )
 
 
-def _settings_elements(is_cse: bool) -> dict[str, DictElement[Any]]:
-    return _url_prefix_setting(is_cse)
+def _settings_elements(is_cloud: bool) -> dict[str, DictElement[Any]]:
+    return _url_prefix_setting(is_cloud)
 
 
-def _url_prefix_setting(is_cse: bool) -> dict[str, DictElement[Any]]:
+def _url_prefix_setting(is_cloud: bool) -> dict[str, DictElement[Any]]:
     return {
         "url_prefix": _get_url_prefix_setting(
-            is_cse,
+            is_cloud,
             default_value="automatic_https" if request.is_ssl_request else "automatic_http",
             group_title="Settings",
         )
@@ -72,13 +72,13 @@ def _url_prefix_setting(is_cse: bool) -> dict[str, DictElement[Any]]:
 def form_spec_asciimail(edition: Edition) -> DictionaryExtended:
     return DictionaryExtended(
         title=Title("Legacy email (ASCII) parameters"),
-        elements=_elements_ascii(is_cse=edition == Edition.CLOUD),
+        elements=_elements_ascii(is_cloud=edition == Edition.CLOUD),
     )
 
 
-def _elements_ascii(is_cse: bool) -> Mapping[str, DictElement[Any]]:
+def _elements_ascii(is_cloud: bool) -> Mapping[str, DictElement[Any]]:
     return {
-        "from": _from_address_element(is_cse),
+        "from": _from_address_element(is_cloud),
         "reply_to": _reply_to(),
         "host_subject": _host_subject(),
         "service_subject": _service_subject(),
@@ -125,15 +125,15 @@ $LONGSERVICEOUTPUT$
             ),
         ),
         "bulk_sort_order": _bulk_sort_order(),
-        "disable_multiplexing": _disable_multiplexing(is_cse),
+        "disable_multiplexing": _disable_multiplexing(is_cloud),
     }
 
 
-def _header_elements(is_cse: bool) -> dict[str, DictElement[Any]]:
+def _header_elements(is_cloud: bool) -> dict[str, DictElement[Any]]:
     return {
-        "from": _from_address_element(is_cse),
+        "from": _from_address_element(is_cloud),
         "reply_to": _reply_to(),
-        "disable_multiplexing": _disable_multiplexing(is_cse),
+        "disable_multiplexing": _disable_multiplexing(is_cloud),
         "host_subject": _host_subject(),
         "service_subject": _service_subject(),
     }
@@ -329,7 +329,7 @@ def _testing_elements() -> dict[str, DictElement[Any]]:
     }
 
 
-def _from_address_element(is_cse: bool) -> DictElement[Any]:
+def _from_address_element(is_cloud: bool) -> DictElement[Any]:
     return DictElement(
         group=DictGroupExtended(
             title=Title("Email header"),
@@ -352,7 +352,7 @@ def _from_address_element(is_cse: bool) -> DictElement[Any]:
                 ),
             },
         ),
-        render_only=is_cse,
+        render_only=is_cloud,
     )
 
 
@@ -382,7 +382,7 @@ def _reply_to() -> DictElement[Any]:
     )
 
 
-def _disable_multiplexing(is_cse: bool) -> DictElement[Any]:
+def _disable_multiplexing(is_cloud: bool) -> DictElement[Any]:
     return DictElement(
         group=DictGroupExtended(
             title=Title("Email header"),
@@ -406,7 +406,7 @@ def _disable_multiplexing(is_cse: bool) -> DictElement[Any]:
                 "were notified."
             ),
         ),
-        render_only=is_cse,
+        render_only=is_cloud,
     )
 
 

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-import abc
 import time
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
@@ -296,33 +295,30 @@ class _MinType:
         return self is other
 
 
+def _make_columns(
+    hint: NodeDisplayHint,
+    decorate_paint_function: Callable[[PaintFunctionFromAPI], PaintFunctionFromAPI],
+    keys: Iterable[SDKey],
+    key_columns: Sequence[SDKey],
+) -> Sequence[_Column]:
+    needed_keys = set(keys).union(key_columns)
+    return [
+        _Column(
+            key=c,
+            title=h.title,
+            paint_function=decorate_paint_function(h.paint_function),
+            key_info=f"{c}*" if c in key_columns else c,
+        )
+        for c in (list(hint.table.columns) + sorted(needed_keys - set(hint.table.columns)))
+        if c in needed_keys
+        for h in (hint.get_column_hint(c),)
+    ]
+
+
 @dataclass(frozen=True)
-class _ABCItemsSorter(abc.ABC):
+class _SDItemsSorter:
     hint: NodeDisplayHint
     decorate_paint_function: Callable[[PaintFunctionFromAPI], PaintFunctionFromAPI]
-
-    def _make_columns(
-        self, keys: Iterable[SDKey], key_columns: Sequence[SDKey]
-    ) -> Sequence[_Column]:
-        # Always take key columns into account because they identify a row
-        needed_keys = set(keys).union(key_columns)
-        return [
-            _Column(
-                key=c,
-                title=h.title,
-                paint_function=self.decorate_paint_function(h.paint_function),
-                key_info=f"{c}*" if c in key_columns else c,
-            )
-            for c in (
-                list(self.hint.table.columns) + sorted(needed_keys - set(self.hint.table.columns))
-            )
-            if c in needed_keys
-            for h in (self.hint.get_column_hint(c),)
-        ]
-
-
-@dataclass(frozen=True)
-class _SDItemsSorter(_ABCItemsSorter):
     icon_path_svc_problems: str
     attributes: ImmutableAttributes
     table: ImmutableTable
@@ -352,7 +348,12 @@ class _SDItemsSorter(_ABCItemsSorter):
                     yield key
 
     def sort_rows(self) -> tuple[Sequence[_Column], Sequence[Sequence[SDItem]]]:
-        columns = self._make_columns(self._filter_row_keys(), self.table.key_columns)
+        columns = _make_columns(
+            self.hint,
+            self.decorate_paint_function,
+            self._filter_row_keys(),
+            self.table.key_columns,
+        )
 
         def _sort_row(ident: SDRowIdent, row: Mapping[SDKey, SDValue]) -> Sequence[SDItem]:
             return [
@@ -383,7 +384,9 @@ class _SDItemsSorter(_ABCItemsSorter):
 
 
 @dataclass(frozen=True)
-class _SDDeltaItemsSorter(_ABCItemsSorter):
+class _SDDeltaItemsSorter:
+    hint: NodeDisplayHint
+    decorate_paint_function: Callable[[PaintFunctionFromAPI], PaintFunctionFromAPI]
     attributes: ImmutableDeltaAttributes
     table: ImmutableDeltaTable
 
@@ -410,7 +413,12 @@ class _SDDeltaItemsSorter(_ABCItemsSorter):
                 yield from row
 
     def sort_rows(self) -> tuple[Sequence[_Column], Sequence[Sequence[_SDDeltaItem]]]:
-        columns = self._make_columns(self._filter_delta_row_keys(), self.table.key_columns)
+        columns = _make_columns(
+            self.hint,
+            self.decorate_paint_function,
+            self._filter_delta_row_keys(),
+            self.table.key_columns,
+        )
 
         def _sort_row(row: Mapping[SDKey, SDDeltaValue]) -> Sequence[_SDDeltaItem]:
             return [

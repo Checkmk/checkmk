@@ -6,6 +6,7 @@
 
 import textwrap
 from collections.abc import Sequence
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
@@ -78,19 +79,24 @@ def long_getopt_specs(option: Declaration) -> Sequence[str]:
     return [f"{name}{suffix}" for name in (option.long, *sorted(option.deprecated_names))]
 
 
-def help_line(spelled: str, help_text: str, fmt: str) -> str:
-    return textwrap.fill(
-        help_text,
-        width=HELP_WIDTH,
-        initial_indent=fmt % spelled,
-        subsequent_indent=" " * len(fmt % ""),
-    )
+@dataclass(frozen=True)
+class HelpColumn:
+    indent: str
+    width: int
+
+    def fill(self, spelled: str, help_text: str) -> str:
+        return textwrap.fill(
+            help_text,
+            width=HELP_WIDTH,
+            initial_indent=f"{self.indent}{spelled:<{self.width}}",
+            subsequent_indent=" " * (len(self.indent) + self.width),
+        )
 
 
-def short_help_text(option: Declaration, fmt: str) -> str:
+def short_help_text(option: Declaration, column: HelpColumn) -> str:
     argument = placeholder(option)
     spelled = " " + ", ".join(spellings(option)) + ("" if argument is None else f" {argument}")
-    return help_line(spelled, option.help, fmt)
+    return column.fill(spelled, option.help)
 
 
 def read_global_options(options: CLIReader) -> CLIGlobalOptions:

@@ -7,6 +7,7 @@
 import textwrap
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
+from typing import Final
 
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Arguments as CLIArguments
@@ -18,8 +19,8 @@ from cmk.cli.internal import Reader as CLIReader
 from .options import (
     Declaration,
     ENGINE_OPTIONS,
-    help_line,
     HELP_WIDTH,
+    HelpColumn,
     long_getopt_specs,
     placeholder,
     short_getopt_specs,
@@ -28,6 +29,12 @@ from .options import (
 )
 
 type BoundCommand = Callable[[CLIContext, CLIArgs], CLIExitCode]
+
+_COMMAND_COLUMN: Final = HelpColumn(indent=" cmk ", width=36)
+
+_SUB_OPTION_COLUMN: Final = HelpColumn(indent="    ", width=24)
+
+_ENGINE_OPTION_COLUMN: Final = HelpColumn(indent="  ", width=21)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -82,7 +89,7 @@ def _spelled_argument(arguments: CLIArguments | None) -> str:
 
 def _short_help_text(command: DiscoveredCommand) -> str:
     spelled = f" {_spelled(command)}{_spelled_argument(command.arguments)}"
-    return help_line(spelled, command.help, " cmk %-36s")
+    return _COMMAND_COLUMN.fill(spelled, command.help)
 
 
 def _long_help_text(command: DiscoveredCommand) -> str | None:
@@ -101,7 +108,7 @@ def _long_help_text(command: DiscoveredCommand) -> str | None:
     ] or [option_text]
 
     if command.options:
-        sub_texts = [short_help_text(option, "    %-24s") for option in command.options]
+        sub_texts = [short_help_text(option, _SUB_OPTION_COLUMN) for option in command.options]
         text.append("    Additional options:\n\n%s" % "\n".join(sub_texts))
 
     return "\n\n".join(text)
@@ -208,5 +215,5 @@ NOTES:
         return "\n\n".join(sorted(texts, key=_help_order))
 
     def _general_option_help(self) -> str:
-        texts = [short_help_text(option, "  %-21s") for option in ENGINE_OPTIONS]
+        texts = [short_help_text(option, _ENGINE_OPTION_COLUMN) for option in ENGINE_OPTIONS]
         return "\n".join(sorted(texts, key=_help_order))

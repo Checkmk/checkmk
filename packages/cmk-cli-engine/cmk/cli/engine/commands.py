@@ -17,9 +17,8 @@ from cmk.cli.internal import Reader as CLIReader
 
 from .options import (
     Declaration,
-    GENERAL_OPTIONS,
+    ENGINE_OPTIONS,
     help_line,
-    HELP_OPTION,
     HELP_WIDTH,
     long_getopt_specs,
     placeholder,
@@ -114,9 +113,7 @@ def _names(option: Declaration) -> Sequence[str]:
 
 def _map_commands(commands: Sequence[DiscoveredCommand]) -> Mapping[str, DiscoveredCommand]:
     claimants = {
-        name: f"the option {option.long!r}"
-        for option in (HELP_OPTION, *GENERAL_OPTIONS)
-        for name in _names(option)
+        name: f"the option {option.long!r}" for option in ENGINE_OPTIONS for name in _names(option)
     }
     mapped: dict[str, DiscoveredCommand] = {}
     for command in commands:
@@ -168,8 +165,7 @@ class Commands:
         self._command_map = _map_commands(plugins)
         self.default = _default_command(plugins)
         self._options = [
-            HELP_OPTION,
-            *GENERAL_OPTIONS,
+            *ENGINE_OPTIONS,
             *(option for command in plugins for option in command.options),
         ]
         _check_arguments(plugins, self._options)
@@ -212,5 +208,5 @@ NOTES:
         return "\n\n".join(sorted(texts, key=_help_order))
 
     def _general_option_help(self) -> str:
-        texts = [short_help_text(option, "  %-21s") for option in (HELP_OPTION, *GENERAL_OPTIONS)]
+        texts = [short_help_text(option, "  %-21s") for option in ENGINE_OPTIONS]
         return "\n".join(sorted(texts, key=_help_order))

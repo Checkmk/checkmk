@@ -48,6 +48,8 @@ GENERAL_OPTIONS: Final[Sequence[Declaration]] = (
     _LOG_FILE_OPTION,
 )
 
+ENGINE_OPTIONS: Final[Sequence[Declaration]] = (HELP_OPTION, *GENERAL_OPTIONS)
+
 
 def spellings(option: Declaration) -> Sequence[str]:
     return [

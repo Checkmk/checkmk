@@ -23,7 +23,7 @@ def make_command[R](command: CLICommand[R]) -> DiscoveredCommand:
         short=command.short,
         help=command.help,
         arguments=command.arguments,
-        description=command.description or (),
+        description=command.description,
         options=recorded.options,
         bind=partial(bind, command),
         default=command.default,

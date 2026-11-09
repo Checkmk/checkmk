@@ -202,7 +202,7 @@ class Command[R]:
     """Runs the command with its request and returns the exit status"""
     short: str | None = None
     arguments: Arguments | None = None
-    description: Sequence[str] | None = None
+    description: Sequence[str] = ()
     default: bool = False
     """Whether positional arguments without any command select this command"""
 

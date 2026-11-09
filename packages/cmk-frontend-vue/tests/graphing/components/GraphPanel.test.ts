@@ -318,7 +318,7 @@ test('the brush bar shows the committed window, not the range the curves are dra
       metrics: [CPU],
       // A range from some earlier fetch, which is what the panel draws while awaiting data.
       dataTimeRange: { start: 1, end: 2, step: 300 },
-      awaitingData: true,
+      answeredTimeRange: { start: 1, end: 2 },
       requestedTimeRange: REQUESTED,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
@@ -511,6 +511,10 @@ const REQUEST_NARROWER_THAN_A_STEP: RequestedTimeRange = {
   start: SIX_HOURLY_GRID_BOUNDARY + 1_000,
   end: SIX_HOURLY_GRID_BOUNDARY + 1_600
 }
+const PREVIOUS_WINDOW: RequestedTimeRange = {
+  start: SIX_HOURLY_GRID_BOUNDARY - 7 * SIX_HOURS,
+  end: SIX_HOURLY_GRID_BOUNDARY + 7 * SIX_HOURS
+}
 
 function renderPanelServedSixHourly(overrides: Partial<GraphPanelProps> = {}) {
   return render(GraphPanel, {
@@ -539,7 +543,7 @@ test('reports time zoom at its floor once the requested window holds the fewest 
 })
 
 test('does not hold the requested window to the resolution of the data a fetch is replacing', () => {
-  renderPanelServedSixHourly({ awaitingData: true })
+  renderPanelServedSixHourly({ answeredTimeRange: PREVIOUS_WINDOW })
 
   expect(screen.getByTestId('at-min-time-zoom')).toHaveTextContent('false')
 })
@@ -558,7 +562,7 @@ test('leaves a window the served resolution cannot fill where it was asked', () 
 // A fetch, not a gesture, can be what finds the floor. The renderer states it once, on entering:
 // an answer that keeps the window there has nothing new to say.
 test('does not have the renderer state the floor while a fetch is out', () => {
-  renderPanelServedSixHourly({ awaitingData: true })
+  renderPanelServedSixHourly({ answeredTimeRange: PREVIOUS_WINDOW })
 
   expect(screen.getByTestId('max-zoom-hint-requests')).toHaveTextContent('0')
 })
@@ -572,9 +576,9 @@ test('does not have the renderer state the floor of a graph that cannot be zoome
 })
 
 test('has the renderer state the floor once a fetch lands too coarse for the request', async () => {
-  const { rerender } = renderPanelServedSixHourly({ awaitingData: true })
+  const { rerender } = renderPanelServedSixHourly({ answeredTimeRange: PREVIOUS_WINDOW })
 
-  await rerender({ awaitingData: false })
+  await rerender({ answeredTimeRange: REQUEST_NARROWER_THAN_A_STEP })
 
   expect(screen.getByTestId('max-zoom-hint-requests')).toHaveTextContent('1')
 })
@@ -588,23 +592,27 @@ test('has the renderer state the floor for a window mounted at it', async () => 
 test('does not have the floor restated when a refresh answers at the same resolution', async () => {
   const { rerender } = renderPanelServedSixHourly()
 
-  await rerender({ awaitingData: true })
-  await rerender({ awaitingData: false, dataTimeRange: { ...SERVED_SIX_HOURLY } })
+  await rerender({ dataTimeRange: { ...SERVED_SIX_HOURLY } })
 
   expect(screen.getByTestId('max-zoom-hint-requests')).toHaveTextContent('1')
 })
 
 test('has the floor stated again once a later fetch lands the window back at it', async () => {
-  const { rerender } = renderPanelServedSixHourly()
+  const { rerender } = renderPanelServedSixHourly({
+    answeredTimeRange: REQUEST_NARROWER_THAN_A_STEP
+  })
   const wideEnough: RequestedTimeRange = {
     start: SIX_HOURLY_GRID_BOUNDARY,
     end: SIX_HOURLY_GRID_BOUNDARY + 4 * SIX_HOURS
   }
 
-  await rerender({ awaitingData: true, requestedTimeRange: wideEnough })
-  await rerender({ awaitingData: false, dataTimeRange: { ...SERVED_SIX_HOURLY } })
-  await rerender({ awaitingData: true, requestedTimeRange: REQUEST_NARROWER_THAN_A_STEP })
-  await rerender({ awaitingData: false, dataTimeRange: { ...SERVED_SIX_HOURLY } })
+  await rerender({ requestedTimeRange: wideEnough })
+  await rerender({ answeredTimeRange: wideEnough, dataTimeRange: { ...SERVED_SIX_HOURLY } })
+  await rerender({ requestedTimeRange: REQUEST_NARROWER_THAN_A_STEP })
+  await rerender({
+    answeredTimeRange: REQUEST_NARROWER_THAN_A_STEP,
+    dataTimeRange: { ...SERVED_SIX_HOURLY }
+  })
 
   expect(screen.getByTestId('max-zoom-hint-requests')).toHaveTextContent('2')
 })
@@ -873,7 +881,6 @@ test('draws the window its data was fetched for while a newer one is fetched', (
       dataTimeRange: { start: REQUESTED.start - 300, end: REQUESTED.end + 300, step: 300 },
       answeredTimeRange: REQUESTED,
       requestedTimeRange: { start: 100, end: 200 },
-      awaitingData: true,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE
@@ -1352,7 +1359,7 @@ test('keeps the all-hidden message up while a refetch is out', () => {
       metrics: [CPU, MEM],
       dataTimeRange: TIME_RANGE,
       requestedTimeRange: REQUESTED,
-      awaitingData: true,
+      answeredTimeRange: { start: REQUESTED.start - 3_600, end: REQUESTED.end - 3_600 },
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE,
@@ -1471,7 +1478,7 @@ describe('a panel of bar metrics', () => {
       binUnit: 'hour',
       requestedTimeRange: { start: NOW - span, end: NOW },
       dataTimeRange: { start: NOW - span - step, end: NOW + step, step },
-      awaitingData
+      answeredTimeRange: awaitingData ? { start: NOW - step, end: NOW } : undefined
     })
 
     expect(screen.getByTestId('at-min-time-zoom')).toHaveTextContent(String(atFloor))

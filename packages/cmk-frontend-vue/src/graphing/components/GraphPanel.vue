@@ -21,7 +21,12 @@ import type {
   TimeRange,
   TimeRangeCommitKind
 } from '../types.ts'
-import { binnedTimeAxis, committedTimeRange, continuousTimeAxis } from '../utils/timeRange'
+import {
+  binnedTimeAxis,
+  committedTimeRange,
+  continuousTimeAxis,
+  sameRequestedTimeRange
+} from '../utils/timeRange'
 import GraphBrush from './GraphBrush/GraphBrush.vue'
 import TimeSeriesGraph, { type ZoomPayload } from './TimeSeriesGraph'
 import { deriveYAxis } from './TimeSeriesGraph/yAxis'
@@ -145,7 +150,11 @@ const anyMetricShown = computed(() => visibleMetrics.value.some((metric) => !met
 
 const requestedSpan = computed(() => props.requestedTimeRange.end - props.requestedTimeRange.start)
 
-const servedForRequest = computed(() => (props.awaitingData ? undefined : props.dataTimeRange))
+const servedForRequest = computed(() =>
+  sameRequestedTimeRange(answeredTimeRange.value, props.requestedTimeRange)
+    ? props.dataTimeRange
+    : undefined
+)
 
 const zoomFloor = computed(() => timeAxis.value.zoomFloor(servedForRequest.value))
 

@@ -378,7 +378,6 @@ function onRetry(index: number): void {
           :requested-time-range="requestedTimeRange"
           :answered-time-range="graph.requestedTimeRange"
           :failed-time-range="entry.load.failedTimeRange"
-          :awaiting-data="entry.load.isLoading"
           :panel-key="entry.index"
           :range-change="rangeChange"
           :y-axis="entry.definition.options.y_axis"

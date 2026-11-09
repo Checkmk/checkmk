@@ -112,7 +112,6 @@ export interface GraphPanelProps {
   answeredTimeRange?: RequestedTimeRange | undefined
   // The requested range whose fetch failed, until the next fetch goes out.
   failedTimeRange?: RequestedTimeRange | undefined
-  awaitingData?: boolean | undefined
   // Identifies this panel as the source of its own range commits.
   panelKey: PanelKey
   // The latest change to requestedTimeRange and who made it; absent until the first one.

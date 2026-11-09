@@ -954,7 +954,7 @@ class TestScheduleDowntimes:
         mock_livestatus.add_table("hosts", [{"name": "otherhost"}], site="remote")
         mock_livestatus.add_table("hosts", [{"name": "thirdhost"}], site="NO_SITE")
         mock_livestatus.expect_query(
-            ["GET hosts", "Columns: name"], sites=expected_sites
+            ["GET hosts", "Columns: name", f"AuthUser: {with_user[0]}"], sites=expected_sites
         )
 
         with mock_livestatus(), time_machine.travel(datetime(2029, 1, 1), tick=False):
@@ -995,7 +995,7 @@ class TestScheduleDowntimes:
             "hosts", [{"name": name} for name in visible_hosts[1:]], site="remote"
         )
         mock_livestatus.expect_query(
-            ["GET hosts", "Columns: name"], sites=["local", "remote"]
+            ["GET hosts", "Columns: name", f"AuthUser: {with_user[0]}"], sites=["local", "remote"]
         )
 
         with (

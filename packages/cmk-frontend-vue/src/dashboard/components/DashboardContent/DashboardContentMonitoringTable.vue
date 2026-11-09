@@ -9,6 +9,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, watch } from 'vue'
 
 import { useInjectCmkToken } from '@/dashboard/composables/useCmkToken'
+import { useInjectIsPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
 import { useWidgetData } from '@/dashboard/composables/useWidgetData'
 import { useWidgetSource } from '@/dashboard/composables/useWidgetSource'
 import type {
@@ -88,9 +89,12 @@ function unappliedHint(value: ComputedMonitoringTable): string {
   })
 }
 
-// The wizard preview has no click shield, so that it scrolls: its links must not navigate away.
-function blockLinksInPreview(event: MouseEvent): void {
-  if (props.isPreview && event.target instanceof Element && event.target.closest('a')) {
+// The wizard preview has no click shield, so that it scrolls, and the viewer of a shared
+// dashboard cannot open the pages the rows link to: in neither may the links navigate away.
+const blocksLinks = props.isPreview || useInjectIsPublicDashboard()
+
+function blockLinks(event: MouseEvent): void {
+  if (blocksLinks && event.target instanceof Element && event.target.closest('a')) {
     event.preventDefault()
   }
 }
@@ -110,8 +114,8 @@ function truncatedHint(value: ComputedMonitoringTable): string {
     <template #default="{ value }">
       <div
         class="db-content-monitoring-table"
-        @click.capture="blockLinksInPreview"
-        @auxclick.capture="blockLinksInPreview"
+        @click.capture="blockLinks"
+        @auxclick.capture="blockLinks"
       >
         <CmkAlert
           v-if="value.unreachable_sites.length > 0"

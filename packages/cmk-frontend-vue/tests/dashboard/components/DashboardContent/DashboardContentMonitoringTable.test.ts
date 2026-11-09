@@ -13,6 +13,7 @@ import { defineComponent, h, nextTick } from 'vue'
 
 import DashboardContentMonitoringTable from '@/dashboard/components/DashboardContent/DashboardContentMonitoringTable.vue'
 import { useProvideCmkToken } from '@/dashboard/composables/useCmkToken'
+import { useProvideIsPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
 import type { ComputedMonitoringTable, MonitoringTableContent } from '@/dashboard/types/widget'
 import type { HostOverview } from '@/monitoring/shared/api/types'
 import { CHECK_POLL_INTERVAL_MS } from '@/monitoring/shared/components/action/actions/reschedule'
@@ -193,11 +194,12 @@ async function renderWidget(content: MonitoringTableContent = CONTENT) {
   return rendered
 }
 
-async function renderInSharedDashboard() {
+async function renderInSharedDashboard(content: MonitoringTableContent = CONTENT) {
   const wrapper = defineComponent({
     setup() {
       useProvideCmkToken(CMK_TOKEN)
-      return () => h(DashboardContentMonitoringTable, makeContentProps(CONTENT))
+      useProvideIsPublicDashboard()
+      return () => h(DashboardContentMonitoringTable, makeContentProps(content))
     }
   })
   const rendered = render(wrapper)
@@ -543,6 +545,32 @@ describe('DashboardContentMonitoringTable', () => {
     await screen.findByText('heute')
 
     expect(screen.queryByRole('button', { name: 'More actions' })).not.toBeInTheDocument()
+  })
+
+  it('keeps its links from navigating away in a shared dashboard', async () => {
+    value = { ...VALUE, rows: [{ ...VALUE.rows[0]!, num_services: 3 }] }
+    await renderInSharedDashboard({ ...CONTENT, columns: ['name', 'num_services'] })
+
+    const click = new MouseEvent('click', { bubbles: true, cancelable: true })
+    ;(await screen.findByRole('link', { name: '3' })).dispatchEvent(click)
+
+    expect(click.defaultPrevented).toBe(true)
+  })
+
+  it('lets its links navigate on a dashboard of the logged-in user', async () => {
+    value = { ...VALUE, rows: [{ ...VALUE.rows[0]!, num_services: 3 }] }
+    await renderWidget({ ...CONTENT, columns: ['name', 'num_services'] })
+
+    let blocked: boolean | undefined
+    const recordAndStopNavigation = (event: Event) => {
+      blocked = event.defaultPrevented
+      event.preventDefault()
+    }
+    window.addEventListener('click', recordAndStopNavigation)
+    ;(await screen.findByRole('link', { name: '3' })).click()
+    window.removeEventListener('click', recordAndStopNavigation)
+
+    expect(blocked).toBe(false)
   })
 
   it('asks by widget ID with the token of a shared dashboard', async () => {

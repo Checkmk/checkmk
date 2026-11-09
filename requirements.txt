@@ -1950,9 +1950,7 @@ httplib2==0.32.1 \
 httpx==0.28.1 \
     --hash=sha256:75e98c5f16b0f35b567856f597f06ff2270a374470a5c2392242528e3e3e42fc \
     --hash=sha256:d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad
-    # via
-    #   -r packages/cmk-maps/requirements.in
-    #   meraki
+    # via meraki
 httpx2==2.16.0 \
     --hash=sha256:0d54c98128e8f2ff7fbbde0fca8c359e5f032edeaaaac443cdb7f31f685bcd7f \
     --hash=sha256:fd2c5d7909e8d86fe92d53020c310ca0e4e431b838c207c5754b9bbf0308d49a
@@ -1964,6 +1962,7 @@ httpx2==2.16.0 \
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-fastapi/dev-requirements.in
     #   -r packages/cmk-fastapi/requirements.in
+    #   -r packages/cmk-maps/requirements.in
     #   anthropic
     #   genai-prices
     #   mcp

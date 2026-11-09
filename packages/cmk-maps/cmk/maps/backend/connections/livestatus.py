@@ -31,7 +31,7 @@ if TYPE_CHECKING:
         SiteConfiguration,
     )
 
-import httpx
+import httpx2
 
 from cmk.ccc.site import SiteId
 from cmk.livestatus_client import ConnectedSite, lqencode, MKLivestatusQueryError
@@ -1214,7 +1214,7 @@ class LivestatusConnection(ConnectionBase):
         series: dict[str, list[tuple[float, float, str]]] = {}
         titles: dict[str, str] = {}
         try:
-            async with httpx.AsyncClient(verify=self._rest_tls, timeout=self._timeout) as client:
+            async with httpx2.AsyncClient(verify=self._rest_tls, timeout=self._timeout) as client:
                 for metric_id in metric_names[:5]:
                     body = {
                         "time_range": {"start": start_dt, "end": end_dt},
@@ -1285,7 +1285,7 @@ class LivestatusConnection(ConnectionBase):
         # columns in the JSON body.
         url = base_url + "/api/1.0/domain-types/service/collections/all"
         try:
-            async with httpx.AsyncClient(verify=self._rest_tls, timeout=self._timeout) as client:
+            async with httpx2.AsyncClient(verify=self._rest_tls, timeout=self._timeout) as client:
                 resp = await client.post(
                     url,
                     headers={

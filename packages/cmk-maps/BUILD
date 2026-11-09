@@ -55,7 +55,7 @@ py_library(
         "//packages/cmk-livestatus-client:py_livestatus",
         "//packages/cmk-trace",
         requirement("fastapi"),
-        requirement("httpx"),
+        requirement("httpx2"),
         requirement("opentelemetry-instrumentation-fastapi"),
         requirement("pydantic"),
         requirement("starlette"),
@@ -204,7 +204,7 @@ py_wheel(
     distribution = "cmk-maps",
     requires = [
         "fastapi",
-        "httpx",
+        "httpx2",
         "opentelemetry-instrumentation-fastapi",
         "pydantic",
         "starlette",

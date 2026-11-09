@@ -1422,7 +1422,6 @@ httpx==0.28.1 \
     --hash=sha256:d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad
     # via
     #   -c requirements.txt
-    #   -r packages/cmk-maps/requirements.in
     #   meraki
 httpx2==2.16.0 \
     --hash=sha256:0d54c98128e8f2ff7fbbde0fca8c359e5f032edeaaaac443cdb7f31f685bcd7f \
@@ -1434,6 +1433,7 @@ httpx2==2.16.0 \
     #   -r non-free/packages/cmk-relay-engine/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-fastapi/requirements.in
+    #   -r packages/cmk-maps/requirements.in
     #   anthropic
     #   genai-prices
     #   mcp

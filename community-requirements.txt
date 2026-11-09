@@ -1894,7 +1894,6 @@ httpx==0.28.1 \
     --hash=sha256:d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad
     # via
     #   -c requirements.txt
-    #   -r packages/cmk-maps/requirements.in
     #   meraki
 httpx2==2.16.0 \
     --hash=sha256:0d54c98128e8f2ff7fbbde0fca8c359e5f032edeaaaac443cdb7f31f685bcd7f \
@@ -1903,6 +1902,7 @@ httpx2==2.16.0 \
     #   -c requirements.txt
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-fastapi/requirements.in
+    #   -r packages/cmk-maps/requirements.in
 hypothesis==6.170.14 \
     --hash=sha256:033aca79fd3f9a6e15402dfddbc988141d43eae38d26a5fc554f6879f7e0e5f9 \
     --hash=sha256:03831d833b161b9b7a32f0b607205293954f3a651196c80138804b9479845d71 \

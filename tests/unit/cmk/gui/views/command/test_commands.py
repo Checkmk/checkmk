@@ -328,6 +328,7 @@ HOST_ROW: Row = {"site": "local", "host_name": "myhost"}
 SERVICE_ROW: Row = {"site": "local", "host_name": "myhost", "service_description": "CPU load"}
 AGGREGATION_ROW: Row = {
     "aggr_id": "Hosts",
+    "aggr_hosts": [("local", "myhost"), ("remote", "otherhost")],
     "aggr_tree": {
         "type": 2,
         "nodes": [
@@ -915,6 +916,128 @@ class TestScheduleDowntimes:
                 ),
             ),
         ]
+
+    @pytest.mark.parametrize(
+        "action_rows, expected_sites",
+        [
+            pytest.param([AGGREGATION_ROW], ["local", "remote"], id="one aggregation"),
+            pytest.param(
+                [
+                    AGGREGATION_ROW,
+                    {"aggr_hosts": [("remote", "otherhost"), ("NO_SITE", "thirdhost")]},
+                ],
+                ["local", "remote", "NO_SITE"],
+                id="multiple aggregations with shared sites",
+            ),
+        ],
+    )
+    @pytest.mark.usefixtures("request_context")
+    def test_aggregation_host_downtimes_query_visibility_on_all_selected_sites(
+        self,
+        with_user: tuple[UserId, str],
+        mock_livestatus: MockLiveStatusConnection,
+        monkeypatch: pytest.MonkeyPatch,
+        action_rows: Rows,
+        expected_sites: list[str],
+    ) -> None:
+        self._submit("_down_host")
+        queried_sites: list[list[SiteId] | None] = []
+        hosts_user_can_see = commands.hosts_user_can_see
+
+        def query_visible_hosts(users_sites: list[SiteId] | None = None) -> Sequence[str]:
+            queried_sites.append(users_sites)
+            return hosts_user_can_see(users_sites=users_sites)
+
+        # Record the legacy visibility boundary while keeping the real Livestatus query.
+        monkeypatch.setattr(commands, "hosts_user_can_see", query_visible_hosts)
+        mock_livestatus.add_table("hosts", [{"name": "myhost"}], site="local")
+        mock_livestatus.add_table("hosts", [{"name": "otherhost"}], site="remote")
+        mock_livestatus.add_table("hosts", [{"name": "thirdhost"}], site="NO_SITE")
+        mock_livestatus.expect_query(
+            ["GET hosts", "Columns: name"], sites=expected_sites
+        )
+
+        with mock_livestatus(), time_machine.travel(datetime(2029, 1, 1), tick=False):
+            issued = _issue(
+                with_user[0], ["action.downtimes"], "aggr", AGGREGATION_ROW, action_rows
+            )
+
+        assert len(issued) == 2
+        assert len(queried_sites) == 1
+        assert queried_sites[0] is not None
+        assert sorted(queried_sites[0]) == sorted(expected_sites)
+        assert [entry[0] for entry in issued if isinstance(entry, tuple)] == [
+            SiteId("local"),
+            SiteId("remote"),
+        ]
+
+    @pytest.mark.parametrize("what, row", [("host", HOST_ROW), ("service", SERVICE_ROW)])
+    @pytest.mark.parametrize("visible_hosts", [["myhost", "otherhost"], ["myhost"], []])
+    @pytest.mark.usefixtures("request_context")
+    def test_host_downtimes_count_only_distinct_visible_hosts(
+        self,
+        with_user: tuple[UserId, str],
+        mock_livestatus: MockLiveStatusConnection,
+        what: str,
+        row: Row,
+        visible_hosts: list[str],
+    ) -> None:
+        self._submit("_down_host")
+        action_rows = [
+            row,
+            row,
+            {"site": "remote", "host_name": "otherhost"},
+        ]
+        mock_livestatus.add_table(
+            "hosts", [{"name": name} for name in visible_hosts[:1]], site="local"
+        )
+        mock_livestatus.add_table(
+            "hosts", [{"name": name} for name in visible_hosts[1:]], site="remote"
+        )
+        mock_livestatus.expect_query(
+            ["GET hosts", "Columns: name"], sites=["local", "remote"]
+        )
+
+        with (
+            mock_livestatus(),
+            time_machine.travel(datetime(2029, 1, 1), tick=False),
+            logged_in(with_user[0], "action.downtimes"),
+        ):
+            issued, _options, dialog, _executor = core_command(what, row, 0, action_rows)
+
+        assert str(dialog.affected) == f"Affected hosts: {len(visible_hosts)}"
+        assert len(issued) == len(visible_hosts[:1])
+        assert [
+            command.host_name for command in issued if isinstance(command, ScheduleHostDowntime)
+        ] == visible_hosts[:1]
+
+    @pytest.mark.usefixtures("request_context")
+    def test_unrestricted_aggregation_host_downtimes_do_not_query_visibility(
+        self, with_user: tuple[UserId, str], mock_livestatus: MockLiveStatusConnection
+    ) -> None:
+        self._submit("_down_host")
+
+        with mock_livestatus(expect_status_query=False):
+            issued = self._schedule(with_user[0], "aggr", AGGREGATION_ROW)
+
+        assert len(issued) == 2
+
+    @pytest.mark.usefixtures("request_context")
+    def test_service_downtimes_do_not_query_host_visibility(
+        self, with_user: tuple[UserId, str], mock_livestatus: MockLiveStatusConnection
+    ) -> None:
+        self._submit("_down_service")
+
+        with (
+            mock_livestatus(expect_status_query=False),
+            time_machine.travel(datetime(2029, 1, 1), tick=False),
+        ):
+            issued = _issue(with_user[0], ["action.downtimes"], "service", SERVICE_ROW)
+
+        assert len(issued) == 1
+        assert isinstance(issued[0], ScheduleServiceDowntime)
+        assert issued[0].host_name == "myhost"
+        assert issued[0].description == "CPU load"
 
     @pytest.mark.usefixtures("request_context")
     def test_child_hosts_go_into_downtime_when_asked_for(

@@ -2009,9 +2009,18 @@ class CommandScheduleDowntimesForm:
             # as an approximation. This is good enough to count the affected hosts.
 
             if not user.may("general.see_all"):
-                user_hosts = hosts_user_can_see(
-                    users_sites=list({SiteId(row["site"]) for row in action_rows})
-                )
+                if downtime_from_bi_aggregation:
+                    # BI rows can refer to multiple sites and have no top-level "site".
+                    users_sites = list(
+                        {
+                            SiteId(site_id)
+                            for action_row in action_rows
+                            for site_id, _hostname in action_row["aggr_hosts"]
+                        }
+                    )
+                else:
+                    users_sites = list({SiteId(action_row["site"]) for action_row in action_rows})
+                user_hosts = hosts_user_can_see(users_sites=users_sites)
                 specs = [spec for spec in specs if spec in user_hosts]
                 if downtime_from_bi_aggregation:
                     action_rows = [

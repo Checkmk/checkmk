@@ -464,12 +464,12 @@ def test_profiling_is_enabled_on_request() -> None:
     assert len(enabled.calls) == 1
 
 
-def test_the_profile_is_written_below_the_site() -> None:
+def test_the_profile_is_written_for_the_site() -> None:
     written = Recorder()
 
     _run(["cmk", "--help"], _runtime(write_profile=written))
 
-    assert written.calls == [_SITE / "var/check_mk/web"]
+    assert written.calls == [_SITE]
 
 
 def test_the_profile_is_written_even_when_the_command_raises() -> None:

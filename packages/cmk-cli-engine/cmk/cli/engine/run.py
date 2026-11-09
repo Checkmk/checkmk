@@ -135,4 +135,4 @@ def run(
             debug=request.global_options.debug,
         ).value
     finally:
-        runtime.write_profile(omd_root / "var/check_mk/web")
+        runtime.write_profile(omd_root)

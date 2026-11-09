@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable
-from pathlib import PurePosixPath
 
 from cmk.diagnostics.internal import (
     CollectContext,
@@ -16,25 +15,28 @@ from cmk.diagnostics.internal import (
     Topic,
     VerbatimCopy,
 )
-from cmk.profiling.backend import PROFILE_ID_RE, PROFILE_SUFFIXES
+from cmk.profiling.backend import (
+    PROFILE_ID_RE,
+    PROFILE_SUFFIXES,
+    profiles_dir,
+    PROFILES_RELATIVE_DIR,
+)
 
 # Shared with the diagnostics plugin family; topics compare by value.
 _TOPIC_PERFORMANCE = Topic("Performance & sizing")
 
-_PROFILES_REL_DIR = PurePosixPath("var/check_mk/profiles")
-
 
 def _collect_gui_profiles(context: CollectContext) -> Iterable[DumpItem]:
-    profiles_dir = context.omd_root / "var/check_mk/profiles"
+    directory = profiles_dir(context.omd_root)
     packed = False
-    if profiles_dir.is_dir():
-        for source in sorted(profiles_dir.iterdir()):
+    if directory.is_dir():
+        for source in sorted(directory.iterdir()):
             if not source.is_file() or source.suffix not in PROFILE_SUFFIXES:
                 continue
             if not PROFILE_ID_RE.match(source.name.split(".", 1)[0]):
                 continue
             packed = True
-            yield DumpItem(_PROFILES_REL_DIR / source.name, VerbatimCopy(source))
+            yield DumpItem(PROFILES_RELATIVE_DIR / source.name, VerbatimCopy(source))
     if not packed:
         raise CollectInfo("No profiles found")
 

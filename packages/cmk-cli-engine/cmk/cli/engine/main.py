@@ -91,6 +91,10 @@ def tracing(environ: Mapping[str, str]) -> CommandTracer:
     return traced
 
 
+def _write_profile(omd_root: Path) -> None:
+    profiling.output_profile(profiling.profiles_dir(omd_root))
+
+
 def main() -> int:
     match os.environ.get("OMD_ROOT"):
         case None:
@@ -106,6 +110,6 @@ def main() -> int:
                     crash_reporter_for=saving_crash_reporter,
                     enable_profiling=profiling.enable,
                     log_to_file=enable_file_logging,
-                    write_profile=profiling.output_profile,
+                    write_profile=_write_profile,
                 ),
             )

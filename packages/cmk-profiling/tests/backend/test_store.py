@@ -23,6 +23,7 @@ from cmk.profiling.backend import (
     PROFILE_ID_RE,
     PROFILE_SUFFIXES,
     ProfileMetadata,
+    profiles_dir,
     write_profile,
 )
 
@@ -254,3 +255,9 @@ def test_profile_metadata_from_json(store_dir: Path) -> None:
     meta = ProfileMetadata.from_json(path)
     assert meta.source_type == "file_upload"
     assert meta.duration_ms is None
+
+
+def test_the_profiles_live_where_the_gui_lists_them() -> None:
+    assert profiles_dir(Path("/omd/sites/mysite")) == Path(
+        "/omd/sites/mysite/var/check_mk/profiles"
+    )

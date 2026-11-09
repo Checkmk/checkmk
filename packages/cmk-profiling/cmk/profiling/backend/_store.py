@@ -23,10 +23,17 @@ import re
 import uuid
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
-from pathlib import Path
-from typing import Literal, TypedDict
+from pathlib import Path, PurePosixPath
+from typing import Final, Literal, TypedDict
 
 from cmk.ccc.store import save_bytes_to_file, save_text_to_file
+
+PROFILES_RELATIVE_DIR: Final = PurePosixPath("var/check_mk/profiles")
+
+
+def profiles_dir(omd_root: Path) -> Path:
+    return omd_root / PROFILES_RELATIVE_DIR
+
 
 logger = logging.getLogger(__name__)
 

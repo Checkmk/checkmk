@@ -351,6 +351,7 @@ def test_registered_configvars() -> None:
             "reporting_view_limit",
             "ai_control_plane_provider",
             "ai_control_plane_instructions",
+            "ai_control_plane_send_usage_data",
             "site_ai_control_plane",
             "site_liveproxyd",
             "site_mcp_server",

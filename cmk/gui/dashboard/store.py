@@ -265,7 +265,8 @@ def migrate_dashboard_config(dashboard: MaybeOldDashboardConfig) -> DashboardCon
                 _migrate_alert_overview_time_range(
                     migrate_widget_time_range(
                         _migrate_inventory_link(
-                            _migrate_metric_time_range(widget), dashboard.get("owner")
+                            _migrate_metric_time_range(_migrate_status_display(widget)),
+                            dashboard.get("owner"),
                         )
                     )
                 )
@@ -281,6 +282,17 @@ def migrate_dashboard_config(dashboard: MaybeOldDashboardConfig) -> DashboardCon
         dashboard["embedded_views"] = embedded_views
 
     return dashboard
+
+
+def _migrate_status_display(widget: DashletConfig) -> DashletConfig:
+    if widget["type"] not in _METRIC_TIME_RANGE_TYPES:
+        return widget
+    raw = cast(dict[str, object], widget)
+    if "svc_status_display" not in raw:
+        return widget
+    migrated = {key: value for key, value in raw.items() if key != "svc_status_display"}
+    migrated.setdefault("status_display", raw["svc_status_display"])
+    return cast(DashletConfig, migrated)
 
 
 _METRIC_TIME_RANGE_TYPES = frozenset({"gauge", "single_metric"})

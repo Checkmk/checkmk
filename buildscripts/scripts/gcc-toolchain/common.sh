@@ -3,6 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# The variables are used by the scripts that source this file.
+# shellcheck disable=SC2034
+
 # BASH_SOURCE, not $0 or git rev-parse: resolves correctly however this is invoked.
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 GCC_TOOLCHAIN_DIR="${REPO_ROOT}/buildscripts/scripts/gcc-toolchain"

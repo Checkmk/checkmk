@@ -515,6 +515,7 @@ sh_library(
         "buildscripts/infrastructure/build-nodes/scripts/install-docker.sh",
         "buildscripts/infrastructure/build-nodes/scripts/install-gdb.sh",
         "buildscripts/infrastructure/build-nodes/scripts/install-gnu-toolchain.sh",
+        "buildscripts/infrastructure/build-nodes/scripts/install-lz4-parallel.sh",
         "buildscripts/infrastructure/build-nodes/scripts/install-make-dist-deps.sh",
         "buildscripts/infrastructure/build-nodes/scripts/install-openssl.sh",
         "buildscripts/infrastructure/build-nodes/scripts/install-packer.sh",

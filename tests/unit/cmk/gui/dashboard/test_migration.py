@@ -538,6 +538,22 @@ class TestMigrateMetricTimeRange:
         assert result["widgets"]["w1"]["time_range"] == ("age", 3600)  # type: ignore[typeddict-item]
 
 
+class TestMigrateStatusDisplay:
+    @pytest.mark.xfail(strict=True, raises=KeyError, reason="crash group 4800")
+    def test_a_stored_service_status_display_becomes_the_status_display(self) -> None:
+        dashboard = _responsive_dashboard(
+            {
+                "type": "single_metric",
+                "metric": "uptime",
+                "svc_status_display": ("background", "all"),
+            }
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["status_display"] == ("background", "all")  # type: ignore[typeddict-item]
+
+
 class TestMigrateAlertOverviewTimeRange:
     def test_a_stored_timerange_becomes_a_fixed_window(self) -> None:
         dashboard = _responsive_dashboard({"type": "alert_overview", "time_range": ("age", 3600)})

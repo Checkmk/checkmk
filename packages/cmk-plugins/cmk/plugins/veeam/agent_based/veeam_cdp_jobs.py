@@ -37,8 +37,6 @@ class CDPJob(NamedTuple):
     state: CDPState
     raw_state: str
     last_restore_point: float | None
-    last_session_result: str | None
-    last_session_end: float | None
 
 
 STATE_MAPPING: Mapping[CDPState, State] = {
@@ -48,12 +46,6 @@ STATE_MAPPING: Mapping[CDPState, State] = {
     CDPState.STOPPED: State.CRIT,
     CDPState.DISABLED: State.OK,
     CDPState.UNKNOWN: State.UNKNOWN,
-}
-
-LAST_RESULT_MAPPING: Mapping[str, State] = {
-    "Success": State.OK,
-    "Warning": State.WARN,
-    "Failed": State.CRIT,
 }
 
 Section = Mapping[str, CDPJob]
@@ -90,30 +82,19 @@ def _parse_state(raw_state: str) -> CDPState:
 
 def _parse_line(line: Sequence[str]) -> CDPJob:
     # The second field used to hold the next run, which CDP policies don't have.
-    # Older agent plugins send 3 fields, or 5 with the policy's result, which is always None.
-    match line:
-        case [name, _next_run, state, last_restore_point, last_session_result, last_session_end]:
-            pass
-        case [name, _next_run, state, last_restore_point, _policy_result]:
-            last_session_result, last_session_end = "null", "null"
-        case [name, _next_run, state]:
-            last_restore_point, last_session_result, last_session_end = "null", "null", "null"
-        case _:
-            raise ValueError(line)
+    # Older agent plugins send 3 fields, or further fields that are no longer used.
+    name, _next_run, state, *rest = line
     return CDPJob(
         name,
         _parse_state(state),
         state,
-        _parse_timestamp(last_restore_point),
-        None if last_session_result in ("null", "None", "") else last_session_result,
-        _parse_timestamp(last_session_end),
+        _parse_timestamp(rest[0]) if rest else None,
     )
 
 
 def parse_veeam_cdp_jobs(string_table: StringTable) -> Section:
     return {
-        job.name: job
-        for job in (_parse_line(line) for line in string_table if len(line) in (3, 5, 6))
+        job.name: job for job in (_parse_line(line) for line in string_table if 3 <= len(line) <= 6)
     }
 
 
@@ -143,18 +124,6 @@ def check_veeam_cdp_jobs_at(
         state=STATE_MAPPING.get(cdp.state, State.UNKNOWN),
         summary=f"State: {cdp.raw_state}",
     )
-
-    if cdp.last_session_result is not None:
-        text = f"Last session: {cdp.last_session_result}"
-        if cdp.last_session_end is not None:
-            text += f", ended {render.datetime(cdp.last_session_end)}"
-        if cdp.state is CDPState.DISABLED:
-            yield Result(state=State.OK, notice=text)
-        else:
-            yield Result(
-                state=LAST_RESULT_MAPPING.get(cdp.last_session_result, State.UNKNOWN),
-                summary=text,
-            )
 
     if cdp.last_restore_point is None or cdp.state is CDPState.DISABLED:
         return

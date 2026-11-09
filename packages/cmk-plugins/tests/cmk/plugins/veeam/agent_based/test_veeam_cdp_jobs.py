@@ -10,7 +10,6 @@ from cmk.agent_based.v2 import (
     DiscoveryResult,
     IgnoreResults,
     Metric,
-    render,
     Result,
     Service,
     State,
@@ -19,7 +18,6 @@ from cmk.agent_based.v2 import (
 from cmk.plugins.veeam.agent_based import veeam_cdp_jobs
 
 NOW = 1787847600
-SESSION_END = NOW - 3600
 PARAMS = veeam_cdp_jobs.CheckParams(age=("fixed", (60.0, 120.0)))
 
 
@@ -32,7 +30,7 @@ def test_discovery() -> None:
     string_table: StringTable = [
         ["Job 1", "null", "Running"],
         ["Job 2", "null", "Running", "null", "null"],
-        ["Job 3", "null", "Running", "null", "null", "null"],
+        ["Job 3", "null", "Running", "null"],
     ]
     expected: DiscoveryResult = [
         Service(item="Job 1"),
@@ -53,13 +51,9 @@ def test_disabled_cdp_jobs_are_not_discovered_when_configured() -> None:
     assert list(veeam_cdp_jobs.discovery_veeam_cdp_jobs(params, section)) == [Service(item="Job 1")]
 
 
-def test_recent_restore_point_and_successful_session() -> None:
-    assert _check(["Job", "null", "Running", str(NOW - 30), "Success", str(SESSION_END)]) == [
+def test_recent_restore_point() -> None:
+    assert _check(["Job", "null", "Running", str(NOW - 30)]) == [
         Result(state=State.OK, summary="State: Running"),
-        Result(
-            state=State.OK,
-            summary=f"Last session: Success, ended {render.datetime(SESSION_END)}",
-        ),
         Result(state=State.OK, summary="Time since last long-term restore point: 30 seconds"),
     ]
 
@@ -86,11 +80,11 @@ def test_recent_restore_point_and_successful_session() -> None:
     ],
 )
 def test_restore_point_age_levels(age: int, expected: Result) -> None:
-    assert _check(["Job", "null", "Running", str(NOW - age), "null", "null"])[-1] == expected
+    assert _check(["Job", "null", "Running", str(NOW - age)])[-1] == expected
 
 
 def test_restore_point_in_the_future_warns() -> None:
-    assert _check(["Job", "null", "Running", str(NOW + 60), "null", "null"])[-1] == Result(
+    assert _check(["Job", "null", "Running", str(NOW + 60)])[-1] == Result(
         state=State.WARN,
         summary=(
             "The last long-term restore point is in the future. "
@@ -99,47 +93,29 @@ def test_restore_point_in_the_future_warns() -> None:
     )
 
 
-@pytest.mark.parametrize(
-    "last_result, state",
-    [("Success", State.OK), ("Warning", State.WARN), ("Failed", State.CRIT)],
-)
-def test_last_session_result(last_result: str, state: State) -> None:
-    assert _check(["Job", "null", "Running", "null", last_result, "null"]) == [
-        Result(state=State.OK, summary="State: Running"),
-        Result(state=state, summary=f"Last session: {last_result}"),
-    ]
-
-
-def test_unmodelled_last_session_result_is_unknown() -> None:
-    assert _check(["Job", "null", "Running", "null", "Running", "null"]) == [
-        Result(state=State.OK, summary="State: Running"),
-        Result(state=State.UNKNOWN, summary="Last session: Running"),
-    ]
-
-
 def test_disabled_policy_is_not_age_checked() -> None:
-    assert _check(["Job", "null", "Disabled", str(NOW - 365 * 86400), "Success", "null"]) == [
+    assert _check(["Job", "null", "Disabled", str(NOW - 365 * 86400)]) == [
         Result(state=State.OK, summary="State: Disabled"),
-        Result(state=State.OK, notice="Last session: Success"),
-    ]
-
-
-def test_failed_last_session_of_disabled_policy_is_only_a_notice() -> None:
-    assert _check(["Job", "null", "Disabled", "null", "Failed", "null"]) == [
-        Result(state=State.OK, summary="State: Disabled"),
-        Result(state=State.OK, notice="Last session: Failed"),
     ]
 
 
 def test_initial_sync_is_ok() -> None:
-    assert _check(["Job", "null", "InitialSync", "null", "null", "null"]) == [
+    assert _check(["Job", "null", "InitialSync", "null"]) == [
         Result(state=State.OK, summary="State: InitialSync"),
     ]
 
 
-def test_policy_result_of_previous_agent_plugin_is_ignored() -> None:
-    assert _check(["Job", "1787847691", "Running", "null", "Failed"]) == [
+@pytest.mark.parametrize(
+    "unused_fields",
+    [
+        pytest.param(["Failed"], id="policy result"),
+        pytest.param(["Failed", str(NOW - 3600)], id="session result and end"),
+    ],
+)
+def test_results_of_previous_agent_plugins_are_ignored(unused_fields: list[str]) -> None:
+    assert _check(["Job", "1787847691", "Running", str(NOW - 30), *unused_fields]) == [
         Result(state=State.OK, summary="State: Running"),
+        Result(state=State.OK, summary="Time since last long-term restore point: 30 seconds"),
     ]
 
 
@@ -157,7 +133,11 @@ def test_unmodelled_policy_state_is_reported_as_unknown() -> None:
 
 def test_line_with_unexpected_field_count_is_skipped() -> None:
     section = veeam_cdp_jobs.parse_veeam_cdp_jobs(
-        [["Job 1", "null"], ["Job 2", "null", "Running", "null"], ["Job 3", "null", "Running"]]
+        [
+            ["Job 1", "null"],
+            ["Job 2", "null", "Running", "null", "null", "null", "null"],
+            ["Job 3", "null", "Running"],
+        ]
     )
 
     params = veeam_cdp_jobs.DEFAULT_DISCOVERY_PARAMETERS
@@ -165,6 +145,6 @@ def test_line_with_unexpected_field_count_is_skipped() -> None:
 
 
 def test_unparseable_timestamps_are_omitted() -> None:
-    assert _check(["Job", "null", "Running", "garbage", "null", "garbage"]) == [
+    assert _check(["Job", "null", "Running", "garbage"]) == [
         Result(state=State.OK, summary="State: Running")
     ]

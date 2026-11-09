@@ -134,23 +134,7 @@ try {
                 $MyCdpJobsLastRestorePoint = "null"
             }
 
-            # CDP sessions are replaced about once a day: only finished ones have a result
-            $MyCdpJobsSessionResult = "null"
-            $MyCdpJobsSessionEnd = "null"
-            try {
-                $myCdpJobsSession = Get-VBRCDPSession -Policy $mycdpjobs -State Stopped -ErrorAction Stop | Sort-Object CreationTime -Descending | Select-Object -First 1
-                if ($myCdpJobsSession -ne $null) {
-                    $MyCdpJobsSessionResult = $myCdpJobsSession.Result
-                    if ($myCdpJobsSession.EndTime -ne $null) {
-                        $MyCdpJobsSessionEnd = ([DateTimeOffset]$myCdpJobsSession.EndTime).ToUnixTimeSeconds()
-                    }
-                }
-            }
-            catch {
-                $MyCdpJobsSessionResult = "null"
-            }
-
-            $myCdpJobsText = "$myCdpJobsText" + "$MyCdpJobsName" + "|null|" + "$MyCdpJobsPolicyState" + "|" + "$MyCdpJobsLastRestorePoint" + "|" + "$MyCdpJobsSessionResult" + "|" + "$MyCdpJobsSessionEnd" + "`n"
+            $myCdpJobsText = "$myCdpJobsText" + "$MyCdpJobsName" + "|null|" + "$MyCdpJobsPolicyState" + "|" + "$MyCdpJobsLastRestorePoint" + "`n"
         }
 
         Write-Host $myCdpJobsText

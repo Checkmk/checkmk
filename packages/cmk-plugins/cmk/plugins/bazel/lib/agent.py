@@ -248,7 +248,12 @@ def _process_data(res: requests.Response, endpoint: Endpoint, args: argparse.Nam
     ):
         return
 
-    sys.stdout.write("<<<bazel_cache_version:sep(0)>>>\n")
+    cache_marker = (
+        f":cached({int(version_info.timestamp)},{args.version_cache})"
+        if args.version_cache > 0
+        else ""
+    )
+    sys.stdout.write(f"<<<bazel_cache_version:sep(0){cache_marker}>>>\n")
     sys.stdout.write(f"{version_info.model_dump_json()}\n")
 
 

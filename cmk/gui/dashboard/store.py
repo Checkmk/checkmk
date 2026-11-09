@@ -235,6 +235,11 @@ def migrate_dashboard_config(dashboard: MaybeOldDashboardConfig) -> DashboardCon
                 f"{dashboard['name']}-{idx}": dashlet for idx, dashlet in enumerate(raw_dashlets)
             }
 
+    dashboard["widgets"] = {
+        widget_id: _migrate_status_display(widget)
+        for widget_id, widget in dashboard["widgets"].items()
+    }
+
     # responsive dashboard already uses the new dashlet format
     if dashboard_uses_relative_grid(dashboard):
         widgets, embedded_views = _migrate_widgets(dashboard)
@@ -242,6 +247,20 @@ def migrate_dashboard_config(dashboard: MaybeOldDashboardConfig) -> DashboardCon
         dashboard["embedded_views"] = embedded_views
 
     return dashboard
+
+
+_STATUS_DISPLAY_WIDGET_TYPES = frozenset({"gauge", "single_metric"})
+
+
+def _migrate_status_display(widget: DashletConfig) -> DashletConfig:
+    if widget["type"] not in _STATUS_DISPLAY_WIDGET_TYPES:
+        return widget
+    raw = cast(dict[str, object], widget)
+    if "svc_status_display" not in raw:
+        return widget
+    migrated = {key: value for key, value in raw.items() if key != "svc_status_display"}
+    migrated.setdefault("status_display", raw["svc_status_display"])
+    return cast(DashletConfig, migrated)
 
 
 def _migrate_widgets(

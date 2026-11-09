@@ -501,7 +501,6 @@ class TestInternalDashboardToRuntimeDashboard:
 
 
 class TestMigrateStatusDisplay:
-    @pytest.mark.xfail(strict=True, raises=KeyError, reason="crash group 4800")
     def test_a_stored_service_status_display_becomes_the_status_display(self) -> None:
         dashboard = _make_dashboard(
             layout={"type": "responsive_grid", "layouts": {}},
@@ -517,3 +516,26 @@ class TestMigrateStatusDisplay:
         result = migrate_dashboard_config(dashboard)
 
         assert result["widgets"]["w1"]["status_display"] == ("background", "all")  # type: ignore[typeddict-item]
+        assert "svc_status_display" not in result["widgets"]["w1"]
+
+    def test_a_migrated_status_display_stays_unchanged(self) -> None:
+        dashboard = _make_dashboard(
+            layout={"type": "responsive_grid", "layouts": {}},
+            widgets={
+                "w1": {"type": "gauge", "metric": "load1", "status_display": ("background", "all")}
+            },
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["status_display"] == ("background", "all")  # type: ignore[typeddict-item]
+
+    def test_other_widget_types_keep_a_service_status_display(self) -> None:
+        dashboard = _make_dashboard(
+            layout={"type": "responsive_grid", "layouts": {}},
+            widgets={"w1": {"type": "alert_overview", "svc_status_display": ("background", "all")}},
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["svc_status_display"] == ("background", "all")  # type: ignore[typeddict-item]

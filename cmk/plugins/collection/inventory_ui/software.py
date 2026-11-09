@@ -1371,14 +1371,17 @@ node_software_applications_proxmox_ve_cluster = Node(
 )
 
 
-def _sort_key_version(value: str) -> tuple[int | str, ...]:
+def _sort_key_version(value: str) -> tuple[tuple[int | str, ...], ...]:
+    return tuple(_sort_key_version_part(value_part) for value_part in value.split("."))
+
+
+def _sort_key_version_part(value_part: str) -> tuple[int | str, ...]:
     parts: list[int | str] = []
-    for value_part in value.split("."):
-        for part in re.split(r"(\d+)", value_part):
-            try:
-                parts.append(int(part))
-            except ValueError:
-                parts.append(part)
+    for part in re.split(r"(\d+)", value_part):
+        try:
+            parts.append(int(part))
+        except ValueError:
+            parts.append(part)
     return tuple(parts)
 
 

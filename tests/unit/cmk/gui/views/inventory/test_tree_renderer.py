@@ -16,6 +16,7 @@ from cmk.utils.structured_data import (
     SDDeltaValue,
     SDKey,
     SDPath,
+    SDValue,
 )
 
 from cmk.gui.inventory.filters import FilterInvtableText
@@ -24,14 +25,24 @@ from cmk.gui.views.inventory._display_hints import (
     ColumnDisplayHint,
     NodeDisplayHint,
 )
-from cmk.gui.views.inventory._paint_functions import inv_paint_generic
+from cmk.gui.views.inventory._paint_functions import (
+    inv_paint_age,
+    inv_paint_bytes,
+    inv_paint_date,
+    inv_paint_date_and_time,
+    inv_paint_generic,
+    inv_paint_timestamp_as_age,
+    inv_paint_volt,
+)
 from cmk.gui.views.inventory._tree_renderer import (
+    _render_legacy_difference,
     _replace_title_placeholders,
     _SDDeltaItem,
     _SDDeltaItemsSorter,
     _SDItemsSorter,
     SDItem,
 )
+from cmk.gui.views.inventory.registry import PaintFunction
 
 
 @pytest.mark.parametrize(
@@ -627,3 +638,92 @@ def test__replace_title_placeholders(
         )
         == expected_title
     )
+
+
+@pytest.mark.parametrize(
+    "paint_function, old, new, expected",
+    [
+        pytest.param(
+            inv_paint_bytes,
+            3354228736,
+            3354228737,
+            '<span class="invold">3.123868942 GiB</span> → '
+            '<span class="invnew">3.123868943 GiB</span>',
+            id="bytes increase with more digits",
+        ),
+        pytest.param(
+            inv_paint_bytes,
+            3354228737,
+            3354228736,
+            '<span class="invold">3.123868943 GiB</span> → '
+            '<span class="invnew">3.123868942 GiB</span>',
+            id="bytes decrease with more digits",
+        ),
+        pytest.param(
+            inv_paint_generic,
+            1.5,
+            1.5001,
+            '<span class="invold">1.5</span> → <span class="invnew">1.5001</span>',
+            id="generic number with more digits",
+        ),
+        pytest.param(
+            inv_paint_volt,
+            12.31,
+            12.34,
+            '<span class="invold">12.31 V</span> → <span class="invnew">12.34 V</span>',
+            id="voltage with more digits",
+        ),
+        pytest.param(
+            inv_paint_age,
+            60.2,
+            60.4,
+            '<span class="invold">60 s</span> → '
+            '<span class="invnew">60 s <span class="muted_text">(+200 ms)</span></span>',
+            id="age",
+        ),
+        pytest.param(
+            inv_paint_date,
+            1762700000,
+            1762700060,
+            f'<span class="invold">{inv_paint_date(1762700000)[1]}</span> → '
+            f'<span class="invnew">{inv_paint_date(1762700060)[1]} '
+            '<span class="muted_text">(+60 s)</span></span>',
+            id="date",
+        ),
+        pytest.param(
+            inv_paint_date_and_time,
+            1762700000.25,
+            1762700000.75,
+            f'<span class="invold">{inv_paint_date_and_time(1762700000.25)[1]}</span> → '
+            f'<span class="invnew">{inv_paint_date_and_time(1762700000.75)[1]} '
+            '<span class="muted_text">(+500 ms)</span></span>',
+            id="date and time",
+        ),
+        pytest.param(
+            inv_paint_generic,
+            "a",
+            "a ",
+            '<span class="invold">a</span> → <span class="invnew">a </span>',
+            id="text",
+        ),
+    ],
+)
+def test_change_painted_alike_shows_the_difference(
+    paint_function: PaintFunction, old: SDValue, new: SDValue, expected: str
+) -> None:
+    assert (
+        str(
+            _SDDeltaItem(
+                key=SDKey("key"),
+                title="Title",
+                old=old,
+                new=new,
+                paint_function=paint_function,
+            ).compute_cell_spec()[2]
+        )
+        == expected
+    )
+
+
+def test_newer_timestamp_shown_as_age_is_a_smaller_age() -> None:
+    assert _render_legacy_difference(inv_paint_timestamp_as_age, 60) == "-60 s"

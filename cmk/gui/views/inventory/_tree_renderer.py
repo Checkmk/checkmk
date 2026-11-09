@@ -4,11 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+import math
+import sys
 import time
-from collections.abc import Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from functools import total_ordering
-from typing import Literal
+from typing import Final, Literal
 
 from livestatus import SiteId
 
@@ -42,6 +44,7 @@ from cmk.gui.utils.theme import Theme, theme
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
 
+from . import _paint_functions
 from ._display_hints import DisplayHints, inv_display_hints, NodeDisplayHint
 from .registry import PaintFunction
 
@@ -104,6 +107,129 @@ class SDItem:
         return alignment_class, "", html_value
 
 
+def _numbers_of(old: SDValue, new: SDValue) -> tuple[int | float, int | float] | None:
+    match old, new:
+        case (bool(), _) | (_, bool()):
+            return None
+        case (int() | float() as old_number, int() | float() as new_number):
+            return old_number, new_number
+        case _:
+            return None
+
+
+def _sign_of(difference: int | float) -> str:
+    return "+" if difference > 0 else "-"
+
+
+def _render_duration(duration: int | float) -> str:
+    return f"{_sign_of(duration)}{cmk.utils.render.approx_age(abs(duration))}"
+
+
+_ROUND_TRIP_DIGITS: Final = math.ceil(1 + sys.float_info.mant_dig * math.log10(2))
+
+
+def _render_rounded(value: int | float, digits: int) -> str:
+    return str(round(value, digits))
+
+
+def _render_volt(value: int | float, digits: int) -> str:
+    return f"{round(value, digits)} V"
+
+
+def _render_bytes(value: int | float, digits: int) -> str:
+    return cmk.utils.render.fmt_number_with_precision(
+        value,
+        precision=digits,
+        drop_zeroes=True,
+        unit_prefix_type=cmk.utils.render.IECUnitPrefixes,
+        unit="B",
+    )
+
+
+def _render_hz(value: int | float, digits: int) -> str:
+    return cmk.utils.render.fmt_number_with_precision(
+        value, precision=digits, drop_zeroes=True, unit="Hz"
+    )
+
+
+def _render_nic_speed(value: int | float, digits: int) -> str:
+    return cmk.utils.render.fmt_number_with_precision(
+        value, precision=digits, drop_zeroes=True, unit="bit/s"
+    )
+
+
+@dataclass(frozen=True)
+class _LegacyPrecision:
+    digits: int
+    render: Callable[[int | float, int], str]
+
+
+def _legacy_precision(paint_function: PaintFunction) -> _LegacyPrecision | None:
+    match paint_function:
+        case _paint_functions.inv_paint_generic:
+            return _LegacyPrecision(digits=2, render=_render_rounded)
+        case _paint_functions.inv_paint_volt:
+            return _LegacyPrecision(digits=1, render=_render_volt)
+        case _paint_functions.inv_paint_bytes:
+            return _LegacyPrecision(digits=0, render=_render_bytes)
+        case _paint_functions.inv_paint_bytes_rounded | _paint_functions.inv_paint_size:
+            return _LegacyPrecision(digits=2, render=_render_bytes)
+        case _paint_functions.inv_paint_hz:
+            return _LegacyPrecision(digits=2, render=_render_hz)
+        case _paint_functions.inv_paint_nic_speed:
+            return _LegacyPrecision(digits=2, render=_render_nic_speed)
+        case _:
+            return None
+
+
+def _render_legacy_change(
+    paint_function: PaintFunction, old: int | float, new: int | float
+) -> tuple[str, str] | None:
+    precision = _legacy_precision(paint_function)
+    if precision is None:
+        return None
+    rendered_pairs = (
+        (precision.render(old, digits), precision.render(new, digits))
+        for digits in range(precision.digits, max(precision.digits, _ROUND_TRIP_DIGITS) + 1)
+    )
+    return next((pair for pair in rendered_pairs if pair[0] != pair[1]), None)
+
+
+def _render_legacy_difference(paint_function: PaintFunction, difference: int | float) -> str:
+    match paint_function:
+        case (
+            _paint_functions.inv_paint_age
+            | _paint_functions.inv_paint_date
+            | _paint_functions.inv_paint_date_and_time
+        ):
+            return _render_duration(difference)
+        case (
+            _paint_functions.inv_paint_timestamp_as_age
+            | _paint_functions.inv_paint_timestamp_as_age_days
+        ):
+            return _render_duration(-difference)
+        case _:
+            return ""
+
+
+def _render_number_change(
+    paint_function: PaintFunction,
+    old: int | float,
+    new: int | float,
+    rendered_value: str | HTML,
+) -> tuple[str | HTML, str | HTML] | None:
+    if (rendered := _render_legacy_change(paint_function, old, new)) is not None:
+        return rendered
+    rendered_difference = _render_legacy_difference(paint_function, new - old)
+    if not rendered_difference:
+        return None
+    return rendered_value, (
+        HTML.with_escaping(rendered_value)
+        + " "
+        + HTMLWriter.render_span(f"({rendered_difference})", css="muted_text")
+    )
+
+
 @dataclass(frozen=True, kw_only=True)
 class _SDDeltaItem:
     key: SDKey
@@ -136,6 +262,17 @@ class _SDDeltaItem:
         if self.old is not None and self.new is not None:
             _, rendered_old_value = self.paint_function(self.old)
             alignment_class, rendered_new_value = self.paint_function(self.new)
+            if (
+                rendered_old_value == rendered_new_value
+                and (numbers := _numbers_of(self.old, self.new)) is not None
+                and (
+                    rendered := _render_number_change(
+                        self.paint_function, *numbers, rendered_new_value
+                    )
+                )
+                is not None
+            ):
+                rendered_old_value, rendered_new_value = rendered
             return (
                 alignment_class,
                 "",

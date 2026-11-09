@@ -51,6 +51,7 @@ build_path = repo_path() / "docker_image"
 image_prefix = "docker-tests"
 DISTRO_CODENAME: Final = "jammy"  # ubuntu-22.04
 cse_config_root = Path("/tmp/cmk-docker-test/cse-config-volume")
+IMAGE_BUILD_TIMEOUT_SECS = 30 * 60
 
 
 def cleanup_old_packages() -> None:
@@ -180,6 +181,34 @@ def resolve_image_alias(alias: str) -> str:
     ).split("\n", maxsplit=1)[0]
 
 
+def _collect_docker_disk_diagnostics() -> str:
+    """Collect disk usage diagnostics for Docker to help diagnose build timeouts."""
+
+    def _run(cmd: list[str]) -> str:
+        try:
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=10, check=False)
+            return (result.stdout + result.stderr).strip()
+        except Exception:
+            logger.exception("Could not execute command - %s", subprocess.list2cmdline(cmd))
+            return ""
+
+    def _format_output(cmd: list[str], output: str) -> str:
+        label = subprocess.list2cmdline(cmd)
+        return f"= {label} ==================\n{output}\n= {label} =================="
+
+    cmd_docker_df = ["docker", "system", "df"]
+    parts = [_format_output(cmd_docker_df, _run(cmd_docker_df))]
+
+    cmd_docker_info = ["docker", "info", "--format", r"{{ .DockerRootDir }}"]
+    root_dir = _run(cmd_docker_info)
+
+    df_path = root_dir if root_dir and Path(root_dir).exists() else "/"
+    cmd_df = ["df", "-h", df_path]
+    parts.append(_format_output(cmd_df, _run(cmd_df)))
+
+    return "\n".join(parts)
+
+
 def build_checkmk(
     client: docker.client.DockerClient,
     package_info: CMKPackageInfo | CMKPackageInfoOld,
@@ -225,12 +254,38 @@ def build_checkmk(
             capture_output=True,
             text=True,
             check=True,
+            timeout=IMAGE_BUILD_TIMEOUT_SECS,
         )
     except subprocess.CalledProcessError as e:
         logger.error("= Build log ==================")
         for line in e.stderr.splitlines():
             logger.error(line)
         logger.error("= Build log ==================")
+        raise
+    except subprocess.TimeoutExpired as exc:
+        # exc.stdout/stderr are always bytes in TimeoutExpired, regardless of text=True
+        parts: list[str] = [_collect_docker_disk_diagnostics()]
+        stdout = (exc.stdout or b"").decode(errors="replace").strip()
+        if stdout:
+            parts += [
+                "= Build STDOUT (partial) ==================",
+                stdout,
+                "= Build STDOUT (partial) ==================",
+            ]
+
+        stderr = (exc.stderr or b"").decode(errors="replace").strip()
+        if stderr:
+            parts += [
+                "= Build STDERR (partial) ==================",
+                stderr,
+                "= Build STDERR (partial) ==================",
+            ]
+        build_log = "\n".join(parts)
+        logger.exception(
+            "Could not build docker image within %s seconds\n%s",
+            IMAGE_BUILD_TIMEOUT_SECS,
+            build_log,
+        )
         raise
 
     logger.info("(Set pytest log level to DEBUG (--log-cli-level=DEBUG) to see the build log)")

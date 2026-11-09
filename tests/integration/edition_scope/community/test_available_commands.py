@@ -8,7 +8,7 @@ from cmk.cli.engine.discovery import discover_commands as cli_discover_commands
 
 
 def test_available_commands() -> None:
-    assert {m.long for m in cli_discover_commands()} == {
+    assert {m.selector.long for m in cli_discover_commands()} == {
         "automation",
         "browse-man",
         "check",

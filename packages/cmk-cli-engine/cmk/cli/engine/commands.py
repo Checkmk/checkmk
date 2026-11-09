@@ -5,7 +5,7 @@
 
 
 import textwrap
-from collections.abc import Callable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Final
 
@@ -14,7 +14,9 @@ from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import Flag as CLIFlag
 from cmk.cli.internal import Reader as CLIReader
+from cmk.cli.internal import Value as CLIValue
 
 from .options import (
     Declaration,
@@ -40,9 +42,7 @@ _ENGINE_OPTION_COLUMN: Final = HelpColumn(indent="  ", width=21)
 @dataclass(frozen=True, kw_only=True)
 class DiscoveredCommand:
     name: str
-    long: str
-    short: str | None
-    help: str
+    selector: CLIFlag | CLIValue[str]
     arguments: CLIArguments | None
     description: Sequence[str]
     options: Sequence[Declaration]
@@ -55,26 +55,8 @@ def bind[R](command: CLICommand[R], reader: CLIReader) -> BoundCommand:
     return lambda context, args: command.handler(context, request, args)
 
 
-def _requires_argument(command: DiscoveredCommand) -> bool:
-    return command.arguments is not None and not command.arguments.optional
-
-
-def _short_getopt_specs(command: DiscoveredCommand) -> Sequence[str]:
-    if command.short is None:
-        return []
-    return [f"{command.short}:" if _requires_argument(command) else command.short]
-
-
-def _long_getopt_specs(command: DiscoveredCommand) -> Sequence[str]:
-    return [f"{command.long}=" if _requires_argument(command) else command.long]
-
-
-def _command_spellings(command: DiscoveredCommand) -> Sequence[str]:
-    return [*([] if command.short is None else [f"-{command.short}"]), f"--{command.long}"]
-
-
 def _spelled(command: DiscoveredCommand) -> str:
-    return ", ".join(_command_spellings(command))
+    return ", ".join(spellings(command.selector))
 
 
 def _spelled_argument(arguments: CLIArguments | None) -> str:
@@ -89,7 +71,7 @@ def _spelled_argument(arguments: CLIArguments | None) -> str:
 
 def _short_help_text(command: DiscoveredCommand) -> str:
     spelled = f" {_spelled(command)}{_spelled_argument(command.arguments)}"
-    return _COMMAND_COLUMN.fill(spelled, command.help)
+    return _COMMAND_COLUMN.fill(spelled, command.selector.help)
 
 
 def _long_help_text(command: DiscoveredCommand) -> str | None:
@@ -124,9 +106,7 @@ def _map_commands(commands: Sequence[DiscoveredCommand]) -> Mapping[str, Discove
     }
     mapped: dict[str, DiscoveredCommand] = {}
     for command in commands:
-        for name in (command.long, command.short):
-            if name is None:
-                continue
+        for name in _names(command.selector):
             if (other := claimants.get(name)) is not None:
                 raise ValueError(f"{name!r} is claimed by {other} and the command {command.name!r}")
             claimants[name] = f"the command {command.name!r}"
@@ -134,29 +114,20 @@ def _map_commands(commands: Sequence[DiscoveredCommand]) -> Mapping[str, Discove
     return mapped
 
 
-def _argument_requirements(
-    commands: Sequence[DiscoveredCommand], options: Sequence[Declaration]
-) -> Iterator[tuple[str, bool]]:
-    for command in commands:
-        for spelling in _command_spellings(command):
-            yield spelling, _requires_argument(command)
-    for option in options:
-        for spelling in spellings(option):
-            yield spelling, placeholder(option) is not None
-
-
-def _check_arguments(commands: Sequence[DiscoveredCommand], options: Sequence[Declaration]) -> None:
+def _check_arguments(declarations: Sequence[Declaration]) -> None:
     declared: dict[str, bool] = {}
-    for spelling, requires_argument in _argument_requirements(commands, options):
-        if declared.setdefault(spelling, requires_argument) != requires_argument:
-            raise ValueError(f"{spelling!r} is declared both with and without an argument")
+    for declaration in declarations:
+        requires_argument = placeholder(declaration) is not None
+        for spelling in spellings(declaration):
+            if declared.setdefault(spelling, requires_argument) != requires_argument:
+                raise ValueError(f"{spelling!r} is declared both with and without an argument")
 
 
 def _default_command(commands: Sequence[DiscoveredCommand]) -> DiscoveredCommand | None:
     match [command for command in commands if command.default]:
         case []:
             return None
-        case [command] if _requires_argument(command):
+        case [command] if placeholder(command.selector) is not None:
             raise ValueError(f"The default command {command.name!r} cannot require an argument")
         case [command]:
             return command
@@ -173,27 +144,24 @@ class Commands:
         self._commands = plugins
         self._command_map = _map_commands(plugins)
         self.default = _default_command(plugins)
-        self._options = [
+        self._declarations: Sequence[Declaration] = [
+            *(command.selector for command in plugins),
             *ENGINE_OPTIONS,
             *(option for command in plugins for option in command.options),
         ]
-        _check_arguments(plugins, self._options)
+        _check_arguments(self._declarations)
 
     def find(self, name: str) -> DiscoveredCommand | None:
         return self._command_map.get(name)
 
     def short_getopt_specs(self) -> str:
         return "".join(
-            [
-                *(spec for command in self._commands for spec in _short_getopt_specs(command)),
-                *(spec for option in self._options for spec in short_getopt_specs(option)),
-            ]
+            spec for declaration in self._declarations for spec in short_getopt_specs(declaration)
         )
 
     def long_getopt_specs(self) -> list[str]:
         return [
-            *(spec for command in self._commands for spec in _long_getopt_specs(command)),
-            *(spec for option in self._options for spec in long_getopt_specs(option)),
+            spec for declaration in self._declarations for spec in long_getopt_specs(declaration)
         ]
 
     def help(self) -> str:

@@ -6,12 +6,29 @@
 from collections.abc import Sequence
 from functools import partial
 
+from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import entry_point_prefixes as cli_entry_point_prefixes
+from cmk.cli.internal import Flag as CLIFlag
+from cmk.cli.internal import Value as CLIValue
 from cmk.discover_plugins import discover_all_plugins, PluginGroup, PluginLocation
 
 from .commands import bind, DiscoveredCommand
 from .readers import RecordedOptions
+
+
+def _selector[R](command: CLICommand[R]) -> CLIFlag | CLIValue[str]:
+    match command.arguments:
+        case None | CLIArguments(optional=True):
+            return CLIFlag(long=command.long, short=command.short, help=command.help)
+        case CLIArguments(placeholder=placeholder):
+            return CLIValue(
+                long=command.long,
+                short=command.short,
+                help=command.help,
+                placeholder=placeholder,
+                parse=str,
+            )
 
 
 def make_command[R](command: CLICommand[R]) -> DiscoveredCommand:
@@ -19,9 +36,7 @@ def make_command[R](command: CLICommand[R]) -> DiscoveredCommand:
     command.request(recorded)
     return DiscoveredCommand(
         name=command.name,
-        long=command.long,
-        short=command.short,
-        help=command.help,
+        selector=_selector(command),
         arguments=command.arguments,
         description=command.description,
         options=recorded.options,

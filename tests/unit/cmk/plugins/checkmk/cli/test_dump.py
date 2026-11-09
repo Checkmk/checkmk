@@ -7,7 +7,6 @@
 # mypy: disable-error-code="type-arg"
 
 import logging
-from contextlib import nullcontext
 from dataclasses import replace
 from pathlib import Path
 from typing import Any, Final, NoReturn, override
@@ -30,8 +29,6 @@ from cmk.checkengine.snmp_backends.classic import ClassicSNMPBackend
 from cmk.checkengine.snmp_backends.stored_walk import StoredWalkSNMPBackend
 from cmk.checkengine.snmplib import SNMPBackendEnum
 from cmk.checkengine.sources._sources import SNMPSource
-from cmk.cli.engine.arguments import RunCommand as CLIRunCommand
-from cmk.cli.engine.call import call as cli_call
 from cmk.cli.engine.discovery import make_command as cli_make_command
 from cmk.cli.engine.readers import ParsedOptions as CLIParsedOptions
 from cmk.cli.engine.readers import RecordedOptions as CLIRecordedOptions
@@ -103,12 +100,10 @@ def test_the_dump_agent_request_is_read_from_the_command_line() -> None:
 
 def _dump_agent(hostname: HostName, options: list[tuple[str, str]]) -> CLIExitCode:
     logger = logging.getLogger(__name__)
-    parsed = CLIRunCommand(cli_make_command(cli_command_dump_agent), hostname, options, [])
-    return cli_call(
+    bound = cli_make_command(cli_command_dump_agent).bind(CLIParsedOptions(options, logger))
+    return bound(
         CLIContext(omd_root=_OMD_ROOT, global_options=CLIGlobalOptions(), logger=logger),
-        parsed,
-        parsed.command.bind(CLIParsedOptions(options, logger)),
-        lambda *_args: nullcontext(),
+        [hostname],
     )
 
 

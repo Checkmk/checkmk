@@ -24,10 +24,13 @@ from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import Count as CLICount
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import Flag as CLIFlag
+from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import no_options as cli_no_options
 from cmk.cli.internal import Reader as CLIReader
 from cmk.cli.internal import Value as CLIValue
 from cmk.cli.internal import Values as CLIValues
+
+from ._logger import null_logger
 
 
 def _unreachable(_context: CLIContext, _request: None, _args: CLIArgs) -> NoReturn:
@@ -118,6 +121,10 @@ _CHECK: Final = cli_make_command(
 _COMMANDS: Final = CLICommands(plugins=[_PLAIN, _OTHER_PLAIN, _WITH_ARGUMENT, _CHECK])
 
 
+def _parse(argv: Sequence[str]) -> CLIRunCommand | CLIShowHelp | CLIInvalidArguments:
+    return cli_parse(_COMMANDS, argv, null_logger())
+
+
 def _general_option_argv(option: CLIDeclaration) -> Sequence[str]:
     if cli_placeholder(option) is not None:
         return [f"--{option.long}={_ARGUMENT_EVERY_CONVERSION_ACCEPTS}"]
@@ -125,116 +132,121 @@ def _general_option_argv(option: CLIDeclaration) -> Sequence[str]:
 
 
 def test_the_long_option_selects_its_command() -> None:
-    parsed = cli_parse(_COMMANDS, ["cmk", "--plain"])
+    parsed = _parse(["cmk", "--plain"])
 
     assert isinstance(parsed, CLIRunCommand)
     assert parsed.command is _PLAIN
 
 
 def test_the_short_option_selects_its_command() -> None:
-    parsed = cli_parse(_COMMANDS, ["cmk", "-p"])
+    parsed = _parse(["cmk", "-p"])
 
     assert isinstance(parsed, CLIRunCommand)
     assert parsed.command is _PLAIN
 
 
 def test_a_sub_option_reaches_its_command() -> None:
-    parsed = cli_parse(_COMMANDS, ["cmk", "--check", "--keepalive"])
+    parsed = _parse(["cmk", "--check", "--keepalive"])
 
     assert isinstance(parsed, CLIRunCommand)
     assert ("--keepalive", "") in parsed.options
 
 
 def test_a_bare_command_shows_the_help() -> None:
-    assert cli_parse(_COMMANDS, ["cmk"]) == CLIShowHelp(options=[])
+    assert _parse(["cmk"]) == CLIShowHelp(CLIGlobalOptions())
 
 
-def test_a_general_option_alone_shows_the_help_and_hands_the_options_back() -> None:
-    assert cli_parse(_COMMANDS, ["cmk", "-v"]) == CLIShowHelp(options=[("-v", "")])
+def test_a_general_option_alone_shows_the_help_with_the_general_options() -> None:
+    assert _parse(["cmk", "-v"]) == CLIShowHelp(CLIGlobalOptions(verbosity=1))
 
 
 @pytest.mark.parametrize("option", ["--help", "-h"])
 def test_the_help_option_shows_the_help(option: str) -> None:
-    assert isinstance(cli_parse(_COMMANDS, ["cmk", option]), CLIShowHelp)
+    assert isinstance(_parse(["cmk", option]), CLIShowHelp)
 
 
 def test_the_help_option_wins_over_a_command_before_it() -> None:
-    assert isinstance(cli_parse(_COMMANDS, ["cmk", "--plain", "--help"]), CLIShowHelp)
+    assert isinstance(_parse(["cmk", "--plain", "--help"]), CLIShowHelp)
 
 
 def test_the_first_of_two_command_options_wins() -> None:
-    parsed = cli_parse(_COMMANDS, ["cmk", "--plain", "--other-plain"])
+    parsed = _parse(["cmk", "--plain", "--other-plain"])
 
     assert isinstance(parsed, CLIRunCommand)
     assert parsed.command is _PLAIN
 
 
 def test_a_required_command_argument_comes_off_the_option() -> None:
-    parsed = cli_parse(_COMMANDS, ["cmk", f"--with-argument={_COMMAND_ARGUMENT}"])
+    parsed = _parse(["cmk", f"--with-argument={_COMMAND_ARGUMENT}"])
 
     assert isinstance(parsed, CLIRunCommand)
-    assert (parsed.argument, parsed.arguments) == (_COMMAND_ARGUMENT, [])
+    assert parsed.args == [_COMMAND_ARGUMENT]
 
 
-def test_an_optional_command_argument_stays_in_the_positional_arguments() -> None:
-    parsed = cli_parse(_COMMANDS, ["cmk", "--check", "host1", "host2"])
+def test_a_command_without_argument_receives_no_arguments() -> None:
+    parsed = _parse(["cmk", "--plain", "ignored", "too"])
 
     assert isinstance(parsed, CLIRunCommand)
-    assert (parsed.argument, parsed.arguments) == ("", ["host1", "host2"])
+    assert parsed.args == ()
+
+
+def test_an_optional_command_argument_takes_all_positional_arguments() -> None:
+    parsed = _parse(["cmk", "--check", "host1", "host2"])
+
+    assert isinstance(parsed, CLIRunCommand)
+    assert parsed.args == ["host1", "host2"]
 
 
 def test_a_repeated_short_spelling_selects_the_command_and_stays_an_option() -> None:
-    parsed = cli_parse(_COMMANDS, ["cmk", "-cc", "myhost"])
+    parsed = _parse(["cmk", "-cc", "myhost"])
 
     assert isinstance(parsed, CLIRunCommand)
     assert (parsed.command, parsed.options) == (_CHECK, [("-c", ""), ("-c", "")])
 
 
 def test_a_repeated_sub_option_argument_is_kept_every_time() -> None:
-    parsed = cli_parse(
-        _COMMANDS, ["cmk", "--check", "--collected=.1.1", "--collected=.1.2", "myhost"]
-    )
+    parsed = _parse(["cmk", "--check", "--collected=.1.1", "--collected=.1.2", "myhost"])
 
     assert isinstance(parsed, CLIRunCommand)
     assert parsed.options == [("--check", ""), ("--collected", ".1.1"), ("--collected", ".1.2")]
 
 
 def test_a_deprecated_sub_option_is_kept_under_its_own_spelling() -> None:
-    parsed = cli_parse(_COMMANDS, ["cmk", "--check", "--legacy-name=value", "myhost"])
+    parsed = _parse(["cmk", "--check", "--legacy-name=value", "myhost"])
 
     assert isinstance(parsed, CLIRunCommand)
     assert parsed.options == [("--check", ""), ("--legacy-name", "value")]
 
 
 def test_one_argument_runs_the_implicit_check_command() -> None:
-    parsed = cli_parse(_COMMANDS, ["cmk", "myhost"])
+    parsed = _parse(["cmk", "myhost"])
 
     assert isinstance(parsed, CLIRunCommand)
-    assert (parsed.command.name, parsed.argument, parsed.arguments) == ("check", "", ["myhost"])
+    assert (parsed.command.name, parsed.args) == ("check", ["myhost"])
 
 
 def test_a_host_and_an_address_run_the_implicit_check_command() -> None:
-    parsed = cli_parse(_COMMANDS, ["cmk", "myhost", "1.2.3.4"])
+    parsed = _parse(["cmk", "myhost", "1.2.3.4"])
 
     assert isinstance(parsed, CLIRunCommand)
-    assert (parsed.command.name, parsed.arguments) == ("check", ["myhost", "1.2.3.4"])
+    assert (parsed.command.name, parsed.args) == ("check", ["myhost", "1.2.3.4"])
 
 
 def test_keepalive_runs_the_implicit_check_command() -> None:
-    parsed = cli_parse(_COMMANDS, ["cmk", "--keepalive"])
+    parsed = _parse(["cmk", "--keepalive"])
 
     assert isinstance(parsed, CLIRunCommand)
     assert parsed.command.name == "check"
 
 
 def test_more_arguments_than_a_host_and_an_address_show_the_help() -> None:
-    parsed = cli_parse(_COMMANDS, ["cmk", "host1", "host2", "host3"])
+    parsed = _parse(["cmk", "host1", "host2", "host3"])
 
     assert isinstance(parsed, CLIShowHelp)
 
 
 def test_an_unknown_option_is_rejected() -> None:
-    parsed = cli_parse(_COMMANDS, ["cmk", "--not-an-option"])
+    parsed = _parse(["cmk", "--not-an-option"])
 
     assert parsed == CLIInvalidArguments(
         "ERROR: option --not-an-option not recognized (see `cmk --help` for valid options)\n"
@@ -242,7 +254,7 @@ def test_an_unknown_option_is_rejected() -> None:
 
 
 def test_a_missing_command_argument_is_rejected() -> None:
-    parsed = cli_parse(_COMMANDS, ["cmk", "--with-argument"])
+    parsed = _parse(["cmk", "--with-argument"])
 
     assert parsed == CLIInvalidArguments(
         "ERROR: option --with-argument requires argument (see `cmk --help` for valid options)\n"
@@ -250,7 +262,7 @@ def test_a_missing_command_argument_is_rejected() -> None:
 
 
 def test_the_rejection_names_the_program_as_it_was_called() -> None:
-    parsed = cli_parse(_COMMANDS, ["/omd/sites/mysite/bin/check_mk", "--not-an-option"])
+    parsed = _parse(["/omd/sites/mysite/bin/check_mk", "--not-an-option"])
 
     assert isinstance(parsed, CLIInvalidArguments)
     assert "see `check_mk --help`" in parsed.message
@@ -258,7 +270,7 @@ def test_the_rejection_names_the_program_as_it_was_called() -> None:
 
 @pytest.mark.parametrize("option", CLI_GENERAL_OPTIONS, ids=lambda option: option.long)
 def test_a_general_option_does_not_select_a_command(option: CLIDeclaration) -> None:
-    parsed = cli_parse(_COMMANDS, ["cmk", *_general_option_argv(option), "myhost"])
+    parsed = _parse(["cmk", *_general_option_argv(option), "myhost"])
 
     assert isinstance(parsed, CLIRunCommand)
     assert parsed.command.name == "check"
@@ -266,7 +278,7 @@ def test_a_general_option_does_not_select_a_command(option: CLIDeclaration) -> N
 
 @pytest.mark.parametrize("option", CLI_GENERAL_OPTIONS, ids=lambda option: option.long)
 def test_a_general_option_is_handed_back_for_processing(option: CLIDeclaration) -> None:
-    parsed = cli_parse(_COMMANDS, ["cmk", *_general_option_argv(option), "myhost"])
+    parsed = _parse(["cmk", *_general_option_argv(option), "myhost"])
 
     assert isinstance(parsed, CLIRunCommand)
     assert f"--{option.long}" in [name for name, _argument in parsed.options]

@@ -6,15 +6,12 @@
 import logging
 import time
 from collections.abc import Mapping, Sequence
-from contextlib import nullcontext
 from pathlib import Path
 
 import pytest
 
 import cmk.utils.paths
 from cmk.ccc.hostaddress import HostAddress
-from cmk.cli.engine.arguments import RunCommand as CLIRunCommand
-from cmk.cli.engine.call import call as cli_call
 from cmk.cli.engine.discovery import make_command as cli_make_command
 from cmk.cli.engine.readers import ParsedOptions as CLIParsedOptions
 from cmk.cli.engine.readers import RecordedOptions as CLIRecordedOptions
@@ -93,13 +90,11 @@ def test_cleanup_piggyback_removes_files_beyond_configured_max_age(
     _store_aged(tmp_path, "aged-out", age=_LONG_MAX_AGE + 600)
     _store_aged(tmp_path, "still-valid", age=_LONG_MAX_AGE - 600)
     logger = logging.getLogger(__name__)
-    parsed = CLIRunCommand(cli_make_command(cli_command_cleanup_piggyback), "", [], [])
+    bound = cli_make_command(cli_command_cleanup_piggyback).bind(CLIParsedOptions([], logger))
 
-    exit_code = cli_call(
+    exit_code = bound(
         CLIContext(omd_root=tmp_path, global_options=CLIGlobalOptions(), logger=logger),
-        parsed,
-        parsed.command.bind(CLIParsedOptions([], logger)),
-        lambda *_args: nullcontext(),
+        (),
     )
 
     assert exit_code == CLIExitCode.SUCCESS

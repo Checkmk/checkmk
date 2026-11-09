@@ -6,11 +6,13 @@
 
 import textwrap
 from collections.abc import Sequence
+from pathlib import Path
 from typing import Final
 
 from cmk.cli.internal import Count as CLICount
 from cmk.cli.internal import Flag as CLIFlag
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
+from cmk.cli.internal import Reader as CLIReader
 from cmk.cli.internal import Value as CLIValue
 from cmk.cli.internal import Values as CLIValues
 
@@ -32,18 +34,18 @@ _DEBUG_OPTION: Final = CLIFlag(long="debug", help="Let most Python exceptions ra
 
 _PROFILE_OPTION: Final = CLIFlag(long="profile", help="Enable profiling mode")
 
-LOG_FILE_OPTION: Final = CLIValue(
+_LOG_FILE_OPTION: Final = CLIValue(
     long="log-file",
     help="Log to the given file (with timestamps) instead of stderr",
     placeholder="PATH",
-    parse=str,
+    parse=Path,
 )
 
 GENERAL_OPTIONS: Final[Sequence[Declaration]] = (
     _VERBOSE_OPTION,
     _DEBUG_OPTION,
     _PROFILE_OPTION,
-    LOG_FILE_OPTION,
+    _LOG_FILE_OPTION,
 )
 
 
@@ -89,15 +91,10 @@ def short_help_text(option: Declaration, fmt: str) -> str:
     return help_line(spelled, option.help, fmt)
 
 
-def parse_general_options(all_opts: GetoptOptions) -> CLIGlobalOptions:
-    verbosity = 0
-    debug = False
-    profile = False
-    for option, _argument in all_opts:
-        if option in spellings(_VERBOSE_OPTION):
-            verbosity += 1
-        elif option in spellings(_DEBUG_OPTION):
-            debug = True
-        elif option in spellings(_PROFILE_OPTION):
-            profile = True
-    return CLIGlobalOptions(verbosity=verbosity, debug=debug, profile=profile)
+def read_global_options(options: CLIReader) -> CLIGlobalOptions:
+    return CLIGlobalOptions(
+        verbosity=options.count(_VERBOSE_OPTION),
+        debug=options.flag(_DEBUG_OPTION),
+        profile=options.flag(_PROFILE_OPTION),
+        log_file=options.value(_LOG_FILE_OPTION),
+    )

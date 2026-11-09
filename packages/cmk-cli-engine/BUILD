@@ -17,7 +17,6 @@ py_library(
     name = "engine",
     srcs = [
         "cmk/cli/engine/arguments.py",
-        "cmk/cli/engine/call.py",
         "cmk/cli/engine/commands.py",
         "cmk/cli/engine/discovery.py",
         "cmk/cli/engine/options.py",
@@ -42,6 +41,7 @@ py_library(
     deps = [
         ":engine",
         "//packages/cmk-ccc:log",
+        "//packages/cmk-plugin-apis:cli",
     ],
 )
 

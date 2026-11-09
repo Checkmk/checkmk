@@ -7,6 +7,7 @@ import logging
 import signal
 import sys
 from collections.abc import Callable, Mapping, Sequence
+from contextlib import AbstractContextManager
 from dataclasses import dataclass, field
 from logging.handlers import WatchedFileHandler
 from pathlib import Path
@@ -14,16 +15,17 @@ from types import FrameType
 from typing import Final
 
 from cmk.ccc.log import CMKFormatter
-from cmk.cli.engine.call import call, CommandTracer
 from cmk.cli.engine.commands import Commands, DiscoveredCommand
 from cmk.cli.engine.discovery import discover_commands
-from cmk.cli.engine.options import LOG_FILE_OPTION, parse_general_options, spellings
 from cmk.cli.engine.output import write_paged, write_stdout
 from cmk.cli.engine.readers import ParsedOptions
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 
-from .arguments import InvalidArguments, parse, ShowHelp
+from .arguments import InvalidArguments, parse, rejection, RunCommand, ShowHelp
+
+type CommandTracer = Callable[[CLIContext, RunCommand], AbstractContextManager[None]]
 
 _VERBOSE: Final = 15
 
@@ -38,10 +40,9 @@ def log_level(verbosity: int) -> int:
             return logging.DEBUG
 
 
-def enable_file_logging(path: str, logger: logging.Logger) -> None:
-    file_path = Path(path)
-    file_path.parent.mkdir(parents=True, exist_ok=True)
-    handler = WatchedFileHandler(file_path)
+def enable_file_logging(path: Path, logger: logging.Logger) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    handler = WatchedFileHandler(path)
     handler.setFormatter(CMKFormatter())
     del logger.handlers[:]
     logger.addHandler(handler)
@@ -70,6 +71,7 @@ class Runtime:
     on_sigint: Callable[[int, FrameType | None], object] = signal.default_int_handler
     crash_reporter_for: Callable[[Path, Sequence[str], Mapping[str, str]], CrashReporter]
     enable_profiling: Callable[[], None]
+    log_to_file: Callable[[Path, logging.Logger], None]
     write_profile: Callable[[Path], None]
     page: Callable[[str], None] = write_paged
     write: Callable[[str], None] = write_stdout
@@ -100,6 +102,16 @@ def dispatch(
         return CLIExitCode.FAILURE
 
 
+def _apply_global_options(global_options: CLIGlobalOptions, runtime: Runtime) -> None:
+    if global_options.log_file is not None:
+        runtime.log_to_file(global_options.log_file, runtime.logger)
+    if global_options.verbosity:
+        runtime.logger.setLevel(log_level(global_options.verbosity))
+    if global_options.profile:
+        runtime.enable_profiling()
+        runtime.logger.debug("Enabled profiling")
+
+
 def run(
     omd_root: Path,
     argv: Sequence[str],
@@ -109,48 +121,37 @@ def run(
     signal.signal(signal.SIGINT, runtime.on_sigint)
 
     commands = Commands(plugins=runtime.discover())
+    logger = runtime.logger.getChild("base")
 
-    parsed = parse(commands, argv)
+    parsed = parse(commands, argv, logger)
     if isinstance(parsed, InvalidArguments):
         runtime.write(parsed.message)
         return CLIExitCode.UNKNOWN.value
 
-    for option, argument in parsed.options:
-        if option in spellings(LOG_FILE_OPTION):
-            enable_file_logging(argument, runtime.logger)
-    global_options = parse_general_options(parsed.options)
-    if global_options.verbosity:
-        runtime.logger.setLevel(log_level(global_options.verbosity))
-    if global_options.profile:
-        runtime.enable_profiling()
-        runtime.logger.debug("Enabled profiling")
-
-    logger = runtime.logger.getChild("base")
+    request = parsed
+    _apply_global_options(request.global_options, runtime)
 
     def command() -> CLIExitCode:
-        if isinstance(parsed, ShowHelp):
+        if isinstance(request, ShowHelp):
             runtime.page(commands.help())
             return CLIExitCode.SUCCESS
         try:
-            bound = parsed.command.bind(ParsedOptions(parsed.options, logger))
-        except ValueError as e:
-            logger.error("%(error)s", {"error": e})  # noqa: TRY400
-            if global_options.debug:
-                raise
+            bound = request.command.bind(ParsedOptions(request.options, logger))
+        except ValueError as error:
+            runtime.write(rejection(argv, error).message)
             return CLIExitCode.UNKNOWN
-        return call(
-            CLIContext(omd_root=omd_root, global_options=global_options, logger=logger),
-            parsed,
-            bound,
-            runtime.trace_command,
+        context = CLIContext(
+            omd_root=omd_root, global_options=request.global_options, logger=logger
         )
+        with runtime.trace_command(context, request):
+            return bound(context, request.args)
 
     try:
         return dispatch(
             command,
             logger,
             runtime.crash_reporter_for(omd_root, argv, environ),
-            debug=global_options.debug,
+            debug=request.global_options.debug,
         ).value
     finally:
         runtime.write_profile(omd_root / "var/check_mk/web")

@@ -22,10 +22,11 @@ def test_fake_dns_reaches_the_implicit_check() -> None:
     parsed = cli_parse(
         CLICommands(plugins=[cli_make_command(cli_command_check)]),
         ["cmk", "--fake-dns", "1.2.3.4", "myhost"],
+        logging.getLogger(__name__),
     )
 
     assert isinstance(parsed, CLIRunCommand)
-    assert (parsed.command.name, parsed.options, parsed.arguments) == (
+    assert (parsed.command.name, parsed.options, parsed.args) == (
         "check",
         [("--fake-dns", "1.2.3.4")],
         ["myhost"],

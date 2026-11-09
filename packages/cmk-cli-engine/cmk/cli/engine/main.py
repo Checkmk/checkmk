@@ -15,7 +15,6 @@ import cmk.ccc.version_info as cmk_version_info
 from cmk import trace
 from cmk.ccc.site import get_omd_config, omd_site
 from cmk.cli.engine.arguments import RunCommand
-from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Context as CLIContext
 from cmk.crash import (
     ABCCrashReport,
@@ -26,8 +25,7 @@ from cmk.crash import (
 from cmk.profiling import backend as profiling
 from cmk.trace.export import exporter_from_config, init_span_processor
 
-from .call import CommandTracer
-from .run import CrashReporter, run, Runtime
+from .run import CommandTracer, CrashReporter, enable_file_logging, run, Runtime
 
 tracer = trace.get_tracer()
 
@@ -64,7 +62,7 @@ def saving_crash_reporter(
 
 def tracing(environ: Mapping[str, str]) -> CommandTracer:
     @contextmanager
-    def traced(context: CLIContext, run_command: RunCommand, args: CLIArgs) -> Iterator[None]:
+    def traced(context: CLIContext, run_command: RunCommand) -> Iterator[None]:
         init_span_processor(
             trace.init_tracing(
                 service_namespace=trace.service_namespace_from_config(
@@ -83,7 +81,9 @@ def tracing(environ: Mapping[str, str]) -> CommandTracer:
             f"command[{run_command.command.name}]",
             attributes={
                 "cmk.base.command.name": run_command.command.name,
-                "cmk.base.command.args": repr((context.global_options, run_command.options, args)),
+                "cmk.base.command.args": repr(
+                    (context.global_options, run_command.options, run_command.args)
+                ),
             },
             context=trace.extract_context_from_environment(dict(environ)),
         ):
@@ -106,6 +106,7 @@ def main() -> int:
                     trace_command=tracing(os.environ),
                     crash_reporter_for=saving_crash_reporter,
                     enable_profiling=profiling.enable,
+                    log_to_file=enable_file_logging,
                     write_profile=profiling.output_profile,
                 ),
             )

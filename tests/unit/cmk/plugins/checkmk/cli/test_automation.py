@@ -39,11 +39,12 @@ def test_the_version_of_a_subprocess_automation_reaches_the_cli() -> None:
     parsed = cli_parse(
         CLICommands(plugins=[cli_make_command(cli_command_automation)]),
         argv,
+        logging.getLogger(__name__),
     )
 
     assert isinstance(parsed, CLIRunCommand)
     assert ("--for-cmk-version", "2.4.0p1") in parsed.options
-    assert parsed.arguments == ["service-discovery-preview", "myhost"]
+    assert parsed.args == ["service-discovery-preview", "myhost"]
 
 
 def test_automation_declares_the_version_option_alone() -> None:

@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import logging
+
 import pytest
 
 from cmk.cli.engine.arguments import parse as cli_parse
@@ -51,6 +53,7 @@ def test_a_command_looking_up_addresses_takes_fake_dns[R](command: CLICommand[R]
     parsed = cli_parse(
         CLICommands(plugins=[cli_make_command(command)]),
         ["cmk", "--fake-dns", "1.2.3.4", f"--{command.long}", "myhost"],
+        logging.getLogger(__name__),
     )
 
     assert isinstance(parsed, CLIRunCommand)

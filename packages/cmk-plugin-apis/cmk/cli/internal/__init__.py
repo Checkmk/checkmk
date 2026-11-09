@@ -66,6 +66,8 @@ class GlobalOptions:
     """``--debug``: let most Python exceptions raise through"""
     profile: bool = False
     """``--profile``: profile the command"""
+    log_file: Path | None = None
+    """``--log-file``: where the engine logs to instead of stderr"""
 
 
 @dataclass(frozen=True, kw_only=True)

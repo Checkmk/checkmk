@@ -7,17 +7,17 @@ import errno
 import logging
 import signal
 from collections.abc import Callable, Iterator, Sequence
-from contextlib import nullcontext
+from contextlib import contextmanager, nullcontext
 from pathlib import Path
 from types import FrameType
-from typing import Final
+from typing import Final, override
 
 import pytest
 
 from cmk.cli.engine.arguments import RunCommand as CLIRunCommand
-from cmk.cli.engine.call import CommandTracer as CLICommandTracer
 from cmk.cli.engine.commands import DiscoveredCommand as CLIDiscoveredCommand
 from cmk.cli.engine.discovery import make_command as cli_make_command
+from cmk.cli.engine.run import CommandTracer as CLICommandTracer
 from cmk.cli.engine.run import dispatch as cli_dispatch
 from cmk.cli.engine.run import enable_file_logging as cli_enable_file_logging
 from cmk.cli.engine.run import log_level as cli_log_level
@@ -166,7 +166,7 @@ def test_file_logging_writes_to_the_given_file(tmp_path: Path) -> None:
     logger = logging.getLogger("test_file_logging_writes_to_the_given_file")
     path = tmp_path / "logs" / "cmk.log"
 
-    cli_enable_file_logging(str(path), logger)
+    cli_enable_file_logging(path, logger)
     logger.error("a message")
 
     assert "a message" in path.read_text()
@@ -176,7 +176,7 @@ def test_file_logging_replaces_the_handlers_it_finds(tmp_path: Path) -> None:
     logger = logging.getLogger("test_file_logging_replaces_the_handlers_it_finds")
     logger.addHandler(logging.NullHandler())
 
-    cli_enable_file_logging(str(tmp_path / "cmk.log"), logger)
+    cli_enable_file_logging(tmp_path / "cmk.log", logger)
 
     assert len(logger.handlers) == 1
 
@@ -189,12 +189,36 @@ def _command(handler: Callable[[CLIContext, None, CLIArgs], CLIExitCode]) -> CLI
     )
 
 
+class _RecordingHandler(logging.Handler):
+    def __init__(self, messages: list[str]) -> None:
+        super().__init__()
+        self._messages = messages
+
+    @override
+    def emit(self, record: logging.LogRecord) -> None:
+        self._messages.append(record.getMessage())
+
+
+class FakeFileLogging:
+    """Stands in for logging to the given file: records what reaches the logger instead"""
+
+    def __init__(self) -> None:
+        self.paths: list[Path] = []
+        self.messages: list[str] = []
+
+    def __call__(self, path: Path, logger: logging.Logger) -> None:
+        self.paths.append(path)
+        del logger.handlers[:]
+        logger.addHandler(_RecordingHandler(self.messages))
+
+
 def _runtime(
     commands: Sequence[CLIDiscoveredCommand] = (),
     *,
     trace_command: CLICommandTracer = lambda *_args: nullcontext(),
     on_sigint: Callable[[int, FrameType | None], object] = signal.default_int_handler,
     enable_profiling: Callable[[], None] = lambda: None,
+    log_to_file: Callable[[Path, logging.Logger], None] = lambda _path, _logger: None,
     write_profile: Callable[[Path], None] = lambda _path: None,
     page: Callable[[str], None] = lambda _text: None,
     write: Callable[[str], None] = lambda _text: None,
@@ -206,6 +230,7 @@ def _runtime(
         on_sigint=on_sigint,
         crash_reporter_for=lambda _omd_root, _argv, _environ: FakeCrashReporter(),
         enable_profiling=enable_profiling,
+        log_to_file=log_to_file,
         write_profile=write_profile,
         page=page,
         write=write,
@@ -221,7 +246,13 @@ def _run(argv: Sequence[str], runtime: CLIRuntime) -> int:
         signal.signal(signal.SIGINT, previous)
 
 
-_NUMBER_VALUE: Final = CLIValue(long="number", help="A number", placeholder="N", parse=int)
+_NUMBER_VALUE: Final = CLIValue(
+    long="number",
+    help="A number",
+    placeholder="N",
+    deprecated_names=frozenset({"count"}),
+    parse=int,
+)
 
 
 def _number_request(options: CLIReader) -> int | None:
@@ -264,24 +295,36 @@ def test_a_sub_option_argument_the_conversion_rejects_exits_three() -> None:
     assert _run(["cmk", "--demo", "--number", "x"], _runtime([command])) == 3
 
 
-def test_a_sub_option_argument_the_conversion_rejects_is_logged(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    runtime = _runtime(
-        [_numbered(lambda *_args: CLIExitCode.SUCCESS)], logger=logging.getLogger("cmk.test")
+def test_a_sub_option_argument_the_conversion_rejects_says_so() -> None:
+    written = Recorder()
+
+    _run(
+        ["cmk", "--demo", "--number", "x"],
+        _runtime([_numbered(lambda *_args: CLIExitCode.SUCCESS)], write=written),
     )
 
-    with caplog.at_level(logging.ERROR):
-        _run(["cmk", "--demo", "--number", "x"], runtime)
-
-    assert caplog.messages == ["--number: Invalid argument"]
+    assert "--number: Invalid argument" in str(written.calls[0])
 
 
-def test_a_sub_option_argument_the_conversion_rejects_is_raised_through_under_debug() -> None:
-    runtime = _runtime([_numbered(lambda *_args: CLIExitCode.SUCCESS)])
+def test_a_deprecated_spelling_is_reported_in_the_log_file() -> None:
+    file_logging = FakeFileLogging()
+    runtime = _runtime(
+        [_numbered(lambda *_args: CLIExitCode.SUCCESS)],
+        log_to_file=file_logging,
+        logger=logging.getLogger("test_a_deprecated_spelling_is_reported_in_the_log_file"),
+    )
 
-    with pytest.raises(ValueError, match="--number: Invalid argument"):
-        _run(["cmk", "--debug", "--demo", "--number", "x"], runtime)
+    _run(["cmk", "--log-file=cmk.log", "--demo", "--count=5"], runtime)
+
+    assert file_logging.messages == ["'--count' is deprecated in favour of option 'number'"]
+
+
+def test_the_log_file_is_the_one_asked_for() -> None:
+    file_logging = FakeFileLogging()
+
+    _run(["cmk", "--log-file=var/log/cmk.log", "--help"], _runtime(log_to_file=file_logging))
+
+    assert file_logging.paths == [Path("var/log/cmk.log")]
 
 
 def test_a_command_is_handed_the_site_root() -> None:
@@ -374,9 +417,7 @@ class FakeCommandTracer:
     def __init__(self) -> None:
         self.traced: list[str] = []
 
-    def __call__(
-        self, _context: CLIContext, run_command: CLIRunCommand, _args: CLIArgs
-    ) -> nullcontext[None]:
+    def __call__(self, _context: CLIContext, run_command: CLIRunCommand) -> nullcontext[None]:
         self.traced.append(run_command.command.name)
         return nullcontext()
 
@@ -390,6 +431,24 @@ def test_a_command_runs_traced() -> None:
     )
 
     assert tracer.traced == ["demo"]
+
+
+def test_the_command_runs_inside_its_trace() -> None:
+    events: list[str] = []
+
+    @contextmanager
+    def traced(_context: CLIContext, _run_command: CLIRunCommand) -> Iterator[None]:
+        events.append("trace starts")
+        yield
+        events.append("trace ends")
+
+    def handler(_context: CLIContext, _request: None, _args: CLIArgs) -> CLIExitCode:
+        events.append("handler")
+        return CLIExitCode.SUCCESS
+
+    _run(["cmk", "--demo"], _runtime([_command(handler)], trace_command=traced))
+
+    assert events == ["trace starts", "handler", "trace ends"]
 
 
 def test_the_help_is_not_traced() -> None:

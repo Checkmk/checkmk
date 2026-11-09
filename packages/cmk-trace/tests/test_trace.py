@@ -160,18 +160,34 @@ class StubExporter(OTLPSpanExporter):
         endpoint: str | None = None,
         insecure: bool | None = None,
         timeout: int | None = None,
+        headers: dict[str, str] | None = None,
     ):
         super().__init__(
             endpoint=endpoint,
             insecure=insecure,
             credentials=None,
-            headers=None,
+            headers=headers,
             timeout=timeout,
             compression=None,
         )
         self.test_endpoint = endpoint
         self.test_timeout = timeout
         self.test_insecure = insecure
+        self.test_headers = headers
+
+
+def test_exporter_from_config_hands_the_given_headers_to_the_exporter() -> None:
+    config = trace.TraceSendConfig(enabled=True, target="https://collector.example:4317")
+
+    exporter = export.exporter_from_config(
+        exporter_log_level=logging.INFO,
+        config=config,
+        exporter_class=StubExporter,
+        headers={"authorization": "Bearer token"},
+    )
+
+    assert isinstance(exporter, StubExporter)
+    assert exporter.test_headers == {"authorization": "Bearer token"}
 
 
 def test_exporter_from_config_local_site() -> None:

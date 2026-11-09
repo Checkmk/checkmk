@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
 from opentelemetry.sdk.trace import export as sdk_export
@@ -27,6 +28,7 @@ def exporter_from_config(
     exporter_log_level: int,
     config: TraceSendConfig,
     exporter_class: type[OTLPSpanExporter] | None = None,
+    headers: Mapping[str, str] | None = None,
 ) -> OTLPSpanExporter | None:
     if not config.enabled:
         return None
@@ -41,13 +43,15 @@ def exporter_from_config(
 
     _set_exporter_logging(exporter_log_level)
 
+    exporter_headers = None if headers is None else dict(headers)
     if isinstance(config.target, LocalTarget):
         return exporter_class(
             endpoint=f"http://localhost:{config.target.port}",
             insecure=True,
             timeout=3,
+            headers=exporter_headers,
         )
-    return exporter_class(endpoint=config.target, timeout=3)
+    return exporter_class(endpoint=config.target, timeout=3, headers=exporter_headers)
 
 
 def init_span_processor(provider: TracerProvider, exporter: SpanExporter | None = None) -> None:

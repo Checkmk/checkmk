@@ -11,6 +11,9 @@ from playwright.sync_api import expect, Locator, Page
 
 from tests.system.gui.testlib.playwright.dropdown import DropdownHelper, DropdownOptions
 from tests.system.gui.testlib.playwright.pom.sidebar.base_sidebar import SidebarHelper
+from tests.system.gui.testlib.playwright.pom.sidebar.widget_graph_legend_settings import (
+    WidgetGraphLegendSettings,
+)
 from tests.system.gui.testlib.playwright.pom.sidebar.widget_time_range_settings import (
     WidgetTimeRangeSettings,
 )
@@ -199,6 +202,11 @@ class MetricsAndGraphsWidgetWizard(BaseWidgetWizard):
     def time_range_settings(self) -> WidgetTimeRangeSettings:
         """The 'Time range' field of the visualization stage."""
         return WidgetTimeRangeSettings(self.locator())
+
+    @property
+    def graph_legend_settings(self) -> WidgetGraphLegendSettings:
+        """The 'Legend' row of the visualization stage's 'Additional graph options'."""
+        return WidgetGraphLegendSettings(self.locator())
 
     def expand_collapsed_panels(self) -> None:
         """Open every settings panel of the stage that starts out collapsed, such as

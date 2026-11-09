@@ -14,13 +14,19 @@ import logging
 
 from playwright.sync_api import Locator
 
+from tests.system.gui.testlib.playwright.pom.graphing.compact_graph_legend import (
+    CompactGraphLegend,
+)
 from tests.system.gui.testlib.playwright.pom.graphing.graph_accessor import (
     ACTION_MENU_BUTTON_NAME,
     ACTION_MENU_DROPDOWN_SELECTOR,
     GraphAccessor,
 )
 from tests.system.gui.testlib.playwright.pom.graphing.graph_surfaces import GraphContainment
-from tests.system.gui.testlib.playwright.pom.graphing.timeseries_graph import TimeSeriesGraph
+from tests.system.gui.testlib.playwright.pom.graphing.timeseries_graph import (
+    GraphPanel,
+    TimeSeriesGraph,
+)
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import BaseDashboard
 
 logger = logging.getLogger(__name__)
@@ -62,6 +68,18 @@ class DashboardGraphWidget:
             self._dashboard.page,
             self._dashboard.main_area,
         )
+
+    @property
+    def panel(self) -> GraphPanel:
+        """The figure read as a graph panel, e.g. for its extended legend, which the figure
+        renders the same way a panel does."""
+        return GraphPanel(self.figure, self._dashboard.page, self._dashboard.main_area)
+
+    @property
+    def compact_legend(self) -> CompactGraphLegend:
+        """The compact legend below the graph, shown only if the widget's render options ask
+        for it."""
+        return CompactGraphLegend(self.figure.locator(".graphing-graph-legend-compact"))
 
     @property
     def timestamp(self) -> Locator:

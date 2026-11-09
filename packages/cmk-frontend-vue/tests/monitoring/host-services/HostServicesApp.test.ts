@@ -349,8 +349,8 @@ test('requests services that are not acknowledged and not in downtime', async ()
   mockServices([makeApiEntry()])
   renderApp({ show_indicators: true })
 
-  await userEvent.click(await screen.findByRole('button', { name: 'Filter Indicator' }))
-  const panel = screen.getByRole('group', { name: 'Filter Indicator' })
+  await userEvent.click(await screen.findByRole('button', { name: 'Filter State' }))
+  const panel = screen.getByRole('group', { name: 'Filter State' })
   await userEvent.click(
     within(within(panel).getByRole('group', { name: 'Acknowledged' })).getByRole('button', {
       name: 'Toggle No'
@@ -371,8 +371,8 @@ test('requests services that are not acknowledged and not in downtime', async ()
         filter: {
           type: 'and',
           children: [
-            { type: 'condition', field: 'in_downtime', op: 'eq', value: false },
-            { type: 'condition', field: 'acknowledged', op: 'eq', value: false }
+            { type: 'condition', field: 'acknowledged', op: 'eq', value: false },
+            { type: 'condition', field: 'in_downtime', op: 'eq', value: false }
           ]
         },
         fields: ['graphs_link', 'custom_icons']
@@ -381,12 +381,12 @@ test('requests services that are not acknowledged and not in downtime', async ()
   )
 })
 
-test('clearing the mode filter restores the full, unfiltered list', async () => {
+test('clearing the state filter restores the full, unfiltered list', async () => {
   mockServices([makeApiEntry()])
   renderApp({ show_indicators: true })
 
-  await userEvent.click(await screen.findByRole('button', { name: 'Filter Indicator' }))
-  let panel = screen.getByRole('group', { name: 'Filter Indicator' })
+  await userEvent.click(await screen.findByRole('button', { name: 'Filter State' }))
+  let panel = screen.getByRole('group', { name: 'Filter State' })
   await userEvent.click(
     within(within(panel).getByRole('group', { name: 'Acknowledged' })).getByRole('button', {
       name: 'Toggle Yes'
@@ -394,8 +394,8 @@ test('clearing the mode filter restores the full, unfiltered list', async () => 
   )
   await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
 
-  await userEvent.click(screen.getByRole('button', { name: 'Filter Indicator (active)' }))
-  panel = screen.getByRole('group', { name: 'Filter Indicator' })
+  await userEvent.click(screen.getByRole('button', { name: 'Filter State (active)' }))
+  panel = screen.getByRole('group', { name: 'Filter State' })
   await userEvent.click(within(panel).getByRole('button', { name: 'Clear' }))
   await userEvent.click(within(panel).getByRole('button', { name: 'Apply' }))
 

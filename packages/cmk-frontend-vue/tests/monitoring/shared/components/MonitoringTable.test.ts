@@ -779,6 +779,17 @@ describe('a column that fits its header', () => {
     expect(probedWidth('mode')).toBe(90)
   })
 
+  test('grows by its maximum growth beyond the width its header needs', async () => {
+    mountTable({
+      columns: [{ ...FIT_COLUMNS[0]!, meta: { fitHeader: true, maxGrowth: 10 } }, FIT_COLUMNS[1]!]
+    })
+    await nextTick()
+    deliverSize(1000, 600)
+    await nextTick()
+
+    expect(probedWidth('mode')).toBe(100)
+  })
+
   test('leaves the columns that do not fit their header at their minimum width', async () => {
     mountTable({ columns: FIT_COLUMNS })
     await nextTick()
@@ -875,6 +886,18 @@ describe('the width left beyond the minimums', () => {
     expect([probedWidth('name'), probedWidth('state'), probedWidth('actions')]).toEqual([
       150, 225, 225
     ])
+  })
+
+  test('a column grows at most by its maximum growth beyond its minimum', async () => {
+    await mountSizedTable(
+      [
+        { id: 'name', header: 'Name', minSize: 100, maxSize: 110, meta: { maxGrowth: 30 } },
+        { id: 'state', header: 'State', minSize: 100 }
+      ],
+      500
+    )
+
+    expect([probedWidth('name'), probedWidth('state')]).toEqual([130, 370])
   })
 })
 

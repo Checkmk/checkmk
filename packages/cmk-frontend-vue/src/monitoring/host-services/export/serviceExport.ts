@@ -4,12 +4,15 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { HostServiceEntry, ServiceEntry } from '@/monitoring/shared/api/types'
+import { indicatorModes, stateModes } from '@/monitoring/shared/components/stateColumn'
 import { type ExportJsonValue, ExportValues, RowExport } from '@/monitoring/shared/export/rowExport'
 import { toLabelItems, toNameItems, toTagItems } from '@/monitoring/shared/labels'
 
 const COLUMN_VALUES = {
-  state: (service) => service.state,
-  modes: (service) => (service.modes ?? []).map((mode) => mode.id).join(', '),
+  // As the State column shows them: acknowledged, downtime and comments beside the state.
+  state: (service) =>
+    ExportValues.annotated(service.state, ExportValues.ids(stateModes(service.modes))),
+  modes: (service) => ExportValues.ids(indicatorModes(service.modes)).join(', '),
   name: (service) => service.name,
   summary: (service) => service.summary,
   last_state_change: (service) => ExportValues.timestamp(service.last_state_change),
@@ -35,7 +38,11 @@ export type ServiceWithHostExportColumn = keyof typeof COLUMN_VALUES_WITH_HOST
 const JSON_VALUES: Partial<
   Record<ServiceExportColumn, (service: HostServiceEntry) => ExportJsonValue>
 > = {
-  modes: (service) => (service.modes ?? []).map((mode) => mode.id),
+  state: (service) => ({
+    state: service.state,
+    modes: ExportValues.ids(stateModes(service.modes))
+  }),
+  modes: (service) => ExportValues.ids(indicatorModes(service.modes)),
   labels: (service) =>
     ExportValues.sortedObject(
       Object.entries(service.labels ?? {}).map(([key, label]) => [key, label.value])

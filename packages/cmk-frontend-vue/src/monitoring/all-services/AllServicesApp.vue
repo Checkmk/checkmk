@@ -35,6 +35,7 @@ import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/acti
 import type { ActionOutcome } from '@/monitoring/shared/components/action/types'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import { sizeModeColumn, useModeColumnWidth } from '@/monitoring/shared/components/modeColumn'
+import { sizeStateColumn, useStateIconCount } from '@/monitoring/shared/components/stateColumn'
 import {
   timestampColumnsAsShown,
   useCellTextWidth,
@@ -135,6 +136,7 @@ const allServicesService = new AllServicesService(servicesApi, getKeyShortcutSer
 })
 
 const modeColumnSize = useModeColumnWidth(() => allServicesService.items.value)
+const stateIconCount = useStateIconCount(() => allServicesService.items.value)
 const inlineCustomActions = useInlineCustomActionCount(() => allServicesService.items.value)
 const initialDisplayOptions = readDisplayOptionsFromUrl(window.location.search)
 const displayOptions = usePersistentRef(
@@ -156,16 +158,19 @@ const timestampColumnWidth = useTimestampColumnWidth(
 )
 
 const tableColumns = computed(() =>
-  sizeActionsColumn(
-    sizeModeColumn(
-      timestampColumnsAsShown(
-        uncapNameWithoutSummary(columns, allServicesService.columnVisibility.value),
-        displayOptions.value.timestampFormat,
-        timestampColumnWidth.value
+  sizeStateColumn(
+    sizeActionsColumn(
+      sizeModeColumn(
+        timestampColumnsAsShown(
+          uncapNameWithoutSummary(columns, allServicesService.columnVisibility.value),
+          displayOptions.value.timestampFormat,
+          timestampColumnWidth.value
+        ),
+        modeColumnSize.value
       ),
-      modeColumnSize.value
+      inlineCustomActions.value
     ),
-    inlineCustomActions.value
+    stateIconCount.value
   )
 )
 

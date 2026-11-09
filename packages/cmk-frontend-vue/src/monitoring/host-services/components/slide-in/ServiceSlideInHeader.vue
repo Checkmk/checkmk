@@ -17,6 +17,7 @@ import ServiceStateDisplay from '@/monitoring/shared/components/ServiceStateDisp
 import StateModeIcons from '@/monitoring/shared/components/StateModeIcons.vue'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionButtons.vue'
 import SlideInHeader from '@/monitoring/shared/components/slide-in/SlideInHeader.vue'
+import { indicatorModes, stateModes } from '@/monitoring/shared/components/stateColumn'
 
 withDefaults(
   defineProps<{
@@ -31,14 +32,18 @@ withDefaults(
 <template>
   <SlideInHeader
     :title="service.name"
-    :modes="service.modes ?? []"
+    :modes="indicatorModes(service.modes)"
     :actions="actions"
     :load-action-menu="loadActionMenu"
   >
     <template #state>
       <span class="monitoring-service-slide-in-header__state">
         <ServiceStateDisplay :state="service.state" :stale="service.stale" />
-        <StateModeIcons :flapping="service.is_flapping" :stale="service.stale" />
+        <StateModeIcons
+          :flapping="service.is_flapping"
+          :stale="service.stale"
+          :modes="stateModes(service.modes)"
+        />
       </span>
     </template>
   </SlideInHeader>

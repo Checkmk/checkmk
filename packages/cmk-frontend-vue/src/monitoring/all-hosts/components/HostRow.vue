@@ -24,6 +24,7 @@ import {
   MODE_ICONS_PER_ROW,
   indicatorIcons
 } from '@/monitoring/shared/components/modeColumn'
+import { indicatorModes, stateModes } from '@/monitoring/shared/components/stateColumn'
 import { ACTIONS_COLUMN_ID } from '@/monitoring/shared/constants'
 import { customActions, withCustomActions } from '@/monitoring/shared/customActions'
 import { formatDisplayTimestamp } from '@/monitoring/shared/formatTimestamp'
@@ -146,6 +147,7 @@ const lastStateChange = computed(() =>
     :state="row.state"
     :flapping="row.is_flapping"
     :stale="row.stale"
+    :modes="stateModes(row.modes)"
   />
   <StringCell
     v-if="hasColumn('name')"
@@ -180,7 +182,7 @@ const lastStateChange = computed(() =>
   <IndicatorCell
     v-if="hasColumn(MODE_COLUMN_ID)"
     :column-id="MODE_COLUMN_ID"
-    :modes="row.modes ?? []"
+    :modes="indicatorModes(row.modes)"
     :icons="indicatorIcons(row)"
     :max="MODE_ICONS_PER_ROW"
   />

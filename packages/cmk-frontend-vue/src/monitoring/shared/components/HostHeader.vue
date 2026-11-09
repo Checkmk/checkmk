@@ -20,6 +20,7 @@ import HostStateDisplay from '@/monitoring/shared/components/HostStateDisplay.vu
 import StateModeIcons from '@/monitoring/shared/components/StateModeIcons.vue'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionButtons.vue'
 import SlideInHeader from '@/monitoring/shared/components/slide-in/SlideInHeader.vue'
+import { indicatorModes, stateModes } from '@/monitoring/shared/components/stateColumn'
 import { hostRefOf } from '@/monitoring/shared/objectRefs'
 
 const props = withDefaults(
@@ -48,7 +49,7 @@ function onSelect(action: CellAction): void {
   <SlideInHeader
     :title="host.name"
     :title-url="url"
-    :modes="host.modes ?? []"
+    :modes="indicatorModes(host.modes)"
     :actions="actions"
     :load-action-menu="loadActionMenu"
     @select="onSelect"
@@ -57,7 +58,11 @@ function onSelect(action: CellAction): void {
     <template #state>
       <span class="monitoring-host-header__state">
         <HostStateDisplay :state="host.state" :stale="host.stale" />
-        <StateModeIcons :flapping="host.is_flapping" :stale="host.stale" />
+        <StateModeIcons
+          :flapping="host.is_flapping"
+          :stale="host.stale"
+          :modes="stateModes(host.modes)"
+        />
       </span>
     </template>
   </SlideInHeader>

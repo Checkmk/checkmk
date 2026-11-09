@@ -119,7 +119,7 @@ test('the state column reads as the one in the hosts listing', () => {
   )
 })
 
-test('the state column filter offers the state checkboxes plus flapping/stale flags', () => {
+test('the state column filter offers the state checkboxes plus the flags of its icons, in their order', () => {
   const stateColumn = serviceColumns().find(
     (column) => columnId(column as ColumnDef<never>) === 'state'
   )
@@ -135,13 +135,16 @@ test('the state column filter offers the state checkboxes plus flapping/stale fl
       { value: 'PENDING', title: 'PENDING' }
     ],
     flags: [
+      { field: 'stale', title: 'Stale' },
       { field: 'is_flapping', title: 'Flapping' },
-      { field: 'stale', title: 'Stale' }
+      { field: 'acknowledged', title: 'Acknowledged' },
+      { field: 'in_downtime', title: 'In downtime' },
+      { field: 'has_comments', title: 'Has comments' }
     ]
   })
 })
 
-test('the mode column filter no longer offers flapping, which moved to the state column', () => {
+test('the mode column filter no longer offers what moved to the state column', () => {
   const modesColumn = serviceColumns().find(
     (column) => columnId(column as ColumnDef<never>) === 'modes'
   )
@@ -149,10 +152,7 @@ test('the mode column filter no longer offers flapping, which moved to the state
   expect(modesColumn?.meta?.filter).toEqual({
     type: 'boolean-group',
     groups: [
-      { field: 'in_downtime', title: 'In downtime' },
-      { field: 'acknowledged', title: 'Acknowledged' },
       { field: 'notifications_enabled', title: 'Notifications disabled', negated: true },
-      { field: 'has_comments', title: 'Has comments' },
       { field: 'active_checks_disabled', title: 'Active checks disabled' },
       { field: 'passive_checks_disabled', title: 'Passive checks disabled' },
       { field: 'in_notification_period', title: 'Out of notification period', negated: true },

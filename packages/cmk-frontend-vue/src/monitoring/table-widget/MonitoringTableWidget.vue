@@ -20,6 +20,7 @@ import {
   sizeModeColumn,
   useModeColumnWidth
 } from '@/monitoring/shared/components/modeColumn'
+import { sizeStateColumn, useStateIconCount } from '@/monitoring/shared/components/stateColumn'
 import { ACTIONS_COLUMN_ID } from '@/monitoring/shared/constants'
 import { sizeActionsColumn, useInlineCustomActionCount } from '@/monitoring/shared/customActions'
 import type { DisplayOptions } from '@/monitoring/shared/types'
@@ -49,17 +50,21 @@ const rowActions = computed(() =>
 )
 
 const modeColumnWidth = useModeColumnWidth(() => props.rows)
+const stateIconCount = useStateIconCount(() => props.rows)
 const inlineCustomActions = useInlineCustomActionCount(() => props.rows)
 
 const columns = computed(() =>
-  sizeActionsColumn(
-    sizeModeColumn(
-      props.descriptor.columns(
-        rowActions.value === null ? props.columnIds : [...props.columnIds, ACTIONS_COLUMN_ID]
+  sizeStateColumn(
+    sizeActionsColumn(
+      sizeModeColumn(
+        props.descriptor.columns(
+          rowActions.value === null ? props.columnIds : [...props.columnIds, ACTIONS_COLUMN_ID]
+        ),
+        modeColumnWidth.value
       ),
-      modeColumnWidth.value
+      inlineCustomActions.value
     ),
-    inlineCustomActions.value
+    stateIconCount.value
   )
 )
 

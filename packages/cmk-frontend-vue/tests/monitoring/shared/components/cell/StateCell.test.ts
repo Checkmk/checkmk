@@ -26,7 +26,7 @@ function mountCell(props: StateCellProps) {
 
 // The owning MonitoringTable resolves the column widths; this stands in for it
 // so the cell can pick the label length its column has room for.
-async function mountCellInColumnOfWidth(props: StateCellProps, width: number) {
+async function mountCellInColumnOfWidth(props: StateCellProps, width: number, minWidth?: number) {
   const layout: ComputedRef<Map<string, ColumnLayoutInfo>> = computed(
     () =>
       new Map([
@@ -34,6 +34,7 @@ async function mountCellInColumnOfWidth(props: StateCellProps, width: number) {
           STATE_COLUMN_ID,
           {
             width,
+            minWidth,
             pinnedLeft: null,
             pinnedRight: null,
             isLastPinned: false,
@@ -139,4 +140,44 @@ test('keeps the flapping indicator in a narrow column', async () => {
 
   expect(screen.getByTitle('Flapping')).toBeInTheDocument()
   expect(screen.getByText('OK')).toBeInTheDocument()
+})
+
+const ACKNOWLEDGED = { icon_name: 'ack', title: 'Problem acknowledged' }
+const DOWNTIME = {
+  icon_name: 'downtime',
+  title: 'In downtime',
+  link: 'view.py?view_name=downtimes'
+}
+const COMMENTS = { icon_name: 'comment', title: '2 comments', link: 'view.py?view_name=comments' }
+
+test('shows stale, flapping, acknowledged, downtime and comments in this order', () => {
+  mountCell({
+    kind: 'service',
+    state: 'CRIT',
+    stale: true,
+    flapping: true,
+    modes: [ACKNOWLEDGED, DOWNTIME, COMMENTS]
+  })
+
+  const titles = ['Stale', 'Flapping', 'Problem acknowledged', 'In downtime', '2 comments']
+  const icons = titles.map((title) => screen.getAllByTitle(title)[0]!)
+  icons
+    .slice(1)
+    .forEach((icon, index) =>
+      expect(icons[index]!.compareDocumentPosition(icon)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
+    )
+})
+
+test('downtime and comments link to their views, the acknowledgement does not', () => {
+  mountCell({ kind: 'service', state: 'CRIT', modes: [ACKNOWLEDGED, DOWNTIME, COMMENTS] })
+
+  expect(screen.getByRole('link', { name: 'In downtime' })).toHaveAttribute('href', DOWNTIME.link)
+  expect(screen.getByRole('link', { name: '2 comments' })).toHaveAttribute('href', COMMENTS.link)
+  expect(screen.queryByRole('link', { name: 'Problem acknowledged' })).not.toBeInTheDocument()
+})
+
+test('a column widened for its icons spells the label out only beyond that', async () => {
+  await mountCellInColumnOfWidth({ state: 'DOWN' }, 140, 140)
+
+  expect(screen.getByText('DO')).toBeInTheDocument()
 })

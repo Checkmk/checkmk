@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { HostEntry } from '@/monitoring/shared/api/types'
+import { indicatorModes, stateModes } from '@/monitoring/shared/components/stateColumn'
 import {
   type ExportJsonValue,
   ExportValues,
@@ -13,8 +14,9 @@ import {
 import { toLabelItems, toNameItems, toTagItems } from '@/monitoring/shared/labels'
 
 const COLUMN_VALUES = {
-  state: (host) => host.state,
-  modes: (host) => (host.modes ?? []).map((mode) => mode.id).join(', '),
+  // As the State column shows them: acknowledged, downtime and comments beside the state.
+  state: (host) => ExportValues.annotated(host.state, ExportValues.ids(stateModes(host.modes))),
+  modes: (host) => ExportValues.ids(indicatorModes(host.modes)).join(', '),
   name: (host) => host.name,
   num_relations: (host) => ExportValues.number(host.num_relations),
   alias: (host) => host.alias ?? '',
@@ -40,7 +42,8 @@ const COLUMN_VALUES = {
 export type HostExportColumn = keyof typeof COLUMN_VALUES
 
 const JSON_VALUES: Partial<Record<HostExportColumn, (host: HostEntry) => ExportJsonValue>> = {
-  modes: (host) => (host.modes ?? []).map((mode) => mode.id),
+  state: (host) => ({ state: host.state, modes: ExportValues.ids(stateModes(host.modes)) }),
+  modes: (host) => ExportValues.ids(indicatorModes(host.modes)),
   labels: (host) =>
     ExportValues.sortedObject(
       Object.entries(host.labels ?? {}).map(([key, label]) => [key, label.value])

@@ -195,7 +195,10 @@ const columnMetrics = computed<ColumnMetric[]>(() =>
     return {
       id: column.id,
       min,
-      max: Math.max(column.columnDef.maxSize ?? DEFAULT_COLUMN_MAX_SIZE, min),
+      max:
+        column.columnDef.meta?.maxGrowth === undefined
+          ? Math.max(column.columnDef.maxSize ?? DEFAULT_COLUMN_MAX_SIZE, min)
+          : min + column.columnDef.meta.maxGrowth,
       grow: column.columnDef.meta?.grow ?? 1,
       isLeftPinned: column.getIsPinned() === 'left',
       isRightPinned: column.getIsPinned() === 'right',
@@ -272,6 +275,7 @@ interface ColumnLayout {
   id: string
   index: number
   width: number
+  min: number
   pinnedSide: 'left' | 'right' | null
   offset: number
   justify: ColumnJustify
@@ -289,6 +293,7 @@ const columnLayout = computed<ColumnLayout[]>(() => {
     id: metric.id,
     index,
     width: widths[index] ?? metric.min,
+    min: metric.min,
     pinnedSide: pinningActive.value
       ? metric.isLeftPinned
         ? 'left'
@@ -344,6 +349,7 @@ const columnInfos = computed<Map<string, ColumnLayoutInfo>>(() => {
   for (const entry of columnLayout.value) {
     infos.set(entry.id, {
       width: containerWidth.value === null ? null : entry.width,
+      minWidth: entry.min,
       pinnedLeft: entry.pinnedSide === 'left' ? entry.offset : null,
       pinnedRight: entry.pinnedSide === 'right' ? entry.offset : null,
       isLastPinned: entry.index === lastPinnedLeftIndex.value,

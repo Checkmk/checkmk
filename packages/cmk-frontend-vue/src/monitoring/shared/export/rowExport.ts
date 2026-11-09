@@ -20,7 +20,7 @@ export type ExportFormat = (typeof FORMATS)[number]
 
 export const REPORT_FORMAT = 'pdf'
 
-export type ExportJsonValue = string | string[] | Record<string, string>
+export type ExportJsonValue = string | string[] | Record<string, string | string[]>
 
 export interface RowExportSchema<Row, Column extends string> {
   readonly filePrefix: string
@@ -35,6 +35,15 @@ export class ExportValues {
 
   static timestamp(unixSeconds: number | null | undefined): string {
     return unixSeconds === undefined || unixSeconds === null ? '' : renderDateAndTime(unixSeconds)
+  }
+
+  /** A value followed by its notes in parentheses, if it has any. */
+  static annotated(value: string, notes: string[]): string {
+    return notes.length === 0 ? value : `${value} (${notes.join(', ')})`
+  }
+
+  static ids(items: readonly { id: string }[]): string[] {
+    return items.map((item) => item.id)
   }
 
   static items(items: LabelCellItem[]): string {

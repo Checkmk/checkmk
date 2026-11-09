@@ -14,6 +14,7 @@ import { columnId } from '@/monitoring/shared/tableState/schema'
 import { CELL_PADDING } from './MonitoringTableContext'
 import type { BooleanGroupFilter } from './filter/types'
 import { iconListWidth } from './iconList'
+import { type RowWithStateIcons, indicatorModes } from './stateColumn'
 
 /** The Indicator column; its id predates its name and stays, as saved dashboards refer to it. */
 export const MODE_COLUMN_ID = 'modes'
@@ -24,8 +25,7 @@ export const MODE_COLUMN_MIN_WIDTH = 56
 export const MODE_COLUMN_MAX_WIDTH = 152
 export const FILLED_MODE_COLUMN_WIDTH = iconListWidth(MODE_ICONS_PER_ROW) + CELL_PADDING
 
-export interface RowWithModes {
-  modes?: readonly unknown[] | null | undefined
+export interface RowWithModes extends RowWithStateIcons {
   custom_icons?: readonly CustomIcon[] | null | undefined
 }
 
@@ -38,7 +38,7 @@ export function useModeColumnWidth(rows: () => readonly RowWithModes[]): Compute
   const carriesModes = ref(false)
 
   watchEffect(() => {
-    if (rows().some((row) => (row.modes?.length ?? 0) + indicatorIcons(row).length > 0)) {
+    if (rows().some((row) => indicatorModes(row.modes).length + indicatorIcons(row).length > 0)) {
       carriesModes.value = true
     }
   })

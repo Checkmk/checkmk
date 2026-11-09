@@ -31,6 +31,12 @@ function makeHost(overrides: Partial<HostEntry> = {}): HostEntry {
   }
 }
 
+const STATE_AND_INDICATOR_MODES: NonNullable<HostEntry['modes']> = [
+  { id: 'downtime', icon_name: 'downtime', link: '', title: 'In scheduled downtime' },
+  { id: 'notifications_off', icon_name: 'ndisabled', link: '', title: 'No notifications' },
+  { id: 'acknowledged', icon_name: 'ack', link: '', title: 'Problem acknowledged' }
+]
+
 async function csvOf(hostExport: HostExport): Promise<string> {
   return hostExport.file('csv').text()
 }
@@ -57,14 +63,37 @@ describe('HostExport', () => {
       [
         makeHost({
           modes: [
-            { id: 'downtime', icon_name: 'downtime', link: '', title: 'In scheduled downtime' },
-            { id: 'acknowledged', icon_name: 'ack', link: '', title: 'Problem acknowledged' }
+            { id: 'notifications_off', icon_name: 'ndisabled', link: '', title: 'No notify' },
+            { id: 'active_checks_off', icon_name: 'disabled', link: '', title: 'No checks' }
           ]
         })
       ]
     )
 
-    expect(await csvOf(hostExport)).toBe('"modes"\n"downtime, acknowledged"\n')
+    expect(await csvOf(hostExport)).toBe('"modes"\n"notifications_off, active_checks_off"\n')
+  })
+
+  test('writes acknowledged, downtime and comments beside the state, not in the modes', async () => {
+    const hostExport = new HostExport(
+      ['state', 'modes'],
+      [makeHost({ state: 'DOWN', modes: STATE_AND_INDICATOR_MODES })]
+    )
+
+    expect(await csvOf(hostExport)).toBe(
+      '"state";"modes"\n"DOWN (acknowledged, downtime)";"notifications_off"\n'
+    )
+  })
+
+  test('writes the state with its acknowledged, downtime and comments in JSON', async () => {
+    const hostExport = new HostExport(
+      ['state', 'modes'],
+      [makeHost({ state: 'DOWN', modes: STATE_AND_INDICATOR_MODES })]
+    )
+
+    expect(await jsonOf(hostExport)).toEqual([
+      ['state', 'modes'],
+      [{ state: 'DOWN', modes: ['acknowledged', 'downtime'] }, ['notifications_off']]
+    ])
   })
 
   test('lists labels, tags and contacts as the table shows them, in its order', async () => {
@@ -125,8 +154,8 @@ describe('HostExport', () => {
       'application/json',
       [
         ['name', 'state'],
-        ['web-1', 'UP'],
-        ['db-1', 'UP']
+        ['web-1', { state: 'UP', modes: [] }],
+        ['db-1', { state: 'UP', modes: [] }]
       ]
     ])
   })
@@ -144,7 +173,7 @@ describe('HostExport', () => {
           contacts: ['zoe', 'anna'],
           contact_groups: ['all'],
           groups: ['web', 'linux'],
-          modes: [{ id: 'downtime', icon_name: 'downtime', link: '', title: 'In downtime' }]
+          modes: [{ id: 'active_checks_off', icon_name: 'disabled', link: '', title: 'No checks' }]
         })
       ]
     )
@@ -157,7 +186,7 @@ describe('HostExport', () => {
         ['anna', 'zoe'],
         ['all'],
         ['linux', 'web'],
-        ['downtime']
+        ['active_checks_off']
       ]
     ])
   })

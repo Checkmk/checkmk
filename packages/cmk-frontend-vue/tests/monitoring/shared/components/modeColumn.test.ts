@@ -18,12 +18,22 @@ import {
   useModeColumnWidth
 } from '@/monitoring/shared/components/modeColumn'
 
-interface Row {
-  modes?: { icon_name: string }[]
+interface Mode {
+  id: string
+  icon_name: string
+  title: string
 }
 
-function modes(count: number): { icon_name: string }[] {
-  return Array.from({ length: count }, (_, index) => ({ icon_name: `icon-${index}` }))
+interface Row {
+  modes?: Mode[]
+}
+
+function modes(count: number): Mode[] {
+  return Array.from({ length: count }, (_, index) => ({
+    id: `mode-${index}`,
+    icon_name: `icon-${index}`,
+    title: `Mode ${index}`
+  }))
 }
 
 test('a listing without any mode leaves the column at its minimum width', () => {
@@ -36,6 +46,14 @@ test('a single mode anywhere in the listing widens the column', () => {
   const rows = ref<Row[]>([{ modes: [] }, { modes: modes(1) }])
 
   expect(useModeColumnWidth(() => rows.value).value).toBe(FILLED_MODE_COLUMN_WIDTH)
+})
+
+test('the modes the State column shows do not widen the column', () => {
+  const rows = ref<Row[]>([
+    { modes: [{ id: 'downtime', icon_name: 'downtime', title: 'In scheduled downtime' }] }
+  ])
+
+  expect(useModeColumnWidth(() => rows.value).value).toBe(MODE_COLUMN_MIN_WIDTH)
 })
 
 test('more modes than fit one row do not widen the column further', () => {

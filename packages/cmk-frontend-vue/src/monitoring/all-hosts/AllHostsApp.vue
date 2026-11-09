@@ -20,6 +20,7 @@ import HostSlideIn from '@/monitoring/shared/components/HostSlideIn.vue'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 import TypeToFocusIndicator from '@/monitoring/shared/components/TypeToFocusIndicator.vue'
 import { sizeModeColumn, useModeColumnWidth } from '@/monitoring/shared/components/modeColumn'
+import { sizeStateColumn, useStateIconCount } from '@/monitoring/shared/components/stateColumn'
 import {
   timestampColumnsAsShown,
   useCellTextWidth,
@@ -162,6 +163,7 @@ const hostService = new HostService(hostApi, getKeyShortcutServiceInstance(), {
 })
 
 const modeColumnSize = useModeColumnWidth(() => hostService.items.value)
+const stateIconCount = useStateIconCount(() => hostService.items.value)
 const inlineCustomActions = useInlineCustomActionCount(() => hostService.items.value)
 const initialDisplayOptions = readDisplayOptionsFromUrl(window.location.search)
 const displayOptions = usePersistentRef(
@@ -183,16 +185,19 @@ const timestampColumnWidth = useTimestampColumnWidth(
 )
 
 const tableColumns = computed(() =>
-  sizeActionsColumn(
-    sizeModeColumn(
-      timestampColumnsAsShown(
-        columns,
-        displayOptions.value.timestampFormat,
-        timestampColumnWidth.value
+  sizeStateColumn(
+    sizeActionsColumn(
+      sizeModeColumn(
+        timestampColumnsAsShown(
+          columns,
+          displayOptions.value.timestampFormat,
+          timestampColumnWidth.value
+        ),
+        modeColumnSize.value
       ),
-      modeColumnSize.value
+      inlineCustomActions.value
     ),
-    inlineCustomActions.value
+    stateIconCount.value
   )
 )
 

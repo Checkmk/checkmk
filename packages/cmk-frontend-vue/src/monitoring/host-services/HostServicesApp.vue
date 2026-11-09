@@ -30,6 +30,7 @@ import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTab
 import TypeToFocusIndicator from '@/monitoring/shared/components/TypeToFocusIndicator.vue'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import { sizeModeColumn, useModeColumnWidth } from '@/monitoring/shared/components/modeColumn'
+import { sizeStateColumn, useStateIconCount } from '@/monitoring/shared/components/stateColumn'
 import {
   timestampColumnsAsShown,
   useCellTextWidth,
@@ -175,6 +176,7 @@ const hostServicesService = new HostServicesService(
 )
 
 const modeColumnSize = useModeColumnWidth(() => hostServicesService.items.value)
+const stateIconCount = useStateIconCount(() => hostServicesService.items.value)
 const inlineCustomActions = useInlineCustomActionCount(() => hostServicesService.items.value)
 const initialDisplayOptions = readDisplayOptionsFromUrl(window.location.search)
 const displayOptions = usePersistentRef(
@@ -196,16 +198,19 @@ const timestampColumnWidth = useTimestampColumnWidth(
 )
 
 const tableColumns = computed(() =>
-  sizeActionsColumn(
-    sizeModeColumn(
-      timestampColumnsAsShown(
-        uncapNameWithoutSummary(columns, hostServicesService.columnVisibility.value),
-        displayOptions.value.timestampFormat,
-        timestampColumnWidth.value
+  sizeStateColumn(
+    sizeActionsColumn(
+      sizeModeColumn(
+        timestampColumnsAsShown(
+          uncapNameWithoutSummary(columns, hostServicesService.columnVisibility.value),
+          displayOptions.value.timestampFormat,
+          timestampColumnWidth.value
+        ),
+        modeColumnSize.value
       ),
-      modeColumnSize.value
+      inlineCustomActions.value
     ),
-    inlineCustomActions.value
+    stateIconCount.value
   )
 )
 

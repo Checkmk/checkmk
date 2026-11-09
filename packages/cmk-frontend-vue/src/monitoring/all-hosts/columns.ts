@@ -23,6 +23,7 @@ import type {
   StringInputFilter
 } from '@/monitoring/shared/components/filter/types'
 import { MODE_COLUMN_ID, indicatorColumn } from '@/monitoring/shared/components/modeColumn'
+import type { StateFlagField } from '@/monitoring/shared/components/stateColumn'
 import { ACTIONS_COLUMN_ID } from '@/monitoring/shared/constants'
 import { actionsColumnWidth } from '@/monitoring/shared/customActions'
 import { columnId } from '@/monitoring/shared/tableState/schema'
@@ -81,10 +82,7 @@ const ALWAYS_FETCHED_HIDEABLE_COLUMNS = ['site_id', 'customer', MODE_COLUMN_ID] 
 
 /** The boolean host fields the Indicator column renders as icons and offers as filters. */
 type HostModeField =
-  | 'in_downtime'
-  | 'acknowledged'
   | 'notifications_enabled'
-  | 'has_comments'
   | 'active_checks_disabled'
   | 'passive_checks_disabled'
   | 'in_notification_period'
@@ -154,7 +152,7 @@ export function buildHostColumns({
   // A host row has one inline button, the link into Setup.
   const actionsWidth = actionsColumnWidth(1)
 
-  const stateFilter: CheckboxListWithFlagsFilter<'state', 'is_flapping' | 'stale'> = {
+  const stateFilter: CheckboxListWithFlagsFilter<'state', StateFlagField> = {
     type: 'checkbox-list-with-flags',
     field: 'state',
     options: [
@@ -163,9 +161,13 @@ export function buildHostColumns({
       { value: 'UNREACHABLE', title: _t('UNREACH') },
       { value: 'PENDING', title: _t('PENDING') }
     ] satisfies { value: HostState; title: string }[],
+    // Same order as the icons beside the state tag, see STATE_MODE_IDS.
     flags: [
+      { field: 'stale', title: _t('Stale') },
       { field: 'is_flapping', title: _t('Flapping') },
-      { field: 'stale', title: _t('Stale') }
+      { field: 'acknowledged', title: _t('Acknowledged') },
+      { field: 'in_downtime', title: _t('In downtime') },
+      { field: 'has_comments', title: _t('Has comments') }
     ]
   }
 
@@ -293,10 +295,7 @@ export function buildHostColumns({
   const modesFilter: BooleanGroupFilter<HostModeField> = {
     type: 'boolean-group',
     groups: [
-      { field: 'in_downtime', title: _t('In downtime') },
-      { field: 'acknowledged', title: _t('Acknowledged') },
       { field: 'notifications_enabled', title: _t('Notifications disabled'), negated: true },
-      { field: 'has_comments', title: _t('Has comments') },
       { field: 'active_checks_disabled', title: _t('Active checks disabled') },
       { field: 'passive_checks_disabled', title: _t('Passive checks disabled') },
       {
@@ -326,8 +325,6 @@ export function buildHostColumns({
       accessorKey: 'state',
       header: _t('State'),
       sortDescFirst: true,
-      minSize: 86,
-      maxSize: 131,
       meta: { filter: stateFilter }
     },
     {

@@ -246,8 +246,9 @@ describe('DashboardContentMonitoringTable', () => {
     await renderWidget()
     await screen.findByText('heute')
 
-    expect(screen.getAllByRole('columnheader').map((header) => header.textContent?.trim())).toEqual(
-      ['State', 'Host', 'Actions']
+    // By name, since a column that fits its header keeps hidden room for the sort position.
+    expect(screen.getAllByRole('columnheader')).toEqual(
+      ['State', 'Host', 'Actions'].map((name) => screen.getByRole('columnheader', { name }))
     )
   })
 

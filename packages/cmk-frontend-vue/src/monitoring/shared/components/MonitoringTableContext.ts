@@ -35,6 +35,11 @@ declare module '@tanstack/vue-table' {
      * other columns: one with 3 grows three times as fast as one with the default 1. Positive.
      */
     grow?: number
+    /**
+     * How much wider than its minimum the column may grow, where the minimum includes the width
+     * that `fitHeader` asks for. Takes precedence over `maxSize`.
+     */
+    maxGrowth?: number
     /** The stretch column absorbs all remaining width. Ignored by MonitoringTable. */
     stretch?: boolean
   }
@@ -96,6 +101,8 @@ export const TABLE_BORDER_SPACING_PX = `${TABLE_BORDER_SPACING}px`
 
 export interface ColumnLayoutInfo {
   width: number | null
+  /** The narrowest the column gets: its minSize, or its label's width if wider. */
+  minWidth?: number | undefined
   pinnedLeft: number | null
   pinnedRight: number | null
   isLastPinned: boolean

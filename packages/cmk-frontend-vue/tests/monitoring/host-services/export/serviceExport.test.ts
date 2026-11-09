@@ -62,8 +62,8 @@ describe('ServiceExport', () => {
   test('names the modes by their id, not by their icon', async () => {
     const service = makeService({
       modes: [
-        { id: 'downtime', icon_name: 'downtime', link: '', title: 'In scheduled downtime' },
-        { id: 'acknowledged', icon_name: 'ack', link: '', title: 'Problem acknowledged' }
+        { id: 'notifications_off', icon_name: 'ndisabled', link: '', title: 'No notify' },
+        { id: 'active_checks_off', icon_name: 'disabled', link: '', title: 'No checks' }
       ]
     })
 
@@ -71,7 +71,23 @@ describe('ServiceExport', () => {
       await new ServiceExport('web-1', ['modes'], [service]).file('json').text()
     )
 
-    expect(rows).toEqual([['modes'], [['downtime', 'acknowledged']]])
+    expect(rows).toEqual([['modes'], [['notifications_off', 'active_checks_off']]])
+  })
+
+  test('writes acknowledged, downtime and comments beside the state, not in the modes', async () => {
+    const service = makeService({
+      state: 'CRIT',
+      modes: [
+        { id: 'comments', icon_name: 'comment', link: '', title: '1 comment' },
+        { id: 'notifications_off', icon_name: 'ndisabled', link: '', title: 'No notify' }
+      ]
+    })
+
+    const file = new ServiceExport('web-1', ['state', 'modes'], [service]).file('csv')
+
+    expect((await file.text()).replace(CSV_BOM, '')).toBe(
+      '"state";"modes"\n"CRIT (comments)";"notifications_off"\n'
+    )
   })
 
   test('names the file after the host', () => {

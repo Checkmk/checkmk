@@ -964,7 +964,7 @@
     },
     "@@perl-modules+//:extensions.bzl%perl_modules": {
       "general": {
-        "bzlTransitiveDigest": "ZFYBxLk7OFs/ocr5QU/fWLq5QvhtMRz/Ev0GLrw+i2Q=",
+        "bzlTransitiveDigest": "witXEIg5hr5mzvDAg2a0m0XPFE2ts9rsrLJuAjMLUPA=",
         "usagesDigest": "mh37B+KBSnwUY7rnm6ai8Qx92VonPXyXV0uXPY66KTA=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -1165,7 +1165,7 @@
             "attributes": {
               "sha256": "4abbba65165d1750e5fcb7f3898f3d7315af566a361576426394710b35c2f829",
               "urls": [
-                "https://ftp.fau.de/macports/distfiles/perl5/Getopt-Long-2.43.tar.gz",
+                "https://cpan.metacpan.org/authors/id/J/JV/JV/Getopt-Long-2.43.tar.gz",
                 "https://artifacts.lan.tribe29.com/repository/upstream-archives/Getopt-Long-2.43.tar.gz"
               ]
             }

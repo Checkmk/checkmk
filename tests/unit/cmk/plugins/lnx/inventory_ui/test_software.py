@@ -9,7 +9,6 @@ from cmk.inventory_ui.v1 import TextField
 from cmk.plugins.lnx.inventory_ui.software import node_software_packages
 
 
-@pytest.mark.xfail(strict=True, raises=TypeError, reason="crash group 4873")
 @pytest.mark.parametrize("column", ["version", "package_version"])
 def test_versions_with_differently_split_parts_can_be_sorted(column: str) -> None:
     field = node_software_packages.table.columns[column]

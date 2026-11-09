@@ -2889,7 +2889,7 @@ class ContactSelection(BaseSchema):
     )
     explicit_email_addresses = fields.Nested(
         ExplicitEmailAddressesCheckbox,
-        description="Send notifications to the following explicit email addresses (non-CSE editions only).",
+        description="Send notifications to the following explicit email addresses (non-Cloud editions only).",
     )
     restrict_by_contact_groups = fields.Nested(
         ListOfContactGroupsCheckbox,
@@ -2922,7 +2922,7 @@ class ContactSelection(BaseSchema):
             and data["explicit_email_addresses"].get("state") == "enabled"
         ):
             raise ValidationError(
-                "The field 'explicit_email_addresses' is not allowed in CSE edition.",
+                "The field 'explicit_email_addresses' is not allowed in the Cloud edition.",
                 field_name="explicit_email_addresses",
             )
         return data

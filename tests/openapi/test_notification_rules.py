@@ -2544,7 +2544,7 @@ def test_forbid_explicit_email_addresses_in_a_create_notification_request_in_clo
 
     assert "explicit_email_addresses" in resp.json["fields"]["rule_config"]["contact_selection"]
     assert (
-        "not allowed in CSE edition"
+        "not allowed in the Cloud edition"
         in resp.json["fields"]["rule_config"]["contact_selection"]["explicit_email_addresses"][0]
     )
 

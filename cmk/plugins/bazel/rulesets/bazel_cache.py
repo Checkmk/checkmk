@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Mapping
+
 from cmk.rulesets.v1 import Help, Label, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
@@ -20,6 +22,18 @@ from cmk.rulesets.v1.form_specs import (
 )
 from cmk.rulesets.v1.form_specs.validators import NetworkPort
 from cmk.rulesets.v1.rule_specs import CheckParameters, HostCondition, SpecialAgent, Topic
+
+
+def _migrate_cert_check_key(value: object) -> Mapping[str, object]:
+    # The checkbox has always been labelled "SSL certificate verification", so
+    # the value stored under the old "no_cert_check" key means "verify".
+    if not isinstance(value, dict):
+        raise TypeError(value)
+    if "no_cert_check" not in value:
+        return value
+    migrated = {k: v for k, v in value.items() if k != "no_cert_check"}
+    migrated["verify_cert"] = value["no_cert_check"]
+    return migrated
 
 
 def _formspec_bazel_cache() -> Dictionary:
@@ -67,7 +81,7 @@ def _formspec_bazel_cache() -> Dictionary:
                 ),
                 required=True,
             ),
-            "no_cert_check": DictElement(
+            "verify_cert": DictElement(
                 parameter_form=BooleanChoice(
                     label=Label("SSL certificate verification"),
                     prefill=DefaultValue(False),
@@ -75,6 +89,7 @@ def _formspec_bazel_cache() -> Dictionary:
                 required=True,
             ),
         },
+        migrate=_migrate_cert_check_key,
     )
 
 

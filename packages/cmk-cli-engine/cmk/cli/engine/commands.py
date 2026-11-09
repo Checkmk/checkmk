@@ -42,6 +42,7 @@ class DiscoveredCommand:
     description: Sequence[str]
     options: Sequence[Declaration]
     bind: Callable[[CLIReader], BoundCommand]
+    default: bool
 
 
 def bind[R](command: CLICommand[R], reader: CLIReader) -> BoundCommand:
@@ -148,6 +149,16 @@ def _check_arguments(commands: Sequence[DiscoveredCommand], options: Sequence[De
             raise ValueError(f"{spelling!r} is declared both with and without an argument")
 
 
+def _default_command(commands: Sequence[DiscoveredCommand]) -> DiscoveredCommand | None:
+    match [command for command in commands if command.default]:
+        case []:
+            return None
+        case [command]:
+            return command
+        case defaults:
+            raise ValueError(f"{[command.name for command in defaults]} are all default commands")
+
+
 def _help_order(text: str) -> str:
     return text.lstrip(" -").lower()
 
@@ -156,6 +167,7 @@ class Commands:
     def __init__(self, *, plugins: Sequence[DiscoveredCommand]) -> None:
         self._commands = plugins
         self._command_map = _map_commands(plugins)
+        self.default = _default_command(plugins)
         self._options = [
             HELP_OPTION,
             *GENERAL_OPTIONS,

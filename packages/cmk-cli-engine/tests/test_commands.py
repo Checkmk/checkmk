@@ -27,6 +27,7 @@ def _command(
     short: str | None = None,
     *,
     request: Callable[[CLIReader], object] = cli_no_options,
+    default: bool = False,
 ) -> CLIDiscoveredCommand:
     return cli_make_command(
         CLICommand(
@@ -36,6 +37,7 @@ def _command(
             request=request,
             handler=_never,
             help="a command under test",
+            default=default,
         )
     )
 
@@ -75,3 +77,8 @@ def test_an_option_cannot_be_declared_with_and_without_an_argument() -> None:
                 ),
             ]
         )
+
+
+def test_there_is_at_most_one_default_command() -> None:
+    with pytest.raises(ValueError, match="default commands"):
+        CLICommands(plugins=[_command("one", default=True), _command("other", default=True)])

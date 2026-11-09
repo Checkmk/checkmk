@@ -203,6 +203,8 @@ class Command[R]:
     short: str | None = None
     arguments: Arguments | None = None
     description: Sequence[str] | None = None
+    default: bool = False
+    """Whether positional arguments without any command select this command"""
 
     def __post_init__(self) -> None:
         if not self.name.isidentifier():

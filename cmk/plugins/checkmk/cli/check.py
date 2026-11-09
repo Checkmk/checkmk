@@ -89,9 +89,14 @@ def _checking_request(options: CLIReader) -> CheckingRequest:
     )
 
 
+_HOST_AND_ADDRESS: Final = 2
+
+
 def _mode_check(
     omd_root: Path, global_options: CLIGlobalOptions, request: CheckingRequest, args: CLIArgs
 ) -> CLIExitCode:
+    if len(args) > _HOST_AND_ADDRESS:
+        raise MKBailOut("Checking takes a HOST and an optional IPADDRESS, nothing more")
     app = make_app(omd_root)
     plugins = load_checks(debug=global_options.debug)
     loading_result = config.load(validate_hosts=True, debug=global_options.debug)
@@ -165,6 +170,7 @@ cli_command_check = CLICommand(
     request=_checking_request,
     handler=_run_check,
     arguments=CLIArguments("HOST [IPADDRESS]", optional=True),
+    default=True,
     help="Check all services on the given HOST",
     description=[
         (

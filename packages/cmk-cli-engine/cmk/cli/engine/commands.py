@@ -5,7 +5,7 @@
 
 
 import textwrap
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 
 from cmk.cli.internal import Args as CLIArgs
@@ -22,8 +22,10 @@ from .options import (
     HELP_OPTION,
     HELP_WIDTH,
     long_getopt_specs,
+    placeholder,
     short_getopt_specs,
     short_help_text,
+    spellings,
 )
 
 type BoundCommand = Callable[[CLIContext, CLIArgs], CLIExitCode]
@@ -61,8 +63,12 @@ def _long_getopt_specs(command: DiscoveredCommand) -> Sequence[str]:
     return [f"{command.long}=" if _requires_argument(command) else command.long]
 
 
+def _command_spellings(command: DiscoveredCommand) -> Sequence[str]:
+    return [*([] if command.short is None else [f"-{command.short}"]), f"--{command.long}"]
+
+
 def _spelled(command: DiscoveredCommand) -> str:
-    return f"{'' if command.short is None else f'-{command.short}, '}--{command.long}"
+    return ", ".join(_command_spellings(command))
 
 
 def _spelled_argument(arguments: CLIArguments | None) -> str:
@@ -102,21 +108,44 @@ def _long_help_text(command: DiscoveredCommand) -> str | None:
     return "\n\n".join(text)
 
 
+def _names(option: Declaration) -> Sequence[str]:
+    return [name for name in (option.short, option.long, *option.deprecated_names) if name]
+
+
 def _map_commands(commands: Sequence[DiscoveredCommand]) -> Mapping[str, DiscoveredCommand]:
-    reserved = {HELP_OPTION.long, HELP_OPTION.short}
+    claimants = {
+        name: f"the option {option.long!r}"
+        for option in (HELP_OPTION, *GENERAL_OPTIONS)
+        for name in _names(option)
+    }
     mapped: dict[str, DiscoveredCommand] = {}
     for command in commands:
         for name in (command.long, command.short):
             if name is None:
                 continue
-            if name in reserved:
-                raise ValueError(f"{name!r} is the help, not the command {command.name!r}")
-            if (other := mapped.get(name)) is not None:
-                raise ValueError(
-                    f"{name!r} is claimed by the commands {other.name!r} and {command.name!r}"
-                )
+            if (other := claimants.get(name)) is not None:
+                raise ValueError(f"{name!r} is claimed by {other} and the command {command.name!r}")
+            claimants[name] = f"the command {command.name!r}"
             mapped[name] = command
     return mapped
+
+
+def _argument_requirements(
+    commands: Sequence[DiscoveredCommand], options: Sequence[Declaration]
+) -> Iterator[tuple[str, bool]]:
+    for command in commands:
+        for spelling in _command_spellings(command):
+            yield spelling, _requires_argument(command)
+    for option in options:
+        for spelling in spellings(option):
+            yield spelling, placeholder(option) is not None
+
+
+def _check_arguments(commands: Sequence[DiscoveredCommand], options: Sequence[Declaration]) -> None:
+    declared: dict[str, bool] = {}
+    for spelling, requires_argument in _argument_requirements(commands, options):
+        if declared.setdefault(spelling, requires_argument) != requires_argument:
+            raise ValueError(f"{spelling!r} is declared both with and without an argument")
 
 
 def _help_order(text: str) -> str:
@@ -132,6 +161,7 @@ class Commands:
             *GENERAL_OPTIONS,
             *(option for command in plugins for option in command.options),
         ]
+        _check_arguments(plugins, self._options)
 
     def find(self, name: str) -> DiscoveredCommand | None:
         return self._command_map.get(name)

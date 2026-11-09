@@ -1,4 +1,4 @@
-title: AWS v2 ApplicationELB: HTTP Target Groups
+title: AWS Application Load Balancer: HTTP Target Group Errors (v2)
 agents: aws_v2
 catalog: cloud/aws
 license: GPLv2

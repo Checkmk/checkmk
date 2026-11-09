@@ -1,4 +1,4 @@
-title: AWS v2 CE: Total Reservation Utilization
+title: AWS Cost Explorer: Total Reservation Utilization (v2)
 agents: aws_v2
 catalog: cloud/aws
 license: GPLv2

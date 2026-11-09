@@ -1,4 +1,4 @@
-title: AWS v2 EBS: Disk IO
+title: AWS EBS: Disk I/O (v2)
 agents: aws_v2
 catalog: cloud/aws
 license: GPLv2

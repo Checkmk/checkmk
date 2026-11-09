@@ -1,4 +1,4 @@
-title: AWS v2 DynamoDB: Latency
+title: AWS DynamoDB: Latency (v2)
 agents: aws_v2
 catalog: cloud/aws
 license: GPLv2

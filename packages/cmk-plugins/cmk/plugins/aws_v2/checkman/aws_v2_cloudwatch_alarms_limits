@@ -1,4 +1,4 @@
-title: AWS v2 CloudWatch: Alarms Limits
+title: AWS CloudWatch: Alarm Limits (v2)
 agents: aws_v2
 catalog: cloud/aws
 license: GPLv2

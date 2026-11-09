@@ -1,4 +1,4 @@
-title: AWS ApplicationELB: Statistics
+title: AWS Application Load Balancer: Statistics
 agents: aws
 catalog: cloud/aws
 license: GPLv2

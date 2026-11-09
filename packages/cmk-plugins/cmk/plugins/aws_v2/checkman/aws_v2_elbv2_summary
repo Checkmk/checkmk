@@ -1,4 +1,4 @@
-title: AWS v2 ApplicationELB: Summary
+title: AWS Application Load Balancer: Summary (v2)
 agents: aws_v2
 catalog: cloud/aws
 license: GPLv2

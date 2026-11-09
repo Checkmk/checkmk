@@ -1,4 +1,4 @@
-title: AWS v2 EBS: Burst Balance
+title: AWS EBS: Burst Balance (v2)
 agents: aws_v2
 catalog: cloud/aws
 license: GPLv2

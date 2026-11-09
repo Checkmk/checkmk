@@ -1,4 +1,4 @@
-title: AWS ApplicationELB: HTTP ELB
+title: AWS Application Load Balancer: Load Balancer HTTP Errors
 agents: aws
 catalog: cloud/aws
 license: GPLv2

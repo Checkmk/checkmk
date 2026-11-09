@@ -1,4 +1,4 @@
-title: AWS ApplicationELB: Target Groups
+title: AWS Application Load Balancer: Target Groups
 agents: aws
 catalog: cloud/aws
 license: GPLv2

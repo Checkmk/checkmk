@@ -2197,6 +2197,15 @@ class Site:
                 # Assumed benign - to be confirmed by the component team. See CMK-35802.
                 logger.warning("Ignored crash report. See CMK-35802")
                 continue
+            if re.search(
+                r"Error creating configuration: \[Errno 2\] No such file or directory: "
+                r"'[^']*/var/check_mk/discovered_host_labels/[^']*\.mk'",
+                crash_detail,
+            ):
+                # The hourly cleanup of discovered host labels deletes label files while the core
+                # configuration is created from them.
+                logger.warning("Ignored crash report due to known race. See CMK-42100")
+                continue
             if re.search("Licensed phase: too many services.", crash_detail):
                 logger.warning("Ignored crash report due to license violation!")
                 continue

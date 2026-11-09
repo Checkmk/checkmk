@@ -5,7 +5,7 @@
 
 from collections.abc import Iterator
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, model_validator
 
 from cmk.server_side_calls.v1 import HostConfig, Secret, SpecialAgentCommand, SpecialAgentConfig
 
@@ -15,7 +15,19 @@ class Params(BaseModel):
     password: Secret | None = None
     port: int | None = None
     protocol: str | None = None
-    no_cert_check: bool = Field(alias="no-cert-check", default=True)
+    verify_cert: bool
+
+    @model_validator(mode="before")
+    @classmethod
+    def _read_unmigrated_cert_check_key(cls, data: object) -> object:
+        # A central site on an older 2.5.0 patch release still sends the unmigrated
+        # key, and the remote site does not run cmk-update-config within a minor
+        # version. The old value already means "verify", so read it as is.
+        if not isinstance(data, dict) or "no_cert_check" not in data:
+            return data
+        migrated = {k: v for k, v in data.items() if k != "no_cert_check"}
+        migrated["verify_cert"] = data["no_cert_check"]
+        return migrated
 
 
 def generate_bazel_cache_command(
@@ -31,7 +43,7 @@ def generate_bazel_cache_command(
         args += ["--port", str(params.port)]
     if params.protocol is not None:
         args += ["--protocol", params.protocol]
-    if params.no_cert_check:
+    if not params.verify_cert:
         args += ["--no-cert-check"]
 
     yield SpecialAgentCommand(command_arguments=args)

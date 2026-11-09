@@ -9,6 +9,5 @@ from cmk.gui.openapi.framework.model.common_fields import timerange_from_interna
 
 
 @pytest.mark.usefixtures("request_context")
-@pytest.mark.xfail(strict=True, raises=ValueError, reason="crash group 4787")
 def test_a_duration_that_is_no_graph_time_range_anymore_becomes_an_age() -> None:
     assert timerange_from_internal(12345) == timerange_from_internal(("age", 12345))

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+import traceback
 
 import pytest
 
@@ -77,6 +78,12 @@ def test_values_that_were_not_given_read_empty() -> None:
 def test_an_option_argument_the_conversion_rejects_is_reported() -> None:
     with pytest.raises(ValueError, match="--number: Invalid argument"):
         CLIParsedOptions([("--number", "not a number")], null_logger()).value(_NUMBER_VALUE)
+
+
+def test_a_rejected_option_argument_hides_the_conversion_error() -> None:
+    with pytest.raises(ValueError) as excinfo:
+        CLIParsedOptions([("--number", "not a number")], null_logger()).value(_NUMBER_VALUE)
+    assert "During handling" not in "".join(traceback.format_exception(excinfo.value))
 
 
 def test_a_deprecated_option_reaches_the_option_it_replaces() -> None:

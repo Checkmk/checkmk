@@ -42,7 +42,7 @@ def _parse[T](parse: Callable[[str], T], spec: str, argument: str) -> T:
     try:
         return parse(argument)
     except ValueError:
-        raise ValueError(f"{spec}: Invalid argument")
+        raise ValueError(f"{spec}: Invalid argument") from None
 
 
 class ParsedOptions:

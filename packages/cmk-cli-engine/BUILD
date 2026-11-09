@@ -31,8 +31,6 @@ py_library(
     ],
 )
 
-# The application: everything the entry point does once it knows the site root.
-# Separate from :main so it can be imported -- and tested -- without OMD_ROOT.
 py_library(
     name = "run",
     srcs = ["cmk/cli/engine/run.py"],
@@ -45,8 +43,6 @@ py_library(
     ],
 )
 
-# The entry point. Separate from :engine because it assembles the application,
-# which depends on the commands, which depend on :engine.
 py_library(
     name = "main",
     srcs = ["cmk/cli/engine/main.py"],

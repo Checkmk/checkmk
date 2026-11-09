@@ -46,6 +46,16 @@ ACCESS_LIST = [
             False,
             id="Not found",
         ),
+        pytest.param(
+            ipaddress.ip_address("2002:db00::1"),
+            True,
+            id="IPv6 found",
+        ),
+        pytest.param(
+            ipaddress.ip_address("2001:db8::1"),
+            False,
+            id="IPv6 not found",
+        ),
     ),
 )
 def test_allowed_ip(ip: ipaddress.IPv6Address | ipaddress.IPv4Address, expected: bool) -> None:

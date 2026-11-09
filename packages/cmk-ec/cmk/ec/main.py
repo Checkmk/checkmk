@@ -309,15 +309,9 @@ def allowed_ip(
     if any(ip in entry for entry in access_list):
         return True
 
-    if not str(ip).startswith("::ffff:") and any(
-        ipaddress.ip_address(f"::ffff:{str(ip)}") in entry for entry in access_list
-    ):
-        return True
-
-    if isinstance(ip, ipaddress.IPv6Address):
-        return any(ip.ipv4_mapped in entry for entry in access_list)
-
-    return False
+    # An IPv4 address may also be listed IPv6-mapped, and vice versa.
+    other = ip.ipv6_mapped if isinstance(ip, ipaddress.IPv4Address) else ip.ipv4_mapped
+    return other is not None and any(other in entry for entry in access_list)
 
 
 def unmap_ipv4_address(ip_address: str) -> str:

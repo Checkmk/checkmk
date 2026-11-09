@@ -7,6 +7,7 @@ from collections.abc import Iterator
 
 import pytest
 
+import cmk.utils.paths
 from cmk.ccc.version import Edition
 from cmk.gui.config import active_config, Config
 from cmk.gui.exceptions import MKUserError
@@ -23,6 +24,7 @@ from cmk.gui.quick_setup.v0_unstable._registry import quick_setup_registry
 from cmk.gui.quick_setup.v0_unstable.type_defs import QuickSetupId
 from cmk.gui.rule_specs.loader import LoadedRuleSpec
 from cmk.gui.rule_specs.registering import register_plugin
+from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.session import session
 from cmk.gui.utils.transaction_manager import transactions
@@ -154,6 +156,29 @@ def test_add_configuration_menu_entry_is_disabled_for_deprecated_special_agent(
 
     [entry] = [e for e in menu.shortcuts if e.title == "Add configuration"]
     assert not entry.is_enabled
+
+
+@pytest.fixture(name="missing_icon")
+def fixture_missing_icon() -> None:
+    """The empty listing shows the Quick Setup icon, and an unknown icon falls back to this one"""
+    icon_dir = cmk.utils.paths.web_dir / "htdocs/themes/facelift/images"
+    icon_dir.mkdir(parents=True, exist_ok=True)
+    (icon_dir / "icon_missing.svg").touch()
+
+
+@pytest.mark.usefixtures("with_admin_login", "missing_icon")
+def test_empty_listing_of_deprecated_special_agent_has_deprecated_title(
+    test_edition: Edition, deprecated_special_agent_with_quick_setup: str
+) -> None:
+    request.set_var("varname", deprecated_special_agent_with_quick_setup)
+    listing = ModeEditConfigurationBundles(test_edition, _page_context())
+
+    with output_funnel.plugged():
+        listing.page(active_config)
+        written = output_funnel.drain()
+
+    assert "Deprecated Quick Setup" in written
+    assert "configuration yet" not in written
 
 
 @pytest.mark.usefixtures("with_admin_login")

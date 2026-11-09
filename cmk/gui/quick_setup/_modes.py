@@ -377,14 +377,16 @@ class ModeEditConfigurationBundles(WatoMode):
         if self._bundle_group_type is RuleGroupType.SPECIAL_AGENTS:
             subtype = re.sub(r"_v\d+$", "", self._name.split(":", maxsplit=1)[1])
 
-            header = html.render_dynamic_icon(DynamicIconName(f"qs_{subtype}")) + html.render_b(
-                _("No %(title)s configuration yet") % {"title": self.title()}
-            )
+            header = html.render_dynamic_icon(DynamicIconName(f"qs_{subtype}"))
             if _is_deprecated_special_agent(self._name):
+                header += html.render_b(_("Deprecated Quick Setup"))
                 body = html.render_p(
                     _("This Quick Setup is deprecated. You cannot add new configurations.")
                 )
             else:
+                header += html.render_b(
+                    _("No %(title)s configuration yet") % {"title": self.title()}
+                )
                 body = html.render_p(
                     _(
                         'Click the "Add configuration" button to start setting up your first '

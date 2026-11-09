@@ -424,7 +424,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
 
     @classmethod
     def _match_event_console_elements(cls, edition: Edition) -> list[DictionaryEntry]:
-        if edition is Edition.CLOUD:  # disabled in CSE
+        if edition is Edition.CLOUD:  # disabled in Cloud
             return []
 
         def migrate_ec_rule_id_match(val: list[TextInput] | TextInput) -> list[TextInput]:
@@ -737,7 +737,7 @@ class ABCNotificationsMode(ABCEventsMode[EventRule]):
                     ("ec_contact", _("Event Console contact")),
                     ("ec_comment", _("Event Console comment")),
                 ]
-                if self._edition is not Edition.CLOUD  # disabled in CSE
+                if self._edition is not Edition.CLOUD  # disabled in Cloud
                 else []
             ),
             default_value=["host"],

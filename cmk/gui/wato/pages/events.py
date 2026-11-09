@@ -309,7 +309,7 @@ class ABCEventsMode[T_EventSpec: EventRule | dict](WatoMode, abc.ABC):
     def _match_service_level_elements(
         cls, edition: Edition, service_levels: Sequence[tuple[int, str]]
     ) -> list[DictionaryEntry]:
-        if edition is Edition.CLOUD:  # disabled in CSE
+        if edition is Edition.CLOUD:  # disabled in Cloud
             return []
         return [
             (

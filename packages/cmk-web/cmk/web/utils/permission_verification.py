@@ -249,7 +249,7 @@ class AnyPerm(MultiPerm):
 class OkayToIgnorePerm(Perm):
     """A permission which does not raise an error if it is not present in Checkmk during built-time.
 
-    Introduced mainly since some components were removed in the CSE edition. Removing a
+    Introduced mainly since some components were removed in the Cloud edition. Removing a
     component also removes the associating permissions. Some general endpoints make use of
     those permissions beyond its component specific endpoints and this would lead to an error
     if the permission is not present. This permission will also not get rendered in the

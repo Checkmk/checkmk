@@ -2916,7 +2916,7 @@ class ContactSelection(BaseSchema):
     def _validate_explicit_email_addresses_not_in_cse(  # type: ignore[misc]
         self, data: dict[str, Any], **_kwargs: Any
     ) -> dict[str, Any]:
-        """Forbid explicit_email_addresses in CSE edition"""
+        """Forbid explicit_email_addresses in Cloud edition"""
         if version.edition(paths.omd_root) == version.Edition.CLOUD and (
             "explicit_email_addresses" in data
             and data["explicit_email_addresses"].get("state") == "enabled"

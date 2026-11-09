@@ -31,7 +31,7 @@ _EU_WEBHOOK_URL: PagerDutyWebhookURL = "https://events.eu.pagerduty.com/v2/enque
 
 
 def form_spec() -> DictionaryExtended:
-    # TODO register CSE specific version
+    # TODO register Cloud specific version
     return DictionaryExtended(
         title=Title("PagerDuty parameters"),
         elements={

@@ -2553,7 +2553,7 @@ def test_explicit_email_addresses_disabled_in_cloud(
     clients: ClientRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test that explicit_email_addresses field is disabled in CSE edition."""
+    """Test that explicit_email_addresses field is disabled in Cloud edition."""
     monkeypatch.setattr(
         "cmk.gui.openapi.endpoints.notification_rules.request_schemas.version.edition",
         lambda _: version.Edition.CLOUD,

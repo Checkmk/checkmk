@@ -37,7 +37,7 @@ from ._helpers import _get_url_prefix_setting
 
 
 def form_spec_mail(edition: Edition) -> DictionaryExtended:
-    # TODO register CSE specific version
+    # TODO register Cloud specific version
     return DictionaryExtended(
         title=Title("HTML email parameters"),
         elements=_parameter_elements(is_cse=edition == Edition.CLOUD),

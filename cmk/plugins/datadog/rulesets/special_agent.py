@@ -154,7 +154,7 @@ def _valuespec_special_agents_datadog() -> Dictionary:
 
 
 def _fetch_events_and_logs_elements() -> Mapping[str, DictElement]:
-    if edition(omd_root) is Edition.CLOUD:  # disabled in CSE
+    if edition(omd_root) is Edition.CLOUD:  # disabled in Cloud
         return {}
     return {
         "events": DictElement(

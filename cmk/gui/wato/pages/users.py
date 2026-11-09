@@ -1056,7 +1056,7 @@ class ModeEditUser(WatoMode):
             self._get_identity_userattrs(user_attrs)
 
         # We always store secrets for automation users. Also in editions that are not allowed
-        # to edit users *hust* CSE *hust*
+        # to edit users *hust* Cloud *hust*
         is_automation_user = self._user.get("is_automation_user", False)
         if is_automation_user or self._can_edit_users:
             self._get_security_userattrs(

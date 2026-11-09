@@ -4,11 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-import dataclasses
 import multiprocessing
 import os
 import subprocess
-from collections.abc import Callable, Iterable, Iterator, Sequence
+from collections.abc import Iterator, Sequence
 from pathlib import Path
 
 import requests
@@ -21,14 +20,12 @@ from cmk.ccc.site import omd_site
 from cmk.ccc.version import __version__, Version
 
 from cmk.utils.paths import (
-    gui_plugins_dir,
     local_agent_based_plugins_dir,
     local_checks_dir,
     local_gui_plugins_dir,
     local_inventory_dir,
     local_legacy_check_manpages_dir,
     local_pnp_templates_dir,
-    local_root,
     local_web_dir,
 )
 from cmk.utils.rulesets.definition import RuleGroup, RuleGroupType
@@ -57,7 +54,6 @@ from cmk.gui.watolib.analyze_configuration import (
     ACTest,
     ACTestCategories,
     ACTestRegistry,
-    gui_plugin_effect,
 )
 from cmk.gui.watolib.check_mk_automations import find_unknown_check_parameter_rule_sets
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
@@ -1167,16 +1163,6 @@ class ACTestSizeOfExtensions(ACTest):
 
 
 class ACTestBrokenGUIExtension(ACTest):
-    def __init__(
-        self,
-        failed_plugins: Callable[
-            [], Sequence[tuple[Path, str, str, BaseException]]
-        ] = cmk.gui.utils.get_failed_plugins,
-        site_local_root: Path = local_root,
-    ) -> None:
-        self._failed_plugins = failed_plugins
-        self._local_root = site_local_root
-
     def category(self) -> str:
         return ACTestCategories.deprecations
 
@@ -1195,31 +1181,20 @@ class ACTestBrokenGUIExtension(ACTest):
 
     def execute(self) -> Iterator[ACSingleResult]:
         site_id = omd_site()
-        if not (failed_plugins := self._failed_plugins()):
+        errors = cmk.gui.utils.get_failed_plugins()
+        if not errors:
             yield ACSingleResult(
                 state=ACResultState.OK,
                 text=_("No broken extensions were found."),
                 site_id=site_id,
             )
-            return
 
-        for plugin_filepath, gui_part, plugin_name, error in failed_plugins:
-            path = plugin_filepath if plugin_filepath.is_relative_to(self._local_root) else None
-            name = (
-                f"{gui_part}/{plugin_name}" if path is None else str(_try_rel_path(site_id, path))
-            )
+        for plugin_filepath, gui_part, plugin_file, error in errors:
             yield ACSingleResult(
                 state=ACResultState.CRIT,
-                text=" ".join(
-                    [
-                        gui_plugin_effect(name, ACResultState.CRIT),
-                        _("Checkmk fails to load it: %(error)s.")
-                        % {"error": str(error).rstrip(".")},
-                        _("The log file 'var/log/web.log' shows the details."),
-                    ]
-                ),
+                text=_('Loading "%s/%s" failed: %s') % (gui_part, plugin_file, error),
                 site_id=site_id,
-                path=path,
+                path=plugin_filepath,
             )
 
 
@@ -1656,139 +1631,6 @@ class ACTestDeprecatedCheckManpages(ACTest):
         )
 
 
-_GUI_MODULE_DIRS = (gui_plugins_dir.parent, local_gui_plugins_dir.parent)
-
-_LOADED_LEGACY_GUI_PLUGIN_FOLDERS = frozenset(
-    {"config", "dashboard", "icons", "pages", "sidebar", "views", "visuals", "wato"}
-)
-
-_DEPRECATED_LEGACY_GUI_PLUGIN_FOLDERS = frozenset({"reporting", "sla", "userdb", "watolib"})
-
-_NEXT_MAJOR_VERSION = "2.5.0"
-
-
-def _gui_module_names(gui_dirs: Iterable[Path]) -> frozenset[str]:
-    return frozenset(
-        path.stem
-        for gui_dir in gui_dirs
-        for folder in (gui_dir, gui_dir / "cee")
-        if folder.is_dir()
-        for path in folder.iterdir()
-        if path.is_dir() or path.suffix == ".py"
-    )
-
-
-@dataclasses.dataclass(frozen=True)
-class _Assessment:
-    state: ACResultState
-    reason: str
-
-
-def _loaded_gui_plugin() -> _Assessment:
-    return _Assessment(
-        state=ACResultState.WARN,
-        reason=_(
-            "Checkmk loads plug-ins from this folder through internal interfaces, which are"
-            " not supported for plug-ins."
-        ),
-    )
-
-
-def _deprecated_gui_plugin() -> _Assessment:
-    return _Assessment(
-        state=ACResultState.WARN,
-        reason=_(
-            "Checkmk loads plug-ins from this folder through internal interfaces, which are"
-            " not supported for plug-ins. Checkmk %(version)s no longer loads them."
-        )
-        % {"version": _NEXT_MAJOR_VERSION},
-    )
-
-
-def _deprecated_graphing_gui_plugin() -> _Assessment:
-    return _Assessment(
-        state=ACResultState.WARN,
-        reason=_(
-            "Checkmk reads graphs, metrics and perf-o-meters from this folder through internal"
-            " interfaces, which are not supported for plug-ins. Checkmk %(version)s no longer"
-            " reads them. Re-implement it with the supported API cmk.graphing.v1."
-        )
-        % {"version": _NEXT_MAJOR_VERSION},
-    )
-
-
-def _graphing_gui_plugin() -> _Assessment:
-    return _Assessment(
-        state=ACResultState.CRIT,
-        reason=_(
-            "Checkmk no longer reads graphs, metrics and perf-o-meters from this folder."
-            " Re-implement it with the supported API cmk.graphing.v1."
-        ),
-    )
-
-
-def _dead_gui_plugin() -> _Assessment:
-    return _Assessment(
-        state=ACResultState.CRIT,
-        reason=_("Checkmk does not load plug-ins from this folder."),
-    )
-
-
-def _assess_gui_plugin(rel_path: Path, gui_module_names: frozenset[str]) -> _Assessment:
-    match rel_path.parts:
-        case ("metrics", _, *_):
-            return _deprecated_graphing_gui_plugin()
-        case (package, _, *_) if package in gui_module_names:
-            return _loaded_gui_plugin()
-        case _:
-            return _dead_gui_plugin()
-
-
-def _assess_legacy_gui_plugin(rel_path: Path, gui_module_names: frozenset[str]) -> _Assessment:
-    match rel_path.parts:
-        case ("plugins", folder, _file) if folder in _LOADED_LEGACY_GUI_PLUGIN_FOLDERS:
-            return _loaded_gui_plugin()
-        case ("plugins", folder, _file) if (
-            folder in _DEPRECATED_LEGACY_GUI_PLUGIN_FOLDERS and folder in gui_module_names
-        ):
-            return _deprecated_gui_plugin()
-        case ("plugins", "metrics" | "perfometer", _, *_):
-            return _graphing_gui_plugin()
-        case _:
-            return _dead_gui_plugin()
-
-
-def _gui_plugin_result(site_id: SiteId, path: Path, assessment: _Assessment) -> ACSingleResult:
-    name = str(_try_rel_path(site_id, path))
-    return ACSingleResult(
-        state=assessment.state,
-        text=" ".join([gui_plugin_effect(name, assessment.state), assessment.reason]),
-        site_id=site_id,
-        path=path,
-    )
-
-
-def _gui_plugin_results(
-    site_id: SiteId, assessed_plugins: Iterable[tuple[Path, _Assessment]]
-) -> Iterator[ACSingleResult]:
-    if not (
-        results := sorted(
-            (
-                _gui_plugin_result(site_id, path, assessment)
-                for path, assessment in assessed_plugins
-            ),
-            key=lambda result: str(result.path),
-        )
-    ):
-        yield ACSingleResult(
-            state=ACResultState.OK,
-            text=_("No GUI plug-ins found"),
-            site_id=site_id,
-        )
-        return
-    yield from results
-
-
 def _walk(folder: Path) -> Iterator[Path]:
     for root, _dirs, files in os.walk(folder):
         for file in files:
@@ -1797,120 +1639,24 @@ def _walk(folder: Path) -> Iterator[Path]:
 
 
 class ACTestDeprecatedGUIExtensions(ACTest):
-    def __init__(
-        self, root: Path = local_gui_plugins_dir, gui_dirs: Sequence[Path] = _GUI_MODULE_DIRS
-    ) -> None:
-        self._root = root
-        self._gui_dirs = gui_dirs
-
     def category(self) -> str:
         return ACTestCategories.deprecations
 
     def title(self) -> str:
-        return _("GUI plug-ins")
+        return _("Deprecated GUI extensions")
 
     def help(self) -> str:
         return _(
-            "<p>Checkmk imports the Python files in each package below"
-            " <tt>'%(plugins_dir)s'</tt>, including its subfolders, which is named like a"
-            " module of the Checkmk GUI. It also reads graphs, metrics and perf-o-meters from"
-            " the package <tt>metrics</tt>, but Checkmk %(version)s no longer does. Other"
-            " files below this folder have no effect.</p>"
-            "<p>These plug-ins use internal interfaces of Checkmk. These interfaces are not"
-            " supported for plug-ins and may change with any update. Graphs, metrics and"
-            " perf-o-meters have the supported API cmk.graphing.v1, rule sets have the supported"
-            " API cmk.rulesets.v1. Files which use a supported API have no effect here and belong"
-            " below <tt>cmk_addons/plugins</tt>.</p>"
-            "<p>Files which Checkmk fails to load are listed by the test 'Broken GUI"
-            " extensions'.</p>"
-        ) % {
-            "plugins_dir": self._root,
-            "version": _NEXT_MAJOR_VERSION,
-        }
-
-    def is_relevant(self) -> bool:
-        return True
-
-    def execute(self) -> Iterator[ACSingleResult]:
-        gui_module_names = _gui_module_names(self._gui_dirs)
-        yield from _gui_plugin_results(
-            omd_site(),
-            (
-                (path, _assess_gui_plugin(path.relative_to(self._root), gui_module_names))
-                for path in _walk(self._root)
-            ),
-        )
-
-
-class ACTestDeprecatedLegacyGUIExtensions(ACTest):
-    def __init__(
-        self, root: Path = local_web_dir, gui_dirs: Sequence[Path] = _GUI_MODULE_DIRS
-    ) -> None:
-        self._root = root
-        self._gui_dirs = gui_dirs
-
-    def category(self) -> str:
-        return ACTestCategories.deprecations
-
-    def title(self) -> str:
-        return _("Legacy GUI plug-ins")
-
-    def help(self) -> str:
-        return _(
-            "<p>Checkmk runs the Python files placed directly in these folders below"
-            " <tt>'%(plugins_dir)s'</tt>: %(folders)s. If a <tt>.pyc</tt> file sits next to a"
-            " <tt>.py</tt> file, Checkmk runs the <tt>.pyc</tt> file instead. It also runs those"
-            " in the folders %(deprecated_folders)s, the folders reporting and sla only in the"
-            " commercial editions, but Checkmk %(version)s no longer does. Files in subfolders"
-            " or in other folders have no effect.</p>"
-            "<p>These plug-ins use internal interfaces of Checkmk. These interfaces are not"
-            " supported for plug-ins and may change with any update. Graphs, metrics and"
-            " perf-o-meters are no longer read from them and need the supported API"
-            " cmk.graphing.v1. Rule sets have the supported API cmk.rulesets.v1. Files which"
-            " use a supported API have no effect here and belong below"
-            " <tt>cmk_addons/plugins</tt>.</p>"
-            "<p>Files which Checkmk fails to load are listed by the test 'Broken GUI"
-            " extensions'.</p>"
-        ) % {
-            "plugins_dir": self._root / "plugins",
-            "folders": ", ".join(sorted(_LOADED_LEGACY_GUI_PLUGIN_FOLDERS)),
-            "deprecated_folders": ", ".join(sorted(_DEPRECATED_LEGACY_GUI_PLUGIN_FOLDERS)),
-            "version": _NEXT_MAJOR_VERSION,
-        }
-
-    def is_relevant(self) -> bool:
-        return True
-
-    def execute(self) -> Iterator[ACSingleResult]:
-        gui_module_names = _gui_module_names(self._gui_dirs)
-        yield from _gui_plugin_results(
-            omd_site(),
-            (
-                (path, _assess_legacy_gui_plugin(path.relative_to(self._root), gui_module_names))
-                for path in _walk(self._root)
-            ),
-        )
-
-
-class ACTestDeprecatedPNPTemplates(ACTest):
-    def __init__(self, templates_dir: Path = local_pnp_templates_dir) -> None:
-        self._templates_dir = templates_dir
-
-    def category(self) -> str:
-        return ACTestCategories.deprecations
-
-    def title(self) -> str:
-        return _("PNP templates")
-
-    def help(self) -> str:
-        return _(
-            "Checkmk no longer reads PNP templates from <tt>'%(templates_dir)s'</tt> and its"
-            " subfolders, so they have no effect. Graphs need the supported API"
-            " cmk.graphing.v1."
-        ) % {"templates_dir": self._templates_dir}
+            "GUI extensions in <tt>'%s'</tt> are marked as 'deprecated'"
+            " and will be ignored in future Checkmk versions"
+            " (official deprecation timeline not decided yet)."
+        ) % str(local_gui_plugins_dir)
 
     def _get_files(self) -> Sequence[Path]:
-        return sorted(p for p in self._templates_dir.rglob("*") if p.is_file())
+        try:
+            return list(_walk(local_gui_plugins_dir))
+        except FileNotFoundError:
+            return []
 
     def is_relevant(self) -> bool:
         return True
@@ -1918,26 +1664,147 @@ class ACTestDeprecatedPNPTemplates(ACTest):
     def execute(self) -> Iterator[ACSingleResult]:
         site_id = omd_site()
         if files := self._get_files():
-            for path in files:
+            for plugin_filepath in files:
                 yield ACSingleResult(
-                    state=ACResultState.CRIT,
-                    text=" ".join(
-                        [
-                            gui_plugin_effect(
-                                str(_try_rel_path(site_id, path)), ACResultState.CRIT
-                            ),
-                            _("Checkmk no longer reads PNP templates."),
-                            _("Re-implement it with the supported API cmk.graphing.v1."),
-                        ]
+                    state=ACResultState.WARN,
+                    text=(
+                        _(
+                            "GUI extension in %r uses an API which is marked as deprecated and may"
+                            " not work anymore due to unknown imports or objects (File: %s)."
+                        )
+                        % (plugin_filepath.parent.name, _try_rel_path(site_id, plugin_filepath))
                     ),
                     site_id=site_id,
-                    path=path,
+                    path=plugin_filepath,
                 )
             return
 
         yield ACSingleResult(
             state=ACResultState.OK,
-            text=_("No PNP templates found"),
+            text=_("No GUI extensions using the deprecated API"),
+            site_id=site_id,
+        )
+
+
+class ACTestDeprecatedLegacyGUIExtensions(ACTest):
+    def category(self) -> str:
+        return ACTestCategories.deprecations
+
+    def title(self) -> str:
+        return _("Deprecated legacy GUI extensions")
+
+    def help(self) -> str:
+        return _(
+            "Legacy GUI extensions in <tt>'%s'</tt> are marked as 'deprecated'"
+            " and will be ignored in future Checkmk versions"
+            " (official deprecation timeline not decided yet)."
+        ) % str(local_web_dir)
+
+    def _get_files(self) -> Sequence[Path]:
+        try:
+            return list(_walk(local_web_dir))
+        except FileNotFoundError:
+            return []
+
+    def is_relevant(self) -> bool:
+        return True
+
+    def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
+        if files := self._get_files():
+            for plugin_filepath in files:
+                match plugin_filepath.parent.name:
+                    case "metrics" | "perfometer":
+                        yield _compute_deprecation_result(
+                            version=__version__,
+                            deprecated_version="2.3.0",
+                            removed_version="2.4.0",
+                            title_entity=(
+                                _("Legacy GUI extension in %r") % plugin_filepath.parent.name
+                            ),
+                            title_api=_("legacy"),
+                            site_id=site_id,
+                            path=plugin_filepath,
+                        )
+                    case "wato":
+                        yield _compute_deprecation_result(
+                            version=__version__,
+                            deprecated_version="2.4.0",
+                            removed_version="2.5.0",
+                            title_entity=(
+                                _("Legacy GUI extension in %r") % plugin_filepath.parent.name
+                            ),
+                            title_api=_("legacy"),
+                            site_id=site_id,
+                            path=plugin_filepath,
+                        )
+                    case _:
+                        yield ACSingleResult(
+                            state=ACResultState.WARN,
+                            text=(
+                                _(
+                                    "Legacy GUI extension in %r uses an API which is marked as"
+                                    " deprecated and may not work anymore due to unknown imports or"
+                                    " objects (File: %s)."
+                                )
+                                % (
+                                    plugin_filepath.parent.name,
+                                    _try_rel_path(site_id, plugin_filepath),
+                                )
+                            ),
+                            site_id=site_id,
+                            path=plugin_filepath,
+                        )
+            return
+
+        yield ACSingleResult(
+            state=ACResultState.OK,
+            text=_("No legacy GUI extensions using the deprecated API"),
+            site_id=site_id,
+        )
+
+
+class ACTestDeprecatedPNPTemplates(ACTest):
+    def category(self) -> str:
+        return ACTestCategories.deprecations
+
+    def title(self) -> str:
+        return _("Deprecated PNP templates")
+
+    def help(self) -> str:
+        return _(
+            "PNP templates in <tt>'%s'</tt> are marked as 'deprecated'"
+            " and will be ignored in future Checkmk versions"
+            " (official deprecation timeline not decided yet)."
+        ) % str(local_pnp_templates_dir)
+
+    def _get_files(self) -> Sequence[Path]:
+        try:
+            return list(local_pnp_templates_dir.iterdir())
+        except FileNotFoundError:
+            return []
+
+    def is_relevant(self) -> bool:
+        return True
+
+    def execute(self) -> Iterator[ACSingleResult]:
+        site_id = omd_site()
+        if files := self._get_files():
+            for plugin_filepath in files:
+                yield ACSingleResult(
+                    state=ACResultState.CRIT,
+                    text=_(
+                        "PNP template uses an API which was removed in an ealier Checkmk version (File: %s)."
+                    )
+                    % _try_rel_path(site_id, plugin_filepath),
+                    site_id=site_id,
+                    path=plugin_filepath,
+                )
+            return
+
+        yield ACSingleResult(
+            state=ACResultState.OK,
+            text=_("No PNP templates using the deprecated API"),
             site_id=site_id,
         )
 

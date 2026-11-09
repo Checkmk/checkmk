@@ -833,6 +833,22 @@ def test_in_fallback_a_multi_line_error_of_the_legacy_updater_keeps_its_details(
     )
 
 
+def test_in_fallback_a_host_name_mismatch_of_the_legacy_updater_keeps_its_state() -> None:
+    """CMK-39594 AC10"""
+    results = _update_results(
+        _controller(CMKAgentUpdateSection(last_check=_AN_HOUR_AGO), _CONNECTION),
+        CMKAgentUpdateSection(last_check=_AN_HOUR_AGO, host_name="other-host"),
+    )
+
+    assert (
+        Result(
+            state=State.WARN,
+            summary="Hostname defined in Checkmk (my-host) and cmk-update-agent configuration (other-host) do not match",
+        )
+        in results
+    )
+
+
 def test_the_integrated_updater_names_no_cmk_update_agent() -> None:
     """CMK-39594 AC3"""
     results = _update_results(_controller(CMKAgentUpdateSection(last_check=_AN_HOUR_AGO)), None)

@@ -410,6 +410,9 @@ def _check_cmk_agent_update(
         ),
     )
     yield from _as_notices("Legacy updater: ", _check_updater_state(params, legacy))
+    # A Python updater that is registered under another host name installs the package of that
+    # host, so the mismatch keeps its state.
+    yield from _check_updater_host_name(params, legacy)
 
 
 def _integrated_updater_stage(
@@ -443,6 +446,7 @@ def _as_notices(prefix: str, results: CheckResult) -> CheckResult:
 
 def _check_updater(params: Mapping[str, Any], section: CMKAgentUpdateSection) -> CheckResult:
     yield from _check_updater_state(params, section)
+    yield from _check_updater_host_name(params, section)
     yield from _check_cmk_agent_update_certificates(section)
 
 
@@ -485,21 +489,26 @@ def _check_updater_state(params: Mapping[str, Any], section: CMKAgentUpdateSecti
         # is disabled explicitly in cmk.gui.view_utils:format_plugin_output
         yield Result(state=State.OK, notice=f"Update URL: {update_url}")
 
-    if update_agent_host_name := section.host_name:
-        yield Result(
-            state=State.OK, notice=f"Hostname used by cmk-update-agent: {update_agent_host_name}"
-        )
-        if (checkmk_host_name := params["host_name"]) != update_agent_host_name:
-            yield Result(
-                state=State(params["updater_host_name_mismatch"]),
-                notice=f"Hostname defined in Checkmk ({checkmk_host_name}) and cmk-update-agent configuration ({update_agent_host_name}) do not match",
-            )
-
     if aghash := section.aghash:
         yield Result(state=State.OK, notice=f"Agent configuration: {aghash}")
 
     if pending := section.pending_hash:
         yield Result(state=State.OK, notice=f"Pending installation: {pending}")
+
+
+def _check_updater_host_name(
+    params: Mapping[str, Any], section: CMKAgentUpdateSection
+) -> CheckResult:
+    if not (update_agent_host_name := section.host_name):
+        return
+    yield Result(
+        state=State.OK, notice=f"Hostname used by cmk-update-agent: {update_agent_host_name}"
+    )
+    if (checkmk_host_name := params["host_name"]) != update_agent_host_name:
+        yield Result(
+            state=State(params["updater_host_name_mismatch"]),
+            notice=f"Hostname defined in Checkmk ({checkmk_host_name}) and cmk-update-agent configuration ({update_agent_host_name}) do not match",
+        )
 
 
 def _check_plugins(

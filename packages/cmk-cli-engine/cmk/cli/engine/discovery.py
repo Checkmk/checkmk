@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from functools import partial
 
 from cmk.cli.internal import Arguments as CLIArguments
@@ -13,7 +13,7 @@ from cmk.cli.internal import Flag as CLIFlag
 from cmk.cli.internal import Value as CLIValue
 from cmk.discover_plugins import discover_all_plugins, PluginGroup, PluginLocation
 
-from .commands import bind, DiscoveredCommand
+from .commands import bind, DiscoveredCommand, inline_run, Run
 from .readers import record
 
 
@@ -31,7 +31,7 @@ def _selector[R](command: CLICommand[R]) -> CLIFlag | CLIValue[str]:
             )
 
 
-def make_command[R](command: CLICommand[R]) -> DiscoveredCommand:
+def make_command[R](command: CLICommand[R], run: Callable[[], Run[R]]) -> DiscoveredCommand:
     recorded = record(command.request)
     return DiscoveredCommand(
         name=command.name,
@@ -39,7 +39,7 @@ def make_command[R](command: CLICommand[R]) -> DiscoveredCommand:
         arguments=command.arguments,
         description=command.description,
         options=recorded.options,
-        bind=partial(bind, command),
+        load_handler=lambda: partial(bind, command, run()),
         default=command.default,
     )
 
@@ -61,6 +61,9 @@ def discover_commands() -> Sequence[DiscoveredCommand]:
         raise_errors=True,
     )
     return tuple(
-        make_command(_named_after_its_variable(prefixes[CLICommand], location, command))
+        make_command(
+            _named_after_its_variable(prefixes[CLICommand], location, command),
+            partial(inline_run, command),
+        )
         for location, command in discovered.plugins.items()
     )

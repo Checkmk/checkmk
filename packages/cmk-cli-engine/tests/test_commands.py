@@ -10,13 +10,14 @@ import pytest
 
 from cmk.cli.engine.commands import Commands as CLICommands
 from cmk.cli.engine.commands import DiscoveredCommand as CLIDiscoveredCommand
-from cmk.cli.engine.discovery import make_command as cli_make_command
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Flag as CLIFlag
 from cmk.cli.internal import no_options as cli_no_options
 from cmk.cli.internal import Reader as CLIReader
 from cmk.cli.internal import Value as CLIValue
+
+from ._commands import inline_command
 
 
 def _never(*_args: object, **_kwargs: object) -> NoReturn:
@@ -31,7 +32,7 @@ def _command(
     arguments: CLIArguments | None = None,
     default: bool = False,
 ) -> CLIDiscoveredCommand:
-    return cli_make_command(
+    return inline_command(
         CLICommand(
             name=long.replace("-", "_"),
             long=long,

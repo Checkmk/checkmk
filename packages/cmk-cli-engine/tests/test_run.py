@@ -16,7 +16,6 @@ import pytest
 
 from cmk.cli.engine.arguments import RunCommand as CLIRunCommand
 from cmk.cli.engine.commands import DiscoveredCommand as CLIDiscoveredCommand
-from cmk.cli.engine.discovery import make_command as cli_make_command
 from cmk.cli.engine.run import CommandTracer as CLICommandTracer
 from cmk.cli.engine.run import dispatch as cli_dispatch
 from cmk.cli.engine.run import run as cli_run
@@ -30,6 +29,7 @@ from cmk.cli.internal import no_options as cli_no_options
 from cmk.cli.internal import Reader as CLIReader
 from cmk.cli.internal import Value as CLIValue
 
+from ._commands import inline_command
 from ._logger import null_logger
 
 _CRASH_MESSAGE = "Boom: it broke - please submit a crash report! (Crash-ID: 42)"
@@ -146,7 +146,7 @@ def test_an_interruption_says_so_in_the_log(caplog: pytest.LogCaptureFixture) ->
 
 
 def _command(handler: Callable[[CLIContext, None, CLIArgs], CLIExitCode]) -> CLIDiscoveredCommand:
-    return cli_make_command(
+    return inline_command(
         CLICommand(
             name="demo", long="demo", request=cli_no_options, handler=handler, help="Demonstrate"
         )
@@ -226,7 +226,7 @@ def _number_request(options: CLIReader) -> int | None:
 def _numbered(
     handler: Callable[[CLIContext, int | None, CLIArgs], CLIExitCode],
 ) -> CLIDiscoveredCommand:
-    return cli_make_command(
+    return inline_command(
         CLICommand(
             name="demo",
             long="demo",

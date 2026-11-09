@@ -9,7 +9,6 @@ from typing import Final
 import pytest
 
 from cmk.cli.engine.discovery import _named_after_its_variable as _cli_named_after_its_variable
-from cmk.cli.engine.discovery import make_command as cli_make_command
 from cmk.cli.engine.readers import parsed as cli_parsed
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Command as CLICommand
@@ -22,6 +21,7 @@ from cmk.cli.internal import Reader as CLIReader
 from cmk.cli.internal import Value as CLIValue
 from cmk.discover_plugins import PluginLocation
 
+from ._commands import inline_command
 from ._logger import null_logger
 
 # The engine only hands this through to the command's handler.
@@ -48,7 +48,7 @@ def _handler(_context: CLIContext, _request: tuple[str | None, int], _args: CLIA
 
 
 def test_make_command_records_the_options_a_command_declares() -> None:
-    command = cli_make_command(
+    command = inline_command(
         CLICommand(
             name="snmpwalk",
             long="snmpwalk",
@@ -69,7 +69,7 @@ def test_a_commands_handler_receives_its_request_parsed() -> None:
         seen.append(request)
         return CLIExitCode.SUCCESS
 
-    command = cli_make_command(
+    command = inline_command(
         CLICommand(
             name="snmpwalk",
             long="snmpwalk",
@@ -78,7 +78,7 @@ def test_a_commands_handler_receives_its_request_parsed() -> None:
             help="Walk",
         )
     )
-    bound = command.bind(
+    bound = command.load_handler()(
         cli_parsed([("--oid", "iso"), ("--verbose", ""), ("--verbose", "")], null_logger())
     )
 

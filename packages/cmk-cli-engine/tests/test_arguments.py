@@ -13,7 +13,6 @@ from cmk.cli.engine.arguments import parse as cli_parse
 from cmk.cli.engine.arguments import RunCommand as CLIRunCommand
 from cmk.cli.engine.arguments import ShowHelp as CLIShowHelp
 from cmk.cli.engine.commands import Commands as CLICommands
-from cmk.cli.engine.discovery import make_command as cli_make_command
 from cmk.cli.engine.options import _GENERAL_OPTIONS as CLI_GENERAL_OPTIONS
 from cmk.cli.engine.options import Declaration as CLIDeclaration
 from cmk.cli.engine.options import GlobalOptions as CLIEngineGlobalOptions
@@ -30,6 +29,7 @@ from cmk.cli.internal import Reader as CLIReader
 from cmk.cli.internal import Value as CLIValue
 from cmk.cli.internal import Values as CLIValues
 
+from ._commands import inline_command
 from ._logger import null_logger
 
 
@@ -41,7 +41,7 @@ _COMMAND_ARGUMENT: Final = "myhost"
 
 _ARGUMENT_EVERY_CONVERSION_ACCEPTS: Final = "inline"
 
-_PLAIN: Final = cli_make_command(
+_PLAIN: Final = inline_command(
     CLICommand(
         name="plain",
         long="plain",
@@ -52,7 +52,7 @@ _PLAIN: Final = cli_make_command(
     )
 )
 
-_OTHER_PLAIN: Final = cli_make_command(
+_OTHER_PLAIN: Final = inline_command(
     CLICommand(
         name="other_plain",
         long="other-plain",
@@ -62,7 +62,7 @@ _OTHER_PLAIN: Final = cli_make_command(
     )
 )
 
-_WITH_ARGUMENT: Final = cli_make_command(
+_WITH_ARGUMENT: Final = inline_command(
     CLICommand(
         name="with_argument",
         long="with-argument",
@@ -106,7 +106,7 @@ def _default_request(
     )
 
 
-_DEFAULT: Final = cli_make_command(
+_DEFAULT: Final = inline_command(
     CLICommand(
         name="default",
         long="default",

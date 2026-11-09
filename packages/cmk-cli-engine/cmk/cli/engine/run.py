@@ -85,8 +85,9 @@ def _show_help(commands: Commands, runtime: Runtime) -> CLIExitCode:
 def _run_command(
     run_command: RunCommand, context: CLIContext, argv: Sequence[str], runtime: Runtime
 ) -> CLIExitCode:
+    bind = run_command.command.load_handler()
     try:
-        bound = run_command.command.bind(parsed(run_command.options, context.logger))
+        bound = bind(parsed(run_command.options, context.logger))
     except ValueError as error:
         runtime.write_error(rejection(argv, error))
         return CLIExitCode.UNKNOWN

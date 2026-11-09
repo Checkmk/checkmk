@@ -38,6 +38,8 @@ _SUB_OPTION_COLUMN: Final = HelpColumn(indent="    ", width=24)
 
 _ENGINE_OPTION_COLUMN: Final = HelpColumn(indent="  ", width=21)
 
+type Run[R] = Callable[[CLIContext, R, CLIArgs], CLIExitCode]
+
 
 @dataclass(frozen=True, kw_only=True)
 class DiscoveredCommand:
@@ -46,13 +48,17 @@ class DiscoveredCommand:
     arguments: CLIArguments | None
     description: Sequence[str]
     options: Sequence[Declaration]
-    bind: Callable[[CLIReader], BoundCommand]
+    load_handler: Callable[[], Callable[[CLIReader], BoundCommand]]
     default: bool
 
 
-def bind[R](command: CLICommand[R], reader: CLIReader) -> BoundCommand:
+def bind[R](command: CLICommand[R], run: Run[R], reader: CLIReader) -> BoundCommand:
     request = command.request(reader)
-    return lambda context, args: command.handler(context, request, args)
+    return lambda context, args: run(context, request, args)
+
+
+def inline_run[R](command: CLICommand[R]) -> Run[R]:
+    return command.handler
 
 
 def _spelled(command: DiscoveredCommand) -> str:

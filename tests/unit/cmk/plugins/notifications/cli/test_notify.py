@@ -3,63 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import logging
+
 from collections.abc import Mapping, Sequence
-from pathlib import Path
 
-import pytest
-
-from cmk.ccc.version import Edition
-from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import Declaration as CLIDeclaration
-from cmk.cli.internal import ExitCode as CLIExitCode
-from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Reader as CLIReader
-from cmk.plugins.notifications.cli.notify import (
-    _KEEPALIVE_FLAG,
-    _notification_exit_code,
-    _notify_request,
-    _NotifyRequest,
-    _run_notify,
-)
-
-
-def test_spool_file_of_commercial_site_fails_without_automation_helper(
-    tmp_path: Path, caplog: pytest.LogCaptureFixture, test_edition: Edition
-) -> None:
-    if test_edition is Edition.COMMUNITY:
-        pytest.skip("Spooling via the automation helper is a commercial feature")
-
-    assert (
-        _run_notify(
-            CLIContext(
-                omd_root=tmp_path,
-                global_options=CLIGlobalOptions(),
-                logger=logging.getLogger(__name__),
-            ),
-            _NotifyRequest(log_to_stdout=False, keepalive=False),
-            ["spoolfile", "/no/such/spoolfile"],
-        )
-        == CLIExitCode.FAILURE
-    )
-    assert "automation-helper service is required" in caplog.text
-
-
-@pytest.mark.parametrize(
-    ["returncode", "expected"],
-    [
-        pytest.param(None, CLIExitCode.SUCCESS, id="no result"),
-        pytest.param(0, CLIExitCode.SUCCESS, id="success"),
-        pytest.param(1, CLIExitCode.FAILURE, id="temporary failure"),
-        pytest.param(2, CLIExitCode.ERROR, id="permanent failure"),
-        pytest.param(127, CLIExitCode.ERROR, id="missing interpreter"),
-        pytest.param(-9, CLIExitCode.ERROR, id="killed script"),
-    ],
-)
-def test_a_notification_script_result_keeps_its_retry_meaning(
-    returncode: int | None, expected: CLIExitCode
-) -> None:
-    assert _notification_exit_code(returncode) == expected
+from cmk.plugins.notifications.cli.notify import _KEEPALIVE_FLAG, _notify_request, NotifyRequest
 
 
 def test_the_notify_request_is_read_from_the_command_line() -> None:
@@ -67,4 +16,4 @@ def test_the_notify_request_is_read_from_the_command_line() -> None:
 
     assert _notify_request(
         CLIReader(lambda declaration: given.get(declaration, ()))
-    ) == _NotifyRequest(log_to_stdout=False, keepalive=True)
+    ) == NotifyRequest(log_to_stdout=False, keepalive=True)

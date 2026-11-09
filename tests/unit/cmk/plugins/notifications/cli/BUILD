@@ -10,6 +10,7 @@ py_cmk_test(
     visibility = ["//visibility:private"],
     deps = [
         "//cmk/plugins/notifications/cli",
+        "//cmk/plugins/notifications/cli/handlers",
         "//packages/cmk-ccc:version",
         "//packages/cmk-plugin-apis:cli",
         "//tests/unit:conftest",

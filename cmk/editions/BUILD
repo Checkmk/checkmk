@@ -43,6 +43,7 @@ py_library(
         "//cmk/plugins/diagnostics/cli",
         "//cmk/plugins/notifications/automations",
         "//cmk/plugins/notifications/cli",
+        "//cmk/plugins/notifications/cli/handlers",
         "//cmk/post_rename_site",
         "//cmk/product_usage",
         "//cmk/product_usage:product_usage_cli",

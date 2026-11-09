@@ -27,6 +27,9 @@ See [BAZEL.md](BAZEL.md) for the full developer command reference.
 - Formatting/linting via `bazel lint` (ruff); type checking via `bazel build --config=mypy` (mypy)
 - Agent plugins: Python 3.4+ compatible
 - GUI cannot import cmk/base internals (enforced by component isolation)
+- Signal handlers must not raise, `sys.exit()` included. Instead: Record the signal
+  and act on it in the main loop; don't catch `KeyboardInterrupt` for shutdown.
+  Raising handlers like `cmk.ccc.timeout.Timeout` exist; don't copy them.
 
 ## Testing
 

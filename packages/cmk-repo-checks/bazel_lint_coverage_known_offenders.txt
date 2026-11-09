@@ -28,7 +28,6 @@ omd/packages/omd/restart_site_apache
 omd/packages/omd/skel/etc/init.d/xinetd
 omd/packages/pnp4nagios/skel/etc/init.d/npcd
 omd/packages/pnp4nagios/skel/etc/init.d/pnp_gearman_worker
-omd/strip_binaries
 packages/check-cert/src/main.rs
 packages/check-cert/tests/starttls.rs
 packages/check-http/src/cli.rs

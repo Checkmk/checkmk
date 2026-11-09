@@ -33,7 +33,6 @@ COPY \
     install-make-dist-deps.sh \
     install-lz4-parallel.sh \
     install-aws-cli.sh \
-    strip_binaries \
     /opt/
 
 # hack to use existing installation scripts, see CMK-20698
@@ -79,7 +78,7 @@ RUN /opt/install-aws-cli.sh
 # lz4 is required to tar home cache folder
 RUN /opt/install-lz4-parallel.sh
 
-RUN rm /opt/install*.sh /opt/defines.make /opt/.bazelversion /opt/package_versions.bzl /opt/build_lib.sh /opt/strip_binaries
+RUN rm /opt/install*.sh /opt/defines.make /opt/.bazelversion /opt/package_versions.bzl /opt/build_lib.sh
 
 # The file "/etc/ci.bazelrc" is already populated by the parent image
 

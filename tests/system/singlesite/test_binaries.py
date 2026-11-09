@@ -120,7 +120,7 @@ ALL_SITE_BINARIES: Sequence[BinarySmoke] = [*NOTIFICATION_PLUGINS, *BIN_BINARIES
 REPO_SCRIPTS: Sequence[RepoScript] = [
     RepoScript(
         "strip_binaries",
-        "omd/strip_binaries",
+        "omd/strip_binaries.sh",
         args=["-h"],
         expected_stdout=r"(usage:.*strip_binaries|strip)",
     ),

@@ -202,9 +202,9 @@ strip_binaries() {
 
     if [[ -n ${CI} ]]; then
         # CI build, located at /opt
-        /opt/strip_binaries "${STRIP_PATH}"
+        /opt/strip_binaries.sh "${STRIP_PATH}"
     else
-        omd/strip_binaries "${STRIP_PATH}"
+        omd/strip_binaries.sh "${STRIP_PATH}"
     fi
 }
 

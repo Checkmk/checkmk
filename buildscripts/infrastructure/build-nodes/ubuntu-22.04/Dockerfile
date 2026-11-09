@@ -149,8 +149,8 @@ RUN /opt/install-gdb.sh
 
 # Now shrink all the binaries and libraries we produced to build a small image
 # in the next step
-COPY strip_binaries strip_binaries.sh /opt/
-RUN /opt/strip_binaries /opt
+COPY strip_binaries.sh /opt/
+RUN /opt/strip_binaries.sh /opt
 
 # Run this AFTER strip_binaries!!
 COPY install-bazel.sh /opt/

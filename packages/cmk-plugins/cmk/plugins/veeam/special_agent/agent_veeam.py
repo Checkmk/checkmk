@@ -26,11 +26,17 @@ import urllib3
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from pydantic.alias_generators import to_camel
 
-from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option, Secret
+from cmk.password_store.v1 import (
+    Obfuscator,
+    parser_add_secret_option,
+    resolve_secret_option,
+    Secret,
+)
 from cmk.plugins.veeam.lib import parse_iso8601_epoch
 from cmk.server_side_programs.v1 import (
     AgentMessages,
     HostnameValidationAdapter,
+    ObfuscatedStorage,
     report_agent_crashes,
     Storage,
     vcrtrace,
@@ -269,12 +275,12 @@ class VeeamAuth(requests.auth.AuthBase):
         self,
         api: VeeamApi,
         *,
-        storage: Storage,
+        secrets: ObfuscatedStorage[Secret[str]],
         user: str,
         password: Secret[str],
     ) -> None:
         self._api = api
-        self._storage = storage
+        self._secrets = secrets
         self._user = user
         self._password = password
         self._owner = f"{user}@{api.url}"
@@ -289,10 +295,10 @@ class VeeamAuth(requests.auth.AuthBase):
         return r
 
     def _load_token(self) -> _StoredToken | None:
-        if (raw := self._storage.read(TOKEN_STORAGE_KEY, None)) is None:
+        if (raw := self._secrets.read(TOKEN_STORAGE_KEY, None)) is None:
             return None
         try:
-            token = _StoredToken.model_validate_json(raw)
+            token = _StoredToken.model_validate_json(raw.reveal())
         except ValidationError:
             return None
         return token if token.owner == self._owner else None
@@ -317,7 +323,7 @@ class VeeamAuth(requests.auth.AuthBase):
             expires_at=requested_at + token.expires_in,
         )
         # Store right away: the refresh token we just used is gone for good.
-        self._storage.write(TOKEN_STORAGE_KEY, stored.model_dump_json())
+        self._secrets.write(TOKEN_STORAGE_KEY, Secret(stored.model_dump_json()))
         return stored
 
     def _refresh(self, token: _StoredToken) -> _StoredToken | None:
@@ -1356,7 +1362,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             storage = Storage(AGENT, host=args.address)
             auth = VeeamAuth(
                 api,
-                storage=storage,
+                secrets=ObfuscatedStorage(AGENT, host=args.address, obfuscator=Obfuscator()),
                 user=args.user,
                 password=resolve_secret_option(args, PASSWORD_OPTION),
             )

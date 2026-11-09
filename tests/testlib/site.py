@@ -1883,6 +1883,15 @@ class Site:
             if re.search("Trial period ended: 'Activate changes' is blocked", crash_detail):
                 logger.warning("Ignored crash report due to license violation! See CMK-38535")
                 continue
+            if re.search(
+                r"Error creating configuration: \[Errno 2\] No such file or directory: "
+                r"'[^']*/var/check_mk/discovered_host_labels/[^']*\.mk'",
+                crash_detail,
+            ):
+                # The hourly cleanup of discovered host labels deletes label files while the core
+                # configuration is created from them.
+                logger.warning("Ignored crash report due to known race. See CMK-42100")
+                continue
             if re.search("version `OPENSSL_3.4.0' not found", crash_detail):
                 logger.warning("Ignored crash report due to known OpenSSL issue. See CMK-28862")
                 continue

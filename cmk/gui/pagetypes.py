@@ -28,7 +28,7 @@ import copy
 import json
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import suppress
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from typing import Generic, Literal, override, Self, TypeVar
 
 from pydantic import BaseModel as PydanticBaseModel
@@ -957,7 +957,7 @@ class Overridable(Base[_T_OverridableConfig]):
             save_user_file("user_%ss" % cls.type_name(), save_dict_of_owner, page_owner)
 
     def clone(self) -> Self:
-        page_config = replace(self.config)
+        page_config = copy.deepcopy(self.config)
         page_config.owner = user.id if user.id else UserId("")
         new_page = self.__class__(page_config)
         return new_page

@@ -972,7 +972,14 @@ class TestScheduleDowntimes:
         ]
 
     @pytest.mark.parametrize("what, row", [("host", HOST_ROW), ("service", SERVICE_ROW)])
-    @pytest.mark.parametrize("visible_hosts", [["myhost", "otherhost"], ["myhost"], []])
+    @pytest.mark.parametrize(
+        "visible_hosts, expected_affected",
+        [
+            (["myhost", "otherhost"], "Affected hosts: 2"),
+            (["myhost"], "Affected host: 1"),
+            ([], "Affected hosts: 0"),
+        ],
+    )
     @pytest.mark.usefixtures("request_context")
     def test_host_downtimes_count_only_distinct_visible_hosts(
         self,
@@ -981,6 +988,7 @@ class TestScheduleDowntimes:
         what: str,
         row: Row,
         visible_hosts: list[str],
+        expected_affected: str,
     ) -> None:
         self._submit("_down_host")
         action_rows = [
@@ -1005,7 +1013,7 @@ class TestScheduleDowntimes:
         ):
             issued, _options, dialog, _executor = core_command(what, row, 0, action_rows)
 
-        assert str(dialog.affected) == f"Affected hosts: {len(visible_hosts)}"
+        assert str(dialog.affected) == expected_affected
         assert len(issued) == len(visible_hosts[:1])
         assert [
             command.host_name for command in issued if isinstance(command, ScheduleHostDowntime)

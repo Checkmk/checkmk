@@ -220,3 +220,9 @@ py_cmk_test(
         requirement("openapi-spec-validator"),
     ],
 )
+
+# Lets shellcheck see these scripts. Nothing depends on this target.
+sh_library(
+    name = "shell_scripts",
+    srcs = ["workspace_status.sh"],
+)

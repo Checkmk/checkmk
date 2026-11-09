@@ -63,20 +63,19 @@ def saving_crash_reporter(
 def tracing(environ: Mapping[str, str]) -> CommandTracer:
     @contextmanager
     def traced(context: CLIContext, run_command: RunCommand) -> Iterator[None]:
-        init_span_processor(
-            trace.init_tracing(
-                service_namespace=trace.service_namespace_from_config(
-                    "", omd_config := get_omd_config(context.omd_root)
+        omd_config = get_omd_config(context.omd_root)
+        if (send_config := trace.trace_send_config(omd_config)).enabled:
+            init_span_processor(
+                trace.init_tracing(
+                    service_namespace=trace.service_namespace_from_config("", omd_config),
+                    service_name="cmk",
+                    service_instance_id=omd_site(),
+                    extra_resource_attributes=trace.resource_attributes_from_config(
+                        context.omd_root
+                    ),
                 ),
-                service_name="cmk",
-                service_instance_id=omd_site(),
-                extra_resource_attributes=trace.resource_attributes_from_config(context.omd_root),
-            ),
-            exporter_from_config(
-                exporter_log_level=logging.CRITICAL,
-                config=trace.trace_send_config(omd_config),
-            ),
-        )
+                exporter_from_config(exporter_log_level=logging.CRITICAL, config=send_config),
+            )
         with tracer.span(
             f"command[{run_command.command.name}]",
             attributes={

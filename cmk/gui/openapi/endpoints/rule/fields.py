@@ -94,6 +94,7 @@ class MoveToSpecificRule(_BaseMoveTo):
     rule_id = fields.String(
         description="The UUID of the rule to move after/before.",
         example="f8b74720-a454-4242-99c4-62994ef0f2bf",
+        required=True,
     )
 
 

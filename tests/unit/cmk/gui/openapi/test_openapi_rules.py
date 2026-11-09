@@ -959,3 +959,16 @@ def test_move_rule_to_folder_without_folder_is_rejected(
     resp = clients.Rule.move(rule_id, {"position": position}, expect_ok=False)
 
     assert resp.status_code == 400
+
+
+@pytest.mark.parametrize("position", ["before_specific_rule", "after_specific_rule"])
+def test_move_rule_to_specific_rule_without_rule_id_is_rejected(
+    clients: ClientRegistry, position: str
+) -> None:
+    rule_id = clients.Rule.create(DEFAULT_RULESET, folder="/", value_raw=DEFAULT_VALUE_RAW).json[
+        "id"
+    ]
+
+    resp = clients.Rule.move(rule_id, {"position": position}, expect_ok=False)
+
+    assert resp.status_code == 400

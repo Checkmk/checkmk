@@ -174,9 +174,12 @@ STAGES:
     - NAME: "All unit tests"
       SEC_VAR_LIST:
         - "CI_TEST_SQL_DB_ENDPOINT"
+      # too-slow-for-cv: a test too slow to run on every change. The post
+      # merge test-unit-all job (test-unit-all.groovy) keeps the tag, so
+      # such a target still runs after the merge; do not tag it manual.
       ENV_VARS:
         BAZEL_TEST_LOGS_DEST: "../results/unit"
-        BAZEL_EXTRA_TAG_FILTERS: "-cpp,-requires-git"
+        BAZEL_EXTRA_TAG_FILTERS: "-cpp,-requires-git,-too-slow-for-cv"
       DIR: "tests"
       COMMAND: |
           make_rc=0

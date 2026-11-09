@@ -3,9 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import contextlib
 import logging
 import sqlite3
 import threading
+from collections.abc import Callable
 from pathlib import Path
 from typing import Literal
 
@@ -600,3 +602,127 @@ def test_housekeeping_during_a_query_vacuums_the_database(
     history.close()
 
     assert (errors, free_pages) == ([], 0)
+
+
+def _add_entry(history: SQLiteHistory) -> None:
+    history.add(event=ec.Event(text="disk full"), what="NEW")
+
+
+def _flush(history: SQLiteHistory) -> None:
+    history.flush()
+
+
+@pytest.mark.parametrize(
+    ("statement", "write"),
+    [
+        pytest.param("INSERT", _add_entry, id="adding an entry"),
+        pytest.param("DELETE", _flush, id="flushing"),
+    ],
+)
+def test_housekeeping_while_writing_vacuums_the_database(
+    settings: ec.Settings,
+    config: Config,
+    tmp_path: Path,
+    statement: Literal["INSERT", "DELETE"],
+    write: Callable[[SQLiteHistory], None],
+) -> None:
+    # Set once the housekeeping waits for the writing or is done, e.g. failed
+    waiting_or_done = threading.Event()
+    history = SQLiteHistory(
+        SQLiteSettings.from_settings(settings, database=tmp_path / "history.sqlite"),
+        # The housekeeping deletes all entries and always vacuums.
+        config | {"archive_mode": "sqlite", "history_lifetime": 0, "sqlite_freelist_size": 0},
+        logging.getLogger("cmk.mkeventd"),
+        StatusTableEvents.columns,
+        StatusTableHistory.columns,
+        lock=_WatchedLock(waiting_or_done),
+    )
+    for _ in range(100):  # pages for the housekeeping to free
+        history.add(event=ec.Event(text="x" * 1000), what="NEW")
+    errors: list[Exception] = []
+
+    def housekeeping() -> None:
+        try:
+            history.housekeeping()
+        except Exception as e:
+            errors.append(e)
+        finally:
+            waiting_or_done.set()
+
+    # A daemon thread doesn't keep pytest from exiting if it stays blocked.
+    housekeeper = threading.Thread(target=housekeeping, daemon=True)
+    # Recorded instead of asserted right away: SQLite would replace the AssertionError by its own.
+    waited_or_done: list[bool] = []
+
+    def start_housekeeping() -> None:
+        if housekeeper.ident is not None:  # e.g. for each further entry flushing deletes
+            return
+        housekeeper.start()
+        waited_or_done.append(waiting_or_done.wait(timeout=30))
+
+    # Starts the housekeeping while writing, within the transaction of the writing
+    history.conn.create_function("start_housekeeping", 0, start_housekeeping)
+    history.conn.execute(
+        f"CREATE TEMP TRIGGER start_housekeeping AFTER {statement} ON history "
+        "BEGIN SELECT start_housekeeping(); END;"
+    )
+
+    try:
+        write(history)
+        housekeeper.join(timeout=30)
+        free_pages = history.conn.execute("PRAGMA freelist_count").fetchone()[0]
+    finally:
+        history.close()
+
+    assert (waited_or_done, errors, free_pages) == ([True], [], 0)
+
+
+def test_closing_while_an_entry_is_added_waits_for_it(
+    settings: ec.Settings, config: Config, tmp_path: Path
+) -> None:
+    database = tmp_path / "history.sqlite"
+    # Set once closing waits for the entry or is done, e.g. failed
+    waiting_or_done = threading.Event()
+    history = SQLiteHistory(
+        SQLiteSettings.from_settings(settings, database=database),
+        config | {"archive_mode": "sqlite"},
+        logging.getLogger("cmk.mkeventd"),
+        StatusTableEvents.columns,
+        StatusTableHistory.columns,
+        lock=_WatchedLock(waiting_or_done),
+    )
+    errors: list[Exception] = []
+
+    def close() -> None:
+        try:
+            history.close()
+        except Exception as e:
+            errors.append(e)
+        finally:
+            waiting_or_done.set()
+
+    # A daemon thread doesn't keep pytest from exiting if it stays blocked.
+    closer = threading.Thread(target=close, daemon=True)
+    # Recorded instead of asserted right away: SQLite would replace the AssertionError by its own.
+    waited_or_done: list[bool] = []
+
+    def start_closing() -> None:
+        closer.start()
+        waited_or_done.append(waiting_or_done.wait(timeout=30))
+
+    # Starts closing while the entry is added, within its transaction
+    history.conn.create_function("start_closing", 0, start_closing)
+    history.conn.execute(
+        "CREATE TEMP TRIGGER start_closing AFTER INSERT ON history "
+        "BEGIN SELECT start_closing(); END;"
+    )
+
+    try:
+        history.add(event=ec.Event(text="disk full"), what="NEW")
+    except Exception as e:
+        errors.append(e)
+    closer.join(timeout=30)
+    with contextlib.closing(sqlite3.connect(database)) as connection:
+        entries = connection.execute("SELECT COUNT(*) FROM history").fetchone()[0]
+
+    assert (waited_or_done, errors, entries) == ([True], [], 1)

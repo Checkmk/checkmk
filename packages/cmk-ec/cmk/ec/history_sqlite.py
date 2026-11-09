@@ -305,9 +305,8 @@ class SQLiteHistory(History):
         self._logger = logger.getChild("sqlite")
         self._event_columns = event_columns
         self._history_columns = history_columns
-        # VACUUM fails while a query reads from the connection, so the housekeeping of the
-        # main thread waits for the queries of the status server. Only tests pass a lock, e.g.
-        # to see when the housekeeping waits.
+        # The threads share the connection and its transaction, so they take turns, e.g. as VACUUM
+        # fails within a transaction. Only tests pass a lock.
         self._lock = threading.Lock() if lock is None else lock
         self._last_housekeeping = 0.0
         self._page_size = 4096
@@ -391,7 +390,7 @@ class SQLiteHistory(History):
     @override
     def flush(self) -> None:
         """Delete all entries the history table."""
-        with self.conn as connection:
+        with self._lock, self.conn as connection:
             connection.execute("DELETE FROM history;")
 
     @override
@@ -400,7 +399,7 @@ class SQLiteHistory(History):
 
         No need to include the line column, as it is autoincremented.
         """
-        with self.conn as connection:
+        with self._lock, self.conn as connection:
             cur = connection.cursor()
             cur.execute(
                 f"""INSERT INTO
@@ -514,8 +513,9 @@ class SQLiteHistory(History):
         Used during a new object instantiation,
         to avoid sqlite3.OperationalError: database is locked.
         """
-        self.conn.commit()
-        self.conn.close()
+        with self._lock:
+            self.conn.commit()
+            self.conn.close()
 
 
 # dumbed-down local version from cmk.utils.render

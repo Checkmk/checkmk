@@ -119,7 +119,7 @@ def run(
         try:
             bound = request.command.bind(ParsedOptions(request.options, logger))
         except ValueError as error:
-            runtime.write(rejection(argv, error).message)
+            runtime.write(rejection(argv, error))
             return CLIExitCode.UNKNOWN
         context = CLIContext(
             omd_root=omd_root, global_options=request.global_options, logger=logger

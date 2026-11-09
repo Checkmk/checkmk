@@ -77,10 +77,8 @@ def _parse(
             )
 
 
-def rejection(argv: Sequence[str], error: Exception) -> InvalidArguments:
-    return InvalidArguments(
-        f"ERROR: {error} (see `{Path(argv[0]).name} --help` for valid options)\n"
-    )
+def rejection(argv: Sequence[str], error: Exception) -> str:
+    return f"ERROR: {error} (see `{Path(argv[0]).name} --help` for valid options)\n"
 
 
 def parse(
@@ -89,4 +87,4 @@ def parse(
     try:
         return _parse(commands, argv, logger)
     except (getopt.GetoptError, ValueError) as error:
-        return rejection(argv, error)
+        return InvalidArguments(rejection(argv, error))

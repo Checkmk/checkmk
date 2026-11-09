@@ -3,7 +3,27 @@
   "title": "ExplorerApp",
   "type": "object",
   "properties": {
-    "global_time_picker": { "$ref": "global_time_picker.json#" }
+    "global_time_picker": { "$ref": "global_time_picker.json#" },
+    "sites": {
+      "description": "The sites the user may see, one column each, in display order.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/explorer_site" }
+    },
+    "mock_data": {
+      "description": "Whether to request the mock data of the list buckets endpoint.",
+      "type": "boolean"
+    }
   },
-  "required": ["global_time_picker"]
+  "required": ["global_time_picker", "sites", "mock_data"],
+  "$defs": {
+    "explorer_site": {
+      "title": "ExplorerSite",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "alias": { "type": "string" }
+      },
+      "required": ["id", "alias"]
+    }
+  }
 }

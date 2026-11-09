@@ -6,6 +6,7 @@
 # debconf settings for omd
 
 # Source debconf library.
+# shellcheck source=/dev/null
 . /usr/share/debconf/confmodule
 
 db_version 2.0

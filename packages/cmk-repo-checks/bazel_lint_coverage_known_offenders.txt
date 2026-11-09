@@ -14,11 +14,6 @@ cmk/plugins/collection/agents/dnsclient
 cmk/plugins/nvidia/agents/nvidia_smi
 cmk/plugins/sap/agents/mk_saprouter
 non-free/packages/cmk-update-agent/build_in_rootfs.sh
-omd/debian/config
-omd/debian/postinst.in
-omd/debian/postrm.in
-omd/debian/prerm.in
-omd/distro
 omd/packages/apache-omd/skel/etc/init.d/apache
 omd/packages/maintenance/logrotate
 omd/packages/maintenance/skel/etc/init.d/crontab

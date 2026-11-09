@@ -14,6 +14,7 @@ CAP_PROGRAMS="bin/mkeventd_open514 lib/nagios/plugins/check_icmp lib/nagios/plug
 APACHE_OMD_CONF="/etc/apache2/conf.d/zzz_omd.conf"
 
 # Source debconf library.
+# shellcheck source=/dev/null
 . /usr/share/debconf/confmodule
 
 # summary of how this script can be called:
@@ -28,6 +29,8 @@ APACHE_OMD_CONF="/etc/apache2/conf.d/zzz_omd.conf"
 # for details, see http://www.debian.org/doc/debian-policy/ or
 # the debian-policy package
 
+# dash, the /bin/sh of Debian and Ubuntu, supports local.
+# shellcheck disable=SC3043
 setperm() {
     local user="$1"
     local group="$2"
@@ -48,11 +51,11 @@ case "$1" in
         mkdir /etc/bash_completion.d
     fi
     update-alternatives --install /omd/versions/default \
-       omd /omd/versions/{CMK_VERSION}.{CMK_EDITION} 38 \
-       --slave /usr/bin/omd omd.bin /omd/versions/{CMK_VERSION}.{CMK_EDITION}/bin/omd \
-       --slave /etc/bash_completion.d/omd omd.bash_completion /omd/versions/{CMK_VERSION}.{CMK_EDITION}/lib/omd/bash_completion \
+       omd "$BASE_PATH" 38 \
+       --slave /usr/bin/omd omd.bin "$BASE_PATH/bin/omd" \
+       --slave /etc/bash_completion.d/omd omd.bash_completion "$BASE_PATH/lib/omd/bash_completion" \
        --slave /usr/share/man/man8/omd.8.gz omd.man8 \
-               /omd/versions/{CMK_VERSION}.{CMK_EDITION}/share/man/man8/omd.8.gz
+               "$BASE_PATH/share/man/man8/omd.8.gz"
 
     # -- looking for group nagios, create it, if not exist
     if ! getent group omd > /dev/null ; then
@@ -138,7 +141,7 @@ case "$1" in
     fi
 
     echo "New default version is {CMK_VERSION}.{CMK_EDITION}."
-    update-alternatives --set omd /omd/versions/{CMK_VERSION}.{CMK_EDITION}
+    update-alternatives --set omd "$BASE_PATH"
 
     DEFAULT=/etc/default/omd
 
@@ -171,7 +174,7 @@ case "$1" in
 
   triggered)
     echo "Apache update detected: sites must be restarted"
-    /omd/versions/{CMK_VERSION}.{CMK_EDITION}/lib/omd/restart_site_apache
+    "$BASE_PATH/lib/omd/restart_site_apache"
     ;;
 
   *)

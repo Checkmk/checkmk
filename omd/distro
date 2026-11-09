@@ -10,8 +10,9 @@
 # Ubuntu is detected with /etc/lsb-release
 SEP=${1:- }
 if [ -e /etc/lsb-release ]; then
+    # shellcheck source=/dev/null
     . /etc/lsb-release
-    if [ -n "$DISTRIB_ID" -a -n "$DISTRIB_RELEASE" ]; then
+    if [ -n "$DISTRIB_ID" ] && [ -n "$DISTRIB_RELEASE" ]; then
         echo "${DISTRIB_ID^^*}$SEP$DISTRIB_RELEASE"
         exit 0
     fi
@@ -75,22 +76,22 @@ if [ -e /etc/SuSE-release ]; then
     # SLES 11
     VERSION=$(sed -rn 's/^VERSION = (.*)/\1/p' </etc/SuSE-release)
     SP=$(sed -rn 's/^PATCHLEVEL = (.*)/\1/p' </etc/SuSE-release)
-    if [ "$VERSION" = 11 -a "$SP" = 1 ]; then
+    if [ "$VERSION" = 11 ] && [ "$SP" = 1 ]; then
         echo "SLES$SEP${VERSION}SP1"
         exit 0
-    elif [ "$VERSION" = 11 -a "$SP" = 2 ]; then
+    elif [ "$VERSION" = 11 ] && [ "$SP" = 2 ]; then
         echo "SLES$SEP${VERSION}SP2"
         exit 0
-    elif [ "$VERSION" = 11 -a "$SP" = 3 ]; then
+    elif [ "$VERSION" = 11 ] && [ "$SP" = 3 ]; then
         echo "SLES$SEP${VERSION}SP3"
         exit 0
-    elif [ "$VERSION" = 11 -a "$SP" = 4 ]; then
+    elif [ "$VERSION" = 11 ] && [ "$SP" = 4 ]; then
         echo "SLES$SEP${VERSION}SP4"
         exit 0
-    elif [ "$VERSION" = 10 -a "$SP" = 1 ]; then
+    elif [ "$VERSION" = 10 ] && [ "$SP" = 1 ]; then
         echo "SLES$SEP${VERSION}SP1"
         exit 0
-    elif [ "$VERSION" = 10 -a "$SP" = 2 ]; then
+    elif [ "$VERSION" = 10 ] && [ "$SP" = 2 ]; then
         echo "SLES$SEP${VERSION}SP2"
         exit 0
     elif [ "$VERSION" = 11 ]; then
@@ -98,7 +99,7 @@ if [ -e /etc/SuSE-release ]; then
         exit 0
     elif [ "$VERSION" = 12 ]; then
         echo -n "SLES$SEP${VERSION}"
-        if [ $SP != 0 ]; then
+        if [ "$SP" != 0 ]; then
             echo "SP$SP"
         else
             echo
@@ -112,6 +113,7 @@ fi
 
 # SLES15+
 if [ -e /etc/os-release ]; then
+    # shellcheck source=/dev/null
     . /etc/os-release
     echo "${NAME}${SEP}${VERSION/-/}"
     exit 0

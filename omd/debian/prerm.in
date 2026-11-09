@@ -25,7 +25,7 @@ case "$1" in
       # Make sure no sites use that version
       for link in /omd/sites/*/version
       do
-          target=$(readlink $link 2>/dev/null) || continue
+          target=$(readlink "$link" 2>/dev/null) || continue
           version=${target##*/}
           if [ "$version" = "{CMK_VERSION}.{CMK_EDITION}" ]
           then
@@ -61,6 +61,6 @@ esac
 
 #DEBHELPER#
 
-update-alternatives --remove  omd /omd/versions/{CMK_VERSION}.{CMK_EDITION}
+update-alternatives --remove  omd "/omd/versions/{CMK_VERSION}.{CMK_EDITION}"
 
 exit 0

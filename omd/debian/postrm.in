@@ -24,7 +24,6 @@ set -e
 
 APACHE_OMD_CONF="/etc/apache2/conf.d/zzz_omd.conf"
 APACHE_OMD_EMPTY_CONF="/opt/omd/apache/empty.conf"
-OMD="omd-{CMK_VERSION}.{CMK_EDITION}"
 BASE_PATH="/omd/versions/{CMK_VERSION}.{CMK_EDITION}"
 
 case "$1" in
@@ -35,16 +34,18 @@ case "$1" in
       # update-alternatives --remove  omd /omd/versions/{CMK_VERSION}.{CMK_EDITION}
       # safely remove __pycache__ and remainting empty folders (not handled
       # automatically) by removing deepest elements first
+      # shellcheck disable=SC2016 # "$1" is expanded by the inner sh
       find "${BASE_PATH}" -type d -name __pycache__ \
         | awk '{print length, $0}' | sort -n -r | cut -d' ' -f2- \
         | xargs -I{} sh -c 'rm -rf "$1"' cmd {}
+      # shellcheck disable=SC2016 # "$1" is expanded by the inner sh
       find "${BASE_PATH}" -type d \
         | awk '{print length, $0}' | sort -n -r | cut -d' ' -f2- \
         | xargs -I{} sh -c 'rmdir "$1"' cmd {}
     ;;
 
     purge)
-      ALTERNATIVES=`update-alternatives --list omd 2>/dev/null | grep -E -v 'No alternatives'` || /bin/true
+      ALTERNATIVES=$(update-alternatives --list omd 2>/dev/null | grep -E -v 'No alternatives') || /bin/true
       if [ -z "$ALTERNATIVES" ]; then
 	  echo "Removing system group 'omd'"
 	  groupdel omd || true

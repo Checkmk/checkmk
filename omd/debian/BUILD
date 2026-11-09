@@ -28,6 +28,10 @@ debian_files = [
 sh_library(
     name = "shell_scripts",
     srcs = [
+        "config",
+        "postinst.in",
+        "postrm.in",
         "preinst.in",
+        "prerm.in",
     ],
 )

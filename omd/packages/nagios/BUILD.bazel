@@ -190,3 +190,9 @@ py_cmk_test(
     srcs = glob(["tests/*.py"]),
     deps = [":merge-nagios-config_lib"],
 )
+
+# Lets shellcheck see these scripts. Nothing depends on this target.
+sh_library(
+    name = "shell_scripts",
+    srcs = ["skel/etc/init.d/nagios"],
+)

@@ -5,8 +5,8 @@
 
 ### BEGIN INIT INFO
 # Provides:       nagios
-# Required-Start: 
-# Required-Stop:  
+# Required-Start:
+# Required-Stop:
 # Default-Start:  2 3 5
 # Default-Stop:
 # Description:    Nagios network monitoring daemon
@@ -34,20 +34,23 @@
 # - When a reload is requested and the program is not running
 #   the init script should execute a start instead
 
-cd ###ROOT###
+cd "###ROOT###" || exit 1
+# shellcheck source=/dev/null
 . .profile
+# shellcheck source=/dev/null
 . lib/omd/init_profile
+# shellcheck source=/dev/null
 . etc/omd/site.conf
 [ "$CONFIG_CORE" = "nagios" ] || exit 5
 
-BIN=###ROOT###/bin/nagios
-TMP_DIR=###ROOT###/tmp/nagios
-CFG_FILE=###ROOT###/tmp/nagios/nagios.cfg
-CMD_FILE=###ROOT###/tmp/run/nagios.cmd
-PID_FILE=###ROOT###/tmp/lock/nagios.lock
-CHECKRESULTS_DIR=###ROOT###/tmp/nagios/checkresults
-USR=###SITE###
-GRP=###SITE###
+BIN="###ROOT###/bin/nagios"
+TMP_DIR="###ROOT###/tmp/nagios"
+CFG_FILE="###ROOT###/tmp/nagios/nagios.cfg"
+CMD_FILE="###ROOT###/tmp/run/nagios.cmd"
+PID_FILE="###ROOT###/tmp/lock/nagios.lock"
+CHECKRESULTS_DIR="###ROOT###/tmp/nagios/checkresults"
+USR="###SITE###"
+GRP="###SITE###"
 
 # You can set the environment variable CORE_NOVERIFY=yes
 # in order to supress a verification of the nagios configuration
@@ -66,17 +69,20 @@ export LC_ALL=C
 export CONFIG_MKEVENTD
 
 # OMD: create configuration file out of fragments
-case "$1" in start|restart|reload|checkconfig|check)
+case "$1" in start | restart | reload | checkconfig | check)
     if [ ! -d "$TMP_DIR" ]; then
         echo "ERROR: tmp directory is not ready. Use \"omd start\" to prepare it"
         exit 1
     fi
 
-    merge-nagios-config \
-       ###ROOT###/etc/nagios/nagios.d/*.cfg \
-       ###ROOT###/etc/nagios/nagios.cfg \
-       > $CFG_FILE || rm -f $CFG_FILE 
-    if [ $? -ne 0 ]; then exit 1; fi
+    if ! merge-nagios-config \
+        "###ROOT###"/etc/nagios/nagios.d/*.cfg \
+        "###ROOT###/etc/nagios/nagios.cfg" \
+        >"$CFG_FILE"; then
+        rm -f "$CFG_FILE"
+        exit 1
+    fi
+    ;;
 esac
 
 OPTIONS="-ud"
@@ -93,20 +99,18 @@ OPTIONS="-ud"
 # which is visible via ps as "init --user". This will be the PPID until
 # the user session ends, then the process will be moved to PPID=1.
 # Strange one, but we try to simply ignore that...  "-o" should make it.
-# 
+#
 # It returns 1 when no process can be found and echos the PID while
 # returning 0 when a process can be found.
 pidof_nagios() {
-    pgrep -u $OMD_SITE -o -fx "$BIN $OPTIONS $CFG_FILE" 2>/dev/null
+    pgrep -u "$OMD_SITE" -o -fx "$BIN $OPTIONS $CFG_FILE" 2>/dev/null
 }
-
 
 verify_config() {
     if [ "$1" != "quiet" ]; then
         echo -n "Running configuration check... "
     fi
-    RESULT=$($BIN -pv $CFG_FILE 2>&1)
-    if [ $? -eq 0 ]; then
+    if RESULT=$("$BIN" -pv "$CFG_FILE" 2>&1); then
         if [ "$1" != "quiet" ]; then
             echo "done."
             echo "$RESULT" >&2
@@ -122,17 +126,17 @@ verify_config() {
 }
 
 prep_start() {
-    if [ -f $CMD_FILE ]; then
-        rm -f $CMD_FILE
+    if [ -f "$CMD_FILE" ]; then
+        rm -f "$CMD_FILE"
     fi
-    touch $PID_FILE
-    chown $USR:$GRP $PID_FILE
-    rm -f $CHECKRESULTS_DIR/*
+    touch "$PID_FILE"
+    chown "$USR:$GRP" "$PID_FILE"
+    rm -f "$CHECKRESULTS_DIR"/*
 }
 
 nagios_wait_stop() {
-    pid=$(pidof_nagios) || {  
-        echo -n 'not running...' 
+    pid=$(pidof_nagios) || {
+        echo -n 'not running...'
         return 0
     }
 
@@ -142,116 +146,115 @@ nagios_wait_stop() {
     # main nagios process. So fetch the process id again
     # multiple times to fetch new processes until all are gone.
     I=0
-    while kill -0 $pid >/dev/null 2>&1; do
+    while kill -0 "$pid" >/dev/null 2>&1; do
         # Send TERM to process group to kill the nagios process and also
         # other processes started by this nagios process, for example
         # check plugins which are currently running
-        kill -TERM -$pid
-        while kill -0 $pid  >/dev/null 2>&1;  do
+        kill -TERM "-$pid"
+        while kill -0 "$pid" >/dev/null 2>&1; do
             if [ $I = '60' ]; then
                 echo -ne "\nsending SIGKILL"
-                kill -9 $pid
+                kill -9 "$pid"
             elif [ $I = '70' ]; then
-                return 1 
+                return 1
             fi
-                
+
             echo -n "."
-            I=$(($I+1))
+            I=$((I + 1))
             sleep 1
         done
         # Is there another proc with ppid 1?
         pid=$(pidof_nagios) || break
     done
-    
+
     rm -f "$PID_FILE"
 }
 
 nagios_wait_start() {
     prep_start
-    $BIN $OPTIONS $CFG_FILE
+    "$BIN" "$OPTIONS" "$CFG_FILE"
 
     I=0
-    while ! pidof_nagios >/dev/null 2>&1;  do
+    while ! pidof_nagios >/dev/null 2>&1; do
         if [ $I = '10' ]; then
             return 1
         else
             echo -n "."
-            I=$(($I+1))
+            I=$((I + 1))
             sleep 1
         fi
     done
 }
 
-if [ ! -f $BIN ]; then
+if [ ! -f "$BIN" ]; then
     echo "Nagios binary $BIN not found. Terminating..."
     exit 1
 fi
 
-case "$1" in start|restart|reload|checkconfig)
-    if [ ! -f $CFG_FILE ]; then
+case "$1" in start | restart | reload | checkconfig)
+    if [ ! -f "$CFG_FILE" ]; then
         echo "Nagios configuration file $CFG_FILE not found. Terminating..."
         exit 1
     fi
+    ;;
 esac
 
-__init_hook $0 $1 pre
+__init_hook "$0" "$1" pre
 case "$1" in
     start)
-         echo -n "Starting nagios..."
-         if pidof_nagios >/dev/null 2>&1; then
-             echo 'already running.'
-             exit 0
-         fi
+        echo -n "Starting nagios..."
+        if pidof_nagios >/dev/null 2>&1; then
+            echo 'already running.'
+            exit 0
+        fi
 
-        if [ "$CORE_NOVERIFY" ] ; then
-            if [ ! -f ~/var/nagios/objects.precache ] ; then
+        if [ "$CORE_NOVERIFY" ]; then
+            if [ ! -f ~/var/nagios/objects.precache ]; then
                 verify_config quiet || exit 1
             fi
         else
             verify_config quiet || exit 1
         fi
 
-
-         if nagios_wait_start; then
-             echo 'OK'
-             __init_hook $0 $1 post 0
-             exit 0
-         else
-             echo 'failed'
-             __init_hook $0 $1 post 1
-             exit 1
-         fi
-    ;;
+        if nagios_wait_start; then
+            echo 'OK'
+            __init_hook "$0" "$1" post 0
+            exit 0
+        else
+            echo 'failed'
+            __init_hook "$0" "$1" post 1
+            exit 1
+        fi
+        ;;
     stop)
         echo -n "Stopping nagios..."
         if nagios_wait_stop; then
             echo 'OK'
-             __init_hook $0 $1 post 0
+            __init_hook "$0" "$1" post 0
             exit 0
         else
             echo 'failed'
-             __init_hook $0 $1 post 1
+            __init_hook "$0" "$1" post 1
             exit 1
         fi
-    ;;
-    check|checkconfig)
+        ;;
+    check | checkconfig)
         if ! verify_config; then
             exit 1
         fi
         exit 0
-    ;;
+        ;;
     status)
-        if pid=$(pidof_nagios 2>&1)
-        then
+        if pid=$(pidof_nagios 2>&1); then
             echo "Running ($pid)."
         else
             echo 'Not running.'
             exit 1
         fi
-    ;;
+        ;;
     restart)
-        if [ "$CORE_NOVERIFY" ] ; then
-            if [ ! -f ~/var/nagios/objects.precache ] ; then
+        if [ "$CORE_NOVERIFY" ]; then
+            if [ ! -f ~/var/nagios/objects.precache ]; then
                 verify_config quiet || exit 1
             fi
         else
@@ -267,11 +270,11 @@ case "$1" in
             echo 'failed'
             exit 1
         fi
-    ;;
-    
-    reload|force-reload)
+        ;;
+
+    reload | force-reload)
         [ "$CORE_NOVERIFY" ] || verify_config quiet || exit 1
-        
+
         # Execute a start when nagios is not running
         if ! pid=$(pidof_nagios) 2>&1; then
             $0 start
@@ -279,20 +282,20 @@ case "$1" in
         fi
 
         echo -n "Reloading nagios configuration (PID: $pid)... "
-        if kill -HUP $pid >/dev/null 2>&1; then
+        if kill -HUP "$pid" >/dev/null 2>&1; then
             echo 'OK'
-            __init_hook $0 $1 post 0
+            __init_hook "$0" "$1" post 0
             exit 0
         else
             $0 restart
             exit $?
         fi
-    ;;
+        ;;
 
     *)
         echo "Usage: nagios {start|stop|restart|reload|status|checkconfig}"
         exit 2
-    ;;
+        ;;
 esac
- 
+
 # EOF

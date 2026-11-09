@@ -36,9 +36,19 @@ from redfish.rest.v1 import (
     SessionCreationError,
 )
 
-from cmk.password_store.v1 import parser_add_secret_option, resolve_secret_option
+from cmk.password_store.v1 import (
+    Obfuscator,
+    parser_add_secret_option,
+    resolve_secret_option,
+    Secret,
+)
 from cmk.plugins.redfish.lib import detect_vendor, REDFISH_SECTIONS, Vendor
-from cmk.server_side_programs.v1 import report_agent_crashes, Storage, vcrtrace
+from cmk.server_side_programs.v1 import (
+    ObfuscatedStorage,
+    report_agent_crashes,
+    Storage,
+    vcrtrace,
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -99,21 +109,20 @@ class ClientSession:
         self.session: Final = session
 
     @classmethod
-    def loadf(cls, hostname: str) -> Self | None:
+    def loadf(cls, secrets: ObfuscatedStorage[Secret[str]]) -> Self | None:
         """Load session data from file"""
-        storage = Storage(AGENT, hostname)
-        if (raw := storage.read("session", None)) is None:
+        if (raw := secrets.read("session", None)) is None:
             return None
         try:
-            raw_json = json.loads(raw)
+            raw_json = json.loads(raw.reveal())
         except json.JSONDecodeError:
             return None
         return cls(location=str(raw_json["location"]), session=str(raw_json["session"]))
 
-    def savef(self, hostname: str) -> None:
+    def savef(self, secrets: ObfuscatedStorage[Secret[str]]) -> None:
         """Save session data to file"""
-        Storage(AGENT, hostname).write(
-            "session", json.dumps({"location": self.location, "session": self.session})
+        secrets.write(
+            "session", Secret(json.dumps({"location": self.location, "session": self.session}))
         )
 
 
@@ -129,8 +138,10 @@ class RedfishClient:
         except RetriesExhaustedError as excp:
             raise CannotRecover("ERROR: too many retries for connection attempt") from excp
 
-    def make_session(self, host_name: str, auth: Literal["session"]) -> None:
-        if session := ClientSession.loadf(host_name):
+    def make_session(
+        self, secrets: ObfuscatedStorage[Secret[str]], auth: Literal["session"]
+    ) -> None:
+        if session := ClientSession.loadf(secrets):
             self._client.set_session_location(session.location)
             self._client.set_session_key(session.session)
             if (
@@ -147,7 +158,7 @@ class RedfishClient:
         self._client.login(auth=auth)
         ClientSession(
             str(self._client.get_session_location()), str(self._client.get_session_key())
-        ).savef(host_name)
+        ).savef(secrets)
 
 
 @dataclass
@@ -1016,7 +1027,9 @@ def get_session(args: argparse.Namespace) -> RedfishData:
                 )
             ),
         )
-        redfishobj.redfish_connection.make_session(redfishobj.hostname, auth="session")
+        redfishobj.redfish_connection.make_session(
+            ObfuscatedStorage(AGENT, redfishobj.hostname, Obfuscator()), auth="session"
+        )
 
     except ServerDownOrUnreachableError as excp:
         raise CannotRecover(

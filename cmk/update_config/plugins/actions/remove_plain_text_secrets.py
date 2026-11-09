@@ -16,6 +16,7 @@ from cmk.update_config.registry import update_action_registry
 _PLAIN_TEXT_SECRETS: Final = (
     ("veeam", "token"),
     ("vsphere", "cookie.value"),
+    ("redfish", "session"),
 )
 
 

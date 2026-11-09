@@ -24,8 +24,9 @@ from unittest import mock
 import pytest
 from redfish.rest.v1 import SessionCreationError  # type: ignore[import-not-found]
 
+from cmk.password_store.v1 import Obfuscator, Secret
 from cmk.plugins.redfish.special_agents import agent_redfish
-from cmk.server_side_programs.v1 import Storage
+from cmk.server_side_programs.v1 import ObfuscatedStorage, Storage
 
 _ILO_NOT_READY = {
     "error": {
@@ -1091,13 +1092,78 @@ def test_get_information_keeps_cached_dependents_of_unavailable_section(
     assert f"<<<redfish_drives:sep(0):cached({cached_at},300)>>>" in capsys.readouterr().out
 
 
+def _set_up_site_files(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("SERVER_SIDE_PROGRAM_STORAGE_PATH", str(tmp_path / "storage"))
+    key_file = tmp_path / "password_store.secret"
+    key_file.write_bytes(b"a" * 32)
+    monkeypatch.setenv("PASSWORD_STORE_SECRET_FILE", str(key_file))
+
+
+def _stored_bytes(tmp_path: Path) -> bytes:
+    """Everything the agent stored, whatever the key and format."""
+    return b"".join(f.read_bytes() for f in (tmp_path / "storage").rglob("*") if f.is_file())
+
+
+@pytest.fixture(name="secrets")
+def _secrets(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> ObfuscatedStorage[Secret[str]]:
+    _set_up_site_files(monkeypatch, tmp_path)
+    return ObfuscatedStorage(agent_redfish.AGENT, "bmc-1", Obfuscator())
+
+
 def test_client_session_loadf_ignores_empty_session_file(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    secrets: ObfuscatedStorage[Secret[str]],
 ) -> None:
-    monkeypatch.setenv("SERVER_SIDE_PROGRAM_STORAGE_PATH", str(tmp_path))
     Storage(agent_redfish.AGENT, "bmc-1").write("session", "")
 
-    assert agent_redfish.ClientSession.loadf("bmc-1") is None
+    assert agent_redfish.ClientSession.loadf(secrets) is None
+
+
+class _SessionClient:
+    """Logs in with a new session, and accepts only the session it handed out last."""
+
+    def __init__(self, valid_key: str | None = None) -> None:
+        self.logins = 0
+        self._valid_key = valid_key
+        self._key: str | None = None
+
+    def login(self, **_kw: str) -> None:
+        self.logins += 1
+        self._key = self._valid_key = "secret-session-key"
+
+    def get_session_location(self) -> str:
+        return "/redfish/v1/SessionService/Sessions/1"
+
+    def get_session_key(self) -> str | None:
+        return self._key
+
+    def set_session_location(self, location: str | None) -> None:
+        pass
+
+    def set_session_key(self, key: str | None) -> None:
+        self._key = key
+
+    def get(self, _url: str, _timeout: int | None) -> mock.Mock:
+        ok = self._key is not None and self._key == self._valid_key
+        return mock.Mock(status=HTTPStatus.OK if ok else HTTPStatus.UNAUTHORIZED)
+
+
+def test_the_session_is_reused_by_the_next_run(secrets: ObfuscatedStorage[Secret[str]]) -> None:
+    agent_redfish.RedfishClient(_SessionClient()).make_session(secrets, auth="session")
+    client = _SessionClient(valid_key="secret-session-key")
+
+    agent_redfish.RedfishClient(client).make_session(secrets, auth="session")
+
+    assert client.logins == 0
+
+
+def test_the_session_is_not_stored_in_plain_text(
+    secrets: ObfuscatedStorage[Secret[str]], tmp_path: Path
+) -> None:
+    agent_redfish.RedfishClient(_SessionClient()).make_session(secrets, auth="session")
+
+    stored = _stored_bytes(tmp_path)
+    assert stored
+    assert b"secret-session-key" not in stored
 
 
 class _SessionRefusingClient:
@@ -1108,7 +1174,7 @@ class _SessionRefusingClient:
 def test_refused_session_is_reported_as_login_error(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    monkeypatch.setenv("SERVER_SIDE_PROGRAM_STORAGE_PATH", str(tmp_path))
+    _set_up_site_files(monkeypatch, tmp_path)
     monkeypatch.setattr(agent_redfish, "redfish_client", lambda **_kw: _SessionRefusingClient())
     args = agent_redfish.parse_arguments(["-u", "user", "--password", "secret", "bmc"])
 

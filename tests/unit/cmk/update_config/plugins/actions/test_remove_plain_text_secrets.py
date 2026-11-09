@@ -24,6 +24,7 @@ def fixture_base_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     [
         pytest.param("veeam", "token", id="veeam"),
         pytest.param("vsphere", "cookie.value", id="vsphere"),
+        pytest.param("redfish", "session", id="redfish"),
     ],
 )
 def test_plain_text_secret_is_removed(base_path: Path, ident: str, key: str) -> None:

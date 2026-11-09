@@ -13,7 +13,6 @@ from pathlib import Path
 import cmk.ccc.version_info as cmk_version_info
 from cmk import trace
 from cmk.ccc.site import get_omd_config, omd_site
-from cmk.cli.engine.arguments import RunCommand
 from cmk.cli.internal import Context as CLIContext
 from cmk.crash import (
     BaseCrashReport,
@@ -24,6 +23,7 @@ from cmk.crash import (
 from cmk.profiling import backend as profiling
 from cmk.trace.export import exporter_from_config, init_span_processor
 
+from .arguments import RunCommand
 from .run import CommandTracer, CrashReporter, enable_file_logging, run, Runtime
 
 tracer = trace.get_tracer()

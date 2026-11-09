@@ -13,15 +13,15 @@ from pathlib import Path
 from types import FrameType
 
 from cmk.ccc.log import log_to_watched_file, verbosity_to_log_level
-from cmk.cli.engine.commands import Commands, DiscoveredCommand
-from cmk.cli.engine.discovery import discover_commands
-from cmk.cli.engine.output import write_paged, write_stdout
-from cmk.cli.engine.readers import ParsedOptions
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 
 from .arguments import InvalidArguments, parse, rejection, RunCommand, ShowHelp
+from .commands import Commands, DiscoveredCommand
+from .discovery import discover_commands
+from .output import write_paged, write_stdout
+from .readers import ParsedOptions
 
 type CommandTracer = Callable[[CLIContext, RunCommand], AbstractContextManager[None]]
 

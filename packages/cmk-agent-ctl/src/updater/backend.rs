@@ -49,6 +49,9 @@ const DEFAULT_INTERVAL: u64 = 3600;
 /// offers. Only a configuration edited by hand can ask for less.
 const MIN_INTERVAL: Duration = Duration::from_secs(60);
 
+const LOCK_ATTEMPTS: u32 = 10;
+const LOCK_RETRY_DELAY: Duration = Duration::from_secs(1);
+
 /// Permissions of the state file: owner only, as for the connection registry.
 /// The state carries the last error, which quotes paths and the site address.
 /// Without effect on Windows, where the file inherits them from its directory.
@@ -939,35 +942,41 @@ impl Updater {
         updater.state.save(&updater.state_path)
     }
 
-    /// Wait for `update.lock`, then load: the state is read only once no other
+    /// Take `update.lock`, then load: the state is read only once no other
     /// process can change it.
     pub fn writable(paths: &PathResolver) -> AnyhowResult<WritableUpdater> {
-        let lock = Self::lock(paths)?;
+        let lock = Self::lock(paths, LOCK_ATTEMPTS, LOCK_RETRY_DELAY)?;
         Ok(WritableUpdater {
             updater: Self::new(paths),
             _serialisation_lock: lock,
         })
     }
 
-    fn lock(paths: &PathResolver) -> AnyhowResult<File> {
+    fn lock(paths: &PathResolver, attempts: u32, retry_delay: Duration) -> AnyhowResult<File> {
         fs::create_dir_all(&paths.updater_package_dir)?;
+        let path = paths.updater_package_dir.join("update.lock");
         let file = File::options()
             .create(true)
             .write(true)
             .truncate(false)
-            .open(paths.updater_package_dir.join("update.lock"))?;
+            .open(&path)?;
 
-        match file.try_lock() {
-            Ok(()) => {}
-            Err(TryLockError::WouldBlock) => {
-                log::warn!("Waiting for the update lock, another update run holds it");
-                // sometimes the lock can be held longer
-                // if the installer is running
-                file.lock()?;
+        for attempt in 1..=attempts {
+            match file.try_lock() {
+                Ok(()) => return Ok(file),
+                Err(TryLockError::WouldBlock) => {
+                    log::warn!(
+                        "Could not lock {path:?} (attempt {attempt}/{attempts}), \
+                         another update run holds it"
+                    );
+                    if attempt < attempts {
+                        std::thread::sleep(retry_delay);
+                    }
+                }
+                Err(TryLockError::Error(e)) => return Err(e.into()),
             }
-            Err(TryLockError::Error(e)) => return Err(e.into()),
         }
-        Ok(file)
+        bail!("Could not lock {path:?} after {attempts} attempts, another update run holds it")
     }
 
     /// Keeps the *first* error: the artifacts fail independently, so the first
@@ -2452,22 +2461,32 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         assert!(File::open(&lock_path).unwrap().try_lock().is_ok());
     }
 
-    /// Another handle holding the lock makes `writable` wait, not fail.
     #[test]
-    fn test_writable_waits_for_the_lock_and_then_takes_it() {
+    fn test_lock_gives_up_while_another_handle_holds_it() {
         let dir = tempfile::TempDir::new().unwrap();
         let paths = artifact_paths(&dir);
         fs::create_dir_all(&paths.updater_package_dir).unwrap();
         let held = File::create(paths.updater_package_dir.join("update.lock")).unwrap();
         held.lock().unwrap();
 
-        let waiting = std::thread::spawn(move || Updater::writable(&paths).map(|_| ()));
-        std::thread::sleep(Duration::from_millis(50));
-        assert!(!waiting.is_finished());
+        assert!(Updater::lock(&paths, 3, Duration::ZERO).is_err());
+    }
 
-        drop(held);
+    #[test]
+    fn test_lock_takes_it_once_released_between_attempts() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let paths = artifact_paths(&dir);
+        fs::create_dir_all(&paths.updater_package_dir).unwrap();
+        let held = File::create(paths.updater_package_dir.join("update.lock")).unwrap();
+        held.lock().unwrap();
 
-        assert!(waiting.join().unwrap().is_ok());
+        let releasing = std::thread::spawn(move || {
+            std::thread::sleep(Duration::from_millis(10));
+            drop(held);
+        });
+
+        assert!(Updater::lock(&paths, 3, Duration::from_millis(50)).is_ok());
+        releasing.join().unwrap();
     }
 
     /// The contract with `CheckForUpdateFile` in `agents/wnx`: the agent service

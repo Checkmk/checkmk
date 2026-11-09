@@ -930,14 +930,7 @@ class TestScheduleDowntimes:
             site="local",
         )
         mock_livestatus.expect_query(
-            [
-                "GET hosts",
-                "Columns: name",
-                "Filter: parents >= myhost",
-                "Or: 1",
-                "ColumnHeaders: off",
-            ],
-            sites=["local"],
+            "GET hosts\nColumns: name\nFilter: parents >= myhost", sites=["local"]
         )
 
         with mock_livestatus():

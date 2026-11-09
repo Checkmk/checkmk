@@ -5,7 +5,7 @@
 """This module contains commands for managing downtimes through LiveStatus."""
 
 import datetime as dt
-from collections.abc import Hashable, Sequence
+from collections.abc import Collection, Hashable, Sequence
 from typing import Literal
 
 from cmk.ccc.hostaddress import HostName
@@ -586,6 +586,32 @@ def schedule_hosts_downtimes_with_query(
             user_id=user_id,
             comment=comment,
         )
+
+
+def child_hosts(
+    connection: MultiSiteConnection,
+    site_id: SiteId,
+    host_names: Collection[str],
+    *,
+    recurse: bool,
+) -> list[HostName]:
+    """Return the hosts on the site that have one of the hosts as parent.
+
+    Only the site itself is asked, because a core knows only the parents it monitors itself.
+    With recurse, the children of the children follow, and so on.
+    """
+    seen = set(host_names)
+    children: list[HostName] = []
+    frontier: Collection[str] = host_names
+    while frontier:
+        rows = Query([Hosts.name], Or(*(Hosts.parents.equals(name) for name in frontier))).fetchall(
+            connection, only_sites=[site_id]
+        )
+        new = [HostName(row.name) for row in rows if row.name not in seen]
+        seen.update(new)
+        children.extend(new)
+        frontier = new if recurse else []
+    return children
 
 
 def schedule_host_downtime(

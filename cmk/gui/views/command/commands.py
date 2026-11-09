@@ -8,7 +8,7 @@
 import json
 import time
 from collections import defaultdict
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from datetime import datetime
 from typing import assert_never, Literal, override, Protocol
 
@@ -26,6 +26,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, _u, ungettext
+from cmk.gui.livestatus_utils.commands.downtimes import child_hosts
 from cmk.gui.logged_in import user
 from cmk.gui.monitor.command import DowntimeRecurrence
 from cmk.gui.permissions import (
@@ -2000,7 +2001,7 @@ class CommandScheduleDowntimesForm:
 
         if "_include_children" in included_from_html:  # only for hosts
             if (recurse := included_from_html.get("_include_children")) is not None:
-                specs = [spec] + self._get_child_hosts(row["site"], [spec], recurse=recurse)
+                specs = [spec] + child_hosts(sites.live(), row["site"], [spec], recurse=recurse)
         elif request.var("_down_host"):  # set on hosts instead of services
             specs = [spec.split(";", maxsplit=1)[0]]
             cmdtag = "HOST"
@@ -2054,23 +2055,6 @@ class CommandScheduleDowntimesForm:
             title=_("Duration"),
             cssclass="inline",
         )
-
-    def _get_child_hosts(self, site: SiteId, hosts: Iterable[str], recurse: bool) -> list[str]:
-        hosts = set(hosts)
-
-        sites.live().set_only_sites([site])
-        query = "GET hosts\nColumns: name\n"
-        query += "".join([f"Filter: parents >= {host}\n" for host in hosts])
-        query += f"Or: {len(hosts)}\n"
-        children = sites.live().query_column(query)
-        sites.live().set_only_sites(None)
-
-        # Recursion, but try to avoid duplicate work
-        new_children = set(children) - hosts
-        if new_children and recurse:
-            rec_childs = self._get_child_hosts(site, new_children, True)
-            new_children.update(rec_childs)
-        return list(new_children)
 
     def _adhoc_downtime_configured(self) -> bool:
         return bool(active_config.adhoc_downtime and active_config.adhoc_downtime.get("duration"))

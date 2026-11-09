@@ -37,6 +37,7 @@ py_library(
         "//cmk/gui:visual_link",
         "//cmk/gui/data_source",
         "//cmk/gui/graphing",
+        "//cmk/gui/livestatus_utils/commands",
         "//cmk/gui/monitor/command",
         "//cmk/gui/openapi/framework",
         "//cmk/gui/openapi/framework:types",

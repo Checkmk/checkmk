@@ -6,16 +6,17 @@
 
 import cmk.ccc.version as cmk_version
 from cmk.ccc.version import edition
-from cmk.cli.engine.output import write_stdout as cli_write_stdout
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import no_options as cli_no_options
 
+from .output import write_stdout
+
 
 def _mode_version(context: CLIContext, _request: None, _args: CLIArgs) -> CLIExitCode:
-    cli_write_stdout(
+    write_stdout(
         """This is %s version %s
 Copyright (C) 2009 Checkmk GmbH
 

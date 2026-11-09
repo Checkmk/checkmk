@@ -29,7 +29,6 @@ from cmk.checkengine.plugins import (
     CheckPlugin,
     SNMPSectionPlugin,
 )
-from cmk.cli.engine.output import write_stdout as cli_write_stdout
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
@@ -47,6 +46,7 @@ from cmk.server_side_calls_backend import (
 )
 
 from .agent_based import load_checks
+from .output import write_stdout
 
 # TODO: Does not care about internal group "check_mk"
 _ALL_SITES_FLAG: Final = CLIFlag(
@@ -196,9 +196,9 @@ def _mode_list_tag(
         loading_result.hosts_config,
         loading_result.host_tags,
     )
-    cli_write_stdout("\n".join(sorted(hosts)))
+    write_stdout("\n".join(sorted(hosts)))
     if hosts:
-        cli_write_stdout("\n")
+        write_stdout("\n")
     return CLIExitCode.SUCCESS
 
 
@@ -319,7 +319,7 @@ def _mode_list_checks(
     ]
 
     for e in sorted(table, key=lambda e: e.name):
-        cli_write_stdout(f"{e.render_tty()}\n")
+        write_stdout(f"{e.render_tty()}\n")
     return CLIExitCode.SUCCESS
 
 

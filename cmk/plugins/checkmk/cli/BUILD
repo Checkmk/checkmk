@@ -40,7 +40,6 @@ py_library(
         "//packages/cmk-check-engine/cmk/checkengine/discovery",
         "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
-        "//packages/cmk-cli-engine:engine",
         "//packages/cmk-licensing/cmk/licensing/basics",
         "//packages/cmk-plugin-apis:cli",
         "//packages/cmk-plugin-apis:discover_plugins",

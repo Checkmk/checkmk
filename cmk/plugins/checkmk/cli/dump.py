@@ -32,7 +32,6 @@ from cmk.checkengine.parser import make_parser, NO_SELECTION, parse_raw_data, Se
 from cmk.checkengine.snmplib import SNMPBackendEnum
 from cmk.checkengine.source_builder import SourceBuilder
 from cmk.checkengine.summarize import summarize
-from cmk.cli.engine.output import write_stdout as cli_write_stdout
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
@@ -57,6 +56,7 @@ from .options import (
     make_file_cache_options,
     SNMP_BACKEND_VALUE,
 )
+from .output import write_stdout
 
 # .
 #   .--dump-agent----------------------------------------------------------.
@@ -285,7 +285,7 @@ def _mode_dump_agent(
                 assert raw_data.ok is not None
                 output.append(raw_data.ok)
 
-        cli_write_stdout(b"".join(output).decode(errors="surrogateescape"))
+        write_stdout(b"".join(output).decode(errors="surrogateescape"))
         for warn in warnings:
             console.warning(warn, file=sys.stderr)
         for err in errors:

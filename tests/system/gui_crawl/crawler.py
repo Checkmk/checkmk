@@ -6,6 +6,7 @@
 import asyncio
 import logging
 import os
+import re
 import time
 import traceback
 from collections import deque
@@ -514,8 +515,15 @@ class Crawler:
                 self.handle_new_reference(url, referer_url=referer_url)
 
     def check_logs(self, url: Url, logs: Iterable[str]) -> None:
+        accepted_logs = [
+            # Maps refuse a user's event stream with 429, which Chrome logs as a
+            # failed load, once they hold two at once or open too many per minute;
+            # the map then polls its states. The crawler's parallel pages share one user.
+            re.compile(r"status of 429 .*/maps/api/v1/sse/"),
+        ]
         for log in logs:
-            self.handle_error(url, error_type="JavascriptError", message=log)
+            if not any(accepted_log.search(log) for accepted_log in accepted_logs):
+                self.handle_error(url, error_type="JavascriptError", message=log)
 
     def verify_is_valid_url(self, url: str) -> None:
         parsed = urlsplit(url)

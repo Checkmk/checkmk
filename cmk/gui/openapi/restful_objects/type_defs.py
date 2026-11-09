@@ -245,6 +245,7 @@ CmkEndpointName = Literal[
     "cmk/show_maps_session",
     "cmk/show_dashboard_responsive_grid",
     "cmk/show_site_global_setting",
+    "cmk/show_opentelemetry_data",
     "cmk/show_template_attributes",
     "cmk/sign",
     "cmk/start",

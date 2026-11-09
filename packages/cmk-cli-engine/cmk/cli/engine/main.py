@@ -5,6 +5,7 @@
 
 import logging
 import os
+import signal
 import sys
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
@@ -24,7 +25,16 @@ from cmk.profiling import backend as profiling
 from cmk.trace.export import exporter_from_config, init_span_processor
 
 from .arguments import RunCommand
-from .run import CommandTracer, CrashReporter, enable_file_logging, run, Runtime
+from .discovery import discover_commands
+from .output import write_paged, write_stdout
+from .run import (
+    CommandTracer,
+    configure_logging,
+    CrashReporter,
+    enable_file_logging,
+    run,
+    Runtime,
+)
 
 tracer = trace.get_tracer()
 
@@ -95,10 +105,15 @@ def main() -> int:
                 sys.argv,
                 os.environ,
                 Runtime(
+                    discover=discover_commands,
                     trace_command=tracing(os.environ),
+                    on_sigint=signal.default_int_handler,
                     crash_reporter_for=saving_crash_reporter,
                     enable_profiling=profiling.enable,
                     log_to_file=enable_file_logging,
                     write_profile=_write_profile,
+                    page=write_paged,
+                    write=write_stdout,
+                    logger=configure_logging(),
                 ),
             )

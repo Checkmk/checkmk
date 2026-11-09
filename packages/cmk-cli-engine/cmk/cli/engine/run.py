@@ -8,7 +8,7 @@ import signal
 import sys
 from collections.abc import Callable, Mapping, Sequence
 from contextlib import AbstractContextManager
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from functools import partial
 from pathlib import Path
 from types import FrameType
@@ -21,8 +21,6 @@ from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 
 from .arguments import InvalidArguments, parse, rejection, RunCommand, ShowHelp
 from .commands import Commands, DiscoveredCommand
-from .discovery import discover_commands
-from .output import write_paged, write_stdout
 from .readers import ParsedOptions
 
 type CommandTracer = Callable[[CLIContext, RunCommand], AbstractContextManager[None]]
@@ -50,16 +48,16 @@ type CrashReporter = Callable[[], str]
 
 @dataclass(frozen=True, kw_only=True)
 class Runtime:
-    discover: Callable[[], Sequence[DiscoveredCommand]] = discover_commands
+    discover: Callable[[], Sequence[DiscoveredCommand]]
     trace_command: CommandTracer
-    on_sigint: Callable[[int, FrameType | None], object] = signal.default_int_handler
+    on_sigint: Callable[[int, FrameType | None], object]
     crash_reporter_for: Callable[[Path, Sequence[str], Mapping[str, str]], CrashReporter]
     enable_profiling: Callable[[], None]
     log_to_file: Callable[[Path, logging.Logger], None]
     write_profile: Callable[[Path], None]
-    page: Callable[[str], None] = write_paged
-    write: Callable[[str], None] = write_stdout
-    logger: logging.Logger = field(default_factory=configure_logging)
+    page: Callable[[str], None]
+    write: Callable[[str], None]
+    logger: logging.Logger
 
 
 def dispatch(

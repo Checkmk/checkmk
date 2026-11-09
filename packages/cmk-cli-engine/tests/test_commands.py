@@ -11,6 +11,7 @@ import pytest
 from cmk.cli.engine.commands import Commands as CLICommands
 from cmk.cli.engine.commands import DiscoveredCommand as CLIDiscoveredCommand
 from cmk.cli.engine.discovery import make_command as cli_make_command
+from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Flag as CLIFlag
 from cmk.cli.internal import no_options as cli_no_options
@@ -27,6 +28,7 @@ def _command(
     short: str | None = None,
     *,
     request: Callable[[CLIReader], object] = cli_no_options,
+    arguments: CLIArguments | None = None,
     default: bool = False,
 ) -> CLIDiscoveredCommand:
     return cli_make_command(
@@ -37,6 +39,7 @@ def _command(
             request=request,
             handler=_never,
             help="a command under test",
+            arguments=arguments,
             default=default,
         )
     )
@@ -82,3 +85,8 @@ def test_an_option_cannot_be_declared_with_and_without_an_argument() -> None:
 def test_there_is_at_most_one_default_command() -> None:
     with pytest.raises(ValueError, match="default commands"):
         CLICommands(plugins=[_command("one", default=True), _command("other", default=True)])
+
+
+def test_the_default_command_cannot_require_an_argument() -> None:
+    with pytest.raises(ValueError, match="'one'"):
+        CLICommands(plugins=[_command("one", arguments=CLIArguments("HOST"), default=True)])

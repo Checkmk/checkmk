@@ -156,6 +156,8 @@ def _default_command(commands: Sequence[DiscoveredCommand]) -> DiscoveredCommand
     match [command for command in commands if command.default]:
         case []:
             return None
+        case [command] if _requires_argument(command):
+            raise ValueError(f"The default command {command.name!r} cannot require an argument")
         case [command]:
             return command
         case defaults:

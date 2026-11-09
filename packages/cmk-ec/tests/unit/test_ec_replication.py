@@ -9,12 +9,10 @@
 import logging
 import os
 import shlex
-import signal
 import socket
 import threading
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
-from types import FrameType
 from typing import Any, Literal
 from unittest.mock import Mock
 
@@ -34,10 +32,10 @@ from cmk.ec.main import (
     get_state_from_master,
     load_configuration,
     load_master_config,
-    MKSignalException,
     PackedEventStatus,
     reload_configuration,
     replication_pull,
+    ReplicationInterrupted,
     save_master_config,
     save_slave_status,
     SlaveStatus,
@@ -565,12 +563,15 @@ def test_failed_sync_is_recorded(slave_status: SlaveStatus, config: Config, pull
     assert (slave_status["success"], slave_status["last_master_down"]) == (False, _NOW)
 
 
-def test_signal_while_syncing_is_passed_on(config: Config, pull: _Pull) -> None:
+def test_sync_interrupted_by_terminating_doesnt_count_as_the_master_being_down(
+    slave_status: SlaveStatus, config: Config, pull: _Pull
+) -> None:
     def fetch_master_state(_config: Config, _slave_status: SlaveStatus) -> dict[str, object]:
-        raise MKSignalException(signal.SIGTERM)
+        raise ReplicationInterrupted
 
-    with pytest.raises(MKSignalException):
-        pull(replication_slave_config(config), fetch_master_state)
+    pull(replication_slave_config(config), fetch_master_state)
+
+    assert (slave_status["success"], slave_status["last_master_down"]) == (True, None)
 
 
 def _done_meanwhile(task: Callable[[], object]) -> bool:
@@ -651,24 +652,105 @@ def test_slave_switched_to_takeover_while_waiting_for_its_master_keeps_its_event
     assert [event["text"] for event in event_status.events()] == ["synced before"]
 
 
-def test_signal_while_waiting_for_the_master_is_passed_on(
+def _replication_from(master: socket.socket, *, connect_timeout: int = 30) -> ec.Replication:
+    """The replication settings of a slave of the master, which the test runs on the local host"""
+    return ec.Replication(connect_timeout=connect_timeout, interval=60, master=master.getsockname())
+
+
+def _accept(master: socket.socket) -> socket.socket:
+    """Accepts the connection of the slave, but doesn't wait for good"""
+    master.settimeout(30)
+    connection, _ = master.accept()
+    connection.settimeout(30)  # The accepted connection doesn't take over the timeout.
+    return connection
+
+
+def _receive_request(connection: socket.socket) -> bytes:
+    """Receives the request of the slave, which shuts down sending once it has sent it"""
+    request = b""
+    while chunk := connection.recv(4096):
+        request += chunk
+    return request
+
+
+def test_state_is_pulled_from_the_master(config: Config, slave_status: SlaveStatus) -> None:
+    requests: list[bytes] = []
+
+    def answer_once(master: socket.socket) -> None:
+        with _accept(master) as connection:
+            requests.append(_receive_request(connection))
+            connection.sendall(b"{'rules': []}")
+
+    with socket.socket() as master:
+        master.bind(("127.0.0.1", 0))
+        master.listen()
+        answering = threading.Thread(target=answer_once, args=(master,), daemon=True)
+        answering.start()
+
+        state = get_state_from_master(
+            config | {"replication": _replication_from(master)},
+            slave_status,
+            terminating=lambda: False,
+        )
+        answering.join(timeout=30)
+
+    assert (requests, state) == ([b"REPLICATE 0\n"], {"rules": []})
+
+
+def test_master_refusing_the_connection_is_not_responding(
     config: Config, slave_status: SlaveStatus
 ) -> None:
-    def signal_handler(signum: int, _stack_frame: FrameType | None) -> None:
-        raise MKSignalException(signum)
+    with socket.socket() as master:  # bound, but not listening
+        master.bind(("127.0.0.1", 0))
+
+        with pytest.raises(Exception, match="Master not responding"):
+            get_state_from_master(
+                config | {"replication": _replication_from(master)},
+                slave_status,
+                terminating=lambda: False,
+            )
+
+
+def test_master_not_answering_within_the_connect_timeout_is_not_responding(
+    config: Config, slave_status: SlaveStatus
+) -> None:
+    with socket.socket() as master:  # accepts connections, but never answers
+        master.bind(("127.0.0.1", 0))
+        master.listen()
+
+        with pytest.raises(Exception, match="Master not responding"):
+            get_state_from_master(
+                config | {"replication": _replication_from(master, connect_timeout=1)},
+                slave_status,
+                terminating=lambda: False,
+            )
+
+
+def test_terminating_ends_waiting_for_the_master(config: Config, slave_status: SlaveStatus) -> None:
+    terminating = threading.Event()
+    errors: list[Exception] = []
+
+    def pull(slave_config: Config) -> None:
+        try:
+            get_state_from_master(slave_config, slave_status, terminating=terminating.is_set)
+        except Exception as e:
+            errors.append(e)
 
     with socket.socket() as master:  # accepts connections, but never answers
         master.bind(("127.0.0.1", 0))
         master.listen()
-        replication = ec.Replication(connect_timeout=10, interval=60, master=master.getsockname())
-        previous_handler = signal.signal(signal.SIGALRM, signal_handler)
-        signal.setitimer(signal.ITIMER_REAL, 0.1)
-        try:
-            with pytest.raises(MKSignalException):
-                get_state_from_master(config | {"replication": replication}, slave_status)
-        finally:
-            signal.setitimer(signal.ITIMER_REAL, 0)
-            signal.signal(signal.SIGALRM, previous_handler)
+        # Daemonic, so that a slave waiting for good doesn't keep pytest from exiting
+        slave = threading.Thread(
+            target=pull, args=(config | {"replication": _replication_from(master)},), daemon=True
+        )
+        slave.start()
+        with _accept(master) as connection:
+            _receive_request(connection)  # i.e. the slave waits for the answer then
+
+            terminating.set()
+            slave.join(timeout=30)
+
+    assert [type(e) for e in errors] == [ReplicationInterrupted]
 
 
 def test_replication_status_survives_a_restart(

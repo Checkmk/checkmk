@@ -16,9 +16,11 @@
 import abc
 import array
 import ast
+import collections
 import contextlib
 import errno
 import fcntl
+import functools
 import hashlib
 import ipaddress
 import itertools
@@ -519,61 +521,35 @@ def _rewritten(text: str, origtext: str, match_groups: MatchGroups) -> str:
     return scrub_string(replace_groups(text, origtext, match_groups))
 
 
-class MKSignalException(BaseException):
-    """Tells the main thread about a signal, see SignalHandler
-
-    Like KeyboardInterrupt, it isn't an Exception, so no handler for errors swallows it, e.g. while
-    the main thread runs an action or waits for the master of a replication slave.
-    """
-
-    def __init__(self, signum: int) -> None:
-        super().__init__(f"Got signal {signum}")
-        self.signum = signum
-
-
 class SignalHandler:
-    """Turns the signals it handles into an MKSignalException, unless it holds them back
+    """Records the signals it handles, so that the main loop acts on them between its tasks
 
-    Raising the exception interrupts whatever the main thread is doing, e.g. waiting for the master
-    of a replication slave, so the main loop holds back the signals where that must not happen.
+    Raising an exception instead could leave a lock held or keep the EC from saving its status.
     """
 
     def __init__(self, logger: Logger) -> None:
         self._logger = logger
-        self._holding_back = False
-        self._held_back: int | None = None
+        # Appending and popping are atomic, so no signal gets lost while take() runs.
+        self._received: collections.deque[int] = collections.deque()
 
     def __call__(self, signum: int, stack_frame: FrameType | None) -> None:  # noqa: ARG002
-        # Record the signal first, so a further signal arriving meanwhile, e.g. while logging, can't
-        # make it get lost. Terminating takes precedence over reloading.
-        if self._held_back is None or self._held_back == signal.SIGHUP:
-            self._held_back = signum
-        self._logger.log(VERBOSE, "Got signal %(signum)d.", {"signum": signum})
-        if not self._holding_back:
-            self._raise_held_back()
+        # Not logged: The handler can interrupt the main thread while that logs.
+        self._received.append(signum)
 
-    @contextlib.contextmanager
-    def holding_back(self) -> Iterator[None]:
-        """Holds back the signals arriving within the block, raising the exception afterwards"""
-        self._holding_back = True
-        try:
-            yield
-        finally:
-            self._holding_back = False
-            self._raise_held_back()
+    def take(self) -> int | None:
+        """Returns the signal to act on and forgets the others, terminating before reloading"""
+        signum: int | None = None
+        while self._received:
+            received = self._received.popleft()
+            self._logger.log(VERBOSE, "Got signal %(signum)d.", {"signum": received})
+            if signum is None or signum == signal.SIGHUP:
+                signum = received
+        return signum
 
-    def _raise_held_back(self) -> None:
-        """Raises the exception for the recorded signal, if any
-
-        A further signal arriving meanwhile raises the exception for the signal taking precedence
-        instead, until the recorded signal is forgotten right before raising the exception: No call
-        is left in between, so no signal handler runs there.
-        """
-        if (signum := self._held_back) is None:
-            return
-        exception = MKSignalException(signum)
-        self._held_back = None
-        raise exception
+    def terminating(self) -> bool:
+        """Tells whether a signal to terminate arrived, without forgetting it like take() does"""
+        # Of an atomic copy, as a signal could change the deque meanwhile
+        return any(signum != signal.SIGHUP for signum in list(self._received))
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -3254,91 +3230,92 @@ def run_eventd(
 
     while not terminate_main_event.is_set():
         try:
-            try:
-                # Reload before using the configuration: If a reloaded one breaks the code below,
-                # reloading a fixed one still works.
-                if reload_config_event.is_set():
-                    reload_config_event.clear()
-                    # A signal must not interrupt the reload halfway, e.g. once the event server
-                    # uses the new configuration, so handle it only once the main loop uses it, too.
-                    with signal_handler.holding_back():
-                        try:
-                            previous_master = _replication_master(config)
-                            config, history = reload_configuration(
-                                settings,
-                                logger,
-                                history,
-                                event_status,
-                                event_server,
-                                status_server,
-                                slave_status,
-                            )
-                            # Like a new one, a slave of another master syncs with it right away.
-                            if _replication_master(config) != previous_master:
-                                last_replication = 0.0
-                        except Exception:
-                            # A held back signal would replace the exception, so log it right away.
-                            # The previous configuration stays in effect.
-                            logger.exception("Cannot reload the configuration")
-                            if settings.options.debug:
-                                raise
-
-                # Wait until the next task is due or a reload is requested, but at most a minute: A
-                # termination requested by the SHUTDOWN command doesn't end the wait.
-                event_list = [
-                    last_housekeeping + config["housekeeping_interval"],
-                    last_retention + config["retention_interval"],
-                    last_statistics + config["statistics_interval"],
-                ]
-                if (next_replication := _next_replication(config, last_replication)) is not None:
-                    event_list.append(next_replication)
-
-                time_left = max(0, min(event_list) - time.time())
-                if reload_config_event.wait(min(time_left, 60)):
-                    continue  # reload before running any task
-                now = time.time()
-
-                # Each task counts as run even if it fails, so a failing one doesn't keep failing
-                # every second, keeping the tasks after it from running.
-                if now > last_housekeeping + config["housekeeping_interval"]:
-                    last_housekeeping = now
-                    event_server.do_housekeeping()
-
-                if now > last_retention + config["retention_interval"]:
-                    last_retention = now
-                    with event_status.lock:
-                        event_status.save_status()
-
-                if now > last_statistics + config["statistics_interval"]:
-                    last_statistics = now
-                    perfcounters.do_statistics()
-
-                next_replication = _next_replication(config, last_replication)
-                if next_replication is not None and now > next_replication:
-                    last_replication = now
-                    replication_pull(
+            # Reload before using the configuration: If a reloaded one breaks the code below,
+            # reloading a fixed one still works.
+            if reload_config_event.is_set():
+                reload_config_event.clear()
+                try:
+                    previous_master = _replication_master(config)
+                    config, history = reload_configuration(
                         settings,
-                        config,
-                        lock_configuration,
-                        perfcounters,
+                        logger,
+                        history,
                         event_status,
                         event_server,
+                        status_server,
                         slave_status,
-                        logger,
-                        fetch_master_state=fetch_master_state,
                     )
-            except Exception:
-                logger.exception("Exception in main thread")
-                if settings.options.debug:
-                    raise
-                time.sleep(1)
-        except MKSignalException as e:
-            if e.signum == 1:
+                    # Like a new one, a slave of another master syncs with it right away.
+                    if _replication_master(config) != previous_master:
+                        last_replication = 0.0
+                except Exception:
+                    # The previous configuration stays in effect.
+                    logger.exception("Cannot reload the configuration")
+                    if settings.options.debug:
+                        raise
+
+            # Act on the signals only between the tasks, see SignalHandler, right before waiting
+            if (signum := signal_handler.take()) == signal.SIGHUP:
                 logger.info("Received SIGHUP - going to reload configuration")
                 reload_config_event.set()  # like the RELOAD command
-            else:
-                logger.info("Signalled to death by signal %(signum)d", {"signum": e.signum})
+                continue
+            if signum is not None:
+                logger.info("Signalled to death by signal %(signum)d", {"signum": signum})
                 terminate(terminate_main_event, event_server, status_server)
+                break
+
+            # Wait until the next task is due or a reload is requested, but at most a second, as
+            # neither a signal nor the SHUTDOWN command ends the wait.
+            event_list = [
+                last_housekeeping + config["housekeeping_interval"],
+                last_retention + config["retention_interval"],
+                last_statistics + config["statistics_interval"],
+            ]
+            if (next_replication := _next_replication(config, last_replication)) is not None:
+                event_list.append(next_replication)
+
+            time_left = max(0, min(event_list) - time.time())
+            if reload_config_event.wait(min(time_left, 1)):
+                continue  # reload before running any task
+            # Terminate before the tasks, too: One can take long, e.g. vacuuming the SQLite history.
+            if signal_handler.terminating():
+                continue
+            now = time.time()
+
+            # Each task counts as run even if it fails, so a failing one doesn't keep failing
+            # every second, keeping the tasks after it from running.
+            if now > last_housekeeping + config["housekeeping_interval"]:
+                last_housekeeping = now
+                event_server.do_housekeeping()
+
+            if now > last_retention + config["retention_interval"]:
+                last_retention = now
+                with event_status.lock:
+                    event_status.save_status()
+
+            if now > last_statistics + config["statistics_interval"]:
+                last_statistics = now
+                perfcounters.do_statistics()
+
+            next_replication = _next_replication(config, last_replication)
+            if next_replication is not None and now > next_replication:
+                last_replication = now
+                replication_pull(
+                    settings,
+                    config,
+                    lock_configuration,
+                    perfcounters,
+                    event_status,
+                    event_server,
+                    slave_status,
+                    logger,
+                    fetch_master_state=fetch_master_state,
+                )
+        except Exception:
+            logger.exception("Exception in main thread")
+            if settings.options.debug:
+                raise
+            time.sleep(1)
 
     # Now wait for termination of the server threads
     event_server.join()
@@ -4200,6 +4177,10 @@ def replication_pull(
         # Without the locks, so that the EC goes on working while it waits for its master
         try:
             fetched: dict[str, Any] | Exception = fetch_master_state(config, slave_status)
+        except ReplicationInterrupted:
+            # Not counting as the master being down, which could lead to a takeover
+            logger.info("Replication: not waiting for the master any longer, as the EC terminates")
+            return
         except Exception as e:
             fetched = e
         with event_status.lock, lock_configuration:
@@ -4365,27 +4346,50 @@ def _is_from_other_master(master_config: Mapping[str, object], config: ConfigFro
     )
 
 
-def get_state_from_master(config: Config, slave_status: SlaveStatus) -> Any:
+class ReplicationInterrupted(Exception):
+    """Ends pulling the state from the master early, as the EC terminates"""
+
+
+# How often a slave waiting for its master looks whether the EC terminates: "omd stop" kills it
+# after a minute, and the connect timeout can be longer.
+_TERMINATION_CHECK_INTERVAL = 1.0  # seconds
+
+
+def get_state_from_master(
+    config: Config, slave_status: SlaveStatus, *, terminating: Callable[[], bool]
+) -> Any:
+    """Raises ReplicationInterrupted once the given function tells that the EC terminates"""
     repl_settings = config["replication"]
     if repl_settings is None:
         raise ValueError("no replication settings")
+    timeout = repl_settings["connect_timeout"]
     response_text = b""
     try:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(repl_settings["connect_timeout"])
-        sock.connect(repl_settings["master"])
-        sock.sendall(
-            b"REPLICATE %d\n" % (slave_status["last_sync"] if slave_status["last_sync"] else 0)
-        )
-        sock.shutdown(socket.SHUT_WR)
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            # Without blocking, so that waiting can look whether the EC terminates
+            sock.setblocking(False)
+            if (err := sock.connect_ex(repl_settings["master"])) not in (0, errno.EINPROGRESS):
+                raise OSError(err, os.strerror(err))
+            _wait_for_master(sock, select.POLLOUT, timeout=timeout, terminating=terminating)
+            if err := sock.getsockopt(socket.SOL_SOCKET, socket.SO_ERROR):
+                raise OSError(err, os.strerror(err))
+            # The request fits into the empty send buffer of the new connection.
+            sock.sendall(
+                b"REPLICATE %d\n" % (slave_status["last_sync"] if slave_status["last_sync"] else 0)
+            )
+            sock.shutdown(socket.SHUT_WR)
 
-        while True:
-            chunk = sock.recv(8192)
-            response_text += chunk
-            if not chunk:
-                break
+            while True:
+                _wait_for_master(sock, select.POLLIN, timeout=timeout, terminating=terminating)
+                chunk = sock.recv(8192)
+                response_text += chunk
+                if not chunk:
+                    break
 
         return ast.literal_eval(response_text.decode("utf-8"))
+    except ReplicationInterrupted:
+        raise
+
     except SyntaxError as e:
         raise Exception(
             f"Invalid response from event daemon: <pre>{repr(response_text)}</pre>"
@@ -4396,6 +4400,22 @@ def get_state_from_master(config: Config, slave_status: SlaveStatus) -> Any:
 
     except Exception as e:
         raise Exception("Cannot connect to event daemon") from e
+
+
+def _wait_for_master(
+    sock: socket.socket, events: int, *, timeout: float, terminating: Callable[[], bool]
+) -> None:
+    """Waits for the events like a socket with the timeout, but raises ReplicationInterrupted once
+    the EC terminates"""
+    poller = select.poll()  # unlike select(), for file descriptors beyond FD_SETSIZE, too
+    poller.register(sock, events)
+    deadline = time.monotonic() + timeout
+    while not terminating():
+        if (left := deadline - time.monotonic()) <= 0:
+            raise TimeoutError("timed out")
+        if poller.poll(min(left, _TERMINATION_CHECK_INTERVAL) * 1000):
+            return
+    raise ReplicationInterrupted
 
 
 def save_slave_status(settings: Settings, slave_status: SlaveStatus) -> None:
@@ -4717,7 +4737,13 @@ def main() -> None:
                 slave_status,
                 logger,
                 reload_config_event,
-                fetch_master_state=get_state_from_master,
+                fetch_master_state=functools.partial(
+                    get_state_from_master,
+                    # On a signal, and on the SHUTDOWN command, too
+                    terminating=lambda: (
+                        signal_handler.terminating() or terminate_main_event.is_set()
+                    ),
+                ),
                 signal_handler=signal_handler,
             )
 
@@ -4753,9 +4779,6 @@ def main() -> None:
 
             logger.info("Successfully shut down.")
             sys.exit(0)
-
-    except MKSignalException:
-        pass
 
     except Exception:
         if settings.options.debug:

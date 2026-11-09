@@ -31,7 +31,6 @@ from cmk.ec.main import (
     EventServer,
     EventStatus,
     load_configuration,
-    MKSignalException,
     PackedEventStatus,
     reload_configuration,
     run_eventd,
@@ -673,6 +672,7 @@ class _RunMainLoop(Protocol):
         housekeeping: _Housekeeping,
         *,
         initial_history: History | None = None,
+        housekeeping_interval: float = 0.0,
     ) -> list[ec.Replication | None]: ...
 
 
@@ -693,10 +693,11 @@ def fixture_run_main_loop(
 ) -> _RunMainLoop:
     """Runs the main loop of an EC with the given settings, starting with the given configuration
 
-    Unless another one is given, the EC starts with the history of its fixture. Housekeeping is due
-    immediately and runs the given function, also after reloading a configuration activated by
-    _activate_main_loop_config(). Returns the contacted masters. Fails if the main loop doesn't end
-    in time, instead of hanging until the test times out.
+    Unless another one is given, the EC starts with the history of its fixture. Unless another
+    interval is given, housekeeping is due immediately. It runs the given function, also after
+    reloading a configuration activated by _activate_main_loop_config(). Returns the contacted
+    masters. Fails if the main loop doesn't end in time, instead of hanging until the test times
+    out.
     """
 
     def run_main_loop(
@@ -705,6 +706,7 @@ def fixture_run_main_loop(
         housekeeping: _Housekeeping,
         *,
         initial_history: History | None = None,
+        housekeeping_interval: float = 0.0,
     ) -> list[ec.Replication | None]:
         event_server = Mock(spec=EventServer)
         event_server.do_housekeeping.side_effect = housekeeping
@@ -724,14 +726,14 @@ def fixture_run_main_loop(
             timed_out.set()
             terminate_main_event.set()
 
-        # Housekeeping is always due, so the main loop never waits and notices the timeout at once.
+        # The main loop waits at most a second, so it notices the timeout soon.
         watchdog = threading.Timer(_MAIN_LOOP_TIMEOUT, time_out)
         watchdog.start()
         try:
             run_eventd(
                 terminate_main_event,
                 settings,
-                config | {"housekeeping_interval": 0.0},
+                config | {"housekeeping_interval": housekeeping_interval},
                 lock_configuration,
                 history if initial_history is None else initial_history,
                 perfcounters,
@@ -770,14 +772,17 @@ def fixture_debug_settings(settings: ec.Settings) -> ec.Settings:
     return settings._replace(options=settings.options._replace(debug=True))
 
 
-def _sighup_during_first_housekeeping(terminate_main_event: threading.Event) -> _Housekeeping:
+def _sighup_during_first_housekeeping(
+    terminate_main_event: threading.Event, signal_handler: SignalHandler
+) -> _Housekeeping:
     """The EC gets a SIGHUP during its first housekeeping and terminates after the second one."""
-    signals = [MKSignalException(signal.SIGHUP)]
+    signals = [signal.SIGHUP]
 
     def housekeeping() -> None:
         if signals:
-            raise signals.pop()
-        terminate_main_event.set()
+            signal_handler(signals.pop(), None)
+        else:
+            terminate_main_event.set()
 
     return housekeeping
 
@@ -897,11 +902,16 @@ def test_sighup_reloads_the_configuration(
     config: Config,
     run_main_loop: _RunMainLoop,
     terminate_main_event: threading.Event,
+    signal_handler: SignalHandler,
 ) -> None:
     # The EC starts saving its status every minute, but reloads to save it continuously.
     _activate_main_loop_config(debug_settings, "retention_interval = 0.0\n")
 
-    run_main_loop(debug_settings, config, _sighup_during_first_housekeeping(terminate_main_event))
+    run_main_loop(
+        debug_settings,
+        config,
+        _sighup_during_first_housekeeping(terminate_main_event, signal_handler),
+    )
 
     assert debug_settings.paths.status_file.value.exists()
 
@@ -913,6 +923,7 @@ def test_sighup_keeps_the_previous_configuration_if_the_new_one_is_broken(
     slave_status: SlaveStatus,
     run_main_loop: _RunMainLoop,
     terminate_main_event: threading.Event,
+    signal_handler: SignalHandler,
 ) -> None:
     # Without debug mode, the main loop logs an exception and retries a second later. Don't wait,
     # and end the main loop instead of retrying forever after any further exception.
@@ -930,7 +941,7 @@ def test_sighup_keeps_the_previous_configuration_if_the_new_one_is_broken(
     contacted_masters = run_main_loop(
         settings,
         config | {"replication": _REPLICATION},
-        _sighup_during_first_housekeeping(terminate_main_event),
+        _sighup_during_first_housekeeping(terminate_main_event, signal_handler),
     )
 
     assert contacted_masters == [_REPLICATION]
@@ -981,16 +992,26 @@ def test_failed_reload_is_logged_although_a_signal_arrives_during_it(
 def test_termination_is_not_lost_to_a_signal_arriving_meanwhile(
     logger: logging.Logger, signal_handler: SignalHandler
 ) -> None:
-    # A SIGHUP arrives while the signal handler logs the SIGTERM.
+    # A SIGHUP arrives while take() logs the SIGTERM.
     logger.setLevel(VERBOSE)
     logger.addHandler(
         _SignalWhileLogging(f"Got signal {signal.SIGTERM:d}", signal_handler, signal.SIGHUP)
     )
 
-    with pytest.raises(MKSignalException) as excinfo:
-        signal_handler(signal.SIGTERM, None)
+    signal_handler(signal.SIGTERM, None)
 
-    assert excinfo.value.signum == signal.SIGTERM
+    assert signal_handler.take() == signal.SIGTERM
+
+
+def test_signal_arriving_while_logging_logs_nothing_in_between(
+    logger: logging.Logger, signal_handler: SignalHandler, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(VERBOSE, logger=logger.name)
+    logger.addHandler(_SignalWhileLogging("Saving the status", signal_handler))
+
+    logger.info("Saving the status")
+
+    assert caplog.messages == ["Saving the status"]
 
 
 @pytest.mark.parametrize(
@@ -1000,14 +1021,129 @@ def test_termination_is_not_lost_to_a_signal_arriving_meanwhile(
         pytest.param((signal.SIGTERM, signal.SIGHUP), id="reload after a termination"),
     ],
 )
-def test_held_back_termination_takes_precedence_over_a_reload(
+def test_termination_takes_precedence_over_a_reload(
     signal_handler: SignalHandler, signums: tuple[int, int]
 ) -> None:
-    with pytest.raises(MKSignalException) as excinfo, signal_handler.holding_back():
-        for signum in signums:
-            signal_handler(signum, None)
+    for signum in signums:
+        signal_handler(signum, None)
 
-    assert excinfo.value.signum == signal.SIGTERM
+    assert signal_handler.take() == signal.SIGTERM
+
+
+def test_signals_are_acted_on_only_once(signal_handler: SignalHandler) -> None:
+    signal_handler(signal.SIGHUP, None)
+    signal_handler.take()
+
+    assert signal_handler.take() is None
+
+
+def test_reload_signal_is_no_termination(signal_handler: SignalHandler) -> None:
+    signal_handler(signal.SIGHUP, None)
+
+    assert not signal_handler.terminating()
+
+
+def test_looking_for_a_termination_leaves_it_to_the_main_loop(
+    signal_handler: SignalHandler,
+) -> None:
+    signal_handler(signal.SIGTERM, None)
+
+    assert (signal_handler.terminating(), signal_handler.take()) == (True, signal.SIGTERM)
+
+
+def test_signal_during_a_task_is_handled_once_the_task_is_done(
+    debug_settings: ec.Settings,
+    config: Config,
+    signal_handler: SignalHandler,
+    run_main_loop: _RunMainLoop,
+) -> None:
+    # Like "omd stop" while housekeeping holds a lock, which an exception would leave held
+    done: list[None] = []
+
+    def housekeeping() -> None:
+        signal_handler(signal.SIGTERM, None)
+        done.append(None)
+
+    run_main_loop(debug_settings, config, housekeeping)
+
+    assert done == [None]
+
+
+def test_waiting_main_loop_looks_for_signals_every_second(
+    monkeypatch: pytest.MonkeyPatch,
+    debug_settings: ec.Settings,
+    config: Config,
+    signal_handler: SignalHandler,
+    run_main_loop: _RunMainLoop,
+    reload_config_event: threading.Event,
+) -> None:
+    # Nothing is due for an hour, and the signal arrives while the main loop waits, which it ends.
+    timeouts: list[float] = []
+
+    def wait(timeout: float) -> bool:
+        timeouts.append(timeout)
+        signal_handler(signal.SIGTERM, None)
+        return False
+
+    monkeypatch.setattr(reload_config_event, "wait", wait)
+
+    run_main_loop(
+        debug_settings,
+        config | {"retention_interval": 3600.0, "statistics_interval": 3600.0},
+        lambda: None,
+        housekeeping_interval=3600.0,
+    )
+
+    assert timeouts == [1]
+
+
+def test_terminating_signal_while_waiting_goes_before_the_tasks_due_then(
+    monkeypatch: pytest.MonkeyPatch,
+    debug_settings: ec.Settings,
+    config: Config,
+    signal_handler: SignalHandler,
+    run_main_loop: _RunMainLoop,
+    reload_config_event: threading.Event,
+) -> None:
+    # Housekeeping is due once the main loop has waited, and the signal arrives meanwhile.
+    def wait(_timeout: float) -> bool:
+        signal_handler(signal.SIGTERM, None)
+        return False
+
+    monkeypatch.setattr(reload_config_event, "wait", wait)
+    housekeepings: list[None] = []
+
+    run_main_loop(debug_settings, config, lambda: housekeepings.append(None))
+
+    assert housekeepings == []
+
+
+def test_terminating_signal_while_handling_a_reload_signal_terminates(
+    debug_settings: ec.Settings,
+    config: Config,
+    logger: logging.Logger,
+    signal_handler: SignalHandler,
+    run_main_loop: _RunMainLoop,
+    terminate_main_event: threading.Event,
+) -> None:
+    _activate_main_loop_config(debug_settings, "")  # for the reload
+    # A SIGTERM arrives while the EC logs a SIGHUP.
+    logger.setLevel(logging.INFO)
+    logger.addHandler(_SignalWhileLogging("Received SIGHUP", signal_handler))
+    reload_signals = [signal.SIGHUP]
+    # Housekeeping is due whenever the main loop goes on, so only once the SIGTERM got lost.
+    housekept_after_the_signals: list[None] = []
+
+    def reload_signal_once() -> None:
+        if reload_signals:
+            signal_handler(reload_signals.pop(), None)
+        else:
+            housekept_after_the_signals.append(None)
+            terminate_main_event.set()  # instead of waiting for the timeout of the main loop
+
+    run_main_loop(debug_settings, config, reload_signal_once)
+
+    assert housekept_after_the_signals == []
 
 
 def test_failing_task_is_retried_only_after_its_interval(

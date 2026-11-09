@@ -73,6 +73,7 @@ class DocReference(Enum):
     REPORTS = "reporting"
     RELAY = "relay"
     SLA_CONFIGURATION = "sla"
+    SYNTHETIC_MONITORING = "robotmk"
     TIMEPERIODS = "timeperiods"
     TEST_NOTIFICATIONS = "notifications#notification_testing"
     USER_INTERFACE = "user_interface"

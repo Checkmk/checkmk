@@ -12,9 +12,17 @@
     "mock_data": {
       "description": "Whether to request the mock data of the list buckets endpoint.",
       "type": "boolean"
-    }
+    },
+    "docs_url_synthetic_monitoring": { "type": "string" },
+    "docs_url_backend_setup": { "type": "string" }
   },
-  "required": ["global_time_picker", "sites", "mock_data"],
+  "required": [
+    "global_time_picker",
+    "sites",
+    "mock_data",
+    "docs_url_synthetic_monitoring",
+    "docs_url_backend_setup"
+  ],
   "$defs": {
     "explorer_site": {
       "title": "ExplorerSite",

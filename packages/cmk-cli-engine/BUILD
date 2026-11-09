@@ -51,6 +51,7 @@ py_library(
     deps = [
         ":engine",
         ":run",
+        "//packages/cmk-ccc:log",
         "//packages/cmk-ccc:site",
         "//packages/cmk-ccc:version-info",
         "//packages/cmk-crash:crash",

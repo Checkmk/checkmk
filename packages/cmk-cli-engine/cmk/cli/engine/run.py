@@ -5,7 +5,6 @@
 
 import logging
 import signal
-import sys
 from collections.abc import Callable, Mapping, Sequence
 from contextlib import AbstractContextManager
 from dataclasses import dataclass
@@ -14,7 +13,7 @@ from pathlib import Path
 from types import FrameType
 from typing import assert_never
 
-from cmk.ccc.log import log_to_watched_file, verbosity_to_log_level
+from cmk.ccc.log import verbosity_to_log_level
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
@@ -24,22 +23,6 @@ from .commands import Commands, DiscoveredCommand
 from .readers import ParsedOptions
 
 type CommandTracer = Callable[[CLIContext, RunCommand], AbstractContextManager[None]]
-
-
-def enable_file_logging(path: Path, logger: logging.Logger) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    log_to_watched_file(logger, path)
-
-
-def configure_logging() -> logging.Logger:
-    logger = logging.getLogger("cmk")
-    handler = logging.StreamHandler(sys.stderr)
-    handler.setFormatter(
-        # astrein: disable=logging-formatter
-        logging.Formatter("[%(levelname)s] %(message)s")
-    )
-    logger.addHandler(handler)
-    return logger
 
 
 type CrashReporter = Callable[[], str]

@@ -13,6 +13,7 @@ from pathlib import Path
 
 import cmk.ccc.version_info as cmk_version_info
 from cmk import trace
+from cmk.ccc.log import log_to_watched_file
 from cmk.ccc.site import get_omd_config, omd_site
 from cmk.cli.internal import Context as CLIContext
 from cmk.crash import (
@@ -27,16 +28,25 @@ from cmk.trace.export import exporter_from_config, init_span_processor
 from .arguments import RunCommand
 from .discovery import discover_commands
 from .output import write_paged, write_stdout
-from .run import (
-    CommandTracer,
-    configure_logging,
-    CrashReporter,
-    enable_file_logging,
-    run,
-    Runtime,
-)
+from .run import CommandTracer, CrashReporter, run, Runtime
 
 tracer = trace.get_tracer()
+
+
+def enable_file_logging(path: Path, logger: logging.Logger) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    log_to_watched_file(logger, path)
+
+
+def configure_logging() -> logging.Logger:
+    logger = logging.getLogger("cmk")
+    handler = logging.StreamHandler(sys.stderr)
+    handler.setFormatter(
+        # astrein: disable=logging-formatter
+        logging.Formatter("[%(levelname)s] %(message)s")
+    )
+    logger.addHandler(handler)
+    return logger
 
 
 def saving_crash_reporter(

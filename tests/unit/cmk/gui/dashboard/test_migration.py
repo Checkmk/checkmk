@@ -498,3 +498,22 @@ class TestInternalDashboardToRuntimeDashboard:
         result = _internal_dashboard_to_runtime_dashboard(raw)
 
         assert "dashlets" not in result
+
+
+class TestMigrateStatusDisplay:
+    @pytest.mark.xfail(strict=True, raises=KeyError, reason="crash group 4800")
+    def test_a_stored_service_status_display_becomes_the_status_display(self) -> None:
+        dashboard = _make_dashboard(
+            layout={"type": "responsive_grid", "layouts": {}},
+            widgets={
+                "w1": {
+                    "type": "single_metric",
+                    "metric": "uptime",
+                    "svc_status_display": ("background", "all"),
+                }
+            },
+        )
+
+        result = migrate_dashboard_config(dashboard)
+
+        assert result["widgets"]["w1"]["status_display"] == ("background", "all")  # type: ignore[typeddict-item]

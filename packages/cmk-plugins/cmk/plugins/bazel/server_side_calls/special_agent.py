@@ -5,7 +5,7 @@
 
 from collections.abc import Iterator
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from cmk.server_side_calls.v1 import HostConfig, Secret, SpecialAgentCommand, SpecialAgentConfig
 
@@ -15,7 +15,7 @@ class Params(BaseModel):
     password: Secret | None = None
     port: int | None = None
     protocol: str | None = None
-    no_cert_check: bool = Field(alias="no-cert-check", default=True)
+    verify_cert: bool
 
 
 def generate_bazel_cache_command(
@@ -31,7 +31,7 @@ def generate_bazel_cache_command(
         args += ["--port", str(params.port)]
     if params.protocol is not None:
         args += ["--protocol", params.protocol]
-    if params.no_cert_check:
+    if not params.verify_cert:
         args += ["--no-cert-check"]
 
     yield SpecialAgentCommand(command_arguments=args)

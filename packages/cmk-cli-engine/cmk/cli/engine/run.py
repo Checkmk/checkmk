@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import errno
 import logging
 import signal
 import sys
@@ -74,8 +73,6 @@ _LOG_FILE_OPTION: Final = Option(
 
 @dataclass(frozen=True, kw_only=True)
 class Runtime:
-    """What the command line reaches for besides its arguments, injectable one by one"""
-
     discover: Callable[[], Sequence[GetoptCommand]] = discover_commands
     trace_command: CommandTracer
     on_sigint: Callable[[int, FrameType | None], object] = signal.default_int_handler
@@ -91,9 +88,9 @@ def dispatch(
     command: Callable[[], CLIExitCode],
     logger: logging.Logger,
     crash_reporter: CrashReporter,
+    *,
     debug: bool,
 ) -> CLIExitCode:
-    """Run the command, mapping what it raises to the exit status it earns"""
     try:
         return command()
 
@@ -101,13 +98,8 @@ def dispatch(
         logger.error("<Interrupted>")  # noqa: TRY400
         return CLIExitCode.INTERRUPTED
 
-    except OSError as e:
-        if e.errno == errno.EPIPE:
-            return CLIExitCode.BROKEN_PIPE
-        if debug:
-            raise
-        logger.error(crash_reporter())  # noqa: TRY400
-        return CLIExitCode.FAILURE
+    except BrokenPipeError:
+        return CLIExitCode.BROKEN_PIPE
 
     except Exception:
         if debug:
@@ -135,7 +127,7 @@ def run(
         return CLIExitCode.UNKNOWN.value
 
     for option, argument in parsed.options:
-        if option.lstrip("-") == _LOG_FILE_OPTION.long_option:
+        if option in _LOG_FILE_OPTION.options():
             enable_file_logging(argument, runtime.logger)
     global_options = parse_general_options(parsed.options)
     if global_options.verbosity:
@@ -169,7 +161,7 @@ def run(
             command,
             logger,
             runtime.crash_reporter_for(omd_root, argv, environ),
-            global_options.debug,
+            debug=global_options.debug,
         ).value
     finally:
         runtime.write_profile(omd_root / "var/check_mk/web")

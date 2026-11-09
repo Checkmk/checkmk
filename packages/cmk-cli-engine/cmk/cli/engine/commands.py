@@ -13,7 +13,7 @@ from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import Reader as CLIReader
 
-from .options import HELP_OPTION, Option, OptionName
+from .options import HELP_OPTION, HELP_WIDTH, Option, OptionName
 
 type BoundCommand = Callable[[CLIContext, CLIArgs], CLIExitCode]
 """A command's handler with the command's request already read"""
@@ -31,7 +31,7 @@ class GetoptCommand(Option):
         argument: bool = False,
         argument_descr: str | None = None,
         argument_optional: bool = False,
-        long_help: list[str] | None = None,
+        long_help: Sequence[str] = (),
         sub_options: Sequence[Option] = (),
     ) -> None:
         super().__init__(
@@ -54,22 +54,18 @@ class GetoptCommand(Option):
 
     @override
     def short_getopt_specs(self) -> list[str]:
-        specs = super().short_getopt_specs()
-        for option in self.sub_options:
-            specs += option.short_getopt_specs()
-        return specs
+        return [
+            *super().short_getopt_specs(),
+            *(spec for option in self.sub_options for spec in option.short_getopt_specs()),
+        ]
 
     @override
     def long_getopt_specs(self) -> list[str]:
-        specs = super().long_getopt_specs()
-        for option in self.sub_options:
-            specs += option.long_getopt_specs()
-        return specs
+        return [
+            *super().long_getopt_specs(),
+            *(spec for option in self.sub_options for spec in option.long_getopt_specs()),
+        ]
 
-    # expected format is like this
-    #  -i, --inventory does a HW/SW Inventory for all, one or several
-    #  hosts. If you add the option -f, --force then persisted sections
-    #  will be used even if they are outdated.
     def long_help_text(self) -> str | None:
         if not self.long_help and not self.sub_options:
             return None
@@ -85,14 +81,14 @@ class GetoptCommand(Option):
             text.append(option_text)
         else:
             for index, paragraph in enumerate(self.long_help):
-                initial_indent = option_text if index == 0 else "    "
-
-                wrapper = textwrap.TextWrapper(
-                    initial_indent=initial_indent,
-                    subsequent_indent="    ",
-                    width=80,
+                text.append(
+                    textwrap.fill(
+                        paragraph,
+                        width=HELP_WIDTH,
+                        initial_indent=option_text if index == 0 else "    ",
+                        subsequent_indent="    ",
+                    )
                 )
-                text.append(wrapper.fill(paragraph))
 
         if self.sub_options:
             sub_texts = [option.short_help_text(fmt="    %-24s") for option in self.sub_options]
@@ -102,17 +98,15 @@ class GetoptCommand(Option):
 
 
 def bind[R](command: CLICommand[R], reader: CLIReader) -> BoundCommand:
-    """Read the command's request and return its handler with the request bound in"""
     request = command.request(reader)
     return lambda context, args: command.handler(context, request, args)
 
 
-def _map_options(commands: Sequence[GetoptCommand]) -> Mapping[OptionName, GetoptCommand]:
-    """Map every spelling of every command to it, rejecting a collision.
+def _help_order(text: str) -> str:
+    return text.lstrip(" -").lower()
 
-    Two commands claiming the same option would otherwise shadow one another
-    silently, and the one that loses simply could not be invoked.
-    """
+
+def _map_options(commands: Sequence[GetoptCommand]) -> Mapping[OptionName, GetoptCommand]:
     reserved = {HELP_OPTION.long_option, HELP_OPTION.short_option}
     mapped: dict[OptionName, GetoptCommand] = {}
     for command in commands:
@@ -136,7 +130,6 @@ class Commands:
         plugins: Sequence[GetoptCommand],
         general_options: Sequence[Option],
     ) -> None:
-        super().__init__()
         self._command_map: Mapping[OptionName, GetoptCommand] = _map_options(plugins)
         self._commands = plugins
         self._general_options = general_options
@@ -144,21 +137,14 @@ class Commands:
     def find(self, name: OptionName) -> GetoptCommand | None:
         return self._command_map.get(name)
 
+    def _options(self) -> Sequence[Option]:
+        return [HELP_OPTION, *self._commands, *self._general_options]
+
     def short_getopt_specs(self) -> str:
-        options = "".join(HELP_OPTION.short_getopt_specs())
-        for command in self._commands:
-            options += "".join(command.short_getopt_specs())
-        for option in self._general_options:
-            options += "".join(option.short_getopt_specs())
-        return options
+        return "".join(spec for option in self._options() for spec in option.short_getopt_specs())
 
     def long_getopt_specs(self) -> list[str]:
-        options = HELP_OPTION.long_getopt_specs()
-        for command in self._commands:
-            options += command.long_getopt_specs()
-        for option in self._general_options:
-            options += option.long_getopt_specs()
-        return options
+        return [spec for option in self._options() for spec in option.long_getopt_specs()]
 
     def help(self) -> str:
         return f"""WAYS TO CALL:
@@ -174,19 +160,15 @@ NOTES:
 
     def _short_help(self) -> str:
         texts = [command.short_help_text(" cmk %-36s") for command in self._commands]
-        return "\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))
+        return "\n".join(sorted(texts, key=_help_order))
 
     def _long_help(self) -> str:
-        texts = []
-        for command in self._commands:
-            text = command.long_help_text()
-            if text:
-                texts.append(text)
-        return "\n\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))
+        texts = [text for command in self._commands if (text := command.long_help_text())]
+        return "\n\n".join(sorted(texts, key=_help_order))
 
     def _general_option_help(self) -> str:
         texts = [
             option.short_help_text(fmt="  %-21s")
             for option in [HELP_OPTION, *self._general_options]
         ]
-        return "\n".join(sorted(texts, key=lambda x: x.lstrip(" -").lower()))
+        return "\n".join(sorted(texts, key=_help_order))

@@ -9,7 +9,7 @@ import sys
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from pathlib import Path
-from typing import override, Self
+from typing import override
 
 import cmk.ccc.version_info as cmk_version_info
 from cmk import trace
@@ -22,7 +22,6 @@ from cmk.crash import (
     BaseDetails,
     CrashReportStore,
     make_crash_report_base_path,
-    VersionInfo,
 )
 from cmk.profiling import backend as profiling
 from cmk.trace.export import exporter_from_config, init_span_processor
@@ -39,29 +38,6 @@ class CrashReport(ABCCrashReport[BaseDetails]):
     def type(cls) -> str:
         return "base"
 
-    @classmethod
-    def from_exception(
-        cls,
-        *,
-        crash_report_base_path: Path,
-        version_info: VersionInfo,
-        argv: Sequence[str],
-        environ: Mapping[str, str],
-    ) -> Self:
-        return cls(
-            crash_report_base_path=crash_report_base_path,
-            crash_info=cls.make_crash_info(
-                version_info,
-                BaseDetails(
-                    argv=list(argv),
-                    env=dict(environ),
-                ),
-            ),
-        )
-
-    def save(self) -> None:
-        CrashReportStore().save(self)
-
     def render(self) -> str:
         return (
             f"{self.crash_info['exc_type']}: {self.crash_info['exc_value']} "
@@ -73,13 +49,14 @@ def saving_crash_reporter(
     omd_root: Path, argv: Sequence[str], environ: Mapping[str, str]
 ) -> CrashReporter:
     def report() -> str:
-        crash = CrashReport.from_exception(
+        crash = CrashReport(
             crash_report_base_path=make_crash_report_base_path(omd_root),
-            version_info=cmk_version_info.get_general_version_infos(omd_root),
-            argv=argv,
-            environ=environ,
+            crash_info=CrashReport.make_crash_info(
+                cmk_version_info.get_general_version_infos(omd_root),
+                BaseDetails(argv=list(argv), env=dict(environ)),
+            ),
         )
-        crash.save()
+        CrashReportStore().save(crash)
         return crash.render()
 
     return report

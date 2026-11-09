@@ -6,6 +6,7 @@
 import getopt
 from collections.abc import Sequence
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Final
 
 from .commands import Commands, GetoptCommand
@@ -45,8 +46,9 @@ def parse(commands: Commands, argv: Sequence[str]) -> RunCommand | ShowHelp | In
             list(argv[1:]), commands.short_getopt_specs(), commands.long_getopt_specs()
         )
     except getopt.GetoptError as error:
-        program = argv[0].split("/")[-1]
-        return InvalidArguments(f"ERROR: {error} (see `{program} --help` for valid options)\n")
+        return InvalidArguments(
+            f"ERROR: {error} (see `{Path(argv[0]).name} --help` for valid options)\n"
+        )
 
     if any(option in HELP_OPTION.options() for option, _argument in options):
         return ShowHelp(options)

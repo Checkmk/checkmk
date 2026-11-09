@@ -15,7 +15,6 @@ from .readers import RecordedOptions
 
 
 def make_command[R](command: CLICommand[R]) -> GetoptCommand:
-    """Build the engine's command from its API declaration"""
     recorded = RecordedOptions()
     command.request(recorded)
     arguments = command.arguments
@@ -28,25 +27,28 @@ def make_command[R](command: CLICommand[R]) -> GetoptCommand:
         argument=arguments is not None,
         argument_descr=None if arguments is None else arguments.placeholder,
         argument_optional=arguments is not None and arguments.optional,
-        long_help=list(command.description) if command.description is not None else None,
+        long_help=command.description or (),
         sub_options=recorded.options,
     )
 
 
-def _named_after_its_variable[R](location: PluginLocation, command: CLICommand[R]) -> CLICommand[R]:
-    if location.name != f"{cli_entry_point_prefixes()[CLICommand]}{command.name}":
+def _named_after_its_variable[R](
+    prefix: str, location: PluginLocation, command: CLICommand[R]
+) -> CLICommand[R]:
+    if location.name != f"{prefix}{command.name}":
         raise ValueError(f"{location} is not named after its command {command.name!r}")
     return command
 
 
 def discover_commands() -> Sequence[GetoptCommand]:
+    prefixes = cli_entry_point_prefixes()
     discovered = discover_all_plugins(
         PluginGroup.CLI,
-        cli_entry_point_prefixes(),
+        prefixes,
         skip_wrong_types=False,
         raise_errors=True,
     )
     return tuple(
-        make_command(_named_after_its_variable(location, command))
+        make_command(_named_after_its_variable(prefixes[CLICommand], location, command))
         for location, command in discovered.plugins.items()
     )

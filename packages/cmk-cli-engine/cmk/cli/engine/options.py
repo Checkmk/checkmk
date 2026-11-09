@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import textwrap
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 from typing import Final
 
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
@@ -12,6 +12,8 @@ from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 OptionSpec = str
 OptionName = str
 type GetoptOptions = Sequence[tuple[OptionSpec, str]]
+
+HELP_WIDTH: Final = 80
 
 
 class Option:
@@ -21,28 +23,19 @@ class Option:
         long_option: str,
         short_help: str,
         short_option: str | None = None,
-        # ----------------------------------------------------------------------
-        # TODO: To avoid nonsensical and/or contradicting value combinations,
-        # all these argument-related parameters below should actually be a
-        # *single* parameter, see their intrinsic relations below.
         argument: bool = False,
         argument_descr: str | None = None,
         argument_optional: bool = False,
         repeat: bool = False,
-        # ----------------------------------------------------------------------
-        deprecated_long_options: set[str] | None = None,
+        deprecated_long_options: Collection[str] = frozenset(),
     ) -> None:
-        super().__init__()
-
-        # We have an argument description if and only if we have an argument.
         assert (argument_descr is not None) == argument
-        # Being optional implies that we actually have an argument.
         assert not argument_optional or argument
 
         self.long_option = long_option
         self.short_help = short_help
         self.short_option = short_option
-        self._deprecated_long_options = deprecated_long_options or set()
+        self._deprecated_long_options = deprecated_long_options
 
         self.repeat = repeat
         self.argument = argument
@@ -69,20 +62,18 @@ class Option:
 
         if self.argument:
             option_txt += " "
-            descr = self.argument_descr if self.argument_descr else "..."
+            descr = self.argument_descr or "..."
             if self.argument_optional:
                 option_txt += "[%s]" % descr
             else:
                 option_txt += descr
 
-        formated_option_txt = fmt % option_txt
-
-        wrapper = textwrap.TextWrapper(
-            initial_indent=formated_option_txt,
+        return textwrap.fill(
+            self.short_help,
+            width=HELP_WIDTH,
+            initial_indent=fmt % option_txt,
             subsequent_indent=" " * len(fmt % ""),
-            width=80,
         )
-        return wrapper.fill(self.short_help)
 
     def short_getopt_specs(self) -> list[str]:
         if (spec := self.short_option) is None:
@@ -120,12 +111,10 @@ _PROFILE_OPTION = Option(
 
 
 def general_options() -> Sequence[Option]:
-    """The options every command accepts, see `cmk.cli.internal.GlobalOptions`"""
     return [_VERBOSE_OPTION, _DEBUG_OPTION, _PROFILE_OPTION]
 
 
 def parse_general_options(all_opts: GetoptOptions) -> CLIGlobalOptions:
-    """Collect the general options from the parsed command line"""
     verbosity = 0
     debug = False
     profile = False

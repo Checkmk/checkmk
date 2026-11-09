@@ -39,7 +39,7 @@ def _option(
         argument=placeholder is not None,
         argument_descr=placeholder,
         repeat=repeat,
-        deprecated_long_options=set(declaration.deprecated_names),
+        deprecated_long_options=declaration.deprecated_names,
     )
 
 

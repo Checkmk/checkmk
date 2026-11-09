@@ -87,7 +87,7 @@ class _BaseMoveTo(base.BaseSchema):
 
 
 class MoveToFolder(_BaseMoveTo):
-    folder = gui_fields.FolderField(example="/")
+    folder = gui_fields.FolderField(example="/", required=True)
 
 
 class MoveToSpecificRule(_BaseMoveTo):

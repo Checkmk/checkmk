@@ -948,7 +948,6 @@ def test_move_rule_before_itself_fails(clients: ClientRegistry) -> None:
     assert resp.json["detail"] == "You cannot move a rule before/after itself."
 
 
-@pytest.mark.xfail(strict=True, reason="crash group 4796")
 @pytest.mark.parametrize("position", ["top_of_folder", "bottom_of_folder"])
 def test_move_rule_to_folder_without_folder_is_rejected(
     clients: ClientRegistry, position: str

@@ -453,6 +453,7 @@ def test_agent_aws_cloudfront_puts_each_distribution_on_its_own_host(
             {
                 "cmk/aws/service": "cloudfront",
                 "cmk/aws/resource_id": "E2RAYOVSSL6ZM3",
+                "cmk/aws/arn": "arn:aws:cloudfront::710145618630:distribution/E2RAYOVSSL6ZM3",
             },
             id="one distribution",
         ),
@@ -492,10 +493,12 @@ def test_agent_aws_cloudfront_distribution_hosts_get_the_resource_labels(
         "E2RAYOVSSL6ZM3": {
             "cmk/aws/service": "cloudfront",
             "cmk/aws/resource_id": "E2RAYOVSSL6ZM3",
+            "cmk/aws/arn": "arn:aws:cloudfront::710145618630:distribution/E2RAYOVSSL6ZM3",
         },
         "EWN6C0UT7HBX0": {
             "cmk/aws/service": "cloudfront",
             "cmk/aws/resource_id": "EWN6C0UT7HBX0",
+            "cmk/aws/arn": "arn:aws:cloudfront::710145618630:distribution/EWN6C0UT7HBX0",
             "cmk/aws/tag/test-tag-key2": "test-tag-value2",
             "cmk/aws/tag/test-tag-key": "test-tag-value",
         },

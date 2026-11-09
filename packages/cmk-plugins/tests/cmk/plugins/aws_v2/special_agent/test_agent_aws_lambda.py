@@ -428,7 +428,7 @@ def test_agent_aws_lambda_region_limits_go_to_the_account_and_each_function_host
     }
 
 
-def test_agent_aws_lambda_labels_function_hosts_as_lambda() -> None:
+def test_agent_aws_lambda_function_hosts_get_the_function_arn() -> None:
     (
         _lambda_limits,
         lambda_summary,
@@ -444,5 +444,14 @@ def test_agent_aws_lambda_labels_function_hosts_as_lambda() -> None:
         *lambda_cloudwatch_insights.run().results,
     ]
 
+    # The CloudWatch rows of an alias still give the host the ARN of its function.
+    function_arn = "arn:aws:lambda:eu-central-1:123456789:function:FunctionName"
     assert results
-    assert all(result.piggyback_host_labels == {"cmk/aws/service": "lambda"} for result in results)
+    expected_labels = {
+        f"FunctionName-{i}": {"cmk/aws/service": "lambda", "cmk/aws/arn": f"{function_arn}-{i}"}
+        for i in range(2)
+    }
+    assert all(
+        result.piggyback_host_labels == expected_labels[str(result.piggyback_hostname)]
+        for result in results
+    )

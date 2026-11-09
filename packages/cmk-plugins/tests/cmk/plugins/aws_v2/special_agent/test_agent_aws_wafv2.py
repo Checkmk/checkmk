@@ -417,5 +417,6 @@ def test_agent_aws_wafv2_web_acl_hosts_get_the_resource_labels(
         "cmk/aws/service": "wafv2",
         "cmk/aws/name": "Name-2",
         "cmk/aws/resource_id": "Id-2",
+        "cmk/aws/arn": "ARN-2",
         **expected_region,
     }

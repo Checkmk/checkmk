@@ -318,6 +318,7 @@ def test_agent_aws_rds_instance_hosts_get_the_resource_labels(
             "cmk/aws/name": f"DBInstanceIdentifier-{i}",
             "cmk/aws/resource_id": f"DbiResourceId-{i}",
             "cmk/aws/region": "region",
+            "cmk/aws/arn": f"DBInstanceArn-{i}",
             **(_TAGS if i < 2 else {}),
         }
         for i in range(3)

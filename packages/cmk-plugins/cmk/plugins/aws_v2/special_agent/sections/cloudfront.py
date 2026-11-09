@@ -256,6 +256,7 @@ def _cloudfront_host_resource(distributions: Sequence[Mapping | None]) -> AwsRes
             return AwsResource(
                 service="cloudfront",
                 resource_id=distribution["Id"],
+                arn=distribution["ARN"],
                 tags=distribution["TagsForCmkLabels"],
             )
         case _:

@@ -47,6 +47,7 @@ def _instance_resource(instance: Mapping[str, Any]) -> AwsResource:
         service="rds",
         name=instance["DBInstanceIdentifier"],
         resource_id=instance["DbiResourceId"],
+        arn=instance["DBInstanceArn"],
         region=instance["Region"],
         tags=instance["TagsForCmkLabels"],
     )

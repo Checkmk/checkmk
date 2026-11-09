@@ -44,7 +44,10 @@ if TYPE_CHECKING:
 
 ProvisionedConcurrencyConfigs = Mapping[str, Sequence[Mapping[str, str]]]
 
-LAMBDA_RESOURCE = AwsResource(service="lambda")
+
+def _lambda_resource(function_arn: str) -> AwsResource:
+    """The resource of a function host. Its only label beyond the service is the ARN."""
+    return AwsResource(service="lambda", arn=function_arn)
 
 
 class LambdaRegionLimits(AWSSectionLimits):
@@ -183,7 +186,7 @@ class LambdaSummary(AWSSection):
             AWSSectionResult(
                 self._target_host(hosts.LambdaFunction(function["FunctionName"])),
                 [function],
-                LAMBDA_RESOURCE,
+                _lambda_resource(function["FunctionArn"]),
             )
             for function in computed_content.content
         ]
@@ -195,6 +198,17 @@ def _function_arn_to_function_name_dim(function_arn: str) -> str:
     'my_python_test_function'
     """
     return function_arn.split(":")[6]
+
+
+def _function_arn(arn: str) -> str:
+    """The ARN of the function, also for the ARN of one of its aliases or versions
+
+    >>> _function_arn("arn:aws:lambda:eu-central-1:710145618630:function:my_function:my_alias")
+    'arn:aws:lambda:eu-central-1:710145618630:function:my_function'
+    >>> _function_arn("arn:aws:lambda:eu-central-1:710145618630:function:my_function")
+    'arn:aws:lambda:eu-central-1:710145618630:function:my_function'
+    """
+    return ":".join(arn.split(":")[:7])
 
 
 class LambdaCloudwatch(AWSSectionCloudwatch):
@@ -306,14 +320,16 @@ class LambdaCloudwatch(AWSSectionCloudwatch):
         # The label of a row is the ARN of a function or of one of its aliases.
         rows_by_function: dict[str, list[Mapping[str, object]]] = {}
         for row in computed_content.content:
-            rows_by_function.setdefault(
-                _function_arn_to_function_name_dim(row["Label"]), []
-            ).append(row)
+            rows_by_function.setdefault(_function_arn(row["Label"]), []).append(row)
         return [
             AWSSectionResult(
-                self._target_host(hosts.LambdaFunction(function_name)), rows, LAMBDA_RESOURCE
+                self._target_host(
+                    hosts.LambdaFunction(_function_arn_to_function_name_dim(function_arn))
+                ),
+                rows,
+                _lambda_resource(function_arn),
             )
-            for function_name, rows in rows_by_function.items()
+            for function_arn, rows in rows_by_function.items()
         ]
 
 
@@ -378,7 +394,7 @@ class LambdaProvisionedConcurrency(AWSSection):
                     hosts.LambdaFunction(_function_arn_to_function_name_dim(function_arn))
                 ),
                 {function_arn: function_content},
-                LAMBDA_RESOURCE,
+                _lambda_resource(function_arn),
             )
             for function_arn, function_content in computed_content.content.items()
         ]
@@ -583,7 +599,7 @@ class LambdaCloudwatchInsights(AWSSection):
                     hosts.LambdaFunction(_function_arn_to_function_name_dim(function_arn))
                 ),
                 {function_arn: function_content},
-                LAMBDA_RESOURCE,
+                _lambda_resource(function_arn),
             )
             for function_arn, function_content in computed_content.content.items()
         ]

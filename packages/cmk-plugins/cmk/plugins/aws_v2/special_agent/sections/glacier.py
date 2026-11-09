@@ -242,6 +242,7 @@ class Glacier(AWSSection):
                 service="glacier",
                 name=vault["VaultName"],
                 resource_id=vault["VaultName"],
+                arn=vault["VaultARN"],
                 region=self._region,
                 tags=vault["TagsForCmkLabels"],
             ),

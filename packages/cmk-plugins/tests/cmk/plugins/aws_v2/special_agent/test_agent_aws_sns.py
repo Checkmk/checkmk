@@ -366,6 +366,7 @@ def test_agent_aws_sns_topic_hosts_get_the_resource_labels(get_sns_sections: SNS
             "cmk/aws/name": topic,
             "cmk/aws/resource_id": topic,
             "cmk/aws/region": "eu-west-1",
+            "cmk/aws/arn": f"arn:aws:sns:eu-west-1:710145618630:{topic}",
             **(tags if topic == "TopicName-3.fifo" else {}),
         }
         for topic in topics

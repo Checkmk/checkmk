@@ -374,6 +374,7 @@ def test_agent_aws_dynamodb_table_hosts_get_the_resource_labels(
             "cmk/aws/name": f"TableName-{i}",
             "cmk/aws/resource_id": f"TableId-{i}",
             "cmk/aws/region": "region",
+            "cmk/aws/arn": f"TableArn-{i}",
             **(tags if i < 2 else {}),
         }
         for i in range(3)

@@ -338,7 +338,14 @@ class ECS(AWSSectionCloudwatch):
         return AWSSectionResult(
             host,
             rows,
-            AwsResource(service="ecs", name=name, resource_id=name, region=self._region, tags=tags),
+            AwsResource(
+                service="ecs",
+                name=name,
+                resource_id=name,
+                region=self._region,
+                tags=tags,
+                arn=cluster.clusterArn,
+            ),
         )
 
     @override

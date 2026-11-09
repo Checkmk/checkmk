@@ -618,6 +618,7 @@ def test_agent_aws_elbv2_load_balancer_hosts_get_the_resource_labels(
             "cmk/aws/name": f"LoadBalancerName-{i}",
             "cmk/aws/resource_id": f"LoadBalancerName-{i}",
             "cmk/aws/region": "region",
+            "cmk/aws/arn": f"LoadBalancerArn-{i}",
             **(tags if i < 2 else {}),
         }
         for i in range(3)

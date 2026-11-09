@@ -437,6 +437,7 @@ def _web_acl_resource(web_acl: Mapping[str, Any] | None) -> AwsResource:
         service="wafv2",
         name=web_acl["Name"],
         resource_id=web_acl["Id"],
+        arn=web_acl["ARN"],
         region=region,
         tags=web_acl["TagsForCmkLabels"],
     )

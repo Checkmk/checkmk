@@ -779,6 +779,7 @@ def test_agent_aws_elasticache_node_hosts_get_the_resource_labels(
             "cmk/aws/name": node,
             "cmk/aws/resource_id": node,
             "cmk/aws/region": "region",
+            "cmk/aws/arn": f"arn:aws:elasticache:region:123:cluster:{node}",
             "cmk/aws/tag/team": "cache",
         }
         for node in ("node-a", "node-b")

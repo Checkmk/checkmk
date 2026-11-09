@@ -302,6 +302,7 @@ def _load_balancer_resource(
         # A load balancer has no ID of its own, only its ARN.
         resource_id=load_balancer["LoadBalancerName"],
         region=region,
+        arn=load_balancer["LoadBalancerArn"],
         tags=load_balancer["TagsForCmkLabels"],
     )
 

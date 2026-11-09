@@ -26,7 +26,10 @@ class AwsResource:
     resource host has this label, and users can filter on it without knowing the resource
     type. A global resource, such as a CloudFront distribution, has no region. The tags
     are the AWS tags of the resource that the rule imports, as process_tags_for_cmk_labels
-    gives them.
+    gives them. The ARN is the ARN as AWS gives it. The label has it unchanged, because a
+    label value can have colons. A resource whose AWS data has no ARN, such as an EC2
+    instance or an S3 bucket, has no ARN label. The ARN does not need a resource ID: a
+    Lambda function has only its ARN.
 
     Of a resource that is gone from its summary since its metrics were cached, only the
     service is known. Every other resource has its ID.
@@ -37,6 +40,7 @@ class AwsResource:
     resource_id: str | None = None
     region: str | None = None
     tags: Mapping[str, str] = field(default_factory=dict)
+    arn: str | None = None
 
     def __post_init__(self) -> None:
         if self.resource_id is None and (
@@ -51,6 +55,7 @@ class AwsResource:
             **({} if self.name is None else {"cmk/aws/name": self.name}),
             **({} if self.resource_id is None else {"cmk/aws/resource_id": self.resource_id}),
             **({} if self.region is None else {"cmk/aws/region": self.region}),
+            **({} if self.arn is None else {"cmk/aws/arn": self.arn}),
             **{
                 f"cmk/aws/tag/{key}": value for key, value in ensure_valid_labels(self.tags).items()
             },

@@ -235,6 +235,7 @@ def test_agent_aws_glacier_vault_hosts_get_the_resource_labels(
             "cmk/aws/name": f"VaultName-{i}",
             "cmk/aws/resource_id": f"VaultName-{i}",
             "cmk/aws/region": "eu-central-1",
+            "cmk/aws/arn": f"VaultARN-{i}",
             **tags[i],
         }
         for i in range(4)

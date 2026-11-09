@@ -464,6 +464,7 @@ class SNSTopicCloudwatch(AWSSection):
                 service="sns",
                 name=topic_name,
                 resource_id=topic_name,
+                arn=topic["ARN"],
                 region=topic["Region"],
                 tags=topic["TagsForCmkLabels"],
             ),

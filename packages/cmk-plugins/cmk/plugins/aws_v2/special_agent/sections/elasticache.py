@@ -336,6 +336,8 @@ class ElastiCacheSummary(AWSSection):
 
 
 class _ElastiCacheNodeInfo(NamedTuple):
+    arn: str
+    """The ARN of the node."""
     tags: Mapping[str, str]
     """The AWS tags of the cluster of the node, as the rule imports them."""
 
@@ -352,7 +354,7 @@ def _node_info(
         ),
         {},
     )
-    return _ElastiCacheNodeInfo(tags)
+    return _ElastiCacheNodeInfo(node["ARN"], tags)
 
 
 class ElastiCache(AWSSectionCloudwatch):
@@ -458,6 +460,7 @@ class ElastiCache(AWSSectionCloudwatch):
                 service="elasticache",
                 name=node_id,
                 resource_id=node_id,
+                arn=node.arn,
                 region=self._region,
                 tags=node.tags,
             ),

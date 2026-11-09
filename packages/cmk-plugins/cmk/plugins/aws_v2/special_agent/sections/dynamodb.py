@@ -112,6 +112,7 @@ class DynamoDB(AWSSection):
             service="dynamodb",
             name=table["TableName"],
             resource_id=table["TableId"],
+            arn=table["TableArn"],
             region=table["Region"],
             tags=table["TagsForCmkLabels"],
         )

@@ -65,3 +65,69 @@ def test_resource_metadata_keeps_the_tags_as_aws_has_them() -> None:
         "region": "eu-central-1",
         "tags": {"a:b": "", "c": "d:e"},
     }
+
+
+@pytest.mark.parametrize(
+    "resource, expected_labels",
+    [
+        pytest.param(
+            AwsResource(
+                service="rds",
+                name="my-db",
+                resource_id="db-ABC",
+                region="eu-central-1",
+                arn="arn:aws:rds:eu-central-1:123456789012:db:my-db",
+            ),
+            {
+                "cmk/aws/service": "rds",
+                "cmk/aws/name": "my-db",
+                "cmk/aws/resource_id": "db-ABC",
+                "cmk/aws/region": "eu-central-1",
+                "cmk/aws/arn": "arn:aws:rds:eu-central-1:123456789012:db:my-db",
+            },
+            id="ARN with colons -> label is the exact ARN",
+        ),
+        pytest.param(
+            AwsResource(
+                service="ecs",
+                name="cluster",
+                resource_id="cluster",
+                region="us-east-1",
+                arn="arn:aws:ecs:us-east-1:123456789012:cluster/cluster",
+            ),
+            {
+                "cmk/aws/service": "ecs",
+                "cmk/aws/name": "cluster",
+                "cmk/aws/resource_id": "cluster",
+                "cmk/aws/region": "us-east-1",
+                "cmk/aws/arn": "arn:aws:ecs:us-east-1:123456789012:cluster/cluster",
+            },
+            id="ARN with slash -> label is the exact ARN",
+        ),
+        pytest.param(
+            AwsResource(service="ec2", name="vm", resource_id="i-0", region="eu-central-1"),
+            {
+                "cmk/aws/service": "ec2",
+                "cmk/aws/name": "vm",
+                "cmk/aws/resource_id": "i-0",
+                "cmk/aws/region": "eu-central-1",
+            },
+            id="no ARN -> no ARN label",
+        ),
+        pytest.param(
+            AwsResource(
+                service="lambda",
+                arn="arn:aws:lambda:eu-central-1:123456789012:function:my-function",
+            ),
+            {
+                "cmk/aws/service": "lambda",
+                "cmk/aws/arn": "arn:aws:lambda:eu-central-1:123456789012:function:my-function",
+            },
+            id="ARN without resource ID -> service and ARN labels",
+        ),
+    ],
+)
+def test_resource_labels_have_the_arn_unchanged(
+    resource: AwsResource, expected_labels: Mapping[str, str]
+) -> None:
+    assert resource.labels() == expected_labels

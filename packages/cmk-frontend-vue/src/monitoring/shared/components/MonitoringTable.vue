@@ -177,6 +177,7 @@ interface ColumnMetric {
   id: string
   min: number
   max: number
+  grow: number
   isLeftPinned: boolean
   isRightPinned: boolean
   justify: ColumnJustify
@@ -195,6 +196,7 @@ const columnMetrics = computed<ColumnMetric[]>(() =>
       id: column.id,
       min,
       max: Math.max(column.columnDef.maxSize ?? DEFAULT_COLUMN_MAX_SIZE, min),
+      grow: column.columnDef.meta?.grow ?? 1,
       isLeftPinned: column.getIsPinned() === 'left',
       isRightPinned: column.getIsPinned() === 'right',
       justify: column.columnDef.meta?.justify ?? 'left'
@@ -209,7 +211,11 @@ const totalMinWidth = computed(() =>
 const borderSpacingTotal = computed(() => (columnMetrics.value.length + 1) * TABLE_BORDER_SPACING)
 
 function distributeWidths(available: number, metrics: ColumnMetric[]): number[] {
-  const columns = metrics.map((metric) => ({ width: metric.min, max: metric.max }))
+  const columns = metrics.map((metric) => ({
+    width: metric.min,
+    max: metric.max,
+    grow: metric.grow
+  }))
   const totalMin = metrics.reduce((sum, metric) => sum + metric.min, 0)
   if (!Number.isFinite(available) || available <= totalMin) {
     return columns.map((column) => column.width)
@@ -219,10 +225,11 @@ function distributeWidths(available: number, metrics: ColumnMetric[]): number[] 
   let remaining = target - totalMin
   let growable = columns.filter((column) => column.width < column.max)
   while (remaining > 0.5 && growable.length > 0) {
-    const share = remaining / growable.length
+    const shared = remaining
+    const totalGrow = growable.reduce((sum, column) => sum + column.grow, 0)
     let cappedAny = false
     for (const column of growable) {
-      const grow = Math.min(share, column.max - column.width)
+      const grow = Math.min((shared * column.grow) / totalGrow, column.max - column.width)
       column.width += grow
       remaining -= grow
       if (column.width >= column.max) {

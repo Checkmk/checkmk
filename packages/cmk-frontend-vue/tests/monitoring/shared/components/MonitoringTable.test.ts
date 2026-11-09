@@ -832,6 +832,52 @@ describe('a column that fits its header', () => {
   })
 })
 
+describe('the width left beyond the minimums', () => {
+  // A table with n columns spends n + 1 px on border spacing.
+  async function mountSizedTable(columns: ColumnDef<Row>[], width: number): Promise<void> {
+    mountTable({ columns })
+    await nextTick()
+    deliverSize(width + columns.length + 1, 600)
+    await nextTick()
+  }
+
+  beforeEach(() => {
+    vi.stubGlobal('ResizeObserver', FakeResizeObserver)
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    FakeResizeObserver.instances = []
+  })
+
+  test('goes to the columns in proportion to how much they grow', async () => {
+    await mountSizedTable(
+      [
+        { id: 'name', header: 'Name', minSize: 100 },
+        { id: 'state', header: 'State', minSize: 100, meta: { grow: 3 } }
+      ],
+      500
+    )
+
+    expect([probedWidth('name'), probedWidth('state')]).toEqual([175, 325])
+  })
+
+  test('that a column cannot take for its maximum goes to the others', async () => {
+    await mountSizedTable(
+      [
+        { id: 'name', header: 'Name', minSize: 100, maxSize: 150, meta: { grow: 3 } },
+        { id: 'state', header: 'State', minSize: 100 },
+        { id: 'actions', header: 'Actions', minSize: 100 }
+      ],
+      600
+    )
+
+    expect([probedWidth('name'), probedWidth('state'), probedWidth('actions')]).toEqual([
+      150, 225, 225
+    ])
+  })
+})
+
 describe('pinned columns', () => {
   // Together the columns need 1200px, more than any of the widths below offer.
   const WIDE_COLUMNS: ColumnDef<Row>[] = COLUMNS.map((column) => ({ ...column, minSize: 400 }))

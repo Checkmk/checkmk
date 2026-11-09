@@ -251,7 +251,8 @@ export function useHostServicesColumns<Row extends HostServiceEntry = HostServic
       header: _t('Summary'),
       sortDescFirst: false,
       minSize: 200,
-      meta: { filter: summaryFilter }
+      // Grows faster than the service name, since extra width saves a long summary more lines.
+      meta: { filter: summaryFilter, grow: 6 }
     },
     {
       accessorKey: 'last_state_change',

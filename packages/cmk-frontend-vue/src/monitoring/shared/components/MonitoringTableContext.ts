@@ -30,6 +30,11 @@ declare module '@tanstack/vue-table' {
      * `headerHelp`.
      */
     fitHeader?: boolean
+    /**
+     * How much of the width left beyond the columns' minimums the column takes, relative to the
+     * other columns: one with 3 grows three times as fast as one with the default 1. Positive.
+     */
+    grow?: number
     /** The stretch column absorbs all remaining width. Ignored by MonitoringTable. */
     stretch?: boolean
   }

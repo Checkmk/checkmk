@@ -9,6 +9,7 @@ import signal
 import sys
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
+from functools import partial
 from pathlib import Path
 
 import cmk.ccc.version_info as cmk_version_info
@@ -122,7 +123,7 @@ def main() -> int:
                     enable_profiling=profiling.enable,
                     log_to_file=enable_file_logging,
                     write_profile=_write_profile,
-                    page=write_paged,
+                    page=partial(write_paged, environ=os.environ),
                     write=write_stdout,
                     logger=configure_logging(),
                 ),

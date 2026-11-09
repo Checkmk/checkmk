@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
 import shlex
 import signal
 import subprocess
@@ -41,7 +40,7 @@ def _sigint_ignored() -> Iterator[None]:
         signal.signal(signal.SIGINT, previous)
 
 
-def write_paged(txt: str) -> None:
+def write_paged(txt: str, environ: Mapping[str, str]) -> None:
     if not sys.stdout.isatty():
         write_stdout(txt)
         return
@@ -49,11 +48,11 @@ def write_paged(txt: str) -> None:
     try:
         with suppress(BrokenPipeError), _sigint_ignored():
             subprocess.run(
-                shlex.split(os.environ.get("PAGER") or _DEFAULT_PAGER),
+                shlex.split(environ.get("PAGER") or _DEFAULT_PAGER),
                 input=txt,
                 text=True,
                 check=False,
-                env=_pager_environment(os.environ),
+                env=_pager_environment(environ),
             )
     except OSError, ValueError:
         write_stdout(txt)

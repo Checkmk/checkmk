@@ -14,7 +14,7 @@ from cmk.cli.engine.output import write_paged as cli_write_paged
 
 
 def test_a_redirected_help_is_written_to_stdout(capsys: pytest.CaptureFixture[str]) -> None:
-    cli_write_paged("the help\n")
+    cli_write_paged("the help\n", {})
 
     assert capsys.readouterr().out == "the help\n"
 
@@ -22,10 +22,9 @@ def test_a_redirected_help_is_written_to_stdout(capsys: pytest.CaptureFixture[st
 def test_a_help_on_a_terminal_is_written_through_the_pager(
     monkeypatch: pytest.MonkeyPatch, capfd: pytest.CaptureFixture[str]
 ) -> None:
-    monkeypatch.setenv("PAGER", "cat")
     monkeypatch.setattr(sys.stdout, "isatty", lambda: True)
 
-    cli_write_paged("the help\n")
+    cli_write_paged("the help\n", {"PAGER": "cat"})
 
     assert capfd.readouterr().out == "the help\n"
 
@@ -33,10 +32,9 @@ def test_a_help_on_a_terminal_is_written_through_the_pager(
 def test_a_missing_pager_falls_back_to_stdout(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    monkeypatch.setenv("PAGER", "no-such-pager-on-this-system")
     monkeypatch.setattr(sys.stdout, "isatty", lambda: True)
 
-    cli_write_paged("the help\n")
+    cli_write_paged("the help\n", {"PAGER": "no-such-pager-on-this-system"})
 
     assert capsys.readouterr().out == "the help\n"
 
@@ -54,11 +52,10 @@ def _own_sigint_handler() -> Iterator[None]:
 def test_an_interrupt_leaves_the_pager_to_clean_up_after_itself(
     monkeypatch: pytest.MonkeyPatch, capfd: pytest.CaptureFixture[str]
 ) -> None:
-    monkeypatch.setenv("PAGER", "sh -c 'kill -INT $PPID; sleep 1; cat'")
     monkeypatch.setattr(sys.stdout, "isatty", lambda: True)
     signal.signal(signal.SIGINT, signal.default_int_handler)
 
-    cli_write_paged("the help\n")
+    cli_write_paged("the help\n", {"PAGER": "sh -c 'kill -INT $PPID; sleep 1; cat'"})
 
     assert capfd.readouterr().out == "the help\n"
 

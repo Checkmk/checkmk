@@ -197,3 +197,12 @@ pkg_tar(
     tags = ["manual"],
     visibility = ["//omd:__pkg__"],
 )
+
+# Lets shellcheck see these scripts. Nothing depends on this target.
+sh_library(
+    name = "shell_scripts",
+    srcs = [
+        "skel/etc/init.d/npcd",
+        "skel/etc/init.d/pnp_gearman_worker",
+    ],
+)

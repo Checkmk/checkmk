@@ -13,19 +13,23 @@
 
 #### OMD ###
 # Check if Mod-Gearman is enabled in OMD. If not terminate.
-cd ###ROOT###
+cd "###ROOT###" || exit 1
+# shellcheck source=/dev/null
 . lib/omd/init_profile
+# shellcheck source=/dev/null
 . etc/omd/site.conf
 
-if [ "$CONFIG_MOD_GEARMAN" != "on" -o "$CONFIG_PNP4NAGIOS" != "gearman" ] ; then
+if [ "$CONFIG_MOD_GEARMAN" != "on" ] || [ "$CONFIG_PNP4NAGIOS" != "gearman" ]; then
     exit 5
 fi
 
 ### read mod_gearman port.conf ###
-if [ -r etc/mod-gearman/port.conf ] ; then
+# shellcheck disable=SC2154 # port.conf sets server
+if [ -r etc/mod-gearman/port.conf ]; then
+    # shellcheck source=/dev/null
     . etc/mod-gearman/port.conf
-    PORT=`echo $server | awk -F: {'print $2'}`
-    LISTEN=`echo $server | awk -F: {'print $1'}`
+    PORT=$(echo "$server" | awk -F: '{print $2}')
+    LISTEN=$(echo "$server" | awk -F: '{print $1}')
     if [ -z "$LISTEN" ]; then
         LISTEN=0.0.0.0
     fi
@@ -37,85 +41,86 @@ fi
 DAEMON="###ROOT###/lib/pnp4nagios/process_perfdata.pl"
 CFG="###ROOT###/etc/pnp4nagios/process_perfdata.cfg"
 NAME=pnp_gearman_worker
-PIDFILE=###ROOT###/tmp/pnp4nagios/run/${NAME}.pid
-USER=###SITE###
-USERID=`id -u`
+PIDFILE="###ROOT###/tmp/pnp4nagios/run/${NAME}.pid"
+USER="###SITE###"
+USERID=$(id -u)
 CMD="$DAEMON --pidfile=$PIDFILE --config=$CFG $GM_PORT --daemon"
 
 get_status() {
-        pid=`cat $PIDFILE 2>/dev/null`
-        if [ "$pid" != "" ]; then
-            ps -p $pid > /dev/null 2>&1
-            if [ $? -eq 0 ]; then
-                echo "$NAME is running with pid $pid"
-                return 0;
-            fi
+    pid=$(cat "$PIDFILE" 2>/dev/null)
+    if [ "$pid" != "" ]; then
+        if ps -p "$pid" >/dev/null 2>&1; then
+            echo "$NAME is running with pid $pid"
+            return 0
         fi
-        echo "$NAME is not running"
-        return 1;
+    fi
+    echo "$NAME is not running"
+    return 1
 }
 
 kill_procs() {
-    pid=`cat $PIDFILE 2>/dev/null`
-    if [ -z $pid ]; then
+    pid=$(cat "$PIDFILE" 2>/dev/null)
+    if [ -z "$pid" ]; then
         echo ". Not running."
     else
         # do a kill if still now down
-        ps -p $pid > /dev/null 2>&1 && kill $pid
-        for x in 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5; do
+        ps -p "$pid" >/dev/null 2>&1 && kill "$pid"
+        for _ in 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5; do
             echo -n "."
-            ps -p $pid > /dev/null 2>&1 && sleep 1;
+            ps -p "$pid" >/dev/null 2>&1 && sleep 1
         done
-        ps -p $pid > /dev/null 2>&1;
-        if [ $? -ne 0 ]; then
+        if ! ps -p "$pid" >/dev/null 2>&1; then
             echo "OK"
-            exit 0;
+            exit 0
         else
             echo "failed"
-            exit 1;
+            exit 1
         fi
     fi
 }
 
-__init_hook $0 $1 pre
+start_worker() {
+    if [ "$USERID" -eq 0 ]; then
+        su -s "$SHELL" - "$USER" -c "$CMD"
+    else
+        # shellcheck disable=SC2086 # CMD is the command line with its options
+        $CMD
+    fi
+}
+
+__init_hook "$0" "$1" pre
 case "$1" in
     start)
         echo -n "Starting $NAME "
-        get_status > /dev/null;
-        if [ $? = 0 ]; then
+        if get_status >/dev/null; then
             echo "failed"
             echo "$NAME already running."
-            exit 0;
+            exit 0
         fi
 
-        if [ "$USERID" -eq 0 ]; then
-            su -s $SHELL - $USER -c  "$CMD"
-        else
-            $CMD
-        fi
-        if [ $? -eq 0 ]; then
+        if start_worker; then
             echo "OK"
-            exit 0;
+            exit 0
         else
             echo "failed"
-            exit 1;
+            exit 1
         fi
         ;;
     stop)
         echo -n "Stopping $NAME"
-        pid=`cat $PIDFILE 2>/dev/null`
-        if [ -z $pid ]; then
+        pid=$(cat "$PIDFILE" 2>/dev/null)
+        if [ -z "$pid" ]; then
             echo ". Not running."
         else
             # kill if still running
-            ps -p $pid > /dev/null 2>&1 && kill_procs;
+            ps -p "$pid" >/dev/null 2>&1 && kill_procs
         fi
-		;;
+        ;;
     status)
-        get_status;
-        exit $?;
-		;;
-    restart|reload)
+        get_status
+        exit $?
+        ;;
+    restart | reload)
         $0 stop && sleep 1 && $0 start
         exit $?
         ;;
@@ -126,4 +131,3 @@ case "$1" in
 esac
 
 exit 0
-

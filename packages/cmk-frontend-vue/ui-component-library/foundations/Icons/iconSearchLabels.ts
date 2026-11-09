@@ -676,6 +676,7 @@ export const iconSearchLabels: Record<string, string[]> = {
   url: ['link', 'address', 'web', 'hyperlink'],
   usedrulesets: ['active rules', 'applied policies'],
   user: ['person', 'account', 'profile', 'avatar'],
+  'user-guide': ['book', 'documentation', 'docs', 'manual', 'handbook', 'learning guide'],
   'user-interface': ['ui', 'appearance', 'layout', 'display', 'theme'],
   'user-locked': ['account locked', 'person blocked', 'disabled'],
   users: ['people', 'group', 'team', 'accounts'],

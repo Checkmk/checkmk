@@ -741,7 +741,7 @@ mod tests {
             assert!(state.source.unwrap().available);
         }
 
-        /// CMK-39594, TC-AU-068: `last_check` records the last answer of the
+        /// CMK-39594 AC9, TC-AU-068: `last_check` records the last answer of the
         /// site, not the last attempt.
         #[test]
         fn test_a_site_that_does_not_answer_leaves_the_last_check() {

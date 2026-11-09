@@ -2118,7 +2118,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         assert!(!saved_source(&updater).unwrap().available);
     }
 
-    /// CMK-39594, TC-AU-068: an answer of the site is recorded as the last check.
+    /// CMK-39594 AC8: an answer of the site is recorded as the last check.
     #[test]
     fn test_an_answered_status_request_records_the_last_check() {
         let dir = tempfile::TempDir::new().unwrap();
@@ -2143,7 +2143,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         assert!(UpdateState::load(&updater.state_path).unwrap().last_check >= Some(before));
     }
 
-    /// CMK-39594, TC-AU-079: a 501 is no answer, so the last check stays.
+    /// CMK-39594 AC8: a 501 is no answer, so the last check stays.
     #[test]
     fn test_a_site_without_agent_updates_is_no_answer() {
         let dir = tempfile::TempDir::new().unwrap();

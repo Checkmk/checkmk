@@ -664,7 +664,7 @@ def test_without_the_legacy_updater_the_integrated_updater_decides_the_state() -
 
 
 def test_without_the_legacy_updater_the_details_name_the_stage_of_the_integrated_updater() -> None:
-    """CMK-39594 AC8, TC-AU-096"""
+    """CMK-39594 AC10, TC-AU-102"""
     results = _update_results(_controller(CMKAgentUpdateSection()), None)
 
     assert results == [
@@ -685,7 +685,7 @@ def test_without_agent_updates_of_the_controller_the_legacy_updater_decides_the_
 
 
 def test_in_fallback_the_legacy_updater_decides_until_the_first_update_check() -> None:
-    """CMK-39594 AC2, AC8, TC-AU-094"""
+    """CMK-39594 AC2, AC10, TC-AU-100"""
     results = _update_results(_controller(CMKAgentUpdateSection()), _LEGACY_UPDATER)
 
     assert results == [
@@ -701,7 +701,7 @@ def test_in_fallback_the_legacy_updater_decides_until_the_first_update_check() -
 
 
 def test_in_fallback_the_integrated_updater_decides_after_its_first_update_check() -> None:
-    """CMK-39594 AC2, AC8, TC-AU-095"""
+    """CMK-39594 AC2, AC8, AC10, TC-AU-101"""
     results = _update_results(
         _controller(
             CMKAgentUpdateSection(last_check=_AN_HOUR_AGO, update_url="https://server:8000/site")
@@ -739,7 +739,7 @@ def test_in_fallback_the_integrated_updater_decides_after_its_first_update_check
 
 
 def test_fallback_details_name_a_missing_update_source() -> None:
-    """CMK-39594 AC8, TC-AU-094"""
+    """CMK-39594 AC10, TC-AU-100"""
     results = _update_results(_controller(CMKAgentUpdateSection(), _CONNECTION), _LEGACY_UPDATER)
 
     assert (
@@ -758,7 +758,7 @@ def test_fallback_details_name_a_missing_update_source() -> None:
 
 
 def test_fallback_details_name_the_update_source_before_the_first_update_check() -> None:
-    """CMK-39594 AC8, TC-AU-094"""
+    """CMK-39594 AC10, TC-AU-100"""
     results = _update_results(
         _controller(CMKAgentUpdateSection(update_url="https://server:8000/site"), _CONNECTION),
         _LEGACY_UPDATER,
@@ -777,7 +777,7 @@ def test_fallback_details_name_the_update_source_before_the_first_update_check()
 
 
 def test_fallback_details_show_an_error_of_the_integrated_updater_as_a_notice() -> None:
-    """CMK-39594 AC8, TC-AU-094"""
+    """CMK-39594 AC10, TC-AU-100"""
     results = _update_results(
         _controller(
             CMKAgentUpdateSection(error="Agent update status request to server/site failed"),
@@ -797,7 +797,7 @@ def test_fallback_details_show_an_error_of_the_integrated_updater_as_a_notice() 
 
 
 def test_in_fallback_a_failure_of_the_integrated_updater_determines_the_state() -> None:
-    """CMK-39594 AC2, TC-AU-095"""
+    """CMK-39594 AC2, TC-AU-101"""
     results = _update_results(
         _controller(
             CMKAgentUpdateSection(
@@ -818,7 +818,7 @@ def test_in_fallback_a_failure_of_the_integrated_updater_determines_the_state() 
 
 
 def test_in_fallback_a_multi_line_error_of_the_legacy_updater_keeps_its_details() -> None:
-    """CMK-39594 AC8, TC-AU-095"""
+    """CMK-39594 AC10, TC-AU-101"""
     results = _update_results(
         _controller(CMKAgentUpdateSection(last_check=_AN_HOUR_AGO), _CONNECTION),
         CMKAgentUpdateSection(error="503 Server Error: Service Unavailable\nRetry later"),

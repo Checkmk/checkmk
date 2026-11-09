@@ -72,7 +72,7 @@ class VersionCache:
         except ValidationError as e:
             LOGGER.warning("Discarding corrupted version cache: %(error)r", {"error": e})
             return None
-        return info if (time.time() - info.timestamp) < self.ttl else None
+        return info if 0 < (time.time() - info.timestamp) < self.ttl else None
 
     def _renew_cached_version_info(
         self, tags_url: str, commit_hash: str

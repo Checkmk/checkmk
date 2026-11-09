@@ -339,6 +339,28 @@ def test_bazel_cache_agent_version_section_reports_cache_creation_time(
 
 
 @mock.patch("cmk.plugins.bazel.lib.agent.requests.get", default_requests_mock_get)
+def test_bazel_cache_agent_refetches_version_cached_in_the_future(
+    capsys: pytest.CaptureFixture[str],
+    patched_environment: None,  # noqa: ARG001
+) -> None:
+    ts_from_the_future = time.time() + 3600
+    Storage("bazel_cache", "bazel-cache.tld").write(
+        VersionCache.VERSION_CACHE_KEY,
+        BazelVersionInfo(
+            timestamp=ts_from_the_future,
+            current="9.9.9",
+            latest=BazelVersion(major=None, minor=None, patch=None),
+        ).model_dump_json(),
+    )
+
+    agent_bazel_cache_main(args=parse_arguments(["--host", "bazel-cache.tld"]))
+
+    output = capsys.readouterr().out.rstrip().split("\n")
+    data = json.loads(output[_version_section_index(output) + 1])
+    assert data["current"] == "2.5.0"
+
+
+@mock.patch("cmk.plugins.bazel.lib.agent.requests.get", default_requests_mock_get)
 def test_bazel_cache_agent_version_section_without_cache_has_no_cached_marker(
     capsys: pytest.CaptureFixture[str],
     patched_environment: None,  # noqa: ARG001

@@ -4,13 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import argparse
+from collections import defaultdict
 from collections.abc import Mapping, Sequence
+from http import HTTPStatus
 from pathlib import Path
 from typing import override
 from unittest.mock import MagicMock, patch
 
 import pytest
+import requests
 
+from cmk.password_store.v1 import Obfuscator, Secret
 from cmk.plugins.vsphere.special_agent.agent_vsphere import (
     convert_hostname,
     ESXConnection,
@@ -22,8 +26,9 @@ from cmk.plugins.vsphere.special_agent.agent_vsphere import (
     get_hostsystem_power_states,
     get_section_snapshot_summary,
     get_vm_power_states,
+    SoapTemplates,
 )
-from cmk.server_side_programs.v1 import HostnameValidationAdapter, Storage
+from cmk.server_side_programs.v1 import HostnameValidationAdapter, ObfuscatedStorage, Storage
 
 
 def _build_id(lun_id: str) -> str:
@@ -134,21 +139,64 @@ _STORE_AGENT = "agent_vsphere"
 _STORE_HOST = "vcenter.example.com"
 
 
+def _stored_bytes(tmp_path: Path) -> bytes:
+    """Everything the agent stored, whatever the key and format."""
+    return b"".join(f.read_bytes() for f in (tmp_path / "storage").rglob("*") if f.is_file())
+
+
+class FakeLoginSession(ESXSession):
+    """Answers every SOAP request with a successful login."""
+
+    def __init__(self) -> None:
+        super().__init__(_STORE_HOST, 443, cert_check=False)
+        self.requests = 0
+
+    @override
+    def postsoap(self, request: str) -> requests.Response:
+        self.requests += 1
+        response = requests.Response()
+        response.status_code = HTTPStatus.OK
+        response.headers["set-cookie"] = "vmware_soap_session=secret-session"
+        return response
+
+
 class StoreBackedConnection(ESXConnection):
-    """Connection wired to a real Storage, without performing any vCenter I/O."""
+    """Connection wired to real storages, without performing any vCenter I/O."""
 
     def __init__(self) -> None:
         self._store = Storage(_STORE_AGENT, _STORE_HOST)
+        self._secrets = ObfuscatedStorage(_STORE_AGENT, _STORE_HOST, Obfuscator())
         self._perf_samples = None
+        self._session = self.session = FakeLoginSession()
+        self._soap_templates = SoapTemplates(defaultdict(str))
 
     def read_stored_float(self, key: str, default: float) -> float:
         return self._read_stored_float(key, default)
 
 
-class TestStoreBackedReads:
+class TestStoreBackedConnection:
     @pytest.fixture(autouse=True)  # ruff: ignore[pytest-fixture-autouse]
     def patch_env(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-        monkeypatch.setenv("SERVER_SIDE_PROGRAM_STORAGE_PATH", str(tmp_path))
+        monkeypatch.setenv("SERVER_SIDE_PROGRAM_STORAGE_PATH", str(tmp_path / "storage"))
+        key_file = tmp_path / "password_store.secret"
+        key_file.write_bytes(b"a" * 32)
+        monkeypatch.setenv("PASSWORD_STORE_SECRET_FILE", str(key_file))
+
+    def test_the_login_cookie_is_reused_by_the_next_run(self) -> None:
+        StoreBackedConnection().login("monitoring", Secret("top-secret"))
+        connection = StoreBackedConnection()
+
+        connection.login("monitoring", Secret("top-secret"))
+
+        assert connection.session.requests == 0
+        assert connection.session.headers["Cookie"] == "vmware_soap_session=secret-session"
+
+    def test_the_login_cookie_is_not_stored_in_plain_text(self, tmp_path: Path) -> None:
+        StoreBackedConnection().login("monitoring", Secret("top-secret"))
+
+        stored = _stored_bytes(tmp_path)
+        assert stored
+        assert b"secret-session" not in stored
 
     def test_read_stored_float_falls_back_on_empty_content(self) -> None:
         Storage(_STORE_AGENT, _STORE_HOST).write("timer", "")

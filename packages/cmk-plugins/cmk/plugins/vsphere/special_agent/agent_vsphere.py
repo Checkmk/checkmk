@@ -31,11 +31,17 @@ import urllib3
 from defusedxml.minidom import parseString
 
 from cmk.password_store.v1 import (
+    Obfuscator,
     parser_add_secret_option,
     resolve_secret_option,
     Secret,
 )
-from cmk.server_side_programs.v1 import HostnameValidationAdapter, Storage, vcrtrace
+from cmk.server_side_programs.v1 import (
+    HostnameValidationAdapter,
+    ObfuscatedStorage,
+    Storage,
+    vcrtrace,
+)
 
 #   .--defines-------------------------------------------------------------.
 #   |                      _       __ _                                    |
@@ -1137,6 +1143,7 @@ class ESXConnection:
         super().__init__()
 
         self._store = Storage(AGENT_NAME, address)
+        self._secrets = ObfuscatedStorage(AGENT_NAME, address, Obfuscator())
         self._perf_samples: None | int = None
 
         self._session = ESXSession(
@@ -1243,21 +1250,21 @@ class ESXConnection:
         if not (server_cookie := response.headers.get("set-cookie")):
             return
 
-        self._store.write("cookie.value", server_cookie)
+        self._secrets.write("cookie.value", Secret(server_cookie))
         self._store.write("cookie.time", str(time.time()))
         self._session.headers["Cookie"] = server_cookie
 
     def _get_valid_stored_cookie(self) -> str | None:
-        if (cookie := self._store.read("cookie.value", None)) is None:
+        if (cookie := self._secrets.read("cookie.value", None)) is None:
             return None
 
         if (cookie_time := self._read_stored_float("cookie.time", None)) is None:
             return None
 
-        return cookie if time.time() - cookie_time < COOKIE_MAX_AGE else None
+        return cookie.reveal() if time.time() - cookie_time < COOKIE_MAX_AGE else None
 
     def delete_server_cookie(self) -> None:
-        self._store.unset("cookie.value")
+        self._secrets.unset("cookie.value")
         self._store.unset("cookie.time")
 
 

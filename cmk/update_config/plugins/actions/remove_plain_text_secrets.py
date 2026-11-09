@@ -13,7 +13,10 @@ from cmk.update_config.registry import update_action_registry
 
 # (program identifier, key) of the secrets that server-side programs kept in a
 # `Storage` up to Checkmk 2.5. They are now kept in an `ObfuscatedStorage`.
-_PLAIN_TEXT_SECRETS: Final = (("veeam", "token"),)
+_PLAIN_TEXT_SECRETS: Final = (
+    ("veeam", "token"),
+    ("vsphere", "cookie.value"),
+)
 
 
 class RemovePlainTextSecrets(UpdateAction):

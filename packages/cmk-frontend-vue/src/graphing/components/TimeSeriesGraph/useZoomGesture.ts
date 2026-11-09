@@ -12,7 +12,7 @@ import {
   clampSpan,
   selectionRect
 } from './interaction/selection'
-import type { TimeRange, ZoomMode, ZoomPayload } from './types'
+import type { PendingTimeRange, TimeRange, ZoomMode, ZoomPayload } from './types'
 
 // A drag shorter than this on the active axis is treated as a click, not a zoom.
 const DRAG_THRESHOLD_PX = 4
@@ -28,6 +28,7 @@ export interface ZoomGestureOptions {
   minValueRange: () => number | null
   valueRange: () => { min: number; max: number } | null
   atTimeFloor: () => boolean
+  pendingTimeRange: () => PendingTimeRange | null
   // Plot dimensions in CSS px.
   plotWidth: Ref<number>
   plotHeight: Ref<number>
@@ -67,16 +68,32 @@ export function useZoomGesture(options: ZoomGestureOptions) {
     }
     return options.zoomMode() === 'value' ? 'ns-resize' : 'ew-resize'
   })
+  const plotBox = computed(() => ({
+    left: 0,
+    top: 0,
+    width: options.plotWidth.value,
+    height: options.plotHeight.value
+  }))
+
   const selectionBand = computed(() =>
-    selection.value
-      ? selectionRect(options.zoomMode(), selection.value, {
-          left: 0,
-          top: 0,
-          width: options.plotWidth.value,
-          height: options.plotHeight.value
-        })
-      : null
+    selection.value ? selectionRect(options.zoomMode(), selection.value, plotBox.value) : null
   )
+
+  const pendingBand = computed(() => {
+    const pending = options.pendingTimeRange()
+    const view = options.timeRange()
+    const viewSpan = view.end - view.start
+    if (pending?.kind !== 'zoom' || viewSpan <= 0) {
+      return null
+    }
+    const toPlotX = (time: number) => ((time - view.start) / viewSpan) * options.plotWidth.value
+    const band = selectionRect(
+      'time',
+      { x0: toPlotX(pending.timeRange.start), y0: 0, x1: toPlotX(pending.timeRange.end), y1: 0 },
+      plotBox.value
+    )
+    return band.width > 0 ? band : null
+  })
 
   // Kept apart from `selection`: a press at the zoom floor arms no band but still has to
   // resolve to a click on release.
@@ -173,5 +190,5 @@ export function useZoomGesture(options: ZoomGestureOptions) {
     window.removeEventListener('mouseup', onPlotDragEnd)
   })
 
-  return { selectionBand, plotCursor, onPlotMouseDown }
+  return { selectionBand, pendingBand, plotCursor, onPlotMouseDown }
 }

@@ -6,6 +6,7 @@
 import { type Ref, computed, ref, watch } from 'vue'
 
 import type {
+  PendingTimeRange,
   PinPayload,
   TimeRange,
   ValueRange,
@@ -71,13 +72,23 @@ export function useGraphInteraction(
   // requested.
   const zoomSession: Ref<{ resetTarget: RequestedTimeRange } | null> = ref(null)
   const sessionSettled = ref(false)
+  const pendingKind = ref<PendingTimeRange['kind'] | null>(null)
   let peakZoomEndsWhenSettled = false
 
   const inspectionActive = computed(
     () => peakZoomValueRange.value !== null || (zoomSession.value !== null && sessionSettled.value)
   )
 
+  const pendingTimeRange = computed<PendingTimeRange | null>(() => {
+    const requested = getRequestedTimeRange?.()
+    if (pendingKind.value === null || requested === undefined || !awaitingData.value) {
+      return null
+    }
+    return { timeRange: requested, kind: pendingKind.value }
+  })
+
   function onSettled(): void {
+    pendingKind.value = null
     sessionSettled.value = zoomSession.value !== null
     if (peakZoomEndsWhenSettled) {
       peakZoomEndsWhenSettled = false
@@ -101,6 +112,7 @@ export function useGraphInteraction(
   function endSession(): void {
     zoomSession.value = null
     sessionSettled.value = false
+    pendingKind.value = null
   }
 
   // The host reports each change to the requested time range along with who made it, so this
@@ -118,7 +130,11 @@ export function useGraphInteraction(
     endSession()
   }
 
-  function commitTimeRange(range: RequestedTimeRange, kind: TimeRangeCommitKind): void {
+  function commitTimeRange(
+    range: RequestedTimeRange,
+    kind: TimeRangeCommitKind,
+    markedAs: PendingTimeRange['kind'] | null
+  ): void {
     // Canvas drag inverts pixels through a continuous scale, so the raw payload is usually
     // fractional, while the shared requestedTimeRange (and the backend) deal only with integers.
     const rounded: RequestedTimeRange = {
@@ -133,6 +149,7 @@ export function useGraphInteraction(
     ) {
       return
     }
+    pendingKind.value = markedAs
     if (zoomSession.value === null) {
       const baseline = getBaseline()
       if (baseline !== undefined) {
@@ -160,11 +177,19 @@ export function useGraphInteraction(
       peakZoomValueRange.value = payload.valueRange
       return
     }
-    commitTimeRange(payload.timeRange, 'changed_timerange_span')
+    commitTimeRange(payload.timeRange, 'changed_timerange_span', 'zoom')
   }
 
   function onPan(payload: { timeRange: TimeRange }): void {
-    commitTimeRange(pannedTimeRange(payload.timeRange), 'translated_timerange')
+    commitTimeRange(
+      pannedTimeRange(payload.timeRange),
+      'translated_timerange',
+      pendingKind.value === 'zoom' ? 'zoom' : 'pan'
+    )
+  }
+
+  function onBrush(range: RequestedTimeRange, kind: TimeRangeCommitKind): void {
+    commitTimeRange(range, kind, null)
   }
 
   function abandonInspection(): void {
@@ -192,12 +217,13 @@ export function useGraphInteraction(
 
   return {
     viewValueRange: computed(() => peakZoomValueRange.value),
+    pendingTimeRange,
     inspectionActive,
     zoomMode,
     pinTime,
     onZoom,
     onPan,
-    onBrush: commitTimeRange,
+    onBrush,
     onReset,
     onRangeChange,
     abandonInspection,

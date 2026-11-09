@@ -46,6 +46,7 @@ function mountGesture(mode: ZoomMode, options: GestureOptions = {}) {
         minValueRange: () => options.minValueRange ?? null,
         valueRange: () => options.valueRange ?? null,
         atTimeFloor: () => options.atTimeFloor ?? false,
+        pendingTimeRange: () => null,
         plotWidth: ref(200),
         plotHeight: ref(100),
         xScale,

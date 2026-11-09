@@ -56,6 +56,11 @@ export interface PinPayload {
   time: number
 }
 
+export interface PendingTimeRange {
+  timeRange: RequestedTimeRange
+  kind: 'zoom' | 'pan'
+}
+
 export interface TimeSeriesGraphProps extends Pick<CmkTimeSeriesGraph, 'size' | 'options'> {
   view_time_range: TimeRange
   data_time_range?: TimeRange | undefined
@@ -82,4 +87,5 @@ export interface TimeSeriesGraphProps extends Pick<CmkTimeSeriesGraph, 'size' | 
   pinEnabled?: boolean
   highlightedMetricNames: string[]
   pinTime?: number | null
+  pendingTimeRange?: PendingTimeRange | null
 }

@@ -193,6 +193,7 @@ const baselineTimeRange = computed<TimeRange | undefined>(() => {
 
 const {
   viewValueRange,
+  pendingTimeRange,
   inspectionActive,
   pinTime,
   onZoom,
@@ -367,6 +368,7 @@ onBeforeUnmount(() => {
         :zoom-enabled="true"
         :pin-enabled="showPin"
         :pin-time="pinTime"
+        :pending-time-range="pendingTimeRange"
         :consolidation-function="DEFAULT_CONSOLIDATION_FN"
         :show-time-axis="showTimeAxis"
         :show-value-axis="showValueAxis"

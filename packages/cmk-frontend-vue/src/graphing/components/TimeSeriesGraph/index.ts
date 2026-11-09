@@ -16,6 +16,7 @@ export type {
   Metric,
   MetricMetadata,
   MetricRender,
+  PendingTimeRange,
   PinPayload,
   RequestedTimeRange,
   ShadedRegion,

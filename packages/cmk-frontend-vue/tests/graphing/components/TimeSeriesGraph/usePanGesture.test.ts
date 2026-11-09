@@ -47,6 +47,7 @@ function mountPan(options: { panEnabled?: boolean; timeRange?: TimeRange } = {})
       api = usePanGesture({
         panEnabled: () => options.panEnabled ?? true,
         timeRange: () => timeRange,
+        pendingTimeRange: () => null,
         measureLabel: (text: string) => text.length * 6,
         plotWidth: ref(PLOT_WIDTH),
         xScale,
@@ -74,6 +75,7 @@ function mountBothGestures() {
       pan = usePanGesture({
         panEnabled: () => true,
         timeRange: () => TIME_RANGE,
+        pendingTimeRange: () => null,
         measureLabel: (text: string) => text.length * 6,
         plotWidth: ref(PLOT_WIDTH),
         xScale,
@@ -88,6 +90,7 @@ function mountBothGestures() {
         minValueRange: () => null,
         valueRange: () => null,
         atTimeFloor: () => false,
+        pendingTimeRange: () => null,
         plotWidth: ref(PLOT_WIDTH),
         plotHeight: ref(PLOT_HEIGHT),
         xScale,

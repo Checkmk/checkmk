@@ -14,19 +14,17 @@ import {
 } from '@/graphing/components/TimeSeriesGraph/axes/timeAxis'
 
 import { navigableBounds, withinNavigableTime } from './interaction/timeBounds'
-import type { TimeRange } from './types'
+import type { PendingTimeRange, RequestedTimeRange, TimeRange } from './types'
 
 // A drag shorter than this is treated as a click, not a pan (mirrors the zoom threshold).
 const DRAG_THRESHOLD_PX = 4
-
-// The ruler extends one span either side of the visible window so labels slide in during a drag.
-const PAN_RULER_SPANS = 3
 
 const STEP_FRACTION_OF_SPAN = 0.25
 
 export interface PanGestureOptions {
   panEnabled: () => boolean
   timeRange: () => TimeRange
+  pendingTimeRange: () => PendingTimeRange | null
   measureLabel: MeasureLabel
   plotWidth: Ref<number>
   // The same instance the renderer draws with, so ruler ticks stay aligned with the plot.
@@ -37,12 +35,52 @@ export interface PanGestureOptions {
 }
 
 export function usePanGesture(options: PanGestureOptions) {
-  const panDx = ref(0)
-  const panActive = ref(false)
-  const panRulerTicks = ref<TimeAxisTick[]>([])
-  let panAnchorX = 0
-  const panCursor = computed(() => (panActive.value ? 'grabbing' : 'ew-resize'))
+  const dragging = ref(false)
+  const dragDx = ref(0)
+  const dragRulerTicks = ref<TimeAxisTick[]>([])
+  let pressX = 0
+  let rulerDxAtPress = 0
   const panClipId = `pan-clip-${useId()}`
+
+  const pendingPanTimeRange = computed(() => {
+    const pending = options.pendingTimeRange()
+    return pending?.kind === 'pan' ? pending.timeRange : null
+  })
+
+  function rulerDxTo(target: RequestedTimeRange): number {
+    const view = options.timeRange()
+    const viewSpan = view.end - view.start
+    return viewSpan > 0 ? -((target.start - view.start) / viewSpan) * options.plotWidth.value : 0
+  }
+
+  function rulerTicksAround(window: RequestedTimeRange): TimeAxisTick[] {
+    const view = options.timeRange()
+    const viewSpan = view.end - view.start
+    if (viewSpan <= 0) {
+      return []
+    }
+    const start = window.start - viewSpan
+    const end = window.end + viewSpan
+    const width = ((end - start) / viewSpan) * options.plotWidth.value
+    return computeTimeAxis(start, end, width, options.measureLabel)
+  }
+
+  const panActive = computed(() => dragging.value || pendingPanTimeRange.value !== null)
+  const panDx = computed(() => {
+    if (dragging.value) {
+      return rulerDxAtPress + dragDx.value
+    }
+    const pending = pendingPanTimeRange.value
+    return pending === null ? 0 : rulerDxTo(pending)
+  })
+  const panRulerTicks = computed(() => {
+    if (dragging.value) {
+      return dragRulerTicks.value
+    }
+    const pending = pendingPanTimeRange.value
+    return pending === null ? [] : rulerTicksAround(pending)
+  })
+  const panCursor = computed(() => (dragging.value ? 'grabbing' : 'ew-resize'))
 
   function panTickX(tick: TimeAxisTick): number {
     return options.xScale(new Date(tick.position * 1000))
@@ -57,17 +95,12 @@ export function usePanGesture(options: PanGestureOptions) {
       return
     }
     ev.preventDefault()
-    const range = options.timeRange()
-    const span = range.end - range.start
-    panRulerTicks.value = computeTimeAxis(
-      range.start - span,
-      range.end + span,
-      options.plotWidth.value * PAN_RULER_SPANS,
-      options.measureLabel
-    )
-    panAnchorX = point.x
-    panDx.value = 0
-    panActive.value = true
+    const pending = pendingPanTimeRange.value
+    rulerDxAtPress = pending === null ? 0 : rulerDxTo(pending)
+    dragRulerTicks.value = rulerTicksAround(pending ?? options.timeRange())
+    pressX = point.x
+    dragDx.value = 0
+    dragging.value = true
     options.onStart()
     window.addEventListener('mousemove', onPanDragMove)
     window.addEventListener('mouseup', onPanDragEnd)
@@ -78,16 +111,17 @@ export function usePanGesture(options: PanGestureOptions) {
     if (!point) {
       return
     }
-    panDx.value = point.x - panAnchorX
+    dragDx.value = point.x - pressX
   }
 
+  // Commits only this drag's own travel: the host adds it to the window still on its way.
   function onPanDragEnd(): void {
     window.removeEventListener('mousemove', onPanDragMove)
     window.removeEventListener('mouseup', onPanDragEnd)
-    const dx = panDx.value
-    panActive.value = false
-    panDx.value = 0
-    panRulerTicks.value = []
+    const dx = dragDx.value
+    dragging.value = false
+    dragDx.value = 0
+    dragRulerTicks.value = []
     if (Math.abs(dx) < DRAG_THRESHOLD_PX) {
       return
     }

@@ -67,6 +67,7 @@ const headerTimeRange = computed<TimeRange | undefined>(() =>
 
 const {
   viewValueRange,
+  pendingTimeRange,
   inspectionActive,
   zoomMode,
   pinTime,
@@ -279,6 +280,7 @@ const legendAlignedWithPlot = computed(() =>
             }"
             :highlighted-metric-names="highlightedMetricNames"
             :pin-time="pinTime"
+            :pending-time-range="pendingTimeRange"
             @zoom="onZoomIntent"
             @pan="onPanIntent"
             @reset="onReset"

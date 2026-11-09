@@ -231,8 +231,11 @@ const hoverAtPin = computed(
     Math.round(hoverState.value.snapX) === Math.round(pinX.value)
 )
 
+const pendingTimeRange = () => props.pendingTimeRange ?? null
+
 const {
   selectionBand,
+  pendingBand,
   plotCursor,
   onPlotMouseDown: startZoomSelection
 } = useZoomGesture({
@@ -242,6 +245,7 @@ const {
   minValueRange: () => props.minValueRange,
   valueRange: () => props.valueRange,
   atTimeFloor: () => props.atMinTimeZoom === true,
+  pendingTimeRange,
   plotWidth,
   plotHeight,
   xScale,
@@ -251,6 +255,8 @@ const {
   onZoomRefused: showMaxZoomHint,
   onPlotClick: setPinAtCursor
 })
+
+const zoomBand = computed(() => selectionBand.value ?? pendingBand.value)
 
 const {
   panActive,
@@ -264,6 +270,7 @@ const {
 } = usePanGesture({
   panEnabled: () => panAffordancesVisible.value,
   timeRange: () => props.view_time_range,
+  pendingTimeRange,
   measureLabel,
   plotWidth,
   xScale,
@@ -634,7 +641,7 @@ defineExpose({ showMaxZoomHint })
       />
       <g ref="axesContainer" :transform="`translate(${marginLeft},${plotTop})`" />
       <!-- Ruler-scrub overlay (pan preview): ticks/labels that slide with the cursor, clipped
-           to the plot width. Only mounted while dragging. -->
+           to the plot width. -->
       <g v-if="panActive" :clip-path="`url(#${panClipId})`">
         <g :transform="`translate(${marginLeft + panDx},${plotTop})`">
           <template v-for="(tick, index) in panRulerTicks" :key="index">
@@ -686,13 +693,13 @@ defineExpose({ showMaxZoomHint })
       :style="{ left: `${marginLeft}px`, top: `${plotTop}px` }"
     />
     <div
-      v-if="selectionBand"
+      v-if="zoomBand"
       class="graphing-time-series-graph__zoom-band"
       :style="{
-        left: `${marginLeft + selectionBand.x}px`,
-        top: `${plotTop + selectionBand.y}px`,
-        width: `${selectionBand.width}px`,
-        height: `${selectionBand.height}px`
+        left: `${marginLeft + zoomBand.x}px`,
+        top: `${plotTop + zoomBand.y}px`,
+        width: `${zoomBand.width}px`,
+        height: `${zoomBand.height}px`
       }"
     />
     <!-- Ahead of the pan steps in tab order, as it sits above them. -->

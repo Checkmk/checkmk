@@ -2901,6 +2901,33 @@ class AlertsAPI(BaseAPI):
             )
         return parsed
 
+    def update(
+        self,
+        configuration_name: str,
+        service_match: Mapping[str, object],
+        thresholds: Mapping[str, object],
+        conditions: Mapping[str, object] | None = None,
+        etag: str = "*",
+    ) -> dict[str, Any]:
+        """Replace what the alert watches; its alert name cannot be changed."""
+        body: dict[str, object] = {"service_match": service_match, "thresholds": thresholds}
+        if conditions is not None:
+            body["conditions"] = conditions
+        response = self.session.put(
+            f"objects/telemetry_alert/{configuration_name}",
+            api_version=APIVersion.UNSTABLE,
+            headers={"If-Match": etag},
+            json=body,
+        )
+        if response.status_code != HTTPStatus.OK:
+            raise UnexpectedResponse.from_response(response)
+        parsed = response.json()
+        if not isinstance(parsed, dict):
+            raise UnexpectedResponse(
+                response.status_code, f"expected a JSON object, got {parsed!r}"
+            )
+        return parsed
+
     def get_all(self) -> list[dict[str, Any]]:
         """The readable alerts; an alert whose configuration cannot be read is left out."""
         response = self.session.get(

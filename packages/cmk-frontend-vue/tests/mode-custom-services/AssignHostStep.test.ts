@@ -26,6 +26,20 @@ const HOSTS: Array<[string, string]> = [
 ]
 
 const TEMPLATE_ATTRIBUTES_URL = `${API_BASE}/domain-types/custom_service/actions/template_attributes/invoke`
+const OPENTELEMETRY_DATA_URL = `${API_BASE}/domain-types/custom_service/actions/opentelemetry_data/invoke`
+
+function openTelemetryDataHandler(state: 'enabled' | 'to_enable') {
+  return http.post(OPENTELEMETRY_DATA_URL, async ({ request }) => {
+    const { host_names: hostNames } = (await request.json()) as { host_names: string[] }
+    return HttpResponse.json({
+      hosts: hostNames.map((hostName) => ({
+        host_name: hostName,
+        opentelemetry_data: state,
+        dcd_connection: null
+      }))
+    })
+  })
+}
 
 let templateAttributesRequest: unknown = null
 
@@ -45,7 +59,8 @@ const server = useMswServer(
       ],
       truncated: false
     })
-  })
+  }),
+  openTelemetryDataHandler('enabled')
 )
 
 afterEach(() => {
@@ -276,4 +291,37 @@ test('summarizes the services on the hosts the template matches below the tabs',
   expect(targetHosts).toHaveTextContent('Target hosts: pod-cart, pod-search')
   expect(screen.getByText(/Service:/)).toHaveTextContent('Service: HTTP duration + all attributes')
   expect(screen.getByRole('tabpanel').contains(targetHosts)).toBe(false)
+})
+
+test('tells that saving enables OpenTelemetry data on the chosen host', async () => {
+  server.use(openTelemetryDataHandler('to_enable'))
+
+  renderStep('HTTP duration', 'web01')
+
+  expect(
+    await screen.findByText('OpenTelemetry data will be enabled on web01 when you save.')
+  ).toBeTruthy()
+})
+
+test('tells that saving enables OpenTelemetry data on the hosts the template matches', async () => {
+  server.use(openTelemetryDataHandler('to_enable'))
+
+  renderStep('HTTP duration', null, {
+    hostNameTemplate: 'pod-$RESOURCE_ATTR.k8s.pod.name$',
+    templatePreview: {
+      status: 'resolved',
+      resolution: {
+        matching_hosts: ['pod-cart', 'pod-search'],
+        unmatched_host_names: [],
+        hidden_match_count: 0,
+        truncated: false
+      }
+    }
+  })
+
+  expect(
+    await screen.findByText(
+      'OpenTelemetry data will be enabled on pod-cart, pod-search when you save.'
+    )
+  ).toBeTruthy()
 })

@@ -20,7 +20,9 @@ import { computed, ref, watch } from 'vue'
 
 import { fetchTemplateAttributes } from '../api'
 import { type TemplateAttributes, appendedAttributeNames, templateMacro } from '../definition'
+import { useOpenTelemetryData } from '../openTelemetryData'
 import type { TemplatePreview } from '../templatePreview'
+import OpenTelemetryDataNotice from './OpenTelemetryDataNotice.vue'
 import TemplateHostMatches from './TemplateHostMatches.vue'
 
 const { _t } = usei18n()
@@ -114,6 +116,13 @@ const hostAutocompleter: Autocompleter = {
   fetch_method: 'rest_autocomplete',
   data: { ident: 'otel_custom_service_host', params: {} }
 }
+
+const openTelemetryData = useOpenTelemetryData(() => {
+  if (assignmentMode.value === 'manual') {
+    return hostName.value ? [hostName.value] : []
+  }
+  return templatePreview.status === 'resolved' ? templatePreview.resolution.matching_hosts : []
+})
 
 const hostFieldId = useId()
 const serviceNameHelpId = useId()
@@ -266,6 +275,7 @@ const templateFieldId = useId()
         <span
           >{{ _t('Target host:') }} <strong>{{ hostName }}</strong></span
         >
+        <OpenTelemetryDataNotice :data="openTelemetryData" />
       </div>
     </div>
     <div v-else class="mode-custom-services-assign-host-step__preview">
@@ -276,6 +286,7 @@ const templateFieldId = useId()
         :preview="templatePreview"
         :service-name="serviceName"
         :appended-attributes="appendedAttributes"
+        :opentelemetry-data="openTelemetryData"
       />
     </div>
   </div>

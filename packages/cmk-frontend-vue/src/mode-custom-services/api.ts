@@ -12,6 +12,7 @@ import type {
   CustomServiceUpdate,
   HostNameTemplateResolution,
   HostNameTemplateResolutionRequest,
+  HostOpenTelemetryData,
   TemplateAttributes,
   TemplateAttributesRequest
 } from './definition'
@@ -164,4 +165,15 @@ export async function resolveHostNameTemplate(
     }
     throw error
   }
+}
+
+export async function fetchOpenTelemetryData(
+  hostNames: string[]
+): Promise<HostOpenTelemetryData[]> {
+  return unwrap(
+    await client.POST('/domain-types/custom_service/actions/opentelemetry_data/invoke', {
+      params: { header: { 'Content-Type': 'application/json' } },
+      body: { host_names: hostNames }
+    })
+  ).hosts
 }

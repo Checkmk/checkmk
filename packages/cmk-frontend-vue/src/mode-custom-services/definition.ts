@@ -40,6 +40,11 @@ export type HostNameTemplateResolutionRequest = NonNullable<
 export type HostNameTemplateResolution =
   paths[ResolveHostNameTemplatePath]['post']['responses'][200]['content']['application/json']
 
+type OpenTelemetryDataPath = '/domain-types/custom_service/actions/opentelemetry_data/invoke'
+
+export type HostOpenTelemetryData =
+  paths[OpenTelemetryDataPath]['post']['responses'][200]['content']['application/json']['hosts'][number]
+
 const MACRO_PREFIXES = {
   resource: 'RESOURCE_ATTR',
   scope: 'SCOPE_ATTR',

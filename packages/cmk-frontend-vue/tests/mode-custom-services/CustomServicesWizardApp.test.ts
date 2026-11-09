@@ -24,6 +24,7 @@ const METRIC_NAMES_URL = `${API_BASE}/domain-types/telemetry_metrics/actions/nam
 const GRAPH_DATA_URL = `${API_BASE}/domain-types/custom_graph/actions/fetch_data/invoke`
 const TEMPLATE_ATTRIBUTES_URL = `${API_BASE}/domain-types/custom_service/actions/template_attributes/invoke`
 const RESOLVE_URL = `${API_BASE}/domain-types/custom_service/actions/resolve_host_name_template/invoke`
+const OPENTELEMETRY_DATA_URL = `${API_BASE}/domain-types/custom_service/actions/opentelemetry_data/invoke`
 
 const STORED_EXTENSIONS = {
   host_assignment: { mode: 'explicit_host', host_name: 'web01' },
@@ -115,7 +116,8 @@ const server = useMswServer(
       errors: [],
       internal: '{"graphs":[]}'
     })
-  )
+  ),
+  http.post(OPENTELEMETRY_DATA_URL, () => HttpResponse.json({ hosts: [] }))
 )
 
 beforeEach(() => {

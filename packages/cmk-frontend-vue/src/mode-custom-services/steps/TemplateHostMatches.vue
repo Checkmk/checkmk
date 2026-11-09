@@ -7,14 +7,22 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 
+import type { OpenTelemetryData } from '../openTelemetryData'
 import type { TemplatePreview } from '../templatePreview'
+import OpenTelemetryDataNotice from './OpenTelemetryDataNotice.vue'
 
 const { _t, _tn } = usei18n()
 
-const { preview, serviceName, appendedAttributes } = defineProps<{
+const {
+  preview,
+  serviceName,
+  appendedAttributes,
+  opentelemetryData = { status: 'idle' }
+} = defineProps<{
   preview: TemplatePreview
   serviceName: string
   appendedAttributes: string
+  opentelemetryData?: OpenTelemetryData
 }>()
 </script>
 
@@ -56,6 +64,7 @@ const { preview, serviceName, appendedAttributes } = defineProps<{
           >{{ _t('Target hosts:') }}
           <strong>{{ preview.resolution.matching_hosts.join(', ') }}</strong></span
         >
+        <OpenTelemetryDataNotice :data="opentelemetryData" />
       </template>
       <span v-if="preview.resolution.unmatched_host_names.length > 0"
         >{{ _t('Hosts that do not exist:') }}

@@ -61,11 +61,6 @@ ALERTS_QUERY = {
     "$select": "severity,message,creationTime,parameters,clusterUUID,sourceEntity",
 }
 
-# The Checkmk service timeout (60 s by default) is shared with the other data sources. A call
-# started just before the end of the budget can wait up to 15 s for the Retry-After of a 503
-# on top (see v4_client.RETRY): 40 s + 15 s = 55 s. Waiting for the rate limits, also after a
-# 429, ends with the budget.
-TIME_BUDGET = timedelta(seconds=40)
 MAX_WORKERS = 4
 
 
@@ -837,7 +832,6 @@ def agent_prism_v4_main(
         password,
         cert_check,
         timeout=timeout,
-        deadline=time.monotonic() + TIME_BUDGET.total_seconds(),
     )
     try:
         clusters = client.list_all(CLUSTERS_PATH)

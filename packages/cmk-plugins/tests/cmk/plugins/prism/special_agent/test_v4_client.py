@@ -49,7 +49,7 @@ def _vms(count: int) -> list[dict[str, str]]:
 
 def _client(
     cert_check: bool | str = True,
-    deadline: float | None = None,
+    timeout: int = 10,
     clock: FakeClock | None = None,
 ) -> PrismV4Client:
     clock = FakeClock() if clock is None else clock
@@ -58,8 +58,7 @@ def _client(
         USERNAME,
         PASSWORD,
         cert_check,
-        timeout=10,
-        deadline=clock.now + 60 if deadline is None else deadline,
+        timeout=timeout,
         now=lambda: NOW,
         rate_limits=RateLimits(clock=clock, sleep=clock.sleep),
         clock=clock,
@@ -228,7 +227,7 @@ def test_rate_limited_call_without_time_to_retry_reports_the_refusal(
     clock = FakeClock()
 
     with pytest.raises(PrismV4Error, match=f"^{VMS_PATH}: HTTP 429 ") as error:
-        _client(deadline=clock.now + 3, clock=clock).get(VMS_PATH)
+        _client(timeout=3, clock=clock).get(VMS_PATH)
 
     assert (error.value.status, len(api.calls), clock.now) == (
         HTTPStatus.TOO_MANY_REQUESTS,
@@ -237,7 +236,7 @@ def test_rate_limited_call_without_time_to_retry_reports_the_refusal(
     )
 
 
-def test_rate_limit_that_outlasts_the_time_budget_fails_at_once(
+def test_rate_limit_that_outlasts_the_timeout_fails_at_once(
     api: responses.RequestsMock,
 ) -> None:
     api.get(
@@ -250,19 +249,15 @@ def test_rate_limit_that_outlasts_the_time_budget_fails_at_once(
         },
     )
     clock = FakeClock()
-    client = _client(deadline=clock.now + 40, clock=clock)
+    client = _client(clock=clock)
     client.get(VMS_PATH)
 
-    with pytest.raises(PrismV4Error, match="rate limit leaves no time"):
+    with pytest.raises(
+        PrismV4Error, match="rate limit would hold the call longer than the timeout"
+    ):
         client.get(VMS_PATH)
 
     assert (len(api.calls), clock.now) == (1, 100.0)
-
-
-@pytest.mark.usefixtures("api")
-def test_used_up_time_budget_raises_without_a_request() -> None:
-    with pytest.raises(PrismV4Error, match="time budget"):
-        _client(deadline=FakeClock().now - 1).get(VMS_PATH)
 
 
 def test_list_all_follows_the_next_link(api: responses.RequestsMock) -> None:
@@ -386,7 +381,6 @@ def test_client_keeps_to_the_rate_limit_a_response_reports(api: responses.Reques
         PASSWORD,
         True,
         timeout=10,
-        deadline=clock.now + 60,
         rate_limits=limits,
         clock=clock,
     )
@@ -412,7 +406,6 @@ def test_call_that_fails_unexpectedly_does_not_hold_up_the_next(
         PASSWORD,
         True,
         timeout=10,
-        deadline=clock.now + 60,
         rate_limits=limits,
         clock=clock,
     )

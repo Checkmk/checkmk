@@ -38,9 +38,9 @@ class _RetryWithout429(Retry):
     RETRY_AFTER_STATUS_CODES = Retry.RETRY_AFTER_STATUS_CODES - {HTTPStatus.TOO_MANY_REQUESTS}
 
 
-# Only status codes are retried: a timeout is not, so a call can't overrun its share of the
-# time budget. Worst case per call: its share of the remaining budget plus 3 x 5 s waiting for
-# the Retry-After of a 503. A 429 is retried by PrismV4Client._send, within the time budget.
+# Only status codes are retried, a timeout is not. Worst case per call: the timeout for each
+# attempt plus 3 x 5 s waiting for the Retry-After of a 503. A 429 is retried by
+# PrismV4Client._send.
 RETRY = _RetryWithout429(
     total=ATTEMPTS - 1,
     connect=0,
@@ -175,8 +175,8 @@ def _with_stats_timestamp(select: Sequence[str]) -> Sequence[str]:
 
 
 class PrismV4Client:
-    """Owns everything about talking to the API: session, retries, rate limits, paging and
-    the time budget. All failures are raised as PrismV4Error."""
+    """Owns everything about talking to the API: session, retries, rate limits and paging.
+    All failures are raised as PrismV4Error."""
 
     def __init__(
         self,
@@ -185,10 +185,9 @@ class PrismV4Client:
         password: str,
         cert_check: bool | str,
         timeout: int,
-        deadline: float,
         now: Callable[[], datetime] = lambda: datetime.now(UTC),
         rate_limits: RateLimits | None = None,
-        # The clock of the deadline
+        # The clock of the rate limits
         clock: Callable[[], float] = time.monotonic,
     ) -> None:
         self._session = new_session(base_url, cert_check, RETRY)
@@ -202,7 +201,6 @@ class PrismV4Client:
         self._verify = cert_check is not False
         self._base_url = base_url
         self._timeout = timeout
-        self._deadline = deadline
         self._now = now
         self._clock = clock
         self._rate_limits = RateLimits(clock=clock) if rate_limits is None else rate_limits
@@ -245,15 +243,15 @@ class PrismV4Client:
         self, url: str, params: QueryParams | None, cookies: Mapping[str, str]
     ) -> requests.Response:
         endpoint = endpoint_of(url)
-        if not self._rate_limits.acquire(endpoint, self._deadline):
-            raise PrismV4Error("the rate limit leaves no time in the budget of this agent run")
+        if not self._rate_limits.acquire(endpoint, self._clock() + self._timeout):
+            raise PrismV4Error("the rate limit would hold the call longer than the timeout")
         response = self._send_once(endpoint, url, params, cookies)
         for _ in range(ATTEMPTS - 1):
             if response.status_code != HTTPStatus.TOO_MANY_REQUESTS:
                 break
             self._rate_limits.back_off(endpoint, _retry_after(response))
-            if not self._rate_limits.acquire(endpoint, self._deadline):
-                # The refusal tells more than the time budget it would overrun
+            if not self._rate_limits.acquire(endpoint, self._clock() + self._timeout):
+                # The refusal tells more than the timeout it would overrun
                 break
             response = self._send_once(endpoint, url, params, cookies)
         return response
@@ -264,8 +262,6 @@ class PrismV4Client:
         """Send a call acquired from the rate limits"""
         response: requests.Response | None = None
         try:
-            if (remaining := self._deadline - self._clock()) <= 0:
-                raise PrismV4Error("the time budget of this agent run is used up")
             response = self._session.get(
                 url,
                 params=params,
@@ -273,8 +269,7 @@ class PrismV4Client:
                 headers={"Cookie": "; ".join(f"{k}={v}" for k, v in cookies.items())}
                 if cookies
                 else None,
-                # All attempts of a retried call share what is left of the time budget
-                timeout=min(self._timeout, remaining / ATTEMPTS),
+                timeout=self._timeout,
                 # Pass `verify` explicitly, otherwise REQUESTS_CA_BUNDLE would override it.
                 verify=self._verify,
             )

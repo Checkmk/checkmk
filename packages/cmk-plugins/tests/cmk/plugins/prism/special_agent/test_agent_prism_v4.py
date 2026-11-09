@@ -4,7 +4,6 @@
 
 import io
 import json
-import time
 from collections.abc import Callable, Mapping, Sequence
 from datetime import timedelta
 from http import HTTPStatus
@@ -303,7 +302,6 @@ def _context(
         PASSWORD,
         True,
         timeout=10,
-        deadline=time.monotonic() + 60,
     )
     return FetchContext(
         client, [], _routing(), AgentMessages() if messages is None else messages, hosts

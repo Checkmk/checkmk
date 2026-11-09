@@ -9,7 +9,6 @@ import sys
 from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from pathlib import Path
-from typing import override
 
 import cmk.ccc.version_info as cmk_version_info
 from cmk import trace
@@ -17,7 +16,7 @@ from cmk.ccc.site import get_omd_config, omd_site
 from cmk.cli.engine.arguments import RunCommand
 from cmk.cli.internal import Context as CLIContext
 from cmk.crash import (
-    ABCCrashReport,
+    BaseCrashReport,
     BaseDetails,
     CrashReportStore,
     make_crash_report_base_path,
@@ -30,32 +29,22 @@ from .run import CommandTracer, CrashReporter, enable_file_logging, run, Runtime
 tracer = trace.get_tracer()
 
 
-class CrashReport(ABCCrashReport[BaseDetails]):
-    @classmethod
-    @override
-    def type(cls) -> str:
-        return "base"
-
-    def render(self) -> str:
-        return (
-            f"{self.crash_info['exc_type']}: {self.crash_info['exc_value']} "
-            f"- please submit a crash report! (Crash-ID: {self.ident_to_text()})"
-        )
-
-
 def saving_crash_reporter(
     omd_root: Path, argv: Sequence[str], environ: Mapping[str, str]
 ) -> CrashReporter:
     def report() -> str:
-        crash = CrashReport(
+        crash = BaseCrashReport(
             crash_report_base_path=make_crash_report_base_path(omd_root),
-            crash_info=CrashReport.make_crash_info(
+            crash_info=BaseCrashReport.make_crash_info(
                 cmk_version_info.get_general_version_infos(omd_root),
                 BaseDetails(argv=list(argv), env=dict(environ)),
             ),
         )
         CrashReportStore().save(crash)
-        return crash.render()
+        return (
+            f"{crash.crash_info['exc_type']}: {crash.crash_info['exc_value']} "
+            f"- please submit a crash report! (Crash-ID: {crash.ident_to_text()})"
+        )
 
     return report
 

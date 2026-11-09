@@ -186,6 +186,13 @@ class ABCCrashReport[TDetails](abc.ABC):
         )
 
 
+class BaseCrashReport(ABCCrashReport[BaseDetails]):
+    @classmethod
+    @override
+    def type(cls) -> str:
+        return "base"
+
+
 def _follow_exception_chain(exc: BaseException | None) -> list[BaseException]:
     if exc is None:
         return []

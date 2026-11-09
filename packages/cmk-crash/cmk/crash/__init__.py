@@ -16,6 +16,7 @@ from cmk.ccc.version_info import VersionInfo
 from ._crash import (
     ABCCrashReport,
     AggregatedCrashInfo,
+    BaseCrashReport,
     BaseDetails,
     build_crash_info,
     ContactDetails,
@@ -46,6 +47,7 @@ from ._store import (
 __all__ = [
     "ABCCrashReport",
     "AggregatedCrashInfo",
+    "BaseCrashReport",
     "BaseDetails",
     "build_crash_info",
     "cleanup_crash_reports",

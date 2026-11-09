@@ -65,7 +65,7 @@ const altHint = computed(() => mainMenu.isAltHinted(props.item.shortcut))
 .mm-nav-toggle-item__li {
   width: 100%;
   height: 56px;
-  border-left: var(--dimension-2) solid transparent;
+  border-left: var(--dimension-3) solid transparent;
   font-size: var(--font-size-small);
   display: flex;
   box-sizing: border-box;

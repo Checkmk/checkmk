@@ -26,4 +26,4 @@ def test_a_core_config_command_declares_the_fake_dns_option_alone[R](
     recorded = CLIRecordedOptions()
     command.request(recorded)
 
-    assert [option.name for option in recorded.options] == ["fake-dns"]
+    assert [option.long for option in recorded.options] == ["fake-dns"]

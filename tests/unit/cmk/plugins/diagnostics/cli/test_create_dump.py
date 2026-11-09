@@ -50,7 +50,7 @@ def test_create_diagnostics_dump_declares_its_options_in_help_order() -> None:
     recorded = CLIRecordedOptions()
     cli_command_create_diagnostics_dump.request(recorded)
 
-    assert [option.name for option in recorded.options] == [
+    assert [option.long for option in recorded.options] == [
         "list",
         "all-topics",
         "plugins",

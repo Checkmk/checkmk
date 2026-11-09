@@ -33,7 +33,7 @@ def test_a_list_command_declares_its_options[R](
     recorded = CLIRecordedOptions()
     command.request(recorded)
 
-    assert [option.name for option in recorded.options] == expected
+    assert [option.long for option in recorded.options] == expected
 
 
 def test_the_list_hosts_request_is_read_from_the_command_line() -> None:

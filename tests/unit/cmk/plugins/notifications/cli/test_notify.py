@@ -66,7 +66,7 @@ def test_notify_declares_its_options_in_help_order() -> None:
     recorded = CLIRecordedOptions()
     cli_command_notify.request(recorded)
 
-    assert [option.name for option in recorded.options] == ["log-to-stdout", "keepalive"]
+    assert [option.long for option in recorded.options] == ["log-to-stdout", "keepalive"]
 
 
 def test_the_notify_request_is_read_from_the_command_line() -> None:

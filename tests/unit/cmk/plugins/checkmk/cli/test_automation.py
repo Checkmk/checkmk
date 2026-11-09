@@ -16,7 +16,6 @@ from cmk.cli.engine.arguments import RunCommand as CLIRunCommand
 from cmk.cli.engine.commands import bind as cli_bind
 from cmk.cli.engine.commands import Commands as CLICommands
 from cmk.cli.engine.discovery import make_command as cli_make_command
-from cmk.cli.engine.options import general_options as cli_general_options
 from cmk.cli.engine.readers import ParsedOptions as CLIParsedOptions
 from cmk.cli.engine.readers import RecordedOptions as CLIRecordedOptions
 from cmk.cli.internal import ExitCode as CLIExitCode
@@ -38,10 +37,7 @@ def test_the_version_of_a_subprocess_automation_reaches_the_cli() -> None:
     )
 
     parsed = cli_parse(
-        CLICommands(
-            plugins=[cli_make_command(cli_command_automation)],
-            general_options=cli_general_options(),
-        ),
+        CLICommands(plugins=[cli_make_command(cli_command_automation)]),
         argv,
     )
 
@@ -54,7 +50,7 @@ def test_automation_declares_the_version_option_alone() -> None:
     recorded = CLIRecordedOptions()
     cli_command_automation.request(recorded)
 
-    assert [option.name for option in recorded.options] == ["for-cmk-version"]
+    assert [option.long for option in recorded.options] == ["for-cmk-version"]
 
 
 def test_the_requested_version_is_read_from_the_command_line() -> None:

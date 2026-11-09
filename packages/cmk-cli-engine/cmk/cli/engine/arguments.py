@@ -9,8 +9,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
-from .commands import Commands, GetoptCommand
-from .options import GetoptOptions, HELP_OPTION
+from .commands import Commands, DiscoveredCommand
+from .options import GetoptOptions, HELP_OPTION, spellings
 
 _IMPLICIT_CHECK_ARGUMENT_LIMIT: Final = 2
 _IMPLICIT_CHECK_COMMAND: Final = "check"
@@ -18,7 +18,7 @@ _IMPLICIT_CHECK_COMMAND: Final = "check"
 
 @dataclass(frozen=True)
 class RunCommand:
-    command: GetoptCommand
+    command: DiscoveredCommand
     argument: str
     options: GetoptOptions
     arguments: Sequence[str]
@@ -50,7 +50,7 @@ def parse(commands: Commands, argv: Sequence[str]) -> RunCommand | ShowHelp | In
             f"ERROR: {error} (see `{Path(argv[0]).name} --help` for valid options)\n"
         )
 
-    if any(option in HELP_OPTION.options() for option, _argument in options):
+    if any(option in spellings(HELP_OPTION) for option, _argument in options):
         return ShowHelp(options)
 
     for option, argument in options:

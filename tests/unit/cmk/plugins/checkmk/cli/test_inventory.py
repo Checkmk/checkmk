@@ -21,7 +21,7 @@ from cmk.plugins.checkmk.cli.options import FileCacheRequest, PluginSelectionReq
 def _declared[R](command: CLICommand[R]) -> list[str]:
     recorded = CLIRecordedOptions()
     command.request(recorded)
-    return [option.name for option in recorded.options]
+    return [option.long for option in recorded.options]
 
 
 def test_inventory_declares_its_options_in_help_order() -> None:

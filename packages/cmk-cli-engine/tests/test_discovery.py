@@ -57,7 +57,7 @@ def test_make_command_records_the_options_a_command_declares() -> None:
             help="Walk",
         )
     )
-    assert command.long_getopt_specs() == ["snmpwalk", "oid=", "object=", "verbose"]
+    assert command.options == [_OID_VALUE, _VERBOSE_COUNT]
 
 
 def test_a_commands_handler_receives_its_request_parsed() -> None:

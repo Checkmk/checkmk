@@ -48,7 +48,7 @@ def test_a_maintenance_command_declares_its_options[R](
     recorded = CLIRecordedOptions()
     command.request(recorded)
 
-    assert [option.name for option in recorded.options] == expected
+    assert [option.long for option in recorded.options] == expected
 
 
 def _write_main_mk(

@@ -12,7 +12,6 @@ from cmk.cli.engine.arguments import parse as cli_parse
 from cmk.cli.engine.arguments import RunCommand as CLIRunCommand
 from cmk.cli.engine.commands import Commands as CLICommands
 from cmk.cli.engine.discovery import make_command as cli_make_command
-from cmk.cli.engine.options import general_options as cli_general_options
 from cmk.cli.engine.readers import ParsedOptions as CLIParsedOptions
 from cmk.cli.engine.readers import RecordedOptions as CLIRecordedOptions
 from cmk.plugins.checkmk.cli.check import _checking_request, CheckingRequest, cli_command_check
@@ -21,9 +20,7 @@ from cmk.plugins.checkmk.cli.options import FileCacheRequest, PluginSelectionReq
 
 def test_fake_dns_reaches_the_implicit_check() -> None:
     parsed = cli_parse(
-        CLICommands(
-            plugins=[cli_make_command(cli_command_check)], general_options=cli_general_options()
-        ),
+        CLICommands(plugins=[cli_make_command(cli_command_check)]),
         ["cmk", "--fake-dns", "1.2.3.4", "myhost"],
     )
 
@@ -39,7 +36,7 @@ def test_check_declares_its_options_in_help_order() -> None:
     recorded = CLIRecordedOptions()
     cli_command_check.request(recorded)
 
-    assert [option.name for option in recorded.options] == [
+    assert [option.long for option in recorded.options] == [
         "cache",
         "no-cache",
         "no-tcp",

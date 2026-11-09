@@ -11,7 +11,7 @@ from typing import Final
 from cmk.cli.engine.arguments import RunCommand as CLIRunCommand
 from cmk.cli.engine.call import call as cli_call
 from cmk.cli.engine.call import CommandTracer as CLICommandTracer
-from cmk.cli.engine.commands import GetoptCommand as CLIGetoptCommand
+from cmk.cli.engine.commands import DiscoveredCommand as CLIDiscoveredCommand
 from cmk.cli.engine.discovery import make_command as cli_make_command
 from cmk.cli.engine.readers import ParsedOptions as CLIParsedOptions
 from cmk.cli.internal import Args as CLIArgs
@@ -55,7 +55,7 @@ def _command(
     *,
     arguments: CLIArguments | None = None,
     request: Callable[[CLIReader], object] = cli_no_options,
-) -> CLIGetoptCommand:
+) -> CLIDiscoveredCommand:
     return cli_make_command(
         CLICommand(
             name="test_command",
@@ -69,13 +69,13 @@ def _command(
 
 
 def _run_command(
-    command: CLIGetoptCommand, argument: str, arguments: Sequence[str]
+    command: CLIDiscoveredCommand, argument: str, arguments: Sequence[str]
 ) -> CLIRunCommand:
     return CLIRunCommand(command, argument, [("--flag", "")], arguments)
 
 
 def _call(
-    command: CLIGetoptCommand,
+    command: CLIDiscoveredCommand,
     argument: str = "",
     *,
     arguments: Sequence[str] = (),

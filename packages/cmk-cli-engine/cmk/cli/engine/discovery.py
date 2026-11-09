@@ -10,25 +10,22 @@ from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import entry_point_prefixes as cli_entry_point_prefixes
 from cmk.discover_plugins import discover_all_plugins, PluginGroup, PluginLocation
 
-from .commands import bind, GetoptCommand
+from .commands import bind, DiscoveredCommand
 from .readers import RecordedOptions
 
 
-def make_command[R](command: CLICommand[R]) -> GetoptCommand:
+def make_command[R](command: CLICommand[R]) -> DiscoveredCommand:
     recorded = RecordedOptions()
     command.request(recorded)
-    arguments = command.arguments
-    return GetoptCommand(
+    return DiscoveredCommand(
         name=command.name,
-        long_option=command.long,
+        long=command.long,
+        short=command.short,
+        help=command.help,
+        arguments=command.arguments,
+        description=command.description or (),
+        options=recorded.options,
         bind=partial(bind, command),
-        short_help=command.help,
-        short_option=command.short,
-        argument=arguments is not None,
-        argument_descr=None if arguments is None else arguments.placeholder,
-        argument_optional=arguments is not None and arguments.optional,
-        long_help=command.description or (),
-        sub_options=recorded.options,
     )
 
 
@@ -40,7 +37,7 @@ def _named_after_its_variable[R](
     return command
 
 
-def discover_commands() -> Sequence[GetoptCommand]:
+def discover_commands() -> Sequence[DiscoveredCommand]:
     prefixes = cli_entry_point_prefixes()
     discovered = discover_all_plugins(
         PluginGroup.CLI,

@@ -15,9 +15,9 @@ from typing import Final
 
 from cmk.ccc.log import CMKFormatter
 from cmk.cli.engine.call import call, CommandTracer
-from cmk.cli.engine.commands import Commands, GetoptCommand
+from cmk.cli.engine.commands import Commands, DiscoveredCommand
 from cmk.cli.engine.discovery import discover_commands
-from cmk.cli.engine.options import general_options, LOG_FILE_OPTION, parse_general_options
+from cmk.cli.engine.options import LOG_FILE_OPTION, parse_general_options, spellings
 from cmk.cli.engine.output import write_paged, write_stdout
 from cmk.cli.engine.readers import ParsedOptions
 from cmk.cli.internal import Context as CLIContext
@@ -65,7 +65,7 @@ type CrashReporter = Callable[[], str]
 
 @dataclass(frozen=True, kw_only=True)
 class Runtime:
-    discover: Callable[[], Sequence[GetoptCommand]] = discover_commands
+    discover: Callable[[], Sequence[DiscoveredCommand]] = discover_commands
     trace_command: CommandTracer
     on_sigint: Callable[[int, FrameType | None], object] = signal.default_int_handler
     crash_reporter_for: Callable[[Path, Sequence[str], Mapping[str, str]], CrashReporter]
@@ -108,10 +108,7 @@ def run(
 ) -> int:
     signal.signal(signal.SIGINT, runtime.on_sigint)
 
-    commands = Commands(
-        plugins=runtime.discover(),
-        general_options=general_options(),
-    )
+    commands = Commands(plugins=runtime.discover())
 
     parsed = parse(commands, argv)
     if isinstance(parsed, InvalidArguments):
@@ -119,7 +116,7 @@ def run(
         return CLIExitCode.UNKNOWN.value
 
     for option, argument in parsed.options:
-        if option in LOG_FILE_OPTION.options():
+        if option in spellings(LOG_FILE_OPTION):
             enable_file_logging(argument, runtime.logger)
     global_options = parse_general_options(parsed.options)
     if global_options.verbosity:

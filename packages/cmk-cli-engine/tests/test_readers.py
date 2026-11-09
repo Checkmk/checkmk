@@ -108,28 +108,14 @@ def test_the_recorder_keeps_the_options_in_reading_order() -> None:
     recorded.values(_NUMBERS_VALUES)
     recorded.flag(_FLAG)
 
-    assert [option.name for option in recorded.options] == ["numbers", "flag"]
+    assert [option.long for option in recorded.options] == ["numbers", "flag"]
 
 
-def test_the_recorder_keeps_what_the_help_and_the_parser_need() -> None:
+def test_the_recorder_keeps_the_declarations_it_reads() -> None:
     recorded = CLIRecordedOptions()
     recorded.flag(_FLAG)
     recorded.count(_COUNTED_COUNT)
     recorded.value(_NUMBER_VALUE)
     recorded.values(_NUMBERS_VALUES)
 
-    assert [
-        (option.options(), option.argument_descr, option.repeat) for option in recorded.options
-    ] == [
-        (["-f", "--flag"], None, False),
-        (["-c", "--counted"], None, True),
-        (["--number"], "N", False),
-        (["--numbers"], "N", True),
-    ]
-
-
-def test_the_recorder_keeps_the_deprecated_spellings() -> None:
-    recorded = CLIRecordedOptions()
-    recorded.flag(_PLUGINS_FLAG)
-
-    assert recorded.options[0].long_getopt_specs() == ["plugins", "checks"]
+    assert recorded.options == [_FLAG, _COUNTED_COUNT, _NUMBER_VALUE, _NUMBERS_VALUES]

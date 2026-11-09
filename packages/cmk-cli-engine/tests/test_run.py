@@ -16,7 +16,7 @@ import pytest
 
 from cmk.cli.engine.arguments import RunCommand as CLIRunCommand
 from cmk.cli.engine.call import CommandTracer as CLICommandTracer
-from cmk.cli.engine.commands import GetoptCommand as CLIGetoptCommand
+from cmk.cli.engine.commands import DiscoveredCommand as CLIDiscoveredCommand
 from cmk.cli.engine.discovery import make_command as cli_make_command
 from cmk.cli.engine.run import dispatch as cli_dispatch
 from cmk.cli.engine.run import enable_file_logging as cli_enable_file_logging
@@ -181,7 +181,7 @@ def test_file_logging_replaces_the_handlers_it_finds(tmp_path: Path) -> None:
     assert len(logger.handlers) == 1
 
 
-def _command(handler: Callable[[CLIContext, None, CLIArgs], CLIExitCode]) -> CLIGetoptCommand:
+def _command(handler: Callable[[CLIContext, None, CLIArgs], CLIExitCode]) -> CLIDiscoveredCommand:
     return cli_make_command(
         CLICommand(
             name="demo", long="demo", request=cli_no_options, handler=handler, help="Demonstrate"
@@ -190,7 +190,7 @@ def _command(handler: Callable[[CLIContext, None, CLIArgs], CLIExitCode]) -> CLI
 
 
 def _runtime(
-    commands: Sequence[CLIGetoptCommand] = (),
+    commands: Sequence[CLIDiscoveredCommand] = (),
     *,
     trace_command: CLICommandTracer = lambda *_args: nullcontext(),
     on_sigint: Callable[[int, FrameType | None], object] = signal.default_int_handler,
@@ -230,7 +230,7 @@ def _number_request(options: CLIReader) -> int | None:
 
 def _numbered(
     handler: Callable[[CLIContext, int | None, CLIArgs], CLIExitCode],
-) -> CLIGetoptCommand:
+) -> CLIDiscoveredCommand:
     return cli_make_command(
         CLICommand(
             name="demo",

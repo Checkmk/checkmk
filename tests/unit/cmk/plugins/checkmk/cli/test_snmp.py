@@ -80,7 +80,7 @@ def test_oids_and_extra_oids_together_are_raised_through_under_debug() -> None:
 def _declared[R](command: CLICommand[R]) -> list[str]:
     recorded = CLIRecordedOptions()
     command.request(recorded)
-    return [option.name for option in recorded.options]
+    return [option.long for option in recorded.options]
 
 
 def test_snmpwalk_declares_its_options_in_help_order() -> None:

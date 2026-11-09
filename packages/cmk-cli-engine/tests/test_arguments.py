@@ -13,50 +13,61 @@ from cmk.cli.engine.arguments import parse as cli_parse
 from cmk.cli.engine.arguments import RunCommand as CLIRunCommand
 from cmk.cli.engine.arguments import ShowHelp as CLIShowHelp
 from cmk.cli.engine.commands import Commands as CLICommands
-from cmk.cli.engine.commands import GetoptCommand as CLIGetoptCommand
 from cmk.cli.engine.discovery import make_command as cli_make_command
-from cmk.cli.engine.options import general_options as cli_general_options
-from cmk.cli.engine.options import Option as CLIOption
+from cmk.cli.engine.options import Declaration as CLIDeclaration
+from cmk.cli.engine.options import GENERAL_OPTIONS as CLI_GENERAL_OPTIONS
+from cmk.cli.engine.options import placeholder as cli_placeholder
+from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
+from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import Count as CLICount
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import Flag as CLIFlag
+from cmk.cli.internal import no_options as cli_no_options
 from cmk.cli.internal import Reader as CLIReader
 from cmk.cli.internal import Value as CLIValue
 from cmk.cli.internal import Values as CLIValues
 
 
-def _unreachable(_reader: CLIReader) -> NoReturn:
-    raise AssertionError("parsing must not bind the command")
+def _unreachable(_context: CLIContext, _request: None, _args: CLIArgs) -> NoReturn:
+    raise AssertionError("parsing must not run the command")
 
 
 _COMMAND_ARGUMENT: Final = "myhost"
 
 _ARGUMENT_EVERY_CONVERSION_ACCEPTS: Final = "inline"
 
-_PLAIN: Final = CLIGetoptCommand(
-    name="plain",
-    long_option="plain",
-    short_option="p",
-    bind=_unreachable,
-    short_help="takes no argument",
+_PLAIN: Final = cli_make_command(
+    CLICommand(
+        name="plain",
+        long="plain",
+        short="p",
+        request=cli_no_options,
+        handler=_unreachable,
+        help="takes no argument",
+    )
 )
 
-_OTHER_PLAIN: Final = CLIGetoptCommand(
-    name="other_plain",
-    long_option="other-plain",
-    bind=_unreachable,
-    short_help="takes no argument either",
+_OTHER_PLAIN: Final = cli_make_command(
+    CLICommand(
+        name="other_plain",
+        long="other-plain",
+        request=cli_no_options,
+        handler=_unreachable,
+        help="takes no argument either",
+    )
 )
 
-_WITH_ARGUMENT: Final = CLIGetoptCommand(
-    name="with_argument",
-    long_option="with-argument",
-    bind=_unreachable,
-    argument=True,
-    argument_descr="HOST",
-    short_help="needs exactly one argument",
+_WITH_ARGUMENT: Final = cli_make_command(
+    CLICommand(
+        name="with_argument",
+        long="with-argument",
+        request=cli_no_options,
+        handler=_unreachable,
+        arguments=CLIArguments("HOST"),
+        help="needs exactly one argument",
+    )
 )
 
 _KEEPALIVE_FLAG: Final = CLIFlag(long="keepalive", help="the option that implies this command")
@@ -104,16 +115,13 @@ _CHECK: Final = cli_make_command(
     )
 )
 
-_COMMANDS: Final = CLICommands(
-    plugins=[_PLAIN, _OTHER_PLAIN, _WITH_ARGUMENT, _CHECK],
-    general_options=cli_general_options(),
-)
+_COMMANDS: Final = CLICommands(plugins=[_PLAIN, _OTHER_PLAIN, _WITH_ARGUMENT, _CHECK])
 
 
-def _general_option_argv(option: CLIOption) -> Sequence[str]:
-    if option.argument:
-        return [f"--{option.long_option}={_ARGUMENT_EVERY_CONVERSION_ACCEPTS}"]
-    return [f"--{option.long_option}"]
+def _general_option_argv(option: CLIDeclaration) -> Sequence[str]:
+    if cli_placeholder(option) is not None:
+        return [f"--{option.long}={_ARGUMENT_EVERY_CONVERSION_ACCEPTS}"]
+    return [f"--{option.long}"]
 
 
 def test_the_long_option_selects_its_command() -> None:
@@ -248,17 +256,17 @@ def test_the_rejection_names_the_program_as_it_was_called() -> None:
     assert "see `check_mk --help`" in parsed.message
 
 
-@pytest.mark.parametrize("option", cli_general_options(), ids=lambda option: option.name)
-def test_a_general_option_does_not_select_a_command(option: CLIOption) -> None:
+@pytest.mark.parametrize("option", CLI_GENERAL_OPTIONS, ids=lambda option: option.long)
+def test_a_general_option_does_not_select_a_command(option: CLIDeclaration) -> None:
     parsed = cli_parse(_COMMANDS, ["cmk", *_general_option_argv(option), "myhost"])
 
     assert isinstance(parsed, CLIRunCommand)
     assert parsed.command.name == "check"
 
 
-@pytest.mark.parametrize("option", cli_general_options(), ids=lambda option: option.name)
-def test_a_general_option_is_handed_back_for_processing(option: CLIOption) -> None:
+@pytest.mark.parametrize("option", CLI_GENERAL_OPTIONS, ids=lambda option: option.long)
+def test_a_general_option_is_handed_back_for_processing(option: CLIDeclaration) -> None:
     parsed = cli_parse(_COMMANDS, ["cmk", *_general_option_argv(option), "myhost"])
 
     assert isinstance(parsed, CLIRunCommand)
-    assert f"--{option.long_option}" in [name for name, _argument in parsed.options]
+    assert f"--{option.long}" in [name for name, _argument in parsed.options]

@@ -51,9 +51,10 @@ class ParsedOptions:
         self._logger = logger
 
     def _given(self, option: Declaration) -> Sequence[tuple[str, str]]:
+        option_spellings = spellings(option)
         given = []
         for spec, argument in self._options:
-            if spec not in spellings(option):
+            if spec not in option_spellings:
                 continue
             if spec.lstrip("-") in option.deprecated_names:
                 self._logger.warning(

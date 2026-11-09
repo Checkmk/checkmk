@@ -83,43 +83,31 @@ class Section(NamedTuple):
 
 @dataclass(frozen=True)
 class ClusterRouting:
-    """Cluster data goes to a piggyback host named after the cluster; Prism Central's
-    own data stays on the Prism Central host."""
+    """Cluster data goes to a piggyback host <cluster name>_<last 8 characters of its
+    extId>, or <extId> if the cluster has no name; Prism Central's own data stays on
+    the Prism Central host."""
 
     targets: Mapping[str, Target]
 
     @classmethod
-    def from_clusters(cls, clusters: Iterable[JsonObject], messages: AgentMessages) -> Self:
+    def from_clusters(cls, clusters: Iterable[JsonObject]) -> Self:
         targets: dict[str, Target] = {}
-        by_name: dict[str, list[tuple[int, str]]] = {}
         for cluster in clusters:
             if not isinstance(ext_id := cluster.get("extId"), str):
                 continue
-            if _is_prism_central(cluster):
-                targets[ext_id] = None
-                continue
-            name = str(cluster.get("name") or ext_id)
-            by_name.setdefault(name, []).append((_incarnation(cluster), ext_id))
-        for name, members in by_name.items():
-            # The oldest cluster keeps the plain name, so adding a cluster never moves a host
-            (_, oldest), *newer = sorted(members)
-            targets[oldest] = name
-            for _, ext_id in newer:
-                targets[ext_id] = f"{name}-{ext_id}"
-            if newer:
-                hosts = ", ".join([name, *(f"{name}-{ext_id}" for _, ext_id in newer)])
-                messages.add_info(f"Clusters named {name} are monitored as the hosts {hosts}")
+            targets[ext_id] = None if _is_prism_central(cluster) else _cluster_host(cluster, ext_id)
         return cls(targets)
 
     def host_for(self, cluster_id: str) -> Target:
         return self.targets.get(cluster_id, Unroutable(f"unknown cluster {cluster_id}"))
 
 
-def _incarnation(cluster: JsonObject) -> int:
-    """When the cluster was created (µs), unknown ones count as newest"""
-    config = cluster.get("config")
-    incarnation = config.get("incarnationId") if isinstance(config, dict) else None
-    return incarnation if isinstance(incarnation, int) else sys.maxsize
+def _cluster_host(cluster: JsonObject, ext_id: str) -> str:
+    """Cluster names aren't unique. The extId starts with the creation time, so its end
+    tells clusters created close together apart."""
+    if not (name := cluster.get("name")):
+        return ext_id
+    return f"{name}_{ext_id[-8:]}"
 
 
 def _is_prism_central(cluster: JsonObject) -> bool:
@@ -872,9 +860,7 @@ def agent_prism_v4_main(
         clock=time.time,
     )
     result = run_fetchers(
-        FetchContext(
-            client, clusters, ClusterRouting.from_clusters(clusters, messages), messages, hosts
-        ),
+        FetchContext(client, clusters, ClusterRouting.from_clusters(clusters), messages, hosts),
         SECTION_FETCHERS,
         schedule,
         messages,

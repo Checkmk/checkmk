@@ -273,6 +273,7 @@ def _container_names_and_messages(
 
 CLUSTER_ID = "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
 PRISM_CENTRAL_ID = "0806a141-8916-471b-99fd-b5119ff280ef"
+CLUSTER_HOST = "cluster-a_55ec3615"
 
 
 class FakeClock:
@@ -290,7 +291,7 @@ def _recorded_cluster_list() -> list[JsonObject]:
 
 
 def _routing() -> ClusterRouting:
-    return ClusterRouting.from_clusters(_recorded_cluster_list(), AgentMessages())
+    return ClusterRouting.from_clusters(_recorded_cluster_list())
 
 
 def _context(
@@ -339,7 +340,7 @@ def _v4_args() -> list[str]:
 
 
 def test_cluster_data_goes_to_host_named_after_cluster() -> None:
-    assert _routing().host_for(CLUSTER_ID) == "cluster-a"
+    assert _routing().host_for(CLUSTER_ID) == CLUSTER_HOST
 
 
 def test_prism_central_data_stays_on_prism_central_host() -> None:
@@ -351,41 +352,33 @@ def test_unknown_cluster_is_not_routed() -> None:
 
 
 # Real extIds start with the creation time, so clusters created together share a long prefix.
-# The newer one sorts first here, so only incarnationId can tell their age.
-OLDER_TWIN = "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
-NEWER_TWIN = "000645cc-2b3a-0f00-1111-222233334444"
-TWINS = [
-    {"extId": NEWER_TWIN, "name": "twin", "config": {"incarnationId": 1765593061999999}},
-    {"extId": OLDER_TWIN, "name": "twin", "config": {"incarnationId": 1765593061145372}},
-]
+TWIN_A = "000645cc-2b3a-3b1c-06a8-7cc255ec3615"
+TWIN_B = "000645cc-2b3a-0f00-1111-222233334444"
 
 
-def test_oldest_cluster_keeps_its_name_and_newer_ones_get_their_id() -> None:
-    routing = ClusterRouting.from_clusters(TWINS, AgentMessages())
-
-    assert (routing.host_for(OLDER_TWIN), routing.host_for(NEWER_TWIN)) == (
-        "twin",
-        f"twin-{NEWER_TWIN}",
-    )
-
-
-def test_clusters_sharing_a_name_are_reported_with_their_hosts() -> None:
-    messages = AgentMessages()
-
-    ClusterRouting.from_clusters(TWINS, messages)
-
-    assert list(messages) == [
-        ("info", f"Clusters named twin are monitored as the hosts twin, twin-{NEWER_TWIN}")
-    ]
-
-
-def test_cluster_without_cluster_function_is_routed_by_name() -> None:
+def test_clusters_sharing_a_name_get_a_host_each() -> None:
     routing = ClusterRouting.from_clusters(
-        [{"extId": "c1", "name": "cluster-a", "config": {"clusterFunction": None}}],
-        AgentMessages(),
+        [{"extId": TWIN_A, "name": "twin"}, {"extId": TWIN_B, "name": "twin"}]
     )
 
-    assert routing.host_for("c1") == "cluster-a"
+    assert (routing.host_for(TWIN_A), routing.host_for(TWIN_B)) == (
+        "twin_55ec3615",
+        "twin_33334444",
+    )
+
+
+def test_cluster_without_a_name_is_routed_by_its_id() -> None:
+    routing = ClusterRouting.from_clusters([{"extId": TWIN_A, "name": None}])
+
+    assert routing.host_for(TWIN_A) == TWIN_A
+
+
+def test_cluster_without_cluster_function_gets_a_cluster_host() -> None:
+    routing = ClusterRouting.from_clusters(
+        [{"extId": TWIN_A, "name": "cluster-a", "config": {"clusterFunction": None}}]
+    )
+
+    assert routing.host_for(TWIN_A) == "cluster-a_55ec3615"
 
 
 def test_sections_are_written_to_their_hosts() -> None:
@@ -537,7 +530,7 @@ def test_hosts_go_to_their_cluster_with_only_the_checked_fields() -> None:
                     (2, 42, 1780725763871836),
                 ]
             ],
-            "cluster-a",
+            CLUSTER_HOST,
         )
     ]
 
@@ -559,7 +552,7 @@ def test_failed_host_listing_is_reported_by_the_hosts_fetcher() -> None:
 
 def test_hypervisors_go_to_their_cluster_for_the_ha_state() -> None:
     assert fetch_ha(_context(hosts=_recorded_host_list())) == [
-        Section("prism_ha_v2", _recorded("section_prism_ha_v2.json"), "cluster-a")
+        Section("prism_ha_v2", _recorded("section_prism_ha_v2.json"), CLUSTER_HOST)
     ]
 
 
@@ -599,7 +592,7 @@ def test_alerts_go_to_their_cluster_or_prism_central(api: responses.RequestsMock
             "{alert_msg}",
             "Fileserver not reachable from PC",
         ],
-        "cluster-a": ["Host {hypervisor_address} appears to have failed. {failover_host_info}"],
+        CLUSTER_HOST: ["Host {hypervisor_address} appears to have failed. {failover_host_info}"],
     }
 
 
@@ -635,7 +628,7 @@ def test_alerts_are_fetched_with_only_the_checked_fields(api: responses.Requests
 def test_cluster_without_alerts_gets_an_empty_section(api: responses.RequestsMock) -> None:
     api.get(v4_url(ALERTS_PATH), json=page([], has_next=False), match=[page_matcher(0)])
 
-    assert _alerts_by_target(fetch_alerts(_context())) == {None: [], "cluster-a": []}
+    assert _alerts_by_target(fetch_alerts(_context())) == {None: [], CLUSTER_HOST: []}
 
 
 def test_prism_central_gets_an_alerts_section_even_if_not_listed_as_cluster(
@@ -672,7 +665,7 @@ def test_alert_keeps_only_the_checked_fields(api: responses.RequestsMock) -> Non
 
     sections = {section.target: section.payload for section in fetch_alerts(_context())}
 
-    assert sections["cluster-a"] == [
+    assert sections[CLUSTER_HOST] == [
         {
             "severity": "CRITICAL",
             "message": "Host {host} failed",
@@ -741,7 +734,7 @@ def test_containers_section_holds_the_monitored_series_per_cluster(
         Section(
             "prism_containers_v2",
             json.loads((FIXTURES / "section_prism_containers_v2.json").read_text()),
-            "cluster-a",
+            CLUSTER_HOST,
         )
     ]
 
@@ -894,7 +887,7 @@ def test_vms_section_holds_only_the_monitored_fields_per_cluster(
         Section(
             "prism_vms_v2",
             json.loads((FIXTURES / "section_prism_vms_v2.json").read_text()),
-            "cluster-a",
+            CLUSTER_HOST,
         )
     ]
 
@@ -1153,7 +1146,7 @@ def test_v4_agent_reports_unreachable_cluster_list_in_one_line(
 
 
 def _remote_support_sections(clusters: Sequence[JsonObject]) -> Sequence[Section]:
-    routing = ClusterRouting.from_clusters(clusters, AgentMessages())
+    routing = ClusterRouting.from_clusters(clusters)
     return fetch_remote_support(FetchContext(_context().client, clusters, routing, AgentMessages()))
 
 
@@ -1173,7 +1166,7 @@ def test_remote_support_goes_to_its_cluster_or_prism_central_with_only_the_check
 
     assert sections == [
         Section(
-            "prism_remote_support_v2", {"config": {"isRemoteSupportEnabled": True}}, "cluster-a"
+            "prism_remote_support_v2", {"config": {"isRemoteSupportEnabled": True}}, CLUSTER_HOST
         ),
         Section("prism_remote_support_v2", {"config": {"isRemoteSupportEnabled": False}}, None),
     ]
@@ -1490,7 +1483,7 @@ def test_storage_pool_goes_to_the_host_of_its_cluster_with_its_disks(
         Section(
             "prism_storage_pools_v2",
             _recorded("section_prism_storage_pools_v2.json"),
-            "cluster-a",
+            CLUSTER_HOST,
         )
     ]
 

@@ -91,7 +91,7 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep '^buildscripts/.*\\.groovy$\\|^buildscripts/scripts/stages.yml$\\|^buildscripts/scripts/check_no_privileged_containers.py$\\|^\\(buildscripts\\|scripts\\)/.*\\.sh$\\|run_tests.sh$' || true"
 
     - NAME: CHANGED_MK_ORACLE_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/mk-oracle/\\|^packages/[^/]*$' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/mk-oracle/\\|^packages/[^/]*$' | grep -v '\\.md$' || true"
 
 STAGES:
     - NAME: "Bazel sanity check (guarded)"

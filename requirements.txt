@@ -3150,7 +3150,6 @@ opentelemetry-exporter-otlp-proto-grpc==1.44.0 \
     --hash=sha256:40d1ae9e03fcc36de3cbac610cc99f35894938bff9cfd90fc4ec68bd85448463 \
     --hash=sha256:6a1a645ea182a2f59440c51fa8301d309f3324a8f9d65f8395584b064b67ee4e
     # via
-    #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r packages/cmk-trace/requirements.in
     #   opentelemetry-exporter-otlp
 opentelemetry-exporter-otlp-proto-http==1.44.0 \
@@ -3222,6 +3221,7 @@ opentelemetry-sdk==1.44.0 \
     #   -r cmk/requirements.in
     #   -r non-free/packages/cmk-ai-control-plane/dev-requirements.in
     #   -r non-free/packages/cmk-mcp/dev-requirements.in
+    #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r packages/cmk-trace/requirements.in
     #   opentelemetry-container-distro
     #   opentelemetry-exporter-otlp-proto-grpc

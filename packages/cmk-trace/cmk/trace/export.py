@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+from collections.abc import Mapping
 
 import opentelemetry.exporter.otlp.proto.grpc.exporter as grpc_exporter
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
@@ -22,19 +23,22 @@ def exporter_from_config(
     exporter_log_level: int,
     config: TraceSendConfig,
     exporter_class: type[OTLPSpanExporter] = OTLPSpanExporter,
+    headers: Mapping[str, str] | None = None,
 ) -> OTLPSpanExporter | None:
     if not config.enabled:
         return None
 
     _set_exporter_logging(exporter_log_level)
 
+    exporter_headers = None if headers is None else dict(headers)
     if isinstance(config.target, LocalTarget):
         return exporter_class(
             endpoint=f"http://localhost:{config.target.port}",
             insecure=True,
             timeout=3,
+            headers=exporter_headers,
         )
-    return exporter_class(endpoint=config.target, timeout=3)
+    return exporter_class(endpoint=config.target, timeout=3, headers=exporter_headers)
 
 
 def init_span_processor(provider: TracerProvider, exporter: SpanExporter | None = None) -> None:

@@ -57,8 +57,7 @@ from cmk.gui.openapi.spec.utils import LIVESTATUS_GENERIC_EXPLANATION
 from cmk.gui.openapi.utils import problem, serve_json
 from cmk.gui.utils import permission_verification as permissions
 from cmk.livestatus_client.expressions import And, Or, QueryExpression
-from cmk.livestatus_client.queries import detailed_connection, Query, ResultRow
-from cmk.livestatus_client.tables import Hosts
+from cmk.livestatus_client.queries import Query, ResultRow
 from cmk.livestatus_client.tables.downtimes import Downtimes
 
 DowntimeType = Literal[
@@ -220,20 +219,10 @@ def create_service_related_downtime(params: Mapping[str, Any]) -> Response:
     downtime_type: DowntimeType = body["downtime_type"]
 
     if downtime_type == "service":
-        host_name = body["host_name"]
-        with detailed_connection(live) as conn:
-            try:
-                site_id = Query(
-                    columns=[Hosts.name], filter_expr=Hosts.name.op("=", host_name)
-                ).value(conn)
-            except ValueError:
-                # Request user can't see the host (but may still be able to access the service)
-                site_id = None
         start_time = _with_defaulted_timezone(body["start_time"])
         end_time = _with_defaulted_timezone(body["end_time"])
         downtime_commands.schedule_service_downtime(
             live,
-            site_id,
             host_name=body["host_name"],
             service_description=body["service_descriptions"],
             start_time=start_time,

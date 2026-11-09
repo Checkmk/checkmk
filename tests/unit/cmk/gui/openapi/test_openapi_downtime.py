@@ -6,6 +6,7 @@
 # mypy: disable-error-code="no-untyped-def"
 
 import datetime
+from http import HTTPStatus
 
 import pytest
 
@@ -13,6 +14,7 @@ from cmk.ccc import version
 from cmk.gui.openapi.endpoints.downtime import _with_defaulted_timezone
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.utils import paths
+from tests.testlib.unit.gui.openapi_monitoring import site_configurations
 from tests.testlib.unit.rest_api_client import ClientRegistry
 from tests.unit.cmk.web_test_app import SetConfig
 
@@ -185,7 +187,6 @@ def test_openapi_schedule_service_downtime(
     clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
-    mock_livestatus.expect_query("GET hosts\nColumns: name\nFilter: name = example.com")
     mock_livestatus.expect_query(
         "GET services\nColumns: description\nFilter: host_name = example.com\nFilter: description = Memory\nFilter: description = CPU load\nOr: 2\nAnd: 2"
     )
@@ -1120,9 +1121,6 @@ def test_openapi_user_in_service_but_not_in_host_contact_group_regression(
     )
 
     mock_livestatus.expect_query(
-        f"GET hosts\nColumns: name\nFilter: name = heute\nAuthUser: {username}"
-    )
-    mock_livestatus.expect_query(
         f"GET services\nColumns: description\nFilter: host_name = heute\nFilter: description = Filesystem /opt/omd/sites/heute/tmp\nAnd: 2\nAuthUser: {username}"
     )
 
@@ -1769,3 +1767,44 @@ def test_openapi_downtime_mode_flexible(
             "type": "flexible",
             "duration_minutes": 60,  # in minutes
         }
+
+
+@pytest.mark.parametrize(
+    "monitoring_sites", [("remote",), ("NO_SITE", "remote")], ids=["one_site", "two_sites"]
+)
+def test_service_downtime_goes_to_the_site_that_monitors_the_host(
+    clients: ClientRegistry,
+    set_config: SetConfig,
+    mock_livestatus: MockLiveStatusConnection,
+    monitoring_sites: tuple[str, ...],
+) -> None:
+    # The mock keeps one expectation queue per site, so a command sent to the wrong site
+    # finds nothing waiting for it there and fails the test.
+    for site_id in mock_livestatus.sites:
+        on_this_site = site_id in monitoring_sites
+        services = [{"host_name": "gestern", "description": "Memory"}] if on_this_site else []
+        mock_livestatus.add_table("services", services, site=site_id)
+    mock_livestatus.expect_query(
+        "GET services\nColumns: description\nFilter: host_name = gestern"
+        "\nFilter: description = Memory\nAnd: 2"
+    )
+    for site_id in monitoring_sites:
+        mock_livestatus.expect_query(
+            "COMMAND [...] SCHEDULE_SVC_DOWNTIME;gestern;Memory;...",
+            match_type="ellipsis",
+            sites=[site_id],
+        )
+
+    with (
+        set_config(sites=site_configurations(["NO_SITE", "remote", "local"])),
+        mock_livestatus(expect_status_query=True),
+    ):
+        resp = clients.Downtime.create_for_services(
+            downtime_type="service",
+            host_name="gestern",
+            service_descriptions=["Memory"],
+            start_time="2020-01-01T00:00:00Z",
+            end_time="2020-01-02T00:00:00Z",
+        )
+
+    assert resp.status_code == HTTPStatus.NO_CONTENT

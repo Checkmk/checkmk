@@ -6,20 +6,23 @@
 
 # mypy: disable-error-code="type-arg"
 
-import subprocess
 from abc import ABC, abstractmethod
-from collections.abc import Mapping
+from typing import TypedDict
 
 import cmk.ccc.plugin_registry
 import cmk.ccc.version as cmk_version
-from cmk.ccc.site import get_agent_receiver_port
+from cmk.ccc.site import get_agent_receiver_port, get_omd_config
 from cmk.gui.config import Config
 from cmk.gui.http import Request
 from cmk.gui.watolib import wire_format
 from cmk.utils import paths
 from cmk.utils.licensing.registry import get_license_state
 
-OMDStatus = Mapping[str, int]
+
+class OMDStatus(TypedDict):
+    """Only rabbitmq: 0 enabled, 5 disabled. Key name kept for older central sites."""
+
+    rabbitmq: int
 
 
 class AutomationCommand[T](ABC):
@@ -52,29 +55,26 @@ automation_command_registry = AutomationCommandRegistry()
 
 
 class AutomationPing(AutomationCommand[None]):
+    """Answer the central site's ping with version, edition and license state
+
+    "omd_status" only tells whether rabbitmq is enabled. It does not hold the
+    state of all site services, despite its name.
+    """
+
     def command_name(self) -> str:
         return "ping"
 
     def get_request(self, config: Config, request: Request) -> None:
         return None
 
-    def _parse_omd_status(self, raw_status: str) -> OMDStatus:
-        status = {key: int(val) for key, val in (el.split(" ") for el in raw_status.splitlines())}
-        return status
-
     def _get_omd_status(self) -> OMDStatus:
-        """Get the status of OMD services on the site
-        0: running, 1: stopped, 5: disabled
+        """Tell the central site whether rabbitmq is disabled (5) on this site
+
+        Same rule as etc/init.d/rabbitmq. Running `omd status` for this is too slow
+        when the central site pings many sites on one server at once.
         """
-
-        result = subprocess.run(
-            ["omd", "-v", "status", "--bare"],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-
-        return self._parse_omd_status(result.stdout)
+        hub_enabled = get_omd_config(paths.omd_root).get("CONFIG_PIGGYBACK_HUB") == "on"
+        return {"rabbitmq": 0 if hub_enabled else 5}
 
     def execute(self, _unused_request: None) -> dict[str, str | OMDStatus]:
         return {

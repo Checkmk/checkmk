@@ -4,31 +4,26 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.watolib.automation_commands import AutomationPing
+from cmk.utils import paths
 
 
-def test_parse_omd_status() -> None:
-    # raw status tested in tests/system/singlesite/omd/test_omd.py
-    raw_status = (
-        "jaeger 5\n"
-        "agent-receiver 0\n"
-        "mkeventd 0\n"
-        "liveproxyd 0\n"
-        "mknotifyd 0\n"
-        "rrdcached 0\n"
-        "redis 0\n"
-        "npcd 5"
-    )
+def _write_site_conf(content: str) -> None:
+    site_conf = paths.omd_root / "etc" / "omd" / "site.conf"
+    site_conf.parent.mkdir(parents=True, exist_ok=True)
+    site_conf.write_text(content)
 
-    assert AutomationPing()._parse_omd_status(raw_status=raw_status) == {
-        "jaeger": 5,
-        "agent-receiver": 0,
-        "mkeventd": 0,
-        "liveproxyd": 0,
-        "mknotifyd": 0,
-        "rrdcached": 0,
-        "redis": 0,
-        "npcd": 5,
-    }, (
-        "The function should return a dictionary "
-        "with the service names as keys and their states as values"
-    )
+
+def test_ping_reports_message_broker_as_disabled_without_piggyback_hub() -> None:
+    _write_site_conf("CONFIG_PIGGYBACK_HUB='off'\n")
+
+    response = AutomationPing().execute(None)
+
+    assert response["omd_status"] == {"rabbitmq": 5}
+
+
+def test_ping_reports_message_broker_as_enabled_with_piggyback_hub() -> None:
+    _write_site_conf("CONFIG_PIGGYBACK_HUB='on'\n")
+
+    response = AutomationPing().execute(None)
+
+    assert response["omd_status"] == {"rabbitmq": 0}

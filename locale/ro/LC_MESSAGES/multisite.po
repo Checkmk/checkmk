@@ -63517,9 +63517,17 @@ msgstr "SAML 2.0"
 msgid "SAML built-in encryption certificate"
 msgstr "Certificat de router SAP"
 
+#, fuzzy, python-format
+msgid "SAML built-in encryption certificate for the customer '%(customer)s'"
+msgstr "Setări de timp pentru certificatul routerului SAP"
+
 #, fuzzy
 msgid "SAML built-in signing certificate"
 msgstr "Certificat de router SAP"
+
+#, fuzzy, python-format
+msgid "SAML built-in signing certificate for the customer '%(customer)s'"
+msgstr "Setări de timp pentru certificatul routerului SAP"
 
 #, fuzzy
 msgid "SAML connection"

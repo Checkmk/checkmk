@@ -441,19 +441,8 @@ void main() {
         // This avoids the pods for the tests waiting for the package to be built.
         // The test pods are expensive and would only idle in that time.
         inside_container_minimal(safe_branch_name: safe_branch_name) {
-            // silent-start is enabled on this trigger to prevent Verified=0 being cast
-            // at build start. Post the build URL manually instead.
             if (new_patchset_revision) {
                 withGerritSshKey {
-                    sh("""
-                        ssh -i "\${GERRIT_SSH_KEY}" -o StrictHostKeyChecking=no \
-                            -p 29418 jenkins@review.lan.tribe29.com \
-                            gerrit review \
-                            --message "'Build started: ${env.BUILD_URL}'" \
-                            --notify NONE \
-                            ${new_patchset_revision}
-                    """);
-
                     // pull changes, but do not yet rebase. Required to get all commits in the chain compared to base branch
                     dir("${checkout_dir}") {
                         withEnv(["GIT_SSH_COMMAND=ssh -o 'StrictHostKeyChecking no' -i ${GERRIT_SSH_KEY} -l jenkins"]) {
@@ -470,6 +459,17 @@ void main() {
                         ]);
                         println("Commits in chain: ${all_commits_in_chain}");
                     }
+
+                    // silent-start is enabled on this trigger to prevent Verified=0 being cast
+                    // at build start. Post the build URL manually on every change in the chain instead.
+                    sh("""
+                        ssh -i "\${GERRIT_SSH_KEY}" -o StrictHostKeyChecking=no \
+                            -p 29418 jenkins@review.lan.tribe29.com \
+                            gerrit review \
+                            --message "'Build started: ${env.BUILD_URL}'" \
+                            --notify NONE \
+                            ${all_commits_in_chain.join(" ")}
+                    """);
                 }
 
                 // Tag every change in the chain, not just the tip, so all of them show the running state.

@@ -140,10 +140,10 @@ def save_global_settings_raw(
     site_specific: bool = False,
     custom_site_path: str | None = None,
     get_global_settings_config: Callable[[], GlobalConfig] = get_global_config,
-    skip_cse_edition_check: bool = False,
+    skip_cloud_edition_check: bool = False,
 ) -> None:
     """Writes the settings without letting the configuration domains validate them."""
-    if not skip_cse_edition_check and edition(paths.omd_root) is Edition.CLOUD:
+    if not skip_cloud_edition_check and edition(paths.omd_root) is Edition.CLOUD:
         global_settings_config = get_global_settings_config().global_settings
         current_global_settings = dict(load_configuration_settings())
         vars_ = {

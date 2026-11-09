@@ -219,7 +219,7 @@ class SampleConfigGeneratorInlineSNMPBackend(SampleConfigGenerator):
                 **load_configuration_settings(full_config=True),
                 "snmp_backend_default": "inline",
             },
-            skip_cse_edition_check=True,
+            skip_cloud_edition_check=True,
         )
 
 
@@ -236,7 +236,7 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
 
     @override
     def generate(self, tree: FolderTree) -> None:
-        save_global_settings_raw(self._initial_global_settings(), skip_cse_edition_check=True)
+        save_global_settings_raw(self._initial_global_settings(), skip_cloud_edition_check=True)
         # Explicitly update the trust stores to initialise ca-certificates.crt, as
         # save_global_settings_raw skips the settings_change() hook.
         ca_domain = ConfigDomainCACertificates()

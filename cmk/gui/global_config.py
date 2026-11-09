@@ -10,7 +10,7 @@ from cmk.flags import ExperimentalFlagConfig
 from cmk.gui.log import logger
 from cmk.ruleset_matcher.definition import RuleGroupType
 from cmk.utils import paths
-from cmk.utils.paths import cse_config_dir
+from cmk.utils.paths import cloud_config_dir
 
 LOGGER = logger.getChild("global-config")
 
@@ -42,9 +42,9 @@ class GlobalConfig(BaseModel):
 
 
 def load_global_config() -> GlobalConfig:
-    path = cse_config_dir / "global-allow-config.json"
+    path = cloud_config_dir / "global-allow-config.json"
     if not path.exists():
-        path = cse_config_dir / "global-config.json"
+        path = cloud_config_dir / "global-config.json"
     try:
         with open(path, encoding="utf-8") as file:
             return GlobalConfig.model_validate_json(file.read())

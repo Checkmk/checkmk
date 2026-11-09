@@ -19,7 +19,7 @@ _NON_STD_PREFIX: Mapping[str, str] = {
 }
 
 
-_IGNORED_VARS = {"Path", "os", "cse_config_dir", "sys", "Union", "LOCAL_SEGMENT"}
+_IGNORED_VARS = {"Path", "os", "cloud_config_dir", "sys", "Union", "LOCAL_SEGMENT"}
 
 
 def _ignore(varname: str) -> bool:

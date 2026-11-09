@@ -169,4 +169,5 @@ r4r_declined_bundles_dir = _r4r_base_dir.joinpath("DECLINED-BUNDLES")
 r4r_discoverable_dir = _r4r_base_dir.joinpath("DISCOVERABLE")
 
 
-cse_config_dir = Path("/etc/cse")
+# Provided by the SaaS deployment; only change it together with the SaaS code.
+cloud_config_dir = Path("/etc/cse")

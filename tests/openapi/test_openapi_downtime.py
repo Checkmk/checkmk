@@ -190,7 +190,6 @@ def test_openapi_schedule_service_downtime(
     clients: ClientRegistry,
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
-    mock_livestatus.expect_query("GET hosts\nColumns: name\nFilter: name = example.com")
     mock_livestatus.expect_query(
         "GET services\nColumns: description\nFilter: host_name = example.com\nFilter: description = Memory\nFilter: description = CPU load\nOr: 2\nAnd: 2"
     )
@@ -1124,9 +1123,6 @@ def test_openapi_user_in_service_but_not_in_host_contact_group_regression(
     )
 
     mock_livestatus.expect_query(
-        f"GET hosts\nColumns: name\nFilter: name = heute\nAuthUser: {username}"
-    )
-    mock_livestatus.expect_query(
         f"GET services\nColumns: description\nFilter: host_name = heute\nFilter: description = Filesystem /opt/omd/sites/heute/tmp\nAnd: 2\nAuthUser: {username}"
     )
 
@@ -1849,11 +1845,7 @@ def test_service_downtime_is_refused_without_the_downtime_permission(
     # The page only hides an action the user may not perform; the endpoint refuses it too,
     # and no command reaches the core (none is expected).
     clients.Downtime.set_credentials(*with_user)
-    mock_livestatus.add_table("hosts", [{"name": "heute"}])
     mock_livestatus.add_table("services", [{"host_name": "heute", "description": "CPU load"}])
-    mock_livestatus.expect_query(
-        f"GET hosts\nColumns: name\nFilter: name = heute\nAuthUser: {with_user[0]}"
-    )
     mock_livestatus.expect_query(
         "GET services\nColumns: description\nFilter: host_name = heute"
         f"\nFilter: description = CPU load\nAnd: 2\nAuthUser: {with_user[0]}"
@@ -1874,29 +1866,31 @@ def test_service_downtime_is_refused_without_the_downtime_permission(
     assert "Set/remove downtimes" in resp.json["detail"]
 
 
+@pytest.mark.parametrize(
+    "monitoring_sites", [("remote",), ("NO_SITE", "remote")], ids=["one_site", "two_sites"]
+)
 def test_service_downtime_goes_to_the_site_that_monitors_the_host(
     clients: ClientRegistry,
     set_config: SetConfig,
     mock_livestatus: MockLiveStatusConnection,
+    monitoring_sites: tuple[str, ...],
 ) -> None:
     # The mock keeps one expectation queue per site, so a command sent to the wrong site
     # finds nothing waiting for it there and fails the test.
     for site_id in mock_livestatus.sites:
-        on_this_site = site_id == "remote"
-        hosts = [{"name": "gestern"}] if on_this_site else []
+        on_this_site = site_id in monitoring_sites
         services = [{"host_name": "gestern", "description": "Memory"}] if on_this_site else []
-        mock_livestatus.add_table("hosts", hosts, site=site_id)
         mock_livestatus.add_table("services", services, site=site_id)
-    mock_livestatus.expect_query("GET hosts\nColumns: name\nFilter: name = gestern")
     mock_livestatus.expect_query(
         "GET services\nColumns: description\nFilter: host_name = gestern"
         "\nFilter: description = Memory\nAnd: 2"
     )
-    mock_livestatus.expect_query(
-        "COMMAND [...] SCHEDULE_SVC_DOWNTIME;gestern;Memory;...",
-        match_type="ellipsis",
-        sites=["remote"],
-    )
+    for site_id in monitoring_sites:
+        mock_livestatus.expect_query(
+            "COMMAND [...] SCHEDULE_SVC_DOWNTIME;gestern;Memory;...",
+            match_type="ellipsis",
+            sites=[site_id],
+        )
 
     with (
         set_config(sites=site_configurations(["NO_SITE", "remote", "local"])),

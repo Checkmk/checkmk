@@ -209,7 +209,6 @@ def schedule_services_downtimes_with_query(
 
 def schedule_service_downtime(
     connection: MultiSiteConnection,
-    site_id: SiteId | None,
     host_name: HostName,
     service_description: list[str] | str,
     start_time: dt.datetime,
@@ -266,9 +265,6 @@ def schedule_service_downtime(
         comment:
             A comment which will be added to the downtime.
 
-        site_id:
-            An optional Site which is targeted by the command. Defaults to the local site if 'None'.
-
     See Also:
         https://assets.nagios.com/downloads/nagioscore/docs/externalcmds/cmdinfo.php?command_id=119
 
@@ -300,7 +296,7 @@ def schedule_service_downtime(
         _schedule_downtime(
             sites=connection,
             command=DOWNTIME.SCHEDULE_SERVICE,
-            site_id=site_id,
+            site_id=row["site"],
             host_or_group=host_name,
             service_description=row[Services.description.name],
             start_time=start_time,

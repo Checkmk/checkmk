@@ -31,8 +31,6 @@ from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.gui.openapi.spec.utils import LIVESTATUS_GENERIC_EXPLANATION
 from cmk.gui.openapi.utils import ProblemException
-from cmk.livestatus_client.queries import detailed_connection, Query
-from cmk.livestatus_client.tables import Hosts
 
 from ._family import DOWNTIME_FAMILY
 
@@ -51,17 +49,8 @@ def create_service_related_downtime_v1(
     match body:
         case CreateServiceDowntimeModel():
             host_name = body.host_name
-            with detailed_connection(live) as conn:
-                try:
-                    site_id = Query(
-                        columns=[Hosts.name], filter_expr=Hosts.name.op("=", host_name)
-                    ).value(conn)
-                except ValueError:
-                    # Request user can't see the host (but may still be able to access the service)
-                    site_id = None
             downtime_commands.schedule_service_downtime(
                 live,
-                site_id,
                 host_name=host_name,
                 service_description=body.service_descriptions,
                 start_time=body.start_time,

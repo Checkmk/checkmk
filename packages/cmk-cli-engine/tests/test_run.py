@@ -477,11 +477,20 @@ def test_a_sub_option_argument_the_conversion_rejects_is_not_traced() -> None:
 
 
 def test_verbosity_raises_the_log_level() -> None:
-    runtime = _runtime()
+    runtime = _runtime(logger=logging.getLogger("test_verbosity_raises_the_log_level"))
 
     _run(["cmk", "-v", "--help"], runtime)
 
     assert runtime.logger.level == cli_log_level(1)
+
+
+def test_without_verbosity_the_logger_is_reset_to_info() -> None:
+    logger = logging.getLogger("test_without_verbosity_the_logger_is_reset_to_info")
+    logger.setLevel(logging.DEBUG)
+
+    _run(["cmk", "--help"], _runtime(logger=logger))
+
+    assert logger.level == logging.INFO
 
 
 def test_profiling_is_enabled_on_request() -> None:

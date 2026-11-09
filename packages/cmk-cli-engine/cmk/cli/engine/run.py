@@ -50,7 +50,6 @@ def enable_file_logging(path: Path, logger: logging.Logger) -> None:
 
 def configure_logging() -> logging.Logger:
     logger = logging.getLogger("cmk")
-    logger.setLevel(logging.INFO)
     handler = logging.StreamHandler(sys.stderr)
     handler.setFormatter(
         # astrein: disable=logging-formatter
@@ -105,8 +104,7 @@ def dispatch(
 def _apply_global_options(global_options: CLIGlobalOptions, runtime: Runtime) -> None:
     if global_options.log_file is not None:
         runtime.log_to_file(global_options.log_file, runtime.logger)
-    if global_options.verbosity:
-        runtime.logger.setLevel(log_level(global_options.verbosity))
+    runtime.logger.setLevel(log_level(global_options.verbosity))
     if global_options.profile:
         runtime.enable_profiling()
         runtime.logger.debug("Enabled profiling")

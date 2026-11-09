@@ -29,7 +29,6 @@ from .options import (
 )
 
 type BoundCommand = Callable[[CLIContext, CLIArgs], CLIExitCode]
-"""A command's handler with the command's request already read"""
 
 
 @dataclass(frozen=True, kw_only=True)

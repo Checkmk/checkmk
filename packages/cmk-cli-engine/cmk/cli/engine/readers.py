@@ -46,8 +46,6 @@ def _parse[T](parse: Callable[[str], T], spec: str, argument: str) -> T:
 
 
 class ParsedOptions:
-    """Reads a command's options off the parsed command line"""
-
     def __init__(self, options: GetoptOptions, logger: logging.Logger) -> None:
         self._options = options
         self._logger = logger

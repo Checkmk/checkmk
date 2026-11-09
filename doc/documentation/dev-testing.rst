@@ -134,10 +134,14 @@ not force the test through with patches and mocks.
 In new code, a seam is justified only where behavior varies in production or
 at a real external boundary.
 
-* **Useful seams:** I/O boundaries, time, randomness, external services.
+* **Useful seams:** I/O boundaries, time (clocks, timeouts, intervals),
+  randomness, external services. A parameter with the production value as
+  default is fine, even if only tests ever pass another value.
 * **Redundant seams:** dependency injection for pure functions, interfaces
   around a collaborator with only one implementation, factories that exist
   only so a test can swap in a mock.
+* **Harmful seams:** flags that switch production code into a test mode. The
+  test then runs code that production never runs.
 
 Legacy code without tests reverses the order: get it under test first, by
 whatever means it takes, then restructure it. Patches, mocks and seams that

@@ -24,9 +24,11 @@ instead of patching Checkmk code, and cover one behavior per test.
 - No Checkmk code is patched; collaborators are injected.
 - No check on how a mock was called where a result or state could be
   checked instead.
-- No Protocol, factory or constructor parameter in new production code that
-  only the test uses. Legacy code may need such seams to get under test
-  before it is restructured.
+- No test-mode flag, and no Protocol or factory that only the test uses, in
+  new production code. A parameter for time, randomness or I/O with the
+  production value as default is fine, even if only the test changes it.
+  Legacy code may need such seams to get under test before it is
+  restructured.
 - Each test covers one behavior, and no behavior is tested at two levels.
 - Arrange, Act and Assert are separated by blank lines, not comments.
 - Every bug fix has a regression test that fails without the fix.

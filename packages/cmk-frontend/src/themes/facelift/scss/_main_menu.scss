@@ -107,6 +107,11 @@
         border-left-color: $font-color-purple;
       }
 
+      a.popup_trigger .cmk-icon {
+        width: 32px;
+        height: 32px;
+      }
+
       a.popup_trigger div {
         letter-spacing: 0;
       }

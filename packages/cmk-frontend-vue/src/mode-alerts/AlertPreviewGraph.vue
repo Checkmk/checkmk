@@ -22,7 +22,7 @@ import {
   useNoDataNotice
 } from '@/graphing/composables/useGraphNotice'
 import { useRequestedTimeRange } from '@/graphing/composables/useRequestedTimeRange'
-import type { PanelKey } from '@/graphing/types'
+import type { PanelKey, RequestedTimeRange } from '@/graphing/types'
 import { type Preview, fetchPreview } from '@/mode-alerts/preview-client'
 import {
   type LevelColors,
@@ -54,6 +54,8 @@ const { pauseRefresh, refreshTick, contentReloadPending } = useGlobalRefresh()
 const figureWidth = ref(DEFAULT_FIGURE_WIDTH)
 
 const preview = ref<Preview | null>(null)
+const answeredTimeRange = ref<RequestedTimeRange | undefined>(undefined)
+const failedTimeRange = ref<RequestedTimeRange | undefined>(undefined)
 const isLoading = ref(false)
 const error = ref<string | null>(null)
 
@@ -66,18 +68,21 @@ async function load(): Promise<void> {
   const canvasWidth = Math.max(1, figureWidth.value - CANVAS_MARGIN_HORIZONTAL)
   const step = Math.max(60, Math.ceil((range.end - range.start) / canvasWidth))
   isLoading.value = true
+  failedTimeRange.value = undefined
   try {
     const result = await fetchPreview(props.matchType, props.pattern, range, step)
     if (requestId !== requestCounter) {
       return
     }
     preview.value = result
+    answeredTimeRange.value = { start: range.start, end: range.end }
     error.value = null
   } catch (e) {
     if (requestId !== requestCounter) {
       return
     }
     error.value = e instanceof Error ? e.message : String(e)
+    failedTimeRange.value = { start: range.start, end: range.end }
   } finally {
     if (requestId === requestCounter) {
       isLoading.value = false
@@ -171,6 +176,8 @@ const notice = computed(
       :title="pattern"
       :metrics="metrics"
       :data-time-range="preview?.time_range"
+      :answered-time-range="answeredTimeRange"
+      :failed-time-range="failedTimeRange"
       :horizontal-lines="horizontalLines"
       fit-horizontal-lines
       :requested-time-range="requestedTimeRange"

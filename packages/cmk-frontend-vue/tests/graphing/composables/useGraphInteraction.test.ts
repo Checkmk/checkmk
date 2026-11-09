@@ -45,46 +45,33 @@ describe('useGraphInteraction', () => {
     vi.mocked(globalPin.clearPin).mockClear()
   })
 
-  test('starts on the baseline with time-zoom mode and no pin', () => {
+  test('starts in time-zoom mode with no peak zoom, no reset and no pin', () => {
     const graph = useGraphInteraction(() => BASELINE)
 
-    expect(graph.viewTimeRange.value).toEqual(BASELINE)
     expect(graph.viewValueRange.value).toBeNull()
     expect(graph.inspectionActive.value).toBe(false)
     expect(graph.zoomMode.value).toBe('time')
     expect(graph.pinTime.value).toBeNull()
   })
 
-  test('a zoom intent overlays the view and activates inspection', () => {
+  test('a zoom intent offers no reset before its window lands', () => {
     const graph = useGraphInteraction(() => BASELINE)
 
     graph.onZoom({ timeRange: ZOOMED })
 
-    expect(graph.viewTimeRange.value).toEqual(ZOOMED)
-    expect(graph.inspectionActive.value).toBe(true)
+    expect(graph.inspectionActive.value).toBe(false)
   })
 
-  test('a pan intent shifts the view', () => {
+  test('a pan intent offers no reset before its window lands', () => {
     const graph = useGraphInteraction(() => BASELINE)
     const shifted: TimeRange = { start: 1100, end: 2100, step: 60 }
 
     graph.onPan({ timeRange: shifted })
 
-    expect(graph.viewTimeRange.value).toEqual(shifted)
-    expect(graph.inspectionActive.value).toBe(true)
-  })
-
-  test('a reset intent restores the baseline', () => {
-    const graph = useGraphInteraction(() => BASELINE)
-    graph.onZoom({ timeRange: ZOOMED })
-
-    graph.onReset()
-
-    expect(graph.viewTimeRange.value).toEqual(BASELINE)
     expect(graph.inspectionActive.value).toBe(false)
   })
 
-  test('a changed baseline updates the view but does not clear the reset target', async () => {
+  test('a changed baseline does not clear the reset target', async () => {
     const baseline = ref<TimeRange>(BASELINE)
     const graph = useGraphInteraction(() => baseline.value)
     graph.onZoom({ timeRange: ZOOMED })
@@ -93,21 +80,7 @@ describe('useGraphInteraction', () => {
     baseline.value = committed
     await nextTick()
 
-    // The local inspection overlay clears (rangeCommit) so the fresh baseline shows through...
-    expect(graph.viewTimeRange.value).toEqual(committed)
-    // ...but inspectionActive stays true: a baseline change alone never clears the reset
-    // target (only onReset(), or the host reporting someone else's range change, does).
     expect(graph.inspectionActive.value).toBe(true)
-  })
-
-  test('a baseline arriving after an initial undefined becomes the view', async () => {
-    const baseline = ref<TimeRange | undefined>(undefined)
-    const graph = useGraphInteraction(() => baseline.value)
-
-    baseline.value = BASELINE
-    await nextTick()
-
-    expect(graph.viewTimeRange.value).toEqual(BASELINE)
   })
 
   test('creating a pin delegates to the global pin', () => {
@@ -309,8 +282,6 @@ test('abandoning the inspection ends it without publishing a range', () => {
 })
 
 describe('the host reports who moved the requested time range', () => {
-  // Zoomed, with the zoom's own fetch settled: that clears the transient overlay, so whatever
-  // inspection is left comes from the reset target alone.
   async function settledZoomedGraph() {
     const baseline = ref<TimeRange>(BASELINE)
     const graph = useGraphInteraction(() => baseline.value)
@@ -385,7 +356,6 @@ describe('a peak zoom outlives every change of the requested time range', () => 
     graph.onPan({ timeRange: SHIFTED })
     await refetchServes(baseline, SHIFTED)
 
-    expect(graph.viewTimeRange.value).toEqual(SHIFTED)
     expect(graph.viewValueRange.value).toEqual(PEAK)
   })
 
@@ -395,7 +365,6 @@ describe('a peak zoom outlives every change of the requested time range', () => 
     graph.onZoom({ timeRange: ZOOMED })
     await refetchServes(baseline, ZOOMED)
 
-    expect(graph.viewTimeRange.value).toEqual(ZOOMED)
     expect(graph.viewValueRange.value).toEqual(PEAK)
   })
 
@@ -405,7 +374,6 @@ describe('a peak zoom outlives every change of the requested time range', () => 
     graph.onBrush({ start: SHIFTED.start, end: SHIFTED.end }, 'translated_timerange')
     await refetchServes(baseline, SHIFTED)
 
-    expect(graph.viewTimeRange.value).toEqual(SHIFTED)
     expect(graph.viewValueRange.value).toEqual(PEAK)
   })
 
@@ -428,6 +396,28 @@ describe('a peak zoom outlives every change of the requested time range', () => 
 
     expect(graph.viewValueRange.value).toBeNull()
     expect(graph.inspectionActive.value).toBe(false)
+  })
+
+  test('the time picker moving the range ends it when the new window fails to load', async () => {
+    const requestedTimeRange = ref<RequestedTimeRange>(bounds(BASELINE))
+    const failedTimeRange = ref<RequestedTimeRange | undefined>(undefined)
+    const graph = useGraphInteraction(
+      () => BASELINE,
+      undefined,
+      () => requestedTimeRange.value,
+      undefined,
+      () => bounds(BASELINE),
+      () => failedTimeRange.value
+    )
+    graph.onZoom({ timeRange: BASELINE, valueRange: PEAK })
+    requestedTimeRange.value = bounds(SHIFTED)
+    graph.onRangeChange({ version: 1, source: 'time_picker' }, OWN_KEY)
+    await nextTick()
+
+    failedTimeRange.value = bounds(SHIFTED)
+    await nextTick()
+
+    expect(graph.viewValueRange.value).toBeNull()
   })
 
   test('a refetch re-serving the same window at another step keeps it', async () => {

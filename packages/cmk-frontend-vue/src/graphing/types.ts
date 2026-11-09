@@ -108,7 +108,10 @@ export interface GraphPanelProps {
   // so that parent components can forward their own optional range prop directly.
   dataTimeRange?: TimeRange | undefined
   requestedTimeRange: RequestedTimeRange
-  // While true the panel draws the range its data covers, not the one requested.
+  // The requested range dataTimeRange was fetched for; absent means requestedTimeRange.
+  answeredTimeRange?: RequestedTimeRange | undefined
+  // The requested range whose fetch failed, until the next fetch goes out.
+  failedTimeRange?: RequestedTimeRange | undefined
   awaitingData?: boolean | undefined
   // Identifies this panel as the source of its own range commits.
   panelKey: PanelKey

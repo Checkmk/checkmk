@@ -441,6 +441,16 @@ test('a pan fetches the panned window over the requested span', async () => {
   expect({ start, end }).toEqual({ start: 500, end: 500 + 4 * 3600 })
 })
 
+test('keeps drawing the window on screen while the panned one is fetched', async () => {
+  renderFigure()
+  const drawnStart = (await screen.findByTestId('view-start')).textContent
+  postSpy.mockReturnValueOnce(new Promise(() => {}))
+
+  await fireEvent.click(screen.getByTestId('emit-pan'))
+
+  expect(screen.getByTestId('view-start')).toHaveTextContent(drawnStart!)
+})
+
 test('a pan reports the panned window to the host', async () => {
   const { emitted } = renderFigure()
   await screen.findByTestId('time-series-graph')
@@ -517,7 +527,7 @@ test('a peak zoom ends when the dashboard configures another range', async () =>
 
   await rerender({ timerange: { type: 'age', hours: 8 } })
 
-  expect(screen.getByTestId('value-range')).toHaveTextContent('none')
+  await waitFor(() => expect(screen.getByTestId('value-range')).toHaveTextContent('none'))
 })
 
 test('carries no context view but keeps panning enabled', async () => {

@@ -180,7 +180,6 @@ describe('zoom sync across the graphs on a page', () => {
     zoomedGraph.onPan({ timeRange: { start: 1_100, end: 2_100, step: 60 } })
     await settlePropagation()
 
-    expect(siblingGraph.viewTimeRange.value).toEqual({ start: 1_100, end: 2_100, step: 60 })
     expect(siblingGraph.viewValueRange.value).toEqual(PEAK)
   })
 

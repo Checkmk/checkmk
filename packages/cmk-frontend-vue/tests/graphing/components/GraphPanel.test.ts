@@ -383,18 +383,23 @@ test.each([
   }
 )
 
-test('a brush change activates inspection, so the reset affordance is offered', async () => {
-  renderPanelWithBrush()
-  expect(screen.getByTestId('inspecting')).toHaveTextContent('false')
-
+test('a brushed window offers the reset affordance once it lands', async () => {
+  const { rerender } = renderPanelWithBrush()
   await fireEvent.click(screen.getByTestId('emit-brush-move'))
+  const brushed: RequestedTimeRange = { start: 300, end: 400 }
+
+  await rerender({
+    requestedTimeRange: brushed,
+    answeredTimeRange: brushed,
+    dataTimeRange: { ...brushed, step: 10 }
+  })
 
   expect(screen.getByTestId('inspecting')).toHaveTextContent('true')
 })
 
 // The renderer stub pans to 300..400. With the same requested span the host republishes exactly
-// that, and the fetch it triggers settles the drawn range on it, clearing the transient overlay:
-// whatever is left of the reset affordance comes from the reset target alone.
+// that, and the fetch it triggers settles the drawn range on it: whatever is left of the reset
+// affordance comes from the reset target alone.
 const PANNED: RequestedTimeRange = { start: 300, end: 400 }
 const PANNED_DATA: TimeRange = { ...PANNED, step: 10 }
 
@@ -861,22 +866,21 @@ test('the renderer receives the baseline view without inspection', () => {
   expect(screen.getByTestId('inspecting')).toHaveTextContent('false')
 })
 
-test('a zoom intent from the renderer overlays the view and activates inspection', async () => {
+test('draws the window its data was fetched for while a newer one is fetched', () => {
   render(GraphPanel, {
     props: {
       metrics: [CPU],
-      dataTimeRange: TIME_RANGE,
-      requestedTimeRange: REQUESTED,
+      dataTimeRange: { start: REQUESTED.start - 300, end: REQUESTED.end + 300, step: 300 },
+      answeredTimeRange: REQUESTED,
+      requestedTimeRange: { start: 100, end: 200 },
+      awaitingData: true,
       panelKey: 0,
       figureWidth: FIGURE_WIDTH,
       interaction: INTERACTION_NONE
     }
   })
 
-  await fireEvent.click(screen.getByTestId('emit-time-zoom'))
-
-  expect(screen.getByTestId('view-start')).toHaveTextContent('100')
-  expect(screen.getByTestId('inspecting')).toHaveTextContent('true')
+  expect(screen.getByTestId('view-start')).toHaveTextContent(String(REQUESTED.start))
 })
 
 test('a zoom intent from the renderer also publishes a requested time range update', async () => {

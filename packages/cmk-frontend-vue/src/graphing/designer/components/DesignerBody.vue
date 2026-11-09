@@ -356,6 +356,8 @@ const addTo = computed<AddTo | null>(() =>
         class="graphing-designer-body__preview"
         :metrics="drawnMetrics"
         :data-time-range="data.dataTimeRange.value"
+        :answered-time-range="data.answeredTimeRange.value"
+        :failed-time-range="data.failedTimeRange.value"
         :horizontal-lines="data.horizontalLines.value"
         :requested-time-range="requestedTimeRange"
         :panel-key="PREVIEW_PANEL_KEY"

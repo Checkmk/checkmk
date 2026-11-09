@@ -5,32 +5,28 @@
  */
 import { type Ref, computed, ref, watch } from 'vue'
 
-import type { PinPayload, TimeRange, ZoomMode, ZoomPayload } from '../components/TimeSeriesGraph'
+import type {
+  PinPayload,
+  TimeRange,
+  ValueRange,
+  ZoomMode,
+  ZoomPayload
+} from '../components/TimeSeriesGraph'
 import type { PanelKey, RangeChange, RequestedTimeRange, TimeRangeCommitKind } from '../types'
+import { committedTimeRange, sameRequestedTimeRange } from '../utils/timeRange'
 import { useGlobalPin } from './useGlobalPin'
-import { useGraphView } from './useGraphView'
-
-// Stands in for the baseline until the first data fetch delivers one; hosts gate
-// their renderer on their own timeRange, so this view is never rendered.
-const EMPTY_TIME_RANGE: TimeRange = { start: 0, end: 0, step: 1 }
 
 // The per-graph interaction owner: the renderer is view-only (emit-and-wait) and this
-// composable holds everything that moves it — the view state machine, the zoom mode,
-// and the pin — plus the handlers that route the renderer's intents into the machine.
+// composable holds everything that moves it, plus the handlers that route the renderer's intents.
 export function useGraphInteraction(
   getBaseline: () => TimeRange | undefined,
   getShowPin: () => boolean = () => false,
   getRequestedTimeRange?: () => RequestedTimeRange,
-  onTimeRangeCommit?: (range: RequestedTimeRange, kind: TimeRangeCommitKind) => void
+  onTimeRangeCommit?: (range: RequestedTimeRange, kind: TimeRangeCommitKind) => void,
+  getAnsweredTimeRange?: () => RequestedTimeRange | undefined,
+  getFailedTimeRange?: () => RequestedTimeRange | undefined
 ) {
-  const {
-    timeRange: viewTimeRange,
-    valueRange: viewValueRange,
-    transientTimeRange,
-    inspectionActive: viewInspectionActive,
-    handleIntent
-  } = useGraphView(() => getBaseline() ?? EMPTY_TIME_RANGE)
-
+  const peakZoomValueRange = ref<ValueRange | null>(null)
   const zoomMode = ref<ZoomMode>('time')
 
   const { pinTime, ensurePinLoaded, setPin, clearPin } = useGlobalPin()
@@ -45,18 +41,67 @@ export function useGraphInteraction(
     { immediate: true }
   )
 
+  function answeredTimeRange(): RequestedTimeRange | undefined {
+    return getAnsweredTimeRange?.() ?? getRequestedTimeRange?.()
+  }
+
+  const dataAnswersRequest = computed(() => {
+    const requested = getRequestedTimeRange?.()
+    const answered = answeredTimeRange()
+    return (
+      requested === undefined ||
+      answered === undefined ||
+      sameRequestedTimeRange(requested, answered)
+    )
+  })
+
+  const fetchFailed = computed(() => {
+    const requested = getRequestedTimeRange?.()
+    const failed = getFailedTimeRange?.()
+    return (
+      requested !== undefined && failed !== undefined && sameRequestedTimeRange(requested, failed)
+    )
+  })
+
+  const awaitingData = computed(() => !dataAnswersRequest.value && !fetchFailed.value)
+
   // Tracks the committing zoom/pan session; resetTarget is the pre-session range, consumed by
   // onReset. It's the requested range, not the RRD-step-snapped baseline: publishing that would
   // drop the time picker to "Custom time range". Falls back to the baseline if nothing was
   // requested.
   const zoomSession: Ref<{ resetTarget: RequestedTimeRange } | null> = ref(null)
-  const inspectionActive = computed(() => viewInspectionActive.value || zoomSession.value !== null)
+  const sessionSettled = ref(false)
+  let peakZoomEndsWhenSettled = false
 
-  watch(getBaseline, (baseline) => {
-    if (baseline !== undefined) {
-      handleIntent({ kind: 'rangeCommit', timeRange: baseline })
+  const inspectionActive = computed(
+    () => peakZoomValueRange.value !== null || (zoomSession.value !== null && sessionSettled.value)
+  )
+
+  function onSettled(): void {
+    sessionSettled.value = zoomSession.value !== null
+    if (peakZoomEndsWhenSettled) {
+      peakZoomEndsWhenSettled = false
+      peakZoomValueRange.value = null
+    }
+  }
+
+  watch([getBaseline, awaitingData], () => {
+    if (!awaitingData.value) {
+      onSettled()
     }
   })
+
+  function endPeakZoom(whenSettled: boolean): void {
+    peakZoomEndsWhenSettled = whenSettled
+    if (!whenSettled) {
+      peakZoomValueRange.value = null
+    }
+  }
+
+  function endSession(): void {
+    zoomSession.value = null
+    sessionSettled.value = false
+  }
 
   // The host reports each change to the requested time range along with who made it, so this
   // never has to guess whether a change was its own commit echoing back.
@@ -70,7 +115,7 @@ export function useGraphInteraction(
     }
     // Another group or a sibling panel moved the window: the reset target is stale, but a peak
     // zoom is still this graph's own business and stands.
-    zoomSession.value = null
+    endSession()
   }
 
   function commitTimeRange(range: RequestedTimeRange, kind: TimeRangeCommitKind): void {
@@ -80,40 +125,65 @@ export function useGraphInteraction(
       start: Math.round(range.start),
       end: Math.round(range.end)
     }
+    const requested = getRequestedTimeRange?.()
+    // Hosts that refetch only a changed range would never land an unmoved window.
+    if (
+      requested !== undefined &&
+      sameRequestedTimeRange(committedTimeRange(requested, rounded, kind), requested)
+    ) {
+      return
+    }
     if (zoomSession.value === null) {
       const baseline = getBaseline()
       if (baseline !== undefined) {
         zoomSession.value = {
-          resetTarget: getRequestedTimeRange?.() ?? { start: baseline.start, end: baseline.end }
+          resetTarget: requested ?? { start: baseline.start, end: baseline.end }
         }
       }
     }
     onTimeRangeCommit?.(rounded, kind)
   }
 
-  function onZoom(payload: ZoomPayload): void {
-    handleIntent({ kind: 'zoomTransient', ...payload })
-    if (!payload.valueRange) {
-      commitTimeRange(payload.timeRange, 'changed_timerange_span')
+  function pannedTimeRange(panned: TimeRange): RequestedTimeRange {
+    const drawn = getBaseline()
+    const requested = getRequestedTimeRange?.()
+    if (!awaitingData.value || drawn === undefined || requested === undefined) {
+      return panned
     }
+    const shiftSeconds = panned.start - drawn.start
+    return { start: requested.start + shiftSeconds, end: requested.end + shiftSeconds }
+  }
+
+  function onZoom(payload: ZoomPayload): void {
+    if (payload.valueRange) {
+      peakZoomEndsWhenSettled = false
+      peakZoomValueRange.value = payload.valueRange
+      return
+    }
+    commitTimeRange(payload.timeRange, 'changed_timerange_span')
   }
 
   function onPan(payload: { timeRange: TimeRange }): void {
-    handleIntent({ kind: 'pan', timeRange: payload.timeRange })
-    commitTimeRange(payload.timeRange, 'translated_timerange')
+    commitTimeRange(pannedTimeRange(payload.timeRange), 'translated_timerange')
   }
 
   function abandonInspection(): void {
-    handleIntent({ kind: 'reset' })
-    zoomSession.value = null
+    endSession()
+    endPeakZoom(awaitingData.value)
   }
 
   function onReset(): void {
     const endedSession = zoomSession.value
-    abandonInspection()
-    if (endedSession !== null) {
-      onTimeRangeCommit?.(endedSession.resetTarget, 'changed_timerange_span')
+    endSession()
+    if (endedSession === null) {
+      endPeakZoom(awaitingData.value)
+      return
     }
+    const answered = answeredTimeRange()
+    endPeakZoom(
+      answered !== undefined && !sameRequestedTimeRange(endedSession.resetTarget, answered)
+    )
+    onTimeRangeCommit?.(endedSession.resetTarget, 'changed_timerange_span')
   }
 
   function onPinCreate(payload: PinPayload): void {
@@ -121,9 +191,7 @@ export function useGraphInteraction(
   }
 
   return {
-    viewTimeRange,
-    viewValueRange,
-    transientTimeRange,
+    viewValueRange: computed(() => peakZoomValueRange.value),
     inspectionActive,
     zoomMode,
     pinTime,

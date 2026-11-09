@@ -187,12 +187,11 @@ const onCommittedTimeRange = (range: RequestedTimeRange, kind: TimeRangeCommitKi
 }
 
 const baselineTimeRange = computed<TimeRange | undefined>(() => {
-  const served = graph.value?.timeRange
-  return served && timeAxis.value.drawnTimeRange(requestedTimeRange.value, served)
+  const held = graph.value
+  return held ? timeAxis.value.drawnTimeRange(held.requestedTimeRange, held.timeRange) : undefined
 })
 
 const {
-  viewTimeRange,
   viewValueRange,
   inspectionActive,
   pinTime,
@@ -206,7 +205,9 @@ const {
   () => baselineTimeRange.value,
   () => props.showPin,
   () => requestedTimeRange.value,
-  onCommittedTimeRange
+  onCommittedTimeRange,
+  () => graph.value?.requestedTimeRange,
+  () => load.value?.failedTimeRange
 )
 
 // The widget owns its displayed window and draws at the fixed consolidation, so it builds the
@@ -233,8 +234,9 @@ watch(
   ],
   () => {
     zoomSessionActive.value = false
-    abandonInspection()
+    // The new window first, so a peak zoom ends with it rather than ahead of it.
     refresh()
+    abandonInspection()
     // Stop first: a figure that starts following the host must not keep its own timer.
     timer.stop()
     startTimer()
@@ -248,8 +250,8 @@ watch(
       return
     }
     zoomSessionActive.value = false
-    abandonInspection()
     refresh()
+    abandonInspection()
   },
   // Synchronous, so the new window is in place before useGraphData reacts to the same tick;
   // a deferred copy would fetch the old window first and then the new one.
@@ -340,8 +342,7 @@ onBeforeUnmount(() => {
       class="graphing-graph-figure__graph"
       :class="{ 'graphing-graph-figure__graph--pinnable': showPin }"
     >
-      <!-- Initial load only: while a refetch is pending the held data stays rendered
-           (the transient zoom bridges it). -->
+      <!-- Initial load only: while a refetch is pending the held data stays rendered. -->
       <CmkIcon
         v-if="showLoadingIcon"
         name="load-graph"
@@ -349,8 +350,8 @@ onBeforeUnmount(() => {
         class="graphing-graph-figure__loading-icon"
       />
       <TimeSeriesGraph
-        v-if="graph"
-        :view_time_range="viewTimeRange"
+        v-if="graph && baselineTimeRange"
+        :view_time_range="baselineTimeRange"
         :data_time_range="graph.timeRange"
         :metrics="visibleMetrics"
         :horizontal_lines="visibleHorizontalLines"

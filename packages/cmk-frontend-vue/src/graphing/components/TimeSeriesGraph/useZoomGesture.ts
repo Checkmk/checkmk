@@ -165,8 +165,6 @@ export function useZoomGesture(options: ZoomGestureOptions) {
     const timeA = (options.xScale.invert(fromX) as Date).getTime() / 1000
     const timeB = (options.xScale.invert(toX) as Date).getTime() / 1000
     const [start, end] = clampSpan([timeA, timeB], options.minTimeRange())
-    // step is carried unchanged: a time-zoom-in redraws held data, so it only feeds the
-    // tick-density heuristic, never a refetch.
     options.onZoom({ timeRange: { start, end, step: range.step } })
   }
 

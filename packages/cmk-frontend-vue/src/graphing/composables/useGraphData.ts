@@ -139,10 +139,12 @@ export interface GraphFetchState {
 /** One graph of a group: the data it holds and how its own load went. */
 export interface GraphLoad extends GraphFetchState {
   graph: ResolvedGraph | null
+  failedTimeRange: RequestedTimeRange | undefined
 }
 
 const NOT_LOADED: GraphLoad = {
   graph: null,
+  failedTimeRange: undefined,
   isLoading: false,
   error: null,
   partialErrors: [],
@@ -283,7 +285,7 @@ export function useGraphData(
     control.inFlight?.abort()
     const inFlight = new AbortController()
     control.inFlight = inFlight
-    updateLoad(index, { isLoading: true })
+    updateLoad(index, { isLoading: true, failedTimeRange: undefined })
 
     let update: Partial<GraphLoad>
     try {
@@ -295,7 +297,10 @@ export function useGraphData(
         warnings: entry.warnings
       }
     } catch (e) {
-      update = { error: e instanceof Error ? e.message : String(e) }
+      update = {
+        error: e instanceof Error ? e.message : String(e),
+        failedTimeRange: request.requestedTimeRange
+      }
     }
     if (control.inFlight !== inFlight) {
       return

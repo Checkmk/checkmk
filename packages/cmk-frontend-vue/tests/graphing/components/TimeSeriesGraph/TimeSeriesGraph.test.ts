@@ -808,6 +808,8 @@ describe('TimeSeriesGraph — keyboard access to the zoom reset', () => {
       />`
     })
     render(host)
+    // A press focuses the plot it lands on, which jsdom leaves to the test.
+    screen.getByRole('img').focus()
 
     pressPlot({ x: 200, y: 100 }, 80)
 

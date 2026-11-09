@@ -491,10 +491,29 @@ const plotAriaLabel = computed<string>(() => {
   return metricTitles.length > 0 ? metricTitles.join(', ') : fallbackPlotLabel
 })
 // Hands the keyboard the way back out of the zoom: Enter right after the drag resets it.
+let resetFocusOwed = false
 function onDragZoom(payload: ZoomPayload): void {
+  resetFocusOwed = true
   emit('zoom', payload)
-  void nextTick(() => resetButton.value?.focus())
+  void nextTick(handOverResetFocus)
 }
+function handOverResetFocus(): void {
+  if (!resetFocusOwed || resetButton.value === null) {
+    return
+  }
+  resetFocusOwed = false
+  if (document.activeElement === canvas.value) {
+    resetButton.value.focus()
+  }
+}
+watch(
+  () => props.inspecting,
+  (inspecting) => {
+    if (inspecting) {
+      void nextTick(handOverResetFocus)
+    }
+  }
+)
 function onResetClick(): void {
   emit('reset')
   canvas.value?.focus()

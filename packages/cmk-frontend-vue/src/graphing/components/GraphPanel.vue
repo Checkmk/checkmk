@@ -18,7 +18,6 @@ import type {
   GraphPanelEmits,
   GraphPanelProps,
   RequestedTimeRange,
-  TimeInterval,
   TimeRange,
   TimeRangeCommitKind
 } from '../types.ts'
@@ -53,13 +52,13 @@ const timeAxis = computed(() =>
     : binnedTimeAxis(props.binUnit, getLocalTimeZone())
 )
 
+const answeredTimeRange = computed(() => props.answeredTimeRange ?? props.requestedTimeRange)
+
 const baselineTimeRange = computed<TimeRange>(() => {
   if (!props.dataTimeRange) {
     return { ...props.requestedTimeRange, step: NOMINAL_STEP_SECONDS }
   }
-  return props.awaitingData
-    ? props.dataTimeRange
-    : timeAxis.value.drawnTimeRange(props.requestedTimeRange, props.dataTimeRange)
+  return timeAxis.value.drawnTimeRange(answeredTimeRange.value, props.dataTimeRange)
 })
 
 const headerTimeRange = computed<TimeRange | undefined>(() =>
@@ -67,9 +66,7 @@ const headerTimeRange = computed<TimeRange | undefined>(() =>
 )
 
 const {
-  viewTimeRange,
   viewValueRange,
-  transientTimeRange,
   inspectionActive,
   zoomMode,
   pinTime,
@@ -84,7 +81,9 @@ const {
   () => baselineTimeRange.value, // getBaseline
   () => props.interaction.pin === 'enabled', // getShowPin
   () => props.requestedTimeRange, // getRequestedTimeRange
-  updateTimeRange // onTimeRangeCommit
+  updateTimeRange, // onTimeRangeCommit
+  () => answeredTimeRange.value, // getAnsweredTimeRange
+  () => props.failedTimeRange // getFailedTimeRange
 )
 
 watch(
@@ -145,18 +144,16 @@ const anyMetricShown = computed(() => visibleMetrics.value.some((metric) => !met
 
 const requestedSpan = computed(() => props.requestedTimeRange.end - props.requestedTimeRange.start)
 
-// The served range while it is what the panel draws; nothing while a fetch is out.
-const servedOnScreen = computed(() => (props.awaitingData ? undefined : props.dataTimeRange))
+const servedForRequest = computed(() => (props.awaitingData ? undefined : props.dataTimeRange))
 
-// Read off the data on screen only: the fetch out may answer finer than the window before it.
-const zoomFloor = computed(() => timeAxis.value.zoomFloor(servedOnScreen.value))
+const zoomFloor = computed(() => timeAxis.value.zoomFloor(servedForRequest.value))
 
 // Time zoom clamps the *requested* window at the floor, so that is the range which reaches it;
 // the served window stays a step wider and would never compare equal.
 const atMinTimeZoom = computed(() => requestedSpan.value <= zoomFloor.value)
 
 const minTimeRange = computed(() =>
-  timeAxis.value.minSpan(MIN_ZOOM_TIME_RANGE_SECONDS, servedOnScreen.value)
+  timeAxis.value.minSpan(MIN_ZOOM_TIME_RANGE_SECONDS, servedForRequest.value)
 )
 
 const graphRenderer = ref<InstanceType<typeof TimeSeriesGraph> | null>(null)
@@ -164,7 +161,7 @@ const graphRenderer = ref<InstanceType<typeof TimeSeriesGraph> | null>(null)
 // A landing fetch can be what reveals the floor, with no gesture to refuse; stated once on entering.
 let floorAnnounced = false
 function announceFloorOnLanding(): void {
-  if (servedOnScreen.value === undefined || props.interaction.zoom !== 'enabled') {
+  if (servedForRequest.value === undefined || props.interaction.zoom !== 'enabled') {
     return
   }
   if (!atMinTimeZoom.value) {
@@ -176,7 +173,7 @@ function announceFloorOnLanding(): void {
     graphRenderer.value?.showMaxZoomHint()
   }
 }
-watch(servedOnScreen, announceFloorOnLanding, { flush: 'post' })
+watch(servedForRequest, announceFloorOnLanding, { flush: 'post' })
 onMounted(announceFloorOnLanding)
 
 const effectiveYAxis = computed(() => deriveYAxis(props.metrics, props.yAxis ?? null))
@@ -202,12 +199,6 @@ const showGraphHeader: Ref<boolean> = computed(
     props.interaction.burger === 'enabled' ||
     zoomControlsEnabled.value ||
     props.showConsolidation
-)
-
-// Not `viewTimeRange`: that is what the curves are drawn against, which during a refetch is
-// still the range the previous data covered.
-const brushWindow = computed<TimeInterval | undefined>(
-  () => transientTimeRange.value ?? props.brushSnapshot?.window
 )
 
 // The renderer sizes its own value-axis margin to the labels it draws; the brush track mirrors
@@ -258,7 +249,7 @@ const legendAlignedWithPlot = computed(() =>
         >
           <TimeSeriesGraph
             ref="graphRenderer"
-            :view_time_range="viewTimeRange"
+            :view_time_range="baselineTimeRange"
             :data_time_range="dataTimeRange"
             :metrics="visibleMetrics"
             :horizontal_lines="visibleHorizontalLines"
@@ -306,12 +297,12 @@ const legendAlignedWithPlot = computed(() =>
         </div>
 
         <GraphBrush
-          v-if="interaction.brush === 'enabled' && brushSnapshot && brushWindow && dataTimeRange"
+          v-if="interaction.brush === 'enabled' && brushSnapshot && dataTimeRange"
           class="graphing-graph-panel__brush"
           :metrics="visibleBrushMetrics"
           :domain="brushSnapshot.drawnDomain"
           :data-domain="brushSnapshot.data.dataTimeRange"
-          :window="brushWindow"
+          :window="brushSnapshot.window"
           :min-span="minTimeRange"
           :bin-unit="timeAxis.binUnit"
           :width="figureWidth"

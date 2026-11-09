@@ -59,6 +59,8 @@ export interface CustomGraphData {
   /** The title each source resolved to in the last completed fetch; unresolved ones are absent. */
   resolvedTitles: Readonly<Ref<Map<ItemId, string>>>
   dataTimeRange: Readonly<Ref<TimeRange | undefined>>
+  answeredTimeRange: Readonly<Ref<RequestedTimeRange | undefined>>
+  failedTimeRange: Readonly<Ref<RequestedTimeRange | undefined>>
   horizontalLines: Readonly<Ref<HorizontalLine[]>>
   overview: Readonly<Ref<OverviewData | undefined>>
   isLoading: Readonly<Ref<boolean>>
@@ -117,6 +119,8 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
   const metricsBySource = ref<Map<ItemId, Metric[]>>(new Map())
   const resolvedTitles = ref<Map<ItemId, string>>(new Map())
   const dataTimeRange = ref<TimeRange | undefined>(undefined)
+  const answeredTimeRange = ref<RequestedTimeRange | undefined>(undefined)
+  const failedTimeRange = ref<RequestedTimeRange | undefined>(undefined)
   const horizontalLines = ref<HorizontalLine[]>([])
   const overview = ref<OverviewData | undefined>(undefined)
   const isLoading = ref(false)
@@ -143,6 +147,8 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
     metricsBySource.value = new Map()
     resolvedTitles.value = new Map()
     dataTimeRange.value = undefined
+    answeredTimeRange.value = undefined
+    failedTimeRange.value = undefined
     horizontalLines.value = []
     overview.value = undefined
     lastOverviewKey = null
@@ -187,6 +193,7 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
     // A translation leaves the strip where it was, so its series are already the current ones.
     const overviewIsCurrent = overviewKey !== null && overviewKey === lastOverviewKey
 
+    failedTimeRange.value = undefined
     isLoading.value = true
     // Cleared on success below, not here, so a retry keeps the failure stated until a result lands.
     try {
@@ -209,6 +216,7 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
       metricsBySource.value = bySource
       resolvedTitles.value = resolveTitles(items, bySource, groupTitles)
       dataTimeRange.value = main.time_range
+      answeredTimeRange.value = { start: range.start, end: range.end }
       horizontalLines.value = main.horizontal_lines
       if (overviewBody === null) {
         overview.value = undefined
@@ -238,6 +246,7 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
         return
       }
       error.value = e instanceof Error ? e.message : String(e)
+      failedTimeRange.value = { start: range.start, end: range.end }
       // A retry has to ask for the strip again, whichever of the two fetches failed.
       lastOverviewKey = null
     } finally {
@@ -303,6 +312,8 @@ export function useCustomGraphData(options: UseCustomGraphDataOptions): CustomGr
     metricsBySource,
     resolvedTitles,
     dataTimeRange,
+    answeredTimeRange,
+    failedTimeRange,
     horizontalLines,
     overview,
     isLoading: readonly(isLoading),

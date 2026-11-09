@@ -25,6 +25,8 @@ defineProps<{
   title: string
   metrics: Metric[]
   dataTimeRange: TimeRange | undefined
+  answeredTimeRange: RequestedTimeRange | undefined
+  failedTimeRange: RequestedTimeRange | undefined
   horizontalLines: HorizontalLine[]
   fitHorizontalLines?: boolean
   requestedTimeRange: RequestedTimeRange
@@ -67,6 +69,8 @@ function onPanelTimeRange(requested: RequestedTimeRange): void {
     <GraphPanel
       :metrics="metrics"
       :data-time-range="dataTimeRange"
+      :answered-time-range="answeredTimeRange"
+      :failed-time-range="failedTimeRange"
       :horizontal-lines="horizontalLines"
       :fit-horizontal-lines="fitHorizontalLines"
       :requested-time-range="requestedTimeRange"

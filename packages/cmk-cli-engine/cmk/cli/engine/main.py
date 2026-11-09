@@ -79,8 +79,8 @@ def tracing(environ: Mapping[str, str]) -> CommandTracer:
         with tracer.span(
             f"command[{run_command.command.name}]",
             attributes={
-                "cmk.base.command.name": run_command.command.name,
-                "cmk.base.command.args": repr(
+                "cmk.cli.command.name": run_command.command.name,
+                "cmk.cli.command.args": repr(
                     (context.global_options, run_command.options, run_command.args)
                 ),
             },

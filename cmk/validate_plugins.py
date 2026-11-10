@@ -52,6 +52,7 @@ from cmk.gui.rule_specs.types import (  # astrein: disable=module-layers
 )
 from cmk.gui.watolib.rulespecs import (  # astrein: disable=module-layers
     FormSpecNotImplementedError,
+    Rulespec,
     rulespec_registry,
 )
 from cmk.gui.wsgi.app import (  # astrein: disable=module-layers
@@ -224,6 +225,19 @@ def _validate_rule_spec_form_creation(*, debug: bool) -> ActiveCheckResult:
     return to_result(ValidationStep.RULE_SPEC_FORMS, errors)
 
 
+def _validate_parameters(rule_spec: Rulespec, params: object) -> None:
+    try:
+        visitor = get_visitor(
+            rule_spec.form_spec, VisitorOptions(mask_values=True, migrate_values=True)
+        )
+        validation_errors = visitor.validate(RawDiskData(params))
+        if validation_errors:
+            raise MKGeneralException(f"Validation Error {validation_errors}")
+    except FormSpecNotImplementedError:
+        rule_spec.valuespec.validate_datatype(params, "")
+        rule_spec.valuespec.validate_value(params, "")
+
+
 def _validate_agent_based_plugin_v2_ruleset_ref(
     plugin: _AgentBasedPlugins,
     *,
@@ -259,16 +273,7 @@ def _validate_agent_based_plugin_v2_ruleset_ref(
         params = default_params
 
     try:
-        try:
-            visitor = get_visitor(
-                rule_spec.form_spec, VisitorOptions(mask_values=True, migrate_values=True)
-            )
-            validation_errors = visitor.validate(RawDiskData(params))
-            if validation_errors:
-                raise MKGeneralException(f"Validation Error {validation_errors}")
-        except FormSpecNotImplementedError:
-            rule_spec.valuespec.validate_datatype(params, "")
-            rule_spec.valuespec.validate_value(params, "")
+        _validate_parameters(rule_spec, params)
     except Exception as e:
         if debug:
             raise e

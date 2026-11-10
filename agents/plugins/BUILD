@@ -7,6 +7,11 @@ exports_files(
     ],
 )
 
+exports_files(
+    ["mk_redis"],
+    visibility = ["//tests/unit-shell/agents:__pkg__"],
+)
+
 filegroup(
     name = "srcs",
     srcs = glob(

@@ -32,3 +32,8 @@ sh_library(
     ],
     visibility = ["//visibility:public"],
 )
+
+exports_files(
+    ["mk_redis.cfg"],
+    visibility = ["//tests/unit-shell/agents:__pkg__"],
+)

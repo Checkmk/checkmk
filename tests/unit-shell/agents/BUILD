@@ -32,7 +32,7 @@ shunit2_test(
         "UNIT_SH_AGENTS_DIR": "${UNIT_SH_REPO_PATH}/agents",
         "UNIT_SH_PLUGINS_DIR": "${UNIT_SH_REPO_PATH}/agents/plugins",
     },
-    deps = ["//agents/plugins:agents_plugins_sh"],
+    deps = [":test_mk_redis_shell_script"],
 )
 
 # Lets shellcheck see these scripts. Nothing depends on this target.
@@ -62,5 +62,14 @@ sh_library(
     srcs = [
         "plugins/test_kaspersky_av.sh",
         "//cmk/plugins/collection/agents:kaspersky_av",
+    ],
+)
+
+sh_library(
+    name = "test_mk_redis_shell_script",
+    srcs = [
+        "plugins/test_mk_redis.sh",
+        "//agents/cfg_examples:mk_redis.cfg",
+        "//agents/plugins:mk_redis",
     ],
 )

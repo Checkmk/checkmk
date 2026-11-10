@@ -39,7 +39,6 @@ tests/packaging/package_validator/src/main.rs
 tests/run_tests.sh
 tests/unit-shell/agents/plugins/test_ibm_mq.sh
 tests/unit-shell/agents/plugins/test_mk_inventory.sh
-tests/unit-shell/agents/plugins/test_mk_redis.sh
 tests/unit-shell/agents/plugins/test_mk_tsm.sh
 tests/unit-shell/agents/plugins/test_netstat.linux.sh
 tests/unit-shell/agents/plugins/test_symantec_av.sh

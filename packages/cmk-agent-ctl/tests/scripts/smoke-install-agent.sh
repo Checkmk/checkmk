@@ -3,8 +3,8 @@
 #
 # The mode calls dpkg and rpm by name, so a stand-in on PATH takes their place,
 # and DEBUG_HOME_DIR puts the controller into the classic layout, where the
-# download directory is <home>/update. Nothing here needs root and nothing
-# touches the package database of this machine.
+# install result goes to <home>. Nothing here needs root and nothing touches
+# the package database of this machine.
 #
 # Usage: smoke-install-agent.sh [path to cmk-agent-ctl]
 
@@ -45,19 +45,17 @@ readonly WORK
 trap 'rm -rf "${WORK}"' EXIT
 
 readonly HOME_DIR="${WORK}/home"
-readonly UPDATE_DIR="${HOME_DIR}/update"
 readonly FAKE_BIN="${WORK}/bin"
-readonly OUTSIDE="${WORK}/outside"
 # What the stand-in was called with. The controller names the command line at
 # log level info only, and the mode runs at the default level here, so the
 # invocation is taken from the stand-in itself rather than from the log.
 readonly CALLS="${WORK}/calls"
-mkdir -p "${UPDATE_DIR}" "${FAKE_BIN}" "${OUTSIDE}"
+mkdir -p "${HOME_DIR}" "${FAKE_BIN}"
 
 # One stand-in for both managers: it records its arguments and the content it
 # was handed, and obeys FAKE_EXIT, so a failing installation needs no second
 # script. The content matters because the mode hands over a descriptor of the
-# bytes it verified, not the directory entry.
+# bytes it verified.
 cat >"${FAKE_BIN}/dpkg" <<'STANDIN'
 #!/bin/sh
 for argument in "$@"; do package="${argument}"; done
@@ -90,25 +88,29 @@ openssl req -x509 -newkey rsa:2048 -nodes -days 2 -subj "/CN=smoke-install-agent
     echo '"""]'
 } >"${CONFIG}"
 
+readonly PACKAGE="${WORK}/package"
+echo "not a real package" >"${PACKAGE}"
+readonly OTHER_PACKAGE="${WORK}/other-package"
+echo "another package" >"${OTHER_PACKAGE}"
+
 failures=0
 
-# Run the mode on one request and report whether it behaved as expected.
+# Run the mode on one conversation and report whether it behaved as expected.
 #
-# $1 title, $2 expected exit code, $3 expected text, $4 the request on standard
-# input. FAKE_EXIT and CONFIG_PATH are passed through, so that a case can let
-# the package manager fail or name another update configuration. The expected
-# text is looked for in what the run leaves behind: the output of the mode and
-# what the stand-in recorded.
+# $1 title, $2 expected exit code, $3 expected text, $4 the file that holds
+# what the controller sends. FAKE_EXIT and CONFIG_PATH are passed through, so
+# that a case can let the package manager fail or name another update
+# configuration. The expected text is looked for in what the run leaves
+# behind: what the mode logged and answered, and what the stand-in recorded.
 run_case() {
-    local title="$1" expected_code="$2" expected_text="$3" request="$4"
+    local title="$1" expected_code="$2" expected_text="$3" input="$4"
     local output code evidence
 
     : >"${CALLS}"
-    output="$(printf '%s\n' "${request}" |
-        env PATH="${FAKE_BIN}:${PATH}" DEBUG_HOME_DIR="${HOME_DIR}" \
-            CMK_AGENT_CTL_UPDATE_CONFIG="${CONFIG_PATH:-${CONFIG}}" \
-            FAKE_EXIT="${FAKE_EXIT:-0}" FAKE_CALLS="${CALLS}" \
-            "${CONTROLLER}" install-agent 2>&1)"
+    output="$(env PATH="${FAKE_BIN}:${PATH}" DEBUG_HOME_DIR="${HOME_DIR}" \
+        CMK_AGENT_CTL_UPDATE_CONFIG="${CONFIG_PATH:-${CONFIG}}" \
+        FAKE_EXIT="${FAKE_EXIT:-0}" FAKE_CALLS="${CALLS}" \
+        "${CONTROLLER}" install-agent <"${input}" 2>&1)"
     code=$?
     evidence="${output}
 $(cat "${CALLS}")"
@@ -128,104 +130,83 @@ $(cat "${CALLS}")"
     echo "    ${GREEN}ok: exit ${code}, '${expected_text}'${RESET}"
 }
 
-# Put a package of $1 into the download directory and name it.
-spool() {
-    local name="$1"
-    echo "not a real package" >"${UPDATE_DIR}/${name}"
-    echo "${UPDATE_DIR}/${name}"
-}
-
 # The certificate as one JSON string, newlines escaped as the site sends them.
 json_certificate() {
     awk 'BEGIN { printf "\"" } { printf "%s\\n", $0 } END { printf "\"" }' "${CERTIFICATE}"
 }
 
-# A request for $1, signed with the key of the trust anchor. SIGN_INSTEAD names
-# a file to sign in its place, which is how a package nothing vouches for is
-# built.
-request_for() {
-    local package="$1" signature
-    signature="$(openssl dgst -sha256 -sign "${KEY}" "${SIGN_INSTEAD:-${package}}" |
-        openssl base64 -A)"
-    printf '{"package": "%s", "signatures": [{"certificate": %s, "signature": "%s"}]}' \
-        "${package}" "$(json_certificate)" "${signature}"
+# Write what the controller sends for the package $1 of the platform $2, and
+# name the file: the request, signed with the key of the trust anchor, the
+# package bytes and the install line. The line goes along right away, because
+# the mode reads it only after it has accepted the package.
+#
+# SIGN_INSTEAD names a file to sign in place of the package, which is how a
+# package nothing vouches for is built. UNSIGNED leaves the signatures out,
+# SIZE announces another length, and NO_INSTALL leaves out the install line.
+conversation() {
+    local package="$1" platform="$2" input="${WORK}/input" signatures size
+    if [ -n "${UNSIGNED:-}" ]; then
+        signatures="[]"
+    else
+        signatures="[{\"certificate\": $(json_certificate), \"signature\": \"$(
+            openssl dgst -sha256 -sign "${KEY}" "${SIGN_INSTEAD:-${package}}" | openssl base64 -A
+        )\"}]"
+    fi
+    size="${SIZE:-$(wc -c <"${package}" | tr -d ' ')}"
+    {
+        printf '{"aghash": "%s", "platform": "%s", "size": %s, "signatures": %s}\n' \
+            "${HASH}" "${platform}" "${size}" "${signatures}"
+        cat "${package}"
+        [ -n "${NO_INSTALL:-}" ] || echo install
+    } >"${input}"
+    echo "${input}"
 }
 
-# A request for $1 that carries no signature at all.
-unsigned_request_for() {
-    printf '{"package": "%s", "signatures": []}' "$1"
-}
-
-# The package manager is handed /proc/<pid>/fd/<n> of the verified bytes, not
-# the directory entry, which is why these cases match on "/proc/" and one of
-# them on the content that arrived there.
-package="$(spool "${HASH}.deb")"
+# The package manager is handed /proc/<pid>/fd/<n> of the verified bytes,
+# which is why these cases match on "/proc/" and one of them on the content
+# that arrived there.
 run_case "a deb is handed to dpkg" 0 "dpkg called with: -i /proc/" \
-    "$(request_for "${package}")"
-[ -e "${package}" ] && echo "    ${RED}FAIL: the package was not removed${RESET}" &&
-    failures=$((failures + 1))
+    "$(conversation "${PACKAGE}" linux_deb)"
 
-package="$(spool "${HASH}.deb")"
 run_case "the verified bytes reach the package manager" 0 "dpkg read: not a real package" \
-    "$(request_for "${package}")"
+    "$(conversation "${PACKAGE}" linux_deb)"
 
-package="$(spool "${HASH}.rpm")"
 run_case "an rpm is handed to rpm" 0 \
     "rpm called with: -vU --oldpackage --replacepkgs /proc/" \
-    "$(request_for "${package}")"
-[ -e "${package}" ] && echo "    ${RED}FAIL: the package was not removed${RESET}" &&
-    failures=$((failures + 1))
+    "$(conversation "${PACKAGE}" linux_rpm)"
 
-package="$(spool "${HASH}.deb")"
+run_case "the result goes back to the controller" 0 '"success":true' \
+    "$(conversation "${PACKAGE}" linux_deb)"
+
 FAKE_EXIT=1 run_case "a failing package manager is reported" 1 "failed, exit status: 1" \
-    "$(request_for "${package}")"
-[ -e "${package}" ] && echo "    ${RED}FAIL: the package was not removed${RESET}" &&
+    "$(conversation "${PACKAGE}" linux_deb)"
+
+run_case "a package the signature does not cover is refused" 1 \
+    "No signature of the package matches a configured signature key" \
+    "$(SIGN_INSTEAD="${OTHER_PACKAGE}" conversation "${PACKAGE}" linux_deb)"
+
+run_case "an unsigned package is refused" 1 '"accepted":false' \
+    "$(UNSIGNED=1 conversation "${PACKAGE}" linux_deb)"
+
+CONFIG_PATH="${WORK}/absent.toml" run_case "a missing update configuration is refused" 1 \
+    "No updater configuration" "$(conversation "${PACKAGE}" linux_deb)"
+
+run_case "a platform without a package manager is refused" 1 \
+    "No package manager installs packages of the platform" \
+    "$(conversation "${PACKAGE}" windows_msi)"
+
+run_case "a transfer shorter than its size is refused" 1 "ended the transfer after" \
+    "$(SIZE=1000 conversation "${PACKAGE}" linux_deb)"
+
+run_case "without the install line nothing is installed" 1 "before it asked to install" \
+    "$(NO_INSTALL=1 conversation "${PACKAGE}" linux_deb)"
+grep -q "called with" "${CALLS}" &&
+    echo "    ${RED}FAIL: the package manager ran${RESET}" &&
     failures=$((failures + 1))
 
-package="$(spool "${HASH}.deb")"
-echo "another package" >"${OUTSIDE}/other.deb"
-# Set before the request is built: a prefix on run_case would come too late,
-# the argument is expanded first.
-SIGN_INSTEAD="${OUTSIDE}/other.deb"
-mismatched_request="$(request_for "${package}")"
-unset SIGN_INSTEAD
-run_case "a package the signature does not cover is refused" 1 \
-    "no signature of it matches a configured signature key" "${mismatched_request}"
-rm -f "${package}"
-
-package="$(spool "${HASH}.deb")"
-run_case "an unsigned package is refused" 1 "no signature of it matches a configured signature key" \
-    "$(unsigned_request_for "${package}")"
-rm -f "${package}"
-
-package="$(spool "${HASH}.deb")"
-CONFIG_PATH="${WORK}/absent.toml" run_case "a missing update configuration is refused" 1 \
-    "No updater configuration" "$(request_for "${package}")"
-rm -f "${package}"
-
-# A package of our own, so that the case does not depend on a system file that
-# a test sandbox may not carry.
-echo "not a real package" >"${OUTSIDE}/${HASH}.deb"
-run_case "a package outside the download directory is refused" 1 "lies outside" \
-    "$(request_for "${OUTSIDE}/${HASH}.deb")"
-
-ln -sf "${OUTSIDE}/${HASH}.deb" "${UPDATE_DIR}/${HASH}.deb"
-run_case "a link out of the download directory is refused" 1 "lies outside" \
-    "$(request_for "${UPDATE_DIR}/${HASH}.deb")"
-rm -f "${UPDATE_DIR}/${HASH}.deb"
-
-package="$(spool "check-mk-agent.deb")"
-run_case "a package not named after a hash is refused" 1 "not named after an agent hash" \
-    "$(request_for "${package}")"
-rm -f "${package}"
-
-package="$(spool "${HASH}.tgz")"
-run_case "a package of another type is refused" 1 "expected a .deb or .rpm file" \
-    "$(request_for "${package}")"
-rm -f "${package}"
-
+echo "/tmp/${HASH}.deb" >"${WORK}/not-a-request"
 run_case "something that is not a request is refused" 1 "Failed to parse the install request" \
-    "/tmp/${HASH}.deb"
+    "${WORK}/not-a-request"
 
 echo
 if [ "${failures}" -eq 0 ]; then

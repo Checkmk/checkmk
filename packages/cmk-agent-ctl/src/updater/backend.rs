@@ -36,6 +36,7 @@ use std::fs;
 use std::fs::File;
 use std::fs::TryLockError;
 use std::io;
+use std::ops::ControlFlow;
 #[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
@@ -57,9 +58,9 @@ const LOCK_RETRY_DELAY: Duration = Duration::from_secs(1);
 /// Without effect on Windows, where the file inherits them from its directory.
 const STATE_FILE_MODE: u32 = 0o600;
 
-/// Permissions of a spooled agent package: the controller writes it, the
-/// privileged installer reads it, nobody else gets to see it.
-/// Without effect on Windows, where the file inherits them from its directory.
+/// Permissions of a spooled agent package: nobody besides the controller and
+/// its group gets to see it. Without effect on Windows, where the file inherits
+/// them from its directory.
 const PACKAGE_FILE_MODE: u32 = 0o640;
 
 /// Longest last error reported to the site, in characters. The state file may
@@ -100,8 +101,8 @@ pub struct UpdaterConfig {
     /// Where the privileged install step of this host listens.
     ///
     /// Linux only: the bakery writes it into the configuration of a package
-    /// that ships the installer unit. Absent means a package can be fetched but
-    /// not handed over to anybody.
+    /// that ships the installer unit. Without it, the controller downloads no
+    /// package.
     #[serde(default)]
     pub installer_socket: Option<PathBuf>,
 }
@@ -279,7 +280,8 @@ pub enum SignatureCheck {
     /// Refuse a package whose signature does not verify.
     Required,
 
-    /// Spool the package whatever its signature says.
+    /// Take the package whatever its signature says. On Linux, the install
+    /// step still verifies it.
     Skip,
 }
 
@@ -368,7 +370,7 @@ impl VerifiedPackage {
     /// the package cannot be written.
     pub fn save(&self, dir: &Path) -> AnyhowResult<PathBuf> {
         let path = spool(&self.0, dir)?;
-        log::info!("Spooled: {self} at {path:?}, waiting for the installer");
+        log::info!("Spooled: {self} at {path:?}, waiting for the agent service");
         Ok(path)
     }
 }
@@ -391,8 +393,8 @@ impl UnverifiedPackage {
     /// where it went.
     ///
     /// The line it writes is a warning, visible without `-v`: the only word
-    /// anyone gets that a privileged installer is about to take a package
-    /// nobody vouched for.
+    /// anyone gets that a package nobody vouched for lies in the download
+    /// directory.
     ///
     /// # Returns
     ///
@@ -404,7 +406,7 @@ impl UnverifiedPackage {
     /// the package cannot be written.
     pub fn save_unverified(&self, dir: &Path) -> AnyhowResult<PathBuf> {
         let path = spool(&self.0, dir)?;
-        log::warn!("Spooled: {self} at {path:?}, waiting for the installer");
+        log::warn!("Spooled: {self} at {path:?}, not handed over");
         Ok(path)
     }
 }
@@ -425,7 +427,7 @@ impl std::fmt::Display for UnverifiedPackage {
 /// `dir` may be created if absent.
 ///
 /// This is the point where bytes delivered by a semi-trusted site turn into a
-/// file that a privileged process will install. Private, and reached only
+/// file that the agent service of Windows will install. Private, and reached only
 /// through [`VerifiedPackage::save`] or [`UnverifiedPackage::save_unverified`]:
 /// the writing is the same, what differs is who may ask for it.
 ///
@@ -497,6 +499,13 @@ fn ensure_verifiable(
     Ok(())
 }
 
+fn download_failed(target: &AgentHash, selected: &connection::UpdateConnection<'_>) -> String {
+    format!(
+        "Agent update download of {target} from {} failed",
+        selected.site_id
+    )
+}
+
 /// What the site answered a check with. Nothing was changed to learn it.
 #[derive(Debug, PartialEq, Eq)]
 pub enum CheckOutcome {
@@ -520,10 +529,11 @@ pub enum CheckOutcome {
     SourceUnavailable,
 }
 
-/// What a fetch did. Nothing is installed here: the package is spooled for the
-/// privileged installer, which is the step after this one.
+/// What a fetch did. `D` is what became of a package that the site offers:
+/// [`Spooled`] from [`Updater::fetch_update`], and on Linux [`Installation`]
+/// from [`WritableUpdater::fetch_and_install`].
 #[derive(Debug, PartialEq, Eq)]
-pub enum FetchOutcome {
+pub enum FetchOutcome<D> {
     /// No site was asked: the updater is not operational or no registered
     /// connection can reach one. The reason is logged.
     NotPossible,
@@ -534,17 +544,8 @@ pub enum FetchOutcome {
     /// The site offers the package this host already runs.
     UpToDate(AgentHash),
 
-    /// The package is waiting for the installer. `signature` says whether
-    /// anything vouched for it: the spooled file itself does not tell them
-    /// apart, so the run that produced it has to say so.
-    Spooled {
-        hash: AgentHash,
-        path: PathBuf,
-        signature: SignatureCheck,
-
-        /// The signatures the site delivered with the package.
-        signatures: Vec<agent_receiver_api::AgentSignature>,
-    },
+    /// The site offers a package other than the installed one.
+    Due(D),
 
     /// The site of the update source serves no agent updates: it answered 501.
     SourceUnavailable,
@@ -554,16 +555,31 @@ pub enum FetchOutcome {
     Superseded,
 }
 
-/// What the hand-over of a spooled package to the privileged install step did.
+/// A package waiting in the download directory. `signature` says whether
+/// anything vouched for it: the spooled file itself does not tell them apart,
+/// so the run that produced it has to say so.
+#[derive(Debug, PartialEq, Eq)]
+pub struct Spooled {
+    pub hash: AgentHash,
+    pub path: PathBuf,
+    pub signature: SignatureCheck,
+}
+
+/// What the privileged install step did with a package that the site offers.
 #[cfg(unix)]
 #[derive(Debug, PartialEq, Eq)]
-pub enum InstallOutcome {
+pub enum Installation {
     /// The configuration names no installer socket, so this host has no
-    /// privileged install step. The package stays where it was spooled.
-    NoInstaller,
+    /// privileged install step, and nothing was downloaded.
+    NoInstaller(AgentHash),
 
-    /// The install step has taken the package and finished.
-    HandedOver,
+    /// The install step accepted the package and ran the package manager.
+    /// `result` is what it sent back, absent when the connection ended
+    /// before.
+    Installed {
+        hash: AgentHash,
+        result: Option<install::InstallResult>,
+    },
 }
 
 /// What the site offers, as [`Updater::offered_update`] decided it.
@@ -609,7 +625,7 @@ pub enum SourceAnswer<'r> {
 /// What the site answered a download with, short of an error.
 #[derive(Debug)]
 enum PackageDownload {
-    Downloaded(UpdatePackage),
+    Started(agent_receiver_api::AgentPackageStream),
 
     /// The site serves no agent updates: it answered 501.
     Unavailable,
@@ -642,11 +658,113 @@ impl std::ops::DerefMut for WritableUpdater {
     }
 }
 
+/// Whether the install step got [`install::INSTALL`], so that the next run
+/// settles what became of the package. A timeout counts: the step may still
+/// finish.
+#[cfg(unix)]
+fn reached_the_installer(installed: &AnyhowResult<Option<install::InstallResult>>) -> bool {
+    match installed {
+        Ok(_) => true,
+        Err(error) => error.is::<install::InstallTimeout>(),
+    }
+}
+
 impl WritableUpdater {
     /// Note `hash` before the hand-over: installing it may end this process.
     pub fn store_pending_hash(&mut self, hash: &AgentHash) -> AnyhowResult<()> {
         self.state.pending_hash = Some(hash.to_string());
         self.state.save(&self.state_path)
+    }
+
+    /// Fetch the package that `answer` offers and stream it to the privileged
+    /// install step, TD 4.5.
+    ///
+    /// The step verifies the package against trust anchors the agent user
+    /// cannot write and answers before it installs anything. Only an accepted
+    /// package becomes the pending hash, and the step installs it only after
+    /// the note is saved, because installing it may end this process.
+    ///
+    /// Blocks until the package manager has finished, and at most
+    /// [`install::INSTALL_TIMEOUT`] for each read and each write on the
+    /// installer socket.
+    ///
+    /// # Errors
+    ///
+    /// If the site offers a package this host could not verify, does not
+    /// deliver it or sends it without its length, if the install step cannot
+    /// be reached or refuses the package, or if the pending hash cannot be
+    /// saved. An [`install::InstallTimeout`] if the step sends no result in
+    /// time. The pending hash stays then, because the package manager may
+    /// still be running.
+    #[cfg(unix)]
+    pub fn fetch_and_install(
+        &mut self,
+        answer: SourceAnswer<'_>,
+        api: &impl agent_receiver_api::AgentUpdate,
+        signature: SignatureCheck,
+    ) -> AnyhowResult<FetchOutcome<Installation>> {
+        let (connection, offered) = match self.due_update(&answer, signature)? {
+            ControlFlow::Break(outcome) => return Ok(outcome),
+            ControlFlow::Continue(due) => due,
+        };
+        let hash = offered.aghash.clone();
+        let Some(socket) = self
+            .loaded_config()
+            .and_then(|config| config.installer_socket.clone())
+        else {
+            log::info!("No installer socket is configured, agent package {hash} is not downloaded");
+            return Ok(FetchOutcome::Due(Installation::NoInstaller(hash)));
+        };
+        let mut download = match self.start_download(api, connection, offered)? {
+            PackageDownload::Started(download) => download,
+            PackageDownload::Unavailable => return Ok(FetchOutcome::SourceUnavailable),
+            PackageDownload::Superseded => return Ok(FetchOutcome::Superseded),
+        };
+        let request = install::InstallRequest {
+            aghash: hash.clone(),
+            platform: self.installed_agent()?.platform.clone(),
+            size: download.size.with_context(|| {
+                format!("The site sent agent package {hash} without its length")
+            })?,
+            signatures: offered.signatures.clone(),
+        };
+        // The bakery names the unit cmk-agent-ctl-installer@.service.
+        log::info!(
+            "Streaming agent package {hash} ({} bytes) from {} to the installer at {socket:?} \
+             (run `journalctl -u 'cmk-agent-ctl-installer@*'` to see the installer's log)",
+            request.size,
+            connection.site_id
+        );
+        let verdict = install::transfer(
+            &socket,
+            &request,
+            &mut download.body,
+            install::INSTALL_TIMEOUT,
+        )
+        .with_context(|| {
+            format!(
+                "Streaming agent package {hash} from {} to the installer failed",
+                connection.site_id
+            )
+        })?;
+        drop(download);
+        let accepted = match verdict {
+            install::Verdict::Accepted(accepted) => accepted,
+            install::Verdict::Refused(reason) => {
+                bail!("The installer refused agent package {hash}: {reason}")
+            }
+        };
+        self.store_pending_hash(&hash)?;
+        let installed = accepted.install();
+        if !reached_the_installer(&installed) {
+            if let Err(clear_error) = self.clear_pending_hash() {
+                log::warn!("Could not clear the pending installation: {clear_error:#}");
+            }
+        }
+        Ok(FetchOutcome::Due(Installation::Installed {
+            hash,
+            result: installed?,
+        }))
     }
 
     /// Settle the package handed over in an earlier run: the installed hash says
@@ -838,7 +956,8 @@ pub struct Updater {
     /// Where the state was read from, and where it is written back.
     state_path: PathBuf,
 
-    /// Where a verified package is spooled for the privileged installer.
+    /// Where a verified package is spooled for the agent service of Windows.
+    /// On Linux, packages are streamed to the install step instead.
     package_dir: PathBuf,
 
     /// Where the privileged install step reports how the installation went.
@@ -1196,19 +1315,65 @@ impl Updater {
         })
     }
 
-    /// Fetch the package that `answer` offers and spool it for the installer.
+    /// The package that `answer` offers and this host takes, or the outcome
+    /// that ends the update before a download.
     ///
-    /// The three steps of an update after the status request: refuse what
-    /// could not be verified anyway, download the rest, and write it out once
-    /// its signature has been checked. Installing the spooled package is not
+    /// Under [`SignatureCheck::Required`], a package that no trust anchor
+    /// could verify is refused here, before it is downloaded.
+    ///
+    /// # Errors
+    ///
+    /// If the site offers a package this host could not verify, or if nothing
+    /// is known about the installed agent.
+    fn due_update<'a, 'r, D>(
+        &self,
+        answer: &'a SourceAnswer<'r>,
+        signature: SignatureCheck,
+    ) -> AnyhowResult<
+        ControlFlow<
+            FetchOutcome<D>,
+            (
+                &'a connection::UpdateConnection<'r>,
+                &'a agent_receiver_api::TargetAgent,
+            ),
+        >,
+    > {
+        let (connection, status) = match answer {
+            SourceAnswer::NotPossible => return Ok(ControlFlow::Break(FetchOutcome::NotPossible)),
+            SourceAnswer::Unavailable => {
+                return Ok(ControlFlow::Break(FetchOutcome::SourceUnavailable))
+            }
+            SourceAnswer::Answered { connection, status } => (connection, status),
+        };
+        let offered = match self.offered_update(status)? {
+            OfferedUpdate::NoPackage => return Ok(ControlFlow::Break(FetchOutcome::NoPackage)),
+            OfferedUpdate::UpToDate(installed) => {
+                return Ok(ControlFlow::Break(FetchOutcome::UpToDate(installed)))
+            }
+            OfferedUpdate::Due(offered) => offered,
+        };
+        if signature == SignatureCheck::Required {
+            ensure_verifiable(
+                offered,
+                &verification::certificates(&self.signature_key_blocks()),
+            )?;
+        }
+        Ok(ControlFlow::Continue((connection, offered)))
+    }
+
+    /// Fetch the package that `answer` offers and spool it, for the update
+    /// mechanism of the Windows agent.
+    ///
+    /// The steps of an update after the status request: refuse what could not
+    /// be verified anyway, download the rest, and write it out once its
+    /// signature has been checked. Handing the spooled package over is not
     /// part of it.
     ///
     /// The package is the only thing written: recording the outcome in the
     /// updater state is left to the cycle that calls this.
     ///
     /// With [`SignatureCheck::Skip`] both the pre-check and the verification
-    /// are left out, and a package nothing vouches for is spooled for a
-    /// privileged installer that cannot tell the difference. Only
+    /// are left out, and a package nothing vouches for is spooled. Only
     /// `--skip-signatures` asks for that.
     ///
     /// # Errors
@@ -1221,29 +1386,22 @@ impl Updater {
         answer: SourceAnswer<'_>,
         api: &impl agent_receiver_api::AgentUpdate,
         signature: SignatureCheck,
-    ) -> AnyhowResult<FetchOutcome> {
-        let (connection, status) = match answer {
-            SourceAnswer::NotPossible => return Ok(FetchOutcome::NotPossible),
-            SourceAnswer::Unavailable => return Ok(FetchOutcome::SourceUnavailable),
-            SourceAnswer::Answered { connection, status } => (connection, status),
+    ) -> AnyhowResult<FetchOutcome<Spooled>> {
+        let (connection, offered) = match self.due_update(&answer, signature)? {
+            ControlFlow::Break(outcome) => return Ok(outcome),
+            ControlFlow::Continue(due) => due,
         };
-        let offered = match self.offered_update(&status)? {
-            OfferedUpdate::NoPackage => return Ok(FetchOutcome::NoPackage),
-            OfferedUpdate::UpToDate(installed) => return Ok(FetchOutcome::UpToDate(installed)),
-            OfferedUpdate::Due(offered) => offered,
+        let package = match self.start_download(api, connection, offered)? {
+            PackageDownload::Started(download) => {
+                self.read_package(download, connection, offered)?
+            }
+            PackageDownload::Unavailable => return Ok(FetchOutcome::SourceUnavailable),
+            PackageDownload::Superseded => return Ok(FetchOutcome::Superseded),
         };
         // The PEM blocks are kept alive here: the parsed certificates borrow
         // the DER they decode to.
         let blocks = self.signature_key_blocks();
         let local_certificates = verification::certificates(&blocks);
-        if signature == SignatureCheck::Required {
-            ensure_verifiable(offered, &local_certificates)?;
-        }
-        let package = match self.download_package(api, &connection, offered)? {
-            PackageDownload::Downloaded(package) => package,
-            PackageDownload::Unavailable => return Ok(FetchOutcome::SourceUnavailable),
-            PackageDownload::Superseded => return Ok(FetchOutcome::Superseded),
-        };
         let (hash, path) = match signature {
             SignatureCheck::Required => {
                 let package = package.verify(&offered.signatures, &local_certificates)?;
@@ -1257,68 +1415,11 @@ impl Updater {
                 )
             }
         };
-        Ok(FetchOutcome::Spooled {
+        Ok(FetchOutcome::Due(Spooled {
             hash,
             path,
             signature,
-            signatures: offered.signatures.clone(),
-        })
-    }
-
-    /// Hand a spooled package to the privileged install step of this host.
-    ///
-    /// The step is a process of its own, running as root: this side only names
-    /// the package and the signatures the site delivered with it, and the unit
-    /// verifies both again against trust anchors the agent user cannot write.
-    /// Blocks until the step has finished, which is as long as the package
-    /// manager takes, and at most `install::INSTALL_TIMEOUT`.
-    ///
-    /// Writes no artifact of the updater, as [`Updater::fetch_update`] does
-    /// not: reconciling the outcome belongs to the cycle, which compares hashes
-    /// on a later run.
-    ///
-    /// # Arguments
-    ///
-    /// * `package` - the spooled package, as [`Updater::fetch_update`]
-    ///   reported it
-    /// * `signatures` - the signatures of the status that named the package
-    ///
-    /// # Returns
-    ///
-    /// [`InstallOutcome::NoInstaller`] when no installer socket is configured.
-    ///
-    /// # Errors
-    ///
-    /// If the installer socket cannot be reached or the request not be
-    /// delivered. An `InstallTimeout` if the step took the request and did not
-    /// end in time.
-    #[cfg(unix)]
-    pub fn install_update(
-        &self,
-        package: &Path,
-        signatures: &[agent_receiver_api::AgentSignature],
-    ) -> AnyhowResult<InstallOutcome> {
-        let Some(socket) = self
-            .loaded_config()
-            .and_then(|config| config.installer_socket.as_ref())
-        else {
-            log::info!("No installer socket is configured, leaving {package:?} where it is");
-            return Ok(InstallOutcome::NoInstaller);
-        };
-        // The bakery names the unit cmk-agent-ctl-installer@.service.
-        log::info!(
-            "Handing {package:?} to the installer at {socket:?} \
-             (run `journalctl -u 'cmk-agent-ctl-installer@*'` to see the installer's log)"
-        );
-        install::hand_over(
-            socket,
-            &install::InstallRequest {
-                package: package.to_path_buf(),
-                signatures: signatures.to_vec(),
-            },
-            install::INSTALL_TIMEOUT,
-        )?;
-        Ok(InstallOutcome::HandedOver)
+        }))
     }
 
     /// Hand a spooled package to the update mechanism of the Windows agent.
@@ -1503,10 +1604,14 @@ impl Updater {
         Ok(OfferedUpdate::Due(offered))
     }
 
-    /// Download the package `offered`, which is not the installed one.
-    ///
-    /// The package is not verified here: it is held in memory until its
-    /// signature has been checked, and only then written anywhere.
+    fn installed_agent(&self) -> AnyhowResult<&AgentInfo> {
+        self.agent_info
+            .as_ref()
+            .context("Cannot download an agent update without the info of the installed agent")
+    }
+
+    /// Start the download of the package `offered`, which is not the
+    /// installed one.
     ///
     /// # Returns
     ///
@@ -1517,56 +1622,68 @@ impl Updater {
     ///
     /// If nothing is known about the installed agent, if the site address
     /// cannot be assembled, or if the site does not deliver the package.
-    fn download_package(
+    fn start_download(
         &self,
         api: &impl agent_receiver_api::AgentUpdate,
         selected: &connection::UpdateConnection<'_>,
         offered: &agent_receiver_api::TargetAgent,
     ) -> AnyhowResult<PackageDownload> {
-        let agent_info = self
-            .agent_info
-            .as_ref()
-            .context("Cannot download an agent update without the info of the installed agent")?;
-        let target = &offered.aghash;
+        let agent_info = self.installed_agent()?;
         let url = site_spec::make_site_url(selected.site_id, &selected.connection.receiver_port)?;
-        let failed = || {
-            format!(
-                "Agent update download of {target} from {} failed",
-                selected.site_id
-            )
-        };
-        let mut download = match api.download_agent(
+        match api.download_agent(
             &url,
             &selected.connection.trust,
             &agent_receiver_api::AgentDownloadBody {
                 platform: &agent_info.platform,
-                aghash: target,
+                aghash: &offered.aghash,
             },
         ) {
-            Ok(download) => download,
+            Ok(download) => Ok(PackageDownload::Started(download)),
             Err(ApiError::ResponseStatus {
                 status: http::StatusCode::NOT_IMPLEMENTED,
                 ..
-            }) => return Ok(PackageDownload::Unavailable),
+            }) => Ok(PackageDownload::Unavailable),
             Err(ApiError::ResponseStatus {
                 status: http::StatusCode::CONFLICT,
                 ..
-            }) => return Ok(PackageDownload::Superseded),
-            Err(error) => return Err(Error::new(error).context(failed())),
-        };
+            }) => Ok(PackageDownload::Superseded),
+            Err(error) => {
+                Err(Error::new(error).context(download_failed(&offered.aghash, selected)))
+            }
+        }
+    }
+
+    /// Read a started download into memory.
+    ///
+    /// The package is not verified here: it is held in memory until its
+    /// signature has been checked, and only then written anywhere.
+    ///
+    /// # Errors
+    ///
+    /// If nothing is known about the installed agent, or if the download
+    /// breaks off.
+    fn read_package(
+        &self,
+        mut download: agent_receiver_api::AgentPackageStream,
+        selected: &connection::UpdateConnection<'_>,
+        offered: &agent_receiver_api::TargetAgent,
+    ) -> AnyhowResult<UpdatePackage> {
+        let agent_info = self.installed_agent()?;
         let mut bytes = Vec::new();
-        io::Read::read_to_end(&mut download.body, &mut bytes).with_context(failed)?;
+        io::Read::read_to_end(&mut download.body, &mut bytes)
+            .with_context(|| download_failed(&offered.aghash, selected))?;
         log::info!(
-            "Downloaded the agent package {target} ({} bytes) from {}, installed is {}",
+            "Downloaded the agent package {} ({} bytes) from {}, installed is {}",
+            offered.aghash,
             bytes.len(),
             selected.site_id,
             agent_info.hash
         );
-        Ok(PackageDownload::Downloaded(UpdatePackage {
-            hash: target.clone(),
+        Ok(UpdatePackage {
+            hash: offered.aghash.clone(),
             platform: agent_info.platform.clone(),
             bytes,
-        }))
+        })
     }
 
     /// The last error in the form the site gets it.
@@ -3275,7 +3392,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             registry: &Registry,
             api: &impl agent_receiver_api::AgentUpdate,
             signature: SignatureCheck,
-        ) -> AnyhowResult<FetchOutcome> {
+        ) -> AnyhowResult<FetchOutcome<Spooled>> {
             self.fetch_update(self.ask_update_source(registry, api)?, api, signature)
         }
     }
@@ -3630,18 +3747,22 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     }
 
     #[test]
-    fn test_download_package_fetches_the_offered_package() {
+    fn test_a_download_fetches_the_offered_package() {
         let registry = registry_with_one_connection();
         let selected = connection::select(&registry.registry, some_source().uuid).unwrap();
         let api = TestApi::new(None);
         let status = offered(Some(TARGET_HASH));
 
-        let PackageDownload::Downloaded(package) = updater_after(None)
-            .download_package(&api, &selected, target_agent(&status))
+        let updater = updater_after(None);
+        let PackageDownload::Started(download) = updater
+            .start_download(&api, &selected, target_agent(&status))
             .unwrap()
         else {
             panic!("expected the site to deliver the package");
         };
+        let package = updater
+            .read_package(download, &selected, target_agent(&status))
+            .unwrap();
 
         assert_eq!(package.hash.as_str(), TARGET_HASH);
         assert_eq!(package.platform, "linux_deb");
@@ -3654,26 +3775,26 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     }
 
     #[test]
-    fn test_download_package_without_agent_info() {
+    fn test_start_download_without_agent_info() {
         let registry = registry_with_one_connection();
         let selected = connection::select(&registry.registry, some_source().uuid).unwrap();
         let status = offered(Some(TARGET_HASH));
 
         let error = updater(some_config(), None)
-            .download_package(&TestApi::new(None), &selected, target_agent(&status))
+            .start_download(&TestApi::new(None), &selected, target_agent(&status))
             .unwrap_err();
 
         assert!(error.to_string().contains("info of the installed agent"));
     }
 
     #[test]
-    fn test_download_package_names_the_package_and_the_site_that_failed() {
+    fn test_start_download_names_the_package_and_the_site_that_failed() {
         let registry = registry_with_one_connection();
         let selected = connection::select(&registry.registry, some_source().uuid).unwrap();
         let status = offered(Some(TARGET_HASH));
 
         let error = updater_after(None)
-            .download_package(&UnreachableApi, &selected, target_agent(&status))
+            .start_download(&UnreachableApi, &selected, target_agent(&status))
             .unwrap_err();
 
         assert_eq!(
@@ -3752,12 +3873,11 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             )
             .unwrap();
 
-        let FetchOutcome::Spooled {
+        let FetchOutcome::Due(Spooled {
             hash,
             path,
             signature,
-            ..
-        } = outcome
+        }) = outcome
         else {
             panic!("expected a spooled package, got {outcome:?}");
         };
@@ -3770,70 +3890,181 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         assert_eq!(fs::read(&path).unwrap(), PACKAGE);
     }
 
+    /// An updater in `dir` with the update source of
+    /// [`registry_with_one_connection`], trusting the test site's signer, whose
+    /// install step listens at `socket`.
+    #[cfg(unix)]
+    fn installing_through(dir: &tempfile::TempDir, socket: Option<PathBuf>) -> WritableUpdater {
+        let mut updater = writable_in(
+            dir,
+            UpdateState {
+                source: Some(some_source()),
+                ..Default::default()
+            },
+        );
+        updater.updater.config = ConfigLoadOutcome::Loaded(UpdaterConfig {
+            installer_socket: socket,
+            ..config_trusting_the_signer().unwrap()
+        });
+        updater
+    }
+
+    #[cfg(unix)]
+    impl WritableUpdater {
+        fn ask_and_install(
+            &mut self,
+            registry: &Registry,
+            api: &impl agent_receiver_api::AgentUpdate,
+        ) -> AnyhowResult<FetchOutcome<Installation>> {
+            let answer = self.ask_update_source(registry, api)?;
+            self.fetch_and_install(answer, api, SignatureCheck::Required)
+        }
+    }
+
+    #[cfg(unix)]
     #[test]
-    fn test_fetch_update_reports_the_signatures_the_site_delivered() {
+    fn test_fetch_and_install_streams_the_package_to_the_installer() {
         let dir = tempfile::TempDir::new().unwrap();
         let registry = registry_with_one_connection();
-        let updater = updater_spooling_into(&dir);
+        let (socket, installer) =
+            install::fake::installer(dir.path(), install::fake::accepted(), None, || {});
+        let mut updater = installing_through(&dir, Some(socket));
 
-        let outcome = updater
-            .ask_and_fetch(
-                &registry.registry,
-                &TestApi::new(Some(TARGET_HASH)),
-                SignatureCheck::Required,
-            )
+        updater
+            .ask_and_install(&registry.registry, &TestApi::new(Some(TARGET_HASH)))
             .unwrap();
 
-        let FetchOutcome::Spooled { signatures, .. } = outcome else {
-            panic!("expected a spooled package, got {outcome:?}");
-        };
-        assert_eq!(signatures, vec![SITE_SIGNATURE.clone()]);
+        let conversation = installer.join().unwrap();
+        assert_eq!(
+            conversation.request,
+            install::InstallRequest {
+                aghash: TARGET_HASH.parse().unwrap(),
+                platform: String::from("linux_deb"),
+                size: PACKAGE.len() as u64,
+                signatures: vec![SITE_SIGNATURE.clone()],
+            }
+        );
+        assert_eq!(conversation.package, PACKAGE);
+        assert!(conversation.install);
+    }
+
+    /// The installation may end this process, so the note has to be on disk
+    /// before the install step starts.
+    #[cfg(unix)]
+    #[test]
+    fn test_fetch_and_install_saves_the_pending_hash_before_the_installation() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let registry = registry_with_one_connection();
+        let state_path = dir.path().join(STATE_FILE);
+        let (pending_tx, pending_rx) = std::sync::mpsc::channel();
+        let (socket, _installer) =
+            install::fake::installer(dir.path(), install::fake::accepted(), None, move || {
+                pending_tx
+                    .send(UpdateState::load(&state_path).unwrap().pending_hash)
+                    .unwrap();
+            });
+        let mut updater = installing_through(&dir, Some(socket));
+
+        updater
+            .ask_and_install(&registry.registry, &TestApi::new(Some(TARGET_HASH)))
+            .unwrap();
+
+        assert_eq!(pending_rx.recv().unwrap().as_deref(), Some(TARGET_HASH));
     }
 
     #[cfg(unix)]
     #[test]
-    fn test_install_update_without_an_installer_socket() {
-        let updater = updater(some_config(), some_agent_info());
+    fn test_fetch_and_install_reports_what_the_installer_sent() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let registry = registry_with_one_connection();
+        let failed = || install::InstallResult {
+            aghash: TARGET_HASH.parse().unwrap(),
+            success: false,
+            error: Some(String::from("Installing failed, exit status: 1")),
+            finished: 1_760_000_000,
+        };
+        let (socket, _installer) =
+            install::fake::installer(dir.path(), install::fake::accepted(), Some(failed()), || {});
+        let mut updater = installing_through(&dir, Some(socket));
+
+        let outcome = updater
+            .ask_and_install(&registry.registry, &TestApi::new(Some(TARGET_HASH)))
+            .unwrap();
 
         assert_eq!(
-            updater
-                .install_update(Path::new("/spool/fedcba9876543210.deb"), &[])
-                .unwrap(),
-            InstallOutcome::NoInstaller
+            outcome,
+            FetchOutcome::Due(Installation::Installed {
+                hash: TARGET_HASH.parse().unwrap(),
+                result: Some(failed()),
+            })
         );
+    }
+
+    /// A refused package is known at once and leaves nothing for the next
+    /// cycle to settle.
+    #[cfg(unix)]
+    #[test]
+    fn test_fetch_and_install_reports_a_refusal() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let registry = registry_with_one_connection();
+        let (socket, installer) = install::fake::installer(
+            dir.path(),
+            install::fake::refused("no signature matches"),
+            None,
+            || {},
+        );
+        let mut updater = installing_through(&dir, Some(socket));
+
+        let error = updater
+            .ask_and_install(&registry.registry, &TestApi::new(Some(TARGET_HASH)))
+            .unwrap_err();
+
+        assert_eq!(
+            error.to_string(),
+            "The installer refused agent package fedcba9876543210: no signature matches"
+        );
+        assert_eq!(updater.state.pending_hash, None);
+        assert!(!installer.join().unwrap().install);
+    }
+
+    /// CMK-41888: the installer may still finish, so the pending installation
+    /// stays for the next run to settle.
+    #[cfg(unix)]
+    #[test]
+    fn test_an_installer_that_timed_out_was_reached() {
+        let timed_out = Err(anyhow::Error::new(install::InstallTimeout {
+            socket: PathBuf::from("/run/cmk-agent-installer.sock"),
+            timeout: install::INSTALL_TIMEOUT,
+        }));
+
+        assert!(reached_the_installer(&timed_out));
     }
 
     #[cfg(unix)]
     #[test]
-    fn test_install_update_hands_the_package_to_the_configured_socket() {
-        use std::io::Read;
+    fn test_an_installer_that_got_no_install_line_was_not_reached() {
+        let not_told = Err(anyhow::anyhow!(
+            "Cannot tell the installer to install the package"
+        ));
 
+        assert!(!reached_the_installer(&not_told));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn test_fetch_and_install_without_an_installer_socket_downloads_nothing() {
         let dir = tempfile::TempDir::new().unwrap();
-        let socket = dir.path().join("cmk-agent-installer.sock");
-        let listener = std::os::unix::net::UnixListener::bind(&socket).unwrap();
-        let installer = std::thread::spawn(move || {
-            let (mut connection, _) = listener.accept().unwrap();
-            let mut request = String::new();
-            connection.read_to_string(&mut request).unwrap();
-            request
-        });
-        let updater = updater(
-            Some(UpdaterConfig {
-                installer_socket: Some(socket),
-                ..some_config().unwrap()
-            }),
-            some_agent_info(),
+        let registry = registry_with_one_connection();
+        let api = TestApi::new(Some(TARGET_HASH));
+        let mut updater = installing_through(&dir, None);
+
+        let outcome = updater.ask_and_install(&registry.registry, &api).unwrap();
+
+        assert_eq!(
+            outcome,
+            FetchOutcome::Due(Installation::NoInstaller(TARGET_HASH.parse().unwrap()))
         );
-
-        let outcome = updater
-            .install_update(Path::new("/spool/fedcba9876543210.deb"), &[])
-            .unwrap();
-
-        assert_eq!(outcome, InstallOutcome::HandedOver);
-        assert!(installer
-            .join()
-            .unwrap()
-            .contains("/spool/fedcba9876543210.deb"));
+        assert!(api.download().is_none());
     }
 
     #[test]
@@ -3965,12 +4196,11 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             )
             .unwrap();
 
-        let FetchOutcome::Spooled {
+        let FetchOutcome::Due(Spooled {
             hash,
             path,
             signature,
-            ..
-        } = outcome
+        }) = outcome
         else {
             panic!("expected a spooled package, got {outcome:?}");
         };
@@ -3997,10 +4227,10 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
 
         assert!(matches!(
             outcome,
-            FetchOutcome::Spooled {
+            FetchOutcome::Due(Spooled {
                 signature: SignatureCheck::Skip,
                 ..
-            }
+            })
         ));
     }
 

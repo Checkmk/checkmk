@@ -339,7 +339,7 @@ rust_doc(
 )
 
 # Drives "cmk-agent-ctl install-agent" against a stand-in package manager: the
-# refusals, the command lines of dpkg and rpm, and the removal of the package,
+# refusals, the command lines of dpkg and rpm, and the answers to the controller,
 # through the real binary and without installing anything. Linux only, as the
 # mode is.
 sh_test(

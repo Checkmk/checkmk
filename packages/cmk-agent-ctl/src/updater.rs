@@ -30,7 +30,7 @@
 
 mod backend;
 mod connection;
-mod install;
+pub mod install;
 mod legacy_registration;
 mod python_literal;
 mod python_updater;
@@ -42,14 +42,12 @@ use crate::environment::PathResolver;
 use crate::modes::registration::AddedConnection;
 use anyhow::Result as AnyhowResult;
 #[cfg(unix)]
-pub use backend::InstallOutcome;
+pub use backend::Installation;
 pub use backend::{
-    AgentInfo, CheckOutcome, FetchOutcome, SignatureCheck, SourceAnswer, UpdateSource, UpdateState,
-    Updater, UpdaterConfig, WritableUpdater,
+    AgentInfo, CheckOutcome, FetchOutcome, SignatureCheck, SourceAnswer, Spooled, UpdateSource,
+    UpdateState, Updater, UpdaterConfig, WritableUpdater,
 };
-#[cfg(unix)]
-pub use install::InstallTimeout;
-pub use install::{InstallRequest, InstallResult, TrustAnchors};
+pub use install::{InstallRequest, InstallResult, InstallVerdict, TrustAnchors};
 pub use legacy_registration::LegacyRegistration;
 pub use python_updater::PythonUpdater;
 

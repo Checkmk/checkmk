@@ -13,7 +13,10 @@ import base64
 import json
 import os
 import shutil
+import socket
 import subprocess
+import tempfile
+from concurrent.futures import ThreadPoolExecutor
 from http import HTTPMethod, HTTPStatus
 from pathlib import Path
 from uuid import UUID, uuid4
@@ -63,7 +66,11 @@ def _registered_uuid(site: AgentReceiverSite) -> UUID:
 
 
 def _install_controller(
-    runner: AgentReceiverRunner, uuid: UUID, install_dir: Path, cert_log: Path
+    runner: AgentReceiverRunner,
+    uuid: UUID,
+    install_dir: Path,
+    cert_log: Path,
+    installer_socket: Path,
 ) -> Path:
     """Set up the controller in a single-directory deployment, registered to the runner.
 
@@ -79,8 +86,10 @@ def _install_controller(
     controller = Path(shutil.copy(os.environ["CMK_AGENT_CTL"], install_dir / "package/bin"))
     # The controller recognizes the deployment by this file, even when it is empty.
     (install_dir / "package/config/cmk-agent-ctl.toml").write_text("")
-    # The file turns the updater on. Without installer_socket, the package stays in the spool.
-    (install_dir / "package/config/cmk-agent-ctl-update.toml").write_text("")
+    # The file turns the updater on, and the controller streams the package to installer_socket.
+    (install_dir / "package/config/cmk-agent-ctl-update.toml").write_text(
+        f"installer_socket = {json.dumps(str(installer_socket))}\n"
+    )
     # The installed package, which the controller reports in its status request.
     (install_dir / "package/agent/agent_info.json").write_text(
         json.dumps({"hash": INSTALLED_HASH, "platform": "linux_deb"})
@@ -116,6 +125,24 @@ def _install_controller(
     return controller
 
 
+def _play_installer(server: socket.socket) -> tuple[bytes, bytes]:
+    """Answer one connection as the installer unit does, see "Install step on Linux" in
+    packages/cmk-agent-ctl/docs/non-free/tech_design/updater_in_controller.md. The package is
+    accepted and nothing is installed. Returns the request line and the package bytes."""
+    connection, _address = server.accept()
+    with connection, connection.makefile("rwb") as stream:
+        request = stream.readline()
+        fields = json.loads(request)
+        package = stream.read(fields["size"])
+        stream.write(b'{"accepted": true, "error": null}\n')
+        stream.flush()
+        stream.readline()
+        result = {"aghash": fields["aghash"], "success": True, "error": None, "finished": 0}
+        stream.write(json.dumps(result).encode() + b"\n")
+        stream.flush()
+    return request, package
+
+
 def test_update_cycle_downloads_the_package_the_site_offers(
     ar_runner: AgentReceiverRunner, wiremock: Wiremock, tmp_path: Path
 ) -> None:
@@ -123,22 +150,33 @@ def test_update_cycle_downloads_the_package_the_site_offers(
     # learns of the package, and the download request fetches it.
     site = ar_runner.site
     uuid = _registered_uuid(site)
-    controller = _install_controller(
-        ar_runner, uuid, tmp_path / "controller", tmp_path / "issued.jsonl"
-    )
     offer = {"target_agent": {"aghash": OFFERED_HASH, "signatures": []}}
     _site_answers(wiremock, site, "status", json.dumps(offer).encode())
     _site_answers(wiremock, site, "download", PACKAGE)
 
-    # The offer carries no signature. Without an installer socket, the controller leaves the
-    # spooled package where it is, and the cycle ends there.
-    cycle = subprocess.run(
-        [controller, "-vv", "update", "--skip-signatures"],
-        capture_output=True,
-        text=True,
-        timeout=60,
-        check=False,
-    )
+    # A short directory keeps the socket path within the AF_UNIX length limit, tmp_path may not.
+    with (
+        tempfile.TemporaryDirectory(prefix="installer", dir="/tmp") as socket_dir,
+        socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as installer,
+        ThreadPoolExecutor(max_workers=1) as pool,
+    ):
+        installer_socket = Path(socket_dir, "installer.sock")
+        installer.bind(str(installer_socket))
+        installer.listen()
+        installer.settimeout(60)
+        conversation = pool.submit(_play_installer, installer)
+        controller = _install_controller(
+            ar_runner, uuid, tmp_path / "controller", tmp_path / "issued.jsonl", installer_socket
+        )
+
+        # The offer carries no signature, so only --skip-signatures lets the controller take it.
+        cycle = subprocess.run(
+            [controller, "-vv", "update", "--skip-signatures"],
+            capture_output=True,
+            text=True,
+            timeout=60,
+            check=False,
+        )
 
     assert cycle.returncode == 0, cycle
     forwarded = [
@@ -151,5 +189,11 @@ def test_update_cycle_downloads_the_package_the_site_offers(
         {"platform": "linux_deb", "installed_aghash": INSTALLED_HASH, "uuid": str(uuid)},
         {"platform": "linux_deb", "aghash": OFFERED_HASH, "uuid": str(uuid)},
     ]
-    spooled = tmp_path / "controller/runtime/controller/update" / f"{OFFERED_HASH}.deb"
-    assert spooled.read_bytes() == PACKAGE
+    request, package = conversation.result()
+    assert json.loads(request) == {
+        "aghash": OFFERED_HASH,
+        "platform": "linux_deb",
+        "size": len(PACKAGE),
+        "signatures": [],
+    }
+    assert package == PACKAGE

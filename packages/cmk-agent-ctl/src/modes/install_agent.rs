@@ -7,25 +7,25 @@
 //!
 //! A socket-activated systemd unit runs this mode as root, once per connection
 //! the controller opens on the installer socket. That connection is the mode's
-//! standard input and output: it reads one `InstallRequest`, verifies the
-//! package against the trust anchors of the update configuration that
-//! `CMK_AGENT_CTL_UPDATE_CONFIG` names, and hands it to `dpkg` or `rpm`.
+//! standard input and output. The mode receives one package, verifies it
+//! against the trust anchors of the update configuration that
+//! `CMK_AGENT_CTL_UPDATE_CONFIG` names, and answers with its verdict. Once the
+//! controller has sent `install`, it hands the package to `dpkg` or `rpm`.
 //!
-//! What a run made of the package goes into the install result file of the
-//! controller, next to the journal of the unit instance and the exit code.
-//! Still missing: sending the same result back over the connection. Until
-//! then the controller reads the file, or settles the outcome by comparing
-//! hashes on a later cycle.
+//! What the package manager did goes back over the connection and into the
+//! install result file of the controller, next to the journal of the unit
+//! instance and the exit code.
 
 use crate::constants;
 use crate::types::AgentHash;
-use crate::updater::{InstallRequest, InstallResult, TrustAnchors};
+use crate::updater::install;
+use crate::updater::{InstallRequest, InstallResult, InstallVerdict, TrustAnchors};
 use anyhow::{bail, Context, Result as AnyhowResult};
 use nix::fcntl::{fcntl, FcntlArg, SealFlag};
 use nix::sys::memfd::{memfd_create, MemFdCreateFlag};
 use sha2::{Digest, Sha256};
 use std::fs::{File, OpenOptions};
-use std::io::{Read, Write};
+use std::io::{BufRead, Read, Seek, Write};
 use std::os::unix::fs::OpenOptionsExt;
 use std::os::unix::io::AsRawFd;
 use std::path::{Path, PathBuf};
@@ -46,12 +46,13 @@ enum PackageManager {
 }
 
 impl PackageManager {
-    /// The manager that installs a package, by the extension of its name.
-    fn of(package: &Path) -> AnyhowResult<PackageManager> {
-        match package.extension().and_then(|extension| extension.to_str()) {
-            Some("deb") => Ok(PackageManager::Dpkg),
-            Some("rpm") => Ok(PackageManager::Rpm),
-            _ => bail!("Not an agent package: {package:?} - expected a .deb or .rpm file"),
+    /// The manager that installs packages of `platform`, as the agent info
+    /// names it.
+    fn of(platform: &str) -> AnyhowResult<PackageManager> {
+        match platform {
+            "linux_deb" => Ok(PackageManager::Dpkg),
+            "linux_rpm" => Ok(PackageManager::Rpm),
+            _ => bail!("No package manager installs packages of the platform {platform:?}"),
         }
     }
 
@@ -80,121 +81,145 @@ impl PackageManager {
     }
 }
 
-/// A package this mode is willing to hand to a package manager.
-struct AcceptedPackage {
-    path: PathBuf,
+/// A package root has received and verified, as a sealed copy of its bytes.
+struct VerifiedPackage {
+    /// The sealed copy, see [`receive_package`]. Held open until the package
+    /// manager has finished, because the path handed over resolves through it.
+    file: File,
+
     manager: PackageManager,
 
-    /// Hash of the package, read off its file name, which the result carries
-    /// back to the controller.
+    /// `aghash` of the request, which the result carries back.
     hash: AgentHash,
 }
 
-impl AcceptedPackage {
-    /// Take the package of a request, or say why it is refused.
+impl VerifiedPackage {
+    /// The path the package manager is given.
     ///
-    /// The path comes from the agent user, so it is a claim: it has to resolve,
-    /// links included, into `package_dir`, and to be named after an agent hash.
-    /// The signature is what makes the step safe; these checks only turn a
-    /// wrong request into a clear error.
-    fn accept(package: &Path, package_dir: &Path) -> AnyhowResult<AcceptedPackage> {
-        let resolved_dir = package_dir
-            .canonicalize()
-            .with_context(|| format!("Cannot resolve the download directory {package_dir:?}"))?;
-        let path = package
-            .canonicalize()
-            .with_context(|| format!("Cannot resolve the package {package:?}"))?;
-        if path.parent() != Some(resolved_dir.as_path()) {
-            bail!("The package {path:?} lies outside the download directory {resolved_dir:?}");
-        }
-        let hash = path
-            .file_stem()
-            .and_then(|stem| stem.to_str())
-            .with_context(|| format!("The package {path:?} has no file name"))?;
-        let hash = hash
-            .parse::<AgentHash>()
-            .with_context(|| format!("The package {path:?} is not named after an agent hash"))?;
-        let manager = PackageManager::of(&path)?;
-        Ok(AcceptedPackage {
-            path,
-            manager,
-            hash,
-        })
-    }
-
-    /// Read this package and check it against `anchors`.
-    ///
-    /// Consumes the acceptance: the result is the only handle that reaches a
-    /// package manager, so an unverified package cannot be installed by
-    /// mistake.
-    ///
-    /// # Arguments
-    ///
-    /// * `anchors` - the certificates of the root-owned update configuration
-    /// * `signatures` - the signatures the request carried
-    ///
-    /// # Errors
-    ///
-    /// If the package cannot be read, is not a regular file, or none of
-    /// `signatures` is a valid signature of its bytes under one of the anchors.
-    fn verify(
-        self,
-        anchors: &TrustAnchors,
-        signatures: &[crate::agent_receiver_api::AgentSignature],
-    ) -> AnyhowResult<VerifiedPackage> {
-        // The agent user owns the download directory and can replace the entry
-        // between `accept` and here: refuse a symlink, do not park in `open` on a
-        // FIFO, and reject anything that is not a regular file.
-        let file = OpenOptions::new()
-            .read(true)
-            .custom_flags(nix::libc::O_NOFOLLOW | nix::libc::O_NONBLOCK)
-            .open(&self.path)
-            .with_context(|| format!("Cannot read the package {:?}", self.path))?;
-        if !file.metadata()?.is_file() {
-            bail!("The package {:?} is not a regular file", self.path);
-        }
-        let mut bytes = Vec::new();
-        (&file)
-            .read_to_end(&mut bytes)
-            .with_context(|| format!("Cannot read the package {:?}", self.path))?;
-        anchors
-            .verify(&Sha256::digest(&bytes), signatures)
-            .with_context(|| {
-                format!(
-                "Refusing the package {:?}: no signature of it matches a configured signature key",
-                self.path
-            )
-            })?;
-        log::info!("Verified the package {:?}", self.path);
-        Ok(VerifiedPackage {
-            file: sealed(&bytes)?,
-            manager: self.manager,
-            path: self.path,
-        })
+    /// The child reopens it through `/proc`, which resolves in this process's
+    /// descriptor table, so the descriptor has to stay open while the manager
+    /// runs.
+    fn install_path(&self) -> PathBuf {
+        PathBuf::from(format!(
+            "/proc/{}/fd/{}",
+            std::process::id(),
+            self.file.as_raw_fd()
+        ))
     }
 }
 
-/// An in-memory copy of `bytes` that nothing can change any more.
-///
-/// [`AcceptedPackage::verify`] checks bytes, not a file. The package lies in
-/// the agent user's directory, so they can rewrite the same inode after the
-/// signature matched and before the package manager reads it. This copy lives
-/// only in memory and is sealed against every write, root's own included, so
-/// what is installed is what was verified.
+/// Install one agent package on behalf of the controller.
 ///
 /// # Arguments
 ///
-/// * `bytes` - the verified content
+/// * `result_path` - where the outcome is written for the controller
 ///
 /// # Errors
 ///
-/// If the memory file cannot be created, written or sealed.
-fn sealed(bytes: &[u8]) -> AnyhowResult<File> {
+/// If the package is refused, if the controller ends the connection before it
+/// sends `install`, or if the package manager fails. The error carries what
+/// the package manager said, because that is the only diagnostic an operator
+/// gets. A result that cannot be written or sent is not one of them: the
+/// installation has happened either way.
+pub fn install_agent(result_path: &Path) -> AnyhowResult<()> {
+    let config_path = std::env::var_os(constants::ENV_UPDATE_CONFIG).map(PathBuf::from);
+    serve(
+        &mut std::io::stdin().lock(),
+        &mut std::io::stdout().lock(),
+        config_path.as_deref(),
+        result_path,
+    )
+}
+
+/// One conversation on the installer socket, from the request to the result.
+///
+/// # Arguments
+///
+/// * `input` - what the controller sends
+/// * `output` - what goes back to the controller
+/// * `config_path` - the update configuration the installer unit names
+/// * `result_path` - where the outcome is written for the controller
+///
+/// # Errors
+///
+/// As [`install_agent`].
+fn serve(
+    input: &mut impl BufRead,
+    output: &mut impl Write,
+    config_path: Option<&Path>,
+    result_path: &Path,
+) -> AnyhowResult<()> {
+    let received = receive(input, config_path);
+    if let Err(error) = install::write_line(output, &InstallVerdict::of(&received)) {
+        log::warn!("Could not send the verdict to the controller: {error:#}");
+    }
+    let package = received?;
+    if !install::read_install(input)? {
+        bail!(
+            "The controller ended the connection before it asked to install agent package {}",
+            package.hash
+        );
+    }
+    let outcome = run_package_manager(&package);
+    let result = InstallResult::of(package.hash.clone(), &outcome, now());
+    report_result(result_path, &result);
+    if let Err(error) = install::write_line(output, &result) {
+        log::info!("Could not send the install result to the controller: {error:#}");
+    }
+    outcome
+}
+
+/// Receive the package of a request and verify it.
+///
+/// Once the request has parsed, all of its package is read before anything
+/// can fail, so that the controller can finish sending and read the verdict.
+///
+/// # Errors
+///
+/// If the request cannot be read, the package does not arrive completely, the
+/// platform has no package manager, the update configuration cannot be found,
+/// or none of the signatures verifies.
+fn receive(input: &mut impl BufRead, config_path: Option<&Path>) -> AnyhowResult<VerifiedPackage> {
+    let request = InstallRequest::read(input)?;
+    log::info!(
+        "Install request for agent package {}, {} bytes, carrying {} signature(s)",
+        request.aghash,
+        request.size,
+        request.signatures.len()
+    );
+    let file = receive_package(input, request.size)?;
+    let manager = PackageManager::of(&request.platform)?;
+    let anchors = TrustAnchors::load(update_config_path(config_path)?)?;
+    anchors
+        .verify(&sha256_of(&file)?, &request.signatures)
+        .context("No signature of the package matches a configured signature key")?;
+    log::info!("Verified agent package {}", request.aghash);
+    Ok(VerifiedPackage {
+        file,
+        manager,
+        hash: request.aghash,
+    })
+}
+
+/// The next `size` bytes of `input`, in a memory file that nothing can change
+/// any more.
+///
+/// The seal stops every write, root's own included, so that the bytes the
+/// package manager installs are the bytes that were verified.
+///
+/// # Errors
+///
+/// If fewer than `size` bytes arrive, or if the memory file cannot be created,
+/// written or sealed.
+fn receive_package(input: &mut impl Read, size: u64) -> AnyhowResult<File> {
     let descriptor = memfd_create(c"cmk-agent-package", MemFdCreateFlag::MFD_ALLOW_SEALING)
         .context("Cannot create the memory file of the package")?;
     let mut file = File::from(descriptor);
-    file.write_all(bytes)
-        .context("Cannot write the package into memory")?;
+    let received = std::io::copy(&mut input.by_ref().take(size), &mut file)
+        .context("Cannot receive the package")?;
+    if received < size {
+        bail!("The controller ended the transfer after {received} of {size} bytes");
+    }
     fcntl(
         file.as_raw_fd(),
         FcntlArg::F_ADD_SEALS(
@@ -208,124 +233,15 @@ fn sealed(bytes: &[u8]) -> AnyhowResult<File> {
     Ok(file)
 }
 
-/// A package root has read and verified, as a sealed copy of its bytes.
-///
-/// The copy is what makes the verification mean anything. The download
-/// directory belongs to the agent user, who may both replace the entry and
-/// rewrite the bytes behind it between the check and the installation; the
-/// copy cannot be changed by anybody once it is sealed.
-struct VerifiedPackage {
-    /// The sealed copy of the verified bytes, see [`sealed`]. Held open until
-    /// the package manager has finished, because the path handed over resolves
-    /// through it.
-    file: File,
-
-    /// The manager that installs it.
-    manager: PackageManager,
-
-    /// Where the package was taken from, for the log and for removing it.
-    path: PathBuf,
-}
-
-impl VerifiedPackage {
-    /// The path the package manager is given.
-    ///
-    /// This process's descriptor of the sealed copy rather than the directory
-    /// entry, so that the manager installs the verified bytes whatever happens
-    /// to the package on disk. The child reopens it through `/proc`, which
-    /// resolves in this process's descriptor table, so the descriptor has to
-    /// stay open while the manager runs.
-    fn install_path(&self) -> PathBuf {
-        PathBuf::from(format!(
-            "/proc/{}/fd/{}",
-            std::process::id(),
-            self.file.as_raw_fd()
-        ))
-    }
-}
-
-/// Install one agent package on behalf of the controller.
-///
-/// The package is removed afterwards, installed or not: a failed package is not
-/// retried from disk, the controller downloads it again in its next cycle, as
-/// the Python updater does.
-///
-/// # Arguments
-///
-/// * `package_dir` - the download directory the package has to lie in
-/// * `result_path` - where the outcome is written for the controller
-///
-/// # Errors
-///
-/// If the request cannot be read, if the update configuration cannot be found,
-/// if the package is refused, or if the package manager fails. The error
-/// carries what the package manager said, because that is the only diagnostic
-/// an operator gets. A result that cannot be written is not one of them: the
-/// installation has happened either way.
-pub fn install_agent(package_dir: &Path, result_path: &Path) -> AnyhowResult<()> {
-    let request = InstallRequest::read(std::io::stdin().lock())?;
-    log::info!(
-        "Install request for {:?}, carrying {} signature(s)",
-        request.package,
-        request.signatures.len()
-    );
-    let config_path = update_config_path()?;
-    let accepted = AcceptedPackage::accept(&request.package, package_dir)?;
-    install_and_report(accepted, &config_path, &request.signatures, result_path)
-}
-
-/// Install `accepted` and write what became of it to `result_path`.
-///
-/// Everything an [`InstallResult`] can report happens from here on: a package
-/// the anchors refuse and a package manager that failed are outcomes the
-/// controller has to tell apart, and both differ from a step that never ran.
-/// What comes before, in [`install_agent`], stays unreported, because the
-/// result is keyed by a hash that only an accepted package has.
-///
-/// # Arguments
-///
-/// * `accepted` - the package, consumed because only a verified one goes on
-/// * `config_path` - the root-owned update configuration named by the unit
-/// * `signatures` - the signatures the request carried
-/// * `result_path` - where the outcome is written for the controller
-///
-/// # Errors
-///
-/// Whatever [`verify_and_run`] failed with, reported before it is returned.
-fn install_and_report(
-    accepted: AcceptedPackage,
-    config_path: &Path,
-    signatures: &[crate::agent_receiver_api::AgentSignature],
-    result_path: &Path,
-) -> AnyhowResult<()> {
-    let hash = accepted.hash.clone();
-    let outcome = verify_and_run(accepted, config_path, signatures);
-    report_result(result_path, &InstallResult::of(hash, &outcome, now()));
-    outcome
-}
-
-/// Verify `accepted` against the anchors of `config_path` and install it.
-///
-/// # Arguments
-///
-/// * `accepted` - the package, consumed because only a verified one goes on
-/// * `config_path` - the root-owned update configuration named by the unit
-/// * `signatures` - the signatures the request carried
-///
-/// # Errors
-///
-/// If the anchors cannot be loaded, if none of them covers the package, or if
-/// the package manager fails.
-fn verify_and_run(
-    accepted: AcceptedPackage,
-    config_path: &Path,
-    signatures: &[crate::agent_receiver_api::AgentSignature],
-) -> AnyhowResult<()> {
-    let anchors = TrustAnchors::load(config_path)?;
-    let package = accepted.verify(&anchors, signatures)?;
-    let outcome = run_package_manager(&package);
-    remove_package(&package.path);
-    outcome
+/// SHA-256 of the sealed copy, which the signatures sign.
+fn sha256_of(copy: &File) -> AnyhowResult<sha2::digest::Output<Sha256>> {
+    let mut reader = copy;
+    reader
+        .rewind()
+        .context("Cannot read the package in memory")?;
+    let mut hasher = Sha256::new();
+    std::io::copy(&mut reader, &mut hasher).context("Cannot read the package in memory")?;
+    Ok(hasher.finalize())
 }
 
 /// Unix time in seconds, for the timestamp of the result.
@@ -387,16 +303,14 @@ fn write_result(path: &Path, result: &InstallResult) -> AnyhowResult<()> {
 ///
 /// If the variable is not set, which means the mode was not started by the
 /// unit that is supposed to start it.
-fn update_config_path() -> AnyhowResult<PathBuf> {
-    std::env::var(constants::ENV_UPDATE_CONFIG)
-        .map(PathBuf::from)
-        .with_context(|| {
-            format!(
-                "{} is not set: this mode is run by the installer unit, which names the \
-                 update configuration there",
-                constants::ENV_UPDATE_CONFIG
-            )
-        })
+fn update_config_path(config_path: Option<&Path>) -> AnyhowResult<&Path> {
+    config_path.with_context(|| {
+        format!(
+            "{} is not set: this mode is run by the installer unit, which names the \
+             update configuration there",
+            constants::ENV_UPDATE_CONFIG
+        )
+    })
 }
 
 /// Run the package manager of `package` and log everything it says.
@@ -407,25 +321,27 @@ fn update_config_path() -> AnyhowResult<PathBuf> {
 fn run_package_manager(package: &VerifiedPackage) -> AnyhowResult<()> {
     let mut command = package.manager.command(&package.install_path());
     log::info!(
-        "Invoking the package manager for {:?}: {command:?}",
-        package.path
+        "Invoking the package manager for agent package {}: {command:?}",
+        package.hash
     );
-    let output = command
-        .stdin(Stdio::null())
-        .output()
-        .with_context(|| format!("Failed to run the package manager for {:?}", package.path))?;
+    let output = command.stdin(Stdio::null()).output().with_context(|| {
+        format!(
+            "Failed to run the package manager for agent package {}",
+            package.hash
+        )
+    })?;
     let said = output_of(&output);
     if !said.is_empty() {
         log::info!("The package manager said:\n{said}");
     }
     if !output.status.success() {
         bail!(
-            "Installing {:?} failed, {}: {said}",
-            package.path,
+            "Installing agent package {} failed, {}: {said}",
+            package.hash,
             output.status
         );
     }
-    log::info!("Installed {:?}", package.path);
+    log::info!("Installed agent package {}", package.hash);
     Ok(())
 }
 
@@ -440,30 +356,12 @@ fn output_of(output: &Output) -> String {
         .join("\n")
 }
 
-/// Remove the package, whatever the installation did with it.
-///
-/// A package that stays would be installed again by the next request that names
-/// it, without anybody downloading or verifying it. Failing to remove it is not
-/// worth failing the installation over.
-fn remove_package(path: &Path) {
-    if let Err(error) = std::fs::remove_file(path) {
-        log::warn!("Could not remove the package {path:?}: {error:#}");
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::os::unix::process::ExitStatusExt;
 
     const HASH: &str = "0123456789abcdef";
-
-    /// A download directory holding one package file of `name`.
-    fn package_dir(name: &str) -> tempfile::TempDir {
-        let dir = tempfile::TempDir::new().unwrap();
-        std::fs::write(dir.path().join(name), "package").unwrap();
-        dir
-    }
 
     fn command_line(manager: PackageManager, package: &str) -> Vec<String> {
         let command = manager.command(Path::new(package));
@@ -484,7 +382,7 @@ mod tests {
     #[test]
     fn test_package_manager_of_a_deb() {
         assert_eq!(
-            PackageManager::of(Path::new("/update/0123456789abcdef.deb")).unwrap(),
+            PackageManager::of("linux_deb").unwrap(),
             PackageManager::Dpkg
         );
     }
@@ -492,15 +390,14 @@ mod tests {
     #[test]
     fn test_package_manager_of_an_rpm() {
         assert_eq!(
-            PackageManager::of(Path::new("/update/0123456789abcdef.rpm")).unwrap(),
+            PackageManager::of("linux_rpm").unwrap(),
             PackageManager::Rpm
         );
     }
 
     #[test]
-    fn test_no_package_manager_for_another_package_type() {
-        assert!(PackageManager::of(Path::new("/update/0123456789abcdef.pkg")).is_err());
-        assert!(PackageManager::of(Path::new("/update/0123456789abcdef")).is_err());
+    fn test_no_package_manager_for_another_platform() {
+        assert!(PackageManager::of("windows_msi").is_err());
     }
 
     /// The command lines are a parity requirement, not a preference, so they
@@ -508,66 +405,22 @@ mod tests {
     #[test]
     fn test_the_deb_command_line() {
         assert_eq!(
-            command_line(PackageManager::Dpkg, "/update/0123456789abcdef.deb"),
-            ["dpkg", "-i", "/update/0123456789abcdef.deb"]
+            command_line(PackageManager::Dpkg, "/proc/1/fd/3"),
+            ["dpkg", "-i", "/proc/1/fd/3"]
         );
     }
 
     #[test]
     fn test_the_rpm_command_line() {
         assert_eq!(
-            command_line(PackageManager::Rpm, "/update/0123456789abcdef.rpm"),
+            command_line(PackageManager::Rpm, "/proc/1/fd/3"),
             [
                 "rpm",
                 "-vU",
                 "--oldpackage",
                 "--replacepkgs",
-                "/update/0123456789abcdef.rpm"
+                "/proc/1/fd/3"
             ]
-        );
-    }
-
-    #[test]
-    fn test_accept_a_spooled_package() {
-        let dir = package_dir(&format!("{HASH}.deb"));
-        let accepted =
-            AcceptedPackage::accept(&dir.path().join(format!("{HASH}.deb")), dir.path()).unwrap();
-        assert_eq!(
-            accepted.path,
-            dir.path()
-                .canonicalize()
-                .unwrap()
-                .join(format!("{HASH}.deb"))
-        );
-        assert_eq!(accepted.manager, PackageManager::Dpkg);
-    }
-
-    #[test]
-    fn test_refuse_a_package_outside_the_download_directory() {
-        let dir = package_dir(&format!("{HASH}.deb"));
-        let elsewhere = package_dir(&format!("{HASH}.deb"));
-        assert!(
-            AcceptedPackage::accept(&elsewhere.path().join(format!("{HASH}.deb")), dir.path())
-                .is_err()
-        );
-    }
-
-    /// The agent user owns the download directory, so it can put a link there
-    /// that points at a package of its own.
-    #[test]
-    fn test_refuse_a_link_out_of_the_download_directory() {
-        let dir = package_dir("decoy.deb");
-        let elsewhere = package_dir(&format!("{HASH}.deb"));
-        let link = dir.path().join(format!("{HASH}.deb"));
-        std::os::unix::fs::symlink(elsewhere.path().join(format!("{HASH}.deb")), &link).unwrap();
-        assert!(AcceptedPackage::accept(&link, dir.path()).is_err());
-    }
-
-    #[test]
-    fn test_refuse_a_package_that_is_not_named_after_a_hash() {
-        let dir = package_dir("check-mk-agent.deb");
-        assert!(
-            AcceptedPackage::accept(&dir.path().join("check-mk-agent.deb"), dir.path()).is_err()
         );
     }
 
@@ -592,17 +445,76 @@ mod tests {
     }
 
     #[test]
-    fn test_remove_a_package() {
-        let dir = package_dir(&format!("{HASH}.deb"));
-        let package = dir.path().join(format!("{HASH}.deb"));
-        remove_package(&package);
-        assert!(!package.exists());
+    fn test_receive_exactly_the_announced_bytes() {
+        let mut input = &b"package and more"[..];
+
+        let file = receive_package(&mut input, 7).unwrap();
+
+        let install_path = format!("/proc/{}/fd/{}", std::process::id(), file.as_raw_fd());
+        assert_eq!(std::fs::read(install_path).unwrap(), b"package");
+        assert_eq!(input, b" and more");
     }
 
-    /// Anchors over a certificate nothing signed with. Which signature is
-    /// accepted is covered by the updater's verification matrix; what matters
-    /// here is that an unsigned package never reaches a package manager.
-    fn anchors(dir: &tempfile::TempDir) -> TrustAnchors {
+    #[test]
+    fn test_a_short_transfer_is_refused() {
+        let error = receive_package(&mut &b"pack"[..], 7).unwrap_err();
+
+        assert_eq!(
+            error.to_string(),
+            "The controller ended the transfer after 4 of 7 bytes"
+        );
+    }
+
+    /// The package manager is pointed at this process's descriptor of the
+    /// sealed copy.
+    #[test]
+    fn test_the_install_path_is_a_descriptor_of_this_process() {
+        let package = VerifiedPackage {
+            file: receive_package(&mut &b"package"[..], 7).unwrap(),
+            manager: PackageManager::Dpkg,
+            hash: HASH.parse().unwrap(),
+        };
+
+        let install_path = package.install_path();
+
+        assert!(install_path.starts_with(format!("/proc/{}/fd", std::process::id())));
+        assert_eq!(
+            std::fs::read(&install_path).unwrap(),
+            b"package",
+            "the descriptor has to resolve to the package"
+        );
+    }
+
+    /// Nothing can write the copy once it is sealed, this process included.
+    /// The seal stops the write, not the open, which is why the descriptor is
+    /// reopened for writing here and the write itself has to fail.
+    #[test]
+    fn test_the_sealed_copy_cannot_be_written() {
+        let package = receive_package(&mut &b"package"[..], 7).unwrap();
+        let install_path = format!("/proc/{}/fd/{}", std::process::id(), package.as_raw_fd());
+
+        let written = OpenOptions::new()
+            .write(true)
+            .open(&install_path)
+            .unwrap()
+            .write_all(b"rewritten");
+
+        assert!(written.is_err());
+        assert_eq!(std::fs::read(&install_path).unwrap(), b"package");
+    }
+
+    #[test]
+    fn test_the_hash_is_that_of_the_sealed_copy() {
+        let copy = receive_package(&mut &b"package"[..], 7).unwrap();
+
+        assert_eq!(sha256_of(&copy).unwrap(), Sha256::digest(b"package"));
+    }
+
+    /// An update configuration that trusts a certificate nothing signed with.
+    /// Which signature is accepted is covered by the updater's verification
+    /// matrix; what matters here is that an unsigned package never reaches a
+    /// package manager.
+    fn config(dir: &tempfile::TempDir) -> PathBuf {
         let key = rcgen::KeyPair::generate().unwrap();
         let der = rcgen::CertificateParams::default()
             .self_signed(&key)
@@ -617,79 +529,131 @@ mod tests {
             format!("signature_keys = [\"\"\"\n{certificate}\"\"\"]\n"),
         )
         .unwrap();
-        TrustAnchors::load(&path).unwrap()
+        path
     }
 
-    #[test]
-    fn test_refuse_a_package_no_signature_matches() {
-        let dir = package_dir(&format!("{HASH}.deb"));
-        let accepted =
-            AcceptedPackage::accept(&dir.path().join(format!("{HASH}.deb")), dir.path()).unwrap();
-
-        assert!(accepted.verify(&anchors(&dir), &[]).is_err());
+    /// What the controller sends: a request for `platform` and its package,
+    /// then the install line.
+    fn conversation(platform: &str) -> Vec<u8> {
+        let mut input = serde_json::to_vec(&InstallRequest {
+            aghash: HASH.parse().unwrap(),
+            platform: String::from(platform),
+            size: 7,
+            signatures: vec![],
+        })
+        .unwrap();
+        input.extend(b"\npackage");
+        input.extend(install::INSTALL.as_bytes());
+        input.push(b'\n');
+        input
     }
 
-    /// The package manager is pointed at this process's descriptor, not at the
-    /// directory entry the agent user can replace.
-    #[test]
-    fn test_the_install_path_is_a_descriptor_of_this_process() {
-        let dir = package_dir(&format!("{HASH}.deb"));
-        let path = dir.path().join(format!("{HASH}.deb"));
-        let package = VerifiedPackage {
-            file: sealed(b"package").unwrap(),
-            manager: PackageManager::Dpkg,
-            path,
-        };
-
-        let install_path = package.install_path();
-
-        assert!(install_path.starts_with(format!("/proc/{}/fd", std::process::id())));
-        assert_eq!(
-            std::fs::read(&install_path).unwrap(),
-            b"package",
-            "the descriptor has to resolve to the package"
-        );
+    /// The first line the controller gets back.
+    fn verdict(output: &[u8]) -> InstallVerdict {
+        install::read_line(&mut &output[..], "the verdict")
+            .unwrap()
+            .unwrap()
     }
 
-    /// Rewriting the package after it was verified does not change what the
-    /// package manager installs.
+    /// A refusal is answered, and nothing runs: no package manager, so no
+    /// result either.
     #[test]
-    fn test_a_rewrite_of_the_package_does_not_reach_the_package_manager() {
-        let dir = package_dir(&format!("{HASH}.deb"));
-        let path = dir.path().join(format!("{HASH}.deb"));
-        let package = VerifiedPackage {
-            file: sealed(b"package").unwrap(),
-            manager: PackageManager::Dpkg,
-            path: path.clone(),
-        };
-
-        std::fs::write(&path, b"rewritten").unwrap();
-
-        assert_eq!(
-            std::fs::read(package.install_path()).unwrap(),
-            b"package",
-            "the sealed copy is what gets installed"
-        );
-    }
-
-    /// A refusal is an outcome of its own: the controller has to tell it from
-    /// an install step that never ran, so the result carries it.
-    #[test]
-    fn test_a_refused_package_is_reported() {
-        let dir = package_dir(&format!("{HASH}.deb"));
-        let accepted =
-            AcceptedPackage::accept(&dir.path().join(format!("{HASH}.deb")), dir.path()).unwrap();
+    fn test_a_package_no_signature_matches_is_refused() {
+        let dir = tempfile::TempDir::new().unwrap();
         let result_path = dir.path().join("agent-install-result.json");
+        let mut output = Vec::new();
 
-        let outcome =
-            install_and_report(accepted, &dir.path().join("absent.toml"), &[], &result_path);
+        let outcome = serve(
+            &mut &conversation("linux_deb")[..],
+            &mut output,
+            Some(&config(&dir)),
+            &result_path,
+        );
 
         assert!(outcome.is_err());
-        let result: InstallResult =
-            serde_json::from_slice(&std::fs::read(&result_path).unwrap()).unwrap();
-        assert_eq!(result.aghash, HASH.parse().unwrap());
-        assert!(!result.success);
-        assert!(result.error.unwrap().contains("No updater configuration"));
+        let verdict = verdict(&output);
+        assert!(!verdict.accepted);
+        assert!(verdict
+            .error
+            .unwrap()
+            .contains("No signature of the package matches a configured signature key"));
+        assert!(!result_path.exists());
+    }
+
+    #[test]
+    fn test_a_platform_without_a_package_manager_is_refused() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let mut output = Vec::new();
+
+        serve(
+            &mut &conversation("windows_msi")[..],
+            &mut output,
+            Some(&config(&dir)),
+            &dir.path().join("agent-install-result.json"),
+        )
+        .unwrap_err();
+
+        assert!(verdict(&output)
+            .error
+            .unwrap()
+            .contains("No package manager installs packages of the platform"));
+    }
+
+    #[test]
+    fn test_a_request_that_does_not_parse_is_refused() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let mut output = Vec::new();
+
+        serve(
+            &mut &b"/tmp/0123456789abcdef.deb\n"[..],
+            &mut output,
+            Some(&config(&dir)),
+            &dir.path().join("agent-install-result.json"),
+        )
+        .unwrap_err();
+
+        assert!(!verdict(&output).accepted);
+    }
+
+    /// The real controller side against the real unit side, over a socket: the
+    /// verdict arrives although the unit refuses.
+    #[test]
+    fn test_the_controller_learns_a_refusal_over_the_socket() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let socket = dir.path().join("cmk-agent-installer.sock");
+        let listener = std::os::unix::net::UnixListener::bind(&socket).unwrap();
+        let config_path = config(&dir);
+        let result_path = dir.path().join("agent-install-result.json");
+        let unit = std::thread::spawn(move || {
+            let (connection, _) = listener.accept().unwrap();
+            let mut output = connection.try_clone().unwrap();
+            let _refused = serve(
+                &mut std::io::BufReader::new(connection),
+                &mut output,
+                Some(&config_path),
+                &result_path,
+            );
+        });
+        let request = InstallRequest {
+            aghash: HASH.parse().unwrap(),
+            platform: String::from("linux_deb"),
+            size: 7,
+            signatures: vec![],
+        };
+
+        let verdict = install::transfer(
+            &socket,
+            &request,
+            &mut &b"package"[..],
+            install::INSTALL_TIMEOUT,
+        )
+        .unwrap();
+
+        unit.join().unwrap();
+        let install::Verdict::Refused(reason) = verdict else {
+            panic!("the unit refused the package");
+        };
+        assert!(reason.contains("No signature of the package matches a configured signature key"));
     }
 
     fn a_result() -> InstallResult {
@@ -754,23 +718,5 @@ mod tests {
             serde_json::from_slice::<InstallResult>(&std::fs::read(&path).unwrap()).unwrap(),
             failed
         );
-    }
-
-    /// Nothing can write the copy once it is sealed, this process included.
-    /// The seal stops the write, not the open, which is why the descriptor is
-    /// reopened for writing here and the write itself has to fail.
-    #[test]
-    fn test_the_sealed_copy_cannot_be_written() {
-        let package = sealed(b"package").unwrap();
-        let install_path = format!("/proc/{}/fd/{}", std::process::id(), package.as_raw_fd());
-
-        let written = OpenOptions::new()
-            .write(true)
-            .open(&install_path)
-            .unwrap()
-            .write_all(b"rewritten");
-
-        assert!(written.is_err());
-        assert_eq!(std::fs::read(&install_path).unwrap(), b"package");
     }
 }

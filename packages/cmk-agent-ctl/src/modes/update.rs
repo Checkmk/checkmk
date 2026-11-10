@@ -8,17 +8,17 @@
 use crate::configuration::config::{ClientConfig, Registry};
 use crate::constants::CMK_UPDATE_AGENT_CMD;
 use crate::environment::{PathResolver, SetupMode};
-use crate::updater::{
-    CheckOutcome, FetchOutcome, PythonUpdater, SignatureCheck, Updater, WritableUpdater,
-};
 #[cfg(unix)]
-use crate::updater::{InstallOutcome, InstallTimeout};
+use crate::updater::Installation;
+use crate::updater::{
+    CheckOutcome, FetchOutcome, PythonUpdater, SignatureCheck, Spooled, Updater, WritableUpdater,
+};
 use crate::{agent_receiver_api, misc, setup};
+#[cfg(unix)]
+use anyhow::anyhow;
 use anyhow::Result as AnyhowResult;
 use log::warn;
 use rand::Rng;
-#[cfg(unix)]
-use std::path::Path;
 use std::thread;
 use std::time::{Duration, Instant, SystemTime};
 
@@ -49,15 +49,15 @@ pub fn check(
 
 /// Fetch the agent package the site has for this host and hand it over.
 ///
-/// The package is downloaded and, once `signature` is satisfied, spooled for
-/// the installer and handed to it. The install step runs as root in a unit of
-/// its own, so this run ends when that unit does, and the line it prints says
-/// what reached it rather than what it installed.
+/// On Linux the package is streamed to the install step, which runs as root in
+/// a unit of its own, verifies the package and installs it. This run ends when
+/// that unit does, unless the installation ends this process first. On
+/// Windows the package is verified, spooled and handed to the agent service.
 ///
-/// `signature` carries `--skip-signatures` through. The install step checks
-/// the signature again regardless, so a package nobody vouched for is spooled
-/// here and refused there. On Windows nothing checks
-/// it again, so such a package is not handed over at all.
+/// `signature` carries `--skip-signatures` through. On Linux it skips only the
+/// check before the download, because the install step verifies the package
+/// regardless. On Windows nothing checks it again, so a package nobody vouched
+/// for is not handed over at all.
 ///
 /// A package handed over in an earlier run is settled first: the installed
 /// hash says whether its installation took effect.
@@ -67,9 +67,9 @@ pub fn check(
 ///
 /// # Errors
 ///
-/// If the site cannot be asked, does not deliver the package it offered, if
-/// the package fails verification or cannot be spooled, or if the installer
-/// cannot be reached.
+/// If the site cannot be asked or does not deliver the package it offered, if
+/// the package fails verification, cannot be spooled or is refused, if the
+/// installer cannot be reached, or if the installation fails.
 pub fn update(
     updater: &mut WritableUpdater,
     registry: &Registry,
@@ -134,6 +134,9 @@ fn run_cycle(
 
     let answer = updater.ask_update_source(registry, api)?;
     updater.record_answer(&answer)?;
+    #[cfg(unix)]
+    let fetched = updater.fetch_and_install(answer, api, signature)?;
+    #[cfg(windows)]
     let fetched = updater.fetch_update(answer, api, signature)?;
 
     println!("{}", report_fetch(&fetched));
@@ -143,29 +146,13 @@ fn run_cycle(
         FetchOutcome::UpToDate(_) | FetchOutcome::NoPackage => updater.clear_last_error()?,
         FetchOutcome::SourceUnavailable => updater.record_source_unavailable()?,
         #[cfg(unix)]
-        FetchOutcome::Spooled {
-            path,
-            signatures,
-            hash,
-            ..
-        } => {
-            updater.store_pending_hash(hash)?;
-            let outcome = updater.install_update(path, signatures);
-            if !reached_the_installer(&outcome) {
-                if let Err(error) = updater.clear_pending_hash() {
-                    log::warn!("Could not clear the pending installation: {error:#}");
-                }
-            }
-
-            println!("{}", report_install(outcome?, path));
-        }
+        FetchOutcome::Due(installation) => installation_outcome(installation)?,
         #[cfg(windows)]
-        FetchOutcome::Spooled {
+        FetchOutcome::Due(Spooled {
             path,
             hash,
             signature,
-            ..
-        } => match signature {
+        }) => match signature {
             SignatureCheck::Required => {
                 updater.store_pending_hash(hash)?;
                 let handed_over = updater.hand_over_msi(path);
@@ -187,17 +174,6 @@ fn run_cycle(
         },
     }
     Ok(())
-}
-
-/// Whether the install step has the package, so that the next run settles what
-/// became of it. A timeout counts: the step took the request, and may still
-/// finish.
-#[cfg(unix)]
-fn reached_the_installer(outcome: &AnyhowResult<InstallOutcome>) -> bool {
-    match outcome {
-        Ok(outcome) => *outcome == InstallOutcome::HandedOver,
-        Err(error) => error.is::<InstallTimeout>(),
-    }
 }
 
 /// What a host without an update configuration is told.
@@ -253,16 +229,9 @@ fn report(outcome: CheckOutcome) -> String {
 
 /// The outcome of a fetch in the line the mode prints for it.
 ///
-/// A spooled package is named by its file: the privileged step is a process of
-/// its own, and [`report_install`] says on the next line what became of the
-/// hand-over to it.
-///
 /// The two outcomes that end without a package read as they do in [`report`]:
 /// the same situation must not be worded by whether `--check-only` was passed.
-///
-/// An unverified package says so. The file on disk carries no such mark, so
-/// this line is the only place the two are told apart.
-fn report_fetch(outcome: &FetchOutcome) -> String {
+fn report_fetch(outcome: &FetchOutcome<impl Report>) -> String {
     match outcome {
         FetchOutcome::NotPossible => {
             String::from("No agent update is possible for this host, run with -v for the reason")
@@ -275,16 +244,52 @@ fn report_fetch(outcome: &FetchOutcome) -> String {
         FetchOutcome::Superseded => String::from(
             "The site replaced the offered agent package, the next update gets the new one",
         ),
-        FetchOutcome::Spooled {
-            hash,
-            path,
-            signature,
-            ..
-        } => format!(
+        FetchOutcome::Due(due) => due.report(),
+    }
+}
+
+/// The line [`report_fetch`] prints for a package that the site offers.
+trait Report {
+    fn report(&self) -> String;
+}
+
+/// A spooled package is named by its file. On Windows, the next line says what
+/// became of the hand-over to the agent service.
+///
+/// An unverified package says so. The file on disk carries no such mark, so
+/// this line is the only place the two are told apart.
+impl Report for Spooled {
+    fn report(&self) -> String {
+        format!(
             "{} is ready at {}",
-            signature.package_name(hash),
-            path.display()
-        ),
+            self.signature.package_name(&self.hash),
+            self.path.display()
+        )
+    }
+}
+
+#[cfg(unix)]
+impl Report for Installation {
+    fn report(&self) -> String {
+        match self {
+            Installation::NoInstaller(hash) => {
+                format!("No installer socket is configured, agent package {hash} is not downloaded")
+            }
+            Installation::Installed {
+                hash,
+                result: Some(result),
+            } => {
+                if result.success {
+                    format!("Agent package {hash} is installed")
+                } else {
+                    format!("The installer could not install agent package {hash}")
+                }
+            }
+            Installation::Installed { hash, result: None } => format!(
+                "The installer sent no result for agent package {hash}, run with --check-only \
+                 to see whether the agent moved"
+            ),
+        }
     }
 }
 
@@ -382,29 +387,32 @@ fn start_delay(
     Some(next_check?.duration_since(now).ok()?.min(interval))
 }
 
-/// What the hand-over to the privileged install step did, in the line the mode
-/// prints after the one of the fetch.
+/// A failed installation as the error of the run.
 ///
-/// The step answers nothing yet, so a finished hand-over is all this side
-/// knows about it. What it made of the package is in the journal of its unit,
-/// and whether the agent moved is what the next check says.
+/// The pending hash stays: the next cycle settles the installation, from the
+/// installed hash and the install result file.
 #[cfg(unix)]
-fn report_install(outcome: InstallOutcome, path: &Path) -> String {
-    match outcome {
-        InstallOutcome::NoInstaller => format!(
-            "No installer socket is configured, {} stays where it is",
-            path.display()
-        ),
-        InstallOutcome::HandedOver => String::from(
-            "The installer has taken it and finished, run with --check-only to see \
-             whether the agent moved",
-        ),
+fn installation_outcome(installation: &Installation) -> AnyhowResult<()> {
+    let Installation::Installed {
+        hash,
+        result: Some(result),
+    } = installation
+    else {
+        return Ok(());
+    };
+    if result.success {
+        return Ok(());
     }
+    Err(anyhow!(result.error.clone().unwrap_or_else(|| format!(
+        "The installation of agent package {hash} failed"
+    ))))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(unix)]
+    use crate::updater::InstallResult;
 
     const HOUR: Duration = Duration::from_secs(3600);
 
@@ -548,12 +556,11 @@ mod tests {
     #[test]
     fn test_report_a_spooled_package() {
         assert_eq!(
-            report_fetch(&FetchOutcome::Spooled {
+            report_fetch(&FetchOutcome::Due(Spooled {
                 hash: TARGET_HASH.parse().unwrap(),
                 path: std::path::PathBuf::from("/spool/fedcba9876543210.deb"),
                 signature: SignatureCheck::Required,
-                signatures: vec![],
-            }),
+            })),
             "Verified agent package fedcba9876543210 is ready at \
              /spool/fedcba9876543210.deb"
         );
@@ -564,71 +571,106 @@ mod tests {
     #[test]
     fn test_report_a_spooled_package_nobody_vouched_for() {
         assert_eq!(
-            report_fetch(&FetchOutcome::Spooled {
+            report_fetch(&FetchOutcome::Due(Spooled {
                 hash: TARGET_HASH.parse().unwrap(),
                 path: std::path::PathBuf::from("/spool/fedcba9876543210.deb"),
                 signature: SignatureCheck::Skip,
-                signatures: vec![],
-            }),
+            })),
             "UNVERIFIED agent package fedcba9876543210 is ready at \
              /spool/fedcba9876543210.deb"
         );
     }
 
-    /// The hand-over is over, and the outcome of the installation is not
-    /// this run's to report.
+    #[cfg(unix)]
+    fn a_result(success: bool) -> InstallResult {
+        InstallResult {
+            aghash: TARGET_HASH.parse().unwrap(),
+            success,
+            error: None,
+            finished: 1_760_000_000,
+        }
+    }
+
     #[cfg(unix)]
     #[test]
-    fn test_report_a_package_the_installer_took() {
+    fn test_report_an_installed_package() {
         assert_eq!(
-            report_install(
-                InstallOutcome::HandedOver,
-                std::path::Path::new("/spool/fedcba9876543210.deb")
-            ),
-            "The installer has taken it and finished, run with --check-only to see \
-             whether the agent moved"
+            report_fetch(&FetchOutcome::Due(Installation::Installed {
+                hash: TARGET_HASH.parse().unwrap(),
+                result: Some(a_result(true)),
+            })),
+            "Agent package fedcba9876543210 is installed"
         );
     }
 
-    /// Without a privileged step the package stays a file, and the line says
-    /// where it is rather than leaving the run without an answer.
+    /// The reason follows as the error of the run.
     #[cfg(unix)]
     #[test]
-    fn test_report_a_package_nobody_takes() {
+    fn test_report_a_package_that_failed_to_install() {
         assert_eq!(
-            report_install(
-                InstallOutcome::NoInstaller,
-                std::path::Path::new("/spool/fedcba9876543210.deb")
-            ),
-            "No installer socket is configured, /spool/fedcba9876543210.deb stays where it is"
+            report_fetch(&FetchOutcome::Due(Installation::Installed {
+                hash: TARGET_HASH.parse().unwrap(),
+                result: Some(a_result(false)),
+            })),
+            "The installer could not install agent package fedcba9876543210"
         );
     }
 
-    /// CMK-41888: the installer may still finish, so the pending installation
-    /// stays for the next run to settle.
+    /// A unit that ended abnormally sends no result.
     #[cfg(unix)]
     #[test]
-    fn test_an_installer_that_timed_out_was_reached() {
-        let timed_out = Err(anyhow::Error::new(InstallTimeout {
-            socket: std::path::PathBuf::from("/run/cmk-agent-installer.sock"),
-            timeout: Duration::from_secs(300),
-        }));
-
-        assert!(reached_the_installer(&timed_out));
+    fn test_report_an_installation_without_a_result() {
+        assert_eq!(
+            report_fetch(&FetchOutcome::Due(Installation::Installed {
+                hash: TARGET_HASH.parse().unwrap(),
+                result: None,
+            })),
+            "The installer sent no result for agent package fedcba9876543210, run with \
+             --check-only to see whether the agent moved"
+        );
     }
 
     #[cfg(unix)]
     #[test]
-    fn test_an_installer_that_could_not_be_reached_was_not_reached() {
-        let unreachable = Err(anyhow::anyhow!("Cannot reach the installer socket"));
+    fn test_report_a_package_nobody_could_install() {
+        assert_eq!(
+            report_fetch(&FetchOutcome::Due(Installation::NoInstaller(
+                TARGET_HASH.parse().unwrap()
+            ))),
+            "No installer socket is configured, agent package fedcba9876543210 is not \
+             downloaded"
+        );
+    }
 
-        assert!(!reached_the_installer(&unreachable));
+    #[cfg(unix)]
+    #[test]
+    fn test_a_failed_installation_fails_the_run() {
+        let error = installation_outcome(&Installation::Installed {
+            hash: TARGET_HASH.parse().unwrap(),
+            result: Some(InstallResult {
+                error: Some(String::from("Installing failed, exit status: 1")),
+                ..a_result(false)
+            }),
+        })
+        .unwrap_err();
+
+        assert_eq!(error.to_string(), "Installing failed, exit status: 1");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn test_a_successful_installation_passes_the_run() {
+        assert!(installation_outcome(&Installation::Installed {
+            hash: TARGET_HASH.parse().unwrap(),
+            result: Some(a_result(true)),
+        })
+        .is_ok());
     }
 
     #[test]
     fn test_report_a_fetch_from_a_site_without_a_package() {
         assert_eq!(
-            report_fetch(&FetchOutcome::NoPackage),
+            report_fetch(&FetchOutcome::<Spooled>::NoPackage),
             "No agent package available for this host"
         );
     }
@@ -636,7 +678,9 @@ mod tests {
     #[test]
     fn test_report_a_fetch_of_an_agent_that_is_up_to_date() {
         assert_eq!(
-            report_fetch(&FetchOutcome::UpToDate(INSTALLED_HASH.parse().unwrap())),
+            report_fetch(&FetchOutcome::<Spooled>::UpToDate(
+                INSTALLED_HASH.parse().unwrap()
+            )),
             "Agent is up to date: 0123456789abcdef"
         );
     }
@@ -644,7 +688,7 @@ mod tests {
     #[test]
     fn test_report_a_fetch_that_could_not_be_made() {
         assert_eq!(
-            report_fetch(&FetchOutcome::NotPossible),
+            report_fetch(&FetchOutcome::<Spooled>::NotPossible),
             "No agent update is possible for this host, run with -v for the reason"
         );
     }

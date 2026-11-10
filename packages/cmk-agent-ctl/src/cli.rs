@@ -93,20 +93,19 @@ pub enum Mode {
 
     /// Update the agent of this host from the Checkmk site it is registered with
     ///
-    /// The package the site offers is downloaded, verified unless
-    /// --skip-signatures is given, write it in the spool directory for the
-    /// installer and trigger installation. The installer runs as root in a unit
-    /// of its own.
+    /// The package the site offers is downloaded. On Linux it is streamed to
+    /// the installer, which runs as root in a unit of its own, verifies the
+    /// package and installs it. On Windows it is verified unless
+    /// --skip-signatures is given, and handed to the agent service.
     Update(UpdateOpts),
 
-    /// Install an agent package the `update` mode spooled
+    /// Install an agent package the `update` mode sends
     ///
     /// The privileged step of an agent update: a socket-activated systemd unit
-    /// runs this command as root for one package, with the request and the
-    /// answer on its standard input and output. Not meant to be called by
-    /// hand. The package is installed only if one of its signatures matches a
-    /// signature key of the update configuration. The outcome is reported
-    /// through the exit code only.
+    /// runs this command as root for one package, with the conversation with
+    /// the controller on its standard input and output. Not meant to be called
+    /// by hand. The package is installed only if one of its signatures matches
+    /// a signature key of the update configuration.
     #[cfg(unix)]
     InstallAgent,
 }
@@ -117,7 +116,10 @@ pub struct UpdateOpts {
     #[arg(long)]
     pub check_only: bool,
 
-    /// Spool the package without checking its signature
+    /// Skip the controller's signature checks
+    ///
+    /// On Linux, the controller only checks the signing certificate before the
+    /// download, and the installer verifies the package regardless.
     #[arg(long, short = 'G', conflicts_with = "check_only")]
     pub skip_signatures: bool,
 

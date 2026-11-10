@@ -104,7 +104,7 @@ const timeAxis = computed(() =>
   binUnit.value === null ? continuousTimeAxis() : binnedTimeAxis(binUnit.value, getLocalTimeZone())
 )
 
-const { graphs, isLoading, error, partialErrors, warnings, reload } = useGraphData(
+const { loads, reload } = useGraphData(
   () => graphDefinitions.value,
   () => requestedTimeRange.value,
   () => plotWidth.value,
@@ -118,7 +118,10 @@ const { graphs, isLoading, error, partialErrors, warnings, reload } = useGraphDa
     planFetchWindow: (range, canvasWidth) => timeAxis.value.planFetchWindow(range, canvasWidth)
   }
 )
-const graph = computed(() => graphs.value[0] ?? null)
+const load = computed(() => loads.value[0] ?? null)
+const graph = computed(() => load.value?.graph ?? null)
+const isLoading = computed(() => load.value?.isLoading ?? false)
+const error = computed(() => load.value?.error ?? null)
 
 // Held back so a quick load renders the figure directly, with no icon flashing over it first. A
 // failure states itself through the notice below instead.
@@ -130,8 +133,8 @@ const showLoadingIcon = useDelayedFlag(
 const notice = useGraphNotice({
   error: () => error.value,
   isLoading: () => isLoading.value,
-  partialErrors: () => partialErrors.value,
-  warnings: () => warnings.value
+  partialErrors: () => load.value?.partialErrors ?? [],
+  warnings: () => load.value?.warnings ?? []
 })
 
 const noDataNotice = useNoDataNotice()
@@ -158,7 +161,7 @@ function startTimer(): void {
 // `start` alone would leave the backoff `reportFailure` scheduled, so stop first: the retry then
 // resumes the normal cadence rather than the penalised one.
 function onRetry(): void {
-  reload()
+  reload(0)
   timer.stop()
   startTimer()
 }

@@ -11,16 +11,28 @@ Registered as the cmk-graph-group custom element via defineCmkComponent in main.
 
 <script setup lang="ts">
 import type { CmkTimeSeriesGraph } from 'cmk-shared-typing/typescript/cmk_time_series_graph'
-import CmkSurfaceNotice from 'cmk-ui-library/components/CmkSurfaceNotice.vue'
+import CmkSurfaceNotice, {
+  type CmkSurfaceNoticeVariant
+} from 'cmk-ui-library/components/CmkSurfaceNotice.vue'
 import CmkVisuallyHidden from 'cmk-ui-library/components/CmkVisuallyHidden.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { LOADING_AFFORDANCE_DELAY_MS, useDelayedFlag } from 'cmk-ui-library/lib/useDelayedFlag'
-import { type ComponentPublicInstance, computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 
 import { useGlobalRefresh } from '../GlobalTimePicker/globalTimeState'
 import { useBrushSnapshot } from '../composables/useBrushSnapshot'
-import { type GraphCombinationMode, useGraphData } from '../composables/useGraphData'
-import { hasPlottableData, useGraphNotice, useNoDataNotice } from '../composables/useGraphNotice'
+import {
+  type GraphCombinationMode,
+  type GraphLoad,
+  type ResolvedGraph,
+  useGraphData
+} from '../composables/useGraphData'
+import {
+  type GraphNoticeDescriptor,
+  graphNoticeOf,
+  hasPlottableData,
+  useNoDataNotice
+} from '../composables/useGraphNotice'
 import { useLocalTimeRange } from '../composables/useLocalTimeRange'
 import { useRequestedTimeRange } from '../composables/useRequestedTimeRange'
 import { useSharedResizeObserver } from '../composables/useSharedResizeObserver'
@@ -31,9 +43,9 @@ import type {
   RequestedTimeRange,
   TimeRangeCommitKind
 } from '../types'
-import { drawnTimeRange } from '../utils/timeRange'
+import { drawnTimeRange, sameRequestedTimeRange } from '../utils/timeRange'
+import GraphGroupEntry from './GraphGroupEntry.vue'
 import GraphPanel from './GraphPanel.vue'
-import GraphSkeleton from './GraphSkeleton.vue'
 import { clippedToNavigableTime, navigableBounds } from './TimeSeriesGraph/interaction/timeBounds'
 import { type ConsolidationFn, DEFAULT_CONSOLIDATION_FN } from './consolidation'
 import { CANVAS_MARGIN_HORIZONTAL, MAX_FIGURE_WIDTH } from './constants'
@@ -185,7 +197,7 @@ const consolidationFnOfPanel = (panelIndex: number): ConsolidationFn =>
 const { pauseRefresh } = useGlobalRefresh()
 
 // One strip for the whole group — every panel shows the same range; only the series differ.
-const brush = useBrushSnapshot<BrushOverview[]>({
+const brush = useBrushSnapshot<(BrushOverview | null)[]>({
   getNow: () => Math.floor(Date.now() / 1000),
   getRequestedTimeRange: () => requestedTimeRange.value
 })
@@ -200,7 +212,7 @@ function onPanelTimeRange(
   setRequestedTimeRange(range, panelKey)
 }
 
-const { graphs, isLoading, loadingSlots, error, partialErrors, warnings, reload } = useGraphData(
+const { loads, reload } = useGraphData(
   () => props.graphs,
   () => requestedTimeRange.value,
   () => effectiveWidth.value - CANVAS_MARGIN_HORIZONTAL,
@@ -212,7 +224,7 @@ const overviewGraphDefinitions = computed(() =>
   props.graphs.some((graph) => graph.interaction.brush === 'enabled') ? props.graphs : []
 )
 
-const { graphs: overviewGraphs, reload: reloadOverview } = useGraphData(
+const { loads: overviewLoads, reload: reloadOverview } = useGraphData(
   () => overviewGraphDefinitions.value,
   () => brush.requestedDomain.value,
   () => effectiveWidth.value - CANVAS_MARGIN_HORIZONTAL,
@@ -221,11 +233,21 @@ const { graphs: overviewGraphs, reload: reloadOverview } = useGraphData(
   { getFetchBounds: navigableBounds }
 )
 
-// Derived from the response that fills it, never from `brush.requestedDomain`, which by now may
-// have moved on: a strip snapped to one fetch's grid and drawn over another's series is what put
-// the selection bar in the wrong place.
-watch(overviewGraphs, (graphs) => {
-  const answered = graphs[0]
+// Published once no strip is loading, so that the strips switch together. Derived
+// from the first strip that answers the current domain: a strip snapped to one fetch's grid and
+// drawn over another's series is what put the selection bar in the wrong place. A strip without
+// such an answer keeps its last one, which the brush draws at its own time range.
+watch(overviewLoads, (overviews) => {
+  if (overviews.some((overview) => overview.isLoading)) {
+    return
+  }
+  const answered = overviews
+    .map(({ graph }) => graph)
+    .find(
+      (graph): graph is ResolvedGraph =>
+        graph !== null &&
+        sameRequestedTimeRange(graph.requestedTimeRange, brush.requestedDomain.value)
+    )
   if (answered === undefined) {
     return
   }
@@ -235,100 +257,77 @@ watch(overviewGraphs, (graphs) => {
       drawnTimeRange(answered.requestedTimeRange, answered.timeRange),
       navigableBounds()
     ),
-    data: graphs.map((graph) => ({ metrics: graph.metrics, dataTimeRange: graph.timeRange }))
+    data: overviews.map(({ graph }) =>
+      graph === null ? null : { metrics: graph.metrics, dataTimeRange: graph.timeRange }
+    )
   })
 })
 
-function brushSnapshotOf(panelIndex: number) {
+const brushSnapshots = computed(() => {
   const snapshot = brush.snapshot.value
-  const overview = snapshot?.data[panelIndex]
-  return snapshot && overview ? { ...snapshot, data: overview } : undefined
-}
-
-// A refetch is skeletonised too: the curves still on screen are the previous range's, so leaving
-// them up reads as nothing having happened. Only that case is worth delaying - a slot that has
-// never held a graph has nothing to leave up, so its wait is blank rather than flickering.
-// A failure is exempt either way, its notice occupies the area.
-const delayHasElapsed = useDelayedFlag(
-  () => loadingSlots.value.some(Boolean) && error.value === null,
-  LOADING_AFFORDANCE_DELAY_MS
-)
-
-// One entry per graph definition, so a panel waiting on its own data is the only one replaced:
-// a consolidation change refetches that panel alone, and blanking its neighbours would lose
-// data they still hold.
-const slots = computed(() =>
-  Array.from({ length: props.graphs.length }, (_unused, index) => {
-    const graph = graphs.value[index] ?? null
-    const isWaiting = (loadingSlots.value[index] ?? false) && error.value === null
-    return {
-      index,
-      graph,
-      isAwaitingData: loadingSlots.value[index] ?? false,
-      isSkeleton: isWaiting && (graph === null || delayHasElapsed.value)
-    }
+  return props.graphs.map((_graph, index) => {
+    const overview = snapshot?.data[index]
+    return snapshot && overview ? { ...snapshot, data: overview } : undefined
   })
-)
-
-const showSkeletons = computed(() => slots.value.some((slot) => slot.isSkeleton))
-
-// Keyed by slot rather than collected in order: skeletons and panels interleave, so a ref array
-// would not line up with the slots the heights are read back against.
-const panelEls = new Map<number, HTMLElement>()
-
-function registerPanel(index: number, el: Element | ComponentPublicInstance | null): void {
-  if (el instanceof HTMLElement) {
-    panelEls.set(index, el)
-  } else {
-    panelEls.delete(index)
-  }
-}
-
-// Read as the skeletons go up but before they render, so the panels they replace are still on
-// screen and each skeleton can hold its own one's footprint.
-const panelHeights = ref<(number | undefined)[]>([])
-
-watch(showSkeletons, (showing) => {
-  if (!showing) {
-    return
-  }
-  const verticalPadding = groupEl.value ? 2 * panelPadding(groupEl.value) : 0
-  panelHeights.value = slots.value.map(({ index }) => {
-    const height = panelEls.get(index)?.getBoundingClientRect().height
-    return height === undefined ? undefined : height - verticalPadding
-  })
-})
-
-const notice = useGraphNotice({
-  error: () => error.value,
-  isLoading: () => isLoading.value,
-  partialErrors: () => partialErrors.value,
-  warnings: () => warnings.value
 })
 
 const noDataNotice = useNoDataNotice()
 
-// One pill per panel: the group's own notice outranks a panel's emptiness, and a panel awaiting
-// data is still showing the answer to the request before this one.
-const panelNotices = computed(() =>
-  slots.value.map(
-    (slot) =>
-      notice.value ??
-      (slot.graph !== null && !slot.isAwaitingData && !hasPlottableData(slot.graph.metrics)
-        ? noDataNotice
-        : null)
+// The fetch's own notice outranks a panel's emptiness, and a panel awaiting data is still showing
+// the answer to the request before this one.
+function noticeOf(load: GraphLoad): GraphNoticeDescriptor | null {
+  const fetchNotice = graphNoticeOf(load)
+  if (fetchNotice !== null) {
+    return fetchNotice
+  }
+  return load.graph !== null && !load.isLoading && !hasPlottableData(load.graph.metrics)
+    ? noDataNotice
+    : null
+}
+
+// One entry per graph definition, so a panel waiting on its own data is the only one replaced:
+// a consolidation change refetches that panel alone, and blanking its neighbours would lose
+// data they still hold.
+const entries = computed(() =>
+  props.graphs.map((definition, index) => {
+    const load = loads.value[index]!
+    return { index, definition, load, notice: noticeOf(load) }
+  })
+)
+
+const isLoading = computed(() => loads.value.some((load) => load.isLoading))
+
+// The skeletons are aria-hidden, so the group announces the wait of each graph that shows one: a
+// first load at once, a refetch once it outlasts the delay.
+const refetchDelayHasElapsed = useDelayedFlag(
+  () => loads.value.some((load) => load.isLoading && load.error === null),
+  LOADING_AFFORDANCE_DELAY_MS
+)
+const announcesLoading = computed(() =>
+  loads.value.some(
+    (load) =>
+      load.isLoading && load.error === null && (load.graph === null || refetchDelayHasElapsed.value)
   )
 )
 
-// Repeated over every panel, so the group states it once instead.
-const announcedNotice = computed(
-  () => notice.value ?? panelNotices.value.find((panelNotice) => panelNotice !== null) ?? null
-)
+const NOTICE_SEVERITY: readonly CmkSurfaceNoticeVariant[] = ['error', 'warning', 'loading', 'info']
+
+// The pills stay silent, so the group announces the most severe notice of its graphs.
+const announcedNotice = computed(() => {
+  const notices = entries.value.map(({ notice }) => notice)
+  for (const variant of NOTICE_SEVERITY) {
+    const notice = notices.find((each) => each?.variant === variant)
+    if (notice) {
+      return notice
+    }
+  }
+  return null
+})
 
 // The overview feeds the brush below the plot, so a retry has to refresh it too.
-function onRetry(): void {
-  reload()
-  reloadOverview()
+function onRetry(index: number): void {
+  reload(index)
+  reloadOverview(index)
 }
 </script>
 
@@ -339,81 +338,66 @@ function onRetry(): void {
     :class="`graphing-graph-group--${layout}`"
     :aria-busy="isLoading"
   >
-    <!-- The pills below repeat one message over every panel, so they stay silent and the group
-         announces it once here. -->
-    <CmkVisuallyHidden v-if="showSkeletons" :text="_t('Loading graphs…')" live="polite" />
+    <!-- The pills below stay silent, so the group announces one message for all of them here. -->
+    <CmkVisuallyHidden v-if="announcesLoading" :text="_t('Loading graphs…')" live="polite" />
     <CmkVisuallyHidden
       v-else-if="announcedNotice"
       :text="announcedNotice.message"
       :live="announcedNotice.variant === 'error' ? 'assertive' : 'polite'"
     />
-    <!-- A slot with neither yet is a first load still inside the delay, and stays blank. -->
-    <template v-for="panelSlot in slots" :key="panelSlot.index">
-      <GraphSkeleton
-        v-if="panelSlot.isSkeleton"
-        class="graphing-graph-group__panel"
-        :figure-width="effectiveWidth"
-        :figure-height="figure_height"
-        :show-legend="display.show_legend"
-        :show-brush="props.graphs[panelSlot.index]!.interaction.brush === 'enabled'"
-        :height="panelHeights[panelSlot.index]"
-      />
-      <div
-        v-else-if="panelSlot.graph"
-        :ref="(el) => registerPanel(panelSlot.index, el)"
-        class="graphing-graph-group__panel"
-      >
+    <GraphGroupEntry
+      v-for="entry in entries"
+      :key="entry.index"
+      :load="entry.load"
+      :notice="entry.notice"
+      :figure-width="effectiveWidth"
+      :figure-height="figure_height"
+      :show-legend="display.show_legend"
+      :show-brush="entry.definition.interaction.brush === 'enabled'"
+      @retry="onRetry(entry.index)"
+    >
+      <template #panel="{ graph }">
         <GraphPanel
-          :consolidation-fn="consolidationFnOfPanel(panelSlot.index)"
-          :metrics="panelSlot.graph.metrics"
-          :data-time-range="panelSlot.graph.timeRange"
+          :consolidation-fn="consolidationFnOfPanel(entry.index)"
+          :metrics="graph.metrics"
+          :data-time-range="graph.timeRange"
           :requested-time-range="requestedTimeRange"
-          :awaiting-data="panelSlot.isAwaitingData"
-          :panel-key="panelSlot.index"
+          :awaiting-data="entry.load.isLoading"
+          :panel-key="entry.index"
           :range-change="rangeChange"
-          :y-axis="props.graphs[panelSlot.index]!.options.y_axis"
-          :title="panelSlot.graph.title"
+          :y-axis="entry.definition.options.y_axis"
+          :title="graph.title"
           :show-title="display.show_title"
-          :show-timestamp="props.graphs[panelSlot.index]?.options.header.show_graph_time ?? true"
+          :show-timestamp="entry.definition.options.header.show_graph_time ?? true"
           :show-consolidation="display.show_consolidation"
           :show-legend="display.show_legend"
           :show-value-axis="display.show_vertical_axis"
           :show-time-axis="display.show_time_axis"
           :min-value-axis-width="display.min_value_axis_width"
-          :interaction="props.graphs[panelSlot.index]!.interaction"
-          :brush-snapshot="brushSnapshotOf(panelSlot.index)"
-          :horizontal-lines="panelSlot.graph.horizontalLines"
-          :shaded-regions="panelSlot.graph.shadedRegions"
+          :interaction="entry.definition.interaction"
+          :brush-snapshot="brushSnapshots[entry.index]"
+          :horizontal-lines="graph.horizontalLines"
+          :shaded-regions="graph.shadedRegions"
           :figure-width="effectiveWidth"
           :figure-height="figure_height"
-          :add-to="panelSlot.graph.addTo"
+          :add-to="graph.addTo"
           :is-hover-graph="layout === 'wrap'"
-          @update:requested-time-range="
-            (range, kind) => onPanelTimeRange(range, kind, panelSlot.index)
-          "
-          @update:consolidation-fn="consolidationFnPerPanel[panelSlot.index] = $event"
+          @update:requested-time-range="(range, kind) => onPanelTimeRange(range, kind, entry.index)"
+          @update:consolidation-fn="consolidationFnPerPanel[entry.index] = $event"
           @inspect="pauseRefresh"
         >
           <template #notice>
             <CmkSurfaceNotice
-              v-if="panelNotices[panelSlot.index]"
-              v-bind="panelNotices[panelSlot.index]!"
+              v-if="entry.notice"
+              v-bind="entry.notice"
               silent
               class="graphing-graph-group__notice"
-              @retry="onRetry"
+              @retry="onRetry(entry.index)"
             />
           </template>
         </GraphPanel>
-      </div>
-    </template>
-    <!-- A first load that failed has no panel to sit over, so the notice stands on its own. -->
-    <CmkSurfaceNotice
-      v-if="notice && graphs.length === 0"
-      v-bind="notice"
-      silent
-      class="graphing-graph-group__notice--standalone"
-      @retry="onRetry"
-    />
+      </template>
+    </GraphGroupEntry>
   </div>
 </template>
 
@@ -441,23 +425,11 @@ function onRetry(): void {
   justify-content: var(--cmk-graph-group-justify-content, flex-start);
 }
 
-// Unset, the panels sit bare in the group; a page that wants each graph on its own box sets these.
-.graphing-graph-group__panel {
-  position: relative;
-  padding: var(--graphing-graph-group-panel-padding, 0);
-  background-color: var(--graphing-graph-group-panel-background, transparent);
-  border-radius: var(--graphing-graph-group-panel-border-radius, 0);
-}
-
 // Centred on the panel, not on its plot alone: the plot's box is GraphPanel's own business.
 .graphing-graph-group__notice {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-}
-
-.graphing-graph-group__notice--standalone {
-  align-self: center;
 }
 </style>

@@ -7,7 +7,7 @@ import type { AddTo, CmkTimeSeriesGraph } from 'cmk-shared-typing/typescript/cmk
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 import { useDebounceFn } from 'cmk-ui-library/lib/useDebounce'
-import { type Ref, computed, onScopeDispose, readonly, ref, watch } from 'vue'
+import { type Ref, computed, onScopeDispose, shallowRef, watch } from 'vue'
 
 import { useGlobalRefresh } from '../GlobalTimePicker/globalTimeState'
 import type { HorizontalLine, Metric, ShadedRegion, TimeRange } from '../components/TimeSeriesGraph'
@@ -126,6 +126,41 @@ export interface GraphDataOptions {
   planFetchWindow?: FetchWindowPlanner
 }
 
+/** How the fetch of one graph went. */
+export interface GraphFetchState {
+  isLoading: boolean
+  error: string | null
+  partialErrors: readonly string[]
+  warnings: readonly string[]
+}
+
+/** One graph of a group: the data it holds and how its own load went. */
+export interface GraphLoad extends GraphFetchState {
+  graph: ResolvedGraph | null
+}
+
+const NOT_LOADED: GraphLoad = {
+  graph: null,
+  isLoading: false,
+  error: null,
+  partialErrors: [],
+  warnings: []
+}
+
+interface LoadControl {
+  // A stale graph holds no data for the current request, or none at all.
+  isStale: boolean
+  // The step of the last request; a resize only re-fetches for a finer one.
+  requestedStep: number | null
+  inFlight: AbortController | null
+}
+
+const newLoadControl = (requestedStep: number | null = null): LoadControl => ({
+  isStale: true,
+  requestedStep,
+  inFlight: null
+})
+
 export function useGraphData(
   getGraphs: () => GraphDataDefinition[],
   getRequestedTimeRange: () => RequestedTimeRange,
@@ -134,54 +169,41 @@ export function useGraphData(
   getCombinationMode: () => GraphCombinationMode | null = () => null,
   options: GraphDataOptions = {}
 ): {
-  graphs: Readonly<Ref<ResolvedGraph[]>>
-  isLoading: Readonly<Ref<boolean>>
-  loadingSlots: Readonly<Ref<readonly boolean[]>>
-  error: Readonly<Ref<string | null>>
-  partialErrors: Readonly<Ref<readonly string[]>>
-  warnings: Readonly<Ref<readonly string[]>>
-  reload: () => void
+  loads: Readonly<Ref<readonly GraphLoad[]>>
+  reload: (index: number) => void
 } {
   const fetchGraph = options.fetchGraph ?? fetchGraphDataByDefinition
   const planFetchWindow = options.planFetchWindow ?? planFetchWindowByWidth
 
-  const graphsRef = ref<ResolvedGraph[]>([])
-  const errorRef = ref<string | null>(null)
-  const diagnosticsPerGraphRef = ref<{ errors: string[]; warnings: string[] }[]>([])
-  const partialErrors = computed(() =>
-    diagnosticsPerGraphRef.value.flatMap((entry) => entry.errors)
+  const published = shallowRef<readonly GraphLoad[]>([])
+  const loads = computed(() =>
+    getGraphs().map((_definition, index) => published.value[index] ?? NOT_LOADED)
   )
-  const warnings = computed(() => diagnosticsPerGraphRef.value.flatMap((entry) => entry.warnings))
+  let controls: LoadControl[] = getGraphs().map(() => newLoadControl())
 
-  const loadsInFlight = ref(0)
-  const isLoading = computed(() => loadsInFlight.value > 0)
-
-  // Per slot, because `isLoading` counts requests: it cannot say which graphs are waiting.
-  const loadingSlots = ref<boolean[]>([])
-
-  // Only the owning token releases a slot, or a superseded load would clear its successor's flag.
-  function settle(token: number): void {
-    loadsInFlight.value -= 1
-    loadingSlots.value = loadingSlots.value.map((loading, index) =>
-      loading && tokenOwningSlot[index] === token ? false : loading
+  function updateLoad(index: number, update: Partial<GraphLoad>): void {
+    published.value = loads.value.map((load, loadIndex) =>
+      loadIndex === index ? { ...load, ...update } : load
     )
   }
 
-  // Step of the most recently requested load; a resize only re-fetches for a finer one.
-  let lastRequestedStep: number | null = null
-
-  let loadToken = 0
-  let tokenOwningSlot: number[] = []
-  let tokenOwningAllSlots = 0
-
-  let fullLoad: AbortController | null = null
-  const slotLoads = new Map<number, AbortController>()
-
   function abortEveryLoad(): void {
-    fullLoad?.abort()
-    fullLoad = null
-    slotLoads.forEach((load) => load.abort())
-    slotLoads.clear()
+    controls.forEach((control) => {
+      control.inFlight?.abort()
+      control.inFlight = null
+    })
+  }
+
+  function matchGraphCount(): void {
+    const count = getGraphs().length
+    if (count === controls.length) {
+      return
+    }
+    abortEveryLoad()
+    published.value = loads.value.map((load) => ({ ...load, isLoading: false }))
+    controls = Array.from({ length: count }, (_unused, index) =>
+      newLoadControl(controls[index]?.requestedStep)
+    )
   }
 
   interface ResolvedEntry {
@@ -191,8 +213,8 @@ export function useGraphData(
   }
 
   // Width not measured yet (0, or negative once the axis margin is subtracted from an unmeasured
-  // figure). Skip rather than fetch at a bogus step; the resize watch below fires the first real
-  // load once a usable width arrives.
+  // figure). Skip rather than fetch at a bogus step; the resize watch below loads once a usable
+  // width arrives.
   function canvasWidthIsMeasured(): boolean {
     const canvasWidth = getCanvasWidth()
     return Number.isFinite(canvasWidth) && canvasWidth > 0
@@ -201,7 +223,6 @@ export function useGraphData(
   function currentRequest(): CurrentRequest {
     const range = getRequestedTimeRange()
     const window = planFetchWindow(range, getCanvasWidth())
-    lastRequestedStep = window.step
     const requestedTimeRange = { start: range.start, end: range.end }
     const bounds = options.getFetchBounds?.()
     return {
@@ -238,97 +259,61 @@ export function useGraphData(
     }
   }
 
-  async function loadAllGraphs() {
-    if (!canvasWidthIsMeasured()) {
-      // Nothing was asked for the current range, so the next usable width has to load it.
-      lastRequestedStep = null
+  async function loadGraph(index: number, request: CurrentRequest): Promise<void> {
+    const definition = getGraphs()[index]
+    const control = controls[index]
+    if (definition === undefined || control === undefined) {
       return
     }
+    control.isStale = false
+    control.requestedStep = request.fetchWindow.step
+    control.inFlight?.abort()
+    const inFlight = new AbortController()
+    control.inFlight = inFlight
+    updateLoad(index, { isLoading: true })
 
-    const token = ++loadToken
-    tokenOwningAllSlots = token
-    const definitions = getGraphs()
-    tokenOwningSlot = definitions.map(() => token)
-    loadingSlots.value = definitions.map(() => true)
-    abortEveryLoad()
-    const load = new AbortController()
-    fullLoad = load
-
-    loadsInFlight.value += 1
-
+    let update: Partial<GraphLoad>
     try {
-      const request = currentRequest()
-      const resolved = await Promise.all(
-        definitions.map((definition, index) => fetchOne(definition, index, request, load.signal))
-      )
-      if (tokenOwningAllSlots !== token) {
-        return
+      const entry = await fetchOne(definition, index, request, inFlight.signal)
+      update = {
+        graph: entry.graph,
+        error: null,
+        partialErrors: entry.errors,
+        warnings: entry.warnings
       }
-      const supersededGraphs = graphsRef.value
-      const supersededDiagnostics = diagnosticsPerGraphRef.value
-      const stillOwnsSlot = (index: number): boolean => tokenOwningSlot[index] === token
-      graphsRef.value = resolved.map((entry, index) =>
-        stillOwnsSlot(index) ? entry.graph : (supersededGraphs[index] ?? entry.graph)
-      )
-      diagnosticsPerGraphRef.value = resolved.map((entry, index) =>
-        stillOwnsSlot(index) ? entry : (supersededDiagnostics[index] ?? entry)
-      )
-      errorRef.value = null
     } catch (e) {
-      if (tokenOwningAllSlots === token) {
-        errorRef.value = e instanceof Error ? e.message : String(e)
-      }
-    } finally {
-      if (fullLoad === load) {
-        fullLoad = null
-      }
-      settle(token)
+      update = { error: e instanceof Error ? e.message : String(e) }
     }
-  }
-
-  async function loadGraph(index: number): Promise<void> {
-    if (!canvasWidthIsMeasured()) {
-      // Nothing was asked for the current range, so the next usable width has to load it.
-      lastRequestedStep = null
+    if (control.inFlight !== inFlight) {
       return
     }
-
-    const definitions = getGraphs()
-    const definition = definitions[index]
-    const everySlotIsFilled = graphsRef.value.length === definitions.length
-    if (definition === undefined || !everySlotIsFilled) {
-      return loadAllGraphs()
-    }
-
-    const token = ++loadToken
-    tokenOwningSlot[index] = token
-    loadingSlots.value[index] = true
-    slotLoads.get(index)?.abort()
-    const load = new AbortController()
-    slotLoads.set(index, load)
-    loadsInFlight.value += 1
-
-    try {
-      const entry = await fetchOne(definition, index, currentRequest(), load.signal)
-      if (tokenOwningSlot[index] !== token) {
-        return
-      }
-      graphsRef.value = graphsRef.value.map((graph, slot) => (slot === index ? entry.graph : graph))
-      diagnosticsPerGraphRef.value = diagnosticsPerGraphRef.value.map((diagnostics, slot) =>
-        slot === index ? entry : diagnostics
-      )
-      errorRef.value = null
-    } catch (e) {
-      if (tokenOwningSlot[index] === token) {
-        errorRef.value = e instanceof Error ? e.message : String(e)
-      }
-    } finally {
-      if (slotLoads.get(index) === load) {
-        slotLoads.delete(index)
-      }
-      settle(token)
-    }
+    control.inFlight = null
+    updateLoad(index, { ...update, isLoading: false })
   }
+
+  function loadStaleGraphs(): void {
+    if (!canvasWidthIsMeasured()) {
+      return
+    }
+    const request = currentRequest()
+    controls.forEach((control, index) => {
+      if (control.isStale) {
+        void loadGraph(index, request)
+      }
+    })
+  }
+
+  function markStale(indices: readonly number[]): void {
+    indices.forEach((index) => {
+      const control = controls[index]
+      if (control !== undefined) {
+        control.isStale = true
+      }
+    })
+    loadStaleGraphs()
+  }
+
+  const everyIndex = (): number[] => getGraphs().map((_definition, index) => index)
 
   const { refreshTick, contentReloadPending } = useGlobalRefresh()
 
@@ -336,7 +321,7 @@ export function useGraphData(
 
   // Outside the watch: a graph mounting during a content reload - a hover preview, say - still
   // has to render something.
-  void loadAllGraphs()
+  loadStaleGraphs()
 
   // The tick re-fetches even when the window did not move, keeping a calendar range (Today, This
   // week) live. A content reload is about to unmount this owner, so nobody would draw its fetch.
@@ -346,52 +331,43 @@ export function useGraphData(
       if (contentReloadPending()) {
         return
       }
-      void loadAllGraphs()
+      matchGraphCount()
+      markStale(everyIndex())
     },
     { deep: true }
   )
 
   const snapshotConsolidationFnPerGraph = (): ConsolidationFn[] => [...getConsolidationFnPerGraph()]
   watch(snapshotConsolidationFnPerGraph, (current, previous) => {
-    current.forEach((consolidationFn, index) => {
-      if (consolidationFn !== previous[index]) {
-        void loadGraph(index)
-      }
-    })
+    markStale(everyIndex().filter((index) => current[index] !== previous[index]))
   })
 
-  // A resize only re-renders client-side; re-fetch (debounced, resizes stream) when the plotted
-  // width plans a finer step than the one on screen. A narrower plot draws finer data just as well.
-  const plansFinerStep = (width: number): boolean =>
-    lastRequestedStep !== null &&
-    planFetchWindow(getRequestedTimeRange(), width).step < lastRequestedStep
+  // A resize only re-renders client-side; re-fetch (debounced, resizes stream) the graphs whose
+  // step is coarser than the one the plotted width plans. A narrower plot draws finer data just as
+  // well.
+  const graphsWithCoarserStep = (width: number): number[] => {
+    const plannedStep = planFetchWindow(getRequestedTimeRange(), width).step
+    return controls.flatMap(({ isStale, requestedStep }, index) =>
+      !isStale && requestedStep !== null && plannedStep < requestedStep ? [index] : []
+    )
+  }
   // Checked again when it fires: a load in between may already have served the finer step.
-  const debouncedLoadAllGraphs = useDebounceFn(() => {
-    if (plansFinerStep(getCanvasWidth())) {
-      void loadAllGraphs()
-    }
+  const debouncedLoadFinerSteps = useDebounceFn(() => {
+    markStale(graphsWithCoarserStep(getCanvasWidth()))
   }, 300)
   watch(getCanvasWidth, (width) => {
     if (!Number.isFinite(width) || width <= 0) {
       return
     }
-    // First usable width since a load was skipped for want of one: run that load now.
-    if (lastRequestedStep === null) {
-      void loadAllGraphs()
-      return
-    }
-    if (plansFinerStep(width)) {
-      debouncedLoadAllGraphs()
+    // A stale graph waited for a usable width: load it now.
+    loadStaleGraphs()
+    if (graphsWithCoarserStep(width).length > 0) {
+      debouncedLoadFinerSteps()
     }
   })
 
   return {
-    graphs: graphsRef,
-    isLoading,
-    loadingSlots,
-    error: readonly(errorRef),
-    partialErrors,
-    warnings,
-    reload: () => void loadAllGraphs()
+    loads,
+    reload: (index) => markStale([index])
   }
 }

@@ -165,6 +165,10 @@ const requestedRanges = (): { start: number; end: number; step: number }[] =>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   postSpy.mock.calls.map((call: any) => call[1].body.requested_time_range)
 
+const requestedGraphTitles = (): string[] =>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  postSpy.mock.calls.map((call: any) => JSON.parse(call[1].body.internal).title)
+
 const requestedConsolidationsByGraphTitle = (): string[] =>
   postSpy.mock.calls.map(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -265,11 +269,15 @@ const EVERYTHING_SHOWN: GraphDisplayOptions = {
   show_time_axis: true
 }
 
-// As the legacy pages do to put each graph on its own padded box.
+// As the legacy pages do to put each graph on its own padded box. The panel rule stands in for the
+// style of GraphGroupEntry, which jsdom does not load.
 function padPanels(padding: string): void {
   const style = document.createElement('style')
   style.id = PANEL_PADDING_STYLE_ID
-  style.textContent = `.graphing-graph-group { --graphing-graph-group-panel-padding: ${padding}; }`
+  style.textContent = `
+    .graphing-graph-group { --graphing-graph-group-panel-padding: ${padding}; }
+    .graphing-graph-group__panel { padding: ${padding}; }
+  `
   document.head.appendChild(style)
 }
 
@@ -621,6 +629,25 @@ test('retrying after a failure refetches both the graph and its overview', async
   expect(notice()).not.toBeInTheDocument()
 })
 
+test('retrying one failed graph refetches that graph and its overview alone', async () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  postSpy.mockImplementation(async (_path: string, options: any) => {
+    if (JSON.parse(options.body.internal).title === 'Memory') {
+      throw new Error('crash')
+    }
+    return { data: FETCHED, error: undefined, response: new Response('{}', { status: 200 }) }
+  })
+  renderGroup([makeGraphDefinition('CPU utilization'), makeGraphDefinition('Memory')])
+  const retry = await screen.findByRole('button', { name: 'Retry' })
+  const requestsOnLoad = 2 * REQUESTS_PER_PANEL
+  await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(requestsOnLoad))
+
+  await fireEvent.click(retry)
+
+  await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(requestsOnLoad + REQUESTS_PER_PANEL))
+  expect(requestedGraphTitles().slice(requestsOnLoad)).toEqual(['Memory', 'Memory'])
+})
+
 test('keeps the panels on screen when a refetch fails, stating the error over them', async () => {
   renderGroup()
   expect(await screen.findByTestId('graph-panel')).toBeInTheDocument()
@@ -818,6 +845,20 @@ test('announces one message for the group rather than one per panel', async () =
   expect(screen.getAllByRole('alert')).toHaveLength(1)
 })
 
+test('announces a failure over the lack of data of another graph', async () => {
+  postSpy.mockImplementation(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async (_path: string, init: any) =>
+      JSON.parse(init.body.internal).title === 'Memory'
+        ? apiFailure(500, 'Internal Server Error', 'gone')
+        : { data: FETCHED_WITHOUT_DATA, error: undefined, response: new Response('{}') }
+  )
+
+  renderGroup([makeGraphDefinition('CPU utilization'), makeGraphDefinition('Memory')])
+
+  expect(await screen.findByRole('alert')).toHaveTextContent('Graph data could not be loaded.')
+})
+
 test('derives the effective width from #main_page_content as container.right - group.left up until the maximum figure width', async () => {
   containerRight = 1_000
   groupLeft = 100
@@ -967,6 +1008,9 @@ function brushBarFraction(): { left: number; width: number } | null {
   return { left: (windowStart - domainStart) / span, width: (windowEnd - windowStart) / span }
 }
 
+const brushGeometries = (): (string | null)[] =>
+  screen.getAllByTestId('brush-geometry').map((geometry) => geometry.textContent)
+
 function servedAsRequested(): void {
   postSpy.mockImplementation(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1010,6 +1054,26 @@ describe('GraphGroup - the brush across a range switch', () => {
     await waitFor(() => expect(brushBarFraction()!.width).toBeCloseTo(before.width, 6))
 
     expect(brushBarFraction()!.left).toBeCloseTo(before.left, 6)
+  })
+
+  test('a strip that fails keeps the brush of its panel', async () => {
+    servedAsRequested()
+    renderGroup([makeGraphDefinition('CPU utilization'), makeGraphDefinition('Memory')])
+    await waitFor(() => expect(brushGeometries()).toHaveLength(2))
+    const before = brushGeometries()[0]
+    const served = postSpy.getMockImplementation()
+    postSpy.mockImplementation(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      async (path: string, init: any) =>
+        JSON.parse(init.body.internal).title === 'Memory'
+          ? apiFailure(500, 'Internal Server Error', 'gone')
+          : served(path, init)
+    )
+
+    useGlobalTimeRange().setActiveTimeRange(range(1, 2), 'time_picker')
+    await waitFor(() => expect(brushGeometries()[0]).not.toBe(before))
+
+    expect(brushGeometries()[1]).toBe(brushGeometries()[0])
   })
 })
 

@@ -9,6 +9,9 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { type ComputedRef, computed } from 'vue'
 
 import type { Metric } from '../components/TimeSeriesGraph/types'
+import type { GraphFetchState } from './useGraphData'
+
+const { _t } = usei18n()
 
 /** The CmkSurfaceNotice props a surface binds when it has something to state over its graph. */
 export interface GraphNoticeDescriptor {
@@ -25,39 +28,44 @@ export interface GraphNoticeDescriptor {
  * the design treats an unavailable backend as something a retry will not fix, and a truncated
  * result is one a retry would only reproduce.
  */
+export function graphNoticeOf(state: GraphFetchState): GraphNoticeDescriptor | null {
+  if (state.error !== null) {
+    return state.isLoading
+      ? { variant: 'loading', message: _t('Loading data …') }
+      : {
+          variant: 'error',
+          message: _t('Graph data could not be loaded.'),
+          description: state.error,
+          retry: true
+        }
+  }
+  if (state.partialErrors.length > 0 || state.warnings.length > 0) {
+    return {
+      // A response can carry both. Stating one pill at the higher severity keeps the advice
+      // alongside the failure rather than dropping whichever lost.
+      variant: state.partialErrors.length > 0 ? 'error' : 'warning',
+      // Translated server-side, so this is already user-facing text.
+      message: [...state.partialErrors, ...state.warnings].join(' ') as TranslatedString
+    }
+  }
+  return null
+}
+
+/** The notice of graphNoticeOf, kept up to date with the fetch. */
 export function useGraphNotice(source: {
   error: () => string | null
   isLoading: () => boolean
   partialErrors: () => readonly string[]
   warnings: () => readonly string[]
 }): ComputedRef<GraphNoticeDescriptor | null> {
-  const { _t } = usei18n()
-
-  return computed(() => {
-    const error = source.error()
-    if (error !== null) {
-      return source.isLoading()
-        ? { variant: 'loading', message: _t('Loading data …') }
-        : {
-            variant: 'error',
-            message: _t('Graph data could not be loaded.'),
-            description: error,
-            retry: true
-          }
-    }
-    const partialErrors = source.partialErrors()
-    const warnings = source.warnings()
-    if (partialErrors.length > 0 || warnings.length > 0) {
-      return {
-        // A response can carry both. Stating one pill at the higher severity keeps the advice
-        // alongside the failure rather than dropping whichever lost.
-        variant: partialErrors.length > 0 ? 'error' : 'warning',
-        // Translated server-side, so this is already user-facing text.
-        message: [...partialErrors, ...warnings].join(' ') as TranslatedString
-      }
-    }
-    return null
-  })
+  return computed(() =>
+    graphNoticeOf({
+      error: source.error(),
+      isLoading: source.isLoading(),
+      partialErrors: source.partialErrors(),
+      warnings: source.warnings()
+    })
+  )
 }
 
 /**
@@ -80,8 +88,6 @@ export function hasPlottableData(metrics: readonly Metric[]): boolean {
  * stating and whether the metrics it holds still answer the request in flight.
  */
 export function useNoDataNotice(): GraphNoticeDescriptor {
-  const { _t } = usei18n()
-
   return {
     variant: 'info',
     message: _t('No data available'),

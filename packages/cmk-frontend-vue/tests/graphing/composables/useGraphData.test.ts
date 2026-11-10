@@ -14,7 +14,11 @@ import {
   resetGlobalTimeState,
   useGlobalRefresh
 } from '@/graphing/GlobalTimePicker/globalTimeState'
-import { type GraphDataFetcher, useGraphData } from '@/graphing/composables/useGraphData'
+import {
+  type GraphDataDefinition,
+  type GraphDataFetcher,
+  useGraphData
+} from '@/graphing/composables/useGraphData'
 import type { RequestedTimeRange } from '@/graphing/types'
 import type { FetchWindowPlanner } from '@/graphing/utils/timeRange'
 
@@ -84,7 +88,7 @@ test('a resolved graph takes its title from the fetched data, not from the defin
   const titles: string[] = []
   const harness = defineComponent({
     setup() {
-      const { graphs } = useGraphData(
+      const { loads } = useGraphData(
         () => [
           {
             internal: '{"graphs": []}',
@@ -103,7 +107,11 @@ test('a resolved graph takes its title from the fetched data, not from the defin
         () => ['max']
       )
       return () => {
-        titles.splice(0, titles.length, ...graphs.value.map((graph) => graph.title))
+        titles.splice(
+          0,
+          titles.length,
+          ...loads.value.flatMap(({ graph }) => (graph === null ? [] : [graph.title]))
+        )
         return h('div')
       }
     }
@@ -370,7 +378,7 @@ function renderWithFetcher(
 test('a resolved graph reports the range it was asked for, not the one it was answered with', async () => {
   const asked = { start: 10_000, end: 20_000 }
 
-  const { graphs } = renderWithFetcher(async () => {
+  const { loads } = renderWithFetcher(async () => {
     return {
       title: 'CPU',
       metrics: [],
@@ -383,31 +391,31 @@ test('a resolved graph reports the range it was asked for, not the one it was an
     }
   }, asked)
 
-  await waitFor(() => expect(graphs.value).toHaveLength(1))
-  expect(graphs.value[0]!.requestedTimeRange).toEqual(asked)
+  await waitFor(() => expect(loads.value[0]!.graph).not.toBeNull())
+  expect(loads.value[0]!.graph!.requestedTimeRange).toEqual(asked)
 })
 
 test('a fetcher that reports no diagnostics fields leaves them empty', async () => {
   // `GraphDataFetcher` is a public extension point, and one supplied from untyped code can omit the
   // fields. Unguarded, flatMap folds that into a one-element array and the caller states a notice
   // over a fetch that in fact succeeded.
-  const { graphs, partialErrors, warnings } = renderWithFetcher((async () => ({
+  const { loads } = renderWithFetcher((async () => ({
     title: 'CPU',
     metrics: [],
     timeRange: { start: 0, end: 3_600, step: 60 },
     horizontalLines: []
   })) as never)
 
-  // Waiting on the resolved graphs, not on the call: the diagnostics are assigned only after the
+  // Waiting on the resolved graph, not on the call: the diagnostics are assigned only after the
   // fetch settles, so asserting earlier would read the initial empty value either way.
-  await waitFor(() => expect(graphs.value).toHaveLength(1))
+  await waitFor(() => expect(loads.value[0]!.graph).not.toBeNull())
   // Length, not toEqual: that ignores undefined array items and would read [undefined] as empty.
-  expect(partialErrors.value).toHaveLength(0)
-  expect(warnings.value).toHaveLength(0)
+  expect(loads.value[0]!.partialErrors).toHaveLength(0)
+  expect(loads.value[0]!.warnings).toHaveLength(0)
 })
 
 test("exposes a fetch's warnings apart from its errors", async () => {
-  const { graphs, partialErrors, warnings } = renderWithFetcher(async () => ({
+  const { loads } = renderWithFetcher(async () => ({
     title: 'CPU',
     metrics: [],
     timeRange: { start: 0, end: 3_600, step: 60 },
@@ -417,10 +425,46 @@ test("exposes a fetch's warnings apart from its errors", async () => {
     warnings: ['The query for CPU matched more than 100 time series.']
   }))
 
-  await waitFor(() => expect(graphs.value).toHaveLength(1))
-  expect(warnings.value).toEqual(['The query for CPU matched more than 100 time series.'])
+  await waitFor(() => expect(loads.value[0]!.graph).not.toBeNull())
+  expect(loads.value[0]!.warnings).toEqual(['The query for CPU matched more than 100 time series.'])
   // Apart, so a caller can state a truncation as advisory rather than as a failure.
-  expect(partialErrors.value).toHaveLength(0)
+  expect(loads.value[0]!.partialErrors).toHaveLength(0)
+})
+
+test('a graph that fails leaves the data of the others in place', async () => {
+  let exposed!: ReturnType<typeof useGraphData>
+  const harness = defineComponent({
+    setup() {
+      exposed = useGraphData(
+        () => [0, 1].map((index) => ({ internal: `{"graph": ${index}}`, add_to: null }) as never),
+        () => ({ start: 0, end: 3_600 }),
+        () => 800,
+        () => [],
+        () => null,
+        {
+          fetchGraph: (definition: GraphDataDefinition) =>
+            definition.internal === '{"graph": 1}'
+              ? Promise.reject(new Error('Graph 1 could not be evaluated'))
+              : Promise.resolve({
+                  title: 'CPU',
+                  metrics: [],
+                  timeRange: { start: 0, end: 3_600, step: 60 },
+                  horizontalLines: [],
+                  shadedRegions: [],
+                  errors: [],
+                  warnings: []
+                })
+        }
+      )
+      return () => h('div')
+    }
+  })
+  render(harness)
+  const { loads } = exposed
+
+  await waitFor(() => expect(loads.value[1]!.error).toBe('Graph 1 could not be evaluated'))
+  expect(loads.value[0]!.graph).not.toBeNull()
+  expect(loads.value[0]!.error).toBeNull()
 })
 
 describe('the page refresh', () => {

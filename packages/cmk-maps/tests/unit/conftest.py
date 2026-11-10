@@ -77,6 +77,7 @@ def _clear_map_caches() -> Iterator[None]:
     yield
     map_service._CACHE.invalidate()  # noqa: SLF001
     map_service._LINKED.invalidate()  # noqa: SLF001
+    map_service._PREVIEWS.invalidate()  # noqa: SLF001
     map_service._SIGNED_VERSIONS.invalidate()  # noqa: SLF001
     state_service._state_snapshots.clear()  # noqa: SLF001
     states._fetched.invalidate()  # noqa: SLF001

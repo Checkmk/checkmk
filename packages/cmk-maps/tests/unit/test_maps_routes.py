@@ -59,17 +59,47 @@ def _client(
     )
 
 
-def test_register_unsigned_own_is_cached(router_client: RouterClientFactory) -> None:
+def test_register_unsigned_own_is_kept_as_the_owners_preview(
+    router_client: RouterClientFactory,
+) -> None:
+    saved = MapConfig(name="streamed", alias="Saved")
+    map_service.register_map(ADMIN_PRINCIPAL.name, saved)
     client = _client(router_client, ADMIN_PRINCIPAL, owner=ADMIN_PRINCIPAL.name)
     resp = client.post(
         "/api/v1/maps/streamed/register",
         json={"config": {"name": "streamed", "alias": "Streamed"}},
     )
     assert resp.status_code == HTTPStatus.OK
-    assert map_service.get_map(ADMIN_PRINCIPAL.name, "streamed") is not None
+    assert map_service.get_map(ADMIN_PRINCIPAL.name, "streamed") is saved
+    preview = map_service.get_preview(ADMIN_PRINCIPAL.name, "streamed")
+    assert preview is not None and preview.alias == "Streamed"
 
 
-def test_register_with_the_read_budget_spent_still_caches_the_map(
+def test_the_owner_opening_the_map_ends_the_preview(
+    router_client: RouterClientFactory, site_secret_file: Path
+) -> None:
+    site_secret_file.write_bytes(_SECRET.reveal())
+    map_service.register_preview("admin", MapConfig(name="streamed", alias="unsaved"))
+    client = _client(router_client, ADMIN_PRINCIPAL, owner="admin")
+
+    _register_signed(client, "v2", saved=False)
+
+    assert map_service.get_preview("admin", "streamed") is None
+
+
+def test_a_viewer_opening_the_map_leaves_the_owners_preview(
+    router_client: RouterClientFactory, site_secret_file: Path
+) -> None:
+    site_secret_file.write_bytes(_SECRET.reveal())
+    map_service.register_preview("admin", MapConfig(name="streamed", alias="unsaved"))
+    client = _client(router_client, Principal(name="bob"), owner="admin")
+
+    _register_signed(client, "v2", saved=False)
+
+    assert map_service.get_preview("admin", "streamed") is not None
+
+
+def test_register_with_the_read_budget_spent_still_keeps_the_preview(
     router_client: RouterClientFactory,
 ) -> None:
     client = _client(router_client, ADMIN_PRINCIPAL, owner=ADMIN_PRINCIPAL.name)
@@ -80,7 +110,7 @@ def test_register_with_the_read_budget_spent_still_caches_the_map(
         json={"config": {"name": "streamed", "alias": "Streamed"}},
     )
     assert resp.status_code == HTTPStatus.TOO_MANY_REQUESTS
-    assert map_service.get_map(ADMIN_PRINCIPAL.name, "streamed") is not None
+    assert map_service.get_preview(ADMIN_PRINCIPAL.name, "streamed") is not None
 
 
 def test_register_answers_with_the_states_the_caller_may_see(
@@ -126,7 +156,7 @@ def test_register_keeps_the_saved_view_of_a_previewed_map(
     )
 
     assert resp.status_code == HTTPStatus.OK
-    cached = map_service.get_map(ADMIN_PRINCIPAL.name, "radar")
+    cached = map_service.get_preview(ADMIN_PRINCIPAL.name, "radar")
     assert cached is not None
     assert isinstance(cached.view, RadarView)
     assert cached.view.filter == "hostgroup"

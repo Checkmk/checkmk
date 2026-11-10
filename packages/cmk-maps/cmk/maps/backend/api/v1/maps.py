@@ -135,7 +135,12 @@ def _register_signed(
     if cfg.name != name:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Map name mismatch")
     if not map_service.register_signed_map(
-        owner, cfg, size=signed_config_size(config_b64), pinned=is_streamed
+        owner,
+        cfg,
+        size=signed_config_size(config_b64),
+        pinned=is_streamed,
+        # The owner opening or saving the map leaves the edits they had not saved.
+        ends_preview=current_user.name == owner,
     ):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="The map was saved since")
     if saved and current_user.may_save(owner):
@@ -206,7 +211,7 @@ async def register_map(
             )
         if body.config.name != name:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Map name mismatch")
-        map_service.register_map(
+        map_service.register_preview(
             current_user.name, body.config, size=_body_size(request), pinned=is_streamed
         )
         if not within_budget:

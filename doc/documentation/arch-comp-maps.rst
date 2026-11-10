@@ -857,7 +857,9 @@ map's owner and name. A map with an open stream is not evicted.
   loading the saved map again.
 * **Unsigned config** (editor preview): accepted only with ``may_edit`` and only
   if the name means the caller's own map to the GUI. It lets the editor preview
-  unsaved changes.
+  unsaved changes. The daemon keeps it apart from the saved config: only the
+  owner's requests and streams get it, every other viewer keeps the saved map.
+  The owner opening or saving the map ends the preview.
 
 **Shared poll loop.** All viewers of the same map (same owner and name) share
 one broadcast loop. On each tick the loop groups its subscribers by AuthUser

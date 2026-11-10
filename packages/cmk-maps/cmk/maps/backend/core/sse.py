@@ -30,6 +30,8 @@ class Subscriber:
     auth_user: str | None
     folder_scope: FolderScope | None = None
     sites: frozenset[str] | None = None
+    # The owner of the map, who sees their unsaved edits of it.
+    owns_map: bool = False
     queue: asyncio.Queue[SentEvent[StreamMessage]] = field(
         default_factory=lambda: asyncio.Queue(maxsize=64)
     )
@@ -56,8 +58,11 @@ class SubscriptionManager:
         folder_scope: FolderScope | None = None,
         *,
         sites: frozenset[str] | None = None,
+        owns_map: bool = False,
     ) -> Subscriber:
-        sub = Subscriber(auth_user=auth_user, folder_scope=folder_scope, sites=sites)
+        sub = Subscriber(
+            auth_user=auth_user, folder_scope=folder_scope, sites=sites, owns_map=owns_map
+        )
         # A request accepted before the daemon began stopping can subscribe after it.
         if self._closed:
             sub.queue.shutdown(immediate=True)

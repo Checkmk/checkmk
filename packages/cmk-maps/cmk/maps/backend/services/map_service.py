@@ -62,6 +62,12 @@ _CACHE_GUARD = threading.Lock()
 _SIGNED_VERSIONS: TtlCache[MapKey, int] = TtlCache(maxsize=10 * _CACHE_MAX_ENTRIES)
 
 
+# The unsaved edits of a map, which only its owner sees.
+_PREVIEWS: TtlCache[MapKey, _Sized] = TtlCache(
+    maxsize=_CACHE_MAX_ENTRIES, weigh=_bytes_sent, maxweight=CACHE_MAX_BYTES
+)
+
+
 def register_map(
     owner: str, cfg: MapConfig, *, size: int = 0, pinned: Callable[[MapKey], bool] | None = None
 ) -> None:
@@ -77,11 +83,25 @@ def register_map(
         _CACHE.set((owner, cfg.name), _Sized(cfg, size), pinned=pinned)
 
 
-def register_signed_map(
+def register_preview(
     owner: str, cfg: MapConfig, *, size: int = 0, pinned: Callable[[MapKey], bool] | None = None
+) -> None:
+    """Keep the owner's unsaved edits of a map apart from the map its viewers see."""
+    with _CACHE_GUARD:
+        _PREVIEWS.set((owner, cfg.name), _Sized(cfg, size), pinned=pinned)
+
+
+def register_signed_map(
+    owner: str,
+    cfg: MapConfig,
+    *,
+    size: int = 0,
+    pinned: Callable[[MapKey], bool] | None = None,
+    ends_preview: bool = False,
 ) -> bool:
     """Like :func:`register_map` for a config the GUI signed, unless one with a
-    later version was registered: return whether it was."""
+    later version was registered: return whether it was. With ``ends_preview``
+    it also drops the owner's unsaved edits of the map."""
     key = (owner, cfg.name)
     with _CACHE_GUARD:
         registered = _SIGNED_VERSIONS.get(key, ttl=_KEPT)
@@ -89,6 +109,8 @@ def register_signed_map(
             return False
         _SIGNED_VERSIONS.set(key, cfg.version)
         _CACHE.set(key, _Sized(cfg, size), pinned=pinned)
+        if ends_preview:
+            _PREVIEWS.pop(key)
     return True
 
 
@@ -104,10 +126,19 @@ def get_map(owner: str, name: str) -> MapConfig | None:
     return None if entry is None else entry.config
 
 
+def get_preview(owner: str, name: str) -> MapConfig | None:
+    """The owner's unsaved edits of the map, if any."""
+    with _CACHE_GUARD:
+        if (entry := _PREVIEWS.get((owner, name), ttl=_KEPT)) is not None:
+            _PREVIEWS.touch((owner, name))
+    return None if entry is None else entry.config
+
+
 def forget_map(owner: str, name: str) -> None:
     """Drop a deleted map, so it is neither served nor linked to any more."""
     with _CACHE_GUARD:
         _CACHE.pop((owner, name))
+        _PREVIEWS.pop((owner, name))
         _LINKED.pop((owner, name))
 
 

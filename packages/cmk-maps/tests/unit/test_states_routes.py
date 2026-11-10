@@ -48,7 +48,7 @@ from cmk.maps.backend.core.ratelimit import (
 )
 from cmk.maps.backend.core.sse import manager, Subscriber
 from cmk.maps.backend.integrations.checkmk import FolderScope
-from cmk.maps.backend.schemas.map import FlowView, FolderTreeView, MapConfig, RadarView
+from cmk.maps.backend.schemas.map import FlowView, FolderTreeView, MapConfig, MapElement, RadarView
 from cmk.maps.backend.schemas.state import MapStates, ObjectState, ObjectTiming
 from cmk.maps.backend.schemas.stream import StreamMessage
 from cmk.maps.backend.services import map_service, settings_service, state_service
@@ -587,6 +587,14 @@ def _poll_together(
             return [r.status_code for r in await asyncio.gather(*polls)]
 
     return asyncio.run(_together())
+
+
+def test_polls_of_the_unsaved_edits_within_the_interval_share_one_fetch(
+    client: TestClient, counted_states: _CountedStates
+) -> None:
+    map_service.register_preview("alice", MapConfig(name="b1", alias="unsaved"))
+    assert [_poll(client, "alice") for _ in range(3)] == [HTTPStatus.OK] * 3
+    assert counted_states.fetched_for == ["alice"]
 
 
 def test_polls_that_arrive_together_share_the_fetch_under_way(
@@ -1237,6 +1245,43 @@ def _events_streamed(app: FastAPI, user: str, count: int) -> list[dict[str, str]
         for frame in received.decode().split("\n\n")
         if frame and not frame.startswith(":")
     ][:count]
+
+
+def _object_ids_streamed_to(app: FastAPI, user: str) -> list[str]:
+    (event,) = _events_streamed(app, user, 1)
+    return [state["object_id"] for state in json.loads(event["data"])["states"]["states"]]
+
+
+def _map_showing(object_id: str) -> MapConfig:
+    return MapConfig(name="b1", objects=[MapElement(id=object_id, type="host", host_name="h1")])
+
+
+def test_the_owner_streams_the_unsaved_edits_of_a_map(app: FastAPI) -> None:
+    map_service.register_map("alice", _map_showing("saved"))
+    map_service.register_preview("alice", _map_showing("unsaved"))
+
+    shown = _object_ids_streamed_to(app, "alice")
+
+    assert shown == ["unsaved"]
+
+
+def test_the_owner_streams_the_unsaved_edits_after_the_daemon_lost_the_saved_map(
+    app: FastAPI,
+) -> None:
+    map_service.register_preview("alice", _map_showing("unsaved"))
+
+    shown = _object_ids_streamed_to(app, "alice")
+
+    assert shown == ["unsaved"]
+
+
+def test_a_viewer_streams_the_saved_map_while_its_owner_edits_it(app: FastAPI) -> None:
+    map_service.register_map("alice", _map_showing("saved"))
+    map_service.register_preview("alice", _map_showing("unsaved"))
+
+    shown = _object_ids_streamed_to(app, "bob")
+
+    assert shown == ["saved"]
 
 
 def test_the_stream_of_a_folder_tree_map_fetches_the_folders_its_user_may_read(

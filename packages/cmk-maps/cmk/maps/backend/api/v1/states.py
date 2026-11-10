@@ -272,12 +272,29 @@ def _subscriber_audience(sub: Subscriber, cfg: MapConfig) -> _Audience:
     return _audience_of(_subscriber_scope(sub), sub.folder_scope, cfg)
 
 
-def _group_key_for(cfg: MapConfig) -> Callable[[Subscriber], str | None]:
-    return lambda sub: _subscriber_audience(sub, cfg).group_key
+def _previewing(group: str | None) -> str:
+    """The group of the owner among ``group`` while they edit the map."""
+    return f"{'\x00' if group is None else group}\x00preview"
+
+
+def _group_key_for(
+    cfg: MapConfig, *, previewing: bool = False
+) -> Callable[[Subscriber], str | None]:
+    def group_key(sub: Subscriber) -> str | None:
+        group = _subscriber_audience(sub, cfg).group_key
+        return _previewing(group) if previewing and sub.owns_map else group
+
+    return group_key
 
 
 def _remember(
-    key: _FetchKey, owner: str, cfg: MapConfig, states: MapStates, *, fetched_at: float
+    key: _FetchKey,
+    owner: str,
+    cfg: MapConfig,
+    states: MapStates,
+    *,
+    fetched_at: float,
+    previewing: bool,
 ) -> _Fetched:
     tree_hosts = states.folder_tree.host_count if states.folder_tree is not None else 0
     # Compressed once here rather than by the middleware for every poll.
@@ -287,7 +304,8 @@ def _remember(
         cfg,
         fetched_at,
     )
-    if fetched.objects <= _FETCHED_MAX_OBJECTS and map_service.get_map(owner, cfg.name) is cfg:
+    current = (map_service.get_preview if previewing else map_service.get_map)(owner, cfg.name)
+    if fetched.objects <= _FETCHED_MAX_OBJECTS and current is cfg:
         _fetched.set(key, fetched)
     return fetched
 
@@ -318,10 +336,14 @@ async def _group_states(
     return await _fetches.run((*key, id(cfg)), fetch)
 
 
-def _kept(key: _FetchKey, owner: str, cfg: MapConfig, flight: _Flight) -> _Fetched:
+def _kept(
+    key: _FetchKey, owner: str, cfg: MapConfig, flight: _Flight, *, previewing: bool
+) -> _Fetched:
     """The fetch as kept for polls, compressed once for all that shared it."""
     if flight.kept is None:
-        flight.kept = _remember(key, owner, cfg, flight.states, fetched_at=flight.fetched_at)
+        flight.kept = _remember(
+            key, owner, cfg, flight.states, fetched_at=flight.fetched_at, previewing=previewing
+        )
     return flight.kept
 
 
@@ -330,12 +352,16 @@ async def _shared_states(
 ) -> bytes:
     """The states of the current interval as gzip, fetched once for everyone polling them."""
     owner = user.map_key_owner
-    key = (_map_key(owner, cfg.name), audience.group_key)
+    # Only the owner is handed their unsaved edits, and these are kept apart
+    # from the map its viewers poll.
+    previewing = map_service.get_preview(owner, cfg.name) is cfg
+    group = _previewing(audience.group_key) if previewing else audience.group_key
+    key = (_map_key(owner, cfg.name), group)
     ttl = settings_service.get_effective_state_refresh_interval()
     fetched = _fetched.get(key, ttl=ttl)
     if fetched is None or fetched.config is not cfg or time.monotonic() - fetched.fetched_at >= ttl:
         flight = await _group_states(key, owner, cfg, audience.scope, audience.folder_scope, links)
-        fetched = _kept(key, owner, cfg, flight)
+        fetched = _kept(key, owner, cfg, flight, previewing=previewing)
     else:
         # The read budget spares Livestatus, which states kept already do not ask.
         rest_read_limiter.refund(user.name)
@@ -344,11 +370,16 @@ async def _shared_states(
     return fetched.gzipped
 
 
+def _topology_group(scope: MonitoringScope, cfg: MapConfig, *, previewing: bool) -> str | None:
+    group = _audience_of(scope, None, cfg).group_key
+    return _previewing(group) if previewing else group
+
+
 async def _group_topology(
-    map_key: str, cfg: MapConfig, scope: MonitoringScope, *, fresh: bool
+    map_key: str, group: str | None, cfg: MapConfig, scope: MonitoringScope, *, fresh: bool
 ) -> list[TopologyNode] | None:
     """The topology of the map for the group, fetched once per interval unless ``fresh``."""
-    key = (map_key, _audience_of(scope, None, cfg).group_key)
+    key = (map_key, group)
     if not fresh:
         ttl = settings_service.get_effective_state_refresh_interval()
         if (kept := _topologies.get(key, ttl=ttl)) is not None and kept.config is cfg:
@@ -371,15 +402,17 @@ async def _push_topology_to(
     *,
     force_full: bool,
     store: bool = True,
+    previewing: bool = False,
 ) -> None:
     if not targets:
         return
+    group = _topology_group(scope, cfg, previewing=previewing)
     # A newcomer gets what the group's stream fetched in this interval.
-    nodes = await _group_topology(map_key, cfg, scope, fresh=store)
+    nodes = await _group_topology(map_key, group, cfg, scope, fresh=store)
     if nodes is None:
         return
     delta = state_service.compute_topology_delta(
-        map_key, _audience_of(scope, None, cfg).group_key, nodes, force_full=force_full, store=store
+        map_key, group, nodes, force_full=force_full, store=store
     )
     if not (force_full or delta.added or delta.changed or delta.removed or delta.timing):
         return
@@ -415,13 +448,20 @@ async def _broadcast_loop(map_key: str, links: LinkSource) -> None:
             # connected viewer on stale data until someone reconnects. Log it and
             # carry on — the map recovers on the next tick.
             try:
-                cfg = map_service.get_map(owner, name)
+                saved = map_service.get_map(owner, name)
+                preview = map_service.get_preview(owner, name)
                 tick_start = asyncio.get_running_loop().time()
                 user_count = 0
-                if cfg is not None:
+                # A daemon that was restarted knows only the owner's unsaved edits
+                # until someone opens the map again.
+                keyed_by = preview if saved is None else saved
+                if keyed_by is not None:
                     # Keyed by the config of this tick: a map that became a
-                    # foldertree map renders the folders each user may read.
-                    grouped = manager.get_subscribers_grouped(map_key, _group_key_for(cfg))
+                    # foldertree map renders the folders each user may read. The
+                    # owner's unsaved edits reach the owner only.
+                    grouped = manager.get_subscribers_grouped(
+                        map_key, _group_key_for(keyed_by, previewing=preview is not None)
+                    )
                     user_count = len(grouped)
                     # Forget delta snapshots for groups whose subscribers have all
                     # left, so a long-running map doesn't leak per-group state.
@@ -433,6 +473,10 @@ async def _broadcast_loop(map_key: str, links: LinkSource) -> None:
                         # the monitoring (scope) + folder (folder_scope) scopes.
                         # Snapshots/deltas are keyed by group_key so admin and a
                         # see-all guest on a foldertree map don't share a tree.
+                        previewing = preview is not None and subs[0].owns_map
+                        cfg = preview if preview is not None and previewing else saved
+                        if cfg is None:
+                            continue
                         audience = _subscriber_audience(subs[0], cfg)
                         key = (map_key, group_key)
                         flight = await _group_states(
@@ -442,7 +486,7 @@ async def _broadcast_loop(map_key: str, links: LinkSource) -> None:
                         # Only for a group that polled since the last tick, so the
                         # cache holds nothing for maps everyone streams.
                         if _was_polled(key):
-                            _kept(key, owner, cfg, flight)
+                            _kept(key, owner, cfg, flight, previewing=previewing)
                         else:
                             _fetched.pop(key)
                         to_send, removed_ids, is_full, timing = state_service.compute_states_delta(
@@ -491,7 +535,12 @@ async def _broadcast_loop(map_key: str, links: LinkSource) -> None:
                                 s.needs_full = False
                         if cfg.view.type == "flow":
                             await _push_topology_to(
-                                cfg, map_key, audience.scope, subs, force_full=False
+                                cfg,
+                                map_key,
+                                audience.scope,
+                                subs,
+                                force_full=False,
+                                previewing=previewing,
                             )
                 elapsed_ms = (asyncio.get_running_loop().time() - tick_start) * 1000
                 logger.debug(
@@ -673,10 +722,14 @@ async def get_map_topology(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"Map '{name}' is no flow map"
         )
+    owner = current_user.map_key_owner
+    scope = resolve_monitoring_scope(current_user)
+    previewing = cfg is map_service.get_preview(owner, cfg.name)
     nodes = await _group_topology(
-        _map_key(current_user.map_key_owner, cfg.name),
+        _map_key(owner, cfg.name),
+        _topology_group(scope, cfg, previewing=previewing),
         cfg,
-        resolve_monitoring_scope(current_user),
+        scope,
         fresh=False,
     )
     if nodes is None:
@@ -918,7 +971,13 @@ async def _subscribe_to_stream(
 
     _take_slot(user.name, tab)
     scope = resolve_monitoring_scope(user)
-    sub = manager.subscribe(map_key, scope.auth_user, resolve_folder_scope(user), sites=scope.sites)
+    sub = manager.subscribe(
+        map_key,
+        scope.auth_user,
+        resolve_folder_scope(user),
+        sites=scope.sites,
+        owns_map=user.name == owner,
+    )
     stream = _TabStream(sub)
     if tab is not None:
         _tab_streams[(user.name, tab)] = stream
@@ -937,7 +996,15 @@ async def _subscribe_to_stream(
         # deltas (topology deltas are convergent upserts, so this client reconverges
         # from the next tick's group delta on top of this full) — no group re-full.
         if cfg.view.type == "flow":
-            await _push_topology_to(cfg, map_key, scope, [sub], force_full=True, store=False)
+            await _push_topology_to(
+                cfg,
+                map_key,
+                scope,
+                [sub],
+                force_full=True,
+                store=False,
+                previewing=sub.owns_map and map_service.get_preview(owner, name) is not None,
+            )
 
         yield StreamSubscription(
             subscriber=sub, name=name, user=user, auth=auth, session_cookie=cookie

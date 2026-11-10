@@ -197,8 +197,12 @@ def registered_map(user: Principal, name: str) -> MapConfig:
     """Resolve the viewed map's config under its real owner, or 404.
 
     Keyed by ``map_key_owner`` (the map's owner, as the GUI named it), so all
-    viewers of a published map resolve the one config registered under it."""
-    cfg = map_service.get_map(user.map_key_owner, name)
+    viewers of a published map resolve the one config registered under it. Its
+    owner gets their unsaved edits of it, if any."""
+    owner = user.map_key_owner
+    cfg = (map_service.get_preview(owner, name) if owner == user.name else None) or (
+        map_service.get_map(owner, name)
+    )
     if cfg is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Map '{name}' not found")
     return cfg

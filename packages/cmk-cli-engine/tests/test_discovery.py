@@ -10,7 +10,7 @@ import pytest
 
 from cmk.cli.engine.discovery import _named_after_its_variable as _cli_named_after_its_variable
 from cmk.cli.engine.discovery import make_command as cli_make_command
-from cmk.cli.engine.readers import ParsedOptions as CLIParsedOptions
+from cmk.cli.engine.readers import parsed as cli_parsed
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
@@ -79,7 +79,7 @@ def test_a_commands_handler_receives_its_request_parsed() -> None:
         )
     )
     bound = command.bind(
-        CLIParsedOptions([("--oid", "iso"), ("--verbose", ""), ("--verbose", "")], null_logger())
+        cli_parsed([("--oid", "iso"), ("--verbose", ""), ("--verbose", "")], null_logger())
     )
 
     bound(

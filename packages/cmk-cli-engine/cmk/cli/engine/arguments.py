@@ -15,7 +15,7 @@ from cmk.cli.internal import Arguments as CLIArguments
 
 from .commands import Commands, DiscoveredCommand
 from .options import GetoptOptions, GlobalOptions, HELP_OPTION, read_global_options, spellings
-from .readers import ParsedOptions
+from .readers import parsed
 
 
 @dataclass(frozen=True)
@@ -63,7 +63,7 @@ def _parse(
     options, positional = getopt.getopt(
         list(argv[1:]), commands.short_getopt_specs(), commands.long_getopt_specs()
     )
-    global_options = read_global_options(ParsedOptions(options, logger))
+    global_options = read_global_options(parsed(options, logger))
     if any(option in spellings(HELP_OPTION) for option, _argument in options):
         return ShowHelp(global_options)
 

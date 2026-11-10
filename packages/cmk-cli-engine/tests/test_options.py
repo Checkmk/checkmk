@@ -10,7 +10,7 @@ from cmk.cli.engine.options import GlobalOptions as CLIEngineGlobalOptions
 from cmk.cli.engine.options import long_getopt_specs as cli_long_getopt_specs
 from cmk.cli.engine.options import read_global_options as cli_read_global_options
 from cmk.cli.engine.options import short_getopt_specs as cli_short_getopt_specs
-from cmk.cli.engine.readers import ParsedOptions as CLIParsedOptions
+from cmk.cli.engine.readers import parsed as cli_parsed
 from cmk.cli.internal import Flag as CLIFlag
 from cmk.cli.internal import Value as CLIValue
 
@@ -18,7 +18,7 @@ from ._logger import null_logger
 
 
 def _read(options: Sequence[tuple[str, str]]) -> CLIEngineGlobalOptions:
-    return cli_read_global_options(CLIParsedOptions(options, null_logger()))
+    return cli_read_global_options(cli_parsed(options, null_logger()))
 
 
 def test_a_general_flag_is_collected() -> None:

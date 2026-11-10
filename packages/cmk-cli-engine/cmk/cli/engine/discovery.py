@@ -14,7 +14,7 @@ from cmk.cli.internal import Value as CLIValue
 from cmk.discover_plugins import discover_all_plugins, PluginGroup, PluginLocation
 
 from .commands import bind, DiscoveredCommand
-from .readers import RecordedOptions
+from .readers import record
 
 
 def _selector[R](command: CLICommand[R]) -> CLIFlag | CLIValue[str]:
@@ -32,8 +32,7 @@ def _selector[R](command: CLICommand[R]) -> CLIFlag | CLIValue[str]:
 
 
 def make_command[R](command: CLICommand[R]) -> DiscoveredCommand:
-    recorded = RecordedOptions()
-    command.request(recorded)
+    recorded = record(command.request)
     return DiscoveredCommand(
         name=command.name,
         selector=_selector(command),

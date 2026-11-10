@@ -19,7 +19,6 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Protocol
 
 
 class ExitCode(Enum):
@@ -125,16 +124,36 @@ class Values[T](_OptionDeclaration):
     """Parses each argument; a ``ValueError`` rejects the command line"""
 
 
-class Reader(Protocol):
+type Declaration = Flag | Count | Value[object] | Values[object]
+
+
+def _parse[T](parse: Callable[[str], T], name: str, argument: str) -> T:
+    try:
+        return parse(argument)
+    except ValueError as e:
+        raise ValueError(f"{name}: Invalid argument {argument!r}: {e}") from None
+
+
+@dataclass(frozen=True)
+class Reader:
     """Reads a command's options by their declarations, each with its declared type"""
 
-    def flag(self, option: Flag) -> bool: ...
+    given: Callable[[Declaration], Sequence[str]]
+    """What the command line gives an option: its argument per occurrence, an empty one
+    for an option without argument"""
 
-    def count(self, option: Count) -> int: ...
+    def flag(self, option: Flag) -> bool:
+        return bool(self.given(option))
 
-    def value[T](self, option: Value[T]) -> T | None: ...
+    def count(self, option: Count) -> int:
+        return len(self.given(option))
 
-    def values[T](self, option: Values[T]) -> Sequence[T]: ...
+    def value[T](self, option: Value[T]) -> T | None:
+        given = self.given(option)
+        return _parse(option.parse, f"--{option.long}", given[-1]) if given else None
+
+    def values[T](self, option: Values[T]) -> Sequence[T]:
+        return tuple(_parse(option.parse, f"--{option.long}", each) for each in self.given(option))
 
 
 def no_options(_options: Reader) -> None:
@@ -222,6 +241,7 @@ __all__ = [
     "Command",
     "Context",
     "Count",
+    "Declaration",
     "entry_point_prefixes",
     "ExitCode",
     "Flag",

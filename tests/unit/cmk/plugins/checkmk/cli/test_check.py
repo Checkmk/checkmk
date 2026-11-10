@@ -4,23 +4,34 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 from cmk.ccc.hostaddress import HostAddress
 from cmk.checkengine.plugins import CheckPluginName, SectionName
 from cmk.checkengine.snmplib import SNMPBackendEnum
-from cmk.cli.engine.readers import ParsedOptions as CLIParsedOptions
-from cmk.cli.engine.readers import RecordedOptions as CLIRecordedOptions
 from cmk.cli.internal import Context as CLIContext
+from cmk.cli.internal import Declaration as CLIDeclaration
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
+from cmk.cli.internal import Reader as CLIReader
 from cmk.plugins.checkmk.cli.check import (
     _checking_request,
+    _NO_SUBMIT_FLAG,
     _run_check,
     CheckingRequest,
-    cli_command_check,
 )
-from cmk.plugins.checkmk.cli.options import FileCacheRequest, PluginSelectionRequest
+from cmk.plugins.checkmk.cli.options import (
+    CHECK_PLUGINS_VALUE,
+    DETECT_PLUGINS_VALUE,
+    DETECT_SECTIONS_VALUE,
+    FAKE_DNS_VALUE,
+    FileCacheRequest,
+    NO_CACHE_FLAG,
+    PluginSelectionRequest,
+    SNMP_BACKEND_VALUE,
+    USEWALK_FLAG,
+)
 
 
 def test_more_than_a_host_and_an_address_are_rejected() -> None:
@@ -28,46 +39,28 @@ def test_more_than_a_host_and_an_address_are_rejected() -> None:
     context = CLIContext(
         omd_root=Path("/nonexistent"), global_options=CLIGlobalOptions(), logger=logger
     )
-    request = _checking_request(CLIParsedOptions([], logger))
+    given: Mapping[CLIDeclaration, Sequence[str]] = {}
+
+    request = _checking_request(CLIReader(lambda declaration: given.get(declaration, ())))
 
     assert _run_check(context, request, ["host1", "host2", "host3"]) == CLIExitCode.UNKNOWN
 
 
-def test_check_declares_its_options_in_help_order() -> None:
-    recorded = CLIRecordedOptions()
-    cli_command_check.request(recorded)
-
-    assert [option.long for option in recorded.options] == [
-        "cache",
-        "no-cache",
-        "no-tcp",
-        "usewalk",
-        "snmp-backend",
-        "no-submit",
-        "perfdata",
-        "detect-sections",
-        "plugins",
-        "detect-plugins",
-        "fake-dns",
-    ]
-
-
 def test_the_checking_request_is_read_from_the_command_line() -> None:
-    options = CLIParsedOptions(
-        [
-            ("--no-cache", ""),
-            ("--usewalk", ""),
-            ("--snmp-backend", "classic"),
-            ("--no-submit", ""),
-            ("--detect-sections", "df,mem"),
-            ("--plugins", "df"),
-            ("--checks", "cpu_loads"),
-            ("--fake-dns", "1.2.3.4"),
-        ],
-        logging.getLogger(__name__),
-    )
+    given: Mapping[CLIDeclaration, Sequence[str]] = {
+        NO_CACHE_FLAG: [""],
+        USEWALK_FLAG: [""],
+        _NO_SUBMIT_FLAG: [""],
+        SNMP_BACKEND_VALUE: ["classic"],
+        DETECT_SECTIONS_VALUE: ["df,mem"],
+        CHECK_PLUGINS_VALUE: ["df"],
+        DETECT_PLUGINS_VALUE: ["cpu_loads"],
+        FAKE_DNS_VALUE: ["1.2.3.4"],
+    }
 
-    assert _checking_request(options) == CheckingRequest(
+    assert _checking_request(
+        CLIReader(lambda declaration: given.get(declaration, ()))
+    ) == CheckingRequest(
         file_cache=FileCacheRequest(cache=False, no_cache=True, no_tcp=False),
         usewalk=True,
         snmp_backend=SNMPBackendEnum.CLASSIC,

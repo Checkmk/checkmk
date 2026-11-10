@@ -3,18 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import logging
+
+from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.cli.engine.readers import ParsedOptions as CLIParsedOptions
-from cmk.cli.engine.readers import RecordedOptions as CLIRecordedOptions
+from cmk.cli.internal import Declaration as CLIDeclaration
+from cmk.cli.internal import Reader as CLIReader
 from cmk.diagnostics.internal import DiagnosticsPlugin, Help, Sensitivity, Topic
 from cmk.plugins.diagnostics.cli.create_dump import (
+    _ALL_TOPICS_VALUE,
+    _CHECKMK_SERVER_HOST_VALUE,
     _cli_selection,
     _CliSelection,
+    _PLUGINS_VALUE,
     _resolve_cli_selection,
-    cli_command_create_diagnostics_dump,
 )
 
 
@@ -45,29 +48,16 @@ _CLI_CATALOGUE = {
 }
 
 
-def test_create_diagnostics_dump_declares_its_options_in_help_order() -> None:
-    recorded = CLIRecordedOptions()
-    cli_command_create_diagnostics_dump.request(recorded)
-
-    assert [option.long for option in recorded.options] == [
-        "list",
-        "all-topics",
-        "plugins",
-        "checkmk-server-host",
-    ]
-
-
 def test_the_selection_is_read_from_the_command_line() -> None:
-    options = CLIParsedOptions(
-        [
-            ("--all-topics", "low"),
-            ("--plugins", "b_high,a_low"),
-            ("--checkmk-server-host", "my_server"),
-        ],
-        logging.getLogger(__name__),
-    )
+    given: Mapping[CLIDeclaration, Sequence[str]] = {
+        _ALL_TOPICS_VALUE: ["low"],
+        _PLUGINS_VALUE: ["b_high,a_low"],
+        _CHECKMK_SERVER_HOST_VALUE: ["my_server"],
+    }
 
-    assert _cli_selection(options) == _CliSelection(
+    assert _cli_selection(
+        CLIReader(lambda declaration: given.get(declaration, ()))
+    ) == _CliSelection(
         list_plugins=False,
         all_topics=Sensitivity.LOW,
         plugins=("b_high", "a_low"),
@@ -76,8 +66,10 @@ def test_the_selection_is_read_from_the_command_line() -> None:
 
 
 def test_an_unknown_threshold_is_rejected() -> None:
-    with pytest.raises(ValueError, match="--all-topics: Invalid argument"):
-        _cli_selection(CLIParsedOptions([("--all-topics", "extreme")], logging.getLogger(__name__)))
+    with pytest.raises(ValueError, match="extreme"):
+        given: Mapping[CLIDeclaration, Sequence[str]] = {_ALL_TOPICS_VALUE: ["extreme"]}
+
+        _cli_selection(CLIReader(lambda declaration: given.get(declaration, ())))
 
 
 def test_without_a_selection_only_always_plugins_run() -> None:

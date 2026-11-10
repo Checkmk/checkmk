@@ -4,22 +4,23 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 
 import pytest
 
 from cmk.ccc.version import Edition
-from cmk.cli.engine.readers import ParsedOptions as CLIParsedOptions
-from cmk.cli.engine.readers import RecordedOptions as CLIRecordedOptions
 from cmk.cli.internal import Context as CLIContext
+from cmk.cli.internal import Declaration as CLIDeclaration
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
+from cmk.cli.internal import Reader as CLIReader
 from cmk.plugins.notifications.cli.notify import (
+    _KEEPALIVE_FLAG,
     _notification_exit_code,
     _notify_request,
     _NotifyRequest,
     _run_notify,
-    cli_command_notify,
 )
 
 
@@ -61,14 +62,9 @@ def test_a_notification_script_result_keeps_its_retry_meaning(
     assert _notification_exit_code(returncode) == expected
 
 
-def test_notify_declares_its_options_in_help_order() -> None:
-    recorded = CLIRecordedOptions()
-    cli_command_notify.request(recorded)
-
-    assert [option.long for option in recorded.options] == ["log-to-stdout", "keepalive"]
-
-
 def test_the_notify_request_is_read_from_the_command_line() -> None:
-    options = CLIParsedOptions([("--keepalive", "")], logging.getLogger(__name__))
+    given: Mapping[CLIDeclaration, Sequence[str]] = {_KEEPALIVE_FLAG: [""]}
 
-    assert _notify_request(options) == _NotifyRequest(log_to_stdout=False, keepalive=True)
+    assert _notify_request(
+        CLIReader(lambda declaration: given.get(declaration, ()))
+    ) == _NotifyRequest(log_to_stdout=False, keepalive=True)

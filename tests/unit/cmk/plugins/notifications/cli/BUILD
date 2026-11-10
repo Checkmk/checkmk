@@ -11,6 +11,7 @@ py_cmk_test(
     deps = [
         "//cmk/plugins/notifications/cli",
         "//packages/cmk-ccc:version",
+        "//packages/cmk-plugin-apis:cli",
         "//tests/unit:conftest",
         requirement("pytest-random-order"),
     ],

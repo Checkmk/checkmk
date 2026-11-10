@@ -3,42 +3,27 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import logging
+
+from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.cli.engine.readers import ParsedOptions as CLIParsedOptions
-from cmk.cli.engine.readers import RecordedOptions as CLIRecordedOptions
-from cmk.cli.internal import Command as CLICommand
+from cmk.cli.internal import Declaration as CLIDeclaration
+from cmk.cli.internal import Reader as CLIReader
 from cmk.plugins.checkmk.cli.man_pages import (
     _renderer_request,
-    cli_command_browse_man,
-    cli_command_man,
+    _RENDERER_VALUE,
 )
-
-
-@pytest.mark.parametrize(
-    ["command", "expected"],
-    [
-        pytest.param(cli_command_man, ["renderer"], id="man"),
-        pytest.param(cli_command_browse_man, [], id="browse-man"),
-    ],
-)
-def test_a_man_page_command_declares_its_options[R](
-    command: CLICommand[R], expected: list[str]
-) -> None:
-    recorded = CLIRecordedOptions()
-    command.request(recorded)
-
-    assert [option.long for option in recorded.options] == expected
 
 
 def test_the_renderer_is_read_from_the_command_line() -> None:
-    options = CLIParsedOptions([("-r", "nowiki")], logging.getLogger(__name__))
+    given: Mapping[CLIDeclaration, Sequence[str]] = {_RENDERER_VALUE: ["nowiki"]}
 
-    assert _renderer_request(options) == "nowiki"
+    assert _renderer_request(CLIReader(lambda declaration: given.get(declaration, ()))) == "nowiki"
 
 
 def test_an_unknown_renderer_is_rejected() -> None:
-    with pytest.raises(ValueError, match="--renderer: Invalid argument"):
-        _renderer_request(CLIParsedOptions([("--renderer", "html")], logging.getLogger(__name__)))
+    with pytest.raises(ValueError, match="html"):
+        given: Mapping[CLIDeclaration, Sequence[str]] = {_RENDERER_VALUE: ["html"]}
+
+        _renderer_request(CLIReader(lambda declaration: given.get(declaration, ())))

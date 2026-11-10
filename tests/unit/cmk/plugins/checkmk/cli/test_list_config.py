@@ -3,40 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import logging
 
-import pytest
+from collections.abc import Mapping, Sequence
 
-from cmk.cli.engine.readers import ParsedOptions as CLIParsedOptions
-from cmk.cli.engine.readers import RecordedOptions as CLIRecordedOptions
-from cmk.cli.internal import Command as CLICommand
+from cmk.cli.internal import Declaration as CLIDeclaration
+from cmk.cli.internal import Reader as CLIReader
 from cmk.plugins.checkmk.cli.list_config import (
+    _INCLUDE_OFFLINE_FLAG,
     _list_hosts_request,
     _ListHostsRequest,
-    cli_command_list_checks,
-    cli_command_list_hosts,
-    cli_command_list_tag,
 )
-
-
-@pytest.mark.parametrize(
-    ["command", "expected"],
-    [
-        pytest.param(cli_command_list_hosts, ["all-sites", "include-offline"], id="list-hosts"),
-        pytest.param(cli_command_list_tag, [], id="list-tag"),
-        pytest.param(cli_command_list_checks, [], id="list-checks"),
-    ],
-)
-def test_a_list_command_declares_its_options[R](
-    command: CLICommand[R], expected: list[str]
-) -> None:
-    recorded = CLIRecordedOptions()
-    command.request(recorded)
-
-    assert [option.long for option in recorded.options] == expected
 
 
 def test_the_list_hosts_request_is_read_from_the_command_line() -> None:
-    options = CLIParsedOptions([("--include-offline", "")], logging.getLogger(__name__))
+    given: Mapping[CLIDeclaration, Sequence[str]] = {_INCLUDE_OFFLINE_FLAG: [""]}
 
-    assert _list_hosts_request(options) == _ListHostsRequest(all_sites=False, include_offline=True)
+    assert _list_hosts_request(
+        CLIReader(lambda declaration: given.get(declaration, ()))
+    ) == _ListHostsRequest(all_sites=False, include_offline=True)

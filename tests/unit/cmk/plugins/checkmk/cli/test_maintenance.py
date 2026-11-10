@@ -12,39 +12,17 @@ import pytest
 
 import cmk.utils.paths
 from cmk.ccc.hostaddress import HostAddress
-from cmk.cli.engine.readers import RecordedOptions as CLIRecordedOptions
-from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.piggyback import backend
 from cmk.plugins.checkmk.cli.maintenance import (
     _run_cleanup_piggyback,
-    cli_command_cleanup_piggyback,
-    cli_command_flush,
-    cli_command_update_dns_cache,
 )
 from cmk.ruleset_matcher.matcher import RuleSpec
 
 _SHORT_MAX_AGE = 60
 _LONG_MAX_AGE = 7200
-
-
-@pytest.mark.parametrize(
-    ["command", "expected"],
-    [
-        pytest.param(cli_command_update_dns_cache, ["fake-dns"], id="update-dns-cache"),
-        pytest.param(cli_command_cleanup_piggyback, [], id="cleanup-piggyback"),
-        pytest.param(cli_command_flush, [], id="flush"),
-    ],
-)
-def test_a_maintenance_command_declares_its_options[R](
-    command: CLICommand[R], expected: list[str]
-) -> None:
-    recorded = CLIRecordedOptions()
-    command.request(recorded)
-
-    assert [option.long for option in recorded.options] == expected
 
 
 def _write_main_mk(

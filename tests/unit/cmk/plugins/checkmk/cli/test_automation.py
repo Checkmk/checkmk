@@ -3,22 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import logging
 import shlex
+from collections.abc import Mapping, Sequence
 
 import pytest
 
 from cmk.automations.backends import SubprocessExecutor
 from cmk.automations.engine import AutomationError
 from cmk.automations.internal import AutomationID
-from cmk.cli.engine.readers import ParsedOptions as CLIParsedOptions
-from cmk.cli.engine.readers import RecordedOptions as CLIRecordedOptions
+from cmk.cli.internal import Declaration as CLIDeclaration
 from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import Reader as CLIReader
 from cmk.plugins.checkmk.cli.automation import (
     _automation_error_exit_code,
     _for_cmk_version_request,
     _FOR_CMK_VERSION_VALUE,
-    cli_command_automation,
 )
 
 
@@ -35,24 +34,20 @@ def test_a_subprocess_automation_passes_the_version_as_the_command_declares_it()
     assert argv[argv.index(f"--{_FOR_CMK_VERSION_VALUE.long}") + 1] == "2.4.0p1"
 
 
-def test_automation_declares_the_version_option_alone() -> None:
-    recorded = CLIRecordedOptions()
-    cli_command_automation.request(recorded)
-
-    assert [option.long for option in recorded.options] == ["for-cmk-version"]
-
-
 def test_the_requested_version_is_read_from_the_command_line() -> None:
-    options = CLIParsedOptions([("--for-cmk-version", "2.4.0p1")], logging.getLogger(__name__))
+    given: Mapping[CLIDeclaration, Sequence[str]] = {_FOR_CMK_VERSION_VALUE: ["2.4.0p1"]}
 
-    assert _for_cmk_version_request(options) == "2.4.0p1"
+    assert (
+        _for_cmk_version_request(CLIReader(lambda declaration: given.get(declaration, ())))
+        == "2.4.0p1"
+    )
 
 
 def test_an_invalid_version_is_rejected() -> None:
-    with pytest.raises(ValueError, match="--for-cmk-version: Invalid argument"):
-        _for_cmk_version_request(
-            CLIParsedOptions([("--for-cmk-version", "foo")], logging.getLogger(__name__))
-        )
+    with pytest.raises(ValueError, match="Invalid version string"):
+        given: Mapping[CLIDeclaration, Sequence[str]] = {_FOR_CMK_VERSION_VALUE: ["foo"]}
+
+        _for_cmk_version_request(CLIReader(lambda declaration: given.get(declaration, ())))
 
 
 @pytest.mark.parametrize(

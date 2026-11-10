@@ -7,6 +7,7 @@
 # mypy: disable-error-code="type-arg"
 
 import logging
+from collections.abc import Mapping, Sequence
 from dataclasses import replace
 from pathlib import Path
 from typing import Any, Final, NoReturn, override
@@ -29,21 +30,18 @@ from cmk.checkengine.snmp_backends.classic import ClassicSNMPBackend
 from cmk.checkengine.snmp_backends.stored_walk import StoredWalkSNMPBackend
 from cmk.checkengine.snmplib import SNMPBackendEnum
 from cmk.checkengine.sources._sources import SNMPSource
-from cmk.cli.engine.readers import ParsedOptions as CLIParsedOptions
-from cmk.cli.engine.readers import RecordedOptions as CLIRecordedOptions
-from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
+from cmk.cli.internal import Declaration as CLIDeclaration
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
+from cmk.cli.internal import Reader as CLIReader
 from cmk.plugins.checkmk.cli import dump
 from cmk.plugins.checkmk.cli.dump import (
     _dump_agent_request,
     _DumpAgentRequest,
     _run_dump_agent,
-    cli_command_dump,
-    cli_command_dump_agent,
 )
-from cmk.plugins.checkmk.cli.options import FileCacheRequest
+from cmk.plugins.checkmk.cli.options import FileCacheRequest, NO_TCP_FLAG, SNMP_BACKEND_VALUE
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
 from tests.testlib.unit.base_configuration_scenario import Scenario
 from tests.testlib.unit.empty_config import EMPTY_CONFIG
@@ -66,43 +64,26 @@ class _MockFetcherTrigger(PlainFetcherTrigger):
 _OMD_ROOT: Final = Path("/omd/sites/mysite")
 
 
-def _declared[R](command: CLICommand[R]) -> list[str]:
-    recorded = CLIRecordedOptions()
-    command.request(recorded)
-    return [option.long for option in recorded.options]
-
-
-def test_dump_agent_declares_its_options_in_help_order() -> None:
-    assert _declared(cli_command_dump_agent) == [
-        "cache",
-        "no-cache",
-        "no-tcp",
-        "snmp-backend",
-        "fake-dns",
-    ]
-
-
-def test_dump_declares_the_fake_dns_option_alone() -> None:
-    assert _declared(cli_command_dump) == ["fake-dns"]
-
-
 def test_the_dump_agent_request_is_read_from_the_command_line() -> None:
-    options = CLIParsedOptions(
-        [("--no-tcp", ""), ("--snmp-backend", "stored-walk")], logging.getLogger(__name__)
-    )
+    given: Mapping[CLIDeclaration, Sequence[str]] = {
+        NO_TCP_FLAG: [""],
+        SNMP_BACKEND_VALUE: ["stored-walk"],
+    }
 
-    assert _dump_agent_request(options) == _DumpAgentRequest(
+    assert _dump_agent_request(
+        CLIReader(lambda declaration: given.get(declaration, ()))
+    ) == _DumpAgentRequest(
         file_cache=FileCacheRequest(cache=False, no_cache=False, no_tcp=True),
         snmp_backend=SNMPBackendEnum.STORED_WALK,
         fake_dns=None,
     )
 
 
-def _dump_agent(hostname: HostName, options: list[tuple[str, str]]) -> CLIExitCode:
+def _dump_agent(hostname: HostName, options: Mapping[CLIDeclaration, Sequence[str]]) -> CLIExitCode:
     logger = logging.getLogger(__name__)
     return _run_dump_agent(
         CLIContext(omd_root=_OMD_ROOT, global_options=CLIGlobalOptions(), logger=logger),
-        _dump_agent_request(CLIParsedOptions(options, logger)),
+        _dump_agent_request(CLIReader(lambda declaration: options.get(declaration, ()))),
         [hostname],
     )
 
@@ -206,7 +187,7 @@ class TestDumpAgent:
     ) -> None:
         _patch_fetcher_trigger(monkeypatch, raw_data)
 
-        _dump_agent(hostname, [])
+        _dump_agent(hostname, {})
 
         assert capsys.readouterr().out == raw_data.decode()
 
@@ -225,7 +206,7 @@ class TestDumpAgent:
             b'{"level": "warning", "message": "Section foo denied"}\n',
         )
 
-        exit_code = _dump_agent(hostname, [])
+        exit_code = _dump_agent(hostname, {})
 
         assert exit_code == CLIExitCode.SUCCESS
         assert capsys.readouterr().err == "WARNING [agent]: Success, Section foo denied\n"
@@ -240,7 +221,7 @@ class TestDumpAgent:
     ) -> None:
         _patch_fetcher_trigger(monkeypatch, Exception("Something broke"))
 
-        exit_code = _dump_agent(hostname, [])
+        exit_code = _dump_agent(hostname, {})
 
         assert exit_code == CLIExitCode.FAILURE
         assert capsys.readouterr().err == "ERROR [agent]: Something broke\n"
@@ -311,16 +292,16 @@ class TestDumpAgentSnmpBackend:
     @pytest.mark.parametrize(
         ["options", "expected_backend_type"],
         [
-            pytest.param([], ClassicSNMPBackend, id="default"),
+            pytest.param({}, ClassicSNMPBackend, id="default"),
             pytest.param(
-                [("--snmp-backend", "stored-walk")], StoredWalkSNMPBackend, id="stored-walk"
+                {SNMP_BACKEND_VALUE: ["stored-walk"]}, StoredWalkSNMPBackend, id="stored-walk"
             ),
         ],
     )
     def test_the_snmp_backend_option_selects_the_backend(
         self,
         hostname: HostName,
-        options: list[tuple[str, str]],
+        options: Mapping[CLIDeclaration, Sequence[str]],
         expected_backend_type: type,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:

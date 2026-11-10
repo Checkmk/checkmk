@@ -63,7 +63,7 @@ class MonitorTimeout:
         NOTE: `timeout` of `<= 0` disables timeout monitoring.
         """
         # defaults
-        self._start_time = time.time()
+        self._start_time = time.monotonic()
         self._timeout_handler = timeout_handler or self._default_timeout_handler
         self._pytest_pid = os.getpid()
         # interface
@@ -116,16 +116,13 @@ class MonitorTimeout:
 
     @property
     def timeout_detected(self) -> bool:
-        return (time.time() - self._start_time) >= float(self._timeout)
+        return (time.monotonic() - self._start_time) >= float(self._timeout)
 
     def _terminate_children_processes(self) -> None:
         """Terminate the children processes.
 
         Processes deepest in the process-hierarchy are terminated first.
         """
-        # TODO:
-        # Termination of a child process should lead to SIGCHLD being raise to parent process.
-        # explore using SIGCHLD to trigger TimeoutError, instead of SIGINT.
         try:
             children = Process(self._pytest_pid).children(recursive=True)
         except NoSuchProcess:
@@ -137,11 +134,8 @@ class MonitorTimeout:
 
     def _stop_monitor(self) -> None:
         """Stop and reap the monitor, so that interpreter exit has no child to wait for."""
-        self._process.terminate()
+        self._process.kill()
         self._process.join(_MONITOR_JOIN_TIMEOUT)
-        if self._process.is_alive():
-            self._process.kill()
-            self._process.join(_MONITOR_JOIN_TIMEOUT)
 
     def __enter__(self) -> Self:
         if self._timeout > 0:
@@ -236,15 +230,8 @@ def pytest_configure(config: pytest.Config) -> None:
 
 @pytest.fixture(scope="session", autouse=True)  # ruff: ignore[pytest-fixture-autouse]
 def _session_timeout(pytestconfig: pytest.Config) -> Iterator[None]:
-    timeout_duration = (
-        _session_timeout_option
-        if isinstance(
-            _session_timeout_option := pytestconfig.getoption(SESSION_TIMEOUT_OPTION), int
-        )
-        else 0
-    )
     with MonitorTimeout(
-        timeout=timeout_duration,
+        timeout=pytestconfig.getoption(SESSION_TIMEOUT_OPTION),
         exit_after_grace=SESSION_SHUTDOWN_GRACE,
         dump_fd=pytestconfig.stash[_STDERR_FD],
     ):

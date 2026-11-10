@@ -5,7 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
-import usei18n from 'cmk-ui-library/lib/i18n'
+import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { computed, ref, watch } from 'vue'
 
 import SelectorView from '@/dashboard/components/selectors/SelectorView.vue'
@@ -25,6 +25,8 @@ const target = defineModel<VisualLocation | null>({ required: true })
 const targetType = ref<VisualLocation['type']>(target.value?.type ?? 'views')
 const dashboards = ref<DashboardTarget[]>([])
 const dashboardsError = ref<string | null>(null)
+// Until the dashboards arrive, the target dropdown has nothing to open.
+const dashboardsLoading = ref(false)
 
 // Loaded once, and only when the dashboards are actually offered.
 watch(
@@ -34,10 +36,13 @@ watch(
       return
     }
     dashboardsError.value = null
+    dashboardsLoading.value = true
     try {
       dashboards.value = await fetchDashboardTargets()
     } catch (error: unknown) {
       dashboardsError.value = String(error)
+    } finally {
+      dashboardsLoading.value = false
     }
   },
   { immediate: true }
@@ -89,6 +94,8 @@ const dashboardSuggestions = computed(() =>
         v-model="selectedName"
         :label="_t('Select a target')"
         :options="{ type: 'filtered', suggestions: dashboardSuggestions }"
+        :input-hint="dashboardsLoading ? _t('Loading…') : untranslated('')"
+        :busy="dashboardsLoading"
       />
     </template>
   </div>

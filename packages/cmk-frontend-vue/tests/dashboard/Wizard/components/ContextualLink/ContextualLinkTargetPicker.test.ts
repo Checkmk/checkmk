@@ -31,7 +31,7 @@ function dashboard(name: string, title: string, owner: string | null = null) {
   }
 }
 
-useMswServer(
+const server = useMswServer(
   // Asked for all owners, the list holds every copy, such as another user's.
   http.get(`${API}/domain-types/dashboard_metadata/collections/all`, ({ request }) => {
     const allOwners = new URL(request.url).searchParams.get('all_owners') === 'true'
@@ -69,6 +69,36 @@ describe('ContextualLinkTargetPicker', () => {
       'Host details (host)',
       'Overview (main)'
     ])
+  })
+
+  it('shows that the dashboards are loading until they are listed', async () => {
+    let listDashboards!: () => void
+    const listed = new Promise<void>((resolve) => (listDashboards = resolve))
+    server.use(
+      http.get(`${API}/domain-types/dashboard_metadata/collections/all`, async () => {
+        await listed
+        return HttpResponse.json({
+          domainType: 'dashboard_metadata',
+          id: 'all',
+          links: [],
+          value: [dashboard('main', 'Overview')]
+        })
+      })
+    )
+    render(ContextualLinkTargetPicker, {
+      props: { modelValue: { type: 'views', name: 'allhosts' } }
+    })
+    const user = userEvent.setup()
+    await user.click(await screen.findByRole('combobox', { name: 'Select a category' }))
+    await user.click(await screen.findByRole('option', { name: 'Dashboards' }))
+    const dropdown = await screen.findByRole('combobox', { name: 'Select a target' })
+
+    expect(dropdown).toHaveTextContent('Loading…')
+    expect(dropdown).toHaveAttribute('aria-busy', 'true')
+
+    listDashboards()
+    await waitFor(() => expect(dropdown).not.toHaveAttribute('aria-busy'))
+    expect(dropdown).not.toHaveTextContent('Loading…')
   })
 
   it('labels a stored dashboard that is no longer listed by its name', async () => {

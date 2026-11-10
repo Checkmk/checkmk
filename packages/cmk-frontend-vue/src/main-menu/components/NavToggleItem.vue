@@ -44,7 +44,12 @@ const altHint = computed(() => mainMenu.isAltHinted(props.item.shortcut))
     }"
     :title="item.hint"
   >
-    <button type="button" :aria-pressed="active" @click="navToggle.toggle()">
+    <button
+      type="button"
+      :aria-label="item.title"
+      :aria-pressed="active"
+      @click="navToggle.toggle()"
+    >
       <CmkIcon :name="navToggle.icon" size="xxlarge" class="mm-nav-toggle-item__icon" />
       <CmkKeyboardKey
         v-if="mainMenu.showKeyHints.value"
@@ -87,6 +92,7 @@ const altHint = computed(() => mainMenu.isAltHinted(props.item.shortcut))
     width: 100%;
     margin: 0;
     border: none;
+    border-radius: 0;
     background: none;
     color: inherit;
     font: inherit;
@@ -97,6 +103,10 @@ const altHint = computed(() => mainMenu.isAltHinted(props.item.shortcut))
     justify-content: center;
     text-decoration: none;
     padding: 0 4px 0 0;
+
+    &:focus-visible {
+      outline: revert;
+    }
 
     .mm-nav-toggle-item__icon {
       margin-bottom: var(--dimension-4);

@@ -51,12 +51,16 @@ function openState(highlight?: NavToggle['highlight']) {
   return { open, navToggle }
 }
 
-function renderToggle(navToggle: NavToggle, toggleItem: NavToggleItemType = item) {
+function renderToggle(
+  navToggle: NavToggle,
+  toggleItem: NavToggleItemType = item,
+  hideItemTitle = false
+) {
   return render(NavToggleItem, {
     global: {
       provide: { [mainMenuKey]: new MainMenuService([], [], new KeyShortcutService(window)) }
     },
-    props: { item: toggleItem, navToggle, hideItemTitle: false }
+    props: { item: toggleItem, navToggle, hideItemTitle }
   })
 }
 
@@ -72,6 +76,13 @@ describe('NavToggleItem', () => {
     renderToggle(openState().navToggle)
 
     expect(screen.getByTitle('Open the AI assistant')).toBeInTheDocument()
+  })
+
+  test('keeps its name while the navigation bar hides the item titles', () => {
+    renderToggle(openState().navToggle, item, true)
+
+    expect(screen.queryByText('AI Assistant')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /AI Assistant/ })).toBeInTheDocument()
   })
 
   test('clicking flips the registered state and the pressed state follows it', async () => {

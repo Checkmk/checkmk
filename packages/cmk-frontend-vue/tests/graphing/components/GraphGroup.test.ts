@@ -20,6 +20,8 @@ import GraphGroup from '@/graphing/components/GraphGroup.vue'
 import { MAX_FIGURE_WIDTH } from '@/graphing/components/constants'
 import type { GraphDisplayOptions } from '@/graphing/types'
 
+import { FakeResizeObserver, deliverSize } from '@tests/lib/fakeResizeObserver'
+
 // Hoisted so the panel stub below can bake the ranges its buttons report into its template.
 const { RANGE_START, RANGE_END, PAN_TARGET, ZOOM_TARGET } = vi.hoisted(() => {
   // Inside the navigable time axis, which starts in 2008: a range before it would hold the
@@ -241,6 +243,7 @@ afterEach(() => {
   document.getElementById(PANEL_PADDING_STYLE_ID)?.remove()
   resetGlobalTimeState()
   vi.useRealTimers()
+  FakeResizeObserver.instances = []
 })
 
 const skeletons = (): NodeListOf<Element> => document.querySelectorAll('.graphing-graph-skeleton')
@@ -855,6 +858,23 @@ test('clamps the derived width to zero rather than going negative when the conta
   await nextTick()
   expect(postSpy).not.toHaveBeenCalled()
   expect(screen.queryByTestId('graph-panel')).not.toBeInTheDocument()
+})
+
+test('a container resize gives every graph group on the page its new width', async () => {
+  vi.stubGlobal('ResizeObserver', FakeResizeObserver)
+  renderGroup([makeGraphDefinition('CPU utilization')])
+  renderGroup([makeGraphDefinition('Memory')])
+  await waitFor(() => expect(panels()).toHaveLength(2))
+
+  containerRight = 700
+  deliverSize(700, 0)
+
+  await waitFor(() =>
+    expect([...panels()].map((panel) => panel.getAttribute('data-figure-width'))).toEqual([
+      '700',
+      '700'
+    ])
+  )
 })
 
 describe('GraphGroup - inside a view widget', () => {

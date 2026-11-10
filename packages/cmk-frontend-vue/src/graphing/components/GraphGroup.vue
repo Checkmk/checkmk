@@ -15,7 +15,6 @@ import CmkSurfaceNotice from 'cmk-ui-library/components/CmkSurfaceNotice.vue'
 import CmkVisuallyHidden from 'cmk-ui-library/components/CmkVisuallyHidden.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { LOADING_AFFORDANCE_DELAY_MS, useDelayedFlag } from 'cmk-ui-library/lib/useDelayedFlag'
-import { useResizeObserver } from 'cmk-ui-library/lib/useResizeObserver'
 import { type ComponentPublicInstance, computed, onMounted, ref, watch } from 'vue'
 
 import { useGlobalRefresh } from '../GlobalTimePicker/globalTimeState'
@@ -24,6 +23,7 @@ import { type GraphCombinationMode, useGraphData } from '../composables/useGraph
 import { hasPlottableData, useGraphNotice, useNoDataNotice } from '../composables/useGraphNotice'
 import { useLocalTimeRange } from '../composables/useLocalTimeRange'
 import { useRequestedTimeRange } from '../composables/useRequestedTimeRange'
+import { useSharedResizeObserver } from '../composables/useSharedResizeObserver'
 import type {
   BrushOverview,
   GraphDisplayOptions,
@@ -151,8 +151,7 @@ if (props.figure_width === undefined) {
     )
   }
 
-  const { observe } = useResizeObserver(recomputeAvailableWidth)
-  observe(containerEl)
+  useSharedResizeObserver(containerEl, recomputeAvailableWidth)
 
   onMounted(() => {
     containerEl.value =

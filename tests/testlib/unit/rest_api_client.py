@@ -5444,6 +5444,22 @@ class AlertClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def search_services(
+        self,
+        service_match: Mapping[str, Any],
+        conditions: Mapping[str, Any] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/actions/search_services/invoke",
+            body={
+                "service_match": dict(service_match),
+                **({} if conditions is None else {"conditions": dict(conditions)}),
+            },
+            expect_ok=expect_ok,
+        )
+
 
 class PagetypeTopicClient(RestApiClient):
     domain: DomainType = "pagetype_topic"

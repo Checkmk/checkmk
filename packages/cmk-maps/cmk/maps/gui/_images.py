@@ -36,7 +36,7 @@ from cmk.maps.gui._image_security import (
     is_valid_image_name,
     safe_image_stem,
 )
-from cmk.maps.gui.store import get_permitted_map, get_permitted_maps, user_maps_path
+from cmk.maps.gui.store import all_maps, get_permitted_map, get_permitted_maps, user_maps_path
 from cmk.maps.shared.validators import is_valid_map_name
 
 MAX_ICON_BYTES = 2 * 1024 * 1024
@@ -59,6 +59,18 @@ class ImageUsageEntry:
     alias: str | None
     object_ids: list[str]
     is_background: bool
+
+
+@dataclass(frozen=True, kw_only=True)
+class ImageUsage:
+    """The maps the caller sees that reference an image, and how many others do."""
+
+    maps: list[ImageUsageEntry]
+    hidden_maps: int
+
+    @property
+    def in_use(self) -> bool:
+        return bool(self.maps or self.hidden_maps)
 
 
 # ---------------------------------------------------------------------------
@@ -141,41 +153,59 @@ def seed_builtin_images() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Usage scan (over the maps the caller may see)
+# Usage scan
 # ---------------------------------------------------------------------------
 
 
-def find_image_usage(name: str) -> list[ImageUsageEntry]:
-    """Maps the caller may see that reference *name* as object icon or background."""
+def _image_refs(payload: Mapping[str, object], name: str) -> tuple[list[str], bool]:
+    """The ids of the objects and slide elements showing *name*, and whether the
+    map or slide has it as its background."""
+    object_ids: list[str] = []
+    objects = payload.get("objects")
+    for obj in objects if isinstance(objects, list) else ():
+        if not isinstance(obj, dict):
+            continue
+        display = obj.get("display")
+        image = display.get("image") if isinstance(display, dict) else None
+        if (image or obj.get("image_src")) == name and isinstance(oid := obj.get("id"), str):
+            object_ids.append(oid)
+    view = payload.get("view")
+    view = view if isinstance(view, dict) else {}
+    elements = view.get("elements")
+    for element in elements if isinstance(elements, list) else ():
+        if (
+            isinstance(element, dict)
+            and element.get("kind") == "image"
+            and element.get("src") == name
+            and isinstance(eid := element.get("id"), str)
+        ):
+            object_ids.append(eid)
+    is_background = name in (payload.get("background_image"), view.get("background_image"))
+    return object_ids, is_background
+
+
+def find_image_usage(name: str) -> ImageUsage:
+    """Every map that shows *name*: those the caller sees, and how many others."""
+    visible = {(page.owner(), page.name()) for page in get_permitted_maps()}
     usage: list[ImageUsageEntry] = []
-    for page in get_permitted_maps():
-        payload = page.config.map_spec
-        object_ids: list[str] = []
-        objects = payload.get("objects")
-        if isinstance(objects, list):
-            for obj in objects:
-                if not isinstance(obj, dict):
-                    continue
-                obj_image = obj.get("image_src")
-                display = obj.get("display")
-                if isinstance(display, dict) and display.get("image"):
-                    obj_image = display.get("image")
-                if obj_image == name:
-                    oid = obj.get("id")
-                    if isinstance(oid, str):
-                        object_ids.append(oid)
-        is_background = payload.get("background_image") == name
-        if object_ids or is_background:
-            alias = payload.get("alias")
-            usage.append(
-                ImageUsageEntry(
-                    map_name=page.config.name,
-                    alias=str(alias) if isinstance(alias, str) else None,
-                    object_ids=object_ids,
-                    is_background=is_background,
-                )
+    hidden_maps = 0
+    for page in all_maps():
+        object_ids, is_background = _image_refs(page.config.map_spec, name)
+        if not (object_ids or is_background):
+            continue
+        if (page.owner(), page.name()) not in visible:
+            hidden_maps += 1
+            continue
+        alias = page.config.map_spec.get("alias")
+        usage.append(
+            ImageUsageEntry(
+                map_name=page.config.name,
+                alias=str(alias) if isinstance(alias, str) else None,
+                object_ids=object_ids,
+                is_background=is_background,
             )
-    return usage
+        )
+    return ImageUsage(maps=usage, hidden_maps=hidden_maps)
 
 
 # ---------------------------------------------------------------------------
@@ -309,12 +339,12 @@ def store_icon(name: str, contents: bytes) -> bool:
     return False
 
 
-def delete_image(name: str, force: bool) -> list[ImageUsageEntry]:
+def delete_image(name: str, force: bool) -> ImageUsage | None:
     """Delete a user-uploaded image, unless it is still in use.
 
     Returns the blocking usage when the image is referenced and ``force`` was not
-    set (an empty list means the file is gone) — the SPA shows the in-use warning
-    and asks again with ``force``.
+    set (None means the file is gone) — the SPA shows the in-use warning and asks
+    again with ``force``.
     """
     require_valid_image_name(name)
     d = _images_dir().resolve()
@@ -328,10 +358,10 @@ def delete_image(name: str, force: bool) -> list[ImageUsageEntry]:
         raise MKUserError("name", _("Invalid filename."))
     if _holds_builtin(path):
         raise MKUserError("name", _("Built-in images cannot be deleted."))
-    if not force and (usage := find_image_usage(name)):
+    if not force and (usage := find_image_usage(name)).in_use:
         return usage
     path.unlink()
-    return []
+    return None
 
 
 # ---------------------------------------------------------------------------

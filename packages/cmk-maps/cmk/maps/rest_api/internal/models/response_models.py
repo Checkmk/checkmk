@@ -348,6 +348,9 @@ class MapsImageUsageResponse:
     usage: list[MapsImageUsage] = api_field(
         description="Maps the caller may see that reference the image.", example=[]
     )
+    hidden_maps: int = api_field(
+        description="How many maps the caller may not see reference the image.", example=0
+    )
 
 
 @api_model

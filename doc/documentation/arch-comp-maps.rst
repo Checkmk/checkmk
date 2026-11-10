@@ -359,11 +359,12 @@ OpenAPI types, not from hand-written copies.
      - Uploads a library image, needs ``maps.configure``.
    * - GET
      - ``objects/maps_image/{name}/actions/usage/invoke``
-     - Which maps use an image, needs ``maps.configure``.
+     - Which maps the user sees use an image, as icon, background or slide
+       element, and how many others do; needs ``maps.configure``.
    * - DELETE
      - ``objects/maps_image/{name}[?force=]``
      - Deletes a library image, needs ``maps.configure``. Built-in images
-       cannot be deleted; an image in use needs ``force``.
+       cannot be deleted; an image any map uses needs ``force``.
    * - GET
      - ``domain-types/maps_settings/collections/all``
      - Authoring defaults and allowed tile sources.

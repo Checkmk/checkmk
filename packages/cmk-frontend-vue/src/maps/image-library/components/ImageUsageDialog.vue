@@ -18,12 +18,12 @@ import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
 import { useNavigation } from '@/maps/services/context'
-import type { ImageUsageEntry } from '@/maps/types/api'
+import type { ImageUsage, ImageUsageEntry } from '@/maps/types/api'
 
 const props = defineProps<{
   open: boolean
   imageName: string
-  usage: ImageUsageEntry[]
+  usage: ImageUsage
 }>()
 
 const emit = defineEmits<{ confirm: []; cancel: [] }>()
@@ -62,13 +62,23 @@ function usageSubtitle(entry: ImageUsageEntry): TranslatedString {
         {{
           _t(
             'The image "%{name}" is referenced by %{count} map(s). Deleting it will leave those maps without an image. Continue?',
-            { name: props.imageName, count: props.usage.length }
+            { name: props.imageName, count: props.usage.usage.length + props.usage.hidden_maps }
+          )
+        }}
+      </CmkParagraph>
+      <CmkParagraph v-if="props.usage.hidden_maps">
+        {{
+          _tn(
+            '%{n} of them is a map you cannot see.',
+            '%{n} of them are maps you cannot see.',
+            props.usage.hidden_maps,
+            { n: props.usage.hidden_maps }
           )
         }}
       </CmkParagraph>
       <CmkLinkCardContainer>
         <CmkLinkCard
-          v-for="entry in props.usage"
+          v-for="entry in props.usage.usage"
           :key="entry.map"
           icon-name="dashboard-main"
           :title="untranslated(entry.alias || entry.map)"

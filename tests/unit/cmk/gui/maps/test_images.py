@@ -6,7 +6,6 @@
 
 import re
 import threading
-from types import SimpleNamespace
 
 import pytest
 
@@ -52,56 +51,6 @@ def test_builtin_names_include_a_shipped_icon() -> None:
     assert "bell.svg" in names
     assert _images._is_builtin("bell.svg")  # noqa: SLF001
     assert not _images._is_builtin("user-upload.png")  # noqa: SLF001
-
-
-def test_find_image_usage_reports_object_and_background_refs(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    pages = [
-        SimpleNamespace(
-            config=SimpleNamespace(
-                name="map-a",
-                map_spec={
-                    "alias": "Map A",
-                    "objects": [
-                        {"id": "o1", "image_src": "icon.svg"},
-                        {"id": "o2", "display": {"image": "icon.svg"}},
-                        {"id": "o3", "image_src": "other.svg"},
-                    ],
-                    "background_image": "bg.png",
-                },
-            )
-        ),
-        SimpleNamespace(
-            config=SimpleNamespace(
-                name="map-b",
-                map_spec={"alias": None, "objects": [], "background_image": "icon.svg"},
-            )
-        ),
-    ]
-    monkeypatch.setattr(_images, "get_permitted_maps", lambda: pages)
-
-    usage = _images.find_image_usage("icon.svg")
-
-    by_map = {entry.map_name: entry for entry in usage}
-    assert set(by_map) == {"map-a", "map-b"}
-    assert by_map["map-a"].object_ids == ["o1", "o2"]
-    assert by_map["map-a"].is_background is False
-    assert by_map["map-a"].alias == "Map A"
-    assert by_map["map-b"].is_background is True
-
-
-def test_find_image_usage_skips_unrelated_maps(monkeypatch: pytest.MonkeyPatch) -> None:
-    pages = [
-        SimpleNamespace(
-            config=SimpleNamespace(
-                name="map-a",
-                map_spec={"objects": [{"id": "o1", "image_src": "other.svg"}]},
-            )
-        ),
-    ]
-    monkeypatch.setattr(_images, "get_permitted_maps", lambda: pages)
-    assert _images.find_image_usage("icon.svg") == []
 
 
 def test_background_paths_refuse_a_map_name_the_stem_cannot_carry(

@@ -40,6 +40,11 @@ def _instances() -> pagetypes.OverridableInstances[MapPage]:
     return MapPage.load()
 
 
+def all_maps() -> list[MapPage]:
+    """Every map: the built-ins and those of every user, seen or not."""
+    return _instances().instances()
+
+
 def get_permitted_maps(user_permissions: UserPermissions | None = None) -> list[MapPage]:
     """The maps the user may see, with built-in/foreign shadowing.
 

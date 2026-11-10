@@ -304,6 +304,8 @@ export type TopologyDelta = Daemon['TopologyDelta']
 
 export type ImageEntry = Schemas['MapsImage']
 export type ImageUsageEntry = Schemas['MapsImageUsage']
+/** The maps the user sees that use an image, and how many others do. */
+export type ImageUsage = Schemas['MapsImageUsageResponse']
 
 export type MetricPoint = Daemon['MetricPoint']
 

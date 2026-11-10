@@ -7,12 +7,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useImageDeletion } from '@/maps/image-library/composables/useImageDeletion'
-import type { ImageUsageEntry } from '@/maps/types/api'
+import type { ImageUsage } from '@/maps/types/api'
 
 import { fakeMapsServices, runWithServices } from '../../support/services'
 
-function usedBy(map: string): ImageUsageEntry {
-  return { map, alias: map, is_background: true, object_ids: [] }
+const UNUSED: ImageUsage = { usage: [], hidden_maps: 0 }
+
+function usedBy(map: string): ImageUsage {
+  return { usage: [{ map, alias: map, is_background: true, object_ids: [] }], hidden_maps: 0 }
 }
 
 let services: ReturnType<typeof fakeMapsServices>
@@ -32,13 +34,13 @@ beforeEach(() => {
   services = fakeMapsServices()
   deleted = []
   errors = []
-  vi.mocked(services.apis.images.usage).mockResolvedValue([])
-  vi.mocked(services.apis.images.delete).mockResolvedValue([])
+  vi.mocked(services.apis.images.usage).mockResolvedValue(UNUSED)
+  vi.mocked(services.apis.images.delete).mockResolvedValue(null)
 })
 
 describe('useImageDeletion — asking', () => {
   it('asks nothing before it knows whether the image is used', async () => {
-    let resolveUsage = (_: ImageUsageEntry[]): void => {}
+    let resolveUsage = (_: ImageUsage): void => {}
     vi.mocked(services.apis.images.usage).mockReturnValueOnce(
       new Promise((resolve) => {
         resolveUsage = resolve
@@ -49,18 +51,25 @@ describe('useImageDeletion — asking', () => {
     expect(deletion.askedAboutUnused.value).toBe(false)
     expect(deletion.askedAboutUsed.value).toBe(false)
 
-    resolveUsage([])
+    resolveUsage(UNUSED)
     await started
     expect(deletion.askedAboutUnused.value).toBe(true)
   })
 
   it('warns about the maps using the image instead of just asking', async () => {
-    vi.mocked(services.apis.images.usage).mockResolvedValueOnce([usedBy('prod')])
+    vi.mocked(services.apis.images.usage).mockResolvedValueOnce(usedBy('prod'))
     const deletion = setup()
     await deletion.start('logo.svg')
     expect(deletion.askedAboutUsed.value).toBe(true)
     expect(deletion.askedAboutUnused.value).toBe(false)
-    expect(deletion.usage.value).toEqual([usedBy('prod')])
+    expect(deletion.usage.value).toEqual(usedBy('prod'))
+  })
+
+  it('warns about an image only maps the operator cannot see use', async () => {
+    vi.mocked(services.apis.images.usage).mockResolvedValueOnce({ usage: [], hidden_maps: 2 })
+    const deletion = setup()
+    await deletion.start('logo.svg')
+    expect(deletion.askedAboutUsed.value).toBe(true)
   })
 
   it('falls back to the plain question when the usage check fails', async () => {
@@ -71,7 +80,7 @@ describe('useImageDeletion — asking', () => {
   })
 
   it('ignores a check that answers after another image was clicked', async () => {
-    let resolveFirst = (_: ImageUsageEntry[]): void => {}
+    let resolveFirst = (_: ImageUsage): void => {}
     vi.mocked(services.apis.images.usage).mockReturnValueOnce(
       new Promise((resolve) => {
         resolveFirst = resolve
@@ -81,10 +90,10 @@ describe('useImageDeletion — asking', () => {
     const first = deletion.start('first.svg')
     await deletion.start('second.svg')
 
-    resolveFirst([usedBy('prod')])
+    resolveFirst(usedBy('prod'))
     await first
     expect(deletion.target.value).toBe('second.svg')
-    expect(deletion.usage.value).toEqual([])
+    expect(deletion.usage.value).toEqual(UNUSED)
   })
 })
 
@@ -99,7 +108,7 @@ describe('useImageDeletion — deleting', () => {
   })
 
   it('forces the delete the operator confirmed through the in-use warning', async () => {
-    vi.mocked(services.apis.images.usage).mockResolvedValueOnce([usedBy('prod')])
+    vi.mocked(services.apis.images.usage).mockResolvedValueOnce(usedBy('prod'))
     const deletion = setup()
     await deletion.start('logo.svg')
     await deletion.confirm()
@@ -108,13 +117,13 @@ describe('useImageDeletion — deleting', () => {
   })
 
   it('shows usage the server found and this did not, instead of deleting', async () => {
-    vi.mocked(services.apis.images.delete).mockResolvedValueOnce([usedBy('lab')])
+    vi.mocked(services.apis.images.delete).mockResolvedValueOnce(usedBy('lab'))
     const deletion = setup()
     await deletion.start('logo.svg')
     await deletion.confirm()
     expect(deleted).toEqual([])
     expect(deletion.askedAboutUsed.value).toBe(true)
-    expect(deletion.usage.value).toEqual([usedBy('lab')])
+    expect(deletion.usage.value).toEqual(usedBy('lab'))
   })
 
   it('reports a failed delete and closes the question', async () => {

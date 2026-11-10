@@ -36,6 +36,7 @@ from cmk.maps.gui._images import (
     delete_image,
     find_image_usage,
     image_list,
+    ImageUsage,
     ImageUsageEntry,
     require_valid_image_name,
     upload_image,
@@ -54,7 +55,7 @@ from cmk.web.utils import permission_verification as permissions
 _UPLOAD_PERMISSIONS = permissions.AllPerm(
     [permissions.Perm("maps.use"), permissions.Perm("maps.configure")]
 )
-# Showing an image's use, and deleting it, scans the maps the user may see.
+# Showing an image's use, and deleting it, names the maps the user may see.
 _USAGE_PERMISSIONS = permissions.AllPerm(
     [permissions.Perm("maps.use"), permissions.Perm("maps.configure"), *MAP_VISIBILITY_PERMISSIONS]
 )
@@ -84,6 +85,12 @@ def _usage(entry: ImageUsageEntry) -> MapsImageUsage:
     )
 
 
+def _usage_response(usage: ImageUsage) -> MapsImageUsageResponse:
+    return MapsImageUsageResponse(
+        usage=[_usage(entry) for entry in usage.maps], hidden_maps=usage.hidden_maps
+    )
+
+
 def show_image_usage_v1(
     name: Annotated[
         str,
@@ -94,7 +101,7 @@ def show_image_usage_v1(
     user.need_permission("maps.use")
     user.need_permission("maps.configure")
     require_valid_image_name(name)
-    return MapsImageUsageResponse(usage=[_usage(entry) for entry in find_image_usage(name)])
+    return _usage_response(find_image_usage(name))
 
 
 def upload_image_v1(body: MapsImageUploadRequest) -> MapsImage:
@@ -125,13 +132,18 @@ def delete_image_v1(
     """Delete an image from the library"""
     user.need_permission("maps.use")
     user.need_permission("maps.configure")
-    if blocking := delete_image(name, force):
-        usage = [_usage(entry) for entry in blocking]
+    if (blocking := delete_image(name, force)) is not None:
+        response = _usage_response(blocking)
         raise ProblemException(
             status=HTTPStatus.CONFLICT,
             title=f"The image {name!r} is still in use",
             detail="Repeat with 'force' to delete it and leave those maps without it.",
-            ext=EXT({"usage": _USAGE_ADAPTER.dump_python(usage, mode="json", by_alias=True)}),
+            ext=EXT(
+                {
+                    "usage": _USAGE_ADAPTER.dump_python(response.usage, mode="json", by_alias=True),
+                    "hidden_maps": response.hidden_maps,
+                }
+            ),
         )
 
 

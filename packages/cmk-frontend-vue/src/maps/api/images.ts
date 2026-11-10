@@ -13,15 +13,15 @@ import { CmkApiError } from 'cmk-ui-library/lib/error'
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 
 import { uploadedFile } from '@/maps/api/upload'
-import type { ImageEntry, ImageUsageEntry } from '@/maps/types/api'
+import type { ImageEntry, ImageUsage } from '@/maps/types/api'
 
 /** The maps an in-use image is still referenced by, off a refused delete. */
-function blockingUsage(error: unknown): ImageUsageEntry[] | null {
+function blockingUsage(error: unknown): ImageUsage | null {
   if (!(error instanceof CmkApiError) || error.statusCode !== 409) {
     return null
   }
-  const usage = (error.body as { ext?: { usage?: ImageUsageEntry[] } } | undefined)?.ext?.usage
-  return usage ?? []
+  const ext = (error.body as { ext?: Partial<ImageUsage> } | undefined)?.ext
+  return { usage: ext?.usage ?? [], hidden_maps: ext?.hidden_maps ?? 0 }
 }
 
 export class ImagesApi {
@@ -38,22 +38,22 @@ export class ImagesApi {
     )
   }
 
-  public async usage(name: string): Promise<ImageUsageEntry[]> {
+  public async usage(name: string): Promise<ImageUsage> {
     return unwrap(
       await client.GET('/objects/maps_image/{name}/actions/usage/invoke', {
         params: { path: { name } }
       })
-    ).usage
+    )
   }
 
   /**
    * Deletes an image, and returns the maps still referencing it when it was kept.
    *
    * Without ``force`` an image in use is refused with a 409 carrying those maps,
-   * so the SPA can show what would break and ask again. An empty list means the
-   * image is gone.
+   * so the SPA can show what would break and ask again. ``null`` means the image
+   * is gone.
    */
-  public async delete(name: string, force = false): Promise<ImageUsageEntry[]> {
+  public async delete(name: string, force = false): Promise<ImageUsage | null> {
     try {
       unwrap(
         await client.DELETE('/objects/maps_image/{name}', {
@@ -61,7 +61,7 @@ export class ImagesApi {
           params: { path: { name }, query: { force: String(force) } }
         })
       )
-      return []
+      return null
     } catch (error: unknown) {
       const blocking = blockingUsage(error)
       if (blocking === null) {

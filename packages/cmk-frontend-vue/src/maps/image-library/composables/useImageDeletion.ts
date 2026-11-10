@@ -8,7 +8,13 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { type ComputedRef, type Ref, computed, ref } from 'vue'
 
 import { useMapsApis } from '@/maps/services/context'
-import type { ImageUsageEntry } from '@/maps/types/api'
+import type { ImageUsage } from '@/maps/types/api'
+
+const UNUSED: ImageUsage = { usage: [], hidden_maps: 0 }
+
+function inUse(found: ImageUsage): boolean {
+  return found.usage.length > 0 || found.hidden_maps > 0
+}
 
 /**
  * Deleting an image, and what it would break.
@@ -23,7 +29,7 @@ export function useImageDeletion(
   onError: (error: unknown, fallback: TranslatedString) => void
 ): {
   target: Ref<string | null>
-  usage: Ref<ImageUsageEntry[]>
+  usage: Ref<ImageUsage>
   askedAboutUnused: ComputedRef<boolean>
   askedAboutUsed: ComputedRef<boolean>
   start: (name: string) => Promise<void>
@@ -34,26 +40,26 @@ export function useImageDeletion(
   const { _t } = usei18n()
 
   const target = ref<string | null>(null)
-  const usage = ref<ImageUsageEntry[]>([])
+  const usage = ref<ImageUsage>(UNUSED)
   /** Nothing is shown until the usage check has answered. */
   const checked = ref(false)
 
   const askedAboutUnused = computed(
-    () => checked.value && target.value !== null && usage.value.length === 0
+    () => checked.value && target.value !== null && !inUse(usage.value)
   )
   const askedAboutUsed = computed(
-    () => checked.value && target.value !== null && usage.value.length > 0
+    () => checked.value && target.value !== null && inUse(usage.value)
   )
 
   async function start(name: string): Promise<void> {
     target.value = name
-    usage.value = []
+    usage.value = UNUSED
     checked.value = false
     try {
       const found = await images.usage(name)
       // A check for a previously clicked image may resolve late; it must not
       // write its result onto the image now under the cursor.
-      if (target.value === name && found.length) {
+      if (target.value === name && inUse(found)) {
         usage.value = found
       }
     } catch {
@@ -67,7 +73,7 @@ export function useImageDeletion(
 
   function cancel(): void {
     target.value = null
-    usage.value = []
+    usage.value = UNUSED
     checked.value = false
   }
 
@@ -78,10 +84,10 @@ export function useImageDeletion(
     }
     // Forced once usage is known: the operator confirmed it through the in-use
     // warning. Unforced, the server keeps the image and returns the maps.
-    const force = usage.value.length > 0
+    const force = inUse(usage.value)
     try {
       const blocking = await images.delete(name, force)
-      if (blocking.length) {
+      if (blocking !== null) {
         usage.value = blocking
         return
       }

@@ -302,6 +302,38 @@ def test_an_image_in_use_is_kept_with_the_maps_using_it(clients: ClientRegistry)
     ]
 
 
+def _image_object(oid: str, **fields: object) -> dict[str, object]:
+    return {
+        "id": oid,
+        "type": "image",
+        "position": {"x": 0, "y": 0},
+        "link": {"url_target": "_blank"},
+        **fields,
+    }
+
+
+def test_the_icon_of_an_object_is_in_use_and_not_the_image_it_replaces(
+    clients: ClientRegistry,
+) -> None:
+    shown = _image_object(
+        "o1", image_src="replaced.png", display={"mode": "icon", "image": "rack.png"}
+    )
+    clients.Maps.create(config=_map("floor", objects=[shown]))
+
+    assert clients.Maps.get_image_usage("rack.png").json == {
+        "usage": [{"map": "floor", "alias": "Floor", "object_ids": ["o1"], "is_background": False}],
+        "hidden_maps": 0,
+    }
+    assert clients.Maps.get_image_usage("replaced.png").json == {"usage": [], "hidden_maps": 0}
+
+
+def test_a_map_showing_other_images_does_not_keep_an_image(clients: ClientRegistry) -> None:
+    clients.Maps.upload_image("rack.png", "image/png", _PNG)
+    clients.Maps.create(config=_map("floor", objects=[_image_object("o1", image_src="other.png")]))
+
+    clients.Maps.delete_image("rack.png").assert_status_code(HTTPStatus.NO_CONTENT)
+
+
 def test_a_background_is_stored_for_its_map(clients: ClientRegistry) -> None:
     clients.Maps.create(config=_map("floor"))
     filename = clients.Maps.upload_background("floor", "plan.png", "image/png", _PNG).json[
@@ -327,6 +359,59 @@ def test_a_background_is_removed(clients: ClientRegistry) -> None:
     clients.Maps.create(config=_map("floor"))
     clients.Maps.upload_background("floor", "plan.png", "image/png", _PNG)
     clients.Maps.delete_background("floor").assert_status_code(HTTPStatus.NO_CONTENT)
+
+
+def _presentation_showing(image: str) -> dict[str, object]:
+    transform = {
+        "x": 0,
+        "y": 0,
+        "w": 10,
+        "h": 10,
+        "rotation": 0,
+        "z": 0,
+        "opacity": 1,
+        "locked": False,
+        "hidden": False,
+    }
+    element = {"kind": "image", "id": "e1", "transform": transform, "fit": "contain", "src": image}
+    return {
+        "type": "presentation",
+        "width": 1920,
+        "height": 1080,
+        "theme": "midnight",
+        "elements": [element],
+        "background_image": image,
+    }
+
+
+def test_an_image_on_a_slide_is_in_use(clients: ClientRegistry) -> None:
+    clients.Maps.upload_image("rack.png", "image/png", _PNG)
+    clients.Maps.create(config=_map("slides", view=_presentation_showing("rack.png")))
+
+    resp = clients.Maps.delete_image("rack.png", expect_ok=False)
+
+    resp.assert_status_code(HTTPStatus.CONFLICT)
+    assert resp.json["ext"]["usage"] == [
+        {"map": "slides", "alias": "Slides", "object_ids": ["e1"], "is_background": True}
+    ]
+
+
+def test_an_image_in_a_map_the_user_does_not_see_is_counted(
+    clients: ClientRegistry,
+    with_automation_user: tuple[UserId, str],
+    with_automation_user_not_admin: tuple[UserId, str],
+) -> None:
+    clients.Maps.upload_image("rack.png", "image/png", _PNG)
+    clients.Maps.set_credentials(*map(str, with_automation_user_not_admin))
+    try:
+        clients.Maps.create(config=_map("theirs", view=_presentation_showing("rack.png")))
+    finally:
+        clients.Maps.set_credentials(*map(str, with_automation_user))
+
+    resp = clients.Maps.delete_image("rack.png", expect_ok=False)
+
+    resp.assert_status_code(HTTPStatus.CONFLICT)
+    assert (resp.json["ext"]["usage"], resp.json["ext"]["hidden_maps"]) == ([], 1)
 
 
 def _background_of(clients: ClientRegistry, name: str) -> str:

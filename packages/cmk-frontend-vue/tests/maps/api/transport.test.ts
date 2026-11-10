@@ -97,7 +97,7 @@ describe('the internal REST transport', () => {
       })
     )
 
-    expect(await new ImagesApi().delete('server.svg')).toEqual([])
+    expect(await new ImagesApi().delete('server.svg')).toBeNull()
     await new ImagesApi().delete('server.svg', true)
 
     expect(seen[0]!.url.searchParams.get('force')).toBe('false')
@@ -117,7 +117,7 @@ describe('the internal REST transport', () => {
       )
     )
 
-    expect(await new ImagesApi().delete('server.svg')).toEqual(usage)
+    expect(await new ImagesApi().delete('server.svg')).toEqual({ usage, hidden_maps: 0 })
   })
 
   it('maps a REST error body to a status-carrying error', async () => {

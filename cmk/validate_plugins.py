@@ -145,12 +145,19 @@ _TOP_LEVEL_BAKERY_RULE_SPECS: Mapping[str, str] = {
 
 
 def _unconfigurable_bakery_plugins(
-    plugin_names: Iterable[str], rule_spec_names: Container[str]
+    v1_plugin_names: Iterable[str],
+    v2_plugins: Iterable[bakery_v2.BakeryPlugin],
+    rule_spec_names: Container[str],
 ) -> Sequence[str]:
     """Names of bakery plug-ins that never run, as no rule spec configures them"""
+    # Plug-ins with default parameters run without a rule, like check plug-ins without a ruleset
+    candidates = {
+        *v1_plugin_names,
+        *(p.name for p in v2_plugins if p.default_parameters is None),
+    }
     return sorted(
         name
-        for name in plugin_names
+        for name in candidates
         if RuleGroup.AgentConfig(name) not in rule_spec_names
         and _TOP_LEVEL_BAKERY_RULE_SPECS.get(name) not in rule_spec_names
     )
@@ -178,7 +185,9 @@ def _validate_bakery_plugins(*, debug: bool) -> Sequence[ActiveCheckResult]:
             ValidationStep.BAKERY_RULE_SPECS,
             [
                 f"Bakery plug-in '{name}' never runs: there is no agent config rule spec '{name}'"
-                for name in _unconfigurable_bakery_plugins(plugins, rulespec_registry)
+                for name in _unconfigurable_bakery_plugins(
+                    plugins, v2_discovered.plugins.values(), rulespec_registry
+                )
             ],
         ),
     ]

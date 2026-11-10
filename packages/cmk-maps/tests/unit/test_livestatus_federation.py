@@ -119,6 +119,39 @@ def test_explicit_tcp_target_never_federates(
     assert conn._sites is None  # noqa: SLF001
 
 
+def _write_folder_perms(omd_root: Path, content: str) -> None:
+    path = omd_root / "etc" / "check_mk" / "maps.d" / "wato" / "folder_perms.mk"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content)
+
+
+def test_an_unreadable_folder_file_is_read_again_until_it_is_repaired(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setattr(settings, "checkmk_omd_root", str(tmp_path))
+    monkeypatch.setattr(livestatus, "_wato_folders_cache", {})
+    _write_folder_perms(tmp_path, "maps_folder_perms = [\n")
+
+    with pytest.raises(SyntaxError):
+        asyncio.run(livestatus._load_wato_folders())  # noqa: SLF001
+
+    _write_folder_perms(tmp_path, "maps_folder_perms = [{'path': 'dc', 'title': 'DC'}]\n")
+    loaded = asyncio.run(livestatus._load_wato_folders())  # noqa: SLF001
+
+    assert [f["path"] for f in loaded.folders] == ["dc"]
+
+
+def test_a_missing_folder_file_is_no_skeleton(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setattr(settings, "checkmk_omd_root", str(tmp_path))
+    monkeypatch.setattr(livestatus, "_wato_folders_cache", {})
+
+    loaded = asyncio.run(livestatus._load_wato_folders())  # noqa: SLF001
+
+    assert loaded == livestatus.WatoFolders([], hide_unreadable=False)
+
+
 # --------------------------------------------------------------------------- #
 # Per-site trust: dead-site stale replay in get_folder_tree
 # --------------------------------------------------------------------------- #

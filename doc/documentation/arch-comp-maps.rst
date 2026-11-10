@@ -576,6 +576,8 @@ The GUI writes two more files for the daemon:
   the folders as Setup's folder lists do: a folder the user may not read is
   hidden only with that setting, and only when no subfolder is shown. The
   hosts of a hidden folder the user may see move to the nearest shown folder.
+  While the file cannot be read, folder-tree maps show their connection as
+  failed; the daemon reads it again on every update.
 * ``etc/check_mk/maps.d/sitespecs.mk`` when sites are saved and on Activate
   Changes: the Livestatus address of every enabled site (encoded socket,
   timeout, persistence, status host, proxy cache flag or TLS settings), without

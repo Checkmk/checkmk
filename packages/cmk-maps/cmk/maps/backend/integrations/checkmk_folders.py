@@ -15,18 +15,16 @@ per-user scope match itself (``FolderScope`` in :mod:`checkmk`).
 Flask-free, the same direct ``exec`` pattern :mod:`checkmk_sites` uses. A missing
 or empty file means "no folder skeleton yet" (fresh site before the first
 activation): the folder-tree map then shows only folders that contain hosts,
-resolved from Livestatus alone.
+resolved from Livestatus alone. A file that cannot be read is an error, so the
+map shows its connection as failed until the next activation repairs the file.
 """
 
-import logging
 from dataclasses import dataclass, field
 from pathlib import Path
 
 from cmk.maps.backend.core.config import settings
 from cmk.maps.backend.integrations import checkmk as _cmk_integration
 from cmk.maps.shared.config_vars import VAR_FOLDER_HIDE_UNREADABLE, VAR_FOLDER_PERMS
-
-log = logging.getLogger(__name__)
 
 
 def _folder_perms_path() -> Path:
@@ -35,9 +33,16 @@ def _folder_perms_path() -> Path:
     )
 
 
-def folder_perms_mtime() -> float:
-    """Return mtime of the folder-perms file for cache invalidation, or 0.0 when absent."""
-    return _cmk_integration.mtime_or_zero(_folder_perms_path())
+def folder_perms_version() -> tuple[int, int, int] | None:
+    """The version of the folder-perms file for cache invalidation, ``None`` when absent.
+
+    Inode, mtime and size: the GUI may rewrite the file within one coarse mtime tick.
+    """
+    try:
+        st = _folder_perms_path().stat()
+    except FileNotFoundError:
+        return None
+    return (st.st_ino, st.st_mtime_ns, st.st_size)
 
 
 @dataclass(frozen=True)
@@ -51,18 +56,11 @@ class FolderSkeleton:
 
 
 def load_folder_perms() -> FolderSkeleton:
-    """Return the prepared folder skeleton, empty when the file is missing,
-    unparseable or empty."""
-    p = _folder_perms_path()
-    if not p.is_file():
-        return FolderSkeleton()
-    try:
-        values = _cmk_integration.exec_mk_file(
-            p, {VAR_FOLDER_PERMS: [], VAR_FOLDER_HIDE_UNREADABLE: False}
-        )
-    except Exception:
-        log.exception("Failed to parse %(path)s", {"path": p})
-        return FolderSkeleton()
+    """Return the prepared folder skeleton, empty when the file is missing or
+    empty. Raises when it cannot be read or parsed."""
+    values = _cmk_integration.exec_mk_file(
+        _folder_perms_path(), {VAR_FOLDER_PERMS: [], VAR_FOLDER_HIDE_UNREADABLE: False}
+    )
     raw = values[VAR_FOLDER_PERMS]
     return FolderSkeleton(
         [dict(entry) for entry in raw if isinstance(entry, dict)] if isinstance(raw, list) else [],

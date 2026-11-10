@@ -222,7 +222,7 @@ class WatoFolders(NamedTuple):
     hide_unreadable: bool
 
 
-_wato_folders_cache: dict[float, WatoFolders] = {}
+_wato_folders_cache: dict[tuple[int, int, int] | None, WatoFolders] = {}
 
 
 def _folder_info_from_entry(entry: dict[str, object]) -> FolderInfo | None:
@@ -251,9 +251,12 @@ def _folder_info_from_entry(entry: dict[str, object]) -> FolderInfo | None:
 
 
 async def _load_wato_folders() -> WatoFolders:
-    """Cached, off-event-loop read of the GUI-prepared SETUP-folder skeleton."""
-    mtime = _cmk_folders.folder_perms_mtime()
-    cached = _wato_folders_cache.get(mtime)
+    """Cached, off-event-loop read of the GUI-prepared SETUP-folder skeleton.
+
+    A file that cannot be read raises and is not cached, so it is read again.
+    """
+    version = _cmk_folders.folder_perms_version()
+    cached = _wato_folders_cache.get(version)
     if cached is not None:
         return cached
     skeleton = await asyncio.to_thread(_cmk_folders.load_folder_perms)
@@ -269,10 +272,10 @@ async def _load_wato_folders() -> WatoFolders:
         "Folder-tree: loaded %(folder_count)d prepared WATO folders",
         {"folder_count": len(loaded.folders)},
     )
-    # Single-entry cache keyed by mtime: a new activation bumps the mtime and
-    # invalidates the previous skeleton.
+    # Single-entry cache: a new activation changes the version and invalidates
+    # the previous skeleton.
     _wato_folders_cache.clear()
-    _wato_folders_cache[mtime] = loaded
+    _wato_folders_cache[version] = loaded
     return loaded
 
 

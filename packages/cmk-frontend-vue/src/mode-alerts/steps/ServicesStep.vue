@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { FormSpec } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
+import CmkChip from 'cmk-ui-library/components/CmkChip.vue'
 import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
 import CmkHelpText from 'cmk-ui-library/components/CmkHelpText.vue'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
@@ -370,6 +371,9 @@ const unitsError = computed(() => {
                 :key="`${service.host_name}:${service.service_name}`"
               >
                 <span class="mode-alerts-services-step__name">{{ service.service_name }}</span>
+                <CmkChip v-if="!service.discovered" as-div size="small" color="warning">
+                  {{ _t('not yet discovered') }}
+                </CmkChip>
                 <span class="mode-alerts-services-step__unit">{{ rowUnit(service) }}</span>
                 <span class="mode-alerts-services-step__host">{{ service.host_name }}</span>
               </li>
@@ -395,6 +399,45 @@ const unitsError = computed(() => {
               )
             }}
           </CmkParagraph>
+          <CmkAlert
+            v-if="matches.undiscovered > 0"
+            variant="warning"
+            size="small"
+            :text="
+              _tn(
+                '%{count} of these services is not discovered yet. The alert applies to it only after a service discovery on %{hosts}.',
+                '%{count} of these services are not discovered yet. The alert applies to them only after a service discovery on %{hosts}.',
+                matches.undiscovered,
+                { count: matches.undiscovered, hosts: matches.undiscovered_hosts.join(', ') }
+              )
+            "
+          />
+          <CmkAlert
+            v-if="matches.incomplete_configurations.length > 0"
+            variant="warning"
+            size="small"
+            :text="
+              _tn(
+                'The custom service %{names} has more series than can be checked here. The alert also applies to its services that are not listed, but their units were not checked.',
+                'The custom services %{names} have more series than can be checked here. The alert also applies to their services that are not listed, but their units were not checked.',
+                matches.incomplete_configurations.length,
+                { names: matches.incomplete_configurations.join(', ') }
+              )
+            "
+          />
+          <CmkAlert
+            v-if="matches.unreachable_sites.length > 0"
+            variant="warning"
+            size="small"
+            :text="
+              _tn(
+                'The site %{sites} did not answer, so its services are missing.',
+                'The sites %{sites} did not answer, so their services are missing.',
+                matches.unreachable_sites.length,
+                { sites: matches.unreachable_sites.join(', ') }
+              )
+            "
+          />
         </div>
 
         <CmkAlert

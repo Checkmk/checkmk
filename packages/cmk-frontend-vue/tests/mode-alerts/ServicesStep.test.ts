@@ -478,6 +478,24 @@ test('each listed service shows its unit, so the user can tell the services apar
   expect(screen.getByText('unit unknown (no recent data)')).toBeInTheDocument()
 })
 
+test('a service not discovered yet is marked and the hosts needing discovery are named', async () => {
+  answer = searchResult([
+    service('web01', 'cart requests'),
+    service('app01', 'cart requests', { discovered: false }),
+    service('app02', 'cart requests', { discovered: false })
+  ])
+  renderStep()
+
+  await pickServiceName('cart requests')
+
+  expect(await screen.findAllByText('not yet discovered')).toHaveLength(2)
+  expect(
+    screen.getByText(
+      '2 of these services are not discovered yet. The alert applies to them only after a service discovery on app01, app02.'
+    )
+  ).toBeInTheDocument()
+})
+
 test('services on hosts the user cannot see are counted', async () => {
   answer = searchResult([service('web01', 'cart requests')], { total: 4, hidden: 3 })
   renderStep()
@@ -519,6 +537,72 @@ test('a single service beyond the listed ones is counted in the singular', async
 
   expect(
     await screen.findByText('1 more service is not listed. Refine the service name to see it.')
+  ).toBeInTheDocument()
+})
+
+test('a single service not discovered yet is told in the singular', async () => {
+  answer = searchResult([
+    service('web01', 'cart requests'),
+    service('app01', 'cart requests', { discovered: false })
+  ])
+  renderStep()
+
+  await pickServiceName('cart requests')
+
+  expect(
+    await screen.findByText(
+      '1 of these services is not discovered yet. The alert applies to it only after a service discovery on app01.'
+    )
+  ).toBeInTheDocument()
+})
+
+test('a custom service with more series than can be checked is named', async () => {
+  answer = searchResult([service('web01', 'cart requests')], {
+    incomplete_configurations: ['by_pod']
+  })
+  renderStep()
+
+  await pickServiceName('cart requests')
+
+  expect(await screen.findByText(/^The custom service by_pod has more series/)).toBeInTheDocument()
+})
+
+test('several custom services with more series than can be checked are named', async () => {
+  answer = searchResult([service('web01', 'cart requests')], {
+    incomplete_configurations: ['by_pod', 'by_route']
+  })
+  renderStep()
+
+  await pickServiceName('cart requests')
+
+  expect(
+    await screen.findByText(/^The custom services by_pod, by_route have more series/)
+  ).toBeInTheDocument()
+})
+
+test('a site that did not answer is named', async () => {
+  answer = searchResult([service('web01', 'cart requests')], { unreachable_sites: ['remote'] })
+  renderStep()
+
+  await pickServiceName('cart requests')
+
+  expect(
+    await screen.findByText('The site remote did not answer, so its services are missing.')
+  ).toBeInTheDocument()
+})
+
+test('several sites that did not answer are named', async () => {
+  answer = searchResult([service('web01', 'cart requests')], {
+    unreachable_sites: ['remote', 'branch']
+  })
+  renderStep()
+
+  await pickServiceName('cart requests')
+
+  expect(
+    await screen.findByText(
+      'The sites remote, branch did not answer, so their services are missing.'
+    )
   ).toBeInTheDocument()
 })
 

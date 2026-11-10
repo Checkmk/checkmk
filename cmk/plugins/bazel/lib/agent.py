@@ -74,7 +74,7 @@ class VersionCache:
         except ValidationError as e:
             LOGGER.warning("Discarding corrupted version cache: %(error)r", {"error": e})
             return None
-        return info if (time.time() - info.timestamp) < self.ttl else None
+        return info if 0 < (time.time() - info.timestamp) < self.ttl else None
 
     def _renew_cached_version_info(
         self, tags_url: str, commit_hash: str
@@ -250,7 +250,12 @@ def _process_data(res: requests.Response, endpoint: Endpoint, args: argparse.Nam
     ):
         return
 
-    sys.stdout.write("<<<bazel_cache_version:sep(0)>>>\n")
+    cache_marker = (
+        f":cached({int(version_info.timestamp)},{args.version_cache})"
+        if args.version_cache > 0
+        else ""
+    )
+    sys.stdout.write(f"<<<bazel_cache_version:sep(0){cache_marker}>>>\n")
     sys.stdout.write(f"{version_info.model_dump_json()}\n")
 
 

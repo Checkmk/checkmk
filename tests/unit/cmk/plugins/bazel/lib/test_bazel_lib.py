@@ -8,6 +8,8 @@
 # mypy: disable-error-code="no-untyped-def"
 
 import json
+import re
+import time
 from collections.abc import Callable
 from pathlib import Path
 from typing import override
@@ -16,8 +18,16 @@ from unittest import mock
 import pytest
 import requests
 
-from cmk.plugins.bazel.lib.agent import agent_bazel_cache_main, parse_arguments, VersionCache
+from cmk.plugins.bazel.lib.agent import (
+    agent_bazel_cache_main,
+    BazelVersion,
+    BazelVersionInfo,
+    parse_arguments,
+    VersionCache,
+)
 from cmk.server_side_programs.v1_unstable import Storage
+
+VERSION_SECTION_PREFIX = "<<<bazel_cache_version:"
 
 METRICS_RESPONSE = """# HELP bazel_remote_azblob_cache_hits The total number of azblob backend cache hits
 # TYPE bazel_remote_azblob_cache_hits counter
@@ -229,6 +239,11 @@ def default_requests_mock_get(url, **kwargs):
     )
 
 
+def _version_section_index(output: list[str]) -> int:
+    [index] = [i for i, line in enumerate(output) if line.startswith(VERSION_SECTION_PREFIX)]
+    return index
+
+
 def test_parse_minimal_arguments() -> None:
     args = parse_arguments(["--host", "bazel-cache.tld"])
     assert args.host == "bazel-cache.tld"
@@ -288,7 +303,7 @@ def test_bazel_cache_agent_output_has_bazel_cache_status_section(
 
 
 @mock.patch("cmk.plugins.bazel.lib.agent.requests.get", default_requests_mock_get)
-def test_bazel_cache_agent_output_has_bazel_cache_version_section(
+def test_bazel_cache_agent_version_section_fresh_fetch_has_cached_marker(
     capsys: pytest.CaptureFixture[str],
     patched_environment: None,
 ) -> None:
@@ -300,6 +315,63 @@ def test_bazel_cache_agent_output_has_bazel_cache_version_section(
     agent_bazel_cache_main(args=args)
     captured = capsys.readouterr()
     output = captured.out.rstrip().split("\n")
+    header = output[_version_section_index(output)]
+    assert re.fullmatch(r"<<<bazel_cache_version:sep\(0\):cached\(\d+,28800\)>>>", header)
+
+
+@mock.patch("cmk.plugins.bazel.lib.agent.requests.get", default_requests_mock_get)
+def test_bazel_cache_agent_version_section_reports_cache_creation_time(
+    capsys: pytest.CaptureFixture[str],
+    patched_environment: None,
+) -> None:
+    cached_at = int(time.time()) - 3600
+    Storage("bazel_cache", "bazel-cache.tld").write(
+        VersionCache.VERSION_CACHE_KEY,
+        BazelVersionInfo(
+            timestamp=cached_at,
+            current="2.5.0",
+            latest=BazelVersion(major=None, minor=None, patch="2.5.1"),
+        ).model_dump_json(),
+    )
+
+    agent_bazel_cache_main(args=parse_arguments(["--host", "bazel-cache.tld"]))
+
+    output = capsys.readouterr().out.rstrip().split("\n")
+    assert f"<<<bazel_cache_version:sep(0):cached({cached_at},28800)>>>" in output
+
+
+@mock.patch("cmk.plugins.bazel.lib.agent.requests.get", default_requests_mock_get)
+def test_bazel_cache_agent_refetches_version_cached_in_the_future(
+    capsys: pytest.CaptureFixture[str],
+    patched_environment: None,
+) -> None:
+    ts_from_the_future = time.time() + 3600
+    Storage("bazel_cache", "bazel-cache.tld").write(
+        VersionCache.VERSION_CACHE_KEY,
+        BazelVersionInfo(
+            timestamp=ts_from_the_future,
+            current="9.9.9",
+            latest=BazelVersion(major=None, minor=None, patch=None),
+        ).model_dump_json(),
+    )
+
+    agent_bazel_cache_main(args=parse_arguments(["--host", "bazel-cache.tld"]))
+
+    output = capsys.readouterr().out.rstrip().split("\n")
+    data = json.loads(output[_version_section_index(output) + 1])
+    assert data["current"] == "2.5.0"
+
+
+@mock.patch("cmk.plugins.bazel.lib.agent.requests.get", default_requests_mock_get)
+def test_bazel_cache_agent_version_section_without_cache_has_no_cached_marker(
+    capsys: pytest.CaptureFixture[str],
+    patched_environment: None,
+) -> None:
+    agent_bazel_cache_main(
+        args=parse_arguments(["--host", "bazel-cache.tld", "--version-cache", "0"])
+    )
+
+    output = capsys.readouterr().out.rstrip().split("\n")
     assert "<<<bazel_cache_version:sep(0)>>>" in output
 
 
@@ -316,7 +388,7 @@ def test_bazel_cache_agent_output_has_correct_current_version(
     agent_bazel_cache_main(args=args)
     captured = capsys.readouterr()
     output = captured.out.rstrip().split("\n")
-    index = output.index("<<<bazel_cache_version:sep(0)>>>") + 1
+    index = _version_section_index(output) + 1
     data = json.loads(output[index])
     assert data["current"] == "2.5.0"
 
@@ -334,7 +406,7 @@ def test_bazel_cache_agent_output_has_patch_version(
     agent_bazel_cache_main(args=args)
     captured = capsys.readouterr()
     output = captured.out.rstrip().split("\n")
-    index = output.index("<<<bazel_cache_version:sep(0)>>>") + 1
+    index = _version_section_index(output) + 1
     data = json.loads(output[index])
     assert data["latest"]["patch"] == "2.5.1"
 
@@ -352,7 +424,7 @@ def test_bazel_cache_agent_output_has_no_major_version(
     agent_bazel_cache_main(args=args)
     captured = capsys.readouterr()
     output = captured.out.rstrip().split("\n")
-    index = output.index("<<<bazel_cache_version:sep(0)>>>") + 1
+    index = _version_section_index(output) + 1
     data = json.loads(output[index])
     assert data["latest"]["major"] is None
 
@@ -370,7 +442,7 @@ def test_bazel_cache_agent_output_has_no_minor_version(
     agent_bazel_cache_main(args=args)
     captured = capsys.readouterr()
     output = captured.out.rstrip().split("\n")
-    index = output.index("<<<bazel_cache_version:sep(0)>>>") + 1
+    index = _version_section_index(output) + 1
     data = json.loads(output[index])
     assert data["latest"]["minor"] is None
 
@@ -414,7 +486,7 @@ def test_bazel_cache_agent_output_has_no_latest_versions(
     agent_bazel_cache_main(args=args)
     captured = capsys.readouterr()
     output = captured.out.rstrip().split("\n")
-    index = output.index("<<<bazel_cache_version:sep(0)>>>") + 1
+    index = _version_section_index(output) + 1
     data = json.loads(output[index])
     assert "latest" in data
     assert data["latest"]["major"] is None
@@ -452,7 +524,7 @@ def test_bazel_cache_agent_output_has_no_version_section(
     agent_bazel_cache_main(args=args)
     captured = capsys.readouterr()
     output = captured.out.rstrip().split("\n")
-    assert "<<<bazel_cache_version:sep(0)>>>" not in output
+    assert not any(line.startswith(VERSION_SECTION_PREFIX) for line in output)
 
 
 @pytest.mark.parametrize(
@@ -746,7 +818,7 @@ def test_bazel_cache_agent_output_without_version_when_tags_are_rate_limited(
     output = capsys.readouterr().out.rstrip().split("\n")
     assert "<<<bazel_cache_status:sep(0)>>>" in output
     assert "<<<bazel_cache_metrics:sep(0)>>>" in output
-    assert "<<<bazel_cache_version:sep(0)>>>" not in output
+    assert not any(line.startswith(VERSION_SECTION_PREFIX) for line in output)
     assert [r.getMessage() for r in caplog.records if r.levelname == "WARNING"] == [
         "Skipping version information: 403 Client Error: rate limit exceeded"
     ]

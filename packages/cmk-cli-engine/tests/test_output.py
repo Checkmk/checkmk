@@ -11,6 +11,13 @@ import pytest
 
 from cmk.cli.engine.output import _pager_environment as _cli_pager_environment
 from cmk.cli.engine.output import write_paged as cli_write_paged
+from cmk.cli.engine.output import write_stderr as cli_write_stderr
+
+
+def test_an_error_is_written_to_stderr(capsys: pytest.CaptureFixture[str]) -> None:
+    cli_write_stderr("ERROR: it broke\n")
+
+    assert capsys.readouterr().err == "ERROR: it broke\n"
 
 
 def test_a_redirected_help_is_written_to_stdout(capsys: pytest.CaptureFixture[str]) -> None:

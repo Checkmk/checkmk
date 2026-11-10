@@ -28,7 +28,7 @@ from cmk.trace.export import exporter_from_config, init_span_processor
 
 from .arguments import RunCommand
 from .discovery import discover_commands
-from .output import write_paged, write_stdout
+from .output import write_paged, write_stderr
 from .run import CommandTracer, CrashReporter, run, Runtime
 
 tracer = trace.get_tracer()
@@ -124,7 +124,7 @@ def main() -> int:
                     log_to_file=enable_file_logging,
                     write_profile=_write_profile,
                     page=partial(write_paged, environ=os.environ),
-                    write=write_stdout,
+                    write_error=write_stderr,
                     logger=configure_logging(),
                 ),
             )

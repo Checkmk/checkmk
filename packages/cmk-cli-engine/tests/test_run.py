@@ -185,7 +185,7 @@ def _runtime(
     log_to_file: Callable[[Path, logging.Logger], None] = lambda _path, _logger: None,
     write_profile: Callable[[Path], None] = lambda _path: None,
     page: Callable[[str], None] = lambda _text: None,
-    write: Callable[[str], None] = lambda _text: None,
+    write_error: Callable[[str], None] = lambda _text: None,
     logger: logging.Logger = null_logger(),
 ) -> CLIRuntime:
     return CLIRuntime(
@@ -197,7 +197,7 @@ def _runtime(
         log_to_file=log_to_file,
         write_profile=write_profile,
         page=page,
-        write=write,
+        write_error=write_error,
         logger=logger,
     )
 
@@ -264,7 +264,7 @@ def test_a_sub_option_argument_the_conversion_rejects_says_so() -> None:
 
     _run(
         ["cmk", "--demo", "--number", "x"],
-        _runtime([_numbered(lambda *_args: CLIExitCode.SUCCESS)], write=written),
+        _runtime([_numbered(lambda *_args: CLIExitCode.SUCCESS)], write_error=written),
     )
 
     assert "--number: Invalid argument" in str(written.calls[0])
@@ -335,7 +335,7 @@ def test_an_unknown_option_exits_three() -> None:
 def test_an_unknown_option_says_what_it_did_not_recognise() -> None:
     written = Recorder()
 
-    _run(["cmk", "--nonsense"], _runtime(write=written))
+    _run(["cmk", "--nonsense"], _runtime(write_error=written))
 
     assert "--nonsense" in str(written.calls[0])
 

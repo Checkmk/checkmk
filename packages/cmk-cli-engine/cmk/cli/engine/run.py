@@ -40,7 +40,7 @@ class Runtime:
     log_to_file: Callable[[Path, logging.Logger], None]
     write_profile: Callable[[Path], None]
     page: Callable[[str], None]
-    write: Callable[[str], None]
+    write_error: Callable[[str], None]
     logger: logging.Logger
 
 
@@ -88,7 +88,7 @@ def _run_command(
     try:
         bound = run_command.command.bind(ParsedOptions(run_command.options, context.logger))
     except ValueError as error:
-        runtime.write(rejection(argv, error))
+        runtime.write_error(rejection(argv, error))
         return CLIExitCode.UNKNOWN
     with runtime.trace_command(context, run_command):
         return bound(context, run_command.args)
@@ -107,7 +107,7 @@ def run(
 
     match parse(commands, argv, logger):
         case InvalidArguments(message=message):
-            runtime.write(message)
+            runtime.write_error(message)
             return CLIExitCode.UNKNOWN.value
         case ShowHelp(global_options=global_options):
             command = partial(_show_help, commands, runtime)

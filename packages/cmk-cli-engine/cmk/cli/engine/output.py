@@ -18,6 +18,12 @@ def write_stdout(txt: str) -> None:
         sys.stdout.flush()
 
 
+def write_stderr(txt: str) -> None:
+    with suppress(IOError):
+        sys.stderr.write(txt)
+        sys.stderr.flush()
+
+
 _DEFAULT_PAGER: Final = "less"
 
 _PAGER_PROMPT: Final = (

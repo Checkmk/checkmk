@@ -21,6 +21,7 @@ export function createSharedGraphFetcher(widgetId: string, cmkToken: string): Gr
         await client.POST('/domain-types/dashboard/actions/fetch-widget-graph-data/invoke', {
           params: { header: { 'Content-Type': 'application/json' } },
           headers: { Authorization: `CMK-TOKEN ${cmkToken}` },
+          signal: params.signal,
           body: {
             source: { type: 'saved', widget_id: widgetId },
             requested_time_range: params.fetchWindow,

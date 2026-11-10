@@ -465,7 +465,8 @@ describe('createSharedGraphFetcher', () => {
     )({
       fetchWindow: { start: 1_000, end: 2_000, step: 60 },
       consolidationFunction: 'max',
-      combinationMode: null
+      combinationMode: null,
+      signal: new AbortController().signal
     })
 
     // The body is matched exactly: the graph definition must not be part of it.
@@ -481,6 +482,23 @@ describe('createSharedGraphFetcher', () => {
       })
     )
     expect(fetched.timeRange).toEqual({ start: 1_000, end: 2_000, step: 60 })
+  })
+
+  test('forwards the abort signal so a superseded load can be cancelled', () => {
+    postSpy.mockReturnValue(new Promise(() => {}))
+    const load = new AbortController()
+
+    void createSharedGraphFetcher(
+      'w1',
+      CMK_TOKEN
+    )({
+      fetchWindow: { start: 1_000, end: 2_000, step: 60 },
+      consolidationFunction: 'max',
+      combinationMode: null,
+      signal: load.signal
+    })
+
+    expect(postSpy.mock.calls[0][1].signal).toBe(load.signal)
   })
 })
 

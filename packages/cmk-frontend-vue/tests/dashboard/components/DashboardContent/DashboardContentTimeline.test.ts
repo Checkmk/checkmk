@@ -97,7 +97,7 @@ function countsPerStep(request: TimelineRequest): Response {
 
 let respond: (request: TimelineRequest) => Response = countsPerStep
 
-useMswServer(
+const server = useMswServer(
   http.post(ENDPOINT, async ({ request }) => {
     const body = (await request.json()) as TimelineRequest
     requests.push(body)
@@ -127,6 +127,22 @@ describe('DashboardContentTimeline', () => {
     expect(request!.step).toBe(HOUR)
     expect(start % HOUR).toBe(0)
     expect(end % HOUR).toBe(0)
+  })
+
+  it('cancels its pending request when it unmounts', async () => {
+    const signals: AbortSignal[] = []
+    server.use(
+      http.post(ENDPOINT, ({ request }) => {
+        signals.push(request.signal)
+        return new Promise<Response>(() => {})
+      })
+    )
+
+    const view = render(DashboardContentTimeline, { props: makeContentProps(HOURLY) })
+    await waitFor(() => expect(signals).toHaveLength(1))
+    view.unmount()
+
+    expect(signals[0]!.aborted).toBe(true)
   })
 
   it('draws the counts as one bar series binned by the configured unit', async () => {

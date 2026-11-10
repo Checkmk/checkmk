@@ -446,12 +446,14 @@ export const dashboardAPI = {
       time_range: WidgetTimeRange
       step: number
     },
-    headers: Record<string, string>
+    headers: Record<string, string>,
+    signal: AbortSignal
   ): Promise<ComputedWidgetResponse<GraphFetchResponse>> => {
     return unwrap(
       await client.POST('/domain-types/dashboard/actions/compute-timeline/invoke', {
         ...CONTENT_TYPE_HEADER,
         headers,
+        signal,
         body
       })
     )

@@ -7,7 +7,7 @@ import type { AddTo, CmkTimeSeriesGraph } from 'cmk-shared-typing/typescript/cmk
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 import { useDebounceFn } from 'cmk-ui-library/lib/useDebounce'
-import { type Ref, computed, readonly, ref, watch } from 'vue'
+import { type Ref, computed, onScopeDispose, readonly, ref, watch } from 'vue'
 
 import { useGlobalRefresh } from '../GlobalTimePicker/globalTimeState'
 import type { HorizontalLine, Metric, ShadedRegion, TimeRange } from '../components/TimeSeriesGraph'
@@ -49,6 +49,8 @@ export interface GraphFetchParams {
   fetchWindow: { start: number; end: number; step: number }
   consolidationFunction: ConsolidationFn
   combinationMode: GraphCombinationMode | null
+  /** Aborted once a newer load supersedes this one, or its owner unmounts. */
+  signal: AbortSignal
 }
 
 interface CurrentRequest {
@@ -103,6 +105,7 @@ export const fetchGraphDataByDefinition: GraphDataFetcher = async (definition, p
     unwrap(
       await client.POST('/domain-types/graph/actions/fetch_data/invoke', {
         params: { header: { 'Content-Type': 'application/json' } },
+        signal: params.signal,
         body: {
           internal: definition.internal,
           requested_time_range: params.fetchWindow,
@@ -171,6 +174,16 @@ export function useGraphData(
   let tokenOwningSlot: number[] = []
   let tokenOwningAllSlots = 0
 
+  let fullLoad: AbortController | null = null
+  const slotLoads = new Map<number, AbortController>()
+
+  function abortEveryLoad(): void {
+    fullLoad?.abort()
+    fullLoad = null
+    slotLoads.forEach((load) => load.abort())
+    slotLoads.clear()
+  }
+
   interface ResolvedEntry {
     graph: ResolvedGraph
     errors: string[]
@@ -200,12 +213,14 @@ export function useGraphData(
   async function fetchOne(
     definition: GraphDataDefinition,
     index: number,
-    request: CurrentRequest
+    request: CurrentRequest,
+    signal: AbortSignal
   ): Promise<ResolvedEntry> {
     const fetched = await fetchGraph(definition, {
       fetchWindow: request.fetchWindow,
       consolidationFunction: getConsolidationFnPerGraph()[index] ?? DEFAULT_CONSOLIDATION_FN,
-      combinationMode: getCombinationMode()
+      combinationMode: getCombinationMode(),
+      signal
     })
     return {
       graph: {
@@ -235,13 +250,16 @@ export function useGraphData(
     const definitions = getGraphs()
     tokenOwningSlot = definitions.map(() => token)
     loadingSlots.value = definitions.map(() => true)
+    abortEveryLoad()
+    const load = new AbortController()
+    fullLoad = load
 
     loadsInFlight.value += 1
 
     try {
       const request = currentRequest()
       const resolved = await Promise.all(
-        definitions.map((definition, index) => fetchOne(definition, index, request))
+        definitions.map((definition, index) => fetchOne(definition, index, request, load.signal))
       )
       if (tokenOwningAllSlots !== token) {
         return
@@ -261,6 +279,9 @@ export function useGraphData(
         errorRef.value = e instanceof Error ? e.message : String(e)
       }
     } finally {
+      if (fullLoad === load) {
+        fullLoad = null
+      }
       settle(token)
     }
   }
@@ -282,10 +303,13 @@ export function useGraphData(
     const token = ++loadToken
     tokenOwningSlot[index] = token
     loadingSlots.value[index] = true
+    slotLoads.get(index)?.abort()
+    const load = new AbortController()
+    slotLoads.set(index, load)
     loadsInFlight.value += 1
 
     try {
-      const entry = await fetchOne(definition, index, currentRequest())
+      const entry = await fetchOne(definition, index, currentRequest(), load.signal)
       if (tokenOwningSlot[index] !== token) {
         return
       }
@@ -299,11 +323,16 @@ export function useGraphData(
         errorRef.value = e instanceof Error ? e.message : String(e)
       }
     } finally {
+      if (slotLoads.get(index) === load) {
+        slotLoads.delete(index)
+      }
       settle(token)
     }
   }
 
   const { refreshTick, contentReloadPending } = useGlobalRefresh()
+
+  onScopeDispose(abortEveryLoad)
 
   // Outside the watch: a graph mounting during a content reload - a hover preview, say - still
   // has to render something.

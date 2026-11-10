@@ -289,6 +289,60 @@ describe('useGraphData — a resize', () => {
   })
 })
 
+describe('useGraphData — a superseded load', () => {
+  function fetchHanging(range: { value: RequestedTimeRange }, canvasWidth: { value: number }) {
+    const signals: AbortSignal[] = []
+    const fetchGraph: GraphDataFetcher = (_definition, params) => {
+      signals.push(params.signal)
+      return new Promise(() => {})
+    }
+    const harness = defineComponent({
+      setup() {
+        useGraphData(
+          () => [{ internal: '{"graphs": []}', add_to: null } as never],
+          () => range.value,
+          () => canvasWidth.value,
+          () => ['max'],
+          () => null,
+          { fetchGraph }
+        )
+        return () => h('div')
+      }
+    })
+    return { signals, view: render(harness) }
+  }
+
+  test('a range change aborts the requests of the load it supersedes', async () => {
+    const range = ref<RequestedTimeRange>({ start: 0, end: 3_600 })
+    const { signals } = fetchHanging(range, ref(800))
+
+    range.value = { start: 3_600, end: 7_200 }
+    await nextTick()
+
+    expect(signals.map((signal) => signal.aborted)).toEqual([true, false])
+  })
+
+  test('an unmount aborts the requests of its loads', () => {
+    const { signals, view } = fetchHanging(ref({ start: 0, end: 3_600 }), ref(800))
+
+    view.unmount()
+
+    expect(signals.map((signal) => signal.aborted)).toEqual([true])
+  })
+
+  test('a load skipped for want of a width aborts nothing', async () => {
+    const range = ref<RequestedTimeRange>({ start: 0, end: 3_600 })
+    const canvasWidth = ref(800)
+    const { signals } = fetchHanging(range, canvasWidth)
+
+    canvasWidth.value = 0
+    range.value = { start: 3_600, end: 7_200 }
+    await nextTick()
+
+    expect(signals.map((signal) => signal.aborted)).toEqual([false])
+  })
+})
+
 function renderWithFetcher(
   fetchGraph: GraphDataFetcher,
   range: RequestedTimeRange = { start: 0, end: 3_600 }

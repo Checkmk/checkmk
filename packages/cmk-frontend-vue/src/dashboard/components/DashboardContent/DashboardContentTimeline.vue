@@ -53,7 +53,7 @@ function onCommitTimeRange(range: RequestedTimeRange): void {
   }
 }
 
-async function fetchBars({ fetchWindow }: GraphFetchParams): Promise<FetchedGraph> {
+async function fetchBars({ fetchWindow, signal }: GraphFetchParams): Promise<FetchedGraph> {
   try {
     const { value } = await dashboardAPI.computeTimeline(
       {
@@ -61,7 +61,8 @@ async function fetchBars({ fetchWindow }: GraphFetchParams): Promise<FetchedGrap
         time_range: { start: isoOf(fetchWindow.start), end: isoOf(fetchWindow.end) },
         step: fetchWindow.step
       },
-      headers
+      headers,
+      signal
     )
     return fetchedGraphOf(value)
   } catch (error) {

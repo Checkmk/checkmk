@@ -21,17 +21,20 @@ flattener parses it (so daemon-side drift fails the config assertions). Neither
 side is mocked, so the two cannot drift apart without breaking CI.
 """
 
+from collections.abc import Iterator
+
 import pytest
 
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.maps.backend.schemas.connection import ConnectionConfig
 from cmk.maps.backend.services.connection_forms import connections_from_global
 from cmk.maps.gui.form_specs.connections import connections_list_spec
+from cmk.utils import password_store
 
 # One stored ``maps_connections`` value exercising every cascade branch the
 # daemon flattener understands: livestatus over a Unix socket, livestatus over
 # TCP, and a Nagios/Raw connection whose metric history rides the REST API (with
-# an explicit password-store secret). Cascades are ``[name, value]`` lists — the
+# a password-store secret). Cascades are ``[name, value]`` lists — the
 # shape the FormSpec disk serialization emits and ``exec_mk_file`` reads back.
 _STORED_CONNECTIONS = [
     {
@@ -79,8 +82,8 @@ _STORED_CONNECTIONS = [
                         "automation_user": "automation",
                         "automation_secret": [
                             "cmk_postprocessed",
-                            "explicit_password",
-                            ["pwid", "s3cr3t"],
+                            "stored_password",
+                            ["maps-raw", ""],
                         ],
                     },
                 ],
@@ -123,6 +126,16 @@ _EXPECTED_CONFIGS = [
 ]
 
 
+pytestmark = pytest.mark.usefixtures("stored_secret")
+
+
+@pytest.fixture(name="stored_secret")
+def fixture_stored_secret() -> Iterator[None]:
+    password_store.save({"maps-raw": "s3cr3t"}, password_store.pending_secrets_path_site())
+    yield
+    password_store.pending_secrets_path_site().unlink(missing_ok=True)
+
+
 def test_gui_formspec_accepts_the_value_the_daemon_parses() -> None:
     # GUI side: the real FormSpec accepts this stored shape unchanged. A renamed
     # dict key or cascade discriminator on the GUI side surfaces here.
@@ -133,7 +146,7 @@ def test_gui_formspec_accepts_the_value_the_daemon_parses() -> None:
 
 def test_daemon_flattens_the_stored_value_into_runtime_configs() -> None:
     # Daemon side: the same stored shape flattens into the runtime configs,
-    # including resolving the explicit password-store secret to plaintext.
+    # including resolving the password-store secret to plaintext.
     assert connections_from_global(_STORED_CONNECTIONS) == _EXPECTED_CONFIGS
 
 

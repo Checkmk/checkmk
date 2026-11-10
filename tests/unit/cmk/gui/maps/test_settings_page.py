@@ -11,7 +11,7 @@ from cmk.ccc.user import UserId
 from cmk.gui.config import Config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.i18n import _l
-from cmk.gui.logged_in import LoggedInSuperUser
+from cmk.gui.logged_in import LoggedInSuperUser, user
 from cmk.gui.watolib.config_domain_name import ConfigVariableGroup
 from cmk.maps.gui._config_domain import (
     CONFIG_VAR_CONNECTIONS,
@@ -72,7 +72,27 @@ def test_the_maps_configure_permission_suffices_for_the_page(
     load_config: Config, with_user: tuple[UserId, str]
 ) -> None:
     with logged_in(with_user[0], "wato.use", "maps.configure"):
-        assert shown_variables(maps_settings(load_config, acting_user=LoggedInSuperUser()))
+        assert shown_variables(maps_settings(load_config, acting_user=user))
+
+
+@pytest.mark.usefixtures("maps_and_gui_variables")
+def test_the_connections_are_hidden_without_the_password_management_permission(
+    load_config: Config, with_user: tuple[UserId, str]
+) -> None:
+    with logged_in(with_user[0], "wato.use", "maps.configure"):
+        shown = shown_variables(maps_settings(load_config, acting_user=user))
+
+    assert CONFIG_VAR_CONNECTIONS not in shown
+
+
+@pytest.mark.usefixtures("maps_and_gui_variables")
+def test_the_connections_are_shown_with_the_password_management_permission(
+    load_config: Config, with_user: tuple[UserId, str]
+) -> None:
+    with logged_in(with_user[0], "wato.use", "maps.configure", "wato.passwords"):
+        shown = shown_variables(maps_settings(load_config, acting_user=user))
+
+    assert CONFIG_VAR_CONNECTIONS in shown
 
 
 def test_the_page_refuses_a_user_with_only_the_global_settings_permission(

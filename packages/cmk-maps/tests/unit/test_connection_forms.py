@@ -15,8 +15,6 @@ import pytest
 from cmk.maps.backend.core.config import settings
 from cmk.maps.backend.services import connection_forms
 
-# An "explicit_password" password-store value resolves to its inline value
-# without needing the on-disk store (the GUI's "explicit" choice).
 _EXPLICIT_SECRET = ("cmk_postprocessed", "explicit_password", ("", "s3cr3t"))
 
 

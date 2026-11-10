@@ -11,6 +11,8 @@ Console's. It renders the global settings editor, which saves each value through
 the global settings REST API, with one topic per Maps config variable group.
 """
 
+from functools import partial
+
 from cmk.gui.breadcrumb import Breadcrumb, make_current_page_breadcrumb_item
 from cmk.gui.config import Config
 from cmk.gui.global_settings import central_settings, ensure_page_access, render_settings_page
@@ -18,7 +20,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.pages import PageContext, PageEndpoint, PageRegistry
 from cmk.gui.watolib.config_domain_name import ConfigVariable
-from cmk.maps.gui._config_domain import ConfigDomainMaps
+from cmk.maps.gui._config_domain import CONFIG_VAR_CONNECTIONS, ConfigDomainMaps
 from cmk.maps.gui._page_menu import maps_breadcrumb
 from cmk.shared_typing.global_settings import GlobalSettingsApp
 
@@ -37,12 +39,16 @@ def maps_settings(config: Config, *, acting_user: LoggedInUser) -> GlobalSetting
         acting_user=acting_user,
         title=title,
         breadcrumb=_breadcrumb(title),
-        shows=_owned_by_maps,
+        shows=partial(_owned_by_maps, acting_user),
     )
 
 
-def _owned_by_maps(config_variable: ConfigVariable) -> bool:
-    return isinstance(config_variable.primary_domain(), ConfigDomainMaps)
+def _owned_by_maps(acting_user: LoggedInUser, config_variable: ConfigVariable) -> bool:
+    if not isinstance(config_variable.primary_domain(), ConfigDomainMaps):
+        return False
+    # Connections pick their secrets from the password store, which Checkmk only
+    # lists to users who may manage passwords.
+    return config_variable.ident() != CONFIG_VAR_CONNECTIONS or acting_user.may("wato.passwords")
 
 
 def _breadcrumb(title: str) -> Breadcrumb:

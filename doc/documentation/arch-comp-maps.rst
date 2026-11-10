@@ -257,7 +257,8 @@ GUI pages
        ``var/maps/images``.
    * - ``maps_settings.py``
      - Setup enabled, provider site, ``wato.use`` and ``maps.configure`` to
-       view; ``wato.edit`` in addition to save
+       view; ``wato.edit`` in addition to save. The connections are shown only
+       with ``wato.passwords``, which listing the password store needs.
      - The Maps settings, rendered with Checkmk's global settings editor.
 
 REST API
@@ -997,9 +998,8 @@ Stored data and secrets
      - Outcome per OrbVis board, and the name each copied OrbVis icon got.
    * - ``etc/check_mk/maps.d/wato/global.mk``, ``sitespecific.mk``
      - Setup
-     - Maps settings, including connections. An automation secret entered as
-       an *explicit password* is stored here in plain text and replicated; a
-       *stored password* is kept as a reference to the password store.
+     - Maps settings, including connections. An automation secret is kept as
+       a reference to the password store. Replicated.
    * - ``etc/check_mk/maps.d/wato/folder_perms.mk``
      - GUI
      - Folder paths, titles and permitted contact groups. Replicated.

@@ -19,6 +19,7 @@ import os
 from collections.abc import Mapping, Sequence
 from typing import Any, Literal
 
+from cmk.gui.form_specs.unstable import PasswordStorePassword
 from cmk.maps.shared.defaults import DEFAULT_CONNECTION_TIMEOUT
 from cmk.maps.shared.validators import CONNECTION_ID_MAX_LENGTH, CONNECTION_ID_PATTERN
 from cmk.rulesets.v1 import Help, Label, Message, Title
@@ -34,7 +35,6 @@ from cmk.rulesets.v1.form_specs import (
     InputHint,
     Integer,
     List,
-    Password,
     String,
 )
 from cmk.rulesets.v1.form_specs.validators import LengthInRange, MatchRegex, ValidationError
@@ -182,7 +182,14 @@ def _metric_history(default_source: str) -> CascadingSingleChoice:
                         ),
                         "automation_secret": DictElement(
                             required=True,
-                            parameter_form=Password(title=Title("Secret")),
+                            parameter_form=PasswordStorePassword(
+                                title=Title("Secret"),
+                                help_text=Help(
+                                    "The automation user's secret from the password store. "
+                                    "The Maps settings are replicated to every site, so they "
+                                    "hold only a reference to it."
+                                ),
+                            ),
                         ),
                     },
                 ),
@@ -275,10 +282,9 @@ def connections_list_spec(
     """The WATO global: the list of monitoring connections Maps queries.
 
     Each entry carries a stable ``id`` (referenced by maps) plus the
-    single-connection fields. The ``automation_secret`` is a ``Password`` form
-    spec: a stored password leaves only a reference in global.mk, an explicit
-    one is kept there in plain text; the daemon resolves both via
-    ``cmk.utils.password_store``.
+    single-connection fields. The ``automation_secret`` is a password from the
+    password store, so global.mk holds only a reference to it; the daemon
+    resolves it via ``cmk.utils.password_store``.
     """
     default_metric_source = "rest_api" if monitoring_core == "nagios" else "livestatus"
     return List(

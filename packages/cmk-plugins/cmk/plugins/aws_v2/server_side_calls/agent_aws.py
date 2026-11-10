@@ -87,6 +87,12 @@ ServiceSelection = (
 )
 
 
+PiggybackNaming = (
+    tuple[Literal["ip_region_instance", "private_dns_name"], None] | tuple[Literal["aws_tag"], str]
+)
+"""How EC2 instances get their host names. "aws_tag" comes with the tag key."""
+
+
 class AwsParams(BaseModel):
     auth: (
         tuple[Literal["access_key"], AccessKeyLogin]
@@ -104,7 +110,7 @@ class AwsParams(BaseModel):
     ) = ("all_tags", None)
     global_services: Mapping[str, ServiceSelection] = {}
     regional_services: Mapping[str, ServiceSelection] = {}
-    piggyback_naming_convention: Literal["ip_region_instance", "private_dns_name"]
+    piggyback_naming_convention: PiggybackNaming
     non_ec2_piggyback_template: Literal["short", "long"] = "long"
     connection_test: bool = False  # only used by the Quick Setup
 
@@ -207,6 +213,14 @@ def _import_tags_args(import_tags: tuple[str, str | None]) -> list[str]:
     return []
 
 
+def _piggyback_naming_args(naming: PiggybackNaming) -> list[str]:
+    match naming:
+        case ("aws_tag", str(tag_key)):
+            return ["--ec2-piggyback-name-tag", tag_key]
+        case (convention, _):
+            return ["--piggyback-naming-convention", convention]
+
+
 def aws_arguments(params: AwsParams, host_config: HostConfig) -> Iterable[SpecialAgentCommand]:
     args = _auth_args(params.auth[1])
     args += _account_args(params.auth[1])
@@ -225,14 +239,9 @@ def aws_arguments(params: AwsParams, host_config: HostConfig) -> Iterable[Specia
         args += _service_args(name, selection, is_global=False)
     args += _tag_args(params.overall_tags, "overall")
     args += _import_tags_args(params.import_tags)
-    args += [
-        "--hostname",
-        host_config.name,
-        "--piggyback-naming-convention",
-        params.piggyback_naming_convention,
-        "--non-ec2-piggyback-template",
-        params.non_ec2_piggyback_template,
-    ]
+    args += ["--hostname", host_config.name]
+    args += _piggyback_naming_args(params.piggyback_naming_convention)
+    args += ["--non-ec2-piggyback-template", params.non_ec2_piggyback_template]
     if params.connection_test:
         args.append("--connection-test")
     yield SpecialAgentCommand(command_arguments=args)

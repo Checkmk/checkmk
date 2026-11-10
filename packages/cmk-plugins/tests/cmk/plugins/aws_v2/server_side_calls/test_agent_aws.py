@@ -13,7 +13,7 @@ from cmk.server_side_calls.v1 import HostConfig, Secret
 
 _MINIMAL_PARAMS: Mapping[str, object] = {
     "auth": ("none", None),
-    "piggyback_naming_convention": "ip_region_instance",
+    "piggyback_naming_convention": ("ip_region_instance", None),
 }
 
 _HOST_ARGS = [
@@ -211,6 +211,25 @@ def test_tag_import_follows_the_rule(
     import_tags: tuple[str, str | None], expected: Sequence[str]
 ) -> None:
     assert _arguments(import_tags=import_tags) == [*expected, *_HOST_ARGS]
+
+
+@pytest.mark.parametrize(
+    ("naming", "expected"),
+    [
+        pytest.param(("private_dns_name", None), ["--piggyback-naming-convention", "private_dns_name"], id="private dns name -> naming convention"),
+        pytest.param(("aws_tag", "Owner"), ["--ec2-piggyback-name-tag", "Owner"], id="aws tag -> name tag with the key"),
+    ],
+)  # fmt: skip
+def test_ec2_host_naming_follows_the_rule(
+    naming: tuple[str, str | None], expected: Sequence[str]
+) -> None:
+    assert _arguments(piggyback_naming_convention=naming) == [
+        "--hostname",
+        "testhost",
+        *expected,
+        "--non-ec2-piggyback-template",
+        "long",
+    ]
 
 
 def test_connection_test_is_requested() -> None:

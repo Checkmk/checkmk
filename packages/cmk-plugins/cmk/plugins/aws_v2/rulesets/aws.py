@@ -797,7 +797,7 @@ def configuration_services() -> Mapping[str, DictElement]:
 def configuration_piggyback_naming() -> Mapping[str, DictElement]:
     return {
         "piggyback_naming_convention": DictElement(
-            parameter_form=SingleChoice(
+            parameter_form=CascadingSingleChoice(
                 title=Title("EC2 instance piggyback names"),
                 help_text=Help(
                     "Each EC2 instance creates a piggyback host.<br><b>Note:</b> "
@@ -806,13 +806,46 @@ def configuration_piggyback_naming() -> Mapping[str, DictElement]:
                     'ID:</b><br>The name consists of "{Private IPv4 '
                     'address}-{Region}-{Instance ID}". This uniquely identifies the '
                     "EC2 instance. It is not possible to ping this host name."
+                    "<br><br><b>AWS tag:</b><br>The name is the value of the AWS tag "
+                    "with the key that you enter."
                 ),
                 elements=[
-                    SingleChoiceElement(
-                        name="ip_region_instance", title=Title("IP - region - instance ID")
+                    CascadingSingleChoiceElement(
+                        name="ip_region_instance",
+                        title=Title("IP - region - instance ID"),
+                        parameter_form=FixedValue(value=None),
                     ),
-                    SingleChoiceElement(
-                        name="private_dns_name", title=Title("Private IP DNS name")
+                    CascadingSingleChoiceElement(
+                        name="private_dns_name",
+                        title=Title("Private IP DNS name"),
+                        parameter_form=FixedValue(value=None),
+                    ),
+                    CascadingSingleChoiceElement(
+                        name="aws_tag",
+                        title=Title("AWS tag"),
+                        parameter_form=String(
+                            title=Title("Tag key"),
+                            help_text=Help(
+                                "The key of the AWS tag whose value is the host name. "
+                                "AWS tag keys are case-sensitive, so the key must match "
+                                "exactly: <tt>Name</tt> does not match <tt>name</tt>."
+                                "<br><br>Checkmk replaces each character that a host name "
+                                "cannot contain with <tt>_</tt>. A host name can contain "
+                                "only the letters a-z and A-Z, the digits 0-9, <tt>-</tt>, "
+                                "<tt>_</tt> and <tt>.</tt>. For example, the tag value "
+                                "<tt>web server/01</tt> gives the host name "
+                                "<tt>web_server_01</tt>, and <tt>Müller</tt> gives "
+                                "<tt>M_ller</tt>."
+                                "<br><br>An EC2 instance gets no host if it does not have "
+                                "the tag, or if the tag value is empty, longer than 240 "
+                                "characters or starts with <tt>-</tt> or <tt>.</tt>."
+                                "<br><br><b>Note:</b> Tag values do not have to be unique. "
+                                "If two EC2 instances get the same host name, only one of "
+                                "them is monitored."
+                            ),
+                            prefill=DefaultValue("Name"),
+                            custom_validate=(validators.LengthInRange(min_value=1, max_value=128),),
+                        ),
                     ),
                 ],
                 prefill=DefaultValue("ip_region_instance"),

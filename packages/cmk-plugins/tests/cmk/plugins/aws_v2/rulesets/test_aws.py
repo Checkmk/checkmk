@@ -40,7 +40,11 @@ def _parameter_form[T](
 
 def _values_of(option: str, params: Mapping[str, object]) -> set[str | Secret]:
     (command,) = special_agent_aws_v2(
-        {"auth": ("none", None), "piggyback_naming_convention": "ip_region_instance", **params},
+        {
+            "auth": ("none", None),
+            "piggyback_naming_convention": ("ip_region_instance", None),
+            **params,
+        },
         HostConfig(name="testhost"),
     )
     arguments: Sequence[str | Secret] = command.command_arguments

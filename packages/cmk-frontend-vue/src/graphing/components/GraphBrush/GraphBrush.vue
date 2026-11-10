@@ -80,12 +80,12 @@ const toTime = (px: number) =>
 // The strip is the plot's renderer pointed at a coarser fetch over a wider extent, so that a
 // series cannot read as one shape here and another there. Only the stroke weights are the
 // strip's own: the plot's would leave 32px of height reading as mostly stroke.
-const M4_BUCKETS = 4000
+const M4_MAX_BUCKETS = 4000
 const STRIP_LINE_WIDTH = 1
 const STRIP_BAND_STROKE_WIDTH = 0.5
 
 const waveformCanvas = ref<HTMLCanvasElement | null>(null)
-const m4CacheStore = createM4CacheStore(M4_BUCKETS)
+const m4CacheStore = createM4CacheStore(M4_MAX_BUCKETS)
 const waveformXScale = scaleTime()
 const waveformYScale = scaleLinear()
 

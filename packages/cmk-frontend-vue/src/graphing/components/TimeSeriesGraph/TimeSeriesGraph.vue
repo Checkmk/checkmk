@@ -99,7 +99,7 @@ const X_AXIS_TOP_RULE_HEIGHT = 1
 const PAN_STEP_SIZE = X_AXIS_BAND_HEIGHT - X_AXIS_TOP_RULE_HEIGHT
 // Bucket count for the M4 cache built on receive (4000 is the default, consider changing
 // if necessary).
-const M4_BUCKETS = 4000
+const M4_MAX_BUCKETS = 4000
 
 const canvas = ref<HTMLCanvasElement | null>(null)
 const resetButton = ref<InstanceType<typeof CmkButton> | null>(null)
@@ -272,7 +272,7 @@ const {
   onCommit: (timeRange) => emit('pan', { timeRange })
 })
 
-const m4CacheStore = createM4CacheStore(M4_BUCKETS)
+const m4CacheStore = createM4CacheStore(M4_MAX_BUCKETS)
 
 // HiDPI: bitmap sized in physical pixels (cssSize * dpr), CSS size in logical pixels, the
 // ctx transform keeps draw code in CSS-pixel coordinates regardless of DPR.

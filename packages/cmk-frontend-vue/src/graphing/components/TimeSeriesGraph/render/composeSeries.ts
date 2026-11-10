@@ -176,7 +176,7 @@ export interface M4CacheStore {
   ensure: (metrics: Metric[], dataTimeRange: TimeRange) => M4Cache[]
 }
 
-export function createM4CacheStore(bucketCount: number): M4CacheStore {
+export function createM4CacheStore(maxBucketCount: number): M4CacheStore {
   let cache: M4Cache[] = []
   let cachedMetrics: Metric[] | null = null
   let cachedTimeRange: TimeRange | null = null
@@ -186,7 +186,7 @@ export function createM4CacheStore(bucketCount: number): M4CacheStore {
       if (cachedMetrics !== metrics || cachedTimeRange !== dataTimeRange) {
         cachedMetrics = metrics
         cachedTimeRange = dataTimeRange
-        cache = metrics.map((metric) => m4(metric.data_points, dataTimeRange, bucketCount))
+        cache = metrics.map((metric) => m4(metric.data_points, dataTimeRange, maxBucketCount))
       }
       return cache
     }

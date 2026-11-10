@@ -52,6 +52,7 @@ pkg_files(
     ],
     prefix = "base/test/root",
     renames = {"//agents/modules/windows:python_3_cab": "python-3.cab"},
+    tags = ["manual"],
 )
 
 # The suite checks the cab in the install dir and unpacks the root one.
@@ -87,6 +88,7 @@ pkg_tar(
         "//agents/wnx/tests/qemu:pytest_stage",
     ],
     extension = "tar.gz",
+    tags = ["manual"],
 )
 
 qemu_test(

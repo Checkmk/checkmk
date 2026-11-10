@@ -37,6 +37,7 @@ pkg_files(
     ],
     prefix = "base/test/root",
     renames = {"//agents/wnx:check_mk_service-windows": "check_mk_agent.exe"},
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -66,5 +67,6 @@ pkg_filegroup(
         ":pytest_stage_test_root_plugins",
         ":pytest_stage_testlib",
     ],
+    tags = ["manual"],
     visibility = ["//agents/wnx/tests:__subpackages__"],
 )

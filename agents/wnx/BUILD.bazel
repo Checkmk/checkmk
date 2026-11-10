@@ -308,6 +308,7 @@ pkg_files(
         ":watest_qemu_script",
     ],
     renames = {":watest-windows": "watest.exe"},
+    tags = ["manual"],
 )
 
 pkg_files(
@@ -384,6 +385,7 @@ pkg_tar(
         ":watest_qemu_test_root_plugins",
     ],
     extension = "tar.gz",
+    tags = ["manual"],
 )
 
 # The whole watest suite inside real-Windows QEMU VMs, one test per tier

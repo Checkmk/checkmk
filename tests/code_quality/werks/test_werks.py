@@ -161,47 +161,53 @@ def test_write_precompiled_werks(
     werks_loader_empty: WerksLoader, all_werks_raw: Sequence[WerkV3]
 ) -> None:
     # Handle both v2 editions (cre, cee, cme, cce, cse) and v3 editions (community, pro, ultimatemt, ultimate, cloud)
-    cre_werks = {w.id: w for w in all_werks_raw if w.edition.value in ("cre", "community")}
-    cee_werks = {w.id: w for w in all_werks_raw if w.edition.value in ("cee", "pro")}
-    cme_werks = {w.id: w for w in all_werks_raw if w.edition.value in ("cme", "ultimatemt")}
-    cce_werks = {w.id: w for w in all_werks_raw if w.edition.value in ("cce", "ultimate")}
-    cse_werks = {w.id: w for w in all_werks_raw if w.edition.value in ("cse", "cloud")}
+    community_werks = {w.id: w for w in all_werks_raw if w.edition.value in ("cre", "community")}
+    pro_werks = {w.id: w for w in all_werks_raw if w.edition.value in ("cee", "pro")}
+    ultimatemt_werks = {w.id: w for w in all_werks_raw if w.edition.value in ("cme", "ultimatemt")}
+    ultimate_werks = {w.id: w for w in all_werks_raw if w.edition.value in ("cce", "ultimate")}
+    cloud_werks = {w.id: w for w in all_werks_raw if w.edition.value in ("cse", "cloud")}
     assert len(all_werks_raw) == sum(
-        [len(cre_werks), len(cee_werks), len(cme_werks), len(cce_werks), len(cse_werks)]
+        [
+            len(community_werks),
+            len(pro_werks),
+            len(ultimatemt_werks),
+            len(ultimate_werks),
+            len(cloud_werks),
+        ]
     )
 
-    assert len(cre_werks) > 9847
-    assert [w for w in cre_werks if 9000 <= w < 10000] == []
+    assert len(community_werks) > 9847
+    assert [w for w in community_werks if 9000 <= w < 10000] == []
     cmk.werks.flavor.cmk.precompile.write_precompiled_werks(
-        werks_loader_empty.base_dir / "werks", cre_werks
+        werks_loader_empty.base_dir / "werks", community_werks
     )
 
-    assert len(cee_werks) > 1358
+    assert len(pro_werks) > 1358
     cmk.werks.flavor.cmk.precompile.write_precompiled_werks(
-        werks_loader_empty.base_dir / "werks-enterprise", cee_werks
+        werks_loader_empty.base_dir / "werks-pro", pro_werks
     )
 
-    assert len(cme_werks) > 50
+    assert len(ultimatemt_werks) > 50
     cmk.werks.flavor.cmk.precompile.write_precompiled_werks(
-        werks_loader_empty.base_dir / "werks-managed", cme_werks
+        werks_loader_empty.base_dir / "werks-ultimatemt", ultimatemt_werks
     )
 
-    assert len(cce_werks) > 10
+    assert len(ultimate_werks) > 10
     cmk.werks.flavor.cmk.precompile.write_precompiled_werks(
-        werks_loader_empty.base_dir / "werks-cloud", cce_werks
+        werks_loader_empty.base_dir / "werks-ultimate", ultimate_werks
     )
 
     cmk.werks.flavor.cmk.precompile.write_precompiled_werks(
-        werks_loader_empty.base_dir / "werks-saas", cse_werks
+        werks_loader_empty.base_dir / "werks-cloud", cloud_werks
     )
 
     werks_loaded = werks_loader_empty.load()
 
-    merged_werks = cre_werks
-    merged_werks.update(cee_werks)
-    merged_werks.update(cme_werks)
-    merged_werks.update(cce_werks)
-    merged_werks.update(cse_werks)
+    merged_werks = community_werks
+    merged_werks.update(pro_werks)
+    merged_werks.update(ultimatemt_werks)
+    merged_werks.update(ultimate_werks)
+    merged_werks.update(cloud_werks)
     assert len(all_werks_raw) == len(merged_werks)
 
     assert set(merged_werks.keys()) == (werks_loaded.keys())

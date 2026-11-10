@@ -21,6 +21,7 @@ import { type AlertModel, emptyAlert } from '@/mode-alerts/types'
 import { CONDITIONS_SPEC, FOLDER_PATHS, MAIN_FOLDER } from './conditions-spec'
 
 const ENDPOINT = `${location.protocol}//${location.host}/api/internal/domain-types/service/collections/all`
+const SEARCH_ENDPOINT = `${location.protocol}//${location.host}/api/internal/domain-types/telemetry_alert/actions/search_services/invoke`
 const PREVIEW_ENDPOINT = `${location.protocol}//${location.host}/api/internal/domain-types/telemetry_alert/actions/preview_data/invoke`
 
 // The services the endpoint reports for any search, so a test only has to say whether
@@ -60,7 +61,21 @@ const server = useMswServer(
     lastQuery = await request.json()
     return HttpResponse.json(collection(matching))
   }),
-  untypedHttp.post(PREVIEW_ENDPOINT, () => HttpResponse.json(preview(units)))
+  untypedHttp.post(PREVIEW_ENDPOINT, () => HttpResponse.json(preview(units))),
+  untypedHttp.post(SEARCH_ENDPOINT, () =>
+    HttpResponse.json({
+      services: [],
+      total: 0,
+      hidden: 0,
+      units: [],
+      undiscovered: 0,
+      undiscovered_hosts: [],
+      incomplete_configurations: [],
+      unreachable_sites: [],
+      service_names: [...new Set(matching.map(([, serviceName]) => serviceName))].sort(),
+      service_names_truncated: false
+    })
+  )
 )
 
 afterEach(() => {

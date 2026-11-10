@@ -5,18 +5,14 @@
  */
 import { userEvent } from '@testing-library/user-event'
 import { cleanup, render, screen, waitFor } from '@testing-library/vue'
-import { useMswServer } from 'cmk-ui-library/vitest.msw'
-// eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
-import { HttpResponse, http } from 'msw'
+import { restApiHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
 import { afterEach, expect, test } from 'vitest'
 import { defineComponent, ref } from 'vue'
 
 import CustomServiceSelect from '@/mode-alerts/CustomServiceSelect.vue'
 import type { ServiceNameMatch } from '@/mode-alerts/types'
 
-const ENDPOINT = `${location.protocol}//${location.host}/api/internal/domain-types/service/collections/all`
-
-const DISCOVERED: Array<[string, string]> = [
+const FOUND: Array<[string, string]> = [
   ['web01', 'HTTP request duration'],
   ['web02', 'HTTP request duration'],
   ['db01', 'Query duration']
@@ -25,20 +21,51 @@ const DISCOVERED: Array<[string, string]> = [
 let sentPattern: string | null = null
 
 useMswServer(
-  http.post(ENDPOINT, async ({ request }) => {
-    const body = (await request.json()) as {
-      query: { expr: Array<{ left: string; right: string }> }
+  restApiHttp.post(
+    '/domain-types/telemetry_alert/actions/search_services/invoke',
+    async ({ request, response }) => {
+      const body = (await request.json()) as { service_match: { pattern: string } }
+      sentPattern = body.service_match.pattern
+      try {
+        new RegExp(sentPattern)
+      } catch (error) {
+        return response.untyped(
+          Response.json(
+            {
+              title: 'Bad Request',
+              status: 400,
+              fields: {
+                'body.service_match.regex.pattern': {
+                  loc: ['body', 'service_match', 'regex', 'pattern'],
+                  msg: `Value error, Not a valid regular expression: ${(error as Error).message}`
+                }
+              }
+            },
+            { status: 400 }
+          )
+        )
+      }
+      const names = [
+        ...new Set(
+          FOUND.filter(([, name]) => new RegExp(`^(?:${sentPattern})`).test(name)).map(
+            ([, name]) => name
+          )
+        )
+      ].sort()
+      return response(200).json({
+        services: [],
+        total: names.length,
+        hidden: 0,
+        units: [],
+        undiscovered: 0,
+        undiscovered_hosts: [],
+        incomplete_configurations: [],
+        unreachable_sites: [],
+        service_names: names,
+        service_names_truncated: false
+      })
     }
-    sentPattern = body.query.expr.find((condition) => condition.left === 'description')?.right ?? ''
-    const matching = DISCOVERED.filter(([, name]) => new RegExp(sentPattern!).test(name))
-    return HttpResponse.json({
-      id: 'all',
-      links: [],
-      value: matching.map(([hostName, serviceName]) => ({
-        extensions: { host_name: hostName, description: serviceName }
-      }))
-    })
-  })
+  )
 )
 
 afterEach(() => {
@@ -65,7 +92,7 @@ async function open(): Promise<void> {
   void userEvent.click(trigger)
 }
 
-test('each discovered service name is offered once, however many hosts have it', async () => {
+test('each service name found is offered once, however many hosts have it', async () => {
   renderSelect()
 
   await open()
@@ -100,17 +127,26 @@ test('an exact match looks for the query literally', async () => {
   await userEvent.type(await screen.findByRole('textbox', { name: 'filter' }), 'duration.')
 
   await waitFor(() => {
-    expect(sentPattern).toBe('duration\\.')
+    expect(sentPattern).toBe('.*duration\\.')
   })
 })
 
-test('a regular expression is passed through untouched', async () => {
+test('a regular expression is searched anywhere in the name', async () => {
   renderSelect('regex')
 
   await open()
   await userEvent.type(await screen.findByRole('textbox', { name: 'filter' }), 'duration.')
 
   await waitFor(() => {
-    expect(sentPattern).toBe('duration.')
+    expect(sentPattern).toBe('.*(?:duration.)')
   })
+})
+
+test('a pattern the server refuses shows its reason', async () => {
+  renderSelect('regex')
+
+  await open()
+  await userEvent.type(await screen.findByRole('textbox', { name: 'filter' }), '(')
+
+  expect(await screen.findByText(/^Not a valid regular expression: /)).toBeInTheDocument()
 })

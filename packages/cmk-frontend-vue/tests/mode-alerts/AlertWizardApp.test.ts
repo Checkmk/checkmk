@@ -20,6 +20,7 @@ import { TIME_PICKER } from './time-picker'
 
 const API_BASE = `${location.protocol}//${location.host}/api/internal`
 const ENDPOINT = `${API_BASE}/domain-types/service/collections/all`
+const SEARCH_ENDPOINT = `${API_BASE}/domain-types/telemetry_alert/actions/search_services/invoke`
 const CREATE_ENDPOINT = `${API_BASE}/domain-types/telemetry_alert/collections/all`
 const PREVIEW_ENDPOINT = `${API_BASE}/domain-types/telemetry_alert/actions/preview_data/invoke`
 const ALERT_ENDPOINT = `${API_BASE}/objects/telemetry_alert/:name`
@@ -32,6 +33,26 @@ const server = useMswServer(
       value: [{ extensions: { host_name: 'web01', description: 'HTTP request duration' } }]
     })
   ),
+  untypedHttp.post(SEARCH_ENDPOINT, () => {
+    const found = {
+      host_name: 'web01',
+      service_name: 'HTTP request duration',
+      discovered: true,
+      unit: 'ms'
+    }
+    return HttpResponse.json({
+      services: [found],
+      total: 1,
+      hidden: 0,
+      units: [{ unit: 'ms', count: 1, example: found }],
+      undiscovered: 0,
+      undiscovered_hosts: [],
+      incomplete_configurations: [],
+      unreachable_sites: [],
+      service_names: ['HTTP request duration'],
+      service_names_truncated: false
+    })
+  }),
   untypedHttp.post(PREVIEW_ENDPOINT, () =>
     HttpResponse.json({
       time_range: { start: 0, end: 3600, step: 60 },
@@ -453,16 +474,24 @@ test('a service name that matches only the custom service does not warn', async 
 
 test('the warning goes once the user picks another service name', async () => {
   server.use(
-    http.post(ENDPOINT, () =>
-      HttpResponse.json({
-        id: 'all',
-        links: [],
-        value: [
-          { extensions: { host_name: 'web01', description: 'HTTP request duration' } },
-          { extensions: { host_name: 'web01', description: 'HTTP response size' } }
-        ]
+    untypedHttp.post(SEARCH_ENDPOINT, () => {
+      const found = [
+        { host_name: 'web01', service_name: 'HTTP request duration', discovered: true, unit: 'ms' },
+        { host_name: 'web01', service_name: 'HTTP response size', discovered: true, unit: 'ms' }
+      ]
+      return HttpResponse.json({
+        services: found,
+        total: 2,
+        hidden: 0,
+        units: [{ unit: 'ms', count: 2, example: found[0] }],
+        undiscovered: 0,
+        undiscovered_hosts: [],
+        incomplete_configurations: [],
+        unreachable_sites: [],
+        service_names: ['HTTP request duration', 'HTTP response size'],
+        service_names_truncated: false
       })
-    )
+    })
   )
   renderApp(null, { prefill: { ...PREFILL, singles_out: false } })
   await nameAlertForCustomService()

@@ -4,18 +4,35 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { CmkApiError } from 'cmk-ui-library/lib/error'
-import { useMswServer } from 'cmk-ui-library/vitest.msw'
+import { restApiHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
 // eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
 import { HttpResponse, http } from 'msw'
 import { afterEach, expect, test } from 'vitest'
 
 import {
   MAX_MATCHES,
+  type ServiceSearchResult,
+  patternErrorOf,
   searchCustomServices,
-  suggestServiceNames
+  searchServices,
+  suggestionPattern
 } from '@/mode-alerts/service-client'
 
 const ENDPOINT = `${location.protocol}//${location.host}/api/internal/domain-types/service/collections/all`
+const SEARCH = '/domain-types/telemetry_alert/actions/search_services/invoke'
+
+const NOTHING: ServiceSearchResult = {
+  services: [],
+  total: 0,
+  hidden: 0,
+  units: [],
+  undiscovered: 0,
+  undiscovered_hosts: [],
+  incomplete_configurations: [],
+  unreachable_sites: [],
+  service_names: [],
+  service_names_truncated: false
+}
 
 interface Condition {
   op: string
@@ -32,6 +49,7 @@ interface RequestBody {
 const ALL_HOSTS = { folder: '/', host_tags: [], host_label_groups: [] }
 
 let sentBody: RequestBody | null = null
+let sentSearch: unknown = null
 let matching: Array<[string, string]> = []
 
 function entries(): Array<{ extensions: { host_name: string; description: string } }> {
@@ -44,6 +62,10 @@ const server = useMswServer(
   http.post(ENDPOINT, async ({ request }) => {
     sentBody = (await request.json()) as RequestBody
     return HttpResponse.json({ id: 'all', links: [], value: entries() })
+  }),
+  restApiHttp.post(SEARCH, async ({ request, response }) => {
+    sentSearch = await request.json()
+    return response(200).json(NOTHING)
   })
 )
 
@@ -53,6 +75,7 @@ function conditionOn(field: string): Condition | undefined {
 
 afterEach(() => {
   sentBody = null
+  sentSearch = null
   matching = []
 })
 
@@ -141,37 +164,6 @@ test('a rejected query is raised as an API error carrying the status', async () 
   await expect(searchCustomServices('regex', '[')).rejects.toSatisfy(
     (error: unknown) => error instanceof CmkApiError && error.statusCode === 400
   )
-})
-
-test('suggestions are searched for, so a partially typed name still finds candidates', async () => {
-  await suggestServiceNames('exact', 'HTTP')
-
-  expect(conditionOn('description')).toEqual({ op: '~', left: 'description', right: 'HTTP' })
-})
-
-test('an exact match escapes the query so it is searched for literally', async () => {
-  await suggestServiceNames('exact', 'duration (p95)')
-
-  expect(conditionOn('description')?.right).toBe('duration \\(p95\\)')
-})
-
-test('a regular expression is searched for as written', async () => {
-  await suggestServiceNames('regex', 'HTTP.*duration')
-
-  expect(conditionOn('description')?.right).toBe('HTTP.*duration')
-})
-
-test('a service name shared by several hosts is suggested once', async () => {
-  matching = [
-    ['web01', 'HTTP request duration'],
-    ['web02', 'HTTP request duration'],
-    ['db01', 'Query duration']
-  ]
-
-  expect(await suggestServiceNames('regex', 'duration')).toEqual({
-    names: ['HTTP request duration', 'Query duration'],
-    truncated: false
-  })
 })
 
 // The filters beyond the custom services check plugin and the service name.
@@ -351,4 +343,66 @@ test('no explicit hosts to exclude selects every host, as in the rule matcher', 
   })
 
   expect(hostFilters()).toEqual([])
+})
+
+function refusal(fields: Record<string, { loc: string[]; msg: string }>) {
+  server.use(
+    restApiHttp.post(SEARCH, ({ response }) =>
+      response.untyped(
+        Response.json({ title: 'Bad Request', status: 400, fields }, { status: 400 })
+      )
+    )
+  )
+}
+
+test('a search sends the service match', async () => {
+  await searchServices('regex', 'HTTP.*duration')
+
+  expect(sentSearch).toEqual({ service_match: { mode: 'regex', pattern: 'HTTP.*duration' } })
+})
+
+test('a search sends the conditions to scope it to their hosts', async () => {
+  const conditions = { folder: '/linux', host_tags: [], host_label_groups: [] }
+
+  await searchServices('exact', 'HTTP request duration', conditions)
+
+  expect(sentSearch).toEqual({
+    service_match: { mode: 'exact', pattern: 'HTTP request duration' },
+    conditions
+  })
+})
+
+test('a search answers what the server found', async () => {
+  expect(await searchServices('exact', 'HTTP request duration')).toEqual(NOTHING)
+})
+
+test('the reason the server refuses the pattern is read from its field', async () => {
+  refusal({
+    'body.service_match.regex.pattern': {
+      loc: ['body', 'service_match', 'regex', 'pattern'],
+      msg: 'Value error, Not a valid regular expression: missing )'
+    }
+  })
+
+  const error = await searchServices('regex', '(').catch((caught: unknown) => caught)
+
+  expect(patternErrorOf(error)).toBe('Not a valid regular expression: missing )')
+})
+
+test('a refusal about another field is not taken for a pattern error', async () => {
+  refusal({
+    'body.conditions.folder': { loc: ['body', 'conditions', 'folder'], msg: 'Unknown folder' }
+  })
+
+  const error = await searchServices('exact', 'x').catch((caught: unknown) => caught)
+
+  expect(patternErrorOf(error)).toBeNull()
+})
+
+test('an exact name is suggested from what it contains, taken literally', () => {
+  expect(suggestionPattern('exact', 'duration (p95)')).toBe('.*duration \\(p95\\)')
+})
+
+test('a regular expression is suggested from anywhere in the name', () => {
+  expect(suggestionPattern('regex', 'CPU|Memory')).toBe('.*(?:CPU|Memory)')
 })

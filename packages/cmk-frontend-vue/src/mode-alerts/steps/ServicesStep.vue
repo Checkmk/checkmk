@@ -306,6 +306,7 @@ async function haveOneUnit(): Promise<boolean> {
               :id="patternFieldId"
               v-model="selectedServiceName"
               :match-type="model.matchType"
+              :conditions="alertConditions(model, folderPaths)"
               :has-error="patternErrors.length > 0"
             />
           </div>

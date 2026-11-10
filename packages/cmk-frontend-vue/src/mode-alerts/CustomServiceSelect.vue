@@ -15,16 +15,19 @@ import type { CmkError } from 'cmk-ui-library/lib/error'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 
 import {
-  MAX_MATCHES,
-  type ServiceNameSuggestions,
-  suggestServiceNames
+  MAX_SERVICES,
+  type ServiceSearchResult,
+  patternErrorOf,
+  searchServices,
+  suggestionPattern
 } from '@/mode-alerts/service-client'
-import type { ServiceNameMatch } from '@/mode-alerts/types'
+import type { AlertConditions, ServiceNameMatch } from '@/mode-alerts/types'
 
 const { _t } = usei18n()
 
-const { matchType, id, hasError } = defineProps<{
+const { matchType, conditions, id, hasError } = defineProps<{
   matchType: ServiceNameMatch
+  conditions?: AlertConditions | undefined
   id?: string | undefined
   hasError?: boolean
 }>()
@@ -32,7 +35,7 @@ const { matchType, id, hasError } = defineProps<{
 const serviceName = defineModel<string | null>({ required: true })
 
 // A regular expression is a pattern, not a name the site can offer, so whatever was typed
-// is always selectable alongside the discovered names.
+// is always selectable alongside the names of the services found.
 function typedName(query: string, names: string[]): Suggestion[] {
   if (query === '' || names.includes(query)) {
     return []
@@ -43,20 +46,22 @@ function typedName(query: string, names: string[]): Suggestion[] {
 async function querySuggestions(
   query: string
 ): Promise<Response | WarningResponse | ErrorResponse> {
-  let result: ServiceNameSuggestions
+  let result: ServiceSearchResult
   try {
-    result = await suggestServiceNames(matchType, query)
+    result = await searchServices('regex', suggestionPattern(matchType, query), conditions)
   } catch (error: unknown) {
-    return new ErrorResponse((error as CmkError)?.message || _t('Unknown error'))
+    return new ErrorResponse(
+      patternErrorOf(error) ?? ((error as CmkError)?.message || _t('Unknown error'))
+    )
   }
   const suggestions: Suggestion[] = [
-    ...typedName(query, result.names),
-    ...result.names.map((name) => ({ name, title: untranslated(name) }))
+    ...typedName(query, result.service_names),
+    ...result.service_names.map((name) => ({ name, title: untranslated(name) }))
   ]
-  if (result.truncated) {
+  if (result.service_names_truncated) {
     return new WarningResponse(
       _t('Only the first %{count} names are shown. Keep typing to narrow them down.', {
-        count: MAX_MATCHES
+        count: MAX_SERVICES
       }),
       suggestions
     )

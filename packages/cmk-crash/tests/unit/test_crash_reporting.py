@@ -19,6 +19,8 @@ import pytest
 
 from cmk.crash import (
     ABCCrashReport,
+    BaseCrashReport,
+    BaseDetails,
     build_crash_info,
     cleanup_crash_reports,
     crash_fingerprint,
@@ -248,6 +250,27 @@ def crash(tmp_path: Path) -> UnitTestCrashReport:
 
 def test_crash_report_type(crash: UnitTestCrashReport) -> None:
     assert crash.type() == "test"
+
+
+def _base_crash(tmp_path: Path) -> BaseCrashReport:
+    try:
+        raise ValueError("crash")
+    except ValueError:
+        return BaseCrashReport(
+            crash_report_base_path=make_crash_report_base_path(tmp_path),
+            crash_info=BaseCrashReport.make_crash_info(
+                _version_info(0.0),
+                BaseDetails(argv=["cmk"], env={}),
+            ),
+        )
+
+
+def test_base_crash_is_stored_with_the_base_crashes(tmp_path: Path) -> None:
+    crash = _base_crash(tmp_path)
+
+    CrashReportStore().save(crash)
+
+    assert (tmp_path / "var/check_mk/crashes/base" / crash.ident_to_text()).is_dir()
 
 
 def test_crash_report_sanitization(crash: UnitTestCrashReport) -> None:

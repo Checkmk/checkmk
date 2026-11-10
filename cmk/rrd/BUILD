@@ -6,6 +6,7 @@ py_library(
     imports = ["../.."],
     visibility = [
         "//cmk:__subpackages__",
+        "//tests/unit/cmk/rrd:__pkg__",
     ],
     deps = [
         "//cmk/utils",

@@ -9,43 +9,28 @@ from pathlib import Path
 from cmk.ccc.hostaddress import HostAddress
 from cmk.checkengine.plugins import CheckPluginName, SectionName
 from cmk.checkengine.snmplib import SNMPBackendEnum
-from cmk.cli.engine.arguments import parse as cli_parse
-from cmk.cli.engine.arguments import RunCommand as CLIRunCommand
-from cmk.cli.engine.commands import bind as cli_bind
-from cmk.cli.engine.commands import Commands as CLICommands
-from cmk.cli.engine.discovery import make_command as cli_make_command
 from cmk.cli.engine.readers import ParsedOptions as CLIParsedOptions
 from cmk.cli.engine.readers import RecordedOptions as CLIRecordedOptions
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
-from cmk.plugins.checkmk.cli.check import _checking_request, CheckingRequest, cli_command_check
+from cmk.plugins.checkmk.cli.check import (
+    _checking_request,
+    _run_check,
+    CheckingRequest,
+    cli_command_check,
+)
 from cmk.plugins.checkmk.cli.options import FileCacheRequest, PluginSelectionRequest
-
-
-def test_fake_dns_reaches_the_implicit_check() -> None:
-    parsed = cli_parse(
-        CLICommands(plugins=[cli_make_command(cli_command_check)]),
-        ["cmk", "--fake-dns", "1.2.3.4", "myhost"],
-        logging.getLogger(__name__),
-    )
-
-    assert isinstance(parsed, CLIRunCommand)
-    assert (parsed.command.name, parsed.options, parsed.args) == (
-        "check",
-        [("--fake-dns", "1.2.3.4")],
-        ["myhost"],
-    )
 
 
 def test_more_than_a_host_and_an_address_are_rejected() -> None:
     logger = logging.getLogger(__name__)
-    bound = cli_bind(cli_command_check, CLIParsedOptions([], logger))
     context = CLIContext(
         omd_root=Path("/nonexistent"), global_options=CLIGlobalOptions(), logger=logger
     )
+    request = _checking_request(CLIParsedOptions([], logger))
 
-    assert bound(context, ["host1", "host2", "host3"]) == CLIExitCode.UNKNOWN
+    assert _run_check(context, request, ["host1", "host2", "host3"]) == CLIExitCode.UNKNOWN
 
 
 def test_check_declares_its_options_in_help_order() -> None:

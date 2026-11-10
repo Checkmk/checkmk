@@ -29,7 +29,6 @@ from cmk.checkengine.snmp_backends.classic import ClassicSNMPBackend
 from cmk.checkengine.snmp_backends.stored_walk import StoredWalkSNMPBackend
 from cmk.checkengine.snmplib import SNMPBackendEnum
 from cmk.checkengine.sources._sources import SNMPSource
-from cmk.cli.engine.discovery import make_command as cli_make_command
 from cmk.cli.engine.readers import ParsedOptions as CLIParsedOptions
 from cmk.cli.engine.readers import RecordedOptions as CLIRecordedOptions
 from cmk.cli.internal import Command as CLICommand
@@ -40,6 +39,7 @@ from cmk.plugins.checkmk.cli import dump
 from cmk.plugins.checkmk.cli.dump import (
     _dump_agent_request,
     _DumpAgentRequest,
+    _run_dump_agent,
     cli_command_dump,
     cli_command_dump_agent,
 )
@@ -100,9 +100,9 @@ def test_the_dump_agent_request_is_read_from_the_command_line() -> None:
 
 def _dump_agent(hostname: HostName, options: list[tuple[str, str]]) -> CLIExitCode:
     logger = logging.getLogger(__name__)
-    bound = cli_make_command(cli_command_dump_agent).bind(CLIParsedOptions(options, logger))
-    return bound(
+    return _run_dump_agent(
         CLIContext(omd_root=_OMD_ROOT, global_options=CLIGlobalOptions(), logger=logger),
+        _dump_agent_request(CLIParsedOptions(options, logger)),
         [hostname],
     )
 

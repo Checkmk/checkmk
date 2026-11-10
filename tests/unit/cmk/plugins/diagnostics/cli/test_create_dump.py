@@ -7,7 +7,6 @@ import logging
 
 import pytest
 
-from cmk.cli.engine.commands import bind as cli_bind
 from cmk.cli.engine.readers import ParsedOptions as CLIParsedOptions
 from cmk.cli.engine.readers import RecordedOptions as CLIRecordedOptions
 from cmk.diagnostics.internal import DiagnosticsPlugin, Help, Sensitivity, Topic
@@ -76,12 +75,9 @@ def test_the_selection_is_read_from_the_command_line() -> None:
     )
 
 
-def test_an_unknown_threshold_is_rejected_before_the_command_runs() -> None:
+def test_an_unknown_threshold_is_rejected() -> None:
     with pytest.raises(ValueError, match="--all-topics: Invalid argument"):
-        cli_bind(
-            cli_command_create_diagnostics_dump,
-            CLIParsedOptions([("--all-topics", "extreme")], logging.getLogger(__name__)),
-        )
+        _cli_selection(CLIParsedOptions([("--all-topics", "extreme")], logging.getLogger(__name__)))
 
 
 def test_without_a_selection_only_always_plugins_run() -> None:

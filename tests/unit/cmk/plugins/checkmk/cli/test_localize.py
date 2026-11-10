@@ -8,12 +8,10 @@ from pathlib import Path
 
 import pytest
 
-from cmk.cli.engine.commands import bind as cli_bind
-from cmk.cli.engine.readers import ParsedOptions as CLIParsedOptions
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
-from cmk.plugins.checkmk.cli.localize import cli_command_localize
+from cmk.plugins.checkmk.cli.localize import _mode_localize
 
 
 def _context() -> CLIContext:
@@ -28,16 +26,12 @@ def _context() -> CLIContext:
     "args", [[], ["frobnicate", "de"]], ids=["without a command", "with an unknown command"]
 )
 def test_a_wrong_invocation_fails(args: list[str]) -> None:
-    bound = cli_bind(cli_command_localize, CLIParsedOptions([], logging.getLogger(__name__)))
-
-    assert bound(_context(), args) == CLIExitCode.FAILURE
+    assert _mode_localize(_context(), None, args) == CLIExitCode.FAILURE
 
 
 def test_a_call_without_a_command_shows_the_usage_on_stderr(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    bound = cli_bind(cli_command_localize, CLIParsedOptions([], logging.getLogger(__name__)))
-
-    bound(_context(), [])
+    _mode_localize(_context(), None, [])
 
     assert "Usage:" in capsys.readouterr().err

@@ -12,8 +12,6 @@ import pytest
 
 import cmk.utils.paths
 from cmk.ccc.hostaddress import HostAddress
-from cmk.cli.engine.discovery import make_command as cli_make_command
-from cmk.cli.engine.readers import ParsedOptions as CLIParsedOptions
 from cmk.cli.engine.readers import RecordedOptions as CLIRecordedOptions
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
@@ -21,6 +19,7 @@ from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.piggyback import backend
 from cmk.plugins.checkmk.cli.maintenance import (
+    _run_cleanup_piggyback,
     cli_command_cleanup_piggyback,
     cli_command_flush,
     cli_command_update_dns_cache,
@@ -90,10 +89,9 @@ def test_cleanup_piggyback_removes_files_beyond_configured_max_age(
     _store_aged(tmp_path, "aged-out", age=_LONG_MAX_AGE + 600)
     _store_aged(tmp_path, "still-valid", age=_LONG_MAX_AGE - 600)
     logger = logging.getLogger(__name__)
-    bound = cli_make_command(cli_command_cleanup_piggyback).bind(CLIParsedOptions([], logger))
-
-    exit_code = bound(
+    exit_code = _run_cleanup_piggyback(
         CLIContext(omd_root=tmp_path, global_options=CLIGlobalOptions(), logger=logger),
+        None,
         (),
     )
 

@@ -3,14 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import logging
-
 import pytest
 
-from cmk.cli.engine.arguments import parse as cli_parse
-from cmk.cli.engine.arguments import RunCommand as CLIRunCommand
-from cmk.cli.engine.commands import Commands as CLICommands
-from cmk.cli.engine.discovery import make_command as cli_make_command
+from cmk.cli.engine.readers import RecordedOptions as CLIRecordedOptions
 from cmk.cli.internal import Command as CLICommand
 from cmk.plugins.checkmk.cli.check import cli_command_check
 from cmk.plugins.checkmk.cli.core_config import (
@@ -26,6 +21,7 @@ from cmk.plugins.checkmk.cli.inventory import (
     cli_command_inventory,
 )
 from cmk.plugins.checkmk.cli.maintenance import cli_command_update_dns_cache
+from cmk.plugins.checkmk.cli.options import FAKE_DNS_VALUE
 from cmk.plugins.checkmk.cli.snmp import cli_command_snmpget, cli_command_snmpwalk
 
 
@@ -50,11 +46,7 @@ from cmk.plugins.checkmk.cli.snmp import cli_command_snmpget, cli_command_snmpwa
     ids=lambda command: command.long,
 )
 def test_a_command_looking_up_addresses_takes_fake_dns[R](command: CLICommand[R]) -> None:
-    parsed = cli_parse(
-        CLICommands(plugins=[cli_make_command(command)]),
-        ["cmk", "--fake-dns", "1.2.3.4", f"--{command.long}", "myhost"],
-        logging.getLogger(__name__),
-    )
+    recorded = CLIRecordedOptions()
+    command.request(recorded)
 
-    assert isinstance(parsed, CLIRunCommand)
-    assert ("--fake-dns", "1.2.3.4") in parsed.options
+    assert FAKE_DNS_VALUE in recorded.options

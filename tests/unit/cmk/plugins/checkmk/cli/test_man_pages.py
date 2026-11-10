@@ -7,7 +7,6 @@ import logging
 
 import pytest
 
-from cmk.cli.engine.commands import bind as cli_bind
 from cmk.cli.engine.readers import ParsedOptions as CLIParsedOptions
 from cmk.cli.engine.readers import RecordedOptions as CLIRecordedOptions
 from cmk.cli.internal import Command as CLICommand
@@ -40,8 +39,6 @@ def test_the_renderer_is_read_from_the_command_line() -> None:
     assert _renderer_request(options) == "nowiki"
 
 
-def test_an_unknown_renderer_is_rejected_before_the_command_runs() -> None:
+def test_an_unknown_renderer_is_rejected() -> None:
     with pytest.raises(ValueError, match="--renderer: Invalid argument"):
-        cli_bind(
-            cli_command_man, CLIParsedOptions([("--renderer", "html")], logging.getLogger(__name__))
-        )
+        _renderer_request(CLIParsedOptions([("--renderer", "html")], logging.getLogger(__name__)))

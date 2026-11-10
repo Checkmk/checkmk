@@ -79,13 +79,11 @@ LambdaSummarySection = Mapping[str, LambdaFunctionConfiguration]
 AWSLimitsByRegion = dict[str, list]
 
 
-def discover_lambda_functions(
+def discover_lambda_function_host(
     section_aws_lambda_summary: LambdaSummarySection | None,
 ) -> DiscoveryResult:
-    if section_aws_lambda_summary is None:
-        return
-    for lambda_function in section_aws_lambda_summary:
-        yield Service(item=lambda_function)
+    if section_aws_lambda_summary:
+        yield Service()
 
 
 def parse_aws(string_table: StringTable) -> GenericAWSSection:

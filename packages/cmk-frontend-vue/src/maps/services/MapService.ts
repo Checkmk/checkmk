@@ -101,8 +101,6 @@ export class MapService {
    * ``loaded`` means an empty answer is no hosts.
    */
   public readonly autoObjects: Ref<'none' | 'loading' | 'loaded' | 'failed'> = ref('none')
-  /** Bumped per map to make a changed background image reload. */
-  public readonly bgRefreshTicks: Ref<Record<string, number>> = ref({})
   /**
    * What an operator chose to look at on a map that takes no writes, by map
    * name. Read-only means "this map is not rewritten", not "the operator may not
@@ -148,10 +146,6 @@ export class MapService {
     >,
     private readonly statesApi: Pick<MapStatesApi, 'fetchAutoObjects'>
   ) {}
-
-  public bumpBgRefreshTick(name: string): void {
-    this.bgRefreshTicks.value[name] = Date.now()
-  }
 
   public async fetchMaps(): Promise<void> {
     const { _t } = usei18n()
@@ -540,11 +534,13 @@ export class MapService {
     const open = this.currentMap.value?.name === name ? this.currentMap.value : null
     const base = open ? { config: open, etag: null } : await this.api.get(name)
     const merged: MapConfig = { ...base.config, ...updates }
-    const { access, signed, etag } = await this.queued(() =>
+    const { access, signed, etag, backgroundImage } = await this.queued(() =>
       // The open map's, read once the saves before it stored theirs.
       this.api.update(merged, envelope, base.etag ?? this.etagOf(name))
     )
     this.etags.set(name, etag)
+    // The server stores a background under a name of its choice.
+    merged.background_image = backgroundImage
     if (open !== null && this.pendingSaveMap === open) {
       // The edits waiting to be saved are in ``merged`` too, which now carries the ETag.
       this.pendingSaveMap = merged
@@ -672,12 +668,18 @@ export class MapService {
         // Updated in place: the server resolves own/foreign/built-in by name and
         // preserves the stored visibility when it is omitted, which is what a
         // routine autosave wants.
-        const { signed, etag } = await this.api.update(
+        const sent = map.background_image
+        const { signed, etag, backgroundImage } = await this.api.update(
           map,
           undefined,
           ifMatch ?? this.etagOf(map.name)
         )
         this.etags.set(map.name, etag)
+        if (map.background_image === sent && (sent ?? null) !== backgroundImage) {
+          // The server stores a background under a name of its choice; left
+          // alone if the map got another one while the save ran.
+          map.background_image = backgroundImage
+        }
         if (this.currentMap.value === map) {
           this.shownSig = signed.sig
         }

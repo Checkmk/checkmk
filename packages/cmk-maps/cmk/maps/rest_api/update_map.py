@@ -22,7 +22,8 @@ from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.openapi.utils import ProblemException, RestAPIRequestGeneralException
-from cmk.maps.gui._images import prune_backgrounds
+from cmk.gui.type_defs import VisualPublic
+from cmk.maps.gui._images import prune_backgrounds, rotate_background
 from cmk.maps.gui._pages import _authorized_public
 from cmk.maps.gui.pagetype import MapPage
 from cmk.maps.gui.store import get_own_map, save_map
@@ -123,11 +124,19 @@ def update_map_v1(
             api_context.etag.verify(map_etag(current))
         previous_background = current.config.map_spec.get("background_image")
         adopt_map_background(spec, str(target_owner), name, current.config.map_spec)
+        # Whoever no longer sees the map loses its background URL along with it.
+        if (
+            stored is not None
+            and _narrows(stored.config.public, public)
+            and isinstance(ref := spec.get("background_image"), str)
+            and ref
+        ):
+            spec["background_image"] = rotate_background(str(target_owner), name, ref)
 
     def saved(stored: MapPage) -> None:
         # A file uploaded for a save still to come stays while the background is unchanged.
         if (ref := stored.config.map_spec.get("background_image")) != previous_background:
-            prune_backgrounds(str(target_owner), name, keep=ref)
+            prune_backgrounds(str(target_owner), name, ref)
 
     try:
         save_map(target_owner, name, spec, public, hidden, verify=verify, saved=saved)
@@ -146,6 +155,16 @@ def update_map_v1(
         body=serialize_map(updated, can_edit=updated.may_edit(), can_delete=updated.may_delete()),
         etag=map_etag(updated),
     )
+
+
+def _narrows(old: VisualPublic | None, new: VisualPublic) -> bool:
+    """Whether someone the map was shown to under ``old`` no longer sees it."""
+    if not old or new is True:
+        return False
+    if not isinstance(old, tuple) or not isinstance(new, tuple):
+        return True
+    (old_kind, old_ids), (new_kind, new_ids) = old, new
+    return old_kind != new_kind or not set(new_ids) >= set(old_ids)
 
 
 ENDPOINT_UPDATE_MAP = VersionedEndpoint(

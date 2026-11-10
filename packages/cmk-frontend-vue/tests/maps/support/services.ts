@@ -121,7 +121,12 @@ export function fakeMapsServices(
   const sessionApi = stubApi(new SessionApi(), { fetchSession: session })
   const mapConfig = stubApi(new MapConfigApi(), {
     list: [],
-    update: { access: aMapAccess(), signed: { config_b64: 'e30', sig: 'saved' }, etag: '"saved"' }
+    update: {
+      access: aMapAccess(),
+      signed: { config_b64: 'e30', sig: 'saved' },
+      etag: '"saved"',
+      backgroundImage: null
+    }
   })
   const mapStates = stubApi(new MapStatesApi(daemon), {
     fetchAutoObjects: [],

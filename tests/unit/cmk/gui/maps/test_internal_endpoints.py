@@ -529,6 +529,63 @@ def test_a_refused_save_keeps_the_stored_background(clients: ClientRegistry) -> 
     assert (cmk.utils.paths.omd_root / "var/maps/backgrounds" / own).read_bytes() == _PNG
 
 
+def test_unpublishing_a_map_gives_its_background_a_new_url(clients: ClientRegistry) -> None:
+    published = {"publish": "all", "hide_in_monitor_menu": False}
+    clients.Maps.create(config=_map("floor"), visibility=published)
+    old = clients.Maps.upload_background("floor", "plan.png", "image/png", _PNG).json["filename"]
+    clients.Maps.edit("floor", _map("floor", background_image=old))
+
+    clients.Maps.edit(
+        "floor",
+        _map("floor", background_image=old),
+        visibility={**published, "publish": "private"},
+    )
+
+    new = _background_of(clients, "floor")
+    backgrounds = cmk.utils.paths.omd_root / "var/maps/backgrounds"
+    assert new != old
+    assert (backgrounds / new).read_bytes() == _PNG
+    assert not (backgrounds / old).exists()
+
+
+def test_a_save_sending_the_background_url_before_unpublishing_keeps_the_new_one(
+    clients: ClientRegistry,
+) -> None:
+    published = {"publish": "all", "hide_in_monitor_menu": False}
+    clients.Maps.create(config=_map("floor"), visibility=published)
+    old = clients.Maps.upload_background("floor", "plan.png", "image/png", _PNG).json["filename"]
+    clients.Maps.edit("floor", _map("floor", background_image=old))
+    clients.Maps.edit(
+        "floor",
+        _map("floor", background_image=old),
+        visibility={**published, "publish": "private"},
+    )
+    new = _background_of(clients, "floor")
+
+    clients.Maps.edit("floor", _map("floor", alias="Edited", background_image=old))
+
+    assert _background_of(clients, "floor") == new
+
+
+def test_a_saved_background_stays_until_a_save_takes_over_an_uploaded_one(
+    clients: ClientRegistry,
+) -> None:
+    clients.Maps.create(config=_map("floor"))
+    saved = clients.Maps.upload_background("floor", "plan.png", "image/png", _PNG).json["filename"]
+    clients.Maps.edit("floor", _map("floor", background_image=saved))
+    replaced = clients.Maps.upload_background("floor", "plan.png", "image/png", _PNG).json[
+        "filename"
+    ]
+    clients.Maps.upload_background("floor", "plan.png", "image/png", _PNG)
+
+    clients.Maps.edit("floor", _map("floor", alias="Edited", background_image=replaced))
+
+    backgrounds = cmk.utils.paths.omd_root / "var/maps/backgrounds"
+    assert _background_of(clients, "floor") == saved
+    assert (backgrounds / saved).is_file()
+    assert not (backgrounds / replaced).exists()
+
+
 def test_a_nagvis_cfg_parses_into_a_draft(clients: ClientRegistry) -> None:
     assert clients.Maps.parse_cfg("floor.cfg", _CFG).json["map"]["alias"] == "Imported"
 

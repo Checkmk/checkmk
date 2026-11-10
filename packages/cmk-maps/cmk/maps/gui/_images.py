@@ -36,6 +36,7 @@ from cmk.maps.gui._image_security import (
     is_valid_image_name,
     safe_image_stem,
 )
+from cmk.maps.gui.pagetype import MapPage
 from cmk.maps.gui.store import all_maps, get_permitted_map, get_permitted_maps, user_maps_path
 from cmk.maps.shared.validators import is_valid_map_name
 
@@ -383,7 +384,7 @@ def _bg_stem(owner: str, name: str) -> str:
     leaves it with a dangling ``background_image``. A fixed-length hex prefix
     cannot collide with a different (owner, map) pair.
 
-    ``name`` is pattern-checked in :func:`_editable_map_owner`, which every
+    ``name`` is pattern-checked in :func:`_editable_map`, which every
     background path resolves through (``[A-Za-z0-9_-]``, so it carries neither a
     ``.`` nor a glob metacharacter the ``{stem}.*`` glob could reach across). The
     served filename adds an unguessable token so the URL is a capability (see
@@ -392,8 +393,8 @@ def _bg_stem(owner: str, name: str) -> str:
     return f"{owner_key}__{name}"
 
 
-def _editable_map_owner(name: str) -> str:
-    """Resolve the real owner of a map the caller may edit, or raise.
+def _editable_map(name: str) -> MapPage:
+    """Resolve the map the caller may edit, with its real owner, or raise.
 
     Mirrors the pagetype permission model: the map's true owner (never a client
     value) so an "edit foreign maps" user can change a foreign map's background,
@@ -412,7 +413,7 @@ def _editable_map_owner(name: str) -> str:
         raise MKUserError("name", _("Unknown map: %(name)s") % {"name": name})
     if not page.may_edit():
         raise MKUserError("name", _("You are not allowed to edit this map."))
-    return str(page.config.owner)
+    return page
 
 
 def upload_background(map_name: str, filename: str, content_type: str, contents: bytes) -> str:
@@ -426,16 +427,16 @@ def upload_background(map_name: str, filename: str, content_type: str, contents:
     The permission split against the image *library* is deliberate, not an
     oversight: the library is site-wide shared state, so writing it needs
     ``maps.configure`` (an admin task), while a background belongs to exactly one
-    map, so ``maps.use`` plus that map's own edit right (``_editable_map_owner``)
+    map, so ``maps.use`` plus that map's own edit right (``_editable_map``)
     is the matching authorization — the same right that lets the user change any
     other field of the map.
 
-    There is deliberately no byte quota: the write is bounded per map (one
-    background, ``MAX_BACKGROUND_BYTES``, older variants unlinked), so total
+    There is deliberately no byte quota: the write is bounded per map (the saved
+    background and one uploaded since, ``MAX_BACKGROUND_BYTES`` each), so total
     usage is bounded by how many maps the user may create — the same bound the
     pagetype store itself has.
     """
-    owner = _editable_map_owner(map_name)
+    page = _editable_map(map_name)
     suffix = _accepted_suffix(
         filename,
         content_type,
@@ -445,18 +446,27 @@ def upload_background(map_name: str, filename: str, content_type: str, contents:
         max_bytes=MAX_BACKGROUND_BYTES,
         too_large=_("Background image must not exceed 10 MB."),
     )
-    return store_background(owner, map_name, suffix, contents)
+    return store_background(
+        str(page.config.owner),
+        map_name,
+        suffix,
+        contents,
+        saved=page.config.map_spec.get("background_image"),
+    )
 
 
-def store_background(owner: str, map_name: str, suffix: str, contents: bytes) -> str:
+def store_background(
+    owner: str, map_name: str, suffix: str, contents: bytes, *, saved: object
+) -> str:
     """Store already vetted ``contents`` as the background of ``owner``'s map.
 
     Returns the filename the map's ``background_image`` refers to. ``map_name`` must
-    be a valid map name (see :func:`_bg_stem`).
+    be a valid map name (see :func:`_bg_stem`). The ``saved`` background stays
+    until a save takes over the new one, so the map as saved keeps its file.
     """
     with store.locked(user_maps_path(UserId(owner))):
         stored = _write_background(owner, map_name, suffix, contents)
-        prune_backgrounds(owner, map_name, keep=stored)
+        prune_backgrounds(owner, map_name, stored, saved)
     return stored
 
 
@@ -467,11 +477,11 @@ def _write_background(owner: str, map_name: str, suffix: str, contents: bytes) -
     return stored
 
 
-def prune_backgrounds(owner: str, map_name: str, *, keep: object) -> None:
+def prune_backgrounds(owner: str, map_name: str, *keep: object) -> None:
     """Remove the background files of ``owner``'s map other than ``keep``."""
     with store.locked(user_maps_path(UserId(owner))):
         for f in _backgrounds_dir().glob(f"{_bg_stem(owner, map_name)}.*"):
-            if f.name != keep:
+            if f.name not in keep:
                 f.unlink(missing_ok=True)
 
 
@@ -487,12 +497,17 @@ def adopt_background(owner: str, map_name: str, ref: str, previous: object) -> s
     deleting either map keeps the other's; None if that map has lost the file. Any
     other file raises :class:`ForeignBackground`. The map's other files stay until
     :func:`prune_backgrounds` after the save."""
+    own = _bg_stem(owner, map_name) + "."
     source = _backgrounds_dir() / ref
     if ref == previous:
         return ref
-    if ref.startswith(_bg_stem(owner, map_name) + "."):
+    if ref.startswith(own):
         if source.is_file():
             return ref
+        # An editor may still hold the name the background had before a save
+        # stored it anew (see :func:`rotate_background`).
+        if isinstance(previous, str) and previous.startswith(own):
+            return previous
         raise ForeignBackground
     for page in get_permitted_maps():
         if ref.startswith(_bg_stem(str(page.config.owner), page.config.name) + "."):
@@ -502,6 +517,20 @@ def adopt_background(owner: str, map_name: str, ref: str, previous: object) -> s
                 return None
             return _write_background(owner, map_name, source.suffix.lower(), contents)
     raise ForeignBackground
+
+
+def rotate_background(owner: str, map_name: str, ref: str) -> str:
+    """Store the background ``ref`` of ``owner``'s map anew under a new name, so its
+    old URL stops working once :func:`prune_backgrounds` ran after the save; another
+    map's file stays as it is."""
+    if not ref.startswith(_bg_stem(owner, map_name) + "."):
+        return ref
+    source = _backgrounds_dir() / ref
+    try:
+        contents = source.read_bytes()
+    except FileNotFoundError:
+        return ref
+    return _write_background(owner, map_name, source.suffix.lower(), contents)
 
 
 def import_background(owner: str, map_name: str, ref: str, contents: bytes) -> str | None:
@@ -522,7 +551,7 @@ def import_background(owner: str, map_name: str, ref: str, contents: bytes) -> s
 
 def delete_background(map_name: str) -> None:
     """Remove a map's background image files (the GUI clears the field on save)."""
-    delete_background_files(_editable_map_owner(map_name), map_name)
+    delete_background_files(str(_editable_map(map_name).config.owner), map_name)
 
 
 def delete_background_files(owner: str, map_name: str, *, keep: str | None = None) -> None:
@@ -530,8 +559,8 @@ def delete_background_files(owner: str, map_name: str, *, keep: str | None = Non
     resolved).
 
     For callers that have already resolved the real owner (e.g. deleting a foreign
-    map, where the caller may delete but not edit it, so ``_editable_map_owner``
+    map, where the caller may delete but not edit it, so ``_editable_map``
     would refuse). The name is still pattern-checked because it feeds the
     ``{stem}.*`` glob that must not reach across maps."""
     if is_valid_map_name(map_name):
-        prune_backgrounds(owner, map_name, keep=keep)
+        prune_backgrounds(owner, map_name, keep)

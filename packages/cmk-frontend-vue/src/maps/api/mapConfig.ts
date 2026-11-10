@@ -25,13 +25,15 @@ export interface SignedBytes {
 }
 
 /**
- * What a save stored: the viewer's access to the map, its signed bytes and the
- * ETag the next save of it sends.
+ * What a save stored: the viewer's access to the map, its signed bytes, the ETag
+ * the next save of it sends and the name of its background, which the server
+ * chooses.
  */
 export interface SavedMap {
   access: MapAccess
   signed: SignedBytes
   etag: string
+  backgroundImage: string | null
 }
 
 /**
@@ -125,7 +127,8 @@ export class MapConfigApi {
     return {
       access: accessFromWire(saved.extensions),
       signed: { config_b64: saved.extensions.config_b64, sig: saved.extensions.sig },
-      etag: requireEtag(result.response)
+      etag: requireEtag(result.response),
+      backgroundImage: saved.extensions.config.background_image ?? null
     }
   }
 

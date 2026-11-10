@@ -5,7 +5,7 @@
  */
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
 // eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
-import { HttpResponse, delay, http } from 'msw'
+import { type HttpHandler, HttpResponse, delay, http } from 'msw'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { nextTick, watchEffect } from 'vue'
 
@@ -184,6 +184,16 @@ beforeEach(() => {
 const saveConflict = http.put('*/api/internal/objects/map/:name', () =>
   HttpResponse.json({ title: 'Precondition failed', detail: "ETag didn't match." }, { status: 412 })
 )
+
+function saveStoringBackground(name: string): HttpHandler {
+  const config = { ...sampleConfig, background_image: name }
+  return http.put('*/api/internal/objects/map/:name', () =>
+    HttpResponse.json(
+      { ...mapObjectResponse, extensions: { ...mapObjectResponse.extensions, config } },
+      { headers: { ETag: '"saved"' } }
+    )
+  )
+}
 
 function newService(): MapService {
   return new MapService(new MapConfigApi(), new MapStatesApi(createMapsDaemonClient()))
@@ -428,6 +438,16 @@ describe('MapService', () => {
       expect(ifMatches).toEqual(['*'])
       expect(saveRequests.at(-1)!.config.alias).toBe('mine')
     })
+
+    it('shows the background under the name the server stored it on an overwrite', async () => {
+      const store = await conflicted()
+      server.use(saveStoringBackground('abc__map1.new.png'))
+      store.currentMap.value!.background_image = 'abc__map1.old.png'
+
+      await store.overwriteOnConflict()
+
+      expect(store.currentMap.value?.background_image).toBe('abc__map1.new.png')
+    })
   })
 
   it('cloneMap() keeps the clone out of the Monitor menu where its source is', async () => {
@@ -666,6 +686,22 @@ describe('MapService', () => {
       public: false,
       hide_in_monitor_menu: false
     })
+  })
+
+  it('saveMapMetadata() shows the background under the name the server stored it', async () => {
+    server.use(saveStoringBackground('abc__map1.new.png'))
+    const store = newService()
+    await store.fetchMaps()
+    await store.fetchMap('map1')
+
+    await store.saveMapMetadata(
+      'map1',
+      { background_image: 'abc__map1.old.png' },
+      { public: false, hide_in_monitor_menu: false }
+    )
+
+    expect(store.currentMap.value?.background_image).toBe('abc__map1.new.png')
+    expect(store.maps.value[0]!.background_image).toBe('abc__map1.new.png')
   })
 
   it('saveMapMetadata() on a map that is not open leaves nothing to save', async () => {

@@ -1146,7 +1146,9 @@ and leaves authentication to the application. For Maps this means:
   listing). Library file names are guessable.
 * ``check_mk/maps/backgrounds/<file>`` is readable without login by anyone who
   knows the URL. The URL stays valid until the background is replaced or
-  removed or the map is deleted. Browsers cache images for about a month.
+  removed, the map is deleted or shown to fewer users. Browsers cache a
+  background for about a month (``Cache-Control: private``); shared caches
+  keep none.
 
 Everything else needs a GUI session. Switching the daemon off
 (``omd config set MAPS off``) stops the daemon only; the Apache configuration,

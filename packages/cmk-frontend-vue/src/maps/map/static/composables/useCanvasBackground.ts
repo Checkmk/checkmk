@@ -6,15 +6,13 @@
 /**
  * The image behind a static map.
  *
- * Two things need arranging. The URL is cache-busted, because a re-upload keeps
- * the same file name and the browser would otherwise keep showing the old
- * picture. And the NagVis-compatible renderer draws the image at its own pixel
- * size, as does every other layout but stretching, so it has to be measured
- * before the canvas can be laid out.
+ * The NagVis-compatible renderer draws the image at its own pixel size, as does
+ * every other layout but stretching, so it has to be measured before the canvas
+ * can be laid out. The URL needs no cache-busting: every upload stores the image
+ * under a new name.
  */
 import { type Ref, computed, ref, watch } from 'vue'
 
-import { useMaps } from '@/maps/services/context'
 import type { MapConfig } from '@/maps/types/api'
 import { backgroundAssetUrl } from '@/maps/utils/assetUrl'
 
@@ -33,33 +31,13 @@ export function useCanvasBackground(source: {
   /** Whether the layout needs the image's own size. */
   measure: () => boolean
 }): CanvasBackground {
-  const maps = useMaps()
-  const cacheKey = ref(Date.now())
-
   const url = computed(() => {
     const background = source.config().background_image
     if (!background) {
       return null
     }
-    return INLINE_URL.test(background)
-      ? background
-      : `${backgroundAssetUrl(background)}?v=${cacheKey.value}`
+    return INLINE_URL.test(background) ? background : backgroundAssetUrl(background)
   })
-
-  watch(
-    () => source.config().background_image,
-    () => {
-      cacheKey.value = Date.now()
-    }
-  )
-  watch(
-    () => maps.bgRefreshTicks.value[source.config().name],
-    (tick) => {
-      if (tick) {
-        cacheKey.value = tick
-      }
-    }
-  )
 
   const naturalSize = ref<{ width: number; height: number } | null>(null)
   // A slow load for a background that has since been replaced must not

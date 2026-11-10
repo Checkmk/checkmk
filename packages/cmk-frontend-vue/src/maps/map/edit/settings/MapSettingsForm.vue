@@ -425,9 +425,6 @@ async function save(): Promise<void> {
       flowView: flowViewFormSpecData.value,
       access: access.snapshot()
     })
-    if (background.changed.value) {
-      mapsStore.bumpBgRefreshTick(props.map.name)
-    }
     background.reset()
     saveAttempted.value = false
     toast.success(_t('Map settings saved'), { label: _t('Open map'), onClick: openMap })

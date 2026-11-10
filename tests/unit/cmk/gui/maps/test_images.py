@@ -79,14 +79,20 @@ def test_background_paths_refuse_a_map_name_the_stem_cannot_carry(
     )
 
     with pytest.raises(MKUserError, match="Invalid map name"):
-        _images._editable_map_owner("net*")  # noqa: SLF001
+        _images._editable_map("net*")  # noqa: SLF001
+
+
+def test_a_background_that_lost_its_file_keeps_its_name() -> None:
+    ref = _images._bg_stem("alice", "net") + ".gone.png"  # noqa: SLF001
+
+    assert _images.rotate_background("alice", "net", ref) == ref
 
 
 def test_a_background_is_stored_only_once_the_owners_maps_are_unlocked() -> None:
     stored: list[str] = []
     storing = threading.Thread(
         target=lambda: stored.append(
-            _images.store_background("alice", "floor", ".png", b"\x89PNG\r\n\x1a\n")
+            _images.store_background("alice", "floor", ".png", b"\x89PNG\r\n\x1a\n", saved=None)
         )
     )
 

@@ -32,6 +32,7 @@ from ._unsorted import (
     ComparableVersion,
     disable,
     disable_outdated,
+    force_active_packages,
     format_file_name,
     get_classified_manifests,
     get_stored_manifests,
@@ -492,7 +493,7 @@ def _command_update_active(
     site_context: SiteContext,
     args: argparse.Namespace,
     path_config: PathConfig | None,
-    _persisting_function: Callable[[Path, bytes], None],
+    persisting_function: Callable[[Path, bytes], None],
 ) -> int:
     """Disable MKP packages that are not suitable for this version, and enable others.
 
@@ -505,8 +506,20 @@ def _command_update_active(
     if path_config is None:
         path_config = read_path_config()
 
+    installer = Installer(site_context.installed_packages_dir)
+    if args.save_active is not None:
+        persisting_function(
+            args.save_active,
+            json.dumps(
+                [
+                    {"name": m.name, "version": m.version}
+                    for m in installer.get_installed_manifests()
+                ]
+            ).encode(),
+        )
+
     uninstalled, installed = update_active_packages(
-        Installer(site_context.installed_packages_dir),
+        installer,
         path_config,
         site_context.package_store,
         site_context.callbacks,
@@ -515,6 +528,62 @@ def _command_update_active(
     )
     site_context.post_package_change_actions([*uninstalled, *installed])
     _writeout_changed_packages(installed=installed, uninstalled=uninstalled, use_json=args.json)
+    return 0
+
+
+def _args_update_active(subparser: argparse.ArgumentParser) -> None:
+    _args_show_all(subparser)
+    subparser.add_argument(
+        "--save-active",
+        type=Path,
+        metavar="FILE",
+        help=(
+            "Before changing anything, record the active packages in FILE."
+            " Pass it to `restore-active` to undo this command."
+        ),
+    )
+
+
+def _args_restore_active(subparser: argparse.ArgumentParser) -> None:
+    _args_show_all(subparser)
+    subparser.add_argument(
+        "file",
+        type=Path,
+        metavar="FILE",
+        help="The file written by `update-active --save-active`",
+    )
+
+
+def _command_restore_active(
+    site_context: SiteContext,
+    args: argparse.Namespace,
+    path_config: PathConfig | None,
+    _persisting_function: Callable[[Path, bytes], None],
+) -> int:
+    """Make the packages recorded by `update-active --save-active` active again"""
+    if path_config is None:
+        path_config = read_path_config()
+
+    try:
+        raw = args.file.read_text()
+    except FileNotFoundError as exc:
+        raise PackageError(f"Missing record of active packages: {args.file}") from exc
+
+    uninstalled, installed, failed = force_active_packages(
+        Installer(site_context.installed_packages_dir),
+        path_config,
+        site_context.package_store,
+        site_context.callbacks,
+        [PackageID(name=p["name"], version=p["version"]) for p in json.loads(raw)],
+        site_version=site_context.version,
+        parse_version=site_context.parse_version,
+    )
+    site_context.post_package_change_actions([*uninstalled, *installed])
+    _writeout_changed_packages(installed=installed, uninstalled=uninstalled, use_json=args.json)
+    if failed:
+        raise PackageError(
+            "Failed to restore: " + ", ".join(f"{p.name} {p.version}" for p in failed)
+        )
     return 0
 
 
@@ -830,7 +899,16 @@ def _parse_arguments(argv: Sequence[str], site_context: SiteContext | None) -> a
         subparsers, "disable-outdated", _no_args, partial(_command_disable_outdated, site_context)
     )
     _add_command(
-        subparsers, "update-active", _args_show_all, partial(_command_update_active, site_context)
+        subparsers,
+        "update-active",
+        _args_update_active,
+        partial(_command_update_active, site_context),
+    )
+    _add_command(
+        subparsers,
+        "restore-active",
+        _args_restore_active,
+        partial(_command_restore_active, site_context),
     )
 
     return parser.parse_args(argv)

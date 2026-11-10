@@ -9,7 +9,7 @@ Don't add new stuff here!
 
 import logging
 import shutil
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from itertools import groupby
 from pathlib import Path
@@ -703,6 +703,61 @@ def update_active_packages(
             parse_version=parse_version,
         ),
     )
+
+
+def force_active_packages(
+    installer: Installer,
+    path_config: PathConfig,
+    package_store: PackageStore,
+    callbacks: Mapping[PackagePart, PackageOperationCallbacks],
+    previously_active: Collection[PackageID],
+    site_version: str,
+    parse_version: Callable[[str], ComparableVersion],
+) -> tuple[Sequence[Manifest], Sequence[Manifest], Sequence[PackageID]]:
+    """Make exactly the given packages the active ones, regardless of the site version"""
+    uninstalled = []
+    failed = []
+    # Uninstall first: the packages to install may ship the same files.
+    for manifest in installer.get_installed_manifests():
+        if manifest.id in previously_active:
+            continue
+        try:
+            _uninstall(installer, path_config, callbacks, manifest)
+        except PackageError as exc:
+            _logger.warning(
+                "[%(name)s %(version)s]: Not uninstalled: %(error)s",
+                {"name": manifest.name, "version": manifest.version, "error": exc},
+            )
+            failed.append(manifest.id)
+        else:
+            uninstalled.append(manifest)
+
+    active = {m.id for m in installer.get_installed_manifests()}
+    installed = []
+    for package_id in previously_active:
+        if package_id in active:
+            continue
+        try:
+            installed.append(
+                install(
+                    installer,
+                    package_store,
+                    package_id,
+                    path_config,
+                    callbacks,
+                    site_version=site_version,
+                    # A previously active package may have been force installed.
+                    version_check=False,
+                    parse_version=parse_version,
+                )
+            )
+        except PackageError as exc:
+            _logger.warning(
+                "[%(name)s %(version)s]: Not installed: %(error)s",
+                {"name": package_id.name, "version": package_id.version, "error": exc},
+            )
+            failed.append(package_id)
+    return uninstalled, installed, failed
 
 
 def _deinstall_inapplicable_active_packages(

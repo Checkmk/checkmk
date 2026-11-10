@@ -5,13 +5,21 @@
 
 import json
 import tarfile
+from dataclasses import replace
 from io import BytesIO
 from pathlib import Path
 
 import pytest
 
 from cmk.mkp_tool import _mkp as mkp
-from cmk.mkp_tool import PackageError, PackageName, PackageStore, PackageVersion, PathConfig
+from cmk.mkp_tool import (
+    Installer,
+    PackageError,
+    PackageName,
+    PackageStore,
+    PackageVersion,
+    PathConfig,
+)
 from cmk.mkp_tool.cli import main, SiteContext
 
 
@@ -383,3 +391,205 @@ class TestPackageLifecycle:
         capsys.readouterr()
 
         assert main(path_config, site_context, argv=["update-active"]) == 0
+
+
+def _mkp_file_with_plugin(
+    tmp_path: Path,
+    name: str,
+    version: str,
+    *,
+    min_required: str = "2.4.0",
+    usable_until: str | None = None,
+) -> Path:
+    (source_dir := tmp_path / "source" / f"{name}-{version}").mkdir(parents=True)
+    (source_dir / f"{name}.py").write_text(version)
+    manifest = mkp.manifest_template(
+        name=PackageName(name),
+        version_packaged="2.4.0",
+        version_required=min_required,
+        version=PackageVersion(version),
+        files={mkp.PackagePart.AGENT_BASED: [Path(f"{name}.py")]},
+    ).model_copy(update={"version_usable_until": usable_until})
+    (path := tmp_path / f"{name}-{version}.mkp").write_bytes(
+        mkp.create_mkp(manifest, lambda _part: source_dir, "2.4.0")
+    )
+    return path
+
+
+def _active(site_context: SiteContext) -> set[tuple[str, str]]:
+    return {
+        (manifest.name, manifest.version)
+        for manifest in Installer(site_context.installed_packages_dir).get_installed_manifests()
+    }
+
+
+class TestRestoreActive:
+    @pytest.fixture(name="old_site")
+    def fixture_old_site(self, site_context: SiteContext) -> SiteContext:
+        return replace(site_context, version="2.4.0")
+
+    @pytest.fixture(name="new_site")
+    def fixture_new_site(self, site_context: SiteContext) -> SiteContext:
+        return replace(site_context, version="2.5.0")
+
+    def test_swapped_out_version_is_active_again(
+        self,
+        old_site: SiteContext,
+        new_site: SiteContext,
+        path_config: PathConfig,
+        tmp_path: Path,
+    ) -> None:
+        old_mkp = _mkp_file_with_plugin(tmp_path, "swapped", "1.0.0", usable_until="2.5.0")
+        new_mkp = _mkp_file_with_plugin(tmp_path, "swapped", "2.0.0", min_required="2.5.0")
+        record = tmp_path / "record"
+        main(path_config, old_site, argv=["add", str(old_mkp)])
+        main(path_config, old_site, argv=["add", str(new_mkp)])
+        main(path_config, old_site, argv=["enable", "swapped", "1.0.0"])
+        main(path_config, old_site, argv=["enable", "swapped", "2.0.0"])
+        main(path_config, new_site, argv=["update-active", "--save-active", str(record)])
+
+        assert main(path_config, new_site, argv=["restore-active", str(record)]) == 0
+
+        assert _active(new_site) == {("swapped", "1.0.0")}
+        assert (path_config.agent_based_plugins_dir / "swapped.py").read_text() == "1.0.0"
+
+    def test_package_removed_by_the_update_is_active_again(
+        self,
+        old_site: SiteContext,
+        new_site: SiteContext,
+        path_config: PathConfig,
+        tmp_path: Path,
+    ) -> None:
+        mkp_file = _mkp_file_with_plugin(tmp_path, "outdated", "1.0.0", usable_until="2.5.0")
+        record = tmp_path / "record"
+        main(path_config, old_site, argv=["add", str(mkp_file)])
+        main(path_config, old_site, argv=["enable", "outdated"])
+        main(path_config, new_site, argv=["update-active", "--save-active", str(record)])
+
+        main(path_config, new_site, argv=["restore-active", str(record)])
+
+        assert _active(new_site) == {("outdated", "1.0.0")}
+        assert (path_config.agent_based_plugins_dir / "outdated.py").exists()
+
+    def test_package_activated_by_the_update_is_inactive_again(
+        self,
+        old_site: SiteContext,
+        new_site: SiteContext,
+        path_config: PathConfig,
+        tmp_path: Path,
+    ) -> None:
+        mkp_file = _mkp_file_with_plugin(tmp_path, "upcoming", "1.0.0", min_required="2.5.0")
+        record = tmp_path / "record"
+        main(path_config, old_site, argv=["add", str(mkp_file)])
+        main(path_config, old_site, argv=["enable", "upcoming"])
+        main(path_config, new_site, argv=["update-active", "--save-active", str(record)])
+
+        main(path_config, new_site, argv=["restore-active", str(record)])
+
+        assert _active(new_site) == set()
+        assert not (path_config.agent_based_plugins_dir / "upcoming.py").exists()
+
+    def test_force_installed_package_is_active_again(
+        self,
+        old_site: SiteContext,
+        new_site: SiteContext,
+        path_config: PathConfig,
+        tmp_path: Path,
+    ) -> None:
+        mkp_file = _mkp_file_with_plugin(tmp_path, "forced", "1.0.0", usable_until="2.4.0")
+        record = tmp_path / "record"
+        main(path_config, old_site, argv=["add", str(mkp_file)])
+        main(path_config, old_site, argv=["enable", "--force-install", "forced"])
+        main(path_config, new_site, argv=["update-active", "--save-active", str(record)])
+
+        main(path_config, new_site, argv=["restore-active", str(record)])
+
+        assert _active(new_site) == {("forced", "1.0.0")}
+
+    def test_package_untouched_by_the_update_stays_active(
+        self,
+        old_site: SiteContext,
+        new_site: SiteContext,
+        path_config: PathConfig,
+        tmp_path: Path,
+    ) -> None:
+        mkp_file = _mkp_file_with_plugin(tmp_path, "timeless", "1.0.0")
+        record = tmp_path / "record"
+        main(path_config, old_site, argv=["add", str(mkp_file)])
+        main(path_config, old_site, argv=["enable", "timeless"])
+        main(path_config, new_site, argv=["update-active", "--save-active", str(record)])
+
+        main(path_config, new_site, argv=["restore-active", str(record)])
+
+        assert _active(new_site) == {("timeless", "1.0.0")}
+
+    def test_enabled_packages_stay_enabled(
+        self,
+        old_site: SiteContext,
+        new_site: SiteContext,
+        path_config: PathConfig,
+        tmp_path: Path,
+    ) -> None:
+        old_mkp = _mkp_file_with_plugin(tmp_path, "swapped", "1.0.0", usable_until="2.5.0")
+        new_mkp = _mkp_file_with_plugin(tmp_path, "swapped", "2.0.0", min_required="2.5.0")
+        record = tmp_path / "record"
+        main(path_config, old_site, argv=["add", str(old_mkp)])
+        main(path_config, old_site, argv=["add", str(new_mkp)])
+        main(path_config, old_site, argv=["enable", "swapped", "1.0.0"])
+        main(path_config, old_site, argv=["enable", "swapped", "2.0.0"])
+        main(path_config, new_site, argv=["update-active", "--save-active", str(record)])
+
+        main(path_config, new_site, argv=["restore-active", str(record)])
+
+        assert {
+            (id_.name, id_.version) for id_ in new_site.package_store.get_enabled_manifests()
+        } == {("swapped", "1.0.0"), ("swapped", "2.0.0")}
+
+    def test_failing_package_does_not_stop_the_restore(
+        self,
+        old_site: SiteContext,
+        new_site: SiteContext,
+        path_config: PathConfig,
+        tmp_path: Path,
+    ) -> None:
+        mkp_file = _mkp_file_with_plugin(tmp_path, "outdated", "1.0.0", usable_until="2.5.0")
+        record = tmp_path / "record"
+        main(path_config, old_site, argv=["add", str(mkp_file)])
+        main(path_config, old_site, argv=["enable", "outdated"])
+        main(path_config, new_site, argv=["update-active"])
+        record.write_text(
+            json.dumps(
+                [{"name": "vanished", "version": "1.0.0"}, {"name": "outdated", "version": "1.0.0"}]
+            )
+        )
+
+        main(path_config, new_site, argv=["restore-active", str(record)])
+
+        assert _active(new_site) == {("outdated", "1.0.0")}
+
+    def test_failing_package_is_reported(
+        self,
+        new_site: SiteContext,
+        path_config: PathConfig,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        record = tmp_path / "record"
+        record.write_text(json.dumps([{"name": "vanished", "version": "1.0.0"}]))
+
+        assert main(path_config, new_site, argv=["restore-active", str(record)]) == 1
+
+        assert "vanished 1.0.0" in capsys.readouterr().err
+
+    def test_missing_record_is_reported(
+        self,
+        new_site: SiteContext,
+        path_config: PathConfig,
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        record = tmp_path / "record"
+
+        assert main(path_config, new_site, argv=["restore-active", str(record)]) == 1
+
+        assert str(record) in capsys.readouterr().err

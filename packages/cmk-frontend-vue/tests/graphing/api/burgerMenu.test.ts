@@ -7,7 +7,7 @@ import { getLocalTimeZone } from '@internationalized/date'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
-import { addToContainer, addToVisual, graphExport } from '@/graphing/api/burgerMenu'
+import { addToContainer, addToVisual, graphExport, loadMenu } from '@/graphing/api/burgerMenu'
 
 function stubLocation(): { restore: () => void } {
   const original = window.location
@@ -162,5 +162,45 @@ describe('graphExport', () => {
     const [, options] = postSpy.mock.calls[0]
     expect(options.body).not.toHaveProperty('y_range_min')
     expect(options.body).not.toHaveProperty('y_range_max')
+  })
+})
+
+describe('loadMenu', () => {
+  const MENU = {
+    data: { value: [{ heading: 'Export', items: [] }] },
+    error: undefined,
+    response: new Response(null, { status: 200 })
+  }
+
+  // The page keeps the menus across tests, so each test has an add type of its own.
+  test('loads the menu of an add type once for the page', async () => {
+    const getSpy = vi.spyOn(client, 'GET').mockResolvedValue(MENU as never)
+
+    const [first, second] = await Promise.all([loadMenu('pnpgraph'), loadMenu('pnpgraph')])
+    const later = await loadMenu('pnpgraph')
+
+    expect(getSpy).toHaveBeenCalledTimes(1)
+    expect([first, second, later].map((groups) => groups[0]!.heading)).toEqual([
+      'Export',
+      'Export',
+      'Export'
+    ])
+  })
+
+  test('loads the menu again after a failed load', async () => {
+    const getSpy = vi
+      .spyOn(client, 'GET')
+      .mockResolvedValueOnce({
+        data: undefined,
+        error: {},
+        response: new Response('', { status: 503, statusText: 'Service Unavailable' })
+      } as never)
+      .mockResolvedValueOnce(MENU as never)
+
+    await expect(loadMenu('custom_graph')).rejects.toThrow()
+    const groups = await loadMenu('custom_graph')
+
+    expect(getSpy).toHaveBeenCalledTimes(2)
+    expect(groups[0]!.heading).toBe('Export')
   })
 })

@@ -141,7 +141,7 @@ const buildCallback = (action: ApiBurgerMenuAction): BurgerMenuCallable => {
   }
 }
 
-export const loadMenu = async (addType: string): Promise<BurgerMenuGroup[]> => {
+const fetchMenu = async (addType: string): Promise<BurgerMenuGroup[]> => {
   const groups: ApiBurgerMenuGroup[] = unwrap(
     await client.GET(_FETCH_CONTEXT_MENU_URL, {
       params: {
@@ -161,4 +161,17 @@ export const loadMenu = async (addType: string): Promise<BurgerMenuGroup[]> => {
       onClick: buildCallback(item.action)
     }))
   }))
+}
+
+const menus = new Map<string, Promise<BurgerMenuGroup[]>>()
+
+/** The menu entries of an add type, loaded once for the page. */
+export const loadMenu = (addType: string): Promise<BurgerMenuGroup[]> => {
+  let menu = menus.get(addType)
+  if (menu === undefined) {
+    menu = fetchMenu(addType)
+    menus.set(addType, menu)
+    menu.catch(() => menus.delete(addType))
+  }
+  return menu
 }

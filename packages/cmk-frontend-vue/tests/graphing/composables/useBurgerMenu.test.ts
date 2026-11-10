@@ -81,17 +81,6 @@ test('loads the menu when enabling coincides with the target being refetched', a
   expect(loadMenu).toHaveBeenCalledWith(ADD_TYPE)
 })
 
-test('does not reload the menu when only the built graph changes', async () => {
-  // Every refresh hands over a new built graph; the menu is the same one.
-  const { addToRef } = mountComposable(true, addTo('a'))
-  expect(loadMenu).toHaveBeenCalledTimes(1)
-
-  addToRef.value = addTo('b')
-  await nextTick()
-
-  expect(loadMenu).toHaveBeenCalledTimes(1)
-})
-
 test('reloads the menu when the add type changes', async () => {
   const { addToRef } = mountComposable(true, addTo('a'))
   expect(loadMenu).toHaveBeenCalledWith(ADD_TYPE)

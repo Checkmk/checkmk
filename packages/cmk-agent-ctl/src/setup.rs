@@ -3,6 +3,8 @@
 // conditions defined in the file COPYING, which is part of this source code package.
 
 use super::environment::{PathResolver, SetupMode};
+#[cfg(unix)]
+use super::log_file;
 #[cfg(windows)]
 use super::misc;
 use super::{cli, constants, types};
@@ -16,6 +18,8 @@ use log::debug;
 #[cfg(windows)]
 use log::info;
 #[cfg(unix)]
+use log::warn;
+#[cfg(unix)]
 use nix::unistd;
 use std::env;
 use std::env::ArgsOs;
@@ -25,6 +29,8 @@ use std::os::unix::fs::MetadataExt;
 #[cfg(unix)]
 use std::path::Path;
 use std::path::PathBuf;
+#[cfg(unix)]
+use std::sync::OnceLock;
 
 // TODO(sk): estimate to move in constants
 #[cfg(windows)]
@@ -108,12 +114,32 @@ pub fn agent_channel() -> types::AgentChannel {
     )
 }
 
+/// flexi_logger shuts its writers down when this handle is dropped.
 #[cfg(unix)]
-fn init_logging(level: &str) -> Result<flexi_logger::LoggerHandle, flexi_logger::FlexiLoggerError> {
-    flexi_logger::Logger::try_with_env_or_str(level)?
-        .log_to_stderr()
-        .format(flexi_logger::default_format)
-        .start()
+static LOGGER: OnceLock<flexi_logger::LoggerHandle> = OnceLock::new();
+
+/// An explicit `RUST_LOG` replaces the specification built here and alone
+/// decides what reaches stderr. Such a `RUST_LOG` can also keep info out of the
+/// log file.
+#[cfg(unix)]
+fn init_logging(level: &str) -> Result<(), flexi_logger::FlexiLoggerError> {
+    use flexi_logger::Duplicate;
+    use log::LevelFilter;
+
+    let stderr_level = level.parse().unwrap_or(LevelFilter::Warn);
+    let stderr = if env::var_os("RUST_LOG").is_some() {
+        Duplicate::All
+    } else {
+        Duplicate::from(stderr_level)
+    };
+    let logger =
+        flexi_logger::Logger::try_with_env_or_str(stderr_level.max(log_file::LEVEL).as_str())?
+            .log_to_writer(Box::new(log_file::LogFile))
+            .duplicate_to_stderr(stderr)
+            .format(flexi_logger::default_format)
+            .start()?;
+    LOGGER.get_or_init(|| logger);
+    Ok(())
 }
 
 #[cfg(windows)]
@@ -245,8 +271,27 @@ fn setup(cli: &cli::Cli) -> AnyhowResult<PathResolver> {
             .unwrap_or(());
     }
 
-    let privileges = privileges_of(&cli.mode);
+    let paths = resolve_paths(privileges_of(&cli.mode))?;
+    if writes_log_file(&cli.mode) {
+        if let Err(err) = log_file::open(&paths.log_path) {
+            warn!("Not logging to {:?}: {err:#}", paths.log_path);
+        }
+    }
+    Ok(paths)
+}
 
+/// Only the daemon writes the log file. A user who calls one of the other modes
+/// reads its log on stderr. `status` runs with every agent call and would flood
+/// the file.
+#[cfg(unix)]
+fn writes_log_file(mode: &cli::Mode) -> bool {
+    matches!(mode, cli::Mode::Daemon(_))
+}
+
+/// Switches to the user required by `privileges`. Returns the paths of the
+/// controller's files for that user.
+#[cfg(unix)]
+fn resolve_paths(privileges: Privileges) -> AnyhowResult<PathResolver> {
     if let Some(install_dir) = setup_single_directory(privileges)
         .context("Failed to initialize under single directory deployment")?
     {
@@ -374,11 +419,27 @@ pub fn init(args: ArgsOs) -> AnyhowResult<(cli::Cli, PathResolver)> {
     Ok((cli, paths))
 }
 
-/// Which modes keep the privileges they were started with. The switch itself
-/// cannot be tested here: becoming another user needs root.
+/// Which modes keep the privileges they were started with, and which write the
+/// log file. The user switch itself cannot be tested here, because becoming
+/// another user needs root.
 #[cfg(all(test, unix))]
 mod tests {
     use super::*;
+
+    /// CMK-41736 AC1, AC3
+    #[test]
+    fn test_only_the_daemon_writes_the_log_file() {
+        assert!(writes_log_file(&cli::Mode::Daemon(
+            cli::DaemonOpts::parse_from(["daemon"])
+        )));
+        assert!(!writes_log_file(&cli::Mode::Update(
+            cli::UpdateOpts::parse_from(["update"])
+        )));
+        assert!(!writes_log_file(&cli::Mode::Status(
+            cli::StatusOpts::parse_from(["status"])
+        )));
+        assert!(!writes_log_file(&cli::Mode::InstallAgent));
+    }
 
     /// The installer unit runs this mode as root, and the package manager and
     /// the root-owned trust anchors both need that root.

@@ -28,6 +28,7 @@ rust_library(
         "src/environment.rs",
         "src/lib.rs",
         "src/log_ext.rs",
+        "src/log_file.rs",
         "src/mailslot_transport.rs",
         "src/misc.rs",
         "src/modes.rs",

@@ -40,6 +40,8 @@ pub const INSTALL_RESULT_FILE: &str = "agent-install-result.json";
 /// Directory holding a verified agent package until the installer has taken it.
 pub const UPDATER_PACKAGE_DIR: &str = "update";
 #[cfg(unix)]
+pub const LOG_FILE: &str = "cmk-agent-ctl.log";
+#[cfg(unix)]
 pub const AGENT_INFO_FILE: &str = "agent_info.json";
 #[cfg(windows)]
 pub const AGENT_INFO_FILE: &str = "checkmk.dat";
@@ -84,11 +86,18 @@ pub const MIN_WIN_VERSION_MAJOR: u64 = 6;
 pub const MIN_WIN_VERSION_MINOR: u64 = 1;
 
 // Log Rotation default parameters
-#[cfg(windows)]
 pub mod log {
     use flexi_logger::{Cleanup, Criterion, Naming};
     pub const FILE_MAX_SIZE: Criterion = Criterion::Size(500000);
+    #[cfg(windows)]
     pub const FILE_NAMING: Naming = Naming::Numbers;
+    /// The empty infix keeps the current file at its plain name. `Naming::Numbers`
+    /// would write to `cmk-agent-ctl_rCURRENT.log`.
+    #[cfg(unix)]
+    pub const FILE_NAMING: Naming = Naming::TimestampsCustomFormat {
+        current_infix: Some(""),
+        format: "r%Y-%m-%d_%H-%M-%S",
+    };
     pub const FILE_CLEANUP: Cleanup = Cleanup::KeepLogFiles(5);
 }
 

@@ -10,6 +10,8 @@ mod constants;
 mod environment;
 #[cfg(windows)]
 mod log_ext;
+#[cfg(unix)]
+mod log_file;
 #[cfg(windows)]
 pub mod mailslot_transport;
 mod misc;

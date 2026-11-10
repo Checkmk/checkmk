@@ -234,6 +234,66 @@ fn test_import_does_not_record_an_update_source() {
     assert!(!test_dir.path().join("agent-update-state.json").exists());
 }
 
+#[cfg(unix)]
+fn run_in(home_dir: &Path, args: &[&str]) -> std::process::Output {
+    assert_cmd::Command::new(common::controller_command_path())
+        .env("DEBUG_HOME_DIR", home_dir)
+        .env_remove("RUST_LOG")
+        .args(args)
+        .assert()
+        .success()
+        .get_output()
+        .clone()
+}
+
+/// The daemon runs until the timeout kills it.
+#[cfg(unix)]
+fn run_daemon_in(home_dir: &Path) -> std::process::Output {
+    assert_cmd::Command::new(common::controller_command_path())
+        .timeout(std::time::Duration::from_secs(2))
+        .env("DEBUG_HOME_DIR", home_dir)
+        .env_remove("RUST_LOG")
+        .arg("daemon")
+        .output()
+        .unwrap()
+}
+
+/// CMK-41736 AC1, AC5
+#[cfg(unix)]
+#[test]
+fn test_the_daemon_logs_info_to_the_file_and_not_to_stderr() {
+    let test_dir = common::setup_test_dir("cmk_agent_ctl_test_log_file-");
+
+    let output = run_daemon_in(test_dir.path());
+
+    let log = fs::read_to_string(test_dir.path().join("cmk-agent-ctl.log")).unwrap();
+    assert!(log.contains("Loaded config"), "{log}");
+    assert!(!String::from_utf8_lossy(&output.stderr).contains("Loaded config"));
+}
+
+/// CMK-41736 AC3
+#[cfg(unix)]
+#[test]
+fn test_status_writes_no_log_file() {
+    let test_dir = common::setup_test_dir("cmk_agent_ctl_test_log_file-");
+
+    run_in(test_dir.path(), &["status", "--no-query-remote"]);
+
+    assert!(!test_dir.path().join("cmk-agent-ctl.log").exists());
+}
+
+/// CMK-41736 AC7
+#[cfg(unix)]
+#[test]
+fn test_an_unwritable_log_file_only_warns() {
+    let test_dir = common::setup_test_dir("cmk_agent_ctl_test_log_file-");
+    fs::create_dir(test_dir.path().join("cmk-agent-ctl.log")).unwrap();
+
+    let output = run_daemon_in(test_dir.path());
+
+    assert!(String::from_utf8_lossy(&output.stderr).contains("Not logging to"));
+}
+
 fn build_status_command_with_log(
     test_dir: &tempfile::TempDir,
     with_log_file: bool,

@@ -50,6 +50,14 @@ pub struct PathResolver {
     #[cfg(unix)]
     pub install_result_path: PathBuf,
 
+    /// The controller's own log on Linux. In the single directory layout it lies
+    /// in `runtime/log/controller`. `runtime/log` is the agent's `MK_LOGDIR` in that
+    /// layout, but systemd starts the controller without that variable. In the
+    /// classic layout the log lies in the controller's home. Windows logs to the
+    /// agent's log instead.
+    #[cfg(unix)]
+    pub log_path: PathBuf,
+
     /// The Python agent updater, a plugin of the Windows agent.
     #[cfg(windows)]
     pub python_updater_plugin_path: PathBuf,
@@ -105,6 +113,8 @@ impl PathResolver {
             updater_package_dir: home_dir.join(constants::UPDATER_PACKAGE_DIR),
             #[cfg(unix)]
             install_result_path: home_dir.join(constants::INSTALL_RESULT_FILE),
+            #[cfg(unix)]
+            log_path: home_dir.join(constants::LOG_FILE),
             #[cfg(windows)]
             python_updater_plugin_path: home_dir
                 .join("plugins")
@@ -113,8 +123,8 @@ impl PathResolver {
     }
 
     /// Single directory deployment, Linux only: baked files below `package/config` and
-    /// `package/agent`, files owned by the controller below `runtime/controller`, all
-    /// relative to `install_dir`.
+    /// `package/agent`, files owned by the controller below `runtime/controller`, its
+    /// log below `runtime/log/controller`, all relative to `install_dir`.
     #[cfg(unix)]
     fn from_install(install_dir: &Path) -> PathResolver {
         let config_dir = install_dir.join("package/config");
@@ -134,6 +144,9 @@ impl PathResolver {
             agent_info_path: agent_dir.join(constants::AGENT_INFO_FILE),
             updater_package_dir: runtime_dir.join(constants::UPDATER_PACKAGE_DIR),
             install_result_path: runtime_dir.join(constants::INSTALL_RESULT_FILE),
+            log_path: install_dir
+                .join("runtime/log/controller")
+                .join(constants::LOG_FILE),
         }
     }
 }
@@ -142,6 +155,7 @@ impl PathResolver {
 mod tests {
     use super::*;
 
+    /// CMK-41736 AC6
     #[test]
     fn test_classic_paths() {
         let home_dir = Path::new("/a/b/c");
@@ -186,8 +200,11 @@ mod tests {
                 PathBuf::from("/usr/lib/check_mk_agent/agent_info.json")
             );
         }
+        #[cfg(unix)]
+        assert_eq!(paths.log_path, home_dir.join("cmk-agent-ctl.log"));
     }
 
+    /// CMK-41736 AC6
     #[cfg(unix)]
     #[test]
     fn test_single_dir_paths() {
@@ -224,6 +241,10 @@ mod tests {
         assert_eq!(
             paths.updater_package_dir,
             install_dir.join("runtime/controller/update")
+        );
+        assert_eq!(
+            paths.log_path,
+            install_dir.join("runtime/log/controller/cmk-agent-ctl.log")
         );
     }
 }

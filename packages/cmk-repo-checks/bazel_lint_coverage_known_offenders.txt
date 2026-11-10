@@ -17,7 +17,6 @@ non-free/packages/cmk-update-agent/build_in_rootfs.sh
 omd/packages/apache-omd/skel/etc/init.d/apache
 omd/packages/maintenance/logrotate
 omd/packages/maintenance/skel/etc/init.d/crontab
-omd/packages/monitoring-plugins/cmk_password_store.h
 omd/packages/omd/restart_site_apache
 omd/packages/omd/skel/etc/init.d/xinetd
 packages/check-cert/src/main.rs

@@ -1,5 +1,6 @@
 load("@aspect_bazel_lib//lib:copy_to_directory.bzl", "copy_to_directory")
 load("@aspect_bazel_lib//lib:directory_path.bzl", "directory_path")
+load("@rules_cc//cc:defs.bzl", "cc_library")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_attributes", "pkg_files", "pkg_mklink")
 load("//bazel/rules:patchelf.bzl", "set_runpath_tree")
 load("//bazel/rules:pkg.bzl", "pkg_tar")
@@ -10,6 +11,15 @@ exports_files(
         "cmk_password_store.h",
     ],
     visibility = ["//visibility:public"],
+)
+
+# Puts the header into a cc_* target, so that clang-tidy covers it once it
+# lints headers (CMK-40386). The monitoring-plugins build includes it through
+# the exported file above. Nothing depends on this target.
+cc_library(
+    name = "cmk_password_store",
+    hdrs = ["cmk_password_store.h"],
+    deps = ["@openssl"],
 )
 
 filegroup(

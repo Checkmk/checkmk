@@ -23,6 +23,7 @@ from pathlib import Path
 
 import cmk.utils.paths
 from cmk.ccc import store
+from cmk.ccc.user import UserId
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.maps.gui._image_security import (
@@ -34,7 +35,7 @@ from cmk.maps.gui._image_security import (
     is_valid_image_name,
     safe_image_stem,
 )
-from cmk.maps.gui.store import get_permitted_map, get_permitted_maps
+from cmk.maps.gui.store import get_permitted_map, get_permitted_maps, user_maps_path
 from cmk.maps.shared.validators import is_valid_map_name
 
 MAX_ICON_BYTES = 2 * 1024 * 1024
@@ -407,9 +408,10 @@ def store_background(owner: str, map_name: str, suffix: str, contents: bytes) ->
     Returns the filename the map's ``background_image`` refers to. ``map_name`` must
     be a valid map name (see :func:`_bg_stem`).
     """
-    stored = _write_background(owner, map_name, suffix, contents)
-    # Map config holds only one filename; drop other-format siblings.
-    delete_background_files(owner, map_name, keep=stored)
+    with store.locked(user_maps_path(UserId(owner))):
+        stored = _write_background(owner, map_name, suffix, contents)
+        # Map config holds only one filename; drop other-format siblings.
+        delete_background_files(owner, map_name, keep=stored)
     return stored
 
 
@@ -451,6 +453,7 @@ def delete_background_files(owner: str, map_name: str, *, keep: str | None = Non
     if not is_valid_map_name(map_name):
         return
     bg_dir = _backgrounds_dir()
-    for f in bg_dir.glob(f"{_bg_stem(owner, map_name)}.*"):
-        if f.name != keep:
-            f.unlink(missing_ok=True)
+    with store.locked(user_maps_path(UserId(owner))):
+        for f in bg_dir.glob(f"{_bg_stem(owner, map_name)}.*"):
+            if f.name != keep:
+                f.unlink(missing_ok=True)

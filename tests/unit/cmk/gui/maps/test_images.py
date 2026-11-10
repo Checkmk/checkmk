@@ -5,14 +5,16 @@
 """Unit tests for the GUI-owned image/background helpers (``cmk.maps.gui._images``)."""
 
 import re
+import threading
 from types import SimpleNamespace
 
 import pytest
 
+from cmk.ccc import store
 from cmk.ccc.user import UserId
 from cmk.gui.exceptions import MKUserError
 from cmk.maps.gui import _images
-from cmk.maps.gui.store import save_map
+from cmk.maps.gui.store import save_map, user_maps_path
 
 
 def test_bg_stem_is_owner_scoped_and_path_safe() -> None:
@@ -129,3 +131,21 @@ def test_background_paths_refuse_a_map_name_the_stem_cannot_carry(
 
     with pytest.raises(MKUserError, match="Invalid map name"):
         _images._editable_map_owner("net*")  # noqa: SLF001
+
+
+def test_a_background_is_stored_only_once_the_owners_maps_are_unlocked() -> None:
+    stored: list[str] = []
+    storing = threading.Thread(
+        target=lambda: stored.append(
+            _images.store_background("alice", "floor", ".png", b"\x89PNG\r\n\x1a\n")
+        )
+    )
+
+    with store.locked(user_maps_path(UserId("alice"))):
+        storing.start()
+        storing.join(timeout=0.2)
+        held_up = not stored
+    storing.join()
+
+    assert held_up
+    assert stored

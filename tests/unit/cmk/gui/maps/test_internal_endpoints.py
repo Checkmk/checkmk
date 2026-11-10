@@ -291,6 +291,19 @@ def test_a_background_is_stored_for_its_map(clients: ClientRegistry) -> None:
     assert filename.endswith(".png")
 
 
+def test_the_last_background_stored_for_a_map_is_kept(clients: ClientRegistry) -> None:
+    clients.Maps.create(config=_map("floor"))
+    clients.Maps.upload_background("floor", "plan.png", "image/png", _PNG)
+    filename = clients.Maps.upload_background("floor", "plan.png", "image/png", _PNG).json[
+        "filename"
+    ]
+
+    stored = cmk.utils.paths.omd_root / "var/maps/backgrounds"
+    assert [p.name for p in stored.iterdir() if p.name.startswith(filename.split(".")[0])] == [
+        filename
+    ]
+
+
 def test_a_background_is_removed(clients: ClientRegistry) -> None:
     clients.Maps.create(config=_map("floor"))
     clients.Maps.upload_background("floor", "plan.png", "image/png", _PNG)

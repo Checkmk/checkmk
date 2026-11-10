@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 // @vitest-environment jsdom
+import { CmkApiError } from 'cmk-ui-library/lib/error'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useMapImport } from '@/maps/home/composables/useMapImport'
@@ -115,6 +116,47 @@ describe('useMapImport', () => {
 
     await api.confirmOverwrite()
     expect(toastWarning).toHaveBeenCalledOnce()
+  })
+
+  const unknownBackground = () =>
+    new CmkApiError('Unknown background image', null, '', 400, {
+      ext: { error: 'unknown_background' }
+    })
+
+  it('stores a map without a background the server does not know, and says so', async () => {
+    vi.mocked(maps.importMapJson).mockRejectedValueOnce(unknownBackground())
+    const api = setup()
+    await api.importFile(
+      fileEvent(new File(['{"name":"m1","objects":[],"background_image":"x.png"}'], 'm1.json'))
+    )
+    expect(maps.importMapJson).toHaveBeenLastCalledWith({ name: 'm1', objects: [] }, false)
+    expect(toastWarning).toHaveBeenCalledOnce()
+    expect(toastError).not.toHaveBeenCalled()
+  })
+
+  it('sends the background along, so a map restored from its own file keeps it', async () => {
+    const api = setup()
+    await api.importFile(
+      fileEvent(new File(['{"name":"m1","objects":[],"background_image":"x.png"}'], 'm1.json'))
+    )
+    expect(maps.importMapJson).toHaveBeenCalledOnce()
+    expect(maps.importMapJson).toHaveBeenCalledWith(
+      { name: 'm1', objects: [], background_image: 'x.png' },
+      false
+    )
+    expect(toastWarning).not.toHaveBeenCalled()
+  })
+
+  it('reports any other refusal of a map with a background as an error', async () => {
+    vi.mocked(maps.importMapJson).mockRejectedValueOnce(
+      new CmkApiError('The map is not valid', null, '', 400, {})
+    )
+    const api = setup()
+    await api.importFile(
+      fileEvent(new File(['{"name":"m1","objects":[],"background_image":"x.png"}'], 'm1.json'))
+    )
+    expect(maps.importMapJson).toHaveBeenCalledOnce()
+    expect(toastError).toHaveBeenCalledOnce()
   })
 
   it('reports a broken file as an error and still clears the input', async () => {

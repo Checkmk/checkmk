@@ -487,7 +487,9 @@ Static files
 * **Backgrounds** belong to one map each. The file name is
   ``<sha256(owner)[:16]>__<map>.<random token><suffix>``. The token
   (``secrets.token_urlsafe(16)``) makes the URL unguessable, so the URL itself
-  is the permission to fetch it.
+  is the permission to fetch it. A map saved with the background of another
+  map the user sees, as a clone is, gets a copy of its own; a map takes no
+  other background file than its own.
 
 Monitoring commands
 -------------------

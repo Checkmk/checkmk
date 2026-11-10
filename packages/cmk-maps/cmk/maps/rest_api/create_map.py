@@ -28,6 +28,7 @@ from cmk.maps.rest_api.endpoint_family import MAPS_FAMILY
 from cmk.maps.rest_api.models.request_models import MapRequest
 from cmk.maps.rest_api.models.response_models import MapObject
 from cmk.maps.rest_api.utils import (
+    adopt_map_background,
     map_etag,
     public_request_from_visibility,
     RW_PERMISSIONS,
@@ -90,6 +91,7 @@ def create_map_v1(api_context: ApiContext, body: MapRequest) -> ApiResponse[MapO
             spec,
             _authorized_public(requested),
             hidden,
+            prepare=lambda: adopt_map_background(spec, user_id, name, {}),
         )
     except MKGeneralException as exc:
         # A failed store write (disk full, unwritable profile) would otherwise
@@ -100,20 +102,24 @@ def create_map_v1(api_context: ApiContext, body: MapRequest) -> ApiResponse[MapO
             detail=str(exc),
         ) from exc
     if not created:
-        # 409 Conflict: the collection POST clashes with an existing resource. A
-        # distinct status (not the 400 used for an invalid name) lets clients tell
-        # "name taken" from "name malformed" — the SPA surfaces each differently.
-        raise RestAPIRequestGeneralException(
-            status=HTTPStatus.CONFLICT,
-            title=f"The map {name!r} already exists",
-            detail="Use the update endpoint to modify an existing map.",
-        )
+        raise _already_exists(name)
     page = get_own_map(user_id, name)
     assert page is not None
     return ApiResponse(
         status_code=HTTPStatus.OK,
         body=serialize_map(page, can_edit=page.may_edit(), can_delete=page.may_delete()),
         etag=map_etag(page),
+    )
+
+
+def _already_exists(name: str) -> RestAPIRequestGeneralException:
+    # 409 Conflict: the collection POST clashes with an existing resource. A
+    # distinct status (not the 400 used for an invalid name) lets clients tell
+    # "name taken" from "name malformed" — the SPA surfaces each differently.
+    return RestAPIRequestGeneralException(
+        status=HTTPStatus.CONFLICT,
+        title=f"The map {name!r} already exists",
+        detail="Use the update endpoint to modify an existing map.",
     )
 
 

@@ -44,6 +44,7 @@ def parse_cfg_v1(body: MapsCfgImportRequest) -> MapsCfgImportResponse:
             )
             % {"image": background}
         )
+        del map_config["background_image"]
     return MapsCfgImportResponse(map_config=dict(map_config), warnings=warnings)
 
 

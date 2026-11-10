@@ -410,15 +410,52 @@ def store_background(owner: str, map_name: str, suffix: str, contents: bytes) ->
     """
     with store.locked(user_maps_path(UserId(owner))):
         stored = _write_background(owner, map_name, suffix, contents)
-        # Map config holds only one filename; drop other-format siblings.
-        delete_background_files(owner, map_name, keep=stored)
+        prune_backgrounds(owner, map_name, keep=stored)
     return stored
 
 
 def _write_background(owner: str, map_name: str, suffix: str, contents: bytes) -> str:
     stored = f"{_bg_stem(owner, map_name)}.{secrets.token_urlsafe(16)}{suffix}"
-    store.save_bytes_to_file(_backgrounds_dir() / stored, contents)
+    with store.locked(user_maps_path(UserId(owner))):
+        store.save_bytes_to_file(_backgrounds_dir() / stored, contents)
     return stored
+
+
+def prune_backgrounds(owner: str, map_name: str, *, keep: object) -> None:
+    """Remove the background files of ``owner``'s map other than ``keep``."""
+    with store.locked(user_maps_path(UserId(owner))):
+        for f in _backgrounds_dir().glob(f"{_bg_stem(owner, map_name)}.*"):
+            if f.name != keep:
+                f.unlink(missing_ok=True)
+
+
+class ForeignBackground(Exception):
+    """The background is neither of the map nor of a map the user sees."""
+
+
+def adopt_background(owner: str, map_name: str, ref: str, previous: object) -> str | None:
+    """The background ``ref`` as one of the files of ``owner``'s map.
+
+    The stored background and the map's own files stay as they are. The background
+    of another map the user sees, as a clone carries it, is copied for the map, so
+    deleting either map keeps the other's; None if that map has lost the file. Any
+    other file raises :class:`ForeignBackground`. The map's other files stay until
+    :func:`prune_backgrounds` after the save."""
+    source = _backgrounds_dir() / ref
+    if ref == previous:
+        return ref
+    if ref.startswith(_bg_stem(owner, map_name) + "."):
+        if source.is_file():
+            return ref
+        raise ForeignBackground
+    for page in get_permitted_maps():
+        if ref.startswith(_bg_stem(str(page.config.owner), page.config.name) + "."):
+            try:
+                contents = source.read_bytes()
+            except FileNotFoundError:
+                return None
+            return _write_background(owner, map_name, source.suffix.lower(), contents)
+    raise ForeignBackground
 
 
 def import_background(owner: str, map_name: str, ref: str, contents: bytes) -> str | None:
@@ -450,10 +487,5 @@ def delete_background_files(owner: str, map_name: str, *, keep: str | None = Non
     map, where the caller may delete but not edit it, so ``_editable_map_owner``
     would refuse). The name is still pattern-checked because it feeds the
     ``{stem}.*`` glob that must not reach across maps."""
-    if not is_valid_map_name(map_name):
-        return
-    bg_dir = _backgrounds_dir()
-    with store.locked(user_maps_path(UserId(owner))):
-        for f in bg_dir.glob(f"{_bg_stem(owner, map_name)}.*"):
-            if f.name != keep:
-                f.unlink(missing_ok=True)
+    if is_valid_map_name(map_name):
+        prune_backgrounds(owner, map_name, keep=keep)

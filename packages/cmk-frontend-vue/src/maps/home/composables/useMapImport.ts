@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { CmkApiError } from 'cmk-ui-library/lib/error'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { type Ref, ref } from 'vue'
 
@@ -12,7 +13,7 @@ import type { CfgImport, MapConfig } from '@/maps/types/api'
 
 interface ImportConflict {
   name: string
-  overwrite: () => Promise<unknown>
+  overwrite: () => Promise<string[]>
   // Carried along so confirming the overwrite still reports what the import
   // had to guess — the answer arrived before the conflict was known.
   warnings: string[]
@@ -29,6 +30,10 @@ interface ImportConflict {
  * The ``.cfg`` importer has to remap the source installation's monitoring
  * backends onto the connections configured here; it names every such guess, and
  * those are surfaced once the map is actually stored.
+ *
+ * A map file names its background image but does not bring it. Where the
+ * server knows no such image for the map, the map is stored without it and the
+ * operator is told to upload it.
  */
 export function useMapImport(): {
   conflict: Ref<ImportConflict | null>
@@ -58,6 +63,34 @@ export function useMapImport(): {
     }
   }
 
+  function isUnknownBackground(error: unknown): boolean {
+    if (!(error instanceof CmkApiError) || error.statusCode !== 400) {
+      return false
+    }
+    const ext = (error.body as { ext?: { error?: unknown } } | undefined)?.ext
+    return ext?.error === 'unknown_background'
+  }
+
+  /** Stores the map; returns what the operator has to know about how it was stored. */
+  async function store(map: MapConfig, overwrite: boolean): Promise<string[]> {
+    try {
+      await maps.importMapJson(map, overwrite)
+      return []
+    } catch (error: unknown) {
+      if (!map.background_image || !isUnknownBackground(error)) {
+        throw error
+      }
+    }
+    const { background_image: image, ...withoutBackground } = map
+    await maps.importMapJson(withoutBackground, overwrite)
+    return [
+      _t(
+        "The background image %{image} is not part of the map file. Upload it in the map's settings under Background image.",
+        { image }
+      )
+    ]
+  }
+
   async function readMap(file: File): Promise<CfgImport> {
     if (file.name.toLowerCase().endsWith('.cfg')) {
       return await maps.parseCfg(file)
@@ -73,21 +106,22 @@ export function useMapImport(): {
     }
     try {
       const { map, warnings } = await readMap(file)
+      let stored: string[]
       try {
-        await maps.importMapJson(map, false)
+        stored = await store(map, false)
       } catch (error: unknown) {
         if (!isNameTaken(error)) {
           throw error
         }
         conflict.value = {
           name: map.name,
-          overwrite: () => maps.importMapJson(map, true),
+          overwrite: () => store(map, true),
           warnings
         }
         return
       }
       await maps.fetchMaps()
-      reportWarnings(warnings)
+      reportWarnings([...warnings, ...stored])
     } catch (error: unknown) {
       reportFailure(error)
     } finally {
@@ -103,9 +137,9 @@ export function useMapImport(): {
     }
     conflict.value = null
     try {
-      await pending.overwrite()
+      const stored = await pending.overwrite()
       await maps.fetchMaps()
-      reportWarnings(pending.warnings)
+      reportWarnings([...pending.warnings, ...stored])
     } catch (error: unknown) {
       reportFailure(error)
     }

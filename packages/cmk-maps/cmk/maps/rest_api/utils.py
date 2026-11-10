@@ -24,10 +24,11 @@ from cmk.gui.openapi.framework import EndpointBehavior, ETag
 from cmk.gui.openapi.framework.model import ApiOmitted, json_dump_without_omitted
 from cmk.gui.openapi.framework.model.base_models import LinkModel
 from cmk.gui.openapi.restful_objects.constructors import object_href
-from cmk.gui.openapi.utils import RestAPIRequestGeneralException
+from cmk.gui.openapi.utils import EXT, RestAPIRequestGeneralException
 from cmk.gui.type_defs import VisualPublic
 from cmk.maps.gui._capabilities import sign_map_config
 from cmk.maps.gui._filter_check import check_object_filter
+from cmk.maps.gui._images import adopt_background, ForeignBackground
 from cmk.maps.gui.pagetype import MapPage
 from cmk.maps.gui.store import get_permitted_map, rotation_pools_of
 from cmk.maps.gui.type_defs import MapName
@@ -347,6 +348,26 @@ def validate_map_size(spec: Mapping[str, object]) -> None:
             title="The map is too large",
             detail=f"A map takes at most {MAP_CONFIG_MAX_BYTES // (1024 * 1024)} MiB.",
         )
+
+
+def adopt_map_background(
+    spec: dict[str, object], owner: str, name: str, stored: Mapping[str, object]
+) -> None:
+    """Point the map at a background file of its own (see :func:`adopt_background`)."""
+    if not isinstance(ref := spec.get("background_image"), str) or not ref:
+        return
+    try:
+        spec["background_image"] = adopt_background(
+            owner, name, ref, stored.get("background_image")
+        )
+    except ForeignBackground:
+        raise RestAPIRequestGeneralException(
+            status=HTTPStatus.BAD_REQUEST,
+            title="Unknown background image",
+            detail="A background image must be uploaded for the map or come from a map you see.",
+            # An import tells this refusal apart: it stores the map without the background.
+            ext=EXT({"error": "unknown_background"}),
+        ) from None
 
 
 def validate_object_filters(spec: Mapping[str, object], stored: Mapping[str, object]) -> None:

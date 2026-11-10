@@ -130,6 +130,24 @@ def test_saving_a_map_seen_by_the_same_users_tells_the_daemon_nothing(
     assert daemon.told == []
 
 
+def test_creating_a_map_under_a_taken_name_prepares_nothing(
+    request_context: None,  # noqa: ARG001
+    with_admin_login: UserId,
+) -> None:
+    prepared: list[str] = []
+    store.save_map(with_admin_login, "map1", _map("map1"), public=False)
+
+    created = store.create_map(
+        with_admin_login,
+        "map1",
+        _map("map1"),
+        public=False,
+        prepare=lambda: prepared.append("map1"),
+    )
+
+    assert (created, prepared) == (False, [])
+
+
 def test_empty_store_has_builtin_maps(
     request_context: None,  # noqa: ARG001
     with_admin_login: UserId,  # noqa: ARG001

@@ -117,6 +117,7 @@ def create_map(
     map_spec: MapSpec,
     public: VisualPublic | None,
     hidden: bool = False,
+    prepare: Callable[[], None] = lambda: None,
 ) -> bool:
     """Atomically create ``owner``'s map ``name``; return ``False`` if it already exists.
 
@@ -130,12 +131,17 @@ def create_map(
     This request's memoized set is updated too, for the same reason
     :func:`save_map` does it: the REST endpoint reads the map back right after
     creating it.
+
+    ``prepare`` runs inside the lock once the name is free and may still complete
+    ``map_spec`` or raise to refuse the create, so nothing it does is left over
+    from a create that did not happen.
     """
-    page = MapPage(map_config_from_spec(owner, name, _stamped(map_spec, None), public, hidden))
     with store.locked(user_maps_path(owner)):
         instances = _own_instances(owner)
         if instances.has_instance((owner, name)):
             return False
+        prepare()
+        page = MapPage(map_config_from_spec(owner, name, _stamped(map_spec, None), public, hidden))
         instances.add_instance((owner, name), page)
         MapPage.save_user_instances(instances, _user_permissions(), owner)
     _instances().add_instance((owner, name), page)
@@ -149,6 +155,7 @@ def save_map(
     public: VisualPublic | None,
     hidden: bool = False,
     verify: Callable[[MapPage | None], None] = lambda _stored: None,
+    saved: Callable[[MapPage], None] = lambda _page: None,
     tell_daemon: TellDaemon = tell_withdrawn,
 ) -> None:
     """Persist ``map_spec`` as ``owner``'s map ``name`` with the given envelope.
@@ -164,6 +171,7 @@ def save_map(
 
     ``verify`` gets the stored map, or ``None``, inside the lock and raises to
     refuse the save, so no other save can land between its check and the write.
+    ``saved`` gets the stored map right after the write, still inside the lock.
     A changed visibility is told to the daemon, which ends the map's streams.
     """
     with store.locked(user_maps_path(owner)):
@@ -177,6 +185,7 @@ def save_map(
         )
         instances.add_instance((owner, name), page)
         MapPage.save_user_instances(instances, _user_permissions(), owner)
+        saved(page)
     _instances().add_instance((owner, name), page)
     if stored is not None and stored.config.public != page.config.public:
         tell_daemon(owner, name, deleted=False)

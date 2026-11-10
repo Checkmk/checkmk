@@ -22,6 +22,7 @@ from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import object_href
 from cmk.gui.openapi.utils import ProblemException, RestAPIRequestGeneralException
+from cmk.maps.gui._images import prune_backgrounds
 from cmk.maps.gui._pages import _authorized_public
 from cmk.maps.gui.pagetype import MapPage
 from cmk.maps.gui.store import get_own_map, save_map
@@ -29,6 +30,7 @@ from cmk.maps.rest_api.endpoint_family import MAPS_FAMILY
 from cmk.maps.rest_api.models.request_models import MapRequest
 from cmk.maps.rest_api.models.response_models import MapObject
 from cmk.maps.rest_api.utils import (
+    adopt_map_background,
     map_etag,
     permitted_map_or_404,
     public_request_from_visibility,
@@ -111,13 +113,24 @@ def update_map_v1(
         else body.visibility.hide_in_monitor_menu
     )
 
+    previous_background: object = None
+
     def verify(stored: MapPage | None) -> None:
+        nonlocal previous_background
         # Against what is stored now; with no own copy yet, the built-in it customizes.
+        current = stored or page
         if api_context.etag.enabled:
-            api_context.etag.verify(map_etag(stored or page))
+            api_context.etag.verify(map_etag(current))
+        previous_background = current.config.map_spec.get("background_image")
+        adopt_map_background(spec, str(target_owner), name, current.config.map_spec)
+
+    def saved(stored: MapPage) -> None:
+        # A file uploaded for a save still to come stays while the background is unchanged.
+        if (ref := stored.config.map_spec.get("background_image")) != previous_background:
+            prune_backgrounds(str(target_owner), name, keep=ref)
 
     try:
-        save_map(target_owner, name, spec, public, hidden, verify=verify)
+        save_map(target_owner, name, spec, public, hidden, verify=verify, saved=saved)
     except MKGeneralException as exc:
         # A failed store write (disk full, unwritable profile) would otherwise
         # surface as an uncaught 500 with a crash report; answer a clean error.

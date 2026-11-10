@@ -273,13 +273,20 @@ def test_an_image_uploaded_under_a_name_a_builtin_takes_later_is_the_uploads(
 
 def test_an_image_in_use_is_kept_with_the_maps_using_it(clients: ClientRegistry) -> None:
     clients.Maps.upload_image("rack.png", "image/png", _PNG)
-    clients.Maps.create(config=_map("floor", background_image="rack.png"))
+    rack = {
+        "id": "o1",
+        "type": "image",
+        "position": {"x": 0, "y": 0},
+        "link": {"url_target": "_blank"},
+        "image_src": "rack.png",
+    }
+    clients.Maps.create(config=_map("floor", objects=[rack]))
 
     resp = clients.Maps.delete_image("rack.png", expect_ok=False)
 
     resp.assert_status_code(HTTPStatus.CONFLICT)
     assert resp.json["ext"]["usage"] == [
-        {"map": "floor", "alias": "Floor", "object_ids": [], "is_background": True}
+        {"map": "floor", "alias": "Floor", "object_ids": ["o1"], "is_background": False}
     ]
 
 
@@ -310,6 +317,85 @@ def test_a_background_is_removed(clients: ClientRegistry) -> None:
     clients.Maps.delete_background("floor").assert_status_code(HTTPStatus.NO_CONTENT)
 
 
+def _background_of(clients: ClientRegistry, name: str) -> str:
+    background: str = clients.Maps.get(name).json["extensions"]["config"]["background_image"]
+    return background
+
+
+def test_a_cloned_map_keeps_its_background_when_the_source_is_deleted(
+    clients: ClientRegistry,
+) -> None:
+    clients.Maps.create(config=_map("floor"))
+    source = clients.Maps.upload_background("floor", "plan.png", "image/png", _PNG).json["filename"]
+    clients.Maps.edit("floor", _map("floor", background_image=source))
+
+    clients.Maps.create(config=_map("copy", background_image=source))
+    clients.Maps.delete("floor")
+
+    clone = _background_of(clients, "copy")
+    assert clone != source
+    assert (cmk.utils.paths.omd_root / "var/maps/backgrounds" / clone).read_bytes() == _PNG
+
+
+def test_a_clone_of_a_map_that_lost_its_background_has_none(clients: ClientRegistry) -> None:
+    clients.Maps.create(config=_map("floor"))
+    source = clients.Maps.upload_background("floor", "plan.png", "image/png", _PNG).json["filename"]
+    clients.Maps.edit("floor", _map("floor", background_image=source))
+    (cmk.utils.paths.omd_root / "var/maps/backgrounds" / source).unlink()
+
+    clients.Maps.create(config=_map("copy", background_image=source))
+
+    assert clients.Maps.get("copy").json["extensions"]["config"]["background_image"] is None
+
+
+def test_a_background_of_no_map_the_user_sees_is_refused(clients: ClientRegistry) -> None:
+    resp = clients.Maps.create(
+        config=_map("floor", background_image="0123456789abcdef__other.token.png"),
+        expect_ok=False,
+    )
+
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
+    assert resp.json["ext"] == {"error": "unknown_background"}
+
+
+def test_a_map_created_anew_does_not_get_the_background_it_lost(clients: ClientRegistry) -> None:
+    clients.Maps.create(config=_map("floor"))
+    lost = clients.Maps.upload_background("floor", "plan.png", "image/png", _PNG).json["filename"]
+    clients.Maps.edit("floor", _map("floor", background_image=lost))
+    clients.Maps.delete("floor")
+
+    resp = clients.Maps.create(config=_map("floor", background_image=lost), expect_ok=False)
+
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
+    assert resp.json["ext"] == {"error": "unknown_background"}
+
+
+def test_a_map_keeps_its_background_on_save(clients: ClientRegistry) -> None:
+    clients.Maps.create(config=_map("floor"))
+    source = clients.Maps.upload_background("floor", "plan.png", "image/png", _PNG).json["filename"]
+    clients.Maps.edit("floor", _map("floor", background_image=source))
+
+    clients.Maps.edit("floor", _map("floor", alias="Renamed", background_image=source))
+
+    assert _background_of(clients, "floor") == source
+
+
+def test_a_refused_save_keeps_the_stored_background(clients: ClientRegistry) -> None:
+    clients.Maps.create(config=_map("floor"))
+    source = clients.Maps.upload_background("floor", "plan.png", "image/png", _PNG).json["filename"]
+    clients.Maps.edit("floor", _map("floor", background_image=source))
+    clients.Maps.create(config=_map("copy"))
+    own = clients.Maps.upload_background("copy", "own.png", "image/png", _PNG).json["filename"]
+    clients.Maps.edit("copy", _map("copy", background_image=own))
+
+    clients.Maps.edit(
+        "copy", _map("copy", background_image=source), etag="invalid_etag", expect_ok=False
+    ).assert_status_code(HTTPStatus.PRECONDITION_FAILED)
+
+    assert _background_of(clients, "copy") == own
+    assert (cmk.utils.paths.omd_root / "var/maps/backgrounds" / own).read_bytes() == _PNG
+
+
 def test_a_nagvis_cfg_parses_into_a_draft(clients: ClientRegistry) -> None:
     assert clients.Maps.parse_cfg("floor.cfg", _CFG).json["map"]["alias"] == "Imported"
 
@@ -318,6 +404,12 @@ def test_a_nagvis_cfg_names_the_background_it_does_not_bring(clients: ClientRegi
     resp = clients.Maps.parse_cfg("floor.cfg", b"define global {\n    map_image = plan.png\n}\n")
 
     assert any("plan.png" in warning for warning in resp.json["warnings"])
+
+
+def test_a_nagvis_cfg_draft_has_no_background_it_does_not_bring(clients: ClientRegistry) -> None:
+    resp = clients.Maps.parse_cfg("floor.cfg", b"define global {\n    map_image = plan.png\n}\n")
+
+    assert "background_image" not in resp.json["map"]
 
 
 def test_a_nagvis_cfg_without_a_background_does_not_mention_one(clients: ClientRegistry) -> None:

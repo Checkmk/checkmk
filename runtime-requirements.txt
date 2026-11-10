@@ -2253,7 +2253,7 @@ meraki==4.7.0 \
     --hash=sha256:f066d60b17ee234e003067fd5034c66380a962e87c55eaa9e1df324e5656fd96
     # via
     #   -c requirements.txt
-    #   -r cmk/requirements.in
+    #   -r packages/cmk-plugins/requirements.in
 msal==1.39.0 \
     --hash=sha256:2d2577886906cd7293850dffa2da29119966c213bfc6ec0cecf8bf7621e1ca77 \
     --hash=sha256:6ab7de335e6d7f5717e2c7e1dbf86e4dda2f6acf3c56773b78dc53ebc6395b5f

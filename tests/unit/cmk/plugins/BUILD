@@ -30,7 +30,6 @@ py_cmk_test(
         "//tests/testlib/common",
         requirement("exchangelib"),
         requirement("feedparser"),
-        requirement("meraki"),
         requirement("polyfactory"),
         requirement("pysmb"),
         requirement("pytest-mock"),

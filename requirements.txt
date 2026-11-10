@@ -3285,7 +3285,7 @@ mdurl==0.1.2 \
 meraki==4.7.0 \
     --hash=sha256:3f9e5c65ced5257ac8a3bf92222911505e143013365401bb7cca7e0484f6b2c9 \
     --hash=sha256:f066d60b17ee234e003067fd5034c66380a962e87c55eaa9e1df324e5656fd96
-    # via -r cmk/requirements.in
+    # via -r packages/cmk-plugins/requirements.in
 more-itertools==11.2.1 \
     --hash=sha256:35a7377edd1dd6608dcb2cdf534ded55ea32d49448875ad042cd3f879fb1ded0 \
     --hash=sha256:cbf08fd0af284dc69718b9b76a8e6203df624d70209ea511e4219d350c856f63

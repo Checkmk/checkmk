@@ -15,7 +15,7 @@ from cmk.plugins.cisco_meraki.lib import agent
 from cmk.plugins.cisco_meraki.lib.agent import MerakiOrganisation, MerakiRunContext
 from cmk.plugins.cisco_meraki.lib.clients import MerakiClient
 from cmk.plugins.cisco_meraki.lib.config import _RequiredSections, MerakiConfig
-from tests.unit.cmk.plugins.cisco_meraki.lib.factories import (
+from tests.cmk.plugins.cisco_meraki.lib.factories import (
     DeviceFactory,
     RawOrganizationFactory,
     RawUplinkStatusesFactory,

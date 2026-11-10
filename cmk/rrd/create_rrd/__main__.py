@@ -27,7 +27,7 @@ def main() -> None:
     logging.getLogger().setLevel(args.log_level)
 
     omd_root = Path(os.environ.get("OMD_ROOT", ""))
-    create_rrd(rrdtool, omd_root, RRDPaths.from_omd_root(omd_root))
+    create_rrd(rrdtool, RRDPaths.from_omd_root(omd_root))
 
 
 if __name__ == "__main__":

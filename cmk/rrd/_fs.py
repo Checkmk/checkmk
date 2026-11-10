@@ -48,28 +48,36 @@ def attach_suffix(p: Path, suffix: str) -> Path:
 
 @dataclass(frozen=True, kw_only=True)
 class RRDPaths:
-    rrd_multiple_dir: Path
-    rrd_single_dir: Path
-    _max_filename_length: int
+    # The site directory, e.g. /omd/sites/mysite
+    omd_root: Path
+    # The same directory below /opt, e.g. /opt/omd/sites/mysite
+    # We need /opt here because of bug in rrdcached
+    opt_root: Path
+    max_filename_length: int
 
     @classmethod
     def from_omd_root(cls, omd_root: Path) -> RRDPaths:
-        opt_root = "/opt" / omd_root.relative_to(omd_root.root)
         return cls(
-            rrd_multiple_dir=opt_root / "var/pnp4nagios/perfdata",
-            rrd_single_dir=opt_root / "var/check_mk/rrd",
-            _max_filename_length=os.pathconf(omd_root, "PC_NAME_MAX"),
+            omd_root=omd_root,
+            opt_root="/opt" / omd_root.relative_to(omd_root.root),
+            max_filename_length=os.pathconf(omd_root, "PC_NAME_MAX"),
         )
 
+    @property
+    def rrd_multiple_dir(self) -> Path:
+        return self.opt_root / "var/pnp4nagios/perfdata"
+
+    @property
+    def rrd_single_dir(self) -> Path:
+        return self.opt_root / "var/check_mk/rrd"
+
     def _storage(self, path: Path) -> Storage:
-        return Storage(path, _max_filename_length=self._max_filename_length)
+        return Storage(path, _max_filename_length=self.max_filename_length)
 
     def pnp_host_dir(self, hostname: HostName) -> Path:
-        # We need /opt here because of bug in rrdcached
         return self.rrd_multiple_dir / pnp_cleanup(hostname)
 
     def cmc_host_dir(self, hostname: HostName) -> Path:
-        # We need /opt here because of bug in rrdcached
         return self.rrd_single_dir / pnp_cleanup(hostname)
 
     def cmc_storage(self, hostname: HostName, service_name: str) -> Storage:

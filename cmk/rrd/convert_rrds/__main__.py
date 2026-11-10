@@ -47,14 +47,12 @@ def main() -> None:
 
     _set_log_level(args.verbose)
 
-    omd_root = Path(os.environ.get("OMD_ROOT", ""))
     convert_rrds(
         rrdtool,
         args.hostnames,
         args.split_rrds,
         args.delete_rrds,
-        omd_root=omd_root,
-        rrd_paths=RRDPaths.from_omd_root(omd_root),
+        rrd_paths=RRDPaths.from_omd_root(Path(os.environ.get("OMD_ROOT", ""))),
     )
 
 

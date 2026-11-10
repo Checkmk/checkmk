@@ -712,59 +712,69 @@ def _write_line(text: str) -> None:
 
 
 class RRDCreator:
-    def __init__(self, rrd_interface: RRDInterface, omd_root: Path, rrd_paths: RRDPaths):
+    def __init__(
+        self,
+        rrd_interface: RRDInterface,
+        rrd_paths: RRDPaths,
+        *,
+        input_fd: int,
+        output_fd: int,
+    ):
         self._rrd_interface = rrd_interface
-        self._omd_root = omd_root
         self._rrd_paths = rrd_paths
+        self._input_fd = input_fd
+        self._output_fd = output_fd
         self._rrd_helper_output_buffer = b""
 
     def create_rrds_keepalive(self, config_factory: Callable[[HostName], RRDConfig]) -> None:
-        input_buffer = b""
         self._rrd_helper_output_buffer = b""
-        job_queue = list[bytes]()
         console.verbose("Started Check_MK RRD creator.")
         try:
-            # We read asynchronously from stdin and put the jobs into a queue.
-            # That way the cmc main process will not be blocked by IO wait.
-            while True:
-                readable, writeable = select.select(
-                    [0],
-                    [1] if self._rrd_helper_output_buffer else [],
-                    [],
-                    0 if job_queue else None,
-                )[:-1]
-
-                if 1 in writeable:
-                    self._write_rrd_helper_response()
-
-                if 0 in readable:
-                    try:
-                        new_bytes = os.read(0, 4096)
-                    except Exception:
-                        new_bytes = b""
-                    if not new_bytes and not job_queue:
-                        console.verbose("Core closed stdin, all jobs finished. Exiting.")
-                        break
-                    parts = (input_buffer + new_bytes).split(b"\n")
-                    job_queue += parts[:-1]
-                    input_buffer = parts[-1]
-
-                # Create *one* RRD file
-                if job_queue:
-                    self._handle_job(job_queue[0].decode("utf-8"), config_factory)
-                    del job_queue[0]
-
+            self._run(config_factory)
         except Exception:
-            create_crash_report(self._omd_root)
+            create_crash_report(self._rrd_paths.omd_root)
             self._queue_rrd_helper_response(
                 f"Check_MK RRD creator failed: {traceback.format_exc()}"
             )
 
         console.verbose("Stopped Check_MK RRD creator.")
 
+    def _run(self, config_factory: Callable[[HostName], RRDConfig]) -> None:
+        # We read asynchronously from stdin and put the jobs into a queue.
+        # That way the cmc main process will not be blocked by IO wait.
+        input_buffer = b""
+        job_queue = list[bytes]()
+        while True:
+            readable, writeable = select.select(
+                [self._input_fd],
+                [self._output_fd] if self._rrd_helper_output_buffer else [],
+                [],
+                0 if job_queue else None,
+            )[:-1]
+
+            if self._output_fd in writeable:
+                self._write_rrd_helper_response()
+
+            if self._input_fd in readable:
+                try:
+                    new_bytes = os.read(self._input_fd, 4096)
+                except Exception:
+                    new_bytes = b""
+                if not new_bytes and not job_queue:
+                    console.verbose("Core closed stdin, all jobs finished. Exiting.")
+                    return
+                parts = (input_buffer + new_bytes).split(b"\n")
+                job_queue += parts[:-1]
+                input_buffer = parts[-1]
+
+            # Create *one* RRD file
+            if job_queue:
+                self._handle_job(job_queue[0].decode("utf-8"), config_factory)
+                del job_queue[0]
+
     def _write_rrd_helper_response(self) -> None:
         size = min(4096, len(self._rrd_helper_output_buffer))
-        written = os.write(1, self._rrd_helper_output_buffer[:size])
+        written = os.write(self._output_fd, self._rrd_helper_output_buffer[:size])
         self._rrd_helper_output_buffer = self._rrd_helper_output_buffer[written:]
 
     def _handle_job(self, spec: str, config_factory: Callable[[HostName], RRDConfig]) -> None:
@@ -777,7 +787,7 @@ class RRDCreator:
         except OSError as exc:
             self._queue_rrd_helper_response(f"Error creating RRD: {exc.strerror}")
         except Exception as e:
-            create_crash_report(self._omd_root)
+            create_crash_report(self._rrd_paths.omd_root)
             self._queue_rrd_helper_response(
                 f"Error creating RRD for {spec}: {str(e) or traceback.format_exc()}"
             )

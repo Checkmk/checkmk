@@ -18,9 +18,9 @@ sites live in the consuming components, not here.
 
 ## Design
 
-A flag is declared as a field on `ExperimentalFlagConfig` via `experimental_field()`, which
-fixes the type to `bool`, defaults it to `False`, and attaches the metadata that
-keeps flags from rotting:
+A flag is declared as an `Annotated[bool, experimental_field(...)]` field on
+`ExperimentalFlagConfig`. `experimental_field()` defaults it to `False` and
+attaches the metadata that keeps flags from rotting:
 
 - `description` — what the flag gates
 - `remove_ticket` — the ticket tracking its removal
@@ -72,14 +72,14 @@ combinations work.
 
 ### Wire contract
 
-These names cross site boundaries during `activate_changes`. They must stay the
-same on every branch:
+These names cross site boundaries during `activate_changes` (the file only in
+2.5.0p8 to p14, see below). They must stay the same on every branch:
 
-| Name                 | Value                   | Where it is used                                  |
-| -------------------- | ----------------------- | ------------------------------------------------- |
-| `ConfigDomain` ident | `release_flags`         | Domain requests the central site sends to remotes |
-| Replicated file      | `release_flag.json`     | Config sync, `etc/check_mk/release_flag.json`     |
-| Flag field names     | e.g. `exp_ai_assistant` | JSON keys in that file                            |
+| Name                 | Value                   | Where it is used                                                                    |
+| -------------------- | ----------------------- | ----------------------------------------------------------------------------------- |
+| `ConfigDomain` ident | `release_flags`         | Domain requests the central site sends to remotes                                   |
+| Config file          | `release_flag.json`     | `etc/check_mk/release_flag.json`, replicated to remote sites only in 2.5.0p8 to p14 |
+| Flag field names     | e.g. `exp_ai_assistant` | JSON keys in that file                                                              |
 
 Renaming the ident or the file makes remote sites on the other version fail the
 activation with a `KeyError`. Werk #22265 did that and was reverted before any
@@ -92,35 +92,29 @@ flag starts off.
 
 ### History
 
-| Version        | Change                                                                                                                                                           | Wire change |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| 2.5.0p8        | Package, `release_flags` config domain, replication of `release_flag.json` (werk #19980). No flags yet.                                                          | New         |
-| 2.5.0p13       | Flag `exp_relay_active_checks`                                                                                                                                   | New key     |
-| 2.5.0p14       | Flag `exp_ai_assistant`. Settings section renamed to "Experimental flags (for testing only)". Werk #22265 (ident rename) added and reverted in the same release. | New key     |
-| 2.5.0p15       | Python API renamed from `release_*` to `experimental_*`                                                                                                          | None        |
-| 2.5.0p17       | Flag `exp_relay_active_checks` removed: active checks on relays are released (werk #20175)                                                                       | Key ignored |
-| 3.0.0 (master) | Has the package from the start, with the `experimental_*` API. Flag `exp_trial_mode_selection` exists only here.                                                 | —           |
+| Version        | Change                                                                                                                                                           | Wire change               |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| 2.5.0p8        | Package, `release_flags` config domain, replication of `release_flag.json` (werk #19980). No flags yet.                                                          | New                       |
+| 2.5.0p13       | Flag `exp_relay_active_checks`                                                                                                                                   | New key                   |
+| 2.5.0p14       | Flag `exp_ai_assistant`. Settings section renamed to "Experimental flags (for testing only)". Werk #22265 (ident rename) added and reverted in the same release. | New key                   |
+| 2.5.0p15       | Python API renamed from `release_*` to `experimental_*`. Flags are no longer synced to remote sites.                                                             | File no longer replicated |
+| 2.5.0p18       | Flag `exp_relay_active_checks` removed: active checks on relays are released (werk #20175)                                                                       | Key ignored               |
+| 3.0.0 (master) | Has the package from the start, with the `experimental_*` API. Flag `exp_trial_mode_selection` exists only here.                                                 | —                         |
 
-2.5.0p15 and 3.0.0 are not released yet (state 2026-09-25).
+3.0.0 is not released yet (state 2026-11-10).
 
 ### Mixed versions
 
-| Central site               | Remote site                | Result                                                                                                                                                 |
-| -------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 2.5.0p8 or newer, or 3.0.0 | 2.5.0p7 or older           | Breaks when a flag is changed: the remote site has no `release_flags` domain and fails the activation with a `KeyError`. Update the remote site first. |
-| 2.5.0p7 or older           | 2.5.0p8 or newer, or 3.0.0 | Works. The central site syncs no flags, so the remote site keeps its own file (no file: all flags off).                                                |
-| 2.5.0p8 or newer           | 3.0.0                      | Works. Flags that both versions declare are controlled by the central site.                                                                            |
-| 3.0.0                      | 2.5.0p8 or newer           | Works. Flags that both versions declare are controlled by the central site.                                                                            |
+| Central site                | Remote site                | Result                                                                                                                                                           |
+| --------------------------- | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2.5.0p8 or newer, or 3.0.0  | 2.5.0p7 or older           | Breaks when a flag is changed: the remote site has no `release_flags` domain and fails the activation with a `KeyError`. Update the remote site first.           |
+| 2.5.0p7 or older            | 2.5.0p8 or newer, or 3.0.0 | Works. The central site syncs no flags, so the remote site keeps its own file (no file: all flags off).                                                          |
+| 2.5.0p15 or newer, or 3.0.0 | 2.5.0p8 or newer, or 3.0.0 | Works. No flags are synced: each site keeps its own file (no file: all flags off).                                                                               |
+| 2.5.0p8 to p14              | 2.5.0p8 or newer, or 3.0.0 | The central site syncs its file, but the remote site resets it to the default flags on activation and restarts. 2.5.0p15 fixed this by not syncing flags at all. |
 
-In every working combination, each site only knows the flags its own version
-declares:
-
-- A key the site does not declare is ignored (`extra="ignore"`).
-- A flag the central site cannot set (because its version does not declare it) is
-  off on the remote site.
-
-Example: with a 2.5.0p13 remote site, `exp_ai_assistant` stays off there,
-even if the central site enables it.
+Remote sites do not get the central site's flags. Each site only knows the
+flags its own version declares: a key the site does not declare is ignored
+(`extra="ignore"`).
 
 ### Backporting a flag
 

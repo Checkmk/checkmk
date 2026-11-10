@@ -942,8 +942,9 @@ Uploaded files
   * The file is accepted only if its magic bytes match an allowed type. The
     stored suffix, and so the content type Apache serves, comes from the
     uploaded file name (``.png`` if it has no allowed suffix); it is not tied to
-    the detected type. The file name is reduced to ``[A-Za-z0-9_-]``. Built-in names cannot
-    be overwritten; other library images of the same name are replaced.
+    the detected type. The file name is reduced to ``[A-Za-z0-9_-]``. An upload
+    never replaces an image: a different file under a taken name gets a free
+    variant of the name, an identical one reuses it.
   * SVGs are parsed with ``defusedxml`` (no entities, no external references)
     and rejected, not rewritten, if they contain scripts, ``foreignObject``,
     ``iframe``/``object``/``embed``, animation elements, event-handler

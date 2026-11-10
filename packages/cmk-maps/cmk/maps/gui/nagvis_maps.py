@@ -27,7 +27,14 @@ from cmk.maps.gui._image_security import (
     is_valid_image_name,
     safe_image_stem,
 )
-from cmk.maps.gui._images import delete_image, icon_name_for, import_background, store_icon
+from cmk.maps.gui._images import (
+    adding_icons,
+    delete_image,
+    icon_name_for,
+    IconNameTakenError,
+    import_background,
+    store_icon,
+)
 from cmk.maps.shared.map_payload import MapPayload
 from cmk.maps.shared.validators import is_valid_map_name
 
@@ -253,15 +260,21 @@ class ShapeCopies:
     def store(self) -> list[str]:
         """Add the shapes the migrated maps show; returns a warning for each that failed."""
         warnings = []
-        for name in sorted(self.used):
-            try:
-                if store_icon(name, self.contents[name]):
-                    self.added.append(name)
-            except (OSError, MKGeneralException) as exc:
-                warnings.append(
-                    f"The shape {name} could not be added to the image library: {exc}. "
-                    "The maps show it as a missing image."
-                )
+        with adding_icons():
+            for name in sorted(self.used):
+                try:
+                    if store_icon(name, self.contents[name]):
+                        self.added.append(name)
+                except IconNameTakenError:
+                    warnings.append(
+                        f"The shape {name} was not added to the image library, as another "
+                        "image got its name meanwhile. The maps show that image."
+                    )
+                except (OSError, MKGeneralException) as exc:
+                    warnings.append(
+                        f"The shape {name} could not be added to the image library: {exc}. "
+                        "The maps show it as a missing image."
+                    )
         return warnings
 
     def remove_added(self) -> None:

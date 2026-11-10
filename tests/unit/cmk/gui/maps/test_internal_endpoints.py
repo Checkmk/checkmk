@@ -271,6 +271,18 @@ def test_an_image_uploaded_under_a_name_a_builtin_takes_later_is_the_uploads(
     clients.Maps.delete_image("bell.svg").assert_status_code(HTTPStatus.NO_CONTENT)
 
 
+def test_an_upload_keeps_the_image_already_under_its_name(clients: ClientRegistry) -> None:
+    other = _PNG + b"\x01"
+    clients.Maps.upload_image("rack 1.png", "image/png", _PNG)
+
+    assert clients.Maps.upload_image("rack_1.png", "image/png", other).json["name"] == (
+        "rack_1-2.png"
+    )
+    images_dir = cmk.utils.paths.omd_root / "var/maps/images"
+    assert (images_dir / "rack_1.png").read_bytes() == _PNG
+    assert (images_dir / "rack_1-2.png").read_bytes() == other
+
+
 def test_an_image_in_use_is_kept_with_the_maps_using_it(clients: ClientRegistry) -> None:
     clients.Maps.upload_image("rack.png", "image/png", _PNG)
     rack = {

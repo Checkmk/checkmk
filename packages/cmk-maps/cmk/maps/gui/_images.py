@@ -16,7 +16,8 @@ the old daemon endpoint they never disclose maps outside the caller's scope.
 
 import hashlib
 import secrets
-from collections.abc import Container, Mapping
+from collections.abc import Container, Iterator, Mapping
+from contextlib import contextmanager
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -238,14 +239,10 @@ def upload_image(filename: str, content_type: str, contents: bytes) -> ImageList
         too_large=_("Image file too large (max 2 MB)."),
         allow_gif=False,
     )
-    target_name = safe_image_stem(filename) + suffix
-    if _is_builtin(target_name):
-        # A built-in icon is referenced across maps; silently replacing it
-        # would change every map at once (delete protects them too).
-        raise MKUserError("filename", _("Built-in images cannot be overwritten."))
-
-    store.save_bytes_to_file(_images_dir() / target_name, contents)
-    return ImageListEntry(name=target_name, url=f"images/{target_name}", builtin=False)
+    # Maps refer to an image by its name, so an upload never replaces one: a
+    # different file under a taken name gets a free variant of it.
+    name = import_icon(safe_image_stem(filename) + suffix, contents)
+    return ImageListEntry(name=name, url=f"images/{name}", builtin=_is_builtin(name))
 
 
 def import_icon(name: str, contents: bytes) -> str:
@@ -255,9 +252,22 @@ def import_icon(name: str, contents: bytes) -> str:
     reused. A different file is never replaced, and a built-in's name never taken,
     seeded yet or not: the icon gets a free variant of the name instead.
     """
-    stored = icon_name_for(name, contents)
-    store_icon(stored, contents)
+    with adding_icons():
+        stored = icon_name_for(name, contents)
+        store_icon(stored, contents)
     return stored
+
+
+@contextmanager
+def adding_icons() -> Iterator[None]:
+    """Held while icons are added, so no two of them get one name."""
+    # Outside the served directory.
+    with store.locked(cmk.utils.paths.omd_root / "var/maps/images.lock"):
+        yield
+
+
+class IconNameTakenError(Exception):
+    """Another file got the name an icon was to be added under."""
 
 
 def icon_name_for(name: str, contents: bytes, planned: Mapping[str, bytes] | None = None) -> str:
@@ -285,12 +295,18 @@ def icon_name_for(name: str, contents: bytes, planned: Mapping[str, bytes] | Non
 
 def store_icon(name: str, contents: bytes) -> bool:
     """Add the icon under the name :func:`icon_name_for` gave it, unless it is there;
-    returns whether it was added."""
-    target = _images_dir() / name
-    if _is_builtin(name) or target.exists():
+    returns whether it was added. To be called while :func:`adding_icons`."""
+    if _is_builtin(name):
         return False
-    store.save_bytes_to_file(target, contents)
-    return True
+    target = _images_dir() / name
+    try:
+        existing = target.read_bytes()
+    except FileNotFoundError:
+        store.save_bytes_to_file(target, contents)
+        return True
+    if existing != contents:
+        raise IconNameTakenError(name)
+    return False
 
 
 def delete_image(name: str, force: bool) -> list[ImageUsageEntry]:

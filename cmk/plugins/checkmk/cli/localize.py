@@ -83,8 +83,8 @@ def _alias_file(lang: str) -> Path:
     return Path(_locale_base(), lang, "alias")
 
 
-def _localize_usage() -> None:
-    sys.stdout.write(
+def _write_usage_to_stderr() -> None:
+    sys.stderr.write(
         """Usage: check_mk [-v] --localize COMMAND [ARGS]
 
 Available commands are:
@@ -110,7 +110,7 @@ Available commands are:
 
 def do_localize(args: list[str]) -> CLIExitCode:
     if len(args) == 0:
-        _localize_usage()
+        _write_usage_to_stderr()
         return CLIExitCode.FAILURE
 
     command = args[0]

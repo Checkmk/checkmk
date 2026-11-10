@@ -17,7 +17,7 @@ _DEPRECATION_MSG = "This command is no longer supported. Please use `mkp%s` inst
 
 
 def _fail_with_deprecation_msg(_context: CLIContext, _request: None, argv: CLIArgs) -> CLIExitCode:
-    sys.stdout.write(_DEPRECATION_MSG % " ".join(("", *argv)) + "\n")
+    sys.stderr.write(_DEPRECATION_MSG % " ".join(("", *argv)) + "\n")
     return CLIExitCode.FAILURE
 
 

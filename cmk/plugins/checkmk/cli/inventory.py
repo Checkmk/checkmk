@@ -7,6 +7,7 @@
 import contextlib
 import dataclasses
 import itertools
+import sys
 import time
 from collections.abc import Container, Sequence
 from pathlib import Path
@@ -557,7 +558,7 @@ def _mode_inventorize_marked_hosts(
                     debug=global_options.debug,
                 )
     except (MKTimeout, TimeoutError) as exc:
-        console.verbose_no_lf(str(exc))
+        console.verbose_no_lf(str(exc), file=sys.stderr)
     return CLIExitCode.SUCCESS
 
 

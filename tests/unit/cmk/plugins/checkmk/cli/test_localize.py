@@ -31,3 +31,13 @@ def test_a_wrong_invocation_fails(args: list[str]) -> None:
     bound = cli_bind(cli_command_localize, CLIParsedOptions([], logging.getLogger(__name__)))
 
     assert bound(_context(), args) == CLIExitCode.FAILURE
+
+
+def test_a_call_without_a_command_shows_the_usage_on_stderr(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    bound = cli_bind(cli_command_localize, CLIParsedOptions([], logging.getLogger(__name__)))
+
+    bound(_context(), [])
+
+    assert "Usage:" in capsys.readouterr().err

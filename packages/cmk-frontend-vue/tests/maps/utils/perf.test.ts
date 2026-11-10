@@ -59,6 +59,27 @@ describe('parsePerfData', () => {
 
   it('parses a long part without a metric in linear time', () => {
     expect(parsePerfData('a'.repeat(1 << 18))).toEqual([])
+    expect(parsePerfData(`'${'a'.repeat(1 << 18)}`)).toEqual([])
+  })
+
+  // The same vectors pin parse_perf_metrics in packages/cmk-maps/tests/unit/test_perfdata.py.
+  it.each([
+    ['a=b=5 ok=1', [['ok', '']]],
+    ["'a=b'=5ms", [['a=b', 'ms']]],
+    ["''=1", []],
+    ['rate=5B/s', [['rate', 'B/s']]],
+    ['temp=-3.5C;0;10', [['temp', 'C']]],
+    [
+      "'unclosed a=1 'b c'=2",
+      [
+        ['a', ''],
+        ['b c', '']
+      ]
+    ],
+    ['OK [check_cpu] load1=0.5', [['load1', '']]],
+    ['x=.5 y=- z=abc', [['x', '']]]
+  ])('parses the shared vector %s', (raw, expected) => {
+    expect(parsePerfData(raw).map((m) => [m.label, m.unit])).toEqual(expected)
   })
 })
 
@@ -77,9 +98,9 @@ describe('getMetric', () => {
     expect(getMetric(metrics, 'load')?.value).toBe(0.5)
   })
 
-  it('returns first metric when label not found', () => {
+  it('returns null when the label is not found', () => {
     const metrics = parsePerfData('rta=1ms')
-    expect(getMetric(metrics, 'nonexistent')?.label).toBe('rta')
+    expect(getMetric(metrics, 'nonexistent')).toBeNull()
   })
 })
 

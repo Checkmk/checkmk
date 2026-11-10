@@ -39,7 +39,6 @@ from cmk.maps.rest_api.internal.endpoint_family import MAPS_INTERNAL_FAMILY
 from cmk.maps.rest_api.internal.models.request_models import (
     MapsMetricInfoBulkRequest,
     MapsMetricInfoRequest,
-    MAX_PERF_DATA_LENGTH,
 )
 from cmk.maps.rest_api.internal.models.response_models import (
     MapsGraphGroup,
@@ -53,6 +52,7 @@ from cmk.maps.rest_api.internal.models.response_models import (
     MapsPerfometerSide,
 )
 from cmk.maps.rest_api.utils import LIVESTATUS_PERMISSIONS, NO_CONFIG_CHANGE
+from cmk.maps.shared.perfdata import MAX_PERF_DATA_LENGTH
 from cmk.web.utils import permission_verification as permissions
 
 # Only resolving the graphs reads the object, over livestatus.

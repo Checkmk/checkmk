@@ -15,12 +15,10 @@ import pytest
 
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.maps.rest_api.internal.metrics import resolve_each
-from cmk.maps.rest_api.internal.models.request_models import (
-    MAX_METRIC_INFO_ENTRIES,
-    MAX_PERF_DATA_LENGTH,
-)
+from cmk.maps.rest_api.internal.models.request_models import MAX_METRIC_INFO_ENTRIES
 from cmk.maps.rest_api.internal.models.response_models import MapsMetricInfoResponse
 from cmk.maps.shared.map_payload import MAP_OBJECTS_MAX
+from cmk.maps.shared.perfdata import MAX_PERF_DATA_LENGTH
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
 

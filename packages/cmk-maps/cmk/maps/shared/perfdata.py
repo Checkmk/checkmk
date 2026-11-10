@@ -14,6 +14,10 @@ import the other (module-layer boundary), so this parser lives here in
 The caller picks what it needs off each entry: the daemon uses ``label`` +
 ``unit``, the GUI only ``label``. This replaces a buggy daemon variant that
 ``.split()`` on whitespace and so tore quoted labels apart.
+
+The grammar is Maps' own, shared with the SPA's ``perf.ts``: it keeps the labels
+as Livestatus reports them, which ``cmk.graphing_engine`` renames, and quotes
+labels with single quotes only.
 """
 
 import re
@@ -27,22 +31,38 @@ class PerfMetric(TypedDict):
     unit: str
 
 
-# One perf_data token: an optionally single-quoted label, ``=``, then the value
-# part up to the next whitespace. The label ``=`` is captured as its own group so
-# a quoted label may itself contain ``=`` (``'a=b'=5``) — splitting on the first
-# ``=`` would otherwise tear the label at the wrong place. The unquoted label
-# stops at ``=``/whitespace (a bare Nagios label carries neither).
-_PERF_TOKEN_RE: Final = re.compile(r"(?:'(?P<qlabel>[^']+)'|(?P<label>[^\s=]+))=(?P<value>\S*)")
-# Leading numeric value, then the trailing unit letters (``5ms`` -> ``ms``).
-_UNIT_RE: Final = re.compile(r"[-\d.]+([a-zA-Z%]*)")
+# The core does not bound perfdata; longer entries resolve to nothing.
+MAX_PERF_DATA_LENGTH: Final = 65536
+
+# A token is a quoted label (which may hold spaces and "=") with its value, or
+# a whitespace-free part. Each alternative stops at the next quote or
+# whitespace, so a long input is read once. Mirrors parsePerfData in
+# cmk-frontend-vue/src/maps/utils/perf.ts.
+_PERF_TOKEN_RE: Final = re.compile(r"'[^']*'=\S*|\S+")
+_VALUE_RE: Final = re.compile(r"-?(?:\d+(?:\.\d*)?|\.\d+)([a-zA-Z%/]*)")
+
+
+def _label_and_value(token: str) -> tuple[str, str] | None:
+    end = token.find("'", 1) if token.startswith("'") else -1
+    if end > 0 and token[end + 1 : end + 2] == "=":
+        return token[1:end], token[end + 2 :]
+    label, eq, value = token.partition("=")
+    return (label, value) if eq else None
 
 
 def parse_perf_metrics(perf_data: str) -> list[PerfMetric]:
-    """Parse a perf_data string into ``[{label, unit}]``, quoted labels intact."""
+    """Parse a perf_data string into ``[{label, unit}]``, quoted labels intact.
+
+    An entry without a label or a numeric value is left out.
+    """
+    if len(perf_data) > MAX_PERF_DATA_LENGTH:
+        return []
     results: list[PerfMetric] = []
-    for match in _PERF_TOKEN_RE.finditer(perf_data):
-        qlabel = match.group("qlabel")
-        label = qlabel if qlabel is not None else match.group("label")
-        unit = _UNIT_RE.match(match.group("value").split(";")[0])
-        results.append({"label": label, "unit": unit.group(1) if unit else ""})
+    for token in _PERF_TOKEN_RE.findall(perf_data):
+        if (parsed := _label_and_value(token)) is None or not parsed[0]:
+            continue
+        label, value = parsed
+        if (number := _VALUE_RE.match(value.split(";", 1)[0])) is None:
+            continue
+        results.append({"label": label, "unit": number.group(1)})
     return results

@@ -45,10 +45,6 @@ type AnnotatedMapName = Annotated[
 # request cannot force an unbounded walk of the compiled aggregation.
 MAX_TREE_DEPTH = 10
 
-# The core does not bound perfdata; this caps what the graphing pipeline is fed
-# per entry. Longer entries resolve to nothing rather than failing the lookups
-# sent along with them.
-MAX_PERF_DATA_LENGTH = 65536
 # The client splits the lookups of a tick into requests of this many.
 MAX_METRIC_INFO_ENTRIES = 1000
 

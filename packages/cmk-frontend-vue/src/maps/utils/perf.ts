@@ -13,30 +13,35 @@ export interface PerfMetric {
   max: number | null
 }
 
-/** Parse Nagios/Checkmk performance data string into structured metrics. */
-export function parsePerfData(raw: string): PerfMetric[] {
-  if (!raw) {
-    return []
+// A quoted label (which may hold spaces and "=") with its value, or a
+// whitespace-free part. Each alternative stops at the next quote or whitespace,
+// so a long input is read once. Mirrors cmk/maps/shared/perfdata.py.
+const PERF_TOKEN = /'[^']*'=\S*|\S+/g
+const PERF_VALUE = /^(-?(?:\d+(?:\.\d*)?|\.\d+))([a-zA-Z%/]*)/
+
+function labelAndValue(token: string): [string, string] | null {
+  const end = token.startsWith("'") ? token.indexOf("'", 1) : -1
+  if (end > 0 && token[end + 1] === '=') {
+    return [token.slice(1, end), token.slice(end + 2)]
   }
+  const eq = token.indexOf('=')
+  return eq < 0 ? null : [token.slice(0, eq), token.slice(eq + 1)]
+}
+
+/**
+ * Parse Nagios/Checkmk performance data string into structured metrics. An
+ * entry without a label or a numeric value is left out.
+ */
+export function parsePerfData(raw: string): PerfMetric[] {
   const metrics: PerfMetric[] = []
-  // Split on whitespace, but labels can be quoted: 'label with space'=value.
-  // Each match takes a whole part, so a long one without a metric is read once.
-  const parts = raw.match(/'[^']*'=\S*|\S+/g) ?? []
-  for (const part of parts) {
-    const eq = part.indexOf('=')
-    if (eq < 0) {
+  for (const token of raw.match(PERF_TOKEN) ?? []) {
+    const parsed = labelAndValue(token)
+    if (!parsed || !parsed[0]) {
       continue
     }
-    const label = part.slice(0, eq).replace(/^'|'$/g, '')
-    const rest = part.slice(eq + 1)
+    const [label, rest] = parsed
     const [valStr = '', warnStr, critStr, minStr, maxStr] = rest.split(';')
-    // Allow "/" inside the unit so multi-char units like "B/s" don't get
-    // truncated to just "B" (which would lose the per-second qualifier).
-    const valMatch = valStr.match(/^(-?[\d.]+)([a-zA-Z%/]*)/)
-    if (!valMatch) {
-      continue
-    }
-    const [, num, unit] = valMatch
+    const [, num, unit = ''] = PERF_VALUE.exec(valStr) ?? []
     if (num === undefined) {
       continue
     }
@@ -44,7 +49,7 @@ export function parsePerfData(raw: string): PerfMetric[] {
     metrics.push({
       label,
       value: parseFloat(num),
-      unit: unit || '',
+      unit,
       warn: toNum(warnStr),
       crit: toNum(critStr),
       min: toNum(minStr),
@@ -54,16 +59,12 @@ export function parsePerfData(raw: string): PerfMetric[] {
   return metrics
 }
 
-/** Get the first matching metric by label, or the first metric if label is empty. */
+/** The metric of *label*, or the first metric when no label is asked for. */
 export function getMetric(metrics: PerfMetric[], label?: string | null): PerfMetric | null {
-  const first = metrics[0]
-  if (first === undefined) {
-    return null
-  }
   if (!label) {
-    return first
+    return metrics[0] ?? null
   }
-  return metrics.find((m) => m.label === label) ?? first
+  return metrics.find((m) => m.label === label) ?? null
 }
 
 /** Whether a percentage *readout* is meaningful: only with a real upper bound

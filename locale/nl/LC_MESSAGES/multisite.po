@@ -892,6 +892,14 @@ msgid ""
 "in version %s and must not be relied on for permanent configuration."
 msgstr ""
 
+#, python-format
+msgid "'%(name)s' has no effect in Checkmk."
+msgstr ""
+
+#, python-format
+msgid "'%(name)s' may break with any update of Checkmk."
+msgstr ""
+
 #, fuzzy
 msgid ""
 "'Activate changes' is blocked. Distributed monitoring is not available after "
@@ -1795,6 +1803,36 @@ msgstr ""
 "p><p>Zelfs als dit mogelijk is, is het niet aan te raden Checkmk op deze "
 "manier te gebruiken, omdat dit de algehele performance van Checkmk kan "
 "verminderen.</p>"
+
+#, python-format
+msgid ""
+"<p>Checkmk imports the Python files in these packages below "
+"<tt>'%(plugins_dir)s'</tt>, including their subfolders: %(packages)s. Other "
+"files below this folder have no effect.</p><p>These plug-ins use internal "
+"interfaces of Checkmk. These interfaces are not supported for plug-ins and "
+"may change with any update. Graphs, metrics and perf-o-meters are no longer "
+"read from them and need the supported API cmk.graphing.v1. Rule sets have "
+"the supported API cmk.rulesets.v1. Files which use a supported API belong "
+"below <tt>cmk_addons/plugins</tt>; Checkmk finds them here only for rule "
+"sets in <tt>wato/check_parameters</tt>, a folder for its own rule sets.</"
+"p><p>Files which Checkmk fails to load are listed by the test 'Broken GUI "
+"extensions'.</p>"
+msgstr ""
+
+#, python-format
+msgid ""
+"<p>Checkmk runs the Python files placed directly in these folders below "
+"<tt>'%(plugins_dir)s'</tt>: %(folders)s. If a <tt>.pyc</tt> file sits next "
+"to a <tt>.py</tt> file, Checkmk runs the <tt>.pyc</tt> file instead. Files "
+"in subfolders or in other folders have no effect.</p><p>These plug-ins use "
+"internal interfaces of Checkmk. These interfaces are not supported for plug-"
+"ins and may change with any update. Graphs, metrics and perf-o-meters are no "
+"longer read from them and need the supported API cmk.graphing.v1. Rule sets "
+"have the supported API cmk.rulesets.v1. Files which use a supported API have "
+"no effect here and belong below <tt>cmk_addons/plugins</tt>.</p><p>Files "
+"which Checkmk fails to load are listed by the test 'Broken GUI extensions'.</"
+"p>"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -13830,11 +13868,19 @@ msgid "Checkmk dashboard"
 msgstr "Checkmk dashboard"
 
 #, fuzzy
+msgid "Checkmk does not load plug-ins from this folder."
+msgstr "Checkmk Agent Plugins-Directory"
+
+#, fuzzy
 msgid "Checkmk edition"
 msgstr "Checkmk editie: %s"
 
 msgid "Checkmk extension packages (MKPs)"
 msgstr "Checkmk uitbreidingspakketten (MKP's)"
+
+#, python-format
+msgid "Checkmk fails to load it: %(error)s."
+msgstr ""
 
 msgid "Checkmk fetcher latency"
 msgstr "Checkmk fetcher latency"
@@ -13884,6 +13930,11 @@ msgstr "Checkmk helper gebruik"
 msgid "Checkmk licensing files"
 msgstr "Checkmk Licentiebestanden"
 
+msgid ""
+"Checkmk loads plug-ins from this folder through internal interfaces, which "
+"are not supported for plug-ins."
+msgstr ""
+
 msgid "Checkmk log files"
 msgstr "Checkmk logbestanden"
 
@@ -13894,6 +13945,22 @@ msgstr ""
 
 msgid "Checkmk mobile"
 msgstr "Checkmk Mobiel"
+
+#, python-format
+msgid ""
+"Checkmk no longer reads PNP templates from <tt>'%(templates_dir)s'</tt> and "
+"its subfolders, so they have no effect. Graphs need the supported API "
+"cmk.graphing.v1."
+msgstr ""
+
+#, fuzzy
+msgid "Checkmk no longer reads PNP templates."
+msgstr "Afgeschreven regelsets"
+
+msgid ""
+"Checkmk no longer reads graphs, metrics and perf-o-meters from this folder. "
+"Re-implement it with the supported API cmk.graphing.v1."
+msgstr ""
 
 msgid "Checkmk overview"
 msgstr "Checkmk Overzicht"
@@ -21206,16 +21273,8 @@ msgid "Deprecated Bakery plug-ins"
 msgstr "Verouderde controleplugins"
 
 #, fuzzy
-msgid "Deprecated GUI extensions"
-msgstr "Verlengingen repliceren"
-
-#, fuzzy
 msgid "Deprecated HW/SW inventory plug-ins"
 msgstr "Afgeschreven HW/SW inventaris plugins"
-
-#, fuzzy
-msgid "Deprecated PNP templates"
-msgstr "Afgeschreven regelsets"
 
 #, fuzzy
 msgid "Deprecated check manual pages"
@@ -21235,10 +21294,6 @@ msgstr "Afgeschafte keuze, gelieve opnieuw te selecteren"
 #, fuzzy, python-format
 msgid "Deprecated extension package: %s"
 msgstr "Nieuw uitbreidingspakket %s aangemaakt"
-
-#, fuzzy
-msgid "Deprecated legacy GUI extensions"
-msgstr "Verlengingen repliceren"
 
 #, fuzzy, python-format
 msgid "Deprecated plug-in: %s"
@@ -26691,6 +26746,10 @@ msgid ""
 "command line: %s"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Extension package: %(ident)s"
+msgstr "Uitbreiding pakketbestanden"
+
 msgid "Extension packages"
 msgstr "Uitbreidingspakketten"
 
@@ -29113,22 +29172,13 @@ msgstr "CPU-gebruik"
 msgid "GUI design"
 msgstr "GUI-ontwerp"
 
-#, python-format
-msgid ""
-"GUI extension in %r uses an API which is marked as deprecated and may not "
-"work anymore due to unknown imports or objects (file: %s)."
-msgstr ""
-
 #, fuzzy
 msgid "GUI extensions"
 msgstr "Gebroken GUI uitbreidingen"
 
-#, python-format
-msgid ""
-"GUI extensions in <tt>'%s'</tt> are marked as 'deprecated' and will be "
-"ignored in future Checkmk versions (official deprecation timeline not "
-"decided yet)."
-msgstr ""
+#, fuzzy
+msgid "GUI plug-ins"
+msgstr "Plugin"
 
 msgid "GUID"
 msgstr ""
@@ -30092,10 +30142,6 @@ msgstr "Hardware/Software-Inventarisatie (Linux, Windows, Solaris, AIX)"
 #, fuzzy
 msgid "HW/SW inventory cleanup"
 msgstr "HW/SW-inventarisatieregels"
-
-#, fuzzy, python-format
-msgid "HW/SW inventory display hints in %r"
-msgstr "Inventaris Geschiedenis"
 
 #, fuzzy
 msgid "HW/SW inventory history"
@@ -39786,26 +39832,13 @@ msgstr ""
 "Oude ASCII E-mails ondersteunen bulking niet. Je kunt bulking uitschakelen "
 "of een andere plugin kiezen die bulking toestaat."
 
-#, fuzzy, python-format
-msgid "Legacy GUI extension in %r"
-msgstr "Verouderde GUI-uitbreidingen"
-
-#, python-format
-msgid ""
-"Legacy GUI extension in %r uses an API which is marked as deprecated and may "
-"not work anymore due to unknown imports or objects (file: %s)."
-msgstr ""
-
 #, fuzzy
 msgid "Legacy GUI extensions"
 msgstr "Verouderde GUI-uitbreidingen"
 
-#, python-format
-msgid ""
-"Legacy GUI extensions in <tt>'%s'</tt> are marked as 'deprecated' and will "
-"be ignored in future Checkmk versions (official deprecation timeline not "
-"decided yet)."
-msgstr ""
+#, fuzzy
+msgid "Legacy GUI plug-ins"
+msgstr "Verouderde GUI-uitbreidingen"
 
 msgid "Legacy agent management"
 msgstr "Beheer van oudere agenten"
@@ -44699,6 +44732,11 @@ msgstr "Migreren"
 msgid "Migrate selected users"
 msgstr "Geselecteerde gebruikers migreren"
 
+msgid ""
+"Migrate the rules to the successor of the rule set or remove them before the "
+"update. The Werk which deprecated the rule set describes its successor."
+msgstr ""
+
 msgid "Migrate users"
 msgstr "Gebruikers migreren"
 
@@ -47199,8 +47237,8 @@ msgid "No GCP services found."
 msgstr "Geen hosts/services gevonden."
 
 #, fuzzy
-msgid "No GUI extensions using the deprecated API"
-msgstr "Geen controleplugins die de verouderde API gebruiken"
+msgid "No GUI plug-ins found"
+msgstr "Niet gevonden"
 
 #, fuzzy
 msgid "No HW/SW inventory plug-ins using the deprecated API"
@@ -47224,8 +47262,8 @@ msgid "No OpenTelemetry configuration yet"
 msgstr "Gebeurtenis Console configuratie"
 
 #, fuzzy
-msgid "No PNP templates using the deprecated API"
-msgstr "Geen controleplugins die de verouderde API gebruiken"
+msgid "No PNP templates found"
+msgstr "Geen regels gevonden."
 
 #, fuzzy
 msgid "No Prometheus configuration found for this bundle."
@@ -47486,10 +47524,6 @@ msgstr "Geen hosts/services gevonden."
 
 msgid "No information available"
 msgstr "Geen informatie beschikbaar"
-
-#, fuzzy
-msgid "No legacy GUI extensions using the deprecated API"
-msgstr "Geen controleplugins die de verouderde API gebruiken"
 
 msgid "No levels"
 msgstr "Geen niveaus"
@@ -52534,18 +52568,9 @@ msgstr "CLOSE_WAIT"
 msgid "PLL lock voltages by freqency"
 msgstr "PLL lockspanningen per freqentie"
 
-#, python-format
-msgid ""
-"PNP template uses an API which was removed in an earlier Checkmk version "
-"(file: %s)."
-msgstr ""
-
-#, python-format
-msgid ""
-"PNP templates in <tt>'%s'</tt> are marked as 'deprecated' and will be "
-"ignored in future Checkmk versions (official deprecation timeline not "
-"decided yet)."
-msgstr ""
+#, fuzzy
+msgid "PNP templates"
+msgstr "Afgeschreven regelsets"
 
 #, fuzzy
 msgid ""
@@ -54943,6 +54968,10 @@ msgstr "Plugin uitgang"
 msgid "Plug-in output in case of absent updates"
 msgstr "Plugin uitvoer in geval van afwezige updates"
 
+#, fuzzy, python-format
+msgid "Plug-in: %(ident)s"
+msgstr "Plugin"
+
 #, fuzzy
 msgid "Plug-ins"
 msgstr "Plugin"
@@ -56769,6 +56798,9 @@ msgstr "uitvoeringstermijn"
 #, fuzzy
 msgid "Re-executions"
 msgstr "uitvoeringstermijn"
+
+msgid "Re-implement it with the supported API cmk.graphing.v1."
+msgstr ""
 
 msgid "Read"
 msgstr "Lees"
@@ -71368,6 +71400,10 @@ msgstr ""
 msgid "The description of the interface as provided by the device"
 msgstr "De beschrijving van de interface zoals verstrekt door de inrichting"
 
+#, fuzzy
+msgid "The details below give the reason."
+msgstr "De identificatiecode van de sensor."
+
 #, no-python-format
 msgid ""
 "The device utilization data reported to the Meraki dashboard is based on a "
@@ -71529,6 +71565,15 @@ msgstr "Het verwachte aantal hulpbronnen in het cluster"
 #, fuzzy
 msgid "The expiration time must be in the future."
 msgstr "De einddatum moet na de begindatum liggen"
+
+msgid ""
+"The extension package contains plug-ins which have no effect in Checkmk."
+msgstr ""
+
+msgid ""
+"The extension package contains plug-ins which may break with any update of "
+"Checkmk."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -72329,6 +72374,9 @@ msgstr "Het cluster moet ten minste één knooppunt hebben"
 #, fuzzy
 msgid "The log file"
 msgstr "Dit logbestand"
+
+msgid "The log file 'var/log/web.log' shows the details."
+msgstr ""
 
 #, python-format
 msgid "The log file <tt>%s</tt> of host <tt>%s</tt> could not be deleted: %s."
@@ -75246,6 +75294,16 @@ msgid ""
 "removed, you can safely clean the rule sets up. In case the extension "
 "package was temporarily disabled, you may consider keeping the rule sets in "
 "place.</li></ol>"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "These rules have no effect in Checkmk %(version)s."
+msgstr "Deze host heeft geen Checkmk agenten."
+
+#, python-format
+msgid ""
+"These rules work in Checkmk %(version)s, but not after the update to the "
+"next major version."
 msgstr ""
 
 msgid ""
@@ -101044,9 +101102,7 @@ msgstr "Hosts verwijderen"
 msgid "Delete chat “%{title}”?"
 msgstr ""
 
-msgid ""
-"This will permanently delete this chat and its messages. This action can’t "
-"be undone."
+msgid "This chat and all its messages will be deleted and can’t be recovered."
 msgstr ""
 
 #, fuzzy
@@ -101955,6 +102011,34 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+#~ msgid "Deprecated GUI extensions"
+#~ msgstr "Verlengingen repliceren"
+
+#, fuzzy
+#~ msgid "Deprecated legacy GUI extensions"
+#~ msgstr "Verlengingen repliceren"
+
+#, fuzzy, python-format
+#~ msgid "HW/SW inventory display hints in %r"
+#~ msgstr "Inventaris Geschiedenis"
+
+#, fuzzy, python-format
+#~ msgid "Legacy GUI extension in %r"
+#~ msgstr "Verouderde GUI-uitbreidingen"
+
+#, fuzzy
+#~ msgid "No GUI extensions using the deprecated API"
+#~ msgstr "Geen controleplugins die de verouderde API gebruiken"
+
+#, fuzzy
+#~ msgid "No PNP templates using the deprecated API"
+#~ msgstr "Geen controleplugins die de verouderde API gebruiken"
+
+#, fuzzy
+#~ msgid "No legacy GUI extensions using the deprecated API"
+#~ msgstr "Geen controleplugins die de verouderde API gebruiken"
 
 #, fuzzy
 #~ msgid "The name of the data store"
@@ -105330,10 +105414,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Checkmk agent local directory"
 #~ msgstr "Checkmk Agent Local-Directory"
-
-#, fuzzy
-#~ msgid "Checkmk agent plug-ins directory"
-#~ msgstr "Checkmk Agent Plugins-Directory"
 
 #~ msgid "Checkmk: Message"
 #~ msgstr "Checkmk: Bericht"

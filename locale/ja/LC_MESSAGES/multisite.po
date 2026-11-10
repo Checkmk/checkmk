@@ -895,6 +895,14 @@ msgstr ""
 "%s<br><br>これは一時的なリリースフラグです。バージョン%sで削除される予定であ"
 "り、恒久的な設定として依存してはなりません。"
 
+#, python-format
+msgid "'%(name)s' has no effect in Checkmk."
+msgstr ""
+
+#, python-format
+msgid "'%(name)s' may break with any update of Checkmk."
+msgstr ""
+
 msgid ""
 "'Activate changes' is blocked. Distributed monitoring is not available after "
 "trial expiration, including hosts added via CMCDump"
@@ -1775,6 +1783,36 @@ msgstr ""
 "Checkmkはこの一時ファイルシステムなしで起動します。</p><p>たとえ可能であって"
 "も、Checkmkの全体的なパフォーマンスが低下する可能性があるため、この方法で"
 "Checkmkを使用することはお勧めできません。</p>"
+
+#, python-format
+msgid ""
+"<p>Checkmk imports the Python files in these packages below "
+"<tt>'%(plugins_dir)s'</tt>, including their subfolders: %(packages)s. Other "
+"files below this folder have no effect.</p><p>These plug-ins use internal "
+"interfaces of Checkmk. These interfaces are not supported for plug-ins and "
+"may change with any update. Graphs, metrics and perf-o-meters are no longer "
+"read from them and need the supported API cmk.graphing.v1. Rule sets have "
+"the supported API cmk.rulesets.v1. Files which use a supported API belong "
+"below <tt>cmk_addons/plugins</tt>; Checkmk finds them here only for rule "
+"sets in <tt>wato/check_parameters</tt>, a folder for its own rule sets.</"
+"p><p>Files which Checkmk fails to load are listed by the test 'Broken GUI "
+"extensions'.</p>"
+msgstr ""
+
+#, python-format
+msgid ""
+"<p>Checkmk runs the Python files placed directly in these folders below "
+"<tt>'%(plugins_dir)s'</tt>: %(folders)s. If a <tt>.pyc</tt> file sits next "
+"to a <tt>.py</tt> file, Checkmk runs the <tt>.pyc</tt> file instead. Files "
+"in subfolders or in other folders have no effect.</p><p>These plug-ins use "
+"internal interfaces of Checkmk. These interfaces are not supported for plug-"
+"ins and may change with any update. Graphs, metrics and perf-o-meters are no "
+"longer read from them and need the supported API cmk.graphing.v1. Rule sets "
+"have the supported API cmk.rulesets.v1. Files which use a supported API have "
+"no effect here and belong below <tt>cmk_addons/plugins</tt>.</p><p>Files "
+"which Checkmk fails to load are listed by the test 'Broken GUI extensions'.</"
+"p>"
+msgstr ""
 
 msgid ""
 "<p>Having a large number of users configured in Checkmk may decrease the "
@@ -13014,11 +13052,19 @@ msgstr "Checkmkコアファイル"
 msgid "Checkmk dashboard"
 msgstr "Checkmk ダッシュボード"
 
+#, fuzzy
+msgid "Checkmk does not load plug-ins from this folder."
+msgstr "Checkmkエージェントプラグイン-ディレクトリ"
+
 msgid "Checkmk edition"
 msgstr "Checkmkエディション"
 
 msgid "Checkmk extension packages (MKPs)"
 msgstr "Checkmk拡張パッケージ(MKPs)"
+
+#, python-format
+msgid "Checkmk fails to load it: %(error)s."
+msgstr ""
 
 msgid "Checkmk fetcher latency"
 msgstr "Checkmkフェッチャーのレイテンシー"
@@ -13067,6 +13113,11 @@ msgstr "Checkmkヘルパーの使用量"
 msgid "Checkmk licensing files"
 msgstr "Checkmkライセンスファイル"
 
+msgid ""
+"Checkmk loads plug-ins from this folder through internal interfaces, which "
+"are not supported for plug-ins."
+msgstr ""
+
 msgid "Checkmk log files"
 msgstr "Checkmkログファイル"
 
@@ -13079,6 +13130,22 @@ msgstr ""
 
 msgid "Checkmk mobile"
 msgstr "Checkmkモバイル"
+
+#, python-format
+msgid ""
+"Checkmk no longer reads PNP templates from <tt>'%(templates_dir)s'</tt> and "
+"its subfolders, so they have no effect. Graphs need the supported API "
+"cmk.graphing.v1."
+msgstr ""
+
+#, fuzzy
+msgid "Checkmk no longer reads PNP templates."
+msgstr "非推奨のPNPテンプレート"
+
+msgid ""
+"Checkmk no longer reads graphs, metrics and perf-o-meters from this folder. "
+"Re-implement it with the supported API cmk.graphing.v1."
+msgstr ""
 
 msgid "Checkmk overview"
 msgstr "Checkmk概要"
@@ -20026,14 +20093,8 @@ msgstr "非推奨"
 msgid "Deprecated Bakery plug-ins"
 msgstr "非推奨のチェックプラグイン"
 
-msgid "Deprecated GUI extensions"
-msgstr "非推奨のGUI拡張機能"
-
 msgid "Deprecated HW/SW inventory plug-ins"
 msgstr "非推奨のHW/SW Inventoryプラグイン"
-
-msgid "Deprecated PNP templates"
-msgstr "非推奨のPNPテンプレート"
 
 #, fuzzy
 msgid "Deprecated check manual pages"
@@ -20051,9 +20112,6 @@ msgstr "非推奨の選択、再選択してください"
 #, python-format
 msgid "Deprecated extension package: %s"
 msgstr "非推奨拡張パッケージ: %s"
-
-msgid "Deprecated legacy GUI extensions"
-msgstr "非推奨のレガシーGUI拡張"
 
 #, python-format
 msgid "Deprecated plug-in: %s"
@@ -25271,6 +25329,10 @@ msgstr ""
 "このmkpを無効にし、コマンドラインでこのコマンドを実行すると、エラーメッセージ"
 "をすべて見ることができます：%s"
 
+#, fuzzy, python-format
+msgid "Extension package: %(ident)s"
+msgstr "拡張パッケージファイル"
+
 msgid "Extension packages"
 msgstr "拡張パッケージ"
 
@@ -27595,27 +27657,12 @@ msgstr "GPU利用率"
 msgid "GUI design"
 msgstr "GUIデザイン"
 
-#, python-format
-msgid ""
-"GUI extension in %r uses an API which is marked as deprecated and may not "
-"work anymore due to unknown imports or objects (file: %s)."
-msgstr ""
-"%rの GUI 拡張機能は、非推奨としてマークされている API を使用しており、不明な"
-"インポートまたはオブジェクトが原因で動作しなくなる可能性があります (File: "
-"%s)。"
-
 msgid "GUI extensions"
 msgstr "GUI拡張機能"
 
-#, python-format
-msgid ""
-"GUI extensions in <tt>'%s'</tt> are marked as 'deprecated' and will be "
-"ignored in future Checkmk versions (official deprecation timeline not "
-"decided yet)."
-msgstr ""
-"<tt>'%s'</tt> 内の GUI 拡張機能は '非推奨' としてマークされており、今後の "
-"Checkmk バージョンでは無視されます（公式な非推奨となるスケジュールは未決定で"
-"す）。"
+#, fuzzy
+msgid "GUI plug-ins"
+msgstr "プラグイン"
 
 msgid "GUID"
 msgstr "GUID"
@@ -28530,10 +28577,6 @@ msgstr "ハードウェア / ソフトウェアインベントリ(Linux、Window
 
 msgid "HW/SW inventory cleanup"
 msgstr "HW/SWインベントリクリーンアップ"
-
-#, fuzzy, python-format
-msgid "HW/SW inventory display hints in %r"
-msgstr "HW/SWインベントリ履歴"
 
 msgid "HW/SW inventory history"
 msgstr "HW/SWインベントリ履歴"
@@ -37601,31 +37644,12 @@ msgstr ""
 "従来のASCIIメールは一括送信をサポートしていません。通知の一括送信を無効にする"
 "か、一括送信を許可する別の通知プラグインを選択できます。"
 
-#, python-format
-msgid "Legacy GUI extension in %r"
-msgstr "レガシーGUI拡張機能%r"
-
-#, python-format
-msgid ""
-"Legacy GUI extension in %r uses an API which is marked as deprecated and may "
-"not work anymore due to unknown imports or objects (file: %s)."
-msgstr ""
-"%r 内のレガシー GUI 拡張機能は、非推奨とマークされた API を使用しており、未知"
-"のインポートやオブジェクト（ファイル: %s）のため、機能しなくなる可能性があり"
-"ます。"
-
 msgid "Legacy GUI extensions"
 msgstr "レガシーGUI拡張機能%r"
 
-#, python-format
-msgid ""
-"Legacy GUI extensions in <tt>'%s'</tt> are marked as 'deprecated' and will "
-"be ignored in future Checkmk versions (official deprecation timeline not "
-"decided yet)."
-msgstr ""
-"<tt>%s</tt> 内のレガシー GUI 拡張機能は、非推奨してマークされており、今後の"
-"Checkmkバージョンでは無視されます（非推奨となる公式スケジュールは未決定で"
-"す）。"
+#, fuzzy
+msgid "Legacy GUI plug-ins"
+msgstr "レガシーGUI拡張機能%r"
 
 msgid "Legacy agent management"
 msgstr "レガシーエージェント管理"
@@ -42307,6 +42331,11 @@ msgstr "移行"
 msgid "Migrate selected users"
 msgstr "選択したユーザーを移行する"
 
+msgid ""
+"Migrate the rules to the successor of the rule set or remove them before the "
+"update. The Werk which deprecated the rule set describes its successor."
+msgstr ""
+
 msgid "Migrate users"
 msgstr "ユーザーを移行する"
 
@@ -44675,8 +44704,9 @@ msgstr "Migrate 内に Dictionary ValueSpec が存在しません: %s"
 msgid "No GCP services found."
 msgstr "GCPサービスが見つかりません。"
 
-msgid "No GUI extensions using the deprecated API"
-msgstr "非推奨のAPIを使用したGUI拡張機能は使用しない"
+#, fuzzy
+msgid "No GUI plug-ins found"
+msgstr "見つかりません"
 
 msgid "No HW/SW inventory plug-ins using the deprecated API"
 msgstr "非推奨のAPIを使用する HW/SW Inventory プラグインは使用しないでください"
@@ -44697,8 +44727,9 @@ msgstr "このバンドルに対応するOTel設定が見つかりませんで�
 msgid "No OpenTelemetry configuration yet"
 msgstr "Open Telemetryコレクターの設定"
 
-msgid "No PNP templates using the deprecated API"
-msgstr "非推奨のAPIを使用するPNPテンプレートを使用しないでください"
+#, fuzzy
+msgid "No PNP templates found"
+msgstr "ルールが見つかりません"
 
 msgid "No Prometheus configuration found for this bundle."
 msgstr "このバンドルに対応するPrometheusの設定が見つかりませせんでした。"
@@ -44937,9 +44968,6 @@ msgstr "ホスト/サービスが見つかりません。"
 
 msgid "No information available"
 msgstr "利用可能な情報はありません"
-
-msgid "No legacy GUI extensions using the deprecated API"
-msgstr "非推奨のAPIを使用したレガシーGUI拡張機能は使用しないでください"
 
 msgid "No levels"
 msgstr "レベルなし"
@@ -49607,23 +49635,9 @@ msgstr "CLOSE_WAIT"
 msgid "PLL lock voltages by freqency"
 msgstr "周波数によるPLLロック電圧"
 
-#, fuzzy, python-format
-msgid ""
-"PNP template uses an API which was removed in an earlier Checkmk version "
-"(file: %s)."
-msgstr ""
-"PNP テンプレートは、以前の Checkmk バージョンで削除された API を使用していま"
-"す（ファイル: %s）。"
-
-#, python-format
-msgid ""
-"PNP templates in <tt>'%s'</tt> are marked as 'deprecated' and will be "
-"ignored in future Checkmk versions (official deprecation timeline not "
-"decided yet)."
-msgstr ""
-"PNPテンプレートが<tt>'%s'</tt>に指定されているものは'非推奨'としてマークされ"
-"ており、今後のCheckmkバージョンでは無視されます（公式に非推奨とするスケジュー"
-"ルは未決定です）。"
+#, fuzzy
+msgid "PNP templates"
+msgstr "非推奨のPNPテンプレート"
 
 #, fuzzy
 msgid ""
@@ -51853,6 +51867,10 @@ msgstr "プラグイン出力"
 msgid "Plug-in output in case of absent updates"
 msgstr "更新がない場合のプラグイン出力"
 
+#, fuzzy, python-format
+msgid "Plug-in: %(ident)s"
+msgstr "プラグイン"
+
 msgid "Plug-ins"
 msgstr "プラグイン"
 
@@ -53588,6 +53606,9 @@ msgstr "再実行戦略"
 
 msgid "Re-executions"
 msgstr "再実行"
+
+msgid "Re-implement it with the supported API cmk.graphing.v1."
+msgstr ""
 
 msgid "Read"
 msgstr "読んだ"
@@ -67613,6 +67634,10 @@ msgstr "説明はオプションであり、説明や文書に使用できます
 msgid "The description of the interface as provided by the device"
 msgstr "デバイスによって提供されるインターフェースの説明"
 
+#, fuzzy
+msgid "The details below give the reason."
+msgstr "センサーの識別子。"
+
 #, no-python-format
 msgid ""
 "The device utilization data reported to the Meraki dashboard is based on a "
@@ -67778,6 +67803,15 @@ msgstr "クラスター内の予想されるリソース数"
 
 msgid "The expiration time must be in the future."
 msgstr "有効期限は将来の日時でなければなりません。"
+
+msgid ""
+"The extension package contains plug-ins which have no effect in Checkmk."
+msgstr ""
+
+msgid ""
+"The extension package contains plug-ins which may break with any update of "
+"Checkmk."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -68575,6 +68609,9 @@ msgstr "クラスターには少なくとも1つの要素が必要です"
 #, fuzzy
 msgid "The log file"
 msgstr "このログファイル"
+
+msgid "The log file 'var/log/web.log' shows the details."
+msgstr ""
 
 #, python-format
 msgid "The log file <tt>%s</tt> of host <tt>%s</tt> could not be deleted: %s."
@@ -71489,6 +71526,18 @@ msgstr ""
 "除された拡張機能パッケージに属するルールセット。削除したままにする予定であれ"
 "ば、安全に削除できます。拡張機能パッケージが一時的に無効化されている場合、"
 "ルールセットを保持しておくことを検討してください。</li></ol>"
+
+#, fuzzy, python-format
+msgid "These rules have no effect in Checkmk %(version)s."
+msgstr "これは Checkmk %s では機能しません。"
+
+#, fuzzy, python-format
+msgid ""
+"These rules work in Checkmk %(version)s, but not after the update to the "
+"next major version."
+msgstr ""
+"これはCheckmk %sでは部分的に機能するかもしれませんが、次期メジャーバージョン"
+"以降では機能しなくなる可能性があります。"
 
 msgid ""
 "These services are being discovered but have been disabled by creating a "
@@ -96107,9 +96156,7 @@ msgstr "ホストを削除"
 msgid "Delete chat “%{title}”?"
 msgstr ""
 
-msgid ""
-"This will permanently delete this chat and its messages. This action can’t "
-"be undone."
+msgid "This chat and all its messages will be deleted and can’t be recovered."
 msgstr ""
 
 #, fuzzy
@@ -97155,6 +97202,85 @@ msgid ""
 msgstr ""
 "後で アクセスする場合はヘルプ ＞ Checkmkの学習 ＞ ウェルカムページ からアクセ"
 "スできます"
+
+#~ msgid "Deprecated GUI extensions"
+#~ msgstr "非推奨のGUI拡張機能"
+
+#~ msgid "Deprecated legacy GUI extensions"
+#~ msgstr "非推奨のレガシーGUI拡張"
+
+#, python-format
+#~ msgid ""
+#~ "GUI extension in %r uses an API which is marked as deprecated and may not "
+#~ "work anymore due to unknown imports or objects (file: %s)."
+#~ msgstr ""
+#~ "%rの GUI 拡張機能は、非推奨としてマークされている API を使用しており、不明"
+#~ "なインポートまたはオブジェクトが原因で動作しなくなる可能性があります "
+#~ "(File: %s)。"
+
+#, python-format
+#~ msgid ""
+#~ "GUI extensions in <tt>'%s'</tt> are marked as 'deprecated' and will be "
+#~ "ignored in future Checkmk versions (official deprecation timeline not "
+#~ "decided yet)."
+#~ msgstr ""
+#~ "<tt>'%s'</tt> 内の GUI 拡張機能は '非推奨' としてマークされており、今後の "
+#~ "Checkmk バージョンでは無視されます（公式な非推奨となるスケジュールは未決定"
+#~ "です）。"
+
+#, fuzzy, python-format
+#~ msgid "HW/SW inventory display hints in %r"
+#~ msgstr "HW/SWインベントリ履歴"
+
+#, python-format
+#~ msgid "Legacy GUI extension in %r"
+#~ msgstr "レガシーGUI拡張機能%r"
+
+#, python-format
+#~ msgid ""
+#~ "Legacy GUI extension in %r uses an API which is marked as deprecated and "
+#~ "may not work anymore due to unknown imports or objects (file: %s)."
+#~ msgstr ""
+#~ "%r 内のレガシー GUI 拡張機能は、非推奨とマークされた API を使用しており、"
+#~ "未知のインポートやオブジェクト（ファイル: %s）のため、機能しなくなる可能性"
+#~ "があります。"
+
+#, python-format
+#~ msgid ""
+#~ "Legacy GUI extensions in <tt>'%s'</tt> are marked as 'deprecated' and "
+#~ "will be ignored in future Checkmk versions (official deprecation timeline "
+#~ "not decided yet)."
+#~ msgstr ""
+#~ "<tt>%s</tt> 内のレガシー GUI 拡張機能は、非推奨してマークされており、今後"
+#~ "のCheckmkバージョンでは無視されます（非推奨となる公式スケジュールは未決定"
+#~ "です）。"
+
+#~ msgid "No GUI extensions using the deprecated API"
+#~ msgstr "非推奨のAPIを使用したGUI拡張機能は使用しない"
+
+#~ msgid "No PNP templates using the deprecated API"
+#~ msgstr "非推奨のAPIを使用するPNPテンプレートを使用しないでください"
+
+#~ msgid "No legacy GUI extensions using the deprecated API"
+#~ msgstr "非推奨のAPIを使用したレガシーGUI拡張機能は使用しないでください"
+
+#, fuzzy, python-format
+#~ msgid ""
+#~ "PNP template uses an API which was removed in an earlier Checkmk version "
+#~ "(file: %s)."
+#~ msgstr ""
+#~ "PNP テンプレートは、以前の Checkmk バージョンで削除された API を使用してい"
+#~ "ます（ファイル: %s）。"
+
+#, python-format
+#~ msgid ""
+#~ "PNP templates in <tt>'%s'</tt> are marked as 'deprecated' and will be "
+#~ "ignored in future Checkmk versions (official deprecation timeline not "
+#~ "decided yet)."
+#~ msgstr ""
+#~ "PNPテンプレートが<tt>'%s'</tt>に指定されているものは'非推奨'としてマークさ"
+#~ "れており、今後のCheckmkバージョンでは無視されます（公式に非推奨とするスケ"
+#~ "ジュールは未決定です）。"
 
 #~ msgid "The name of the data store"
 #~ msgstr "データストアの名前"
@@ -100760,9 +100886,6 @@ msgstr ""
 
 #~ msgid "Checkmk agent local directory"
 #~ msgstr "Checkmkエージェントローカルディレクトリ"
-
-#~ msgid "Checkmk agent plug-ins directory"
-#~ msgstr "Checkmkエージェントプラグイン-ディレクトリ"
 
 #~ msgid "Checkmk: Message"
 #~ msgstr "Checkmk: メッセージ"

@@ -77,7 +77,7 @@ def _mode_man(
         rendered = renderer(man_page).render_page()
     except Exception as exc:
         sys.stderr.write(f"ERROR: Invalid check manpage {args[0]}: {exc}\n")
-        return CLIExitCode.SUCCESS
+        return CLIExitCode.FAILURE
 
     man_pages.write_output(rendered)
     return CLIExitCode.SUCCESS

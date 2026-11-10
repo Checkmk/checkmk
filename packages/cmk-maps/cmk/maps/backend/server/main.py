@@ -18,6 +18,7 @@ import time
 from collections.abc import Sequence
 from contextlib import suppress
 from pathlib import Path
+from typing import Literal, Protocol
 
 # Only the standard library here: omd runs these commands for every status call.
 # The daemon itself lives in cmk.maps.backend.server.daemon.
@@ -63,8 +64,20 @@ def _send(pid: int, sig: signal.Signals) -> None:
         os.kill(pid, sig)
 
 
+class _Run(Protocol):
+    def __call__(
+        self, args: list[str], /, *, capture_output: bool, text: Literal[True], check: bool
+    ) -> subprocess.CompletedProcess[str]: ...
+
+
 class MapsServer:
-    def __init__(self, omd_root: Path) -> None:
+    def __init__(
+        self,
+        omd_root: Path,
+        *,
+        run: _Run = subprocess.run,
+    ) -> None:
+        self._run = run
         self.run_dir = omd_root / "tmp" / "run"
         self.log_dir = omd_root / "var" / "log" / "maps"
         self.pid_file = self.run_dir / "maps.pid"
@@ -86,8 +99,8 @@ class MapsServer:
         self.run_dir.mkdir(parents=True, exist_ok=True)
         self.socket.unlink(missing_ok=True)
 
-        result = subprocess.run(
-            [sys.executable, "-m", _DAEMON],
+        result = self._run(
+            [sys.executable, "-P", "-m", _DAEMON],
             capture_output=True,
             text=True,
             check=False,

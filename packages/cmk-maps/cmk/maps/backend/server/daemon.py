@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """The Maps daemon: forks into the background and serves until it gets SIGTERM.
 
-Started by ``cmk-maps-server start`` as ``python -m cmk.maps.backend.server.daemon``.
+Started by ``cmk-maps-server start`` as ``python -P -m cmk.maps.backend.server.daemon``.
 """
 
 import logging

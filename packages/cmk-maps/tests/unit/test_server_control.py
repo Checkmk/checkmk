@@ -2,6 +2,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import os
 import signal
 import subprocess
 from pathlib import Path
@@ -84,7 +85,7 @@ def test_start_already_running(
     assert "already running." in capsys.readouterr().out
 
 
-def test_start_waits_for_socket(server: srv.MapsServer, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_start_waits_for_socket(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(srv, "_alive", lambda _pid: True)
 
     def fake_run(cmd: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:  # noqa: ARG001
@@ -92,12 +93,29 @@ def test_start_waits_for_socket(server: srv.MapsServer, monkeypatch: pytest.Monk
         server.socket.touch()
         return subprocess.CompletedProcess(cmd, 0, "", "")
 
-    monkeypatch.setattr(subprocess, "run", fake_run)
+    server = srv.MapsServer(tmp_path, run=fake_run)
     assert server.start() == 0
 
 
+def test_the_daemon_is_started_in_safe_path_mode(tmp_path: Path) -> None:
+    commands: list[list[str]] = []
+
+    def fake_run(cmd: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:  # noqa: ARG001
+        commands.append(cmd)
+        # A process that is alive: this one.
+        server.pid_file.write_text(str(os.getpid()))
+        server.socket.touch()
+        return subprocess.CompletedProcess(cmd, 0, "", "")
+
+    server = srv.MapsServer(tmp_path, run=fake_run)
+
+    server.start()
+
+    assert commands[0][1:3] == ["-P", "-m"]
+
+
 def test_start_fails_when_socket_never_binds(
-    server: srv.MapsServer, monkeypatch: pytest.MonkeyPatch
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(srv, "_alive", lambda _pid: True)
     monkeypatch.setattr(srv, "_START_TIMEOUT", 0.3)
@@ -106,19 +124,17 @@ def test_start_fails_when_socket_never_binds(
         server.pid_file.write_text("4242")  # process up, but socket never appears
         return subprocess.CompletedProcess(cmd, 0, "", "")
 
-    monkeypatch.setattr(subprocess, "run", fake_run)
+    server = srv.MapsServer(tmp_path, run=fake_run)
     assert server.start() == 1
 
 
 def test_start_reports_a_daemon_that_fails_to_start(
-    server: srv.MapsServer,
-    monkeypatch: pytest.MonkeyPatch,
-    capsys: pytest.CaptureFixture[str],
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     def fake_run(cmd: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:  # noqa: ARG001
         return subprocess.CompletedProcess(cmd, 1, "", "boom")
 
-    monkeypatch.setattr(subprocess, "run", fake_run)
+    server = srv.MapsServer(tmp_path, run=fake_run)
     assert server.start() == 1
     assert "failed" in capsys.readouterr().out
 

@@ -36,6 +36,7 @@ from cmk.maps.backend.api.v1.deps import (
 )
 from cmk.maps.backend.api.v1.states import (
     end_streams,
+    is_streamed,
     map_states_response,
     tell_map_saved,
     view_preview,
@@ -124,7 +125,7 @@ def _register_signed(
     # The owner was resolved for ``name``, so the signed config must be that map's.
     if cfg.name != name:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Map name mismatch")
-    if not map_service.register_signed_map(owner, cfg):
+    if not map_service.register_signed_map(owner, cfg, pinned=is_streamed):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="The map was saved since")
     if saved and current_user.may_save(owner):
         tell_map_saved(owner, name, sig)
@@ -193,7 +194,7 @@ async def register_map(
             )
         if body.config.name != name:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Map name mismatch")
-        map_service.register_map(current_user.name, body.config)
+        map_service.register_map(current_user.name, body.config, pinned=is_streamed)
         if not within_budget:
             charge(rest_read_limiter, current_user.name)
         return await map_states_response(

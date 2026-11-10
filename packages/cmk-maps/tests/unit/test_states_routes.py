@@ -207,6 +207,17 @@ def test_registered_map_missing_map_is_404() -> None:
     assert exc.value.status_code == HTTPStatus.NOT_FOUND
 
 
+def test_a_map_is_streamed_while_it_has_a_subscriber() -> None:
+    map_key = states._map_key("alice", "b1")  # noqa: SLF001
+    sub = manager.subscribe(map_key, None)
+    streamed_while_subscribed = states.is_streamed(("alice", "b1"))
+    manager.unsubscribe(map_key, sub)
+
+    assert streamed_while_subscribed
+    assert not states.is_streamed(("alice", "b1"))
+    assert not states.is_streamed(("bob", "b1"))
+
+
 # --------------------------------------------------------------------------- #
 # _broadcast_loop — lifecycle + error resilience
 # --------------------------------------------------------------------------- #

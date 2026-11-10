@@ -513,6 +513,11 @@ def tell_map_saved(owner: str, name: str, sig: str) -> None:
         manager.push(map_key, subscribers, MAP_EVENTS.encode(MapSavedMessage(map=name, sig=sig)))
 
 
+def is_streamed(key: tuple[str, str]) -> bool:
+    """Whether the map of ``key`` (owner, name) has an open stream."""
+    return manager.get_subscriber_count(_map_key(*key)) > 0
+
+
 def end_streams(owner: str, name: str) -> None:
     """End every open stream of the map; a browser that may still see it reconnects."""
     for sub in manager.get_subscribers(_map_key(owner, name)):

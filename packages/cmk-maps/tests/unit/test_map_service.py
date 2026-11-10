@@ -54,3 +54,15 @@ def test_an_unsaved_preview_lets_no_older_signed_config_in() -> None:
     assert not map_service.register_signed_map("alice", MapConfig(name="net", version=1))
     assert map_service.register_signed_map("alice", MapConfig(name="net", version=2))
     assert map_service.register_signed_map("bob", MapConfig(name="net", version=1))
+
+
+def test_a_streamed_map_stays_cached_however_many_maps_are_registered() -> None:
+    map_service.register_map("alice", MapConfig(name="streamed"))
+    streamed = ("alice", "streamed")
+
+    for i in range(2000):
+        map_service.register_map("bob", MapConfig(name=f"m{i}"), pinned=streamed.__eq__)
+
+    assert map_service.get_map("alice", "streamed") is not None
+    assert map_service.get_map("bob", "m0") is None
+    assert map_service.get_map("bob", "m1999") is not None

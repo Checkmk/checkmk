@@ -14,7 +14,7 @@ persistence lives entirely in the GUI.
 import threading
 import time
 from collections import OrderedDict
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from collections.abc import Set as AbstractSet
 from typing import Protocol
 
@@ -27,8 +27,10 @@ from cmk.maps.backend.schemas.map import MapConfig
 #
 # Bounded LRU because ``register`` needs only authentication: without a cap one
 # authenticated user could loop it with unique names and grow the daemon heap
-# without bound. Evicting is safe — the config lives in the GUI store and a
-# viewer whose entry was evicted re-registers on its next request.
+# without bound. A map with an open stream is never evicted, as its broadcast
+# loop reads it on every tick; those are bounded by the stream limit. Evicting
+# any other is safe — the config lives in the GUI store and a viewer whose
+# entry was evicted re-registers on its next request.
 _CACHE_MAX_ENTRIES = 1024
 _CACHE: OrderedDict[tuple[str, str], MapConfig] = OrderedDict()
 _CACHE_GUARD = threading.Lock()
@@ -39,40 +41,56 @@ _CACHE_GUARD = threading.Lock()
 _SIGNED_VERSIONS_MAX_ENTRIES = 10 * _CACHE_MAX_ENTRIES
 _SIGNED_VERSIONS: OrderedDict[tuple[str, str], int] = OrderedDict()
 
+type MapKey = tuple[str, str]
 
-def register_map(owner: str, cfg: MapConfig) -> None:
+
+def _never(_key: MapKey) -> bool:
+    return False
+
+
+def register_map(owner: str, cfg: MapConfig, *, pinned: Callable[[MapKey], bool] = _never) -> None:
     """Cache a GUI-owned map config in memory for state streaming.
 
     Map config is owned by the GUI visuals store now; the daemon only needs the
     config in memory so its state/SSE path can resolve and stream it. The SPA
     registers the map it loaded (keyed by the map's owner + name) before opening
-    the stream.
+    the stream. A map for which ``pinned`` holds is not evicted for it.
     """
     with _CACHE_GUARD:
-        _cache(owner, cfg)
+        _put_bounded(_CACHE, (owner, cfg.name), cfg, _CACHE_MAX_ENTRIES, pinned)
 
 
-def register_signed_map(owner: str, cfg: MapConfig) -> bool:
+def register_signed_map(
+    owner: str, cfg: MapConfig, *, pinned: Callable[[MapKey], bool] = _never
+) -> bool:
     """Like :func:`register_map` for a config the GUI signed, unless one with a
     later version was registered: return whether it was."""
     key = (owner, cfg.name)
     with _CACHE_GUARD:
         if cfg.version < _SIGNED_VERSIONS.get(key, cfg.version):
             return False
-        _put_bounded(_SIGNED_VERSIONS, key, cfg.version, _SIGNED_VERSIONS_MAX_ENTRIES)
-        _cache(owner, cfg)
+        _put_bounded(_SIGNED_VERSIONS, key, cfg.version, _SIGNED_VERSIONS_MAX_ENTRIES, _never)
+        _put_bounded(_CACHE, key, cfg, _CACHE_MAX_ENTRIES, pinned)
     return True
 
 
-def _cache(owner: str, cfg: MapConfig) -> None:
-    _put_bounded(_CACHE, (owner, cfg.name), cfg, _CACHE_MAX_ENTRIES)
-
-
-def _put_bounded[K, V](entries: OrderedDict[K, V], key: K, value: V, limit: int) -> None:
+def _put_bounded[K, V](
+    entries: OrderedDict[K, V], key: K, value: V, limit: int, pinned: Callable[[K], bool]
+) -> None:
+    """Put ``key`` last, then evict the oldest entries but ``key`` and the pinned ones."""
     entries[key] = value
     entries.move_to_end(key)
-    while len(entries) > limit:
-        entries.popitem(last=False)
+    excess = len(entries) - limit
+    if excess <= 0:
+        return
+    evict: list[K] = []
+    for old in entries:
+        if len(evict) == excess:
+            break
+        if old != key and not pinned(old):
+            evict.append(old)
+    for old in evict:
+        del entries[old]
 
 
 def get_map(owner: str, name: str) -> MapConfig | None:

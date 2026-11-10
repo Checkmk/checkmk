@@ -16,7 +16,7 @@ from cmk.maps.backend.api.v1.deps import (
     can_configure,
     rate_limited_read,
     require_connection_read,
-    resolve_auth_user,
+    resolve_monitoring_scope,
 )
 from cmk.maps.backend.connections.base import (
     ConnectionBase,
@@ -44,24 +44,9 @@ router = APIRouter()
 
 
 @asynccontextmanager
-async def auth_user_scope(connection: ConnectionBase, auth_user: str | None) -> AsyncIterator[None]:
-    """Scope livestatus queries inside the block to *auth_user*'s contact
-    visibility; ``None`` (admins / ``general.see_all`` / non-CMK setups) runs
-    UNSCOPED. Livestatus ``AuthUser`` only knows contacts, and cmkadmin
-    typically is no contact, so passing the raw username would silently
-    filter every query down to zero rows.
-    """
-    if auth_user is not None:
-        async with connection.with_auth_user(auth_user):
-            yield
-    else:
-        yield
-
-
-@asynccontextmanager
 async def _auth_scope(connection: ConnectionBase, user: Principal) -> AsyncIterator[None]:
-    """Resolve *user* to a Livestatus AuthUser and scope queries accordingly."""
-    async with auth_user_scope(connection, resolve_auth_user(user)):
+    """Scope the queries inside the block to what *user* may see."""
+    async with connection.with_monitoring_scope(resolve_monitoring_scope(user)):
         yield
 
 

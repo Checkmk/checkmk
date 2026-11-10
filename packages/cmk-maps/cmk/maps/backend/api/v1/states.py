@@ -19,7 +19,7 @@ from fastapi.sse import EventSourceResponse
 
 from cmk.fastapi.gui_session import Unavailable
 from cmk.fastapi.sse import EventStream, SentEvent
-from cmk.maps.backend.api.v1.connections import auth_user_scope, build_topology_response
+from cmk.maps.backend.api.v1.connections import build_topology_response
 from cmk.maps.backend.api.v1.deps import (
     charge,
     get_current_user,
@@ -28,11 +28,11 @@ from cmk.maps.backend.api.v1.deps import (
     GuiAuthDep,
     rate_limited_map_read,
     registered_map,
-    resolve_auth_user,
+    resolve_monitoring_scope,
     SessionCookieDep,
 )
 from cmk.maps.backend.api.v1.types import MapName
-from cmk.maps.backend.connections.base import ServiceMatchRow, ServiceRow
+from cmk.maps.backend.connections.base import MonitoringScope, ServiceMatchRow, ServiceRow
 from cmk.maps.backend.core.auth import GuiAuth, Principal
 from cmk.maps.backend.core.config import settings
 from cmk.maps.backend.core.ratelimit import (
@@ -133,7 +133,7 @@ class _Topology:
 
 type _TopologyKey = tuple[str, str | None]
 
-# The latest topology per (flow map, auth user), so a new stream and a client
+# The latest topology per (flow map, subscriber group), so a new stream and a client
 # without one get what the map's stream fetched in this interval.
 _topologies: TtlCache[_TopologyKey, _Topology] = TtlCache(
     maxsize=256,
@@ -158,7 +158,7 @@ _KEEPALIVE: SentEvent[StreamMessage] = SentEvent(comment="ping")
 
 
 async def _fetch_topology_for_user(
-    cfg: MapConfig, auth_user: str | None
+    cfg: MapConfig, scope: MonitoringScope
 ) -> list[TopologyNode] | None:
     connection = state_service.get_connection(cfg.connection_id)
     if connection is None:
@@ -190,7 +190,7 @@ async def _fetch_topology_for_user(
         )
 
     try:
-        async with auth_user_scope(connection, auth_user):
+        async with connection.with_monitoring_scope(scope):
             return await _build()
     except Exception:
         logger.warning("topology fetch failed for map '%(map)s'", {"map": cfg.name}, exc_info=True)
@@ -236,7 +236,7 @@ def _map_key(owner: str, name: str) -> str:
 
 @dataclass(frozen=True)
 class _Audience:
-    auth_user: str | None
+    scope: MonitoringScope
     # Only a foldertree map renders the Setup folders the user may read, which the
     # monitoring scope does not cover: a see-all guest shares auth_user=None with
     # an admin but sees fewer folders.
@@ -244,25 +244,32 @@ class _Audience:
 
     @property
     def group_key(self) -> str | None:
-        if self.folder_scope is None:
-            return self.auth_user
+        if self.folder_scope is None and self.scope.sites is None:
+            return self.scope.auth_user
         # NUL for a see-all user, as no user name holds it, while "None" is one.
-        user = "\x00" if self.auth_user is None else self.auth_user
-        return f"{user}\x00{self.folder_scope.key}"
+        # No site ID holds a comma or an asterisk.
+        user = "\x00" if self.scope.auth_user is None else self.scope.auth_user
+        sites = "*" if self.scope.sites is None else ",".join(sorted(self.scope.sites))
+        folders = "" if self.folder_scope is None else self.folder_scope.key
+        return f"{user}\x00{sites}\x00{folders}"
 
 
 def _audience_of(
-    auth_user: str | None, folder_scope: FolderScope | None, cfg: MapConfig
+    scope: MonitoringScope, folder_scope: FolderScope | None, cfg: MapConfig
 ) -> _Audience:
-    return _Audience(auth_user, folder_scope if cfg.view.type == "foldertree" else None)
+    return _Audience(scope, folder_scope if cfg.view.type == "foldertree" else None)
 
 
 def _audience(user: Principal, cfg: MapConfig) -> _Audience:
-    return _audience_of(resolve_auth_user(user), resolve_folder_scope(user), cfg)
+    return _audience_of(resolve_monitoring_scope(user), resolve_folder_scope(user), cfg)
+
+
+def _subscriber_scope(sub: Subscriber) -> MonitoringScope:
+    return MonitoringScope(sub.auth_user, sub.sites)
 
 
 def _subscriber_audience(sub: Subscriber, cfg: MapConfig) -> _Audience:
-    return _audience_of(sub.auth_user, sub.folder_scope, cfg)
+    return _audience_of(_subscriber_scope(sub), sub.folder_scope, cfg)
 
 
 def _group_key_for(cfg: MapConfig) -> Callable[[Subscriber], str | None]:
@@ -293,7 +300,7 @@ async def _group_states(
     key: _FetchKey,
     owner: str,
     cfg: MapConfig,
-    auth_user: str | None,
+    scope: MonitoringScope,
     folder_scope: FolderScope | None,
     links: LinkSource,
 ) -> _Flight:
@@ -301,7 +308,7 @@ async def _group_states(
         fetched_at = time.monotonic()
         states = await state_service.get_map_states(
             cfg,
-            auth_user=auth_user,
+            scope=scope,
             folder_scope=folder_scope,
             map_owner=owner,
             links=links,
@@ -327,9 +334,7 @@ async def _shared_states(
     ttl = settings_service.get_effective_state_refresh_interval()
     fetched = _fetched.get(key, ttl=ttl)
     if fetched is None or fetched.config is not cfg or time.monotonic() - fetched.fetched_at >= ttl:
-        flight = await _group_states(
-            key, owner, cfg, audience.auth_user, audience.folder_scope, links
-        )
+        flight = await _group_states(key, owner, cfg, audience.scope, audience.folder_scope, links)
         fetched = _kept(key, owner, cfg, flight)
     else:
         # The read budget spares Livestatus, which states kept already do not ask.
@@ -340,17 +345,17 @@ async def _shared_states(
 
 
 async def _group_topology(
-    map_key: str, cfg: MapConfig, auth_user: str | None, *, fresh: bool
+    map_key: str, cfg: MapConfig, scope: MonitoringScope, *, fresh: bool
 ) -> list[TopologyNode] | None:
     """The topology of the map for the group, fetched once per interval unless ``fresh``."""
-    key = (map_key, auth_user)
+    key = (map_key, _audience_of(scope, None, cfg).group_key)
     if not fresh:
         ttl = settings_service.get_effective_state_refresh_interval()
         if (kept := _topologies.get(key, ttl=ttl)) is not None and kept.config is cfg:
             return kept.nodes
 
     async def fetch() -> list[TopologyNode] | None:
-        nodes = await _fetch_topology_for_user(cfg, auth_user)
+        nodes = await _fetch_topology_for_user(cfg, scope)
         if nodes is not None:
             _topologies.set(key, _Topology(cfg, nodes))
         return nodes
@@ -361,7 +366,7 @@ async def _group_topology(
 async def _push_topology_to(
     cfg: MapConfig,
     map_key: str,
-    auth_user: str | None,
+    scope: MonitoringScope,
     targets: list[Subscriber],
     *,
     force_full: bool,
@@ -370,11 +375,11 @@ async def _push_topology_to(
     if not targets:
         return
     # A newcomer gets what the group's stream fetched in this interval.
-    nodes = await _group_topology(map_key, cfg, auth_user, fresh=store)
+    nodes = await _group_topology(map_key, cfg, scope, fresh=store)
     if nodes is None:
         return
     delta = state_service.compute_topology_delta(
-        map_key, auth_user, nodes, force_full=force_full, store=store
+        map_key, _audience_of(scope, None, cfg).group_key, nodes, force_full=force_full, store=store
     )
     if not (force_full or delta.added or delta.changed or delta.removed or delta.timing):
         return
@@ -387,11 +392,11 @@ async def _push_topology_to(
 async def _broadcast_loop(map_key: str, links: LinkSource) -> None:
     """Fetch states once per interval and push to all subscribers.
 
-    With CHECKMK_OMD_ROOT, subscribers are grouped by auth_user and each group
+    With CHECKMK_OMD_ROOT, subscribers are grouped by what they may see and each group
     receives states filtered to its user's contact groups. Otherwise a single
     shared query is issued.
 
-    Delta-encoded per (map, auth_user): only added/changed states travel the
+    Delta-encoded per (map, group): only added/changed states travel the
     wire, plus object_ids that disappeared. The first tick (or after a snapshot
     is dropped) is full so newly-attached subscribers converge.
 
@@ -425,13 +430,13 @@ async def _broadcast_loop(map_key: str, links: LinkSource) -> None:
                     state_service.prune_map_snapshots(_dead_sites_snapshots, map_key, live_groups)
                     for group_key, subs in grouped.items():
                         # All subs in a group render identically; the first carries
-                        # the monitoring (auth_user) + folder (folder_scope) scopes.
+                        # the monitoring (scope) + folder (folder_scope) scopes.
                         # Snapshots/deltas are keyed by group_key so admin and a
                         # see-all guest on a foldertree map don't share a tree.
                         audience = _subscriber_audience(subs[0], cfg)
                         key = (map_key, group_key)
                         flight = await _group_states(
-                            key, owner, cfg, audience.auth_user, audience.folder_scope, links
+                            key, owner, cfg, audience.scope, audience.folder_scope, links
                         )
                         states = flight.states
                         # Only for a group that polled since the last tick, so the
@@ -486,7 +491,7 @@ async def _broadcast_loop(map_key: str, links: LinkSource) -> None:
                                 s.needs_full = False
                         if cfg.view.type == "flow":
                             await _push_topology_to(
-                                cfg, map_key, audience.auth_user, subs, force_full=False
+                                cfg, map_key, audience.scope, subs, force_full=False
                             )
                 elapsed_ms = (asyncio.get_running_loop().time() - tick_start) * 1000
                 logger.debug(
@@ -534,7 +539,7 @@ async def map_states_response(
     audience = _audience(current_user, cfg)
     states = await state_service.get_map_states(
         cfg,
-        auth_user=audience.auth_user,
+        scope=audience.scope,
         folder_scope=audience.folder_scope,
         map_owner=current_user.map_key_owner,
         links=links,
@@ -671,7 +676,7 @@ async def get_map_topology(
     nodes = await _group_topology(
         _map_key(current_user.map_key_owner, cfg.name),
         cfg,
-        resolve_auth_user(current_user),
+        resolve_monitoring_scope(current_user),
         fresh=False,
     )
     if nodes is None:
@@ -700,14 +705,14 @@ async def get_folder_host_services(
     if connection is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Connection not found")
 
-    auth_user = resolve_auth_user(current_user)
+    scope = resolve_monitoring_scope(current_user)
     only_hard = cfg.view.only_hard_states
 
     async def _fetch() -> list[ServiceRow]:
         return await connection.get_host_services(host, only_hard=only_hard)
 
     try:
-        async with auth_user_scope(connection, auth_user):
+        async with connection.with_monitoring_scope(scope):
             rows = await _fetch()
     except Exception:
         logger.warning(
@@ -775,7 +780,7 @@ async def folder_service_search(
     if connection is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Connection not found")
 
-    auth_user = resolve_auth_user(current_user)
+    scope = resolve_monitoring_scope(current_user)
     only_hard = cfg.view.only_hard_states
 
     async def _fetch() -> list[ServiceMatchRow]:
@@ -788,7 +793,7 @@ async def folder_service_search(
         )
 
     try:
-        async with auth_user_scope(connection, auth_user):
+        async with connection.with_monitoring_scope(scope):
             rows = await _fetch()
     except Exception:
         logger.warning("folder service search failed for '%(map)s'", {"map": name}, exc_info=True)
@@ -912,7 +917,8 @@ async def _subscribe_to_stream(
     map_key = _map_key(owner, name)
 
     _take_slot(user.name, tab)
-    sub = manager.subscribe(map_key, resolve_auth_user(user), resolve_folder_scope(user))
+    scope = resolve_monitoring_scope(user)
+    sub = manager.subscribe(map_key, scope.auth_user, resolve_folder_scope(user), sites=scope.sites)
     stream = _TabStream(sub)
     if tab is not None:
         _tab_streams[(user.name, tab)] = stream
@@ -931,9 +937,7 @@ async def _subscribe_to_stream(
         # deltas (topology deltas are convergent upserts, so this client reconverges
         # from the next tick's group delta on top of this full) — no group re-full.
         if cfg.view.type == "flow":
-            await _push_topology_to(
-                cfg, map_key, sub.auth_user, [sub], force_full=True, store=False
-            )
+            await _push_topology_to(cfg, map_key, scope, [sub], force_full=True, store=False)
 
         yield StreamSubscription(
             subscriber=sub, name=name, user=user, auth=auth, session_cookie=cookie

@@ -26,6 +26,7 @@ from cmk.maps.shared.map_signature import sign_config, signed_config_size
 
 _COOKIE = "jdoe:4f1c2b1e-0d7a-4a3b-9a55-8d9d7c3a2b10:9c1e0000"
 _IDENTIFY = "/domain-types/gui_session/actions/identify/invoke"
+_MONITORED_SITES = "/domain-types/maps_monitored_sites/actions/show/invoke"
 _ACCESS = "/domain-types/maps_access/actions/resolve/invoke"
 _LINK_TARGETS = "/domain-types/maps_link_targets/actions/resolve/invoke"
 _SECRET = Secret(b"0123456789abcdef0123456789abcdef")
@@ -69,6 +70,10 @@ def _identified(
     )
 
 
+def _monitoring(sites: list[str] | None) -> httpx2.Response:
+    return httpx2.Response(HTTPStatus.OK, json={"monitored_sites": sites})
+
+
 def _auth(gui: _GUI) -> GuiAuth:
     return GuiAuth(
         GuiLoopback(
@@ -78,7 +83,7 @@ def _auth(gui: _GUI) -> GuiAuth:
 
 
 def test_the_user_comes_with_what_the_gui_says_about_them() -> None:
-    gui = _GUI({_IDENTIFY: _identified()})
+    gui = _GUI({_IDENTIFY: _identified(), _MONITORED_SITES: _monitoring(["central"])})
 
     principal = asyncio.run(_auth(gui).principal(_COOKIE, now=0.0))
 
@@ -90,7 +95,8 @@ def test_the_user_comes_with_what_the_gui_says_about_them() -> None:
                 "required_permissions": list(_ALL_PERMISSIONS),
                 "include_contact_groups": True,
             },
-        )
+        ),
+        (_MONITORED_SITES, {"user_id": "jdoe"}),
     ]
     assert principal == Principal(
         name="jdoe",
@@ -99,13 +105,52 @@ def test_the_user_comes_with_what_the_gui_says_about_them() -> None:
         see_all=False,
         folder_see_all=True,
         contact_groups=frozenset({"linux"}),
+        monitored_sites=frozenset({"central"}),
     )
+
+
+def test_a_user_without_monitored_sites_set_is_asked_all_sites_for() -> None:
+    gui = _GUI({_IDENTIFY: _identified(), _MONITORED_SITES: _monitoring(None)})
+
+    principal = asyncio.run(_auth(gui).principal(_COOKIE, now=0.0))
+
+    assert isinstance(principal, Principal)
+    assert principal.monitored_sites is None
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [
+        pytest.param(httpx2.Response(HTTPStatus.OK, json={}), id="no sites named"),
+        pytest.param(httpx2.Response(HTTPStatus.NOT_FOUND), id="user gone"),
+    ],
+)
+def test_a_user_whose_monitored_sites_the_gui_does_not_name_is_not_let_in(
+    answer: httpx2.Response,
+) -> None:
+    gui = _GUI({_IDENTIFY: _identified(), _MONITORED_SITES: answer})
+
+    assert isinstance(asyncio.run(_auth(gui).principal(_COOKIE, now=0.0)), Unavailable)
+
+
+def test_a_user_without_named_monitored_sites_is_asked_about_again() -> None:
+    gui = _GUI({_IDENTIFY: _identified(), _MONITORED_SITES: httpx2.Response(HTTPStatus.NOT_FOUND)})
+    auth = _auth(gui)
+
+    async def _ask_twice() -> None:
+        await auth.principal(_COOKIE, now=0.0)
+        await auth.principal(_COOKIE, now=1.0)
+
+    asyncio.run(_ask_twice())
+
+    assert [path for path, _body in gui.requests] == [_IDENTIFY, _MONITORED_SITES] * 2
 
 
 def test_a_user_without_maps_is_forbidden() -> None:
     gui = _GUI({_IDENTIFY: _identified(permissions={"maps.use": False})})
 
     assert asyncio.run(_auth(gui).principal(_COOKIE, now=0.0)) == Forbidden()
+    assert [path for path, _body in gui.requests] == [_IDENTIFY]
 
 
 def test_a_user_name_with_a_line_break_is_forbidden() -> None:
@@ -125,7 +170,7 @@ def test_a_refused_session_is_rejected() -> None:
 
 
 def test_the_user_is_kept_for_a_session_until_the_ttl_has_passed() -> None:
-    gui = _GUI({_IDENTIFY: _identified()})
+    gui = _GUI({_IDENTIFY: _identified(), _MONITORED_SITES: _monitoring(None)})
     auth = _auth(gui)
 
     async def _ask_at(*times: float) -> None:
@@ -134,7 +179,7 @@ def test_the_user_is_kept_for_a_session_until_the_ttl_has_passed() -> None:
 
     asyncio.run(_ask_at(0.0, IDENTITY_TTL - 0.1, IDENTITY_TTL))
 
-    assert len(gui.requests) == 2
+    assert [path for path, _body in gui.requests] == [_IDENTIFY, _MONITORED_SITES] * 2
 
 
 def test_a_forbidden_user_is_asked_about_again() -> None:

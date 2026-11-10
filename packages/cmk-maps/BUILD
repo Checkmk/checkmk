@@ -161,6 +161,7 @@ py_library(
         "//cmk/gui/openapi/framework:core",
         "//cmk/gui/openapi/framework:types",
         "//cmk/gui/openapi/restful_objects",
+        "//cmk/gui/userdb",
         "//packages/cmk-ccc:user",
         "//packages/cmk-web/cmk/web/utils",
         requirement("pydantic"),

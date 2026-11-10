@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 
 from cmk.maps.backend.connections import livestatus
-from cmk.maps.backend.connections.base import QueryTimeoutError
+from cmk.maps.backend.connections.base import MonitoringScope, QueryTimeoutError
 from cmk.maps.backend.core.config import settings
 from cmk.maps.backend.integrations import checkmk_sites
 
@@ -73,7 +73,7 @@ def test_the_user_reaches_the_query_thread(
     conn = _connection(monkeypatch, tmp_path, client)
 
     async def scenario() -> None:
-        livestatus._auth_user_ctx.set("jdoe")  # noqa: SLF001
+        livestatus._scope_ctx.set(MonitoringScope("jdoe"))  # noqa: SLF001
         await conn._query_with_site("GET hosts\nColumns: name\n")  # noqa: SLF001
 
     asyncio.run(scenario())

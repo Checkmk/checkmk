@@ -25,10 +25,11 @@ logger = logging.getLogger(__name__)
 
 @dataclass(eq=False)
 class Subscriber:
-    # ``auth_user`` is the Livestatus monitoring scope (None = see all hosts).
-    # ``folder_scope`` is the independent SETUP-folder read scope.
+    # ``auth_user`` and ``sites`` are the Livestatus monitoring scope (None = see
+    # all hosts, all sites). ``folder_scope`` is the independent SETUP-folder read scope.
     auth_user: str | None
     folder_scope: FolderScope | None = None
+    sites: frozenset[str] | None = None
     queue: asyncio.Queue[SentEvent[StreamMessage]] = field(
         default_factory=lambda: asyncio.Queue(maxsize=64)
     )
@@ -53,8 +54,10 @@ class SubscriptionManager:
         the_map: str,
         auth_user: str | None,
         folder_scope: FolderScope | None = None,
+        *,
+        sites: frozenset[str] | None = None,
     ) -> Subscriber:
-        sub = Subscriber(auth_user=auth_user, folder_scope=folder_scope)
+        sub = Subscriber(auth_user=auth_user, folder_scope=folder_scope, sites=sites)
         # A request accepted before the daemon began stopping can subscribe after it.
         if self._closed:
             sub.queue.shutdown(immediate=True)

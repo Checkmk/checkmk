@@ -193,17 +193,29 @@ class MetricHistoryResult:
     titles: dict[str, str] = field(default_factory=dict)
 
 
+@dataclass(frozen=True)
+class MonitoringScope:
+    """What the daemon asks of the monitoring for a user: the hosts and services of
+    ``auth_user`` as a contact (``None`` for all), on ``sites`` (``None`` for all)."""
+
+    auth_user: str | None = None
+    sites: frozenset[str] | None = None
+
+
+UNSCOPED = MonitoringScope()
+
+
 class ConnectionBase(ABC):
     """Base class all monitoring connections must implement."""
 
     connection_id: str = "unknown"
 
     @asynccontextmanager
-    async def with_auth_user(self, username: str) -> AsyncIterator[None]:
-        """Scope queries inside the block to *username*'s contact visibility.
+    async def with_monitoring_scope(self, scope: MonitoringScope) -> AsyncIterator[None]:
+        """Scope queries inside the block to what *scope* may see.
 
         Default: no scoping — only connections with contact-based host
-        visibility (Livestatus ``AuthUser``) override this.
+        visibility (Livestatus ``AuthUser``) and sites override this.
         """
         yield
 
@@ -212,7 +224,7 @@ class ConnectionBase(ABC):
         """Scope the SETUP folder skeleton to *scope*'s readable folders.
 
         Default: no scoping — only connections with a folder concept
-        (Livestatus) override this. Independent of ``with_auth_user`` because
+        (Livestatus) override this. Independent of ``with_monitoring_scope`` because
         folder-read permission and monitoring host visibility differ.
         """
         yield

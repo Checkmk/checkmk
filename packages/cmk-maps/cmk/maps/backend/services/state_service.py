@@ -15,7 +15,13 @@ from dataclasses import dataclass, field
 from functools import lru_cache
 from typing import TYPE_CHECKING
 
-from cmk.maps.backend.connections.base import FolderTreeData, GeoHost, QueryRefusedError
+from cmk.maps.backend.connections.base import (
+    FolderTreeData,
+    GeoHost,
+    MonitoringScope,
+    QueryRefusedError,
+    UNSCOPED,
+)
 from cmk.maps.backend.core.config import settings
 from cmk.maps.backend.integrations.checkmk import FolderScope
 from cmk.maps.backend.schemas.map import (
@@ -129,7 +135,7 @@ def list_connection_ids() -> list[str]:
 
 async def get_map_states(
     cfg: MapConfig,
-    auth_user: str | None = None,
+    scope: MonitoringScope = UNSCOPED,
     folder_scope: FolderScope | None = None,
     *,
     map_owner: str,
@@ -137,11 +143,10 @@ async def get_map_states(
 ) -> MapStates:
     """Fetch current states for all objects in a map.
 
-    When *auth_user* is provided, Livestatus queries are scoped to that user's
-    contact groups so they only see objects they are authorised for.
-    *folder_scope* independently scopes a foldertree
+    Livestatus queries are scoped to *scope*, so the user only sees objects they
+    are authorised for. *folder_scope* independently scopes a foldertree
     map's SETUP folder skeleton to the folders the user may read (see-all
-    guests see all hosts but not all folder names) — distinct from *auth_user*.
+    guests see all hosts but not all folder names) — distinct from *scope*.
     """
     connection_id = cfg.connection_id
     connection = get_connection(connection_id)
@@ -161,21 +166,12 @@ async def get_map_states(
             runtime=get_daemon_runtime(),
         )
 
-    async def _run() -> MapStates:
-        # Folder scope is set for every CMK request (admins included) so the
-        # folder tree is filtered by SETUP read-permission; auth_user adds the
-        # Livestatus host filter only for non-see-all monitoring users.
-        if auth_user is not None:
-            async with connection.with_auth_user(auth_user):
-                return await _execute_map_states(
-                    cfg, connection, auth_user=auth_user, map_owner=map_owner, links=links
-                )
+    # Folder scope is set for every CMK request (admins included) so the folder
+    # tree is filtered by SETUP read-permission, independently of the monitoring.
+    async with connection.with_folder_scope(folder_scope), connection.with_monitoring_scope(scope):
         return await _execute_map_states(
-            cfg, connection, auth_user=auth_user, map_owner=map_owner, links=links
+            cfg, connection, scope=scope, map_owner=map_owner, links=links
         )
-
-    async with connection.with_folder_scope(folder_scope):
-        return await _run()
 
 
 async def _derive_connection_ok(states: list[ObjectState], connection: ConnectionBase) -> bool:
@@ -198,11 +194,14 @@ async def _derive_connection_ok(states: list[ObjectState], connection: Connectio
 async def _execute_map_states(
     cfg: MapConfig,
     connection: ConnectionBase,
-    auth_user: str | None = None,
+    scope: MonitoringScope = UNSCOPED,
     map_owner: str = "",
     links: LinkSource | None = None,
 ) -> MapStates:
     """Inner state-fetch implementation; must be called with auth context already set."""
+    # A scoped query leaves out what the user may not see, so a missing row
+    # does not tell whether the object exists.
+    restricted = scope != UNSCOPED
     if cfg.view.type == "radar":
         return await _get_radar_states(cfg, connection)
 
@@ -210,7 +209,7 @@ async def _execute_map_states(
         return await _get_folder_tree_states(cfg, connection)
 
     if cfg.view.type == "presentation":
-        return await _get_presentation_states(cfg, connection, auth_user=auth_user)
+        return await _get_presentation_states(cfg, connection, restricted=restricted)
 
     # Inflate worldmap automap-source hosts into transient map objects so
     # the rest of the pipeline (state fetch, stream diffing, frontend
@@ -223,9 +222,15 @@ async def _execute_map_states(
             [o for o in objects if not _is_link(_as_state_source(o))],
             default_connection=connection,
             default_connection_id=cfg.connection_id,
-            auth_user=auth_user,
+            restricted=restricted,
         ),
-        _map_link_states(link_objects, auth_user, (map_owner, cfg.name), _LinkCache(links)),
+        _map_link_states(
+            link_objects,
+            scope.auth_user,
+            (map_owner, cfg.name),
+            _LinkCache(links),
+            restricted=restricted,
+        ),
     )
     states = [*state_map.values(), *link_states]
 
@@ -337,7 +342,7 @@ async def _states_for_objects(
     *,
     default_connection: ConnectionBase,
     default_connection_id: str,
-    auth_user: str | None = None,
+    restricted: bool,
 ) -> dict[str, ObjectState]:
     """Run the batched state fetch once per distinct connection, then merge.
 
@@ -359,7 +364,7 @@ async def _states_for_objects(
                 obj.id: ObjectState(object_id=obj.id, type=obj.type, state="PENDING", stale=True)
                 for obj in group_objs
             }
-        return await _get_map_states_batched(conn, group_objs, auth_user=auth_user)
+        return await _get_map_states_batched(conn, group_objs, restricted=restricted)
 
     if len(groups) == 1:
         cid, group_objs = next(iter(groups.items()))
@@ -424,7 +429,7 @@ async def _resolve_host_states(
     connection: ConnectionBase,
     hosts_soft: list[MapElement],
     hosts_hard: list[MapElement],
-    auth_user: str | None,
+    restricted: bool,
     results: dict[str, ObjectState],
 ) -> None:
     """Batch-fetch host states, then enrich with service summaries and
@@ -449,11 +454,7 @@ async def _resolve_host_states(
         for obj in host_group:
             assert obj.host_name is not None
             if batch_ok and obj.host_name not in batch:
-                # Permission-filtered batches return only the hosts a non-admin
-                # user is allowed to see; for that user the missing entry is a
-                # permission denial. For admin/SSO-admin context (auth_user is
-                # None) the host is *actually* not present in monitoring data.
-                state_value = "NO_PERMISSION" if auth_user is not None else "NOT_FOUND"
+                state_value = "NO_PERMISSION" if restricted else "NOT_FOUND"
                 results[obj.id] = ObjectState(object_id=obj.id, type="host", state=state_value)
             else:
                 raw = batch.get(obj.host_name)
@@ -552,7 +553,7 @@ async def _resolve_service_states(
     connection: ConnectionBase,
     svcs_soft: list[MapElement],
     svcs_hard: list[MapElement],
-    auth_user: str | None,
+    restricted: bool,
     results: dict[str, ObjectState],
 ) -> None:
     """Batch-fetch service states (soft and hard groups) into *results*."""
@@ -579,7 +580,7 @@ async def _resolve_service_states(
             assert obj.host_name is not None and obj.service_description is not None
             key = (obj.host_name, obj.service_description)
             if batch_ok and key not in svc_batch:
-                state_value = "NO_PERMISSION" if auth_user is not None else "NOT_FOUND"
+                state_value = "NO_PERMISSION" if restricted else "NOT_FOUND"
                 results[obj.id] = ObjectState(object_id=obj.id, type="service", state=state_value)
             else:
                 raw = svc_batch.get(key)
@@ -721,7 +722,7 @@ def _log_link_failure(exc: Exception) -> None:
 
 
 async def _linked_map_summaries(
-    graph: dict[tuple[str, str], _LinkedMap], auth_user: str | None
+    graph: dict[tuple[str, str], _LinkedMap], *, restricted: bool
 ) -> dict[tuple[str, str], _MapSummary]:
     """Asks the own objects of all linked maps in one round per connection."""
     keys: dict[str, tuple[str, str]] = {}
@@ -744,7 +745,7 @@ async def _linked_map_summaries(
                 objects,
                 default_connection=connection,
                 default_connection_id=connection_id,
-                auth_user=auth_user,
+                restricted=restricted,
             )
         except Exception as exc:
             _log_link_failure(exc)
@@ -795,6 +796,8 @@ async def _map_link_states(
     auth_user: str | None,
     root: tuple[str, str],
     cache: _LinkCache,
+    *,
+    restricted: bool,
 ) -> list[ObjectState]:
     """Aggregate each map-link object to the worst state of the maps it reaches.
 
@@ -806,7 +809,7 @@ async def _map_link_states(
         return []
     as_user = _link_user(root[0], auth_user)
     graph = await _link_graph(as_user, _link_names(link_objects), auth_user, cache, root)
-    summaries = await _linked_map_summaries(graph, auth_user) if graph else {}
+    summaries = await _linked_map_summaries(graph, restricted=restricted) if graph else {}
     by_target: dict[tuple[str, str], ObjectState] = {}
     states = []
     for obj in link_objects:
@@ -827,7 +830,8 @@ async def _map_link_states(
 async def _get_map_states_batched(
     connection: ConnectionBase,
     objects: list[MapElement],
-    auth_user: str | None = None,
+    *,
+    restricted: bool,
 ) -> dict[str, ObjectState]:
     """Fetch states for all map objects using batch queries where supported.
 
@@ -839,8 +843,8 @@ async def _get_map_states_batched(
     bins = _bin_map_elements(objects)
     results: dict[str, ObjectState] = {}
 
-    await _resolve_host_states(connection, bins.hosts_soft, bins.hosts_hard, auth_user, results)
-    await _resolve_service_states(connection, bins.svcs_soft, bins.svcs_hard, auth_user, results)
+    await _resolve_host_states(connection, bins.hosts_soft, bins.hosts_hard, restricted, results)
+    await _resolve_service_states(connection, bins.svcs_soft, bins.svcs_hard, restricted, results)
     await _resolve_individual_states(connection, bins.others, results)
 
     return results
@@ -907,7 +911,8 @@ async def _resolve_primary_host(connection: ConnectionBase) -> str | None:
 async def _get_presentation_states(
     cfg: MapConfig,
     connection: ConnectionBase,
-    auth_user: str | None = None,
+    *,
+    restricted: bool,
 ) -> MapStates:
     """Resolve live states for the bound data elements of a presentation map.
 
@@ -964,7 +969,7 @@ async def _get_presentation_states(
         objects,
         default_connection=connection,
         default_connection_id=cfg.connection_id,
-        auth_user=auth_user,
+        restricted=restricted,
     )
     for el in bound:
         if not el.host_name and (state := state_map.get(el.id)) and (host := _host_of(el)):

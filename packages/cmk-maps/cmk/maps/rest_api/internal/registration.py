@@ -34,6 +34,7 @@ from cmk.maps.rest_api.internal.metrics import (
     ENDPOINT_BULK_RESOLVE_METRIC_INFO,
     ENDPOINT_SHOW_METRIC_INFO,
 )
+from cmk.maps.rest_api.internal.monitored_sites import ENDPOINT_SHOW_MONITORED_SITES
 from cmk.maps.rest_api.internal.object_lookups import (
     ENDPOINT_LIST_DYNGROUP_MEMBERS,
     ENDPOINT_LIST_FOLDERS,
@@ -73,6 +74,7 @@ def register(
     versioned_endpoint_registry.register(ENDPOINT_SHOW_SESSION)
     versioned_endpoint_registry.register(ENDPOINT_RESOLVE_ACCESS)
     versioned_endpoint_registry.register(ENDPOINT_RESOLVE_LINK_TARGETS)
+    versioned_endpoint_registry.register(ENDPOINT_SHOW_MONITORED_SITES)
     versioned_endpoint_registry.register(ENDPOINT_SHOW_SIGNED_MAP)
     versioned_endpoint_registry.register(ENDPOINT_RUN_COMMAND)
     versioned_endpoint_registry.register(ENDPOINT_SHOW_FORM_SCHEMA)

@@ -29,7 +29,7 @@ import pytest
 
 from cmk.livestatus_client import MKLivestatusQueryError
 from cmk.maps.backend.connections import livestatus
-from cmk.maps.backend.connections.base import FolderTreeData, QueryRefusedError
+from cmk.maps.backend.connections.base import FolderTreeData, MonitoringScope, QueryRefusedError
 from cmk.maps.backend.core.config import settings
 from cmk.maps.backend.integrations import checkmk_sites
 
@@ -78,6 +78,28 @@ def test_unchanged_mtime_is_not_reparsed(monkeypatch: pytest.MonkeyPatch, tmp_pa
     conn._adopt_sites_if_appeared()  # noqa: SLF001
     conn._adopt_sites_if_appeared()  # second call: already adopted -> no reparse  # noqa: SLF001
     assert calls == 1
+
+
+def test_a_user_who_may_not_see_the_own_site_gets_no_rows_from_its_socket(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setattr(settings, "checkmk_omd_root", str(tmp_path))
+    monkeypatch.setattr(checkmk_sites, "load_sites", lambda: None)
+    conn = livestatus.LivestatusConnection(socket_path=_local_socket_path(tmp_path), host=None)
+    connected: list[bool] = []
+
+    def _connect() -> object:
+        connected.append(True)
+        raise ConnectionRefusedError
+
+    monkeypatch.setattr(conn, "_make_singlesite_connection", _connect)
+    token = livestatus._scope_ctx.set(MonitoringScope("alice", frozenset({"other"})))  # noqa: SLF001
+    try:
+        rows = conn._run_singlesite_sync("GET hosts\nColumns: name\n")  # noqa: SLF001
+    finally:
+        livestatus._scope_ctx.reset(token)  # noqa: SLF001
+
+    assert (rows, connected) == ([], [])
 
 
 def test_explicit_tcp_target_never_federates(
@@ -137,11 +159,11 @@ def _fetch_tree_as(conn: livestatus.LivestatusConnection, auth_user: str | None)
     """Run ``get_folder_tree`` inside *auth_user*'s scope (the replay cache key)."""
 
     async def _coro() -> FolderTreeData:
-        token = livestatus._auth_user_ctx.set(auth_user)  # noqa: SLF001
+        token = livestatus._scope_ctx.set(MonitoringScope(auth_user))  # noqa: SLF001
         try:
             return await conn.get_folder_tree()
         finally:
-            livestatus._auth_user_ctx.reset(token)  # noqa: SLF001
+            livestatus._scope_ctx.reset(token)  # noqa: SLF001
 
     return asyncio.run(_coro())
 
@@ -269,11 +291,11 @@ def test_geo_hosts_are_asked_for_once_per_user_within_a_tick(
     monkeypatch.setattr(conn, "_query", _query)
 
     async def _as(auth_user: str | None) -> list[str]:
-        token = livestatus._auth_user_ctx.set(auth_user)  # noqa: SLF001
+        token = livestatus._scope_ctx.set(MonitoringScope(auth_user))  # noqa: SLF001
         try:
             return [h["name"] for h in await conn.get_hosts_with_geo()]
         finally:
-            livestatus._auth_user_ctx.reset(token)  # noqa: SLF001
+            livestatus._scope_ctx.reset(token)  # noqa: SLF001
 
     async def _ticks() -> list[list[str]]:
         return [await _as("alice"), await _as("alice"), await _as("bob")]
@@ -366,10 +388,53 @@ def test_a_site_alone_refusing_a_query_drops_out(
     assert federated.dead_sites() == ["remote"]
 
 
+def _hosts_as(
+    federated: livestatus.LivestatusConnection, scope: MonitoringScope
+) -> list[list[object]]:
+    token = livestatus._scope_ctx.set(scope)  # noqa: SLF001
+    try:
+        return sorted(federated._run_multisite_sync("GET hosts\nColumns: name\n"))  # noqa: SLF001
+    finally:
+        livestatus._scope_ctx.reset(token)  # noqa: SLF001
+
+
+@pytest.mark.parametrize(
+    "monitored, rows",
+    [
+        pytest.param(None, [["central", "central-h"], ["remote", "remote-h"]], id="all sites"),
+        pytest.param(frozenset({"remote"}), [["remote", "remote-h"]], id="one site"),
+        pytest.param(frozenset({"gone"}), [], id="no configured site"),
+        pytest.param(frozenset(), [], id="no site"),
+    ],
+)
+def test_a_user_sees_the_rows_of_their_monitored_sites(
+    federated: livestatus.LivestatusConnection,
+    sites: dict[str, _FakeSite],
+    monitored: frozenset[str] | None,
+    rows: list[list[str]],
+) -> None:
+    assert _hosts_as(federated, MonitoringScope("alice", monitored)) == rows
+    asked = {sid for sid, site in sites.items() if any(b"GET hosts" in q for q in site.queries)}
+    assert asked == {row[0] for row in rows}
+
+
+def test_a_dead_site_the_user_may_not_see_is_not_named(
+    federated: livestatus.LivestatusConnection,
+) -> None:
+    federated._run_multisite_sync("GET hosts\nColumns: name\nFilter: new_column = a\n")  # noqa: SLF001
+
+    async def _dead_as(scope: MonitoringScope) -> list[str]:
+        async with federated.with_monitoring_scope(scope):
+            return federated.dead_sites()
+
+    assert asyncio.run(_dead_as(MonitoringScope("alice", frozenset({"central"})))) == []
+    assert asyncio.run(_dead_as(MonitoringScope("alice"))) == ["remote"]
+
+
 def _ask_refused_as(federated: livestatus.LivestatusConnection, *auth_users: str) -> None:
     async def _ask() -> None:
         for auth_user in auth_users:
-            async with federated.with_auth_user(auth_user):
+            async with federated.with_monitoring_scope(MonitoringScope(auth_user)):
                 with pytest.raises(QueryRefusedError):
                     await federated.get_dyngroup_state("host", "Filter: nme = a\n")
 
@@ -429,7 +494,7 @@ def test_a_long_refused_query_is_logged_shortened(
     object_filter = "Filter: nme = a\n" + "Filter: name = padding\nOr: 2\n" * 2000
 
     async def _ask() -> None:
-        async with federated.with_auth_user("alice"):
+        async with federated.with_monitoring_scope(MonitoringScope("alice")):
             with pytest.raises(QueryRefusedError):
                 await federated.get_dyngroup_state("host", object_filter)
 

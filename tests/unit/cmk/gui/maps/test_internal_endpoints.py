@@ -15,10 +15,13 @@ from http import HTTPStatus
 import pytest
 
 import cmk.utils.paths
+from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui.config import Config
+from cmk.gui.type_defs import UserSpec
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.utils.local_secrets import SiteInternalSecret
+from tests.testlib.unit.gui.users import create_and_destroy_user
 from tests.testlib.unit.gui.web_test_app import SetConfig
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
@@ -151,6 +154,38 @@ def test_link_targets_are_reserved_for_the_site(
     resp = clients.Maps.resolve_link_targets(
         {"user_id": with_user[0], "names": ["all_hosts"]}, expect_ok=False
     )
+    resp.assert_status_code(HTTPStatus.UNAUTHORIZED)
+
+
+@pytest.mark.parametrize(
+    "sites", [pytest.param(["remote", "central"], id="some"), pytest.param(None, id="all")]
+)
+def test_monitored_sites_are_those_set_for_the_user(
+    clients: ClientRegistry, load_config: Config, sites: list[str] | None
+) -> None:
+    custom_attrs: UserSpec = (
+        {} if sites is None else {"authorized_sites": [SiteId(site) for site in sites]}
+    )
+    with create_and_destroy_user(custom_attrs=custom_attrs, config=load_config) as (
+        user_id,
+        _password,
+    ):
+        resp = clients.Maps.show_monitored_sites({"user_id": user_id}, headers=_internal_token())
+
+    assert resp.json == {"monitored_sites": None if sites is None else sorted(sites)}
+
+
+def test_monitored_sites_of_a_user_who_is_gone_are_not_named(clients: ClientRegistry) -> None:
+    resp = clients.Maps.show_monitored_sites(
+        {"user_id": "gone"}, headers=_internal_token(), expect_ok=False
+    )
+    resp.assert_status_code(HTTPStatus.NOT_FOUND)
+
+
+def test_monitored_sites_are_reserved_for_the_site(
+    clients: ClientRegistry, with_user: tuple[UserId, str]
+) -> None:
+    resp = clients.Maps.show_monitored_sites({"user_id": with_user[0]}, expect_ok=False)
     resp.assert_status_code(HTTPStatus.UNAUTHORIZED)
 
 

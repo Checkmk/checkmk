@@ -719,6 +719,8 @@ reads the session cookie from each request and asks the GUI about it:
   hold (``maps.use``, ``general.edit_map``, ``maps.configure``,
   ``general.see_all``, ``wato.see_all_folders``) and their contact groups. A
   refused session is answered with 401, a user without ``maps.use`` with 403.
+* ``maps_monitored_sites/show`` answers the sites the GUI queries for the user,
+  as set in "Monitored sites", or all sites.
 * ``maps_access/resolve`` answers which map the user sees under a name, and its
   owner, with the same pagetype logic as the GUI. A name the user sees no map
   under is answered with 404.
@@ -770,8 +772,8 @@ logic, not by Maps:
 * On create and update, the requested visibility is clamped to what the
   editing user may publish.
 
-**What the daemon knows about a user** comes from ``identify``; what the SPA
-offers comes from ``maps_session``:
+**What the daemon knows about a user** comes from ``identify`` and
+``maps_monitored_sites``; what the SPA offers comes from ``maps_session``:
 
 .. list-table::
    :header-rows: 1
@@ -789,6 +791,9 @@ offers comes from ``maps_session``:
    * - ``contact_groups``
      - the user's contact groups
      - Folder scope of folder-tree maps
+   * - ``monitored_sites``
+     - the user's monitored sites
+     - Sites every query asks
    * - ``may_edit``
      - ``general.edit_map``
      - Unsigned previews, connection list
@@ -810,6 +815,11 @@ daemon query carries ``AuthUser: <user of the session>``, with two exceptions:
 * A background warm-up loop queries topology and host/service data every 60 s
   without AuthUser to keep connections warm. Its results are discarded, never
   sent to a client.
+
+Like the GUI, the daemon asks only the user's monitored sites, and names no
+other site as dead. On a site's own socket without distribution, a user whose
+monitored sites leave out that site gets no rows. Every cache of query results is
+kept per user and set of sites.
 
 The user's contact groups are not used for Livestatus; they only scope the
 Setup folder skeleton of folder-tree maps.

@@ -244,6 +244,14 @@ class MapsAccessRequest:
 
 
 @api_model
+class MapsMonitoredSitesRequest:
+    user_id: Annotated[str, TypedPlainValidator(str, UserConverter.valid_user_id)] = api_field(
+        description="The user the daemon identified from their GUI session.",
+        example="cmkadmin",
+    )
+
+
+@api_model
 class MapsMapRef:
     owner: str = api_field(description="The owner of the map, empty for a built-in map.")
     name: AnnotatedMapName = api_field(description="The name of the map.")

@@ -22,7 +22,6 @@ import time
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, Field, ValidationError
 
-from cmk.maps.backend.api.v1.connections import auth_user_scope
 from cmk.maps.backend.api.v1.deps import (
     can_create_map,
     charge,
@@ -31,7 +30,7 @@ from cmk.maps.backend.api.v1.deps import (
     GuiAuthDep,
     rate_limited_map_read,
     registered_map,
-    resolve_auth_user,
+    resolve_monitoring_scope,
     within_read_budget,
 )
 from cmk.maps.backend.api.v1.states import (
@@ -278,8 +277,7 @@ async def get_auto_objects(
     # read path (a non-see-all user must not enumerate hosts outside their
     # groups). Without the AuthUser context the underlying Livestatus query runs
     # unscoped and returns every geo-tagged host in the site.
-    auth_user = resolve_auth_user(current_user)
-    async with auth_user_scope(connection, auth_user):
+    async with connection.with_monitoring_scope(resolve_monitoring_scope(current_user)):
         inflated = await state_service.inflate_auto_objects(cfg, connection)
     persisted_ids = {o.id for o in cfg.objects}
     return [o for o in inflated if o.id not in persisted_ids]

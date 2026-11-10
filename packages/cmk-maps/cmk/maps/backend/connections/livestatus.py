@@ -42,11 +42,13 @@ from cmk.maps.backend.connections.base import (
     FolderTreeHostRow,
     GeoHost,
     MetricHistoryResult,
+    MonitoringScope,
     QueryRefusedError,
     QueryTimeoutError,
     ServiceMatchRow,
     ServiceRow,
     TopologyRow,
+    UNSCOPED,
 )
 from cmk.maps.backend.core.config import settings
 from cmk.maps.backend.core.ttl_cache import TtlCache
@@ -85,14 +87,15 @@ from cmk.utils.misc import pnp_cleanup
 logger = logging.getLogger(__name__)
 
 
-# When set, every Livestatus query in the current asyncio task includes
-# ``AuthUser: <username>`` so Livestatus only returns objects the user
-# is a contact for (contact-group filtering).
-_auth_user_ctx: ContextVar[str | None] = ContextVar("_auth_user_ctx", default=None)
+# Every Livestatus query in the current asyncio task is scoped to it: with
+# ``AuthUser: <username>`` Livestatus only returns objects the user is a contact
+# for, and only the user's monitored sites are asked. Every cache of query
+# results is keyed by it.
+_scope_ctx: ContextVar[MonitoringScope] = ContextVar("_scope_ctx", default=UNSCOPED)
 
 # The requesting user's SETUP-folder read visibility, used by ``get_folder_tree``
 # to mark which (otherwise unscoped) folders the user may see. Distinct from
-# ``_auth_user_ctx``: a see-all guest scopes folders by contact group yet has no
+# ``_scope_ctx``: a see-all guest scopes folders by contact group yet has no
 # Livestatus AuthUser. ``None`` permits no folder.
 _folder_scope_ctx: ContextVar[FolderScope | None] = ContextVar("_folder_scope_ctx", default=None)
 
@@ -565,21 +568,21 @@ class LivestatusConnection(ConnectionBase):
         # Per-site trust: last successful foldertree host rows per
         # (auth-scope, site-filter) -> site_id, replayed when a site dies.
         self._ft_rows_cache: dict[
-            tuple[str | None, tuple[str, ...] | None], dict[str, list[FolderTreeHostRow]]
+            tuple[MonitoringScope, tuple[str, ...] | None], dict[str, list[FolderTreeHostRow]]
         ] = {}
         # Per-host-set cache for get_services_summary (TTL=_SERVICES_SUMMARY_CACHE_TTL).
         # Keyed by (auth user, host set): the query is auth-scoped, so the cache
         # must be too (mirrors _ft_rows_cache).
         self._services_summary_cache: TtlCache[
-            tuple[str | None, frozenset[str]], dict[str, ServicesSummary]
+            tuple[MonitoringScope, frozenset[str]], dict[str, ServicesSummary]
         ] = TtlCache(maxsize=32)
         # get_hosts_with_geo: the first states of a geo map and its auto-objects
         # fetch ask for the same hosts back to back, as do concurrent viewers.
         self._geo_hosts_cache: TtlCache[
-            tuple[str | None, str | None, str | None], list[GeoHost]
+            tuple[MonitoringScope, str | None, str | None], list[GeoHost]
         ] = TtlCache(maxsize=32)
         # Sent again once a dead site would be retried.
-        self._refused_queries: TtlCache[tuple[bytes, str | None], str] = TtlCache(maxsize=1024)
+        self._refused_queries: TtlCache[tuple[bytes, MonitoringScope], str] = TtlCache(maxsize=1024)
 
         # Auto-federate when this connection points at the central site's local
         # Livestatus socket — the socket only sees local data, so MultiSiteConnection
@@ -624,24 +627,25 @@ class LivestatusConnection(ConnectionBase):
 
     @asynccontextmanager
     @override
-    async def with_auth_user(self, username: str) -> AsyncIterator[None]:
-        """Context manager: scope Livestatus queries to *username*'s contact groups.
+    async def with_monitoring_scope(self, scope: MonitoringScope) -> AsyncIterator[None]:
+        """Context manager: scope Livestatus queries to what *scope* may see.
 
         While active, every Livestatus query in this asyncio task appends
         ``AuthUser: <username>`` to the LQL request so Livestatus only returns
-        hosts/services the user is a contact for.
+        hosts/services the user is a contact for, and asks only the sites of
+        *scope*.
         """
-        token = _auth_user_ctx.set(username)
+        token = _scope_ctx.set(scope)
         try:
             yield
         finally:
-            _auth_user_ctx.reset(token)
+            _scope_ctx.reset(token)
 
     @asynccontextmanager
     @override
     async def with_folder_scope(self, scope: FolderScope | None) -> AsyncIterator[None]:
         """Context manager: scope the SETUP folder skeleton (``get_folder_tree``)
-        to *scope*'s readable folders. Independent of ``with_auth_user`` because
+        to *scope*'s readable folders. Independent of ``with_monitoring_scope`` because
         folder-read permission and monitoring host visibility differ."""
         token = _folder_scope_ctx.set(scope)
         try:
@@ -1101,7 +1105,7 @@ class LivestatusConnection(ConnectionBase):
         values, so over-matching here (e.g. a host with maps_lat but no
         maps_lng) is harmless rather than a silent omission.
         """
-        cache_key = (_auth_user_ctx.get(), group_type, group_name)
+        cache_key = (_scope_ctx.get(), group_type, group_name)
         cached = self._geo_hosts_cache.get(cache_key, ttl=self._GEO_HOSTS_CACHE_TTL)
         if cached is not None:
             return list(cached)
@@ -1430,7 +1434,10 @@ class LivestatusConnection(ConnectionBase):
 
     @override
     def dead_sites(self) -> list[str]:
-        return sorted(self._mc_dead) if self._sites else []
+        if not self._sites:
+            return []
+        allowed = _scope_ctx.get().sites
+        return sorted(self._mc_dead if allowed is None else self._mc_dead & allowed)
 
     @override
     async def is_available(self) -> bool:
@@ -1547,7 +1554,7 @@ class LivestatusConnection(ConnectionBase):
         # UI greys them out. The cache is keyed by the auth scope (a contact-
         # scoped user must never see another user's host rows) + site filter.
         dead_sites = self.dead_sites()
-        cache_key = (_auth_user_ctx.get(), tuple(sorted(sites)) if sites else None)
+        cache_key = (_scope_ctx.get(), tuple(sorted(sites)) if sites else None)
         # Bound the per-scope cache: SSE groups are few, but REST calls from
         # rotating contact-scoped users would otherwise accumulate forever.
         # FIFO eviction via dict insertion order is plenty here.
@@ -1651,7 +1658,7 @@ class LivestatusConnection(ConnectionBase):
         if not hostnames:
             return {}
 
-        cache_key = (_auth_user_ctx.get(), frozenset(hostnames))
+        cache_key = (_scope_ctx.get(), frozenset(hostnames))
         cached = self._services_summary_cache.get(cache_key, ttl=self._SERVICES_SUMMARY_CACHE_TTL)
         if cached is not None:
             return dict(cached)
@@ -1786,7 +1793,7 @@ class LivestatusConnection(ConnectionBase):
         connection-agnostic.
         """
         self._adopt_sites_if_appeared()
-        key = (_query_digest(query), _auth_user_ctx.get())
+        key = (_query_digest(query), _scope_ctx.get())
         if (reason := self._refused_queries.get(key, ttl=self._MC_DEAD_RETRY_SECONDS)) is not None:
             raise QueryRefusedError(reason)
         try:
@@ -1815,7 +1822,9 @@ class LivestatusConnection(ConnectionBase):
         except TimeoutError:
             raise QueryTimeoutError from None
 
-    def _note_refused_query(self, key: tuple[bytes, str | None], query: str, reason: str) -> None:
+    def _note_refused_query(
+        self, key: tuple[bytes, MonitoringScope], query: str, reason: str
+    ) -> None:
         # An expired entry stays until evicted, so each query is warned about once.
         if key not in self._refused_queries:
             logger.warning(
@@ -1857,10 +1866,17 @@ class LivestatusConnection(ConnectionBase):
         sync. The client adds OutputFormat/ResponseHeader framing itself, so
         *lql* is the bare query — same contract as ``_run_multisite_sync``.
         """
+        scope = _scope_ctx.get()
+        # The own socket serves only the own site, which the user's monitored sites may leave out.
+        if (
+            scope.sites is not None
+            and self._federation_eligible
+            and settings.checkmk_site not in scope.sites
+        ):
+            return []
         headers = ""
-        auth_user = _auth_user_ctx.get()
-        if auth_user:
-            headers += f"AuthUser: {lqencode(auth_user)}\n"
+        if scope.auth_user:
+            headers += f"AuthUser: {lqencode(scope.auth_user)}\n"
         conn = self._make_singlesite_connection()
         try:
             return list(conn.query(_lql_to_query(lql), add_headers=headers))
@@ -1929,10 +1945,14 @@ class LivestatusConnection(ConnectionBase):
             mc = self._mc
             assert mc is not None  # rebuilt above when missing
 
+            scope = _scope_ctx.get()
             headers = ""
-            auth_user = _auth_user_ctx.get()
-            if auth_user:
-                headers += f"AuthUser: {lqencode(auth_user)}\n"
+            if scope.auth_user:
+                headers += f"AuthUser: {lqencode(scope.auth_user)}\n"
+            if scope.sites is not None:
+                only_sites = [s for s in (only_sites or self._sites) if s in scope.sites]
+                if not only_sites:
+                    return []
 
             asked = [c for c in mc.connections if not only_sites or c.id in only_sites]
             mc.set_only_sites([SiteId(s) for s in only_sites] if only_sites else None)

@@ -18,6 +18,7 @@ import pytest
 from pydantic import ValidationError
 
 from cmk.maps.backend.connections import livestatus
+from cmk.maps.backend.connections.base import MonitoringScope
 from cmk.maps.backend.core.config import settings
 from cmk.maps.backend.integrations import checkmk_sites
 from cmk.maps.backend.schemas.connection import (
@@ -454,11 +455,11 @@ def test_authuser_header_is_lqencoded(monkeypatch: pytest.MonkeyPatch, tmp_path:
 
     monkeypatch.setattr(conn, "_make_singlesite_connection", _FakeClient)
 
-    token = livestatus._auth_user_ctx.set("evil\nStats: state = 0")  # noqa: SLF001
+    token = livestatus._scope_ctx.set(MonitoringScope("evil\nStats: state = 0"))  # noqa: SLF001
     try:
         conn._run_singlesite_sync("GET hosts\nColumns: name\n")  # noqa: SLF001
     finally:
-        livestatus._auth_user_ctx.reset(token)  # noqa: SLF001
+        livestatus._scope_ctx.reset(token)  # noqa: SLF001
 
     headers = captured["headers"]
     assert headers.startswith("AuthUser: ")

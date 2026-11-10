@@ -7,10 +7,11 @@
 The daemon runs behind the site Apache and handles no users, sessions or
 passwords of its own. The browser sends the GUI session cookie with every
 request. The daemon asks the GUI of its site who is behind it and which of the
-permissions Maps needs they hold (``gui_session/identify``), which map a name
-means for that user (``maps_access/resolve``), and which maps the names of map
-links mean (``maps_link_targets/resolve``). It keeps the first answer per session
-and the others per user for :data:`~cmk.fastapi.gui_session.IDENTITY_TTL` seconds.
+permissions Maps needs they hold (``gui_session/identify``), which sites the GUI
+queries for that user (``maps_monitored_sites/show``), which map a name means for
+them (``maps_access/resolve``), and which maps the names of map links mean
+(``maps_link_targets/resolve``). It keeps the first two answers per session and
+the others per user for :data:`~cmk.fastapi.gui_session.IDENTITY_TTL` seconds.
 
 The map config a viewer relays is signed by the GUI and verified here against
 the owner the GUI named, see :mod:`cmk.maps.shared.map_signature`.
@@ -22,7 +23,7 @@ import hmac
 import itertools
 import logging
 import time
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from collections.abc import Set as AbstractSet
 from dataclasses import dataclass, field
 from typing import Final
@@ -75,6 +76,7 @@ _PERMISSIONS: Final = (
     _SEE_ALL_FOLDERS_PERMISSION,
 )
 
+_MONITORED_SITES_PATH: Final = "domain-types/maps_monitored_sites/actions/show/invoke"
 _ACCESS_PATH: Final = "domain-types/maps_access/actions/resolve/invoke"
 _LINK_TARGETS_PATH: Final = "domain-types/maps_link_targets/actions/resolve/invoke"
 _LINK_RETRY_AFTER: Final = 10.0
@@ -106,6 +108,8 @@ class Principal:
     # (wato.see_all_folders); ``contact_groups`` scopes folder reads otherwise.
     folder_see_all: bool = False
     contact_groups: frozenset[str] = field(default_factory=frozenset)
+    # The sites the GUI queries for the user, ``None`` for all.
+    monitored_sites: frozenset[str] | None = None
     # The map the request is about, as the GUI resolved its name for this user, so
     # the daemon keys its shared broadcast loop by the map's true owner (not the
     # viewer). ``None`` for requests about no map in particular.
@@ -157,6 +161,13 @@ class NoMap:
     """The user sees no map of that name."""
 
 
+class _MonitoredSitesAnswer(BaseModel):
+    model_config = ConfigDict(strict=True)
+
+    # Null means all sites, so the field has no default an empty answer could take.
+    monitored_sites: frozenset[str] | None
+
+
 class _AccessAnswer(BaseModel):
     model_config = ConfigDict(strict=True)
 
@@ -188,7 +199,7 @@ class LinkTarget:
     size: int = 0
 
 
-def _principal(identity: Identity) -> Principal:
+def _principal(identity: Identity, monitored_sites: frozenset[str] | None) -> Principal:
     return Principal(
         name=identity.user_id,
         may_edit=identity.permissions[_EDIT_PERMISSION],
@@ -197,6 +208,7 @@ def _principal(identity: Identity) -> Principal:
         see_all=identity.permissions[_SEE_ALL_PERMISSION],
         folder_see_all=identity.permissions[_SEE_ALL_FOLDERS_PERMISSION],
         contact_groups=frozenset(identity.contact_groups),
+        monitored_sites=monitored_sites,
     )
 
 
@@ -235,18 +247,35 @@ class GuiAuth:
     ) -> Principal | Rejected | Forbidden | Unavailable:
         if (principal := self._principals.get(session_cookie, now=now)) is not None:
             return principal
-        match await self._gui.identify(
+        identity = await self._gui.identify(
             session_cookie, required_permissions=_PERMISSIONS, include_contact_groups=True
-        ):
-            case Identity() as identity:
-                # The GUI's Livestatus client refuses a user name with a line break too.
-                if not identity.permissions[_USE_PERMISSION] or "\n" in identity.user_id:
-                    return Forbidden()
-                principal = _principal(identity)
-                self._principals.put(session_cookie, principal, now=now)
-                return principal
-            case other:
-                return other
+        )
+        if not isinstance(identity, Identity):
+            return identity
+        # The GUI's Livestatus client refuses a user name with a line break too.
+        if not identity.permissions[_USE_PERMISSION] or "\n" in identity.user_id:
+            return Forbidden()
+        sites = await self._ask_about_user(
+            "monitored sites",
+            _MONITORED_SITES_PATH,
+            {"user_id": identity.user_id},
+            _MonitoredSitesAnswer,
+        )
+        if isinstance(sites, Unavailable):
+            return sites
+        principal = _principal(identity, sites.monitored_sites)
+        self._principals.put(session_cookie, principal, now=now)
+        return principal
+
+    async def _ask_about_user[M: BaseModel](
+        self, endpoint: str, path: str, body: Mapping[str, object], answer: type[M]
+    ) -> M | Unavailable:
+        """The answer of an endpoint that takes a user the daemon identified."""
+        resolved = await self._gui.post(endpoint, path, body, answer)
+        if isinstance(resolved, Rejected):
+            # The endpoint judges no session, so it has no reason to say this.
+            return unavailable(endpoint, "status 400, error invalid_grant")
+        return resolved
 
     async def map_owner(
         self, user: Principal, name: str, *, now: float
@@ -257,12 +286,9 @@ class GuiAuth:
         key = self._key(user.name, name)
         if (owner := self._owners.get(key, now=now)) is not None:
             return owner
-        resolved = await self._gui.post(
+        resolved = await self._ask_about_user(
             "map access", _ACCESS_PATH, {"user_id": user.name, "name": name}, _AccessAnswer
         )
-        if isinstance(resolved, Rejected):
-            # The endpoint judges no session, so it has no reason to say this.
-            return unavailable("map access", "status 400, error invalid_grant")
         if isinstance(resolved, Unavailable):
             return resolved
         owner = NoMap() if resolved.owner is None else resolved.owner

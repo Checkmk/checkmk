@@ -30,7 +30,9 @@ from cmk.maps.backend.connections.base import (
     FolderInfo,
     FolderTreeData,
     FolderTreeHostRow,
+    MonitoringScope,
     QueryRefusedError,
+    UNSCOPED,
 )
 from cmk.maps.backend.schemas.map import (
     MapConfig,
@@ -127,6 +129,37 @@ def test_get_map_states_with_connection(
     assert result.connection_ok is True
     assert result.states[0].state == "UP"
     assert result.states[0].object_id == "h1"
+
+
+@pytest.mark.parametrize(
+    "scope, state",
+    [
+        pytest.param(UNSCOPED, "NOT_FOUND", id="sees everything"),
+        pytest.param(MonitoringScope("bob"), "NO_PERMISSION", id="sees as a contact"),
+        pytest.param(
+            MonitoringScope(None, frozenset({"central"})),
+            "NO_PERMISSION",
+            id="sees everything on some sites",
+        ),
+    ],
+)
+def test_an_object_without_a_row_is_not_found_only_for_who_sees_everything(
+    mock_connection: MagicMock,
+    monkeypatch: pytest.MonkeyPatch,
+    scope: MonitoringScope,
+    state: str,
+) -> None:
+    monkeypatch.setattr(state_service, "_connections", {"mock": mock_connection})
+    map_cfg = _map(
+        [
+            _obj("h1", "host", host_name="srv1"),
+            _obj("s1", "service", host_name="srv1", service_description="CPU load"),
+        ]
+    )
+
+    result = asyncio.run(get_map_states(map_cfg, scope, map_owner=""))
+
+    assert [(s.object_id, s.state) for s in result.states] == [("h1", state), ("s1", state)]
 
 
 def test_get_map_states_batch_exception_yields_pending(
@@ -467,7 +500,9 @@ def test_a_restricted_viewer_follows_a_link_to_the_map_they_see(
     _down_host_connection(mock_connection, monkeypatch)
     gui = FakeLinkGui({("bob", "net"): ("carol", _LINKED)})
 
-    result = asyncio.run(get_map_states(_LINKING, auth_user="bob", map_owner="alice", links=gui))
+    result = asyncio.run(
+        get_map_states(_LINKING, MonitoringScope("bob"), map_owner="alice", links=gui)
+    )
 
     assert [(s.object_id, s.state) for s in result.states] == [("to_net", "DOWN")]
     assert gui.asked == [("bob", ["net"])]
@@ -492,7 +527,9 @@ def test_a_link_to_a_map_the_viewer_does_not_see_stays_pending(
     map_service.register_map("alice", _LINKED)
     gui = FakeLinkGui({("alice", "net"): ("alice", _LINKED)})
 
-    result = asyncio.run(get_map_states(_LINKING, auth_user="bob", map_owner="alice", links=gui))
+    result = asyncio.run(
+        get_map_states(_LINKING, MonitoringScope("bob"), map_owner="alice", links=gui)
+    )
 
     assert [(s.object_id, s.state) for s in result.states] == [("to_net", "PENDING")]
 

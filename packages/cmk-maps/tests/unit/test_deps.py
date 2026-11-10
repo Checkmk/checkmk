@@ -19,8 +19,9 @@ from cmk.maps.backend.api.v1.deps import (
     can_configure,
     can_create_map,
     rate_limited_read,
-    resolve_auth_user,
+    resolve_monitoring_scope,
 )
+from cmk.maps.backend.connections.base import MonitoringScope
 from cmk.maps.backend.core.auth import Principal
 from cmk.maps.backend.core.ratelimit import rest_read_limiter
 
@@ -37,10 +38,17 @@ def test_create_map_follows_may_edit() -> None:
     assert not can_create_map(Principal(name="a", may_edit=False))
 
 
-def test_resolve_auth_user_scopes_unless_see_all() -> None:
+def test_the_monitoring_scope_names_the_user_unless_see_all() -> None:
     # see_all (admin / general.see_all) bypasses Livestatus contact-group scoping.
-    assert resolve_auth_user(Principal(name="alice", see_all=True)) is None
-    assert resolve_auth_user(Principal(name="alice", see_all=False)) == "alice"
+    assert resolve_monitoring_scope(Principal(name="alice", see_all=True)) == MonitoringScope()
+    assert resolve_monitoring_scope(Principal(name="alice", see_all=False)) == MonitoringScope(
+        "alice"
+    )
+
+
+def test_the_monitoring_scope_holds_the_sites_of_the_user() -> None:
+    principal = Principal(name="alice", see_all=True, monitored_sites=frozenset({"central"}))
+    assert resolve_monitoring_scope(principal) == MonitoringScope(None, frozenset({"central"}))
 
 
 def test_rate_limited_read_allows_within_budget() -> None:

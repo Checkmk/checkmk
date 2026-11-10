@@ -22,7 +22,7 @@ from fake_connection import FakeConnection
 from router_client import RouterClientFactory
 
 from cmk.maps.backend.api.v1 import connections, deps
-from cmk.maps.backend.connections.base import MetricHistoryResult
+from cmk.maps.backend.connections.base import MetricHistoryResult, MonitoringScope, UNSCOPED
 from cmk.maps.backend.core.auth import Principal
 from cmk.maps.backend.schemas.connection import ConnectionConfig, REDACTED_SECRET
 from cmk.maps.backend.services import connection_service, state_service
@@ -40,15 +40,15 @@ def _clear_connections() -> Iterator[None]:
 
 
 class _ScopeSpyConnection(FakeConnection):
-    """Records the auth-user each query was scoped to (empty = ran unscoped)."""
+    """Records the monitoring scope each query was scoped to."""
 
     def __init__(self) -> None:
-        self.scoped_as: list[str] = []
+        self.scoped_as: list[MonitoringScope] = []
 
     @asynccontextmanager
     @override
-    async def with_auth_user(self, username: str) -> AsyncIterator[None]:
-        self.scoped_as.append(username)
+    async def with_monitoring_scope(self, scope: MonitoringScope) -> AsyncIterator[None]:
+        self.scoped_as.append(scope)
         yield
 
 
@@ -195,7 +195,7 @@ def test_metric_history_scopes_query_to_contact_user(
 
     assert resp.status_code == HTTPStatus.OK
     # A contact-scoped user's read must be wrapped in their Livestatus AuthUser.
-    assert spy.scoped_as == ["bob"]
+    assert spy.scoped_as == [MonitoringScope("bob")]
 
 
 def test_metric_history_see_all_user_runs_unscoped(
@@ -214,7 +214,22 @@ def test_metric_history_see_all_user_runs_unscoped(
     assert resp.status_code == HTTPStatus.OK
     # see-all bypasses AuthUser scoping — passing the raw name would filter cmkadmin
     # (typically no contact) down to zero rows.
-    assert spy.scoped_as == []
+    assert spy.scoped_as == [UNSCOPED]
+
+
+def test_object_details_are_scoped_to_the_sites_of_the_user(
+    router_client: RouterClientFactory,
+) -> None:
+    spy = _ScopeSpyConnection()
+    state_service.register_connection("c1", spy)
+    user = Principal(name="cmkadmin", see_all=True, monitored_sites=frozenset({"central"}))
+    client = router_client(
+        connections.router, "/api/v1/connections", overrides={deps.rate_limited_read: user}
+    )
+
+    client.get("/api/v1/connections/c1/object-details", params={"type": "host", "host": "h"})
+
+    assert spy.scoped_as == [MonitoringScope(None, frozenset({"central"}))]
 
 
 def test_object_details_service_requires_service_param(

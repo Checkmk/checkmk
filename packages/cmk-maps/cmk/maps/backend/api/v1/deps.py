@@ -17,6 +17,7 @@ from fastapi import Depends, HTTPException, Request, status
 
 from cmk.fastapi.gui_session import Rejected, SessionCookie, Unavailable
 from cmk.maps.backend.api.v1.types import MapName
+from cmk.maps.backend.connections.base import MonitoringScope
 from cmk.maps.backend.core.auth import Forbidden, GuiAuth, NoMap, Principal
 from cmk.maps.backend.core.ratelimit import RateLimiter, rest_read_limiter
 from cmk.maps.backend.schemas.map import MapConfig
@@ -37,7 +38,7 @@ __all__ = [
     "rate_limited_read",
     "registered_map",
     "require_connection_read",
-    "resolve_auth_user",
+    "resolve_monitoring_scope",
     "within_read_budget",
 ]
 
@@ -168,9 +169,9 @@ def can_create_map(principal: Principal) -> bool:
     return principal.may_edit
 
 
-def resolve_auth_user(principal: Principal) -> str | None:
-    """Livestatus ``AuthUser`` to scope queries, or ``None`` for see-all users."""
-    return principal.auth_user
+def resolve_monitoring_scope(principal: Principal) -> MonitoringScope:
+    """What of the monitoring the queries for *principal* are scoped to."""
+    return MonitoringScope(principal.auth_user, principal.monitored_sites)
 
 
 # ---------------------------------------------------------------------------

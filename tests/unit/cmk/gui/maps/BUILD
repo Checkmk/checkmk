@@ -12,6 +12,7 @@ py_cmk_test(
         "//cmk/gui/openapi/framework:api_config",
         "//cmk/gui/openapi/spec/spec_generator",
         "//cmk/gui/sidebar",
+        "//packages/cmk-ccc:site",
         "//packages/cmk-livestatus-client",
         # Cross-component dep: the signature-contract test verifies a GUI-signed
         # map config with the daemon's real verifier to pin the wire format.

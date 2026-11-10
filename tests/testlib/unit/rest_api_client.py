@@ -2406,6 +2406,21 @@ class MapsClient(RestApiClient):
             api_version=APIVersion.INTERNAL,
         )
 
+    def show_monitored_sites(
+        self,
+        body: dict[str, Any],
+        headers: Mapping[str, str] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "post",
+            url="/domain-types/maps_monitored_sites/actions/show/invoke",
+            body=body,
+            headers=dict(headers) if headers else None,
+            expect_ok=expect_ok,
+            api_version=APIVersion.INTERNAL,
+        )
+
     def run_command(self, body: dict[str, Any], expect_ok: bool = True) -> Response:
         return self.request(
             "post",

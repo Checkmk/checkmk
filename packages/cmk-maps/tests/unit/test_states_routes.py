@@ -18,7 +18,7 @@ target); the loop is bounded by unsubscribing the sole subscriber from a patched
 import asyncio
 import contextlib
 import json
-from collections.abc import Awaitable, Callable, Iterator
+from collections.abc import AsyncIterator, Awaitable, Callable, Iterator
 from http import HTTPStatus
 from types import SimpleNamespace
 from typing import override
@@ -36,7 +36,7 @@ from cmk.fastapi.gui_session import GuiLoopback
 from cmk.fastapi.sse import SentEvent
 from cmk.maps.backend.api.v1 import deps, states
 from cmk.maps.backend.app import create_app
-from cmk.maps.backend.connections.base import TopologyRow
+from cmk.maps.backend.connections.base import MonitoringScope, TopologyRow, UNSCOPED
 from cmk.maps.backend.core.auth import GuiAuth, Principal
 from cmk.maps.backend.core.middleware import CompactGZipMiddleware
 from cmk.maps.backend.core.ratelimit import (
@@ -48,7 +48,7 @@ from cmk.maps.backend.core.ratelimit import (
 )
 from cmk.maps.backend.core.sse import manager, Subscriber
 from cmk.maps.backend.integrations.checkmk import FolderScope
-from cmk.maps.backend.schemas.map import FlowView, FolderTreeView, MapConfig, RadarView, StaticView
+from cmk.maps.backend.schemas.map import FlowView, FolderTreeView, MapConfig, RadarView
 from cmk.maps.backend.schemas.state import MapStates, ObjectState, ObjectTiming
 from cmk.maps.backend.schemas.stream import StreamMessage
 from cmk.maps.backend.services import map_service, settings_service, state_service
@@ -77,6 +77,8 @@ class _GUI:
         self.logged_out: set[str] = set()
         self.unpublished: set[str] = set()
         self.editors: set[str] = set()
+        self.seeing_all: set[str] = set()
+        self.sites: dict[str, list[str]] = {}
         self.down = False
 
     def handle(self, request: httpx2.Request) -> httpx2.Response:
@@ -96,9 +98,14 @@ class _GUI:
                     "permissions": {
                         **_PERMISSIONS,
                         "general.edit_map": body["session_cookie"] in self.editors,
+                        "general.see_all": body["session_cookie"] in self.seeing_all,
                     },
                     "contact_groups": [],
                 },
+            )
+        if request.url.path.endswith("/maps_monitored_sites/actions/show/invoke"):
+            return httpx2.Response(
+                HTTPStatus.OK, json={"monitored_sites": self.sites.get(body["user_id"])}
             )
         if body["name"] in self.unpublished:
             return httpx2.Response(HTTPStatus.OK, json={})
@@ -207,17 +214,6 @@ def test_registered_map_missing_map_is_404() -> None:
     assert exc.value.status_code == HTTPStatus.NOT_FOUND
 
 
-def test_a_map_is_streamed_while_it_has_a_subscriber() -> None:
-    map_key = states._map_key("alice", "b1")  # noqa: SLF001
-    sub = manager.subscribe(map_key, None)
-    streamed_while_subscribed = states.is_streamed(("alice", "b1"))
-    manager.unsubscribe(map_key, sub)
-
-    assert streamed_while_subscribed
-    assert not states.is_streamed(("alice", "b1"))
-    assert not states.is_streamed(("bob", "b1"))
-
-
 # --------------------------------------------------------------------------- #
 # _broadcast_loop — lifecycle + error resilience
 # --------------------------------------------------------------------------- #
@@ -317,29 +313,6 @@ def test_broadcast_loop_newcomer_gets_full_established_gets_delta(
     assert newcomer.queue.empty()
 
 
-@pytest.mark.parametrize(("view", "scoped"), [(FolderTreeView(), True), (StaticView(), False)])
-def test_broadcast_loop_scopes_the_folders_by_the_config_of_each_tick(
-    monkeypatch: pytest.MonkeyPatch, view: FolderTreeView | StaticView, scoped: bool
-) -> None:
-    map_key = states._map_key("alice", "b1")  # noqa: SLF001
-    scope = FolderScope(see_all=False, groups=frozenset({"ops"}))
-    sub = manager.subscribe(map_key, "bob", scope)
-    monkeypatch.setattr(map_service, "get_map", lambda _o, _n: MapConfig(name="b1", view=view))
-    seen: list[FolderScope | None] = []
-
-    async def _states(*_a: object, folder_scope: FolderScope | None, **_k: object) -> MapStates:
-        seen.append(folder_scope)
-        manager.unsubscribe(map_key, sub)
-        return MapStates(map_name="b1", states=[], generated_at=0.0, runtime=get_daemon_runtime())
-
-    monkeypatch.setattr(state_service, "get_map_states", _states)
-    monkeypatch.setattr(settings_service, "get_effective_state_refresh_interval", lambda: 0.0)
-
-    asyncio.run(states._broadcast_loop(map_key, FakeLinkGui()))  # noqa: SLF001
-
-    assert seen == [scope if scoped else None]
-
-
 @pytest.fixture
 def _live_connection() -> Iterator[None]:
     state_service.register_connection("live_1", FakeConnection())
@@ -354,7 +327,7 @@ def test_pushed_topology_is_queued_as_a_topology_update_event() -> None:
 
     asyncio.run(
         states._push_topology_to(  # noqa: SLF001
-            MapConfig(name="b1", connection_id="live_1"), map_key, None, [sub], force_full=True
+            MapConfig(name="b1", connection_id="live_1"), map_key, UNSCOPED, [sub], force_full=True
         )
     )
 
@@ -392,40 +365,17 @@ def test_a_new_stream_gets_the_topology_its_group_fetched_in_this_interval(
     map_key = states._map_key("alice", "b1")  # noqa: SLF001
     streaming, joining = manager.subscribe(map_key, None), manager.subscribe(map_key, None)
     asyncio.run(
-        states._push_topology_to(cfg, map_key, None, [streaming], force_full=False)  # noqa: SLF001
+        states._push_topology_to(cfg, map_key, UNSCOPED, [streaming], force_full=False)  # noqa: SLF001
     )
 
     asyncio.run(
         states._push_topology_to(  # noqa: SLF001
-            cfg, map_key, None, [joining], force_full=True, store=False
+            cfg, map_key, UNSCOPED, [joining], force_full=True, store=False
         )
     )
 
     assert counted_topology.fetches == 1
     assert joining.queue.get_nowait().event == "topology_update"
-
-
-def test_a_tick_of_a_flow_map_pushes_its_topology(
-    counted_topology: _CountedTopology, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    map_key = states._map_key("alice", "b1")  # noqa: SLF001
-    monkeypatch.setattr(map_service, "get_map", lambda _o, _n: _flow_map())
-    sub = manager.subscribe(map_key, None)
-    sub.needs_full = False
-
-    async def _states(*_a: object, **_k: object) -> MapStates:
-        return MapStates(map_name="b1", states=[], generated_at=0.0, runtime=get_daemon_runtime())
-
-    async def _fake_sleep(_delay: float) -> None:
-        manager.unsubscribe(map_key, sub)
-
-    monkeypatch.setattr(state_service, "get_map_states", _states)
-    monkeypatch.setattr(settings_service, "get_effective_state_refresh_interval", lambda: 0.0)
-    monkeypatch.setattr(asyncio, "sleep", _fake_sleep)
-    asyncio.run(states._broadcast_loop(map_key, FakeLinkGui()))  # noqa: SLF001
-
-    assert counted_topology.fetches == 1
-    assert [sub.queue.get_nowait().event for _ in range(sub.queue.qsize())][-1] == "topology_update"
 
 
 def test_the_topology_of_a_flow_map_is_fetched_once_per_interval(
@@ -564,8 +514,8 @@ class _CountedStates:
         self.fail = False
         self.on_fetch: Callable[[], None] = lambda: None
 
-    async def __call__(self, cfg: MapConfig, *, auth_user: str | None, **_kw: object) -> MapStates:
-        self.fetched_for.append(auth_user)
+    async def __call__(self, cfg: MapConfig, *, scope: MonitoringScope, **_kw: object) -> MapStates:
+        self.fetched_for.append(scope.auth_user)
         await self.release.wait()
         self.on_fetch()
         if self.fail:
@@ -1192,10 +1142,132 @@ def test_only_who_may_save_the_map_polls_unsaved_view_settings(
     assert _poll(client, "bob") == HTTPStatus.OK
 
 
-def test_a_see_all_user_shares_no_folder_tree_with_a_user_named_none() -> None:
-    scope = FolderScope(see_all=False, groups=frozenset({"ops"}))
+class _ScopeRecording(FakeConnection):
+    """Records the scopes each fetch of the states runs in."""
 
-    see_all = states._Audience(None, scope).group_key  # noqa: SLF001
-    named_none = states._Audience("None", scope).group_key  # noqa: SLF001
+    def __init__(self) -> None:
+        super().__init__()
+        self.monitoring_scopes: list[MonitoringScope] = []
+        self.folder_scopes: list[FolderScope | None] = []
 
-    assert see_all != named_none
+    @contextlib.asynccontextmanager
+    @override
+    async def with_monitoring_scope(self, scope: MonitoringScope) -> AsyncIterator[None]:
+        self.monitoring_scopes.append(scope)
+        yield
+
+    @contextlib.asynccontextmanager
+    @override
+    async def with_folder_scope(self, scope: FolderScope | None) -> AsyncIterator[None]:
+        self.folder_scopes.append(scope)
+        yield
+
+
+@pytest.fixture(name="scope_recording")
+def fixture_scope_recording() -> Iterator[_ScopeRecording]:
+    connection = _ScopeRecording()
+    state_service.register_connection("live_1", connection)
+    yield connection
+    state_service.unregister_connection("live_1")
+
+
+def test_polls_of_see_all_users_who_may_see_other_sites_fetch_apart(
+    client: TestClient, gui: _GUI, scope_recording: _ScopeRecording
+) -> None:
+    map_service.register_map("alice", MapConfig(name="b1"))
+    gui.seeing_all.update({"carol", "dave"})
+    gui.sites.update({"carol": ["a"], "dave": ["a", "b"]})
+
+    _poll(client, "carol")
+    _poll(client, "dave")
+
+    assert len(scope_recording.monitoring_scopes) == 2
+
+
+def test_polls_of_a_see_all_user_and_a_user_named_none_fetch_apart(
+    client: TestClient, gui: _GUI, scope_recording: _ScopeRecording
+) -> None:
+    map_service.register_map("alice", MapConfig(name="b1", view=FolderTreeView()))
+    gui.seeing_all.add("carol")
+
+    _poll(client, "carol")
+    _poll(client, "None")
+
+    assert len(scope_recording.monitoring_scopes) == 2
+
+
+def _on_first_event_of_the_stream[T](app: FastAPI, user: str, observe: Callable[[], T]) -> T:
+    seen: list[T] = []
+    asyncio.run(
+        _stream_map_b1(app, user, leave_after_events=1, on_event=lambda: seen.append(observe()))
+    )
+    return seen[0]
+
+
+def test_a_map_is_streamed_while_a_viewer_has_its_stream_open(app: FastAPI) -> None:
+    map_service.register_map("alice", MapConfig(name="b1"))
+
+    streamed = _on_first_event_of_the_stream(
+        app, "bob", lambda: states.is_streamed(("alice", "b1"))
+    )
+
+    assert streamed
+
+
+def test_a_map_is_no_longer_streamed_once_its_last_viewer_left(app: FastAPI) -> None:
+    map_service.register_map("alice", MapConfig(name="b1"))
+
+    asyncio.run(_stream_map_b1(app, "bob", leave_after_events=1))
+
+    assert not states.is_streamed(("alice", "b1"))
+
+
+def test_a_map_of_another_owner_with_the_same_name_is_not_streamed(app: FastAPI) -> None:
+    map_service.register_map("alice", MapConfig(name="b1"))
+
+    streamed = _on_first_event_of_the_stream(app, "bob", lambda: states.is_streamed(("bob", "b1")))
+
+    assert not streamed
+
+
+def _events_streamed(app: FastAPI, user: str, count: int) -> list[dict[str, str]]:
+    received = asyncio.run(_stream_map_b1(app, user, leave_after_events=count))
+    return [
+        dict(line.split(": ", 1) for line in frame.splitlines())
+        for frame in received.decode().split("\n\n")
+        if frame and not frame.startswith(":")
+    ][:count]
+
+
+def test_the_stream_of_a_folder_tree_map_fetches_the_folders_its_user_may_read(
+    app: FastAPI, scope_recording: _ScopeRecording
+) -> None:
+    map_service.register_map("alice", MapConfig(name="b1", view=FolderTreeView()))
+
+    _events_streamed(app, "bob", 1)
+
+    assert scope_recording.folder_scopes == [FolderScope(see_all=False)]
+
+
+def test_the_stream_of_a_map_without_folders_fetches_no_folders(
+    app: FastAPI, scope_recording: _ScopeRecording
+) -> None:
+    map_service.register_map("alice", MapConfig(name="b1"))
+
+    _events_streamed(app, "bob", 1)
+
+    assert scope_recording.folder_scopes == [None]
+
+
+@pytest.mark.usefixtures("counted_topology")
+def test_each_tick_of_the_stream_of_a_flow_map_pushes_its_topology(app: FastAPI) -> None:
+    map_service.register_map("alice", _flow_map())
+
+    events = _events_streamed(app, "alice", 3)
+
+    # One topology comes with the opening of the stream, one with its first tick.
+    assert sorted(event["event"] for event in events) == [
+        "state_update",
+        "topology_update",
+        "topology_update",
+    ]

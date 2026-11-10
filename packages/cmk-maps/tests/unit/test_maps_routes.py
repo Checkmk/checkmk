@@ -28,7 +28,7 @@ from router_client import AuthDependency, RouterClientFactory
 
 from cmk.crypto.secrets import Secret
 from cmk.maps.backend.api.v1 import deps, maps, states
-from cmk.maps.backend.connections.base import GeoHost
+from cmk.maps.backend.connections.base import GeoHost, MonitoringScope
 from cmk.maps.backend.core.auth import Principal
 from cmk.maps.backend.core.ratelimit import rest_read_limiter
 from cmk.maps.backend.core.sse import manager, Subscriber
@@ -428,8 +428,8 @@ class _AuthScopeSpyConnection(FakeConnection):
 
     @asynccontextmanager
     @override
-    async def with_auth_user(self, username: str) -> AsyncIterator[None]:
-        self._active_auth_user = username
+    async def with_monitoring_scope(self, scope: MonitoringScope) -> AsyncIterator[None]:
+        self._active_auth_user = scope.auth_user
         try:
             yield
         finally:

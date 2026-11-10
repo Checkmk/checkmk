@@ -495,6 +495,17 @@ class MapsAccessResponse:
 
 
 @api_model
+class MapsMonitoredSitesResponse:
+    monitored_sites: list[str] | None = api_field(
+        description=(
+            "The sites the GUI queries for the user, as set in 'Monitored sites', or null for "
+            "all sites. Not an access restriction."
+        ),
+        example=["central"],
+    )
+
+
+@api_model
 class MapsFormSchemaResponse:
     """A FormSpec rendered for the SPA, with its values in the form's own shape.
 

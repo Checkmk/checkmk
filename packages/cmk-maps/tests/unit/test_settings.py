@@ -14,6 +14,7 @@ _TUNABLES = {
     "MAPS_STATE_REFRESH_INTERVAL": "state_refresh_interval",
     "MAPS_CONNECTION_QUERY_TIMEOUT": "connection_query_timeout",
     "MAPS_CONNECTION_POOL_SIZE": "connection_pool_size",
+    "MAPS_MULTISITE_CONNECTIONS": "multisite_connections",
     "MAPS_FLOW_MAX_SERVICES_PER_HOST": "flow_map_max_services_per_host",
     "MAPS_FLOW_TOP_AFFECTED_HOSTS": "flow_map_top_affected_hosts",
     "MAPS_FLOW_BULK_SERVICE_CHUNK_SIZE": "flow_map_bulk_service_chunk_size",

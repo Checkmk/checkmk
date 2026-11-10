@@ -1236,7 +1236,10 @@ Daemon lifecycle
   subscribers, broadcast loops, caches and rate limiters live in process
   memory. Blocking Livestatus calls run in a thread pool of their connection
   (``MAPS_CONNECTION_POOL_SIZE``, 20), so a site that never answers holds
-  only that pool and the default executor stays free.
+  only that pool and the default executor stays free. Federated queries share
+  a few connections to the sites (``MAPS_MULTISITE_CONNECTIONS``, 4). A query
+  that asks a slow site keeps its connection until the site answers or the
+  query timeout ends; the other queries go on while a connection is free.
   The daemon starts before Apache (``rc.d/84-maps``).
 * At start the daemon applies the log level, activates the configured
   connections (or the factory default, the site's own Livestatus) and refuses

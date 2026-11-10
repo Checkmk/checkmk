@@ -77,6 +77,7 @@ class Settings(BaseModel):
     # truly stuck sockets.
     connection_query_timeout: int = _bounded("MAPS_CONNECTION_QUERY_TIMEOUT", 30, 1, 300)
     connection_pool_size: int = _bounded("MAPS_CONNECTION_POOL_SIZE", 20, 1, 256)
+    multisite_connections: int = _bounded("MAPS_MULTISITE_CONNECTIONS", 4, 1, 16)
 
     flow_map_max_services_per_host: int = _bounded(
         "MAPS_FLOW_MAX_SERVICES_PER_HOST", 50, 0, FLOW_SERVICES_PER_HOST_MAX

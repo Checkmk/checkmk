@@ -25,7 +25,6 @@ from typing import cast, Literal, NamedTuple, override, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from cmk.livestatus_client import (
-        MultiSiteConnection,
         Query,
         SingleSiteConnection,
         SiteConfiguration,
@@ -34,7 +33,13 @@ if TYPE_CHECKING:
 import httpx2
 
 from cmk.ccc.site import SiteId
-from cmk.livestatus_client import ConnectedSite, lqencode, MKLivestatusQueryError
+from cmk.livestatus_client import (
+    ConnectedSite,
+    lqencode,
+    MKLivestatusQueryError,
+    MultiSiteConnection,
+    SiteConfigurations,
+)
 from cmk.maps.backend.connections.base import (
     ConnectionBase,
     FolderInfo,
@@ -608,10 +613,13 @@ class LivestatusConnection(ConnectionBase):
         # Last sitespecs mtime seen while still on the single-socket path; lets the
         # absent->present adoption skip re-parsing an unchanged (or absent) file.
         self._single_mode_mtime: float = 0.0
-        self._mc: MultiSiteConnection | None = None
-        self._mc_mtime: float = 0.0
-        # monotonic timestamp of the last MC (re)build — drives the dead-site
-        # reconnect retry (see _mc_needs_rebuild).
+        # A few federated connections, so a slow remote site holds up only the
+        # queries on one of them. Connections of an older generation (other
+        # site specs, or before a dead-site retry) are closed on their return.
+        self._mc_idle: list[MultiSiteConnection] = []
+        self._mc_slots = threading.BoundedSemaphore(settings.multisite_connections)
+        self._mc_generation = 0
+        self._mc_mtime: float | None = None
         self._mc_built_at: float = 0.0
         self._mc_lock = threading.Lock()
         self._mc_dead: set[str] = set()
@@ -1451,10 +1459,7 @@ class LivestatusConnection(ConnectionBase):
 
     def _disconnect(self) -> None:
         with self._mc_lock:
-            if self._mc is not None:
-                with contextlib.suppress(Exception):
-                    self._mc.disconnect()
-                self._mc = None
+            self._new_mc_generation()
 
     @override
     def dead_sites(self) -> list[str]:
@@ -1923,21 +1928,54 @@ class LivestatusConnection(ConnectionBase):
 
     # MultiSiteConnection marks unreachable sites dead at CONNECT time and
     # never retries them for its lifetime (cmk.gui sidesteps this by building
-    # a fresh connection per request). With our cached MC a dead federation
-    # site would stay dead until the daemon restarts — rebuild periodically
-    # while anything is dead so recovered sites come back. Trade-off: the
-    # rebuild happens under _mc_lock, so a SYN-blackholed site (machine gone,
-    # not just process down) can stall concurrent queries for one connect
-    # timeout every retry interval — still far less often than cmk.gui's
-    # connect-per-request.
+    # a fresh connection per request). Our connections are kept, so while
+    # anything is dead they are rebuilt periodically and recovered sites come
+    # back.
     _MC_DEAD_RETRY_SECONDS = 30.0
 
-    def _mc_needs_rebuild(self, current_mtime: float) -> bool:
-        if self._mc is None or current_mtime != self._mc_mtime:
-            return True
-        return bool(
+    def _new_mc_generation(self) -> None:
+        """Close the idle connections; those in use are closed on their return."""
+        self._mc_generation += 1
+        self._mc_built_at = time.monotonic()
+        for mc in self._mc_idle:
+            with contextlib.suppress(Exception):
+                mc.disconnect()
+        self._mc_idle = []
+
+    def _follow_site_specs(self) -> None:
+        current_mtime = _cmk_sites.sites_mk_mtime()
+        if current_mtime != self._mc_mtime:
+            if self._mc_mtime is not None:
+                logger.info("Site specs changed — reloading enabled sites")
+        elif not (
             self._mc_dead and time.monotonic() - self._mc_built_at > self._MC_DEAD_RETRY_SECONDS
+        ):
+            return
+        self._sites = _cmk_sites.load_sites()
+        self._mc_mtime = current_mtime
+        # Deliberately NOT clearing _mc_dead while sites remain: a still-dead
+        # site must stay marked until the post-query dead_sites() refresh, or
+        # its stale foldertree leaves would flicker out for a tick.
+        if not self._sites:
+            self._mc_dead = set()
+        self._new_mc_generation()
+
+    def _new_multisite_connection(
+        self, sites: Mapping[str, Mapping[str, object]]
+    ) -> MultiSiteConnection:
+        mc = MultiSiteConnection(
+            sites=SiteConfigurations(cast("dict[SiteId, SiteConfiguration]", dict(sites)))
         )
+        mc.set_prepend_site(True)
+        return mc
+
+    def _give_back(self, mc: MultiSiteConnection, generation: int) -> None:
+        with self._mc_lock:
+            if generation == self._mc_generation:
+                self._mc_idle.append(mc)
+                return
+        with contextlib.suppress(Exception):
+            mc.disconnect()
 
     def _run_multisite_sync(
         self, lql: str, only_sites: list[str] | None = None
@@ -1945,65 +1983,64 @@ class LivestatusConnection(ConnectionBase):
         """Sync federated query via Checkmks ``MultiSiteConnection``.
 
         Must run in a query thread (``_in_query_thread``); ``MultiSiteConnection``
-        is sync. ``AuthUser:`` is sent per-query so the cached connection isn't
+        is sync. ``AuthUser:`` is sent per-query so a pooled connection isn't
         mutated across concurrent users.
         """
-        from cmk.livestatus_client import MultiSiteConnection, SiteConfigurations
-
         if not self._sites:
             return []
-
-        with self._mc_lock:
-            current_mtime = _cmk_sites.sites_mk_mtime()
-            if self._mc_needs_rebuild(current_mtime):
-                if self._mc is not None and current_mtime != self._mc_mtime:
-                    logger.info("Site specs changed — reloading enabled sites")
-                self._sites = _cmk_sites.load_sites()
-                if not self._sites:
-                    self._mc = None
-                    self._mc_mtime = current_mtime
-                    self._mc_dead = set()
-                    return []
-                if self._mc is not None:
-                    # Close the superseded connection's sockets — dead-retry
-                    # rebuilds every 30s would otherwise leak FDs until GC.
-                    with contextlib.suppress(Exception):
-                        self._mc.disconnect()
-                self._mc = MultiSiteConnection(
-                    sites=SiteConfigurations(cast("dict[SiteId, SiteConfiguration]", self._sites))
-                )
-                self._mc.set_prepend_site(True)
-                self._mc_mtime = current_mtime
-                self._mc_built_at = time.monotonic()
-                # Deliberately NOT clearing _mc_dead here: a still-dead site
-                # must stay marked until the post-query dead_sites() refresh,
-                # or its stale foldertree leaves would flicker out for a tick.
-            mc = self._mc
-            assert mc is not None  # rebuilt above when missing
-
-            scope = _scope_ctx.get()
-            headers = ""
-            if scope.auth_user:
-                headers += f"AuthUser: {lqencode(scope.auth_user)}\n"
-            if scope.sites is not None:
-                only_sites = [s for s in (only_sites or self._sites) if s in scope.sites]
-                if not only_sites:
-                    return []
-
-            asked = [c for c in mc.connections if not only_sites or c.id in only_sites]
-            mc.set_only_sites([SiteId(s) for s in only_sites] if only_sites else None)
+        if not self._mc_slots.acquire(timeout=settings.connection_query_timeout):
+            raise QueryTimeoutError
+        try:
+            with self._mc_lock:
+                self._follow_site_specs()
+                sites = self._sites
+                generation = self._mc_generation
+                mc = self._mc_idle.pop() if self._mc_idle else None
+            if not sites:
+                return []
+            if mc is None:
+                mc = self._new_multisite_connection(sites)
             try:
-                rows = mc.query(lql, add_headers=headers)
+                return self._query_multisite(mc, sites, lql, only_sites, generation)
             finally:
-                mc.set_only_sites(None)
+                self._give_back(mc, generation)
+        finally:
+            self._mc_slots.release()
 
-            refused = _take_back_a_refused_query(mc, asked)
-            self._log_dead_site_transitions(
-                cast("Mapping[str, Mapping[str, object]]", mc.dead_sites())
-            )
-            if refused is not None:
-                raise refused
-            return list(rows)
+    def _query_multisite(
+        self,
+        mc: MultiSiteConnection,
+        sites: Mapping[str, object],
+        lql: str,
+        only_sites: list[str] | None,
+        generation: int,
+    ) -> list[list[object]]:
+        scope = _scope_ctx.get()
+        headers = ""
+        if scope.auth_user:
+            headers += f"AuthUser: {lqencode(scope.auth_user)}\n"
+        if scope.sites is not None:
+            only_sites = [s for s in (only_sites or sites) if s in scope.sites]
+            if not only_sites:
+                return []
+
+        asked = [c for c in mc.connections if not only_sites or c.id in only_sites]
+        mc.set_only_sites([SiteId(s) for s in only_sites] if only_sites else None)
+        try:
+            rows = mc.query(lql, add_headers=headers)
+        finally:
+            mc.set_only_sites(None)
+
+        refused = _take_back_a_refused_query(mc, asked)
+        with self._mc_lock:
+            # A connection of an earlier generation may still hold a recovered site for dead.
+            if generation == self._mc_generation:
+                self._log_dead_site_transitions(
+                    cast("Mapping[str, Mapping[str, object]]", mc.dead_sites())
+                )
+        if refused is not None:
+            raise refused
+        return list(rows)
 
     def _log_dead_site_transitions(self, dead: Mapping[str, Mapping[str, object]]) -> None:
         """Log only when a site enters or leaves the dead set, not every query."""
@@ -2013,8 +2050,11 @@ class LivestatusConnection(ConnectionBase):
                 "Livestatus site %(site_id)s dead: %(exception)s",
                 {"site_id": sid, "exception": dead[sid].get("exception")},
             )
-        for sid in self._mc_dead - current:
-            logger.info("Livestatus site %(site_id)s recovered", {"site_id": sid})
+        if recovered := self._mc_dead - current:
+            for sid in recovered:
+                logger.info("Livestatus site %(site_id)s recovered", {"site_id": sid})
+            # The other connections may still hold the site for dead.
+            self._new_mc_generation()
         self._mc_dead = current
 
 

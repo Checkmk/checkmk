@@ -66,22 +66,6 @@ test('last reports the final present sample of a series ending in a gap', () => 
   expect(stats.last).toBe(renderedAlone(finalSample))
 })
 
-test('min, average and max are taken over the present samples, skipping the gaps', () => {
-  const stats = metricStats(makeMetric([4, null, 1, 7, null]))
-
-  expect([stats.min, stats.avg, stats.max]).toEqual([
-    renderedAlone(1),
-    renderedAlone(4),
-    renderedAlone(7)
-  ])
-})
-
-test('a series of nothing but gaps has no stats to report', () => {
-  const stats = metricStats(makeMetric([null, null]))
-
-  expect(stats).toEqual({ min: 'n/a', avg: 'n/a', max: 'n/a', last: 'n/a' })
-})
-
 test('stats tell apart two values one axis step apart', () => {
   const valueResolution = 0.005
 

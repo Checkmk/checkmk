@@ -317,25 +317,6 @@ class GraphPanel:
         """
         return self.legend.locator("tbody .graphing-graph-legend__row")
 
-    @property
-    def legend_stat_headers(self) -> Locator:
-        """The headers of the stat columns, in the order the legend renders them."""
-        return self.legend.locator("thead .graphing-graph-legend__header--stat")
-
-    def legend_values(self) -> dict[str, list[str]]:
-        """The stats of every series row as shown, in `GraphStat` order, by series title.
-
-        Read in one call, so a refetch settling in between cannot mix two fetches' rows.
-        """
-        rows: list[tuple[str, list[str]]] = self.legend_rows.evaluate_all(
-            "rows => rows.map(row => ["
-            "  row.querySelector('.graphing-graph-legend__title').textContent.trim(),"
-            "  [...row.querySelectorAll('.graphing-graph-legend__stat')]"
-            "    .map(cell => cell.textContent.trim()),"
-            "])"
-        )
-        return dict(rows)
-
     def legend_stat(self, title: str, stat: GraphStat) -> Locator:
         """The `stat` cell of the legend row whose title contains `title`.
 

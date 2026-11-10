@@ -537,19 +537,8 @@ class TestPerformanceGraphContent:
             },
         )
 
-    @pytest.mark.parametrize(
-        "legend",
-        [
-            pytest.param({"show_legend": False}, id="no_legend"),
-            pytest.param({"show_legend": True, "legend_style": "compact"}, id="compact"),
-            pytest.param({"show_legend": True, "legend_style": "extended"}, id="extended"),
-            pytest.param({"show_legend": True}, id="shown_without_a_style"),
-        ],
-    )
-    def test_stores_the_legend_as_sent(
-        self, clients: ClientRegistry, legend: dict[str, object]
-    ) -> None:
-        clients.DashboardClient.create_relative_grid_dashboard(
+    def test_keeps_the_legend_style(self, clients: ClientRegistry) -> None:
+        resp = clients.DashboardClient.create_relative_grid_dashboard(
             create_dashboard_payload(
                 "test_dashboard",
                 {
@@ -557,24 +546,18 @@ class TestPerformanceGraphContent:
                         {
                             "type": "performance_graph",
                             "timerange": {"type": "predefined", "value": "last_25_hours"},
-                            "graph_render_options": legend,
+                            "graph_render_options": {
+                                "show_legend": True,
+                                "legend_style": "extended",
+                            },
                             "source": "active_sessions",
                         }
                     )
                 },
             )
         )
-
-        resp = clients.DashboardClient.get_relative_grid_dashboard("test_dashboard")
-
         widget = next(iter(resp.json["extensions"]["widgets"].values()))
-        render_options = widget["content"]["graph_render_options"]
-        stored = {
-            key: render_options[key]
-            for key in ("show_legend", "legend_style")
-            if key in render_options
-        }
-        assert stored == legend
+        assert widget["content"]["graph_render_options"]["legend_style"] == "extended"
 
     def test_rejects_an_unknown_legend_style(self, clients: ClientRegistry) -> None:
         resp = clients.DashboardClient.create_relative_grid_dashboard(

@@ -128,7 +128,8 @@ const { headerLineBreakLevel } = useHeaderLineBreakLevel(
     showTitle: () => !!props.showTitle,
     showValuesAndTime: () => showValuesAndTime.value,
     showZoomAndMenu: () => showZoomAndMenu.value
-  }
+  },
+  () => props.title ?? ''
 )
 
 const resolutionLabel = computed(() => {

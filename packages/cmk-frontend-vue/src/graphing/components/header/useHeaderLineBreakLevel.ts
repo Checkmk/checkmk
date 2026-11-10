@@ -29,9 +29,13 @@ export interface HeaderLineBreakLevelFlags {
  */
 export function useHeaderLineBreakLevel(
   els: HeaderLineBreakLevelElements,
-  flags: HeaderLineBreakLevelFlags
+  flags: HeaderLineBreakLevelFlags,
+  title: () => string
 ): { headerLineBreakLevel: Ref<number> } {
   const headerLineBreakLevel = ref(0)
+  // A title can fit one line at level 2 and wrap again at level 1, so level 2 releases once per
+  // header width and title. Each further release would alternate the two levels on every frame.
+  let releasedAtWidth: number | null = null
 
   const onSameRow = (elements: Array<HTMLElement | null>): boolean => {
     const rects = elements
@@ -55,7 +59,8 @@ export function useHeaderLineBreakLevel(
 
   function computeHeaderLineBreakLevel(): void {
     // Level 0: no measurable layout yet (e.g. initial mount), or every block fits one row unwrapped
-    if ((els.headerRef.value?.getBoundingClientRect().width ?? 0) === 0) {
+    const headerWidth = els.headerRef.value?.getBoundingClientRect().width ?? 0
+    if (headerWidth === 0) {
       headerLineBreakLevel.value = 0
       return
     }
@@ -77,10 +82,18 @@ export function useHeaderLineBreakLevel(
     }
     // Level 2: title wrapped; hysteresis holds it at 2 until the title fits one line again
     if (headerLineBreakLevel.value === 2) {
-      headerLineBreakLevel.value = titleIsMultiLine() ? 2 : 1
+      if (!titleIsMultiLine() && headerWidth !== releasedAtWidth) {
+        releasedAtWidth = headerWidth
+        headerLineBreakLevel.value = 1
+      }
       return
     }
-    headerLineBreakLevel.value = onSameRow([els.titleRef.value, els.zoomAndMenuRef.value]) ? 1 : 2
+    if (onSameRow([els.titleRef.value, els.zoomAndMenuRef.value])) {
+      releasedAtWidth = null
+      headerLineBreakLevel.value = 1
+      return
+    }
+    headerLineBreakLevel.value = 2
   }
 
   const { observe } = useResizeObserver(computeHeaderLineBreakLevel)
@@ -88,6 +101,10 @@ export function useHeaderLineBreakLevel(
   observe(els.titleRef)
   observe(els.valuesAndTimeRef)
   observe(els.zoomAndMenuRef)
+
+  watch([flags.showValuesAndTime, flags.showZoomAndMenu, flags.showTitle, title], () => {
+    releasedAtWidth = null
+  })
 
   // Recompute on first render, on show* flag changes, and whenever we leave level 0
   // (to settle levels 1 vs 2).

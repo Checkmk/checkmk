@@ -73,6 +73,7 @@ function setupHeaderLineBreakLevel(layout: Layout, flags: Flags = {}) {
   const showTitle = ref(flags.showTitle ?? true)
   const showValuesAndTime = ref(flags.showValuesAndTime ?? true)
   const showZoomAndMenu = ref(flags.showZoomAndMenu ?? true)
+  const title = ref('A title that wraps')
 
   let headerLineBreakLevel!: Ref<number>
   const host = defineComponent({
@@ -88,7 +89,8 @@ function setupHeaderLineBreakLevel(layout: Layout, flags: Flags = {}) {
           showTitle: () => showTitle.value,
           showValuesAndTime: () => showValuesAndTime.value,
           showZoomAndMenu: () => showZoomAndMenu.value
-        }
+        },
+        () => title.value
       ))
       return () => h('div')
     }
@@ -100,7 +102,8 @@ function setupHeaderLineBreakLevel(layout: Layout, flags: Flags = {}) {
     setRect: (block: Block, rect: Rect) => stubRect(els[block], rect),
     showTitle,
     showValuesAndTime,
-    showZoomAndMenu
+    showZoomAndMenu,
+    title
   }
 }
 
@@ -221,6 +224,50 @@ test('level 2 releases to level 1 once the title fits a single line again', asyn
   header.showValuesAndTime.value = false // trigger a recompute
   await nextTick()
   await nextTick()
+  expect(header.level()).toBe(1)
+})
+
+function flipBetweenLevels() {
+  const header = setupHeaderLineBreakLevel({
+    header: { top: 0, height: 100, width: 400 },
+    title: { top: 0, height: 45, width: 380 },
+    valuesAndTime: { top: 90, height: 20, width: 120 },
+    zoomAndMenu: THIRD_ROW,
+    titleLineHeight: 20
+  })
+  const recompute = (): void => FakeResizeObserver.instances[0]!.fire()
+  header.setRect('title', { top: 0, height: 20, width: 380 })
+  recompute()
+  header.setRect('title', { top: 0, height: 45, width: 380 })
+  recompute()
+  header.setRect('title', { top: 0, height: 20, width: 380 })
+  return { header, recompute }
+}
+
+test('level 2 holds after a release wrapped the title again in a header of the same width', () => {
+  const { header, recompute } = flipBetweenLevels()
+
+  recompute()
+
+  expect(header.level()).toBe(2)
+})
+
+test('level 2 releases again for a new title in a header of the same width', async () => {
+  const { header, recompute } = flipBetweenLevels()
+  header.title.value = 'A short title'
+  await nextTick()
+
+  recompute()
+
+  expect(header.level()).toBe(1)
+})
+
+test('level 2 releases again in a wider header', () => {
+  const { header, recompute } = flipBetweenLevels()
+  header.setRect('header', { top: 0, height: 100, width: 500 })
+
+  recompute()
+
   expect(header.level()).toBe(1)
 })
 

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from cmk.server_side_programs.v1 import ObfuscatedStorage
+from cmk.server_side_programs.v1 import ObfuscatedStorage, Storage
 
 TEST_AGENT = "test_agent"
 TEST_HOST = "test_host"
@@ -86,3 +86,14 @@ def test_missing_storage_path_raises(
 
     with pytest.raises(RuntimeError):
         operation(storage)
+
+
+def test_same_key_in_storage_and_obfuscated_storage_does_not_collide(
+    storage: ObfuscatedStorage[int],
+) -> None:
+    plain = Storage(TEST_AGENT, TEST_HOST)
+
+    storage.write("key", 123)
+    plain.write("key", "plain value")
+
+    assert (storage.read("key", None), plain.read("key", None)) == (123, "plain value")

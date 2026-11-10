@@ -9,6 +9,9 @@ from typing import Final, final, Protocol
 from urllib.parse import quote as urlquote
 
 _STORAGE_PATH_ENV: Final = "SERVER_SIDE_PROGRAM_STORAGE_PATH"
+# Keep in sync with cmk/update_config/plugins/actions/server_side_program_storage.py
+_STORAGE_NAMESPACE: Final = "storage"
+_OBFUSCATED_NAMESPACE: Final = "obfuscated_storage"
 
 
 def _get_base_path() -> Path:
@@ -24,8 +27,8 @@ def _sanitize_key(key: str) -> str:
     return skey
 
 
-def _storage_dir(*, host: str, ident: str) -> Path:
-    return Path(_get_base_path(), _sanitize_key(host), _sanitize_key(ident))
+def _storage_dir(*, host: str, ident: str, namespace: str) -> Path:
+    return Path(_get_base_path(), _sanitize_key(host), _sanitize_key(ident), namespace)
 
 
 def _key_path(directory: Path, key: str) -> Path:
@@ -65,7 +68,9 @@ class Storage:
         self._host: Final = host
 
     def _path(self, key: str) -> Path:
-        return _key_path(_storage_dir(host=self._host, ident=self._ident), key)
+        return _key_path(
+            _storage_dir(host=self._host, ident=self._ident, namespace=_STORAGE_NAMESPACE), key
+        )
 
     def write(self, key: str, content: str) -> None:
         """
@@ -155,9 +160,8 @@ class ObfuscatedStorage[T]:
         key had never been written.
         Callers must be prepared to recreate the value in that case.
 
-    The storage uses the same namespace as a :class:`Storage` created with the same
-    program identifier and host name.
-    Do not use the same key with both of them.
+    The values are kept apart from those of a :class:`Storage` created with the same
+    program identifier and host name, so both can use the same key.
 
     Args:
         program_ident: A string identifying the program using the storage. This is used to
@@ -187,7 +191,9 @@ class ObfuscatedStorage[T]:
         self._obfuscator: Final = obfuscator
 
     def _path(self, key: str) -> Path:
-        return _key_path(_storage_dir(host=self._host, ident=self._ident), key)
+        return _key_path(
+            _storage_dir(host=self._host, ident=self._ident, namespace=_OBFUSCATED_NAMESPACE), key
+        )
 
     def write(self, key: str, value: T) -> None:
         """

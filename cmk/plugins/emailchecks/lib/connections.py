@@ -41,7 +41,7 @@ from cmk.plugins.emailchecks.lib.ac_args import (
 )
 from cmk.plugins.emailchecks.lib.graph_api_client import AuthorityURLs, GraphApiClient
 from cmk.server_side_programs.v1 import Storage
-from cmk.server_side_programs.v1._storage import _storage_dir  # FIXME
+from cmk.server_side_programs.v1._storage import _storage_dir, _STORAGE_NAMESPACE  # FIXME
 
 # Isort messes with the type annotation and creates a unused-ignore for the
 # OAUTH2 and OAuth2Credentials imports.
@@ -329,7 +329,10 @@ class GraphApi(_Connection):
             secret=self.auth.client_secret,
             authority_urls=self.authority_urls,
             pw_store=PasswordStore(store_secret),
-            pw_store_file=_storage_dir(host=self.storage_id, ident=ident) / "stored_tokens",
+            pw_store_file=_storage_dir(
+                host=self.storage_id, ident=ident, namespace=_STORAGE_NAMESPACE
+            )
+            / "stored_tokens",
             storage=storage,
             initial_access_token=self.auth.initial_access_token,
             initial_refresh_token=self.auth.initial_refresh_token,

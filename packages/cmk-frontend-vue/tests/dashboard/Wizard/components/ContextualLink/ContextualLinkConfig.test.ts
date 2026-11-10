@@ -5,7 +5,12 @@
  */
 import userEvent from '@testing-library/user-event'
 import { render, screen, waitFor, within } from '@testing-library/vue'
-import { useProvideFilterDefinitions } from 'cmk-ui-library/components/filter'
+import {
+  type FilterDefinition,
+  type FilterDefinitions,
+  type FilterGroups,
+  useProvideFilterDefinitions
+} from 'cmk-ui-library/components/filter'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
@@ -78,13 +83,27 @@ const HOST_STATE_OPTIONS: ContextualLinkOptions = {
   filter_keys: { host_labels: { type: 'label', object_type: 'host' } }
 }
 
-function renderCustomConfig() {
-  const handler = useContextualLink<HostStateContent>(HOST_STATE_OPTIONS, undefined)
+function filterDefinition(id: string, title: string, info: string, group: string | null) {
+  return { id, title, extensions: { info, group } } as FilterDefinition
+}
+
+const FILTER_DEFINITIONS: FilterDefinitions = {
+  host: filterDefinition('host', 'Host name', 'host', null),
+  host_labels: filterDefinition('host_labels', 'Host labels', 'host', 'labels'),
+  service_labels: filterDefinition('service_labels', 'Service labels', 'service', 'labels')
+}
+const FILTER_GROUPS = { labels: { title: 'Labels' } } as unknown as FilterGroups
+
+function renderCustomConfig(
+  options: ContextualLinkOptions = HOST_STATE_OPTIONS,
+  definitions: FilterDefinitions = {}
+) {
+  const handler = useContextualLink<HostStateContent>(options, undefined)
   handler.mode.value = 'custom'
   render(
     defineComponent({
       setup() {
-        useProvideFilterDefinitions({ definitions: {}, groups: {} })
+        useProvideFilterDefinitions({ definitions, groups: FILTER_GROUPS })
         return () => h(ContextualLinkConfig, { handler })
       }
     })
@@ -207,6 +226,56 @@ describe('ContextualLinkConfig', () => {
     handler.addFilter(link, 'host_labels')
 
     expect(await screen.findAllByRole('combobox', { name: 'Label key' })).toHaveLength(1)
+  })
+
+  it('offers the filters to add by the object they filter, each naming its group', async () => {
+    renderCustomConfig(
+      { ...HOST_STATE_OPTIONS, filters: ['host', 'host_labels', 'service_labels'] },
+      FILTER_DEFINITIONS
+    )
+
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Add filter' }))
+
+    expect(
+      screen.getAllByRole('button', { name: /^Toggle .*\(/ }).map((button) => button.textContent)
+    ).toEqual(['All (3)', 'Host (2)', 'Service (1)'])
+    expect(screen.getAllByRole('menuitem').map((item) => item.getAttribute('aria-label'))).toEqual([
+      'Host name',
+      'Host labels – Labels',
+      'Service labels – Labels'
+    ])
+  })
+
+  it('offers no toggle when all filters to add filter the same object', async () => {
+    renderCustomConfig(HOST_STATE_OPTIONS, FILTER_DEFINITIONS)
+
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Add filter' }))
+
+    expect(await screen.findAllByRole('menuitem')).toHaveLength(2)
+    expect(screen.queryByRole('button', { name: /^Toggle .*\(/ })).not.toBeInTheDocument()
+  })
+
+  it('adds the filter picked from the filters to add', async () => {
+    const handler = renderCustomConfig(HOST_STATE_OPTIONS, FILTER_DEFINITIONS)
+    const user = userEvent.setup()
+
+    await user.click(screen.getByRole('button', { name: 'Add filter' }))
+    await user.click(await screen.findByRole('menuitem', { name: 'Host labels – Labels' }))
+
+    expect(handler.customLinks.value[0]!.filters.map(({ filterId }) => filterId)).toEqual([
+      'host_labels'
+    ])
+  })
+
+  it('offers a filter without a definition by its id', async () => {
+    renderCustomConfig()
+
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Add filter' }))
+
+    expect(screen.getAllByRole('menuitem').map((item) => item.getAttribute('aria-label'))).toEqual([
+      'host',
+      'host_labels'
+    ])
   })
 
   it('hides the filters once the clicked element is unchecked', async () => {

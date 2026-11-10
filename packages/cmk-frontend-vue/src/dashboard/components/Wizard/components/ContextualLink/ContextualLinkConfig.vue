@@ -7,13 +7,19 @@ conditions defined in the file COPYING, which is part of this source code packag
 import type { Autocompleter } from 'cmk-shared-typing/typescript/vue_formspec_components'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
 import CmkCollapsible, { CmkCollapsibleTitle } from 'cmk-ui-library/components/CmkCollapsible'
-import CmkDropdown, { CmkAddDropdown } from 'cmk-ui-library/components/CmkDropdown'
+import CmkDropdown from 'cmk-ui-library/components/CmkDropdown'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import CmkIndent from 'cmk-ui-library/components/CmkIndent.vue'
+import CmkMenu, { type CmkMenuCategory, type CmkMenuItem } from 'cmk-ui-library/components/CmkMenu'
 import CmkToggleButtonGroup from 'cmk-ui-library/components/CmkToggleButtonGroup.vue'
 import FormAutocompleter from 'cmk-ui-library/components/FormAutocompleter/FormAutocompleter.vue'
-import { CmkRemoveFilterButton, useFilterDefinitions } from 'cmk-ui-library/components/filter'
+import {
+  CmkRemoveFilterButton,
+  getCategoryDefinition,
+  useFilterDefinitions,
+  useFilterGroups
+} from 'cmk-ui-library/components/filter'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import CmkInlineValidation from 'cmk-ui-library/components/user-input/CmkInlineValidation.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
@@ -35,6 +41,7 @@ const { defaultTarget } = defineProps<{
 }>()
 
 const filterDefinitions = useFilterDefinitions()
+const filterGroups = useFilterGroups()
 
 const MODE_TITLES = {
   default: _t('Default'),
@@ -60,6 +67,28 @@ function filterTitle(filterId: string) {
 const filterOptions = computed(() =>
   handler.value.filters.map((filterId) => ({ name: filterId, title: filterTitle(filterId) }))
 )
+
+const filterMenuItems = computed<CmkMenuItem[]>(() =>
+  handler.value.filters.map((filterId) => {
+    const { info, group } = filterDefinitions[filterId]?.extensions ?? {}
+    return {
+      label: [{ text: filterTitle(filterId), truncateOrder: 1 }],
+      value: filterId,
+      category: info,
+      detail: group ? (filterGroups[group]?.title ?? group) : undefined
+    }
+  })
+)
+
+// A toggle with a single object to pick would narrow nothing.
+const filterCategories = computed<CmkMenuCategory[] | undefined>(() => {
+  const infos = [...new Set(filterMenuItems.value.map(({ category }) => category))].filter(
+    (info) => info !== undefined
+  )
+  return infos.length > 1
+    ? infos.map((info) => ({ value: info, title: getCategoryDefinition(info).title }))
+    : undefined
+})
 
 const KEY_LABELS: Record<FilterKeyOption['type'], TranslatedString> = {
   label: _t('Label key'),
@@ -207,9 +236,14 @@ function confirmDelete() {
                   @remove="link.filters.splice(filterIndex, 1)"
                 />
               </div>
-              <CmkAddDropdown
-                :options="{ type: 'filtered', suggestions: filterOptions }"
+              <CmkMenu
+                :items="filterMenuItems"
+                :categories="filterCategories"
                 :label="_t('Add filter')"
+                trigger-icon="plus"
+                :trigger-text="_t('Add filter')"
+                :search-placeholder="_t('Search filters ...')"
+                searchable
                 @select="(filterId: string) => handler.addFilter(link, filterId)"
               />
             </CmkIndent>

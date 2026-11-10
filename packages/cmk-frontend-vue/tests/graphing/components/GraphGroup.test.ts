@@ -21,7 +21,7 @@ import { MAX_FIGURE_WIDTH } from '@/graphing/components/constants'
 import type { GraphDisplayOptions } from '@/graphing/types'
 
 import { FakeIntersectionObserver, reportIntersection } from '@tests/lib/fakeIntersectionObserver'
-import { FakeResizeObserver, deliverSize } from '@tests/lib/fakeResizeObserver'
+import { FakeResizeObserver, deliverSize, deliverSizes } from '@tests/lib/fakeResizeObserver'
 
 // Hoisted so the panel stub below can bake the ranges its buttons report into its template.
 const { RANGE_START, RANGE_END, PAN_TARGET, ZOOM_TARGET } = vi.hoisted(() => {
@@ -191,22 +191,15 @@ const PANEL_PADDING_STYLE_ID = 'panel-padding'
 let containerRight = 1_000
 let groupLeft = 0
 
-// Per title, so a skeleton taking the wrong slot's height is caught. A skeleton carries the same
-// class but none of this text, so measuring one would read 0 here.
-const PANEL_HEIGHTS: Record<string, number> = {
-  'CPU utilization': 583,
-  Memory: 421
-}
-
-const domRect = (left: number, right: number, height = 0): DOMRect => ({
+const domRect = (left: number, right: number): DOMRect => ({
   x: left,
   y: 0,
   left,
   right,
   top: 0,
-  bottom: height,
+  bottom: 0,
   width: right - left,
-  height,
+  height: 0,
   toJSON: () => ({})
 })
 
@@ -226,10 +219,6 @@ beforeEach(() => {
     }
     if (this.classList.contains('graphing-graph-group')) {
       return domRect(groupLeft, containerRight)
-    }
-    if (this.classList.contains('graphing-graph-group__panel')) {
-      const title = Object.keys(PANEL_HEIGHTS).find((name) => this.textContent?.includes(name))
-      return domRect(0, 0, title === undefined ? 0 : PANEL_HEIGHTS[title]!)
     }
     return domRect(0, 0)
   })
@@ -270,15 +259,11 @@ const EVERYTHING_SHOWN: GraphDisplayOptions = {
   show_time_axis: true
 }
 
-// As the legacy pages do to put each graph on its own padded box. The panel rule stands in for the
-// style of GraphGroupEntry, which jsdom does not load.
+// As the legacy pages do to put each graph on its own padded box.
 function padPanels(padding: string): void {
   const style = document.createElement('style')
   style.id = PANEL_PADDING_STYLE_ID
-  style.textContent = `
-    .graphing-graph-group { --graphing-graph-group-panel-padding: ${padding}; }
-    .graphing-graph-group__panel { padding: ${padding}; }
-  `
+  style.textContent = `.graphing-graph-group { --graphing-graph-group-panel-padding: ${padding}; }`
   document.head.appendChild(style)
 }
 
@@ -324,38 +309,6 @@ test('swaps the panels for skeletons once a refetch outlasts the delay', async (
 
   expect(panels()).toHaveLength(0)
   expect(skeletons()).toHaveLength(1)
-})
-
-test("sizes a refetch's skeletons from the panels they replace", async () => {
-  vi.useFakeTimers()
-  renderGroup([makeGraphDefinition('CPU utilization'), makeGraphDefinition('Memory')])
-  await vi.advanceTimersByTimeAsync(0)
-  expect(panels()).toHaveLength(2)
-
-  postSpy.mockReturnValue(new Promise(() => {}))
-  await fireEvent.click(screen.getAllByText('pan')[0]!)
-  await vi.advanceTimersByTimeAsync(1_000)
-
-  expect(Array.from(skeletons(), (el) => (el as HTMLElement).style.height)).toEqual([
-    `${PANEL_HEIGHTS['CPU utilization']}px`,
-    `${PANEL_HEIGHTS['Memory']}px`
-  ])
-})
-
-test("sizes a padded panel's skeleton to the panel's footprint, not adding the padding twice", async () => {
-  padPanels('20px')
-  vi.useFakeTimers()
-  renderGroup()
-  await vi.advanceTimersByTimeAsync(0)
-  expect(panels()).toHaveLength(1)
-
-  postSpy.mockReturnValue(new Promise(() => {}))
-  await fireEvent.click(screen.getByText('pan'))
-  await vi.advanceTimersByTimeAsync(1_000)
-
-  expect((skeletons()[0] as HTMLElement).style.height).toBe(
-    `${PANEL_HEIGHTS['CPU utilization']! - 40}px`
-  )
 })
 
 test('reports the busy state from the first moment of a refetch too', async () => {
@@ -917,6 +870,104 @@ test('a container resize gives every graph group on the page its new width', asy
       '700'
     ])
   )
+})
+
+describe('GraphGroup - the height a skeleton holds', () => {
+  // The page keeps the heights across tests, so each test has graph titles of its own.
+  function reportPanelHeights(heightByTitle: Record<string, number>): void {
+    deliverSizes((target) => {
+      const title = Object.keys(heightByTitle).find((name) => target.textContent?.includes(name))
+      return { width: 700, height: title === undefined ? 0 : heightByTitle[title]! }
+    })
+  }
+
+  const skeletonHeights = (): string[] =>
+    Array.from(skeletons(), (skeleton) => (skeleton as HTMLElement).style.height)
+
+  beforeEach(() => {
+    vi.stubGlobal('ResizeObserver', FakeResizeObserver)
+    vi.useFakeTimers()
+  })
+
+  test("a refetch's skeletons hold the height of the panels they replace", async () => {
+    renderGroup([makeGraphDefinition('Disk throughput'), makeGraphDefinition('Network traffic')])
+    await vi.advanceTimersByTimeAsync(0)
+    expect(panels()).toHaveLength(2)
+    reportPanelHeights({ 'Disk throughput': 583, 'Network traffic': 421 })
+
+    postSpy.mockReturnValue(new Promise(() => {}))
+    await fireEvent.click(screen.getAllByText('pan')[0]!)
+    await vi.advanceTimersByTimeAsync(1_000)
+
+    expect(skeletonHeights()).toEqual(['583px', '421px'])
+  })
+
+  test('a group that mounts again holds the height of the panels it had', async () => {
+    const { unmount } = renderGroup([makeGraphDefinition('Load average')])
+    await vi.advanceTimersByTimeAsync(0)
+    expect(panels()).toHaveLength(1)
+    reportPanelHeights({ 'Load average': 512 })
+    unmount()
+
+    postSpy.mockReturnValue(new Promise(() => {}))
+    renderGroup([makeGraphDefinition('Load average')])
+    await nextTick()
+
+    expect(skeletonHeights()).toEqual(['512px'])
+  })
+
+  test('a panel that is not rendered keeps the height it had', async () => {
+    renderGroup([makeGraphDefinition('Swap usage')])
+    await vi.advanceTimersByTimeAsync(0)
+    expect(panels()).toHaveLength(1)
+    reportPanelHeights({ 'Swap usage': 377 })
+    deliverSize(700, 0)
+
+    postSpy.mockReturnValue(new Promise(() => {}))
+    await fireEvent.click(screen.getByText('pan'))
+    await vi.advanceTimersByTimeAsync(1_000)
+
+    expect(skeletonHeights()).toEqual(['377px'])
+  })
+
+  test('two groups with the same graph at other sizes keep their heights apart', async () => {
+    const withLegend = renderGroup([makeGraphDefinition('Inode usage')])
+    const withoutLegend = renderGroup([makeGraphDefinition('Inode usage')], { show_legend: false })
+    await vi.advanceTimersByTimeAsync(0)
+    expect(panels()).toHaveLength(2)
+    deliverSizes((target) => ({
+      width: 700,
+      height: withLegend.container.contains(target)
+        ? 583
+        : withoutLegend.container.contains(target)
+          ? 391
+          : 0
+    }))
+    withLegend.unmount()
+    withoutLegend.unmount()
+
+    postSpy.mockReturnValue(new Promise(() => {}))
+    renderGroup([makeGraphDefinition('Inode usage')])
+    renderGroup([makeGraphDefinition('Inode usage')], { show_legend: false })
+    await nextTick()
+
+    expect(skeletonHeights()).toEqual(['583px', '391px'])
+  })
+
+  test('a notice in the place of a panel leaves its skeleton the estimated height', async () => {
+    postSpy.mockRejectedValue(new Error('gone'))
+    const { unmount } = renderGroup([makeGraphDefinition('Disk queue')])
+    await vi.advanceTimersByTimeAsync(1_000)
+    expect(notice()).toBeInTheDocument()
+    deliverSize(700, 48)
+    unmount()
+
+    postSpy.mockReturnValue(new Promise(() => {}))
+    renderGroup([makeGraphDefinition('Disk queue')])
+    await nextTick()
+
+    expect(skeletonHeights()).toEqual([''])
+  })
 })
 
 describe('GraphGroup - graphs away from the view', () => {

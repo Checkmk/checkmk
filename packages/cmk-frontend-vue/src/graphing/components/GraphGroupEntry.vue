@@ -12,11 +12,14 @@ import { computed, ref, watch } from 'vue'
 import type { GraphLoad, ResolvedGraph } from '../composables/useGraphData'
 import type { GraphNoticeDescriptor } from '../composables/useGraphNotice'
 import { useNearView } from '../composables/useNearView'
+import { useSharedResizeObserver } from '../composables/useSharedResizeObserver'
 import GraphSkeleton from './GraphSkeleton.vue'
+import { rememberPanelHeight, rememberedPanelHeight } from './rememberedPanelHeights'
 
 const props = defineProps<{
   load: GraphLoad
   notice: GraphNoticeDescriptor | null
+  heightKey: string
   figureWidth: number
   figureHeight: number
   showLegend: boolean
@@ -52,18 +55,12 @@ const isSkeleton = computed(
     (props.load.graph === null || (props.load.isLoading && delayHasElapsed.value))
 )
 
-function contentHeight(element: HTMLElement): number {
-  const style = getComputedStyle(element)
-  const padding = (parseFloat(style.paddingTop) || 0) + (parseFloat(style.paddingBottom) || 0)
-  return element.getBoundingClientRect().height - padding
-}
+const showsPanel = computed(() => !isSkeleton.value && props.load.graph !== null)
 
-// Read as a refetch's skeleton goes up but before it renders, so the panel it replaces is still on
-// screen and the skeleton can hold that panel's footprint.
-const refetchHeight = ref<number | undefined>(undefined)
-watch(isSkeleton, (showsSkeleton) => {
-  if (showsSkeleton && props.load.graph !== null && root.value !== null) {
-    refetchHeight.value = contentHeight(root.value)
+// Only a panel is remembered: a skeleton or a notice in its place has a height of its own.
+useSharedResizeObserver(root, (entry) => {
+  if (showsPanel.value) {
+    rememberPanelHeight(props.heightKey, entry.contentBoxSize[0]?.blockSize ?? 0)
   }
 })
 </script>
@@ -83,7 +80,7 @@ watch(isSkeleton, (showsSkeleton) => {
       :figure-height="figureHeight"
       :show-legend="showLegend"
       :show-brush="showBrush"
-      :height="load.graph === null ? undefined : refetchHeight"
+      :height="rememberedPanelHeight(heightKey)"
     />
     <slot v-else-if="load.graph" name="panel" :graph="load.graph" />
     <!-- A first load that failed has no panel to sit over, so its notice stands on its own. -->

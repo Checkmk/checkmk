@@ -299,6 +299,14 @@ const entries = computed(() =>
   })
 )
 
+// Everything that the group renders a graph with shapes its height, except the width, which the
+// resize observer follows.
+const heightKeys = computed(() =>
+  props.graphs.map((definition) =>
+    JSON.stringify([props.figure_height, props.layout, props.display, definition])
+  )
+)
+
 const isLoading = computed(() => loads.value.some((load) => load.isLoading))
 
 // The skeletons are aria-hidden, so the group announces the wait of each graph that shows one: a
@@ -354,6 +362,7 @@ function onRetry(index: number): void {
       :key="entry.index"
       :load="entry.load"
       :notice="entry.notice"
+      :height-key="heightKeys[entry.index]!"
       :figure-width="effectiveWidth"
       :figure-height="figure_height"
       :show-legend="display.show_legend"

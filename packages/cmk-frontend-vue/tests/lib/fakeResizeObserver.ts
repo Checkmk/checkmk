@@ -40,14 +40,24 @@ function entryFor(target: Element, width: number, height: number): ResizeObserve
   } as unknown as ResizeObserverEntry
 }
 
-/** Report one content box size for every element that any fake observer observes. */
-export function deliverSize(width: number, height: number): void {
+/** Report the content box size that sizeOf gives for every element that any fake observer observes. */
+export function deliverSizes(sizeOf: (target: Element) => { width: number; height: number }): void {
   for (const observer of FakeResizeObserver.instances) {
     if (observer.observed.size === 0) {
       continue
     }
-    observer.fire([...observer.observed].map((target) => entryFor(target, width, height)))
+    observer.fire(
+      [...observer.observed].map((target) => {
+        const { width, height } = sizeOf(target)
+        return entryFor(target, width, height)
+      })
+    )
   }
+}
+
+/** Report one content box size for every element that any fake observer observes. */
+export function deliverSize(width: number, height: number): void {
+  deliverSizes(() => ({ width, height }))
 }
 
 /** A fake that reports one content box size for each element as soon as it observes it. */

@@ -194,6 +194,101 @@ describe('useGraphData — a planned fetch window', () => {
   })
 })
 
+describe('useGraphData — a resize', () => {
+  // Eight days: the step depends on the width (234 s at 740 px, 152 s at 1140 px).
+  const EIGHT_DAYS: RequestedTimeRange = { start: 0, end: 8 * 86_400 }
+  const DEBOUNCE_ELAPSED_MS = 400
+
+  function fetchResizable(range: { value: RequestedTimeRange }, canvasWidth: { value: number }) {
+    const harness = defineComponent({
+      setup() {
+        useGraphData(
+          () => [{ internal: '{"graphs": []}', add_to: null } as never],
+          () => range.value,
+          () => canvasWidth.value,
+          () => ['max']
+        )
+        return () => h('div')
+      }
+    })
+    render(harness)
+  }
+
+  const requestedSteps = (): number[] =>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    postSpy.mock.calls.map((call: any) => call[1].body.requested_time_range.step)
+
+  const debounceElapsed = (): Promise<void> =>
+    new Promise((resolve) => setTimeout(resolve, DEBOUNCE_ELAPSED_MS))
+
+  test('a narrower plot keeps the finer data it holds', async () => {
+    const canvasWidth = ref(1_140)
+    fetchResizable(ref(EIGHT_DAYS), canvasWidth)
+    await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(1))
+
+    canvasWidth.value = 740
+    await debounceElapsed()
+
+    expect(requestedSteps()).toEqual([152])
+  })
+
+  test('a wider plot fetches its finer step', async () => {
+    const canvasWidth = ref(740)
+    fetchResizable(ref(EIGHT_DAYS), canvasWidth)
+    await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(1))
+
+    canvasWidth.value = 1_140
+    await debounceElapsed()
+
+    expect(requestedSteps()).toEqual([234, 152])
+  })
+
+  test('a range change to a coarser step still fetches', async () => {
+    const range = ref(EIGHT_DAYS)
+    fetchResizable(range, ref(1_140))
+    await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(1))
+
+    range.value = { start: 0, end: 16 * 86_400 }
+
+    await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(2))
+    expect(requestedSteps()).toEqual([152, 304])
+  })
+
+  test('a range change while the plot is unmeasured loads once the plot is back', async () => {
+    const range = ref(EIGHT_DAYS)
+    const canvasWidth = ref(740)
+    fetchResizable(range, canvasWidth)
+    await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(1))
+
+    canvasWidth.value = 0
+    await nextTick()
+    range.value = { start: 86_400, end: 9 * 86_400 }
+    await nextTick()
+    canvasWidth.value = 740
+
+    await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(2))
+    expect(postSpy.mock.calls[1][1].body.requested_time_range).toEqual({
+      start: 86_400,
+      end: 9 * 86_400,
+      step: 234
+    })
+  })
+
+  test('a widening that a range change already served fetches nothing more', async () => {
+    const range = ref(EIGHT_DAYS)
+    const canvasWidth = ref(740)
+    fetchResizable(range, canvasWidth)
+    await waitFor(() => expect(postSpy).toHaveBeenCalledTimes(1))
+
+    canvasWidth.value = 1_140
+    await nextTick()
+    range.value = { start: 86_400, end: 9 * 86_400 }
+    await debounceElapsed()
+
+    expect(requestedSteps()).toEqual([234, 152])
+  })
+})
+
 function renderWithFetcher(
   fetchGraph: GraphDataFetcher,
   range: RequestedTimeRange = { start: 0, end: 3_600 }

@@ -164,8 +164,7 @@ export function useGraphData(
     )
   }
 
-  // Step of the most recently requested load; a resize only re-fetches when the
-  // planned step actually changes.
+  // Step of the most recently requested load; a resize only re-fetches for a finer one.
   let lastRequestedStep: number | null = null
 
   let loadToken = 0
@@ -226,6 +225,8 @@ export function useGraphData(
 
   async function loadAllGraphs() {
     if (!canvasWidthIsMeasured()) {
+      // Nothing was asked for the current range, so the next usable width has to load it.
+      lastRequestedStep = null
       return
     }
 
@@ -266,6 +267,8 @@ export function useGraphData(
 
   async function loadGraph(index: number): Promise<void> {
     if (!canvasWidthIsMeasured()) {
+      // Nothing was asked for the current range, so the next usable width has to load it.
+      lastRequestedStep = null
       return
     }
 
@@ -328,20 +331,27 @@ export function useGraphData(
     })
   })
 
-  // A resize only re-renders client-side; re-fetch (debounced, resizes stream) when the
-  // plotted width changes the requested step, so the data resolution keeps matching the
-  // drawn pixels.
-  const debouncedLoadAllGraphs = useDebounceFn(() => void loadAllGraphs(), 300)
+  // A resize only re-renders client-side; re-fetch (debounced, resizes stream) when the plotted
+  // width plans a finer step than the one on screen. A narrower plot draws finer data just as well.
+  const plansFinerStep = (width: number): boolean =>
+    lastRequestedStep !== null &&
+    planFetchWindow(getRequestedTimeRange(), width).step < lastRequestedStep
+  // Checked again when it fires: a load in between may already have served the finer step.
+  const debouncedLoadAllGraphs = useDebounceFn(() => {
+    if (plansFinerStep(getCanvasWidth())) {
+      void loadAllGraphs()
+    }
+  }, 300)
   watch(getCanvasWidth, (width) => {
     if (!Number.isFinite(width) || width <= 0) {
       return
     }
-    // First usable width after an unmeasured start: run the initial load that was skipped.
+    // First usable width since a load was skipped for want of one: run that load now.
     if (lastRequestedStep === null) {
       void loadAllGraphs()
       return
     }
-    if (planFetchWindow(getRequestedTimeRange(), width).step !== lastRequestedStep) {
+    if (plansFinerStep(width)) {
       debouncedLoadAllGraphs()
     }
   })

@@ -10,7 +10,7 @@ pinned as well as what it makes of the answers.
 
 import asyncio
 import json
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from http import HTTPStatus
 from pathlib import Path
 
@@ -41,12 +41,18 @@ _ALL_PERMISSIONS = {
 
 
 class _GUI:
-    def __init__(self, answers: dict[str, httpx2.Response]) -> None:
+    def __init__(
+        self,
+        answers: dict[str, httpx2.Response],
+        before_answer: Callable[[], None] = lambda: None,
+    ) -> None:
         self.answers = answers
         self.requests: list[tuple[str, object]] = []
+        self._before_answer = before_answer
 
     def handle(self, request: httpx2.Request) -> httpx2.Response:
         self.requests.append((request.url.path, json.loads(request.content)))
+        self._before_answer()
         return self.answers[request.url.path]
 
 
@@ -193,6 +199,65 @@ def test_the_map_owner_is_kept_per_user_and_map() -> None:
     ]
 
 
+def test_a_withdrawn_map_has_its_owner_asked_about_again() -> None:
+    gui = _GUI({_ACCESS: httpx2.Response(HTTPStatus.OK, json={"owner": "alice"})})
+    auth = _auth(gui)
+
+    async def _ask_around_a_withdrawal() -> None:
+        await auth.map_owner(Principal(name="jdoe"), "dc1", now=0.0)
+        await auth.map_owner(Principal(name="jdoe"), "dc2", now=0.0)
+        auth.forget_owners("dc1")
+        await auth.map_owner(Principal(name="jdoe"), "dc1", now=1.0)
+        await auth.map_owner(Principal(name="jdoe"), "dc2", now=1.0)
+
+    asyncio.run(_ask_around_a_withdrawal())
+
+    assert [body for _path, body in gui.requests] == [
+        {"user_id": "jdoe", "name": name} for name in ("dc1", "dc2", "dc1")
+    ]
+
+
+def test_a_map_withdrawn_again_after_the_first_withdrawal_expired_is_asked_about_again() -> None:
+    gui = _GUI({_ACCESS: httpx2.Response(HTTPStatus.OK, json={"owner": "alice"})})
+    clock = [0.0]
+    auth = GuiAuth(
+        GuiLoopback(
+            httpx2.AsyncClient(base_url="http://gui", transport=httpx2.MockTransport(gui.handle))
+        ),
+        clock=lambda: clock[0],
+    )
+    just_before_expiry = IDENTITY_TTL - 1.0
+    just_after_expiry = IDENTITY_TTL + 1.0
+
+    async def _ask_around_two_withdrawals() -> None:
+        auth.forget_owners("dc1")
+        clock[0] = just_before_expiry
+        await auth.map_owner(Principal(name="jdoe"), "dc1", now=just_before_expiry)
+        clock[0] = just_after_expiry
+        auth.forget_owners("dc1")
+        await auth.map_owner(Principal(name="jdoe"), "dc1", now=just_after_expiry)
+
+    asyncio.run(_ask_around_two_withdrawals())
+
+    assert len(gui.requests) == 2
+
+
+def test_a_withdrawn_map_is_asked_about_again_after_many_other_withdrawals() -> None:
+    gui = _GUI({_ACCESS: httpx2.Response(HTTPStatus.OK, json={"owner": "alice"})})
+    auth = _auth(gui)
+
+    async def _ask_around_a_flood_of_withdrawals() -> None:
+        await auth.map_owner(Principal(name="jdoe"), "dc1", now=0.0)
+        auth.forget_owners("dc1")
+        for i in range(10_000):
+            auth.forget_owners(f"other{i}")
+        await auth.map_owner(Principal(name="jdoe"), "dc1", now=1.0)
+
+    asyncio.run(_ask_around_a_flood_of_withdrawals())
+
+    assert len(gui.requests) == 2
+
+
 def test_an_odd_map_answer_is_no_verdict() -> None:
     gui = _GUI({_ACCESS: httpx2.Response(HTTPStatus.OK, json={"owner": 1})})
 
@@ -279,6 +344,35 @@ def test_link_targets_are_kept_per_user_while_the_daemon_holds_them() -> None:
         {"names": ["net"], "cached": cached, "user_id": "hdoe"},
         {"names": ["net"], "cached": cached, "user_id": "jdoe"},
     ]
+
+
+def test_a_link_target_withdrawn_while_the_gui_is_asked_is_left_out() -> None:
+    gui = _GUI(
+        {_LINK_TARGETS: _targets({"name": "net", "owner": "carol"})},
+        before_answer=lambda: auth.forget_owners("net"),
+    )
+    auth = _auth(gui)
+
+    targets = asyncio.run(auth.link_targets("jdoe", ["net"], {("carol", "net")}, now=0.0))
+
+    assert targets == {}
+
+
+def test_a_link_target_withdrawn_while_the_gui_is_asked_is_asked_about_again() -> None:
+    gui = _GUI(
+        {_LINK_TARGETS: _targets({"name": "net", "owner": "carol"})},
+        before_answer=lambda: auth.forget_owners("net"),
+    )
+    auth = _auth(gui)
+    held = {("carol", "net")}
+
+    async def _ask_twice() -> None:
+        await auth.link_targets("jdoe", ["net"], held, now=0.0)
+        await auth.link_targets("jdoe", ["net"], held, now=1.0)
+
+    asyncio.run(_ask_twice())
+
+    assert len(gui.requests) == 2
 
 
 def test_link_targets_without_an_answer_resolve_to_no_map_for_a_while() -> None:

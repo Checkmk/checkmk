@@ -88,6 +88,13 @@ def get_map(owner: str, name: str) -> MapConfig | None:
     return cached
 
 
+def forget_map(owner: str, name: str) -> None:
+    """Drop a deleted map, so it is neither served nor linked to any more."""
+    with _CACHE_GUARD:
+        _CACHE.pop((owner, name), None)
+        _LINKED.pop((owner, name), None)
+
+
 # Maps fetched only because a link names them. Kept apart, so they never push a
 # map someone has open out of the cache, and fetched again after a while, so a
 # change that reached no open view reaches the links too.

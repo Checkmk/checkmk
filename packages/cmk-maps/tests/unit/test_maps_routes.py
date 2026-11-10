@@ -11,6 +11,7 @@ legacy .cfg parsing live GUI-side (the visuals store and
 
 import asyncio
 import json
+import time
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from http import HTTPStatus
@@ -34,13 +35,17 @@ from cmk.maps.backend.core.sse import manager, Subscriber
 from cmk.maps.backend.schemas.map import MapConfig, RadarView, WorldmapView
 from cmk.maps.backend.schemas.state import ObjectState
 from cmk.maps.backend.services import map_service, state_service
-from cmk.maps.shared.map_signature import sign_config
+from cmk.maps.shared.map_signature import MAP_SIG_CONTEXT, MAP_WITHDRAWN_CONTEXT, sign_config
 
 ADMIN_PRINCIPAL = Principal(name="admin", may_edit=True, configure=True, see_all=True)
 
 
 def _client(
-    router_client: RouterClientFactory, user: Principal, *, owner: str | None
+    router_client: RouterClientFactory,
+    user: Principal,
+    *,
+    owner: str | None,
+    gui: FakeLinkGui | None = None,
 ) -> TestClient:
     """A client for ``user``, to whom the GUI names ``owner`` for every map name."""
     return router_client(
@@ -49,7 +54,7 @@ def _client(
         overrides={
             deps.get_current_user: user,
             deps.get_map_owner: owner,
-            deps.get_gui_auth: FakeLinkGui(),
+            deps.get_gui_auth: gui or FakeLinkGui(),
         },
     )
 
@@ -260,6 +265,86 @@ def test_a_save_registered_without_states_tells_the_open_views_and_answers_none(
 
     assert (resp.status_code, resp.content) == (HTTPStatus.NO_CONTENT, b"")
     assert _saved_events(sub) == [{"type": "map_saved", "map": "streamed", "sig": signed["sig"]}]
+
+
+def _withdraw(client: TestClient, *, at: float, context: bytes = MAP_WITHDRAWN_CONTEXT) -> int:
+    notice = sign_config(
+        {"name": "streamed", "at": at, "deleted": True},
+        _SECRET.hmac,
+        owner="admin",
+        context=context,
+    )
+    return client.post(
+        "/api/v1/maps/streamed/withdrawn", json={"owner": "admin", **notice}
+    ).status_code
+
+
+def _withdraw_while_streamed(client: TestClient) -> Subscriber:
+    _register_signed(client, "v1")
+    sub = manager.subscribe("admin\x00streamed", None)
+    try:
+        assert _withdraw(client, at=time.time()) == HTTPStatus.NO_CONTENT
+    finally:
+        manager.unsubscribe("admin\x00streamed", sub)
+    return sub
+
+
+def test_a_withdrawn_map_has_its_owner_resolved_anew(
+    router_client: RouterClientFactory, site_secret_file: Path
+) -> None:
+    site_secret_file.write_bytes(_SECRET.reveal())
+    gui = FakeLinkGui()
+    client = _client(router_client, ADMIN_PRINCIPAL, owner="admin", gui=gui)
+
+    _withdraw_while_streamed(client)
+
+    assert gui.forgotten == ["streamed"]
+
+
+def test_a_withdrawn_map_ends_its_streams(
+    router_client: RouterClientFactory, site_secret_file: Path
+) -> None:
+    site_secret_file.write_bytes(_SECRET.reveal())
+    client = _client(router_client, ADMIN_PRINCIPAL, owner="admin")
+
+    sub = _withdraw_while_streamed(client)
+
+    with pytest.raises(asyncio.QueueShutDown):
+        sub.queue.get_nowait()
+
+
+def test_a_withdrawn_map_is_no_longer_held(
+    router_client: RouterClientFactory, site_secret_file: Path
+) -> None:
+    site_secret_file.write_bytes(_SECRET.reveal())
+    client = _client(router_client, ADMIN_PRINCIPAL, owner="admin")
+
+    _withdraw_while_streamed(client)
+
+    assert map_service.get_map("admin", "streamed") is None
+
+
+@pytest.mark.parametrize(
+    "at, context",
+    [
+        pytest.param(time.time(), MAP_SIG_CONTEXT, id="saved-config signature"),
+        pytest.param(time.time() - 3600, MAP_WITHDRAWN_CONTEXT, id="stale notice"),
+    ],
+)
+def test_a_notice_the_gui_did_not_just_send_ends_no_stream(
+    router_client: RouterClientFactory, site_secret_file: Path, at: float, context: bytes
+) -> None:
+    site_secret_file.write_bytes(_SECRET.reveal())
+    client = _client(router_client, ADMIN_PRINCIPAL, owner="admin")
+    sub = manager.subscribe("admin\x00streamed", None)
+    try:
+        status = _withdraw(client, at=at, context=context)
+    finally:
+        manager.unsubscribe("admin\x00streamed", sub)
+
+    assert status == HTTPStatus.FORBIDDEN
+    with pytest.raises(asyncio.QueueEmpty):
+        sub.queue.get_nowait()
 
 
 def test_opening_a_map_tells_no_view(

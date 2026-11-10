@@ -425,6 +425,11 @@ reaches the browser without delay.
      - ``v1/maps/{name}/saved``
      - Like ``register`` for a signed config just saved, without the state:
        tells the open streams of the map which version is saved.
+   * - POST
+     - ``v1/maps/{name}/withdrawn``
+     - Sent by the GUI over the daemon's socket when a map is deleted or its
+       visibility changed. Authenticated by the site-internal secret, not by a
+       session. See `Authentication`_.
    * - GET
      - ``v1/maps/{name}/states``
      - Full state of all objects of a registered map. The settings preview
@@ -608,7 +613,8 @@ What Maps promises
   visible to everyone the map is published to.
 * The daemon never grants more than the user's GUI session grants. A logout or
   a permission change takes effect in the daemon within 60 s, and on an open
-  stream within 90 s.
+  stream within 90 s. A deleted map, or a map whose visibility changed, ends
+  its open streams on the same site at once.
 * Monitoring data (plug-in output, aliases, labels, …) is data, not markup: a
   monitored host cannot inject active content into a map.
 * The daemon cannot change monitoring or configuration. Commands run only with
@@ -725,6 +731,20 @@ in the daemon within 60 s. An open SSE stream asks again every 30 s and ends
 when the session is refused, the user no longer sees the map, or the map's
 owner or the user's scope changed. Without an answer of the GUI the stream stays
 open and asks again next time.
+
+When the Maps store deletes a map or changes its visibility, the GUI tells the
+daemon of its own site directly over ``tmp/run/maps.sock``. The notice names the
+owner, the map and the time, signed with the site-internal secret in a context
+of its own, so no signed map config passes as one; the daemon acts only on a
+notice of the last 60 s. A signature rather than core's ``InternalToken``
+header: the daemon already verifies the GUI's signatures for map configs, and a
+signed notice cannot be replayed later or for another map. Maps that leave the
+store another way, such as with a deleted user, end their streams on the next
+recheck. It then resolves the owner of
+that map anew for every user, ends the map's open streams (a browser that may
+still see the map reconnects), and drops a deleted map from its cache. If the
+daemon is not running, the GUI goes on; the 30 s and 60 s above still apply,
+as they do on remote sites, which receive maps by replication.
 
 The daemon refuses every request whose ``Sec-Fetch-Site`` is not
 ``same-origin``, and a request body that is not ``application/json``, like the

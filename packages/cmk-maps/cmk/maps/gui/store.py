@@ -24,6 +24,7 @@ from cmk.gui.hooks import request_memoize
 from cmk.gui.permissions import all_permissions
 from cmk.gui.type_defs import VisualPublic
 from cmk.gui.utils.roles import UserPermissions
+from cmk.maps.gui._daemon_notice import tell_withdrawn, TellDaemon
 from cmk.maps.gui.pagetype import MapPage
 from cmk.maps.gui.type_defs import map_config_from_spec, MapName, MapSpec
 
@@ -148,6 +149,7 @@ def save_map(
     public: VisualPublic | None,
     hidden: bool = False,
     verify: Callable[[MapPage | None], None] = lambda _stored: None,
+    tell_daemon: TellDaemon = tell_withdrawn,
 ) -> None:
     """Persist ``map_spec`` as ``owner``'s map ``name`` with the given envelope.
 
@@ -162,6 +164,7 @@ def save_map(
 
     ``verify`` gets the stored map, or ``None``, inside the lock and raises to
     refuse the save, so no other save can land between its check and the write.
+    A changed visibility is told to the daemon, which ends the map's streams.
     """
     with store.locked(user_maps_path(owner)):
         instances = _own_instances(owner)
@@ -175,10 +178,12 @@ def save_map(
         instances.add_instance((owner, name), page)
         MapPage.save_user_instances(instances, _user_permissions(), owner)
     _instances().add_instance((owner, name), page)
+    if stored is not None and stored.config.public != page.config.public:
+        tell_daemon(owner, name, deleted=False)
 
 
-def delete_map(owner: UserId, name: MapName) -> None:
-    """Remove ``owner``'s map. No-op if it does not exist.
+def delete_map(owner: UserId, name: MapName, tell_daemon: TellDaemon = tell_withdrawn) -> None:
+    """Remove ``owner``'s map and tell the daemon. No-op if it does not exist.
 
     Locked and reloaded like :func:`save_map` — a whole-file rewrite from a stale
     set would resurrect maps deleted, or drop maps saved, since this request
@@ -193,6 +198,7 @@ def delete_map(owner: UserId, name: MapName) -> None:
     memoized = _instances()
     if memoized.has_instance((owner, name)):
         memoized.remove_instance((owner, name))
+    tell_daemon(owner, name, deleted=True)
 
 
 def rotation_pools_of(value: object) -> list[str]:

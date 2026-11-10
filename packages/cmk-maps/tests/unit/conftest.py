@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Shared fixtures for the Maps daemon unit tests."""
 
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
 
@@ -33,6 +33,11 @@ def site_secret_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     return secret_file
 
 
+def _returning(value: object) -> Callable[[], object]:
+    # Without parameters: FastAPI would read one as a request parameter and copy its default.
+    return lambda: value
+
+
 @pytest.fixture
 def router_client() -> Iterator[RouterClientFactory]:
     """Mount one router on a fresh ``FastAPI`` app and return a ``TestClient``.
@@ -54,7 +59,7 @@ def router_client() -> Iterator[RouterClientFactory]:
         app = FastAPI()
         app.include_router(router, prefix=prefix)
         for dependency, value in (overrides or {}).items():
-            app.dependency_overrides[dependency] = lambda value=value: value
+            app.dependency_overrides[dependency] = _returning(value)
         client = TestClient(app, raise_server_exceptions=True)
         clients.append(client)
         return client

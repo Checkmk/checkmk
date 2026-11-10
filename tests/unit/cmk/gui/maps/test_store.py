@@ -84,6 +84,52 @@ def test_write_does_not_drop_a_map_stored_after_the_memoized_load(
     assert on_disk.has_instance((owner, "second")), "the concurrently stored map was lost"
 
 
+class _RecordingDaemon:
+    def __init__(self) -> None:
+        self.told: list[tuple[str, str, bool]] = []
+
+    def __call__(self, owner: str, name: str, *, deleted: bool) -> None:
+        self.told.append((owner, name, deleted))
+
+
+def test_deleting_a_map_tells_the_daemon_it_is_gone(
+    request_context: None,  # noqa: ARG001
+    with_admin_login: UserId,
+) -> None:
+    daemon = _RecordingDaemon()
+    store.save_map(with_admin_login, "map1", _map("map1"), public=False, tell_daemon=daemon)
+
+    store.delete_map(with_admin_login, "map1", tell_daemon=daemon)
+
+    assert daemon.told == [(with_admin_login, "map1", True)]
+
+
+def test_changing_who_sees_a_map_tells_the_daemon(
+    request_context: None,  # noqa: ARG001
+    with_admin_login: UserId,
+) -> None:
+    daemon = _RecordingDaemon()
+    store.save_map(with_admin_login, "map1", _map("map1"), public=True, tell_daemon=daemon)
+
+    store.save_map(with_admin_login, "map1", _map("map1"), public=False, tell_daemon=daemon)
+
+    assert daemon.told == [(with_admin_login, "map1", False)]
+
+
+def test_saving_a_map_seen_by_the_same_users_tells_the_daemon_nothing(
+    request_context: None,  # noqa: ARG001
+    with_admin_login: UserId,
+) -> None:
+    daemon = _RecordingDaemon()
+    store.save_map(with_admin_login, "map1", _map("map1"), public=True, tell_daemon=daemon)
+
+    store.save_map(
+        with_admin_login, "map1", _map("map1", alias="Renamed"), public=True, tell_daemon=daemon
+    )
+
+    assert daemon.told == []
+
+
 def test_empty_store_has_builtin_maps(
     request_context: None,  # noqa: ARG001
     with_admin_login: UserId,  # noqa: ARG001

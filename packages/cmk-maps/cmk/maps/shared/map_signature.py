@@ -32,6 +32,8 @@ HmacFn = Callable[[bytes], bytes]
 # into the signed input (see :func:`_map_sig_input`); ``v3`` signs only versions
 # the GUI set, which the daemon orders saves by.
 MAP_SIG_CONTEXT = b"maps-map-config:v3:"
+# The GUI's notice that a map was deleted or its visibility changed.
+MAP_WITHDRAWN_CONTEXT = b"maps-map-withdrawn:v1:"
 
 
 class InvalidSignature(Exception):
@@ -56,7 +58,7 @@ def _canonical_json(obj: Mapping[str, object]) -> bytes:
     return json.dumps(obj, separators=(",", ":"), sort_keys=True).encode("utf-8")
 
 
-def _map_sig_input(owner: str, payload: bytes) -> bytes:
+def _map_sig_input(owner: str, payload: bytes, context: bytes) -> bytes:
     """The exact bytes an owner-bound map-config signature is computed over.
 
     Binds the map ``owner`` into the signed input so a config signed for one owner
@@ -64,19 +66,32 @@ def _map_sig_input(owner: str, payload: bytes) -> bytes:
     it delimits unambiguously from the payload — a username containing the
     separator can't shift the owner/config boundary.
     """
-    return MAP_SIG_CONTEXT + json.dumps(owner).encode("utf-8") + b"." + payload
+    return context + json.dumps(owner).encode("utf-8") + b"." + payload
 
 
-def sign_config(config: Mapping[str, object], hmac_fn: HmacFn, *, owner: str) -> dict[str, str]:
+def sign_config(
+    config: Mapping[str, object],
+    hmac_fn: HmacFn,
+    *,
+    owner: str,
+    context: bytes = MAP_SIG_CONTEXT,
+) -> dict[str, str]:
     """Sign a resolved map config so the daemon can trust bytes a viewer relays."""
     payload = _canonical_json(config)
     return {
         "config_b64": _b64url_encode(payload),
-        "sig": _b64url_encode(hmac_fn(_map_sig_input(owner, payload))),
+        "sig": _b64url_encode(hmac_fn(_map_sig_input(owner, payload, context))),
     }
 
 
-def verify_config(config_b64: str, sig: str, hmac_fn: HmacFn, *, owner: str) -> dict[str, object]:
+def verify_config(
+    config_b64: str,
+    sig: str,
+    hmac_fn: HmacFn,
+    *,
+    owner: str,
+    context: bytes = MAP_SIG_CONTEXT,
+) -> dict[str, object]:
     """Verify a signed map config and return the parsed object.
 
     ``owner`` is the map owner the caller resolved independently (the daemon asks
@@ -89,7 +104,7 @@ def verify_config(config_b64: str, sig: str, hmac_fn: HmacFn, *, owner: str) -> 
     except binascii.Error, ValueError:
         raise InvalidSignature("map config is not valid base64") from None
 
-    if not hmac.compare_digest(signature, hmac_fn(_map_sig_input(owner, payload))):
+    if not hmac.compare_digest(signature, hmac_fn(_map_sig_input(owner, payload, context))):
         raise InvalidSignature("bad map config signature")
 
     try:

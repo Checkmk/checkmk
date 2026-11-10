@@ -17,8 +17,10 @@ Map background images and the image library are GUI-owned now (uploaded via
 handles files or the legacy format.
 """
 
+import time
+
 from fastapi import APIRouter, Depends, HTTPException, Response, status
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, Field, ValidationError
 
 from cmk.maps.backend.api.v1.connections import auth_user_scope
 from cmk.maps.backend.api.v1.deps import (
@@ -33,13 +35,19 @@ from cmk.maps.backend.api.v1.deps import (
     within_read_budget,
 )
 from cmk.maps.backend.api.v1.states import (
+    end_streams,
     map_states_response,
     tell_map_saved,
     view_preview,
     ViewPreview,
 )
 from cmk.maps.backend.api.v1.types import MapName
-from cmk.maps.backend.core.auth import InvalidSignature, Principal, verify_map_config
+from cmk.maps.backend.core.auth import (
+    InvalidSignature,
+    Principal,
+    verify_map_config,
+    verify_withdrawal,
+)
 from cmk.maps.backend.core.ratelimit import rest_read_limiter
 from cmk.maps.backend.schemas.map import (
     MapConfig,
@@ -78,6 +86,18 @@ class SavedRequest(BaseModel):
 
     config_b64: str
     sig: str
+
+
+class WithdrawnRequest(BaseModel):
+    """The GUI's signed notice that a map was deleted or its visibility changed."""
+
+    owner: str = Field(max_length=256)
+    config_b64: str = Field(max_length=1024)
+    sig: str = Field(max_length=128)
+
+
+# A notice is sent right after the change; an older one is not acted on.
+_WITHDRAWN_NOTICE_MAX_AGE = 60.0
 
 
 def _register_signed(
@@ -200,6 +220,27 @@ async def register_saved_map(
     # Only the states would ask Livestatus.
     if within_budget:
         rest_read_limiter.refund(current_user.name)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post("/{name}/withdrawn", status_code=status.HTTP_204_NO_CONTENT, response_class=Response)
+async def map_withdrawn(name: MapName, body: WithdrawnRequest, auth: GuiAuthDep) -> Response:
+    """Stop serving a map as it was: authenticated by the GUI's signature, not a session."""
+    try:
+        notice = verify_withdrawal(body.config_b64, body.sig, owner=body.owner)
+    except InvalidSignature as exc:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid notice") from exc
+    at = notice.get("at")
+    if (
+        notice.get("name") != name
+        or not isinstance(at, int | float)
+        or abs(time.time() - at) > _WITHDRAWN_NOTICE_MAX_AGE
+    ):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid notice")
+    auth.forget_owners(name)
+    end_streams(body.owner, name)
+    if notice.get("deleted") is True:
+        map_service.forget_map(body.owner, name)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 

@@ -18,7 +18,7 @@ from pathlib import Path
 import pytest
 
 from cmk.maps.backend.core import auth
-from cmk.maps.gui import _capabilities
+from cmk.maps.gui import _capabilities, _daemon_notice
 from cmk.utils import paths
 
 _KEY = b"0123456789abcdef0123456789abcdef"
@@ -54,3 +54,19 @@ def test_signed_map_config_for_foreign_owner_is_rejected() -> None:
     signed = _capabilities.sign_map_config({"name": "shared", "alias": "Shared"}, owner="alice")
     with pytest.raises(auth.InvalidSignature):
         auth.verify_map_config(signed["config_b64"], signed["sig"], owner="mallory")
+
+
+def test_withdrawal_notice_round_trips_through_real_signer() -> None:
+    notice = _daemon_notice.withdrawal_notice("alice", "shared", deleted=True, now=12.5)
+    assert notice["owner"] == "alice"
+    assert auth.verify_withdrawal(notice["config_b64"], notice["sig"], owner="alice") == {
+        "name": "shared",
+        "at": 12.5,
+        "deleted": True,
+    }
+
+
+def test_signed_map_config_is_no_withdrawal_notice() -> None:
+    signed = _capabilities.sign_map_config({"name": "shared", "alias": "Shared"}, owner="alice")
+    with pytest.raises(auth.InvalidSignature):
+        auth.verify_withdrawal(signed["config_b64"], signed["sig"], owner="alice")

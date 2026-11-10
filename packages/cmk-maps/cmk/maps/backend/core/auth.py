@@ -19,8 +19,10 @@ the owner the GUI named, see :mod:`cmk.maps.shared.map_signature`.
 import dataclasses
 import functools
 import hmac
+import itertools
 import logging
-from collections.abc import Sequence
+import time
+from collections.abc import Callable, Sequence
 from collections.abc import Set as AbstractSet
 from dataclasses import dataclass, field
 from typing import Final
@@ -36,9 +38,15 @@ from cmk.fastapi.gui_session import (
     Unavailable,
     unavailable,
 )
+from cmk.maps.backend.core.ttl_cache import TtlCache
 from cmk.maps.backend.schemas.map import MapConfig
 from cmk.maps.shared.map_links import CACHED_MAP_REFS_MAX
-from cmk.maps.shared.map_signature import HmacFn, InvalidSignature, verify_config
+from cmk.maps.shared.map_signature import (
+    HmacFn,
+    InvalidSignature,
+    MAP_WITHDRAWN_CONTEXT,
+    verify_config,
+)
 from cmk.maps.shared.validators import is_valid_map_name
 from cmk.utils import paths
 
@@ -189,6 +197,10 @@ def _principal(identity: Identity) -> Principal:
     )
 
 
+# Far more maps than are withdrawn within an identity TTL.
+_GENERATIONS_MAX = 4096
+
+
 class GuiAuth:
     """What the GUI of the site said about a session, kept for a limited time.
 
@@ -196,11 +208,22 @@ class GuiAuth:
     get in as soon as the GUI lets them.
     """
 
-    def __init__(self, gui: GuiLoopback) -> None:
+    def __init__(self, gui: GuiLoopback, *, clock: Callable[[], float] = time.monotonic) -> None:
         self._gui = gui
+        self._clock = clock
         self._principals = IdentityCache[Principal](IDENTITY_TTL)
         self._owners = IdentityCache[str | NoMap](IDENTITY_TTL)
         self._link_owners = IdentityCache[str | NoMap](IDENTITY_TTL)
+        # Bumped when the GUI withdraws a map, so no cached owner of it is used again.
+        # Kept only as long as such an owner stays cached; a value is never given
+        # twice, so a generation that expired cannot come back.
+        self._generations: TtlCache[str, int] = TtlCache(
+            maxsize=_GENERATIONS_MAX, expire_after=IDENTITY_TTL
+        )
+        self._generation_counter = itertools.count(1)
+        # What a name without a kept generation reads as. Raised whenever the bound
+        # could drop a generation, so a dropped one never reads as an older value.
+        self._generation_floor = 0
         # A GUI that gave no answer is not asked again on every state fetch.
         self._links_unanswered = IdentityCache[bool](_LINK_RETRY_AFTER)
 
@@ -228,7 +251,7 @@ class GuiAuth:
         """The owner of the map ``user`` sees under ``name``."""
         # The answer depends on the user, not the session, so all their sessions share it.
         # A map name holds no newline, so the key of one user and map cannot be another's.
-        key = f"{user.name}\n{name}"
+        key = self._key(user.name, name)
         if (owner := self._owners.get(key, now=now)) is not None:
             return owner
         resolved = await self._gui.post(
@@ -242,6 +265,21 @@ class GuiAuth:
         owner = NoMap() if resolved.owner is None else resolved.owner
         self._owners.put(key, owner, now=now)
         return owner
+
+    def forget_owners(self, name: str) -> None:
+        """Resolve the owner of ``name`` anew for every user."""
+        if len(self._generations) >= _GENERATIONS_MAX and name not in self._generations:
+            self._generation_floor = next(self._generation_counter)
+        self._generations.set(name, next(self._generation_counter), now=self._clock())
+
+    def _generation(self, name: str) -> int:
+        return (
+            self._generations.get(name, ttl=IDENTITY_TTL, now=self._clock())
+            or self._generation_floor
+        )
+
+    def _key(self, as_user: str, name: str) -> str:
+        return f"{as_user}\n{name}\n{self._generation(name)}"
 
     async def link_targets(
         self,
@@ -258,26 +296,25 @@ class GuiAuth:
         name without an answer of the GUI resolves to no map until the next fetch.
         """
         targets: dict[str, LinkTarget] = {}
-        ask = []
+        # The names to ask the GUI about, with the key their answer is kept under.
+        ask: dict[str, str] = {}
         # A name no map can have would fail the question for all the others.
         for name in filter(is_valid_map_name, names):
-            match self._link_owners.get(f"{as_user}\n{name}", now=now):
+            key = self._key(as_user, name)
+            match self._link_owners.get(key, now=now):
                 case None:
-                    ask.append(name)
+                    ask[name] = key
                 case NoMap():
                     pass
                 case str() as owner if (owner, name) in held:
                     targets[name] = LinkTarget(owner)
                 case _:
-                    ask.append(name)
+                    ask[name] = key
         if not ask or self._links_unanswered.get(as_user, now=now):
             return targets
-        asked = set(ask)
         body: dict[str, object] = {
-            "names": ask,
-            "cached": [{"owner": o, "name": n} for o, n in held if n in asked][
-                :CACHED_MAP_REFS_MAX
-            ],
+            "names": list(ask),
+            "cached": [{"owner": o, "name": n} for o, n in held if n in ask][:CACHED_MAP_REFS_MAX],
         }
         if as_user:
             body["user_id"] = as_user
@@ -287,14 +324,17 @@ class GuiAuth:
         if not isinstance(answer, _LinkTargetsAnswer):
             self._links_unanswered.put(as_user, True, now=now)
             return targets
-        found = {t.name: t for t in answer.targets if t.name in asked}
-        for name in ask:
+        found = {t.name: t for t in answer.targets if t.name in ask}
+        for name, key in ask.items():
+            # Withdrawn while the GUI was asked: the answer may be from before.
+            if self._key(as_user, name) != key:
+                continue
             target = found.get(name)
             resolved = None if target is None else _usable_target(target, held)
             if resolved is None:
-                self._link_owners.put(f"{as_user}\n{name}", NoMap(), now=now)
+                self._link_owners.put(key, NoMap(), now=now)
             else:
-                self._link_owners.put(f"{as_user}\n{name}", resolved.owner, now=now)
+                self._link_owners.put(key, resolved.owner, now=now)
                 targets[name] = resolved
         return targets
 
@@ -355,3 +395,8 @@ def verify_map_config(config_b64: str, sig: str, *, owner: str) -> dict[str, obj
     signature or JSON problem.
     """
     return verify_config(config_b64, sig, _site_hmac(), owner=owner)
+
+
+def verify_withdrawal(notice_b64: str, sig: str, *, owner: str) -> dict[str, object]:
+    """Verify the GUI's notice that a map of ``owner`` was withdrawn."""
+    return verify_config(notice_b64, sig, _site_hmac(), owner=owner, context=MAP_WITHDRAWN_CONTEXT)

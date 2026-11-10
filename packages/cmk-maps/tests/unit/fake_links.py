@@ -21,6 +21,10 @@ class FakeLinkGui:
         self._sees = sees
         self.asked: list[tuple[str, list[str]]] = []
         self.held: list[AbstractSet[tuple[str, str]]] = []
+        self.forgotten: list[str] = []
+
+    def forget_owners(self, name: str) -> None:
+        self.forgotten.append(name)
 
     async def link_targets(
         self,

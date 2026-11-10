@@ -129,6 +129,7 @@ py_library(
         "//cmk/gui/rule_specs:legacy_converter",
         "//cmk/gui/sidebar",
         "//cmk/utils",
+        "//cmk/utils:unixsocket_http",
         "//packages/cmk-ccc:user",
         "//packages/cmk-livestatus-client",
         "//packages/cmk-plugin-apis:graphing",

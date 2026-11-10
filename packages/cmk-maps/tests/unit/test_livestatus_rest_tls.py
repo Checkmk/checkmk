@@ -3,14 +3,25 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import asyncio
 import functools
+import json
 import os
+import socket
 import ssl
+import threading
+from collections.abc import Iterator
+from http import HTTPStatus
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from typing import override
+from unittest.mock import Mock
 
+import httpx2
 import pytest
 
 from cmk.crypto.certificate import CertificateWithPrivateKey
+from cmk.livestatus_client import SingleSiteConnection
 from cmk.maps.backend.connections.livestatus import LivestatusConnection
 from cmk.maps.backend.core.config import settings
 
@@ -66,3 +77,110 @@ def test_rest_calls_trust_site_cas_written_anew(ca_file: Path) -> None:
     context = connection._rest_tls  # noqa: SLF001
     assert _trusts(context, "new-ca")
     assert not _trusts(context, "old-ca")
+
+
+_METRIC_ANSWER = {
+    "step": 60,
+    "time_range": {"start": "2026-01-01T00:00:00+00:00"},
+    "metrics": [{"data_points": [1.0], "unit": {"symbol": ""}, "title": "Load"}],
+}
+
+
+def _metric_answer(_request: httpx2.Request) -> httpx2.Response:
+    return httpx2.Response(HTTPStatus.OK, json=_METRIC_ANSWER)
+
+
+class _MetricHandler(BaseHTTPRequestHandler):
+    """Answers every POST with a metric, as a site or a proxy in front of one would."""
+
+    def do_POST(self) -> None:
+        self.rfile.read(int(self.headers.get("Content-Length", "0")))
+        body = json.dumps(_METRIC_ANSWER).encode()
+        self.send_response(HTTPStatus.OK)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    @override
+    def log_message(self, format: str, *args: object) -> None: ...
+
+
+@pytest.fixture(name="metric_server")
+def fixture_metric_server() -> Iterator[str]:
+    server = ThreadingHTTPServer(("127.0.0.1", 0), _MetricHandler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    yield f"http://127.0.0.1:{server.server_port}"
+    server.shutdown()
+    server.server_close()
+
+
+def _closed_port_url() -> str:
+    with socket.socket() as sock:
+        sock.bind(("127.0.0.1", 0))
+        return f"http://127.0.0.1:{sock.getsockname()[1]}"
+
+
+def _proxy_in_environment(monkeypatch: pytest.MonkeyPatch, proxy_url: str) -> None:
+    for name in ("http_proxy", "https_proxy", "all_proxy"):
+        monkeypatch.setenv(name, proxy_url)
+        monkeypatch.setenv(name.upper(), proxy_url)
+    monkeypatch.delenv("no_proxy", raising=False)
+    monkeypatch.delenv("NO_PROXY", raising=False)
+
+
+def _rest_connection(
+    perf_data: str,
+    *,
+    host: str = "127.0.0.1",
+    checkmk_url: str = "/heute/check_mk",
+    transport: httpx2.AsyncBaseTransport | None = None,
+) -> LivestatusConnection:
+    site = Mock(spec=SingleSiteConnection)
+    site.query.return_value = [[perf_data]]
+    return LivestatusConnection(
+        host=host,
+        timeout=0.5,
+        checkmk_url=checkmk_url,
+        automation_user="automation",
+        automation_secret="secret",
+        rest_transport=transport,
+        make_site_connection=lambda *_args, **_kwargs: site,
+    )
+
+
+def test_rest_calls_to_the_own_site_go_past_a_proxy_of_the_environment(
+    monkeypatch: pytest.MonkeyPatch, metric_server: str
+) -> None:
+    _proxy_in_environment(monkeypatch, _closed_port_url())
+    conn = _rest_connection("load1=1", checkmk_url=f"{metric_server}/heute/check_mk")
+
+    result = asyncio.run(conn.get_metric_history("h", "CPU load", 0, 60))
+
+    assert list(result.series) == ["load1"]
+
+
+def test_rest_calls_to_another_site_go_through_the_proxy_of_the_environment(
+    monkeypatch: pytest.MonkeyPatch, metric_server: str
+) -> None:
+    _proxy_in_environment(monkeypatch, metric_server)
+    conn = _rest_connection(
+        "load1=1", host="remote.invalid", checkmk_url="http://remote.invalid/remote/check_mk"
+    )
+
+    result = asyncio.run(conn.get_metric_history("h", "CPU load", 0, 60))
+
+    assert list(result.series) == ["load1"]
+
+
+def test_each_rest_call_ends_at_its_own_deadline() -> None:
+    async def _slow_load5(request: httpx2.Request) -> httpx2.Response:
+        if b'"load5"' in request.content:
+            await asyncio.sleep(60)
+        return _metric_answer(request)
+
+    conn = _rest_connection("load1=1 load5=1 load15=1", transport=httpx2.MockTransport(_slow_load5))
+
+    result = asyncio.run(conn.get_metric_history("h", "CPU load", 0, 60))
+
+    assert list(result.series) == ["load1", "load15"]

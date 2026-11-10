@@ -22,6 +22,7 @@ from functools import lru_cache
 from http import HTTPStatus
 from pathlib import Path
 from typing import cast, Literal, NamedTuple, override, Protocol, TYPE_CHECKING
+from urllib.parse import urlsplit
 
 if TYPE_CHECKING:
     from cmk.livestatus_client import Query, SiteConfiguration
@@ -85,6 +86,7 @@ from cmk.maps.shared.states import (
     severity_rank,
     state_token,
 )
+from cmk.maps.shared.validators import is_loopback_host, normalize_host
 from cmk.utils.misc import pnp_cleanup
 
 logger = logging.getLogger(__name__)
@@ -542,6 +544,7 @@ class LivestatusConnection(ConnectionBase):
         automation_user: str | None = None,
         automation_secret: str | None = None,
         *,
+        rest_transport: httpx2.AsyncBaseTransport | None = None,
         clock: Callable[[], float] = time.monotonic,
         make_site_connection: _SiteConnect = SingleSiteConnection,
         make_federated_connection: Callable[
@@ -567,6 +570,7 @@ class LivestatusConnection(ConnectionBase):
         self._checkmk_url = checkmk_url
         self._automation_user = automation_user
         self._automation_secret = automation_secret
+        self._rest_transport = rest_transport
         self._clock = clock
         self._make_site_connection = make_site_connection
         self._make_federated_connection = make_federated_connection
@@ -1259,7 +1263,7 @@ class LivestatusConnection(ConnectionBase):
         series: dict[str, list[tuple[float, float, str]]] = {}
         titles: dict[str, str] = {}
         try:
-            async with httpx2.AsyncClient(verify=self._rest_tls, timeout=self._timeout) as client:
+            async with self._rest_client(base_url) as client:
                 for metric_id in metric_names[:5]:
                     body = {
                         "time_range": {"start": start_dt, "end": end_dt},
@@ -1270,11 +1274,15 @@ class LivestatusConnection(ConnectionBase):
                         "metric_id": metric_id,
                     }
                     try:
-                        resp = await client.post(
-                            api_url,
-                            json=body,
-                            headers={"Authorization": auth_header, "Accept": "application/json"},
-                        )
+                        async with asyncio.timeout(self._timeout):
+                            resp = await client.post(
+                                api_url,
+                                json=body,
+                                headers={
+                                    "Authorization": auth_header,
+                                    "Accept": "application/json",
+                                },
+                            )
                         if resp.status_code != HTTPStatus.OK:
                             logger.debug(
                                 "CMK REST API %(metric_id)s: HTTP %(status_code)s",
@@ -1330,7 +1338,7 @@ class LivestatusConnection(ConnectionBase):
         # columns in the JSON body.
         url = base_url + "/api/1.0/domain-types/service/collections/all"
         try:
-            async with httpx2.AsyncClient(verify=self._rest_tls, timeout=self._timeout) as client:
+            async with asyncio.timeout(self._timeout), self._rest_client(base_url) as client:
                 resp = await client.post(
                     url,
                     headers={
@@ -1907,6 +1915,19 @@ class LivestatusConnection(ConnectionBase):
                 {"reason": reason, "query": _shortened(query, _LOGGED_QUERY_MAX_CHARS)},
             )
         self._refused_queries.set(key, reason)
+
+    def _rest_client(self, base_url: str) -> httpx2.AsyncClient:
+        """A client for the REST API at ``base_url``.
+
+        The own site is reached directly; another site through the proxy the
+        environment names, as for Checkmk's own calls to remote sites.
+        """
+        return httpx2.AsyncClient(
+            verify=self._rest_tls,
+            timeout=self._timeout,
+            trust_env=not is_loopback_host(normalize_host(urlsplit(base_url).hostname or "")),
+            transport=self._rest_transport,
+        )
 
     @property
     def _rest_tls(self) -> ssl.SSLContext | bool:

@@ -52,6 +52,7 @@ from cmk.gui.watolib.rulespecs import (  # astrein: disable=cmk-module-layer-vio
     Rulespec,
     rulespec_registry,
 )
+from cmk.inventory_ui import v1_unstable as inventory_ui_v1_unstable
 from cmk.rulesets.v1 import entry_point_prefixes
 from cmk.rulesets.v1.rule_specs import (
     ActiveCheck,
@@ -81,6 +82,7 @@ class ValidationStep(enum.Enum):
     ACTIVE_CHECKS = "active checks loading"
     SPECIAL_AGENTS = "special agents loading"
     GRAPHING_PLUGINS = "graphing plugins loading"
+    INVENTORY_UI_PLUGINS = "inventory view plugins loading"
     BAKERY_PLUGINS = "bakery plugins loading"
     BAKERY_RULE_SPECS = "bakery plugins rule specs validation"
     BAKERY_DEFAULT_PARAMETERS = "bakery plugins default parameters validation"
@@ -223,6 +225,18 @@ def _validate_graphing_plugin_loading() -> ActiveCheckResult:
         raise_errors=debug.enabled(),
     )
     return to_result(ValidationStep.GRAPHING_PLUGINS, [str(e) for e in discovered_plugins.errors])
+
+
+def _validate_inventory_ui_plugin_loading() -> ActiveCheckResult:
+    discovered_plugins = discover_all_plugins(
+        PluginGroup.INVENTORY_UI,
+        inventory_ui_v1_unstable.entry_point_prefixes(),
+        skip_wrong_types=False,
+        raise_errors=debug.enabled(),
+    )
+    return to_result(
+        ValidationStep.INVENTORY_UI_PLUGINS, [str(e) for e in discovered_plugins.errors]
+    )
 
 
 def _validate_rule_spec_loading() -> ActiveCheckResult:
@@ -499,6 +513,7 @@ def validate_plugins() -> ActiveCheckResult:
         _validate_active_checks_loading(),
         _validate_special_agent_loading(),
         _validate_graphing_plugin_loading(),
+        _validate_inventory_ui_plugin_loading(),
         _validate_rule_spec_loading(),
         _validate_rule_spec_form_creation(),
         _validate_referenced_rule_spec(),

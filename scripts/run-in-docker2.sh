@@ -122,10 +122,10 @@ while [[ $# -gt 0 && "$1" =~ ^[A-Za-z_][A-Za-z0-9_]*= ]]; do
     ENV_ARGS+=("$1")
     shift
 done
-print_debug "ENV_ARGS: ${ENV_ARGS}"
+print_debug "ENV_ARGS: ${ENV_ARGS[*]}"
 
 CMD_ARGS=("$@")
-print_debug "CMD_ARGS: ${CMD_ARGS}"
+print_debug "CMD_ARGS: ${CMD_ARGS[*]}"
 
 # Build export statements with safe quoting so values with spaces/specials works
 EXPORT_STMTS=""
@@ -192,7 +192,7 @@ fi
 if [[ $ENABLE_DIND -gt 0 ]]; then
     print_debug "Mounting ~/.docker into container"
     DOCKER_MOUNT_ARGS="${DOCKER_MOUNT_ARGS} -v ${HOME}/.docker:/${CONTAINER_USER}/.docker"
-    DOCKER_MOUNT_ARGS="${DOCKER_MOUNT_ARGS} -v "/var/run/docker.sock:/var/run/docker.sock""
+    DOCKER_MOUNT_ARGS="${DOCKER_MOUNT_ARGS} -v /var/run/docker.sock:/var/run/docker.sock"
 fi
 
 # we can not afford 8GB of tmpfs on a user machine for /git to have everything always clean
@@ -239,7 +239,7 @@ docker run -a stdout -a stderr \
     ${MEMORY_LIMITATION} \
     --workdir /git \
     -v ${CHECKOUT_ROOT}:/checkmk \
-    -v /home/$(whoami)/.cmk-credentials:/${CONTAINER_USER}/.cmk-credentials:ro \
+    -v "/home/$(whoami)/.cmk-credentials:/${CONTAINER_USER}/.cmk-credentials:ro" \
     --group-add="$(getent group docker | cut -d: -f3)" \
     ${DOCKER_MOUNT_ARGS} \
     ${DOCKER_ENV_ARGS} \

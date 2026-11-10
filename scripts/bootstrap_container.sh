@@ -17,6 +17,6 @@ working_directory=$2
 # most tests require to be in "/git", so make this magically happen
 echo "Copy ${source_directory} to expected ${working_directory} ..."
 # prepare a fake git "overlay"
-cp -a ${source_directory} ${working_directory}
-git config --global --add safe.directory ${working_directory}
-cd ${working_directory} || exit 1
+cp -a "${source_directory}" "${working_directory}"
+git config --global --add safe.directory "${working_directory}"
+cd "${working_directory}" || exit 1

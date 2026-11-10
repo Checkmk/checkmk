@@ -36,8 +36,6 @@ packages/mk-sql/src/main.rs
 packages/mk-sql/tests/test_running_instances.rs
 packages/mk-sql/wine-prepare.sh
 packages/neb/test/NagiosMockup.cc
-scripts/bootstrap_container.sh
-scripts/run-in-docker2.sh
 tests/packaging/package_validator/src/main.rs
 tests/run_tests.sh
 tests/unit-shell/agents/plugins/test_ibm_mq.sh

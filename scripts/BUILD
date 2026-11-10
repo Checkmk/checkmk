@@ -29,6 +29,7 @@ py_binary(
 sh_library(
     name = "scripts_sh",
     srcs = [
+        "bootstrap_container.sh",
         "check-current-commit",
         "check_no_py_test.sh",
         "check_requirements_test_coverage.sh",
@@ -43,6 +44,7 @@ sh_library(
         "remove-orphaned-bazel-bases.sh",
         "remove-unused-filelevel-mypy-suppressions.sh",
         "run-in-docker.sh",
+        "run-in-docker2.sh",
         "run-iwyu",
         "run-mypy",
         "run-unittests",

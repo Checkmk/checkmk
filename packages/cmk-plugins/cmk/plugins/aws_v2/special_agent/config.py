@@ -86,6 +86,11 @@ class NamingConvention(Enum):
     private_dns_name = "private_dns_name"
 
 
+@dataclass(frozen=True)
+class TagNaming:
+    key: str
+
+
 class CloudFrontHostAssignment(Enum):
     """Where the data of a CloudFront distribution goes. The values are those of the rule."""
 
@@ -108,7 +113,7 @@ class HostNaming:
     See hosts.target_host. The CloudFront section also reads cloudfront for its name.
     """
 
-    ec2: NamingConvention
+    ec2: NamingConvention | TagNaming
     non_ec2: NonEC2PiggybackTemplate
     cloudfront: CloudFrontHostAssignment
     account_id: str | None = None
@@ -128,7 +133,7 @@ class AWSConfig:
         hostname: str,
         sys_argv: argparse.Namespace,
         overall_tags: OverallTags,
-        piggyback_naming_convention: NamingConvention,
+        piggyback_naming_convention: NamingConvention | TagNaming,
         non_ec2_piggyback_template: NonEC2PiggybackTemplate,
         tags_option: TagsOption = TagsImportPatternOption.import_all,
         *,

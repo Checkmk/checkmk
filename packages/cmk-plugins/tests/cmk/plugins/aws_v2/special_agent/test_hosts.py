@@ -12,6 +12,7 @@ from cmk.plugins.aws_v2.special_agent.config import (
     HostNaming,
     NamingConvention,
     NonEC2PiggybackTemplate,
+    TagNaming,
 )
 from cmk.plugins.aws_v2.special_agent.hosts import (
     AccountScope,
@@ -110,6 +111,53 @@ def test_ec2_instance_without_a_name_has_no_host(
     )
 
     assert not list(ec2_instance_hosts([instance], "eu-central-1", naming))
+
+
+NAME_TAG_NAMING = HostNaming(
+    ec2=TagNaming("Name"),
+    non_ec2=NonEC2PiggybackTemplate.LONG,
+    cloudfront=CloudFrontHostAssignment.account,
+)
+
+
+def _instance_with_tags(**tags: str) -> Mapping[str, object]:
+    return {**INSTANCE, "Tags": [{"Key": key, "Value": value} for key, value in tags.items()]}
+
+
+@pytest.mark.parametrize(
+    ("tag_value", "expected"),
+    [
+        pytest.param("web01", "web01", id="valid value -> unchanged"),
+        pytest.param("web-01.prod_eu", "web-01.prod_eu", id="dash dot underscore -> unchanged"),
+        pytest.param("web server/01", "web_server_01", id="space and slash -> underscore"),
+        pytest.param("a:b=c+d@e", "a_b_c_d_e", id="colon equals plus at -> underscore"),
+        pytest.param("Müller", "M_ller", id="non-ascii letter -> underscore"),
+        pytest.param(" web", "_web", id="leading space -> leading underscore"),
+        pytest.param("x" * 240, "x" * 240, id="240 chars -> unchanged"),
+    ],
+)
+def test_ec2_instance_host_is_named_after_the_tag_value(tag_value: str, expected: str) -> None:
+    instance = _instance_with_tags(Name=tag_value)
+
+    hosts = list(ec2_instance_hosts([instance], "eu-central-1", NAME_TAG_NAMING))
+
+    assert hosts == [(expected, instance)]
+
+
+@pytest.mark.parametrize(
+    "instance",
+    [
+        pytest.param(INSTANCE, id="no tags -> no host"),
+        pytest.param(_instance_with_tags(Owner="me"), id="other tag only -> no host"),
+        pytest.param(_instance_with_tags(name="web01"), id="key in other case -> no host"),
+        pytest.param(_instance_with_tags(Name=""), id="empty value -> no host"),
+        pytest.param(_instance_with_tags(Name="x" * 241), id="241 chars -> no host"),
+        pytest.param(_instance_with_tags(Name="-web"), id="leading dash -> no host"),
+        pytest.param(_instance_with_tags(Name=".web"), id="leading dot -> no host"),
+    ],
+)
+def test_ec2_instance_without_a_usable_tag_has_no_host(instance: Mapping[str, object]) -> None:
+    assert not list(ec2_instance_hosts([instance], "eu-central-1", NAME_TAG_NAMING))
 
 
 @pytest.mark.parametrize(

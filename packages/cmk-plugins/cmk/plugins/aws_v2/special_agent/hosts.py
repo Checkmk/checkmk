@@ -20,7 +20,13 @@ from typing import assert_never, NewType, Self
 
 from pydantic import BaseModel, Field
 
-from .config import CloudFrontHostAssignment, HostNaming, NamingConvention, NonEC2PiggybackTemplate
+from .config import (
+    CloudFrontHostAssignment,
+    HostNaming,
+    NamingConvention,
+    NonEC2PiggybackTemplate,
+    TagNaming,
+)
 
 TargetHost = NewType("TargetHost", str)
 """The name of a piggyback host."""
@@ -28,6 +34,7 @@ TargetHost = NewType("TargetHost", str)
 
 INVALID_HOST_NAME_CHAR = re.compile(r"[^-0-9a-zA-Z_.]")
 PIGGYBACK_HASH_LENGTH = 8
+_MAX_HOST_NAME_LENGTH = 240
 
 
 @dataclass(frozen=True)
@@ -35,10 +42,16 @@ class AccountScope:
     """Data about the AWS account or one of its regions as a whole."""
 
 
+class _Tag(BaseModel):
+    key: str = Field(..., alias="Key")
+    value: str = Field(..., alias="Value")
+
+
 class _Instance(BaseModel):
     private_ip_address: str | None = Field(None, alias="PrivateIpAddress")
     private_dns_name: str | None = Field(None, alias="PrivateDnsName")
     instance_id: str = Field(..., alias="InstanceId")
+    tags: list[_Tag] = Field(default_factory=list, alias="Tags")
 
 
 @dataclass(frozen=True)
@@ -47,6 +60,7 @@ class EC2Instance:
     private_ip_address: str | None
     private_dns_name: str | None
     region: str
+    tags: Mapping[str, str]
 
     @classmethod
     def from_api(cls, instance: Mapping[str, object], region: str) -> Self:
@@ -56,6 +70,7 @@ class EC2Instance:
             private_ip_address=parsed.private_ip_address,
             private_dns_name=parsed.private_dns_name,
             region=region,
+            tags={tag.key: tag.value for tag in parsed.tags},
         )
 
 
@@ -218,7 +233,9 @@ def account_host(account_id: str | None) -> TargetHost:
     return TargetHost(f"aws_account_{account_id}")
 
 
-def _ec2_instance_host(instance: EC2Instance, convention: NamingConvention) -> TargetHost | None:
+def _ec2_instance_host(
+    instance: EC2Instance, convention: NamingConvention | TagNaming
+) -> TargetHost | None:
     # PrivateIpAddress and InstanceId is available although the instance is stopped
     # When we terminate an instance, the instance gets the state "terminated":
     # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-lifecycle.html
@@ -235,8 +252,25 @@ def _ec2_instance_host(instance: EC2Instance, convention: NamingConvention) -> T
                     f"{instance.private_ip_address}-{instance.region}-{instance.instance_id}"
                 )
             return None
+        case TagNaming(key=key):
+            value = instance.tags.get(key)
+            return None if value is None else _host_name_from_tag_value(value)
         case _:
             assert_never(convention)
+
+
+def _host_name_from_tag_value(value: str) -> TargetHost | None:
+    """Replace each character that a host name cannot contain with "_".
+
+    A value that gives no valid host name returns None: an empty value, a too long value,
+    or a value that starts with "-" or ".".
+    """
+    if len(value) > _MAX_HOST_NAME_LENGTH:
+        return None
+    host_name = _sanitize_name(value)
+    if not host_name or host_name[0] in "-.":
+        return None
+    return TargetHost(host_name)
 
 
 def _ebs_attachment_host(attachment: EBSAttachment, account_id: str | None) -> TargetHost:

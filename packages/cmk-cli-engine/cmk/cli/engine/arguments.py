@@ -12,24 +12,23 @@ from pathlib import Path
 
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Arguments as CLIArguments
-from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 
 from .commands import Commands, DiscoveredCommand
-from .options import GetoptOptions, HELP_OPTION, read_global_options, spellings
+from .options import GetoptOptions, GlobalOptions, HELP_OPTION, read_global_options, spellings
 from .readers import ParsedOptions
 
 
 @dataclass(frozen=True)
 class RunCommand:
     command: DiscoveredCommand
-    global_options: CLIGlobalOptions
+    global_options: GlobalOptions
     options: GetoptOptions
     args: CLIArgs
 
 
 @dataclass(frozen=True)
 class ShowHelp:
-    global_options: CLIGlobalOptions
+    global_options: GlobalOptions
 
 
 @dataclass(frozen=True)

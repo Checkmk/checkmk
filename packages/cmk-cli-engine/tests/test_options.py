@@ -6,37 +6,37 @@
 from collections.abc import Sequence
 from pathlib import Path
 
+from cmk.cli.engine.options import GlobalOptions as CLIEngineGlobalOptions
 from cmk.cli.engine.options import long_getopt_specs as cli_long_getopt_specs
 from cmk.cli.engine.options import read_global_options as cli_read_global_options
 from cmk.cli.engine.options import short_getopt_specs as cli_short_getopt_specs
 from cmk.cli.engine.readers import ParsedOptions as CLIParsedOptions
 from cmk.cli.internal import Flag as CLIFlag
-from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Value as CLIValue
 
 from ._logger import null_logger
 
 
-def _read(options: Sequence[tuple[str, str]]) -> CLIGlobalOptions:
+def _read(options: Sequence[tuple[str, str]]) -> CLIEngineGlobalOptions:
     return cli_read_global_options(CLIParsedOptions(options, null_logger()))
 
 
 def test_a_general_flag_is_collected() -> None:
-    assert _read([("--debug", "")]) == CLIGlobalOptions(debug=True)
+    assert _read([("--debug", "")]) == CLIEngineGlobalOptions(debug=True)
 
 
 def test_the_verbosity_counts_the_short_and_long_spelling_alike() -> None:
-    assert _read([("-v", ""), ("--verbose", "")]) == CLIGlobalOptions(verbosity=2)
+    assert _read([("-v", ""), ("--verbose", "")]) == CLIEngineGlobalOptions(verbosity=2)
 
 
 def test_the_log_file_is_a_path() -> None:
-    assert _read([("--log-file", "var/log/cmk.log")]) == CLIGlobalOptions(
+    assert _read([("--log-file", "var/log/cmk.log")]) == CLIEngineGlobalOptions(
         log_file=Path("var/log/cmk.log")
     )
 
 
 def test_an_option_that_is_not_a_general_one_is_left_alone() -> None:
-    assert _read([("--flag", "")]) == CLIGlobalOptions()
+    assert _read([("--flag", "")]) == CLIEngineGlobalOptions()
 
 
 def test_a_deprecated_spelling_is_a_long_getopt_spec_too() -> None:

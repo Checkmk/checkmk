@@ -16,6 +16,7 @@ from cmk.cli.engine.commands import Commands as CLICommands
 from cmk.cli.engine.discovery import make_command as cli_make_command
 from cmk.cli.engine.options import Declaration as CLIDeclaration
 from cmk.cli.engine.options import GENERAL_OPTIONS as CLI_GENERAL_OPTIONS
+from cmk.cli.engine.options import GlobalOptions as CLIEngineGlobalOptions
 from cmk.cli.engine.options import placeholder as cli_placeholder
 from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Arguments as CLIArguments
@@ -24,7 +25,6 @@ from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import Count as CLICount
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import Flag as CLIFlag
-from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import no_options as cli_no_options
 from cmk.cli.internal import Reader as CLIReader
 from cmk.cli.internal import Value as CLIValue
@@ -154,11 +154,11 @@ def test_a_sub_option_reaches_its_command() -> None:
 
 
 def test_a_bare_command_shows_the_help() -> None:
-    assert _parse(["cmk"]) == CLIShowHelp(CLIGlobalOptions())
+    assert _parse(["cmk"]) == CLIShowHelp(CLIEngineGlobalOptions())
 
 
 def test_a_general_option_alone_shows_the_help_with_the_general_options() -> None:
-    assert _parse(["cmk", "-v"]) == CLIShowHelp(CLIGlobalOptions(verbosity=1))
+    assert _parse(["cmk", "-v"]) == CLIShowHelp(CLIEngineGlobalOptions(verbosity=1))
 
 
 @pytest.mark.parametrize("option", ["--help", "-h"])

@@ -91,7 +91,7 @@ def tracing(environ: Mapping[str, str]) -> CommandTracer:
             attributes={
                 "cmk.cli.command.name": run_command.command.name,
                 "cmk.cli.command.args": repr(
-                    (context.global_options, run_command.options, run_command.args)
+                    (run_command.global_options, run_command.options, run_command.args)
                 ),
             },
             context=trace.extract_context_from_environment(dict(environ)),

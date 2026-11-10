@@ -52,22 +52,14 @@ optional argument.
 
 @dataclass(frozen=True, kw_only=True)
 class GlobalOptions:
-    """The options every command accepts.
+    """The options every command accepts and acts on itself.
 
-    The engine declares and parses them, and applies the effects that are its own
-    (log level, profiling) before the command's handler runs. The handler
-    receives the values for whatever it has to do with them itself, such as
-    switching on debug mode for the Checkmk code it reaches.
+    The engine declares and parses them along with the options whose effects are
+    its own alone, such as the log level and profiling.
     """
 
-    verbosity: int = 0
-    """The number of ``-v`` / ``--verbose`` occurrences"""
     debug: bool = False
     """``--debug``: let most Python exceptions raise through"""
-    profile: bool = False
-    """``--profile``: profile the command"""
-    log_file: Path | None = None
-    """``--log-file``: where the engine logs to instead of stderr"""
 
 
 @dataclass(frozen=True, kw_only=True)

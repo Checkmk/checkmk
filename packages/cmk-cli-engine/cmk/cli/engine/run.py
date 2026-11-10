@@ -20,6 +20,7 @@ from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 
 from .arguments import InvalidArguments, parse, rejection, RunCommand, ShowHelp
 from .commands import Commands, DiscoveredCommand
+from .options import GlobalOptions
 from .readers import ParsedOptions
 
 type CommandTracer = Callable[[CLIContext, RunCommand], AbstractContextManager[None]]
@@ -67,7 +68,7 @@ def dispatch(
         return CLIExitCode.FAILURE
 
 
-def _apply_global_options(global_options: CLIGlobalOptions, runtime: Runtime) -> None:
+def _apply_global_options(global_options: GlobalOptions, runtime: Runtime) -> None:
     if global_options.log_file is not None:
         runtime.log_to_file(global_options.log_file, runtime.logger)
     runtime.logger.setLevel(verbosity_to_log_level(global_options.verbosity))
@@ -111,7 +112,11 @@ def run(
         case ShowHelp(global_options=global_options):
             command = partial(_show_help, commands, runtime)
         case RunCommand(global_options=global_options) as run_command:
-            context = CLIContext(omd_root=omd_root, global_options=global_options, logger=logger)
+            context = CLIContext(
+                omd_root=omd_root,
+                global_options=CLIGlobalOptions(debug=global_options.debug),
+                logger=logger,
+            )
             command = partial(_run_command, run_command, context, argv, runtime)
         case unexpected:
             assert_never(unexpected)

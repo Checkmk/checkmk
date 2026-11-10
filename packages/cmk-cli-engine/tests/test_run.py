@@ -25,6 +25,7 @@ from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
+from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import no_options as cli_no_options
 from cmk.cli.internal import Reader as CLIReader
 from cmk.cli.internal import Value as CLIValue
@@ -300,6 +301,18 @@ def test_a_command_is_handed_the_site_root() -> None:
     _run(["cmk", "--demo"], _runtime([_command(remember)]))
 
     assert seen == [_SITE]
+
+
+def test_a_command_is_handed_only_the_options_it_acts_on() -> None:
+    seen: list[CLIGlobalOptions] = []
+
+    def remember(context: CLIContext, _request: None, _args: CLIArgs) -> CLIExitCode:
+        seen.append(context.global_options)
+        return CLIExitCode.SUCCESS
+
+    _run(["cmk", "-v", "--profile", "--debug", "--demo"], _runtime([_command(remember)]))
+
+    assert seen == [CLIGlobalOptions(debug=True)]
 
 
 def test_a_command_reports_through_the_engines_logger() -> None:

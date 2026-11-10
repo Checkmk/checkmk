@@ -12,7 +12,6 @@ from typing import Final
 
 from cmk.cli.internal import Count as CLICount
 from cmk.cli.internal import Flag as CLIFlag
-from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Reader as CLIReader
 from cmk.cli.internal import Value as CLIValue
 from cmk.cli.internal import Values as CLIValues
@@ -20,6 +19,15 @@ from cmk.cli.internal import Values as CLIValues
 type GetoptOptions = Sequence[tuple[str, str]]
 
 type Declaration = CLIFlag | CLICount | CLIValue[object] | CLIValues[object]
+
+
+@dataclass(frozen=True, kw_only=True)
+class GlobalOptions:
+    verbosity: int = 0
+    debug: bool = False
+    profile: bool = False
+    log_file: Path | None = None
+
 
 HELP_WIDTH: Final = 80
 
@@ -99,8 +107,8 @@ def short_help_text(option: Declaration, column: HelpColumn) -> str:
     return column.fill(spelled, option.help)
 
 
-def read_global_options(options: CLIReader) -> CLIGlobalOptions:
-    return CLIGlobalOptions(
+def read_global_options(options: CLIReader) -> GlobalOptions:
+    return GlobalOptions(
         verbosity=options.count(_VERBOSE_OPTION),
         debug=options.flag(_DEBUG_OPTION),
         profile=options.flag(_PROFILE_OPTION),

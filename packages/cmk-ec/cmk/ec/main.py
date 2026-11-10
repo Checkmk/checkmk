@@ -3983,10 +3983,24 @@ def replication_pull(
     )
 
     if need_sync:
+        # Without the locks, so that the EC goes on working while it waits for its master
+        try:
+            fetched: dict[str, Any] | Exception = fetch_master_state(config, slave_status)
+        except Exception as e:
+            fetched = e
         with event_status.lock, lock_configuration:
+            # Switched by the SWITCHMODE command meanwhile, so the sync is outdated
+            if slave_status["mode"] != mode:
+                logger.info(
+                    "Replication: dropping the sync with the master, as the mode switched to "
+                    "%(mode)s meanwhile",
+                    {"mode": slave_status["mode"]},
+                )
+                return
             try:
-                new_state = fetch_master_state(config, slave_status)
-                replication_update_state(settings, config, event_status, event_server, new_state)
+                if isinstance(fetched, Exception):
+                    raise fetched  # handled like failing to update the state below
+                replication_update_state(settings, config, event_status, event_server, fetched)
                 if repl_settings.get("logging"):
                     logger.info("Successfully synchronized with master")
                 slave_status["last_sync"] = now

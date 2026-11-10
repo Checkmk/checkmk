@@ -11,6 +11,7 @@ import os
 import shlex
 import signal
 import socket
+import threading
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from types import FrameType
@@ -567,6 +568,84 @@ def test_signal_while_syncing_is_passed_on(config: Config, pull: _Pull) -> None:
 
     with pytest.raises(MKSignalException):
         pull(replication_slave_config(config), fetch_master_state)
+
+
+def _done_meanwhile(task: Callable[[], object]) -> bool:
+    """Whether another thread is done with the task within 30 s, so not if it needs a lock the
+    caller holds"""
+    # A daemon thread doesn't keep pytest from exiting if it stays blocked.
+    thread = threading.Thread(target=task, daemon=True)
+    thread.start()
+    thread.join(timeout=30)
+    return not thread.is_alive()
+
+
+def test_syncing_slave_answers_status_queries_while_waiting_for_its_master(
+    status_server: StatusServer, config: Config, pull: _Pull
+) -> None:
+    answered: list[bool] = []
+
+    def unreachable_master(config: Config, slave_status: SlaveStatus) -> dict[str, object]:
+        answered.append(_done_meanwhile(lambda: query_status_server(status_server, "GET status")))
+        return _unreachable_master(config, slave_status)
+
+    pull(replication_slave_config(config), unreachable_master)
+
+    assert answered == [True]
+
+
+def test_slave_which_took_over_processes_messages_while_waiting_for_its_master(
+    event_server: EventServer,
+    event_status: EventStatus,
+    config: Config,
+    history: History,
+    slave_status: SlaveStatus,
+    pull: _Pull,
+) -> None:
+    # With automatic fallback, it tries to reach its master again.
+    slave_config = replication_slave_config(config, takeover=60, fallback=60) | {
+        "rule_packs": [ec.default_rule_pack([new_rule({})])]
+    }
+    event_server.reload_configuration(slave_config, history)
+    slave_status["mode"] = "takeover"
+    processed: list[bool] = []
+
+    def unreachable_master(config: Config, slave_status: SlaveStatus) -> dict[str, object]:
+        message = new_message(ec.Event(text="disk full"))
+        processed.append(
+            _done_meanwhile(lambda: event_server.process_potential_event_instrumented([message]))
+        )
+        return _unreachable_master(config, slave_status)
+
+    pull(slave_config, unreachable_master)
+
+    assert (processed, [event["text"] for event in event_status.events()]) == (
+        [True],
+        ["disk full"],
+    )
+
+
+def test_slave_switched_to_takeover_while_waiting_for_its_master_keeps_its_events(
+    event_status: EventStatus,
+    status_server: StatusServer,
+    config: Config,
+    history: History,
+    pull: _Pull,
+) -> None:
+    slave_config = replication_slave_config(config)
+    status_server.reload_configuration(slave_config, history)
+    event_status.new_event(new_event(ec.Event(text="synced before")))
+    master = _master(new_event(ec.Event(text="from master")))
+
+    def master_answering_after_the_switch(
+        config: Config, slave_status: SlaveStatus
+    ) -> dict[str, object]:
+        _done_meanwhile(lambda: query_status_server(status_server, "COMMAND SWITCHMODE;takeover"))
+        return master(config, slave_status)
+
+    pull(slave_config, master_answering_after_the_switch)
+
+    assert [event["text"] for event in event_status.events()] == ["synced before"]
 
 
 def test_signal_while_waiting_for_the_master_is_passed_on(

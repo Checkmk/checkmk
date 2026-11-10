@@ -22,7 +22,7 @@ from cmk.fastapi.gui_session import GuiLoopback, IDENTITY_TTL, Rejected, Unavail
 from cmk.maps.backend.core.auth import Forbidden, GuiAuth, LinkTarget, NoMap, Principal
 from cmk.maps.backend.schemas.map import MapConfig
 from cmk.maps.shared.map_links import CACHED_MAP_REFS_MAX
-from cmk.maps.shared.map_signature import sign_config
+from cmk.maps.shared.map_signature import sign_config, signed_config_size
 
 _COOKIE = "jdoe:4f1c2b1e-0d7a-4a3b-9a55-8d9d7c3a2b10:9c1e0000"
 _IDENTIFY = "/domain-types/gui_session/actions/identify/invoke"
@@ -280,16 +280,23 @@ def _signed_target(owner: str, name: str) -> dict[str, str]:
     return {"name": name, "owner": owner, **signed}
 
 
+def _target_of(signed: dict[str, str]) -> LinkTarget:
+    return LinkTarget(
+        signed["owner"], MapConfig(name=signed["name"]), signed_config_size(signed["config_b64"])
+    )
+
+
 @pytest.mark.usefixtures("_site_secret")
 def test_a_link_target_comes_with_the_config_the_gui_signed() -> None:
-    gui = _GUI({_LINK_TARGETS: _targets(_signed_target("carol", "net"))})
+    signed = _signed_target("carol", "net")
+    gui = _GUI({_LINK_TARGETS: _targets(signed)})
 
     targets = asyncio.run(_auth(gui).link_targets("jdoe", ["net", "gone"], set(), now=0.0))
 
     assert gui.requests == [
         (_LINK_TARGETS, {"names": ["net", "gone"], "cached": [], "user_id": "jdoe"})
     ]
-    assert targets == {"net": LinkTarget("carol", MapConfig(name="net"))}
+    assert targets == {"net": _target_of(signed)}
 
 
 @pytest.mark.usefixtures("_site_secret")
@@ -314,13 +321,14 @@ def test_the_empty_user_asks_for_built_in_maps_only() -> None:
 @pytest.mark.usefixtures("_site_secret")
 def test_more_held_maps_than_the_gui_takes_are_left_out_of_the_question() -> None:
     held = {(f"user{i}", "net") for i in range(CACHED_MAP_REFS_MAX + 1)}
-    gui = _GUI({_LINK_TARGETS: _targets(_signed_target("carol", "net"))})
+    signed = _signed_target("carol", "net")
+    gui = _GUI({_LINK_TARGETS: _targets(signed)})
 
     targets = asyncio.run(_auth(gui).link_targets("jdoe", ["net"], held, now=0.0))
 
     [(_path, body)] = gui.requests
     assert isinstance(body, dict) and len(body["cached"]) == CACHED_MAP_REFS_MAX
-    assert targets == {"net": LinkTarget("carol", MapConfig(name="net"))}
+    assert targets == {"net": _target_of(signed)}
 
 
 def test_link_targets_are_kept_per_user_while_the_daemon_holds_them() -> None:

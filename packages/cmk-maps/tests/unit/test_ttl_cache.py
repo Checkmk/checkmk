@@ -55,6 +55,18 @@ def test_a_key_set_again_is_evicted_last() -> None:
     assert "b" not in cache
 
 
+def test_a_touched_key_is_evicted_last() -> None:
+    cache: TtlCache[str, int] = TtlCache(maxsize=2)
+    cache.set("a", 1, now=0.0)
+    cache.set("b", 2, now=0.0)
+
+    cache.touch("a", now=0.0)
+    cache.set("c", 3, now=0.0)
+
+    assert "a" in cache
+    assert "b" not in cache
+
+
 def test_pop_removes_entry_and_is_safe_when_absent() -> None:
     cache: TtlCache[str, int] = TtlCache()
     cache.set("a", 1, now=0.0)
@@ -102,3 +114,34 @@ def test_setting_drops_the_entries_no_get_would_return() -> None:
     cache.set("b", 2, now=5.0)
     cache.set("c", 3, now=10.0)
     assert ("a" in cache, "b" in cache) == (False, True)
+
+
+def test_a_pinned_key_is_not_evicted_over_maxsize() -> None:
+    cache: TtlCache[str, int] = TtlCache(maxsize=2)
+    cache.set("a", 1, now=0.0)
+    cache.set("b", 2, now=0.0)
+
+    cache.set("c", 3, now=0.0, pinned=lambda k: k == "a")
+
+    assert [k for k in "abc" if k in cache] == ["a", "c"]
+
+
+def test_a_pinned_key_is_not_evicted_over_maxweight() -> None:
+    cache: TtlCache[str, list[int]] = TtlCache(weigh=len, maxweight=4)
+    cache.set("a", [1, 2], now=0.0)
+    cache.set("b", [1, 2], now=0.0)
+
+    cache.set("c", [1, 2], now=0.0, pinned=lambda k: k == "a")
+
+    assert [k for k in "abc" if k in cache] == ["a", "c"]
+
+
+def test_iterating_yields_the_keys_set_longest_ago_first() -> None:
+    cache: TtlCache[str, int] = TtlCache()
+    cache.set("b", 1, now=0.0)
+    cache.set("a", 2, now=0.0)
+    cache.set("b", 3, now=0.0)
+
+    keys = list(cache)
+
+    assert keys == ["a", "b"]

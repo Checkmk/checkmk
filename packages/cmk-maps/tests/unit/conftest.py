@@ -75,9 +75,9 @@ def _clear_map_caches() -> Iterator[None]:
     """Drop the in-memory map cache and state-snapshot dicts after each test so
     a map registered by one route test cannot bleed into the next."""
     yield
-    map_service._CACHE.clear()  # noqa: SLF001
-    map_service._LINKED.clear()  # noqa: SLF001
-    map_service._SIGNED_VERSIONS.clear()  # noqa: SLF001
+    map_service._CACHE.invalidate()  # noqa: SLF001
+    map_service._LINKED.invalidate()  # noqa: SLF001
+    map_service._SIGNED_VERSIONS.invalidate()  # noqa: SLF001
     state_service._state_snapshots.clear()  # noqa: SLF001
     states._fetched.invalidate()  # noqa: SLF001
     states._topologies.invalidate()  # noqa: SLF001

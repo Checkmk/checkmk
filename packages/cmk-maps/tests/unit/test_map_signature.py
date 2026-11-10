@@ -20,7 +20,7 @@ from pathlib import Path
 import pytest
 
 from cmk.maps.backend.core.auth import InvalidSignature, verify_map_config
-from cmk.maps.shared.map_signature import MAP_SIG_CONTEXT, sign_config
+from cmk.maps.shared.map_signature import MAP_SIG_CONTEXT, sign_config, signed_config_size
 
 pytestmark = pytest.mark.usefixtures("_shared_secret")
 
@@ -90,3 +90,10 @@ def test_verify_map_config_rejects_context_confusion() -> None:
     wrong_sig = _b64url(hmac.new(_KEY, payload, hashlib.sha256).digest())
     with pytest.raises(InvalidSignature):
         verify_map_config(_b64url(payload), wrong_sig, owner="alice")
+
+
+@pytest.mark.parametrize("alias", ["", "a", "ab", "abc"])
+def test_the_size_of_a_signed_config_is_that_of_its_json(alias: str) -> None:
+    signed = sign_config({"alias": alias}, lambda _data: b"", owner="alice")
+    payload = base64.urlsafe_b64decode(signed["config_b64"] + "==")
+    assert signed_config_size(signed["config_b64"]) == len(payload)

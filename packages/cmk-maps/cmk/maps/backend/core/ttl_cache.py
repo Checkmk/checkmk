@@ -20,7 +20,7 @@ that need single-flight semantics fetch through
 """
 
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 
 
 class TtlCache[K, V]:
@@ -56,10 +56,18 @@ class TtlCache[K, V]:
             return None
         return value
 
-    def set(self, key: K, value: V, *, now: float | None = None) -> None:
-        """Store ``value`` under ``key``, evicting the entry set longest ago when
-        a *new* key would exceed ``maxsize``. Setting a key again makes it the
-        newest, so a key kept fresh is never the one evicted."""
+    def set(
+        self,
+        key: K,
+        value: V,
+        *,
+        now: float | None = None,
+        pinned: Callable[[K], bool] | None = None,
+    ) -> None:
+        """Store ``value`` under ``key``, evicting the entries set longest ago while
+        the cache holds more than ``maxsize`` entries or ``maxweight``. Setting a
+        key again makes it the newest, so a key kept fresh is never the one
+        evicted. Neither is a key for which ``pinned`` holds."""
         now = time.monotonic() if now is None else now
         # Entries are in the order they were set, so the expired ones lead.
         while self._expire_after is not None and self._store:
@@ -67,16 +75,29 @@ class TtlCache[K, V]:
             if now - self._store[oldest][0] < self._expire_after:
                 break
             self._drop(oldest)
-        if not self._drop(key) and len(self._store) >= self._maxsize:
-            self._drop(next(iter(self._store)))
+        self._drop(key)
         self._store[key] = (now, value)
         if self._weigh is not None:
             self._weight += self._weigh(value)
-            while self._maxweight is not None and self._weight > self._maxweight:
-                oldest = next(iter(self._store))
-                if oldest == key:
-                    break
-                self._drop(oldest)
+        excess = len(self._store) - self._maxsize
+        excess_weight = 0 if self._maxweight is None else self._weight - self._maxweight
+        victims = []
+        for k, (_, v) in self._store.items():
+            if excess <= 0 and excess_weight <= 0:
+                break
+            if k == key or (pinned and pinned(k)):
+                continue
+            victims.append(k)
+            excess -= 1
+            if self._weigh is not None:
+                excess_weight -= self._weigh(v)
+        for k in victims:
+            self._drop(k)
+
+    def touch(self, key: K, *, now: float | None = None) -> None:
+        """Make ``key`` the newest, as setting its value again would."""
+        if (entry := self._store.pop(key, None)) is not None:
+            self._store[key] = (time.monotonic() if now is None else now, entry[1])
 
     def pop(self, key: K) -> None:
         """Drop one entry if present (no error when absent)."""
@@ -94,6 +115,10 @@ class TtlCache[K, V]:
         if self._weigh is not None:
             self._weight -= self._weigh(entry[1])
         return True
+
+    def __iter__(self) -> Iterator[K]:
+        """The keys, the one set longest ago first, expired ones included."""
+        return iter(list(self._store))
 
     def __contains__(self, key: object) -> bool:
         return key in self._store

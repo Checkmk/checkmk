@@ -45,6 +45,7 @@ from cmk.maps.shared.map_signature import (
     HmacFn,
     InvalidSignature,
     MAP_WITHDRAWN_CONTEXT,
+    signed_config_size,
     verify_config,
 )
 from cmk.maps.shared.validators import is_valid_map_name
@@ -179,10 +180,12 @@ class _LinkTargetsAnswer(BaseModel):
 
 @dataclass(frozen=True, slots=True)
 class LinkTarget:
-    """The map a link's name means. ``config`` is ``None`` for a map the daemon holds."""
+    """The map a link's name means. ``config`` is ``None`` for a map the daemon holds;
+    ``size`` is the bytes it took to send."""
 
     owner: str
     config: MapConfig | None = None
+    size: int = 0
 
 
 def _principal(identity: Identity) -> Principal:
@@ -352,7 +355,9 @@ def _usable_target(target: _LinkTarget, held: AbstractSet[tuple[str, str]]) -> L
             {"map": target.name, "error": exc},
         )
         return None
-    return LinkTarget(target.owner, cfg) if cfg.name == target.name else None
+    if cfg.name != target.name:
+        return None
+    return LinkTarget(target.owner, cfg, signed_config_size(target.config_b64))
 
 
 # ``LocalSecret.regenerate`` always writes 32 bytes; anything else is a rewrite in progress.

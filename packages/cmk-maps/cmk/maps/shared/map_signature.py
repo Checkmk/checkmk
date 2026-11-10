@@ -49,6 +49,11 @@ def _b64url_decode(value: str) -> bytes:
     return base64.urlsafe_b64decode(value + pad)
 
 
+def signed_config_size(config_b64: str) -> int:
+    """The bytes of the config JSON a signed ``config_b64`` carries."""
+    return len(config_b64) * 3 // 4
+
+
 def _canonical_json(obj: Mapping[str, object]) -> bytes:
     """The canonical byte encoding: compact, key-sorted UTF-8.
 

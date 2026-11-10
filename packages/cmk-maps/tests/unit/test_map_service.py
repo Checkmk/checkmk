@@ -5,7 +5,6 @@
 
 import asyncio
 
-import pytest
 from fake_links import FakeLinkGui
 
 from cmk.maps.backend.schemas.map import MapConfig
@@ -35,14 +34,12 @@ def test_a_link_target_the_gui_names_no_map_for_is_left_out() -> None:
     assert asyncio.run(map_service.find_link_targets(FakeLinkGui({}), "alice", ["net"])) == {}
 
 
-def test_a_fetched_link_target_is_fetched_again_after_a_while(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setattr(map_service, "_LINKED_FOR", 0.0)
+def test_a_fetched_link_target_is_fetched_again_after_a_while() -> None:
     gui = FakeLinkGui({("alice", "net"): ("carol", MapConfig(name="net"))})
+    a_day = 24 * 3600.0
 
-    asyncio.run(map_service.find_link_targets(gui, "alice", ["net"]))
-    asyncio.run(map_service.find_link_targets(gui, "alice", ["net"]))
+    asyncio.run(map_service.find_link_targets(gui, "alice", ["net"], clock=lambda: 0.0))
+    asyncio.run(map_service.find_link_targets(gui, "alice", ["net"], clock=lambda: a_day))
 
     assert gui.held == [set(), set()]
 
@@ -66,3 +63,35 @@ def test_a_streamed_map_stays_cached_however_many_maps_are_registered() -> None:
     assert map_service.get_map("alice", "streamed") is not None
     assert map_service.get_map("bob", "m0") is None
     assert map_service.get_map("bob", "m1999") is not None
+
+
+def test_maps_past_the_byte_bound_push_out_the_oldest_unstreamed_one() -> None:
+    half = map_service.CACHE_MAX_BYTES // 2 + 1
+    streamed = ("alice", "streamed")
+    map_service.register_map("alice", MapConfig(name="streamed"), size=half)
+    map_service.register_map("alice", MapConfig(name="old"), size=half, pinned=streamed.__eq__)
+
+    map_service.register_map("alice", MapConfig(name="new"), size=half, pinned=streamed.__eq__)
+
+    assert map_service.get_map("alice", "streamed") is not None
+    assert map_service.get_map("alice", "old") is None
+    assert map_service.get_map("alice", "new") is not None
+
+
+def test_a_map_registered_again_counts_its_bytes_once() -> None:
+    almost_all = map_service.CACHE_MAX_BYTES - 1
+    map_service.register_map("alice", MapConfig(name="kept"), size=1)
+    for _ in range(3):
+        map_service.register_map("alice", MapConfig(name="big"), size=almost_all)
+
+    assert map_service.get_map("alice", "kept") is not None
+
+
+def test_a_map_read_since_is_pushed_out_after_one_that_was_not() -> None:
+    map_service.register_map("alice", MapConfig(name="read"), size=1)
+    map_service.register_map("alice", MapConfig(name="unread"), size=1)
+    map_service.get_map("alice", "read")
+
+    map_service.register_map("alice", MapConfig(name="new"), size=map_service.CACHE_MAX_BYTES - 1)
+
+    assert map_service.get_map("alice", "read") is not None

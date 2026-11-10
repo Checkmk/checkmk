@@ -19,7 +19,7 @@ handles files or the legacy format.
 
 import time
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel, Field, ValidationError
 
 from cmk.maps.backend.api.v1.connections import auth_user_scope
@@ -56,6 +56,8 @@ from cmk.maps.backend.schemas.map import (
 )
 from cmk.maps.backend.schemas.state import MapStates
 from cmk.maps.backend.services import map_service, state_service
+from cmk.maps.shared.map_payload import MAP_CONFIG_MAX_BYTES
+from cmk.maps.shared.map_signature import signed_config_size
 
 router = APIRouter()
 
@@ -97,6 +99,14 @@ class WithdrawnRequest(BaseModel):
     sig: str = Field(max_length=128)
 
 
+def _body_size(request: Request) -> int:
+    """The bytes of the request body, or the most a map may take if it does not say."""
+    try:
+        return int(request.headers["content-length"])
+    except KeyError, ValueError:
+        return MAP_CONFIG_MAX_BYTES
+
+
 # A notice is sent right after the change; an older one is not acted on.
 _WITHDRAWN_NOTICE_MAX_AGE = 60.0
 
@@ -125,7 +135,9 @@ def _register_signed(
     # The owner was resolved for ``name``, so the signed config must be that map's.
     if cfg.name != name:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Map name mismatch")
-    if not map_service.register_signed_map(owner, cfg, pinned=is_streamed):
+    if not map_service.register_signed_map(
+        owner, cfg, size=signed_config_size(config_b64), pinned=is_streamed
+    ):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="The map was saved since")
     if saved and current_user.may_save(owner):
         tell_map_saved(owner, name, sig)
@@ -136,6 +148,7 @@ def _register_signed(
 async def register_map(
     name: MapName,
     body: RegisterRequest,
+    request: Request,
     auth: GuiAuthDep,
     # Counted, never refused here: a spent budget still registers the map and
     # refuses only its states.
@@ -194,7 +207,9 @@ async def register_map(
             )
         if body.config.name != name:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Map name mismatch")
-        map_service.register_map(current_user.name, body.config, pinned=is_streamed)
+        map_service.register_map(
+            current_user.name, body.config, size=_body_size(request), pinned=is_streamed
+        )
         if not within_budget:
             charge(rest_read_limiter, current_user.name)
         return await map_states_response(

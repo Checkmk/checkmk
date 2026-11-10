@@ -11,86 +11,85 @@ read it back (``get_map``). Nothing here reads or writes map config on disk —
 persistence lives entirely in the GUI.
 """
 
+import math
 import threading
 import time
-from collections import OrderedDict
 from collections.abc import Callable, Mapping, Sequence
 from collections.abc import Set as AbstractSet
-from typing import Protocol
+from typing import NamedTuple, Protocol
 
 from cmk.maps.backend.core.auth import LinkTarget
+from cmk.maps.backend.core.ttl_cache import TtlCache
 from cmk.maps.backend.schemas.map import MapConfig
+
+type MapKey = tuple[str, str]
+
+
+class _Sized(NamedTuple):
+    config: MapConfig
+    size: int
+
+
+def _bytes_sent(entry: _Sized) -> int:
+    return entry.size
+
+
+# Nothing in these caches goes stale by age alone.
+_KEPT = math.inf
+
 
 # Keyed by (owner, name): maps are per-user visuals, so two users can each own a
 # map called "x" and keying by name alone would let one shadow the other in every
 # state/SSE stream. The owner is the MAP owner, never the viewer.
 #
-# Bounded LRU because ``register`` needs only authentication: without a cap one
+# Bounded because ``register`` needs only authentication: without a cap one
 # authenticated user could loop it with unique names and grow the daemon heap
 # without bound. A map with an open stream is never evicted, as its broadcast
 # loop reads it on every tick; those are bounded by the stream limit. Evicting
 # any other is safe — the config lives in the GUI store and a viewer whose
 # entry was evicted re-registers on its next request.
 _CACHE_MAX_ENTRIES = 1024
-_CACHE: OrderedDict[tuple[str, str], MapConfig] = OrderedDict()
+# A map may take up to MAP_CONFIG_MAX_BYTES, so the count alone would allow gigabytes.
+CACHE_MAX_BYTES = 64 * 1024 * 1024
+_CACHE: TtlCache[MapKey, _Sized] = TtlCache(
+    maxsize=_CACHE_MAX_ENTRIES, weigh=_bytes_sent, maxweight=CACHE_MAX_BYTES
+)
 _CACHE_GUARD = threading.Lock()
 
 
 # The highest version of each map registered signed. Kept for more maps than the
 # cache holds, so a map pushed out of it still refuses an older config.
-_SIGNED_VERSIONS_MAX_ENTRIES = 10 * _CACHE_MAX_ENTRIES
-_SIGNED_VERSIONS: OrderedDict[tuple[str, str], int] = OrderedDict()
-
-type MapKey = tuple[str, str]
+_SIGNED_VERSIONS: TtlCache[MapKey, int] = TtlCache(maxsize=10 * _CACHE_MAX_ENTRIES)
 
 
-def _never(_key: MapKey) -> bool:
-    return False
-
-
-def register_map(owner: str, cfg: MapConfig, *, pinned: Callable[[MapKey], bool] = _never) -> None:
+def register_map(
+    owner: str, cfg: MapConfig, *, size: int = 0, pinned: Callable[[MapKey], bool] | None = None
+) -> None:
     """Cache a GUI-owned map config in memory for state streaming.
 
     Map config is owned by the GUI visuals store now; the daemon only needs the
     config in memory so its state/SSE path can resolve and stream it. The SPA
     registers the map it loaded (keyed by the map's owner + name) before opening
-    the stream. A map for which ``pinned`` holds is not evicted for it.
+    the stream. ``size`` is the bytes the config took to send. A map for which
+    ``pinned`` holds is not evicted for it.
     """
     with _CACHE_GUARD:
-        _put_bounded(_CACHE, (owner, cfg.name), cfg, _CACHE_MAX_ENTRIES, pinned)
+        _CACHE.set((owner, cfg.name), _Sized(cfg, size), pinned=pinned)
 
 
 def register_signed_map(
-    owner: str, cfg: MapConfig, *, pinned: Callable[[MapKey], bool] = _never
+    owner: str, cfg: MapConfig, *, size: int = 0, pinned: Callable[[MapKey], bool] | None = None
 ) -> bool:
     """Like :func:`register_map` for a config the GUI signed, unless one with a
     later version was registered: return whether it was."""
     key = (owner, cfg.name)
     with _CACHE_GUARD:
-        if cfg.version < _SIGNED_VERSIONS.get(key, cfg.version):
+        registered = _SIGNED_VERSIONS.get(key, ttl=_KEPT)
+        if registered is not None and cfg.version < registered:
             return False
-        _put_bounded(_SIGNED_VERSIONS, key, cfg.version, _SIGNED_VERSIONS_MAX_ENTRIES, _never)
-        _put_bounded(_CACHE, key, cfg, _CACHE_MAX_ENTRIES, pinned)
+        _SIGNED_VERSIONS.set(key, cfg.version)
+        _CACHE.set(key, _Sized(cfg, size), pinned=pinned)
     return True
-
-
-def _put_bounded[K, V](
-    entries: OrderedDict[K, V], key: K, value: V, limit: int, pinned: Callable[[K], bool]
-) -> None:
-    """Put ``key`` last, then evict the oldest entries but ``key`` and the pinned ones."""
-    entries[key] = value
-    entries.move_to_end(key)
-    excess = len(entries) - limit
-    if excess <= 0:
-        return
-    evict: list[K] = []
-    for old in entries:
-        if len(evict) == excess:
-            break
-        if old != key and not pinned(old):
-            evict.append(old)
-    for old in evict:
-        del entries[old]
 
 
 def get_map(owner: str, name: str) -> MapConfig | None:
@@ -100,24 +99,25 @@ def get_map(owner: str, name: str) -> MapConfig | None:
     config with ``model_copy(update=...)`` instead of changing it.
     """
     with _CACHE_GUARD:
-        cached = _CACHE.get((owner, name))
-        if cached is not None:
-            _CACHE.move_to_end((owner, name))
-    return cached
+        if (entry := _CACHE.get((owner, name), ttl=_KEPT)) is not None:
+            _CACHE.touch((owner, name))
+    return None if entry is None else entry.config
 
 
 def forget_map(owner: str, name: str) -> None:
     """Drop a deleted map, so it is neither served nor linked to any more."""
     with _CACHE_GUARD:
-        _CACHE.pop((owner, name), None)
-        _LINKED.pop((owner, name), None)
+        _CACHE.pop((owner, name))
+        _LINKED.pop((owner, name))
 
 
 # Maps fetched only because a link names them. Kept apart, so they never push a
 # map someone has open out of the cache, and fetched again after a while, so a
 # change that reached no open view reaches the links too.
 _LINKED_FOR = 300.0
-_LINKED: OrderedDict[tuple[str, str], tuple[float, MapConfig]] = OrderedDict()
+_LINKED: TtlCache[MapKey, _Sized] = TtlCache(
+    maxsize=_CACHE_MAX_ENTRIES, weigh=_bytes_sent, maxweight=CACHE_MAX_BYTES
+)
 
 
 class LinkSource(Protocol):
@@ -132,7 +132,11 @@ class LinkSource(Protocol):
 
 
 async def find_link_targets(
-    source: LinkSource, as_user: str, names: Sequence[str]
+    source: LinkSource,
+    as_user: str,
+    names: Sequence[str],
+    *,
+    clock: Callable[[], float] = time.monotonic,
 ) -> dict[str, tuple[str, MapConfig]]:
     """The maps ``as_user`` sees under the names map links give, by name.
 
@@ -140,24 +144,22 @@ async def find_link_targets(
     open under that name. A target the daemon does not hold is fetched.
     """
     wanted = set(names)
-    now = time.monotonic()
+    now = clock()
     with _CACHE_GUARD:
         held = {key for key in _CACHE if key[1] in wanted}
         held.update(
             key
-            for key, (fetched_at, _cfg) in _LINKED.items()
-            if key[1] in wanted and now - fetched_at < _LINKED_FOR
+            for key in _LINKED
+            if key[1] in wanted and _LINKED.get(key, ttl=_LINKED_FOR, now=now) is not None
         )
     found: dict[str, tuple[str, MapConfig]] = {}
     for name, target in (await source.link_targets(as_user, names, held, now=now)).items():
         key = (target.owner, name)
         with _CACHE_GUARD:
             if target.config is not None:
-                _LINKED[key] = (now, target.config)
-                _LINKED.move_to_end(key)
-                while len(_LINKED) > _CACHE_MAX_ENTRIES:
-                    _LINKED.popitem(last=False)
-            cfg = _CACHE.get(key) or _LINKED.get(key, (0.0, None))[1]
+                _LINKED.set(key, _Sized(target.config, target.size), now=now)
+            entry = _CACHE.get(key, ttl=_KEPT) or _LINKED.get(key, ttl=_LINKED_FOR, now=now)
+            cfg = None if entry is None else entry.config
         if cfg is not None:
             found[name] = (target.owner, cfg)
     return found

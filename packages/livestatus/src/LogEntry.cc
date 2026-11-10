@@ -12,6 +12,7 @@
 #include <iterator>
 #include <stdexcept>
 #include <system_error>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -216,12 +217,211 @@ const std::vector<LogDef> log_definitions{
            .log_type = LogEntryKind::none,
            .params = {LogEntryParam::HostName, LogEntryParam::State,
                       LogEntryParam::PluginOutput}},
+    // NOTE: The command is parsed by external_command_target().
     LogDef{.prefix = "EXTERNAL COMMAND",
            .log_class = LogEntry::Class::ext_command,
            .log_type = LogEntryKind::none,
-           .params = {
-               LogEntryParam::Ignore  // command
-           }}};
+           .params = {}}};
+
+enum class CommandTarget { none, host, service };
+
+struct CommandDef {
+    std::string_view name;
+    CommandTarget target;
+};
+
+// The external commands whose arguments start with a host name, followed by a
+// service description for service commands. If a service command has no
+// service description, it refers to the host. All other commands, e.g. global,
+// group, contact or ID-based ones, refer to no host, just like unknown ones.
+// So does LOG (_LOG with Nagios): The core writes the logged line to the
+// history right after the command, and that line is authorized on its own.
+constexpr auto command_defs = std::to_array<CommandDef>({
+    {.name = "ACKNOWLEDGE_HOST_PROBLEM"sv, .target = CommandTarget::host},
+    {.name = "ACKNOWLEDGE_SVC_PROBLEM"sv, .target = CommandTarget::service},
+    {.name = "ADD_HOST_COMMENT"sv, .target = CommandTarget::host},
+    {.name = "ADD_SVC_COMMENT"sv, .target = CommandTarget::service},
+    {.name = "CHANGE_CUSTOM_HOST_VAR"sv, .target = CommandTarget::host},
+    {.name = "CHANGE_CUSTOM_SVC_VAR"sv, .target = CommandTarget::service},
+    {.name = "CHANGE_HOST_CHECK_COMMAND"sv, .target = CommandTarget::host},
+    {.name = "CHANGE_HOST_CHECK_TIMEPERIOD"sv, .target = CommandTarget::host},
+    {.name = "CHANGE_HOST_EVENT_HANDLER"sv, .target = CommandTarget::host},
+    {.name = "CHANGE_HOST_MODATTR"sv, .target = CommandTarget::host},
+    {.name = "CHANGE_HOST_NOTIFICATION_TIMEPERIOD"sv,
+     .target = CommandTarget::host},
+    {.name = "CHANGE_MAX_HOST_CHECK_ATTEMPTS"sv, .target = CommandTarget::host},
+    {.name = "CHANGE_MAX_SVC_CHECK_ATTEMPTS"sv,
+     .target = CommandTarget::service},
+    {.name = "CHANGE_NORMAL_HOST_CHECK_INTERVAL"sv,
+     .target = CommandTarget::host},
+    {.name = "CHANGE_NORMAL_SVC_CHECK_INTERVAL"sv,
+     .target = CommandTarget::service},
+    {.name = "CHANGE_RETRY_HOST_CHECK_INTERVAL"sv,
+     .target = CommandTarget::host},
+    {.name = "CHANGE_RETRY_SVC_CHECK_INTERVAL"sv,
+     .target = CommandTarget::service},
+    {.name = "CHANGE_SVC_CHECK_COMMAND"sv, .target = CommandTarget::service},
+    {.name = "CHANGE_SVC_CHECK_TIMEPERIOD"sv, .target = CommandTarget::service},
+    {.name = "CHANGE_SVC_EVENT_HANDLER"sv, .target = CommandTarget::service},
+    {.name = "CHANGE_SVC_MODATTR"sv, .target = CommandTarget::service},
+    {.name = "CHANGE_SVC_NOTIFICATION_TIMEPERIOD"sv,
+     .target = CommandTarget::service},
+    {.name = "DELAY_HOST_NOTIFICATION"sv, .target = CommandTarget::host},
+    {.name = "DELAY_SVC_NOTIFICATION"sv, .target = CommandTarget::service},
+    {.name = "DEL_ALL_HOST_COMMENTS"sv, .target = CommandTarget::host},
+    {.name = "DEL_ALL_SVC_COMMENTS"sv, .target = CommandTarget::service},
+    // host[;service[;start[;comment]]]
+    {.name = "DEL_DOWNTIME_BY_HOST_NAME"sv, .target = CommandTarget::service},
+    {.name = "DISABLE_ALL_NOTIFICATIONS_BEYOND_HOST"sv,
+     .target = CommandTarget::host},
+    {.name = "DISABLE_HOST_AND_CHILD_NOTIFICATIONS"sv,
+     .target = CommandTarget::host},
+    {.name = "DISABLE_HOST_CHECK"sv, .target = CommandTarget::host},
+    {.name = "DISABLE_HOST_EVENT_HANDLER"sv, .target = CommandTarget::host},
+    {.name = "DISABLE_HOST_FLAP_DETECTION"sv, .target = CommandTarget::host},
+    {.name = "DISABLE_HOST_NOTIFICATIONS"sv, .target = CommandTarget::host},
+    {.name = "DISABLE_HOST_SVC_CHECKS"sv, .target = CommandTarget::host},
+    {.name = "DISABLE_HOST_SVC_NOTIFICATIONS"sv, .target = CommandTarget::host},
+    {.name = "DISABLE_PASSIVE_HOST_CHECKS"sv, .target = CommandTarget::host},
+    {.name = "DISABLE_PASSIVE_SVC_CHECKS"sv, .target = CommandTarget::service},
+    {.name = "DISABLE_SVC_CHECK"sv, .target = CommandTarget::service},
+    {.name = "DISABLE_SVC_EVENT_HANDLER"sv, .target = CommandTarget::service},
+    {.name = "DISABLE_SVC_FLAP_DETECTION"sv, .target = CommandTarget::service},
+    {.name = "DISABLE_SVC_NOTIFICATIONS"sv, .target = CommandTarget::service},
+    {.name = "EC_DELETE_EVENTS_OF_HOST"sv, .target = CommandTarget::host},
+    {.name = "ENABLE_ALL_NOTIFICATIONS_BEYOND_HOST"sv,
+     .target = CommandTarget::host},
+    {.name = "ENABLE_HOST_AND_CHILD_NOTIFICATIONS"sv,
+     .target = CommandTarget::host},
+    {.name = "ENABLE_HOST_CHECK"sv, .target = CommandTarget::host},
+    {.name = "ENABLE_HOST_EVENT_HANDLER"sv, .target = CommandTarget::host},
+    {.name = "ENABLE_HOST_FLAP_DETECTION"sv, .target = CommandTarget::host},
+    {.name = "ENABLE_HOST_NOTIFICATIONS"sv, .target = CommandTarget::host},
+    {.name = "ENABLE_HOST_SVC_CHECKS"sv, .target = CommandTarget::host},
+    {.name = "ENABLE_HOST_SVC_NOTIFICATIONS"sv, .target = CommandTarget::host},
+    {.name = "ENABLE_PASSIVE_HOST_CHECKS"sv, .target = CommandTarget::host},
+    {.name = "ENABLE_PASSIVE_SVC_CHECKS"sv, .target = CommandTarget::service},
+    {.name = "ENABLE_SVC_CHECK"sv, .target = CommandTarget::service},
+    {.name = "ENABLE_SVC_EVENT_HANDLER"sv, .target = CommandTarget::service},
+    {.name = "ENABLE_SVC_FLAP_DETECTION"sv, .target = CommandTarget::service},
+    {.name = "ENABLE_SVC_NOTIFICATIONS"sv, .target = CommandTarget::service},
+    {.name = "MK_LOGWATCH_ACKNOWLEDGE"sv, .target = CommandTarget::host},
+    {.name = "PROCESS_HOST_CHECK_RESULT"sv, .target = CommandTarget::host},
+    {.name = "PROCESS_HOST_PERFDATA"sv, .target = CommandTarget::host},
+    {.name = "PROCESS_SERVICE_CHECK_RESULT"sv,
+     .target = CommandTarget::service},
+    {.name = "PROCESS_SVC_PERFDATA"sv, .target = CommandTarget::service},
+    {.name = "REMOVE_HOST_ACKNOWLEDGEMENT"sv, .target = CommandTarget::host},
+    {.name = "REMOVE_SVC_ACKNOWLEDGEMENT"sv, .target = CommandTarget::service},
+    {.name = "SCHEDULE_AND_PROPAGATE_HOST_DOWNTIME"sv,
+     .target = CommandTarget::host},
+    {.name = "SCHEDULE_AND_PROPAGATE_TRIGGERED_HOST_DOWNTIME"sv,
+     .target = CommandTarget::host},
+    {.name = "SCHEDULE_FORCED_HOST_CHECK"sv, .target = CommandTarget::host},
+    {.name = "SCHEDULE_FORCED_HOST_SVC_CHECKS"sv,
+     .target = CommandTarget::host},
+    {.name = "SCHEDULE_FORCED_SVC_CHECK"sv, .target = CommandTarget::service},
+    {.name = "SCHEDULE_HOST_CHECK"sv, .target = CommandTarget::host},
+    {.name = "SCHEDULE_HOST_DOWNTIME"sv, .target = CommandTarget::host},
+    {.name = "SCHEDULE_HOST_SVC_CHECKS"sv, .target = CommandTarget::host},
+    {.name = "SCHEDULE_HOST_SVC_DOWNTIME"sv, .target = CommandTarget::host},
+    {.name = "SCHEDULE_SVC_CHECK"sv, .target = CommandTarget::service},
+    {.name = "SCHEDULE_SVC_DOWNTIME"sv, .target = CommandTarget::service},
+    {.name = "SEND_CUSTOM_HOST_NOTIFICATION"sv, .target = CommandTarget::host},
+    {.name = "SEND_CUSTOM_SVC_NOTIFICATION"sv,
+     .target = CommandTarget::service},
+    {.name = "SET_HOST_NOTIFICATION_NUMBER"sv, .target = CommandTarget::host},
+    {.name = "SET_SVC_NOTIFICATION_NUMBER"sv, .target = CommandTarget::service},
+    {.name = "START_OBSESSING_OVER_HOST"sv, .target = CommandTarget::host},
+    {.name = "START_OBSESSING_OVER_SVC"sv, .target = CommandTarget::service},
+    {.name = "STOP_OBSESSING_OVER_HOST"sv, .target = CommandTarget::host},
+    {.name = "STOP_OBSESSING_OVER_SVC"sv, .target = CommandTarget::service},
+});
+
+// The order of std::ranges::less, but inlined: Comparing names via memcmp()
+// calls made parsing a command line up to 15% slower.
+constexpr bool name_less(std::string_view a, std::string_view b) {
+    const auto n = std::min(a.size(), b.size());
+    for (size_t i = 0; i < n; ++i) {
+        if (a[i] != b[i]) {
+            return static_cast<unsigned char>(a[i]) <
+                   static_cast<unsigned char>(b[i]);
+        }
+    }
+    return a.size() < b.size();
+}
+
+static_assert(std::ranges::is_sorted(command_defs, name_less,
+                                     &CommandDef::name),
+              "command_defs must be sorted for the binary search");
+
+// A command targets a host or a service, the latter exactly if its name has SVC
+// or SERVICE, but not HOST in it. The only exception is
+// DEL_DOWNTIME_BY_HOST_NAME with its optional service. This catches a wrong
+// target in command_defs at compile time.
+constexpr bool has_plausible_target(const CommandDef &def) {
+    if (def.target == CommandTarget::none) {
+        return false;
+    }
+    if (def.name == "DEL_DOWNTIME_BY_HOST_NAME"sv) {
+        return def.target == CommandTarget::service;
+    }
+    auto has = [&def](std::string_view part) {
+        return def.name.find(part) != std::string_view::npos;
+    };
+    return (def.target == CommandTarget::service) ==
+           ((has("SVC") || has("SERVICE")) && !has("HOST"));
+}
+
+static_assert(std::ranges::all_of(command_defs, has_plausible_target),
+              "command_defs must target a host, or a service for SVC/SERVICE");
+
+CommandTarget command_target(std::string_view command) {
+    const auto *it = std::ranges::lower_bound(command_defs, command, name_less,
+                                              &CommandDef::name);
+    return it != command_defs.end() && it->name == command
+               ? it->target
+               : CommandTarget::none;
+}
+
+// Returns the definition whose prefix, followed by ": ", starts the text.
+const LogDef *find_log_def(std::string_view text) {
+    for (const auto &def : log_definitions) {
+        if (has_prefix(text, def.prefix) &&
+            text.substr(def.prefix.size()).starts_with(": "sv)) {
+            return &def;
+        }
+    }
+    return nullptr;
+}
+
+// Removes the first field from a ';'-separated text and returns it.
+std::string_view next_field(std::string_view &text) {
+    const auto field = text.substr(0, text.find(';'));
+    text.remove_prefix(std::min(text.size(), field.size() + 1));
+    return field;
+}
+
+// Returns the host and service an external command refers to, if any, so that
+// its entry can be authorized like the host and service entries.
+std::pair<std::string_view, std::string_view> external_command_target(
+    std::string_view command) {
+    // e.g. ADD_SVC_COMMENT;host;service;... or ADD_HOST_COMMENT;host;...
+    const auto target = command_target(next_field(command));
+    if (target == CommandTarget::none) {
+        return {};
+    }
+    const auto host_name = next_field(command);
+    if (target == CommandTarget::host) {
+        return {host_name, {}};
+    }
+    return {host_name, next_field(command)};
+}
+
+// Nagios logs commands it doesn't know as a warning instead of an EXTERNAL
+// COMMAND line, e.g. MODIFY_HOST_DOWNTIME from the REST API.
+constexpr auto unrecognized_command_prefix =
+    "Warning: Unrecognized external command -> "sv;
 
 }  // namespace
 // 0123456789012345678901234567890
@@ -338,27 +538,35 @@ void LogEntry::assign(LogEntryParam par, std::string_view field) {
 // A bit verbose, but we avoid unnecessary string copies below.
 void LogEntry::classifyLogMessage() {
     const std::string_view message_sv{message_};
-    for (const auto &def : log_definitions) {
-        if (textStartsWith(def.prefix) &&
-            message_.compare(timestamp_prefix_length + def.prefix.size(), 2,
-                             ": ") == 0) {
-            type_ = def.prefix;
-            class_ = def.log_class;
-            kind_ = def.log_type;
-            // TODO(sp) Use boost::tokenizer instead of this index fiddling
-            size_t pos = timestamp_prefix_length + def.prefix.size() + 2;
-            for (LogEntryParam const par : def.params) {
-                const size_t sep_pos = message_.find(';', pos);
-                const size_t end_pos =
-                    sep_pos == std::string::npos ? message_.size() : sep_pos;
-                assign(par, message_sv.substr(pos, end_pos - pos));
-                pos = sep_pos == std::string::npos ? message_.size()
-                                                   : (sep_pos + 1);
-            }
-            return;
+    if (const auto *def =
+            find_log_def(message_sv.substr(timestamp_prefix_length))) {
+        type_ = def->prefix;
+        class_ = def->log_class;
+        kind_ = def->log_type;
+        // TODO(sp) Use boost::tokenizer instead of this index fiddling
+        size_t pos = timestamp_prefix_length + def->prefix.size() + 2;
+        for (LogEntryParam const par : def->params) {
+            const size_t sep_pos = message_.find(';', pos);
+            const size_t end_pos =
+                sep_pos == std::string::npos ? message_.size() : sep_pos;
+            assign(par, message_sv.substr(pos, end_pos - pos));
+            pos =
+                sep_pos == std::string::npos ? message_.size() : (sep_pos + 1);
         }
+        if (class_ == LogEntry::Class::ext_command) {
+            std::tie(host_name_, service_description_) =
+                external_command_target(options_);
+        }
+        return;
     }
     type_ = message_sv.substr(timestamp_prefix_length);
+    if (has_prefix(type_, unrecognized_command_prefix)) {
+        class_ = LogEntry::Class::ext_command;
+        kind_ = LogEntryKind::none;
+        std::tie(host_name_, service_description_) = external_command_target(
+            type_.substr(unrecognized_command_prefix.size()));
+        return;
+    }
     if (textStartsWith("LOG VERSION: 2.0")) {
         class_ = LogEntry::Class::program;
         kind_ = LogEntryKind::log_version;

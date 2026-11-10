@@ -102,7 +102,7 @@ public:
         // PASSIVE {HOST,SERVICE} CHECK
         passivecheck = 4,
 
-        // EXTERNAL COMMAND
+        // EXTERNAL COMMAND, "Warning: Unrecognized external command -> ..."
         ext_command = 5,
 
         // {INITIAL,CURRENT} {HOST,SERVICE} STATE, TIMEPERIOD TRANSITION

@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <string>
 #include <tuple>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -901,6 +902,91 @@ TEST(LogEntry, ExternalCommand) {
     EXPECT_EQ("", e.plugin_output());
     EXPECT_EQ("", e.comment());
     EXPECT_EQ("", e.state_info());
+}
+
+class ExternalHostCommand : public ::testing::TestWithParam<std::string> {};
+
+TEST_P(ExternalHostCommand, RefersToTheHost) {
+    const LogEntry e{42, "[1551424305] EXTERNAL COMMAND: " + GetParam()};
+
+    EXPECT_EQ(std::pair("web01"s, ""s),
+              std::pair(e.host_name(), e.service_description()));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    LogEntry, ExternalHostCommand,
+    ::testing::Values("ADD_HOST_COMMENT;web01;0;alice;secret",
+                      "SCHEDULE_HOST_SVC_CHECKS;web01;1551424305",
+                      "ENABLE_HOST_SVC_NOTIFICATIONS;web01",
+                      "MK_LOGWATCH_ACKNOWLEDGE;web01;/var/log/messages",
+                      "DEL_DOWNTIME_BY_HOST_NAME;web01"));
+
+class ExternalServiceCommand : public ::testing::TestWithParam<std::string> {};
+
+TEST_P(ExternalServiceCommand, RefersToTheService) {
+    const LogEntry e{42, "[1551424305] EXTERNAL COMMAND: " + GetParam()};
+
+    EXPECT_EQ(std::pair("web01"s, "CPU load"s),
+              std::pair(e.host_name(), e.service_description()));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    LogEntry, ExternalServiceCommand,
+    ::testing::Values(
+        "ADD_SVC_COMMENT;web01;CPU load;0;alice;secret",
+        "PROCESS_SERVICE_CHECK_RESULT;web01;CPU load;0;OK",
+        "DEL_DOWNTIME_BY_HOST_NAME;web01;CPU load;1551424305;secret"));
+
+class ExternalCommandWithoutHost
+    : public ::testing::TestWithParam<std::string> {};
+
+TEST_P(ExternalCommandWithoutHost, RefersToNothing) {
+    const LogEntry e{42, "[1551424305] EXTERNAL COMMAND: " + GetParam()};
+
+    EXPECT_EQ(std::pair(""s, ""s),
+              std::pair(e.host_name(), e.service_description()));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    LogEntry, ExternalCommandWithoutHost,
+    ::testing::Values(
+        "SAVE_STATE_INFORMATION",
+        "SCHEDULE_HOSTGROUP_HOST_DOWNTIME;linux;1;2;1;0;0;alice;secret",
+        "DEL_HOST_COMMENT;42", "DEL_SVC_COMMENT;42", "DEL_HOST_DOWNTIME;42",
+        "DEL_SVC_DOWNTIME;42",
+        "MODIFY_HOST_DOWNTIME;42;1551424305;+3600;0;0;0;alice;secret",
+        "MODIFY_SVC_DOWNTIME;42;1551424305;+3600;0;0;0;alice;secret",
+        "DISABLE_CONTACT_HOST_NOTIFICATIONS;alice",
+        "CHANGE_GLOBAL_SVC_EVENT_HANDLER;my_handler", "FROBNICATE_HOST;web01",
+        "LOG;HOST NOTIFICATION: alice;web01;DOWN;mail;down",
+        "LOG;SERVICE NOTIFICATION RESULT: alice;web01;CPU load;OK;mail;",
+        "_LOG;HOST NOTIFICATION: alice;web01;DOWN;mail;down",
+        "LOG;something else"));
+
+TEST(LogEntry, UnrecognizedNagiosCommandIsAnExternalCommand) {
+    const LogEntry e{
+        42,
+        "[1551424305] Warning: Unrecognized external command -> "
+        "MODIFY_HOST_DOWNTIME;42;1551424305;+3600;0;0;0;alice;secret"};
+
+    EXPECT_EQ(LogEntry::Class::ext_command, e.log_class());
+}
+
+TEST(LogEntry, UnrecognizedNagiosCommandRefersToItsService) {
+    const LogEntry e{42,
+                     "[1551424305] Warning: Unrecognized external command -> "
+                     "PROCESS_SVC_PERFDATA;web01;CPU load;1551424305;load=1"};
+
+    EXPECT_EQ(std::pair("web01"s, "CPU load"s),
+              std::pair(e.host_name(), e.service_description()));
+}
+
+TEST(LogEntry, OtherNagiosWarningsAreInformational) {
+    const LogEntry e{42,
+                     "[1551424305] Warning: Return code of 127 for check of "
+                     "service 'CPU load' on host 'web01' was out of bounds."};
+
+    EXPECT_EQ(LogEntry::Class::info, e.log_class());
 }
 
 TEST(LogEntry, LogVersion) {

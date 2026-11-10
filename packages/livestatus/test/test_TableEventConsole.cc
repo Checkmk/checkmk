@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "DummyMonitoringCore.h"
+#include "StubObjects.h"
 #include "TemporaryDirectory.h"
 #include "asio/buffer.hpp"
 #include "asio/io_context.hpp"
@@ -36,63 +37,6 @@
 using namespace std::chrono_literals;
 
 namespace {
-class ECPaths : public IPaths {
-public:
-    explicit ECPaths(std::filesystem::path event_console_status_socket)
-        : event_console_status_socket_{std::move(event_console_status_socket)} {
-    }
-    [[nodiscard]] std::filesystem::path log_file() const override { return {}; }
-    [[nodiscard]] std::filesystem::path crash_reports_directory()
-        const override {
-        return {};
-    }
-    [[nodiscard]] std::filesystem::path license_usage_history_file()
-        const override {
-        return {};
-    }
-    [[nodiscard]] std::filesystem::path inventory_directory() const override {
-        return {};
-    }
-    [[nodiscard]] std::filesystem::path structured_status_directory()
-        const override {
-        return {};
-    }
-    [[nodiscard]] std::filesystem::path robotmk_html_log_directory()
-        const override {
-        return {};
-    }
-    [[nodiscard]] std::filesystem::path logwatch_directory() const override {
-        return {};
-    }
-    [[nodiscard]] std::filesystem::path prediction_directory() const override {
-        return {};
-    }
-    [[nodiscard]] std::filesystem::path event_console_status_socket()
-        const override {
-        return event_console_status_socket_;
-    }
-    [[nodiscard]] std::filesystem::path livestatus_socket() const override {
-        return {};
-    }
-    [[nodiscard]] std::filesystem::path history_file() const override {
-        return {};
-    }
-    [[nodiscard]] std::filesystem::path history_archive_directory()
-        const override {
-        return {};
-    }
-    [[nodiscard]] std::filesystem::path rrd_multiple_directory()
-        const override {
-        return {};
-    }
-    [[nodiscard]] std::filesystem::path rrdcached_socket() const override {
-        return {};
-    }
-
-private:
-    std::filesystem::path event_console_status_socket_;
-};
-
 class ECCore : public DummyMonitoringCore {
 public:
     explicit ECCore(std::filesystem::path event_console_status_socket)
@@ -100,7 +44,8 @@ public:
     }
     [[nodiscard]] bool mkeventdEnabled() const override { return true; }
     [[nodiscard]] std::unique_ptr<const IPaths> paths() const override {
-        return std::make_unique<ECPaths>(event_console_status_socket_);
+        return std::make_unique<StubPaths>(StubPaths::Values{
+            .event_console_status_socket = event_console_status_socket_});
     }
     [[nodiscard]] Logger *loggerLivestatus() const override {
         return Logger::getLogger("test");

@@ -19,11 +19,21 @@ export interface CmkMenuLabelPart {
   line?: 1 | 2
 }
 
+/** A category the menu's toggle can narrow its items to, headed by its title in the list. */
+export interface CmkMenuCategory {
+  value: string
+  title: string
+}
+
 interface CmkMenuItemBase {
   color?: string
   label: CmkMenuLabelPart[]
   /** Shown at the end of the row. */
   icon?: SimpleIcons
+  /** Muted text at the end of the row, before the icon, such as the kind of the item. */
+  detail?: string | undefined
+  /** The value of the category the item belongs to. */
+  category?: string | undefined
 }
 
 /** An item that navigates: to its one link, or through a submenu of several. */

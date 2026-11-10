@@ -5,6 +5,7 @@
  */
 export { default } from './CmkMenu.vue'
 export type {
+  CmkMenuCategory,
   CmkMenuItem,
   CmkMenuLabelPart,
   CmkMenuLink,

@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import userEvent from '@testing-library/user-event'
-import { render, screen } from '@testing-library/vue'
+import { render, screen, within } from '@testing-library/vue'
 import CmkMenu, { type CmkMenuItem, type CmkMenuLinkItem } from 'cmk-ui-library/components/CmkMenu'
 
 function anItem(host: string, links: CmkMenuLinkItem['links'] = [{ title: 'Host', url: '#' }]) {
@@ -230,4 +230,134 @@ test('the search field takes the given placeholder', async () => {
   expect(
     await screen.findByRole('searchbox', { name: 'Search custom graphs ...' })
   ).toHaveAttribute('placeholder', 'Search custom graphs ...')
+})
+
+const CATEGORIES = [
+  { value: 'dashboards', title: 'Dashboard' },
+  { value: 'views', title: 'View' }
+]
+
+function categorisedItem(title: string, category: string, detail = 'Built-in'): CmkMenuItem {
+  return { label: [{ text: title }], value: title, category, detail }
+}
+
+const CATEGORISED_ITEMS = [
+  categorisedItem('Main', 'dashboards'),
+  categorisedItem('Problems', 'dashboards', 'Custom'),
+  categorisedItem('All hosts', 'views')
+]
+
+async function openCategorisedMenu(): Promise<void> {
+  render(CmkMenu, {
+    props: { items: CATEGORISED_ITEMS, label: 'Target page', categories: CATEGORIES }
+  })
+  await userEvent.click(screen.getByRole('button', { name: 'Target page' }))
+  await screen.findByRole('menu', { name: 'Target page' })
+}
+
+test('the category toggle names every category with its number of items', async () => {
+  await openCategorisedMenu()
+
+  expect(
+    screen.getAllByRole('button', { name: /^Toggle / }).map((button) => button.textContent)
+  ).toEqual(['All (3)', 'Dashboard (2)', 'View (1)'])
+})
+
+test('each category heads its items', async () => {
+  await openCategorisedMenu()
+
+  const dashboards = screen.getByRole('group', { name: 'Dashboard' })
+  expect(dashboards).toHaveTextContent(/^Dashboard/)
+  expect(
+    within(dashboards)
+      .getAllByRole('menuitem')
+      .map((item) => item.getAttribute('aria-label'))
+  ).toEqual(['Main – Built-in', 'Problems – Custom'])
+})
+
+test('picking a category keeps only its items', async () => {
+  await openCategorisedMenu()
+
+  await userEvent.click(screen.getByRole('button', { name: 'Toggle View (1)' }))
+
+  expectItemsNamed(['All hosts – Built-in'])
+  expect(screen.queryByRole('group', { name: 'Dashboard' })).not.toBeInTheDocument()
+})
+
+test('search narrows the picked category further', async () => {
+  render(CmkMenu, {
+    props: {
+      items: CATEGORISED_ITEMS,
+      label: 'Target page',
+      categories: CATEGORIES,
+      searchable: true
+    }
+  })
+  await userEvent.click(screen.getByRole('button', { name: 'Target page' }))
+  await userEvent.click(await screen.findByRole('button', { name: 'Toggle Dashboard (2)' }))
+
+  await userEvent.type(screen.getByRole('searchbox', { name: 'Search' }), 'prob')
+
+  expectItemsNamed(['Problems – Custom'])
+})
+
+test('reopening shows the items of every category again', async () => {
+  await openCategorisedMenu()
+  await userEvent.click(screen.getByRole('button', { name: 'Toggle View (1)' }))
+
+  await userEvent.keyboard('{Escape}')
+  await userEvent.click(screen.getByRole('button', { name: 'Target page' }))
+
+  await screen.findByRole('menu', { name: 'Target page' })
+  expectItemsNamed(['Main – Built-in', 'Problems – Custom', 'All hosts – Built-in'])
+})
+
+test('Tab reaches the category toggle from the search', async () => {
+  render(CmkMenu, {
+    props: {
+      items: CATEGORISED_ITEMS,
+      label: 'Target page',
+      categories: CATEGORIES,
+      searchable: true
+    }
+  })
+  await userEvent.click(screen.getByRole('button', { name: 'Target page' }))
+  expect(await screen.findByRole('searchbox', { name: 'Search' })).toHaveFocus()
+  const toggle = screen.getByRole('button', { name: 'Toggle All (3)' })
+
+  // Without styles, jsdom also stops at the search's hidden clear button.
+  for (let presses = 0; presses < 3 && document.activeElement !== toggle; presses++) {
+    await userEvent.tab()
+  }
+
+  expect(toggle).toHaveFocus()
+})
+
+test('an item shows its detail at the end of its row', async () => {
+  await openCategorisedMenu()
+
+  expect(screen.getByRole('menuitem', { name: 'Problems – Custom' })).toHaveTextContent(
+    /Problems\s*Custom$/
+  )
+})
+
+test('a menu without categories has neither the toggle nor headings', async () => {
+  await openMenu([anItem('web01'), anItem('db01')])
+
+  expect(screen.queryByRole('button', { name: /^Toggle / })).not.toBeInTheDocument()
+  expect(screen.queryByRole('group', { name: /./ })).not.toBeInTheDocument()
+})
+
+test('a field trigger is named by the label and the given text, and shows the text', () => {
+  render(CmkMenu, {
+    props: { items: [], label: 'Target page', triggerVariant: 'field', triggerText: 'Main' }
+  })
+
+  expect(screen.getByRole('button', { name: 'Target page: Main' })).toHaveTextContent('Main')
+})
+
+test('a field trigger without text shows the label', () => {
+  render(CmkMenu, { props: { items: [], label: 'Target page', triggerVariant: 'field' } })
+
+  expect(screen.getByRole('button', { name: 'Target page' })).toHaveTextContent('Target page')
 })

@@ -4,7 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkMenu, { type CmkMenuItem } from 'cmk-ui-library/components/CmkMenu'
+import CmkMenu, { type CmkMenuCategory, type CmkMenuItem } from 'cmk-ui-library/components/CmkMenu'
 import { ref } from 'vue'
 
 const items: CmkMenuItem[] = [
@@ -37,6 +37,22 @@ const graphs: CmkMenuItem[] = [
   { label: [{ text: 'Custom graph 2' }], value: 'custom_graph_2', icon: 'clone' }
 ]
 const picked = ref<string | null>(null)
+
+// Categories add a toggle below the search and head their items; a field shows the pick.
+const categories: CmkMenuCategory[] = [
+  { value: 'dashboards', title: 'Dashboard' },
+  { value: 'views', title: 'View' }
+]
+const targets: CmkMenuItem[] = [
+  {
+    label: [{ text: 'Main dashboard' }],
+    value: 'main',
+    category: 'dashboards',
+    detail: 'Built-in'
+  },
+  { label: [{ text: 'All hosts' }], value: 'allhosts', category: 'views', detail: 'Built-in' }
+]
+const target = ref<string | null>(null)
 </script>
 
 <template>
@@ -50,5 +66,15 @@ const picked = ref<string | null>(null)
     search-placeholder="Search custom graphs ..."
     searchable
     @select="(value) => (picked = value)"
+  />
+
+  <CmkMenu
+    :items="targets"
+    :categories="categories"
+    label="Target page"
+    trigger-variant="field"
+    :trigger-text="targets.find((item) => 'value' in item && item.value === target)?.label[0]?.text"
+    searchable
+    @select="(value) => (target = value)"
   />
 </template>

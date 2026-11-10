@@ -9,7 +9,11 @@ import {
   type PanelConfigFor,
   listOptions
 } from '@ucl/_ucl/components/detail-page'
-import type { CmkMenuItem, CmkMenuLinkItem } from 'cmk-ui-library/components/CmkMenu'
+import type {
+  CmkMenuCategory,
+  CmkMenuItem,
+  CmkMenuLinkItem
+} from 'cmk-ui-library/components/CmkMenu'
 
 import codeExample from './UclCmkMenuCodeExample.vue?raw'
 
@@ -53,8 +57,16 @@ const ITEM_KINDS = {
   links: 'Links, one line',
   twoLineLinks: 'Links, two lines',
   mixedLinks: 'Links, mixed lines',
-  values: 'Values'
+  values: 'Values',
+  categorised: 'Values in categories'
 }
+
+const TRIGGER_VARIANTS = { button: 'Button', field: 'Field' }
+
+const DEMO_CATEGORIES: CmkMenuCategory[] = [
+  { value: 'dashboards', title: 'Dashboard' },
+  { value: 'views', title: 'View' }
+]
 
 const DEMO_ITEMS: CmkMenuItem[] = HOSTS.map((host, index) => {
   const [service, metric] = SERVICES[index % SERVICES.length]!
@@ -93,11 +105,20 @@ const DEMO_VALUE_ITEMS: CmkMenuItem[] = HOSTS.map((_, index) => ({
   icon: 'clone'
 }))
 
+// Every third item is a view, every second one built-in, as in a picker of link targets.
+const DEMO_CATEGORISED_ITEMS: CmkMenuItem[] = HOSTS.map((host, index) => ({
+  label: [{ text: `Overview of ${host}`, truncateOrder: 1 }],
+  value: host,
+  category: index % 3 === 2 ? 'views' : 'dashboards',
+  detail: index % 2 === 0 ? 'Built-in' : 'Custom'
+}))
+
 const DEMO_ITEMS_BY_KIND: Record<keyof typeof ITEM_KINDS, CmkMenuItem[]> = {
   links: DEMO_ITEMS,
   twoLineLinks: DEMO_TWO_LINE_ITEMS,
   mixedLinks: DEMO_MIXED_ITEMS,
-  values: DEMO_VALUE_ITEMS
+  values: DEMO_VALUE_ITEMS,
+  categorised: DEMO_CATEGORISED_ITEMS
 }
 
 export const a11yData = [
@@ -109,6 +130,11 @@ export const a11yData = [
     keys: ['Enter', 'Space', 'ArrowDown'],
     description:
       'Opens the menu from the trigger. With search shown, focus starts in the search field.'
+  },
+  {
+    keys: ['Tab', 'Shift+Tab'],
+    description:
+      'With categories, moves between the search field and the buttons of the category toggle; Enter or Space picks the focused category.'
   },
   {
     keys: ['ArrowDown', 'ArrowUp'],
@@ -151,7 +177,14 @@ export const panelConfig = {
     title: 'Item kind',
     options: listOptions<keyof typeof ITEM_KINDS>(ITEM_KINDS),
     initialState: 'links' as const,
-    help: 'Links navigate (metric inline, on a second line, or mixed); values are emitted with select, e.g. to pick a graph.'
+    help: 'Links navigate (metric inline, on a second line, or mixed); values are emitted with select, e.g. to pick a graph. Values in categories add the category toggle, headings and a detail per item.'
+  },
+  triggerVariant: {
+    type: 'list' as const,
+    title: 'Trigger variant',
+    options: listOptions<keyof typeof TRIGGER_VARIANTS>(TRIGGER_VARIANTS),
+    initialState: 'button' as const,
+    help: 'A field fills its container like a dropdown, showing the trigger text or else the accessible name.'
   },
   triggerText: {
     type: 'string' as const,
@@ -174,7 +207,7 @@ export const panelConfig = {
     initialState: 'few' as const,
     help: 'Up to nine items the list grows with them; beyond that it scrolls at a fixed height.'
   }
-} satisfies PanelConfigFor<typeof CmkMenu, 'items' | 'triggerIcon'> & PanelConfig
+} satisfies PanelConfigFor<typeof CmkMenu, 'items' | 'triggerIcon' | 'categories'> & PanelConfig
 </script>
 
 <script setup lang="ts">
@@ -192,15 +225,22 @@ import { computed, ref, watch } from 'vue'
 
 defineProps<{ screenshotMode: boolean }>()
 
-const propState = new PanelStateCreator<typeof CmkMenu, 'items' | 'triggerIcon'>().createRef(
-  panelConfig
-)
+const propState = new PanelStateCreator<
+  typeof CmkMenu,
+  'items' | 'triggerIcon' | 'categories'
+>().createRef(panelConfig)
 
-const pickValues = computed(() => propState.value.itemKind === 'values')
-// Each item kind starts with the trigger it has in use: text for picking values, icon-only for links.
-watch(pickValues, (values) => {
-  propState.value.triggerText = values ? 'Clone custom graph' : ''
-})
+const pickValues = computed(() => ['values', 'categorised'].includes(propState.value.itemKind))
+const categorised = computed(() => propState.value.itemKind === 'categorised')
+// Each item kind starts with the trigger it has in use: text for picking values, icon-only for
+// links, and a field for picking from categories.
+watch(
+  () => propState.value.itemKind,
+  (kind) => {
+    propState.value.triggerText = kind === 'values' ? 'Clone custom graph' : ''
+    propState.value.triggerVariant = kind === 'categorised' ? 'field' : 'button'
+  }
+)
 const items = computed(() =>
   DEMO_ITEMS_BY_KIND[propState.value.itemKind].slice(0, ITEM_COUNTS[propState.value.itemCount])
 )
@@ -217,8 +257,10 @@ const selected = ref<string | null>(null)
           :items="items"
           :label="propState.label"
           :searchable="propState.searchable"
-          :trigger-icon="pickValues ? 'clone' : undefined"
+          :trigger-icon="propState.itemKind === 'values' ? 'clone' : undefined"
           :trigger-text="propState.triggerText || undefined"
+          :trigger-variant="propState.triggerVariant"
+          :categories="categorised ? DEMO_CATEGORIES : undefined"
           :search-placeholder="propState.searchPlaceholder || undefined"
           @select="(value) => (selected = value)"
         />
@@ -239,6 +281,7 @@ const selected = ref<string | null>(null)
 <style scoped>
 .ucl-cmk-menu {
   display: flex;
+  width: 320px;
   flex-direction: column;
   align-items: flex-start;
   gap: var(--dimension-6);

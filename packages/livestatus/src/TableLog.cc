@@ -148,9 +148,7 @@ std::string TableLog::namePrefix() const { return "log_"; }
 namespace {
 bool rowWithoutHost(const LogRow &lr) {
     auto clazz = lr.entry->log_class();
-    return clazz == LogEntry::Class::info ||
-           clazz == LogEntry::Class::program ||
-           clazz == LogEntry::Class::ext_command;
+    return clazz == LogEntry::Class::info || clazz == LogEntry::Class::program;
 }
 
 LogRestrictions constructRestrictions(Query &query,

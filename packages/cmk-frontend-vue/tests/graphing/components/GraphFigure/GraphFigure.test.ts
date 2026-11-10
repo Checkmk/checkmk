@@ -12,6 +12,8 @@ import { nextTick } from 'vue'
 import GraphFigure from '@/graphing/components/GraphFigure/GraphFigure.vue'
 import { useGlobalPin } from '@/graphing/composables/useGlobalPin'
 
+import { FakeResizeObserver, resizeObserverReporting } from '@tests/lib/fakeResizeObserver'
+
 // The mock stands in for the view-only renderer: the buttons replay its zoom/pan/reset/pin
 // intent emits so the tests can drive the figure's interaction wiring.
 vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
@@ -125,6 +127,7 @@ let postSpy: any
 beforeEach(() => {
   // The mocked pin is a module-level singleton, so it has to be cleared between tests.
   useGlobalPin().clearPin()
+  vi.stubGlobal('ResizeObserver', resizeObserverReporting(800, 200))
   postSpy = vi.spyOn(client, 'POST')
   postSpy.mockResolvedValue({
     data: FETCHED,
@@ -135,6 +138,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.useRealTimers()
+  FakeResizeObserver.instances = []
 })
 
 const loadingIcon = (): Element | null =>
@@ -159,6 +163,31 @@ function fetchSource(
 ): Record<string, unknown> {
   return { source: { type: 'fetch', key, fetch, binUnit } }
 }
+
+const requestedSteps = (): number[] =>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  postSpy.mock.calls.map((call: any) => call[1].body.requested_time_range.step)
+
+test('loads once, at the width it is first measured at', async () => {
+  vi.stubGlobal('ResizeObserver', resizeObserverReporting(1_200, 200))
+  // Eight days: the step depends on the width (234 s at 740 px, 152 s at 1140 px).
+  renderFigure({ timerange: { type: 'age', hours: 8 * 24 } })
+
+  await screen.findByTestId('time-series-graph')
+  await new Promise((resolve) => setTimeout(resolve, 400))
+
+  expect(requestedSteps()).toEqual([152])
+})
+
+test('loads nothing while it is too narrow to plot', async () => {
+  vi.stubGlobal('ResizeObserver', resizeObserverReporting(50, 200))
+  renderFigure()
+
+  await nextTick()
+  await nextTick()
+
+  expect(postSpy).not.toHaveBeenCalled()
+})
 
 test('holds the loading icon back for a second while the fetch is pending', async () => {
   vi.useFakeTimers()

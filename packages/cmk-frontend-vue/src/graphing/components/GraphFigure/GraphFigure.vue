@@ -58,24 +58,28 @@ const emit = defineEmits<{
 }>()
 
 const graphAreaDiv = ref<HTMLDivElement | null>(null)
-// The renderer draws into this outer figure size and insets the axis/label margins itself, so the
-// figure fills the whole measured graph area; subtracting the margins here would double-count them.
-const figureSize = ref<Size>({ width: 800, height: 200, mode: 'resizable' })
+const graphAreaSize = ref<{ width: number; height: number } | null>(null)
 const { observe } = useResizeObserver((entries) => {
   const size = entries[0]!.contentBoxSize![0]!
-  figureSize.value = {
-    width: Math.max(MIN_FIGURE_SIZE, size.inlineSize),
-    height: Math.max(MIN_FIGURE_SIZE, size.blockSize),
-    mode: 'resizable'
-  }
+  graphAreaSize.value = { width: size.inlineSize, height: size.blockSize }
 })
 observe(graphAreaDiv)
 
+// The renderer draws into this outer figure size and insets the axis/label margins itself, so the
+// figure fills the whole measured graph area; subtracting the margins here would double-count them.
+const figureSize = computed<Size>(() => ({
+  width: Math.max(MIN_FIGURE_SIZE, graphAreaSize.value?.width ?? 0),
+  height: Math.max(MIN_FIGURE_SIZE, graphAreaSize.value?.height ?? 0),
+  mode: 'resizable'
+}))
+
 // The fetch resolution follows the plotted pixel width (figure minus the horizontal axis margins),
-// so the requested step matches the columns actually drawn.
-const plotWidth = computed(() =>
-  Math.max(1, Math.round(figureSize.value.width - CANVAS_MARGIN_HORIZONTAL))
-)
+// so the requested step matches the columns actually drawn. 0 holds the load until measured, and a
+// width the margins would eat up counts as not measured.
+const plotWidth = computed(() => {
+  const width = graphAreaSize.value?.width ?? 0
+  return width > CANVAS_MARGIN_HORIZONTAL ? Math.round(width - CANVAS_MARGIN_HORIZONTAL) : 0
+})
 
 const followsHostRange = computed(() => props.requestedTimeRange !== undefined)
 const baseTimeRange = (): RequestedTimeRange => {
@@ -313,71 +317,73 @@ onBeforeUnmount(() => {
       'graphing-graph-figure--pin-overhang': showPin && !hasHeader
     }"
   >
-    <!-- Initial load only: while a refetch is pending the held data stays rendered
-         (the transient zoom bridges it). -->
-    <CmkIcon
-      v-if="showLoadingIcon"
-      name="load-graph"
-      size="xlarge"
-      class="graphing-graph-figure__loading-icon"
-    />
-    <template v-else-if="graph">
-      <div
-        v-if="hasHeader"
-        class="graphing-graph-figure__header"
-        :class="{ 'graphing-graph-figure__header--pin-gap': showPin }"
-      >
-        <GraphTimestamp v-if="showTimestamp && baselineTimeRange" :time-range="baselineTimeRange" />
-        <GraphBurgerMenu
-          v-if="burgerMenuVisible"
-          :aria-label="_t('Action menu')"
-          class="graphing-graph-figure__burger-menu"
-          :groups="burgerMenuGroups"
-          @do-action="triggerBurgerMenuAction"
-        />
-      </div>
-      <div
-        ref="graphAreaDiv"
-        class="graphing-graph-figure__graph"
-        :class="{ 'graphing-graph-figure__graph--pinnable': showPin }"
-      >
-        <TimeSeriesGraph
-          :view_time_range="viewTimeRange"
-          :data_time_range="graph.timeRange"
-          :metrics="visibleMetrics"
-          :horizontal_lines="visibleHorizontalLines"
-          :shaded_regions="graph?.shadedRegions ?? []"
-          :value-range="viewValueRange"
-          zoom-mode="time"
-          :size="figureSize"
-          :bin-unit="timeAxis.binUnit"
-          :min-time-range="timeAxis.minSpan(null, graph.timeRange)"
-          :min-value-range="null"
-          :inspecting="inspectionActive"
-          :pan-enabled="true"
-          :zoom-enabled="true"
-          :pin-enabled="showPin"
-          :pin-time="pinTime"
-          :consolidation-function="DEFAULT_CONSOLIDATION_FN"
-          :show-time-axis="showTimeAxis"
-          :show-value-axis="showValueAxis"
-          :min-value-axis-width="minValueAxisWidth"
-          :options="graphOptions"
-          :highlighted-metric-names="highlightedMetricNames"
-          @zoom="onZoom"
-          @pan="onPan"
-          @reset="onResetIntent"
-          @pin-create="onPinCreate"
-          @pin-action="clearPin"
-          @update:value-resolution="valueResolution = $event"
-        />
-        <CmkSurfaceNotice
-          v-if="displayedNotice"
-          v-bind="displayedNotice"
-          class="graphing-graph-figure__notice"
-          @retry="onRetry"
-        />
-      </div>
+    <div
+      v-if="graph && hasHeader"
+      class="graphing-graph-figure__header"
+      :class="{ 'graphing-graph-figure__header--pin-gap': showPin }"
+    >
+      <GraphTimestamp v-if="showTimestamp && baselineTimeRange" :time-range="baselineTimeRange" />
+      <GraphBurgerMenu
+        v-if="burgerMenuVisible"
+        :aria-label="_t('Action menu')"
+        class="graphing-graph-figure__burger-menu"
+        :groups="burgerMenuGroups"
+        @do-action="triggerBurgerMenuAction"
+      />
+    </div>
+    <!-- Rendered before any data: the first load waits for its measured width. -->
+    <div
+      ref="graphAreaDiv"
+      class="graphing-graph-figure__graph"
+      :class="{ 'graphing-graph-figure__graph--pinnable': showPin }"
+    >
+      <!-- Initial load only: while a refetch is pending the held data stays rendered
+           (the transient zoom bridges it). -->
+      <CmkIcon
+        v-if="showLoadingIcon"
+        name="load-graph"
+        size="xlarge"
+        class="graphing-graph-figure__loading-icon"
+      />
+      <TimeSeriesGraph
+        v-if="graph"
+        :view_time_range="viewTimeRange"
+        :data_time_range="graph.timeRange"
+        :metrics="visibleMetrics"
+        :horizontal_lines="visibleHorizontalLines"
+        :shaded_regions="graph?.shadedRegions ?? []"
+        :value-range="viewValueRange"
+        zoom-mode="time"
+        :size="figureSize"
+        :bin-unit="timeAxis.binUnit"
+        :min-time-range="timeAxis.minSpan(null, graph.timeRange)"
+        :min-value-range="null"
+        :inspecting="inspectionActive"
+        :pan-enabled="true"
+        :zoom-enabled="true"
+        :pin-enabled="showPin"
+        :pin-time="pinTime"
+        :consolidation-function="DEFAULT_CONSOLIDATION_FN"
+        :show-time-axis="showTimeAxis"
+        :show-value-axis="showValueAxis"
+        :min-value-axis-width="minValueAxisWidth"
+        :options="graphOptions"
+        :highlighted-metric-names="highlightedMetricNames"
+        @zoom="onZoom"
+        @pan="onPan"
+        @reset="onResetIntent"
+        @pin-create="onPinCreate"
+        @pin-action="clearPin"
+        @update:value-resolution="valueResolution = $event"
+      />
+      <CmkSurfaceNotice
+        v-if="displayedNotice"
+        v-bind="displayedNotice"
+        class="graphing-graph-figure__notice"
+        @retry="onRetry"
+      />
+    </div>
+    <template v-if="graph">
       <GraphLegendCompact
         v-if="legend === 'compact'"
         :metrics="legendMetrics"
@@ -403,13 +409,6 @@ onBeforeUnmount(() => {
         @hover-metrics="highlightedMetricNames = $event"
       />
     </template>
-    <!-- A first load that failed has no plot to sit over, so the notice stands on its own. -->
-    <CmkSurfaceNotice
-      v-if="displayedNotice && graph === null"
-      v-bind="displayedNotice"
-      class="graphing-graph-figure__notice"
-      @retry="onRetry"
-    />
   </div>
 </template>
 
@@ -425,15 +424,15 @@ onBeforeUnmount(() => {
   box-sizing: border-box;
 }
 
-.graphing-graph-figure__loading-icon {
-  margin: auto;
-}
-
+.graphing-graph-figure__loading-icon,
 .graphing-graph-figure__notice {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+}
+
+.graphing-graph-figure__notice {
   max-width: 100%;
 }
 
@@ -458,7 +457,7 @@ onBeforeUnmount(() => {
   min-height: 0;
   overflow: hidden;
 
-  /* The box the notice centres on. */
+  /* The box the loading icon and the notice centre on. */
   position: relative;
 }
 

@@ -8,12 +8,13 @@ import { render, screen, waitFor } from '@testing-library/vue'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
 // eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
 import { HttpResponse, http } from 'msw'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import DashboardContentTimeline from '@/dashboard/components/DashboardContent/DashboardContentTimeline.vue'
 import type { TimelineContent } from '@/dashboard/types/widget'
 
 import { makeContentProps } from '@tests/dashboard/contentProps'
+import { FakeResizeObserver, resizeObserverReporting } from '@tests/lib/fakeResizeObserver'
 
 vi.mock('@/graphing/components/TimeSeriesGraph', () => ({
   default: {
@@ -104,9 +105,14 @@ useMswServer(
   })
 )
 
+beforeEach(() => {
+  vi.stubGlobal('ResizeObserver', resizeObserverReporting(800, 200))
+})
+
 afterEach(() => {
   respond = countsPerStep
   requests = []
+  FakeResizeObserver.instances = []
 })
 
 describe('DashboardContentTimeline', () => {

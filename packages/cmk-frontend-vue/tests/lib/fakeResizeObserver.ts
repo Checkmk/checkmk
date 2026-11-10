@@ -30,23 +30,32 @@ export class FakeResizeObserver {
   }
 }
 
+function entryFor(target: Element, width: number, height: number): ResizeObserverEntry {
+  return {
+    target,
+    contentBoxSize: [{ inlineSize: width, blockSize: height }],
+    borderBoxSize: [{ inlineSize: width, blockSize: height }],
+    devicePixelContentBoxSize: [],
+    contentRect: { width, height }
+  } as unknown as ResizeObserverEntry
+}
+
 /** Report one content box size for every element that any fake observer observes. */
 export function deliverSize(width: number, height: number): void {
   for (const observer of FakeResizeObserver.instances) {
     if (observer.observed.size === 0) {
       continue
     }
-    observer.fire(
-      [...observer.observed].map(
-        (target) =>
-          ({
-            target,
-            contentBoxSize: [{ inlineSize: width, blockSize: height }],
-            borderBoxSize: [{ inlineSize: width, blockSize: height }],
-            devicePixelContentBoxSize: [],
-            contentRect: { width, height }
-          }) as unknown as ResizeObserverEntry
-      )
-    )
+    observer.fire([...observer.observed].map((target) => entryFor(target, width, height)))
+  }
+}
+
+/** A fake that reports one content box size for each element as soon as it observes it. */
+export function resizeObserverReporting(width: number, height: number): typeof FakeResizeObserver {
+  return class extends FakeResizeObserver {
+    override observe(element: Element): void {
+      super.observe(element)
+      this.fire([entryFor(element, width, height)])
+    }
   }
 }

@@ -52,8 +52,8 @@ DynamicFileColumn<T>::DynamicFileColumn(
     , _filepath{std::move(filepath)} {}
 
 template <typename T>
-[[nodiscard]] std::filesystem::path DynamicFileColumn<T>::basepath(
-    const T &data, const ICore &core) const {
+std::filesystem::path DynamicFileColumn<T>::basepath(const T &data,
+                                                     const ICore &core) const {
     // This delays the call to mc to after it is constructed.
     return _basepath(data, core);
 }

@@ -188,6 +188,7 @@ cc_test(
     deps = [
         ":dummy_nagios",
         ":test_utilities",
+        "//packages/livestatus:temporary_directory",
         "@gtest//:gtest_main",
     ],
 )

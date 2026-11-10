@@ -12,7 +12,7 @@ namespace fs = std::filesystem;
 
 namespace mk {
 
-[[nodiscard]] std::string unescape_filename(const std::string &filename) {
+std::string unescape_filename(const std::string &filename) {
     std::string filename_native;
     bool quote_active = false;
     for (auto c : filename) {
@@ -29,7 +29,7 @@ namespace mk {
             filename_native += c;
         }
     }
-    return fs::path{filename_native};
+    return filename_native;
 }
 
 bool path_contains(const fs::path &directory, const fs::path &path) {

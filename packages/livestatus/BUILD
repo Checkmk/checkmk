@@ -122,18 +122,35 @@ pkg_tar(
     visibility = ["//visibility:public"],
 )
 
+cc_library(
+    name = "temporary_directory",
+    testonly = 1,
+    hdrs = ["test/TemporaryDirectory.h"],
+    copts = ["-std=c++20"],
+    platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
+    strip_include_prefix = "test/",
+    visibility = [
+        "//non-free/packages/cmc:__pkg__",
+        "//packages/neb:__pkg__",
+    ],
+)
+
 cc_test(
     name = "test",
     size = "small",
-    srcs = glob([
-        "test/*.cc",
-        "test/*.h",
-    ]),
+    srcs = glob(
+        [
+            "test/*.cc",
+            "test/*.h",
+        ],
+        exclude = ["test/TemporaryDirectory.h"],
+    ),
     copts = ["-std=c++20"],
     platform = "//bazel/platforms:x86_64-linux-gcc-hermetic",
     tags = ["cpp"],
     deps = [
         ":livestatus_base",
+        ":temporary_directory",
         "@gtest//:gtest_main",
         "@re2",
     ],

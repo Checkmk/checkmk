@@ -3,7 +3,6 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
-#include <cassert>
 #include <filesystem>
 #include <string>
 #include <tuple>
@@ -15,84 +14,59 @@
 
 namespace fs = std::filesystem;
 
-class PathContainsFixtureBase
-    : public ::testing::TestWithParam<std::tuple<fs::path, fs::path, bool>> {
+// A directory and a path, both relative to a temporary directory, and whether
+// the directory contains the path when both are created and when they aren't.
+class PathContainsTest : public ::testing::TestWithParam<
+                             std::tuple<fs::path, fs::path, bool, bool>> {
 protected:
-    [[nodiscard]] fs::path basepath() const { return basedir_.path(); };
+    void SetUp() override {
+        // operator/ would drop the temporary directory for absolute paths.
+        ASSERT_TRUE(std::get<0>(GetParam()).is_relative());
+        ASSERT_TRUE(std::get<1>(GetParam()).is_relative());
+    }
+
     [[nodiscard]] fs::path directory() const {
-        return basepath() / directory_;
-    };
-    [[nodiscard]] fs::path path() const { return basepath() / path_; };
-    virtual void SetUp_(const fs::path &directory, const fs::path &path) = 0;
+        return basedir_.path() / std::get<0>(GetParam());
+    }
+    [[nodiscard]] fs::path path() const {
+        return basedir_.path() / std::get<1>(GetParam());
+    }
+    [[nodiscard]] static bool contained_when_created() {
+        return std::get<2>(GetParam());
+    }
+    [[nodiscard]] static bool contained_when_not_created() {
+        return std::get<3>(GetParam());
+    }
 
 private:
-    TemporaryDirectory basedir_{"crash_report_tests"};
-    fs::path directory_;
-    fs::path path_;
+    TemporaryDirectory basedir_{"file_system_helper_tests"};
 };
 
-void PathContainsFixtureBase::SetUp_(const fs::path &_directory,
-                                     const fs::path &_path) {
-    // Make sure the dirs are going to be under basepath.
-    assert(_directory.is_relative() and _path.is_relative());
-    directory_ = _directory;
-    path_ = _path;
+TEST_P(PathContainsTest, PathsCreated) {
+    fs::create_directories(directory());
+    fs::create_directories(path());
+    ASSERT_EQ(contained_when_created(), mk::path_contains(directory(), path()));
 }
 
-class PathContainsFixtureWithPathCreation : public PathContainsFixtureBase {
-protected:
-    void SetUp_(const fs::path &_directory, const fs::path &_path) final {
-        PathContainsFixtureBase::SetUp_(_directory, _path);
-        fs::create_directories(directory());
-        fs::create_directories(path());
-    }
-};
-
-class PathContainsFixtureWithoutPathCreation : public PathContainsFixtureBase {
-protected:
-    void SetUp_(const fs::path &_directory, const fs::path &_path) final {
-        PathContainsFixtureBase::SetUp_(_directory, _path);
-    }
-};
-
-TEST_P(PathContainsFixtureWithPathCreation, TestPathContains) {
-    const bool expected = std::get<2>(GetParam());
-    SetUp_(std::get<0>(GetParam()), std::get<1>(GetParam()));
-    ASSERT_EQ(expected, mk::path_contains(directory(), path()));
-}
-
-TEST_P(PathContainsFixtureWithoutPathCreation, TestPathContains) {
-    const bool expected = std::get<2>(GetParam());
-    SetUp_(std::get<0>(GetParam()), std::get<1>(GetParam()));
-    ASSERT_EQ(expected, mk::path_contains(directory(), path()));
+TEST_P(PathContainsTest, PathsNotCreated) {
+    ASSERT_EQ(contained_when_not_created(),
+              mk::path_contains(directory(), path()));
 }
 
 INSTANTIATE_TEST_SUITE_P(
-    PathContainsTestsWithPath, PathContainsFixtureWithPathCreation,
-    ::testing::Values(std::make_tuple("", "", true),
-                      std::make_tuple("abc/def", "abc/def", true),
-                      std::make_tuple("xyz/../def", "def", true),
-                      std::make_tuple("abc/def", "xyz/../abc/def", true),
-                      std::make_tuple("", "abc/def", true),
-                      std::make_tuple("abc/def", "", false),
-                      std::make_tuple("abc/def", "xyz/abc", false),
-                      std::make_tuple("abc/def", "xyz", false),
-                      std::make_tuple("xyz", "abc/def", false)));
-
-INSTANTIATE_TEST_SUITE_P(
-    PathContainsTestsWithoutPath, PathContainsFixtureWithoutPathCreation,
-    ::testing::Values(std::make_tuple("", "", true),
-                      std::make_tuple("abc/def", "abc/def", false),
-                      std::make_tuple("xyz/../def", "def", false),
-                      std::make_tuple("abc/def", "xyz/../abc/def", false),
-                      std::make_tuple("", "abc/def", false),
-                      std::make_tuple("abc/def", "", false),
-                      std::make_tuple("abc/def", "xyz/abc", false),
-                      std::make_tuple("abc/def", "xyz", false),
-                      std::make_tuple("xyz", "abc/def", false)));
+    PathContainsTests, PathContainsTest,
+    ::testing::Values(std::make_tuple("", "", true, true),
+                      std::make_tuple("abc/def", "abc/def", true, false),
+                      std::make_tuple("xyz/../def", "def", true, false),
+                      std::make_tuple("abc/def", "xyz/../abc/def", true, false),
+                      std::make_tuple("", "abc/def", true, false),
+                      std::make_tuple("abc/def", "", false, false),
+                      std::make_tuple("abc/def", "xyz/abc", false, false),
+                      std::make_tuple("abc/def", "xyz", false, false),
+                      std::make_tuple("xyz", "abc/def", false, false)));
 
 class UnescapeFileNameFixture
-    : public ::testing::TestWithParam<std::tuple<fs::path, fs::path>> {};
+    : public ::testing::TestWithParam<std::tuple<std::string, std::string>> {};
 
 TEST_P(UnescapeFileNameFixture, TestUnescapeFileName) {
     ASSERT_EQ(mk::unescape_filename(std::get<0>(GetParam())),
@@ -108,4 +82,6 @@ INSTANTIATE_TEST_SUITE_P(
                       std::make_tuple(R"(\sa\sb\sc)", R"( a b c)"),
                       std::make_tuple(R"(\\\sa\\\sb\\\sc)", R"(\ a\ b\ c)"),
                       std::make_tuple(R"(\\sa\\sb\\sc)", R"(\sa\sb\sc)"),
-                      std::make_tuple(R"(\\\sa\\\sb\\\sc)", R"(\ a\ b\ c)")));
+                      std::make_tuple(R"(\\\sa\\\sb\\\sc)", R"(\ a\ b\ c)"),
+                      std::make_tuple(R"(a\xb)", R"(axb)"),
+                      std::make_tuple(R"(abc\)", R"(abc)")));

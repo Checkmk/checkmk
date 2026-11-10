@@ -93,6 +93,7 @@ class ValidationStep(enum.Enum):
     SPECIAL_AGENTS = "special agents loading"
     BAKERY_PLUGINS = "bakery plugins loading"
     BAKERY_RULE_SPECS = "bakery plugins rule specs validation"
+    BAKERY_DEFAULT_PARAMETERS = "bakery plugins default parameters validation"
     RULE_SPECS = "rule specs loading"
     RULE_SPEC_FORMS = "rule specs forms creation"
     RULE_SPEC_REFERENCED = "referenced rule specs validation"
@@ -191,7 +192,38 @@ def _validate_bakery_plugins(*, debug: bool) -> Sequence[ActiveCheckResult]:
                 )
             ],
         ),
+        _validate_bakery_default_parameters(v2_discovered.plugins.values(), debug=debug),
     ]
+
+
+def _validate_bakery_default_parameters(
+    plugins: Iterable[bakery_v2.BakeryPlugin], *, debug: bool
+) -> ActiveCheckResult:
+    if not os.environ.get("OMD_SITE"):
+        return ActiveCheckResult(
+            state=1,
+            summary=f"{ValidationStep.BAKERY_DEFAULT_PARAMETERS.value.capitalize()} skipped",
+            details=["Validation of default parameters can only be used as site user"],
+        )
+
+    errors = []
+    with gui_context():
+        for plugin in plugins:
+            if (
+                plugin.default_parameters is None
+                or (rule_spec := rulespec_registry.get(RuleGroup.AgentConfig(plugin.name))) is None
+            ):
+                continue
+            try:
+                _validate_parameters(rule_spec, plugin.default_parameters)
+            except Exception as e:
+                if debug:
+                    raise e
+                errors.append(
+                    f"Default parameters specified by {type(plugin).__name__} '{plugin.name}' "
+                    f"cannot be read by AgentConfig rule spec '{plugin.name}': {e}"
+                )
+    return to_result(ValidationStep.BAKERY_DEFAULT_PARAMETERS, errors)
 
 
 def _validate_rule_spec_loading() -> ActiveCheckResult:

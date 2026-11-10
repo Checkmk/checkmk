@@ -38,7 +38,7 @@ are looked up by name in registries:
 
 * **Data source**: provides the rows, usually from a Livestatus table.
 * **Info and filters**: select and narrow the rows.
-* **Painters**: render the cells (see :doc:`arch-comp-painters-v1`).
+* **Painters**: render the cells.
 * **Sorters and layouts**: order and arrange the rows.
 * **Commands and icons**: actions on rows and status icons.
 

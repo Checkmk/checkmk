@@ -11,6 +11,7 @@ the matching subscriber queues, so a subscriber costs no extra fetch or encoding
 
 import asyncio
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
@@ -25,14 +26,9 @@ logger = logging.getLogger(__name__)
 @dataclass(eq=False)
 class Subscriber:
     # ``auth_user`` is the Livestatus monitoring scope (None = see all hosts).
-    # ``folder_scope`` is the independent SETUP-folder read scope. ``group_key``
-    # collapses both into one identity so subscribers that would render the SAME
-    # map share a single computation+delta — for foldertree maps admin and a
-    # see-all guest have the same auth_user (None) but different folder_scope, so
-    # the key keeps them apart; for other maps it is just the auth_user.
+    # ``folder_scope`` is the independent SETUP-folder read scope.
     auth_user: str | None
     folder_scope: FolderScope | None = None
-    group_key: str | None = None
     queue: asyncio.Queue[SentEvent[StreamMessage]] = field(
         default_factory=lambda: asyncio.Queue(maxsize=64)
     )
@@ -57,25 +53,15 @@ class SubscriptionManager:
         the_map: str,
         auth_user: str | None,
         folder_scope: FolderScope | None = None,
-        group_key: str | None = None,
     ) -> Subscriber:
-        sub = Subscriber(
-            auth_user=auth_user,
-            folder_scope=folder_scope,
-            group_key=group_key if group_key is not None else auth_user,
-        )
+        sub = Subscriber(auth_user=auth_user, folder_scope=folder_scope)
         # A request accepted before the daemon began stopping can subscribe after it.
         if self._closed:
             sub.queue.shutdown(immediate=True)
         self._subscribers.setdefault(the_map, set()).add(sub)
         logger.debug(
-            "SSE subscribe map=%(map)s user=%(user)s key=%(key)s total=%(total)d",
-            {
-                "map": the_map,
-                "user": auth_user,
-                "key": sub.group_key,
-                "total": len(self._subscribers[the_map]),
-            },
+            "SSE subscribe map=%(map)s user=%(user)s total=%(total)d",
+            {"map": the_map, "user": auth_user, "total": len(self._subscribers[the_map])},
         )
         return sub
 
@@ -95,13 +81,13 @@ class SubscriptionManager:
     def get_subscribers(self, the_map: str) -> list[Subscriber]:
         return list(self._subscribers.get(the_map, ()))
 
-    def get_subscribers_grouped(self, the_map: str) -> dict[str | None, list[Subscriber]]:
-        # Grouped by ``group_key`` (auth_user + folder scope), not auth_user alone,
-        # so users with different rendered output (e.g. admin vs see-all guest on a
-        # foldertree map) get their own computation + delta stream.
+    def get_subscribers_grouped(
+        self, the_map: str, group_key: Callable[[Subscriber], str | None]
+    ) -> dict[str | None, list[Subscriber]]:
+        """The subscribers by ``group_key``: those of one key see the same states."""
         groups: dict[str | None, list[Subscriber]] = {}
         for sub in self._subscribers.get(the_map, ()):
-            groups.setdefault(sub.group_key, []).append(sub)
+            groups.setdefault(group_key(sub), []).append(sub)
         return groups
 
     def push(

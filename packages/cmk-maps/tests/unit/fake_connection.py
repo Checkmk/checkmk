@@ -348,13 +348,13 @@ class FakeConnection(ConnectionBase):
         # Deterministic demo tree: nested folders, two empty folders
         # (staging/decommissioned) and hosts spread across two sites.
         folders: list[FolderInfo] = [
-            {"path": "", "title": "Main"},
-            {"path": "datacenters", "title": "Datacenters"},
-            {"path": "datacenters/muc", "title": "Munich"},
-            {"path": "datacenters/fra", "title": "Frankfurt"},
-            {"path": "network", "title": "Network"},
-            {"path": "staging", "title": "Staging"},
-            {"path": "decommissioned", "title": "Decommissioned"},
+            {"path": "", "title": "Main", "permitted": True},
+            {"path": "datacenters", "title": "Datacenters", "permitted": True},
+            {"path": "datacenters/muc", "title": "Munich", "permitted": True},
+            {"path": "datacenters/fra", "title": "Frankfurt", "permitted": True},
+            {"path": "network", "title": "Network", "permitted": True},
+            {"path": "staging", "title": "Staging", "permitted": True},
+            {"path": "decommissioned", "title": "Decommissioned", "permitted": True},
         ]
         placement = _DEMO_HOST_PLACEMENT
         summaries = await self.get_services_summary(list(placement))

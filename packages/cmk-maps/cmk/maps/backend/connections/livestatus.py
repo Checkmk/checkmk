@@ -93,7 +93,7 @@ _auth_user_ctx: ContextVar[str | None] = ContextVar("_auth_user_ctx", default=No
 # The requesting user's SETUP-folder read visibility, used by ``get_folder_tree``
 # to mark which (otherwise unscoped) folders the user may see. Distinct from
 # ``_auth_user_ctx``: a see-all guest scopes folders by contact group yet has no
-# Livestatus AuthUser. ``None`` means unrestricted (not set).
+# Livestatus AuthUser. ``None`` permits no folder.
 _folder_scope_ctx: ContextVar[FolderScope | None] = ContextVar("_folder_scope_ctx", default=None)
 
 
@@ -1556,14 +1556,17 @@ class LivestatusConnection(ConnectionBase):
         # (``wato.see_all_folders`` OR membership in a folder's contact groups).
         # This is deliberately NOT the monitoring scope: a see-all guest sees
         # every host yet must not see SETUP folder names outside their groups.
-        # ``None`` scope = unrestricted. Empty folders the user
-        # can't read are then pruned by the state service.
+        # No scope permits no folder. Empty folders the user can't read are
+        # then pruned by the state service.
         folders = await _load_wato_folders()
         scope = _folder_scope_ctx.get()
         scoped: list[FolderInfo] = [
             cast(
                 "FolderInfo",
-                {**f, "permitted": scope is None or scope.permits(f.get("permitted_groups", []))},
+                {
+                    **f,
+                    "permitted": scope is not None and scope.permits(f.get("permitted_groups", [])),
+                },
             )
             for f in folders
         ]

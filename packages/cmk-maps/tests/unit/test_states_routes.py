@@ -48,7 +48,7 @@ from cmk.maps.backend.core.ratelimit import (
 )
 from cmk.maps.backend.core.sse import manager, Subscriber
 from cmk.maps.backend.integrations.checkmk import FolderScope
-from cmk.maps.backend.schemas.map import FlowView, MapConfig, RadarView
+from cmk.maps.backend.schemas.map import FlowView, FolderTreeView, MapConfig, RadarView, StaticView
 from cmk.maps.backend.schemas.state import MapStates, ObjectState, ObjectTiming
 from cmk.maps.backend.schemas.stream import StreamMessage
 from cmk.maps.backend.services import map_service, settings_service, state_service
@@ -224,7 +224,7 @@ def test_broadcast_loop_survives_and_continues_after_a_failing_tick(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     map_key = states._map_key("alice", "b1")  # noqa: SLF001
-    sub = manager.subscribe(map_key, None, folder_scope=None, group_key=None)
+    sub = manager.subscribe(map_key, None, folder_scope=None)
 
     monkeypatch.setattr(map_service, "get_map", lambda _owner, _name: MagicMock(name="cfg"))
 
@@ -268,9 +268,9 @@ def test_broadcast_loop_newcomer_gets_full_established_gets_delta(
         map_key, None, [ObjectState(object_id="host:h1", type="host", state="UP", output="ok")]
     )
 
-    established = manager.subscribe(map_key, None, group_key=None)
+    established = manager.subscribe(map_key, None)
     established.needs_full = False
-    newcomer = manager.subscribe(map_key, None, group_key=None)  # needs_full=True by default
+    newcomer = manager.subscribe(map_key, None)  # needs_full=True by default
 
     async def _states(*_a: object, **_k: object) -> MapStates:
         return MapStates(
@@ -304,6 +304,29 @@ def test_broadcast_loop_newcomer_gets_full_established_gets_delta(
     # Exactly one message each — the newcomer did not also force a group-wide full.
     assert established.queue.empty()
     assert newcomer.queue.empty()
+
+
+@pytest.mark.parametrize(("view", "scoped"), [(FolderTreeView(), True), (StaticView(), False)])
+def test_broadcast_loop_scopes_the_folders_by_the_config_of_each_tick(
+    monkeypatch: pytest.MonkeyPatch, view: FolderTreeView | StaticView, scoped: bool
+) -> None:
+    map_key = states._map_key("alice", "b1")  # noqa: SLF001
+    scope = FolderScope(see_all=False, groups=frozenset({"ops"}))
+    sub = manager.subscribe(map_key, "bob", scope)
+    monkeypatch.setattr(map_service, "get_map", lambda _o, _n: MapConfig(name="b1", view=view))
+    seen: list[FolderScope | None] = []
+
+    async def _states(*_a: object, folder_scope: FolderScope | None, **_k: object) -> MapStates:
+        seen.append(folder_scope)
+        manager.unsubscribe(map_key, sub)
+        return MapStates(map_name="b1", states=[], generated_at=0.0, runtime=get_daemon_runtime())
+
+    monkeypatch.setattr(state_service, "get_map_states", _states)
+    monkeypatch.setattr(settings_service, "get_effective_state_refresh_interval", lambda: 0.0)
+
+    asyncio.run(states._broadcast_loop(map_key, FakeLinkGui()))  # noqa: SLF001
+
+    assert seen == [scope if scoped else None]
 
 
 @pytest.fixture
@@ -369,6 +392,29 @@ def test_a_new_stream_gets_the_topology_its_group_fetched_in_this_interval(
 
     assert counted_topology.fetches == 1
     assert joining.queue.get_nowait().event == "topology_update"
+
+
+def test_a_tick_of_a_flow_map_pushes_its_topology(
+    counted_topology: _CountedTopology, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    map_key = states._map_key("alice", "b1")  # noqa: SLF001
+    monkeypatch.setattr(map_service, "get_map", lambda _o, _n: _flow_map())
+    sub = manager.subscribe(map_key, None)
+    sub.needs_full = False
+
+    async def _states(*_a: object, **_k: object) -> MapStates:
+        return MapStates(map_name="b1", states=[], generated_at=0.0, runtime=get_daemon_runtime())
+
+    async def _fake_sleep(_delay: float) -> None:
+        manager.unsubscribe(map_key, sub)
+
+    monkeypatch.setattr(state_service, "get_map_states", _states)
+    monkeypatch.setattr(settings_service, "get_effective_state_refresh_interval", lambda: 0.0)
+    monkeypatch.setattr(asyncio, "sleep", _fake_sleep)
+    asyncio.run(states._broadcast_loop(map_key, FakeLinkGui()))  # noqa: SLF001
+
+    assert counted_topology.fetches == 1
+    assert [sub.queue.get_nowait().event for _ in range(sub.queue.qsize())][-1] == "topology_update"
 
 
 def test_the_topology_of_a_flow_map_is_fetched_once_per_interval(
@@ -648,7 +694,7 @@ def _stream_ticks(
     monkeypatch: pytest.MonkeyPatch, ticks: int, between_ticks: Callable[[], None]
 ) -> None:
     map_key = states._map_key("alice", "b1")  # noqa: SLF001
-    sub = manager.subscribe(map_key, "alice", group_key="alice")
+    sub = manager.subscribe(map_key, "alice")
     done = {"ticks": 0}
     sleep = asyncio.sleep
 
@@ -683,7 +729,7 @@ def test_a_poll_while_the_stream_fetches_shares_that_fetch(
     app: FastAPI, counted_states: _CountedStates, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     map_key = states._map_key("alice", "b1")  # noqa: SLF001
-    sub = manager.subscribe(map_key, "alice", group_key="alice")
+    sub = manager.subscribe(map_key, "alice")
     counted_states.release.clear()
     joined: list[object] = []
     run = states._fetches.run  # noqa: SLF001
@@ -1087,10 +1133,9 @@ def test_sse_hands_no_slot_to_another_user_naming_the_same_tab(app: FastAPI) -> 
 def _overflow_the_subscribers_of_b1() -> None:
     map_key = states._map_key("alice", "b1")  # noqa: SLF001
     filler: SentEvent[StreamMessage] = SentEvent(event="state_update", raw_data="{}")
-    for subscribers in manager.get_subscribers_grouped(map_key).values():
-        for subscriber in subscribers:
-            while not subscriber.overflowed:
-                manager.push(map_key, [subscriber], filler)
+    for subscriber in manager.get_subscribers(map_key):
+        while not subscriber.overflowed:
+            manager.push(map_key, [subscriber], filler)
 
 
 def test_sse_releases_the_subscriber_and_stream_slot_when_the_subscriber_overflows(

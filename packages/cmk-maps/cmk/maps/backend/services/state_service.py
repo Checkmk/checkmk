@@ -1198,7 +1198,7 @@ def _build_folder_tree(data: FolderTreeData, fv: FolderTreeView) -> FolderTreeNo
 
     ensure_folder("")
     for f in data.folders:
-        ensure_folder(f["path"], f.get("title"), f.get("folder_id", ""), f.get("permitted", True))
+        ensure_folder(f["path"], f.get("title"), f.get("folder_id", ""), f.get("permitted", False))
 
     # Hosts live only as tree nodes; the flat ``states`` list is left empty (see
     # the MapStates return). At 100k+ hosts duplicating every host into ``states``

@@ -9,7 +9,7 @@ import gzip
 import logging
 import math
 import time
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from contextlib import suppress
 from dataclasses import dataclass, field
 from typing import Annotated, cast, Literal
@@ -251,11 +251,22 @@ class _Audience:
         return f"{user}\x00{self.folder_scope.key}"
 
 
+def _audience_of(
+    auth_user: str | None, folder_scope: FolderScope | None, cfg: MapConfig
+) -> _Audience:
+    return _Audience(auth_user, folder_scope if cfg.view.type == "foldertree" else None)
+
+
 def _audience(user: Principal, cfg: MapConfig) -> _Audience:
-    return _Audience(
-        resolve_auth_user(user),
-        resolve_folder_scope(user) if cfg.view.type == "foldertree" else None,
-    )
+    return _audience_of(resolve_auth_user(user), resolve_folder_scope(user), cfg)
+
+
+def _subscriber_audience(sub: Subscriber, cfg: MapConfig) -> _Audience:
+    return _audience_of(sub.auth_user, sub.folder_scope, cfg)
+
+
+def _group_key_for(cfg: MapConfig) -> Callable[[Subscriber], str | None]:
+    return lambda sub: _subscriber_audience(sub, cfg).group_key
 
 
 def _remember(
@@ -403,7 +414,9 @@ async def _broadcast_loop(map_key: str, links: LinkSource) -> None:
                 tick_start = asyncio.get_running_loop().time()
                 user_count = 0
                 if cfg is not None:
-                    grouped = manager.get_subscribers_grouped(map_key)
+                    # Keyed by the config of this tick: a map that became a
+                    # foldertree map renders the folders each user may read.
+                    grouped = manager.get_subscribers_grouped(map_key, _group_key_for(cfg))
                     user_count = len(grouped)
                     # Forget delta snapshots for groups whose subscribers have all
                     # left, so a long-running map doesn't leak per-group state.
@@ -415,11 +428,10 @@ async def _broadcast_loop(map_key: str, links: LinkSource) -> None:
                         # the monitoring (auth_user) + folder (folder_scope) scopes.
                         # Snapshots/deltas are keyed by group_key so admin and a
                         # see-all guest on a foldertree map don't share a tree.
-                        rep = subs[0]
-                        auth_user = rep.auth_user
+                        audience = _subscriber_audience(subs[0], cfg)
                         key = (map_key, group_key)
                         flight = await _group_states(
-                            key, owner, cfg, auth_user, rep.folder_scope, links
+                            key, owner, cfg, audience.auth_user, audience.folder_scope, links
                         )
                         states = flight.states
                         # Only for a group that polled since the last tick, so the
@@ -473,7 +485,9 @@ async def _broadcast_loop(map_key: str, links: LinkSource) -> None:
                             for s in newcomers:
                                 s.needs_full = False
                         if cfg.view.type == "flow":
-                            await _push_topology_to(cfg, map_key, auth_user, subs, force_full=False)
+                            await _push_topology_to(
+                                cfg, map_key, audience.auth_user, subs, force_full=False
+                            )
                 elapsed_ms = (asyncio.get_running_loop().time() - tick_start) * 1000
                 logger.debug(
                     "Broadcast tick map=%(map)s user_groups=%(user_groups)d "
@@ -886,15 +900,8 @@ async def _subscribe_to_stream(
     owner = user.map_key_owner
     map_key = _map_key(owner, name)
 
-    audience = _audience(user, cfg)
-
     _take_slot(user.name, tab)
-    sub = manager.subscribe(
-        map_key,
-        audience.auth_user,
-        folder_scope=audience.folder_scope,
-        group_key=audience.group_key,
-    )
+    sub = manager.subscribe(map_key, resolve_auth_user(user), resolve_folder_scope(user))
     stream = _TabStream(sub)
     if tab is not None:
         _tab_streams[(user.name, tab)] = stream
@@ -914,7 +921,7 @@ async def _subscribe_to_stream(
         # from the next tick's group delta on top of this full) — no group re-full.
         if cfg.view.type == "flow":
             await _push_topology_to(
-                cfg, map_key, audience.auth_user, [sub], force_full=True, store=False
+                cfg, map_key, sub.auth_user, [sub], force_full=True, store=False
             )
 
         yield StreamSubscription(

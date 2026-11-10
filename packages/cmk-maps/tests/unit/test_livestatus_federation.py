@@ -29,7 +29,7 @@ import pytest
 
 from cmk.livestatus_client import MKLivestatusQueryError
 from cmk.maps.backend.connections import livestatus
-from cmk.maps.backend.connections.base import FolderTreeData, QueryRefusedError
+from cmk.maps.backend.connections.base import FolderInfo, FolderTreeData, QueryRefusedError
 from cmk.maps.backend.core.config import settings
 from cmk.maps.backend.integrations import checkmk_sites
 
@@ -144,6 +144,22 @@ def _fetch_tree_as(conn: livestatus.LivestatusConnection, auth_user: str | None)
             livestatus._auth_user_ctx.reset(token)  # noqa: SLF001
 
     return asyncio.run(_coro())
+
+
+def test_a_folder_tree_without_a_folder_scope_permits_no_folder(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    conn = _tcp_connection(monkeypatch)
+
+    async def _folders() -> list[FolderInfo]:
+        return [{"path": "dc", "title": "DC", "permitted_groups": []}]
+
+    monkeypatch.setattr(livestatus, "_load_wato_folders", _folders)
+    monkeypatch.setattr(conn, "_query_with_site", _rows_from([]))
+
+    tree = asyncio.run(conn.get_folder_tree())
+
+    assert {f["path"]: f.get("permitted") for f in tree.folders}["dc"] is False
 
 
 def _staleness(tree: FolderTreeData) -> tuple[set[str], set[str]]:

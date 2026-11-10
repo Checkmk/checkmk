@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Unit tests for the SSE SubscriptionManager.
 
-Covers subscriber bookkeeping, the group_key collapsing that decides which
-subscribers share one delta computation, and the overflow flagging in ``push``
+Covers subscriber bookkeeping, the grouping that decides which subscribers
+share one delta computation, and the overflow flagging in ``push``
 when a slow client's queue is full (the SSE handler then ends the stream so the
 client reconnects for a full resend). ``Subscriber`` builds its queue on the
 running event loop, so the few cases that touch a queue run inside ``asyncio.run``
@@ -27,10 +27,8 @@ def _event(data: str) -> SentEvent[StreamMessage]:
 
 def test_subscribe_tracks_and_counts() -> None:
     mgr = SubscriptionManager()
-    sub = mgr.subscribe("map1", "alice")
+    mgr.subscribe("map1", "alice")
     assert mgr.get_subscriber_count("map1") == 1
-    # group_key defaults to auth_user when not given explicitly.
-    assert sub.group_key == "alice"
 
 
 def test_subscriber_needs_full_by_default() -> None:
@@ -39,12 +37,6 @@ def test_subscriber_needs_full_by_default() -> None:
     mgr = SubscriptionManager()
     sub = mgr.subscribe("map1", "alice")
     assert sub.needs_full is True
-
-
-def test_explicit_group_key_is_kept() -> None:
-    mgr = SubscriptionManager()
-    sub = mgr.subscribe("map1", None, group_key="admin-folderscope")
-    assert sub.group_key == "admin-folderscope"
 
 
 def test_unsubscribe_removes_and_drops_empty_map() -> None:
@@ -62,13 +54,15 @@ def test_unsubscribe_unknown_is_noop() -> None:
     assert mgr.get_subscriber_count("ghost") == 0
 
 
-def test_same_auth_user_different_group_key_split() -> None:
-    # Foldertree map: admin and a see-all guest share auth_user None but
-    # render differently, so distinct group_keys keep them in separate groups.
+def _by_user(sub: Subscriber) -> str | None:
+    return sub.auth_user
+
+
+def test_different_group_keys_split() -> None:
     mgr = SubscriptionManager()
-    mgr.subscribe("map1", None, group_key="admin")
-    mgr.subscribe("map1", None, group_key="guest")
-    groups = mgr.get_subscribers_grouped("map1")
+    mgr.subscribe("map1", "admin")
+    mgr.subscribe("map1", "guest")
+    groups = mgr.get_subscribers_grouped("map1", _by_user)
     assert set(groups) == {"admin", "guest"}
     assert all(len(v) == 1 for v in groups.values())
 
@@ -77,13 +71,13 @@ def test_same_group_key_shares_one_group() -> None:
     mgr = SubscriptionManager()
     mgr.subscribe("map1", "user1")
     mgr.subscribe("map1", "user1")
-    groups = mgr.get_subscribers_grouped("map1")
+    groups = mgr.get_subscribers_grouped("map1", _by_user)
     assert set(groups) == {"user1"}
     assert len(groups["user1"]) == 2
 
 
 def test_empty_map_yields_no_groups() -> None:
-    assert SubscriptionManager().get_subscribers_grouped("none") == {}
+    assert SubscriptionManager().get_subscribers_grouped("none", _by_user) == {}
 
 
 def test_push_delivers_message_to_each_target() -> None:

@@ -65,6 +65,17 @@ def test_a_query_without_an_answer_leaves_the_default_executor_free(
     assert asyncio.run(scenario()) == "free"
 
 
+def test_a_query_on_a_closed_connection_times_out(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, answer: threading.Event
+) -> None:
+    answer.set()
+    conn = _connection(monkeypatch, tmp_path, _Client(answer))
+    conn.close()
+
+    with pytest.raises(QueryTimeoutError):
+        asyncio.run(conn._query_with_site("GET hosts\nColumns: name\n"))  # noqa: SLF001
+
+
 def test_the_user_reaches_the_query_thread(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, answer: threading.Event
 ) -> None:

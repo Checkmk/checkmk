@@ -21,6 +21,8 @@ flattener parses it (so daemon-side drift fails the config assertions). Neither
 side is mocked, so the two cannot drift apart without breaking CI.
 """
 
+import pytest
+
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.maps.backend.schemas.connection import ConnectionConfig
 from cmk.maps.backend.services.connection_forms import connections_from_global
@@ -133,3 +135,19 @@ def test_daemon_flattens_the_stored_value_into_runtime_configs() -> None:
     # Daemon side: the same stored shape flattens into the runtime configs,
     # including resolving the explicit password-store secret to plaintext.
     assert connections_from_global(_STORED_CONNECTIONS) == _EXPECTED_CONFIGS
+
+
+_STORED_TWICE = [*_STORED_CONNECTIONS, {**_STORED_CONNECTIONS[1], "label": "Second"}]
+
+
+@pytest.mark.usefixtures("request_context", "with_user_login")
+def test_gui_formspec_refuses_an_id_used_twice() -> None:
+    spec = connections_list_spec(monitoring_core="cmc")
+    visitor = get_visitor(spec, VisitorOptions(migrate_values=True, mask_values=False))
+    assert [m.message for m in visitor.validate(RawDiskData(_STORED_TWICE))] == [
+        'The connection ID "remote" is used more than once.'
+    ]
+
+
+def test_daemon_keeps_the_first_connection_of_an_id() -> None:
+    assert connections_from_global(_STORED_TWICE) == _EXPECTED_CONFIGS

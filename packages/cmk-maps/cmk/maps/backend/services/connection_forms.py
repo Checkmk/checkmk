@@ -116,13 +116,15 @@ def connection_form_to_config(entry: Mapping[str, object]) -> ConnectionConfig |
 
 
 def connections_from_global(raw: object) -> list[ConnectionConfig]:
-    """Flatten the whole ``maps_connections`` list; skip malformed entries."""
+    """Flatten the whole ``maps_connections`` list; skip malformed entries and
+    every but the first entry of an ID."""
     if not isinstance(raw, Sequence) or isinstance(raw, str):
         return []
-    out: list[ConnectionConfig] = []
+    out: dict[str, ConnectionConfig] = {}
     for entry in raw:
-        if isinstance(entry, Mapping):
-            cfg = connection_form_to_config(entry)
-            if cfg is not None:
-                out.append(cfg)
-    return out
+        if isinstance(entry, Mapping) and (cfg := connection_form_to_config(entry)) is not None:
+            if cfg.id in out:
+                logger.warning("Skipping a second connection %(cid)r", {"cid": cfg.id})
+                continue
+            out[cfg.id] = cfg
+    return list(out.values())

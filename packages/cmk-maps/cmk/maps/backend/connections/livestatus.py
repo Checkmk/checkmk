@@ -1444,6 +1444,19 @@ class LivestatusConnection(ConnectionBase):
         return MetricHistoryResult(series=series)
 
     @override
+    def close(self) -> None:
+        # Queries under way end on their threads; the federated sockets close after them.
+        self._query_executor.submit(self._disconnect)
+        self._query_executor.shutdown(wait=False)
+
+    def _disconnect(self) -> None:
+        with self._mc_lock:
+            if self._mc is not None:
+                with contextlib.suppress(Exception):
+                    self._mc.disconnect()
+                self._mc = None
+
+    @override
     def dead_sites(self) -> list[str]:
         if not self._sites:
             return []
@@ -1836,10 +1849,12 @@ class LivestatusConnection(ConnectionBase):
     async def _in_query_thread[T](self, run: Callable[[str], T], query: str) -> T:
         loop = asyncio.get_running_loop()
         try:
-            return await asyncio.wait_for(
-                loop.run_in_executor(self._query_executor, copy_context().run, run, query),
-                timeout=settings.connection_query_timeout,
-            )
+            future = loop.run_in_executor(self._query_executor, copy_context().run, run, query)
+        except RuntimeError:
+            # Closed because the connection was reconfigured; it answers no more.
+            raise QueryTimeoutError from None
+        try:
+            return await asyncio.wait_for(future, timeout=settings.connection_query_timeout)
         except TimeoutError:
             raise QueryTimeoutError from None
 

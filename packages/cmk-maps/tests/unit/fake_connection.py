@@ -228,6 +228,10 @@ class FakeConnection(ConnectionBase):
     connection_id = "test"
 
     @override
+    def close(self) -> None:
+        pass
+
+    @override
     async def get_host_state(self, hostname: str) -> ObjectState:
         state = _PINNED_HOST_STATES.get(hostname, _HOST_STATES[hash(hostname) % len(_HOST_STATES)])
         if state == "UP":

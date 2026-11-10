@@ -16,6 +16,7 @@ is the list's own UI. ``type`` is a CascadingSingleChoice mirroring the backend
 """
 
 import os
+from collections.abc import Mapping, Sequence
 from typing import Any, Literal
 
 from cmk.maps.shared.validators import CONNECTION_ID_MAX_LENGTH, CONNECTION_ID_PATTERN
@@ -35,7 +36,7 @@ from cmk.rulesets.v1.form_specs import (
     Password,
     String,
 )
-from cmk.rulesets.v1.form_specs.validators import LengthInRange, MatchRegex
+from cmk.rulesets.v1.form_specs.validators import LengthInRange, MatchRegex, ValidationError
 
 
 def _omd_socket_prefill() -> InputHint[str] | DefaultValue[str]:
@@ -249,6 +250,16 @@ def _connection_elements(default_metric_source: str) -> dict[str, DictElement[An
     }
 
 
+def _unique_connection_ids(value: Sequence[Mapping[str, object]]) -> None:
+    seen: set[object] = set()
+    for connection in value:
+        if (cid := connection.get("id")) in seen:
+            raise ValidationError(
+                Message('The connection ID "%(id)s" is used more than once.') % {"id": str(cid)}
+            )
+        seen.add(cid)
+
+
 def connections_list_spec(
     monitoring_core: MonitoringCore | None = None,
     title: Title = Title("Maps connections"),
@@ -272,6 +283,7 @@ def connections_list_spec(
         remove_element_label=Label("Remove connection"),
         no_element_label=Label("No connections configured yet."),
         editable_order=False,
+        custom_validate=(_unique_connection_ids,),
         element_template=Dictionary(
             title=Title("Connection"),
             elements={

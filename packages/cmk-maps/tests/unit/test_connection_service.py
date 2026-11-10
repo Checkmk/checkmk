@@ -33,11 +33,17 @@ pytestmark = pytest.mark.usefixtures("_clear_connections")
 
 
 @pytest.fixture
-def _clear_connections() -> Iterator[None]:
+def _clear_connections(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     """The shared conftest clears map/snapshot state but not the connection
     registry — a connection one warmup test registers must not bleed into the next."""
+    monkeypatch.setattr(
+        connection_service,
+        "_registered",
+        connection_service._Registered(check_every=0),  # noqa: SLF001
+    )
     yield
     state_service._connections.clear()  # noqa: SLF001
+    state_service._followers.clear()  # noqa: SLF001
 
 
 class _StopLoop(Exception):
@@ -252,10 +258,91 @@ def test_build_instance_carries_connection_config() -> None:
     assert instance._automation_user == "automation"  # noqa: SLF001
 
 
+class _Configured:
+    """The ``maps_connections`` the daemon reads: a new object once it was changed."""
+
+    def __init__(self, monkeypatch: pytest.MonkeyPatch, *configs: ConnectionConfig) -> None:
+        self.raw: list[ConnectionConfig] = list(configs)
+        monkeypatch.setattr(
+            checkmk_globals,
+            "load_maps_globals",
+            lambda: {checkmk_globals.VAR_CONNECTIONS: self.raw},
+        )
+        monkeypatch.setattr(connection_forms, "connections_from_global", list)
+
+    def change_to(self, *configs: ConnectionConfig) -> None:
+        self.raw = list(configs)
+
+
+class _ClosingConnection(FakeConnection):
+    def __init__(self, cfg: ConnectionConfig) -> None:
+        self.cfg = cfg
+        self.closed = False
+
+    @override
+    def close(self) -> None:
+        self.closed = True
+
+
+def _livestatus(cid: str, host: str = "10.0.0.1") -> ConnectionConfig:
+    return ConnectionConfig(id=cid, type="livestatus", label=cid, host=host)
+
+
+@pytest.fixture(name="built")
+def fixture_built(monkeypatch: pytest.MonkeyPatch) -> list[_ClosingConnection]:
+    built: list[_ClosingConnection] = []
+
+    def _build(cfg: ConnectionConfig) -> _ClosingConnection:
+        built.append(_ClosingConnection(cfg))
+        return built[-1]
+
+    monkeypatch.setattr(connection_service, "build_instance", _build)
+    return built
+
+
+def test_a_removed_connection_is_closed_and_found_no_more(
+    monkeypatch: pytest.MonkeyPatch, built: list[_ClosingConnection]
+) -> None:
+    configured = _Configured(monkeypatch, _livestatus("a"), _livestatus("b"))
+    connection_service.activate_all()
+
+    configured.change_to(_livestatus("b"))
+
+    assert state_service.get_connection("a") is None
+    assert state_service.get_connection("b") is built[1]
+    assert [c.closed for c in built] == [True, False]
+
+
+def test_a_changed_connection_is_built_anew(
+    monkeypatch: pytest.MonkeyPatch, built: list[_ClosingConnection]
+) -> None:
+    configured = _Configured(monkeypatch, _livestatus("a", "10.0.0.1"))
+    connection_service.activate_all()
+
+    configured.change_to(_livestatus("a", "10.0.0.2"))
+    found = state_service.get_connection("a")
+
+    assert isinstance(found, _ClosingConnection)
+    assert (found.cfg.host, built[0].closed) == ("10.0.0.2", True)
+
+
+def test_unchanged_connections_are_not_built_again(
+    monkeypatch: pytest.MonkeyPatch, built: list[_ClosingConnection]
+) -> None:
+    configured = _Configured(monkeypatch, _livestatus("a"))
+    connection_service.activate_all()
+
+    state_service.get_connection("a")
+    configured.change_to(_livestatus("a"))
+    state_service.get_connection("a")
+
+    assert len(built) == 1
+
+
 def test_activate_all_isolates_a_failing_connection(monkeypatch: pytest.MonkeyPatch) -> None:
     good = ConnectionConfig(id="good", type="livestatus", label="Good", socket_path="/tmp/live")
     bad = ConnectionConfig(id="bad", type="livestatus", label="Bad", socket_path="/tmp/live")
-    monkeypatch.setattr(connection_service, "load_all", lambda: [bad, good])
+    _Configured(monkeypatch, bad, good)
 
     def _build(cfg: ConnectionConfig) -> object:
         if cfg.id == "bad":

@@ -210,6 +210,10 @@ class ConnectionBase(ABC):
 
     connection_id: str = "unknown"
 
+    @abstractmethod
+    def close(self) -> None:
+        """Release what the connection holds once it is no longer configured."""
+
     @asynccontextmanager
     async def with_monitoring_scope(self, scope: MonitoringScope) -> AsyncIterator[None]:
         """Scope queries inside the block to what *scope* may see.

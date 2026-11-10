@@ -563,10 +563,11 @@ values). It holds:
 
 The directory is a registered replication path, so remote sites receive the
 same settings with Activate Changes. The daemon ignores the keys it does not
-use. It re-reads the refresh interval on every poll, but sets up the
-connections and the log level only at start (see `Daemon lifecycle`_). The
-connection list route re-reads the file on every request, so until a restart
-it can differ from the connections actually in use.
+use. It re-reads the refresh interval on every poll and the connections on
+every lookup of one, once the file changed: a new or changed connection is set
+up, a removed one is closed. Of two connections with the same ID it uses the
+first; the GUI refuses to save such a list. The log level is set only at start
+(see `Daemon lifecycle`_).
 
 The GUI writes two more files for the daemon:
 
@@ -1238,8 +1239,9 @@ Daemon lifecycle
   connections (or the built-in local one) and refuses to start if no connection
   could be set up. It does not test connectivity at start, so an unreachable
   Livestatus shows up only in the first queries.
-  **Changes to connections or the log level take effect only after**
-  ``omd restart maps``; Activate Changes does not restart the daemon.
+  **Changes to the log level, and a password changed in the password store,
+  take effect only after** ``omd restart maps``; Activate Changes does not
+  restart the daemon.
 * Reload restarts the daemon. The log files are reopened after logrotate on
   their own. Stop sends ``SIGTERM``, which ends the open map streams; uvicorn
   waits up to 30 s for the other requests, the stop script 35 s before it kills
@@ -1425,9 +1427,8 @@ core, each generic rather than Maps-specific:
 Risks and technical debts
 =========================
 
-* The daemon reads connections and the log level only at start. Changing them
-  in the Maps settings needs ``omd restart maps``, and until then the
-  connection list (read per request) and the active connections can differ.
+* The daemon reads the log level only at start. Changing it in the Maps
+  settings needs ``omd restart maps``.
 * The single-worker model caps vertical scalability. Scaling out needs the
   process-local state (SSE subscribers, caches, rate limiters) to move behind a
   shared broker first. Each open stream also holds one of the 64 site Apache

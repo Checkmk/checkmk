@@ -117,6 +117,15 @@ logger = logging.getLogger(__name__)
 _connections: dict[str, ConnectionBase] = {}
 
 
+# Run before every lookup, so the registry follows the configured connections.
+# Set by the connection service, which imports this module.
+_followers: list[Callable[[], None]] = []
+
+
+def follow_configuration(follow: Callable[[], None]) -> None:
+    _followers[:] = [follow]
+
+
 def register_connection(connection_id: str, connection: ConnectionBase) -> None:
     _connections[connection_id] = connection
 
@@ -126,10 +135,19 @@ def unregister_connection(connection_id: str) -> None:
 
 
 def get_connection(connection_id: str) -> ConnectionBase | None:
+    for follow in _followers:
+        follow()
+    return _connections.get(connection_id)
+
+
+def get_registered_connection(connection_id: str) -> ConnectionBase | None:
+    """The connection registered under the ID, without following the configuration."""
     return _connections.get(connection_id)
 
 
 def list_connection_ids() -> list[str]:
+    for follow in _followers:
+        follow()
     return list(_connections.keys())
 
 

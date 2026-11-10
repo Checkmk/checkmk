@@ -10,8 +10,16 @@ from typing import Any
 
 import pytest
 
-from cmk.plugins.aws_v2.special_agent.agent_aws_v2 import PARALLEL_JOBS, parse_arguments
-from cmk.plugins.aws_v2.special_agent.config import NamingConvention, TagsImportPatternOption
+from cmk.plugins.aws_v2.special_agent.agent_aws_v2 import (
+    configure_aws,
+    PARALLEL_JOBS,
+    parse_arguments,
+)
+from cmk.plugins.aws_v2.special_agent.config import (
+    NamingConvention,
+    TagNaming,
+    TagsImportPatternOption,
+)
 
 # These have to always exist, so just set them here
 REQUIRED_ARGS = ["--hostname", "foo", "--piggyback-naming-convention", "ip_region_instance"]
@@ -112,6 +120,34 @@ def test_parse_arguments(args: Sequence[str], expected: Mapping[str, Any]) -> No
     ns = parse_arguments(args)
     for prop, value in expected.items():
         assert getattr(ns, prop) == value
+
+
+@pytest.mark.parametrize(
+    ("naming_args", "expected"),
+    [
+        pytest.param(
+            ["--piggyback-naming-convention", "private_dns_name"],
+            NamingConvention.private_dns_name,
+            id="naming convention -> that convention",
+        ),
+        pytest.param(
+            ["--ec2-piggyback-name-tag", "Name"],
+            TagNaming("Name"),
+            id="name tag -> tag naming with that key",
+        ),
+    ],
+)
+def test_ec2_host_naming_follows_the_arguments(
+    naming_args: Sequence[str], expected: NamingConvention | TagNaming
+) -> None:
+    config = configure_aws(parse_arguments(["--hostname", "foo", *naming_args]))
+
+    assert config.host_naming.ec2 == expected
+
+
+def test_name_tag_together_with_naming_convention_is_rejected() -> None:
+    with pytest.raises(SystemExit):
+        parse_arguments([*REQUIRED_ARGS, "--ec2-piggyback-name-tag", "Name"])
 
 
 def test_access_key_without_secret_is_rejected(capsys: pytest.CaptureFixture[str]) -> None:

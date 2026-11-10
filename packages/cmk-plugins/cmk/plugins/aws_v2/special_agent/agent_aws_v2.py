@@ -37,6 +37,7 @@ from .config import (
     LOGGER,
     NamingConvention,
     NonEC2PiggybackTemplate,
+    TagNaming,
     TagsImportPatternOption,
 )
 from .credentials import (
@@ -401,15 +402,24 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         " per distribution",
     )
     parser.add_argument("--hostname", required=True)
-    parser.add_argument(
+    group_piggyback_naming = parser.add_mutually_exclusive_group(required=True)
+    group_piggyback_naming.add_argument(
         "--piggyback-naming-convention",
         type=NamingConvention,
-        required=True,
         help="For each running EC2 instance a piggyback host is created. This option changes the "
         "naming of these hosts. Note, that not every host name is pingable. Moreover, "
         "changes in the piggyback name will cause the piggyback host to be reset. "
         "If you choose `ip_region_instance`, then the name includes the private IP "
         "address, the region and the instance ID: {Private IPv4 address}-{region}-{Instance ID}. ",
+    )
+    group_piggyback_naming.add_argument(
+        "--ec2-piggyback-name-tag",
+        metavar="KEY",
+        help="Name the piggyback host of each EC2 instance after the value of the AWS tag with "
+        "this key. The key must match exactly, because AWS tag keys are case-sensitive. Each "
+        "character that a host name cannot contain (all except a-z, A-Z, 0-9, '-', '_' and '.') "
+        "becomes '_'. An instance gets no host if it does not have the tag, or if the value is "
+        "empty, longer than 240 characters or starts with '-' or '.'.",
     )
     parser.add_argument(
         "--non-ec2-piggyback-template",
@@ -609,12 +619,16 @@ def _pass_proxy_to_credential_process(args: argparse.Namespace) -> None:
         os.environ["HTTPS_PROXY"] = f"http://{proxies['https']}"
 
 
-def _configure_aws(args: argparse.Namespace) -> AWSConfig:
+def configure_aws(args: argparse.Namespace) -> AWSConfig:
     aws_config = AWSConfig(
         args.hostname,
         args,
         (args.overall_tag_keys, args.overall_tag_values),
-        args.piggyback_naming_convention,
+        (
+            args.piggyback_naming_convention
+            if args.ec2_piggyback_name_tag is None
+            else TagNaming(args.ec2_piggyback_name_tag)
+        ),
         args.non_ec2_piggyback_template,
         args.tag_key_pattern,
         cloudfront_host_assignment=args.cloudfront_host_assignment,
@@ -922,7 +936,7 @@ def _monitored_account_ids(credentials: AwsCredentials) -> Sequence[str]:
 def _prepare_run(
     args: argparse.Namespace, client_config: botocore.config.Config | None
 ) -> _RunSettings:
-    aws_config = _configure_aws(args)
+    aws_config = configure_aws(args)
 
     global_services, regional_services = _sanitize_aws_services_params(
         args.global_services, args.services, r_and_g_aws_services=("wafv2",)

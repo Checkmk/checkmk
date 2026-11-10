@@ -171,7 +171,7 @@ const requestedConsolidationsByGraphTitle = (): string[] =>
   )
 
 // GraphGroup runs useGraphData twice - once for the graphs, once for the brush overviews beneath
-// them - so fetching one panel issues this many requests.
+// them - so fetching one panel with the brush enabled issues this many requests.
 const REQUESTS_PER_PANEL = 2
 
 // A full-width group (no figure_width) derives its width from #main_page_content. jsdom reports
@@ -669,6 +669,21 @@ test('fetches the graph with the initial range and the overview with the multipl
   expect(ranges).toContainEqual({ start: RANGE_START, end: RANGE_END, step: 60 })
   // 1000s active span → 7× multiplier → 7000s overview domain centered on the range.
   expect(ranges).toContainEqual({ start: RANGE_START - 3_000, end: RANGE_END + 3_000, step: 60 })
+})
+
+test('fetches no overview for graphs without a brush', async () => {
+  const withoutBrush = (title: string): CmkTimeSeriesGraph => {
+    const definition = makeGraphDefinition(title)
+    return { ...definition, interaction: { ...definition.interaction, brush: 'disabled' } }
+  }
+  renderGroup([withoutBrush('CPU utilization'), withoutBrush('Memory')])
+
+  await waitFor(() => expect(panels()).toHaveLength(2))
+
+  expect(requestedRanges()).toEqual([
+    { start: RANGE_START, end: RANGE_END, step: 60 },
+    { start: RANGE_START, end: RANGE_END, step: 60 }
+  ])
 })
 
 test('asks only the panel whose consolidation function was selected for data again', async () => {

@@ -209,8 +209,12 @@ const { graphs, isLoading, loadingSlots, error, partialErrors, warnings, reload 
   () => props.combination_mode
 )
 
+const overviewGraphDefinitions = computed(() =>
+  props.graphs.some((graph) => graph.interaction.brush === 'enabled') ? props.graphs : []
+)
+
 const { graphs: overviewGraphs, reload: reloadOverview } = useGraphData(
-  () => props.graphs,
+  () => overviewGraphDefinitions.value,
   () => brush.requestedDomain.value,
   () => effectiveWidth.value - CANVAS_MARGIN_HORIZONTAL,
   () => consolidationFnPerPanel.value,

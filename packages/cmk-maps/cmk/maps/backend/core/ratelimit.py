@@ -179,3 +179,8 @@ rest_read_limiter = RateLimiter(max_calls=240, window_seconds=60)
 # Per-user budget for the polls the states kept for the interval answer. They
 # spare Livestatus, so it holds twenty tabs polling every second.
 kept_states_limiter = RateLimiter(max_calls=1200, window_seconds=60)
+
+# Site-wide: past it, an unhandled exception is only logged, so a flood of
+# failing requests does not keep the disk busy with crash reports.
+crash_report_limiter = RateLimiter(max_calls=30, window_seconds=60)
+CRASH_REPORT_KEY = "site"

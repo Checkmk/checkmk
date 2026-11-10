@@ -20,7 +20,7 @@ another site makes it send, too, so such requests are refused before routing.
 import asyncio
 import logging
 import sys
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager, suppress
 from http import HTTPStatus
 from pathlib import Path
@@ -36,8 +36,9 @@ from cmk.fastapi.gui_session import GuiLoopback, loopback_http_client
 from cmk.maps.backend.app import create_app
 from cmk.maps.backend.core.auth import GuiAuth
 from cmk.maps.backend.core.config import settings
-from cmk.maps.backend.core.crash import create_crash_report
+from cmk.maps.backend.core.crash import crash_report, save_crash_report
 from cmk.maps.backend.core.middleware import SECURITY_HEADERS
+from cmk.maps.backend.core.ratelimit import CRASH_REPORT_KEY, crash_report_limiter, RateLimiter
 from cmk.maps.backend.core.version import APP_VERSION
 from cmk.maps.backend.services import connection_service, settings_service
 from cmk.maps.backend.services.state_service import list_connection_ids
@@ -125,30 +126,44 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 app = create_app(lifespan=lifespan)
 
 
-@app.exception_handler(Exception)
-async def _handle_unhandled_exception(request: Request, exc: Exception) -> JSONResponse:
-    """Persist unhandled request exceptions as Checkmk crash reports.
+def crash_handler(
+    omd_root: Path, limiter: RateLimiter
+) -> Callable[[Request, Exception], Awaitable[JSONResponse]]:
+    """Persist unhandled request exceptions as Checkmk crash reports of the site
+    in ``omd_root``, as many as ``limiter`` lets through.
 
     HTTPExceptions and validation errors have their own handlers; only real
     bugs end up here. The crash ID in the response lets an operator find the
     report on the site's crash reports page.
     """
-    try:
-        crash_id = create_crash_report(Path(settings.checkmk_omd_root))
-    except Exception:
-        logger.exception("Failed to write the crash report for the following exception")
+
+    async def handle(request: Request, exc: Exception) -> JSONResponse:
         crash_id = "n/a"
-    logger.error(
-        "Unhandled exception on %(path)s (crash ID: %(crash_id)s)",
-        {"path": request.url.path, "crash_id": crash_id},
-        exc_info=exc,
-    )
-    # Starlette answers it outside every middleware.
-    return JSONResponse(
-        status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-        content={"detail": "Internal server error", "crash_id": crash_id},
-        headers={name.decode(): value.decode() for name, value in SECURITY_HEADERS},
-    )
+        if not limiter.is_blocked(CRASH_REPORT_KEY):
+            limiter.record(CRASH_REPORT_KEY)
+            try:
+                crash = crash_report(omd_root)
+                crash_id = await asyncio.to_thread(save_crash_report, crash)
+            except Exception:
+                logger.exception("Failed to write the crash report for the following exception")
+        logger.error(
+            "Unhandled exception on %(path)s (crash ID: %(crash_id)s)",
+            {"path": request.url.path, "crash_id": crash_id},
+            exc_info=exc,
+        )
+        # Starlette answers it outside every middleware.
+        return JSONResponse(
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            content={"detail": "Internal server error", "crash_id": crash_id},
+            headers={name.decode(): value.decode() for name, value in SECURITY_HEADERS},
+        )
+
+    return handle
+
+
+app.add_exception_handler(
+    Exception, crash_handler(Path(settings.checkmk_omd_root), crash_report_limiter)
+)
 
 
 # A span over a long-lived stream is of little value.

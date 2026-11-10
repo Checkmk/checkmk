@@ -23,13 +23,18 @@ class MapsCrashReport(ABCCrashReport[None]):
         return "maps"
 
 
-def create_crash_report(omd_root: Path) -> str:
-    """Persist the exception currently being handled; returns the crash ID."""
-    crash = MapsCrashReport(
+def crash_report(omd_root: Path) -> MapsCrashReport:
+    """The report of the exception currently being handled, so it is made where it
+    is handled."""
+    return MapsCrashReport(
         crash_report_base_path=make_crash_report_base_path(omd_root),
         crash_info=MapsCrashReport.make_crash_info(
             cmk_version_info.get_general_version_infos(omd_root), None
         ),
     )
+
+
+def save_crash_report(crash: MapsCrashReport) -> str:
+    """Persist *crash*; returns the crash ID."""
     CrashReportStore().save(crash)
     return crash.ident_to_text()

@@ -103,7 +103,7 @@ def run(
     signal.signal(signal.SIGINT, runtime.on_sigint)
 
     commands = Commands(plugins=runtime.discover())
-    logger = runtime.logger.getChild("base")
+    logger = runtime.logger.getChild("cli")
 
     match parse(commands, argv, logger):
         case InvalidArguments(message=message):

@@ -325,7 +325,7 @@ def test_a_command_reports_through_the_engines_logger() -> None:
     logger = logging.getLogger("cmk.test")
     _run(["cmk", "--demo"], _runtime([_command(remember)], logger=logger))
 
-    assert seen == [logger.getChild("base")]
+    assert seen == [logger.getChild("cli")]
 
 
 def test_an_unknown_option_exits_three() -> None:

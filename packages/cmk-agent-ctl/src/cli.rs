@@ -388,17 +388,27 @@ mod tests {
         assert!(Cli::try_parse_from(["cmk-agent-ctl", "update", "--check-only", "-G"]).is_err());
     }
 
-    /// The bakery writes `cmk-agent-ctl install-agent` into the installer unit
+    /// The bakery writes `cmk-agent-ctl -v install-agent` into the installer unit
     /// it bakes, so the spelling of the mode and its empty argument list are a
     /// contract with that unit.
     #[cfg(unix)]
     #[test]
     fn test_install_agent_takes_no_arguments() {
         assert!(matches!(
-            Cli::parse_from(["cmk-agent-ctl", "install-agent"]).mode,
+            Cli::parse_from(["cmk-agent-ctl", "-v", "install-agent"]).mode,
             Mode::InstallAgent
         ));
         assert!(Cli::try_parse_from(["cmk-agent-ctl", "install-agent", "--package"]).is_err());
+    }
+
+    /// CMK-41736 AC4
+    #[cfg(unix)]
+    #[test]
+    fn test_the_installer_unit_logs_at_info() {
+        assert_eq!(
+            Cli::parse_from(["cmk-agent-ctl", "-v", "install-agent"]).logging_level(),
+            "info"
+        );
     }
 
     #[test]

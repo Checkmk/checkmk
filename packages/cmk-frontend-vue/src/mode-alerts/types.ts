@@ -98,21 +98,6 @@ export function servicePattern(model: AlertModel): string {
   return model.servicePattern.trim()
 }
 
-// The Livestatus and JavaScript dialects differ, so this only rules out patterns broken
-// in both; Livestatus rejects the rest with a 400.
-export function hasUnparsableRegex(model: AlertModel): boolean {
-  const pattern = servicePattern(model)
-  if (model.matchType !== 'regex' || pattern === '') {
-    return false
-  }
-  try {
-    new RegExp(pattern)
-    return false
-  } catch {
-    return true
-  }
-}
-
 function tagCondition({ group_name: key, value }: ConditionChoicesValue): TagCondition {
   if ('oper_eq' in value) {
     return { key, operator: 'is', value: value.oper_eq }

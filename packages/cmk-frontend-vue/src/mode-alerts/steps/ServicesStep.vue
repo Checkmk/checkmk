@@ -26,24 +26,24 @@ import { FormEdit, type ValidationMessages } from '@/form'
 
 import CustomServiceSelect from '@/mode-alerts/CustomServiceSelect.vue'
 import { formSpecErrors } from '@/mode-alerts/conditions-validation'
-import { type ServiceUnit, fetchServiceUnits } from '@/mode-alerts/preview-client'
 import {
-  MAX_MATCHES,
-  type ServiceMatches,
-  searchCustomServices
+  type FoundService,
+  type ServiceSearchResult,
+  type UnitSummary,
+  patternErrorOf,
+  searchServices
 } from '@/mode-alerts/service-client'
 import {
   type AlertModel,
   type FolderPaths,
   alertConditions,
-  hasUnparsableRegex,
   servicePattern
 } from '@/mode-alerts/types'
 
 const SEARCH_DEBOUNCE_MS = 200
 const PREVIEW_LIMIT = 5
 
-const { _t } = usei18n()
+const { _t, _tn } = usei18n()
 
 const {
   conditionsSpec,
@@ -89,13 +89,13 @@ const selectedServiceName = computed({
   }
 })
 
-const matches = ref<ServiceMatches | null>(null)
+const conditions = computed(() => alertConditions(model.value, folderPaths))
+
+const matches = ref<ServiceSearchResult | null>(null)
 const searching = ref(false)
 const searchError = ref<string | null>(null)
-// The unit of each service the latest search matched, `null` until they are fetched or when
-// fetching them failed.
-const serviceUnits = ref<ServiceUnit[] | null>(null)
-let unitsRequest: Promise<ServiceUnit[] | null> | null = null
+// Why the server refused the service pattern, shown at the field.
+const refusedPattern = ref<string | null>(null)
 const displayErrors = ref(false)
 const conditionsValidation = ref<ValidationMessages>([])
 const showAllMatches = ref(false)
@@ -109,15 +109,14 @@ function getPatternErrors(): string[] {
   if (servicePattern(model.value) === '') {
     return [_t('A service name is required')]
   }
-  if (hasUnparsableRegex(model.value)) {
-    return [_t('This is not a valid regular expression')]
-  }
-  return []
+  return refusedPattern.value === null ? [] : [refusedPattern.value]
 }
 
-const patternErrors = computed(() => (displayErrors.value ? getPatternErrors() : []))
+const patternErrors = computed(() =>
+  displayErrors.value || refusedPattern.value !== null ? getPatternErrors() : []
+)
 
-const noMatches = computed(() => matches.value !== null && matches.value.services.length === 0)
+const noMatches = computed(() => matches.value !== null && matches.value.total === 0)
 
 const visibleMatches = computed(() =>
   showAllMatches.value
@@ -125,36 +124,43 @@ const visibleMatches = computed(() =>
     : (matches.value?.services ?? []).slice(0, PREVIEW_LIMIT)
 )
 
+// The services found but not listed, beyond those on hosts the user may not see.
+const unlisted = computed(() =>
+  matches.value === null
+    ? 0
+    : matches.value.total - matches.value.hidden - matches.value.services.length
+)
+
 async function search(): Promise<void> {
-  if (getPatternErrors().length > 0) {
+  if (servicePattern(model.value) === '') {
     return
   }
   const token = ++searchToken
   searching.value = true
   searchError.value = null
   try {
-    const result = await searchCustomServices(
+    const result = await searchServices(
       model.value.matchType,
       servicePattern(model.value),
-      alertConditions(model.value, folderPaths)
+      conditions.value
     )
     if (token !== searchToken) {
       return
     }
     matches.value = result
     showAllMatches.value = false
-    if (result.services.length > 0) {
-      void loadUnits(token)
-    }
   } catch (error) {
     if (token !== searchToken) {
       return
     }
     matches.value = null
-    searchError.value =
-      error instanceof CmkApiError && error.statusCode < 500
-        ? error.message
-        : _t('Failed to search for custom services.')
+    refusedPattern.value = patternErrorOf(error)
+    if (refusedPattern.value === null) {
+      searchError.value =
+        error instanceof CmkApiError && (error.statusCode < 500 || error.statusCode === 503)
+          ? error.message
+          : _t('Failed to search for custom services.')
+    }
   } finally {
     if (token === searchToken) {
       searching.value = false
@@ -170,20 +176,19 @@ function cancelPendingSearch(): void {
 }
 
 // A result list left over from an earlier pattern would be misleading. The token is
-// invalidated here, not in `search()`, which a cleared or unparsable pattern never reaches.
+// invalidated here, not in `search()`, which a cleared pattern never reaches.
 watch(
   [
     () => model.value.servicePattern,
     () => model.value.matchType,
-    () => JSON.stringify(alertConditions(model.value, folderPaths))
+    () => JSON.stringify(conditions.value)
   ],
   () => {
     searchToken++
     matches.value = null
     searching.value = false
     searchError.value = null
-    serviceUnits.value = null
-    unitsRequest = null
+    refusedPattern.value = null
     cancelPendingSearch()
     debounceTimer = setTimeout(() => void search(), SEARCH_DEBOUNCE_MS)
   }
@@ -209,66 +214,52 @@ async function validate(): Promise<boolean> {
   if (matches.value === null) {
     await search()
   }
-  if (searchError.value !== null || (matches.value?.services.length ?? 0) === 0) {
+  if (getPatternErrors().length > 0 || searchError.value !== null || matches.value === null) {
     return false
   }
-  return await haveOneUnit()
+  if (matches.value.total === 0) {
+    return false
+  }
+  return unitsError.value === null
 }
 
-function loadUnits(token: number): Promise<ServiceUnit[] | null> {
-  const request = fetchServiceUnits(model.value.matchType, servicePattern(model.value)).catch(
-    // The threshold step shows the same fetch error with its graph, so it need not block here.
-    () => null
-  )
-  unitsRequest = request
-  void request.then((units) => {
-    if (token === searchToken) {
-      serviceUnits.value = units
-    }
-  })
-  return request
-}
-
-function unitLabel(unit: string): string {
+function unitLabel(unit: string | null | undefined): string {
+  if (unit === null || unit === undefined) {
+    return _t('unit unknown')
+  }
   return unit === '' ? _t('no unit') : unit
 }
 
-function unitOf(serviceName: string): string | null {
-  const units = (serviceUnits.value ?? [])
-    .filter((entry) => entry.service_name === serviceName)
-    .map((entry) => unitLabel(entry.unit))
-  return units.length === 0 ? null : units.join(', ')
-}
-
-// The preview applies no conditions, so it can report services the list leaves out. A truncated
-// list does not show every match, so then all units count.
-function listedUnits(units: ServiceUnit[]): ServiceUnit[] {
-  if (matches.value === null || matches.value.truncated) {
-    return units
+function rowUnit(service: FoundService): string {
+  if (service.unit === null || service.unit === undefined) {
+    return _t('unit unknown (no recent data)')
   }
-  const listed = new Set(matches.value.services.map((service) => service.serviceName))
-  return units.filter((entry) => listed.has(entry.service_name))
+  return unitLabel(service.unit)
 }
 
-const mixedUnits = computed<string[]>(() => {
-  const distinct = [...new Set(listedUnits(serviceUnits.value ?? []).map((entry) => entry.unit))]
-  return distinct.length > 1 ? distinct.sort() : []
+function unitWithExample(entry: UnitSummary): string {
+  const example = entry.example
+  if (example === null || example === undefined) {
+    return _t('%{unit} (on hosts you cannot see)', { unit: unitLabel(entry.unit) })
+  }
+  return _t('%{unit} (%{service} on %{host})', {
+    unit: unitLabel(entry.unit),
+    service: example.service_name,
+    host: example.host_name
+  })
+}
+
+// The units cover every service found, not only the listed ones, as the alert applies to all.
+const unitsError = computed(() => {
+  const units = matches.value?.units ?? []
+  if (units.length <= 1) {
+    return null
+  }
+  return _t(
+    'The selected services have different units: %{units}. You must select services with the same units to set levels on them.',
+    { units: units.map(unitWithExample).join(', ') }
+  )
 })
-
-const unitsError = computed(() =>
-  mixedUnits.value.length === 0
-    ? null
-    : _t(
-        'The selected services have different units: %{units}. You must select services with the same units to set levels on them.',
-        { units: mixedUnits.value.map(unitLabel).join(', ') }
-      )
-)
-
-async function haveOneUnit(): Promise<boolean> {
-  const token = searchToken
-  await (unitsRequest ?? loadUnits(token))
-  return token === searchToken && mixedUnits.value.length === 0
-}
 </script>
 
 <template>
@@ -306,7 +297,7 @@ async function haveOneUnit(): Promise<boolean> {
               :id="patternFieldId"
               v-model="selectedServiceName"
               :match-type="model.matchType"
-              :conditions="alertConditions(model, folderPaths)"
+              :conditions="conditions"
               :has-error="patternErrors.length > 0"
             />
           </div>
@@ -351,14 +342,17 @@ async function haveOneUnit(): Promise<boolean> {
           v-else-if="noMatches"
           :variant="displayErrors ? 'error' : 'warning'"
           size="small"
-          :text="_t('No matching services. Only discovered services can be selected.')"
+          :text="
+            _t(
+              'No matching services. A custom service is found once it is discovered or its series reported in the last 10 minutes.'
+            )
+          "
         />
 
         <div v-else-if="matches" class="mode-alerts-services-step__results">
           <div class="mode-alerts-services-step__results-header">
             <CmkLabel variant="subtitle">
-              {{ _t('Matching services') }} ({{ matches.services.length
-              }}{{ matches.truncated ? '+' : '' }})
+              {{ _t('Matching services') }} ({{ matches.total }})
             </CmkLabel>
             <CmkButton
               v-if="matches.services.length > PREVIEW_LIMIT"
@@ -369,34 +363,38 @@ async function haveOneUnit(): Promise<boolean> {
               {{ showAllMatches ? _t('show preview') : _t('show all') }}
             </CmkButton>
           </div>
-          <CmkAlert
-            v-if="matches.truncated"
-            variant="warning"
-            size="small"
-            :text="
-              _t(
-                'Only the first %{count} matches are shown. Refine the service name to narrow them down.',
-                { count: MAX_MATCHES }
-              )
-            "
-          />
           <CmkScrollContainer max-height="240px">
             <ul class="mode-alerts-services-step__list">
               <li
                 v-for="service in visibleMatches"
-                :key="`${service.hostName}:${service.serviceName}`"
+                :key="`${service.host_name}:${service.service_name}`"
               >
-                <span class="mode-alerts-services-step__name">{{ service.serviceName }}</span>
-                <span
-                  v-if="unitOf(service.serviceName) !== null"
-                  class="mode-alerts-services-step__unit"
-                >
-                  {{ unitOf(service.serviceName) }}
-                </span>
-                <span class="mode-alerts-services-step__host">{{ service.hostName }}</span>
+                <span class="mode-alerts-services-step__name">{{ service.service_name }}</span>
+                <span class="mode-alerts-services-step__unit">{{ rowUnit(service) }}</span>
+                <span class="mode-alerts-services-step__host">{{ service.host_name }}</span>
               </li>
             </ul>
           </CmkScrollContainer>
+          <CmkParagraph v-if="unlisted > 0">
+            {{
+              _tn(
+                '%{count} more service is not listed. Refine the service name to see it.',
+                '%{count} more services are not listed. Refine the service name to see them.',
+                unlisted,
+                { count: unlisted }
+              )
+            }}
+          </CmkParagraph>
+          <CmkParagraph v-if="matches.hidden > 0">
+            {{
+              _tn(
+                '%{count} more service is on a host you cannot see.',
+                '%{count} more services are on hosts you cannot see.',
+                matches.hidden,
+                { count: matches.hidden }
+              )
+            }}
+          </CmkParagraph>
         </div>
 
         <CmkAlert

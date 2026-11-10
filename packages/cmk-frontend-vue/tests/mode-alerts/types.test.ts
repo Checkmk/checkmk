@@ -14,7 +14,6 @@ import {
   emptyAlert,
   hasCompleteThresholds,
   hasThresholds,
-  hasUnparsableRegex,
   prefilledAlert,
   servicePattern
 } from '@/mode-alerts/types'
@@ -23,24 +22,6 @@ import { PREDICTION_PERIODS } from './thresholds-spec'
 
 // The folder choice's option ids and the folder paths they stand for.
 const FOLDERS = { '': '', web: 'linux/web' }
-
-test('a broken regular expression is reported as unparsable', () => {
-  expect(hasUnparsableRegex({ ...emptyAlert(), matchType: 'regex', servicePattern: '[' })).toBe(
-    true
-  )
-})
-
-test('a valid regular expression is accepted', () => {
-  expect(
-    hasUnparsableRegex({ ...emptyAlert(), matchType: 'regex', servicePattern: 'HTTP.*duration' })
-  ).toBe(false)
-})
-
-test('a name that is not a regular expression is never reported as unparsable', () => {
-  expect(hasUnparsableRegex({ ...emptyAlert(), matchType: 'exact', servicePattern: '[' })).toBe(
-    false
-  )
-})
 
 test('surrounding whitespace is not part of the alert name', () => {
   expect(alertName({ ...emptyAlert(), name: '  Latency too high  ' })).toBe('Latency too high')

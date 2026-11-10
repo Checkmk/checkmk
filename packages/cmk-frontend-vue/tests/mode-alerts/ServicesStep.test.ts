@@ -9,80 +9,87 @@ import {
   type WizardContext,
   wizardContextProvider
 } from 'cmk-ui-library/components/CmkWizard/utils.ts'
-import { untypedHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
-// eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
-import { HttpResponse, http } from 'msw'
+import { restApiHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
 import { afterEach, expect, test, vi } from 'vitest'
 import { defineComponent, ref } from 'vue'
 
+import type { FoundService, ServiceSearchResult, UnitSummary } from '@/mode-alerts/service-client'
 import ServicesStep from '@/mode-alerts/steps/ServicesStep.vue'
 import { type AlertModel, emptyAlert } from '@/mode-alerts/types'
 
 import { CONDITIONS_SPEC, FOLDER_PATHS, MAIN_FOLDER } from './conditions-spec'
 
-const ENDPOINT = `${location.protocol}//${location.host}/api/internal/domain-types/service/collections/all`
-const SEARCH_ENDPOINT = `${location.protocol}//${location.host}/api/internal/domain-types/telemetry_alert/actions/search_services/invoke`
-const PREVIEW_ENDPOINT = `${location.protocol}//${location.host}/api/internal/domain-types/telemetry_alert/actions/preview_data/invoke`
+const SEARCH = '/domain-types/telemetry_alert/actions/search_services/invoke'
 
-// The services the endpoint reports for any search, so a test only has to say whether
-// something matched.
-let matching: Array<[string, string]> = []
+type SearchBody = {
+  service_match: { mode: string; pattern: string }
+  conditions?: { folder: string }
+}
 
-function collection(services: Array<[string, string]>) {
+function service(host: string, name: string, extra: Partial<FoundService> = {}): FoundService {
   return {
-    id: 'all',
-    links: [],
-    value: services.map(([hostName, serviceName]) => ({
-      extensions: { host_name: hostName, description: serviceName }
-    }))
+    host_name: host,
+    service_name: name,
+    discovered: true,
+    unit: '',
+    ...extra
   }
 }
 
-// The service names and units the preview draws for any service name.
-let units: Array<[string, string]> = []
-
-function preview(units: Array<[string, string]>) {
+// What the server answers for the services it found, summarised like the server does.
+function searchResult(
+  found: FoundService[],
+  extra: Partial<ServiceSearchResult> = {}
+): ServiceSearchResult {
+  const units: UnitSummary[] = []
+  for (const entry of found) {
+    const known = units.find((unit) => unit.unit === entry.unit)
+    if (known === undefined) {
+      units.push({ unit: entry.unit ?? null, count: 1, example: entry })
+    } else {
+      known.count += 1
+    }
+  }
+  const undiscovered = found.filter((entry) => !entry.discovered)
   return {
-    time_range: { start: 0, end: 3600, step: 60 },
-    metrics: [],
-    horizontal_lines: [],
-    service_units: units.map(([serviceName, unit]) => ({ service_name: serviceName, unit })),
-    notice: null,
-    warnings: [],
-    errors: []
+    services: found,
+    total: found.length,
+    hidden: 0,
+    units,
+    undiscovered: undiscovered.length,
+    undiscovered_hosts: [...new Set(undiscovered.map((entry) => entry.host_name))],
+    incomplete_configurations: [],
+    unreachable_sites: [],
+    service_names: [...new Set(found.map((entry) => entry.service_name))].sort(),
+    service_names_truncated: false,
+    ...extra
   }
 }
 
-// The query of the latest search, to tell which conditions it applied.
-let lastQuery: unknown = null
+// The answer to any search, so a test only has to say what was found.
+let answer: ServiceSearchResult = searchResult([])
+// The body of the step's latest own search, not the dropdown's.
+let lastSearch: SearchBody | null = null
+
+// The dropdown searches for names containing what was typed, the step for the pattern itself.
+function isSuggestion(body: SearchBody): boolean {
+  return body.service_match.pattern.startsWith('.*')
+}
 
 const server = useMswServer(
-  http.post(ENDPOINT, async ({ request }) => {
-    lastQuery = await request.json()
-    return HttpResponse.json(collection(matching))
-  }),
-  untypedHttp.post(PREVIEW_ENDPOINT, () => HttpResponse.json(preview(units))),
-  untypedHttp.post(SEARCH_ENDPOINT, () =>
-    HttpResponse.json({
-      services: [],
-      total: 0,
-      hidden: 0,
-      units: [],
-      undiscovered: 0,
-      undiscovered_hosts: [],
-      incomplete_configurations: [],
-      unreachable_sites: [],
-      service_names: [...new Set(matching.map(([, serviceName]) => serviceName))].sort(),
-      service_names_truncated: false
-    })
-  )
+  restApiHttp.post(SEARCH, async ({ request, response }) => {
+    const body = (await request.json()) as SearchBody
+    if (!isSuggestion(body)) {
+      lastSearch = body
+    }
+    return response(200).json(answer)
+  })
 )
 
 afterEach(() => {
   cleanup()
-  matching = []
-  units = []
-  lastQuery = null
+  answer = searchResult([])
+  lastSearch = null
 })
 
 function renderStep(alert: Partial<AlertModel> = {}) {
@@ -145,15 +152,16 @@ async function settle(): Promise<void> {
   }
 }
 
-// Only the step's own search matches exactly; the dropdown's suggestions always search.
+// Holds the step's own exact searches until released.
 function heldExactSearch(): { release: () => void; started: () => boolean } {
   const pending: Array<() => void> = []
   server.use(
-    http.post(ENDPOINT, async ({ request }) => {
-      if ((await exactMatchOn(request)) === true) {
+    restApiHttp.post(SEARCH, async ({ request, response }) => {
+      const body = (await request.json()) as SearchBody
+      if (body.service_match.mode === 'exact') {
         await new Promise<void>((resolve) => pending.push(resolve))
       }
-      return HttpResponse.json(collection(matching))
+      return response(200).json(answer)
     })
   )
   return {
@@ -162,18 +170,15 @@ function heldExactSearch(): { release: () => void; started: () => boolean } {
   }
 }
 
-async function exactMatchOn(request: Request): Promise<boolean> {
-  const body = (await request.json()) as {
-    query: { expr: Array<{ op: string; left: string }> }
-  }
-  return body.query.expr.find((condition) => condition.left === 'description')?.op === '='
+async function next(): Promise<void> {
+  await userEvent.click(screen.getByRole('button', { name: /next step/i }))
 }
 
 test('choosing a service name lists the custom services it matches', async () => {
-  matching = [
-    ['web01', 'HTTP request duration'],
-    ['web02', 'HTTP request duration']
-  ]
+  answer = searchResult([
+    service('web01', 'HTTP request duration'),
+    service('web02', 'HTTP request duration')
+  ])
   renderStep()
 
   await pickServiceName('HTTP request duration')
@@ -184,12 +189,11 @@ test('choosing a service name lists the custom services it matches', async () =>
   expect(screen.getByText('web02')).toBeInTheDocument()
 })
 
-test('the discovered service names are offered as choices', async () => {
-  matching = [
-    ['web01', 'HTTP request duration'],
-    ['web02', 'HTTP request duration'],
-    ['db01', 'Query duration']
-  ]
+test('the names of the services found are offered as choices', async () => {
+  answer = searchResult([
+    service('web01', 'HTTP request duration'),
+    service('db01', 'Query duration', { discovered: false })
+  ])
   renderStep()
 
   await open('Service name')
@@ -198,14 +202,30 @@ test('the discovered service names are offered as choices', async () => {
   expect(screen.getByRole('option', { name: 'Query duration' })).toBeInTheDocument()
 })
 
-test('the number of matching services is reported', async () => {
-  matching = [['web01', 'HTTP request duration']]
+test('the choices are searched on the hosts the conditions select', async () => {
+  const sent: SearchBody[] = []
+  server.use(
+    restApiHttp.post(SEARCH, async ({ request, response }) => {
+      sent.push((await request.json()) as SearchBody)
+      return response(200).json(answer)
+    })
+  )
+  renderStep()
+
+  await open('Service name')
+
+  await waitFor(() => expect(sent.some(isSuggestion)).toBe(true))
+  expect(sent.find(isSuggestion)?.conditions?.folder).toBe('/')
+})
+
+test('the number of all matching services is reported', async () => {
+  answer = searchResult([service('web01', 'HTTP request duration')], { total: 3, hidden: 2 })
   renderStep()
 
   await pickServiceName('HTTP request duration')
 
   await waitFor(() => {
-    expect(screen.getByText(/Matching services/)).toHaveTextContent('(1)')
+    expect(screen.getByText(/Matching services/)).toHaveTextContent('(3)')
   })
 })
 
@@ -229,7 +249,7 @@ test('a service name matching nothing says so without waiting for the next step'
 test('a missing service name blocks navigation with a required error', async () => {
   const { navigation } = renderStep()
 
-  await userEvent.click(screen.getByRole('button', { name: /next step/i }))
+  await next()
 
   await waitFor(() => {
     expect(screen.getByText('A service name is required')).toBeInTheDocument()
@@ -240,7 +260,7 @@ test('a missing service name blocks navigation with a required error', async () 
 test('a service name matching nothing blocks navigation', async () => {
   const { navigation } = renderStep({ servicePattern: 'nonexistent' })
 
-  await userEvent.click(screen.getByRole('button', { name: /next step/i }))
+  await next()
 
   await waitFor(() => {
     expect(screen.getByText(/No matching services/)).toBeInTheDocument()
@@ -248,37 +268,84 @@ test('a service name matching nothing blocks navigation', async () => {
   expect(navigation.next).not.toHaveBeenCalled()
 })
 
-test('an unparsable regular expression blocks navigation before any search', async () => {
-  const { navigation } = renderStep({
-    matchType: 'regex',
-    servicePattern: '['
-  })
+test('a regular expression the server refuses blocks navigation and says why', async () => {
+  server.use(
+    restApiHttp.post(SEARCH, async ({ request, response }) => {
+      if (isSuggestion((await request.json()) as SearchBody)) {
+        return response(200).json(answer)
+      }
+      return response.untyped(
+        Response.json(
+          {
+            title: 'Bad Request',
+            status: 400,
+            detail: 'These fields have problems: body.service_match.regex.pattern',
+            fields: {
+              'body.service_match.regex.pattern': {
+                loc: ['body', 'service_match', 'regex', 'pattern'],
+                msg: 'Value error, Not a valid regular expression: unterminated character set',
+                type: 'value_error'
+              }
+            }
+          },
+          { status: 400 }
+        )
+      )
+    })
+  )
+  const { navigation } = renderStep({ matchType: 'regex', servicePattern: '[' })
 
-  await userEvent.click(screen.getByRole('button', { name: /next step/i }))
+  await next()
 
-  await waitFor(() => {
-    expect(screen.getByText('This is not a valid regular expression')).toBeInTheDocument()
-  })
+  expect(
+    await screen.findByText('Not a valid regular expression: unterminated character set')
+  ).toBeInTheDocument()
   expect(navigation.next).not.toHaveBeenCalled()
 })
 
-test.each([
-  ['exact', 'TEST'],
-  ['regex', 'duration']
-] as const)(
-  'a %s search matching nothing points at the discovery requirement',
-  async (matchType, servicePattern) => {
-    renderStep({ matchType, servicePattern })
-
-    await userEvent.click(screen.getByRole('button', { name: /next step/i }))
-
-    await waitFor(() => {
-      expect(
-        screen.getByText('No matching services. Only discovered services can be selected.')
-      ).toBeInTheDocument()
+test('a search the server cannot answer shows its reason and blocks navigation', async () => {
+  server.use(
+    restApiHttp.post(SEARCH, async ({ request, response }) => {
+      if (isSuggestion((await request.json()) as SearchBody)) {
+        return response(200).json(answer)
+      }
+      return response.untyped(
+        Response.json(
+          {
+            title: 'The service search failed',
+            detail: 'This site has no metric backend to find the custom services in.',
+            status: 503
+          },
+          { status: 503 }
+        )
+      )
     })
-  }
-)
+  )
+  const { navigation } = renderStep({ servicePattern: 'HTTP request duration' })
+
+  await next()
+
+  expect(
+    await screen.findByText(
+      'The service search failed: This site has no metric backend to find the custom services in.'
+    )
+  ).toBeInTheDocument()
+  expect(navigation.next).not.toHaveBeenCalled()
+})
+
+test('a failing search blocks navigation and says so', async () => {
+  server.use(
+    restApiHttp.post(SEARCH, ({ response }) =>
+      response.untyped(Response.json({ title: 'Internal error', status: 500 }, { status: 500 }))
+    )
+  )
+  const { navigation } = renderStep({ servicePattern: 'HTTP request duration' })
+
+  await next()
+
+  expect(await screen.findByText('Failed to search for custom services.')).toBeInTheDocument()
+  expect(navigation.next).not.toHaveBeenCalled()
+})
 
 test('the service name help explains both match types', async () => {
   renderStep()
@@ -291,170 +358,172 @@ test('the service name help explains both match types', async () => {
 })
 
 test('at least one matching service continues to the next step', async () => {
-  matching = [['web01', 'HTTP request duration']]
-  const { navigation } = renderStep({
-    servicePattern: 'HTTP request duration'
-  })
+  answer = searchResult([service('web01', 'HTTP request duration')])
+  const { navigation } = renderStep({ servicePattern: 'HTTP request duration' })
 
-  await userEvent.click(screen.getByRole('button', { name: /next step/i }))
+  await next()
 
   await waitFor(() => {
     expect(navigation.next).toHaveBeenCalled()
   })
 })
 
-test('services in different units block navigation and name the units', async () => {
-  matching = [
-    ['web01', 'HTTP request duration'],
-    ['web01', 'HTTP queue length']
-  ]
-  units = [
-    ['HTTP request duration', 'ms'],
-    ['HTTP queue length', '']
-  ]
-  const { navigation } = renderStep({ matchType: 'regex', servicePattern: 'HTTP' })
+test('services only on hosts the user cannot see still continue to the next step', async () => {
+  answer = searchResult([], {
+    total: 1,
+    hidden: 1,
+    units: [{ unit: 'ms', count: 1, example: null }]
+  })
+  const { navigation } = renderStep({ servicePattern: 'HTTP request duration' })
 
-  await userEvent.click(screen.getByRole('button', { name: /next step/i }))
+  await next()
 
   await waitFor(() => {
-    expect(screen.getByText(/different units: no unit, ms/)).toBeInTheDocument()
+    expect(navigation.next).toHaveBeenCalled()
   })
+})
+
+test('services in different units block navigation and name an example of each', async () => {
+  answer = searchResult([
+    service('web01', 'HTTP request duration', { unit: 'ms' }),
+    service('web01', 'HTTP queue length', { unit: '' })
+  ])
+  const { navigation } = renderStep({ matchType: 'regex', servicePattern: 'HTTP' })
+
+  await next()
+
+  expect(
+    await screen.findByText(
+      /different units: ms \(HTTP request duration on web01\), no unit \(HTTP queue length on web01\)/
+    )
+  ).toBeInTheDocument()
   expect(navigation.next).not.toHaveBeenCalled()
 })
 
 test('services in different units say so without waiting for the next step', async () => {
-  matching = [
-    ['web01', 'HTTP request duration'],
-    ['web01', 'HTTP queue length']
-  ]
-  units = [
-    ['HTTP request duration', 'ms'],
-    ['HTTP queue length', '']
-  ]
+  answer = searchResult([
+    service('web01', 'HTTP request duration', { unit: 'ms' }),
+    service('web01', 'HTTP queue length', { unit: '' })
+  ])
   const { navigation } = renderStep()
 
   await typeServiceName('HTTP')
 
-  expect(await screen.findByText(/different units: no unit, ms/)).toBeInTheDocument()
+  expect(await screen.findByText(/different units/)).toBeInTheDocument()
   expect(navigation.next).not.toHaveBeenCalled()
 })
 
 test('narrowing the service name to one unit clears the unit warning', async () => {
-  matching = [
-    ['web01', 'HTTP request duration'],
-    ['web01', 'HTTP queue length']
-  ]
-  units = [
-    ['HTTP request duration', 'ms'],
-    ['HTTP queue length', '']
-  ]
+  answer = searchResult([
+    service('web01', 'HTTP request duration', { unit: 'ms' }),
+    service('web01', 'HTTP queue length', { unit: '' })
+  ])
   renderStep()
   await typeServiceName('HTTP')
   await screen.findByText(/different units/)
 
-  matching = [['web01', 'HTTP request duration']]
-  units = [['HTTP request duration', 'ms']]
+  answer = searchResult([service('web01', 'HTTP request duration', { unit: 'ms' })])
   await pickServiceName('HTTP request duration')
 
-  await waitFor(() => expect(screen.getByText('ms')).toBeInTheDocument())
+  await waitFor(() => {
+    expect(screen.getByText('ms')).toBeInTheDocument()
+    expect(screen.queryByText('no unit')).not.toBeInTheDocument()
+  })
   expect(screen.queryByText(/different units/)).not.toBeInTheDocument()
 })
 
-test('each matching service shows its unit, so the user can tell the services apart', async () => {
-  matching = [
-    ['web01', 'HTTP request duration'],
-    ['web01', 'HTTP queue length']
-  ]
-  units = [
-    ['HTTP request duration', 'ms'],
-    ['HTTP queue length', '']
-  ]
+test('an unknown unit counts as a unit of its own and names the service', async () => {
+  answer = searchResult([
+    service('web01', 'HTTP request duration', { unit: 'ms' }),
+    service('app03', 'HTTP request duration', { unit: null })
+  ])
+  const { navigation } = renderStep({ servicePattern: 'HTTP request duration' })
+
+  await next()
+
+  expect(
+    await screen.findByText(/unit unknown \(HTTP request duration on app03\)/)
+  ).toBeInTheDocument()
+  expect(navigation.next).not.toHaveBeenCalled()
+})
+
+test('a unit only on hosts the user cannot see is named without the host', async () => {
+  answer = searchResult([service('web01', 'HTTP request duration', { unit: 'ms' })], {
+    total: 2,
+    hidden: 1,
+    units: [
+      { unit: 'ms', count: 1, example: service('web01', 'HTTP request duration', { unit: 'ms' }) },
+      { unit: 'B/s', count: 1, example: null }
+    ]
+  })
+  renderStep({ servicePattern: 'HTTP request duration' })
+
+  await next()
+
+  expect(await screen.findByText(/B\/s \(on hosts you cannot see\)/)).toBeInTheDocument()
+})
+
+test('each listed service shows its unit, so the user can tell the services apart', async () => {
+  answer = searchResult([
+    service('web01', 'HTTP request duration', { unit: 'ms' }),
+    service('web01', 'HTTP queue length', { unit: '' }),
+    service('web02', 'HTTP queue length', { unit: null })
+  ])
   renderStep()
 
   await typeServiceName('HTTP')
 
   expect(await screen.findByText('ms')).toBeInTheDocument()
   expect(screen.getByText('no unit')).toBeInTheDocument()
+  expect(screen.getByText('unit unknown (no recent data)')).toBeInTheDocument()
 })
 
-test('a service without recent data shows no unit', async () => {
-  matching = [['web01', 'HTTP request duration']]
+test('services on hosts the user cannot see are counted', async () => {
+  answer = searchResult([service('web01', 'cart requests')], { total: 4, hidden: 3 })
   renderStep()
 
-  await pickServiceName('HTTP request duration')
+  await pickServiceName('cart requests')
 
-  await waitFor(() => expect(screen.getByText('web01')).toBeInTheDocument())
-  await settle()
-  expect(screen.queryByText('no unit')).not.toBeInTheDocument()
+  expect(
+    await screen.findByText('3 more services are on hosts you cannot see.')
+  ).toBeInTheDocument()
 })
 
-test('one service name in different units blocks navigation', async () => {
-  matching = [
-    ['web01', 'HTTP request duration'],
-    ['web02', 'HTTP request duration']
-  ]
-  units = [
-    ['HTTP request duration', ''],
-    ['HTTP request duration', 'ms']
-  ]
-  const { navigation } = renderStep({ servicePattern: 'HTTP request duration' })
+test('services beyond the listed ones are counted', async () => {
+  answer = searchResult([service('web01', 'cart requests')], { total: 250 })
+  renderStep()
 
-  await userEvent.click(screen.getByRole('button', { name: /next step/i }))
+  await pickServiceName('cart requests')
 
-  await waitFor(() => {
-    expect(screen.getByText(/different units: no unit, ms/)).toBeInTheDocument()
-  })
-  expect(navigation.next).not.toHaveBeenCalled()
+  expect(
+    await screen.findByText(
+      '249 more services are not listed. Refine the service name to see them.'
+    )
+  ).toBeInTheDocument()
 })
 
-test('services the conditions leave out of the list do not block navigation', async () => {
-  matching = [['web01', 'HTTP request duration']]
-  units = [
-    ['HTTP request duration', 'ms'],
-    ['HTTP queue length', '']
-  ]
-  const { navigation } = renderStep({ matchType: 'regex', servicePattern: 'HTTP' })
+test('a single service on a host the user cannot see is counted in the singular', async () => {
+  answer = searchResult([service('web01', 'cart requests')], { total: 2, hidden: 1 })
+  renderStep()
 
-  await userEvent.click(screen.getByRole('button', { name: /next step/i }))
+  await pickServiceName('cart requests')
 
-  await waitFor(() => {
-    expect(navigation.next).toHaveBeenCalled()
-  })
+  expect(await screen.findByText('1 more service is on a host you cannot see.')).toBeInTheDocument()
 })
 
-test('with a truncated list, the units of all services count', async () => {
-  matching = Array.from({ length: 201 }, (_, index): [string, string] => [
-    `web${index}`,
-    'HTTP request duration'
-  ])
-  units = [
-    ['HTTP request duration', 'ms'],
-    ['HTTP queue length', '']
-  ]
-  const { navigation } = renderStep({ matchType: 'regex', servicePattern: 'HTTP' })
+test('a single service beyond the listed ones is counted in the singular', async () => {
+  answer = searchResult([service('web01', 'cart requests')], { total: 2 })
+  renderStep()
 
-  await userEvent.click(screen.getByRole('button', { name: /next step/i }))
+  await pickServiceName('cart requests')
 
-  await waitFor(() => {
-    expect(screen.getByText(/different units: no unit, ms/)).toBeInTheDocument()
-  })
-  expect(navigation.next).not.toHaveBeenCalled()
-})
-
-test('a failing unit check does not block navigation', async () => {
-  matching = [['web01', 'HTTP request duration']]
-  server.use(untypedHttp.post(PREVIEW_ENDPOINT, () => HttpResponse.json({}, { status: 500 })))
-  const { navigation } = renderStep({ servicePattern: 'HTTP request duration' })
-
-  await userEvent.click(screen.getByRole('button', { name: /next step/i }))
-
-  await waitFor(() => {
-    expect(navigation.next).toHaveBeenCalled()
-  })
+  expect(
+    await screen.findByText('1 more service is not listed. Refine the service name to see it.')
+  ).toBeInTheDocument()
 })
 
 test('changing the match type discards the results of the previous search', async () => {
-  matching = [['web01', 'HTTP request duration']]
+  answer = searchResult([service('web01', 'HTTP request duration')])
   renderStep()
 
   await pickServiceName('HTTP request duration')
@@ -470,18 +539,16 @@ test('changing the match type discards the results of the previous search', asyn
 test('a slow search cannot overwrite the result of a later one', async () => {
   const slow: Array<() => void> = []
   server.use(
-    http.post(ENDPOINT, async ({ request }) => {
-      if ((await exactMatchOn(request)) === true) {
+    restApiHttp.post(SEARCH, async ({ request, response }) => {
+      const body = (await request.json()) as SearchBody
+      if (body.service_match.mode === 'exact') {
         await new Promise<void>((resolve) => slow.push(resolve))
-        return HttpResponse.json(collection([['stale-host', 'HTTP request duration']]))
+        return response(200).json(searchResult([service('stale-host', 'HTTP request duration')]))
       }
-      return HttpResponse.json(collection([['fresh-host', 'HTTP request duration']]))
+      return response(200).json(searchResult([service('fresh-host', 'HTTP request duration')]))
     })
   )
-  renderStep({
-    matchType: 'regex',
-    servicePattern: 'HTTP request duration'
-  })
+  renderStep({ matchType: 'regex', servicePattern: 'HTTP request duration' })
 
   await pickMatchType('Exact match')
   await waitFor(() => expect(slow).toHaveLength(1))
@@ -496,7 +563,7 @@ test('a slow search cannot overwrite the result of a later one', async () => {
 })
 
 test('a search still in flight is discarded once the service name is cleared', async () => {
-  matching = [['stale-host', 'HTTP request duration']]
+  answer = searchResult([service('stale-host', 'HTTP request duration')])
   const search = heldExactSearch()
   const { model } = renderStep()
 
@@ -528,7 +595,7 @@ test('choosing a folder narrows the conditions to it', async () => {
 })
 
 test('a condition the form rejects blocks navigation and says why', async () => {
-  matching = [['web01', 'HTTP request duration']]
+  answer = searchResult([service('web01', 'HTTP request duration')])
   const { navigation } = renderStep({
     servicePattern: 'HTTP request duration',
     conditions: { folder_path: MAIN_FOLDER, explicit_hosts: { value: [], negate: false } }
@@ -541,7 +608,7 @@ test('a condition the form rejects blocks navigation and says why', async () => 
 })
 
 test('a host label group without labels blocks navigation like in the rule editor', async () => {
-  matching = [['web01', 'HTTP request duration']]
+  answer = searchResult([service('web01', 'HTTP request duration')])
   const { navigation } = renderStep({
     servicePattern: 'HTTP request duration',
     conditions: {
@@ -557,7 +624,7 @@ test('a host label group without labels blocks navigation like in the rule edito
 })
 
 test('valid conditions let the step continue', async () => {
-  matching = [['web01', 'HTTP request duration']]
+  answer = searchResult([service('web01', 'HTTP request duration')])
   const { navigation } = renderStep({
     servicePattern: 'HTTP request duration',
     conditions: { folder_path: MAIN_FOLDER, explicit_hosts: { value: ['web01'], negate: false } }
@@ -569,11 +636,11 @@ test('valid conditions let the step continue', async () => {
 })
 
 test('choosing a folder searches the matching services again, in that folder', async () => {
-  matching = [['web01', 'HTTP request duration']]
+  answer = searchResult([service('web01', 'HTTP request duration')])
   renderStep()
   await pickServiceName('HTTP request duration')
   await waitFor(() => expect(screen.getByText('web01')).toBeInTheDocument())
-  matching = []
+  answer = searchResult([])
 
   void userEvent.click(combobox('Folder'))
   await userEvent.click(await screen.findByRole('option', { name: 'Main/Linux' }))
@@ -581,5 +648,5 @@ test('choosing a folder searches the matching services again, in that folder', a
   await waitFor(() => {
     expect(screen.getByText(/No matching services/)).toBeInTheDocument()
   })
-  expect(JSON.stringify(lastQuery)).toContain('^/wato/linux/')
+  expect(lastSearch?.conditions?.folder).toBe('/linux')
 })

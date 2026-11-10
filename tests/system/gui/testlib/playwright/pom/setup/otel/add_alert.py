@@ -163,8 +163,8 @@ class AlertWizard(CmkPage):
     def matching_services_heading(self) -> Locator:
         """The heading of the matching services, with their count: "Matching services (2)".
 
-        The count gets a "+" when the search stopped at its limit. Shown only once a search
-        found services; it re-evaluates whenever the service name or the conditions change.
+        Shown only once a search found services; it re-evaluates whenever the service name or
+        the conditions change.
         """
         return self.active_step.get_by_text(re.compile(r"^Matching services \("))
 
@@ -180,9 +180,7 @@ class AlertWizard(CmkPage):
 
     @property
     def no_matching_services_message(self) -> Locator:
-        return self.active_step.get_by_text(
-            "No matching services. Only discovered services can be selected."
-        )
+        return self.active_step.get_by_text(re.compile(r"^No matching services\."))
 
     # Step 3: Define threshold
 

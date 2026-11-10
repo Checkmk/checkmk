@@ -19,20 +19,12 @@ import { PREDICTION_PERIODS, THRESHOLDS_SPEC } from './thresholds-spec'
 import { TIME_PICKER } from './time-picker'
 
 const API_BASE = `${location.protocol}//${location.host}/api/internal`
-const ENDPOINT = `${API_BASE}/domain-types/service/collections/all`
 const SEARCH_ENDPOINT = `${API_BASE}/domain-types/telemetry_alert/actions/search_services/invoke`
 const CREATE_ENDPOINT = `${API_BASE}/domain-types/telemetry_alert/collections/all`
 const PREVIEW_ENDPOINT = `${API_BASE}/domain-types/telemetry_alert/actions/preview_data/invoke`
 const ALERT_ENDPOINT = `${API_BASE}/objects/telemetry_alert/:name`
 
 const server = useMswServer(
-  http.post(ENDPOINT, () =>
-    HttpResponse.json({
-      id: 'all',
-      links: [],
-      value: [{ extensions: { host_name: 'web01', description: 'HTTP request duration' } }]
-    })
-  ),
   untypedHttp.post(SEARCH_ENDPOINT, () => {
     const found = {
       host_name: 'web01',

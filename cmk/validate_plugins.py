@@ -16,6 +16,9 @@ from typing import assert_never
 
 from cmk.agent_based import v2 as agent_based_v2
 from cmk.agent_based import v3_unstable as agent_based_v3_unstable
+from cmk.base.api.bakery.register import (  # astrein: disable=module-layers
+    load_bakery_plugins,
+)
 from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.version import edition
 from cmk.checkengine.plugin_backend import (  # astrein: disable=module-layers
@@ -53,6 +56,9 @@ from cmk.gui.watolib.rulespecs import (  # astrein: disable=module-layers
 from cmk.gui.wsgi.app import (  # astrein: disable=module-layers
     gui_context,
 )
+from cmk.licensing.basics.options import (  # astrein: disable=module-layers
+    get_license_options,
+)
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.rulesets.v1 import entry_point_prefixes
 from cmk.rulesets.v1.rule_specs import (
@@ -83,6 +89,7 @@ class ValidationStep(enum.Enum):
     AGENT_BASED_PLUGINS = "agent based plugins loading"
     ACTIVE_CHECKS = "active checks loading"
     SPECIAL_AGENTS = "special agents loading"
+    BAKERY_PLUGINS = "bakery plugins loading"
     RULE_SPECS = "rule specs loading"
     RULE_SPEC_FORMS = "rule specs forms creation"
     RULE_SPEC_REFERENCED = "referenced rule specs validation"
@@ -126,6 +133,15 @@ def _validate_special_agent_loading() -> ActiveCheckResult:
     else:
         errors = []
     return to_result(ValidationStep.SPECIAL_AGENTS, errors)
+
+
+def _validate_bakery_plugins(*, debug: bool) -> Sequence[ActiveCheckResult]:
+    _plugins, failures = load_bakery_plugins()
+    if failures and debug:
+        raise failures[0][1]
+    return [
+        to_result(ValidationStep.BAKERY_PLUGINS, [f"{module}: {exc}" for module, exc in failures])
+    ]
 
 
 def _validate_rule_spec_loading() -> ActiveCheckResult:
@@ -395,7 +411,9 @@ def _validate_rule_spec_usage(plugins: AgentBasedPlugins) -> ActiveCheckResult:
 
 
 def validate_plugins(*, debug: bool) -> ActiveCheckResult:
-    main_modules.register(edition(paths.omd_root), debug=debug)
+    current_edition = edition(paths.omd_root)
+    main_modules.register(current_edition, debug=debug)
+    bakery_enabled = get_license_options(paths.omd_root, current_edition).bakery.enabled
     plugins, loading_subresult = _validate_agent_based_plugin_loading(debug=debug)
     sub_results = [
         loading_subresult,
@@ -406,6 +424,8 @@ def validate_plugins(*, debug: bool) -> ActiveCheckResult:
         _validate_referenced_rule_spec(debug=debug),
         _validate_rule_spec_usage(plugins),
     ]
+    if bakery_enabled:
+        sub_results.extend(_validate_bakery_plugins(debug=debug))
     return ActiveCheckResult.from_subresults(*sub_results)
 
 

@@ -37,24 +37,33 @@ def bakery_plugin(
     registered_bakery_plugins[str(bakery_plugin_object.name)] = bakery_plugin_object
 
 
+def load_bakery_plugins() -> tuple[dict[str, BakeryPlugin], list[tuple[str, BaseException]]]:
+    """Load the plug-ins and return the import failures instead of reporting them"""
+    failures = list(
+        chain(
+            # This is where our unmigrated shipped bakery plugins reside:
+            load_plugins_with_exceptions("cmk.base.nonfree.plugins.bakery"),
+            # This is where third party bakery plugins likely reside, as this is the
+            # path we advertised previous to our edition renaming.
+            # Let's be as undisruptive as possible, we're in the process of replacing the
+            # registration approach completely anyway (see Werk #18600 for a timeline)
+            load_plugins_with_exceptions("cmk.base.cee.plugins.bakery"),
+            # We are in the process of deprecating cmk.base.api.bakery.register,
+            # and migrate our plugins to the new cmk.bakery.v2 API.
+            # For the time being, we also load this namespace, to allow to separate the
+            # migration into two steps ("going public" and using the new API)).
+            # CMK-31432
+            load_plugins_with_exceptions("cmk.base.plugins.bakery"),
+        )
+    )
+    return registered_bakery_plugins, failures
+
+
 def get_bakery_plugins(*, debug: bool) -> dict[str, BakeryPlugin]:
-    for plugin, exception in chain(
-        # This is where our unmigrated shipped bakery plugins reside:
-        load_plugins_with_exceptions("cmk.base.nonfree.plugins.bakery"),
-        # This is where third party bakery plugins likely reside, as this is the
-        # path we advertised previous to our edition renaming.
-        # Let's be as undisruptive as possible, we're in the process of replacing the
-        # registration approach completely anyway (see Werk #18600 for a timeline)
-        load_plugins_with_exceptions("cmk.base.cee.plugins.bakery"),
-        # We are in the process of deprecating cmk.base.api.bakery.register,
-        # and migrate our plugins to the new cmk.bakery.v2 API.
-        # For the time being, we also load this namespace, to allow to separate the
-        # migration into two steps ("going public" and using the new API)).
-        # CMK-31432
-        load_plugins_with_exceptions("cmk.base.plugins.bakery"),
-    ):
+    plugins, failures = load_bakery_plugins()
+    for plugin, exception in failures:
         console.error(f"Error in bakery plug-in {plugin}: {exception}", file=sys.stderr)
         if debug:
             raise exception
 
-    return registered_bakery_plugins
+    return plugins

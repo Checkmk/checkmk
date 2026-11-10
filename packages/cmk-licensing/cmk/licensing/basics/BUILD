@@ -5,6 +5,7 @@ py_library(
     srcs = glob(["**/*.py"]),
     imports = ["../../.."],
     visibility = [
+        "//cmk:__pkg__",
         "//cmk/gui_plugins/internal:__pkg__",
         "//cmk/plugins/checkmk/cli:__subpackages__",
         "//non-free/packages/cmk-ai-control-plane:__pkg__",

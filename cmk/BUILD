@@ -40,6 +40,7 @@ py_library(
     imports = [".."],
     visibility = ["//:__subpackages__"],
     deps = [
+        "//cmk/base/api",
         "//cmk/gui:app",
         "//cmk/gui/rule_specs:types",
         "//cmk/gui/watolib",
@@ -48,6 +49,7 @@ py_library(
         "//packages/cmk-check-engine:specs",
         "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
+        "//packages/cmk-licensing/cmk/licensing/basics",
         "//packages/cmk-plugin-apis:agent_based",
         "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-plugin-apis:rulesets",

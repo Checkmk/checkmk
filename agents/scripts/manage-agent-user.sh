@@ -14,6 +14,9 @@
 
 if [ -n "${MK_INSTALLDIR}" ]; then
     HOMEDIR="${MK_INSTALLDIR}/runtime/controller"
+    # The controller derives this path on its own, by the same rule as MK_LOGDIR
+    # in the agent script. In the classic layout it logs to its home.
+    CONTROLLER_LOG_DIR="${MK_INSTALLDIR}/runtime/log/controller"
     CONTROLLER_BINARY="${MK_INSTALLDIR}/package/bin/cmk-agent-ctl"
     AUTO_REGISTRATION_CONFIG="${MK_INSTALLDIR}/package/config/pre_configured_connections.json"
     REGISTERED_CONNECTIONS_PATH="${MK_INSTALLDIR}/runtime/controller/registered_connections.json"
@@ -38,6 +41,7 @@ _set_agent_user_permissions() {
     chown -R :"${GROUP_REF}" "${MK_INSTALLDIR}/package/config"
     chown -R :"${GROUP_REF}" "${MK_INSTALLDIR}/package/agent"
     chown -R :"${GROUP_REF}" "${MK_INSTALLDIR}/package/local"
+    mkdir -p "${CONTROLLER_LOG_DIR}"
     # The folders below runtime/job belong to the users that run mk-job.
     # The agent user can write to runtime and could replace job by a symlink.
     # Hence chown must not follow symlinks here.
@@ -50,6 +54,13 @@ _set_agent_controller_user_permissions() {
     # Get more finegrained access for the agent controller user only
     chown :"${GROUP_REF}" "${MK_INSTALLDIR}/runtime"
     chown -R "${USER_REF}":"${GROUP_REF}" "${MK_INSTALLDIR}/runtime/controller"
+    # The agent and its plug-ins write runtime/log as root. The controller's
+    # group gets runtime/log, so that the controller can reach
+    # runtime/log/controller. prepare-agent-updater.sh does the same for the
+    # agent updater.
+    mkdir -p "${CONTROLLER_LOG_DIR}"
+    chown :"${GROUP_REF}" "${MK_INSTALLDIR}/runtime/log"
+    chown -R "${USER_REF}":"${GROUP_REF}" "${CONTROLLER_LOG_DIR}"
     chown :"${GROUP_REF}" "${MK_INSTALLDIR}/package/config"
     for baked_file in "cmk-agent-ctl.toml" "cmk-agent-ctl-update.toml" "pre_configured_connections.json" "trusted_cas.json"; do
         baked_path="${MK_INSTALLDIR}/package/config/${baked_file}"

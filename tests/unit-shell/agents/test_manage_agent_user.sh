@@ -24,6 +24,7 @@ setUp() {
 echo "\$@" >>"${WORK}/chown.log"
 EOF
     chmod +x "${INSTALLDIR}/package/bin/cmk-agent-ctl" "${FAKE_PATH}/id" "${FAKE_PATH}/chown"
+    ln -s "$(command -v mkdir)" "${FAKE_PATH}/mkdir"
 }
 
 tearDown() {
@@ -60,6 +61,30 @@ test_non_root_mode_gives_the_agent_user_the_runtime_directory() {
         "grep -qxF -- '-h cmk-agent:cmk-agent ${INSTALLDIR}/runtime ${INSTALLDIR}/runtime/job' '${WORK}/chown.log'"
     assertTrue "chown calls: $(cat "${WORK}/chown.log")" \
         "grep -qE -- '^-R cmk-agent:cmk-agent .*/runtime/cache( |\$)' '${WORK}/chown.log'"
+}
+
+# CMK-41736 AC6
+test_root_mode_gives_the_controller_its_log_directory() {
+    PATH="${FAKE_PATH}" MK_INSTALLDIR="${INSTALLDIR}" /bin/sh "${TESTEE}"
+    assertEquals "exit code" "0" "$?"
+
+    assertTrue "log directory" "[ -d '${INSTALLDIR}/runtime/log/controller' ]"
+    assertTrue "chown calls: $(cat "${WORK}/chown.log")" \
+        "grep -qxF ':cmk-agent ${INSTALLDIR}/runtime/log' '${WORK}/chown.log'"
+    assertTrue "chown calls: $(cat "${WORK}/chown.log")" \
+        "grep -qxF -- '-R cmk-agent:cmk-agent ${INSTALLDIR}/runtime/log/controller' '${WORK}/chown.log'"
+}
+
+# CMK-41736 AC6
+test_non_root_mode_gives_the_agent_user_the_log_directory() {
+    ln -s "$(command -v find)" "${FAKE_PATH}/find"
+
+    PATH="${FAKE_PATH}" DEPLOYMENT_MODE="non-root" MK_INSTALLDIR="${INSTALLDIR}" /bin/sh "${TESTEE}"
+    assertEquals "exit code" "0" "$?"
+
+    assertTrue "log directory" "[ -d '${INSTALLDIR}/runtime/log/controller' ]"
+    assertTrue "chown calls: $(cat "${WORK}/chown.log")" \
+        "grep -qE -- '^-R cmk-agent:cmk-agent .*/runtime/log( |\$)' '${WORK}/chown.log'"
 }
 
 # shellcheck disable=SC1090

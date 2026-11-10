@@ -15,6 +15,7 @@ from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from typing import assert_never
 
 from cmk.agent_based import v2 as agent_based_v2
+from cmk.bakery import v2_unstable as bakery_v2_unstable
 from cmk.base.api.bakery.register import (  # astrein: disable=cmk-module-layer-violation
     load_bakery_plugins,
 )
@@ -146,8 +147,20 @@ def _validate_bakery_plugins() -> Sequence[ActiveCheckResult]:
     plugins, failures = load_bakery_plugins()
     if failures and debug.enabled():
         raise failures[0][1]
+    v2_discovered = discover_all_plugins(
+        PluginGroup.BAKERY,
+        bakery_v2_unstable.entry_point_prefixes(),
+        skip_wrong_types=False,
+        raise_errors=debug.enabled(),
+    )
     return [
-        to_result(ValidationStep.BAKERY_PLUGINS, [f"{module}: {exc}" for module, exc in failures]),
+        to_result(
+            ValidationStep.BAKERY_PLUGINS,
+            [
+                *(f"{module}: {exc}" for module, exc in failures),
+                *(str(e) for e in v2_discovered.errors),
+            ],
+        ),
         to_result(
             ValidationStep.BAKERY_RULE_SPECS,
             [

@@ -51,28 +51,38 @@ describe('DashboardPreviewContent', () => {
     expect(screen.queryByRole('link', { name: 'Test' })).toBeNull()
   })
 
-  it('lets the legend of a scatterplot scroll', async () => {
-    vi.spyOn(client, 'POST').mockResolvedValue({
-      data: {
-        graphs: [{ internal: '{"graphs": []}', title: 'Scatterplot' }],
-        no_data_message: null
-      },
-      error: undefined,
-      response: new Response('{}', { status: 200 })
-    } as never)
-    const props = makeContentProps<AverageScatterplotContent>({
-      type: 'average_scatterplot',
-      metric: 'util',
-      time_range: { type: 'predefined', value: 'last_25_hours' },
-      metric_color: 'default',
-      average_color: 'default',
-      median_color: 'default',
-      show_legend: true
-    })
+  it.each([
+    { legendStyle: 'extended', scrolls: true },
+    { legendStyle: 'compact', scrolls: false }
+  ] as const)(
+    'scrolls a scatterplot preview with a $legendStyle legend: $scrolls',
+    async ({ legendStyle, scrolls }) => {
+      vi.spyOn(client, 'POST').mockResolvedValue({
+        data: {
+          graphs: [{ internal: '{"graphs": []}', title: 'Scatterplot' }],
+          no_data_message: null
+        },
+        error: undefined,
+        response: new Response('{}', { status: 200 })
+      } as never)
+      const props = makeContentProps<AverageScatterplotContent>({
+        type: 'average_scatterplot',
+        metric: 'util',
+        time_range: { type: 'predefined', value: 'last_25_hours' },
+        metric_color: 'default',
+        average_color: 'default',
+        median_color: 'default',
+        show_legend: true,
+        legend_style: legendStyle
+      })
 
-    renderPreview(props)
+      renderPreview(props)
 
-    await screen.findByTestId('graph-figure')
-    expect(document.querySelector('.db-content-container__preview-scroll-container')).not.toBeNull()
-  })
+      await screen.findByTestId('graph-figure')
+      const scrollContainer = document.querySelector(
+        '.db-content-container__preview-scroll-container'
+      )
+      expect(scrollContainer !== null).toBe(scrolls)
+    }
+  )
 })

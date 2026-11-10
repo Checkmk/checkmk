@@ -387,7 +387,7 @@ onMounted(() => {
     :effective-title="effectiveTitle"
     :general_settings="general_settings"
     content-overflow="hidden"
-    :is-scrollable-preview="(isPreview ?? false) && legend !== 'none'"
+    :is-scrollable-preview="(isPreview ?? false) && legend === 'extended'"
   >
     <div
       class="db-content-time-series-graph"

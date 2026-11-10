@@ -63,7 +63,7 @@ const isPublicDashboard = useInjectIsPublicDashboard()
     >
       <CmkScrollContainer
         v-if="isScrollablePreview"
-        height="calc(calc(var(--dimension-8) * 10) - var(--dimension-8))"
+        height="calc(var(--db-widget-preview-height) - var(--dimension-8))"
         class="db-content-container__preview-scroll-container"
         :class="{
           'db-content-container__preview-scroll-container--limited-width': limitPreviewWidth

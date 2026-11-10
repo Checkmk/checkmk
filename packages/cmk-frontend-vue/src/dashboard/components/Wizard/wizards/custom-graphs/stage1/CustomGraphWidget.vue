@@ -112,7 +112,7 @@ const widgetProps = computed(() => handler.value.widgetProps)
 <style scoped>
 .db-custom-graph-widget--preview-placeholder {
   background-color: var(--ux-theme-3);
-  height: calc(var(--dimension-8) * 10);
+  height: var(--db-widget-preview-height);
   position: relative;
 }
 

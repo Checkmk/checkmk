@@ -153,6 +153,9 @@
 
   /* Dimensions */
   --form-field-height: 21px;
+
+  /* Shared widget preview height in the dashboard wizards */
+  --db-widget-preview-height: calc(var(--dimension-8) * 11);
 }
 
 @layer theme {

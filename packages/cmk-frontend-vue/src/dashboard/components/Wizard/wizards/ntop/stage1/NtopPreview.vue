@@ -19,7 +19,7 @@ const { _t } = usei18n()
 
 <style scoped>
 .db-ntop-preview {
-  --db-preview-content-height: calc(var(--dimension-8) * 10);
+  --db-preview-content-height: var(--db-widget-preview-height);
   --db-preview-content-padding: var(--dimension-3);
 
   display: flex;

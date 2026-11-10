@@ -65,3 +65,21 @@ test('shows the full title unchanged when it fits', async () => {
 
   expect(root.textContent!.trim()).toBe('Short title')
 })
+
+test("a later fit changes the probe's text without replacing its node", async () => {
+  const { container, rerender } = render(GraphTitle, { props: { title: 'seed' } })
+  const root = container.querySelector<HTMLElement>('.graphing-graph-title')!
+  const probe = container.querySelector<HTMLElement>('.graphing-graph-title__probe')!
+  stubTitleGeometry(root, probe, 25)
+  await rerender({ title: 'First title' })
+  await nextTick()
+  const replacements: MutationRecord[] = []
+  new MutationObserver((records) => replacements.push(...records)).observe(probe, {
+    childList: true
+  })
+
+  await rerender({ title: 'Second title' })
+  await nextTick()
+
+  expect(replacements).toEqual([])
+})

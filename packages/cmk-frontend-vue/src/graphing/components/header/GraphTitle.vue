@@ -18,6 +18,9 @@ const MAX_LINES = computed(() => (props.isCompact ? 1 : 2))
 const rootEl = ref<HTMLElement | null>(null)
 // A hidden twin used to trial-fit candidate strings without disturbing the rendered title
 const probeEl = ref<HTMLElement | null>(null)
+// The trials change only the data of this node. A new child of the probe makes the next measurement
+// restyle thousands of elements on a view page, where the theme has :has() rules.
+const probeText = document.createTextNode('')
 
 const displayTitle = ref(props.title)
 
@@ -41,13 +44,16 @@ function fitTitle(): void {
     ? lineHeight * MAX_LINES.value + 1
     : Number.POSITIVE_INFINITY
   probe.style.width = `${width}px`
+  if (probeText.parentNode !== probe) {
+    probe.appendChild(probeText)
+  }
   const fits = (text: string): boolean => {
-    probe.textContent = text
+    probeText.data = text
     return probe.scrollHeight <= maxHeight && probe.scrollWidth <= width
   }
 
   displayTitle.value = middleTruncate(props.title, fits)
-  probe.textContent = ''
+  probeText.data = ''
 }
 
 // Debounce the resize-observer driven fit: it rewrites the title's text (and so its height), which

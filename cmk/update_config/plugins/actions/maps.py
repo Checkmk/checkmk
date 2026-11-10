@@ -33,6 +33,7 @@ from cmk.maps.gui.legacy_maps import (
     copy_legacy_background,
     copy_legacy_icons,
     drop_unloadable_filters,
+    drop_unloadable_urls,
     foreign_connections,
     is_demo_map,
     is_hidden_map,
@@ -126,6 +127,7 @@ def _prepare_maps(
                 maps.outcomes[board] = "skipped"
                 continue
             dropped = drop_unloadable_filters(data)
+            dropped_urls = drop_unloadable_urls(data)
             if not icons_copied:
                 # Checked first: a failing board is retried on every update and must not
                 # copy the library and repeat its warnings each time.
@@ -156,6 +158,12 @@ def _prepare_maps(
                 "OrbVis board %(board)r is migrated without %(count)d object(s) whose "
                 "Livestatus filter Maps cannot load.",
                 {"board": board, "count": dropped},
+            )
+        if dropped_urls:
+            logger.warning(
+                "OrbVis board %(board)r is migrated without %(count)d address(es) of "
+                "tiles or graphs Maps does not accept.",
+                {"board": board, "count": dropped_urls},
             )
         if used_foreign := sorted(used_connections(spec) & foreign):
             logger.warning(

@@ -5,7 +5,9 @@
 """Shared validators for user-supplied URL/color fields on maps/presentations."""
 
 import re
+from collections.abc import Callable
 from typing import Annotated, Final
+from urllib.parse import urlsplit
 
 from pydantic import Field
 
@@ -98,39 +100,86 @@ def coerce_user_url(value: object) -> object:
     ``coerce_color``: stored JSON may pre-date the allowlist; dropping the
     offending URL keeps the map loadable while API saves stay strict.
     """
+    return _coerced(validate_user_url, value)
+
+
+def _coerced(validate: Callable[[str], str | None], value: object) -> object:
     if value is None or value == "":
         return value
     if not isinstance(value, str):
         return None
     try:
-        return validate_user_url(value)
+        return validate(value)
     except ValueError:
         return None
 
 
-# An image is requested with the viewer's session, so one outside the image
-# library must name an image file rather than a page of the site.
+# The browser loads these URLs with the viewer's session as soon as the map is
+# shown, so they must not name a page of the site.
 _IMAGE_FILE_URL = re.compile(r"[^?#\\]*\.(?:png|gif|jpe?g|svg|webp|bmp|ico)", re.IGNORECASE)
+# Read-only pages a graph object may embed from the site itself.
+_EMBEDDABLE_SITE_PAGES = frozenset({"graph_image.py", "view.py", "dashboard.py"})
+
+
+def _is_absolute_http(url: str) -> bool:
+    parts = urlsplit(url)
+    return parts.scheme.lower() in ("http", "https") and bool(parts.netloc)
+
+
+# Leaflet fills these per tile; any other placeholder it would fill from its options.
+_TILE_PLACEHOLDER = re.compile(r"\{(?:s|z|x|y|-y|r)\}")
+
+
+def validate_tile_url(value: str | None) -> str | None:
+    """An absolute http(s) URL of a tile server, with the placeholders of a tile only."""
+    url = validate_user_url(value)
+    if not url:
+        return url
+    if not _is_absolute_http(url):
+        raise ValueError("A tile server URL must be an absolute http or https URL")
+    if set(_TILE_PLACEHOLDER.sub("", url)) & {"{", "}"}:
+        raise ValueError(
+            "A tile server URL may only hold the placeholders {s}, {z}, {x}, {y}, {-y} and {r}"
+        )
+    if "{" in urlsplit(url).netloc.replace("{s}", ""):
+        raise ValueError("The host of a tile server URL may only hold the placeholder {s}")
+    return url
+
+
+def validate_graph_url(value: str | None) -> str | None:
+    """An absolute http(s) URL, or a graph, view or dashboard page of the site."""
+    url = validate_user_url(value)
+    if not url or _is_absolute_http(url):
+        return url
+    parts = urlsplit(url)
+    if parts.scheme or "\\" in url or parts.path.rsplit("/", 1)[-1] not in _EMBEDDABLE_SITE_PAGES:
+        raise ValueError(
+            "A graph URL must be an absolute http or https URL, or a graph, view or"
+            " dashboard page of this site"
+        )
+    return url
 
 
 def validate_image_url(value: str | None) -> str | None:
-    """An image-library filename, or a URL of an image file."""
+    """An image-library filename, or an absolute http(s) URL of an image file."""
     url = validate_user_url(value)
-    if url and set(url) & {"/", ":"} and not _IMAGE_FILE_URL.fullmatch(url):
-        raise ValueError("An image URL must name an image file")
+    if (
+        url
+        and set(url) & {"/", ":", "\\", "?", "#"}
+        and not (_is_absolute_http(url) and _IMAGE_FILE_URL.fullmatch(url))
+    ):
+        raise ValueError("An image URL must be an absolute http or https URL of an image file")
     return url
 
 
 def coerce_image_url(value: object) -> object:
     """``None`` for an image URL ``validate_image_url`` refuses, as ``coerce_user_url``."""
-    if value is None or value == "":
-        return value
-    if not isinstance(value, str):
-        return None
-    try:
-        return validate_image_url(value)
-    except ValueError:
-        return None
+    return _coerced(validate_image_url, value)
+
+
+def coerce_graph_url(value: object) -> object:
+    """``None`` for a graph URL ``validate_graph_url`` refuses, as ``coerce_user_url``."""
+    return _coerced(validate_graph_url, value)
 
 
 # A click-through URL's target. Anything other than a new tab or the same frame

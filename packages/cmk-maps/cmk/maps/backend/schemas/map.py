@@ -58,7 +58,9 @@ from cmk.maps.shared.validators import (
     FiniteFloat,
     MAX_ROTATION_POOLS,
     validate_color,
+    validate_graph_url,
     validate_rotation_pool,
+    validate_tile_url,
     validate_user_url,
 )
 
@@ -162,8 +164,7 @@ class WorldmapView(BaseModel):
     @field_validator("tile_url")
     @classmethod
     def _validate_tile_url(cls, v: str | None) -> str | None:
-        # Lands in Leaflet's <img src> — same scheme allowlist as object URLs.
-        return validate_user_url(v)
+        return validate_tile_url(v)
 
 
 class RadarView(BaseModel):
@@ -319,10 +320,15 @@ class MapElement(BaseModel):
     graph_id: str | None = None
     graph_time_window: int | None = None  # minutes; None = all stored history
 
-    @field_validator("url", "hover_url", "graph_url")
+    @field_validator("url", "hover_url")
     @classmethod
     def _validate_urls(cls, v: str | None) -> str | None:
         return validate_user_url(v)
+
+    @field_validator("graph_url")
+    @classmethod
+    def _validate_graph_url(cls, v: str | None) -> str | None:
+        return validate_graph_url(v)
 
     @field_validator("url_target", mode="before")
     @classmethod
@@ -480,10 +486,15 @@ class MapElementUpdate(BaseModel):
     hover_template: str | None = None
     context_template: str | None = None
 
-    @field_validator("url", "hover_url", "graph_url")
+    @field_validator("url", "hover_url")
     @classmethod
     def _validate_urls(cls, v: str | None) -> str | None:
         return validate_user_url(v)
+
+    @field_validator("graph_url")
+    @classmethod
+    def _validate_graph_url(cls, v: str | None) -> str | None:
+        return validate_graph_url(v)
 
     @field_validator("url_target", mode="before")
     @classmethod

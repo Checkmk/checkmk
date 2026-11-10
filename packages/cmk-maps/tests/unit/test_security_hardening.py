@@ -30,6 +30,7 @@ from cmk.maps.backend.schemas.connection import (
 from cmk.maps.backend.schemas.map import (
     MapElement,
     MapElementUpdate,
+    WorldmapView,
 )
 from cmk.maps.backend.services.state_service import _names_or_filter
 from cmk.maps.shared.validators import (
@@ -37,7 +38,9 @@ from cmk.maps.shared.validators import (
     coerce_url_target,
     coerce_user_url,
     is_valid_map_name,
+    validate_graph_url,
     validate_image_url,
+    validate_tile_url,
     validate_user_url,
 )
 
@@ -47,7 +50,6 @@ from cmk.maps.shared.validators import (
     [
         pytest.param("floorplan.png", id="library-filename"),
         pytest.param("logout.py", id="library-filename-of-any-kind"),
-        pytest.param("/heute/check_mk/images/logo.PNG", id="image-path"),
         pytest.param("https://example.com/logo.svg", id="image-url"),
     ],
 )
@@ -59,6 +61,8 @@ def test_validate_image_url_accepts_images(value: str) -> None:
     "value",
     [
         pytest.param("/heute/check_mk/logout.py", id="page"),
+        pytest.param("/heute/check_mk/images/logo.png", id="site-image"),
+        pytest.param("http:logo.png", id="no-host"),
         pytest.param("../check_mk/logout.py", id="relative-page"),
         pytest.param("/logo.png?reload=1", id="query"),
         pytest.param("./logout.py#.png", id="fragment"),
@@ -67,6 +71,66 @@ def test_validate_image_url_accepts_images(value: str) -> None:
 def test_validate_image_url_rejects_other_urls(value: str) -> None:
     with pytest.raises(ValueError):
         validate_image_url(value)
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param("https://{s}.tile.example/{z}/{x}/{y}.png", id="template"),
+        pytest.param("http://tiles.internal:8080/{z}/{x}/{y}.png", id="http-with-port"),
+        pytest.param("https://tile-{s}.example/{z}/{x}/{-y}{r}.png", id="every-placeholder"),
+    ],
+)
+def test_validate_tile_url_accepts_absolute_urls(value: str) -> None:
+    assert validate_tile_url(value) == value
+    WorldmapView.model_validate({"tile_url": value})
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param("/heute/check_mk/logout.py", id="site-path"),
+        pytest.param("tiles/{z}/{x}/{y}.png", id="relative"),
+        pytest.param("ftp://tiles.example/{z}/{x}/{y}.png", id="other-scheme"),
+        pytest.param("https://tiles.example/{z}/{x}/{y}.png?key={apikey}", id="other-placeholder"),
+        pytest.param("https://tiles.example/{ z}/{x}/{y}.png", id="spaced-placeholder"),
+        pytest.param("https://tiles.example/{z/{x}/{y}.png", id="unclosed-placeholder"),
+        pytest.param("https://tiles.example{r}/{z}/{x}/{y}.png", id="tile-placeholder-in-host"),
+        pytest.param("https://user{z}@tiles.example/{z}/{x}/{y}.png", id="placeholder-in-userinfo"),
+    ],
+)
+def test_validate_tile_url_rejects_other_urls(value: str) -> None:
+    with pytest.raises(ValueError):
+        validate_tile_url(value)
+    with pytest.raises(ValidationError):
+        WorldmapView.model_validate({"tile_url": value})
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param("https://grafana.example/render/d-solo/x?panelId=2", id="external"),
+        pytest.param("/heute/check_mk/graph_image.py?request=x", id="site-graph"),
+        pytest.param("view.py?view_name=allhosts", id="site-view"),
+        pytest.param("../check_mk/dashboard.py?name=main", id="site-dashboard"),
+    ],
+)
+def test_validate_graph_url_accepts_external_urls_and_read_only_site_pages(value: str) -> None:
+    assert validate_graph_url(value) == value
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param("/heute/check_mk/logout.py", id="site-page"),
+        pytest.param("/heute/check_mk/view.py/../logout.py", id="dot-segments"),
+        pytest.param("view.py\\..\\logout.py", id="backslash"),
+        pytest.param("mailto:ops@example.com", id="other-scheme"),
+    ],
+)
+def test_validate_graph_url_rejects_other_urls(value: str) -> None:
+    with pytest.raises(ValueError):
+        validate_graph_url(value)
 
 
 # --- validate_user_url: scheme allowlist + rejection ---
@@ -233,7 +297,7 @@ def test_map_element_rejects_xss_url_schemes(field: str, scheme: str) -> None:
         MapElementUpdate.model_validate({field: scheme + "alert(1)"})
 
 
-@pytest.mark.parametrize("field", ["url", "hover_url", "graph_url"])
+@pytest.mark.parametrize("field", ["url", "hover_url"])
 @pytest.mark.parametrize(
     "url",
     [

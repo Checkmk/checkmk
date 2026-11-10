@@ -46,7 +46,12 @@ from cmk.maps.shared.map_payload import (
     OBJECT_FIELD_DEFAULTS,
     RADAR_VIEW_FIELD_DEFAULTS,
 )
-from cmk.maps.shared.validators import coerce_image_url, rgb_to_hex
+from cmk.maps.shared.validators import (
+    coerce_graph_url,
+    coerce_image_url,
+    rgb_to_hex,
+    validate_tile_url,
+)
 
 
 def legacy_maps_dir() -> Path:
@@ -135,6 +140,26 @@ def _loads(object_filter: object) -> bool:
     except ValueError:
         return False
     return True
+
+
+def drop_unloadable_urls(board: dict[str, object]) -> int:
+    """Leave out the graph and tile URLs Maps does not load, counting them.
+
+    OrbVis loaded tiles and graphs from any URL, relative ones included.
+    """
+    dropped = 0
+    for obj in _dict_objects(board):
+        if obj.get("graph_url") and coerce_graph_url(obj["graph_url"]) is None:
+            obj["graph_url"] = None
+            dropped += 1
+    view = board.get("view")
+    if isinstance(view, dict) and isinstance(tile_url := view.get("tile_url"), str):
+        try:
+            validate_tile_url(tile_url)
+        except ValueError:
+            view["tile_url"] = None
+            dropped += 1
+    return dropped
 
 
 def used_connections(spec: Mapping[str, object]) -> set[str]:

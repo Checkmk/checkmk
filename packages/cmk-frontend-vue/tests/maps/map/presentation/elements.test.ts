@@ -12,14 +12,17 @@ describe('resolveImageRef', () => {
     expect(resolveImageRef('../logout.py')).toMatch(/images\/\.\.%2Flogout\.py$/)
   })
 
-  it('keeps a URL of an image file', () => {
-    expect(resolveImageRef('/heute/check_mk/images/logo.png')).toBe(
-      '/heute/check_mk/images/logo.png'
-    )
+  it('keeps an external URL of an image file', () => {
+    expect(resolveImageRef('https://cdn.example/logo.png')).toBe('https://cdn.example/logo.png')
   })
 
   it('drops a URL that names no image file', () => {
-    expect(resolveImageRef('/heute/check_mk/logout.py')).toBe('')
-    expect(resolveImageRef('/logo.png?reload=1')).toBe('')
+    expect(resolveImageRef('https://cdn.example/logout.py')).toBe('')
+    expect(resolveImageRef('https://cdn.example/logo.png?reload=1')).toBe('')
+  })
+
+  it('drops a path of the site, which would load with the session', () => {
+    expect(resolveImageRef('/heute/check_mk/images/logo.png')).toBe('')
+    expect(resolveImageRef(`${window.location.origin}/heute/check_mk/logo.png`)).toBe('')
   })
 })

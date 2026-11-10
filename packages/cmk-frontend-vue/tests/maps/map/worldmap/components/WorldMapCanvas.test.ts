@@ -15,7 +15,7 @@ import { aMap, aState, anObject, newMapView } from '../../../support/fixtures'
 import { mapsGlobal } from '../../../support/services'
 
 // Minimal Leaflet stand-in covering exactly what the canvas touches while
-// mounting (L.map / tileLayer / divIcon / marker) and unmounting (map.remove).
+// mounting (L.map / TileLayer / divIcon / marker) and unmounting (map.remove).
 // jsdom has no layout, so nothing is positioned for real.
 //
 // A marker's icon element is the one the canvas handed to ``divIcon`` as
@@ -72,17 +72,16 @@ const leaflet = vi.hoisted(() => {
     bringToFront: vi.fn(),
     getElement: vi.fn(() => null)
   })
-  const makeTileLayer = () => ({
-    addTo: vi.fn().mockReturnThis(),
-    remove: vi.fn(),
-    setUrl: vi.fn()
-  })
+  class TileLayer {
+    addTo = vi.fn().mockReturnThis()
+    remove = vi.fn()
+  }
   const L = {
     map: vi.fn((element: HTMLElement) => {
       mapContainer = element
       return mapStub
     }),
-    tileLayer: vi.fn(makeTileLayer),
+    TileLayer,
     marker: vi.fn(makeMarker),
     polyline: vi.fn(makePolyline),
     divIcon: vi.fn((options: { html?: HTMLElement }) => options),

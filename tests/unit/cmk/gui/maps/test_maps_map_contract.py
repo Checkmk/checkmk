@@ -98,7 +98,7 @@ _PRESENTATION_MAP: dict[str, object] = {
         "elements": [
             {"kind": "shape", "id": "s1", "shape": "rect", "fill": "#3b82f6", "flow": True},
             {"kind": "text", "id": "t1", "text": "Title", "font_size": 24},
-            {"kind": "image", "id": "i1", "src": "/logo.png", "fit": "contain"},
+            {"kind": "image", "id": "i1", "src": "https://img.example/logo.png", "fit": "contain"},
             {"kind": "data", "id": "d1", "host_name": "srv1", "display": {"mode": "icon"}},
             {"kind": "group", "id": "g1", "children": ["s1", "t1"]},
         ],
@@ -268,6 +268,35 @@ def test_rest_model_rejects_tile_saturation_the_daemon_would_reject() -> None:
         map_from_spec(dense)
 
 
+@pytest.mark.parametrize("tile_url", ["/tiles/{z}/{x}/{y}.png", "tiles/{z}/{x}/{y}.png"])
+def test_rest_model_refuses_a_tile_url_of_the_site(tile_url: str) -> None:
+    dense = DaemonMapConfig.model_validate(_WORLDMAP_MAP).model_dump(mode="json")
+    dense["view"]["tile_url"] = tile_url
+    with pytest.raises(ValidationError):
+        map_from_spec(dense)
+
+
+def _graph_map(graph_url: str) -> dict[str, object]:
+    dense = DaemonMapConfig.model_validate(
+        {**_STATIC_MAP, "objects": [{"id": "g1", "type": "graph"}]}
+    ).model_dump(mode="json")
+    dense["objects"][0]["graph_url"] = graph_url
+    return dense
+
+
+@pytest.mark.parametrize(
+    "graph_url",
+    ["https://grafana.example/render/d-solo/x", "/heute/check_mk/view.py?view_name=allhosts"],
+)
+def test_rest_model_takes_external_graphs_and_read_only_site_pages(graph_url: str) -> None:
+    map_from_spec(_graph_map(graph_url))
+
+
+def test_rest_model_refuses_a_graph_url_of_another_site_page() -> None:
+    with pytest.raises(ValidationError):
+        map_from_spec(_graph_map("/heute/check_mk/logout.py"))
+
+
 def test_rest_model_normalises_valid_object_filter() -> None:
     dense = DaemonMapConfig.model_validate(_WORLDMAP_MAP).model_dump(mode="json")
     dense["objects"][0]["object_filter"] = "Filter: host_name ~ srv"
@@ -325,7 +354,7 @@ def test_rest_model_drops_traversal_in_image_filenames() -> None:
     assert (rest_obj.background_image, display.image) == (None, None)
 
 
-@pytest.mark.parametrize("ref", ["https://cdn.example/floor.png", "/floor.png", "floor.png"])
+@pytest.mark.parametrize("ref", ["https://cdn.example/floor.png", "floor.png"])
 def test_rest_model_keeps_presentation_image_urls(ref: str) -> None:
     # Slide images and backgrounds take a store filename or an external URL.
     dense = DaemonMapConfig.model_validate(_PRESENTATION_MAP).model_dump(mode="json")
@@ -334,7 +363,9 @@ def test_rest_model_keeps_presentation_image_urls(ref: str) -> None:
     map_from_spec(dense)
 
 
-@pytest.mark.parametrize("ref", ["javascript:alert(1)", "/heute/check_mk/logout.py"])
+@pytest.mark.parametrize(
+    "ref", ["javascript:alert(1)", "/heute/check_mk/logout.py", "/floor.png", "x.py?.png"]
+)
 @pytest.mark.parametrize("field", ["background_image", "src", "display"])
 def test_rest_model_rejects_presentation_images_that_name_no_image(field: str, ref: str) -> None:
     dense = DaemonMapConfig.model_validate(_PRESENTATION_MAP).model_dump(mode="json")

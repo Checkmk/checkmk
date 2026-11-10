@@ -20,6 +20,7 @@
 import L from 'leaflet'
 
 import type { MapView, TileSource, WorldmapView } from '@/maps/types/api'
+import { isAutoLoadable } from '@/maps/utils/autoLoadUrl'
 
 function tileHost(url: string): string | null {
   return /^https?:\/\/([^/?#]+)/i.exec(url.trim())?.[1]?.toLowerCase() ?? null
@@ -84,6 +85,20 @@ export function tileSettings(
   }
 }
 
+// Leaflet fills the template for each tile, from the tile and from its own
+// options, so a URL is checked as it is requested.
+class CheckedTileLayer extends L.TileLayer {
+  override getTileUrl(coords: L.Coords): string {
+    try {
+      const url = super.getTileUrl(coords)
+      return isAutoLoadable(url) ? url : ''
+    } catch {
+      // Leaflet throws on a placeholder it has no value for.
+      return ''
+    }
+  }
+}
+
 /**
  * Adds the map's tile layer and applies its saturation, replacing a layer added
  * by an earlier call.
@@ -99,7 +114,9 @@ export function applyTileLayer(
     return previous
   }
   previous?.remove()
-  const layer = L.tileLayer(settings.url, { attribution: settings.attribution }).addTo(leafletMap)
+  const layer = new CheckedTileLayer(settings.url, {
+    attribution: settings.attribution
+  }).addTo(leafletMap)
   const pane = leafletMap.getPane('tilePane')
   if (pane) {
     pane.style.filter = settings.paneFilter

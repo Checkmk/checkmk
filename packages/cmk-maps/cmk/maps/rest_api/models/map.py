@@ -82,8 +82,10 @@ from cmk.maps.shared.validators import (
     MAX_ROTATION_POOLS,
     validate_color,
     validate_font_family,
+    validate_graph_url,
     validate_image_url,
     validate_rotation_pool,
+    validate_tile_url,
     validate_user_url,
 )
 
@@ -102,6 +104,8 @@ _ElementId = Annotated[str, Field(min_length=1)]
 _UserUrl = Annotated[str, AfterValidator(validate_user_url)]
 _UrlTarget = Annotated[str, BeforeValidator(coerce_url_target)]
 _ImageUrl = Annotated[str, AfterValidator(validate_image_url)]
+_TileUrl = Annotated[str, AfterValidator(validate_tile_url)]
+_GraphUrl = Annotated[str, AfterValidator(validate_graph_url)]
 # Uploaded icon / background filenames — drop anything that could leave the asset
 # dir. Coerces like the daemon: the model also validates stored maps on read.
 _AssetRef = Annotated[str | None, BeforeValidator(coerce_asset_ref)]
@@ -423,7 +427,7 @@ class MapWorldmapView:
     zoom: Annotated[int, Field(ge=0, le=MAX_ZOOM)] = api_field(
         description="Initial zoom level.", example=5
     )
-    tile_url: _UserUrl | None | ApiOmitted = api_field(
+    tile_url: _TileUrl | None | ApiOmitted = api_field(
         description="Leaflet tile URL template override.",
         example="https://tiles.example.com/{z}/{x}/{y}.png",
         default_factory=ApiOmitted,
@@ -784,9 +788,12 @@ class MapObjectTextbox:
 class MapObjectGraph:
     """Embedded-graph configuration for a graph object."""
 
-    url: _UserUrl | None | ApiOmitted = api_field(
-        description="Embedded graph URL.",
-        example="/check_mk/graph.py?host=web-01",
+    url: _GraphUrl | None | ApiOmitted = api_field(
+        description=(
+            "Embedded graph URL: an absolute http(s) URL, or a graph, view or dashboard"
+            " page of this site."
+        ),
+        example="https://grafana.example/render/d-solo/abc?panelId=2",
         default_factory=ApiOmitted,
     )
     embed_type: Literal["img", "iframe"] | ApiOmitted = api_field(

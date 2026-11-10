@@ -795,6 +795,13 @@ def test_drop_unusable_urls_drops_a_link_maps_refuses(block: str, key: str, url:
     assert key not in _first_obj(map_cfg)
 
 
+def test_drop_unusable_urls_drops_a_container_of_a_site_page_maps_does_not_embed() -> None:
+    map_cfg = cfg_to_map("define container {\n    url = /heute/check_mk/logout.py\n}\n", "test")
+
+    assert len(drop_unusable_urls(map_cfg)) == 1
+    assert "graph_url" not in _first_obj(map_cfg)
+
+
 def test_drop_unusable_urls_keeps_a_link_maps_accepts() -> None:
     map_cfg = cfg_to_map("define shape {\n    icon = i.png\n    url = [htmlcgi]/x.cgi\n}\n", "test")
 

@@ -26,7 +26,8 @@ from cmk.gui.form_specs.unstable.legacy_valuespec import LegacyValueSpec
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import Color
 from cmk.maps.gui.form_specs import LINE_STYLES
-from cmk.rulesets.v1 import Help, Title
+from cmk.maps.shared.validators import validate_tile_url
+from cmk.rulesets.v1 import Help, Message, Title
 from cmk.rulesets.v1.form_specs import (
     CascadingSingleChoice,
     CascadingSingleChoiceElement,
@@ -42,7 +43,20 @@ from cmk.rulesets.v1.form_specs import (
     SingleChoiceElement,
     String,
 )
-from cmk.rulesets.v1.form_specs.validators import NumberInRange
+from cmk.rulesets.v1.form_specs.validators import NumberInRange, ValidationError
+
+
+def _check_tile_url(value: str) -> None:
+    try:
+        validate_tile_url(value)
+    except ValueError as exc:
+        raise ValidationError(
+            Message(
+                "Enter an absolute http or https URL, such as"
+                " https://tiles.example/{z}/{x}/{y}.png. It may hold the placeholders"
+                " {s}, {z}, {x}, {y}, {-y} and {r}, and in the host only {s}."
+            )
+        ) from exc
 
 
 def _default_connection_element(
@@ -138,6 +152,7 @@ def map_defaults_spec(
                                                 "dark_all/{z}/{x}/{y}.png"
                                             ),
                                             field_size=FieldSize.LARGE,
+                                            custom_validate=(_check_tile_url,),
                                         ),
                                     ),
                                 },

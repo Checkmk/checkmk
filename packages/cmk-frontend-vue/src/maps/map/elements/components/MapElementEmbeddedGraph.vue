@@ -13,6 +13,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, onUnmounted, ref, watch, watchEffect } from 'vue'
 
 import type { MapElement } from '@/maps/types/api'
+import { isEmbeddableGraphUrl } from '@/maps/utils/autoLoadUrl'
 
 import MapElementGraphNotice from './MapElementGraphNotice.vue'
 
@@ -28,22 +29,10 @@ watch(
   }
 )
 
-/**
- * Render-sink guard. A map saved before the server-side scheme allowlist may
- * still carry a hostile URL, so only ever embed http(s) — a relative URL
- * resolves against the page origin and passes.
- */
+// Checked where the URL is loaded: another server, or a read-only page of this site.
 const embeddable = computed(() => {
   const url = props.object.graph_url
-  if (!url) {
-    return ''
-  }
-  try {
-    const { protocol } = new URL(url, window.location.href)
-    return protocol === 'http:' || protocol === 'https:' ? url : ''
-  } catch {
-    return ''
-  }
+  return url && isEmbeddableGraphUrl(url) ? url : ''
 })
 
 // A cache-busting counter, bumped on the object's own refresh interval: the

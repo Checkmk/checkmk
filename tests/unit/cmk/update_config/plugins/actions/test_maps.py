@@ -454,6 +454,27 @@ def test_graph_metrics_the_daemon_would_drop_are_dropped(admin: UserId) -> None:
     assert objects[1]["graph_metric"] is None
 
 
+def test_a_graph_url_of_another_site_page_is_dropped(
+    admin: UserId, caplog: pytest.LogCaptureFixture
+) -> None:
+    map_spec = _complete_map(
+        objects=[_complete_object(id="g1", type="graph", graph_url="/heute/check_mk/logout.py")]
+    )
+
+    obj = _objects(_migrated(admin, "graph-url", map_spec).config.map_spec)[0]
+
+    assert obj["graph_url"] is None
+    assert "without 1 address(es)" in caplog.text
+
+
+def test_a_relative_tile_url_is_dropped(admin: UserId) -> None:
+    view = {"type": "worldmap", "lat": 51.0, "lng": 10.0, "zoom": 5, "tile_url": "/t/{z}/{x}/{y}"}
+
+    spec = _migrated(admin, "geo-tiles", _complete_map(view=view)).config.map_spec
+
+    assert _view(spec)["tile_url"] is None
+
+
 def test_a_sparse_map_gets_the_daemon_defaults(admin: UserId) -> None:
     spec = _migrated(admin, "sparse", {"view": {"type": "static"}}).config.map_spec
 

@@ -3,9 +3,10 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import { describe, expect, it } from 'vitest'
+import L from 'leaflet'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { isAllowedTileUrl, tileSettings } from '@/maps/shared/worldmap/tileLayer'
+import { applyTileLayer, isAllowedTileUrl, tileSettings } from '@/maps/shared/worldmap/tileLayer'
 import type { TileSource, WorldmapView } from '@/maps/types/api'
 
 import { newMapView } from '../../support/fixtures'
@@ -57,6 +58,38 @@ describe('tileSettings', () => {
     const settings = tileSettings(newMapView('static'), OSM)
     expect(settings.url).toBe(OSM.default_url)
     expect(settings.paneFilter).toBe('')
+  })
+})
+
+describe('applyTileLayer', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  /** The address the map of a site at mon.example requests one tile from. */
+  function requestedTile(tileUrl: string): string | undefined {
+    vi.stubGlobal('location', new URL('http://mon.example/heute/check_mk/maps.py'))
+    const map = L.map(document.createElement('div')).setView([0, 0], 3)
+    const layer = applyTileLayer(map, worldmap({ tile_url: tileUrl }), OSM)
+    return layer?.getTileUrl(Object.assign(L.point(1, 2), { z: 3 }))
+  }
+
+  it('requests a tile from another server', () => {
+    expect(requestedTile('https://tiles.internal/{z}/{x}/{y}.png')).toBe(
+      'https://tiles.internal/3/1/2.png'
+    )
+  })
+
+  it('requests no tile from the site itself', () => {
+    expect(requestedTile('/heute/check_mk/{z}/{x}/{y}.png')).toBe('')
+  })
+
+  it('requests no tile from the site however the template spells its host', () => {
+    expect(requestedTile('http://mon.example{r}/heute/check_mk/{z}/{x}/{y}.png')).toBe('')
+  })
+
+  it('requests no tile for a placeholder without a value', () => {
+    expect(requestedTile('https://tiles.internal/{z}/{x}/{y}.png?key={apikey}')).toBe('')
   })
 })
 

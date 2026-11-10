@@ -13,6 +13,7 @@ import type {
   TextElement
 } from '@/maps/types/api'
 import { imageAssetUrl } from '@/maps/utils/assetUrl'
+import { isAutoLoadable } from '@/maps/utils/autoLoadUrl'
 import { resolveAssetBase } from '@/maps/utils/deploymentBase'
 import type { TranslateFn } from '@/maps/utils/dropdownOptions'
 import { isImageFileUrl } from '@/maps/utils/sanitize'
@@ -65,6 +66,8 @@ export function insertLabel(_t: TranslateFn, kind: InsertKind): string {
 // kept verbatim. Both the element ``src`` and the slide ``background_image``
 // follow this convention and resolve through the helpers below.
 const IMAGE_URL_RE = /^(https?:|data:|blob:|\/)/
+// Mirrors validate_image_url in cmk/maps/shared/validators.py.
+const LOADABLE_IMAGE_URL_RE = /^https?:\/\//i
 
 export function resolveImageRef(ref: string | null | undefined): string {
   if (!ref) {
@@ -74,7 +77,7 @@ export function resolveImageRef(ref: string | null | undefined): string {
     return ref
   }
   if (IMAGE_URL_RE.test(ref)) {
-    return isImageFileUrl(ref) ? ref : ''
+    return LOADABLE_IMAGE_URL_RE.test(ref) && isImageFileUrl(ref) && isAutoLoadable(ref) ? ref : ''
   }
   return imageAssetUrl(ref)
 }

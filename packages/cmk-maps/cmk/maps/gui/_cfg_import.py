@@ -48,7 +48,7 @@ from cmk.maps.shared.map_payload import (
     MonitoredObjectType,
     WorldmapView,
 )
-from cmk.maps.shared.validators import coerce_color, coerce_user_url
+from cmk.maps.shared.validators import coerce_color, coerce_graph_url, coerce_user_url
 
 # A NagVis .cfg is a small text file; cap the upload before the whole-file regex
 # scan + multi-pass reference resolver run over it, mirroring the icon/background
@@ -1247,7 +1247,8 @@ def drop_unusable_urls(map_cfg: MapPayload) -> list[str]:
     dropped = 0
     for obj in map_cfg["objects"]:
         for key in _URL_KEYS:
-            if obj.get(key) and coerce_user_url(obj[key]) is None:
+            coerce = coerce_graph_url if key == "graph_url" else coerce_user_url
+            if obj.get(key) and coerce(obj[key]) is None:
                 del obj[key]
                 dropped += 1
     if not dropped:

@@ -46,6 +46,7 @@ from cmk.maps.gui._page_menu import (
     images_page_menu,
     map_list_page_menu,
     maps_breadcrumb,
+    may_manage_images,
     PAGE_MENU_EVENT,
 )
 from cmk.maps.gui._settings import map_object_defaults, MapListView, tile_csp_sources
@@ -238,7 +239,7 @@ def _chrome(
         return shown.title() or shown.name(), Breadcrumb(), None
     if _rotates(ctx):
         return _("Maps"), Breadcrumb(), None
-    if _shows_images(ctx) and user.may("maps.configure"):
+    if _shows_images(ctx) and may_manage_images(user):
         breadcrumb = images_breadcrumb()
         return _("Images"), breadcrumb, images_page_menu(breadcrumb)
     breadcrumb = maps_breadcrumb()

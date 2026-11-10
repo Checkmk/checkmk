@@ -245,6 +245,42 @@ def test_an_uploaded_image_joins_the_library(clients: ClientRegistry) -> None:
     assert clients.Maps.upload_image("rack.png", "image/png", _PNG).json["name"] == "rack.png"
 
 
+def test_the_image_library_is_not_listed_for_a_guest(
+    clients: ClientRegistry,
+    with_automation_user: tuple[UserId, str],
+    with_automation_user_guest: tuple[UserId, str],
+) -> None:
+    clients.Maps.set_credentials(*map(str, with_automation_user_guest))
+    try:
+        resp = clients.Maps.get_images(expect_ok=False)
+    finally:
+        clients.Maps.set_credentials(*map(str, with_automation_user))
+
+    resp.assert_status_code(HTTPStatus.FORBIDDEN)
+
+
+def test_the_image_library_is_listed_for_an_editor_of_the_maps_of_others(
+    clients: ClientRegistry,
+    with_automation_user: tuple[UserId, str],
+    with_automation_user_guest: tuple[UserId, str],
+    set_config: SetConfig,
+    load_config: Config,
+) -> None:
+    roles = copy.deepcopy(load_config.roles)
+    roles["guest"]["permissions"] = {
+        **roles["guest"].get("permissions", {}),
+        "general.edit_foreign_map": True,
+    }
+    clients.Maps.set_credentials(*map(str, with_automation_user_guest))
+    try:
+        with set_config(roles=roles):
+            resp = clients.Maps.get_images()
+    finally:
+        clients.Maps.set_credentials(*map(str, with_automation_user))
+
+    assert resp.json["images"]
+
+
 def test_an_unused_image_is_deleted(clients: ClientRegistry) -> None:
     clients.Maps.upload_image("rack.png", "image/png", _PNG)
     clients.Maps.delete_image("rack.png").assert_status_code(HTTPStatus.NO_CONTENT)

@@ -90,12 +90,17 @@ watch(
   }
 )
 
-// The image library requires the configure permission; bounce home once the
-// session says this user has none.
+// The image library is for map editors who may configure Maps; bounce home once
+// the session says this user is not one.
 watch(
-  () => [nav.state.view, auth.canConfigure.value, auth.user.value] as const,
+  () =>
+    [nav.state.view, auth.canConfigure.value, auth.canCreateMaps.value, auth.user.value] as const,
   () => {
-    if (nav.state.view === 'admin' && auth.user.value !== null && !auth.canConfigure.value) {
+    if (
+      nav.state.view === 'admin' &&
+      auth.user.value !== null &&
+      !(auth.canConfigure.value && auth.canCreateMaps.value)
+    ) {
       nav.replace({ view: 'home' })
     }
   },

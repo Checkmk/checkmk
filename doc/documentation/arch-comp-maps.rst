@@ -353,18 +353,22 @@ OpenAPI types, not from hand-written copies.
        draft; nothing is stored until the user saves the map.
    * - GET
      - ``domain-types/maps_image/collections/all``
-     - Lists the image library.
+     - Lists the image library, needs ``general.edit_map`` or
+       ``general.edit_foreign_map``.
    * - POST
      - ``domain-types/maps_image/collections/all``
-     - Uploads a library image, needs ``maps.configure``.
+     - Uploads a library image, needs ``maps.configure`` and
+       ``general.edit_map``.
    * - GET
      - ``objects/maps_image/{name}/actions/usage/invoke``
      - Which maps the user sees use an image, as icon, background or slide
-       element, and how many others do; needs ``maps.configure``.
+       element, and how many others do; needs ``maps.configure`` and
+       ``general.edit_map``.
    * - DELETE
      - ``objects/maps_image/{name}[?force=]``
-     - Deletes a library image, needs ``maps.configure``. Built-in images
-       cannot be deleted; an image any map uses needs ``force``.
+     - Deletes a library image, needs ``maps.configure`` and
+       ``general.edit_map``. Built-in images cannot be deleted; an image any
+       map uses needs ``force``.
    * - GET
      - ``domain-types/maps_settings/collections/all``
      - Authoring defaults and allowed tile sources.
@@ -484,7 +488,8 @@ Static files
 `Unauthenticated surface`_ for who can fetch them.
 
 * **Images** are the shared image library: the vendored Tabler icons plus icons
-  uploaded by users with ``maps.configure`` or copied by the OrbVis migration.
+  uploaded by users with ``maps.configure`` and ``general.edit_map`` or copied
+  by the OrbVis migration.
 * **Backgrounds** belong to one map each. The file name is
   ``<sha256(owner)[:16]>__<map>.<random token><suffix>``. The token
   (``secrets.token_urlsafe(16)``) makes the URL unguessable, so the URL itself
@@ -651,10 +656,12 @@ Actors and default permissions
    * - ``maps.configure``
      - admin
      - Maps settings (view: with ``wato.use``; save: also ``wato.edit``),
-       image library uploads and deletions, full connection details.
+       image library uploads and deletions (with ``general.edit_map``), full
+       connection details.
    * - ``general.edit_map``
      - admin, user
-     - Create and edit own maps; register unsigned previews in the daemon.
+     - Create and edit own maps; list the image library (as does
+       ``general.edit_foreign_map``); register unsigned previews in the daemon.
    * - ``general.see_user_map``
      - admin, user, guest
      - See maps others published.
@@ -938,8 +945,8 @@ Uploaded files
   Uploads are base64 in a JSON body; the size is checked before decoding.
 
   * Library images: PNG, JPEG, WebP or SVG, at most 2 MB, needs
-    ``maps.configure``. Background images: additionally GIF, at most 10 MB,
-    needs edit rights on the map.
+    ``maps.configure`` and ``general.edit_map``. Background images:
+    additionally GIF, at most 10 MB, needs edit rights on the map.
   * The file is accepted only if its magic bytes match an allowed type. The
     stored suffix, and so the content type Apache serves, comes from the
     uploaded file name (``.png`` if it has no allowed suffix); it is not tied to

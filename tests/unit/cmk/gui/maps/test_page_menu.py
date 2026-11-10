@@ -5,12 +5,16 @@
 
 # ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
 
+import copy
+
 import pytest
 
 from cmk.ccc.user import UserId
+from cmk.gui.config import active_config, Config
 from cmk.gui.htmllib.generator import ClickAction
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import PageMenu, PageMenuLink
+from cmk.gui.permissions import all_permissions
 from cmk.gui.session_context import UserContext
 from cmk.gui.utils.roles import UserPermissions
 from cmk.maps.gui._page_menu import (
@@ -21,6 +25,7 @@ from cmk.maps.gui._page_menu import (
     PAGE_MENU_EVENT,
 )
 from cmk.maps.gui._settings import MapListView
+from tests.testlib.unit.gui.web_test_app import SetConfig
 
 
 def _menu(layout: MapListView = "cards") -> PageMenu:
@@ -40,6 +45,29 @@ def test_admin_gets_all_list_actions(request_context: None, with_admin_login: Us
         "maps_images",
         "maps_settings",
     ]
+
+
+def test_an_admin_who_may_not_edit_maps_gets_the_settings_but_no_image_library(
+    request_context: None,
+    with_admin_login: UserId,
+    set_config: SetConfig,
+    load_config: Config,
+) -> None:
+    roles = copy.deepcopy(load_config.roles)
+    roles["admin"]["permissions"] = {
+        **roles["admin"].get("permissions", {}),
+        "general.edit_map": False,
+    }
+
+    with (
+        set_config(roles=roles),
+        UserContext(
+            with_admin_login, UserPermissions.from_config(active_config, all_permissions())
+        ),
+    ):
+        names = _entry_names(_menu(), "maps")
+
+    assert names == ["maps_settings"]
 
 
 def test_add_map_is_the_quick_button(request_context: None, with_admin_login: UserId) -> None:

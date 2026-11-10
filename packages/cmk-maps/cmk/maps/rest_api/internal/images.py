@@ -52,18 +52,30 @@ from cmk.maps.rest_api.internal.models.response_models import (
 from cmk.maps.rest_api.utils import MAP_VISIBILITY_PERMISSIONS, NO_CONFIG_CHANGE
 from cmk.web.utils import permission_verification as permissions
 
+# The library holds the images map editors pick; who may change it must also be one.
 _UPLOAD_PERMISSIONS = permissions.AllPerm(
-    [permissions.Perm("maps.use"), permissions.Perm("maps.configure")]
+    [
+        permissions.Perm("maps.use"),
+        permissions.Perm("maps.configure"),
+        permissions.Perm("general.edit_map"),
+    ]
 )
 # Showing an image's use, and deleting it, names the maps the user may see.
 _USAGE_PERMISSIONS = permissions.AllPerm(
-    [permissions.Perm("maps.use"), permissions.Perm("maps.configure"), *MAP_VISIBILITY_PERMISSIONS]
+    [
+        permissions.Perm("maps.use"),
+        permissions.Perm("maps.configure"),
+        permissions.Perm("general.edit_map"),
+        *MAP_VISIBILITY_PERMISSIONS,
+    ]
 )
 
 
 def list_images_v1() -> MapsImagesResponse:
     """Show the image library"""
     user.need_permission("maps.use")
+    if not user.may("general.edit_map"):
+        user.need_permission("general.edit_foreign_map")
     return MapsImagesResponse(
         images=[
             MapsImage(name=entry.name, url=entry.url, builtin=entry.builtin)
@@ -100,6 +112,7 @@ def show_image_usage_v1(
     """Show which maps use an image"""
     user.need_permission("maps.use")
     user.need_permission("maps.configure")
+    user.need_permission("general.edit_map")
     require_valid_image_name(name)
     return _usage_response(find_image_usage(name))
 
@@ -108,6 +121,7 @@ def upload_image_v1(body: MapsImageUploadRequest) -> MapsImage:
     """Add an image to the library"""
     user.need_permission("maps.use")
     user.need_permission("maps.configure")
+    user.need_permission("general.edit_map")
     entry = upload_image(body.filename, body.content_type, body.content)
     return MapsImage(name=entry.name, url=entry.url, builtin=entry.builtin)
 
@@ -132,6 +146,7 @@ def delete_image_v1(
     """Delete an image from the library"""
     user.need_permission("maps.use")
     user.need_permission("maps.configure")
+    user.need_permission("general.edit_map")
     if (blocking := delete_image(name, force)) is not None:
         response = _usage_response(blocking)
         raise ProblemException(
@@ -153,7 +168,20 @@ ENDPOINT_LIST_IMAGES = VersionedEndpoint(
         link_relation="cmk/list_maps_images",
         method="get",
     ),
-    permissions=EndpointPermissions(required=permissions.Perm("maps.use")),
+    permissions=EndpointPermissions(
+        # Whoever may edit a map picks its images, another user's map included.
+        required=permissions.AllPerm(
+            [
+                permissions.Perm("maps.use"),
+                permissions.AnyPerm(
+                    [
+                        permissions.Perm("general.edit_map"),
+                        permissions.Perm("general.edit_foreign_map"),
+                    ]
+                ),
+            ]
+        )
+    ),
     doc=EndpointDoc(family=MAPS_INTERNAL_FAMILY.name),
     behavior=NO_CONFIG_CHANGE,
     versions={APIVersion.INTERNAL: EndpointHandler(handler=list_images_v1)},

@@ -37,6 +37,11 @@ IMAGES_URL: Final = f"{MAPS_HOME_URL}?mode=icons"
 type PageMenuAction = Literal["create", "import", "upload"]
 
 
+def may_manage_images(acting_user: LoggedInUser) -> bool:
+    """The image library is a Setup page for map editors."""
+    return acting_user.may("maps.configure") and acting_user.may("general.edit_map")
+
+
 def maps_breadcrumb() -> Breadcrumb:
     # Maps has no Setup tile; its pages hang under Customize → Maps.
     breadcrumb = make_main_menu_breadcrumb(main_menu_registry.menu_customize())
@@ -138,25 +143,25 @@ def _maps_dropdown(acting_user: LoggedInUser, settings_url: str) -> PageMenuDrop
             )
         )
     if acting_user.may("maps.configure"):
-        topics.append(
-            PageMenuTopic(
-                title=_("Setup"),
-                entries=[
-                    PageMenuEntry(
-                        title=_("Images"),
-                        icon_name=StaticIcon(IconNames.icons),
-                        item=make_simple_link(IMAGES_URL),
-                        name="maps_images",
-                    ),
-                    PageMenuEntry(
-                        title=_("Maps settings"),
-                        icon_name=StaticIcon(IconNames.configuration),
-                        item=make_simple_link(settings_url),
-                        name="maps_settings",
-                    ),
-                ],
+        setup = []
+        if may_manage_images(acting_user):
+            setup.append(
+                PageMenuEntry(
+                    title=_("Images"),
+                    icon_name=StaticIcon(IconNames.icons),
+                    item=make_simple_link(IMAGES_URL),
+                    name="maps_images",
+                )
+            )
+        setup.append(
+            PageMenuEntry(
+                title=_("Maps settings"),
+                icon_name=StaticIcon(IconNames.configuration),
+                item=make_simple_link(settings_url),
+                name="maps_settings",
             )
         )
+        topics.append(PageMenuTopic(title=_("Setup"), entries=setup))
     return PageMenuDropdown(name="maps", title=_("Maps"), topics=topics)
 
 

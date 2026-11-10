@@ -11,8 +11,8 @@ use anyhow::{Error, Result as AnyhowResult};
 use base64::{engine::general_purpose::STANDARD as BASE64_STANDARD, Engine};
 use rsa::pkcs1v15::{Signature, VerifyingKey};
 use rsa::pkcs8::DecodePublicKey;
-use rsa::signature::Verifier;
-use sha2::Sha256;
+use rsa::signature::hazmat::PrehashVerifier;
+use sha2::{Digest, Sha256};
 use x509_parser::certificate::X509Certificate;
 use x509_parser::prelude::ASN1Time;
 
@@ -52,6 +52,8 @@ pub fn certificates(blocks: &[x509_parser::pem::Pem]) -> Vec<X509Certificate<'_>
         .collect()
 }
 
+pub type Sha256Digest = sha2::digest::Output<Sha256>;
+
 /// Check `bytes` against the signatures the site delivered with them.
 ///
 /// # Errors
@@ -60,6 +62,22 @@ pub fn certificates(blocks: &[x509_parser::pem::Pem]) -> Vec<X509Certificate<'_>
 /// `local_certificates`.
 pub fn verify(
     bytes: &[u8],
+    signatures: &[AgentSignature],
+    local_certificates: &[X509Certificate],
+) -> AnyhowResult<()> {
+    verify_digest(&Sha256::digest(bytes), signatures, local_certificates)
+}
+
+/// Check the SHA-256 `digest` of a package against the signatures the site
+/// delivered with the package. A signature signs this digest, so the result is
+/// the one [`verify`] gives for the package bytes.
+///
+/// # Errors
+///
+/// If none of `signatures` is a valid signature of `digest` under one of
+/// `local_certificates`.
+pub fn verify_digest(
+    digest: &Sha256Digest,
     signatures: &[AgentSignature],
     local_certificates: &[X509Certificate],
 ) -> AnyhowResult<()> {
@@ -84,7 +102,7 @@ pub fn verify(
         };
 
         if VerifyingKey::<Sha256>::new(public_key)
-            .verify(bytes, &signature)
+            .verify_prehash(digest, &signature)
             .is_err()
         {
             log::warn!("Signature for certificate {subject} does not match the package");

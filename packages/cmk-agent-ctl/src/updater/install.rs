@@ -255,21 +255,25 @@ impl TrustAnchors {
         Ok(TrustAnchors { blocks })
     }
 
-    /// Check `package` against the signatures the site delivered with it.
+    /// Check a package against the signatures the site delivered with it.
     ///
     /// # Arguments
     ///
-    /// * `package` - the bytes that are about to be installed, not the file
-    ///   they were read from
+    /// * `digest` - SHA-256 of the bytes that are about to be installed, not
+    ///   of the file they were read from
     /// * `signatures` - `signatures` of the [`InstallRequest`]
     ///
     /// # Errors
     ///
-    /// If none of `signatures` is a valid signature of `package` under one of
+    /// If none of `signatures` is a valid signature of `digest` under one of
     /// the anchors.
-    pub fn verify(&self, package: &[u8], signatures: &[AgentSignature]) -> AnyhowResult<()> {
-        verification::verify(
-            package,
+    pub fn verify(
+        &self,
+        digest: &verification::Sha256Digest,
+        signatures: &[AgentSignature],
+    ) -> AnyhowResult<()> {
+        verification::verify_digest(
+            digest,
             signatures,
             &verification::certificates(&self.blocks),
         )
@@ -279,6 +283,7 @@ impl TrustAnchors {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use sha2::Digest;
 
     const PACKAGE: &str = "/opt/checkmk/agent/runtime/controller/update/0123456789abcdef.deb";
 
@@ -355,7 +360,9 @@ mod tests {
         let dir = tempfile::TempDir::new().unwrap();
         let anchors = TrustAnchors::load(&config_with(&[a_certificate()], &dir)).unwrap();
 
-        assert!(anchors.verify(b"an agent package", &[]).is_err());
+        assert!(anchors
+            .verify(&sha2::Sha256::digest(b"an agent package"), &[])
+            .is_err());
     }
 
     fn request(body: &str) -> AnyhowResult<InstallRequest> {

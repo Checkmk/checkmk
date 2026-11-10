@@ -23,6 +23,7 @@ use crate::updater::{InstallRequest, InstallResult, TrustAnchors};
 use anyhow::{bail, Context, Result as AnyhowResult};
 use nix::fcntl::{fcntl, FcntlArg, SealFlag};
 use nix::sys::memfd::{memfd_create, MemFdCreateFlag};
+use sha2::{Digest, Sha256};
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
 use std::os::unix::fs::OpenOptionsExt;
@@ -156,12 +157,14 @@ impl AcceptedPackage {
         (&file)
             .read_to_end(&mut bytes)
             .with_context(|| format!("Cannot read the package {:?}", self.path))?;
-        anchors.verify(&bytes, signatures).with_context(|| {
-            format!(
+        anchors
+            .verify(&Sha256::digest(&bytes), signatures)
+            .with_context(|| {
+                format!(
                 "Refusing the package {:?}: no signature of it matches a configured signature key",
                 self.path
             )
-        })?;
+            })?;
         log::info!("Verified the package {:?}", self.path);
         Ok(VerifiedPackage {
             file: sealed(&bytes)?,

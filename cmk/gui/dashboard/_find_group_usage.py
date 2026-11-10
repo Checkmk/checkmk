@@ -29,11 +29,11 @@ def find_usages_of_contact_group_in_dashboards(
                     makeuri_contextless(
                         request,
                         [
-                            ("load_name", dashboard_name),
-                            ("mode", "edit"),
+                            ("mode", "edit_settings"),
                             ("owner", dashboard_owner),
+                            ("name", dashboard_name),
                         ],
-                        filename="edit_dashboard.py",
+                        filename="dashboard.py",
                     ),
                 )
             )

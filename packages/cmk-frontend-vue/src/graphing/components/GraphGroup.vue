@@ -212,12 +212,16 @@ function onPanelTimeRange(
   setRequestedTimeRange(range, panelKey)
 }
 
+const nearView = ref<boolean[]>([])
+const isWanted = (index: number): boolean => nearView.value[index] ?? false
+
 const { loads, reload } = useGraphData(
   () => props.graphs,
   () => requestedTimeRange.value,
   () => effectiveWidth.value - CANVAS_MARGIN_HORIZONTAL,
   () => consolidationFnPerPanel.value,
-  () => props.combination_mode
+  () => props.combination_mode,
+  { isWanted }
 )
 
 const overviewGraphDefinitions = computed(() =>
@@ -230,10 +234,10 @@ const { loads: overviewLoads, reload: reloadOverview } = useGraphData(
   () => effectiveWidth.value - CANVAS_MARGIN_HORIZONTAL,
   () => consolidationFnPerPanel.value,
   () => props.combination_mode,
-  { getFetchBounds: navigableBounds }
+  { getFetchBounds: navigableBounds, isWanted }
 )
 
-// Published once no strip is loading, so that the strips switch together. Derived
+// Published once no strip is loading, so that the strips near the view switch together. Derived
 // from the first strip that answers the current domain: a strip snapped to one fetch's grid and
 // drawn over another's series is what put the selection bar in the wrong place. A strip without
 // such an answer keeps its last one, which the brush draws at its own time range.
@@ -354,6 +358,7 @@ function onRetry(index: number): void {
       :figure-height="figure_height"
       :show-legend="display.show_legend"
       :show-brush="entry.definition.interaction.brush === 'enabled'"
+      @near-view="nearView[entry.index] = $event"
       @retry="onRetry(entry.index)"
     >
       <template #panel="{ graph }">

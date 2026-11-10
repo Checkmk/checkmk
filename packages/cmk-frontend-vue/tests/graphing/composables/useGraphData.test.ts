@@ -431,6 +431,59 @@ test("exposes a fetch's warnings apart from its errors", async () => {
   expect(loads.value[0]!.partialErrors).toHaveLength(0)
 })
 
+describe('useGraphData — graphs away from the view', () => {
+  function renderNearView(
+    nearView: { value: boolean[] },
+    range: { value: RequestedTimeRange } = ref({ start: 0, end: 3_600 })
+  ): ReturnType<typeof useGraphData> {
+    let exposed!: ReturnType<typeof useGraphData>
+    const harness = defineComponent({
+      setup() {
+        exposed = useGraphData(
+          () => [0, 1].map((index) => ({ internal: `{"graph": ${index}}`, add_to: null }) as never),
+          () => range.value,
+          () => 800,
+          () => [],
+          () => null,
+          { isWanted: (index) => nearView.value[index] ?? false }
+        )
+        return () => h('div')
+      }
+    })
+    render(harness)
+    return exposed
+  }
+
+  const fetchedGraphs = (): string[] =>
+    postSpy.mock.calls.map(
+      (call: [string, { body: { internal: string } }]) => call[1].body.internal
+    )
+
+  test('a graph away from the view fetches nothing until it comes near', async () => {
+    const nearView = ref([true, false])
+    renderNearView(nearView)
+    await waitFor(() => expect(fetchedGraphs()).toEqual(['{"graph": 0}']))
+
+    nearView.value = [true, true]
+
+    await waitFor(() => expect(fetchedGraphs()).toEqual(['{"graph": 0}', '{"graph": 1}']))
+  })
+
+  test('a range change fetches again only the graphs near the view', async () => {
+    const nearView = ref([true, true])
+    const range = ref<RequestedTimeRange>({ start: 0, end: 3_600 })
+    const { loads } = renderNearView(nearView, range)
+    await waitFor(() => expect(loads.value.every(({ graph }) => graph !== null)).toBe(true))
+    postSpy.mockClear()
+
+    nearView.value = [true, false]
+    range.value = { start: 3_600, end: 7_200 }
+
+    await waitFor(() => expect(fetchedGraphs()).toEqual(['{"graph": 0}']))
+    expect(loads.value[1]!.graph).not.toBeNull()
+  })
+})
+
 test('a graph that fails leaves the data of the others in place', async () => {
   let exposed!: ReturnType<typeof useGraphData>
   const harness = defineComponent({

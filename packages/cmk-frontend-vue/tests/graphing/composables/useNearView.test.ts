@@ -4,9 +4,9 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
-import { type EffectScope, effectScope, ref } from 'vue'
+import { type EffectScope, type Ref, effectScope, ref } from 'vue'
 
-import { useWhenNearView } from '@/graphing/composables/useNearView'
+import { useNearView, useWhenNearView } from '@/graphing/composables/useNearView'
 
 import { FakeIntersectionObserver, reportIntersection } from '@tests/lib/fakeIntersectionObserver'
 
@@ -81,4 +81,27 @@ test('a target whose scope ended draws nothing when it comes near', () => {
   report(true)
 
   expect(draws).toBe(0)
+})
+
+function useNearTarget(): Readonly<Ref<boolean>> {
+  const scope = effectScope()
+  scopes.push(scope)
+  return scope.run(() => useNearView(ref(target)))!
+}
+
+test('a target is near the view while the observer reports it near', () => {
+  const isNear = useNearTarget()
+
+  report(true)
+  const nearAfterReport = isNear.value
+  report(false)
+
+  expect(nearAfterReport).toBe(true)
+  expect(isNear.value).toBe(false)
+})
+
+test('without an IntersectionObserver, every target is near the view', () => {
+  vi.stubGlobal('IntersectionObserver', undefined)
+
+  expect(useNearTarget().value).toBe(true)
 })

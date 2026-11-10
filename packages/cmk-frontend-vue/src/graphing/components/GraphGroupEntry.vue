@@ -11,6 +11,7 @@ import { computed, ref, watch } from 'vue'
 
 import type { GraphLoad, ResolvedGraph } from '../composables/useGraphData'
 import type { GraphNoticeDescriptor } from '../composables/useGraphNotice'
+import { useNearView } from '../composables/useNearView'
 import GraphSkeleton from './GraphSkeleton.vue'
 
 const props = defineProps<{
@@ -23,6 +24,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
+  'near-view': [isNear: boolean]
   retry: []
 }>()
 
@@ -31,6 +33,9 @@ defineSlots<{
 }>()
 
 const root = ref<HTMLElement | null>(null)
+
+const isNearView = useNearView(root)
+watch(isNearView, (isNear) => emit('near-view', isNear), { immediate: true })
 
 // A refetch is skeletonised too: the curves still on screen are the previous range's, so leaving
 // them up reads as nothing having happened. Only that case is worth delaying: a graph that has

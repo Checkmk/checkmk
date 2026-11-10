@@ -3,7 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
-import type { Ref } from 'vue'
+import { type Ref, readonly, ref } from 'vue'
 
 import { sharedObserver, useObservedElement } from './sharedObserver'
 
@@ -19,6 +19,18 @@ const observeNearView = sharedObserver<IntersectionObserverEntry>(
 )
 
 const canObserveNearView = (): boolean => typeof IntersectionObserver !== 'undefined'
+
+/** Whether target is near the view; without IntersectionObserver, every target is near. */
+export function useNearView(target: Readonly<Ref<Element | null>>): Readonly<Ref<boolean>> {
+  if (!canObserveNearView()) {
+    return readonly(ref(true))
+  }
+  const isNear = ref(false)
+  useObservedElement(observeNearView, target, (entry) => {
+    isNear.value = entry.isIntersecting
+  })
+  return readonly(isNear)
+}
 
 /** Return a request that runs run at once near the view, else when target comes near it. */
 export function useWhenNearView(

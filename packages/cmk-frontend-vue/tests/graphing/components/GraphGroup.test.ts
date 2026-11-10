@@ -20,6 +20,7 @@ import GraphGroup from '@/graphing/components/GraphGroup.vue'
 import { MAX_FIGURE_WIDTH } from '@/graphing/components/constants'
 import type { GraphDisplayOptions } from '@/graphing/types'
 
+import { FakeIntersectionObserver, reportIntersection } from '@tests/lib/fakeIntersectionObserver'
 import { FakeResizeObserver, deliverSize } from '@tests/lib/fakeResizeObserver'
 
 // Hoisted so the panel stub below can bake the ranges its buttons report into its template.
@@ -916,6 +917,41 @@ test('a container resize gives every graph group on the page its new width', asy
       '700'
     ])
   )
+})
+
+describe('GraphGroup - graphs away from the view', () => {
+  test('a graph away from the view keeps its skeleton and fetches nothing', async () => {
+    vi.stubGlobal('IntersectionObserver', FakeIntersectionObserver)
+    renderGroup([makeGraphDefinition('CPU utilization'), makeGraphDefinition('Memory')])
+    await nextTick()
+    const [nearPanel, awayPanel] = document.querySelectorAll('.graphing-graph-group__panel')
+
+    reportIntersection(nearPanel!, true)
+    reportIntersection(awayPanel!, false)
+
+    await waitFor(() => expect(panels()).toHaveLength(1))
+    expect(skeletons()).toHaveLength(1)
+    expect(new Set(requestedGraphTitles())).toEqual(new Set(['CPU utilization']))
+  })
+
+  test('a panel away from the view keeps its brush across a domain change', async () => {
+    vi.stubGlobal('IntersectionObserver', FakeIntersectionObserver)
+    servedAsRequested()
+    renderGroup([makeGraphDefinition('CPU utilization'), makeGraphDefinition('Memory')])
+    await nextTick()
+    const [nearPanel, awayPanel] = document.querySelectorAll('.graphing-graph-group__panel')
+    reportIntersection(nearPanel!, true)
+    reportIntersection(awayPanel!, true)
+    await waitFor(() => expect(brushGeometries()).toHaveLength(2))
+    const before = brushGeometries()[0]
+    reportIntersection(awayPanel!, false)
+    await nextTick()
+
+    useGlobalTimeRange().setActiveTimeRange(range(1, 2), 'time_picker')
+    await waitFor(() => expect(brushGeometries()[0]).not.toBe(before))
+
+    expect(brushGeometries()[1]).toBe(brushGeometries()[0])
+  })
 })
 
 describe('GraphGroup - inside a view widget', () => {

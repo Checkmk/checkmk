@@ -124,6 +124,8 @@ export interface GraphDataOptions {
   getFetchBounds?: () => NavigableBounds
   fetchGraph?: GraphDataFetcher
   planFetchWindow?: FetchWindowPlanner
+  /** Whether the graph at this index is wanted now; a stale graph loads only while it is wanted. */
+  isWanted?: (index: number) => boolean
 }
 
 /** How the fetch of one graph went. */
@@ -148,7 +150,7 @@ const NOT_LOADED: GraphLoad = {
 }
 
 interface LoadControl {
-  // A stale graph holds no data for the current request, or none at all.
+  // A stale graph holds no data for the current request. It loads once it is wanted.
   isStale: boolean
   // The step of the last request; a resize only re-fetches for a finer one.
   requestedStep: number | null
@@ -174,6 +176,7 @@ export function useGraphData(
 } {
   const fetchGraph = options.fetchGraph ?? fetchGraphDataByDefinition
   const planFetchWindow = options.planFetchWindow ?? planFetchWindowByWidth
+  const isWanted = options.isWanted ?? (() => true)
 
   const published = shallowRef<readonly GraphLoad[]>([])
   const loads = computed(() =>
@@ -192,6 +195,16 @@ export function useGraphData(
       control.inFlight?.abort()
       control.inFlight = null
     })
+  }
+
+  function abortLoad(index: number): void {
+    const control = controls[index]
+    if (control === undefined || control.inFlight === null) {
+      return
+    }
+    control.inFlight.abort()
+    control.inFlight = null
+    updateLoad(index, { isLoading: false })
   }
 
   function matchGraphCount(): void {
@@ -297,8 +310,13 @@ export function useGraphData(
     }
     const request = currentRequest()
     controls.forEach((control, index) => {
-      if (control.isStale) {
+      if (!control.isStale) {
+        return
+      }
+      if (isWanted(index)) {
         void loadGraph(index, request)
+      } else {
+        abortLoad(index)
       }
     })
   }
@@ -342,6 +360,8 @@ export function useGraphData(
     markStale(everyIndex().filter((index) => current[index] !== previous[index]))
   })
 
+  watch(() => everyIndex().map((index) => isWanted(index)), loadStaleGraphs)
+
   // A resize only re-renders client-side; re-fetch (debounced, resizes stream) the graphs whose
   // step is coarser than the one the plotted width plans. A narrower plot draws finer data just as
   // well.
@@ -359,7 +379,6 @@ export function useGraphData(
     if (!Number.isFinite(width) || width <= 0) {
       return
     }
-    // A stale graph waited for a usable width: load it now.
     loadStaleGraphs()
     if (graphsWithCoarserStep(width).length > 0) {
       debouncedLoadFinerSteps()

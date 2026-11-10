@@ -45,6 +45,7 @@ from cmk.maps.shared.map_payload import (
     LINE_WIDTH_MIN,
     LinePerfdataLabel,
     LineStyle,
+    MAP_BUNDLE_HOSTS_MAX,
     MAP_OBJECTS_MAX,
     MonitoredObjectType,
     OBJECT_EXPAND_DEPTH_MAX,
@@ -59,6 +60,7 @@ from cmk.maps.shared.validators import (
     MAX_ROTATION_POOLS,
     validate_color,
     validate_graph_url,
+    validate_host_name,
     validate_rotation_pool,
     validate_tile_url,
     validate_user_url,
@@ -68,6 +70,7 @@ from cmk.maps.shared.validators import (
 # asset URL; drop anything that could climb out of the asset directory.
 _AssetRef = Annotated[str | None, BeforeValidator(coerce_asset_ref)]
 _RotationPool = Annotated[str, AfterValidator(validate_rotation_pool)]
+_HostName = Annotated[str, AfterValidator(validate_host_name)]
 
 
 class AggregationInfo(BaseModel):
@@ -294,7 +297,7 @@ class MapElement(BaseModel):
     # Set ⇒ this dyngroup is a geo "bundle": worst-state folds host + service
     # severities, and the worldmap automap suppresses the member hosts' markers.
     bundle_kind: Literal["static", "location"] | None = None
-    bundle_hosts: list[str] | None = Field(default=None, max_length=BUNDLE_HOSTS_MAX)
+    bundle_hosts: list[_HostName] | None = Field(default=None, max_length=BUNDLE_HOSTS_MAX)
     # None ⇒ exact coordinate match (5 decimals ≈ 1 m).
     bundle_precision: int | None = Field(default=None, ge=0, le=BUNDLE_PRECISION_MAX)
     # 0 = root only, hard cap 10 levels — see backend.app.services.state_service.
@@ -413,6 +416,12 @@ class MapConfig(BaseModel):
     view: MapView = StaticView()
     objects: list[MapElement] = Field(default=[], max_length=MAP_OBJECTS_MAX)
 
+    @model_validator(mode="after")
+    def _bundle_hosts_in_total(self) -> Self:
+        if sum(len(o.bundle_hosts or ()) for o in self.objects) > MAP_BUNDLE_HOSTS_MAX:
+            raise ValueError(f"A map's bundles take at most {MAP_BUNDLE_HOSTS_MAX} hosts in all")
+        return self
+
     @field_validator("background_color")
     @classmethod
     def _validate_background_color(cls, v: str | None) -> str | None:
@@ -455,7 +464,7 @@ class MapElementUpdate(BaseModel):
     object_types: Literal["host", "service"] | None = None
     object_filter: str | None = None
     bundle_kind: Literal["static", "location"] | None = None
-    bundle_hosts: list[str] | None = Field(default=None, max_length=BUNDLE_HOSTS_MAX)
+    bundle_hosts: list[_HostName] | None = Field(default=None, max_length=BUNDLE_HOSTS_MAX)
     bundle_precision: int | None = Field(default=None, ge=0, le=BUNDLE_PRECISION_MAX)
     expand_depth: int | None = Field(default=None, ge=0, le=OBJECT_EXPAND_DEPTH_MAX)
     only_hard_states: bool | None = None

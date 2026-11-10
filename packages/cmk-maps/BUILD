@@ -25,7 +25,10 @@ py_library(
         "//packages/cmk-maps/tests:__subpackages__",
         "//tests:__subpackages__",
     ],
-    deps = [requirement("pydantic")],
+    deps = [
+        "//packages/cmk-ccc:hostaddress",
+        requirement("pydantic"),
+    ],
 )
 
 py_library(

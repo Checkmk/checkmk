@@ -25,6 +25,7 @@ from cmk.maps.gui.pagetype import MapPage
 from cmk.maps.gui.store import get_own_map
 from cmk.maps.migration.legacy_maps import migrate_legacy_maps
 from cmk.maps.rest_api.utils import map_from_spec
+from cmk.maps.shared.map_payload import BUNDLE_HOSTS_MAX, MAP_BUNDLE_HOSTS_MAX
 from cmk.utils import paths
 from tests.testlib.unit.gui.users import create_and_destroy_user
 
@@ -379,6 +380,45 @@ def test_a_dynamic_group_keeps_its_service_counting(
     obj = _objects(_migrated(admin, "dyn", map_spec).config.map_spec)[0]
 
     assert obj.get("recognize_services") == group.get("recognize_services")
+
+
+def test_a_bundle_host_that_is_no_host_name_is_left_out_of_its_bundle(
+    admin: UserId, caplog: pytest.LogCaptureFixture
+) -> None:
+    bundle = _complete_object(bundle_kind="static", bundle_hosts=["web01", "web 02"], **_DYNGROUP)
+
+    obj = _objects(_migrated(admin, "bundle", _complete_map(objects=[bundle])).config.map_spec)[0]
+
+    assert obj["bundle_hosts"] == ["web01"]
+    assert "without 1 bundle host(s)" in caplog.text
+
+
+def test_a_bundle_keeps_as_many_hosts_as_maps_takes(admin: UserId) -> None:
+    hosts = [f"web{number}" for number in range(BUNDLE_HOSTS_MAX + 1)]
+    bundle = _complete_object(bundle_kind="static", bundle_hosts=hosts, **_DYNGROUP)
+
+    obj = _objects(_migrated(admin, "bundle", _complete_map(objects=[bundle])).config.map_spec)[0]
+
+    assert obj["bundle_hosts"] == hosts[:BUNDLE_HOSTS_MAX]
+
+
+def test_the_bundles_of_a_board_keep_as_many_hosts_as_a_map_takes(admin: UserId) -> None:
+    over = 400
+    sizes = [BUNDLE_HOSTS_MAX] * (MAP_BUNDLE_HOSTS_MAX // BUNDLE_HOSTS_MAX - 1) + [600, 400 + over]
+    bundles = [
+        _complete_object(
+            id=f"b{bundle}",
+            bundle_kind="static",
+            bundle_hosts=[f"web{number}" for number in range(size)],
+            **_DYNGROUP,
+        )
+        for bundle, size in enumerate(sizes)
+    ]
+
+    objects = _objects(_migrated(admin, "bundle", _complete_map(objects=bundles)).config.map_spec)
+
+    kept = [len(hosts) for obj in objects if isinstance(hosts := obj["bundle_hosts"], list)]
+    assert kept == [*sizes[:-1], sizes[-1] - over]
 
 
 def test_a_dynamic_group_maps_cannot_load_is_left_out_of_its_board(

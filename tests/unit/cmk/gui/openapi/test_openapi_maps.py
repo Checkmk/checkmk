@@ -19,7 +19,12 @@ import pytest
 from cmk.ccc.user import UserId
 from cmk.maps.rest_api import utils
 from cmk.maps.rest_api.internal import signed_maps
-from cmk.maps.shared.map_payload import MAP_CONFIG_MAX_BYTES, MAP_OBJECTS_MAX
+from cmk.maps.shared.map_payload import (
+    BUNDLE_HOSTS_MAX,
+    MAP_BUNDLE_HOSTS_MAX,
+    MAP_CONFIG_MAX_BYTES,
+    MAP_OBJECTS_MAX,
+)
 from tests.testlib.unit.rest_api_client import ClientRegistry, Response
 
 
@@ -482,6 +487,30 @@ def test_a_save_with_text_that_is_not_utf8_is_refused(clients: ClientRegistry) -
     clients.Maps.create(config=_STATIC_MAP)
 
     _edit(clients, {**_STATIC_MAP, "alias": "\ud800"}, "*", expect_ok=False).assert_status_code(
+        HTTPStatus.BAD_REQUEST
+    )
+
+
+def _bundles(*hosts: list[str]) -> dict[str, object]:
+    return _map(
+        "map1",
+        objects=[
+            _host_object(f"b{i}", obj_type="dyngroup", bundle={"kind": "static", "hosts": members})
+            for i, members in enumerate(hosts)
+        ],
+    )
+
+
+def test_a_bundle_host_that_is_no_host_name_is_refused(clients: ClientRegistry) -> None:
+    clients.Maps.create(config=_bundles(["web 01"]), expect_ok=False).assert_status_code(
+        HTTPStatus.BAD_REQUEST
+    )
+
+
+def test_a_map_takes_a_limited_number_of_bundle_hosts_in_all(clients: ClientRegistry) -> None:
+    full = [f"h{i}" for i in range(BUNDLE_HOSTS_MAX)]
+    bundles = MAP_BUNDLE_HOSTS_MAX // BUNDLE_HOSTS_MAX + 1
+    clients.Maps.create(config=_bundles(*[full] * bundles), expect_ok=False).assert_status_code(
         HTTPStatus.BAD_REQUEST
     )
 

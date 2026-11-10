@@ -13,6 +13,7 @@ from cmk.maps.backend.schemas.map import MapConfig, MapElement, WorldmapView
 from cmk.maps.shared.map_payload import (
     BUNDLE_HOSTS_MAX,
     FLOW_POSITIONS_MAX,
+    MAP_BUNDLE_HOSTS_MAX,
     MAP_OBJECTS_MAX,
     PRESENTATION_ELEMENTS_MAX,
 )
@@ -173,3 +174,29 @@ def test_a_map_takes_a_limited_number_of_entries(
 
     with pytest.raises(ValidationError):
         MapConfig.model_validate({"name": "m", **entries(limit + 1)})
+
+
+def _bundles(count: int) -> dict[str, object]:
+    full = [f"h{i}" for i in range(BUNDLE_HOSTS_MAX)]
+    return {
+        "objects": [
+            {"id": f"b{i}", "type": "dyngroup", "bundle_kind": "static", "bundle_hosts": full}
+            for i in range(count)
+        ]
+    }
+
+
+def test_a_map_takes_a_limited_number_of_bundle_hosts_in_all() -> None:
+    bundles = MAP_BUNDLE_HOSTS_MAX // BUNDLE_HOSTS_MAX
+    MapConfig.model_validate({"name": "m", **_bundles(bundles)})
+
+    with pytest.raises(ValidationError):
+        MapConfig.model_validate({"name": "m", **_bundles(bundles + 1)})
+
+
+@pytest.mark.parametrize("host", ["", "web 01", "$(id)"])
+def test_a_bundle_host_must_be_a_host_name(host: str) -> None:
+    with pytest.raises(ValidationError):
+        MapElement.model_validate(
+            {"id": "b", "type": "dyngroup", "bundle_kind": "static", "bundle_hosts": [host]}
+        )

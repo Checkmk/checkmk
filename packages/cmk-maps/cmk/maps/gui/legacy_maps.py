@@ -40,8 +40,10 @@ from cmk.maps.shared.map_compat import (
 )
 from cmk.maps.shared.map_payload import (
     AUTO_OBJECT_ID_PREFIX,
+    BUNDLE_HOSTS_MAX,
     DISPLAY_FIELD_DEFAULTS,
     LABEL_FIELD_DEFAULTS,
+    MAP_BUNDLE_HOSTS_MAX,
     MAP_FIELD_DEFAULTS,
     OBJECT_FIELD_DEFAULTS,
     RADAR_VIEW_FIELD_DEFAULTS,
@@ -50,6 +52,7 @@ from cmk.maps.shared.validators import (
     coerce_graph_url,
     coerce_image_url,
     rgb_to_hex,
+    validate_host_name,
     validate_tile_url,
 )
 
@@ -137,6 +140,31 @@ def _loads(object_filter: object) -> bool:
         return False
     try:
         normalize_object_filter(object_filter)
+    except ValueError:
+        return False
+    return True
+
+
+def drop_unusable_bundle_hosts(board: dict[str, object]) -> int:
+    """Leave out the bundle hosts Maps does not take, counting them: one that is no
+    host name, and those past what a bundle and a map hold."""
+    dropped = 0
+    left = MAP_BUNDLE_HOSTS_MAX
+    for obj in _dict_objects(board):
+        if not isinstance(hosts := obj.get("bundle_hosts"), list):
+            continue
+        kept = [host for host in hosts if _is_host_name(host)][: min(BUNDLE_HOSTS_MAX, left)]
+        left -= len(kept)
+        dropped += len(hosts) - len(kept)
+        obj["bundle_hosts"] = kept
+    return dropped
+
+
+def _is_host_name(value: object) -> bool:
+    if not isinstance(value, str):
+        return False
+    try:
+        validate_host_name(value)
     except ValueError:
         return False
     return True

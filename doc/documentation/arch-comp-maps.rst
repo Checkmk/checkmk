@@ -1055,7 +1055,7 @@ Limits
    * - Pinned flow positions per map
      - 10,000
    * - Hosts per geo bundle
-     - 1000
+     - 1000, 10,000 in all bundles of a map; each a valid host name
    * - Maps a state fetch follows through links
      - 256; further links stay pending, marked stale
    * - Metric history window

@@ -62,6 +62,7 @@ from cmk.maps.shared.map_payload import (
     LINE_WIDTH_MIN,
     LinePerfdataLabel,
     LineStyle,
+    MAP_BUNDLE_HOSTS_MAX,
     MAP_OBJECTS_MAX,
     MonitoredObjectType,
     OBJECT_EXPAND_DEPTH_MAX,
@@ -83,6 +84,7 @@ from cmk.maps.shared.validators import (
     validate_color,
     validate_font_family,
     validate_graph_url,
+    validate_host_name,
     validate_image_url,
     validate_rotation_pool,
     validate_tile_url,
@@ -106,6 +108,7 @@ _UrlTarget = Annotated[str, BeforeValidator(coerce_url_target)]
 _ImageUrl = Annotated[str, AfterValidator(validate_image_url)]
 _TileUrl = Annotated[str, AfterValidator(validate_tile_url)]
 _GraphUrl = Annotated[str, AfterValidator(validate_graph_url)]
+_HostName = Annotated[str, AfterValidator(validate_host_name)]
 # Uploaded icon / background filenames — drop anything that could leave the asset
 # dir. Coerces like the daemon: the model also validates stored maps on read.
 _AssetRef = Annotated[str | None, BeforeValidator(coerce_asset_ref)]
@@ -691,8 +694,12 @@ class MapObjectBundle:
     kind: Literal["static", "location"] | None | ApiOmitted = api_field(
         description="Geo bundle kind.", example="location", default_factory=ApiOmitted
     )
-    hosts: Annotated[list[str], Field(max_length=BUNDLE_HOSTS_MAX)] | None | ApiOmitted = api_field(
-        description="Bundle member hosts.", example=["web-01", "web-02"], default_factory=ApiOmitted
+    hosts: Annotated[list[_HostName], Field(max_length=BUNDLE_HOSTS_MAX)] | None | ApiOmitted = (
+        api_field(
+            description="Bundle member hosts.",
+            example=["web-01", "web-02"],
+            default_factory=ApiOmitted,
+        )
     )
     precision: Annotated[int, Field(ge=0, le=BUNDLE_PRECISION_MAX)] | None | ApiOmitted = api_field(
         description="Geo bundle coordinate precision.", example=3, default_factory=ApiOmitted
@@ -1077,6 +1084,17 @@ class MapConfig:
     canvas_height: int | None | ApiOmitted = api_field(
         description="Persisted canvas height.", example=1080, default_factory=ApiOmitted
     )
+
+    @model_validator(mode="after")
+    def _bundle_hosts_in_total(self) -> Self:
+        total = sum(
+            len(o.bundle.hosts)
+            for o in self.objects
+            if not isinstance(o.bundle, ApiOmitted) and isinstance(o.bundle.hosts, list)
+        )
+        if total > MAP_BUNDLE_HOSTS_MAX:
+            raise ValueError(f"A map's bundles take at most {MAP_BUNDLE_HOSTS_MAX} hosts in all")
+        return self
 
 
 @api_model

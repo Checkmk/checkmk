@@ -12,6 +12,7 @@ from urllib.parse import urlsplit
 
 from pydantic import Field
 
+from cmk.ccc.hostaddress import HostName
 from cmk.maps.shared.map_name import MAP_NAME_MAX_LENGTH, MAP_NAME_PATTERN
 
 # Connections are referenced by this id from maps and stored as a file name part.
@@ -120,6 +121,13 @@ def _coerced(validate: Callable[[str], str | None], value: object) -> object:
 _IMAGE_FILE_URL = re.compile(r"[^?#\\]*\.(?:png|gif|jpe?g|svg|webp|bmp|ico)", re.IGNORECASE)
 # Read-only pages a graph object may embed from the site itself.
 _EMBEDDABLE_SITE_PAGES = frozenset({"graph_image.py", "view.py", "dashboard.py"})
+
+
+def validate_host_name(value: str) -> str:
+    """A host name as Checkmk takes it."""
+    if not value:
+        raise ValueError("A host name must not be empty")
+    return str(HostName(value))
 
 
 def normalize_host(hostname: str) -> str:

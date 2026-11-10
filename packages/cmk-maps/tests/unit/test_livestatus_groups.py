@@ -11,8 +11,8 @@ from cmk.maps.backend.connections import livestatus
 from cmk.maps.backend.schemas.state import ObjectState, ServicesSummary
 
 
-async def _no_folders() -> list[object]:
-    return []
+async def _no_folders() -> livestatus.WatoFolders:
+    return livestatus.WatoFolders([], hide_unreadable=False)
 
 
 def _connection(

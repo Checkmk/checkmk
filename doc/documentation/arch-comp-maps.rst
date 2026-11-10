@@ -387,7 +387,7 @@ OpenAPI types, not from hand-written copies.
        Livestatus filter lines.
    * - GET
      - ``domain-types/maps_folder/collections/all``
-     - Setup folders the user may see.
+     - Setup folders as Setup's folder lists show them.
    * - GET
      - ``domain-types/maps_site/collections/all``
      - Sites the user is authorized for.
@@ -563,8 +563,11 @@ it can differ from the connections actually in use.
 The GUI writes two more files for the daemon:
 
 * ``etc/check_mk/maps.d/wato/folder_perms.mk`` on every Activate Changes: path,
-  title and permitted contact groups of every Setup folder, used to scope
-  folder-tree maps.
+  title and permitted contact groups of every Setup folder, and the global
+  setting ``wato_hide_folders_without_read_permissions``. Folder-tree maps show
+  the folders as Setup's folder lists do: a folder the user may not read is
+  hidden only with that setting, and only when no subfolder is shown. The
+  hosts of a hidden folder the user may see move to the nearest shown folder.
 * ``etc/check_mk/maps.d/sitespecs.mk`` when sites are saved and on Activate
   Changes: the Livestatus address of every enabled site (encoded socket,
   timeout, persistence, status host, proxy cache flag or TLS settings), without

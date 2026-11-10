@@ -260,10 +260,9 @@ def dyngroup_members(object_types: str, object_filter: str) -> list[Member]:
 
 
 def folder_choices(tree: FolderTree) -> list[FolderChoice]:
-    """Setup folders for the foldertree root-folder picker.
-
-    Uses the WATO folder tree, which is already scoped to the folders the acting
-    user may see — so unlike the daemon endpoint this needs no extra gate.
+    """Setup folders for the foldertree root-folder picker, as Setup's folder
+    choices list them: unreadable folders are hidden only when
+    ``wato_hide_folders_without_read_permissions`` is set.
     """
     return [
         FolderChoice(path=str(path), title=str(title)) for path, title in tree.folder_choices(user)

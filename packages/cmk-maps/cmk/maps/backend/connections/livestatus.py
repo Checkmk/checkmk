@@ -21,7 +21,7 @@ from datetime import datetime, UTC
 from functools import lru_cache
 from http import HTTPStatus
 from pathlib import Path
-from typing import cast, Literal, override, TYPE_CHECKING
+from typing import cast, Literal, NamedTuple, override, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from cmk.livestatus_client import (
@@ -206,7 +206,12 @@ def _folder_path_from_filename(filename: str) -> str:
 # ``Folder.groups()``), not from Livestatus (which only knows folders that contain
 # hosts). Cached on the file mtime — the skeleton changes only on activation, but
 # the read would otherwise run on every state tick.
-_wato_folders_cache: dict[float, list[FolderInfo]] = {}
+class WatoFolders(NamedTuple):
+    folders: list[FolderInfo]
+    hide_unreadable: bool
+
+
+_wato_folders_cache: dict[float, WatoFolders] = {}
 
 
 def _folder_info_from_entry(entry: dict[str, object]) -> FolderInfo | None:
@@ -234,23 +239,30 @@ def _folder_info_from_entry(entry: dict[str, object]) -> FolderInfo | None:
     return info
 
 
-async def _load_wato_folders() -> list[FolderInfo]:
+async def _load_wato_folders() -> WatoFolders:
     """Cached, off-event-loop read of the GUI-prepared SETUP-folder skeleton."""
     mtime = _cmk_folders.folder_perms_mtime()
     cached = _wato_folders_cache.get(mtime)
     if cached is not None:
         return cached
-    raw = await asyncio.to_thread(_cmk_folders.load_folder_perms)
-    folders = [info for entry in raw if (info := _folder_info_from_entry(entry)) is not None]
+    skeleton = await asyncio.to_thread(_cmk_folders.load_folder_perms)
+    loaded = WatoFolders(
+        [
+            info
+            for entry in skeleton.folders
+            if (info := _folder_info_from_entry(entry)) is not None
+        ],
+        skeleton.hide_unreadable,
+    )
     logger.debug(
         "Folder-tree: loaded %(folder_count)d prepared WATO folders",
-        {"folder_count": len(folders)},
+        {"folder_count": len(loaded.folders)},
     )
     # Single-entry cache keyed by mtime: a new activation bumps the mtime and
     # invalidates the previous skeleton.
     _wato_folders_cache.clear()
-    _wato_folders_cache[mtime] = folders
-    return folders
+    _wato_folders_cache[mtime] = loaded
+    return loaded
 
 
 # State-code maps + severity ranking are the shared GUI↔daemon vocabulary
@@ -1556,9 +1568,9 @@ class LivestatusConnection(ConnectionBase):
         # (``wato.see_all_folders`` OR membership in a folder's contact groups).
         # This is deliberately NOT the monitoring scope: a see-all guest sees
         # every host yet must not see SETUP folder names outside their groups.
-        # No scope permits no folder. Empty folders the user can't read are
-        # then pruned by the state service.
-        folders = await _load_wato_folders()
+        # No scope permits no folder. The state service then hides the folders
+        # the user may not read as Setup does.
+        wato_folders = await _load_wato_folders()
         scope = _folder_scope_ctx.get()
         scoped: list[FolderInfo] = [
             cast(
@@ -1568,9 +1580,14 @@ class LivestatusConnection(ConnectionBase):
                     "permitted": scope is not None and scope.permits(f.get("permitted_groups", [])),
                 },
             )
-            for f in folders
+            for f in wato_folders.folders
         ]
-        return FolderTreeData(folders=scoped, hosts=hosts, dead_sites=replayed_dead)
+        return FolderTreeData(
+            folders=scoped,
+            hosts=hosts,
+            dead_sites=replayed_dead,
+            hide_unreadable=wato_folders.hide_unreadable,
+        )
 
     @override
     async def get_all_services_states(

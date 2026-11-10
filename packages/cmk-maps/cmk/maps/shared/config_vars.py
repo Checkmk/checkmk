@@ -30,6 +30,8 @@ VAR_SITE_SPECS = "maps_site_specs"
 
 # Prepared SETUP-folder skeleton — maps.d/wato/folder_perms.mk.
 VAR_FOLDER_PERMS = "maps_folder_perms"
+# Setup's ``wato_hide_folders_without_read_permissions``, written with the skeleton.
+VAR_FOLDER_HIDE_UNREADABLE = "maps_folder_hide_unreadable"
 
 
 class FolderPermEntry(TypedDict):

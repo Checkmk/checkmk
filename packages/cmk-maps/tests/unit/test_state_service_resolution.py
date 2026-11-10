@@ -26,7 +26,12 @@ import pytest
 from fake_connection import FakeConnection
 from fake_links import FakeLinkGui
 
-from cmk.maps.backend.connections.base import FolderTreeData, QueryRefusedError
+from cmk.maps.backend.connections.base import (
+    FolderInfo,
+    FolderTreeData,
+    FolderTreeHostRow,
+    QueryRefusedError,
+)
 from cmk.maps.backend.schemas.map import (
     MapConfig,
     MapElement,
@@ -1639,50 +1644,84 @@ def test_foldertree_hide_empty_folders(test_conn: FakeConnection) -> None:  # no
     assert _find_node(tree, "datacenters/muc") is not None
 
 
-def test_foldertree_prunes_unpermitted_empty_folders(
-    test_conn: FakeConnection, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """A scoped user must not see SETUP folder names they have no access to.
-
-    Empty folders the user can't read (``permitted=False``) are pruned even with
-    ``show_empty_folders`` on; an empty *permitted* folder is kept, and a folder
-    that contains a visible host is kept regardless of its own permission flag.
-    """
-
+def _setup_folder_tree(
+    test_conn: FakeConnection,
+    monkeypatch: pytest.MonkeyPatch,
+    folders: list[FolderInfo],
+    hosts: list[FolderTreeHostRow],
+    *,
+    hide_unreadable: bool,
+    **view: object,
+) -> FolderTreeNode:
     async def _fake_folder_tree(
         *,
         only_hard: bool = False,  # noqa: ARG001
         sites: list[str] | None = None,  # noqa: ARG001
     ) -> FolderTreeData:
-        return FolderTreeData(
-            folders=[
-                {"path": "", "title": "Main", "permitted": True},
-                {"path": "secret", "title": "Secret", "permitted": False},
-                {"path": "shared", "title": "Shared", "permitted": True},
-                {"path": "withhost", "title": "WithHost", "permitted": False},
-            ],
-            hosts=[
-                {
-                    "host_name": "h1",
-                    "folder_path": "withhost",
-                    "state": "UP",
-                    "output": "",
-                    "site_id": "central",
-                }
-            ],
-        )
+        return FolderTreeData(folders=folders, hosts=hosts, hide_unreadable=hide_unreadable)
 
     monkeypatch.setattr(test_conn, "get_folder_tree", _fake_folder_tree)
-    result = asyncio.run(get_map_states(_folder_map({"show_empty_folders": True}), map_owner=""))
-    tree = result.folder_tree
+    tree = asyncio.run(
+        get_map_states(_folder_map({"show_empty_folders": True, **view}), map_owner="")
+    ).folder_tree
     assert tree is not None
-    # Empty + not permitted → hidden, even though show_empty_folders is on.
+    return tree
+
+
+def _host_in(folder: str, name: str = "h1") -> FolderTreeHostRow:
+    return {"host_name": name, "folder_path": folder, "state": "UP", "output": "", "site_id": "c"}
+
+
+def test_foldertree_shows_unreadable_folders_unless_setup_hides_them(
+    test_conn: FakeConnection, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    tree = _setup_folder_tree(
+        test_conn,
+        monkeypatch,
+        [{"path": "", "title": "Main", "permitted": True}, {"path": "secret", "title": "Secret"}],
+        [],
+        hide_unreadable=False,
+    )
+
+    assert _find_node(tree, "secret") is not None
+
+
+def test_foldertree_hides_an_unreadable_folder_and_keeps_its_hosts_in_the_parent(
+    test_conn: FakeConnection, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    tree = _setup_folder_tree(
+        test_conn,
+        monkeypatch,
+        [
+            {"path": "", "title": "Main", "permitted": True},
+            {"path": "secret", "title": "Secret", "permitted": False},
+            {"path": "secret/deeper", "title": "Deeper", "permitted": False},
+        ],
+        [_host_in("secret/deeper")],
+        hide_unreadable=True,
+    )
+
     assert _find_node(tree, "secret") is None
-    # Empty + permitted → shown (respects show_empty_folders).
-    assert _find_node(tree, "shared") is not None
-    # Has a visible host → shown regardless of its own permission flag.
-    wh = _find_node(tree, "withhost")
-    assert wh is not None and wh.host_count == 1
+    assert [c.path for c in tree.children] == ["h1"]
+    assert tree.host_count == 1
+
+
+def test_foldertree_shows_an_unreadable_folder_above_a_readable_one(
+    test_conn: FakeConnection, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    tree = _setup_folder_tree(
+        test_conn,
+        monkeypatch,
+        [
+            {"path": "", "title": "Main", "permitted": True},
+            {"path": "secret", "title": "Secret", "permitted": False},
+            {"path": "secret/open", "title": "Open", "permitted": True},
+        ],
+        [],
+        hide_unreadable=True,
+    )
+
+    assert _find_node(tree, "secret/open") is not None
 
 
 def test_foldertree_sites_filter(test_conn: FakeConnection) -> None:  # noqa: ARG001
@@ -1733,35 +1772,32 @@ def test_foldertree_no_services_by_default(test_conn: FakeConnection) -> None:  
 
 
 @pytest.mark.parametrize(
-    ("root_folder", "permitted", "title"),
+    ("root_folder", "permitted", "hide_unreadable", "title"),
     [
-        pytest.param("secret", False, "Main", id="unreadable and empty"),
-        pytest.param("missing", True, "Main", id="missing"),
-        pytest.param("secret", True, "Secret", id="readable and empty"),
+        pytest.param("secret", False, True, "Main", id="hidden"),
+        pytest.param("secret", False, False, "Secret", id="unreadable and shown"),
+        pytest.param("missing", True, True, "Main", id="missing"),
+        pytest.param("secret", True, True, "Secret", id="readable"),
     ],
 )
-def test_a_root_folder_the_user_may_not_read_and_sees_nothing_in_reads_as_missing(
+def test_a_root_folder_setup_hides_reads_as_missing(
     test_conn: FakeConnection,
     monkeypatch: pytest.MonkeyPatch,
     root_folder: str,
     permitted: bool,
+    hide_unreadable: bool,
     title: str,
 ) -> None:
-    async def _fake_folder_tree(
-        *,
-        only_hard: bool = False,  # noqa: ARG001
-        sites: list[str] | None = None,  # noqa: ARG001
-    ) -> FolderTreeData:
-        return FolderTreeData(
-            folders=[
-                {"path": "", "title": "Main", "permitted": True},
-                {"path": "secret", "title": "Secret", "permitted": permitted},
-            ],
-            hosts=[],
-        )
+    tree = _setup_folder_tree(
+        test_conn,
+        monkeypatch,
+        [
+            {"path": "", "title": "Main", "permitted": True},
+            {"path": "secret", "title": "Secret", "permitted": permitted},
+        ],
+        [],
+        hide_unreadable=hide_unreadable,
+        root_folder=root_folder,
+    )
 
-    monkeypatch.setattr(test_conn, "get_folder_tree", _fake_folder_tree)
-    result = asyncio.run(get_map_states(_folder_map({"root_folder": root_folder}), map_owner=""))
-
-    assert result.folder_tree is not None
-    assert result.folder_tree.title == title
+    assert tree.title == title

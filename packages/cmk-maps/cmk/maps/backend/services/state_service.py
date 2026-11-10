@@ -9,7 +9,7 @@ import gc
 import logging
 import re
 import time
-from collections.abc import Collection, Iterator
+from collections.abc import Callable, Collection, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from functools import lru_cache
@@ -64,6 +64,10 @@ def natural_key(name: str) -> tuple[int | str, ...]:
         order,
         *(int(part) if part.isdecimal() else part for part in _NUMBER_RUNS.split(name.casefold())),
     )
+
+
+# Folders after hosts, then worst state first, then by name.
+_ChildOrder = tuple[bool, int, tuple[int | str, ...]]
 
 
 def sort_folder_services(services: list[FolderHostService]) -> None:
@@ -1240,6 +1244,9 @@ def _build_folder_tree(data: FolderTreeData, fv: FolderTreeView) -> FolderTreeNo
             )
         )
 
+    def child_order(c: FolderTreeNode) -> _ChildOrder:
+        return (c.kind == "folder", -sev_get(c.state, -1), natural_key(c.title))
+
     # Service leaves are NOT materialised here. ``show_services`` instead makes
     # hosts expandable on demand: the frontend fetches a single host's services
     # via the folder-host-services endpoint only when the operator drills into
@@ -1283,13 +1290,7 @@ def _build_folder_tree(data: FolderTreeData, fv: FolderTreeView) -> FolderTreeNo
         # hosts sit right under Main, before the subfolders). Within each group
         # worst-severity first (problems float up), then by name as Setup
         # orders it; EMPTY/PENDING sink below healthy via the -1 default.
-        node.children.sort(
-            key=lambda c: (
-                c.kind == "folder",
-                -sev_get(c.state, -1),
-                natural_key(c.title),
-            )
-        )
+        node.children.sort(key=child_order)
 
     # Resolve the display root (stable folder_id first, then path).
     root_path = ""
@@ -1301,11 +1302,13 @@ def _build_folder_tree(data: FolderTreeData, fv: FolderTreeView) -> FolderTreeNo
         root_path = by_id if by_id is not None else (cand if cand in nodes else "")
     root = nodes.get(root_path) or nodes[""]
     finalize(root)
-    if root.is_empty and not root.permitted and root is not nodes[""]:
-        # A root the user may not read and sees no host in reads as one that does
-        # not exist, so its title stays as hidden as the folder.
+    hidden = _hidden_folders(nodes[""]) if data.hide_unreadable else set()
+    if root.path in hidden:
+        # A root Setup hides reads as one that does not exist.
         root = nodes[""]
         finalize(root)
+    if hidden:
+        _hoist_hosts_of_hidden_folders(root, hidden, child_order)
 
     # problems_severity narrows what problems_only keeps: "critical" only
     # retains CRITICAL/DOWN/UNREACHABLE — on typical sites nearly every host
@@ -1328,16 +1331,65 @@ def _build_folder_tree(data: FolderTreeData, fv: FolderTreeView) -> FolderTreeNo
         node.children = [c for c in node.children if prune(c)]
         if fv.problems_only:
             return _node_is_problem(node)
-        # An empty folder the user has no Checkmk read-permission to is never
-        # shown — otherwise the SETUP folder name would leak to a user outside
-        # its contact groups (even though all its hosts are already hidden).
-        # Folders that contain a visible host are not empty, so they survive.
-        if node.is_empty and not node.permitted:
-            return False
         return fv.show_empty_folders or not node.is_empty
 
     prune(root)
     return root
+
+
+def _hidden_folders(tree_root: FolderTreeNode) -> set[str]:
+    """The paths of the folders Setup hides when it hides unreadable folders.
+
+    Setup's folder lists show a folder the user may read, one with a shown
+    subfolder, and the root folder (``Folder._walk_tree``).
+    """
+    hidden: set[str] = set()
+
+    def shown(node: FolderTreeNode) -> bool:
+        has_shown_subfolder = False
+        for child in node.children:
+            if child.kind == "folder" and shown(child):
+                has_shown_subfolder = True
+        if has_shown_subfolder or node.permitted or node is tree_root:
+            return True
+        hidden.add(node.path)
+        return False
+
+    shown(tree_root)
+    return hidden
+
+
+def _hoist_hosts_of_hidden_folders(
+    node: FolderTreeNode,
+    hidden: set[str],
+    child_order: Callable[[FolderTreeNode], _ChildOrder],
+) -> None:
+    """Drop the hidden folders below ``node``; their hosts move to the nearest
+    shown folder, as the user may still see them in monitoring."""
+    kept: list[FolderTreeNode] = []
+    hoisted: list[FolderTreeNode] = []
+    for child in node.children:
+        if child.kind != "folder":
+            kept.append(child)
+        elif child.path in hidden:
+            for host in _hosts_below(child):
+                host.path = f"{node.path}/{host.title}" if node.path else host.title
+                hoisted.append(host)
+        else:
+            _hoist_hosts_of_hidden_folders(child, hidden, child_order)
+            kept.append(child)
+    if hoisted:
+        kept.extend(hoisted)
+        kept.sort(key=child_order)
+    node.children = kept
+
+
+def _hosts_below(folder: FolderTreeNode) -> Iterator[FolderTreeNode]:
+    for child in folder.children:
+        if child.kind == "folder":
+            yield from _hosts_below(child)
+        else:
+            yield child
 
 
 # ---------------------------------------------------------------------------

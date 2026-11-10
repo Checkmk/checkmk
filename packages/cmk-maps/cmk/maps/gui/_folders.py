@@ -31,7 +31,11 @@ from cmk.ccc.exceptions import MKGeneralException
 from cmk.gui.log import logger
 from cmk.gui.watolib.hosts_and_folders import FolderTree
 from cmk.gui.watolib.snapshot_artifacts import SnapshotArtifact, SnapshotArtifactRegistry
-from cmk.maps.shared.config_vars import FolderPermEntry, VAR_FOLDER_PERMS
+from cmk.maps.shared.config_vars import (
+    FolderPermEntry,
+    VAR_FOLDER_HIDE_UNREADABLE,
+    VAR_FOLDER_PERMS,
+)
 
 
 def folder_perms_path() -> Path:
@@ -60,15 +64,15 @@ def _resolve_folder_skeleton(tree: FolderTree) -> list[FolderPermEntry]:
     return skeleton
 
 
-def _is_written(path: Path, skeleton: list[FolderPermEntry]) -> bool:
+def _is_written(path: Path, content: dict[str, object]) -> bool:
     # A file that cannot be read counts as changed, so the next write repairs it.
     try:
-        written: list[FolderPermEntry] = store.load_from_mk_file(
-            path, key=VAR_FOLDER_PERMS, default=[], lock=False
+        written = store.load_mk_file(
+            path, default={VAR_FOLDER_PERMS: [], VAR_FOLDER_HIDE_UNREADABLE: False}, lock=False
         )
     except MKGeneralException:
         return False
-    return written == skeleton
+    return dict(written) == content
 
 
 def write_folder_skeleton(tree: FolderTree) -> None:
@@ -78,12 +82,16 @@ def write_folder_skeleton(tree: FolderTree) -> None:
     # previous skeleton — so log and let the activation finish.
     try:
         path = folder_perms_path()
-        skeleton = _resolve_folder_skeleton(tree)
+        # Changing the option needs an activation, which rewrites this file.
+        content: dict[str, object] = {
+            VAR_FOLDER_PERMS: _resolve_folder_skeleton(tree),
+            VAR_FOLDER_HIDE_UNREADABLE: tree.config.wato_hide_folders_without_read_permissions,
+        }
         # Written on every activation, so leave an unchanged file untouched.
-        if _is_written(path, skeleton):
+        if _is_written(path, content):
             return
         path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
-        store.save_to_mk_file(path, key=VAR_FOLDER_PERMS, value=skeleton)
+        store.save_mk_file(path, "\n".join(f"{key} = {value!r}" for key, value in content.items()))
     except Exception:
         logger.exception(
             "Cannot write the Maps folder permissions to %(path)s",

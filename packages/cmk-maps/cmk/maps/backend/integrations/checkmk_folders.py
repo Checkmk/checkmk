@@ -19,11 +19,12 @@ resolved from Livestatus alone.
 """
 
 import logging
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from cmk.maps.backend.core.config import settings
 from cmk.maps.backend.integrations import checkmk as _cmk_integration
-from cmk.maps.shared.config_vars import VAR_FOLDER_PERMS
+from cmk.maps.shared.config_vars import VAR_FOLDER_HIDE_UNREADABLE, VAR_FOLDER_PERMS
 
 log = logging.getLogger(__name__)
 
@@ -39,21 +40,31 @@ def folder_perms_mtime() -> float:
     return _cmk_integration.mtime_or_zero(_folder_perms_path())
 
 
-def load_folder_perms() -> list[dict[str, object]]:
-    """Return the prepared folder skeleton, or ``[]`` when the file is missing,
-    unparseable or empty.
+@dataclass(frozen=True)
+class FolderSkeleton:
+    """Each folder carries ``path``, ``title``, ``folder_id`` and the effective
+    ``permitted_groups`` — the shape the GUI writer produces."""
 
-    Each entry carries ``path``, ``title``, ``folder_id`` and the effective
-    ``permitted_groups`` — the shape the GUI writer produces.
-    """
+    folders: list[dict[str, object]] = field(default_factory=list)
+    # Setup's ``wato_hide_folders_without_read_permissions``.
+    hide_unreadable: bool = False
+
+
+def load_folder_perms() -> FolderSkeleton:
+    """Return the prepared folder skeleton, empty when the file is missing,
+    unparseable or empty."""
     p = _folder_perms_path()
     if not p.is_file():
-        return []
+        return FolderSkeleton()
     try:
-        raw = _cmk_integration.exec_mk_file(p, {VAR_FOLDER_PERMS: []})[VAR_FOLDER_PERMS]
+        values = _cmk_integration.exec_mk_file(
+            p, {VAR_FOLDER_PERMS: [], VAR_FOLDER_HIDE_UNREADABLE: False}
+        )
     except Exception:
         log.exception("Failed to parse %(path)s", {"path": p})
-        return []
-    if not isinstance(raw, list):
-        return []
-    return [dict(entry) for entry in raw if isinstance(entry, dict)]
+        return FolderSkeleton()
+    raw = values[VAR_FOLDER_PERMS]
+    return FolderSkeleton(
+        [dict(entry) for entry in raw if isinstance(entry, dict)] if isinstance(raw, list) else [],
+        values[VAR_FOLDER_HIDE_UNREADABLE] is True,
+    )

@@ -20,6 +20,7 @@ the folder tree is faked so the test pins the wire shape, not watolib.
 import os
 from collections.abc import Iterator
 from pathlib import Path
+from types import SimpleNamespace
 from typing import cast
 
 import pytest
@@ -50,8 +51,9 @@ class _FakeFolder:
 
 
 class _FakeTree:
-    def __init__(self, folders: list[_FakeFolder]) -> None:
+    def __init__(self, folders: list[_FakeFolder], hide_unreadable: bool) -> None:
         self._folders = folders
+        self.config = SimpleNamespace(wato_hide_folders_without_read_permissions=hide_unreadable)
 
     def all_folders(self) -> dict[str, _FakeFolder]:
         return {f.path(): f for f in self._folders}
@@ -66,9 +68,9 @@ def fixture_shared_omd_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> 
     yield tmp_path
 
 
-def _fake_tree(folders: list[_FakeFolder]) -> FolderTree:
-    # The writer only asks the tree for its folders.
-    return cast(FolderTree, _FakeTree(folders))
+def _fake_tree(folders: list[_FakeFolder], *, hide_unreadable: bool = False) -> FolderTree:
+    # The writer only asks the tree for its folders and the hide option.
+    return cast(FolderTree, _FakeTree(folders, hide_unreadable))
 
 
 def test_skeleton_round_trips(shared_omd_root: Path) -> None:
@@ -83,7 +85,7 @@ def test_skeleton_round_trips(shared_omd_root: Path) -> None:
     )
     loaded = checkmk_folders.load_folder_perms()
 
-    by_path = {entry["path"]: entry for entry in loaded}
+    by_path = {entry["path"]: entry for entry in loaded.folders}
     assert set(by_path) == {"", "dc", "dc/muc"}
     assert by_path[""] == {
         "path": "",
@@ -98,7 +100,7 @@ def test_skeleton_round_trips(shared_omd_root: Path) -> None:
 
 
 def test_missing_file_means_no_skeleton(shared_omd_root: Path) -> None:
-    assert checkmk_folders.load_folder_perms() == []
+    assert checkmk_folders.load_folder_perms() == checkmk_folders.FolderSkeleton()
 
 
 def test_daemon_converts_loaded_entries_to_folder_infos(shared_omd_root: Path) -> None:
@@ -107,7 +109,7 @@ def test_daemon_converts_loaded_entries_to_folder_infos(shared_omd_root: Path) -
 
     _folders.write_folder_skeleton(_fake_tree([_FakeFolder("dc", "Datacenters", "dc-id", ["ops"])]))
 
-    (entry,) = checkmk_folders.load_folder_perms()
+    (entry,) = checkmk_folders.load_folder_perms().folders
     assert _folder_info_from_entry(entry) == {
         "path": "dc",
         "title": "Datacenters",
@@ -135,4 +137,18 @@ def test_an_unreadable_skeleton_is_rewritten(shared_omd_root: Path) -> None:
 
     _folders.write_folder_skeleton(_fake_tree([_FakeFolder("dc", "Datacenters", "dc-id", ["ops"])]))
 
-    assert [entry["path"] for entry in checkmk_folders.load_folder_perms()] == ["dc"]
+    assert [entry["path"] for entry in checkmk_folders.load_folder_perms().folders] == ["dc"]
+
+
+@pytest.mark.parametrize("hide_unreadable", [True, False])
+def test_the_hide_option_round_trips(shared_omd_root: Path, hide_unreadable: bool) -> None:
+    _folders.write_folder_skeleton(_fake_tree([], hide_unreadable=hide_unreadable))
+
+    assert checkmk_folders.load_folder_perms().hide_unreadable is hide_unreadable
+
+
+def test_a_changed_hide_option_is_rewritten(shared_omd_root: Path) -> None:
+    _folders.write_folder_skeleton(_fake_tree([], hide_unreadable=False))
+    _folders.write_folder_skeleton(_fake_tree([], hide_unreadable=True))
+
+    assert checkmk_folders.load_folder_perms().hide_unreadable is True

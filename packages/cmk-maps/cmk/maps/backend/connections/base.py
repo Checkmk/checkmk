@@ -175,6 +175,7 @@ class FolderTreeData:
     # Federation sites that stopped answering (their hosts above are the
     # replayed last-known rows, marked ``stale``).
     dead_sites: list[str] = field(default_factory=list)
+    hide_unreadable: bool = False
 
 
 @dataclass

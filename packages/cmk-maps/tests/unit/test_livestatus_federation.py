@@ -29,7 +29,7 @@ import pytest
 
 from cmk.livestatus_client import MKLivestatusQueryError
 from cmk.maps.backend.connections import livestatus
-from cmk.maps.backend.connections.base import FolderInfo, FolderTreeData, QueryRefusedError
+from cmk.maps.backend.connections.base import FolderTreeData, QueryRefusedError
 from cmk.maps.backend.core.config import settings
 from cmk.maps.backend.integrations import checkmk_sites
 
@@ -101,9 +101,9 @@ def test_explicit_tcp_target_never_federates(
 # --------------------------------------------------------------------------- #
 
 
-async def _no_folders() -> list[object]:
+async def _no_folders() -> livestatus.WatoFolders:
     """Skip the GUI-prepared folder skeleton (file access) — irrelevant here."""
-    return []
+    return livestatus.WatoFolders([], hide_unreadable=False)
 
 
 def _host_row(
@@ -151,8 +151,10 @@ def test_a_folder_tree_without_a_folder_scope_permits_no_folder(
 ) -> None:
     conn = _tcp_connection(monkeypatch)
 
-    async def _folders() -> list[FolderInfo]:
-        return [{"path": "dc", "title": "DC", "permitted_groups": []}]
+    async def _folders() -> livestatus.WatoFolders:
+        return livestatus.WatoFolders(
+            [{"path": "dc", "title": "DC", "permitted_groups": []}], hide_unreadable=False
+        )
 
     monkeypatch.setattr(livestatus, "_load_wato_folders", _folders)
     monkeypatch.setattr(conn, "_query_with_site", _rows_from([]))

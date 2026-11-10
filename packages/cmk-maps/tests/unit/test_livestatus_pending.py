@@ -10,8 +10,8 @@ import pytest
 from cmk.maps.backend.connections import livestatus
 
 
-async def _no_folders() -> list[object]:
-    return []
+async def _no_folders() -> livestatus.WatoFolders:
+    return livestatus.WatoFolders([], hide_unreadable=False)
 
 
 def _connection(

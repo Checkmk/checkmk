@@ -94,6 +94,7 @@ pkg_tar(
         "//agents/wnx/tests/qemu:pytest_stage",
     ],
     extension = "tar.gz",
+    tags = ["manual"],
 )
 
 qemu_test(

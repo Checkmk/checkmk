@@ -719,7 +719,7 @@ mod tests {
                 _base_url: &reqwest::Url,
                 _connection: &TrustedConnection,
                 _body: &AgentDownloadBody<'_>,
-            ) -> AnyhowResult<Vec<u8>, ApiError> {
+            ) -> AnyhowResult<agent_receiver_api::AgentPackageStream, ApiError> {
                 panic!("the site offered no package")
             }
         }

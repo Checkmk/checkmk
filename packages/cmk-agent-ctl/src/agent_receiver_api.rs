@@ -242,6 +242,33 @@ pub struct AgentDownloadBody<'a> {
     pub aghash: &'a types::AgentHash,
 }
 
+/// An agent package on its way from the site.
+pub struct AgentPackageStream {
+    /// The length the site announced in `Content-Length`.
+    pub size: Option<u64>,
+
+    /// The package bytes, read straight from the connection.
+    pub body: Box<dyn std::io::Read + Send>,
+}
+
+impl std::fmt::Debug for AgentPackageStream {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("AgentPackageStream")
+            .field("size", &self.size)
+            .finish_non_exhaustive()
+    }
+}
+
+#[cfg(test)]
+impl From<&'static [u8]> for AgentPackageStream {
+    fn from(bytes: &'static [u8]) -> Self {
+        Self {
+            size: Some(bytes.len() as u64),
+            body: Box::new(bytes),
+        }
+    }
+}
+
 pub trait AgentUpdate {
     /// Report what is installed and learn which package the site would deliver.
     ///
@@ -254,13 +281,13 @@ pub trait AgentUpdate {
         body: &UpdateStatusBody<'_>,
     ) -> Result<UpdateStatusResponse, ApiError>;
 
-    /// Fetch the agent package itself, unverified.
+    /// Start the download of the agent package, unverified.
     fn download_agent(
         &self,
         base_url: &reqwest::Url,
         connection: &config::TrustedConnection,
         body: &AgentDownloadBody<'_>,
-    ) -> Result<Vec<u8>, ApiError>;
+    ) -> Result<AgentPackageStream, ApiError>;
 }
 
 pub trait Registration {
@@ -369,7 +396,9 @@ impl Api {
     }
 
     /// The body of a response that is not JSON, for example an agent package.
-    fn response_bytes(response: reqwest::blocking::Response) -> Result<Vec<u8>, ApiError> {
+    fn response_stream(
+        response: reqwest::blocking::Response,
+    ) -> Result<AgentPackageStream, ApiError> {
         let status = response.status();
         if status != StatusCode::OK {
             return Err(ApiError::ResponseStatus {
@@ -377,10 +406,10 @@ impl Api {
                 body: response.text().ok(),
             });
         }
-        Ok(response
-            .bytes()
-            .context("Failed to obtain response body")?
-            .to_vec())
+        Ok(AgentPackageStream {
+            size: response.content_length(),
+            body: Box::new(response),
+        })
     }
 
     fn check_response_204(response: reqwest::blocking::Response) -> Result<(), ApiError> {
@@ -624,8 +653,8 @@ impl AgentUpdate for Api {
         base_url: &reqwest::Url,
         connection: &config::TrustedConnection,
         body: &AgentDownloadBody<'_>,
-    ) -> Result<Vec<u8>, ApiError> {
-        Self::response_bytes(
+    ) -> Result<AgentPackageStream, ApiError> {
+        Self::response_stream(
             certs::client(
                 Some(connection.tls_handshake_credentials()?),
                 self.use_proxy,
@@ -770,23 +799,27 @@ mod test_api {
     }
 
     #[test]
-    fn test_response_bytes_ok() {
-        assert_eq!(
-            Api::response_bytes(reqwest::blocking::Response::from(
-                http::Response::builder()
-                    .status(StatusCode::OK)
-                    .body("a package")
-                    .unwrap(),
-            ))
-            .unwrap(),
-            b"a package"
-        );
+    fn test_response_stream_ok() {
+        use std::io::Read;
+
+        let mut stream = Api::response_stream(reqwest::blocking::Response::from(
+            http::Response::builder()
+                .status(StatusCode::OK)
+                .body("a package")
+                .unwrap(),
+        ))
+        .unwrap();
+        let mut bytes = Vec::new();
+        stream.body.read_to_end(&mut bytes).unwrap();
+
+        assert_eq!(stream.size, Some(9));
+        assert_eq!(bytes, b"a package");
     }
 
     #[test]
-    fn test_response_bytes_error() {
+    fn test_response_stream_error() {
         assert_eq!(
-            Api::response_bytes(reqwest::blocking::Response::from(
+            Api::response_stream(reqwest::blocking::Response::from(
                 http::Response::builder()
                     .status(StatusCode::NOT_FOUND)
                     .body("{\"detail\": \"No such agent\"}")

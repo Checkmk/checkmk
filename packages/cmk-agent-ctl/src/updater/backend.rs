@@ -1529,7 +1529,13 @@ impl Updater {
             .context("Cannot download an agent update without the info of the installed agent")?;
         let target = &offered.aghash;
         let url = site_spec::make_site_url(selected.site_id, &selected.connection.receiver_port)?;
-        let bytes = match api.download_agent(
+        let failed = || {
+            format!(
+                "Agent update download of {target} from {} failed",
+                selected.site_id
+            )
+        };
+        let mut download = match api.download_agent(
             &url,
             &selected.connection.trust,
             &agent_receiver_api::AgentDownloadBody {
@@ -1537,7 +1543,7 @@ impl Updater {
                 aghash: target,
             },
         ) {
-            Ok(bytes) => bytes,
+            Ok(download) => download,
             Err(ApiError::ResponseStatus {
                 status: http::StatusCode::NOT_IMPLEMENTED,
                 ..
@@ -1546,13 +1552,10 @@ impl Updater {
                 status: http::StatusCode::CONFLICT,
                 ..
             }) => return Ok(PackageDownload::Superseded),
-            Err(error) => {
-                return Err(Error::new(error).context(format!(
-                    "Agent update download of {target} from {} failed",
-                    selected.site_id
-                )))
-            }
+            Err(error) => return Err(Error::new(error).context(failed())),
         };
+        let mut bytes = Vec::new();
+        io::Read::read_to_end(&mut download.body, &mut bytes).with_context(failed)?;
         log::info!(
             "Downloaded the agent package {target} ({} bytes) from {}, installed is {}",
             bytes.len(),
@@ -3108,14 +3111,15 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             base_url: &reqwest::Url,
             connection: &TrustedConnection,
             body: &agent_receiver_api::AgentDownloadBody<'_>,
-        ) -> AnyhowResult<Vec<u8>, agent_receiver_api::ApiError> {
+        ) -> AnyhowResult<agent_receiver_api::AgentPackageStream, agent_receiver_api::ApiError>
+        {
             *self.download.borrow_mut() = Some(RecordedDownload {
                 url: base_url.to_string(),
                 uuid: connection.uuid.to_string(),
                 platform: String::from(body.platform),
                 aghash: String::from(body.aghash.as_str()),
             });
-            Ok(PACKAGE.to_vec())
+            Ok(PACKAGE.into())
         }
     }
 
@@ -3137,7 +3141,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             _base_url: &reqwest::Url,
             _connection: &TrustedConnection,
             _body: &agent_receiver_api::AgentDownloadBody<'_>,
-        ) -> Result<Vec<u8>, ApiError> {
+        ) -> Result<agent_receiver_api::AgentPackageStream, ApiError> {
             Err(ApiError::Communication(Error::msg("connection refused")))
         }
     }
@@ -3187,10 +3191,11 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             _base_url: &reqwest::Url,
             _connection: &TrustedConnection,
             _body: &agent_receiver_api::AgentDownloadBody<'_>,
-        ) -> AnyhowResult<Vec<u8>, agent_receiver_api::ApiError> {
+        ) -> AnyhowResult<agent_receiver_api::AgentPackageStream, agent_receiver_api::ApiError>
+        {
             match self.download {
                 Some(code) => Err(refused(code)),
-                None => Ok(PACKAGE.to_vec()),
+                None => Ok(PACKAGE.into()),
             }
         }
     }
@@ -4368,7 +4373,8 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             _base_url: &reqwest::Url,
             _connection: &TrustedConnection,
             _body: &agent_receiver_api::AgentDownloadBody<'_>,
-        ) -> AnyhowResult<Vec<u8>, agent_receiver_api::ApiError> {
+        ) -> AnyhowResult<agent_receiver_api::AgentPackageStream, agent_receiver_api::ApiError>
+        {
             unreachable!("the migration downloads nothing")
         }
     }

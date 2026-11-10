@@ -8,6 +8,8 @@ per-file cmk-monitor-otel-collector=file:/component_owners/opentelemetry_collect
 per-file cmk-monitor-otel-collector=set noparent
 per-file cmk-transform-inventory-trees=file:/component_owners/hw_sw_inventory/OWNERS_DEFINITION
 per-file cmk-transform-inventory-trees=set noparent
+per-file cmk-validate-plugins=file:/component_owners/plugin_apis/OWNERS_DEFINITION
+per-file cmk-validate-plugins=set noparent
 per-file mkp=file:/component_owners/mkp_tool/OWNERS_DEFINITION
 per-file mkp=set noparent
 

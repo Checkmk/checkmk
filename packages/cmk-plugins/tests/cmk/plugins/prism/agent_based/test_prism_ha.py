@@ -115,7 +115,12 @@ def test_v4_cluster_with_normal_hosts_is_best_effort() -> None:
 
     assert (list(discovery_prism_ha(section)), list(check_prism_ha(section=section))) == (
         [Service()],
-        [Result(state=State.OK, summary="State: BestEffort")],
+        [
+            Result(
+                state=State.OK,
+                summary="State: BestEffort (HA reservation not visible in v4 API)",
+            )
+        ],
     )
 
 
@@ -129,7 +134,10 @@ def test_v4_cluster_with_normal_hosts_is_best_effort() -> None:
         ),
         pytest.param(
             ["ACROPOLIS_NORMAL", "RESERVING_FOR_HA_FAILOVER"],
-            Result(state=State.OK, summary="State: BestEffort"),
+            Result(
+                state=State.OK,
+                summary="State: BestEffort (HA reservation not visible in v4 API)",
+            ),
             id="host being reserved",
         ),
         pytest.param(
@@ -149,8 +157,24 @@ def test_v4_cluster_with_normal_hosts_is_best_effort() -> None:
         ),
         pytest.param(
             ["ACROPOLIS_NORMAL", "ENTERED_MAINTENANCE_MODE"],
-            Result(state=State.OK, summary="State: BestEffort"),
+            Result(
+                state=State.OK,
+                summary="State: BestEffort (HA reservation not visible in v4 API), 1 host in maintenance mode",
+            ),
             id="maintenance mode",
+        ),
+        pytest.param(
+            ["ENTERING_MAINTENANCE_MODE", "ENTERED_MAINTENANCE_MODE", "ACROPOLIS_NORMAL"],
+            Result(
+                state=State.OK,
+                summary="State: BestEffort (HA reservation not visible in v4 API), 2 hosts in maintenance mode",
+            ),
+            id="hosts entering and in maintenance mode",
+        ),
+        pytest.param(
+            ["ENTERED_MAINTENANCE_MODE", "HA_HEALING_TARGET"],
+            Result(state=State.WARN, summary="State: Healing, 1 host in maintenance mode"),
+            id="maintenance mode while healing",
         ),
         pytest.param(
             ["$UNKNOWN", "HA_HEALING_TARGET"],

@@ -44,15 +44,15 @@ _HEALING_STATES = frozenset(
     }
 )
 _RESERVED_STATES = frozenset({"RESERVED_FOR_HA_FAILOVER"})
+_MAINTENANCE_STATES = frozenset({"ENTERING_MAINTENANCE_MODE", "ENTERED_MAINTENANCE_MODE"})
 _KNOWN_STATES = (
     _HEALING_STATES
     | _RESERVED_STATES
+    | _MAINTENANCE_STATES
     | {
         "ACROPOLIS_NORMAL",
         # The reservation isn't in place yet
         "RESERVING_FOR_HA_FAILOVER",
-        "ENTERING_MAINTENANCE_MODE",
-        "ENTERED_MAINTENANCE_MODE",
     }
 )
 
@@ -77,15 +77,22 @@ def parse_prism_ha_v2(string_table: StringTable) -> Section:
     # Like the legacy agent, HA is only monitored on clusters of AHV hosts
     if not hosts or any(host.hypervisor.hypervisor_type != "AHV" for host in hosts):
         return {}
+    states = [
+        state
+        for host in hosts
+        if (state := host.hypervisor.state) is not None and state in _KNOWN_STATES
+    ]
+    ha_state = _ha_state_v2(states)
     return {
         # v4 can't tell whether HA is enabled
         "failover_enabled": True,
-        "ha_state": _ha_state_v2(
-            [
-                state
-                for host in hosts
-                if (state := host.hypervisor.state) is not None and state in _KNOWN_STATES
-            ]
+        "ha_state": ha_state,
+        "hosts_in_maintenance": sum(state in _MAINTENANCE_STATES for state in states),
+        # Segment-based reservation leaves every host in its normal state
+        **(
+            {"ha_state_note": "HA reservation not visible in v4 API"}
+            if ha_state == "BestEffort"
+            else {}
         ),
     }
 
@@ -120,7 +127,14 @@ def check_prism_ha(section: Section) -> CheckResult:
     if section.get("failover_enabled"):
         state = _HA_STATES.get(str(section.get("ha_state")), 3)
 
-    yield Result(state=State(state), summary=f"State: {section.get('ha_state')}")
+    summary = f"State: {section.get('ha_state')}"
+    if note := section.get("ha_state_note"):
+        summary += f" ({note})"
+    if hosts_in_maintenance := section.get("hosts_in_maintenance", 0):
+        hosts = "host" if hosts_in_maintenance == 1 else "hosts"
+        summary += f", {hosts_in_maintenance} {hosts} in maintenance mode"
+
+    yield Result(state=State(state), summary=summary)
 
 
 check_plugin_prism_ha = CheckPlugin(

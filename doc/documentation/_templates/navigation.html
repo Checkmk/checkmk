@@ -1,0 +1,4 @@
+{#- Alabaster's sidebar honours each toctree's maxdepth, which hides everything below the top level.
+Show the page tree instead. -#}
+<h3>{{ _('Navigation') }}</h3>
+{{ toctree(maxdepth=3, collapse=True, includehidden=True, titles_only=True) }}

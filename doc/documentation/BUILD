@@ -32,9 +32,18 @@ filegroup(
     visibility = ["//:__subpackages__"],
 )
 
+# Only needed to build the HTML, so not part of :srcs, which omd ships.
+filegroup(
+    name = "templates",
+    srcs = glob(["_templates/*.html"]),
+)
+
 sphinx_html(
     name = "documentation",
-    srcs = [":srcs"],
+    srcs = [
+        ":srcs",
+        ":templates",
+    ],
     config = "conf.py",
     index = "index.rst",
     sphinx_build = ":sphinx_build",

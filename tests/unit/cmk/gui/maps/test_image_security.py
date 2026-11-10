@@ -232,6 +232,16 @@ def test_is_safe_svg_accepts_safe_references(content: bytes) -> None:
     assert is_safe_svg(content)
 
 
+def test_is_safe_svg_refuses_a_style_inside_a_style() -> None:
+    assert not is_safe_svg(
+        b'<svg xmlns="http://www.w3.org/2000/svg"><style><style>rect{fill:red}</style></style></svg>'
+    )
+
+
+def test_is_safe_svg_refuses_more_elements_than_a_floor_plan_has() -> None:
+    assert not is_safe_svg(b"<svg>" + b"<g/>" * 500_000 + b"</svg>")
+
+
 @pytest.mark.parametrize("name", ["icon.png", "my-logo_2.svg", "a"])
 def test_is_valid_image_name_accepts_plain_names(name: str) -> None:
     assert is_valid_image_name(name)

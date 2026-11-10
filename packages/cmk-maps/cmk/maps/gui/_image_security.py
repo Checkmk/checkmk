@@ -188,7 +188,7 @@ def _css_is_local(css: str) -> bool:
     return all(_href_is_safe(url, local_only=True) for url in urls)
 
 
-# ElementTree silently drops XML processing instructions, so the element walk
+# The parser hands no XML processing instructions on, so the element check
 # below never sees a leading ``<?xml-stylesheet ...?>`` PI — yet the original
 # bytes we store keep it, and a browser navigating straight to the .svg applies
 # the referenced XSLT, which can emit script in our origin. Only the XML
@@ -218,6 +218,65 @@ def _has_unsafe_processing_instruction(content: bytes) -> bool:
     return any(m.group(1).lower() != b"xml" for m in _XML_PI_TARGET.finditer(content))
 
 
+# Far above real floor plans (10 MiB at some 200 bytes per path is about 50,000
+# elements).
+_SVG_ELEMENTS_MAX = 500_000
+
+
+class _UnsafeSvg(Exception):
+    pass
+
+
+class _SvgCheck:
+    """Parser target that checks each element as the parser reaches it, so no
+    tree is built; refuses with :class:`_UnsafeSvg`."""
+
+    def __init__(self) -> None:
+        self._elements = 0
+        self._in_style = False
+        self._style_text: list[str] = []
+
+    def start(self, tag: str, attrib: dict[str, str]) -> None:
+        self._elements += 1
+        if self._elements == 1 and tag.rsplit("}", 1)[-1] != "svg":
+            raise _UnsafeSvg
+        local_tag = tag.rsplit("}", 1)[-1].lower()
+        if self._elements > _SVG_ELEMENTS_MAX or local_tag in _SVG_FORBIDDEN_TAGS:
+            raise _UnsafeSvg
+        local_only = local_tag in _SVG_LOCAL_HREF_ONLY_TAGS
+        for attr_name, attr_val in attrib.items():
+            local_attr = attr_name.rsplit("}", 1)[-1].lower()
+            if (
+                local_attr.startswith(_SVG_FORBIDDEN_ATTR_PREFIXES)
+                or not _css_is_local(attr_val)
+                or (local_attr == "href" and not _href_is_safe(attr_val, local_only=local_only))
+            ):
+                raise _UnsafeSvg
+        if local_tag == "style":
+            # A style in a style has no meaning in SVG; refused, each style's
+            # text is checked once.
+            if self._in_style:
+                raise _UnsafeSvg
+            self._in_style = True
+
+    def data(self, text: str) -> None:
+        # All text inside <style>, a child's included: the browser applies it all.
+        if self._in_style:
+            self._style_text.append(text)
+
+    def end(self, tag: str) -> None:
+        if tag.rsplit("}", 1)[-1].lower() != "style":
+            return
+        css = "".join(self._style_text)
+        self._style_text.clear()
+        self._in_style = False
+        if not _css_is_local(css):
+            raise _UnsafeSvg
+
+    def close(self) -> bool:
+        return self._elements > 0
+
+
 def is_safe_svg(content: bytes) -> bool:
     """Parse *content* as SVG with defusedxml; reject script vectors.
 
@@ -227,43 +286,23 @@ def is_safe_svg(content: bytes) -> bool:
     A DOCTYPE is permitted (the standard SVG DTD reference is ubiquitous in
     exported assets) but ``forbid_entities``/``forbid_external`` stay on, so
     billion-laughs entity expansion and XXE external entities are still blocked.
-    The parsed tree is then walked to reject ``<script>``, on-event attributes,
-    ``<foreignObject>``, remote ``<use>`` targets, and script-bearing URIs.
+    Each element is checked as it is parsed (see :class:`_SvgCheck`) to reject
+    ``<script>``, on-event attributes, ``<foreignObject>``, remote ``<use>``
+    targets, and script-bearing URIs.
     """
+    # PIs never reach the parser target, so a smuggled xml-stylesheet/XSLT PI
+    # must be caught on the raw bytes.
+    if _has_unsafe_processing_instruction(content):
+        return False
     # defusedxml ships without type stubs in the site environment.
     parser = DefusedET.DefusedXMLParser(  # type: ignore[no-untyped-call]
-        forbid_dtd=False, forbid_entities=True, forbid_external=True
+        target=_SvgCheck(), forbid_dtd=False, forbid_entities=True, forbid_external=True
     )
     try:
         parser.feed(content)
-        root = parser.close()
-    except DefusedXmlException, DefusedET.ParseError:
+        return bool(parser.close())
+    except DefusedXmlException, DefusedET.ParseError, _UnsafeSvg:
         return False
-    if root.tag.rsplit("}", 1)[-1] != "svg":
-        return False
-    # PIs are invisible to the element walk below (ElementTree drops them), so a
-    # smuggled xml-stylesheet/XSLT PI must be caught on the raw bytes.
-    if _has_unsafe_processing_instruction(content):
-        return False
-    for elem in root.iter():
-        local_tag = elem.tag.rsplit("}", 1)[-1].lower()
-        if local_tag in _SVG_FORBIDDEN_TAGS:
-            return False
-        # ``itertext()``, not ``.text``: a child inside <style> pushes the rest
-        # into its ``tail``, so ``<style><x/>@import url(…)</style>`` would slip
-        # past while the browser still applies the rule.
-        if local_tag == "style" and not _css_is_local("".join(elem.itertext())):
-            return False
-        local_only = local_tag in _SVG_LOCAL_HREF_ONLY_TAGS
-        for attr_name, attr_val in elem.attrib.items():
-            local_attr = attr_name.rsplit("}", 1)[-1].lower()
-            if local_attr.startswith(_SVG_FORBIDDEN_ATTR_PREFIXES):
-                return False
-            if not _css_is_local(attr_val):
-                return False
-            if local_attr == "href" and not _href_is_safe(attr_val, local_only=local_only):
-                return False
-    return True
 
 
 def is_valid_image(content: bytes, *, allow_svg: bool = True, allow_gif: bool = True) -> bool:

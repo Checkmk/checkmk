@@ -308,7 +308,7 @@ def test_backup_remove(tmp_path: Path) -> None:
 
     with (
         contextlib.suppress(TBaseException),
-        ManageUpdate("heute", "tmp_directory", site_dir, old_skel, new_skel),
+        ManageUpdate("heute", "tmp_directory", site_dir, old_skel, new_skel, lambda _command: 0),
     ):
         assert save == _list_non_backup_files(site_dir)
         for relpath in reversed(list(walk_managed(old_skel))):
@@ -331,7 +331,7 @@ def test_backup_add(tmp_path: Path) -> None:
 
     with (
         contextlib.suppress(TBaseException),
-        ManageUpdate("heute", "tmp_directory", site_dir, old_skel, new_skel),
+        ManageUpdate("heute", "tmp_directory", site_dir, old_skel, new_skel, lambda _command: 0),
     ):
         assert save == [
             read_all(p) for p in walk_in_DFS_order(site_dir) if ".update_backup" not in str(p)
@@ -364,7 +364,7 @@ def test_backup_modify(tmp_path: Path) -> None:
 
     with (
         contextlib.suppress(TBaseException),
-        ManageUpdate("heute", "tmp_directory", site_dir, old_skel, new_skel),
+        ManageUpdate("heute", "tmp_directory", site_dir, old_skel, new_skel, lambda _command: 0),
     ):
         assert save == [
             read_all(p) for p in walk_in_DFS_order(site_dir) if ".update_backup" not in str(p)
@@ -390,7 +390,9 @@ def test_backup_prepare_next_run(tmp_path: Path) -> None:
 
     with (
         contextlib.suppress(TBaseException),
-        ManageUpdate("heute", "tmp_directory", site_dir, old_skel, new_skel) as mu,
+        ManageUpdate(
+            "heute", "tmp_directory", site_dir, old_skel, new_skel, lambda _command: 0
+        ) as mu,
     ):
         backup_dir = mu.backup_dir
         assert backup_dir.exists()

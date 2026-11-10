@@ -2540,8 +2540,25 @@ def main_update(
         ensure_skel_is_intact(Path(from_skelroot))
         ensure_skel_is_intact(Path(to_skelroot))
 
+        additional_update_env = {
+            "OMD_FROM_EDITION": from_edition,
+            "OMD_FROM_VERSION": from_version,
+            "OMD_TO_EDITION": to_edition,
+            "OMD_TO_VERSION": to_version,
+        }
+        update_env = {
+            **os.environ,
+            "OMD_ROOT": site_home,
+            "OMD_SITE": site.name,
+            **additional_update_env,
+        }
         with ManageUpdate(
-            site.name, site.tmp_dir, Path(site_home), Path(from_skelroot), Path(to_skelroot)
+            site.name,
+            site.tmp_dir,
+            Path(site_home),
+            Path(from_skelroot),
+            Path(to_skelroot),
+            lambda command: _call_script(is_tty, update_env, command),
         ) as mu:
             # First walk through skeleton files of new version
             for relpath in walk_skel(to_skelroot, depth_first=False):
@@ -2588,25 +2605,12 @@ def main_update(
             # initialized tmpfs.
             mu.prepare_and_populate_tmpfs(config, site.replacements(), site.skel_permissions)
 
-            additional_update_env = {
-                "OMD_FROM_EDITION": from_edition,
-                "OMD_FROM_VERSION": from_version,
-                "OMD_TO_EDITION": to_edition,
-                "OMD_TO_VERSION": to_version,
-            }
+            mu.update_active_mkps()
+
             if conflict_mode != PreFlight.IGNORE:
                 command = ["cmk-update-config", "--conflict", conflict_mode.value, "--dry-run"]
                 sys.stdout.write(f"Executing '{subprocess.list2cmdline(command)}'")
-                returncode = _call_script(
-                    is_tty,
-                    {
-                        **os.environ,
-                        "OMD_ROOT": site_home,
-                        "OMD_SITE": site.name,
-                        **additional_update_env,
-                    },
-                    command,
-                )
+                returncode = _call_script(is_tty, update_env, command)
                 if returncode != 0:
                     sys.exit(returncode)
             else:

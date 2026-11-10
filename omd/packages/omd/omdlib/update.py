@@ -9,18 +9,20 @@ import enum
 import os
 import shutil
 import sys
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Sequence
 from pathlib import Path
 from types import TracebackType
 from typing import assert_never, Literal, Self
 
 from omdlib.config_api import Config
+from omdlib.console import ok
 from omdlib.crash_reporting import report_crash
 from omdlib.options import CommandOptions
 from omdlib.skel_permissions import Permissions
 from omdlib.tmpfs import prepare_and_populate_tmpfs, unmount_tmpfs_without_save
 from omdlib.type_defs import Replacements, Skeleton
 
+from cmk.ccc import tty
 from cmk.crash import make_crash_report_base_path
 
 
@@ -196,9 +198,32 @@ HOOK_RELPATHS = [
 ]
 
 
+def update_active_mkps(run: Callable[[Sequence[str]], int], record: Path) -> None:
+    sys.stdout.write("Updating active extension packages...")
+    sys.stdout.flush()
+    if run(["mkp", "update-active", "--save-active", str(record)]) == 0:
+        ok()
+        return
+
+    sys.stdout.write(
+        tty.warn + ": Could not update the active extension packages. "
+        "The pre-flight checks verify the packages that are active now.\n"
+    )
+
+
+def restore_active_mkps(run: Callable[[Sequence[str]], int], record: Path) -> bool:
+    return run(["mkp", "restore-active", str(record)]) == 0
+
+
 class ManageUpdate:
     def __init__(
-        self, site_name: str, tmp_dir: str, site_home: Path, old_skel: Path, new_skel: Path
+        self,
+        site_name: str,
+        tmp_dir: str,
+        site_home: Path,
+        old_skel: Path,
+        new_skel: Path,
+        run: Callable[[Sequence[str]], int],
     ) -> None:
         self.backup_dir = site_home / ".update_backup"
         self.old_skel = old_skel
@@ -207,6 +232,9 @@ class ManageUpdate:
         self.site_name = site_name
         self.tmp_dir = tmp_dir
         self.populated_tmpfs = False
+        self.updated_active_mkps = False
+        self._active_mkps = self.backup_dir / "active_mkps"
+        self._run = run
 
     def __enter__(self) -> Self:
         if self.backup_dir.exists():
@@ -241,6 +269,11 @@ class ManageUpdate:
         )
         self.populated_tmpfs = True
 
+    def update_active_mkps(self) -> None:
+        # Set first: an interrupted swap must be undone as well.
+        self.updated_active_mkps = True
+        update_active_mkps(self._run, self._active_mkps)
+
     def __exit__(
         self,
         exc_type: type[BaseException] | None,
@@ -249,6 +282,8 @@ class ManageUpdate:
     ) -> Literal[False]:
         if exc_type is not None:
             try:
+                if self.updated_active_mkps:
+                    restore_active_mkps(self._run, self._active_mkps)
                 if self.populated_tmpfs:
                     # Always leave the tmpfs unmounted. We currently are in the context of the new
                     # version (symlink has been restored, but python3 interpreter and dynamic libraries

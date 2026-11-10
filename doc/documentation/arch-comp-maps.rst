@@ -537,7 +537,7 @@ BI aggregations
 BI aggregations are resolved in the GUI request with ``BIManager`` (the same
 compiler and computer the ``aggr`` views use), always against the local site's
 compiled BI configuration. Aggregations are addressed by title. A user without
-``general.see_all`` gets only the aggregations that contain at least one host
+``bi.see_all`` gets only the aggregations that contain at least one host
 they can see; leaf states are fetched under the ``bi`` auth domain (no AuthUser
 with ``bi.see_all``). Trees are returned up to depth 10.
 

@@ -16,6 +16,7 @@ branch listing (dedup, sort, scope filter, function label), the tree node shape,
 and the per-branch state.
 """
 
+import copy
 from types import SimpleNamespace
 from typing import cast, get_args
 from unittest.mock import MagicMock
@@ -26,10 +27,19 @@ from cmk.bi.lib import BIState, NodeComputeResult, NodeResultBundle, RequiredBIE
 from cmk.bi.trees import BICompiledAggregation, BICompiledLeaf, BICompiledRule
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
+from cmk.ccc.user import UserId
+from cmk.gui.config import active_config, Config
+from cmk.gui.permissions import all_permissions
+from cmk.gui.role_types import BuiltInUserRole, CustomUserRole
+from cmk.gui.session_context import UserContext
+from cmk.gui.utils.roles import UserPermissions
 from cmk.livestatus_client import MKLivestatusException
+from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.maps.gui import _aggregations
 from cmk.maps.gui._aggregations import AggregationInfo, AggregationState
 from cmk.maps.shared.states import BIStateName
+from tests.testlib.unit.gui.users import create_and_destroy_user
+from tests.testlib.unit.gui.web_test_app import SetConfig
 
 
 def _compute_result(
@@ -147,12 +157,12 @@ def _fake_manager(
     monkeypatch.setattr(_aggregations, "BIManager", lambda: manager)
 
 
-def _branch(title: str, pack_id: str, function: str) -> MagicMock:
+def _branch(title: str, pack_id: str, function: str, *, host: str = "h1") -> MagicMock:
     branch = MagicMock(spec=BICompiledRule)
     branch.properties = SimpleNamespace(title=title)
     branch.pack_id = pack_id
     branch.aggregation_function = SimpleNamespace(kind=lambda: function)
-    branch.required_elements = {RequiredBIElement(SiteId("SITE"), HostName("h1"), None)}
+    branch.required_elements = {RequiredBIElement(SiteId("SITE"), HostName(host), None)}
     return branch
 
 
@@ -268,3 +278,98 @@ def test_aggregation_tree_reports_a_dead_livestatus(monkeypatch: pytest.MonkeyPa
     result = _aggregations.aggregation_tree("Host a", 10)
     assert result.tree is None
     assert result.connection_ok is False
+
+
+# The permission and the hosts a user sees come from the logged-in user, as the
+# endpoints ask for them.
+@pytest.mark.usefixtures("request_context")
+def test_a_user_who_may_not_see_all_of_bi_gets_only_aggregations_of_hosts_they_see(
+    with_user_login: UserId,
+    mock_livestatus: MockLiveStatusConnection,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _fake_manager(
+        monkeypatch,
+        compiled={
+            "p1": SimpleNamespace(
+                branches=[
+                    _branch("Seen", "pack1", "worst", host="seen"),
+                    _branch("Hidden", "pack1", "worst", host="hidden"),
+                ]
+            )
+        },
+    )
+    mock_livestatus.add_table("hosts", [{"name": "seen"}])
+    mock_livestatus.expect_query(f"GET hosts\nColumns: name\nAuthUser: {with_user_login}")
+
+    with mock_livestatus:
+        assert [entry.title for entry in _aggregations.list_aggregations()] == ["Seen"]
+
+
+def _user_role_with(config: Config, permission: str) -> dict[str, BuiltInUserRole | CustomUserRole]:
+    roles = copy.deepcopy(config.roles)
+    roles["user"]["permissions"] = {**roles["user"].get("permissions", {}), permission: True}
+    return roles
+
+
+@pytest.mark.usefixtures("request_context")
+def test_a_user_who_may_see_all_of_bi_gets_every_aggregation_unasked(
+    with_user: tuple[UserId, str],
+    set_config: SetConfig,
+    load_config: Config,
+    mock_livestatus: MockLiveStatusConnection,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _fake_manager(monkeypatch, compiled={"p1": _compiled_aggr("pack1", "worst", ["Alpha"])})
+
+    # No query is expected: the hosts the user sees play no part.
+    with (
+        set_config(roles=_user_role_with(load_config, "bi.see_all")),
+        UserContext(with_user[0], UserPermissions.from_config(active_config, all_permissions())),
+        mock_livestatus(expect_status_query=False),
+    ):
+        assert [entry.title for entry in _aggregations.list_aggregations()] == ["Alpha"]
+
+
+@pytest.mark.usefixtures("request_context")
+def test_a_user_who_sees_all_hosts_gets_every_aggregation_unasked(
+    with_user: tuple[UserId, str],
+    set_config: SetConfig,
+    load_config: Config,
+    mock_livestatus: MockLiveStatusConnection,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _fake_manager(monkeypatch, compiled={"p1": _compiled_aggr("pack1", "worst", ["Alpha"])})
+
+    with (
+        set_config(roles=_user_role_with(load_config, "general.see_all")),
+        UserContext(with_user[0], UserPermissions.from_config(active_config, all_permissions())),
+        mock_livestatus(expect_status_query=False),
+    ):
+        assert [entry.title for entry in _aggregations.list_aggregations()] == ["Alpha"]
+
+
+@pytest.mark.usefixtures("request_context")
+def test_a_user_held_to_their_own_hosts_gets_only_aggregations_of_those(
+    set_config: SetConfig,
+    load_config: Config,
+    mock_livestatus: MockLiveStatusConnection,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _fake_manager(
+        monkeypatch,
+        compiled={"p1": SimpleNamespace(branches=[_branch("Hidden", "pack1", "worst")])},
+    )
+    mock_livestatus.add_table("hosts", [{"name": "seen"}])
+
+    with (
+        create_and_destroy_user(config=load_config, custom_attrs={"force_authuser": True}) as (
+            user_id,
+            _password,
+        ),
+        set_config(roles=_user_role_with(load_config, "general.see_all")),
+        UserContext(user_id, UserPermissions.from_config(active_config, all_permissions())),
+    ):
+        mock_livestatus.expect_query(f"GET hosts\nColumns: name\nAuthUser: {user_id}")
+        with mock_livestatus:
+            assert _aggregations.list_aggregations() == []

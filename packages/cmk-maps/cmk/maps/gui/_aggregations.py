@@ -114,10 +114,14 @@ class AggregationState:
 def _scoped() -> bool:
     """Whether the caller's aggregation view must be contact-scoped.
 
-    ``general.see_all`` users (admins) run unscoped; everyone else only sees
-    aggregations that touch a host in their contact groups.
+    As in Checkmk's BI views: users with ``bi.see_all`` run unscoped; everyone
+    else only sees aggregations that touch a host in their contact groups. Who
+    sees all hosts is not asked for them either, as BI asks unrestricted for
+    such a user.
     """
-    return not user.may("general.see_all")
+    if user.may("bi.see_all"):
+        return False
+    return not user.may("general.see_all") or bool(user.get_attribute("force_authuser"))
 
 
 def _visible_hosts() -> set[str]:
@@ -170,7 +174,7 @@ def _results_to_states(
     """Normalise BIComputer.compute_result_for_filter output into per-branch states.
 
     ``visible`` scopes the result to aggregations touching a host the caller may
-    see (``None`` for ``general.see_all`` users) — the same guard the list/tree
+    see (``None`` for ``bi.see_all`` users) — the same guard the list/tree
     lookups apply, so a contact-scoped user cannot pull the live state/output of
     an aggregation outside their contact groups by guessing its title.
     """

@@ -64,10 +64,10 @@ export interface UseContextualLink<C extends LinkedContent> extends UseValidate 
 
 let nextDraftId = 0
 
-function newCustomLink<F>(): CustomLinkDraft<F> {
+function newCustomLink<F>(title: string): CustomLinkDraft<F> {
   return {
     id: nextDraftId++,
-    title: '',
+    title,
     target: null,
     includeClickedElement: true,
     filters: [],
@@ -75,6 +75,17 @@ function newCustomLink<F>(): CustomLinkDraft<F> {
     includeTimeRange: true,
     showFilterForm: false
   }
+}
+
+/** A new link is named after its position, so that it can be saved as it is. */
+function freeTitle(links: CustomLinkDraft<unknown>[]): string {
+  const titles = new Set(links.map(({ title }) => title))
+  // Once a link is removed, the next position may already name one.
+  let position = links.length + 1
+  while (titles.has(_t('Link %{n}', { n: position }))) {
+    position++
+  }
+  return _t('Link %{n}', { n: position })
 }
 
 function newFilter<F>(
@@ -120,8 +131,7 @@ export function useContextualLink<C extends LinkedContent>(
   const customLinks = ref<CustomLinkDraft<F>[]>(
     stored?.type === 'custom'
       ? stored.links.map((link) => ({
-          ...newCustomLink<F>(),
-          title: link.title,
+          ...newCustomLink<F>(link.title),
           target: link.location,
           includeClickedElement: link.filters.length > 0,
           filters: link.filters.map((f) =>
@@ -131,7 +141,7 @@ export function useContextualLink<C extends LinkedContent>(
           includeTimeRange: link.include_time_range,
           showFilterForm: link.show_filter_form
         }))
-      : [newCustomLink<F>()]
+      : [newCustomLink<F>(freeTitle([]))]
   ) as Ref<CustomLinkDraft<F>[]>
   const validationErrors = ref<TranslatedString[]>([])
 
@@ -282,7 +292,7 @@ export function useContextualLink<C extends LinkedContent>(
     inheritedIncludeTimeRange,
     inheritedIncludesContext: inheritedHidden.include_context,
     customLinks,
-    addCustomLink: () => customLinks.value.push(newCustomLink<F>()),
+    addCustomLink: () => customLinks.value.push(newCustomLink<F>(freeTitle(customLinks.value))),
     removeCustomLink: (index: number) => customLinks.value.splice(index, 1),
     addFilter: (link, filterId) =>
       link.filters.push(newFilter(filterId as F, options.filter_keys[filterId])),

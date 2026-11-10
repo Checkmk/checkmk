@@ -151,10 +151,39 @@ describe('useContextualLink', () => {
     expect(handler.validationErrors.value).toEqual([])
   })
 
-  it('rejects a custom link entry without a title', () => {
+  it('names a new custom link after its position', () => {
+    const handler = hostStatisticsLink()
+
+    handler.addCustomLink()
+
+    expect(handler.customLinks.value.map(({ title }) => title)).toEqual(['Link 1', 'Link 2'])
+  })
+
+  it('names a new custom link after a position no other link is named after', () => {
+    const handler = hostStatisticsLink()
+    handler.addCustomLink()
+    handler.removeCustomLink(0)
+
+    handler.addCustomLink()
+
+    expect(handler.customLinks.value.map(({ title }) => title)).toEqual(['Link 2', 'Link 3'])
+  })
+
+  it('accepts a new custom link with a target under its given name', () => {
+    const handler = hostStatisticsLink()
+    handler.mode.value = 'custom'
+
+    handler.customLinks.value[0]!.target = SEARCHHOST
+
+    expect(handler.validate()).toBe(true)
+  })
+
+  it('rejects a custom link entry whose title was cleared', () => {
     const handler = hostStatisticsLink()
     handler.mode.value = 'custom'
     handler.customLinks.value[0]!.target = SEARCHHOST
+
+    handler.customLinks.value[0]!.title = ' '
 
     expect(handler.validate()).toBe(false)
   })

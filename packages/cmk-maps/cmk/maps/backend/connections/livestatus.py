@@ -62,6 +62,7 @@ from cmk.maps.backend.schemas.state import (
     ObjectState,
     ServicesSummary,
 )
+from cmk.maps.shared.config_vars import MAX_STATE_REFRESH_INTERVAL
 from cmk.maps.shared.filters import excluded_members_filter
 from cmk.maps.shared.geo import LAT_LABEL, LAT_VAR, LNG_LABEL, LNG_VAR, resolve_host_coords
 from cmk.maps.shared.perfdata import parse_perf_metrics
@@ -92,6 +93,13 @@ logger = logging.getLogger(__name__)
 # for, and only the user's monitored sites are asked. Every cache of query
 # results is keyed by it.
 _scope_ctx: ContextVar[MonitoringScope] = ContextVar("_scope_ctx", default=UNSCOPED)
+
+# What a request for folder-tree rows depends on: the monitoring and folder
+# scope, whether hard states are asked for, and the site filter.
+type _FolderTreeRowsKey = tuple[MonitoringScope, FolderScope | None, bool, tuple[str, ...] | None]
+# How long the rows of a site that died are shown, greyed out, instead of none.
+_FOLDER_TREE_REPLAY_FOR = 2 * MAX_STATE_REFRESH_INTERVAL
+_FOLDER_TREE_ROWS_KEPT = 1024
 
 # The requesting user's SETUP-folder read visibility, used by ``get_folder_tree``
 # to mark which (otherwise unscoped) folders the user may see. Distinct from
@@ -565,11 +573,11 @@ class LivestatusConnection(ConnectionBase):
         # fetches don't blast the unix-socket listen backlog (EAGAIN). Held
         # at chunk granularity in get_hosts_services_batch.
         self._bulk_chunk_semaphore = asyncio.Semaphore(settings.flow_map_bulk_max_concurrent_chunks)
-        # Per-site trust: last successful foldertree host rows per
-        # (auth-scope, site-filter) -> site_id, replayed when a site dies.
-        self._ft_rows_cache: dict[
-            tuple[MonitoringScope, tuple[str, ...] | None], dict[str, list[FolderTreeHostRow]]
-        ] = {}
+        # Per-site trust: last successful foldertree host rows per request kind
+        # and site, replayed when a site dies.
+        self._ft_rows_cache: TtlCache[tuple[_FolderTreeRowsKey, str], list[FolderTreeHostRow]] = (
+            TtlCache(maxsize=_FOLDER_TREE_ROWS_KEPT, expire_after=_FOLDER_TREE_REPLAY_FOR)
+        )
         # Per-host-set cache for get_services_summary (TTL=_SERVICES_SUMMARY_CACHE_TTL).
         # Keyed by (auth user, host set): the query is auth-scoped, so the cache
         # must be too (mirrors _ft_rows_cache).
@@ -1551,24 +1559,34 @@ class LivestatusConnection(ConnectionBase):
         # silently drops out of MultiSiteConnection results — its hosts would
         # vanish from the tree and the map would read "all green". Replay the
         # last successful fetch for dead sites instead, marked ``stale`` so the
-        # UI greys them out. The cache is keyed by the auth scope (a contact-
-        # scoped user must never see another user's host rows) + site filter.
+        # UI greys them out. The cache is keyed by all a request's rows depend
+        # on: a scoped user must never see another user's host rows, nor rows of
+        # contact groups they have left, nor current states for hard ones.
         dead_sites = self.dead_sites()
-        cache_key = (_scope_ctx.get(), tuple(sorted(sites)) if sites else None)
-        # Bound the per-scope cache: SSE groups are few, but REST calls from
-        # rotating contact-scoped users would otherwise accumulate forever.
-        # FIFO eviction via dict insertion order is plenty here.
-        while len(self._ft_rows_cache) > 32 and cache_key not in self._ft_rows_cache:
-            self._ft_rows_cache.pop(next(iter(self._ft_rows_cache)))
-        site_cache = self._ft_rows_cache.setdefault(cache_key, {})
+        cache_key = (
+            _scope_ctx.get(),
+            _folder_scope_ctx.get(),
+            only_hard,
+            tuple(sorted(sites)) if sites else None,
+        )
+        now = time.monotonic()
+        # The rows of a dead site are not set again, so they would be evicted first.
+        # Of every dead site: the monitored sites differ from user to user.
+        dead = self._mc_dead
         for site, site_rows in rows_by_site.items():
-            site_cache[site] = site_rows
+            self._ft_rows_cache.set(
+                (cache_key, site), site_rows, now=now, pinned=lambda key: key[1] in dead
+            )
         replayed_dead: list[str] = []
         for site in dead_sites:
             if site_filter is not None and site not in site_filter:
                 continue
             replayed_dead.append(site)
-            for cached_row in site_cache.get(site, []):
+            # Rows older than any refresh interval would show a long gone state.
+            for cached_row in (
+                self._ft_rows_cache.get((cache_key, site), ttl=_FOLDER_TREE_REPLAY_FOR, now=now)
+                or []
+            ):
                 hosts.append(cast("FolderTreeHostRow", {**cached_row, "stale": True}))
         # Scope the (otherwise unscoped) folder skeleton to what the requesting
         # user may *read* in SETUP, mirroring Checkmk folder permissions

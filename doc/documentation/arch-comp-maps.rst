@@ -821,6 +821,10 @@ other site as dead. On a site's own socket without distribution, a user whose
 monitored sites leave out that site gets no rows. Every cache of query results is
 kept per user and set of sites.
 
+A folder-tree map shows the hosts of a site that stopped answering greyed out,
+from that site's last answer to the same request (user, sites, contact groups,
+hard or current states), for at most 10 minutes.
+
 The user's contact groups are not used for Livestatus; they only scope the
 Setup folder skeleton of folder-tree maps.
 

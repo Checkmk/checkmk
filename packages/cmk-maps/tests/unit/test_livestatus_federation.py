@@ -32,6 +32,7 @@ from cmk.maps.backend.connections import livestatus
 from cmk.maps.backend.connections.base import FolderTreeData, MonitoringScope, QueryRefusedError
 from cmk.maps.backend.core.config import settings
 from cmk.maps.backend.integrations import checkmk_sites
+from cmk.maps.backend.integrations.checkmk import FolderScope
 
 
 def _local_socket_path(omd_root: Path) -> str:
@@ -244,6 +245,92 @@ def test_dead_site_replay_is_scoped_to_the_auth_user(monkeypatch: pytest.MonkeyP
     alice_tree = _fetch_tree_as(conn, "alice")
     _, stale = _staleness(alice_tree)
     assert stale == {"alice-only-h"}
+
+
+def _stale_after_remote_died(
+    conn: livestatus.LivestatusConnection,
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    primed: tuple[FolderScope | None, bool],
+    asked: tuple[FolderScope | None, bool],
+) -> set[str]:
+    """The stale hosts of a request ``asked`` after one ``primed`` while the remote site lived."""
+
+    async def _tree(folder_scope: FolderScope | None, only_hard: bool) -> FolderTreeData:
+        async with conn.with_folder_scope(folder_scope):
+            return await conn.get_folder_tree(only_hard=only_hard)
+
+    conn._sites = {"central": {}, "remote_fra": {}}  # noqa: SLF001
+    conn._mc_dead = set()  # noqa: SLF001
+    monkeypatch.setattr(conn, "_query_with_site", _rows_from([("remote_fra", _host_row("h"))]))
+    asyncio.run(_tree(*primed))
+    conn._mc_dead = {"remote_fra"}  # noqa: SLF001
+    monkeypatch.setattr(conn, "_query_with_site", _rows_from([]))
+    tree = asyncio.run(_tree(*asked))
+    assert tree.dead_sites == ["remote_fra"]
+    return _staleness(tree)[1]
+
+
+_OPS = FolderScope(see_all=False, groups=frozenset({"ops"}))
+
+
+def test_the_same_request_gets_the_rows_of_a_dead_site(monkeypatch: pytest.MonkeyPatch) -> None:
+    conn = _tcp_connection(monkeypatch)
+    assert _stale_after_remote_died(
+        conn, monkeypatch, primed=(_OPS, False), asked=(_OPS, False)
+    ) == {"h"}
+
+
+@pytest.mark.parametrize(
+    "asked",
+    [
+        pytest.param((_OPS, True), id="hard states"),
+        pytest.param((FolderScope(see_all=False, groups=frozenset({"dev"})), False), id="groups"),
+    ],
+)
+def test_another_request_gets_no_rows_of_a_dead_site(
+    monkeypatch: pytest.MonkeyPatch, asked: tuple[FolderScope | None, bool]
+) -> None:
+    conn = _tcp_connection(monkeypatch)
+    assert _stale_after_remote_died(conn, monkeypatch, primed=(_OPS, False), asked=asked) == set()
+
+
+def test_rows_of_a_site_dead_for_long_are_not_shown(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(livestatus, "_FOLDER_TREE_REPLAY_FOR", -1.0)
+    conn = _tcp_connection(monkeypatch)
+    assert (
+        _stale_after_remote_died(conn, monkeypatch, primed=(_OPS, False), asked=(_OPS, False))
+        == set()
+    )
+
+
+def test_a_dead_site_keeps_its_rows_while_more_requests_come_than_are_kept(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    conn = _tcp_connection(monkeypatch)
+    live = [f"site{i}" for i in range(100)]
+
+    async def _tree(folder_scope: FolderScope) -> FolderTreeData:
+        async with conn.with_folder_scope(folder_scope):
+            return await conn.get_folder_tree()
+
+    async def _trees_of_other_requests() -> None:
+        for i in range(livestatus._FOLDER_TREE_ROWS_KEPT // len(live) + 1):  # noqa: SLF001
+            await _tree(FolderScope(see_all=False, groups=frozenset({f"group{i}"})))
+
+    conn._sites = dict.fromkeys(["remote_fra", *live], {})  # noqa: SLF001
+    conn._mc_dead = set()  # noqa: SLF001
+    monkeypatch.setattr(conn, "_query_with_site", _rows_from([("remote_fra", _host_row("h"))]))
+    asyncio.run(_tree(_OPS))
+    conn._mc_dead = {"remote_fra"}  # noqa: SLF001
+    monkeypatch.setattr(
+        conn,
+        "_query_with_site",
+        _rows_from([(site, _host_row(f"host-{site}")) for site in live]),
+    )
+    asyncio.run(_trees_of_other_requests())
+
+    assert _staleness(asyncio.run(_tree(_OPS)))[1] == {"h"}
 
 
 def test_single_site_connection_never_reports_dead_sites(monkeypatch: pytest.MonkeyPatch) -> None:

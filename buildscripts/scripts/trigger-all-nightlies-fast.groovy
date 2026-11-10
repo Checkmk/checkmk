@@ -12,7 +12,40 @@ def main() {
     def branch_base_folder = package_helper.branch_base_folder(true);
     def safe_branch_name = versioning.safe_branch_name();
 
-    def all_editions = versioning.get_editions();
+    def disable_cache = params.DISABLE_CACHE;
+    def force_build = params.DISABLE_JENKINS_CACHE == true;
+    def fake_artifacts = params.FAKE_ARTIFACTS;
+    def override_editions = params.EDITIONS.trim() ?: "";
+
+    def all_editions = [];
+    def job_parameters = [
+        CUSTOM_GIT_REF: effective_git_ref,
+        FAKE_ARTIFACTS: fake_artifacts,
+        DISABLE_CACHE: disable_cache,
+
+        // test specific parameters
+        RUN_COMPONENT_MK_ORACLE_TEST: true,
+        RUN_DOCKER_INTEGRATION_TEST: true,
+        RUN_MULTI_SITE_TEST: true,
+        RUN_SINGLE_SITE_TEST: true,
+        RUN_SYSTEM_AGENT_UPDATE_TEST: true,
+        RUN_UPDATE_TEST: true,
+
+        // image specific parameters
+        BUILD_CMK_IMAGE: true,
+        PUSH_TO_REGISTRY: true,
+        PUSH_TO_REGISTRY_ONLY: false,
+        SET_BRANCH_LATEST_TAG: false,
+        SET_LATEST_TAG: false,
+    ];
+    def job_parameters_no_check = [
+        CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
+        CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
+    ];
+
+    inside_container_minimal(safe_branch_name: safe_branch_name) {
+        all_editions = versioning.get_editions();
+    }
     def editions_to_test = all_editions;
 
     if (Calendar.getInstance().get(Calendar.HOUR_OF_DAY) in 12..15) {
@@ -20,15 +53,6 @@ def main() {
         editions_to_test = ["enterprise"];
     }
 
-    def job_parameters = [
-        CUSTOM_GIT_REF: effective_git_ref,
-    ];
-    def job_parameters_no_check = [
-        CIPARAM_BISECT_COMMENT: params.CIPARAM_BISECT_COMMENT,
-        CIPARAM_OVERRIDE_BUILD_NODE: params.CIPARAM_OVERRIDE_BUILD_NODE,
-    ];
-
-    def override_editions = params.EDITIONS.trim() ?: "";
     if (override_editions) {
         editions_to_test = override_editions.replaceAll(',', ' ').split(' ').grep();
     }
@@ -36,11 +60,14 @@ def main() {
     print(
         """
         |===== CONFIGURATION ===============================
-        |editions:.............. │${editions_to_test}│
         |branch_base_folder:.... │${branch_base_folder}│
+        |disable_cache:......... │${disable_cache}│
+        |editions:.............. │${editions_to_test}│
+        |fake_artifacts:........ │${fake_artifacts}│
+        |fixed_node:............ |${params.TRIGGER_CIPARAM_OVERRIDE_BUILD_NODE}|
+        |force_build:........... │${force_build}│
         |job_parameters:........ │${job_parameters}│
         |job_parameters_no_check:│${job_parameters_no_check}│
-        |fixed_node:............ |${params.TRIGGER_CIPARAM_OVERRIDE_BUILD_NODE}|
         |safe_branch_name:...... │${safe_branch_name}│
         |===================================================
         """.stripMargin());

@@ -113,7 +113,14 @@ vi.mock('@/graphing/components/GraphBrush/GraphBrush.vue', () => ({
       'plotWidth'
     ],
     emits: ['update:requestedTimeRange'],
+    data: () => ({ metricsChanges: 0 }),
+    watch: {
+      metrics(this: { metricsChanges: number }) {
+        this.metricsChanges += 1
+      }
+    },
     template: `<div class="graphing-graph-brush">
+      <span data-testid="brush-metrics-changes">{{ metricsChanges }}</span>
       <span data-testid="brush-window">{{ window.start }}-{{ window.end }}</span>
       <span data-testid="brush-domain">{{ domain.start }}-{{ domain.end }}</span>
       <span data-testid="brush-min-span">{{ minSpan }}</span>
@@ -353,6 +360,14 @@ function renderPanelWithBrush() {
     }
   })
 }
+
+test('a new brush snapshot over the same overview keeps the metrics the brush holds', async () => {
+  const { rerender } = renderPanelWithBrush()
+
+  await rerender({ brushSnapshot: { ...BRUSH_SNAPSHOT! } })
+
+  expect(screen.getByTestId('brush-metrics-changes')).toHaveTextContent('0')
+})
 
 test.each([
   ['emit-brush-move', { start: 300, end: 400 }, 'translated_timerange'],

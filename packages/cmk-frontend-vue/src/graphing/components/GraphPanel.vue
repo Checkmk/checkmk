@@ -125,8 +125,11 @@ const { visibleMetrics, visibleHorizontalLines } = useGraphVisibility(
   { hiddenMetricNames, hiddenLineNames, highlightedMetricNames }
 )
 
+// A computed of its own, so that a new snapshot over the same overview keeps the metrics array and
+// the brush keeps its buckets.
+const brushMetrics = computed(() => props.brushSnapshot?.data.metrics ?? [])
 const { visibleMetrics: visibleBrushMetrics } = useGraphVisibility(
-  () => props.brushSnapshot?.data.metrics ?? [],
+  () => brushMetrics.value,
   () => [],
   { hiddenMetricNames }
 )

@@ -412,6 +412,7 @@ allows = [
   "cmk.crash",
   "cmk.fastapi",
   "cmk.password_store.v1",
+  "cmk.product_usage.site_id",
   "cmk.schema_manager",
   "cmk.schema_migrations.ai_control_plane",
 ]
@@ -1907,6 +1908,7 @@ allows = [
   "cmk.ai_control_plane",
   "cmk.fastapi",
   "cmk.password_store.v1",
+  "cmk.product_usage.site_id",
   "cmk.schema_migrations.ai_control_plane",
 ]
 

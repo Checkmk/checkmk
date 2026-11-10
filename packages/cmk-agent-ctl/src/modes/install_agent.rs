@@ -30,13 +30,6 @@ use std::os::unix::io::AsRawFd;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output, Stdio};
 
-/// Upper bound of a package, in bytes.
-///
-/// An agent package is a few tens of megabytes. The bound exists because the
-/// file is written by the agent user and root reads all of it into memory to
-/// verify its signature.
-const MAX_PACKAGE_BYTES: u64 = 128 * 1024 * 1024;
-
 /// Permissions of the install result: root writes it, the controller reads it
 /// as the agent user.
 const RESULT_FILE_MODE: u32 = 0o644;
@@ -141,9 +134,8 @@ impl AcceptedPackage {
     ///
     /// # Errors
     ///
-    /// If the package cannot be read, is not a regular file, exceeds
-    /// [`MAX_PACKAGE_BYTES`], or none of `signatures` is a valid signature of
-    /// its bytes under one of the anchors.
+    /// If the package cannot be read, is not a regular file, or none of
+    /// `signatures` is a valid signature of its bytes under one of the anchors.
     fn verify(
         self,
         anchors: &TrustAnchors,
@@ -161,18 +153,9 @@ impl AcceptedPackage {
             bail!("The package {:?} is not a regular file", self.path);
         }
         let mut bytes = Vec::new();
-        // One byte over the bound tells a package of exactly the bound from one
-        // that is too large to hold.
         (&file)
-            .take(MAX_PACKAGE_BYTES + 1)
             .read_to_end(&mut bytes)
             .with_context(|| format!("Cannot read the package {:?}", self.path))?;
-        if bytes.len() as u64 > MAX_PACKAGE_BYTES {
-            bail!(
-                "The package {:?} exceeds {MAX_PACKAGE_BYTES} bytes",
-                self.path
-            );
-        }
         anchors.verify(&bytes, signatures).with_context(|| {
             format!(
                 "Refusing the package {:?}: no signature of it matches a configured signature key",

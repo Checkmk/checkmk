@@ -546,16 +546,16 @@ def test_is_preview_injection() -> None:
 
 
 def test_consume_check_results_clamps_inf_levels() -> None:
-    _, perfdata, _ = checkers._consume_check_results(  # noqa: SLF001
+    perfdata = checkers._consume_check_results(  # noqa: SLF001
         [MetricV3Unstable("m", 1.0, levels=(float("inf"), float("-inf")))]
-    )
+    ).metrics
     assert len(perfdata) == 1
     assert perfdata[0].warn == sys.float_info.max
     assert perfdata[0].crit == -sys.float_info.max
 
 
 def test_consume_check_results_clamps_inf_lower_levels() -> None:
-    _, perfdata, _ = checkers._consume_check_results(  # noqa: SLF001
+    perfdata = checkers._consume_check_results(  # noqa: SLF001
         [
             MetricV3Unstable(
                 "m",
@@ -563,7 +563,7 @@ def test_consume_check_results_clamps_inf_lower_levels() -> None:
                 lower_levels=(float("inf"), float("-inf")),
             )
         ]
-    )
+    ).metrics
     assert len(perfdata) == 1
     assert perfdata[0].warn_lower == sys.float_info.max
     assert perfdata[0].crit_lower == -sys.float_info.max

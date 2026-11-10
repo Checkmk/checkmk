@@ -825,13 +825,18 @@ def _get_check_function(  # type: ignore[explicit-any]
     return __check_function
 
 
-def _aggregate_results(
-    subresults: tuple[
-        Sequence[IgnoreResults], Sequence[MetricTuple], Sequence[CheckFunctionResult]
-    ],
-) -> ServiceCheckResult:
+@dataclass(frozen=True)
+class _Subresults:
+    ignore_results: Sequence[IgnoreResults]
+    metrics: Sequence[MetricTuple]
+    results: Sequence[CheckFunctionResult]
+
+
+def _aggregate_results(subresults: _Subresults) -> ServiceCheckResult:
     # Impedance matching part of `get_check_function()`.
-    ignore_results, metrics, results = subresults
+    ignore_results = subresults.ignore_results
+    metrics = subresults.metrics
+    results = subresults.results
 
     if not ignore_results and not results:  # Check returned nothing
         return SubmittableServiceCheckResult.item_not_found()
@@ -891,9 +896,7 @@ def _clamp(v: float | None) -> float | None:
     return v
 
 
-def _consume_check_results(
-    subresults: FinalCheckResult,
-) -> tuple[Sequence[IgnoreResults], Sequence[MetricTuple], Sequence[CheckFunctionResult]]:
+def _consume_check_results(subresults: FinalCheckResult) -> _Subresults:
     """Impedance matching between the Check API and the Check Engine."""
     ignore_results: list[IgnoreResults] = []
     results: list[CheckFunctionResult] = []
@@ -920,9 +923,9 @@ def _consume_check_results(
                 case CheckFunctionResult():
                     results.append(subr)
     except IgnoreResultsError as exc:
-        return [IgnoreResults(str(exc))], perfdata, results
+        return _Subresults([IgnoreResults(str(exc))], perfdata, results)
 
-    return ignore_results, perfdata, results
+    return _Subresults(ignore_results, perfdata, results)
 
 
 def _get_monitoring_data_kwargs(

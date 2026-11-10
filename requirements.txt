@@ -3126,9 +3126,9 @@ numpy==2.3.5 \
     #   -r non-free/packages/cmk-metric-backend/requirements.in
     #   contourpy
     #   matplotlib
-oauthlib==3.3.1 \
-    --hash=sha256:0f0f8aa759826a193cf66c12ea1af1637f87b9b4622d46e866952bb022e538c9 \
-    --hash=sha256:88119c938d2b8fb88561af5f6ee0eec8cc8d552b7bb1f712743136eb7523b7a1
+oauthlib==4.0.1 \
+    --hash=sha256:3d73febdb6faa00f277c81fb04be7b7586fb96fc3b7f0b9c772dada69a25ede7 \
+    --hash=sha256:498a298876e996301950a5b053d12c31628bb7b895db03666430c69ce182eb61
     # via
     #   -c constraints.txt
     #   -r cmk/requirements.in
@@ -5727,9 +5727,9 @@ types-mypy-extensions==1.1.0.20260518 \
     --hash=sha256:5d65c3eb3cd84c090d296b9546ef445b61409f7bc6757e25d8642ee8521b0cd0 \
     --hash=sha256:942a40b112baf755bf3dc8046f2cb5dd7f11c7d9abb49cc35bb7c00e1be6e920
     # via -r tests/dev-requirements.in
-types-oauthlib==3.3.0.20260518 \
-    --hash=sha256:7e35e6e8731e49fc131fb0a94b5e473ac70722dd039c308501de2a5c137ed024 \
-    --hash=sha256:b713f6c32a0e544d165afed6b953780d99ef6997a6b6ddc07491f72bdaf5307b
+types-oauthlib==4.0.0.20261107 \
+    --hash=sha256:24d4b41215e67bcc21f3e417e6018f19746e35c6566a2766f2d7b0e9c5225cd9 \
+    --hash=sha256:5c93a0d26c1ce5e451edf716b68267c549870de9b936b846896576beb3376d36
     # via -r tests/dev-requirements.in
 types-paramiko==5.0.0.20260617 \
     --hash=sha256:50a5b0dc68b39d30097cb7d93b4915dbbc97ed740ea633bd492be25ca1f25df4 \

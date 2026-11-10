@@ -16,12 +16,16 @@ is the list's own UI. ``type`` is a CascadingSingleChoice mirroring the backend
 """
 
 import os
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any, Literal
 
 from cmk.gui.form_specs.unstable import PasswordStorePassword
 from cmk.maps.shared.defaults import DEFAULT_CONNECTION_TIMEOUT
-from cmk.maps.shared.validators import CONNECTION_ID_MAX_LENGTH, CONNECTION_ID_PATTERN
+from cmk.maps.shared.validators import (
+    CONNECTION_ID_MAX_LENGTH,
+    CONNECTION_ID_PATTERN,
+    credentialed_url_allowed,
+)
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
@@ -218,7 +222,9 @@ def _livestatus_branch(default_metric_source: str) -> Dictionary:
                 title=Title("Checkmk URL"),
                 help_text=Help(
                     "Used for deep links into the Checkmk GUI. Leave empty "
-                    "to inherit the global setting."
+                    "to inherit the global setting. With the Checkmk REST API as metric "
+                    "history source, the credentials are sent to this URL, so it must be a "
+                    "path on this site or name the host of the TCP target."
                 ),
                 prefill=InputHint("/<site>/check_mk"),
                 field_size=FieldSize.LARGE,
@@ -229,7 +235,58 @@ def _livestatus_branch(default_metric_source: str) -> Dictionary:
             parameter_form=_metric_history(default_metric_source),
         ),
     }
-    return Dictionary(title=Title("Livestatus connection"), elements=elements)
+    return Dictionary(
+        title=Title("Livestatus connection"),
+        elements=elements,
+        custom_validate=(_credentials_stay_with_the_connection,),
+    )
+
+
+def _uses_rest_api(value: Mapping[str, object]) -> bool:
+    match value.get("metric_history"):
+        case ("rest_api", _):
+            return True
+        case _:
+            return False
+
+
+def _credentials_stay_with_the_connection(value: Mapping[str, object]) -> None:
+    url = value.get("checkmk_url")
+    if not (isinstance(url, str) and url and _uses_rest_api(value)):
+        return
+    match value.get("target"):
+        case ("tcp", {"host": str() as host}):
+            peer: str | None = host
+        case _:
+            peer = None
+    if not credentialed_url_allowed(url, peer):
+        raise ValidationError(
+            Message(
+                "With REST API credentials, the Checkmk URL must be a path on this site "
+                "or name the host of the TCP target."
+            )
+        )
+
+
+def stored_secret_id(connection: Mapping[str, object]) -> str | None:
+    """The password-store ID the REST credentials of *connection* refer to."""
+    match connection.get("type"):
+        case (
+            "livestatus",
+            {
+                "metric_history": (
+                    "rest_api",
+                    {"automation_secret": (_, "stored_password", (str() as password_id, _))},
+                )
+            },
+        ):
+            return password_id
+        case _:
+            return None
+
+
+SecretUsable = Callable[[str], bool]
+"""Whether the saving user may use a password, by its ID."""
 
 
 MonitoringCore = Literal["cmc", "nagios"]
@@ -275,16 +332,39 @@ def _unique_connection_ids(value: Sequence[Mapping[str, object]]) -> None:
         seen.add(cid)
 
 
+def _usable_secrets(
+    secret_usable: SecretUsable,
+) -> Callable[[Sequence[Mapping[str, object]]], None]:
+    def _validate(value: Sequence[Mapping[str, object]]) -> None:
+        for connection in value:
+            cid = str(connection.get("id"))
+            if (password_id := stored_secret_id(connection)) is not None and not secret_usable(
+                password_id
+            ):
+                raise ValidationError(
+                    Message(
+                        'The password of the connection "%(id)s" has either been removed or '
+                        "you are not permitted to use it. Please choose another one."
+                    )
+                    % {"id": cid}
+                )
+
+    return _validate
+
+
 def connections_list_spec(
     monitoring_core: MonitoringCore | None = None,
     title: Title = Title("Maps connections"),
+    *,
+    secret_usable: SecretUsable,
 ) -> List[Any]:
     """The WATO global: the list of monitoring connections Maps queries.
 
     Each entry carries a stable ``id`` (referenced by maps) plus the
     single-connection fields. The ``automation_secret`` is a password from the
     password store, so global.mk holds only a reference to it; the daemon
-    resolves it via ``cmk.utils.password_store``.
+    resolves it via ``cmk.utils.password_store``. ``secret_usable`` decides
+    which of those references the saving user may set.
     """
     default_metric_source = "rest_api" if monitoring_core == "nagios" else "livestatus"
     return List(
@@ -297,7 +377,7 @@ def connections_list_spec(
         remove_element_label=Label("Remove connection"),
         no_element_label=Label("No connections configured yet."),
         editable_order=False,
-        custom_validate=(_unique_connection_ids,),
+        custom_validate=(_unique_connection_ids, _usable_secrets(secret_usable)),
         element_template=Dictionary(
             title=Title("Connection"),
             elements={

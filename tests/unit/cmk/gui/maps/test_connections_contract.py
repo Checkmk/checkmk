@@ -28,6 +28,7 @@ import pytest
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.maps.backend.schemas.connection import ConnectionConfig
 from cmk.maps.backend.services.connection_forms import connections_from_global
+from cmk.maps.gui._config_variables import connections_form_spec
 from cmk.maps.gui.form_specs.connections import connections_list_spec
 from cmk.utils import password_store
 
@@ -139,7 +140,7 @@ def fixture_stored_secret() -> Iterator[None]:
 def test_gui_formspec_accepts_the_value_the_daemon_parses() -> None:
     # GUI side: the real FormSpec accepts this stored shape unchanged. A renamed
     # dict key or cascade discriminator on the GUI side surfaces here.
-    spec = connections_list_spec(monitoring_core="cmc")
+    spec = connections_list_spec(monitoring_core="cmc", secret_usable=lambda _pid: True)
     visitor = get_visitor(spec, VisitorOptions(migrate_values=True, mask_values=False))
     assert visitor.validate(RawDiskData(_STORED_CONNECTIONS)) == []
 
@@ -155,7 +156,7 @@ _STORED_TWICE = [*_STORED_CONNECTIONS, {**_STORED_CONNECTIONS[1], "label": "Seco
 
 @pytest.mark.usefixtures("request_context", "with_user_login")
 def test_gui_formspec_refuses_an_id_used_twice() -> None:
-    spec = connections_list_spec(monitoring_core="cmc")
+    spec = connections_list_spec(monitoring_core="cmc", secret_usable=lambda _pid: True)
     visitor = get_visitor(spec, VisitorOptions(migrate_values=True, mask_values=False))
     assert [m.message for m in visitor.validate(RawDiskData(_STORED_TWICE))] == [
         'The connection ID "remote" is used more than once.'
@@ -164,3 +165,69 @@ def test_gui_formspec_refuses_an_id_used_twice() -> None:
 
 def test_daemon_keeps_the_first_connection_of_an_id() -> None:
     assert connections_from_global(_STORED_TWICE) == _EXPECTED_CONFIGS
+
+
+_REFUSED = [
+    (
+        'The password of the connection "raw" has either been removed or you are not permitted '
+        "to use it. Please choose another one."
+    )
+]
+
+
+@pytest.mark.usefixtures("request_context", "with_user_login")
+def test_gui_formspec_refuses_a_password_the_user_may_not_use() -> None:
+    spec = connections_list_spec(monitoring_core="cmc", secret_usable=lambda _pid: False)
+    visitor = get_visitor(spec, VisitorOptions(migrate_values=True, mask_values=False))
+    assert [m.message for m in visitor.validate(RawDiskData(_STORED_CONNECTIONS))] == _REFUSED
+
+
+@pytest.mark.usefixtures("request_context", "with_user_login")
+def test_a_connection_keeps_no_password_the_user_may_not_use() -> None:
+    visitor = get_visitor(
+        connections_form_spec(), VisitorOptions(migrate_values=True, mask_values=False)
+    )
+
+    messages = [m.message for m in visitor.validate(RawDiskData(_STORED_CONNECTIONS))]
+
+    assert messages == _REFUSED
+
+
+@pytest.mark.usefixtures("request_context", "with_user_login")
+def test_gui_formspec_keeps_rest_credentials_with_the_connection() -> None:
+    elsewhere = [
+        {
+            "id": "raw",
+            "label": "Raw core",
+            "type": [
+                "livestatus",
+                {
+                    "target": [
+                        "tcp",
+                        {"host": "raw.example.com", "port": 6557, "tls": True, "tls_verify": True},
+                    ],
+                    "timeout": 10,
+                    "checkmk_url": "https://other.example.com/check_mk",
+                    "metric_history": [
+                        "rest_api",
+                        {
+                            "automation_user": "automation",
+                            "automation_secret": [
+                                "cmk_postprocessed",
+                                "stored_password",
+                                ["maps-raw", ""],
+                            ],
+                        },
+                    ],
+                },
+            ],
+        }
+    ]
+    spec = connections_list_spec(monitoring_core="cmc", secret_usable=lambda _pid: True)
+    visitor = get_visitor(spec, VisitorOptions(migrate_values=True, mask_values=False))
+    assert [m.message for m in visitor.validate(RawDiskData(elsewhere))] == [
+        (
+            "With REST API credentials, the Checkmk URL must be a path on this site "
+            "or name the host of the TCP target."
+        )
+    ]

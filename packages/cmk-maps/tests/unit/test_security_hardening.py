@@ -580,6 +580,51 @@ def test_connection_rejects_dangerous_urls(url: str) -> None:
         ConnectionConfig(id="b1", host="h", checkmk_url=url)
 
 
+@pytest.mark.parametrize(
+    ("host", "socket_path", "url"),
+    [
+        pytest.param(
+            "Monitor.example.com", None, "https://monitor.example.com./cmk", id="own-host"
+        ),
+        pytest.param("monitor.example.com", None, "/remote/check_mk", id="site-path"),
+        pytest.param(None, "/omd/live", "http://127.0.0.1/heute", id="socket-loopback"),
+    ],
+)
+def test_rest_credentials_may_go_to_the_connection_itself(
+    host: str | None, socket_path: str | None, url: str
+) -> None:
+    ConnectionConfig(
+        id="b1",
+        host=host,
+        socket_path=socket_path,
+        checkmk_url=url,
+        automation_user="automation",
+        automation_secret="s3cr3t",
+    )
+
+
+@pytest.mark.parametrize(
+    ("host", "socket_path", "url"),
+    [
+        pytest.param("monitor.example.com", None, "https://other.example.com/cmk", id="other-host"),
+        pytest.param("monitor.example.com", None, "//other.example.com/cmk", id="scheme-relative"),
+        pytest.param(None, "/omd/live", "https://monitor.example.com/cmk", id="socket-remote"),
+    ],
+)
+def test_rest_credentials_go_nowhere_else(
+    host: str | None, socket_path: str | None, url: str
+) -> None:
+    with pytest.raises(ValidationError):
+        ConnectionConfig(
+            id="b1",
+            host=host,
+            socket_path=socket_path,
+            checkmk_url=url,
+            automation_user="automation",
+            automation_secret="s3cr3t",
+        )
+
+
 def test_validate_safe_url_passes_through_safe_value() -> None:
     assert _validate_safe_url("/CMC/check_mk") == "/CMC/check_mk"
 

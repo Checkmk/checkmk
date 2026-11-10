@@ -18,8 +18,8 @@ import logging
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
-from cmk.maps.backend.core.config import settings
-from cmk.maps.backend.schemas.connection import ConnectionConfig
+from cmk.maps.backend.core.config import Settings, settings
+from cmk.maps.backend.schemas.connection import ConnectionConfig, REDACTED_SECRET
 from cmk.maps.shared.defaults import DEFAULT_CONNECTION_TIMEOUT
 from cmk.utils import password_store
 
@@ -46,11 +46,18 @@ def _cascade(value: object) -> tuple[str, object] | None:
     return None
 
 
-def connection_form_to_config(entry: Mapping[str, object]) -> ConnectionConfig | None:
+def _secret_named(value: object) -> str | None:
+    return None if value is None else REDACTED_SECRET
+
+
+def connection_form_to_config(
+    entry: Mapping[str, object], *, resolve_secrets: bool = True, site: Settings = settings
+) -> ConnectionConfig | None:
     """Flatten one ``maps_connections`` list entry into a ConnectionConfig.
 
     Returns ``None`` for a malformed entry (logged) so one bad record cannot
-    abort loading the rest.
+    abort loading the rest. Without ``resolve_secrets`` a configured secret is
+    only named, as :data:`REDACTED_SECRET`.
     """
     cid = entry.get("id")
     if not isinstance(cid, str) or not cid:
@@ -80,8 +87,8 @@ def connection_form_to_config(entry: Mapping[str, object]) -> ConnectionConfig |
     if target is not None:
         target_name, target_value = target
         if target_name == "local":
-            socket_path = str(Path(settings.checkmk_omd_root) / "tmp" / "run" / "live")
-            checkmk_url = checkmk_url or f"/{settings.checkmk_site}/check_mk"
+            socket_path = str(Path(site.checkmk_omd_root) / "tmp" / "run" / "live")
+            checkmk_url = checkmk_url or f"/{site.checkmk_site}/check_mk"
         elif target_name == "socket" and isinstance(target_value, dict):
             socket_path = target_value.get("socket_path")
         elif target_name == "tcp" and isinstance(target_value, dict):
@@ -97,7 +104,9 @@ def connection_form_to_config(entry: Mapping[str, object]) -> ConnectionConfig |
         creds = metric_history[1]
         if isinstance(creds, dict):
             automation_user = creds.get("automation_user")
-            automation_secret = _resolve_secret(creds.get("automation_secret"))
+            automation_secret = (_resolve_secret if resolve_secrets else _secret_named)(
+                creds.get("automation_secret")
+            )
 
     try:
         return ConnectionConfig(
@@ -122,14 +131,18 @@ def connection_form_to_config(entry: Mapping[str, object]) -> ConnectionConfig |
         return None
 
 
-def connections_from_global(raw: object) -> list[ConnectionConfig]:
+def connections_from_global(raw: object, *, resolve_secrets: bool = True) -> list[ConnectionConfig]:
     """Flatten the whole ``maps_connections`` list; skip malformed entries and
     every but the first entry of an ID."""
     if not isinstance(raw, Sequence) or isinstance(raw, str):
         return []
     out: dict[str, ConnectionConfig] = {}
     for entry in raw:
-        if isinstance(entry, Mapping) and (cfg := connection_form_to_config(entry)) is not None:
+        if (
+            isinstance(entry, Mapping)
+            and (cfg := connection_form_to_config(entry, resolve_secrets=resolve_secrets))
+            is not None
+        ):
             if cfg.id in out:
                 logger.warning("Skipping a second connection %(cid)r", {"cid": cfg.id})
                 continue

@@ -7,6 +7,7 @@
 import asyncio
 import logging
 import time
+from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from cmk.maps.backend.connections.base import topology_problem_rank
@@ -27,78 +28,21 @@ def _configured() -> object:
     return checkmk_globals.load_maps_globals().get(checkmk_globals.VAR_CONNECTIONS)
 
 
-def _effective(raw: object) -> list[ConnectionConfig]:
+def _effective(raw: object, *, resolve_secrets: bool = True) -> list[ConnectionConfig]:
     """Effective connections of the WATO ``maps_connections`` global.
 
     WATO is the sole editor; the daemon never writes connections. Falls back to
     the factory default when none are configured.
     """
-    if configs := connection_forms.connections_from_global(raw):
+    if configs := connection_forms.connections_from_global(raw, resolve_secrets=resolve_secrets):
         return configs
     return connection_forms.connections_from_global(default_connections(settings.checkmk_site))
 
 
 def load_all() -> list[ConnectionConfig]:
-    """Effective connections, read read-only from the WATO ``maps_connections`` global."""
-    return _effective(_configured())
-
-
-class _Registered:
-    """The connections registered with the state service, as last configured."""
-
-    def __init__(self, *, check_every: float = 1.0) -> None:
-        # The configured value they were built from. Held, so its identity is not
-        # reused: the globals loader returns the same object until a file changed.
-        self._raw: object = object()
-        self._configs: dict[str, ConnectionConfig] = {}
-        # Every connection lookup asks; the files are looked at once per interval.
-        self._check_every = check_every
-        self._checked = float("-inf")
-
-    def sync(self) -> None:
-        """Register what changed since the last call: build new and changed
-        connections, close and drop removed ones."""
-        now = time.monotonic()
-        if now - self._checked < self._check_every:
-            return
-        self._checked = now
-        raw = _configured()
-        if raw is self._raw:
-            return
-        self._raw = raw
-        wanted = {cfg.id: cfg for cfg in _effective(raw)}
-        for cid in self._configs.keys() - wanted.keys():
-            _close(cid)
-            state_service.unregister_connection(cid)
-            logger.info("Removed connection '%(id)s'", {"id": cid})
-        for cid, cfg in wanted.items():
-            if self._configs.get(cid) == cfg:
-                continue
-            _close(cid)
-            try:
-                _activate(cfg)
-            except Exception:
-                state_service.unregister_connection(cid)
-                logger.exception("Failed to activate connection '%(id)s'", {"id": cid})
-                continue
-            logger.info(
-                "Activated connection '%(id)s' (type=%(type)s)", {"id": cid, "type": cfg.type}
-            )
-        self._configs = wanted
-
-
-def _close(connection_id: str) -> None:
-    if (connection := state_service.get_registered_connection(connection_id)) is not None:
-        connection.close()
-
-
-_registered = _Registered()
-
-
-def activate_all() -> None:
-    """Register the configured connections, and again whenever they change."""
-    _registered.sync()
-    state_service.follow_configuration(_registered.sync)
+    """Effective connections to list, read from the WATO ``maps_connections``
+    global; their secrets are only named, not looked up."""
+    return _effective(_configured(), resolve_secrets=False)
 
 
 def build_instance(cfg: ConnectionConfig) -> ConnectionBase:
@@ -118,9 +62,73 @@ def build_instance(cfg: ConnectionConfig) -> ConnectionBase:
     )
 
 
-def _activate(cfg: ConnectionConfig) -> None:
-    """Instantiate and register a connection with the state service."""
-    _register(cfg.id, build_instance(cfg))
+class _Registered:
+    """The connections registered with the state service, as last configured."""
+
+    def __init__(
+        self,
+        *,
+        load: Callable[[], object],
+        build: Callable[[ConnectionConfig], ConnectionBase],
+        check_every: float,
+    ) -> None:
+        self._load = load
+        self._build = build
+        # The configured value they were built from. Held, so its identity is not
+        # reused: the globals loader returns the same object until a file changed.
+        self._raw: object = object()
+        self._configs: dict[str, ConnectionConfig] = {}
+        # Every connection lookup asks; the files are looked at once per interval.
+        self._check_every = check_every
+        self._checked = float("-inf")
+
+    def sync(self) -> None:
+        """Register what changed since the last call: build new and changed
+        connections, close and drop removed ones."""
+        now = time.monotonic()
+        if now - self._checked < self._check_every:
+            return
+        self._checked = now
+        raw = self._load()
+        if raw is self._raw:
+            return
+        self._raw = raw
+        wanted = {cfg.id: cfg for cfg in _effective(raw)}
+        for cid in self._configs.keys() - wanted.keys():
+            _close(cid)
+            state_service.unregister_connection(cid)
+            logger.info("Removed connection '%(id)s'", {"id": cid})
+        for cid, cfg in wanted.items():
+            if self._configs.get(cid) == cfg:
+                continue
+            _close(cid)
+            try:
+                _register(cid, self._build(cfg))
+            except Exception:
+                state_service.unregister_connection(cid)
+                logger.exception("Failed to activate connection '%(id)s'", {"id": cid})
+                continue
+            logger.info(
+                "Activated connection '%(id)s' (type=%(type)s)", {"id": cid, "type": cfg.type}
+            )
+        self._configs = wanted
+
+
+def _close(connection_id: str) -> None:
+    if (connection := state_service.get_registered_connection(connection_id)) is not None:
+        connection.close()
+
+
+def activate_all(
+    *,
+    load: Callable[[], object] = _configured,
+    build: Callable[[ConnectionConfig], ConnectionBase] = build_instance,
+    check_every: float = 1.0,
+) -> None:
+    """Register the configured connections, and again whenever they change."""
+    registered = _Registered(load=load, build=build, check_every=check_every)
+    registered.sync()
+    state_service.follow_configuration(registered.sync)
 
 
 async def _warmup_tick() -> None:

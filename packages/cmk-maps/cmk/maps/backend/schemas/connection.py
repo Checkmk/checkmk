@@ -4,13 +4,16 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Pydantic schemas for monitoring connection configuration."""
 
-from ipaddress import ip_address
 from typing import Literal
 from urllib.parse import urlparse
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from cmk.maps.shared.validators import ConnectionId
+from cmk.maps.shared.validators import (
+    ConnectionId,
+    credentialed_url_allowed,
+    normalize_host,
+)
 
 # Cloud-provider metadata services, which would hand IAM tokens to the
 # credentialed outbound HTTP path. A denylist rather than a private-range block
@@ -28,20 +31,6 @@ _BLOCKED_HOSTS = frozenset(
         "metadata",
     }
 )
-
-
-def _normalize_host(hostname: str) -> str:
-    """Canonicalise a URL host before matching :data:`_BLOCKED_HOSTS`.
-
-    ``urlparse().hostname`` lowercases and unwraps IPv6 brackets but keeps a
-    trailing dot, and an IP literal has many spellings — both would otherwise
-    walk past a string comparison.
-    """
-    host = hostname.rstrip(".")
-    try:
-        return str(ip_address(host))
-    except ValueError:
-        return host
 
 
 def _validate_socket_path(value: str | None) -> str | None:
@@ -88,7 +77,7 @@ def _validate_safe_url(value: str | None) -> str | None:
         raise ValueError(f"Unsupported URL scheme: {parsed.scheme!r}")
     if parsed.username or parsed.password:
         raise ValueError("URL must not contain userinfo")
-    host = _normalize_host(parsed.hostname or "")
+    host = normalize_host(parsed.hostname or "")
     if host in _BLOCKED_HOSTS:
         raise ValueError(f"Host {host!r} is blocked")
     return s
@@ -140,6 +129,20 @@ class ConnectionConfig(BaseModel):
     @model_validator(mode="after")
     def _require_type_targets(self) -> ConnectionConfig:
         _require_type_targets(self)
+        return self
+
+    @model_validator(mode="after")
+    def _credentials_stay_with_the_connection(self) -> ConnectionConfig:
+        if (
+            self.checkmk_url
+            and self.automation_user
+            and self.automation_secret
+            and not credentialed_url_allowed(self.checkmk_url, self.host or None)
+        ):
+            raise ValueError(
+                "With REST API credentials, the Checkmk URL must be a path on this site "
+                "or name the connection's host"
+            )
         return self
 
 

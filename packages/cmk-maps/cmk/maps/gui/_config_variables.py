@@ -42,6 +42,7 @@ from cmk.gui.watolib.config_domain_name import (
     ConfigVariableGroupRegistry,
     ConfigVariableRegistry,
 )
+from cmk.gui.watolib.password_store import passwordstore_choices
 from cmk.maps.gui._config_domain import (
     CONFIG_VAR_CONNECTIONS,
     CONFIG_VAR_LOG_LEVEL,
@@ -86,10 +87,16 @@ ConfigVariableGroupMapsDaemon = ConfigVariableGroup(
 )
 
 
+def _secret_usable(password_id: str) -> bool:
+    return password_id in dict(passwordstore_choices())
+
+
 def connections_form_spec() -> List[Any]:
     # The metric-history default tracks the local site's core; resolved at render
     # time (like the connection-choices for map defaults).
-    return connections_list_spec(monitoring_core(), title=CONNECTIONS_TITLE)
+    return connections_list_spec(
+        monitoring_core(), title=CONNECTIONS_TITLE, secret_usable=_secret_usable
+    )
 
 
 def map_defaults_form_spec() -> Dictionary:

@@ -128,6 +128,7 @@ py_library(
         "//cmk/gui/pagetypes",
         "//cmk/gui/rule_specs:legacy_converter",
         "//cmk/gui/sidebar",
+        "//cmk/gui/watolib:password_store",
         "//cmk/utils",
         "//cmk/utils:unixsocket_http",
         "//packages/cmk-ccc:user",

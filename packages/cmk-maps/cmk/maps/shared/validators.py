@@ -6,6 +6,7 @@
 
 import re
 from collections.abc import Callable
+from ipaddress import ip_address
 from typing import Annotated, Final
 from urllib.parse import urlsplit
 
@@ -119,6 +120,37 @@ def _coerced(validate: Callable[[str], str | None], value: object) -> object:
 _IMAGE_FILE_URL = re.compile(r"[^?#\\]*\.(?:png|gif|jpe?g|svg|webp|bmp|ico)", re.IGNORECASE)
 # Read-only pages a graph object may embed from the site itself.
 _EMBEDDABLE_SITE_PAGES = frozenset({"graph_image.py", "view.py", "dashboard.py"})
+
+
+def normalize_host(hostname: str) -> str:
+    """One spelling of a host: lowercase, no trailing dot, IP literals canonical."""
+    host = hostname.strip().lower().rstrip(".")
+    try:
+        return str(ip_address(host))
+    except ValueError:
+        return host
+
+
+def is_loopback_host(host: str) -> bool:
+    """Whether a host spelled as :func:`normalize_host` gives it names this machine."""
+    try:
+        return host == "localhost" or ip_address(host).is_loopback
+    except ValueError:
+        return False
+
+
+def credentialed_url_allowed(url: str, peer_host: str | None) -> bool:
+    """Whether a connection's REST credentials may be sent to *url*.
+
+    A path on this site always may. An absolute URL must name the connection's
+    Livestatus host, or this machine for a connection without one."""
+    url = url.strip()
+    if url.startswith("/") and not url.startswith("//"):
+        return True
+    host = normalize_host(urlsplit(url).hostname or "")
+    if peer_host is None:
+        return is_loopback_host(host)
+    return host == normalize_host(peer_host)
 
 
 def _is_absolute_http(url: str) -> bool:

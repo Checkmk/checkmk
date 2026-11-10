@@ -24,6 +24,7 @@ from router_client import RouterClientFactory
 from cmk.maps.backend.api.v1 import connections, deps
 from cmk.maps.backend.connections.base import MetricHistoryResult, MonitoringScope, UNSCOPED
 from cmk.maps.backend.core.auth import Principal
+from cmk.maps.backend.integrations import checkmk_globals
 from cmk.maps.backend.schemas.connection import ConnectionConfig, REDACTED_SECRET
 from cmk.maps.backend.services import connection_service, state_service
 
@@ -86,6 +87,45 @@ def test_list_backends_redacts_secrets(
     # The resolved secret must never leave the server on the read-only list API.
     assert body[0]["automation_secret"] == REDACTED_SECRET
     assert "supersecret" not in resp.text
+
+
+def test_the_list_names_a_configured_secret_without_looking_it_up(
+    router_client: RouterClientFactory, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # No password store holds "maps-raw" here, so only an unresolved secret shows.
+    entry = {
+        "id": "raw",
+        "label": "Raw",
+        "type": (
+            "livestatus",
+            {
+                "target": ("tcp", {"host": "raw.example.com", "port": 6557}),
+                "metric_history": (
+                    "rest_api",
+                    {
+                        "automation_user": "automation",
+                        "automation_secret": (
+                            "cmk_postprocessed",
+                            "stored_password",
+                            ("maps-raw", ""),
+                        ),
+                    },
+                ),
+            },
+        ),
+    }
+    monkeypatch.setattr(
+        checkmk_globals, "load_maps_globals", lambda: {checkmk_globals.VAR_CONNECTIONS: [entry]}
+    )
+    client = router_client(
+        connections.router,
+        "/api/v1/connections",
+        overrides={deps.require_connection_read: _ADMIN},
+    )
+
+    (listed,) = client.get("/api/v1/connections").json()
+
+    assert listed["automation_secret"] == REDACTED_SECRET
 
 
 def test_list_backends_hides_transport_without_configure(

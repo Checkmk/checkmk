@@ -12,18 +12,14 @@ flattens it to ConnectionConfig and resolves the secret.
 
 import pytest
 
-from cmk.maps.backend.core.config import settings
+from cmk.maps.backend.core.config import Settings
 from cmk.maps.backend.services import connection_forms
 
 _EXPLICIT_SECRET = ("cmk_postprocessed", "explicit_password", ("", "s3cr3t"))
 
 
 @pytest.mark.parametrize("site", ["central", "remote1"])
-def test_a_connection_to_this_site_is_the_own_livestatus_of_each_site(
-    monkeypatch: pytest.MonkeyPatch, site: str
-) -> None:
-    monkeypatch.setattr(settings, "checkmk_site", site)
-    monkeypatch.setattr(settings, "checkmk_omd_root", f"/omd/sites/{site}")
+def test_a_connection_to_this_site_is_the_own_livestatus_of_each_site(site: str) -> None:
     entry = {
         "id": "own",
         "label": "Own",
@@ -33,7 +29,9 @@ def test_a_connection_to_this_site_is_the_own_livestatus_of_each_site(
         ),
     }
 
-    cfg = connection_forms.connection_form_to_config(entry)
+    cfg = connection_forms.connection_form_to_config(
+        entry, site=Settings(checkmk_site=site, checkmk_omd_root=f"/omd/sites/{site}")
+    )
 
     assert cfg is not None
     assert (cfg.socket_path, cfg.host, cfg.checkmk_url) == (

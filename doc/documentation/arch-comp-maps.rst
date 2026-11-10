@@ -547,7 +547,10 @@ Daemon to Livestatus and Checkmk
   series through ``api/1.0`` of that site with these credentials. It does so
   only after it has checked under the user's AuthUser that the object is
   visible. Without credentials it uses Livestatus ``rrddata`` columns, which are
-  scoped by AuthUser anyway.
+  scoped by AuthUser anyway. With credentials, the ``checkmk_url`` is a path on
+  this site or names the connection's TCP host (this machine for a socket), and
+  the secret is a password the saving user may use from the password store. The
+  connection list names a configured secret without looking it up.
 
 Configuration
 -------------

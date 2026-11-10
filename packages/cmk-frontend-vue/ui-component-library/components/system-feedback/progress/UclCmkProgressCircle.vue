@@ -54,7 +54,8 @@ export const panelConfig = {
     initialState: 'success' as const
   },
   label: { type: 'boolean' as const, title: 'label', initialState: true },
-  reverse: { type: 'boolean' as const, title: 'reverse (countdown)', initialState: false }
+  reverse: { type: 'boolean' as const, title: 'reverse (countdown)', initialState: false },
+  animateValue: { type: 'boolean' as const, title: 'animateValue', initialState: true }
 } satisfies PanelConfigFor<typeof CmkProgressCircle>
 </script>
 
@@ -88,6 +89,7 @@ const propState = new PanelStateCreator<typeof CmkProgressCircle>().createRef(pa
         :font-color="propState.fontColor"
         :label="propState.label ? { showTotal: true, unit: '%' } : undefined"
         :reverse="propState.reverse"
+        :animate-value="propState.animateValue"
       />
 
       <template #properties>

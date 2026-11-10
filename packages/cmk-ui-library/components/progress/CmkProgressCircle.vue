@@ -67,6 +67,7 @@ export interface CmkProgressCircleDefaultProps {
   max?: number | 'unknown'
   label?: ProgressLabel
   reverse?: boolean
+  animateValue?: boolean
 }
 
 const {
@@ -76,7 +77,8 @@ const {
   fontColor = undefined,
   max = 100,
   label = undefined,
-  reverse = false
+  reverse = false,
+  animateValue = true
 } = defineProps<CmkProgressCircleDefaultProps>()
 
 const { accessibilityLabelString, labelString, progressRatio } = useProgressLabel(() => ({
@@ -126,6 +128,7 @@ const cmkProgressCircleId = useId()
       />
       <circle
         class="cmk-progress-circle__indicator"
+        :class="{ 'cmk-progress-circle__indicator--static': !animateValue }"
         :cx="center"
         :cy="center"
         :r="radius"
@@ -169,6 +172,11 @@ const cmkProgressCircleId = useId()
   stroke: var(--cmk-progress-circle-color);
   stroke-linecap: round;
   transition: stroke-dashoffset 660ms ease-in-out;
+}
+
+/* stroke-dashoffset transitions repaint on the main thread every frame */
+.cmk-progress-circle__indicator--static {
+  transition: none;
 }
 
 .cmk-progress-circle__label {

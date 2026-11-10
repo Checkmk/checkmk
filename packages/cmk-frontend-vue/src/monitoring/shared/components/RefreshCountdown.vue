@@ -67,6 +67,7 @@ const accessibilityLabel = computed(() =>
       :color="manualPaused ? pauseColor : color"
       :label="false"
       :reverse="true"
+      :animate-value="false"
       aria-hidden="true"
     />
     <span class="monitoring-refresh-countdown__content" aria-hidden="true">

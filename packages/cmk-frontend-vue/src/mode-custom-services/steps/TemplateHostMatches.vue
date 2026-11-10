@@ -47,19 +47,24 @@ const {
       <CmkAlert
         v-if="
           preview.resolution.matching_hosts.length === 0 &&
+          preview.resolution.unmatched_host_names.length === 0 &&
           preview.resolution.hidden_match_count === 0 &&
           !preview.resolution.truncated
         "
         size="small"
         variant="warning"
         :text="
-          _t('No configured host currently matches this template, so the service cannot be saved.')
+          _t('This template currently resolves to no host name, so the service cannot be saved.')
         "
       />
+      <span
+        v-if="
+          preview.resolution.matching_hosts.length > 0 ||
+          preview.resolution.unmatched_host_names.length > 0
+        "
+        >{{ _t('Service:') }} <strong>{{ serviceName }}</strong> {{ appendedAttributes }}</span
+      >
       <template v-if="preview.resolution.matching_hosts.length > 0">
-        <span
-          >{{ _t('Service:') }} <strong>{{ serviceName }}</strong> {{ appendedAttributes }}</span
-        >
         <span
           >{{ _t('Target hosts:') }}
           <strong>{{ preview.resolution.matching_hosts.join(', ') }}</strong></span
@@ -67,7 +72,7 @@ const {
         <OpenTelemetryDataNotice :data="opentelemetryData" />
       </template>
       <span v-if="preview.resolution.unmatched_host_names.length > 0"
-        >{{ _t('Hosts that do not exist:') }}
+        >{{ _t('New hosts, created in the Main folder on saving:') }}
         <strong>{{ preview.resolution.unmatched_host_names.join(', ') }}</strong></span
       >
       <CmkAlert

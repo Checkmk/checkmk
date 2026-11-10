@@ -300,8 +300,16 @@ test.each<[string, TemplatePreview, boolean]>([
   ['a refused template', { status: 'refused', error: 'grouping drops it' }, true],
   ['matching hosts', { status: 'resolved', resolution: RESOLUTION }, false],
   [
-    'no matching host',
+    'only new hosts',
     { status: 'resolved', resolution: { ...RESOLUTION, matching_hosts: [] } },
+    false
+  ],
+  [
+    'no host at all',
+    {
+      status: 'resolved',
+      resolution: { ...RESOLUTION, matching_hosts: [], unmatched_host_names: [] }
+    },
     true
   ],
   [

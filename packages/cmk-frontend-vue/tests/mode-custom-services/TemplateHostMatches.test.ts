@@ -35,22 +35,33 @@ test('names the service and the hosts the template matches', () => {
   )
 })
 
-test('names resolved names that match no configured host apart', () => {
+test('names the hosts saving creates apart', () => {
   renderMatches({
     status: 'resolved',
-    resolution: { ...RESOLUTION, unmatched_host_names: ['pod-serach'] }
+    resolution: { ...RESOLUTION, unmatched_host_names: ['pod-search'] }
   })
 
-  expect(screen.getByText(/Hosts that do not exist:/)).toHaveTextContent(
-    'Hosts that do not exist: pod-serach'
+  expect(screen.getByText(/New hosts/)).toHaveTextContent(
+    'New hosts, created in the Main folder on saving: pod-search'
   )
-  expect(screen.getByText(/Target hosts:/)).not.toHaveTextContent('pod-serach')
+  expect(screen.getByText(/Target hosts:/)).not.toHaveTextContent('pod-search')
 })
 
-test('warns that the service cannot be saved when no host matches', () => {
+test('names the service when the template resolves only to new hosts', () => {
+  renderMatches({
+    status: 'resolved',
+    resolution: { ...RESOLUTION, matching_hosts: [], unmatched_host_names: ['pod-search'] }
+  })
+
+  expect(screen.getByText(/Service:/)).toHaveTextContent('Service: HTTP duration + http.route')
+  expect(screen.queryByText(/Target hosts:/)).toBeNull()
+  expect(screen.queryByText(/resolves to no host name/)).toBeNull()
+})
+
+test('warns that the service cannot be saved when the template resolves to no host name', () => {
   renderMatches({ status: 'resolved', resolution: { ...RESOLUTION, matching_hosts: [] } })
 
-  expect(isAlert(/No configured host currently matches/)).toBe(true)
+  expect(isAlert(/resolves to no host name/)).toBe(true)
   expect(screen.queryByText(/Service:/)).toBeNull()
   expect(screen.queryByText(/Target hosts:/)).toBeNull()
 })
@@ -68,7 +79,7 @@ test('matches that are all hidden are not reported as no match', () => {
   })
 
   expect(screen.getByText(/3 matching hosts are in folders you may not see/)).toBeTruthy()
-  expect(screen.queryByText(/No configured host currently matches/)).toBeNull()
+  expect(screen.queryByText(/resolves to no host name/)).toBeNull()
 })
 
 test('warns that truncated target hosts may be incomplete', () => {
@@ -84,7 +95,7 @@ test('incomplete target hosts without a visible match are not reported as no mat
   })
 
   expect(screen.getByText(/target hosts may be incomplete/)).toBeTruthy()
-  expect(screen.queryByText(/No configured host currently matches/)).toBeNull()
+  expect(screen.queryByText(/resolves to no host name/)).toBeNull()
 })
 
 test('shows a pending lookup instead of target hosts', () => {

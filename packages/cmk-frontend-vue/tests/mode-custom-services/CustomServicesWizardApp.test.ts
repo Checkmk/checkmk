@@ -357,23 +357,37 @@ test('a service assigned by host name template asks for its attributes only at t
   await waitFor(() => expect(templateAttributesRequests).toBe(1))
 })
 
-test('a host name template that matches no host cannot be saved', async () => {
-  serveStoredTemplateService()
+function serveResolution(unmatchedHostNames: string[]): void {
   server.use(
     http.post(RESOLVE_URL, () =>
       HttpResponse.json({
         matching_hosts: [],
-        unmatched_host_names: ['crat'],
+        unmatched_host_names: unmatchedHostNames,
         hidden_match_count: 0,
         truncated: false
       })
     )
   )
+}
+
+test('a host name template that resolves to no host name cannot be saved', async () => {
+  serveStoredTemplateService()
+  serveResolution([])
   renderWizard()
   await goToHostStep()
 
-  expect(await screen.findByText(/No configured host currently matches/)).toBeTruthy()
+  expect(await screen.findByText(/resolves to no host name/)).toBeTruthy()
   expect(screen.getByRole('button', { name: 'Save & activate changes' })).toBeDisabled()
+})
+
+test('a host name template that resolves only to new hosts can be saved', async () => {
+  serveStoredTemplateService()
+  serveResolution(['pod-cart'])
+  renderWizard()
+  await goToHostStep()
+
+  expect(await screen.findByText(/New hosts/)).toHaveTextContent('pod-cart')
+  expect(screen.getByRole('button', { name: 'Save & activate changes' })).toBeEnabled()
 })
 
 test('a user who may not add alerts is not offered to add one', async () => {

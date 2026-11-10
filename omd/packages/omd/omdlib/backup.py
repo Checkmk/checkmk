@@ -177,10 +177,10 @@ def _backup_site_to_tarfile(
         os.path.join(site_home, relative_path) for relative_path in sqlite_relative_paths
     )
 
-    def accepted_files(tarinfo: tarfile.TarInfo) -> bool:
-        # patterns are relative to site directory, tarinfo.name includes site name.
+    def accepted_files(arcname: str) -> bool:
+        # patterns are relative to site directory, arcname includes site name.
         return not any(
-            fnmatch.fnmatch(tarinfo.name[len(site_name) + 1 :], glob_pattern)
+            fnmatch.fnmatch(arcname[len(site_name) + 1 :], glob_pattern)
             for glob_pattern in excludes
         )
 
@@ -383,7 +383,7 @@ def _tar_add(
     name: str,
     arcname: str,
     *,
-    predicate: Callable[[tarfile.TarInfo], bool] = lambda _: True,
+    predicate: Callable[[str], bool] = lambda _: True,
     sqlite_snapshot_paths: frozenset[str] = frozenset(),
     verbose: bool,
 ) -> None:
@@ -398,13 +398,20 @@ def _tar_add(
     # Skip if somebody tries to archive the archive...
     if tar.name is not None and os.path.abspath(name) == tar.name:
         return
+    # Exclude files.
+    if not predicate(arcname):
+        return
     directory_files = []
     try:
         with rrd_socket.suspend_rrd_update_if_needed(arcname):
             # Create a TarInfo object from the file.
-            tarinfo = _get_tar_info_or_raise(tar, name, arcname)
-            # Exclude files.
-            if not predicate(tarinfo):
+            tarinfo = _get_tar_info(tar, name, arcname)
+            if tarinfo is None:
+                # This should never be triggered by cmk owned sockets, since they are placed in
+                # `tmp/run`, which is excluded from the backup via the `tmp/*` pattern.
+                sys.stderr.write(
+                    f"Warning: '{name}' is a UNIX domain socket. Excluding it from the backup.\n"
+                )
                 return
 
             # Snapshot via the sqlite backup API instead of copying the live file.
@@ -415,7 +422,9 @@ def _tar_add(
                 backup_name = f"{name}.backup"
                 try:
                     _backup_sqlite(name, backup_name)
-                    backup_tarinfo = _get_tar_info_or_raise(tar, backup_name, arcname=arcname)
+                    backup_tarinfo = _get_tar_info(tar, backup_name, arcname=arcname)
+                    # The backup file was just written as a regular file.
+                    assert backup_tarinfo is not None
                     with open(backup_name, "rb") as file:
                         tar.addfile(backup_tarinfo, file)
                 finally:
@@ -482,16 +491,10 @@ def _backup_sqlite(src: str | Path, dst: str | Path) -> None:
         src_conn.backup(dst_conn)
 
 
-def _get_tar_info_or_raise(
-    tar: tarfile.TarFile, name: str, arcname: str | None = None
-) -> tarfile.TarInfo:
+def _get_tar_info(tar: tarfile.TarFile, name: str, arcname: str) -> tarfile.TarInfo | None:
     """Wrapper for tarfile.gettarinfo
 
     The original implementation is incorrectly typed as to never return None,
-    although in practice this can happen on e. g. unix domain sockets. In this case
-    we want to raise an Exception to make sure we can handle the error gracefully.
+    although in practice this can happen on e. g. unix domain sockets.
     """
-    tarinfo: tarfile.TarInfo | None = tar.gettarinfo(name, arcname=arcname)
-    if tarinfo is None:
-        raise tarfile.TarError(f"Failed to get tarinfo for file {name!r}")
-    return tarinfo
+    return tar.gettarinfo(name, arcname=arcname)

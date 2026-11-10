@@ -142,21 +142,20 @@ def test_get_exlude_patterns_mixed() -> None:
     assert "var/check_mk/rrd/*" not in actual_excludes
 
 
-def test_backup_site_to_tarfile_socket_fail(tmp_path: Path) -> None:
+def test_backup_site_to_tarfile_skips_socket_with_warning(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
     site_name = "site"
     site_home = tmp_path / site_name
     site_home.mkdir(parents=True, exist_ok=True)
+    (site_home / "test123").write_text("uftauftauftata", encoding="utf-8")
 
-    test_file = site_home / "test_file"
+    test_socket = site_home / "test_socket"
     server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    print(str(test_file))  # noqa: T201  # It's OK for test/script helpers to print()
-    server.bind(str(test_file))
+    server.bind(str(test_socket))
 
     tar_path = tmp_path / "backup.tar"
-    with (
-        pytest.raises(tarfile.TarError, match="Failed to get tarinfo for file '.*test_file.*'"),
-        tarfile.open(tar_path, mode="w:") as tar,
-    ):
+    with tarfile.open(tar_path, mode="w:") as tar:
         omdlib.backup._backup_site_to_tarfile(  # noqa: SLF001
             site_name,
             str(site_home),
@@ -165,6 +164,39 @@ def test_backup_site_to_tarfile_socket_fail(tmp_path: Path) -> None:
             BackupExclusions.from_options({}),
             verbose=False,
         )
+
+    assert f"Warning: '{test_socket}' is a UNIX domain socket" in capsys.readouterr().err
+    with tarfile.open(tar_path) as tar:
+        names = tar.getnames()
+    assert f"{site_name}/test_socket" not in names
+    assert f"{site_name}/test123" in names
+
+
+def test_backup_site_to_tarfile_excluded_socket_is_silent(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    site_name = "site"
+    site_home = tmp_path / site_name
+    log_dir = site_home / "var" / "log" / "apache"
+    log_dir.mkdir(parents=True)
+
+    server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    server.bind(str(log_dir / "test_socket"))
+
+    tar_path = tmp_path / "backup.tar"
+    with tarfile.open(tar_path, mode="w:") as tar:
+        omdlib.backup._backup_site_to_tarfile(  # noqa: SLF001
+            site_name,
+            str(site_home),
+            True,
+            tar,
+            BackupExclusions.from_options({"no-logs": None}),
+            verbose=False,
+        )
+
+    assert capsys.readouterr().out == ""
+    with tarfile.open(tar_path) as tar:
+        assert f"{site_name}/var/log/apache/test_socket" not in tar.getnames()
 
 
 def test_backup_site_to_tarfile_snapshots_a_sqlite_database_without_its_wal(

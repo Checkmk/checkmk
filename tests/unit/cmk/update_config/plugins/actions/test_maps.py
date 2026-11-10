@@ -1155,6 +1155,14 @@ def test_a_board_named_like_a_builtin_map_gets_a_fallback_name(admin: UserId) ->
     assert page.config.map_spec["alias"] == "Our infrastructure"
 
 
+def test_a_board_named_other_gets_a_fallback_name(admin: UserId) -> None:
+    # ``other`` is the pagetype default topic, which has no ``map.<name>`` permission.
+    _run_with_board("other", _complete_map())
+
+    assert get_own_map(admin, "other") is None
+    assert get_own_map(admin, "other_legacy") is not None
+
+
 def test_a_board_named_like_a_builtin_map_does_not_shadow_it(admin: UserId) -> None:
     # The admin's own map would take the built-in's place for the admin.
     _run_with_board("infrastructure", _complete_map())
@@ -1170,12 +1178,11 @@ def test_the_fallback_name_keeps_the_boards_visibility() -> None:
     assert _role_permissions("user")["map.infrastructure_legacy"] is False
 
 
-def test_a_taken_fallback_name_is_recorded_as_skipped(admin: UserId) -> None:
-    # Not imported over the map of the fallback name.
+def test_a_board_whose_fallback_name_is_taken_too_gets_the_next_one(admin: UserId) -> None:
     save_user_file("user_maps", {"infrastructure_legacy": {"title": "Taken"}}, admin)
     _run_with_board("infrastructure", _complete_map())
 
-    assert _outcomes()["infrastructure"] == "skipped"
+    assert get_own_map(admin, "infrastructure_legacy2") is not None
 
 
 def test_a_board_named_like_another_users_map_gets_a_fallback_name(

@@ -68,7 +68,7 @@ class TakenNames:
     @classmethod
     def load(cls, admin: UserId, own: Mapping[str, object]) -> Self:
         return cls(
-            builtins=frozenset(MapPage.builtin_pages()),
+            builtins=frozenset(MapPage.reserved_unique_ids()),
             others=frozenset(name for owner, name in MapPage.load_raw() if owner != admin),
             own=own,
         )
@@ -76,10 +76,16 @@ class TakenNames:
     def target(self, source: str) -> str:
         """The name ``source`` migrates as: ``<source>_legacy`` if a map has its name,
         as a built-in would hide it, another user's map share its permission and an
-        own map be overwritten. ``source`` is shortened so the suffix still fits."""
+        own map be overwritten; ``<source>_legacy2`` and so on if that is taken too.
+        ``source`` is shortened so the suffix still fits."""
         if not self.taken(source):
             return source
-        return source[: MAP_NAME_MAX_LENGTH - len(_FALLBACK_SUFFIX)] + _FALLBACK_SUFFIX
+        suffix = _FALLBACK_SUFFIX
+        number = 1
+        while self.taken(name := source[: MAP_NAME_MAX_LENGTH - len(suffix)] + suffix):
+            number += 1
+            suffix = f"{_FALLBACK_SUFFIX}{number}"
+        return name
 
     def taken(self, name: str) -> bool:
         return name in self.builtins or name in self.others or name in self.own

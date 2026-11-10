@@ -115,3 +115,10 @@ class MapPage(pagetypes.Overridable[MapConfig]):
     @classmethod
     def builtin_pages(cls) -> Mapping[str, MapConfig]:
         return builtin_map_configs()
+
+    @override
+    @classmethod
+    def reserved_unique_ids(cls) -> list[str]:
+        # ``default_topic`` gets no ``map.<name>`` permission, so a map of that
+        # name would be visible to everyone.
+        return [*cls.builtin_pages(), cls.default_topic()]

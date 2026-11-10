@@ -22,6 +22,7 @@ from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import collection_href
 from cmk.gui.openapi.utils import ProblemException, RestAPIRequestGeneralException
 from cmk.maps.gui._pages import _authorized_public
+from cmk.maps.gui.pagetype import MapPage
 from cmk.maps.gui.store import create_map, get_own_map
 from cmk.maps.rest_api.endpoint_family import MAPS_FAMILY
 from cmk.maps.rest_api.models.request_models import MapRequest
@@ -61,6 +62,12 @@ def create_map_v1(api_context: ApiContext, body: MapRequest) -> ApiResponse[MapO
             status=HTTPStatus.BAD_REQUEST,
             title="Invalid map name",
             detail="A map name may only contain letters, digits, underscore and hyphen.",
+        )
+    if name in MapPage.reserved_unique_ids():
+        raise RestAPIRequestGeneralException(
+            status=HTTPStatus.BAD_REQUEST,
+            title="Reserved map name",
+            detail=f"The map name {name!r} is reserved for Checkmk. Choose another name.",
         )
     validate_object_ids(body.config)
     spec = spec_from_map(body.config)

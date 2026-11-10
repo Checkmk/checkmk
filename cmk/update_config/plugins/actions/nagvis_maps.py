@@ -5,11 +5,10 @@
 
 """Migration of NagVis maps into Checkmk Maps, on update and by ``cmk-migrate-maps``.
 
-See "Update from NagVis" in ``doc/documentation/arch-comp-maps.rst``. What became of
-each map, ``migrated`` or ``skipped``, is recorded in
-``var/maps/nagvis_maps_migration.mk``; a later run only looks at maps not recorded
-there, unless forced. A map that could not be migrated is not recorded, so every
-update tries it again.
+See "Update from NagVis" in ``doc/documentation/arch-comp-maps.rst``. The maps that
+were migrated are recorded in ``var/maps/nagvis_maps_migration.mk``; a later run only
+looks at maps not recorded there, unless forced. A map that could not be migrated is
+not recorded, so every update tries it again.
 """
 
 from collections.abc import Collection, Mapping, Sequence
@@ -158,7 +157,7 @@ def _prepare_maps(
     access: _NagVisAccess | None,
     logger: Logger,
 ) -> _Migrated:
-    """Add each NagVis map to the admin's maps; skipped ones enter the outcomes.
+    """Add each NagVis map to the admin's maps.
 
     ``earlier`` holds the name each map of an earlier run still has, by NagVis name;
     links follow those names too. A map in ``replace`` takes the place of the
@@ -174,14 +173,6 @@ def _prepare_maps(
         valid_name = map_name_from_filename(path.name)
         replacing = replace.get(nagvis_name)
         name = replacing or maps.taken.target(valid_name)
-        if not replacing and maps.taken.taken(name):
-            logger.warning(
-                "NagVis map %(map)r is not migrated: a map named %(name)r already exists.",
-                {"map": nagvis_name, "name": name},
-            )
-            # A forced run keeps a map migrated before as such.
-            maps.outcomes.setdefault(nagvis_name, "skipped")
-            continue
         try:
             map_cfg, warnings = read_nagvis_map(path, name, config)
             # Checked first, so a map that fails copies no background on every update.
@@ -241,7 +232,7 @@ def _prepare_maps(
 class NagVisMigration:
     # The NagVis names of the maps the run stored.
     migrated: Sequence[str]
-    # Whether every map of the run was migrated, none skipped, failed or unknown.
+    # Whether every map of the run was migrated, none failed or unknown.
     complete: bool
 
 

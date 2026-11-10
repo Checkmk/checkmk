@@ -12,9 +12,9 @@ recorded there, so an icon the operator deleted or replaced in Maps stays that w
 
 * ``migrated``: a board named like a shipped built-in map, another user's map or
   one of the admin's own becomes ``<name>_legacy``, shortened to fit, as the other
-  would hide it, share its ``map.<name>`` permission or be overwritten,
-* ``skipped``: the fallback name is taken too; the board is not imported over the
-  map of it. Also an OrbVis demo board, which only showed OrbVis's features.
+  would hide it, share its ``map.<name>`` permission or be overwritten; if that
+  name is taken too, a number follows it,
+* ``skipped``: an OrbVis demo board, which only showed OrbVis's features.
 
 A board that could not be migrated is not recorded: every update tries it again,
 so one fixed by hand comes over with the next run. The same goes for an icon the
@@ -119,13 +119,6 @@ def _prepare_maps(
             )
             continue
         name = maps.taken.target(board)
-        if maps.taken.taken(name):
-            logger.warning(
-                "OrbVis board %(board)r is not migrated: a map named %(name)r already exists.",
-                {"board": board, "name": name},
-            )
-            maps.outcomes[board] = "skipped"
-            continue
         try:
             data = read_legacy_map(path)
             if is_demo_map(data):

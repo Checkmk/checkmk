@@ -145,6 +145,14 @@ def test_create_duplicate_returns_409(clients: ClientRegistry) -> None:
     clients.Maps.create(config=_STATIC_MAP, expect_ok=False).assert_status_code(HTTPStatus.CONFLICT)
 
 
+@pytest.mark.parametrize("name", ["all_hosts", "other"])
+def test_create_with_a_reserved_name_returns_400(clients: ClientRegistry, name: str) -> None:
+    response = clients.Maps.create(config=_map(name), expect_ok=False)
+
+    response.assert_status_code(HTTPStatus.BAD_REQUEST)
+    assert "reserved" in response.json["detail"]
+
+
 def test_map_name_limit_served_to_the_spa_is_the_one_create_applies(
     clients: ClientRegistry,
 ) -> None:

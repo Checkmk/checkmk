@@ -287,8 +287,9 @@ OpenAPI types, not from hand-written copies.
    * - POST
      - ``domain-types/map/collections/all``
      - Needs ``general.edit_map``. Name must match ``[a-zA-Z0-9_-]{1,100}``;
-       409 if the caller already owns a map of that name (a built-in or
-       another user's map of that name is shadowed, not refused). The requested visibility is clamped to what
+       400 for the name of a built-in map or ``other``, 409 if the caller
+       already owns a map of that name (another user's map of that name is
+       shadowed, not refused). The requested visibility is clamped to what
        the user's publish permissions allow.
    * - PUT
      - ``objects/map/{name}``
@@ -1280,9 +1281,10 @@ record); reading and translating the OrbVis files is
   named like a built-in map or another user's map becomes ``<name>_legacy``,
   its name shortened so the suffix fits, since a map name carries one
   ``map.<name>`` permission for all owners; one named like a map of the owner
-  does too, so a board added later is not lost.
-  A board that does not validate, or whose fallback name is taken too, is
-  logged with a warning and can be brought over with *Import map…*.
+  does too, so a board added later is not lost. If that name is taken too, a
+  number follows: ``<name>_legacy2``.
+  A board that does not validate is logged with a warning and can be brought
+  over with *Import map…*.
 * OrbVis's demo boards are not migrated. They are the only read-only boards:
   OrbVis seeded them itself and refused edits to them.
 * The OrbVis files are left alone. The outcome per board and per icon is

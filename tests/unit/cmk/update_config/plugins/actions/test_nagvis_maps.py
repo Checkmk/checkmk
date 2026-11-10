@@ -247,17 +247,24 @@ def test_a_map_named_like_one_of_the_admin_gets_the_fallback_name(admin: UserId)
     assert page.config.map_spec["alias"] == "Second"
 
 
-@pytest.mark.usefixtures("with_admin")
-def test_a_map_whose_fallback_name_is_taken_too_is_skipped() -> None:
+def test_a_map_named_other_gets_the_fallback_name(admin: UserId) -> None:
+    _write_map("other", _HOST)
+
+    _action()(_LOGGER, debug=True)
+
+    assert get_own_map(admin, "other") is None
+    assert get_own_map(admin, "other_legacy") is not None
+
+
+def test_a_map_whose_fallback_name_is_taken_too_gets_the_next_one(admin: UserId) -> None:
     _write_map("office", _HOST)
     _write_map("office_legacy", _HOST)
     _action()(_LOGGER, debug=True)
     store.save_object_to_file(_record_path(), {})
 
-    result = migrate_nagvis_maps(_LOGGER)
+    _action()(_LOGGER, debug=True)
 
-    assert not result.complete
-    assert _outcomes()["office"] == "skipped"
+    assert get_own_map(admin, "office_legacy2") is not None
 
 
 def test_a_map_name_maps_does_not_take_is_cleaned(admin: UserId) -> None:
@@ -413,7 +420,7 @@ def test_a_forced_run_replaces_the_earlier_migration_changed_in_maps(admin: User
     assert "office_legacy" not in own
 
 
-def test_a_forced_run_that_cannot_migrate_a_map_again_keeps_it_recorded_as_migrated(
+def test_a_forced_run_of_a_map_stored_for_another_admin_gets_a_free_name(
     admin: UserId,
 ) -> None:
     _write_map("office", _HOST)
@@ -425,6 +432,7 @@ def test_a_forced_run_that_cannot_migrate_a_map_again_keeps_it_recorded_as_migra
 
     migrate_nagvis_maps(_LOGGER, force=True)
 
+    assert get_own_map(admin, "office_legacy2") is not None
     assert _outcomes() == {"office": "migrated"}
 
 

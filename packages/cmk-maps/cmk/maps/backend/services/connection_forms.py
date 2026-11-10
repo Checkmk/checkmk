@@ -18,6 +18,8 @@ import logging
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 
+from pydantic import ValidationError
+
 from cmk.maps.backend.core.config import Settings, settings
 from cmk.maps.backend.schemas.connection import ConnectionConfig, REDACTED_SECRET
 from cmk.maps.shared.defaults import DEFAULT_CONNECTION_TIMEOUT
@@ -123,6 +125,17 @@ def connection_form_to_config(
             automation_user=automation_user,
             automation_secret=automation_secret,
         )
+    except ValidationError as exc:
+        logger.warning(
+            "Skipping invalid connection %(cid)r: %(errors)s",
+            {
+                "cid": cid,
+                "errors": [
+                    (e["loc"], e["msg"]) for e in exc.errors(include_input=False, include_url=False)
+                ],
+            },
+        )
+        return None
     except Exception as exc:
         logger.warning(
             "Skipping invalid connection %(cid)r: %(exc)s",

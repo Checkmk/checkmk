@@ -4,6 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Crash reports: unhandled exceptions must land in the Checkmk crash store."""
 
+import base64
+import json
 from http import HTTPStatus
 from pathlib import Path
 
@@ -13,6 +15,7 @@ from fastapi.testclient import TestClient
 import cmk.ccc.version_info as cmk_version_info
 from cmk.maps.backend import main
 from cmk.maps.backend.core.crash import create_crash_report
+from cmk.maps.backend.schemas.connection import ConnectionConfig
 
 
 @pytest.fixture(name="version_infos")
@@ -36,6 +39,23 @@ def test_create_crash_report_persists_to_the_store(tmp_path: Path, version_infos
 
     crash_dir = tmp_path / "var" / "check_mk" / "crashes" / "maps" / crash_id
     assert (crash_dir / "crash.info").exists()
+
+
+def test_a_crash_report_holds_no_connection_secret(tmp_path: Path, version_infos: None) -> None:  # noqa: ARG001
+    connection = ConnectionConfig(
+        id="c1", host="h", automation_user="automation", automation_secret="s3cr3t"
+    )
+    try:
+        raise ValueError(connection.id)
+    except ValueError:
+        crash_id = create_crash_report(tmp_path)
+
+    crash_info = json.loads(
+        (tmp_path / "var" / "check_mk" / "crashes" / "maps" / crash_id / "crash.info").read_text()
+    )
+    local_vars = base64.b64decode(crash_info["local_vars"]).decode()
+    assert "automation" in local_vars
+    assert "s3cr3t" not in local_vars
 
 
 def test_unhandled_request_exception_returns_500_with_crash_id(

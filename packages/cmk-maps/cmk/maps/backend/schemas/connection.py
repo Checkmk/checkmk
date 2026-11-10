@@ -7,7 +7,7 @@
 from typing import Literal
 from urllib.parse import urlparse
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from cmk.maps.shared.validators import (
     ConnectionId,
@@ -74,12 +74,12 @@ def _validate_safe_url(value: str | None) -> str | None:
         return s
     parsed = urlparse(s)
     if parsed.scheme not in ("http", "https"):
-        raise ValueError(f"Unsupported URL scheme: {parsed.scheme!r}")
+        raise ValueError("URL scheme must be http or https")
     if parsed.username or parsed.password:
         raise ValueError("URL must not contain userinfo")
     host = normalize_host(parsed.hostname or "")
     if host in _BLOCKED_HOSTS:
-        raise ValueError(f"Host {host!r} is blocked")
+        raise ValueError("URL host is blocked")
     return s
 
 
@@ -90,6 +90,8 @@ REDACTED_SECRET = "***REDACTED***"
 
 
 class ConnectionConfig(BaseModel):
+    model_config = ConfigDict(hide_input_in_errors=True)
+
     id: ConnectionId
     type: Literal["livestatus"] = "livestatus"
     label: str = Field(default="", max_length=200)
@@ -114,7 +116,7 @@ class ConnectionConfig(BaseModel):
     timeout: float = Field(default=10.0, ge=0.1, le=300.0)
     checkmk_url: str | None = Field(default=None, description="e.g. /<site>/check_mk")
     automation_user: str | None = Field(default=None, max_length=200)
-    automation_secret: str | None = Field(default=None, max_length=512)
+    automation_secret: str | None = Field(default=None, max_length=512, repr=False)
 
     @field_validator("checkmk_url")
     @classmethod

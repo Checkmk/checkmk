@@ -93,6 +93,38 @@ def test_tcp_connection_with_rest_secret() -> None:
     assert cfg.automation_secret == "s3cr3t"
 
 
+_CREDENTIALS_FOR_ELSEWHERE = {
+    "id": "remote",
+    "label": "Remote",
+    "type": (
+        "livestatus",
+        {
+            "target": ("tcp", {"host": "mon.example", "port": 6557}),
+            "checkmk_url": "https://elsewhere.example/check_mk",
+            "metric_history": (
+                "rest_api",
+                {"automation_user": "automation", "automation_secret": _EXPLICIT_SECRET},
+            ),
+        },
+    ),
+}
+
+
+def test_an_invalid_connection_is_logged_without_its_secret(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    assert connection_forms.connection_form_to_config(_CREDENTIALS_FOR_ELSEWHERE) is None
+    assert "remote" in caplog.text
+    assert "s3cr3t" not in caplog.text
+
+
+def test_an_invalid_connection_is_logged_with_what_is_wrong(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    connection_forms.connection_form_to_config(_CREDENTIALS_FOR_ELSEWHERE)
+    assert "the Checkmk URL must be a path on this site" in caplog.text
+
+
 def test_unknown_backend_type_skipped() -> None:
     # Only ``livestatus`` is a supported backend type; anything else is skipped
     # rather than crashing the load of the remaining connections.

@@ -41,6 +41,10 @@ from cmk.checkengine.specs.checkresults import (  # astrein: disable=module-laye
     ActiveCheckResult,
 )
 from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, PluginGroup
+from cmk.graphing.v1 import entry_point_prefixes as graphing_entry_point_prefixes_v1
+from cmk.graphing.v2_unstable import (
+    entry_point_prefixes as graphing_entry_point_prefixes_v2_unstable,
+)
 from cmk.gui import main_modules  # astrein: disable=module-layers
 from cmk.gui.form_specs import (  # astrein: disable=module-layers
     get_visitor,
@@ -91,6 +95,7 @@ class ValidationStep(enum.Enum):
     AGENT_BASED_PLUGINS = "agent based plugins loading"
     ACTIVE_CHECKS = "active checks loading"
     SPECIAL_AGENTS = "special agents loading"
+    GRAPHING_PLUGINS = "graphing plugins loading"
     BAKERY_PLUGINS = "bakery plugins loading"
     BAKERY_RULE_SPECS = "bakery plugins rule specs validation"
     BAKERY_DEFAULT_PARAMETERS = "bakery plugins default parameters validation"
@@ -224,6 +229,17 @@ def _validate_bakery_default_parameters(
                     f"cannot be read by AgentConfig rule spec '{plugin.name}': {e}"
                 )
     return to_result(ValidationStep.BAKERY_DEFAULT_PARAMETERS, errors)
+
+
+def _validate_graphing_plugin_loading(*, debug: bool) -> ActiveCheckResult:
+    discovered_plugins = discover_all_plugins(
+        PluginGroup.GRAPHING,
+        dict(graphing_entry_point_prefixes_v1())
+        | dict(graphing_entry_point_prefixes_v2_unstable()),
+        skip_wrong_types=False,
+        raise_errors=debug,
+    )
+    return to_result(ValidationStep.GRAPHING_PLUGINS, [str(e) for e in discovered_plugins.errors])
 
 
 def _validate_rule_spec_loading() -> ActiveCheckResult:
@@ -505,6 +521,7 @@ def validate_plugins(*, debug: bool) -> ActiveCheckResult:
         loading_subresult,
         _validate_active_checks_loading(),
         _validate_special_agent_loading(),
+        _validate_graphing_plugin_loading(debug=debug),
         _validate_rule_spec_loading(),
         _validate_rule_spec_form_creation(debug=debug),
         _validate_referenced_rule_spec(debug=debug),

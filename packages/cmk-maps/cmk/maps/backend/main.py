@@ -96,8 +96,8 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     settings_service.get_system_settings()
 
     # Connections come from the WATO ``maps_connections`` global (read-only);
-    # connection_service falls back to a built-in local-site connection when none
-    # are configured, so there is always a usable data source.
+    # connection_service falls back to the factory default when none are
+    # configured, so there is always a usable data source.
     connection_service.activate_all()
 
     # Fail fast: the daemon exists to serve live monitoring data, so coming up

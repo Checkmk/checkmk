@@ -85,10 +85,7 @@ def test_every_site_starts_with_a_connection_to_its_own_livestatus(
     (connection,) = defaults[CONFIG_VAR_CONNECTIONS]
 
     assert connection["id"] == defaults[CONFIG_VAR_MAP_DEFAULTS]["default_backend_id"]
-    assert connection["type"][1]["target"] == (
-        "socket",
-        {"socket_path": str(cmk.utils.paths.omd_root / "tmp" / "run" / "live")},
-    )
+    assert connection["type"][1]["target"] == ("local", None)
 
 
 def test_the_default_connection_is_a_valid_connections_value(

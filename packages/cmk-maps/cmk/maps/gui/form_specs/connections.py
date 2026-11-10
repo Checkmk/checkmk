@@ -19,6 +19,7 @@ import os
 from collections.abc import Mapping, Sequence
 from typing import Any, Literal
 
+from cmk.maps.shared.defaults import DEFAULT_CONNECTION_TIMEOUT
 from cmk.maps.shared.validators import CONNECTION_ID_MAX_LENGTH, CONNECTION_ID_PATTERN
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
@@ -57,11 +58,18 @@ def _livestatus_target() -> CascadingSingleChoice:
     return CascadingSingleChoice(
         title=Title("Connection target"),
         help_text=Help(
-            "Pick Unix socket when Maps runs inside the same OMD site as the "
-            "monitoring core (path is at tmp/run/live). Pick TCP for remote "
-            "Livestatus / xinetd setups."
+            "Pick Local site for the Livestatus of the site Maps runs on, which is "
+            "each remote site's own in a distributed setup. Pick Unix socket for "
+            "another socket path, and TCP for remote Livestatus / xinetd setups."
         ),
         elements=[
+            CascadingSingleChoiceElement(
+                name="local",
+                title=Title("Local site"),
+                parameter_form=FixedValue(
+                    value=None, label=Label("The Livestatus of the site Maps runs on")
+                ),
+            ),
             CascadingSingleChoiceElement(
                 name="socket",
                 title=Title("Unix socket"),
@@ -133,7 +141,7 @@ def _livestatus_target() -> CascadingSingleChoice:
                 ),
             ),
         ],
-        prefill=DefaultValue("socket"),
+        prefill=DefaultValue("local"),
     )
 
 
@@ -195,7 +203,7 @@ def _livestatus_branch(default_metric_source: str) -> Dictionary:
             parameter_form=Integer(
                 title=Title("Timeout"),
                 unit_symbol="s",
-                prefill=DefaultValue(10),
+                prefill=DefaultValue(DEFAULT_CONNECTION_TIMEOUT),
             ),
         ),
         "checkmk_url": DictElement(

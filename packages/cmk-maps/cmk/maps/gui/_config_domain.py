@@ -21,7 +21,7 @@ import copy
 from collections.abc import Mapping
 from functools import lru_cache
 from pathlib import Path
-from typing import Final, Literal, override, TypedDict
+from typing import Final, override, TypedDict
 
 import cmk.utils.paths
 from cmk.ccc.site import omd_site
@@ -37,6 +37,7 @@ from cmk.gui.watolib.config_domain_name import (
 from cmk.maps.gui._permissions import PERMISSION_SECTION_MAPS
 from cmk.maps.gui.form_specs.global_settings import object_defaults_spec
 from cmk.maps.shared import config_vars as maps_config_vars
+from cmk.maps.shared.defaults import default_connections
 from cmk.maps.shared.map_payload import MapViewType, RenderMode
 from cmk.rulesets.v1 import Title
 from cmk.utils.config_warnings import ConfigurationWarnings
@@ -65,57 +66,6 @@ DEFAULT_LOG_LEVEL = "INFO"
 DEFAULT_STATE_REFRESH_INTERVAL = 5
 
 
-class _SocketTarget(TypedDict):
-    socket_path: str
-
-
-class _LivestatusOptions(TypedDict):
-    """The Livestatus arm of the connection form's ``type`` cascade."""
-
-    target: tuple[Literal["socket"], _SocketTarget]
-    timeout: int
-    checkmk_url: str
-    metric_history: tuple[Literal["livestatus"], None]
-
-
-class _ConnectionEntry(TypedDict):
-    """One ``maps_connections`` entry in the nested FormSpec shape WATO stores.
-
-    The daemon flattens this back into a ``ConnectionConfig``
-    (``cmk.maps.backend.services.connection_forms``).
-    """
-
-    id: str
-    label: str
-    type: tuple[Literal["livestatus"], _LivestatusOptions]
-
-
-def _connections_default() -> list[_ConnectionEntry]:
-    # Every site starts with a connection to its own Livestatus. Being the factory
-    # default, it is computed on each site and never stored, so it does not count
-    # as a modification and is not replicated to the remote sites; the daemon's
-    # built-in local-site connection describes the same connection.
-    site = omd_site()
-    return [
-        {
-            "id": f"cmk_{site}",
-            "label": f"Checkmk {site}",
-            "type": (
-                "livestatus",
-                {
-                    "target": (
-                        "socket",
-                        {"socket_path": str(cmk.utils.paths.omd_root / "tmp" / "run" / "live")},
-                    ),
-                    "timeout": 10,
-                    "checkmk_url": f"/{site}/check_mk",
-                    "metric_history": ("livestatus", None),
-                },
-            ),
-        }
-    ]
-
-
 class _MapDefaults(TypedDict):
     """The authoring defaults a new map inherits."""
 
@@ -129,7 +79,7 @@ def _map_defaults_default() -> _MapDefaults:
     # list from disk / render a valuespec: default_globals() is also reached from
     # non-request activation paths (get_all_default_globals), where file I/O and
     # form rendering are surprising. The default connection id is deterministic
-    # (cmk_<site>, see _connections_default / builtin_maps), so we name it directly and
+    # (cmk_<site>, see default_connections / builtin_maps), so we name it directly and
     # let per-map / Global-settings overrides take precedence.
     return {
         "default_backend_id": f"cmk_{omd_site()}",
@@ -197,7 +147,7 @@ class ConfigDomainMaps(ABCConfigDomain):
     @override
     def default_globals(self) -> GlobalSettings:
         return {
-            CONFIG_VAR_CONNECTIONS: _connections_default(),
+            CONFIG_VAR_CONNECTIONS: default_connections(omd_site()),
             CONFIG_VAR_LOG_LEVEL: DEFAULT_LOG_LEVEL,
             CONFIG_VAR_STATE_REFRESH_INTERVAL: DEFAULT_STATE_REFRESH_INTERVAL,
             # GUI-only authoring seeds — kept in the daemon's own domain (the

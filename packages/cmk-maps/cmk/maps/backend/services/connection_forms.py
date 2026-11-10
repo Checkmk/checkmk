@@ -16,8 +16,11 @@ the same mechanism the HTTP-proxy config uses).
 
 import logging
 from collections.abc import Mapping, Sequence
+from pathlib import Path
 
+from cmk.maps.backend.core.config import settings
 from cmk.maps.backend.schemas.connection import ConnectionConfig
+from cmk.maps.shared.defaults import DEFAULT_CONNECTION_TIMEOUT
 from cmk.utils import password_store
 
 logger = logging.getLogger(__name__)
@@ -72,10 +75,14 @@ def connection_form_to_config(entry: Mapping[str, object]) -> ConnectionConfig |
     port: int | None = None
     tls = True
     tls_verify = True
+    checkmk_url = type_value.get("checkmk_url") or None
     target = _cascade(type_value.get("target"))
     if target is not None:
         target_name, target_value = target
-        if target_name == "socket" and isinstance(target_value, dict):
+        if target_name == "local":
+            socket_path = str(Path(settings.checkmk_omd_root) / "tmp" / "run" / "live")
+            checkmk_url = checkmk_url or f"/{settings.checkmk_site}/check_mk"
+        elif target_name == "socket" and isinstance(target_value, dict):
             socket_path = target_value.get("socket_path")
         elif target_name == "tcp" and isinstance(target_value, dict):
             host = target_value.get("host")
@@ -102,8 +109,8 @@ def connection_form_to_config(entry: Mapping[str, object]) -> ConnectionConfig |
             port=port,
             tls=tls,
             tls_verify=tls_verify,
-            timeout=float(type_value.get("timeout", 10)),
-            checkmk_url=type_value.get("checkmk_url") or None,
+            timeout=float(type_value.get("timeout", DEFAULT_CONNECTION_TIMEOUT)),
+            checkmk_url=checkmk_url,
             automation_user=automation_user,
             automation_secret=automation_secret,
         )

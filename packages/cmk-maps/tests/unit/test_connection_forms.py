@@ -10,11 +10,39 @@ Pins the exact FormSpec ("form") shape WATO writes for a connection — the
 flattens it to ConnectionConfig and resolves the secret.
 """
 
+import pytest
+
+from cmk.maps.backend.core.config import settings
 from cmk.maps.backend.services import connection_forms
 
 # An "explicit_password" password-store value resolves to its inline value
 # without needing the on-disk store (the GUI's "explicit" choice).
 _EXPLICIT_SECRET = ("cmk_postprocessed", "explicit_password", ("", "s3cr3t"))
+
+
+@pytest.mark.parametrize("site", ["central", "remote1"])
+def test_a_connection_to_this_site_is_the_own_livestatus_of_each_site(
+    monkeypatch: pytest.MonkeyPatch, site: str
+) -> None:
+    monkeypatch.setattr(settings, "checkmk_site", site)
+    monkeypatch.setattr(settings, "checkmk_omd_root", f"/omd/sites/{site}")
+    entry = {
+        "id": "own",
+        "label": "Own",
+        "type": (
+            "livestatus",
+            {"target": ("local", None), "timeout": 10, "metric_history": ("livestatus", None)},
+        ),
+    }
+
+    cfg = connection_forms.connection_form_to_config(entry)
+
+    assert cfg is not None
+    assert (cfg.socket_path, cfg.host, cfg.checkmk_url) == (
+        f"/omd/sites/{site}/tmp/run/live",
+        None,
+        f"/{site}/check_mk",
+    )
 
 
 def test_socket_connection() -> None:

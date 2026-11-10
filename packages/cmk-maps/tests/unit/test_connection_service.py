@@ -201,18 +201,23 @@ def test_warmup_loop_primes_immediately_then_ticks_each_interval(
     assert sleeps == [30, 30]
 
 
-def test_load_all_falls_back_to_local_connection(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_load_all_falls_back_to_the_factory_default(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(settings, "checkmk_site", "mysite")
     monkeypatch.setattr(settings, "checkmk_omd_root", "/omd/sites/mysite")
     monkeypatch.setattr(checkmk_globals, "load_maps_globals", dict)
 
     configs = connection_service.load_all()
 
-    assert len(configs) == 1
-    local = configs[0]
-    assert local.id == "cmk_mysite"
-    assert local.type == "livestatus"
-    assert local.socket_path == "/omd/sites/mysite/tmp/run/live"
+    assert configs == [
+        ConnectionConfig(
+            id="cmk_mysite",
+            type="livestatus",
+            label="Checkmk mysite",
+            socket_path="/omd/sites/mysite/tmp/run/live",
+            checkmk_url="/mysite/check_mk",
+            timeout=30.0,
+        )
+    ]
 
 
 def test_load_all_returns_configured_connections(monkeypatch: pytest.MonkeyPatch) -> None:

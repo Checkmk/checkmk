@@ -7,7 +7,6 @@
 import asyncio
 import logging
 import time
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 from cmk.maps.backend.connections.base import topology_problem_rank
@@ -16,29 +15,12 @@ from cmk.maps.backend.integrations import checkmk_globals
 from cmk.maps.backend.schemas.connection import ConnectionConfig
 from cmk.maps.backend.services import connection_forms, state_service
 from cmk.maps.backend.services.state_service import register_connection as _register
+from cmk.maps.shared.defaults import default_connections
 
 if TYPE_CHECKING:
     from cmk.maps.backend.connections.base import ConnectionBase
 
 logger = logging.getLogger(__name__)
-
-
-def _local_connection() -> ConnectionConfig:
-    """A built-in connection to the site's own Livestatus socket.
-
-    Used when ``maps_connections`` holds no connection: the GUI's factory default
-    describes the same connection but is never written to the file this daemon
-    reads.
-    """
-    return ConnectionConfig(
-        id=f"cmk_{settings.checkmk_site}",
-        type="livestatus",
-        label=f"Checkmk {settings.checkmk_site}",
-        socket_path=str(Path(settings.checkmk_omd_root) / "tmp" / "run" / "live"),
-        checkmk_url=f"/{settings.checkmk_site}",
-        port=6557,
-        timeout=settings.connection_query_timeout,
-    )
 
 
 def _configured() -> object:
@@ -48,11 +30,12 @@ def _configured() -> object:
 def _effective(raw: object) -> list[ConnectionConfig]:
     """Effective connections of the WATO ``maps_connections`` global.
 
-    WATO is the sole editor; the daemon never writes connections. Falls back to a
-    built-in local-site connection when none are configured.
+    WATO is the sole editor; the daemon never writes connections. Falls back to
+    the factory default when none are configured.
     """
-    configs = connection_forms.connections_from_global(raw)
-    return configs if configs else [_local_connection()]
+    if configs := connection_forms.connections_from_global(raw):
+        return configs
+    return connection_forms.connections_from_global(default_connections(settings.checkmk_site))
 
 
 def load_all() -> list[ConnectionConfig]:

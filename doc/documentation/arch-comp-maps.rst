@@ -536,10 +536,11 @@ Daemon to Livestatus and Checkmk
 --------------------------------
 
 * **Livestatus** is queried with ``cmk.livestatus_client``. The default
-  connection ``cmk_<site>`` uses the local socket ``tmp/run/live``. In a
-  distributed setup this connection fans out to all sites, using the site specs
-  the GUI writes to ``etc/check_mk/maps.d/sitespecs.mk``. Further connections
-  (Unix socket or TCP, optionally TLS) can be configured in the Maps settings.
+  connection ``cmk_<site>`` targets *this site*: each site the setting is
+  replicated to uses its own socket ``tmp/run/live``. On a central site this
+  connection fans out to all sites, using the site specs the GUI writes to
+  ``etc/check_mk/maps.d/sitespecs.mk``. Further connections (this site, a Unix
+  socket or TCP, optionally TLS) can be configured in the Maps settings.
 * **Checkmk REST API**, only for metric history: if a connection has a
   ``checkmk_url``, an automation user and a secret, the daemon fetches metric
   series through ``api/1.0`` of that site with these credentials. It does so
@@ -1055,7 +1056,7 @@ Limits
    * - Metric history window
      - 1 minute to 7 days
    * - Livestatus query timeout
-     - 30 s overall per query (socket timeout per connection, default 10 s),
+     - 30 s overall per query (socket timeout per connection, default 30 s),
        at most 20 concurrent queries per connection
    * - Uploads
      - 2 MB (library images), 10 MB (backgrounds), 5 MB (NagVis ``.cfg``)
@@ -1236,9 +1237,9 @@ Daemon lifecycle
   only that pool and the default executor stays free.
   The daemon starts before Apache (``rc.d/84-maps``).
 * At start the daemon applies the log level, activates the configured
-  connections (or the built-in local one) and refuses to start if no connection
-  could be set up. It does not test connectivity at start, so an unreachable
-  Livestatus shows up only in the first queries.
+  connections (or the factory default, the site's own Livestatus) and refuses
+  to start if no connection could be set up. It does not test connectivity at
+  start, so an unreachable Livestatus shows up only in the first queries.
   **Changes to the log level, and a password changed in the password store,
   take effect only after** ``omd restart maps``; Activate Changes does not
   restart the daemon.

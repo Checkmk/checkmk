@@ -855,6 +855,7 @@ REVEALED_DEFAULTS: Mapping[str, Mapping[str, object]] = {
         # carrying it is environment-dependent.
         "[add]": UnstableDefault(),
         "[add].type.livestatus": UnstableDefault(),
+        "[add].type.livestatus.target.local": None,
         "[add].type.livestatus.target.socket": UnstableDefault(),
         "[add].type.livestatus.checkmk_url": NoSaveableDefault(),
         "[add].type.livestatus.metric_history.livestatus": None,
@@ -1318,7 +1319,7 @@ DEFAULT_DISK_VALUES: Mapping[str, object] = {
     "maps_connections": [],
     "maps_map_defaults": {
         # The site's own connection is the factory default and thereby the only
-        # choice, see cmk.maps.gui._config_domain._connections_default.
+        # choice, see cmk.maps.shared.defaults.default_connections.
         "default_backend_id": "cmk_NO_SITE",
         "default_map_type": ("static", None),
         "default_render_mode": "default",

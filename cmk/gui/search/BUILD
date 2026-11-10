@@ -47,6 +47,21 @@ py_library(
 )
 
 py_library(
+    name = "livestatus_links",
+    srcs = ["livestatus_links.py"],
+    imports = ["../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        "//packages/cmk-ccc:hostaddress",
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-web/cmk/web/utils",
+    ],
+)
+
+py_library(
     name = "_routing",
     srcs = ["_routing.py"],
     imports = ["../../.."],
@@ -80,6 +95,7 @@ py_library(
         include = ["**/*.py"],
         exclude = [
             "index.py",
+            "livestatus_links.py",
             "matchers.py",
             "permissions.py",
             "quicksearch.py",

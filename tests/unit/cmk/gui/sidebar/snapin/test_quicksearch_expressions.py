@@ -65,7 +65,7 @@ class _FakeConductor(ABCQuicksearchConductor):
         return "Topic"
 
     @override
-    def create_results(self, build_url: object) -> list[SearchResult]:
+    def create_results(self, result_url_builder: object) -> list[SearchResult]:
         return self._results
 
 

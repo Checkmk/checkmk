@@ -15,6 +15,7 @@ from cmk.gui.search.quicksearch import (
     ABCQuicksearchConductor,
     BasicPluginQuicksearchConductor,
     FilterBehaviour,
+    legacy_view_urls,
     LivestatusQuicksearchConductor,
     sanitize_and_validate_regex,
     UrlBuilder,
@@ -203,12 +204,13 @@ class SnapinQuicksearchManager:
         search_objects: list[ABCQuicksearchConductor],
     ) -> SearchResultsByTopic:
         """Generates elements out of the raw data"""
+        result_urls = legacy_view_urls(self._build_url)
         yield from (
             (
                 search_object.get_match_topic(),
                 results,
             )
             for search_object in search_objects
-            for results in [search_object.create_results(self._build_url)]
+            for results in [search_object.create_results(result_urls)]
             if results
         )

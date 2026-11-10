@@ -3,13 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
 from typing import override
 from urllib.parse import parse_qsl, urlencode, urlsplit
 
 import pytest
 from werkzeug.test import create_environ
 
+from cmk.ccc.hostaddress import HostName
+from cmk.ccc.site import SiteId
 from cmk.gui.config import Config
 from cmk.gui.http import Request
 from cmk.gui.permissions import all_permissions
@@ -20,6 +21,7 @@ from cmk.gui.search._engines._livestatus import (
     get_url_builder,
     GroupMatchPlugin,
     HostMatchPlugin,
+    legacy_view_urls,
     LivestatusQuicksearchConductor,
     LivestatusResult,
     LivestatusSearchEngine,
@@ -27,7 +29,15 @@ from cmk.gui.search._engines._livestatus import (
     UrlBuilder,
     UsedFilters,
 )
-from cmk.gui.type_defs import SearchResult
+from cmk.gui.search.livestatus_links import (
+    LivestatusMatch,
+    ResultGroup,
+    ResultHost,
+    ResultService,
+    ResultTarget,
+    ResultUrlBuilder,
+)
+from cmk.gui.type_defs import Rows, SearchResult
 from cmk.gui.utils.roles import UserPermissions
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.shared_typing.unified_search import ProviderName
@@ -38,8 +48,12 @@ def _build_url(query_string: str = "q=myhost") -> UrlBuilder:
     return get_url_builder(Request(create_environ(query_string=query_string)))
 
 
-def _view_query(addvars: Sequence[HTTPVariable]) -> str:
-    return f"view.py?{urlencode(addvars)}"
+def _result_url_builder() -> ResultUrlBuilder:
+    return legacy_view_urls(_build_url())
+
+
+def _view_query(result: LivestatusMatch) -> str:
+    return f"view.py?{urlencode(result.view_vars)}"
 
 
 def _url_params(url: str) -> dict[str, str]:
@@ -294,7 +308,7 @@ class TestGenerateDisplayTexts:
             LivestatusResult(
                 text_tokens=[("s", "CPU load")],
                 view_vars=[("a", "1")],
-                row={"description": "CPU load", "host_name": "myhost"},
+                row={"description": "CPU load", "host_name": "myhost", "site": "site1"},
                 display_text="",
             )
         ]
@@ -427,7 +441,7 @@ class TestGenerateDisplayTexts:
             LivestatusResult(
                 text_tokens=[("ad", "10.10.15.200"), ("s", "CPU load")],
                 view_vars=[("a", "1")],
-                row={"description": "CPU load", "host_name": "myhost"},
+                row={"description": "CPU load", "host_name": "myhost", "site": "site1"},
                 display_text="",
             )
         ]
@@ -636,7 +650,7 @@ class TestExecuteLivestatusCommand:
             conductor.do_query()
 
         assert conductor.num_rows() == 0
-        assert conductor.create_results(_build_url()) == []
+        assert conductor.create_results(_result_url_builder()) == []
 
 
 class TestCreateResults:
@@ -647,7 +661,7 @@ class TestCreateResults:
         conductor._livestatus_table = "hosts"  # noqa: SLF001
         conductor._rows = [{"site": "mysite", "name": "myhost", "host_name": "myhost"}]  # noqa: SLF001
 
-        results = conductor.create_results(_build_url())
+        results = conductor.create_results(_result_url_builder())
 
         assert [result.title for result in results] == ["myhost"]
         assert _url_params(results[0].url) == {
@@ -663,7 +677,7 @@ class TestCreateResults:
         conductor._livestatus_table = "hostgroups"  # noqa: SLF001
         conductor._rows = [{"site": "mysite", "name": "mygroup"}]  # noqa: SLF001
 
-        results = conductor.create_results(_build_url())
+        results = conductor.create_results(_result_url_builder())
 
         assert "site" not in _url_params(results[0].url)
 
@@ -679,12 +693,63 @@ class TestCreateResults:
             {"site": "mysite", "name": "myhost", "host_name": "myhost", "host_groups": ["mygroup"]}
         ]
 
-        results = conductor.create_results(_build_url())
+        results = conductor.create_results(_result_url_builder())
 
         assert _url_params(results[0].url) == {
             "view_name": "host",
             "host": "myhost",
         }
+
+
+class TestResultTargets:
+    """The URL builder is told which object each result stands for, so that it can link it to
+    any page, not only to the legacy views."""
+
+    @staticmethod
+    def _targets(
+        used_filters: UsedFilters, livestatus_table: str, rows: Rows
+    ) -> list[ResultTarget]:
+        conductor = LivestatusQuicksearchConductor(
+            used_filters, FilterBehaviour.CONTINUE, row_limit=80
+        )
+        conductor._livestatus_table = livestatus_table  # noqa: SLF001
+        conductor._rows = rows  # noqa: SLF001
+        targets: list[ResultTarget] = []
+
+        def record(result: LivestatusMatch) -> str:
+            targets.append(result.target)
+            return "url"
+
+        conductor.create_results(record)
+        return targets
+
+    def test_a_host_row_is_its_host_on_its_site(self) -> None:
+        assert self._targets(
+            {"h": ["myhost"]},
+            "hosts",
+            [{"site": "mysite", "name": "myhost", "host_name": "myhost"}],
+        ) == [ResultHost(site_id=SiteId("mysite"), host_name=HostName("myhost"))]
+
+    def test_a_service_row_is_its_service_on_its_host(self) -> None:
+        assert self._targets(
+            {"s": ["CPU"]},
+            "services",
+            [{"site": "mysite", "host_name": "myhost", "description": "CPU load"}],
+        ) == [
+            ResultService(
+                site_id=SiteId("mysite"), host_name=HostName("myhost"), service="CPU load"
+            )
+        ]
+
+    def test_a_host_group_row_is_its_group(self) -> None:
+        assert self._targets(
+            {"hg": ["mygroup"]}, "hostgroups", [{"site": "mysite", "name": "mygroup"}]
+        ) == [ResultGroup(kind="host", name="mygroup")]
+
+    def test_a_service_group_row_is_its_group(self) -> None:
+        assert self._targets(
+            {"sg": ["mygroup"]}, "servicegroups", [{"site": "mysite", "name": "mygroup"}]
+        ) == [ResultGroup(kind="service", name="mygroup")]
 
 
 class _FakeConductor(ABCQuicksearchConductor):
@@ -724,7 +789,7 @@ class _FakeConductor(ABCQuicksearchConductor):
         raise NotImplementedError
 
     @override
-    def create_results(self, build_url: UrlBuilder) -> list[SearchResult]:
+    def create_results(self, result_url_builder: ResultUrlBuilder) -> list[SearchResult]:
         return [SearchResult(title=title, url="view.py") for title in self.titles]
 
     @override
@@ -735,7 +800,9 @@ class _FakeConductor(ABCQuicksearchConductor):
 class TestConductSearch:
     @staticmethod
     def _manager(row_limit: int) -> QuicksearchManager:
-        return QuicksearchManager(row_limit=row_limit, search_order=[], build_url=_build_url())
+        return QuicksearchManager(
+            row_limit=row_limit, search_order=[], result_url_builder=_result_url_builder()
+        )
 
     def test_all_filters_are_queried_while_they_want_to_continue(self) -> None:
         first = _FakeConductor(["a"], FilterBehaviour.CONTINUE, row_limit=10)
@@ -785,7 +852,9 @@ class TestConductSearch:
 
 class TestEvaluateResults:
     def test_results_are_grouped_by_match_topic(self) -> None:
-        manager = QuicksearchManager(row_limit=10, search_order=[], build_url=_build_url())
+        manager = QuicksearchManager(
+            row_limit=10, search_order=[], result_url_builder=_result_url_builder()
+        )
         conductors: list[ABCQuicksearchConductor] = [
             _FakeConductor(["myhost"], FilterBehaviour.CONTINUE, 10, topic="Host name"),
             _FakeConductor(["My alias"], FilterBehaviour.CONTINUE, 10, topic="Host alias"),
@@ -799,7 +868,9 @@ class TestEvaluateResults:
         ]
 
     def test_filters_without_results_are_left_out(self) -> None:
-        manager = QuicksearchManager(row_limit=10, search_order=[], build_url=_build_url())
+        manager = QuicksearchManager(
+            row_limit=10, search_order=[], result_url_builder=_result_url_builder()
+        )
         conductors: list[ABCQuicksearchConductor] = [
             _FakeConductor([], FilterBehaviour.CONTINUE, 10, topic="Host name"),
         ]
@@ -813,7 +884,7 @@ class TestDetermineSearchObjects:
         return QuicksearchManager(
             row_limit=80,
             search_order=[("h", "continue"), ("s", "finished")],
-            build_url=_build_url(),
+            result_url_builder=_result_url_builder(),
         )
 
     def test_an_explicit_expression_yields_a_single_aggregated_conductor(
@@ -855,7 +926,7 @@ class TestSearch:
     def _engine(config: Config, row_limit: int = 80) -> LivestatusSearchEngine:
         return LivestatusSearchEngine(
             config,
-            Request(create_environ(query_string="q=myhost")),
+            result_url_builder=_result_url_builder(),
             row_limit=row_limit,
             search_order=[("h", "continue")],
         )
@@ -931,8 +1002,8 @@ class TestBasicPluginQuicksearchConductor:
 
     def test_the_results_are_capped_at_the_row_limit(self) -> None:
         conductor = self._conductor(["a", "b", "c"], row_limit=2)
-
-        assert [result.title for result in conductor.create_results(_build_url())] == ["a", "b"]
+        titles = [result.title for result in conductor.create_results(_result_url_builder())]
+        assert titles == ["a", "b"]
 
     def test_a_plugin_search_has_no_content_page_to_open(self) -> None:
         # Pressing Enter on a non-livestatus match (e.g. a monitor menu entry) has no

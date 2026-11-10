@@ -20,7 +20,7 @@ from cmk.shared_typing.unified_search import (
 )
 
 from ._collapsing import get_collapser
-from ._engines._livestatus import LivestatusSearchEngine
+from ._engines._livestatus import legacy_result_urls, LivestatusSearchEngine
 from ._engines._redis import RedisSearchEngine
 from ._unified import UnifiedSearch
 from .permissions import (
@@ -65,7 +65,7 @@ class PageUnifiedSearch(AjaxPage):
             ),
             livestatus_engine=LivestatusSearchEngine(
                 ctx.config,
-                ctx.request,
+                result_url_builder=legacy_result_urls(ctx.request),
                 row_limit=_LIVESTATUS_ENGINE_ROW_LIMIT,
                 search_order=_UNIFIED_SEARCH_LIVESTATUS_ORDER,
             ),

@@ -34,6 +34,14 @@ from cmk.ruleset_matcher.tags import TagGroupID, TagID
 from cmk.shared_typing.unified_search import ProviderName, UnifiedSearchResultItem
 from cmk.web.utils.urls import HTTPVariable, makeuri
 
+from ..livestatus_links import (
+    LivestatusMatch,
+    ResultGroup,
+    ResultHost,
+    ResultService,
+    ResultTarget,
+    ResultUrlBuilder,
+)
 from ..matchers import ABCMatchPlugin, match_plugin_registry, MatchPluginRegistry
 from ._helpers import transform_legacy_results_to_unified
 
@@ -106,6 +114,20 @@ def get_url_builder(request: Request) -> UrlBuilder:
     return build_url
 
 
+def legacy_result_urls(request: Request) -> ResultUrlBuilder:
+    """Links each result of the request to the legacy view (``view.py``) showing it"""
+    return legacy_view_urls(get_url_builder(request))
+
+
+def legacy_view_urls(build_url: UrlBuilder) -> ResultUrlBuilder:
+    """Links each result to the legacy view (``view.py``) showing it"""
+
+    def build(result: LivestatusMatch) -> str:
+        return build_url(result.view_vars)
+
+    return build
+
+
 class ABCQuicksearchConductor(abc.ABC):
     def __init__(
         self, used_filters: UsedFilters, filter_behaviour: FilterBehaviour, row_limit: int
@@ -145,7 +167,7 @@ class ABCQuicksearchConductor(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def create_results(self, build_url: UrlBuilder) -> list[SearchResult]:
+    def create_results(self, result_url_builder: ResultUrlBuilder) -> list[SearchResult]:
         """Returns the results for the given query"""
         raise NotImplementedError
 
@@ -212,7 +234,7 @@ class BasicPluginQuicksearchConductor(ABCQuicksearchConductor):
         raise NotImplementedError  # TODO: Implement this
 
     @override
-    def create_results(self, build_url: UrlBuilder) -> list[SearchResult]:
+    def create_results(self, result_url_builder: ResultUrlBuilder) -> list[SearchResult]:
         return self._results[: self._row_limit]
 
 
@@ -409,7 +431,7 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
         return url_params
 
     @override
-    def create_results(self, build_url: UrlBuilder) -> list[SearchResult]:
+    def create_results(self, result_url_builder: ResultUrlBuilder) -> list[SearchResult]:
         elements: list[LivestatusResult] = []
 
         if not self._rows:
@@ -454,7 +476,22 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
                 )
             )
 
-        return self._generate_display_texts(elements, build_url)
+        return self._generate_display_texts(elements, result_url_builder)
+
+    def _get_target(self, row: Row) -> ResultTarget:
+        match self.livestatus_table:
+            case "hosts":
+                return ResultHost(site_id=row["site"], host_name=row["name"])
+            case "services":
+                return ResultService(
+                    site_id=row["site"], host_name=row["host_name"], service=row["description"]
+                )
+            case "hostgroups":
+                return ResultGroup(kind="host", name=row["name"])
+            case "servicegroups":
+                return ResultGroup(kind="service", name=row["name"])
+            case other:
+                raise ValueError(f"No search result target for livestatus table {other!r}")
 
     def _get_target_view(self, exact_match: bool = True) -> ViewName:
         if exact_match:
@@ -479,14 +516,19 @@ class LivestatusQuicksearchConductor(ABCQuicksearchConductor):
         raise NotImplementedError
 
     def _generate_display_texts(
-        self, elements: list[LivestatusResult], build_url: UrlBuilder
+        self, elements: list[LivestatusResult], result_url_builder: ResultUrlBuilder
     ) -> list[SearchResult]:
         """Creates the text displayed to the user
 
         Analyzes all display texts and ensures that we have unique ones"""
 
         def url_of(element: LivestatusResult) -> str:
-            return build_url(element.view_vars)
+            return result_url_builder(
+                LivestatusMatch(
+                    target=self._get_target(element.row),
+                    view_vars=tuple(element.view_vars),
+                )
+            )
 
         for element in elements:
             if self.livestatus_table == "services":
@@ -568,11 +610,11 @@ class QuicksearchManager:
         *,
         row_limit: int,
         search_order: Iterable[tuple[str, str]],
-        build_url: UrlBuilder,
+        result_url_builder: ResultUrlBuilder,
     ) -> None:
         self._row_limit = row_limit
         self._search_order = search_order
-        self._build_url = build_url
+        self._result_url_builder = result_url_builder
 
     def generate_results(
         self, query: SearchQuery, user_permissions: UserPermissions
@@ -708,7 +750,7 @@ class QuicksearchManager:
                 results,
             )
             for search_object in search_objects
-            for results in [search_object.create_results(self._build_url)]
+            for results in [search_object.create_results(self._result_url_builder)]
             if results
         )
 
@@ -1423,8 +1465,8 @@ class LivestatusSearchEngine:
     def __init__(
         self,
         config: Config,
-        request: Request,
         *,
+        result_url_builder: ResultUrlBuilder,
         row_limit: int,
         search_order: Iterable[tuple[str, str]],
         user_permissions: UserPermissions | None = None,
@@ -1432,7 +1474,7 @@ class LivestatusSearchEngine:
         self._legacy_engine = QuicksearchManager(
             row_limit=row_limit,
             search_order=search_order,
-            build_url=get_url_builder(request),
+            result_url_builder=result_url_builder,
         )
         self._user_permissions = user_permissions or UserPermissions.from_config(
             config, all_permissions()

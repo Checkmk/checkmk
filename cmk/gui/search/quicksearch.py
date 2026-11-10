@@ -15,6 +15,7 @@ from ._engines._livestatus import (
     FilterBehaviour,
     get_url_builder,
     IncorrectLabelInputError,
+    legacy_view_urls,
     LivestatusQuicksearchConductor,
     sanitize_and_validate_regex,
     UrlBuilder,
@@ -31,5 +32,6 @@ __all__ = [
     "UrlBuilder",
     "UsedFilters",
     "get_url_builder",
+    "legacy_view_urls",
     "sanitize_and_validate_regex",
 ]

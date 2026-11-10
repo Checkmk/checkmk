@@ -28,6 +28,7 @@ py_library(
         "//cmk/gui:config",
         "//cmk/gui:core_toolkit",
         "//cmk/gui:page_toolkit",
+        "//cmk/gui/search:livestatus_links",
         "//cmk/gui/search:matchers",
         "//cmk/gui/utils",
         "//cmk/gui/utils:middle",

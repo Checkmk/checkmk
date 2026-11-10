@@ -5,9 +5,25 @@
 """Shared validators for user-supplied URL/color fields on maps/presentations."""
 
 import re
-from typing import Final
+from typing import Annotated, Final
+
+from pydantic import Field
 
 from cmk.maps.shared.map_name import MAP_NAME_MAX_LENGTH, MAP_NAME_PATTERN
+
+# Connections are referenced by this id from maps and stored as a file name part.
+CONNECTION_ID_PATTERN: Final = r"^[a-zA-Z0-9_\-]+$"
+CONNECTION_ID_MAX_LENGTH: Final = 64
+ConnectionId = Annotated[
+    str, Field(max_length=CONNECTION_ID_MAX_LENGTH, pattern=CONNECTION_ID_PATTERN)
+]
+
+FiniteFloat = Annotated[float, Field(allow_inf_nan=False)]
+
+# font-family reaches an inline style on the frontend; keep CSS-breaking
+# characters (;{}()<>/:) out so it can't escape the property like the color
+# fields are guarded against.
+_FONT_RE = re.compile(r"^[a-zA-Z0-9 ,_'\"\-.]{1,128}$")
 
 # Hex (#rgb/#rgba/#rrggbb/#rrggbbaa), a plain CSS named color, or "transparent".
 # Strict on purpose — keeps `<script>`, `javascript:`, `expression(...)` and other
@@ -171,6 +187,15 @@ def validate_rotation_pool(value: str) -> str:
     if not is_valid_map_name(value):
         raise ValueError(f"invalid rotation pool name: {value!r}")
     return value
+
+
+def validate_font_family(value: str | None) -> str | None:
+    if value is None or value == "":
+        return value
+    s = value.strip()
+    if not _FONT_RE.fullmatch(s):
+        raise ValueError(f"invalid font family: {value!r}")
+    return s
 
 
 def validate_color(value: str | None) -> str | None:

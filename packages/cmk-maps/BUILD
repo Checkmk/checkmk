@@ -25,6 +25,7 @@ py_library(
         "//packages/cmk-maps/tests:__subpackages__",
         "//tests:__subpackages__",
     ],
+    deps = [requirement("pydantic")],
 )
 
 py_library(

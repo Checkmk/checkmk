@@ -120,6 +120,22 @@ MAP_OBJECTS_MAX: Final = 5000
 PRESENTATION_ELEMENTS_MAX: Final = MAP_OBJECTS_MAX
 FLOW_POSITIONS_MAX: Final = 10000
 BUNDLE_HOSTS_MAX: Final = 1000
+BUNDLE_PRECISION_MAX: Final = 8
+FLOW_LAYERS_MIN: Final = -1
+FLOW_LAYERS_MAX: Final = 20
+FLOW_TOP_AFFECTED_HOSTS_MAX: Final = 1000
+FLOW_SERVICES_PER_HOST_MAX: Final = 500
+FOLDER_EXPAND_DEPTH_MAX: Final = 20
+OBJECT_EXPAND_DEPTH_MAX: Final = 10
+LINE_WIDTH_MIN: Final = 1
+LINE_WIDTH_MAX: Final = 20
+SLIDE_SIZE_MIN: Final = 320
+SLIDE_SIZE_MAX: Final = 8192
+STROKE_WIDTH_MAX: Final = 64
+FONT_SIZE_MIN: Final = 4
+FONT_SIZE_MAX: Final = 512
+LINE_HEIGHT_MIN: Final = 0.5
+LINE_HEIGHT_MAX: Final = 4
 # Every page that lists the maps loads each stored one, and the daemon takes its
 # signed config, a third larger in base64, in a request of at most 16 MiB.
 MAP_CONFIG_MAX_BYTES: Final = 4 * 1024 * 1024

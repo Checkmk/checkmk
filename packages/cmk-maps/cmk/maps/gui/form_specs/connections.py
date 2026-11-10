@@ -18,6 +18,7 @@ is the list's own UI. ``type`` is a CascadingSingleChoice mirroring the backend
 import os
 from typing import Any, Literal
 
+from cmk.maps.shared.validators import CONNECTION_ID_MAX_LENGTH, CONNECTION_ID_PATTERN
 from cmk.rulesets.v1 import Help, Label, Message, Title
 from cmk.rulesets.v1.form_specs import (
     BooleanChoice,
@@ -283,8 +284,9 @@ def connections_list_spec(
                             "underscore and hyphen only; must be unique."
                         ),
                         custom_validate=(
+                            LengthInRange(max_value=CONNECTION_ID_MAX_LENGTH),
                             MatchRegex(
-                                r"^[a-zA-Z0-9_\-]+$",
+                                CONNECTION_ID_PATTERN,
                                 error_msg=Message(
                                     "Use only letters, digits, underscore and hyphen."
                                 ),

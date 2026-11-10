@@ -41,27 +41,47 @@ from cmk.maps.shared.filters import (
     optional_member_pattern,
 )
 from cmk.maps.shared.geo import LAT_LIMIT, LNG_LIMIT, MAX_ZOOM
+from cmk.maps.shared.map_name import MAP_NAME_MAX_LENGTH, MAP_NAME_PATTERN
 from cmk.maps.shared.map_payload import (
     BackgroundPosition,
     BackgroundStyle,
     BUNDLE_HOSTS_MAX,
+    BUNDLE_PRECISION_MAX,
     ClickAction,
+    FLOW_LAYERS_MAX,
+    FLOW_LAYERS_MIN,
     FLOW_POSITIONS_MAX,
+    FLOW_SERVICES_PER_HOST_MAX,
+    FLOW_TOP_AFFECTED_HOSTS_MAX,
+    FOLDER_EXPAND_DEPTH_MAX,
+    FONT_SIZE_MAX,
+    FONT_SIZE_MIN,
+    LINE_HEIGHT_MAX,
+    LINE_HEIGHT_MIN,
+    LINE_WIDTH_MAX,
+    LINE_WIDTH_MIN,
     LinePerfdataLabel,
     LineStyle,
     MAP_OBJECTS_MAX,
     MonitoredObjectType,
+    OBJECT_EXPAND_DEPTH_MAX,
     ObjectType,
     PRESENTATION_ELEMENTS_MAX,
     PresentationObjectType,
     PresentationTheme,
     RenderMode,
+    SLIDE_SIZE_MAX,
+    SLIDE_SIZE_MIN,
+    STROKE_WIDTH_MAX,
 )
 from cmk.maps.shared.validators import (
     coerce_asset_ref,
     coerce_url_target,
+    ConnectionId,
+    FiniteFloat,
     MAX_ROTATION_POOLS,
     validate_color,
+    validate_font_family,
     validate_image_url,
     validate_rotation_pool,
     validate_user_url,
@@ -74,6 +94,7 @@ from cmk.maps.shared.validators import (
 # daemon. ``validate_color`` passes ``None``/``""`` through, so it composes with the
 # optional/nullable fields below.
 _Color = Annotated[str, AfterValidator(validate_color)]
+_ElementId = Annotated[str, Field(min_length=1)]
 
 # The same for user-supplied URLs and their link target: mirror the daemon's
 # allowlist (scheme + OS-handler authority) and its ``_blank``/``_self`` narrowing
@@ -115,13 +136,15 @@ class MapElementTransform:
     """Shared geometry block for every presentation element (the daemon's
     ``_ElementBase``): position, size, rotation, stacking and editor flags."""
 
-    x: float = api_field(description="Absolute slide x in pixels.", example=100.0)
-    y: float = api_field(description="Absolute slide y in pixels.", example=200.0)
-    w: float = api_field(description="Width in pixels.", example=120.0)
-    h: float = api_field(description="Height in pixels.", example=80.0)
-    rotation: float = api_field(description="Rotation in degrees.", example=0.0)
+    x: FiniteFloat = api_field(description="Absolute slide x in pixels.", example=100.0)
+    y: FiniteFloat = api_field(description="Absolute slide y in pixels.", example=200.0)
+    w: FiniteFloat = api_field(description="Width in pixels.", example=120.0)
+    h: FiniteFloat = api_field(description="Height in pixels.", example=80.0)
+    rotation: FiniteFloat = api_field(description="Rotation in degrees.", example=0.0)
     z: int = api_field(description="Stacking order.", example=0)
-    opacity: float = api_field(description="Opacity 0..1.", example=1.0)
+    opacity: Annotated[FiniteFloat, Field(ge=0, le=1)] = api_field(
+        description="Opacity 0..1.", example=1.0
+    )
     locked: bool = api_field(
         description="Whether the element is locked in the editor.", example=False
     )
@@ -177,13 +200,17 @@ class MapElementLabel:
 @api_model
 class MapShapeElement:
     kind: Literal["shape"] = api_field(description="Element discriminator.", example="shape")
-    id: str = api_field(description="Client-generated unique element id.", example="elem-1")
+    id: _ElementId = api_field(description="Client-generated unique element id.", example="elem-1")
     transform: MapElementTransform = api_field(description="Geometry and editor state.")
     shape: Literal["rect", "ellipse", "line", "arrow"] = api_field(
         description="Shape kind.", example="rect"
     )
-    stroke_width: float = api_field(description="Stroke width in pixels.", example=1.0)
-    corner_radius: float = api_field(description="Corner radius in pixels.", example=4.0)
+    stroke_width: Annotated[FiniteFloat, Field(ge=0, le=STROKE_WIDTH_MAX)] = api_field(
+        description="Stroke width in pixels.", example=1.0
+    )
+    corner_radius: Annotated[FiniteFloat, Field(ge=0)] = api_field(
+        description="Corner radius in pixels.", example=4.0
+    )
     dash: Literal["solid", "dashed", "dotted"] = api_field(
         description="Stroke dash style.", example="solid"
     )
@@ -196,7 +223,7 @@ class MapShapeElement:
     stroke: _Color | None | ApiOmitted = api_field(
         description="Stroke color.", example="#1e3a8a", default_factory=ApiOmitted
     )
-    connection_id: str | None | ApiOmitted = api_field(
+    connection_id: ConnectionId | None | ApiOmitted = api_field(
         description="Monitoring connection override.", example="live_1", default_factory=ApiOmitted
     )
     object_type: PresentationObjectType | None | ApiOmitted = api_field(
@@ -254,22 +281,26 @@ class MapShapeElement:
 @api_model
 class MapTextElement:
     kind: Literal["text"] = api_field(description="Element discriminator.", example="text")
-    id: str = api_field(description="Client-generated unique element id.", example="elem-1")
+    id: _ElementId = api_field(description="Client-generated unique element id.", example="elem-1")
     transform: MapElementTransform = api_field(description="Geometry and editor state.")
     text: str = api_field(description="Text content.", example="Datacenter Munich")
-    font_size: float = api_field(description="Font size in pixels.", example=24.0)
+    font_size: Annotated[FiniteFloat, Field(ge=FONT_SIZE_MIN, le=FONT_SIZE_MAX)] = api_field(
+        description="Font size in pixels.", example=24.0
+    )
     font_weight: Literal["normal", "bold"] = api_field(description="Font weight.", example="bold")
     font_style: Literal["normal", "italic"] = api_field(description="Font style.", example="normal")
     text_align: Literal["left", "center", "right", "justify"] = api_field(
         description="Text alignment.", example="center"
     )
-    line_height: float = api_field(description="Line height factor.", example=1.3)
-    letter_spacing: float = api_field(description="Letter spacing in pixels.", example=0.0)
+    line_height: Annotated[FiniteFloat, Field(ge=LINE_HEIGHT_MIN, le=LINE_HEIGHT_MAX)] = api_field(
+        description="Line height factor.", example=1.3
+    )
+    letter_spacing: FiniteFloat = api_field(description="Letter spacing in pixels.", example=0.0)
     name: str | None | ApiOmitted = api_field(
         description="Editor display name.", example="Title", default_factory=ApiOmitted
     )
-    font_family: str | None | ApiOmitted = api_field(
-        description="Font family.", example="Inter", default_factory=ApiOmitted
+    font_family: Annotated[str, AfterValidator(validate_font_family)] | None | ApiOmitted = (
+        api_field(description="Font family.", example="Inter", default_factory=ApiOmitted)
     )
     color: _Color | None | ApiOmitted = api_field(
         description="Text color; null inherits theme.",
@@ -284,7 +315,7 @@ class MapTextElement:
 @api_model
 class MapImageElement:
     kind: Literal["image"] = api_field(description="Element discriminator.", example="image")
-    id: str = api_field(description="Client-generated unique element id.", example="elem-1")
+    id: _ElementId = api_field(description="Client-generated unique element id.", example="elem-1")
     transform: MapElementTransform = api_field(description="Geometry and editor state.")
     fit: Literal["cover", "contain", "fill"] = api_field(
         description="Object fit.", example="contain"
@@ -305,7 +336,7 @@ class MapImageElement:
 @api_model
 class MapDataElement:
     kind: Literal["data"] = api_field(description="Element discriminator.", example="data")
-    id: str = api_field(description="Client-generated unique element id.", example="elem-1")
+    id: _ElementId = api_field(description="Client-generated unique element id.", example="elem-1")
     transform: MapElementTransform = api_field(description="Geometry and editor state.")
     only_hard_states: bool = api_field(description="Use last hard states.", example=False)
     display: MapElementDisplay = api_field(
@@ -314,7 +345,7 @@ class MapDataElement:
     name: str | None | ApiOmitted = api_field(
         description="Editor display name.", example="web-01", default_factory=ApiOmitted
     )
-    connection_id: str | None | ApiOmitted = api_field(
+    connection_id: ConnectionId | None | ApiOmitted = api_field(
         description="Monitoring connection override.", example="live_1", default_factory=ApiOmitted
     )
     object_type: PresentationObjectType | None | ApiOmitted = api_field(
@@ -351,7 +382,7 @@ class MapDataElement:
 @api_model
 class MapGroupElement:
     kind: Literal["group"] = api_field(description="Element discriminator.", example="group")
-    id: str = api_field(description="Client-generated unique element id.", example="elem-1")
+    id: _ElementId = api_field(description="Client-generated unique element id.", example="elem-1")
     transform: MapElementTransform = api_field(description="Geometry and editor state.")
     children: list[str] = api_field(
         description="Element ids grouped under this group.", example=["elem-2", "elem-3"]
@@ -383,10 +414,10 @@ class MapStaticView:
 @api_model
 class MapWorldmapView:
     type: Literal["worldmap"] = api_field(description="View discriminator.", example="worldmap")
-    lat: Annotated[float, Field(ge=-LAT_LIMIT, le=LAT_LIMIT)] = api_field(
+    lat: Annotated[FiniteFloat, Field(ge=-LAT_LIMIT, le=LAT_LIMIT)] = api_field(
         description="Initial map center latitude.", example=51.0
     )
-    lng: Annotated[float, Field(ge=-LNG_LIMIT, le=LNG_LIMIT)] = api_field(
+    lng: Annotated[FiniteFloat, Field(ge=-LNG_LIMIT, le=LNG_LIMIT)] = api_field(
         description="Initial map center longitude.", example=10.0
     )
     zoom: Annotated[int, Field(ge=0, le=MAX_ZOOM)] = api_field(
@@ -397,7 +428,7 @@ class MapWorldmapView:
         example="https://tiles.example.com/{z}/{x}/{y}.png",
         default_factory=ApiOmitted,
     )
-    tile_saturate: Annotated[float, Field(ge=0, le=100)] | None | ApiOmitted = api_field(
+    tile_saturate: Annotated[FiniteFloat, Field(ge=0, le=100)] | None | ApiOmitted = api_field(
         description="CSS saturate() percent (0..100).", example=100.0, default_factory=ApiOmitted
     )
     auto_source: Literal["all_hosts", "hostgroup", "servicegroup"] | None | ApiOmitted = api_field(
@@ -431,8 +462,8 @@ class MapRadarView:
 
 @api_model
 class MapFlowNodePosition:
-    x: float = api_field(description="Pinned node x position.", example=120.0)
-    y: float = api_field(description="Pinned node y position.", example=80.0)
+    x: FiniteFloat = api_field(description="Pinned node x position.", example=120.0)
+    y: FiniteFloat = api_field(description="Pinned node y position.", example=80.0)
 
 
 @api_model
@@ -443,18 +474,26 @@ class MapFlowView:
         example="core-router",
         default_factory=ApiOmitted,
     )
-    child_layers: int | None | ApiOmitted = api_field(
+    child_layers: (
+        Annotated[int, Field(ge=FLOW_LAYERS_MIN, le=FLOW_LAYERS_MAX)] | None | ApiOmitted
+    ) = api_field(
         description="Downward layer limit (-1 = all).", example=2, default_factory=ApiOmitted
     )
-    parent_layers: int | None | ApiOmitted = api_field(
+    parent_layers: (
+        Annotated[int, Field(ge=FLOW_LAYERS_MIN, le=FLOW_LAYERS_MAX)] | None | ApiOmitted
+    ) = api_field(
         description="Upward layer limit (-1 = all).", example=1, default_factory=ApiOmitted
     )
-    top_affected_hosts: int | None | ApiOmitted = api_field(
+    top_affected_hosts: (
+        Annotated[int, Field(ge=0, le=FLOW_TOP_AFFECTED_HOSTS_MAX)] | None | ApiOmitted
+    ) = api_field(
         description="Per-map override of the top-affected-hosts limit.",
         example=10,
         default_factory=ApiOmitted,
     )
-    max_services_per_host: int | None | ApiOmitted = api_field(
+    max_services_per_host: (
+        Annotated[int, Field(ge=0, le=FLOW_SERVICES_PER_HOST_MAX)] | None | ApiOmitted
+    ) = api_field(
         description="Per-map override of the services-per-host limit.",
         example=5,
         default_factory=ApiOmitted,
@@ -485,8 +524,8 @@ class MapFolderTreeView:
     default_view: Literal["list", "map"] | ApiOmitted = api_field(
         description="Presentation the map opens in.", example="map", default_factory=ApiOmitted
     )
-    default_expand_depth: int | ApiOmitted = api_field(
-        description="Initial expand depth.", example=2, default_factory=ApiOmitted
+    default_expand_depth: Annotated[int, Field(ge=0, le=FOLDER_EXPAND_DEPTH_MAX)] | ApiOmitted = (
+        api_field(description="Initial expand depth.", example=2, default_factory=ApiOmitted)
     )
     show_services: bool | ApiOmitted = api_field(
         description="Include services in the tree.", example=True, default_factory=ApiOmitted
@@ -517,8 +556,12 @@ class MapPresentationView:
     type: Literal["presentation"] = api_field(
         description="View discriminator.", example="presentation"
     )
-    width: int = api_field(description="Slide stage width in pixels.", example=1920)
-    height: int = api_field(description="Slide stage height in pixels.", example=1080)
+    width: Annotated[int, Field(ge=SLIDE_SIZE_MIN, le=SLIDE_SIZE_MAX)] = api_field(
+        description="Slide stage width in pixels.", example=1920
+    )
+    height: Annotated[int, Field(ge=SLIDE_SIZE_MIN, le=SLIDE_SIZE_MAX)] = api_field(
+        description="Slide stage height in pixels.", example=1080
+    )
     theme: PresentationTheme = api_field(description="Slide theme.", example="midnight")
     elements: Annotated[
         list[MapPresentationElement], Field(max_length=PRESENTATION_ELEMENTS_MAX)
@@ -560,17 +603,17 @@ class MapObjectPosition:
     """Where the object sits on the map (canvas x/y for static/flow/radar maps,
     lat/lng for worldmaps)."""
 
-    x: int | float = api_field(description="Canvas x position.", example=100)
-    y: int | float = api_field(description="Canvas y position.", example=200)
+    x: int | FiniteFloat = api_field(description="Canvas x position.", example=100)
+    y: int | FiniteFloat = api_field(description="Canvas y position.", example=200)
     z: int | None | ApiOmitted = api_field(
         description="Stacking order; null inherits the map's default_z.",
         example=1,
         default_factory=ApiOmitted,
     )
-    lat: float | None | ApiOmitted = api_field(
+    lat: FiniteFloat | None | ApiOmitted = api_field(
         description="Latitude (worldmap).", example=48.1, default_factory=ApiOmitted
     )
-    lng: float | None | ApiOmitted = api_field(
+    lng: FiniteFloat | None | ApiOmitted = api_field(
         description="Longitude (worldmap).", example=11.6, default_factory=ApiOmitted
     )
 
@@ -579,7 +622,7 @@ class MapObjectPosition:
 class MapObjectBinding:
     """What monitoring entity the object is bound to."""
 
-    connection_id: str | None | ApiOmitted = api_field(
+    connection_id: ConnectionId | None | ApiOmitted = api_field(
         description="Per-object connection override; null inherits the map's.",
         example="live_1",
         default_factory=ApiOmitted,
@@ -615,7 +658,7 @@ class MapObjectBinding:
         example=True,
         default_factory=ApiOmitted,
     )
-    expand_depth: int | ApiOmitted = api_field(
+    expand_depth: Annotated[int, Field(ge=0, le=OBJECT_EXPAND_DEPTH_MAX)] | ApiOmitted = api_field(
         description="Map-link/aggregation expand depth (0..10).",
         example=1,
         default_factory=ApiOmitted,
@@ -647,7 +690,7 @@ class MapObjectBundle:
     hosts: Annotated[list[str], Field(max_length=BUNDLE_HOSTS_MAX)] | None | ApiOmitted = api_field(
         description="Bundle member hosts.", example=["web-01", "web-02"], default_factory=ApiOmitted
     )
-    precision: int | None | ApiOmitted = api_field(
+    precision: Annotated[int, Field(ge=0, le=BUNDLE_PRECISION_MAX)] | None | ApiOmitted = api_field(
         description="Geo bundle coordinate precision.", example=3, default_factory=ApiOmitted
     )
 
@@ -656,22 +699,22 @@ class MapObjectBundle:
 class MapObjectLine:
     """Geometry and styling for a line/connection object."""
 
-    x2: int | float | None | ApiOmitted = api_field(
+    x2: int | FiniteFloat | None | ApiOmitted = api_field(
         description="Line end x.", example=300, default_factory=ApiOmitted
     )
-    y2: int | float | None | ApiOmitted = api_field(
+    y2: int | FiniteFloat | None | ApiOmitted = api_field(
         description="Line end y.", example=400, default_factory=ApiOmitted
     )
-    lat2: float | None | ApiOmitted = api_field(
+    lat2: FiniteFloat | None | ApiOmitted = api_field(
         description="Line end latitude.", example=48.2, default_factory=ApiOmitted
     )
-    lng2: float | None | ApiOmitted = api_field(
+    lng2: FiniteFloat | None | ApiOmitted = api_field(
         description="Line end longitude.", example=11.7, default_factory=ApiOmitted
     )
-    mid_x: int | float | None | ApiOmitted = api_field(
+    mid_x: int | FiniteFloat | None | ApiOmitted = api_field(
         description="Line bend point x.", example=200, default_factory=ApiOmitted
     )
-    mid_y: int | float | None | ApiOmitted = api_field(
+    mid_y: int | FiniteFloat | None | ApiOmitted = api_field(
         description="Line bend point y.", example=300, default_factory=ApiOmitted
     )
     start_ref: str | None | ApiOmitted = api_field(
@@ -683,8 +726,8 @@ class MapObjectLine:
     style: LineStyle | None | ApiOmitted = api_field(
         description="Line style.", example="arrow_end", default_factory=ApiOmitted
     )
-    width: int | None | ApiOmitted = api_field(
-        description="Line stroke width (px).", example=2, default_factory=ApiOmitted
+    width: Annotated[int, Field(ge=LINE_WIDTH_MIN, le=LINE_WIDTH_MAX)] | None | ApiOmitted = (
+        api_field(description="Line stroke width (px).", example=2, default_factory=ApiOmitted)
     )
     perfdata_label: LinePerfdataLabel | ApiOmitted = api_field(
         description="Perfdata label at the line midpoint.",
@@ -938,11 +981,13 @@ class MapElement:
 class MapConfig:
     """Full map payload — the create/update request body and show response."""
 
-    name: str = api_field(
-        description="Unique map name (URL/permission id).", example="datacenter-muc"
-    )
+    name: Annotated[
+        str, Field(min_length=1, max_length=MAP_NAME_MAX_LENGTH, pattern=MAP_NAME_PATTERN)
+    ] = api_field(description="Unique map name (URL/permission id).", example="datacenter-muc")
     alias: str = api_field(description="Human-readable title.", example="Datacenter Munich")
-    connection_id: str = api_field(description="Default monitoring connection.", example="live_1")
+    connection_id: ConnectionId = api_field(
+        description="Default monitoring connection.", example="live_1"
+    )
     icon_size: int | None = api_field(
         description="Default icon size in pixels (null = default).", example=32
     )

@@ -10,6 +10,8 @@ from urllib.parse import urlparse
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from cmk.maps.shared.validators import ConnectionId
+
 # Cloud-provider metadata services, which would hand IAM tokens to the
 # credentialed outbound HTTP path. A denylist rather than a private-range block
 # because a remote Checkmk site legitimately lives on an RFC1918 address — so a
@@ -99,7 +101,7 @@ REDACTED_SECRET = "***REDACTED***"
 
 
 class ConnectionConfig(BaseModel):
-    id: str = Field(..., max_length=64, pattern=r"^[a-zA-Z0-9_\-]+$")
+    id: ConnectionId
     type: Literal["livestatus"] = "livestatus"
     label: str = Field(default="", max_length=200)
     # Livestatus connection (Unix socket OR TCP, not both)

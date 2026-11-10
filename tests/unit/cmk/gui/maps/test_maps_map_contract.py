@@ -19,8 +19,11 @@ daemon parse), so a renamed/removed/retyped/regrouped field on either side — o
 mismapped bridge entry — fails CI.
 """
 
+import copy
+from collections.abc import Iterator, Mapping
+
 import pytest
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from cmk.maps.backend.schemas.map import MapConfig as DaemonMapConfig
 from cmk.maps.rest_api.models.map import MapObjectBinding, MapObjectDisplay
@@ -129,6 +132,93 @@ def test_daemon_dense_map_is_accepted_by_rest_model(map_spec: dict[str, object])
     # a bridge entry that points at the wrong stored key.
     dense = DaemonMapConfig.model_validate(map_spec).model_dump(mode="json")
     map_from_spec(dense)
+
+
+_Path = tuple[str | int, ...]
+
+
+def _refused_values(prop: Mapping[str, object]) -> Iterator[object]:
+    any_of = prop.get("anyOf")
+    for schema in [prop, *(any_of if isinstance(any_of, list) else [])]:
+        assert isinstance(schema, Mapping)
+        if isinstance(maximum := schema.get("maximum"), int | float):
+            yield maximum + 1
+        if isinstance(minimum := schema.get("minimum"), int | float):
+            yield minimum - 1
+        if isinstance(max_length := schema.get("maxLength"), int):
+            yield "a" * (max_length + 1)
+        if schema.get("minLength"):
+            yield ""
+        if "pattern" in schema:
+            yield "a b"
+        if schema.get("type") == "number":
+            yield float("nan")
+
+
+def _out_of_bounds(model: BaseModel, path: _Path) -> Iterator[tuple[_Path, object]]:
+    """Every (path, value) the daemon model refuses by a declared bound."""
+    properties = type(model).model_json_schema(by_alias=False).get("properties", {})
+    for name in type(model).model_fields:
+        for value in _refused_values(properties.get(name, {})):
+            yield (*path, name), value
+        child = getattr(model, name)
+        items = (
+            child.items()
+            if isinstance(child, dict)
+            else enumerate(child)
+            if isinstance(child, list)
+            else [(None, child)]
+        )
+        for key, item in items:
+            if isinstance(item, BaseModel):
+                yield from _out_of_bounds(
+                    item, (*path, name) if key is None else (*path, name, key)
+                )
+
+
+_OUT_OF_BOUNDS = [
+    (model.model_dump(mode="json"), path, value)
+    for model in map(DaemonMapConfig.model_validate, _MAPS)
+    for path, value in _out_of_bounds(model, ())
+]
+
+
+_OUT_OF_BOUNDS_IDS = [f"{d['name']}:{'.'.join(map(str, p))}={v!r}" for d, p, v in _OUT_OF_BOUNDS]
+
+
+def _with_value(dense: dict[str, object], path: _Path, value: object) -> dict[str, object]:
+    changed = copy.deepcopy(dense)
+    target: object = changed
+    for key in path[:-1]:
+        if isinstance(target, list):
+            assert isinstance(key, int)
+            target = target[key]
+        else:
+            assert isinstance(target, dict)
+            target = target[key]
+    assert isinstance(target, dict)
+    target[path[-1]] = value
+    return changed
+
+
+@pytest.mark.parametrize("dense, path, value", _OUT_OF_BOUNDS, ids=_OUT_OF_BOUNDS_IDS)
+def test_the_daemon_refuses_each_value_past_a_declared_bound(
+    dense: dict[str, object], path: _Path, value: object
+) -> None:
+    refused = _with_value(dense, path, value)
+
+    with pytest.raises(ValidationError):
+        DaemonMapConfig.model_validate(refused)
+
+
+@pytest.mark.parametrize("dense, path, value", _OUT_OF_BOUNDS, ids=_OUT_OF_BOUNDS_IDS)
+def test_rest_model_is_never_laxer_than_the_daemon(
+    dense: dict[str, object], path: _Path, value: object
+) -> None:
+    refused = _with_value(dense, path, value)
+
+    with pytest.raises(ValidationError):
+        map_from_spec(refused)
 
 
 @pytest.mark.parametrize(

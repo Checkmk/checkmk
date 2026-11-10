@@ -21,31 +21,29 @@ Kept self-contained on purpose: the module imports nothing from ``map.py`` so
 and so the whole feature reverts cleanly as one unit.
 """
 
-import re
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from cmk.maps.shared.map_payload import (
+    FONT_SIZE_MAX,
+    FONT_SIZE_MIN,
+    LINE_HEIGHT_MAX,
+    LINE_HEIGHT_MIN,
     PRESENTATION_ELEMENTS_MAX,
     PresentationObjectType,
     PresentationTheme,
+    SLIDE_SIZE_MAX,
+    SLIDE_SIZE_MIN,
+    STROKE_WIDTH_MAX,
 )
-from cmk.maps.shared.validators import validate_color, validate_image_url
-
-# font-family reaches an inline style on the frontend; keep CSS-breaking
-# characters (;{}()<>/:) out so it can't escape the property like the color
-# fields are guarded against.
-_FONT_RE = re.compile(r"^[a-zA-Z0-9 ,_'\"\-.]{1,128}$")
-
-
-def _validate_font_family(value: str | None) -> str | None:
-    if value is None or value == "":
-        return value
-    s = value.strip()
-    if not _FONT_RE.fullmatch(s):
-        raise ValueError(f"invalid font family: {value!r}")
-    return s
+from cmk.maps.shared.validators import (
+    ConnectionId,
+    FiniteFloat,
+    validate_color,
+    validate_font_family,
+    validate_image_url,
+)
 
 
 def _validate_image_src(value: str | None) -> str | None:
@@ -88,13 +86,13 @@ class _ElementBase(BaseModel):
     # Client-generated; uniqueness enforced on PresentationView.
     id: str = Field(min_length=1)
     # Absolute slide pixels — deliberately not the static map's percentages.
-    x: float = 0
-    y: float = 0
-    w: float = 120
-    h: float = 80
-    rotation: float = 0
+    x: FiniteFloat = 0
+    y: FiniteFloat = 0
+    w: FiniteFloat = 120
+    h: FiniteFloat = 80
+    rotation: FiniteFloat = 0
     z: int = 0
-    opacity: float = Field(default=1.0, ge=0, le=1)
+    opacity: FiniteFloat = Field(default=1.0, ge=0, le=1)
     locked: bool = False
     hidden: bool = False
     name: str | None = None
@@ -105,13 +103,13 @@ class ShapeElement(_ElementBase):
     shape: Literal["rect", "ellipse", "line", "arrow"] = "rect"
     fill: str | None = "#3b82f6"
     stroke: str | None = None
-    stroke_width: float = Field(default=1, ge=0, le=64)
-    corner_radius: float = Field(default=0, ge=0)
+    stroke_width: FiniteFloat = Field(default=1, ge=0, le=STROKE_WIDTH_MAX)
+    corner_radius: FiniteFloat = Field(default=0, ge=0)
     dash: Literal["solid", "dashed", "dotted"] = "solid"
     # Optional monitoring binding. When set, the shape colours itself by the
     # bound object's state (fill for rect/ellipse, stroke for line/arrow) and
     # can show a state label — the foundation weathermap links build on.
-    connection_id: str | None = None
+    connection_id: ConnectionId | None = None
     # ``None`` keeps the legacy derivation (service when a service_description
     # is set, else host) so pre-existing maps stay wire-compatible.
     object_type: PresentationObjectType | None = None
@@ -152,15 +150,15 @@ class TextElement(_ElementBase):
     kind: Literal["text"] = "text"
     text: str = "Text"
     font_family: str | None = None
-    font_size: float = Field(default=16, ge=4, le=512)
+    font_size: FiniteFloat = Field(default=16, ge=FONT_SIZE_MIN, le=FONT_SIZE_MAX)
     font_weight: Literal["normal", "bold"] = "normal"
     font_style: Literal["normal", "italic"] = "normal"
     text_align: Literal["left", "center", "right", "justify"] = "left"
-    line_height: float = Field(default=1.3, ge=0.5, le=4)
+    line_height: FiniteFloat = Field(default=1.3, ge=LINE_HEIGHT_MIN, le=LINE_HEIGHT_MAX)
     # None means "inherit the slide theme" — resolved in the renderer.
     color: str | None = None
     background: str | None = None
-    letter_spacing: float = 0
+    letter_spacing: FiniteFloat = 0
 
     @field_validator("color", "background")
     @classmethod
@@ -170,7 +168,7 @@ class TextElement(_ElementBase):
     @field_validator("font_family")
     @classmethod
     def _v_font(cls, v: str | None) -> str | None:
-        return _validate_font_family(v)
+        return validate_font_family(v)
 
 
 class ImageElement(_ElementBase):
@@ -190,7 +188,7 @@ class DataElement(_ElementBase):
     an unbound data element renders as a styled placeholder."""
 
     kind: Literal["data"] = "data"
-    connection_id: str | None = None
+    connection_id: ConnectionId | None = None
     # ``None`` keeps the legacy derivation (service when a service_description
     # is set, else host) so pre-existing maps stay wire-compatible.
     object_type: PresentationObjectType | None = None
@@ -231,8 +229,8 @@ PresentationElement = Annotated[
 
 class PresentationView(BaseModel):
     type: Literal["presentation"] = "presentation"
-    width: int = Field(default=1920, ge=320, le=8192)
-    height: int = Field(default=1080, ge=320, le=8192)
+    width: int = Field(default=1920, ge=SLIDE_SIZE_MIN, le=SLIDE_SIZE_MAX)
+    height: int = Field(default=1080, ge=SLIDE_SIZE_MIN, le=SLIDE_SIZE_MAX)
     theme: PresentationTheme = "midnight"
     background: str | None = None
     # Optional slide background image (image-store filename or external URL),

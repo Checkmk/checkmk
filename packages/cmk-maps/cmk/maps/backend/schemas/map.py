@@ -33,18 +33,29 @@ from cmk.maps.shared.map_payload import (
     BackgroundPosition,
     BackgroundStyle,
     BUNDLE_HOSTS_MAX,
+    BUNDLE_PRECISION_MAX,
     ClickAction,
+    FLOW_LAYERS_MAX,
+    FLOW_LAYERS_MIN,
     FLOW_POSITIONS_MAX,
+    FLOW_SERVICES_PER_HOST_MAX,
+    FLOW_TOP_AFFECTED_HOSTS_MAX,
+    FOLDER_EXPAND_DEPTH_MAX,
+    LINE_WIDTH_MAX,
+    LINE_WIDTH_MIN,
     LinePerfdataLabel,
     LineStyle,
     MAP_OBJECTS_MAX,
     MonitoredObjectType,
+    OBJECT_EXPAND_DEPTH_MAX,
     ObjectType,
     RenderMode,
 )
 from cmk.maps.shared.validators import (
     coerce_asset_ref,
     coerce_url_target,
+    ConnectionId,
+    FiniteFloat,
     MAX_ROTATION_POOLS,
     validate_color,
     validate_rotation_pool,
@@ -130,8 +141,8 @@ class StaticView(BaseModel):
 class WorldmapView(BaseModel):
     type: Literal["worldmap"] = "worldmap"
     # Out of these bounds the map opens on nothing.
-    lat: float = Field(default=51.0, ge=-LAT_LIMIT, le=LAT_LIMIT)
-    lng: float = Field(default=10.0, ge=-LNG_LIMIT, le=LNG_LIMIT)
+    lat: FiniteFloat = Field(default=51.0, ge=-LAT_LIMIT, le=LAT_LIMIT)
+    lng: FiniteFloat = Field(default=10.0, ge=-LNG_LIMIT, le=LNG_LIMIT)
     zoom: int = Field(default=5, ge=0, le=MAX_ZOOM)
     # Optional override for the Leaflet tile-URL template. Use ``{s}`` for
     # subdomain, ``{z}/{x}/{y}`` for tile coords. When omitted, the frontend
@@ -139,7 +150,7 @@ class WorldmapView(BaseModel):
     # internal or caching tile server (e.g. behind a bandwidth-limited network).
     tile_url: str | None = None
     # CSS saturate() filter percent: 0 = greyscale, 100 = unchanged.
-    tile_saturate: float | None = Field(default=None, ge=0, le=100)
+    tile_saturate: FiniteFloat | None = Field(default=None, ge=0, le=100)
     # Automap source: when set, the backend dynamically populates the map
     # with hosts that carry maps_lat/maps_lng labels (or legacy LAT/LONG
     # custom variables) from the configured connection. Persisted objects
@@ -163,20 +174,20 @@ class RadarView(BaseModel):
 
 
 class FlowNodePosition(BaseModel):
-    x: float
-    y: float
+    x: FiniteFloat
+    y: FiniteFloat
 
 
 class FlowView(BaseModel):
     type: Literal["flow"] = "flow"
     root: str | None = None
     # -1 = unlimited; None defaults to unlimited downward / 0 upward (NagVis automap defaults).
-    child_layers: int | None = Field(default=None, ge=-1, le=20)
-    parent_layers: int | None = Field(default=None, ge=-1, le=20)
+    child_layers: int | None = Field(default=None, ge=FLOW_LAYERS_MIN, le=FLOW_LAYERS_MAX)
+    parent_layers: int | None = Field(default=None, ge=FLOW_LAYERS_MIN, le=FLOW_LAYERS_MAX)
     # Per-map overrides for the global flow_map_* limits. None = use the
     # global default from settings.
-    top_affected_hosts: int | None = Field(default=None, ge=0, le=1000)
-    max_services_per_host: int | None = Field(default=None, ge=0, le=500)
+    top_affected_hosts: int | None = Field(default=None, ge=0, le=FLOW_TOP_AFFECTED_HOSTS_MAX)
+    max_services_per_host: int | None = Field(default=None, ge=0, le=FLOW_SERVICES_PER_HOST_MAX)
     # Pinned host positions from operator drags. Key is the host name; missing
     # hosts fall back to the force-simulation layout. Service-node positions
     # are derived from their host and not persisted.
@@ -194,7 +205,7 @@ class FolderTreeView(BaseModel):
     # Which presentation the map opens in (operator-chosen, saved per map).
     # Defaults to the treemap — the glanceable status surface; list is secondary.
     default_view: Literal["list", "map"] = "map"
-    default_expand_depth: int = Field(default=1, ge=0, le=20)
+    default_expand_depth: int = Field(default=1, ge=0, le=FOLDER_EXPAND_DEPTH_MAX)
     show_services: bool = False
     show_empty_folders: bool = True
     problems_only: bool = False
@@ -231,11 +242,11 @@ class MapElement(BaseModel):
     # connection_id" — the common case. Setting this lets a single map mix
     # objects from multiple monitoring backends, the way NagVis allows
     # ``backend_id`` per object.
-    connection_id: str | None = None
-    x: int | float = 0
-    y: int | float = 0
-    lat: float | None = None
-    lng: float | None = None
+    connection_id: ConnectionId | None = None
+    x: int | FiniteFloat = 0
+    y: int | FiniteFloat = 0
+    lat: FiniteFloat | None = None
+    lng: FiniteFloat | None = None
     # ``None`` means "inherit the map's ``default_z``" — NagVis stores no z on
     # objects that use the global default, so imported objects stay unset and
     # the renderer resolves ``z ?? map.default_z``.
@@ -245,22 +256,22 @@ class MapElement(BaseModel):
     group_name: str | None = None
     map_name: str | None = None
     image_src: _AssetRef = None
-    x2: int | float | None = None
-    y2: int | float | None = None
-    lat2: float | None = None
-    lng2: float | None = None
+    x2: int | FiniteFloat | None = None
+    y2: int | FiniteFloat | None = None
+    lat2: FiniteFloat | None = None
+    lng2: FiniteFloat | None = None
     # Optional line bend/meeting point. ``None`` → renderer uses the geometric
     # midpoint of the two endpoints (the previous fixed behavior). A set value
     # mirrors NagVis' explicit middle coordinate on two-segment lines.
-    mid_x: int | float | None = None
-    mid_y: int | float | None = None
+    mid_x: int | FiniteFloat | None = None
+    mid_y: int | FiniteFloat | None = None
     # Line endpoint bindings: when set, the start/end follows the referenced
     # object's position instead of a fixed coordinate (sticky connectors).
     start_ref: str | None = None
     end_ref: str | None = None
     line_style: LineStyle | None = None
     # Stroke width in pixels. None → renderer's per-style default.
-    line_width: int | None = Field(default=None, ge=1, le=20)
+    line_width: int | None = Field(default=None, ge=LINE_WIDTH_MIN, le=LINE_WIDTH_MAX)
     # Which perfdata label to draw at the line midpoint (none/percent/bandwidth/both).
     line_perfdata_label: LinePerfdataLabel = "none"
     # Color the line by inbound/outbound utilization gradient instead of state color.
@@ -284,9 +295,9 @@ class MapElement(BaseModel):
     bundle_kind: Literal["static", "location"] | None = None
     bundle_hosts: list[str] | None = Field(default=None, max_length=BUNDLE_HOSTS_MAX)
     # None ⇒ exact coordinate match (5 decimals ≈ 1 m).
-    bundle_precision: int | None = Field(default=None, ge=0, le=8)
+    bundle_precision: int | None = Field(default=None, ge=0, le=BUNDLE_PRECISION_MAX)
     # 0 = root only, hard cap 10 levels — see backend.app.services.state_service.
-    expand_depth: int = Field(default=0, ge=0, le=10)
+    expand_depth: int = Field(default=0, ge=0, le=OBJECT_EXPAND_DEPTH_MAX)
     only_hard_states: bool = False
     recognize_services: bool = False
     exclude_members: str | None = None
@@ -363,7 +374,7 @@ class MapConfig(BaseModel):
     # always round-trips.
     name: str = Field(..., min_length=1, max_length=MAP_NAME_MAX_LENGTH, pattern=MAP_NAME_PATTERN)
     alias: str = ""
-    connection_id: str = "live_1"
+    connection_id: ConnectionId = "live_1"
     icon_size: int | None = None
     rotation_interval: int = 0
     rotation_pools: list[_RotationPool] = Field(default_factory=list, max_length=MAX_ROTATION_POOLS)
@@ -439,8 +450,8 @@ class MapElementUpdate(BaseModel):
     object_filter: str | None = None
     bundle_kind: Literal["static", "location"] | None = None
     bundle_hosts: list[str] | None = Field(default=None, max_length=BUNDLE_HOSTS_MAX)
-    bundle_precision: int | None = Field(default=None, ge=0, le=8)
-    expand_depth: int | None = Field(default=None, ge=0, le=10)
+    bundle_precision: int | None = Field(default=None, ge=0, le=BUNDLE_PRECISION_MAX)
+    expand_depth: int | None = Field(default=None, ge=0, le=OBJECT_EXPAND_DEPTH_MAX)
     only_hard_states: bool | None = None
     recognize_services: bool | None = None
     exclude_members: str | None = None

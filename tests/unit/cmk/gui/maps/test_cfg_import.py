@@ -1246,13 +1246,16 @@ def test_cfg_to_map_out_of_range_values_still_validate() -> None:
     )
     parsed_map = cfg_to_map(objects_cfg, map_name_from_filename("x" * 150 + ".cfg"))
     assert len(parsed_map["objects"]) == 2
+    resolve_connection_ids(parsed_map, ["live_1"], "live_1")
     DaemonMapConfig.model_validate(parsed_map)
 
     # An automap has no objects of its own; its layer depths are the risk.
     automap_cfg = (
         "define global {\n    sources = automap\n    child_layers = 50\n    parent_layers = -3\n}\n"
     )
-    DaemonMapConfig.model_validate(cfg_to_map(automap_cfg, "am"))
+    automap = cfg_to_map(automap_cfg, "am")
+    resolve_connection_ids(automap, ["live_1"], "live_1")
+    DaemonMapConfig.model_validate(automap)
 
 
 # ---------------------------------------------------------------------------

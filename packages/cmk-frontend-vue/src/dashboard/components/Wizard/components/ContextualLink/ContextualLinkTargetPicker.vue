@@ -4,106 +4,111 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkDropdown from 'cmk-ui-library/components/CmkDropdown/CmkDropdown.vue'
-import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
-import { computed, ref, watch } from 'vue'
+import CmkMenu, { type CmkMenuCategory, type CmkMenuItem } from 'cmk-ui-library/components/CmkMenu'
+import usei18n from 'cmk-ui-library/lib/i18n'
+import { computed, onMounted, ref } from 'vue'
 
-import SelectorView from '@/dashboard/components/selectors/SelectorView.vue'
-import { withStoredName } from '@/dashboard/components/selectors/storedName'
+import { useViewsCollection } from '@/dashboard/composables/api/useViewsCollection'
 
-import {
-  type DashboardTarget,
-  dashboardOptions,
-  fetchDashboardTargets
-} from '../WidgetVisualization/api'
+import { type DashboardTarget, fetchDashboardTargets } from '../WidgetVisualization/api'
 import type { VisualLocation } from './contextualLink'
+
+interface LinkTarget extends VisualLocation {
+  title: string
+  isBuiltIn: boolean
+}
 
 const { _t } = usei18n()
 
 const target = defineModel<VisualLocation | null>({ required: true })
 
-const targetType = ref<VisualLocation['type']>(target.value?.type ?? 'views')
+const { list: views, ensureLoaded: ensureViewsLoaded, error: viewsError } = useViewsCollection()
 const dashboards = ref<DashboardTarget[]>([])
 const dashboardsError = ref<string | null>(null)
-// Until the dashboards arrive, the target dropdown has nothing to open.
-const dashboardsLoading = ref(false)
 
-// Loaded once, and only when the dashboards are actually offered.
-watch(
-  targetType,
-  async (type) => {
-    if (type !== 'dashboards' || dashboards.value.length > 0) {
-      return
-    }
-    dashboardsError.value = null
-    dashboardsLoading.value = true
-    try {
-      dashboards.value = await fetchDashboardTargets()
-    } catch (error: unknown) {
-      dashboardsError.value = String(error)
-    } finally {
-      dashboardsLoading.value = false
-    }
-  },
-  { immediate: true }
-)
+onMounted(async () => {
+  try {
+    dashboards.value = await fetchDashboardTargets()
+  } catch (error: unknown) {
+    dashboardsError.value = String(error)
+  }
+})
+onMounted(ensureViewsLoaded)
 
-const typeOptions = computed(() => [
-  { name: 'views', title: _t('Views') },
-  { name: 'dashboards', title: _t('Dashboards') }
+const categories = computed<CmkMenuCategory[]>(() => [
+  { value: 'dashboards', title: _t('Dashboard') },
+  { value: 'views', title: _t('View') }
 ])
 
-const selectedType = computed<string | null>({
-  get: () => targetType.value,
-  set: (value) => {
-    targetType.value = value as VisualLocation['type']
-    target.value = null
-  }
-})
-
-const selectedName = computed<string | null>({
-  get: () => (target.value?.type === targetType.value ? target.value.name : null),
-  set: (name) => {
-    target.value = name === null ? null : { type: targetType.value, name }
-  }
-})
-
-const dashboardSuggestions = computed(() =>
-  withStoredName(dashboardOptions(dashboards.value), selectedName.value)
+const targets = computed<LinkTarget[]>(() =>
+  [
+    ...dashboards.value.map(({ name, title, isBuiltIn }) => ({
+      type: 'dashboards' as const,
+      name,
+      title,
+      isBuiltIn
+    })),
+    ...views.value.map((view) => ({
+      type: 'views' as const,
+      name: view.id!,
+      title: view.title!,
+      isBuiltIn: view.extensions.owner === ''
+    }))
+  ].sort((a, b) => a.title.localeCompare(b.title))
 )
+
+function itemValue({ type, name }: VisualLocation): string {
+  return `${type}:${name}`
+}
+
+// The name tells apart targets of the same title, and lets search find a target by it.
+const items = computed<CmkMenuItem[]>(() =>
+  targets.value.map((linkTarget) => ({
+    label: [
+      { text: linkTarget.title, truncateOrder: 2 },
+      { text: linkTarget.name, truncateOrder: 1 }
+    ],
+    value: itemValue(linkTarget),
+    category: linkTarget.type,
+    detail: linkTarget.isBuiltIn ? _t('Built-in') : _t('Custom')
+  }))
+)
+
+// A stored target that is no longer listed keeps its name.
+const selectedTitle = computed(() => {
+  if (target.value === null) {
+    return undefined
+  }
+  const { type, name } = target.value
+  return (
+    targets.value.find((linkTarget) => linkTarget.type === type && linkTarget.name === name)
+      ?.title ?? name
+  )
+})
+
+function select(value: string): void {
+  const linkTarget = targets.value.find((candidate) => itemValue(candidate) === value)
+  if (linkTarget !== undefined) {
+    target.value = { type: linkTarget.type, name: linkTarget.name }
+  }
+}
 </script>
 
 <template>
-  <div class="db-contextual-link-target-picker">
-    <CmkDropdown
-      v-model="selectedType"
-      :label="_t('Select a category')"
-      :options="{ type: 'fixed', suggestions: typeOptions }"
-    />
-    <SelectorView
-      v-if="targetType === 'views'"
-      v-model:selected-view="selectedName"
-      :read-only="false"
-    />
-    <template v-else>
-      <div v-if="dashboardsError" class="error-message">
-        {{ _t('Error loading dashboards: ') + dashboardsError }}
-      </div>
-      <CmkDropdown
-        v-else
-        v-model="selectedName"
-        :label="_t('Select a target')"
-        :options="{ type: 'filtered', suggestions: dashboardSuggestions }"
-        :input-hint="dashboardsLoading ? _t('Loading…') : untranslated('')"
-        :busy="dashboardsLoading"
-      />
-    </template>
+  <div v-if="dashboardsError" class="error-message">
+    {{ _t('Error loading dashboards: ') + dashboardsError }}
   </div>
+  <div v-if="viewsError" class="error-message">
+    {{ _t('Error loading views: ') + viewsError }}
+  </div>
+  <CmkMenu
+    :items="items"
+    :categories="categories"
+    :label="_t('Target page')"
+    trigger-variant="field"
+    :trigger-text="selectedTitle"
+    :search-placeholder="_t('Search target pages ...')"
+    searchable
+    @select="select"
+  />
 </template>
-
-<style scoped>
-.db-contextual-link-target-picker {
-  display: flex;
-  gap: var(--dimension-6);
-}
-</style>

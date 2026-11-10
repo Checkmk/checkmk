@@ -27,7 +27,7 @@ const HOST_STATISTICS_OPTIONS: ContextualLinkOptions = {
 }
 
 useMswServer(
-  // The target picker of the inherited mode lists the dashboards and the views.
+  // The target picker of the inherited and the custom mode lists the dashboards and the views.
   http.get(`${API}/domain-types/dashboard_metadata/collections/all`, () =>
     HttpResponse.json({
       domainType: 'dashboard_metadata',
@@ -52,9 +52,6 @@ useMswServer(
   ),
   http.get(`${API}/domain-types/view/collections/all`, () =>
     HttpResponse.json({ domainType: 'view', id: 'all', links: [], value: [] })
-  ),
-  http.get(`${API}/objects/constant/data_source/collections/all`, () =>
-    HttpResponse.json({ domainType: 'constant', id: 'data_source', links: [], value: [] })
   )
 )
 
@@ -130,8 +127,8 @@ describe('ContextualLinkConfig', () => {
       'aria-pressed',
       'true'
     )
-    const target = screen.getByRole('combobox', { name: 'Select a target' })
-    await waitFor(() => expect(target).toHaveTextContent('Overview (main)'))
+    const target = screen.getByRole('button', { name: /^Target page/ })
+    await waitFor(() => expect(target).toHaveTextContent('Overview'))
   })
 
   it('opens a stored link that leads nowhere switched off', () => {
@@ -163,12 +160,12 @@ describe('ContextualLinkConfig', () => {
     expect(handler.mode.value).toBe('inherited')
   })
 
-  it('names the target page of an inherited link', async () => {
+  it('offers the target page of an inherited link', async () => {
     renderConfig()
 
     await userEvent.setup().click(screen.getByRole('button', { name: 'Toggle Inherited' }))
 
-    expect(screen.getByText('Target page')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Target page' })).toBeInTheDocument()
   })
 
   it('lists what an inherited link always carries', async () => {

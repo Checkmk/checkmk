@@ -9,6 +9,7 @@ import { useMswServer } from 'cmk-ui-library/vitest.msw'
 // eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
 import { HttpResponse, http } from 'msw'
 import { describe, expect, it } from 'vitest'
+import { defineComponent, h, ref } from 'vue'
 
 import ContextualLinkTargetPicker from '@/dashboard/components/Wizard/components/ContextualLink/ContextualLinkTargetPicker.vue'
 import type { VisualLocation } from '@/dashboard/components/Wizard/components/ContextualLink/contextualLink'
@@ -23,7 +24,7 @@ function dashboard(name: string, title: string, owner: string | null = null) {
     extensions: {
       name,
       owner,
-      is_built_in: true,
+      is_built_in: owner === null,
       is_editable: false,
       layout_type: 'relative_grid',
       display: { title }
@@ -31,11 +32,27 @@ function dashboard(name: string, title: string, owner: string | null = null) {
   }
 }
 
-const server = useMswServer(
+function view(name: string, title: string, owner = '') {
+  return {
+    domainType: 'view',
+    id: name,
+    title,
+    links: [],
+    extensions: {
+      data_source: 'hosts',
+      restricted_to_single: [],
+      filters: {},
+      is_mobile: false,
+      owner
+    }
+  }
+}
+
+useMswServer(
   // Asked for all owners, the list holds every copy, such as another user's.
   http.get(`${API}/domain-types/dashboard_metadata/collections/all`, ({ request }) => {
     const allOwners = new URL(request.url).searchParams.get('all_owners') === 'true'
-    const copies = [dashboard('main', 'Overview'), dashboard('host', 'Host details')]
+    const copies = [dashboard('main', 'Overview'), dashboard('mine', 'My hosts', 'cmkadmin')]
     return HttpResponse.json({
       domainType: 'dashboard_metadata',
       id: 'all',
@@ -43,79 +60,84 @@ const server = useMswServer(
       value: allOwners ? [...copies, dashboard('main', 'Overview', 'harry')] : copies
     })
   }),
-  // The views selector lists the views and their data sources.
   http.get(`${API}/domain-types/view/collections/all`, () =>
-    HttpResponse.json({ domainType: 'view', id: 'all', links: [], value: [] })
-  ),
-  http.get(`${API}/objects/constant/data_source/collections/all`, () =>
-    HttpResponse.json({ domainType: 'constant', id: 'data_source', links: [], value: [] })
+    HttpResponse.json({
+      domainType: 'view',
+      id: 'all',
+      links: [],
+      value: [view('allhosts', 'All hosts')]
+    })
   )
 )
 
-function renderPicker(target: VisualLocation) {
-  render(ContextualLinkTargetPicker, { props: { modelValue: target } })
-  return screen.findByRole('combobox', { name: 'Select a target' })
+const user = userEvent.setup()
+
+async function openPicker(stored: VisualLocation | null) {
+  const target = ref(stored)
+  render(
+    defineComponent({
+      setup: () => () =>
+        h(ContextualLinkTargetPicker, {
+          modelValue: target.value,
+          'onUpdate:modelValue': (value: VisualLocation | null) => (target.value = value)
+        })
+    })
+  )
+  const trigger = screen.getByRole('button', { name: /^Target page/ })
+  // Both lists are loaded once the menu holds the view and both dashboards.
+  await user.click(trigger)
+  await waitFor(() => expect(screen.getAllByRole('menuitem')).toHaveLength(3))
+  return trigger
+}
+
+function itemNames(): (string | null)[] {
+  return screen.getAllByRole('menuitem').map((item) => item.getAttribute('aria-label'))
 }
 
 describe('ContextualLinkTargetPicker', () => {
-  it('offers every listed dashboard by its title and name', async () => {
-    const dropdown = await renderPicker({ type: 'dashboards', name: 'main' })
-    await waitFor(() => expect(dropdown).toHaveTextContent('Overview (main)'))
+  it('offers the dashboards and the views by title and name, each built-in or custom', async () => {
+    await openPicker(null)
 
-    await userEvent.setup().click(dropdown)
-    const options = await screen.findAllByRole('option')
-
-    expect(options.map((option) => option.textContent)).toEqual([
-      'Host details (host)',
-      'Overview (main)'
+    expect(itemNames()).toEqual([
+      'My hosts – mine – Custom',
+      'Overview – main – Built-in',
+      'All hosts – allhosts – Built-in'
     ])
   })
 
-  it('shows that the dashboards are loading until they are listed', async () => {
-    let listDashboards!: () => void
-    const listed = new Promise<void>((resolve) => (listDashboards = resolve))
-    server.use(
-      http.get(`${API}/domain-types/dashboard_metadata/collections/all`, async () => {
-        await listed
-        return HttpResponse.json({
-          domainType: 'dashboard_metadata',
-          id: 'all',
-          links: [],
-          value: [dashboard('main', 'Overview')]
-        })
-      })
-    )
-    render(ContextualLinkTargetPicker, {
-      props: { modelValue: { type: 'views', name: 'allhosts' } }
-    })
-    const user = userEvent.setup()
-    await user.click(await screen.findByRole('combobox', { name: 'Select a category' }))
-    await user.click(await screen.findByRole('option', { name: 'Dashboards' }))
-    const dropdown = await screen.findByRole('combobox', { name: 'Select a target' })
+  it('narrows the targets to the views', async () => {
+    await openPicker(null)
 
-    expect(dropdown).toHaveTextContent('Loading…')
-    expect(dropdown).toHaveAttribute('aria-busy', 'true')
+    await user.click(screen.getByRole('button', { name: 'Toggle View (1)' }))
 
-    listDashboards()
-    await waitFor(() => expect(dropdown).not.toHaveAttribute('aria-busy'))
-    expect(dropdown).not.toHaveTextContent('Loading…')
+    expect(itemNames()).toEqual(['All hosts – allhosts – Built-in'])
   })
 
-  it('labels a stored dashboard that is no longer listed by its name', async () => {
-    const dropdown = await renderPicker({ type: 'dashboards', name: 'gone' })
+  it('picks a view as the target', async () => {
+    await openPicker(null)
 
-    await waitFor(() => expect(dropdown).toHaveTextContent('gone'))
+    await user.click(screen.getByRole('menuitem', { name: 'All hosts – allhosts – Built-in' }))
+
+    expect(screen.getByRole('button', { name: 'Target page: All hosts' })).toBeInTheDocument()
   })
 
-  it('clears the target when the category changes, so no hidden target is saved', async () => {
-    const { emitted } = render(ContextualLinkTargetPicker, {
-      props: { modelValue: { type: 'views', name: 'allhosts' } }
-    })
-    const user = userEvent.setup()
+  it('picks a dashboard as the target', async () => {
+    await openPicker({ type: 'views', name: 'allhosts' })
 
-    await user.click(await screen.findByRole('combobox', { name: 'Select a category' }))
-    await user.click(await screen.findByRole('option', { name: 'Dashboards' }))
+    await user.click(screen.getByRole('menuitem', { name: 'Overview – main – Built-in' }))
 
-    expect(emitted('update:modelValue')).toEqual([[null]])
+    expect(screen.getByRole('button', { name: 'Target page: Overview' })).toBeInTheDocument()
+  })
+
+  it('shows the stored target by its title', async () => {
+    const trigger = await openPicker({ type: 'dashboards', name: 'main' })
+
+    expect(trigger).toHaveTextContent('Overview')
+  })
+
+  it('shows a stored target that is no longer listed by its name', async () => {
+    const trigger = await openPicker({ type: 'dashboards', name: 'gone' })
+
+    expect(trigger).toHaveTextContent('gone')
   })
 })

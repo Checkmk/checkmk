@@ -42,6 +42,7 @@ from cmk.gui.watolib.analyze_configuration import (
 )
 from cmk.livestatus_client import SiteConfigurations
 from cmk.mkp_tool import get_stored_manifests, Manifest, PackageStore, PathConfig
+from cmk.ruleset_matcher.matcher import RulesetName
 from cmk.utils import paths
 from cmk.web.utils.html import HTML
 from cmk.web.utils.urls import makeuri_contextless
@@ -347,11 +348,6 @@ class _ACTestResultProblemUnsorted(_ACTestResultProblem):
     def _create_error_box_message(self, version: str, state: ACResultState) -> str:
         if self._is_problem_of("ACTestUnknownCheckParameterRuleSets"):
             return _("These rules have no effect in Checkmk %(version)s.") % {"version": version}
-        if self._is_problem_of("ACTestDeprecatedRuleSets"):
-            return _(
-                "These rules work in Checkmk %(version)s, but not after the update to the next"
-                " major version."
-            ) % {"version": version}
         return super()._create_error_box_message(version, state)
 
     @override
@@ -380,12 +376,46 @@ class _ACTestResultProblemUnsorted(_ACTestResultProblem):
                     )
                 },
             )
-        if self._is_problem_of("ACTestDeprecatedRuleSets"):
-            return _(
-                "Migrate the rules to the successor of the rule set or remove them before the"
-                " update. The Werk which deprecated the rule set describes its successor."
-            )
         return _("We highly recommend solving this issue already in your installation.")
+
+
+@dataclass(frozen=True)
+class _ACTestResultProblemDeprecatedRuleSet(_ACTestResultProblem):
+    ruleset: RulesetName | None = None
+
+    @override
+    def _create_title(self) -> str:
+        return self.ident
+
+    @override
+    def _create_error_box_message(self, version: str, state: ACResultState) -> str:
+        return _(
+            "These rules work in Checkmk %(version)s, but not after the update to the next"
+            " major version."
+        ) % {"version": version}
+
+    @override
+    def _create_info(self, version: str) -> str:
+        return ""
+
+    @override
+    def _create_recommendation(self) -> HTML | str:
+        recommendation = _(
+            "Migrate the rules to the successor of the rule set or remove them before the"
+            " update. The Werk which deprecated the rule set describes its successor."
+        )
+        if self.ruleset is None:
+            return recommendation
+        return HTMLWriter.render_p(recommendation) + HTMLWriter.render_p(
+            HTMLWriter.render_a(
+                _("Show the rules of this rule set"),
+                href=makeuri_contextless(
+                    request,
+                    [("mode", "edit_ruleset"), ("varname", self.ruleset)],
+                    filename="wato.py",
+                ),
+            )
+        )
 
 
 _GUI_PLUGIN_TEST_IDS = frozenset(
@@ -429,12 +459,20 @@ def _find_ac_test_result_problems(
                         file_problem(str(path), _NotificationCategory.manage_mkps),
                     )
 
+            elif ac_test_result.test_id == "ACTestDeprecatedRuleSets":
+                problem = problem_by_key.setdefault(
+                    (_ACTestResultProblemDeprecatedRuleSet, ac_test_result.text),
+                    _ACTestResultProblemDeprecatedRuleSet(
+                        ac_test_result.text,
+                        _NotificationCategory.rule_sets,
+                        ruleset=ac_test_result.ruleset,
+                    ),
+                )
+
             else:
                 match ac_test_result.test_id:
                     case test_id if test_id in _PACKAGE_MANAGEMENT_TEST_IDS:
                         notification_category = _NotificationCategory.manage_mkps
-                    case "ACTestDeprecatedRuleSets":
-                        notification_category = _NotificationCategory.rule_sets
                     case _:
                         notification_category = _NotificationCategory.log
 

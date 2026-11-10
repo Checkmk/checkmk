@@ -568,31 +568,51 @@ def test_broken_gui_extension_without_its_file_goes_to_the_package_managers() ->
     ]
 
 
-def test_deprecated_rule_set_message() -> None:
-    problem = _ACTestResultProblemUnsorted(
-        ident="A text",
-        notification_category=_NotificationCategory.rule_sets,
-        _ac_test_results={
-            SiteId("site_id"): [
-                ACTestResult(
-                    ACResultState.WARN,
-                    "A text",
-                    "ACTestDeprecatedRuleSets",
-                    "deprecations",
-                    "Title",
-                    "Help",
-                    SiteId("site_id"),
-                    None,
-                ),
-            ],
-        },
+def _deprecated_rule_set_problems(ruleset: str | None) -> Sequence[_ACTestResultProblem]:
+    finding = ACTestResult(
+        ACResultState.WARN,
+        'Found rules of the rule set "Deprecated: Title".',
+        "ACTestDeprecatedRuleSets",
+        "deprecations",
+        "Title",
+        "Help",
+        SiteId("site_id"),
+        None,
+        ruleset,
     )
+    return _find_ac_test_result_problems({SiteId("site_id"): [finding]}, {})
+
+
+def test_deprecated_rule_set_goes_to_the_rule_set_admins() -> None:
+    [problem] = _deprecated_rule_set_problems("agent_config:classic_file_deployment")
+
+    assert problem.notification_category is _NotificationCategory.rule_sets
+
+
+def test_deprecated_rule_set_message() -> None:
+    [problem] = _deprecated_rule_set_problems("agent_config:classic_file_deployment")
+
     assert (
         '<div class="warning">These rules work in Checkmk 2.3.0, but not after the update to the'
         " next major version.</div><p>Migrate the rules to the successor of the rule set or"
         " remove them before the update. The Werk which deprecated the rule set describes its"
         " successor.</p>"
     ) in str(problem.html("2.3.0"))
+
+
+def test_deprecated_rule_set_message_links_the_rule_set() -> None:
+    [problem] = _deprecated_rule_set_problems("agent_config:classic_file_deployment")
+
+    assert (
+        '<p><a href="wato.py?mode=edit_ruleset&varname=agent_config%3Aclassic_file_deployment">'
+        "Show the rules of this rule set</a></p>"
+    ) in str(problem.html("2.3.0"))
+
+
+def test_deprecated_rule_set_message_of_an_older_remote_site_has_no_link() -> None:
+    [problem] = _deprecated_rule_set_problems(None)
+
+    assert "<a " not in str(problem.html("2.3.0"))
 
 
 _PACKAGE_WITH_GUI_PLUGIN = Manifest(

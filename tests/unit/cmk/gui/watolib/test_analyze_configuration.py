@@ -158,6 +158,23 @@ def test_ac_test_run(ac_test: type[ACTest], test_result: Sequence[ACTestResult])
     }
 
 
+class _FakeACTestRuleSet(_FakeACTestSingleSite):
+    @override
+    def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
+        yield ACSingleResult(
+            state=ACResultState.WARN,
+            text="rule set result",
+            site_id=SiteId("site_id"),
+            ruleset="agent_config:classic_file_deployment",
+        )
+
+
+def test_ac_test_run_keeps_the_rule_set() -> None:
+    [result] = _FakeACTestRuleSet().run(SiteId("site_id"), Config())
+
+    assert result.ruleset == "agent_config:classic_file_deployment"
+
+
 @pytest.mark.parametrize(
     "ac_test_result",
     [
@@ -187,7 +204,39 @@ def test_ac_test_run(ac_test: type[ACTest], test_result: Sequence[ACTestResult])
             ),
             id="without-path",
         ),
+        pytest.param(
+            ACTestResult(
+                state=ACResultState.WARN,
+                text="Text",
+                site_id=SiteId("NO_SITE"),
+                test_id="test_id",
+                category="category",
+                title="Title",
+                help="Help",
+                path=None,
+                ruleset="agent_config:classic_file_deployment",
+            ),
+            id="with-ruleset",
+        ),
     ],
 )
 def test_ac_test_result_repr(ac_test_result: ACTestResult) -> None:
     assert ACTestResult.from_repr(ast.literal_eval(repr(ac_test_result))) == ac_test_result
+
+
+def test_ac_test_result_of_an_older_remote_site_has_no_rule_set() -> None:
+    assert (
+        ACTestResult.from_repr(
+            {
+                "site_id": "NO_SITE",
+                "state": 1,
+                "text": "Text",
+                "test_id": "test_id",
+                "category": "category",
+                "title": "Title",
+                "help": "Help",
+                "path": None,
+            }
+        ).ruleset
+        is None
+    )

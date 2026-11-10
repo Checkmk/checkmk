@@ -45,6 +45,7 @@ from cmk.gui.watolib.automations import (
 )
 from cmk.gui.watolib.sites import get_effective_global_setting
 from cmk.livestatus_client import LocalConnection, SiteConfigurations
+from cmk.ruleset_matcher.matcher import RulesetName
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.paths import (
     local_lib_dir,
@@ -77,6 +78,7 @@ class ACSingleResult:
     text: str
     site_id: SiteId
     path: Path | None = None
+    ruleset: RulesetName | None = None
 
 
 @dataclasses.dataclass(frozen=True)
@@ -89,6 +91,7 @@ class ACTestResult:
     help: str
     site_id: SiteId
     path: Path | None
+    ruleset: RulesetName | None = None
 
     @property
     def state_marked_text(self) -> str:
@@ -114,6 +117,8 @@ class ACTestResult:
             title=repr_data["title"],
             help=repr_data["help"],
             path=None if (p := repr_data.get("path")) is None else Path(p),
+            # Remote sites of older versions send no rule set.
+            ruleset=repr_data.get("ruleset"),
         )
 
     @override
@@ -138,6 +143,7 @@ class ACTestResult:
                     ACResultState.EXCEPTION: "ACResultEXCEPTION",
                 }[self.state],
                 "path": str(self.path) if self.path else None,
+                "ruleset": self.ruleset,
             }
         )
 
@@ -200,6 +206,7 @@ class ACTest:
                     title=self.title(),
                     help=self.help(),
                     path=result.path,
+                    ruleset=result.ruleset,
                 )
         except Exception:
             gui_logger.exception(

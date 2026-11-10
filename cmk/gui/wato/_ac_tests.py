@@ -1301,9 +1301,10 @@ class ACTestDeprecatedRuleSets(ACTest):
             for rule_set in deprecated_rule_sets:
                 yield ACSingleResult(
                     state=ACResultState.WARN,
-                    text=_("Found configured rules of deprecated rule set %(name)r.")
-                    % {"name": rule_set.name},
+                    text=_('Found rules of the rule set "%(title)s" (%(name)s).')
+                    % {"title": rule_set.title() or rule_set.name, "name": rule_set.name},
                     site_id=site_id,
+                    ruleset=rule_set.name,
                 )
             return
 

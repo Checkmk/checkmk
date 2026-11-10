@@ -27,7 +27,9 @@ const props = withDefaults(
     customTimeRanges: GlobalTimePickerProps['custom_time_ranges']
     serverTimeZone: GlobalTimePickerProps['server_time_zone']
     firstDayOfWeek: GlobalTimePickerProps['first_day_of_week']
-    variant?: 'extended' | 'condensed'
+    /** `condensed` offers the presets from one dropdown beside the trigger instead of chips;
+     *  `minimal` shows none beside the trigger, so only the flyout offers them. */
+    variant?: 'extended' | 'condensed' | 'minimal'
     disabled?: boolean
   }>(),
   { variant: 'extended', disabled: false }
@@ -129,8 +131,9 @@ function onApplyPreset(preset: CustomPreset): void {
       v-if="customPresets.length || $slots.trailing || $slots.aside"
       class="graphing-global-time-picker__band"
     >
+      <slot v-if="variant === 'minimal'" name="trailing" />
       <DynamicPresets
-        v-if="customPresets.length || $slots.trailing"
+        v-else-if="customPresets.length || $slots.trailing"
         :presets="customPresets"
         :active-preset-id="activePresetId"
         :variant="variant"

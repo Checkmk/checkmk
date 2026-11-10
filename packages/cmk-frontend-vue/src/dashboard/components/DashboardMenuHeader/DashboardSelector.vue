@@ -152,6 +152,8 @@ watch(
         :class="{ 'dashboard-selector--disabled': props.disabled }"
         type="text"
         :placeholder="props.selectedDashboard?.title || _t('Select dashboard')"
+        :title="props.selectedDashboard?.title"
+        :aria-label="_t('Dashboard')"
         :disabled="props.disabled"
         @focus="handleInputFocus"
         @focusout="handleFocusOut"

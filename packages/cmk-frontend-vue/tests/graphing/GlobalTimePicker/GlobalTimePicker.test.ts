@@ -259,6 +259,23 @@ describe('GlobalTimePicker', () => {
     expect(within(grid).getAllByRole('columnheader')[0]!).toHaveAccessibleName('Sonntag')
   })
 
+  test('minimal: renders no presets beside the trigger, only the trailing content', () => {
+    render(GlobalTimePicker, {
+      props: {
+        customTimeRanges: CUSTOM_RANGES,
+        serverTimeZone: TZ,
+        firstDayOfWeek: null,
+        variant: 'minimal',
+        modelValue: rollingRange(4 * 3600)
+      },
+      slots: { trailing: () => h('button', 'Filter') }
+    })
+
+    expect(screen.queryByRole('combobox')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Last 4 hours' })).toBeNull()
+    expect(screen.getByRole('button', { name: 'Filter' })).toBeInTheDocument()
+  })
+
   test('condensed: applying a quick range closes the flyout', async () => {
     const view = renderControlledPicker(rollingRange(4 * 3600), 'condensed')
     await openFlyout(view.container)

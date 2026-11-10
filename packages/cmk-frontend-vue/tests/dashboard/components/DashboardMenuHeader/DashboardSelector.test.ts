@@ -180,8 +180,8 @@ describe('DashboardSelector', () => {
         expect(screen.getByText('Custom A')).toBeInTheDocument()
       })
 
-      expect(screen.getByTitle('Custom A')).toHaveClass('active')
-      expect(screen.getByTitle('Custom B')).not.toHaveClass('active')
+      expect(screen.getByText('Custom A')).toHaveClass('active')
+      expect(screen.getByText('Custom B')).not.toHaveClass('active')
     })
 
     it('closes dropdown on blur', async () => {

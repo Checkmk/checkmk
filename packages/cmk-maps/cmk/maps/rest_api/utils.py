@@ -18,6 +18,7 @@ from http import HTTPStatus
 from typing import Final, get_args
 
 from pydantic import TypeAdapter, ValidationError
+from pydantic_core import PydanticSerializationError
 
 from cmk.gui.openapi.framework import EndpointBehavior, ETag
 from cmk.gui.openapi.framework.model import ApiOmitted, json_dump_without_omitted
@@ -286,7 +287,19 @@ def map_from_spec(spec: Mapping[str, object]) -> MapConfig:
 
 def spec_from_map(map_cfg: MapConfig) -> dict[str, object]:
     """Serialize a typed, grouped map back to the flat ``map_spec`` dict for storage."""
-    nested: dict[str, object] = json.loads(json_dump_without_omitted(MapConfig, map_cfg))
+    try:
+        dumped = json_dump_without_omitted(MapConfig, map_cfg)
+    except PydanticSerializationError as exc:
+        # Only text that does not encode as UTF-8, such as a lone surrogate; the
+        # error names nothing but its message to tell that by.
+        if "UnicodeEncodeError" not in str(exc):
+            raise
+        raise RestAPIRequestGeneralException(
+            status=HTTPStatus.BAD_REQUEST,
+            title="The map is not valid",
+            detail="Map contains text that is not valid UTF-8.",
+        ) from None
+    nested: dict[str, object] = json.loads(dumped)
     if isinstance(objects := nested.get("objects"), list):
         nested["objects"] = [_flatten_object(_sub_mapping(o)) for o in objects]
     if isinstance(view := nested.get("view"), dict):

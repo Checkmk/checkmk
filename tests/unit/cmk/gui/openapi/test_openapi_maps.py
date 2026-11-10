@@ -472,6 +472,20 @@ def test_the_size_limit_counts_a_character_outside_ascii_as_escaped(
     ).assert_status_code(HTTPStatus.BAD_REQUEST)
 
 
+def test_a_map_with_text_that_is_not_utf8_is_refused(clients: ClientRegistry) -> None:
+    clients.Maps.create(config=_map("map1", alias="\ud800"), expect_ok=False).assert_status_code(
+        HTTPStatus.BAD_REQUEST
+    )
+
+
+def test_a_save_with_text_that_is_not_utf8_is_refused(clients: ClientRegistry) -> None:
+    clients.Maps.create(config=_STATIC_MAP)
+
+    _edit(clients, {**_STATIC_MAP, "alias": "\ud800"}, "*", expect_ok=False).assert_status_code(
+        HTTPStatus.BAD_REQUEST
+    )
+
+
 def test_object_rejects_null_for_non_nullable_line_fields(clients: ClientRegistry) -> None:
     # ``line_perfdata_label``/``line_weather_color`` are non-nullable in the daemon
     # map schema; the REST mirror must not advertise them as nullable (an explicit

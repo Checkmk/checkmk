@@ -462,40 +462,25 @@ class ACTestHTTPSecured(ACTest):
             )
 
 
-_APACHE_FORWARDED_HEADERS_SEARCH_DIRS = (
-    Path("/etc/apache2"),
-    Path("/etc/httpd"),
-)
+def _configured_forwarded_headers_mode() -> str:
+    return get_omd_config(cmk.utils.paths.omd_root)["CONFIG_APACHE_FORWARDED_HEADERS"]
 
 
-def _manual_forwarded_headers_files(search_dirs: Iterable[Path]) -> list[Path]:
-    """Best-effort scan of well-known system Apache config locations for a manually configured
-    RequestHeader for X-Forwarded-Proto/X-Forwarded-Ssl. An admin who put it somewhere else, or
-    behind a variable/include Apache can't be statically resolved, won't be caught."""
-    found = []
-    for root in search_dirs:
-        if not root.is_dir():
-            continue
-        for candidate in root.rglob("*.conf"):
-            try:
-                content = candidate.read_text()
-            except OSError:
-                continue
-            if "X-Forwarded-Proto" in content or "X-Forwarded-Ssl" in content:
-                found.append(candidate)
-    return found
+def _received_forwarded_proto() -> str | None:
+    proto: str | None = request.headers.get("X-Forwarded-Proto")
+    return proto
 
 
 class ACTestApacheForwardedHeaders(ACTest):
     def __init__(
         self,
-        omd_root: Path | None = None,
-        search_dirs: Iterable[Path] | None = None,
+        configured_mode: Callable[[], str] = _configured_forwarded_headers_mode,
+        received_forwarded_proto: Callable[[], str | None] = _received_forwarded_proto,
+        is_remote_site: Callable[[SiteConfigurations], bool] = is_distributed_setup_remote_site,
     ) -> None:
-        self._omd_root = omd_root or cmk.utils.paths.omd_root
-        self._search_dirs = (
-            _APACHE_FORWARDED_HEADERS_SEARCH_DIRS if search_dirs is None else list(search_dirs)
-        )
+        self._configured_mode = configured_mode
+        self._received_forwarded_proto = received_forwarded_proto
+        self._is_remote_site = is_remote_site
 
     @override
     def category(self) -> str:
@@ -519,48 +504,57 @@ class ACTestApacheForwardedHeaders(ACTest):
                 "If your system Apache sits behind another proxy or load balancer that "
                 "terminates TLS and forwards plain HTTP to it, that automatic value would be "
                 "wrong. Run <tt>omd config set APACHE_FORWARDED_HEADERS manual</tt> for the "
-                "site and set the headers yourself in the system Apache configuration instead, "
-                'e.g. <tt>RequestHeader set X-Forwarded-Proto "https"</tt>.'
+                "site and have that proxy or load balancer set the headers instead."
+            )
+            + " "
+            + _(
+                "This test checks whether the request that executes it reached the site with "
+                "an X-Forwarded-Proto header. It is not executed on remote sites."
             )
         )
 
     @override
     def execute(self, site_id: SiteId, config: Config) -> Iterator[ACSingleResult]:
-        mode = get_omd_config(self._omd_root)["CONFIG_APACHE_FORWARDED_HEADERS"]
-        manual_files = _manual_forwarded_headers_files(self._search_dirs)
+        # The configuration of the system Apache or of a proxy in front of it is not inspected:
+        # which of its files and sections apply to this site cannot be told from here, and a proxy
+        # may run on another host. What arrives at the site is what the site acts on.
+        #
+        # On a remote site the request is the automation call of the central site. It need not take
+        # the way the clients of the remote site take, so it tells nothing about their headers.
+        if self._is_remote_site(config.sites):
+            return
 
-        if mode == "auto":
-            if manual_files:
-                yield ACSingleResult(
-                    state=ACResultState.WARN,
-                    text=_(
-                        "Found a RequestHeader for X-Forwarded-Proto/X-Forwarded-Ssl in "
-                        "%(files)s. Checkmk already sets this header itself; remove the manual "
-                        "entry to avoid duplicate or conflicting configuration, or set "
-                        "APACHE_FORWARDED_HEADERS to 'manual' if this Apache needs it."
-                    )
-                    % {"files": ", ".join(str(path) for path in manual_files)},
-                    site_id=site_id,
-                )
-            else:
-                yield ACSingleResult(
-                    state=ACResultState.OK,
-                    text=_("X-Forwarded-Proto/-Ssl are set automatically"),
-                    site_id=site_id,
-                )
-        elif manual_files:
+        mode = self._configured_mode()
+
+        if self._received_forwarded_proto() is not None:
             yield ACSingleResult(
                 state=ACResultState.OK,
-                text=_("X-Forwarded-Proto/-Ssl are configured manually, as configured"),
+                text=(
+                    _("X-Forwarded-Proto is set automatically")
+                    if mode == "auto"
+                    else _("X-Forwarded-Proto is set by the proxy in front of the system Apache")
+                ),
+                site_id=site_id,
+            )
+        elif mode == "auto":
+            yield ACSingleResult(
+                state=ACResultState.WARN,
+                text=_(
+                    "The request reached the site without an X-Forwarded-Proto header, so the "
+                    "system Apache does not set it. Run <tt>omd update-apache-config</tt> for "
+                    "the site as root and make sure the Apache module mod_headers is enabled. "
+                    "If the site is not reached through the system Apache, e.g. in a container, "
+                    "the proxy in front of it has to set the header."
+                ),
                 site_id=site_id,
             )
         else:
             yield ACSingleResult(
                 state=ACResultState.WARN,
                 text=_(
-                    "APACHE_FORWARDED_HEADERS is set to 'manual', but no matching "
-                    "RequestHeader configuration was found in the usual system Apache "
-                    "locations. Is this intentional?"
+                    "APACHE_FORWARDED_HEADERS is set to 'manual', but the request reached the "
+                    "site without an X-Forwarded-Proto header. The proxy or load balancer in "
+                    "front of the system Apache has to set it."
                 ),
                 site_id=site_id,
             )

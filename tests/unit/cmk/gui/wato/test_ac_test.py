@@ -128,68 +128,47 @@ def test_automation_user_secret_flagging() -> None:
     }
 
 
-def _omd_root(tmp_path: Path, forwarded_headers: str) -> Path:
-    site_conf = tmp_path / "etc" / "omd" / "site.conf"
-    site_conf.parent.mkdir(parents=True)
-    site_conf.write_text(f"CONFIG_APACHE_FORWARDED_HEADERS='{forwarded_headers}'\n")
-    return tmp_path
-
-
-def test_apache_forwarded_headers_auto_ok(tmp_path: Path) -> None:
-    """Default mode, no manual leftover config anywhere -> OK"""
-    results = list(
+def _forwarded_headers_results(
+    mode: str, forwarded_proto: str | None, *, is_remote_site: bool = False
+) -> Sequence[ACSingleResult]:
+    return list(
         ACTestApacheForwardedHeaders(
-            omd_root=_omd_root(tmp_path, "auto"), search_dirs=[tmp_path / "apache2"]
+            configured_mode=lambda: mode,
+            received_forwarded_proto=lambda: forwarded_proto,
+            is_remote_site=lambda _site_configs: is_remote_site,
         ).execute(SiteId("NO_SITE"), Config())
     )
+
+
+@pytest.mark.parametrize("mode", ["auto", "manual"])
+@pytest.mark.parametrize("forwarded_proto", ["http", "https"])
+def test_apache_forwarded_headers_present_ok(mode: str, forwarded_proto: str) -> None:
+    results = _forwarded_headers_results(mode, forwarded_proto)
 
     assert [r.state for r in results] == [ACResultState.OK]
-    assert "automatically" in results[0].text
 
 
-def test_apache_forwarded_headers_auto_leftover_warns(tmp_path: Path) -> None:
-    """Default mode, but a manual RequestHeader is still configured -> WARN"""
-    apache_dir = tmp_path / "apache2" / "conf-enabled"
-    apache_dir.mkdir(parents=True)
-    leftover = apache_dir / "proxy.conf"
-    leftover.write_text('RequestHeader set X-Forwarded-Proto "https"\n')
-
-    results = list(
-        ACTestApacheForwardedHeaders(
-            omd_root=_omd_root(tmp_path, "auto"), search_dirs=[tmp_path / "apache2"]
-        ).execute(SiteId("NO_SITE"), Config())
-    )
+def test_apache_forwarded_headers_auto_missing_warns() -> None:
+    """The system Apache should set the header, e.g. its configuration was not updated"""
+    results = _forwarded_headers_results("auto", None)
 
     assert [r.state for r in results] == [ACResultState.WARN]
-    assert str(leftover) in results[0].text
+    assert "update-apache-config" in results[0].text
 
 
-def test_apache_forwarded_headers_manual_with_config_ok(tmp_path: Path) -> None:
-    """Opted out, and a manual RequestHeader is indeed configured -> OK"""
-    apache_dir = tmp_path / "apache2"
-    apache_dir.mkdir()
-    (apache_dir / "proxy.conf").write_text('RequestHeader set X-Forwarded-Proto "https"\n')
-
-    results = list(
-        ACTestApacheForwardedHeaders(
-            omd_root=_omd_root(tmp_path, "manual"), search_dirs=[apache_dir]
-        ).execute(SiteId("NO_SITE"), Config())
-    )
-
-    assert [r.state for r in results] == [ACResultState.OK]
-    assert "manually" in results[0].text
-
-
-def test_apache_forwarded_headers_manual_without_config_warns(tmp_path: Path) -> None:
-    """Opted out, but no matching manual configuration was found -> WARN"""
-    results = list(
-        ACTestApacheForwardedHeaders(
-            omd_root=_omd_root(tmp_path, "manual"), search_dirs=[tmp_path / "apache2"]
-        ).execute(SiteId("NO_SITE"), Config())
-    )
+def test_apache_forwarded_headers_manual_missing_warns() -> None:
+    """Opted out, but nothing in front of the system Apache sets the header"""
+    results = _forwarded_headers_results("manual", None)
 
     assert [r.state for r in results] == [ACResultState.WARN]
-    assert "intentional" in results[0].text
+    assert "manual" in results[0].text
+
+
+def test_apache_forwarded_headers_not_reported_on_remote_site() -> None:
+    """A missing header in the central site's automation call says nothing about the clients"""
+    results = _forwarded_headers_results("auto", None, is_remote_site=True)
+
+    assert results == []
 
 
 def _write_plugin_file(plugin_root: Path, rel_path: str, content: str) -> Path:

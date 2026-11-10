@@ -123,7 +123,13 @@ function fillPlaceholders(
       const m = metrics().find((x) => x.label === label)
       return m ? encode(String(m.value) + m.unit) : ''
     }
-    return encode(vars[key]?.() ?? '')
+    const value = Object.hasOwn(vars, key) ? vars[key] : undefined
+    try {
+      return encode(value?.() ?? '')
+    } catch {
+      // One placeholder that cannot be filled must not take the whole map down.
+      return ''
+    }
   })
 }
 

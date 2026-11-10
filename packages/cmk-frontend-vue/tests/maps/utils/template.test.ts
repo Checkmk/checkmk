@@ -139,6 +139,26 @@ describe('interpolateTemplate', () => {
     expect(interpolateTemplate('[{{state}}]', makeObject(), undefined)).toBe('[]')
   })
 
+  it.each(['constructor', '__proto__', 'hasOwnProperty'])(
+    'fills {{%s}} with nothing, as it is no placeholder of the object',
+    (key) => {
+      const object = makeObject({ host_name: 'web01' })
+
+      expect(interpolateTemplate(`[{{${key}}}] {{host}}`, object, undefined)).toBe('[] web01')
+    }
+  )
+
+  it('leaves the rest of the text when one placeholder cannot be filled', () => {
+    const state = makeState({ state: 'UP' })
+    Object.defineProperty(state, 'output', {
+      get() {
+        throw new Error('unreadable')
+      }
+    })
+
+    expect(interpolateTemplate('[{{output}}] {{state}}', makeObject(), state)).toBe('[] UP')
+  })
+
   it('names the object by its filled-in label', () => {
     const object = makeObject({ host_name: 'web01', label: label('Core ({{state}})') })
 

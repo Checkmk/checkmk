@@ -9,6 +9,7 @@ import { getLocalTimeZone } from '@internationalized/date'
 import { scaleLinear, scaleTime } from 'd3-scale'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
+import { useWhenNearView } from '../../composables/useNearView'
 import type { TimeInterval, TimeRangeCommitKind } from '../../types'
 import { drawnBinEdges } from '../../utils/bins'
 import type { BinUnit, Metric, RequestedTimeRange, TimeRange } from '../TimeSeriesGraph'
@@ -136,12 +137,14 @@ function drawWaveform(): void {
   )
 }
 
-onMounted(drawWaveform)
+const requestWaveform = useWhenNearView(waveformCanvas, drawWaveform)
+
+onMounted(requestWaveform)
 // The selection window moves over the waveform without changing it, so a drag redraws the
 // scrims below and leaves the canvas alone.
 watch(
   () => [props.metrics, props.domain, props.dataDomain, props.plotWidth, props.binUnit],
-  drawWaveform
+  requestWaveform
 )
 
 const svgRef = ref<SVGSVGElement | null>(null)

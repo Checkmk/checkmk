@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
+import { useWhenNearView } from '../../../composables/useNearView'
 import type { HoverState } from '../interaction/hover'
 import GraphTooltip from './GraphTooltip.vue'
 import { type FocusDot, drawCrosshair, drawFocusDots, drawPinLine } from './crosshair'
@@ -45,10 +46,12 @@ function sizeCanvasToDevicePixelRatio(): void {
     return
   }
   const dpr = window.devicePixelRatio || 1
-  canvas.width = Math.round(props.plotWidth * dpr)
-  canvas.height = Math.round(props.plotHeight * dpr)
-  canvas.style.width = `${props.plotWidth}px`
-  canvas.style.height = `${props.plotHeight}px`
+  const width = Math.round(props.plotWidth * dpr)
+  const height = Math.round(props.plotHeight * dpr)
+  if (canvas.width !== width || canvas.height !== height) {
+    canvas.width = width
+    canvas.height = height
+  }
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
 }
 
@@ -95,15 +98,18 @@ function attachDPRWatcher(): void {
   dprMedia.addEventListener('change', onDPRChange, { once: true })
 }
 
-function onDPRChange(): void {
+const requestPaint = useWhenNearView(overlayCanvas, () => {
   sizeCanvasToDevicePixelRatio()
   redraw()
+})
+
+function onDPRChange(): void {
+  requestPaint()
   attachDPRWatcher()
 }
 
 onMounted(() => {
-  sizeCanvasToDevicePixelRatio()
-  redraw()
+  requestPaint()
   attachDPRWatcher()
 })
 
@@ -112,16 +118,7 @@ onBeforeUnmount(() => {
   dprMedia = null
 })
 
-watch(
-  () => [props.plotWidth, props.plotHeight],
-  () => {
-    sizeCanvasToDevicePixelRatio()
-    redraw()
-  }
-)
-
-watch(() => props.hoverState, redraw)
-watch(() => props.pinX, redraw)
+watch(() => [props.plotWidth, props.plotHeight, props.hoverState, props.pinX], requestPaint)
 </script>
 
 <template>
@@ -130,7 +127,12 @@ watch(() => props.pinX, redraw)
     class="graphing-overlay-layer"
     :style="{ width: `${plotWidth}px`, height: `${plotHeight}px` }"
   >
-    <canvas ref="overlayCanvas" class="graphing-overlay-layer__canvas" aria-hidden="true" />
+    <canvas
+      ref="overlayCanvas"
+      class="graphing-overlay-layer__canvas"
+      :style="{ width: `${plotWidth}px`, height: `${plotHeight}px` }"
+      aria-hidden="true"
+    />
     <GraphTooltip :hover-state="hoverState" />
   </div>
 </template>

@@ -21,6 +21,7 @@ import { userSpecificUnit } from 'cmk-ui-library/lib/unit-format/unitFormatter'
 import { scaleLinear, scaleTime } from 'd3-scale'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
+import { useWhenNearView } from '../../composables/useNearView'
 import { drawnBinEdges } from '../../utils/bins'
 import { type ConsolidationFn, DEFAULT_CONSOLIDATION_FN } from '../consolidation'
 import {
@@ -332,8 +333,6 @@ function draw(): void {
   const dpr = window.devicePixelRatio || 1
   canvasEl.width = Math.round(plotWidth.value * dpr)
   canvasEl.height = Math.round(plotHeight.value * dpr)
-  canvasEl.style.width = `${plotWidth.value}px`
-  canvasEl.style.height = `${plotHeight.value}px`
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
   ctx.clearRect(0, 0, plotWidth.value, plotHeight.value)
 
@@ -365,6 +364,8 @@ function draw(): void {
     drawHorizontalLines(axesContainer.value, props.horizontal_lines, yScale, plotWidth.value)
   }
 }
+
+const requestDraw = useWhenNearView(canvas, draw)
 
 // Guard against cycling through
 //    watch(plotWidth) -> draw() -> fitMarginToValueLabels() -> set marginLeft -> watch(plotWidth)
@@ -512,12 +513,12 @@ function attachDPRWatcher() {
 }
 
 function onDPRChange() {
-  draw()
+  requestDraw()
   attachDPRWatcher()
 }
 
 onMounted(() => {
-  draw()
+  requestDraw()
   attachDPRWatcher()
 })
 
@@ -546,7 +547,7 @@ watch(
     props.showValueAxis,
     props.minValueAxisWidth
   ],
-  draw,
+  requestDraw,
   { deep: true }
 )
 
@@ -639,7 +640,13 @@ defineExpose({ showMaxZoomHint })
       tabindex="0"
       role="img"
       :aria-label="plotAriaLabel"
-      :style="{ left: `${marginLeft}px`, top: `${plotTop}px`, cursor: plotCursor }"
+      :style="{
+        left: `${marginLeft}px`,
+        top: `${plotTop}px`,
+        width: `${plotWidth}px`,
+        height: `${plotHeight}px`,
+        cursor: plotCursor
+      }"
       @mousemove="onMouseMove"
       @mouseleave="clearHoverAfterDelay"
       @mousedown="onPlotMouseDown"

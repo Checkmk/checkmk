@@ -11,7 +11,7 @@ import enum
 import os
 import sys
 from argparse import ArgumentParser
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from typing import assert_never
 
 from cmk.agent_based import v2 as agent_based_v2
@@ -90,6 +90,7 @@ class ValidationStep(enum.Enum):
     ACTIVE_CHECKS = "active checks loading"
     SPECIAL_AGENTS = "special agents loading"
     BAKERY_PLUGINS = "bakery plugins loading"
+    BAKERY_RULE_SPECS = "bakery plugins rule specs validation"
     RULE_SPECS = "rule specs loading"
     RULE_SPEC_FORMS = "rule specs forms creation"
     RULE_SPEC_REFERENCED = "referenced rule specs validation"
@@ -135,12 +136,38 @@ def _validate_special_agent_loading() -> ActiveCheckResult:
     return to_result(ValidationStep.SPECIAL_AGENTS, errors)
 
 
+# Configured by top-level rule specs, see cmk/bakery/base/config.py
+_TOP_LEVEL_BAKERY_RULE_SPECS: Mapping[str, str] = {
+    "agent_encryption": "agent_encryption",
+    "agent_port": "agent_ports",
+}
+
+
+def _unconfigurable_bakery_plugins(
+    plugin_names: Iterable[str], rule_spec_names: Container[str]
+) -> Sequence[str]:
+    """Names of bakery plug-ins that never run, as no rule spec configures them"""
+    return sorted(
+        name
+        for name in plugin_names
+        if RuleGroup.AgentConfig(name) not in rule_spec_names
+        and _TOP_LEVEL_BAKERY_RULE_SPECS.get(name) not in rule_spec_names
+    )
+
+
 def _validate_bakery_plugins(*, debug: bool) -> Sequence[ActiveCheckResult]:
-    _plugins, failures = load_bakery_plugins()
+    plugins, failures = load_bakery_plugins()
     if failures and debug:
         raise failures[0][1]
     return [
-        to_result(ValidationStep.BAKERY_PLUGINS, [f"{module}: {exc}" for module, exc in failures])
+        to_result(ValidationStep.BAKERY_PLUGINS, [f"{module}: {exc}" for module, exc in failures]),
+        to_result(
+            ValidationStep.BAKERY_RULE_SPECS,
+            [
+                f"Bakery plug-in '{name}' never runs: there is no agent config rule spec '{name}'"
+                for name in _unconfigurable_bakery_plugins(plugins, rulespec_registry)
+            ],
+        ),
     ]
 
 

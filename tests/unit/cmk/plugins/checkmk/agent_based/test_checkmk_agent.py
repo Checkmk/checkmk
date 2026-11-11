@@ -736,10 +736,12 @@ def _controller(
 
 
 def _update_results(
-    controller: ControllerSection, legacy: CMKAgentUpdateSection | None
+    controller: ControllerSection,
+    legacy: CMKAgentUpdateSection | None,
+    params: Mapping[str, object] = _UPDATE_PARAMS,
 ) -> list[IgnoreResults | Metric | Result]:
     with time_machine.travel(_NOW, tick=False):
-        return [*check_checkmk_agent(_UPDATE_PARAMS, None, None, controller, legacy, None)]
+        return [*check_checkmk_agent(params, None, None, controller, legacy, None)]
 
 
 def test_without_the_legacy_updater_the_integrated_updater_decides_the_state() -> None:
@@ -761,6 +763,51 @@ def test_without_the_legacy_updater_the_integrated_updater_decides_the_state() -
         Result(state=State.OK, notice="Time since last update check: 1 hour 0 minutes"),
         Result(state=State.OK, notice="Last update check: 2026-10-30 11:00:00"),
     ]
+
+
+def _refused_download(refusal_of_the_site: str) -> str:
+    """The error that the agent controller records for a download that the site refused
+
+    The agent receiver puts the title of the refusal in front of its text, and the agent
+    controller puts the request and the status code in front of that.
+    """
+    return (
+        "Agent update download of 0123456789abcdef from server/site failed:"
+        " Request failed with code 403 Forbidden:"
+        f" Agent deployment disabled - Details: {refusal_of_the_site}"
+    )
+
+
+def test_a_globally_disabled_deployment_gets_the_state_of_its_parameter() -> None:
+    """TC-AU-072: the refusal of a download while agent deployment is globally disabled gets the
+    state of its parameter, not the WARN of any other update error"""
+    error = _refused_download(
+        "Agent deployment is currently globally disabled on the deployment server."
+    )
+
+    results = _update_results(
+        _controller(CMKAgentUpdateSection(last_check=_AN_HOUR_AGO, error=error)),
+        None,
+        {**_UPDATE_PARAMS, "error_deployment_globally_disabled": 0},
+    )
+
+    assert Result(state=State.OK, summary=error) in results
+
+
+def test_a_host_excluded_from_deployment_gets_the_state_of_its_parameter() -> None:
+    """TC-AU-073: the refusal of a download for a host that the host selection excludes gets the
+    state of its parameter, not the WARN of any other update error"""
+    error = _refused_download(
+        "Agent updates are disabled for host name my-host:: On host name exclusion list."
+    )
+
+    results = _update_results(
+        _controller(CMKAgentUpdateSection(last_check=_AN_HOUR_AGO, error=error)),
+        None,
+        {**_UPDATE_PARAMS, "error_deployment_disabled_for_hostname": 0},
+    )
+
+    assert Result(state=State.OK, summary=error) in results
 
 
 def test_without_the_legacy_updater_the_details_name_the_stage_of_the_integrated_updater() -> None:

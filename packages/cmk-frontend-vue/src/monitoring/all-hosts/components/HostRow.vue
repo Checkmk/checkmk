@@ -31,6 +31,7 @@ import { formatDisplayTimestamp } from '@/monitoring/shared/formatTimestamp'
 import { hostServicesPageUrl } from '@/monitoring/shared/hostServicesPageUrl'
 import {
   contactCondition,
+  contactGroupCondition,
   groupCondition,
   labelCondition,
   tagCondition,
@@ -223,6 +224,7 @@ const lastStateChange = computed(() =>
     column-id="contact_groups"
     :items="contactGroups"
     size="small"
+    :filter-by="contactGroupCondition"
   />
   <LabelCell
     v-if="hasColumn('groups')"

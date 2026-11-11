@@ -581,6 +581,20 @@ test.each([
   })
 })
 
+test('clicking a contact group narrows the listing to the hosts assigned to it', async () => {
+  const service = makeListingService()
+  mountRow(makeHost({ contact_groups: ['linux', 'all'] }), makeTableRow(), {}, service)
+
+  await fireEvent.click(screen.getByRole('button', { name: 'linux' }))
+
+  expect(service.filterState.value).toStrictEqual({
+    type: 'condition',
+    field: 'contact_groups',
+    op: 'one_of',
+    value: ['linux']
+  })
+})
+
 test('host groups stay plain where there is no listing to narrow', () => {
   mountRow(makeHost({ groups: ['linux'] }))
 

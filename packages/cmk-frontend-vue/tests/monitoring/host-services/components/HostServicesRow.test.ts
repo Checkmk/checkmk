@@ -315,6 +315,20 @@ test('renders the tags of a service, sorted alphabetically', () => {
   ])
 })
 
+test('clicking a tag narrows the listing to the services carrying it', async () => {
+  const service = makeListingService()
+  mountRow(makeService({ tags: { criticality: 'prod' } }), makeTableRow(), {}, service)
+
+  await fireEvent.click(screen.getByRole('button', { name: 'criticality: prod' }))
+
+  expect(service.filterState.value).toStrictEqual({
+    type: 'condition',
+    field: 'tags',
+    op: 'all_of',
+    value: ['criticality:prod']
+  })
+})
+
 test('renders the labels of a service, sorted alphabetically', () => {
   const { container } = mountRow(
     makeService({

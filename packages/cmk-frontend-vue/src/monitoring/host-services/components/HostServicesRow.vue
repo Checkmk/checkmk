@@ -40,6 +40,7 @@ import { formatDisplayTimestamp } from '@/monitoring/shared/formatTimestamp'
 import {
   groupCondition,
   labelCondition,
+  tagCondition,
   toLabelItems,
   toNameItems,
   toTagItems
@@ -246,7 +247,13 @@ const serviceGroups = computed(() => toNameItems(props.row.groups ?? []))
     size="small"
     :filter-by="labelCondition"
   />
-  <LabelCell v-if="hasColumn('tags')" column-id="tags" :items="tags" size="small" />
+  <LabelCell
+    v-if="hasColumn('tags')"
+    column-id="tags"
+    :items="tags"
+    size="small"
+    :filter-by="tagCondition"
+  />
   <LabelCell v-if="hasColumn('contacts')" column-id="contacts" :items="contacts" size="small" />
   <LabelCell
     v-if="hasColumn('contact_groups')"

@@ -25,18 +25,25 @@ from .trees import (
     SDValue,
 )
 
+type _SDRawRetentionInterval = tuple[int, int, int, Literal["previous", "current"]]
+
+type _SDRawRetentionIntervals = Mapping[SDKey, _SDRawRetentionInterval]
+
+type _SDRawTableRetentions = (
+    Sequence[tuple[Sequence[SDValue], _SDRawRetentionIntervals]]
+    | Mapping[SDRowIdent, _SDRawRetentionIntervals]
+)
+
 
 class _SDRawAttributes(TypedDict, total=False):
     Pairs: Mapping[SDKey, SDValue]
-    Retentions: Mapping[SDKey, tuple[int, int, int, Literal["previous", "current"]]]
+    Retentions: _SDRawRetentionIntervals
 
 
 class _SDRawTable(TypedDict, total=False):
     KeyColumns: Sequence[SDKey]
     Rows: Sequence[Mapping[SDKey, SDValue]]
-    Retentions: Mapping[
-        SDRowIdent, Mapping[SDKey, tuple[int, int, int, Literal["previous", "current"]]]
-    ]
+    Retentions: _SDRawTableRetentions
 
 
 class SDRawTree(TypedDict):
@@ -62,7 +69,7 @@ class SDRawDeltaTree(TypedDict):
 
 def _serialize_retention_interval(
     retention_interval: RetentionInterval,
-) -> tuple[int, int, int, Literal["previous", "current"]]:
+) -> _SDRawRetentionInterval:
     return (
         retention_interval.cached_at,
         retention_interval.cache_interval,
@@ -98,10 +105,10 @@ def _serialize_table(
             }
         )
     if retentions:
-        raw_table["Retentions"] = {
-            i: {k: _serialize_retention_interval(v) for k, v in ri.items()}
+        raw_table["Retentions"] = [
+            (list(i), {k: _serialize_retention_interval(v) for k, v in ri.items()})
             for i, ri in retentions.items()
-        }
+        ]
     return raw_table
 
 
@@ -120,8 +127,7 @@ def _is_sd_value(value: object) -> TypeIs[SDValue]:
 
 
 def _deserialize_retention_interval(
-    raw_retention_interval: tuple[int, int, int]
-    | tuple[int, int, int, Literal["previous", "current"]],
+    raw_retention_interval: tuple[int, int, int] | _SDRawRetentionInterval,
 ) -> RetentionInterval:
     return (
         RetentionInterval(*raw_retention_interval)
@@ -140,6 +146,19 @@ def _deserialize_attributes(raw_attributes: _SDRawAttributes) -> ImmutableAttrib
     )
 
 
+def _deserialize_table_retentions(
+    raw_retentions: _SDRawTableRetentions,
+) -> Mapping[SDRowIdent, Mapping[SDKey, RetentionInterval]]:
+    raw_items = raw_retentions.items() if isinstance(raw_retentions, Mapping) else raw_retentions
+    return {
+        tuple(raw_ident): {
+            key: _deserialize_retention_interval(raw_retention_interval)
+            for key, raw_retention_interval in raw_intervals_by_key.items()
+        }
+        for raw_ident, raw_intervals_by_key in raw_items
+    }
+
+
 def _deserialize_table(raw_table: _SDRawTable) -> ImmutableTable:
     rows = raw_table.get("Rows", [])
     key_columns = raw_table.get("KeyColumns", [])
@@ -151,13 +170,7 @@ def _deserialize_table(raw_table: _SDRawTable) -> ImmutableTable:
     return ImmutableTable(
         key_columns=key_columns,
         rows_by_ident=rows_by_ident,
-        retentions={
-            ident: {
-                key: _deserialize_retention_interval(raw_retention_interval)
-                for key, raw_retention_interval in raw_intervals_by_key.items()
-            }
-            for ident, raw_intervals_by_key in raw_table.get("Retentions", {}).items()
-        },
+        retentions=_deserialize_table_retentions(raw_table.get("Retentions", [])),
     )
 
 

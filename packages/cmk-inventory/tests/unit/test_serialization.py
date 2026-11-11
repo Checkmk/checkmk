@@ -6,12 +6,12 @@
 import gzip
 import json
 from collections.abc import Mapping
-from typing import Literal
 
 import pytest
 
 from cmk.inventory.delta import compare_trees, ImmutableDeltaTree, SDDeltaValue
 from cmk.inventory.serialization import (
+    _SDRawRetentionInterval,
     deserialize_delta_cache_entry,
     deserialize_delta_tree,
     deserialize_tree,
@@ -27,6 +27,7 @@ from cmk.inventory.serialization import (
 )
 from cmk.inventory.trees import (
     ImmutableAttributes,
+    ImmutableTable,
     ImmutableTree,
     MutableTree,
     RetentionInterval,
@@ -327,9 +328,7 @@ def test_deserialize_a_legacy_tree() -> None:
     ],
 )
 def test_deserialize_retention_interval(
-    raw_retention_interval: (
-        tuple[int, int, int] | tuple[int, int, int, Literal["previous", "current"]]
-    ),
+    raw_retention_interval: tuple[int, int, int] | _SDRawRetentionInterval,
     expected_retention_interval: RetentionInterval,
 ) -> None:
     assert deserialize_tree(
@@ -350,11 +349,24 @@ def test_deserialize_retention_interval(
 )
 def test_serialize_retention_interval(
     retention_interval: RetentionInterval,
-    expected_raw_retention_interval: tuple[int, int, int, Literal["previous", "current"]],
+    expected_raw_retention_interval: _SDRawRetentionInterval,
 ) -> None:
     assert serialize_tree(
         ImmutableTree(attributes=ImmutableAttributes(retentions={SDKey("key"): retention_interval}))
     )["Attributes"]["Retentions"] == {SDKey("key"): expected_raw_retention_interval}
+
+
+def test_table_retentions_survive_json() -> None:
+    tree = ImmutableTree(
+        table=ImmutableTable(
+            key_columns=[SDKey("kc")],
+            rows_by_ident={("KC",): {SDKey("kc"): "KC", SDKey("c"): "C"}},
+            retentions={("KC",): {SDKey("c"): RetentionInterval(1, 2, 3, "previous")}},
+        )
+    )
+    assert deserialize_tree(json.loads(json.dumps(serialize_tree(tree)))).table.retentions == {
+        ("KC",): {SDKey("c"): RetentionInterval(1, 2, 3, "previous")}
+    }
 
 
 def test_deserialize_delta_tree_with_attributes_key() -> None:

@@ -51,7 +51,6 @@ def test_diagnose_via_an_unknown_site_reports_an_error(page: AjaxPage) -> None:
     assert "gone" in result["output"]
 
 
-@pytest.mark.xfail(strict=True, raises=KeyError, reason="crash group 4997: KeyError 'site_id'")
 @pytest.mark.parametrize(
     "page",
     [

@@ -9,7 +9,7 @@
 """Modes for creating and editing hosts"""
 
 import abc
-from collections.abc import Collection, Iterator, Sequence
+from collections.abc import Collection, Iterator, Mapping, Sequence
 from dataclasses import asdict
 from typing import cast, Final, Literal, overload, override
 from urllib.parse import unquote
@@ -1238,6 +1238,12 @@ class _SiteAjaxPage(AjaxPage):
             return None
         return _("Unknown site: %(site)s") % {"site": site_id}
 
+    @staticmethod
+    def _requested_site(api_request: Mapping[str, object]) -> SiteId:
+        if not isinstance(site_id := api_request.get("site_id"), str) or not site_id:
+            raise MKUserError("site_id", _("Please specify a site."))
+        return SiteId(site_id)
+
 
 class PageAjaxPingHost(_SiteAjaxPage):
     @override
@@ -1285,7 +1291,7 @@ class PageAjaxDiagCmkAgent(_SiteAjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
         api_request = ctx.request.get_request()
-        site_id = SiteId(api_request["site_id"])
+        site_id = self._requested_site(api_request)
         if (error := self._unknown_site_error(ctx, site_id)) is not None:
             return {"status_code": 99, "output": error}
         result = diag_cmk_agent(
@@ -1310,7 +1316,7 @@ class PageAjaxDiagSnmp(_SiteAjaxPage):
     @override
     def page(self, ctx: PageContext) -> PageResult:
         api_request = ctx.request.get_request()
-        site_id = SiteId(api_request["site_id"])
+        site_id = self._requested_site(api_request)
         if (error := self._unknown_site_error(ctx, site_id)) is not None:
             return {"status_code": 99, "output": error}
 

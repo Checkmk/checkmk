@@ -8,8 +8,7 @@ import { type ComputedRef, type WritableComputedRef, computed } from 'vue'
 
 export const DEFAULT_QUANTILE = 0.95
 
-// The rule form spec's own defaults, for the aggregation parameters a consolidation does not carry.
-export const DEFAULT_HISTOGRAM_PERCENTILE = DEFAULT_QUANTILE * 100
+// Stored for a threshold whose input is blank.
 export const DEFAULT_THRESHOLD_FOR_FRACTION_BELOW = 0
 export const DEFAULT_LOWER_THRESHOLD_FOR_FRACTION_BETWEEN = 0
 export const DEFAULT_UPPER_THRESHOLD_FOR_FRACTION_BETWEEN = 100

@@ -10,36 +10,39 @@ import { defineComponent, nextTick, ref } from 'vue'
 import type { ValidationMessages } from '@/form'
 
 import FormTelemetryMetricsConsolidation from '@/telemetry-metrics/FormTelemetryMetricsConsolidation.vue'
-import type { ConsolidationFunction } from '@/telemetry-metrics/consolidation/types'
+import type { ConsolidationModel } from '@/telemetry-metrics/consolidation/types'
 
 afterEach(cleanup)
 
+const GAUGE_LAST: ConsolidationModel = {
+  type: 'gauge',
+  function: 'gauge_last',
+  params: {},
+  lookbackSeconds: 120
+}
+const SUM_RATE: ConsolidationModel = {
+  type: 'sum',
+  function: 'sum_rate',
+  params: {},
+  lookbackSeconds: 120
+}
+const HISTOGRAM_PRESERVE: ConsolidationModel = {
+  type: 'histogram',
+  function: 'histogram_preserve',
+  params: {},
+  lookbackSeconds: 120
+}
+
 function renderConsolidation(initial: {
-  aggregationLookback?: number
-  aggregationHistogramPercentile?: number
-  aggregationHistogramThresholdForFractionBelow?: number
-  aggregationHistogramLowerThresholdForFractionBetween?: number
-  aggregationHistogramUpperThresholdForFractionBetween?: number
+  consolidation: ConsolidationModel
   metricTypes?: string[]
   metricName?: string | null
-  consolidationFunction?: ConsolidationFunction | null
   backendValidation?: ValidationMessages
 }) {
   const models = {
-    aggregationLookback: ref(initial.aggregationLookback ?? 120),
-    aggregationHistogramPercentile: ref(initial.aggregationHistogramPercentile ?? 90),
-    aggregationHistogramThresholdForFractionBelow: ref(
-      initial.aggregationHistogramThresholdForFractionBelow ?? 0
-    ),
-    aggregationHistogramLowerThresholdForFractionBetween: ref(
-      initial.aggregationHistogramLowerThresholdForFractionBetween ?? 0
-    ),
-    aggregationHistogramUpperThresholdForFractionBetween: ref(
-      initial.aggregationHistogramUpperThresholdForFractionBetween ?? 100
-    ),
+    consolidation: ref<ConsolidationModel>(initial.consolidation),
     metricTypes: ref(initial.metricTypes ?? []),
     metricName: ref<string | null>(initial.metricName ?? null),
-    consolidationFunction: ref<ConsolidationFunction | null>(initial.consolidationFunction ?? null),
     backendValidation: ref<ValidationMessages>(initial.backendValidation ?? [])
   }
   const wrapper = defineComponent({
@@ -49,18 +52,7 @@ function renderConsolidation(initial: {
     },
     template: `
       <FormTelemetryMetricsConsolidation
-        v-model:aggregation-lookback="models.aggregationLookback.value"
-        v-model:aggregation-histogram-percentile="models.aggregationHistogramPercentile.value"
-        v-model:aggregation-histogram-threshold-for-fraction-below="
-          models.aggregationHistogramThresholdForFractionBelow.value
-        "
-        v-model:aggregation-histogram-lower-threshold-for-fraction-between="
-          models.aggregationHistogramLowerThresholdForFractionBetween.value
-        "
-        v-model:aggregation-histogram-upper-threshold-for-fraction-between="
-          models.aggregationHistogramUpperThresholdForFractionBetween.value
-        "
-        v-model:consolidation-function="models.consolidationFunction.value"
+        v-model:consolidation="models.consolidation.value"
         v-model:backend-validation="models.backendValidation.value"
         :metric-types="models.metricTypes.value"
         :metric-name="models.metricName.value"
@@ -76,11 +68,8 @@ function chip() {
   return screen.getByRole('button', { name: /Edit consolidation/ })
 }
 
-test('a histogram metric defaults to preserve histograms', () => {
-  renderConsolidation({
-    aggregationLookback: 120,
-    metricTypes: ['histogram']
-  })
+test('the chip shows the stored type, function and lookback', () => {
+  renderConsolidation({ consolidation: HISTOGRAM_PRESERVE, metricTypes: ['histogram'] })
 
   expect(chip()).toHaveTextContent('[histogram]')
   expect(chip()).toHaveTextContent('preserve histograms')
@@ -88,9 +77,8 @@ test('a histogram metric defaults to preserve histograms', () => {
 })
 
 test('picking the quantile function seeds the default percentile', async () => {
-  renderConsolidation({
-    aggregationLookback: 120,
-    aggregationHistogramPercentile: 90,
+  const models = renderConsolidation({
+    consolidation: HISTOGRAM_PRESERVE,
     metricTypes: ['histogram']
   })
 
@@ -99,25 +87,27 @@ test('picking the quantile function seeds the default percentile', async () => {
   await userEvent.click(await screen.findByRole('option', { name: 'Quantile' }))
   await userEvent.keyboard('{Escape}')
 
-  // A freshly picked function seeds its own default (95 %); it does not inherit
-  // whatever percentile happened to be stored from a previous function.
   expect(chip()).toHaveTextContent('p95')
+  await waitFor(() =>
+    expect(models.consolidation.value).toMatchObject({
+      function: 'histogram_quantile',
+      params: { quantile: 0.95 }
+    })
+  )
 })
 
 test('a sum metric shows the rate function and no quantile input', async () => {
-  const models = renderConsolidation({ metricTypes: ['sum'] })
+  renderConsolidation({ consolidation: SUM_RATE, metricTypes: ['sum'] })
 
   expect(chip()).toHaveTextContent('[sum]')
   expect(chip()).toHaveTextContent('rate')
 
   await userEvent.click(chip())
   expect(screen.queryByLabelText('Quantile (0 to 1)')).toBeNull()
-  // A non-histogram type leaves the stored percentile untouched.
-  expect(models.aggregationHistogramPercentile.value).toBe(90)
 })
 
 test('a sum metric offers the rate, last-recorded-raw and delta functions', async () => {
-  renderConsolidation({ metricTypes: ['sum'] })
+  renderConsolidation({ consolidation: SUM_RATE, metricTypes: ['sum'] })
 
   await userEvent.click(chip())
   await userEvent.click(screen.getByRole('combobox', { name: 'Consolidation function' }))
@@ -129,15 +119,8 @@ test('a sum metric offers the rate, last-recorded-raw and delta functions', asyn
   })
 })
 
-test('a gauge metric shows the last-value function by default', () => {
-  renderConsolidation({ metricTypes: ['gauge'] })
-
-  expect(chip()).toHaveTextContent('[gauge]')
-  expect(chip()).toHaveTextContent('last')
-})
-
 test('a gauge metric offers the last, max, avg and min functions', async () => {
-  renderConsolidation({ metricTypes: ['gauge'] })
+  renderConsolidation({ consolidation: GAUGE_LAST, metricTypes: ['gauge'] })
 
   await userEvent.click(chip())
   await userEvent.click(screen.getByRole('combobox', { name: 'Consolidation function' }))
@@ -151,7 +134,7 @@ test('a gauge metric offers the last, max, avg and min functions', async () => {
 })
 
 test('a histogram metric offers the preserve histograms, quantile, count delta, count rate, sum rate, sum delta, fraction below, fraction between and cumulative sum field functions', async () => {
-  renderConsolidation({ metricTypes: ['histogram'] })
+  renderConsolidation({ consolidation: HISTOGRAM_PRESERVE, metricTypes: ['histogram'] })
 
   await userEvent.click(chip())
   await userEvent.click(screen.getByRole('combobox', { name: 'Consolidation function' }))
@@ -170,7 +153,7 @@ test('a histogram metric offers the preserve histograms, quantile, count delta, 
 })
 
 test('editing the lookback writes back to the aggregation-lookback model', async () => {
-  const models = renderConsolidation({ aggregationLookback: 120, metricTypes: ['sum'] })
+  const models = renderConsolidation({ consolidation: SUM_RATE, metricTypes: ['sum'] })
 
   await userEvent.click(chip())
   const minutes = screen.getByLabelText('Lookback Minutes')
@@ -178,11 +161,11 @@ test('editing the lookback writes back to the aggregation-lookback model', async
   await userEvent.type(minutes, '5')
   await userEvent.keyboard('{Escape}')
 
-  await waitFor(() => expect(models.aggregationLookback.value).toBe(300))
+  await waitFor(() => expect(models.consolidation.value.lookbackSeconds).toBe(300))
 })
 
 test('a negative lookback surfaces its message and blocks leaving', async () => {
-  renderConsolidation({ aggregationLookback: 120, metricTypes: ['sum'] })
+  renderConsolidation({ consolidation: SUM_RATE, metricTypes: ['sum'] })
 
   await userEvent.click(chip())
   const minutes = screen.getByLabelText('Lookback Minutes')
@@ -194,9 +177,9 @@ test('a negative lookback surfaces its message and blocks leaving', async () => 
   expect(screen.getByLabelText('Lookback Minutes')).toBeVisible()
 })
 
-test('editing the quantile writes the percentile back as a percentage', async () => {
+test('editing the quantile writes it back with its function', async () => {
   const models = renderConsolidation({
-    aggregationHistogramPercentile: 90,
+    consolidation: HISTOGRAM_PRESERVE,
     metricTypes: ['histogram']
   })
 
@@ -209,12 +192,17 @@ test('editing the quantile writes the percentile back as a percentage', async ()
   await userEvent.type(quantile, '0.5')
   await userEvent.keyboard('{Escape}')
 
-  await waitFor(() => expect(models.aggregationHistogramPercentile.value).toBe(50))
+  await waitFor(() =>
+    expect(models.consolidation.value).toMatchObject({
+      function: 'histogram_quantile',
+      params: { quantile: 0.5 }
+    })
+  )
 })
 
-test('editing the fraction-below threshold writes it back to its model', async () => {
+test('editing the fraction-below threshold writes it back with its function', async () => {
   const models = renderConsolidation({
-    aggregationHistogramThresholdForFractionBelow: 0,
+    consolidation: HISTOGRAM_PRESERVE,
     metricTypes: ['histogram']
   })
 
@@ -227,13 +215,17 @@ test('editing the fraction-below threshold writes it back to its model', async (
   await userEvent.type(threshold, '42')
   await userEvent.keyboard('{Escape}')
 
-  await waitFor(() => expect(models.aggregationHistogramThresholdForFractionBelow.value).toBe(42))
+  await waitFor(() =>
+    expect(models.consolidation.value).toMatchObject({
+      function: 'histogram_fraction_below',
+      params: { fractionBelowThreshold: 42 }
+    })
+  )
 })
 
-test('editing the fraction-between thresholds writes them back to their models', async () => {
+test('editing the fraction-between thresholds writes them back with their function', async () => {
   const models = renderConsolidation({
-    aggregationHistogramLowerThresholdForFractionBetween: 0,
-    aggregationHistogramUpperThresholdForFractionBetween: 100,
+    consolidation: HISTOGRAM_PRESERVE,
     metricTypes: ['histogram']
   })
 
@@ -249,17 +241,19 @@ test('editing the fraction-between thresholds writes them back to their models',
   await userEvent.type(upper, '20')
   await userEvent.keyboard('{Escape}')
 
-  await waitFor(() => {
-    expect(models.aggregationHistogramLowerThresholdForFractionBetween.value).toBe(10)
-    expect(models.aggregationHistogramUpperThresholdForFractionBetween.value).toBe(20)
-  })
+  await waitFor(() =>
+    expect(models.consolidation.value).toMatchObject({
+      function: 'histogram_fraction_between',
+      params: { fractionLowerThreshold: 10, fractionUpperThreshold: 20 }
+    })
+  )
 })
 
 test('resolving a loaded metric leaves the stored consolidation untouched', async () => {
   const models = renderConsolidation({
     metricName: 'test.request.duration',
     metricTypes: [],
-    consolidationFunction: { type: 'gauge', function: 'gauge_last' }
+    consolidation: GAUGE_LAST
   })
 
   models.metricTypes.value = ['histogram']
@@ -271,7 +265,7 @@ test('resolving a loaded metric leaves the stored consolidation untouched', asyn
 
 test.each<{
   scenario: string
-  consolidationFunction: ConsolidationFunction
+  consolidation: ConsolidationModel
   load: 'name-first' | 'types-first'
   resolvedTypes: string[]
   expectedType: string
@@ -279,7 +273,7 @@ test.each<{
 }>([
   {
     scenario: 'resets a now-unsupported consolidation to the new type default',
-    consolidationFunction: { type: 'gauge', function: 'gauge_last' },
+    consolidation: GAUGE_LAST,
     load: 'name-first',
     resolvedTypes: ['sum'],
     expectedType: '[sum]',
@@ -287,7 +281,7 @@ test.each<{
   },
   {
     scenario: 'keeps a consolidation the new type still supports',
-    consolidationFunction: { type: 'gauge', function: 'gauge_max' },
+    consolidation: { ...GAUGE_LAST, function: 'gauge_max' },
     load: 'name-first',
     resolvedTypes: ['gauge'],
     expectedType: '[gauge]',
@@ -295,7 +289,7 @@ test.each<{
   },
   {
     scenario: 'resets when the type list resolves before the name',
-    consolidationFunction: { type: 'gauge', function: 'gauge_last' },
+    consolidation: GAUGE_LAST,
     load: 'types-first',
     resolvedTypes: ['sum'],
     expectedType: '[sum]',
@@ -303,11 +297,11 @@ test.each<{
   }
 ])(
   'picking a new metric $scenario',
-  async ({ consolidationFunction, load, resolvedTypes, expectedType, expectedFunction }) => {
+  async ({ consolidation, load, resolvedTypes, expectedType, expectedFunction }) => {
     const models = renderConsolidation({
       metricName: 'old.metric',
       metricTypes: ['gauge'],
-      consolidationFunction
+      consolidation
     })
 
     const setName = () => {
@@ -328,7 +322,10 @@ test.each<{
 )
 
 test('backend validation for the lookback is surfaced and its replacement applied', async () => {
-  const models = renderConsolidation({ aggregationLookback: 0, metricTypes: ['sum'] })
+  const models = renderConsolidation({
+    consolidation: { ...SUM_RATE, lookbackSeconds: 0 },
+    metricTypes: ['sum']
+  })
 
   models.backendValidation.value = [
     {
@@ -348,13 +345,17 @@ test('backend validation for the lookback is surfaced and its replacement applie
   await nextTick()
 
   expect(await screen.findByText('Aggregation lookback must be at least 1 second.')).toBeVisible()
-  expect(models.aggregationLookback.value).toBe(1)
+  expect(models.consolidation.value.lookbackSeconds).toBe(1)
 })
 
 test('backend validation for the fraction-between lower threshold is surfaced and its replacement applied', async () => {
   const models = renderConsolidation({
-    aggregationHistogramLowerThresholdForFractionBetween: 50,
-    aggregationHistogramUpperThresholdForFractionBetween: 10,
+    consolidation: {
+      type: 'histogram',
+      function: 'histogram_fraction_between',
+      params: { fractionLowerThreshold: 50, fractionUpperThreshold: 10 },
+      lookbackSeconds: 120
+    },
     metricTypes: ['histogram']
   })
 
@@ -381,6 +382,8 @@ test('backend validation for the fraction-between lower threshold is surfaced an
   expect(
     await screen.findByText('The lower threshold must be below the upper threshold.')
   ).toBeVisible()
-  expect(models.aggregationHistogramLowerThresholdForFractionBetween.value).toBe(5)
-  expect(models.aggregationHistogramUpperThresholdForFractionBetween.value).toBe(10)
+  expect(models.consolidation.value.params).toEqual({
+    fractionLowerThreshold: 5,
+    fractionUpperThreshold: 10
+  })
 })

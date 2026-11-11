@@ -16,7 +16,13 @@ import FormTelemetryMetricsAttributes from '@/telemetry-metrics/FormTelemetryMet
 import FormTelemetryMetricsConsolidation from '@/telemetry-metrics/FormTelemetryMetricsConsolidation.vue'
 import { buildAutocompleteContext } from '@/telemetry-metrics/attributeFilterAdapter'
 import { useAttributeKeySuggestions } from '@/telemetry-metrics/attributeKeySuggestions'
-import { type ConsolidationFunction, outputType } from '@/telemetry-metrics/consolidation/types'
+import {
+  type ConsolidationFunction,
+  type ConsolidationModel,
+  type ConsolidationParams,
+  consolidationFunctionOf,
+  outputType
+} from '@/telemetry-metrics/consolidation/types'
 import FormGroupBy from '@/telemetry-metrics/group-by/FormGroupBy.vue'
 import GroupByThenSteps from '@/telemetry-metrics/group-by/GroupByThenSteps.vue'
 import {
@@ -40,8 +46,8 @@ import {
   percentileGroupBy
 } from '@/telemetry-metrics/group-by/wire'
 import {
-  DEFAULT_HISTOGRAM_PERCENTILE,
   DEFAULT_LOWER_THRESHOLD_FOR_FRACTION_BETWEEN,
+  DEFAULT_QUANTILE,
   DEFAULT_THRESHOLD_FOR_FRACTION_BELOW,
   DEFAULT_UPPER_THRESHOLD_FOR_FRACTION_BETWEEN
 } from '@/telemetry-metrics/histogram-params'
@@ -197,75 +203,47 @@ const attributeFilter = computed<AttributeFilter | undefined>({
     store.replace({ ...item, attribute_filter: value ?? { type: 'and', conjuncts: [] } })
 })
 
-function storeCurrentWith(overrides: {
-  lookbackSeconds?: number
-  percentile?: number
-  thresholdForFractionBelow?: number
-  lowerThresholdForFractionBetween?: number
-  upperThresholdForFractionBetween?: number
-  consolidationFunction?: ConsolidationFunction
-}): void {
-  const consolidation = overrides.consolidationFunction ?? consolidationFunction.value
-  const inputType = outputType(consolidation.type, consolidation.function)
-  const group = groupByForInputType(inputType, groupBy.value)
+function paramsFromStored(stored: Consolidation): ConsolidationParams {
+  switch (stored.type) {
+    case 'histogram_quantile':
+      return { quantile: stored.percentile / 100 }
+    case 'histogram_fraction_below':
+      return { fractionBelowThreshold: stored.threshold }
+    case 'histogram_fraction_between':
+      return {
+        fractionLowerThreshold: stored.lower_threshold,
+        fractionUpperThreshold: stored.upper_threshold
+      }
+    default:
+      return {}
+  }
+}
+
+function storeConsolidation(model: ConsolidationModel): void {
+  const group = groupByForInputType(outputType(model.type, model.function), groupBy.value)
   const stored = toStored(
-    consolidation,
-    overrides.lookbackSeconds ?? aggregationLookback.value,
-    overrides.percentile ?? aggregationHistogramPercentile.value,
-    overrides.thresholdForFractionBelow ?? aggregationHistogramThresholdForFractionBelow.value,
-    overrides.lowerThresholdForFractionBetween ??
-      aggregationHistogramLowerThresholdForFractionBetween.value,
-    overrides.upperThresholdForFractionBetween ??
-      aggregationHistogramUpperThresholdForFractionBetween.value,
+    consolidationFunctionOf(model),
+    model.lookbackSeconds,
+    (model.params.quantile ?? DEFAULT_QUANTILE) * 100,
+    model.params.fractionBelowThreshold ?? DEFAULT_THRESHOLD_FOR_FRACTION_BELOW,
+    model.params.fractionLowerThreshold ?? DEFAULT_LOWER_THRESHOLD_FOR_FRACTION_BETWEEN,
+    model.params.fractionUpperThreshold ?? DEFAULT_UPPER_THRESHOLD_FOR_FRACTION_BETWEEN,
     group
   )
   persist(stored, aggregatorFromGroupBy(group, thenSteps.value))
 }
 
-const aggregationLookback = computed<number>({
-  get: () => item.consolidation_function.lookback_seconds,
-  set: (value) => storeCurrentWith({ lookbackSeconds: value })
-})
-
-const aggregationHistogramPercentile = computed<number>({
-  get: () =>
-    item.consolidation_function.type === 'histogram_quantile'
-      ? item.consolidation_function.percentile
-      : DEFAULT_HISTOGRAM_PERCENTILE,
-  set: (value) => storeCurrentWith({ percentile: value })
-})
-
-const aggregationHistogramThresholdForFractionBelow = computed<number>({
-  get: () =>
-    item.consolidation_function.type === 'histogram_fraction_below'
-      ? item.consolidation_function.threshold
-      : DEFAULT_THRESHOLD_FOR_FRACTION_BELOW,
-  set: (value) => storeCurrentWith({ thresholdForFractionBelow: value })
-})
-
-const aggregationHistogramLowerThresholdForFractionBetween = computed<number>({
-  get: () =>
-    item.consolidation_function.type === 'histogram_fraction_between'
-      ? item.consolidation_function.lower_threshold
-      : DEFAULT_LOWER_THRESHOLD_FOR_FRACTION_BETWEEN,
-  set: (value) => storeCurrentWith({ lowerThresholdForFractionBetween: value })
-})
-
-const aggregationHistogramUpperThresholdForFractionBetween = computed<number>({
-  get: () =>
-    item.consolidation_function.type === 'histogram_fraction_between'
-      ? item.consolidation_function.upper_threshold
-      : DEFAULT_UPPER_THRESHOLD_FOR_FRACTION_BETWEEN,
-  set: (value) => storeCurrentWith({ upperThresholdForFractionBetween: value })
-})
-
-const consolidationFunction = computed<ConsolidationFunction>({
-  get: () => toPicker(item.consolidation_function),
-  set: (value) => storeCurrentWith({ consolidationFunction: value })
+const consolidationModel = computed<ConsolidationModel>({
+  get: () => ({
+    ...toPicker(item.consolidation_function),
+    params: paramsFromStored(item.consolidation_function),
+    lookbackSeconds: item.consolidation_function.lookback_seconds
+  }),
+  set: storeConsolidation
 })
 
 const groupByInputType = computed<GroupByInputType>(() =>
-  outputType(consolidationFunction.value.type, consolidationFunction.value.function)
+  outputType(consolidationModel.value.type, consolidationModel.value.function)
 )
 
 // The draft the widget edits, not a view of the stored value: an empty pill (a key the
@@ -296,7 +274,7 @@ function storedGroupBy(): GroupByModel {
   }
 }
 
-watch([groupBy, thenSteps], () => storeCurrentWith({}))
+watch([groupBy, thenSteps], () => storeConsolidation(consolidationModel.value))
 
 // The group-by pills pick from the same attribute keys as the where clause.
 const { querySuggestions: groupByQuerySuggestions, suggestionRevision: groupBySuggestionRevision } =
@@ -342,18 +320,7 @@ const { querySuggestions: groupByQuerySuggestions, suggestionRevision: groupBySu
           :validation="consolidationErrors"
         />
         <FormTelemetryMetricsConsolidation
-          v-model:aggregation-lookback="aggregationLookback"
-          v-model:aggregation-histogram-percentile="aggregationHistogramPercentile"
-          v-model:aggregation-histogram-threshold-for-fraction-below="
-            aggregationHistogramThresholdForFractionBelow
-          "
-          v-model:aggregation-histogram-lower-threshold-for-fraction-between="
-            aggregationHistogramLowerThresholdForFractionBetween
-          "
-          v-model:aggregation-histogram-upper-threshold-for-fraction-between="
-            aggregationHistogramUpperThresholdForFractionBetween
-          "
-          v-model:consolidation-function="consolidationFunction"
+          v-model:consolidation="consolidationModel"
           :label="_t('Then consolidate by: consolidation function and lookback')"
           :metric-types="metricTypes"
           :metric-name="metricName"

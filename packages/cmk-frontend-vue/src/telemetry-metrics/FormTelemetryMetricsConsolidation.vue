@@ -17,17 +17,9 @@ import FormConsolidation from '@/telemetry-metrics/consolidation/FormConsolidati
 import {
   DEFAULT_QUANTILE,
   METRIC_TYPES,
-  consolidationFunctionOf,
   defaultFunction
 } from '@/telemetry-metrics/consolidation/types'
-import type {
-  ConsolidationFunction,
-  ConsolidationModel,
-  MetricType
-} from '@/telemetry-metrics/consolidation/types'
-
-// Fall back to histogram before the type resolves so the percentile stays reachable.
-const FALLBACK_TYPE: MetricType = 'histogram'
+import type { ConsolidationModel, MetricType } from '@/telemetry-metrics/consolidation/types'
 
 const props = defineProps<{
   label: TranslatedString
@@ -36,25 +28,7 @@ const props = defineProps<{
 }>()
 
 const backendValidation = defineModel<ValidationMessages>('backendValidation', { default: [] })
-const aggregationLookback = defineModel<number>('aggregationLookback', { required: true })
-const aggregationHistogramPercentile = defineModel<number>('aggregationHistogramPercentile', {
-  required: true
-})
-const aggregationHistogramThresholdForFractionBelow = defineModel<number>(
-  'aggregationHistogramThresholdForFractionBelow',
-  { required: true }
-)
-const aggregationHistogramLowerThresholdForFractionBetween = defineModel<number>(
-  'aggregationHistogramLowerThresholdForFractionBetween',
-  { required: true }
-)
-const aggregationHistogramUpperThresholdForFractionBetween = defineModel<number>(
-  'aggregationHistogramUpperThresholdForFractionBetween',
-  { required: true }
-)
-const consolidationFunction = defineModel<ConsolidationFunction | null>('consolidationFunction', {
-  default: null
-})
+const consolidation = defineModel<ConsolidationModel>('consolidation', { required: true })
 
 function isMetricType(value: string): value is MetricType {
   return (METRIC_TYPES as readonly string[]).includes(value)
@@ -62,35 +36,13 @@ function isMetricType(value: string): value is MetricType {
 
 const availableTypes = computed<MetricType[]>(() => props.metricTypes.filter(isMetricType))
 
-// A previously persisted function pick wins; only a line without one yet (new or old
-// saved data) falls back to deriving from the metric's first available type.
-function paramsFor(fn: ConsolidationFunction): ConsolidationModel['params'] {
-  switch (fn.function) {
-    case 'histogram_quantile':
-      return { quantile: aggregationHistogramPercentile.value / 100 }
-    case 'histogram_fraction_below':
-      return { fractionBelowThreshold: aggregationHistogramThresholdForFractionBelow.value }
-    case 'histogram_fraction_between':
-      return {
-        fractionLowerThreshold: aggregationHistogramLowerThresholdForFractionBetween.value,
-        fractionUpperThreshold: aggregationHistogramUpperThresholdForFractionBetween.value
-      }
-    default:
-      return {}
-  }
+function copyOf(value: ConsolidationModel): ConsolidationModel {
+  return { ...value, params: { ...value.params } }
 }
 
-function buildModel(): ConsolidationModel {
-  const fn =
-    consolidationFunction.value ?? defaultFunction(availableTypes.value[0] ?? FALLBACK_TYPE)
-  return {
-    ...fn,
-    params: paramsFor(fn),
-    lookbackSeconds: aggregationLookback.value
-  }
-}
-
-const model = ref<ConsolidationModel>(buildModel())
+// The draft the widget edits, not a view of the stored value: a blank parameter cannot be
+// stored, so reading the model back would refill an input the user has just cleared.
+const model = ref<ConsolidationModel>(copyOf(consolidation.value))
 
 // name and resolved types settle in an unpredictable order, so both watches drive the reset.
 const pendingMetricReset = ref(false)
@@ -122,57 +74,58 @@ watch(
 )
 watch(availableTypes, () => applyPendingReset(true))
 
-// Mirror the editable pill values back to the persisted fields. Each param
-// belongs to its own function only, so other types leave it untouched.
+// One write for the whole value: a parent rebuilds what it stores from every part, so a
+// function and its parameters arriving separately would each be paired with a stale sibling.
 watch(
   model,
   (value) => {
-    if (value.lookbackSeconds !== aggregationLookback.value) {
-      aggregationLookback.value = value.lookbackSeconds
-    }
-    if (value.function === 'histogram_quantile' && value.params.quantile !== undefined) {
-      const percentile = value.params.quantile * 100
-      if (percentile !== aggregationHistogramPercentile.value) {
-        aggregationHistogramPercentile.value = percentile
-      }
-    }
-    if (
-      value.function === 'histogram_fraction_below' &&
-      value.params.fractionBelowThreshold !== undefined &&
-      value.params.fractionBelowThreshold !== aggregationHistogramThresholdForFractionBelow.value
-    ) {
-      aggregationHistogramThresholdForFractionBelow.value = value.params.fractionBelowThreshold
-    }
-    if (value.function === 'histogram_fraction_between') {
-      if (
-        value.params.fractionLowerThreshold !== undefined &&
-        value.params.fractionLowerThreshold !==
-          aggregationHistogramLowerThresholdForFractionBetween.value
-      ) {
-        aggregationHistogramLowerThresholdForFractionBetween.value =
-          value.params.fractionLowerThreshold
-      }
-      if (
-        value.params.fractionUpperThreshold !== undefined &&
-        value.params.fractionUpperThreshold !==
-          aggregationHistogramUpperThresholdForFractionBetween.value
-      ) {
-        aggregationHistogramUpperThresholdForFractionBetween.value =
-          value.params.fractionUpperThreshold
-      }
-    }
-    const fn = consolidationFunctionOf(value)
-    if (
-      fn.type !== consolidationFunction.value?.type ||
-      fn.function !== consolidationFunction.value?.function
-    ) {
-      consolidationFunction.value = fn
-    }
+    consolidation.value = copyOf(value)
   },
   { deep: true }
 )
 
 const validationMessages = ref<string[]>([])
+
+function withReplacement(
+  current: ConsolidationModel,
+  location: string | undefined,
+  replacement: TelemetryMetricsCustomQuery
+): ConsolidationModel {
+  const withParams = (params: ConsolidationModel['params']): ConsolidationModel => ({
+    ...current,
+    params: { ...current.params, ...params }
+  })
+  switch (location) {
+    case 'aggregation_lookback':
+      return { ...current, lookbackSeconds: replacement.aggregation_lookback }
+    case 'aggregation_histogram_percentile':
+      return current.function === 'histogram_quantile'
+        ? withParams({ quantile: replacement.aggregation_histogram_percentile / 100 })
+        : current
+    case 'aggregation_histogram_threshold_for_fraction_below':
+      return current.function === 'histogram_fraction_below'
+        ? withParams({
+            fractionBelowThreshold: replacement.aggregation_histogram_threshold_for_fraction_below
+          })
+        : current
+    case 'aggregation_histogram_lower_threshold_for_fraction_between':
+      return current.function === 'histogram_fraction_between'
+        ? withParams({
+            fractionLowerThreshold:
+              replacement.aggregation_histogram_lower_threshold_for_fraction_between
+          })
+        : current
+    case 'aggregation_histogram_upper_threshold_for_fraction_between':
+      return current.function === 'histogram_fraction_between'
+        ? withParams({
+            fractionUpperThreshold:
+              replacement.aggregation_histogram_upper_threshold_for_fraction_between
+          })
+        : current
+    default:
+      return current
+  }
+}
 
 const VALIDATED_LOCATIONS = [
   'aggregation_lookback',
@@ -192,31 +145,12 @@ immediateWatch(
         return
       }
       validationMessages.value.push(message.message)
-      const replacement = message.replacement_value as TelemetryMetricsCustomQuery
-      switch (location) {
-        case 'aggregation_lookback':
-          aggregationLookback.value = replacement.aggregation_lookback
-          break
-        case 'aggregation_histogram_percentile':
-          aggregationHistogramPercentile.value = replacement.aggregation_histogram_percentile
-          break
-        case 'aggregation_histogram_threshold_for_fraction_below':
-          aggregationHistogramThresholdForFractionBelow.value =
-            replacement.aggregation_histogram_threshold_for_fraction_below
-          break
-        case 'aggregation_histogram_lower_threshold_for_fraction_between':
-          aggregationHistogramLowerThresholdForFractionBetween.value =
-            replacement.aggregation_histogram_lower_threshold_for_fraction_between
-          break
-        case 'aggregation_histogram_upper_threshold_for_fraction_between':
-          aggregationHistogramUpperThresholdForFractionBetween.value =
-            replacement.aggregation_histogram_upper_threshold_for_fraction_between
-          break
-      }
+      model.value = withReplacement(
+        model.value,
+        location,
+        message.replacement_value as TelemetryMetricsCustomQuery
+      )
     })
-    if (validationMessages.value.length > 0) {
-      model.value = buildModel()
-    }
   }
 )
 </script>

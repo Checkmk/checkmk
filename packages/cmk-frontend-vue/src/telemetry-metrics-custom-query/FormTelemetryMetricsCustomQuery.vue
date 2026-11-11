@@ -24,7 +24,11 @@ import FormTelemetryMetricsAttributes from '@/telemetry-metrics/FormTelemetryMet
 import FormTelemetryMetricsConsolidation from '@/telemetry-metrics/FormTelemetryMetricsConsolidation.vue'
 import { buildAutocompleteContext } from '@/telemetry-metrics/attributeFilterAdapter'
 import { useAttributeKeySuggestions } from '@/telemetry-metrics/attributeKeySuggestions'
-import { type ConsolidationFunction, outputType } from '@/telemetry-metrics/consolidation/types'
+import {
+  type ConsolidationModel,
+  consolidationFunctionOf,
+  outputType
+} from '@/telemetry-metrics/consolidation/types'
 import FormGroupBy from '@/telemetry-metrics/group-by/FormGroupBy.vue'
 import GroupByThenSteps from '@/telemetry-metrics/group-by/GroupByThenSteps.vue'
 import {
@@ -43,13 +47,13 @@ import {
   percentileGroupBy
 } from '@/telemetry-metrics/group-by/wire'
 import {
-  DEFAULT_HISTOGRAM_PERCENTILE,
   DEFAULT_LOWER_THRESHOLD_FOR_FRACTION_BETWEEN,
+  DEFAULT_QUANTILE,
   DEFAULT_THRESHOLD_FOR_FRACTION_BELOW,
   DEFAULT_UPPER_THRESHOLD_FOR_FRACTION_BETWEEN
 } from '@/telemetry-metrics/histogram-params'
 
-import { buildConsolidationFunction, consolidationFunctionFromWire } from './consolidation'
+import { buildConsolidationFunction, consolidationModelFromWire } from './consolidation'
 
 const { _t } = usei18n()
 
@@ -90,61 +94,6 @@ const consolidation = defineModel<WireConsolidationFunction>('consolidation', { 
 // Float grouping rides this sibling; histogram grouping stays embedded in the consolidation.
 const aggregator = defineModel<Aggregator | undefined>('aggregator', { default: undefined })
 
-const aggregationLookback = computed<number>({
-  get: () => consolidation.value.lookback_seconds,
-  set: (value) => {
-    consolidation.value = { ...consolidation.value, lookback_seconds: value }
-  }
-})
-
-const aggregationHistogramPercentile = computed<number>({
-  get: () =>
-    consolidation.value.function === 'histogram_quantile'
-      ? consolidation.value.percentile
-      : DEFAULT_HISTOGRAM_PERCENTILE,
-  set: (value) => {
-    if (consolidation.value.function === 'histogram_quantile') {
-      consolidation.value = { ...consolidation.value, percentile: value }
-    }
-  }
-})
-
-const aggregationHistogramThresholdForFractionBelow = computed<number>({
-  get: () =>
-    consolidation.value.function === 'histogram_fraction_below'
-      ? consolidation.value.threshold
-      : DEFAULT_THRESHOLD_FOR_FRACTION_BELOW,
-  set: (value) => {
-    if (consolidation.value.function === 'histogram_fraction_below') {
-      consolidation.value = { ...consolidation.value, threshold: value }
-    }
-  }
-})
-
-const aggregationHistogramLowerThresholdForFractionBetween = computed<number>({
-  get: () =>
-    consolidation.value.function === 'histogram_fraction_between'
-      ? consolidation.value.lower_threshold
-      : DEFAULT_LOWER_THRESHOLD_FOR_FRACTION_BETWEEN,
-  set: (value) => {
-    if (consolidation.value.function === 'histogram_fraction_between') {
-      consolidation.value = { ...consolidation.value, lower_threshold: value }
-    }
-  }
-})
-
-const aggregationHistogramUpperThresholdForFractionBetween = computed<number>({
-  get: () =>
-    consolidation.value.function === 'histogram_fraction_between'
-      ? consolidation.value.upper_threshold
-      : DEFAULT_UPPER_THRESHOLD_FOR_FRACTION_BETWEEN,
-  set: (value) => {
-    if (consolidation.value.function === 'histogram_fraction_between') {
-      consolidation.value = { ...consolidation.value, upper_threshold: value }
-    }
-  }
-})
-
 // The draft the widget edits, not a view of the stored value: an empty pill (a key the
 // user has just added but not filled in) is not persisted, so reading the group-by back
 // out of the consolidation would drop it again the moment it appears.
@@ -172,36 +121,29 @@ function storedGroupBy(): GroupByModel {
   }
 }
 
-function groupByInputTypeOf(consolidationFunction: ConsolidationFunction | null): GroupByInputType {
-  return consolidationFunction
-    ? outputType(consolidationFunction.type, consolidationFunction.function)
-    : 'float'
-}
-
-function rebuildConsolidation(consolidationFunction: ConsolidationFunction | null): void {
-  const inputType = groupByInputTypeOf(consolidationFunction)
-  const group = groupByForInputType(inputType, groupBy.value)
+function rebuildConsolidation(model: ConsolidationModel): void {
+  const group = groupByForInputType(outputType(model.type, model.function), groupBy.value)
   consolidation.value = buildConsolidationFunction(
-    consolidationFunction,
-    aggregationLookback.value,
-    aggregationHistogramPercentile.value,
-    aggregationHistogramThresholdForFractionBelow.value,
-    aggregationHistogramLowerThresholdForFractionBetween.value,
-    aggregationHistogramUpperThresholdForFractionBetween.value,
+    consolidationFunctionOf(model),
+    model.lookbackSeconds,
+    (model.params.quantile ?? DEFAULT_QUANTILE) * 100,
+    model.params.fractionBelowThreshold ?? DEFAULT_THRESHOLD_FOR_FRACTION_BELOW,
+    model.params.fractionLowerThreshold ?? DEFAULT_LOWER_THRESHOLD_FOR_FRACTION_BETWEEN,
+    model.params.fractionUpperThreshold ?? DEFAULT_UPPER_THRESHOLD_FOR_FRACTION_BETWEEN,
     group
   )
   aggregator.value = aggregatorFromGroupBy(group, thenSteps.value)
 }
 
-const consolidationFunction = computed<ConsolidationFunction | null>({
-  get: () => consolidationFunctionFromWire(consolidation.value),
+const consolidationModel = computed<ConsolidationModel>({
+  get: () => consolidationModelFromWire(consolidation.value),
   set: rebuildConsolidation
 })
 
-watch([groupBy, thenSteps], () => rebuildConsolidation(consolidationFunction.value))
+watch([groupBy, thenSteps], () => rebuildConsolidation(consolidationModel.value))
 
 const groupByInputType = computed<GroupByInputType>(() =>
-  groupByInputTypeOf(consolidationFunction.value)
+  outputType(consolidationModel.value.type, consolidationModel.value.function)
 )
 
 const thenStepsShown = computed(() => thenStepsAllowed(groupByInputType.value, groupBy.value))
@@ -250,18 +192,7 @@ const { querySuggestions: groupByQuerySuggestions, suggestionRevision: groupBySu
     <SourceFormStack spacing="label">
       <SourceFormText variant="description">{{ _t('Consolidation') }}</SourceFormText>
       <FormTelemetryMetricsConsolidation
-        v-model:aggregation-lookback="aggregationLookback"
-        v-model:aggregation-histogram-percentile="aggregationHistogramPercentile"
-        v-model:aggregation-histogram-threshold-for-fraction-below="
-          aggregationHistogramThresholdForFractionBelow
-        "
-        v-model:aggregation-histogram-lower-threshold-for-fraction-between="
-          aggregationHistogramLowerThresholdForFractionBetween
-        "
-        v-model:aggregation-histogram-upper-threshold-for-fraction-between="
-          aggregationHistogramUpperThresholdForFractionBetween
-        "
-        v-model:consolidation-function="consolidationFunction"
+        v-model:consolidation="consolidationModel"
         :label="_t('Consolidation')"
         :metric-types="metricTypes"
         :metric-name="metricName"

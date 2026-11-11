@@ -7,7 +7,11 @@ import type { ConsolidationFunction as WireConsolidationFunction } from 'cmk-sha
 import { staticAssertNever } from 'cmk-ui-library/lib/typeUtils'
 
 import { catalogFunctionName } from '@/telemetry-metrics/consolidation/types'
-import type { ConsolidationFunction } from '@/telemetry-metrics/consolidation/types'
+import type {
+  ConsolidationFunction,
+  ConsolidationModel,
+  ConsolidationParams
+} from '@/telemetry-metrics/consolidation/types'
 import type { GroupByModel } from '@/telemetry-metrics/group-by/types'
 import {
   groupFractionBelowThresholdToWire,
@@ -32,6 +36,30 @@ export function consolidationFunctionFromWire(
     default:
       staticAssertNever(wire)
       throw new Error(`unhandled consolidation type: ${JSON.stringify(wire)}`)
+  }
+}
+
+function paramsFromWire(wire: WireConsolidationFunction): ConsolidationParams {
+  switch (wire.function) {
+    case 'histogram_quantile':
+      return { quantile: wire.percentile / 100 }
+    case 'histogram_fraction_below':
+      return { fractionBelowThreshold: wire.threshold }
+    case 'histogram_fraction_between':
+      return {
+        fractionLowerThreshold: wire.lower_threshold,
+        fractionUpperThreshold: wire.upper_threshold
+      }
+    default:
+      return {}
+  }
+}
+
+export function consolidationModelFromWire(wire: WireConsolidationFunction): ConsolidationModel {
+  return {
+    ...consolidationFunctionFromWire(wire),
+    params: paramsFromWire(wire),
+    lookbackSeconds: wire.lookback_seconds
   }
 }
 

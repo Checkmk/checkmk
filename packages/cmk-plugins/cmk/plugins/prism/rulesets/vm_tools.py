@@ -40,7 +40,7 @@ def _parameter_form_prism_vm_tools() -> form_specs.Dictionary:
                         ),
                         form_specs.SingleChoiceElement(
                             name="disabled",
-                            title=Title("not disabled"),
+                            title=Title("disabled"),
                         ),
                         form_specs.SingleChoiceElement(
                             name="ignored",

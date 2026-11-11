@@ -21,7 +21,6 @@ from cmk.plugins.checkmk.agent_based.checkmk_agent import (
     _check_transport,
     _check_trusted_cas,
     _check_version,
-    _get_error_result,
     check_checkmk_agent,
     check_plugin_checkmk_agent,
     discover_checkmk_agent,
@@ -1111,20 +1110,6 @@ def test_a_stale_update_check_of_the_integrated_updater_warns() -> None:
         )
         in results
     )
-
-
-def test_get_error_result() -> None:
-    assert list(
-        _get_error_result(
-            "agent updates are disabled for host name my-host because it is on the exclusion list",
-            {"error_deployment_disabled_for_hostname": 0},
-        )
-    ) == [
-        Result(
-            state=State.OK,
-            summary="agent updates are disabled for host name my-host because it is on the exclusion list",
-        ),
-    ]
 
 
 @pytest.mark.parametrize(

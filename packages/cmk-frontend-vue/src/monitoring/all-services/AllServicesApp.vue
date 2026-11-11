@@ -58,7 +58,7 @@ import { buildFilterUrlSchema } from '@/monitoring/shared/filterState/schema'
 import { filterStateWriter, readFilterUrlState } from '@/monitoring/shared/filterState/urlState'
 import { HOST_TAB_OVERVIEW } from '@/monitoring/shared/hostSlideInTabs'
 import { tableKeyboardHints } from '@/monitoring/shared/keyboardHints'
-import { labelCondition } from '@/monitoring/shared/labels'
+import { labelCondition, tagCondition } from '@/monitoring/shared/labels'
 import { hostRefOfService, serviceCommand, serviceRefOf } from '@/monitoring/shared/objectRefs'
 import {
   buildColumnStorageKey,
@@ -474,6 +474,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         :permitted-actions="hostActions.permittedActions"
         :load-action-menu="hostActions.loadActionMenu"
         :filter-labels-by="labelCondition"
+        :filter-tags-by="tagCondition"
         :narrow-target="allHostsPageUrl"
         @close="closeHostSlideIn"
         @performed="onActionPerformed"

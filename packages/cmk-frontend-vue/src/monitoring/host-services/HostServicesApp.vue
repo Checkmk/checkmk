@@ -46,7 +46,7 @@ import {
 } from '@/monitoring/shared/displayOptionsState/urlState'
 import { hostPanelFragment } from '@/monitoring/shared/hostPanelFragment'
 import { HOST_TAB_OVERVIEW } from '@/monitoring/shared/hostSlideInTabs'
-import { labelCondition } from '@/monitoring/shared/labels'
+import { labelCondition, tagCondition } from '@/monitoring/shared/labels'
 import { serviceCommand, serviceRefOf } from '@/monitoring/shared/objectRefs'
 import { DEFAULT_DISPLAY_OPTIONS } from '@/monitoring/shared/types'
 import { useHostActions } from '@/monitoring/shared/useHostActions'
@@ -514,6 +514,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         :permitted-actions="hostActions.permittedActions"
         :load-action-menu="hostActions.loadActionMenu"
         :filter-labels-by="labelCondition"
+        :filter-tags-by="tagCondition"
         :narrow-target="allHostsPageUrl"
         @close="closeHostSlideIn"
         @performed="onActionPerformed"

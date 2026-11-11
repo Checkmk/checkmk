@@ -17,6 +17,7 @@ import {
 } from '@/monitoring/host-services/columns'
 import { ServiceExport } from '@/monitoring/host-services/export/serviceExport'
 import type { HostServiceEntry } from '@/monitoring/shared/api/types'
+import { ACTIONS_HEADER_WIDTH } from '@/monitoring/shared/constants'
 import { RowExport } from '@/monitoring/shared/export/rowExport'
 import {
   MonitoringService,
@@ -206,14 +207,19 @@ test('the service name takes the spare width once the summary is hidden', () => 
   expect(nameColumn(columns).minSize).toBe(150)
 })
 
-test('the actions column widens by one button width per inline action', () => {
-  const actionsSize = (inlineActions: number) =>
-    useHostServicesColumns({ includeSelect: true, inlineActions }).find(
-      (column) => columnId(column) === 'actions'
-    )!.minSize!
+function actionsSize(inlineActions: number): number {
+  return useHostServicesColumns({ includeSelect: true, inlineActions }).find(
+    (column) => columnId(column) === 'actions'
+  )!.minSize!
+}
 
-  expect(actionsSize(2) - actionsSize(1)).toBe(actionsSize(1) - actionsSize(0))
-  expect(actionsSize(1)).toBeGreaterThan(actionsSize(0))
+test('the actions column widens by one button width per inline action', () => {
+  expect(actionsSize(3) - actionsSize(2)).toBe(actionsSize(2) - actionsSize(1))
+  expect(actionsSize(2)).toBeGreaterThan(actionsSize(1))
+})
+
+test('the actions column keeps its header readable without inline actions', () => {
+  expect(actionsSize(0)).toBe(ACTIONS_HEADER_WIDTH)
 })
 
 test('last state change comes before last check, matching the legacy view', () => {

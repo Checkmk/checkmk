@@ -23,7 +23,7 @@ import type {
   StringInputFilter
 } from '@/monitoring/shared/components/filter/types'
 import { MODE_COLUMN_ID } from '@/monitoring/shared/components/modeColumn'
-import { ACTIONS_COLUMN_ID } from '@/monitoring/shared/constants'
+import { ACTIONS_COLUMN_ID, ACTIONS_HEADER_WIDTH } from '@/monitoring/shared/constants'
 import { columnId } from '@/monitoring/shared/tableState/schema'
 
 export interface HostColumnOptions {
@@ -543,8 +543,8 @@ export function buildHostColumns({
       id: ACTIONS_COLUMN_ID,
       header: _t('Actions'),
       enableSorting: false,
-      minSize: 75,
-      maxSize: 75,
+      minSize: ACTIONS_HEADER_WIDTH,
+      maxSize: ACTIONS_HEADER_WIDTH,
       meta: { justify: 'right' }
     } satisfies ColumnDef<HostEntry>
   ]

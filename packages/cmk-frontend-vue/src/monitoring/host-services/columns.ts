@@ -24,7 +24,7 @@ import type {
   StringInputFilter
 } from '@/monitoring/shared/components/filter/types'
 import { MODE_COLUMN_ID } from '@/monitoring/shared/components/modeColumn'
-import { ACTIONS_COLUMN_ID } from '@/monitoring/shared/constants'
+import { ACTIONS_COLUMN_ID, ACTIONS_HEADER_WIDTH } from '@/monitoring/shared/constants'
 import { columnId } from '@/monitoring/shared/tableState/schema'
 
 /**
@@ -63,7 +63,7 @@ const ACTION_BUTTON_WIDTH = 25
 const ACTIONS_MENU_WIDTH = 50
 
 function actionsColumnWidth(inlineActions: number): number {
-  return ACTIONS_MENU_WIDTH + inlineActions * ACTION_BUTTON_WIDTH
+  return Math.max(ACTIONS_HEADER_WIDTH, ACTIONS_MENU_WIDTH + inlineActions * ACTION_BUTTON_WIDTH)
 }
 
 export interface HostServicesColumnOptions {

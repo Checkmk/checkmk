@@ -303,6 +303,13 @@ const enterMissingRuntimeFiltersAction = useInjectMissingRuntimeFiltersAction()
 }
 
 /* NOTE: third party CSS selector (grid-layout-plus) */
+/* stylelint-disable-next-line checkmk/vue-bem-naming-convention,selector-pseudo-class-no-unknown */
+:deep(.vgl-item:has([aria-haspopup='true'][aria-expanded='true'])) {
+  /* Each item is its own stacking context, so later items would paint over an open menu. */
+  z-index: 1;
+}
+
+/* NOTE: third party CSS selector (grid-layout-plus) */
 /* stylelint-disable-next-line checkmk/vue-bem-naming-convention */
 .vgl-layout {
   --vgl-placeholder-bg: var(--interactive-accent);

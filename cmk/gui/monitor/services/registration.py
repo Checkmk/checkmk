@@ -12,7 +12,7 @@ from cmk.gui.openapi.restful_objects.endpoint_family import EndpointFamilyRegist
 from cmk.gui.pages import PageRegistry
 
 from ._api._registration import register_endpoints
-from ._legacy_view_link import HostServicesLinkButton
+from ._legacy_view_link import AllServicesLinkButton, HostServicesLinkButton
 from ._page_menu import HostMenus
 from ._pages._registration import register_pages
 
@@ -37,3 +37,4 @@ def register(
         setup_folders,
     )
     register_builtin("experimental_view_button", HostServicesLinkButton(teleport_target))
+    register_builtin("experimental_view_button", AllServicesLinkButton(teleport_target))

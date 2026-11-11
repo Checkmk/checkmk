@@ -11,7 +11,10 @@ import pytest
 
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
-from cmk.gui.monitor.services._legacy_view_link import HostServicesLinkButton
+from cmk.gui.monitor.services._legacy_view_link import (
+    AllServicesLinkButton,
+    HostServicesLinkButton,
+)
 
 SHORTCUTS = "#page_menu_bar .shortcuts"
 
@@ -32,7 +35,9 @@ class _VueComponentData(HTMLParser):
                 self.payloads.append(json.loads(value))
 
 
-def _button_payload(button: HostServicesLinkButton, view_name: str) -> dict[str, object] | None:
+def _button_payload(
+    button: AllServicesLinkButton | HostServicesLinkButton, view_name: str
+) -> dict[str, object] | None:
     with html.output_funnel.plugged():
         button(view_name)
         rendered = html.output_funnel.drain()
@@ -89,3 +94,17 @@ def test_the_configured_teleport_target_reaches_the_button() -> None:
 
     assert payload is not None
     assert payload["teleport_target"] == SHORTCUTS
+
+
+@pytest.mark.usefixtures("request_context")
+def test_the_classic_all_services_view_offers_the_new_view_and_a_survey() -> None:
+    payload = _button_payload(AllServicesLinkButton(), "allservices")
+
+    assert payload is not None
+    assert payload["url"] == "monitor_all_services.py"
+    assert payload["survey_url"] == "https://survey.checkmk.com/index.php/527348?lang=en"
+
+
+@pytest.mark.usefixtures("request_context")
+def test_all_services_button_leaves_other_views_untouched() -> None:
+    assert _button_payload(AllServicesLinkButton(), "host") is None

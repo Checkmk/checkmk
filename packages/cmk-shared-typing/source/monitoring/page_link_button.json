@@ -5,7 +5,8 @@
   "properties": {
     "url": { "type": "string" },
     "title": { "type": "string" },
-    "teleport_target": { "type": ["string", "null"] }
+    "teleport_target": { "type": ["string", "null"] },
+    "survey_url": { "type": ["string", "null"] }
   },
   "required": ["url", "title"]
 }

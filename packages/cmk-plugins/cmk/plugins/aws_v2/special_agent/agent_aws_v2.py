@@ -40,6 +40,7 @@ from .config import (
 )
 from .credentials import (
     AccessKey,
+    AccountListStore,
     AwsAccount,
     AwsCredentials,
     CLIENT_LOCK,
@@ -698,7 +699,10 @@ def _spoke_accounts_from_args(args: argparse.Namespace) -> SpokeAccounts | None:
 
 def _test_connection(credentials: AwsCredentials) -> int:
     try:
-        for account_id in credentials.monitored_account_ids():
+        account_ids = credentials.monitored_account_ids()
+        if credentials.account_listing_error is not None:
+            raise credentials.account_listing_error
+        for account_id in account_ids:
             credentials.open_account(account_id)
     except AwsAccessError as ae:
         sys.stderr.write(f"Connection failed with: {ae}\n")
@@ -850,6 +854,7 @@ def agent_aws_main(args: argparse.Namespace) -> int:
         args.global_service_region,
         client_config,
         _spoke_accounts_from_args(args),
+        AccountListStore(args.hostname),
     )
 
     if args.connection_test:
@@ -863,7 +868,7 @@ def agent_aws_main(args: argparse.Namespace) -> int:
         accounts = [
             _start_account(pool, credentials, account_id, settings) for account_id in account_ids
         ]
-    return _write_output(accounts)
+    return _write_output(accounts, _listing_error_rows(credentials))
 
 
 def _monitored_account_ids(credentials: AwsCredentials) -> Sequence[str]:
@@ -874,15 +879,19 @@ def _monitored_account_ids(credentials: AwsCredentials) -> Sequence[str]:
         _write_access_error(ae)
         write_agent_info([AgentInfoRow("error", reason=str(ae))])
         return []
+    if credentials.account_listing_error is not None:
+        # Written before the account output, while the rule host is still the target.
+        _write_access_error(credentials.account_listing_error)
     if not account_ids:
         # Only an organization can leave nothing: every account is excluded or inactive.
         write_agent_info(
             [
+                *_listing_error_rows(credentials),
                 AgentInfoRow(
                     "error",
                     reason="No active account of the organization is left to monitor."
                     " Check the excluded account IDs.",
-                )
+                ),
             ]
         )
     return account_ids
@@ -974,11 +983,24 @@ def _region_jobs(settings: _RunSettings, regions: Sequence[str]) -> list[_Region
     return jobs
 
 
-def _write_output(accounts: Sequence[tuple[str, _AccountJobs | AwsAccessError]]) -> int:
+def _listing_error_rows(credentials: AwsCredentials) -> list[AgentInfoRow]:
+    if (error := credentials.account_listing_error) is None:
+        return []
+    return [
+        AgentInfoRow(
+            "error", reason=f"{error}. Monitoring the accounts of the last successful listing"
+        )
+    ]
+
+
+def _write_output(
+    accounts: Sequence[tuple[str, _AccountJobs | AwsAccessError]],
+    run_rows: Sequence[AgentInfoRow],
+) -> int:
     """Write the output of all accounts and the agent info. 1 if a section had exceptions."""
     # The output follows the order of the accounts and regions, whichever job finished first.
     has_exceptions = False
-    agent_info: list[AgentInfoRow] = []
+    agent_info = list(run_rows)
     for account_id, jobs in accounts:
         if isinstance(jobs, AwsAccessError):
             # Only this account is lost. The others still get monitored.

@@ -18,8 +18,13 @@ The spoke accounts are either listed in the rule or, for an organization, found 
 ListAccounts on every run. The hub calls ListAccounts itself, or it assumes an account list
 role in the management account for that one call. That role is also one AssumeRole away
 from the login identity, and the spokes are not assumed through it.
+
+If ListAccounts fails, the accounts of the last successful listing are monitored. A failed
+listing says nothing about the accounts themselves, and without their data Checkmk would
+show their services as vanished.
 """
 
+import json
 import threading
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -27,7 +32,9 @@ from dataclasses import dataclass
 import boto3
 import botocore
 
-from .config import AwsAccessError, describe_credential_failure
+from cmk.server_side_programs.v1 import Storage
+
+from .config import AGENT, AwsAccessError, describe_credential_failure
 
 # boto3 sessions are not thread-safe, their clients are. Create every client under this lock.
 CLIENT_LOCK = threading.Lock()
@@ -133,6 +140,47 @@ def _assume_role(
     ), account_id
 
 
+class AccountListStore:
+    """The answer of the last successful ListAccounts call of one rule host.
+
+    The answer is only valid for the identity that listed the accounts: the hub account
+    and the account list role. Other credentials may belong to another organization.
+    """
+
+    _KEY = "organization_accounts"
+
+    def __init__(self, hostname: str) -> None:
+        self._storage = Storage(AGENT, hostname)
+
+    def read(self, lister: Sequence[str | None]) -> Sequence[Mapping[str, str]] | None:
+        try:
+            stored = json.loads(self._storage.read(self._KEY, "null"))
+        except ValueError:
+            return None
+        if not isinstance(stored, dict) or stored.get("lister") != list(lister):
+            return None
+        accounts = stored.get("accounts")
+        return accounts if isinstance(accounts, list) else None
+
+    def write(self, lister: Sequence[str | None], accounts: Sequence[Mapping[str, str]]) -> None:
+        self._storage.write(
+            self._KEY,
+            json.dumps(
+                {
+                    "lister": list(lister),
+                    "accounts": [
+                        {
+                            key: account[key]
+                            for key in ("Id", "Name", "State", "Status")
+                            if key in account
+                        }
+                        for account in accounts
+                    ],
+                }
+            ),
+        )
+
+
 def _is_active(account: Mapping[str, str]) -> bool:
     # AWS replaces Status with State, which also knows PENDING_ACTIVATION and CLOSED.
     return account.get("State", account.get("Status")) == "ACTIVE"
@@ -170,9 +218,12 @@ class AwsCredentials:
         global_service_region: str,
         client_config: botocore.config.Config | None,
         spokes: SpokeAccounts | None = None,
+        account_list_store: AccountListStore | None = None,
     ) -> None:
         self._hub = hub
         self._spokes = spokes
+        self._account_list_store = account_list_store
+        self.account_listing_error: AwsAccessError | None = None
         self._global_service_region = global_service_region
         self._client_config = client_config
         self._session: boto3.session.Session | None = None
@@ -211,16 +262,45 @@ class AwsCredentials:
         return account_id
 
     def monitored_account_ids(self) -> Sequence[str]:
-        """The accounts this run monitors. Raises AwsAccessError if the hub login fails."""
+        """The accounts this run monitors. Raises AwsAccessError if the hub login fails.
+
+        If ListAccounts fails but an earlier listing is stored, its accounts are returned
+        and account_listing_error tells why.
+        """
         # Called also for spoke accounts, so that a broken login fails here, once.
         session_account_id = self.session_account_id()
         if self._spokes is None:
             return [session_account_id]
         if isinstance(accounts := self._spokes.accounts, Organization):
-            return self._organization_account_ids(accounts)
+            return self._organization_account_ids(accounts, session_account_id)
         return accounts
 
-    def _organization_account_ids(self, organization: Organization) -> Sequence[str]:
+    def _organization_account_ids(
+        self, organization: Organization, session_account_id: str
+    ) -> Sequence[str]:
+        store = self._account_list_store
+        lister = (session_account_id, organization.list_role_arn)
+        try:
+            accounts = self._list_accounts(organization)
+        except AwsAccessError as error:
+            if store is None or (stored := store.read(lister)) is None:
+                raise
+            self.account_listing_error = error
+            accounts = stored
+        else:
+            if store is not None:
+                store.write(lister, accounts)
+        # open_account() gives each account its name from here.
+        self._account_names = {
+            account["Id"]: account["Name"] for account in accounts if account.get("Name")
+        }
+        return [
+            account["Id"]
+            for account in accounts
+            if _is_active(account) and account["Id"] not in organization.excluded_ids
+        ]
+
+    def _list_accounts(self, organization: Organization) -> Sequence[Mapping[str, str]]:
         try:
             session = self.session()
             if organization.list_role_arn is not None:
@@ -234,7 +314,7 @@ class AwsCredentials:
                 )
             with CLIENT_LOCK:
                 client = session.client("organizations", config=self._client_config)
-            accounts = [
+            return [
                 account
                 for page in client.get_paginator("list_accounts").paginate()
                 for account in page["Accounts"]
@@ -243,15 +323,6 @@ class AwsCredentials:
             raise AwsAccessError(
                 f"Cannot list the accounts in the organization: {describe_credential_failure(e)}"
             )
-        # open_account() gives each account its name from here.
-        self._account_names = {
-            account["Id"]: account["Name"] for account in accounts if account.get("Name")
-        }
-        return [
-            account["Id"]
-            for account in accounts
-            if _is_active(account) and account["Id"] not in organization.excluded_ids
-        ]
 
     def open_account(self, account_id: str) -> AwsAccount:
         """One account of monitored_account_ids(), with the session to use for all its regions.

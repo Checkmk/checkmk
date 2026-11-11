@@ -55,7 +55,7 @@ The ``cmk-product-usage`` command-line tool (``cmk.product_usage.cli``) is the s
 A per-site cron job invokes it every 30 minutes, but a collection actually happens only about once every 30 days (7 days on a Cloud trial site) -- see `Collection and transmission`_.
 
 **Collectors.**
-Three collectors read from Livestatus and the filesystem: check usage (``collectors/checks.py``), site info (``collectors/site_info.py``), and a previously recorded Grafana-usage snapshot (``collectors/grafana.py``).
+Four collectors read from Livestatus and the filesystem: check usage (``collectors/checks.py``), site info (``collectors/site_info.py``), a previously recorded Grafana-usage snapshot (``collectors/grafana.py``), and, on a Cloud trial site only, the audit log entries per actor class (``collectors/audit_log.py``).
 
 **Config and consent.**
 The config module reads the site's consent decision and HTTP-proxy setting from ``product_usage_analytics.mk``, a Checkmk global-settings file that a GUI page also reads and writes.
@@ -101,9 +101,12 @@ The CLI checks whether a site is a Cloud trial (``is_cloud_trial``) once per run
 * Per-check usage -- Livestatus's services table, keyed by check command with anything after a ``!`` stripped so check-parameter secrets are never collected.
 * Disabled-service counts -- parsed out of the discovery long-plugin-output's "Service ignored: " lines.
 * The last recorded Grafana-usage snapshot, if any.
+* On a Cloud trial site only, the audit log entries per actor class -- interactive users, automation users, and the platform (the Cloud platform's users and the site itself) -- as a count and the time of the newest entry.
+  The collector reads the current and the rotated audit logs and the GUI's user store; it sends no user IDs.
 
 The result is wrapped in a ``SelfDescribingModel`` envelope (``{"metadata": {version, namespace, name}, "data": {...}}``) and stored as ``var/check_mk/product_usage/product_usage_<timestamp>.json``.
-A Cloud trial site sends ``CloudTrialPayload`` (``cloud_trial_analytics``) instead of ``ProductUsagePayload`` (``product_usage_analytics``): the same data plus trial signals, which are still ``null``.
+A Cloud trial site sends ``CloudTrialPayload`` (``cloud_trial_analytics``) instead of ``ProductUsagePayload`` (``product_usage_analytics``): the same data plus trial signals; of these, only the audit log is collected so far, the others are still ``null``.
+A trial signal whose collector fails is ``null``: the error goes to ``var/log/product_usage_analytics.log`` and the rest of the payload is sent as usual.
 
 **Transmission and retry.**
 Transmission uploads every stored file, oldest first, and deletes a file only once its POST gets a successful response, so a failed upload's file survives to be retried.
@@ -118,6 +121,7 @@ This section covers the technical side.
 
 **Code changes.**
 Add the new field to ``ProductUsageData`` in ``cmk/product_usage/schema.py``, gather it in a collector under ``cmk/product_usage/collectors/`` (a new module, or an existing one if it fits), and wire the result into ``collect_data()`` in ``cmk/product_usage/collection.py``.
+A Cloud trial signal goes into ``CloudTrialPayload`` instead and is wired into ``collect_cloud_trial_data()``; catch its collector's errors there, as ``_collect_audit_log()`` does, so that one failing trial signal does not stop the payload.
 Keep the same sanitization discipline the existing collectors apply -- no hostnames, paths, service instance names, or check-command arguments, per the `Requirements overview`_.
 Every field needs a ``description`` and at least one entry in ``examples``; ``tests/unit/cmk/product_usage/test_manifest.py`` fails otherwise.
 The description is the text admins read on the manifest page, so write it for admins, not developers.
@@ -218,6 +222,9 @@ Risks and technical debts
    Nothing is stored or uploaded in that run, including files left over from earlier failed uploads, and the next run is not planned, so every cron run (every 30 minutes) tries again until the error is gone.
    The intended design is fail-open: a failure while gathering one data point must not prevent collecting and sending the others.
    New collectors are built that way from now on.
+6. The audit log collector classifies users by rules of thumb.
+   The Cloud platform's user IDs are fixed (``api_user``, ``agent_registration``), so the entries of a different registration user for the preconfigured agent count as automation.
+   A deleted user counts as interactive only if its ID is an email address, like a Cognito user's ID; otherwise it counts as automation.
 
 See Also
 ========

@@ -1302,7 +1302,11 @@ impl Updater {
             log::info!("No installer socket is configured, leaving {package:?} where it is");
             return Ok(InstallOutcome::NoInstaller);
         };
-        log::info!("Handing {package:?} to the installer at {socket:?}");
+        // The bakery names the unit cmk-agent-ctl-installer@.service.
+        log::info!(
+            "Handing {package:?} to the installer at {socket:?} \
+             (run `journalctl -u 'cmk-agent-ctl-installer@*'` to see the installer's log)"
+        );
         install::hand_over(
             socket,
             &install::InstallRequest {

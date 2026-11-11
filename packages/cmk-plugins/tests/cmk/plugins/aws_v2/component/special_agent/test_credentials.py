@@ -13,6 +13,7 @@ import pytest
 from cmk.plugins.aws_v2.special_agent.config import AwsAccessError
 from cmk.plugins.aws_v2.special_agent.credentials import (
     AccessKey,
+    AccountListStore,
     AwsCredentials,
     DefaultCredentials,
     HubCredentials,
@@ -204,12 +205,17 @@ def test_spoke_without_external_id_omits_it(fake_sts: FakeSts) -> None:
     assert "ExternalId" not in call.params
 
 
-def _organization(organization: Organization, key_id: str = "AKIAHUB") -> AwsCredentials:
+def _organization(
+    organization: Organization,
+    key_id: str = "AKIAHUB",
+    store: AccountListStore | None = None,
+) -> AwsCredentials:
     return AwsCredentials(
         HubCredentials(AccessKey(key_id, "secret")),
         "us-east-1",
         None,
         SpokeAccounts(organization, "CheckmkMonitoring", "tenant-42"),
+        store,
     )
 
 
@@ -294,3 +300,24 @@ def test_account_list_role_without_external_id_omits_it(fake_sts: FakeSts) -> No
 def test_failed_listing_is_an_access_error() -> None:
     with pytest.raises(AwsAccessError, match="Cannot list the accounts in the organization"):
         _organization(Organization(), key_id=NO_LIST_KEY_ID).monitored_account_ids()
+
+
+@pytest.mark.usefixtures("fake_sts")
+def test_failed_listing_monitors_the_accounts_of_the_last_listing() -> None:
+    store = AccountListStore("aws-org")
+    _organization(Organization(), store=store).monitored_account_ids()
+
+    assert (
+        _organization(Organization(), key_id=NO_LIST_KEY_ID, store=store).monitored_account_ids()
+        == ACTIVE_ORGANIZATION_ACCOUNTS
+    )
+
+
+@pytest.mark.usefixtures("fake_sts")
+def test_failed_listing_ignores_the_stored_accounts_of_another_hub() -> None:
+    store = AccountListStore("aws-org")
+    store.write(("222222222222", None), [{"Id": "777777777777", "Status": "ACTIVE"}])
+    credentials = _organization(Organization(), key_id=NO_LIST_KEY_ID, store=store)
+
+    with pytest.raises(AwsAccessError, match="Cannot list the accounts in the organization"):
+        credentials.monitored_account_ids()

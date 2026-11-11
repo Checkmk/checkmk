@@ -46,6 +46,8 @@ LOGIN_ARGS = [
     "sns",
 ]
 
+NO_LIST_ARGS = [NO_LIST_KEY_ID if arg == "AKIAHUB" else arg for arg in LOGIN_ARGS]
+
 
 def _account_args(accounts: list[str]) -> list[str]:
     return [arg for account in accounts for arg in ("--account", account)]
@@ -309,15 +311,60 @@ def test_failed_listing_is_a_run_error_in_the_agent_info(
     fake_sts: FakeSts, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
 ) -> None:
     monkeypatch.setenv("AWS_ENDPOINT_URL", fake_sts.url)
-    args = [NO_LIST_KEY_ID if arg == "AKIAHUB" else arg for arg in LOGIN_ARGS]
-
-    agent_aws_main(parse_arguments([*args, "--organization"]))
+    agent_aws_main(parse_arguments([*NO_LIST_ARGS, "--organization"]))
 
     [header, row] = _sections_by_host(capsys.readouterr().out)[None][-2:]
     assert (header, json.loads(row)["reason"].split(":")[0]) == (
         "<<<aws_v2_agent_info:sep(0)>>>",
         "Cannot list the accounts in the organization",
     )
+
+
+def test_failed_listing_after_success_is_a_run_error_beside_the_known_accounts(
+    fake_sts: FakeSts, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setenv("AWS_ENDPOINT_URL", fake_sts.url)
+    agent_aws_main(parse_arguments([*LOGIN_ARGS, "--organization"]))
+    capsys.readouterr()
+
+    agent_aws_main(parse_arguments([*NO_LIST_ARGS, "--organization"]))
+
+    lines = _sections_by_host(capsys.readouterr().out)[None]
+    rows = [json.loads(line) for line in lines[lines.index("<<<aws_v2_agent_info:sep(0)>>>") + 1 :]]
+    assert [(row["status"], row.get("account")) for row in rows] == [
+        ("error", None),
+        *(("ok", account) for account in ACTIVE_ORGANIZATION_ACCOUNTS),
+    ]
+
+
+def test_connection_test_fails_on_a_failed_listing_with_known_accounts(
+    fake_sts: FakeSts, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("AWS_ENDPOINT_URL", fake_sts.url)
+    agent_aws_main(parse_arguments([*LOGIN_ARGS, "--organization"]))
+
+    assert agent_aws_main(parse_arguments([*NO_LIST_ARGS, "--organization", "--connection-test"]))
+
+
+def test_failed_listing_with_every_known_account_excluded_names_the_listing_error(
+    fake_sts: FakeSts, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setenv("AWS_ENDPOINT_URL", fake_sts.url)
+    agent_aws_main(parse_arguments([*LOGIN_ARGS, "--organization"]))
+    capsys.readouterr()
+    excluded = [
+        arg for account in ACTIVE_ORGANIZATION_ACCOUNTS for arg in ("--exclude-account", account)
+    ]
+
+    agent_aws_main(parse_arguments([*NO_LIST_ARGS, "--organization", *excluded]))
+
+    lines = _sections_by_host(capsys.readouterr().out)[None]
+    rows = [json.loads(line) for line in lines[lines.index("<<<aws_v2_agent_info:sep(0)>>>") + 1 :]]
+    # The first sentence of each reason, without the details of AWS.
+    assert [re.split(r"[:.]", row["reason"])[0] for row in rows] == [
+        "Cannot list the accounts in the organization",
+        "No active account of the organization is left to monitor",
+    ]
 
 
 def test_organization_without_an_account_to_monitor_is_a_run_error(

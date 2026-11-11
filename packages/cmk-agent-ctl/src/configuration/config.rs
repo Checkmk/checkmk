@@ -56,6 +56,34 @@ pub fn tmp_path_for_atomical_save(path: &Path) -> PathBuf {
     tmp_path
 }
 
+/// Write `contents` to `path`, restricted to `mode` from the moment the file
+/// comes into existence.
+///
+/// `mode` applies to the creation only and is masked by the umask. A
+/// temporary file left behind by an interrupted save keeps the mode it was
+/// created with, so [`fs::File::set_permissions`] narrows it before the write.
+#[cfg(unix)]
+pub fn write_restricted(path: &Path, contents: &[u8], mode: u32) -> io::Result<()> {
+    use std::io::Write;
+    use std::os::unix::fs::OpenOptionsExt;
+
+    let mut file = fs::OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .mode(mode)
+        .open(path)?;
+    file.set_permissions(fs::Permissions::from_mode(mode))?;
+    file.write_all(contents)
+}
+
+/// Write `contents` to `path`. Windows inherits the permissions of the
+/// directory, which the installer owns.
+#[cfg(windows)]
+pub fn write_restricted(path: &Path, contents: &[u8], _mode: u32) -> io::Result<()> {
+    fs::write(path, contents)
+}
+
 pub struct RegisterExistingConfig {
     pub connection_config: RegistrationConnectionConfig,
     pub host_name: String,
@@ -427,10 +455,12 @@ impl Registry {
 
     pub fn save(&self) -> io::Result<()> {
         let tmp_path = self.make_tmp_path_for_save();
-        fs::write(&tmp_path, serde_json::to_string_pretty(&self.connections)?)?;
+        write_restricted(
+            &tmp_path,
+            serde_json::to_string_pretty(&self.connections)?.as_bytes(),
+            0o600,
+        )?;
         fs::rename(&tmp_path, &self.path)?;
-        #[cfg(unix)]
-        fs::set_permissions(&self.path, fs::Permissions::from_mode(0o600))?;
         self.legacy_pull_marker.remove()
     }
 

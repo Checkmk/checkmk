@@ -19,8 +19,8 @@ use super::verification;
 use crate::agent_receiver_api;
 use crate::agent_receiver_api::{ApiError, NoAgentUpdates};
 use crate::config::{
-    tmp_path_for_atomical_save, JSONLoader, JSONLoaderMissingSafe, Registry, TOMLLoader,
-    UpdaterRegistration,
+    tmp_path_for_atomical_save, write_restricted, JSONLoader, JSONLoaderMissingSafe, Registry,
+    TOMLLoader, UpdaterRegistration,
 };
 #[cfg(windows)]
 use crate::constants;
@@ -37,8 +37,6 @@ use std::fs::File;
 use std::fs::TryLockError;
 use std::io;
 use std::ops::ControlFlow;
-#[cfg(unix)]
-use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use x509_parser::certificate::X509Certificate;
@@ -1834,34 +1832,6 @@ impl Updater {
     }
 }
 
-/// Write `contents` to `path`, restricted to `mode` from the moment the file
-/// comes into existence.
-///
-/// `mode` applies to the creation only and is masked by the umask, and a
-/// temporary file left behind by an interrupted save keeps the mode it was
-/// created with - hence the explicit [`fs::set_permissions`] afterwards.
-#[cfg(unix)]
-fn write_restricted(path: &Path, contents: &[u8], mode: u32) -> io::Result<()> {
-    use std::io::Write;
-    use std::os::unix::fs::OpenOptionsExt;
-
-    let mut file = fs::OpenOptions::new()
-        .write(true)
-        .create(true)
-        .truncate(true)
-        .mode(mode)
-        .open(path)?;
-    file.write_all(contents)?;
-    file.set_permissions(fs::Permissions::from_mode(mode))
-}
-
-/// Write `contents` to `path`. Windows inherits the permissions of the
-/// directory, which the installer owns.
-#[cfg(windows)]
-fn write_restricted(path: &Path, contents: &[u8], _mode: u32) -> io::Result<()> {
-    fs::write(path, contents)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1870,6 +1840,8 @@ mod tests {
     use crate::environment::SetupMode;
     use base64::{engine::general_purpose::STANDARD as BASE64, Engine};
     use std::cell::RefCell;
+    #[cfg(unix)]
+    use std::os::unix::fs::PermissionsExt;
     use std::path::PathBuf;
     use std::str::FromStr;
     use std::sync::LazyLock;

@@ -6,17 +6,19 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
-import { defineComponent, h } from 'vue'
+import { defineComponent, h, ref } from 'vue'
 
 import DashboardContentTimeSeriesGraph from '@/dashboard/components/DashboardContent/DashboardContentTimeSeriesGraph.vue'
 import { createSharedGraphFetcher } from '@/dashboard/components/DashboardContent/sharedGraphFetcher'
 import { useProvideCmkToken } from '@/dashboard/composables/useCmkToken'
+import { useProvideDashboardEditing } from '@/dashboard/composables/useDashboardEditing'
 import { useProvideSharedWidgetGraphs } from '@/dashboard/composables/useSharedWidgetGraphs'
 import type { SharedWidgetGraphs } from '@/dashboard/types/page.ts'
 import type {
   AverageScatterplotContent,
   CustomGraphContent,
-  EmbeddedCustomGraphContent
+  EmbeddedCustomGraphContent,
+  SingleTimeseriesContent
 } from '@/dashboard/types/widget.ts'
 
 import { makeContentProps } from '@tests/dashboard/contentProps'
@@ -41,8 +43,10 @@ vi.mock('@/graphing/components/GraphFigure/GraphFigure.vue', () => ({
       'requestedTimeRange'
     ],
     emits: ['commitTimeRange'],
+    data: () => ({ headerActionsShown: false }),
     template: `<div
       data-testid="graph-figure"
+      :data-header-actions-shown="headerActionsShown"
       :data-show-pin="showPin"
       :data-legend="legend"
       :data-source-type="source.type"
@@ -56,6 +60,11 @@ vi.mock('@/graphing/components/GraphFigure/GraphFigure.vue', () => ({
     >{{ source.type === 'definition' ? source.internal : source.key }}<button
       data-testid="emit-commit-time-range"
       @click="$emit('commitTimeRange', { start: 1767225600, end: 1767229200 })"
+    /><slot
+      name="header-actions"
+      :metrics="[]"
+      :time-range="{ start: 1000, end: 2000 }"
+      :set-shown="(shown) => (headerActionsShown = shown)"
     /></div>`
   }
 }))
@@ -605,5 +614,187 @@ describe('the burger menu of a graph widget', () => {
 
     const figure = await screen.findByTestId('graph-figure')
     expect(figure.getAttribute('data-show-burger-menu')).toBe('false')
+  })
+})
+
+const LINKED_TIMESERIES: SingleTimeseriesContent = {
+  type: 'single_timeseries',
+  metric: 'util',
+  color: 'default_theme',
+  timerange: 'dashboard',
+  graph_render_options: {},
+  contextual_link: {
+    type: 'inherited',
+    location: { type: 'views', name: 'service' },
+    include_context: false,
+    include_time_range: true,
+    show_filter_form: false
+  }
+}
+
+const ONE_SERVICE = {
+  uses_infos: [],
+  filters: { host: { host: 'heute' }, service: { service: 'CPU load' } },
+  restricted_to_single: []
+}
+
+const GRAPH_LINKS = {
+  links: [
+    {
+      title: 'Service',
+      location: { type: 'views', name: 'service' },
+      include_context: false,
+      include_time_range: true,
+      show_filter_form: false
+    }
+  ],
+  services: [
+    {
+      site_id: null,
+      host_name: 'heute',
+      service_description: 'CPU load',
+      link_properties: {
+        links: [
+          {
+            host: { status: 'encoded', variables: { host: 'heute' } },
+            service: { status: 'encoded', variables: { service: 'CPU load' } }
+          }
+        ]
+      }
+    }
+  ]
+}
+
+const GRAPH_LINKS_URL = '/domain-types/dashboard/actions/compute-graph-links/invoke'
+
+const sameJson = (actual: unknown, expected: unknown): boolean =>
+  JSON.stringify(actual) === JSON.stringify(expected)
+
+// The answers of the mocked API arrive within a macrotask.
+const settled = () => new Promise((resolve) => setTimeout(resolve, 0))
+
+describe('the contextual link of a graph widget', () => {
+  beforeEach(() => {
+    postSpy.mockImplementation(async (url: string) => ({
+      data:
+        url === GRAPH_LINKS_URL
+          ? { domainType: 'widget-compute', value: GRAPH_LINKS }
+          : { graphs: [{ internal: '{"graphs": []}', title: 'My graph' }], no_data_message: null },
+      error: undefined,
+      response: new Response('{}', { status: 200 })
+    }))
+  })
+
+  test('leads a graph of one service straight to the target for its host', async () => {
+    renderWidget({ content: LINKED_TIMESERIES, effective_filter_context: ONE_SERVICE })
+
+    const link = await screen.findByRole('link', { name: 'Service' })
+    expect(link.getAttribute('href')).toMatch(/^view\.py\?view_name=service&.*host=heute/)
+  })
+
+  test('carries the shown window in its link', async () => {
+    renderWidget({ content: LINKED_TIMESERIES, effective_filter_context: ONE_SERVICE })
+
+    const link = await screen.findByRole('link', { name: 'Service' })
+    expect(link.getAttribute('href')).toContain('from=1000000&to=2000000')
+  })
+
+  test('tells the figure that it shows its link', async () => {
+    renderWidget({ content: LINKED_TIMESERIES, effective_filter_context: ONE_SERVICE })
+
+    await screen.findByRole('link', { name: 'Service' })
+    expect(screen.getByTestId('graph-figure').getAttribute('data-header-actions-shown')).toBe(
+      'true'
+    )
+  })
+
+  test('tells the figure that it shows nothing when no line names a service', async () => {
+    renderWidget({
+      content: { ...LINKED_TIMESERIES, type: 'combined_graph' },
+      effective_filter_context: ONE_SERVICE
+    })
+
+    const figure = await screen.findByTestId('graph-figure')
+    await settled()
+    expect(figure.getAttribute('data-header-actions-shown')).toBe('false')
+  })
+
+  test('asks for the links of a service under an empty site filter on all sites', async () => {
+    postSpy.mockImplementation(async (url: string, init: { body: { services?: unknown } }) => ({
+      data:
+        url !== GRAPH_LINKS_URL
+          ? { graphs: [{ internal: '{"graphs": []}', title: 'My graph' }], no_data_message: null }
+          : {
+              domainType: 'widget-compute',
+              value: sameJson(init.body.services, [
+                { site_id: null, host_name: 'heute', service_description: 'CPU load' }
+              ])
+                ? GRAPH_LINKS
+                : { links: [], services: [] }
+            },
+      error: undefined,
+      response: new Response('{}', { status: 200 })
+    }))
+    renderWidget({
+      content: LINKED_TIMESERIES,
+      effective_filter_context: {
+        ...ONE_SERVICE,
+        filters: { ...ONE_SERVICE.filters, site: { site: '' } }
+      }
+    })
+
+    expect(await screen.findByRole('link', { name: 'Service' })).toBeInTheDocument()
+  })
+
+  test('offers no link while the widget links nowhere', async () => {
+    renderWidget({
+      content: { ...LINKED_TIMESERIES, contextual_link: { type: 'none' } },
+      effective_filter_context: ONE_SERVICE
+    })
+
+    await screen.findByTestId('graph-figure')
+    await settled()
+    expect(screen.queryByRole('link', { name: 'Service' })).not.toBeInTheDocument()
+  })
+
+  test('offers no link in a shared dashboard', async () => {
+    renderInSharedDashboard(
+      { w1: { graphs: [ADDABLE_SHELL], no_data_message: null } },
+      { content: LINKED_TIMESERIES, effective_filter_context: ONE_SERVICE }
+    )
+
+    await screen.findByTestId('graph-figure')
+    await settled()
+    expect(screen.queryByRole('link', { name: 'Service' })).not.toBeInTheDocument()
+  })
+
+  test('offers no link in the widget preview', async () => {
+    renderWidget({
+      content: LINKED_TIMESERIES,
+      effective_filter_context: ONE_SERVICE,
+      isPreview: true
+    })
+
+    await screen.findByTestId('graph-figure')
+    await settled()
+    expect(screen.queryByRole('link', { name: 'Service' })).not.toBeInTheDocument()
+  })
+
+  test('only shows that it is there while the dashboard is edited', async () => {
+    const wrapper = defineComponent({
+      setup() {
+        useProvideDashboardEditing(ref(true))
+        return () =>
+          h(DashboardContentTimeSeriesGraph, {
+            ...baseProps,
+            content: LINKED_TIMESERIES,
+            effective_filter_context: ONE_SERVICE
+          } as never)
+      }
+    })
+    render(wrapper)
+
+    expect(await screen.findByRole('button', { name: 'Service' })).toBeDisabled()
+    expect(screen.queryByRole('link', { name: 'Service' })).not.toBeInTheDocument()
   })
 })

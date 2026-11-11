@@ -13,6 +13,7 @@ import client, { unwrap } from 'cmk-ui-library/lib/rest-api-client/client'
 import { staticAssertNever } from 'cmk-ui-library/lib/typeUtils'
 import { computed, onMounted, ref, watch } from 'vue'
 
+import GraphContextualLinks from '@/dashboard/components/GraphContextualLinks.vue'
 import { useInjectCmkToken } from '@/dashboard/composables/useCmkToken'
 import { useInjectSharedWidgetGraphs } from '@/dashboard/composables/useSharedWidgetGraphs'
 import type {
@@ -20,6 +21,8 @@ import type {
   CombinedGraphContent,
   CustomGraphContent,
   EmbeddedCustomGraphContent,
+  GraphLinkContent,
+  GraphService,
   PerformanceGraphContent,
   ProblemGraphContent,
   SingleTimeseriesContent,
@@ -371,6 +374,29 @@ const showBurgerMenu = computed(
     addTo.value !== null
 )
 
+// A shared dashboard follows no link. Neither does the preview, which takes no clicks.
+const linkedContent = computed<GraphLinkContent | null>(() => {
+  const content = props.content
+  const followsLinks = cmkToken === undefined && props.isPreview !== true
+  if (!followsLinks || !('contextual_link' in content)) {
+    return null
+  }
+  return content.contextual_link.type === 'none' ? null : content
+})
+
+// These graphs are drawn for the service of the widget's filters; the others name it per line.
+const singleService = computed<GraphService | null>(() => {
+  if (props.content.type !== 'single_timeseries' && props.content.type !== 'performance_graph') {
+    return null
+  }
+  const { host, service, site } = singleContext.value
+  if (host === null || service === null) {
+    return null
+  }
+  // An empty site filter names no site.
+  return { site_id: site || null, host_name: host, service_description: service }
+})
+
 onMounted(() => {
   if (sharedWidgetGraphs === undefined) {
     void loadGraph()
@@ -422,7 +448,21 @@ onMounted(() => {
         :show-burger-menu="showBurgerMenu"
         :add-to="addTo"
         @commit-time-range="onCommitTimeRange"
-      />
+      >
+        <template
+          v-if="linkedContent"
+          #header-actions="{ metrics, timeRange: shownTimeRange, setShown }"
+        >
+          <GraphContextualLinks
+            :content="linkedContent"
+            :context="effective_filter_context.filters"
+            :single-service="singleService"
+            :metrics="metrics"
+            :time-range="shownTimeRange"
+            :set-shown="setShown"
+          />
+        </template>
+      </GraphFigure>
     </div>
   </DashboardContentContainer>
 </template>

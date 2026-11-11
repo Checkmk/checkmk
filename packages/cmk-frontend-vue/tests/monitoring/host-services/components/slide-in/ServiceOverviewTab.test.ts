@@ -254,6 +254,23 @@ describe('ServiceOverviewTab', () => {
     })
   })
 
+  it('narrows the listing to the services assigned to a contact group clicked on', async () => {
+    const service = makeListingService()
+    render(ServiceOverviewTab, {
+      props: { displayOptions: DISPLAY_OPTIONS, data: makeOverview({ contact_groups: ['linux'] }) },
+      global: { provide: { [MONITORING_SERVICE as symbol]: service } }
+    })
+
+    await userEvent.click(screen.getByRole('button', { name: 'linux' }))
+
+    expect(service.filterState.value).toStrictEqual({
+      type: 'condition',
+      field: 'contact_groups',
+      op: 'one_of',
+      value: ['linux']
+    })
+  })
+
   it('narrows the listing to the services carrying a label clicked on', async () => {
     const service = makeListingService()
     render(ServiceOverviewTab, {

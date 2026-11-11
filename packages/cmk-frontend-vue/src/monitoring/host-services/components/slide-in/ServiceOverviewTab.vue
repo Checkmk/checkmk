@@ -19,7 +19,13 @@ import OverviewChips from '@/monitoring/shared/components/slide-in/OverviewChips
 import OverviewDetailList from '@/monitoring/shared/components/slide-in/OverviewDetailList.vue'
 import OverviewLabels from '@/monitoring/shared/components/slide-in/OverviewLabels.vue'
 import { formatDisplayTimestamp } from '@/monitoring/shared/formatTimestamp'
-import { labelCondition, tagCondition, toNameItems, toTagItems } from '@/monitoring/shared/labels'
+import {
+  contactGroupCondition,
+  labelCondition,
+  tagCondition,
+  toNameItems,
+  toTagItems
+} from '@/monitoring/shared/labels'
 import type { DisplayOptions } from '@/monitoring/shared/types'
 
 const props = defineProps<{ data: ServiceOverview; displayOptions: DisplayOptions }>()
@@ -84,7 +90,7 @@ const nextCheck = computed(() =>
     <OverviewDetailList align="start">
       <dt>{{ _t('Contact groups:') }}</dt>
       <dd>
-        <OverviewChips :items="contactGroupChips" />
+        <OverviewChips :items="contactGroupChips" :filter-by="contactGroupCondition" />
       </dd>
 
       <dt>{{ _t('Tags:') }}</dt>

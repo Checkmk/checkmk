@@ -1380,6 +1380,7 @@ fastapi==0.163.1 \
     # via
     #   -r cmk/requirements.in
     #   -r non-free/packages/cmk-ai-control-plane/requirements.in
+    #   -r non-free/packages/cmk-ai-router/requirements.in
     #   -r non-free/packages/cmk-dev-ai/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-fastapi/requirements.in
@@ -1954,6 +1955,7 @@ httpx2==2.16.2 \
     --hash=sha256:f05c13aade4c45dbf1c9060647a1058f0acad62398fad96e741269edb33d46f5
     # via
     #   -r non-free/packages/cmk-ai-control-plane/requirements.in
+    #   -r non-free/packages/cmk-ai-router/dev-requirements.in
     #   -r non-free/packages/cmk-dev-ai/dev-requirements.in
     #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r non-free/packages/cmk-relay-engine/requirements.in
@@ -4389,6 +4391,7 @@ pydantic==2.14.3 \
     # via
     #   -r cmk/requirements.in
     #   -r non-free/packages/cmk-ai-control-plane/requirements.in
+    #   -r non-free/packages/cmk-ai-router/requirements.in
     #   -r non-free/packages/cmk-bakery/requirements.in
     #   -r non-free/packages/cmk-cloud/requirements.in
     #   -r non-free/packages/cmk-core-helpers/requirements.in
@@ -4864,6 +4867,7 @@ pytest==9.2.0 \
     # via
     #   -r non-free/packages/cmk-agent-registration-extended/dev-requirements.in
     #   -r non-free/packages/cmk-ai-control-plane/dev-requirements.in
+    #   -r non-free/packages/cmk-ai-router/dev-requirements.in
     #   -r non-free/packages/cmk-bakery/dev-requirements.in
     #   -r non-free/packages/cmk-cloud/dev-requirements.in
     #   -r non-free/packages/cmk-core-helpers/dev-requirements.in
@@ -4981,6 +4985,7 @@ pytest-random-order==1.2.0 \
     --hash=sha256:78d1d6f346222cdf26a7302c502d2f1cab19454529af960b8b9e1427a99ab277
     # via
     #   -r non-free/packages/cmk-ai-control-plane/dev-requirements.in
+    #   -r non-free/packages/cmk-ai-router/dev-requirements.in
     #   -r non-free/packages/cmk-dev-ai/dev-requirements.in
     #   -r non-free/packages/cmk-mcp/dev-requirements.in
     #   -r non-free/packages/cmk-relay-engine/dev-requirements.in
@@ -5000,6 +5005,7 @@ pytest-socket==0.8.1 \
     --hash=sha256:f9846bed1dcd96eed459e5e14795bbaf96715cf4e827891fe70773817ecb8ed4
     # via
     #   -r non-free/packages/cmk-ai-control-plane/dev-requirements.in
+    #   -r non-free/packages/cmk-ai-router/dev-requirements.in
     #   -r non-free/packages/cmk-dev-ai/dev-requirements.in
     #   -r non-free/packages/cmk-mcp/dev-requirements.in
     #   -r non-free/packages/cmk-relay-engine/dev-requirements.in
@@ -6543,6 +6549,7 @@ uvicorn==0.54.0 \
     # via
     #   -r cmk/requirements.in
     #   -r non-free/packages/cmk-ai-control-plane/requirements.in
+    #   -r non-free/packages/cmk-ai-router/requirements.in
     #   -r non-free/packages/cmk-dev-ai/requirements.in
     #   -r non-free/packages/cmk-mcp/requirements.in
     #   -r packages/cmk-agent-receiver/requirements.in

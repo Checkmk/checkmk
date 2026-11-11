@@ -1956,6 +1956,9 @@ allows = [
   "cmk.checkengine.snmplib",
 ]
 
+[components."cmk.ai_router"]
+allows = []
+
 [components."cmk.reviewmk"]
 allows = []
 

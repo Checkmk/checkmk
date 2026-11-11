@@ -5,6 +5,16 @@
  */
 import { extractQualityLevel, parseMarkdown, stripQualityLineFromText } from '@/ai/lib/markdown'
 
+import {
+  ACTIVE_MARKDOWN,
+  ACTIVE_MARKUP,
+  BOUNDARY_MARKDOWN,
+  BOUNDARY_MARKUP,
+  type SurfacePolicy,
+  activeContentIn,
+  inertVHtmlContent
+} from '@tests/vitest.sanitize'
+
 function badge(state: 'ok' | 'warn' | 'crit' | 'unknown'): string {
   const label = state.toUpperCase()
   return `<span class="ai-markdown-content__badge ai-markdown-content__badge--${state}">${label}</span>`
@@ -246,30 +256,73 @@ describe('stripQualityLineFromText - single-strip invariant', () => {
   })
 })
 
+const ANSWER: SurfacePolicy = {
+  tags: [
+    'p',
+    'br',
+    'hr',
+    'blockquote',
+    'pre',
+    'code',
+    'span',
+    'strong',
+    'em',
+    'b',
+    'i',
+    's',
+    'del',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'ul',
+    'ol',
+    'li',
+    'table',
+    'thead',
+    'tbody',
+    'tr',
+    'th',
+    'td',
+    'a'
+  ],
+  attributes: ['href', 'title', 'align', 'class'],
+  classes: [
+    'ai-markdown-content__badge',
+    'ai-markdown-content__badge--ok',
+    'ai-markdown-content__badge--warn',
+    'ai-markdown-content__badge--crit',
+    'ai-markdown-content__badge--unknown',
+    'ai-markdown-content__service-context',
+    'ai-markdown-content__recommended-actions'
+  ],
+  protocols: ['http:', 'https:', 'mailto:']
+}
+
 describe('markdown.parse - sanitization', () => {
-  test('neutralizes hostile HTML echoed back in the answer', async () => {
-    const hostile = [
-      'Raw script tag: <script>alert("xss-script")</script>',
-      'Image with error handler: <img src="x" onerror="alert(\'xss-img\')">',
-      'SVG onload: <svg onload="alert(\'xss-svg\')"></svg>',
-      'Iframe: <iframe src="javascript:alert(\'xss-iframe\')"></iframe>',
-      'Styled span with handler: <span onmouseover="alert(\'xss-span\')" style="background:red">hover me</span>',
-      "JavaScript URL link: [click me](javascript:alert('xss-link'))",
-      'Data URL link: [data url](data:text/html,<script>alert(1)</script>)',
-      'Entities stay text: &lt;script&gt;alert(1)&lt;/script&gt;',
-      'Mixed case: <ScRiPt>alert("xss-case")</ScRiPt>'
-    ].join('\n\n')
+  test.each([...ACTIVE_MARKUP, ...ACTIVE_MARKDOWN])('renders %s as inert', async (markup) => {
+    const html = await parse(`Hi ${markup} there`)
 
-    const html = await parse(hostile)
+    const rendered = inertVHtmlContent(html)
+    expect(activeContentIn(rendered, ANSWER)).toEqual([])
+  })
 
-    expect(html).not.toMatch(/<script/i)
-    expect(html).not.toMatch(/<svg/i)
-    expect(html).not.toMatch(/<iframe/i)
-    expect(html).not.toMatch(/<img/i)
-    expect(html).not.toMatch(/\son\w+=/i)
-    expect(html).not.toContain('javascript:')
-    expect(html).not.toContain('data:text/html')
-    expect(html).not.toContain('style=')
+  test.each([...BOUNDARY_MARKUP, ...BOUNDARY_MARKDOWN])(
+    'keeps %s within the answer policy, showing %s',
+    async (markup, text) => {
+      const html = await parse(`Hi ${markup} there`)
+
+      const rendered = inertVHtmlContent(html)
+      expect(activeContentIn(rendered, ANSWER)).toEqual([])
+      expect(rendered.textContent?.trim()).toBe(`Hi ${text} there`)
+    }
+  )
+
+  test('shows escaped markup as text', async () => {
+    const html = await parse('Entities stay text: &lt;script&gt;alert(1)&lt;/script&gt;')
+
     expect(html).toContain('&lt;script&gt;alert(1)&lt;/script&gt;')
   })
 

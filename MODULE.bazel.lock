@@ -436,7 +436,7 @@
     },
     "//bazel/extensions:python_cab_repositories.bzl%repos": {
       "general": {
-        "bzlTransitiveDigest": "ShVSxgDZ0KpTZxOAGN3MwcTNprONFtev7vzrtRY3m/g=",
+        "bzlTransitiveDigest": "XG1T928UP31txNXio1KHFNwJ/i8/W+rSwGo+04JLK2w=",
         "usagesDigest": "BXYqIAu49CQCFQxk4Z2fbq50BtPUgveC3nsyNS28Gd4=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},

@@ -10,11 +10,10 @@ import hashlib
 import http.client
 from collections.abc import Mapping, Sequence
 from http import HTTPStatus
-from typing import cast, Literal
+from typing import cast, Literal, TypeForm
 
 from apispec import APISpec
 from pydantic import PydanticInvalidForJsonSchema, TypeAdapter
-from typing_extensions import TypeForm
 
 from cmk.ccc.version import Edition
 from cmk.gui.http import Response

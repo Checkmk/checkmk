@@ -24,14 +24,14 @@ pkg_files(
     attributes = pkg_attributes(mode = "0755"),
     renames = select({
         "@//:use_fake_artifacts_enabled": {
-            ":mk-oracle.aix.faked": "lib/python3.14/site-packages/cmk/plugins/oracle/agents/mk-oracle.aix.faked",
-            ":mk-oracle.exe.faked": "lib/python3.14/site-packages/cmk/plugins/oracle/agents/mk-oracle.exe.faked",
-            ":mk-oracle.solaris.faked": "lib/python3.14/site-packages/cmk/plugins/oracle/agents/mk-oracle.solaris.faked",
+            ":mk-oracle.aix.faked": "lib/python3.15/site-packages/cmk/plugins/oracle/agents/mk-oracle.aix.faked",
+            ":mk-oracle.exe.faked": "lib/python3.15/site-packages/cmk/plugins/oracle/agents/mk-oracle.exe.faked",
+            ":mk-oracle.solaris.faked": "lib/python3.15/site-packages/cmk/plugins/oracle/agents/mk-oracle.solaris.faked",
         },
         "//conditions:default": {
-            ":mk-oracle.aix": "lib/python3.14/site-packages/cmk/plugins/oracle/agents/mk-oracle.aix",
-            ":mk-oracle.exe": "lib/python3.14/site-packages/cmk/plugins/oracle/agents/mk-oracle.exe",
-            ":mk-oracle.solaris": "lib/python3.14/site-packages/cmk/plugins/oracle/agents/mk-oracle.solaris",
+            ":mk-oracle.aix": "lib/python3.15/site-packages/cmk/plugins/oracle/agents/mk-oracle.aix",
+            ":mk-oracle.exe": "lib/python3.15/site-packages/cmk/plugins/oracle/agents/mk-oracle.exe",
+            ":mk-oracle.solaris": "lib/python3.15/site-packages/cmk/plugins/oracle/agents/mk-oracle.solaris",
         },
     }),
     tags = ["manual"],
@@ -43,7 +43,7 @@ pkg_files(
     name = "mk-oracle_linux_pkg",
     srcs = ["//packages/mk-oracle"],
     attributes = pkg_attributes(mode = "0755"),
-    prefix = "lib/python3.14/site-packages/cmk/plugins/oracle/agents",
+    prefix = "lib/python3.15/site-packages/cmk/plugins/oracle/agents",
     tags = ["manual"],
 )
 

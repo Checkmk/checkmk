@@ -241,6 +241,11 @@ single_version_override(
         "//bazel/patches:rules_python-py_wheel-filter_out_virtual_imports.patch",
         # TODO: Re-check if that patch is still needed with bazel 9.1.1, see CMK-39403
         "//bazel/patches:rules_python-relative-interpreter-symlink.patch",
+        # A pip.override repacks the patched wheel with a zip binary, which the build
+        # images lack: use the toolchain's Python. Only elementpath's patch needs it.
+        # TODO: Remove the elementpath patch once a pysaml2 release allows xmlschema>=3,
+        # see //bazel/module:py.MODULE.bazel.
+        "//bazel/patches:rules_python-repack_patched_whl_with_python.patch",
     ],
 )
 
@@ -649,11 +654,11 @@ http_archive(
 http_archive(
     name = "python",
     build_file = "//omd/packages/Python:BUILD.Python.bazel",
-    integrity = "sha256-O0jayPtZ9i6qZ6yDwesSvaG3oIQG3ShuJSwRpmvif4E=",
-    strip_prefix = "Python-3.14.7",
+    integrity = "sha256-i1U20oAULs9s3+FdEqIbocZeMAu/eyio0M24SVdXl94=",
+    strip_prefix = "Python-3.15.2",
     urls = [
-        "https://www.python.org/ftp/python/3.14.7/Python-3.14.7.tar.xz",
-        UPSTREAM_MIRROR_URL + "Python-3.14.7.tar.xz",
+        "https://www.python.org/ftp/python/3.15.2/Python-3.15.2.tar.xz",
+        UPSTREAM_MIRROR_URL + "Python-3.15.2.tar.xz",
     ],
 )
 

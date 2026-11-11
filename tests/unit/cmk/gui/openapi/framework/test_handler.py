@@ -11,12 +11,11 @@ import json
 from collections.abc import Iterator
 from dataclasses import dataclass
 from http import HTTPStatus
-from typing import Annotated, override
+from typing import Annotated, override, TypeForm
 from unittest.mock import MagicMock
 
 import pytest
 from pydantic import PlainSerializer
-from typing_extensions import TypeForm
 from werkzeug.datastructures import ETags, Headers
 
 from cmk.ccc import store

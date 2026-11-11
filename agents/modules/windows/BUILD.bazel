@@ -48,14 +48,14 @@ py_binary(
     visibility = ["//visibility:public"],
 )
 
-# Offline pip driver — runs the sha256-pinned pip wheel from the closure
-# under the CAB's major.minor CPython, so pip-written metadata (RECORD
-# bytecode tags, versioned script names) matches the CAB's Python.
+# Offline pip driver — runs the sha256-pinned pip wheel from the closure.
+# python_cab.bzl runs it under the CAB's major.minor CPython, so pip-written
+# metadata (RECORD bytecode tags, versioned script names) matches the CAB's
+# Python.
 py_binary(
     name = "pip_offline",
     srcs = ["pip_offline.py"],
     main = "pip_offline.py",
-    python_version = _PY_WIN_MAJOR_MINOR,
     visibility = ["//visibility:public"],
 )
 

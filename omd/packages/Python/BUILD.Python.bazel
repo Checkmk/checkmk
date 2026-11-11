@@ -75,6 +75,11 @@ configure_make(
         "--enable-shared",
         "--with-lto",
         "--without-static-libpython",
+        # Since 3.15, a missing system mpdecimal no longer falls back to the
+        # bundled libmpdec: _decimal is silently left out and the decimal module
+        # becomes the slow pure-Python _pydecimal. Python 3.16 removes the
+        # bundled copy, so we will need our own mpdecimal package then.
+        "--with-system-libmpdec=no",
         # Bake a stable prefix into the binaries instead of the bazel sandbox
         # path. rules_foreign_cc passes its own --prefix=$BUILD_TMPDIR/... first;
         # autotools honours the last --prefix, so this one wins for the value

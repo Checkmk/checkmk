@@ -17,9 +17,12 @@ config_setting(
 ) for module in all_requirements]
 
 # Extra Bazel-fetched srcs some modules need on top of the common set below, e.g.
-# offline meson subproject sources seeded by get_extra_setup() in
-# build-python3-modules.bzl.
+# offline meson subproject sources seeded by get_extra_setup() or patches applied by
+# get_post_install() in build-python3-modules.bzl.
 _EXTRA_MODULE_SRCS = {
+    # TODO: Remove the elementpath patch once a pysaml2 release allows xmlschema>=3, see
+    # //bazel/module:py.MODULE.bazel.
+    "elementpath": ["//bazel/patches:elementpath-unicode_categories_fallback.patch"],
     "matplotlib": [
         "@matplotlib_freetype_src//file",
         "@matplotlib_harfbuzz_src//file",

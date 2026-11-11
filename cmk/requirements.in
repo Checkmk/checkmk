@@ -58,7 +58,6 @@ roman
 setproctitle
 setuptools
 starlette
-typing-extensions
 tzlocal
 urllib3
 uvicorn

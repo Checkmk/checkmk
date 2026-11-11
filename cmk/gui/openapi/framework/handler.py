@@ -10,9 +10,8 @@ import types
 from collections.abc import Callable
 from http import HTTPStatus
 from inspect import BoundArguments
-from typing import get_args, get_origin
+from typing import get_args, get_origin, TypeForm
 
-from typing_extensions import TypeForm
 from werkzeug.datastructures import MIMEAccept
 from werkzeug.http import parse_accept_header
 

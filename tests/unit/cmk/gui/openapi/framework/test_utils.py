@@ -7,10 +7,9 @@ import dataclasses
 import types
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from typing import Annotated, cast, Literal, TypeVar
+from typing import Annotated, cast, Literal, TypeForm, TypeVar
 
 import pytest
-from typing_extensions import TypeForm
 
 from cmk.gui.openapi.framework._utils import (
     get_resolved_origin,

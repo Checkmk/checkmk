@@ -32,7 +32,7 @@ Everything else is hermetic via bazel modules:
   given the same inputs).
 - the pinned `pip` wheel from the `@windows_python_wheels` hub, run
   under the hermetic CPython of the CAB's `major.minor` line
-  (`pip_offline.py`, pinned via its `py_binary`'s `python_version`) —
+  (`pip_offline.py`, pinned by a transition in `python_cab.bzl`) —
   installs the Windows wheels offline (`--no-index --find-links`,
   `--platform win_amd64 --only-binary=:all:`). Nothing Windows runs
   during the build, and the build action needs no network.
@@ -127,9 +127,10 @@ For a **patch bump** (same `major.minor`, e.g. 3.13.14 → 3.13.15):
   `python-<version>-amd64-<feature>.msi` — the fallback URL is built from
   `PYTHON_VERSION_WINDOWS`, but nothing populates the mirror automatically, so
   until they are uploaded the fallback 404s and only python.org serves them,
-- optionally bump the `x86_64-pc-windows-msvc`
+- optionally bump its `x86_64-pc-windows-msvc`
   `single_version_platform_override` (version + url + sha256) in
-  `bazel/module/py.MODULE.bazel` — python-build-standalone releases can lag
+  `bazel/module/py.MODULE.bazel`, not the one for the site's Python, which
+  follows `PYTHON_VERSION` — python-build-standalone releases can lag
   python.org, and a patch-level drift between the build-time toolchain and
   the shipped MSIs is harmless.
 
@@ -137,7 +138,7 @@ For a **minor bump** (e.g. 3.13.x → 3.14.x), additionally:
 
 - update `pip.parse(python_version = ...)` for the `windows_python_wheels`
   and `windows_test_python_wheels` hubs in `bazel/module/python_cab.MODULE.bazel`,
-- in `bazel/module/py.MODULE.bazel`: update the `x86_64-pc-windows-msvc`
+- in `bazel/module/py.MODULE.bazel`: update its `x86_64-pc-windows-msvc`
   `single_version_platform_override` to the new minor (and add an
   `x86_64-unknown-linux-gnu` one for it, so the resolver runtime is pinned
   too), and update the `use_repo(python, "python_<X_Y>_x86_64-unknown-linux-gnu")`

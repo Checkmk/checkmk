@@ -134,7 +134,7 @@ def test_02_pip_path(site: Site) -> None:
 def test_03_pip_interpreter_version(site: Site, pip_cmd: PipCommand) -> None:
     p = site.execute(pip_cmd.command + ["-V"], stdout=subprocess.PIPE)
     version = p.stdout.read() if p.stdout else "<NO STDOUT>"
-    assert version.startswith("pip 26.2.1")
+    assert version.startswith("pip 26.2.2")
 
 
 def test_04_pip_user_can_install_non_wheel_packages(site: Site) -> None:
@@ -193,9 +193,10 @@ def test_avoids_symlink_attacks(site: Site) -> None:
     )
 
 
-def test_python_preferred_encoding(site: Site) -> None:
+def test_python_locale_encoding(site: Site) -> None:
+    # Not getpreferredencoding(): it's always "utf-8" in UTF-8 mode, the default since 3.15.
     p = site.execute(
-        ["python3", "-c", "import locale; print(locale.getpreferredencoding())"],
+        ["python3", "-c", "import locale; print(locale.getencoding())"],
         stdout=subprocess.PIPE,
     )
     assert p.communicate()[0].rstrip() == "UTF-8"

@@ -54,6 +54,22 @@ _windows_wheels_transition = transition(
     ],
 )
 
+def _cab_python_transition_impl(_settings, _attr):
+    return {
+        "@rules_python//python/config_settings:python_version": python_version_major_minor(PYTHON_VERSION_WINDOWS),
+    }
+
+# pip_offline runs pip under the cab's major.minor, so that the metadata pip
+# writes (RECORD bytecode tags, versioned script names) matches the cab's
+# Python. Pinned on this edge, not by the py_binary's python_version: that would
+# also pin the target itself, where the lint and mypy aspects then need
+# @cmk_requirements wheels for that version, which only has the site's.
+_cab_python_transition = transition(
+    implementation = _cab_python_transition_impl,
+    inputs = [],
+    outputs = ["@rules_python//python/config_settings:python_version"],
+)
+
 def _python_msi_tree_impl(ctx):
     tree = ctx.actions.declare_directory(ctx.label.name)
     py_short = python_version_major_minor(PYTHON_VERSION_WINDOWS).replace(".", "")
@@ -141,7 +157,8 @@ def _cab_args(ctx, cab, requirements):
 def _cab_tools(ctx):
     return [
         ctx.attr._pack_cab[DefaultInfo].files_to_run,
-        ctx.attr._pip_offline[DefaultInfo].files_to_run,
+        # A transitioned attr is a list, also for a 1:1 transition.
+        ctx.attr._pip_offline[0][DefaultInfo].files_to_run,
     ]
 
 # The attributes python_cab and python_test_cab share: the extracted
@@ -171,7 +188,7 @@ _CAB_ATTRS = {
     "_pip_offline": attr.label(
         default = Label(":pip_offline"),
         executable = True,
-        cfg = "exec",
+        cfg = _cab_python_transition,
     ),
 }
 

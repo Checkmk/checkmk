@@ -162,23 +162,23 @@ class TestEnsureClone:
 
     def test_active_clone_is_noop(self, omd: FakeOmd) -> None:
         ensure_clone(omd.site_root)
-        sentinel = omd.clone / "deployed.txt"
-        sentinel.write_text("keep me")
+        sentinel_ = omd.clone / "deployed.txt"
+        sentinel_.write_text("keep me")
 
         ensure_clone(omd.site_root)
 
-        assert sentinel.read_text() == "keep me"
+        assert sentinel_.read_text() == "keep me"
         assert omd.omd_calls() == ["stop", "start"]  # no second restart
 
     def test_reuses_existing_clone_with_matching_version(self, omd: FakeOmd) -> None:
         omd.clone.mkdir(parents=True)
-        sentinel = omd.clone / "deployed.txt"
-        sentinel.write_text("keep me")
+        sentinel_ = omd.clone / "deployed.txt"
+        sentinel_.write_text("keep me")
 
         ensure_clone(omd.site_root)
 
         assert os.readlink(omd.version_link) == str(omd.clone)
-        assert sentinel.read_text() == "keep me"
+        assert sentinel_.read_text() == "keep me"
 
     def test_rebuilds_dangling_clone_symlink(self, omd: FakeOmd) -> None:
         omd.version_link.unlink()

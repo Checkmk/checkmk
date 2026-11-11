@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from pydantic.fields import FieldInfo
 
 if TYPE_CHECKING:
-    from typing_extensions import TypeForm
+    from typing import TypeForm
 
 
 class SentEvent[M: BaseModel](ServerSentEvent):  # type: ignore[explicit-any]

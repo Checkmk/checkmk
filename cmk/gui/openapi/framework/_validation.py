@@ -11,9 +11,7 @@ import dataclasses
 import inspect
 import types
 from collections.abc import Iterator, Mapping
-from typing import Any, cast, get_args, TypeAliasType, Union
-
-from typing_extensions import TypeForm
+from typing import Any, cast, get_args, TypeAliasType, TypeForm, Union
 
 from cmk.gui.openapi.restful_objects.type_defs import ErrorStatusCodeInt, StatusCodeInt
 from cmk.gui.openapi.restful_objects.utils import identify_expected_status_codes

@@ -127,10 +127,14 @@ def py_proto_library(name, protos, output_mode = None, **kwargs):
         protos = protos,
     )
 
+    # The stubs land in this package, the modules in the protos' one: "." is for mypy to find
+    # the stubs. As data, they also give the import path a directory at runtime, where Python
+    # 3.15+ reports a missing one on stderr.
     _py_library(
         name = name,
         srcs = [name_pb],
         pyi_srcs = [name_pyi],
+        data = [name_pyi],
         imports = ["."],
         **kwargs
     )

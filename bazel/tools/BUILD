@@ -87,7 +87,7 @@ groovy_bin.npm_groovy_lint_binary(
 mypy_cli(
     name = "mypy_cli_original",
     mypy_requirement = requirement("mypy"),
-    python_version = "3.14",
+    python_version = "3.15",
     tags = ["no-mypy"],
     deps = [
         # for `plugins = ["pydantic.mypy"]`

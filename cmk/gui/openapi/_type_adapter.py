@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from functools import lru_cache
-from typing import cast, get_args, override
+from typing import cast, get_args, override, TypeForm
 
 from pydantic import ConfigDict, TypeAdapter
-from typing_extensions import TypeForm
 
 
 class _HashableArgs[T]:

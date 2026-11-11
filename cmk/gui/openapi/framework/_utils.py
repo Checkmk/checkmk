@@ -7,9 +7,16 @@ import functools
 import operator
 import types
 from collections.abc import Iterable, Iterator, Mapping
-from typing import Annotated, cast, get_args, get_origin, get_type_hints, TypeAliasType, TypeVar
-
-from typing_extensions import TypeForm
+from typing import (
+    Annotated,
+    cast,
+    get_args,
+    get_origin,
+    get_type_hints,
+    TypeAliasType,
+    TypeForm,
+    TypeVar,
+)
 
 from cmk.gui.utils.dataclasses import DataclassInstance
 

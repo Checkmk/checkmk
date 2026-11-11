@@ -1,10 +1,22 @@
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.single_version_platform_override(
     platform = "x86_64-unknown-linux-gnu",
-    python_version = "3.14.7",
-    sha256 = "3d1705fee7747c491d774e26fa91fad67e25d1eb3ede4124dc88501279f2e7d4",
+    python_version = "3.15.2",
+    sha256 = "182e7adf7e4f0e32dafac5143f00d466afd20eef45918ea170f78884e503ac18",
     urls = [
-        "https://github.com/astral-sh/python-build-standalone/releases/download/20260807/cpython-3.14.7+20260807-x86_64-unknown-linux-gnu-install_only.tar.gz",
+        "https://github.com/astral-sh/python-build-standalone/releases/download/20261110/cpython-3.15.2+20261110-x86_64-unknown-linux-gnu-install_only.tar.gz",
+    ],
+)
+
+# The Windows build nodes evaluate the pip extension, too, and its
+# cmk_requirements hub needs a host interpreter of the site's version there
+# -- guarded by //tests/code_quality/requirements:requirements_files.
+python.single_version_platform_override(
+    platform = "x86_64-pc-windows-msvc",
+    python_version = "3.15.2",
+    sha256 = "a0e4e14d152efbd2a66e4873efe0b4ab42e1ee759441dbc23af034236d7a09cd",
+    urls = [
+        "https://github.com/astral-sh/python-build-standalone/releases/download/20261110/cpython-3.15.2+20261110-x86_64-pc-windows-msvc-install_only.tar.gz",
     ],
 )
 
@@ -20,11 +32,28 @@ python.single_version_platform_override(
         "https://github.com/astral-sh/python-build-standalone/releases/download/20260807/cpython-3.14.7+20260807-x86_64-pc-windows-msvc-install_only.tar.gz",
     ],
 )
-python.defaults(python_version = "3.14")
+
+# Linux runtime for resolving the Windows wheel closure (rules_uv, see the
+# use_repo below), pinned to the same version.  Drop it together with the
+# extra python.toolchain() below once PYTHON_VERSION_WINDOWS has caught up
+# with the site's major.minor.
+python.single_version_platform_override(
+    platform = "x86_64-unknown-linux-gnu",
+    python_version = "3.14.7",
+    sha256 = "3d1705fee7747c491d774e26fa91fad67e25d1eb3ede4124dc88501279f2e7d4",
+    urls = [
+        "https://github.com/astral-sh/python-build-standalone/releases/download/20260807/cpython-3.14.7+20260807-x86_64-unknown-linux-gnu-install_only.tar.gz",
+    ],
+)
+python.defaults(python_version = "3.15")
 python.toolchain(
     configure_coverage_tool = True,
-    python_version = "3.14",
+    python_version = "3.15",
 )
+
+# The Windows agent's major.minor, registered only as long as it differs from
+# the site's; see the Linux 3.14.7 override above.
+python.toolchain(python_version = "3.14")
 
 # rules_uv py3_runtime for //agents/modules/windows:windows_requirements; the
 # version infix must track PYTHON_VERSION_WINDOWS's major.minor (same guard).
@@ -49,12 +78,26 @@ pip.parse(
         "CC": "gcc-14",
     },
     hub_name = "cmk_requirements",
-    python_version = "3.14",
+    python_version = "3.15",
     requirements_by_platform = {
         "@//:requirements.txt": "linux_*",
     },
 )
 use_repo(pip, "cmk_requirements")
+
+# elementpath 4.8.0 has no Unicode categories for Python 3.15+, but pysaml2 keeps us
+# on it (xmlschema<3, which needs elementpath<5). The patch backports the fallback of
+# elementpath 5.x; //omd/packages/python3-modules applies it to the site's copy.
+# TODO: Remove the elementpath patch once a pysaml2 release allows xmlschema>=3, i.e.
+# elementpath 5.x: drop this override, the patch and its export in //bazel/patches, its
+# entries in //omd/packages/python3-modules (BUILD, build-python3-modules.bzl), and the
+# rules_python patch for repacking patched wheels in //:MODULE.bazel, unless another
+# pip.override needs it by then.
+pip.override(
+    file = "elementpath-4.8.0-py3-none-any.whl",
+    patch_strip = 1,
+    patches = ["//bazel/patches:elementpath-unicode_categories_fallback.patch"],
+)
 
 types = use_extension("@rules_mypy//mypy:types.bzl", "types")
 types.requirements(

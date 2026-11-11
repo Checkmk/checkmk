@@ -1,0 +1,66 @@
+diff --git a/python/private/pypi/hub_builder.bzl b/python/private/pypi/hub_builder.bzl
+index 596cfb2..e00a90e 100644
+--- a/python/private/pypi/hub_builder.bzl
++++ b/python/private/pypi/hub_builder.bzl
+@@ -640,7 +640,8 @@ def _whl_repo(
+         # need to pass the extra args there, so only pop this for whls
+         args["extra_pip_args"] = src.extra_pip_args
+ 
+-    if not (enable_pipstar_extract and is_whl):
++    # Patched wheels are repacked with Python, see patch_whl.bzl.
++    if not (enable_pipstar_extract and is_whl) or args.get("whl_patches"):
+         if interpreter.path:
+             args["python_interpreter"] = interpreter.path
+         if interpreter.target:
+diff --git a/python/private/pypi/patch_whl.bzl b/python/private/pypi/patch_whl.bzl
+index e8d76ee..ef6c55c 100644
+--- a/python/private/pypi/patch_whl.bzl
++++ b/python/private/pypi/patch_whl.bzl
+@@ -22,6 +22,7 @@ the RECORD file natively in Starlark and repack using system zip.
+ load("@rules_python_internal//:rules_python_config.bzl", rp_config = "config")
+ load("//python/private:repo_utils.bzl", "repo_utils")
+ load(":parse_whl_name.bzl", "parse_whl_name")
++load(":pypi_repo_utils.bzl", "pypi_repo_utils")
+ 
+ _DUMMY_SHA256 = "sha256=0"
+ 
+@@ -213,17 +214,17 @@ def _repack_whl(rctx, *, output):
+         _repack_whl_unix(rctx, output = output)
+ 
+ def _repack_whl_unix(rctx, *, output):
++    # The toolchain's Python instead of a zip binary, which hosts may lack.
++    python = pypi_repo_utils.resolve_python_interpreter(
++        rctx,
++        python_interpreter = rctx.attr.python_interpreter,
++        python_interpreter_target = rctx.attr.python_interpreter_target,
++    )
++    entries = sorted([entry.basename for entry in rctx.path(".").readdir()])
+     repo_utils.execute_checked(
+         rctx,
+         op = "PatchWhl",
+-        arguments = [
+-            "zip",
+-            "-0",
+-            "-X",
+-            str(output),
+-            "-r",
+-            ".",
+-        ],
++        arguments = [python, "-I", "-m", "zipfile", "-c", str(output)] + entries,
+     )
+ 
+ def _repack_whl_windows(rctx, *, output):
+diff --git a/python/private/pypi/whl_archive.bzl b/python/private/pypi/whl_archive.bzl
+index 242104f..2bf60d5 100644
+--- a/python/private/pypi/whl_archive.bzl
++++ b/python/private/pypi/whl_archive.bzl
+@@ -124,6 +124,9 @@ way to define whl_library and move whl patching to a separate place. INTERNAL US
+         "enable_implicit_namespace_pkgs",
+         "envsubst",
+         "pip_data_exclude",
++        # Repacking patched wheels needs Python, see patch_whl.bzl.
++        "python_interpreter",
++        "python_interpreter_target",
+     ]
+ } | AUTH_ATTRS
+ 

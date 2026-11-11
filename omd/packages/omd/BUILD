@@ -313,7 +313,7 @@ py_binary(
 pkg_files(
     name = "omdlib_pkg",
     srcs = [":omdlib"],
-    prefix = "lib/python3.14/site-packages/omdlib",
+    prefix = "lib/python3.15/site-packages/omdlib",
 )
 
 pkg_files(

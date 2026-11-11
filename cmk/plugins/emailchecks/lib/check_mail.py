@@ -114,7 +114,7 @@ def create_argument_parser() -> argparse.ArgumentParser:
 
 def syslog_time(localtime: time.struct_time = time.localtime()) -> str:
     """
-    >>> syslog_time(time.strptime("Sep 22 21:20:19", "%b %d %H:%M:%S"))
+    >>> syslog_time(time.strptime("2025 Sep 22 21:20:19", "%Y %b %d %H:%M:%S"))
     'Sep 22 21:20:19'
     """
     return time.strftime("%b %d %H:%M:%S", localtime)

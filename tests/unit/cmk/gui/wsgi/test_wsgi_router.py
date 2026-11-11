@@ -5,11 +5,11 @@
 
 # mypy: disable-error-code="comparison-overlap"
 
+import importlib.machinery
 import importlib.util
 import os.path
 import types
 from http import HTTPStatus
-from importlib._bootstrap_external import SourceFileLoader
 from typing import override
 
 import flask
@@ -59,20 +59,13 @@ def test_wsgi_app() -> None:
 
 
 def _import_file(file_name: str) -> types.ModuleType:
-    loader: SourceFileLoader = SourceFileLoader("index", file_name)
-    file_spec = importlib.util.spec_from_file_location(
-        "index",
-        file_name,
-        loader=loader,
+    loader = importlib.machinery.SourceFileLoader("index", file_name)
+    # Not spec_from_file_location(loader=...): typeshed types it as LoaderProtocol, which still
+    # requires load_module(), gone from the loaders since Python 3.15.
+    imported = importlib.util.module_from_spec(
+        importlib.machinery.ModuleSpec("index", loader, origin=file_name)
     )
-    if file_spec is None:
-        raise ValueError(f"Module {file_name} could not be found.")
-
-    file_spec.loader = loader
-    imported = importlib.util.module_from_spec(file_spec)
-
-    assert file_spec.loader is not None
-    file_spec.loader.exec_module(imported)
+    loader.exec_module(imported)
     return imported
 
 

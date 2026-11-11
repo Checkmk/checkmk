@@ -12,10 +12,19 @@ import types
 from collections.abc import Callable, Mapping, Sequence
 from functools import lru_cache
 from http import HTTPStatus
-from typing import Annotated, cast, get_args, get_origin, Literal, Self, TypeAliasType, TypedDict
+from typing import (
+    Annotated,
+    cast,
+    get_args,
+    get_origin,
+    Literal,
+    Self,
+    TypeAliasType,
+    TypedDict,
+    TypeForm,
+)
 
 from pydantic import BaseModel, ConfigDict, ValidationError, with_config
-from typing_extensions import TypeForm
 
 from cmk import trace
 from cmk.gui.openapi.restful_objects.validators import RequestDataValidator

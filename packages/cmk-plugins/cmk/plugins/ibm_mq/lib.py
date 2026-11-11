@@ -46,10 +46,10 @@ def parse_ibm_mq(string_table: StringTable, group_by_object: str) -> Section:
         information if there are more values to come after the current one
         (True), or if it is the last value (False).
         """
-        sentinel = object()
-        previous = sentinel
+        sentinel_ = object()
+        previous = sentinel_
         for value in iter(iterable):
-            if isinstance(previous, list) and previous is not sentinel:
+            if isinstance(previous, list) and previous is not sentinel_:
                 yield previous, True
             previous = value
         if isinstance(previous, list):

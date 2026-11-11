@@ -41,6 +41,23 @@ def get_extra_setup(module_name):
         """,
     }.get(module_name, "")
 
+def get_post_install(module_name):
+    """Shell snippet executed right after `pip install`.
+
+    Used to patch the installed module: the patches apply to its site-packages and
+    must be added to that module's `srcs` in the calling BUILD file. pip has already
+    compiled everything, so the snippet recompiles what its patches touch.
+    """
+    site_packages = "$$HOME/$$MODULE_NAME/lib/python%s/site-packages" % PYTHON_MAJOR_DOT_MINOR
+    return {
+        # Unicode categories for Python 3.15+, see //bazel/module:py.MODULE.bazel.
+        # TODO: Remove the elementpath patch once a pysaml2 release allows xmlschema>=3.
+        "elementpath": """
+            patch --directory="{site_packages}" --strip=1 < "$(execpath //bazel/patches:elementpath-unicode_categories_fallback.patch)"
+            "$$PYTHON_EXECUTABLE" -m compileall -f -q "{site_packages}/elementpath/regex"
+        """.format(site_packages = site_packages),
+    }.get(module_name, "")
+
 def create_requirements_file(name, outs):
     """This macro is creating a requirements file per module.
     """
@@ -62,6 +79,7 @@ def build_python_module(name, srcs, outs, requirements = "", **kwargs):
     freetds_dir = Label("@freetds").repo_name
     python_dir = Label("@python").repo_name
     extra_setup = get_extra_setup(name)
+    post_install = get_post_install(name)
     native.genrule(
         name = name + "_compile",
         srcs = srcs,
@@ -79,6 +97,7 @@ def build_python_module(name, srcs, outs, requirements = "", **kwargs):
                 requirements = requirements,
                 constraints = constraints,
                 extra_setup = extra_setup,
+                post_install = post_install,
                 openssl_dir = openssl_dir,
                 freetds_dir = freetds_dir,
                 python_dir = python_dir,
@@ -89,6 +108,7 @@ def build_python_module(name, srcs, outs, requirements = "", **kwargs):
                 requirements = requirements,
                 constraints = constraints,
                 extra_setup = extra_setup,
+                post_install = post_install,
                 openssl_dir = openssl_dir,
                 freetds_dir = freetds_dir,
                 python_dir = python_dir,
@@ -212,6 +232,7 @@ build_cmd = """
         find "$$TMPDIR" -name meson-log.txt -print -exec cat {{}} \\; 2>/dev/null
         exit "$$PIP_INSTALL_STATUS"
     fi
+    {post_install}
 
     tar cf $@ -C $$MODULE_NAME .
 """

@@ -4,8 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-
-from typing_extensions import TypeForm
+from typing import TypeForm
 
 from cmk.gui.openapi.framework.model import json_dump_without_omitted
 

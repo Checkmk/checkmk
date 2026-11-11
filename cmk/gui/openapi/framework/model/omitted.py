@@ -17,12 +17,11 @@ default value. For serializing the response, the `json_dump_without_omitted` fun
 to remove the `ApiOmitted` values from the response body.
 """
 
-from typing import ClassVar, Literal, NoReturn, override, Self
+from typing import ClassVar, Literal, NoReturn, override, Self, TypeForm
 
 from pydantic import GetCoreSchemaHandler, GetJsonSchemaHandler
 from pydantic_core import CoreSchema, ErrorDetails, PydanticOmit
 from pydantic_core.core_schema import is_instance_schema
-from typing_extensions import TypeForm
 
 from cmk.gui.openapi._type_adapter import get_cached_type_adapter
 

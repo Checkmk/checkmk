@@ -5,9 +5,8 @@
 import json
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Annotated, get_args, get_origin
+from typing import Annotated, get_args, get_origin, TypeForm
 
-from typing_extensions import TypeForm
 from werkzeug.http import parse_options_header
 
 

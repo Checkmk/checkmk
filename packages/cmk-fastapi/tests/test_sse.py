@@ -15,7 +15,7 @@ from cmk.fastapi import FastAPI
 from cmk.fastapi.sse import EventStream, SentEvent
 
 if TYPE_CHECKING:
-    from typing_extensions import TypeForm
+    from typing import TypeForm
 
 
 class Greeting(BaseModel):

@@ -9,16 +9,16 @@ import type { GlobalTimePickerProps } from 'cmk-shared-typing/typescript/global_
 import GlobalRefreshControl from '../GlobalRefreshControl/GlobalRefreshControl.vue'
 import { reloadPageContent } from '../GlobalRefreshControl/pageContentReload.ts'
 import GlobalTimePicker from './GlobalTimePicker.vue'
-import { initGlobalRefresh } from './globalTimeState.ts'
+import { initGlobalTime } from './globalTimeState.ts'
 import { useGlobalTimePickerRange } from './useGlobalTimePickerRange.ts'
 
 const props = defineProps<GlobalTimePickerProps>()
 
 const { range, returnToLiveMonitoring } = useGlobalTimePickerRange(props.default_time_range)
 
-initGlobalRefresh({
+initGlobalTime({
   intervalSeconds: props.refresh.interval_seconds,
-  live: props.refresh.starts_live,
+  start: { type: 'page_default', live: props.refresh.starts_live },
   // Only a page whose rows the server rendered needs its content re-fetched; one made of graphs
   // alone leaves them to follow the tick.
   ...(props.refresh.reloads_page_content ? { strategy: reloadPageContent } : {})

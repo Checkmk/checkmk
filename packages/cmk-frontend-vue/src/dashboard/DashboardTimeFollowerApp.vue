@@ -9,14 +9,18 @@ import { onBeforeUnmount, onMounted } from 'vue'
 
 import { reloadPageContent } from '@/graphing/GlobalRefreshControl/pageContentReload'
 import {
-  initGlobalRefresh,
+  initGlobalTime,
   useGlobalRefresh,
   useGlobalTimeRange
 } from '@/graphing/GlobalTimePicker/globalTimeState'
 
 import { isDashboardTimeRangeMessage } from './lib/dashboardTimeRangeMessage'
 
-initGlobalRefresh({ intervalSeconds: null, live: false, strategy: reloadPageContent })
+initGlobalTime({
+  intervalSeconds: null,
+  start: { type: 'page_default', live: false },
+  strategy: reloadPageContent
+})
 
 const { setActiveTimeRange } = useGlobalTimeRange()
 const { refreshOnce } = useGlobalRefresh()

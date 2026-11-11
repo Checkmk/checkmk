@@ -8,7 +8,7 @@ import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import type { ComputedRef, WritableComputedRef } from 'vue'
 
 import {
-  initGlobalRefresh,
+  initGlobalTime,
   useGlobalRefresh,
   useGlobalTimeRange
 } from '@/graphing/GlobalTimePicker/globalTimeState'
@@ -30,9 +30,9 @@ export function useDashboardTimeControl(
   const { refreshTick, pauseRefresh } = useGlobalRefresh()
   const { setActiveTimeRange } = useGlobalTimeRange()
 
-  initGlobalRefresh({
+  initGlobalTime({
     intervalSeconds: globalTimePicker.refresh.interval_seconds,
-    live: live ?? globalTimePicker.refresh.starts_live
+    start: { type: 'page_default', live: live ?? globalTimePicker.refresh.starts_live }
   })
 
   return {

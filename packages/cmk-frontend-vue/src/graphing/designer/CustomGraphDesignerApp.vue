@@ -19,7 +19,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch 
 import { PageHeader } from '@/page-header'
 
 import { GlobalRefreshControl } from '../GlobalRefreshControl'
-import { initGlobalRefresh, rollingRange, useGlobalTimeRange } from '../GlobalTimePicker'
+import { initGlobalTime, rollingRange, useGlobalTimeRange } from '../GlobalTimePicker'
 import {
   type CustomGraphObject,
   type CustomGraphOptions,
@@ -50,7 +50,10 @@ if (activeTimeRange.value === null) {
   setActiveTimeRange(rollingRange(props.time_picker.default_time_range), 'time_picker')
 }
 
-initGlobalRefresh({ intervalSeconds: props.time_picker.refresh.interval_seconds, live: true })
+initGlobalTime({
+  intervalSeconds: props.time_picker.refresh.interval_seconds,
+  start: { type: 'page_default', live: true }
+})
 
 function returnToLiveMonitoring(): void {
   setActiveTimeRange(rollingRange(props.time_picker.default_time_range), 'time_picker')

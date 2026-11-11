@@ -10,7 +10,7 @@ import { nextTick } from 'vue'
 
 import GlobalRefreshControl from '@/graphing/GlobalRefreshControl/GlobalRefreshControl.vue'
 import {
-  initGlobalRefresh,
+  initGlobalTime,
   resetGlobalTimeState,
   useGlobalRefresh
 } from '@/graphing/GlobalTimePicker/globalTimeState'
@@ -186,7 +186,10 @@ describe('the interval picked is the one the clock runs on', () => {
 
   function renderLive(): ReturnType<typeof userEvent.setup> {
     vi.useFakeTimers()
-    initGlobalRefresh({ intervalSeconds: BACKEND_INTERVALS_SECONDS[0]!, live: true })
+    initGlobalTime({
+      intervalSeconds: BACKEND_INTERVALS_SECONDS[0]!,
+      start: { type: 'page_default', live: true }
+    })
     render(GlobalRefreshControl, {
       props: { ...PROPS, intervalChoicesSeconds: BACKEND_INTERVALS_SECONDS }
     })

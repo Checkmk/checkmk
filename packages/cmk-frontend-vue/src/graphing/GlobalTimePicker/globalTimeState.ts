@@ -126,21 +126,24 @@ function resumeRefresh(): void {
   fireRefresh()
 }
 
-export interface GlobalRefreshInit {
+/** How the page's time starts. */
+export type TimeStart = { type: 'page_default'; live: boolean }
+
+export interface GlobalTimeInit {
   /** `null` keeps the default. */
   intervalSeconds: number | null
-  live: boolean
+  start: TimeStart
   strategy?: RefreshStrategy
 }
 
-/** Wire the page's refresh, once - a late-mounting host must not clobber what the user picked in
- * the meantime. Never refreshes: what the server just rendered is already that fresh.
+/** Start the page's time and refresh, once - a late-mounting host must not clobber what the user
+ * picked in the meantime. Never refreshes: what the server just rendered is already that fresh.
  */
-export function initGlobalRefresh({
+export function initGlobalTime({
   intervalSeconds,
-  live,
+  start,
   strategy: refresh
-}: GlobalRefreshInit): void {
+}: GlobalTimeInit): void {
   if (initialised) {
     return
   }
@@ -150,7 +153,7 @@ export function initGlobalRefresh({
   if (intervalSeconds !== null && Number.isFinite(intervalSeconds) && intervalSeconds > 0) {
     intervalSecondsState.value = intervalSeconds
   }
-  pausedState.value = !live
+  pausedState.value = !start.live
   // The interval runs from what the server just rendered, so coming back to the tab inside it is
   // not a missed refresh.
   lastRefreshAtMs = Date.now()

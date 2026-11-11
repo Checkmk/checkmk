@@ -10,7 +10,8 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { defineComponent, h, nextTick, ref } from 'vue'
 
 import {
-  initGlobalRefresh,
+  type GlobalTimeInit,
+  initGlobalTime,
   resetGlobalTimeState,
   useGlobalRefresh
 } from '@/graphing/GlobalTimePicker/globalTimeState'
@@ -524,7 +525,11 @@ describe('the page refresh', () => {
   const A_RANGE = { start: 0, end: 3_600 }
   const A_CANVAS_WIDTH = 800
   // Never reports back, so the content reload stays in flight for the whole test.
-  const RELOADING_CONTENT = { intervalSeconds: 30, live: false, strategy: () => {} }
+  const RELOADING_CONTENT: GlobalTimeInit = {
+    intervalSeconds: 30,
+    start: { type: 'page_default', live: false },
+    strategy: () => {}
+  }
 
   const loadsSoFar = (): number => postSpy.mock.calls.length
 
@@ -539,7 +544,7 @@ describe('the page refresh', () => {
   })
 
   test('a refresh whose content swap will unmount this graph fetches nothing', async () => {
-    initGlobalRefresh(RELOADING_CONTENT)
+    initGlobalTime(RELOADING_CONTENT)
     fetchFor(A_RANGE, A_CANVAS_WIDTH)
     await waitFor(() => expect(loadsSoFar()).toBe(1))
     const loadsBefore = loadsSoFar()
@@ -552,7 +557,7 @@ describe('the page refresh', () => {
   })
 
   test('a graph mounting while a content reload is in flight still loads', async () => {
-    initGlobalRefresh(RELOADING_CONTENT)
+    initGlobalTime(RELOADING_CONTENT)
     useGlobalRefresh().resumeRefresh()
 
     fetchFor(A_RANGE, A_CANVAS_WIDTH)

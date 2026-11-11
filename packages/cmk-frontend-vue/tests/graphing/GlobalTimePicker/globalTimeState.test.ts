@@ -10,7 +10,7 @@ import { nextTick, watch } from 'vue'
 
 import {
   type RefreshStrategy,
-  initGlobalRefresh,
+  initGlobalTime,
   resetGlobalTimeState,
   useGlobalRefresh,
   useGlobalTimeRange
@@ -204,7 +204,10 @@ describe('wiring the page', () => {
   test('what the server just rendered is not refreshed on arrival', () => {
     const { refreshTick, refreshPaused } = useGlobalRefresh()
 
-    initGlobalRefresh({ intervalSeconds: FROM_THE_SERVER, live: true })
+    initGlobalTime({
+      intervalSeconds: FROM_THE_SERVER,
+      start: { type: 'page_default', live: true }
+    })
 
     expect(refreshTick.value).toBe(0)
     expect(refreshPaused.value).toBe(false)
@@ -212,7 +215,10 @@ describe('wiring the page', () => {
 
   test('a page that arrives live refreshes once its own interval is up', () => {
     const { refreshTick } = useGlobalRefresh()
-    initGlobalRefresh({ intervalSeconds: FROM_THE_SERVER, live: true })
+    initGlobalTime({
+      intervalSeconds: FROM_THE_SERVER,
+      start: { type: 'page_default', live: true }
+    })
 
     vi.advanceTimersByTime(FROM_THE_SERVER * 1000)
 
@@ -222,7 +228,10 @@ describe('wiring the page', () => {
   test('a page that does not arrive live only preselects the interval', () => {
     const { refreshIntervalSeconds, refreshPaused, refreshTick } = useGlobalRefresh()
 
-    initGlobalRefresh({ intervalSeconds: FROM_THE_SERVER, live: false })
+    initGlobalTime({
+      intervalSeconds: FROM_THE_SERVER,
+      start: { type: 'page_default', live: false }
+    })
     vi.advanceTimersByTime(3 * FROM_THE_SERVER * 1000)
 
     expect(refreshIntervalSeconds.value).toBe(FROM_THE_SERVER)
@@ -236,7 +245,7 @@ describe('wiring the page', () => {
       const { refreshIntervalSeconds } = useGlobalRefresh()
       const theDefault = refreshIntervalSeconds.value
 
-      initGlobalRefresh({ intervalSeconds, live: false })
+      initGlobalTime({ intervalSeconds, start: { type: 'page_default', live: false } })
 
       expect(refreshIntervalSeconds.value).toBe(theDefault)
     }
@@ -244,9 +253,15 @@ describe('wiring the page', () => {
 
   test('only the first wiring wins, so a late host cannot clobber it', () => {
     const { refreshIntervalSeconds, refreshPaused } = useGlobalRefresh()
-    initGlobalRefresh({ intervalSeconds: FROM_THE_SERVER, live: false })
+    initGlobalTime({
+      intervalSeconds: FROM_THE_SERVER,
+      start: { type: 'page_default', live: false }
+    })
 
-    initGlobalRefresh({ intervalSeconds: FROM_THE_SERVER * 2, live: true })
+    initGlobalTime({
+      intervalSeconds: FROM_THE_SERVER * 2,
+      start: { type: 'page_default', live: true }
+    })
 
     expect(refreshIntervalSeconds.value).toBe(FROM_THE_SERVER)
     expect(refreshPaused.value).toBe(true)
@@ -323,7 +338,7 @@ describe('a page whose content the refresh re-fetches', () => {
   })
 
   test('refreshing once re-fetches the content', () => {
-    initGlobalRefresh({ intervalSeconds: 30, live: false, strategy })
+    initGlobalTime({ intervalSeconds: 30, start: { type: 'page_default', live: false }, strategy })
 
     useGlobalRefresh().refreshOnce()
 
@@ -331,7 +346,7 @@ describe('a page whose content the refresh re-fetches', () => {
   })
 
   test('every refresh re-fetches the content', () => {
-    initGlobalRefresh({ intervalSeconds: 30, live: true, strategy })
+    initGlobalTime({ intervalSeconds: 30, start: { type: 'page_default', live: true }, strategy })
 
     vi.advanceTimersByTime(3 * oneIntervalMs())
 
@@ -340,7 +355,7 @@ describe('a page whose content the refresh re-fetches', () => {
 
   test('the fetch owners the swap will unmount are held off', () => {
     const { resumeRefresh, contentReloadPending } = useGlobalRefresh()
-    initGlobalRefresh({ intervalSeconds: 30, live: false, strategy })
+    initGlobalTime({ intervalSeconds: 30, start: { type: 'page_default', live: false }, strategy })
 
     resumeRefresh()
 
@@ -349,7 +364,7 @@ describe('a page whose content the refresh re-fetches', () => {
 
   test('they are released once the outgoing content is about to be replaced', () => {
     const { resumeRefresh, contentReloadPending } = useGlobalRefresh()
-    initGlobalRefresh({ intervalSeconds: 30, live: false, strategy })
+    initGlobalTime({ intervalSeconds: 30, start: { type: 'page_default', live: false }, strategy })
     resumeRefresh()
 
     releaseContent()
@@ -359,7 +374,7 @@ describe('a page whose content the refresh re-fetches', () => {
 
   test('a page with nothing to re-fetch never holds its fetch owners off', () => {
     const { resumeRefresh, contentReloadPending } = useGlobalRefresh()
-    initGlobalRefresh({ intervalSeconds: 30, live: false })
+    initGlobalTime({ intervalSeconds: 30, start: { type: 'page_default', live: false } })
 
     resumeRefresh()
 
@@ -368,7 +383,7 @@ describe('a page whose content the refresh re-fetches', () => {
 
   test('a reload reporting back late cannot release the refresh that followed it', () => {
     const { contentReloadPending } = useGlobalRefresh()
-    initGlobalRefresh({ intervalSeconds: 30, live: true, strategy })
+    initGlobalTime({ intervalSeconds: 30, start: { type: 'page_default', live: true }, strategy })
     vi.advanceTimersByTime(oneIntervalMs())
     const releaseFirstReload = releaseContent
     vi.advanceTimersByTime(oneIntervalMs())

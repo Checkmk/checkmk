@@ -10,7 +10,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, onScopeDispose, ref, watch } from 'vue'
 
 import {
-  initGlobalRefresh,
+  initGlobalTime,
   useGlobalRefresh,
   useGlobalTimePickerRange
 } from '@/graphing/GlobalTimePicker'
@@ -46,7 +46,10 @@ const PANEL_KEY: PanelKey = 0
 const DEFAULT_FIGURE_WIDTH = 900
 const DEBOUNCE_MS = 400
 
-initGlobalRefresh({ intervalSeconds: props.timePicker.refresh.interval_seconds, live: true })
+initGlobalTime({
+  intervalSeconds: props.timePicker.refresh.interval_seconds,
+  start: { type: 'page_default', live: true }
+})
 const { range: timePickerRange } = useGlobalTimePickerRange(props.timePicker.default_time_range)
 const { requestedTimeRange, setRequestedTimeRange, rangeChange } = useRequestedTimeRange()
 const { pauseRefresh, refreshTick, contentReloadPending } = useGlobalRefresh()

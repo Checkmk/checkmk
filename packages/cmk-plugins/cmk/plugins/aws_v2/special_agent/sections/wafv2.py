@@ -56,19 +56,16 @@ def _iterate_through_wafv2_list_operations(
     list_operation: Callable, scope: str, entry_name: str, get_response_content: Callable
 ) -> Sequence:
     """
-    For some reason, the return objects of the list_... functions of the WAFV2-client seem to
-    always contain 'NextMarker', indicating that there are more values to retrieve, even if there
-    are not. Also, these functions cannot be paginated.
+    The list_... functions of the WAFV2 client cannot be paginated. 'NextMarker' is optional:
+    AWS omits it on the last page, for example when the list is empty.
     """
 
     response = list_operation(Scope=scope)
     results = get_response_content(response, entry_name)
-    next_marker = get_response_content(response, "NextMarker", dflt="")
 
-    while next_marker:
+    while next_marker := response.get("NextMarker", ""):
         response = list_operation(NextMarker=next_marker, Scope=scope)
         results.extend(get_response_content(response, entry_name))
-        next_marker = get_response_content(response, "NextMarker", dflt="")
 
     return results
 

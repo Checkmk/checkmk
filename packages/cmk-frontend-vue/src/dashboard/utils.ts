@@ -40,8 +40,12 @@ import type {
   ComputedWidgetResponse,
   ComputedWidgetSpecResponse,
   EffectiveWidgetFilterContext,
+  ExplicitWidgetContent,
   Gauge,
   GaugeContent,
+  GraphLinkContent,
+  GraphLinks,
+  GraphService,
   HostOrServiceState,
   InventoryAttribute,
   InventoryContent,
@@ -393,6 +397,17 @@ export const dashboardAPI = {
       await client.POST('/domain-types/dashboard/actions/compute-stats/invoke', {
         ...CONTENT_TYPE_HEADER,
         headers,
+        body
+      })
+    )
+  },
+  computeGraphLinks: async (body: {
+    source: ExplicitWidgetContent<GraphLinkContent>
+    services: GraphService[]
+  }): Promise<ComputedWidgetResponse<GraphLinks>> => {
+    return unwrap(
+      await client.POST('/domain-types/dashboard/actions/compute-graph-links/invoke', {
+        ...CONTENT_TYPE_HEADER,
         body
       })
     )

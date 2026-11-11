@@ -122,19 +122,7 @@ def watch_new_messages(omd_root: Path) -> Iterator[PiggybackMessage]:
                 continue
             if event.watchee == watch_for_deleted_status_files:
                 if event.type & Masks.DELETE:
-                    source = HostName(event.name)
-                    for piggybacked_host_path in _get_piggybacked_hosts_for_source(
-                        omd_root, source
-                    ):
-                        yield PiggybackMessage(
-                            PiggybackMetaData(
-                                source=source,
-                                piggybacked=HostName(piggybacked_host_path.name),
-                                last_update=int(time.time()),
-                                last_contact=None,
-                            ),
-                            b"",
-                        )
+                    yield from _messages_for_removed_source(event.name, omd_root)
                 _last_processed_time = int(time.time())
                 continue
 
@@ -145,6 +133,22 @@ def watch_new_messages(omd_root: Path) -> Iterator[PiggybackMessage]:
             if message := _make_message_from_event(event, omd_root):
                 _last_processed_time = int(time.time())
                 yield message
+
+
+def _messages_for_removed_source(
+    deleted_file_name: str, omd_root: Path
+) -> Iterator[PiggybackMessage]:
+    source = HostName(deleted_file_name)
+    for piggybacked_host_path in _get_piggybacked_hosts_for_source(omd_root, source):
+        yield PiggybackMessage(
+            PiggybackMetaData(
+                source=source,
+                piggybacked=HostName(piggybacked_host_path.name),
+                last_update=int(time.time()),
+                last_contact=None,
+            ),
+            b"",
+        )
 
 
 def _make_message_from_event(event: Event, omd_root: Path) -> PiggybackMessage | None:

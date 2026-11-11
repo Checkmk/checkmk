@@ -24,6 +24,14 @@ from cmk.gui.quick_setup.v0_unstable.widgets import FormSpecId
 from cmk.gui.session_context import UserContext
 from cmk.gui.utils.roles import UserPermissions
 from cmk.password_store.v1 import Secret
+from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1.form_specs import (
+    CascadingSingleChoice,
+    CascadingSingleChoiceElement,
+    DictElement,
+    Dictionary,
+    Password,
+)
 from cmk.server_side_calls_backend import load_special_agents
 
 ALL_FORM_SPEC_DATA: ParsedFormData = {
@@ -139,6 +147,38 @@ def test_quick_setup_collect_passwords_from_form_data() -> None:
         collect_passwords_from_form_data(ALL_FORM_SPEC_DATA, quick_setup_aws_form_spec())
         == EXPECTED_PASSWORDS
     )
+
+
+def test_quick_setup_collects_a_password_nested_in_a_cascading_choice() -> None:
+    parameter_form = Dictionary(
+        elements={
+            "auth": DictElement(
+                parameter_form=CascadingSingleChoice(
+                    elements=[
+                        CascadingSingleChoiceElement(
+                            name="secret",
+                            title=Title("Secret"),
+                            parameter_form=Dictionary(
+                                elements={"password": DictElement(parameter_form=Password())}
+                            ),
+                        ),
+                    ],
+                ),
+            ),
+        }
+    )
+    form_data: ParsedFormData = {
+        FormSpecId("credentials"): {
+            "auth": (
+                "secret",
+                {"password": ("cmk_postprocessed", "explicit_password", ("pw_id", "my_secret"))},
+            )
+        },
+    }
+
+    passwords = collect_passwords_from_form_data(form_data, parameter_form)
+
+    assert passwords == {"pw_id": Secret("my_secret")}
 
 
 @pytest.mark.skip("There currently is no quick setup rule with defaults we could test with.")

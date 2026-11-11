@@ -32,7 +32,7 @@ from cmk.gui.quick_setup.v0_unstable.widgets import (
 )
 from cmk.gui.watolib.passwords import load_passwords
 from cmk.password_store.v1 import Secret
-from cmk.rulesets.v1.form_specs import Dictionary, FormSpec, Password
+from cmk.rulesets.v1.form_specs import Dictionary, FormSpec
 from cmk.utils.ip_lookup import IPStackConfig
 
 
@@ -48,26 +48,48 @@ def collect_params_with_defaults_from_form_data(
     )
 
 
+def password_values_in_form_data(
+    all_stages_form_data: ParsedFormData, parameter_form: Dictionary
+) -> Iterator[tuple[str, str, str]]:
+    """The passwords in the fields of the parameter form, as (password type, id, password).
+
+    A password can be a field of its own or nested in a dictionary, a list or a cascading
+    choice, for example the secret of an authentication choice.
+    """
+    for form_data in all_stages_form_data.values():
+        if not isinstance(form_data, dict):
+            continue
+        for form_spec_id, form_spec_value in form_data.items():
+            if form_spec_id in parameter_form.elements:
+                yield from _password_values(form_spec_value)
+
+
+def _password_values(value: object) -> Iterator[tuple[str, str, str]]:
+    match value:
+        case (
+            "cmk_postprocessed",
+            "explicit_password" | "stored_password" as kind,
+            (str(pw_id), str(pw)),
+        ):
+            yield kind, pw_id, pw
+        case dict():
+            for element in value.values():
+                yield from _password_values(element)
+        case list() | tuple():
+            for element in value:
+                yield from _password_values(element)
+        case _:
+            pass
+
+
 def collect_passwords_from_form_data(
     all_stages_form_data: ParsedFormData, parameter_form: Dictionary
 ) -> Mapping[str, Secret[str]]:
-    possible_expected_password_keys = [
-        key
-        for key in parameter_form.elements
-        if isinstance(parameter_form.elements[key].parameter_form, Password)
-    ]
-
     return {
-        form_spec_value[2][0]: Secret(
-            form_spec_value[2][1]
-            if form_spec_value[1] == "explicit_password"
-            else load_passwords(user)[form_spec_value[2][0]]["password"]
+        pw_id: Secret(
+            pw if kind == "explicit_password" else load_passwords(user)[pw_id]["password"]
         )
-        for form_data in all_stages_form_data.values()
-        if isinstance(form_data, dict)
-        for form_spec_id, form_spec_value in form_data.items()
-        if form_spec_id in possible_expected_password_keys
-        if form_spec_value[0] == "cmk_postprocessed"
+        for kind, pw_id, pw in password_values_in_form_data(all_stages_form_data, parameter_form)
     }
 
 

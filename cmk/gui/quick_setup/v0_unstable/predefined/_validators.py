@@ -23,6 +23,7 @@ from cmk.gui.quick_setup.v0_unstable.predefined._common import (
     collect_passwords_from_form_data,
     create_diag_special_agent_input,
     find_id_in_form_data,
+    password_values_in_form_data,
 )
 from cmk.gui.quick_setup.v0_unstable.predefined._utils import (
     existing_folder_from_path,
@@ -44,7 +45,7 @@ from cmk.gui.watolib.check_mk_automations import diag_special_agent
 from cmk.gui.watolib.configuration_bundle_store import ConfigBundleStore, is_locked_by_config_bundle
 from cmk.gui.watolib.hosts_and_folders import _normalize_folder_name
 from cmk.gui.watolib.passwords import load_passwords
-from cmk.rulesets.v1.form_specs import Dictionary, Password
+from cmk.rulesets.v1.form_specs import Dictionary
 
 
 def validate_test_connection_custom_collect_params(
@@ -75,32 +76,18 @@ def _validate_non_quick_setup_password(
     _ctx: QuickSetupContext,
 ) -> GeneralStageErrors:
     general_errors: GeneralStageErrors = []
-    possible_expected_password_keys = [
-        key
-        for key in parameter_form.elements
-        if isinstance(parameter_form.elements[key].parameter_form, Password)
-    ]
-
-    for form_data in all_stages_form_data.values():
-        if not isinstance(form_data, dict):
+    for kind, pw_id, _pw in password_values_in_form_data(all_stages_form_data, parameter_form):
+        if kind != "stored_password":
             continue
 
-        for form_spec_id, form_spec_value in form_data.items():
-            if not (
-                form_spec_id in possible_expected_password_keys
-                and form_spec_value[0] == "cmk_postprocessed"
-                and form_spec_value[1] == "stored_password"
-            ):
-                continue
-
-            pw_from_store = load_passwords(user)[form_spec_value[2][0]]
-            if ("locked_by" in pw_from_store) and (
-                is_locked_by_config_bundle(pw_from_store["locked_by"])
-            ):
-                general_errors.append(
-                    f'Password with title "{pw_from_store["title"]}" is locked by a Quick '
-                    "Setup and cannot be used."
-                )
+        pw_from_store = load_passwords(user)[pw_id]
+        if ("locked_by" in pw_from_store) and (
+            is_locked_by_config_bundle(pw_from_store["locked_by"])
+        ):
+            general_errors.append(
+                f'Password with title "{pw_from_store["title"]}" is locked by a Quick '
+                "Setup and cannot be used."
+            )
 
     return general_errors
 

@@ -12,6 +12,7 @@ from datetime import datetime
 
 from cmk.ccc.version import Edition, edition
 from cmk.product_usage.collection import (
+    collect_cloud_trial_data,
     collect_data,
     data_storage_path,
     store_data,
@@ -32,7 +33,6 @@ from cmk.product_usage.schedule import (
     should_run_collection_on_schedule,
     store_next_run_ts,
 )
-from cmk.product_usage.schema import CloudTrialPayload, ProductUsagePayload
 from cmk.product_usage.transmission import transmit_data
 from cmk.utils import paths
 from cmk.utils.licensing.handler import LicenseState
@@ -107,8 +107,14 @@ def main(args: Sequence[str]) -> int:
                 paths.check_mk_config_dir,
                 paths.omd_root,
                 logger,
-                payload_type=CloudTrialPayload if cloud_trial else ProductUsagePayload,
             )
+            if cloud_trial:
+                data = collect_cloud_trial_data(
+                    data,
+                    var_dir=paths.var_dir,
+                    default_config_dir=paths.default_config_dir,
+                    logger=logger,
+                )
             if request.write_to_stdout:
                 sys.stdout.write(
                     data.model_dump_with_metadata_json(indent=2).decode("utf-8") + "\n"

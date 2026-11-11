@@ -7,25 +7,21 @@ import logging
 import time
 from pathlib import Path
 
+import cmk.product_usage.collectors.audit_log as audit_log_collector
 import cmk.product_usage.collectors.checks as checks_collector
 import cmk.product_usage.collectors.grafana as grafana_collector
 import cmk.product_usage.collectors.site_info as site_info_collector
-from cmk.product_usage.schema import ProductUsagePayload
+from cmk.product_usage.schema import AuditLog, CloudTrialPayload, ProductUsagePayload
 
 
 def collect_data(
-    var_dir: Path,
-    cmk_config_dir: Path,
-    omd_root: Path,
-    logger: logging.Logger,
-    *,
-    payload_type: type[ProductUsagePayload],
+    var_dir: Path, cmk_config_dir: Path, omd_root: Path, logger: logging.Logger
 ) -> ProductUsagePayload:
     logger.info("Collection starts")
 
     site_info = site_info_collector.collect(cmk_config_dir, var_dir, omd_root)
 
-    return payload_type(
+    return ProductUsagePayload(
         timestamp=int(time.time()),
         id=site_info.id,
         count_hosts=site_info.count_hosts,
@@ -50,3 +46,32 @@ def store_data(data: ProductUsagePayload, var_dir: Path) -> None:
 
 def data_storage_path(var_dir: Path) -> Path:
     return var_dir / "product_usage"
+
+
+# The users with which the Cloud platform acts on a trial site
+_CLOUD_PLATFORM_USER_IDS = frozenset({"api_user", "agent_registration"})
+
+
+def collect_cloud_trial_data(
+    product_usage: ProductUsagePayload,
+    *,
+    var_dir: Path,
+    default_config_dir: Path,
+    logger: logging.Logger,
+) -> CloudTrialPayload:
+    return CloudTrialPayload(
+        **dict(product_usage),
+        audit_log=_collect_audit_log(var_dir, default_config_dir, logger),
+    )
+
+
+def _collect_audit_log(
+    var_dir: Path, default_config_dir: Path, logger: logging.Logger
+) -> AuditLog | None:
+    try:
+        return audit_log_collector.collect(
+            var_dir, default_config_dir, platform_user_ids=_CLOUD_PLATFORM_USER_IDS
+        )
+    except Exception:
+        logger.exception("Could not collect the audit log, sending no audit log")
+        return None

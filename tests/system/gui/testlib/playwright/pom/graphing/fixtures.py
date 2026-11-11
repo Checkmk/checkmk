@@ -621,6 +621,7 @@ def _action_menu_widget_content(
         return (
             {
                 "type": "single_timeseries",
+                "contextual_link": {"type": "none"},
                 "timerange": _ACTION_MENU_WIDGET_TIMERANGE,
                 "graph_render_options": _ACTION_MENU_RENDER_OPTIONS,
                 "metric": metric_name,
@@ -650,6 +651,7 @@ def _action_menu_widget_content(
         return (
             {
                 "type": "average_scatterplot",
+                "contextual_link": {"type": "none"},
                 "time_range": _ACTION_MENU_WIDGET_TIMERANGE,
                 "metric": metric_name,
                 "metric_color": "default",

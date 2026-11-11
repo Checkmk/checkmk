@@ -25,7 +25,7 @@ from cmk.graphing_engine import ServiceName as EngineServiceName
 from cmk.gui import sites
 from cmk.gui.config import active_config, Config, RequestCacheConfig
 from cmk.gui.dashboard.exceptions import WidgetRenderError
-from cmk.gui.dashboard.type_defs import ABCGraphDashletConfig, DashboardWindow
+from cmk.gui.dashboard.type_defs import ABCGraphDashletConfig, ContextualLinkConfig, DashboardWindow
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.graphing import (
     build_template_graphs,
@@ -198,6 +198,7 @@ class TemplateGraphDashletConfig(ABCGraphDashletConfig):
     source: NotRequired[int]
     # Stable graph id. Written by all new configs.
     graph_id: NotRequired[str]
+    contextual_link: NotRequired[ContextualLinkConfig]
 
 
 class TemplateGraphDashlet(

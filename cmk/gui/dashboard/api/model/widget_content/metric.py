@@ -45,6 +45,8 @@ from ..contextual_link import (
     contextual_link_from_internal,
     contextual_link_to_internal,
     ContextualLinkSpec,
+    targetless_contextual_link_from_internal,
+    TargetlessContextualLinkSpec,
 )
 from ._base import BaseWidgetContent, time_range_from_internal, time_range_to_internal
 
@@ -413,6 +415,9 @@ class AverageScatterplotContent(_BaseMetricContent):
         "a single row, extended lists them in a table with their statistics. Defaults to compact.",
         default_factory=ApiOmitted,
     )
+    contextual_link: TargetlessContextualLinkSpec[ObjectServiceContextFilter] = api_field(
+        description="Where the scatterplot's link button leads from a service it draws."
+    )
 
     @classmethod
     @override
@@ -430,6 +435,9 @@ class AverageScatterplotContent(_BaseMetricContent):
             median_color=config.get("median_color") or "default",
             show_legend=config.get("show_legend", ApiOmitted()),
             legend_style=config.get("legend_style", ApiOmitted()),
+            contextual_link=targetless_contextual_link_from_internal(
+                config.get("contextual_link"), OBJECT_SERVICE_FILTER_ADAPTER
+            ),
         )
 
     @override
@@ -446,7 +454,13 @@ class AverageScatterplotContent(_BaseMetricContent):
             config["show_legend"] = self.show_legend
         if not isinstance(self.legend_style, ApiOmitted):
             config["legend_style"] = self.legend_style
+        if (link := contextual_link_to_internal(self.contextual_link)) is not None:
+            config["contextual_link"] = link
         return config
+
+    @override
+    def configured_contextual_link(self) -> AnyContextualLinkSpec:
+        return self.contextual_link
 
 
 @api_model

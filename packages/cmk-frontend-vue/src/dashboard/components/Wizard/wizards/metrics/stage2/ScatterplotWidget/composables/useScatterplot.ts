@@ -95,7 +95,8 @@ export const useScatterplot = async (
         averageColor.value === 'default' ? 'default' : averageColor.value.toUpperCase(),
       median_color: medianColor.value === 'default' ? 'default' : medianColor.value.toUpperCase(),
       show_legend: graphLegend.value,
-      legend_style: graphLegendStyle.value
+      legend_style: graphLegendStyle.value,
+      contextual_link: currentContent?.contextual_link ?? { type: 'none' }
     }
   }
 

@@ -107,11 +107,13 @@ class ProblemsGraphDashletConfig(ABCGraphDashletConfig): ...
 class CombinedGraphDashletConfig(ABCGraphDashletConfig):
     graph_template: str
     presentation: GraphPresentation
+    contextual_link: NotRequired[ContextualLinkConfig]
 
 
 class SingleTimeseriesDashletConfig(ABCGraphDashletConfig):
     metric: str
     color: str
+    contextual_link: NotRequired[ContextualLinkConfig]
 
 
 class CustomGraphDashletConfig(ABCGraphDashletConfig):
@@ -183,6 +185,7 @@ class AverageScatterplotDashletConfig(DashletConfig):
     median_color: str | None
     show_legend: NotRequired[bool]
     legend_style: NotRequired[GraphLegendStyle]
+    contextual_link: NotRequired[ContextualLinkConfig]
 
 
 class TopListColumnConfig(TypedDict):

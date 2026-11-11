@@ -275,6 +275,7 @@ def _graph_dashboard(
         },
         "content": {
             "type": "performance_graph",
+            "contextual_link": {"type": "none"},
             "timerange": "dashboard",
             "graph_render_options": {"show_legend": True, "legend_style": legend_style},
             "source": graph.graph_id,

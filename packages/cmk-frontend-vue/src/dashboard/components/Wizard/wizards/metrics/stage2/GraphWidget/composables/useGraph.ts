@@ -94,7 +94,8 @@ export const useGraph = async (
       metric,
       timerange: generateTimeRangeSpec(),
       graph_render_options: graphRenderOptions.value,
-      color: DEFAULT_COLOR_SCHEMAS.includes(color.value) ? color.value : color.value.toUpperCase()
+      color: DEFAULT_COLOR_SCHEMAS.includes(color.value) ? color.value : color.value.toUpperCase(),
+      contextual_link: currentContent?.contextual_link ?? { type: 'none' }
     }
   }
 

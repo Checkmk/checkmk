@@ -30,14 +30,25 @@ from cmk.gui.dashboard.api.model.contextual_link import (
     ContextualLink,
     ContextualLinkCustom,
     ContextualLinkInherited,
+    ContextualLinkNone,
     ContextualLinkSpec,
     LabelKeyOption,
     TagGroupKeyOption,
+    targetless_contextual_link_from_internal,
+    TargetlessContextualLinkSpec,
     VisualLocation,
 )
 from cmk.gui.dashboard.api.model.widget_content._base import BaseWidgetContent
+from cmk.gui.dashboard.api.model.widget_content.graph import (
+    CombinedGraphContent,
+    PerformanceGraphContent,
+    SingleTimeseriesContent,
+)
 from cmk.gui.dashboard.api.model.widget_content.inventory import InventoryContent
-from cmk.gui.dashboard.api.model.widget_content.metric import TopListContent
+from cmk.gui.dashboard.api.model.widget_content.metric import (
+    AverageScatterplotContent,
+    TopListContent,
+)
 from cmk.gui.dashboard.api.model.widget_content.overview import SiteOverviewContent
 from cmk.gui.dashboard.api.model.widget_content.state import (
     HostStateContent,
@@ -329,3 +340,39 @@ def test_a_top_list_offers_a_custom_link_with_the_filters_of_its_host_and_servic
     assert options is not None
     assert options.modes == ["default", "inherited", "custom"]
     assert {"host", "host_labels", "wato_folder", "service", "svcstate"} <= set(options.filters)
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        SingleTimeseriesContent,
+        PerformanceGraphContent,
+        CombinedGraphContent,
+        AverageScatterplotContent,
+    ],
+)
+def test_a_graph_offers_no_built_in_link_but_the_filters_of_a_service_it_draws(
+    content: type[BaseWidgetContent],
+) -> None:
+    options = content.contextual_link_options()
+
+    assert options is not None
+    assert options.modes == ["inherited", "custom"]
+    assert {"host", "host_labels", "service", "service_labels"} <= set(options.filters)
+
+
+def test_a_graph_without_a_stored_link_links_nowhere() -> None:
+    assert targetless_contextual_link_from_internal(
+        None, OBJECT_SERVICE_FILTER_ADAPTER
+    ) == ContextualLinkNone(type="none")
+
+
+def test_a_graph_link_round_trips() -> None:
+    link: TargetlessContextualLinkSpec[ObjectServiceContextFilter] = _inherited(_DASHBOARD)
+
+    assert (
+        targetless_contextual_link_from_internal(
+            contextual_link_to_internal(link), OBJECT_SERVICE_FILTER_ADAPTER
+        )
+        == link
+    )

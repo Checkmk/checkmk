@@ -413,6 +413,7 @@ def test_compute_widget_titles(clients: ClientRegistry) -> None:
                 },
                 "content": {
                     "type": "performance_graph",
+                    "contextual_link": {"type": "none"},
                     "timerange": {"type": "predefined", "value": "last_25_hours"},
                     "graph_render_options": {},
                     "source": "active_sessions",
@@ -531,6 +532,7 @@ class TestPerformanceGraphContent:
             clients,
             {
                 "type": "performance_graph",
+                "contextual_link": {"type": "none"},
                 "timerange": {"type": "predefined", "value": "last_25_hours"},
                 "graph_render_options": {},
                 "source": "active_sessions",
@@ -556,6 +558,7 @@ class TestPerformanceGraphContent:
                     "test_widget": create_widget(
                         {
                             "type": "performance_graph",
+                            "contextual_link": {"type": "none"},
                             "timerange": {"type": "predefined", "value": "last_25_hours"},
                             "graph_render_options": legend,
                             "source": "active_sessions",
@@ -584,6 +587,7 @@ class TestPerformanceGraphContent:
                     "test_widget": create_widget(
                         {
                             "type": "performance_graph",
+                            "contextual_link": {"type": "none"},
                             "timerange": {"type": "predefined", "value": "last_25_hours"},
                             "graph_render_options": {"legend_style": "huge"},
                             "source": "active_sessions",

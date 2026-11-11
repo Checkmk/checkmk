@@ -73,7 +73,8 @@ describe('DashboardPreviewContent', () => {
         average_color: 'default',
         median_color: 'default',
         show_legend: true,
-        legend_style: legendStyle
+        legend_style: legendStyle,
+        contextual_link: { type: 'none' }
       })
 
       renderPreview(props)

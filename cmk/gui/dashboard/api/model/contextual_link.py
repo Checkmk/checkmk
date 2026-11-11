@@ -128,11 +128,18 @@ type ContextualLinkSpec[F] = Annotated[
     Discriminator("type"),
 ]
 
+# A widget without a built-in target, so it links nowhere unless configured.
+type TargetlessContextualLinkSpec[F] = Annotated[
+    ContextualLinkNone | ContextualLinkInherited | ContextualLinkCustom[F],
+    Discriminator("type"),
+]
+
 type AnyContextualLinkSpec = (
     ContextualLinkSpec[AggregateHostContextFilter]
     | ContextualLinkSpec[AggregateServiceContextFilter]
     | ContextualLinkSpec[ObjectHostContextFilter]
     | ContextualLinkSpec[ObjectServiceContextFilter]
+    | TargetlessContextualLinkSpec[ObjectServiceContextFilter]
 )
 
 
@@ -284,6 +291,23 @@ def contextual_link_from_internal[F](
     """The API form of a stored link configuration; `replacements` renames or drops (None)."""
     if config is None:
         return ContextualLinkDefault(type="default")
+    return _stored_link_from_internal(config, filter_adapter, replacements or {})
+
+
+def targetless_contextual_link_from_internal[F](
+    config: ContextualLinkConfig | None, filter_adapter: TypeAdapter[F]
+) -> TargetlessContextualLinkSpec[F]:
+    """The API form of a stored link of a widget without a built-in target; no link is none."""
+    if config is None:
+        return ContextualLinkNone(type="none")
+    return _stored_link_from_internal(config, filter_adapter, {})
+
+
+def _stored_link_from_internal[F](
+    config: ContextualLinkConfig,
+    filter_adapter: TypeAdapter[F],
+    replacements: Mapping[FilterName, FilterName | None],
+) -> ContextualLinkNone | ContextualLinkInherited | ContextualLinkCustom[F]:
     if config["type"] == "none":
         return ContextualLinkNone(type="none")
     if config["type"] == "inherited":
@@ -297,7 +321,7 @@ def contextual_link_from_internal[F](
                     location=location_from_internal(entry["location"]),
                     filters=[
                         filter_adapter.validate_python(f)
-                        for f in _replaced(entry["filters"], replacements or {})
+                        for f in _replaced(entry["filters"], replacements)
                     ],
                     include_context=entry["include_context"],
                     include_time_range=entry["include_time_range"],

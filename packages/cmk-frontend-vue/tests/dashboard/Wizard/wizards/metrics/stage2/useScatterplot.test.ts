@@ -47,7 +47,8 @@ const STORED: ScatterplotContent = {
   time_range: { type: 'predefined', value: 'last_25_hours' },
   metric_color: 'default',
   average_color: 'default',
-  median_color: 'default'
+  median_color: 'default',
+  contextual_link: { type: 'none' }
 }
 
 useMswServer(

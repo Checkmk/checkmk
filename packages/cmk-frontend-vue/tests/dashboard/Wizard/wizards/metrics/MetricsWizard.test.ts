@@ -44,7 +44,8 @@ const asWidgetSpec = (filters: ConfiguredFilters): WidgetSpec => ({
     type: 'single_timeseries',
     metric: 'util',
     color: 'default_metric',
-    timerange: 'dashboard'
+    timerange: 'dashboard',
+    contextual_link: { type: 'none' }
   },
   filter_context: { filters, uses_infos: [] },
   general_settings: {

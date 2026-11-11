@@ -19,6 +19,7 @@ from cmk.gui.dashboard.dashlet.dashlets.graph import (
 from cmk.gui.dashboard.type_defs import (
     ABCGraphDashletConfig,
     CombinedGraphDashletConfig,
+    ContextualLinkConfig,
     CustomGraphDashletConfig,
     DashletConfig,
     EmbeddedCustomGraphDashletConfig,
@@ -40,6 +41,13 @@ from cmk.gui.type_defs import (
     VerticalAxisWidth,
 )
 
+from ..context_filters import OBJECT_SERVICE_FILTER_ADAPTER, ObjectServiceContextFilter
+from ..contextual_link import (
+    AnyContextualLinkSpec,
+    contextual_link_to_internal,
+    targetless_contextual_link_from_internal,
+    TargetlessContextualLinkSpec,
+)
 from ._base import BaseWidgetContent, time_range_from_internal, time_range_to_internal
 
 
@@ -192,6 +200,15 @@ class _BaseGraphContent(BaseWidgetContent, ABC):
         )
 
 
+_GRAPH_LINK_DESCRIPTION = "Where the graph's link button leads from a service the graph draws."
+
+
+def _graph_link_from_internal(
+    config: ContextualLinkConfig | None,
+) -> TargetlessContextualLinkSpec[ObjectServiceContextFilter]:
+    return targetless_contextual_link_from_internal(config, OBJECT_SERVICE_FILTER_ADAPTER)
+
+
 @api_model
 class ProblemGraphContent(_BaseGraphContent):
     type: Literal["problem_graph"] = api_field(
@@ -230,6 +247,9 @@ class CombinedGraphContent(_BaseGraphContent):
         description="The graph template to use for the combined graph.",
     )
     presentation: GraphPresentation = api_field(description="The format of the combined graph.")
+    contextual_link: TargetlessContextualLinkSpec[ObjectServiceContextFilter] = api_field(
+        description=_GRAPH_LINK_DESCRIPTION
+    )
 
     @classmethod
     @override
@@ -246,15 +266,25 @@ class CombinedGraphContent(_BaseGraphContent):
             ),
             graph_template=config["graph_template"],
             presentation=config["presentation"],
+            contextual_link=_graph_link_from_internal(config.get("contextual_link")),
         )
 
     @override
     def to_internal(self) -> CombinedGraphDashletConfig:
-        return CombinedGraphDashletConfig(
-            **self._to_internal(),
+        config = CombinedGraphDashletConfig(
+            type=self.internal_type(),
+            timerange=time_range_to_internal(self.timerange),
+            graph_render_options=self._get_graph_render_options_internal(),
             graph_template=self.graph_template,
             presentation=self.presentation,
         )
+        if (link := contextual_link_to_internal(self.contextual_link)) is not None:
+            config["contextual_link"] = link
+        return config
+
+    @override
+    def configured_contextual_link(self) -> AnyContextualLinkSpec:
+        return self.contextual_link
 
 
 @api_model
@@ -266,6 +296,9 @@ class SingleTimeseriesContent(_BaseGraphContent):
     metric: str = api_field(description="Name of the metric.")
     color: Literal["default_theme", "default_metric"] | ColorHex = api_field(
         description="Color of the timeseries line.",
+    )
+    contextual_link: TargetlessContextualLinkSpec[ObjectServiceContextFilter] = api_field(
+        description=_GRAPH_LINK_DESCRIPTION
     )
 
     @classmethod
@@ -283,15 +316,25 @@ class SingleTimeseriesContent(_BaseGraphContent):
             ),
             metric=config["metric"],
             color=config["color"],
+            contextual_link=_graph_link_from_internal(config.get("contextual_link")),
         )
 
     @override
     def to_internal(self) -> SingleTimeseriesDashletConfig:
-        return SingleTimeseriesDashletConfig(
-            **self._to_internal(),
+        config = SingleTimeseriesDashletConfig(
+            type=self.internal_type(),
+            timerange=time_range_to_internal(self.timerange),
+            graph_render_options=self._get_graph_render_options_internal(),
             metric=self.metric,
             color=self.color,
         )
+        if (link := contextual_link_to_internal(self.contextual_link)) is not None:
+            config["contextual_link"] = link
+        return config
+
+    @override
+    def configured_contextual_link(self) -> AnyContextualLinkSpec:
+        return self.contextual_link
 
 
 @api_model
@@ -320,8 +363,6 @@ class CustomGraphContent(_BaseGraphContent):
 
     @override
     def to_internal(self) -> CustomGraphDashletConfig:
-        # NOTE: mypy doesn't like missing non-required fields in ** expressions
-        #       so we can't use **self._to_internal() here
         return CustomGraphDashletConfig(
             type=self.internal_type(),
             timerange=time_range_to_internal(self.timerange),
@@ -466,6 +507,9 @@ class PerformanceGraphContent(_BaseGraphContent):
     source: str | Annotated[int, Ge(1)] = api_field(
         description="Graph id or number of the performance graph."
     )
+    contextual_link: TargetlessContextualLinkSpec[ObjectServiceContextFilter] = api_field(
+        description=_GRAPH_LINK_DESCRIPTION
+    )
 
     @classmethod
     @override
@@ -491,24 +535,26 @@ class PerformanceGraphContent(_BaseGraphContent):
                 config.get("graph_render_options", {})
             ),
             source=source,
+            contextual_link=_graph_link_from_internal(config.get("contextual_link")),
         )
 
     @override
     def to_internal(self) -> TemplateGraphDashletConfig:
         # The REST API still exposes a single ``source`` field; route string ids into the new
         # ``graph_id`` field and keep int indices in the legacy ``source`` field.
-        # NOTE: mypy doesn't like missing non-required fields in ** expressions,
-        #       so we can't use **self._to_internal() here.
-        if isinstance(self.source, int):
-            return TemplateGraphDashletConfig(
-                type=self.internal_type(),
-                timerange=time_range_to_internal(self.timerange),
-                graph_render_options=self._get_graph_render_options_internal(),
-                source=self.source,
-            )
-        return TemplateGraphDashletConfig(
+        config = TemplateGraphDashletConfig(
             type=self.internal_type(),
             timerange=time_range_to_internal(self.timerange),
             graph_render_options=self._get_graph_render_options_internal(),
-            graph_id=self.source,
         )
+        if isinstance(self.source, int):
+            config["source"] = self.source
+        else:
+            config["graph_id"] = self.source
+        if (link := contextual_link_to_internal(self.contextual_link)) is not None:
+            config["contextual_link"] = link
+        return config
+
+    @override
+    def configured_contextual_link(self) -> AnyContextualLinkSpec:
+        return self.contextual_link

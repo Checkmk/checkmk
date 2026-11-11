@@ -20,6 +20,15 @@ from cmk.gui.dashboard.store import DashboardStore, get_all_dashboards, save_all
 from cmk.gui.role_types import BuiltInUserRole, CustomUserRole
 from tests.testlib.unit.rest_api_client import ClientRegistry
 
+_SINGLE_TIMESERIES: dict[str, object] = {
+    "type": "single_timeseries",
+    "contextual_link": {"type": "none"},
+    "timerange": {"type": "predefined", "value": "last_25_hours"},
+    "graph_render_options": {},
+    "metric": "availability",
+    "color": "#ABCDEF",
+}
+
 
 def create_dashboard_payload(
     dashboard_id: str,
@@ -174,6 +183,7 @@ class TestCombinedGraphContent:
             clients,
             {
                 "type": "combined_graph",
+                "contextual_link": {"type": "none"},
                 "timerange": {"type": "predefined", "value": "last_25_hours"},
                 "graph_render_options": {},
                 "graph_template": "disk_utilization",
@@ -191,6 +201,7 @@ class TestSingleTimeseriesContent:
             clients,
             {
                 "type": "single_timeseries",
+                "contextual_link": {"type": "none"},
                 "timerange": {"type": "predefined", "value": "last_25_hours"},
                 "graph_render_options": {},
                 "metric": "availability",
@@ -213,6 +224,7 @@ class TestSingleTimeseriesContent:
                     "test_widget": create_widget(
                         {
                             "type": "single_timeseries",
+                            "contextual_link": {"type": "none"},
                             "timerange": timerange,
                             "graph_render_options": {},
                             "metric": "availability",
@@ -224,6 +236,41 @@ class TestSingleTimeseriesContent:
         )
         widget = next(iter(resp.json["extensions"]["widgets"].values()))
         assert widget["content"]["timerange"] == timerange
+
+    @pytest.mark.usefixtures("mock_livestatus")
+    def test_a_none_link_round_trips(self, clients: ClientRegistry) -> None:
+        clients.DashboardClient.create_relative_grid_dashboard(
+            create_dashboard_payload(
+                "test_dashboard",
+                {"test_widget": create_widget(_SINGLE_TIMESERIES)},
+            )
+        )
+
+        widgets = clients.DashboardClient.get_relative_grid_dashboard("test_dashboard").json[
+            "extensions"
+        ]["widgets"]
+        assert next(iter(widgets.values()))["content"]["contextual_link"] == {"type": "none"}
+
+    @pytest.mark.usefixtures("mock_livestatus")
+    def test_an_inherited_link_round_trips(self, clients: ClientRegistry) -> None:
+        link = {
+            "type": "inherited",
+            "location": {"type": "dashboards", "name": "main"},
+            "include_context": True,
+            "include_time_range": True,
+            "show_filter_form": False,
+        }
+        clients.DashboardClient.create_relative_grid_dashboard(
+            create_dashboard_payload(
+                "test_dashboard",
+                {"test_widget": create_widget({**_SINGLE_TIMESERIES, "contextual_link": link})},
+            )
+        )
+
+        widgets = clients.DashboardClient.get_relative_grid_dashboard("test_dashboard").json[
+            "extensions"
+        ]["widgets"]
+        assert next(iter(widgets.values()))["content"]["contextual_link"] == link
 
 
 class TestCustomGraphContent:
@@ -332,6 +379,7 @@ class TestAverageScatterplotContent:
             clients,
             {
                 "type": "average_scatterplot",
+                "contextual_link": {"type": "none"},
                 "time_range": {"type": "predefined", "value": "last_25_hours"},
                 "metric": "availability",
                 "metric_color": "#ABCDEF",
@@ -354,6 +402,7 @@ class TestAverageScatterplotContent:
                     "test_widget": create_widget(
                         {
                             "type": "average_scatterplot",
+                            "contextual_link": {"type": "none"},
                             "time_range": time_range,
                             "metric": "availability",
                             "metric_color": "default",
@@ -375,6 +424,7 @@ class TestAverageScatterplotContent:
                     "test_widget": create_widget(
                         {
                             "type": "average_scatterplot",
+                            "contextual_link": {"type": "none"},
                             "time_range": {"type": "predefined", "value": "last_25_hours"},
                             "metric": "availability",
                             "metric_color": "default",
@@ -399,6 +449,7 @@ class TestAverageScatterplotContent:
                     "test_widget": create_widget(
                         {
                             "type": "average_scatterplot",
+                            "contextual_link": {"type": "none"},
                             "time_range": {"type": "predefined", "value": "last_25_hours"},
                             "metric": "availability",
                             "metric_color": "default",
@@ -421,6 +472,7 @@ class TestAverageScatterplotContent:
                     "test_widget": create_widget(
                         {
                             "type": "average_scatterplot",
+                            "contextual_link": {"type": "none"},
                             "time_range": {"type": "predefined", "value": "last_25_hours"},
                             "metric": "availability",
                             "metric_color": "default",

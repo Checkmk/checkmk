@@ -329,6 +329,7 @@ def _template_graph_content(graph_id: str, timerange: object) -> dict[str, objec
     """
     return {
         "type": "performance_graph",
+        "contextual_link": {"type": "none"},
         "timerange": timerange,
         "graph_render_options": {"show_graph_time": True},
         "source": graph_id,

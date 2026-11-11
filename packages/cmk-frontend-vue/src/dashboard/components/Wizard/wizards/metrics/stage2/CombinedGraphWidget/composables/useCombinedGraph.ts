@@ -100,7 +100,8 @@ export const useCombinedGraph = async (
       graph_render_options: graphRenderOptions.value,
 
       graph_template: metric,
-      presentation: presentation.value
+      presentation: presentation.value,
+      contextual_link: currentContent?.contextual_link ?? { type: 'none' }
     }
   }
 

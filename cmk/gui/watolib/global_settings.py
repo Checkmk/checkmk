@@ -6,6 +6,7 @@
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import AbstractContextManager, contextmanager, ExitStack
 from enum import StrEnum
+from typing import Protocol
 
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
@@ -140,6 +141,23 @@ def effective_site_value(
         return site_globals[varname], GlobalSettingsOrigin.site
 
     return effective_value(global_settings, varname)
+
+
+class DomainGlobalsLoader(Protocol):
+    def __call__(self, domain: ABCConfigDomain, site_id: SiteId) -> GlobalSettings: ...
+
+
+def load_domain_globals(domain: ABCConfigDomain, site_id: SiteId) -> GlobalSettings:  # noqa: ARG001
+    return domain.load()
+
+
+def load_global_settings_of_site(
+    site_id: SiteId, load_domain_globals: DomainGlobalsLoader
+) -> GlobalSettings:
+    settings: dict[str, object] = {}
+    for domain in ABCConfigDomain.enabled_domains():
+        settings.update(load_domain_globals(domain, site_id))
+    return settings
 
 
 def save_global_settings_raw(

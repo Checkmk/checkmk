@@ -94,6 +94,7 @@ def test_activate_changes(
                 snapshot_manager_factory=orig_features.snapshot_manager_factory,
                 get_rabbitmq_definitions=orig_features.get_rabbitmq_definitions,
                 distribute_piggyback_hub_configs=mocker.MagicMock(),
+                load_domain_globals=orig_features.load_domain_globals,
             ),
         )
 
@@ -215,6 +216,7 @@ def test_list_activate_changes_star_etag(
                 snapshot_manager_factory=orig_features.snapshot_manager_factory,
                 get_rabbitmq_definitions=orig_features.get_rabbitmq_definitions,
                 distribute_piggyback_hub_configs=mocker.MagicMock(),
+                load_domain_globals=orig_features.load_domain_globals,
             ),
         )
 
@@ -249,6 +251,7 @@ def test_list_activate_changes_valid_etag(
                 snapshot_manager_factory=orig_features.snapshot_manager_factory,
                 get_rabbitmq_definitions=orig_features.get_rabbitmq_definitions,
                 distribute_piggyback_hub_configs=mocker.MagicMock(),
+                load_domain_globals=orig_features.load_domain_globals,
             ),
         )
         with mock_livestatus(expect_status_query=True):

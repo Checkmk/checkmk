@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from http import HTTPStatus
 
+from cmk.ccc.version import edition
 from cmk.gui.openapi.framework import (
     ApiContext,
     APIVersion,
@@ -16,13 +17,15 @@ from cmk.gui.openapi.framework import (
 )
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import sub_object_href
+from cmk.gui.watolib.activate_changes import activation_features_registry
 from cmk.gui.watolib.config_domain_name import config_variable_registry
 from cmk.gui.watolib.global_settings import (
     effective_site_value,
-    load_configuration_settings,
+    load_global_settings_of_site,
     need_site_read_permission,
 )
 from cmk.gui.watolib.sites import load_site_globals
+from cmk.utils import paths
 
 from ._family import GLOBAL_SETTINGS_FAMILY
 from ._utils import (
@@ -54,7 +57,10 @@ def show_site_global_setting_v1(
     value, origin = effective_site_value(
         load_site_globals(sites, site_id),
         varname,
-        global_settings=load_configuration_settings(),
+        global_settings=load_global_settings_of_site(
+            site_id,
+            activation_features_registry[str(edition(paths.omd_root))].load_domain_globals,
+        ),
     )
     form_spec = config_variable.value_model(
         global_settings_context_of(site_id, api_context, edits_site_specific_value=True)

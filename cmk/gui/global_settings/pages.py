@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.ccc.site import SiteId
+from cmk.ccc.version import edition
 from cmk.gui.breadcrumb import (
     Breadcrumb,
     BreadcrumbItem,
@@ -29,7 +30,9 @@ from cmk.gui.site_config import (
     is_distributed_setup_remote_site,
 )
 from cmk.gui.wato import MainModuleTopicGeneral
+from cmk.gui.watolib.activate_changes import activation_features_registry
 from cmk.gui.watolib.config_domain_name import ConfigVariable
+from cmk.gui.watolib.global_settings import DomainGlobalsLoader
 from cmk.gui.watolib.sites import (
     site_globals_editable,
     site_management_registry,
@@ -37,6 +40,7 @@ from cmk.gui.watolib.sites import (
 )
 from cmk.livestatus_client import SiteConfigurations
 from cmk.shared_typing.global_settings import GlobalSettingsApp
+from cmk.utils import paths
 from cmk.web.utils.urls import makeuri_contextless
 
 
@@ -73,7 +77,11 @@ def global_settings(config: Config, *, acting_user: LoggedInUser) -> GlobalSetti
 
 
 def site_specific_settings(
-    config: Config, site_id: SiteId, *, acting_user: LoggedInUser
+    config: Config,
+    site_id: SiteId,
+    *,
+    acting_user: LoggedInUser,
+    load_domain_globals: DomainGlobalsLoader,
 ) -> GlobalSettingsApp:
     ensure_page_access(config, STATIC_PERMISSIONS_SITES)
     sites = site_management_registry["site_management"].load_sites()
@@ -89,6 +97,7 @@ def site_specific_settings(
         breadcrumb=_site_specific_breadcrumb(site_id, title),
         sites=sites,
         site_id=site_id,
+        load_domain_globals=load_domain_globals,
     )
 
 
@@ -146,5 +155,12 @@ def _global_settings_page(ctx: PageContext) -> None:
 
 def _site_specific_settings_page(ctx: PageContext) -> None:
     site_id = SiteId(request.get_ascii_input_mandatory("site"))
-    data = site_specific_settings(ctx.config, site_id, acting_user=user)
+    data = site_specific_settings(
+        ctx.config,
+        site_id,
+        acting_user=user,
+        load_domain_globals=activation_features_registry[
+            str(edition(paths.omd_root))
+        ].load_domain_globals,
+    )
     render_settings_page(ctx.config, data)

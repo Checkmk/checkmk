@@ -13,6 +13,7 @@ from cmk.ccc.user import UserId
 from cmk.ccc.version import Edition
 from cmk.gui.mkeventd.config_domain import ConfigDomainEventConsole
 from cmk.gui.session_context import SuperUserContext, UserContext
+from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
@@ -27,6 +28,7 @@ from cmk.gui.watolib.global_settings import (
     affected_sites,
     global_settings_diff_text,
     is_available_in_global_settings,
+    load_global_settings_of_site,
     may_read,
 )
 from cmk.gui.watolib.pending_changes import PendingChanges, PendingChangesStore
@@ -255,3 +257,14 @@ def test_diff_text_form_spec_secret_is_redacted(
     assert diff_text == "Redacted secrets changed."
     assert "old-secret" not in diff_text
     assert "new-secret" not in diff_text
+
+
+def _load_the_site_per_domain(domain: ABCConfigDomain, site_id: SiteId) -> GlobalSettings:
+    return {domain.ident(): site_id}
+
+
+@pytest.mark.usefixtures("request_context")
+def test_the_global_settings_of_a_site_merge_what_each_domain_loads_for_it() -> None:
+    assert load_global_settings_of_site(SiteId("remote"), _load_the_site_per_domain)[
+        ConfigDomainGUI.ident()
+    ] == SiteId("remote")

@@ -99,6 +99,7 @@ from cmk.gui.watolib.config_domain_name import (
     CORE,
 )
 from cmk.gui.watolib.config_sync import replication_path_registry
+from cmk.gui.watolib.global_settings import load_domain_globals
 from cmk.gui.watolib.groups_io import contact_group_usage_finder_registry
 from cmk.gui.watolib.host_attributes import (
     host_attribute_registry,
@@ -301,6 +302,7 @@ def register(
             snapshot_manager_factory=make_cre_snapshot_manager,
             get_rabbitmq_definitions=default_rabbitmq_definitions,
             distribute_piggyback_hub_configs=distribute_piggyback_hub_configs,
+            load_domain_globals=load_domain_globals,
         )
     )
     broker_certificate_sync_registry.register(DefaultBrokerCertificateSync())

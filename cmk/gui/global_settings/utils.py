@@ -26,11 +26,13 @@ from cmk.gui.watolib.config_domain_name import (
     GlobalSettingsContext,
 )
 from cmk.gui.watolib.global_settings import (
+    DomainGlobalsLoader,
     effective_site_value,
     effective_value,
     GlobalSettingsOrigin,
     is_available_in_global_settings,
     load_configuration_settings,
+    load_global_settings_of_site,
     make_global_settings_context,
     may_read,
 )
@@ -75,6 +77,7 @@ class _GlobalScope:
 class _SiteScope:
     site_id: SiteId
     global_settings: Mapping[str, object]
+    reaching_global_settings: Mapping[str, object]
     site_settings: Mapping[str, object]
     managed_by_central_site: bool
 
@@ -117,6 +120,7 @@ def site_settings(
     breadcrumb: Breadcrumb,
     sites: SiteConfigurations,
     site_id: SiteId,
+    load_domain_globals: DomainGlobalsLoader,
 ) -> GlobalSettingsApp:
     return _app_data(
         config,
@@ -126,6 +130,7 @@ def site_settings(
         _SiteScope(
             site_id=site_id,
             global_settings=load_configuration_settings(),
+            reaching_global_settings=load_global_settings_of_site(site_id, load_domain_globals),
             site_settings=load_site_globals(sites, site_id),
             managed_by_central_site=site_globals_are_pushed(sites, sites[site_id]),
         ),
@@ -239,9 +244,12 @@ def _variables(
                 site_overrides=_site_overrides(varname, scope.sites),
             )
         else:
-            global_value, global_origin = effective_value(scope.global_settings, varname)
+            global_value, _global_origin = effective_value(scope.global_settings, varname)
+            _reaching_value, reaching_origin = effective_value(
+                scope.reaching_global_settings, varname
+            )
             value, origin = effective_site_value(
-                scope.site_settings, varname, global_settings=scope.global_settings
+                scope.site_settings, varname, global_settings=scope.reaching_global_settings
             )
             _, vue_global_value = visitor.to_vue(RawDiskData(global_value))
             spec, vue_value = visitor.to_vue(RawDiskData(value))
@@ -250,7 +258,7 @@ def _variables(
                 explicit=origin is GlobalSettingsOrigin.site,
                 global_layer=GlobalLayerValue(
                     value=vue_global_value,
-                    explicit=global_origin is GlobalSettingsOrigin.global_,
+                    explicit=reaching_origin is GlobalSettingsOrigin.global_,
                 ),
             )
         yield GlobalSettingsVariable(

@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from http import HTTPStatus
 
+from cmk.ccc.version import edition
 from cmk.gui.i18n import _
 from cmk.gui.openapi.framework import (
     ApiContext,
@@ -17,16 +18,18 @@ from cmk.gui.openapi.framework import (
 )
 from cmk.gui.openapi.framework.model.response import ApiResponse
 from cmk.gui.openapi.restful_objects.constructors import sub_object_href
+from cmk.gui.watolib.activate_changes import activation_features_registry
 from cmk.gui.watolib.config_domain_name import config_variable_registry
 from cmk.gui.watolib.global_settings import (
     add_global_settings_change,
     effective_site_value,
     global_settings_diff_text,
     GlobalSettingsOrigin,
-    load_configuration_settings,
+    load_global_settings_of_site,
     need_site_write_permission,
 )
 from cmk.gui.watolib.sites import load_site_globals
+from cmk.utils import paths
 from cmk.web.utils.html import HTML
 
 from ._family import GLOBAL_SETTINGS_FAMILY
@@ -69,7 +72,12 @@ def update_site_global_setting_v1(
     sites = load_configured_sites()
     site_globals = load_site_globals(sites, site_id)
     old_value, old_origin = effective_site_value(
-        site_globals, varname, global_settings=load_configuration_settings()
+        site_globals,
+        varname,
+        global_settings=load_global_settings_of_site(
+            site_id,
+            activation_features_registry[str(edition(paths.omd_root))].load_domain_globals,
+        ),
     )
     if api_context.etag.enabled:
         api_context.etag.verify(site_global_setting_etag(site_id, varname, old_value, old_origin))

@@ -144,7 +144,7 @@ from cmk.gui.watolib.config_sync import (
     ReplicationPathType,
     SnapshotSettings,
 )
-from cmk.gui.watolib.global_settings import load_configuration_settings
+from cmk.gui.watolib.global_settings import DomainGlobalsLoader, load_configuration_settings
 from cmk.gui.watolib.host_relations_export import (
     add_dropped_relations,
     export_host_relations_of_central_site,
@@ -4732,6 +4732,7 @@ class ActivationFeatures:
         ],
         None,
     ]
+    load_domain_globals: DomainGlobalsLoader
 
 
 class ActivationFeaturesRegistry(Registry[ActivationFeatures]):

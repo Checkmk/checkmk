@@ -534,6 +534,25 @@ def test_metric_requests_additional_groupby_fields(interval: monitoring_v3.TimeI
     assert request == expected
 
 
+def test_redis_cpu_request_asks_for_cpu_seconds_per_second_of_each_node(
+    interval: monitoring_v3.TimeInterval,
+) -> None:
+    [cpu] = [
+        m for m in agent_gcp.REDIS.metrics if m.name == "redis.googleapis.com/stats/cpu_utilization"
+    ]
+
+    request = cpu.request(
+        interval=interval,
+        groupby=agent_gcp.REDIS.default_groupby,
+        project="fun",
+        resource_type=None,
+    )
+
+    aggregation = request["aggregation"]
+    assert aggregation.per_series_aligner == Aligner.ALIGN_RATE
+    assert list(aggregation.group_by_fields) == ["resource.instance_id", "resource.node_id"]
+
+
 @pytest.fixture(name="cost_output")
 def fixture_cost_output() -> Sequence[agent_gcp.Section]:
     client = FakeClient("test", FakeMonitoringClient(), FakeAssetClient())

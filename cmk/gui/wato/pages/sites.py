@@ -86,7 +86,7 @@ from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_variable_registry,
 )
-from cmk.gui.watolib.config_domains import ConfigDomainGUI
+from cmk.gui.watolib.config_domains import ConfigDomainCACertificates, ConfigDomainGUI
 from cmk.gui.watolib.config_sync import (
     populate_saml_site_endpoint_urls,
 )
@@ -2013,6 +2013,11 @@ class ModeSiteLivestatusEncryption(WatoMode):
         )
 
         if (cert_str := cert_pem.decode()) in current_cas["trusted_cas"]:
+            # The per-site CA store is derived from this setting and only rebuilt
+            # when the setting is saved. Refresh it here as well, so a store that
+            # went stale (e.g. the setting was written as a file) is repaired by
+            # trusting the CA again, even though nothing new is saved.
+            ConfigDomainCACertificates.update_remote_sites_cas(current_cas["trusted_cas"])
             raise MKUserError(
                 None,
                 _('The CA is already a <a href="%(url)s">trusted CA</a>.')

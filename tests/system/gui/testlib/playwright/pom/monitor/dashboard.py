@@ -217,6 +217,18 @@ class BaseDashboard(CmkPage):
             f"> td:nth-child({column_index})"
         )
 
+    def get_widget_link(self, widget_title: str, name: str) -> Locator:
+        """Get the link a widget draws on one of its elements, e.g. a host in a top list.
+
+        Args:
+            widget_title: the title of the widget.
+            name: the text of the linked element.
+
+        Returns:
+            The locator of the link.
+        """
+        return self.get_widget(widget_title).get_by_role("link", name=name, exact=True)
+
     def check_widget_is_present(self, widget_title: str) -> None:
         """Check that a specific widget is present on the page.
 

@@ -20,6 +20,7 @@ import { useHostState } from '@/dashboard/components/Wizard/wizards/hosts-site/s
 import { useHostStatistics } from '@/dashboard/components/Wizard/wizards/hosts-site/stage2/HostStatistics/composables/useHostStatistics'
 import { useSiteOverview } from '@/dashboard/components/Wizard/wizards/hosts-site/stage2/SiteOverview/composables/useSiteOverview'
 import { useInventory } from '@/dashboard/components/Wizard/wizards/hw_sw_inventory/stage2/InventoryWidget/useInventory'
+import { useTopList } from '@/dashboard/components/Wizard/wizards/metrics/stage2/TopListWidget/composables/useTopList'
 import { useServiceState } from '@/dashboard/components/Wizard/wizards/services/stage2/ServiceState/composables/useServiceState'
 import { useServiceStatistics } from '@/dashboard/components/Wizard/wizards/services/stage2/ServiceStatistics/composables/useServiceStatistics'
 import { useProvideDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
@@ -85,6 +86,20 @@ const WIZARDS: LinkWizard[] = [
       type: 'site_overview',
       dataset: 'hosts',
       hexagon_size: 'large',
+      contextual_link: link
+    })
+  },
+  {
+    name: 'useTopList',
+    type: 'top_list',
+    openWizard: (stored) => useTopList('util', {}, stored && storedSpec(stored)),
+    storedContent: (link) => ({
+      type: 'top_list',
+      metric: 'util',
+      display_range: 'automatic',
+      columns: { show_service_description: true, show_bar_visualization: true },
+      ranking_order: 'high',
+      limit_to: 10,
       contextual_link: link
     })
   }

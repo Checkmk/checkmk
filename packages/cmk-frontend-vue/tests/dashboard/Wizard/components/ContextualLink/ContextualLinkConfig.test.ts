@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import userEvent from '@testing-library/user-event'
-import { render, screen, within } from '@testing-library/vue'
+import { render, screen, waitFor, within } from '@testing-library/vue'
 import { useProvideFilterDefinitions } from 'cmk-ui-library/components/filter'
 import { untranslated } from 'cmk-ui-library/lib/i18n'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
@@ -27,7 +27,29 @@ const HOST_STATISTICS_OPTIONS: ContextualLinkOptions = {
 }
 
 useMswServer(
-  // The target picker of the inherited mode lists the views.
+  // The target picker of the inherited mode lists the dashboards and the views.
+  http.get(`${API}/domain-types/dashboard_metadata/collections/all`, () =>
+    HttpResponse.json({
+      domainType: 'dashboard_metadata',
+      id: 'all',
+      links: [],
+      value: [
+        {
+          domainType: 'dashboard_metadata',
+          id: 'main',
+          links: [],
+          extensions: {
+            name: 'main',
+            owner: null,
+            is_built_in: true,
+            is_editable: false,
+            layout_type: 'relative_grid',
+            display: { title: 'Overview' }
+          }
+        }
+      ]
+    })
+  ),
   http.get(`${API}/domain-types/view/collections/all`, () =>
     HttpResponse.json({ domainType: 'view', id: 'all', links: [], value: [] })
   ),
@@ -79,6 +101,44 @@ describe('ContextualLinkConfig', () => {
 
     expect(screen.getByRole('button', { name: 'Toggle Default' })).toBeInTheDocument()
     expect(screen.queryAllByRole('button', { name: /^Toggle / })).toHaveLength(1)
+  })
+
+  it('starts a new link on the default target', () => {
+    renderConfig()
+
+    expect(screen.getByRole('checkbox', { name: 'Add contextual link' })).toBeChecked()
+    expect(screen.getByRole('button', { name: 'Toggle Default' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    )
+  })
+
+  it('opens a stored inherited link on its mode and its target', async () => {
+    renderConfig(
+      HOST_STATISTICS_OPTIONS,
+      {},
+      {
+        type: 'inherited',
+        location: { type: 'dashboards', name: 'main' },
+        include_context: true,
+        include_time_range: false,
+        show_filter_form: false
+      }
+    )
+
+    expect(screen.getByRole('button', { name: 'Toggle Inherited' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    )
+    const target = screen.getByRole('combobox', { name: 'Select a target' })
+    await waitFor(() => expect(target).toHaveTextContent('Overview (main)'))
+  })
+
+  it('opens a stored link that leads nowhere switched off', () => {
+    renderConfig(HOST_STATISTICS_OPTIONS, {}, { type: 'none' })
+
+    expect(screen.getByRole('checkbox', { name: 'Add contextual link' })).not.toBeChecked()
+    expect(screen.queryAllByRole('button', { name: /^Toggle / })).toHaveLength(0)
   })
 
   it('names the built-in target in default mode', () => {

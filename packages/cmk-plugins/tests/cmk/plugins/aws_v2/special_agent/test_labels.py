@@ -67,6 +67,20 @@ def test_resource_metadata_keeps_the_tags_as_aws_has_them() -> None:
     }
 
 
+def test_resource_metadata_has_the_arn_unchanged() -> None:
+    metadata = AwsResource(
+        service="lambda",
+        arn="arn:aws:lambda:eu-central-1:123456789012:function:my-function",
+    ).metadata()
+
+    assert metadata == {
+        "entity": "resource",
+        "service": "lambda",
+        "arn": "arn:aws:lambda:eu-central-1:123456789012:function:my-function",
+        "tags": {},
+    }
+
+
 @pytest.mark.parametrize(
     "resource, expected_labels",
     [

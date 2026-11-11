@@ -69,5 +69,6 @@ class AwsResource:
             **({} if self.name is None else {"name": self.name}),
             **({} if self.resource_id is None else {"resource_id": self.resource_id}),
             **({} if self.region is None else {"region": self.region}),
+            **({} if self.arn is None else {"arn": self.arn}),
             "tags": dict(self.tags),
         }

@@ -24,6 +24,7 @@ node_software_applications_aws_metadata = Node(
         "account_id": TextField(Title("Account ID")),
         "account_name": TextField(Title("Account name")),
         "region": TextField(Title("Region")),
+        "arn": TextField(Title("ARN")),
     },
 )
 

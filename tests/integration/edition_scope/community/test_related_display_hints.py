@@ -209,6 +209,7 @@ _KNOWN_ATTRIBUTES_KEY_ORDERS = {
         "account_id",
         "account_name",
         "region",
+        "arn",
     ],
 }
 

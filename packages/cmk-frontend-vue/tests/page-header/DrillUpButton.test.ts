@@ -9,6 +9,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import DrillUpButton from '@/page-header/DrillUpButton.vue'
 
+const ORIGIN = 'https://monitoring.example'
+const DASHBOARD = `${ORIGIN}/site/check_mk/dashboard.py?name=main`
+const PAGE = `${ORIGIN}/site/check_mk/view.py?view_name=allhosts`
+
 function withHistory(length: number) {
   vi.spyOn(History.prototype, 'length', 'get').mockReturnValue(length)
 }
@@ -18,8 +22,11 @@ function referredBy(url: string) {
 }
 
 describe('DrillUpButton', () => {
+  const originalLocation = window.location
+
   afterEach(() => {
     vi.restoreAllMocks()
+    Object.defineProperty(window, 'location', { configurable: true, value: originalLocation })
   })
 
   it('goes back in the history of the tab', async () => {
@@ -30,6 +37,19 @@ describe('DrillUpButton', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Back to Overview' }))
 
     expect(back).toHaveBeenCalledOnce()
+  })
+
+  it('opens the referring page in a tab without history', async () => {
+    withHistory(1)
+    referredBy(DASHBOARD)
+    const assign = vi.fn()
+    Object.defineProperty(window, 'location', { configurable: true, value: { href: PAGE, assign } })
+    render(DrillUpButton, { props: { title: 'Overview' } })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Back to Overview' }))
+
+    expect(assign).toHaveBeenCalledOnce()
+    expect(String(assign.mock.calls[0]?.[0])).toBe(DASHBOARD)
   })
 
   it('shows no button without history and referrer', () => {

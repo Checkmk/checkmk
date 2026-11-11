@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
+import re
 from typing import override
 from urllib.parse import urljoin
 
@@ -37,7 +38,8 @@ class AllHosts(CmkPage):
     @override
     def validate_page(self) -> None:
         logger.info("Validate that current page is '%s' page", self.page_title)
-        self.main_area.check_page_title(self.page_title)
+        # A site filter adds the site to the title.
+        self.main_area.check_page_title(re.compile(rf"^{re.escape(self.page_title)}\b"))
 
     @override
     def _dropdown_list_name_to_id(self) -> DropdownListNameToID:
@@ -67,6 +69,14 @@ class AllHosts(CmkPage):
     def try_the_new_view_in_page_menu(self) -> Locator:
         """The switch button as mounted inside the page menu bar's shortcut area."""
         return self.page_menu_shortcuts.locator("button.monitoring-page-link-button")
+
+    @property
+    def drill_up_button(self) -> Locator:
+        """The button back to the page a drill-down came from, shown only on a view a
+        drill-down opened. Its name is 'Back to <title of that page>'."""
+        return self.main_area.locator("#top_heading").get_by_role(
+            "button", name=re.compile(r"^Back to ")
+        )
 
     def get_host_link(self, host_name: str) -> Locator:
         """Get the link to a host in the 'All hosts' view.

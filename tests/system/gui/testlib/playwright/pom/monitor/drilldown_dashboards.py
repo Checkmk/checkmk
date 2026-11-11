@@ -85,6 +85,20 @@ def cpu_top_list(
     }
 
 
+def host_stats(title: str, contextual_link: Mapping[str, object]) -> dict[str, object]:
+    """Host statistics of all hosts, linking each part and the total as `contextual_link`
+    says."""
+    return {
+        "general_settings": {
+            "title": {"text": title, "render_mode": "with_background"},
+            "render_background": True,
+        },
+        "content": {"type": "host_stats", "contextual_link": dict(contextual_link)},
+        "filters": {},
+        "layout": {"type": "relative_grid", "position": {"x": 1, "y": 1}, "size": _WIDGET_SIZE},
+    }
+
+
 def apply_host_name_runtime_filter(dashboard: BaseDashboard, host_name: str) -> str:
     """Narrow the dashboard to the host by the 'Host name (regex)' runtime filter.
 

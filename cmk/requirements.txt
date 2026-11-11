@@ -68,7 +68,7 @@ pysaml2~=7.4 # used by SSO via SAML2.0
 azure-storage-blob~=12.20.0 # used for backups to Azure Blob Storage
 azure-identity~=1.17.0 # used for backups to Azure Blob Storage
 pyjwt[crypto]==2.15.1 # used for SSO via OAUTH2
-GitPython~=3.1 # used for werk collecting
+GitPython~=3.2 # used for werk collecting
 icalendar==5.0.7 # used for importing .ical files
 recurring_ical_events==2.0.2 # used for parsing recurring events in icalendar objects
 netapp-ontap==9.14.1.0 # used by netapp special agent

@@ -8,6 +8,7 @@ import json
 import pytest
 
 from cmk.gui.config import Config
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.pages import PageContext
 from cmk.gui.session import session
@@ -28,6 +29,15 @@ def test_agent_diagnose_via_an_unknown_site_reports_an_error() -> None:
     assert isinstance(result, dict)
     assert result["status_code"] == 99
     assert "gone" in result["output"]
+
+
+@pytest.mark.xfail(strict=True, reason="crash group 4997: KeyError 'site_id'")
+@pytest.mark.usefixtures("request_context", "with_admin_login")
+def test_agent_diagnose_without_a_site_reports_an_error() -> None:
+    request.set_var("host_name", "heute")
+
+    with pytest.raises(MKUserError):
+        PageAjaxDiagCmkAgent().page(_page_context())
 
 
 @pytest.mark.usefixtures("request_context", "with_admin_login")

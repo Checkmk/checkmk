@@ -825,6 +825,10 @@ msgstr "%(name_singular)s はクイックセットアップでのみ削除可能
 msgid "%(nondescript_rule_count)d notification rule(s) "
 msgstr "%(nondescript_rule_count)d通知ルール(s) "
 
+#, fuzzy, python-format
+msgid "%(not_before)s to %(not_after)s"
+msgstr "開始日: %(not_before)s - 終了日: %(not_after)s"
+
 #, python-format
 msgid "%(num)d incompatible Werks have been acknowledged."
 msgstr "%(num)d 互換性のないWerksが承認されました。"
@@ -1123,6 +1127,14 @@ msgid ""
 "'%(host)s' stores a relation to '%(other)s' that '%(other)s' does not store, "
 "so the monitoring does not show it. Add it on '%(other)s', or remove it from "
 "'%(host)s'."
+msgstr ""
+
+#, fuzzy, python-format
+msgid "'%(name)s' has no effect in Checkmk."
+msgstr "%(name)sは削除されました。"
+
+#, python-format
+msgid "'%(name)s' may break with any update of Checkmk."
 msgstr ""
 
 #, python-format
@@ -2175,6 +2187,36 @@ msgstr ""
 "Checkmkはこの一時ファイルシステムなしで起動します。</p><p>たとえ可能であって"
 "も、Checkmkの全体的なパフォーマンスが低下する可能性があるため、この方法で"
 "Checkmkを使用することはお勧めできません。</p>"
+
+#, python-format
+msgid ""
+"<p>Checkmk imports the Python files in these packages below "
+"<tt>'%(plugins_dir)s'</tt>, including their subfolders: %(packages)s. Other "
+"files below this folder have no effect.</p><p>These plug-ins use internal "
+"interfaces of Checkmk. These interfaces are not supported for plug-ins and "
+"may change with any update. Graphs, metrics and perf-o-meters are no longer "
+"read from them and need the supported API cmk.graphing.v1. Rule sets have "
+"the supported API cmk.rulesets.v1. Files which use a supported API belong "
+"below <tt>cmk_addons/plugins</tt>; Checkmk finds them here only for rule "
+"sets in <tt>wato/check_parameters</tt>, a folder for its own rule sets.</"
+"p><p>Files which Checkmk fails to load are listed by the test 'Broken GUI "
+"extensions'.</p>"
+msgstr ""
+
+#, python-format
+msgid ""
+"<p>Checkmk runs the Python files placed directly in these folders below "
+"<tt>'%(plugins_dir)s'</tt>: %(folders)s. If a <tt>.pyc</tt> file sits next "
+"to a <tt>.py</tt> file, Checkmk runs the <tt>.pyc</tt> file instead. Files "
+"in subfolders or in other folders have no effect.</p><p>These plug-ins use "
+"internal interfaces of Checkmk. These interfaces are not supported for plug-"
+"ins and may change with any update. Graphs, metrics and perf-o-meters are no "
+"longer read from them and need the supported API cmk.graphing.v1. Rule sets "
+"have the supported API cmk.rulesets.v1. Files which use a supported API have "
+"no effect here and belong below <tt>cmk_addons/plugins</tt>.</p><p>Files "
+"which Checkmk fails to load are listed by the test 'Broken GUI extensions'.</"
+"p>"
+msgstr ""
 
 msgid ""
 "<p>Having a large number of users configured in Checkmk may decrease the "
@@ -3508,6 +3550,10 @@ msgstr "ASMユーザー名"
 msgid "ASP requests rejected"
 msgstr "ASPリクエストが拒否されました"
 
+#, fuzzy
+msgid "AWS"
+msgstr "EWS"
+
 msgid "AWS EC2 instances"
 msgstr "AWS EC2 インスタンス"
 
@@ -3516,6 +3562,10 @@ msgstr "AWS S3 (オブジェクトストレージ)"
 
 msgid "AWS S3 bucket"
 msgstr "AWS S3 バケット"
+
+#, fuzzy
+msgid "AWS service"
+msgstr "すべてのサービス"
 
 msgid "AWS services found!"
 msgstr "AWSのサービスが見つかりました！"
@@ -3530,6 +3580,10 @@ msgid "AWS v2/CE total reservation utilization"
 msgstr "AWS v2/CE 総予約利用率"
 
 msgid "AWS v2/CloudFront"
+msgstr "AWS v2/CloudFront"
+
+#, fuzzy
+msgid "AWS v2/CloudFront distribution"
 msgstr "AWS v2/CloudFront"
 
 msgid "AWS v2/CloudWatch alarms limits"
@@ -3559,10 +3613,18 @@ msgstr "AWS v2/EC2 の制限"
 msgid "AWS v2/ECS CPU reservation"
 msgstr "AWS v2/ECS CPU予約"
 
+#, fuzzy
+msgid "AWS v2/ECS CPU utilization"
+msgstr "AWS v2/ElastiCache CPU利用率"
+
 msgid "AWS v2/ECS Limits"
 msgstr "AWS v2/ECS の制限"
 
 msgid "AWS v2/ECS memory reservation"
+msgstr "AWS v2/ECS メモリ予約"
+
+#, fuzzy
+msgid "AWS v2/ECS memory utilization"
 msgstr "AWS v2/ECS メモリ予約"
 
 msgid "AWS v2/ELB HTTP errors"
@@ -4260,8 +4322,16 @@ msgstr ""
 "合、いずれかのPodが設定期間よりも長く保留されると、サービスはWARN/CRITになり"
 "ます。クラスタとノードは、空きポッド数のレベルを定義することができます。"
 
+#, fuzzy
+msgid "Account ID"
+msgstr "アカウントID"
+
 msgid "Account IDs"
 msgstr "アカウントID"
+
+#, fuzzy
+msgid "Account name"
+msgstr "ストレージアカウント名"
 
 msgid ""
 "Account names on Windows, user or group names - or numeric IDs - on Linux "
@@ -14124,11 +14194,26 @@ msgstr "Checkmk ダッシュボード"
 msgid "Checkmk data backend"
 msgstr "Checkmkのデータバックエンド"
 
+msgid ""
+"Checkmk does not check limits on EC2 instance types that it does not know "
+"about. By default in this case, it will emit a warning so that you are aware "
+"that the limits of these instances are unmonitored. You can select a "
+"different service state for this scenario here."
+msgstr ""
+
+#, fuzzy
+msgid "Checkmk does not load plug-ins from this folder."
+msgstr "Checkmkには、このサービスに関するグラフはありません。"
+
 msgid "Checkmk edition"
 msgstr "Checkmkエディション"
 
 msgid "Checkmk extension packages (MKPs)"
 msgstr "Checkmk拡張パッケージ(MKPs)"
+
+#, fuzzy, python-format
+msgid "Checkmk fails to load it: %(error)s."
+msgstr "ジョブの停止に失敗しました: %(error)s"
 
 msgid "Checkmk fetcher latency"
 msgstr "Checkmkフェッチャーのレイテンシー"
@@ -14151,6 +14236,11 @@ msgstr "Checkmk ホスト名"
 msgid "Checkmk licensing files"
 msgstr "Checkmkライセンスファイル"
 
+msgid ""
+"Checkmk loads plug-ins from this folder through internal interfaces, which "
+"are not supported for plug-ins."
+msgstr ""
+
 msgid "Checkmk log files"
 msgstr "Checkmkログファイル"
 
@@ -14163,6 +14253,22 @@ msgstr ""
 
 msgid "Checkmk mobile"
 msgstr "Checkmkモバイル"
+
+#, python-format
+msgid ""
+"Checkmk no longer reads PNP templates from <tt>'%(templates_dir)s'</tt> and "
+"its subfolders, so they have no effect. Graphs need the supported API "
+"cmk.graphing.v1."
+msgstr ""
+
+#, fuzzy
+msgid "Checkmk no longer reads PNP templates."
+msgstr "非推奨のPNPテンプレート"
+
+msgid ""
+"Checkmk no longer reads graphs, metrics and perf-o-meters from this folder. "
+"Re-implement it with the supported API cmk.graphing.v1."
+msgstr ""
 
 msgid "Checkmk partner or reseller"
 msgstr "Checkmkパートナーまたはリセラー"
@@ -14525,10 +14631,13 @@ msgid ""
 "AWS SDK: environment variables, the files in <tt>~/.aws</tt> of the site "
 "user, and the instance profile or EKS Pod Identity when Checkmk runs on AWS. "
 "Recommended on AWS, because AWS renews the instance profile and EKS Pod "
-"Identity credentials itself.<br>To monitor through an IAM role, choose "
-"<b>Explicit list of account IDs</b> under <b>Accounts</b>, and enter the "
-"account and the name of the role. The agent then assumes the role in that "
-"account. The AWS CloudTrail log shows these calls with the session name "
+"Identity credentials itself.<br><b>Named profile:</b> Checkmk stores no "
+"secret. The agent uses a profile from <tt>~/.aws/config</tt> of the site "
+"user, for example one whose <tt>credential_process</tt> gets temporary "
+"credentials from IAM Roles Anywhere.<br>To monitor through an IAM role, "
+"choose <b>Explicit list of account IDs</b> under <b>Accounts</b>, and enter "
+"the account and the name of the role. The agent then assumes the role in "
+"that account. The AWS CloudTrail log shows these calls with the session name "
 "<tt>checkmk-&lt;site&gt;</tt>."
 msgstr ""
 
@@ -14797,26 +14906,26 @@ msgstr ""
 msgid ""
 "Choose which updater keeps the agents up to date.<br><b>Enable agent updates "
 "using the Agent Controller</b>: The Agent Controller updates the agents for "
-"Linux and Windows. On Linux, it needs the Agent Controller and the single "
-"directory deployment of the rule set <i>Customize agent package</i>. Baking "
-"fails for Linux agents without them. Solaris agents get the legacy updater."
-"<br><b>Enable agent updates using the Agent Controller (fallback to legacy "
-"updater in case of problems)</b>: The agents get both updaters, and both run "
-"side by side, independently of each other. Both install the agent package "
-"that is baked for the host, so it does not matter which of them updates an "
-"agent first. If the Agent Controller fails to update an agent, the legacy "
-"updater still keeps it up to date. Agents that cannot use the Agent "
-"Controller get the legacy updater only: Solaris agents, and Linux agents "
-"without the Agent Controller or without the single directory deployment. "
-"Rules that enabled agent updates before Checkmk 3.0 use this entry after the "
-"update.<br><b>Enable agent updates using the legacy updater (deprecated)</"
-"b>: Only the legacy updater updates the agents.<br><br>Do not forget to "
-"enable agent updates in at least one of your rules. It can be useful to "
-"create rules that are only partially filled out. Since the rule execution is "
-"done on a <i>per parameter</i> base you can for example create one rule at "
-"the top of your list that just sets the activation to <i>Do not enable agent "
-"updates</i> for just some of your hosts without setting any of the other "
-"parameters."
+"Linux and Windows. Baking fails for Linux agents without the Agent "
+"Controller. Baking also fails for hosts that the rule set <i>Use classic "
+"file deployment</i> keeps on the classic file deployment. Solaris agents get "
+"the legacy updater.<br><b>Enable agent updates using the Agent Controller "
+"(fallback to legacy updater in case of problems)</b>: The agents get both "
+"updaters, and both run side by side, independently of each other. Both "
+"install the agent package that is baked for the host, so it does not matter "
+"which of them updates an agent first. If the Agent Controller fails to "
+"update an agent, the legacy updater still keeps it up to date. Agents that "
+"cannot use the Agent Controller get the legacy updater only: Solaris agents, "
+"and Linux agents without the Agent Controller or without the single "
+"directory deployment. Rules that enabled agent updates before Checkmk 3.0 "
+"use this entry after the update.<br><b>Enable agent updates using the legacy "
+"updater (deprecated)</b>: Only the legacy updater updates the agents."
+"<br><br>Do not forget to enable agent updates in at least one of your rules. "
+"It can be useful to create rules that are only partially filled out. Since "
+"the rule execution is done on a <i>per parameter</i> base you can for "
+"example create one rule at the top of your list that just sets the "
+"activation to <i>Do not enable agent updates</i> for just some of your hosts "
+"without setting any of the other parameters."
 msgstr ""
 
 msgid ""
@@ -15343,6 +15452,10 @@ msgstr "Cloud SQL"
 
 msgid "Cloud hosts"
 msgstr "クラウドホスト"
+
+#, fuzzy
+msgid "Cloud provider"
+msgstr "AIプロバイダー"
 
 msgid "Cloud region"
 msgstr "クラウドリージョン"
@@ -20764,7 +20877,8 @@ msgstr "カスタムサービスの削除 %(title)s"
 msgid "Delete customer #%(nr)d"
 msgstr "顧客 #%(nr)dを削除"
 
-msgid "Delete event immediately after the actions"
+#, fuzzy
+msgid "Delete event right after triggering its actions"
 msgstr "アクションの直後にイベントを削除する"
 
 msgid "Delete files older than"
@@ -21493,18 +21607,13 @@ msgstr "デプロイ"
 msgid "Deprecated"
 msgstr "非推奨"
 
-msgid "Deprecated GUI extensions"
-msgstr "非推奨のGUI拡張機能"
-
-msgid "Deprecated PNP templates"
-msgstr "非推奨のPNPテンプレート"
+#, fuzzy
+msgid "Deprecated Quick Setup"
+msgstr "Prometheus クイックセットアップ"
 
 #, python-format
 msgid "Deprecated extension package: %(ident)s"
 msgstr "非推奨拡張パッケージ: %(ident)s"
-
-msgid "Deprecated legacy GUI extensions"
-msgstr "非推奨のレガシーGUI拡張"
 
 #, python-format
 msgid "Deprecated plug-in: %(ident)s"
@@ -26824,6 +26933,10 @@ msgstr ""
 "コマンドラインでこのコマンドを実行すると、このMKPを無効にし、完全なエラーメッ"
 "セージを見ることができます：%(command)s"
 
+#, fuzzy, python-format
+msgid "Extension package: %(ident)s"
+msgstr "拡張パッケージファイル"
+
 msgid "Extension packages"
 msgstr "拡張パッケージ"
 
@@ -29177,27 +29290,12 @@ msgstr "GRPCベースのOTLPレシーバー:"
 msgid "GUI design"
 msgstr "GUIデザイン"
 
-#, python-format
-msgid ""
-"GUI extension in %(plugin_name)r uses an API which is marked as deprecated "
-"and may not work anymore due to unknown imports or objects (file: %(file)s)."
-msgstr ""
-"%(plugin_name)r のGUI 拡張機能は、非推奨としてマークされている API を使用して"
-"おり、不明なインポートまたはオブジェクト (File: %(file)s)が原因で正常に動作し"
-"ない可能性があります。"
-
 msgid "GUI extensions"
 msgstr "GUI拡張機能"
 
-#, python-format
-msgid ""
-"GUI extensions in <tt>'%(plugins_dir)s'</tt> are marked as 'deprecated' and "
-"will be ignored in future Checkmk versions (official deprecation timeline "
-"not decided yet)."
-msgstr ""
-"<tt>'%(plugins_dir)s'</tt> 内の GUI 拡張機能は '非推奨' としてマークされてお"
-"り、今後の Checkmk バージョンでは無視されます（公式な非推奨となるスケジュール"
-"は未決定です）。"
+#, fuzzy
+msgid "GUI plug-ins"
+msgstr "プラグイン"
 
 msgid "GUID"
 msgstr "GUID"
@@ -35965,11 +36063,16 @@ msgstr ""
 "トは含まれません。ご注意ください：分散監視はライセンス状態が'Free'の場合には"
 "利用できません。"
 
+#, fuzzy
 msgid ""
 "In a distributed setup where the Event Console is not running in the same "
 "site as the host is monitored on, you need to access the remote Event "
 "Console via TCP. Please make sure that this is activated in the global "
-"settings of the Event Console. The default port number is 6558."
+"settings of the Event Console. The default port number is 6558. A port after "
+"the host, e.g. myhost:6559 or [2001:db8::1]:6559, overrides it. The check "
+"tries IPv6 first, so if <i>Access to event status via TCP</i> of that Event "
+"Console restricts the source addresses, allow the IPv6 addresses of this "
+"site's host there, too."
 msgstr ""
 "イベントコンソールがホストと同じサイトで実行されていない分散セットアップで"
 "は、TCPを介してリモートイベントコンソールにアクセスする必要があります。イベン"
@@ -39524,28 +39627,12 @@ msgstr ""
 "従来のASCIIメールは一括処理をサポートしていません。通知の一括送信を無効にする"
 "か、一括送信を許可する別の通知プラグインを選択してください。"
 
-#, python-format
-msgid ""
-"Legacy GUI extension in %(plugin_name)r uses an API which is marked as "
-"deprecated and may not work anymore due to unknown imports or objects (file: "
-"%(file)s)."
-msgstr ""
-"%(plugin_name)r 内のレガシー GUI 拡張機能は、非推奨とマークされた API を使用"
-"しており、未知のインポートやオブジェクト（ファイル: %(file)s）が原因で、正常"
-"に動作しない可能性があります。"
-
 msgid "Legacy GUI extensions"
 msgstr "レガシーGUI拡張機能%r"
 
-#, python-format
-msgid ""
-"Legacy GUI extensions in <tt>'%(web_dir)s'</tt> are marked as 'deprecated' "
-"and will be ignored in future Checkmk versions (official deprecation "
-"timeline not decided yet)."
-msgstr ""
-"<tt>%(web_dir)s</tt> 内のレガシー GUI 拡張機能は、非推奨してマークされてお"
-"り、今後のCheckmkバージョンでは無視されます（非推奨となる公式スケジュールは未"
-"決定です）。"
+#, fuzzy
+msgid "Legacy GUI plug-ins"
+msgstr "レガシーGUI拡張機能%r"
 
 msgid "Legacy agent management"
 msgstr "レガシーエージェント管理"
@@ -44420,6 +44507,11 @@ msgstr "移行"
 msgid "Migrate selected users"
 msgstr "選択したユーザーを移行する"
 
+msgid ""
+"Migrate the rules to the successor of the rule set or remove them before the "
+"update. The Werk which deprecated the rule set describes its successor."
+msgstr ""
+
 msgid "Migrate users"
 msgstr "ユーザーを移行する"
 
@@ -46255,6 +46347,10 @@ msgstr "名前：%(managed_robot_name)s"
 msgid "Name: %(name)s"
 msgstr "名前: %(name)s"
 
+#, fuzzy
+msgid "Named profile"
+msgstr "プロファイルを編集する"
+
 msgid "Names"
 msgstr "名前"
 
@@ -46857,8 +46953,9 @@ msgstr "Migrate 内に Dictionary ValueSpec が存在しません: %(valuespec)s
 msgid "No GCP services found."
 msgstr "GCPサービスが見つかりません。"
 
-msgid "No GUI extensions using the deprecated API"
-msgstr "非推奨のAPIを使用したGUI拡張機能は使用しない"
+#, fuzzy
+msgid "No GUI plug-ins found"
+msgstr "アクションが見つかりませんでした"
 
 msgid "No IP"
 msgstr "IPなし"
@@ -46875,8 +46972,9 @@ msgstr "このバンドルに対応するOTel設定が見つかりませんで�
 msgid "No OpenTelemetry configuration yet"
 msgstr "OpenTelemetryの設定はまだありません"
 
-msgid "No PNP templates using the deprecated API"
-msgstr "非推奨のAPIを使用するPNPテンプレートを使用しないでください"
+#, fuzzy
+msgid "No PNP templates found"
+msgstr "ルールが見つかりません"
 
 msgid "No Prometheus configuration found for this bundle."
 msgstr "このバンドルに対応するPrometheusの設定が見つかりませせんでした。"
@@ -47159,9 +47257,6 @@ msgstr "ホスト/サービスが見つかりません。"
 
 msgid "No information available"
 msgstr "利用可能な情報はありません"
-
-msgid "No legacy GUI extensions using the deprecated API"
-msgstr "非推奨のAPIを使用したレガシーGUI拡張機能は使用しないでください"
 
 msgid "No levels"
 msgstr "レベルなし"
@@ -51831,23 +51926,9 @@ msgstr "PLEASE WAIT"
 msgid "PLL lock voltages by freqency"
 msgstr "周波数によるPLLロック電圧"
 
-#, python-format
-msgid ""
-"PNP template uses an API which was removed in an earlier Checkmk version "
-"(file: %(file)s)."
-msgstr ""
-"PNPテンプレートは、以前のCheckmkバージョンで削除されたAPIを使用しています"
-"（ファイル：%(file)s）。"
-
-#, python-format
-msgid ""
-"PNP templates in <tt>'%(templates_dir)s'</tt> are marked as 'deprecated' and "
-"will be ignored in future Checkmk versions (official deprecation timeline "
-"not decided yet)."
-msgstr ""
-"PNPテンプレートが<tt>'%(templates_dir)s'</tt>に指定されているものは'非推奨'と"
-"してマークされており、今後のCheckmkバージョンでは無視されます（公式に非推奨と"
-"するスケジュールは未決定です）。"
+#, fuzzy
+msgid "PNP templates"
+msgstr "テンプレート"
 
 msgid ""
 "PNP4Nagios needs meta information about hosts and services. This information "
@@ -52335,6 +52416,9 @@ msgstr "パーティション(XEN)"
 
 msgid "Parts per million"
 msgstr "100万分の1"
+
+msgid "Pass the proxy to the credential_process"
+msgstr ""
 
 msgid "Passive checks"
 msgstr "パッシブチェック"
@@ -54170,6 +54254,10 @@ msgstr "プラグイン出力"
 msgid "Plug-in output in case of absent updates"
 msgstr "更新がない場合のプラグイン出力"
 
+#, fuzzy, python-format
+msgid "Plug-in: %(ident)s"
+msgstr "非推奨のプラグイン: %(ident)s"
+
 msgid "Plug-ins"
 msgstr "プラグイン"
 
@@ -54968,6 +55056,10 @@ msgstr "プロファイル%(id)sがアップロードされ、分析されまし
 msgid "Profile changed (sync failed: %(result)s)"
 msgstr "プロファイルが変更されました(同期に失敗しました %(result)s)"
 
+#, fuzzy
+msgid "Profile name"
+msgstr "ファイル名"
+
 msgid "Profile not found."
 msgstr "プロフィールが見つかりません。"
 
@@ -55215,6 +55307,10 @@ msgstr "プロキシ"
 
 msgid "Proxy URL"
 msgstr "プロキシURL"
+
+#, fuzzy
+msgid "Proxy for credential_process"
+msgstr "エージェントを構成する"
 
 msgid "Proxy host"
 msgstr "プロキシホスト"
@@ -55997,6 +56093,9 @@ msgstr "再実行戦略"
 
 msgid "Re-executions"
 msgstr "再実行"
+
+msgid "Re-implement it with the supported API cmk.graphing.v1."
+msgstr ""
 
 msgid "Read"
 msgstr "読んだ"
@@ -58209,6 +58308,10 @@ msgstr "解決済み"
 
 msgid "Resource Group"
 msgstr "リソースグループ"
+
+#, fuzzy
+msgid "Resource ID"
+msgstr "ソース"
 
 msgid "Resource Name"
 msgstr "リソース名"
@@ -66196,6 +66299,10 @@ msgstr "リカバリが設定されているかどうか（事前定義済み）
 msgid "State if remaining API reads are unknown"
 msgstr "残りのAPI読み取りが不明であるかどうかの状態"
 
+#, fuzzy
+msgid "State if running instance types are unknown to Checkmk"
+msgstr "残りのAPI読み取りが不明であるかどうかの状態"
+
 msgid "State if specific check plug-ins receive no monitoring data."
 msgstr "特定のチェックプラグインが監視データを受け取らない場合。"
 
@@ -68995,6 +69102,11 @@ msgstr "イベントコンソールは現在実行されていません。"
 msgid "The Event Console is disabled (\"omd config\")."
 msgstr "イベントコンソールが無効になっています([omd config])。"
 
+msgid ""
+"The Event Console sends the email with the <tt>mail</tt> command. If the "
+"command still runs after a minute, the Event Console kills it."
+msgstr ""
+
 #, python-format
 msgid ""
 "The Event Console view '%(view_name)s' cannot be rendered. The Event Console "
@@ -70189,6 +70301,11 @@ msgstr ""
 "えることができます。このチェックは、SAP値のリストを一度に監視します。"
 
 msgid ""
+"The check gives up after this time, 20 seconds by default. The check timeout "
+"of the monitoring core, 60 seconds by default, must be longer."
+msgstr ""
+
+msgid ""
 "The check takes this state in case the inventory cannot be updated because "
 "of any possible reason. A common use is setting this to OK for workstations "
 "that can be switched off - so you will get no notifications in that case."
@@ -70717,6 +70834,18 @@ msgstr ""
 "ダッシュボード'%(dashboard_name)s' は存在しません、または閲覧許可がありませ"
 "ん。"
 
+#, fuzzy, python-format
+msgid ""
+"The dashboard '%(name)s' does not exist or you do not have permission to "
+"view it."
+msgstr ""
+"ダッシュボード'%(dashboard_name)s' は存在しません、または閲覧許可がありませ"
+"ん。"
+
+#, fuzzy, python-format
+msgid "The dashboard has no widget '%(widget)s'."
+msgstr "ダッシュボードにフォルダー %{n} を準備しました"
+
 #, python-brace-format
 msgid ""
 "The data backend certificate authority {path} holds no certificate. Create "
@@ -70912,6 +71041,10 @@ msgid "The description of the interface as provided by the device"
 msgstr "デバイスによって提供されるインターフェースの説明"
 
 #, fuzzy
+msgid "The details below give the reason."
+msgstr "センサーの識別子。"
+
+#, fuzzy
 msgid "The deviation of the local clock from the time server."
 msgstr "スキャンの実行をこの時間範囲に制限します。"
 
@@ -71104,6 +71237,15 @@ msgstr "クラスター内の予想されるリソース数"
 
 msgid "The expiration time must be in the future."
 msgstr "有効期限は将来の日時でなければなりません。"
+
+msgid ""
+"The extension package contains plug-ins which have no effect in Checkmk."
+msgstr ""
+
+msgid ""
+"The extension package contains plug-ins which may break with any update of "
+"Checkmk."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -72005,6 +72147,9 @@ msgstr ""
 msgid "The log file"
 msgstr "このログファイル"
 
+msgid "The log file 'var/log/web.log' shows the details."
+msgstr ""
+
 #, python-format
 msgid ""
 "The log file <tt>%(display_name)s</tt> of host <tt>%(host_name)s</tt> could "
@@ -72443,6 +72588,13 @@ msgid ""
 "`RMK`."
 msgstr ""
 "KPIの名前はサービス名から読み取ることができます。それは`RMK`の後の部分です。"
+
+msgid ""
+"The name of a profile in <tt>~/.aws/config</tt> of the site user, for "
+"example <tt>checkmk</tt> for the section <tt>[profile checkmk]</tt>. The "
+"profile is read on the site that runs the agent, so every site that monitors "
+"this host needs a profile of this name."
+msgstr ""
 
 msgid "The name of the Datadog monitor."
 msgstr "Datagodモニターの名称。"
@@ -74401,11 +74553,6 @@ msgstr "タググループID \"%(tag_group_id)s\"は2回使用されています
 msgid "The target has been deleted."
 msgstr "ターゲットが削除されました。"
 
-msgid ""
-"The target page shows a single object. Without the dashboard and widget "
-"filters, add a filter that identifies it."
-msgstr ""
-
 msgid "The target rule is no longer available"
 msgstr "ターゲットルールは現在使用できません"
 
@@ -74976,6 +75123,18 @@ msgid "The virtual machine"
 msgstr "仮想マシン"
 
 #, python-format
+msgid "The widget has no link %(index)d."
+msgstr ""
+
+#, fuzzy, python-format
+msgid "The widget has no part '%(part)s'."
+msgstr "ダウンタイムは、発生したら速やかに解消されなければなりません。"
+
+#, fuzzy
+msgid "The widget shows no statistics."
+msgstr "スイッチポートの統計"
+
+#, python-format
 msgid "The write-only user may write to the test database for %(feature)s"
 msgstr ""
 
@@ -75383,6 +75542,18 @@ msgstr ""
 "削除された拡張パッケージに属するルールセット。関連する拡張パッケージを削除し"
 "たままにする予定であれば、安全に削除できます。拡張パッケージが一時的に無効化"
 "されている場合は、ルールセットを残しておくことを検討してください。</li></ol>"
+
+#, fuzzy, python-format
+msgid "These rules have no effect in Checkmk %(version)s."
+msgstr "これは Checkmk %(version)s では機能しません。"
+
+#, fuzzy, python-format
+msgid ""
+"These rules work in Checkmk %(version)s, but not after the update to the "
+"next major version."
+msgstr ""
+"これはCheckmk %(version)sでは部分的に機能するかもしれませんが、次期メジャー"
+"バージョン以降では機能しなくなる可能性があります。"
 
 msgid ""
 "These services are being discovered but have been disabled by creating a "
@@ -78507,6 +78678,12 @@ msgid "This rule is disabled"
 msgstr "このルールは無効になっています"
 
 msgid ""
+"This rule is for the CloudFront service of a piggyback host named as the "
+"distribution ID. For the CloudFront services on the AWS account host or on "
+"an origin domain host, use the rule 'AWS v2/CloudFront'."
+msgstr ""
+
+msgid ""
 "This rule is not yet known on the target site. Activate pending changes or "
 "complete the user profile replication to synchronize it."
 msgstr ""
@@ -79465,11 +79642,16 @@ msgstr "このルールは非推奨であり、将来のバージョンでは削
 msgid "This rulset allow you to configure a SSH check for a host"
 msgstr "このルールセットを使用すると、ホストのSSHチェックを構成できます"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
-"This script will be executed using the BASH shell. This information is "
-"available as environment variables:%(variables)s"
-msgstr "この情報は、環境変数として利用可能です"
+"This script will be executed using the BASH shell. If it still runs after a "
+"minute, the Event Console kills it, together with the processes it started, "
+"unless they run in a process group of their own, e.g. started with "
+"<tt>setsid</tt>. As the Event Console waits for the output of the script, "
+"too, start a lengthy task in the background, with its output redirected, "
+"e.g. <tt>command >/dev/null 2>&1 &</tt>. This information is available as "
+"environment variables:%(variables)s"
+msgstr ""
 
 msgid ""
 "This selection is only relevant if under 'User' -> 'Edit profile' -> 'Mega "
@@ -85105,6 +85287,10 @@ msgstr "到達不能"
 msgid "Unreachable hosts"
 msgstr "到達不能なホスト"
 
+#, fuzzy
+msgid "Unreadable"
+msgstr "到達不能"
+
 msgid "Unreclaimable slab"
 msgstr "再利用不可なスラブ"
 
@@ -88356,6 +88542,9 @@ msgstr "ポート照会時にサーバ証明書を検証する"
 msgid "Validate with custom certificate authority (CA)"
 msgstr "ポート照会時にサーバ証明書を検証する"
 
+msgid "Validity"
+msgstr "有効性"
+
 msgid "Validity of missing data"
 msgstr "欠測データの有効性"
 
@@ -91574,6 +91763,15 @@ msgstr ""
 "この権限がない場合、ユーザーは自分が所属する連絡先グループと共有されている定"
 "義済み条件のみを編集できます。この権限は、すべての定義済み条件へのフルアクセ"
 "スを許可します。"
+
+msgid ""
+"Without this, only the calls of the agent itself go through the proxy. With "
+"this, the agent also sets <tt>HTTPS_PROXY</tt> for a <tt>credential_process</"
+"tt> of the AWS config profile. Whether the command uses it is up to the "
+"command: <tt>aws_signing_helper</tt> of IAM Roles Anywhere needs <tt>--with-"
+"proxy</tt>. The variable contains the username and password of the proxy, so "
+"the command can read them."
+msgstr ""
 
 msgid "Words"
 msgstr "言葉"
@@ -97874,9 +98072,6 @@ msgstr "ビューを選択"
 msgid "Choose from available views"
 msgstr "利用可能なビューから選択"
 
-msgid "%{name} (resolved by name)"
-msgstr ""
-
 #, fuzzy
 msgid "Follow dashboard time range"
 msgstr "グラフの時間範囲を表示する"
@@ -98862,9 +99057,6 @@ msgstr "ダッシュボードの表示方法を選択、有効期限を設定、
 
 msgid "Link settings saved."
 msgstr "リンク設定が保存されました。"
-
-msgid "Validity"
-msgstr "有効性"
 
 msgid "Set expiration date"
 msgstr "有効期限を設定する"
@@ -103337,6 +103529,15 @@ msgid "Failed to search for custom services."
 msgstr "カスタムサービスの作成に失敗しました。"
 
 #, fuzzy
+msgid "no unit"
+msgstr "ユニットを選択"
+
+msgid ""
+"The selected services have different units: %{units}. You must select "
+"services with the same units to set levels on them."
+msgstr ""
+
+#, fuzzy
 msgid "Select services"
 msgstr "(サービスを選択)"
 
@@ -107313,20 +107514,40 @@ msgstr "EULA"
 msgid "Checkmk group companies"
 msgstr "Checkmkログファイル"
 
+#, fuzzy
+msgid "email"
+msgstr "Eメール"
+
+#, fuzzy
+msgid "Email %{address} to unsubscribe"
+msgstr "Eメールアドレス属性"
+
+#, fuzzy
+msgid "Privacy Notice"
+msgstr "プライバシープロトコル"
+
 msgid ""
 "By starting the trial, I agree to the %{terms} and the %{eula}. I have\n"
-"    noted the %{privacy_policy}. In exchange for this free trial, I agree "
-"to\n"
-"    receive information about Checkmk products and services (incl. "
-"newsletter,\n"
-"    events and customer surveys) from the %{checkmk_group} by email and "
-"telephone,\n"
-"    and that Checkmk may analyse my interaction with these emails (opens "
-"and\n"
-"    clicks) to improve its marketing. I understand that this consent is the\n"
-"    condition for receiving the trial free of charge. I can unsubscribe at "
-"any time\n"
-"    via email."
+"      noted the %{privacy_policy}."
+msgstr ""
+
+msgid ""
+"In exchange for this free trial, I agree to receive information about\n"
+"      Checkmk products and services (incl. newsletter, events and customer\n"
+"      surveys) from the %{checkmk_group} by email and telephone, and that\n"
+"      Checkmk may analyse my interaction with these emails (opens and "
+"clicks)\n"
+"      to improve its marketing. I understand that this consent is the\n"
+"      condition for receiving the trial free of charge. I can unsubscribe "
+"at\n"
+"      any time via %{email}."
+msgstr ""
+
+msgid ""
+"We check the email address you provide against external sources to\n"
+"      confirm that it belongs to a business contact and to complete the\n"
+"      details of your organisation and role. Further information and your\n"
+"      right to object: %{privacy_notice}."
 msgstr ""
 
 #, fuzzy
@@ -107976,11 +108197,71 @@ msgstr "コンテナ化"
 msgid "Next steps with Checkmk"
 msgstr "Checkmkに同梱されているMIB"
 
-msgid "Activate Changes"
-msgstr "変更をアクティブにする"
+msgid "Set up a Checkmk Relay first"
+msgstr ""
 
-msgid "1 Step | Takes 1-3 min"
-msgstr "１ステップ｜所要時間1～3分"
+msgctxt "%{link} is the link text \"Checkmk Relay\""
+msgid "Systems behind a firewall? Set up a %{link} first."
+msgstr ""
+
+msgid "2 Steps | Takes 7-10 min"
+msgstr "２ステップ｜所要時間7～10分"
+
+msgid ""
+"A host is anything you monitor: a server, a network device, a VM, a "
+"container platform,\n"
+"a cloud account or an application. Checkmk finds its services automatically."
+msgstr ""
+
+#, fuzzy
+msgid "Servers & operating systems"
+msgstr "ゲストオペレーティングシステム"
+
+#, fuzzy
+msgid "Linux, Windows & Unix servers"
+msgstr "Windows タイム サービスピア"
+
+msgid "Solaris, AIX, FreeBSD, macOS, ..."
+msgstr ""
+
+msgid "Network devices and virtualization need a Checkmk Relay"
+msgstr ""
+
+msgid ""
+"Checkmk Cloud cannot reach systems inside your network directly. Set up a "
+"Checkmk Relay in your network first, then add network devices or "
+"virtualization platforms such as Proxmox VE."
+msgstr ""
+
+#, fuzzy
+msgid "Set up Checkmk Relay"
+msgstr "Checkmkサイドバーを使用"
+
+msgid "Switches, routers, firewalls & other SNMP devices"
+msgstr ""
+
+#, fuzzy
+msgid "Checkmk Relay"
+msgstr "Checkmkエージェント"
+
+#, fuzzy
+msgid "Virtualization & containers"
+msgstr "待機中コンテナ"
+
+#, fuzzy
+msgid "Cloud platforms"
+msgstr "Google Cloud Platform"
+
+msgid "Microsoft Azure"
+msgstr "Microsoft Azure"
+
+#, fuzzy
+msgid "Applications & databases"
+msgstr "アプリケーションゲートウェイ"
+
+#, fuzzy
+msgid "OpenTelemetry (Beta)"
+msgstr "OpenTelemetry（実験的）"
 
 msgid ""
 "In Checkmk, configuration changes are first saved as pending and do not "
@@ -108018,77 +108299,6 @@ msgstr "保留中の変更はありません"
 
 msgid "Mark as done"
 msgstr "完了としてマークする"
-
-msgid "2 Steps | Takes 7-10 min"
-msgstr "２ステップ｜所要時間7～10分"
-
-msgid ""
-"In Checkmk, a host is any standalone physical or virtual system that is "
-"monitored.\n"
-"Each host has services which represent what is monitored, for example CPU "
-"usage, disk space, processes, or hardware sensors.\n"
-"The service discovery of Checkmk automatically detects these services.\n"
-"This allows monitoring to start with minimal configuration effort."
-msgstr ""
-"Checkmkにおいて、ホストとは、監視対象となる独立した物理システムまたは仮想シス"
-"テムを指します。\n"
-"各ホストには、CPU使用率、ディスク容量、プロセス、ハードウェアセンサーなど、監"
-"視対象となる項目を表すサービスが設定されています。\n"
-"Checkmkはサービス検出機能を使用してこれらのサービスを自動的に検知します。\n"
-"これにより、最小限の設定作業で監視を監視を開始することができます。"
-
-#, fuzzy
-msgid "Set up basic folder structure"
-msgstr "初心者向けガイド: ホストフォルダの構造"
-
-msgid ""
-"In Checkmk, folders are the foundation for organizing hosts and applying "
-"settings consistently.\n"
-"            Creating a folder (or folder structure) before adding your first "
-"host helps you keep things tidy from\n"
-"            the start and makes it easier to manage similar hosts later on "
-"through inheritance. Learn more about\n"
-"            folders and inheritance in the"
-msgstr ""
-"Checkmkにおいて、フォルダはホストを整理し、設定を一貫して適用するための基盤と"
-"なります。\n"
-"            最初のホストを追加する前にフォルダ（またはフォルダ構造）を作成し"
-"ておくと、\n"
-"            最初から整理整頓された状態を保て、後々、継承機能を通じて類似した"
-"ホストの管理が容易になります。\n"
-"            フォルダと継承の詳細については、以下"
-
-msgid "documentation."
-msgstr "ドキュメント。"
-
-#, fuzzy
-msgid "On-premises hosts"
-msgstr "レベルホスト"
-
-#, fuzzy
-msgid "Server (Linux, Windows, Solaris, ...)"
-msgstr "ハードウェア / ソフトウェアインベントリ(Linux、Windows、Solaris、AIX)"
-
-#, fuzzy
-msgid "Network devices and SNMP"
-msgstr "ネットワークスキャン"
-
-msgid "Checkmk Relay (objects behind a firewall)"
-msgstr "Checkmkリレー（ファイアウォール内のオブジェクト）"
-
-#, fuzzy
-msgid "Cloud platforms"
-msgstr "Google Cloud Platform"
-
-msgid "Microsoft Azure"
-msgstr "Microsoft Azure"
-
-msgid "Application monitoring"
-msgstr "アプリケーション監視"
-
-#, fuzzy
-msgid "OpenTelemetry (Beta)"
-msgstr "OpenTelemetry（実験的）"
 
 #, fuzzy
 msgid "Adjust service thresholds"
@@ -108226,6 +108436,9 @@ msgstr ""
 "          そうしなければ、不必要な複雑さや混乱を招く恐れがあります。複数ユー"
 "ザーでの運用に関する詳細は、\n"
 "          以下の"
+
+msgid "documentation."
+msgstr "ドキュメント。"
 
 #, fuzzy
 msgid "Create a contact group"
@@ -108416,6 +108629,151 @@ msgid ""
 msgstr ""
 "後で アクセスする場合はヘルプ ＞ Checkmkの学習 ＞ ウェルカムページ からアクセ"
 "スできます"
+
+#, fuzzy
+msgid "To explore"
+msgstr "取り上げるトピック"
+
+#~ msgid "Deprecated GUI extensions"
+#~ msgstr "非推奨のGUI拡張機能"
+
+#~ msgid "Deprecated legacy GUI extensions"
+#~ msgstr "非推奨のレガシーGUI拡張"
+
+#, python-format
+#~ msgid ""
+#~ "GUI extension in %(plugin_name)r uses an API which is marked as "
+#~ "deprecated and may not work anymore due to unknown imports or objects "
+#~ "(file: %(file)s)."
+#~ msgstr ""
+#~ "%(plugin_name)r のGUI 拡張機能は、非推奨としてマークされている API を使用"
+#~ "しており、不明なインポートまたはオブジェクト (File: %(file)s)が原因で正常"
+#~ "に動作しない可能性があります。"
+
+#, python-format
+#~ msgid ""
+#~ "GUI extensions in <tt>'%(plugins_dir)s'</tt> are marked as 'deprecated' "
+#~ "and will be ignored in future Checkmk versions (official deprecation "
+#~ "timeline not decided yet)."
+#~ msgstr ""
+#~ "<tt>'%(plugins_dir)s'</tt> 内の GUI 拡張機能は '非推奨' としてマークされて"
+#~ "おり、今後の Checkmk バージョンでは無視されます（公式な非推奨となるスケ"
+#~ "ジュールは未決定です）。"
+
+#, python-format
+#~ msgid ""
+#~ "Legacy GUI extension in %(plugin_name)r uses an API which is marked as "
+#~ "deprecated and may not work anymore due to unknown imports or objects "
+#~ "(file: %(file)s)."
+#~ msgstr ""
+#~ "%(plugin_name)r 内のレガシー GUI 拡張機能は、非推奨とマークされた API を使"
+#~ "用しており、未知のインポートやオブジェクト（ファイル: %(file)s）が原因で、"
+#~ "正常に動作しない可能性があります。"
+
+#, python-format
+#~ msgid ""
+#~ "Legacy GUI extensions in <tt>'%(web_dir)s'</tt> are marked as "
+#~ "'deprecated' and will be ignored in future Checkmk versions (official "
+#~ "deprecation timeline not decided yet)."
+#~ msgstr ""
+#~ "<tt>%(web_dir)s</tt> 内のレガシー GUI 拡張機能は、非推奨してマークされてお"
+#~ "り、今後のCheckmkバージョンでは無視されます（非推奨となる公式スケジュール"
+#~ "は未決定です）。"
+
+#~ msgid "No GUI extensions using the deprecated API"
+#~ msgstr "非推奨のAPIを使用したGUI拡張機能は使用しない"
+
+#~ msgid "No PNP templates using the deprecated API"
+#~ msgstr "非推奨のAPIを使用するPNPテンプレートを使用しないでください"
+
+#~ msgid "No legacy GUI extensions using the deprecated API"
+#~ msgstr "非推奨のAPIを使用したレガシーGUI拡張機能は使用しないでください"
+
+#, python-format
+#~ msgid ""
+#~ "PNP template uses an API which was removed in an earlier Checkmk version "
+#~ "(file: %(file)s)."
+#~ msgstr ""
+#~ "PNPテンプレートは、以前のCheckmkバージョンで削除されたAPIを使用しています"
+#~ "（ファイル：%(file)s）。"
+
+#, python-format
+#~ msgid ""
+#~ "PNP templates in <tt>'%(templates_dir)s'</tt> are marked as 'deprecated' "
+#~ "and will be ignored in future Checkmk versions (official deprecation "
+#~ "timeline not decided yet)."
+#~ msgstr ""
+#~ "PNPテンプレートが<tt>'%(templates_dir)s'</tt>に指定されているものは'非推"
+#~ "奨'としてマークされており、今後のCheckmkバージョンでは無視されます（公式に"
+#~ "非推奨とするスケジュールは未決定です）。"
+
+#, fuzzy, python-format
+#~ msgid ""
+#~ "This script will be executed using the BASH shell. This information is "
+#~ "available as environment variables:%(variables)s"
+#~ msgstr "この情報は、環境変数として利用可能です"
+
+#~ msgid "Activate Changes"
+#~ msgstr "変更をアクティブにする"
+
+#~ msgid "1 Step | Takes 1-3 min"
+#~ msgstr "１ステップ｜所要時間1～3分"
+
+#~ msgid ""
+#~ "In Checkmk, a host is any standalone physical or virtual system that is "
+#~ "monitored.\n"
+#~ "Each host has services which represent what is monitored, for example CPU "
+#~ "usage, disk space, processes, or hardware sensors.\n"
+#~ "The service discovery of Checkmk automatically detects these services.\n"
+#~ "This allows monitoring to start with minimal configuration effort."
+#~ msgstr ""
+#~ "Checkmkにおいて、ホストとは、監視対象となる独立した物理システムまたは仮想"
+#~ "システムを指します。\n"
+#~ "各ホストには、CPU使用率、ディスク容量、プロセス、ハードウェアセンサーな"
+#~ "ど、監視対象となる項目を表すサービスが設定されています。\n"
+#~ "Checkmkはサービス検出機能を使用してこれらのサービスを自動的に検知しま"
+#~ "す。\n"
+#~ "これにより、最小限の設定作業で監視を監視を開始することができます。"
+
+#, fuzzy
+#~ msgid "Set up basic folder structure"
+#~ msgstr "初心者向けガイド: ホストフォルダの構造"
+
+#~ msgid ""
+#~ "In Checkmk, folders are the foundation for organizing hosts and applying "
+#~ "settings consistently.\n"
+#~ "            Creating a folder (or folder structure) before adding your "
+#~ "first host helps you keep things tidy from\n"
+#~ "            the start and makes it easier to manage similar hosts later "
+#~ "on through inheritance. Learn more about\n"
+#~ "            folders and inheritance in the"
+#~ msgstr ""
+#~ "Checkmkにおいて、フォルダはホストを整理し、設定を一貫して適用するための基"
+#~ "盤となります。\n"
+#~ "            最初のホストを追加する前にフォルダ（またはフォルダ構造）を作成"
+#~ "しておくと、\n"
+#~ "            最初から整理整頓された状態を保て、後々、継承機能を通じて類似し"
+#~ "たホストの管理が容易になります。\n"
+#~ "            フォルダと継承の詳細については、以下"
+
+#, fuzzy
+#~ msgid "On-premises hosts"
+#~ msgstr "レベルホスト"
+
+#, fuzzy
+#~ msgid "Server (Linux, Windows, Solaris, ...)"
+#~ msgstr ""
+#~ "ハードウェア / ソフトウェアインベントリ(Linux、Windows、Solaris、AIX)"
+
+#, fuzzy
+#~ msgid "Network devices and SNMP"
+#~ msgstr "ネットワークスキャン"
+
+#~ msgid "Checkmk Relay (objects behind a firewall)"
+#~ msgstr "Checkmkリレー（ファイアウォール内のオブジェクト）"
+
+#~ msgid "Application monitoring"
+#~ msgstr "アプリケーション監視"
 
 #~ msgid ""
 #~ "This rule allows you to customize the user and installation directory of "
@@ -108797,10 +109155,6 @@ msgstr ""
 #~ msgstr ""
 #~ "Checkmkの製品およびサービスに関するEメールマガジンの配信に同意します。%"
 #~ "{link}から配信停止手続きを行うことができます。"
-
-#, fuzzy
-#~ msgid "email"
-#~ msgstr "Eメール"
 
 #~ msgid "unsubscribe from onboarding emails by email"
 #~ msgstr "メールによるオンボーディングメールの受信解除"
@@ -110590,10 +110944,6 @@ msgstr ""
 #~ msgid "NFSv4.1 write ios"
 #~ msgstr "NFSv4.1書込みios"
 
-#, python-format
-#~ msgid "Not before: %(not_before)s - Not after: %(not_after)s"
-#~ msgstr "開始日: %(not_before)s - 終了日: %(not_after)s"
-
 #~ msgid "Number of available file descriptors"
 #~ msgstr "使用可能なファイル記述子の数"
 
@@ -110857,9 +111207,6 @@ msgstr ""
 #, python-format
 #~ msgid "Val. %(i)d"
 #~ msgstr "Val. %(i)d"
-
-#~ msgid "Waiting containers"
-#~ msgstr "待機中コンテナ"
 
 #~ msgid ""
 #~ "What the two hosts are to each other. Management board is the only "
@@ -112425,9 +112772,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Environment variables"
 #~ msgstr "環境変数"
-
-#~ msgid "Extension package files"
-#~ msgstr "拡張パッケージファイル"
 
 #, python-format
 #~ msgid "Files in %(directory)s"
@@ -119774,10 +120118,6 @@ msgstr ""
 
 #~ msgid "monitor"
 #~ msgstr "モニター"
-
-#, fuzzy
-#~ msgid "AWS account name"
-#~ msgstr "ストレージアカウント名"
 
 #, fuzzy
 #~ msgid "Parallel plan groups"

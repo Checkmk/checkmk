@@ -837,6 +837,10 @@ msgid "%(nondescript_rule_count)d notification rule(s) "
 msgstr "kennisgevingsregel"
 
 #, python-format
+msgid "%(not_before)s to %(not_after)s"
+msgstr ""
+
+#, python-format
 msgid "%(num)d incompatible Werks have been acknowledged."
 msgstr "%(num)d incompatibele Werks zijn bevestigd."
 
@@ -1124,6 +1128,14 @@ msgid ""
 "'%(host)s' stores a relation to '%(other)s' that '%(other)s' does not store, "
 "so the monitoring does not show it. Add it on '%(other)s', or remove it from "
 "'%(host)s'."
+msgstr ""
+
+#, fuzzy, python-format
+msgid "'%(name)s' has no effect in Checkmk."
+msgstr "De %(name)s is verwijderd."
+
+#, python-format
+msgid "'%(name)s' may break with any update of Checkmk."
 msgstr ""
 
 #, python-format
@@ -2171,6 +2183,36 @@ msgstr ""
 "p><p>Zelfs als dit mogelijk is, is het niet aan te raden Checkmk op deze "
 "manier te gebruiken, omdat dit de algehele performance van Checkmk kan "
 "verminderen.</p>"
+
+#, python-format
+msgid ""
+"<p>Checkmk imports the Python files in these packages below "
+"<tt>'%(plugins_dir)s'</tt>, including their subfolders: %(packages)s. Other "
+"files below this folder have no effect.</p><p>These plug-ins use internal "
+"interfaces of Checkmk. These interfaces are not supported for plug-ins and "
+"may change with any update. Graphs, metrics and perf-o-meters are no longer "
+"read from them and need the supported API cmk.graphing.v1. Rule sets have "
+"the supported API cmk.rulesets.v1. Files which use a supported API belong "
+"below <tt>cmk_addons/plugins</tt>; Checkmk finds them here only for rule "
+"sets in <tt>wato/check_parameters</tt>, a folder for its own rule sets.</"
+"p><p>Files which Checkmk fails to load are listed by the test 'Broken GUI "
+"extensions'.</p>"
+msgstr ""
+
+#, python-format
+msgid ""
+"<p>Checkmk runs the Python files placed directly in these folders below "
+"<tt>'%(plugins_dir)s'</tt>: %(folders)s. If a <tt>.pyc</tt> file sits next "
+"to a <tt>.py</tt> file, Checkmk runs the <tt>.pyc</tt> file instead. Files "
+"in subfolders or in other folders have no effect.</p><p>These plug-ins use "
+"internal interfaces of Checkmk. These interfaces are not supported for plug-"
+"ins and may change with any update. Graphs, metrics and perf-o-meters are no "
+"longer read from them and need the supported API cmk.graphing.v1. Rule sets "
+"have the supported API cmk.rulesets.v1. Files which use a supported API have "
+"no effect here and belong below <tt>cmk_addons/plugins</tt>.</p><p>Files "
+"which Checkmk fails to load are listed by the test 'Broken GUI extensions'.</"
+"p>"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -3564,6 +3606,10 @@ msgstr "Gebruikersnaam"
 msgid "ASP requests rejected"
 msgstr "ASP Verzoeken Afgewezen"
 
+#, fuzzy
+msgid "AWS"
+msgstr "EWS"
+
 msgid "AWS EC2 instances"
 msgstr "AWS EC2-instanties"
 
@@ -3573,6 +3619,10 @@ msgstr "Toegewezen opslag"
 
 msgid "AWS S3 bucket"
 msgstr "AWS S3 emmer"
+
+#, fuzzy
+msgid "AWS service"
+msgstr "Alle diensten"
 
 #, fuzzy
 msgid "AWS services found!"
@@ -3591,6 +3641,10 @@ msgstr "Totaal geheugengebruik"
 
 #, fuzzy
 msgid "AWS v2/CloudFront"
+msgstr "AWS/CloudFront"
+
+#, fuzzy
+msgid "AWS v2/CloudFront distribution"
 msgstr "AWS/CloudFront"
 
 #, fuzzy
@@ -3630,11 +3684,19 @@ msgid "AWS v2/ECS CPU reservation"
 msgstr "CPU reservering"
 
 #, fuzzy
+msgid "AWS v2/ECS CPU utilization"
+msgstr "AWS/ElastiCache CPU-gebruik"
+
+#, fuzzy
 msgid "AWS v2/ECS Limits"
 msgstr "AWS/EC2 Grenzen"
 
 #, fuzzy
 msgid "AWS v2/ECS memory reservation"
+msgstr "Geheugenreservering"
+
+#, fuzzy
+msgid "AWS v2/ECS memory utilization"
 msgstr "Geheugenreservering"
 
 #, fuzzy
@@ -4394,8 +4456,16 @@ msgstr ""
 "het aantal vrije pods."
 
 #, fuzzy
+msgid "Account ID"
+msgstr "Teller ID"
+
+#, fuzzy
 msgid "Account IDs"
 msgstr "Teller ID"
+
+#, fuzzy
+msgid "Account name"
+msgstr "Naam opslagrekening"
 
 msgid ""
 "Account names on Windows, user or group names - or numeric IDs - on Linux "
@@ -15006,12 +15076,27 @@ msgstr "Checkmk dashboard"
 msgid "Checkmk data backend"
 msgstr "Configuratie toestand toevoegen"
 
+msgid ""
+"Checkmk does not check limits on EC2 instance types that it does not know "
+"about. By default in this case, it will emit a warning so that you are aware "
+"that the limits of these instances are unmonitored. You can select a "
+"different service state for this scenario here."
+msgstr ""
+
+#, fuzzy
+msgid "Checkmk does not load plug-ins from this folder."
+msgstr "Andere logboeken voor deze dienst"
+
 #, fuzzy
 msgid "Checkmk edition"
 msgstr "Checkmk editie: %s"
 
 msgid "Checkmk extension packages (MKPs)"
 msgstr "Checkmk uitbreidingspakketten (MKP's)"
+
+#, fuzzy, python-format
+msgid "Checkmk fails to load it: %(error)s."
+msgstr "Het starten van de opdracht is mislukt: %s"
 
 msgid "Checkmk fetcher latency"
 msgstr "Checkmk fetcher latency"
@@ -15034,6 +15119,11 @@ msgstr "Checkmk staat"
 msgid "Checkmk licensing files"
 msgstr "Checkmk Licentiebestanden"
 
+msgid ""
+"Checkmk loads plug-ins from this folder through internal interfaces, which "
+"are not supported for plug-ins."
+msgstr ""
+
 msgid "Checkmk log files"
 msgstr "Checkmk logbestanden"
 
@@ -15044,6 +15134,22 @@ msgstr ""
 
 msgid "Checkmk mobile"
 msgstr "Checkmk Mobiel"
+
+#, python-format
+msgid ""
+"Checkmk no longer reads PNP templates from <tt>'%(templates_dir)s'</tt> and "
+"its subfolders, so they have no effect. Graphs need the supported API "
+"cmk.graphing.v1."
+msgstr ""
+
+#, fuzzy
+msgid "Checkmk no longer reads PNP templates."
+msgstr "Afgeschreven regelsets"
+
+msgid ""
+"Checkmk no longer reads graphs, metrics and perf-o-meters from this folder. "
+"Re-implement it with the supported API cmk.graphing.v1."
+msgstr ""
 
 #, fuzzy
 msgid "Checkmk partner or reseller"
@@ -15460,10 +15566,13 @@ msgid ""
 "AWS SDK: environment variables, the files in <tt>~/.aws</tt> of the site "
 "user, and the instance profile or EKS Pod Identity when Checkmk runs on AWS. "
 "Recommended on AWS, because AWS renews the instance profile and EKS Pod "
-"Identity credentials itself.<br>To monitor through an IAM role, choose "
-"<b>Explicit list of account IDs</b> under <b>Accounts</b>, and enter the "
-"account and the name of the role. The agent then assumes the role in that "
-"account. The AWS CloudTrail log shows these calls with the session name "
+"Identity credentials itself.<br><b>Named profile:</b> Checkmk stores no "
+"secret. The agent uses a profile from <tt>~/.aws/config</tt> of the site "
+"user, for example one whose <tt>credential_process</tt> gets temporary "
+"credentials from IAM Roles Anywhere.<br>To monitor through an IAM role, "
+"choose <b>Explicit list of account IDs</b> under <b>Accounts</b>, and enter "
+"the account and the name of the role. The agent then assumes the role in "
+"that account. The AWS CloudTrail log shows these calls with the session name "
 "<tt>checkmk-&lt;site&gt;</tt>."
 msgstr ""
 
@@ -15726,26 +15835,26 @@ msgstr ""
 msgid ""
 "Choose which updater keeps the agents up to date.<br><b>Enable agent updates "
 "using the Agent Controller</b>: The Agent Controller updates the agents for "
-"Linux and Windows. On Linux, it needs the Agent Controller and the single "
-"directory deployment of the rule set <i>Customize agent package</i>. Baking "
-"fails for Linux agents without them. Solaris agents get the legacy updater."
-"<br><b>Enable agent updates using the Agent Controller (fallback to legacy "
-"updater in case of problems)</b>: The agents get both updaters, and both run "
-"side by side, independently of each other. Both install the agent package "
-"that is baked for the host, so it does not matter which of them updates an "
-"agent first. If the Agent Controller fails to update an agent, the legacy "
-"updater still keeps it up to date. Agents that cannot use the Agent "
-"Controller get the legacy updater only: Solaris agents, and Linux agents "
-"without the Agent Controller or without the single directory deployment. "
-"Rules that enabled agent updates before Checkmk 3.0 use this entry after the "
-"update.<br><b>Enable agent updates using the legacy updater (deprecated)</"
-"b>: Only the legacy updater updates the agents.<br><br>Do not forget to "
-"enable agent updates in at least one of your rules. It can be useful to "
-"create rules that are only partially filled out. Since the rule execution is "
-"done on a <i>per parameter</i> base you can for example create one rule at "
-"the top of your list that just sets the activation to <i>Do not enable agent "
-"updates</i> for just some of your hosts without setting any of the other "
-"parameters."
+"Linux and Windows. Baking fails for Linux agents without the Agent "
+"Controller. Baking also fails for hosts that the rule set <i>Use classic "
+"file deployment</i> keeps on the classic file deployment. Solaris agents get "
+"the legacy updater.<br><b>Enable agent updates using the Agent Controller "
+"(fallback to legacy updater in case of problems)</b>: The agents get both "
+"updaters, and both run side by side, independently of each other. Both "
+"install the agent package that is baked for the host, so it does not matter "
+"which of them updates an agent first. If the Agent Controller fails to "
+"update an agent, the legacy updater still keeps it up to date. Agents that "
+"cannot use the Agent Controller get the legacy updater only: Solaris agents, "
+"and Linux agents without the Agent Controller or without the single "
+"directory deployment. Rules that enabled agent updates before Checkmk 3.0 "
+"use this entry after the update.<br><b>Enable agent updates using the legacy "
+"updater (deprecated)</b>: Only the legacy updater updates the agents."
+"<br><br>Do not forget to enable agent updates in at least one of your rules. "
+"It can be useful to create rules that are only partially filled out. Since "
+"the rule execution is done on a <i>per parameter</i> base you can for "
+"example create one rule at the top of your list that just sets the "
+"activation to <i>Do not enable agent updates</i> for just some of your hosts "
+"without setting any of the other parameters."
 msgstr ""
 
 #, fuzzy
@@ -16298,6 +16407,10 @@ msgstr "Cloud SQL"
 
 msgid "Cloud hosts"
 msgstr "Cloud hosts"
+
+#, fuzzy
+msgid "Cloud provider"
+msgstr "Zorg voor niveaus"
 
 #, fuzzy
 msgid "Cloud region"
@@ -22046,7 +22159,8 @@ msgstr "%d aangepaste service attributen"
 msgid "Delete customer #%(nr)d"
 msgstr "Verwijder klant #%(nr)d"
 
-msgid "Delete event immediately after the actions"
+#, fuzzy
+msgid "Delete event right after triggering its actions"
 msgstr "Gebeurtenis verwijderen onmiddellijk na de acties"
 
 msgid "Delete files older than"
@@ -22814,20 +22928,12 @@ msgid "Deprecated"
 msgstr "Afgeschreven"
 
 #, fuzzy
-msgid "Deprecated GUI extensions"
-msgstr "Verlengingen repliceren"
-
-#, fuzzy
-msgid "Deprecated PNP templates"
-msgstr "Afgeschreven regelsets"
+msgid "Deprecated Quick Setup"
+msgstr "Snelle installatie"
 
 #, fuzzy, python-format
 msgid "Deprecated extension package: %(ident)s"
 msgstr "Nieuw uitbreidingspakket %s aangemaakt"
-
-#, fuzzy
-msgid "Deprecated legacy GUI extensions"
-msgstr "Verlengingen repliceren"
 
 #, fuzzy, python-format
 msgid "Deprecated plug-in: %(ident)s"
@@ -28378,6 +28484,10 @@ msgid ""
 "command line: %(command)s"
 msgstr ""
 
+#, fuzzy, python-format
+msgid "Extension package: %(ident)s"
+msgstr "Uitbreiding pakketbestanden"
+
 msgid "Extension packages"
 msgstr "Uitbreidingspakketten"
 
@@ -30838,22 +30948,13 @@ msgstr ""
 msgid "GUI design"
 msgstr "GUI-ontwerp"
 
-#, python-format
-msgid ""
-"GUI extension in %(plugin_name)r uses an API which is marked as deprecated "
-"and may not work anymore due to unknown imports or objects (file: %(file)s)."
-msgstr ""
-
 #, fuzzy
 msgid "GUI extensions"
 msgstr "Gebroken GUI uitbreidingen"
 
-#, python-format
-msgid ""
-"GUI extensions in <tt>'%(plugins_dir)s'</tt> are marked as 'deprecated' and "
-"will be ignored in future Checkmk versions (official deprecation timeline "
-"not decided yet)."
-msgstr ""
+#, fuzzy
+msgid "GUI plug-ins"
+msgstr "Plugin"
 
 msgid "GUID"
 msgstr ""
@@ -38208,7 +38309,11 @@ msgid ""
 "In a distributed setup where the Event Console is not running in the same "
 "site as the host is monitored on, you need to access the remote Event "
 "Console via TCP. Please make sure that this is activated in the global "
-"settings of the Event Console. The default port number is 6558."
+"settings of the Event Console. The default port number is 6558. A port after "
+"the host, e.g. myhost:6559 or [2001:db8::1]:6559, overrides it. The check "
+"tries IPv6 first, so if <i>Access to event status via TCP</i> of that Event "
+"Console restricts the source addresses, allow the IPv6 addresses of this "
+"site's host there, too."
 msgstr ""
 "In een gedistribueerde setup waar de Event Console niet op dezelfde site "
 "draait als de host die wordt gemonitord moet je de remote Event Console "
@@ -42007,23 +42112,13 @@ msgstr ""
 "Oude ASCII E-mails ondersteunen bulking niet. Je kunt bulking uitschakelen "
 "of een andere plugin kiezen die bulking toestaat."
 
-#, python-format
-msgid ""
-"Legacy GUI extension in %(plugin_name)r uses an API which is marked as "
-"deprecated and may not work anymore due to unknown imports or objects (file: "
-"%(file)s)."
-msgstr ""
-
 #, fuzzy
 msgid "Legacy GUI extensions"
 msgstr "Verouderde GUI-uitbreidingen"
 
-#, python-format
-msgid ""
-"Legacy GUI extensions in <tt>'%(web_dir)s'</tt> are marked as 'deprecated' "
-"and will be ignored in future Checkmk versions (official deprecation "
-"timeline not decided yet)."
-msgstr ""
+#, fuzzy
+msgid "Legacy GUI plug-ins"
+msgstr "Verouderde GUI-uitbreidingen"
 
 msgid "Legacy agent management"
 msgstr "Beheer van oudere agenten"
@@ -47231,6 +47326,11 @@ msgstr "Migreren"
 msgid "Migrate selected users"
 msgstr "Geselecteerde gebruikers migreren"
 
+msgid ""
+"Migrate the rules to the successor of the rule set or remove them before the "
+"update. The Werk which deprecated the rule set describes its successor."
+msgstr ""
+
 msgid "Migrate users"
 msgstr "Gebruikers migreren"
 
@@ -49179,6 +49279,10 @@ msgstr "Naam: %(name)s"
 msgid "Name: %(name)s"
 msgstr "Naam: %(name)s"
 
+#, fuzzy
+msgid "Named profile"
+msgstr "Profiel bewerken"
+
 msgid "Names"
 msgstr "Namen"
 
@@ -49842,8 +49946,8 @@ msgid "No GCP services found."
 msgstr "Geen hosts/services gevonden."
 
 #, fuzzy
-msgid "No GUI extensions using the deprecated API"
-msgstr "Geen controleplugins die de verouderde API gebruiken"
+msgid "No GUI plug-ins found"
+msgstr "Niet gevonden"
 
 msgid "No IP"
 msgstr "Geen IP"
@@ -49863,8 +49967,8 @@ msgid "No OpenTelemetry configuration yet"
 msgstr "Host configuratie"
 
 #, fuzzy
-msgid "No PNP templates using the deprecated API"
-msgstr "Geen controleplugins die de verouderde API gebruiken"
+msgid "No PNP templates found"
+msgstr "Geen regels gevonden."
 
 #, fuzzy
 msgid "No Prometheus configuration found for this bundle."
@@ -50167,10 +50271,6 @@ msgstr "Geen hosts/services gevonden."
 
 msgid "No information available"
 msgstr "Geen informatie beschikbaar"
-
-#, fuzzy
-msgid "No legacy GUI extensions using the deprecated API"
-msgstr "Geen controleplugins die de verouderde API gebruiken"
 
 msgid "No levels"
 msgstr "Geen niveaus"
@@ -55285,18 +55385,9 @@ msgstr "CLOSE_WAIT"
 msgid "PLL lock voltages by freqency"
 msgstr "PLL lockspanningen per freqentie"
 
-#, python-format
-msgid ""
-"PNP template uses an API which was removed in an earlier Checkmk version "
-"(file: %(file)s)."
-msgstr ""
-
-#, python-format
-msgid ""
-"PNP templates in <tt>'%(templates_dir)s'</tt> are marked as 'deprecated' and "
-"will be ignored in future Checkmk versions (official deprecation timeline "
-"not decided yet)."
-msgstr ""
+#, fuzzy
+msgid "PNP templates"
+msgstr "Sjabloon hostnaam"
 
 #, fuzzy
 msgid ""
@@ -55823,6 +55914,9 @@ msgstr "Partities (XEN)"
 
 msgid "Parts per million"
 msgstr "Delen per miljoen"
+
+msgid "Pass the proxy to the credential_process"
+msgstr ""
 
 msgid "Passive checks"
 msgstr "Passieve controles"
@@ -57787,6 +57881,10 @@ msgstr "Plugin uitgang"
 msgid "Plug-in output in case of absent updates"
 msgstr "Plugin uitvoer in geval van afwezige updates"
 
+#, fuzzy, python-format
+msgid "Plug-in: %(ident)s"
+msgstr "Verouderde controleplugins"
+
 #, fuzzy
 msgid "Plug-ins"
 msgstr "Plugin"
@@ -58651,6 +58749,10 @@ msgid "Profile changed (sync failed: %(result)s)"
 msgstr "Profiel gewijzigd (synchronisatie mislukt: %(result)s)"
 
 #, fuzzy
+msgid "Profile name"
+msgstr "Bestandsnaam"
+
+#, fuzzy
 msgid "Profile not found."
 msgstr "Pagina niet gevonden"
 
@@ -58921,6 +59023,10 @@ msgstr "Proxy URL"
 
 msgid "Proxy URL"
 msgstr "Proxy URL"
+
+#, fuzzy
+msgid "Proxy for credential_process"
+msgstr "Agenten configureren"
 
 msgid "Proxy host"
 msgstr "Proxy host"
@@ -59759,6 +59865,9 @@ msgstr "uitvoeringstermijn"
 #, fuzzy
 msgid "Re-executions"
 msgstr "uitvoeringstermijn"
+
+msgid "Re-implement it with the supported API cmk.graphing.v1."
+msgstr ""
 
 msgid "Read"
 msgstr "Lees"
@@ -62109,6 +62218,10 @@ msgstr "Opgelost"
 
 msgid "Resource Group"
 msgstr "Hulpbron Groep"
+
+#, fuzzy
+msgid "Resource ID"
+msgstr "Bronnen"
 
 msgid "Resource Name"
 msgstr "Bronnaam"
@@ -70429,6 +70542,10 @@ msgid "State if remaining API reads are unknown"
 msgstr "Staat als resterende API-lezingen onbekend zijn"
 
 #, fuzzy
+msgid "State if running instance types are unknown to Checkmk"
+msgstr "Staat als resterende API-lezingen onbekend zijn"
+
+#, fuzzy
 msgid "State if specific check plug-ins receive no monitoring data."
 msgstr ""
 "Staat als specifieke controle plugins geen controle gegevens ontvangen."
@@ -73490,6 +73607,11 @@ msgstr "De Event Console is momenteel niet actief."
 msgid "The Event Console is disabled (\"omd config\")."
 msgstr "De Event Console is uitgeschakeld (\"omd config\")."
 
+msgid ""
+"The Event Console sends the email with the <tt>mail</tt> command. If the "
+"command still runs after a minute, the Event Console kills it."
+msgstr ""
+
 #, fuzzy, python-format
 msgid ""
 "The Event Console view '%(view_name)s' cannot be rendered. The Event Console "
@@ -74659,6 +74781,11 @@ msgstr ""
 "waarden tegelijk."
 
 msgid ""
+"The check gives up after this time, 20 seconds by default. The check timeout "
+"of the monitoring core, 60 seconds by default, must be longer."
+msgstr ""
+
+msgid ""
 "The check takes this state in case the inventory cannot be updated because "
 "of any possible reason. A common use is setting this to OK for workstations "
 "that can be switched off - so you will get no notifications in that case."
@@ -75195,6 +75322,18 @@ msgstr ""
 "De %s is alleen voor jou zichtbaar omdat je'geen toestemming hebt om hem te "
 "delen."
 
+#, fuzzy, python-format
+msgid ""
+"The dashboard '%(name)s' does not exist or you do not have permission to "
+"view it."
+msgstr ""
+"De %s is alleen voor jou zichtbaar omdat je'geen toestemming hebt om hem te "
+"delen."
+
+#, fuzzy, python-format
+msgid "The dashboard has no widget '%(widget)s'."
+msgstr "Toegepaste filters:"
+
 #, python-brace-format
 msgid ""
 "The data backend certificate authority {path} holds no certificate. Create "
@@ -75376,6 +75515,10 @@ msgstr ""
 
 msgid "The description of the interface as provided by the device"
 msgstr "De beschrijving van de interface zoals verstrekt door de inrichting"
+
+#, fuzzy
+msgid "The details below give the reason."
+msgstr "De identificatiecode van de sensor."
 
 #, fuzzy
 msgid "The deviation of the local clock from the time server."
@@ -75562,6 +75705,15 @@ msgstr "Het verwachte aantal hulpbronnen in het cluster"
 msgid "The expiration time must be in the future."
 msgstr ""
 "Je kunt tellen en verwachten niet tegelijk gebruiken in dezelfde regel."
+
+msgid ""
+"The extension package contains plug-ins which have no effect in Checkmk."
+msgstr ""
+
+msgid ""
+"The extension package contains plug-ins which may break with any update of "
+"Checkmk."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -76429,6 +76581,9 @@ msgstr ""
 msgid "The log file"
 msgstr "Dit logbestand"
 
+msgid "The log file 'var/log/web.log' shows the details."
+msgstr ""
+
 #, fuzzy, python-format
 msgid ""
 "The log file <tt>%(display_name)s</tt> of host <tt>%(host_name)s</tt> could "
@@ -76856,6 +77011,13 @@ msgstr "Geheime sleutel"
 msgid ""
 "The name of a KPI can be read off the service name. It is the part after "
 "`RMK`."
+msgstr ""
+
+msgid ""
+"The name of a profile in <tt>~/.aws/config</tt> of the site user, for "
+"example <tt>checkmk</tt> for the section <tt>[profile checkmk]</tt>. The "
+"profile is read on the site that runs the agent, so every site that monitors "
+"this host needs a profile of this name."
 msgstr ""
 
 msgid "The name of the Datadog monitor."
@@ -78785,11 +78947,6 @@ msgstr "De taggroep-ID \"%s\" wordt twee keer gebruikt."
 msgid "The target has been deleted."
 msgstr "Het doelwit is verwijderd."
 
-msgid ""
-"The target page shows a single object. Without the dashboard and widget "
-"filters, add a filter that identifies it."
-msgstr ""
-
 msgid "The target rule is no longer available"
 msgstr "De doelregel is niet langer beschikbaar"
 
@@ -79355,6 +79512,18 @@ msgid "The virtual machine"
 msgstr "De virtuele machine"
 
 #, python-format
+msgid "The widget has no link %(index)d."
+msgstr ""
+
+#, fuzzy, python-format
+msgid "The widget has no part '%(part)s'."
+msgstr "De einddatum moet na de begindatum liggen"
+
+#, fuzzy
+msgid "The widget shows no statistics."
+msgstr "Switch poort statistieken"
+
+#, python-format
 msgid "The write-only user may write to the test database for %(feature)s"
 msgstr ""
 
@@ -79752,6 +79921,16 @@ msgid ""
 "removed, you can safely clean the rule sets up. In case the extension "
 "package was temporarily disabled, you may consider keeping the rule sets in "
 "place.</li></ol>"
+msgstr ""
+
+#, fuzzy, python-format
+msgid "These rules have no effect in Checkmk %(version)s."
+msgstr "Deze host heeft geen Checkmk agenten."
+
+#, python-format
+msgid ""
+"These rules work in Checkmk %(version)s, but not after the update to the "
+"next major version."
 msgstr ""
 
 msgid ""
@@ -82987,6 +83166,12 @@ msgid "This rule is disabled"
 msgstr "Deze regel is uitgeschakeld"
 
 msgid ""
+"This rule is for the CloudFront service of a piggyback host named as the "
+"distribution ID. For the CloudFront services on the AWS account host or on "
+"an origin domain host, use the rule 'AWS v2/CloudFront'."
+msgstr ""
+
+msgid ""
 "This rule is not yet known on the target site. Activate pending changes or "
 "complete the user profile replication to synchronize it."
 msgstr ""
@@ -83945,11 +84130,16 @@ msgstr "Deze regel is verouderd. Gebruik in plaats daarvan \"%s\"."
 msgid "This rulset allow you to configure a SSH check for a host"
 msgstr "Met deze regelset kunt u een SSH-controle configureren voor een host"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
-"This script will be executed using the BASH shell. This information is "
-"available as environment variables:%(variables)s"
-msgstr "Deze informatie is beschikbaar als omgevingsvariabelen"
+"This script will be executed using the BASH shell. If it still runs after a "
+"minute, the Event Console kills it, together with the processes it started, "
+"unless they run in a process group of their own, e.g. started with "
+"<tt>setsid</tt>. As the Event Console waits for the output of the script, "
+"too, start a lengthy task in the background, with its output redirected, "
+"e.g. <tt>command >/dev/null 2>&1 &</tt>. This information is available as "
+"environment variables:%(variables)s"
+msgstr ""
 
 #, fuzzy
 msgid ""
@@ -90304,6 +90494,10 @@ msgid "Unreachable hosts"
 msgstr "Onbereikbare hosts"
 
 #, fuzzy
+msgid "Unreadable"
+msgstr "Onbereikbaar"
+
+#, fuzzy
 msgid "Unreclaimable slab"
 msgstr "Niet opvraagbaar geheugen"
 
@@ -93853,6 +94047,10 @@ msgstr "Servercertificaat valideren tijdens poortverzoek"
 msgid "Validate with custom certificate authority (CA)"
 msgstr "Servercertificaat valideren tijdens poortverzoek"
 
+#, fuzzy
+msgid "Validity"
+msgstr "Geldig tot"
+
 msgid "Validity of missing data"
 msgstr "Geldigheid van ontbrekende gegevens"
 
@@ -97131,6 +97329,15 @@ msgstr ""
 "voorwaarden bewerken die worden gedeeld met een contactgroep waarvan zij lid "
 "zijn. Dit recht geeft volledige toegang tot alle vooraf gedefinieerde "
 "voorwaarden."
+
+msgid ""
+"Without this, only the calls of the agent itself go through the proxy. With "
+"this, the agent also sets <tt>HTTPS_PROXY</tt> for a <tt>credential_process</"
+"tt> of the AWS config profile. Whether the command uses it is up to the "
+"command: <tt>aws_signing_helper</tt> of IAM Roles Anywhere needs <tt>--with-"
+"proxy</tt>. The variable contains the username and password of the proxy, so "
+"the command can read them."
+msgstr ""
 
 msgid "Words"
 msgstr "Woorden"
@@ -103702,9 +103909,6 @@ msgstr "Weergave kiezen"
 msgid "Choose from available views"
 msgstr "Beschikbare poorten"
 
-msgid "%{name} (resolved by name)"
-msgstr ""
-
 #, fuzzy
 msgid "Follow dashboard time range"
 msgstr "Toon grafiek tijdsbereik"
@@ -104764,10 +104968,6 @@ msgstr ""
 #, fuzzy
 msgid "Link settings saved."
 msgstr "Licentie staat"
-
-#, fuzzy
-msgid "Validity"
-msgstr "Geldig tot"
 
 #, fuzzy
 msgid "Set expiration date"
@@ -109281,6 +109481,15 @@ msgid "Failed to search for custom services."
 msgstr "Naam van de aangepaste dienst"
 
 #, fuzzy
+msgid "no unit"
+msgstr "Kies alle"
+
+msgid ""
+"The selected services have different units: %{units}. You must select "
+"services with the same units to set levels on them."
+msgstr ""
+
+#, fuzzy
 msgid "Select services"
 msgstr "Gebruikers verwijderen"
 
@@ -113141,20 +113350,40 @@ msgstr ""
 msgid "Checkmk group companies"
 msgstr "Checkmk logbestanden"
 
+#, fuzzy
+msgid "email"
+msgstr "E-mail"
+
+#, fuzzy
+msgid "Email %{address} to unsubscribe"
+msgstr "Kenmerk e-mailadres"
+
+#, fuzzy
+msgid "Privacy Notice"
+msgstr "Privacy-protocol"
+
 msgid ""
 "By starting the trial, I agree to the %{terms} and the %{eula}. I have\n"
-"    noted the %{privacy_policy}. In exchange for this free trial, I agree "
-"to\n"
-"    receive information about Checkmk products and services (incl. "
-"newsletter,\n"
-"    events and customer surveys) from the %{checkmk_group} by email and "
-"telephone,\n"
-"    and that Checkmk may analyse my interaction with these emails (opens "
-"and\n"
-"    clicks) to improve its marketing. I understand that this consent is the\n"
-"    condition for receiving the trial free of charge. I can unsubscribe at "
-"any time\n"
-"    via email."
+"      noted the %{privacy_policy}."
+msgstr ""
+
+msgid ""
+"In exchange for this free trial, I agree to receive information about\n"
+"      Checkmk products and services (incl. newsletter, events and customer\n"
+"      surveys) from the %{checkmk_group} by email and telephone, and that\n"
+"      Checkmk may analyse my interaction with these emails (opens and "
+"clicks)\n"
+"      to improve its marketing. I understand that this consent is the\n"
+"      condition for receiving the trial free of charge. I can unsubscribe "
+"at\n"
+"      any time via %{email}."
+msgstr ""
+
+msgid ""
+"We check the email address you provide against external sources to\n"
+"      confirm that it belongs to a business contact and to complete the\n"
+"      details of your organisation and role. Further information and your\n"
+"      right to object: %{privacy_notice}."
 msgstr ""
 
 #, fuzzy
@@ -113760,12 +113989,71 @@ msgstr "Containerisatie"
 msgid "Next steps with Checkmk"
 msgstr "MIB's geleverd met Checkmk"
 
-#, fuzzy
-msgid "Activate Changes"
-msgstr "Activeerde de veranderingen"
-
-msgid "1 Step | Takes 1-3 min"
+msgid "Set up a Checkmk Relay first"
 msgstr ""
+
+msgctxt "%{link} is the link text \"Checkmk Relay\""
+msgid "Systems behind a firewall? Set up a %{link} first."
+msgstr ""
+
+msgid "2 Steps | Takes 7-10 min"
+msgstr ""
+
+msgid ""
+"A host is anything you monitor: a server, a network device, a VM, a "
+"container platform,\n"
+"a cloud account or an application. Checkmk finds its services automatically."
+msgstr ""
+
+#, fuzzy
+msgid "Servers & operating systems"
+msgstr "Gast-besturingssystemen"
+
+#, fuzzy
+msgid "Linux, Windows & Unix servers"
+msgstr "Windows Diensten"
+
+msgid "Solaris, AIX, FreeBSD, macOS, ..."
+msgstr ""
+
+msgid "Network devices and virtualization need a Checkmk Relay"
+msgstr ""
+
+msgid ""
+"Checkmk Cloud cannot reach systems inside your network directly. Set up a "
+"Checkmk Relay in your network first, then add network devices or "
+"virtualization platforms such as Proxmox VE."
+msgstr ""
+
+#, fuzzy
+msgid "Set up Checkmk Relay"
+msgstr "Gebruik Checkmk zijbalk"
+
+msgid "Switches, routers, firewalls & other SNMP devices"
+msgstr ""
+
+#, fuzzy
+msgid "Checkmk Relay"
+msgstr "Checkmk agent"
+
+#, fuzzy
+msgid "Virtualization & containers"
+msgstr "Wachtende containers"
+
+#, fuzzy
+msgid "Cloud platforms"
+msgstr "Google Cloud Platform"
+
+msgid "Microsoft Azure"
+msgstr "Microsoft Azure"
+
+#, fuzzy
+msgid "Applications & databases"
+msgstr "Toepassingsgateways"
+
+#, fuzzy
+msgid "OpenTelemetry (Beta)"
+msgstr "Configuratie toestand toevoegen"
 
 msgid ""
 "In Checkmk, configuration changes are first saved as pending and do not "
@@ -113794,66 +114082,6 @@ msgstr "Geen hangende wijzigingen"
 #, fuzzy
 msgid "Mark as done"
 msgstr "volledig"
-
-msgid "2 Steps | Takes 7-10 min"
-msgstr ""
-
-msgid ""
-"In Checkmk, a host is any standalone physical or virtual system that is "
-"monitored.\n"
-"Each host has services which represent what is monitored, for example CPU "
-"usage, disk space, processes, or hardware sensors.\n"
-"The service discovery of Checkmk automatically detects these services.\n"
-"This allows monitoring to start with minimal configuration effort."
-msgstr ""
-
-#, fuzzy
-msgid "Set up basic folder structure"
-msgstr "Beginnershandleiding: Host mapstructuren"
-
-msgid ""
-"In Checkmk, folders are the foundation for organizing hosts and applying "
-"settings consistently.\n"
-"            Creating a folder (or folder structure) before adding your first "
-"host helps you keep things tidy from\n"
-"            the start and makes it easier to manage similar hosts later on "
-"through inheritance. Learn more about\n"
-"            folders and inheritance in the"
-msgstr ""
-
-#, fuzzy
-msgid "documentation."
-msgstr "Documentatie URL"
-
-#, fuzzy
-msgid "On-premises hosts"
-msgstr "Niveaus Gastheren"
-
-#, fuzzy
-msgid "Server (Linux, Windows, Solaris, ...)"
-msgstr "Hardware/Software-Inventarisatie (Linux, Windows, Solaris, AIX)"
-
-#, fuzzy
-msgid "Network devices and SNMP"
-msgstr "Netwerk scan"
-
-msgid "Checkmk Relay (objects behind a firewall)"
-msgstr ""
-
-#, fuzzy
-msgid "Cloud platforms"
-msgstr "Google Cloud Platform"
-
-msgid "Microsoft Azure"
-msgstr "Microsoft Azure"
-
-#, fuzzy
-msgid "Application monitoring"
-msgstr "Zoeken in Toezicht"
-
-#, fuzzy
-msgid "OpenTelemetry (Beta)"
-msgstr "Configuratie toestand toevoegen"
 
 #, fuzzy
 msgid "Adjust service thresholds"
@@ -113958,6 +114186,10 @@ msgid ""
 "more about working with multiple\n"
 "          users in the"
 msgstr ""
+
+#, fuzzy
+msgid "documentation."
+msgstr "Documentatie URL"
 
 #, fuzzy
 msgid "Create a contact group"
@@ -114110,6 +114342,60 @@ msgstr ""
 msgid ""
 "You can still access it later via Help > Learning Checkmk > Welcome page"
 msgstr ""
+
+#, fuzzy
+msgid "To explore"
+msgstr "Proef vervallen"
+
+#, fuzzy
+#~ msgid "Deprecated GUI extensions"
+#~ msgstr "Verlengingen repliceren"
+
+#, fuzzy
+#~ msgid "Deprecated legacy GUI extensions"
+#~ msgstr "Verlengingen repliceren"
+
+#, fuzzy
+#~ msgid "No GUI extensions using the deprecated API"
+#~ msgstr "Geen controleplugins die de verouderde API gebruiken"
+
+#, fuzzy
+#~ msgid "No PNP templates using the deprecated API"
+#~ msgstr "Geen controleplugins die de verouderde API gebruiken"
+
+#, fuzzy
+#~ msgid "No legacy GUI extensions using the deprecated API"
+#~ msgstr "Geen controleplugins die de verouderde API gebruiken"
+
+#, fuzzy, python-format
+#~ msgid ""
+#~ "This script will be executed using the BASH shell. This information is "
+#~ "available as environment variables:%(variables)s"
+#~ msgstr "Deze informatie is beschikbaar als omgevingsvariabelen"
+
+#, fuzzy
+#~ msgid "Activate Changes"
+#~ msgstr "Activeerde de veranderingen"
+
+#, fuzzy
+#~ msgid "Set up basic folder structure"
+#~ msgstr "Beginnershandleiding: Host mapstructuren"
+
+#, fuzzy
+#~ msgid "On-premises hosts"
+#~ msgstr "Niveaus Gastheren"
+
+#, fuzzy
+#~ msgid "Server (Linux, Windows, Solaris, ...)"
+#~ msgstr "Hardware/Software-Inventarisatie (Linux, Windows, Solaris, AIX)"
+
+#, fuzzy
+#~ msgid "Network devices and SNMP"
+#~ msgstr "Netwerk scan"
+
+#, fuzzy
+#~ msgid "Application monitoring"
+#~ msgstr "Zoeken in Toezicht"
 
 #, fuzzy
 #~ msgid "Time since last CDP sync"
@@ -114460,10 +114746,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Not saved"
 #~ msgstr "Niet gedeeld"
-
-#, fuzzy
-#~ msgid "email"
-#~ msgstr "E-mail"
 
 #, fuzzy
 #~ msgid "Apply to selected maps"
@@ -116140,9 +116422,6 @@ msgstr ""
 #~ msgid "Val. %(i)d"
 #~ msgstr "Val. %(i)d"
 
-#~ msgid "Waiting containers"
-#~ msgstr "Wachtende containers"
-
 #, fuzzy
 #~ msgid "hosts are UP but have services in WARNING state"
 #~ msgstr "hosts zijn up maar hebben services in warning state"
@@ -117430,9 +117709,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Environment variables"
 #~ msgstr "Omgevingsvariabelen"
-
-#~ msgid "Extension package files"
-#~ msgstr "Uitbreiding pakketbestanden"
 
 #, fuzzy, python-format
 #~ msgid "Files in %(directory)s"
@@ -124488,10 +124764,6 @@ msgstr ""
 
 #~ msgid "monitor"
 #~ msgstr "monitor"
-
-#, fuzzy
-#~ msgid "AWS account name"
-#~ msgstr "Naam opslagrekening"
 
 #, fuzzy
 #~ msgid "Parallel plan groups"

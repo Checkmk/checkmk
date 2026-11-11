@@ -6,7 +6,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2026-11-09 14:42+0000\n"
+"PO-Revision-Date: 2026-11-11 08:55+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/dev/"
 "de/>\n"
 "Language: de\n"
@@ -592,7 +592,13 @@ msgid_plural ""
 "%(count)d objects ignore the state of some members by a pattern Maps cannot "
 "apply. Maps counts every member; the settings were dropped."
 msgstr[0] ""
+"%(count)d Objekt ignoriert den Zustand einiger Mitglieder über ein Pattern, "
+"das Maps nicht anwenden kann. Maps zählt jedes Mitglied; die Einstellung "
+"wurde entfernt."
 msgstr[1] ""
+"%(count)d Objekte ignorieren den Zustand einiger Mitglieder über ein "
+"Pattern, das Maps nicht anwenden kann. Maps zählt jedes Mitglied; die "
+"Einstellungen wurden entfernt."
 
 #, python-format
 msgid ""
@@ -692,7 +698,7 @@ msgstr "%(failed_notifications)d fehlgeschlagene Benachrichtigungen"
 
 #, python-format
 msgid "%(filename)s (local, download requires login)"
-msgstr ""
+msgstr "%(filename)s (lokal, Download erfordert Login)"
 
 #, fuzzy, python-format
 msgid "%(files)s and %(count)d more"
@@ -841,6 +847,10 @@ msgstr "%(name_singular)s kann nur durch Quick Setup gelöscht werden"
 #, python-format
 msgid "%(nondescript_rule_count)d notification rule(s) "
 msgstr "%(nondescript_rule_count)d Benachrichtigungsregel(n) "
+
+#, fuzzy, python-format
+msgid "%(not_before)s to %(not_after)s"
+msgstr "Nicht vor: %(not_before)s - nicht nach: %(not_after)s"
 
 #, python-format
 msgid "%(num)d incompatible Werks have been acknowledged."
@@ -1139,6 +1149,14 @@ msgid ""
 "'%(host)s' stores a relation to '%(other)s' that '%(other)s' does not store, "
 "so the monitoring does not show it. Add it on '%(other)s', or remove it from "
 "'%(host)s'."
+msgstr ""
+
+#, fuzzy, python-format
+msgid "'%(name)s' has no effect in Checkmk."
+msgstr "%(name)s wurde gelöscht."
+
+#, python-format
+msgid "'%(name)s' may break with any update of Checkmk."
 msgstr ""
 
 #, fuzzy, python-format
@@ -2212,6 +2230,36 @@ msgstr ""
 "Dateisystem.</p><p>Auch wenn dies möglich ist, wird es nicht empfohlen "
 "Checkmk so zu betreiben, da es die Performance von Checkmk beeinträchtigen "
 "kann.</p>"
+
+#, python-format
+msgid ""
+"<p>Checkmk imports the Python files in these packages below "
+"<tt>'%(plugins_dir)s'</tt>, including their subfolders: %(packages)s. Other "
+"files below this folder have no effect.</p><p>These plug-ins use internal "
+"interfaces of Checkmk. These interfaces are not supported for plug-ins and "
+"may change with any update. Graphs, metrics and perf-o-meters are no longer "
+"read from them and need the supported API cmk.graphing.v1. Rule sets have "
+"the supported API cmk.rulesets.v1. Files which use a supported API belong "
+"below <tt>cmk_addons/plugins</tt>; Checkmk finds them here only for rule "
+"sets in <tt>wato/check_parameters</tt>, a folder for its own rule sets.</"
+"p><p>Files which Checkmk fails to load are listed by the test 'Broken GUI "
+"extensions'.</p>"
+msgstr ""
+
+#, python-format
+msgid ""
+"<p>Checkmk runs the Python files placed directly in these folders below "
+"<tt>'%(plugins_dir)s'</tt>: %(folders)s. If a <tt>.pyc</tt> file sits next "
+"to a <tt>.py</tt> file, Checkmk runs the <tt>.pyc</tt> file instead. Files "
+"in subfolders or in other folders have no effect.</p><p>These plug-ins use "
+"internal interfaces of Checkmk. These interfaces are not supported for plug-"
+"ins and may change with any update. Graphs, metrics and perf-o-meters are no "
+"longer read from them and need the supported API cmk.graphing.v1. Rule sets "
+"have the supported API cmk.rulesets.v1. Files which use a supported API have "
+"no effect here and belong below <tt>cmk_addons/plugins</tt>.</p><p>Files "
+"which Checkmk fails to load are listed by the test 'Broken GUI extensions'.</"
+"p>"
+msgstr ""
 
 msgid ""
 "<p>Having a large number of users configured in Checkmk may decrease the "
@@ -3609,6 +3657,10 @@ msgstr "ASM-Benutzername"
 msgid "ASP requests rejected"
 msgstr "ASP-Anfragen abgelehnt"
 
+#, fuzzy
+msgid "AWS"
+msgstr "EWS"
+
 msgid "AWS EC2 instances"
 msgstr "AWS EC2 Instanzen"
 
@@ -3617,6 +3669,10 @@ msgstr "AWS S3 (Objektspeicher)"
 
 msgid "AWS S3 bucket"
 msgstr "AWS S3 Bucket"
+
+#, fuzzy
+msgid "AWS service"
+msgstr "Alle Services"
 
 msgid "AWS services found!"
 msgstr "AWS Services gefunden!"
@@ -3634,6 +3690,10 @@ msgstr "AWS/CE Gesamte Reservierungsauslastung"
 
 #, fuzzy
 msgid "AWS v2/CloudFront"
+msgstr "AWS/CloudFront"
+
+#, fuzzy
+msgid "AWS v2/CloudFront distribution"
 msgstr "AWS/CloudFront"
 
 #, fuzzy
@@ -3673,11 +3733,19 @@ msgid "AWS v2/ECS CPU reservation"
 msgstr "CPU-Reservierung"
 
 #, fuzzy
+msgid "AWS v2/ECS CPU utilization"
+msgstr "AWS/ElastiCache CPU-Auslastung"
+
+#, fuzzy
 msgid "AWS v2/ECS Limits"
 msgstr "AWS/ECS Limits"
 
 #, fuzzy
 msgid "AWS v2/ECS memory reservation"
+msgstr "Speicherreservierung"
+
+#, fuzzy
+msgid "AWS v2/ECS memory utilization"
 msgstr "Speicherreservierung"
 
 #, fuzzy
@@ -4421,8 +4489,16 @@ msgstr ""
 "festgelegt werden."
 
 #, fuzzy
+msgid "Account ID"
+msgstr "Zähler-ID"
+
+#, fuzzy
 msgid "Account IDs"
 msgstr "Zähler-ID"
+
+#, fuzzy
+msgid "Account name"
+msgstr "AWS Kontoname"
 
 msgid ""
 "Account names on Windows, user or group names - or numeric IDs - on Linux "
@@ -8661,9 +8737,8 @@ msgstr "Ereignisse archivieren"
 msgid "Archive events of hosts"
 msgstr "Ereignisse von Hosts archivieren"
 
-#, fuzzy
 msgid "Archive events of hosts?"
-msgstr "Ereignisse von Hosts archivieren"
+msgstr "Ereignisse des Hosts archivieren?"
 
 msgid "Archive exceeds total size limit"
 msgstr "Archiv überschreitet Limit der Gesamtgröße"
@@ -11239,7 +11314,7 @@ msgstr ""
 
 #, python-format
 msgid "Both carry the host label \"%(name)s\" with the value \"%(value)s\"."
-msgstr ""
+msgstr "Beide haben das Host-Label \"%(name)s\" mit dem Wert \"%(value)s\"."
 
 msgid "Both conditions must match (defensive)"
 msgstr "Beide Bedingungen müssen zutreffen (defensiv)"
@@ -11749,6 +11824,10 @@ msgid ""
 "host name. Enable this to connect without verifying the certificate, for "
 "example when the backup server presents a self-signed certificate."
 msgstr ""
+"Standardmäßig wird das TLS-Zertifikat des Servers gegen den Checkmk-Host-"
+"Namen geprüft. Aktivieren Sie dies, um ohne Prüfung des Zertifikats zu "
+"verbinden, zum Beispiel wenn der Backup-Server ein selbst signiertes "
+"Zertifikat präsentiert."
 
 #, python-brace-format
 msgid ""
@@ -14504,7 +14583,7 @@ msgid "Checkmk Micro Core"
 msgstr "Checkmk Micro Core"
 
 msgid "Checkmk REST API (Nagios / Raw core)"
-msgstr ""
+msgstr "Checkmk REST-API (Nagios-/Raw-Kern)"
 
 #, fuzzy
 msgid "Checkmk URL"
@@ -14587,11 +14666,26 @@ msgstr "Checkmk Dashboard"
 msgid "Checkmk data backend"
 msgstr "Metrik-Backend anfragen"
 
+msgid ""
+"Checkmk does not check limits on EC2 instance types that it does not know "
+"about. By default in this case, it will emit a warning so that you are aware "
+"that the limits of these instances are unmonitored. You can select a "
+"different service state for this scenario here."
+msgstr ""
+
+#, fuzzy
+msgid "Checkmk does not load plug-ins from this folder."
+msgstr "Andere Protokolle für diesen Dienst"
+
 msgid "Checkmk edition"
 msgstr "Checkmk-Edition"
 
 msgid "Checkmk extension packages (MKPs)"
 msgstr "Checkmk-Erweiterungspakete (MKPs)"
+
+#, fuzzy, python-format
+msgid "Checkmk fails to load it: %(error)s."
+msgstr "Fehler beim Stoppen des Jobs: %(error)s"
 
 msgid "Checkmk fetcher latency"
 msgstr "Checkmk-Fetcher-Latenz"
@@ -14616,6 +14710,11 @@ msgstr "Checkmk Zustand"
 msgid "Checkmk licensing files"
 msgstr "Checkmk Lizenzdateien"
 
+msgid ""
+"Checkmk loads plug-ins from this folder through internal interfaces, which "
+"are not supported for plug-ins."
+msgstr ""
+
 msgid "Checkmk log files"
 msgstr "Checkmk Log-Dateien"
 
@@ -14628,6 +14727,22 @@ msgstr ""
 
 msgid "Checkmk mobile"
 msgstr "Checkmk Mobil"
+
+#, python-format
+msgid ""
+"Checkmk no longer reads PNP templates from <tt>'%(templates_dir)s'</tt> and "
+"its subfolders, so they have no effect. Graphs need the supported API "
+"cmk.graphing.v1."
+msgstr ""
+
+#, fuzzy
+msgid "Checkmk no longer reads PNP templates."
+msgstr "Veraltete PNP-Vorlagen"
+
+msgid ""
+"Checkmk no longer reads graphs, metrics and perf-o-meters from this folder. "
+"Re-implement it with the supported API cmk.graphing.v1."
+msgstr ""
 
 msgid "Checkmk partner or reseller"
 msgstr "Checkmk-Partner und -Reseller"
@@ -15003,10 +15118,13 @@ msgid ""
 "AWS SDK: environment variables, the files in <tt>~/.aws</tt> of the site "
 "user, and the instance profile or EKS Pod Identity when Checkmk runs on AWS. "
 "Recommended on AWS, because AWS renews the instance profile and EKS Pod "
-"Identity credentials itself.<br>To monitor through an IAM role, choose "
-"<b>Explicit list of account IDs</b> under <b>Accounts</b>, and enter the "
-"account and the name of the role. The agent then assumes the role in that "
-"account. The AWS CloudTrail log shows these calls with the session name "
+"Identity credentials itself.<br><b>Named profile:</b> Checkmk stores no "
+"secret. The agent uses a profile from <tt>~/.aws/config</tt> of the site "
+"user, for example one whose <tt>credential_process</tt> gets temporary "
+"credentials from IAM Roles Anywhere.<br>To monitor through an IAM role, "
+"choose <b>Explicit list of account IDs</b> under <b>Accounts</b>, and enter "
+"the account and the name of the role. The agent then assumes the role in "
+"that account. The AWS CloudTrail log shows these calls with the session name "
 "<tt>checkmk-&lt;site&gt;</tt>."
 msgstr ""
 
@@ -15220,6 +15338,11 @@ msgid ""
 "percentages. In most cases the sensible threshold differs from one metric to "
 "the next, so configure them separately."
 msgstr ""
+"Wählen Sie, ob die Schwellwerte für jede Metrik auf den zutreffenden Hosts "
+"gelten oder nur für einzeln benannte Metriken. Ein gemeinsames Paar von "
+"Schwellwerten für alle Metriken ist nur sinnvoll, wenn die Metriken dieselbe "
+"Skala haben, z. B. Prozentwerte. Meist unterscheidet sich der sinnvolle "
+"Schwellwert von Metrik zu Metrik, konfigurieren Sie sie daher getrennt."
 
 msgid ""
 "Choose whether this rule gets prioritized over cache times that are "
@@ -15275,26 +15398,26 @@ msgstr ""
 msgid ""
 "Choose which updater keeps the agents up to date.<br><b>Enable agent updates "
 "using the Agent Controller</b>: The Agent Controller updates the agents for "
-"Linux and Windows. On Linux, it needs the Agent Controller and the single "
-"directory deployment of the rule set <i>Customize agent package</i>. Baking "
-"fails for Linux agents without them. Solaris agents get the legacy updater."
-"<br><b>Enable agent updates using the Agent Controller (fallback to legacy "
-"updater in case of problems)</b>: The agents get both updaters, and both run "
-"side by side, independently of each other. Both install the agent package "
-"that is baked for the host, so it does not matter which of them updates an "
-"agent first. If the Agent Controller fails to update an agent, the legacy "
-"updater still keeps it up to date. Agents that cannot use the Agent "
-"Controller get the legacy updater only: Solaris agents, and Linux agents "
-"without the Agent Controller or without the single directory deployment. "
-"Rules that enabled agent updates before Checkmk 3.0 use this entry after the "
-"update.<br><b>Enable agent updates using the legacy updater (deprecated)</"
-"b>: Only the legacy updater updates the agents.<br><br>Do not forget to "
-"enable agent updates in at least one of your rules. It can be useful to "
-"create rules that are only partially filled out. Since the rule execution is "
-"done on a <i>per parameter</i> base you can for example create one rule at "
-"the top of your list that just sets the activation to <i>Do not enable agent "
-"updates</i> for just some of your hosts without setting any of the other "
-"parameters."
+"Linux and Windows. Baking fails for Linux agents without the Agent "
+"Controller. Baking also fails for hosts that the rule set <i>Use classic "
+"file deployment</i> keeps on the classic file deployment. Solaris agents get "
+"the legacy updater.<br><b>Enable agent updates using the Agent Controller "
+"(fallback to legacy updater in case of problems)</b>: The agents get both "
+"updaters, and both run side by side, independently of each other. Both "
+"install the agent package that is baked for the host, so it does not matter "
+"which of them updates an agent first. If the Agent Controller fails to "
+"update an agent, the legacy updater still keeps it up to date. Agents that "
+"cannot use the Agent Controller get the legacy updater only: Solaris agents, "
+"and Linux agents without the Agent Controller or without the single "
+"directory deployment. Rules that enabled agent updates before Checkmk 3.0 "
+"use this entry after the update.<br><b>Enable agent updates using the legacy "
+"updater (deprecated)</b>: Only the legacy updater updates the agents."
+"<br><br>Do not forget to enable agent updates in at least one of your rules. "
+"It can be useful to create rules that are only partially filled out. Since "
+"the rule execution is done on a <i>per parameter</i> base you can for "
+"example create one rule at the top of your list that just sets the "
+"activation to <i>Do not enable agent updates</i> for just some of your hosts "
+"without setting any of the other parameters."
 msgstr ""
 
 msgid ""
@@ -15831,6 +15954,10 @@ msgstr "Cloud-SQL"
 
 msgid "Cloud hosts"
 msgstr "Cloud-Hosts"
+
+#, fuzzy
+msgid "Cloud provider"
+msgstr "Provider"
 
 msgid "Cloud region"
 msgstr "Cloud-Region"
@@ -18580,6 +18707,9 @@ msgid ""
 "every crash report by hand, you can let this site upload its crash reports "
 "automatically once a day."
 msgstr ""
+"Absturzberichte helfen uns, Fehler schneller zu finden und zu beheben. "
+"Anstatt jeden Absturzbericht manuell einzureichen, können Sie diese Instanz "
+"ihre Absturzberichte automatisch einmal täglich hochladen lassen."
 
 msgid ""
 "Crash reports might contain sensitive information such as secrets. It is "
@@ -20236,7 +20366,7 @@ msgid "Data"
 msgstr "Daten"
 
 msgid "Data Guard CRITICAL"
-msgstr ""
+msgstr "Data Guard CRITICAL"
 
 #, fuzzy
 msgid "Data Guard statistics"
@@ -21437,7 +21567,8 @@ msgstr "%d benutzerdefinierte Service-Attribute"
 msgid "Delete customer #%(nr)d"
 msgstr "Kunde #%(nr)d löschen"
 
-msgid "Delete event immediately after the actions"
+#, fuzzy
+msgid "Delete event right after triggering its actions"
 msgstr "Lösche Ereignis direkt nach den Aktionen"
 
 msgid "Delete files older than"
@@ -22179,18 +22310,13 @@ msgstr "Verteilungen"
 msgid "Deprecated"
 msgstr "Veraltet"
 
-msgid "Deprecated GUI extensions"
-msgstr "Veraltete GUI-Erweiterungen"
-
-msgid "Deprecated PNP templates"
-msgstr "Veraltete PNP-Vorlagen"
+#, fuzzy
+msgid "Deprecated Quick Setup"
+msgstr "Prometheus Quick Setup"
 
 #, python-format
 msgid "Deprecated extension package: %(ident)s"
 msgstr "Veraltetes Erweiterungspaket: %(ident)s"
-
-msgid "Deprecated legacy GUI extensions"
-msgstr "Veraltete Legacy GUI-Erweiterungen"
 
 #, python-format
 msgid "Deprecated plug-in: %(ident)s"
@@ -25489,6 +25615,8 @@ msgid ""
 "Enable agent updates using the Agent Controller (fallback to legacy updater "
 "in case of problems)"
 msgstr ""
+"Agenten-Updates über den Agent Controller aktivieren (bei Problemen Fallback "
+"auf Legacy-Updater)"
 
 msgid "Enable agent updates using the legacy updater (deprecated)"
 msgstr ""
@@ -27657,6 +27785,10 @@ msgstr ""
 "Erweiterungspaket installiert, aber Regelsatzmigration fehlgeschlagen. Sie "
 "können dieses MKP deaktivieren und die vollständige Fehlermeldung sehen, "
 "indem Sie diesen Befehl auf der Befehlszeile ausführen: %(command)s"
+
+#, fuzzy, python-format
+msgid "Extension package: %(ident)s"
+msgstr "Erweiterungspaketdateien"
 
 msgid "Extension packages"
 msgstr "Erweiterungspakete"
@@ -30050,27 +30182,12 @@ msgstr "gRPC-basierter OTLP-Empfänger:"
 msgid "GUI design"
 msgstr "GUI-Design"
 
-#, python-format
-msgid ""
-"GUI extension in %(plugin_name)r uses an API which is marked as deprecated "
-"and may not work anymore due to unknown imports or objects (file: %(file)s)."
-msgstr ""
-"Die GUI-Erweiterung in %(plugin_name)r verwendet eine API, die als veraltet "
-"gekennzeichnet ist und aufgrund von unbekannten Importen oder Objekten "
-"möglicherweise nicht mehr funktioniert (Datei: %(file)s)."
-
 msgid "GUI extensions"
 msgstr "GUI-Erweiterungen"
 
-#, python-format
-msgid ""
-"GUI extensions in <tt>'%(plugins_dir)s'</tt> are marked as 'deprecated' and "
-"will be ignored in future Checkmk versions (official deprecation timeline "
-"not decided yet)."
-msgstr ""
-"GUI-Erweiterungen in <tt>'%(plugins_dir)s'</tt> sind als 'veraltet' markiert "
-"und werden in zukünftigen Checkmk-Versionen ignoriert (offizieller Zeitplan "
-"für die Abschaffung ist noch nicht entschieden)."
+#, fuzzy
+msgid "GUI plug-ins"
+msgstr "Plugins"
 
 msgid "GUID"
 msgstr "GUID"
@@ -37077,7 +37194,11 @@ msgid ""
 "In a distributed setup where the Event Console is not running in the same "
 "site as the host is monitored on, you need to access the remote Event "
 "Console via TCP. Please make sure that this is activated in the global "
-"settings of the Event Console. The default port number is 6558."
+"settings of the Event Console. The default port number is 6558. A port after "
+"the host, e.g. myhost:6559 or [2001:db8::1]:6559, overrides it. The check "
+"tries IPv6 first, so if <i>Access to event status via TCP</i> of that Event "
+"Console restricts the source addresses, allow the IPv6 addresses of this "
+"site's host there, too."
 msgstr ""
 "In einem verteilten Setup bei dem die Event Console nicht auf derselben "
 "Instanz läuft wie der überwachte Host erfolgt der Zugriff auf die Remote "
@@ -40736,28 +40857,12 @@ msgstr ""
 "entweder Bulk-Benachrichtigungen deaktivieren oder ein anderes "
 "Benachrichtigungs-Plugin wählen, das die Bildung von Bulks erlaubt."
 
-#, python-format
-msgid ""
-"Legacy GUI extension in %(plugin_name)r uses an API which is marked as "
-"deprecated and may not work anymore due to unknown imports or objects (file: "
-"%(file)s)."
-msgstr ""
-"Die Legacy GUI-Erweiterung in %(plugin_name)r verwendet eine API, die als "
-"veraltet gekennzeichnet ist und aufgrund unbekannter Importe oder Objekte "
-"möglicherweise nicht mehr funktioniert (Datei: %(file)s)."
-
 msgid "Legacy GUI extensions"
 msgstr "Legacy GUI-Erweiterungen"
 
-#, python-format
-msgid ""
-"Legacy GUI extensions in <tt>'%(web_dir)s'</tt> are marked as 'deprecated' "
-"and will be ignored in future Checkmk versions (official deprecation "
-"timeline not decided yet)."
-msgstr ""
-"Legacy GUI-Erweiterungen in <tt>'%(web_dir)s'</tt> sind als 'veraltet' "
-"markiert und werden in zukünftigen Checkmk-Versionen ignoriert (offizieller "
-"Zeitplan für die Abschaffung ist noch nicht entschieden)."
+#, fuzzy
+msgid "Legacy GUI plug-ins"
+msgstr "Legacy GUI-Erweiterungen"
 
 msgid "Legacy agent management"
 msgstr "Verwaltung von Legacy-Agenten"
@@ -42520,6 +42625,9 @@ msgid ""
 "Log files ('*.log' or '*.state') below var/log that may include highly "
 "sensitive data, including all files without a sensitivity classification"
 msgstr ""
+"Log-Dateien ('*.log' oder '*.state') unterhalb von var/log, die hochsensible "
+"Daten enthalten können, einschließlich aller Dateien ohne "
+"Sensibilitätseinstufung"
 
 msgid ""
 "Log files ('*.log' or '*.state') below var/log that may include sensitive "
@@ -42824,7 +42932,6 @@ msgstr "Erfolgreich an die Event Console geschickte Logs"
 msgid "Logswitches"
 msgstr "Logswitches"
 
-#, fuzzy
 msgid "Logwatch"
 msgstr "Logwatch"
 
@@ -42858,6 +42965,8 @@ msgstr "Nach Schlüsseln suchen"
 msgid ""
 "Look-around assertions and backreferences are not supported by the agent."
 msgstr ""
+"Lookaround-Assertions und Rückwärtsreferenzen werden vom Agenten nicht "
+"unterstützt."
 
 msgid "Looking back"
 msgstr "Blicke zurück"
@@ -43805,7 +43914,7 @@ msgid "Manage alerts"
 msgstr "Aktivierte Alerts"
 
 msgid "Manage alerts on your Telemetry data."
-msgstr ""
+msgstr "Verwalten Sie Alerts zu Ihren Telemetry-Daten."
 
 msgid "Manage and create Checkmk extension packages (MKPs)."
 msgstr "Checkmk-Erweiterungspakete (MKPs) verwalten und erstellen."
@@ -45772,6 +45881,11 @@ msgstr "Migrieren"
 msgid "Migrate selected users"
 msgstr "Ausgewählte Benutzer migrieren"
 
+msgid ""
+"Migrate the rules to the successor of the rule set or remove them before the "
+"update. The Werk which deprecated the rule set describes its successor."
+msgstr ""
+
 msgid "Migrate users"
 msgstr "Benutzer migrieren"
 
@@ -47610,6 +47724,10 @@ msgstr "Name: %(name)s"
 msgid "Name: %(name)s"
 msgstr "Name: %(name)s"
 
+#, fuzzy
+msgid "Named profile"
+msgstr "Benutzerprofil bearbeiten"
+
 msgid "Names"
 msgstr "Namen"
 
@@ -48229,8 +48347,9 @@ msgstr "Kein Wörterbuch ValueSpec innerhalb von Migrate: %(valuespec)s"
 msgid "No GCP services found."
 msgstr "Keine GCP-Services gefunden."
 
-msgid "No GUI extensions using the deprecated API"
-msgstr "Keine GUI-Erweiterungen, welche die veraltete API verwenden"
+#, fuzzy
+msgid "No GUI plug-ins found"
+msgstr "Keine Aktionen gefunden"
 
 msgid "No IP"
 msgstr "Keine IP"
@@ -48247,8 +48366,9 @@ msgstr "Für dieses Bündel wurde keine OTel-Konfiguration gefunden."
 msgid "No OpenTelemetry configuration yet"
 msgstr "Noch keine OpenTelemetry-Konfiguration"
 
-msgid "No PNP templates using the deprecated API"
-msgstr "Keine PNP-Vorlagen, welche die veraltete API verwenden"
+#, fuzzy
+msgid "No PNP templates found"
+msgstr "Keine Ergebnisse gefunden"
 
 msgid "No Prometheus configuration found for this bundle."
 msgstr "Für dieses Bündel wurde keine Prometheus-Konfiguration gefunden."
@@ -48539,9 +48659,6 @@ msgstr "Keine Hosts/Services gefunden."
 
 msgid "No information available"
 msgstr "Keine Informationen vorhanden"
-
-msgid "No legacy GUI extensions using the deprecated API"
-msgstr "Keine Legacy GUI-Erweiterungen, welche die veraltete API verwenden"
 
 msgid "No levels"
 msgstr "Keine Levels"
@@ -51682,6 +51799,11 @@ msgid ""
 "override the plug-in's defaults (e.g. <tt>work_notes</tt> or <tt>state</"
 "tt>); fields not listed here keep their default values."
 msgstr ""
+"Optionale Name/Wert-Paare, die in den PUT-Request an ServiceNow übernommen "
+"werden, wenn eine Quittierungsbenachrichtigung ausgelöst wird. Hier "
+"eingetragene Namen überschreiben die Standardwerte des Plugins (z. B. "
+"<tt>work_notes</tt> oder <tt>state</tt>); nicht aufgeführte Felder behalten "
+"ihre Standardwerte."
 
 msgid "Optional parameters"
 msgstr "Optionale Parameter"
@@ -53318,23 +53440,9 @@ msgstr "Bitte warten"
 msgid "PLL lock voltages by freqency"
 msgstr "PLL Verriegelungsspannung nach Frequenz"
 
-#, python-format
-msgid ""
-"PNP template uses an API which was removed in an earlier Checkmk version "
-"(file: %(file)s)."
-msgstr ""
-"Die PNP-Vorlage verwendet eine API, die in einer früheren Checkmk-Version "
-"entfernt wurde (Datei: %(file)s)."
-
-#, python-format
-msgid ""
-"PNP templates in <tt>'%(templates_dir)s'</tt> are marked as 'deprecated' and "
-"will be ignored in future Checkmk versions (official deprecation timeline "
-"not decided yet)."
-msgstr ""
-"PNP-Vorlagen in <tt>'%(templates_dir)s'</tt> sind als 'veraltet' markiert "
-"und werden in zukünftigen Checkmk-Versionen ignoriert (offizieller Zeitplan "
-"für die Abschaffung ist noch nicht entschieden)."
+#, fuzzy
+msgid "PNP templates"
+msgstr "VMs / Vorlagen"
 
 #, fuzzy
 msgid ""
@@ -53842,6 +53950,9 @@ msgstr "Partitionen (XEN)"
 
 msgid "Parts per million"
 msgstr "Parts per million"
+
+msgid "Pass the proxy to the credential_process"
+msgstr ""
 
 msgid "Passive checks"
 msgstr "Passive Checks"
@@ -55249,6 +55360,9 @@ msgid ""
 "via DNS and that your firewall and proxy settings permit outbound HTTPS "
 "access."
 msgstr ""
+"Bitte stellen Sie sicher, dass der Host, auf dem Checkmk läuft, den Host-"
+"Namen des Servers per DNS auflösen kann und dass Ihre Firewall- und Proxy-"
+"Einstellungen ausgehenden HTTPS-Zugriff erlauben."
 
 msgid "Please make sure, that the data is URL-encoded."
 msgstr "Bitte stellen Sie sicher, dass die Daten URL codiert sind."
@@ -55736,6 +55850,10 @@ msgstr "Plugin-Ausgabe"
 
 msgid "Plug-in output in case of absent updates"
 msgstr "Plugin-Ausgabe wenn keine Updates vorhanden sind"
+
+#, fuzzy, python-format
+msgid "Plug-in: %(ident)s"
+msgstr "Veraltetes Plugin: %(ident)s"
 
 msgid "Plug-ins"
 msgstr "Plugins"
@@ -56556,6 +56674,10 @@ msgid "Profile changed (sync failed: %(result)s)"
 msgstr "Profile geändert (Sync gescheitert: %(result)s)"
 
 #, fuzzy
+msgid "Profile name"
+msgstr "Dateiname"
+
+#, fuzzy
 msgid "Profile not found."
 msgstr "Seite nicht gefunden"
 
@@ -56572,6 +56694,9 @@ msgid ""
 "Profiles older than this are discarded on the next save or housekeeping run. "
 "Leave unset to keep profiles indefinitely (count-based cap still applies)."
 msgstr ""
+"Profile, die älter sind, werden beim nächsten Speichern oder Aufräumlauf "
+"verworfen. Lassen Sie das Feld leer, um Profile unbegrenzt aufzubewahren "
+"(die Obergrenze für die Anzahl gilt weiterhin)."
 
 msgid "Program"
 msgstr "Programm"
@@ -56805,6 +56930,10 @@ msgstr "Proxy"
 msgid "Proxy URL"
 msgstr "Proxy-URL"
 
+#, fuzzy
+msgid "Proxy for credential_process"
+msgstr "Konfiguriere Agenten"
+
 msgid "Proxy host"
 msgstr "Proxy Host"
 
@@ -56832,6 +56961,10 @@ msgid ""
 "for the recurring API calls of the services using this connection. Without "
 "this option the proxy settings of the process environment are used."
 msgstr ""
+"Proxy für den Zugriff auf Microsoft, sowohl für die hier durchgeführte "
+"Autorisierung als auch für die wiederkehrenden API-Aufrufe der Services, die "
+"diese Verbindung verwenden. Ohne diese Option werden die Proxy-Einstellungen "
+"der Prozessumgebung verwendet."
 
 msgid "Public"
 msgstr "Öffentlich"
@@ -57425,7 +57558,7 @@ msgid "RUNNING AS STANDBY"
 msgstr ""
 
 msgid "RUNNING ELSEWHERE"
-msgstr ""
+msgstr "RUNNING ELSEWHERE"
 
 msgid "RX"
 msgstr "RX"
@@ -57599,6 +57732,9 @@ msgstr "Strategie der Wiederausführung"
 
 msgid "Re-executions"
 msgstr "Wiederausführungen"
+
+msgid "Re-implement it with the supported API cmk.graphing.v1."
+msgstr ""
 
 msgid "Read"
 msgstr "Lesen"
@@ -59847,6 +59983,10 @@ msgstr "Gelöst"
 
 msgid "Resource Group"
 msgstr "Ressourcengruppe"
+
+#, fuzzy
+msgid "Resource ID"
+msgstr "Ressource"
 
 msgid "Resource Name"
 msgstr "Ressourcenname"
@@ -62803,6 +62943,9 @@ msgid ""
 "Selected kinds become Checkmk hosts. Individual resources can override this "
 "choice using the checkmk.com/promote-to-host annotation."
 msgstr ""
+"Ausgewählte Ressourcenarten werden zu Checkmk-Hosts. Einzelne Ressourcen "
+"können diese Auswahl mit der Annotation checkmk.com/promote-to-host "
+"überschreiben."
 
 msgid "Selected style configuration"
 msgstr "Gewählte Stilkonfiguration"
@@ -65115,6 +65258,8 @@ msgid ""
 "Shown on map cards and in the header. Leave blank to fall back to the "
 "technical name."
 msgstr ""
+"Wird auf den Kartenkacheln und in der Kopfzeile angezeigt. Leer lassen, um "
+"auf den technischen Namen zurückzugreifen."
 
 msgid "Shows a single aggregation."
 msgstr "Zeigt ein einzelnes Aggregat."
@@ -68077,6 +68222,10 @@ msgstr ""
 msgid "State if remaining API reads are unknown"
 msgstr "Zustand falls verbleibende API Leseoperationen unbekannt sind"
 
+#, fuzzy
+msgid "State if running instance types are unknown to Checkmk"
+msgstr "Zustand falls verbleibende API Leseoperationen unbekannt sind"
+
 msgid "State if specific check plug-ins receive no monitoring data."
 msgstr ""
 "Zustand, wenn spezifische Check-Plugins keine Monitoring-Daten erhalten."
@@ -70207,6 +70356,9 @@ msgid ""
 "Team names that will be added as responders for the alert. The integration's "
 "own team is always implicitly responsible; entries here add additional teams."
 msgstr ""
+"Teamnamen, die als Responder für den Alert hinzugefügt werden. Das eigene "
+"Team der Integration ist immer implizit zuständig; die Einträge hier fügen "
+"weitere Teams hinzu."
 
 msgid ""
 "Team names which will be responsible for the alert. If the API Key belongs "
@@ -71003,6 +71155,11 @@ msgstr "Die Event Console läuft zur Zeit nicht."
 
 msgid "The Event Console is disabled (\"omd config\")."
 msgstr "Die Event Console ist deaktiviert (\"omd config\")."
+
+msgid ""
+"The Event Console sends the email with the <tt>mail</tt> command. If the "
+"command still runs after a minute, the Event Console kills it."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -72234,6 +72391,11 @@ msgstr ""
 "Liste von SAP-Werten auf einmal."
 
 msgid ""
+"The check gives up after this time, 20 seconds by default. The check timeout "
+"of the monitoring core, 60 seconds by default, must be longer."
+msgstr ""
+
+msgid ""
 "The check takes this state in case the inventory cannot be updated because "
 "of any possible reason. A common use is setting this to OK for workstations "
 "that can be switched off - so you will get no notifications in that case."
@@ -72795,6 +72957,18 @@ msgstr ""
 "Das Dashboard '%(dashboard_name)s' existiert nicht oder Sie haben keine "
 "Berechtigung, um es zu sehen."
 
+#, fuzzy, python-format
+msgid ""
+"The dashboard '%(name)s' does not exist or you do not have permission to "
+"view it."
+msgstr ""
+"Das Dashboard '%(dashboard_name)s' existiert nicht oder Sie haben keine "
+"Berechtigung, um es zu sehen."
+
+#, fuzzy, python-format
+msgid "The dashboard has no widget '%(widget)s'."
+msgstr "Angewendete %{n} Dashboard-Filter"
+
 #, python-brace-format
 msgid ""
 "The data backend certificate authority {path} holds no certificate. Create "
@@ -72832,6 +73006,8 @@ msgid ""
 "The data backend of this site does not trust the client certificates it "
 "issues to remote sites yet."
 msgstr ""
+"Das Daten-Backend dieser Instanz vertraut den Client-Zertifikaten, die es "
+"für Remote-Instanzen ausstellt, noch nicht."
 
 msgid "The data backend of this site has changes that are not activated yet."
 msgstr ""
@@ -72994,6 +73170,10 @@ msgstr ""
 
 msgid "The description of the interface as provided by the device"
 msgstr "Die Beschreibung der Schnittstelle wie vom Gerät angegeben"
+
+#, fuzzy
+msgid "The details below give the reason."
+msgstr "Der Identifier für den Sensor."
 
 #, fuzzy
 msgid "The deviation of the local clock from the time server."
@@ -73194,6 +73374,15 @@ msgstr "Die erwartete Anzahl von Ressourcen im Cluster"
 
 msgid "The expiration time must be in the future."
 msgstr "Das Ablaufdatum muss in der Zukunft liegen."
+
+msgid ""
+"The extension package contains plug-ins which have no effect in Checkmk."
+msgstr ""
+
+msgid ""
+"The extension package contains plug-ins which may break with any update of "
+"Checkmk."
+msgstr ""
 
 #, python-format
 msgid ""
@@ -74107,6 +74296,9 @@ msgstr ""
 msgid "The log file"
 msgstr "Die Log-Datei"
 
+msgid "The log file 'var/log/web.log' shows the details."
+msgstr ""
+
 #, python-format
 msgid ""
 "The log file <tt>%(display_name)s</tt> of host <tt>%(host_name)s</tt> could "
@@ -74550,7 +74742,7 @@ msgstr ""
 
 #, python-format
 msgid "The name is \"%(host)s\" with \"%(token)s\" added."
-msgstr ""
+msgstr "Der Name ist \"%(host)s\", ergänzt um \"%(token)s\"."
 
 msgid ""
 "The name is the individual part of the used service name. Choose a human "
@@ -74581,6 +74773,13 @@ msgid ""
 msgstr ""
 "Der Name eines KPI kann aus dem Service-Namen abgelesen werden. Es ist der "
 "Teil nach `RMK`."
+
+msgid ""
+"The name of a profile in <tt>~/.aws/config</tt> of the site user, for "
+"example <tt>checkmk</tt> for the section <tt>[profile checkmk]</tt>. The "
+"profile is read on the site that runs the agent, so every site that monitors "
+"this host needs a profile of this name."
+msgstr ""
 
 msgid "The name of the Datadog monitor."
 msgstr "Der Name des Datadog-Monitors."
@@ -75496,6 +75695,8 @@ msgid ""
 "The query for '%(metric)s' matched more than %(max)d time series, so the "
 "result is truncated. Please narrow down the query."
 msgstr ""
+"Die Abfrage für '%(metric)s' hat mehr als %(max)d Zeitreihen ergeben, daher "
+"wird das Ergebnis gekürzt. Bitte schränken Sie die Abfrage ein."
 
 msgid "The query returned no data."
 msgstr "Die Abfrage hat keine Daten zurückgegeben."
@@ -76594,11 +76795,6 @@ msgstr "Die ID der Merkmal-Gruppe \"%(tag_group_id)s\" wird zweimal verwendet."
 msgid "The target has been deleted."
 msgstr "Das Ziel wurde gelöscht."
 
-msgid ""
-"The target page shows a single object. Without the dashboard and widget "
-"filters, add a filter that identifies it."
-msgstr ""
-
 msgid "The target rule is no longer available"
 msgstr "Die Zielregel ist nicht mehr verfügbar"
 
@@ -76653,7 +76849,7 @@ msgstr "Der Text"
 #, python-format
 msgid ""
 "The text \"%(text)s\" is not preceded by a search prefix such as \"h:\"."
-msgstr ""
+msgstr "Vor dem Text \"%(text)s\" steht kein Suchpräfix wie \"h:\"."
 
 msgid "The text entered here is handled as a regular expression pattern."
 msgstr "Der eingegebene Text wird als regulärer Ausdrucks-Pattern behandelt."
@@ -77184,6 +77380,18 @@ msgid "The virtual machine"
 msgstr "Die virtuelle Maschine"
 
 #, python-format
+msgid "The widget has no link %(index)d."
+msgstr ""
+
+#, fuzzy, python-format
+msgid "The widget has no part '%(part)s'."
+msgstr "Das Ende-Datum muss nach dem Start-Datum liegen"
+
+#, fuzzy
+msgid "The widget shows no statistics."
+msgstr "Switch-Port-Statistiken"
+
+#, python-format
 msgid "The write-only user may write to the test database for %(feature)s"
 msgstr ""
 
@@ -77614,6 +77822,18 @@ msgstr ""
 "lassen, können Sie die Regelsätze sicher bereinigen. Falls das "
 "Erweiterungspaket vorübergehend deaktiviert wurde, können Sie die Regelsätze "
 "beibehalten.</li></ol>"
+
+#, fuzzy, python-format
+msgid "These rules have no effect in Checkmk %(version)s."
+msgstr "Dies funktioniert nicht in Checkmk %(version)s."
+
+#, fuzzy, python-format
+msgid ""
+"These rules work in Checkmk %(version)s, but not after the update to the "
+"next major version."
+msgstr ""
+"Dies könnte teilweise in Checkmk %(version)s funktionieren, aber eventuell "
+"nicht mehr ab der nächsten Hauptversion."
 
 msgid ""
 "These services are being discovered but have been disabled by creating a "
@@ -80909,6 +81129,12 @@ msgid "This rule is disabled"
 msgstr "Diese Regel ist deaktiviert"
 
 msgid ""
+"This rule is for the CloudFront service of a piggyback host named as the "
+"distribution ID. For the CloudFront services on the AWS account host or on "
+"an origin domain host, use the rule 'AWS v2/CloudFront'."
+msgstr ""
+
+msgid ""
 "This rule is not yet known on the target site. Activate pending changes or "
 "complete the user profile replication to synchronize it."
 msgstr ""
@@ -81899,11 +82125,16 @@ msgid "This rulset allow you to configure a SSH check for a host"
 msgstr ""
 "Mit diesem Regelsatz können Sie einen Check für SSH für einen Host einrichten"
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
-"This script will be executed using the BASH shell. This information is "
-"available as environment variables:%(variables)s"
-msgstr "Diese Informationen sind als Umgebungsvariablen verfügbar"
+"This script will be executed using the BASH shell. If it still runs after a "
+"minute, the Event Console kills it, together with the processes it started, "
+"unless they run in a process group of their own, e.g. started with "
+"<tt>setsid</tt>. As the Event Console waits for the output of the script, "
+"too, start a lengthy task in the background, with its output redirected, "
+"e.g. <tt>command >/dev/null 2>&1 &</tt>. This information is available as "
+"environment variables:%(variables)s"
+msgstr ""
 
 msgid ""
 "This selection is only relevant if under 'User' -> 'Edit profile' -> 'Mega "
@@ -86506,9 +86737,8 @@ msgstr "Benachrichtigung für eine spezifische Methode auslösen"
 msgid "Triggering events"
 msgstr "Auslösende Ereignisse"
 
-#, fuzzy
 msgid "Trim the profile store to the configured maximum count?"
-msgstr "Untersuche die Änderungshistorie der Konfiguration"
+msgstr "Den Profilspeicher auf die konfigurierte maximale Anzahl reduzieren?"
 
 msgid "Troubleshooting/testing settings"
 msgstr "Fehlerbehebung/Test der Einstellungen"
@@ -87637,6 +87867,10 @@ msgstr "Nicht erreichbar"
 
 msgid "Unreachable hosts"
 msgstr "Nicht erreichbare Hosts"
+
+#, fuzzy
+msgid "Unreadable"
+msgstr "Nicht erreichbar"
 
 msgid "Unreclaimable slab"
 msgstr "Unanforderbare Platte"
@@ -90955,6 +91189,9 @@ msgstr "Serverzertifikat bei Portabfrage validieren"
 msgid "Validate with custom certificate authority (CA)"
 msgstr "Mit der benutzerdefinierten Zertifizierungsstelle (CA) validieren"
 
+msgid "Validity"
+msgstr "Gültigkeit"
+
 msgid "Validity of missing data"
 msgstr "Gültigkeit der fehlenden Daten"
 
@@ -92635,6 +92872,11 @@ msgid ""
 "addresses, configuration excerpts, agent output and Python tracebacks. The "
 "contact address is sent with every report so we can follow up."
 msgstr ""
+"Wenn aktiviert, lädt diese Instanz ihre Absturzberichte einmal täglich an "
+"die konfigurierte URL für Absturzberichte hoch. Absturzberichte können Host-"
+"Namen, IP-Adressen, Auszüge aus der Konfiguration, Agentenausgaben und "
+"Python-Tracebacks enthalten. Die Kontaktadresse wird mit jedem Bericht "
+"übermittelt, damit wir bei Rückfragen auf Sie zukommen können."
 
 msgid ""
 "When forwarding mails from the mailbox to the Event Console, the body of the "
@@ -93490,7 +93732,7 @@ msgstr ""
 "löscht alte Snapshots, wenn ein vorgegebenes Maximum erreicht ist."
 
 msgid "Where object links open."
-msgstr ""
+msgstr "Wo Objekt-Links geöffnet werden."
 
 msgid ""
 "Whether or not Checkmk should ask the user for a comment before activating a "
@@ -94251,6 +94493,15 @@ msgstr ""
 "bearbeiten, die mit einer Kontaktgruppe geteilt werden, der sie angehören. "
 "Diese Berechtigung gewährt den vollen Zugriff auf alle vordefinierten "
 "Bedingungen."
+
+msgid ""
+"Without this, only the calls of the agent itself go through the proxy. With "
+"this, the agent also sets <tt>HTTPS_PROXY</tt> for a <tt>credential_process</"
+"tt> of the AWS config profile. Whether the command uses it is up to the "
+"command: <tt>aws_signing_helper</tt> of IAM Roles Anywhere needs <tt>--with-"
+"proxy</tt>. The variable contains the username and password of the proxy, so "
+"the command can read them."
+msgstr ""
 
 msgid "Words"
 msgstr "Wörter"
@@ -100088,7 +100339,7 @@ msgid "PgDn"
 msgstr ""
 
 msgid "Menu"
-msgstr ""
+msgstr "Menü"
 
 msgid "Copy failed: this might be due to browser security restrictions."
 msgstr ""
@@ -100726,9 +100977,6 @@ msgstr "Ansicht auswählen"
 msgid "Choose from available views"
 msgstr "Wählen Sie aus den verfügbaren Ansichten"
 
-msgid "%{name} (resolved by name)"
-msgstr ""
-
 #, fuzzy
 msgid "Follow dashboard time range"
 msgstr "Zeige Graphzeitraum"
@@ -100912,6 +101160,8 @@ msgstr ""
 
 msgid "Select a key for every label, tag and auxiliary tag filter."
 msgstr ""
+"Wählen Sie für jeden Label-, Merkmals- und Hilfsmerkmalsfilter einen "
+"Schlüssel aus."
 
 #, fuzzy
 msgid "A link carries at most %{count} auxiliary tags."
@@ -101493,9 +101743,8 @@ msgstr ""
 "Legen Sie die erforderlichen Filter fest, welche die Betrachter beim Laden "
 "eingeben müssen."
 
-#, fuzzy
 msgid "Discard your changes?"
-msgstr "Erkannte Änderungen"
+msgstr "Sollen Ihre Änderungen verworfen werden?"
 
 msgid ""
 "You have unsaved changes to this cloned graph. Changing the graph source "
@@ -101724,9 +101973,6 @@ msgstr ""
 
 msgid "Link settings saved."
 msgstr "Link-Einstellungen wurden gespeichert."
-
-msgid "Validity"
-msgstr "Gültigkeit"
 
 msgid "Set expiration date"
 msgstr "Ablaufdatum setzen"
@@ -102275,26 +102521,23 @@ msgstr "Entferne explizite Einstellungen"
 msgid "Remove modification"
 msgstr "Bedingung entfernen"
 
-#, fuzzy
 msgid "Remove site-specific value?"
-msgstr "Prüfe auf spezifische Werte"
+msgstr "Instanzspezifische Werte entfernen?"
 
 #, fuzzy
 msgid "The site will inherit the value from Global settings."
 msgstr "Diese Variable ist auf Werkseinstellung."
 
-#, fuzzy
 msgid "Remove explicit setting?"
-msgstr "Entferne explizite Einstellungen"
+msgstr "Explizite Einstellungen entfernen?"
 
 msgid ""
 "Removing the explicit value will restore the factory setting. The value will "
 "no longer be stored explicitly."
 msgstr ""
 
-#, fuzzy
 msgid "Remove modification?"
-msgstr "Bedingung entfernen"
+msgstr "Änderung entfernen?"
 
 msgid ""
 "The configured value will be discarded and the factory default will be used "
@@ -102813,7 +103056,7 @@ msgid "Expected '%{symbol}'."
 msgstr "Erwarteter Modus"
 
 msgid "The formula is nested too deeply; simplify it."
-msgstr ""
+msgstr "Die Formel ist zu tief verschachtelt; vereinfachen Sie sie."
 
 #, fuzzy
 msgid "Invalid formula: %{detail}"
@@ -102833,7 +103076,7 @@ msgid "Cannot mix RRD data and OpenTelemetry metrics: \"%{id}\"."
 msgstr ""
 
 msgid "Consolidate \"%{id}\" using avg, min, max or sum."
-msgstr ""
+msgstr "Konsolidieren Sie \"%{id}\" mit avg, min, max oder sum."
 
 #, fuzzy
 msgid "Select the metric to transform."
@@ -102865,15 +103108,13 @@ msgstr "Diese Gruppe existiert nicht."
 msgid "Colors are assigned automatically to multi-metric queries."
 msgstr ""
 
-#, fuzzy
 msgid "Delete all metrics?"
-msgstr "Lösche alle Karten"
+msgstr "Alle Metriken löschen?"
 
-#, fuzzy
 msgid "Delete metric %{names}?"
 msgid_plural "Delete metrics %{names}?"
-msgstr[0] "Service-Name auswählen"
-msgstr[1] "Service-Name auswählen"
+msgstr[0] "Metrik %{names} löschen?"
+msgstr[1] "Metriken %{names} löschen?"
 
 msgid "Calculations that use this metric are also deleted:"
 msgid_plural "Calculations that use these metrics are also deleted:"
@@ -103545,6 +103786,8 @@ msgstr ""
 
 msgid "Watch your Setup folders as a tree, each folder in its worst state"
 msgstr ""
+"Ihre Setup-Ordner als Baum beobachten, jeden Ordner in seinem schlechtesten "
+"Zustand"
 
 msgid "Design a slide for a status wall from text, shapes and live states"
 msgstr ""
@@ -103605,10 +103848,11 @@ msgstr[1] "%{n} wurden ausgewählt"
 msgid "Delete %{n} maps"
 msgstr "Lösche alle Karten"
 
-#, fuzzy
 msgid ""
 "The following maps will be permanently removed. This action cannot be undone."
-msgstr "Möchten Sie dieses Relay wirklich löschen?"
+msgstr ""
+"Die folgenden Karten werden endgültig gelöscht. Dieser Vorgang kann nicht "
+"rückgängig gemacht werden."
 
 #, fuzzy
 msgid "… and %{n} more"
@@ -103760,14 +104004,14 @@ msgstr "iCalendar importieren"
 msgid "Yours"
 msgstr "Stunden"
 
-#, fuzzy
 msgid ""
 "Are you sure you want to delete \"%{name}\"? This action cannot be undone."
-msgstr "Möchten Sie dieses Relay wirklich löschen?"
+msgstr ""
+"Möchten Sie „%{name}“ wirklich löschen? Diese Aktion kann nicht rückgängig "
+"gemacht werden."
 
-#, fuzzy
 msgid "Map \"%{name}\" already exists. Overwrite?"
-msgstr "Verwalteter Roboter wurde gelöscht."
+msgstr "Die Karte „%{name}“ existiert bereits. Möchten Sie sie überschreiben?"
 
 #, fuzzy
 msgid "Select all (%{n})"
@@ -103830,7 +104074,7 @@ msgid "Clear selected image"
 msgstr "Ordnerauswahl"
 
 msgid "No images match \"%{q}\""
-msgstr ""
+msgstr "Keine Bilder entsprechen \"%{q}\""
 
 #, fuzzy
 msgid "No images uploaded yet"
@@ -103853,9 +104097,8 @@ msgstr ""
 msgid "Delete failed"
 msgstr "Standard-Profil"
 
-#, fuzzy
 msgid "Delete image \"%{name}\"?"
-msgstr "Service-Name auswählen"
+msgstr "Bild „%{name}“ löschen?"
 
 #, fuzzy
 msgid "Uploaded images"
@@ -104102,7 +104345,7 @@ msgid "Notifications disabled — alerts will not be sent for this host"
 msgstr "Benachrichtigungen sind für %(what)s deaktiviert"
 
 msgid "MUTED"
-msgstr ""
+msgstr "STUMM"
 
 #, fuzzy
 msgid "Exit full screen"
@@ -104293,9 +104536,8 @@ msgstr "Children"
 msgid "Show problems"
 msgstr "Nur Probleme anzeigen"
 
-#, fuzzy
 msgid "Remove all downtimes of %{name}?"
-msgstr "Alle Wartungszeiten entfernen"
+msgstr "Alle Wartungszeiten von %{name} beseitigen?"
 
 #, fuzzy
 msgid "Attempt"
@@ -104896,6 +105138,7 @@ msgstr ""
 
 msgid "Pick a group — the map has nothing to show without one."
 msgstr ""
+"Wählen Sie eine Gruppe aus — ohne Gruppe hat die Karte nichts anzuzeigen."
 
 #, fuzzy
 msgid "Original size"
@@ -105066,9 +105309,8 @@ msgstr ""
 msgid "An error occurred"
 msgstr ", es sind Fehler aufgetreten"
 
-#, fuzzy
 msgid "Delete map \"%{name}\"?"
-msgstr "Host %{name} auswählen"
+msgstr "Karte „%{name}“ löschen?"
 
 #, fuzzy
 msgid "Hover preview:"
@@ -105406,9 +105648,8 @@ msgid ""
 "overwrite them with yours."
 msgstr ""
 
-#, fuzzy
 msgid "Delete %{n} objects?"
-msgstr "Bei ausgewählten Objekten"
+msgstr "%{n} Objekte löschen?"
 
 #, fuzzy
 msgid "theme default"
@@ -105513,7 +105754,7 @@ msgid "Cover"
 msgstr "Wiederherstellen"
 
 msgid "From image library"
-msgstr ""
+msgstr "Aus Bildbibliothek"
 
 #, fuzzy
 msgid "Choose an image…"
@@ -105637,9 +105878,8 @@ msgstr "Einzel-Aggregation"
 msgid "Pick a tool above to start your slide"
 msgstr "Wert des Attributs"
 
-#, fuzzy
 msgid "Replace slide contents?"
-msgstr "Durch Unterstriche ersetzen"
+msgstr "Inhalte der Slide ersetzen?"
 
 msgid ""
 "Applying a template replaces every element on this slide. Undo restores them."
@@ -106020,9 +106260,8 @@ msgstr "Einheit auswählen"
 msgid "Nothing to pick"
 msgstr "Es wurde nichts protokolliert"
 
-#, fuzzy
 msgid "Discard unsaved changes?"
-msgstr "Fremde Änderungen verwerfen"
+msgstr "Ungespeicherte Änderungen verwerfen?"
 
 msgid "You have unsaved changes. Closing now will discard them."
 msgstr ""
@@ -106069,13 +106308,11 @@ msgstr "Text"
 msgid "Checkmk label"
 msgstr "Checkmk-Agent"
 
-#, fuzzy
 msgid "Delete %{type}?"
-msgstr "Lösche %s"
+msgstr "%{type} löschen?"
 
-#, fuzzy
 msgid "Delete %{type} \"%{name}\"?"
-msgstr "Host %{name} auswählen"
+msgstr "%{type} „%{name}“ löschen?"
 
 msgid "Percent"
 msgstr "Prozent"
@@ -106155,6 +106392,15 @@ msgid "Failed to search for custom services."
 msgstr "Name des benutzerdefinierten Service"
 
 #, fuzzy
+msgid "no unit"
+msgstr "Einheit auswählen"
+
+msgid ""
+"The selected services have different units: %{units}. You must select "
+"services with the same units to set levels on them."
+msgstr ""
+
+#, fuzzy
 msgid "Select services"
 msgstr "(Service auswählen)"
 
@@ -106163,9 +106409,8 @@ msgid "Select the custom services the alert applies to by their service name."
 msgstr ""
 "Der Name der Cluster-Ressource, so wie er im Service-Namen angezeigt wird."
 
-#, fuzzy
 msgid "How are service names matched?"
-msgstr "Service-Name anzeigen"
+msgstr "Wie werden Service-Namen abgeglichen?"
 
 msgid ""
 "Exact matching needs the complete service name. A regular expression matches "
@@ -106470,6 +106715,11 @@ msgid ""
 "hosts sharing a value such as a serial number. If your hosts are named "
 "another way, enter the word or the label below."
 msgstr ""
+"Checkmk hat keine Hosts gefunden, die offensichtlich zusammengehören – weder "
+"einen, der wie ein anderer plus ein Wort heißt, zum Beispiel „srv-01-ilo“ "
+"neben „srv-01“, noch Hosts, die sich einen Wert wie eine Seriennummer "
+"teilen. Wenn Ihre Hosts anders benannt sind, geben Sie unten das Wort oder "
+"das Label ein."
 
 msgid ""
 "Checkmk found no host named like another plus a word - \"srv-01-ilo\" next "
@@ -106558,6 +106808,8 @@ msgstr "ID des Wertes"
 
 msgid "Say which value the %{noun} carries to continue."
 msgstr ""
+"Geben Sie an, welchen Wert der Host mit der Rolle %{noun} trägt, um "
+"fortzufahren."
 
 #, fuzzy
 msgid "Additional indicators"
@@ -107789,9 +108041,8 @@ msgstr "Warum kann kein Passwort erstellt werden?"
 msgid "Creating a new password is not available for your account. "
 msgstr "Für Ihr Konto ist die Erstellung eines neuen Passworts nicht möglich. "
 
-#, fuzzy
 msgid "How are passwords created by the quick setup?"
-msgstr "Das Passwort wurde vom Server zurückgewiesen."
+msgstr "Wie werden Passwörter im Quick Setup erstellt?"
 
 msgid "When configured as part of a quick setup, only the selected password "
 msgstr ""
@@ -109898,7 +110149,7 @@ msgid "Remove grouping"
 msgstr "Gruppe entfernen"
 
 msgid "nothing, combine all series into one"
-msgstr ""
+msgstr "nichts, alle Serien zu einer zusammenfassen"
 
 #, fuzzy
 msgid "Grouping function"
@@ -110051,9 +110302,8 @@ msgstr ""
 msgid "Verification code"
 msgstr "Verifizierung"
 
-#, fuzzy
 msgid "Didn't receive it?"
-msgstr "Empfangene Daten"
+msgstr "Nicht erhalten?"
 
 #, fuzzy
 msgid "Continue without verification"
@@ -110074,20 +110324,39 @@ msgstr "EULA"
 msgid "Checkmk group companies"
 msgstr "Checkmk Log-Dateien"
 
+msgid "email"
+msgstr "E-Mail"
+
+#, fuzzy
+msgid "Email %{address} to unsubscribe"
+msgstr "Attribut der E-Mail-Adresse"
+
+#, fuzzy
+msgid "Privacy Notice"
+msgstr "Datenschutzerklärung"
+
 msgid ""
 "By starting the trial, I agree to the %{terms} and the %{eula}. I have\n"
-"    noted the %{privacy_policy}. In exchange for this free trial, I agree "
-"to\n"
-"    receive information about Checkmk products and services (incl. "
-"newsletter,\n"
-"    events and customer surveys) from the %{checkmk_group} by email and "
-"telephone,\n"
-"    and that Checkmk may analyse my interaction with these emails (opens "
-"and\n"
-"    clicks) to improve its marketing. I understand that this consent is the\n"
-"    condition for receiving the trial free of charge. I can unsubscribe at "
-"any time\n"
-"    via email."
+"      noted the %{privacy_policy}."
+msgstr ""
+
+msgid ""
+"In exchange for this free trial, I agree to receive information about\n"
+"      Checkmk products and services (incl. newsletter, events and customer\n"
+"      surveys) from the %{checkmk_group} by email and telephone, and that\n"
+"      Checkmk may analyse my interaction with these emails (opens and "
+"clicks)\n"
+"      to improve its marketing. I understand that this consent is the\n"
+"      condition for receiving the trial free of charge. I can unsubscribe "
+"at\n"
+"      any time via %{email}."
+msgstr ""
+
+msgid ""
+"We check the email address you provide against external sources to\n"
+"      confirm that it belongs to a business contact and to complete the\n"
+"      details of your organisation and role. Further information and your\n"
+"      right to object: %{privacy_notice}."
 msgstr ""
 
 #, fuzzy
@@ -110149,7 +110418,7 @@ msgid "Start a trial"
 msgstr "Startzeit"
 
 msgid "Try all features of Checkmk free for %{days} days."
-msgstr ""
+msgstr "Testen Sie alle Funktionen von Checkmk %{days} Tage lang kostenlos."
 
 #, fuzzy
 msgid "I'm an existing customer"
@@ -110209,7 +110478,7 @@ msgid "Trial verified"
 msgstr "Testzeitraum abgelaufen"
 
 msgid "Unverified trial"
-msgstr ""
+msgstr "Nicht verifizierter Testzeitraum"
 
 msgid ""
 "Trial started without verification. Full features for %{days} days from site "
@@ -110683,11 +110952,69 @@ msgstr "Weiter erkunden"
 msgid "Next steps with Checkmk"
 msgstr "Nächste Schritte in Checkmk"
 
-msgid "Activate Changes"
-msgstr "Änderungen aktivieren"
+msgid "Set up a Checkmk Relay first"
+msgstr ""
 
-msgid "1 Step | Takes 1-3 min"
-msgstr "1 Schritt | Dauert 1-3 Min"
+msgctxt "%{link} is the link text \"Checkmk Relay\""
+msgid "Systems behind a firewall? Set up a %{link} first."
+msgstr ""
+
+msgid "2 Steps | Takes 7-10 min"
+msgstr "2 Schritte | Dauer 7-10 Min"
+
+msgid ""
+"A host is anything you monitor: a server, a network device, a VM, a "
+"container platform,\n"
+"a cloud account or an application. Checkmk finds its services automatically."
+msgstr ""
+
+#, fuzzy
+msgid "Servers & operating systems"
+msgstr "Gast-Betriebssysteme"
+
+#, fuzzy
+msgid "Linux, Windows & Unix servers"
+msgstr "Peers des Windows-Zeitdiensts"
+
+msgid "Solaris, AIX, FreeBSD, macOS, ..."
+msgstr ""
+
+msgid "Network devices and virtualization need a Checkmk Relay"
+msgstr ""
+
+msgid ""
+"Checkmk Cloud cannot reach systems inside your network directly. Set up a "
+"Checkmk Relay in your network first, then add network devices or "
+"virtualization platforms such as Proxmox VE."
+msgstr ""
+
+#, fuzzy
+msgid "Set up Checkmk Relay"
+msgstr "Checkmk-Seitenleiste verwenden"
+
+msgid "Switches, routers, firewalls & other SNMP devices"
+msgstr ""
+
+#, fuzzy
+msgid "Checkmk Relay"
+msgstr "Checkmk-Agent"
+
+#, fuzzy
+msgid "Virtualization & containers"
+msgstr "Wartende Container"
+
+msgid "Cloud platforms"
+msgstr "Cloud-Plattformen"
+
+msgid "Microsoft Azure"
+msgstr "Microsoft Azure"
+
+#, fuzzy
+msgid "Applications & databases"
+msgstr "Applikations-Gateways"
+
+msgid "OpenTelemetry (Beta)"
+msgstr "OpenTelemetry (Beta)"
 
 msgid ""
 "In Checkmk, configuration changes are first saved as pending and do not "
@@ -110724,72 +111051,6 @@ msgstr "Öffnen der Ansicht \"Alle ausstehenden Änderungen\""
 
 msgid "Mark as done"
 msgstr "Als fertig markieren"
-
-msgid "2 Steps | Takes 7-10 min"
-msgstr "2 Schritte | Dauer 7-10 Min"
-
-msgid ""
-"In Checkmk, a host is any standalone physical or virtual system that is "
-"monitored.\n"
-"Each host has services which represent what is monitored, for example CPU "
-"usage, disk space, processes, or hardware sensors.\n"
-"The service discovery of Checkmk automatically detects these services.\n"
-"This allows monitoring to start with minimal configuration effort."
-msgstr ""
-"Jeder Host besitzt eine Reihe von Services, die das darstellen, was Sie "
-"überwachen möchten, beispielsweise die \n"
-"CPU-Auslastung, den Festplattenspeicher, laufende Prozesse oder "
-"Hardwaresensoren. Checkmk macht dies einfach mit der \n"
-"Service-Erkennung, die automatisch relevante Services auf Ihrem Host "
-"erkennt, sodass Sie mit minimalem Einrichtungsaufwand mit der \n"
-"Überwachung beginnen können."
-
-msgid "Set up basic folder structure"
-msgstr "Grundlegende Ordnerstruktur einrichten"
-
-msgid ""
-"In Checkmk, folders are the foundation for organizing hosts and applying "
-"settings consistently.\n"
-"            Creating a folder (or folder structure) before adding your first "
-"host helps you keep things tidy from\n"
-"            the start and makes it easier to manage similar hosts later on "
-"through inheritance. Learn more about\n"
-"            folders and inheritance in the"
-msgstr ""
-"In Checkmk bilden Ordner die Grundlage für die Organisation von Hosts und "
-"die einheitliche Anwendung von Einstellungen.\n"
-"            Das Erstellen eines Ordners (oder einer Ordnerstruktur) vor dem "
-"Hinzufügen Ihres ersten Hosts hilft Ihnen, von Anfang an Ordnung zu halten\n"
-"            und erleichtert später die Verwaltung ähnlicher Hosts durch "
-"Vererbung. Erfahren Sie mehr über\n"
-"            Ordner und Vererbung in der"
-
-msgid "documentation."
-msgstr "Dokumentation."
-
-msgid "On-premises hosts"
-msgstr "On-Premises Hosts"
-
-msgid "Server (Linux, Windows, Solaris, ...)"
-msgstr "Server (Linux, Windows, Solaris, ...)"
-
-msgid "Network devices and SNMP"
-msgstr "Netzwerkgeräte und SNMP"
-
-msgid "Checkmk Relay (objects behind a firewall)"
-msgstr "Checkmk Relay (Objekte hinter einer Firewall)"
-
-msgid "Cloud platforms"
-msgstr "Cloud-Plattformen"
-
-msgid "Microsoft Azure"
-msgstr "Microsoft Azure"
-
-msgid "Application monitoring"
-msgstr "Monitoring der Applikation"
-
-msgid "OpenTelemetry (Beta)"
-msgstr "OpenTelemetry (Beta)"
 
 msgid "Adjust service thresholds"
 msgstr "Service-Schwellenwerte anpassen"
@@ -110924,6 +111185,9 @@ msgstr ""
 "          andernfalls riskieren Sie unnötige Komplexität und Verwirrung. "
 "Erfahren Sie mehr über die Arbeit mit mehreren\n"
 "          Benutzern in der"
+
+msgid "documentation."
+msgstr "Dokumentation."
 
 msgid "Create a contact group"
 msgstr "Eine Kontaktgruppe erstellen"
@@ -111109,6 +111373,147 @@ msgid ""
 msgstr ""
 "Sie können später weiterhin über Hilfe > Checkmk erlernen > Willkommensseite "
 "darauf zugreifen"
+
+#, fuzzy
+msgid "To explore"
+msgstr "Erkundete Themen"
+
+#~ msgid "Deprecated GUI extensions"
+#~ msgstr "Veraltete GUI-Erweiterungen"
+
+#~ msgid "Deprecated legacy GUI extensions"
+#~ msgstr "Veraltete Legacy GUI-Erweiterungen"
+
+#, python-format
+#~ msgid ""
+#~ "GUI extension in %(plugin_name)r uses an API which is marked as "
+#~ "deprecated and may not work anymore due to unknown imports or objects "
+#~ "(file: %(file)s)."
+#~ msgstr ""
+#~ "Die GUI-Erweiterung in %(plugin_name)r verwendet eine API, die als "
+#~ "veraltet gekennzeichnet ist und aufgrund von unbekannten Importen oder "
+#~ "Objekten möglicherweise nicht mehr funktioniert (Datei: %(file)s)."
+
+#, python-format
+#~ msgid ""
+#~ "GUI extensions in <tt>'%(plugins_dir)s'</tt> are marked as 'deprecated' "
+#~ "and will be ignored in future Checkmk versions (official deprecation "
+#~ "timeline not decided yet)."
+#~ msgstr ""
+#~ "GUI-Erweiterungen in <tt>'%(plugins_dir)s'</tt> sind als 'veraltet' "
+#~ "markiert und werden in zukünftigen Checkmk-Versionen ignoriert "
+#~ "(offizieller Zeitplan für die Abschaffung ist noch nicht entschieden)."
+
+#, python-format
+#~ msgid ""
+#~ "Legacy GUI extension in %(plugin_name)r uses an API which is marked as "
+#~ "deprecated and may not work anymore due to unknown imports or objects "
+#~ "(file: %(file)s)."
+#~ msgstr ""
+#~ "Die Legacy GUI-Erweiterung in %(plugin_name)r verwendet eine API, die als "
+#~ "veraltet gekennzeichnet ist und aufgrund unbekannter Importe oder Objekte "
+#~ "möglicherweise nicht mehr funktioniert (Datei: %(file)s)."
+
+#, python-format
+#~ msgid ""
+#~ "Legacy GUI extensions in <tt>'%(web_dir)s'</tt> are marked as "
+#~ "'deprecated' and will be ignored in future Checkmk versions (official "
+#~ "deprecation timeline not decided yet)."
+#~ msgstr ""
+#~ "Legacy GUI-Erweiterungen in <tt>'%(web_dir)s'</tt> sind als 'veraltet' "
+#~ "markiert und werden in zukünftigen Checkmk-Versionen ignoriert "
+#~ "(offizieller Zeitplan für die Abschaffung ist noch nicht entschieden)."
+
+#~ msgid "No GUI extensions using the deprecated API"
+#~ msgstr "Keine GUI-Erweiterungen, welche die veraltete API verwenden"
+
+#~ msgid "No PNP templates using the deprecated API"
+#~ msgstr "Keine PNP-Vorlagen, welche die veraltete API verwenden"
+
+#~ msgid "No legacy GUI extensions using the deprecated API"
+#~ msgstr "Keine Legacy GUI-Erweiterungen, welche die veraltete API verwenden"
+
+#, python-format
+#~ msgid ""
+#~ "PNP template uses an API which was removed in an earlier Checkmk version "
+#~ "(file: %(file)s)."
+#~ msgstr ""
+#~ "Die PNP-Vorlage verwendet eine API, die in einer früheren Checkmk-Version "
+#~ "entfernt wurde (Datei: %(file)s)."
+
+#, python-format
+#~ msgid ""
+#~ "PNP templates in <tt>'%(templates_dir)s'</tt> are marked as 'deprecated' "
+#~ "and will be ignored in future Checkmk versions (official deprecation "
+#~ "timeline not decided yet)."
+#~ msgstr ""
+#~ "PNP-Vorlagen in <tt>'%(templates_dir)s'</tt> sind als 'veraltet' markiert "
+#~ "und werden in zukünftigen Checkmk-Versionen ignoriert (offizieller "
+#~ "Zeitplan für die Abschaffung ist noch nicht entschieden)."
+
+#, fuzzy, python-format
+#~ msgid ""
+#~ "This script will be executed using the BASH shell. This information is "
+#~ "available as environment variables:%(variables)s"
+#~ msgstr "Diese Informationen sind als Umgebungsvariablen verfügbar"
+
+#~ msgid "Activate Changes"
+#~ msgstr "Änderungen aktivieren"
+
+#~ msgid "1 Step | Takes 1-3 min"
+#~ msgstr "1 Schritt | Dauert 1-3 Min"
+
+#~ msgid ""
+#~ "In Checkmk, a host is any standalone physical or virtual system that is "
+#~ "monitored.\n"
+#~ "Each host has services which represent what is monitored, for example CPU "
+#~ "usage, disk space, processes, or hardware sensors.\n"
+#~ "The service discovery of Checkmk automatically detects these services.\n"
+#~ "This allows monitoring to start with minimal configuration effort."
+#~ msgstr ""
+#~ "Jeder Host besitzt eine Reihe von Services, die das darstellen, was Sie "
+#~ "überwachen möchten, beispielsweise die \n"
+#~ "CPU-Auslastung, den Festplattenspeicher, laufende Prozesse oder "
+#~ "Hardwaresensoren. Checkmk macht dies einfach mit der \n"
+#~ "Service-Erkennung, die automatisch relevante Services auf Ihrem Host "
+#~ "erkennt, sodass Sie mit minimalem Einrichtungsaufwand mit der \n"
+#~ "Überwachung beginnen können."
+
+#~ msgid "Set up basic folder structure"
+#~ msgstr "Grundlegende Ordnerstruktur einrichten"
+
+#~ msgid ""
+#~ "In Checkmk, folders are the foundation for organizing hosts and applying "
+#~ "settings consistently.\n"
+#~ "            Creating a folder (or folder structure) before adding your "
+#~ "first host helps you keep things tidy from\n"
+#~ "            the start and makes it easier to manage similar hosts later "
+#~ "on through inheritance. Learn more about\n"
+#~ "            folders and inheritance in the"
+#~ msgstr ""
+#~ "In Checkmk bilden Ordner die Grundlage für die Organisation von Hosts und "
+#~ "die einheitliche Anwendung von Einstellungen.\n"
+#~ "            Das Erstellen eines Ordners (oder einer Ordnerstruktur) vor "
+#~ "dem Hinzufügen Ihres ersten Hosts hilft Ihnen, von Anfang an Ordnung zu "
+#~ "halten\n"
+#~ "            und erleichtert später die Verwaltung ähnlicher Hosts durch "
+#~ "Vererbung. Erfahren Sie mehr über\n"
+#~ "            Ordner und Vererbung in der"
+
+#~ msgid "On-premises hosts"
+#~ msgstr "On-Premises Hosts"
+
+#~ msgid "Server (Linux, Windows, Solaris, ...)"
+#~ msgstr "Server (Linux, Windows, Solaris, ...)"
+
+#~ msgid "Network devices and SNMP"
+#~ msgstr "Netzwerkgeräte und SNMP"
+
+#~ msgid "Checkmk Relay (objects behind a firewall)"
+#~ msgstr "Checkmk Relay (Objekte hinter einer Firewall)"
+
+#~ msgid "Application monitoring"
+#~ msgstr "Monitoring der Applikation"
 
 #~ msgid ""
 #~ "This rule allows you to customize the user and installation directory of "
@@ -111473,9 +111878,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Not saved"
 #~ msgstr "Nicht freigegeben"
-
-#~ msgid "email"
-#~ msgstr "E-Mail"
 
 #, fuzzy
 #~ msgid "Apply to selected maps"
@@ -112879,10 +113281,6 @@ msgstr ""
 #~ msgid "NFSv4.1 write ios"
 #~ msgstr "NFSv4.1 Schreib-E/A"
 
-#, python-format
-#~ msgid "Not before: %(not_before)s - Not after: %(not_after)s"
-#~ msgstr "Nicht vor: %(not_before)s - nicht nach: %(not_after)s"
-
 #~ msgid "Number of available file descriptors"
 #~ msgstr "Anzahl der verfügbaren Dateideskriptoren"
 
@@ -113137,9 +113535,6 @@ msgstr ""
 #, python-format
 #~ msgid "Val. %(i)d"
 #~ msgstr "Wert %(i)d"
-
-#~ msgid "Waiting containers"
-#~ msgstr "Wartende Container"
 
 #~ msgid "hosts are UP but have services in WARNING state"
 #~ msgstr "Hosts sind UP, haben aber Services im Zustand WARNING"
@@ -114603,9 +114998,6 @@ msgstr ""
 
 #~ msgid "Environment variables"
 #~ msgstr "Umgebungsvariablen"
-
-#~ msgid "Extension package files"
-#~ msgstr "Erweiterungspaketdateien"
 
 #, python-format
 #~ msgid "Files in %(directory)s"
@@ -122537,9 +122929,6 @@ msgstr ""
 
 #~ msgid "monitor"
 #~ msgstr "überwachen"
-
-#~ msgid "AWS account name"
-#~ msgstr "AWS Kontoname"
 
 #~ msgid "Parallel plan groups"
 #~ msgstr "Parallele Plangruppen"

@@ -158,6 +158,35 @@ class ProductUsagePayload(SelfDescribingModel, ProductUsageData):
     }
 
 
+class AuditLogActorClass(pydantic.BaseModel):
+    entries: int = pydantic.Field(
+        description="The number of audit log entries of the actor class.",
+        examples=[12],
+    )
+    last_entry_at: int | None = pydantic.Field(
+        description=(
+            "Unix timestamp in seconds of the newest audit log entry of the actor class,"
+            " or null if the actor class has no entries."
+        ),
+        examples=[1767789000],
+    )
+
+
+class AuditLog(pydantic.BaseModel):
+    interactive: AuditLogActorClass = pydantic.Field(
+        description="Entries of the users that log in interactively.",
+        examples=[{"entries": 12, "last_entry_at": 1767789000}],
+    )
+    automation: AuditLogActorClass = pydantic.Field(
+        description="Entries of the automation users that the customer creates.",
+        examples=[{"entries": 0, "last_entry_at": None}],
+    )
+    platform: AuditLogActorClass = pydantic.Field(
+        description="Entries of the Cloud platform and of the site itself.",
+        examples=[{"entries": 41, "last_entry_at": 1767790000}],
+    )
+
+
 class CloudTrialPayload(ProductUsagePayload):
     metadata: typing.ClassVar[Metadata] = {
         "version": "v1",
@@ -186,13 +215,19 @@ class CloudTrialPayload(ProductUsagePayload):
         ),
         examples=[None],
     )
-    audit_log: None = pydantic.Field(
+    audit_log: AuditLog | None = pydantic.Field(
         default=None,
         description=(
             "The number of audit log entries and the timestamp of the newest entry per actor"
             " class: interactive, automation and platform."
         ),
-        examples=[None],
+        examples=[
+            {
+                "interactive": {"entries": 12, "last_entry_at": 1767789000},
+                "automation": {"entries": 0, "last_entry_at": None},
+                "platform": {"entries": 41, "last_entry_at": 1767790000},
+            }
+        ],
     )
     count_hosts_default_services_only: None = pydantic.Field(
         default=None,

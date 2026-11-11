@@ -6,10 +6,13 @@
 
 import pprint
 
+import pytest
+
 import cmk.utils.log
 import cmk.utils.paths
 from cmk.ccc.hostaddress import HostAddress
 from cmk.piggyback import backend
+from cmk.piggyback.backend._storage import _messages_for_removed_source
 
 _TEST_HOST_NAME = HostAddress("test-host")
 
@@ -240,3 +243,10 @@ class TestPiggybackMetaData:
             last_contact=None,
         )
         assert backend.PiggybackMetaData.deserialize(pmd.serialize()) == pmd
+
+
+@pytest.mark.xfail(strict=True, raises=ValueError, reason="crash group 4356: invalid host address")
+def test_removed_file_without_a_host_name_yields_no_messages() -> None:
+    messages = _messages_for_removed_source(".source.newab12cd", cmk.utils.paths.omd_root)
+
+    assert not list(messages)

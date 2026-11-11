@@ -16,15 +16,17 @@ from cmk.ccc.user import UserId
 from cmk.gui import visuals
 from cmk.gui.config import Config, RequestCacheConfig
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
-from cmk.gui.graphing import resolve_default_time_range_seconds
+from cmk.gui.graphing import global_time_picker_props, resolve_default_time_range_seconds
 from cmk.gui.graphing.openapi.models import ApiDiscoveredGraph
 from cmk.gui.htmllib.html import html
 from cmk.gui.logged_in import user
 from cmk.gui.pages import PageContext, PageResult
 from cmk.gui.token_auth import AuthToken, DashboardToken, TokenId
 from cmk.gui.type_defs import VisualContext
+from cmk.gui.utils.graph_refresh import GRAPH_REFRESH_INTERVALS_SECONDS
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.utils.temperature_unit import TemperatureUnit
+from cmk.shared_typing.global_time_picker import GlobalTimePickerProps, GlobalTimePickerRefresh
 from cmk.web.utils.request_cache import RequestCache
 
 from .api import convert_internal_relative_dashboard_to_api_model_dict, DashboardConstants
@@ -63,6 +65,24 @@ class SharedDashboardPageComponents:
     def default_time_range(config: Config) -> int:
         """The site's default graph time range, the same for every viewer of a token."""
         return resolve_default_time_range_seconds(config.graph_timeranges, None)
+
+    @staticmethod
+    def global_time_picker(config: Config) -> GlobalTimePickerProps:
+        """The global time picker and refresh control of the shared page.
+
+        Built from the site configuration only: the page has no logged-in viewer, so no user
+        preference (time range, refresh interval, start of week) may leak into it."""
+        return global_time_picker_props(
+            config.graph_timeranges,
+            SharedDashboardPageComponents.default_time_range(config),
+            first_day_of_week=None,
+            refresh=GlobalTimePickerRefresh(
+                interval_seconds=None,
+                interval_choices_seconds=list(GRAPH_REFRESH_INTERVALS_SECONDS),
+                starts_live=True,
+                reloads_page_content=False,
+            ),
+        )
 
     @staticmethod
     def html_section(title: str, page_properties: dict[str, Any], config: Config) -> None:
@@ -234,6 +254,6 @@ def page_shared_dashboard(
         "dashboard_constants": DashboardConstants.dict_output(),
         "url_params": {"ifid": ctx.request.get_ascii_input("ifid")},
         "token_value": token_id,
-        "default_time_range": SharedDashboardPageComponents.default_time_range(ctx.config),
+        "global_time_picker": asdict(SharedDashboardPageComponents.global_time_picker(ctx.config)),
     }
     SharedDashboardPageComponents.html_section(title, page_properties, ctx.config)

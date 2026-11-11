@@ -98,5 +98,5 @@ export interface SharedDashboardPageProperties {
   dashboard_constants: DashboardConstants
   url_params: FilterHTTPVars
   token_value: string
-  default_time_range: number
+  global_time_picker: GlobalTimePickerProps
 }

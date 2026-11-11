@@ -3,13 +3,38 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { CalendarDateTime, toZoned } from '@internationalized/date'
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
+import type { GlobalTimePickerProps } from 'cmk-shared-typing/typescript/global_time_picker'
+import type { DateTimeRange } from 'cmk-ui-library/components/date-time/types.ts'
 import { describe, expect, it } from 'vitest'
 
 import SharedDashboardMenuHeader from '@/dashboard/components/DashboardMenuHeader/SharedDashboardMenuHeader.vue'
 
+const TZ = 'Europe/Berlin'
+
+const testRange: DateTimeRange = (() => {
+  const to = toZoned(new CalendarDateTime(2026, 3, 10, 12, 0), TZ, 'compatible')
+  return { from: to.subtract({ hours: 4 }), to }
+})()
+
+const testGlobalTimePicker: GlobalTimePickerProps = {
+  custom_time_ranges: [{ title: 'Last 1 hour', total_seconds: 3600 }],
+  default_time_range: 4 * 3600,
+  server_time_zone: TZ,
+  first_day_of_week: null,
+  refresh: {
+    interval_seconds: null,
+    interval_choices_seconds: [30, 60, 90],
+    starts_live: true,
+    reloads_page_content: false
+  }
+}
+
 function renderSharedHeader(props: { dashboardTitle: string }) {
-  return render(SharedDashboardMenuHeader, { props })
+  return render(SharedDashboardMenuHeader, {
+    props: { ...props, globalTimePicker: testGlobalTimePicker, range: testRange }
+  })
 }
 
 describe('SharedDashboardMenuHeader', () => {

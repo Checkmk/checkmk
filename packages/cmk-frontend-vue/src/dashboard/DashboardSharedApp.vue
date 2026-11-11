@@ -12,6 +12,7 @@ import DashboardComponent from '@/dashboard/components/DashboardComponent.vue'
 import SharedDashboardMenuHeader from '@/dashboard/components/DashboardMenuHeader/SharedDashboardMenuHeader.vue'
 import { useProvideCmkToken } from '@/dashboard/composables/useCmkToken'
 import { useDashboardFilters } from '@/dashboard/composables/useDashboardFilters.ts'
+import { useDashboardTimeControl } from '@/dashboard/composables/useDashboardTimeControl.ts'
 import { useDashboardWidgets } from '@/dashboard/composables/useDashboardWidgets.ts'
 import { useProvideIsPublicDashboard } from '@/dashboard/composables/useIsPublicDashboard'
 import { useProvideDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
@@ -21,8 +22,6 @@ import { type DashboardKey, DashboardLayout } from '@/dashboard/types/dashboard.
 import { urlParamsKey } from '@/dashboard/types/injectionKeys.ts'
 import type { SharedDashboardPageProperties } from '@/dashboard/types/page.ts'
 import { createDashboardModel, setupTokenValidityCheck } from '@/dashboard/utils.ts'
-import { useGlobalRefresh } from '@/graphing/GlobalTimePicker/globalTimeState.ts'
-import { useGlobalTimePickerRange } from '@/graphing/GlobalTimePicker/useGlobalTimePickerRange.ts'
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 const { CmkErrorBoundary } = useCmkErrorBoundary()
@@ -61,14 +60,17 @@ const dashboardFilters = useDashboardFilters(computed(() => sharedDashboard.filt
 const dashboardWidgets = useDashboardWidgets(computed(() => sharedDashboard.content.widgets))
 useProvideMissingRuntimeFiltersAction(dashboardFilters.areAllMandatoryFiltersApplied, () => {})
 
-const { range } = useGlobalTimePickerRange(props.default_time_range)
-const { refreshTick } = useGlobalRefresh()
+const { range, refreshTick, updateTimeRange } = useDashboardTimeControl(props.global_time_picker)
 </script>
 
 <template>
   <CmkErrorBoundary>
     <div>
-      <SharedDashboardMenuHeader :dashboard-title="dashboard.title" />
+      <SharedDashboardMenuHeader
+        v-model:range="range"
+        :dashboard-title="dashboard.title"
+        :global-time-picker="global_time_picker"
+      />
     </div>
     <DashboardComponent
       v-model:dashboard="sharedDashboard"
@@ -80,6 +82,7 @@ const { refreshTick } = useGlobalRefresh()
       :is-editing="false"
       :tick="refreshTick"
       :range="range"
+      @widget:update-time-range="(_widgetId, newRange) => updateTimeRange(newRange)"
     />
   </CmkErrorBoundary>
 </template>

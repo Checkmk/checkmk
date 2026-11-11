@@ -4,21 +4,29 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import type { GlobalTimePickerProps } from 'cmk-shared-typing/typescript/global_time_picker.ts'
 import CmkIcon from 'cmk-ui-library/components/CmkIcon'
 import CmkMultitoneIcon from 'cmk-ui-library/components/CmkIcon/CmkMultitoneIcon.vue'
 import CmkLabel from 'cmk-ui-library/components/CmkLabel.vue'
+import type { DateTimeRange } from 'cmk-ui-library/components/date-time/types.ts'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
 import { renderDate, renderTimeOfDay } from 'cmk-ui-library/lib/renderTime'
 import useClickOutside from 'cmk-ui-library/lib/useClickOutside'
 import { onMounted, onUnmounted, ref } from 'vue'
 
+import DashboardRefreshControl from '@/dashboard/components/DashboardRefreshControl.vue'
+import GlobalTimePicker from '@/graphing/GlobalTimePicker/GlobalTimePicker.vue'
+
 interface Props {
   dashboardTitle: string
+  globalTimePicker: GlobalTimePickerProps
 }
 
 const { _t } = usei18n()
 
-defineProps<Props>()
+const props = defineProps<Props>()
+
+const range = defineModel<DateTimeRange>('range', { required: true })
 
 const vClickOutside = useClickOutside()
 
@@ -65,13 +73,30 @@ onUnmounted(() => {
 
 <template>
   <div class="db-shared-dashboard-menu-header__sections">
-    <div class="db-shared-dashboard-menu-header__left-section">
+    <div class="db-shared-dashboard-menu-header__title-section">
       <div class="db-shared-dashboard-menu-header__dashboard-title">
         <CmkLabel variant="title">{{ dashboardTitle }}</CmkLabel>
       </div>
     </div>
 
-    <div class="db-shared-dashboard-menu-header__right-section">
+    <div class="db-shared-dashboard-menu-header__time-range-section">
+      <GlobalTimePicker
+        v-model="range"
+        class="db-shared-dashboard-menu-header__time-picker"
+        :custom-time-ranges="props.globalTimePicker.custom_time_ranges"
+        :server-time-zone="props.globalTimePicker.server_time_zone"
+        :first-day-of-week="props.globalTimePicker.first_day_of_week"
+        variant="condensed"
+      />
+    </div>
+    <div class="db-shared-dashboard-menu-header__refresh-control-section">
+      <DashboardRefreshControl
+        :default-time-range="props.globalTimePicker.default_time_range"
+        :interval-choices-seconds="props.globalTimePicker.refresh.interval_choices_seconds"
+      />
+    </div>
+
+    <div class="db-shared-dashboard-menu-header__menu-section">
       <div v-if="showDateTime" class="db-shared-dashboard-menu-header__utc-time">
         <span class="db-shared-dashboard-menu-header__utc-date">{{ currentUtcDate }}</span>
         <span class="db-shared-dashboard-menu-header__utc-time-only"
@@ -137,13 +162,34 @@ onUnmounted(() => {
   padding: var(--dimension-4);
   font-size: var(--font-size-large);
   min-height: 36px;
+  flex-wrap: wrap;
+  gap: var(--dimension-4);
 }
 
-.db-shared-dashboard-menu-header__left-section {
+.db-shared-dashboard-menu-header__title-section {
   display: flex;
   align-items: center;
   gap: var(--dimension-4);
-  flex: 1;
+  flex: 0 1 auto;
+}
+
+.db-shared-dashboard-menu-header__time-range-section {
+  display: flex;
+  align-items: center;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.db-shared-dashboard-menu-header__time-picker {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.db-shared-dashboard-menu-header__refresh-control-section {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  margin-left: auto;
 }
 
 .db-shared-dashboard-menu-header__dashboard-title {
@@ -159,6 +205,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: var(--dimension-2);
+  min-width: 155px;
 }
 
 .db-shared-dashboard-menu-header__utc-date {
@@ -199,12 +246,12 @@ onUnmounted(() => {
   flex: 1;
 }
 
-.db-shared-dashboard-menu-header__right-section {
+.db-shared-dashboard-menu-header__menu-section {
   display: flex;
   align-items: center;
   gap: var(--dimension-5);
-  flex: 1;
-  justify-content: flex-end;
+  flex: 0 0 auto;
+  margin-left: var(--dimension-8);
 }
 
 .db-shared-dashboard-menu-header__icon-dropdown-menu {

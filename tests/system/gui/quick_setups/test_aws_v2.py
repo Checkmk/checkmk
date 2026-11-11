@@ -97,6 +97,7 @@ def test_minimal_configuration(
     aws_v2_qs_config_page.specify_stage_one_details(
         access_key="my_aws_access_key",
         access_password="my_aws_access_password",
+        site_name=test_site.id,
     )
 
     aws_v2_qs_config_page.validate_button_text_and_goto_next_qs_stage(current_stage=1)
@@ -105,7 +106,6 @@ def test_minimal_configuration(
     aws_v2_qs_config_page.specify_stage_two_details(
         host_name,
         regions_to_monitor=["ap-south-1", "eu-central-1"],
-        site_name=test_site.id,
     )
 
     aws_v2_qs_config_page.validate_button_text_and_goto_next_qs_stage(current_stage=2)

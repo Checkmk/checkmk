@@ -12,8 +12,6 @@ from collections.abc import Mapping, Sequence
 from dataclasses import replace
 
 from cmk.gui.form_specs.unstable.two_column_dictionary import TwoColumnDictionary
-from cmk.gui.htmllib.generator import HTMLWriter
-from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.quick_setup.v0_unstable.definitions import QSSiteSelection
 from cmk.gui.quick_setup.v0_unstable.predefined import (
@@ -58,7 +56,6 @@ from cmk.plugins.aws_v2.rulesets import (  # astrein: disable=module-layers
 from cmk.ruleset_matcher.definition import RuleGroup
 from cmk.rulesets.v1 import Message, Title
 from cmk.rulesets.v1.form_specs import DictElement, Dictionary, validators
-from cmk.web.utils.urls import makeuri_contextless
 
 RULESET_NAME = RuleGroup.SpecialAgents("aws_v2")
 PREV_BUTTON_LABEL = _("Back")
@@ -66,8 +63,6 @@ MAX_REGIONS = 5
 
 
 def _access_options() -> Mapping[str, DictElement[object]]:
-    # The rule selects the authentication in "auth". The Quick Setup only offers the access
-    # key, see _rule_value().
     return {
         key: element for key, element in aws.configuration_authentication().items() if key != "auth"
     }
@@ -108,8 +103,7 @@ def quick_setup_formspec() -> Dictionary:
     """All fields of the Quick Setup, as the stages put them on the first level"""
     return Dictionary(
         elements={
-            **aws.configuration_access_key(),
-            **_access_options(),
+            **aws.configuration_authentication(),
             **_regions(),
             **aws.configuration_services(),
             **_other_options(),
@@ -121,48 +115,53 @@ def prepare_aws() -> QuickSetupStage:
     return QuickSetupStage(
         title=_("Prepare AWS for Checkmk"),
         configure_components=[
+            Text(text=_("Select how Checkmk logs in to AWS, and prepare AWS for it:")),
             ListOfWidgets(
                 items=[
-                    Text(text=_("Go to AWS root account > Services > IAM.")),
                     Text(
                         text=_(
-                            'Click "Add user" under Users, select "Access key - Programmatic '
-                            'access", and attach the "ReadOnlyAccess" policy.',
+                            'Access key: in AWS IAM, create a user with the "ReadOnlyAccess" '
+                            "policy and an access key. Enter the access key ID and the secret "
+                            "access key below."
                         ),
                         tooltip=_(
                             "Since this is a ReadOnlyAccess, we won't create any resources on "
                             "your AWS account."
                         ),
                     ),
-                    Text(text=_("Note down the generated access key ID and secret access key.")),
                     Text(
                         text=_(
-                            "Return to Checkmk, define a unique configuration name, and use the "
-                            "access key ID and secret access key below."
+                            "Default AWS credentials: Checkmk stores no secret. The agent uses "
+                            "the default credential chain of the AWS SDK on the selected site, "
+                            "for example the instance profile when Checkmk runs on EC2. Attach "
+                            'the "ReadOnlyAccess" policy to this identity.'
+                        )
+                    ),
+                    Text(
+                        text=_(
+                            "Named profile: Checkmk stores no secret. Add the profile to "
+                            "~/.aws/config of the site user on the selected site. Attach the "
+                            '"ReadOnlyAccess" policy to the identity of the profile.'
                         )
                     ),
                 ],
-                list_type="ordered",
+                list_type="bullet",
             ),
             NoteText(
-                text=_("Note: To authenticate with an IAM role, please use the %(link)s.")
-                % {
-                    "link": HTMLWriter.render_a(
-                        _("advanced configuration"),
-                        href=makeuri_contextless(
-                            request,
-                            [("mode", "edit_ruleset"), ("varname", RULESET_NAME)],
-                            "wato.py",
-                        ),
-                    )
-                }
+                text=_(
+                    'Note: To monitor through an IAM role, select "Explicit list of account IDs" '
+                    'under "Accounts", and enter the account and the name of the role.'
+                )
             ),
             widgets.unique_id_formspec_wrapper(
                 title=Title("Configuration name"), prefill_template="aws_config"
             ),
+            widgets.site_formspec_wrapper(),
             FormSpecWrapper(
                 id=FormSpecId("credentials"),
-                form_spec=TwoColumnDictionary(elements=aws.configuration_access_key()),
+                form_spec=TwoColumnDictionary(
+                    elements={"auth": aws.configuration_authentication()["auth"]}
+                ),
             ),
             Collapsible(
                 title=_("Other options"),
@@ -187,8 +186,8 @@ def prepare_aws() -> QuickSetupStage:
                         parameter_form=quick_setup_formspec(),
                         custom_collect_params=_collect_params_for_connection_test,
                         error_message=_(
-                            "Could not access your AWS account. Please check your access and "
-                            "secret key and try again."
+                            "Could not access your AWS account. Please check the authentication "
+                            "and the accounts and try again."
                         ),
                     ),
                 ],
@@ -214,7 +213,6 @@ def configure_host_and_regions() -> QuickSetupStage:
                 id=FormSpecId("configure_regions"),
                 form_spec=TwoColumnDictionary(elements=_regions()),
             ),
-            widgets.site_formspec_wrapper(),
         ],
         actions=[
             QuickSetupStageAction(
@@ -288,7 +286,7 @@ def recap_found_services(
         rulespec_name=RULESET_NAME,
         all_stages_form_data=parsed_data,
         parameter_form=quick_setup_formspec(),
-        collect_params=collect_params,
+        collect_params=collect_params_with_defaults_from_form_data,
         progress_logger=progress_logger,
         site_configs=ctx.site_configs,
         debug=ctx.debug,
@@ -353,11 +351,10 @@ def action(
 ) -> str:
     match mode:
         case QuickSetupActionMode.SAVE:
-            return complete.create_and_save_special_agent_bundle_custom_collect_params(
+            return complete.create_and_save_special_agent_bundle(
                 special_agent_name="aws_v2",
                 parameter_form=quick_setup_formspec(),
                 all_stages_form_data=all_stages_form_data,
-                custom_collect_params=collect_params,
                 progress_logger=progress_logger,
                 tree=ctx.tree,
             )
@@ -367,33 +364,14 @@ def action(
             raise ValueError(f"Unknown mode {mode}")
 
 
-def _rule_value(params: Mapping[str, object]) -> Mapping[str, object]:
-    # The Quick Setup keeps the access key on the first level, where the Quick Setup handles
-    # the password. The rule expects it as the selected authentication.
-    access_key_fields = aws.configuration_access_key()
-    return {
-        "auth": (
-            "access_key",
-            {**{key: params[key] for key in access_key_fields}, "accounts": ("single", None)},
-        ),
-        **{key: value for key, value in params.items() if key not in access_key_fields},
-    }
-
-
-def collect_params(
-    all_stages_form_data: ParsedFormData, parameter_form: Dictionary
-) -> Mapping[str, object]:
-    """Return the value of the rule that the Quick Setup creates"""
-    return _rule_value(
-        collect_params_with_defaults_from_form_data(all_stages_form_data, parameter_form)
-    )
-
-
 def _collect_params_for_connection_test(
     all_stages_form_data: ParsedFormData, parameter_form: Dictionary
 ) -> Mapping[str, object]:
     # The agent option "--connection-test" only tests the access to AWS.
-    return {**collect_params(all_stages_form_data, parameter_form), "connection_test": True}
+    return {
+        **collect_params_with_defaults_from_form_data(all_stages_form_data, parameter_form),
+        "connection_test": True,
+    }
 
 
 quick_setup_aws_v2 = QuickSetup(

@@ -13,8 +13,8 @@ from cmk.gui.form_specs import DEFAULT_VALUE, get_visitor, RawDiskData, VisitorO
 from cmk.gui.logged_in import user
 from cmk.gui.quick_setup.config_setups.aws_v2.stages import (
     action,
-    collect_params,
     configure_host_and_regions,
+    prepare_aws,
     quick_setup_aws_v2,
     quick_setup_formspec,
 )
@@ -26,7 +26,10 @@ from cmk.gui.quick_setup.v0_unstable.definitions import (
     UniqueBundleIDStr,
     UniqueFormSpecIDStr,
 )
-from cmk.gui.quick_setup.v0_unstable.predefined import build_formspec_map_from_stages
+from cmk.gui.quick_setup.v0_unstable.predefined import (
+    build_formspec_map_from_stages,
+    collect_params_with_defaults_from_form_data,
+)
 from cmk.gui.quick_setup.v0_unstable.setups import QuickSetupActionMode, QuickSetupContext
 from cmk.gui.quick_setup.v0_unstable.type_defs import ParsedFormData
 from cmk.gui.quick_setup.v0_unstable.widgets import Collapsible, FormSpecId, FormSpecWrapper, Widget
@@ -41,7 +44,16 @@ _SECRET = ("cmk_postprocessed", "explicit_password", (_PASSWORD_ID, "my_secret_a
 
 _FORM_DATA: ParsedFormData = {
     FormSpecId(UniqueFormSpecIDStr): {UniqueBundleIDStr: "my_aws_account"},
-    FormSpecId("credentials"): {"access_key_id": "my_access_key", "secret_access_key": _SECRET},
+    FormSpecId("credentials"): {
+        "auth": (
+            "access_key",
+            {
+                "access_key_id": "my_access_key",
+                "secret_access_key": _SECRET,
+                "accounts": ("single", None),
+            },
+        )
+    },
     FormSpecId("host_data"): {QSHostName: "aws_host", QSHostPath: "aws_folder"},
     FormSpecId("configure_regions"): {"regions": ["eu_central_1"]},
     FormSpecId("configure_services_to_monitor"): {
@@ -84,7 +96,7 @@ def _stage_widgets() -> Iterator[Widget]:
 
 
 @pytest.mark.usefixtures("with_admin_login")
-def test_quick_setup_offers_the_fields_of_the_rule_with_the_access_key_as_authentication() -> None:
+def test_quick_setup_offers_the_fields_of_the_rule() -> None:
     offered_fields = {
         name: element
         for wrapper in _form_specs(list(_stage_widgets()))
@@ -94,15 +106,16 @@ def test_quick_setup_offers_the_fields_of_the_rule_with_the_access_key_as_authen
     }
 
     assert _schemas(offered_fields) == _schemas(
-        {
-            **{
-                name: element
-                for name, element in aws.formspec().elements.items()
-                if name not in {"auth", "regions"}
-            },
-            **aws.configuration_access_key(),
-        }
+        {name: element for name, element in aws.formspec().elements.items() if name != "regions"}
     )
+
+
+@pytest.mark.usefixtures("with_admin_login")
+def test_site_is_selected_before_the_connection_test() -> None:
+    # The agent reads the default credentials and the named profile on the site that runs it.
+    first_stage_forms = build_formspec_map_from_stages([prepare_aws()], _ctx())
+
+    assert FormSpecId("site") in first_stage_forms
 
 
 @pytest.mark.parametrize(
@@ -128,22 +141,8 @@ def test_quick_setup_limits_the_regions_to_five(
 
 
 @pytest.mark.usefixtures("with_admin_login")
-def test_access_key_becomes_the_authentication_of_the_rule() -> None:
-    rule_value = collect_params(_FORM_DATA, quick_setup_formspec())
-
-    assert rule_value["auth"] == (
-        "access_key",
-        {
-            "access_key_id": "my_access_key",
-            "secret_access_key": _SECRET,
-            "accounts": ("single", None),
-        },
-    )
-
-
-@pytest.mark.usefixtures("with_admin_login")
 def test_quick_setup_creates_a_valid_rule_value() -> None:
-    rule_value = collect_params(_FORM_DATA, quick_setup_formspec())
+    rule_value = collect_params_with_defaults_from_form_data(_FORM_DATA, quick_setup_formspec())
 
     errors = get_visitor(
         aws.formspec(), VisitorOptions(migrate_values=False, mask_values=False)

@@ -397,18 +397,20 @@ class AWSv2AddNewConfiguration(BaseQuickSetupAddNewConfiguration):
         self.quick_setup_area.get_by_role("combobox", name=dropdown_name, exact=True).click()
         self.quick_setup_area.get_by_role("option", name=option, exact=True).click()
 
-    def specify_stage_one_details(self, access_key: str, access_password: str) -> None:
+    def specify_stage_one_details(
+        self, access_key: str, access_password: str, site_name: str
+    ) -> None:
         logger.info("Initialize stage-1 details.")
         main_area = self.main_area.locator()
         main_area.get_by_role("textbox", name="Configuration name").fill(self.configuration_name)
+        main_area.get_by_role("combobox", name="Site selection").click()
+        main_area.get_by_role("option", name=f"{site_name} - Local site").click()
         self._get_row("The access key ID for your AWS account").get_by_role("textbox").fill(
             access_key
         )
         self.fill_explicit_password(access_password)
 
-    def specify_stage_two_details(
-        self, host_name: str, regions_to_monitor: list[str], site_name: str
-    ) -> None:
+    def specify_stage_two_details(self, host_name: str, regions_to_monitor: list[str]) -> None:
         logger.info("Initialize stage-2 details.")
         main_area = self.main_area.locator()
         main_area.get_by_role("textbox", name="Host name").fill(host_name)
@@ -423,9 +425,6 @@ class AWSv2AddNewConfiguration(BaseQuickSetupAddNewConfiguration):
                 "option", name=region
             ).click()
             regions.get_by_role("button", name="Add >").click()
-
-        main_area.get_by_role("combobox", name="Site selection").click()
-        main_area.get_by_role("option", name=f"{site_name} - Local site").click()
 
     def specify_stage_three_details(
         self, global_services: dict[str, str], regional_services: dict[str, str]

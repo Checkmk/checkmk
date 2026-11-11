@@ -313,24 +313,24 @@ Map cascadeJobSpecs(Map args) {
         start_delay: 0,
     ] };
 
+    /// No medium-chain test needs tests/qa-test-data; skip the checkout to save
+    /// the ~95s/job it costs to fetch the submodule. Does not change what the
+    /// job does, so it belongs in build_params_no_check, not build_params: a
+    /// cached build from before this param existed is still a valid match.
+    def skip_qa_submodule = [CIPARAM_SKIP_QA_SUBMODULE: true];
+
     def multisite_job = "test-system-multisite-${args.edition}".toString();
     /// limiting reruns; duration of multisite tests is approaching thresholds ~ 35 mins.
     /// 10 ~ 10% of total multisite test-cases
     specs["${multisite_job} [marker]".toString()] = markerSpec(
         multisite_job, ["--max-suite-reruns=10"]
-    );
+    ) + [build_params_no_check: skip_qa_submodule];
 
     def singlesite_job = "test-system-singlesite-${args.edition}".toString();
 
     /// Sharding off: exactly what this cascade did before, one job on the marker.
     /// The switch is the SHARD_COUNT job parameter, so turning sharding on or off
     /// is a checkmk_ci change and needs no change here and no rebase of open chains.
-
-    /// No medium-chain test needs tests/qa-test-data; skip the checkout to save
-    /// the ~95s/shard it costs to fetch the submodule. Does not change what the
-    /// job does, so it belongs in build_params_no_check, not build_params: a
-    /// cached build from before this param existed is still a valid match.
-    def skip_qa_submodule = [CIPARAM_SKIP_QA_SUBMODULE: true];
 
     if (args.singlesite_shards < 2) {
         /// limiting reruns; 50 ~ 10% of total singlesite test-cases

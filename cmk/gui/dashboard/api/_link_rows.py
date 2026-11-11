@@ -15,10 +15,10 @@ from cmk.gui.visuals.filter.drilldowns import RowValues
 
 
 class LinkedService(Protocol):
-    """A service whose contextual links read its row."""
+    """A service whose contextual links read its row; without a site, it is looked up on all."""
 
     @property
-    def site_id(self) -> SiteId: ...
+    def site_id(self) -> SiteId | None: ...
 
     @property
     def host_name(self) -> HostName: ...
@@ -75,8 +75,7 @@ def link_service_rows(
 def _rows(
     services: Sequence[LinkedService], query: str, columns: Sequence[ColumnName]
 ) -> list[RowValues]:
-    with (
-        sites.only_sites(sorted({service.site_id for service in services})),
-        sites.prepend_site(),
-    ):
+    site_ids = {service.site_id for service in services}
+    only_sites = None if None in site_ids else sorted(s for s in site_ids if s is not None)
+    with sites.only_sites(only_sites), sites.prepend_site():
         return [dict(zip(["site", *columns], values)) for values in sites.live().query(query)]

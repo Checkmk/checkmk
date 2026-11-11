@@ -55,6 +55,7 @@ type WidgetComputeAction = Literal[
     "compute-state-summary",
     "compute-single-metric",
     "compute-monitoring-table",
+    "compute-graph-links",
 ]
 
 

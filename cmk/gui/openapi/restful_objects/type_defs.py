@@ -173,6 +173,7 @@ CmkEndpointName = Literal[
     "cmk/compute_dashboard_widget_titles",
     "cmk/compute_monitoring_table",
     "cmk/compute_gauge",
+    "cmk/compute_graph_links",
     "cmk/compute_inventory",
     "cmk/compute_single_metric",
     "cmk/compute_site_overview",

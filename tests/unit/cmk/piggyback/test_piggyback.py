@@ -5,14 +5,12 @@
 
 
 import pprint
-
-import pytest
+import threading
 
 import cmk.utils.log
 import cmk.utils.paths
 from cmk.ccc.hostaddress import HostAddress
 from cmk.piggyback import backend
-from cmk.piggyback.backend._storage import _messages_for_removed_source
 
 _TEST_HOST_NAME = HostAddress("test-host")
 
@@ -245,8 +243,39 @@ class TestPiggybackMetaData:
         assert backend.PiggybackMetaData.deserialize(pmd.serialize()) == pmd
 
 
-@pytest.mark.xfail(strict=True, raises=ValueError, reason="crash group 4356: invalid host address")
-def test_removed_file_without_a_host_name_yields_no_messages() -> None:
-    messages = _messages_for_removed_source(".source.newab12cd", cmk.utils.paths.omd_root)
+def _remove_status_files_until(stopped: threading.Event, source: HostAddress) -> None:
+    omd_root = cmk.utils.paths.omd_root
+    stray_file = omd_root / "tmp/check_mk/piggyback_sources" / f".{source}.newab12cd"
+    while not stopped.is_set():
+        stray_file.touch()
+        stray_file.unlink()
+        backend.store_piggyback_raw_data(
+            source, {}, message_timestamp=_REF_TIME, contact_timestamp=_REF_TIME, omd_root=omd_root
+        )
+        backend.remove_source_status_file(source, omd_root)
+        stopped.wait(0.01)
 
-    assert not list(messages)
+
+def test_watching_ignores_a_removed_file_without_a_host_name() -> None:
+    source = HostAddress("source")
+    backend.store_piggyback_raw_data(
+        source,
+        {_TEST_HOST_NAME: _PAYLOAD},
+        message_timestamp=_REF_TIME,
+        contact_timestamp=_REF_TIME,
+        omd_root=cmk.utils.paths.omd_root,
+    )
+    messages = backend.watch_new_messages(cmk.utils.paths.omd_root)
+    stopped = threading.Event()
+    remover = threading.Thread(target=_remove_status_files_until, args=(stopped, source))
+    remover.start()
+    try:
+        received = [next(messages), next(messages)]
+    finally:
+        stopped.set()
+        remover.join()
+
+    assert [(m.meta.source, m.meta.piggybacked) for m in received] == [
+        (source, _TEST_HOST_NAME),
+        (source, _TEST_HOST_NAME),
+    ]

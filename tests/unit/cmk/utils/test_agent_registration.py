@@ -326,7 +326,7 @@ def test_uuid_link_manager_writes_the_registration_file_that_the_agent_receiver_
 
 
 def test_uuid_link_manager_removes_the_record_when_it_unlinks_the_host() -> None:
-    """CMK-39504 AC5"""
+    """CMK-39504 AC5, TC-AU-109"""
     uuid = UUID("59e631e9-de89-40d6-9662-ba54569a24fb")
     _uuid_link_manager().link_registration(
         HostName("my-hostname"), uuid, push_configured=False, registration=_REGISTRATION

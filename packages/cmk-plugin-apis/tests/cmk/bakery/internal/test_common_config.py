@@ -133,7 +133,7 @@ def test_single_directory_custom_install() -> None:
 
 
 def test_classic_file_deployment_selects_the_agent_paths() -> None:
-    """CMK-40617 AC1, AC3, AC4, AC6"""
+    """CMK-40617 AC1, AC3, AC4, AC6, TC-AU-097"""
     provider = TargetPathsProvider(
         {
             "agent_paths": {
@@ -151,7 +151,7 @@ def test_classic_file_deployment_selects_the_agent_paths() -> None:
 
 
 def test_customize_agent_package_wins_over_classic_file_deployment() -> None:
-    """CMK-40617 AC3, AC4, AC6"""
+    """CMK-40617 AC3, AC4, AC6, TC-AU-096"""
     provider = TargetPathsProvider(
         {
             "agent_paths": {
@@ -251,7 +251,7 @@ def test_without_rule_legacy_agent_user_no_longer_applies() -> None:
 
 
 def test_single_directory_deployment_ignores_the_legacy_agent_user() -> None:
-    """CMK-40617 AC4, AC6"""
+    """CMK-40617 AC4, AC6, TC-AU-096"""
     provider = DeploymentModeProvider(
         {
             "agent_user": {"user": "legacyuser"},
@@ -266,7 +266,7 @@ def test_single_directory_deployment_ignores_the_legacy_agent_user() -> None:
 
 
 def test_classic_file_deployment_applies_the_legacy_agent_user() -> None:
-    """CMK-40617 AC4, AC6"""
+    """CMK-40617 AC4, AC6, TC-AU-097"""
     provider = DeploymentModeProvider(
         {"agent_user": {"user": "legacyuser"}, "classic_file_deployment": {}}
     )

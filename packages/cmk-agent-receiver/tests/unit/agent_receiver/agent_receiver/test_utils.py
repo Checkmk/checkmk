@@ -132,5 +132,5 @@ def test_an_unreadable_registration_file_is_unavailable(uuid: UUID4) -> None:
 
 
 def test_a_registration_without_a_file_is_unavailable(uuid: UUID4) -> None:
-    """CMK-39504 AC6"""
+    """CMK-39504 AC6, TC-AU-109"""
     assert agent_update_authorization(uuid) is AgentUpdateAuthorization.UNAVAILABLE

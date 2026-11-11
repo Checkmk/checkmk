@@ -150,7 +150,7 @@ mod tests {
         );
     }
 
-    /// CMK-39588 AC1
+    /// CMK-39588 AC1, TC-AU-093
     #[test]
     fn test_a_registration_without_a_decision_is_no_candidate() {
         assert_eq!(
@@ -164,7 +164,7 @@ mod tests {
         );
     }
 
-    /// CMK-39588 AC2
+    /// CMK-39588 AC2, TC-AU-011
     #[test]
     fn test_keep_leaves_a_registered_source() {
         assert_eq!(
@@ -192,7 +192,7 @@ mod tests {
         );
     }
 
-    /// CMK-39588 AC2, AC6
+    /// CMK-39588 AC2, AC6, TC-AU-011
     #[test]
     fn test_overwrite_takes_the_last_registration() {
         assert_eq!(
@@ -206,7 +206,7 @@ mod tests {
         );
     }
 
-    /// CMK-39588 AC2
+    /// CMK-39588 AC2, TC-AU-011
     #[test]
     fn test_manual_leaves_the_source_alone() {
         assert_eq!(
@@ -220,7 +220,7 @@ mod tests {
         );
     }
 
-    /// CMK-39588 AC3: the registration replaced the connection of the source, so
+    /// CMK-39588 AC3, TC-AU-011: the registration replaced the connection of the source, so
     /// the registry no longer holds the recorded UUID.
     #[test]
     fn test_keep_takes_the_registration_that_replaced_the_source() {

@@ -673,7 +673,7 @@ mod test_api {
         );
     }
 
-    /// CMK-39588 AC1: a site that predates the field.
+    /// CMK-39588 AC1, TC-AU-093: a site that predates the field.
     #[test]
     fn test_register_existing_response_without_authorization_is_unavailable() {
         assert_eq!(

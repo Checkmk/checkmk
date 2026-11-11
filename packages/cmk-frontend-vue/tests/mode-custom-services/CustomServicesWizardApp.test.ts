@@ -80,8 +80,9 @@ const server = useMswServer(
       value: [{ id: 'http_duration_on_web01', domainType: 'custom_service' }]
     })
   ),
-  http.post(LIST_URL, () => {
+  http.post(LIST_URL, async ({ request }) => {
     createRequests += 1
+    lastBody = await request.json()
     return HttpResponse.json({
       domainType: 'custom_service',
       id: 'custom_service_2',
@@ -175,6 +176,7 @@ async function goToHostStep(): Promise<void> {
 
 // A fragment, as jsdom only follows those, so the page the wizard went on to shows in the hash.
 const CREATE_ALERT_URL = '#create_otel_alert'
+const ALERT_WIZARD_OPENED = new RegExp(`^${CREATE_ALERT_URL}\\?`)
 
 function renderNewServiceWizard(createAlertUrl: string | null = CREATE_ALERT_URL) {
   return renderWizard(null, createAlertUrl)
@@ -388,8 +390,21 @@ test('going on to add an alert creates the service, then opens the alert wizard'
 
   await userEvent.click(await screen.findByRole('button', { name: 'Create & add alert' }))
 
-  await waitFor(() => expect(window.location.hash).toBe(CREATE_ALERT_URL))
+  await waitFor(() => expect(window.location.hash).toMatch(ALERT_WIZARD_OPENED))
   expect(createRequests).toBe(1)
+})
+
+test('the alert wizard is told which service was created', async () => {
+  renderNewServiceWizard()
+  await goToHostStepOfNewService()
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Create & add alert' }))
+
+  await waitFor(() => expect(window.location.hash).toMatch(ALERT_WIZARD_OPENED))
+  const { configuration_name: name } = lastBody as { configuration_name: string }
+  expect(window.location.hash).toBe(
+    `${CREATE_ALERT_URL}?custom_service=${encodeURIComponent(name)}`
+  )
 })
 
 test('a created service cannot be created again while the next page loads', async () => {
@@ -398,7 +413,7 @@ test('a created service cannot be created again while the next page loads', asyn
 
   await userEvent.click(await screen.findByRole('button', { name: 'Create & add alert' }))
 
-  await waitFor(() => expect(window.location.hash).toBe(CREATE_ALERT_URL))
+  await waitFor(() => expect(window.location.hash).toMatch(ALERT_WIZARD_OPENED))
   expect(screen.getByRole('button', { name: 'Create & add alert' })).toBeDisabled()
   expect(screen.getByRole('button', { name: 'Create & activate changes' })).toBeDisabled()
 })

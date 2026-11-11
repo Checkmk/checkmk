@@ -49,13 +49,16 @@ const {
   conditionsSpec,
   folderPaths,
   isFirst = false,
-  prefilled = false
+  prefilled = false,
+  matchMaySelectOthers = false
 } = defineProps<
   CmkWizardStepProps & {
     conditionsSpec: FormSpec
     folderPaths: FolderPaths
     isFirst?: boolean
     prefilled?: boolean
+    // The service name, taken over from a custom service, may select other services as well
+    matchMaySelectOthers?: boolean
   }
 >()
 
@@ -306,6 +309,16 @@ async function haveOneUnit(): Promise<boolean> {
               :has-error="patternErrors.length > 0"
             />
           </div>
+          <CmkAlert
+            v-if="matchMaySelectOthers"
+            variant="warning"
+            size="small"
+            :text="
+              _t(
+                'This service name may also match other custom services on these hosts. Review it before you continue.'
+              )
+            "
+          />
           <CmkAlert
             v-for="error in patternErrors"
             :key="error"

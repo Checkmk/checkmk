@@ -16,7 +16,7 @@ import { initializeComponentRegistry } from '@/form/private/FormEditDispatcher/d
 
 // Like the Setup page, the folder choice offers option ids instead of paths.
 export const MAIN_FOLDER = 'option-main'
-const LINUX_FOLDER = 'option-linux'
+export const LINUX_FOLDER = 'option-linux'
 export const FOLDER_PATHS = { [MAIN_FOLDER]: '', [LINUX_FOLDER]: 'linux' }
 
 // The Setup page registers the form components on start, a test has to do it itself.

@@ -62,6 +62,27 @@ export interface AlertModel {
   thresholds: ThresholdsValue
 }
 
+/** An alert for a custom service, as the backend derives it from the service's definition. */
+export interface AlertPrefill {
+  match_type: ServiceNameMatch
+  service_pattern: string
+  conditions: HostConditions
+  // Whether the service match selects only this custom service on its hosts
+  singles_out: boolean
+}
+
+export function prefilledAlert(
+  prefill: AlertPrefill,
+  conditions: HostConditions,
+  thresholds: ThresholdsValue = {}
+): AlertModel {
+  return {
+    ...emptyAlert({ ...conditions, ...prefill.conditions }, thresholds),
+    matchType: prefill.match_type,
+    servicePattern: prefill.service_pattern
+  }
+}
+
 export function emptyAlert(
   conditions: HostConditions = { folder_path: '' },
   thresholds: ThresholdsValue = {}

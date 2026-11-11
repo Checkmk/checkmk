@@ -15,6 +15,7 @@ import {
   hasCompleteThresholds,
   hasThresholds,
   hasUnparsableRegex,
+  prefilledAlert,
   servicePattern
 } from '@/mode-alerts/types'
 
@@ -356,4 +357,18 @@ test('a side without stored levels stays unset', () => {
   expect(alertModelFrom(STORED, FOLDERS, PREDICTION_PERIODS).thresholds).toEqual({
     upper_levels: ['fixed', [80, 90]]
   })
+})
+
+test('a prefilled alert keeps the conditions the custom service does not set', () => {
+  const model = prefilledAlert(
+    {
+      match_type: 'exact',
+      service_pattern: 'Pod CPU',
+      conditions: { folder_path: 'web' },
+      singles_out: true
+    },
+    { folder_path: '', host_tags: [] }
+  )
+
+  expect(model.conditions).toEqual({ folder_path: 'web', host_tags: [] })
 })

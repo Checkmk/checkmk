@@ -17,12 +17,14 @@ import ServicesStep from '@/mode-alerts/steps/ServicesStep.vue'
 import ThresholdsStep from '@/mode-alerts/steps/ThresholdsStep.vue'
 import {
   type AlertModel,
+  type AlertPrefill,
   type FolderPaths,
   type HostConditions,
   type PredictionPeriods,
   type ThresholdsValue,
   alertModelFrom,
-  emptyAlert
+  emptyAlert,
+  prefilledAlert
 } from '@/mode-alerts/types'
 
 const { _t } = usei18n()
@@ -43,12 +45,28 @@ const props = defineProps<{
   warning_color: string
   critical_color: string
   activate_changes_url: string
+  // Set when the alert is added for a custom service, from its definition
+  prefill?: AlertPrefill | null
+  prefill_error?: string | null
 }>()
 
 const editing = props.configuration_name !== null
 // A stored alert keeps its name (the update endpoint cannot rename it), so editing skips step 1.
 const currentStep = ref(editing ? 2 : 1)
-const model = ref<AlertModel>(emptyAlert(props.conditions_form.data, props.thresholds_form.data))
+const prefill = props.prefill ?? null
+const model = ref<AlertModel>(
+  prefill === null
+    ? emptyAlert(props.conditions_form.data, props.thresholds_form.data)
+    : prefilledAlert(prefill, props.conditions_form.data, props.thresholds_form.data)
+)
+// The check only holds for the match the backend derived, not for one the user changed it to.
+const matchMaySelectOthers = computed(
+  () =>
+    prefill !== null &&
+    !prefill.singles_out &&
+    model.value.matchType === prefill.match_type &&
+    model.value.servicePattern === prefill.service_pattern
+)
 const saving = ref(false)
 const saveError = ref<string | null>(null)
 const editETag = ref<string | null>(null)
@@ -130,6 +148,11 @@ async function saveAlert(): Promise<void> {
 
 <template>
   <div class="mode-alerts-alert-wizard-app">
+    <CmkAlert
+      v-if="props.prefill_error"
+      variant="warning"
+      :text="untranslated(props.prefill_error)"
+    />
     <CmkAlert v-if="loadError" variant="error" :text="untranslated(loadError)" />
     <CmkWizard v-else-if="!loading" v-model="currentStep" mode="guided">
       <NameStep v-if="!editing" v-model="model" :index="1" :is-completed="() => currentStep > 1" />
@@ -141,7 +164,8 @@ async function saveAlert(): Promise<void> {
         :index="2"
         :is-completed="() => currentStep > 2"
         :is-first="editing"
-        :prefilled="editing"
+        :prefilled="editing || prefill !== null"
+        :match-may-select-others="matchMaySelectOthers"
       />
 
       <ThresholdsStep

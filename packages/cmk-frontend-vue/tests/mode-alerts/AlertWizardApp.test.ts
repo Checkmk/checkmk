@@ -12,8 +12,9 @@ import { afterEach, beforeEach, expect, test } from 'vitest'
 
 import { resetGlobalTimeState } from '@/graphing/GlobalTimePicker/globalTimeState'
 import AlertWizardApp from '@/mode-alerts/AlertWizardApp.vue'
+import type { AlertPrefill } from '@/mode-alerts/types'
 
-import { CONDITIONS_SPEC, FOLDER_PATHS, MAIN_FOLDER } from './conditions-spec'
+import { CONDITIONS_SPEC, FOLDER_PATHS, LINUX_FOLDER, MAIN_FOLDER } from './conditions-spec'
 import { PREDICTION_PERIODS, THRESHOLDS_SPEC } from './thresholds-spec'
 import { TIME_PICKER } from './time-picker'
 
@@ -53,9 +54,13 @@ afterEach(() => {
   resetGlobalTimeState()
 })
 
-function renderApp(configurationName: string | null = null) {
+function renderApp(
+  configurationName: string | null = null,
+  extraProps: { prefill?: AlertPrefill; prefill_error?: string } = {}
+) {
   render(AlertWizardApp, {
     props: {
+      ...extraProps,
       configuration_name: configurationName,
       conditions_form: { spec: CONDITIONS_SPEC, data: { folder_path: MAIN_FOLDER } },
       thresholds_form: { spec: THRESHOLDS_SPEC, data: {} },
@@ -387,4 +392,90 @@ test('an alert loaded without a version identifier says so instead of the wizard
 
   expect(await screen.findByText(/without a version identifier/)).toBeVisible()
   expect(screen.queryByRole('heading', { name: 'Select services' })).toBeNull()
+})
+
+const PREFILL: AlertPrefill = {
+  match_type: 'exact',
+  service_pattern: 'HTTP request duration',
+  conditions: { folder_path: LINUX_FOLDER, explicit_hosts: { value: ['web01'], negate: false } },
+  singles_out: true
+}
+
+async function nameAlertForCustomService() {
+  await userEvent.type(screen.getByRole('textbox', { name: /Alert name/ }), 'Latency too high')
+  await userEvent.click(screen.getByRole('button', { name: /next step/i }))
+  await waitForServicesStep()
+}
+
+test('an alert for a custom service starts from its service name', async () => {
+  renderApp(null, { prefill: PREFILL })
+
+  await nameAlertForCustomService()
+
+  await waitFor(() =>
+    expect(screen.getByRole('combobox', { name: 'Service name' })).toHaveTextContent(
+      'HTTP request duration'
+    )
+  )
+})
+
+test('an alert for a custom service starts from the folder of its rule', async () => {
+  renderApp(null, { prefill: PREFILL })
+
+  await nameAlertForCustomService()
+
+  expect(screen.getByRole('combobox', { name: 'Folder' })).toHaveTextContent('Main/Linux')
+})
+
+test('an alert for a custom service lists the services it matches right away', async () => {
+  renderApp(null, { prefill: PREFILL })
+
+  await nameAlertForCustomService()
+
+  expect(await screen.findByText(/Matching services/)).toHaveTextContent('(1)')
+})
+
+test('a service name that may match other custom services warns', async () => {
+  renderApp(null, { prefill: { ...PREFILL, singles_out: false } })
+
+  await nameAlertForCustomService()
+
+  expect(screen.getByText(/may also match other custom services/)).toBeInTheDocument()
+})
+
+test('a service name that matches only the custom service does not warn', async () => {
+  renderApp(null, { prefill: PREFILL })
+
+  await nameAlertForCustomService()
+
+  expect(screen.queryByText(/may also match other custom services/)).toBeNull()
+})
+
+test('the warning goes once the user picks another service name', async () => {
+  server.use(
+    http.post(ENDPOINT, () =>
+      HttpResponse.json({
+        id: 'all',
+        links: [],
+        value: [
+          { extensions: { host_name: 'web01', description: 'HTTP request duration' } },
+          { extensions: { host_name: 'web01', description: 'HTTP response size' } }
+        ]
+      })
+    )
+  )
+  renderApp(null, { prefill: { ...PREFILL, singles_out: false } })
+  await nameAlertForCustomService()
+  expect(screen.getByText(/may also match other custom services/)).toBeInTheDocument()
+
+  void userEvent.click(screen.getByRole('combobox', { name: 'Service name' }))
+  await userEvent.click(await screen.findByRole('option', { name: 'HTTP response size' }))
+
+  expect(screen.queryByText(/may also match other custom services/)).toBeNull()
+})
+
+test('an alert that cannot start from the custom service says why', () => {
+  renderApp(null, { prefill_error: 'The custom service "gone" does not exist.' })
+
+  expect(screen.getByText(/The custom service "gone" does not exist/)).toBeVisible()
 })

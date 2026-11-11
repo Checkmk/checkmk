@@ -116,6 +116,13 @@ async function persist(): Promise<SaveResult> {
   return await updateCustomService(configurationName, model.value, editETag.value)
 }
 
+// The alert wizard starts from the conditions of the custom service it is told about.
+function alertUrlFor(createAlertUrl: string): string {
+  const separator = createAlertUrl.includes('?') ? '&' : '?'
+  const name = encodeURIComponent(model.value.configurationName)
+  return `${createAlertUrl}${separator}custom_service=${name}`
+}
+
 // Persist the custom service, then go on to `target`: the full activate-changes page so the
 // user can apply the pending change, or the alert wizard, whose end activates it as well.
 async function saveService(target: string): Promise<void> {
@@ -219,7 +226,7 @@ async function saveService(target: string): Promise<void> {
             :override-label="_t('Create & add alert')"
             icon-name="alerts"
             :disabled="!hostStepValid || saving"
-            @click="saveService(props.create_alert_url)"
+            @click="saveService(alertUrlFor(props.create_alert_url))"
           />
           <CmkWizardButton type="previous" />
         </template>

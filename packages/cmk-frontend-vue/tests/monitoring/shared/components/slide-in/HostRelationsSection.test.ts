@@ -81,6 +81,24 @@ test('points the service counts of a related host at its services', () => {
   )
 })
 
+test('leads the name of a related host to its services, with its details open', () => {
+  renderSection({ relations: [makeRelation()] })
+
+  const link = screen.getByRole('link', { name: 'mgmt-web-1' })
+  expect(link).toHaveAttribute(
+    'href',
+    'monitor_host_services.py?host=mgmt-web-1&site=local#host=mgmt-web-1&site=local'
+  )
+  expect(link).toHaveAttribute('target', '_top')
+})
+
+test('leaves the name of a related host on an unavailable site unlinked', () => {
+  renderSection({ relations: [makeRelation({ health: null })] })
+
+  expect(screen.getByRole('heading', { name: 'mgmt-web-1' })).toBeInTheDocument()
+  expect(screen.queryByRole('link', { name: 'mgmt-web-1' })).not.toBeInTheDocument()
+})
+
 test('counts the services of every related host without asking the reader to open it', () => {
   renderSection({ relations: [makeRelation()] })
 

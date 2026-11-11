@@ -17,6 +17,7 @@ import type { HostOverview, HostRef } from '@/monitoring/shared/api/types'
 import HostStateDisplay from '@/monitoring/shared/components/HostStateDisplay.vue'
 import ServiceSummaryBar from '@/monitoring/shared/components/ServiceSummaryBar.vue'
 import RelatedHostCard from '@/monitoring/shared/components/slide-in/RelatedHostCard.vue'
+import { hostDetailsPageUrl } from '@/monitoring/shared/hostServicesPageUrl'
 
 type Relation = HostOverview['relations'][number]
 
@@ -129,6 +130,14 @@ watch(
             :title="untranslated(relation.host_name)"
             :subtitle="_t('Relation type: %{type}', { type: relation.relation_type })"
           >
+            <template v-if="relation.health" #title>
+              <a
+                :href="hostDetailsPageUrl(hostRef(relation))"
+                target="_top"
+                class="monitoring-host-relations-section__host"
+                >{{ relation.host_name }}</a
+              >
+            </template>
             <template #leading>
               <HostStateDisplay
                 v-if="relation.health"
@@ -197,6 +206,16 @@ watch(
   flex: 0 0 auto;
   align-self: flex-start;
   margin-right: var(--dimension-6);
+}
+
+.monitoring-host-relations-section__host {
+  color: inherit;
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    text-decoration: underline;
+  }
 }
 
 .monitoring-host-relations-section__more {

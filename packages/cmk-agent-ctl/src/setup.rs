@@ -5,9 +5,9 @@
 #[cfg(windows)]
 use super::misc;
 use super::{cli, constants, types};
-#[cfg(unix)]
-use anyhow::Context;
 use anyhow::Result as AnyhowResult;
+#[cfg(unix)]
+use anyhow::{bail, Context};
 use clap::Parser;
 #[cfg(windows)]
 use flexi_logger::FileSpec;
@@ -269,11 +269,7 @@ fn setup_single_directory() -> AnyhowResult<Option<PathBuf>> {
         installdir
     );
 
-    let owning_uid = nix::unistd::Uid::from_raw(
-        std::fs::metadata(installdir.join("runtime").join("controller"))
-            .context("Could not determine agent user")?
-            .uid(),
-    );
+    let owning_uid = agent_user_of(&installdir.join("runtime").join("controller"))?;
 
     become_user(UserRepr::Uid(owning_uid)).context(format!(
         "Failed to run as user '{}'. Please execute with sufficient permissions (maybe try 'sudo').",
@@ -281,6 +277,19 @@ fn setup_single_directory() -> AnyhowResult<Option<PathBuf>> {
     ))?;
 
     Ok(Some(installdir))
+}
+
+/// In the non-root deployment the agent user owns `runtime`. That user could
+/// therefore replace `runtime/controller` with a link to a directory owned by
+/// root. A run as root would then keep root.
+#[cfg(unix)]
+fn agent_user_of(controller_dir: &Path) -> AnyhowResult<unistd::Uid> {
+    let metadata =
+        std::fs::symlink_metadata(controller_dir).context("Could not determine agent user")?;
+    if !metadata.is_dir() {
+        bail!("Could not determine agent user: {controller_dir:?} is not a directory");
+    }
+    Ok(unistd::Uid::from_raw(metadata.uid()))
 }
 
 #[cfg(unix)]
@@ -343,6 +352,27 @@ mod tests {
             PathResolver::from_home_dir(home_dir).config_path,
             config_path
         );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn test_the_owner_of_runtime_controller_is_the_agent_user() {
+        let dir = tempfile::tempdir().unwrap();
+
+        assert_eq!(
+            agent_user_of(dir.path()).unwrap().as_raw(),
+            std::fs::metadata(dir.path()).unwrap().uid()
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn test_a_linked_runtime_controller_is_refused() {
+        let dir = tempfile::tempdir().unwrap();
+        let link = dir.path().join("controller");
+        std::os::unix::fs::symlink(dir.path(), &link).unwrap();
+
+        assert!(agent_user_of(&link).is_err());
     }
 
     #[cfg(windows)]

@@ -23,9 +23,11 @@ from tests.system.gui.testlib.playwright.pom.monitor.drilldown_dashboards import
     apply_host_name_runtime_filter,
     cpu_top_list,
     inherited_link,
+    url_variables,
+)
+from tests.system.gui.testlib.playwright.pom.monitor.rest_dashboard import (
     open_dashboard,
     rest_dashboard,
-    url_variables,
 )
 from tests.testlib.system.site import Site
 

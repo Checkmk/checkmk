@@ -32,14 +32,17 @@ from tests.system.gui.testlib.playwright.pom.graphing.graph_surfaces import Grap
 from tests.system.gui.testlib.playwright.pom.graphing.timeseries_graph import GraphPanel
 from tests.system.gui.testlib.playwright.pom.monitor.custom_dashboard import CustomDashboard
 from tests.system.gui.testlib.playwright.pom.monitor.dashboard import BaseDashboard, MainDashboard
+from tests.system.gui.testlib.playwright.pom.monitor.rest_dashboard import (
+    open_dashboard,
+    rest_dashboard,
+)
 from tests.system.gui.testlib.playwright.pom.sidebar.widget_wizard_sidebar import (
     MetricsAndGraphsWidgetWizard,
     ServiceMetricDropdownOptions,
     VisualizationType,
 )
 from tests.testlib.common.utils import wait_until
-from tests.testlib.common.utils2 import is_cleanup_enabled
-from tests.testlib.system.site import ADMIN_USER, Site
+from tests.testlib.system.site import Site
 
 _INHERITING_DASHBOARD_ID: Final = "e2e_inheriting_time_range_dashboard"
 _INHERITING_DASHBOARD_TITLE: Final = "E2E inheriting time range dashboard"
@@ -341,48 +344,9 @@ def _open_dashboard(
     title: str,
     widgets: Mapping[str, Mapping[str, object]],
 ) -> Generator[CustomDashboard]:
-    """A dashboard of the given widgets, opened in the browser.
-
-    Built through the REST API: the wizard is not what is under test here. Shared with all
-    users, because on the cloud edition the browser does not log in as `ADMIN_USER`.
-    """
-    payload = {
-        "id": dashboard_id,
-        "general_settings": {
-            "title": {"text": title, "render": True, "include_context": False},
-            "description": "",
-            "menu": {
-                "topic": "overview",
-                "sort_index": 99,
-                "search_terms": [],
-                "is_show_more": False,
-            },
-            "visibility": {
-                "hide_in_monitor_menu": False,
-                "hide_in_drop_down_menus": False,
-                "share": {"type": "with_all_users"},
-            },
-        },
-        "filter_context": {
-            "restricted_to_single": [],
-            "filters": {},
-            "mandatory_context_filters": [],
-        },
-        "widgets": dict(widgets),
-        "layout": {"type": "relative_grid"},
-    }
-    with test_site.openapi.acting_as(ADMIN_USER, test_site.admin_password):
-        test_site.openapi.dashboard.create_relative_grid_dashboard(payload)
-    try:
-        dashboard_page.page.goto(
-            test_site.internal_url + f"dashboard.py?name={dashboard_id}&owner={ADMIN_USER}",
-            wait_until="load",
-        )
-        yield CustomDashboard(dashboard_page.page, page_title=title, navigate_to_page=False)
-    finally:
-        if is_cleanup_enabled():
-            with test_site.openapi.acting_as(ADMIN_USER, test_site.admin_password):
-                test_site.openapi.dashboard.delete(dashboard_id)
+    """A dashboard of the given widgets, opened in the browser."""
+    with rest_dashboard(test_site, dashboard_id=dashboard_id, title=title, widgets=widgets):
+        yield open_dashboard(dashboard_page.page, test_site, dashboard_id, title)
 
 
 @contextmanager

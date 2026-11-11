@@ -25,9 +25,11 @@ from tests.system.gui.testlib.playwright.pom.monitor.drilldown_dashboards import
     CPU_SERVICE,
     cpu_top_list,
     inherited_link,
+    url_variables,
+)
+from tests.system.gui.testlib.playwright.pom.monitor.rest_dashboard import (
     open_dashboard,
     rest_dashboard,
-    url_variables,
 )
 from tests.system.gui.testlib.playwright.pom.page import CmkPage
 from tests.testlib.system.site import Site

@@ -4,6 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
+import type { ConfiguredFilters } from 'cmk-ui-library/components/filter'
 import { useMswServer } from 'cmk-ui-library/vitest.msw'
 // eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
 import { HttpResponse, http } from 'msw'
@@ -46,10 +47,13 @@ useMswServer(
   )
 )
 
-function openEmbeddedURL(editWidgetSpec: WidgetSpec | null) {
+function openEmbeddedURL(
+  editWidgetSpec: WidgetSpec | null,
+  dashboardFilters: ConfiguredFilters = {}
+) {
   const wizard = ref<GetValidWidgetProps>()
   const { range } = makeContentProps(null)
-  render(
+  const { container } = render(
     defineComponent({
       setup() {
         useProvideDashboardConstants(CONSTANTS)
@@ -60,12 +64,13 @@ function openEmbeddedURL(editWidgetSpec: WidgetSpec | null) {
             tick: 0,
             range,
             dashboardKey: { name: 'main', owner: 'cmkadmin' },
+            dashboardFilters,
             editWidgetSpec
           })
       }
     })
   )
-  return wizard
+  return { wizard, container }
 }
 
 describe('EmbeddedURL', () => {
@@ -82,14 +87,14 @@ describe('EmbeddedURL', () => {
   })
 
   it('requires a URL', async () => {
-    const wizard = openEmbeddedURL(null)
+    const { wizard } = openEmbeddedURL(null)
 
     expect(wizard.value!.getValidWidgetProps()).toBeNull()
     expect(await screen.findByText('Value must be a valid URL')).toBeInTheDocument()
   })
 
   it('rejects a URL without an http or https scheme', async () => {
-    const wizard = openEmbeddedURL(null)
+    const { wizard } = openEmbeddedURL(null)
 
     await fireEvent.update(
       screen.getByRole('textbox', { name: 'Enter URL to embed' }),
@@ -101,7 +106,7 @@ describe('EmbeddedURL', () => {
   })
 
   it('includes the dashboard filters once checked', async () => {
-    const wizard = openEmbeddedURL(null)
+    const { wizard } = openEmbeddedURL(null)
 
     await fireEvent.update(
       screen.getByRole('textbox', { name: 'Enter URL to embed' }),
@@ -116,8 +121,23 @@ describe('EmbeddedURL', () => {
     )
   })
 
+  it('shows the dashboard filters in the preview once checked', async () => {
+    const { container } = openEmbeddedURL(null, { host: { host: 'db01' } })
+
+    await fireEvent.update(
+      screen.getByRole('textbox', { name: 'Enter URL to embed' }),
+      'https://example.com'
+    )
+    await fireEvent.click(screen.getByRole('checkbox', { name: 'Dashboard filters' }))
+
+    await waitFor(() => {
+      const source = new URL(container.querySelector('iframe')!.getAttribute('src')!)
+      expect(source.searchParams.get('host')).toBe('db01')
+    })
+  })
+
   it('includes the time range once checked', async () => {
-    const wizard = openEmbeddedURL(null)
+    const { wizard } = openEmbeddedURL(null)
 
     await fireEvent.update(
       screen.getByRole('textbox', { name: 'Enter URL to embed' }),

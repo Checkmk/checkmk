@@ -3,6 +3,7 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import type { ConfiguredFilters } from 'cmk-ui-library/components/filter'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { useDebounceRef } from 'cmk-ui-library/lib/useDebounce'
 import { type Ref, computed, ref, watch } from 'vue'
@@ -28,7 +29,10 @@ export interface UseEmbeddedURL extends UseWidgetHandler, UseWidgetVisualization
   includeTimeRange: Ref<boolean>
 }
 
-export function useEmbeddedURL(currentSpec: WidgetSpec | null): UseEmbeddedURL {
+export function useEmbeddedURL(
+  currentSpec: WidgetSpec | null,
+  dashboardFilters: Readonly<Ref<ConfiguredFilters>>
+): UseEmbeddedURL {
   const constants = useInjectDashboardConstants()
   const {
     title,
@@ -93,7 +97,7 @@ export function useEmbeddedURL(currentSpec: WidgetSpec | null): UseEmbeddedURL {
       effectiveTitle: effectiveTitle.value,
       effective_filter_context: buildWidgetEffectiveFilterContext(
         content.value,
-        {},
+        dashboardFilters.value,
         [], // we know this doesn't use any infos, no need to ask the backend
         constants
       )

@@ -5,10 +5,12 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import CmkCatalogPanel from 'cmk-ui-library/components/CmkCatalogPanel.vue'
+import type { ConfiguredFilters } from 'cmk-ui-library/components/filter'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
 import CmkLabelRequired from 'cmk-ui-library/components/user-input/CmkLabelRequired.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
+import { toRef } from 'vue'
 
 import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import DashboardPreviewContent from '@/dashboard/components/DashboardPreviewContent.vue'
@@ -25,10 +27,14 @@ import { useEmbeddedURL } from './composables/useEmbeddedURL'
 
 const { _t } = usei18n()
 interface Props extends BaseWidgetProp {
+  dashboardFilters: ConfiguredFilters
   editWidgetSpec: WidgetSpec | null
 }
 const props = defineProps<Props>()
-const handler = useEmbeddedURL(props.editWidgetSpec)
+const handler = useEmbeddedURL(
+  props.editWidgetSpec,
+  toRef(() => props.dashboardFilters)
+)
 
 function getValidWidgetProps(): WidgetProps | null {
   if (handler.validate()) {

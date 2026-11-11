@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
+import type { ConfiguredFilters } from 'cmk-ui-library/components/filter'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { type ShallowRef, computed, ref, toValue, useTemplateRef } from 'vue'
 
@@ -35,6 +36,7 @@ interface Stage1Props {
   tick: number
   range: DateTimeRange
   dashboardKey: DashboardKey
+  dashboardFilters: ConfiguredFilters
   editWidgetSpec: WidgetSpec | null
 }
 
@@ -159,6 +161,7 @@ function gotoNextStage() {
     :dashboard-key="dashboardKey"
     :tick="tick"
     :range="range"
+    :dashboard-filters="dashboardFilters"
     :edit-widget-spec="editWidgetSpec"
   />
 

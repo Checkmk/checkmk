@@ -5,6 +5,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 -->
 <script setup lang="ts">
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
+import { computed } from 'vue'
 
 import type { DashboardKey } from '@/dashboard/types/dashboard'
 import type { ContextFilters } from '@/dashboard/types/filter.ts'
@@ -16,6 +17,7 @@ import type {
 } from '@/dashboard/types/widget'
 
 import CloseButton from '../../components/CloseButton.vue'
+import { parseContextConfiguredFilters } from '../../components/FiltersRecap/utils'
 import WizardContainer from '../../components/WizardContainer.vue'
 import WizardStageContainer from '../../components/WizardStageContainer.vue'
 import Stage1 from './stage1/StageContents.vue'
@@ -28,7 +30,9 @@ interface OtherWizardProps {
   editWidgetSpec?: WidgetSpec | null
 }
 
-defineProps<OtherWizardProps>()
+const props = defineProps<OtherWizardProps>()
+
+const dashboardFilters = computed(() => parseContextConfiguredFilters(props.contextFilters))
 
 defineEmits<{
   goBack: []
@@ -49,6 +53,7 @@ defineEmits<{
         :dashboard-key="dashboardKey"
         :tick="tick"
         :range="range"
+        :dashboard-filters="dashboardFilters"
         :edit-widget-spec="editWidgetSpec ?? null"
         @add-widget="
           (content, generalSettings, filterContext) =>

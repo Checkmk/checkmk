@@ -789,6 +789,11 @@ logic, not by Maps:
   map published by someone else.
 * On create and update, the requested visibility is clamped to what the
   editing user may publish.
+* In a multi-tenant edition, publishing does not stop at customers: a map
+  published to all users reaches the users of every customer, as a published
+  dashboard or graph collection does. The image library is site-wide, like
+  custom icons. The monitoring data a map shows stays limited to the viewer's
+  contact groups.
 
 **What the daemon knows about a user** comes from ``identify`` and
 ``maps_monitored_sites``; what the SPA offers comes from ``maps_session``:
@@ -1003,7 +1008,8 @@ Stored data and secrets
        change).
    * - ``var/maps/images/``
      - GUI, update
-     - Image library. Not replicated.
+     - Image library. Not replicated: a site has the built-in images and
+       those uploaded on it.
    * - ``var/maps/backgrounds/``
      - GUI, update
      - Map backgrounds (capability URLs). Not replicated.

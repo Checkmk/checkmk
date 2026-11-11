@@ -58,37 +58,55 @@ void main() {
             );
         }
 
-        helper.execute_test([
-            // k8s specific configs
-            name: "${make_target}",
-            container_name: "this-distro-container",
-            callback: single_tests.&run_make_target_k8s,
+        /// Set which build the test run times are based on.
+        /// The value is empty for non sharded builds
+        def shard_build_based_on = params.SHARD_BUILD_BASED_ON ?: "";
 
-            // test environment specific configs
-            disable_hot_cache: true,
-            prepare_fake_git_overlay: true,
-            creds_usernames: [
-                [credentialsId: "cmk-credentials", location: "/etc/.cmk-credentials"],
-            ],
+        withEnv([
+            "SHARD_BUILD_BASED_ON=${shard_build_based_on}",
+            /// Jenkins url is needed for the API calls to read test run times
+            "JENKINS_URL=${env.JENKINS_URL}",
+        ]) {
+            helper.execute_test([
+                // k8s specific configs
+                name: "${make_target}",
+                container_name: "this-distro-container",
+                callback: single_tests.&run_make_target_k8s,
 
-            // test specific configs
-            result_path: "${checkout_dir}/test-results/${distro}",
-            archive_pattern: "${test_results_dir}/**",
-            edition: edition,
-            docker_tag: setup_values.docker_tag,
-            version: setup_values.cmk_version,
-            distro: distro,
-            branch_name: setup_values.safe_branch_name,
-            make_target: "${make_target}",
-            test_filter: params.TEST_FILTER,
-            faked_artifacts: fake_artifacts,
-            force_build: force_build,
-            disable_cache: disable_cache,
-            // ultimatemt can hit 120min during the nightly runs (without wait time)
-            // runs of heavy chain are around 45-90min depending on the edition
-            // using FoS of 3
-            timeout: 360,
-        ]);
+                // test environment specific configs
+                disable_hot_cache: true,
+                prepare_fake_git_overlay: true,
+                creds_usernames: [
+                    [credentialsId: "cmk-credentials", location: "/etc/.cmk-credentials"],
+                ],
+                /// Sharded runs need to query the Jenkins API to get the test run times
+                creds_env: shard_build_based_on ? [
+                    usernamePassword(
+                        credentialsId: "jenkins-api-token",
+                        usernameVariable: "JENKINS_USERNAME",
+                        passwordVariable: "JENKINS_PASSWORD",
+                    ),
+                ] : [],
+
+                // test specific configs
+                result_path: "${checkout_dir}/test-results/${distro}",
+                archive_pattern: "${test_results_dir}/**",
+                edition: edition,
+                docker_tag: setup_values.docker_tag,
+                version: setup_values.cmk_version,
+                distro: distro,
+                branch_name: setup_values.safe_branch_name,
+                make_target: "${make_target}",
+                test_filter: params.TEST_FILTER,
+                faked_artifacts: fake_artifacts,
+                force_build: force_build,
+                disable_cache: disable_cache,
+                // ultimatemt can hit 120min during the nightly runs (without wait time)
+                // runs of heavy chain are around 45-90min depending on the edition
+                // using FoS of 3
+                timeout: 360,
+            ]);
+        }
     }
 
     stage("Process test reports") {

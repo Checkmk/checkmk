@@ -246,10 +246,9 @@ void triggerCascadeJob(Map args) {
 /// run_tests.sh evals TEST_FILTER as shell tokens, so it carries plain pytest
 /// options as well as markers.
 ///
-/// At most one marker belongs here: the make targets append their own "-m" after
-/// TEST_FILTER and pytest lets the last one win. "-m medium_test_chain" also
-/// switches test-system-singlesite-single.groovy to its marker-only target, so an
-/// entry that wants the whole suite sharded must not carry it.
+/// Sharded entries carry no medium_test_chain marker. Sharding the marker
+/// subset needs balancing by selected tests, not whole modules, which will
+/// be done in CMK-41175.
 String composeTestFilter(Map args) {
     def parts = [];
     if (args.marker) {
@@ -301,6 +300,12 @@ Map cascadeJobSpecs(Map args) {
     /// Rerun each failing test-case once; show tracebacks even on eventual pass
     /// so flakes stay visible in the log. Applied to every triggered job.
     def rerun_opts = ["--reruns=1", "--reruns-delay=2", "--rerun-show-tracebacks"];
+    /// No medium-chain test needs tests/qa-test-data; skip the checkout to save
+    /// the ~95s/job it costs to fetch the submodule. Does not change what the
+    /// job does, so it belongs in build_params_no_check, not build_params: a
+    /// cached build from before this param existed is still a valid match.
+    def skip_qa_submodule = [CIPARAM_SKIP_QA_SUBMODULE: true];
+
     def markerSpec = { job_name, options = [] -> [
         job_name: job_name,
         build_params: [
@@ -310,58 +315,48 @@ Map cascadeJobSpecs(Map args) {
                 options: options + rerun_opts,
             )
         ],
+        build_params_no_check: skip_qa_submodule,
         start_delay: 0,
     ] };
 
-    /// No medium-chain test needs tests/qa-test-data; skip the checkout to save
-    /// the ~95s/job it costs to fetch the submodule. Does not change what the
-    /// job does, so it belongs in build_params_no_check, not build_params: a
-    /// cached build from before this param existed is still a valid match.
-    def skip_qa_submodule = [CIPARAM_SKIP_QA_SUBMODULE: true];
+    /// Sharding off: exactly what this cascade did before.
+    /// The switch is the SHARD_COUNT/SHARD_COUNT_MULTISITE job parameters.
+    def addSuite = { job_prefix, shard_count, shard_durations_build, max_suite_reruns ->
+        def job_name = "${job_prefix}-${args.edition}".toString();
 
-    def multisite_job = "test-system-multisite-${args.edition}".toString();
+        if (shard_count < 2) {
+            /// limiting reruns; roughly 10% of the suite's total test-cases
+            specs["${job_name} [marker]".toString()] = markerSpec(
+                job_name, ["--max-suite-reruns=${max_suite_reruns}"]
+            );
+            return;
+        }
+
+        /// The whole suite, split over N jobs (markers are dropped, see CMK-41175)
+        (0..<shard_count).each { shard ->
+            def label = "${job_name} [shard ${shard + 1}/${shard_count}]";
+            specs[label.toString()] = [
+                job_name: job_name,
+                build_params: [
+                    TEST_FILTER: composeTestFilter(
+                        shard_index: shard,
+                        shard_count: shard_count,
+                        options: [args.medium_chain_option] + rerun_opts,
+                    ),
+                    /// Record which run time the sharding is based on
+                    SHARD_BUILD_BASED_ON: shard_durations_build,
+                ],
+                build_params_no_check: skip_qa_submodule,
+                start_delay: shard == 0 ? 0 : args.package_visibility_delay,
+            ];
+        }
+    };
+
     /// limiting reruns; duration of multisite tests is approaching thresholds ~ 35 mins.
     /// 10 ~ 10% of total multisite test-cases
-    specs["${multisite_job} [marker]".toString()] = markerSpec(
-        multisite_job, ["--max-suite-reruns=10"]
-    ) + [build_params_no_check: skip_qa_submodule];
-
-    def singlesite_job = "test-system-singlesite-${args.edition}".toString();
-
-    /// Sharding off: exactly what this cascade did before, one job on the marker.
-    /// The switch is the SHARD_COUNT job parameter, so turning sharding on or off
-    /// is a checkmk_ci change and needs no change here and no rebase of open chains.
-
-    if (args.singlesite_shards < 2) {
-        /// limiting reruns; 50 ~ 10% of total singlesite test-cases
-        specs["${singlesite_job} [marker]".toString()] = markerSpec(
-            singlesite_job, ["--max-suite-reruns=50"]
-        );
-        return specs;
-    }
-
-    /// The whole single site suite, split over N jobs. No marker here: the point
-    /// is to run more than the marked tests, see composeTestFilter().
-    (0..<args.singlesite_shards).each { shard ->
-        def label = "${singlesite_job} [shard ${shard + 1}/${args.singlesite_shards}]";
-        specs[label.toString()] = [
-            job_name: singlesite_job,
-            build_params: [
-                TEST_FILTER: composeTestFilter(
-                    shard_index: shard,
-                    shard_count: args.singlesite_shards,
-                    options: [args.medium_chain_option] + rerun_opts,
-                ),
-                /// A build parameter and not part of TEST_FILTER, so the job
-                /// documents where its runtimes come from. It is matched, which
-                /// is what stops a cached shard build from an earlier run with
-                /// different runtimes being reused into this split.
-                SHARD_BUILD_BASED_ON: args.shard_durations_build,
-            ],
-            build_params_no_check: skip_qa_submodule,
-            start_delay: shard == 0 ? 0 : args.package_visibility_delay,
-        ];
-    }
+    addSuite("test-system-multisite", args.multisite_shards, args.shard_durations_build_multisite, 10);
+    /// limiting reruns; 50 ~ 10% of total singlesite test-cases
+    addSuite("test-system-singlesite", args.singlesite_shards, args.shard_durations_build_singlesite, 50);
     return specs;
 }
 
@@ -385,23 +380,22 @@ void main() {
     def all_change_info = [:];
     def edition_medium_chain = "ultimate";
     def distro_medium_chain = "ubuntu-24.04";
-    /// Run the whole single site suite instead of only the tests carrying the
-    /// medium_test_chain marker, split over this many pods. Each shard builds its
-    /// own site, so the cost is N site setups against roughly 1/N of the runtime.
-    /// The split is computed in pytest, see tests/testlib/system/shard_planning.py.
+    /// Run the whole suite instead of only the tests carrying the medium_test_chain
+    /// marker, split over this many pods. Each shard builds its own site, so the
+    /// cost is N site setups against roughly 1/N of the runtime. The split is
+    /// computed in pytest, see tests/testlib/system/shard_planning.py.
     ///
-    /// A job parameter so the number can be tuned from checkmk_ci without a change
-    /// here. The fallback keeps this working before that parameter is deployed.
-    ///
-    /// One value for the whole cascade for now, since only the single site suite
-    /// is sharded. Once multisite shards too it needs a value per suite, they do
-    /// not want the same number.
+    /// Job parameters so the numbers can be tuned from checkmk_ci without a change
+    /// here. The fallbacks keep this working before those parameters are deployed.
     def singlesite_shards = (params.SHARD_COUNT ?: 8) as Integer;
-    /// Build the shards take their runtimes from. Heavy has no singlesite job on
-    /// the gate's edition, so this is the closest full report. Only used for
+    /// Disable sharding for multisite until markers are accepted (see CMK-41175)
+    def multisite_shards = (params.SHARD_COUNT_MULTISITE ?: 1) as Integer;
+    /// Build the shards take their runtimes from. Heavy has no singlesite/multisite
+    /// job on the gate's edition, so this is the closest full report. Only used for
     /// balancing, never for selecting, so the mismatch does not matter.
     /// Full job path, so this works from the Testing folder and on any branch.
-    def durations_job = "${branch_base_folder}/heavy/test-system-singlesite-ultimatemt";
+    def durations_job_singlesite = "${branch_base_folder}/heavy/test-system-singlesite-ultimatemt";
+    def durations_job_multisite = "${branch_base_folder}/heavy/test-system-multisite-ultimatemt";
     /// Tests that cannot work pre-submit carry "skip_if_medium_chain".
     def medium_chain_option = "--medium-chain";
     /// The pre-build below waits for the package, but every shard still does its
@@ -432,7 +426,9 @@ void main() {
         |fake_artifacts:.... │${fake_artifacts} (always active)│
         |force_build:....... │${force_build}│
         |singlesite_shards:. │${singlesite_shards}│
-        |durations_job:..... │${durations_job}│
+        |multisite_shards:.. │${multisite_shards}│
+        |durations_job_s:... │${durations_job_singlesite}│
+        |durations_job_m:... │${durations_job_multisite}│
         |safe_branch_name:.. │${safe_branch_name}│
         |===================================================
         """.stripMargin());
@@ -518,9 +514,11 @@ void main() {
                 job_specs = cascadeJobSpecs(
                     edition: edition_medium_chain,
                     singlesite_shards: singlesite_shards,
+                    multisite_shards: multisite_shards,
                     medium_chain_option: medium_chain_option,
                     package_visibility_delay: package_visibility_delay,
-                    shard_durations_build: (singlesite_shards < 2) ? "" : resolveShardDurations(job: durations_job),
+                    shard_durations_build_singlesite: (singlesite_shards < 2) ? "" : resolveShardDurations(job: durations_job_singlesite),
+                    shard_durations_build_multisite: (multisite_shards < 2) ? "" : resolveShardDurations(job: durations_job_multisite),
                 );
                 println("Cascade entries:");
                 job_specs.each { label, spec ->

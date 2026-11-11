@@ -8,6 +8,7 @@ import json
 import pytest
 
 from cmk.gui.config import Config
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.pages import AjaxPage, PageContext
 from cmk.gui.permissions import all_permissions
@@ -48,6 +49,22 @@ def test_diagnose_via_an_unknown_site_reports_an_error(page: AjaxPage) -> None:
     assert isinstance(result, dict)
     assert result["status_code"] == 99
     assert "gone" in result["output"]
+
+
+@pytest.mark.xfail(strict=True, raises=KeyError, reason="crash group 4997: KeyError 'site_id'")
+@pytest.mark.parametrize(
+    "page",
+    [
+        pytest.param(PageAjaxDiagCmkAgent(), id="agent"),
+        pytest.param(PageAjaxDiagSnmp(), id="snmp"),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_diagnose_without_a_site_reports_an_error(page: AjaxPage) -> None:
+    request.set_var("host_name", "heute")
+
+    with pytest.raises(MKUserError):
+        page.page(_page_context())
 
 
 @pytest.mark.usefixtures("request_context")

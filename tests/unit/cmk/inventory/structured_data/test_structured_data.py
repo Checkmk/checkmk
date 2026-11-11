@@ -5,10 +5,10 @@
 
 # mypy: disable-error-code="comparison-overlap"
 
+import json
 import shutil
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Literal
 
 import pytest
 
@@ -18,6 +18,7 @@ from cmk.inventory.structured_data import (
     _DeltaDict,
     _deserialize_retention_interval,
     _parse_from_unzipped,
+    _SDRawRetentionInterval,
     _serialize_retention_interval,
     deserialize_delta_tree,
     deserialize_tree,
@@ -245,6 +246,31 @@ def test_deserialize_filled_imm_tree() -> None:
     )
     assert tree == _create_filled_mut_tree()
     assert tree == _create_filled_imm_tree()
+
+
+def test_table_retentions_survive_json() -> None:
+    tree = ImmutableTree(
+        table=ImmutableTable(
+            key_columns=[SDKey("kc")],
+            rows_by_ident={("KC",): {SDKey("kc"): "KC", SDKey("c"): "C"}},
+            retentions={("KC",): {SDKey("c"): RetentionInterval(1, 2, 3, "previous")}},
+        )
+    )
+    assert deserialize_tree(json.loads(json.dumps(serialize_tree(tree)))).table.retentions == {
+        ("KC",): {SDKey("c"): RetentionInterval(1, 2, 3, "previous")}
+    }
+
+
+def test_table_retentions_serialized_in_row_order() -> None:
+    idents = [f"KC{n}" for n in range(20)]
+    tree = MutableTree()
+    tree.add(path=(), key_columns=[SDKey("kc")], rows=[{SDKey("kc"): i} for i in idents])
+    choices = SDRetentionFilterChoices(path=(), interval=6)
+    choices.add_columns_choice(choice="all", cache_info=(4, 5))
+    tree.update(now=0, previous_tree=ImmutableTree(), choices=choices)
+    assert serialize_tree(tree)["Table"].get("Retentions") == [
+        ([i], {"kc": (4, 5, 6, "current")}) for i in idents
+    ]
 
 
 def test_serialize_empty_delta_tree() -> None:
@@ -1835,9 +1861,7 @@ def test_update_from_previous_2() -> None:
     ],
 )
 def test_deserialize_retention_interval(
-    raw_retention_interval: (
-        tuple[int, int, int] | tuple[int, int, int, Literal["previous", "current"]]
-    ),
+    raw_retention_interval: tuple[int, int, int] | _SDRawRetentionInterval,
     expected_retention_interval: RetentionInterval,
 ) -> None:
     assert _deserialize_retention_interval(raw_retention_interval) == expected_retention_interval
@@ -1852,7 +1876,7 @@ def test_deserialize_retention_interval(
 )
 def test_serialize_retention_interval(
     retention_interval: RetentionInterval,
-    expected_raw_retention_interval: tuple[int, int, int, Literal["previous", "current"]],
+    expected_raw_retention_interval: _SDRawRetentionInterval,
 ) -> None:
     assert _serialize_retention_interval(retention_interval) == expected_raw_retention_interval
 

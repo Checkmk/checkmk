@@ -365,10 +365,10 @@ def test__inventorize_real_host_only_intervals(
 
     if table_expected_retentions:
         table_retentions = {
-            "Retentions": {
-                i: {k: _serialize_retention_interval(v) for k, v in ri.items()}
+            "Retentions": [
+                (list(i), {k: _serialize_retention_interval(v) for k, v in ri.items()})
                 for i, ri in table_expected_retentions.items()
-            }
+            ]
         }
     else:
         table_retentions = {}
@@ -576,10 +576,10 @@ def test__inventorize_real_host_raw_cache_info_and_only_intervals(
 
     if table_expected_retentions:
         table_retentions = {
-            "Retentions": {
-                i: {k: _serialize_retention_interval(v) for k, v in ri.items()}
+            "Retentions": [
+                (list(i), {k: _serialize_retention_interval(v) for k, v in ri.items()})
                 for i, ri in table_expected_retentions.items()
-            }
+            ]
         }
     else:
         table_retentions = {}

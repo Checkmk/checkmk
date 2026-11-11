@@ -19,6 +19,9 @@ from .utils import (
     create_protocol_file,
     get_path_from_env,
     INTEGRATION_PORT,
+    patch_venv_config,
+    postinstall_module,
+    unpack_modules,
     YamlDict,
 )
 
@@ -85,3 +88,12 @@ def setup_all(data_dir: Path) -> YieldFixture[None]:
     create_protocol_file(data_dir)
     create_legacy_pull_file(data_dir)
     yield
+
+
+@pytest.fixture(name="cab_python", scope="module")
+def cab_python_fixture(root_dir: Path, tmp_path_factory: pytest.TempPathFactory) -> Path:
+    module_dir = tmp_path_factory.mktemp("python-3")
+    assert unpack_modules(root_dir, module_dir=module_dir) == 0
+    assert postinstall_module(module_dir) == 0
+    patch_venv_config(module_dir)
+    return module_dir / ".venv" / "Scripts" / "python.exe"

@@ -3,12 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 import os
 import platform
+import ssl
 import subprocess
 import sys
-from collections.abc import Iterator
+import threading
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any, Final, NamedTuple
 
@@ -213,3 +217,51 @@ def patch_venv_config(module_dir: Path) -> None:
         text = text.replace(r"C:\ProgramData\checkmk\agent\modules\python-3", f"{module_dir}")
     with open(pyvenv_cfg, "w") as out_file:
         out_file.write(text)
+
+
+def run_python(
+    python: Path, args: Sequence[str | Path], *, conf_dir: Path
+) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [python, *args],
+        # No proxy variables: requests would send the loopback queries through them.
+        env={
+            "SYSTEMROOT": os.environ["SYSTEMROOT"],
+            "MK_CONFDIR": str(conf_dir),
+            "MK_VARDIR": str(conf_dir),
+            "TEMP": str(conf_dir),
+        },
+        capture_output=True,
+        text=True,
+        timeout=60,
+        check=False,
+    )
+
+
+@contextmanager
+def http_server(
+    respond: Callable[[bytes], Mapping[str, object]], *, certfile: Path | None = None
+) -> Iterator[int]:
+    class _Handler(BaseHTTPRequestHandler):
+        def do_POST(self) -> None:
+            payload = json.dumps(
+                respond(self.rfile.read(int(self.headers["Content-Length"])))
+            ).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(payload)))
+            self.end_headers()
+            self.wfile.write(payload)
+
+    with ThreadingHTTPServer(("127.0.0.1", 0), _Handler) as server:
+        if certfile is not None:
+            context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+            context.load_cert_chain(certfile)
+            server.socket = context.wrap_socket(server.socket, server_side=True)
+        thread = threading.Thread(target=server.serve_forever)
+        thread.start()
+        try:
+            yield server.server_address[1]
+        finally:
+            server.shutdown()
+            thread.join()

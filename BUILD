@@ -29,6 +29,7 @@ exports_files(
         "site.Cargo.lock.bazel",
         "host.Cargo.lock.bazel",
         ".cargo/config.toml",
+        "package_versions.bzl",
     ],
 )
 

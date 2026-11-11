@@ -12,6 +12,7 @@ py_library(
         "test_check_mk_cmd_line.py",
         "test_check_mk_run.py",
         "test_python_module.py",
+        "test_python_plugins.py",
         "utils.py",
     ],
     visibility = ["//visibility:public"],
@@ -22,13 +23,17 @@ py_library(
     ],
 )
 
-# The updater plugin test_python_module copies. The GPL-only repository
-# has no non-free/, so there test_python_module skips itself.
+# The updater plugin test_python_module copies, and the tests in nonfree/
+# that run it. The GPL-only repository has neither, so there
+# test_python_module skips itself.
 filegroup(
     name = "cmk_update_agent",
     testonly = True,
     srcs = select({
-        "@//:gpl+nonfree_repo": ["//non-free/packages/cmk-update-agent:cmk_update_agent.py"],
+        "@//:gpl+nonfree_repo": [
+            "//agents/wnx/tests/integration/nonfree:srcs",
+            "//non-free/packages/cmk-update-agent:cmk_update_agent.py",
+        ],
         "@//:gpl_repo": [],
     }),
 )
@@ -39,7 +44,12 @@ pkg_files(
     srcs = glob(
         ["*.py"],
         exclude = ["integration_qemu.py"],
-    ) + [":cmk_update_agent"],
+    ) + [
+        ":cmk_update_agent",
+        # What test_python_plugins runs on the cab's interpreter, and its pin.
+        "//:package_versions.bzl",
+        "//agents/plugins:srcs",
+    ],
     prefix = "repo",
     strip_prefix = strip_prefix.from_root(),
 )

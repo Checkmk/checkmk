@@ -6,6 +6,7 @@
 import datetime
 from dataclasses import asdict, dataclass
 
+from cmk.ccc.site import url_prefix
 from cmk.gui.config import Config
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import Request, Response
@@ -16,12 +17,18 @@ from cmk.gui.site_config import (
     is_distributed_setup_remote_site,
 )
 from cmk.product_usage.config import load_product_usage_config
-from cmk.shared_typing.product_usage_analytics import ProductUsageAnalyticsConfig
+from cmk.shared_typing.product_usage_analytics import (
+    ProductUsageAnalyticsConfig,
+    ReminderCookie,
+)
 from cmk.utils import paths
 from cmk.web.utils.urls import makeuri
 
 from ._popup_cookie import (
+    COOKIE_MAX_AGE_SECONDS,
+    COOKIE_NAME,
     product_usage_analytics_popup_timestamp_cookie,
+    REMINDER_INTERVAL_SECONDS,
     set_user_product_usage_analytics_popup_cookie,
 )
 
@@ -43,8 +50,9 @@ def render_product_usage_analytics_popup(
 ) -> None:
     # Show product usage analytics popup if user is admin and the site is a central site (in case of
     # distributed setup) and has not decided about product usage analytics. We show the popup only
-    # after 30 days have passed since the first login. After 30 days, we keep showing the popup on
-    # every login until the user makes a decision.
+    # after 30 days have passed since the first login. After that, we keep showing the popup on
+    # every page load until the user decides or defers the decision in the popup. Deferring resets
+    # the cookie in the browser.
 
     is_not_distributed_setup = not has_distributed_setup_remote_sites(
         active_config.sites
@@ -65,15 +73,11 @@ def render_product_usage_analytics_popup(
 
         if popup_timestamp_cookie is None:
             set_user_product_usage_analytics_popup_cookie(request, response)
-        else:
-            # Check if 30 days (2592000 seconds) have passed since first login
-            THIRTY_DAYS_IN_SECONDS = 2592000
-            current_timestamp = datetime.datetime.now().timestamp()
-            time_difference = current_timestamp - popup_timestamp_cookie
-
-            if time_difference >= THIRTY_DAYS_IN_SECONDS:
-                _show_popup(request)
-                set_user_product_usage_analytics_popup_cookie(request, response)
+        elif (
+            datetime.datetime.now().timestamp() - popup_timestamp_cookie
+            >= REMINDER_INTERVAL_SECONDS
+        ):
+            _show_popup(request)
 
 
 def _show_popup(request: Request) -> None:
@@ -85,6 +89,11 @@ def _show_popup(request: Request) -> None:
                     request,
                     addvars=[("varname", "product_usage_analytics")],
                     filename="global_settings.py",
+                ),
+                reminder_cookie=ReminderCookie(
+                    name=COOKIE_NAME,
+                    path=url_prefix(),
+                    max_age_seconds=COOKIE_MAX_AGE_SECONDS,
                 ),
             )
         ),

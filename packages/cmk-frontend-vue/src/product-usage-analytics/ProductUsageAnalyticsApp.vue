@@ -18,6 +18,16 @@ const { _t } = usei18n()
 const props = defineProps<ProductUsageAnalyticsConfig>()
 
 const popupOpen = ref(true)
+
+/**
+ * Ask again after the reminder interval. Without this, the pop-up comes back on the next page load.
+ */
+function deferDecision(): void {
+  const { name, path, max_age_seconds: maxAge } = props.reminder_cookie
+  const secure = window.location.protocol === 'https:' ? '; secure' : ''
+  document.cookie = `${name}=${Date.now() / 1000}; path=${path}; max-age=${maxAge}${secure}`
+  popupOpen.value = false
+}
 </script>
 
 <template>
@@ -87,13 +97,13 @@ const popupOpen = ref(true)
     </div>
 
     <div class="product-usage-analytics-app__buttons">
-      <CmkButton variant="secondary" @click="popupOpen = false">{{
+      <CmkButton variant="secondary" @click="deferDecision">{{
         _t('Remind me again in 30 days')
       }}</CmkButton>
       <a
         class="product-usage-analytics-app__link"
         :href="props.global_settings_link"
-        @click="popupOpen = false"
+        @click="deferDecision"
         >{{ _t('Manage in global settings') }}</a
       >
     </div>

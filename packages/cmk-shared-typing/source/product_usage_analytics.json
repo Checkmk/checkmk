@@ -3,7 +3,30 @@
   "type": "object",
   "title": "product_usage_analytics_config",
   "properties": {
-    "global_settings_link": { "type": "string" }
+    "global_settings_link": {
+      "type": "string"
+    },
+    "reminder_cookie": {
+      "$ref": "#/$defs/reminder_cookie"
+    }
   },
-  "required": ["global_settings_link"]
+  "required": ["global_settings_link", "reminder_cookie"],
+  "$defs": {
+    "reminder_cookie": {
+      "type": "object",
+      "description": "The cookie the pop-up sets when the user defers the decision. The pop-up is shown again once its timestamp is older than the reminder interval.",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "max_age_seconds": {
+          "type": "integer"
+        }
+      },
+      "required": ["name", "path", "max_age_seconds"]
+    }
+  }
 }

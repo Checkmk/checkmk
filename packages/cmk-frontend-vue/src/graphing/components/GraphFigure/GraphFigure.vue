@@ -27,7 +27,12 @@ import {
 } from '../../utils/timeRange'
 import GraphBurgerMenu from '../GraphBurgerMenu.vue'
 import GraphTimestamp from '../GraphTimestamp.vue'
-import TimeSeriesGraph, { type GraphOptions, type Size, type TimeRange } from '../TimeSeriesGraph'
+import TimeSeriesGraph, {
+  type GraphOptions,
+  type Metric,
+  type Size,
+  type TimeRange
+} from '../TimeSeriesGraph'
 import { deriveYAxis } from '../TimeSeriesGraph/yAxis'
 import { DEFAULT_CONSOLIDATION_FN } from '../consolidation'
 import { CANVAS_MARGIN_HORIZONTAL } from '../constants'
@@ -55,6 +60,16 @@ const props = withDefaults(defineProps<GraphFigureProps>(), {
 
 const emit = defineEmits<{
   commitTimeRange: [range: RequestedTimeRange]
+}>()
+
+const slots = defineSlots<{
+  /** Controls of the embedding component at the end of the header. They call `setShown` with
+   * whether they show anything, so the header takes no room while they show nothing. */
+  'header-actions'?(props: {
+    metrics: Metric[]
+    timeRange: RequestedTimeRange
+    setShown: (shown: boolean) => void
+  }): unknown
 }>()
 
 const graphAreaDiv = ref<HTMLDivElement | null>(null)
@@ -302,9 +317,23 @@ const graphOptions = computed((): GraphOptions => {
   }
 })
 
+const actionsShown = ref(false)
+
+function setActionsShown(shown: boolean): void {
+  actionsShown.value = shown
+}
+
 // The marker stands above the plot, in the gap below the header, which is widened to fit it.
 // With no header there is no gap and the frame clips it, so the figure reserves the room.
-const hasHeader = computed(() => props.showTimestamp || burgerMenuVisible.value)
+const headerShown = computed(
+  () => props.showTimestamp || burgerMenuVisible.value || actionsShown.value
+)
+
+// While the actions show nothing, the header is hidden, not removed: they stay mounted to say
+// when they do. `slots` is not reactive, so it is read on each render.
+function hasHeader(): boolean {
+  return headerShown.value || slots['header-actions'] !== undefined
+}
 
 onMounted(() => {
   startTimer()
@@ -320,22 +349,30 @@ onBeforeUnmount(() => {
     class="graphing-graph-figure"
     :class="{
       'graphing-graph-figure--with-margin': showMargin,
-      'graphing-graph-figure--pin-overhang': showPin && !hasHeader
+      'graphing-graph-figure--pin-overhang': showPin && !headerShown
     }"
   >
     <div
-      v-if="graph && hasHeader"
+      v-if="graph && hasHeader()"
+      v-show="headerShown"
       class="graphing-graph-figure__header"
       :class="{ 'graphing-graph-figure__header--pin-gap': showPin }"
     >
       <GraphTimestamp v-if="showTimestamp && baselineTimeRange" :time-range="baselineTimeRange" />
-      <GraphBurgerMenu
-        v-if="burgerMenuVisible"
-        :aria-label="_t('Action menu')"
-        class="graphing-graph-figure__burger-menu"
-        :groups="burgerMenuGroups"
-        @do-action="triggerBurgerMenuAction"
-      />
+      <div class="graphing-graph-figure__header-end">
+        <slot
+          name="header-actions"
+          :metrics="legendMetrics"
+          :time-range="requestedTimeRange"
+          :set-shown="setActionsShown"
+        />
+        <GraphBurgerMenu
+          v-if="burgerMenuVisible"
+          :aria-label="_t('Action menu')"
+          :groups="burgerMenuGroups"
+          @do-action="triggerBurgerMenuAction"
+        />
+      </div>
     </div>
     <!-- Rendered before any data: the first load waits for its measured width. -->
     <div
@@ -454,7 +491,10 @@ onBeforeUnmount(() => {
   margin-bottom: var(--dimension-5);
 }
 
-.graphing-graph-figure__burger-menu {
+.graphing-graph-figure__header-end {
+  display: flex;
+  align-items: center;
+  gap: var(--dimension-4);
   margin-left: auto;
 }
 

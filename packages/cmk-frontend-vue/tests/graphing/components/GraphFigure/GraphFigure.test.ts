@@ -7,7 +7,7 @@ import type * as intl from '@internationalized/date'
 import { fireEvent, render, screen, waitFor } from '@testing-library/vue'
 import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 import client from 'cmk-ui-library/lib/rest-api-client/client'
-import { nextTick } from 'vue'
+import { type PropType, type VNode, defineComponent, h, nextTick, onMounted, ref } from 'vue'
 
 import GraphFigure from '@/graphing/components/GraphFigure/GraphFigure.vue'
 import { useGlobalPin } from '@/graphing/composables/useGlobalPin'
@@ -146,13 +146,17 @@ const loadingIcon = (): Element | null =>
 
 const DEFINITION = '{"graphs": []}'
 
-function renderFigure(props: Record<string, unknown> = {}) {
+function renderFigure(
+  props: Record<string, unknown> = {},
+  slots: Record<string, (props: never) => VNode> = {}
+) {
   return render(GraphFigure, {
     props: {
       source: { type: 'definition', internal: DEFINITION },
       timerange: { type: 'age', hours: 4 },
       ...props
-    }
+    },
+    slots
   })
 }
 
@@ -590,6 +594,86 @@ test('shows the burger menu only when requested and there is an add-to target', 
   expect(document.querySelector('.graphing-graph-burger-menu')).not.toBeInTheDocument()
 })
 
+type ActionsProps = {
+  metrics: { metadata: { name: string } }[]
+  timeRange: object
+  setShown: (shown: boolean) => void
+}
+
+/** Header actions that tell the figure on mounting whether they show anything. */
+function headerActions(shown = true) {
+  const actions = defineComponent({
+    props: {
+      metrics: { type: Array as PropType<ActionsProps['metrics']>, required: true },
+      timeRange: { type: Object, required: true },
+      setShown: { type: Function as PropType<ActionsProps['setShown']>, required: true }
+    },
+    setup(props) {
+      onMounted(() => props.setShown(shown))
+      return () =>
+        h('span', { 'data-testid': 'header-actions' }, [
+          props.metrics.map((metric) => metric.metadata.name).join(','),
+          ` ${JSON.stringify(props.timeRange)}`
+        ])
+    }
+  })
+  return { 'header-actions': (props: ActionsProps) => h(actions, props) }
+}
+
+describe('the header actions of the embedding component', () => {
+  const actions = headerActions()
+
+  test('show in a header of their own', async () => {
+    renderFigure({}, actions)
+
+    await screen.findByTestId('time-series-graph')
+    expect(document.querySelector('.graphing-graph-figure__header')).toContainElement(
+      screen.getByTestId('header-actions')
+    )
+    expect(screen.getByTestId('header-actions')).toBeVisible()
+  })
+
+  test('leave the header hidden while they show nothing', async () => {
+    renderFigure({}, headerActions(false))
+
+    await screen.findByTestId('time-series-graph')
+    expect(screen.getByTestId('header-actions')).not.toBeVisible()
+  })
+
+  test('show once the embedding component starts to give them', async () => {
+    const withActions = ref(false)
+    render(
+      defineComponent({
+        setup: () => () =>
+          h(
+            GraphFigure,
+            {
+              source: { type: 'definition', internal: DEFINITION },
+              timerange: { type: 'age', hours: 4 }
+            },
+            withActions.value ? actions : {}
+          )
+      })
+    )
+    await screen.findByTestId('time-series-graph')
+
+    withActions.value = true
+
+    await waitFor(() => expect(screen.getByTestId('header-actions')).toBeVisible())
+  })
+
+  test('are handed the drawn metrics and the shown window', async () => {
+    renderFigure({}, actions)
+    await screen.findByTestId('time-series-graph')
+
+    await fireEvent.click(screen.getByTestId('emit-pan'))
+
+    expect(screen.getByTestId('header-actions')).toHaveTextContent(
+      `cpu ${JSON.stringify({ start: 500, end: 500 + 4 * 3600 })}`
+    )
+  })
+})
+
 test('a figure without the pin never arms it', async () => {
   renderFigure()
 
@@ -646,6 +730,13 @@ describe('room for the pin marker', () => {
 
     await waitFor(() => expect(screen.getByTestId('time-series-graph')).toBeInTheDocument())
     expect(header()).not.toBeInTheDocument()
+    expect(figure()).toHaveClass('graphing-graph-figure--pin-overhang')
+  })
+
+  test('header actions showing nothing leave the overhang to the figure', async () => {
+    renderFigure({ showPin: true }, headerActions(false))
+
+    await waitFor(() => expect(screen.getByTestId('time-series-graph')).toBeInTheDocument())
     expect(figure()).toHaveClass('graphing-graph-figure--pin-overhang')
   })
 

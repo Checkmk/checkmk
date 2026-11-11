@@ -433,8 +433,8 @@ void main() {
     /// Job parameters so the numbers can be tuned from checkmk_ci without a change
     /// here. The fallbacks keep this working before those parameters are deployed.
     def singlesite_shards = (params.SHARD_COUNT ?: 8) as Integer;
-    /// Multisite stays unsharded by default until SHARD_COUNT_MULTISITE is raised.
-    def multisite_shards = (params.SHARD_COUNT_MULTISITE ?: 1) as Integer;
+    /// Multisite keeps its marker and is split over 3 shards by default until SHARD_COUNT_MULTISITE is set.
+    def multisite_shards = (params.SHARD_COUNT_MULTISITE ?: 3) as Integer;
     /// Marker per suite, "" runs the whole suite. Unsharded singlesite keeps the
     /// marker, so SHARD_COUNT=1 restores the run from before sharding.
     def singlesite_marker = (singlesite_shards < 2) ? "medium_test_chain" : "";

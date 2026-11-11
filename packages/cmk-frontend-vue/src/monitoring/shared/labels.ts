@@ -78,6 +78,10 @@ export function tagCondition(item: LabelCellItem): FieldConditionMap['tags'] {
   }
 }
 
+export function contactCondition(item: LabelCellItem): FieldConditionMap['contacts'] {
+  return { type: 'condition', field: 'contacts', op: 'one_of', value: [labelItemText(item)] }
+}
+
 /** Narrow the listing to what carries the label an entry shows. */
 export function labelCondition(item: LabelCellItem): FieldConditionMap['labels'] {
   const pair = 'keyValue' in item ? `${item.keyValue.key}:${item.keyValue.value}` : item.text

@@ -267,6 +267,13 @@ test('the folder column offers a text filter', () => {
   expect(folderColumn?.meta?.filter).toEqual({ type: 'string-input', field: 'folder' })
 })
 
+test('the contacts column keeps its substring search', () => {
+  const columns = hostColumns()
+  const contactsColumn = columns.find((column) => columnId(column) === 'contacts')
+
+  expect(contactsColumn?.meta?.filter).toEqual({ type: 'string-input', field: 'contacts' })
+})
+
 test.each(['last_check', 'last_state_change'])(
   'the %s column offers a from/to filter on the instant',
   (field) => {

@@ -85,6 +85,7 @@ export type FetchState = 'idle' | FetchKind
 export type ColumnCondition =
   | FieldConditionMap['groups']
   | FieldConditionMap['labels']
+  | FieldConditionMap['contacts']
   | FieldConditionMap['tags']
 
 export interface MonitoringServiceOptions<T> {

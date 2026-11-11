@@ -19,14 +19,26 @@ const props = defineProps<{ definition: StringInputFilter<F> }>()
 
 const model = defineModel<ColumnFilterNode<F> | undefined>({ default: undefined })
 
-function extractValues(node: ColumnFilterNode<F> | undefined): string {
+function extractValues(node: ColumnFilterNode<F> | undefined): string[] {
   if (!node || node.type !== 'condition') {
-    return ''
+    return []
   }
-  return typeof node.value === 'string' ? node.value : ''
+  const values: unknown[] = Array.isArray(node.value) ? node.value : [node.value]
+  return values.filter((entry): entry is string => typeof entry === 'string' && entry !== '')
 }
 
-const value = ref<string>(extractValues(model.value))
+function isExactMatch(node: ColumnFilterNode<F> | undefined): boolean {
+  return node?.type === 'condition' && node.op === 'one_of'
+}
+
+function fieldText(node: ColumnFilterNode<F> | undefined): string {
+  const values = extractValues(node)
+  return values.length === 1 ? values[0]! : ''
+}
+
+const value = ref<string>(fieldText(model.value))
+
+const showsExactMatch = computed(() => isExactMatch(model.value) && value.value !== '')
 
 function containsNode(text: string): ColumnFilterNode<F> {
   return {
@@ -51,10 +63,9 @@ const selected = computed<string[]>({
       return []
     }
     if (node.type === 'or') {
-      return node.children.map((child) => extractValues(child as ColumnFilterNode<F>))
+      return node.children.flatMap((child) => extractValues(child as ColumnFilterNode<F>))
     }
-    const single = extractValues(node)
-    return single === '' ? [] : [single]
+    return extractValues(node)
   },
   set(values: string[]) {
     const kept = values.filter((entry) => entry.trim() !== '')
@@ -94,6 +105,12 @@ const selected = computed<string[]>({
       :aria-label="_t('Value')"
       @update:model-value="createFilterNode($event)"
     />
+    <span
+      v-if="!definition.suggest && showsExactMatch"
+      class="monitoring-filter-string-input__hint"
+    >
+      {{ _t('Exact match. Editing searches by substring.') }}
+    </span>
   </div>
 </template>
 
@@ -105,5 +122,11 @@ const selected = computed<string[]>({
   :deep(.monitoring-filter-string-input__element) {
     width: 100%;
   }
+}
+
+.monitoring-filter-string-input__hint {
+  display: block;
+  margin-top: var(--dimension-3);
+  color: var(--font-color-dimmed);
 }
 </style>

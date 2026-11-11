@@ -30,6 +30,7 @@ import { customActions, withCustomActions } from '@/monitoring/shared/customActi
 import { formatDisplayTimestamp } from '@/monitoring/shared/formatTimestamp'
 import { hostServicesPageUrl } from '@/monitoring/shared/hostServicesPageUrl'
 import {
+  contactCondition,
   groupCondition,
   labelCondition,
   tagCondition,
@@ -210,7 +211,13 @@ const lastStateChange = computed(() =>
     size="small"
     :filter-by="tagCondition"
   />
-  <LabelCell v-if="hasColumn('contacts')" column-id="contacts" :items="contacts" size="small" />
+  <LabelCell
+    v-if="hasColumn('contacts')"
+    column-id="contacts"
+    :items="contacts"
+    size="small"
+    :filter-by="contactCondition"
+  />
   <LabelCell
     v-if="hasColumn('contact_groups')"
     column-id="contact_groups"

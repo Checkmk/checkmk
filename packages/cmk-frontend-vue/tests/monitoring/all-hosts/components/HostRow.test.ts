@@ -564,6 +564,23 @@ test('clicking a tag narrows the listing to the hosts carrying it', async () => 
   })
 })
 
+test.each([
+  { name: 'hh', contact: 'hh' },
+  { name: 'a name with regex characters', contact: 'foo+bar.baz@example.com' }
+])('clicking a contact narrows the listing to exactly that contact: $name', async ({ contact }) => {
+  const service = makeListingService()
+  mountRow(makeHost({ contacts: [contact, `${contact}admin`] }), makeTableRow(), {}, service)
+
+  await fireEvent.click(screen.getByRole('button', { name: contact }))
+
+  expect(service.filterState.value).toStrictEqual({
+    type: 'condition',
+    field: 'contacts',
+    op: 'one_of',
+    value: [contact]
+  })
+})
+
 test('host groups stay plain where there is no listing to narrow', () => {
   mountRow(makeHost({ groups: ['linux'] }))
 

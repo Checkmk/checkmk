@@ -398,4 +398,33 @@ describe('HostSlideIn', () => {
 
     expect(emitted()['close']).toHaveLength(1)
   })
+
+  it('links a label to the page its narrow target names', async () => {
+    vi.spyOn(client, 'GET').mockResolvedValue({
+      data: makeHostOverview({ labels: { env: { value: 'prod', source: 'explicit' } } }),
+      error: undefined,
+      response: new Response()
+    } as never)
+    const narrowTarget = vi.fn(() => 'monitor_all_hosts.py?filter=env')
+    render(HostSlideIn, {
+      props: {
+        host: makeHost(),
+        actions: makeRegistry(vi.fn()),
+        loadActionMenu: async () => [],
+        displayOptions: DISPLAY_OPTIONS,
+        filterLabelsBy: labelCondition,
+        narrowTarget
+      }
+    })
+
+    const link = await screen.findByRole('link', { name: 'env: prod' })
+
+    expect(link).toHaveAttribute('href', 'monitor_all_hosts.py?filter=env')
+    expect(narrowTarget).toHaveBeenCalledWith({
+      type: 'condition',
+      field: 'labels',
+      op: 'all_of',
+      value: ['env:prod']
+    })
+  })
 })

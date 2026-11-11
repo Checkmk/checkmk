@@ -28,9 +28,14 @@ const props = withDefaults(
     /** Counts how often the reader asked for the relations; 0 means they did not. */
     revealRelationsRequest?: number
     displayOptions: DisplayOptions
-    /** What a label click narrows the listing behind to; unset unless that lists hosts. */
+    /**
+     * What a label click narrows to: handed to the NARROW_TARGET provided if set, else to the
+     * listing behind; leave it unset when neither lists hosts.
+     */
     filterLabelsBy?: ((item: LabelCellItem) => ColumnCondition) | undefined
+    /** What a contact group click narrows to, like filterLabelsBy. */
     filterContactGroupsBy?: ((item: LabelCellItem) => ColumnCondition) | undefined
+    /** What a tag click narrows to, like filterLabelsBy. */
     filterTagsBy?: ((item: LabelCellItem) => ColumnCondition) | undefined
   }>(),
   { revealRelationsRequest: 0 }

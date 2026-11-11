@@ -30,7 +30,7 @@ import TableSkeleton from '@/loading-transition/TableSkeleton.vue'
 import { HostApi } from '@/monitoring/shared/api/hosts'
 import type { HostOverview } from '@/monitoring/shared/api/types'
 import HostHeader, { type HostHeaderSubject } from '@/monitoring/shared/components/HostHeader.vue'
-import { AFTER_NARROW } from '@/monitoring/shared/components/MonitoringTableContext'
+import { AFTER_NARROW, NARROW_TARGET } from '@/monitoring/shared/components/MonitoringTableContext'
 import ActionFeedback from '@/monitoring/shared/components/action/ActionFeedback.vue'
 import MonitoringActionPane from '@/monitoring/shared/components/action/MonitoringActionPane.vue'
 import type { MonitoringActionRegistry } from '@/monitoring/shared/components/action/registry'
@@ -65,10 +65,20 @@ const props = withDefaults(
     /** Counts how often the reader asked for the relations; 0 means they did not. */
     revealRelationsRequest?: number
     displayOptions: DisplayOptions
-    /** What a label click narrows the listing behind to; unset unless that lists hosts. */
+    /**
+     * What a label click narrows to: handed to narrowTarget if set, else to the
+     * listing behind; leave it unset when neither lists hosts.
+     */
     filterLabelsBy?: ((item: LabelCellItem) => ColumnCondition) | undefined
+    /** What a contact group click narrows to, like filterLabelsBy. */
     filterContactGroupsBy?: ((item: LabelCellItem) => ColumnCondition) | undefined
+    /** What a tag click narrows to, like filterLabelsBy. */
     filterTagsBy?: ((item: LabelCellItem) => ColumnCondition) | undefined
+    /**
+     * The page a clicked value links to, given what it narrows to; set when the
+     * listing behind does not list hosts. Provided to the tabs as NARROW_TARGET.
+     */
+    narrowTarget?: ((condition: ColumnCondition) => string) | undefined
   }>(),
   {
     rowActions: () => [],
@@ -86,6 +96,9 @@ const emit = defineEmits<{
 const { _t } = usei18n()
 
 provide(AFTER_NARROW, () => emit('close'))
+if (props.narrowTarget) {
+  provide(NARROW_TARGET, props.narrowTarget)
+}
 
 const hostApi = new HostApi()
 

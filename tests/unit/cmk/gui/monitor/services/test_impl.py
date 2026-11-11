@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 import pytest
 
@@ -740,6 +740,7 @@ def test_fetch_leaves_the_graphs_unread_when_not_asked_for() -> None:
 
 
 def _overview_row(**overrides: object) -> dict[str, object]:
+    """A row shaped for the single-service query behind ``get_overview``."""
     return {
         "description": "Filesystem /",
         "host_name": _UNKNOWN_HOSTNAME,
@@ -767,7 +768,7 @@ def _overview_row(**overrides: object) -> dict[str, object]:
         "host_acknowledged": 0,
         "host_scheduled_downtime_depth": 0,
         "contact_groups": [],
-        "long_plugin_output": "Used: 29.61%\\nInodes used: 10.26%",
+        "long_plugin_output": "",
         "current_attempt": 1,
         "max_check_attempts": 1,
         "next_check": 0,
@@ -781,6 +782,7 @@ def _overview_row(**overrides: object) -> dict[str, object]:
         "check_type": 0,
         "cached_at": 0,
         "cache_interval": 0,
+        "host_filename": "/wato/hosts.mk",
         **overrides,
     }
 
@@ -897,3 +899,72 @@ def test_all_services_count_matched_applies_filters() -> None:
             )
             == 0
         )
+
+
+class _SetupOpening:
+    """Setup's folders, opening the hosts of the given folders to the user."""
+
+    def __init__(self, open_hosts: Mapping[str, str]) -> None:
+        self._open_hosts = open_hosts
+        self.asked: list[tuple[str, str | None]] = []
+
+    def title_of(self, _path: str) -> str | None:
+        return None
+
+    def all_titles(self) -> Mapping[str, str]:
+        return {}
+
+    def may_read_host(self, host_name: str, path: str | None) -> bool:
+        self.asked.append((host_name, path))
+        return self._open_hosts.get(host_name) == path
+
+
+def _overview_setup_access(
+    mock_livestatus: MockLiveStatusConnection, host_filename: str, setup: _SetupOpening | None
+) -> bool | None:
+    mock_livestatus.add_table("services", [_overview_row(host_filename=host_filename)])
+    mock_livestatus.expect_query("GET services", match_type="loose", sites=["NO_SITE"])
+    with mock_livestatus(expect_status_query=True):
+        overview = LiveStatusHostServicesRepository(
+            connection=sites.live(), setup=setup
+        ).get_overview(hostname=_UNKNOWN_HOSTNAME, service_name="Filesystem /", site_id="NO_SITE")
+    return overview.setup_access
+
+
+@pytest.mark.parametrize(
+    "open_hosts, expected",
+    [
+        pytest.param({_UNKNOWN_HOSTNAME: "linux/web"}, True, id="user may open the host"),
+        pytest.param({}, False, id="user may not open the host"),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_get_overview_asks_setup_for_the_host_in_its_folder(
+    mock_livestatus: MockLiveStatusConnection, open_hosts: Mapping[str, str], expected: bool
+) -> None:
+    setup = _SetupOpening(open_hosts)
+
+    assert _overview_setup_access(mock_livestatus, "/wato/linux/web/hosts.mk", setup) is expected
+    assert setup.asked == [(_UNKNOWN_HOSTNAME, "linux/web")]
+
+
+@pytest.mark.usefixtures("request_context")
+def test_get_overview_keeps_a_host_setup_does_not_manage_closed_without_asking(
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    setup = _SetupOpening({_UNKNOWN_HOSTNAME: ""})
+
+    assert (
+        _overview_setup_access(
+            mock_livestatus, "/omd/sites/heute/etc/nagios/conf.d/hosts.mk", setup
+        )
+        is False
+    )
+    assert setup.asked == []
+
+
+@pytest.mark.usefixtures("request_context")
+def test_get_overview_keeps_every_host_closed_without_setup(
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    assert _overview_setup_access(mock_livestatus, "/wato/hosts.mk", None) is False

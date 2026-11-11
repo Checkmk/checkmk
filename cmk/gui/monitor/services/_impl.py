@@ -26,7 +26,8 @@ from cmk.gui.livestatus_utils.commands.comment import add_service_comment
 from cmk.gui.livestatus_utils.commands.downtimes import recur_mode, RecurMode
 from cmk.gui.monitor.command import ModifiableAttribute
 from cmk.gui.monitor.hosts import reader_unavailable_sites
-from cmk.gui.monitor.shared import IconSource
+from cmk.gui.monitor.setup_folders import SetupFolders
+from cmk.gui.monitor.shared import IconSource, may_open_in_setup
 from cmk.gui.monitor.site_scope import MonitorSites
 from cmk.gui.utils.relay import is_scheduled_by_relay
 from cmk.livestatus_client import (
@@ -77,9 +78,13 @@ class LiveStatusHostServicesRepository:
         *,
         connection: MultiSiteConnection,
         read_unavailable_sites: Callable[[], frozenset[str]] = reader_unavailable_sites,
+        setup: SetupFolders | None = None,
     ) -> None:
+        """``setup`` says whether the user may open the host of the service an overview shows in
+        Setup; without it, they may not."""
         self._connection = connection
         self._read_unavailable_sites = read_unavailable_sites
+        self._setup = setup
 
     def host_exists(self, hostname: str) -> bool:
         q = Query([Hosts.name], Hosts.name == hostname, extra_headers=["Limit: 1"])
@@ -147,6 +152,7 @@ class LiveStatusHostServicesRepository:
                 Services.cached_at,
                 Services.cache_interval,
                 Services.host_labels,
+                Services.host_filename,
             ],
             And(Services.host_name == hostname, Services.description == service_name),
         )
@@ -212,6 +218,7 @@ class LiveStatusHostServicesRepository:
             tags=dict(row["tags"]),
             # The overview does not expose contacts, so its query does not read them.
             contacts=[],
+            setup_access=_setup_access(self._setup, row["host_name"], row["host_filename"]),
         )
 
     def count_total(self, hostname: str) -> int:
@@ -298,6 +305,12 @@ class LiveStatusServicesRepository:
                 for site_id in self._sites.matching(query)
             ),
         )
+
+
+def _setup_access(setup: SetupFolders | None, hostname: str, filename: str) -> bool:
+    """Whether the user may open the host defined in ``filename`` in Setup. Without Setup, no host
+    opens in it."""
+    return setup is not None and may_open_in_setup(setup.may_read_host, hostname, filename)
 
 
 def _fetch_services(

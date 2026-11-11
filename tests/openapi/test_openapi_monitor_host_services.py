@@ -1613,6 +1613,7 @@ class TestMonitorServiceOverview:
                     "is_flapping": 0,
                     "staleness": 0.0,
                     "host_alias": _HOST_ALIAS,
+                    "host_filename": "/wato/hosts.mk",
                     "host_state": 0,
                     "host_has_been_checked": 1,
                     "host_acknowledged": 0,
@@ -1735,6 +1736,7 @@ class TestMonitorServiceOverview:
                     "is_flapping": 0,
                     "staleness": 0.0,
                     "host_alias": _HOST_ALIAS,
+                    "host_filename": "/wato/hosts.mk",
                     "host_state": 0,
                     "host_has_been_checked": 1,
                     "host_acknowledged": 0,
@@ -1964,6 +1966,7 @@ class TestMonitorServiceOverview:
                     "is_flapping": 0,
                     "staleness": 0.0,
                     "host_alias": _HOST_ALIAS,
+                    "host_filename": "/wato/hosts.mk",
                     "host_state": 0,
                     "host_has_been_checked": 1,
                     "host_acknowledged": 0,
@@ -2036,6 +2039,7 @@ class TestMonitorServiceOverview:
                     "is_flapping": 0,
                     "staleness": 0.0,
                     "host_alias": _HOST_ALIAS,
+                    "host_filename": "/wato/hosts.mk",
                     "host_state": 0,
                     "host_has_been_checked": 1,
                     "host_acknowledged": 0,
@@ -2109,6 +2113,7 @@ class TestMonitorServiceOverview:
                     "is_flapping": 0,
                     "staleness": 0.0,
                     "host_alias": _HOST_ALIAS,
+                    "host_filename": "/wato/hosts.mk",
                     "host_state": 0,
                     "host_has_been_checked": 0,
                     "host_acknowledged": 0,
@@ -2515,6 +2520,7 @@ _OVERVIEW_SERVICE_ROW = {
     "is_flapping": 0,
     "staleness": 0.0,
     "host_alias": _HOST_ALIAS,
+    "host_filename": "/wato/hosts.mk",
     "host_state": 0,
     "host_has_been_checked": 1,
     "host_acknowledged": 0,
@@ -2537,7 +2543,8 @@ _SERVICE_OVERVIEW_COLUMNS = (
     "host_has_been_checked host_acknowledged host_scheduled_downtime_depth contact_groups "
     "long_plugin_output "
     "current_attempt max_check_attempts next_check tags labels label_sources perf_data "
-    "check_command pnpgraph_present check_type cached_at cache_interval host_labels"
+    "check_command pnpgraph_present check_type cached_at cache_interval host_labels "
+    "host_filename"
 )
 _LIMIT = 1000
 _OTHER_SITE_ID = "remote"

@@ -192,6 +192,9 @@ class ServiceOverviewResponse:
                 raise ValueError(f"service overview is missing {name!r}")
             return value
 
+        # Setup restricts a host to the contact groups its permissions name, so it may refuse a
+        # user the host even where they may see its parameters or run its discovery.
+        setup_access = service.setup_access
         return cls(
             name=service.name,
             host_name=service.host_name,
@@ -207,11 +210,11 @@ class ServiceOverviewResponse:
             legacy_service_status_link=service_view_link("service", service),
             legacy_service_parameters_link=(
                 parameters_link.url_for(host=service.host_name, service=service.name)
-                if parameters_link
+                if parameters_link and setup_access
                 else None
             ),
             legacy_service_discovery_link=(
-                service_discovery_link(service) if may_run_discovery else None
+                service_discovery_link(service) if may_run_discovery and setup_access else None
             ),
             legacy_service_graphs_link=(
                 service_view_link("service_graphs", service) if service.has_graphs else None
@@ -280,20 +283,22 @@ def make_endpoint_get_service_overview(setup_folders: SetupFolderSource) -> Vers
         user = api_context.user
         parameters_link = service_parameters_link(api_context.config, user)
         may_run_discovery = may_reach_setup(api_context.config, user, "hosts")
+        # Reading Setup's folders is the costly part, so they are read only for a link to give.
         # Neither link is offered where Setup is off, so Setup is not asked there either.
-        may_open_host_in_setup = (
-            parameters_link is not None or may_run_discovery
-        ) and setup_folders(api_context.config, user).may_read_host(hostname, None)
+        asks_setup = parameters_link is not None or may_run_discovery
         with sites.only_sites(site_id):
-            host_services_repo = LiveStatusHostServicesRepository(connection=sites.live())
+            host_services_repo = LiveStatusHostServicesRepository(
+                connection=sites.live(),
+                setup=setup_folders(api_context.config, user) if asks_setup else None,
+            )
 
             return _handle_get_service_overview(
                 host_services_repo,
                 hostname=hostname,
                 service_name=service_name,
                 site_id=site_id,
-                parameters_link=parameters_link if may_open_host_in_setup else None,
-                may_run_discovery=may_run_discovery and may_open_host_in_setup,
+                parameters_link=parameters_link,
+                may_run_discovery=may_run_discovery,
             )
 
     return VersionedEndpoint(

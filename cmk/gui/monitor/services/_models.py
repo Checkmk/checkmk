@@ -177,6 +177,8 @@ class ServiceOverview(Service):
     next_check: UnixTimestamp | None
     # A relay runs this active check and schedules it, so the core reports no next check.
     scheduled_by_relay: bool
+    # Whether the user may open the host of this service in Setup.
+    setup_access: bool
 
 
 class ServiceOptionalField(enum.StrEnum):

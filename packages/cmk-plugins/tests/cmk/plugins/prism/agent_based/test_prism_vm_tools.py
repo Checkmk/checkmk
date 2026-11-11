@@ -99,3 +99,45 @@ def test_check_prism_vm_tools(
         )
         == expected_check_result
     )
+
+
+def test_disabled_tools_that_should_be_enabled_are_warn() -> None:
+    section = {"nutanixGuestTools": {"installedVersion": "4.5", "enabled": False}}
+
+    assert list(
+        check_prism_vm_tools(
+            params={"tools_install": "installed", "tools_enabled": "enabled"},
+            section=section,
+        )
+    ) == [
+        Result(state=State.OK, summary="Tools with version 4.5 installed"),
+        Result(state=State.WARN, summary="No tools enabled, but should be enabled"),
+    ]
+
+
+def test_vm_without_tools_has_nothing_to_enable() -> None:
+    section = {"nutanixGuestTools": {"installedVersion": None, "enabled": False}}
+
+    assert list(
+        check_prism_vm_tools(
+            params={"tools_install": "not_installed", "tools_enabled": "enabled"},
+            section=section,
+        )
+    ) == [
+        Result(state=State.OK, summary="No tools installed"),
+        Result(state=State.OK, summary="No tools enabled"),
+    ]
+
+
+def test_vm_without_tools_and_unknown_activation_is_ok() -> None:
+    section = {"nutanixGuestTools": {"installedVersion": None, "enabled": None}}
+
+    assert list(
+        check_prism_vm_tools(
+            params={"tools_install": "not_installed", "tools_enabled": "enabled"},
+            section=section,
+        )
+    ) == [
+        Result(state=State.OK, summary="No tools installed"),
+        Result(state=State.OK, summary="No tools enabled"),
+    ]

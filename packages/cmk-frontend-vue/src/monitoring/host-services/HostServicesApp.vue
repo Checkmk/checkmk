@@ -46,7 +46,7 @@ import {
 } from '@/monitoring/shared/displayOptionsState/urlState'
 import { hostPanelFragment } from '@/monitoring/shared/hostPanelFragment'
 import { HOST_TAB_OVERVIEW } from '@/monitoring/shared/hostSlideInTabs'
-import { labelCondition, tagCondition } from '@/monitoring/shared/labels'
+import { contactGroupCondition, labelCondition, tagCondition } from '@/monitoring/shared/labels'
 import { serviceCommand, serviceRefOf } from '@/monitoring/shared/objectRefs'
 import { DEFAULT_DISPLAY_OPTIONS } from '@/monitoring/shared/types'
 import { useHostActions } from '@/monitoring/shared/useHostActions'
@@ -515,6 +515,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         :load-action-menu="hostActions.loadActionMenu"
         :filter-labels-by="labelCondition"
         :filter-tags-by="tagCondition"
+        :filter-contact-groups-by="contactGroupCondition"
         :narrow-target="allHostsPageUrl"
         @close="closeHostSlideIn"
         @performed="onActionPerformed"

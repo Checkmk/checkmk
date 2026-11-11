@@ -12,6 +12,7 @@ from ._contextual_link_encoding import (
     with_link_columns,
 )
 from ._family import DASHBOARD_FAMILY
+from ._link_rows import link_host_rows, link_service_rows
 from ._registration import register_endpoints
 from ._utils import (
     clone_dashboard_config,
@@ -77,5 +78,7 @@ __all__ = [
     "view_link",
     "widget_compute_endpoint",
     "link_columns",
+    "link_host_rows",
+    "link_service_rows",
     "with_link_columns",
 ]

@@ -106,6 +106,22 @@ test('a stored aggregator populates the group-by widget', async () => {
   expect(within(chip).getByText('service.name')).toBeVisible()
 })
 
+test('picking the quantile function persists the percentile its chip shows', async () => {
+  const store = renderForm(newTelemetryMetricsDraft('A'))
+  const chip = await screen.findByRole('button', { name: /Edit consolidation/ })
+
+  await userEvent.click(chip)
+  await userEvent.click(screen.getByRole('combobox', { name: 'Consolidation function' }))
+  await userEvent.click(await screen.findByRole('option', { name: 'Quantile' }))
+
+  await waitFor(() =>
+    expect(storedItem(store).consolidation_function).toMatchObject({
+      type: 'histogram_quantile',
+      percentile: 95
+    })
+  )
+})
+
 const MAX_BY_SERVICE: Aggregator = {
   stages: [
     {

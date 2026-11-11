@@ -6,6 +6,7 @@
 import { userEvent } from '@testing-library/user-event'
 import { render, screen, waitFor } from '@testing-library/vue'
 import type { Aggregator } from 'cmk-shared-typing/typescript/aggregation'
+import type { ConsolidationFunction } from 'cmk-shared-typing/typescript/consolidation'
 
 import type { ValidationMessages } from '@/form'
 
@@ -55,6 +56,32 @@ test('a preserve histograms line offers the groupings that pair with it', async 
     expect(screen.getByRole('option', { name: 'fraction below by' })).toBeVisible()
     expect(screen.getByRole('option', { name: 'fraction between by' })).toBeVisible()
   })
+})
+
+test('picking the quantile function stores the percentile its chip shows', async () => {
+  let stored: ConsolidationFunction = {
+    type: 'gauge',
+    function: 'gauge_last',
+    lookback_seconds: 120
+  }
+  const { rerender } = render(FormTelemetryMetricsCustomQuery, {
+    props: {
+      consolidation: stored,
+      // Stored by the parent and handed back on its next render, as a v-model does.
+      'onUpdate:consolidation': (value: ConsolidationFunction) => {
+        stored = value
+        void rerender({ consolidation: value })
+      }
+    }
+  })
+
+  await userEvent.click(screen.getByRole('button', { name: /Edit consolidation/ }))
+  await userEvent.click(screen.getByRole('combobox', { name: 'Consolidation function' }))
+  await userEvent.click(await screen.findByRole('option', { name: 'Quantile' }))
+
+  await waitFor(() =>
+    expect(stored).toMatchObject({ function: 'histogram_quantile', percentile: 95 })
+  )
 })
 
 const SUM_BY_SERVICE_THEN_AVG_BY_REGION: Aggregator = {

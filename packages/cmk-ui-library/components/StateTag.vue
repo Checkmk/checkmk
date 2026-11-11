@@ -4,6 +4,7 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
+import { INLINE_STATE_TAG_WIDTH } from 'cmk-ui-library/components/stateTagSizes'
 import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 
 export type StateTone = 'ok' | 'warning' | 'critical' | 'unknown' | 'pending'
@@ -86,7 +87,7 @@ withDefaults(
  */
 .cmk-state-tag--size-inline {
   --state-tag-height: var(--dimension-5);
-  --state-tag-width: 34px;
+  --state-tag-width: v-bind('`${INLINE_STATE_TAG_WIDTH}px`');
 
   padding: 0 var(--dimension-3);
   font-size: 9px;

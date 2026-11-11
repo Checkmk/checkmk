@@ -24,7 +24,7 @@ import type {
 } from '@/monitoring/shared/components/filter/types'
 import { MODE_COLUMN_ID, indicatorColumn } from '@/monitoring/shared/components/modeColumn'
 import type { StateFlagField } from '@/monitoring/shared/components/stateColumn'
-import { ACTIONS_COLUMN_ID } from '@/monitoring/shared/constants'
+import { ACTIONS_COLUMN_ID, LONG_TEXT_COLUMN_GROW } from '@/monitoring/shared/constants'
 import { actionsColumnWidth } from '@/monitoring/shared/customActions'
 import { columnId } from '@/monitoring/shared/tableState/schema'
 
@@ -381,7 +381,7 @@ export function buildHostColumns({
       sortDescFirst: false,
       minSize: 100,
       maxSize: 300,
-      meta: { filter: siteFilter, hidden: true }
+      meta: { filter: siteFilter, hidden: true, grow: LONG_TEXT_COLUMN_GROW }
     },
     {
       accessorKey: 'last_check',

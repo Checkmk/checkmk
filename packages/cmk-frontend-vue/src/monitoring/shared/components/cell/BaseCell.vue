@@ -247,6 +247,7 @@ const highlightStyle = computed<CSSProperties>(() =>
       inset: 0;
     }
 
+    /* Counted in `HOST_CELL_CHROME` (hostCell.ts), so keep it in sync when resizing. */
     .monitoring-base-cell__action-icon {
       flex: 0 0 auto;
       align-self: center;

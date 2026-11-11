@@ -21,6 +21,7 @@ import {
   MONITORING_SERVICE,
   TABLE_BORDER_SPACING
 } from '@/monitoring/shared/components/MonitoringTableContext'
+import { fitColumnsToContent } from '@/monitoring/shared/components/contentColumns'
 import type { FetchState, MonitoringService } from '@/monitoring/shared/services/MonitoringService'
 
 import { FakeResizeObserver, deliverSize } from '@tests/lib/fakeResizeObserver'
@@ -898,6 +899,21 @@ describe('the width left beyond the minimums', () => {
     )
 
     expect([probedWidth('name'), probedWidth('state')]).toEqual([130, 370])
+  })
+
+  test('goes to the other columns once a column fitted to its content fits', async () => {
+    await mountSizedTable(
+      fitColumnsToContent<Row>(
+        [
+          { accessorKey: 'name', header: 'Name', minSize: 100, maxSize: 300 },
+          { id: 'state', header: 'State', minSize: 100 }
+        ],
+        { name: 250 }
+      ),
+      600
+    )
+
+    expect([probedWidth('name'), probedWidth('state')]).toEqual([250, 350])
   })
 })
 

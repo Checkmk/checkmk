@@ -38,6 +38,8 @@ const emit = defineEmits<{
   display: flex;
   flex-direction: row;
   align-items: center;
+
+  /* Counted in `HOST_CELL_CHROME` (hostCell.ts). */
   gap: var(--dimension-3);
   min-width: 0;
   min-height: 21px;

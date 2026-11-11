@@ -96,6 +96,9 @@ export type HeaderFitWidths = Record<string, number>
 /** The horizontal padding of a cell around its content. */
 export const CELL_PADDING = 16
 
+/** Spare width so a sub-pixel difference between canvas and DOM layout doesn't wrap a glyph. */
+export const SUBPIXEL_SLACK = 1
+
 export const TABLE_BORDER_SPACING = 1
 export const TABLE_BORDER_SPACING_PX = `${TABLE_BORDER_SPACING}px`
 

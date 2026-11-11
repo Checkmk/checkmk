@@ -34,6 +34,10 @@ import { rowsToActOn } from '@/monitoring/shared/components/action/actions/remov
 import { RESCHEDULE_ACTION_ID } from '@/monitoring/shared/components/action/actions/reschedule'
 import type { ActionOutcome } from '@/monitoring/shared/components/action/types'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
+import {
+  fitColumnsToContent,
+  useSiteColumnWidth
+} from '@/monitoring/shared/components/contentColumns'
 import { sizeModeColumn, useModeColumnWidth } from '@/monitoring/shared/components/modeColumn'
 import { sizeStateColumn, useStateIconCount } from '@/monitoring/shared/components/stateColumn'
 import {
@@ -79,6 +83,7 @@ import { useTypeToFocus } from '@/monitoring/shared/useTypeToFocus'
 
 import { AllServicesApi } from './api/services'
 import { buildAllServicesColumnPinning, distinguishesSites, useAllServicesColumns } from './columns'
+import { useHostColumnWidth } from './hostColumn'
 import { AllServicesService } from './services/AllServicesService'
 
 const { _t } = usei18n()
@@ -154,25 +159,34 @@ const displayOptions = usePersistentRef(
 
 const root = useTemplateRef<HTMLElement>('root')
 
-const timestampColumnWidth = useTimestampColumnWidth(
-  () => displayOptions.value,
-  useCellTextWidth(root)
+const cellTextWidth = useCellTextWidth(root)
+
+const timestampColumnWidth = useTimestampColumnWidth(() => displayOptions.value, cellTextWidth)
+
+const hostColumnWidth = useHostColumnWidth(allServicesService, cellTextWidth)
+
+const siteWidth = useSiteColumnWidth(
+  props.sites.map((site) => site.id),
+  cellTextWidth
 )
 
 const tableColumns = computed(() =>
-  sizeStateColumn(
-    sizeActionsColumn(
-      sizeModeColumn(
-        timestampColumnsAsShown(
-          uncapNameWithoutSummary(columns, allServicesService.columnVisibility.value),
-          displayOptions.value.timestampFormat,
-          timestampColumnWidth.value
+  fitColumnsToContent(
+    sizeStateColumn(
+      sizeActionsColumn(
+        sizeModeColumn(
+          timestampColumnsAsShown(
+            uncapNameWithoutSummary(columns, allServicesService.columnVisibility.value),
+            displayOptions.value.timestampFormat,
+            timestampColumnWidth.value
+          ),
+          modeColumnSize.value
         ),
-        modeColumnSize.value
+        inlineCustomActions.value
       ),
-      inlineCustomActions.value
+      stateIconCount.value
     ),
-    stateIconCount.value
+    { host_name: hostColumnWidth.value, site_id: siteWidth.value }
   )
 )
 

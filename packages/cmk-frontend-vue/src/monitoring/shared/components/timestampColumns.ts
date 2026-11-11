@@ -9,7 +9,7 @@ import { type ComputedRef, type Ref, computed, shallowRef, watch } from 'vue'
 import { longestTimestampShape } from '@/monitoring/shared/formatTimestamp'
 import type { DisplayOptions, TimestampFormatId } from '@/monitoring/shared/types'
 
-import { CELL_PADDING } from './MonitoringTableContext'
+import { CELL_PADDING, SUBPIXEL_SLACK } from './MonitoringTableContext'
 
 export type TextWidth = (text: string) => number
 
@@ -71,9 +71,7 @@ export function useTimestampColumnWidth(
       measure(candidate) > measure(widest) ? candidate : widest
     )
     const shape = longestTimestampShape(displayOptions())
-    // A pixel to spare, so a sub-pixel difference between canvas and DOM layout doesn't wrap the
-    // text's last glyph.
-    return Math.ceil(measure(shape.replaceAll('0', digit))) + 1 + CELL_PADDING
+    return Math.ceil(measure(shape.replaceAll('0', digit))) + SUBPIXEL_SLACK + CELL_PADDING
   })
 }
 

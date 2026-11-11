@@ -19,6 +19,10 @@ import DisplayOptionsPane from '@/monitoring/shared/components/DisplayOptionsPan
 import HostSlideIn from '@/monitoring/shared/components/HostSlideIn.vue'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 import TypeToFocusIndicator from '@/monitoring/shared/components/TypeToFocusIndicator.vue'
+import {
+  fitColumnsToContent,
+  useSiteColumnWidth
+} from '@/monitoring/shared/components/contentColumns'
 import { sizeModeColumn, useModeColumnWidth } from '@/monitoring/shared/components/modeColumn'
 import { sizeStateColumn, useStateIconCount } from '@/monitoring/shared/components/stateColumn'
 import {
@@ -180,25 +184,32 @@ const displayOptions = usePersistentRef(
 
 const root = useTemplateRef<HTMLElement>('root')
 
-const timestampColumnWidth = useTimestampColumnWidth(
-  () => displayOptions.value,
-  useCellTextWidth(root)
+const cellTextWidth = useCellTextWidth(root)
+
+const timestampColumnWidth = useTimestampColumnWidth(() => displayOptions.value, cellTextWidth)
+
+const siteWidth = useSiteColumnWidth(
+  props.sites.map((site) => site.id),
+  cellTextWidth
 )
 
 const tableColumns = computed(() =>
-  sizeStateColumn(
-    sizeActionsColumn(
-      sizeModeColumn(
-        timestampColumnsAsShown(
-          columns,
-          displayOptions.value.timestampFormat,
-          timestampColumnWidth.value
+  fitColumnsToContent(
+    sizeStateColumn(
+      sizeActionsColumn(
+        sizeModeColumn(
+          timestampColumnsAsShown(
+            columns,
+            displayOptions.value.timestampFormat,
+            timestampColumnWidth.value
+          ),
+          modeColumnSize.value
         ),
-        modeColumnSize.value
+        inlineCustomActions.value
       ),
-      inlineCustomActions.value
+      stateIconCount.value
     ),
-    stateIconCount.value
+    { site_id: siteWidth.value }
   )
 )
 

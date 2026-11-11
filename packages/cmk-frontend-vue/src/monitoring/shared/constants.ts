@@ -17,3 +17,10 @@ export const ACTION_PANE_MIN_WIDTH = '520px'
 export const ACTIONS_COLUMN_ID = 'actions'
 /** The width the actions column's header needs to read in full. */
 export const ACTIONS_HEADER_WIDTH = 75
+
+/**
+ * The `meta.grow` of the columns whose text runs longest, the summary, host and site: they share
+ * the spare width alike, and grow faster than the other columns, since extra width saves them the
+ * most lines.
+ */
+export const LONG_TEXT_COLUMN_GROW = 5

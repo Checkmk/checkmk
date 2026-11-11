@@ -17,7 +17,7 @@ import type {
   StringInputWithCheckboxListFilter
 } from '@/monitoring/shared/components/filter/types'
 import { MODE_COLUMN_ID } from '@/monitoring/shared/components/modeColumn'
-import { ACTIONS_COLUMN_ID } from '@/monitoring/shared/constants'
+import { ACTIONS_COLUMN_ID, LONG_TEXT_COLUMN_GROW } from '@/monitoring/shared/constants'
 import { columnId } from '@/monitoring/shared/tableState/schema'
 
 export interface AllServicesColumnOptions extends HostServicesColumnOptions {
@@ -75,7 +75,7 @@ export function useAllServicesColumns({
     enableHiding: false,
     minSize: 120,
     maxSize: 300,
-    meta: { filter: hostFilter }
+    meta: { filter: hostFilter, grow: LONG_TEXT_COLUMN_GROW }
   }
 
   const siteColumn: ColumnDef<ServiceEntry> = {
@@ -84,7 +84,7 @@ export function useAllServicesColumns({
     sortDescFirst: false,
     minSize: 100,
     maxSize: 300,
-    meta: { filter: siteFilter, hidden: !distinguishesSites(sites) }
+    meta: { filter: siteFilter, hidden: !distinguishesSites(sites), grow: LONG_TEXT_COLUMN_GROW }
   }
 
   const serviceColumns = useHostServicesColumns<ServiceEntry>(options).map((column) =>

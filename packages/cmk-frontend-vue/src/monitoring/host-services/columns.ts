@@ -25,7 +25,7 @@ import type {
 } from '@/monitoring/shared/components/filter/types'
 import { indicatorColumn } from '@/monitoring/shared/components/modeColumn'
 import type { StateFlagField } from '@/monitoring/shared/components/stateColumn'
-import { ACTIONS_COLUMN_ID } from '@/monitoring/shared/constants'
+import { ACTIONS_COLUMN_ID, LONG_TEXT_COLUMN_GROW } from '@/monitoring/shared/constants'
 import { actionsColumnWidth } from '@/monitoring/shared/customActions'
 import { columnId } from '@/monitoring/shared/tableState/schema'
 
@@ -248,8 +248,7 @@ export function useHostServicesColumns<Row extends HostServiceEntry = HostServic
       header: _t('Summary'),
       sortDescFirst: false,
       minSize: 200,
-      // Grows faster than the service name, since extra width saves a long summary more lines.
-      meta: { filter: summaryFilter, grow: 6 }
+      meta: { filter: summaryFilter, grow: LONG_TEXT_COLUMN_GROW }
     },
     indicatorColumn<Row, ServiceModeField>(modesFilter, showIndicators),
     {

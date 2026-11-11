@@ -85,12 +85,12 @@ def test_totp_fail_login(
     action_page.login(credentials)
     action_page.page.wait_for_url(url=re.compile("user_login_two_factor.py"), wait_until="load")
 
-    action_page.page.get_by_role("spinbutton", name="OTP Digit 1").fill("1")
-    action_page.page.get_by_role("spinbutton", name="OTP Digit 2").fill("1")
-    action_page.page.get_by_role("spinbutton", name="OTP Digit 3").fill("1")
-    action_page.page.get_by_role("spinbutton", name="OTP Digit 4").fill("1")
-    action_page.page.get_by_role("spinbutton", name="OTP Digit 5").fill("1")
-    action_page.page.get_by_role("spinbutton", name="OTP Digit 6").fill("1")
+    action_page.page.get_by_role("textbox", name="Digit 1 of 6").fill("1")
+    action_page.page.get_by_role("textbox", name="Digit 2 of 6").fill("1")
+    action_page.page.get_by_role("textbox", name="Digit 3 of 6").fill("1")
+    action_page.page.get_by_role("textbox", name="Digit 4 of 6").fill("1")
+    action_page.page.get_by_role("textbox", name="Digit 5 of 6").fill("1")
+    action_page.page.get_by_role("textbox", name="Digit 6 of 6").fill("1")
 
     failed_logins_file = f"var/check_mk/web/{credentials.username}/num_failed_logins.mk"
 
@@ -118,7 +118,7 @@ def test_totp_remove(
     otp_value = generate_code(secret)
 
     for x, i in enumerate(otp_value):
-        action_page.page.get_by_role("spinbutton", name=f"OTP Digit {x + 1}").fill(i)
+        action_page.page.get_by_role("textbox", name=f"Digit {x + 1} of 6").fill(i)
 
     action_page.page.wait_for_url(url=re.compile("index.py"), wait_until="load")
     action_page.main_menu.user_two_factor_authentication.click()

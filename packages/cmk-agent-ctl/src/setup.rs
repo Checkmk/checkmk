@@ -78,6 +78,17 @@ pub fn update_start_delay_disabled() -> bool {
     disabled
 }
 
+pub fn update_thread_disabled() -> bool {
+    let disabled = env::var_os(constants::ENV_NO_UPDATE_THREAD).is_some();
+    if disabled {
+        log::warn!(
+            "{} is set: the update thread runs no update cycles",
+            constants::ENV_NO_UPDATE_THREAD
+        );
+    }
+    disabled
+}
+
 pub fn max_connections() -> usize {
     let Ok(str_max) = env::var(constants::ENV_MAX_CONNECTIONS) else {
         return constants::MAX_CONNECTIONS;

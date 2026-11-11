@@ -237,7 +237,9 @@ fn report_fetch(outcome: &FetchOutcome) -> String {
 /// spread over it. A restart keeps the schedule, except the one an install
 /// causes: that host checks within a minute to confirm the install, and its
 /// schedule moves to that check. Tests skip the wait at start with
-/// `DEBUG_NO_UPDATE_START_DELAY`.
+/// `DEBUG_NO_UPDATE_START_DELAY`, and the cycles with `DEBUG_NO_UPDATE_THREAD`.
+/// With `DEBUG_NO_UPDATE_THREAD`, the thread parks instead of returning,
+/// because the daemon ends when one of its threads returns.
 ///
 /// The lock is taken only for a cycle that runs, so a host without automatic
 /// updates never touches the download directory. A failed cycle, a lock that
@@ -248,6 +250,11 @@ pub fn fn_thread(
     mut registry: Registry,
     client_config: ClientConfig,
 ) -> AnyhowResult<()> {
+    if setup::update_thread_disabled() {
+        loop {
+            thread::park();
+        }
+    }
     let updater = Updater::new(&paths);
     if !setup::update_start_delay_disabled() {
         match start_delay(

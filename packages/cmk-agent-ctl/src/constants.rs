@@ -73,6 +73,10 @@ pub const ENV_CONNECTION_TIMEOUT: &str = "DEBUG_CONNECTION_TIMEOUT";
 /// Set for tests only: the update thread of the daemon runs its first cycle at
 /// once instead of after a random delay.
 pub const ENV_NO_UPDATE_START_DELAY: &str = "DEBUG_NO_UPDATE_START_DELAY";
+/// Set for tests only: the update thread of the daemon runs no cycle at all, so
+/// that only an explicit `update` installs a package. Only an explicit `update`
+/// then confirms an install as well.
+pub const ENV_NO_UPDATE_THREAD: &str = "DEBUG_NO_UPDATE_THREAD";
 #[cfg(windows)]
 pub const ENV_PROGRAM_DATA: &str = "ProgramData";
 

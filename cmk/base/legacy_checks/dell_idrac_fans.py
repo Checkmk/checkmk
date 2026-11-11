@@ -51,7 +51,8 @@ def check_dell_idrac_fans(item, params, info):
             if state_readable in ("OTHER", "UNKNOWN", "FAILED", "NO DATA FROM DEVICE"):
                 return
 
-            value = int(value)
+            if (rpm := _to_int_or_none(value)) is None:
+                return
             if not params:
                 # The iDRAC may report any subset of the four thresholds as an
                 # empty string; treat each empty value as "no threshold".
@@ -63,7 +64,7 @@ def check_dell_idrac_fans(item, params, info):
                 if upper != (None, None):
                     params["upper"] = upper
 
-            yield check_fan(value, params)
+            yield check_fan(rpm, params)
 
 
 def parse_dell_idrac_fans(string_table: StringTable) -> StringTable:

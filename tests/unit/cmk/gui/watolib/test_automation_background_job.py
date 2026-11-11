@@ -18,6 +18,8 @@ from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry, Ser
 from cmk.ccc import store
 from cmk.ccc import version as cmk_version
 from cmk.gui.background_job import BackgroundProcessInterface
+from cmk.gui.config import Config
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.utils.roles import UserPermissionSerializableConfig
 from cmk.gui.watolib import automation_background_job
@@ -183,3 +185,22 @@ class TestCheckmkAutomationBackgroundJob:
                 Path(job.get_work_dir()) / "result.mk"
             )
             assert job_result == result
+
+
+@pytest.mark.xfail(
+    strict=True, raises=MKUserError, reason="crash group 4977: non-ASCII request rejected"
+)
+@pytest.mark.usefixtures("request_context")
+def test_remote_automation_start_accepts_non_ascii_requests() -> None:
+    api_request = CheckmkAutomationRequest(
+        command="test",
+        args=["hösti"],
+        indata=None,
+        stdin_data=None,
+        timeout=None,
+    )
+    request.set_var("request", repr(tuple(api_request)))
+
+    parsed = AutomationCheckmkAutomationStart().get_request(Config(), request)
+
+    assert parsed.api_request == api_request

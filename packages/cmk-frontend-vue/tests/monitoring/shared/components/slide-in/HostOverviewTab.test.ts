@@ -9,7 +9,7 @@ import { render, screen } from '@testing-library/vue'
 import type { HostOverview } from '@/monitoring/shared/api/types'
 import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
 import HostOverviewTab from '@/monitoring/shared/components/slide-in/HostOverviewTab.vue'
-import { labelCondition, tagCondition } from '@/monitoring/shared/labels'
+import { contactGroupCondition, labelCondition, tagCondition } from '@/monitoring/shared/labels'
 import type { DisplayOptions } from '@/monitoring/shared/types'
 
 import { makeListingService } from '../../../shared/services/testHelpers'
@@ -143,6 +143,27 @@ test('narrows the listing of hosts to the ones carrying a tag clicked on', async
     field: 'tags',
     op: 'all_of',
     value: ['cmk/os_family:linux']
+  })
+})
+
+test('narrows the listing of hosts to the ones assigned to a contact group clicked on', async () => {
+  const service = makeListingService()
+  render(HostOverviewTab, {
+    props: {
+      data: makeData(),
+      displayOptions: DISPLAY_OPTIONS,
+      filterContactGroupsBy: contactGroupCondition
+    },
+    global: { provide: { [MONITORING_SERVICE as symbol]: service } }
+  })
+
+  await userEvent.click(screen.getByRole('button', { name: 'all' }))
+
+  expect(service.filterState.value).toStrictEqual({
+    type: 'condition',
+    field: 'contact_groups',
+    op: 'one_of',
+    value: ['all']
   })
 })
 

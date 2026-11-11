@@ -38,7 +38,7 @@ import {
   seedDisplayOptions
 } from '@/monitoring/shared/displayOptionsState/urlState'
 import { HOST_TAB_OVERVIEW } from '@/monitoring/shared/hostSlideInTabs'
-import { labelCondition, tagCondition } from '@/monitoring/shared/labels'
+import { contactGroupCondition, labelCondition, tagCondition } from '@/monitoring/shared/labels'
 import { hostRefOf } from '@/monitoring/shared/objectRefs'
 import { DEFAULT_DISPLAY_OPTIONS } from '@/monitoring/shared/types'
 import { IMMEDIATE_HOST_COMMAND_IDS, useHostActions } from '@/monitoring/shared/useHostActions'
@@ -402,6 +402,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         :reveal-relations-request="revealRelationsRequest"
         :filter-labels-by="labelCondition"
         :filter-tags-by="tagCondition"
+        :filter-contact-groups-by="contactGroupCondition"
         :actions="actionRegistry"
         :row-actions="rowActionButtons"
         :permitted-actions="hostActions"

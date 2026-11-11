@@ -67,6 +67,7 @@ const props = withDefaults(
     displayOptions: DisplayOptions
     /** What a label click narrows the listing behind to; unset unless that lists hosts. */
     filterLabelsBy?: ((item: LabelCellItem) => ColumnCondition) | undefined
+    filterContactGroupsBy?: ((item: LabelCellItem) => ColumnCondition) | undefined
     filterTagsBy?: ((item: LabelCellItem) => ColumnCondition) | undefined
   }>(),
   {
@@ -246,7 +247,8 @@ const tabs = computed<SlideInTab[]>(() => {
         revealRelationsRequest: props.revealRelationsRequest,
         displayOptions: props.displayOptions,
         filterLabelsBy: props.filterLabelsBy,
-        filterTagsBy: props.filterTagsBy
+        filterTagsBy: props.filterTagsBy,
+        filterContactGroupsBy: props.filterContactGroupsBy
       },
       load: () => loadOverview(hostRefOf(host))
     },

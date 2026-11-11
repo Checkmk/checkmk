@@ -30,6 +30,7 @@ const props = withDefaults(
     displayOptions: DisplayOptions
     /** What a label click narrows the listing behind to; unset unless that lists hosts. */
     filterLabelsBy?: ((item: LabelCellItem) => ColumnCondition) | undefined
+    filterContactGroupsBy?: ((item: LabelCellItem) => ColumnCondition) | undefined
     filterTagsBy?: ((item: LabelCellItem) => ColumnCondition) | undefined
   }>(),
   { revealRelationsRequest: 0 }
@@ -97,7 +98,7 @@ const age = computed(() =>
 
       <dt>{{ _t('Contact groups') }}</dt>
       <dd>
-        <OverviewChips :items="contactGroupChips" />
+        <OverviewChips :items="contactGroupChips" :filter-by="filterContactGroupsBy" />
       </dd>
     </OverviewDetailList>
 

@@ -78,13 +78,15 @@ class AnalyseHostResult(AutomationResult):
 
 
 @dataclass
-class AnalyzeHostRuleMatchesResult(AutomationResult):
-    results: dict[str, list[object]]
+class AnalyzeHostRulesetsResult(AutomationResult):
+    """For each ruleset the ids of its rules that match the host, in the order of the ruleset"""
+
+    matching_rules: Mapping[RulesetName, Sequence[str]]
 
     @staticmethod
     @override
     def automation_call() -> AutomationID:
-        return AutomationID("analyze-host-rule-matches")
+        return AutomationID("analyze-host-rulesets")
 
 
 @dataclass
@@ -115,6 +117,21 @@ class AnalyzeHostRuleMatchingHostsResult(AutomationResult):
     @override
     def automation_call() -> AutomationID:
         return AutomationID("analyze-host-rule-matching-hosts")
+
+
+@dataclass
+class AnalyzeHostRulesetsIneffectiveRulesResult(AutomationResult):
+    """For each ruleset, in order, the ids of its rules that match no host
+
+    Only the ids travel: the hosts a rule matches would bloat the result in big installations.
+    """
+
+    ineffective_rules: Mapping[RulesetName, Sequence[str]]
+
+    @staticmethod
+    @override
+    def automation_call() -> AutomationID:
+        return AutomationID("analyze-host-rulesets-ineffective-rules")
 
 
 @dataclass

@@ -72,11 +72,7 @@ def list_rulesets(param: Mapping[str, Any]) -> Response:
 
     if search_options := _get_search_options(param):
         rulesets = RulesetCollection_(
-            {
-                name: ruleset
-                for name, ruleset in all_sets.get_rulesets().items()
-                if ruleset.matches_search_with_rules(search_options, debug=active_config.debug)
-            }
+            all_sets.rulesets_matching_search(search_options, debug=active_config.debug)
         )
     else:
         rulesets = all_sets

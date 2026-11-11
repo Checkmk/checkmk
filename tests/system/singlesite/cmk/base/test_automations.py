@@ -255,14 +255,14 @@ def test_automation_analyse_service_no_check(site: Site) -> None:
 
 
 @pytest.mark.usefixtures("test_cfg")
-def test_automation_analyze_host_rule_matches(site: Site) -> None:
+def test_automation_analyze_host_rulesets(site: Site) -> None:
     automation_result = _execute_automation(
         site,
-        results.AnalyzeHostRuleMatchesResult,
+        results.AnalyzeHostRulesetsResult,
         args=["modes-test-host"],
         stdin=repr(
-            [
-                [
+            {
+                "unconditional": [
                     {
                         "id": "b92a5406-1d56-4f1d-953d-225b111239e3",
                         "value": "ag",
@@ -272,7 +272,7 @@ def test_automation_analyze_host_rule_matches(site: Site) -> None:
                         },
                     }
                 ],
-                [
+                "tagged": [
                     {
                         "id": "aaaaaaaa-1d56-4f1d-953d-225b111239e3",
                         "value": "duda",
@@ -286,14 +286,55 @@ def test_automation_analyze_host_rule_matches(site: Site) -> None:
                         },
                     }
                 ],
-            ]
+            }
         ),
     )
 
-    assert isinstance(automation_result, results.AnalyzeHostRuleMatchesResult)
-    assert automation_result.results == {
-        "b92a5406-1d56-4f1d-953d-225b111239e3": ["ag"],
-        "aaaaaaaa-1d56-4f1d-953d-225b111239e3": [],
+    assert isinstance(automation_result, results.AnalyzeHostRulesetsResult)
+    assert automation_result.matching_rules == {
+        "unconditional": ["b92a5406-1d56-4f1d-953d-225b111239e3"],
+        "tagged": [],
+    }
+
+
+@pytest.mark.usefixtures("test_cfg")
+def test_automation_analyze_host_rulesets_ineffective_rules(site: Site) -> None:
+    automation_result = _execute_automation(
+        site,
+        results.AnalyzeHostRulesetsIneffectiveRulesResult,
+        stdin=repr(
+            (
+                None,
+                {
+                    "unconditional": [
+                        {
+                            "id": "b92a5406-1d56-4f1d-953d-225b111239e3",
+                            "value": "ag",
+                            "condition": {},
+                            "options": {
+                                "description": "",
+                            },
+                        }
+                    ],
+                    "unknown host": [
+                        {
+                            "id": "aaaaaaaa-1d56-4f1d-953d-225b111239e3",
+                            "value": "duda",
+                            "condition": {"host_name": ["no-such-host"]},
+                            "options": {
+                                "description": "",
+                            },
+                        }
+                    ],
+                },
+            )
+        ),
+    )
+
+    assert isinstance(automation_result, results.AnalyzeHostRulesetsIneffectiveRulesResult)
+    assert automation_result.ineffective_rules == {
+        "unconditional": [],
+        "unknown host": ["aaaaaaaa-1d56-4f1d-953d-225b111239e3"],
     }
 
 

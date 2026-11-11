@@ -240,6 +240,31 @@ def test_openapi_rules_href_escaped(clients: ClientRegistry) -> None:
     )
 
 
+def test_ruleset_search_by_name_lists_only_the_matching_rulesets(
+    clients: ClientRegistry,
+) -> None:
+    resp = clients.Ruleset.list(name=f"^{DEFAULT_RULESET}$", used=False)
+
+    assert [r["id"] for r in resp.json["value"]] == [DEFAULT_RULESET]
+
+
+def test_ruleset_search_for_used_rulesets_omits_the_ruleset_without_rules(
+    clients: ClientRegistry,
+) -> None:
+    resp = clients.Ruleset.list(name=f"^{DEFAULT_RULESET}$", used=True)
+
+    assert resp.json["value"] == []
+
+
+@pytest.mark.usefixtures("new_rule")
+def test_ruleset_search_for_used_rulesets_lists_the_ruleset_with_a_rule(
+    clients: ClientRegistry,
+) -> None:
+    resp = clients.Ruleset.list(name=f"^{DEFAULT_RULESET}$", used=True)
+
+    assert [r["id"] for r in resp.json["value"]] == [DEFAULT_RULESET]
+
+
 def test_openapi_create_rule_failure(clients: ClientRegistry) -> None:
     resp = clients.Rule.create(
         ruleset="host_groups",

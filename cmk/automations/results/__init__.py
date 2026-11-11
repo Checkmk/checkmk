@@ -25,10 +25,13 @@ from cmk.automations.results.analysis import (
     AnalyzeHostRuleEffectivenessResult as AnalyzeHostRuleEffectivenessResult,
 )
 from cmk.automations.results.analysis import (
-    AnalyzeHostRuleMatchesResult as AnalyzeHostRuleMatchesResult,
+    AnalyzeHostRuleMatchingHostsResult as AnalyzeHostRuleMatchingHostsResult,
 )
 from cmk.automations.results.analysis import (
-    AnalyzeHostRuleMatchingHostsResult as AnalyzeHostRuleMatchingHostsResult,
+    AnalyzeHostRulesetsIneffectiveRulesResult as AnalyzeHostRulesetsIneffectiveRulesResult,
+)
+from cmk.automations.results.analysis import (
+    AnalyzeHostRulesetsResult as AnalyzeHostRulesetsResult,
 )
 from cmk.automations.results.analysis import (
     AnalyzeServiceRuleMatchesResult as AnalyzeServiceRuleMatchesResult,

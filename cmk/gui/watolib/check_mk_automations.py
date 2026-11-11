@@ -34,7 +34,7 @@ from cmk.gui.watolib.automations import (
 from cmk.gui.watolib.host_attributes import CollectedHostAttributes
 from cmk.gui.watolib.hosts_and_folders import collect_all_hosts, FolderTree
 from cmk.ruleset_matcher.labels import HostLabel, Labels
-from cmk.ruleset_matcher.matcher import RuleSpec
+from cmk.ruleset_matcher.matcher import RulesetName, RuleSpec
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
 from cmk.utils.servicename import Item, ServiceName
 
@@ -393,21 +393,22 @@ def analyse_host(
     )
 
 
-def analyze_host_rule_matches(
+def analyze_host_rulesets(
     host_name: HostName,
-    rules: Sequence[Sequence[RuleSpec]],
+    rulesets: Mapping[RulesetName, Sequence[RuleSpec]],
     *,
     debug: bool,
-) -> results.AnalyzeHostRuleMatchesResult:
+) -> results.AnalyzeHostRulesetsResult:
+    """Which rules of each ruleset match the host, with one automation call for all of them"""
     return _deserialize(
         _automation_serialized(
-            AutomationID("analyze-host-rule-matches"),
+            AutomationID("analyze-host-rulesets"),
             automation_config=LocalAutomationConfig(),
             args=[host_name],
-            indata=rules,
+            indata=rulesets,
             debug=debug,
         ),
-        results.AnalyzeHostRuleMatchesResult,
+        results.AnalyzeHostRulesetsResult,
         debug=debug,
     )
 
@@ -461,6 +462,29 @@ def analyze_host_rule_matching_hosts(
             debug=debug,
         ),
         results.AnalyzeHostRuleMatchingHostsResult,
+        debug=debug,
+    )
+
+
+def analyze_host_rulesets_ineffective_rules(
+    rulesets: Mapping[RulesetName, Sequence[RuleSpec]],
+    *,
+    host_names: Sequence[HostName] | None = None,
+    debug: bool,
+) -> results.AnalyzeHostRulesetsIneffectiveRulesResult:
+    """The rules of each ruleset matching no host, with one automation call for all of them
+
+    Only the given hosts take part in the matching, all configured hosts without them.
+    """
+    return _deserialize(
+        _automation_serialized(
+            AutomationID("analyze-host-rulesets-ineffective-rules"),
+            automation_config=LocalAutomationConfig(),
+            args=[],
+            indata=(host_names, rulesets),
+            debug=debug,
+        ),
+        results.AnalyzeHostRulesetsIneffectiveRulesResult,
         debug=debug,
     )
 

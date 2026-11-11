@@ -108,8 +108,6 @@ from cmk.gui.watolib.automations import (
 )
 from cmk.gui.watolib.check_mk_automations import (
     analyse_service,
-    analyze_host_rule_effectiveness,
-    analyze_host_rule_matches,
     analyze_service_rule_matches,
     find_unknown_check_parameter_rule_sets,
     get_check_information,
@@ -146,7 +144,9 @@ from cmk.gui.watolib.rulesets import (
     FolderRulesets,
     get_rule_conditions_from_catalog_value,
     get_rule_options_from_catalog_value,
+    host_rule_effectiveness,
     LockedConditions,
+    matching_host_rules,
     may_edit_ruleset,
     parse_explicit_hosts_for_vue,
     parse_explicit_services_for_vue,
@@ -358,13 +358,9 @@ class ABCRulesetMode(WatoMode):
         if self._search_options:
             rulesets = AllRulesets(
                 visible_rulesets(
-                    {
-                        name: ruleset
-                        for name, ruleset in self._rulesets().get_rulesets().items()
-                        if ruleset.matches_search_with_rules(
-                            self._search_options, debug=config.debug
-                        )
-                    }
+                    self._rulesets().rulesets_matching_search(
+                        self._search_options, debug=config.debug
+                    )
                 ),
                 self._tree,
             )
@@ -1322,10 +1318,7 @@ class ModeEditRuleset(WatoMode):
         search_options: SearchOptions = ModeRuleSearchForm(self._edition, self._ctx).search_options
 
         rule_effectiveness = (
-            analyze_host_rule_effectiveness(
-                [r.to_single_base_ruleset() for _f, _i, r in rules],
-                debug=debug,
-            ).results
+            host_rule_effectiveness([ruleset], debug=debug)
             if "rule_ineffective" in search_options
             else {}
         )
@@ -1340,8 +1333,7 @@ class ModeEditRuleset(WatoMode):
                 self._hostname,
                 self._item,
                 self._service,
-                ruleset.rulespec,
-                [e[2] for e in rules],
+                ruleset,
                 debug=debug,
             )
             if self._hostname and self._host
@@ -1402,7 +1394,7 @@ class ModeEditRuleset(WatoMode):
         rulenr: int,
         search_options: SearchOptions,
         rule_match_results: Mapping[str, RuleMatchResult],
-        rule_effectiveness: dict[str, bool],
+        rule_effectiveness: Mapping[str, bool],
     ) -> None:
         if rule_match_results:
             table.cell(_("Match host"), css=["narrow"])
@@ -1491,11 +1483,12 @@ class ModeEditRuleset(WatoMode):
         host_name: HostName,
         item: Item,
         service_name: ServiceName | None,
-        rulespec: Rulespec,
-        rules: Sequence[Rule],
+        ruleset: Ruleset,
         *,
         debug: bool,
     ) -> dict[str, RuleMatchResult]:
+        rulespec = ruleset.rulespec
+        rules = [rule for _folder, _rule_index, rule in ruleset.get_rules()]
         with tracer.span(
             "ModeEditRuleset_analyze_rule_matching",
             attributes={
@@ -1530,14 +1523,10 @@ class ModeEditRuleset(WatoMode):
                     ).results.items()
                 }
             else:
-                rule_matches = {
-                    rule_id: bool(matches)
-                    for rule_id, matches in analyze_host_rule_matches(
-                        host_name,
-                        [r.to_single_base_ruleset() for r in rules],
-                        debug=debug,
-                    ).results.items()
-                }
+                matching_rule_ids = matching_host_rules(host_name, [ruleset], debug=debug)[
+                    ruleset.name
+                ]
+                rule_matches = {rule.id: rule.id in matching_rule_ids for rule in rules}
 
             span.set_attribute("cmk.gui.rule_matches", repr(rule_matches))
 

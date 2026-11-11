@@ -34,6 +34,8 @@ from cmk.automations.results import (
     AnalyseHostResult,
     AnalyzeHostRuleEffectivenessResult,
     AnalyzeHostRuleMatchingHostsResult,
+    AnalyzeHostRulesetsIneffectiveRulesResult,
+    AnalyzeHostRulesetsResult,
     DiagHostResult,
     GetServicesLabelsResult,
 )
@@ -845,6 +847,98 @@ def test_analyse_host(monkeypatch: MonkeyPatch) -> None:
         }
         | additional_labels,
     )
+
+
+def test_analyze_host_rulesets_reports_the_matching_rules_per_ruleset(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    ts = Scenario()
+    ts.add_host(HostName("test-host"), tags={TagGroupID("criticality"): TagID("test")})
+    state = make_common_state(ts.apply(monkeypatch))
+    rulesets: dict[str, list[RuleSpec[int]]] = {
+        "unconditional": [{"id": "01", "value": 1, "condition": {}}],
+        "tagged": [
+            {
+                "id": "02",
+                "value": 2,
+                "condition": {"host_tags": {TagGroupID("criticality"): TagID("prod")}},
+            },
+            {
+                "id": "03",
+                "value": 3,
+                "condition": {"host_tags": {TagGroupID("criticality"): TagID("test")}},
+            },
+        ],
+    }
+    monkeypatch.setattr(sys, "stdin", io.StringIO(repr(rulesets)))
+
+    result = checkmk.automation_analyze_host_rulesets.handler(state, ["test-host"])
+
+    assert result == AnalyzeHostRulesetsResult({"unconditional": ["01"], "tagged": ["03"]})
+
+
+def test_analyze_host_rulesets_matches_nothing_for_an_unknown_host(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    ts = Scenario()
+    ts.add_host(HostName("test-host"))
+    state = make_common_state(ts.apply(monkeypatch))
+    rulesets: dict[str, list[RuleSpec[int]]] = {
+        "unconditional": [{"id": "01", "value": 1, "condition": {}}],
+    }
+    monkeypatch.setattr(sys, "stdin", io.StringIO(repr(rulesets)))
+
+    result = checkmk.automation_analyze_host_rulesets.handler(state, ["unknown-host"])
+
+    assert result == AnalyzeHostRulesetsResult({"unconditional": []})
+
+
+def test_host_rulesets_ineffective_rules_reports_the_rules_matching_no_host_per_ruleset(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    ts = Scenario()
+    ts.add_host(HostName("test-host"), tags={TagGroupID("criticality"): TagID("test")})
+    state = make_common_state(ts.apply(monkeypatch))
+    rulesets: dict[str, list[RuleSpec[int]]] = {
+        "unconditional": [{"id": "01", "value": 1, "condition": {}}],
+        "tagged": [
+            {
+                "id": "02",
+                "value": 2,
+                "condition": {"host_tags": {TagGroupID("criticality"): TagID("prod")}},
+            },
+            {
+                "id": "03",
+                "value": 3,
+                "condition": {"host_tags": {TagGroupID("criticality"): TagID("test")}},
+            },
+        ],
+    }
+    monkeypatch.setattr(sys, "stdin", io.StringIO(repr((None, rulesets))))
+
+    result = checkmk.automation_analyze_host_rulesets_ineffective_rules.handler(state, [])
+
+    assert result == AnalyzeHostRulesetsIneffectiveRulesResult(
+        {"unconditional": [], "tagged": ["02"]}
+    )
+
+
+def test_host_rulesets_ineffective_rules_matches_the_given_hosts_only(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    ts = Scenario()
+    ts.add_host(HostName("asked-host"))
+    ts.add_host(HostName("other-host"))
+    state = make_common_state(ts.apply(monkeypatch))
+    rulesets: dict[str, list[RuleSpec[int]]] = {
+        "asked": [{"id": "01", "value": 1, "condition": {"host_name": ["asked-host"]}}],
+        "other": [{"id": "02", "value": 2, "condition": {"host_name": ["other-host"]}}],
+    }
+    monkeypatch.setattr(sys, "stdin", io.StringIO(repr((["asked-host"], rulesets))))
+
+    result = checkmk.automation_analyze_host_rulesets_ineffective_rules.handler(state, [])
+
+    assert result == AnalyzeHostRulesetsIneffectiveRulesResult({"asked": [], "other": ["02"]})
 
 
 def test_rule_effectiveness_is_not_answered_from_an_earlier_call(monkeypatch: MonkeyPatch) -> None:

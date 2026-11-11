@@ -8,7 +8,7 @@
 # mypy: disable-error-code="type-arg"
 
 import datetime
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from io import StringIO
 from unittest.mock import MagicMock
 from zoneinfo import ZoneInfo
@@ -28,8 +28,8 @@ from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChan
 from cmk.gui.watolib.rulesets import FolderRulesets, Rule, RuleConditions, RuleOptions, Ruleset
 from cmk.livestatus_client import SiteConfiguration, SiteConfigurations
 from cmk.livestatus_client.testing import MockLiveStatusConnection
-from cmk.plugins.checkmk.automations.checkmk import automation_analyze_host_rule_matches
-from cmk.ruleset_matcher.matcher import RuleSpec
+from cmk.plugins.checkmk.automations.checkmk import automation_analyze_host_rulesets
+from cmk.ruleset_matcher.matcher import RulesetName, RuleSpec
 from cmk.ruleset_matcher.tags import get_effective_tag_config
 from cmk.utils.paths import default_config_dir
 from tests.testlib.unit.automations import make_common_state
@@ -230,8 +230,8 @@ def fixture_mock_delete_hosts_automation(mocker: MockerFixture) -> MagicMock:
     )
 
 
-@pytest.fixture(name="mock_analyze_host_rule_matches_automation")
-def fixture_mock_analyze_host_rule_matches_automation(
+@pytest.fixture(name="mock_analyze_host_rulesets_automation")
+def fixture_mock_analyze_host_rulesets_automation(
     mocker: MockerFixture, monkeypatch: pytest.MonkeyPatch
 ) -> MagicMock:
     """Replace rule matching via automation call, which does not work in unit test context,
@@ -243,24 +243,22 @@ def fixture_mock_analyze_host_rule_matches_automation(
 
     def analyze_with_matcher(
         h: HostName,
-        r: Sequence[Sequence[RuleSpec]],
+        r: Mapping[RulesetName, Sequence[RuleSpec]],
         *,
         debug: bool,
     ) -> AutomationResult:
         with mocker.patch("sys.stdin", StringIO(repr(r))):
-            return automation_analyze_host_rule_matches.handler(
-                make_common_state(loading_result), [h]
-            )
+            return automation_analyze_host_rulesets.handler(make_common_state(loading_result), [h])
 
     return mocker.patch.object(
-        automatic_host_removal, "analyze_host_rule_matches", analyze_with_matcher
+        automatic_host_removal, "analyze_host_rulesets", analyze_with_matcher
     )
 
 
 @pytest.mark.usefixtures("setup_hosts")
 @pytest.mark.usefixtures("setup_rules")
 @pytest.mark.usefixtures("setup_livestatus_mock")
-@pytest.mark.usefixtures("mock_analyze_host_rule_matches_automation")
+@pytest.mark.usefixtures("mock_analyze_host_rulesets_automation")
 def test_execute_host_removal_job(
     config: Config,
     tree: FolderTree,

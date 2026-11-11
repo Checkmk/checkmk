@@ -42,7 +42,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     make_folder_tree,
 )
 from cmk.gui.watolib.mode import ModeRegistry, WatoMode
-from cmk.gui.watolib.rulesets import AllRulesets, Rule, Ruleset
+from cmk.gui.watolib.rulesets import AllRulesets, matching_host_rules, Rule, Ruleset
 from cmk.gui.watolib.rulespecs import (
     AllowAll,
     get_rulegroup,
@@ -169,44 +169,55 @@ class ModeObjectParameters(WatoMode):
                 debug=config.debug,
             )
 
-        last_maingroup = None
         allow_list = get_rulespec_allow_list()
         irrelevant_rulesets = _get_irrelevant_rulesets(self._service)
-        for groupname in sorted(rulespec_group_registry.get_host_rulespec_group_names(for_host)):
-            maingroup = groupname.split("/")[0]
+        rulespecs = [
+            (groupname.split("/")[0], rulespec)
+            for groupname in sorted(rulespec_group_registry.get_host_rulespec_group_names(for_host))
             for rulespec in sorted(
                 rulespec_registry.get_by_group(groupname), key=lambda x: x.title or ""
-            ):
-                if rulespec.name in irrelevant_rulesets:
-                    continue
+            )
+            if rulespec.name not in irrelevant_rulesets
+            and allow_list.is_visible(rulespec.name)
+            # Skip the rules that are not for hosts/services
+            and (rulespec.item_type == "service") != (not self._service)
+        ]
 
-                if not allow_list.is_visible(rulespec.name):
-                    continue
+        # One automation call matches the host against all host rulesets of the page
+        host_rule_matches = matching_host_rules(
+            self._hostname,
+            [
+                all_rulesets.get(rulespec.name)
+                for _maingroup, rulespec in rulespecs
+                if not rulespec.is_for_services
+            ],
+            debug=config.debug,
+        )
 
-                if (rulespec.item_type == "service") == (not self._service):
-                    continue  # This rule is not for hosts/services
-
-                # Open form for that group here, if we know that we have at least one rule
-                if last_maingroup != maingroup:
-                    last_maingroup = maingroup
-                    rulegroup = get_rulegroup(maingroup)
-                    forms.header(
-                        rulegroup.title,
-                        isopen=maingroup == "monconf",
-                        narrow=True,
-                        css="rulesettings",
-                    )
-                    html.help(rulegroup.help)
-
-                self._output_analysed_ruleset(
-                    all_rulesets,
-                    rulespec,
-                    svc_desc_or_item=self._service,
-                    svc_desc=self._service,
-                    service_result=service_result,
-                    known_settings=None,
-                    debug=config.debug,
+        last_maingroup = None
+        for maingroup, rulespec in rulespecs:
+            # Open form for that group here, if we know that we have at least one rule
+            if last_maingroup != maingroup:
+                last_maingroup = maingroup
+                rulegroup = get_rulegroup(maingroup)
+                forms.header(
+                    rulegroup.title,
+                    isopen=maingroup == "monconf",
+                    narrow=True,
+                    css="rulesettings",
                 )
+                html.help(rulegroup.help)
+
+            self._output_analysed_ruleset(
+                all_rulesets,
+                rulespec,
+                svc_desc_or_item=self._service,
+                svc_desc=self._service,
+                service_result=service_result,
+                known_settings=None,
+                matching_rule_ids=host_rule_matches.get(rulespec.name),
+                debug=config.debug,
+            )
 
         forms.end()
 
@@ -573,8 +584,14 @@ class ModeObjectParameters(WatoMode):
         service_result: AnalyseServiceResult | None,
         known_settings: object | None,
         *,
+        matching_rule_ids: Container[str] | None = None,
         debug: bool,
     ) -> None:
+        """Render the ruleset's effective value for the host or service
+
+        `matching_rule_ids` are the rules of the ruleset that match the host, when the caller
+        already knows them. Otherwise the ruleset is matched here.
+        """
         if known_settings is None:
             known_settings = self._PARAMETERS_UNKNOWN
 
@@ -610,12 +627,16 @@ class ModeObjectParameters(WatoMode):
         forms.section(HTMLWriter.render_a(rulespec.title, url))
 
         ruleset = all_rulesets.get(varname)
-        setting, rules = ruleset.analyse_ruleset(
-            self._hostname,
-            svc_desc_or_item,
-            svc_desc,
-            service_labels=service_result.labels if service_result else {},
-            debug=debug,
+        setting, rules = (
+            ruleset.analyse_matching_rules(matching_rule_ids)
+            if matching_rule_ids is not None
+            else ruleset.analyse_ruleset(
+                self._hostname,
+                svc_desc_or_item,
+                svc_desc,
+                service_labels=service_result.labels if service_result else {},
+                debug=debug,
+            )
         )
 
         html.open_table(class_="setting")

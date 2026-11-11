@@ -6,7 +6,7 @@
 # mypy: disable-error-code="type-arg"
 
 import sys
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from io import StringIO
 
 import pytest
@@ -23,11 +23,11 @@ from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.rulesets import FolderRulesets, Rule, RuleConditions, RuleOptions, Ruleset
 from cmk.livestatus_client import SiteConfigurations
 from cmk.plugins.checkmk.automations.checkmk import (
-    automation_analyze_host_rule_matches,
+    automation_analyze_host_rulesets,
     automation_analyze_service_rule_matches,
 )
 from cmk.ruleset_matcher.labels import Labels
-from cmk.ruleset_matcher.matcher import RuleSpec
+from cmk.ruleset_matcher.matcher import RulesetName, RuleSpec
 from cmk.utils.paths import default_config_dir
 from tests.testlib.unit.automations import make_common_state
 from tests.testlib.unit.base_configuration_scenario import Scenario
@@ -43,14 +43,14 @@ def _noop_pending_changes() -> PendingChanges:
     )
 
 
-@pytest.fixture(name="mock_analyze_host_rule_matches_automation")
-def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.fixture(name="mock_analyze_host_rulesets_automation")
+def fixture_mock_analyze_host_rulesets_automation(monkeypatch: pytest.MonkeyPatch) -> None:
     """Replace rule matching via automation call, which does not work in unit test context,
     with a direct call to the automation"""
 
     def analyze_with_matcher(
         h: HostName,
-        r: Sequence[Sequence[RuleSpec]],
+        r: Mapping[RulesetName, Sequence[RuleSpec]],
         *,
         debug: bool,  # noqa: ARG001
     ) -> AutomationResult:
@@ -61,15 +61,13 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
 
         with monkeypatch.context() as m:
             m.setattr(sys, "stdin", StringIO(repr(r)))
-            return automation_analyze_host_rule_matches.handler(
-                make_common_state(loading_result), [h]
-            )
+            return automation_analyze_host_rulesets.handler(make_common_state(loading_result), [h])
 
-    monkeypatch.setattr(rulesets, "analyze_host_rule_matches", analyze_with_matcher)
+    monkeypatch.setattr(rulesets, "analyze_host_rulesets", analyze_with_matcher)
 
 
 @pytest.mark.usefixtures(
-    "request_context", "with_admin_login", "mock_analyze_host_rule_matches_automation"
+    "request_context", "with_admin_login", "mock_analyze_host_rulesets_automation"
 )
 def test_analyse_host_ruleset() -> None:
     ruleset = _test_host_ruleset(
@@ -115,7 +113,7 @@ def test_analyse_host_ruleset() -> None:
     ],
 )  # fmt: skip
 @pytest.mark.usefixtures(
-    "request_context", "with_admin_login", "mock_analyze_host_rule_matches_automation"
+    "request_context", "with_admin_login", "mock_analyze_host_rulesets_automation"
 )
 def test_every_matching_snmp_section_rule_is_effective(ruleset_name: str, value: object) -> None:
     # The fetcher applies all matching rules of these rule sets, decided per section.

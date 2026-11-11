@@ -969,6 +969,36 @@
         }
       ]
     },
+    "ca_certificate_choice": {
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "#/$defs/form_spec"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "ca_certificate_choice",
+              "default": "ca_certificate_choice"
+            },
+            "elements": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/value_summary"
+              }
+            },
+            "chosen_label": {
+              "type": "string"
+            },
+            "not_chosen_label": {
+              "type": "string"
+            }
+          },
+          "required": ["type", "elements", "chosen_label", "not_chosen_label"]
+        }
+      ]
+    },
     "data_backend_settings": {
       "type": "object",
       "allOf": [
@@ -1955,6 +1985,9 @@
         },
         {
           "$ref": "#/$defs/ca_certificate"
+        },
+        {
+          "$ref": "#/$defs/ca_certificate_choice"
         },
         {
           "$ref": "#/$defs/password"

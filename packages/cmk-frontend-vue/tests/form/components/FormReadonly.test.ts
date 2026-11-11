@@ -766,3 +766,22 @@ test('FormReadonly renders a preserve grouping and its then step in one row', ()
     'p95 by [Resource] k8s.pod.name, then avg by nothing, combine all series into one'
   )
 })
+
+test('FormReadonly renders ca_certificate_choice', () => {
+  const spec: FormSpec.CaCertificateChoice = {
+    type: 'ca_certificate_choice',
+    title: 'Inherited from global settings',
+    help: '',
+    validators: [],
+    elements: [
+      { value: 'CA one', label: null, detail_groups: [[{ title: 'Subject', text: 'CN=one' }]] },
+      { value: 'CA two', label: null, detail_groups: [[{ title: 'Subject', text: 'CN=two' }]] }
+    ],
+    chosen_label: 'Trusted',
+    not_chosen_label: 'Not trusted'
+  }
+  const { container } = render(FormReadonly, {
+    props: { spec, data: ['CA two'], backendValidation: [] }
+  })
+  expect(container.textContent).toBe('Not trusted:Subject:CN=oneTrusted:Subject:CN=two')
+})

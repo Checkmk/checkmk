@@ -7,7 +7,7 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
 
-from collections.abc import Generator, Iterable, Mapping, Sequence
+from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
 from typing import Any, Literal, override
 
 import cmk.utils.paths
@@ -23,6 +23,7 @@ from cmk.gui.form_specs.generators.host_address import HostAddressValidator
 from cmk.gui.form_specs.generators.log_level import LogLevelChoice
 from cmk.gui.form_specs.unstable import (
     CACertificate,
+    CACertificateChoice,
     CACertificates,
     id_validators,
     LegacyValueSpec,
@@ -102,6 +103,7 @@ from cmk.gui.watolib.config_variable_groups import (
     ConfigVariableGroupUserManagement,
     ConfigVariableGroupWATO,
 )
+from cmk.gui.watolib.global_settings import effective_value, load_configuration_settings
 from cmk.gui.watolib.groups_io import (
     ContactGroupUsageFinderRegistry,
     load_contact_group_information,
@@ -2158,14 +2160,77 @@ def _trusted_cas_list_element(title: Title) -> fs.DictElement[Sequence[str]]:
     )
 
 
-def _global_trusted_cas_form() -> fs.Dictionary:
+def _central_trusted_cas() -> Sequence[str]:
+    value, _origin = effective_value(
+        load_configuration_settings(), "trusted_certificate_authorities"
+    )
+    match value:
+        case {"trusted_cas": list() as cas} if all(isinstance(ca, str) for ca in cas):
+            return cas
+    raise TypeError(f"Invalid global trusted CAs: {value!r}")
+
+
+def _trusted_cas_dictionary(
+    inherited: Mapping[str, fs.DictElement[Any]],
+) -> fs.Dictionary:
     return fs.Dictionary(
         title=Title("Trusted certificate authorities for SSL"),
         help_text=_trusted_cas_help(),
         elements={
             "use_system_wide_cas": _use_system_wide_cas_element(),
+            **inherited,
             "trusted_cas": _trusted_cas_list_element(Title("Manually added")),
         },
+    )
+
+
+def _split_trusted_cas(value: object, central_cas: Sequence[str]) -> Mapping[str, object]:
+    match value:
+        case {"use_system_wide_cas": bool() as use_system_wide_cas, "trusted_cas": list() as cas}:
+            return {
+                "use_system_wide_cas": use_system_wide_cas,
+                "inherited": [pem for pem in central_cas if pem in cas],
+                "trusted_cas": [pem for pem in cas if pem not in central_cas],
+            }
+        case _:
+            raise ValueError(f"Invalid trusted CAs: {value!r}")
+
+
+def _merge_trusted_cas(value: object) -> Mapping[str, object]:
+    match value:
+        case {
+            "use_system_wide_cas": bool() as use_system_wide_cas,
+            "inherited": list() as chosen,
+            "trusted_cas": list() as own,
+        }:
+            return {
+                "use_system_wide_cas": use_system_wide_cas,
+                "trusted_cas": [*chosen, *(pem for pem in own if pem not in chosen)],
+            }
+        case _:
+            raise ValueError(f"Invalid trusted CAs: {value!r}")
+
+
+def _trusted_cas_form(
+    context: GlobalSettingsContext, central_trusted_cas: Callable[[], Sequence[str]]
+) -> fs.FormSpec[Any]:
+    central_cas = central_trusted_cas() if context.edits_site_specific_value else ()
+    if not central_cas:
+        return _trusted_cas_dictionary({})
+    return TransformDataForLegacyFormatOrRecomposeFunction(
+        wrapped_form_spec=_trusted_cas_dictionary(
+            {
+                "inherited": fs.DictElement(
+                    required=True,
+                    parameter_form=CACertificateChoice(
+                        title=Title("Inherited from global settings"),
+                        certificates=central_cas,
+                    ),
+                )
+            }
+        ),
+        from_disk=lambda value: _split_trusted_cas(value, central_cas),
+        to_disk=_merge_trusted_cas,
     )
 
 
@@ -2183,7 +2248,7 @@ ConfigVariableTrustedCertificateAuthorities = ConfigVariable(
         )
     ],
     ident="trusted_certificate_authorities",
-    form_spec=lambda _context: _global_trusted_cas_form(),
+    form_spec=lambda context: _trusted_cas_form(context, _central_trusted_cas),
 )
 
 ConfigVariableTrustedCertificateAuthorities.add_config_domain_affected_by_change(ConfigDomainCore)

@@ -2,10 +2,11 @@
 # Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 from cmk.rulesets.internal.form_specs import ListExtended
-from cmk.rulesets.v1.form_specs import MultilineText
+from cmk.rulesets.v1.form_specs import FormSpec, MultilineText
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -20,3 +21,8 @@ class CACertificate(MultilineText):
 @dataclass(frozen=True, kw_only=True)
 class CACertificates(ListExtended[str]):
     element_template: CACertificate
+
+
+@dataclass(frozen=True, kw_only=True)
+class CACertificateChoice(FormSpec[Sequence[str]]):
+    certificates: Sequence[str]

@@ -9,6 +9,7 @@ import { type Component } from 'vue'
 import FormBinaryConditionChoices from '@/form/private/forms/FormBinaryConditionChoices'
 import FormBooleanChoice from '@/form/private/forms/FormBooleanChoice.vue'
 import FormCaCertificate from '@/form/private/forms/FormCaCertificate.vue'
+import FormCaCertificateChoice from '@/form/private/forms/FormCaCertificateChoice.vue'
 import FormCascadingSingleChoice from '@/form/private/forms/FormCascadingSingleChoice.vue'
 import FormCatalog from '@/form/private/forms/FormCatalog/FormCatalog.vue'
 import FormCheckboxListChoice from '@/form/private/forms/FormCheckboxListChoice.vue'
@@ -62,6 +63,7 @@ const baseComponents: BaseComponents = {
   binary_condition_choices: FormBinaryConditionChoices,
   boolean_choice: FormBooleanChoice,
   ca_certificate: FormCaCertificate,
+  ca_certificate_choice: FormCaCertificateChoice,
   cascading_single_choice: FormCascadingSingleChoice,
   catalog: FormCatalog,
   checkbox_list_choice: FormCheckboxListChoice,

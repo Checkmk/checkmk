@@ -1038,6 +1038,19 @@ def test_adding_a_trusted_ca_is_logged_as_a_security_event(
     assert _trust_changes(caplog) == ["certificate added"]
 
 
+def test_a_site_can_stop_trusting_a_central_ca(clients: ClientRegistry, remote_site: str) -> None:
+    clients.GlobalSetting.update(
+        "trusted_certificate_authorities", _trusted_cas_value(_self_signed_ca_pem())
+    )
+
+    resp = clients.GlobalSetting.update_site(
+        remote_site,
+        "trusted_certificate_authorities",
+        {"use_system_wide_cas": False, "inherited": [], "trusted_cas": []},
+    )
+    assert resp.json["value"]["inherited"] == []
+
+
 @pytest.mark.usefixtures("remote_site")
 def test_a_central_trusted_ca_is_logged_once_for_all_the_sites_inheriting_it(
     clients: ClientRegistry, caplog: pytest.LogCaptureFixture

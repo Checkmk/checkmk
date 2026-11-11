@@ -10,6 +10,7 @@ import type {
   BinaryConditionChoicesValue,
   BooleanChoice,
   CaCertificate,
+  CaCertificateChoice,
   CascadingSingleChoice,
   CheckboxListChoice,
   Components,
@@ -165,6 +166,8 @@ function _renderForm(
       return renderMultilineText(formSpec as MultilineText, value as string)
     case 'ca_certificate':
       return renderCaCertificate(formSpec as CaCertificate, value as string)
+    case 'ca_certificate_choice':
+      return renderCaCertificateChoice(formSpec as CaCertificateChoice, value as unknown[])
     case 'data_size':
       return renderDataSize(value as [string, string])
     case 'catalog':
@@ -549,6 +552,15 @@ function renderMultilineText(formSpec: MultilineText, value: string): VNode {
 function renderCaCertificate(formSpec: CaCertificate, value: string): VNode {
   // PEM text is always monospaced, the form spec has no flag to opt out of it.
   return renderTextLines(formSpec.label, value, true)
+}
+
+function renderCaCertificateChoice(formSpec: CaCertificateChoice, value: unknown[]): VNode {
+  return renderValueSummaries(
+    formSpec.elements.map((element) => ({
+      ...element,
+      label: value.includes(element.value) ? formSpec.chosen_label : formSpec.not_chosen_label
+    }))
+  )
 }
 
 function renderBooleanChoice(formSpec: BooleanChoice, value: boolean): VNode {

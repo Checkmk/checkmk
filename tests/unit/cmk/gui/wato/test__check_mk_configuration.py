@@ -16,6 +16,7 @@ from cmk.gui.form_specs._utils import migrate_form_spec_disk_value
 from cmk.gui.wato._check_mk_configuration import (
     _migrate_log_levels,
     _migrate_piggybacked_host_files,
+    _trusted_cas_form,
     AgentConfigOnlyFrom,
     AgentEncryption,
     AgentPorts,
@@ -172,7 +173,9 @@ def test_migrate_log_levels(
     assert _migrate_log_levels(params) == expected_result
 
 
-def _global_settings_context(edition: Edition) -> GlobalSettingsContext:
+def _global_settings_context(
+    edition: Edition, *, edits_site_specific_value: bool | None = None
+) -> GlobalSettingsContext:
     return GlobalSettingsContext(
         target_site_id=SiteId("mysite"),
         edition_of_local_site=edition,
@@ -181,6 +184,7 @@ def _global_settings_context(edition: Edition) -> GlobalSettingsContext:
         configured_sites=SiteConfigurations({}),
         configured_graph_timeranges=[],
         folder_choices=lambda: [("", "Main")],
+        edits_site_specific_value=edits_site_specific_value,
     )
 
 
@@ -288,6 +292,65 @@ def test_trusted_cas_change_activates_the_core() -> None:
     domain_idents = [d.ident() for d in ConfigVariableTrustedCertificateAuthorities.all_domains()]
     assert domain_idents[0] == ConfigDomainCACertificates.ident()
     assert ConfigDomainCore.ident() in domain_idents
+
+
+def _trusted_cas_form_spec(
+    central_cas: Sequence[str], *, edits_site_specific_value: bool
+) -> FormSpec[object]:
+    return _trusted_cas_form(
+        _global_settings_context(
+            Edition.COMMUNITY, edits_site_specific_value=edits_site_specific_value
+        ),
+        lambda: central_cas,
+    )
+
+
+def _shown_trusted_cas(
+    central_cas: Sequence[str], disk_value: object, *, edits_site_specific_value: bool
+) -> object:
+    _spec, value = get_visitor(
+        _trusted_cas_form_spec(central_cas, edits_site_specific_value=edits_site_specific_value),
+        VisitorOptions(migrate_values=False, mask_values=False),
+    ).to_vue(RawDiskData(disk_value))
+    return value
+
+
+@pytest.mark.usefixtures("request_context")
+def test_a_site_shows_each_central_ca_as_trusted_or_not() -> None:
+    value = _shown_trusted_cas(
+        ["central A", "central B"],
+        {"use_system_wide_cas": True, "trusted_cas": ["own", "central B"]},
+        edits_site_specific_value=True,
+    )
+    assert value == {
+        "use_system_wide_cas": True,
+        "inherited": ["central B"],
+        "trusted_cas": ["own"],
+    }
+
+
+def test_a_site_stores_the_trusted_central_cas_before_its_own() -> None:
+    disk_value = get_visitor(
+        _trusted_cas_form_spec(["central A", "central B"], edits_site_specific_value=True),
+        VisitorOptions(migrate_values=False, mask_values=False),
+    ).to_disk(
+        RawFrontendData(
+            {
+                "use_system_wide_cas": False,
+                "inherited": ["central B"],
+                "trusted_cas": ["own", "central B"],
+            }
+        )
+    )
+    assert disk_value == {"use_system_wide_cas": False, "trusted_cas": ["central B", "own"]}
+
+
+@pytest.mark.usefixtures("request_context")
+def test_the_global_value_offers_no_central_cas() -> None:
+    disk_value = {"use_system_wide_cas": True, "trusted_cas": ["central A"]}
+    assert (
+        _shown_trusted_cas(["central A"], disk_value, edits_site_specific_value=False) == disk_value
+    )
 
 
 def test_check_mk_exit_status_accepts_agent_warnings_for_special_agents() -> None:

@@ -16,8 +16,8 @@ import pytest
 from cmk.ccc.user import UserId
 from cmk.crypto.certificate import CertificateWithPrivateKey
 from cmk.gui.config import Config
-from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
-from cmk.gui.form_specs.unstable import CACertificate, CACertificates
+from cmk.gui.form_specs import get_visitor, RawDiskData, RawFrontendData, VisitorOptions
+from cmk.gui.form_specs.unstable import CACertificate, CACertificateChoice, CACertificates
 from cmk.gui.permissions import all_permissions
 from cmk.gui.session_context import UserContext
 from cmk.gui.utils.roles import UserPermissions
@@ -173,3 +173,35 @@ def test_an_unreadable_certificate_is_summarized_as_such(spec: CACertificate) ->
             ],
         )
     ]
+
+
+_CHOICE_OPTIONS = VisitorOptions(migrate_values=False, mask_values=False)
+
+
+@pytest.mark.usefixtures("request_context")
+def test_a_certificate_choice_offers_each_certificate_as_trusted_or_not() -> None:
+    choice_spec, _value = get_visitor(
+        CACertificateChoice(certificates=["not a certificate"]), _CHOICE_OPTIONS
+    ).to_vue(RawDiskData([]))
+    assert choice_spec == shared_type_defs.CaCertificateChoice(
+        title="",
+        help="",
+        validators=[],
+        elements=[
+            shared_type_defs.ValueSummary(
+                value="not a certificate",
+                label=None,
+                detail_groups=[
+                    [shared_type_defs.ValueSummaryDetail(title="Certificate", text="Unreadable")]
+                ],
+            )
+        ],
+        chosen_label="Trusted",
+        not_chosen_label="Not trusted",
+    )
+
+
+def test_a_certificate_choice_stores_the_chosen_certificates_in_their_order() -> None:
+    assert get_visitor(
+        CACertificateChoice(certificates=["one", "two", "three"]), _CHOICE_OPTIONS
+    ).to_disk(RawFrontendData(["three", "unknown", "one"])) == ["one", "three"]

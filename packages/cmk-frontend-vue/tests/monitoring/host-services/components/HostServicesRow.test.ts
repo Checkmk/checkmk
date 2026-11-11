@@ -277,6 +277,20 @@ test('renders the contact groups of a service, sorted alphabetically', () => {
   expect(tags.map((tag) => tag.textContent?.trim())).toEqual(['all', 'linux'])
 })
 
+test('clicking a contact group narrows the listing to the services assigned to it', async () => {
+  const service = makeListingService()
+  mountRow(makeService({ contact_groups: ['linux', 'all'] }), makeTableRow(), {}, service)
+
+  await fireEvent.click(screen.getByRole('button', { name: 'linux' }))
+
+  expect(service.filterState.value).toStrictEqual({
+    type: 'condition',
+    field: 'contact_groups',
+    op: 'one_of',
+    value: ['linux']
+  })
+})
+
 test('renders the service groups of a service, sorted alphabetically', () => {
   const { container } = mountRow(makeService({ groups: ['web', 'databases'] }))
 

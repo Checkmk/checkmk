@@ -39,6 +39,7 @@ import { customActions, withCustomActions } from '@/monitoring/shared/customActi
 import { formatDisplayTimestamp } from '@/monitoring/shared/formatTimestamp'
 import {
   contactCondition,
+  contactGroupCondition,
   groupCondition,
   labelCondition,
   tagCondition,
@@ -267,6 +268,7 @@ const serviceGroups = computed(() => toNameItems(props.row.groups ?? []))
     column-id="contact_groups"
     :items="contactGroups"
     size="small"
+    :filter-by="contactGroupCondition"
   />
   <LabelCell
     v-if="hasColumn('groups')"

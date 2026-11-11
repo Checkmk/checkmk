@@ -295,12 +295,11 @@ defineEmits(['click'])
   background-color: transparent;
   border: 1px solid transparent;
   color: inherit;
-  font-weight: var(--font-weight-default);
-  text-decoration: underline;
+  font-weight: var(--font-weight-semibold);
+  text-decoration: none;
 
   &:hover:not(.cmk-button--disabled) {
     background-color: var(--ux-theme-5);
-    text-decoration: none;
   }
 
   &:focus-visible:not(.cmk-button--disabled) {

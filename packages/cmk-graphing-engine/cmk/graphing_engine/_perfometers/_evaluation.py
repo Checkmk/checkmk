@@ -12,7 +12,7 @@ from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v1 import perfometers as perfometers_v1
 from cmk.graphing.v2_unstable import perfometers as perfometers_v2_unstable
 from cmk.graphing_engine._data._fetched import FetchedData, PerformanceData
-from cmk.graphing_engine._data._naming import MetricName
+from cmk.graphing_engine._data._naming import MetricName, Service
 from cmk.graphing_engine._data._timeseries import TimeRange
 from cmk.graphing_engine._data._units import CurveAttributes
 from cmk.graphing_engine._plugins._perfometer_matching import PerfometerIndex
@@ -27,7 +27,6 @@ from cmk.graphing_engine._plugins._types import (
 )
 from cmk.graphing_engine._quantities._quantity import EvaluationContext, first_value
 from cmk.graphing_engine._rrd._metrics import rrd_metric_of
-from cmk.graphing_engine._rrd._naming import Service
 
 
 class FocusBoundKind(enum.StrEnum):

@@ -8,6 +8,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import assert_never, Final
 
+from ._naming import Service
 from ._timeseries import TimeSeries
 
 
@@ -60,3 +61,4 @@ class FetchedData:
     time_series: TimeSeries | None
     label_macros: Mapping[str, str] = field(default_factory=dict)
     series_attributes: SeriesAttributes = field(default_factory=dict)
+    origin: Service | None = None

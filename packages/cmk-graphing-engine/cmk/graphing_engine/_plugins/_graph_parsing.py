@@ -10,9 +10,9 @@ from typing import assert_never, Protocol
 from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
+from cmk.graphing_engine._data._naming import Service
 from cmk.graphing_engine._graphs._graph import Bound, Curve, Graph, Line, MinimalRange, Rule, Stack
 from cmk.graphing_engine._quantities._quantity import QuantityProtocol
-from cmk.graphing_engine._rrd._naming import Service
 
 from ._quantity_parsing import attributes_of_quantity, parse_quantity
 from ._types import ApiGraph, ApiQuantity, is_scalar, metric_names_in_quantity

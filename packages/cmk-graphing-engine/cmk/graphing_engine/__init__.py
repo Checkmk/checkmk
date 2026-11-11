@@ -11,7 +11,11 @@ from ._data._fetched import (
     SeriesAttributes,
 )
 from ._data._naming import (
+    HostName,
     MetricName,
+    Service,
+    ServiceName,
+    SiteID,
 )
 from ._data._temperature import TemperatureUnit, unit_conversion, UnitConversion
 from ._data._timeseries import (
@@ -159,13 +163,7 @@ from ._rrd._metrics import (
     RRDMetric,
     ScalarOf,
 )
-from ._rrd._naming import (
-    HostName,
-    Service,
-    ServiceName,
-    SiteID,
-    split_predict_prefix,
-)
+from ._rrd._naming import split_predict_prefix
 from ._rrd._performance_data import (
     parse_check_command,
     parse_performance_data,

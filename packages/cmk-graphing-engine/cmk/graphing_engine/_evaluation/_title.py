@@ -8,6 +8,7 @@ import re
 from collections.abc import Iterable, Iterator, Mapping
 
 from cmk.graphing_engine._data._fetched import ScalarKind
+from cmk.graphing_engine._data._naming import Service
 from cmk.graphing_engine._quantities._quantity import (
     EvaluationContext,
     fetch_leaves,
@@ -16,7 +17,6 @@ from cmk.graphing_engine._quantities._quantity import (
     QuantityProtocol,
 )
 from cmk.graphing_engine._rrd._metrics import rrd_metric_of, RRDMetric, ScalarOf
-from cmk.graphing_engine._rrd._naming import Service
 
 _TITLE_EXPRESSION_PREFIX = "_EXPRESSION:"
 _TITLE_EXPRESSION_PATTERN = re.compile(re.escape(_TITLE_EXPRESSION_PREFIX) + r"\{.*?\}")

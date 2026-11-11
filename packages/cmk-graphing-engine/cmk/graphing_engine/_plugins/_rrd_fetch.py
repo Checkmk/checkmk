@@ -9,6 +9,7 @@ from dataclasses import dataclass
 
 from cmk.graphing.v1 import translations as translations_v1
 from cmk.graphing_engine._data._fetched import FetchedData, PerformanceData
+from cmk.graphing_engine._data._naming import Service, SiteID
 from cmk.graphing_engine._data._timeseries import merge_series, scaled_series, TimeRange, TimeSeries
 from cmk.graphing_engine._quantities._quantity import MetricProtocol
 from cmk.graphing_engine._rrd._fetch import (
@@ -16,7 +17,6 @@ from cmk.graphing_engine._rrd._fetch import (
     FetchRRDTimeSeriesProtocol,
 )
 from cmk.graphing_engine._rrd._metrics import ConsolidationFunction, RRDMetric
-from cmk.graphing_engine._rrd._naming import Service, SiteID
 from cmk.graphing_engine._rrd._performance_data import parse_performance_data, RawPerformanceData
 from cmk.graphing_engine._rrd._resample import resample
 

@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typing import Final, Literal
 
 from cmk.graphing.v1 import metrics as metrics_v1
-from cmk.graphing_engine._data._naming import MetricName
+from cmk.graphing_engine._data._naming import HostName, MetricName, ServiceName, SiteID
 from cmk.graphing_engine._data._timeseries import TimeRange
 from cmk.graphing_engine._data._units import CurveAttributes, Unit
 from cmk.graphing_engine._graphs._graph import Curve, Graph, Line, Region
@@ -18,7 +18,6 @@ from cmk.graphing_engine._rrd._metrics import (
     PredictionMetric,
     RRDMetric,
 )
-from cmk.graphing_engine._rrd._naming import HostName, ServiceName, SiteID
 
 from ._attributes import metric_attributes
 

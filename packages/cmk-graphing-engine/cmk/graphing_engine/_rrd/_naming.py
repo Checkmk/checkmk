@@ -4,14 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import enum
-from dataclasses import dataclass
-from typing import NewType
 
 from cmk.graphing_engine._data._naming import MetricName
-
-HostName = NewType("HostName", str)
-ServiceName = NewType("ServiceName", str)
-SiteID = NewType("SiteID", str)
 
 
 def rrd_metric_name(text: str) -> MetricName:
@@ -22,13 +16,6 @@ def rrd_metric_name(text: str) -> MetricName:
         .replace("\\", "_")
         .replace("\x00", "_")
     )
-
-
-@dataclass(frozen=True, kw_only=True)
-class Service:
-    site_id: SiteID | None = None
-    host_name: HostName
-    service_name: ServiceName
 
 
 class PredictPrefix(enum.StrEnum):

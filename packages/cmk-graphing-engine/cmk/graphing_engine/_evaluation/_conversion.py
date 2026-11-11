@@ -49,6 +49,7 @@ def _converted_curve(curve: EvaluatedCurve, temperature_unit: TemperatureUnit) -
         time_series=mapped_series(curve.time_series, conversion.converter),
         source_id=curve.source_id,
         series_attributes=curve.series_attributes,
+        origin=curve.origin,
     )
 
 

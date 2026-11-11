@@ -12,6 +12,7 @@ cannot reach any data the dashboard does not already show, and an edited widget 
 without the token going stale.
 """
 
+import dataclasses
 from http import HTTPStatus
 
 from cmk.gui.dashboard.graph_widget_discovery import (
@@ -24,6 +25,7 @@ from cmk.gui.graphing.openapi.fetch_graph_data import evaluate_built_graph_to_re
 from cmk.gui.graphing.openapi.models import (
     ApiCombinationMode,
     ApiConsolidation,
+    ApiMetric,
     ApiTimeRange,
     GraphFetchResponse,
 )
@@ -38,7 +40,7 @@ from cmk.gui.openapi.framework import (
     EndpointPermissions,
     VersionedEndpoint,
 )
-from cmk.gui.openapi.framework.model import api_field, api_model
+from cmk.gui.openapi.framework.model import api_field, api_model, ApiOmitted
 from cmk.gui.openapi.restful_objects.constructors import domain_type_action_href
 from cmk.gui.openapi.utils import ProblemException
 
@@ -90,7 +92,7 @@ def fetch_widget_graph_data_v1(
                 detail=discovered.no_data_message or "The widget has no graph to fetch.",
             )
 
-        return evaluate_built_graph_to_response(
+        response = evaluate_built_graph_to_response(
             discovered.graphs[0].graph,
             requested_time_range=body.requested_time_range,
             consolidation_function=body.consolidation_function,
@@ -99,6 +101,16 @@ def fetch_widget_graph_data_v1(
                 user, api_context.config.default_temperature_unit
             ),
         )
+        # A shared dashboard follows no link, so its viewers need not learn the sites of the lines.
+        return dataclasses.replace(
+            response, metrics=[_without_origin(metric) for metric in response.metrics]
+        )
+
+
+def _without_origin(metric: ApiMetric) -> ApiMetric:
+    return dataclasses.replace(
+        metric, metadata=dataclasses.replace(metric.metadata, origin=ApiOmitted())
+    )
 
 
 ENDPOINT_FETCH_WIDGET_GRAPH_DATA = VersionedEndpoint(

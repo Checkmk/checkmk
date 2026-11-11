@@ -9,6 +9,7 @@ from typing import assert_never
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v2_unstable import metrics as metrics_v2_unstable
 from cmk.graphing_engine._data._fetched import ScalarKind
+from cmk.graphing_engine._data._naming import Service
 from cmk.graphing_engine._data._units import CurveAttributes
 from cmk.graphing_engine._quantities._expressions import (
     Constant,
@@ -19,7 +20,6 @@ from cmk.graphing_engine._quantities._expressions import (
 )
 from cmk.graphing_engine._quantities._quantity import QuantityProtocol
 from cmk.graphing_engine._rrd._metrics import rrd_metric_of, ScalarOf
-from cmk.graphing_engine._rrd._naming import Service
 
 from ._attributes import metric_attributes, parse_color, parse_unit, scalar_attributes
 from ._types import ApiQuantity, ApiScalar, operands_of

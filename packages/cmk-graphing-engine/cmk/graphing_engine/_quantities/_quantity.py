@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from typing import Protocol, runtime_checkable
 
 from cmk.graphing_engine._data._fetched import FetchedData, PerformanceData, SeriesAttributes
-from cmk.graphing_engine._data._naming import MetricName
+from cmk.graphing_engine._data._naming import MetricName, Service
 from cmk.graphing_engine._data._timeseries import last_present, TimeRange, TimeSeries
 
 
@@ -43,6 +43,7 @@ class EvaluatedQuantity:
     time_series: TimeSeries
     label_macros: Mapping[str, str] = field(default_factory=dict)
     series_attributes: SeriesAttributes = field(default_factory=dict)
+    origin: Service | None = None
     fanned: bool = False
 
 

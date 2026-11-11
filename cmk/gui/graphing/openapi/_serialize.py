@@ -13,11 +13,13 @@ from cmk.graphing_engine import (
     EvaluatedGraph,
     NonConvertibleUnit,
     SeriesAttributes,
+    Service,
     TimeSeries,
     Unit,
 )
 from cmk.graphing_engine import TimeRange as EngineTimeRange
 from cmk.gui.i18n import _
+from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.utils.temperature_unit import TemperatureUnit
 
 from .._source import FetchDiagnostics
@@ -25,6 +27,7 @@ from .._unit_format import unit_to_unit_format
 from .models import (
     ApiAreaRender,
     ApiConsolidation,
+    ApiCurveOrigin,
     ApiHorizontalLine,
     ApiLineRender,
     ApiMetric,
@@ -114,6 +117,16 @@ def _series_attributes_to_api(attributes: SeriesAttributes) -> list[ApiMetricAtt
     ]
 
 
+def _origin_to_api(origin: Service | None) -> ApiCurveOrigin | ApiOmitted:
+    if origin is None:
+        return ApiOmitted()
+    return ApiCurveOrigin(
+        site_id=origin.site_id,
+        host_name=origin.host_name,
+        service_description=origin.service_name,
+    )
+
+
 def _render_to_api(drawn: DrawnCurve[EvaluatedCurve]) -> ApiMetricRender:
     if drawn.stack is None:
         return ApiLineRender(shape="line", inverse=drawn.inverse, hidden=False)
@@ -131,6 +144,7 @@ def curve_to_api_metric(
             unit=_api_unit(curve.attributes.unit),
             color=curve.attributes.color,
             attributes=_series_attributes_to_api(curve.series_attributes),
+            origin=_origin_to_api(curve.origin),
         ),
         render=_render_to_api(drawn),
         data_points=list(curve.time_series.values),

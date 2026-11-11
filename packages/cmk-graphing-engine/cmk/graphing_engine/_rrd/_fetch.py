@@ -7,12 +7,11 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Final, Protocol
 
-from cmk.graphing_engine._data._naming import MetricName
+from cmk.graphing_engine._data._naming import MetricName, Service, SiteID
 from cmk.graphing_engine._data._timeseries import TimeRange, TimeSeries
 
 from ._edge_neighbours import expected_served_step, with_edge_neighbours
 from ._metrics import ConsolidationFunction, RRDMetric
-from ._naming import Service, SiteID
 
 
 class FetchMetricNamesProtocol(Protocol):

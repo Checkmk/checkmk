@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 from typing import assert_never
 
 from cmk.graphing_engine._data._fetched import MACRO_SERIES_ID, SeriesAttributes
+from cmk.graphing_engine._data._naming import Service
 from cmk.graphing_engine._data._timeseries import fitted, TimeRange, TimeSeries
 from cmk.graphing_engine._data._units import CurveAttributes
 from cmk.graphing_engine._graphs._graph import (
@@ -38,6 +39,7 @@ class EvaluatedCurve:
     time_series: TimeSeries
     source_id: str | None = None
     series_attributes: SeriesAttributes = field(default_factory=dict)
+    origin: Service | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -171,6 +173,7 @@ def _evaluate_curve(
             time_series=evaluated.time_series,
             source_id=curve.source_id,
             series_attributes=evaluated.series_attributes,
+            origin=evaluated.origin,
         )
         for index, evaluated in enumerate(results)
     ]
@@ -235,6 +238,7 @@ def _fitted_curve(curve: EvaluatedCurve, time_range: TimeRange) -> EvaluatedCurv
         time_series=fitted(curve.time_series, time_range),
         source_id=curve.source_id,
         series_attributes=curve.series_attributes,
+        origin=curve.origin,
     )
 
 

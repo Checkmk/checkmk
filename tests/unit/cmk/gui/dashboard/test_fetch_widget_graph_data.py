@@ -21,6 +21,10 @@ from cmk.graphing_engine import (
     EvaluatedGraph,
     EvaluatedLine,
     Graph,
+    HostName,
+    Service,
+    ServiceName,
+    SiteID,
     TimeRange,
     TimeSeries,
     Unit,
@@ -43,6 +47,7 @@ from cmk.gui.graphing import (
 from cmk.gui.graphing.openapi import fetch_graph_data as fetch_graph_data_module
 from cmk.gui.graphing.openapi.models import ApiTimeRange
 from cmk.gui.logged_in import user
+from cmk.gui.openapi.framework.model import ApiOmitted
 from cmk.gui.openapi.utils import ProblemException
 from cmk.gui.token_auth import AgentDownloadToken, AuthToken, TokenId
 from cmk.gui.type_defs import UserSpec
@@ -126,6 +131,39 @@ def _celsius_graph(_graphs: Sequence[Graph], _options: EvaluationOptions) -> Eva
                                 values=[20.0],
                             ),
                             source_id=None,
+                        ),
+                        inverse=False,
+                    )
+                ],
+            )
+        ],
+        diagnostics=FetchDiagnostics(),
+    )
+
+
+def _graph_of_one_service(_graphs: Sequence[Graph], _options: EvaluationOptions) -> EvaluatedGraphs:
+    unit = Unit(notation=DecimalNotation(""), precision=AutoPrecision(2))
+    time_range = TimeRange(start=0, end=30, step=10)
+    return EvaluatedGraphs(
+        graphs=[
+            EvaluatedGraph(
+                name="g",
+                title="t",
+                time_range=time_range,
+                vertical_range=None,
+                stacks=[],
+                lines=[
+                    EvaluatedLine(
+                        curve=EvaluatedCurve(
+                            id="c",
+                            attributes=CurveAttributes(title="Load", unit=unit, color="#123456"),
+                            value=1.0,
+                            time_series=TimeSeries(time_range=time_range, values=[1.0]),
+                            origin=Service(
+                                site_id=SiteID("NO_SITE"),
+                                host_name=HostName("my-host"),
+                                service_name=ServiceName("CPU load"),
+                            ),
                         ),
                         inverse=False,
                     )
@@ -257,3 +295,15 @@ def test_fetch_takes_the_temperature_unit_from_the_owners_own_profile(
     [metric] = response.metrics
     assert metric.metadata.unit.symbol == expected_symbol
     assert metric.data_points == expected_points
+
+
+@pytest.mark.usefixtures("load_config", "request_context")
+def test_fetch_names_no_service_a_line_draws(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(fetch_graph_data_module, "evaluate_built_graphs", _graph_of_one_service)
+    impersonating(monkeypatch, {_WIDGET_ID: _graph_widget()})
+    _discovering(monkeypatch, [_built()])
+
+    response = fetch_widget_graph_data_v1(api_context(dashboard_token()), _REQUEST)
+
+    [metric] = response.metrics
+    assert isinstance(metric.metadata.origin, ApiOmitted)

@@ -81,6 +81,16 @@ class ApiMetricAttribute:
 
 
 @api_model
+class ApiCurveOrigin:
+    site_id: str | None = api_field(
+        description="The site of the service, or null if it is not known.",
+        example="mysite",
+    )
+    host_name: str = api_field(description="The host of the service.", example="myhost")
+    service_description: str = api_field(description="The service.", example="CPU load")
+
+
+@api_model
 class ApiMetricMetadata:
     name: str = api_field(
         description="The stable structural identifier of the metric.",
@@ -96,6 +106,11 @@ class ApiMetricMetadata:
         description="The attributes of the series the metric was fetched from. Empty for a metric "
         "without any, e.g. one fetched from an RRD.",
         example=[],
+    )
+    origin: ApiCurveOrigin | ApiOmitted = api_field(
+        description="The service the metric draws, if the graph draws one curve per service, as a "
+        "line or a stacked area. Omitted otherwise, and on a shared dashboard.",
+        default_factory=ApiOmitted,
     )
 
 

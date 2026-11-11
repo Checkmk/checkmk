@@ -11,14 +11,14 @@ from cmk.graphing.v1 import graphs as graphs_v1
 from cmk.graphing.v1 import metrics as metrics_v1
 from cmk.graphing.v2_unstable import graphs as graphs_v2_unstable
 from cmk.graphing_engine._data._fetched import ScalarKind
-from cmk.graphing_engine._data._naming import MetricName
+from cmk.graphing_engine._data._naming import MetricName, Service
 from cmk.graphing_engine._data._units import CurveAttributes
 from cmk.graphing_engine._graphs._drawn_curves import drawn_curves
 from cmk.graphing_engine._graphs._graph import Curve, Graph, Line, Rule, Stack
 from cmk.graphing_engine._quantities._quantity import fetch_leaves
 from cmk.graphing_engine._rrd._fetch import FetchMetricNamesProtocol
 from cmk.graphing_engine._rrd._metrics import rrd_metric_of, RRDMetric, ScalarOf
-from cmk.graphing_engine._rrd._naming import PredictPrefix, Service
+from cmk.graphing_engine._rrd._naming import PredictPrefix
 
 from ._attributes import metric_attributes, scalar_attributes
 from ._graph_parsing import build_single_quantity, parse_graph_from_api, QuantityBuilderProtocol

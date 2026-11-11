@@ -37,7 +37,9 @@ from cmk.graphing_engine import (
     Rule,
     ScalarKind,
     ScalarOf,
+    Service,
     ServiceName,
+    SiteID,
     TimeRange,
     TimeSeries,
     Unit,
@@ -58,7 +60,12 @@ from cmk.gui.graphing.openapi._serialize import (
     evaluated_to_response,
 )
 from cmk.gui.graphing.openapi.fetch_graph_data import fetch_graph_data_v1
-from cmk.gui.graphing.openapi.models import ApiTimeRange, ApiUnitFormat, GraphFetchRequest
+from cmk.gui.graphing.openapi.models import (
+    ApiCurveOrigin,
+    ApiTimeRange,
+    ApiUnitFormat,
+    GraphFetchRequest,
+)
 from cmk.gui.logged_in import LoggedInNobody
 from cmk.gui.openapi.framework import ApiContext
 from cmk.gui.openapi.utils import ProblemException
@@ -687,6 +694,45 @@ def test_evaluated_to_response_leaves_an_rrd_metric_without_attributes() -> None
 
     [metric] = response.metrics
     assert metric.metadata.attributes == []
+
+
+def test_evaluated_to_response_names_the_service_a_curve_draws() -> None:
+    unit = Unit(notation=DecimalNotation("X"), precision=AutoPrecision(2))
+    time_range = TimeRange(start=0, end=30, step=10)
+    evaluated = EvaluatedGraph(
+        name="g",
+        title="t",
+        time_range=time_range,
+        vertical_range=None,
+        stacks=[],
+        lines=[
+            EvaluatedLine(
+                curve=EvaluatedCurve(
+                    id="c",
+                    attributes=CurveAttributes(title="Line", unit=unit, color="#0000ff"),
+                    value=1.0,
+                    time_series=TimeSeries(time_range=time_range, values=[1.0]),
+                    origin=Service(
+                        site_id=SiteID("s1"),
+                        host_name=HostName("h0"),
+                        service_name=ServiceName("CPU load"),
+                    ),
+                ),
+                inverse=False,
+            )
+        ],
+    )
+
+    response = evaluated_to_response(
+        evaluated,
+        diagnostics=FetchDiagnostics(),
+        temperature_unit=TemperatureUnit.CELSIUS,
+    )
+
+    [metric] = response.metrics
+    assert metric.metadata.origin == ApiCurveOrigin(
+        site_id="s1", host_name="h0", service_description="CPU load"
+    )
 
 
 def _init_setup_git_repo(config_dir: Path) -> None:

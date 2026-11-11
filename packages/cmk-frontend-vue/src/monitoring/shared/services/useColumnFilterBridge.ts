@@ -10,23 +10,10 @@ import type { ColumnFilterNode, FilterField } from '@/monitoring/shared/api/type
 import { filterFields } from '@/monitoring/shared/components/filter/types'
 
 import type { FilterStore } from './FilterStore'
-import { getTopLevelConditions } from './filterNodeUtils'
-
-function combine(
-  conditions: ColumnFilterNode<FilterField>[]
-): ColumnFilterNode<FilterField> | undefined {
-  if (conditions.length === 0) {
-    return undefined
-  }
-  if (conditions.length === 1) {
-    return conditions[0]
-  }
-  return { type: 'and', children: conditions }
-}
 
 /**
- * Bridges a FilterStore (field-centric) with TanStack Table's column filter state
- * (column-ID-centric). Derives the table's displayed column filters from the store
+ * Bridges a FilterStore (keyed by the fields a column filters on) with TanStack
+ * Table's column filter state (column-ID-centric). Derives the table's displayed column filters from the store
  * and maps column filter change events back to store updates.
  *
  * Intended to be shared across monitoring apps that combine a FilterStore with a
@@ -39,36 +26,29 @@ export function useColumnFilterBridge<TData>(
   tableColumnFilters: ComputedRef<ColumnFiltersState>
   onColumnFiltersUpdate: (next: ColumnFiltersState) => void
 } {
+  const filteredColumns = columns.flatMap((col) =>
+    col.meta?.filter !== undefined && 'accessorKey' in col
+      ? [{ id: col.accessorKey as string, fields: filterFields(col.meta.filter) }]
+      : []
+  )
+
   const tableColumnFilters = computed<ColumnFiltersState>(() =>
-    columns.flatMap((col) => {
-      const filter = col.meta?.filter
-      if (filter === undefined || !('accessorKey' in col)) {
-        return []
-      }
-      const conditions = filterFields(filter)
-        .map((field) => filterStore.getColumnFilter(field))
-        .filter((condition): condition is ColumnFilterNode<FilterField> => condition !== undefined)
-      const value = combine(conditions)
-      return value !== undefined ? [{ id: col.accessorKey as string, value }] : []
+    filteredColumns.flatMap(({ id, fields }) => {
+      const value = filterStore.getColumnFilter(...fields)
+      return value !== undefined ? [{ id, value }] : []
     })
   )
 
   function onColumnFiltersUpdate(next: ColumnFiltersState): void {
-    const map = new Map<FilterField, ColumnFilterNode<FilterField> | undefined>()
-    for (const col of columns) {
-      const filter = col.meta?.filter
-      if (filter === undefined || !('accessorKey' in col)) {
-        continue
-      }
-      const value = next.find((f) => f.id === col.accessorKey)?.value as
-        | ColumnFilterNode<FilterField>
-        | undefined
-      const conditions = value !== undefined ? getTopLevelConditions(value) : []
-      for (const field of filterFields(filter)) {
-        map.set(field, combine(conditions.filter((condition) => condition.field === field)))
-      }
-    }
-    filterStore.setColumnFilters(map)
+    filterStore.setColumnFilters(
+      filteredColumns.map(
+        ({ id, fields }) =>
+          [
+            fields,
+            next.find((f) => f.id === id)?.value as ColumnFilterNode<FilterField> | undefined
+          ] as const
+      )
+    )
   }
 
   return { tableColumnFilters, onColumnFiltersUpdate }

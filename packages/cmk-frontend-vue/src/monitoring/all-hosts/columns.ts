@@ -294,6 +294,7 @@ export function buildHostColumns({
 
   const modesFilter: BooleanGroupFilter<HostModeField> = {
     type: 'boolean-group',
+    combineLabel: _t('Combine selections with'),
     groups: [
       { field: 'notifications_enabled', title: _t('Notifications disabled'), negated: true },
       { field: 'active_checks_disabled', title: _t('Active checks disabled') },

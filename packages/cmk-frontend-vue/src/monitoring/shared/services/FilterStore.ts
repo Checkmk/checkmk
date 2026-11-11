@@ -7,7 +7,12 @@ import { type ComputedRef, type Ref, computed, ref, shallowRef } from 'vue'
 
 import type { ColumnFilterNode, FilterField, FilterNode } from '@/monitoring/shared/api/types'
 
-import { filterNodesEqual, getTopLevelConditions, setCondition } from './filterNodeUtils'
+import {
+  filterNodesEqual,
+  getColumnNodes,
+  getTopLevelFields,
+  setColumnNodes
+} from './filterNodeUtils'
 
 export interface QuickFilterConfig {
   label: string
@@ -55,27 +60,31 @@ export class FilterStore {
     }))
   }
 
-  getColumnFilter(field: FilterField): ColumnFilterNode<FilterField> | undefined {
-    if (this.filterNode.value === undefined) {
-      return undefined
-    }
-    const matching = getTopLevelConditions(this.filterNode.value).filter((c) => c.field === field)
-    if (matching.length === 0) {
-      return undefined
-    }
-    if (matching.length === 1) {
-      return matching[0]!
-    }
-    return { type: 'and', children: matching }
+  /** The conditions of a column filtering on `fields`, AND-combined when there are several. */
+  getColumnFilter(...fields: FilterField[]): ColumnFilterNode<FilterField> | undefined {
+    const matching = (
+      this.filterNode.value !== undefined ? getColumnNodes(this.filterNode.value, fields) : []
+    ) as ColumnFilterNode<FilterField>[]
+    return matching.length === 0
+      ? undefined
+      : matching.length === 1
+        ? matching[0]!
+        : { type: 'and', children: matching }
   }
 
-  /** Batch-update column conditions. Fields mapped to `undefined` are cleared. */
-  setColumnFilters(map: Map<FilterField, ColumnFilterNode<FilterField> | undefined>): void {
-    let node = this.filterNode.value
-    for (const [field, condition] of map) {
-      node = setCondition(node, field, condition)
-    }
-    this.filterNode.value = node
+  /**
+   * Batch-update column conditions, keyed by a column's field or fields. Columns mapped to
+   * `undefined` are cleared.
+   */
+  setColumnFilters(
+    entries: Iterable<
+      readonly [FilterField | readonly FilterField[], ColumnFilterNode<FilterField> | undefined]
+    >
+  ): void {
+    this.filterNode.value = [...entries].reduce<FilterNode | undefined>(
+      (node, [fields, condition]) => setColumnNodes(node, [fields].flat(), condition),
+      this.filterNode.value
+    )
   }
 
   /** Replace the entire filterNode with the quick filter's preset conditions. */
@@ -101,6 +110,6 @@ export class FilterStore {
     if (this.filterNode.value === undefined) {
       return 0
     }
-    return new Set(getTopLevelConditions(this.filterNode.value).map((c) => c.field)).size
+    return new Set(getTopLevelFields(this.filterNode.value)).size
   }
 }

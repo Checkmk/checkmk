@@ -248,6 +248,7 @@ test('the mode column filter no longer offers what moved to the state column', (
 
   expect(modesColumn?.meta?.filter).toEqual({
     type: 'boolean-group',
+    combineLabel: 'Combine selections with',
     groups: [
       { field: 'notifications_enabled', title: 'Notifications disabled', negated: true },
       { field: 'active_checks_disabled', title: 'Active checks disabled' },

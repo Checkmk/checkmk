@@ -14,10 +14,13 @@ edits.
 
 The v-model is a `ColumnFilterNode<F | BF>` (or undefined for "no filter"):
 the checkbox list's own `one_of` condition and any active flag's `eq`
-condition, AND-combined when more than one is active. The parent
+condition, AND-combined when more than one is active. The flags may be
+combined with OR among themselves; their `or` node is then kept as one child
+of that AND, next to the checkbox list's condition. The parent
 `FilterDropdown` owns the popover shell and Clear/Apply handling.
 -->
 <script setup lang="ts" generic="F extends FilterField, BF extends FilterField">
+import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed } from 'vue'
 
 import type { ColumnFilterNode, FilterField } from '@/monitoring/shared/api/types'
@@ -29,6 +32,8 @@ import type { BooleanGroupFilter, CheckboxListFilter, CheckboxListWithFlagsFilte
 const props = defineProps<{ definition: CheckboxListWithFlagsFilter<F, BF> }>()
 
 const model = defineModel<ColumnFilterNode<F | BF> | undefined>({ default: undefined })
+
+const { _t } = usei18n()
 
 function topLevelConditions(
   node: ColumnFilterNode<F | BF> | undefined
@@ -45,7 +50,8 @@ function topLevelConditions(
 
 // Combines the checkbox and flags slices back into one node, flattening a
 // slice that is itself an "and" (several active flags) rather than nesting
-// it - the model stays a single flat "and" of conditions either way.
+// it - the model stays a single flat "and" either way. An "or" of flags
+// stays one child of it.
 function combine(
   nodes: (ColumnFilterNode<F | BF> | undefined)[]
 ): ColumnFilterNode<F | BF> | undefined {
@@ -84,7 +90,8 @@ const checkboxModel = computed<ColumnFilterNode<F> | undefined>({
 
 const flagsDefinition = computed<BooleanGroupFilter<BF>>(() => ({
   type: 'boolean-group',
-  groups: props.definition.flags
+  groups: props.definition.flags,
+  combineLabel: _t('Combine status flag selections with')
 }))
 
 const flagsModel = computed<ColumnFilterNode<BF> | undefined>({

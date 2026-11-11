@@ -54,6 +54,54 @@ export function getTopLevelConditions(node: FilterNode): FieldNode[] {
   return getTopChildren(node).filter(isFieldNode)
 }
 
+/**
+ * A top-level node a column funnel owns: a per-field leaf, or an OR of such leaves (e.g. status
+ * flags combined with OR). Anything nested deeper belongs to no column.
+ */
+type ColumnNode = FieldNode | { type: 'or'; children: FieldNode[] }
+
+function isColumnNode(node: FilterNode): node is ColumnNode {
+  return isFieldNode(node) || (node.type === 'or' && node.children.every(isFieldNode))
+}
+
+function leafFields(node: ColumnNode): FilterField[] {
+  return isFieldNode(node) ? [node.field] : node.children.map((child) => child.field)
+}
+
+function isOwnedBy(node: FilterNode, fields: readonly FilterField[]): boolean {
+  return isColumnNode(node) && leafFields(node).every((field) => fields.includes(field))
+}
+
+/** The top-level nodes of a flat AND that a column filtering on `fields` owns. */
+export function getColumnNodes(node: FilterNode, fields: readonly FilterField[]): FilterNode[] {
+  return getTopChildren(node).filter((child) => isOwnedBy(child, fields))
+}
+
+/**
+ * Immutably replace the nodes a column filtering on `fields` owns in a flat AND by the top-level
+ * nodes of `value` (which an AND is flattened into). Passing `undefined` removes them.
+ */
+export function setColumnNodes(
+  node: FilterNode | undefined,
+  fields: readonly FilterField[],
+  value: FilterNode | undefined
+): FilterNode | undefined {
+  const next = [
+    ...(node !== undefined ? getTopChildren(node) : []).filter((c) => !isOwnedBy(c, fields)),
+    ...(value !== undefined ? getTopChildren(value) : []).filter((c) => isOwnedBy(c, fields))
+  ]
+  return next.length === 0
+    ? undefined
+    : next.length === 1
+      ? next[0]!
+      : { type: 'and', children: next }
+}
+
+/** Every field the column-owned top-level nodes of a flat AND filter on. */
+export function getTopLevelFields(node: FilterNode): FilterField[] {
+  return getTopChildren(node).filter(isColumnNode).flatMap(leafFields)
+}
+
 type CanonicalNode =
   | { type: 'condition'; field: string; op: string; value: unknown }
   | { type: 'age'; field: string; op: string; seconds: number }

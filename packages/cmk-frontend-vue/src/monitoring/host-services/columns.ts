@@ -197,6 +197,7 @@ export function useHostServicesColumns<Row extends HostServiceEntry = HostServic
 
   const modesFilter: BooleanGroupFilter<ServiceModeField> = {
     type: 'boolean-group',
+    combineLabel: _t('Combine selections with'),
     groups: [
       { field: 'notifications_enabled', title: _t('Notifications disabled'), negated: true },
       { field: 'active_checks_disabled', title: _t('Active checks disabled') },

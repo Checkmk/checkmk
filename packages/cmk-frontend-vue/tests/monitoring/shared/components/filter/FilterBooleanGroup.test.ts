@@ -22,13 +22,16 @@ const definition: BooleanGroupFilter<ModeField> = {
   ]
 }
 
-function renderFilter(initial?: ColumnFilterNode<ModeField>) {
+function renderFilter(
+  initial?: ColumnFilterNode<ModeField>,
+  filterDefinition: BooleanGroupFilter<ModeField> = definition
+) {
   const model = ref<ColumnFilterNode<ModeField> | undefined>(initial)
   render(
     defineComponent({
       components: { FilterBooleanGroup },
       setup() {
-        return { model, definition }
+        return { model, definition: filterDefinition }
       },
       template: '<FilterBooleanGroup v-model="model" :definition="definition" />'
     })
@@ -100,4 +103,46 @@ test('a negated group shows a true field as "No"', () => {
     'aria-pressed',
     'true'
   )
+})
+
+const combinable: BooleanGroupFilter<ModeField> = { ...definition, combineLabel: 'Combine with' }
+
+const inDowntime = { type: 'condition', field: 'in_downtime', op: 'eq', value: true } as const
+const acknowledged = { type: 'condition', field: 'acknowledged', op: 'eq', value: true } as const
+
+async function pickYes(user: ReturnType<typeof userEvent.setup>, title: string): Promise<void> {
+  const group = screen.getByRole('group', { name: title })
+  await user.click(within(group).getByRole('button', { name: 'Toggle Yes' }))
+}
+
+test('offers no AND/OR switch without a combine label', () => {
+  renderFilter()
+
+  expect(screen.queryByRole('group', { name: 'Combine with' })).toBeNull()
+})
+
+test('combines the active groups with OR once switched to OR', async () => {
+  const user = userEvent.setup()
+  const { model } = renderFilter(undefined, combinable)
+
+  const combine = screen.getByRole('group', { name: 'Combine with' })
+  await user.click(within(combine).getByRole('button', { name: 'Toggle OR' }))
+  await pickYes(user, 'In downtime')
+  await pickYes(user, 'Acknowledged')
+
+  expect(model.value).toEqual({ type: 'or', children: [inDowntime, acknowledged] })
+})
+
+test('switching back to AND recombines the active groups', async () => {
+  const user = userEvent.setup()
+  const { model } = renderFilter({ type: 'or', children: [inDowntime, acknowledged] }, combinable)
+
+  const combine = screen.getByRole('group', { name: 'Combine with' })
+  expect(within(combine).getByRole('button', { name: 'Toggle OR' })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  )
+  await user.click(within(combine).getByRole('button', { name: 'Toggle AND' }))
+
+  expect(model.value).toEqual({ type: 'and', children: [inDowntime, acknowledged] })
 })

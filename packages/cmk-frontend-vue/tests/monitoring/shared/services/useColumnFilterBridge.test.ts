@@ -263,6 +263,31 @@ describe('useColumnFilterBridge round trip', () => {
     expect(bridge.tableColumnFilters.value).toContainEqual({ id: 'modes_col', value: inDowntime })
   })
 
+  it('keeps flags combined with OR as one node through the store', () => {
+    const { store, bridge } = makeBridge()
+    const modesEither: FilterNode = { type: 'or', children: [inDowntime, acknowledged] }
+
+    bridge.onColumnFiltersUpdate([
+      { id: 'state_col', value: state },
+      { id: 'modes_col', value: modesEither }
+    ])
+
+    expect(store.filterNode.value).toStrictEqual({ type: 'and', children: [state, modesEither] })
+    expect(bridge.tableColumnFilters.value).toContainEqual({ id: 'modes_col', value: modesEither })
+    expect(store.activeFilterCount).toBe(3)
+  })
+
+  it('replaces flags combined with OR when the column changes', () => {
+    const { store, bridge } = makeBridge()
+
+    bridge.onColumnFiltersUpdate([
+      { id: 'modes_col', value: { type: 'or', children: [inDowntime, acknowledged] } }
+    ])
+    bridge.onColumnFiltersUpdate([{ id: 'modes_col', value: inDowntime }])
+
+    expect(store.filterNode.value).toStrictEqual(inDowntime)
+  })
+
   it('clears every condition when the table state goes empty', () => {
     const { store, bridge } = makeBridge()
 

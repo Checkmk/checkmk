@@ -469,6 +469,22 @@ def test_query_builder_name_choice_multiple_with_or() -> None:
     assert parse_as_livestatus_filter(condition) == expected
 
 
+def test_query_builder_name_choice_multiple_with_and() -> None:
+    condition = ServiceNameChoiceCondition(
+        type="condition", field="contact_groups", op="all_of", value=["ops", "dev"]
+    )
+
+    expected = "\n".join(  # noqa: FLY002
+        [
+            "Filter: contact_groups >= ops",
+            "Filter: contact_groups >= dev",
+            "And: 2",
+        ]
+    )
+
+    assert parse_as_livestatus_filter(condition) == expected
+
+
 def test_query_builder_name_choice_prefix_matches_by_regex() -> None:
     condition = ServiceNameChoiceCondition(
         type="condition", field="contact_groups", op="one_of", value=["ops*"]

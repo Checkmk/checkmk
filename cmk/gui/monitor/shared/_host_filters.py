@@ -212,15 +212,17 @@ class NameChoiceCondition:
     field: NameListField = api_field(
         description="List-valued host field to filter on", example="contact_groups"
     )
-    op: Literal["one_of"] = api_field(description="Set membership operation", example="one_of")
+    op: Literal["one_of", "all_of"] = api_field(
+        description="Set membership operation", example="one_of"
+    )
     value: Annotated[
         list[Annotated[str, StringConstraints(pattern=_NO_NEWLINES_REGEX)]],
         MinLen(1),
         AfterValidator(validate_uniqueness),
     ] = api_field(
         description=(
-            "Names to match. A host matches when the field holds any one of them. A trailing "
-            "'*' matches by prefix."
+            "Names to match. With 'one_of' a host matches when the field holds any one of "
+            "them, with 'all_of' only when it holds every one. A trailing '*' matches by prefix."
         ),
         example=["all"],
     )
@@ -470,8 +472,11 @@ def _accumulate_filters(
         case NameChoiceCondition():
             filters.extend(_name_choice_filters(node.field, node.value, column_prefix))
 
-            if len(node.value) > 1:
-                filters.append(f"Or: {len(node.value)}")
+            match node.op:
+                case "one_of" if len(node.value) > 1:
+                    filters.append(f"Or: {len(node.value)}")
+                case "all_of" if len(node.value) > 1:
+                    filters.append(f"And: {len(node.value)}")
 
         case SiteChoiceCondition():
             raise AssertionError("Site conditions are not fully supported as filter nodes.")

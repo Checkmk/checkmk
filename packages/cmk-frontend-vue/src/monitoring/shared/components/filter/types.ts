@@ -135,6 +135,8 @@ export interface BooleanFilterGroup<F extends FilterField = FilterField> {
 export interface BooleanGroupFilter<F extends FilterField = FilterField> {
   type: 'boolean-group'
   groups: BooleanFilterGroup<F>[]
+  /** Offer an AND/OR switch for the active groups, labelled with this text. AND only when unset. */
+  combineLabel?: string
 }
 
 /**
@@ -184,7 +186,8 @@ export interface AutocompleteChoiceFilter<F extends FilterField = FilterField> {
   /** API field this filter targets. Used to produce the correct condition node. */
   field: F
   /**
-   * How the picks combine: `all_of` for the key/value fields, where an entry
+   * How the picks combine by default, until the user flips the AND/OR switch: `all_of` for the
+   * key/value fields, where an entry
    * carries every label or tag it is tagged with and demanding all of them is
    * what narrows the list; `one_of` for the name lists, where the picks are
    * alternatives.

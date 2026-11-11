@@ -9,18 +9,46 @@ that are known only to the server, picked as chips against its autocompleter.
 
 The committed value is a single set-membership condition carrying every pick,
 which is what the API's label, tag and contact-group conditions accept. The
-definition says whether the picks combine as `all_of` or as `one_of`.
+AND/OR switch picks `all_of` or `one_of`; the definition's `op` is the default.
 -->
 <script setup lang="ts" generic="F extends FilterField">
 import CmkChipAutocomplete from 'cmk-ui-library/components/CmkChipAutocomplete.vue'
-import { computed } from 'vue'
+import usei18n from 'cmk-ui-library/lib/i18n'
+import { computed, ref } from 'vue'
 
 import type { ColumnFilterNode, FilterField } from '../../api/types'
+import FilterCombineToggle, { type CombineMode } from './FilterCombineToggle.vue'
 import type { AutocompleteChoiceFilter } from './types'
+
+type ChoiceOp = 'all_of' | 'one_of'
+
+const OP_BY_MODE: Record<CombineMode, ChoiceOp> = { and: 'all_of', or: 'one_of' }
 
 const props = defineProps<{ definition: AutocompleteChoiceFilter<F> }>()
 
 const model = defineModel<ColumnFilterNode<F> | undefined>({ default: undefined })
+
+const { _t } = usei18n()
+
+// Remembers a switch flipped before the first pick, which has no condition to carry it yet.
+const pickedOp = ref<ChoiceOp | undefined>()
+
+const op = computed<ChoiceOp>(
+  () =>
+    (model.value?.type === 'condition' ? (model.value.op as ChoiceOp) : undefined) ??
+    pickedOp.value ??
+    (props.definition.op as ChoiceOp)
+)
+
+const mode = computed<CombineMode>({
+  get: () => (op.value === 'all_of' ? 'and' : 'or'),
+  set: (next) => {
+    pickedOp.value = OP_BY_MODE[next]
+    if (model.value?.type === 'condition') {
+      model.value = { ...model.value, op: OP_BY_MODE[next] } as ColumnFilterNode<F>
+    }
+  }
+})
 
 const selected = computed<string[]>({
   get() {
@@ -38,7 +66,7 @@ const selected = computed<string[]>({
     model.value = {
       type: 'condition',
       field: props.definition.field,
-      op: props.definition.op,
+      op: op.value,
       value: values
     } as ColumnFilterNode<F>
   }
@@ -55,11 +83,15 @@ const selected = computed<string[]>({
       :wildcard-option="definition.wildcardOption"
       :max-selected="definition.maxSelected"
     />
+    <FilterCombineToggle v-model="mode" :label="_t('Combine selections with')" />
   </div>
 </template>
 
 <style scoped>
 .monitoring-filter-autocomplete-choice {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dimension-4);
   margin: var(--dimension-3) var(--dimension-2);
 }
 </style>

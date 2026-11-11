@@ -20,7 +20,9 @@ wide as the library makes an icon-only small toggle button, declared once as
 The v-model is a `ColumnFilterNode<F>` (or undefined for "no filter"). Group
 states are derived from the model at render time; on change the non-"Any"
 groups produce `eq` boolean conditions that are AND-combined into the node (a
-single active group stays a lone condition). The parent `FilterDropdown` owns
+single active group stays a lone condition). A definition with a
+`combineLabel` also offers an AND/OR switch; with OR the conditions are
+combined into an `or` node instead. The parent `FilterDropdown` owns
 the popover shell and Clear/Apply handling.
 -->
 <script setup lang="ts" generic="F extends FilterField">
@@ -29,10 +31,11 @@ import CmkToggleButtonGroup, {
 } from 'cmk-ui-library/components/CmkToggleButtonGroup.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import useId from 'cmk-ui-library/lib/useId'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 import type { ColumnFilterNode, FilterField } from '@/monitoring/shared/api/types'
 
+import FilterCombineToggle, { type CombineMode } from './FilterCombineToggle.vue'
 import type { BooleanGroupFilter } from './types'
 
 type BooleanState = 'all' | 'true' | 'false'
@@ -56,7 +59,7 @@ function conditionsOf(node: ColumnFilterNode<F> | undefined): { field: F; value:
   if (node.type === 'condition') {
     return [{ field: node.field as F, value: Boolean(node.value) }]
   }
-  if (node.type === 'and') {
+  if (node.type === 'and' || node.type === 'or') {
     return node.children.flatMap(conditionsOf)
   }
   return []
@@ -89,12 +92,22 @@ const options = computed<ToggleButtonOption[]>(() => [
   { label: _t('No'), value: 'false', icon: 'cancel', tooltip: _t('No') }
 ])
 
+// With fewer than two active groups the node can't tell AND from OR, so the
+// switch keeps its own state, seeded from the node.
+const mode = ref<CombineMode>(model.value?.type === 'or' ? 'or' : 'and')
+
+function setMode(next: CombineMode): void {
+  mode.value = next
+  commit((field) => stateOf(field))
+}
+
 function setState(field: F, next: BooleanState): void {
+  commit((other) => (other === field ? next : stateOf(other)))
+}
+
+function commit(stateFor: (field: F) => BooleanState): void {
   const active = props.definition.groups
-    .map((group) => ({
-      field: group.field,
-      state: group.field === field ? next : stateOf(group.field)
-    }))
+    .map((group) => ({ field: group.field, state: stateFor(group.field) }))
     .filter((entry) => entry.state !== 'all')
     .map(
       (entry) =>
@@ -111,7 +124,7 @@ function setState(field: F, next: BooleanState): void {
   } else if (active.length === 1) {
     model.value = active[0]
   } else {
-    model.value = { type: 'and', children: active } as ColumnFilterNode<F>
+    model.value = { type: mode.value, children: active } as ColumnFilterNode<F>
   }
 }
 </script>
@@ -145,6 +158,13 @@ function setState(field: F, next: BooleanState): void {
         @update:model-value="setState(group.field, $event as BooleanState)"
       />
     </div>
+    <FilterCombineToggle
+      v-if="definition.combineLabel !== undefined"
+      class="monitoring-filter-boolean-group__combine"
+      :model-value="mode"
+      :label="definition.combineLabel"
+      @update:model-value="setMode"
+    />
   </div>
 </template>
 
@@ -184,5 +204,9 @@ function setState(field: F, next: BooleanState): void {
 
 .monitoring-filter-boolean-group__options {
   grid-column: 2 / -1;
+}
+
+.monitoring-filter-boolean-group__combine {
+  grid-column: 1 / -1;
 }
 </style>

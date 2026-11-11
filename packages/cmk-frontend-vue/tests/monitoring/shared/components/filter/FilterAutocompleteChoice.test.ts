@@ -4,7 +4,7 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import userEvent from '@testing-library/user-event'
-import { render, screen, waitFor } from '@testing-library/vue'
+import { render, screen, waitFor, within } from '@testing-library/vue'
 import { defineComponent, ref } from 'vue'
 
 import type { ColumnFilterNode } from '@/monitoring/shared/api/types'
@@ -52,5 +52,42 @@ test.each(['all_of', 'one_of'] as const)('commits every pick as one %s condition
     field: 'labels',
     op,
     value: LABELS
+  })
+})
+
+test('the AND/OR switch starts at the default the definition gives', () => {
+  mountFunnel('one_of')
+
+  const combine = screen.getByRole('group', { name: 'Combine selections with' })
+  expect(within(combine).getByRole('button', { name: 'Toggle OR' })).toHaveAttribute(
+    'aria-pressed',
+    'true'
+  )
+})
+
+test('switching to OR turns the picks into a one_of condition', async () => {
+  const model = mountFunnel('all_of')
+
+  for (const label of LABELS) {
+    await pick(label)
+  }
+  const combine = screen.getByRole('group', { name: 'Combine selections with' })
+  await userEvent.click(within(combine).getByRole('button', { name: 'Toggle OR' }))
+
+  expect(model.value).toEqual({ type: 'condition', field: 'labels', op: 'one_of', value: LABELS })
+})
+
+test('a switch flipped before the first pick applies to it', async () => {
+  const model = mountFunnel('one_of')
+
+  const combine = screen.getByRole('group', { name: 'Combine selections with' })
+  await userEvent.click(within(combine).getByRole('button', { name: 'Toggle AND' }))
+  await pick(LABELS[0]!)
+
+  expect(model.value).toEqual({
+    type: 'condition',
+    field: 'labels',
+    op: 'all_of',
+    value: [LABELS[0]]
   })
 })

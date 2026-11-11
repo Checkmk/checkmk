@@ -352,6 +352,31 @@ def test_a_link_target_signed_for_another_owner_is_left_out() -> None:
     assert asyncio.run(_auth(gui).link_targets("jdoe", ["net"], set(), now=0.0)) == {}
 
 
+def test_a_link_target_is_asked_about_again_once_the_secret_is_readable(
+    site_secret_file: Path,
+) -> None:
+    signed = _signed_target("carol", "net")
+    gui = _GUI({_LINK_TARGETS: _targets(signed)})
+    auth = _auth(gui)
+    # omd has truncated the file and not yet written the secret.
+    assert asyncio.run(auth.link_targets("jdoe", ["net"], set(), now=0.0)) == {}
+
+    site_secret_file.write_bytes(_SECRET.reveal())
+
+    assert asyncio.run(auth.link_targets("jdoe", ["net"], set(), now=11.0)) == {
+        "net": _target_of(signed)
+    }
+
+
+@pytest.mark.usefixtures("site_secret_file")
+def test_a_held_link_target_needs_no_secret() -> None:
+    gui = _GUI({_LINK_TARGETS: _targets({"name": "net", "owner": "carol"})})
+
+    targets = asyncio.run(_auth(gui).link_targets("jdoe", ["net"], {("carol", "net")}, now=0.0))
+
+    assert targets == {"net": LinkTarget("carol")}
+
+
 def test_the_empty_user_asks_for_built_in_maps_only() -> None:
     gui = _GUI({_LINK_TARGETS: _targets({"name": "net", "owner": ""})})
 

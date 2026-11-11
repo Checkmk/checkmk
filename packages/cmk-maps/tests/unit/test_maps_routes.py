@@ -12,7 +12,7 @@ legacy .cfg parsing live GUI-side (the visuals store and
 import asyncio
 import json
 import time
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 from http import HTTPStatus
 from pathlib import Path
@@ -257,6 +257,30 @@ def _register_signed(client: TestClient, alias: str, *, saved: bool = True) -> N
     assert resp.status_code == HTTPStatus.OK
 
 
+def _empty(_secret_file: Path) -> None:
+    """omd has truncated the file and not yet written the secret."""
+
+
+def _half_written(secret_file: Path) -> None:
+    secret_file.write_bytes(_SECRET.reveal()[:16])
+
+
+@pytest.mark.parametrize(
+    "left_as", [_empty, _half_written, Path.unlink], ids=["empty", "half written", "missing"]
+)
+def test_a_map_is_not_registered_without_a_readable_secret(
+    router_client: RouterClientFactory, site_secret_file: Path, left_as: Callable[[Path], None]
+) -> None:
+    left_as(site_secret_file)
+    client = _client(router_client, ADMIN_PRINCIPAL, owner="admin")
+    signed = sign_config({"name": "streamed"}, _SECRET.hmac, owner="admin")
+
+    resp = client.post("/api/v1/maps/streamed/register", json={**signed, "saved": True})
+
+    assert resp.status_code == HTTPStatus.SERVICE_UNAVAILABLE
+    assert map_service.get_map("admin", "streamed") is None
+
+
 def _saved_events(sub: Subscriber) -> list[dict[str, str]]:
     events = []
     while not sub.queue.empty():
@@ -307,6 +331,15 @@ def _withdraw(client: TestClient, *, at: float, context: bytes = MAP_WITHDRAWN_C
     return client.post(
         "/api/v1/maps/streamed/withdrawn", json={"owner": "admin", **notice}
     ).status_code
+
+
+@pytest.mark.usefixtures("site_secret_file")
+def test_a_notice_is_not_judged_without_a_readable_secret(
+    router_client: RouterClientFactory,
+) -> None:
+    client = _client(router_client, ADMIN_PRINCIPAL, owner="admin")
+
+    assert _withdraw(client, at=time.time()) == HTTPStatus.SERVICE_UNAVAILABLE
 
 
 def _withdraw_while_streamed(client: TestClient) -> Subscriber:

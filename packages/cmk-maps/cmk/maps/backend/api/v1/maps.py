@@ -45,6 +45,7 @@ from cmk.maps.backend.api.v1.types import MapName
 from cmk.maps.backend.core.auth import (
     InvalidSignature,
     Principal,
+    SiteSecretUnreadable,
     verify_map_config,
     verify_withdrawal,
 )
@@ -106,6 +107,13 @@ def _body_size(request: Request) -> int:
         return MAP_CONFIG_MAX_BYTES
 
 
+def _unverifiable() -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        detail="Map signatures cannot be verified right now",
+    )
+
+
 # A notice is sent right after the change; an older one is not acted on.
 _WITHDRAWN_NOTICE_MAX_AGE = 60.0
 
@@ -118,6 +126,8 @@ def _register_signed(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Map '{name}' not found")
     try:
         raw = verify_map_config(config_b64, sig, owner=owner)
+    except SiteSecretUnreadable as exc:
+        raise _unverifiable() from exc
     except InvalidSignature as exc:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Invalid map signature"
@@ -248,6 +258,8 @@ async def map_withdrawn(name: MapName, body: WithdrawnRequest, auth: GuiAuthDep)
     """Stop serving a map as it was: authenticated by the GUI's signature, not a session."""
     try:
         notice = verify_withdrawal(body.config_b64, body.sig, owner=body.owner)
+    except SiteSecretUnreadable as exc:
+        raise _unverifiable() from exc
     except InvalidSignature as exc:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Invalid notice") from exc
     at = notice.get("at")

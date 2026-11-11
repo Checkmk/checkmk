@@ -58,6 +58,7 @@ __all__ = [
     "InvalidSignature",
     "NoMap",
     "Principal",
+    "SiteSecretUnreadable",
     "verify_map_config",
 ]
 
@@ -354,12 +355,29 @@ class GuiAuth:
             self._links_unanswered.put(as_user, True, now=now)
             return targets
         found = {t.name: t for t in answer.targets if t.name in ask}
+        # One secret for the whole answer, read only if a target is signed.
+        site_hmac: HmacFn | None = None
+        if any(t.sig is not None for t in found.values()):
+            try:
+                site_hmac = _site_hmac()
+            except SiteSecretUnreadable:
+                self._links_unanswered.put(as_user, True, now=now)
         for name, key in ask.items():
             # Withdrawn while the GUI was asked: the answer may be from before.
             if self._key(as_user, name) != key:
                 continue
             target = found.get(name)
-            resolved = None if target is None else _usable_target(target, held)
+            if target is None:
+                resolved = None
+            elif target.config_b64 is None or target.sig is None:
+                resolved = LinkTarget(target.owner) if (target.owner, name) in held else None
+            elif site_hmac is None:
+                # Asked about again later instead of kept as no map.
+                continue
+            else:
+                resolved = _signed_target(
+                    name, target.owner, target.config_b64, target.sig, site_hmac
+                )
             if resolved is None:
                 self._link_owners.put(key, NoMap(), now=now)
             else:
@@ -368,53 +386,56 @@ class GuiAuth:
         return targets
 
 
-def _usable_target(target: _LinkTarget, held: AbstractSet[tuple[str, str]]) -> LinkTarget | None:
-    if target.config_b64 is None or target.sig is None:
-        return LinkTarget(target.owner) if (target.owner, target.name) in held else None
+def _signed_target(
+    name: str, owner: str, config_b64: str, sig: str, site_hmac: HmacFn
+) -> LinkTarget | None:
     try:
-        cfg = MapConfig.model_validate(
-            verify_map_config(target.config_b64, target.sig, owner=target.owner)
-        )
+        cfg = MapConfig.model_validate(verify_config(config_b64, sig, site_hmac, owner=owner))
     except (InvalidSignature, ValidationError) as exc:
         logger.debug(
-            "A map link's target %(map)s cannot be used: %(error)s",
-            {"map": target.name, "error": exc},
+            "A map link's target %(map)s cannot be used: %(error)s", {"map": name, "error": exc}
         )
         return None
-    if cfg.name != target.name:
+    if cfg.name != name:
         return None
-    return LinkTarget(target.owner, cfg, signed_config_size(target.config_b64))
+    return LinkTarget(owner, cfg, signed_config_size(config_b64))
+
+
+class SiteSecretUnreadable(Exception):
+    """The site-internal secret is missing, unreadable or being rewritten.
+
+    Says nothing about a signature; reading again later may succeed.
+    """
 
 
 # ``LocalSecret.regenerate`` always writes 32 bytes; anything else is a rewrite in progress.
 _SITE_SECRET_SIZE = 32
 
 
-@functools.lru_cache(maxsize=1)
-def _site_hmac_for_file(_key: tuple[int, int, int]) -> HmacFn:
+def _unreadable(reason: str) -> SiteSecretUnreadable:
+    logger.warning(
+        "Map signatures cannot be verified: the site-internal secret %(reason)s",
+        {"reason": reason},
+    )
+    return SiteSecretUnreadable(f"the site-internal secret {reason}")
+
+
+def _site_hmac() -> HmacFn:
+    """HMAC with the site-internal secret, read anew on every call.
+
+    omd rewrites the file in place while the site runs, so a secret kept between
+    calls could be one the GUI no longer signs with.
+    """
     # Read-only on purpose: ``SiteInternalSecret()`` writes its own secret into an
     # empty file, racing omd's rewrite.
     try:
         value = paths.site_internal_secret_file.read_bytes()
     except OSError as exc:
-        raise InvalidSignature("site-internal secret is not readable") from exc
+        raise _unreadable(f"is not readable ({type(exc).__name__})") from exc
     if len(value) != _SITE_SECRET_SIZE:
-        raise InvalidSignature("site-internal secret is being rotated")
+        raise _unreadable("is not complete")
     # Same HMAC-SHA256 as ``cmk.crypto.secrets.Secret.hmac``, which the GUI signs with.
     return functools.partial(hmac.digest, value, digest="sha256")
-
-
-def _site_hmac() -> HmacFn:
-    """HMAC with the site-internal secret, cached until the file changes.
-
-    Keyed on inode, mtime and size: omd truncates and rewrites the file in place,
-    usually within one coarse mtime tick.
-    """
-    try:
-        st = paths.site_internal_secret_file.stat()
-    except OSError as exc:
-        raise InvalidSignature("site-internal secret is not readable") from exc
-    return _site_hmac_for_file((st.st_ino, st.st_mtime_ns, st.st_size))
 
 
 def verify_map_config(config_b64: str, sig: str, *, owner: str) -> dict[str, object]:
@@ -423,7 +444,8 @@ def verify_map_config(config_b64: str, sig: str, *, owner: str) -> dict[str, obj
     ``owner`` is the owner the GUI named for the map, so a viewer can't
     substitute a tampered config, nor relay a config signed for a foreign owner,
     for a shared broadcast loop. Raises :class:`InvalidSignature` on any decode,
-    signature or JSON problem.
+    signature or JSON problem, and :class:`SiteSecretUnreadable` while the secret
+    to verify with cannot be read.
     """
     return verify_config(config_b64, sig, _site_hmac(), owner=owner)
 

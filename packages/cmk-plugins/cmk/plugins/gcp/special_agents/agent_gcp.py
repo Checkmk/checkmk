@@ -1019,9 +1019,12 @@ REDIS = Service(
     default_groupby="resource.instance_id",
     metrics=[
         Metric(
+            # DELTA of CPU-seconds per sample: the rate gives the CPU-seconds per second.
+            # Sum the series of each node, not the nodes of an instance.
             name="redis.googleapis.com/stats/cpu_utilization",
             aggregation=Aggregation(
-                per_series_aligner=Aligner.ALIGN_MAX,
+                per_series_aligner=Aligner.ALIGN_RATE,
+                group_by_fields=["resource.node_id"],
             ),
         ),
         Metric(

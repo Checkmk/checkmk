@@ -123,3 +123,12 @@ def test_check_dell_idrac_fans(  # type: ignore[misc]
     parsed = parse_dell_idrac_fans(string_table)
     result = list(check_dell_idrac_fans(item, params, parsed))
     assert result == expected_results
+
+
+@pytest.mark.xfail(strict=True, reason="crash group 4993: int('') on a missing fan reading")
+def test_check_dell_idrac_fans_without_a_reading_reports_the_status() -> None:
+    section = parse_dell_idrac_fans([["2", "3", "", "Fan1_2", "", "", "", ""]])
+
+    assert list(check_dell_idrac_fans("2", {}, section)) == [
+        Result(state=State.OK, summary="Status: OK, Name: Fan1_2"),
+    ]

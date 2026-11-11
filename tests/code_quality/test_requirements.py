@@ -349,6 +349,7 @@ CEE_UNUSED_PACKAGES = [
 def test_dependencies_are_used() -> None:
     known_unused_packages = set(CEE_UNUSED_PACKAGES)
     known_unused_packages.add("setuptools")  # pinned transitive dependency
+    known_unused_packages.add("dnspython")  # pinned transitive dependency
     # used by the automation helper, bot not via a standard static Python import
     known_unused_packages.add("uvicorn-worker")
 

@@ -88,3 +88,4 @@ gunicorn==23.0.0 # automation helper
 watchdog==6.0.0 # automation helper
 uvicorn-worker==0.3.0  # automation helper
 uvicorn==0.32.1  # ui-job-scheduler
+dnspython<2.9 # CMK-42257

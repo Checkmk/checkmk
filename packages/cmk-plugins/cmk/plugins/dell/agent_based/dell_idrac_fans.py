@@ -68,7 +68,8 @@ def check_dell_idrac_fans(
             if state_readable in ("OTHER", "UNKNOWN", "FAILED", "NO DATA FROM DEVICE"):
                 return
 
-            rpm = int(value)
+            if (rpm := _to_int_or_none(value)) is None:
+                return
             if params:
                 yield from check_fan(rpm, params)
                 return

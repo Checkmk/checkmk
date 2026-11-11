@@ -3,11 +3,74 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import {
+  ACTIVE_MARKUP,
+  BOUNDARY_MARKUP,
+  type SurfacePolicy,
+  activeContentIn,
+  inertVHtmlContent
+} from 'cmk-ui-library/vitest.sanitize'
 import { describe, expect, it } from 'vitest'
 
 import { sanitizeTemplateHtml } from '@/maps/utils/sanitize'
 
+const TEMPLATE: SurfacePolicy = {
+  tags: [
+    'b',
+    'i',
+    'u',
+    'em',
+    'strong',
+    'span',
+    'div',
+    'p',
+    'br',
+    'hr',
+    'a',
+    'ul',
+    'ol',
+    'li',
+    'code',
+    'img',
+    'table',
+    'thead',
+    'tbody',
+    'tr',
+    'td',
+    'th'
+  ],
+  attributes: ['href', 'src', 'class', 'style', 'target', 'rel', 'alt', 'width', 'height'],
+  classes: 'any',
+  protocols: ['http:', 'https:', 'mailto:', 'tel:'],
+  // Mirrors the backend's scheme allowlist, which stored maps are validated against on load.
+  osHandlerProtocols: ['ftp:', 'ssh:', 'telnet:', 'rdp:', 'vnc:'],
+  sameOriginImageSources: true
+}
+
 describe('sanitizeTemplateHtml', () => {
+  it.each(ACTIVE_MARKUP)('renders %s as inert', (markup) => {
+    const sanitized = inertVHtmlContent(sanitizeTemplateHtml(markup))
+
+    expect(activeContentIn(sanitized, TEMPLATE)).toEqual([])
+  })
+
+  it.each(BOUNDARY_MARKUP)('keeps %s within the template policy, showing %s', (markup, text) => {
+    const sanitized = inertVHtmlContent(sanitizeTemplateHtml(markup))
+
+    expect(activeContentIn(sanitized, TEMPLATE)).toEqual([])
+    expect(sanitized.textContent).toBe(text)
+  })
+
+  it.each(['/icons/host.png', 'host.svg'])(
+    'keeps the same-origin icon %s within the template policy',
+    (src) => {
+      const sanitized = inertVHtmlContent(sanitizeTemplateHtml(`<img src="${src}" alt="host">`))
+
+      expect(sanitized.querySelector('img')?.getAttribute('src')).toBe(src)
+      expect(activeContentIn(sanitized, TEMPLATE)).toEqual([])
+    }
+  )
+
   it('keeps allowed markup', () => {
     const html = '<b>bold</b> <span class="x" style="color:red">red</span><br><ul><li>a</li></ul>'
     expect(sanitizeTemplateHtml(html)).toBe(
@@ -102,28 +165,6 @@ describe('sanitizeTemplateHtml', () => {
     }
     expect(sanitizeTemplateHtml('<img src="host.svg" alt="x" />')).toBe(
       '<img src="host.svg" alt="x" />'
-    )
-  })
-
-  it('strips script tags entirely', () => {
-    expect(sanitizeTemplateHtml('before<script>alert(1)</script>after')).toBe('beforeafter')
-  })
-
-  it('strips event handler attributes', () => {
-    expect(sanitizeTemplateHtml('<b onclick="alert(1)">x</b>')).toBe('<b>x</b>')
-    expect(sanitizeTemplateHtml('<span onmouseover="alert(1)">x</span>')).toBe('<span>x</span>')
-    // onerror is stripped; the relative src survives (an external src would be
-    // stripped too — see the image-sources test).
-    expect(sanitizeTemplateHtml('<img src="/x.png" onerror="alert(1)" />')).toBe(
-      '<img src="/x.png" />'
-    )
-  })
-
-  it('drops javascript: URLs but keeps the hardened link tag', () => {
-    // The unsafe href is dropped; the tag stays and still gets the forced
-    // target/rel hardening from transformTags.
-    expect(sanitizeTemplateHtml('<a href="javascript:alert(1)">x</a>')).toBe(
-      '<a rel="noopener noreferrer nofollow" target="_blank">x</a>'
     )
   })
 

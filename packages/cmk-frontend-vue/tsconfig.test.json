@@ -7,7 +7,8 @@
     "tests/**/*.ts",
     "tests/**/*.vue",
     "ui-component-library/**/*",
-    "../cmk-ui-library/vitest.msw.ts"
+    "../cmk-ui-library/vitest.msw.ts",
+    "../cmk-ui-library/vitest.sanitize.ts"
   ],
   "compilerOptions": {
     // Own build info: inheriting app's gave bogus up-to-date verdicts.
@@ -16,6 +17,7 @@
     "paths": {
       "cmk-ui-library/lib/i18nString": ["./weaki18nString.d.ts"],
       "cmk-ui-library/vitest.msw": ["../cmk-ui-library/vitest.msw.ts"],
+      "cmk-ui-library/vitest.sanitize": ["../cmk-ui-library/vitest.sanitize.ts"],
       "@/*": ["./src/*"],
       "@ucl/*": ["./ui-component-library/*"],
       "@tests/*": ["./tests/*"],

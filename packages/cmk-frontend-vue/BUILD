@@ -394,7 +394,10 @@ js_library(
 js_library(
     name = "test_ts",
     srcs = glob(["tests/**/*.ts"]) + [":tsconfig"],
-    deps = ["//packages/cmk-ui-library:vitest_msw"],
+    deps = [
+        "//packages/cmk-ui-library:vitest_msw",
+        "//packages/cmk-ui-library:vitest_sanitize",
+    ],
 )
 
 TYPE_CHECK_DEPS = TEST_TOOLING + NPM_LINKS + [

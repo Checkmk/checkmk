@@ -5,10 +5,15 @@
  */
 import { render, screen } from '@testing-library/vue'
 import CmkHtml from 'cmk-ui-library/components/CmkHtml.vue'
+import {
+  ACTIVE_MARKUP,
+  BOUNDARY_MARKUP,
+  type SurfacePolicy,
+  activeContentIn
+} from 'cmk-ui-library/vitest.sanitize'
 import { defineComponent } from 'vue'
 
 test.each([
-  ['<script>alert(1)</script>', ''],
   ['<h1>abc</h1>', null],
   ['<h2>abc</h2>', null],
   ['<b>abc</b>', null],
@@ -45,9 +50,7 @@ test.each([
   [
     "Please download it manually and send it to <a href='mailto:feedback@checkmk.com?subject=Checkmk+Crash+Report+-+2021.11.12'>feedback@checkmk.com</a>",
     "Please download it manually and send it to <a href='mailto:feedback@checkmk.com?subject=Checkmk+Crash+Report+-+2021.11.12'>feedback@checkmk.com</a>"
-  ],
-  ["<a href='ftp://checkmk.com/'>abc</a>", ''],
-  ["<a href='javascript:alert(1)'>abc</a>", '']
+  ]
 ])('Escapes text correctly: %s', (input: string, expected: string | null) => {
   const testComponent = defineComponent({
     components: { CmkHtml },
@@ -76,4 +79,51 @@ test.each([
   } else {
     expect(component).toContainHTML(expected)
   }
+})
+
+const MESSAGE: SurfacePolicy = {
+  tags: [
+    'h1',
+    'h2',
+    'b',
+    'tt',
+    'i',
+    'u',
+    'hr',
+    'br',
+    'nobr',
+    'pre',
+    'sup',
+    'p',
+    'li',
+    'ul',
+    'ol',
+    'a'
+  ],
+  attributes: ['href', 'name', 'target'],
+  classes: [],
+  protocols: ['http:', 'https:', 'mailto:'],
+  namedTargets: true
+}
+
+function renderedMessage(html: string): HTMLSpanElement {
+  const { container } = render(CmkHtml, { props: { html } })
+  const [wrapper, ...others] = container.children
+  if (!(wrapper instanceof HTMLSpanElement) || others.length > 0) {
+    throw new Error(`CmkHtml rendered ${container.innerHTML} instead of one span`)
+  }
+  return wrapper
+}
+
+test.each(ACTIVE_MARKUP)('renders %s as inert', (markup) => {
+  const message = renderedMessage(markup)
+
+  expect(activeContentIn(message, MESSAGE)).toEqual([])
+})
+
+test.each(BOUNDARY_MARKUP)('keeps %s within the message policy, showing %s', (markup, text) => {
+  const message = renderedMessage(markup)
+
+  expect(activeContentIn(message, MESSAGE)).toEqual([])
+  expect(message.textContent).toBe(text)
 })

@@ -92,6 +92,12 @@ js_library(
 )
 
 js_library(
+    name = "vitest_sanitize",
+    srcs = ["vitest.sanitize.ts"],
+    visibility = ["//packages:__subpackages__"],
+)
+
+js_library(
     name = "vitest_shared",
     srcs = ["vitest.shared.ts"],
     visibility = ["//packages/cmk-frontend-vue:__pkg__"],
@@ -108,6 +114,7 @@ vue_library(
         ":node_modules/msw",
         ":node_modules/vue-component-type-helpers",
         ":vitest_msw",
+        ":vitest_sanitize",
         ":vitest_shared",
         ":vitest_shared_setup",
         "//:node_modules/@vue/compiler-dom",

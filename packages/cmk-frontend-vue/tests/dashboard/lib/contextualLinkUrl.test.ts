@@ -28,31 +28,33 @@ function variablesOf(url: string): Record<string, string> {
   return Object.fromEntries(new URL(url, 'http://localhost/check_mk/').searchParams)
 }
 
+const LAST_FOUR_HOURS = { from: 'now-14400s', to: 'now' }
+
 const DOWN_HOSTS_OF_DEFERRED_SITES: LinkProperties = {
   links: [{ ...DOWN_HOSTS, sites: { status: 'deferred' } }]
 }
 
 describe('contextualLinkUrl', () => {
   it('names the page it leaves', () => {
-    const url = contextualLinkUrl(SEARCHHOST, DOWN_HOSTS, {}, 'Overview')
+    const url = contextualLinkUrl(SEARCHHOST, DOWN_HOSTS, {}, null, 'Overview')
 
     expect(variablesOf(url)._drilled_from).toBe('Overview')
   })
 
   it('names no page without one to name', () => {
-    const url = contextualLinkUrl(SEARCHHOST, DOWN_HOSTS, {}, null)
+    const url = contextualLinkUrl(SEARCHHOST, DOWN_HOSTS, {}, null, null)
 
     expect(variablesOf(url)).not.toHaveProperty('_drilled_from')
   })
 
   it('addresses a view through view.py with view_name', () => {
-    const url = contextualLinkUrl(SEARCHHOST, {}, {}, null)
+    const url = contextualLinkUrl(SEARCHHOST, {}, {}, null, null)
 
     expect(url.startsWith('view.py?view_name=searchhost&')).toBe(true)
   })
 
   it('appends the encoded variables, filled_in and _show_filter_form', () => {
-    const url = contextualLinkUrl(SEARCHHOST, DOWN_HOSTS, {}, null)
+    const url = contextualLinkUrl(SEARCHHOST, DOWN_HOSTS, {}, null, null)
 
     expect(variablesOf(url)).toEqual({
       view_name: 'searchhost',
@@ -67,6 +69,7 @@ describe('contextualLinkUrl', () => {
       { ...SEARCHHOST, location: { type: 'dashboards', name: 'site' } },
       {},
       {},
+      null,
       null
     )
 
@@ -81,6 +84,7 @@ describe('contextualLinkUrl', () => {
         host: { host: 'web01' },
         hoststate: { hst0: 'on' }
       },
+      null,
       null
     )
 
@@ -102,6 +106,7 @@ describe('contextualLinkUrl', () => {
         opthostgroup: { status: 'dropped', reason: 'no_value' }
       },
       {},
+      null,
       null
     )
 
@@ -121,6 +126,7 @@ describe('contextualLinkUrl', () => {
         }
       },
       {},
+      null,
       null
     )
 
@@ -135,6 +141,7 @@ describe('contextualLinkUrl', () => {
       SEARCHHOST,
       { opthostgroup: { status: 'dropped', reason: 'no_value' } },
       { opthostgroup: { opthost_group: 'linux' } },
+      null,
       null
     )
 
@@ -147,13 +154,25 @@ describe('contextualLinkUrl', () => {
   })
 
   it('sends _show_filter_form from the link flag', () => {
-    const url = contextualLinkUrl({ ...SEARCHHOST, show_filter_form: false }, {}, {}, null)
+    const url = contextualLinkUrl({ ...SEARCHHOST, show_filter_form: false }, {}, {}, null, null)
 
     expect(variablesOf(url)._show_filter_form).toBe('0')
   })
 
-  it('adds no time range variable', () => {
-    const url = contextualLinkUrl({ ...SEARCHHOST, include_time_range: true }, {}, {}, null)
+  it('carries the time range the link includes', () => {
+    const url = contextualLinkUrl(
+      { ...SEARCHHOST, include_time_range: true },
+      {},
+      {},
+      LAST_FOUR_HOURS,
+      null
+    )
+
+    expect(variablesOf(url)).toMatchObject(LAST_FOUR_HOURS)
+  })
+
+  it('leaves out the time range the link leaves out', () => {
+    const url = contextualLinkUrl(SEARCHHOST, {}, {}, LAST_FOUR_HOURS, null)
 
     expect(Object.keys(variablesOf(url))).toEqual(['view_name', 'filled_in', '_show_filter_form'])
   })
@@ -166,6 +185,7 @@ describe('contextualLinkEntries', () => {
       DOWN_HOSTS_OF_DEFERRED_SITES,
       {},
       null,
+      null,
       (linkIndex) => `dashboard_stats_link.py?link_index=${linkIndex}`
     )
 
@@ -173,9 +193,16 @@ describe('contextualLinkEntries', () => {
   })
 
   it('builds the URL of a link without deferred filters itself', () => {
-    const entries = contextualLinkEntries([SEARCHHOST], { links: [DOWN_HOSTS] }, {}, null, () => {
-      throw new Error('not called')
-    })
+    const entries = contextualLinkEntries(
+      [SEARCHHOST],
+      { links: [DOWN_HOSTS] },
+      {},
+      null,
+      null,
+      () => {
+        throw new Error('not called')
+      }
+    )
 
     expect(entries).toEqual([
       {
@@ -186,7 +213,13 @@ describe('contextualLinkEntries', () => {
   })
 
   it('leaves out a deferred filter without a page to value it', () => {
-    const [entry] = contextualLinkEntries([SEARCHHOST], DOWN_HOSTS_OF_DEFERRED_SITES, {}, null)
+    const [entry] = contextualLinkEntries(
+      [SEARCHHOST],
+      DOWN_HOSTS_OF_DEFERRED_SITES,
+      {},
+      null,
+      null
+    )
 
     const variables = variablesOf(entry!.href)
 
@@ -203,6 +236,7 @@ describe('statsLinkUrl', () => {
       'down',
       1,
       { siteopt: { site: 'heute' } },
+      null,
       null
     )
 
@@ -218,8 +252,30 @@ describe('statsLinkUrl', () => {
   })
 
   it('names the page it leaves', () => {
-    const url = statsLinkUrl({ name: 'main', owner: '' }, 'widget-1', 'total', 0, {}, 'Overview')
+    const url = statsLinkUrl(
+      { name: 'main', owner: '' },
+      'widget-1',
+      'total',
+      0,
+      {},
+      null,
+      'Overview'
+    )
 
     expect(variablesOf(url)._drilled_from).toBe('Overview')
+  })
+
+  it('sends the time range, for the server to carry if the link includes it', () => {
+    const url = statsLinkUrl(
+      { name: 'main', owner: 'admin' },
+      'widget-1',
+      'down',
+      0,
+      {},
+      LAST_FOUR_HOURS,
+      null
+    )
+
+    expect(variablesOf(url)).toMatchObject(LAST_FOUR_HOURS)
   })
 })

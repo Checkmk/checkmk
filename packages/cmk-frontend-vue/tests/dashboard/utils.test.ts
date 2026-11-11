@@ -107,6 +107,14 @@ describe('urlHandler', () => {
         host: 'new'
       })
     })
+
+    it('keeps the time range a drill-down carried', () => {
+      const input = 'https://example.com/dashboard.py?name=foo&owner=bar&from=now-14400s&to=now'
+
+      const url = urlHandler.withRuntimeFilters(input, { host: 'new' })
+
+      expect(Object.fromEntries(url.searchParams)).toMatchObject({ from: 'now-14400s', to: 'now' })
+    })
   })
 
   describe('updateCurrentUrl', () => {

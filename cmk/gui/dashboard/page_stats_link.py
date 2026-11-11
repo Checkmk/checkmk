@@ -28,7 +28,7 @@ from .api.model.link_properties import DeferredFilter, DroppedFilter, EncodedFil
 from .api.model.widget_content import content_from_internal
 from .store import get_permitted_dashboards_by_owners
 from .type_defs import DashletConfig
-from .view_drilldown import target_url
+from .view_drilldown import target_url, TimeRangeVariables
 
 PAGE_STATS_LINK = "dashboard_stats_link"
 
@@ -40,6 +40,7 @@ class _StatsLinkRequest(BaseModel):
     part: StatsLinkPart
     link_index: NonNegativeInt
     context: Annotated[VisualContext, Json]
+    time_range: TimeRangeVariables | None
 
     @classmethod
     def from_request(cls, request: Request) -> Self:
@@ -52,6 +53,7 @@ class _StatsLinkRequest(BaseModel):
                     "part": request.get_str_input("part"),
                     "link_index": request.get_str_input("link_index"),
                     "context": request.get_str_input("context", "{}"),
+                    "time_range": _time_range_input(request),
                 }
             )
         except ValidationError as e:
@@ -88,13 +90,27 @@ def page_stats_link(ctx: PageContext) -> None:
         params.part,
         params.link_index,
     )
-    raise HTTPRedirect(_link_url(link, properties, params.context, requested_drill_up(ctx.request)))
+    raise HTTPRedirect(
+        _link_url(
+            link,
+            properties,
+            params.context,
+            params.time_range,
+            requested_drill_up(ctx.request),
+        )
+    )
+
+
+def _time_range_input(request: Request) -> dict[str, str | None] | None:
+    from_, to = request.get_str_input("from"), request.get_str_input("to")
+    return None if from_ is None and to is None else {"from_": from_, "to": to}
 
 
 def _link_url(
     link: EffectiveLink,
     properties: Mapping[FilterName, FilterResult],
     context: VisualContext,
+    time_range: TimeRangeVariables | None,
     drilled_from: DrillUpButton | None,
 ) -> str:
     filters: dict[FilterName, FilterHTTPVariables] = {
@@ -110,6 +126,7 @@ def _link_url(
         filters,
         show_filter_form=link.show_filter_form,
         drilled_from=drilled_from,
+        time_range=time_range if link.include_time_range else None,
         dropped=list(_dropped(properties, filters)),
     )
 

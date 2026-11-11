@@ -52,19 +52,35 @@ _DASHBOARD = "stats_board"
 _WIDGET = "stats"
 
 
-def _link(*filter_ids: str, include_context: bool = False) -> dict[str, object]:
+def _link(
+    *filter_ids: str, include_context: bool = False, include_time_range: bool = False
+) -> dict[str, object]:
     return {
         "title": "Problems",
         "location": {"type": "views", "name": "allhosts"},
         "filters": [{"filter_id": filter_id} for filter_id in filter_ids],
         "include_context": include_context,
-        "include_time_range": False,
+        "include_time_range": include_time_range,
         "show_filter_form": False,
     }
 
 
-def _custom_link(*filter_ids: str, include_context: bool = False) -> dict[str, object]:
-    return {"type": "custom", "links": [_link(*filter_ids, include_context=include_context)]}
+def _custom_link(
+    *filter_ids: str, include_context: bool = False, include_time_range: bool = False
+) -> dict[str, object]:
+    return {
+        "type": "custom",
+        "links": [
+            _link(
+                *filter_ids,
+                include_context=include_context,
+                include_time_range=include_time_range,
+            )
+        ],
+    }
+
+
+_LAST_FOUR_HOURS = {"from": "now-14400s", "to": "now"}
 
 
 def _save_stats_widget(clients: ClientRegistry, widget_type: str, link: dict[str, object]) -> None:
@@ -213,6 +229,55 @@ def test_a_click_queries_no_objects_without_a_deferred_filter(
     )
 
     assert variables["hst1"] == "on"
+
+
+def test_a_click_carries_the_time_range_its_link_includes(
+    clients: ClientRegistry,
+    with_automation_user: tuple[UserId, str],
+    logged_in_admin_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    _save_stats_widget(clients, "host_stats", _custom_link("hoststate", include_time_range=True))
+
+    variables = _follow(
+        logged_in_admin_wsgi_app,
+        mock_livestatus,
+        _url(with_automation_user[0], "down", **_LAST_FOUR_HOURS),
+    )
+
+    assert {name: variables.get(name) for name in ("from", "to")} == _LAST_FOUR_HOURS
+
+
+def test_a_click_leaves_out_the_time_range_its_link_leaves_out(
+    clients: ClientRegistry,
+    with_automation_user: tuple[UserId, str],
+    logged_in_admin_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    _save_stats_widget(clients, "host_stats", _custom_link("hoststate"))
+
+    variables = _follow(
+        logged_in_admin_wsgi_app,
+        mock_livestatus,
+        _url(with_automation_user[0], "down", **_LAST_FOUR_HOURS),
+    )
+
+    assert "from" not in variables
+    assert "to" not in variables
+
+
+@pytest.mark.usefixtures("suppress_license_expiry_header", "patch_theme", "suppress_license_banner")
+def test_a_click_with_half_a_time_range_is_rejected(
+    clients: ClientRegistry,
+    with_automation_user: tuple[UserId, str],
+    logged_in_admin_wsgi_app: WebTestAppForCMK,
+) -> None:
+    _save_stats_widget(clients, "host_stats", _custom_link("hoststate", include_time_range=True))
+
+    logged_in_admin_wsgi_app.get(
+        _url(with_automation_user[0], "down", **{"from": "now-14400s"}),
+        status=HTTPStatus.BAD_REQUEST,
+    )
 
 
 def test_a_click_queries_no_objects_for_another_links_deferred_filter(

@@ -12,6 +12,7 @@ import {
   useGlobalRefresh,
   useGlobalTimeRange
 } from '@/graphing/GlobalTimePicker/globalTimeState'
+import { timeStartFromUrl } from '@/graphing/GlobalTimePicker/timeRangeUrl'
 import { useGlobalTimePickerRange } from '@/graphing/GlobalTimePicker/useGlobalTimePickerRange'
 
 export interface DashboardTimeControl {
@@ -32,7 +33,10 @@ export function useDashboardTimeControl(
 
   initGlobalTime({
     intervalSeconds: globalTimePicker.refresh.interval_seconds,
-    start: { type: 'page_default', live: live ?? globalTimePicker.refresh.starts_live }
+    start: timeStartFromUrl(
+      new URL(window.location.href),
+      live ?? globalTimePicker.refresh.starts_live
+    )
   })
 
   return {

@@ -6,6 +6,7 @@
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 
 import type { FilterHTTPVars, VisualContext } from '@/dashboard/types/widget'
+import { fixedTimeRangeVariables } from '@/graphing/GlobalTimePicker/timeRangeUrl'
 
 export interface IFrameUrlParameters {
   /** `null` leaves the filters out. */
@@ -24,18 +25,11 @@ function setFilters(context: VisualContext): FilterHTTPVars[] {
   )
 }
 
-function timeRangeVariables(range: DateTimeRange): FilterHTTPVars {
-  return {
-    from: String(range.from.toDate().getTime()),
-    to: String(range.to.toDate().getTime())
-  }
-}
-
 /** The URL of an iframe widget, with the dashboard parameters it includes. */
 export function iframeUrl(url: string, parameters: IFrameUrlParameters): string {
   const variables = [
     ...(parameters.context === null ? [] : setFilters(parameters.context)),
-    ...(parameters.timeRange === null ? [] : [timeRangeVariables(parameters.timeRange)])
+    ...(parameters.timeRange === null ? [] : [fixedTimeRangeVariables(parameters.timeRange)])
   ]
   if (variables.length === 0) {
     return url

@@ -126,8 +126,11 @@ function resumeRefresh(): void {
   fireRefresh()
 }
 
-/** How the page's time starts. */
-export type TimeStart = { type: 'page_default'; live: boolean }
+/** How the page's time starts. A fixed window a link carried always starts paused. */
+export type TimeStart =
+  | { type: 'page_default'; live: boolean }
+  | { type: 'linked_rolling'; seconds: number; live: boolean }
+  | { type: 'linked_fixed'; range: DateTimeRange }
 
 export interface GlobalTimeInit {
   /** `null` keeps the default. */
@@ -153,7 +156,19 @@ export function initGlobalTime({
   if (intervalSeconds !== null && Number.isFinite(intervalSeconds) && intervalSeconds > 0) {
     intervalSecondsState.value = intervalSeconds
   }
-  pausedState.value = !start.live
+  switch (start.type) {
+    case 'page_default':
+      pausedState.value = !start.live
+      break
+    case 'linked_rolling':
+      setRange(rollingRange(start.seconds), 'time_picker')
+      pausedState.value = !start.live
+      break
+    case 'linked_fixed':
+      setRange(start.range, 'time_picker')
+      pausedState.value = true
+      break
+  }
   // The interval runs from what the server just rendered, so coming back to the tab inside it is
   // not a missed refresh.
   lastRefreshAtMs = Date.now()

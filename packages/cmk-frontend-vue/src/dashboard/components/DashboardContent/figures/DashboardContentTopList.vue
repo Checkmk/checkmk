@@ -21,6 +21,7 @@ import type {
   TopListError
 } from '@/dashboard/types/widget.ts'
 import { dashboardAPI } from '@/dashboard/utils.ts'
+import { useTimeRangeVariables } from '@/graphing/GlobalTimePicker/timeRangeUrl'
 import { DRILLED_FROM_PARAM } from '@/page-header/drillUp'
 
 import type { ContentProps } from '../types.ts'
@@ -30,6 +31,7 @@ const { _t } = usei18n()
 const props = defineProps<ContentProps<TopListContent>>()
 const isPublicDashboard = useInjectIsPublicDashboard()
 const drillDownSource = useInjectDrillDownSource()
+const timeRange = useTimeRangeVariables()
 const { state, retry } = useComputedWidget(props, dashboardAPI.computeTopList)
 
 const errorMessage: string = _t(
@@ -98,6 +100,7 @@ function contextualLink(
     topList.links,
     properties,
     props.effective_filter_context.filters,
+    timeRange.value,
     drillDownSource.value
   )
   if (entries.length === 0 || isPublicDashboard) {

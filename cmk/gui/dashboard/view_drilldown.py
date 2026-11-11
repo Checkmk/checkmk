@@ -37,6 +37,15 @@ from cmk.web.utils.urls import makeuri_contextless
 
 from .api.model.contextual_link import location_from_internal, resolved_copy, VisualLocation
 
+
+@dataclass(frozen=True)
+class TimeRangeVariables:
+    """The URL variables that carry a dashboard's time range, as the dashboard wrote them."""
+
+    from_: str
+    to: str
+
+
 _PAGE_BY_TARGET_TYPE: Mapping[ContextualLinkTargetType, tuple[str, str]] = {
     "views": ("view.py", "view_name"),
     "dashboards": ("dashboard.py", "name"),
@@ -145,6 +154,7 @@ def _inherited_url(
         {**context, **object_filters},
         show_filter_form=show_filter_form,
         drilled_from=drilled_from,
+        time_range=None,
     )
 
 
@@ -177,6 +187,7 @@ def _custom_url(
         filters,
         show_filter_form=show_filter_form,
         drilled_from=drilled_from,
+        time_range=None,
         # A filter the context carries in place of the row's value still travels.
         dropped=[
             entry
@@ -192,12 +203,16 @@ def target_url(
     *,
     show_filter_form: bool,
     drilled_from: DrillUpButton | None,
+    time_range: TimeRangeVariables | None,
     dropped: Sequence[Dropped] = (),
 ) -> str:
     page, name_variable = _PAGE_BY_TARGET_TYPE[location.type]
     variables: dict[str, str] = {}
     for filter_variables in context.values():
         variables.update(filter_variables)
+    if time_range is not None:
+        variables["from"] = time_range.from_
+        variables["to"] = time_range.to
     # The target's own variables go last, so no filter can override them.
     variables[name_variable] = location.name
     variables["filled_in"] = "filter"

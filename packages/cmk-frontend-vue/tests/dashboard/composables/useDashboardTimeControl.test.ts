@@ -32,6 +32,8 @@ function globalTimePicker(startsLive: boolean): GlobalTimePickerProps {
 }
 
 describe('useDashboardTimeControl', () => {
+  const pageUrl = window.location.href
+
   // Module-level singleton: reset it so each test starts from a known state.
   beforeEach(() => {
     resetGlobalTimeState()
@@ -39,6 +41,7 @@ describe('useDashboardTimeControl', () => {
 
   afterEach(() => {
     resetGlobalTimeState()
+    window.history.replaceState({}, '', pageUrl)
   })
 
   it.each([
@@ -48,6 +51,17 @@ describe('useDashboardTimeControl', () => {
     useDashboardTimeControl(globalTimePicker(startsLive))
 
     expect(useGlobalRefresh().refreshPaused.value).toBe(paused)
+  })
+
+  it('starts paused on the fixed window a link carried', () => {
+    const [start, end] = [Date.parse('2026-01-01T00:00:00Z'), Date.parse('2026-01-01T04:00:00Z')]
+    window.history.replaceState({}, '', `?name=main&from=${start}&to=${end}`)
+
+    useDashboardTimeControl(globalTimePicker(true))
+
+    const active = useGlobalTimeRange().activeTimeRange.value!
+    expect([active.from.toDate().getTime(), active.to.toDate().getTime()]).toEqual([start, end])
+    expect(useGlobalRefresh().refreshPaused.value).toBe(true)
   })
 
   it("a widget's time range becomes the shared range and pauses the refresh", () => {

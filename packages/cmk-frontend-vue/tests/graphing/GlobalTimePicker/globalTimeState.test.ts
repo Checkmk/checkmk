@@ -266,6 +266,43 @@ describe('wiring the page', () => {
     expect(refreshIntervalSeconds.value).toBe(FROM_THE_SERVER)
     expect(refreshPaused.value).toBe(true)
   })
+
+  test('a page a link carried a duration into starts with that duration, live as the page is', () => {
+    const { activeTimeRange } = useGlobalTimeRange()
+
+    initGlobalTime({
+      intervalSeconds: FROM_THE_SERVER,
+      start: { type: 'linked_rolling', seconds: 4 * 3600, live: true }
+    })
+
+    expect(durationSeconds(activeTimeRange.value!)).toBe(4 * 3600)
+    expect(endsNow(activeTimeRange.value!)).toBe(true)
+    expect(useGlobalRefresh().refreshPaused.value).toBe(false)
+  })
+
+  test('a page a link carried a fixed window into starts paused on it', () => {
+    const { activeTimeRange } = useGlobalTimeRange()
+
+    initGlobalTime({
+      intervalSeconds: FROM_THE_SERVER,
+      start: { type: 'linked_fixed', range: range(10, 11) }
+    })
+
+    expect(activeTimeRange.value).toEqual(range(10, 11))
+    expect(useGlobalRefresh().refreshPaused.value).toBe(true)
+  })
+
+  test('a range a link carried replaces the default an earlier host set', () => {
+    const { activeTimeRange, setActiveTimeRange } = useGlobalTimeRange()
+    setActiveTimeRange(rollingRange(3600), 'time_picker')
+
+    initGlobalTime({
+      intervalSeconds: FROM_THE_SERVER,
+      start: { type: 'linked_fixed', range: range(9, 10) }
+    })
+
+    expect(activeTimeRange.value).toEqual(range(9, 10))
+  })
 })
 
 describe('carrying the window forward', () => {

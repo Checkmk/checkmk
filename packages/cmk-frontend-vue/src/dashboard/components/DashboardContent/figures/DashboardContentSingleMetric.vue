@@ -16,6 +16,7 @@ import { useInjectDrillDownSource } from '@/dashboard/composables/useDrillDownSo
 import { firstContextualLinkUrl } from '@/dashboard/lib/contextualLinkUrl'
 import type { ComputedSingleMetric, SingleMetricContent } from '@/dashboard/types/widget.ts'
 import { dashboardAPI } from '@/dashboard/utils.ts'
+import { useTimeRangeVariables } from '@/graphing/GlobalTimePicker/timeRangeUrl'
 
 import type { ContentProps } from '../types.ts'
 import WidgetFigureFrame from './WidgetFigureFrame.vue'
@@ -28,6 +29,7 @@ const { state, retry } = useRangedComputedWidget(
 )
 
 const drillDownSource = useInjectDrillDownSource()
+const timeRange = useTimeRangeVariables()
 
 function href(metric: ComputedSingleMetric): string | undefined {
   return (
@@ -35,6 +37,7 @@ function href(metric: ComputedSingleMetric): string | undefined {
       metric.links,
       metric.link_properties,
       props.effective_filter_context.filters,
+      timeRange.value,
       drillDownSource.value
     ) ?? undefined
   )

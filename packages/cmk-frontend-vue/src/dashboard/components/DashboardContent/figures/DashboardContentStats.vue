@@ -10,6 +10,7 @@ import { useInjectDrillDownSource } from '@/dashboard/composables/useDrillDownSo
 import { statsLinkUrl } from '@/dashboard/lib/contextualLinkUrl'
 import type { StatsContent, StatsLinkPart } from '@/dashboard/types/widget'
 import { dashboardAPI } from '@/dashboard/utils'
+import { useTimeRangeVariables } from '@/graphing/GlobalTimePicker/timeRangeUrl'
 
 import type { ContentProps } from '../types'
 import WidgetFigureFrame from './WidgetFigureFrame.vue'
@@ -17,6 +18,7 @@ import WidgetFigureFrame from './WidgetFigureFrame.vue'
 const props = defineProps<ContentProps<StatsContent>>()
 const { state, retry } = useComputedWidget(props, dashboardAPI.computeStats)
 const drillDownSource = useInjectDrillDownSource()
+const timeRange = useTimeRangeVariables()
 
 function deferredLinkUrl(part: StatsLinkPart, linkIndex: number): string {
   return statsLinkUrl(
@@ -25,6 +27,7 @@ function deferredLinkUrl(part: StatsLinkPart, linkIndex: number): string {
     part,
     linkIndex,
     props.effective_filter_context.filters,
+    timeRange.value,
     drillDownSource.value
   )
 }

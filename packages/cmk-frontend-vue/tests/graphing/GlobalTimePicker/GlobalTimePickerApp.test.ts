@@ -40,6 +40,8 @@ const activeDurationSeconds = (): number => {
 }
 
 describe('GlobalTimePickerApp', () => {
+  const pageUrl = window.location.href
+
   // Module-level singleton: reset it so each test starts from a known state.
   beforeEach(() => {
     resetGlobalTimeState()
@@ -47,6 +49,7 @@ describe('GlobalTimePickerApp', () => {
 
   afterEach(() => {
     resetGlobalTimeState()
+    window.history.replaceState({}, '', pageUrl)
   })
 
   test('seeds the shared store with the default duration when empty', () => {
@@ -58,6 +61,14 @@ describe('GlobalTimePickerApp', () => {
     useGlobalTimeRange().setActiveTimeRange(rollingRange(99), 'time_picker')
     render(GlobalTimePickerApp, { props: { ...PROPS } })
     expect(activeDurationSeconds()).toBe(99)
+  })
+
+  test('starts with the duration a link carried', () => {
+    window.history.replaceState({}, '', `?view_name=allhosts&from=now-${25 * HOUR}s&to=now`)
+
+    render(GlobalTimePickerApp, { props: { ...PROPS } })
+
+    expect(activeDurationSeconds()).toBe(25 * HOUR)
   })
 
   test('a chip click propagates the new range to the shared store', async () => {

@@ -9,6 +9,7 @@ import { computed } from 'vue'
 import { useInjectDrillDownSource } from '@/dashboard/composables/useDrillDownSource'
 import { contextualLinkEntries } from '@/dashboard/lib/contextualLinkUrl'
 import type { LinkProperties, ResolvedLink, VisualContext } from '@/dashboard/types/widget'
+import { useTimeRangeVariables } from '@/graphing/GlobalTimePicker/timeRangeUrl'
 
 import ContextualLinkAnchor from './ContextualLinkAnchor.vue'
 
@@ -27,12 +28,14 @@ const open = defineModel<boolean>('open', { default: false })
 defineSlots<{ default(props: { several: boolean }): unknown }>()
 
 const drillDownSource = useInjectDrillDownSource()
+const timeRange = useTimeRangeVariables()
 
 const entries = computed(() =>
   contextualLinkEntries(
     props.links,
     props.linkProperties,
     props.filters,
+    timeRange.value,
     drillDownSource.value,
     props.deferredHref
   )

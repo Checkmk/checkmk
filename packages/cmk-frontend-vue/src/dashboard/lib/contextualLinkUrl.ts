@@ -11,6 +11,7 @@ import type {
   StatsLinkPart,
   VisualContext
 } from '@/dashboard/types/widget'
+import type { TimeRangeVariables } from '@/graphing/GlobalTimePicker/timeRangeUrl'
 import { DRILLED_FROM_PARAM } from '@/page-header/drillUp'
 
 const PAGE_BY_LOCATION_TYPE: Record<ResolvedLink['location']['type'], [string, string]> = {
@@ -23,6 +24,7 @@ export function contextualLinkUrl(
   link: ResolvedLink,
   properties: Record<string, FilterResult>,
   effectiveContext: VisualContext,
+  timeRange: TimeRangeVariables | null,
   drilledFrom: string | null
 ): string {
   const [page, nameVariable] = PAGE_BY_LOCATION_TYPE[link.location.type]
@@ -39,6 +41,9 @@ export function contextualLinkUrl(
     for (const [variable, value] of Object.entries(variables)) {
       params.set(variable, value)
     }
+  }
+  if (link.include_time_range && timeRange !== null) {
+    setTimeRange(params, timeRange)
   }
   params.set('filled_in', 'filter')
   params.set('_show_filter_form', link.show_filter_form ? '1' : '0')
@@ -69,6 +74,12 @@ export function contextualLinkUrl(
   return `${page}?${params.toString()}`
 }
 
+function setTimeRange(params: URLSearchParams, timeRange: TimeRangeVariables): void {
+  for (const [variable, value] of Object.entries(timeRange)) {
+    params.set(variable, value)
+  }
+}
+
 export interface ContextualLinkEntry {
   title: string
   href: string
@@ -87,6 +98,7 @@ export function contextualLinkEntries(
   links: ResolvedLink[],
   linkProperties: LinkProperties,
   effectiveContext: VisualContext,
+  timeRange: TimeRangeVariables | null,
   drilledFrom: string | null,
   deferredHref?: ((linkIndex: number) => string) | undefined
 ): ContextualLinkEntry[] {
@@ -102,7 +114,7 @@ export function contextualLinkEntries(
         href:
           deferred && deferredHref
             ? deferredHref(index)
-            : contextualLinkUrl(link, properties, effectiveContext, drilledFrom)
+            : contextualLinkUrl(link, properties, effectiveContext, timeRange, drilledFrom)
       }
     ]
   })
@@ -118,6 +130,7 @@ export function statsLinkUrl(
   part: StatsLinkPart,
   linkIndex: number,
   effectiveContext: VisualContext,
+  timeRange: TimeRangeVariables | null,
   drilledFrom: string | null
 ): string {
   const params = new URLSearchParams({
@@ -128,6 +141,9 @@ export function statsLinkUrl(
     link_index: String(linkIndex),
     context: JSON.stringify(effectiveContext)
   })
+  if (timeRange !== null) {
+    setTimeRange(params, timeRange)
+  }
   if (drilledFrom) {
     params.set(DRILLED_FROM_PARAM, drilledFrom)
   }
@@ -139,6 +155,7 @@ export function firstContextualLinkUrl(
   links: ResolvedLink[],
   linkProperties: LinkProperties,
   effectiveContext: VisualContext,
+  timeRange: TimeRangeVariables | null,
   drilledFrom: string | null
 ): string | null {
   const link = links[0]
@@ -146,5 +163,5 @@ export function firstContextualLinkUrl(
   if (link === undefined || properties === undefined) {
     return null
   }
-  return contextualLinkUrl(link, properties, effectiveContext, drilledFrom)
+  return contextualLinkUrl(link, properties, effectiveContext, timeRange, drilledFrom)
 }

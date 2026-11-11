@@ -10,6 +10,7 @@ import GlobalRefreshControl from '../GlobalRefreshControl/GlobalRefreshControl.v
 import { reloadPageContent } from '../GlobalRefreshControl/pageContentReload.ts'
 import GlobalTimePicker from './GlobalTimePicker.vue'
 import { initGlobalTime } from './globalTimeState.ts'
+import { timeStartFromUrl } from './timeRangeUrl.ts'
 import { useGlobalTimePickerRange } from './useGlobalTimePickerRange.ts'
 
 const props = defineProps<GlobalTimePickerProps>()
@@ -18,7 +19,7 @@ const { range, returnToLiveMonitoring } = useGlobalTimePickerRange(props.default
 
 initGlobalTime({
   intervalSeconds: props.refresh.interval_seconds,
-  start: { type: 'page_default', live: props.refresh.starts_live },
+  start: timeStartFromUrl(new URL(window.location.href), props.refresh.starts_live),
   // Only a page whose rows the server rendered needs its content re-fetched; one made of graphs
   // alone leaves them to follow the tick.
   ...(props.refresh.reloads_page_content ? { strategy: reloadPageContent } : {})

@@ -64,6 +64,7 @@ import type {
   WidgetTimeRange
 } from '@/dashboard/types/widget.ts'
 import type { GraphFetchResponse } from '@/graphing'
+import { TIME_RANGE_VARIABLES } from '@/graphing/GlobalTimePicker/timeRangeUrl'
 import { DRILLED_FROM_PARAM } from '@/page-header/drillUp'
 
 import type { ComputeWidgetTitlesRequest, ComputeWidgetTitlesResponse } from './types/api'
@@ -599,13 +600,13 @@ export const urlHandler = {
   },
 
   /**
-   * The dashboard's URL with new runtime filters. It keeps the dashboard and the way back a
-   * drill-down offered, and drops every other variable.
+   * The dashboard's URL with new runtime filters. It keeps the dashboard, and the way back and
+   * the time range a drill-down offered, and drops every other variable.
    */
   withRuntimeFilters(input: string, runtimeFilters: Record<string, string>): URL {
     return urlHandler.updateWithPreserve(
       input,
-      ['name', 'owner', DRILLED_FROM_PARAM],
+      ['name', 'owner', DRILLED_FROM_PARAM, ...TIME_RANGE_VARIABLES],
       runtimeFilters
     )
   },

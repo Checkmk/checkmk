@@ -13,6 +13,11 @@ import {
   useGlobalRefresh,
   useGlobalTimeRange
 } from '@/graphing/GlobalTimePicker/globalTimeState'
+import {
+  type TimeRangeVariables,
+  linkTimeRangeVariables,
+  setTimeRangeVariables
+} from '@/graphing/GlobalTimePicker/timeRangeUrl'
 
 import { isDashboardTimeRangeMessage } from './lib/dashboardTimeRangeMessage'
 
@@ -25,7 +30,11 @@ initGlobalTime({
 const { setActiveTimeRange } = useGlobalTimeRange()
 const { refreshOnce } = useGlobalRefresh()
 
+const LINK_INCLUDING_TIME_RANGE = 'a[data-cmk_includes_time_range]'
+const LINK_EVENTS = ['pointerover', 'pointerdown', 'focusin'] as const
+
 let lastTick: number | null = null
+let toldTimeRange: TimeRangeVariables | null = null
 
 function followDashboard(event: MessageEvent): void {
   if (event.source !== window.parent || event.origin !== window.location.origin) {
@@ -34,19 +43,41 @@ function followDashboard(event: MessageEvent): void {
   if (!isDashboardTimeRangeMessage(event.data)) {
     return
   }
-  const { range, tick } = event.data
-  setActiveTimeRange(
-    { from: parseAbsoluteToLocal(range.start), to: parseAbsoluteToLocal(range.end) },
-    'time_picker'
-  )
+  const { range, tick, live } = event.data
+  const followed = { from: parseAbsoluteToLocal(range.start), to: parseAbsoluteToLocal(range.end) }
+  setActiveTimeRange(followed, 'time_picker')
   if (lastTick !== null && tick !== lastTick) {
     refreshOnce()
   }
   lastTick = tick
+  toldTimeRange = linkTimeRangeVariables(followed, live)
 }
 
-onMounted(() => window.addEventListener('message', followDashboard))
-onBeforeUnmount(() => window.removeEventListener('message', followDashboard))
+function carryTimeRange(event: Event): void {
+  if (toldTimeRange === null || !(event.target instanceof Element)) {
+    return
+  }
+  const link = event.target.closest(LINK_INCLUDING_TIME_RANGE)
+  if (!(link instanceof HTMLAnchorElement)) {
+    return
+  }
+  const url = new URL(link.href)
+  setTimeRangeVariables(url.searchParams, toldTimeRange)
+  link.href = url.toString()
+}
+
+onMounted(() => {
+  window.addEventListener('message', followDashboard)
+  for (const type of LINK_EVENTS) {
+    document.addEventListener(type, carryTimeRange, true)
+  }
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('message', followDashboard)
+  for (const type of LINK_EVENTS) {
+    document.removeEventListener(type, carryTimeRange, true)
+  }
+})
 </script>
 
 <template>

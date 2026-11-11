@@ -11,7 +11,10 @@ import type {
   StatsLinkPart,
   VisualContext
 } from '@/dashboard/types/widget'
-import type { TimeRangeVariables } from '@/graphing/GlobalTimePicker/timeRangeUrl'
+import {
+  type TimeRangeVariables,
+  setTimeRangeVariables
+} from '@/graphing/GlobalTimePicker/timeRangeUrl'
 import { DRILLED_FROM_PARAM } from '@/page-header/drillUp'
 
 const PAGE_BY_LOCATION_TYPE: Record<ResolvedLink['location']['type'], [string, string]> = {
@@ -43,7 +46,7 @@ export function contextualLinkUrl(
     }
   }
   if (link.include_time_range && timeRange !== null) {
-    setTimeRange(params, timeRange)
+    setTimeRangeVariables(params, timeRange)
   }
   params.set('filled_in', 'filter')
   params.set('_show_filter_form', link.show_filter_form ? '1' : '0')
@@ -72,12 +75,6 @@ export function contextualLinkUrl(
     params.set(DRILLED_FROM_PARAM, drilledFrom)
   }
   return `${page}?${params.toString()}`
-}
-
-function setTimeRange(params: URLSearchParams, timeRange: TimeRangeVariables): void {
-  for (const [variable, value] of Object.entries(timeRange)) {
-    params.set(variable, value)
-  }
 }
 
 export interface ContextualLinkEntry {
@@ -142,7 +139,7 @@ export function statsLinkUrl(
     context: JSON.stringify(effectiveContext)
   })
   if (timeRange !== null) {
-    setTimeRange(params, timeRange)
+    setTimeRangeVariables(params, timeRange)
   }
   if (drilledFrom) {
     params.set(DRILLED_FROM_PARAM, drilledFrom)

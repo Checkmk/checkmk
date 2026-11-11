@@ -36,6 +36,16 @@ export function linkTimeRangeVariables(range: DateTimeRange, live: boolean): Tim
   return fixedTimeRangeVariables(range)
 }
 
+/** Sets the variables that carry a time range on `params`. */
+export function setTimeRangeVariables(
+  params: URLSearchParams,
+  variables: TimeRangeVariables
+): void {
+  for (const [variable, value] of Object.entries(variables)) {
+    params.set(variable, value)
+  }
+}
+
 function validDate(epochMs: number): Date | null {
   const date = new Date(epochMs)
   return Number.isNaN(date.getTime()) ? null : date

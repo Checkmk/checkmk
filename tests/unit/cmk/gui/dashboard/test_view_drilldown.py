@@ -53,14 +53,17 @@ def fixture_admin_permissions(load_config: Config, with_admin_login: UserId) -> 
 
 
 def _inherited(
-    location: ContextualLinkLocationConfig = ("views", "host"), *, include_context: bool = True
+    location: ContextualLinkLocationConfig = ("views", "host"),
+    *,
+    include_context: bool = True,
+    include_time_range: bool = True,
 ) -> ContextualLinkEntryConfig:
     return ContextualLinkEntryConfig(
         title=location[1],
         location=location,
         filters=[],
         include_context=include_context,
-        include_time_range=True,
+        include_time_range=include_time_range,
         show_filter_form=False,
     )
 
@@ -69,13 +72,14 @@ def _custom(
     *filters: ContextFilterConfig,
     location: ContextualLinkLocationConfig = ("views", "allhosts"),
     include_context: bool = False,
+    include_time_range: bool = True,
 ) -> ContextualLinkEntryConfig:
     return ContextualLinkEntryConfig(
         title=location[1],
         location=location,
         filters=list(filters),
         include_context=include_context,
-        include_time_range=True,
+        include_time_range=include_time_range,
         show_filter_form=False,
     )
 
@@ -571,3 +575,27 @@ def test_column_drilldowns_custom_link_names_the_dashboard_it_leaves(
     )
 
     assert variables["_drilled_from"] == "Main"
+
+
+@pytest.mark.usefixtures("request_context")
+@pytest.mark.parametrize(
+    "link",
+    [
+        pytest.param(_inherited(include_time_range=True), id="inherited-includes"),
+        pytest.param(_inherited(include_time_range=False), id="inherited-leaves-out"),
+        pytest.param(
+            _custom(ContextFilterConfig(filter_id="host"), include_time_range=True),
+            id="custom-includes",
+        ),
+        pytest.param(
+            _custom(ContextFilterConfig(filter_id="host"), include_time_range=False),
+            id="custom-leaves-out",
+        ),
+    ],
+)
+def test_column_drilldowns_link_includes_the_time_range_as_its_link_does(
+    link: ContextualLinkEntryConfig, admin_permissions: UserPermissions
+) -> None:
+    drilldowns = column_drilldowns(_view_spec("allhosts"), {0: link}, _CONTEXT, admin_permissions)
+
+    assert drilldowns[0].includes_time_range is link["include_time_range"]

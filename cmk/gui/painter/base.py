@@ -354,6 +354,7 @@ class CellDrilldown:
 
     columns: Sequence[ColumnName]
     url: Callable[[Row], str]
+    includes_time_range: bool
 
 
 def columns_of_cells(cells: Sequence[Cell], permitted_views: PermittedViewSpecs) -> set[ColumnName]:
@@ -580,7 +581,11 @@ class Cell:
             and link_renderer
             and self.painter_context().url_renderer.display_options.enabled(DisplayOptions.I)
         ):
-            content = HTMLWriter.render_a(content, href=self._drilldown.url(view_row))
+            content = HTMLWriter.render_a(
+                content,
+                href=self._drilldown.url(view_row),
+                data_cmk_includes_time_range="" if self._drilldown.includes_time_range else None,
+            )
 
         # Add the optional mouseover tooltip
         if content and self.has_tooltip():

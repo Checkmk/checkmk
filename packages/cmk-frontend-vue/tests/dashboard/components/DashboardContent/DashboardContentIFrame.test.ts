@@ -5,10 +5,12 @@
  */
 import { fromDate } from '@internationalized/date'
 import { fireEvent, render } from '@testing-library/vue'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { nextTick } from 'vue'
 
 import DashboardContentIFrame from '@/dashboard/components/DashboardContent/DashboardContentIFrame.vue'
 import type { IFrameContent } from '@/dashboard/types/widget'
+import { resetGlobalTimeState, useGlobalRefresh } from '@/graphing/GlobalTimePicker/globalTimeState'
 
 import { makeContentProps } from '@tests/dashboard/contentProps'
 
@@ -33,6 +35,10 @@ function iframeSource(content: IFrameContent): URL {
 }
 
 describe('DashboardContentIFrame', () => {
+  afterEach(() => {
+    resetGlobalTimeState()
+  })
+
   it('includes the dashboard filters when the widget asks for them', () => {
     const source = iframeSource({
       type: 'url',
@@ -57,7 +63,7 @@ describe('DashboardContentIFrame', () => {
     expect(source.searchParams.get('to')).toBe('1767229200000')
   })
 
-  it('tells the loaded page the time range and tick', async () => {
+  it('tells the loaded page the time range, the tick and whether the dashboard is live', async () => {
     const { container } = render(DashboardContentIFrame, {
       props: makeContentProps(URL_ONLY, { tick: 3 })
     })
@@ -70,7 +76,8 @@ describe('DashboardContentIFrame', () => {
       {
         type: 'cmk:dashboard:time-range',
         range: { start: '2026-01-01T00:00:00.000Z', end: '2026-01-01T01:00:00.000Z' },
-        tick: 3
+        tick: 3,
+        live: false
       },
       'https://example.com'
     )
@@ -99,6 +106,19 @@ describe('DashboardContentIFrame', () => {
         range: { start: '2026-01-02T00:00:00.000Z', end: '2026-01-02T01:00:00.000Z' }
       })
     ])
+  })
+
+  it('tells the page when the dashboard resumes or pauses', async () => {
+    const { container } = render(DashboardContentIFrame, { props: makeContentProps(URL_ONLY) })
+    const postMessage = vi.spyOn(container.querySelector('iframe')!.contentWindow!, 'postMessage')
+    const { pauseRefresh, resumeRefresh } = useGlobalRefresh()
+
+    resumeRefresh()
+    await nextTick()
+    pauseRefresh()
+    await nextTick()
+
+    expect(postMessage.mock.calls.map(([message]) => message.live)).toEqual([true, false])
   })
 
   it.each([

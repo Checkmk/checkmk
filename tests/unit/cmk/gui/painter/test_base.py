@@ -74,8 +74,12 @@ def _link_to_view(content: str | HTML, _row: Row, link_spec: VisualLinkSpec) -> 
     return f"view:{link_spec.name}:{content}"
 
 
-def _drilldown_to(url: str) -> CellDrilldown:
-    return CellDrilldown(columns=[], url=lambda row: f"{url}?host={row['host_name']}")
+def _drilldown_to(url: str, *, includes_time_range: bool = False) -> CellDrilldown:
+    return CellDrilldown(
+        columns=[],
+        url=lambda row: f"{url}?host={row['host_name']}",
+        includes_time_range=includes_time_range,
+    )
 
 
 def test_cell_render_links_the_content_to_its_drilldown() -> None:
@@ -84,6 +88,16 @@ def test_cell_render_links_the_content_to_its_drilldown() -> None:
     _tdclass, content = cell.render(_ROW, _link_to_view, Mock(spec=LoggedInUser))
 
     assert str(content) == '<a href="dashboard.py?host=heute">heute</a>'
+
+
+def test_cell_render_marks_a_drilldown_that_includes_the_time_range() -> None:
+    cell = _cell(ColumnSpec("alias"), _drilldown_to("dashboard.py", includes_time_range=True))
+
+    _tdclass, content = cell.render(_ROW, _link_to_view, Mock(spec=LoggedInUser))
+
+    assert str(content) == (
+        "<a href=\"dashboard.py?host=heute\" data-cmk_includes_time_range=''>heute</a>"
+    )
 
 
 def test_cell_render_follows_the_link_spec_over_the_drilldown() -> None:
@@ -106,7 +120,10 @@ def test_cell_render_leaves_a_painter_without_links_unlinked() -> None:
 
 
 def test_cell_needed_columns_include_the_columns_of_its_drilldown() -> None:
-    cell = _cell(ColumnSpec("alias"), CellDrilldown(columns=["host_name"], url=lambda _row: ""))
+    cell = _cell(
+        ColumnSpec("alias"),
+        CellDrilldown(columns=["host_name"], url=lambda _row: "", includes_time_range=False),
+    )
 
     assert cell.needed_columns({}) == {"host_alias", "host_name"}
 
@@ -121,7 +138,9 @@ def test_join_cell_render_links_the_view_row_to_its_drilldown() -> None:
 
 
 def test_columns_of_cells_include_the_columns_of_a_join_cells_drilldown() -> None:
-    cell = _join_cell(CellDrilldown(columns=["host_name"], url=lambda _row: ""))
+    cell = _join_cell(
+        CellDrilldown(columns=["host_name"], url=lambda _row: "", includes_time_range=False)
+    )
 
     assert columns_of_cells([cell], {}) == {"host_alias", "host_name"}
 

@@ -103,6 +103,7 @@ def column_drilldowns(
                     show_filter_form=link["show_filter_form"],
                     drilled_from=drilled_from,
                 ),
+                includes_time_range=link["include_time_range"],
             )
         elif object_infos:
             drilldowns[index] = CellDrilldown(
@@ -115,6 +116,7 @@ def column_drilldowns(
                     show_filter_form=link["show_filter_form"],
                     drilled_from=drilled_from,
                 ),
+                includes_time_range=link["include_time_range"],
             )
     return drilldowns
 

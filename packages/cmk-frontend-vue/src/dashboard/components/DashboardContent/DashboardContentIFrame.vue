@@ -11,6 +11,7 @@ import { useInjectIsPublicDashboard } from '@/dashboard/composables/useIsPublicD
 import { dashboardTimeRangeMessage } from '@/dashboard/lib/dashboardTimeRangeMessage'
 import { iframeUrl } from '@/dashboard/lib/iframeUrl'
 import { type IFrameContent } from '@/dashboard/types/widget.ts'
+import { useGlobalRefresh } from '@/graphing/GlobalTimePicker/globalTimeState'
 
 import DashboardContentContainer from './DashboardContentContainer.vue'
 import type { ContentProps } from './types.ts'
@@ -53,14 +54,16 @@ const src = computed(() =>
 
 const iframe = useTemplateRef<HTMLIFrameElement>('iframe')
 
+const { refreshPaused } = useGlobalRefresh()
+
 function postTimeRange(): void {
   iframe.value?.contentWindow?.postMessage(
-    dashboardTimeRangeMessage(range, tick),
+    dashboardTimeRangeMessage(range, tick, !refreshPaused.value),
     new URL(src.value, window.location.origin).origin
   )
 }
 
-watch(() => [range, tick], postTimeRange)
+watch(() => [range, tick, refreshPaused.value], postTimeRange)
 </script>
 
 <template>

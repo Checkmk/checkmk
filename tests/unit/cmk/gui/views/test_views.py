@@ -196,7 +196,7 @@ def test_create_view_basics() -> None:
 def test_view_row_cells_hands_a_drilldown_to_its_painters_cell_past_a_skipped_painter() -> None:
     view_spec = multisite_builtin_views["allhosts"].copy()
     view_spec["painters"] = [ColumnSpec("not_a_registered_painter"), ColumnSpec("alias")]
-    drilldown = CellDrilldown(columns=["host_name"], url=lambda _row: "")
+    drilldown = CellDrilldown(columns=["host_name"], url=lambda _row: "", includes_time_range=False)
     view = View(
         "allhosts",
         view_spec,

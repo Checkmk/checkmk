@@ -9,6 +9,8 @@ import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import type { FieldConditionMap, LabelValue } from '@/monitoring/shared/api/types'
 import {
   type LabelCellItem,
+  type TagItem,
+  isTagItem,
   labelItemText
 } from '@/monitoring/shared/components/cell/labelCellItem'
 
@@ -27,7 +29,7 @@ export function labelColor(source: string): Colors {
 }
 
 /** Order entries alphabetically, so a row reads the same on every refresh. */
-function sortedByText(items: LabelCellItem[]): LabelCellItem[] {
+function sortedByText<Item extends LabelCellItem>(items: Item[]): Item[] {
   return items.sort((first, second) => labelItemText(first).localeCompare(labelItemText(second)))
 }
 
@@ -50,10 +52,11 @@ export function toNameItems(names: string[]): LabelCellItem[] {
 }
 
 /** Render tags as `group: value` entries, in the plain grey they share with a contact group. */
-export function toTagItems(tags: Record<string, string>): LabelCellItem[] {
+export function toTagItems(tags: Record<string, string>): TagItem[] {
   return sortedByText(
     Object.entries(tags).map(([group, value]) => ({
-      text: `${group}: ${value}` as TranslatedString
+      text: `${group}: ${value}` as TranslatedString,
+      tag: { group, value }
     }))
   )
 }
@@ -61,6 +64,18 @@ export function toTagItems(tags: Record<string, string>): LabelCellItem[] {
 /** Narrow the listing to what is in the group an entry names. */
 export function groupCondition(item: LabelCellItem): FieldConditionMap['groups'] {
   return { type: 'condition', field: 'groups', op: 'one_of', value: [labelItemText(item)] }
+}
+
+export function tagCondition(item: LabelCellItem): FieldConditionMap['tags'] {
+  if (!isTagItem(item)) {
+    throw new Error(`Not a tag entry: ${labelItemText(item)}`)
+  }
+  return {
+    type: 'condition',
+    field: 'tags',
+    op: 'all_of',
+    value: [`${item.tag.group}:${item.tag.value}`]
+  }
 }
 
 /** Narrow the listing to what carries the label an entry shows. */

@@ -82,7 +82,10 @@ export type FetchKind = 'foreground' | 'background'
 export type FetchState = 'idle' | FetchKind
 
 /** A condition on a field whose column has the same id, so narrowing to it can show that column. */
-export type ColumnCondition = FieldConditionMap['groups'] | FieldConditionMap['labels']
+export type ColumnCondition =
+  | FieldConditionMap['groups']
+  | FieldConditionMap['labels']
+  | FieldConditionMap['tags']
 
 export interface MonitoringServiceOptions<T> {
   pollIntervalMs?: number | undefined

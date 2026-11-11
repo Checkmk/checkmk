@@ -550,6 +550,20 @@ test('clicking a label narrows the listing to the hosts carrying it', async () =
   })
 })
 
+test('clicking a tag narrows the listing to the hosts carrying it', async () => {
+  const service = makeListingService()
+  mountRow(makeHost({ tags: { criticality: 'prod' } }), makeTableRow(), {}, service)
+
+  await fireEvent.click(screen.getByRole('button', { name: 'criticality: prod' }))
+
+  expect(service.filterState.value).toStrictEqual({
+    type: 'condition',
+    field: 'tags',
+    op: 'all_of',
+    value: ['criticality:prod']
+  })
+})
+
 test('host groups stay plain where there is no listing to narrow', () => {
   mountRow(makeHost({ groups: ['linux'] }))
 

@@ -32,6 +32,7 @@ import { hostServicesPageUrl } from '@/monitoring/shared/hostServicesPageUrl'
 import {
   groupCondition,
   labelCondition,
+  tagCondition,
   toLabelItems,
   toNameItems,
   toTagItems
@@ -202,7 +203,13 @@ const lastStateChange = computed(() =>
     size="small"
     :filter-by="labelCondition"
   />
-  <LabelCell v-if="hasColumn('tags')" column-id="tags" :items="tags" size="small" />
+  <LabelCell
+    v-if="hasColumn('tags')"
+    column-id="tags"
+    :items="tags"
+    size="small"
+    :filter-by="tagCondition"
+  />
   <LabelCell v-if="hasColumn('contacts')" column-id="contacts" :items="contacts" size="small" />
   <LabelCell
     v-if="hasColumn('contact_groups')"

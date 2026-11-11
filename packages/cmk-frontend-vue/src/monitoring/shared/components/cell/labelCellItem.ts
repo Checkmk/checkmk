@@ -11,9 +11,21 @@ interface LabelCellStyle {
   variant?: Variants | undefined
 }
 
+export interface TagPair {
+  group: string
+  value: string
+}
+
+export type TagItem = LabelCellStyle & { text: TranslatedString; tag: TagPair }
+
 /** A plain entry, or the two halves of a `key: value` label, for its value to stand out. */
-export type LabelCellItem = LabelCellStyle &
-  ({ text: TranslatedString } | { keyValue: { key: string; value: string } })
+export type LabelCellItem =
+  | (LabelCellStyle & ({ text: TranslatedString } | { keyValue: { key: string; value: string } }))
+  | TagItem
+
+export function isTagItem(item: LabelCellItem): item is TagItem {
+  return 'tag' in item
+}
 
 export function labelItemText(item: LabelCellItem): TranslatedString {
   return 'keyValue' in item

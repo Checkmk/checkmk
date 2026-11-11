@@ -6,7 +6,13 @@
 import { describe, expect, it } from 'vitest'
 
 import { labelItemText } from '@/monitoring/shared/components/cell/labelCellItem'
-import { labelColor, toLabelItems, toTagItems } from '@/monitoring/shared/labels'
+import {
+  labelColor,
+  tagCondition,
+  toLabelItems,
+  toNameItems,
+  toTagItems
+} from '@/monitoring/shared/labels'
 
 describe('labelColor', () => {
   it('gives a label the colour of the source it was set from', () => {
@@ -50,8 +56,27 @@ describe('toLabelItems', () => {
 describe('toTagItems', () => {
   it('leaves every tag in the plain grey a contact group carries', () => {
     expect(toTagItems({ criticality: 'prod', networking: 'lan' })).toEqual([
-      { text: 'criticality: prod' },
-      { text: 'networking: lan' }
+      { text: 'criticality: prod', tag: { group: 'criticality', value: 'prod' } },
+      { text: 'networking: lan', tag: { group: 'networking', value: 'lan' } }
     ])
+  })
+})
+
+describe('tagCondition', () => {
+  it('filters by the group and value of the tag, not by how the entry reads', () => {
+    const [item] = toTagItems({ site: 'eu: west' })
+
+    expect(tagCondition(item!)).toStrictEqual({
+      type: 'condition',
+      field: 'tags',
+      op: 'all_of',
+      value: ['site:eu: west']
+    })
+  })
+
+  it('refuses an entry that is not a tag, rather than filtering for nothing', () => {
+    const [item] = toNameItems(['criticality: prod'])
+
+    expect(() => tagCondition(item!)).toThrow()
   })
 })

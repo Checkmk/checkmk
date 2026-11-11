@@ -561,7 +561,7 @@ def _patch_template_file(
                 sys.stdout.write("Restored your version.\n")
                 break
             elif choice == "install":
-                os.rename(new_orig_path, dst)
+                shutil.copyfile(new_orig_path, dst)
                 sys.stdout.write("Installed default file (with site name %s).\n" % new_site.name)
                 break
             elif choice == "shell":

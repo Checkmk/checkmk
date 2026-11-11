@@ -38,6 +38,7 @@ from cmk.gui.views.graph import _LEGACY_ONLY_RENDER_OPTIONS
 from cmk.gui.views.page_show_view import get_limit
 from cmk.gui.views.store import multisite_builtin_views
 from cmk.livestatus_client.testing import MockLiveStatusConnection
+from cmk.web.htmllib.builder import HtmlBuilder
 from cmk.web.utils.request_cache import RequestCache
 from tests.testlib.unit.gui.web_test_app import WebTestAppForCMK
 from tests.unit.cmk.gui.helpers.painter_context_test_helper import make_painter_context
@@ -275,11 +276,10 @@ def test_view_want_checkboxes(view: View) -> None:
     assert view.want_checkboxes is True
 
 
-@pytest.mark.usefixtures("suppress_license_expiry_header", "patch_theme", "suppress_license_banner")
-def test_view_page(
-    logged_in_admin_wsgi_app: WebTestAppForCMK, mock_livestatus: MockLiveStatusConnection
-) -> None:
-    wsgi_app = logged_in_admin_wsgi_app
+def _all_hosts_page(
+    wsgi_app: WebTestAppForCMK, live: MockLiveStatusConnection, query: str = ""
+) -> str:
+    """The 'All hosts' view of one host, as the browser receives it."""
 
     def _prepend(prefix: str, dict_: Mapping[str, object]) -> dict[str, object]:
         d: dict[str, object] = {}
@@ -288,7 +288,6 @@ def test_view_page(
             d[prefix + key] = value
         return d
 
-    live: MockLiveStatusConnection = mock_livestatus
     live.set_sites(["NO_SITE", "remote"])
     live.add_table(
         "hosts",
@@ -366,6 +365,36 @@ def test_view_page(
     )
     live.expect_query("GET hosts\nColumns: filename\nStats: state >= 0")
     with live():
-        resp = wsgi_app.get("/NO_SITE/check_mk/view.py?view_name=allhosts", status=HTTPStatus.OK)
-        assert "heute" in resp.text
-        assert "query=null" not in resp.text
+        return wsgi_app.get(
+            f"/NO_SITE/check_mk/view.py?view_name=allhosts{query}", status=HTTPStatus.OK
+        ).text
+
+
+@pytest.mark.usefixtures("suppress_license_expiry_header", "patch_theme", "suppress_license_banner")
+def test_view_page(
+    logged_in_admin_wsgi_app: WebTestAppForCMK, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    page = _all_hosts_page(logged_in_admin_wsgi_app, mock_livestatus)
+
+    assert "heute" in page
+    assert "query=null" not in page
+
+
+@pytest.mark.usefixtures("suppress_license_expiry_header", "patch_theme", "suppress_license_banner")
+def test_view_page_offers_the_way_back_to_the_page_a_drill_down_came_from(
+    logged_in_admin_wsgi_app: WebTestAppForCMK, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    page = _all_hosts_page(logged_in_admin_wsgi_app, mock_livestatus, "&_drilled_from=Overview")
+
+    assert (
+        str(HtmlBuilder.render_vue_component("cmk-drill-up-button", {"title": "Overview"})) in page
+    )
+
+
+@pytest.mark.usefixtures("suppress_license_expiry_header", "patch_theme", "suppress_license_banner")
+def test_view_page_offers_no_way_back_without_a_drill_down(
+    logged_in_admin_wsgi_app: WebTestAppForCMK, mock_livestatus: MockLiveStatusConnection
+) -> None:
+    page = _all_hosts_page(logged_in_admin_wsgi_app, mock_livestatus)
+
+    assert "<cmk-drill-up-button" not in page

@@ -81,6 +81,12 @@ class BaseDashboard(CmkPage):
         """The live/paused refresh control in the page header, above the dashboard menu."""
         return self.main_area.locator(".graphing-global-refresh-control")
 
+    @property
+    def drill_up_button(self) -> Locator:
+        """The button back to the page a drill-down came from, shown only on a dashboard a
+        drill-down opened. Its name is 'Back to <title of that page>'."""
+        return self._menu_header.get_by_role("button", name=re.compile(r"^Back to "))
+
     def get_menu_button(self, button_name: str) -> Locator:
         """Get button of the top menu by its name.
 

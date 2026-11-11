@@ -30,6 +30,7 @@ _CPU_METRIC: Final = "util"
 _WIDGET_SIZE: Final = {"width": 40, "height": 20}
 
 _HOST_NAME_FILTER: Final = "Host name (regex)"
+_SERVICE_NAME_FILTER: Final = "Service name (regex)"
 
 
 def inherited_link(location_type: str, name: str) -> dict[str, object]:
@@ -139,21 +140,37 @@ def rest_dashboard(
 
 
 def apply_host_name_runtime_filter(dashboard: BaseDashboard, host_name: str) -> str:
-    """Narrow the dashboard to the host by the 'Host name (regex)' runtime filter, which
-    offers the site's host names to pick from.
+    """Narrow the dashboard to the host by the 'Host name (regex)' runtime filter.
 
     Returns the filter's value in the dashboard URL, the picked name as a regex.
     """
+    return _apply_name_runtime_filter(dashboard, _HOST_NAME_FILTER, host_name, "host_regex")
+
+
+def apply_service_name_runtime_filter(dashboard: BaseDashboard, service_name: str) -> str:
+    """Narrow the dashboard to the service by the 'Service name (regex)' runtime filter.
+
+    Returns the filter's value in the dashboard URL, the picked name as a regex.
+    """
+    return _apply_name_runtime_filter(
+        dashboard, _SERVICE_NAME_FILTER, service_name, "service_regex"
+    )
+
+
+def _apply_name_runtime_filter(
+    dashboard: BaseDashboard, filter_name: str, name: str, variable: str
+) -> str:
+    # The filter offers the site's names to pick from.
     sidebar = dashboard.open_runtime_filters()
-    sidebar.add_filter_to_host_selection(_HOST_NAME_FILTER, "Host name")
-    sidebar.get_filter_combobox(_HOST_NAME_FILTER).click()
-    sidebar.dropdown_list_filter_textbox.fill(host_name)
-    sidebar.locator().get_by_role("option", name=host_name, exact=True).click()
+    sidebar.add_filter_to_host_selection(filter_name)
+    sidebar.get_filter_combobox(filter_name).click()
+    sidebar.dropdown_list_filter_textbox.fill(name)
+    sidebar.locator().get_by_role("option", name=name, exact=True).click()
     sidebar.apply_button.click()
     expect(dashboard.page, "The runtime filter did not reach the dashboard URL").to_have_url(
-        re.compile(r"[?&]host_regex=")
+        re.compile(rf"[?&]{variable}=")
     )
-    return url_variables(dashboard.page.url)["host_regex"]
+    return url_variables(dashboard.page.url)[variable]
 
 
 def url_variables(url: str) -> dict[str, str]:

@@ -115,6 +115,10 @@ def serialize_tree(tree: MutableTree | ImmutableTree) -> SDRawTree:
     }
 
 
+def _is_sd_value(value: object) -> TypeIs[SDValue]:
+    return value is None or isinstance(value, int | float | str | bool)
+
+
 def _deserialize_retention_interval(
     raw_retention_interval: tuple[int, int, int]
     | tuple[int, int, int, Literal["previous", "current"]],
@@ -191,10 +195,6 @@ def _deserialize_legacy_table(raw_rows: Sequence[Mapping[SDKey, SDValue]]) -> Im
         rows_by_ident.setdefault(make_row_ident(key_columns, row), {}).update(row)
 
     return ImmutableTable(key_columns=key_columns, rows_by_ident=rows_by_ident)
-
-
-def _is_sd_value(value: object) -> TypeIs[SDValue]:
-    return value is None or isinstance(value, int | float | str | bool)
 
 
 def _parse_legacy_row(raw_row: Mapping[str, object]) -> Mapping[SDKey, SDValue]:

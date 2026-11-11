@@ -145,6 +145,30 @@ def _validate_unique_tag_keys(tags: Sequence[Mapping[str, object]]) -> None:
         )
 
 
+_ROLE_NAME_FORMAT = validators.MatchRegex(
+    # \x21-\x2e\x30-\x7e is the printable ASCII range without "/".
+    # AWS allows it in a role path, see the Path parameter in
+    # https://docs.aws.amazon.com/IAM/latest/APIReference/API_CreateRole.html
+    r"^([\x21-\x2e\x30-\x7e]+/)*[A-Za-z0-9_+=,.@-]{1,64}\Z",
+    Message(
+        "An IAM role name contains up to 64 characters: letters, digits and "
+        "_+=,.@-. You can put a path in front of the name. The path must end "
+        "with a slash and must not start with one, for example "
+        "monitoring/CheckmkMonitoring."
+    ),
+)
+
+
+def _validate_role_name(value: str) -> None:
+    # A name copied from a chat or a ticket often brings a space along, which the
+    # format message alone does not reveal.
+    if value != value.strip():
+        raise validators.ValidationError(
+            Message("The role name must not start or end with whitespace characters.")
+        )
+    _ROLE_NAME_FORMAT(value)
+
+
 def _validate_unique_account_ids(account_ids: Sequence[str]) -> None:
     if len(account_ids) != len(set(account_ids)):
         raise validators.ValidationError(Message("Each account ID may appear only once."))
@@ -524,20 +548,7 @@ def _spoke_role() -> Mapping[str, DictElement]:
                                 "path, put the path in front of the name, without the leading "
                                 "slash, for example <tt>monitoring/CheckmkMonitoring</tt>."
                             ),
-                            custom_validate=(
-                                validators.MatchRegex(
-                                    # \x21-\x2e\x30-\x7e is the printable ASCII range without
-                                    # "/". AWS allows it in a role path, see the Path parameter in
-                                    # https://docs.aws.amazon.com/IAM/latest/APIReference/API_CreateRole.html
-                                    r"^([\x21-\x2e\x30-\x7e]+/)*[A-Za-z0-9_+=,.@-]{1,64}\Z",
-                                    Message(
-                                        "An IAM role name has 1 to 64 characters: letters, "
-                                        "digits and _+=,.@-. A path in front of it ends with a "
-                                        "slash and does not start with one, for example "
-                                        "monitoring/CheckmkMonitoring."
-                                    ),
-                                ),
-                            ),
+                            custom_validate=(_validate_role_name,),
                         ),
                         required=True,
                     ),

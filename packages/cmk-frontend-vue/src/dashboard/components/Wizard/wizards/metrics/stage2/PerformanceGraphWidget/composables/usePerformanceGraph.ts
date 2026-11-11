@@ -10,6 +10,10 @@ import { type Ref, ref, watch } from 'vue'
 import type { GraphTimerange } from '@/dashboard/components/TimeRange/GraphTimeRange.vue'
 import { useTimeRangeSource } from '@/dashboard/components/TimeRange/useTimeRangeSource'
 import {
+  type UseContextualLink,
+  useContextualLink
+} from '@/dashboard/components/Wizard/components/ContextualLink/useContextualLink'
+import {
   type UseWidgetVisualizationOptions,
   useWidgetVisualizationProps
 } from '@/dashboard/components/Wizard/components/WidgetVisualization/useWidgetVisualization'
@@ -31,6 +35,7 @@ import {
 const CONTENT_TYPE = 'performance_graph'
 export interface UsePerformanceGraph
   extends UseWidgetHandler, UseGraphRenderOptions, UseWidgetVisualizationOptions {
+  contextualLink: UseContextualLink<PerformanceGraphContent>
   followDashboardTimeRange: Ref<boolean>
   timeRange: Ref<GraphTimerange>
 
@@ -81,10 +86,17 @@ export const usePerformanceGraph = async (
     graphRenderOptions
   } = useGraphRenderOptions(currentContent?.graph_render_options, currentContent === null)
 
+  const contextualLink = useContextualLink<PerformanceGraphContent>(
+    constants.widgets[CONTENT_TYPE]!.contextual_link!,
+    currentContent?.contextual_link
+  )
+
   const widgetProps = ref<WidgetProps>()
 
   const validate = (): boolean => {
-    return validateTitle()
+    const isTitleValid = validateTitle()
+    const isLinkValid = contextualLink.validate()
+    return isTitleValid && isLinkValid
   }
 
   const _generateContent = (): PerformanceGraphContent => {
@@ -93,7 +105,7 @@ export const usePerformanceGraph = async (
       timerange: generateTimeRangeSpec(),
       graph_render_options: graphRenderOptions.value,
       source: metric,
-      contextual_link: currentContent?.contextual_link ?? { type: 'none' }
+      contextual_link: contextualLink.contextualLink.value ?? { type: 'none' }
     }
   }
 
@@ -121,7 +133,13 @@ export const usePerformanceGraph = async (
   }
 
   watch(
-    [followDashboardTimeRange, timeRange, widgetGeneralSettings, graphRenderOptions],
+    [
+      contextualLink.contextualLink,
+      followDashboardTimeRange,
+      timeRange,
+      widgetGeneralSettings,
+      graphRenderOptions
+    ],
     useDebounceFn(() => {
       void _updateWidgetProps()
     }, 300),
@@ -131,6 +149,8 @@ export const usePerformanceGraph = async (
   await _updateWidgetProps()
 
   return {
+    contextualLink,
+
     followDashboardTimeRange,
     timeRange,
 

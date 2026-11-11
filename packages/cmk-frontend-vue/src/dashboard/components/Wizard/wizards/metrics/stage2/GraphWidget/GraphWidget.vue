@@ -11,6 +11,7 @@ import { computed } from 'vue'
 import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import DashboardPreviewContent from '@/dashboard/components/DashboardPreviewContent.vue'
 import TimeRangeSource from '@/dashboard/components/TimeRange/TimeRangeSource.vue'
+import ContextualLinkConfig from '@/dashboard/components/Wizard/components/ContextualLink/ContextualLinkConfig.vue'
 import GraphRenderOptions from '@/dashboard/components/Wizard/components/GraphRenderOptions/GraphRenderOptions.vue'
 import FieldComponent from '@/dashboard/components/Wizard/components/TableForm/FieldComponent.vue'
 import FieldDescription from '@/dashboard/components/Wizard/components/TableForm/FieldDescription.vue'
@@ -98,6 +99,12 @@ const widgetProps = computed(() => handler.value.widgetProps)
         { name: 'default_theme', title: _t('Default theme color') }
       ]"
     />
+  </CmkCatalogPanel>
+
+  <ContentSpacer />
+
+  <CmkCatalogPanel :title="_t('Contextual link')" variant="padded">
+    <ContextualLinkConfig v-model:handler="handler.contextualLink" />
   </CmkCatalogPanel>
 
   <ContentSpacer />

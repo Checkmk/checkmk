@@ -7,9 +7,13 @@ import type { components } from 'cmk-shared-typing/typescript/openapi_internal'
 
 import type {
   BarplotContent,
+  CombinedGraphContent,
+  GraphContent,
   HostStateContent,
   HostStatisticsContent,
   InventoryContent,
+  PerformanceGraphContent,
+  ScatterplotContent,
   ServiceStateContent,
   ServiceStatisticsContent,
   SiteOverviewContent,
@@ -25,6 +29,10 @@ export type LinkedContent =
   | InventoryContent
   | TopListContent
   | BarplotContent
+  | GraphContent
+  | PerformanceGraphContent
+  | CombinedGraphContent
+  | ScatterplotContent
 
 export type ContextualLinkOf<C extends LinkedContent> = C['contextual_link']
 export type ContextFilterIdOf<C extends LinkedContent> = Extract<

@@ -10,6 +10,10 @@ import { type Ref, ref, watch } from 'vue'
 import type { GraphTimerange } from '@/dashboard/components/TimeRange/GraphTimeRange.vue'
 import { useTimeRangeSource } from '@/dashboard/components/TimeRange/useTimeRangeSource'
 import {
+  type UseContextualLink,
+  useContextualLink
+} from '@/dashboard/components/Wizard/components/ContextualLink/useContextualLink'
+import {
   type UseGraphLegend,
   useGraphLegend
 } from '@/dashboard/components/Wizard/components/GraphRenderOptions/useGraphLegend'
@@ -32,6 +36,7 @@ import { type UseAdditionalOptions, useAdditionalOptions } from './useAdditional
 const CONTENT_TYPE = 'average_scatterplot'
 export interface UseScatterplot
   extends UseWidgetHandler, UseWidgetVisualizationOptions, UseAdditionalOptions, UseGraphLegend {
+  contextualLink: UseContextualLink<ScatterplotContent>
   followDashboardTimeRange: Ref<boolean>
   timeRange: Ref<GraphTimerange>
   widgetProps: Ref<WidgetProps>
@@ -79,10 +84,17 @@ export const useScatterplot = async (
     currentContent === null
   )
 
+  const contextualLink = useContextualLink<ScatterplotContent>(
+    constants.widgets[CONTENT_TYPE]!.contextual_link!,
+    currentContent?.contextual_link
+  )
+
   const widgetProps = ref<WidgetProps>()
 
   const validate = (): boolean => {
-    return validateTitle()
+    const isTitleValid = validateTitle()
+    const isLinkValid = contextualLink.validate()
+    return isTitleValid && isLinkValid
   }
 
   const _generateContent = (): ScatterplotContent => {
@@ -96,7 +108,7 @@ export const useScatterplot = async (
       median_color: medianColor.value === 'default' ? 'default' : medianColor.value.toUpperCase(),
       show_legend: graphLegend.value,
       legend_style: graphLegendStyle.value,
-      contextual_link: currentContent?.contextual_link ?? { type: 'none' }
+      contextual_link: contextualLink.contextualLink.value ?? { type: 'none' }
     }
   }
 
@@ -125,6 +137,7 @@ export const useScatterplot = async (
 
   watch(
     [
+      contextualLink.contextualLink,
       followDashboardTimeRange,
       timeRange,
       widgetGeneralSettings,
@@ -143,6 +156,8 @@ export const useScatterplot = async (
   await _updateWidgetProps()
 
   return {
+    contextualLink,
+
     followDashboardTimeRange,
     timeRange,
 

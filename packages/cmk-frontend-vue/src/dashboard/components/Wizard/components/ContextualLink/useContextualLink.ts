@@ -97,7 +97,10 @@ export function useContextualLink<C extends LinkedContent>(
 ): UseContextualLink<C> {
   type F = ContextFilterIdOf<C>
   // Each mode keeps its own state until save, so switching back and forth loses nothing.
-  const enabled = ref(stored?.type !== 'none')
+  // A new widget without a built-in target starts linking nowhere.
+  const enabled = ref(
+    stored === undefined ? options.modes.includes('default') : stored.type !== 'none'
+  )
   const mode = ref<ConfigurableMode>(
     stored !== undefined && stored.type !== 'none' && options.modes.includes(stored.type)
       ? stored.type

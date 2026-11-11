@@ -10,6 +10,10 @@ import { type Ref, ref, watch } from 'vue'
 import type { GraphTimerange } from '@/dashboard/components/TimeRange/GraphTimeRange.vue'
 import { useTimeRangeSource } from '@/dashboard/components/TimeRange/useTimeRangeSource'
 import {
+  type UseContextualLink,
+  useContextualLink
+} from '@/dashboard/components/Wizard/components/ContextualLink/useContextualLink'
+import {
   type UseWidgetVisualizationOptions,
   useWidgetVisualizationProps
 } from '@/dashboard/components/Wizard/components/WidgetVisualization/useWidgetVisualization'
@@ -32,6 +36,7 @@ import {
 const CONTENT_TYPE = 'combined_graph'
 export interface UseCombinedGraph
   extends UseWidgetHandler, UseGraphRenderOptions, UseWidgetVisualizationOptions {
+  contextualLink: UseContextualLink<CombinedGraphContent>
   followDashboardTimeRange: Ref<boolean>
   timeRange: Ref<GraphTimerange>
   presentation: Ref<CombinedGraphContentPresentation>
@@ -87,10 +92,17 @@ export const useCombinedGraph = async (
     currentContent?.presentation ?? 'lines'
   )
 
+  const contextualLink = useContextualLink<CombinedGraphContent>(
+    constants.widgets[CONTENT_TYPE]!.contextual_link!,
+    currentContent?.contextual_link
+  )
+
   const widgetProps = ref<WidgetProps>()
 
   const validate = (): boolean => {
-    return validateTitle()
+    const isTitleValid = validateTitle()
+    const isLinkValid = contextualLink.validate()
+    return isTitleValid && isLinkValid
   }
 
   const _generateContent = (): CombinedGraphContent => {
@@ -101,7 +113,7 @@ export const useCombinedGraph = async (
 
       graph_template: metric,
       presentation: presentation.value,
-      contextual_link: currentContent?.contextual_link ?? { type: 'none' }
+      contextual_link: contextualLink.contextualLink.value ?? { type: 'none' }
     }
   }
 
@@ -129,7 +141,14 @@ export const useCombinedGraph = async (
   }
 
   watch(
-    [followDashboardTimeRange, timeRange, widgetGeneralSettings, graphRenderOptions, presentation],
+    [
+      contextualLink.contextualLink,
+      followDashboardTimeRange,
+      timeRange,
+      widgetGeneralSettings,
+      graphRenderOptions,
+      presentation
+    ],
     useDebounceFn(() => {
       void _updateWidgetProps()
     }, 300),
@@ -139,6 +158,8 @@ export const useCombinedGraph = async (
   await _updateWidgetProps()
 
   return {
+    contextualLink,
+
     followDashboardTimeRange,
     timeRange,
 

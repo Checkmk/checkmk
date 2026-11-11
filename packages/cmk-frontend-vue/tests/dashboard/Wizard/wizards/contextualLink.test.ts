@@ -20,6 +20,10 @@ import { useHostState } from '@/dashboard/components/Wizard/wizards/hosts-site/s
 import { useHostStatistics } from '@/dashboard/components/Wizard/wizards/hosts-site/stage2/HostStatistics/composables/useHostStatistics'
 import { useSiteOverview } from '@/dashboard/components/Wizard/wizards/hosts-site/stage2/SiteOverview/composables/useSiteOverview'
 import { useInventory } from '@/dashboard/components/Wizard/wizards/hw_sw_inventory/stage2/InventoryWidget/useInventory'
+import { useCombinedGraph } from '@/dashboard/components/Wizard/wizards/metrics/stage2/CombinedGraphWidget/composables/useCombinedGraph'
+import { useGraph } from '@/dashboard/components/Wizard/wizards/metrics/stage2/GraphWidget/composables/useGraph'
+import { usePerformanceGraph } from '@/dashboard/components/Wizard/wizards/metrics/stage2/PerformanceGraphWidget/composables/usePerformanceGraph'
+import { useScatterplot } from '@/dashboard/components/Wizard/wizards/metrics/stage2/ScatterplotWidget/composables/useScatterplot'
 import { useTopList } from '@/dashboard/components/Wizard/wizards/metrics/stage2/TopListWidget/composables/useTopList'
 import { useServiceState } from '@/dashboard/components/Wizard/wizards/services/stage2/ServiceState/composables/useServiceState'
 import { useServiceStatistics } from '@/dashboard/components/Wizard/wizards/services/stage2/ServiceStatistics/composables/useServiceStatistics'
@@ -33,7 +37,9 @@ type ContextualLinkSpec =
   | components['schemas']['ContextualLinkDefault']
   | components['schemas']['ContextualLinkInherited']
 
-type LinkWizardHandler = UseWidgetHandler & { contextualLink: { enabled: Ref<boolean> } }
+type LinkWizardHandler = UseWidgetHandler & {
+  contextualLink: { enabled: Ref<boolean>; validate: () => boolean }
+}
 
 interface LinkWizard {
   name: string
@@ -105,6 +111,73 @@ const WIZARDS: LinkWizard[] = [
   }
 ]
 
+type GraphLinkSpec =
+  | components['schemas']['ContextualLinkNone']
+  | components['schemas']['ContextualLinkInherited']
+
+interface GraphLinkWizard {
+  name: string
+  type: string
+  openWizard: (stored: WidgetContentType | null) => Promise<LinkWizardHandler>
+  storedContent: (contextualLink: GraphLinkSpec) => WidgetContentType
+}
+
+// The graph widgets have no built-in link to fall back to.
+const GRAPH_WIZARDS: GraphLinkWizard[] = [
+  {
+    name: 'useGraph',
+    type: 'single_timeseries',
+    openWizard: (stored) => useGraph('util', {}, stored && storedSpec(stored)),
+    storedContent: (link) => ({
+      type: 'single_timeseries',
+      metric: 'util',
+      color: 'default_metric',
+      timerange: 'dashboard',
+      graph_render_options: {},
+      contextual_link: link
+    })
+  },
+  {
+    name: 'usePerformanceGraph',
+    type: 'performance_graph',
+    openWizard: (stored) => usePerformanceGraph('cpu', {}, stored && storedSpec(stored)),
+    storedContent: (link) => ({
+      type: 'performance_graph',
+      source: 'cpu',
+      timerange: 'dashboard',
+      graph_render_options: {},
+      contextual_link: link
+    })
+  },
+  {
+    name: 'useCombinedGraph',
+    type: 'combined_graph',
+    openWizard: (stored) => useCombinedGraph('cpu', {}, stored && storedSpec(stored)),
+    storedContent: (link) => ({
+      type: 'combined_graph',
+      graph_template: 'cpu',
+      presentation: 'lines',
+      timerange: 'dashboard',
+      graph_render_options: {},
+      contextual_link: link
+    })
+  },
+  {
+    name: 'useScatterplot',
+    type: 'average_scatterplot',
+    openWizard: (stored) => useScatterplot('util', {}, stored && storedSpec(stored)),
+    storedContent: (link) => ({
+      type: 'average_scatterplot',
+      metric: 'util',
+      time_range: 'dashboard',
+      metric_color: 'default',
+      average_color: 'default',
+      median_color: 'default',
+      contextual_link: link
+    })
+  }
+]
+
 const GENERAL_SETTINGS: WidgetSpec['general_settings'] = {
   title: { text: 'Widget', render_mode: 'with_background' },
   render_background: true
@@ -157,9 +230,17 @@ const WIDGET_CONSTANTS: DashboardConstants['widgets'][string] = {
   }
 }
 
+const GRAPH_WIDGET_CONSTANTS: DashboardConstants['widgets'][string] = {
+  ...WIDGET_CONSTANTS,
+  contextual_link: { modes: ['inherited', 'custom'], filters: [], filter_keys: {} }
+}
+
 const CONSTANTS: DashboardConstants = {
   responsive_grid_breakpoints: {},
-  widgets: Object.fromEntries(WIZARDS.map(({ type }) => [type, WIDGET_CONSTANTS]))
+  widgets: {
+    ...Object.fromEntries(WIZARDS.map(({ type }) => [type, WIDGET_CONSTANTS])),
+    ...Object.fromEntries(GRAPH_WIZARDS.map(({ type }) => [type, GRAPH_WIDGET_CONSTANTS]))
+  }
 }
 
 async function open(openWizard: LinkWizard['openWizard'], stored: WidgetContentType | null = null) {
@@ -186,6 +267,14 @@ const INHERITED: ContextualLinkSpec = {
   location: { type: 'views', name: 'allhosts' },
   include_context: false,
   include_time_range: false,
+  show_filter_form: false
+}
+
+const INHERITED_GRAPH_LINK: GraphLinkSpec = {
+  type: 'inherited',
+  location: { type: 'views', name: 'service' },
+  include_context: false,
+  include_time_range: true,
   show_filter_form: false
 }
 
@@ -217,6 +306,34 @@ describe.each(WIZARDS)('$name', ({ openWizard, storedContent }) => {
 
   it('keeps a stored link that leads nowhere when it edits a widget', async () => {
     const handler = await open(openWizard, storedContent({ type: 'none' }))
+
+    expect(await submittedLink(handler)).toEqual({ type: 'none' })
+  })
+})
+
+describe.each(GRAPH_WIZARDS)('$name', ({ openWizard, storedContent }) => {
+  it('submits a link that leads nowhere for a new widget', async () => {
+    const handler = await open(openWizard)
+
+    expect(await submittedLink(handler)).toEqual({ type: 'none' })
+  })
+
+  it('can be saved without a link target for a new widget', async () => {
+    const handler = await open(openWizard)
+
+    expect(handler.contextualLink.validate()).toBe(true)
+  })
+
+  it('keeps a stored inherited link when it edits a widget', async () => {
+    const handler = await open(openWizard, storedContent(INHERITED_GRAPH_LINK))
+
+    expect(await submittedLink(handler)).toEqual(INHERITED_GRAPH_LINK)
+  })
+
+  it('submits a link that leads nowhere once the link is unchecked', async () => {
+    const handler = await open(openWizard, storedContent(INHERITED_GRAPH_LINK))
+
+    handler.contextualLink.enabled.value = false
 
     expect(await submittedLink(handler)).toEqual({ type: 'none' })
   })

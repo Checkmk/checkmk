@@ -10,6 +10,10 @@ import { type Ref, ref, watch } from 'vue'
 import type { GraphTimerange } from '@/dashboard/components/TimeRange/GraphTimeRange.vue'
 import { useTimeRangeSource } from '@/dashboard/components/TimeRange/useTimeRangeSource'
 import {
+  type UseContextualLink,
+  useContextualLink
+} from '@/dashboard/components/Wizard/components/ContextualLink/useContextualLink'
+import {
   type UseWidgetVisualizationOptions,
   useWidgetVisualizationProps
 } from '@/dashboard/components/Wizard/components/WidgetVisualization/useWidgetVisualization'
@@ -32,6 +36,7 @@ const DEFAULT_COLOR_SCHEMAS = ['default_metric', 'default_theme']
 const CONTENT_TYPE = 'single_timeseries'
 export interface UseGraph
   extends UseWidgetHandler, UseGraphRenderOptions, UseWidgetVisualizationOptions {
+  contextualLink: UseContextualLink<GraphContent>
   followDashboardTimeRange: Ref<boolean>
   timeRange: Ref<GraphTimerange>
   color: Ref<string>
@@ -82,10 +87,17 @@ export const useGraph = async (
 
   const color = ref<string>(currentContent?.color ?? 'default_metric')
 
+  const contextualLink = useContextualLink<GraphContent>(
+    constants.widgets[CONTENT_TYPE]!.contextual_link!,
+    currentContent?.contextual_link
+  )
+
   const widgetProps = ref<WidgetProps>()
 
   const validate = (): boolean => {
-    return validateTitle()
+    const isTitleValid = validateTitle()
+    const isLinkValid = contextualLink.validate()
+    return isTitleValid && isLinkValid
   }
 
   const _generateContent = (): GraphContent => {
@@ -95,7 +107,7 @@ export const useGraph = async (
       timerange: generateTimeRangeSpec(),
       graph_render_options: graphRenderOptions.value,
       color: DEFAULT_COLOR_SCHEMAS.includes(color.value) ? color.value : color.value.toUpperCase(),
-      contextual_link: currentContent?.contextual_link ?? { type: 'none' }
+      contextual_link: contextualLink.contextualLink.value ?? { type: 'none' }
     }
   }
 
@@ -123,7 +135,14 @@ export const useGraph = async (
   }
 
   watch(
-    [followDashboardTimeRange, timeRange, widgetGeneralSettings, graphRenderOptions, color],
+    [
+      contextualLink.contextualLink,
+      followDashboardTimeRange,
+      timeRange,
+      widgetGeneralSettings,
+      graphRenderOptions,
+      color
+    ],
     useDebounceFn(() => {
       void _updateWidgetProps()
     }, 300),
@@ -133,6 +152,8 @@ export const useGraph = async (
   await _updateWidgetProps()
 
   return {
+    contextualLink,
+
     followDashboardTimeRange,
     timeRange,
 

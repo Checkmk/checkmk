@@ -271,11 +271,23 @@ def test_account_list_role_is_assumed_only_to_list_the_accounts(fake_sts: FakeSt
     )
 
 
-def test_account_list_role_is_assumed_with_the_external_id(fake_sts: FakeSts) -> None:
+def test_account_list_role_and_spoke_roles_get_their_own_external_id(fake_sts: FakeSts) -> None:
+    credentials = _organization(Organization(list_role_arn=LIST_ROLE, list_external_id="org-7"))
+    credentials.open_account(credentials.monitored_account_ids()[1])
+
+    assert [
+        (call.params["RoleArn"], call.params["ExternalId"]) for call in fake_sts.assume_role_calls
+    ] == [
+        (LIST_ROLE, "org-7"),
+        ("arn:aws:iam::333333333333:role/CheckmkMonitoring", "tenant-42"),
+    ]
+
+
+def test_account_list_role_without_external_id_omits_it(fake_sts: FakeSts) -> None:
     _organization_account_ids(Organization(list_role_arn=LIST_ROLE))
 
     [call] = fake_sts.assume_role_calls
-    assert call.params["ExternalId"] == "tenant-42"
+    assert "ExternalId" not in call.params
 
 
 @pytest.mark.usefixtures("fake_sts")

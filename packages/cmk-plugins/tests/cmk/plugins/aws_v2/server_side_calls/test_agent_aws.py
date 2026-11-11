@@ -220,10 +220,12 @@ def test_agent_accepts_the_arguments_of_every_option() -> None:
                 "accounts": (
                     "organization",
                     {
-                        "role_name": "CheckmkMonitoring",
-                        "external_id": "my_id",
+                        "role": {"name": "CheckmkMonitoring", "external_id": "my_id"},
                         "excluded_account_ids": ["333333333333"],
-                        "account_list_role_arn": "arn:aws:iam::888888888888:role/List",
+                        "account_list_role": {
+                            "arn": "arn:aws:iam::888888888888:role/List",
+                            "external_id": "my_list_id",
+                        },
                     },
                 ),
             },
@@ -270,8 +272,7 @@ _ACCOUNT_LIST = (
     "list",
     {
         "account_ids": ["333333333333", "444444444444"],
-        "role_name": "CheckmkMonitoring",
-        "external_id": "tenant-42",
+        "role": {"name": "CheckmkMonitoring", "external_id": "tenant-42"},
     },
 )
 
@@ -295,7 +296,7 @@ def test_account_list_is_passed_with_role_name_and_external_id() -> None:
 
 
 def test_account_list_without_external_id_omits_it() -> None:
-    accounts = ("list", {"account_ids": ["333333333333"], "role_name": "CheckmkMonitoring"})
+    accounts = ("list", {"account_ids": ["333333333333"], "role": {"name": "CheckmkMonitoring"}})
 
     assert "--spoke-external-id" not in _arguments(auth=("none", {"accounts": accounts}))
 
@@ -335,10 +336,12 @@ def test_named_profile_carries_the_account_list() -> None:
 _ORGANIZATION = (
     "organization",
     {
-        "role_name": "CheckmkMonitoring",
-        "external_id": "tenant-42",
+        "role": {"name": "CheckmkMonitoring", "external_id": "tenant-42"},
         "excluded_account_ids": ["333333333333", "444444444444"],
-        "account_list_role_arn": "arn:aws:iam::888888888888:role/CheckmkAccountList",
+        "account_list_role": {
+            "arn": "arn:aws:iam::888888888888:role/CheckmkAccountList",
+            "external_id": "org-7",
+        },
     },
 )
 
@@ -352,6 +355,8 @@ def test_organization_is_passed_with_its_options() -> None:
         "444444444444",
         "--account-list-role-arn",
         "arn:aws:iam::888888888888:role/CheckmkAccountList",
+        "--account-list-external-id",
+        "org-7",
         "--spoke-role-name",
         "CheckmkMonitoring",
         "--spoke-external-id",
@@ -361,7 +366,7 @@ def test_organization_is_passed_with_its_options() -> None:
 
 
 def test_organization_without_options_passes_only_the_role_name() -> None:
-    accounts = ("organization", {"role_name": "CheckmkMonitoring"})
+    accounts = ("organization", {"role": {"name": "CheckmkMonitoring"}})
 
     assert _arguments(auth=("none", {"accounts": accounts})) == [
         "--organization",
@@ -376,8 +381,16 @@ def test_agent_accepts_the_organization_options() -> None:
         [str(arg) for arg in _arguments(auth=("none", {"accounts": _ORGANIZATION}))]
     )
 
-    assert (parsed.organization, parsed.excluded_accounts, parsed.account_list_role_arn) == (
+    assert (
+        parsed.organization,
+        parsed.excluded_accounts,
+        parsed.account_list_role_arn,
+        parsed.account_list_external_id,
+        parsed.spoke_external_id,
+    ) == (
         True,
         ["333333333333", "444444444444"],
         "arn:aws:iam::888888888888:role/CheckmkAccountList",
+        "org-7",
+        "tenant-42",
     )

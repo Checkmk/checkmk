@@ -326,13 +326,19 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         " --organization. Without it, the credentials list them themselves.",
     )
     parser.add_argument(
+        "--account-list-external-id",
+        help="The external ID of the --account-list-role-arn role. Without it, the agent sends"
+        " no external ID to that role.",
+    )
+    parser.add_argument(
         "--spoke-role-name",
         help="The name of the role to assume in every monitored account. A role with a path"
         " gets the path in front, for example monitoring/CheckmkMonitoring.",
     )
     parser.add_argument(
         "--spoke-external-id",
-        help="The external ID of every role the agent assumes for --account or --organization",
+        help="The external ID of the role in every account of --account or --organization. The"
+        " agent does not send it to the --account-list-role-arn role.",
     )
     parser.add_argument(
         "--region",
@@ -474,6 +480,8 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         )
     if (args.excluded_accounts or args.account_list_role_arn) and not args.organization:
         parser.error("--exclude-account and --account-list-role-arn require --organization")
+    if args.account_list_external_id and not args.account_list_role_arn:
+        parser.error("--account-list-external-id requires --account-list-role-arn")
     return args
 
 
@@ -677,7 +685,9 @@ def _hub_credentials_from_args(args: argparse.Namespace) -> HubCredentials:
 def _spoke_accounts_from_args(args: argparse.Namespace) -> SpokeAccounts | None:
     if args.organization:
         accounts: Sequence[str] | Organization = Organization(
-            args.excluded_accounts or (), args.account_list_role_arn
+            args.excluded_accounts or (),
+            args.account_list_role_arn,
+            args.account_list_external_id or None,
         )
     elif args.accounts:
         accounts = args.accounts

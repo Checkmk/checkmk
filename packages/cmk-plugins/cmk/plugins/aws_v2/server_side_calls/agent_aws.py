@@ -16,17 +16,25 @@ class AccessKey(BaseModel):
     secret_access_key: Secret
 
 
+class SpokeRole(BaseModel):
+    name: str
+    external_id: str | None = None
+
+
+class AccountListRole(BaseModel):
+    arn: str
+    external_id: str | None = None
+
+
 class AccountList(BaseModel):
     account_ids: list[str]
-    role_name: str
-    external_id: str | None = None
+    role: SpokeRole
 
 
 class OrganizationAccounts(BaseModel):
-    role_name: str
-    external_id: str | None = None
+    role: SpokeRole
     excluded_account_ids: list[str] = []
-    account_list_role_arn: str | None = None
+    account_list_role: AccountListRole | None = None
 
 
 Accounts = (
@@ -131,13 +139,15 @@ def _account_args(login: AccessKeyLogin | DefaultCredentials | NamedProfile | No
             for account_id in accounts.excluded_account_ids
             for arg in ("--exclude-account", account_id)
         ]
-        if accounts.account_list_role_arn:
-            args += ["--account-list-role-arn", accounts.account_list_role_arn]
+        if list_role := accounts.account_list_role:
+            args += ["--account-list-role-arn", list_role.arn]
+            if list_role.external_id:
+                args += ["--account-list-external-id", list_role.external_id]
     else:
         return []
-    args += ["--spoke-role-name", accounts.role_name]
-    if accounts.external_id:
-        args += ["--spoke-external-id", accounts.external_id]
+    args += ["--spoke-role-name", accounts.role.name]
+    if accounts.role.external_id:
+        args += ["--spoke-external-id", accounts.role.external_id]
     return args
 
 

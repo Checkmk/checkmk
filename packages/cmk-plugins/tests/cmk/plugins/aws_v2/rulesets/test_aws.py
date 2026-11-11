@@ -89,17 +89,32 @@ def _login_forms() -> dict[str, object]:
     return {element.name: element.parameter_form for element in auth.elements}
 
 
-def _account_choice_elements(choice: str) -> Mapping[str, DictElement[object]]:
+def _account_choice_form(choice: str) -> Dictionary:
     login = _login_forms()["none"]
     assert isinstance(login, Dictionary)
     accounts = _parameter_form(login.elements, "accounts", CascadingSingleChoice)
     (form,) = (e.parameter_form for e in accounts.elements if e.name == choice)
     assert isinstance(form, Dictionary)
-    return form.elements
+    return form
+
+
+def _account_choice_elements(choice: str) -> Mapping[str, DictElement[object]]:
+    return _account_choice_form(choice).elements
 
 
 def _account_list_elements() -> Mapping[str, DictElement[object]]:
     return _account_choice_elements("list")
+
+
+def _role_name() -> String:
+    role = _parameter_form(_account_list_elements(), "role", Dictionary)
+    return _parameter_form(role.elements, "name", String)
+
+
+def _account_list_role() -> Dictionary:
+    return _parameter_form(
+        _account_choice_elements("organization"), "account_list_role", Dictionary
+    )
 
 
 def test_every_login_offers_an_account_list() -> None:
@@ -131,7 +146,7 @@ def test_account_id_needs_exactly_twelve_digits(account_id: str) -> None:
     ],
 )
 def test_role_name_accepts_a_path(name: str) -> None:
-    role_name = _parameter_form(_account_list_elements(), "role_name", String)
+    role_name = _role_name()
 
     for validate in role_name.custom_validate or ():
         validate(name)
@@ -149,7 +164,7 @@ def test_role_name_accepts_a_path(name: str) -> None:
     ],
 )
 def test_role_name_rejects_a_malformed_path(name: str) -> None:
-    role_name = _parameter_form(_account_list_elements(), "role_name", String)
+    role_name = _role_name()
 
     with pytest.raises(ValidationError):
         for validate in role_name.custom_validate or ():
@@ -169,7 +184,7 @@ def test_organization_offers_every_option_of_the_server_side_call() -> None:
 
     assert (set(elements), {key for key, element in elements.items() if element.required}) == (
         set(OrganizationAccounts.model_fields),
-        {"role_name"},
+        {"role"},
     )
 
 
@@ -203,9 +218,7 @@ def test_excluded_account_ids_must_be_unique() -> None:
     ],
 )
 def test_account_list_role_must_be_a_role_arn(arn: str) -> None:
-    list_role = _parameter_form(
-        _account_choice_elements("organization"), "account_list_role_arn", String
-    )
+    list_role = _parameter_form(_account_list_role().elements, "arn", String)
 
     with pytest.raises(ValidationError):
         for validate in list_role.custom_validate or ():
@@ -213,9 +226,11 @@ def test_account_list_role_must_be_a_role_arn(arn: str) -> None:
 
 
 def test_account_list_role_accepts_a_role_arn_with_a_path() -> None:
-    list_role = _parameter_form(
-        _account_choice_elements("organization"), "account_list_role_arn", String
-    )
+    list_role = _parameter_form(_account_list_role().elements, "arn", String)
 
     for validate in list_role.custom_validate or ():
         validate("arn:aws-us-gov:iam::888888888888:role/monitoring/CheckmkAccountList")
+
+
+def test_account_list_role_needs_its_arn() -> None:
+    assert _account_list_role().elements["arn"].required

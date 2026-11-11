@@ -205,6 +205,10 @@ def test_organization_options_are_parsed() -> None:
             [*ACCOUNT_ARGS, "--account-list-role-arn", "arn:aws:iam::1:role/List"],
             id="list role without it",
         ),
+        pytest.param(
+            [*ORGANIZATION_ARGS, "--account-list-external-id", "org-7"],
+            id="list role external ID without list role",
+        ),
     ],
 )
 def test_wrong_organization_options_are_rejected(args: Sequence[str]) -> None:

@@ -70,13 +70,13 @@ class Organization:
 
     excluded_ids: Sequence[str] = ()
     list_role_arn: str | None = None
+    list_external_id: str | None = None
 
 
 @dataclass(frozen=True)
 class SpokeAccounts:
     accounts: Sequence[str] | Organization
     role_name: str
-    # Sent to every role this rule assumes, the account list role included.
     external_id: str | None = None
 
 
@@ -217,19 +217,17 @@ class AwsCredentials:
         if self._spokes is None:
             return [session_account_id]
         if isinstance(accounts := self._spokes.accounts, Organization):
-            return self._organization_account_ids(accounts, self._spokes.external_id)
+            return self._organization_account_ids(accounts)
         return accounts
 
-    def _organization_account_ids(
-        self, organization: Organization, external_id: str | None
-    ) -> Sequence[str]:
+    def _organization_account_ids(self, organization: Organization) -> Sequence[str]:
         try:
             session = self.session()
             if organization.list_role_arn is not None:
                 session, _ = _assume_role(
                     session,
                     organization.list_role_arn,
-                    external_id,
+                    organization.list_external_id,
                     self._hub.session_name,
                     self._global_service_region,
                     self._client_config,

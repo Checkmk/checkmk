@@ -471,26 +471,40 @@ def _organization() -> Mapping[str, DictElement]:
                 custom_validate=(_validate_unique_account_ids,),
             ),
         ),
-        "account_list_role_arn": DictElement(
-            parameter_form=String(
+        "account_list_role": DictElement(
+            parameter_form=Dictionary(
                 title=Title("Role that lists the accounts"),
                 help_text=Help(
-                    "The ARN of a role in the management account that may call "
+                    "A role in the management account that may call "
                     "<tt>organizations:ListAccounts</tt>. The credentials assume it only to "
                     "list the accounts. The role in each account is still assumed directly "
-                    "from the credentials. Leave this empty when the credentials may list the "
-                    "accounts themselves, for example as a delegated administrator."
+                    "from the credentials. Leave this unchecked when the credentials may list "
+                    "the accounts themselves, for example as a delegated administrator."
                 ),
-                field_size=FieldSize.LARGE,
-                custom_validate=(
-                    validators.MatchRegex(
-                        r"^arn:[\w-]+:iam::[0-9]{12}:role/.*",
-                        Message(
-                            "Enter the ARN of an IAM role, for example "
-                            "arn:aws:iam::123456789012:role/CheckmkAccountList."
+                elements={
+                    "arn": DictElement(
+                        parameter_form=String(
+                            title=Title("ARN"),
+                            field_size=FieldSize.LARGE,
+                            custom_validate=(
+                                validators.MatchRegex(
+                                    r"^arn:[\w-]+:iam::[0-9]{12}:role/.*",
+                                    Message(
+                                        "Enter the ARN of an IAM role, for example "
+                                        "arn:aws:iam::123456789012:role/CheckmkAccountList."
+                                    ),
+                                ),
+                            ),
                         ),
+                        required=True,
                     ),
-                ),
+                    "external_id": _external_id(
+                        Help(
+                            "Sent only when the credentials assume this role. Set it when the "
+                            "trust policy of this role requires one."
+                        )
+                    ),
+                },
             ),
         ),
     }
@@ -498,48 +512,65 @@ def _organization() -> Mapping[str, DictElement]:
 
 def _spoke_role() -> Mapping[str, DictElement]:
     return {
-        "role_name": DictElement(
-            parameter_form=String(
-                title=Title("Name of the role in every account"),
-                help_text=Help(
-                    "For example <tt>CheckmkMonitoring</tt>. If the role has a path, put the "
-                    "path in front of the name, without the leading slash, for example "
-                    "<tt>monitoring/CheckmkMonitoring</tt>."
-                ),
-                custom_validate=(
-                    validators.MatchRegex(
-                        # \x21-\x2e\x30-\x7e is the printable ASCII range without "/".
-                        # AWS allows it in a role path, see the Path parameter in
-                        # https://docs.aws.amazon.com/IAM/latest/APIReference/API_CreateRole.html
-                        r"^([\x21-\x2e\x30-\x7e]+/)*[A-Za-z0-9_+=,.@-]{1,64}\Z",
-                        Message(
-                            "An IAM role name has 1 to 64 characters: letters, digits and "
-                            "_+=,.@-. A path in front of it ends with a slash and does not start "
-                            "with one, for example monitoring/CheckmkMonitoring."
+        "role": DictElement(
+            parameter_form=Dictionary(
+                title=Title("Role in every account"),
+                elements={
+                    "name": DictElement(
+                        parameter_form=String(
+                            title=Title("Name"),
+                            help_text=Help(
+                                "For example <tt>CheckmkMonitoring</tt>. If the role has a "
+                                "path, put the path in front of the name, without the leading "
+                                "slash, for example <tt>monitoring/CheckmkMonitoring</tt>."
+                            ),
+                            custom_validate=(
+                                validators.MatchRegex(
+                                    # \x21-\x2e\x30-\x7e is the printable ASCII range without
+                                    # "/". AWS allows it in a role path, see the Path parameter in
+                                    # https://docs.aws.amazon.com/IAM/latest/APIReference/API_CreateRole.html
+                                    r"^([\x21-\x2e\x30-\x7e]+/)*[A-Za-z0-9_+=,.@-]{1,64}\Z",
+                                    Message(
+                                        "An IAM role name has 1 to 64 characters: letters, "
+                                        "digits and _+=,.@-. A path in front of it ends with a "
+                                        "slash and does not start with one, for example "
+                                        "monitoring/CheckmkMonitoring."
+                                    ),
+                                ),
+                            ),
                         ),
+                        required=True,
                     ),
-                ),
+                    "external_id": _external_id(
+                        Help(
+                            "Sent when the credentials assume the role in each account, the "
+                            "same for every account. Set it when the roles require one. A rule "
+                            "on this site can then use those roles only if it knows the ID."
+                        )
+                    ),
+                },
             ),
             required=True,
         ),
-        # A String, not a Password: AWS does not treat the external ID as a secret.
-        # Without the hub credentials it grants nothing. It only keeps a rule that does
-        # not know it from using the roles through the hub login that all rules share.
-        # A masked value would also keep admins from checking it against the trust policy.
-        "external_id": DictElement(
-            parameter_form=String(
-                title=Title("External ID"),
-                help_text=Help(
-                    "Sent with every AssumeRole call of this rule, the same for every account "
-                    "and for the role that lists the accounts. Set it when the roles require "
-                    "one. A rule on this site can then use those roles only if it knows the ID. "
-                    "It is not a secret: it is stored and passed in plain text, so every user "
-                    "who can read this rule can copy it."
-                ),
-                custom_validate=(validators.LengthInRange(min_value=1),),
-            ),
-        ),
     }
+
+
+def _external_id(help_text: Help) -> DictElement:
+    # A String, not a Password: AWS does not treat the external ID as a secret.
+    # Without the hub credentials it grants nothing. It only keeps a rule that does
+    # not know it from using the roles through the hub login that all rules share.
+    # A masked value would also keep admins from checking it against the trust policy.
+    return DictElement(
+        parameter_form=String(
+            title=Title("External ID"),
+            help_text=help_text
+            + Help(
+                " It is not a secret: it is stored and passed in plain text, so every user "
+                "who can read this rule can copy it."
+            ),
+            custom_validate=(validators.LengthInRange(min_value=1),),
+        ),
+    )
 
 
 def configuration_authentication() -> Mapping[str, DictElement]:

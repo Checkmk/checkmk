@@ -5,12 +5,14 @@
 
 # mypy: disable-error-code="explicit-any"
 
+import json
 from collections.abc import Mapping, Sequence
 from typing import Any
 
 import pytest
 
 from cmk.agent_based.v2 import Result, Service, State
+from cmk.plugins.prism.agent_based.prism_vm import parse_prism_vm_v2
 from cmk.plugins.prism.agent_based.prism_vm_tools import (
     check_prism_vm_tools,
     discovery_prism_vm_tools,
@@ -99,3 +101,68 @@ def test_check_prism_vm_tools(  # type: ignore[misc]
         )
         == expected_check_result
     )
+
+
+def _v4_section(guest_tools: Mapping[str, object]) -> Mapping[str, Any]:
+    vm = {
+        "extId": "vm-1",
+        "name": "vm-1",
+        "hypervisor": "AHV",
+        "powerState": "ON",
+        "memorySizeBytes": 8589934592,
+        "guestTools": guest_tools,
+    }
+    return parse_prism_vm_v2([[json.dumps(vm)]])
+
+
+DEFAULT_PARAMS = {"tools_install": "installed", "tools_enabled": "enabled"}
+
+
+@pytest.mark.parametrize(
+    "section",
+    [
+        pytest.param(
+            {"nutanixGuestTools": {"installedVersion": "4.5", "enabled": False}},
+            id="legacy agent",
+        ),
+        pytest.param(
+            _v4_section({"version": "4.5", "isInstalled": True, "isEnabled": False}),
+            id="v4 agent",
+        ),
+    ],
+)
+def test_disabled_tools_that_should_be_enabled_are_warn(  # type: ignore[misc]
+    section: Mapping[str, Any],
+) -> None:
+    assert list(check_prism_vm_tools(params=DEFAULT_PARAMS, section=section)) == [
+        Result(state=State.OK, summary="Tools with version 4.5 installed"),
+        Result(state=State.WARN, summary="No tools enabled, but should be enabled"),
+    ]
+
+
+def test_vm_without_tools_has_nothing_to_enable() -> None:
+    section = {"nutanixGuestTools": {"installedVersion": None, "enabled": False}}
+
+    assert list(
+        check_prism_vm_tools(
+            params={"tools_install": "not_installed", "tools_enabled": "enabled"},
+            section=section,
+        )
+    ) == [
+        Result(state=State.OK, summary="No tools installed"),
+        Result(state=State.OK, summary="No tools enabled"),
+    ]
+
+
+def test_vm_without_tools_and_unknown_activation_is_ok() -> None:
+    section = {"nutanixGuestTools": {"installedVersion": None, "enabled": None}}
+
+    assert list(
+        check_prism_vm_tools(
+            params={"tools_install": "not_installed", "tools_enabled": "enabled"},
+            section=section,
+        )
+    ) == [
+        Result(state=State.OK, summary="No tools installed"),
+        Result(state=State.OK, summary="No tools enabled"),
+    ]

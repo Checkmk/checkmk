@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 
 import cmk.utils.paths
-from cmk.ccc.hostaddress import HostAddress, HostNameValidationError
+from cmk.ccc.hostaddress import HostAddress
 from cmk.piggyback import backend
 from cmk.piggyback.backend._storage import _remove_files_older_than, _remove_folder_if_empty
 
@@ -499,9 +499,6 @@ def _remove_status_files_until(stopped: threading.Event, source: HostAddress) ->
         stopped.wait(0.01)
 
 
-@pytest.mark.xfail(
-    strict=True, raises=HostNameValidationError, reason="crash group 4356: invalid host address"
-)
 def test_watching_ignores_a_removed_file_without_a_host_name() -> None:
     source = HostAddress("source")
     backend.store_piggyback_raw_data(

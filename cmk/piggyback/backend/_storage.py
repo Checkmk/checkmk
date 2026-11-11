@@ -19,7 +19,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Literal, Self
 
-from cmk.ccc.hostaddress import HostAddress, HostName
+from cmk.ccc.hostaddress import HostAddress, HostName, HostNameValidationError
 from cmk.ccc.inotify import Event, INotify, Masks
 
 from ._paths import payload_dir, source_status_dir
@@ -138,7 +138,10 @@ def watch_new_messages(omd_root: Path) -> Iterator[PiggybackMessage]:
 def _messages_for_removed_source(
     deleted_file_name: str, omd_root: Path
 ) -> Iterator[PiggybackMessage]:
-    source = HostName(deleted_file_name)
+    try:
+        source = HostName(deleted_file_name)
+    except HostNameValidationError:
+        return
     for piggybacked_host_path in _get_piggybacked_hosts_for_source(omd_root, source):
         yield PiggybackMessage(
             PiggybackMetaData(

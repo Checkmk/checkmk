@@ -3,12 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import json
 import logging
 import os
+import sqlite3
 import struct
 import zlib
 from collections.abc import Iterator, Mapping
-from contextlib import contextmanager
+from contextlib import closing, contextmanager
 from pathlib import Path
 
 import pytest
@@ -239,12 +241,38 @@ def test_a_gif_shape_is_named_for_conversion(
     assert any("router.gif" in w and "Convert them to PNG" in w for w in _warnings(caplog))
 
 
-def test_a_geographic_map_is_named_for_its_markers(
+def _write_worldmap_objects(*objects: Mapping[str, str]) -> None:
+    with closing(sqlite3.connect(_write_nagvis_file("worldmap.db", ""))) as db:
+        db.execute("CREATE TABLE objects (object_id VARCHAR(20), object TEXT)")
+        db.executemany(
+            "INSERT INTO objects VALUES (?, ?)",
+            [(obj["object_id"], json.dumps(obj)) for obj in objects],
+        )
+        db.commit()
+
+
+def test_a_worldmap_is_stored_with_its_objects_at_their_positions(admin: UserId) -> None:
+    _write_worldmap_objects(
+        {"object_id": "a1b2c3", "type": "host", "host_name": "web01", "x": "48.1", "y": "11.5"},
+        {"object_id": "d4e5f6", "type": "line", "x": "a1b2c3%+0,50.9", "y": "a1b2c3%+0,6.9"},
+    )
+
+    page = _migrated(admin, "world", "define global {\nsources=worldmap\n}")
+
+    host, line = _objects(page)
+    assert (host["host_name"], host["lat"], host["lng"]) == ("web01", 48.1, 11.5)
+    assert (line["start_ref"], line["lat2"], line["lng2"]) == (host["id"], 50.9, 6.9)
+
+
+def test_a_geomap_entry_without_valid_coordinates_is_named_in_the_output(
     admin: UserId, caplog: pytest.LogCaptureFixture
 ) -> None:
-    _migrated(admin, "world", "define global {\nsources=worldmap\n}")
+    _write_nagvis_file("geomap/offices.csv", "ber-srv1;Berlin;52.52;13.405\nlost;Lost;;\n")
 
-    assert any("not migrated" in warning for warning in _warnings(caplog))
+    page = _migrated(admin, "offices", "define global {\nsources=geomap\nsource_file=offices\n}")
+
+    assert [obj["host_name"] for obj in _objects(page)] == ["ber-srv1"]
+    assert any("geomap/offices.csv" in w and "lost" in w for w in _warnings(caplog))
 
 
 def test_what_maps_does_not_carry_over_is_named_with_its_map(

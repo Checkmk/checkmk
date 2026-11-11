@@ -44,6 +44,7 @@ from cmk.maps.gui._images import (
     import_background,
     store_icon,
 )
+from cmk.maps.gui.nagvis_geo import GeoFiles, read_geo_files
 from cmk.maps.shared.map_payload import IMAGE_SIZE_MAX, MapPayload
 from cmk.maps.shared.validators import is_valid_map_name
 
@@ -154,15 +155,24 @@ def import_site(sites: SiteConfigurations) -> ImportSite:
     )
 
 
-def read_nagvis_map(path: Path, name: str, config: NagVisConfig) -> tuple[MapPayload, list[str]]:
+def read_nagvis_geo_files() -> GeoFiles:
+    """What NagVis keeps of its geographic maps outside the map files."""
+    return read_geo_files(_nagvis_cfg_dir())
+
+
+def read_nagvis_map(
+    path: Path, name: str, config: NagVisConfig, geo_files: GeoFiles
+) -> tuple[MapPayload, list[str]]:
     """The map in ``path`` as a map named ``name``, with what it lost on the way."""
     map_cfg, warnings = parse_cfg_upload(
-        path.name, path.read_bytes(), config.site, default_backend=config.default_backend
+        path.name,
+        path.read_bytes(),
+        config.site,
+        default_backend=config.default_backend,
+        geo_files=geo_files,
     )
     map_cfg["name"] = name
     warnings += _apply_rotation(map_cfg, path.stem, config.pools)
-    if map_cfg["view"]["type"] == "geo":
-        warnings.append("Its objects are kept outside the map file and are not migrated.")
     return map_cfg, warnings
 
 

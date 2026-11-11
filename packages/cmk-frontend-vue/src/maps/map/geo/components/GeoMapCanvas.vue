@@ -27,7 +27,7 @@ import { useMapMotion } from '@/maps/map/composables/useMapMotion'
 import { useMapObjectMenus } from '@/maps/map/composables/useMapObjectMenus'
 import { useMapPalette } from '@/maps/map/composables/useMapPalette'
 import type { HoverAnchorRect } from '@/maps/map/composables/useObjectHoverMenu'
-import { useObjectResize } from '@/maps/map/composables/useObjectResize'
+import { type Centering, useObjectResize } from '@/maps/map/composables/useObjectResize'
 import { useRovingFocus } from '@/maps/map/composables/useRovingFocus'
 import MapElementLabel from '@/maps/map/elements/components/MapElementLabel.vue'
 import { providePulseCount } from '@/maps/map/elements/composables/pulseCount'
@@ -169,10 +169,16 @@ const menus = useMapObjectMenus({
   preview: () => props.preview
 })
 
-const resize = useObjectResize({
-  surface: () => surface.value,
-  centering: () => ({ x: false, y: false })
-})
+/**
+ * NagVis centers a text box on its coordinate by the width and the height it
+ * was given, each on its own, so a map migrated from it keeps that.
+ */
+function centeringOf(object: MapElement): Centering {
+  const nagvis = object.type === 'textbox' && props.config.render_mode === 'nagvis_classic'
+  return { x: nagvis && !!object.textbox_width, y: nagvis && !!object.textbox_height }
+}
+
+const resize = useObjectResize({ surface: () => surface.value, centering: centeringOf })
 
 /** Runs an action on the object an id belongs to, if it is still there. */
 function withObject(id: string, act: (object: MapElement) => void): void {
@@ -536,6 +542,7 @@ defineExpose({
         :dimmed="filterActive && !matches(view.object)"
         :preview="preview"
         :tab-stop="roving.isTabStop(view.object.id)"
+        :centering="centeringOf(view.object)"
         @activate="onObjectClick(view.object, $event)"
         @double-click="onObjectDblclick(view.object)"
         @context-menu="onObjectContext(view.object, $event)"

@@ -160,11 +160,13 @@ def map_metadata_spec(
                 parameter_form=SingleChoice(
                     title=Title("Rendering style"),
                     help_text=Help(
-                        "Maps renders objects centered on their coordinates. "
-                        "NagVis-classic places them as NagVis does, anchored "
-                        "top-left, with labels at their own offset and the "
-                        "background at its own size, in the same look. It is "
-                        "selected automatically for an imported NagVis .cfg map."
+                        "Maps renders objects centered on their coordinates, "
+                        "but hangs a text box on a geo map by its top-left "
+                        "corner. NagVis-classic places them as NagVis does, in "
+                        "the same look: on a static map anchored top-left, with "
+                        "labels at their own offset and the background at its "
+                        "own size; on a geo map with text boxes centered. It is "
+                        "selected automatically for a map imported from NagVis."
                     ),
                     elements=[
                         SingleChoiceElement(name="default", title=Title("Maps (default)")),

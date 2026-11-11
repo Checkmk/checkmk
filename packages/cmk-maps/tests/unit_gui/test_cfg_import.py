@@ -14,6 +14,8 @@ The "all objects" coverage runs off the shared ``all_objects_map`` fixture (see
 ``conftest.py``), an inlined NagVis map exercising every object and line type.
 """
 
+from collections.abc import Mapping
+
 import pytest
 
 from cmk.gui.exceptions import MKUserError
@@ -21,6 +23,7 @@ from cmk.maps.backend.schemas.map import MapConfig as DaemonMapConfig
 from cmk.maps.gui import _cfg_import
 from cmk.maps.gui._cfg_import import (
     _line_coords,
+    _MAX_OBJECT_SETTINGS_CHARS,
     _parse_blocks,
     _parse_coord,
     convert_cfg,
@@ -32,7 +35,8 @@ from cmk.maps.gui._cfg_import import (
     map_name_from_filename,
     resolve_connection_ids,
 )
-from cmk.maps.shared.map_payload import MapDisplay, MapObject, MapPayload
+from cmk.maps.gui.nagvis_geo import GeoFiles, WorldmapTable
+from cmk.maps.shared.map_payload import MAP_OBJECTS_MAX, MapDisplay, MapObject, MapPayload
 
 
 def _coord(v: str) -> int:
@@ -1055,7 +1059,7 @@ def test_worldmap_global_becomes_geo_view() -> None:
         "zoom": 6,
         "tile_saturate": 33.0,
     }
-    # Markers live in a sidecar file the text-only import can't read.
+    # NagVis keeps the objects outside the file.
     assert parsed_map["objects"] == []
 
 
@@ -1159,6 +1163,363 @@ def test_geomap_global_becomes_geo_view() -> None:
     view = parsed_map["view"]
     assert view["type"] == "geo"
     assert view["zoom"] == 7
+
+
+_WORLDMAP = "define global {\n sources=worldmap\n}\n"
+_GEOMAP = "define global {\n sources=geomap\n source_file=offices\n}\n"
+
+
+def _host(object_id: str, lat: str, lng: str, **params: str) -> dict[str, str]:
+    return {
+        "object_id": object_id,
+        "type": "host",
+        "host_name": f"host-{object_id}",
+        "x": lat,
+        "y": lng,
+        **params,
+    }
+
+
+def _convert_worldmap(
+    text: str, *objects: Mapping[str, str], unreadable: int = 0
+) -> tuple[MapPayload, list[str]]:
+    table = WorldmapTable({obj["object_id"]: obj for obj in objects}, unreadable)
+    return convert_cfg(text, "geo", geo_files=GeoFiles(table, {}))
+
+
+def _worldmap_objects(text: str, *objects: Mapping[str, str]) -> list[MapObject]:
+    return _convert_worldmap(text, *objects)[0]["objects"]
+
+
+def _convert_geomap(text: str, locations: str) -> tuple[MapPayload, list[str]]:
+    return convert_cfg(
+        text, "gm", geo_files=GeoFiles(WorldmapTable(), {"offices": locations.encode()})
+    )
+
+
+def test_an_object_of_a_worldmap_sits_at_its_coordinates() -> None:
+    (obj,) = _worldmap_objects(_WORLDMAP, _host("a1b2c3", "48.137", "11.575"))
+
+    assert (obj["type"], obj["host_name"]) == ("host", "host-a1b2c3")
+    assert (obj["lat"], obj["lng"]) == (48.137, 11.575)
+
+
+def test_the_label_of_an_object_of_a_worldmap_stays_below_its_icon() -> None:
+    (obj,) = _worldmap_objects(_WORLDMAP, _host("a1b2c3", "48.1", "11.5"))
+
+    assert (obj["label"]["x"], obj["label"]["y"]) == (0, 0)
+
+
+def test_the_label_of_a_gadget_of_a_worldmap_stays_below_the_gadget() -> None:
+    (obj,) = _worldmap_objects(
+        _WORLDMAP,
+        _host("a1b2c3", "48.1", "11.5", view_type="gadget", gadget_url="std_speedometer.php"),
+    )
+
+    assert obj["display"]["mode"] == "gadget"
+    assert obj["label"]["y"] == 0
+
+
+def test_a_label_at_a_point_of_a_worldmap_stays_below_its_icon() -> None:
+    (obj,) = _worldmap_objects(_WORLDMAP, _host("a1b2c3", "48.1", "11.5", label_y="150"))
+
+    assert obj["label"]["y"] == 0
+
+
+def test_an_object_of_a_worldmap_takes_over_the_maps_defaults() -> None:
+    text = "define global {\n sources=worldmap\n label_show=1\n}\n"
+
+    (obj,) = _worldmap_objects(text, _host("a1b2c3", "48.1", "11.5"))
+
+    assert obj["label"]["show"] is True
+
+
+def test_a_line_of_a_worldmap_runs_between_its_first_and_last_coordinates() -> None:
+    (line,) = _worldmap_objects(
+        _WORLDMAP,
+        {
+            "object_id": "l1",
+            "type": "line",
+            "line_type": "12",
+            "x": "48.1,49,50.9",
+            "y": "11.5,9,6.9",
+        },
+    )
+
+    assert (line["type"], line["line_style"]) == ("line", "plain")
+    assert (line["lat"], line["lng"], line["lat2"], line["lng2"]) == (48.1, 11.5, 50.9, 6.9)
+
+
+def test_an_object_of_a_worldmap_drawn_as_a_line_by_its_template_is_one() -> None:
+    text = _WORLDMAP + "define template {\n name=as_line\n view_type=line\n}\n"
+
+    (line,) = _worldmap_objects(text, _host("a1b2c3", "48.1,50.9", "11.5,6.9", use="as_line"))
+
+    assert line["type"] == "line"
+    assert (line["lat"], line["lng"], line["lat2"], line["lng2"]) == (48.1, 11.5, 50.9, 6.9)
+
+
+def test_a_line_end_of_a_worldmap_follows_its_object() -> None:
+    host, line = _worldmap_objects(
+        _WORLDMAP,
+        _host("a1b2c3", "48.1", "11.5"),
+        {"object_id": "l1", "type": "line", "x": "a1b2c3%+0,50.9", "y": "a1b2c3%+0,6.9"},
+    )
+
+    assert line["start_ref"] == host["id"]
+    assert "end_ref" not in line
+
+
+def test_a_line_end_of_a_worldmap_that_follows_a_line_is_named() -> None:
+    line_type = {"type": "line", "x": "48.1,50.9", "y": "11.5,6.9"}
+
+    parsed_map, warnings = _convert_worldmap(
+        _WORLDMAP,
+        {"object_id": "l1", **line_type},
+        {"object_id": "l2", "type": "line", "x": "l1%+0,52.5", "y": "l1%+0,13.4"},
+    )
+
+    assert "start_ref" not in parsed_map["objects"][1]
+    assert any("1 line end follows a line" in w for w in warnings), warnings
+
+
+def test_an_object_of_a_worldmap_without_valid_coordinates_is_left_out_and_named() -> None:
+    parsed_map, warnings = _convert_worldmap(
+        _WORLDMAP, _host("a1b2c3", "north", "11.5"), _host("d4e5f6", "48.1", "11.5")
+    )
+
+    assert [obj["host_name"] for obj in parsed_map["objects"]] == ["host-d4e5f6"]
+    assert any(
+        "1 object has no valid coordinates and was left out: host host-a1b2c3" in w
+        for w in warnings
+    ), warnings
+
+
+def test_unreadable_entries_of_the_worldmap_table_are_named() -> None:
+    _parsed_map, warnings = _convert_worldmap(_WORLDMAP, unreadable=2)
+
+    assert "2 entries of worldmap.db are unreadable and were left out." in warnings
+
+
+def test_a_worldmap_table_that_cannot_be_read_fails_the_map() -> None:
+    geo_files = GeoFiles(WorldmapTable(error="file is not a database"), {})
+
+    with pytest.raises(MKUserError, match="worldmap.db cannot be read"):
+        convert_cfg(_WORLDMAP, "geo", geo_files=geo_files)
+
+
+def test_objects_of_unknown_types_in_the_worldmap_table_are_named() -> None:
+    _parsed_map, warnings = _convert_worldmap(
+        _WORLDMAP, {"object_id": "a1b2c3", "type": "widget", "x": "48.1", "y": "11.5"}
+    )
+
+    assert any("1 object of an unknown type was left out: widget." in w for w in warnings)
+
+
+def test_objects_nagvis_shows_at_some_zoom_levels_only_are_named() -> None:
+    _parsed_map, warnings = _convert_worldmap(
+        _WORLDMAP, _host("a1b2c3", "48.1", "11.5", min_zoom="8"), _host("d4e5f6", "50.9", "6.9")
+    )
+
+    assert any("NagVis shows 1 object only at some zoom levels." in w for w in warnings)
+
+
+def test_a_worldmap_holds_as_many_objects_as_a_map_and_names_the_rest() -> None:
+    objects = [_host(f"h{i}", "48.1", "11.5") for i in range(MAP_OBJECTS_MAX + 1)]
+
+    parsed_map, warnings = _convert_worldmap(_WORLDMAP, *objects)
+
+    assert len(parsed_map["objects"]) == MAP_OBJECTS_MAX
+    assert any("The last 1 were left out." in w for w in warnings), warnings
+
+
+def test_a_worldmap_holds_as_many_settings_as_a_map_and_names_the_rest() -> None:
+    long_text = "x" * _MAX_OBJECT_SETTINGS_CHARS
+
+    parsed_map, warnings = _convert_worldmap(
+        _WORLDMAP,
+        _host("a1b2c3", "48.1", "11.5"),
+        _host("d4e5f6", "48.1", "11.5", label_text=long_text),
+    )
+
+    assert [obj["host_name"] for obj in parsed_map["objects"]] == ["host-a1b2c3"]
+    assert any("The last 1 were left out." in w for w in warnings), warnings
+
+
+def test_the_objects_of_a_worldmap_file_are_shown_besides_those_of_the_table() -> None:
+    text = _WORLDMAP + "define host {\n host_name=h1\n x=50.9\n y=6.9\n}\n"
+
+    parsed_map, _warnings = _convert_worldmap(text, _host("a1b2c3", "48.1", "11.5"))
+
+    assert [(obj["host_name"], obj["lat"], obj["lng"]) for obj in parsed_map["objects"]] == [
+        ("h1", 50.9, 6.9),
+        ("host-a1b2c3", 48.1, 11.5),
+    ]
+
+
+def test_an_object_of_the_worldmap_table_replaces_that_of_the_file_with_its_id() -> None:
+    text = _WORLDMAP + "define host {\n object_id=a1b2c3\n host_name=h1\n x=50.9\n y=6.9\n}\n"
+
+    parsed_map, _warnings = _convert_worldmap(text, _host("a1b2c3", "48.1", "11.5"))
+
+    assert [obj["host_name"] for obj in parsed_map["objects"]] == ["host-a1b2c3"]
+
+
+def test_an_object_of_a_worldmap_file_without_coordinates_is_named() -> None:
+    text = _WORLDMAP + "define host {\n host_name=h1\n}\n"
+
+    parsed_map, warnings = _convert_worldmap(text)
+
+    assert parsed_map["objects"] == []
+    assert any("left out: host h1" in w for w in warnings), warnings
+
+
+def test_import_names_what_an_object_of_a_worldmap_loses() -> None:
+    _parsed_map, warnings = _convert_worldmap(
+        _WORLDMAP, _host("a1b2c3", "48.1", "11.5", hover_url="https://example.com/info")
+    )
+
+    assert any("1 object has a hover URL." in w for w in warnings), warnings
+
+
+def test_a_map_of_a_worldmap_and_a_geomap_takes_the_objects_of_the_worldmap() -> None:
+    text = "define global {\n sources=worldmap,geomap\n source_file=offices\n}\n"
+
+    parsed_map, warnings = _convert_worldmap(text, _host("a1b2c3", "48.1", "11.5"))
+
+    assert [obj["host_name"] for obj in parsed_map["objects"]] == ["host-a1b2c3"]
+    assert any("Maps takes those of worldmap.db only." in w for w in warnings), warnings
+
+
+def test_an_uploaded_worldmap_names_that_its_objects_are_not_part_of_the_file() -> None:
+    parsed_map, warnings = convert_cfg(_WORLDMAP, "geo")
+
+    assert parsed_map["objects"] == []
+    assert any("worldmap.db, which is not part of the map file" in w for w in warnings)
+
+
+def test_an_uploaded_worldmap_keeps_the_objects_of_its_file() -> None:
+    text = _WORLDMAP + "define host {\n host_name=h1\n x=50.9\n y=6.9\n}\n"
+
+    parsed_map, _warnings = convert_cfg(text, "geo")
+
+    assert [obj["host_name"] for obj in parsed_map["objects"]] == ["h1"]
+
+
+def test_a_geomap_has_a_host_for_each_line_of_its_location_file() -> None:
+    parsed_map, warnings = _convert_geomap(
+        _GEOMAP,
+        "; name;alias;lat;long\nber-srv1;Berlin;52.52;13.405\ncgn-srv1;Cologne;50.94;6.96\n",
+    )
+
+    assert [(obj["host_name"], obj["lat"], obj["lng"]) for obj in parsed_map["objects"]] == [
+        ("ber-srv1", 52.52, 13.405),
+        ("cgn-srv1", 50.94, 6.96),
+    ]
+    assert warnings == []
+
+
+def test_a_geomap_shows_the_section_around_its_locations() -> None:
+    parsed_map, _warnings = _convert_geomap(
+        _GEOMAP, "ham;Hamburg;53.55;10.0\nmuc;Munich;48.15;11.55\n"
+    )
+
+    view = parsed_map["view"]
+    assert view["type"] == "geo"
+    assert (view["lat"], view["lng"]) == pytest.approx((50.85, 10.775))
+    assert view["zoom"] == 6
+
+
+def test_a_geomap_shows_the_section_around_the_hosts_it_holds() -> None:
+    locations = "".join(f"h{i};Hamburg;53.55;10.0\n" for i in range(MAP_OBJECTS_MAX))
+
+    parsed_map, _warnings = _convert_geomap(_GEOMAP, locations + "far;Sydney;-33.87;151.21\n")
+
+    view = parsed_map["view"]
+    assert view["type"] == "geo"
+    assert (view["lat"], view["lng"]) == (53.55, 10.0)
+
+
+def test_a_geomap_with_a_zoom_level_of_its_own_keeps_it() -> None:
+    text = "define global {\n sources=geomap\n source_file=offices\n geomap_zoom=9\n}\n"
+
+    parsed_map, _warnings = _convert_geomap(text, "ham;Hamburg;53.55;10.0\n")
+
+    view = parsed_map["view"]
+    assert view["type"] == "geo"
+    assert (view["lat"], view["lng"], view["zoom"]) == (53.55, 10.0, 9)
+
+
+def test_a_geomap_entry_without_valid_coordinates_is_left_out_and_named() -> None:
+    parsed_map, warnings = _convert_geomap(_GEOMAP, "lost;Lost;;\ncgn-srv1;Cologne;50.94;6.96\n")
+
+    assert [obj["host_name"] for obj in parsed_map["objects"]] == ["cgn-srv1"]
+    assert warnings == [
+        "1 entry of geomap/offices.csv has no valid coordinates and was left out: lost"
+    ]
+
+
+def test_a_geomap_without_its_location_file_is_named() -> None:
+    parsed_map, warnings = convert_cfg(_GEOMAP, "gm", geo_files=GeoFiles(WorldmapTable(), {}))
+
+    assert parsed_map["objects"] == []
+    assert warnings == [
+        "The location file geomap/offices.csv is missing or unreadable, so the map has no hosts."
+    ]
+
+
+def test_a_geomap_that_names_no_location_file_is_named() -> None:
+    _parsed_map, warnings = convert_cfg("define global {\n sources=geomap\n}\n", "gm")
+
+    assert warnings == ["The map names no location file, so it has no hosts."]
+
+
+def test_a_geomap_limited_to_a_host_group_is_named() -> None:
+    text = "define global {\n sources=geomap\n source_file=offices\n filter_group=berlin\n}\n"
+
+    _parsed_map, warnings = _convert_geomap(text, "ber-srv1;Berlin;52.52;13.405\n")
+
+    assert warnings == [
+        (
+            "NagVis shows only the hosts of the host group berlin on the map. Maps shows "
+            "every host of its location file."
+        )
+    ]
+
+
+def test_an_uploaded_geomap_names_that_its_hosts_are_not_part_of_the_file() -> None:
+    parsed_map, warnings = convert_cfg(_GEOMAP, "gm")
+
+    assert parsed_map["objects"] == []
+    assert any("geomap/offices.csv, which is not part of the map file" in w for w in warnings)
+
+
+def test_a_geomap_of_the_hosts_in_the_monitoring_places_them_itself() -> None:
+    view = cfg_to_map(
+        "define global {\n sources=geomap\n source_type=backend\n filter_group=berlin\n}\n",
+        "gm",
+    )["view"]
+
+    assert view["type"] == "geo"
+    assert (view["auto_source"], view["auto_filter_value"]) == ("hostgroup", "berlin")
+
+
+def test_a_geomap_of_an_unknown_source_type_is_named() -> None:
+    _parsed_map, warnings = convert_cfg(
+        "define global {\n sources=geomap\n source_type=csvfile\n}\n", "gm"
+    )
+
+    assert warnings == [
+        "The map takes its hosts from the unknown source type csvfile. It has no hosts."
+    ]
+
+
+def test_a_geomap_of_the_hosts_in_the_monitoring_names_its_section() -> None:
+    _parsed_map, warnings = convert_cfg(
+        "define global {\n sources=geomap\n source_type=backend\n}\n", "gm"
+    )
+
+    assert any("NagVis fits the section of the map to the hosts it finds." in w for w in warnings)
 
 
 def test_dynmap_is_not_converted_to_geo() -> None:
@@ -1424,6 +1785,24 @@ def test_a_map_limited_to_a_host_group_names_the_objects_maps_shows_besides() ->
     _parsed_map, warnings = convert_cfg(content, "hg")
 
     assert any("outside the host group linux" in warning for warning in warnings)
+
+
+def test_a_worldmap_limited_to_a_host_group_names_the_objects_maps_shows_besides() -> None:
+    text = "define global {\n sources=worldmap\n filter_group=linux\n}\n"
+
+    _parsed_map, warnings = _convert_worldmap(text, _host("a1b2c3", "48.1", "11.5"))
+
+    assert any("outside the host group linux" in warning for warning in warnings)
+
+
+def test_a_map_without_a_source_taking_a_host_group_names_none() -> None:
+    content = (
+        "define global {\nfilter_group=linux\n}\ndefine host {\nhost_name=web01\nx=1\ny=1\n}\n"
+    )
+
+    _parsed_map, warnings = convert_cfg(content, "hg")
+
+    assert not any("host group" in warning for warning in warnings)
 
 
 def test_a_dynmap_limited_to_a_host_group_names_nothing_else_without_other_objects() -> None:

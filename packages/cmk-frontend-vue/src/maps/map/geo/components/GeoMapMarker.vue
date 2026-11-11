@@ -17,6 +17,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { useTemplateRef } from 'vue'
 
 import type { HoverAnchorRect } from '@/maps/map/composables/useObjectHoverMenu'
+import type { Centering } from '@/maps/map/composables/useObjectResize'
 import MapElement from '@/maps/map/elements/MapElement.vue'
 import type { MapElement as MapObject, ObjectState } from '@/maps/types/api'
 import { anchorRectOf } from '@/maps/utils/anchorRect'
@@ -39,6 +40,8 @@ defineProps<{
   /** The settings preview is not interactive. */
   preview: boolean
   tabStop: boolean
+  /** Where it is centered on the coordinate rather than hung from it by its top-left corner. */
+  centering: Centering
 }>()
 
 const emit = defineEmits<{
@@ -85,7 +88,9 @@ function onResizeStart(event: PointerEvent): void {
     class="maps-geo-map-marker"
     :class="{
       'maps-geo-map-marker--selected': selected,
-      'maps-geo-map-marker--textbox': object.type === 'textbox'
+      'maps-geo-map-marker--textbox': object.type === 'textbox',
+      'maps-geo-map-marker--centered-x': centering.x,
+      'maps-geo-map-marker--centered-y': centering.y
     }"
     :style="dimmedStyle(dimmed)"
     :data-object-id="object.id"
@@ -99,7 +104,8 @@ function onResizeStart(event: PointerEvent): void {
     @dragstart.prevent
   >
     <!-- No ``render-mode``: the NagVis-compatible renderer draws for an imported
-         static map, and there is no such thing as an imported geo map. -->
+         static map. A geo map migrated from NagVis only keeps where NagVis placed its
+         objects. -->
     <MapElement
       :object="object"
       :state="state"
@@ -122,6 +128,20 @@ function onResizeStart(event: PointerEvent): void {
    in has none either, so the box would break its text at every space. */
 .maps-geo-map-marker--textbox {
   width: max-content;
+}
+
+/* Leaflet has no size of a text box to anchor it by, so it is centered by the box
+   as drawn. */
+.maps-geo-map-marker--centered-x {
+  transform: translateX(-50%);
+}
+
+.maps-geo-map-marker--centered-y {
+  transform: translateY(-50%);
+}
+
+.maps-geo-map-marker--centered-x.maps-geo-map-marker--centered-y {
+  transform: translate(-50%, -50%);
 }
 
 .maps-geo-map-marker:focus-visible {

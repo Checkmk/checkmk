@@ -25,11 +25,13 @@ from cmk.gui.userdb import load_users, UserRolesConfigFile
 from cmk.gui.utils.roles import UserPermissions
 from cmk.gui.watolib.groups_io import load_contact_group_information
 from cmk.maps.gui._cfg_import import map_name_from_filename
+from cmk.maps.gui.nagvis_geo import GeoFiles
 from cmk.maps.gui.nagvis_maps import (
     copy_nagvis_background,
     nagvis_maps_dir,
     NagVisConfig,
     read_nagvis_config,
+    read_nagvis_geo_files,
     read_nagvis_map,
     ShapeCopies,
 )
@@ -170,6 +172,7 @@ def _prepare_maps(
     earlier: Mapping[str, str],
     replace: Mapping[str, str],
     config: NagVisConfig,
+    geo_files: GeoFiles,
     access: _NagVisAccess | None,
     logger: Logger,
 ) -> _Migrated:
@@ -190,7 +193,7 @@ def _prepare_maps(
         replacing = replace.get(nagvis_name)
         name = replacing or maps.taken.target(valid_name)
         try:
-            map_cfg, warnings = read_nagvis_map(path, name, config)
+            map_cfg, warnings = read_nagvis_map(path, name, config, geo_files)
             # Checked first, so a map that fails copies no background on every update.
             map_from_spec(dict(map_cfg))
             shape_names, shape_warnings = migrated.shapes.plan(map_cfg)
@@ -307,7 +310,14 @@ def migrate_nagvis_maps(
             if owner == admin and outcomes.get(source) == "migrated" and name in maps.own
         }
         migrated = _prepare_maps(
-            files, maps, earlier, earlier if force else {}, config, access, logger
+            files,
+            maps,
+            earlier,
+            earlier if force else {},
+            config,
+            read_nagvis_geo_files(),
+            access,
+            logger,
         )
         shape_warnings = maps.store(
             migrated.names,

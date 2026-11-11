@@ -224,6 +224,8 @@ class GeoView(TypedDict):
     lng: float
     zoom: int
     tile_saturate: NotRequired[float]
+    auto_source: NotRequired[Literal["all_hosts", "hostgroup", "servicegroup"]]
+    auto_filter_value: NotRequired[str]
 
 
 class RadarView(TypedDict):
@@ -267,6 +269,14 @@ class MapObject(TypedDict):
     y2: NotRequired[int]
     mid_x: NotRequired[int]
     mid_y: NotRequired[int]
+    # Where the object sits on a geographic map, and where its line ends.
+    lat: NotRequired[float]
+    lng: NotRequired[float]
+    lat2: NotRequired[float]
+    lng2: NotRequired[float]
+    # The ids of the objects a line's ends follow.
+    start_ref: NotRequired[str]
+    end_ref: NotRequired[str]
     z: NotRequired[int]
     label: NotRequired[MapLabel]
     display: NotRequired[MapDisplay]

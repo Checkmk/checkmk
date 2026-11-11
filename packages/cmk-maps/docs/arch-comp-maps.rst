@@ -1453,8 +1453,12 @@ import of the editor:
 * A map takes part in each pool that lists it. A pool interval other than
   Maps' 60 seconds becomes the map's ``rotation_interval``, the shortest one
   where its pools differ. URL entries of a pool are left out and named.
-* Worldmap and geomap markers are kept outside the ``.cfg`` and are not
-  migrated; such a map is framed and named in the update output.
+* NagVis keeps the objects of a geographic map outside the ``.cfg``: those of
+  worldmaps in a table they all share, the hosts of a geomap in a location
+  file. The update reads these files once and migrates the objects at their
+  coordinates, with the templates of the map file applied; a geomap is framed
+  around its hosts as NagVis frames it. The editor's import has only the
+  ``.cfg`` and yields the framed map without objects.
 * A NagVis dynamic map of hosts or services becomes a static map with one
   grid. The members moved off the grid stay as objects pinned out of it.
   Group dynamic maps, and dynamic maps combined with an automap or a

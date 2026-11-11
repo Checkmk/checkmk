@@ -14,6 +14,7 @@ import codecs
 import contextlib
 import hashlib
 import html
+import math
 import re
 from collections import Counter
 from collections.abc import Collection, Mapping, Sequence
@@ -25,6 +26,15 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, ungettext
 from cmk.maps.gui._filter_check import check_object_filter
 from cmk.maps.gui._settings import connection_choices, map_object_defaults
+from cmk.maps.gui.nagvis_geo import (
+    describe,
+    GeoFiles,
+    is_zoom_limited,
+    locations,
+    place,
+    Placement,
+    WorldmapTable,
+)
 from cmk.maps.shared.defaults import counts_host_services
 from cmk.maps.shared.filters import (
     bound_type_of,
@@ -50,6 +60,7 @@ from cmk.maps.shared.map_payload import (
     LinePerfdataLabel,
     LineStyle,
     MAP_FIELD_DEFAULTS,
+    MAP_OBJECTS_MAX,
     MapDisplay,
     MapLabel,
     MapObject,
@@ -224,7 +235,7 @@ def _bool(v: str | None, default: bool = False) -> bool:
     return (v or "").strip().lower() in ("1", "true", "yes") if v is not None else default
 
 
-def _clamp(value: int, low: int, high: int) -> int:
+def _clamp[T: (int, float)](value: T, low: T, high: T) -> T:
     return max(low, min(high, value))
 
 
@@ -594,6 +605,15 @@ _GLOBAL_MAP_KEYS = frozenset(
         "dynmap_per_row",
         "dynmap_sort",
         "dynmap_order",
+        "source_type",
+        "source_file",
+        "width",
+        "height",
+        "worldmap_center",
+        "worldmap_zoom",
+        "worldmap_tiles_saturate",
+        "geomap_zoom",
+        "geomap_border",
     }
 )
 
@@ -622,10 +642,8 @@ def _parse_latlng(value: str | None) -> tuple[float, float] | None:
 def _geo_view(p: dict[str, str]) -> GeoView:
     """Build a Maps geo view from a NagVis worldmap/geomap global block.
 
-    Worldmap objects live in ``etc/worldmap.db`` and geomap hosts in a CSV — both
-    are sidecar files the text-only map import can't read, so the UI import
-    produces a correctly-framed but empty geo map. The CLI importer
-    (tools/cfg_importer.py) fills the markers in from those sidecars.
+    A geomap of the hosts NagVis finds by their coordinates in the monitoring
+    places them the same way in Maps.
     """
     lat, lng = _parse_latlng(p.get("worldmap_center")) or (_GEO_DEFAULT_LAT, _GEO_DEFAULT_LNG)
     zoom = p.get("worldmap_zoom") or p.get("geomap_zoom")
@@ -634,7 +652,53 @@ def _geo_view(p: dict[str, str]) -> GeoView:
     saturate = p.get("worldmap_tiles_saturate")
     if saturate not in (None, ""):
         view["tile_saturate"] = float(max(0, min(100, _int(saturate, 100))))
+    if "geomap" in _sources(p) and p.get("source_type") == "backend":
+        if group := p.get("filter_group"):
+            view["auto_source"] = "hostgroup"
+            view["auto_filter_value"] = group
+        else:
+            view["auto_source"] = "all_hosts"
     return view
+
+
+# The size NagVis draws a geomap in, unless the map sets its own.
+_GEOMAP_WIDTH = 1000
+_GEOMAP_HEIGHT = 600
+_GEOMAP_BORDER = 0.25
+_TILE_SIZE = 256
+# The projection of the tiles has no poles.
+_MERCATOR_LAT_LIMIT = 85.0
+
+
+def _mercator(lat: float) -> float:
+    lat = _clamp(lat, -_MERCATOR_LAT_LIMIT, _MERCATOR_LAT_LIMIT)
+    return math.log(math.tan(math.pi / 4 + math.radians(lat) / 2))
+
+
+def _frame_geomap(
+    view: GeoView, p: Mapping[str, str], points: Sequence[tuple[float, float]]
+) -> None:
+    """Show the section NagVis draws a geomap in: its locations and a border around them."""
+    if not points:
+        return
+    border = parse_degrees(p.get("geomap_border"))
+    if border is None or border < 0:
+        border = _GEOMAP_BORDER
+    lats = [lat for lat, _lng in points]
+    lngs = [lng for _lat, lng in points]
+    south, north = min(lats) - border, max(lats) + border
+    west, east = min(lngs) - border, max(lngs) + border
+    zoom = view["zoom"]
+    if not p.get("geomap_zoom"):
+        width = max(_int(p.get("width")), 0) or _GEOMAP_WIDTH
+        height = max(_int(p.get("height")), 0) or _GEOMAP_HEIGHT
+        # At zoom level 0 the world is one tile wide and high.
+        across = max((east - west) / 360, 1e-9)
+        down = max((_mercator(north) - _mercator(south)) / (2 * math.pi), 1e-9)
+        zoom = math.floor(math.log2(min(width / across, height / down) / _TILE_SIZE))
+    view["lat"], view["lng"], view["zoom"] = bounded_view(
+        (south + north) / 2, (west + east) / 2, zoom
+    )
 
 
 def _sources(p: Mapping[str, str]) -> set[str]:
@@ -1025,6 +1089,15 @@ def _drawn_gadget_height(gadget_type: str, size: int) -> int:
     return round(size * _GAUGE_HEIGHT_SHARE) + _GAUGE_CAPTION_HEIGHT
 
 
+def _drawn_height(display: MapDisplay, map_icon_size: int) -> int:
+    """How high the object is drawn, which NagVis puts its label below."""
+    if not (size := display.get("image_size")):
+        return map_icon_size
+    if display["mode"] == "gadget":
+        return _drawn_gadget_height(display["gadget_type"], size)
+    return size
+
+
 def _apply_type_specific(obj: MapObject, block_type: str, p: dict[str, str]) -> None:
     if block_type in ("host", "service", "hostgroup", "servicegroup", "dyngroup") and _bool(
         p.get("only_hard_states")
@@ -1064,11 +1137,9 @@ def _handle_monitor_block(
     maps_type = _MONITOR_OBJECT_TYPES[block_type]
     x, y = _parse_coord(p.get("x", "0"), "x"), _parse_coord(p.get("y", "0"), "y")
     display = _build_display(p)
-    icon_size = map_icon_size
     if display["mode"] == "icon" and (own := ICONSET_SIZE.get(p.get("iconset", ""))):
-        display["image_size"] = icon_size = own
-    elif display["mode"] == "gadget" and (size := display.get("image_size")):
-        icon_size = _drawn_gadget_height(display["gadget_type"], size)
+        display["image_size"] = own
+    icon_size = _drawn_height(display, map_icon_size)
     payload: MapObject = {
         "id": f"{maps_type}_{raw_id}",
         "type": maps_type,
@@ -1137,10 +1208,16 @@ def _translate_macros(label: MapLabel, block_type: str) -> None:
     label["text"] = _MACRO_RE.sub(lambda m: macros.get(m.group(1), m.group(0)), text)
 
 
+def _drawn_as_line(block_type: str, p: Mapping[str, str]) -> bool:
+    return block_type == "line" or (
+        block_type in _MONITOR_OBJECT_TYPES and p.get("view_type") == "line"
+    )
+
+
 def _handle_object_block(
     block_type: str, p: dict[str, str], raw_id: str, map_icon_size: int
 ) -> _ImportObject | None:
-    if p.get("view_type") == "line" and block_type in _MONITOR_OBJECT_TYPES:
+    if block_type != "line" and _drawn_as_line(block_type, p):
         return _handle_view_type_line(block_type, p, raw_id)
     if block_type == "line":
         return _handle_line_block(p, raw_id)
@@ -1424,13 +1501,309 @@ def _dynmap_warnings(stale: int, customized: int, lines: int) -> list[str]:
     return warnings
 
 
+@dataclass
+class _Inherited:
+    """What a block takes over: object > template > global > built-in default."""
+
+    global_defaults: Mapping[str, str]
+    map_icon_size: int
+    settings_chars: int = 0
+
+    def effective(self, with_template: Mapping[str, str]) -> dict[str, str]:
+        effective = {**self.global_defaults, **with_template}
+        effective.pop("use", None)
+        return effective
+
+    def take(self, effective: Mapping[str, str]) -> bool:
+        """Whether the map can still take an object of these settings."""
+        self.settings_chars += sum(len(k) + len(v) for k, v in effective.items())
+        return self.settings_chars <= _MAX_OBJECT_SETTINGS_CHARS
+
+    def import_object(
+        self, block_type: str, effective: dict[str, str], counter: int
+    ) -> _ImportObject | None:
+        # object_id identifies the object and is never inherited.
+        object_id = effective.get("object_id")
+        obj = _handle_object_block(
+            block_type, effective, object_id or str(counter), self.map_icon_size
+        )
+        if obj is None:
+            return None
+        # ``url_target`` is a required field on every map object; only the
+        # monitor handler sets it (and only when the cfg gave a target). Give
+        # everything else NagVis' default so the map round-trips on save.
+        obj.payload.setdefault("url_target", "_self")
+        if block_type in _MONITOR_OBJECT_TYPES and (label := obj.payload.get("label")):
+            _translate_macros(label, block_type)
+        # NagVis allows backend_id per object so one map can mix monitoring
+        # sources; the daemon honours that (it groups the state fetch by
+        # connection). Kept raw here and resolved against the configured
+        # connections in resolve_connection_ids, like the map-level id.
+        if backend := effective.get("backend_id") or effective.get("connection_id"):
+            obj.payload["connection_id"] = backend
+        obj.ref_id = object_id
+        return obj
+
+
+# An object of a geographic map: its type, its settings and where it sits.
+type _GeoObject = tuple[str, dict[str, str], Placement]
+
+
+def _geo_objects(
+    geo: Sequence[_GeoObject], inherited: _Inherited, features: _Features, warnings: list[str]
+) -> list[_ImportObject]:
+    """The objects of a geographic map, as far as a map holds them."""
+    if len(geo) > MAP_OBJECTS_MAX:
+        warnings.append(
+            _(
+                "The map has %(count)d objects, more than the %(limit)d a map holds. "
+                "The last %(left_out)d were left out."
+            )
+            % {"count": len(geo), "limit": MAP_OBJECTS_MAX, "left_out": len(geo) - MAP_OBJECTS_MAX}
+        )
+        geo = geo[:MAP_OBJECTS_MAX]
+    objects = []
+    zoom_limited = 0
+    for counter, (block_type, params, placement) in enumerate(geo, start=1):
+        effective = inherited.effective(params)
+        if not inherited.take(effective):
+            warnings.append(
+                _(
+                    "With what their templates and the global settings pass on, the objects "
+                    "of the map take more than %(limit)d characters. The last %(left_out)d "
+                    "were left out."
+                )
+                % {"limit": _MAX_OBJECT_SETTINGS_CHARS, "left_out": len(geo) - counter + 1}
+            )
+            break
+        if (obj := inherited.import_object(block_type, effective, counter)) is None:
+            continue
+        _place(obj, block_type, effective, placement, inherited.map_icon_size)
+        objects.append(obj)
+        features.add(obj, block_type, effective)
+        zoom_limited += is_zoom_limited(effective)
+    if zoom_limited:
+        warnings.append(
+            ungettext(
+                "NagVis shows %(count)d object only at some zoom levels. Maps shows it at "
+                "every zoom level.",
+                "NagVis shows %(count)d objects only at some zoom levels. Maps shows them at "
+                "every zoom level.",
+                zoom_limited,
+            )
+            % {"count": zoom_limited}
+        )
+    return objects
+
+
+def _worldmap_objects(
+    file_blocks: list[tuple[str, dict[str, str]]],
+    geo_files: GeoFiles | None,
+    warnings: list[str],
+) -> list[_GeoObject]:
+    """The objects of the map file and of the worldmap table, taking the templates of
+    the map file as if the table followed it."""
+    if geo_files is None:
+        warnings.append(
+            _(
+                "NagVis keeps the objects of a worldmap in worldmap.db, which is not part of "
+                "the map file. Add the objects in the editor."
+            )
+        )
+    table = geo_files.worldmap if geo_files else WorldmapTable()
+    if table.error is not None:
+        raise MKUserError(
+            "file", _("worldmap.db cannot be read: %(error)s") % {"error": table.error}
+        )
+    if table.unreadable:
+        warnings.append(
+            ungettext(
+                "%(count)d entry of worldmap.db is unreadable and was left out.",
+                "%(count)d entries of worldmap.db are unreadable and were left out.",
+                table.unreadable,
+            )
+            % {"count": table.unreadable}
+        )
+    rows = [(params["type"], dict(params)) for params in table.objects.values()]
+    # NagVis draws the objects of the file as well, unless the table holds one of
+    # the same object_id.
+    file_objects = [
+        (block_type, p)
+        for block_type, p in file_blocks
+        if block_type not in _STRUCTURAL_BLOCKS and p.get("object_id") not in table.objects
+    ]
+    warnings += _unknown_type_warnings([*file_objects, *rows])
+    kept = [(block_type, params) for block_type, params in rows if block_type in _BLOCK_TYPES]
+    merged = _merge_templates([*file_blocks, *kept])
+    shown = [
+        (block_type, params)
+        for (block_type, p), params in zip(file_blocks, merged[: len(file_blocks)], strict=True)
+        if block_type in _BLOCK_TYPES and p.get("object_id") not in table.objects
+    ]
+    shown += zip((block_type for block_type, _p in kept), merged[len(file_blocks) :], strict=True)
+    # A file object without an object_id cannot be referenced; "#" is no part of one.
+    keyed = [
+        (params.get("object_id") or f"#{i}", block_type, params)
+        for i, (block_type, params) in enumerate(shown)
+    ]
+    # Where an object is depends on whether it is drawn as a line, which a
+    # template can decide.
+    positions = {**table.objects, **{key: params for key, _type, params in keyed}}
+    geo: list[_GeoObject] = []
+    invalid = []
+    for key, block_type, params in keyed:
+        line = _drawn_as_line(block_type, params)
+        if (placement := place(positions, key, line=line)) is None:
+            invalid.append(describe(block_type, key, params))
+            continue
+        # ``x`` and ``y`` hold the degrees the placement took, no pixels.
+        geo.append(
+            (block_type, {k: v for k, v in params.items() if k not in ("x", "y")}, placement)
+        )
+    if invalid:
+        warnings.append(
+            ungettext(
+                "%(count)d object has no valid coordinates and was left out: %(objects)s",
+                "%(count)d objects have no valid coordinates and were left out: %(objects)s",
+                len(invalid),
+            )
+            % {"count": len(invalid), "objects": _clipped(", ".join(invalid))}
+        )
+    return geo
+
+
+def _geomap_objects(
+    p: Mapping[str, str], geo_files: GeoFiles | None, warnings: list[str]
+) -> list[_GeoObject]:
+    if (source_type := p.get("source_type", "csv")) != "csv":
+        # The view takes the hosts from the monitoring, by their coordinates.
+        if source_type == "backend":
+            warnings.append(
+                _(
+                    "NagVis fits the section of the map to the hosts it finds. Maps opens "
+                    "the map with the section it was saved with. Adjust it in the editor if "
+                    "needed."
+                )
+            )
+        else:
+            warnings.append(
+                _("The map takes its hosts from the unknown source type %(type)s. It has no hosts.")
+                % {"type": _clipped(source_type)}
+            )
+        return []
+    if group := p.get("filter_group"):
+        warnings.append(
+            _(
+                "NagVis shows only the hosts of the host group %(group)s on the map. Maps "
+                "shows every host of its location file."
+            )
+            % {"group": _clipped(group)}
+        )
+    if not (name := p.get("source_file", "")):
+        warnings.append(_("The map names no location file, so it has no hosts."))
+        return []
+    if geo_files is None:
+        warnings.append(
+            _(
+                "NagVis takes the hosts of the map from geomap/%(name)s.csv, which is not "
+                "part of the map file. Add the hosts in the editor."
+            )
+            % {"name": _clipped(name)}
+        )
+        return []
+    if (raw := geo_files.locations.get(name)) is None:
+        warnings.append(
+            _(
+                "The location file geomap/%(name)s.csv is missing or unreadable, so the map has no hosts."
+            )
+            % {"name": _clipped(name)}
+        )
+        return []
+    found = locations(decode_cfg(raw))
+    if found.invalid:
+        warnings.append(
+            ungettext(
+                "%(count)d entry of geomap/%(name)s.csv has no valid coordinates and was left "
+                "out: %(entries)s",
+                "%(count)d entries of geomap/%(name)s.csv have no valid coordinates and were "
+                "left out: %(entries)s",
+                len(found.invalid),
+            )
+            % {
+                "count": len(found.invalid),
+                "name": _clipped(name),
+                "entries": _clipped(", ".join(found.invalid)),
+            }
+        )
+    return [("host", {"host_name": host}, Placement(at)) for host, at in found.hosts.items()]
+
+
+def _place(
+    obj: _ImportObject,
+    block_type: str,
+    p: Mapping[str, str],
+    placement: Placement,
+    map_icon_size: int,
+) -> None:
+    payload = obj.payload
+    payload["lat"], payload["lng"] = placement.at
+    if payload["type"] == "line":
+        payload["lat2"], payload["lng2"] = placement.end or placement.at
+        del payload["x2"], payload["y2"]
+        if placement.start_ref:
+            payload["start_ref"] = placement.start_ref
+        if placement.end_ref:
+            payload["end_ref"] = placement.end_ref
+    elif block_type in _MONITOR_OBJECT_TYPES:
+        # A geo map centers the label below the icon, where NagVis has it
+        # unless told otherwise, and shifts it from there. NagVis' ``label_x``
+        # counts from the icon's left edge instead, and a label at a point of the
+        # map stays there; neither has a match here.
+        label = payload["label"]
+        label["x"] = 0
+        if _label_map_coord(p.get("label_y")) is None:
+            label["y"] -= _drawn_height(payload["display"], map_icon_size)
+        else:
+            label["y"] = 0
+        label.pop("align", None)
+
+
+def _bind_line_ends(objects: Sequence[_ImportObject]) -> int:
+    """Let a line end name the object it follows by its id instead of its ``object_id``.
+
+    Returns how many ends follow an object they cannot be bound to: a line, or
+    one left out.
+    """
+    ids: dict[str, str] = {}
+    for obj in objects:
+        if obj.ref_id and obj.payload["type"] != "line":
+            ids.setdefault(obj.ref_id, obj.payload["id"])
+    ends: tuple[Literal["start_ref", "end_ref"], ...] = ("start_ref", "end_ref")
+    unbound = 0
+    for obj in objects:
+        for end in ends:
+            if (ref := obj.payload.pop(end, None)) is None:
+                continue
+            if ref in ids:
+                obj.payload[end] = ids[ref]
+            else:
+                unbound += 1
+    return unbound
+
+
 def convert_cfg(
-    content: str, map_name: str, default_backend: str = NAGVIS_DEFAULT_BACKEND
+    content: str,
+    map_name: str,
+    default_backend: str = NAGVIS_DEFAULT_BACKEND,
+    geo_files: GeoFiles | None = None,
 ) -> tuple[MapPayload, list[str]]:
     """Convert legacy .cfg text to a Maps map, with what it could not carry over.
 
     ``default_backend`` is the one the NagVis the map comes from used where the map
     names none, for the ids of the objects a dynamic map added.
+
+    NagVis keeps the objects of a geographic map outside its file, in
+    ``geo_files``; without them such a map has its section and no objects.
     """
     warnings: list[str] = []
     map_cfg: MapPayload = {
@@ -1473,78 +1846,76 @@ def convert_cfg(
     for block_type, p in blocks:
         if block_type == "global":
             global_props = p
+            _apply_global(map_cfg, p, warnings)
     global_defaults = {
         k: v
         for k, v in global_props.items()
         if k not in _NON_INHERITED_KEYS and k not in _GLOBAL_MAP_KEYS
     }
     map_icon_size = ICONSET_SIZE.get(global_props.get("iconset", ""), 22)
+    inherited = _Inherited(global_defaults, map_icon_size)
     dynmap = _dynmap(global_props, global_defaults, map_icon_size, default_backend, warnings)
-    stale = customized = lines = settings_chars = 0
+    stale = customized = lines = 0
     features = _Features()
-    warnings += _unknown_type_warnings(blocks)
+    view = map_cfg["view"]
 
-    for (block_type, p), with_template in zip(blocks, _merge_templates(blocks), strict=True):
-        if block_type == "global":
-            _apply_global(map_cfg, p, warnings)
-            continue
-        if block_type not in _BLOCK_TYPES:
-            continue
-        counter += 1
-        # object_id identifies the object and is never inherited.
-        object_id = p.get("object_id")
-        raw_id = object_id or str(counter)
-        effective = {**global_defaults, **with_template}
-        effective.pop("use", None)
-        settings_chars += sum(len(k) + len(v) for k, v in effective.items())
-        if settings_chars > _MAX_OBJECT_SETTINGS_CHARS:
-            raise MKUserError(
-                "file",
-                _(
-                    "The objects of the map, with what their templates and the global"
-                    " settings pass on, take more than %(limit)d characters."
+    if view["type"] == "geo":
+        sources = _sources(global_props)
+        if "worldmap" in sources:
+            if "geomap" in sources:
+                warnings.append(
+                    _(
+                        "The map takes objects from worldmap.db and from a location file. "
+                        "Maps takes those of worldmap.db only."
+                    )
                 )
-                % {"limit": _MAX_OBJECT_SETTINGS_CHARS},
+            objects = _geo_objects(
+                _worldmap_objects(blocks, geo_files, warnings), inherited, features, warnings
             )
-        part = _dynmap_part(dynmap, block_type, p, effective) if dynmap else None
-        if part == "stale":
-            stale += 1
-            continue
-        if part == "grid":
-            customized += bool(with_template.keys() - _DYNMAP_IDENTITY_KEYS)
-            continue
-        obj = _handle_object_block(block_type, effective, raw_id, map_icon_size)
-        if obj is not None:
-            # ``url_target`` is a required field on every map object; only the
-            # monitor handler sets it (and only when the cfg gave a target). Give
-            # everything else NagVis' default so the map round-trips on save.
-            obj.payload.setdefault("url_target", "_self")
-            if block_type in _MONITOR_OBJECT_TYPES and (label := obj.payload.get("label")):
-                _translate_macros(label, block_type)
-            # NagVis allows backend_id per object so one map can mix monitoring
-            # sources; the daemon honours that (it groups the state fetch by
-            # connection). Kept raw here and resolved against the configured
-            # connections in resolve_connection_ids, like the map-level id.
-            if backend := effective.get("backend_id") or effective.get("connection_id"):
-                obj.payload["connection_id"] = backend
-            if part == "pinned" and obj.payload["type"] in ("host", "service"):
-                obj.payload["grid_id"] = _DYNMAP_GRID_ID
-            elif part == "pinned":
-                # Only a host or a service is pinned out of a grid.
-                lines += 1
-            obj.ref_id = object_id
-            objects.append(obj)
-            features.add(obj, block_type, effective)
+        else:
+            objects = _geo_objects(
+                _geomap_objects(global_props, geo_files, warnings), inherited, features, warnings
+            )
+            _frame_geomap(
+                view, global_props, [(obj.payload["lat"], obj.payload["lng"]) for obj in objects]
+            )
+    else:
+        warnings += _unknown_type_warnings(blocks)
+        for (block_type, p), with_template in zip(blocks, _merge_templates(blocks), strict=True):
+            if block_type not in _BLOCK_TYPES:
+                continue
+            counter += 1
+            effective = inherited.effective(with_template)
+            if not inherited.take(effective):
+                raise MKUserError(
+                    "file",
+                    _(
+                        "The objects of the map, with what their templates and the global"
+                        " settings pass on, take more than %(limit)d characters."
+                    )
+                    % {"limit": _MAX_OBJECT_SETTINGS_CHARS},
+                )
+            part = _dynmap_part(dynmap, block_type, p, effective) if dynmap else None
+            if part == "stale":
+                stale += 1
+                continue
+            if part == "grid":
+                customized += bool(with_template.keys() - _DYNMAP_IDENTITY_KEYS)
+                continue
+            if (obj := inherited.import_object(block_type, effective, counter)) is not None:
+                if part == "pinned" and obj.payload["type"] in ("host", "service"):
+                    obj.payload["grid_id"] = _DYNMAP_GRID_ID
+                elif part == "pinned":
+                    # Only a host or a service is pinned out of a grid.
+                    lines += 1
+                objects.append(obj)
+                features.add(obj, block_type, effective)
+        _resolve_pending_refs(objects)
 
-    _resolve_pending_refs(objects)
-
-    warnings += _global_warnings(global_props, map_cfg["view"]["type"])
-    if map_cfg["view"]["type"] == "flow":
+    warnings += _global_warnings(global_props, view["type"])
+    if view["type"] == "flow":
         warnings += _automap_object_warnings(len(objects))
-    if map_cfg["view"]["type"] in ("flow", "geo"):
-        # Flow auto-populates from topology; worldmap markers come from a sidecar
-        # file (worldmap.db / geomap CSV) the text-only import can't read, so the
-        # map is framed here and filled by the CLI importer.
+        # Flow auto-populates from topology.
         objects = []
     else:
         warnings += features.warnings()
@@ -1554,6 +1925,17 @@ def convert_cfg(
         objects, unique_ids([obj.payload["id"] for obj in objects]), strict=True
     ):
         obj.payload["id"] = object_id
+    if unbound := _bind_line_ends(objects):
+        warnings.append(
+            ungettext(
+                "%(count)d line end follows a line or an object that was left out. Maps "
+                "binds a line end only to an object, so it stays where it is.",
+                "%(count)d line ends follow a line or an object that was left out. Maps "
+                "binds a line end only to an object, so they stay where they are.",
+                unbound,
+            )
+            % {"count": unbound}
+        )
     map_cfg["objects"] = [obj.payload for obj in objects]
     if dynmap:
         # First, so its members are drawn over it.
@@ -1563,11 +1945,16 @@ def convert_cfg(
     return map_cfg, warnings
 
 
+# The sources that take ``filter_group``, apart from a geomap, which names it itself,
+# and an automap, which has no objects in Maps.
+_HOST_GROUP_SOURCES = frozenset({"filter", "worldmap"})
+
+
 def _host_group_warnings(p: dict[str, str], objects: list[MapObject]) -> list[str]:
-    """NagVis' ``filter`` source leaves out every object of a host outside the
+    """With ``filter_group``, NagVis leaves out every object of a host outside the
     group, which only a grid of Maps can do."""
     group = p.get("filter_group", "").strip()
-    if "filter" not in _sources(p) or not group:
+    if not _sources(p) & _HOST_GROUP_SOURCES or not group:
         return []
     # Only the grid's own filter takes the group, not what is pinned out of it.
     if not any(obj.get("host_name") for obj in objects if obj["type"] != "grid"):
@@ -1941,7 +2328,11 @@ class ImportSite:
 
 
 def parse_cfg_upload(
-    filename: str, contents: bytes, site: ImportSite, default_backend: str
+    filename: str,
+    contents: bytes,
+    site: ImportSite,
+    default_backend: str,
+    geo_files: GeoFiles | None = None,
 ) -> tuple[MapPayload, list[str]]:
     """Parse an uploaded legacy NagVis ``.cfg`` into a map dict (no persistence).
 
@@ -1963,7 +2354,7 @@ def parse_cfg_upload(
             % {"limit": MAX_CFG_BYTES // (1024 * 1024)},
         )
     map_cfg, warnings = convert_cfg(
-        decode_cfg(contents), map_name_from_filename(filename), default_backend
+        decode_cfg(contents), map_name_from_filename(filename), default_backend, geo_files
     )
     return map_cfg, (
         resolve_connection_ids(

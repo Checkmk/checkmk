@@ -252,12 +252,18 @@ describe('GeoMapCanvas', () => {
     await waitFor(() => expect(container.innerHTML).toBe(''))
   })
 
-  const renderTextbox = async (): Promise<void> => {
+  const renderTextbox = async (
+    renderMode: MapConfig['render_mode'] = 'default',
+    size: Pick<MapElement, 'textbox_width' | 'textbox_height'> = {}
+  ): Promise<void> => {
     leaflet.L.marker.mockClear()
-    const textbox = anObject({ id: 't1', type: 'textbox', lat: 53.55, lng: 9.99 })
+    const textbox = anObject({ id: 't1', type: 'textbox', lat: 53.55, lng: 9.99, ...size })
     render(GeoMapCanvas, {
       global: mapsGlobal(),
-      props: { ...baseProps, config: aMap({ ...sampleConfig(), objects: [textbox] }) }
+      props: {
+        ...baseProps,
+        config: aMap({ ...sampleConfig(), render_mode: renderMode, objects: [textbox] })
+      }
     })
     await waitFor(() => expect(leaflet.L.marker).toHaveBeenCalledTimes(1))
   }
@@ -272,6 +278,37 @@ describe('GeoMapCanvas', () => {
         'maps-geo-map-marker--textbox'
       )
     )
+  })
+
+  /** The axes the text box's marker is centered on. */
+  const centeredAxes = async (
+    renderMode: MapConfig['render_mode'],
+    size: Pick<MapElement, 'textbox_width' | 'textbox_height'>
+  ): Promise<string[]> => {
+    await renderTextbox(renderMode, size)
+    const marker = await waitFor(() => {
+      const element = document.querySelector<HTMLElement>('[data-object-id="t1"]')
+      expect(element).not.toBeNull()
+      return element!
+    })
+    return ['x', 'y'].filter((axis) =>
+      marker.classList.contains(`maps-geo-map-marker--centered-${axis}`)
+    )
+  }
+
+  it('hangs a text box by its top-left corner', async () => {
+    expect(await centeredAxes('default', { textbox_width: 120, textbox_height: 30 })).toEqual([])
+  })
+
+  it('centers the text box of a map migrated from NagVis on its coordinate', async () => {
+    expect(
+      await centeredAxes('nagvis_classic', { textbox_width: 120, textbox_height: 30 })
+    ).toEqual(['x', 'y'])
+  })
+
+  // NagVis halves the width and the height it was given, each on its own.
+  it('centers a migrated text box only along the axes NagVis gave it a size for', async () => {
+    expect(await centeredAxes('nagvis_classic', { textbox_width: 120 })).toEqual(['x'])
   })
 
   // Leaflet stacks markers by their screen row, so on a shared coordinate it

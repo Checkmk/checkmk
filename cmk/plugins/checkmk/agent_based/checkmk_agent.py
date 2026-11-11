@@ -97,6 +97,11 @@ def _check_cmk_agent_installation(
     )
     if agent_info["agentos"] is not None:
         yield Result(state=State.OK, summary="OS: %s" % agent_info["agentos"])
+    yield from _check_installation_layout(
+        agent_info["agentos"],
+        agent_info.get("installationdirectory"),
+        State(params["classic_layout"]),
+    )
 
     yield from _check_transport(
         bool(agent_info.get("sshclient")),
@@ -220,6 +225,15 @@ def _check_encryption_panic(
             state=State.CRIT,
             summary="Failed to apply symmetric encryption, aborting communication.",
         )
+
+
+def _check_installation_layout(
+    agent_os: str | None,
+    installation_directory: str | None,
+    classic_layout_state: State,
+) -> CheckResult:
+    if agent_os == "linux" and not installation_directory:
+        yield Result(state=classic_layout_state, summary="Classic directory layout")
 
 
 def _check_agent_update(
@@ -800,6 +814,7 @@ check_plugin_checkmk_agent = CheckPlugin(
         "agent_version_missmatch": 1,
         "restricted_address_mismatch": 1,
         "legacy_pull_mode": 1,
+        "classic_layout": 0,
         "trusted_cas_mismatch": 2,
         "updater_host_name_mismatch": 1,
         # This next entry will be postprocessed by the backend.

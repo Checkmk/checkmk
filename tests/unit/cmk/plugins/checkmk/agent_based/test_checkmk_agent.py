@@ -392,6 +392,106 @@ def test_updater_host_name_mismatch_switched_off_is_ok_in_details() -> None:
     ]
 
 
+def test_a_linux_agent_without_installation_directory_is_noted_as_classic_layout() -> None:
+    """TC-AU-112"""
+    params = {
+        "agent_version": ("ignore", {}),
+        "agent_version_missmatch": 1,
+        "restricted_address_mismatch": 1,
+        "legacy_pull_mode": 1,
+        "only_from": None,
+        "classic_layout": 0,
+    }
+    section_check_mk = {
+        "version": "3.0.0-2026.11.11",
+        "agentos": "linux",
+    }
+
+    results = [
+        *check_checkmk_agent(
+            params=params,
+            section_check_mk=section_check_mk,
+            section_checkmk_agent_plugins=None,
+            section_cmk_agent_ctl_status=None,
+            section_cmk_update_agent_status=None,
+            section_checkmk_cached_plugins=None,
+        )
+    ]
+
+    assert results == [
+        Result(state=State.OK, summary="Version: 3.0.0-2026.11.11"),
+        Result(state=State.OK, summary="OS: linux"),
+        Result(state=State.OK, summary="Classic directory layout"),
+    ]
+
+
+@pytest.mark.parametrize("agent_os", ["solaris", "aix"])
+def test_a_solaris_or_aix_agent_without_installation_directory_is_not_noted_as_classic_layout(
+    agent_os: str,
+) -> None:
+    params = {
+        "agent_version": ("ignore", {}),
+        "agent_version_missmatch": 1,
+        "restricted_address_mismatch": 1,
+        "legacy_pull_mode": 1,
+        "only_from": None,
+        "classic_layout": 0,
+    }
+    section_check_mk = {
+        "version": "3.0.0-2026.11.11",
+        "agentos": agent_os,
+    }
+
+    results = [
+        *check_checkmk_agent(
+            params=params,
+            section_check_mk=section_check_mk,
+            section_checkmk_agent_plugins=None,
+            section_cmk_agent_ctl_status=None,
+            section_cmk_update_agent_status=None,
+            section_checkmk_cached_plugins=None,
+        )
+    ]
+
+    assert results == [
+        Result(state=State.OK, summary="Version: 3.0.0-2026.11.11"),
+        Result(state=State.OK, summary=f"OS: {agent_os}"),
+    ]
+
+
+def test_a_linux_agent_with_installation_directory_is_not_noted_as_classic_layout() -> None:
+    """TC-AU-112"""
+    params = {
+        "agent_version": ("ignore", {}),
+        "agent_version_missmatch": 1,
+        "restricted_address_mismatch": 1,
+        "legacy_pull_mode": 1,
+        "only_from": None,
+        "classic_layout": 0,
+    }
+    section_check_mk = {
+        "version": "3.0.0-2026.11.11",
+        "agentos": "linux",
+        "installationdirectory": "/opt/checkmk/agent/default",
+    }
+
+    results = [
+        *check_checkmk_agent(
+            params=params,
+            section_check_mk=section_check_mk,
+            section_checkmk_agent_plugins=None,
+            section_cmk_agent_ctl_status=None,
+            section_cmk_update_agent_status=None,
+            section_checkmk_cached_plugins=None,
+        )
+    ]
+
+    assert results == [
+        Result(state=State.OK, summary="Version: 3.0.0-2026.11.11"),
+        Result(state=State.OK, summary="OS: linux"),
+    ]
+
+
 @pytest.mark.parametrize(
     "trusted_certs,results",
     (
@@ -864,7 +964,11 @@ def test_a_successful_update_reports_the_new_version() -> None:
         results = [
             *check_checkmk_agent(
                 _UPDATE_PARAMS,
-                {"version": "2.5.0p2", "agentos": "linux"},
+                {
+                    "version": "2.5.0p2",
+                    "agentos": "linux",
+                    "installationdirectory": "/opt/checkmk/agent/default",
+                },
                 None,
                 _controller(
                     CMKAgentUpdateSection(

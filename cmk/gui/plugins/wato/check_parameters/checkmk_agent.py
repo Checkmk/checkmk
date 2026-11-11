@@ -151,6 +151,19 @@ def _parameter_valuespec_checkmk_agent() -> Dictionary:
                 ),
             ),
             (
+                "classic_layout",
+                MonitoringState(
+                    title=_("State if the agent uses the classic layout"),
+                    help=_(
+                        "A Linux agent in the classic layout spreads its files over several"
+                        " directories. An agent installed below a single directory reports that"
+                        " directory to Checkmk. This state is used if the agent reports no"
+                        " installation directory."
+                    ),
+                    default_value=0,
+                ),
+            ),
+            (
                 "error_deployment_globally_disabled",
                 MonitoringState(
                     title=_("State if agent deployment is globally disabled"), default_value=1

@@ -130,10 +130,12 @@ def _migrate(activation: SingleChoice, value: object) -> object:
 def test_migration_maps_the_activation_of_checkmk_2_5(
     activation: SingleChoice, value: object, expected: str
 ) -> None:
+    """CMK-39506, TC-AU-049"""
     assert _migrate(activation, value) == expected
 
 
 def test_every_activation_entry_survives_the_migration(activation: SingleChoice) -> None:
+    """CMK-39506, TC-AU-049"""
     names = [element.name for element in activation.elements]
 
     assert [_migrate(activation, name) for name in names] == names

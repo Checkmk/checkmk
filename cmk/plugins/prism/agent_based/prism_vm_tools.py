@@ -45,7 +45,7 @@ def check_prism_vm_tools(params: Mapping[str, Any], section: Section) -> CheckRe
     elif tool_enabled and enabled_state == "disabled":
         message = "Tools enabled, but should be disabled"
         yield Result(state=State.WARN, summary=message)
-    elif tool_enabled is None and enabled_state == "enabled":
+    elif tool_install is not None and not tool_enabled and enabled_state == "enabled":
         message = "No tools enabled, but should be enabled"
         yield Result(state=State.WARN, summary=message)
     elif enabled_state == "ignored":

@@ -29,7 +29,7 @@ from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationC
 from cmk.utils.diagnostics import DiagnosticsCLParameters
 from cmk.utils.labels import HostLabel, Labels
 from cmk.utils.notify import NotificationContext
-from cmk.utils.rulesets.ruleset_matcher import RuleSpec
+from cmk.utils.rulesets.ruleset_matcher import RulesetName, RuleSpec
 from cmk.utils.servicename import Item, ServiceName
 
 
@@ -375,21 +375,22 @@ def analyse_host(
     )
 
 
-def analyze_host_rule_matches(
+def analyze_host_rulesets(
     host_name: HostName,
-    rules: Sequence[Sequence[RuleSpec]],
+    rulesets: Mapping[RulesetName, Sequence[RuleSpec]],
     *,
     debug: bool,
-) -> results.AnalyzeHostRuleMatchesResult:
+) -> results.AnalyzeHostRulesetsResult:
+    """Which rules of each ruleset match the host, with one automation call for all of them"""
     return _deserialize(
         _automation_serialized(
-            "analyze-host-rule-matches",
+            "analyze-host-rulesets",
             automation_config=LocalAutomationConfig(),
             args=[host_name],
-            indata=rules,
+            indata=rulesets,
             debug=debug,
         ),
-        results.AnalyzeHostRuleMatchesResult,
+        results.AnalyzeHostRulesetsResult,
         debug=debug,
     )
 
@@ -427,6 +428,29 @@ def analyze_host_rule_effectiveness(
             debug=debug,
         ),
         results.AnalyzeHostRuleEffectivenessResult,
+        debug=debug,
+    )
+
+
+def analyze_host_rulesets_ineffective_rules(
+    rulesets: Mapping[RulesetName, Sequence[RuleSpec]],
+    *,
+    host_names: Sequence[HostName] | None = None,
+    debug: bool,
+) -> results.AnalyzeHostRulesetsIneffectiveRulesResult:
+    """The rules of each ruleset matching no host, with one automation call for all of them
+
+    Only the given hosts take part in the matching, all configured hosts without them.
+    """
+    return _deserialize(
+        _automation_serialized(
+            "analyze-host-rulesets-ineffective-rules",
+            automation_config=LocalAutomationConfig(),
+            args=[],
+            indata=(host_names, rulesets),
+            debug=debug,
+        ),
+        results.AnalyzeHostRulesetsIneffectiveRulesResult,
         debug=debug,
     )
 

@@ -7,6 +7,8 @@
 # mypy: disable-error-code="no-untyped-def"
 # mypy: disable-error-code="type-arg"
 
+import io
+import sys
 from collections.abc import Callable, Container, Mapping, Sequence
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -50,6 +52,7 @@ from cmk.server_side_calls_backend import load_active_checks
 from cmk.snmplib import oids_to_walk, SNMPContextConfig
 from cmk.utils import config_warnings, paths
 from cmk.utils.password_store import pending_secrets_path_site
+from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.tags import TagGroupID, TagID
 from tests.testlib.unit.base_configuration_scenario import Scenario
 from tests.unit.cmk.base.empty_config import EMPTY_CONFIG
@@ -881,3 +884,164 @@ rtt min/avg/max/mdev = 0.035/0.037/0.040/0.002 ms
     status, _output = check_mk.ping_target(["ping6"], "::1", _ping_printing(output))
 
     assert status == 0
+
+
+def _analyze_host_rulesets(
+    monkeypatch: pytest.MonkeyPatch,
+    config_cache: ConfigCache,
+    host_name: str,
+    rulesets: Mapping[str, Sequence[RuleSpec[int]]],
+) -> automation_results.AnalyzeHostRulesetsResult:
+    context, _config_cache, _loading_result = _prepare(
+        monkeypatch, relay_id=None, loaded_active_checks={}
+    )
+    monkeypatch.setattr(sys, "stdin", io.StringIO(repr(rulesets)))
+    return check_mk.automation_analyze_host_rulesets(
+        context,
+        [host_name],
+        None,
+        config.LoadingResult(loaded_config=config_cache._loaded_config, config_cache=config_cache),
+    )
+
+
+def _analyze_host_rulesets_ineffective_rules(
+    monkeypatch: pytest.MonkeyPatch,
+    config_cache: ConfigCache,
+    host_names: Sequence[str] | None,
+    rulesets: Mapping[str, Sequence[RuleSpec[int]]],
+) -> automation_results.AnalyzeHostRulesetsIneffectiveRulesResult:
+    context, _config_cache, _loading_result = _prepare(
+        monkeypatch, relay_id=None, loaded_active_checks={}
+    )
+    monkeypatch.setattr(sys, "stdin", io.StringIO(repr((host_names, rulesets))))
+    return check_mk.automation_analyze_host_rulesets_ineffective_rules(
+        context,
+        [],
+        None,
+        config.LoadingResult(loaded_config=config_cache._loaded_config, config_cache=config_cache),
+    )
+
+
+def test_analyze_host_rulesets_reports_the_matching_rules_per_ruleset(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    ts = Scenario()
+    ts.add_host(HostName("test-host"), tags={TagGroupID("criticality"): TagID("test")})
+    config_cache = ts.apply(monkeypatch)
+    rulesets: dict[str, list[RuleSpec[int]]] = {
+        "unconditional": [{"id": "01", "value": 1, "condition": {}}],
+        "tagged": [
+            {
+                "id": "02",
+                "value": 2,
+                "condition": {"host_tags": {TagGroupID("criticality"): TagID("prod")}},
+            },
+            {
+                "id": "03",
+                "value": 3,
+                "condition": {"host_tags": {TagGroupID("criticality"): TagID("test")}},
+            },
+        ],
+    }
+
+    result = _analyze_host_rulesets(monkeypatch, config_cache, "test-host", rulesets)
+
+    assert result == automation_results.AnalyzeHostRulesetsResult(
+        {"unconditional": ["01"], "tagged": ["03"]}
+    )
+
+
+def test_analyze_host_rulesets_matches_nothing_for_an_unknown_host(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    ts = Scenario()
+    ts.add_host(HostName("test-host"))
+    config_cache = ts.apply(monkeypatch)
+    rulesets: dict[str, list[RuleSpec[int]]] = {
+        "unconditional": [{"id": "01", "value": 1, "condition": {}}],
+    }
+
+    result = _analyze_host_rulesets(monkeypatch, config_cache, "unknown-host", rulesets)
+
+    assert result == automation_results.AnalyzeHostRulesetsResult({"unconditional": []})
+
+
+def test_host_rulesets_ineffective_rules_reports_the_rules_matching_no_host_per_ruleset(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    ts = Scenario()
+    ts.add_host(HostName("test-host"), tags={TagGroupID("criticality"): TagID("test")})
+    config_cache = ts.apply(monkeypatch)
+    rulesets: dict[str, list[RuleSpec[int]]] = {
+        "unconditional": [{"id": "01", "value": 1, "condition": {}}],
+        "tagged": [
+            {
+                "id": "02",
+                "value": 2,
+                "condition": {"host_tags": {TagGroupID("criticality"): TagID("prod")}},
+            },
+            {
+                "id": "03",
+                "value": 3,
+                "condition": {"host_tags": {TagGroupID("criticality"): TagID("test")}},
+            },
+        ],
+    }
+
+    result = _analyze_host_rulesets_ineffective_rules(monkeypatch, config_cache, None, rulesets)
+
+    assert result == automation_results.AnalyzeHostRulesetsIneffectiveRulesResult(
+        {"unconditional": [], "tagged": ["02"]}
+    )
+
+
+def test_host_rulesets_ineffective_rules_takes_offline_hosts_into_account(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    ts = Scenario()
+    ts.add_host(HostName("online-host"))
+    ts.add_host(HostName("offline-host"), tags={TagGroupID("criticality"): TagID("offline")})
+    ts.set_option(
+        "only_hosts",
+        [
+            {
+                "id": "only",
+                "value": True,
+                "condition": {"host_tags": {TagGroupID("criticality"): {"$ne": TagID("offline")}}},
+            }
+        ],
+    )
+    config_cache = ts.apply(monkeypatch)
+    assert config_cache.is_offline(HostName("offline-host"))
+    rulesets: dict[str, list[RuleSpec[int]]] = {
+        "online": [{"id": "01", "value": 1, "condition": {"host_name": ["online-host"]}}],
+        "offline": [{"id": "02", "value": 2, "condition": {"host_name": ["offline-host"]}}],
+        "unknown": [{"id": "03", "value": 3, "condition": {"host_name": ["unknown-host"]}}],
+    }
+
+    result = _analyze_host_rulesets_ineffective_rules(monkeypatch, config_cache, None, rulesets)
+
+    assert result == automation_results.AnalyzeHostRulesetsIneffectiveRulesResult(
+        {"online": [], "offline": [], "unknown": ["03"]}
+    )
+
+
+def test_host_rulesets_ineffective_rules_matches_the_given_hosts_only(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    ts = Scenario()
+    ts.add_host(HostName("asked-host"))
+    ts.add_host(HostName("other-host"))
+    config_cache = ts.apply(monkeypatch)
+    rulesets: dict[str, list[RuleSpec[int]]] = {
+        "asked": [{"id": "01", "value": 1, "condition": {"host_name": ["asked-host"]}}],
+        "other": [{"id": "02", "value": 2, "condition": {"host_name": ["other-host"]}}],
+    }
+
+    result = _analyze_host_rulesets_ineffective_rules(
+        monkeypatch, config_cache, ["asked-host"], rulesets
+    )
+
+    assert result == automation_results.AnalyzeHostRulesetsIneffectiveRulesResult(
+        {"asked": [], "other": ["02"]}
+    )

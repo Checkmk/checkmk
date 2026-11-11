@@ -44,7 +44,8 @@ from cmk.automations.results import (
     AnalyseHostResult,
     AnalyseServiceResult,
     AnalyzeHostRuleEffectivenessResult,
-    AnalyzeHostRuleMatchesResult,
+    AnalyzeHostRulesetsIneffectiveRulesResult,
+    AnalyzeHostRulesetsResult,
     AnalyzeServiceRuleMatchesResult,
     AutodiscoveryResult,
     DeleteHostsKnownRemoteResult,
@@ -254,6 +255,8 @@ from cmk.utils.rulesets.ruleset_matcher import (
     BundledHostRulesetMatcher,
     RulesetMatcher,
     RulesetName,
+    RuleSpec,
+    SingleHostMatcher,
 )
 from cmk.utils.servicename import Item, ServiceName
 
@@ -2431,38 +2434,37 @@ def automation_analyse_host(
     )
 
 
-def automation_analyze_host_rule_matches(
+def automation_analyze_host_rulesets(
     ctx: AutomationContext,
     args: list[str],
     plugins: AgentBasedPlugins | None,
     loading_result: config.LoadingResult | None,
-) -> AnalyzeHostRuleMatchesResult:
+) -> AnalyzeHostRulesetsResult:
     host_name = HostName(args[0])
-    # We read the list of rules from stdin since it could be too much for the command line
-    match_rules = ast.literal_eval(sys.stdin.read())
+    # We read the rulesets from stdin since they could be too much for the command line
+    rulesets: Mapping[RulesetName, Sequence[RuleSpec[object]]] = ast.literal_eval(sys.stdin.read())
 
     if loading_result is None:
         loading_result = load_config(
             discovery_rulesets=(),
             get_builtin_host_labels=ctx.get_builtin_host_labels,
         )
-    ruleset_matcher = loading_result.config_cache.ruleset_matcher
-    label_manager = loading_result.config_cache.label_manager
+    config_cache = loading_result.config_cache
+    if host_name not in config_cache.ruleset_matcher.ruleset_optimizer.all_configured_hosts:
+        # Like the ruleset matcher: no rule matches a host that is not configured.
+        return AnalyzeHostRulesetsResult({name: [] for name in rulesets})
 
-    ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({host_name})
-
-    return AnalyzeHostRuleMatchesResult(
-        {
-            rules[0]["id"]: list(
-                ruleset_matcher.get_host_values_all(host_name, rules, label_manager.labels_of_host)
-            )
-            # The caller needs to get one result per rule. For this reason we can not just use
-            # the list of rules with the ruleset matching functions but have to execute rule
-            # matching for the rules individually. If we would use the provided list of rules,
-            # then the not matching rules would not be represented in the result and we would
-            # not know which matched value is related to which rule.
-            for rules in match_rules
-        }
+    # The host is matched against every rule of every ruleset exactly once, so evaluating
+    # the conditions directly beats the ruleset matcher, whose precomputation over the
+    # configured hosts would have to be built for every call.
+    matcher = SingleHostMatcher(
+        host_name,
+        host_tags=config_cache.host_tags.tags(host_name),
+        host_path=config_cache.host_path(host_name),
+        host_labels=config_cache.label_manager.labels_of_host(host_name),
+    )
+    return AnalyzeHostRulesetsResult(
+        {name: matcher.matching_rule_ids(ruleset) for name, ruleset in rulesets.items()}
     )
 
 
@@ -2552,6 +2554,64 @@ def automation_analyze_host_rule_effectiveness(
             # then the not matching rules would not be represented in the result and we would
             # not know which matched value is related to which rule.
             for rules in match_rules
+        }
+    )
+
+
+def automation_analyze_host_rulesets_ineffective_rules(
+    ctx: AutomationContext,
+    args: list[str],
+    plugins: AgentBasedPlugins | None,
+    loading_result: config.LoadingResult | None,
+) -> AnalyzeHostRulesetsIneffectiveRulesResult:
+    # We read the hosts and rulesets from stdin since they could be too much for the command line
+    host_names, rulesets = ast.literal_eval(sys.stdin.read())
+
+    if loading_result is None:
+        loading_result = load_config(
+            discovery_rulesets=(),
+            get_builtin_host_labels=ctx.get_builtin_host_labels,
+        )
+    return _analyze_host_rulesets_ineffective_rules(
+        loading_result.config_cache, host_names, rulesets
+    )
+
+
+def _analyze_host_rulesets_ineffective_rules(
+    config_cache: ConfigCache,
+    host_names: Sequence[HostName] | None,
+    rulesets: Mapping[RulesetName, Sequence[RuleSpec[object]]],
+) -> AnalyzeHostRulesetsIneffectiveRulesResult:
+    """The rules of each ruleset that match none of the hosts
+
+    Without host names every configured host takes part. This includes the hosts removed by
+    "only_hosts" (usually the hosts tagged "offline"): a rule matching only such hosts is
+    still in use and must not be reported as ineffective.
+    """
+    # The configuration's matcher is scoped to the hosts this site monitors. This matches
+    # the conditions of the rules and nothing else: the site of a host plays no role.
+    ruleset_matcher = config_cache.make_ruleset_matcher()
+    labels_of_host = config_cache.label_manager.labels_of_host
+    if host_names is None:
+        hosts = ruleset_matcher.ruleset_optimizer.all_configured_hosts
+    else:
+        hosts = frozenset(host_names)
+        # The precomputation only has to cover the hosts that take part. It also covers
+        # clusters and nodes: a rule matching only such an extra host still counts as
+        # ineffective.
+        ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(set(hosts))
+
+    # The rules are matched one by one: the result is per rule, and matching a ruleset as
+    # a whole would not tell which of its rules matched. The matcher caches the hosts per
+    # condition, so rules with the same conditions are evaluated once across all rulesets.
+    return AnalyzeHostRulesetsIneffectiveRulesResult(
+        {
+            name: [
+                rule["id"]
+                for rule in ruleset
+                if hosts.isdisjoint(ruleset_matcher.get_matching_hosts(rule, labels_of_host))
+            ]
+            for name, ruleset in rulesets.items()
         }
     )
 
@@ -4552,8 +4612,8 @@ def automations_common() -> list[Automation]:
             handler=automation_analyse_host,
         ),
         Automation(
-            ident="analyze-host-rule-matches",
-            handler=automation_analyze_host_rule_matches,
+            ident="analyze-host-rulesets",
+            handler=automation_analyze_host_rulesets,
         ),
         Automation(
             ident="analyze-service-rule-matches",
@@ -4562,6 +4622,10 @@ def automations_common() -> list[Automation]:
         Automation(
             ident="analyze-host-rule-effectiveness",
             handler=automation_analyze_host_rule_effectiveness,
+        ),
+        Automation(
+            ident="analyze-host-rulesets-ineffective-rules",
+            handler=automation_analyze_host_rulesets_ineffective_rules,
         ),
         Automation(
             ident="delete-hosts",

@@ -37,7 +37,7 @@ from cmk.gui.watolib.automations import (
     make_automation_config,
     MKAutomationException,
 )
-from cmk.gui.watolib.check_mk_automations import analyze_host_rule_matches, delete_hosts
+from cmk.gui.watolib.check_mk_automations import analyze_host_rulesets, delete_hosts
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 from cmk.gui.watolib.rulesets import SingleRulesetRecursively, UseHostFolder
 from cmk.utils.automation_config import LocalAutomationConfig, RemoteAutomationConfig
@@ -179,27 +179,29 @@ def _hosts_to_be_removed_for_site(
     return [Host.load_host(hostname) for hostname in hostnames]
 
 
+_RULESET_NAME = "automatic_host_removal"
+
+
 def _hosts_to_be_removed_local(*, debug: bool) -> Iterator[HostName]:
     if not (automatic_host_removal_ruleset := _load_automatic_host_removal_ruleset()):
         _LOGGER.debug("No cleanup rule configured: Terminating.")
         return  # small 'optimization'
+    rule_values = {rule["id"]: rule["value"] for rule in automatic_host_removal_ruleset}
     now = time.time()
 
     for hostname, check_mk_service_crit_since in _livestatus_query_local_candidates():
         _LOGGER.debug("Found '%s' to be CRIT since %0.2fs", hostname, check_mk_service_crit_since)
         if not (
-            matches := list(
-                analyze_host_rule_matches(
-                    hostname, [automatic_host_removal_ruleset], debug=debug
-                ).results.values()
-            )[0]
+            matching_rule_ids := analyze_host_rulesets(
+                hostname, {_RULESET_NAME: automatic_host_removal_ruleset}, debug=debug
+            ).matching_rules[_RULESET_NAME]
         ):
             _LOGGER.debug("No matched rule: Skipping")
             continue
 
-        # Unfortunately we don't get specific typing of the value out of analyze_host_rule_matches.
-        # So reconstruct the original value to help mypy with typing.
-        first_match = matches[0]
+        # The rule values are untyped in the ruleset. So reconstruct the original value to help
+        # mypy with typing.
+        first_match = rule_values[matching_rule_ids[0]]
         _LOGGER.debug("Matching rule: %r", first_match)
         matched_value: (
             tuple[Literal["enabled"], _RemovalConditions] | tuple[Literal["disabled"], None]
@@ -226,9 +228,9 @@ def _load_automatic_host_removal_ruleset() -> Sequence[RuleSpec]:
     return [
         rule.to_config(use_host_folder=UseHostFolder.HOST_FOLDER_FOR_BASE)
         for _folder, _idx, rule in SingleRulesetRecursively.load_single_ruleset_recursively(
-            "automatic_host_removal"
+            _RULESET_NAME
         )
-        .get("automatic_host_removal")
+        .get(_RULESET_NAME)
         .get_rules()
     ]
 

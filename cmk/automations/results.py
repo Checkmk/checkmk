@@ -393,15 +393,17 @@ result_type_registry.register(AnalyseHostResult)
 
 
 @dataclass
-class AnalyzeHostRuleMatchesResult(ABCAutomationResult):
-    results: dict[str, list[object]]
+class AnalyzeHostRulesetsResult(ABCAutomationResult):
+    """For each ruleset the ids of its rules that match the host, in the order of the ruleset"""
+
+    matching_rules: Mapping[RulesetName, Sequence[str]]
 
     @staticmethod
     def automation_call() -> str:
-        return "analyze-host-rule-matches"
+        return "analyze-host-rulesets"
 
 
-result_type_registry.register(AnalyzeHostRuleMatchesResult)
+result_type_registry.register(AnalyzeHostRulesetsResult)
 
 
 @dataclass
@@ -426,6 +428,23 @@ class AnalyzeHostRuleEffectivenessResult(ABCAutomationResult):
 
 
 result_type_registry.register(AnalyzeHostRuleEffectivenessResult)
+
+
+@dataclass
+class AnalyzeHostRulesetsIneffectiveRulesResult(ABCAutomationResult):
+    """For each ruleset, in order, the ids of its rules that match no host
+
+    Only the ids travel: the hosts a rule matches would bloat the result in big installations.
+    """
+
+    ineffective_rules: Mapping[RulesetName, Sequence[str]]
+
+    @staticmethod
+    def automation_call() -> str:
+        return "analyze-host-rulesets-ineffective-rules"
+
+
+result_type_registry.register(AnalyzeHostRulesetsIneffectiveRulesResult)
 
 
 @dataclass

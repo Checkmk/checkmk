@@ -9,7 +9,7 @@
 # mypy: disable-error-code="redundant-expr"
 
 import contextlib
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence, Set
 from dataclasses import dataclass
 from re import Pattern
 from typing import (
@@ -235,6 +235,20 @@ class RulesetMatcher:
 
         return self.ruleset_optimizer.get_host_ruleset(hostname, ruleset, labels_of_host)
 
+    def get_matching_hosts(
+        self,
+        rule: RuleSpec[TRuleValue],
+        labels_of_host: Callable[[HostName], Labels],
+    ) -> Set[HostName]:
+        """The processed hosts the rule matches, none for a disabled rule
+
+        Rules with the same conditions share the computation, however many rulesets
+        they are spread over. Do not modify the returned set.
+        """
+        if is_disabled(rule):
+            return frozenset()
+        return self.ruleset_optimizer.matching_hosts(rule["condition"], labels_of_host)
+
     def get_service_bool_value(
         self,
         hostname: HostName,
@@ -371,7 +385,7 @@ class RulesetMatcher:
 
 # TODO: improve and cleanup types
 _ConditionCacheID: TypeAlias = tuple[
-    tuple[str, ...],
+    tuple[str, ...] | None,
     tuple[tuple[TagGroupID, object], ...],
     LabelGroupsCacheId,
     str,
@@ -428,6 +442,10 @@ class RulesetOptimizer:
 
         # TODO: Clean this one up?
         self._initialize_host_lookup()
+
+    @property
+    def all_configured_hosts(self) -> frozenset[HostName]:
+        return self._all_configured_hosts
 
     def clear_ruleset_caches(self) -> None:
         self.__host_ruleset_cache.clear()
@@ -578,6 +596,16 @@ class RulesetOptimizer:
 
         return negate, regex(combine_patterns(pattern_parts))
 
+    def matching_hosts(
+        self,
+        condition: RuleConditionsSpec,
+        labels_of_host: Callable[[HostName], Labels],
+    ) -> Set[HostName]:
+        """The processed hosts the host conditions match; cached by the conditions' content"""
+        return self._all_matching_hosts(
+            condition, with_foreign_hosts=False, labels_of_host=labels_of_host
+        )
+
     def _all_matching_hosts(
         self,
         condition: RuleConditionsSpec,
@@ -690,24 +718,26 @@ class RulesetOptimizer:
         label_groups: LabelGroups,
         rule_path: str,
     ) -> _ConditionCacheID:
-        host_parts: list[str] = []
+        # No host condition matches every host, an empty host list none: keep them apart.
+        host_parts: tuple[str, ...] | None = None
 
         if hostlist is not None:
-            negate, hostlist = parse_negated_condition_list(hostlist)
-            if negate:
-                host_parts.append("!")
+            negate, host_entries = parse_negated_condition_list(hostlist)
+            parts = ["!"] if negate else []
 
-            for h in hostlist:
+            for h in host_entries:
                 if isinstance(h, dict):
                     if "$regex" not in h:
                         raise NotImplementedError()
-                    host_parts.append("~%s" % h["$regex"])
+                    parts.append("~%s" % h["$regex"])
                     continue
 
-                host_parts.append(h)
+                parts.append(h)
+
+            host_parts = tuple(sorted(parts))
 
         return (
-            tuple(sorted(host_parts)),
+            host_parts,
             tuple(
                 (taggroup_id, _tags_cache_id(tag_condition))
                 for taggroup_id, tag_condition in tag_conditions.items()
@@ -1099,3 +1129,41 @@ class BundledHostRulesetMatcher[TRuleValue]:
             rn: self.matcher.get_host_values_all(host_name, host_ruleset, self.labels_of_host)
             for rn, host_ruleset in self.host_rulesets.items()
         }
+
+
+class SingleHostMatcher:
+    """Match rules against one host by evaluating their conditions directly
+
+    The RulesetMatcher precomputes the hosts every rule matches, which pays off
+    when many hosts are matched against the same rulesets. For one host and many
+    rulesets that precomputation only costs, so this evaluates the conditions of
+    each rule against that one host and nothing else. Both agree on which rules
+    match a configured host.
+    """
+
+    def __init__(
+        self,
+        host_name: HostName,
+        host_tags: Mapping[TagGroupID, TagID],
+        host_path: str,
+        host_labels: Labels,
+    ) -> None:
+        self._host_name = host_name
+        self._host_tags = set(host_tags.items())
+        self._host_path = host_path
+        self._host_labels = host_labels
+
+    def matches[TRuleValue](self, rule: RuleSpec[TRuleValue]) -> bool:
+        if is_disabled(rule):
+            return False
+        condition = rule["condition"]
+        return (
+            self._host_path.startswith(condition.get("host_folder", "/"))
+            and matches_host_tags(self._host_tags, condition.get("host_tags", {}))
+            and matches_labels(self._host_labels, condition.get("host_label_groups", []))
+            and matches_host_name(condition.get("host_name"), self._host_name)
+        )
+
+    def matching_rule_ids[TRuleValue](self, ruleset: Sequence[RuleSpec[TRuleValue]]) -> list[str]:
+        """The ids of the rules that match the host, in the order of the ruleset"""
+        return [rule["id"] for rule in ruleset if self.matches(rule)]

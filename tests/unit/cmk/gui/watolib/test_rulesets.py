@@ -6,19 +6,19 @@
 # mypy: disable-error-code="type-arg"
 
 import sys
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from io import StringIO
 
 import pytest
 
 from cmk.automations.results import (
-    AnalyzeHostRuleMatchesResult,
+    AnalyzeHostRulesetsResult,
     AnalyzeServiceRuleMatchesResult,
 )
 from cmk.base.app import make_app
 from cmk.base.automations.automations import AutomationContext
 from cmk.base.automations.check_mk import (
-    automation_analyze_host_rule_matches,
+    automation_analyze_host_rulesets,
     automation_analyze_service_rule_matches,
 )
 from cmk.ccc.hostaddress import HostName
@@ -31,18 +31,18 @@ from cmk.gui.watolib.rulesets import FolderRulesets, Rule, RuleConditions, RuleO
 from cmk.utils import paths
 from cmk.utils.labels import Labels
 from cmk.utils.paths import default_config_dir
-from cmk.utils.rulesets.ruleset_matcher import RuleSpec
+from cmk.utils.rulesets.ruleset_matcher import RulesetName, RuleSpec
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
 
-@pytest.fixture(name="mock_analyze_host_rule_matches_automation")
-def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.fixture(name="mock_analyze_host_rulesets_automation")
+def fixture_mock_analyze_host_rulesets_automation(monkeypatch: pytest.MonkeyPatch) -> None:
     """Replace rule matching via automation call, which does not work in unit test context,
     with a direct call to the automation"""
 
     def analyze_with_matcher(
-        h: HostName, r: Sequence[Sequence[RuleSpec]], *, debug: bool
-    ) -> AnalyzeHostRuleMatchesResult:
+        h: HostName, r: Mapping[RulesetName, Sequence[RuleSpec]], *, debug: bool
+    ) -> AnalyzeHostRulesetsResult:
         ts = Scenario()
         ts.add_host(HostName("ding"))
         ts.add_host(HostName("dong"))
@@ -50,7 +50,7 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
 
         with monkeypatch.context() as m:
             m.setattr(sys, "stdin", StringIO(repr(r)))
-            return automation_analyze_host_rule_matches(
+            return automation_analyze_host_rulesets(
                 AutomationContext(
                     edition=(app := make_app(edition(paths.omd_root))).edition,
                     make_bake_on_restart=app.make_bake_on_restart,
@@ -64,11 +64,11 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
                 None,
             )
 
-    monkeypatch.setattr(rulesets, "analyze_host_rule_matches", analyze_with_matcher)
+    monkeypatch.setattr(rulesets, "analyze_host_rulesets", analyze_with_matcher)
 
 
 @pytest.mark.usefixtures(
-    "request_context", "with_admin_login", "mock_analyze_host_rule_matches_automation"
+    "request_context", "with_admin_login", "mock_analyze_host_rulesets_automation"
 )
 def test_analyse_host_ruleset() -> None:
     ruleset = _test_host_ruleset(

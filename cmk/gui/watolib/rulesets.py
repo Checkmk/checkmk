@@ -57,7 +57,8 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import DropdownChoiceEntries
 from cmk.gui.watolib.check_mk_automations import (
     analyze_host_rule_effectiveness,
-    analyze_host_rule_matches,
+    analyze_host_rulesets,
+    analyze_host_rulesets_ineffective_rules,
     analyze_service_rule_matches,
 )
 from cmk.gui.watolib.configuration_bundle_store import is_locked_by_quick_setup
@@ -567,6 +568,32 @@ class RulesetCollection:
     def get_rulesets(self) -> Mapping[RulesetName, Ruleset]:
         return self._rulesets
 
+    def rulesets_matching_search(
+        self, search_options: SearchOptions, *, debug: bool
+    ) -> Mapping[RulesetName, Ruleset]:
+        """The rulesets that match the search, see `Ruleset.matches_search_with_rules`
+
+        The effectiveness of the rules, if the search asks for it, comes from one
+        automation call for all rulesets the search considers.
+        """
+        candidates = [
+            ruleset
+            for ruleset in self._rulesets.values()
+            if ruleset.matches_ruleset_search_options(search_options)
+        ]
+        rule_effectiveness = (
+            host_rule_effectiveness(candidates, debug=debug)
+            if "rule_ineffective" in search_options
+            else {}
+        )
+        return {
+            ruleset.name: ruleset
+            for ruleset in candidates
+            if ruleset.matches_search_with_rules(
+                search_options, debug=debug, rule_effectiveness=rule_effectiveness
+            )
+        }
+
     def get_unknown_rulesets(
         self,
     ) -> Mapping[FolderPath, Mapping[RulesetName, Sequence[RuleSpec[object]]]]:
@@ -968,8 +995,18 @@ class Ruleset:
 
         return content
 
-    # Whether or not either the ruleset itself matches the search or the rules match
-    def matches_search_with_rules(self, search_options: SearchOptions, *, debug: bool) -> bool:
+    def matches_search_with_rules(
+        self,
+        search_options: SearchOptions,
+        *,
+        debug: bool,
+        rule_effectiveness: Mapping[str, bool] | None = None,
+    ) -> bool:
+        """Whether the ruleset itself or any of its rules matches the search
+
+        `rule_effectiveness`, if given, holds for every rule whether it is effective and
+        saves the automation call per ruleset, see `host_rule_effectiveness`.
+        """
         if not self.matches_ruleset_search_options(search_options):
             return False
 
@@ -984,13 +1021,14 @@ class Ruleset:
         # Interesting: This has always tried host matching. Whether or not a service ruleset
         # does not match any service has never been tested. Probably because this would be
         # too expensive.
-        rule_effectiveness = (
-            analyze_host_rule_effectiveness(
-                [r.to_single_base_ruleset() for _f, _i, r in rules], debug=debug
-            ).results
-            if rules and "rule_ineffective" in search_options
-            else {}
-        )
+        if rule_effectiveness is None:
+            rule_effectiveness = (
+                analyze_host_rule_effectiveness(
+                    [r.to_single_base_ruleset() for _f, _i, r in rules], debug=debug
+                ).results
+                if rules and "rule_ineffective" in search_options
+                else {}
+            )
 
         # Store the matching rules for later result rendering
         self.search_matching_rules = []
@@ -1167,8 +1205,13 @@ class Ruleset:
     def _on_change(self) -> None:
         hooks.call("ruleset-changed", self.name)
 
-    # Returns the outcoming value or None and a list of matching rules. These are pairs
-    # of rule_folder and rule_number
+    def to_base_ruleset(self) -> Sequence[RuleSpec]:
+        """The rules in matching order, as cmk.base loads them"""
+        return [
+            rule.to_config(UseHostFolder.HOST_FOLDER_FOR_BASE)
+            for _folder, _rule_index, rule in self.get_rules()
+        ]
+
     def analyse_ruleset(
         self,
         hostname: HostName,
@@ -1178,37 +1221,40 @@ class Ruleset:
         *,
         debug: bool,
     ) -> tuple[object, list[tuple[Folder, int, Rule]]]:
-        resultlist = []
-        resultdict: dict[str, Any] = {}
-        effectiverules = []
-
-        rules = self.get_rules()
+        """Match the ruleset against the host or service, see `analyse_matching_rules`"""
         if self.rulespec.is_for_services:
-            rule_matches = {
-                rule_id: bool(matches)
+            matching_rule_ids: Container[str] = {
+                rule_id
                 for rule_id, matches in analyze_service_rule_matches(
                     hostname,
                     (svc_desc if self.rulespec.item_type == "service" else svc_desc_or_item) or "",
                     service_labels,
-                    [r.to_single_base_ruleset() for _f, _i, r in rules],
+                    [r.to_single_base_ruleset() for _f, _i, r in self.get_rules()],
                     debug=debug,
                 ).results.items()
+                if matches
             }
         else:
-            rule_matches = {
-                rule_id: bool(matches)
-                for rule_id, matches in analyze_host_rule_matches(
-                    hostname,
-                    [r.to_single_base_ruleset() for _f, _i, r in rules],
-                    debug=debug,
-                ).results.items()
-            }
+            matching_rule_ids = matching_host_rules(hostname, [self], debug=debug)[self.name]
+        return self.analyse_matching_rules(matching_rule_ids)
 
-        for folder, rule_index, rule in rules:
+    def analyse_matching_rules(
+        self, matching_rule_ids: Container[str]
+    ) -> tuple[object, list[tuple[Folder, int, Rule]]]:
+        """Returns the outcoming value or None and the effective rules
+
+        The effective rules are the matching rules that contribute to the value, as
+        triples of rule folder, rule index within that folder and rule.
+        """
+        resultlist = []
+        resultdict: dict[str, Any] = {}
+        effectiverules = []
+
+        for folder, rule_index, rule in self.get_rules():
             if rule.is_disabled():
                 continue
 
-            if not rule_matches[rule.id]:
+            if rule.id not in matching_rule_ids:
                 continue
 
             if self.match_type() == "all":
@@ -1685,7 +1731,56 @@ class Rule:
         return did_rename
 
 
+def matching_host_rules(
+    hostname: HostName, rulesets: Iterable[Ruleset], *, debug: bool
+) -> Mapping[RulesetName, Container[str]]:
+    """The ids of the rules matching the host, per ruleset, with one automation call for all"""
+    base_rulesets = {ruleset.name: ruleset.to_base_ruleset() for ruleset in rulesets}
+    if not base_rulesets:
+        return {}
+    return {
+        name: set(rule_ids)
+        for name, rule_ids in analyze_host_rulesets(
+            hostname, base_rulesets, debug=debug
+        ).matching_rules.items()
+    }
+
+
+def host_rule_effectiveness(rulesets: Iterable[Ruleset], *, debug: bool) -> Mapping[str, bool]:
+    """Whether each rule of the rulesets matches at least one host, with one automation call
+
+    Like `Ruleset.matches_search_with_rules`, this tries host matching only.
+    """
+    base_rulesets = {
+        ruleset.name: base_ruleset
+        for ruleset in rulesets
+        if (base_ruleset := ruleset.to_base_ruleset())
+    }
+    if not base_rulesets:
+        return {}
+    ineffective_rules = {
+        name: frozenset(rule_ids)
+        for name, rule_ids in analyze_host_rulesets_ineffective_rules(
+            base_rulesets, debug=debug
+        ).ineffective_rules.items()
+    }
+    return {
+        rule["id"]: rule["id"] not in ineffective_rules.get(name, frozenset())
+        for name, rules in base_rulesets.items()
+        for rule in rules
+    }
+
+
 def _match_rule_host_list(rule: Rule, search_hosts_str: str) -> bool:
+    def rule_matches(host_name: str) -> bool:
+        return bool(
+            analyze_host_rulesets(
+                HostAddress(host_name),
+                {rule.ruleset.name: rule.to_single_base_ruleset()},
+                debug=False,
+            ).matching_rules[rule.ruleset.name]
+        )
+
     # Regex
     if any(c in ".?*+^$|[](){}\\" for c in search_hosts_str):
         match_regex = re.compile(search_hosts_str)
@@ -1693,24 +1788,10 @@ def _match_rule_host_list(rule: Rule, search_hosts_str: str) -> bool:
         for host_name, _host in Host.all().items():
             if match_regex.search(host_name):
                 rule_host_list.append(host_name)
-        if not any(
-            analyze_host_rule_matches(
-                HostAddress(host_name),
-                [rule.to_single_base_ruleset()],
-                debug=False,
-            ).results[rule.id]
-            for host_name in rule_host_list
-        ):
+        if not any(rule_matches(host_name) for host_name in rule_host_list):
             return False
     # Single host or host list
-    elif not all(
-        analyze_host_rule_matches(
-            HostAddress(host_name),
-            [rule.to_single_base_ruleset()],
-            debug=False,
-        ).results[rule.id]
-        for host_name in search_hosts_str.split(" ")
-    ):
+    elif not all(rule_matches(host_name) for host_name in search_hosts_str.split(" ")):
         return False
     return True
 

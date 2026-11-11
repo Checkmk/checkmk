@@ -1698,19 +1698,7 @@ class ConfigCache:
             self._loaded_config.shadow_hosts,
         )
 
-        self.ruleset_matcher = ruleset_matcher.RulesetMatcher(
-            host_tags=self.host_tags.host_tags_maps,
-            host_paths=self._host_paths,
-            clusters_of=self._clusters_of_cache,
-            nodes_of=self._nodes_cache,
-            all_configured_hosts=frozenset(
-                itertools.chain(
-                    self.hosts_config.hosts,
-                    self.hosts_config.clusters,
-                    self.hosts_config.shadow_hosts,
-                )
-            ),
-        )
+        self.ruleset_matcher = self.make_ruleset_matcher()
         builtin_host_labels = {
             hostname: get_builtin_host_labels(self._site_of_host(hostname))
             for hostname in self.hosts_config
@@ -2001,6 +1989,22 @@ class ConfigCache:
         self.__snmp_fetch_interval.clear()
         self.__notification_plugin_parameters.clear()
         self.__snmp_backend.clear()
+
+    def make_ruleset_matcher(self) -> ruleset_matcher.RulesetMatcher:
+        """A new matcher over all configured hosts, sharing no state with `self.ruleset_matcher`"""
+        return ruleset_matcher.RulesetMatcher(
+            host_tags=self.host_tags.host_tags_maps,
+            host_paths=self._host_paths,
+            clusters_of=self._clusters_of_cache,
+            nodes_of=self._nodes_cache,
+            all_configured_hosts=frozenset(
+                itertools.chain(
+                    self.hosts_config.hosts,
+                    self.hosts_config.clusters,
+                    self.hosts_config.shadow_hosts,
+                )
+            ),
+        )
 
     @staticmethod
     def _get_host_paths(config_host_paths: dict[HostName, str]) -> dict[HostName, str]:

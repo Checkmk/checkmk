@@ -7,7 +7,7 @@
 
 
 import datetime
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from io import StringIO
 from unittest.mock import MagicMock
 from zoneinfo import ZoneInfo
@@ -16,10 +16,10 @@ import pytest
 import time_machine
 from pytest_mock import MockerFixture
 
-from cmk.automations.results import AnalyzeHostRuleMatchesResult
+from cmk.automations.results import AnalyzeHostRulesetsResult
 from cmk.base.app import make_app
 from cmk.base.automations.automations import AutomationContext
-from cmk.base.automations.check_mk import automation_analyze_host_rule_matches
+from cmk.base.automations.check_mk import automation_analyze_host_rulesets
 from cmk.ccc.hostaddress import HostName
 from cmk.ccc.site import SiteId
 from cmk.ccc.version import edition
@@ -30,7 +30,7 @@ from cmk.gui.watolib.rulesets import FolderRulesets, Rule, RuleConditions, RuleO
 from cmk.livestatus_client import SiteConfiguration
 from cmk.livestatus_client.testing import MockLiveStatusConnection
 from cmk.utils.paths import default_config_dir, omd_root
-from cmk.utils.rulesets.ruleset_matcher import RuleSpec
+from cmk.utils.rulesets.ruleset_matcher import RulesetName, RuleSpec
 from tests.testlib.unit.base_configuration_scenario import Scenario
 
 
@@ -203,8 +203,8 @@ def fixture_mock_delete_hosts_automation(mocker: MockerFixture) -> MagicMock:
     )
 
 
-@pytest.fixture(name="mock_analyze_host_rule_matches_automation")
-def fixture_mock_analyze_host_rule_matches_automation(
+@pytest.fixture(name="mock_analyze_host_rulesets_automation")
+def fixture_mock_analyze_host_rulesets_automation(
     mocker: MockerFixture, monkeypatch: pytest.MonkeyPatch
 ) -> MagicMock:
     """Replace rule matching via automation call, which does not work in unit test context,
@@ -215,10 +215,10 @@ def fixture_mock_analyze_host_rule_matches_automation(
     ts.apply(monkeypatch)
 
     def analyze_with_matcher(
-        h: HostName, r: Sequence[Sequence[RuleSpec]], *, debug: bool
-    ) -> AnalyzeHostRuleMatchesResult:
+        h: HostName, r: Mapping[RulesetName, Sequence[RuleSpec]], *, debug: bool
+    ) -> AnalyzeHostRulesetsResult:
         with mocker.patch("sys.stdin", StringIO(repr(r))):
-            return automation_analyze_host_rule_matches(
+            return automation_analyze_host_rulesets(
                 AutomationContext(
                     edition=(app := make_app(edition(omd_root))).edition,
                     make_bake_on_restart=app.make_bake_on_restart,
@@ -233,7 +233,7 @@ def fixture_mock_analyze_host_rule_matches_automation(
             )
 
     return mocker.patch.object(
-        automatic_host_removal, "analyze_host_rule_matches", analyze_with_matcher
+        automatic_host_removal, "analyze_host_rulesets", analyze_with_matcher
     )
 
 
@@ -241,7 +241,7 @@ def fixture_mock_analyze_host_rule_matches_automation(
 @pytest.mark.usefixtures("setup_rules")
 @pytest.mark.usefixtures("setup_livestatus_mock")
 @pytest.mark.usefixtures("with_admin_login")
-@pytest.mark.usefixtures("mock_analyze_host_rule_matches_automation")
+@pytest.mark.usefixtures("mock_analyze_host_rulesets_automation")
 def test_execute_host_removal_job(
     mock_livestatus: MockLiveStatusConnection,
     activate_changes_mock: MagicMock,

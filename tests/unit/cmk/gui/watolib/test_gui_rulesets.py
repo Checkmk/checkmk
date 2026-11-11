@@ -23,13 +23,15 @@ from pytest import FixtureRequest
 import cmk.gui.utils
 from cmk.automations.results import (
     AnalyzeHostRuleEffectivenessResult,
-    AnalyzeHostRuleMatchesResult,
+    AnalyzeHostRulesetsIneffectiveRulesResult,
+    AnalyzeHostRulesetsResult,
 )
 from cmk.base.app import make_app
 from cmk.base.automations.automations import AutomationContext
 from cmk.base.automations.check_mk import (
     automation_analyze_host_rule_effectiveness,
-    automation_analyze_host_rule_matches,
+    automation_analyze_host_rulesets,
+    automation_analyze_host_rulesets_ineffective_rules,
 )
 from cmk.base.config import LoadingResult
 from cmk.ccc import version
@@ -732,14 +734,14 @@ def test_ruleset_ordering_insert_after(
     assert ruleset.get_folder_rules(folder)[expected_index] == rule
 
 
-@pytest.fixture(name="mock_analyze_host_rule_matches_automation")
-def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.MonkeyPatch) -> None:
+@pytest.fixture(name="mock_analyze_host_rulesets_automation")
+def fixture_mock_analyze_host_rulesets_automation(monkeypatch: pytest.MonkeyPatch) -> None:
     """Replace rule matching via automation call, which does not work in unit test context,
     with a direct call to the automation"""
 
     def analyze_with_matcher(
-        h: HostName, r: Sequence[Sequence[RuleSpec]], *, debug: bool
-    ) -> AnalyzeHostRuleMatchesResult:
+        h: HostName, r: Mapping[RulesetName, Sequence[RuleSpec]], *, debug: bool
+    ) -> AnalyzeHostRulesetsResult:
         ts = Scenario()
         ts.add_host(HostName("foobar123"), host_path="/wato/regex_check/hosts.mk")
         ts.add_host(HostName("foobar456"), host_path="/wato/regex_check/hosts.mk")
@@ -751,7 +753,7 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
 
         with monkeypatch.context() as m:
             m.setattr(sys, "stdin", StringIO(repr(r)))
-            return automation_analyze_host_rule_matches(
+            return automation_analyze_host_rulesets(
                 AutomationContext(
                     edition=(app := make_app(version.edition(paths.omd_root))).edition,
                     make_bake_on_restart=app.make_bake_on_restart,
@@ -765,7 +767,7 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
                 loading_result,
             )
 
-    monkeypatch.setattr(rulesets, "analyze_host_rule_matches", analyze_with_matcher)
+    monkeypatch.setattr(rulesets, "analyze_host_rulesets", analyze_with_matcher)
 
 
 @pytest.mark.parametrize(
@@ -875,7 +877,7 @@ def fixture_mock_analyze_host_rule_matches_automation(monkeypatch: pytest.Monkey
         ),
     ],
 )
-@pytest.mark.usefixtures("mock_analyze_host_rule_matches_automation")
+@pytest.mark.usefixtures("mock_analyze_host_rulesets_automation")
 def test_matches_search_with_rules(
     with_admin_login: UserId,
     search_options: rulesets.SearchOptions,
@@ -890,6 +892,25 @@ def test_matches_search_with_rules(
     ruleset.append_rule(folder, rule)
 
     assert ruleset.matches_search_with_rules(search_options, debug=False) == expected_result
+
+
+def _host_contactgroups_ruleset_with_rule_for(host_name: str) -> Ruleset:
+    (ruleset := _ruleset("host_contactgroups")).append_rule(
+        (folder := folder_tree().root_folder()),
+        rulesets.Rule.from_config(
+            folder,
+            ruleset,
+            {
+                "id": "2a983a0a-7fab-4403-ab9d-5922fd8be529",
+                "value": "all",
+                "condition": {
+                    "host_name": [host_name],
+                },
+                "options": {"disabled": False, "description": "foo"},
+            },
+        ),
+    )
+    return ruleset
 
 
 @pytest.fixture(name="inline_analyze_host_rule_effectiveness_automation")
@@ -934,21 +955,7 @@ def fixture_inline_analyze_host_rule_effectiveness_automation(
 def test_matches_search_with_rules_negate_is_ineffective_finds_matching(
     with_admin_login: UserId,
 ) -> None:
-    (ruleset := _ruleset("host_contactgroups")).append_rule(
-        (folder := folder_tree().root_folder()),
-        rulesets.Rule.from_config(
-            folder,
-            ruleset,
-            {
-                "id": "2a983a0a-7fab-4403-ab9d-5922fd8be529",
-                "value": "all",
-                "condition": {
-                    "host_name": ["ding"],
-                },
-                "options": {"disabled": False, "description": "foo"},
-            },
-        ),
-    )
+    ruleset = _host_contactgroups_ruleset_with_rule_for("ding")
 
     assert ruleset.matches_search_with_rules({"rule_ineffective": False}, debug=False) is True
 
@@ -956,21 +963,7 @@ def test_matches_search_with_rules_negate_is_ineffective_finds_matching(
 @pytest.mark.skip_on_code_coverage
 @pytest.mark.usefixtures("inline_analyze_host_rule_effectiveness_automation")
 def test_matches_search_with_rules_is_ineffective_finds_matching(with_admin_login: UserId) -> None:
-    (ruleset := _ruleset("host_contactgroups")).append_rule(
-        (folder := folder_tree().root_folder()),
-        rulesets.Rule.from_config(
-            folder,
-            ruleset,
-            {
-                "id": "2a983a0a-7fab-4403-ab9d-5922fd8be529",
-                "value": "all",
-                "condition": {
-                    "host_name": ["ding"],
-                },
-                "options": {"disabled": False, "description": "foo"},
-            },
-        ),
-    )
+    ruleset = _host_contactgroups_ruleset_with_rule_for("ding")
 
     assert ruleset.matches_search_with_rules({"rule_ineffective": True}, debug=False) is False
 
@@ -979,23 +972,119 @@ def test_matches_search_with_rules_is_ineffective_finds_matching(with_admin_logi
 def test_matches_search_with_rules_is_ineffective_finds_not_matching(
     with_admin_login: UserId,
 ) -> None:
-    (ruleset := _ruleset("host_contactgroups")).append_rule(
+    ruleset = _host_contactgroups_ruleset_with_rule_for("dong")
+
+    assert ruleset.matches_search_with_rules({"rule_ineffective": True}, debug=False) is True
+
+
+@pytest.fixture(name="inline_analyze_host_rulesets_ineffective_rules_automation")
+def fixture_inline_analyze_host_rulesets_ineffective_rules_automation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Inline rule matching automation call"""
+
+    def analyze_host_rulesets_ineffective_rules(
+        r: Mapping[RulesetName, Sequence[RuleSpec]],
+        *,
+        debug: bool,
+    ) -> AnalyzeHostRulesetsIneffectiveRulesResult:
+        ts = Scenario()
+        ts.add_host(HostName("ding"))
+        config_cache = ts.apply(monkeypatch)
+        loading_result = LoadingResult(
+            loaded_config=config_cache._loaded_config,
+            config_cache=config_cache,
+        )
+
+        with monkeypatch.context() as m:
+            m.setattr(sys, "stdin", StringIO(repr((None, r))))
+            return automation_analyze_host_rulesets_ineffective_rules(
+                AutomationContext(
+                    edition=(app := make_app(version.edition(paths.omd_root))).edition,
+                    make_bake_on_restart=app.make_bake_on_restart,
+                    create_core=app.create_core,
+                    make_fetcher_trigger=app.make_fetcher_trigger,
+                    make_metric_backend_fetcher=app.make_metric_backend_fetcher,
+                    get_builtin_host_labels=app.get_builtin_host_labels,
+                ),
+                [],
+                None,
+                loading_result,
+            )
+
+    monkeypatch.setattr(
+        rulesets, "analyze_host_rulesets_ineffective_rules", analyze_host_rulesets_ineffective_rules
+    )
+
+
+@pytest.mark.usefixtures("inline_analyze_host_rulesets_ineffective_rules_automation")
+def test_search_for_effective_rules_finds_the_ruleset_with_a_matching_rule(
+    with_admin_login: UserId,
+) -> None:
+    ruleset = _host_contactgroups_ruleset_with_rule_for("ding")
+
+    found = rulesets.RulesetCollection({ruleset.name: ruleset}).rulesets_matching_search(
+        {"rule_ineffective": False}, debug=False
+    )
+
+    assert set(found) == {"host_contactgroups"}
+
+
+@pytest.mark.usefixtures("inline_analyze_host_rulesets_ineffective_rules_automation")
+def test_search_for_ineffective_rules_skips_the_ruleset_with_a_matching_rule(
+    with_admin_login: UserId,
+) -> None:
+    ruleset = _host_contactgroups_ruleset_with_rule_for("ding")
+
+    found = rulesets.RulesetCollection({ruleset.name: ruleset}).rulesets_matching_search(
+        {"rule_ineffective": True}, debug=False
+    )
+
+    assert not found
+
+
+@pytest.mark.usefixtures("inline_analyze_host_rulesets_ineffective_rules_automation")
+def test_search_for_ineffective_rules_finds_the_ruleset_with_a_rule_matching_no_host(
+    with_admin_login: UserId,
+) -> None:
+    ruleset = _host_contactgroups_ruleset_with_rule_for("dong")
+
+    found = rulesets.RulesetCollection({ruleset.name: ruleset}).rulesets_matching_search(
+        {"rule_ineffective": True}, debug=False
+    )
+
+    assert set(found) == {"host_contactgroups"}
+
+
+def test_search_for_ineffective_rules_asks_the_automation_once_for_all_rulesets(
+    monkeypatch: pytest.MonkeyPatch, with_admin_login: UserId
+) -> None:
+    asked_for: list[Mapping[RulesetName, Sequence[RuleSpec]]] = []
+
+    def analyze_host_rulesets_ineffective_rules(
+        r: Mapping[RulesetName, Sequence[RuleSpec]], *, debug: bool
+    ) -> AnalyzeHostRulesetsIneffectiveRulesResult:
+        asked_for.append(r)
+        return AnalyzeHostRulesetsIneffectiveRulesResult(
+            {name: [rule["id"] for rule in rules] for name, rules in r.items()}
+        )
+
+    monkeypatch.setattr(
+        rulesets, "analyze_host_rulesets_ineffective_rules", analyze_host_rulesets_ineffective_rules
+    )
+    contactgroups = _host_contactgroups_ruleset_with_rule_for("ding")
+    (groups := _ruleset("host_groups")).append_rule(
         (folder := folder_tree().root_folder()),
         rulesets.Rule.from_config(
-            folder,
-            ruleset,
-            {
-                "id": "2a983a0a-7fab-4403-ab9d-5922fd8be529",
-                "value": "all",
-                "condition": {
-                    "host_name": ["dong"],
-                },
-                "options": {"disabled": False, "description": "foo"},
-            },
+            folder, groups, {"id": "host-groups-rule", "value": "all", "condition": {}}
         ),
     )
 
-    assert ruleset.matches_search_with_rules({"rule_ineffective": True}, debug=False) is True
+    rulesets.RulesetCollection(
+        {contactgroups.name: contactgroups, groups.name: groups}
+    ).rulesets_matching_search({"rule_ineffective": True}, debug=False)
+
+    assert [set(r) for r in asked_for] == [{"host_contactgroups", "host_groups"}]
 
 
 @dataclass

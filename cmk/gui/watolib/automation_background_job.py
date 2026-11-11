@@ -79,7 +79,7 @@ class AutomationCheckmkAutomationStart(AutomationCommand[AutomationCheckmkAutoma
     ) -> AutomationCheckmkAutomationStartRequest:
         return AutomationCheckmkAutomationStartRequest(
             api_request=CheckmkAutomationRequest(
-                *ast.literal_eval(request.get_ascii_input_mandatory("request"))
+                *ast.literal_eval(request.get_str_input_mandatory("request"))
             ),
             user_permission_config=UserPermissionSerializableConfig.from_global_config(config),
         )

@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { FilterField, HostRef } from '@/monitoring/shared/api/types'
 import { readFilterUrlState } from '@/monitoring/shared/filterState/urlState'
-import { hostServicesPageUrl } from '@/monitoring/shared/hostServicesPageUrl'
+import { hostDetailsPageUrl, hostServicesPageUrl } from '@/monitoring/shared/hostServicesPageUrl'
 
 const HOST: HostRef = { site_id: 'local', name: 'web-1' }
 
@@ -47,5 +47,28 @@ describe('hostServicesPageUrl', () => {
 
     expect(params(url).get('host')).toBe('we&b=1')
     expect(params(url).get('site')).toBe('local')
+  })
+})
+
+describe('hostDetailsPageUrl', () => {
+  it('addresses the host services page of the host', () => {
+    const url = hostDetailsPageUrl(HOST)
+
+    expect(params(url).get('host')).toBe('web-1')
+    expect(params(url).get('site')).toBe('local')
+  })
+
+  it('names the host in the fragment, which opens its details slide-in', () => {
+    const fragment = new URLSearchParams(
+      new URL(hostDetailsPageUrl(HOST), 'http://checkmk.example/').hash.slice(1)
+    )
+
+    expect(Object.fromEntries(fragment)).toEqual({ host: 'web-1', site: 'local' })
+  })
+
+  it('spells the fragment the way it spells the query', () => {
+    const url = hostDetailsPageUrl({ site_id: 'local', name: 'web 1' })
+
+    expect(url.split('#')[1]).toBe('host=web%201&site=local')
   })
 })

@@ -43,6 +43,7 @@ import {
   readDisplayOptionsFromUrl,
   seedDisplayOptions
 } from '@/monitoring/shared/displayOptionsState/urlState'
+import { hostPanelFragment } from '@/monitoring/shared/hostPanelFragment'
 import { HOST_TAB_OVERVIEW } from '@/monitoring/shared/hostSlideInTabs'
 import { serviceCommand, serviceRefOf } from '@/monitoring/shared/objectRefs'
 import { DEFAULT_DISPLAY_OPTIONS } from '@/monitoring/shared/types'
@@ -332,12 +333,14 @@ const SERVICE_SLIDE_IN: SlideInUrlDescriptor<HostServiceEntry, string> = {
 // The host is the page, so the only host this panel opens is the one it shows, named the way the
 // all hosts listing names it. Its tab gets a key of its own, as the service panel owns `tab`.
 const HOST_SLIDE_IN: SlideInUrlDescriptor<HostEntry, HostRef> = {
-  keys: ['host', 'site'],
+  keys: hostPanelFragment.keys,
   tabKey: 'host_tab',
   defaultTabId: HOST_TAB_OVERVIEW,
-  encode: (entry) => ({ host: entry.name, site: entry.site_id }),
-  decode: (params) =>
-    params['host'] === host.name && params['site'] === host.site_id ? host : null,
+  encode: (entry) => hostPanelFragment.encode(entry),
+  decode: (params) => {
+    const named = hostPanelFragment.decode(params)
+    return named?.name === host.name && named.site_id === host.site_id ? host : null
+  },
   matches: (entry, identity) => entry.name === identity.name && entry.site_id === identity.site_id,
   load: async (identity) =>
     hostApi.fetchHost(identity, undefined, hostFields.length > 0 ? hostFields : undefined)

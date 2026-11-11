@@ -5,6 +5,7 @@
  */
 import type { FilterNode, HostRef, ServiceState } from '@/monitoring/shared/api/types'
 import { flatFilterUrlCodec } from '@/monitoring/shared/filterState/codec'
+import { hostPanelFragment } from '@/monitoring/shared/hostPanelFragment'
 import { mergeQuery } from '@/monitoring/shared/urlQuery'
 
 const PAGE = 'monitor_host_services.py'
@@ -26,4 +27,9 @@ export function hostServicesPageUrl(host: HostRef, states?: readonly ServiceStat
     site: host.site_id,
     ...flatFilterUrlCodec.encode({ filter, search: '' })
   })}`
+}
+
+export function hostDetailsPageUrl(host: HostRef): string {
+  const panel = mergeQuery('', hostPanelFragment.encode(host)).slice(1)
+  return `${hostServicesPageUrl(host)}#${panel}`
 }

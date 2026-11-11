@@ -50,7 +50,8 @@ import {
   DEFAULT_LOWER_THRESHOLD_FOR_FRACTION_BETWEEN,
   DEFAULT_QUANTILE,
   DEFAULT_THRESHOLD_FOR_FRACTION_BELOW,
-  DEFAULT_UPPER_THRESHOLD_FOR_FRACTION_BETWEEN
+  DEFAULT_UPPER_THRESHOLD_FOR_FRACTION_BETWEEN,
+  quantileToPercentile
 } from '@/telemetry-metrics/histogram-params'
 
 import { buildConsolidationFunction, consolidationModelFromWire } from './consolidation'
@@ -126,7 +127,7 @@ function rebuildConsolidation(model: ConsolidationModel): void {
   consolidation.value = buildConsolidationFunction(
     consolidationFunctionOf(model),
     model.lookbackSeconds,
-    (model.params.quantile ?? DEFAULT_QUANTILE) * 100,
+    quantileToPercentile(model.params.quantile ?? DEFAULT_QUANTILE),
     model.params.fractionBelowThreshold ?? DEFAULT_THRESHOLD_FOR_FRACTION_BELOW,
     model.params.fractionLowerThreshold ?? DEFAULT_LOWER_THRESHOLD_FOR_FRACTION_BETWEEN,
     model.params.fractionUpperThreshold ?? DEFAULT_UPPER_THRESHOLD_FOR_FRACTION_BETWEEN,

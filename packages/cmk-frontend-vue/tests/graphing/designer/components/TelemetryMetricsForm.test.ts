@@ -140,6 +140,20 @@ test('selecting another function re-persists the sibling aggregator', async () =
   await waitFor(() => expect(storedItem(store).aggregator).toEqual(MAX_BY_SERVICE))
 })
 
+test('regrouping leaves a stored quantile percentile as it is', async () => {
+  const store = renderForm({
+    ...newTelemetryMetricsDraft('A'),
+    consolidation_function: { type: 'histogram_quantile', lookback_seconds: 300, percentile: 57 },
+    aggregator: SUM_BY_SERVICE
+  })
+  await openGroupByFunctionDropdown()
+
+  await userEvent.click(await screen.findByRole('option', { name: 'max by' }))
+
+  await waitFor(() => expect(storedItem(store).aggregator).toEqual(MAX_BY_SERVICE))
+  expect(storedItem(store).consolidation_function).toMatchObject({ percentile: 57 })
+})
+
 test('selecting "no grouping" clears the sibling aggregator', async () => {
   const store = renderForm({ ...newTelemetryMetricsDraft('A'), aggregator: SUM_BY_SERVICE })
   await openGroupByFunctionDropdown()
@@ -186,6 +200,18 @@ test('adding a then step to a histogram grouping persists a then-only aggregator
     })
   )
   expect(storedItem(store).consolidation_function).toEqual(PRESERVE_QUANTILE_BY_SERVICE)
+})
+
+test('adding a then step leaves a stored "percentile by" percentile as it is', async () => {
+  const store = renderForm({
+    ...newTelemetryMetricsDraft('A'),
+    consolidation_function: { ...PRESERVE_QUANTILE_BY_SERVICE, percentile: 57 }
+  })
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Add then step' }))
+
+  await waitFor(() => expect(storedItem(store).aggregator?.stages).toHaveLength(1))
+  expect(storedItem(store).consolidation_function).toMatchObject({ percentile: 57 })
 })
 
 test('a histogram grouping loads its then steps from every aggregator stage', async () => {

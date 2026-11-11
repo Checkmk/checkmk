@@ -8,6 +8,12 @@ import { type ComputedRef, type WritableComputedRef, computed } from 'vue'
 
 export const DEFAULT_QUANTILE = 0.95
 
+/** The percentile (0 to 100) a quantile (0 to 1) stands for. */
+export function quantileToPercentile(quantile: number): number {
+  // Scaling by 100 is inexact in binary floats: 0.57 would come out as 56.99999999999999.
+  return Math.round(quantile * 100 * 1e9) / 1e9
+}
+
 // Stored for a threshold whose input is blank.
 export const DEFAULT_THRESHOLD_FOR_FRACTION_BELOW = 0
 export const DEFAULT_LOWER_THRESHOLD_FOR_FRACTION_BETWEEN = 0

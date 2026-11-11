@@ -49,7 +49,8 @@ import {
   DEFAULT_LOWER_THRESHOLD_FOR_FRACTION_BETWEEN,
   DEFAULT_QUANTILE,
   DEFAULT_THRESHOLD_FOR_FRACTION_BELOW,
-  DEFAULT_UPPER_THRESHOLD_FOR_FRACTION_BETWEEN
+  DEFAULT_UPPER_THRESHOLD_FOR_FRACTION_BETWEEN,
+  quantileToPercentile
 } from '@/telemetry-metrics/histogram-params'
 
 import type { GraphItemsStore } from '../../composables/useGraphItems'
@@ -224,7 +225,7 @@ function storeConsolidation(model: ConsolidationModel): void {
   const stored = toStored(
     consolidationFunctionOf(model),
     model.lookbackSeconds,
-    (model.params.quantile ?? DEFAULT_QUANTILE) * 100,
+    quantileToPercentile(model.params.quantile ?? DEFAULT_QUANTILE),
     model.params.fractionBelowThreshold ?? DEFAULT_THRESHOLD_FOR_FRACTION_BELOW,
     model.params.fractionLowerThreshold ?? DEFAULT_LOWER_THRESHOLD_FOR_FRACTION_BETWEEN,
     model.params.fractionUpperThreshold ?? DEFAULT_UPPER_THRESHOLD_FOR_FRACTION_BETWEEN,

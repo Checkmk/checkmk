@@ -84,6 +84,55 @@ test('picking the quantile function stores the percentile its chip shows', async
   )
 })
 
+test('regrouping leaves a stored quantile percentile as it is', async () => {
+  const stored: ConsolidationFunction[] = []
+  render(FormTelemetryMetricsCustomQuery, {
+    props: {
+      consolidation: {
+        type: 'histogram',
+        function: 'histogram_quantile',
+        lookback_seconds: 300,
+        percentile: 57
+      },
+      aggregator: {
+        stages: [
+          {
+            aggregate_by: [{ kind: 'resource', name: 'service.name' }],
+            aggregation_fn: { type: 'scalar', name: 'sum' }
+          }
+        ]
+      },
+      'onUpdate:consolidation': (value: ConsolidationFunction) => stored.push(value)
+    }
+  })
+
+  await userEvent.click(await screen.findByRole('button', { name: /Edit group by/ }))
+  await userEvent.click(screen.getByRole('combobox', { name: 'Grouping function' }))
+  await userEvent.click(await screen.findByRole('option', { name: 'max by' }))
+
+  await waitFor(() => expect(stored.at(-1)).toMatchObject({ percentile: 57 }))
+})
+
+test('adding a then step leaves a stored "percentile by" percentile as it is', async () => {
+  const stored: ConsolidationFunction[] = []
+  render(FormTelemetryMetricsCustomQuery, {
+    props: {
+      consolidation: {
+        type: 'histogram',
+        function: 'histogram_preserve_quantile',
+        lookback_seconds: 300,
+        percentile: 57,
+        group_by: [{ kind: 'resource', key: 'service.name' }]
+      },
+      'onUpdate:consolidation': (value: ConsolidationFunction) => stored.push(value)
+    }
+  })
+
+  await userEvent.click(await screen.findByRole('button', { name: 'Add then step' }))
+
+  await waitFor(() => expect(stored.at(-1)).toMatchObject({ percentile: 57 }))
+})
+
 const SUM_BY_SERVICE_THEN_AVG_BY_REGION: Aggregator = {
   stages: [
     {

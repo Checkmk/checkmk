@@ -7,7 +7,7 @@ import type { Aggregator } from 'cmk-shared-typing/typescript/aggregation'
 import type { ConsolidationGroupByKey } from 'cmk-shared-typing/typescript/consolidation'
 import { randomId } from 'cmk-ui-library/lib/randomId'
 
-import { DEFAULT_QUANTILE } from '../histogram-params'
+import { DEFAULT_QUANTILE, quantileToPercentile } from '../histogram-params'
 import {
   type AggregationStep,
   type GroupByModel,
@@ -51,7 +51,7 @@ export function percentileGroupBy(stored?: {
 }
 
 export function groupPercentileToWire(groupBy: GroupByModel): number {
-  return (groupBy.params.quantile ?? DEFAULT_QUANTILE) * 100
+  return quantileToPercentile(groupBy.params.quantile ?? DEFAULT_QUANTILE)
 }
 
 /**

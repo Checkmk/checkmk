@@ -6,9 +6,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 <script setup lang="ts">
 import type { MonitoringHostServicesApp } from 'cmk-shared-typing/typescript/monitoring/host_services'
 import { useCmkErrorBoundary } from 'cmk-ui-library/components/CmkErrorBoundary'
-import type { SimpleIcons } from 'cmk-ui-library/components/CmkIcon/types'
 import usei18n from 'cmk-ui-library/lib/i18n'
-import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { getKeyShortcutServiceInstance } from 'cmk-ui-library/lib/keyShortcuts'
 import { useKeyboardHints } from 'cmk-ui-library/lib/keyboardHelp'
 import usePersistentRef from 'cmk-ui-library/lib/usePersistentRef'
@@ -46,6 +44,7 @@ import {
 import { hostPanelFragment } from '@/monitoring/shared/hostPanelFragment'
 import { HOST_TAB_OVERVIEW } from '@/monitoring/shared/hostSlideInTabs'
 import { serviceCommand, serviceRefOf } from '@/monitoring/shared/objectRefs'
+import { toCellAction } from '@/monitoring/shared/rowLinks'
 import { DEFAULT_DISPLAY_OPTIONS } from '@/monitoring/shared/types'
 import { useHostActions } from '@/monitoring/shared/useHostActions'
 import { IMMEDIATE_SERVICE_COMMAND_IDS } from '@/monitoring/shared/useServiceActions'
@@ -108,12 +107,7 @@ const serviceListing = useServiceListing(props)
 
 // Always-visible inline buttons (parameters). Their url keeps the {service} placeholder,
 // resolved per row in HostServicesRow.
-const rowActionButtons: CellAction[] = (props.links ?? []).map((action) => ({
-  id: action.ident,
-  label: action.title as TranslatedString,
-  icon: action.icon as SimpleIcons,
-  url: action.url
-}))
+const rowActionButtons: CellAction[] = (props.links ?? []).map(toCellAction)
 
 // The legacy action-menu links (graphs, log file viewer, custom actions, ...), read when the
 // menu is opened.

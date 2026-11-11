@@ -16,6 +16,7 @@ py_library(
         "//cmk/gui:page_toolkit",
         "//cmk/gui/openapi/framework",
         "//cmk/gui/utils",
+        "//cmk/gui/utils:base",
         "//cmk/gui/views:components",
         "//packages/cmk-ccc:site",
         "//packages/cmk-livestatus-client",

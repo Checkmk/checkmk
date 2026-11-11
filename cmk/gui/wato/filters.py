@@ -6,14 +6,13 @@
 # mypy: disable-error-code="type-arg"
 
 from collections.abc import Iterable, Sequence
-from functools import lru_cache
 from typing import override
 
 from cmk.gui import site_config, sites
 from cmk.gui.config import active_config, RequestCacheConfig
 from cmk.gui.i18n import _, _l
-from cmk.gui.monitor.hosts import folder_path_from_filename
 from cmk.gui.type_defs import ChoiceMapping, ColumnName, FilterHeader, FilterHTTPVariables
+from cmk.gui.utils.setup_folder_files import folder_path_from_filename
 from cmk.gui.valuespec import DualListChoice, ValueSpec
 from cmk.gui.visuals.filter import drilldowns, Filter, FilterGroup, FilterRegistry
 from cmk.gui.visuals.filter.components import Dropdown, DualList, FilterComponent, StaticText
@@ -22,9 +21,6 @@ from cmk.web.utils.request_cache import RequestCache
 from cmk.web.utils.speaklater import LazyString
 
 from ._folder_titles import FOLDER_TITLES
-
-# The hosts of one folder share their file, and a view may have thousands of rows.
-_folder_path = lru_cache(maxsize=1024)(folder_path_from_filename)
 
 
 def register(filter_registry: FilterRegistry) -> None:
@@ -90,7 +86,7 @@ def _folders(
 def _row_folder(row: drilldowns.RowValues) -> str | None:
     if (filename := drilldowns.value(row, "host_filename")) is None:
         return None
-    return _folder_path(filename)
+    return folder_path_from_filename(filename)
 
 
 class FilterWatoFolder(Filter):

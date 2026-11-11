@@ -8,6 +8,7 @@ from typing import Annotated, Self
 
 from cmk.ccc.site import SiteId
 from cmk.gui import sites
+from cmk.gui.monitor.command import may_reach_setup, service_parameters_link, SetupLink
 from cmk.gui.monitor.setup_folders import SetupFolderSource
 from cmk.gui.openapi.framework import (
     ApiContext,
@@ -42,7 +43,6 @@ from ._modes import build_host_modes, build_service_modes, ServiceModeInfo
 from ._urls import (
     host_view_link,
     service_discovery_link,
-    service_parameters_link,
     service_view_link,
 )
 
@@ -180,7 +180,11 @@ class ServiceOverviewResponse:
 
     @classmethod
     def from_domain(
-        cls, service: ServiceOverview, *, may_see_parameters: bool, may_run_discovery: bool
+        cls,
+        service: ServiceOverview,
+        *,
+        parameters_link: SetupLink | None,
+        may_run_discovery: bool,
     ) -> Self:
         def read[T](value: T | None, name: str) -> T:
             """The overview reads every column, so a missing one is a bug, not an omission."""
@@ -202,7 +206,9 @@ class ServiceOverviewResponse:
             legacy_host_status_link=host_view_link("hoststatus", service),
             legacy_service_status_link=service_view_link("service", service),
             legacy_service_parameters_link=(
-                service_parameters_link(service) if may_see_parameters else None
+                parameters_link.url_for(host=service.host_name, service=service.name)
+                if parameters_link
+                else None
             ),
             legacy_service_discovery_link=(
                 service_discovery_link(service) if may_run_discovery else None
@@ -230,7 +236,7 @@ def _handle_get_service_overview(
     hostname: str,
     service_name: str,
     site_id: str,
-    may_see_parameters: bool = False,
+    parameters_link: SetupLink | None = None,
     may_run_discovery: bool = False,
 ) -> ServiceOverviewResponse:
     try:
@@ -248,7 +254,7 @@ def _handle_get_service_overview(
         ) from None
 
     return ServiceOverviewResponse.from_domain(
-        service, may_see_parameters=may_see_parameters, may_run_discovery=may_run_discovery
+        service, parameters_link=parameters_link, may_run_discovery=may_run_discovery
     )
 
 
@@ -272,15 +278,12 @@ def make_endpoint_get_service_overview(setup_folders: SetupFolderSource) -> Vers
     ) -> ServiceOverviewResponse:
         """Show the overview for a single service of a host."""
         user = api_context.user
-        may_see_parameters = user.may("wato.rulesets")
-        may_run_discovery = user.may("wato.use") and (
-            user.may("wato.seeall") or user.may("wato.hosts")
-        )
+        parameters_link = service_parameters_link(api_context.config, user)
+        may_run_discovery = may_reach_setup(api_context.config, user, "hosts")
+        # Neither link is offered where Setup is off, so Setup is not asked there either.
         may_open_host_in_setup = (
-            api_context.config.wato_enabled
-            and (may_see_parameters or may_run_discovery)
-            and setup_folders(api_context.config, user).may_read_host(hostname, None)
-        )
+            parameters_link is not None or may_run_discovery
+        ) and setup_folders(api_context.config, user).may_read_host(hostname, None)
         with sites.only_sites(site_id):
             host_services_repo = LiveStatusHostServicesRepository(connection=sites.live())
 
@@ -289,7 +292,7 @@ def make_endpoint_get_service_overview(setup_folders: SetupFolderSource) -> Vers
                 hostname=hostname,
                 service_name=service_name,
                 site_id=site_id,
-                may_see_parameters=may_see_parameters and may_open_host_in_setup,
+                parameters_link=parameters_link if may_open_host_in_setup else None,
                 may_run_discovery=may_run_discovery and may_open_host_in_setup,
             )
 

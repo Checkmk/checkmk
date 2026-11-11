@@ -6,7 +6,7 @@
 from ._commands import monitor_commands, MonitorCommands, OfferedCommand
 from ._downtime import downtime_recurrences, DowntimeRecurrence, DowntimeRecurrences
 from ._fake_check_result import fake_check_output
-from ._host import host_setup_links, HOST_SUPPORTED_ACTIONS, HostSetupLink
+from ._host import HOST_SUPPORTED_ACTIONS
 from ._legacy import LegacyCommand, LegacyCommandSource
 from ._modified_attributes import ATTRIBUTE_PERMISSIONS, ModifiableAttribute
 from ._presets import (
@@ -20,6 +20,13 @@ from ._registry import (
     MonitorCommand,
     MonitorCommandRegistry,
     MonitorObjectType,
+)
+from ._setup_links import (
+    host_setup_links,
+    may_reach_setup,
+    service_parameters_link,
+    service_setup_links,
+    SetupLink,
 )
 from ._urls import acknowledge_presets_url, downtime_presets_url, notification_rules_url
 
@@ -35,11 +42,11 @@ __all__ = [
     "DowntimeRecurrence",
     "DowntimeRecurrences",
     "fake_check_output",
-    "HOST_SUPPORTED_ACTIONS",
     "host_setup_links",
-    "HostSetupLink",
+    "HOST_SUPPORTED_ACTIONS",
     "LegacyCommand",
     "LegacyCommandSource",
+    "may_reach_setup",
     "ModifiableAttribute",
     "monitor_command_registry",
     "monitor_commands",
@@ -49,4 +56,7 @@ __all__ = [
     "MonitorObjectType",
     "notification_rules_url",
     "OfferedCommand",
+    "service_parameters_link",
+    "service_setup_links",
+    "SetupLink",
 ]

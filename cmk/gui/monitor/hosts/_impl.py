@@ -27,7 +27,12 @@ from cmk.gui.livestatus_utils.commands.comment import add_host_comment
 from cmk.gui.livestatus_utils.commands.downtimes import child_hosts, recur_mode, RecurMode
 from cmk.gui.logged_in import user
 from cmk.gui.monitor.command import ModifiableAttribute
-from cmk.gui.monitor.shared import folder_files_matching, HostState, IconSource
+from cmk.gui.monitor.shared import (
+    folder_files_matching,
+    HostState,
+    IconSource,
+    may_open_in_setup,
+)
 from cmk.gui.monitor.site_scope import MonitorSites
 from cmk.gui.sites import SiteStates
 from cmk.gui.utils.host_relation_kinds import kind_accepts
@@ -63,7 +68,7 @@ from cmk.livestatus_client.types import Column
 from cmk.ruleset_matcher.labels import BuiltinLabelsKey
 
 from ._exceptions import HostNotFoundError
-from ._folder import folder_path_from_filename, folder_title, MonitorFolders
+from ._folder import folder_title, MonitorFolders
 from ._models import (
     Event,
     EventClass,
@@ -349,14 +354,7 @@ class LiveStatusHostRepository:
         )
 
     def _setup_access(self, hostname: str, filename: str) -> bool:
-        """Whether the user may open the host in Setup, found in the folder its file names.
-
-        A host whose file is not Setup's is no Setup host, which is said without asking Setup: by
-        name alone, it would search its whole tree for the host, for every such row.
-        """
-        if (path := folder_path_from_filename(filename)) is None:
-            return False
-        return self._folders.may_read_host(hostname, path)
+        return may_open_in_setup(self._folders.may_read_host, hostname, filename)
 
     def _fetch_shown_related_hosts(
         self, links: Sequence[ResolvedRelation]

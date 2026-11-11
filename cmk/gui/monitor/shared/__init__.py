@@ -39,6 +39,7 @@ from ._host_folders import (
     folder_matching_filters,
     folders_below,
     folders_titled,
+    may_open_in_setup,
 )
 from ._host_state import HostState, HostStateLabel
 from ._validators import validate_label_pairs, validate_uniqueness, validate_unix_timestamp
@@ -65,6 +66,7 @@ __all__ = [
     "LabelChoiceCondition",
     "LabelField",
     "livestatus_filter_lines",
+    "may_open_in_setup",
     "NameChoiceCondition",
     "NameListField",
     "NotNode",

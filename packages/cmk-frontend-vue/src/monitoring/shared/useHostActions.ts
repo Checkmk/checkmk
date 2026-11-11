@@ -42,10 +42,11 @@ import type { MonitoringActionRegistry } from '@/monitoring/shared/components/ac
 import type { MonitoringAction } from '@/monitoring/shared/components/action/types'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import { menuEntryIcon } from '@/monitoring/shared/components/customIcon'
+import { type RowLink, toCellAction } from '@/monitoring/shared/rowLinks'
 
 /** What a page sends about the host commands and the Setup links it offers. */
 export interface HostActionsPayload extends MonitoringCommandsPayload {
-  links?: { ident: string; title: string; icon: string; url: string }[] | undefined
+  links?: RowLink[] | undefined
 }
 
 export interface HostActions {
@@ -79,12 +80,7 @@ export function useHostActions(payload: HostActionsPayload): HostActions {
     icon: ACTION_ICON_OVERRIDES[action.ident] ?? (action.icon as SimpleIcons)
   }))
 
-  const rowActions: CellAction[] = (payload.links ?? []).map((action) => ({
-    id: action.ident,
-    label: action.title as TranslatedString,
-    icon: action.icon as SimpleIcons,
-    url: action.url
-  }))
+  const rowActions: CellAction[] = (payload.links ?? []).map(toCellAction)
 
   const rowCommands = permitted.filter((action) => IMMEDIATE_HOST_COMMAND_IDS.includes(action.id))
 

@@ -11,10 +11,10 @@ from cmk.gui.dashboard.type_defs import MonitoringTableName
 from cmk.gui.monitor.command import (
     host_setup_links,
     HOST_SUPPORTED_ACTIONS,
-    HostSetupLink,
     MonitorCommands,
     MonitorObjectType,
     OfferedCommand,
+    SetupLink,
 )
 from cmk.gui.monitor.hosts.table import (
     HOST_TABLE,
@@ -51,11 +51,11 @@ def _reads_shared_dashboard(api_context: ApiContext) -> bool:
     return api_context.token is not None
 
 
-def _no_links(_api_context: ApiContext) -> Sequence[HostSetupLink]:
+def _no_links(_api_context: ApiContext) -> Sequence[SetupLink]:
     return []
 
 
-def _host_setup_links(api_context: ApiContext) -> Sequence[HostSetupLink]:
+def _host_setup_links(api_context: ApiContext) -> Sequence[SetupLink]:
     if _reads_shared_dashboard(api_context):
         return []
     return host_setup_links(api_context.config, api_context.user)
@@ -67,7 +67,7 @@ class RowOffer:
 
     object_type: MonitorObjectType
     supported_actions: tuple[MonitoringActionIdent, ...]
-    links: Callable[[ApiContext], Sequence[HostSetupLink]] = _no_links
+    links: Callable[[ApiContext], Sequence[SetupLink]] = _no_links
 
     def actions(
         self, api_context: ApiContext, commands: MonitorCommands

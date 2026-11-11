@@ -29,6 +29,7 @@ from cmk.gui.monitor.command import (
     HOST_SUPPORTED_ACTIONS,
     MonitorCommands,
     notification_rules_url,
+    service_setup_links,
 )
 from cmk.gui.monitor.export import EXPORT_EVENT, MonitorReportExportMenu
 from cmk.gui.monitor.hosts._pages._monitor_all_hosts import monitor_all_hosts_visual_spec
@@ -61,7 +62,6 @@ from cmk.web.utils.urls import makeuri_contextless
 
 _HOST_STATUS_VIEW_NAME = "hoststatus"
 _ALL_HOSTS_PERMISSION = "view.allhosts"
-_RULESETS_PERMISSION = "wato.rulesets"
 
 
 def _row_links(
@@ -75,16 +75,11 @@ def _row_links(
     allowed to edit rules may still be refused this host's parameters: `setup_access` says whether
     they may open it. It is asked last, as finding the host in Setup is the costly check.
     """
-    if not config.wato_enabled or not user.may(_RULESETS_PERMISSION) or not setup_access():
+    if not (links := service_setup_links(config, user)) or not setup_access():
         return []
     return [
-        RowLink(
-            ident="parameters",
-            title=_("Parameters"),
-            icon="rulesets",
-            url=f"wato.py?{urlencode([('mode', 'object_parameters'), ('host', hostname)])}"
-            "&service={service}",
-        )
+        RowLink(ident=link.ident, title=link.title, icon=link.icon, url=link.url_for(host=hostname))
+        for link in links
     ]
 
 

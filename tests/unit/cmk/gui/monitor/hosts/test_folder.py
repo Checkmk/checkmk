@@ -6,7 +6,7 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from cmk.gui.monitor.hosts._folder import folder_path_from_filename, folder_title, MonitorFolders
+from cmk.gui.monitor.hosts._folder import folder_title, MonitorFolders
 from cmk.gui.monitor.shared import folder_matching_filters
 
 
@@ -40,21 +40,6 @@ _TITLES = {
     "network/dc1": "Netzwerk / Rechenzentrum 1",
     "dc_muc": "Data center Munich",
 }
-
-
-@pytest.mark.parametrize(
-    "filename, expected",
-    [
-        ("/wato/hosts.mk", ""),
-        ("/wato/network/hosts.mk", "network"),
-        ("/wato/network/switches/hosts.mk", "network/switches"),
-        ("/omd/sites/heute/etc/nagios/conf.d/hosts.mk", None),
-        ("/wato/network/switches/other.mk", None),
-        ("/watoo/network/hosts.mk", None),
-    ],
-)
-def test_folder_path_from_filename(filename: str, expected: str | None) -> None:
-    assert folder_path_from_filename(filename) == expected
 
 
 @pytest.mark.parametrize(

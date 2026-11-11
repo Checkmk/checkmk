@@ -12,6 +12,7 @@ py_library(
         "host_relations.py",
         "images.py",
         "relay.py",
+        "setup_folder_files.py",
     ],
     imports = ["../../.."],
     visibility = [

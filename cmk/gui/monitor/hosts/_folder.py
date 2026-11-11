@@ -32,9 +32,9 @@ labels instead; a folder column cannot show it, and labels are the dimension tha
 """
 
 from collections.abc import Callable, Mapping
-from pathlib import PurePosixPath
 
 from cmk.gui.monitor.setup_folders import SetupFolders
+from cmk.gui.utils.setup_folder_files import folder_path_from_filename
 
 
 class MonitorFolders:
@@ -58,15 +58,6 @@ class MonitorFolders:
     def may_read_host(self, host_name: str, path: str | None) -> bool:
         """Whether the user may open the host in Setup, False while Setup is not wired."""
         return self._setup is not None and self._setup.may_read_host(host_name, path)
-
-
-def folder_path_from_filename(filename: str) -> str | None:
-    """The folder a host defined in ``filename`` sits in, None when that file is not Setup's."""
-    path = PurePosixPath(filename)
-    if path.name != "hosts.mk" or path.parts[:2] != ("/", "wato"):
-        return None
-    folder = path.relative_to("/wato").parent
-    return "" if folder == PurePosixPath(".") else str(folder)
 
 
 def folder_title(filename: str, title_of: Callable[[str], str | None]) -> str:

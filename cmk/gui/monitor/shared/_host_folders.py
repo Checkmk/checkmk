@@ -10,7 +10,9 @@ Setup writes per folder below ``/wato``. The titles are Setup's, so they are pas
 """
 
 import re
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
+
+from cmk.gui.utils.setup_folder_files import folder_path_from_filename
 
 
 def folder_matching_filters(value: str, titles: Mapping[str, str]) -> list[str]:
@@ -68,6 +70,20 @@ def folders_below(patterns: Iterable[str], titles: Mapping[str, str]) -> list[st
         for pattern in patterns
     ]
     return [path for path in sorted(titles) if any(r.match(f"{path}/") for r in regexes)]
+
+
+def may_open_in_setup(
+    may_read_host: Callable[[str, str], bool], host_name: str, filename: str
+) -> bool:
+    """Whether the user may open the host defined in ``filename`` in Setup, as ``may_read_host``
+    says for a host and its folder.
+
+    A host whose file is not Setup's is no Setup host, which is said without asking Setup: by
+    name alone, it would search its whole tree for the host, for every such row.
+    """
+    if (path := folder_path_from_filename(filename)) is None:
+        return False
+    return may_read_host(host_name, path)
 
 
 def _filename_of(path: str) -> str:

@@ -13,6 +13,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.type_defs import Row
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.roles import UserPermissions
+from cmk.gui.utils.setup_folder_files import folder_path_from_filename
 from cmk.gui.views.icon import Icon, IconConfig
 from cmk.ruleset_matcher.tags import TagID
 from cmk.web.utils.icons import DynamicIcon, IconNames, StaticIcon
@@ -33,7 +34,7 @@ def _render_wato_icon(
     if not may_see_hosts() or is_mobile(request, response):
         return None
 
-    wato_folder = _wato_folder_from_filename(row["host_filename"])
+    wato_folder = folder_path_from_filename(row["host_filename"])
     if wato_folder is None:
         return None
 
@@ -142,7 +143,7 @@ def _paint_download_host_info(
 
         params = [
             ("host", row["host_name"]),
-            ("folder", _wato_folder_from_filename(row["host_filename"])),
+            ("folder", folder_path_from_filename(row["host_filename"])),
             ("type", ty),
             ("_start", "1"),
         ]
@@ -158,10 +159,4 @@ def _paint_download_host_info(
 
         url = makeuri_contextless(request, params, filename="fetch_agent_output.py")
         return StaticIcon(IconNames.agents), title, url
-    return None
-
-
-def _wato_folder_from_filename(filename: str) -> str | None:
-    if filename.startswith("/wato/") and filename.endswith("hosts.mk"):
-        return filename[6:-8].rstrip("/")
     return None

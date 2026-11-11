@@ -14,21 +14,12 @@ from cmk.gui.http import request
 from cmk.gui.logged_in import user
 from cmk.web.utils.urls import makeuri_contextless
 
-
-def _may_reach(config: Config, permission: str) -> bool:
-    """Whether the page would serve the request, rather than refuse it.
-
-    Mirrors `ensure_static_permissions`: Setup as a whole has to be reachable,
-    and the page's own permission is waived for those who may see all of it.
-    """
-    if not config.wato_enabled or not user.may("wato.use"):
-        return False
-    return user.may("wato.seeall") or user.may(f"wato.{permission}")
+from ._setup_links import may_reach_setup
 
 
 def acknowledge_presets_url(config: Config) -> str | None:
     """Where the acknowledge option defaults are edited."""
-    if not _may_reach(config, "global"):
+    if not may_reach_setup(config, user, "global"):
         return None
     return makeuri_contextless(
         request,
@@ -39,14 +30,14 @@ def acknowledge_presets_url(config: Config) -> str | None:
 
 def notification_rules_url(config: Config) -> str | None:
     """The rules that decide who a notification reaches."""
-    if not _may_reach(config, "notifications"):
+    if not may_reach_setup(config, user, "notifications"):
         return None
     return makeuri_contextless(request, [("mode", "notifications")], filename="wato.py")
 
 
 def downtime_presets_url(config: Config) -> str | None:
     """Where the downtime duration presets are edited."""
-    if not _may_reach(config, "global"):
+    if not may_reach_setup(config, user, "global"):
         return None
     return makeuri_contextless(
         request,

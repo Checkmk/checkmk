@@ -14,6 +14,7 @@ from cmk.gui.i18n import _l
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.painter import Cell, InternalPainter, PainterContext
 from cmk.gui.type_defs import Row
+from cmk.gui.utils.setup_folder_files import folder_path_from_filename
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views.sorter import Sorter
 from cmk.web.utils.html import HTML
@@ -48,10 +49,8 @@ def get_wato_folder(
     request: Request,
     request_cache: RequestCache[RequestCacheConfig],
 ) -> str | HTML:
-    filename = row["host_filename"]
-    if not filename.startswith("/wato/") or not filename.endswith("/hosts.mk"):
+    if (wato_path := folder_path_from_filename(row["host_filename"])) is None:
         return ""
-    wato_path = filename[6:-9]
     title_path = request_cache.get(FOLDER_TITLES).title_path(wato_path, with_links)
     if isinstance(title_path, str):
         return title_path

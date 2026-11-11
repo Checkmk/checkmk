@@ -12,8 +12,6 @@ use crate::{
 };
 use anyhow::{bail, Context, Result as AnyhowResult};
 use log::{error, info, warn};
-#[cfg(unix)]
-use std::os::unix::fs::PermissionsExt;
 use std::process::Command;
 #[cfg(windows)]
 use winreg::enums::{HKEY_LOCAL_MACHINE, KEY_READ, KEY_WOW64_64KEY};
@@ -852,11 +850,8 @@ pub fn register_updater_subprocess(
     // scoped to a single host and already visible in this process' command line.
     if let Credentials::UsernamePassword { password, .. } = &updater_registration_config.credentials
     {
-        std::fs::write(&password_file_path, password)
+        config::write_restricted(&password_file_path, password.as_bytes(), 0o600)
             .context("Failed to write password to temporary file")?;
-
-        #[cfg(unix)]
-        std::fs::set_permissions(&password_file_path, std::fs::Permissions::from_mode(0o600))?;
     }
 
     let result = (|| {

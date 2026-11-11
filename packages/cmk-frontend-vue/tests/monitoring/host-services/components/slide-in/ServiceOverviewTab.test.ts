@@ -234,6 +234,26 @@ describe('ServiceOverviewTab', () => {
     expect(screen.getByRole('link', { name: 'Host is in scheduled downtime' })).toBeInTheDocument()
   })
 
+  it('narrows the listing to the services carrying a tag clicked on', async () => {
+    const service = makeListingService()
+    render(ServiceOverviewTab, {
+      props: {
+        displayOptions: DISPLAY_OPTIONS,
+        data: makeOverview({ tags: { criticality: 'prod' } })
+      },
+      global: { provide: { [MONITORING_SERVICE as symbol]: service } }
+    })
+
+    await userEvent.click(screen.getByRole('button', { name: 'criticality: prod' }))
+
+    expect(service.filterState.value).toStrictEqual({
+      type: 'condition',
+      field: 'tags',
+      op: 'all_of',
+      value: ['criticality:prod']
+    })
+  })
+
   it('narrows the listing to the services carrying a label clicked on', async () => {
     const service = makeListingService()
     render(ServiceOverviewTab, {

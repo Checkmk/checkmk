@@ -45,7 +45,16 @@ const shownVariables = computed(() => {
 
 const modifiedCount = computed(() => props.topic.variables.filter(isModified).length)
 const siteOverrideCount = computed(() => props.topic.variables.filter(isSiteOverride).length)
-const modifiedCountLabel = computed(() => _t('%{count} modified', { count: modifiedCount.value }))
+const modifiedCountLabel = computed(() =>
+  props.scope.type === 'site'
+    ? _t('%{count} modified globally', { count: modifiedCount.value })
+    : _t('%{count} modified', { count: modifiedCount.value })
+)
+const modifiedFilterLabel = computed(() =>
+  props.scope.type === 'site'
+    ? _t('Show only the settings modified globally')
+    : _t('Show only the modified settings')
+)
 const siteOverrideCountLabel = computed(() =>
   props.scope.type === 'site'
     ? _t('%{count} overridden on this site', { count: siteOverrideCount.value })
@@ -71,7 +80,7 @@ const siteOverrideFilterLabel = computed(() =>
         v-if="modifiedCount > 0"
         color="others"
         variant="outline"
-        :title="_t('Show only the modified settings')"
+        :title="modifiedFilterLabel"
         @click="emit('filter', 'modified')"
       >
         {{ modifiedCountLabel }}

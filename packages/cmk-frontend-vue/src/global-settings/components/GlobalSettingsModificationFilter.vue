@@ -18,11 +18,7 @@ const props = defineProps<{ scope: GlobalSettingsScope; showSiteOverrides: boole
 
 const selected = defineModel<ModificationFilter>({ default: 'all' })
 
-const modifiedTooltip = computed<TranslatedString>(() =>
-  props.scope.type === 'site'
-    ? _t('Show only settings configured for this site whether globally or as a site override')
-    : _t('Show only settings modified globally for all sites')
-)
+const modifiedTooltip = _t('Show only settings modified globally for all sites')
 
 const siteOverridesTooltip = computed<TranslatedString>(() =>
   props.scope.type === 'site'
@@ -39,11 +35,11 @@ interface FilterOption {
 const options = computed<FilterOption[]>(() => {
   const shown: FilterOption[] = [
     { label: _t('All settings'), value: 'all', tooltip: _t('Show all settings') },
-    { label: _t('Modified only'), value: 'modified', tooltip: modifiedTooltip.value }
+    { label: _t('Modified globally'), value: 'modified', tooltip: modifiedTooltip }
   ]
   if (props.showSiteOverrides) {
     shown.push({
-      label: _t('Site overrides only'),
+      label: props.scope.type === 'site' ? _t('Overridden by site') : _t('Overridden by sites'),
       value: 'site',
       tooltip: siteOverridesTooltip.value
     })

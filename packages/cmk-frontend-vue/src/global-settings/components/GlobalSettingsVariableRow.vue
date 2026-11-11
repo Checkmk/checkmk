@@ -8,11 +8,12 @@ import type { GlobalSettingsVariable } from 'cmk-shared-typing/typescript/global
 import CmkChip from 'cmk-ui-library/components/CmkChip.vue'
 import CmkIconButton from 'cmk-ui-library/components/CmkIconButton.vue'
 import usei18n, { untranslated } from 'cmk-ui-library/lib/i18n'
+import type { TranslatedString } from 'cmk-ui-library/lib/i18nString'
 import { computed } from 'vue'
 
 import FormReadonly from '@/form/FormReadonly.vue'
 
-import { isModified } from '../lib/values'
+import { isModified, isSiteOverride } from '../lib/values'
 import GlobalSettingsCollapsibleValue from './GlobalSettingsCollapsibleValue.vue'
 import GlobalSettingsHighlightedText from './GlobalSettingsHighlightedText.vue'
 import GlobalSettingsInlineToggle from './GlobalSettingsInlineToggle.vue'
@@ -28,7 +29,10 @@ const props = defineProps<{
 const emit = defineEmits<{ edit: [] }>()
 
 const isBooleanChoice = computed(() => props.variable.spec.type === 'boolean_choice')
-const modified = computed(() => isModified(props.variable))
+const badges = computed<TranslatedString[]>(() => [
+  ...(isModified(props.variable) ? [_t('modified')] : []),
+  ...(isSiteOverride(props.variable) ? [_t('overridden')] : [])
+])
 const value = computed(() => props.variable.current.value)
 </script>
 
@@ -48,9 +52,16 @@ const value = computed(() => props.variable.current.value)
       <template #label>
         <GlobalSettingsHighlightedText :text="variable.spec.title" :query="query" />
       </template>
-      <template v-if="modified" #label-end>
-        <CmkChip as-div size="small" color="others" variant="outline">
-          {{ _t('modified') }}
+      <template v-if="badges.length > 0" #label-end>
+        <CmkChip
+          v-for="badge in badges"
+          :key="badge"
+          as-div
+          size="small"
+          color="others"
+          variant="outline"
+        >
+          {{ badge }}
         </CmkChip>
       </template>
       <template #default>

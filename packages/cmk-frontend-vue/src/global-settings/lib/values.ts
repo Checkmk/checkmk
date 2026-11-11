@@ -8,10 +8,12 @@ import type { GlobalSettingsVariable } from 'cmk-shared-typing/typescript/global
 export type ModificationFilter = 'all' | 'modified' | 'site'
 
 export function isModified(variable: GlobalSettingsVariable): boolean {
-  return (
-    variable.current.explicit ||
-    (variable.current.type === 'site' && variable.current.global_layer.explicit)
-  )
+  switch (variable.current.type) {
+    case 'global':
+      return variable.current.explicit
+    case 'site':
+      return variable.current.global_layer.explicit
+  }
 }
 
 export function isSiteOverride(variable: GlobalSettingsVariable): boolean {

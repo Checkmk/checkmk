@@ -143,6 +143,16 @@ function withSiteValues(topic: GlobalSettingsTopic): GlobalSettingsTopic {
 
 const siteInheritedTopic = withSiteValues(resettableTopic)
 
+const siteBothLayersTopic: GlobalSettingsTopic = {
+  ...resettableTopic,
+  variables: [
+    {
+      ...resettableTopic.variables[0]!,
+      current: site(20, true, { value: 15, explicit: true })
+    }
+  ]
+}
+
 const siteMixedTopic: GlobalSettingsTopic = {
   ...resettableTopic,
   variables: [
@@ -243,6 +253,19 @@ async function openSiteEditor(origin: GlobalSettingsOrigin): Promise<HTMLElement
   return await screen.findByRole('dialog')
 }
 
+async function badgesOf(title: string): Promise<string[]> {
+  await userEvent.click(screen.getByRole('button', { name: 'Expand all' }))
+  const row = screen
+    .getByRole('button', { name: `Edit ${title}` })
+    .closest<HTMLElement>('.global-settings-variable-row')
+  if (row === null) {
+    throw new Error(`No row found for the setting "${title}"`)
+  }
+  return within(row)
+    .queryAllByText(/^(modified|overridden)$/)
+    .map((badge) => badge.textContent?.trim() ?? '')
+}
+
 function settingRow() {
   return screen
     .getByRole('button', { name: 'Edit Lock user accounts after N login failures' })
@@ -299,7 +322,10 @@ describe('GlobalSettingsApp page header', () => {
 describe('GlobalSettingsApp pushed settings notice', () => {
   test('global settings the central site pushes say so', () => {
     render(GlobalSettingsApp, {
-      props: { ...data, scope: { type: 'global', managed_by_central_site: true } }
+      props: {
+        ...data,
+        scope: { type: 'global', managed_by_central_site: true }
+      }
     })
 
     expect(screen.getByRole('alert')).toHaveTextContent(
@@ -389,6 +415,14 @@ describe('GlobalSettingsApp accordion', () => {
     expect(screen.getAllByText('modified')).toHaveLength(1)
     expect(screen.getByText('Site setting').closest('label')).toContainElement(
       screen.getByText('modified')
+    )
+  })
+
+  test('a setting name cut off by its badges shows in full on hover', async () => {
+    render(GlobalSettingsApp, { props: data })
+    await userEvent.click(screen.getByRole('button', { name: 'Expand all' }))
+    expect(screen.getByTitle('Lock user accounts after N login failures')).toHaveTextContent(
+      'Lock user accounts after N login failures'
     )
   })
 })
@@ -871,22 +905,87 @@ describe('GlobalSettingsApp', () => {
     expect(screen.getByText('1 overridden on sites')).toBeInTheDocument()
   })
 
-  test('a site page counts a value modified in the global settings as modified', () => {
+  test('a site page counts the values inherited from the global settings as globally modified', () => {
     render(GlobalSettingsApp, {
       props: { ...data, scope: siteScope, topics: [siteInheritedTopic] }
     })
 
-    expect(screen.getByText('2 modified')).toBeInTheDocument()
+    expect(screen.getByText('2 modified globally')).toBeInTheDocument()
+  })
+
+  test('a site page does not count inherited values as overridden', () => {
+    render(GlobalSettingsApp, {
+      props: { ...data, scope: siteScope, topics: [siteInheritedTopic] }
+    })
+
     expect(screen.queryByText(/overridden on this site/)).not.toBeInTheDocument()
   })
 
-  test('a site page tags the values it overrides itself apart from the modified ones', () => {
+  test('a site page counts the globally modified values apart', () => {
     render(GlobalSettingsApp, {
       props: { ...data, scope: siteScope, topics: [siteMixedTopic] }
     })
 
-    expect(screen.getByText('2 modified')).toBeInTheDocument()
+    expect(screen.getByText('1 modified globally')).toBeInTheDocument()
+  })
+
+  test('a site page counts the values it overrides itself apart', () => {
+    render(GlobalSettingsApp, {
+      props: { ...data, scope: siteScope, topics: [siteMixedTopic] }
+    })
+
     expect(screen.getByText('1 overridden on this site')).toBeInTheDocument()
+  })
+
+  test('an inherited global modification is marked as modified', async () => {
+    render(GlobalSettingsApp, {
+      props: { ...data, scope: siteScope, topics: [siteMixedTopic] }
+    })
+
+    expect(await badgesOf('Lock user accounts after N login failures')).toEqual(['modified'])
+  })
+
+  test('a site override of a default value is marked as overridden', async () => {
+    render(GlobalSettingsApp, {
+      props: { ...data, scope: siteScope, topics: [siteMixedTopic] }
+    })
+
+    expect(await badgesOf('Enable piggyback-hub')).toEqual(['overridden'])
+  })
+
+  test('a site override of a globally modified value carries both badges', async () => {
+    render(GlobalSettingsApp, {
+      props: { ...data, scope: siteScope, topics: [siteBothLayersTopic] }
+    })
+
+    expect(await badgesOf('Lock user accounts after N login failures')).toEqual([
+      'modified',
+      'overridden'
+    ])
+  })
+
+  test('the global page marks a modified value that a site overrides with both badges', async () => {
+    render(GlobalSettingsApp, {
+      props: {
+        ...data,
+        topics: [
+          {
+            ...overriddenTopic,
+            variables: [
+              {
+                ...overriddenTopic.variables[0]!,
+                current: { ...overriddenTopic.variables[0]!.current, explicit: true }
+              }
+            ]
+          }
+        ]
+      }
+    })
+
+    expect(await badgesOf('Lock user accounts after N login failures')).toEqual([
+      'modified',
+      'overridden'
+    ])
   })
 
   test('a site editor shows the inherited value and the state of the shown one', async () => {
@@ -1330,9 +1429,9 @@ describe('GlobalSettingsApp search', () => {
       ]
     }
 
-    test('modified only hides the rows that still use their default', async () => {
+    test('globally modified hides the rows that still use their default', async () => {
       const user = setup()
-      await filterBy(user, 'Modified only')
+      await filterBy(user, 'Modified globally')
       await user.click(screen.getByRole('button', { name: 'Expand all' }))
 
       expect(screen.getByText(label('Site setting'))).toBeInTheDocument()
@@ -1342,7 +1441,7 @@ describe('GlobalSettingsApp search', () => {
     test('the site override filter stays away while nothing is overridden', () => {
       setup()
 
-      expect(screen.queryByRole('button', { name: 'Site overrides only' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: 'Overridden by sites' })).not.toBeInTheDocument()
     })
 
     test('a site override filter in the URL is ignored while nothing is overridden', () => {
@@ -1353,9 +1452,9 @@ describe('GlobalSettingsApp search', () => {
       expect(screen.getByText(label('User management'))).toBeInTheDocument()
     })
 
-    test('site overrides only keeps the variables a site overrides on the global page', async () => {
+    test('overridden by sites keeps the variables a site overrides on the global page', async () => {
       const user = setup({ ...searchData, topics: [overriddenTopic, secondTopic] })
-      await filterBy(user, 'Site overrides only')
+      await filterBy(user, 'Overridden by sites')
       await user.click(screen.getByRole('button', { name: 'Expand all' }))
 
       expect(
@@ -1364,13 +1463,13 @@ describe('GlobalSettingsApp search', () => {
       expect(screen.queryByText(label('Site setting'))).not.toBeInTheDocument()
     })
 
-    test('site overrides only hides everything the site does not override itself', async () => {
+    test('overridden by site hides everything the site does not override itself', async () => {
       const user = setup({
         ...searchData,
         scope: siteScope,
         topics: [siteMixedTopic]
       })
-      await filterBy(user, 'Site overrides only')
+      await filterBy(user, 'Overridden by site')
       await user.click(screen.getByRole('button', { name: 'Expand all' }))
 
       expect(screen.getByText(label('Enable piggyback-hub'))).toBeInTheDocument()
@@ -1379,9 +1478,37 @@ describe('GlobalSettingsApp search', () => {
       ).not.toBeInTheDocument()
     })
 
+    test('globally modified on a site page hides a site override of a default value', async () => {
+      const user = setup({ ...searchData, scope: siteScope, topics: [siteMixedTopic] })
+      await filterBy(user, 'Modified globally')
+      await user.click(screen.getByRole('button', { name: 'Expand all' }))
+
+      expect(screen.queryByText(label('Enable piggyback-hub'))).not.toBeInTheDocument()
+    })
+
+    test('globally modified on a site page keeps an inherited global modification', async () => {
+      const user = setup({ ...searchData, scope: siteScope, topics: [siteMixedTopic] })
+      await filterBy(user, 'Modified globally')
+      await user.click(screen.getByRole('button', { name: 'Expand all' }))
+
+      expect(
+        screen.getByText(label('Lock user accounts after N login failures'))
+      ).toBeInTheDocument()
+    })
+
+    test('globally modified on a site page keeps a value the site overrides as well', async () => {
+      const user = setup({ ...searchData, scope: siteScope, topics: [siteBothLayersTopic] })
+      await filterBy(user, 'Modified globally')
+      await user.click(screen.getByRole('button', { name: 'Expand all' }))
+
+      expect(
+        screen.getByText(label('Lock user accounts after N login failures'))
+      ).toBeInTheDocument()
+    })
+
     test('the filter leaves the sections closed', async () => {
       const user = setup()
-      await filterBy(user, 'Modified only')
+      await filterBy(user, 'Modified globally')
 
       expect(screen.getByText(label('Site management'))).toBeInTheDocument()
       expect(screen.queryByText(label('Site setting'))).not.toBeInTheDocument()
@@ -1392,7 +1519,7 @@ describe('GlobalSettingsApp search', () => {
       await search(user, 'idle')
       expect(screen.getByText(label('Login session idle timeout'))).toBeInTheDocument()
 
-      await filterBy(user, 'Modified only')
+      await filterBy(user, 'Modified globally')
       expect(screen.getByText('No matching settings found.')).toBeInTheDocument()
     })
 
@@ -1406,7 +1533,7 @@ describe('GlobalSettingsApp search', () => {
 
     test('switching the filter writes it to the URL', async () => {
       const user = setup()
-      await filterBy(user, 'Modified only')
+      await filterBy(user, 'Modified globally')
       await vi.advanceTimersByTimeAsync(200)
       expect(window.location.search).toBe('?filter=modified')
 
@@ -1420,7 +1547,7 @@ describe('GlobalSettingsApp search', () => {
 
       await user.click(within(topic('User management')).getByRole('button', { name: '1 modified' }))
 
-      expect(screen.getByRole('button', { name: 'Modified only' })).toHaveAttribute(
+      expect(screen.getByRole('button', { name: 'Modified globally' })).toHaveAttribute(
         'aria-pressed',
         'true'
       )
@@ -1455,7 +1582,7 @@ describe('GlobalSettingsApp search', () => {
     test('the empty state resets the search and the filter together', async () => {
       const user = setup()
       await search(user, 'idle')
-      await filterBy(user, 'Modified only')
+      await filterBy(user, 'Modified globally')
 
       await user.click(screen.getByRole('button', { name: 'Reset search' }))
       await vi.advanceTimersByTimeAsync(200)

@@ -30,6 +30,7 @@ const props = withDefaults(
     displayOptions: DisplayOptions
     /** What a label click narrows the listing behind to; unset unless that lists hosts. */
     filterLabelsBy?: ((item: LabelCellItem) => ColumnCondition) | undefined
+    filterTagsBy?: ((item: LabelCellItem) => ColumnCondition) | undefined
   }>(),
   { revealRelationsRequest: 0 }
 )
@@ -113,7 +114,7 @@ const age = computed(() =>
     <OverviewDetailList align="start">
       <dt>{{ _t('Tags') }}</dt>
       <dd>
-        <OverviewChips :items="tagChips" />
+        <OverviewChips :items="tagChips" :filter-by="filterTagsBy" />
       </dd>
 
       <dt>{{ _t('Labels') }}</dt>

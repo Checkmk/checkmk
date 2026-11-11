@@ -167,6 +167,43 @@ py_library(
     ],
 )
 
+# The migrations of OrbVis boards and NagVis maps, run by the update actions in
+# cmk.update_config and by the cmk-migrate-maps command. The command sets up the
+# GUI itself, so this target depends on //cmk/gui:app and nothing of the GUI
+# may depend on it.
+py_library(
+    name = "migration",
+    srcs = glob(["cmk/maps/migration/**/*.py"]),
+    data = ["cmk/maps/py.typed"],
+    imports = ["."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        ":gui",
+        ":rest_api",
+        ":shared",
+        "//cmk/gui:app",
+        "//cmk/gui:auth_core",
+        "//cmk/gui:config",
+        "//cmk/gui:core_toolkit",
+        "//cmk/gui:session_context",
+        "//cmk/gui/userdb",
+        "//cmk/gui/watolib:config_infra",
+        "//cmk/gui/watolib:groups_io",
+        "//cmk/utils",
+        "//cmk/utils:paths",
+        "//cmk/utils:redis",
+        "//packages/cmk-ccc:log",
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-ccc:store",
+        "//packages/cmk-ccc:user",
+        "//packages/cmk-ccc:version",
+        "//packages/cmk-wsgi",
+    ],
+)
+
 # The GuiFeaturePlugin cmk.gui.main_modules discovers: the only target that
 # pulls in both halves of the feature, so neither half depends on the other.
 py_library(
@@ -220,6 +257,7 @@ py_wheel(
         ":backend",
         ":builtin_icons",
         ":gui",
+        ":migration",
         ":py_typed",
         ":registration",
         ":rest_api",

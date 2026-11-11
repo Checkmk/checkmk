@@ -23,9 +23,8 @@ from cmk.maps import gui as maps_gui
 from cmk.maps.gui.legacy_maps import legacy_maps_dir
 from cmk.maps.gui.pagetype import MapPage
 from cmk.maps.gui.store import get_own_map
+from cmk.maps.migration.legacy_maps import migrate_legacy_maps
 from cmk.maps.rest_api.utils import map_from_spec
-from cmk.update_config.internal import ExpiryVersion
-from cmk.update_config.plugins.actions.maps import MigrateLegacyMaps
 from cmk.utils import paths
 from tests.testlib.unit.gui.users import create_and_destroy_user
 
@@ -92,15 +91,6 @@ def _objects(spec: Mapping[str, object]) -> list[dict[str, object]]:
     return objects
 
 
-def _action() -> MigrateLegacyMaps:
-    return MigrateLegacyMaps(
-        name="migrate_legacy_maps",
-        title="test",
-        sort_index=0,
-        expiry_version=ExpiryVersion.NEVER,
-    )
-
-
 def _write_board(name: str, map_spec: dict[str, object]) -> Path:
     boards_dir = legacy_maps_dir() / "boards"
     boards_dir.mkdir(parents=True, exist_ok=True)
@@ -137,7 +127,7 @@ def _maps_backgrounds_dir() -> Path:
 
 def _run_with_board(name: str, map_spec: dict[str, object]) -> None:
     _write_board(name, map_spec)
-    _action()(_LOGGER, debug=True)
+    migrate_legacy_maps(_LOGGER)
 
 
 def _migrated(admin: UserId, name: str, map_spec: dict[str, object]) -> MapPage:
@@ -207,7 +197,7 @@ def _run_with_failing_store(admin: UserId) -> None:
     # An existing store file: the store lock opens it, only writing it fails.
     save_user_file("user_maps", {}, admin)
     with _read_only_profile(admin), pytest.raises(MKGeneralException):
-        _action()(_LOGGER, debug=True)
+        migrate_legacy_maps(_LOGGER)
 
 
 # --- what a board becomes ---------------------------------------------------
@@ -238,7 +228,7 @@ def test_the_legacy_map_file_is_left_alone() -> None:
     path = _write_board("legacy1", _complete_map())
     before = path.read_text()
 
-    _action()(_LOGGER, debug=True)
+    migrate_legacy_maps(_LOGGER)
 
     assert path.read_text() == before
 
@@ -920,7 +910,7 @@ def test_a_board_withheld_from_a_role_stays_withheld() -> None:
     _set_role_permissions("user", {"orbvis.view_all": False, "orbvis.view_withheld": False})
     _write_board("shown", _complete_map())
     _write_board("withheld", _complete_map())
-    _action()(_LOGGER, debug=True)
+    migrate_legacy_maps(_LOGGER)
 
     assert "map.shown" not in _role_permissions("user")
     assert _role_permissions("user")["map.withheld"] is False
@@ -1154,7 +1144,7 @@ def test_a_board_stored_by_a_stopped_run_is_recorded_as_migrated(admin: UserId) 
     _migrated(admin, "legacy", _complete_map())
     store.save_object_to_file(_record_path(), {"pending": {"legacy": "legacy"}})
 
-    _action()(_LOGGER, debug=True)
+    migrate_legacy_maps(_LOGGER)
 
     assert _outcomes() == {"legacy": "migrated"}
 

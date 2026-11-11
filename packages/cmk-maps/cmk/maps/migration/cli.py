@@ -27,11 +27,11 @@ from cmk.gui.watolib.pending_changes import (
     PendingChangesStore,
 )
 from cmk.gui.wsgi.app import gui_context
-from cmk.update_config.plugins.actions.nagvis_maps import migrate_nagvis_maps
+from cmk.maps.migration.nagvis_maps import migrate_nagvis_maps
 from cmk.utils import paths
 from cmk.utils.redis import disable_redis
 
-logger = logging.getLogger("cmk.update_config.migrate_maps")
+logger = logging.getLogger("cmk.maps.migration")
 
 
 def _parse_args(argv: Sequence[str]) -> argparse.Namespace:

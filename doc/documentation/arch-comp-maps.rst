@@ -174,7 +174,7 @@ endpoints use the GUI integration, but ``cmk.maps.gui`` may not import
 Module layers
 -------------
 
-The five top-level modules of the package are separate components in
+The six top-level modules of the package are separate components in
 ``module_layers.toml``, so the layering is enforced by a check rather than by
 convention (abridged, the file is authoritative):
 
@@ -195,6 +195,9 @@ Component                  May import
                            ``cmk.maps.shared``
 ``cmk.maps.registration``  ``cmk.gui_plugins.internal``, ``cmk.maps.gui``,
                            ``cmk.maps.rest_api``
+``cmk.maps.migration``     ``cmk.gui`` internals, ``cmk.maps.gui``,
+                           ``cmk.maps.rest_api``, ``cmk.maps.shared``. Nothing
+                           of the package imports it
 =========================  =====================================================
 
 That ``cmk.maps.gui`` imports ``cmk.gui`` internals is not an exception granted
@@ -1270,9 +1273,9 @@ wheel.
 Update from OrbVis
 ------------------
 
-On update, ``cmk.update_config.plugins.actions.maps`` (action
+On update, ``cmk.maps.migration.legacy_maps`` (update action
 ``migrate_legacy_maps``) imports the boards of an OrbVis installation into
-the pagetype store. The action owns the update side (owner, roles, outcome
+the pagetype store. It owns the update side (owner, roles, outcome
 record); reading and translating the OrbVis files is
 ``cmk.maps.gui.legacy_maps``:
 
@@ -1323,7 +1326,7 @@ record); reading and translating the OrbVis files is
 Update from NagVis
 ------------------
 
-On update, ``cmk.update_config.plugins.actions.nagvis_maps`` (action
+On update, ``cmk.maps.migration.nagvis_maps`` (update action
 ``migrate_nagvis_maps``) imports the maps of the site's NagVis into the
 pagetype store, after the OrbVis boards. Reading the NagVis files is
 ``cmk.maps.gui.nagvis_maps``, which translates each map with the ``.cfg``
@@ -1340,7 +1343,7 @@ import of the editor:
   in a name becomes ``_``, as in the editor's import. The outcome per map is
   recorded in ``var/maps/nagvis_maps_migration.mk``, together with the owner
   and name it was last stored as (``migrated_as``).
-* ``cmk-migrate-maps`` (``cmk.update_config.migrate_maps``) runs the same
+* ``cmk-migrate-maps`` (``cmk.maps.migration.cli``) runs the same
   migration on a running site, optionally for given maps only. With ``-f`` it
   migrates recorded maps again: one whose ``migrated_as`` map still exists
   among the owner's maps replaces it under its name, also if it was changed
@@ -1400,8 +1403,8 @@ core, each generic rather than Maps-specific:
   editor (``central_settings``, ``render_settings_page``).
 * GUI hooks: ``sites-saved`` writes ``sitespecs.mk``, ``pre-activate-changes``
   writes ``sitespecs.mk`` and ``folder_perms.mk``.
-* ``cmk.update_config``: the OrbVis and NagVis migrations, which also write
-  role permissions.
+* ``cmk.update_config``: the update actions that run the OrbVis and NagVis
+  migrations of ``cmk.maps.migration``, which also write role permissions.
 
 Risks and technical debts
 =========================

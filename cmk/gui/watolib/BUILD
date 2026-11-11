@@ -23,6 +23,7 @@ py_library(
         "//non-free/packages:__subpackages__",
         "//packages/cmk-backup:__pkg__",
         "//packages/cmk-flags:__pkg__",
+        "//packages/cmk-maps:__pkg__",
         "//packages/cmk-wsgi:__pkg__",
         "//tests:__subpackages__",
     ],
@@ -124,6 +125,7 @@ py_library(
     imports = ["../../.."],
     visibility = [
         "//cmk:__subpackages__",
+        "//packages/cmk-maps:__pkg__",
         "//tests:__subpackages__",
     ],
     deps = [

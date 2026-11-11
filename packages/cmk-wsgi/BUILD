@@ -20,6 +20,7 @@ py_library(
         "//cmk:__subpackages__",
         "//non-free/packages/cmk-agent-registration-extended:__pkg__",
         "//omd/packages/check_mk:__pkg__",
+        "//packages/cmk-maps:__pkg__",
         "//tests:__subpackages__",
     ],
     deps = [

@@ -17,6 +17,7 @@ py_cmk_test(
         # map config with the daemon's real verifier to pin the wire format.
         "//packages/cmk-maps:backend",
         "//packages/cmk-maps:gui",
+        "//packages/cmk-maps:migration",
         # The map-domain REST endpoints, exercised by test_rest_api_spec.
         "//packages/cmk-maps:rest_api",
         # Pins the daemon's critical states to the app's generated type.

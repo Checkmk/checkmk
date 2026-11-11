@@ -20,11 +20,7 @@ from cmk.gui.userdb import UserRolesConfigFile
 from cmk.gui.watolib.groups_io import load_group_information, save_group_information
 from cmk.maps.gui.pagetype import MapPage
 from cmk.maps.gui.store import get_own_map, user_maps_path
-from cmk.update_config.internal import ExpiryVersion
-from cmk.update_config.plugins.actions.nagvis_maps import (
-    migrate_nagvis_maps,
-    MigrateNagVisMaps,
-)
+from cmk.maps.migration.nagvis_maps import migrate_nagvis_maps
 from cmk.utils import paths
 from tests.testlib.unit.gui.users import create_and_destroy_user
 
@@ -45,18 +41,13 @@ def fixture_admin(with_admin: tuple[UserId, str]) -> UserId:
     return with_admin[0]
 
 
-def _action() -> MigrateNagVisMaps:
+def _migrate() -> None:
     # As every site sets it up; ``nagvis.ini.php``, read after it, may override it.
     _write_nagvis_file(
         "conf.d/authorisation.ini.php",
         '[global]\nauthorisationmodule="CoreAuthorisationModMultisite"\n',
     )
-    return MigrateNagVisMaps(
-        name="migrate_nagvis_maps",
-        title="test",
-        sort_index=0,
-        expiry_version=ExpiryVersion.NEVER,
-    )
+    migrate_nagvis_maps(_LOGGER)
 
 
 def _write_nagvis_file(relative: str, text: str) -> Path:
@@ -81,7 +72,7 @@ def _write_nagvis_image(kind: str, name: str, contents: bytes = _PNG) -> None:
 
 def _migrated(admin: UserId, name: str, *blocks: str) -> MapPage:
     _write_map(name, *blocks)
-    _action()(_LOGGER, debug=True)
+    _migrate()
     page = get_own_map(admin, name)
     assert page is not None
     return page
@@ -181,7 +172,7 @@ def test_a_shape_is_removed_when_its_map_cannot_be_stored(admin: UserId) -> None
     # An existing store file: the store lock opens it, only writing it fails.
     save_user_file("user_maps", {}, admin)
     with _maps_unwritable(admin), pytest.raises(MKGeneralException):
-        _action()(_LOGGER, debug=True)
+        _migrate()
 
     assert not (paths.omd_root / "var" / "maps" / "images" / "cloud.png").exists()
 
@@ -197,7 +188,7 @@ def test_a_shape_in_the_library_before_stays_when_its_map_cannot_be_stored(
     _write_map("office", "define shape {\nicon=cloud.png\nx=1\ny=1\n}")
     save_user_file("user_maps", {}, admin)
     with _maps_unwritable(admin), pytest.raises(MKGeneralException):
-        _action()(_LOGGER, debug=True)
+        _migrate()
 
     assert library_image.read_bytes() == _PNG
 
@@ -227,7 +218,7 @@ def test_a_migrated_map_is_not_overwritten_later(admin: UserId) -> None:
     _migrated(admin, "office", "define global {\nalias=First\n}")
     _write_map("office", "define global {\nalias=Second\n}")
 
-    _action()(_LOGGER, debug=True)
+    _migrate()
 
     page = get_own_map(admin, "office")
     assert page is not None
@@ -236,11 +227,11 @@ def test_a_migrated_map_is_not_overwritten_later(admin: UserId) -> None:
 
 def test_a_map_named_like_one_of_the_admin_gets_the_fallback_name(admin: UserId) -> None:
     _write_map("office", "define global {\nalias=First\n}")
-    _action()(_LOGGER, debug=True)
+    _migrate()
     store.save_object_to_file(_record_path(), {})
     _write_map("office", "define global {\nalias=Second\n}")
 
-    _action()(_LOGGER, debug=True)
+    _migrate()
 
     page = get_own_map(admin, "office_legacy")
     assert page is not None
@@ -250,7 +241,7 @@ def test_a_map_named_like_one_of_the_admin_gets_the_fallback_name(admin: UserId)
 def test_a_map_named_other_gets_the_fallback_name(admin: UserId) -> None:
     _write_map("other", _HOST)
 
-    _action()(_LOGGER, debug=True)
+    _migrate()
 
     assert get_own_map(admin, "other") is None
     assert get_own_map(admin, "other_legacy") is not None
@@ -259,10 +250,10 @@ def test_a_map_named_other_gets_the_fallback_name(admin: UserId) -> None:
 def test_a_map_whose_fallback_name_is_taken_too_gets_the_next_one(admin: UserId) -> None:
     _write_map("office", _HOST)
     _write_map("office_legacy", _HOST)
-    _action()(_LOGGER, debug=True)
+    _migrate()
     store.save_object_to_file(_record_path(), {})
 
-    _action()(_LOGGER, debug=True)
+    _migrate()
 
     assert get_own_map(admin, "office_legacy2") is not None
 
@@ -270,7 +261,7 @@ def test_a_map_whose_fallback_name_is_taken_too_gets_the_next_one(admin: UserId)
 def test_a_map_name_maps_does_not_take_is_cleaned(admin: UserId) -> None:
     _write_map("core.switches", _HOST)
 
-    _action()(_LOGGER, debug=True)
+    _migrate()
 
     assert get_own_map(admin, "core_switches") is not None
     assert _outcomes() == {"core.switches": "migrated"}
@@ -282,7 +273,7 @@ def test_a_cleaned_name_that_is_taken_names_each_step(
     save_user_file("user_maps", {"core_switches": {"title": "Own"}}, admin)
     _write_map("core.switches", _HOST)
 
-    _action()(_LOGGER, debug=True)
+    _migrate()
 
     assert get_own_map(admin, "core_switches_legacy") is not None
     warnings = _warnings(caplog)
@@ -310,7 +301,7 @@ def test_a_link_follows_its_map_to_the_cleaned_name(admin: UserId) -> None:
 def test_a_link_follows_its_map_to_the_name_an_earlier_run_gave_it(admin: UserId) -> None:
     save_user_file("user_maps", {"office": {"title": "Own"}}, admin)
     _write_map("office", _HOST)
-    _action()(_LOGGER, debug=True)
+    _migrate()
 
     page = _migrated(admin, "overview", "define map {\nmap_name=office\nx=10\ny=20\n}")
 
@@ -323,7 +314,7 @@ def test_a_forced_run_of_a_single_map_keeps_its_link_to_the_fallback_name(
     save_user_file("user_maps", {"office": {"title": "Own"}}, admin)
     _write_map("office", _HOST)
     _write_map("overview", "define map {\nmap_name=office\nx=10\ny=20\n}")
-    _action()(_LOGGER, debug=True)
+    _migrate()
 
     migrate_nagvis_maps(_LOGGER, only=["overview"], force=True)
 
@@ -336,7 +327,7 @@ def test_a_long_name_is_shortened_for_its_fallback(admin: UserId) -> None:
     save_user_file("user_maps", {name: {"title": "Own"}}, admin)
     _write_map(name, _HOST)
 
-    _action()(_LOGGER, debug=True)
+    _migrate()
 
     assert _outcomes() == {name: "migrated"}
     assert get_own_map(admin, "a" * 93 + "_legacy") is not None
@@ -349,7 +340,7 @@ def test_an_unreadable_map_is_left_for_a_later_run() -> None:
     locked.chmod(0o000)
     try:
         _write_map("office", _HOST)
-        _action()(_LOGGER, debug=True)
+        _migrate()
     finally:
         locked.chmod(0o600)
 
@@ -360,7 +351,7 @@ def test_a_map_stored_by_a_stopped_run_is_recorded_as_migrated(admin: UserId) ->
     _migrated(admin, "office", _HOST)
     store.save_object_to_file(_record_path(), {"maps": {}, "pending": {"office": "office"}})
 
-    _action()(_LOGGER, debug=True)
+    _migrate()
 
     assert _outcomes() == {"office": "migrated"}
     assert get_own_map(admin, "office_legacy") is None
@@ -379,7 +370,7 @@ def test_a_map_a_stopped_run_did_not_store_is_migrated_again(admin: UserId) -> N
 
 def test_a_forced_run_replaces_the_earlier_migration(admin: UserId) -> None:
     _write_map("office", "define global {\nalias=First\n}")
-    _action()(_LOGGER, debug=True)
+    _migrate()
     _write_map("office", "define global {\nalias=Second\n}")
 
     assert migrate_nagvis_maps(_LOGGER, force=True).complete
@@ -393,7 +384,7 @@ def test_a_forced_run_replaces_the_earlier_migration(admin: UserId) -> None:
 def test_a_forced_run_never_replaces_a_map_created_otherwise(admin: UserId) -> None:
     save_user_file("user_maps", {"office": {"title": "Own"}}, admin)
     _write_map("office", "define global {\nalias=First\n}")
-    _action()(_LOGGER, debug=True)
+    _migrate()
     _write_map("office", "define global {\nalias=Second\n}")
 
     migrate_nagvis_maps(_LOGGER, force=True)
@@ -521,7 +512,7 @@ def test_only_the_given_maps_are_migrated() -> None:
 
 def test_a_given_migrated_map_is_left_untouched(admin: UserId) -> None:
     _write_map("office", "define global {\nalias=First\n}")
-    _action()(_LOGGER, debug=True)
+    _migrate()
     _write_map("office", "define global {\nalias=Second\n}")
 
     assert migrate_nagvis_maps(_LOGGER, only=["office"]).complete
@@ -616,7 +607,7 @@ def test_the_maps_of_another_admin_are_named(
 ) -> None:
     with create_and_destroy_user(username="bob", role="admin", config=load_config):
         _write_map("office", _HOST)
-        _action()(_LOGGER, debug=True)
+        _migrate()
 
         assert get_own_map(UserId("bob"), "office") is not None
     assert any("Deleting bob" in warning for warning in _warnings(caplog))

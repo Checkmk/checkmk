@@ -930,6 +930,19 @@ allows = [
   "cmk.maps.rest_api",
 ]
 
+# The migrations of OrbVis boards and NagVis maps into Maps and the
+# cmk-migrate-maps command. The update actions in cmk.update_config call into
+# it; nothing of the feature itself imports it.
+[components."cmk.maps.migration"]
+allows = [
+  "@ccc",
+  "cmk.gui",
+  "cmk.maps.gui",
+  "cmk.maps.rest_api",
+  "cmk.maps.shared",
+  "cmk.utils",
+]
+
 [components."cmk.mcp"]
 allows = ["@ccc", "@trace", "@crash"]
 
@@ -1730,9 +1743,7 @@ allows = [
   "cmk.inventory",
   "cmk.licensing",
   "cmk.flags.gui",
-  "cmk.maps.gui",
-  "cmk.maps.rest_api",
-  "cmk.maps.shared",
+  "cmk.maps.migration",
   "cmk.message_broker_certs",
   "cmk.data_backend.gui",
   "cmk.data_backend.telemetry_metrics.gui",

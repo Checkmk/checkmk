@@ -303,11 +303,7 @@ fn setup_single_directory(privileges: Privileges) -> AnyhowResult<Option<PathBuf
         install_dir
     );
 
-    let owning_uid = nix::unistd::Uid::from_raw(
-        std::fs::metadata(install_dir.join("runtime").join("controller"))
-            .context("Could not determine agent user")?
-            .uid(),
-    );
+    let owning_uid = agent_user_of(&install_dir.join("runtime").join("controller"))?;
 
     become_user(UserRepr::Uid(owning_uid)).context(format!(
         "Failed to run as user '{}'. Please execute with sufficient permissions (maybe try 'sudo').",
@@ -315,6 +311,19 @@ fn setup_single_directory(privileges: Privileges) -> AnyhowResult<Option<PathBuf
     ))?;
 
     Ok(Some(install_dir))
+}
+
+/// In the non-root deployment the agent user owns `runtime`. That user could
+/// therefore replace `runtime/controller` with a link to a directory owned by
+/// root. A run as root would then keep root.
+#[cfg(unix)]
+fn agent_user_of(controller_dir: &Path) -> AnyhowResult<unistd::Uid> {
+    let metadata =
+        std::fs::symlink_metadata(controller_dir).context("Could not determine agent user")?;
+    if !metadata.is_dir() {
+        bail!("Could not determine agent user: {controller_dir:?} is not a directory");
+    }
+    Ok(unistd::Uid::from_raw(metadata.uid()))
 }
 
 #[cfg(unix)]
@@ -385,6 +394,25 @@ mod tests {
             privileges_of(&cli::Mode::Daemon(cli::DaemonOpts::parse_from(["daemon"]))),
             Privileges::AgentUser
         );
+    }
+
+    #[test]
+    fn test_the_owner_of_runtime_controller_is_the_agent_user() {
+        let dir = tempfile::tempdir().unwrap();
+
+        assert_eq!(
+            agent_user_of(dir.path()).unwrap().as_raw(),
+            std::fs::metadata(dir.path()).unwrap().uid()
+        );
+    }
+
+    #[test]
+    fn test_a_linked_runtime_controller_is_refused() {
+        let dir = tempfile::tempdir().unwrap();
+        let link = dir.path().join("controller");
+        std::os::unix::fs::symlink(dir.path(), &link).unwrap();
+
+        assert!(agent_user_of(&link).is_err());
     }
 }
 

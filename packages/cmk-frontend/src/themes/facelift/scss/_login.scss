@@ -220,9 +220,27 @@ body.login {
   }
 
   &.trial_mode_selection {
+    // The dialog outgrows the fixed-height login box and gets cut off on short
+    // windows. Center it with flex auto margins instead, so the page scrolls,
+    // as master does for all login pages (fe5e549bc84).
+    div#main_page_content .simplebar-content {
+      display: flex;
+      box-sizing: border-box;
+      min-height: 100%;
+    }
+
+    div#login {
+      position: relative;
+      height: auto;
+      padding: 20px 0;
+    }
+
     /* stylelint-disable-next-line selector-id-pattern */
     #login_window {
+      top: 0;
+      left: 0;
       width: 640px;
+      margin: 0 auto 10px;
       text-align: left;
     }
   }

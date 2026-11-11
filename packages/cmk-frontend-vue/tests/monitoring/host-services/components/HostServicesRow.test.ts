@@ -305,6 +305,20 @@ test('renders the contacts of a service, sorted alphabetically', () => {
   expect(tags.map((tag) => tag.textContent?.trim())).toEqual(['hh', 'ops'])
 })
 
+test('clicking a contact narrows the listing to the services it is a contact of', async () => {
+  const service = makeListingService()
+  mountRow(makeService({ contacts: ['ops', 'hh'] }), makeTableRow(), {}, service)
+
+  await fireEvent.click(screen.getByRole('button', { name: 'hh' }))
+
+  expect(service.filterState.value).toStrictEqual({
+    type: 'condition',
+    field: 'contacts',
+    op: 'one_of',
+    value: ['hh']
+  })
+})
+
 test('renders the tags of a service, sorted alphabetically', () => {
   const { container } = mountRow(makeService({ tags: { networking: 'lan', criticality: 'prod' } }))
 

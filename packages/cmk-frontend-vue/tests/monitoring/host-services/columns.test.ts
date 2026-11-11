@@ -191,6 +191,12 @@ test('the select column is never on offer in the picker', () => {
   expect(makeService().toggleableColumns.map((column) => column.id)).not.toContain('select')
 })
 
+test('the contacts column keeps its substring search', () => {
+  const contactsColumn = serviceColumns().find((column) => columnId(column) === 'contacts')
+
+  expect(contactsColumn?.meta?.filter).toEqual({ type: 'string-input', field: 'contacts' })
+})
+
 function nameColumn(columns: ColumnDef<HostServiceEntry>[]): ColumnDef<HostServiceEntry> {
   return columns.find((column) => columnId(column) === 'name')!
 }

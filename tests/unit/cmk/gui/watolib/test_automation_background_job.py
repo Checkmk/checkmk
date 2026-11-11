@@ -146,7 +146,6 @@ class TestCheckmkAutomationBackgroundJob:
             assert job_result == result
 
 
-@pytest.mark.xfail(strict=True, reason="crash group 4977: non-ASCII request rejected")
 @pytest.mark.usefixtures("request_context")
 def test_remote_automation_start_accepts_non_ascii_requests() -> None:
     api_request = CheckmkAutomationRequest(

@@ -472,3 +472,86 @@ class ListedHostNic(HostNic):
 
 class HostNics(RootModel[list[HostNic]]):
     model_config = ConfigDict(frozen=True)
+
+
+class AutoRollupRetentionDetails(V4Model):
+    """Recovery points kept for frequency times the interval, e.g. 4 weeks"""
+
+    # HOURLY, DAILY, WEEKLY, MONTHLY or YEARLY
+    snapshot_interval_type: str = Field(alias="snapshotIntervalType")
+    frequency: int
+
+
+class Retention(V4Model):
+    # A number of recovery points (linear retention) or an auto rollup
+    local: int | AutoRollupRetentionDetails | None = None
+    remote: int | AutoRollupRetentionDetails | None = None
+
+
+class ProtectionSchedule(V4Model):
+    recovery_point_objective_time_seconds: int = Field(alias="recoveryPointObjectiveTimeSeconds")
+    retention: Retention | None = None
+
+
+class ReplicationConfiguration(V4Model):
+    source_location_label: str = Field(alias="sourceLocationLabel")
+    # None: the recovery points stay at the source
+    remote_location_label: str | None = Field(None, alias="remoteLocationLabel")
+    schedule: ProtectionSchedule
+
+
+class ReplicationLocation(V4Model):
+    label: str
+    domain_manager_ext_id: str | None = Field(None, alias="domainManagerExtId")
+    # The primary location's Prism Central owns the policy
+    is_primary: bool = Field(False, alias="isPrimary")
+
+
+class ProtectedVm(V4Model):
+    model_config = ConfigDict(frozen=True, extra="ignore", populate_by_name=True)
+
+    ext_id: str = Field(alias="extId")
+    name: str
+    newest_recovery_point: AwareDatetime | None = Field(None, alias="newestRecoveryPoint")
+    # Prism Central couldn't report the VM's recovery points
+    recovery_point_unknown: bool | None = Field(None, alias="recoveryPointUnknown")
+
+
+class ProtectionPolicy(V4Model):
+    """A protection policy with the VMs it protects, as written to prism_protection_policies"""
+
+    ext_id: str = Field(alias="extId")
+    name: str
+    replication_locations: list[ReplicationLocation] = Field([], alias="replicationLocations")
+    replication_configurations: list[ReplicationConfiguration] = Field(
+        [], alias="replicationConfigurations"
+    )
+    vms: list[ProtectedVm] = []
+
+
+class ProtectionPolicies(RootModel[list[ProtectionPolicy]]):
+    model_config = ConfigDict(frozen=True)
+
+
+class ProtectionPolicyState(V4Model):
+    policy: Reference | None = None
+
+
+class VmProtection(V4Model):
+    """An item of the AHV VM list, reduced to its protection policy"""
+
+    ext_id: str = Field(alias="extId")
+    name: str | None = None
+    protection_policy_state: ProtectionPolicyState | None = Field(
+        None, alias="protectionPolicyState"
+    )
+
+    @property
+    def policy_ext_id(self) -> str | None:
+        if self.protection_policy_state is None or self.protection_policy_state.policy is None:
+            return None
+        return self.protection_policy_state.policy.ext_id
+
+
+class RecoveryPoint(V4Model):
+    creation_time: AwareDatetime = Field(alias="creationTime")

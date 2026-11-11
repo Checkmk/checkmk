@@ -1,0 +1,331 @@
+{
+  "data": [
+    {
+      "$objectType": "datapolicies.v4.config.ProtectionPolicy",
+      "extId": "f2198935-a3d2-4f3e-b850-504d6cb75043",
+      "ownerExtId": "00000000-0000-0000-0000-000000000000",
+      "name": "test",
+      "replicationLocations": [
+        {
+          "replicationSubLocation": {
+            "$objectType": "datapolicies.v4.config.NutanixCluster",
+            "clusterExtIds": ["000658fe-0a81-0d90-1db7-7cc2558be654"]
+          },
+          "$objectType": "datapolicies.v4.config.ReplicationLocation",
+          "label": "pc-b",
+          "domainManagerExtId": "a61a8d7b-a202-4338-8384-98492cc494a1",
+          "isPrimary": true
+        },
+        {
+          "replicationSubLocation": {
+            "$objectType": "datapolicies.v4.config.NutanixCluster",
+            "clusterExtIds": ["000645cc-2b3a-3b1c-06a8-7cc255ec3615"]
+          },
+          "label": "pc-a-1",
+          "domainManagerExtId": "0806a141-8916-471b-99fd-b5119ff280ef",
+          "isPrimary": false
+        }
+      ],
+      "replicationConfigurations": [
+        {
+          "$objectType": "datapolicies.v4.config.ReplicationConfiguration",
+          "sourceLocationLabel": "pc-b",
+          "remoteLocationLabel": "pc-a-1",
+          "schedule": {
+            "scheduleExtId": "e1a791b9-cff7-4b73-986a-29661c17f715",
+            "retention": {
+              "$objectType": "datapolicies.v4.config.LinearRetention",
+              "local": 1,
+              "remote": 1
+            },
+            "$objectType": "datapolicies.v4.config.Schedule",
+            "recoveryPointType": "CRASH_CONSISTENT",
+            "recoveryPointObjectiveTimeSeconds": 3600,
+            "startTime": "18h:30m",
+            "isReplicationPaused": false
+          }
+        },
+        {
+          "sourceLocationLabel": "pc-a-1",
+          "remoteLocationLabel": "pc-b",
+          "schedule": {
+            "scheduleExtId": "148d504c-d044-497a-aaf0-4c110e86062e",
+            "retention": {
+              "$objectType": "datapolicies.v4.config.LinearRetention",
+              "local": 1,
+              "remote": 1
+            },
+            "$objectType": "datapolicies.v4.config.Schedule",
+            "recoveryPointType": "CRASH_CONSISTENT",
+            "recoveryPointObjectiveTimeSeconds": 3600,
+            "startTime": "18h:30m",
+            "isReplicationPaused": false
+          }
+        }
+      ]
+    },
+    {
+      "$objectType": "datapolicies.v4.config.ProtectionPolicy",
+      "extId": "a09797a5-5883-42bd-ba01-57d87b7b8e64",
+      "ownerExtId": "00000000-0000-0000-0000-000000000000",
+      "name": "test_backup4",
+      "replicationLocations": [
+        {
+          "replicationSubLocation": {
+            "$objectType": "datapolicies.v4.config.NutanixCluster",
+            "clusterExtIds": ["000645c0-d9bc-94f6-1db7-7cc2558be654"]
+          },
+          "$objectType": "datapolicies.v4.config.ReplicationLocation",
+          "label": "pc-b",
+          "domainManagerExtId": "2521b067-eb07-489e-9ba1-8448d38be393",
+          "isPrimary": true
+        },
+        {
+          "replicationSubLocation": {
+            "$objectType": "datapolicies.v4.config.NutanixCluster",
+            "clusterExtIds": ["000645cc-2b3a-3b1c-06a8-7cc255ec3615"]
+          },
+          "label": "Unnamed-1",
+          "domainManagerExtId": "0806a141-8916-471b-99fd-b5119ff280ef",
+          "isPrimary": false
+        }
+      ],
+      "replicationConfigurations": [
+        {
+          "$objectType": "datapolicies.v4.config.ReplicationConfiguration",
+          "sourceLocationLabel": "pc-b",
+          "remoteLocationLabel": "Unnamed-1",
+          "schedule": {
+            "scheduleExtId": "52bc4ca9-d598-41e2-a077-f1ee29e76e84",
+            "retention": {
+              "$objectType": "datapolicies.v4.config.LinearRetention",
+              "local": 1,
+              "remote": 1
+            },
+            "$objectType": "datapolicies.v4.config.Schedule",
+            "recoveryPointType": "CRASH_CONSISTENT",
+            "recoveryPointObjectiveTimeSeconds": 3600,
+            "isReplicationPaused": false
+          }
+        },
+        {
+          "sourceLocationLabel": "Unnamed-1",
+          "remoteLocationLabel": "pc-b",
+          "schedule": {
+            "scheduleExtId": "d1a4694d-2603-4d98-a20f-90bc9a29b3ea",
+            "retention": {
+              "$objectType": "datapolicies.v4.config.LinearRetention",
+              "local": 1,
+              "remote": 1
+            },
+            "$objectType": "datapolicies.v4.config.Schedule",
+            "recoveryPointType": "CRASH_CONSISTENT",
+            "recoveryPointObjectiveTimeSeconds": 3600,
+            "isReplicationPaused": false
+          }
+        }
+      ],
+      "categoryIds": ["602cdbc0-bc61-4f4c-637f-e1ab6fa32385"]
+    },
+    {
+      "$objectType": "datapolicies.v4.config.ProtectionPolicy",
+      "extId": "43b613be-1e38-46c5-82c7-bf675647bf79",
+      "ownerExtId": "00000000-0000-0000-0000-000000000000",
+      "name": "test_backup1",
+      "replicationLocations": [
+        {
+          "replicationSubLocation": {
+            "$objectType": "datapolicies.v4.config.NutanixCluster",
+            "clusterExtIds": ["000645c0-d9bc-94f6-1db7-7cc2558be654"]
+          },
+          "$objectType": "datapolicies.v4.config.ReplicationLocation",
+          "label": "pc-b",
+          "domainManagerExtId": "2521b067-eb07-489e-9ba1-8448d38be393",
+          "isPrimary": true
+        },
+        {
+          "replicationSubLocation": {
+            "$objectType": "datapolicies.v4.config.NutanixCluster",
+            "clusterExtIds": ["000645cc-2b3a-3b1c-06a8-7cc255ec3615"]
+          },
+          "label": "Unnamed-1",
+          "domainManagerExtId": "0806a141-8916-471b-99fd-b5119ff280ef",
+          "isPrimary": false
+        }
+      ],
+      "replicationConfigurations": [
+        {
+          "$objectType": "datapolicies.v4.config.ReplicationConfiguration",
+          "sourceLocationLabel": "pc-b",
+          "remoteLocationLabel": "Unnamed-1",
+          "schedule": {
+            "scheduleExtId": "61decc66-0a28-4c44-baba-6758e615cc62",
+            "retention": {
+              "$objectType": "datapolicies.v4.config.LinearRetention",
+              "local": 1,
+              "remote": 1
+            },
+            "$objectType": "datapolicies.v4.config.Schedule",
+            "recoveryPointType": "CRASH_CONSISTENT",
+            "recoveryPointObjectiveTimeSeconds": 3600,
+            "isReplicationPaused": false
+          }
+        },
+        {
+          "sourceLocationLabel": "Unnamed-1",
+          "remoteLocationLabel": "pc-b",
+          "schedule": {
+            "scheduleExtId": "3789882e-b2aa-4342-864a-5e170aac3ceb",
+            "retention": {
+              "$objectType": "datapolicies.v4.config.LinearRetention",
+              "local": 1,
+              "remote": 1
+            },
+            "$objectType": "datapolicies.v4.config.Schedule",
+            "recoveryPointType": "CRASH_CONSISTENT",
+            "recoveryPointObjectiveTimeSeconds": 3600,
+            "isReplicationPaused": false
+          }
+        }
+      ]
+    },
+    {
+      "$objectType": "datapolicies.v4.config.ProtectionPolicy",
+      "extId": "2b6ea400-1fd0-4683-b379-afc0c589036a",
+      "ownerExtId": "00000000-0000-0000-0000-000000000000",
+      "name": "pts-pp",
+      "replicationLocations": [
+        {
+          "$objectType": "datapolicies.v4.config.ReplicationLocation",
+          "label": "pc-a",
+          "domainManagerExtId": "0806a141-8916-471b-99fd-b5119ff280ef",
+          "isPrimary": true
+        },
+        {
+          "replicationSubLocation": {
+            "$objectType": "datapolicies.v4.config.NutanixCluster",
+            "clusterExtIds": ["000645ce-992f-e6af-1020-7cc255ec3590"]
+          },
+          "label": "pc-c-1",
+          "domainManagerExtId": "539b621c-85a5-47ff-b9c9-5479a7eb3f3c",
+          "isPrimary": false
+        }
+      ],
+      "replicationConfigurations": [
+        {
+          "$objectType": "datapolicies.v4.config.ReplicationConfiguration",
+          "sourceLocationLabel": "pc-a",
+          "remoteLocationLabel": "pc-c-1",
+          "schedule": {
+            "scheduleExtId": "cb56caeb-618e-4464-b69e-f9058622c378",
+            "retention": {
+              "$objectType": "datapolicies.v4.config.LinearRetention",
+              "local": 1,
+              "remote": 1
+            },
+            "$objectType": "datapolicies.v4.config.Schedule",
+            "recoveryPointType": "CRASH_CONSISTENT",
+            "recoveryPointObjectiveTimeSeconds": 3600,
+            "isReplicationPaused": false
+          }
+        },
+        {
+          "sourceLocationLabel": "pc-c-1",
+          "remoteLocationLabel": "pc-a",
+          "schedule": {
+            "scheduleExtId": "f5518710-ad72-4709-86b1-46173662564d",
+            "retention": {
+              "$objectType": "datapolicies.v4.config.LinearRetention",
+              "local": 1,
+              "remote": 1
+            },
+            "$objectType": "datapolicies.v4.config.Schedule",
+            "recoveryPointType": "CRASH_CONSISTENT",
+            "recoveryPointObjectiveTimeSeconds": 3600,
+            "isReplicationPaused": false
+          }
+        }
+      ],
+      "categoryIds": ["d36cc839-3ae5-4a0f-616b-8c160992e129"]
+    },
+    {
+      "$objectType": "datapolicies.v4.config.ProtectionPolicy",
+      "extId": "6937453c-62f9-47c8-89f9-8e86228d134a",
+      "ownerExtId": "00000000-0000-0000-0000-000000000000",
+      "name": "cross-cluster",
+      "replicationLocations": [
+        {
+          "replicationSubLocation": {
+            "$objectType": "datapolicies.v4.config.NutanixCluster",
+            "clusterExtIds": ["000645cc-2b3a-3b1c-06a8-7cc255ec3615"]
+          },
+          "$objectType": "datapolicies.v4.config.ReplicationLocation",
+          "label": "pc-a",
+          "domainManagerExtId": "0806a141-8916-471b-99fd-b5119ff280ef",
+          "isPrimary": true
+        },
+        {
+          "replicationSubLocation": {
+            "$objectType": "datapolicies.v4.config.NutanixCluster",
+            "clusterExtIds": ["000645ce-992f-e6af-1020-7cc255ec3590"]
+          },
+          "label": "pc-c-1",
+          "domainManagerExtId": "539b621c-85a5-47ff-b9c9-5479a7eb3f3c",
+          "isPrimary": false
+        }
+      ],
+      "replicationConfigurations": [
+        {
+          "$objectType": "datapolicies.v4.config.ReplicationConfiguration",
+          "sourceLocationLabel": "pc-a",
+          "schedule": {
+            "scheduleExtId": "5a7ab681-773e-4689-a66b-e5866bcf9bf1",
+            "retention": {
+              "$objectType": "datapolicies.v4.config.LinearRetention",
+              "local": 1
+            },
+            "$objectType": "datapolicies.v4.config.Schedule",
+            "recoveryPointType": "CRASH_CONSISTENT",
+            "recoveryPointObjectiveTimeSeconds": 3600,
+            "isReplicationPaused": false
+          }
+        },
+        {
+          "sourceLocationLabel": "pc-a",
+          "remoteLocationLabel": "pc-c-1",
+          "schedule": {
+            "scheduleExtId": "6707b43b-d204-4fbe-8167-fc82c00ada5d",
+            "retention": {
+              "$objectType": "datapolicies.v4.config.LinearRetention",
+              "local": 1,
+              "remote": 1
+            },
+            "$objectType": "datapolicies.v4.config.Schedule",
+            "recoveryPointType": "CRASH_CONSISTENT",
+            "recoveryPointObjectiveTimeSeconds": 3600,
+            "isReplicationPaused": false
+          }
+        },
+        {
+          "sourceLocationLabel": "pc-c-1",
+          "remoteLocationLabel": "pc-a",
+          "schedule": {
+            "scheduleExtId": "24d377b7-524a-43a2-8137-b3e649cba215",
+            "retention": {
+              "$objectType": "datapolicies.v4.config.LinearRetention",
+              "local": 1,
+              "remote": 1
+            },
+            "$objectType": "datapolicies.v4.config.Schedule",
+            "recoveryPointType": "CRASH_CONSISTENT",
+            "recoveryPointObjectiveTimeSeconds": 3600,
+            "isReplicationPaused": false
+          }
+        }
+      ]
+    }
+  ],
+  "metadata": {
+    "totalAvailableResults": 5
+  }
+}

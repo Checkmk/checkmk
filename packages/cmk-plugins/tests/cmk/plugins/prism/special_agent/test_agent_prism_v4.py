@@ -5,7 +5,7 @@
 import io
 import json
 from collections.abc import Callable, Mapping, Sequence
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from http import HTTPStatus
 from pathlib import Path
 from types import MappingProxyType
@@ -18,6 +18,7 @@ from responses import matchers
 
 from cmk.plugins.prism.special_agent.agent_prism import agent_prism_main, parse_arguments
 from cmk.plugins.prism.special_agent.agent_prism_v4 import (
+    AHV_VM_SELECT,
     AHV_VM_STATS_PATH,
     AHV_VMS_PATH,
     ALERTS_PATH,
@@ -37,6 +38,7 @@ from cmk.plugins.prism.special_agent.agent_prism_v4 import (
     fetch_host_nics,
     fetch_hosts,
     fetch_nodes,
+    fetch_protection_policies,
     fetch_remote_support,
     fetch_storage_pools,
     fetch_vms,
@@ -45,6 +47,8 @@ from cmk.plugins.prism.special_agent.agent_prism_v4 import (
     FetchSchedule,
     HOST_NICS_PATH,
     HOSTS_PATH,
+    PROTECTION_POLICIES_PATH,
+    RECOVERY_POINTS_PATH,
     run_fetchers,
     Section,
     Unroutable,
@@ -316,6 +320,9 @@ def _routing() -> ClusterRouting:
     return ClusterRouting.from_clusters(_recorded_cluster_list())
 
 
+NOW = datetime(2026, 11, 11, 16, 0, tzinfo=UTC)
+
+
 def _context(
     messages: AgentMessages | None = None,
     hosts: Sequence[JsonObject] | PrismV4Error = (),
@@ -326,6 +333,7 @@ def _context(
         PASSWORD,
         True,
         timeout=10,
+        now=lambda: NOW,
     )
     return FetchContext(
         client, [], _routing(), AgentMessages() if messages is None else messages, hosts
@@ -716,6 +724,7 @@ def test_v4_agent_queries_only_the_v4_api(api: responses.RequestsMock) -> None:
     _serve_recorded_nodes(api)
     _serve_recorded_host_nics(api)
     _serve_cluster_stats(api)
+    _serve_recorded_protection_policies(api)
 
     agent_prism_main(parse_arguments(_v4_args()))
 
@@ -742,6 +751,9 @@ def test_v4_agent_queries_only_the_v4_api(api: responses.RequestsMock) -> None:
             AHV_VM_STATS_PATH,
             HOST_NICS_PATH,
             f"{CLUSTER_STATS_PATH}/{CLUSTER_ID}",
+            # The policies share the VM list. The lab's policies protect no VMs, so no
+            # recovery points are fetched.
+            PROTECTION_POLICIES_PATH,
         )
     )
 
@@ -1711,3 +1723,480 @@ def test_cluster_that_does_not_fit_the_model_is_skipped_with_an_info() -> None:
         [],
         [("info", "Skipped cluster 'broken': Prism Central reports no valid extId for it")],
     )
+
+
+def recorded_protection_policies() -> dict[str, object]:
+    """The 5 protection policies of the lab (anonymised): 3 owned by another Prism Central
+    (pc-b) replicating to cluster-a, 2 owned by this one (pc-a) replicating to pc-c"""
+    return _recorded("datapolicies_config_protection_policies.json")
+
+
+def _serve_recorded_protection_policies(api: responses.RequestsMock) -> None:
+    api.get(
+        v4_url(PROTECTION_POLICIES_PATH),
+        json=recorded_protection_policies(),
+        match=[page_matcher(0)],
+    )
+
+
+def _protection_vm(ext_id: str, policy_id: str | None) -> dict[str, object]:
+    vm: dict[str, object] = {"extId": ext_id, "name": f"vm-{ext_id}"}
+    if policy_id is not None:
+        vm["protectionPolicyState"] = {"policy": {"extId": policy_id}}
+    return vm
+
+
+def _serve_newest_recovery_point(
+    api: responses.RequestsMock, vm_id: str, created: str | None
+) -> None:
+    api.get(
+        v4_url(RECOVERY_POINTS_PATH),
+        # Prism Central leaves out "data" if nothing matches
+        json=(
+            {"metadata": {"totalAvailableResults": 0}}
+            if created is None
+            else page(
+                [
+                    {
+                        "creationTime": created,
+                        "status": "COMPLETE",
+                        "vmRecoveryPoints": [{"vmExtId": vm_id}],
+                    }
+                ],
+                has_next=False,
+            )
+        ),
+        match=[
+            matchers.query_param_matcher(
+                {
+                    "$filter": f"vmRecoveryPoints/any(v:v/vmExtId eq '{vm_id}')",
+                    "$orderby": "creationTime desc",
+                    "$limit": "1",
+                }
+            )
+        ],
+    )
+
+
+CROSS_CLUSTER_POLICY = "6937453c-62f9-47c8-89f9-8e86228d134a"
+
+
+def test_lab_policies_protect_no_vms_so_no_recovery_points_are_fetched(
+    api: responses.RequestsMock,
+) -> None:
+    """On the lab no VM has a policy: the policies go to Prism Central without VMs"""
+    _serve_recorded_protection_policies(api)
+    _serve_recorded_vms(api)
+    api.assert_all_requests_are_fired = False
+
+    (section,) = fetch_protection_policies(_context())
+
+    assert isinstance(section.payload, list)
+    assert (
+        section.name,
+        section.target,
+        [policy["vms"] for policy in section.payload],
+        [call.request.path_url.split("?")[0] for call in api.calls],
+    ) == (
+        "prism_protection_policies",
+        None,
+        [[], []],
+        [
+            f"/api/{PROTECTION_POLICIES_PATH}",
+            f"/api/{AHV_VMS_PATH}",
+            f"/api/{AHV_VMS_PATH}",
+        ],
+    )
+
+
+def test_policies_owned_by_another_prism_central_are_left_out(
+    api: responses.RequestsMock,
+) -> None:
+    _serve_recorded_protection_policies(api)
+    api.get(v4_url(AHV_VMS_PATH), json=page([], has_next=False), match=[page_matcher(0)])
+
+    (section,) = fetch_protection_policies(_context())
+
+    assert isinstance(section.payload, list)
+    assert [policy["name"] for policy in section.payload] == ["pts-pp", "cross-cluster"]
+
+
+def test_all_policies_are_reported_with_a_warning_if_no_cluster_is_prism_central(
+    api: responses.RequestsMock,
+) -> None:
+    _serve_recorded_protection_policies(api)
+    api.get(v4_url(AHV_VMS_PATH), json=page([], has_next=False), match=[page_matcher(0)])
+    messages = AgentMessages()
+    context = FetchContext(_context().client, [], ClusterRouting({}), messages)
+
+    (section,) = fetch_protection_policies(context)
+
+    assert isinstance(section.payload, list)
+    assert (len(section.payload), [level for level, _text in messages]) == (5, ["warning"])
+
+
+def test_vm_with_an_invalid_protection_policy_is_reported(api: responses.RequestsMock) -> None:
+    _serve_recorded_protection_policies(api)
+    api.get(
+        v4_url(AHV_VMS_PATH),
+        json=page(
+            [{"extId": "vm-1", "name": "vm-vm-1", "protectionPolicyState": {"policy": {}}}],
+            has_next=False,
+        ),
+        match=[page_matcher(0)],
+    )
+    messages = AgentMessages()
+
+    fetch_protection_policies(_context(messages))
+
+    assert [level for level, _text in messages] == ["info"]
+
+
+def test_policy_without_primary_location_is_kept(api: responses.RequestsMock) -> None:
+    api.get(
+        v4_url(PROTECTION_POLICIES_PATH),
+        json=page(
+            [
+                {
+                    "extId": "no-primary",
+                    "name": "no-primary",
+                    "replicationLocations": [{"label": "pc-b", "domainManagerExtId": "pc-b-id"}],
+                }
+            ],
+            has_next=False,
+        ),
+        match=[page_matcher(0)],
+    )
+    api.get(v4_url(AHV_VMS_PATH), json=page([], has_next=False), match=[page_matcher(0)])
+
+    (section,) = fetch_protection_policies(_context())
+
+    assert isinstance(section.payload, list)
+    assert [policy["name"] for policy in section.payload] == ["no-primary"]
+
+
+def test_each_protected_vm_gets_its_newest_recovery_point(api: responses.RequestsMock) -> None:
+    _serve_recorded_protection_policies(api)
+    api.get(
+        v4_url(AHV_VMS_PATH),
+        json=page(
+            [
+                _protection_vm("vm-1", CROSS_CLUSTER_POLICY),
+                _protection_vm("vm-2", CROSS_CLUSTER_POLICY),
+                _protection_vm("vm-3", None),
+            ],
+            has_next=False,
+        ),
+        match=[
+            page_matcher(0),
+            matchers.query_param_matcher({"$select": AHV_VM_SELECT}, strict_match=False),
+        ],
+    )
+    _serve_newest_recovery_point(api, "vm-1", "2026-11-11T15:00:00Z")
+    _serve_newest_recovery_point(api, "vm-2", None)
+
+    (section,) = fetch_protection_policies(_context())
+
+    assert isinstance(section.payload, list)
+    assert {policy["name"]: policy["vms"] for policy in section.payload}["cross-cluster"] == [
+        {"extId": "vm-1", "name": "vm-vm-1", "newestRecoveryPoint": "2026-11-11T15:00:00Z"},
+        {"extId": "vm-2", "name": "vm-vm-2"},
+    ]
+
+
+def test_policy_section_keeps_only_the_checked_fields(api: responses.RequestsMock) -> None:
+    _serve_recorded_protection_policies(api)
+    api.get(v4_url(AHV_VMS_PATH), json=page([], has_next=False), match=[page_matcher(0)])
+
+    (section,) = fetch_protection_policies(_context())
+
+    assert isinstance(section.payload, list)
+    assert section.payload[-1] == {
+        "extId": CROSS_CLUSTER_POLICY,
+        "name": "cross-cluster",
+        "replicationLocations": [
+            {
+                "label": "pc-a",
+                "domainManagerExtId": PRISM_CENTRAL_ID,
+                "isPrimary": True,
+            },
+            {
+                "label": "pc-c-1",
+                "domainManagerExtId": "539b621c-85a5-47ff-b9c9-5479a7eb3f3c",
+                "isPrimary": False,
+            },
+        ],
+        "replicationConfigurations": [
+            {
+                "sourceLocationLabel": "pc-a",
+                "schedule": {
+                    "recoveryPointObjectiveTimeSeconds": 3600,
+                    "retention": {"local": 1},
+                },
+            },
+            {
+                "sourceLocationLabel": "pc-a",
+                "remoteLocationLabel": "pc-c-1",
+                "schedule": {
+                    "recoveryPointObjectiveTimeSeconds": 3600,
+                    "retention": {"local": 1, "remote": 1},
+                },
+            },
+            {
+                "sourceLocationLabel": "pc-c-1",
+                "remoteLocationLabel": "pc-a",
+                "schedule": {
+                    "recoveryPointObjectiveTimeSeconds": 3600,
+                    "retention": {"local": 1, "remote": 1},
+                },
+            },
+        ],
+        "vms": [],
+    }
+
+
+def test_auto_rollup_retention_is_kept(api: responses.RequestsMock) -> None:
+    retention = {
+        "local": {"snapshotIntervalType": "WEEKLY", "frequency": 4},
+        "remote": {"snapshotIntervalType": "DAILY", "frequency": 7},
+    }
+    api.get(
+        v4_url(PROTECTION_POLICIES_PATH),
+        json=page(
+            [
+                {
+                    "extId": "rollup",
+                    "name": "rollup",
+                    "replicationConfigurations": [
+                        {
+                            "sourceLocationLabel": "pc-a",
+                            "remoteLocationLabel": "pc-b",
+                            "schedule": {
+                                "recoveryPointObjectiveTimeSeconds": 3600,
+                                "retention": {
+                                    "$objectType": "datapolicies.v4.config.AutoRollupRetention",
+                                    **retention,
+                                },
+                            },
+                        }
+                    ],
+                }
+            ],
+            has_next=False,
+        ),
+        match=[page_matcher(0)],
+    )
+    api.get(v4_url(AHV_VMS_PATH), json=page([], has_next=False), match=[page_matcher(0)])
+
+    (section,) = fetch_protection_policies(_context())
+
+    assert isinstance(section.payload, list)
+    assert section.payload[0]["replicationConfigurations"][0]["schedule"]["retention"] == retention
+
+
+def test_vms_and_policies_share_one_vm_list(api: responses.RequestsMock) -> None:
+    _serve_recorded_protection_policies(api)
+    _serve_recorded_vms(api)
+    api.assert_all_requests_are_fired = False
+    context = _context()
+
+    fetch_vms(context)
+    fetch_protection_policies(context)
+
+    assert [call.request.path_url.split("?")[0] for call in api.calls].count(
+        f"/api/{AHV_VMS_PATH}"
+    ) == 2  # Two pages
+
+
+def test_vms_of_policies_owned_elsewhere_get_no_recovery_points(
+    api: responses.RequestsMock,
+) -> None:
+    """Without a registered response, a recovery point call would fail the test"""
+    _serve_recorded_protection_policies(api)
+    api.get(
+        v4_url(AHV_VMS_PATH),
+        # The policy "test" is owned by another Prism Central
+        json=page([_protection_vm("vm-1", "f2198935-a3d2-4f3e-b850-504d6cb75043")], has_next=False),
+        match=[page_matcher(0)],
+    )
+
+    (section,) = fetch_protection_policies(_context())
+
+    assert isinstance(section.payload, list)
+    assert [policy["vms"] for policy in section.payload] == [[], []]
+
+
+RECOVERY_POINTS_FAILURE = "Could not fetch the recovery points of 1 of 1 protected VMs"
+
+
+@pytest.mark.parametrize(
+    ["status", "expected_message"],
+    [
+        pytest.param(
+            HTTPStatus.NOT_FOUND,
+            (
+                "info",
+                f"{RECOVERY_POINTS_FAILURE}: {RECOVERY_POINTS_PATH}: HTTP 404 Not Found",
+            ),
+            id="no recovery point API",
+        ),
+        pytest.param(
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            (
+                "warning",
+                f"{RECOVERY_POINTS_FAILURE}: {RECOVERY_POINTS_PATH}: HTTP 500 Internal Server Error",
+            ),
+            id="any other error",
+        ),
+    ],
+)
+def test_policies_are_reported_if_the_recovery_points_cannot_be_fetched(
+    api: responses.RequestsMock, status: HTTPStatus, expected_message: tuple[str, str]
+) -> None:
+    _serve_recorded_protection_policies(api)
+    api.get(
+        v4_url(AHV_VMS_PATH),
+        json=page([_protection_vm("vm-1", CROSS_CLUSTER_POLICY)], has_next=False),
+        match=[page_matcher(0)],
+    )
+    api.get(v4_url(RECOVERY_POINTS_PATH), status=status, json={"message": status.phrase})
+    messages = AgentMessages()
+
+    (section,) = fetch_protection_policies(_context(messages))
+
+    assert isinstance(section.payload, list)
+    assert (section.payload[-1]["vms"], list(messages)) == (
+        [{"extId": "vm-1", "name": "vm-vm-1", "recoveryPointUnknown": True}],
+        [expected_message],
+    )
+
+
+def test_policies_are_reported_if_a_recovery_point_is_invalid(
+    api: responses.RequestsMock,
+) -> None:
+    _serve_recorded_protection_policies(api)
+    api.get(
+        v4_url(AHV_VMS_PATH),
+        json=page([_protection_vm("vm-1", CROSS_CLUSTER_POLICY)], has_next=False),
+        match=[page_matcher(0)],
+    )
+    # creationTime without a time zone
+    api.get(
+        v4_url(RECOVERY_POINTS_PATH),
+        json=page([{"creationTime": "2026-11-11T15:00:00"}], has_next=False),
+    )
+    messages = AgentMessages()
+
+    (section,) = fetch_protection_policies(_context(messages))
+
+    assert isinstance(section.payload, list)
+    assert (section.payload[-1]["vms"], [level for level, _text in messages]) == (
+        [{"extId": "vm-1", "name": "vm-vm-1", "recoveryPointUnknown": True}],
+        ["warning"],
+    )
+
+
+def test_only_the_vm_whose_recovery_point_call_fails_is_unknown(
+    api: responses.RequestsMock,
+) -> None:
+    _serve_recorded_protection_policies(api)
+    api.get(
+        v4_url(AHV_VMS_PATH),
+        json=page(
+            [
+                _protection_vm("vm-1", CROSS_CLUSTER_POLICY),
+                _protection_vm("vm-2", CROSS_CLUSTER_POLICY),
+            ],
+            has_next=False,
+        ),
+        match=[page_matcher(0)],
+    )
+    _serve_newest_recovery_point(api, "vm-1", "2026-11-11T15:00:00Z")
+    api.get(
+        v4_url(RECOVERY_POINTS_PATH),
+        status=HTTPStatus.INTERNAL_SERVER_ERROR,
+        json={},
+        match=[
+            matchers.query_param_matcher(
+                {"$filter": "vmRecoveryPoints/any(v:v/vmExtId eq 'vm-2')"}, strict_match=False
+            )
+        ],
+    )
+    messages = AgentMessages()
+
+    (section,) = fetch_protection_policies(_context(messages))
+
+    assert isinstance(section.payload, list)
+    assert (section.payload[-1]["vms"], [level for level, _text in messages]) == (
+        [
+            {"extId": "vm-1", "name": "vm-vm-1", "newestRecoveryPoint": "2026-11-11T15:00:00Z"},
+            {"extId": "vm-2", "name": "vm-vm-2", "recoveryPointUnknown": True},
+        ],
+        ["warning"],
+    )
+
+
+def test_every_vm_gets_its_own_recovery_point_call(api: responses.RequestsMock) -> None:
+    """A failing call doesn't stop the calls of the other VMs"""
+    _serve_recorded_protection_policies(api)
+    api.get(
+        v4_url(AHV_VMS_PATH),
+        json=page(
+            [
+                _protection_vm("vm-1", CROSS_CLUSTER_POLICY),
+                _protection_vm("vm-2", CROSS_CLUSTER_POLICY),
+            ],
+            has_next=False,
+        ),
+        match=[page_matcher(0)],
+    )
+    api.get(
+        v4_url(RECOVERY_POINTS_PATH),
+        status=HTTPStatus.SERVICE_UNAVAILABLE,
+        json={},
+        match=[
+            matchers.query_param_matcher(
+                {"$filter": "vmRecoveryPoints/any(v:v/vmExtId eq 'vm-1')"}, strict_match=False
+            )
+        ],
+    )
+    _serve_newest_recovery_point(api, "vm-2", "2026-11-11T15:00:00Z")
+
+    (section,) = fetch_protection_policies(_context())
+
+    assert isinstance(section.payload, list)
+    assert section.payload[-1]["vms"] == [
+        {"extId": "vm-1", "name": "vm-vm-1", "recoveryPointUnknown": True},
+        {"extId": "vm-2", "name": "vm-vm-2", "newestRecoveryPoint": "2026-11-11T15:00:00Z"},
+    ]
+
+
+def test_protected_vm_without_a_name_is_named_by_its_id(api: responses.RequestsMock) -> None:
+    _serve_recorded_protection_policies(api)
+    api.get(
+        v4_url(AHV_VMS_PATH),
+        json=page(
+            [
+                {
+                    "extId": "vm-1",
+                    "protectionPolicyState": {"policy": {"extId": CROSS_CLUSTER_POLICY}},
+                }
+            ],
+            has_next=False,
+        ),
+        match=[page_matcher(0)],
+    )
+    _serve_newest_recovery_point(api, "vm-1", None)
+
+    (section,) = fetch_protection_policies(_context())
+
+    assert isinstance(section.payload, list)
+    assert section.payload[-1]["vms"] == [{"extId": "vm-1", "name": "vm-1"}]
+
+
+def test_no_policies_means_no_vm_call(api: responses.RequestsMock) -> None:
+    api.get(
+        v4_url(PROTECTION_POLICIES_PATH), json=page([], has_next=False), match=[page_matcher(0)]
+    )
+
+    assert fetch_protection_policies(_context()) == [Section("prism_protection_policies", [], None)]

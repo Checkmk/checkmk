@@ -13,7 +13,7 @@ import time
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
-from datetime import timedelta
+from datetime import datetime, timedelta
 from functools import partial
 from http import HTTPStatus
 from typing import Literal, NamedTuple, Protocol, Self, TextIO
@@ -44,6 +44,9 @@ from cmk.plugins.prism.v4_models import (
     NodeConfig,
     NodeDisk,
     PoolDisk,
+    ProtectedVm,
+    ProtectionPolicy,
+    RecoveryPoint,
     StorageContainer,
     StorageContainerStats,
     StorageContainerWithStats,
@@ -51,6 +54,7 @@ from cmk.plugins.prism.v4_models import (
     V4Model,
     Vm,
     VmDetails,
+    VmProtection,
     VmWithHostName,
 )
 from cmk.server_side_programs.v1 import AgentMessages, Storage
@@ -155,6 +159,7 @@ class FetchContext:
     # fetch_vms reports the VMs without host names.
     hosts: Sequence[JsonObject] | PrismV4Error = ()
     disks: FetchOnce[Disks] = field(default_factory=FetchOnce)
+    ahv_vms: FetchOnce[list[JsonObject]] = field(default_factory=FetchOnce)
 
 
 @dataclass(frozen=True)
@@ -443,7 +448,7 @@ ESXI_VMS_PATH = "vmm/v4.0/esxi/config/vms"
 _VM_SELECT = "extId,name,powerState,description,memorySizeBytes,host/extId,cluster/extId"
 # Prism Central rejects a $select with a field the model doesn't have
 AHV_VM_SELECT = (
-    f"{_VM_SELECT},numSockets,numCoresPerSocket,protectionType,"
+    f"{_VM_SELECT},numSockets,numCoresPerSocket,protectionType,protectionPolicyState,"
     "guestTools/version,guestTools/isInstalled,guestTools/isEnabled"
 )
 ESXI_VM_SELECT = (
@@ -488,6 +493,13 @@ def _report_partial_failure(context: FetchContext, what: str, error: PrismV4Erro
         context.messages.add_info(f"Could not fetch the {what}: {error}")
     else:
         context.messages.add_warning(f"Could not fetch the {what}: {error}")
+
+
+def _ahv_vms(context: FetchContext) -> list[JsonObject]:
+    """Listed once for the VMs and the protection policies"""
+    return context.ahv_vms.get(
+        lambda: context.client.list_all(AHV_VMS_PATH, {"$select": AHV_VM_SELECT})
+    )
 
 
 def _esxi_vms(context: FetchContext) -> list[JsonObject]:
@@ -551,13 +563,7 @@ def _vm_details(
 
 def fetch_vms(context: FetchContext) -> Sequence[Section]:
     """A VM that doesn't fit the model is left out, the others are reported"""
-    ahv_vms = _parse_valid(
-        Vm,
-        context.client.list_all(AHV_VMS_PATH, {"$select": AHV_VM_SELECT}),
-        "VM",
-        "extId",
-        context.messages,
-    )
+    ahv_vms = _parse_valid(Vm, _ahv_vms(context), "VM", "extId", context.messages)
     esxi_vms = _parse_valid(Vm, _esxi_vms(context), "VM", "extId", context.messages)
     if not ahv_vms and not esxi_vms:
         return []
@@ -767,6 +773,108 @@ def fetch_storage_pools(context: FetchContext) -> Sequence[Section]:
     ]
 
 
+PROTECTION_POLICIES_PATH = "datapolicies/v4.0/config/protection-policies"
+RECOVERY_POINTS_PATH = "dataprotection/v4.0/config/recovery-points"
+
+
+def _recovery_points_filter(vm_id: str) -> str:
+    # Prism Central rejects the lambda with a space after the colon (DP-10101)
+    return f"vmRecoveryPoints/any(v:v/vmExtId eq '{vm_id}')"
+
+
+def _newest_recovery_point(context: FetchContext, vm_id: str) -> datetime | None:
+    body = context.client.get(
+        RECOVERY_POINTS_PATH,
+        {"$filter": _recovery_points_filter(vm_id), "$orderby": "creationTime desc", "$limit": 1},
+    )
+    match body.get("data"):
+        case [newest, *_]:
+            try:
+                return RecoveryPoint.model_validate(newest).creation_time
+            except ValidationError as e:
+                raise PrismV4Error(
+                    f"{RECOVERY_POINTS_PATH}: invalid recovery point of VM {vm_id}: {e}"
+                ) from e
+        case _:
+            return None
+
+
+def _newest_recovery_points(
+    context: FetchContext, vm_ids: Sequence[str]
+) -> dict[str, datetime | PrismV4Error]:
+    """The newest recovery point of each VM that has one, or the error of the VM's call"""
+    results = _fetch_each_reporting(
+        context,
+        vm_ids,
+        partial(_newest_recovery_point, context),
+        "recovery points",
+        "protected VMs",
+    )
+    return {
+        vm_id: result for vm_id, result in zip(vm_ids, results, strict=True) if result is not None
+    }
+
+
+def _is_owned_by(policy: ProtectionPolicy, prism_central_ids: set[str]) -> bool:
+    """A policy without a primary location counts as owned"""
+    primaries = [location for location in policy.replication_locations if location.is_primary]
+    return not primaries or any(
+        location.domain_manager_ext_id in prism_central_ids for location in primaries
+    )
+
+
+def fetch_protection_policies(context: FetchContext) -> Sequence[Section]:
+    """v4 can't read protection domains, only protection policies. A policy belongs to Prism
+    Central, so it goes to the Prism Central host with the VMs it protects and the newest
+    recovery point of each. Recovery points name no policy, they are matched by VM. Policies of
+    other Prism Centrals that replicate to this one are left to the Prism Central owning them."""
+    prism_central_ids = {
+        ext_id for ext_id, target in context.routing.targets.items() if target is None
+    }
+    policies = _parse_valid(
+        ProtectionPolicy,
+        context.client.list_all(PROTECTION_POLICIES_PATH),
+        "protection policy",
+        "extId",
+        context.messages,
+    )
+    if prism_central_ids:
+        policies = [policy for policy in policies if _is_owned_by(policy, prism_central_ids)]
+    elif policies:
+        context.messages.add_warning(
+            "Could not tell which protection policies this Prism Central owns, as no cluster is "
+            "listed as Prism Central: all policies are reported"
+        )
+    vms_by_policy: dict[str, list[VmProtection]] = {policy.ext_id: [] for policy in policies}
+    if policies:
+        for vm in _parse_valid(VmProtection, _ahv_vms(context), "VM", "extId", context.messages):
+            # VMs of policies owned by another Prism Central are left out with their policies
+            if vm.policy_ext_id in vms_by_policy:
+                vms_by_policy[vm.policy_ext_id].append(vm)
+    protected = [vm.ext_id for vms in vms_by_policy.values() for vm in vms]
+    newest = _newest_recovery_points(context, protected)
+
+    def protected_vm(vm: VmProtection) -> ProtectedVm:
+        name = vm.name or vm.ext_id
+        match newest.get(vm.ext_id):
+            case PrismV4Error():
+                return ProtectedVm(ext_id=vm.ext_id, name=name, recovery_point_unknown=True)
+            case creation_time:
+                return ProtectedVm(ext_id=vm.ext_id, name=name, newest_recovery_point=creation_time)
+
+    return [
+        Section(
+            "prism_protection_policies",
+            [
+                policy.model_copy(
+                    update={"vms": [protected_vm(vm) for vm in vms_by_policy[policy.ext_id]]}
+                ).to_section()
+                for policy in policies
+            ],
+        )
+    ]
+
+
 SECTION_FETCHERS: Sequence[Fetcher] = (
     Fetcher("hosts", fetch_hosts),
     Fetcher("alerts", fetch_alerts),
@@ -778,6 +886,7 @@ SECTION_FETCHERS: Sequence[Fetcher] = (
     Fetcher("storage pools", fetch_storage_pools),
     Fetcher("HA", fetch_ha),
     Fetcher("clusters", fetch_clusters),
+    Fetcher("protection policies", fetch_protection_policies),
 )
 
 

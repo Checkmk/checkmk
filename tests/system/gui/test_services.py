@@ -181,7 +181,7 @@ def test_service_graphs_have_titles_and_legend_not_broken(
         service_graphs.panels, "The engine rendered no graph at all on the service detail page"
     ).not_to_have_count(0)
 
-    for index, panel in enumerate(service_graphs.all_panels()):
+    for index, panel in enumerate(service_graphs.scroll_through_panels()):
         expect(panel.title, f"Graph {index} rendered without a title").to_be_visible()
         expect(panel.title, f"Graph {index} rendered an empty title").not_to_have_text("")
         expect(panel.legend, f"Graph {index} rendered without a legend").to_be_visible()

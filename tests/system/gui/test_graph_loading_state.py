@@ -99,6 +99,10 @@ def test_skeleton_visible_while_loading_then_canvas(
         route.continue_()
 
     graphs.wait_until_rendered()
+    for index, panel in enumerate(graphs.scroll_through_panels()):
+        expect(
+            panel.graph.canvas, f"Graph {index} drew no plot once its data arrived"
+        ).to_be_visible()
     expect(
         graphs.skeletons,
         "The skeleton outlived the data it was standing in for",
@@ -131,8 +135,10 @@ def test_refetch_skeletons_hold_the_panel_footprint(
     service_graphs.page.route(_GRAPH_DATA_URL, hold)
     service_graphs.time_picker.select_preset(_OTHER_PRESET)
 
+    # The first slot, not the first skeleton: a slot away from the view keeps the skeleton of
+    # a graph that never loaded.
     expect(
-        service_graphs.skeletons.first,
+        service_graphs.skeleton(0),
         "No skeleton stood in for the panels while the new range was still pending",
     ).to_be_visible()
     heights_during = _slot_heights(service_graphs)

@@ -6,6 +6,7 @@
 """Page objects for the graph engine's rendered graphs and their canvas gestures."""
 
 import logging
+from collections.abc import Iterator
 from enum import StrEnum
 
 from playwright.sync_api import expect, FloatRect, Locator, Page, Response
@@ -14,6 +15,7 @@ from tests.system.gui.testlib.playwright.pom.graphing.global_time_picker import 
 from tests.system.gui.testlib.playwright.pom.graphing.graph_accessor import (
     ACTION_MENU_BUTTON_NAME,
     ACTION_MENU_DROPDOWN_SELECTOR,
+    ENGINE_GRAPH_PANEL_SELECTOR,
     GraphAccessor,
     SURFACE_NOTICE_ERROR_SELECTOR,
 )
@@ -30,6 +32,8 @@ _DRAG_STEPS = 12
 
 _ADD_PIN_LABEL = "Add pin"
 _REMOVE_PIN_LABEL = "Remove pin"
+
+_SKELETON_SELECTOR = ".graphing-graph-skeleton"
 
 
 class GraphStat(StrEnum):
@@ -417,15 +421,49 @@ class ServiceGraphs:
         )
 
     def panel(self, index: int = 0) -> GraphPanel:
-        return GraphPanel(self.panels.nth(index), self.page, self._main_area)
+        """The panel in the slot of graph `index`; the slot holds it once the graph has loaded."""
+        return GraphPanel(
+            self.panel_slots.nth(index).locator(ENGINE_GRAPH_PANEL_SELECTOR),
+            self.page,
+            self._main_area,
+        )
+
+    def scroll_to(self, index: int) -> GraphPanel:
+        """Scroll the slot of graph `index` into view and return its panel.
+
+        A graph loads and draws only near the view. Further down the page, a slot holds a
+        skeleton, or a panel that still shows its last window, until a scroll brings it near.
+        """
+        self.panel_slots.nth(index).scroll_into_view_if_needed()
+        return self.panel(index)
+
+    def scroll_through_panels(self) -> Iterator[GraphPanel]:
+        """Scroll to every graph in turn and yield its panel."""
+        for index in range(self.panel_count()):
+            yield self.scroll_to(index)
+
+    def time_windows(self) -> list[list[str]]:
+        """Scroll to every graph in turn and read the time axis labels that it draws."""
+        windows = []
+        for index, panel in enumerate(self.scroll_through_panels()):
+            expect(
+                panel.graph.time_axis_labels, f"Graph {index} drew no time axis labels"
+            ).not_to_have_count(0)
+            windows.append(panel.graph.time_axis_label_texts())
+        return windows
 
     @property
     def skeletons(self) -> Locator:
-        """The placeholders standing in for the panels while the first fetch is pending.
+        """The placeholders standing in for the panels until their graphs load.
 
-        Decorative and ``aria-hidden``, so no role query reaches them.
+        A graph loads only near the view, so further down the page a skeleton stays until a
+        scroll brings it near. Decorative and ``aria-hidden``, so no role query reaches them.
         """
-        return self._main_area.locator(".graphing-graph-skeleton")
+        return self._main_area.locator(_SKELETON_SELECTOR)
+
+    def skeleton(self, index: int) -> Locator:
+        """The placeholder in the slot of graph `index`."""
+        return self.panel_slots.nth(index).locator(_SKELETON_SELECTOR)
 
     @property
     def panel_slots(self) -> Locator:
@@ -445,12 +483,9 @@ class ServiceGraphs:
 
     def panel_count(self) -> int:
         # ``.count()`` does not auto-wait, so this is only correct once
-        # ``wait_until_rendered`` has run. The group mounts every panel in one tick, so the
-        # first panel being on screen means the rest are too.
-        return self.panels.count()
-
-    def all_panels(self) -> list[GraphPanel]:
-        return [self.panel(index) for index in range(self.panel_count())]
+        # ``wait_until_rendered`` has run. The group mounts a slot for every graph at once,
+        # skeletons included, so the count does not depend on how many graphs have loaded.
+        return self.panel_slots.count()
 
     @property
     def pin_handles(self) -> Locator:
@@ -509,9 +544,10 @@ class ServiceGraphs:
         self.wait_until_rendered()
 
     def wait_until_rendered(self) -> None:
-        """Wait for the graphs to be on screen.
+        """Wait for the first panel and for every graph near the view to load.
 
-        The first panel is enough: the group assigns all of its graphs in one go once every
-        fetch has resolved, so the panels appear together rather than trickling in.
+        The graphs load one by one, so the first panel can be on screen while its neighbours
+        still load; a test reading the slots at that point would catch them mid-swap.
         """
         self.panel(0).graph.canvas.wait_for(state="visible")
+        self.wait_until_settled()

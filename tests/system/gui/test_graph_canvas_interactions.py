@@ -43,18 +43,20 @@ def test_x_drag_zooms_every_graph_and_reset_returns(
     The drag is committed to the page's shared time range, so sibling graphs and the time
     picker follow it, and the reset control puts them all back.
     """
-    panels = service_graphs.all_panels()
-    windows_before = [panel.graph.time_axis_label_texts() for panel in panels]
+    windows_before = service_graphs.time_windows()
     preset_before = service_graphs.active_preset_chip.inner_text()
     _mark_document(service_graphs)
+    first = service_graphs.panel(0)
 
-    panels[0].graph.drag_across_canvas(0.3, 0.7)
+    first.graph.drag_across_canvas(0.3, 0.7)
 
     expect(
-        panels[0].graph.reset_zoom_button,
+        first.graph.reset_zoom_button,
         "Zooming did not offer a way back to the original window",
     ).to_be_visible()
-    for panel, window_before in zip(panels, windows_before):
+    for panel, window_before in zip(
+        service_graphs.scroll_through_panels(), windows_before, strict=True
+    ):
         expect(
             panel.graph.time_axis_labels,
             "A graph rendered no time axis labels at all",
@@ -68,12 +70,14 @@ def test_x_drag_zooms_every_graph_and_reset_returns(
         "The picker still highlights a preset although the window is now a custom one",
     ).to_have_count(0)
     assert _document_survived(service_graphs), "Zooming reloaded the page instead of redrawing"
-    zoomed_windows = [panel.graph.time_axis_label_texts() for panel in panels]
+    zoomed_windows = service_graphs.time_windows()
 
-    panels[0].graph.reset_zoom_button.click()
+    first.graph.reset_zoom_button.click()
 
     # The preset ends at "now", so the restored window may have moved on by a tick.
-    for panel, zoomed_window in zip(panels, zoomed_windows):
+    for panel, zoomed_window in zip(
+        service_graphs.scroll_through_panels(), zoomed_windows, strict=True
+    ):
         expect(
             panel.graph.time_axis_labels,
             "A graph did not leave its zoomed window",
@@ -125,13 +129,14 @@ def test_axis_strip_drag_pans_every_graph(
     The strip over the axis labels is the pan affordance, and the gesture is committed to
     the page's shared time range, so sibling graphs move with it.
     """
-    panels = service_graphs.all_panels()
-    windows_before = [panel.graph.time_axis_label_texts() for panel in panels]
+    windows_before = service_graphs.time_windows()
     _mark_document(service_graphs)
 
-    panels[0].graph.drag_axis_strip(0.6, 0.3)
+    service_graphs.panel(0).graph.drag_axis_strip(0.6, 0.3)
 
-    for panel, window_before in zip(panels, windows_before):
+    for panel, window_before in zip(
+        service_graphs.scroll_through_panels(), windows_before, strict=True
+    ):
         expect(
             panel.graph.time_axis_labels,
             "A graph rendered no time axis labels at all",
@@ -199,16 +204,19 @@ def test_pinning_a_point_marks_it_on_every_graph_and_stores_it(
     handles are compared as a fraction of their plot, not by page x.
     """
     graphs = open_service_graphs(dashboard_page.page, graph_hosts_with_varying_data[0])
-    panel_count = graphs.panel_count()
 
     graphs.panel(0).graph.add_pin(0.4)
 
-    expect(
-        graphs.pin_handles, "A graph shows no pin although a point was pinned on the page"
-    ).to_have_count(panel_count)
+    for index, panel in enumerate(graphs.scroll_through_panels()):
+        expect(
+            panel.graph.pin_handle,
+            f"Graph {index} shows no pin although a point was pinned on the page",
+        ).to_be_visible()
     graphs.wait_until_settled()
     positions = graphs.pin_positions()
-    assert len(positions) == panel_count, f"A graph lost its pin while being measured: {positions}"
+    assert len(positions) == graphs.panel_count(), (
+        f"A graph lost its pin while being measured: {positions}"
+    )
     assert max(positions) - min(positions) <= _PIN_ALIGNMENT_TOLERANCE, (
         f"The graphs pin different points of their window: {positions}"
     )
@@ -229,9 +237,11 @@ def test_a_stored_pin_marks_every_graph_when_the_page_opens(
 
     graphs = open_service_graphs(dashboard_page.page, host_name)
 
-    expect(
-        graphs.pin_handles, "A graph opened without the pin the site stores for the user"
-    ).to_have_count(graphs.panel_count())
+    for index, panel in enumerate(graphs.scroll_through_panels()):
+        expect(
+            panel.graph.pin_handle,
+            f"Graph {index} opened without the pin the site stores for the user",
+        ).to_be_visible()
     assert not javascript_errors, f"Uncaught JS errors showing the stored pin: {javascript_errors}"
 
 

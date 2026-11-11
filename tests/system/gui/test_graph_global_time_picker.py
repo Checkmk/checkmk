@@ -49,14 +49,17 @@ def test_one_preset_selection_moves_every_graph_on_the_page(
     Assert: every panel's axis moved and now spans the picked window, the picked chip is the
     highlighted one, and the document was redrawn rather than reloaded.
     """
-    panels = service_graphs.all_panels()
-    assert len(panels) > 1, "The service rendered a single graph, so 'every graph' proves nothing"
-    windows_before = [panel.graph.time_axis_label_texts() for panel in panels]
+    assert service_graphs.panel_count() > 1, (
+        "The service rendered a single graph, so 'every graph' proves nothing"
+    )
+    windows_before = service_graphs.time_windows()
     _mark_document(service_graphs)
 
     service_graphs.time_picker.select_preset(OTHER_PRESET)
 
-    for panel, window_before in zip(panels, windows_before):
+    for panel, window_before in zip(
+        service_graphs.scroll_through_panels(), windows_before, strict=True
+    ):
         expect(
             panel.graph.time_axis_labels,
             "A graph rendered no time axis labels at all",
@@ -140,7 +143,7 @@ def test_user_preference_preselects_its_own_range(
     ).to_have_text(OTHER_PRESET)
 
     service_graphs.wait_until_settled()
-    for panel in service_graphs.all_panels():
+    for panel in service_graphs.scroll_through_panels():
         expect(
             panel.timestamp,
             "A graph drew a narrower window than the range the picker preselected",

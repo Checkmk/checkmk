@@ -66,3 +66,16 @@ def test_cloud_trial_payload_carries_product_usage_data_and_null_trial_signals()
             "count_hosts_default_services_only": None,
         },
     }
+
+
+def test_cloud_trial_payload_carries_audit_log_entries_per_actor_class() -> None:
+    audit_log = {
+        "interactive": {"entries": 12, "last_entry_at": 1767789000},
+        "automation": {"entries": 0, "last_entry_at": None},
+        "platform": {"entries": 41, "last_entry_at": 1767790000},
+    }
+    payload = {**_product_usage_data(), "audit_log": audit_log}
+
+    json_payload = CloudTrialPayload.model_validate(payload).model_dump_with_metadata_json()
+
+    assert json.loads(json_payload)["data"]["audit_log"] == audit_log

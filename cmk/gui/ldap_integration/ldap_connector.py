@@ -896,6 +896,7 @@ class LDAPUserConnector(UserConnector[LDAPUserConnectionConfig]):
 
                 if ldap_obj:
                     self._ldap_obj = ldap_obj
+                    break
                 else:
                     if error_msg is not None:  # it should be, though
                         errors.append(error_msg)

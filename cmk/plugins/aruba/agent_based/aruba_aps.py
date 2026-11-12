@@ -5,39 +5,40 @@
 
 
 from cmk.agent_based.v2 import (
-    check_levels,
-    CheckPlugin,
-    CheckResult,
-    DiscoveryResult,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     startswith,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import (
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    discover_one_service,
+    parse_as,
+    ParseFailure,
+)
+
+type Section = int | ParseFailure
 
 
-def discover_aruba_aps(section: StringTable) -> DiscoveryResult:
-    if section:
-        yield Service()
-
-
-def check_aruba_aps(section: StringTable) -> CheckResult:
-    try:
-        connected_aps = int(section[0][0])
-    except IndexError, ValueError:
+def check_aruba_aps(section: Section) -> CheckResult:
+    if isinstance(section, ParseFailure):
+        yield section
         return
 
     yield from check_levels(
-        connected_aps,
+        section,
         metric_name="connections",
         render_func=lambda x: f"{x}",
         label="Connections",
     )
 
 
-def parse_aruba_aps(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_aruba_aps(string_table: StringTable) -> Section | None:
+    if not string_table:
+        return None
+    return parse_as(int, string_table[0][0], field="wlsxSwitchTotalNumAccessPoints")
 
 
 snmp_section_aruba_aps = SimpleSNMPSection(
@@ -52,6 +53,6 @@ snmp_section_aruba_aps = SimpleSNMPSection(
 check_plugin_aruba_aps = CheckPlugin(
     name="aruba_aps",
     service_name="Access Points",
-    discovery_function=discover_aruba_aps,
+    discovery_function=discover_one_service,
     check_function=check_aruba_aps,
 )

@@ -63,6 +63,19 @@ pub enum AgentUpdateAuthorization {
     Unavailable,
 }
 
+/// Why a site offers no agent updates, as its agent receiver states it.
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum NoAgentUpdates {
+    CommunityEdition,
+    NotLicensed,
+}
+
+#[derive(Deserialize)]
+struct NoAgentUpdatesResponse {
+    reason: NoAgentUpdates,
+}
+
 #[derive(Deserialize)]
 pub struct RegisterExistingResponse {
     pub root_cert: String,
@@ -135,6 +148,36 @@ pub enum ApiError {
         body: Option<String>,
     },
     Communication(anyhow::Error),
+}
+
+impl ApiError {
+    /// The statement of a site that it offers no agent updates: a 501 whose
+    /// body names the reason. Any other 501 states nothing.
+    pub fn no_agent_updates(&self) -> Option<NoAgentUpdates> {
+        let ApiError::ResponseStatus {
+            status: StatusCode::NOT_IMPLEMENTED,
+            body: Some(body),
+        } = self
+        else {
+            return None;
+        };
+        serde_json::from_str::<NoAgentUpdatesResponse>(body)
+            .ok()
+            .map(|response| response.reason)
+    }
+}
+
+#[cfg(test)]
+impl ApiError {
+    /// The answer of a receiver whose site offers no agent updates.
+    pub fn stating_no_agent_updates(reason: &str) -> Self {
+        Self::ResponseStatus {
+            status: StatusCode::NOT_IMPLEMENTED,
+            body: Some(format!(
+                r#"{{"detail": "This site offers no agent updates.", "reason": "{reason}"}}"#
+            )),
+        }
+    }
 }
 
 impl std::fmt::Display for ApiError {
@@ -736,6 +779,14 @@ mod test_api {
             success.agent_update_authorization,
             AgentUpdateAuthorization::Authorized
         );
+    }
+
+    /// CMK-41723 AC1: no edition has such a license yet.
+    #[test]
+    fn test_a_501_states_that_the_license_includes_no_agent_updates() {
+        let answer = ApiError::stating_no_agent_updates("not_licensed");
+
+        assert_eq!(answer.no_agent_updates(), Some(NoAgentUpdates::NotLicensed));
     }
 
     #[test]

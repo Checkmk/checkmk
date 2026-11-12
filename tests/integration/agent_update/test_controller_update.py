@@ -120,7 +120,7 @@ def _install_controller(
     )
     # The update source, as the registration records it.
     (runtime_dir / "agent-update-state.json").write_text(
-        json.dumps({"source": {"uuid": str(uuid), "available": True}})
+        json.dumps({"source": {"uuid": str(uuid)}})
     )
     return controller
 

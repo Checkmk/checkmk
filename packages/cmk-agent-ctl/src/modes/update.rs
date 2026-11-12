@@ -5,6 +5,7 @@
 //! The update cycle of this host, run once by the `update` mode and at the
 //! configured interval by the update thread of the daemon.
 
+use crate::agent_receiver_api::NoAgentUpdates;
 use crate::configuration::config::{ClientConfig, Registry};
 use crate::constants::CMK_UPDATE_AGENT_CMD;
 use crate::environment::{PathResolver, SetupMode};
@@ -144,7 +145,11 @@ fn run_cycle(
     match &fetched {
         FetchOutcome::NotPossible | FetchOutcome::Superseded => {}
         FetchOutcome::UpToDate(_) | FetchOutcome::NoPackage => updater.clear_last_error()?,
-        FetchOutcome::SourceUnavailable => updater.record_source_unavailable()?,
+        FetchOutcome::SourceUnavailable(reason) => match reason {
+            NoAgentUpdates::CommunityEdition => updater.record_source_unavailable(*reason)?,
+            // A license can come back while nobody touches the host.
+            NoAgentUpdates::NotLicensed => {}
+        },
         #[cfg(unix)]
         FetchOutcome::Due(installation) => installation_outcome(installation)?,
         #[cfg(windows)]
@@ -221,7 +226,7 @@ fn report(outcome: CheckOutcome) -> String {
         CheckOutcome::UpdateAvailable { target, installed } => {
             format!("Agent update available: {target} (installed: {installed})")
         }
-        CheckOutcome::SourceUnavailable => {
+        CheckOutcome::SourceUnavailable(_) => {
             String::from("The site of the update source serves no agent updates")
         }
     }
@@ -238,7 +243,7 @@ fn report_fetch(outcome: &FetchOutcome<impl Report>) -> String {
         }
         FetchOutcome::NoPackage => String::from("No agent package available for this host"),
         FetchOutcome::UpToDate(hash) => format!("Agent is up to date: {hash}"),
-        FetchOutcome::SourceUnavailable => {
+        FetchOutcome::SourceUnavailable(_) => {
             String::from("The site of the update source serves no agent updates")
         }
         FetchOutcome::Superseded => String::from(
@@ -821,7 +826,7 @@ mod tests {
                 .unwrap();
                 let source = UpdateSource {
                     uuid: SOURCE_UUID.parse().unwrap(),
-                    available: true,
+                    no_agent_updates: None,
                 };
                 let registry = TestRegistry::new().add_connection(
                     &ConnectionMode::Pull,
@@ -923,8 +928,9 @@ mod tests {
             assert!(failed.is_err(), "{failed:?}");
             let error = failed_state.last_error.clone().unwrap_or_default();
             assert!(error.contains("connection refused"), "{error:?}");
-            assert!(
-                failed_state.source.as_ref().unwrap().available,
+            assert_eq!(
+                failed_state.source.as_ref().unwrap().no_agent_updates,
+                None,
                 "{failed_state:?}"
             );
             assert!(retried.is_ok(), "{retried:?}");
@@ -934,7 +940,7 @@ mod tests {
             );
             let state = host.state();
             assert_eq!(state.last_error, None);
-            assert!(state.source.unwrap().available);
+            assert_eq!(state.source.unwrap().no_agent_updates, None);
         }
 
         /// CMK-39594 AC9, TC-AU-068: `last_check` records the last answer of the
@@ -970,10 +976,7 @@ mod tests {
         fn test_a_source_latched_by_501_stays_latched() {
             let host = Host::new();
             let first_501_then_upgraded = ScriptedApi::new(vec![
-                Err(ApiError::ResponseStatus {
-                    status: http::StatusCode::NOT_IMPLEMENTED,
-                    body: None,
-                }),
+                Err(ApiError::stating_no_agent_updates("community_edition")),
                 no_package(),
             ]);
 
@@ -983,8 +986,48 @@ mod tests {
             assert!(first.is_ok(), "{first:?}");
             assert!(second.is_ok(), "{second:?}");
             assert_eq!(first_501_then_upgraded.reported_errors().len(), 1);
-            let state = host.state();
-            assert!(!state.source.as_ref().unwrap().available, "{state:?}");
+            assert_eq!(
+                host.state().source.unwrap().no_agent_updates,
+                Some(NoAgentUpdates::CommunityEdition)
+            );
+        }
+
+        /// CMK-41723 AC3: only the statement of the site latches its source.
+        #[test]
+        fn test_a_501_without_a_statement_is_asked_again_by_the_next_cycle() {
+            let host = Host::new();
+            let first_501_then_answering = ScriptedApi::new(vec![
+                Err(ApiError::ResponseStatus {
+                    status: http::StatusCode::NOT_IMPLEMENTED,
+                    body: Some(String::from(r#"{"detail": "Not Implemented"}"#)),
+                }),
+                no_package(),
+            ]);
+
+            let failed = host.cycle(&first_501_then_answering);
+            let retried = host.cycle(&first_501_then_answering);
+
+            assert!(failed.is_err(), "{failed:?}");
+            assert!(retried.is_ok(), "{retried:?}");
+            assert_eq!(host.state().source.unwrap().no_agent_updates, None);
+        }
+
+        /// CMK-41723 AC3
+        #[test]
+        fn test_a_site_without_the_license_is_asked_again_by_the_next_cycle() {
+            let host = Host::new();
+            let first_unlicensed_then_licensed = ScriptedApi::new(vec![
+                Err(ApiError::stating_no_agent_updates("not_licensed")),
+                no_package(),
+            ]);
+
+            let unlicensed = host.cycle(&first_unlicensed_then_licensed);
+            let licensed = host.cycle(&first_unlicensed_then_licensed);
+
+            assert!(unlicensed.is_ok(), "{unlicensed:?}");
+            assert!(licensed.is_ok(), "{licensed:?}");
+            assert_eq!(first_unlicensed_then_licensed.reported_errors().len(), 2);
+            assert_eq!(host.state().source.unwrap().no_agent_updates, None);
         }
 
         /// TC-AU-025: a removed TLS registration is refused with 403
@@ -1009,7 +1052,7 @@ mod tests {
                 state.source,
                 Some(UpdateSource {
                     uuid: SOURCE_UUID.parse().unwrap(),
-                    available: true,
+                    no_agent_updates: None,
                 })
             );
         }

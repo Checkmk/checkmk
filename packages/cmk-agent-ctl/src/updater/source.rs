@@ -46,8 +46,7 @@ pub fn determine_update_source(
         })
         .map(|connection| UpdateSource {
             uuid: connection.uuid,
-            // Only the site, by answering 501, can say that it serves no agent updates.
-            available: true,
+            no_agent_updates: None,
         });
     match updater_registration {
         UpdaterRegistration::Overwrite => candidates.next_back().or(current),
@@ -110,7 +109,7 @@ mod tests {
     fn source(uuid: &str) -> UpdateSource {
         UpdateSource {
             uuid: uuid::Uuid::from_str(uuid).unwrap(),
-            available: true,
+            no_agent_updates: None,
         }
     }
 

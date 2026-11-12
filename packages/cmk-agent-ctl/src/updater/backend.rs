@@ -17,7 +17,7 @@ use super::section;
 use super::source;
 use super::verification;
 use crate::agent_receiver_api;
-use crate::agent_receiver_api::ApiError;
+use crate::agent_receiver_api::{ApiError, NoAgentUpdates};
 use crate::config::{
     tmp_path_for_atomical_save, JSONLoader, JSONLoaderMissingSafe, Registry, TOMLLoader,
     UpdaterRegistration,
@@ -147,8 +147,9 @@ pub struct UpdateSource {
     #[serde_as(as = "DisplayFromStr")]
     pub uuid: uuid::Uuid,
 
-    /// Whether the site serves agent updates. False once it answered 501.
-    pub available: bool,
+    /// The statement of the site that ended the requests through the source.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub no_agent_updates: Option<NoAgentUpdates>,
 }
 
 /// Operational state of the updater, owned and written by the controller.
@@ -525,8 +526,8 @@ pub enum CheckOutcome {
         installed: AgentHash,
     },
 
-    /// The site of the update source serves no agent updates: likely the Community edition.
-    SourceUnavailable,
+    /// The site of the update source stated that it serves no agent updates.
+    SourceUnavailable(NoAgentUpdates),
 }
 
 /// What a fetch did. `D` is what became of a package that the site offers:
@@ -547,8 +548,8 @@ pub enum FetchOutcome<D> {
     /// The site offers a package other than the installed one.
     Due(D),
 
-    /// The site of the update source serves no agent updates: it answered 501.
-    SourceUnavailable,
+    /// The site of the update source stated that it serves no agent updates.
+    SourceUnavailable(NoAgentUpdates),
 
     /// The site no longer has the package it offered: it answered 409 to the
     /// download. The next status request names the package that replaced it.
@@ -603,7 +604,7 @@ enum OfferedUpdate<'a> {
 #[derive(Debug)]
 pub enum UpdateAvailabilityStatus {
     Available(agent_receiver_api::UpdateStatusResponse),
-    Unavailable,
+    Unavailable(NoAgentUpdates),
 }
 
 /// What came of asking the update source for a status, short of an error.
@@ -612,8 +613,8 @@ pub enum SourceAnswer<'r> {
     /// connection can reach one. The reason is logged.
     NotPossible,
 
-    /// The site of the update source serves no agent updates: it answered 501.
-    Unavailable,
+    /// The site of the update source stated that it serves no agent updates.
+    Unavailable(NoAgentUpdates),
 
     /// The site named the agent package it has for this host.
     Answered {
@@ -627,8 +628,8 @@ pub enum SourceAnswer<'r> {
 enum PackageDownload {
     Started(agent_receiver_api::AgentPackageStream),
 
-    /// The site serves no agent updates: it answered 501.
-    Unavailable,
+    /// The site stated that it serves no agent updates.
+    Unavailable(NoAgentUpdates),
 
     /// The site no longer has the offered package: it answered 409.
     Superseded,
@@ -717,7 +718,9 @@ impl WritableUpdater {
         };
         let mut download = match self.start_download(api, connection, offered)? {
             PackageDownload::Started(download) => download,
-            PackageDownload::Unavailable => return Ok(FetchOutcome::SourceUnavailable),
+            PackageDownload::Unavailable(reason) => {
+                return Ok(FetchOutcome::SourceUnavailable(reason))
+            }
             PackageDownload::Superseded => return Ok(FetchOutcome::Superseded),
         };
         let request = install::InstallRequest {
@@ -841,15 +844,16 @@ impl WritableUpdater {
         result.error
     }
 
-    /// The site of the source answered 501: no more requests go through it.
-    pub fn record_source_unavailable(&mut self) -> AnyhowResult<()> {
+    /// The site of the source stated that it serves no agent updates. No more
+    /// requests go through it.
+    pub fn record_source_unavailable(&mut self, reason: NoAgentUpdates) -> AnyhowResult<()> {
         let Some(source) = self.state.source.as_mut() else {
             return Ok(());
         };
-        if !source.available {
+        if source.no_agent_updates.is_some() {
             return Ok(());
         }
-        source.available = false;
+        source.no_agent_updates = Some(reason);
         log::warn!(
             "The site of the update source serves no agent updates, connection {} gets no more update requests",
             source.uuid
@@ -914,7 +918,7 @@ impl WritableUpdater {
             }
             let source = UpdateSource {
                 uuid: selected.connection.trust.uuid,
-                available: true,
+                no_agent_updates: None,
             };
             log::info!(
                 "Migrated the registration of the Python agent updater to {}, connection {} \
@@ -1270,7 +1274,9 @@ impl Updater {
     ) -> AnyhowResult<CheckOutcome> {
         let status = match self.ask_update_source(registry, api)? {
             SourceAnswer::NotPossible => return Ok(CheckOutcome::NotPossible),
-            SourceAnswer::Unavailable => return Ok(CheckOutcome::SourceUnavailable),
+            SourceAnswer::Unavailable(reason) => {
+                return Ok(CheckOutcome::SourceUnavailable(reason))
+            }
             SourceAnswer::Answered { status, .. } => status,
         };
         let Some(target) = status.target_agent.map(|offered| offered.aghash) else {
@@ -1311,7 +1317,7 @@ impl Updater {
             UpdateAvailabilityStatus::Available(status) => {
                 SourceAnswer::Answered { connection, status }
             }
-            UpdateAvailabilityStatus::Unavailable => SourceAnswer::Unavailable,
+            UpdateAvailabilityStatus::Unavailable(reason) => SourceAnswer::Unavailable(reason),
         })
     }
 
@@ -1340,8 +1346,8 @@ impl Updater {
     > {
         let (connection, status) = match answer {
             SourceAnswer::NotPossible => return Ok(ControlFlow::Break(FetchOutcome::NotPossible)),
-            SourceAnswer::Unavailable => {
-                return Ok(ControlFlow::Break(FetchOutcome::SourceUnavailable))
+            SourceAnswer::Unavailable(reason) => {
+                return Ok(ControlFlow::Break(FetchOutcome::SourceUnavailable(*reason)))
             }
             SourceAnswer::Answered { connection, status } => (connection, status),
         };
@@ -1395,7 +1401,9 @@ impl Updater {
             PackageDownload::Started(download) => {
                 self.read_package(download, connection, offered)?
             }
-            PackageDownload::Unavailable => return Ok(FetchOutcome::SourceUnavailable),
+            PackageDownload::Unavailable(reason) => {
+                return Ok(FetchOutcome::SourceUnavailable(reason))
+            }
             PackageDownload::Superseded => return Ok(FetchOutcome::Superseded),
         };
         // The PEM blocks are kept alive here: the parsed certificates borrow
@@ -1474,7 +1482,7 @@ impl Updater {
             return None;
         };
 
-        if !source.available {
+        if source.no_agent_updates.is_some() {
             log::info!("No agent update is possible: the site of the update source serves no agent updates");
             return None;
         }
@@ -1498,7 +1506,7 @@ impl Updater {
     ///
     /// # Returns
     ///
-    /// [`UpdateAvailabilityStatus::Unavailable`] when the site answers 501: it
+    /// [`UpdateAvailabilityStatus::Unavailable`] when the site states that it
     /// serves no agent updates.
     ///
     /// # Errors
@@ -1531,7 +1539,7 @@ impl Updater {
                 proof: &proof,
             }),
         )?;
-        if let UpdateAvailabilityStatus::Unavailable = status {
+        if let UpdateAvailabilityStatus::Unavailable(_) = status {
             bail!("{} serves no agent updates", selected.site_id);
         }
         Ok(())
@@ -1559,14 +1567,13 @@ impl Updater {
             },
         ) {
             Ok(status) => Ok(UpdateAvailabilityStatus::Available(status)),
-            Err(ApiError::ResponseStatus {
-                status: http::StatusCode::NOT_IMPLEMENTED,
-                ..
-            }) => Ok(UpdateAvailabilityStatus::Unavailable),
-            Err(error) => Err(Error::new(error).context(format!(
-                "Agent update status request to {} failed",
-                selected.site_id
-            ))),
+            Err(error) => match error.no_agent_updates() {
+                Some(reason) => Ok(UpdateAvailabilityStatus::Unavailable(reason)),
+                None => Err(Error::new(error).context(format!(
+                    "Agent update status request to {} failed",
+                    selected.site_id
+                ))),
+            },
         }
     }
 
@@ -1615,8 +1622,8 @@ impl Updater {
     ///
     /// # Returns
     ///
-    /// [`PackageDownload::Unavailable`] when the site answers 501, and
-    /// [`PackageDownload::Superseded`] when it answers 409.
+    /// [`PackageDownload::Unavailable`] when the site states that it serves no
+    /// agent updates, and [`PackageDownload::Superseded`] when it answers 409.
     ///
     /// # Errors
     ///
@@ -1640,16 +1647,13 @@ impl Updater {
         ) {
             Ok(download) => Ok(PackageDownload::Started(download)),
             Err(ApiError::ResponseStatus {
-                status: http::StatusCode::NOT_IMPLEMENTED,
-                ..
-            }) => Ok(PackageDownload::Unavailable),
-            Err(ApiError::ResponseStatus {
                 status: http::StatusCode::CONFLICT,
                 ..
             }) => Ok(PackageDownload::Superseded),
-            Err(error) => {
-                Err(Error::new(error).context(download_failed(&offered.aghash, selected)))
-            }
+            Err(error) => match error.no_agent_updates() {
+                Some(reason) => Ok(PackageDownload::Unavailable(reason)),
+                None => Err(Error::new(error).context(download_failed(&offered.aghash, selected))),
+            },
         }
     }
 
@@ -1958,7 +1962,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     fn some_source() -> UpdateSource {
         UpdateSource {
             uuid: uuid::Uuid::from_str(CONNECTION_UUID).unwrap(),
-            available: true,
+            no_agent_updates: None,
         }
     }
 
@@ -1967,7 +1971,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     fn other_source() -> UpdateSource {
         UpdateSource {
             uuid: uuid::Uuid::from_str("8f0e3a1c-5b2d-4e6f-9a7b-0c1d2e3f4a5b").unwrap(),
-            available: true,
+            no_agent_updates: None,
         }
     }
 
@@ -1994,7 +1998,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
 
     /// CMK-39588 AC4: written without an update configuration, and without a site.
     #[test]
-    fn test_reconcile_source_writes_the_uuid_and_the_availability() {
+    fn test_reconcile_source_writes_the_uuid() {
         let dir = tempfile::TempDir::new().unwrap();
         let paths = artifact_paths(&dir);
 
@@ -2010,7 +2014,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             serde_json::from_str(&fs::read_to_string(&paths.updater_state_path).unwrap()).unwrap();
         assert_eq!(
             state["source"],
-            serde_json::json!({"uuid": CONNECTION_UUID, "available": true})
+            serde_json::json!({"uuid": CONNECTION_UUID})
         );
     }
 
@@ -2241,9 +2245,14 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             },
         );
 
-        updater.record_source_unavailable().unwrap();
+        updater
+            .record_source_unavailable(NoAgentUpdates::CommunityEdition)
+            .unwrap();
 
-        assert!(!saved_source(&updater).unwrap().available);
+        assert_eq!(
+            saved_source(&updater).unwrap().no_agent_updates,
+            Some(NoAgentUpdates::CommunityEdition)
+        );
     }
 
     /// CMK-39594 AC8: an answer of the site is recorded as the last check.
@@ -2288,7 +2297,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         let answer = updater
             .ask_update_source(
                 &registry.registry,
-                &RefusingApi::status(http::StatusCode::NOT_IMPLEMENTED),
+                &RefusingApi::status_without_agent_updates(),
             )
             .unwrap();
         updater.record_answer(&answer).unwrap();
@@ -2330,6 +2339,27 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         );
     }
 
+    /// A 3.0 daily from before the reason was recorded marked the source with
+    /// `available`.
+    #[test]
+    fn test_state_file_with_the_former_mark_of_the_source_loads() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let path = dir.path().join("state.json");
+        fs::write(
+            &path,
+            format!(
+                r#"{{"source": {{"uuid": "{CONNECTION_UUID}", "available": false}},
+                    "last_check": null, "last_update": null, "next_check": null,
+                    "pending_hash": null, "last_error": null}}"#
+            ),
+        )
+        .unwrap();
+
+        let state = UpdateState::load(&path).unwrap();
+
+        assert_eq!(state.source, Some(some_source()));
+    }
+
     #[test]
     fn test_state_file_keys_the_source_by_uuid() {
         let dir = tempfile::TempDir::new().unwrap();
@@ -2344,7 +2374,6 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
 
         let written = fs::read_to_string(&path).unwrap();
         assert!(written.contains(&format!(r#""uuid": "{CONNECTION_UUID}""#)));
-        assert!(written.contains(r#""available": true"#));
     }
 
     #[test]
@@ -3266,14 +3295,21 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     /// A site that refuses one of the two requests with a status code, and
     /// answers the other one as [`TestApi`] does for [`TARGET_HASH`].
     struct RefusingApi {
-        status: Option<http::StatusCode>,
-        download: Option<http::StatusCode>,
+        status: Option<Refusal>,
+        download: Option<Refusal>,
+    }
+
+    #[derive(Clone, Copy)]
+    enum Refusal {
+        Status(http::StatusCode),
+        /// The statement of a Community site.
+        NoAgentUpdates,
     }
 
     impl RefusingApi {
         fn status(code: http::StatusCode) -> Self {
             Self {
-                status: Some(code),
+                status: Some(Refusal::Status(code)),
                 download: None,
             }
         }
@@ -3281,13 +3317,30 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         fn download(code: http::StatusCode) -> Self {
             Self {
                 status: None,
-                download: Some(code),
+                download: Some(Refusal::Status(code)),
+            }
+        }
+
+        fn status_without_agent_updates() -> Self {
+            Self {
+                status: Some(Refusal::NoAgentUpdates),
+                download: None,
+            }
+        }
+
+        fn download_without_agent_updates() -> Self {
+            Self {
+                status: None,
+                download: Some(Refusal::NoAgentUpdates),
             }
         }
     }
 
-    fn refused(status: http::StatusCode) -> ApiError {
-        ApiError::ResponseStatus { status, body: None }
+    fn refused(refusal: Refusal) -> ApiError {
+        match refusal {
+            Refusal::Status(status) => ApiError::ResponseStatus { status, body: None },
+            Refusal::NoAgentUpdates => ApiError::stating_no_agent_updates("community_edition"),
+        }
     }
 
     impl agent_receiver_api::AgentUpdate for RefusingApi {
@@ -3298,7 +3351,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             _body: &agent_receiver_api::UpdateStatusBody<'_>,
         ) -> Result<UpdateStatusResponse, ApiError> {
             match self.status {
-                Some(code) => Err(refused(code)),
+                Some(refusal) => Err(refused(refusal)),
                 None => Ok(offered(Some(TARGET_HASH))),
             }
         }
@@ -3311,7 +3364,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         ) -> AnyhowResult<agent_receiver_api::AgentPackageStream, agent_receiver_api::ApiError>
         {
             match self.download {
-                Some(code) => Err(refused(code)),
+                Some(refusal) => Err(refused(refusal)),
                 None => Ok(PACKAGE.into()),
             }
         }
@@ -3596,7 +3649,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         let updater = Updater {
             state: UpdateState {
                 source: Some(UpdateSource {
-                    available: false,
+                    no_agent_updates: Some(NoAgentUpdates::CommunityEdition),
                     ..some_source()
                 }),
                 ..Default::default()
@@ -3633,11 +3686,14 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         let outcome = updater_after(None)
             .check(
                 &registry.registry,
-                &RefusingApi::status(http::StatusCode::NOT_IMPLEMENTED),
+                &RefusingApi::status_without_agent_updates(),
             )
             .unwrap();
 
-        assert_eq!(outcome, CheckOutcome::SourceUnavailable);
+        assert_eq!(
+            outcome,
+            CheckOutcome::SourceUnavailable(NoAgentUpdates::CommunityEdition)
+        );
     }
 
     /// A host that may not update itself can still be asked what it would
@@ -4285,12 +4341,15 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         let outcome = updater_spooling_into(&dir)
             .ask_and_fetch(
                 &registry.registry,
-                &RefusingApi::status(http::StatusCode::NOT_IMPLEMENTED),
+                &RefusingApi::status_without_agent_updates(),
                 SignatureCheck::Required,
             )
             .unwrap();
 
-        assert_eq!(outcome, FetchOutcome::SourceUnavailable);
+        assert_eq!(
+            outcome,
+            FetchOutcome::SourceUnavailable(NoAgentUpdates::CommunityEdition)
+        );
     }
 
     /// TC-AU-079: the site may stop serving agent updates between the status
@@ -4303,12 +4362,15 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         let outcome = updater_spooling_into(&dir)
             .ask_and_fetch(
                 &registry.registry,
-                &RefusingApi::download(http::StatusCode::NOT_IMPLEMENTED),
+                &RefusingApi::download_without_agent_updates(),
                 SignatureCheck::Required,
             )
             .unwrap();
 
-        assert_eq!(outcome, FetchOutcome::SourceUnavailable);
+        assert_eq!(
+            outcome,
+            FetchOutcome::SourceUnavailable(NoAgentUpdates::CommunityEdition)
+        );
     }
 
     /// A 409 is no failure: the site baked a newer package in between, and the
@@ -4512,7 +4574,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     struct MigrationApi {
         host_names: Vec<(uuid::Uuid, &'static str)>,
         unreachable: Vec<uuid::Uuid>,
-        refusal: Option<http::StatusCode>,
+        refusal: Option<Refusal>,
         refusals: Vec<(uuid::Uuid, http::StatusCode)>,
         status_bodies: RefCell<Vec<serde_json::Value>>,
         registration_queries: RefCell<usize>,
@@ -4531,7 +4593,14 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
 
         fn refusing(self, status: http::StatusCode) -> Self {
             Self {
-                refusal: Some(status),
+                refusal: Some(Refusal::Status(status)),
+                ..self
+            }
+        }
+
+        fn without_agent_updates(self) -> Self {
+            Self {
+                refusal: Some(Refusal::NoAgentUpdates),
                 ..self
             }
         }
@@ -4590,10 +4659,10 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
                 self.refusals
                     .iter()
                     .find(|(uuid, _)| *uuid == connection.uuid)
-                    .map(|(_, code)| *code)
+                    .map(|(_, code)| Refusal::Status(*code))
             });
             match refusal {
-                Some(code) => Err(refused(code)),
+                Some(refusal) => Err(refused(refusal)),
                 None => Ok(offered(None)),
             }
         }
@@ -4826,7 +4895,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     fn third_source() -> UpdateSource {
         UpdateSource {
             uuid: uuid::Uuid::from_str("2da62f8f-9e4a-4b1b-8b3a-1c1a0b0f1a03").unwrap(),
-            available: true,
+            no_agent_updates: None,
         }
     }
 
@@ -4957,8 +5026,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
         let error = updater
             .migrate(
                 &registry_with_one_connection().registry,
-                &MigrationApi::knowing(&[(&some_source(), "myhost")])
-                    .refusing(http::StatusCode::NOT_IMPLEMENTED),
+                &MigrationApi::knowing(&[(&some_source(), "myhost")]).without_agent_updates(),
             )
             .unwrap_err();
 

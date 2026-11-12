@@ -1,4 +1,4 @@
-title: Dell Equallogic SAN Storage: Health- and Raid State
+title: Dell: EqualLogic Health and RAID State
 agents: snmp
 catalog: hw/storagehw/dell
 license: GPLv2

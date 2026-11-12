@@ -1,4 +1,4 @@
-title: Dell PowerEdge Server: CPU State
+title: Dell PowerEdge: CPUs
 agents: snmp
 catalog: hw/server/dell
 license: GPLv2

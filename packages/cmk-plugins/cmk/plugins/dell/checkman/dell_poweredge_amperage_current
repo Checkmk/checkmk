@@ -1,4 +1,4 @@
-title: Dell PowerEdge Server: Current
+title: Dell PowerEdge: Current
 agents: snmp
 catalog: hw/server/dell
 license: GPLv2

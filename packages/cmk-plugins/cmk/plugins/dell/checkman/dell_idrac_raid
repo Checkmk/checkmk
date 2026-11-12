@@ -1,4 +1,4 @@
-title: Dell iDRAC: Status of Raid Controller
+title: Dell iDRAC: RAID Controllers
 agents: snmp
 catalog: hw/server/dell
 license: GPLv2

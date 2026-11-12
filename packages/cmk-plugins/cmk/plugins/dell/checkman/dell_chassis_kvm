@@ -1,4 +1,4 @@
-title: Dell PowerEdge Server: Global KVM State
+title: Dell PowerEdge: Chassis KVM
 agents: snmp
 catalog: hw/server/dell
 license: GPLv2

@@ -1,4 +1,4 @@
-title: Dell iDRAC: Status of Power Supply Unit (PSU)
+title: Dell iDRAC: Power Supplies
 agents: snmp
 catalog: hw/server/dell
 license: GPLv2

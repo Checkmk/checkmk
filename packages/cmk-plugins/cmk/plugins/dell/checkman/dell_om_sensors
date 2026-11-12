@@ -1,4 +1,4 @@
-title: Dell OpenManage: Sensors (Fan, Temperature)
+title: Dell OpenManage: Fan and Temperature Sensors
 agents: snmp
 catalog: hw/server/dell
 license: GPLv2

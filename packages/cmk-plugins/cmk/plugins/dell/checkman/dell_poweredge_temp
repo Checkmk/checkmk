@@ -1,4 +1,4 @@
-title: Dell PowerEdge Server: Temperature Sensors
+title: Dell PowerEdge: Temperature Sensors
 agents: snmp
 catalog: hw/server/dell
 license: GPLv2

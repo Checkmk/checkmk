@@ -1,4 +1,4 @@
-title: Dell PowerEdge Chassis: Temperature Sensors
+title: Dell PowerEdge: Chassis Temperature Sensors
 agents: snmp
 catalog: hw/server/dell
 license: GPLv2

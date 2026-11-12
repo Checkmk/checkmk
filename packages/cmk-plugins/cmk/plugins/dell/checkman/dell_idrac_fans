@@ -1,4 +1,4 @@
-title: Dell iDRAC: Fan States
+title: Dell iDRAC: Fans
 agents: snmp
 catalog: hw/server/dell
 license: GPLv2

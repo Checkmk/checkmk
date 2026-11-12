@@ -1,4 +1,4 @@
-title: Dell PowerEdge Server: State of PCI Devices
+title: Dell PowerEdge: PCI Devices
 agents: snmp
 catalog: hw/server/dell
 license: GPLv2

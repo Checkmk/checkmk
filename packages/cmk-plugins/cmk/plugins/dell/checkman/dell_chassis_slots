@@ -1,4 +1,4 @@
-title: Dell PowerEdge Chassis: State of the Blade Slots
+title: Dell PowerEdge: Chassis Blade Slots
 agents: snmp
 catalog: hw/server/dell
 license: GPLv2

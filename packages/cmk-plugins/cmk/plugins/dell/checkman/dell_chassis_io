@@ -1,4 +1,4 @@
-title: Dell PowerEdge Chassis: Overall IO Module State
+title: Dell PowerEdge: Chassis I/O Modules
 agents: snmp
 catalog: hw/server/dell
 license: GPLv2

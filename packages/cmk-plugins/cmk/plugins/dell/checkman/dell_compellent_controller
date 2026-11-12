@@ -1,4 +1,4 @@
-title: Dell Compellent: Controller Status
+title: Dell Compellent: Controllers
 agents: snmp
 catalog: hw/storagehw/dell
 license: GPLv2

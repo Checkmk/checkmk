@@ -1,4 +1,4 @@
-title: Dell OpenManage: PSU Redundancy Status
+title: Dell OpenManage: PSU Redundancy
 agents: snmp
 catalog: hw/server/dell
 license: GPLv2

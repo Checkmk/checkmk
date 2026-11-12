@@ -1,4 +1,4 @@
-title: Dell PowerEdge Server: State of Network Devices
+title: Dell PowerEdge: Network Devices
 agents: snmp
 catalog: hw/server/dell
 license: GPLv2

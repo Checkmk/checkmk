@@ -1,4 +1,4 @@
-title: Dell PowerEdge Chassis: Overall Fan State
+title: Dell PowerEdge: Chassis Fans
 agents: snmp
 catalog: hw/server/dell
 license: GPLv2

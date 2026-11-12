@@ -1,4 +1,4 @@
-title: Dell PowerEdge Chassis: Overall Power Consumption
+title: Dell PowerEdge: Chassis Power Consumption
 agents: snmp
 catalog: hw/server/dell
 license: GPLv2

@@ -1,4 +1,4 @@
-title: Dell Compellent: Enclosure Status
+title: Dell Compellent: Enclosures
 agents: snmp
 catalog: hw/storagehw/dell
 license: GPLv2

@@ -1,4 +1,4 @@
-title: Dell PowerEdge Server: State of Memory Modules
+title: Dell PowerEdge: Memory Modules
 agents: snmp
 catalog: hw/server/dell
 license: GPLv2

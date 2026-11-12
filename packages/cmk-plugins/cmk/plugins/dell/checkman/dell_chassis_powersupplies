@@ -1,4 +1,4 @@
-title: Dell PowerEdge Chassis: Power Consumption per Power Supply Unit
+title: Dell PowerEdge: Chassis Power Supplies
 agents: snmp
 catalog: hw/server/dell
 license: GPLv2

@@ -1,4 +1,4 @@
-title: Dell PowerEdge Server: Global State
+title: Dell PowerEdge: Server Status
 agents: snmp
 catalog: hw/server/dell
 license: GPLv2

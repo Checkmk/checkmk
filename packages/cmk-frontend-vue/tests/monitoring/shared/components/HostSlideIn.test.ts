@@ -10,6 +10,7 @@ import client from 'cmk-ui-library/lib/rest-api-client/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { h as createElement, defineComponent, markRaw } from 'vue'
 
+import { allHostsPageUrl } from '@/monitoring/shared/allHostsPageUrl'
 import type { HostEntry, HostOverview } from '@/monitoring/shared/api/types'
 import HostSlideIn, {
   type HostSlideInSubject
@@ -21,7 +22,6 @@ import type { MonitoringActionRegistry } from '@/monitoring/shared/components/ac
 import type { ActionOutcome, MonitoringAction } from '@/monitoring/shared/components/action/types'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
 import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
-import { labelCondition } from '@/monitoring/shared/labels'
 import type { DisplayOptions } from '@/monitoring/shared/types'
 
 import { makeListingService } from '../../shared/services/testHelpers'
@@ -389,7 +389,7 @@ describe('HostSlideIn', () => {
         actions: makeRegistry(vi.fn()),
         loadActionMenu: async () => [],
         displayOptions: DISPLAY_OPTIONS,
-        filterLabelsBy: labelCondition
+        valueClicks: 'narrow-listing'
       },
       global: { provide: { [MONITORING_SERVICE as symbol]: makeListingService() } }
     })
@@ -399,32 +399,49 @@ describe('HostSlideIn', () => {
     expect(emitted()['close']).toHaveLength(1)
   })
 
-  it('links a label to the page its narrow target names', async () => {
+  it('links a label to the page listing all hosts carrying it', async () => {
     vi.spyOn(client, 'GET').mockResolvedValue({
       data: makeHostOverview({ labels: { env: { value: 'prod', source: 'explicit' } } }),
       error: undefined,
       response: new Response()
     } as never)
-    const narrowTarget = vi.fn(() => 'monitor_all_hosts.py?filter=env')
     render(HostSlideIn, {
       props: {
         host: makeHost(),
         actions: makeRegistry(vi.fn()),
         loadActionMenu: async () => [],
         displayOptions: DISPLAY_OPTIONS,
-        filterLabelsBy: labelCondition,
-        narrowTarget
+        valueClicks: 'open-host-list'
       }
     })
 
     const link = await screen.findByRole('link', { name: 'env: prod' })
 
-    expect(link).toHaveAttribute('href', 'monitor_all_hosts.py?filter=env')
-    expect(narrowTarget).toHaveBeenCalledWith({
-      type: 'condition',
-      field: 'labels',
-      op: 'all_of',
-      value: ['env:prod']
+    expect(link).toHaveAttribute(
+      'href',
+      allHostsPageUrl({ type: 'condition', field: 'labels', op: 'all_of', value: ['env:prod'] })
+    )
+  })
+
+  it('keeps the labels plain without a say on what a click does', async () => {
+    vi.spyOn(client, 'GET').mockResolvedValue({
+      data: makeHostOverview({ labels: { env: { value: 'prod', source: 'explicit' } } }),
+      error: undefined,
+      response: new Response()
+    } as never)
+    render(HostSlideIn, {
+      props: {
+        host: makeHost(),
+        actions: makeRegistry(vi.fn()),
+        loadActionMenu: async () => [],
+        displayOptions: DISPLAY_OPTIONS
+      },
+      global: { provide: { [MONITORING_SERVICE as symbol]: makeListingService() } }
     })
+
+    await screen.findByText('prod')
+
+    expect(screen.queryByRole('button', { name: 'env: prod' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'env: prod' })).not.toBeInTheDocument()
   })
 })

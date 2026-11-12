@@ -17,6 +17,8 @@ export type HostSlideInSubject = HostRef &
       'state' | 'stale' | 'is_flapping' | 'modes' | 'legacy_host_status_link' | 'setup_access'
     >
   >
+
+export type HostValueClicks = 'narrow-listing' | 'open-host-list'
 </script>
 
 <script setup lang="ts">
@@ -27,6 +29,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, markRaw, onUnmounted, provide, ref, watch } from 'vue'
 
 import TableSkeleton from '@/loading-transition/TableSkeleton.vue'
+import { allHostsPageUrl } from '@/monitoring/shared/allHostsPageUrl'
 import { HostApi } from '@/monitoring/shared/api/hosts'
 import type { HostOverview } from '@/monitoring/shared/api/types'
 import HostHeader, { type HostHeaderSubject } from '@/monitoring/shared/components/HostHeader.vue'
@@ -36,14 +39,12 @@ import MonitoringActionPane from '@/monitoring/shared/components/action/Monitori
 import type { MonitoringActionRegistry } from '@/monitoring/shared/components/action/registry'
 import type { ActionOutcome } from '@/monitoring/shared/components/action/types'
 import type { CellAction } from '@/monitoring/shared/components/cell/ActionsCell.vue'
-import type { LabelCellItem } from '@/monitoring/shared/components/cell/labelCellItem'
 import SlideInActions from '@/monitoring/shared/components/slide-in/SlideInActions.vue'
 import { ACTION_REFRESH_DELAY_MS } from '@/monitoring/shared/constants'
 import EventHistoryApp from '@/monitoring/shared/events/EventHistoryApp.vue'
 import { fetchEvents } from '@/monitoring/shared/events/api'
 import { HOST_TAB_OVERVIEW } from '@/monitoring/shared/hostSlideInTabs'
 import { hostRefOf } from '@/monitoring/shared/objectRefs'
-import type { ColumnCondition } from '@/monitoring/shared/services/MonitoringService'
 import { useSlideInActions } from '@/monitoring/shared/services/useSlideInActions'
 import type { DisplayOptions } from '@/monitoring/shared/types'
 
@@ -66,19 +67,10 @@ const props = withDefaults(
     revealRelationsRequest?: number
     displayOptions: DisplayOptions
     /**
-     * What a label click narrows to: handed to narrowTarget if set, else to the
-     * listing behind; leave it unset when neither lists hosts.
+     * What a click on a label, tag or contact group does: narrow the listing behind,
+     * which has to list hosts, or open the page listing all hosts; unset, they are plain.
      */
-    filterLabelsBy?: ((item: LabelCellItem) => ColumnCondition) | undefined
-    /** What a contact group click narrows to, like filterLabelsBy. */
-    filterContactGroupsBy?: ((item: LabelCellItem) => ColumnCondition) | undefined
-    /** What a tag click narrows to, like filterLabelsBy. */
-    filterTagsBy?: ((item: LabelCellItem) => ColumnCondition) | undefined
-    /**
-     * The page a clicked value links to, given what it narrows to; set when the
-     * listing behind does not list hosts. Provided to the tabs as NARROW_TARGET.
-     */
-    narrowTarget?: ((condition: ColumnCondition) => string) | undefined
+    valueClicks?: HostValueClicks | undefined
   }>(),
   {
     rowActions: () => [],
@@ -96,8 +88,8 @@ const emit = defineEmits<{
 const { _t } = usei18n()
 
 provide(AFTER_NARROW, () => emit('close'))
-if (props.narrowTarget) {
-  provide(NARROW_TARGET, props.narrowTarget)
+if (props.valueClicks === 'open-host-list') {
+  provide(NARROW_TARGET, allHostsPageUrl)
 }
 
 const hostApi = new HostApi()
@@ -259,9 +251,7 @@ const tabs = computed<SlideInTab[]>(() => {
       props: {
         revealRelationsRequest: props.revealRelationsRequest,
         displayOptions: props.displayOptions,
-        filterLabelsBy: props.filterLabelsBy,
-        filterTagsBy: props.filterTagsBy,
-        filterContactGroupsBy: props.filterContactGroupsBy
+        narrowable: props.valueClicks !== undefined
       },
       load: () => loadOverview(hostRefOf(host))
     },

@@ -14,7 +14,6 @@ import { useKeyboardHints } from 'cmk-ui-library/lib/keyboardHelp'
 import usePersistentRef from 'cmk-ui-library/lib/usePersistentRef'
 import { computed, onBeforeUnmount, onMounted, provide, ref, useTemplateRef } from 'vue'
 
-import { allHostsPageUrl } from '@/monitoring/shared/allHostsPageUrl'
 import { HostServicesApi } from '@/monitoring/shared/api/hostServices'
 import { HostApi } from '@/monitoring/shared/api/hosts'
 import type {
@@ -46,7 +45,6 @@ import {
 } from '@/monitoring/shared/displayOptionsState/urlState'
 import { hostPanelFragment } from '@/monitoring/shared/hostPanelFragment'
 import { HOST_TAB_OVERVIEW } from '@/monitoring/shared/hostSlideInTabs'
-import { contactGroupCondition, labelCondition, tagCondition } from '@/monitoring/shared/labels'
 import { serviceCommand, serviceRefOf } from '@/monitoring/shared/objectRefs'
 import { DEFAULT_DISPLAY_OPTIONS } from '@/monitoring/shared/types'
 import { useHostActions } from '@/monitoring/shared/useHostActions'
@@ -513,10 +511,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         :row-actions="hostActions.rowActions"
         :permitted-actions="hostActions.permittedActions"
         :load-action-menu="hostActions.loadActionMenu"
-        :filter-labels-by="labelCondition"
-        :filter-tags-by="tagCondition"
-        :filter-contact-groups-by="contactGroupCondition"
-        :narrow-target="allHostsPageUrl"
+        value-clicks="open-host-list"
         @close="closeHostSlideIn"
         @performed="onActionPerformed"
       />

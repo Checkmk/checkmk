@@ -15,7 +15,13 @@ import OverviewChips from '@/monitoring/shared/components/slide-in/OverviewChips
 import OverviewDetailList from '@/monitoring/shared/components/slide-in/OverviewDetailList.vue'
 import OverviewLabels from '@/monitoring/shared/components/slide-in/OverviewLabels.vue'
 import { formatDisplayTimestamp } from '@/monitoring/shared/formatTimestamp'
-import { toNameItems, toTagItems } from '@/monitoring/shared/labels'
+import {
+  contactGroupCondition,
+  labelCondition,
+  tagCondition,
+  toNameItems,
+  toTagItems
+} from '@/monitoring/shared/labels'
 import { Narrowing } from '@/monitoring/shared/narrowing'
 import { hostRefOf } from '@/monitoring/shared/objectRefs'
 import type { ColumnCondition } from '@/monitoring/shared/services/MonitoringService'
@@ -30,16 +36,12 @@ const props = withDefaults(
     revealRelationsRequest?: number
     displayOptions: DisplayOptions
     /**
-     * What a label click narrows to: handed to the NARROW_TARGET provided if set, else to the
-     * listing behind; leave it unset when neither lists hosts.
+     * Whether a click on a label, tag or contact group narrows: through the NARROW_TARGET
+     * provided if set, else the listing behind, which then has to list hosts.
      */
-    filterLabelsBy?: ((item: LabelCellItem) => ColumnCondition) | undefined
-    /** What a contact group click narrows to, like filterLabelsBy. */
-    filterContactGroupsBy?: ((item: LabelCellItem) => ColumnCondition) | undefined
-    /** What a tag click narrows to, like filterLabelsBy. */
-    filterTagsBy?: ((item: LabelCellItem) => ColumnCondition) | undefined
+    narrowable?: boolean
   }>(),
-  { revealRelationsRequest: 0 }
+  { revealRelationsRequest: 0, narrowable: false }
 )
 
 const { _t } = usei18n()
@@ -49,18 +51,10 @@ const hostRef = computed(() => hostRefOf(props.data))
 const tagChips = computed(() => toTagItems(props.data.tags))
 const contactGroupChips = computed(() => toNameItems(props.data.contact_groups))
 
-type ConditionOf = (item: LabelCellItem) => ColumnCondition
-
 const narrowing = Narrowing.inject()
 
-function actionFor(conditionOf: ConditionOf | undefined): ItemAction | undefined {
-  return conditionOf ? narrowing.actionFor(conditionOf) : undefined
-}
-
-function narrowBy(conditionOf: ConditionOf | undefined, item: LabelCellItem): void {
-  if (conditionOf) {
-    narrowing.narrow(conditionOf(item))
-  }
+function actionFor(conditionOf: (item: LabelCellItem) => ColumnCondition): ItemAction | undefined {
+  return props.narrowable ? narrowing.actionFor(conditionOf) : undefined
 }
 
 const lastCheck = computed(() =>
@@ -120,8 +114,8 @@ const age = computed(() =>
       <dd>
         <OverviewChips
           :items="contactGroupChips"
-          :action="actionFor(filterContactGroupsBy)"
-          @select="narrowBy(filterContactGroupsBy, $event)"
+          :action="actionFor(contactGroupCondition)"
+          @select="narrowing.narrow(contactGroupCondition($event))"
         />
       </dd>
     </OverviewDetailList>
@@ -141,8 +135,8 @@ const age = computed(() =>
       <dd>
         <OverviewChips
           :items="tagChips"
-          :action="actionFor(filterTagsBy)"
-          @select="narrowBy(filterTagsBy, $event)"
+          :action="actionFor(tagCondition)"
+          @select="narrowing.narrow(tagCondition($event))"
         />
       </dd>
 
@@ -150,8 +144,8 @@ const age = computed(() =>
       <dd>
         <OverviewLabels
           :labels="data.labels"
-          :action="actionFor(filterLabelsBy)"
-          @select="narrowBy(filterLabelsBy, $event)"
+          :action="actionFor(labelCondition)"
+          @select="narrowing.narrow(labelCondition($event))"
         />
       </dd>
     </OverviewDetailList>

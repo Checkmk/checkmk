@@ -17,7 +17,6 @@ import HostServicesRow from '@/monitoring/host-services/components/HostServicesR
 import ServiceSlideIn, {
   SERVICE_GRAPHS_TAB_ID
 } from '@/monitoring/host-services/components/ServiceSlideIn.vue'
-import { allHostsPageUrl } from '@/monitoring/shared/allHostsPageUrl'
 import type { HostRef, ServiceEntry, ServiceRef } from '@/monitoring/shared/api/types'
 import DisplayOptionsPane from '@/monitoring/shared/components/DisplayOptionsPane.vue'
 import HostSlideIn, {
@@ -58,7 +57,6 @@ import { buildFilterUrlSchema } from '@/monitoring/shared/filterState/schema'
 import { filterStateWriter, readFilterUrlState } from '@/monitoring/shared/filterState/urlState'
 import { HOST_TAB_OVERVIEW } from '@/monitoring/shared/hostSlideInTabs'
 import { tableKeyboardHints } from '@/monitoring/shared/keyboardHints'
-import { contactGroupCondition, labelCondition, tagCondition } from '@/monitoring/shared/labels'
 import { hostRefOfService, serviceCommand, serviceRefOf } from '@/monitoring/shared/objectRefs'
 import {
   buildColumnStorageKey,
@@ -473,10 +471,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         :row-actions="hostActions.rowActions"
         :permitted-actions="hostActions.permittedActions"
         :load-action-menu="hostActions.loadActionMenu"
-        :filter-labels-by="labelCondition"
-        :filter-tags-by="tagCondition"
-        :filter-contact-groups-by="contactGroupCondition"
-        :narrow-target="allHostsPageUrl"
+        value-clicks="open-host-list"
         @close="closeHostSlideIn"
         @performed="onActionPerformed"
       />

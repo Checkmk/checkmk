@@ -12,7 +12,6 @@ import {
   NARROW_TARGET
 } from '@/monitoring/shared/components/MonitoringTableContext'
 import HostOverviewTab from '@/monitoring/shared/components/slide-in/HostOverviewTab.vue'
-import { contactGroupCondition, labelCondition, tagCondition } from '@/monitoring/shared/labels'
 import type { ColumnCondition } from '@/monitoring/shared/services/MonitoringService'
 import type { DisplayOptions } from '@/monitoring/shared/types'
 
@@ -119,7 +118,7 @@ test('dashes out the timestamps of a host that has never been checked', () => {
 test('narrows the listing of hosts to the ones carrying a label clicked on', async () => {
   const service = makeListingService()
   render(HostOverviewTab, {
-    props: { data: makeData(), displayOptions: DISPLAY_OPTIONS, filterLabelsBy: labelCondition },
+    props: { data: makeData({ tags: {} }), displayOptions: DISPLAY_OPTIONS, narrowable: true },
     global: { provide: { [MONITORING_SERVICE as symbol]: service } }
   })
 
@@ -136,7 +135,7 @@ test('narrows the listing of hosts to the ones carrying a label clicked on', asy
 test('narrows the listing of hosts to the ones carrying a tag clicked on', async () => {
   const service = makeListingService()
   render(HostOverviewTab, {
-    props: { data: makeData(), displayOptions: DISPLAY_OPTIONS, filterTagsBy: tagCondition },
+    props: { data: makeData({ labels: {} }), displayOptions: DISPLAY_OPTIONS, narrowable: true },
     global: { provide: { [MONITORING_SERVICE as symbol]: service } }
   })
 
@@ -156,7 +155,7 @@ test('narrows the listing of hosts to the ones assigned to a contact group click
     props: {
       data: makeData(),
       displayOptions: DISPLAY_OPTIONS,
-      filterContactGroupsBy: contactGroupCondition
+      narrowable: true
     },
     global: { provide: { [MONITORING_SERVICE as symbol]: service } }
   })
@@ -183,7 +182,7 @@ test('keeps the labels plain where the listing behind the panel holds no hosts',
 test('links a label to the page a narrow target names instead of narrowing the listing', async () => {
   const service = makeListingService()
   render(HostOverviewTab, {
-    props: { data: makeData(), displayOptions: DISPLAY_OPTIONS, filterLabelsBy: labelCondition },
+    props: { data: makeData({ tags: {} }), displayOptions: DISPLAY_OPTIONS, narrowable: true },
     global: {
       provide: {
         [MONITORING_SERVICE as symbol]: service,

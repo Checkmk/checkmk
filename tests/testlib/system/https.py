@@ -7,10 +7,10 @@ certificates for testing purposes.
 """
 
 import ssl
+import threading
 from http import HTTPStatus
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from ipaddress import IPv4Address
-from multiprocessing import get_context
 from pathlib import Path
 
 from cmk.crypto.certificate import (
@@ -67,6 +67,8 @@ class HTTPSDummy:
         self.ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
         self.ssl_context.load_cert_chain(keyfile=self.key_file, certfile=self.cert_file)
 
+        self._thread = threading.Thread(target=self.httpd.serve_forever, daemon=True)
+
     def create_self_signed_cert(self) -> None:
         PersistedCertificateWithPrivateKey.persist(
             CertificateWithPrivateKey.generate_self_signed(
@@ -81,20 +83,12 @@ class HTTPSDummy:
             self.key_file,
         )
 
-    def start_server(self) -> None:
-        self.httpd.socket = self.ssl_context.wrap_socket(self.httpd.socket, server_side=True)
-        self.httpd.serve_forever()
-
     def run(self) -> int:
-        # NOTE: Things don't work out-of-the-box here for Python 3.14's default start method
-        # "forkserver", see
-        # https://docs.python.org/3/library/multiprocessing.html#the-spawn-and-forkserver-start-methods
-        # The concrete problem here is that the threading.Lock object contained (transitively) in
-        # the SiteApacheHTTPServer can't be pickled.
-        self.httpp = get_context("fork").Process(target=self.start_server)
-        self.httpp.start()
+        self.httpd.socket = self.ssl_context.wrap_socket(self.httpd.socket, server_side=True)
+        self._thread.start()
         return self.port
 
     def stop(self) -> None:
-        self.httpp.terminate()
-        self.httpp.join()
+        self.httpd.shutdown()
+        self._thread.join()
+        self.httpd.server_close()

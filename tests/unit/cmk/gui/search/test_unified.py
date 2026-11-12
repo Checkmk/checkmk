@@ -17,7 +17,8 @@ from cmk.shared_typing.unified_search import (
 
 class TestUnifiedSearch:
     @pytest.fixture(scope="class")
-    def engine(self) -> UnifiedSearch:
+    @classmethod
+    def engine(cls) -> UnifiedSearch:
         return UnifiedSearch(
             redis_engine=_FakeRedisEngine(),
             livestatus_engine=_FakeLivestatusEngine(),

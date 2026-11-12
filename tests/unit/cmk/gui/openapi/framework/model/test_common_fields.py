@@ -38,7 +38,8 @@ from tests.testlib.unit.gui.validation_context import make_validation_context
 
 class TestBinaryBase64:
     @pytest.fixture(scope="class")
-    def adapter(self) -> TypeAdapter[BinaryBase64]:
+    @classmethod
+    def adapter(cls) -> TypeAdapter[BinaryBase64]:
         return TypeAdapter(BinaryBase64)  # astrein: disable=pydantic-type-adapter
 
     def test_is_bytes_subclass(self) -> None:
@@ -87,7 +88,8 @@ class TestBinaryBase64:
 
 class TestLivestatusRegex:
     @pytest.fixture(scope="class")
-    def adapter(self) -> TypeAdapter[LivestatusRegex]:
+    @classmethod
+    def adapter(cls) -> TypeAdapter[LivestatusRegex]:
         return TypeAdapter(LivestatusRegex)  # astrein: disable=pydantic-type-adapter
 
     def test_accepts_a_regex_that_livestatus_supports(
@@ -113,7 +115,8 @@ class TestLivestatusRegex:
 
 class TestQueryExpressionValidator:
     @pytest.fixture(scope="class")
-    def adapter(self) -> TypeAdapter[QueryExpression]:
+    @classmethod
+    def adapter(cls) -> TypeAdapter[QueryExpression]:
         return TypeAdapter(  # astrein: disable=pydantic-type-adapter
             Annotated[QueryExpression, query_expression_validator(Hosts)]
         )
@@ -150,7 +153,8 @@ class TestQueryExpressionValidator:
 
 class TestQueryExpressionValidatorAllowEmpty:
     @pytest.fixture(scope="class")
-    def adapter(self) -> TypeAdapter[QueryExpression]:
+    @classmethod
+    def adapter(cls) -> TypeAdapter[QueryExpression]:
         return TypeAdapter(  # astrein: disable=pydantic-type-adapter
             Annotated[QueryExpression, query_expression_validator(Hosts, allow_empty=True)]
         )
@@ -172,7 +176,8 @@ class TestQueryExpressionValidatorAllowEmpty:
 
 class TestColumnsValidator:
     @pytest.fixture(scope="class")
-    def adapter(self) -> TypeAdapter[list[Column]]:
+    @classmethod
+    def adapter(cls) -> TypeAdapter[list[Column]]:
         return TypeAdapter(  # astrein: disable=pydantic-type-adapter
             Annotated[list[Column], columns_validator(Hosts)]
         )
@@ -204,7 +209,8 @@ class TestColumnsValidator:
             columns_validator(Hosts, mandatory=["nonexistent_column"])
 
     @pytest.fixture(scope="class")
-    def adapter_mandatory(self) -> TypeAdapter[list[Column]]:
+    @classmethod
+    def adapter_mandatory(cls) -> TypeAdapter[list[Column]]:
         return TypeAdapter(  # astrein: disable=pydantic-type-adapter
             Annotated[list[Column], columns_validator(Hosts, mandatory=[Hosts.name])]
         )

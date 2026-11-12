@@ -20,7 +20,7 @@ const DEFAULT_LIMIT = 5
 const props = withDefaults(
   defineProps<{
     items: LabelCellItem[]
-    limit?: number
+    limit?: number | undefined
     filterBy?: ((item: LabelCellItem) => ColumnCondition) | undefined
   }>(),
   { limit: DEFAULT_LIMIT }

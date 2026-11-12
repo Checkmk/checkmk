@@ -16,7 +16,7 @@ shift
 
 # shellcheck disable=SC2016 # $CMK_VERSION is the PowerShell variable, not ours
 sed -i \
-    -e 's/\$CMK_VERSION = "2.5.0p21"
+    -e 's/\$CMK_VERSION = ".*/$CMK_VERSION = "'"${version}"'"\r/' \
     -e 's/^set CMK_VERSION *=".*/set CMK_VERSION="'"${version}"'"\r/' \
     -e 's/^Const CMK_VERSION = ".*/Const CMK_VERSION = "'"${version}"'"\r/' \
     -e 's/\(^[[:space:]]*\)Version: [0-9.a-z-]*/\1Version: '"${version}"'/' \

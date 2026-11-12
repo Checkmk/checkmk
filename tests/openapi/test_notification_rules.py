@@ -78,6 +78,9 @@ from cmk.gui.rest_api_types.notifications_rule_types import (
     PluginType,
     RecoveryStateCaseAPI,
     RecoveryStateIncidentAPI,
+    TagGroupIsOrIsNot,
+    TagGroupOneOfOrNoneOf,
+    TagGroupOperator,
 )
 from cmk.gui.valuespec import Checkbox, Dictionary, Integer, ListOfStrings, TextInput
 from cmk.gui.watolib.notification_parameter import (
@@ -2477,6 +2480,37 @@ def test_match_host_tags(clients: ClientRegistry) -> None:
 
     resp = clients.RuleNotification.create(rule_config=config)
     assert resp.json["extensions"]["rule_config"] == config
+
+
+@pytest.mark.parametrize(
+    "operator, missing_field",
+    [
+        pytest.param("is", "tag_id", id="is without tag_id"),
+        pytest.param("is_not", "tag_id", id="is_not without tag_id"),
+        pytest.param("one_of", "tag_ids", id="one_of without tag_ids"),
+        pytest.param("none_of", "tag_ids", id="none_of without tag_ids"),
+    ],
+)
+def test_tag_group_condition_without_tags_is_rejected(
+    clients: ClientRegistry, operator: TagGroupOperator, missing_field: str
+) -> None:
+    config = notification_rule_request_example()
+    config["conditions"]["match_host_tags"] = {
+        "state": "enabled",
+        "value": [
+            cast(
+                TagGroupIsOrIsNot | TagGroupOneOfOrNoneOf,
+                {"tag_type": "tag_group", "tag_group_id": "agent", "operator": operator},
+            )
+        ],
+    }
+
+    resp = clients.RuleNotification.create(rule_config=config, expect_ok=False)
+
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
+    assert resp.json["fields"]["rule_config"]["conditions"]["match_host_tags"]["value"]["0"] == {
+        missing_field: ["Missing data for required field."]
+    }
 
 
 auth_methods: list[

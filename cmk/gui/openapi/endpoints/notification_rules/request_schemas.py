@@ -150,6 +150,7 @@ class TagGroupNoneOfOrOneof(TagGroupBase):
             example="checkmk-agent",
             description="Tag groups tag ids are available via the host tag group endpoint.",
         ),
+        required=True,
         example=["ip-v4-only", "ip-v6-only"],
     )
 
@@ -157,6 +158,7 @@ class TagGroupNoneOfOrOneof(TagGroupBase):
 class TagGroupIsNotOrIs(TagGroupBase):
     operator = fields.String(enum=["is", "is_not"], required=True)
     tag_id = AuxTagIDField(
+        required=True,
         example="checkmk-agent",
         description="Tag groups tag ids are available via the host tag group endpoint.",
     )

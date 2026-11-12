@@ -1541,7 +1541,7 @@ class SlackPlugin:
                 params["url_prefix_for_links_to_checkmk"]
             ),
             disable_ssl_cert_verification=CheckboxTrueOrNone.from_api_request(
-                params["url_prefix_for_links_to_checkmk"]
+                params["disable_ssl_cert_verification"]
             ),
             http_proxy=CheckboxHttpProxy.from_api_request(params["http_proxy"]),
         )

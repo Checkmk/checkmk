@@ -194,7 +194,7 @@ def test_backup_site_to_tarfile_excluded_socket_is_silent(
             verbose=False,
         )
 
-    assert capsys.readouterr().out == ""
+    assert capsys.readouterr().err == ""
     with tarfile.open(tar_path) as tar:
         assert f"{site_name}/var/log/apache/test_socket" not in tar.getnames()
 

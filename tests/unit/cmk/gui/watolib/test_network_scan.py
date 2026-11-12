@@ -5,10 +5,6 @@
 
 # ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
 
-import pytest
-
-from cmk.ccc.exceptions import MKGeneralException
-
 from cmk.utils.user import UserId
 
 from cmk.gui.watolib.host_attributes import HostAttributes
@@ -16,7 +12,6 @@ from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.network_scan import execute_network_scan_job
 
 
-@pytest.mark.xfail(strict=True, raises=MKGeneralException, reason="crash group 4766")
 def test_scan_run_as_a_missing_user_is_recorded_as_failed(with_admin_login: UserId) -> None:
     folder_tree().root_folder().create_subfolder(
         "netscan",

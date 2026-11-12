@@ -34,7 +34,9 @@ void main() {
     def msi_exe_targets = [
         "//packages/cmk-agent-ctl:cmk-agent-ctl-windows": "//agents/wnx:msi_cmk-agent-ctl",
     ];
-    def signed_in_build = ["cmk-agent-ctl.exe"];
+    // Signed in the build; archived under the name winagt-build gives them.
+    def renamed_targets = ["//agents/windows/plugins:azure_signed_plugins": "signed_plugins.tar"];
+    def signed_in_build = ["cmk-agent-ctl.exe"] + renamed_targets.values();
     // Built and archived like the binaries, but there is no -static-crt tier
     // for an MSI to check.
     def targets = exe_targets.collect { msi_exe_targets[it] ?: it } + [
@@ -65,7 +67,9 @@ void main() {
             }
 
             stage("Build windows binaries") {
-                build_windows_binaries(safe_branch_name, cmk_version, targets, "artefacts");
+                build_windows_binaries(
+                    safe_branch_name, cmk_version, targets, renamed_targets, "artefacts"
+                );
             }
 
             stage("Check toolchain argument contract") {
@@ -117,7 +121,7 @@ void main() {
         stage("Archive binaries") {
             dir("artefacts") {
                 archiveArtifacts(
-                    artifacts: "*.exe,*.msi",
+                    artifacts: "*.exe,*.msi,*.tar",
                     fingerprint: true,
                 );
             }
@@ -150,7 +154,9 @@ void main() {
     }
 }
 
-void build_windows_binaries(String branch_name, String cmk_version, List targets, String binary_directory) {
+void build_windows_binaries(
+    String branch_name, String cmk_version, List targets, Map renamed_targets, String binary_directory
+) {
     def windows = load("${checkout_dir}/buildscripts/scripts/utils/windows.groovy");
 
     // The MSI embeds the PowerShell scripts and exes signed during the build,
@@ -161,7 +167,8 @@ void build_windows_binaries(String branch_name, String cmk_version, List targets
         sh(
             """
             set -euo pipefail
-            bazel build --cmk_version=${cmk_version} ${signing_flag} ${targets.join(" ")}
+            bazel build --cmk_version=${cmk_version} ${signing_flag} \\
+                ${(targets + renamed_targets.keySet()).join(" ")}
             mkdir -p ${binary_directory}
             """
         );
@@ -171,6 +178,12 @@ void build_windows_binaries(String branch_name, String cmk_version, List targets
             sh(
                 "cp -f \$(bazel cquery --cmk_version=${cmk_version} ${signing_flag} " +
                 "--output=files ${target}) ${binary_directory}/"
+            );
+        }
+        renamed_targets.each { target, name ->
+            sh(
+                "cp -f \$(bazel cquery --cmk_version=${cmk_version} ${signing_flag} " +
+                "--output=files ${target}) ${binary_directory}/${name}"
             );
         }
     }

@@ -13,7 +13,7 @@ from cmk.ccc.version import Edition, edition
 from cmk.gui.form_specs import get_visitor, RawDiskData, VisitorOptions
 from cmk.gui.global_config import get_global_config, GlobalConfig
 from cmk.gui.i18n import _
-from cmk.gui.logged_in import user
+from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.type_defs import GlobalSettings, GraphTimerange
 from cmk.gui.user_sites import get_event_console_site_choices
 from cmk.gui.watolib import config_domain_name
@@ -57,6 +57,13 @@ def need_read_permission(config_variable: ConfigVariable) -> None:
 def need_write_permission(config_variable: ConfigVariable) -> None:
     user.need_permission("wato.edit")
     need_read_permission(config_variable)
+
+
+def may_write(config_variable: ConfigVariable, acting_user: LoggedInUser) -> bool:
+    """Whether the user has the permissions need_write_permission() checks"""
+    return acting_user.may("wato.edit") and all(
+        acting_user.may(permission) for permission in _read_permissions(config_variable)
+    )
 
 
 def need_site_read_permission(config_variable: ConfigVariable) -> None:

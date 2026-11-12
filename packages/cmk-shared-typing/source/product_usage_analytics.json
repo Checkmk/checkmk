@@ -6,11 +6,27 @@
     "global_settings_link": {
       "type": "string"
     },
+    "manifest_link": {
+      "type": "string"
+    },
+    "enabled_choice_id": {
+      "type": "string",
+      "description": "The value the global setting's form uses for the choice to enable product usage analytics"
+    },
+    "activate_changes_link": {
+      "type": "string"
+    },
     "reminder_cookie": {
       "$ref": "#/$defs/reminder_cookie"
     }
   },
-  "required": ["global_settings_link", "reminder_cookie"],
+  "required": [
+    "global_settings_link",
+    "manifest_link",
+    "enabled_choice_id",
+    "activate_changes_link",
+    "reminder_cookie"
+  ],
   "$defs": {
     "reminder_cookie": {
       "type": "object",

@@ -6,18 +6,35 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import { type ProductUsageAnalyticsConfig } from 'cmk-shared-typing/typescript/product_usage_analytics'
+import CmkAlert from 'cmk-ui-library/components/CmkAlert.vue'
 import CmkButton from 'cmk-ui-library/components/CmkButton'
+import CmkLink from 'cmk-ui-library/components/CmkLink.vue'
 import CmkPopupDialog from 'cmk-ui-library/components/CmkPopupDialog.vue'
 import CmkSpace from 'cmk-ui-library/components/CmkSpace.vue'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { ref } from 'vue'
 
-const { _t } = usei18n()
+import { createGlobalSettingsService } from '@/global-settings/api'
+
+const { _t, _tp } = usei18n()
 
 const props = defineProps<ProductUsageAnalyticsConfig>()
 
+const VARNAME = 'product_usage_analytics'
+
 const popupOpen = ref(true)
+const state = ref<'asking' | 'saving' | 'failed' | 'enabled'>('asking')
+
+// One msgid per sentence, so translations can move the link.
+const shareNoteParts = _tp(
+  '%{link} is a link to the product usage analytics manifest with the text "manifest"',
+  'We believe in only receiving data you explicitly choose to share (see %{link}).'
+).split('%{link}')
+const changeNoteParts = _tp(
+  '%{link} is a link to the global setting with the text "global settings"',
+  'You can change your decision at any time in %{link}.'
+).split('%{link}')
 
 /**
  * Ask again after the reminder interval. Without this, the pop-up comes back on the next page load.
@@ -27,6 +44,28 @@ function deferDecision(): void {
   const secure = window.location.protocol === 'https:' ? '; secure' : ''
   document.cookie = `${name}=${Date.now() / 1000}; path=${path}; max-age=${maxAge}${secure}`
   popupOpen.value = false
+}
+
+async function enable(): Promise<void> {
+  state.value = 'saving'
+  // The pop-up is only shown on standalone and central sites.
+  const service = createGlobalSettingsService({ type: 'global', managed_by_central_site: false })
+  try {
+    const current = await service.load(VARNAME)
+    // Keep the other parts of the setting, like the proxy, as they are.
+    const value = {
+      ...(current.value as Record<string, unknown>),
+      enabled: props.enabled_choice_id
+    }
+    const result = await service.save(VARNAME, value, current.etag)
+    state.value = result.type === 'saved' ? 'enabled' : 'failed'
+  } catch {
+    state.value = 'failed'
+  }
+}
+
+function goToActivateChanges(): void {
+  window.location.href = props.activate_changes_link
 }
 </script>
 
@@ -87,25 +126,49 @@ function deferDecision(): void {
 
       <p>
         <b>{{ _t('Product usage analytics is turned off by default. ') }}</b>
-        {{
-          _t(
-            'We believe in only receiving data you explicitly choose to share. You can enable sharing analytics data any time from global settings. \
-            If you do not wish to be reminded, please manage your preferences in global settings.'
-          )
-        }}
+        {{ shareNoteParts[0]
+        }}<CmkLink :href="props.manifest_link" target="_blank" inline>{{ _t('manifest') }}</CmkLink
+        >{{ shareNoteParts[1] }} {{ changeNoteParts[0]
+        }}<CmkLink :href="props.global_settings_link" inline @click="deferDecision">{{
+          _t('global settings')
+        }}</CmkLink
+        >{{ changeNoteParts[1] }}
       </p>
+
+      <CmkAlert
+        v-if="state === 'enabled'"
+        variant="success"
+        :heading="_t('Thank you! Product usage analytics is enabled.')"
+        :text="_t('Activate the pending changes to start the collection.')"
+        :main-button="{ title: _t('Activate changes'), onclick: goToActivateChanges }"
+      />
+      <CmkAlert
+        v-if="state === 'failed'"
+        variant="error"
+        :text="
+          _t(
+            'Product usage analytics could not be enabled. Please try again or enable it in global settings.'
+          )
+        "
+      />
     </div>
 
     <div class="product-usage-analytics-app__buttons">
-      <CmkButton variant="secondary" @click="deferDecision">{{
-        _t('Remind me again in 30 days')
+      <CmkButton v-if="state === 'enabled'" variant="primary" @click="popupOpen = false">{{
+        _t('Close')
       }}</CmkButton>
-      <a
-        class="product-usage-analytics-app__link"
-        :href="props.global_settings_link"
-        @click="deferDecision"
-        >{{ _t('Manage in global settings') }}</a
-      >
+      <template v-else>
+        <CmkButton variant="secondary" @click="deferDecision">{{
+          _t('Remind me again in 30 days')
+        }}</CmkButton>
+        <CmkButton
+          variant="primary"
+          :running="state === 'saving'"
+          :disabled="state === 'saving'"
+          @click="enable"
+          >{{ _t('Enable product usage analytics') }}</CmkButton
+        >
+      </template>
     </div>
   </CmkPopupDialog>
 </template>
@@ -119,29 +182,5 @@ function deferDecision(): void {
   display: flex;
   justify-content: flex-end;
   gap: var(--dimension-8);
-}
-
-.product-usage-analytics-app__link {
-  color: var(--button-primary-text-color);
-  background-color: var(--default-button-primary-color);
-  border: var(--dimension-1) solid var(--button-primary-border-color);
-  padding: 0 var(--dimension-4);
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--dimension-3);
-
-  &:hover {
-    background-color: color-mix(in srgb, var(--default-button-primary-color) 70%, var(--white) 30%);
-  }
-
-  &:active {
-    background-color: color-mix(
-      in srgb,
-      var(--default-button-primary-color) 90%,
-      var(--interactive-press-tint) 10%
-    );
-  }
 }
 </style>

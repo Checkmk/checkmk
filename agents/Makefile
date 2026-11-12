@@ -40,7 +40,7 @@ setversion:
 	-e 's/^set CMK_VERSION *=".*/set CMK_VERSION="$(NEW_VERSION)"\r/' \
 	-e 's/^Const CMK_VERSION = ".*/Const CMK_VERSION = "$(NEW_VERSION)"\r/' \
 	-e 's/\(^[[:space:]]*\)Version: [0-9.a-z-]*/\1Version: $(NEW_VERSION)/' \
-	$(shell find $(REPO_PATH)/agents/windows/plugins -type f -not -path "*/scripts/*") \
+	$(shell find $(REPO_PATH)/agents/windows/plugins -type f -not -path "$(REPO_PATH)/agents/windows/plugins/scripts/*") \
 	$(shell find $(REPO_PATH)/cmk/plugins -path "*/cmk/plugins/*/agents/*" -type f) ;
 	sed -i \
 	-e 's/^CMK_VERSION=".*/CMK_VERSION="$(NEW_VERSION)"/' \

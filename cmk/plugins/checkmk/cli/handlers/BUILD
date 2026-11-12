@@ -10,7 +10,10 @@ py_library(
         "//tests:__subpackages__",
     ],
     deps = [
+        "//cmk/base:app",
+        "//cmk/base:checking",
         "//cmk/base/config",
+        "//cmk/base/core",
         "//cmk/piggyback:backend",
         "//cmk/plugins/checkmk/cli",
         "//cmk/server_side_calls_backend",
@@ -18,6 +21,8 @@ py_library(
         "//cmk/utils:man_pages",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
+        "//packages/cmk-ccc:site",
+        "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:tty",
         "//packages/cmk-ccc:version",
         "//packages/cmk-check-engine/cmk/checkengine/discovery",
@@ -27,5 +32,6 @@ py_library(
         "//packages/cmk-plugin-apis:cli",
         "//packages/cmk-plugin-apis:discover_plugins",
         "//packages/cmk-ruleset-matcher",
+        "//packages/cmk-trace",
     ],
 )

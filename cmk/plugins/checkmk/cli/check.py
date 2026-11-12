@@ -5,60 +5,33 @@
 """The "cmk --check" command."""
 
 import dataclasses
-import itertools
-from pathlib import Path
 from typing import Final
 
-import cmk.utils.password_store
-import cmk.utils.paths
-from cmk.base import config
-from cmk.base.app import make_app
-from cmk.base.checking import run_checking
-from cmk.ccc.exceptions import MKBailOut, MKGeneralException
 from cmk.ccc.hostaddress import HostAddress
-from cmk.checkengine.fetcher_utils.secrets import AdHocSecrets, StoredSecrets
 from cmk.checkengine.plugins import CheckPluginName
 from cmk.checkengine.snmplib import SNMPBackendEnum
-from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
-from cmk.cli.internal import Context as CLIContext
-from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import Flag as CLIFlag
-from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Reader as CLIReader
-from cmk.server_side_calls_backend import load_secrets_file
 
-from .agent_based import extract_plugin_selection, load_checks
-from .exit_code import state_exit_code
 from .options import (
     CHECK_PLUGINS_VALUE,
     FAKE_DNS_VALUE,
     file_cache_request,
     FileCacheRequest,
-    make_file_cache_options,
     plugin_selection_request,
     PluginSelectionRequest,
     SNMP_BACKEND_VALUE,
     USEWALK_FLAG,
 )
 
-# .
-#   .--check---------------------------------------------------------------.
-#   |                           _               _                          |
-#   |                       ___| |__   ___  ___| | __                      |
-#   |                      / __| '_ \ / _ \/ __| |/ /                      |
-#   |                     | (__| | | |  __/ (__|   <                       |
-#   |                      \___|_| |_|\___|\___|_|\_\                      |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
 _NO_SUBMIT_FLAG: Final = CLIFlag(
     long="no-submit",
     short="n",
     help="Do not submit results to core, do not save counters",
 )
+
 
 _PERFDATA_FLAG: Final = CLIFlag(
     long="perfdata",
@@ -90,86 +63,11 @@ def _checking_request(options: CLIReader) -> CheckingRequest:
     )
 
 
-_HOST_AND_ADDRESS: Final = 2
-
-
-def _mode_check(
-    omd_root: Path, global_options: CLIGlobalOptions, request: CheckingRequest, args: CLIArgs
-) -> CLIExitCode:
-    if len(args) > _HOST_AND_ADDRESS:
-        raise MKBailOut("Checking takes a HOST and an optional IPADDRESS, nothing more")
-    app = make_app(omd_root)
-    plugins = load_checks(debug=global_options.debug)
-    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
-    loaded_config = loading_result.loaded_config
-    ruleset_matcher = loading_result.config_cache.ruleset_matcher
-    label_manager = loading_result.config_cache.label_manager
-
-    secrets = load_secrets_file(cmk.utils.password_store.pending_secrets_path_site())
-
-    selected_sections, run_plugin_names = extract_plugin_selection(
-        detect_plugins=request.plugin_selection.detect_plugins,
-        detect_sections=request.plugin_selection.detect_sections,
-        selected_plugins=request.plugin_selection.plugins,
-        plugins=plugins.check_plugins,
-        sections=itertools.chain(plugins.agent_sections.values(), plugins.snmp_sections.values()),
-        type_=CheckPluginName,
-    )
-
-    state = run_checking(
-        app,
-        loaded_config,
-        ruleset_matcher,
-        label_manager,
-        plugins,
-        loading_result.config_cache,
-        loading_result.hosts_config,
-        loading_result.host_tags,
-        loaded_config.monitoring_core,
-        config.ServiceDependsOn(
-            tag_list=loading_result.host_tags.tag_list,
-            service_dependencies=loaded_config.service_dependencies,
-            debug=global_options.debug,
-        ),
-        args,
-        file_cache_options=make_file_cache_options(request.file_cache),
-        snmp_backend=request.snmp_backend,
-        usewalk=request.usewalk,
-        selected_sections=selected_sections,
-        run_plugin_names=run_plugin_names,
-        dry_run=request.no_submit,
-        show_perfdata=request.perfdata,
-        secrets_config_relay=AdHocSecrets(
-            path=cmk.utils.password_store.generate_ad_hoc_secrets_path(
-                cmk.utils.paths.relative_tmp_dir
-            ),
-            secrets=secrets,
-        ),
-        secrets_config_site=StoredSecrets(
-            path=cmk.utils.password_store.pending_secrets_path_site(), secrets=secrets
-        ),
-        trusted_ca_file=cmk.utils.paths.trusted_ca_file,
-        fake_dns=request.fake_dns,
-        debug=global_options.debug,
-    )
-    return state_exit_code(state)
-
-
-def _run_check(context: CLIContext, request: CheckingRequest, args: CLIArgs) -> CLIExitCode:
-    try:
-        return _mode_check(context.omd_root, context.global_options, request, args)
-    except (MKBailOut, MKGeneralException) as e:
-        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
-        if context.global_options.debug:
-            raise
-        return CLIExitCode.UNKNOWN
-
-
 cli_command_check = CLICommand(
     name="check",
+    handler="cmk.plugins.checkmk.cli.handlers.check:cli_handler_check",
     long="check",
     request=_checking_request,
-    handler=_run_check,
     arguments=CLIArguments("HOST [IPADDRESS]", optional=True),
     default=True,
     help="Check all services on the given HOST",

@@ -25,8 +25,6 @@ py_library(
         "//packages/cmk-ccc:config-path",
         "//packages/cmk-ccc:exceptions",
         "//packages/cmk-ccc:hostaddress",
-        "//packages/cmk-ccc:site",
-        "//packages/cmk-ccc:store",
         "//packages/cmk-ccc:timeout",
         "//packages/cmk-ccc:tty",
         "//packages/cmk-ccc:version",
@@ -40,6 +38,5 @@ py_library(
         "//packages/cmk-check-engine/cmk/checkengine/plugins",
         "//packages/cmk-plugin-apis:cli",
         "//packages/cmk-ruleset-matcher",
-        "//packages/cmk-trace",
     ],
 )

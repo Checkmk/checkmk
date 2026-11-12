@@ -15,10 +15,10 @@ from cmk.cli.internal import Declaration as CLIDeclaration
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import Reader as CLIReader
 from cmk.plugins.checkmk.cli.automation import (
-    _automation_error_exit_code,
     _for_cmk_version_request,
     _FOR_CMK_VERSION_VALUE,
 )
+from cmk.plugins.checkmk.cli.handlers.automation import _automation_error_exit_code
 
 
 def test_a_subprocess_automation_passes_the_version_as_the_command_declares_it() -> None:

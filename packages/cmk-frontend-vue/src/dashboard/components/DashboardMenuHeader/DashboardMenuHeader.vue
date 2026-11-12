@@ -196,6 +196,7 @@ const copyInternalDashboardLink = async (): Promise<void> => {
         <DropdownMenu
           :icon="{ name: 'share', primaryColor: '--interactive-accent-strong' }"
           :ariaLabel="_t('Share')"
+          :right="!(isBuiltInDashboard || canEditDashboard)"
           :disabled="isInteractionDisabled"
           :options="[
             { label: _t('Copy internal link'), action: copyInternalDashboardLink },
@@ -224,7 +225,7 @@ const copyInternalDashboardLink = async (): Promise<void> => {
         <DropdownMenu
           icon="global-settings"
           :ariaLabel="_t('Settings')"
-          :right="!(isBuiltInDashboard || canEditDashboard)"
+          :right="true"
           :disabled="isInteractionDisabled"
           :options="[
             {

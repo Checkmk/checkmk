@@ -95,7 +95,7 @@ void main() {
     run_system_agent_update_test = [
         run_system_agent_update_test,
         distro in distros_system_agent_update_test,
-        edition == "pro",
+        edition == "ultimate",
     ].every { it };
 
     inside_container_minimal(safe_branch_name: safe_branch_name) {

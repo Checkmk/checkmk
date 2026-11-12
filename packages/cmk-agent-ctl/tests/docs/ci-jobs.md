@@ -29,7 +29,7 @@ flowchart TD
         NM["test-system-multisite"]
         NS["test-system-singlesite"]
         NU["test-system-update"]
-        NAU["test-system-agent-updates<br/>Pro edition only, deb and rpm,<br/>classic Docker node"]
+        NAU["test-system-agent-updates<br/>Ultimate edition only, deb and rpm,<br/>classic Docker node"]
     end
 
     subgraph PKG["Package builds"]
@@ -60,7 +60,7 @@ flowchart TD
   not run here.
 - **`cv/test-system-agent-updates`** runs only when someone posts
   `start: test-system-agent-updates` on a change. It runs on `ubuntu-24.04` with the Pro
-  edition, so it tests the baked deb.
+  edition, so it tests the baked deb. The cases that need the Ultimate edition skip themselves.
 - **The suite tests the baked package.** The unbaked package, built from `agents/BUILD`,
   `agents/debian/` and the `.spec` files, is not tested.
 
@@ -82,11 +82,12 @@ pod:
 None of these jobs runs with faked artifacts. In the Pro jobs, the cases that need the Ultimate
 edition skip themselves.
 
-The nightly build chain of the Pro edition also runs `test-system-agent-updates`, the suite
-`non-free/tests/system/agent_updates/`, twice: on `ubuntu-24.04` for the baked deb and on `almalinux-10`
-for the baked rpm. The baked package is the same in every edition that bakes, so one edition
-suffices. The job runs on a classic Docker node, because its test container boots systemd. The
-heavy trigger does not run it.
+The nightly build chain of the Ultimate edition also runs `test-system-agent-updates`, the
+suite `non-free/tests/system/agent_updates/`, twice: on `ubuntu-24.04` for the baked deb and on
+`almalinux-10` for the baked rpm. The baked package is the same in every edition that bakes, so
+one edition suffices. All cases run only in the Ultimate edition, because the registration with
+`register-new` needs the Ultimate edition. The job runs on a classic Docker node, because its test
+container boots systemd. The heavy trigger does not run it.
 
 ## Package builds
 

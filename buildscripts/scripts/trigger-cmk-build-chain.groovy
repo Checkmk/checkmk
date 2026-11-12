@@ -159,7 +159,7 @@ void main() {
                 def run_system_agent_update_test = [
                     run_system_agent_update_test_param,
                     distro in distros_system_agent_update_test,
-                    edition in ["pro",],
+                    edition in ["ultimate",],
                 ].every { it };
 
                 def job_parameters_testing = [

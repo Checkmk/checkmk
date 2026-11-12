@@ -47,6 +47,8 @@ pub use backend::{
     AgentInfo, CheckOutcome, FetchOutcome, SignatureCheck, SourceAnswer, UpdateSource, UpdateState,
     Updater, UpdaterConfig, WritableUpdater,
 };
+#[cfg(unix)]
+pub use install::InstallTimeout;
 pub use install::{InstallRequest, InstallResult, TrustAnchors};
 pub use legacy_registration::LegacyRegistration;
 pub use python_updater::PythonUpdater;

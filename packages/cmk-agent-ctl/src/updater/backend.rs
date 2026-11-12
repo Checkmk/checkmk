@@ -1269,7 +1269,7 @@ impl Updater {
     /// the package and the signatures the site delivered with it, and the unit
     /// verifies both again against trust anchors the agent user cannot write.
     /// Blocks until the step has finished, which is as long as the package
-    /// manager takes.
+    /// manager takes, and at most `install::INSTALL_TIMEOUT`.
     ///
     /// Writes no artifact of the updater, as [`Updater::fetch_update`] does
     /// not: reconciling the outcome belongs to the cycle, which compares hashes
@@ -1288,7 +1288,8 @@ impl Updater {
     /// # Errors
     ///
     /// If the installer socket cannot be reached or the request not be
-    /// delivered.
+    /// delivered. An `InstallTimeout` if the step took the request and did not
+    /// end in time.
     #[cfg(unix)]
     pub fn install_update(
         &self,
@@ -1313,6 +1314,7 @@ impl Updater {
                 package: package.to_path_buf(),
                 signatures: signatures.to_vec(),
             },
+            install::INSTALL_TIMEOUT,
         )?;
         Ok(InstallOutcome::HandedOver)
     }

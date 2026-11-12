@@ -8,11 +8,11 @@
 use crate::configuration::config::{ClientConfig, Registry};
 use crate::constants::CMK_UPDATE_AGENT_CMD;
 use crate::environment::{PathResolver, SetupMode};
-#[cfg(unix)]
-use crate::updater::InstallOutcome;
 use crate::updater::{
     CheckOutcome, FetchOutcome, PythonUpdater, SignatureCheck, Updater, WritableUpdater,
 };
+#[cfg(unix)]
+use crate::updater::{InstallOutcome, InstallTimeout};
 use crate::{agent_receiver_api, misc, setup};
 use anyhow::Result as AnyhowResult;
 use log::warn;
@@ -151,7 +151,7 @@ fn run_cycle(
         } => {
             updater.store_pending_hash(hash)?;
             let outcome = updater.install_update(path, signatures);
-            if !matches!(outcome, Ok(InstallOutcome::HandedOver)) {
+            if !reached_the_installer(&outcome) {
                 if let Err(error) = updater.clear_pending_hash() {
                     log::warn!("Could not clear the pending installation: {error:#}");
                 }
@@ -187,6 +187,17 @@ fn run_cycle(
         },
     }
     Ok(())
+}
+
+/// Whether the install step has the package, so that the next run settles what
+/// became of it. A timeout counts: the step took the request, and may still
+/// finish.
+#[cfg(unix)]
+fn reached_the_installer(outcome: &AnyhowResult<InstallOutcome>) -> bool {
+    match outcome {
+        Ok(outcome) => *outcome == InstallOutcome::HandedOver,
+        Err(error) => error.is::<InstallTimeout>(),
+    }
 }
 
 /// What a host without an update configuration is told.
@@ -591,6 +602,27 @@ mod tests {
             ),
             "No installer socket is configured, /spool/fedcba9876543210.deb stays where it is"
         );
+    }
+
+    /// CMK-41888: the installer may still finish, so the pending installation
+    /// stays for the next run to settle.
+    #[cfg(unix)]
+    #[test]
+    fn test_an_installer_that_timed_out_was_reached() {
+        let timed_out = Err(anyhow::Error::new(InstallTimeout {
+            socket: std::path::PathBuf::from("/run/cmk-agent-installer.sock"),
+            timeout: Duration::from_secs(300),
+        }));
+
+        assert!(reached_the_installer(&timed_out));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn test_an_installer_that_could_not_be_reached_was_not_reached() {
+        let unreachable = Err(anyhow::anyhow!("Cannot reach the installer socket"));
+
+        assert!(!reached_the_installer(&unreachable));
     }
 
     #[test]

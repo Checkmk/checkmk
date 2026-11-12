@@ -17,12 +17,14 @@ use anyhow::{bail, Context, Result as AnyhowResult};
 use serde::{Deserialize, Serialize};
 use std::io::Read;
 #[cfg(unix)]
-use std::io::Write;
+use std::io::{ErrorKind, Write};
 #[cfg(unix)]
 use std::net::Shutdown;
 #[cfg(unix)]
 use std::os::unix::net::UnixStream;
 use std::path::{Path, PathBuf};
+#[cfg(unix)]
+use std::time::Duration;
 
 /// Upper bound of one request, in bytes.
 const MAX_REQUEST_BYTES: u64 = 64 * 1024;
@@ -30,6 +32,36 @@ const MAX_REQUEST_BYTES: u64 = 64 * 1024;
 /// Upper bound of one answer, in bytes.
 #[cfg(unix)]
 const MAX_REPLY_BYTES: u64 = 64 * 1024;
+
+/// How long the controller waits for the install step to end. Past it the
+/// step may still be running: the controller only stops waiting.
+#[cfg(unix)]
+pub const INSTALL_TIMEOUT: Duration = Duration::from_secs(300);
+
+/// The install step took the request and did not end in time.
+///
+/// An error of its own, because it is no failed hand-over: the step has the
+/// package, and what it makes of it is settled by a later run.
+#[cfg(unix)]
+#[derive(Debug)]
+pub struct InstallTimeout {
+    pub socket: PathBuf,
+    pub timeout: Duration,
+}
+
+#[cfg(unix)]
+impl std::fmt::Display for InstallTimeout {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            formatter,
+            "The installer at {:?} did not finish within {:?}, it may still be running",
+            self.socket, self.timeout
+        )
+    }
+}
+
+#[cfg(unix)]
+impl std::error::Error for InstallTimeout {}
 
 /// What the controller asks the installer unit to install.
 ///
@@ -91,15 +123,23 @@ impl InstallRequest {
 ///   configuration
 /// * `request` - the spooled package and the signatures of the status that
 ///   named it
+/// * `timeout` - how long to wait for the unit to end
 ///
 /// # Errors
 ///
-/// If the socket cannot be reached, the request cannot be written, or the unit
-/// answers more than [`MAX_REPLY_BYTES`].
+/// If the socket cannot be reached, the request cannot be written, the unit
+/// answers more than [`MAX_REPLY_BYTES`], or it does not end within `timeout`,
+/// which is an [`InstallTimeout`].
 #[cfg(unix)]
-pub fn hand_over(socket: &Path, request: &InstallRequest) -> AnyhowResult<()> {
+pub fn hand_over(socket: &Path, request: &InstallRequest, timeout: Duration) -> AnyhowResult<()> {
     let mut stream = UnixStream::connect(socket)
         .with_context(|| format!("Cannot reach the installer socket {socket:?}"))?;
+    // The timeout bounds each read. The unit answers nothing before it ends,
+    // so that bounds the wait for it.
+    stream
+        .set_read_timeout(Some(timeout))
+        .and_then(|()| stream.set_write_timeout(Some(timeout)))
+        .with_context(|| format!("Cannot set the timeout of the installer socket {socket:?}"))?;
     let mut line = serde_json::to_vec(request).context("Cannot serialize the install request")?;
     line.push(b'\n');
     stream
@@ -112,10 +152,18 @@ pub fn hand_over(socket: &Path, request: &InstallRequest) -> AnyhowResult<()> {
 
     let mut reply = Vec::new();
     // One byte over the bound, as in `InstallRequest::read`.
-    (&stream)
-        .take(MAX_REPLY_BYTES + 1)
-        .read_to_end(&mut reply)
-        .with_context(|| format!("Cannot read what the installer at {socket:?} answered"))?;
+    if let Err(error) = (&stream).take(MAX_REPLY_BYTES + 1).read_to_end(&mut reply) {
+        // A read that timed out is `WouldBlock` on Unix.
+        if matches!(error.kind(), ErrorKind::WouldBlock | ErrorKind::TimedOut) {
+            return Err(InstallTimeout {
+                socket: socket.to_path_buf(),
+                timeout,
+            }
+            .into());
+        }
+        return Err(error)
+            .with_context(|| format!("Cannot read what the installer at {socket:?} answered"));
+    }
     if reply.len() as u64 > MAX_REPLY_BYTES {
         bail!("The installer at {socket:?} answered more than {MAX_REPLY_BYTES} bytes");
     }
@@ -385,7 +433,7 @@ mod tests {
         let (socket, installer) = installer_listening(&dir, b"");
         let request = an_install_request();
 
-        hand_over(&socket, &request).unwrap();
+        hand_over(&socket, &request, INSTALL_TIMEOUT).unwrap();
 
         let delivered = installer.join().unwrap();
         assert_eq!(InstallRequest::read(&delivered[..]).unwrap(), request);
@@ -399,7 +447,27 @@ mod tests {
         let dir = tempfile::TempDir::new().unwrap();
         let (socket, _installer) = installer_listening(&dir, b"{\"success\": true}\n");
 
-        assert!(hand_over(&socket, &an_install_request()).is_ok());
+        assert!(hand_over(&socket, &an_install_request(), INSTALL_TIMEOUT).is_ok());
+    }
+
+    /// CMK-41888: an installer that takes the request and never ends does not
+    /// hold the controller for good. Nothing accepts the connection here, which
+    /// looks the same from this end: connected, written, and never closed.
+    #[cfg(unix)]
+    #[test]
+    fn test_hand_over_stops_waiting_for_an_installer_that_does_not_finish() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let socket = dir.path().join("cmk-agent-installer.sock");
+        let _installer = std::os::unix::net::UnixListener::bind(&socket).unwrap();
+
+        let handed_over = hand_over(&socket, &an_install_request(), Duration::from_millis(100));
+
+        let error = handed_over.unwrap_err();
+        assert!(error.is::<InstallTimeout>(), "{error:#}");
+        assert!(
+            error.to_string().contains("did not finish within 100ms"),
+            "{error:#}"
+        );
     }
 
     const FINISHED: u64 = 1_760_000_000;
@@ -439,6 +507,11 @@ mod tests {
     fn test_hand_over_without_an_installer() {
         let dir = tempfile::TempDir::new().unwrap();
 
-        assert!(hand_over(&dir.path().join("none.sock"), &an_install_request()).is_err());
+        assert!(hand_over(
+            &dir.path().join("none.sock"),
+            &an_install_request(),
+            INSTALL_TIMEOUT
+        )
+        .is_err());
     }
 }

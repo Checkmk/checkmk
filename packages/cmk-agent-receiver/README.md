@@ -33,8 +33,13 @@ Since Gunicorn is configured with one combined trust store (agent CA + relay CA 
 ## API
 
 The **agent-receiver** sub-app covers agent registration (including async approval workflows), certificate renewal, monitoring-data upload, registration status queries, and agent updates.
-For agent updates it forwards the status query and the package download to the site, which offers them on commercial editions only; a site without them, such as a Community site, is reported as `501 Not Implemented`.
-The responses of `register_existing`, `register_existing_token` and `register_new_ongoing` report in `agent_update_authorization` whether the registration permits agent updates. The receiver reads it from the file that the site writes for the UUID in `var/agent-receiver/registrations/`: `authorized`, `not_permitted`, or `unavailable` when the file is missing or holds no result.
+For agent updates it forwards the status query and the package download to the site.
+A site offers agent updates when its license option `bakery` is enabled, which the receiver reads itself.
+On a site without them, the receiver answers both requests with `501 Not Implemented` and a body that names the reason: `community_edition` or `not_licensed`.
+It then makes no call to the site.
+The responses of `register_existing`, `register_existing_token` and `register_new_ongoing` report in `agent_update_authorization` whether the registration permits agent updates.
+On a site without agent updates, the value is the same reason.
+Otherwise the receiver reads it from the file that the site writes for the UUID in `var/agent-receiver/registrations/`: `authorized`, `not_permitted`, or `unavailable` when the file is missing or holds no result.
 All endpoints that operate on a specific agent UUID require mTLS — the client certificate CN is validated against the UUID in the URL path, and the certificate must have been issued by the agent CA.
 
 The **relay** sub-app covers relay registration, certificate exchange, task management (create / fetch / update), config activation, and forwarding of monitoring data to CMC.

@@ -26,13 +26,19 @@ def wiremock() -> Iterator[Wiremock]:
 
 
 @pytest.fixture()
-def ar_site(wiremock: Wiremock, tmp_path: pathlib.Path) -> AgentReceiverSite:
+def site_edition() -> str:
+    return "ultimate"
+
+
+@pytest.fixture()
+def ar_site(wiremock: Wiremock, tmp_path: pathlib.Path, site_edition: str) -> AgentReceiverSite:
     wiremock.reset()
     return AgentReceiverConfigBuilder(
         omd_root=tmp_path / "some-test-name",
         site_name="some-test-name",
         apache_address=wiremock.wiremock_hostname,
         apache_port=wiremock.port,
+        edition=site_edition,
     ).build()
 
 

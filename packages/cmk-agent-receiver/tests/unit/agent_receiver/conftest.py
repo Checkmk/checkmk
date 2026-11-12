@@ -39,10 +39,19 @@ def site_env(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
 
 
 @pytest.fixture
-def setup_site_context(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Iterator[Config]:
+def site_edition() -> str:
+    # Unlike Community, Pro offers agent updates. Unlike Ultimate, it has no relays.
+    return "pro"
+
+
+@pytest.fixture
+def setup_site_context(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, site_edition: str
+) -> Iterator[Config]:
     site_env(monkeypatch, tmp_path)
     get_config.cache_clear()
     config = get_config()
+    (config.omd_root / "version").symlink_to(f"some.detailed.version.{site_edition}")
     config.agent_output_dir.mkdir(parents=True)
     config.r4r_dir.mkdir(parents=True)
     config.log_path.parent.mkdir(parents=True)

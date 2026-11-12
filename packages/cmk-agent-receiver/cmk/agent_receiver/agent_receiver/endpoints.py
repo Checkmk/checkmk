@@ -21,6 +21,7 @@ from fastapi import (
     UploadFile,
 )
 from fastapi.concurrency import run_in_threadpool
+from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from pydantic import BaseModel, UUID4, ValidationError
 from starlette.status import (
@@ -47,6 +48,7 @@ from cmk.agent_receiver.agent_receiver.models import (
     ConnectionMode,
     CsrField,
     DownloadRequest,
+    NoAgentUpdatesResponse,
     R4RStatus,
     RegisterExistingBody,
     RegisterExistingResponse,
@@ -65,6 +67,7 @@ from cmk.agent_receiver.agent_receiver.models import (
 )
 from cmk.agent_receiver.agent_receiver.utils import (
     agent_update_authorization,
+    no_agent_updates_on_this_site,
     NotRegisteredException,
     R4R,
     RegisteredHost,
@@ -533,16 +536,28 @@ def _registered_host(uuid: UUID4) -> RegisteredHost:
         ) from e
 
 
+def _no_agent_updates_response() -> JSONResponse | None:
+    if (reason := no_agent_updates_on_this_site()) is None:
+        return None
+    return JSONResponse(
+        status_code=HTTP_501_NOT_IMPLEMENTED,
+        content=NoAgentUpdatesResponse(reason=reason).model_dump(mode="json"),
+    )
+
+
 @UUID_VALIDATION_ROUTER.post(
     "/agent_update/status/{uuid}",
     response_model=UpdateStatusResponse,
     response_model_exclude_none=True,
+    responses={HTTP_501_NOT_IMPLEMENTED: {"model": NoAgentUpdatesResponse}},
 )
 async def agent_update_status(
     uuid: UUID4,
     *,
     status_request: UpdateStatusRequest,
-) -> UpdateStatusResponse:
+) -> UpdateStatusResponse | JSONResponse:
+    if (no_agent_updates := _no_agent_updates_response()) is not None:
+        return no_agent_updates
     host = _registered_host(uuid)
     return await deployment_status(
         f"uuid={uuid} Querying the agent update status failed",
@@ -556,13 +571,18 @@ async def agent_update_status(
 @UUID_VALIDATION_ROUTER.post(
     "/agent_update/agent/{uuid}",
     response_class=Response,
-    responses={HTTPStatus.OK: {"content": {"application/octet-stream": {}}}},
+    responses={
+        HTTPStatus.OK: {"content": {"application/octet-stream": {}}},
+        HTTP_501_NOT_IMPLEMENTED: {"model": NoAgentUpdatesResponse},
+    },
 )
 async def agent_update_agent(
     uuid: UUID4,
     *,
     download_request: DownloadRequest,
 ) -> Response:
+    if (no_agent_updates := _no_agent_updates_response()) is not None:
+        return no_agent_updates
     host = _registered_host(uuid)
     package = await deployment_download(
         f"uuid={uuid} Downloading the agent package failed",

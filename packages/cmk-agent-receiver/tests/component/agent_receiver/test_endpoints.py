@@ -38,15 +38,6 @@ DOWNLOAD_REQUEST: dict[str, object] = {"platform": "linux_deb", "aghash": "01234
 
 NO_AGENT: dict[str, object] = {}
 
-ROUTING_404 = {
-    "title": "Not Found",
-    "status": 404,
-    "detail": (
-        "404 Not Found: The requested URL was not found on the server. If you entered the URL "
-        "manually please check your spelling and try again."
-    ),
-}
-
 
 def _json_answer(
     status: HTTPStatus, body: object, content_type: str = "application/json"
@@ -204,29 +195,44 @@ def test_status_leaves_unreported_fields_out(
     ]
 
 
-@pytest.mark.parametrize(
-    "body_of_the_404",
-    [
-        pytest.param(json.dumps(ROUTING_404), id="rest-api"),
-        pytest.param("Not Found", id="plain-text"),
-    ],
-)
-def test_status_reports_a_site_without_agent_updates_as_not_implemented(
+@pytest.mark.parametrize("site_edition", [pytest.param("community", id="community")])
+def test_status_states_why_the_site_offers_no_agent_updates(
+    test_client: TestClient,
+    ar_site: AgentReceiverSite,
+    registered_uuid: UUID,
+) -> None:
+    """CMK-41723 AC1"""
+    response = _request_status(test_client, ar_site, registered_uuid, STATUS_REQUEST)
+
+    assert response.status_code == HTTPStatus.NOT_IMPLEMENTED
+    assert response.json() == {
+        "detail": "This site offers no agent updates.",
+        "reason": "community_edition",
+    }
+
+
+def test_status_takes_a_missing_endpoint_of_the_site_for_no_statement(
     test_client: TestClient,
     wiremock: Wiremock,
     ar_site: AgentReceiverSite,
     registered_uuid: UUID,
-    body_of_the_404: str,
 ) -> None:
+    """CMK-41723 AC3"""
+    routing_404 = {
+        "title": "Not Found",
+        "status": 404,
+        "detail": "404 Not Found: The requested URL was not found on the server.",
+    }
     _site_answers(
-        wiremock, ar_site, "status", Response(status=HTTPStatus.NOT_FOUND, body=body_of_the_404)
+        wiremock,
+        ar_site,
+        "status",
+        _json_answer(HTTPStatus.NOT_FOUND, routing_404, "application/problem+json"),
     )
 
     response = _request_status(test_client, ar_site, registered_uuid, STATUS_REQUEST)
 
-    assert response.status_code == HTTPStatus.NOT_IMPLEMENTED
-    assert response.json() == {"detail": "This site offers no agent updates."}
-    assert len(_forwarded(wiremock, ar_site, "status")) == 1
+    assert response.status_code == HTTPStatus.NOT_FOUND
 
 
 def test_status_passes_a_refusal_of_the_site_through(
@@ -339,21 +345,17 @@ def test_agent_passes_a_refusal_of_the_site_through(
     assert response.json() == {"detail": f"{title} - Details: The reason."}
 
 
-def test_agent_reports_a_site_without_agent_updates_as_not_implemented(
+@pytest.mark.parametrize("site_edition", [pytest.param("community", id="community")])
+def test_agent_states_why_the_site_offers_no_agent_updates(
     test_client: TestClient,
-    wiremock: Wiremock,
     ar_site: AgentReceiverSite,
     registered_uuid: UUID,
 ) -> None:
-    _site_answers(
-        wiremock,
-        ar_site,
-        "download",
-        _json_answer(HTTPStatus.NOT_FOUND, ROUTING_404, "application/problem+json"),
-    )
-
+    """CMK-41723 AC1"""
     response = _request_agent(test_client, ar_site, registered_uuid, DOWNLOAD_REQUEST)
 
     assert response.status_code == HTTPStatus.NOT_IMPLEMENTED
-    assert response.json() == {"detail": "This site offers no agent updates."}
-    assert len(_forwarded(wiremock, ar_site, "download")) == 1
+    assert response.json() == {
+        "detail": "This site offers no agent updates.",
+        "reason": "community_edition",
+    }

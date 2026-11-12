@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import dataclasses
 import time
 from pathlib import Path
 
@@ -12,16 +13,20 @@ from pydantic import UUID4
 from cmk.agent_receiver.agent_receiver.models import (
     AgentUpdateAuthorization,
     ConnectionMode,
+    NoAgentUpdatesReason,
     R4RStatus,
     RequestForRegistration,
 )
 from cmk.agent_receiver.agent_receiver.utils import (
     agent_update_authorization,
+    no_agent_updates_reason,
     NotRegisteredException,
     R4R,
     RegisteredHost,
 )
 from cmk.agent_receiver.lib.config import get_config
+from cmk.ccc.version import Edition
+from cmk.licensing.basics.options import get_license_options, LicenseFlag
 
 pytestmark = pytest.mark.usefixtures("setup_site_context")
 
@@ -134,3 +139,20 @@ def test_an_unreadable_registration_file_is_unavailable(uuid: UUID4) -> None:
 def test_a_registration_without_a_file_is_unavailable(uuid: UUID4) -> None:
     """CMK-39504 AC6, TC-AU-109"""
     assert agent_update_authorization(uuid) is AgentUpdateAuthorization.UNAVAILABLE
+
+
+@pytest.mark.parametrize("site_edition", [pytest.param("community", id="community")])
+def test_a_registration_at_a_community_site_reports_the_edition(uuid: UUID4) -> None:
+    """CMK-41723 AC2"""
+    assert agent_update_authorization(uuid) is AgentUpdateAuthorization.COMMUNITY_EDITION
+
+
+def test_a_license_without_the_bakery_offers_no_agent_updates() -> None:
+    """CMK-41723 AC1: no edition has such a license yet."""
+    pro_without_bakery = dataclasses.replace(
+        get_license_options(Path(), Edition.PRO), bakery=LicenseFlag(enabled=False)
+    )
+
+    reason = no_agent_updates_reason(Edition.PRO, pro_without_bakery)
+
+    assert reason is NoAgentUpdatesReason.NOT_LICENSED

@@ -40,6 +40,7 @@ class AgentReceiverConfigBuilder:
         task_ttl: float = 120.0,
         max_pending_tasks_per_relay: int = 10,
         socket_timeout: float = 2.0,
+        edition: str = "ultimate",
     ) -> None:
         self._config = Config(
             omd_root=omd_root,
@@ -50,6 +51,7 @@ class AgentReceiverConfigBuilder:
         )
         self._apache_address = apache_address
         self._apache_port = apache_port
+        self._edition = edition
 
     def build(self) -> AgentReceiverSite:
         config = self._config
@@ -73,7 +75,7 @@ class AgentReceiverConfigBuilder:
 
         set_up_site_certs(config=config)
 
-        version_name = "some.detailed.version.ultimate"
+        version_name = f"some.detailed.version.{self._edition}"
         version_path = config.omd_root / version_name
         version_path.mkdir(exist_ok=True)
         (config.omd_root / "version").symlink_to(version_path)

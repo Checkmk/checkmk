@@ -137,9 +137,23 @@ class ConnectionMode(Enum):
     PUSH = "push-agent"
 
 
+class NoAgentUpdatesReason(Enum):
+    """Why a site offers no agent updates"""
+
+    COMMUNITY_EDITION = "community_edition"
+    NOT_LICENSED = "not_licensed"
+
+
+class NoAgentUpdatesResponse(BaseModel, frozen=True):
+    detail: str = "This site offers no agent updates."
+    reason: NoAgentUpdatesReason
+
+
 class AgentUpdateAuthorization(Enum):
     AUTHORIZED = "authorized"
     NOT_PERMITTED = "not_permitted"
+    COMMUNITY_EDITION = "community_edition"
+    NOT_LICENSED = "not_licensed"
     UNAVAILABLE = "unavailable"
 
 

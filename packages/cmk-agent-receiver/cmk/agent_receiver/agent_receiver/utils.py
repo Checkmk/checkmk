@@ -6,19 +6,22 @@
 import os
 from contextlib import suppress
 from dataclasses import dataclass
-from typing import Final, Self
+from typing import assert_never, Final, Self
 
 from pydantic import UUID4, ValidationError
 
 from cmk.agent_receiver.agent_receiver.models import (
     AgentUpdateAuthorization,
     ConnectionMode,
+    NoAgentUpdatesReason,
     R4RStatus,
     RequestForRegistration,
     UUIDRegistration,
 )
 from cmk.agent_receiver.lib.config import get_config
 from cmk.agent_receiver.lib.log import logger
+from cmk.ccc.version import Edition, omd_version
+from cmk.licensing.basics.options import get_license_options, LicenseOptions
 
 
 class NotRegisteredException(Exception): ...
@@ -38,7 +41,40 @@ class RegisteredHost:
         )
 
 
+def no_agent_updates_reason(
+    site_edition: Edition, license_options: LicenseOptions
+) -> NoAgentUpdatesReason | None:
+    """Why a site offers no agent updates, None if it offers them
+
+    The site registers its agent deployment endpoints by the same license option.
+    """
+    if site_edition is Edition.COMMUNITY:
+        return NoAgentUpdatesReason.COMMUNITY_EDITION
+    if not license_options.bakery.enabled:
+        return NoAgentUpdatesReason.NOT_LICENSED
+    return None
+
+
+def no_agent_updates_on_this_site() -> NoAgentUpdatesReason | None:
+    omd_root = get_config().omd_root
+    # cmk.ccc.version.edition() takes an edition that it doesn't know for the Community edition.
+    site_edition = Edition.from_version_string(omd_version(omd_root))
+    return no_agent_updates_reason(site_edition, get_license_options(omd_root, site_edition))
+
+
 def agent_update_authorization(uuid: UUID4) -> AgentUpdateAuthorization:
+    match no_agent_updates_on_this_site():
+        case NoAgentUpdatesReason.COMMUNITY_EDITION:
+            return AgentUpdateAuthorization.COMMUNITY_EDITION
+        case NoAgentUpdatesReason.NOT_LICENSED:
+            return AgentUpdateAuthorization.NOT_LICENSED
+        case None:
+            return _authorization_of_the_registration(uuid)
+        case unreachable:
+            assert_never(unreachable)
+
+
+def _authorization_of_the_registration(uuid: UUID4) -> AgentUpdateAuthorization:
     try:
         raw = (get_config().registrations_dir / f"{uuid}.json").read_bytes()
         registration = UUIDRegistration.model_validate_json(raw)

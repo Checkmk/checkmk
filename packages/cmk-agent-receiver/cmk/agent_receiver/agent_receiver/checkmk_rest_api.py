@@ -12,7 +12,7 @@ from urllib.parse import quote
 import httpx2
 from fastapi import HTTPException
 from fastapi.security import HTTPBasicCredentials
-from pydantic import BaseModel, UUID4, ValidationError
+from pydantic import BaseModel, UUID4
 
 from cmk.agent_receiver.agent_receiver.models import (
     ConnectionMode,
@@ -294,7 +294,7 @@ async def deployment_status(
         {**status_request.model_dump(exclude_none=True), "uuid": str(uuid)},
         "application/json",
     )
-    _verify_agent_update_response(response)
+    _verify_response(response, HTTPStatus.OK)
     return UpdateStatusResponse.model_validate(response.json())
 
 
@@ -312,28 +312,8 @@ async def deployment_download(
         "application/octet-stream",
         timeout=_DOWNLOAD_TIMEOUT_SECONDS,
     )
-    _verify_agent_update_response(response)
-    return response.content
-
-
-def _verify_agent_update_response(response: httpx2.Response) -> None:
-    if response.status_code == HTTPStatus.NOT_FOUND and _matched_no_endpoint(response):
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_IMPLEMENTED,
-            detail="This site offers no agent updates.",
-        )
     _verify_response(response, HTTPStatus.OK)
-
-
-def _matched_no_endpoint(response: httpx2.Response) -> bool:
-    # The REST API titles a URL that matches no endpoint with the bare status phrase, which is
-    # what a Community site answers, as it has no agent deployment endpoints. The endpoints give
-    # their own 404s a title of their own.
-    try:
-        title = _RestApiErrorDescr.model_validate_json(response.text).title
-    except ValidationError:
-        return True
-    return title == HTTPStatus.NOT_FOUND.phrase
+    return response.content
 
 
 def _verify_response(

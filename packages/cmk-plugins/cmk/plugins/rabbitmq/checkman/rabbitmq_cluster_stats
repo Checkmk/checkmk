@@ -1,4 +1,4 @@
-title: RabbitMQ: Cluster Stats
+title: RabbitMQ: Cluster Statistics
 agents: rabbitmq
 catalog: app/rabbitmq
 license: GPLv2

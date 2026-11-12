@@ -1,4 +1,4 @@
-title: RabbitMQ: Nodes GC
+title: RabbitMQ: Node Garbage Collection
 agents: rabbitmq
 catalog: app/rabbitmq
 license: GPLv2

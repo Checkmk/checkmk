@@ -1,4 +1,4 @@
-title: RabbitMQ: Nodes Processes
+title: RabbitMQ: Node Processes
 agents: rabbitmq
 catalog: app/rabbitmq
 license: GPLv2

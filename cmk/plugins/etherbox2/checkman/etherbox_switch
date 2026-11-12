@@ -1,4 +1,4 @@
-title: Etherbox / MessPC: Sensor Switch Contact
+title: Etherbox: Switch Contacts
 catalog: hw/environment/betternet
 agents: snmp
 license: GPLv2

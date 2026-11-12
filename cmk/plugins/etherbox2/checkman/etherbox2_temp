@@ -1,4 +1,4 @@
-title: Etherbox 2 / MessPC: Sensor Temperature
+title: Etherbox: Etherbox 2 Temperature
 catalog: hw/environment/betternet
 agents: snmp
 license: GPLv2

@@ -1,4 +1,4 @@
-title: MS SQL Tablespaces: Transactions per Second
+title: Microsoft SQL Server: Transactions per Second
 agents: windows
 catalog: app/mssql
 license: GPLv2

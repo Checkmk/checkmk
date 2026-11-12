@@ -1,4 +1,4 @@
-title: MSSQL Database: Jobs
+title: Microsoft SQL Server: Jobs
 agents: windows
 catalog: app/mssql
 license: GPLv2

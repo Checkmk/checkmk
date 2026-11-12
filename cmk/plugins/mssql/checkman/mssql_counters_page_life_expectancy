@@ -1,4 +1,4 @@
-title: MSSQL Server: Page Life Expectancy (PLE)
+title: Microsoft SQL Server: Page Life Expectancy
 agents: windows
 catalog: app/mssql
 license: GPLv2

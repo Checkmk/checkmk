@@ -1,4 +1,4 @@
-title: MS SQL Tablespaces: Successful Backups (by Type)
+title: Microsoft SQL Server: Backups per Type
 agents: windows
 catalog: app/mssql
 license: GPLv2

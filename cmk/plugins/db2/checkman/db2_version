@@ -1,4 +1,4 @@
-title: DB2: Instance Version
+title: IBM Db2: Version
 agents: aix, linux
 catalog: app/db2
 license: GPLv2

@@ -1,4 +1,4 @@
-title: MS SQL: Availability Groups
+title: Microsoft SQL Server: Availability Groups
 agents: windows
 catalog: app/mssql
 license: GPLv2

@@ -1,4 +1,4 @@
-title: MS SQL: General State
+title: Microsoft SQL Server: Instance State
 agents: windows
 catalog: app/mssql
 license: GPLv2

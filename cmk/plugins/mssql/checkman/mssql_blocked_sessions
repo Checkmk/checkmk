@@ -1,4 +1,4 @@
-title: MS SQL Server: Blocked Sessions
+title: Microsoft SQL Server: Blocked Sessions
 agents: windows
 catalog: app/mssql
 license: GPLv2

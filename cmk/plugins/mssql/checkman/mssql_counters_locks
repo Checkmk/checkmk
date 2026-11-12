@@ -1,4 +1,4 @@
-title: MS SQL Tablespaces: Locks per Second
+title: Microsoft SQL Server: Locks per Second
 agents: windows
 catalog: app/mssql
 license: GPLv2

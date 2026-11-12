@@ -1,4 +1,4 @@
-title: Couchbase Nodes: Total Operations
+title: Couchbase: Node Total Operations
 agents: special
 catalog: app/couchbase
 license: GPLv2

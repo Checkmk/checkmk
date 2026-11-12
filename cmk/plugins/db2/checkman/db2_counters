@@ -1,4 +1,4 @@
-title: DB2: Databases Deadlocks, Lockwaits and Sortoverflows
+title: IBM Db2: Deadlocks, Lock Waits and Sort Overflows
 agents: aix, linux
 catalog: app/db2
 license: GPLv2

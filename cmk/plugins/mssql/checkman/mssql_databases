@@ -1,4 +1,4 @@
-title: MS SQL Database: Properties
+title: Microsoft SQL Server: Database Properties
 agents: windows
 catalog: app/mssql
 license: GPLv2

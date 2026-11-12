@@ -1,4 +1,4 @@
-title: MSSQL Database: Mirroring
+title: Microsoft SQL Server: Mirroring
 agents: windows
 catalog: app/mssql
 license: GPLv2

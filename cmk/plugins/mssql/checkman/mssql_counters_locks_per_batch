@@ -1,4 +1,4 @@
-title: MS SQL Server: Locks per Batch
+title: Microsoft SQL Server: Locks per Batch
 agents: windows
 catalog: app/mssql
 license: GPLv2

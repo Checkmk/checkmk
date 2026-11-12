@@ -5,38 +5,40 @@
 
 
 from cmk.agent_based.v2 import (
-    check_levels,
-    CheckPlugin,
-    CheckResult,
-    DiscoveryResult,
-    Service,
     SimpleSNMPSection,
     SNMPTree,
     startswith,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import (
+    check_levels,
+    CheckPlugin,
+    CheckResult,
+    discover_one_service,
+    parse_as,
+    ParseFailure,
+)
+
+type Section = int | ParseFailure
 
 
-def discover_aruba_clients(section: StringTable) -> DiscoveryResult:
-    if section:
-        yield Service()
-
-
-def check_aruba_clients(section: StringTable) -> CheckResult:
-    try:
-        connected_clients = int(section[0][0])
-    except IndexError, ValueError:
+def check_aruba_clients(section: Section) -> CheckResult:
+    if isinstance(section, ParseFailure):
+        yield section
         return
+
     yield from check_levels(
-        connected_clients,
+        section,
         metric_name="connections",
         render_func=lambda x: f"{x}",
         label="Connections",
     )
 
 
-def parse_aruba_clients(string_table: StringTable) -> StringTable:
-    return string_table
+def parse_aruba_clients(string_table: StringTable) -> Section | None:
+    if not string_table:
+        return None
+    return parse_as(int, string_table[0][0], field="wlsxSwitchTotalNumStationsAssociated")
 
 
 snmp_section_aruba_clients = SimpleSNMPSection(
@@ -51,6 +53,6 @@ snmp_section_aruba_clients = SimpleSNMPSection(
 check_plugin_aruba_clients = CheckPlugin(
     name="aruba_clients",
     service_name="WLAN Clients",
-    discovery_function=discover_aruba_clients,
+    discovery_function=discover_one_service,
     check_function=check_aruba_clients,
 )

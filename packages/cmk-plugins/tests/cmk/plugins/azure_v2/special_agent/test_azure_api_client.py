@@ -118,13 +118,27 @@ def _graph_client() -> BaseAsyncApiClient:
     return BaseAsyncApiClient(get_graph_authority_urls("global"), {}, "tenant", "client", "secret")
 
 
-def test_regional_metrics_url_points_to_the_region() -> None:
-    client = _mgmt_client("global")
+@pytest.mark.parametrize(
+    "authority, expected",
+    [
+        pytest.param(
+            "global",
+            "https://westeurope.metrics.monitor.azure.com/subscriptions/sub/metrics:getBatch",
+            id="global",
+        ),
+        pytest.param(
+            "china",
+            "https://metrics.monitor.azure.cn/subscriptions/sub/metrics:getBatch",
+            id="china",
+        ),
+    ],
+)
+def test_regional_metrics_url_matches_the_cloud(
+    authority: Literal["global", "china"], expected: str
+) -> None:
+    client = _mgmt_client(authority)
 
-    assert (
-        client.build_regional_url("westeurope", "/metrics:getBatch")
-        == "https://westeurope.metrics.monitor.azure.com/subscriptions/sub/metrics:getBatch"
-    )
+    assert client.build_regional_url("westeurope", "/metrics:getBatch") == expected
 
 
 def test_graph_client_has_no_regional_url() -> None:

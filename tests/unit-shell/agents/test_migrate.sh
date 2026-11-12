@@ -59,6 +59,7 @@ _migrate_with() {
 }
 
 test_hidden_file_is_moved() {
+    # CMK-40621 AC2, CMK-40622 AC3
     printf 'kept\n' >"${OLD_VARDIR}/.hidden"
 
     _migrate >/dev/null
@@ -68,6 +69,7 @@ test_hidden_file_is_moved() {
 }
 
 test_directory_on_both_sides_is_merged() {
+    # CMK-40621 AC2, CMK-40622 AC3
     printf 'from the old tree\n' >"${OLD_VARDIR}/cache/old_entry"
     printf 'already here\n' >"${RUNTIME}/cache/new_entry"
 
@@ -79,6 +81,7 @@ test_directory_on_both_sides_is_merged() {
 }
 
 test_directory_on_both_sides_keeps_the_mode_of_the_package() {
+    # CMK-40621 AC2
     # The classic layout had these open to others. Moving the directory itself
     # would replace the one the package created and bring 0755 along.
     chmod 0755 "${OLD_VARDIR}/cache"
@@ -91,6 +94,7 @@ test_directory_on_both_sides_keeps_the_mode_of_the_package() {
 }
 
 test_a_nested_directory_on_both_sides_is_merged_as_well() {
+    # CMK-40621 AC2, CMK-40622 AC3
     mkdir -p "${OLD_VARDIR}/cache/sub" "${RUNTIME}/cache/sub"
     printf 'from the old tree\n' >"${OLD_VARDIR}/cache/sub/old_entry"
     printf 'already here\n' >"${RUNTIME}/cache/sub/new_entry"
@@ -102,6 +106,7 @@ test_a_nested_directory_on_both_sides_is_merged_as_well() {
 }
 
 test_dangling_symlink_is_moved() {
+    # CMK-40621 AC2, CMK-40622 AC3
     # Its target does not exist, so a test for the entry itself has to look at
     # the link rather than at what it points to.
     ln -s /nowhere/at/all "${OLD_VARDIR}/dangling"
@@ -113,6 +118,7 @@ test_dangling_symlink_is_moved() {
 }
 
 test_file_is_not_moved_into_a_directory_of_its_name() {
+    # CMK-40621 AC2
     # mv would put the file inside the directory, at runtime/plain/plain,
     # where nothing reads it. It has to stay behind and be reported instead.
     printf 'content\n' >"${OLD_VARDIR}/plain"
@@ -125,6 +131,7 @@ test_file_is_not_moved_into_a_directory_of_its_name() {
 }
 
 test_what_cannot_be_moved_is_kept() {
+    # CMK-40621 AC2
     # A file in the new tree where the old tree has a directory: the move
     # fails, and the old data has to survive instead of being cleaned away.
     mkdir -p "${OLD_VARDIR}/spool"
@@ -138,6 +145,7 @@ test_what_cannot_be_moved_is_kept() {
 }
 
 test_a_symlinked_directory_in_the_new_tree_is_not_followed() {
+    # CMK-40624 AC4
     # Descending through it would carry the old runtime data out of the tree.
     mkdir -p "${WORK}/elsewhere" "${OLD_VARDIR}/linked"
     printf 'precious\n' >"${OLD_VARDIR}/linked/precious"
@@ -152,6 +160,7 @@ test_a_symlinked_directory_in_the_new_tree_is_not_followed() {
 }
 
 test_exit_code_is_zero_when_something_could_not_be_moved() {
+    # CMK-40624 AC4
     # The SVR4 postinstall script of the Solaris package calls this, and a
     # non-zero exit code there can abort the whole pkgadd transaction.
     mkdir -p "${OLD_VARDIR}/spool"
@@ -164,6 +173,7 @@ test_exit_code_is_zero_when_something_could_not_be_moved() {
 }
 
 test_migration_runs_under_korn_shell() {
+    # CMK-40624 AC4
     # Solaris resolves "sh" to ksh93. There is no Solaris 10 Bourne shell to
     # test against here, so ksh is the closest stand-in available.
     ksh -c "" >/dev/null 2>&1 || startSkipping

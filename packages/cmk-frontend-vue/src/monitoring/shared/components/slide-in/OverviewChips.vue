@@ -8,12 +8,12 @@ import CmkButton from 'cmk-ui-library/components/CmkButton/CmkButton.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, ref } from 'vue'
 
-import FilterTag from '@/monitoring/shared/components/FilterTag.vue'
+import ItemTag from '@/monitoring/shared/components/ItemTag.vue'
 import {
+  type ItemAction,
   type LabelCellItem,
   labelItemText
 } from '@/monitoring/shared/components/cell/labelCellItem'
-import type { ColumnCondition } from '@/monitoring/shared/services/MonitoringService'
 
 const DEFAULT_LIMIT = 5
 
@@ -21,10 +21,12 @@ const props = withDefaults(
   defineProps<{
     items: LabelCellItem[]
     limit?: number | undefined
-    filterBy?: ((item: LabelCellItem) => ColumnCondition) | undefined
+    action?: ItemAction | undefined
   }>(),
   { limit: DEFAULT_LIMIT }
 )
+
+defineEmits<{ select: [item: LabelCellItem] }>()
 
 const { _t } = usei18n()
 
@@ -38,13 +40,14 @@ const visibleItems = computed(() =>
 
 <template>
   <div class="monitoring-overview-chips">
-    <FilterTag
+    <ItemTag
       v-for="item in visibleItems"
       :key="labelItemText(item)"
       :item="item"
       size="small"
       spacing="none"
-      :filter-by="filterBy"
+      :action="action"
+      @select="$emit('select', $event)"
     />
     <CmkButton v-if="hasOverflow" size="small" variant="text" @click="expanded = !expanded">
       {{ expanded ? _t('show less') : `+${items.length - limit}` }}

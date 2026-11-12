@@ -47,6 +47,7 @@ import {
   toNameItems,
   toTagItems
 } from '@/monitoring/shared/labels'
+import { Narrowing } from '@/monitoring/shared/narrowing'
 import type { DisplayOptions } from '@/monitoring/shared/types'
 
 const props = withDefaults(
@@ -175,6 +176,13 @@ const tags = computed(() => toTagItems(props.row.tags ?? {}))
 const contacts = computed(() => toNameItems(props.row.contacts ?? []))
 const contactGroups = computed(() => toNameItems(props.row.contact_groups ?? []))
 const serviceGroups = computed(() => toNameItems(props.row.groups ?? []))
+
+const narrowing = Narrowing.inject()
+const labelAction = narrowing.actionFor(labelCondition)
+const tagAction = narrowing.actionFor(tagCondition)
+const contactAction = narrowing.actionFor(contactCondition)
+const contactGroupAction = narrowing.actionFor(contactGroupCondition)
+const groupAction = narrowing.actionFor(groupCondition)
 </script>
 
 <template>
@@ -247,35 +255,40 @@ const serviceGroups = computed(() => toNameItems(props.row.groups ?? []))
     column-id="labels"
     :items="labels"
     size="small"
-    :filter-by="labelCondition"
+    :action="labelAction"
+    @select="narrowing.narrow(labelCondition($event))"
   />
   <LabelCell
     v-if="hasColumn('tags')"
     column-id="tags"
     :items="tags"
     size="small"
-    :filter-by="tagCondition"
+    :action="tagAction"
+    @select="narrowing.narrow(tagCondition($event))"
   />
   <LabelCell
     v-if="hasColumn('contacts')"
     column-id="contacts"
     :items="contacts"
     size="small"
-    :filter-by="contactCondition"
+    :action="contactAction"
+    @select="narrowing.narrow(contactCondition($event))"
   />
   <LabelCell
     v-if="hasColumn('contact_groups')"
     column-id="contact_groups"
     :items="contactGroups"
     size="small"
-    :filter-by="contactGroupCondition"
+    :action="contactGroupAction"
+    @select="narrowing.narrow(contactGroupCondition($event))"
   />
   <LabelCell
     v-if="hasColumn('groups')"
     column-id="groups"
     :items="serviceGroups"
     size="small"
-    :filter-by="groupCondition"
+    :action="groupAction"
+    @select="narrowing.narrow(groupCondition($event))"
   />
   <PerfometerCell
     v-if="hasColumn('perfometer')"

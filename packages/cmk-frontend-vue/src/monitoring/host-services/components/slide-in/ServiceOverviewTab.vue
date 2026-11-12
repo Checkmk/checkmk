@@ -26,6 +26,7 @@ import {
   toNameItems,
   toTagItems
 } from '@/monitoring/shared/labels'
+import { Narrowing } from '@/monitoring/shared/narrowing'
 import type { DisplayOptions } from '@/monitoring/shared/types'
 
 const props = defineProps<{ data: ServiceOverview; displayOptions: DisplayOptions }>()
@@ -38,6 +39,11 @@ const checkAttempt = computed(
 
 const tagChips = computed(() => toTagItems(props.data.tags))
 const contactGroupChips = computed(() => toNameItems(props.data.contact_groups))
+
+const narrowing = Narrowing.inject()
+const contactGroupAction = narrowing.actionFor(contactGroupCondition)
+const tagAction = narrowing.actionFor(tagCondition)
+const labelAction = narrowing.actionFor(labelCondition)
 
 const lastCheck = computed(() =>
   props.data.last_check === null
@@ -90,17 +96,29 @@ const nextCheck = computed(() =>
     <OverviewDetailList align="start">
       <dt>{{ _t('Contact groups:') }}</dt>
       <dd>
-        <OverviewChips :items="contactGroupChips" :filter-by="contactGroupCondition" />
+        <OverviewChips
+          :items="contactGroupChips"
+          :action="contactGroupAction"
+          @select="narrowing.narrow(contactGroupCondition($event))"
+        />
       </dd>
 
       <dt>{{ _t('Tags:') }}</dt>
       <dd>
-        <OverviewChips :items="tagChips" :filter-by="tagCondition" />
+        <OverviewChips
+          :items="tagChips"
+          :action="tagAction"
+          @select="narrowing.narrow(tagCondition($event))"
+        />
       </dd>
 
       <dt>{{ _t('Labels:') }}</dt>
       <dd>
-        <OverviewLabels :labels="data.labels" :filter-by="labelCondition" />
+        <OverviewLabels
+          :labels="data.labels"
+          :action="labelAction"
+          @select="narrowing.narrow(labelCondition($event))"
+        />
       </dd>
     </OverviewDetailList>
 

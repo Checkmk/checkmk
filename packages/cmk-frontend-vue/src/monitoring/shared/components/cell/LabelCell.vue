@@ -9,22 +9,21 @@ import type { Sizes } from 'cmk-ui-library/components/CmkTag.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { computed, inject, nextTick, onMounted, ref, watch } from 'vue'
 
-import type { ColumnCondition } from '@/monitoring/shared/services/MonitoringService'
-
-import FilterTag from '../FilterTag.vue'
+import ItemTag from '../ItemTag.vue'
 import { COLUMN_LAYOUT_KEY } from '../MonitoringTableContext'
 import BaseCell from './BaseCell.vue'
-import { type LabelCellItem, labelItemText } from './labelCellItem'
+import { type ItemAction, type LabelCellItem, labelItemText } from './labelCellItem'
 
 export interface LabelCellProps {
   items: LabelCellItem[]
   size?: Sizes | undefined
   columnId?: string | undefined
-  /** The filter a click on an entry narrows the listing to; without it the entries are plain. */
-  filterBy?: ((item: LabelCellItem) => ColumnCondition) | undefined
+  action?: ItemAction | undefined
 }
 
 const props = defineProps<LabelCellProps>()
+
+defineEmits<{ select: [item: LabelCellItem] }>()
 
 const { _t } = usei18n()
 
@@ -179,7 +178,7 @@ watch(columnWidth, (width, previous) => {
           'monitoring-label-cell__row--expanded': expanded && !measuring
         }"
       >
-        <FilterTag
+        <ItemTag
           v-for="(item, index) in visibleItems"
           :key="`${index}-${labelItemText(item)}`"
           data-label-cell-item
@@ -188,7 +187,8 @@ watch(columnWidth, (width, previous) => {
           :item="item"
           :size="size"
           spacing="none"
-          :filter-by="filterBy"
+          :action="action"
+          @select="$emit('select', $event)"
         />
         <CmkButton
           v-if="measuring || (hasOverflow && !expanded)"

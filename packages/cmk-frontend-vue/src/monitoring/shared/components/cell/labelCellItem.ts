@@ -23,6 +23,13 @@ export type LabelCellItem =
   | (LabelCellStyle & ({ text: TranslatedString } | { keyValue: { key: string; value: string } }))
   | TagItem
 
+/** What a click on an entry does; without one the entry is plain. */
+export interface ItemAction {
+  title: (item: LabelCellItem) => TranslatedString
+  /** The page the entry links to; without it a click selects the entry. */
+  href?: ((item: LabelCellItem) => string) | undefined
+}
+
 export function isTagItem(item: LabelCellItem): item is TagItem {
   return 'tag' in item
 }

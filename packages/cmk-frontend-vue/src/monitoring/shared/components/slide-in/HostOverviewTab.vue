@@ -10,12 +10,13 @@ import { computed } from 'vue'
 
 import type { HostOverview } from '@/monitoring/shared/api/types'
 import ServiceSummaryBar from '@/monitoring/shared/components/ServiceSummaryBar.vue'
-import type { LabelCellItem } from '@/monitoring/shared/components/cell/labelCellItem'
+import type { ItemAction, LabelCellItem } from '@/monitoring/shared/components/cell/labelCellItem'
 import OverviewChips from '@/monitoring/shared/components/slide-in/OverviewChips.vue'
 import OverviewDetailList from '@/monitoring/shared/components/slide-in/OverviewDetailList.vue'
 import OverviewLabels from '@/monitoring/shared/components/slide-in/OverviewLabels.vue'
 import { formatDisplayTimestamp } from '@/monitoring/shared/formatTimestamp'
 import { toNameItems, toTagItems } from '@/monitoring/shared/labels'
+import { Narrowing } from '@/monitoring/shared/narrowing'
 import { hostRefOf } from '@/monitoring/shared/objectRefs'
 import type { ColumnCondition } from '@/monitoring/shared/services/MonitoringService'
 import type { DisplayOptions } from '@/monitoring/shared/types'
@@ -47,6 +48,20 @@ const hostRef = computed(() => hostRefOf(props.data))
 
 const tagChips = computed(() => toTagItems(props.data.tags))
 const contactGroupChips = computed(() => toNameItems(props.data.contact_groups))
+
+type ConditionOf = (item: LabelCellItem) => ColumnCondition
+
+const narrowing = Narrowing.inject()
+
+function actionFor(conditionOf: ConditionOf | undefined): ItemAction | undefined {
+  return conditionOf ? narrowing.actionFor(conditionOf) : undefined
+}
+
+function narrowBy(conditionOf: ConditionOf | undefined, item: LabelCellItem): void {
+  if (conditionOf) {
+    narrowing.narrow(conditionOf(item))
+  }
+}
 
 const lastCheck = computed(() =>
   props.data.last_check === null
@@ -103,7 +118,11 @@ const age = computed(() =>
 
       <dt>{{ _t('Contact groups') }}</dt>
       <dd>
-        <OverviewChips :items="contactGroupChips" :filter-by="filterContactGroupsBy" />
+        <OverviewChips
+          :items="contactGroupChips"
+          :action="actionFor(filterContactGroupsBy)"
+          @select="narrowBy(filterContactGroupsBy, $event)"
+        />
       </dd>
     </OverviewDetailList>
 
@@ -120,12 +139,20 @@ const age = computed(() =>
     <OverviewDetailList align="start">
       <dt>{{ _t('Tags') }}</dt>
       <dd>
-        <OverviewChips :items="tagChips" :filter-by="filterTagsBy" />
+        <OverviewChips
+          :items="tagChips"
+          :action="actionFor(filterTagsBy)"
+          @select="narrowBy(filterTagsBy, $event)"
+        />
       </dd>
 
       <dt>{{ _t('Labels') }}</dt>
       <dd>
-        <OverviewLabels :labels="data.labels" :filter-by="filterLabelsBy" />
+        <OverviewLabels
+          :labels="data.labels"
+          :action="actionFor(filterLabelsBy)"
+          @select="narrowBy(filterLabelsBy, $event)"
+        />
       </dd>
     </OverviewDetailList>
 

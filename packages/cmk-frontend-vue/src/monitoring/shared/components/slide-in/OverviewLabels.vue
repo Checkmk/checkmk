@@ -7,21 +7,21 @@ conditions defined in the file COPYING, which is part of this source code packag
 import { computed } from 'vue'
 
 import type { LabelValue } from '@/monitoring/shared/api/types'
-import type { LabelCellItem } from '@/monitoring/shared/components/cell/labelCellItem'
+import type { ItemAction, LabelCellItem } from '@/monitoring/shared/components/cell/labelCellItem'
 import OverviewChips from '@/monitoring/shared/components/slide-in/OverviewChips.vue'
 import { toLabelItems } from '@/monitoring/shared/labels'
-import type { ColumnCondition } from '@/monitoring/shared/services/MonitoringService'
 
 const props = defineProps<{
   labels: Record<string, LabelValue>
   limit?: number | undefined
-  /** The filter a click on a label narrows the listing to; without it the labels are plain. */
-  filterBy?: ((item: LabelCellItem) => ColumnCondition) | undefined
+  action?: ItemAction | undefined
 }>()
+
+defineEmits<{ select: [item: LabelCellItem] }>()
 
 const items = computed(() => toLabelItems(props.labels))
 </script>
 
 <template>
-  <OverviewChips :items="items" :limit="limit" :filter-by="filterBy" />
+  <OverviewChips :items="items" :limit="limit" :action="action" @select="$emit('select', $event)" />
 </template>

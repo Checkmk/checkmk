@@ -7,9 +7,13 @@ import userEvent from '@testing-library/user-event'
 import { render, screen } from '@testing-library/vue'
 
 import type { HostOverview } from '@/monitoring/shared/api/types'
-import { MONITORING_SERVICE } from '@/monitoring/shared/components/MonitoringTableContext'
+import {
+  MONITORING_SERVICE,
+  NARROW_TARGET
+} from '@/monitoring/shared/components/MonitoringTableContext'
 import HostOverviewTab from '@/monitoring/shared/components/slide-in/HostOverviewTab.vue'
 import { contactGroupCondition, labelCondition, tagCondition } from '@/monitoring/shared/labels'
+import type { ColumnCondition } from '@/monitoring/shared/services/MonitoringService'
 import type { DisplayOptions } from '@/monitoring/shared/types'
 
 import { makeListingService } from '../../../shared/services/testHelpers'
@@ -174,4 +178,25 @@ test('keeps the labels plain where the listing behind the panel holds no hosts',
   })
 
   expect(screen.queryByRole('button', { name: 'cmk/os_family: linux' })).not.toBeInTheDocument()
+})
+
+test('links a label to the page a narrow target names instead of narrowing the listing', async () => {
+  const service = makeListingService()
+  render(HostOverviewTab, {
+    props: { data: makeData(), displayOptions: DISPLAY_OPTIONS, filterLabelsBy: labelCondition },
+    global: {
+      provide: {
+        [MONITORING_SERVICE as symbol]: service,
+        [NARROW_TARGET as symbol]: (condition: ColumnCondition) =>
+          `hosts.py?${JSON.stringify(condition.value)}`
+      }
+    }
+  })
+
+  const link = screen.getByRole('link', { name: 'cmk/os_family: linux' })
+  await userEvent.click(link)
+
+  expect(link).toHaveAttribute('href', 'hosts.py?["cmk/os_family:linux"]')
+  expect(link).toHaveAttribute('title', 'Show hosts with cmk/os_family: linux')
+  expect(service.filterState.value).toBeUndefined()
 })

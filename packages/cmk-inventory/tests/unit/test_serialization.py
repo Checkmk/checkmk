@@ -465,9 +465,9 @@ def test_parse_from_raw_status_data_tree() -> None:
     assert parse_from_raw_status_data_tree(json.dumps(tree).encode()) == deserialize_tree(tree)
 
 
-def test_parse_from_raw_status_data_tree_legacy() -> None:
-    tree = serialize_tree(filled_mutable_tree())
-    assert parse_from_raw_status_data_tree(repr(tree).encode()) == deserialize_tree(tree)
+def test_parse_from_raw_status_data_tree_rejects_a_legacy_dump() -> None:
+    with pytest.raises(json.JSONDecodeError):
+        parse_from_raw_status_data_tree(repr(serialize_tree(filled_mutable_tree())).encode())
 
 
 @pytest.mark.parametrize(

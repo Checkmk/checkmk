@@ -15,7 +15,7 @@ from cmk.inventory.serialization import (
     SDRawTree,
 )
 from cmk.inventory.store import InventoryStore
-from cmk.inventory.trees import RetentionInterval, SDKey, SDNodeName
+from cmk.inventory.trees import SDKey, SDNodeName
 
 
 def file_names(directory: Path) -> Sequence[str]:
@@ -50,32 +50,6 @@ def raw_tree(value: str) -> SDRawTree:
             ),
         },
     )
-
-
-def tree_with_table_retentions() -> SDRawTree:
-    return SDRawTree(
-        Attributes={},
-        Table={
-            "KeyColumns": [SDKey("kc")],
-            "Rows": [{SDKey("kc"): "KC", SDKey("c1"): "C1"}],
-            "Retentions": {("KC",): {SDKey("c1"): (1, 2, 3, "current")}},
-        },
-        Nodes={},
-    )
-
-
-TABLE_RETENTIONS = {("KC",): {SDKey("c1"): RetentionInterval(1, 2, 3, "current")}}
-
-
-def gzipped_repr(raw_tree: SDRawTree) -> bytes:
-    buf = io.BytesIO()
-    with gzip.GzipFile(fileobj=buf, mode="wb") as f:
-        f.write(
-            (
-                repr(SDMetaAndRawTree(meta=make_meta(do_archive=False), raw_tree=raw_tree)) + "\n"
-            ).encode("utf-8")
-        )
-    return buf.getvalue()
 
 
 def gzipped_json(raw_tree: SDRawTree) -> bytes:

@@ -3208,7 +3208,6 @@
   "pkg:pypi/typeguard@4.5.0": "MIT",
   "pkg:pypi/typeguard@4.5.2": "MIT",
   "pkg:pypi/typeguard@4.6.0": "MIT",
-  "pkg:pypi/typing-extensions@4.15.0": "PSF-2.0",
   "pkg:pypi/typing-extensions@4.16.0": "PSF-2.0",
   "pkg:pypi/typing-inspection@0.4.2": "MIT",
   "pkg:pypi/typing-inspection@0.4.3": "MIT",

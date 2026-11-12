@@ -1,4 +1,4 @@
-title: NTI Enviromux SEMS E2D: Temperature
+title: NTI Enviromux: SEMS E2D Temperature
 agents: snmp
 catalog: hw/environment/nti
 license: GPLv2

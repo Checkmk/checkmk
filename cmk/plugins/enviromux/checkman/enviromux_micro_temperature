@@ -1,4 +1,4 @@
-title: NTI Enviromux Micro-T: Temperature
+title: NTI Enviromux: Micro-T Temperature
 agents: snmp
 catalog: hw/environment/nti
 license: GPLv2

@@ -1,4 +1,4 @@
-title: NTI Enviromux 16D: Auxiliary Sensor Temperature
+title: NTI Enviromux: 16D Auxiliary Temperature
 agents: snmp
 catalog: hw/environment/nti
 license: GPLv2

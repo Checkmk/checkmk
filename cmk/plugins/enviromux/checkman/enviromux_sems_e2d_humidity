@@ -1,4 +1,4 @@
-title: NTI Enviromux SEMS E2D: Humidity
+title: NTI Enviromux: SEMS E2D Humidity
 agents: snmp
 catalog: hw/environment/nti
 license: GPLv2

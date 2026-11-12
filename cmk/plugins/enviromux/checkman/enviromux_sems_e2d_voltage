@@ -1,4 +1,4 @@
-title: NTI Enviromux SEMS E2D: Voltage
+title: NTI Enviromux: SEMS E2D Voltage
 agents: snmp
 catalog: hw/environment/nti
 license: GPLv2

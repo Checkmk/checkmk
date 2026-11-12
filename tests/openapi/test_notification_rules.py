@@ -568,6 +568,30 @@ def test_event_type_condition_without_value_matches_default_events(
     assert {event for event, enabled in events.items() if enabled} == default_events
 
 
+def test_event_console_condition_disables_omitted_fields(clients: ClientRegistry) -> None:
+    config = notification_rule_request_example()
+    config["conditions"]["event_console_alerts"] = {
+        "state": "enabled",
+        "value": {"match_type": "match_only_event_console_alerts", "values": {}},
+    }
+
+    rule_id = clients.RuleNotification.create(rule_config=config).json["id"]
+
+    stored = clients.RuleNotification.get(rule_id).json["extensions"]["rule_config"]
+    assert stored["conditions"]["event_console_alerts"] == {
+        "state": "enabled",
+        "value": {
+            "match_type": "match_only_event_console_alerts",
+            "values": {
+                "match_rule_ids": {"state": "disabled"},
+                "match_syslog_priority": {"state": "disabled"},
+                "match_syslog_facility": {"state": "disabled"},
+                "match_event_comment": {"state": "disabled"},
+            },
+        },
+    }
+
+
 rule_properties_testdata: list[APIRuleProperties] = [
     {"allow_users_to_deactivate": {"state": "enabled"}},
     {"do_not_apply_this_rule": {"state": "disabled"}},

@@ -881,15 +881,19 @@ class MatchSysLogFacOneOfSchema(CheckboxOneOfSchema):
 class EventConsoleAlertAttrsCreate(BaseSchema):
     match_rule_ids = fields.Nested(
         MatchRuleIdsOneOfSchema,
+        load_default=lambda: {"state": "disabled"},
     )
     match_syslog_priority = fields.Nested(
         MatchSysLogPriOneOfSchema,
+        load_default=lambda: {"state": "disabled"},
     )
     match_syslog_facility = fields.Nested(
         MatchSysLogFacOneOfSchema,
+        load_default=lambda: {"state": "disabled"},
     )
     match_event_comment = fields.Nested(
         StrValueOneOfSchema,
+        load_default=lambda: {"state": "disabled"},
     )
 
 

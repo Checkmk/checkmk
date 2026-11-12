@@ -32,8 +32,8 @@ from tests.system.singlesite.openapi.rules.helpers import (
     LevelConfig,
     managed_rule_with_levels,
     PERIOD_CONFIGS,
+    PeriodConfig,
     setup_test_environment,
-    TestRuleConfig,
     verify_rule_conversion,
 )
 from tests.testlib.system.site import Site
@@ -51,7 +51,7 @@ def setup_test_environment_fixture(site: Site) -> Generator:
 @pytest.mark.skip_if_edition("cloud")
 @pytest.mark.parametrize("config", PERIOD_CONFIGS)
 @pytest.mark.usefixtures("setup_test_environment_fixture")
-def test_predictive_levels_periods(site: Site, config: TestRuleConfig) -> None:
+def test_predictive_levels_periods(site: Site, config: PeriodConfig) -> None:
     """Test different period types for predictive levels."""
     logger.info("Testing: %s (period=%s)", config.description, config.period)
 

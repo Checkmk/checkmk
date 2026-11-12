@@ -28,7 +28,7 @@ class LevelConfig(NamedTuple):
     metric: str
 
 
-class TestRuleConfig(NamedTuple):
+class PeriodConfig(NamedTuple):
     """Configuration for test rule parameters."""
 
     period: str
@@ -50,8 +50,8 @@ LEVEL_CONFIGS = [
 
 # Test data configurations
 PERIOD_CONFIGS = [
-    TestRuleConfig("wday", "Weekly pattern"),
-    TestRuleConfig("day", "Daily pattern"),
-    TestRuleConfig("hour", "Hourly pattern"),
-    TestRuleConfig("minute", "Minute pattern"),
+    PeriodConfig("wday", "Weekly pattern"),
+    PeriodConfig("day", "Daily pattern"),
+    PeriodConfig("hour", "Hourly pattern"),
+    PeriodConfig("minute", "Minute pattern"),
 ]

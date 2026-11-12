@@ -18,7 +18,7 @@ from tests.system.singlesite.openapi.rules.helpers.rule_configs import (
     LEVEL_CONFIGS,
     LevelConfig,
     PERIOD_CONFIGS,
-    TestRuleConfig,
+    PeriodConfig,
 )
 from tests.system.singlesite.openapi.rules.helpers.rule_helpers import (
     build_fixed_rule_value,
@@ -42,7 +42,7 @@ __all__ = [
     "DEFAULT_LEVELS",
     "DEFAULT_PERIOD",
     "LevelConfig",
-    "TestRuleConfig",
+    "PeriodConfig",
     # Rule management helpers
     "FOLDER_PATH",
     "HOSTNAME",

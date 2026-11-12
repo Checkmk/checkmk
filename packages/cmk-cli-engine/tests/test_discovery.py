@@ -84,7 +84,7 @@ def test_a_commands_handler_receives_its_request_parsed() -> None:
         ),
         _record,
     )
-    bound = command.load_handler()(
+    bound = command.load()(
         cli_parsed([("--oid", "iso"), ("--verbose", ""), ("--verbose", "")], {}, null_logger())
     )
 

@@ -85,7 +85,7 @@ def _show_help(commands: Commands, runtime: Runtime) -> CLIExitCode:
 def _run_command(
     run_command: RunCommand, context: CLIContext, argv: Sequence[str], runtime: Runtime
 ) -> CLIExitCode:
-    bind = run_command.command.load_handler()
+    bind = run_command.command.load()
     try:
         bound = bind(
             parsed(

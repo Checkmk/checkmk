@@ -16,7 +16,7 @@ from cmk.cli.internal import Handler as CLIHandler
 from cmk.cli.internal import Value as CLIValue
 from cmk.discover_plugins import discover_all_plugins, PluginGroup, PluginLocation
 
-from .commands import bind, DiscoveredCommand, Run
+from .commands import bind, DiscoveredCommand
 from .readers import Positional, record
 
 
@@ -58,10 +58,6 @@ def load_handler[R](command: CLICommand[R]) -> CLIHandler[R]:
             raise TypeError(f"{command.handler} is a {type(other).__name__}, not a Handler")
 
 
-def loaded_run[R](command: CLICommand[R]) -> Run[R]:
-    return load_handler(command).run
-
-
 def _is_required(positional: Positional) -> bool:
     match positional:
         case CLIArgument(optional=False):
@@ -79,7 +75,7 @@ def _reads_one_after_the_remaining(positional: Sequence[Positional]) -> bool:
     return any(isinstance(each, CLIArguments) for each in positional[:-1])
 
 
-def make_command[R](command: CLICommand[R], run: Callable[[], Run[R]]) -> DiscoveredCommand:
+def make_command[R](command: CLICommand[R], load: Callable[[], CLIHandler[R]]) -> DiscoveredCommand:
     recorded = record(command.request)
     if len({each.placeholder for each in recorded.positional}) < len(recorded.positional):
         raise ValueError(f"{command.name!r} reads a positional argument twice")
@@ -93,7 +89,7 @@ def make_command[R](command: CLICommand[R], run: Callable[[], Run[R]]) -> Discov
         positional=recorded.positional,
         description=command.description,
         options=recorded.options,
-        load_handler=lambda: partial(bind, command, run()),
+        load=lambda: partial(bind, command, load().run),
         default=command.default,
     )
 
@@ -117,7 +113,7 @@ def discover_commands() -> Sequence[DiscoveredCommand]:
     return tuple(
         make_command(
             _named_after_its_variable(prefixes[CLICommand], location, command),
-            partial(loaded_run, command),
+            partial(load_handler, command),
         )
         for location, command in discovered.plugins.items()
     )

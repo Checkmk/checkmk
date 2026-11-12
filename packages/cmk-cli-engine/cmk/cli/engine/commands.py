@@ -40,6 +40,8 @@ _ENGINE_OPTION_COLUMN: Final = HelpColumn(indent="  ", width=21)
 
 type Run[R] = Callable[[CLIContext, R], CLIExitCode]
 
+type Binder = Callable[[CLIReader], BoundCommand]
+
 
 @dataclass(frozen=True, kw_only=True)
 class DiscoveredCommand:
@@ -48,7 +50,7 @@ class DiscoveredCommand:
     positional: Sequence[Positional]
     description: Sequence[str]
     options: Sequence[Declaration]
-    load_handler: Callable[[], Callable[[CLIReader], BoundCommand]]
+    load: Callable[[], Binder]
     default: bool
 
 

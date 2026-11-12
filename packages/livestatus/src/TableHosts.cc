@@ -651,48 +651,42 @@ void TableHosts::addColumns(Table *table, const std::string &prefix,
             return core.isPnpGraphPresent(row);
         }));
 
-    // TODO CMK-23408
-    const auto add_extension = [](std::filesystem::path p,
-                                  const std::string &ext) {
-        return p.replace_extension(p.extension().string() + ext);
-    };
-    const auto try_json = [&add_extension](const std::filesystem::path &p,
-                                           const std::string &ext) {
-        const auto json = add_extension(p, ".json" + ext);
-        return std::filesystem::exists(json) ? json : add_extension(p, ext);
+    const auto json_tree_file = [](std::filesystem::path p,
+                                   const std::string &ext) {
+        return p.replace_extension(p.extension().string() + ".json" + ext);
     };
 
     table->addColumn(std::make_unique<TimeColumn<row_type>>(
         prefix + "mk_inventory_last",
         "The timestamp of the last Check_MK HW/SW Inventory for this host. 0 means that no inventory data is present",
-        offsets, [&try_json](const row_type &row, const ICore &core) {
-            return mk_inventory_last(
-                try_json(core.paths()->inventory_directory() / row.name(), ""));
+        offsets, [json_tree_file](const row_type &row, const ICore &core) {
+            return mk_inventory_last(json_tree_file(
+                core.paths()->inventory_directory() / row.name(), ""));
         }));
 
     table->addColumn(std::make_unique<BlobColumn<row_type>>(
         prefix + "mk_inventory",
         "The file content of the Check_MK HW/SW Inventory", offsets,
         BlobFileReader<row_type>{
-            [&try_json](const row_type &row, const ICore &core) {
-                return try_json(
+            [json_tree_file](const row_type &row, const ICore &core) {
+                return json_tree_file(
                     core.paths()->inventory_directory() / row.name(), "");
             }}));
     table->addColumn(std::make_unique<BlobColumn<row_type>>(
         prefix + "mk_inventory_gz",
         "The gzipped file content of the Check_MK HW/SW Inventory", offsets,
         BlobFileReader<row_type>{
-            [&try_json](const row_type &row, const ICore &core) {
-                return try_json(
+            [json_tree_file](const row_type &row, const ICore &core) {
+                return json_tree_file(
                     core.paths()->inventory_directory() / row.name(), ".gz");
             }}));
     table->addColumn(std::make_unique<BlobColumn<row_type>>(
         prefix + "structured_status",
         "The file content of the structured status of the Check_MK HW/SW Inventory",
         offsets,
-        BlobFileReader<row_type>{[&try_json](const row_type &row,
-                                             const ICore &core) {
-            return try_json(
+        BlobFileReader<row_type>{[json_tree_file](const row_type &row,
+                                                  const ICore &core) {
+            return json_tree_file(
                 core.paths()->structured_status_directory() / row.name(), "");
         }}));
     table->addColumn(std::make_unique<ListColumn<row_type>>(

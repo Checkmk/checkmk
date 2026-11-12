@@ -307,6 +307,44 @@ test('services in different units block navigation and name the units', async ()
   expect(navigation.next).not.toHaveBeenCalled()
 })
 
+test('services in different units say so without waiting for the next step', async () => {
+  matching = [
+    ['web01', 'HTTP request duration'],
+    ['web01', 'HTTP queue length']
+  ]
+  units = [
+    ['HTTP request duration', 'ms'],
+    ['HTTP queue length', '']
+  ]
+  const { navigation } = renderStep()
+
+  await typeServiceName('HTTP')
+
+  expect(await screen.findByText(/different units: no unit, ms/)).toBeInTheDocument()
+  expect(navigation.next).not.toHaveBeenCalled()
+})
+
+test('narrowing the service name to one unit clears the unit warning', async () => {
+  matching = [
+    ['web01', 'HTTP request duration'],
+    ['web01', 'HTTP queue length']
+  ]
+  units = [
+    ['HTTP request duration', 'ms'],
+    ['HTTP queue length', '']
+  ]
+  renderStep()
+  await typeServiceName('HTTP')
+  await screen.findByText(/different units/)
+
+  matching = [['web01', 'HTTP request duration']]
+  units = [['HTTP request duration', 'ms']]
+  await pickServiceName('HTTP request duration')
+
+  await waitFor(() => expect(screen.getByText('ms')).toBeInTheDocument())
+  expect(screen.queryByText(/different units/)).not.toBeInTheDocument()
+})
+
 test('each matching service shows its unit, so the user can tell the services apart', async () => {
   matching = [
     ['web01', 'HTTP request duration'],

@@ -89,7 +89,6 @@ const selectedServiceName = computed({
 const matches = ref<ServiceMatches | null>(null)
 const searching = ref(false)
 const searchError = ref<string | null>(null)
-const unitsError = ref<string | null>(null)
 // The unit of each service the latest search matched, `null` until they are fetched or when
 // fetching them failed.
 const serviceUnits = ref<ServiceUnit[] | null>(null)
@@ -180,7 +179,6 @@ watch(
     matches.value = null
     searching.value = false
     searchError.value = null
-    unitsError.value = null
     serviceUnits.value = null
     unitsRequest = null
     cancelPendingSearch()
@@ -249,22 +247,24 @@ function listedUnits(units: ServiceUnit[]): ServiceUnit[] {
   return units.filter((entry) => listed.has(entry.service_name))
 }
 
+const mixedUnits = computed<string[]>(() => {
+  const distinct = [...new Set(listedUnits(serviceUnits.value ?? []).map((entry) => entry.unit))]
+  return distinct.length > 1 ? distinct.sort() : []
+})
+
+const unitsError = computed(() =>
+  mixedUnits.value.length === 0
+    ? null
+    : _t(
+        'The selected services have different units: %{units}. You must select services with the same units to set levels on them.',
+        { units: mixedUnits.value.map(unitLabel).join(', ') }
+      )
+)
+
 async function haveOneUnit(): Promise<boolean> {
   const token = searchToken
-  unitsError.value = null
-  const units = await (unitsRequest ?? loadUnits(token))
-  if (token !== searchToken) {
-    return false
-  }
-  const distinct = [...new Set(listedUnits(units ?? []).map((entry) => entry.unit))].sort()
-  if (distinct.length <= 1) {
-    return true
-  }
-  unitsError.value = _t(
-    'The selected services have different units: %{units}. You must select services with the same units to set levels on them.',
-    { units: distinct.map(unitLabel).join(', ') }
-  )
-  return false
+  await (unitsRequest ?? loadUnits(token))
+  return token === searchToken && mixedUnits.value.length === 0
 }
 </script>
 
@@ -385,7 +385,11 @@ async function haveOneUnit(): Promise<boolean> {
           </CmkScrollContainer>
         </div>
 
-        <CmkAlert v-if="unitsError" variant="error" :text="untranslated(unitsError)" />
+        <CmkAlert
+          v-if="unitsError"
+          :variant="displayErrors ? 'error' : 'warning'"
+          :text="untranslated(unitsError)"
+        />
       </div>
     </template>
 

@@ -98,24 +98,6 @@ py_library(
 )
 
 py_library(
-    name = "transformation",
-    srcs = [
-        "cmk/inventory/transformation/__init__.py",
-        "cmk/inventory/transformation/__main__.py",
-        "cmk/inventory/transformation/tree_files.py",
-    ],
-    imports = ["."],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":package",
-        ":paths",
-        ":store",
-        "//packages/cmk-ccc:hostaddress",
-        "//packages/cmk-ccc:store",
-    ],
-)
-
-py_library(
     name = "inventory",
     imports = ["."],
     visibility = ["//visibility:public"],
@@ -126,7 +108,6 @@ py_library(
         ":package",
         ":paths",
         ":store",
-        ":transformation",
     ],
 )
 
@@ -139,7 +120,6 @@ py_doc_test(
         ":model",
         ":paths",
         ":store",
-        ":transformation",
     ],
 )
 
@@ -168,9 +148,6 @@ py_library(
 py_wheel(
     name = "wheel",
     distribution = "cmk-inventory",
-    entry_points = {"console_scripts": [
-        "cmk-transform-inventory-trees = cmk.inventory.transformation.__main__:main",
-    ]},
     strip_path_prefixes = ["packages/cmk-inventory"],
     version = "1.0.0",
     visibility = ["//visibility:public"],
@@ -183,7 +160,6 @@ py_wheel(
         ":paths",
         ":plugins",
         ":store",
-        ":transformation",
     ],
 )
 
@@ -209,7 +185,6 @@ py_requirements_test(
         ":paths",
         ":plugins",
         ":store",
-        ":transformation",
     ],
     requirements_in = "requirements.in",
 )

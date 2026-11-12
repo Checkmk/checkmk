@@ -80,22 +80,16 @@ class InventoryStore:
 
         tree_path = self.inv_paths.inventory_tree(host_name)
         save_raw_tree(tree_path, raw_tree)
-        tree_path.legacy.unlink(missing_ok=True)
 
         tree_path_gz = self.inv_paths.inventory_tree_gz(host_name)
         save_raw_tree_gz(tree_path_gz, SDMetaAndRawTree(meta=meta, raw_tree=raw_tree))
-        tree_path_gz.legacy.unlink(missing_ok=True)
 
         self.inv_paths.inventory_marker_file.touch()
 
     def remove_inventory_tree(self, *, host_name: HostName) -> None:
         tree_path = self.inv_paths.inventory_tree(host_name)
         tree_path.path.unlink(missing_ok=True)
-        tree_path.legacy.unlink(missing_ok=True)
-
-        tree_path_gz = self.inv_paths.inventory_tree_gz(host_name)
-        tree_path_gz.path.unlink(missing_ok=True)
-        tree_path_gz.legacy.unlink(missing_ok=True)
+        self.inv_paths.inventory_tree_gz(host_name).path.unlink(missing_ok=True)
 
     def load_status_data_tree(self, *, host_name: HostName) -> ImmutableTree:
         return load_tree_from_tree_path(self.inv_paths.status_data_tree(host_name))
@@ -105,14 +99,11 @@ class InventoryStore:
     ) -> None:
         tree_path = self.inv_paths.status_data_tree(host_name)
         save_raw_tree(tree_path, serialize_tree(tree))
-        tree_path.legacy.unlink(missing_ok=True)
 
         self.inv_paths.status_data_marker_file.touch()
 
     def remove_status_data_tree(self, *, host_name: HostName) -> None:
-        tree_path = self.inv_paths.status_data_tree(host_name)
-        tree_path.path.unlink(missing_ok=True)
-        tree_path.legacy.unlink(missing_ok=True)
+        self.inv_paths.status_data_tree(host_name).path.unlink(missing_ok=True)
 
     def load_merged_tree(
         self,
@@ -136,16 +127,16 @@ class InventoryStore:
             return tree
 
         try:
-            latest_archive_file_path = max(
-                self.inv_paths.archive_host(host_name).iterdir(),
-                key=parse_archive_timestamp,
+            latest_archive_tree = TreePath(
+                path=max(
+                    self.inv_paths.archive_host(host_name).iterdir(),
+                    key=parse_archive_timestamp,
+                )
             )
         except FileNotFoundError, ValueError:
             return ImmutableTree()
 
-        return load_tree_from_tree_path(
-            TreePath.from_archive_or_delta_cache_file_path(latest_archive_file_path)
-        )
+        return load_tree_from_tree_path(latest_archive_tree)
 
     def save_if_changed(
         self,
@@ -158,7 +149,7 @@ class InventoryStore:
         messages = list(actions.messages)
         if actions.do_archive:
             messages.append("Archive current inventory tree.")
-            archive_inventory_tree(self.inv_paths, host_name, debug=False)
+            archive_inventory_tree(self.inv_paths, host_name)
         if actions.do_save:
             messages.append("Save new inventory tree.")
             self.save_inventory_tree(

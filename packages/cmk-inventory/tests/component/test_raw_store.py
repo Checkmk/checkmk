@@ -28,54 +28,17 @@ from ._fixtures import (
 )
 
 
-def _host_files(tmp_path: Path, host_name: HostName, suffix: str) -> Sequence[Path]:
+def _host_files(tmp_path: Path, host_name: HostName) -> Sequence[Path]:
     return [
-        tmp_path / f"var/check_mk/inventory/{host_name}{suffix}",
-        tmp_path / f"var/check_mk/inventory/{host_name}{suffix}.gz",
-        tmp_path / f"tmp/check_mk/status_data/{host_name}{suffix}",
+        tmp_path / f"var/check_mk/inventory/{host_name}.json",
+        tmp_path / f"var/check_mk/inventory/{host_name}.json.gz",
+        tmp_path / f"tmp/check_mk/status_data/{host_name}.json",
+        *(tmp_path / f"var/check_mk/inventory_archive/{host_name}/{idx}.json" for idx in range(5)),
         *(
-            tmp_path / f"var/check_mk/inventory_archive/{host_name}/{idx}{suffix}"
-            for idx in range(5)
-        ),
-        *(
-            tmp_path / f"var/check_mk/inventory_delta_cache/{host_name}/{prev}_{prev + 1}{suffix}"
+            tmp_path / f"var/check_mk/inventory_delta_cache/{host_name}/{prev}_{prev + 1}.json"
             for prev in range(4)
         ),
     ]
-
-
-def test_rename_legacy(tmp_path: Path) -> None:
-    old_host_name = HostName("old_host_name")
-    tree = raw_tree("val")
-    gzipped = gzipped_repr(tree)
-    cmk.ccc.store.save_object_to_file(tmp_path / f"var/check_mk/inventory/{old_host_name}", tree)
-    cmk.ccc.store.save_bytes_to_file(
-        tmp_path / f"var/check_mk/inventory/{old_host_name}.gz", gzipped
-    )
-    cmk.ccc.store.save_object_to_file(tmp_path / f"tmp/check_mk/status_data/{old_host_name}", tree)
-    timestamps = list(range(5))
-    for idx in timestamps:
-        tree = raw_tree(f"val-{idx}")
-        cmk.ccc.store.save_object_to_file(
-            tmp_path / f"var/check_mk/inventory_archive/{old_host_name}/{idx}", tree
-        )
-    for prev, cur in zip(timestamps, timestamps[1:]):
-        tree = raw_tree(f"val-{prev}-{cur}")
-        cmk.ccc.store.save_object_to_file(
-            tmp_path / f"var/check_mk/inventory_delta_cache/{old_host_name}/{prev}_{cur}", tree
-        )
-
-    new_host_name = HostName("new_host_name")
-    rename(tmp_path, old_host_name=old_host_name, new_host_name=new_host_name)
-
-    old_files = _host_files(tmp_path, old_host_name, "")
-    new_files = _host_files(tmp_path, new_host_name, "")
-    assert (
-        [p.exists() for p in old_files],
-        [p.exists() for p in new_files],
-        (tmp_path / f"var/check_mk/inventory_archive/{old_host_name}").exists(),
-        (tmp_path / f"var/check_mk/inventory_delta_cache/{old_host_name}").exists(),
-    ) == ([False] * len(old_files), [True] * len(new_files), False, False)
 
 
 def test_rename(tmp_path: Path) -> None:
@@ -108,8 +71,8 @@ def test_rename(tmp_path: Path) -> None:
     new_host_name = HostName("new_host_name")
     rename(tmp_path, old_host_name=old_host_name, new_host_name=new_host_name)
 
-    old_files = _host_files(tmp_path, old_host_name, ".json")
-    new_files = _host_files(tmp_path, new_host_name, ".json")
+    old_files = _host_files(tmp_path, old_host_name)
+    new_files = _host_files(tmp_path, new_host_name)
     assert (
         [p.exists() for p in old_files],
         [p.exists() for p in new_files],
@@ -163,7 +126,7 @@ def test_rename_without_history_reports_only_the_renamed_trees(tmp_path: Path) -
 def test_raw_store_archives_the_tree_dated_by_its_remote_timestamp(tmp_path: Path) -> None:
     _save_meta_and_raw_inventory_tree(tmp_path, 123)
 
-    RawInventoryStore(tmp_path).archive_inventory_tree(host_name=HostName("hostname"), debug=False)
+    RawInventoryStore(tmp_path).archive_inventory_tree(host_name=HostName("hostname"))
 
     assert list((tmp_path / "var/check_mk/inventory_archive/hostname").iterdir()) == [
         tmp_path / "var/check_mk/inventory_archive/hostname/123.json"
@@ -173,11 +136,14 @@ def test_raw_store_archives_the_tree_dated_by_its_remote_timestamp(tmp_path: Pat
 def test_archive_inventory_tree(tmp_path: Path) -> None:
     host_name = HostName("hostname")
     tree = raw_tree("val")
-    gzipped = gzipped_repr(tree)
-    cmk.ccc.store.save_object_to_file(tmp_path / "var/check_mk/inventory/hostname", tree)
-    cmk.ccc.store.save_bytes_to_file(tmp_path / "var/check_mk/inventory/hostname.gz", gzipped)
+    cmk.ccc.store.save_text_to_file(
+        tmp_path / "var/check_mk/inventory/hostname.json", json.dumps(tree)
+    )
+    cmk.ccc.store.save_bytes_to_file(
+        tmp_path / "var/check_mk/inventory/hostname.json.gz", gzipped_json(tree)
+    )
 
-    RawInventoryStore(tmp_path).archive_inventory_tree(host_name=host_name, debug=False)
+    RawInventoryStore(tmp_path).archive_inventory_tree(host_name=host_name)
     assert (
         {
             tuple(p.suffixes)
@@ -188,7 +154,7 @@ def test_archive_inventory_tree(tmp_path: Path) -> None:
 
 
 def test_archive_inventory_tree_without_a_tree_archives_nothing(tmp_path: Path) -> None:
-    RawInventoryStore(tmp_path).archive_inventory_tree(host_name=HostName("hostname"), debug=False)
+    RawInventoryStore(tmp_path).archive_inventory_tree(host_name=HostName("hostname"))
 
     assert not (tmp_path / "var/check_mk/inventory_archive/hostname").exists()
 
@@ -198,26 +164,11 @@ def test_archive_inventory_tree_moves_the_tree_dated_by_its_mtime(tmp_path: Path
     cmk.ccc.store.save_text_to_file(tree_file_path, json.dumps(raw_tree("val")))
     os.utime(tree_file_path, (123, 123))
 
-    RawInventoryStore(tmp_path).archive_inventory_tree(host_name=HostName("hostname"), debug=False)
+    RawInventoryStore(tmp_path).archive_inventory_tree(host_name=HostName("hostname"))
 
     assert list((tmp_path / "var/check_mk/inventory_archive/hostname").iterdir()) == [
         tmp_path / "var/check_mk/inventory_archive/hostname/123.json"
     ]
-
-
-def test_archive_inventory_tree_keeps_the_table_retentions_of_a_legacy_tree(
-    tmp_path: Path,
-) -> None:
-    cmk.ccc.store.save_object_to_file(
-        tmp_path / "var/check_mk/inventory/hostname", tree_with_table_retentions()
-    )
-    RawInventoryStore(tmp_path).archive_inventory_tree(host_name=HostName("hostname"), debug=False)
-    assert (
-        InventoryStore(tmp_path)
-        .load_previous_inventory_tree(host_name=HostName("hostname"))
-        .table.retentions
-        == TABLE_RETENTIONS
-    )
 
 
 def test_save_meta_and_raw_inventory_tree_keeps_the_table_retentions_of_a_legacy_tree(

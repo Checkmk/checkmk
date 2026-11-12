@@ -120,12 +120,15 @@ def _sort_corrupted_history_files(
 class HistoryStore:
     def __init__(self, omd_root: Path) -> None:
         self.inv_paths = InventoryPaths(omd_root)
-        self._lookup: dict[tuple[Path, Path], ImmutableTree] = {}
+        self._lookup: dict[Path, ImmutableTree] = {}
 
     def _collect_paths_from_delta_cache(
         self, host_name: HostName
     ) -> Iterator[Result[HistoryDeltaPath, Path]]:
         for file_path in collect_files(self.inv_paths.delta_cache_host(host_name)):
+            if file_path.suffix != ".json":
+                yield Error(file_path)
+                continue
             try:
                 previous_timestamp, current_timestamp = parse_delta_cache_timestamps(file_path)
             except ValueError:
@@ -152,7 +155,7 @@ class HistoryStore:
             try:
                 yield OK(
                     _HistoryPath(
-                        tree_path=TreePath.from_archive_or_delta_cache_file_path(file_path),
+                        tree_path=TreePath(path=file_path),
                         timestamp=parse_archive_timestamp(file_path),
                     )
                 )
@@ -199,10 +202,9 @@ class HistoryStore:
         if path is None:
             return ImmutableTree()
 
-        key = (path.tree_path.path, path.tree_path.legacy)
-        if key not in self._lookup:
-            self._lookup[key] = load_tree_from_tree_path(path.tree_path)
-        return self._lookup[key]
+        if path.tree_path.path not in self._lookup:
+            self._lookup[path.tree_path.path] = load_tree_from_tree_path(path.tree_path)
+        return self._lookup[path.tree_path.path]
 
     def _load_history_entry(
         self, *, host_name: HostName, path: HistoryDeltaPath | HistoryArchivePath
@@ -210,11 +212,7 @@ class HistoryStore:
         match path:
             case HistoryDeltaPath():
                 try:
-                    raw = (
-                        json.loads(store.load_text_from_file(path.file_path))
-                        if path.file_path.suffix == ".json"
-                        else store.load_object_from_file(path.file_path, default=None, debug=False)
-                    )
+                    raw = json.loads(store.load_text_from_file(path.file_path))
                 except MKGeneralException:
                     return Error([path.file_path])
 
@@ -244,14 +242,7 @@ class HistoryStore:
                         self._save_history_entry(host_name=host_name, history_entry=entry)
                     return OK(entry)
 
-                return Error(
-                    [
-                        path.current.tree_path.path,
-                        path.current.tree_path.legacy,
-                        path.current.tree_path.path,
-                        path.current.tree_path.legacy,
-                    ]
-                )
+                return Error([path.current.tree_path.path])
 
     def _save_history_entry(self, *, host_name: HostName, history_entry: HistoryEntry) -> None:
         delta_cache_tree = self.inv_paths.delta_cache_tree(
@@ -271,7 +262,6 @@ class HistoryStore:
                 )
             ),
         )
-        delta_cache_tree.legacy.unlink(missing_ok=True)
 
     def _collect_paths(
         self, host_name: HostName

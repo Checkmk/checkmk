@@ -194,9 +194,8 @@ def _flush(hosts: Sequence[HostAddress], *, debug: bool) -> None:
 
         # inventory
         tree_path = InventoryPaths(cmk.utils.paths.omd_root).inventory_tree(host)
-        if tree_path.path.exists() or tree_path.legacy.exists():
+        if tree_path.path.exists():
             tree_path.path.unlink(missing_ok=True)
-            tree_path.legacy.unlink(missing_ok=True)
             write_stdout(tty.bold + tty.yellow + " inventory")
 
         if not flushed:

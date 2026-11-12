@@ -112,7 +112,7 @@ class RDSLimits(AWSSectionLimits):
             quota_name = limit["AccountQuotaName"]
             key, title = AWSRDSLimitNameMap.get(quota_name, (None, None))
             if key is None or title is None:
-                LOGGER.info(
+                LOGGER.debug(
                     "%(name)s: Unhandled account quota name: '%(quota_name)s'",
                     {"name": self.name, "quota_name": quota_name},
                 )

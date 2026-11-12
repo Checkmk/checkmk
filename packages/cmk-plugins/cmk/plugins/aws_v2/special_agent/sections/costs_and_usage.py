@@ -132,7 +132,7 @@ class ReservationUtilization(AWSSection):
             response = self._client.get_reservation_utilization(**params)  # type: ignore[attr-defined]
         # NOTE: The suppression below is needed because of BaseClientExceptions.__getattr__ magic.
         except self._client.exceptions.DataUnavailableException:  # type: ignore[misc]
-            LOGGER.warning("ReservationUtilization: No data available")
+            LOGGER.debug("ReservationUtilization: No data available")
             return []
         return self._get_response_content(response, "UtilizationsByTime")
 

@@ -212,7 +212,7 @@ class AWSConfig:
             self._write_config_hash()
             return False
 
-        LOGGER.info(
+        LOGGER.debug(
             "AWSConfig: %(hostname)s: Config is up-to-date: '%(config_hash)s'",
             {"hostname": self.hostname, "config_hash": self._current_config_hash},
         )

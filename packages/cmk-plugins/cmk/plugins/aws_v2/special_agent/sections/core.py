@@ -341,7 +341,7 @@ class AWSSection(DataCache):
         final_results = []
         for result in created_results:
             if not result.content:
-                LOGGER.info("%(name)s: Result is empty or None", {"name": self.name})
+                LOGGER.debug("%(name)s: Result is empty or None", {"name": self.name})
                 continue
 
             # In the related check plug-in aws.include we parse these results and
@@ -358,7 +358,7 @@ class AWSSection(DataCache):
         if my_cache_timestamp is None:
             return False
         if colleague_contents.cache_timestamp > my_cache_timestamp:
-            LOGGER.info("Colleague data is newer than cache file %(key)s", {"key": self._key})
+            LOGGER.debug("Colleague data is newer than cache file %(key)s", {"key": self._key})
             return False
         return True
 

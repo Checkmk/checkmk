@@ -734,7 +734,7 @@ def regions_not_enabled(
             ec2 = session.client("ec2", region_name=region, config=config)
         regions = ec2.describe_regions(AllRegions=True).get("Regions", [])
     except (botocore.exceptions.BotoCoreError, botocore.exceptions.ClientError) as e:
-        LOGGER.info("Cannot tell which regions are enabled: %(error)s", {"error": e})
+        LOGGER.warning("Cannot tell which regions are enabled: %(error)s", {"error": e})
         return frozenset()
     return not_opted_in(regions)
 
@@ -831,6 +831,7 @@ def _run_region(
         sections.init_sections(services, region, account_config, s3_limits_distributor)
         sections.run(use_cache=use_cache)
     except AwsAccessError as ae:
+        LOGGER.warning("No access: %(error)s", {"error": ae})
         # Not raised: a raising job stops the whole run, and this only loses the account.
         # A new error: the traceback and the chained botocore error of the original one
         # hold frames that hold the account's session.
@@ -839,10 +840,10 @@ def _run_region(
         if args.debug:
             raise
         return RegionRun(output.getvalue(), False, ())
-    except Exception as e:
-        LOGGER.info(e)
+    except Exception:
         if args.debug:
             raise
+        LOGGER.exception("Region run failed")
         return RegionRun(output.getvalue(), True, ())
     notes = [
         AgentInfoRow("info", account.id, f"A service control policy denies {name}", region)
@@ -885,6 +886,7 @@ def _monitored_account_ids(credentials: AwsCredentials) -> Sequence[str]:
     try:
         account_ids = credentials.monitored_account_ids()
     except AwsAccessError as ae:
+        LOGGER.warning("Cannot list the accounts to monitor: %(error)s", {"error": ae})
         _write_access_error(ae)
         write_agent_info([AgentInfoRow("error", reason=str(ae))])
         return []

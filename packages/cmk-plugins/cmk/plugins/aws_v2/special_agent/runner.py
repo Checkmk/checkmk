@@ -286,7 +286,7 @@ class AWSSections(abc.ABC):
             # In the second case we get an exception raised by botocore
             # during we execute an operation, eg. cloudwatch.get_metrics(**kwargs)-> None:
             # - botocore.exceptions.EndpointConnectionError
-            LOGGER.info(
+            LOGGER.warning(
                 "Invalid region name or client key %(client_key)s: %(error)s",
                 {"client_key": client_key, "error": e},
             )
@@ -306,19 +306,23 @@ class AWSSections(abc.ABC):
             try:
                 section_result = section.run(use_cache=use_cache)
             except AssertionError as e:
-                LOGGER.info(e)
+                LOGGER.exception("%(section)s: %(error)s", {"section": section.name, "error": e})
                 if self._debug:
                     raise
             except Exception as e:
-                LOGGER.info(
-                    "%(class_name)s: %(error)s",
-                    {"class_name": section.__class__.__name__, "error": e},
-                )
                 if self._debug:
                     raise
                 if denied_by_scp(e):
+                    LOGGER.info(
+                        "%(section)s: A service control policy denies it: %(error)s",
+                        {"section": section.name, "error": e},
+                    )
                     self.denied_by_scp.append(section.name)
                 else:
+                    LOGGER.warning(
+                        "%(section)s: Collection failed: %(error)s",
+                        {"section": section.name, "error": e},
+                    )
                     exceptions.append(e)
             else:
                 results.setdefault(
@@ -452,7 +456,7 @@ class AWSSections(abc.ABC):
 
     def _write_section_results(self, results: Results) -> None:
         if not results:
-            LOGGER.info(
+            LOGGER.debug(
                 "%(class_name)s: No results or cached data",
                 {"class_name": self.__class__.__name__},
             )
@@ -460,11 +464,11 @@ class AWSSections(abc.ABC):
 
         for (section_name, cache_timestamp, section_interval), result in results.items():
             if not result:
-                LOGGER.info("%(section_name)s: No results", {"section_name": section_name})
+                LOGGER.debug("%(section_name)s: No results", {"section_name": section_name})
                 continue
 
             if not isinstance(result, list):
-                LOGGER.info(
+                LOGGER.error(
                     "%(section_name)s: Section result must be of type 'list' containing 'AWSSectionResults'",
                     {"section_name": section_name},
                 )

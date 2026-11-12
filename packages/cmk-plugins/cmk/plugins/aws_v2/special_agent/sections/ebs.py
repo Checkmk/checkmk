@@ -94,7 +94,7 @@ class EBSLimits(AWSSectionLimits):
             elif vol_type == "st1":
                 vol_storage_st1 += vol_size
             else:
-                LOGGER.info(
+                LOGGER.debug(
                     "%(name)s: Unhandled volume type: '%(vol_type)s'",
                     {"name": self.name, "vol_type": vol_type},
                 )

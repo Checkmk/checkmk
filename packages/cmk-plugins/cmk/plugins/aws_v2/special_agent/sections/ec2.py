@@ -245,7 +245,7 @@ class EC2Limits(AWSSectionLimits):
 
             inst_az = res_inst.get("AvailabilityZone")
             if not inst_az:
-                LOGGER.info("AvailabilityZone not available")
+                LOGGER.debug("%(name)s: AvailabilityZone not available", {"name": self.name})
                 continue
             res_limits.setdefault(inst_az, {})[inst_type] = (
                 res_limits.get(inst_az, {}).get(inst_type, 0) + res_inst["InstanceCount"]

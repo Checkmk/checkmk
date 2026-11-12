@@ -9,7 +9,7 @@
 //! which sees the registry as the run left it.
 
 use super::backend::UpdateSource;
-use crate::agent_receiver_api::AgentUpdateAuthorization;
+use crate::agent_receiver_api::{AgentUpdateAuthorization, NoAgentUpdates};
 use crate::config::{Registry, UpdaterRegistration};
 use crate::modes::registration::AddedConnection;
 use crate::site_spec::SiteID;
@@ -57,8 +57,8 @@ pub fn determine_update_source(
 
 /// Log what a registration means for agent updates.
 ///
-/// A missing permission is a warning only where the registration could have
-/// become the source.
+/// A refusal is a warning only where the registration could have become the
+/// source.
 pub fn report(
     connection: &AddedConnection,
     updater_registration: &UpdaterRegistration,
@@ -67,20 +67,47 @@ pub fn report(
     let Some(site_id) = registry.retrieve_standard_connection_by_uuid(&connection.uuid) else {
         return;
     };
-    match connection.agent_update_authorization {
-        AgentUpdateAuthorization::Authorized => {}
-        AgentUpdateAuthorization::NotPermitted => {
-            let level = match updater_registration {
-                UpdaterRegistration::Manual => Level::Info,
-                UpdaterRegistration::Keep | UpdaterRegistration::Overwrite => Level::Warn,
-            };
-            log::log!(level, "{}", not_permitted_message(&site_id));
-        }
-        AgentUpdateAuthorization::Unavailable => log::info!(
+    let authorization = connection.agent_update_authorization;
+    if let Some(refusal) = refusal_message(&site_id, authorization) {
+        let level = match updater_registration {
+            UpdaterRegistration::Manual => Level::Info,
+            UpdaterRegistration::Keep | UpdaterRegistration::Overwrite => Level::Warn,
+        };
+        log::log!(level, "{refusal}");
+    } else if authorization == AgentUpdateAuthorization::Unavailable {
+        log::info!(
             "The site {} reported no decision about agent updates for this registration. \
              Connection {} does not become the update source.",
             site_id,
             connection.uuid
+        );
+    }
+}
+
+/// Why a registration yields no update source, if its site reported that.
+pub fn refusal_message(
+    site_id: &SiteID,
+    authorization: AgentUpdateAuthorization,
+) -> Option<String> {
+    match authorization.no_agent_updates() {
+        Some(reason) => Some(no_agent_updates_message(site_id, reason)),
+        None => (authorization == AgentUpdateAuthorization::NotPermitted)
+            .then(|| not_permitted_message(site_id)),
+    }
+}
+
+/// What a site that offers no agent updates means for this host, with the
+/// remedy.
+pub fn no_agent_updates_message(site_id: &SiteID, reason: NoAgentUpdates) -> String {
+    match reason {
+        NoAgentUpdates::CommunityEdition => format!(
+            "{site_id}: Agent updates are not available on Checkmk Community edition (see \
+             https://checkmk.com/pricing#feature-table for details). Please register the agent \
+             controller with --automatic-updates once you upgrade to a commercial edition."
+        ),
+        NoAgentUpdates::NotLicensed => format!(
+            "{site_id}: The license of this site does not include agent updates. Please \
+             register the agent controller with --automatic-updates once it does."
         ),
     }
 }
@@ -254,5 +281,32 @@ mod tests {
 
         assert!(message.contains("wato.download_all_agents"));
         assert!(message.contains("wato.download_agents"));
+    }
+
+    /// CMK-41723 AC4
+    #[test]
+    fn test_a_community_site_is_named_with_the_way_to_agent_updates() {
+        let message = no_agent_updates_message(
+            &SiteID::from_str("server/site").unwrap(),
+            NoAgentUpdates::CommunityEdition,
+        );
+
+        assert!(message.starts_with("server/site: "));
+        assert!(message.contains("Community edition"));
+        assert!(message.contains("https://checkmk.com/pricing#feature-table"));
+        assert!(message.contains("register the agent controller with --automatic-updates"));
+    }
+
+    /// CMK-41723 AC4
+    #[test]
+    fn test_a_site_without_the_license_is_named_with_the_way_to_agent_updates() {
+        let message = no_agent_updates_message(
+            &SiteID::from_str("server/site").unwrap(),
+            NoAgentUpdates::NotLicensed,
+        );
+
+        assert!(message.starts_with("server/site: "));
+        assert!(message.contains("license"));
+        assert!(message.contains("register the agent controller with --automatic-updates"));
     }
 }

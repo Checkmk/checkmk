@@ -2,6 +2,7 @@
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+use crate::agent_receiver_api::AgentUpdateAuthorization;
 use crate::{certs, cli, constants, setup, site_spec, types};
 use anyhow::{bail, Context, Result as AnyhowResult};
 use serde::de::DeserializeOwned;
@@ -628,6 +629,10 @@ pub struct TrustedConnectionWithRemote {
     #[serde(flatten)]
     pub trust: TrustedConnection,
     pub receiver_port: u16,
+    /// What the site reported about agent updates when it registered this
+    /// connection.
+    #[serde(default)]
+    pub agent_update_authorization: AgentUpdateAuthorization,
 }
 
 impl PartialEq for TrustedConnectionWithRemote {
@@ -892,6 +897,24 @@ mod test_trusted_connection_deserialization {
         assert_eq!(conn.trust.root_certs, vec![String::from("legacy_ca")]);
         assert_eq!(conn.receiver_port, 8000);
     }
+
+    /// CMK-41723 AC4
+    #[test]
+    fn test_connection_with_remote_keeps_the_answer_of_its_registration() {
+        let conn = TrustedConnectionWithRemote {
+            trust: TrustedConnection::from(UUID),
+            receiver_port: 8000,
+            agent_update_authorization: AgentUpdateAuthorization::CommunityEdition,
+        };
+
+        let reloaded: TrustedConnectionWithRemote =
+            serde_json::from_str(&serde_json::to_string(&conn).unwrap()).unwrap();
+
+        assert_eq!(
+            reloaded.agent_update_authorization,
+            AgentUpdateAuthorization::CommunityEdition
+        );
+    }
 }
 
 #[cfg(test)]
@@ -1012,6 +1035,7 @@ pub mod test_helpers {
             Self {
                 trust: TrustedConnection::from(u),
                 receiver_port: 8000,
+                agent_update_authorization: Default::default(),
             }
         }
     }

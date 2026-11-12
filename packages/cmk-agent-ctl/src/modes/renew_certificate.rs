@@ -334,6 +334,7 @@ mod test_renew_certificate {
         config::TrustedConnectionWithRemote {
             trust: new_trusted_connection(cert),
             receiver_port: 8000,
+            agent_update_authorization: Default::default(),
         }
     }
 

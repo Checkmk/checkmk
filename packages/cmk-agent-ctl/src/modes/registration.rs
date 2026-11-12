@@ -276,6 +276,7 @@ fn direct_registration(
                 root_certs,
             },
             receiver_port: config.receiver_port,
+            agent_update_authorization: registration_result.agent_update_authorization,
         },
     );
 
@@ -338,9 +339,6 @@ pub struct ProxyPullData {
 impl config::JSONLoader for ProxyPullData {}
 
 /// A connection that a registration added to the registry.
-///
-/// Apart from the UUID, which identifies the connection in the registry, it
-/// holds only what the registry doesn't.
 pub struct AddedConnection {
     pub uuid: uuid::Uuid,
     /// The credentials the registration used, including a password typed at the
@@ -950,6 +948,46 @@ mod tests {
             );
         }
 
+        /// CMK-41723 AC4
+        #[test]
+        fn test_register_existing_keeps_the_answer_of_the_site_in_the_registry() {
+            let registration_config = registration_connection_config(vec![], None, false);
+            let mut registry = TestRegistry::new();
+
+            direct_registration(
+                &registration_config,
+                &prepare_registration(
+                    &registration_config,
+                    &MockInteractiveTrust {
+                        expect_server_cert_prompt: true,
+                        expect_password_prompt: true,
+                    },
+                )
+                .unwrap(),
+                &mut registry.registry,
+                &MockApi {
+                    expect_root_cert: false,
+                    expected_registration_method: Some(RegistrationMethod::Existing),
+                    agent_update_authorization:
+                        agent_receiver_api::AgentUpdateAuthorization::CommunityEdition,
+                },
+                &RegistrationCallExisting {
+                    host_name: HOST_NAME,
+                },
+            )
+            .unwrap();
+
+            let (_site_id, connection) = registry
+                .registry
+                .get_standard_pull_connections()
+                .next()
+                .unwrap();
+            assert_eq!(
+                connection.agent_update_authorization,
+                agent_receiver_api::AgentUpdateAuthorization::CommunityEdition
+            );
+        }
+
         /// CMK-39588 AC1, AC6
         #[test]
         fn test_register_new_carries_the_authorization() {
@@ -1191,6 +1229,7 @@ mod tests {
                             root_certs: vec![String::from("root_cert")],
                         },
                         receiver_port: config.connection_config.receiver_port,
+                        agent_update_authorization: Default::default(),
                     },
                 );
                 Ok(AddedConnection {

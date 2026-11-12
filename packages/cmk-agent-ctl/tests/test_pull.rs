@@ -51,6 +51,7 @@ fn registry(
                 root_certs: vec![String::from_utf8(certs.ca_cert.clone()).unwrap()],
             },
             receiver_port: 1234,
+            agent_update_authorization: Default::default(),
         },
     );
     registry

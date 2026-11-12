@@ -85,6 +85,7 @@ fn migrate_standard_connection(
         config::TrustedConnectionWithRemote {
             trust: connection.into(),
             receiver_port: coordinates.port,
+            agent_update_authorization: Default::default(),
         },
     )
 }

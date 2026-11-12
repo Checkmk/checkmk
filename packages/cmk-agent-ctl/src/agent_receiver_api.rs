@@ -50,17 +50,30 @@ struct RegisterExistingBody {
 }
 
 /// Whether the registration file of a UUID permits agent updates through its
-/// connection, as the site of the registration reports it.
-#[derive(Deserialize, Clone, Copy, Debug, Default, PartialEq, Eq)]
+/// connection, as the site of the registration reports it. A site that offers
+/// no agent updates reports why.
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, Default, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum AgentUpdateAuthorization {
     Authorized,
     NotPermitted,
+    CommunityEdition,
+    NotLicensed,
     /// Also stands for a site that predates the field, and for a value that
     /// this controller doesn't know.
     #[default]
     #[serde(other)]
     Unavailable,
+}
+
+impl AgentUpdateAuthorization {
+    pub fn no_agent_updates(self) -> Option<NoAgentUpdates> {
+        match self {
+            Self::CommunityEdition => Some(NoAgentUpdates::CommunityEdition),
+            Self::NotLicensed => Some(NoAgentUpdates::NotLicensed),
+            Self::Authorized | Self::NotPermitted | Self::Unavailable => None,
+        }
+    }
 }
 
 /// Why a site offers no agent updates, as its agent receiver states it.
@@ -760,6 +773,28 @@ mod test_api {
         assert_eq!(
             authorization_of_register_existing(r#", "agent_update_authorization": "pending""#),
             AgentUpdateAuthorization::Unavailable
+        );
+    }
+
+    /// CMK-41723 AC2
+    #[test]
+    fn test_register_existing_response_reports_the_community_edition() {
+        assert_eq!(
+            authorization_of_register_existing(
+                r#", "agent_update_authorization": "community_edition""#
+            )
+            .no_agent_updates(),
+            Some(NoAgentUpdates::CommunityEdition)
+        );
+    }
+
+    /// CMK-41723 AC2
+    #[test]
+    fn test_register_existing_response_reports_a_license_without_agent_updates() {
+        assert_eq!(
+            authorization_of_register_existing(r#", "agent_update_authorization": "not_licensed""#)
+                .no_agent_updates(),
+            Some(NoAgentUpdates::NotLicensed)
         );
     }
 

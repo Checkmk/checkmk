@@ -1,0 +1,25 @@
+title: Pure Storage FlashArray: Network Interfaces
+agents: pure_storage_fa
+catalog: hw/storagehw/pure_storage
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the network interfaces of a Pure Storage.
+ Monitoring name, speed, ip, MAC, Gateway, Netmask, MTU and Subnet
+
+ The status is mapped to the following Checkmk state:
+
+ - {OK} if "enabled" as discovered and no bad speed changes
+
+ - {WARN} if "enabled" as discovered and bad speed changes
+
+ - {CRIT} if "disabled"
+
+ To make this check work you have to configure the related special agent
+ {Pure Storage FlashArray}.
+
+item:
+ Name of the interface.
+
+discovery:
+ One service per interface is created.

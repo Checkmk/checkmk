@@ -1,0 +1,23 @@
+title: Pure Storage FlashArray: Drive
+agents: pure_storage_fa
+catalog: hw/storagehw/pure_storage
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the drive of a Pure Storage.
+ Monitoring type, name, state, capacity and protocol
+
+ The status is mapped to the following Checkmk state:
+
+ - {OK} if "state" is "healthy" or as discovered
+
+ - {CRIT} if "state" is not "healthy" and not as discovered
+
+ To make this check work you have to configure the related special agent
+ {Pure Storage FlashArray}.
+
+item:
+ Name of the drive.
+
+discovery:
+ One service per drive is created.

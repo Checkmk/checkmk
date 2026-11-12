@@ -26,7 +26,7 @@ use crate::config::{
 use crate::constants;
 use crate::environment::PathResolver;
 use crate::modes::registration::AddedConnection;
-use crate::site_spec;
+use crate::site_spec::{self, SiteID};
 use crate::types::AgentHash;
 use anyhow::{anyhow, bail, Context, Error, Result as AnyhowResult};
 use log::{log, Level};
@@ -507,12 +507,47 @@ fn download_failed(target: &AgentHash, selected: &connection::UpdateConnection<'
     )
 }
 
+/// Why the updater can ask no site.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Obstacle {
+    /// An artifact of the updater failed to load. Holds the error.
+    NotOperational(String),
+
+    NoSource,
+
+    /// Holds the UUID of the update source, whose connection is no longer
+    /// registered.
+    SourceNotRegistered(uuid::Uuid),
+
+    /// The site of the update source stated in an earlier run that it serves
+    /// no agent updates.
+    NoAgentUpdates {
+        site_id: SiteID,
+        reason: NoAgentUpdates,
+    },
+}
+
+impl std::fmt::Display for Obstacle {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::NotOperational(error) => write!(f, "{error}"),
+            Self::NoSource => f.write_str("no update source is recorded"),
+            Self::SourceNotRegistered(uuid) => write!(
+                f,
+                "the connection {uuid} of the update source is no longer registered"
+            ),
+            Self::NoAgentUpdates { site_id, .. } => write!(
+                f,
+                "the site {site_id} of the update source serves no agent updates"
+            ),
+        }
+    }
+}
+
 /// What the site answered a check with. Nothing was changed to learn it.
 #[derive(Debug, PartialEq, Eq)]
 pub enum CheckOutcome {
-    /// No site was asked: the updater is not operational, not activated, or no
-    /// registered connection can reach one. The reason is logged.
-    NotPossible,
+    NotPossible(Obstacle),
 
     /// The site has no agent package for this host.
     NoPackage,
@@ -527,7 +562,10 @@ pub enum CheckOutcome {
     },
 
     /// The site of the update source stated that it serves no agent updates.
-    SourceUnavailable(NoAgentUpdates),
+    SourceUnavailable {
+        site_id: SiteID,
+        reason: NoAgentUpdates,
+    },
 }
 
 /// What a fetch did. `D` is what became of a package that the site offers:
@@ -535,9 +573,7 @@ pub enum CheckOutcome {
 /// from [`WritableUpdater::fetch_and_install`].
 #[derive(Debug, PartialEq, Eq)]
 pub enum FetchOutcome<D> {
-    /// No site was asked: the updater is not operational or no registered
-    /// connection can reach one. The reason is logged.
-    NotPossible,
+    NotPossible(Obstacle),
 
     /// The site has no agent package for this host.
     NoPackage,
@@ -549,7 +585,10 @@ pub enum FetchOutcome<D> {
     Due(D),
 
     /// The site of the update source stated that it serves no agent updates.
-    SourceUnavailable(NoAgentUpdates),
+    SourceUnavailable {
+        site_id: SiteID,
+        reason: NoAgentUpdates,
+    },
 
     /// The site no longer has the package it offered: it answered 409 to the
     /// download. The next status request names the package that replaced it.
@@ -609,12 +648,13 @@ pub enum UpdateAvailabilityStatus {
 
 /// What came of asking the update source for a status, short of an error.
 pub enum SourceAnswer<'r> {
-    /// No site was asked: the updater is not operational or no registered
-    /// connection can reach one. The reason is logged.
-    NotPossible,
+    NotPossible(Obstacle),
 
     /// The site of the update source stated that it serves no agent updates.
-    Unavailable(NoAgentUpdates),
+    Unavailable {
+        site_id: SiteID,
+        reason: NoAgentUpdates,
+    },
 
     /// The site named the agent package it has for this host.
     Answered {
@@ -719,7 +759,10 @@ impl WritableUpdater {
         let mut download = match self.start_download(api, connection, offered)? {
             PackageDownload::Started(download) => download,
             PackageDownload::Unavailable(reason) => {
-                return Ok(FetchOutcome::SourceUnavailable(reason))
+                return Ok(FetchOutcome::SourceUnavailable {
+                    site_id: connection.site_id.clone(),
+                    reason,
+                })
             }
             PackageDownload::Superseded => return Ok(FetchOutcome::Superseded),
         };
@@ -1221,8 +1264,12 @@ impl Updater {
             log::info!("Skipping the agent update: automatic agent updates are deactivated");
             return false;
         }
-        let Some(selected) = self.find_update_connection(registry) else {
-            return self.awaits_migration(registry);
+        let selected = match self.find_update_connection(registry) {
+            Ok(selected) => selected,
+            Err(obstacle) => {
+                log::info!("No agent update is possible: {obstacle}");
+                return self.awaits_migration(registry);
+            }
         };
         log::info!(
             "Using the {} connection to {}, the recorded update source: the site \
@@ -1273,9 +1320,9 @@ impl Updater {
         api: &impl agent_receiver_api::AgentUpdate,
     ) -> AnyhowResult<CheckOutcome> {
         let status = match self.ask_update_source(registry, api)? {
-            SourceAnswer::NotPossible => return Ok(CheckOutcome::NotPossible),
-            SourceAnswer::Unavailable(reason) => {
-                return Ok(CheckOutcome::SourceUnavailable(reason))
+            SourceAnswer::NotPossible(obstacle) => return Ok(CheckOutcome::NotPossible(obstacle)),
+            SourceAnswer::Unavailable { site_id, reason } => {
+                return Ok(CheckOutcome::SourceUnavailable { site_id, reason })
             }
             SourceAnswer::Answered { status, .. } => status,
         };
@@ -1310,14 +1357,18 @@ impl Updater {
         registry: &'r Registry,
         api: &impl agent_receiver_api::AgentUpdate,
     ) -> AnyhowResult<SourceAnswer<'r>> {
-        let Some(connection) = self.find_update_connection(registry) else {
-            return Ok(SourceAnswer::NotPossible);
+        let connection = match self.find_update_connection(registry) {
+            Ok(connection) => connection,
+            Err(obstacle) => return Ok(SourceAnswer::NotPossible(obstacle)),
         };
         Ok(match self.request_update_status(api, &connection)? {
             UpdateAvailabilityStatus::Available(status) => {
                 SourceAnswer::Answered { connection, status }
             }
-            UpdateAvailabilityStatus::Unavailable(reason) => SourceAnswer::Unavailable(reason),
+            UpdateAvailabilityStatus::Unavailable(reason) => SourceAnswer::Unavailable {
+                site_id: connection.site_id.clone(),
+                reason,
+            },
         })
     }
 
@@ -1345,9 +1396,16 @@ impl Updater {
         >,
     > {
         let (connection, status) = match answer {
-            SourceAnswer::NotPossible => return Ok(ControlFlow::Break(FetchOutcome::NotPossible)),
-            SourceAnswer::Unavailable(reason) => {
-                return Ok(ControlFlow::Break(FetchOutcome::SourceUnavailable(*reason)))
+            SourceAnswer::NotPossible(obstacle) => {
+                return Ok(ControlFlow::Break(FetchOutcome::NotPossible(
+                    obstacle.clone(),
+                )))
+            }
+            SourceAnswer::Unavailable { site_id, reason } => {
+                return Ok(ControlFlow::Break(FetchOutcome::SourceUnavailable {
+                    site_id: site_id.clone(),
+                    reason: *reason,
+                }))
             }
             SourceAnswer::Answered { connection, status } => (connection, status),
         };
@@ -1402,7 +1460,10 @@ impl Updater {
                 self.read_package(download, connection, offered)?
             }
             PackageDownload::Unavailable(reason) => {
-                return Ok(FetchOutcome::SourceUnavailable(reason))
+                return Ok(FetchOutcome::SourceUnavailable {
+                    site_id: connection.site_id.clone(),
+                    reason,
+                })
             }
             PackageDownload::Superseded => return Ok(FetchOutcome::Superseded),
         };
@@ -1461,40 +1522,44 @@ impl Updater {
     /// the receiver authenticates the host by the client certificate and
     /// resolves its UUID to a host name.
     ///
-    /// # Returns
+    /// # Errors
     ///
-    /// `None`, with the reason logged, when the updater is not operational, no
-    /// update source is recorded, its site serves no agent updates, or its
-    /// connection is no longer registered. Whether automatic updates are
-    /// activated is none of its business - that governs the automatic cycle,
-    /// not what an operator may ask for by hand.
+    /// The [`Obstacle`] that keeps the updater from asking a site. Whether
+    /// automatic updates are activated is none of its business - that governs
+    /// the automatic cycle, not what an operator may ask for by hand.
     fn find_update_connection<'a>(
         &self,
         registry: &'a Registry,
-    ) -> Option<connection::UpdateConnection<'a>> {
+    ) -> Result<connection::UpdateConnection<'a>, Obstacle> {
         if !self.is_operational() {
-            log::info!("No agent update is possible: the updater is not operational");
-            return None;
+            return Err(Obstacle::NotOperational(self.not_operational_reason()));
         }
-
         let Some(source) = &self.state.source else {
-            log::info!("No agent update is possible: no update source is recorded");
-            return None;
+            return Err(Obstacle::NoSource);
         };
-
-        if source.no_agent_updates.is_some() {
-            log::info!("No agent update is possible: the site of the update source serves no agent updates");
-            return None;
-        }
-
         let Some(selected) = connection::select(registry, source.uuid) else {
-            log::info!(
-"No agent update is possible: the connection {} of the update source is not registered",
-    source.uuid
-            );
-            return None;
+            return Err(Obstacle::SourceNotRegistered(source.uuid));
         };
-        Some(selected)
+        match source.no_agent_updates {
+            Some(reason) => Err(Obstacle::NoAgentUpdates {
+                site_id: selected.site_id.clone(),
+                reason,
+            }),
+            None => Ok(selected),
+        }
+    }
+
+    fn not_operational_reason(&self) -> String {
+        if let Some(error) = &self.load_error {
+            return format!("{error:#}");
+        }
+        match &self.config {
+            ConfigLoadOutcome::Broken(error) => format!("{error:#}"),
+            ConfigLoadOutcome::Absent => String::from("agent updates are not configured"),
+            ConfigLoadOutcome::Loaded(_) => {
+                String::from("the info of the installed agent is missing")
+            }
+        }
     }
 
     /// Ask the site behind `selected` which agent package it has for this host.
@@ -3623,7 +3688,10 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
 
         let outcome = updater_after(None).check(&registry.registry, &api).unwrap();
 
-        assert_eq!(outcome, CheckOutcome::NotPossible);
+        assert_eq!(
+            outcome,
+            CheckOutcome::NotPossible(Obstacle::SourceNotRegistered(some_source().uuid))
+        );
         assert!(api.request.borrow().is_none());
     }
 
@@ -3637,7 +3705,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             .check(&registry.registry, &api)
             .unwrap();
 
-        assert_eq!(outcome, CheckOutcome::NotPossible);
+        assert_eq!(outcome, CheckOutcome::NotPossible(Obstacle::NoSource));
         assert!(api.request.borrow().is_none());
     }
 
@@ -3659,7 +3727,13 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
 
         let outcome = updater.check(&registry.registry, &api).unwrap();
 
-        assert_eq!(outcome, CheckOutcome::NotPossible);
+        assert_eq!(
+            outcome,
+            CheckOutcome::NotPossible(Obstacle::NoAgentUpdates {
+                site_id: SOURCE_SITE.parse().unwrap(),
+                reason: NoAgentUpdates::CommunityEdition,
+            })
+        );
         assert!(api.request.borrow().is_none());
     }
 
@@ -3674,7 +3748,10 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             .check(&registry.registry, &api)
             .unwrap();
 
-        assert_eq!(outcome, CheckOutcome::NotPossible);
+        assert_eq!(
+            outcome,
+            CheckOutcome::NotPossible(Obstacle::SourceNotRegistered(some_source().uuid))
+        );
         assert!(api.request.borrow().is_none());
     }
 
@@ -3692,7 +3769,10 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
 
         assert_eq!(
             outcome,
-            CheckOutcome::SourceUnavailable(NoAgentUpdates::CommunityEdition)
+            CheckOutcome::SourceUnavailable {
+                site_id: SOURCE_SITE.parse().unwrap(),
+                reason: NoAgentUpdates::CommunityEdition,
+            }
         );
     }
 
@@ -3727,7 +3807,10 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             .check(&registry.registry, &TestApi::new(Some(TARGET_HASH)))
             .unwrap();
 
-        assert_eq!(outcome, CheckOutcome::NotPossible);
+        assert!(matches!(
+            outcome,
+            CheckOutcome::NotPossible(Obstacle::NotOperational(_))
+        ));
     }
 
     #[test]
@@ -3739,7 +3822,10 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             .check(&registry.registry, &api)
             .unwrap();
 
-        assert_eq!(outcome, CheckOutcome::NotPossible);
+        assert!(matches!(
+            outcome,
+            CheckOutcome::NotPossible(Obstacle::NotOperational(_))
+        ));
         assert!(api.request.borrow().is_none());
     }
 
@@ -4174,7 +4260,10 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             )
             .unwrap();
 
-        assert_eq!(outcome, FetchOutcome::NotPossible);
+        assert!(matches!(
+            outcome,
+            FetchOutcome::NotPossible(Obstacle::NotOperational(_))
+        ));
     }
 
     /// `check` and the update cycle both ask through `ask_update_source`.
@@ -4187,7 +4276,10 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
             .ask_update_source(&registry.registry, &api)
             .unwrap();
 
-        assert!(matches!(answer, SourceAnswer::NotPossible));
+        assert!(matches!(
+            answer,
+            SourceAnswer::NotPossible(Obstacle::NotOperational(_))
+        ));
         assert!(api.request.borrow().is_none());
     }
 
@@ -4348,7 +4440,10 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
 
         assert_eq!(
             outcome,
-            FetchOutcome::SourceUnavailable(NoAgentUpdates::CommunityEdition)
+            FetchOutcome::SourceUnavailable {
+                site_id: SOURCE_SITE.parse().unwrap(),
+                reason: NoAgentUpdates::CommunityEdition,
+            }
         );
     }
 
@@ -4369,7 +4464,10 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
 
         assert_eq!(
             outcome,
-            FetchOutcome::SourceUnavailable(NoAgentUpdates::CommunityEdition)
+            FetchOutcome::SourceUnavailable {
+                site_id: SOURCE_SITE.parse().unwrap(),
+                reason: NoAgentUpdates::CommunityEdition,
+            }
         );
     }
 

@@ -112,7 +112,7 @@ pub fn no_agent_updates_message(site_id: &SiteID, reason: NoAgentUpdates) -> Str
     }
 }
 
-fn not_permitted_message(site_id: &SiteID) -> String {
+pub fn not_permitted_message(site_id: &SiteID) -> String {
     format!(
         "The registration at {site_id} permits no agent updates. The registering user needs \
          the permission \"Enable agent updates on all hosts & download all monitoring agents\" \

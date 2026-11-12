@@ -44,12 +44,13 @@ use anyhow::Result as AnyhowResult;
 #[cfg(unix)]
 pub use backend::Installation;
 pub use backend::{
-    AgentInfo, CheckOutcome, FetchOutcome, SignatureCheck, SourceAnswer, Spooled, UpdateSource,
-    UpdateState, Updater, UpdaterConfig, WritableUpdater,
+    AgentInfo, CheckOutcome, FetchOutcome, Obstacle, SignatureCheck, SourceAnswer, Spooled,
+    UpdateSource, UpdateState, Updater, UpdaterConfig, WritableUpdater,
 };
 pub use install::{InstallRequest, InstallResult, InstallVerdict, TrustAnchors};
 pub use legacy_registration::LegacyRegistration;
 pub use python_updater::PythonUpdater;
+pub use source::{no_agent_updates_message, not_permitted_message, refusal_message};
 
 /// The steps after a run that changed the registered connections, one per
 /// agent updater:

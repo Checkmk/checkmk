@@ -5,14 +5,16 @@
 //! The update cycle of this host, run once by the `update` mode and at the
 //! configured interval by the update thread of the daemon.
 
-use crate::agent_receiver_api::NoAgentUpdates;
-use crate::configuration::config::{ClientConfig, Registry};
+use crate::agent_receiver_api::{AgentUpdateAuthorization, NoAgentUpdates};
+use crate::configuration::config::{ClientConfig, Registry, TrustedConnectionWithRemote};
 use crate::constants::CMK_UPDATE_AGENT_CMD;
 use crate::environment::{PathResolver, SetupMode};
+use crate::site_spec::SiteID;
 #[cfg(unix)]
 use crate::updater::Installation;
 use crate::updater::{
-    CheckOutcome, FetchOutcome, PythonUpdater, SignatureCheck, Spooled, Updater, WritableUpdater,
+    no_agent_updates_message, refusal_message, CheckOutcome, FetchOutcome, Obstacle, PythonUpdater,
+    SignatureCheck, Spooled, Updater, WritableUpdater,
 };
 use crate::{agent_receiver_api, misc, setup};
 #[cfg(unix)]
@@ -38,13 +40,16 @@ pub fn check(
     setup_mode: SetupMode,
 ) -> AnyhowResult<()> {
     if !updater.is_configured()? {
-        println!("{}", report_unconfigured(python_updater, setup_mode));
+        println!(
+            "{}",
+            report_unconfigured(python_updater, setup_mode, registry)
+        );
         return Ok(());
     }
     let api = agent_receiver_api::Api {
         use_proxy: client_config.use_proxy,
     };
-    println!("{}", report(updater.check(registry, &api)?));
+    println!("{}", report(updater.check(registry, &api)?, registry));
     Ok(())
 }
 
@@ -101,7 +106,10 @@ fn update_through(
     setup_mode: SetupMode,
 ) -> AnyhowResult<()> {
     if !updater.is_configured()? {
-        println!("{}", report_unconfigured(python_updater, setup_mode));
+        println!(
+            "{}",
+            report_unconfigured(python_updater, setup_mode, registry)
+        );
         return Ok(());
     }
 
@@ -140,12 +148,12 @@ fn run_cycle(
     #[cfg(windows)]
     let fetched = updater.fetch_update(answer, api, signature)?;
 
-    println!("{}", report_fetch(&fetched));
+    println!("{}", report_fetch(&fetched, registry));
 
     match &fetched {
-        FetchOutcome::NotPossible | FetchOutcome::Superseded => {}
+        FetchOutcome::NotPossible(_) | FetchOutcome::Superseded => {}
         FetchOutcome::UpToDate(_) | FetchOutcome::NoPackage => updater.clear_last_error()?,
-        FetchOutcome::SourceUnavailable(reason) => match reason {
+        FetchOutcome::SourceUnavailable { reason, .. } => match reason {
             NoAgentUpdates::CommunityEdition => updater.record_source_unavailable(*reason)?,
             // A license can come back while nobody touches the host.
             NoAgentUpdates::NotLicensed => {}
@@ -186,9 +194,13 @@ fn run_cycle(
 /// The bakery ships the Python updater only under a rule that enables agent
 /// updates, so a package with it and without an update configuration is
 /// updated by the Python updater.
-fn report_unconfigured(python_updater: Option<&PythonUpdater>, setup_mode: SetupMode) -> String {
+fn report_unconfigured(
+    python_updater: Option<&PythonUpdater>,
+    setup_mode: SetupMode,
+    registry: &Registry,
+) -> String {
     if python_updater.is_none() {
-        return String::from("Agent updates are not configured for this host");
+        return report_without_updater(registry);
     }
     let command = if cfg!(windows) {
         format!("{CMK_UPDATE_AGENT_CMD} updater")
@@ -211,23 +223,110 @@ fn report_unconfigured(python_updater: Option<&PythonUpdater>, setup_mode: Setup
     report
 }
 
-/// The outcome of a check in the one line the mode prints.
+const BAKERY_HINT: &str = "Agent updates need an agent package from the Agent Bakery, baked with \
+    the rule \"Agent updater (Linux, Windows, Solaris)\". The Agent Bakery is part of the \
+    commercial editions (see https://checkmk.com/pricing#feature-table).";
+
+/// A plain registration sets no update source under the Registration option
+/// "manual", which is the default.
+const REGISTER_HINT: &str =
+    "Register the agent controller with --automatic-updates to set an update source.";
+
+/// The connections that can reach a site. The registry holds them in hash
+/// maps, so they are sorted by site for a stable output.
+fn standard_connections(registry: &Registry) -> Vec<(&SiteID, &TrustedConnectionWithRemote)> {
+    let mut connections: Vec<_> = registry
+        .get_push_connections()
+        .chain(registry.get_standard_pull_connections())
+        .collect();
+    connections.sort_by_key(|(site_id, _)| *site_id);
+    connections
+}
+
+/// What a host whose package ships no updater is told.
+fn report_without_updater(registry: &Registry) -> String {
+    report_with_refusals(
+        "Agent updates are not configured for this host.",
+        BAKERY_HINT,
+        registry,
+        |site_id, authorization| {
+            Some(no_agent_updates_message(
+                site_id,
+                authorization.no_agent_updates()?,
+            ))
+        },
+    )
+}
+
+/// `first_line`, the refusals of the registered sites, and `hint`.
 ///
-/// The reason behind [`CheckOutcome::NotPossible`] is logged rather than
-/// printed: it names the artifacts of the updater, which is more than the
-/// question asked here deserves.
-fn report(outcome: CheckOutcome) -> String {
-    match outcome {
-        CheckOutcome::NotPossible => String::from(
-            "No agent update check is possible for this host, run with -v for the reason",
+/// The hint helps only where a site may serve agent updates, so it is left
+/// out when every registered site refused.
+fn report_with_refusals(
+    first_line: &str,
+    hint: &str,
+    registry: &Registry,
+    refusal: impl Fn(&SiteID, AgentUpdateAuthorization) -> Option<String>,
+) -> String {
+    let connections = standard_connections(registry);
+    let refusals: Vec<String> = connections
+        .iter()
+        .filter_map(|(site_id, connection)| refusal(site_id, connection.agent_update_authorization))
+        .collect();
+    let every_site_refused = !connections.is_empty() && refusals.len() == connections.len();
+
+    let mut lines = vec![String::from(first_line)];
+    lines.extend(refusals);
+    if !every_site_refused {
+        lines.push(String::from(hint));
+    }
+    lines.join("\n")
+}
+
+/// Why no site was asked, with the remedy where the controller knows one.
+fn report_obstacle(obstacle: &Obstacle, registry: &Registry) -> String {
+    match obstacle {
+        Obstacle::NotOperational(_) => {
+            format!("No agent update is possible for this host: {obstacle}")
+        }
+        Obstacle::NoSource => report_with_refusals(
+            &format!("No agent update is possible for this host: {obstacle}."),
+            REGISTER_HINT,
+            registry,
+            refusal_message,
         ),
+        Obstacle::SourceNotRegistered(_) => {
+            format!("No agent update is possible for this host: {obstacle}. {REGISTER_HINT}")
+        }
+        Obstacle::NoAgentUpdates { site_id, reason } => no_agent_updates_message(site_id, *reason),
+    }
+}
+
+/// What the site of the update source answered to this run.
+///
+/// A site without the license keeps the authorization of the source, so its
+/// line asks for no registration.
+fn report_source_unavailable(site_id: &SiteID, reason: NoAgentUpdates) -> String {
+    match reason {
+        NoAgentUpdates::CommunityEdition => no_agent_updates_message(site_id, reason),
+        NoAgentUpdates::NotLicensed => format!(
+            "{site_id}: The license of this site does not include agent updates. This host \
+             gets agent updates again once the license includes them."
+        ),
+    }
+}
+
+/// The outcome of a check in the lines the mode prints.
+fn report(outcome: CheckOutcome, registry: &Registry) -> String {
+    match outcome {
+        CheckOutcome::NotPossible(obstacle) => report_obstacle(&obstacle, registry),
         CheckOutcome::NoPackage => String::from("No agent package available for this host"),
         CheckOutcome::UpToDate(hash) => format!("Agent is up to date: {hash}"),
         CheckOutcome::UpdateAvailable { target, installed } => {
             format!("Agent update available: {target} (installed: {installed})")
         }
-        CheckOutcome::SourceUnavailable(_) => {
-            String::from("The site of the update source serves no agent updates")
+        CheckOutcome::SourceUnavailable { site_id, reason } => {
+            report_source_unavailable(&site_id, reason)
         }
     }
 }
@@ -236,15 +335,13 @@ fn report(outcome: CheckOutcome) -> String {
 ///
 /// The two outcomes that end without a package read as they do in [`report`]:
 /// the same situation must not be worded by whether `--check-only` was passed.
-fn report_fetch(outcome: &FetchOutcome<impl Report>) -> String {
+fn report_fetch(outcome: &FetchOutcome<impl Report>, registry: &Registry) -> String {
     match outcome {
-        FetchOutcome::NotPossible => {
-            String::from("No agent update is possible for this host, run with -v for the reason")
-        }
+        FetchOutcome::NotPossible(obstacle) => report_obstacle(obstacle, registry),
         FetchOutcome::NoPackage => String::from("No agent package available for this host"),
         FetchOutcome::UpToDate(hash) => format!("Agent is up to date: {hash}"),
-        FetchOutcome::SourceUnavailable(_) => {
-            String::from("The site of the update source serves no agent updates")
+        FetchOutcome::SourceUnavailable { site_id, reason } => {
+            report_source_unavailable(site_id, *reason)
         }
         FetchOutcome::Superseded => String::from(
             "The site replaced the offered agent package, the next update gets the new one",
@@ -416,6 +513,9 @@ fn installation_outcome(installation: &Installation) -> AnyhowResult<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::test_helpers::TestRegistry;
+    use crate::config::ConnectionMode;
+    use crate::updater::not_permitted_message;
     #[cfg(unix)]
     use crate::updater::InstallResult;
 
@@ -479,10 +579,13 @@ mod tests {
     #[test]
     fn test_report_an_available_update() {
         assert_eq!(
-            report(CheckOutcome::UpdateAvailable {
-                target: TARGET_HASH.parse().unwrap(),
-                installed: INSTALLED_HASH.parse().unwrap(),
-            }),
+            report(
+                CheckOutcome::UpdateAvailable {
+                    target: TARGET_HASH.parse().unwrap(),
+                    installed: INSTALLED_HASH.parse().unwrap(),
+                },
+                &TestRegistry::new().registry
+            ),
             "Agent update available: fedcba9876543210 (installed: 0123456789abcdef)"
         );
     }
@@ -490,7 +593,10 @@ mod tests {
     #[test]
     fn test_report_an_agent_that_is_up_to_date() {
         assert_eq!(
-            report(CheckOutcome::UpToDate(INSTALLED_HASH.parse().unwrap())),
+            report(
+                CheckOutcome::UpToDate(INSTALLED_HASH.parse().unwrap()),
+                &TestRegistry::new().registry
+            ),
             "Agent is up to date: 0123456789abcdef"
         );
     }
@@ -498,16 +604,8 @@ mod tests {
     #[test]
     fn test_report_a_site_without_a_package() {
         assert_eq!(
-            report(CheckOutcome::NoPackage),
+            report(CheckOutcome::NoPackage, &TestRegistry::new().registry),
             "No agent package available for this host"
-        );
-    }
-
-    #[test]
-    fn test_report_a_check_that_could_not_be_made() {
-        assert_eq!(
-            report(CheckOutcome::NotPossible),
-            "No agent update check is possible for this host, run with -v for the reason"
         );
     }
 
@@ -518,7 +616,8 @@ mod tests {
         assert_eq!(
             report_unconfigured(
                 Some(&PythonUpdater::at("cmk-update-agent")),
-                SetupMode::SingleDir
+                SetupMode::SingleDir,
+                &TestRegistry::new().registry
             ),
             "Agent updates of this host are handled by the legacy updater\n\
              (cmk-update-agent), not by the Agent Controller."
@@ -532,7 +631,8 @@ mod tests {
         assert_eq!(
             report_unconfigured(
                 Some(&PythonUpdater::at("cmk-update-agent")),
-                SetupMode::Classic
+                SetupMode::Classic,
+                &TestRegistry::new().registry
             ),
             "Agent updates of this host are handled by the legacy updater\n\
              (cmk-update-agent), not by the Agent Controller.\n\
@@ -551,7 +651,8 @@ mod tests {
         assert_eq!(
             report_unconfigured(
                 Some(&PythonUpdater::at("check_mk_agent.exe")),
-                SetupMode::Classic
+                SetupMode::Classic,
+                &TestRegistry::new().registry
             ),
             "Agent updates of this host are handled by the legacy updater\n\
              (check_mk_agent.exe updater), not by the Agent Controller."
@@ -561,11 +662,14 @@ mod tests {
     #[test]
     fn test_report_a_spooled_package() {
         assert_eq!(
-            report_fetch(&FetchOutcome::Due(Spooled {
-                hash: TARGET_HASH.parse().unwrap(),
-                path: std::path::PathBuf::from("/spool/fedcba9876543210.deb"),
-                signature: SignatureCheck::Required,
-            })),
+            report_fetch(
+                &FetchOutcome::Due(Spooled {
+                    hash: TARGET_HASH.parse().unwrap(),
+                    path: std::path::PathBuf::from("/spool/fedcba9876543210.deb"),
+                    signature: SignatureCheck::Required,
+                }),
+                &TestRegistry::new().registry
+            ),
             "Verified agent package fedcba9876543210 is ready at \
              /spool/fedcba9876543210.deb"
         );
@@ -576,11 +680,14 @@ mod tests {
     #[test]
     fn test_report_a_spooled_package_nobody_vouched_for() {
         assert_eq!(
-            report_fetch(&FetchOutcome::Due(Spooled {
-                hash: TARGET_HASH.parse().unwrap(),
-                path: std::path::PathBuf::from("/spool/fedcba9876543210.deb"),
-                signature: SignatureCheck::Skip,
-            })),
+            report_fetch(
+                &FetchOutcome::Due(Spooled {
+                    hash: TARGET_HASH.parse().unwrap(),
+                    path: std::path::PathBuf::from("/spool/fedcba9876543210.deb"),
+                    signature: SignatureCheck::Skip,
+                }),
+                &TestRegistry::new().registry
+            ),
             "UNVERIFIED agent package fedcba9876543210 is ready at \
              /spool/fedcba9876543210.deb"
         );
@@ -600,10 +707,13 @@ mod tests {
     #[test]
     fn test_report_an_installed_package() {
         assert_eq!(
-            report_fetch(&FetchOutcome::Due(Installation::Installed {
-                hash: TARGET_HASH.parse().unwrap(),
-                result: Some(a_result(true)),
-            })),
+            report_fetch(
+                &FetchOutcome::Due(Installation::Installed {
+                    hash: TARGET_HASH.parse().unwrap(),
+                    result: Some(a_result(true)),
+                }),
+                &TestRegistry::new().registry
+            ),
             "Agent package fedcba9876543210 is installed"
         );
     }
@@ -613,10 +723,13 @@ mod tests {
     #[test]
     fn test_report_a_package_that_failed_to_install() {
         assert_eq!(
-            report_fetch(&FetchOutcome::Due(Installation::Installed {
-                hash: TARGET_HASH.parse().unwrap(),
-                result: Some(a_result(false)),
-            })),
+            report_fetch(
+                &FetchOutcome::Due(Installation::Installed {
+                    hash: TARGET_HASH.parse().unwrap(),
+                    result: Some(a_result(false)),
+                }),
+                &TestRegistry::new().registry
+            ),
             "The installer could not install agent package fedcba9876543210"
         );
     }
@@ -626,10 +739,13 @@ mod tests {
     #[test]
     fn test_report_an_installation_without_a_result() {
         assert_eq!(
-            report_fetch(&FetchOutcome::Due(Installation::Installed {
-                hash: TARGET_HASH.parse().unwrap(),
-                result: None,
-            })),
+            report_fetch(
+                &FetchOutcome::Due(Installation::Installed {
+                    hash: TARGET_HASH.parse().unwrap(),
+                    result: None,
+                }),
+                &TestRegistry::new().registry
+            ),
             "The installer sent no result for agent package fedcba9876543210, run with \
              --check-only to see whether the agent moved"
         );
@@ -639,9 +755,10 @@ mod tests {
     #[test]
     fn test_report_a_package_nobody_could_install() {
         assert_eq!(
-            report_fetch(&FetchOutcome::Due(Installation::NoInstaller(
-                TARGET_HASH.parse().unwrap()
-            ))),
+            report_fetch(
+                &FetchOutcome::Due(Installation::NoInstaller(TARGET_HASH.parse().unwrap())),
+                &TestRegistry::new().registry
+            ),
             "No installer socket is configured, agent package fedcba9876543210 is not \
              downloaded"
         );
@@ -675,7 +792,10 @@ mod tests {
     #[test]
     fn test_report_a_fetch_from_a_site_without_a_package() {
         assert_eq!(
-            report_fetch(&FetchOutcome::<Spooled>::NoPackage),
+            report_fetch(
+                &FetchOutcome::<Spooled>::NoPackage,
+                &TestRegistry::new().registry
+            ),
             "No agent package available for this host"
         );
     }
@@ -683,19 +803,252 @@ mod tests {
     #[test]
     fn test_report_a_fetch_of_an_agent_that_is_up_to_date() {
         assert_eq!(
-            report_fetch(&FetchOutcome::<Spooled>::UpToDate(
-                INSTALLED_HASH.parse().unwrap()
-            )),
+            report_fetch(
+                &FetchOutcome::<Spooled>::UpToDate(INSTALLED_HASH.parse().unwrap()),
+                &TestRegistry::new().registry
+            ),
             "Agent is up to date: 0123456789abcdef"
         );
     }
 
+    /// A registry with a connection to each site, whose registration got the
+    /// given answer about agent updates.
+    fn registry_with(answers: &[(&str, AgentUpdateAuthorization)]) -> TestRegistry {
+        let mut registry = TestRegistry::new();
+        for (site, answer) in answers {
+            registry.registry.register_connection(
+                &ConnectionMode::Pull,
+                &site.parse().unwrap(),
+                TrustedConnectionWithRemote {
+                    agent_update_authorization: *answer,
+                    ..TrustedConnectionWithRemote::from(uuid::Uuid::new_v4())
+                },
+            );
+        }
+        registry
+    }
+
+    fn community_line(site: &str) -> String {
+        no_agent_updates_message(&site.parse().unwrap(), NoAgentUpdates::CommunityEdition)
+    }
+
+    /// CMK-41723 AC4
     #[test]
-    fn test_report_a_fetch_that_could_not_be_made() {
+    fn test_without_configuration_a_community_site_is_named() {
+        let registry =
+            registry_with(&[("server/site", AgentUpdateAuthorization::CommunityEdition)]);
+
         assert_eq!(
-            report_fetch(&FetchOutcome::<Spooled>::NotPossible),
-            "No agent update is possible for this host, run with -v for the reason"
+            report_without_updater(&registry.registry),
+            format!(
+                "Agent updates are not configured for this host.\n{}",
+                community_line("server/site")
+            )
         );
+    }
+
+    /// CMK-41723 AC5
+    #[test]
+    fn test_without_configuration_the_bakery_is_named() {
+        let registry = registry_with(&[("server/site", AgentUpdateAuthorization::Unavailable)]);
+
+        assert_eq!(
+            report_without_updater(&registry.registry),
+            format!("Agent updates are not configured for this host.\n{BAKERY_HINT}")
+        );
+    }
+
+    /// CMK-41723 AC5
+    #[test]
+    fn test_without_configuration_an_unregistered_host_gets_the_bakery_named() {
+        assert_eq!(
+            report_without_updater(&TestRegistry::new().registry),
+            format!("Agent updates are not configured for this host.\n{BAKERY_HINT}")
+        );
+    }
+
+    /// CMK-41723 AC4, AC5
+    #[test]
+    fn test_without_configuration_one_site_with_agent_updates_keeps_the_bakery_named() {
+        let registry = registry_with(&[
+            (
+                "server/community",
+                AgentUpdateAuthorization::CommunityEdition,
+            ),
+            ("server/pro", AgentUpdateAuthorization::Authorized),
+        ]);
+
+        assert_eq!(
+            report_without_updater(&registry.registry),
+            format!(
+                "Agent updates are not configured for this host.\n{}\n{BAKERY_HINT}",
+                community_line("server/community")
+            )
+        );
+    }
+
+    /// CMK-41723 AC6
+    #[test]
+    fn test_report_an_updater_that_is_not_operational() {
+        assert_eq!(
+            report(
+                CheckOutcome::NotPossible(Obstacle::NotOperational(String::from(
+                    "Failed to load the agent info"
+                ))),
+                &TestRegistry::new().registry
+            ),
+            "No agent update is possible for this host: Failed to load the agent info"
+        );
+    }
+
+    /// CMK-41723 AC6
+    #[test]
+    fn test_report_a_host_without_an_update_source() {
+        let registry = registry_with(&[("server/site", AgentUpdateAuthorization::Unavailable)]);
+
+        assert_eq!(
+            report(
+                CheckOutcome::NotPossible(Obstacle::NoSource),
+                &registry.registry
+            ),
+            format!(
+                "No agent update is possible for this host: no update source is recorded.\n\
+                 {REGISTER_HINT}"
+            )
+        );
+    }
+
+    /// CMK-41723 AC6: a site that offers no agent updates must not hide that
+    /// the other site may serve them.
+    #[test]
+    fn test_report_a_host_without_an_update_source_whose_other_site_may_serve_updates() {
+        let registry = registry_with(&[
+            (
+                "server/community",
+                AgentUpdateAuthorization::CommunityEdition,
+            ),
+            ("server/pro", AgentUpdateAuthorization::Authorized),
+        ]);
+
+        assert_eq!(
+            report(
+                CheckOutcome::NotPossible(Obstacle::NoSource),
+                &registry.registry
+            ),
+            format!(
+                "No agent update is possible for this host: no update source is recorded.\n\
+                 {}\n{REGISTER_HINT}",
+                community_line("server/community")
+            )
+        );
+    }
+
+    /// CMK-41723 AC6
+    #[test]
+    fn test_report_a_host_whose_registration_permits_no_agent_updates() {
+        let registry = registry_with(&[("server/site", AgentUpdateAuthorization::NotPermitted)]);
+
+        assert_eq!(
+            report(
+                CheckOutcome::NotPossible(Obstacle::NoSource),
+                &registry.registry
+            ),
+            format!(
+                "No agent update is possible for this host: no update source is recorded.\n{}",
+                not_permitted_message(&"server/site".parse().unwrap())
+            )
+        );
+    }
+
+    /// CMK-41723 AC4
+    #[test]
+    fn test_report_a_host_without_an_update_source_at_a_community_site() {
+        let registry =
+            registry_with(&[("server/site", AgentUpdateAuthorization::CommunityEdition)]);
+
+        assert_eq!(
+            report(
+                CheckOutcome::NotPossible(Obstacle::NoSource),
+                &registry.registry
+            ),
+            format!(
+                "No agent update is possible for this host: no update source is recorded.\n{}",
+                community_line("server/site")
+            )
+        );
+    }
+
+    /// CMK-41723 AC6
+    #[test]
+    fn test_report_an_update_source_whose_connection_is_gone() {
+        assert_eq!(
+            report(
+                CheckOutcome::NotPossible(Obstacle::SourceNotRegistered(
+                    "8f0e3a1c-5b2d-4e6f-9a7b-0c1d2e3f4a5b".parse().unwrap()
+                )),
+                &TestRegistry::new().registry
+            ),
+            format!(
+                "No agent update is possible for this host: the connection \
+                 8f0e3a1c-5b2d-4e6f-9a7b-0c1d2e3f4a5b of the update source is no longer \
+                 registered. {REGISTER_HINT}"
+            )
+        );
+    }
+
+    /// CMK-41723 AC4: the run that gets the statement of the site and the later
+    /// runs print the same line.
+    #[test]
+    fn test_report_a_site_without_agent_updates_alike_in_every_run() {
+        let site_id: SiteID = "server/site".parse().unwrap();
+        let registry = TestRegistry::new();
+
+        let first_run = report_fetch(
+            &FetchOutcome::<Spooled>::SourceUnavailable {
+                site_id: site_id.clone(),
+                reason: NoAgentUpdates::CommunityEdition,
+            },
+            &registry.registry,
+        );
+        let later_run = report_fetch(
+            &FetchOutcome::<Spooled>::NotPossible(Obstacle::NoAgentUpdates {
+                site_id,
+                reason: NoAgentUpdates::CommunityEdition,
+            }),
+            &registry.registry,
+        );
+
+        assert_eq!(first_run, community_line("server/site"));
+        assert_eq!(later_run, first_run);
+    }
+
+    /// CMK-41723 AC4
+    #[test]
+    fn test_report_an_update_source_whose_site_has_no_license() {
+        let site_id: SiteID = "server/site".parse().unwrap();
+        let registry = TestRegistry::new();
+
+        let checked = report(
+            CheckOutcome::SourceUnavailable {
+                site_id: site_id.clone(),
+                reason: NoAgentUpdates::NotLicensed,
+            },
+            &registry.registry,
+        );
+        let fetched = report_fetch(
+            &FetchOutcome::<Spooled>::SourceUnavailable {
+                site_id,
+                reason: NoAgentUpdates::NotLicensed,
+            },
+            &registry.registry,
+        );
+
+        assert_eq!(
+            checked,
+            "server/site: The license of this site does not include agent updates. This host \
+             gets agent updates again once the license includes them."
+        );
+        assert_eq!(fetched, checked);
     }
 
     /// The update cycle against a mock of the site. The agent info of the

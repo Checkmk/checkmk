@@ -150,3 +150,37 @@ fn assert_exits_with_1_on_a_broken_configuration(args: &[&str]) {
 
     test_dir.close().unwrap();
 }
+
+/// CMK-41723 AC4
+#[test]
+fn test_update_names_a_registered_site_that_offers_no_agent_updates() {
+    if agent::is_elevation_required() {
+        println!("Test is skipped, must be in elevated mode");
+        return;
+    }
+    let test_dir = common::setup_test_dir("cmk-agent-ctl_test_update");
+    std::fs::write(
+        test_dir.path().join("registered_connections.json"),
+        r#"{"push": {}, "pull_imported": [], "pull": {"server/site": {
+            "uuid": "8f0e3a1c-5b2d-4e6f-9a7b-0c1d2e3f4a5b", "private_key": "key",
+            "certificate": "cert", "root_certs": ["root"], "receiver_port": 8000,
+            "agent_update_authorization": "community_edition"}}}"#,
+    )
+    .unwrap();
+
+    let mut controller = assert_cmd::Command::new(common::controller_command_path());
+    // As in assert_reports_a_missing_configuration.
+    #[cfg(unix)]
+    controller.env("PATH", test_dir.path());
+
+    controller
+        .env("DEBUG_HOME_DIR", test_dir.path())
+        .arg("update")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "server/site: Agent updates are not available on Checkmk Community edition",
+        ));
+
+    test_dir.close().unwrap();
+}

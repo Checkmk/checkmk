@@ -1,4 +1,4 @@
-title: AWS ELBv2: Application and Network Limits
+title: AWS ELB: Application and Network Load Balancer Limits
 agents: aws
 catalog: cloud/aws
 license: GPLv2

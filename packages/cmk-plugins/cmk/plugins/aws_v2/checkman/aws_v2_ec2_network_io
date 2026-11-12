@@ -1,4 +1,4 @@
-title: AWS v2 EC2: Instance Network IO
+title: AWS EC2: Instance Network I/O (v2)
 agents: aws_v2
 catalog: cloud/aws
 license: GPLv2

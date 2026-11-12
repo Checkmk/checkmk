@@ -1,4 +1,4 @@
-title: AWS v2 ELB: Health
+title: AWS ELB: Health (v2)
 agents: aws_v2
 catalog: cloud/aws
 license: GPLv2

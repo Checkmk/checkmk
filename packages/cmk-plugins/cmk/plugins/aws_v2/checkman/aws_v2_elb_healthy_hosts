@@ -1,4 +1,4 @@
-title: AWS v2 ELB: Healthy Hosts
+title: AWS ELB: Healthy Hosts (v2)
 agents: aws_v2
 catalog: cloud/aws
 license: GPLv2

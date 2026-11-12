@@ -155,11 +155,11 @@ _handle_user_legacy() {
         if [ "${existing_homedir}" != "${HOMEDIR}" ]; then
             printf "Warning: '%s' found with home directory '%s' - Expected '%s'.\n" "${AGENT_USER}" "${existing_homedir}" "${HOMEDIR}" >&2
             printf "   This can't be resolved automatically.\n" >&2
-            printf "Details: You are installing a Checkmk agent package with active agent controller in multi directory deployment\n" >&2
+            printf "Details: You are installing a Checkmk agent package with active agent controller in multi-directory deployment\n" >&2
             printf "   (I.e., the agent installation is distributed over multiple system directories like '/usr/lib', '/var/lib', '/etc').\n" >&2
             printf "   For proper operation, the agent controller needs the home directory of the '%s' user being set to '%s'.\n" "${AGENT_USER}" "${HOMEDIR}" >&2
-            printf "   When coming from a single directory deployment (I.e., all agent files are installed under '/opt/checkmk/agent/default'),\n" >&2
-            printf "   be aware that going back to a multi directory installation is not supported.\n" >&2
+            printf "   When coming from a single-directory deployment (I.e., all agent files are installed under '/opt/checkmk/agent/default'),\n" >&2
+            printf "   be aware that going back to a multi-directory installation is not supported.\n" >&2
             printf "   Please adjust the agent user home directory and migrate runtime files (var data) manually.\n" >&2
             printf "   After that, you can restart the agent controller by calling 'systemctl restart cmk-agent-ctl daemon'.\n" >&2
         fi

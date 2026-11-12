@@ -618,7 +618,7 @@ mod tests {
     }
 
     /// The update cycle against a mock of the site. The agent info of the
-    /// single directory deployment exists on Unix only.
+    /// single-directory deployment exists on Unix only.
     #[cfg(unix)]
     mod update_cycle {
         use super::*;
@@ -713,7 +713,7 @@ mod tests {
             Ok(UpdateStatusResponse { target_agent: None })
         }
 
-        /// A host in a single directory deployment, whose update source is the
+        /// A host in a single-directory deployment, whose update source is the
         /// one connection of its registry.
         struct Host {
             _dir: tempfile::TempDir,

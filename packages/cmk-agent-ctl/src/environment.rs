@@ -15,7 +15,7 @@ pub enum SetupMode {
     /// `/var/lib/cmk-agent`(fixed) for Linux
     /// `%ProgramData%\checkmk\agent` for Windows.
     Classic,
-    /// Single directory deployment, Linux only: config and runtime split below the
+    /// Single-directory deployment, Linux only: config and runtime split below the
     /// installation directory.
     #[cfg(unix)]
     SingleDir,
@@ -53,7 +53,7 @@ pub struct PathResolver {
     #[cfg(unix)]
     pub install_result_path: PathBuf,
 
-    /// The controller's own log on Linux. In the single directory layout it lies
+    /// The controller's own log on Linux. In the single-directory layout it lies
     /// in `runtime/log/controller`. `runtime/log` is the agent's `MK_LOGDIR` in that
     /// layout, but systemd starts the controller without that variable. In the
     /// classic layout the log lies in the controller's home. Windows logs to the
@@ -126,7 +126,7 @@ impl PathResolver {
         }
     }
 
-    /// Single directory deployment, Linux only: baked files below `package/config` and
+    /// Single-directory deployment, Linux only: baked files below `package/config` and
     /// `package/agent`, files owned by the controller below `runtime/controller`, its
     /// log below `runtime/log/controller`, all relative to `install_dir`.
     #[cfg(unix)]

@@ -49,9 +49,9 @@ _install_symlinks() {
 
 _setup_alternatives_command() {
     [ -n "${MK_INSTALLDIR}" ] || {
-        # Only in single directory deployment we can be sure that all binaries under package/bin are our own,
+        # Only in single-directory deployment we can be sure that all binaries under package/bin are our own,
         # and run echo the alternatives command on all of them.
-        # Since this script is also executed in multi directory deployment, we exit silently here.
+        # Since this script is also executed in multi-directory deployment, we exit silently here.
         exit 0
     }
 

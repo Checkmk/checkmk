@@ -2350,7 +2350,7 @@ signature_keys = [\"-----BEGIN CERTIFICATE-----\\nabc\\n-----END CERTIFICATE----
     }
 
     /// The layout that keeps all three artifacts below one directory, so that it
-    /// can be set up in a temporary one: the single directory layout on Unix, the
+    /// can be set up in a temporary one: the single-directory layout on Unix, the
     /// classic layout on Windows, where the agent info sits in `install` below
     /// the controller's home.
     fn artifact_paths(dir: &tempfile::TempDir) -> PathResolver {

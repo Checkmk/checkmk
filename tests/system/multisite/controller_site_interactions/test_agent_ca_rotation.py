@@ -43,8 +43,8 @@ _CLASSIC_CONTROLLER_REGISTRY_PATH = Path("/var/lib/cmk-agent/registered_connecti
 def _controller_registry_path(agent_ctl: Path) -> Path:
     """The registry of the controller, in the layout its package was installed in.
 
-    Like the controller itself, take a binary below <install dir>/package/bin for the single
-    directory layout.
+    Like the controller itself, take a binary below <install dir>/package/bin for the
+    single-directory layout.
     """
     binary = agent_ctl.resolve()
     if binary.parent.parts[-2:] == ("package", "bin"):

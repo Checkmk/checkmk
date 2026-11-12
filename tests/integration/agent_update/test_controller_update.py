@@ -65,7 +65,7 @@ def _registered_uuid(site: AgentReceiverSite) -> UUID:
 def _install_controller(
     runner: AgentReceiverRunner, uuid: UUID, install_dir: Path, cert_log: Path
 ) -> Path:
-    """Set up the controller in a single directory deployment, registered to the runner.
+    """Set up the controller in a single-directory deployment, registered to the runner.
 
     The controller detects that deployment from the location of its own executable. The test
     user owns runtime/controller. The controller switches to that owner, so it stays the test

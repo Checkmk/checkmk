@@ -24,7 +24,7 @@ def _form_spec() -> Dictionary:
             "This rule set will only set the agent user to the configured value."
             "<br>It will not take care of further needed permissions on the target system."
             "<br>It applies only to hosts that match the rule <i>Use classic file deployment</i>."
-            " All other hosts get the single directory deployment, where the agent runs as root"
+            " All other hosts get the single-directory deployment, where the agent runs as root"
             " unless the rule set <i>Customize agent package</i> configures another user."
             "<br>Please use <i>Customize agent package</i> instead, which offers a proper"
             " non-root agent installation.<br>"

@@ -304,7 +304,7 @@ fn writes_log_file(mode: &cli::Mode) -> bool {
 #[cfg(unix)]
 fn resolve_paths(privileges: Privileges) -> AnyhowResult<PathResolver> {
     if let Some(install_dir) = setup_single_directory(privileges)
-        .context("Failed to initialize under single directory deployment")?
+        .context("Failed to initialize under single-directory deployment")?
     {
         return Ok(PathResolver::new(SetupMode::SingleDir, &install_dir));
     }
@@ -323,11 +323,11 @@ fn resolve_paths(privileges: Privileges) -> AnyhowResult<PathResolver> {
 
     if let Privileges::Keep = privileges {
         // The integrated updater, and with it the installer unit, is baked for the
-        // single directory deployment only. Reaching this point means the unit runs
+        // single-directory deployment only. Reaching this point means the unit runs
         // where it was never meant to, so the mode says so instead of looking for
         // files that the classic layout does not have.
         bail!(
-            "The agent updater integrated into the controller requires the single directory \
+            "The agent updater integrated into the controller requires the single-directory \
              deployment of the Checkmk agent"
         );
     }
@@ -348,14 +348,14 @@ fn setup_single_directory(privileges: Privileges) -> AnyhowResult<Option<PathBuf
 
     if let Privileges::Keep = privileges {
         debug!(
-            "Detected single directory deployment under {:?}. Keeping the privileges of the calling process.",
+            "Detected single-directory deployment under {:?}. Keeping the privileges of the calling process.",
             install_dir
         );
         return Ok(Some(install_dir));
     }
 
     debug!(
-        "Detected single directory deployment under {:?}. Trying to become the agent user and setting up paths accordingly, and failing otherwise.",
+        "Detected single-directory deployment under {:?}. Trying to become the agent user and setting up paths accordingly, and failing otherwise.",
         install_dir
     );
 

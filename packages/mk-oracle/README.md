@@ -147,7 +147,7 @@ The default _legacy deployment_ plugins path for the Checkmk agent on Linux is `
 sudo unzip -j /home/$USER/Downloads/instantclient-basic-linux.x64-21.20.0.0.0dbru.zip -d /usr/lib/check_mk_agent/plugins/libexec/mk-oracle-v2/oic/
 ```
 
-The default _single directory deployment_ plugins path for the Checkmk agent on Linux is `/opt/checkmk/agent/default/package/plugins`
+The default _single-directory deployment_ plugins path for the Checkmk agent on Linux is `/opt/checkmk/agent/default/package/plugins`
 
 ```
 sudo unzip -j /home/$USER/Downloads/instantclient-basic-linux.x64-21.20.0.0.0dbru.zip -d /opt/checkmk/agent/default/package/plugins/libexec/mk-oracle-v2/oic/

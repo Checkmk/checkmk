@@ -32,7 +32,7 @@ def _deployment_mode_form() -> CascadingSingleChoice:
             " doesn't exist yet.<br>"
             "If you want to change this default behavior, you can configure this rule for setting"
             " a custom agent/Agent Controller user.<br>"
-            "<b>Note</b>: You can only use this configuration with the new single directory"
+            "<b>Note</b>: You can only use this configuration with the new single-directory"
             " structure. Please enable <i>Customize installation directories</i> before saving the"
             " rule."
         ),

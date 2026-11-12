@@ -63,7 +63,7 @@ def _valuespec_agent_config_custom_files() -> Dictionary:
             "<tt>/usr/bin/some_executable</tt><br>"
             "<tt>/usr/lib/check_mk_agent/local/my_local_check</tt><br>"
             "<tt>/usr/lib/check_mk_agent/some_file</tt><br>"
-            "When activating the single directory deployment in the <i>Customize agent package</i>"
+            "When activating the single-directory deployment in the <i>Customize agent package</i>"
             " rule set:<br>"
             "<tt>/opt/checkmk/agent/default/package/bin/some_executable</tt><br>"
             "<tt>/opt/checkmk/agent/default/package/local/my_local_check</tt><br>"

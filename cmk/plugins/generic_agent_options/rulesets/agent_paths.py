@@ -26,7 +26,7 @@ def _form_spec() -> Dictionary:
     return Dictionary(
         help_text=Help(
             "These paths apply only to hosts that match the rule <i>Use classic file"
-            " deployment</i>. All other hosts get the single directory deployment, which can be"
+            " deployment</i>. All other hosts get the single-directory deployment, which can be"
             " configured with the rule set <i>Customize agent package</i>."
             "<br><b>Note</b>: When updating agents to the new directory structure, please keep"
             " this rule set until the agent update is done. The agent package will read the"

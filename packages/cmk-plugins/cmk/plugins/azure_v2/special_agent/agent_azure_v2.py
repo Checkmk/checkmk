@@ -28,7 +28,7 @@ import string
 import sys
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from collections.abc import Coroutine, Iterable, Mapping, Sequence
+from collections.abc import Callable, Coroutine, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum
 from multiprocessing import Lock
@@ -45,7 +45,7 @@ from cmk.plugins.azure_v2.lib import (
     RESOURCE_TYPE_ABBREVIATIONS,
     short_resource_type,
 )
-from cmk.plugins.azure_v2.special_agent._data_cache import DataCache
+from cmk.plugins.azure_v2.special_agent._data_cache import current_time, DataCache
 from cmk.plugins.azure_v2.special_agent.azure_api_client import (
     ApiError,
     ApiErrorAuthorizationRequestDenied,
@@ -2264,6 +2264,7 @@ class MetricNamesCache(AzureAsyncCache):
         resource_type: str,
         cache_id: str,
         debug: bool = False,
+        clock: Callable[[], float] = current_time,
     ) -> None:
         self._resource_type = resource_type
         super().__init__(
@@ -2271,6 +2272,7 @@ class MetricNamesCache(AzureAsyncCache):
             agent=f"agent_{AGENT}",
             key=f"{subscription[:6]}_{resource_type.replace('/', '_')}_metric_names",
             debug=debug,
+            clock=clock,
         )
 
     @property

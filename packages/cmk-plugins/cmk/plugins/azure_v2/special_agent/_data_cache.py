@@ -15,6 +15,7 @@ import datetime
 import json
 import logging
 import time
+from collections.abc import Callable
 from typing import Any
 
 from cmk.server_side_programs.v1 import Storage
@@ -30,6 +31,10 @@ def _datetime_serializer(obj: object) -> str:
     raise TypeError("%r is not JSON serializable" % obj)
 
 
+def current_time() -> float:
+    return time.time()
+
+
 class DataCache(abc.ABC):
     """
     Attention! A user may configure multiple special agents per Checkmk instance.
@@ -37,10 +42,19 @@ class DataCache(abc.ABC):
     Normally you should use the hostname as part of the cache_file_name or cache_file_dir.
     """
 
-    def __init__(self, *, host_name: str, agent: str, key: str, debug: bool = False) -> None:
+    def __init__(
+        self,
+        *,
+        host_name: str,
+        agent: str,
+        key: str,
+        debug: bool = False,
+        clock: Callable[[], float] = current_time,
+    ) -> None:
         self._storage = Storage(host_name, agent)
         self._key = key
         self.debug = debug
+        self._clock = clock
 
     def _read_storage(self) -> tuple[float, str] | None:
         if (raw := self._storage.read(self._key, None)) is None:
@@ -55,7 +69,7 @@ class DataCache(abc.ABC):
         return None
 
     def _write_storage(self, raw_content: str) -> None:
-        self._storage.write(self._key, f"{time.time()}\n{raw_content}")
+        self._storage.write(self._key, f"{self._clock()}\n{raw_content}")
 
     @property
     @abc.abstractmethod
@@ -85,7 +99,7 @@ class DataCache(abc.ABC):
         if mtime is None:
             return False
 
-        age = time.time() - mtime
+        age = self._clock() - mtime
         if 0 < age < self.cache_interval:
             return True
 

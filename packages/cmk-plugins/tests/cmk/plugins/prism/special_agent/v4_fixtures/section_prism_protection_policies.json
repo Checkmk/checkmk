@@ -5,12 +5,10 @@
     "replicationLocations": [
       {
         "label": "pc-a",
-        "domainManagerExtId": "0806a141-8916-471b-99fd-b5119ff280ef",
         "isPrimary": true
       },
       {
         "label": "pc-c-1",
-        "domainManagerExtId": "539b621c-85a5-47ff-b9c9-5479a7eb3f3c",
         "isPrimary": false
       }
     ],
@@ -23,7 +21,8 @@
           "retention": {
             "local": 1,
             "remote": 1
-          }
+          },
+          "isReplicationPaused": false
         }
       },
       {
@@ -34,7 +33,8 @@
           "retention": {
             "local": 1,
             "remote": 1
-          }
+          },
+          "isReplicationPaused": false
         }
       }
     ],
@@ -46,12 +46,10 @@
     "replicationLocations": [
       {
         "label": "pc-a",
-        "domainManagerExtId": "0806a141-8916-471b-99fd-b5119ff280ef",
         "isPrimary": true
       },
       {
         "label": "pc-c-1",
-        "domainManagerExtId": "539b621c-85a5-47ff-b9c9-5479a7eb3f3c",
         "isPrimary": false
       }
     ],
@@ -62,7 +60,8 @@
           "recoveryPointObjectiveTimeSeconds": 3600,
           "retention": {
             "local": 1
-          }
+          },
+          "isReplicationPaused": false
         }
       },
       {
@@ -73,7 +72,8 @@
           "retention": {
             "local": 1,
             "remote": 1
-          }
+          },
+          "isReplicationPaused": false
         }
       },
       {
@@ -84,7 +84,8 @@
           "retention": {
             "local": 1,
             "remote": 1
-          }
+          },
+          "isReplicationPaused": false
         }
       }
     ],

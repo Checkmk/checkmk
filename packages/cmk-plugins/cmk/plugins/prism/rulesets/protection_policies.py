@@ -10,6 +10,7 @@ from cmk.rulesets.v1.form_specs import (
     Dictionary,
     Float,
     LevelDirection,
+    ServiceState,
     SimpleLevels,
 )
 from cmk.rulesets.v1.form_specs.validators import NumberInRange
@@ -36,6 +37,51 @@ def _parameter_form_prism_protection_policies() -> Dictionary:
                     ),
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=DefaultValue((1.5, 2.0)),
+                ),
+                required=True,
+            ),
+            "replication_states": DictElement(
+                parameter_form=Dictionary(
+                    title=Title("States of the replication of a VM to a remote location"),
+                    help_text=Help(
+                        "Only VMs of policies that replicate to a remote location "
+                        "synchronously or every 1 to 15 minutes have a replication state. "
+                        "The v4 API reports none for hourly or longer schedules."
+                    ),
+                    elements={
+                        "in_sync": DictElement(
+                            parameter_form=ServiceState(
+                                title=Title("In sync"), prefill=DefaultValue(ServiceState.OK)
+                            ),
+                            required=True,
+                        ),
+                        "syncing": DictElement(
+                            parameter_form=ServiceState(
+                                title=Title("Syncing"), prefill=DefaultValue(ServiceState.OK)
+                            ),
+                            required=True,
+                        ),
+                        "out_of_sync": DictElement(
+                            parameter_form=ServiceState(
+                                title=Title("Out of sync"),
+                                help_text=Help(
+                                    "The replication schedule is disabled and nothing replicates."
+                                ),
+                                prefill=DefaultValue(ServiceState.WARN),
+                            ),
+                            required=True,
+                        ),
+                    },
+                ),
+                required=True,
+            ),
+            "replication_paused": DictElement(
+                parameter_form=ServiceState(
+                    title=Title("State if the replication of a schedule is paused"),
+                    help_text=Help(
+                        "Only schedules with synchronous replication (RPO of 0) can be paused."
+                    ),
+                    prefill=DefaultValue(ServiceState.WARN),
                 ),
                 required=True,
             ),

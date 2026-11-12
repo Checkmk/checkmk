@@ -25,6 +25,19 @@ description:
  one made by the policy's schedule, because the API doesn't tell them apart.
  A VM whose recovery point the agent couldn't fetch is {UNKNOWN}.
 
+ For VMs of policies that replicate to a remote location synchronously or
+ every 1 to 15 minutes, it shows the replication state of each VM per remote
+ location: in sync, syncing or out of sync. The v4 API reports no replication
+ state for hourly or longer schedules, so the check shows none for them.
+ Out of sync means the replication schedule is disabled and nothing
+ replicates. By default out of sync is {WARN}, the other states are {OK}. A
+ schedule with paused replication (only possible for synchronous replication)
+ is {WARN}, if Prism Central reports it: the v4.0 API documents no such
+ field, but Prism Central 7.5 sends it.
+ A VM whose replication state the agent couldn't fetch is {UNKNOWN}.
+ If Prism Central reports no replication state for such a VM, the check
+ says so in the details and stays {OK}.
+
  VMs on ESXi clusters are not covered: the v4 API shows which policy protects
  a VM only for AHV VMs. A policy protecting only ESXi VMs shows "Protected
  VMs: 0".

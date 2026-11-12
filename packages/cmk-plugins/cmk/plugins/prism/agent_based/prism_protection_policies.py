@@ -9,7 +9,7 @@ v4 can't read protection domains, so this replaces prism_protection_domains for 
 """
 
 import time
-from collections.abc import Mapping, MutableMapping, Sequence
+from collections.abc import Iterable, Mapping, MutableMapping, Sequence
 from typing import Literal, NamedTuple, TypedDict
 
 from cmk.agent_based.v2 import (
@@ -35,15 +35,57 @@ from cmk.plugins.prism.v4_models import (
     ReplicationConfiguration,
 )
 
-Section = Mapping[str, ProtectionPolicy]
+ReplicationKey = Literal["in_sync", "syncing", "out_of_sync"]
+
+
+class Replication(NamedTuple):
+    vm_name: str
+    target: str
+    # None: a status the plug-in doesn't know
+    key: ReplicationKey | None
+    label: str
+
+
+class Policy(NamedTuple):
+    config: ProtectionPolicy
+    replications: Sequence[Replication]
+
+
+Section = Mapping[str, Policy]
+
+
+class ReplicationStates(TypedDict):
+    in_sync: int
+    syncing: int
+    out_of_sync: int
 
 
 class Params(TypedDict):
     # The age of a VM's newest recovery point, as a multiple of the policy's RPO
     recovery_point_age: FixedLevelsT[float] | NoLevelsT
+    replication_states: ReplicationStates
+    replication_paused: int
 
 
-DEFAULT_PARAMS = Params(recovery_point_age=("fixed", (1.5, 2.0)))
+DEFAULT_PARAMS = Params(
+    recovery_point_age=("fixed", (1.5, 2.0)),
+    # Out of sync: the replication schedule is disabled and nothing replicates
+    replication_states=ReplicationStates(in_sync=0, syncing=0, out_of_sync=1),
+    replication_paused=1,
+)
+
+_REPLICATION_STATUSES: Mapping[str, tuple[ReplicationKey, str]] = {
+    "IN_SYNC": ("in_sync", "in sync"),
+    "SYNCING": ("syncing", "syncing"),
+    "OUT_OF_SYNC": ("out_of_sync", "out of sync"),
+}
+
+# Why Prism Central reported no replication state for a VM the agent asked about
+_REPLICATION_MISSING = {
+    "not_found": "not found among Prism Central's protected resources",
+    "none_reported": "no replication state reported",
+    "incomplete": "replication state incomplete",
+}
 
 FORGET_GONE_VMS_AFTER = 24 * 3600.0
 
@@ -62,7 +104,22 @@ def parse_prism_protection_policies(string_table: StringTable) -> Section:
     policies = ProtectionPolicies.model_validate_json(string_table[0][0]).root
     # Policy names need not be unique. The end of the ID keeps the item of a policy stable when
     # another policy of the same name is added.
-    return {f"{policy.name} ({policy.ext_id[-8:]})": policy for policy in policies}
+    return {
+        f"{policy.name} ({policy.ext_id[-8:]})": Policy(policy, _replications(policy))
+        for policy in policies
+    }
+
+
+def _replications(policy: ProtectionPolicy) -> list[Replication]:
+    return [
+        Replication(
+            vm.name,
+            replication.target,
+            *_REPLICATION_STATUSES.get(replication.status, (None, replication.status)),
+        )
+        for vm in policy.vms
+        for replication in vm.replications or []
+    ]
 
 
 agent_section_prism_protection_policies = AgentSection(
@@ -111,20 +168,19 @@ def _render_retention(retention: int | AutoRollupRetentionDetails) -> str:
     return f"{retention.frequency} {unit}{'' if retention.frequency == 1 else 's'}"
 
 
+def _locations(configuration: ReplicationConfiguration) -> str:
+    if configuration.remote_location_label is None:
+        return configuration.source_location_label
+    return f"{configuration.source_location_label} -> {configuration.remote_location_label}"
+
+
 def _retention_result(configuration: ReplicationConfiguration) -> Result | None:
     if (retention := configuration.schedule.retention) is None or retention.local is None:
         return None
-    if configuration.remote_location_label is None:
-        locations = configuration.source_location_label
-        kept = f"{_render_retention(retention.local)} locally"
-    else:
-        locations = (
-            f"{configuration.source_location_label} -> {configuration.remote_location_label}"
-        )
-        kept = f"{_render_retention(retention.local)} locally" + (
-            "" if retention.remote is None else f", {_render_retention(retention.remote)} remotely"
-        )
-    return Result(state=State.OK, notice=f"Retention {locations}: {kept}")
+    kept = f"{_render_retention(retention.local)} locally"
+    if configuration.remote_location_label is not None and retention.remote is not None:
+        kept += f", {_render_retention(retention.remote)} remotely"
+    return Result(state=State.OK, notice=f"Retention {_locations(configuration)}: {kept}")
 
 
 class _RecoveryPointAge(NamedTuple):
@@ -214,8 +270,9 @@ def check_protection_policy(
     now: float,
 ) -> CheckResult:
     """The check with its value store and the current time given"""
-    if (policy := section.get(item)) is None:
+    if (parsed := section.get(item)) is None:
         return
+    policy = parsed.config
     configurations = _active_configurations(policy)
     rpos = [
         configuration.schedule.recovery_point_objective_time_seconds
@@ -237,6 +294,11 @@ def check_protection_policy(
     for configuration in configurations:
         if (result := _retention_result(configuration)) is not None:
             yield result
+        if configuration.schedule.is_replication_paused:
+            yield Result(
+                state=State(params["replication_paused"]),
+                summary=f"Replication {_locations(configuration)} paused",
+            )
 
     match params["recovery_point_age"]:
         case ("fixed", (warn, crit)) if rpo is not None:
@@ -247,7 +309,8 @@ def check_protection_policy(
         case _:
             age_levels = None
     remembered_vms = _forget_gone_vms(policy, now, value_store)
-    for vm in sorted(policy.vms, key=lambda vm: vm.name):
+    vms = sorted(policy.vms, key=lambda vm: vm.name)
+    for vm in vms:
         if vm.recovery_point_unknown:
             yield Result(
                 state=State.UNKNOWN, summary=f"{vm.name}: recovery point could not be fetched"
@@ -263,6 +326,50 @@ def check_protection_policy(
             label=_AGE_LABELS[age.source].format(vm=vm.name),
             notice_only=True,
         )
+    yield from _replication_results(params["replication_states"], vms, parsed.replications)
+
+
+def _of_vms(state: State, text: str, vm_names: Sequence[str]) -> Result:
+    """One result for all the VMs it applies to, with their names in the details"""
+    summary = text.format(vms=f"{len(vm_names)} VM{'' if len(vm_names) == 1 else 's'}")
+    return Result(state=state, summary=summary, details=f"{summary}\n{', '.join(vm_names)}")
+
+
+def _replication_results(
+    states: ReplicationStates,
+    vms: Sequence[ProtectedVm],
+    replications: Sequence[Replication],
+) -> Iterable[Result]:
+    """A state that isn't OK gets one result per remote location with the number of VMs, not one
+    per VM: a state like out of sync has one cause, the schedule, and affects all its VMs at
+    once. OK states are shown per VM in the details."""
+    if unknown := [vm.name for vm in vms if vm.replication_unknown]:
+        yield _of_vms(State.UNKNOWN, "Replication state could not be fetched for {vms}", unknown)
+    vm_names_by_replication: dict[tuple[str, str, ReplicationKey | None], list[str]] = {}
+    for replication in sorted(replications):
+        vm_names_by_replication.setdefault(
+            (replication.target, replication.label, replication.key), []
+        ).append(replication.vm_name)
+    ok: list[tuple[str, str, str]] = []
+    for (target, label, key), vm_names in sorted(
+        vm_names_by_replication.items(), key=lambda item: item[0][:2]
+    ):
+        state = State.UNKNOWN if key is None else State(states[key])
+        if state is State.OK:
+            ok.extend((vm_name, target, label) for vm_name in vm_names)
+        else:
+            yield _of_vms(state, f"Replication to {target}: {{vms}} {label}", vm_names)
+    for vm_name, target, label in sorted(ok):
+        yield Result(state=State.OK, notice=f"{vm_name}: replication to {target}: {label}")
+    for vm in vms:
+        if vm.replication_missing is not None:
+            yield Result(
+                state=State.OK,
+                notice=f"{vm.name}: "
+                + _REPLICATION_MISSING.get(
+                    vm.replication_missing, f"no replication state ({vm.replication_missing})"
+                ),
+            )
 
 
 def check_prism_protection_policies(item: str, params: Params, section: Section) -> CheckResult:

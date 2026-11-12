@@ -7,6 +7,8 @@ import json
 from datetime import datetime, UTC
 from pathlib import Path
 
+import pytest
+
 from cmk.agent_based.v2 import Result, Service, State, StringTable
 from cmk.plugins.prism.agent_based.prism_protection_policies import (
     check_protection_policy,
@@ -14,6 +16,7 @@ from cmk.plugins.prism.agent_based.prism_protection_policies import (
     discovery_prism_protection_policies,
     Params,
     parse_prism_protection_policies,
+    Replication,
 )
 
 # The 2 policies a Prism Central 7.5 lab (anonymised) owns, as the v4 agent writes them: none
@@ -209,7 +212,11 @@ def test_age_levels_can_be_switched_off() -> None:
     results = _check(
         HOURLY,
         _section(_policy([_vm("stale", "2026-11-10T16:00:00Z")])),
-        Params(recovery_point_age=("no_levels", None)),
+        Params(
+            recovery_point_age=("no_levels", None),
+            replication_states=DEFAULT_PARAMS["replication_states"],
+            replication_paused=DEFAULT_PARAMS["replication_paused"],
+        ),
     )
 
     assert results[-1] == Result(
@@ -369,3 +376,182 @@ def test_synchronous_replication_only_has_no_age_levels() -> None:
 
 def test_empty_section_discovers_nothing() -> None:
     assert list(discovery_prism_protection_policies(parse_prism_protection_policies([]))) == []
+
+
+def _replicated_vm(*replications: tuple[str, str], name: str = "app") -> dict[str, object]:
+    return {
+        **_vm(name, "2026-11-11T15:30:00Z"),
+        "replications": [{"target": target, "status": status} for target, status in replications],
+    }
+
+
+def test_replication_states_of_a_vm_are_shown_per_remote_location() -> None:
+    results = _check(
+        HOURLY,
+        _section(
+            _policy(
+                [
+                    _replicated_vm(
+                        ("pc-c", "IN_SYNC"),
+                        ("pc-d", "SYNCING"),
+                        ("pc-e", "OUT_OF_SYNC"),
+                        ("pc-f", "$UNKNOWN"),
+                    )
+                ]
+            )
+        ),
+    )
+
+    assert results[-4:] == [
+        Result(
+            state=State.WARN,
+            summary="Replication to pc-e: 1 VM out of sync",
+            details="Replication to pc-e: 1 VM out of sync\napp",
+        ),
+        Result(
+            state=State.UNKNOWN,
+            summary="Replication to pc-f: 1 VM $UNKNOWN",
+            details="Replication to pc-f: 1 VM $UNKNOWN\napp",
+        ),
+        Result(state=State.OK, notice="app: replication to pc-c: in sync"),
+        Result(state=State.OK, notice="app: replication to pc-d: syncing"),
+    ]
+
+
+def test_parse_translates_the_replication_status() -> None:
+    section = parse_prism_protection_policies(
+        _section(_policy([_replicated_vm(("pc-c", "OUT_OF_SYNC"), ("pc-f", "$UNKNOWN"))]))
+    )
+
+    assert section[HOURLY].replications == [
+        Replication("app", "pc-c", "out_of_sync", "out of sync"),
+        Replication("app", "pc-f", None, "$UNKNOWN"),
+    ]
+
+
+def test_vms_out_of_sync_with_a_remote_location_share_one_result() -> None:
+    """Out of sync means the schedule is disabled, which affects all its VMs at once"""
+    results = _check(
+        HOURLY,
+        _section(
+            _policy(
+                [
+                    _replicated_vm(("pc-c", "OUT_OF_SYNC"), name="app"),
+                    _replicated_vm(("pc-c", "OUT_OF_SYNC"), ("pc-d", "OUT_OF_SYNC"), name="db"),
+                    _replicated_vm(("pc-c", "IN_SYNC"), name="web"),
+                ]
+            )
+        ),
+    )
+
+    assert results[-3:] == [
+        Result(
+            state=State.WARN,
+            summary="Replication to pc-c: 2 VMs out of sync",
+            details="Replication to pc-c: 2 VMs out of sync\napp, db",
+        ),
+        Result(
+            state=State.WARN,
+            summary="Replication to pc-d: 1 VM out of sync",
+            details="Replication to pc-d: 1 VM out of sync\ndb",
+        ),
+        Result(state=State.OK, notice="web: replication to pc-c: in sync"),
+    ]
+
+
+def test_replication_states_are_configurable() -> None:
+    results = _check(
+        HOURLY,
+        _section(_policy([_replicated_vm(("pc-c", "SYNCING"))])),
+        Params(
+            recovery_point_age=("fixed", (1.5, 2.0)),
+            replication_states={"in_sync": 0, "syncing": 1, "out_of_sync": 2},
+            replication_paused=1,
+        ),
+    )
+
+    assert results[-1] == Result(
+        state=State.WARN,
+        summary="Replication to pc-c: 1 VM syncing",
+        details="Replication to pc-c: 1 VM syncing\napp",
+    )
+
+
+@pytest.mark.parametrize(
+    ["missing", "expected"],
+    [
+        pytest.param(
+            "not_found", "app: not found among Prism Central's protected resources", id="not found"
+        ),
+        pytest.param("none_reported", "app: no replication state reported", id="none reported"),
+        pytest.param("incomplete", "app: replication state incomplete", id="incomplete"),
+        pytest.param("new_reason", "app: no replication state (new_reason)", id="unknown reason"),
+    ],
+)
+def test_vm_without_the_replication_state_asked_for_says_why(missing: str, expected: str) -> None:
+    vm = {**_vm("app", "2026-11-11T15:30:00Z"), "replications": [], "replicationMissing": missing}
+
+    assert _check(HOURLY, _section(_policy([vm])))[-1] == Result(state=State.OK, notice=expected)
+
+
+def test_vm_whose_replication_state_was_not_asked_for_has_no_replication_line() -> None:
+    results = _check(HOURLY, _section(_policy([_vm("app", "2026-11-11T15:30:00Z")])))
+
+    assert results[-1] == Result(
+        state=State.OK, notice="app: newest recovery point: 30 minutes 0 seconds"
+    )
+
+
+def _paused_policy() -> dict[str, object]:
+    policy = _policy([])
+    policy["replicationConfigurations"] = [
+        {
+            "sourceLocationLabel": "pc-a",
+            "remoteLocationLabel": "pc-c",
+            "schedule": {"recoveryPointObjectiveTimeSeconds": 0, "isReplicationPaused": True},
+        }
+    ]
+    return policy
+
+
+def test_paused_replication_is_warn() -> None:
+    assert _check(HOURLY, _section(_paused_policy()))[-1] == Result(
+        state=State.WARN, summary="Replication pc-a -> pc-c paused"
+    )
+
+
+def test_state_of_paused_replication_is_configurable() -> None:
+    assert _check(
+        HOURLY, _section(_paused_policy()), Params(**{**DEFAULT_PARAMS, "replication_paused": 2})
+    )[-1] == Result(state=State.CRIT, summary="Replication pc-a -> pc-c paused")
+
+
+def test_paused_way_back_is_ignored() -> None:
+    policy = _paused_policy()
+    policy["replicationConfigurations"] = [
+        {
+            "sourceLocationLabel": "pc-c",
+            "remoteLocationLabel": "pc-a",
+            "schedule": {"recoveryPointObjectiveTimeSeconds": 0, "isReplicationPaused": True},
+        }
+    ]
+
+    assert all("paused" not in result.summary for result in _check(HOURLY, _section(policy)))
+
+
+def test_vms_with_an_unknown_replication_state_share_one_unknown_result() -> None:
+    assert _check(
+        HOURLY,
+        _section(
+            _policy(
+                [
+                    {**_vm(name, "2026-11-11T15:30:00Z"), "replicationUnknown": True}
+                    for name in ("app", "db")
+                ]
+            )
+        ),
+    )[-1] == Result(
+        state=State.UNKNOWN,
+        summary="Replication state could not be fetched for 2 VMs",
+        details="Replication state could not be fetched for 2 VMs\napp, db",
+    )

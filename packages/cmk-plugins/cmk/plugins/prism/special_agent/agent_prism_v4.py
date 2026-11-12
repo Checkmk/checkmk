@@ -32,6 +32,7 @@ from cmk.plugins.prism.v4_models import (
     ClusterRemoteSupport,
     ClusterStats,
     ClusterWithStats,
+    DataProtectionSiteReference,
     DiskConfig,
     DiskStats,
     HaHost,
@@ -44,6 +45,7 @@ from cmk.plugins.prism.v4_models import (
     NodeConfig,
     NodeDisk,
     PoolDisk,
+    ProtectedResource,
     ProtectedVm,
     ProtectionPolicy,
     RecoveryPoint,
@@ -55,6 +57,7 @@ from cmk.plugins.prism.v4_models import (
     Vm,
     VmDetails,
     VmProtection,
+    VmReplication,
     VmWithHostName,
 )
 from cmk.server_side_programs.v1 import AgentMessages, Storage
@@ -775,6 +778,7 @@ def fetch_storage_pools(context: FetchContext) -> Sequence[Section]:
 
 PROTECTION_POLICIES_PATH = "datapolicies/v4.0/config/protection-policies"
 RECOVERY_POINTS_PATH = "dataprotection/v4.0/config/recovery-points"
+PROTECTED_RESOURCES_PATH = "dataprotection/v4.0/config/protected-resources"
 
 
 def _recovery_points_filter(vm_id: str) -> str:
@@ -812,6 +816,114 @@ def _newest_recovery_points(
     )
     return {
         vm_id: result for vm_id, result in zip(vm_ids, results, strict=True) if result is not None
+    }
+
+
+def _protected_resource(context: FetchContext, vm_id: str) -> ProtectedResource | None:
+    """None if Prism Central doesn't know the VM as a protected resource, e.g. because it was
+    deleted since it was listed"""
+    try:
+        body = context.client.get(f"{PROTECTED_RESOURCES_PATH}/{vm_id}")
+    except PrismV4Error as e:
+        if e.status != HTTPStatus.NOT_FOUND:
+            raise
+        LOGGER.info("VM %(id)s is not a protected resource: %(error)s", {"id": vm_id, "error": e})
+        return None
+    try:
+        return ProtectedResource.model_validate(body.get("data", {}))
+    except ValidationError as e:
+        raise PrismV4Error(
+            f"{PROTECTED_RESOURCES_PATH}/{vm_id}: invalid replication states: {e}"
+        ) from e
+
+
+def _reports_replication_states(policy: ProtectionPolicy) -> bool:
+    """Prism Central reports replication states only for VMs replicated synchronously (an RPO
+    of 0) or every 1 to 15 minutes, not for hourly or longer schedules. Only the schedules from
+    the primary location count: the way back applies after a failover."""
+    primaries = {location.label for location in policy.replication_locations if location.is_primary}
+    return any(
+        configuration.remote_location_label is not None
+        and (not primaries or configuration.source_location_label in primaries)
+        and configuration.schedule.recovery_point_objective_time_seconds < 3600
+        for configuration in policy.replication_configurations
+    )
+
+
+def _target(policy: ProtectionPolicy, site: DataProtectionSiteReference, prism_central: str) -> str:
+    """The label of the policy's location on the site's Prism Central. If several locations
+    are on it, they name their clusters, and the one naming the site's cluster is taken."""
+    locations = [
+        location
+        for location in policy.replication_locations
+        if location.domain_manager_ext_id == prism_central
+    ]
+    if len(locations) > 1:
+        locations = [
+            location
+            for location in locations
+            if location.replication_sub_location is not None
+            and site.cluster_ext_id in location.replication_sub_location.cluster_ext_ids
+        ]
+    if len(locations) == 1:
+        return locations[0].label
+    return f"Prism Central {prism_central[-8:]}"
+
+
+class _VmReplications(NamedTuple):
+    states: list[VmReplication]
+    # Why there are no states: not_found, none_reported or incomplete
+    missing: str | None
+
+
+def _replications(policy: ProtectionPolicy, resource: ProtectedResource | None) -> _VmReplications:
+    if resource is None:
+        return _VmReplications([], "not_found")
+    of_policy = [
+        state
+        for state in resource.replication_states
+        if state.protection_policy_ext_id in (None, policy.ext_id)
+    ]
+    if not of_policy:
+        return _VmReplications([], "none_reported")
+    states = [
+        VmReplication(
+            target=_target(policy, state.target_site_reference, prism_central),
+            status=state.replication_status,
+        )
+        for state in of_policy
+        if state.replication_status is not None
+        and state.target_site_reference is not None
+        and (prism_central := state.target_site_reference.mgmt_cluster_ext_id) is not None
+    ]
+    return _VmReplications(states, None if states else "incomplete")
+
+
+def _replications_by_vm(
+    context: FetchContext,
+    policies: Sequence[ProtectionPolicy],
+    vms_by_policy: Mapping[str, Sequence[VmProtection]],
+) -> dict[str, _VmReplications | PrismV4Error]:
+    """The replication states of each VM of a policy Prism Central reports them for, or the
+    error of the VM's call"""
+    replicated = [
+        (policy, vm)
+        for policy in policies
+        if _reports_replication_states(policy)
+        for vm in vms_by_policy[policy.ext_id]
+    ]
+    resources = _fetch_each_reporting(
+        context,
+        [vm.ext_id for _policy, vm in replicated],
+        partial(_protected_resource, context),
+        "replication states",
+        "protected VMs",
+    )
+    return {
+        vm.ext_id: resource
+        if isinstance(resource, PrismV4Error)
+        else _replications(policy, resource)
+        for (policy, vm), resource in zip(replicated, resources, strict=True)
     }
 
 
@@ -853,14 +965,22 @@ def fetch_protection_policies(context: FetchContext) -> Sequence[Section]:
                 vms_by_policy[vm.policy_ext_id].append(vm)
     protected = [vm.ext_id for vms in vms_by_policy.values() for vm in vms]
     newest = _newest_recovery_points(context, protected)
+    replications = _replications_by_vm(context, policies, vms_by_policy) if protected else {}
 
     def protected_vm(vm: VmProtection) -> ProtectedVm:
-        name = vm.name or vm.ext_id
-        match newest.get(vm.ext_id):
-            case PrismV4Error():
-                return ProtectedVm(ext_id=vm.ext_id, name=name, recovery_point_unknown=True)
-            case creation_time:
-                return ProtectedVm(ext_id=vm.ext_id, name=name, newest_recovery_point=creation_time)
+        recovery_point = newest.get(vm.ext_id)
+        states = replications.get(vm.ext_id)
+        return ProtectedVm(
+            ext_id=vm.ext_id,
+            name=vm.name or vm.ext_id,
+            newest_recovery_point=None
+            if isinstance(recovery_point, PrismV4Error)
+            else recovery_point,
+            recovery_point_unknown=True if isinstance(recovery_point, PrismV4Error) else None,
+            replications=states.states if isinstance(states, _VmReplications) else None,
+            replication_missing=states.missing if isinstance(states, _VmReplications) else None,
+            replication_unknown=True if isinstance(states, PrismV4Error) else None,
+        )
 
     return [
         Section(

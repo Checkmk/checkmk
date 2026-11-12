@@ -491,6 +491,8 @@ class Retention(V4Model):
 class ProtectionSchedule(V4Model):
     recovery_point_objective_time_seconds: int = Field(alias="recoveryPointObjectiveTimeSeconds")
     retention: Retention | None = None
+    # Only schedules with an RPO of 0 (synchronous replication) can be paused
+    is_replication_paused: bool | None = Field(None, alias="isReplicationPaused")
 
 
 class ReplicationConfiguration(V4Model):
@@ -500,11 +502,30 @@ class ReplicationConfiguration(V4Model):
     schedule: ProtectionSchedule
 
 
+class ReplicationSubLocation(V4Model):
+    # Empty: all clusters of the location's Prism Central
+    cluster_ext_ids: list[str] = Field([], alias="clusterExtIds")
+
+
 class ReplicationLocation(V4Model):
     label: str
-    domain_manager_ext_id: str | None = Field(None, alias="domainManagerExtId")
+    # Only the agent reads the location's Prism Central and clusters, to tell which policies
+    # this Prism Central owns and to name a replication target: they aren't written to the
+    # section
+    domain_manager_ext_id: str | None = Field(None, alias="domainManagerExtId", exclude=True)
+    replication_sub_location: ReplicationSubLocation | None = Field(
+        None, alias="replicationSubLocation", exclude=True
+    )
     # The primary location's Prism Central owns the policy
     is_primary: bool = Field(False, alias="isPrimary")
+
+
+class VmReplication(V4Model):
+    # The label of the target location, or "Prism Central <end of its ID>" if the policy has
+    # no location that fits
+    target: str
+    # IN_SYNC, SYNCING, OUT_OF_SYNC
+    status: str
 
 
 class ProtectedVm(V4Model):
@@ -515,6 +536,14 @@ class ProtectedVm(V4Model):
     newest_recovery_point: AwareDatetime | None = Field(None, alias="newestRecoveryPoint")
     # Prism Central couldn't report the VM's recovery points
     recovery_point_unknown: bool | None = Field(None, alias="recoveryPointUnknown")
+    # None: not fetched (the policy is local or replicates hourly or less often)
+    replications: list[VmReplication] | None = None
+    # Why a fetched VM has no replications. not_found: Prism Central doesn't know the VM as a
+    # protected resource (or it was deleted since it was listed). none_reported: it reports no
+    # replication state for this policy. incomplete: its states lack the status or the target.
+    replication_missing: str | None = Field(None, alias="replicationMissing")
+    # Prism Central couldn't report the VM's replication states
+    replication_unknown: bool | None = Field(None, alias="replicationUnknown")
 
 
 class ProtectionPolicy(V4Model):
@@ -555,3 +584,21 @@ class VmProtection(V4Model):
 
 class RecoveryPoint(V4Model):
     creation_time: AwareDatetime = Field(alias="creationTime")
+
+
+class DataProtectionSiteReference(V4Model):
+    # The Prism Central of the site
+    mgmt_cluster_ext_id: str | None = Field(None, alias="mgmtClusterExtId")
+    cluster_ext_id: str | None = Field(None, alias="clusterExtId")
+
+
+class ReplicationState(V4Model):
+    protection_policy_ext_id: str | None = Field(None, alias="protectionPolicyExtId")
+    replication_status: str | None = Field(None, alias="replicationStatus")
+    target_site_reference: DataProtectionSiteReference | None = Field(
+        None, alias="targetSiteReference"
+    )
+
+
+class ProtectedResource(V4Model):
+    replication_states: list[ReplicationState] = Field([], alias="replicationStates")

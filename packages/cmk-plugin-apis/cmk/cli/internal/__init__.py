@@ -185,9 +185,9 @@ class Command[R]:
     ...     return ExitCode.SUCCESS
     >>> cli_command_greet = Command(
     ...     name="greet",
+    ...     handler="cmk.plugins.greetings.cli.handlers.greet:cli_handler_greet",
     ...     long="greet",
     ...     request=greet_request,
-    ...     handler=greet,
     ...     help="Greet the given names",
     ...     arguments=Arguments("NAME...", optional=True),
     ... )
@@ -209,8 +209,10 @@ class Command[R]:
     to learn which options the command has, and once per run with the parsed
     command line.
     """
-    handler: Callable[[Context, R, Args], ExitCode]
-    """Runs the command with its request and returns the exit status"""
+    handler: Callable[[Context, R, Args], ExitCode] | str
+    """Where the command's :class:`Handler` lives, as ``module:object``, imported when the command
+    runs; or the command's handler function, until its family has moved it into a handler.
+    """
     short: str | None = None
     arguments: Arguments | None = None
     description: Sequence[str] = ()
@@ -220,6 +222,30 @@ class Command[R]:
     def __post_init__(self) -> None:
         if not self.name.isidentifier():
             raise ValueError(f"{self.name!r} is not an identifier")
+
+
+@dataclass(frozen=True, kw_only=True)
+class Handler[R]:
+    """The handler of a command, in a module of its own so that it loads only when the command runs.
+
+    Its command refers to it as ``module:object``:
+
+    >>> def greet(context: Context, request: None, args: Args) -> ExitCode:
+    ...     print("Hello", ", ".join(args))
+    ...     return ExitCode.SUCCESS
+    >>> cli_command_greet = Command(
+    ...     name="greet",
+    ...     handler="cmk.plugins.greetings.cli.handlers.greet:cli_handler_greet",
+    ...     long="greet",
+    ...     request=no_options,
+    ...     help="Greet the given names",
+    ... )
+    >>> cli_handler_greet = Handler(command=cli_command_greet, run=greet)
+    """
+
+    command: Command[R]
+    run: Callable[[Context, R, Args], ExitCode]
+    """Runs the command with its request and returns the exit status"""
 
 
 def entry_point_prefixes() -> Mapping[type[Command[object]], str]:
@@ -246,6 +272,7 @@ __all__ = [
     "ExitCode",
     "Flag",
     "GlobalOptions",
+    "Handler",
     "no_options",
     "Reader",
     "Value",

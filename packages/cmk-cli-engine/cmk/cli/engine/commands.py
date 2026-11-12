@@ -58,7 +58,11 @@ def bind[R](command: CLICommand[R], run: Run[R], reader: CLIReader) -> BoundComm
 
 
 def inline_run[R](command: CLICommand[R]) -> Run[R]:
-    return command.handler
+    match command.handler:
+        case str():
+            raise LookupError(f"--{command.long} has a handler plug-in instead")
+        case run:
+            return run
 
 
 def _spelled(command: DiscoveredCommand) -> str:

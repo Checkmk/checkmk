@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import importlib
 from collections.abc import Callable, Sequence
 from functools import partial
 
@@ -10,6 +11,7 @@ from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
 from cmk.cli.internal import entry_point_prefixes as cli_entry_point_prefixes
 from cmk.cli.internal import Flag as CLIFlag
+from cmk.cli.internal import Handler as CLIHandler
 from cmk.cli.internal import Value as CLIValue
 from cmk.discover_plugins import discover_all_plugins, PluginGroup, PluginLocation
 
@@ -29,6 +31,38 @@ def _selector[R](command: CLICommand[R]) -> CLIFlag | CLIValue[str]:
                 placeholder=placeholder,
                 parse=str,
             )
+
+
+def _split_reference(reference: str) -> tuple[str, str]:
+    module_name, _colon, object_name = reference.partition(":")
+    if not module_name or not object_name.isidentifier():
+        raise ValueError(f"{reference!r} does not refer to a handler as 'module:object'")
+    return module_name, object_name
+
+
+def _loaded_handler[R](command: CLICommand[R], reference: str) -> CLIHandler[R]:
+    module_name, object_name = _split_reference(reference)
+    match getattr(importlib.import_module(module_name), object_name, None):
+        case None:
+            raise LookupError(f"{module_name} has no {object_name}")
+        case CLIHandler() as handler if handler.command is command:
+            return handler
+        case CLIHandler() as handler:
+            raise ValueError(f"{reference} handles {handler.command.name!r}, not {command.name!r}")
+        case other:
+            raise TypeError(f"{reference} is a {type(other).__name__}, not a Handler")
+
+
+def load_handler[R](command: CLICommand[R]) -> CLIHandler[R]:
+    match command.handler:
+        case str(reference):
+            return _loaded_handler(command, reference)
+        case _:
+            raise LookupError(f"{command.name!r} carries its handler function itself")
+
+
+def loaded_run[R](command: CLICommand[R]) -> Run[R]:
+    return load_handler(command).run
 
 
 def make_command[R](command: CLICommand[R], run: Callable[[], Run[R]]) -> DiscoveredCommand:
@@ -63,7 +97,9 @@ def discover_commands() -> Sequence[DiscoveredCommand]:
     return tuple(
         make_command(
             _named_after_its_variable(prefixes[CLICommand], location, command),
-            partial(inline_run, command),
+            partial(loaded_run, command)
+            if isinstance(command.handler, str)
+            else partial(inline_run, command),
         )
         for location, command in discovered.plugins.items()
     )

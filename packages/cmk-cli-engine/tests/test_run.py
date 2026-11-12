@@ -10,12 +10,13 @@ from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager, nullcontext
 from pathlib import Path
 from types import FrameType
-from typing import Final, override
+from typing import Final, NoReturn, override
 
 import pytest
 
 from cmk.cli.engine.arguments import RunCommand as CLIRunCommand
 from cmk.cli.engine.commands import DiscoveredCommand as CLIDiscoveredCommand
+from cmk.cli.engine.discovery import make_command as cli_make_command
 from cmk.cli.engine.run import CommandTracer as CLICommandTracer
 from cmk.cli.engine.run import dispatch as cli_dispatch
 from cmk.cli.engine.run import run as cli_run
@@ -326,6 +327,25 @@ def test_a_command_reports_through_the_engines_logger() -> None:
     _run(["cmk", "--demo"], _runtime([_command(remember)], logger=logger))
 
     assert seen == [logger.getChild("cli")]
+
+
+def _unloadable() -> NoReturn:
+    raise ValueError("the handler module fails to import")
+
+
+def test_a_handler_that_fails_to_load_is_a_crash() -> None:
+    command = cli_make_command(
+        CLICommand(
+            name="demo",
+            handler="family.cli.handlers.demo:cli_handler_demo",
+            long="demo",
+            request=cli_no_options,
+            help="Demonstrate",
+        ),
+        _unloadable,
+    )
+
+    assert _run(["cmk", "--demo"], _runtime([command])) == CLIExitCode.FAILURE.value
 
 
 def test_an_unknown_option_exits_three() -> None:

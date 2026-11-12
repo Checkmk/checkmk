@@ -37,6 +37,7 @@ def test_run_transforms_the_trees_of_the_given_host(tmp_path: Path) -> None:
         ["cmk-transform-inventory-trees", "--host-name", "hostname"],
         omd_root=tmp_path,
         logger=null_logger(),
+        clock=lambda: 0.0,
         collect_host_names=FakeCollectHosts(["hostname"]),
     )
 
@@ -50,6 +51,7 @@ def test_run_applies_the_bundle_length(tmp_path: Path) -> None:
         ["cmk-transform-inventory-trees", "--bundle-length", "2"],
         omd_root=tmp_path,
         logger=null_logger(),
+        clock=lambda: 0.0,
         collect_host_names=FakeCollectHosts(["host1", "host2", "host3"]),
     )
 
@@ -63,6 +65,7 @@ def test_run_only_shows_the_results(tmp_path: Path) -> None:
         ["cmk-transform-inventory-trees", "--show-results"],
         omd_root=tmp_path,
         logger=null_logger(),
+        clock=lambda: 0.0,
         collect_host_names=FakeCollectHosts(["hostname"]),
     )
 
@@ -78,6 +81,7 @@ def test_run_exits_with_1_when_the_transformation_fails(tmp_path: Path) -> None:
             ["cmk-transform-inventory-trees"],
             omd_root=tmp_path,
             logger=null_logger(),
+            clock=lambda: 0.0,
             collect_host_names=FakeCollectHosts(["hostname"]),
         )
         == 1

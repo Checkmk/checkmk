@@ -25,6 +25,14 @@ from ._fixtures import gzipped_repr, raw_tree
 from ._logger import null_logger
 
 
+class FakeClock:
+    def __init__(self, *times: float) -> None:
+        self._times = list(times)
+
+    def __call__(self) -> float:
+        return self._times.pop(0) if len(self._times) > 1 else self._times[0]
+
+
 def test_transformation_nothing_to_do(tmp_path: Path) -> None:
     transform_inventory_trees(
         logger=null_logger(),
@@ -32,6 +40,7 @@ def test_transformation_nothing_to_do(tmp_path: Path) -> None:
         bundle_length=0,
         filter_host_names=[],
         all_host_names=[],
+        clock=FakeClock(0.0),
     )
 
 
@@ -47,6 +56,7 @@ def test_transform_replaces_the_legacy_inventory_trees(tmp_path: Path) -> None:
         bundle_length=0,
         filter_host_names=["hostname"],
         all_host_names=["hostname"],
+        clock=FakeClock(0.0),
     )
 
     assert (
@@ -67,6 +77,7 @@ def test_transform_replaces_the_legacy_status_data_tree(tmp_path: Path) -> None:
         bundle_length=0,
         filter_host_names=["hostname"],
         all_host_names=["hostname"],
+        clock=FakeClock(0.0),
     )
 
     assert (
@@ -87,6 +98,7 @@ def test_transform_replaces_the_legacy_archive_tree(tmp_path: Path) -> None:
         bundle_length=0,
         filter_host_names=["hostname"],
         all_host_names=["hostname"],
+        clock=FakeClock(0.0),
     )
 
     assert (
@@ -107,6 +119,7 @@ def test_transform_replaces_the_legacy_delta_cache_tree(tmp_path: Path) -> None:
         bundle_length=0,
         filter_host_names=["hostname"],
         all_host_names=["hostname"],
+        clock=FakeClock(0.0),
     )
 
     assert (
@@ -154,6 +167,7 @@ def test_the_bundle_length_limits_the_transformed_trees(tmp_path: Path) -> None:
         bundle_length=2,
         filter_host_names=[],
         all_host_names=["host1", "host2", "host3"],
+        clock=FakeClock(0.0),
     )
 
     assert len(list((tmp_path / "var/check_mk/inventory").glob("*.json"))) == 2
@@ -168,6 +182,7 @@ def test_without_a_bundle_length_at_least_one_tree_is_transformed(tmp_path: Path
         bundle_length=0,
         filter_host_names=[],
         all_host_names=["host1", "host2"],
+        clock=FakeClock(0.0),
     )
 
     assert len(list((tmp_path / "var/check_mk/inventory").glob("*.json"))) == 1
@@ -201,6 +216,7 @@ def test_a_transformed_tree_is_not_overwritten_by_its_legacy_tree(tmp_path: Path
         bundle_length=0,
         filter_host_names=["hostname"],
         all_host_names=["hostname"],
+        clock=FakeClock(0.0),
     )
 
     assert json.loads((tmp_path / "var/check_mk/inventory/hostname.json").read_text()) == raw_tree(
@@ -221,6 +237,7 @@ def test_a_stray_file_in_the_archive_directory_is_skipped(tmp_path: Path) -> Non
         bundle_length=0,
         filter_host_names=["hostname"],
         all_host_names=["hostname"],
+        clock=FakeClock(0.0),
     )
 
     assert (tmp_path / "var/check_mk/inventory_archive/hostname/123.json").exists()
@@ -245,3 +262,18 @@ def test_show_transformation_results_renders_the_size(
     show_transformation_results(omd_root=tmp_path, filter_host_names=[], all_host_names=[])
 
     assert f"Size: {rendered_size}\n" in capsys.readouterr().out
+
+
+def test_transform_records_the_precise_duration(tmp_path: Path) -> None:
+    _save_legacy_inventory_trees(tmp_path, ["hostname"])
+
+    transform_inventory_trees(
+        logger=null_logger(),
+        omd_root=tmp_path,
+        bundle_length=0,
+        filter_host_names=[],
+        all_host_names=["hostname"],
+        clock=FakeClock(10.0, 10.25),
+    )
+
+    assert [r["duration"] for r in TransformationResultsStore(tmp_path).load()] == [0.25]

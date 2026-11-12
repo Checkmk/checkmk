@@ -7,8 +7,7 @@ import logging
 import math
 import os
 import sys
-import time
-from collections.abc import Iterator, Sequence
+from collections.abc import Callable, Iterator, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TypedDict
@@ -225,13 +224,15 @@ def _compute_bundle(
     return host_tree_paths[: math.ceil(total_count / _NUMBER_OF_BUNDLES)]
 
 
-def _transform_host_tree_path(host_tree_path: _HostTreePath) -> TransformationResult:
-    now = time.time()
+def _transform_host_tree_path(
+    host_tree_path: _HostTreePath, clock: Callable[[], float]
+) -> TransformationResult:
+    start = clock()
     transform(host_tree_path.tree_path, host_tree_path.stat.st_mtime)
     return TransformationResult(
         host_name=host_tree_path.host_name,
         path=str(host_tree_path.tree_path.legacy),
-        duration=int(time.time() - now),
+        duration=clock() - start,
         size=host_tree_path.stat.st_size,
     )
 
@@ -267,6 +268,7 @@ def transform_inventory_trees(
     bundle_length: int,
     filter_host_names: Sequence[str],
     all_host_names: Sequence[str],
+    clock: Callable[[], float],
 ) -> int:
     host_tree_paths, _unknown_file_paths = _collect_selected_host_tree_paths_or_unknown_file_paths(
         omd_root, filter_host_names, all_host_names
@@ -284,7 +286,7 @@ def transform_inventory_trees(
 
     new_transformation_results = []
     for host_tree_path in to_be_transformed:
-        new_transformation_results.append(_transform_host_tree_path(host_tree_path))
+        new_transformation_results.append(_transform_host_tree_path(host_tree_path, clock))
 
     if len_results := len(new_transformation_results):
         logger.info("Transformed %(tree_count)s inventory trees", {"tree_count": len_results})

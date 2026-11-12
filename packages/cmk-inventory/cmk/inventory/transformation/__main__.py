@@ -7,8 +7,9 @@ import logging
 import os
 import subprocess
 import sys
+import time
 from argparse import ArgumentParser, Namespace
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Protocol
 
@@ -70,6 +71,7 @@ def run(
     *,
     omd_root: Path,
     logger: logging.Logger,
+    clock: Callable[[], float],
     collect_host_names: HostNamesCollector = _collect_hosts,
 ) -> int:
     args = _parse_arguments(argv)
@@ -86,6 +88,7 @@ def run(
             bundle_length=args.bundle_length,
             filter_host_names=args.host_name,
             all_host_names=collect_host_names(logger),
+            clock=clock,
         )
     except Exception:
         logger.exception("Failed to transform inventory trees")
@@ -93,7 +96,12 @@ def run(
 
 
 def main() -> int:
-    return run(sys.argv, omd_root=Path(os.environ.get("OMD_ROOT", "")), logger=logger)
+    return run(
+        sys.argv,
+        omd_root=Path(os.environ.get("OMD_ROOT", "")),
+        logger=logger,
+        clock=time.perf_counter,
+    )
 
 
 if __name__ == "__main__":

@@ -130,6 +130,11 @@ msgstr ""
 msgid " Ignore this option"
 msgstr " このオプションは無視してください"
 
+msgid ""
+" It is not a secret: it is stored and passed in plain text, so every user "
+"who can read this rule can copy it."
+msgstr ""
+
 #, python-format
 msgid " Match groups: %(groups)s"
 msgstr " 一致グループ:%(groups)s"
@@ -3129,6 +3134,14 @@ msgstr ""
 "現在、復元が実行されています。バックアップを削除できるのは、復元が実行されて"
 "いないときだけです。"
 
+msgid ""
+"A role in the management account that may call "
+"<tt>organizations:ListAccounts</tt>. The credentials assume it only to list "
+"the accounts. The role in each account is still assumed directly from the "
+"credentials. Leave this unchecked when the credentials may list the accounts "
+"themselves, for example as a delegated administrator."
+msgstr ""
+
 msgid "A rule pack with this ID already exists."
 msgstr "このIDのルールパックはすでに存在します。"
 
@@ -3507,6 +3520,10 @@ msgstr "APTアップデート"
 
 msgid "ARM 64-bit only"
 msgstr "ARM 64-bit 専用"
+
+#, fuzzy
+msgid "ARN"
+msgstr "警告"
 
 msgid "ASCII email"
 msgstr "ASCII Eメール"
@@ -46297,9 +46314,6 @@ msgstr "リソースの名前"
 msgid "Name of the resource group"
 msgstr "リソースグループの名前"
 
-msgid "Name of the role in every account"
-msgstr "各アカウントにおけるロールの名称"
-
 msgid "Name of the service"
 msgstr "サービスの名前"
 
@@ -58882,6 +58896,10 @@ msgid "Role attribute must not be empty"
 msgstr "role属性は空にできません"
 
 #, fuzzy
+msgid "Role in every account"
+msgstr "各アカウントにおけるロールの名称"
+
+#, fuzzy
 msgid "Role that lists the accounts"
 msgstr "このアカウントへのログインを無効にする"
 
@@ -61398,15 +61416,18 @@ msgstr "送信済み"
 msgid "Sent on: %(sent_on)s, expires on: %(expires_on)s"
 msgstr "送信日: %(sent_on)s、有効期限: %(expires_on)s"
 
+msgid ""
+"Sent only when the credentials assume this role. Set it when the trust "
+"policy of this role requires one."
+msgstr ""
+
 msgid "Sent vs Received Traffic Breakdown"
 msgstr "送信済みトラフィックと受信済みトラフィックの内訳"
 
 msgid ""
-"Sent with every AssumeRole call of this rule, the same for every account and "
-"for the role that lists the accounts. Set it when the roles require one. A "
-"rule on this site can then use those roles only if it knows the ID. It is "
-"not a secret: it is stored and passed in plain text, so every user who can "
-"read this rule can copy it."
+"Sent when the credentials assume the role in each account, the same for "
+"every account. Set it when the roles require one. A rule on this site can "
+"then use those roles only if it knows the ID."
 msgstr ""
 
 msgid "Sentinel"
@@ -67714,6 +67735,10 @@ msgstr "外形監視"
 msgid "Synthetic monitoring (licensed tests: %(limit)s)"
 msgstr "外形監視（ライセンス対象のテスト：%(limit)s）"
 
+#, fuzzy
+msgid "Synthetic monitoring explorer"
+msgstr "外形監視"
+
 msgid "Synthetic monitoring is an add-on."
 msgstr "外形監視はアドオンです。"
 
@@ -68813,14 +68838,6 @@ msgstr "'send everu'の値は０より大きくなければなりません。"
 
 msgid "The <i>from</i> time must not be later then the <i>until</i> time."
 msgstr "<i>from</i>の時間は、<i>until</i>の時間より遅くてはなりません。"
-
-msgid ""
-"The ARN of a role in the management account that may call "
-"<tt>organizations:ListAccounts</tt>. The credentials assume it only to list "
-"the accounts. The role in each account is still assumed directly from the "
-"credentials. Leave this empty when the credentials may list the accounts "
-"themselves, for example as a delegated administrator."
-msgstr ""
 
 msgid "The ARN of the IAM role to assume"
 msgstr "引き受けるIAMロールのARN"
@@ -77716,6 +77733,14 @@ msgstr ""
 msgid ""
 "This permission allows users to migrate other users to another connection"
 msgstr "この権限を持つユーザーは他のユーザーを別の接続に移行することができます"
+
+#, fuzzy
+msgid ""
+"This permission allows users to see the results of their synthetic tests in "
+"the synthetic monitoring explorer."
+msgstr ""
+"この権限により、ユーザーはウェブインターフェイスを使用して、本機 のユーザーに"
+"メッセージを送信することができます。"
 
 msgid ""
 "This permission allows users to send messages to the users of the monitoring "
@@ -87126,6 +87151,10 @@ msgstr "Check_MKサービスのステータスを使用する"
 msgid "Use the status of the service..."
 msgstr "サービスのステータスを使用します..."
 
+#, fuzzy
+msgid "Use the synthetic monitoring explorer"
+msgstr "外形監視テスト"
+
 msgid "Use the threshold reported by the device"
 msgstr "デバイスから報告されたしきい値を使用する"
 
@@ -92193,6 +92222,10 @@ msgid ""
 msgstr ""
 "アクションの実行が許可されていません。エラーと思われる場合は、管理者に許可を"
 "確認してください。"
+
+#, fuzzy
+msgid "You are not allowed to see the pending changes"
+msgstr "セットアップの使用は許可されていません。"
 
 msgid "You are not allowed to use passwords from the password store here."
 msgstr ""
@@ -103713,6 +103746,25 @@ msgstr "メトリックが選択されていません。"
 msgid "Select a metric to see its graph"
 msgstr "カスタムグラフを選択する"
 
+msgid ""
+"OpenTelemetry data is disabled on %{host} by the dynamic host management "
+"connection \"%{connection}\", so this service will not receive data on that "
+"host. Enable OpenTelemetry data in that connection."
+msgstr ""
+
+msgid ""
+"OpenTelemetry data is disabled and locked on %{host}, so this service will "
+"not receive data on that host."
+msgstr ""
+
+#, fuzzy
+msgid "OpenTelemetry data will be enabled on %{hosts} when you save."
+msgstr "保存するとキーペアが生成されます。"
+
+#, fuzzy
+msgid "Could not check whether OpenTelemetry data is enabled on the hosts."
+msgstr "OpenTelemetryの設定を保存できませんでした"
+
 #, fuzzy
 msgid "Enter a host name template to see the hosts it matches."
 msgstr "ホスト名の命名に使用されるホスト名テンプレート"
@@ -106424,10 +106476,6 @@ msgid "Could not change the selected services"
 msgstr "選択したサービスのダウンタイムをスケジュールできませんでした"
 
 #, fuzzy
-msgid "Not available yet"
-msgstr "まだ利用できません。"
-
-#, fuzzy
 msgid "Selected: %{count}"
 msgstr "(ホスト選択)"
 
@@ -108633,6 +108681,10 @@ msgstr ""
 #, fuzzy
 msgid "To explore"
 msgstr "取り上げるトピック"
+
+#, fuzzy
+#~ msgid "Not available yet"
+#~ msgstr "まだ利用できません。"
 
 #~ msgid "Deprecated GUI extensions"
 #~ msgstr "非推奨のGUI拡張機能"

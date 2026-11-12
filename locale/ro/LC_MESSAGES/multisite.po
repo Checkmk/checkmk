@@ -130,6 +130,11 @@ msgstr ""
 msgid " Ignore this option"
 msgstr " Ignoră această opțiune"
 
+msgid ""
+" It is not a secret: it is stored and passed in plain text, so every user "
+"who can read this rule can copy it."
+msgstr ""
+
 #, python-format
 msgid " Match groups: %(groups)s"
 msgstr " Se potrivește grupurilor: %(groups)s"
@@ -3181,6 +3186,14 @@ msgstr ""
 "În prezent, se execută o restaurare. Puteți șterge doar copiile de rezervă "
 "în timp ce nu se execută o restaurare."
 
+msgid ""
+"A role in the management account that may call "
+"<tt>organizations:ListAccounts</tt>. The credentials assume it only to list "
+"the accounts. The role in each account is still assumed directly from the "
+"credentials. Leave this unchecked when the credentials may list the accounts "
+"themselves, for example as a delegated administrator."
+msgstr ""
+
 msgid "A rule pack with this ID already exists."
 msgstr "Există deja un pachet de reguli cu acest ID."
 
@@ -3597,6 +3610,10 @@ msgstr "Actualizări APT"
 
 msgid "ARM 64-bit only"
 msgstr ""
+
+#, fuzzy
+msgid "ARN"
+msgstr "WARN"
 
 #, fuzzy
 msgid "ASCII email"
@@ -49410,10 +49427,6 @@ msgstr "Numele grupului de resurse"
 msgid "Name of the resource group"
 msgstr "Numele grupului de resurse"
 
-#, fuzzy
-msgid "Name of the role in every account"
-msgstr "Numele interfeței de legătură"
-
 msgid "Name of the service"
 msgstr "Denumirea serviciului"
 
@@ -63026,6 +63039,10 @@ msgid "Role attribute must not be empty"
 msgstr "Atributul nu există."
 
 #, fuzzy
+msgid "Role in every account"
+msgstr "Numele interfeței de legătură"
+
+#, fuzzy
 msgid "Role that lists the accounts"
 msgstr "dezactivează autentificarea în acest cont"
 
@@ -65671,15 +65688,18 @@ msgstr "Trimis"
 msgid "Sent on: %(sent_on)s, expires on: %(expires_on)s"
 msgstr "Versiunea: %s, Ediție: %s"
 
+msgid ""
+"Sent only when the credentials assume this role. Set it when the trust "
+"policy of this role requires one."
+msgstr ""
+
 msgid "Sent vs Received Traffic Breakdown"
 msgstr "Defalcarea traficului trimis vs. primit"
 
 msgid ""
-"Sent with every AssumeRole call of this rule, the same for every account and "
-"for the role that lists the accounts. Set it when the roles require one. A "
-"rule on this site can then use those roles only if it knows the ID. It is "
-"not a secret: it is stored and passed in plain text, so every user who can "
-"read this rule can copy it."
+"Sent when the credentials assume the role in each account, the same for "
+"every account. Set it when the roles require one. A rule on this site can "
+"then use those roles only if it knows the ID."
 msgstr ""
 
 msgid "Sentinel"
@@ -72404,6 +72424,10 @@ msgid "Synthetic monitoring (licensed tests: %(limit)s)"
 msgstr "Monitorizare sintetică (teste autorizate: %s)"
 
 #, fuzzy
+msgid "Synthetic monitoring explorer"
+msgstr "Monitorizare sintetică"
+
+#, fuzzy
 msgid "Synthetic monitoring is an add-on."
 msgstr "Căutare în Monitorizare"
 
@@ -73599,14 +73623,6 @@ msgstr "Clusterul trebuie să aibă cel puțin un nod"
 msgid "The <i>from</i> time must not be later then the <i>until</i> time."
 msgstr ""
 "Timpul <i>de la</i> nu trebuie să fie mai târziu de timpul <i>până la</i>."
-
-msgid ""
-"The ARN of a role in the management account that may call "
-"<tt>organizations:ListAccounts</tt>. The credentials assume it only to list "
-"the accounts. The role in each account is still assumed directly from the "
-"credentials. Leave this empty when the credentials may list the accounts "
-"themselves, for example as a delegated administrator."
-msgstr ""
 
 msgid "The ARN of the IAM role to assume"
 msgstr "ARN al rolului IAM care trebuie asumat"
@@ -82505,6 +82521,14 @@ msgid ""
 msgstr ""
 "Această permisiune permite utilizatorilor să migreze alți utilizatori către "
 "o altă conexiune"
+
+#, fuzzy
+msgid ""
+"This permission allows users to see the results of their synthetic tests in "
+"the synthetic monitoring explorer."
+msgstr ""
+"Această permisiune permite utilizatorilor să trimită mesaje utilizatorilor "
+"sistemului de monitorizare prin intermediul interfeței web."
 
 msgid ""
 "This permission allows users to send messages to the users of the monitoring "
@@ -92786,6 +92810,10 @@ msgid "Use the status of the service..."
 msgstr "Utilizați starea serviciului..."
 
 #, fuzzy
+msgid "Use the synthetic monitoring explorer"
+msgstr "Monitorizare sintetică"
+
+#, fuzzy
 msgid "Use the threshold reported by the device"
 msgstr "Utilizați starea serviciului..."
 
@@ -98161,6 +98189,10 @@ msgstr ""
 "Nu vi se permite să efectuați acțiuni. Dacă credeți că este o eroare, vă "
 "rugăm să cereți administratorului dumneavoastră să vă acorde permisiunea de "
 "a face acest lucru."
+
+#, fuzzy
+msgid "You are not allowed to see the pending changes"
+msgstr "Nu aveți voie să folosiți configurația."
 
 msgid "You are not allowed to use passwords from the password store here."
 msgstr "Nu aveți voie să folosiți aici parole din magazinul de parole."
@@ -110102,6 +110134,25 @@ msgstr "Niciuna selectată"
 msgid "Select a metric to see its graph"
 msgstr "Clonarea graficului personalizat"
 
+msgid ""
+"OpenTelemetry data is disabled on %{host} by the dynamic host management "
+"connection \"%{connection}\", so this service will not receive data on that "
+"host. Enable OpenTelemetry data in that connection."
+msgstr ""
+
+msgid ""
+"OpenTelemetry data is disabled and locked on %{host}, so this service will "
+"not receive data on that host."
+msgstr ""
+
+#, fuzzy
+msgid "OpenTelemetry data will be enabled on %{hosts} when you save."
+msgstr "Perechea de chei va fi generată atunci când salvați."
+
+#, fuzzy
+msgid "Could not check whether OpenTelemetry data is enabled on the hosts."
+msgstr "Adaugp o noua configurație de utilizator"
+
 #, fuzzy
 msgid "Enter a host name template to see the hosts it matches."
 msgstr "Șablon de nume de gazdă"
@@ -112816,10 +112867,6 @@ msgid "Could not change the selected services"
 msgstr "Gazda/serviciul trebuie să aibă unul dintre contactele selectate."
 
 #, fuzzy
-msgid "Not available yet"
-msgstr "nu este disponibil"
-
-#, fuzzy
 msgid "Selected: %{count}"
 msgstr "Ștergeți gazda"
 
@@ -114891,6 +114938,10 @@ msgstr ""
 #, fuzzy
 msgid "To explore"
 msgstr "Procesul a expirat"
+
+#, fuzzy
+#~ msgid "Not available yet"
+#~ msgstr "nu este disponibil"
 
 #, fuzzy
 #~ msgid "Deprecated GUI extensions"

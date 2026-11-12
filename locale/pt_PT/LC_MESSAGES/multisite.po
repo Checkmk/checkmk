@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-11-11 08:55+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
@@ -131,6 +131,11 @@ msgstr ""
 
 msgid " Ignore this option"
 msgstr " Ignorar esta opção"
+
+msgid ""
+" It is not a secret: it is stored and passed in plain text, so every user "
+"who can read this rule can copy it."
+msgstr ""
 
 #, python-format
 msgid " Match groups: %(groups)s"
@@ -3150,6 +3155,14 @@ msgstr ""
 "Uma restauração está actualmente em curso. Você só pode excluir backups "
 "enquanto nenhuma restauração estiver em execução."
 
+msgid ""
+"A role in the management account that may call "
+"<tt>organizations:ListAccounts</tt>. The credentials assume it only to list "
+"the accounts. The role in each account is still assumed directly from the "
+"credentials. Leave this unchecked when the credentials may list the accounts "
+"themselves, for example as a delegated administrator."
+msgstr ""
+
 msgid "A rule pack with this ID already exists."
 msgstr "Já existe um pacote de regras com esta identificação."
 
@@ -3562,6 +3575,10 @@ msgstr "Atualizações do APT"
 
 msgid "ARM 64-bit only"
 msgstr ""
+
+#, fuzzy
+msgid "ARN"
+msgstr "ADVERTÊNCIA"
 
 #, fuzzy
 msgid "ASCII email"
@@ -49244,10 +49261,6 @@ msgstr "Nome do grupo de recursos"
 msgid "Name of the resource group"
 msgstr "Nome do grupo de recursos"
 
-#, fuzzy
-msgid "Name of the role in every account"
-msgstr "Nome da interface de ligação"
-
 msgid "Name of the service"
 msgstr "Nome do serviço"
 
@@ -62847,6 +62860,10 @@ msgid "Role attribute must not be empty"
 msgstr "O atributo não existe."
 
 #, fuzzy
+msgid "Role in every account"
+msgstr "Nome da interface de ligação"
+
+#, fuzzy
 msgid "Role that lists the accounts"
 msgstr "desabilitar o login a esta conta"
 
@@ -65467,15 +65484,18 @@ msgstr "Enviado para"
 msgid "Sent on: %(sent_on)s, expires on: %(expires_on)s"
 msgstr "Versão: %s, Edição: %s"
 
+msgid ""
+"Sent only when the credentials assume this role. Set it when the trust "
+"policy of this role requires one."
+msgstr ""
+
 msgid "Sent vs Received Traffic Breakdown"
 msgstr "Distribuição do Tráfego Enviado vs Recebido"
 
 msgid ""
-"Sent with every AssumeRole call of this rule, the same for every account and "
-"for the role that lists the accounts. Set it when the roles require one. A "
-"rule on this site can then use those roles only if it knows the ID. It is "
-"not a secret: it is stored and passed in plain text, so every user who can "
-"read this rule can copy it."
+"Sent when the credentials assume the role in each account, the same for "
+"every account. Set it when the roles require one. A rule on this site can "
+"then use those roles only if it knows the ID."
 msgstr ""
 
 msgid "Sentinel"
@@ -72130,6 +72150,10 @@ msgid "Synthetic monitoring (licensed tests: %(limit)s)"
 msgstr "Pesquisa em Monitorização"
 
 #, fuzzy
+msgid "Synthetic monitoring explorer"
+msgstr "Pesquisa em Monitorização"
+
+#, fuzzy
 msgid "Synthetic monitoring is an add-on."
 msgstr "Pesquisa em Monitorização"
 
@@ -73332,14 +73356,6 @@ msgstr "O agrupamento deve ter pelo menos um nó"
 
 msgid "The <i>from</i> time must not be later then the <i>until</i> time."
 msgstr "O tempo <i> de</i> não deve ser posterior, então o tempo <i> até</i>."
-
-msgid ""
-"The ARN of a role in the management account that may call "
-"<tt>organizations:ListAccounts</tt>. The credentials assume it only to list "
-"the accounts. The role in each account is still assumed directly from the "
-"credentials. Leave this empty when the credentials may list the accounts "
-"themselves, for example as a delegated administrator."
-msgstr ""
 
 msgid "The ARN of the IAM role to assume"
 msgstr "A ARN do papel do IAM para assumir"
@@ -82121,6 +82137,14 @@ msgid ""
 msgstr ""
 "Esta permissão permite aos utilizadores migrarem outros utilizadores para "
 "outra ligação"
+
+#, fuzzy
+msgid ""
+"This permission allows users to see the results of their synthetic tests in "
+"the synthetic monitoring explorer."
+msgstr ""
+"Esta permissão permite aos utilizadores enviar mensagens aos utilizadores do "
+"sistema de monitorização utilizando a interface Web."
 
 msgid ""
 "This permission allows users to send messages to the users of the monitoring "
@@ -92416,6 +92440,10 @@ msgid "Use the status of the service..."
 msgstr "Use o status do serviço..."
 
 #, fuzzy
+msgid "Use the synthetic monitoring explorer"
+msgstr "Pesquisa em Monitorização"
+
+#, fuzzy
 msgid "Use the threshold reported by the device"
 msgstr "Use o status do serviço..."
 
@@ -97753,6 +97781,10 @@ msgstr ""
 "Você não está autorizado a realizar ações. Se você acha que isto é um erro, "
 "por favor peça ao seu administrador que lhe conceda a permissão para o fazer."
 
+#, fuzzy
+msgid "You are not allowed to see the pending changes"
+msgstr "Você não está autorizado a usar a configuração."
+
 msgid "You are not allowed to use passwords from the password store here."
 msgstr "Você não está autorizado a usar senhas da loja de senhas aqui."
 
@@ -100338,7 +100370,6 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
-#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -100824,7 +100855,6 @@ msgstr ""
 msgid "hosts"
 msgstr "hospedeiros"
 
-#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""
@@ -109619,6 +109649,25 @@ msgstr "Nenhum selecionado"
 msgid "Select a metric to see its graph"
 msgstr "Clonar gráfico personalizado"
 
+msgid ""
+"OpenTelemetry data is disabled on %{host} by the dynamic host management "
+"connection \"%{connection}\", so this service will not receive data on that "
+"host. Enable OpenTelemetry data in that connection."
+msgstr ""
+
+msgid ""
+"OpenTelemetry data is disabled and locked on %{host}, so this service will "
+"not receive data on that host."
+msgstr ""
+
+#, fuzzy
+msgid "OpenTelemetry data will be enabled on %{hosts} when you save."
+msgstr "O par de chaves será gerado quando você salvar."
+
+#, fuzzy
+msgid "Could not check whether OpenTelemetry data is enabled on the hosts."
+msgstr "Adicionar nova configuração de usuário"
+
 #, fuzzy
 msgid "Enter a host name template to see the hosts it matches."
 msgstr "Modelo de nome de anfitrião"
@@ -112241,10 +112290,6 @@ msgid "Could not change the selected services"
 msgstr "O anfitrião/serviço deve ter um dos contactos seleccionados."
 
 #, fuzzy
-msgid "Not available yet"
-msgstr "não disponíveis"
-
-#, fuzzy
 msgid "Selected: %{count}"
 msgstr "Eliminar o anfitrião"
 
@@ -114302,6 +114347,10 @@ msgstr ""
 #, fuzzy
 msgid "To explore"
 msgstr "O julgamento expirou"
+
+#, fuzzy
+#~ msgid "Not available yet"
+#~ msgstr "não disponíveis"
 
 #, fuzzy
 #~ msgid "Deprecated GUI extensions"

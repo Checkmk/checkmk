@@ -129,6 +129,11 @@ msgstr ""
 msgid " Ignore this option"
 msgstr " Ignorar esta opción"
 
+msgid ""
+" It is not a secret: it is stored and passed in plain text, so every user "
+"who can read this rule can copy it."
+msgstr ""
+
 #, python-format
 msgid " Match groups: %(groups)s"
 msgstr " Grupos coincidentes: %(groups)s"
@@ -3161,6 +3166,14 @@ msgstr ""
 "Se está ejecutando una restauración. Sólo puede eliminar las copias de "
 "seguridad mientras no se esté ejecutando una restauración."
 
+msgid ""
+"A role in the management account that may call "
+"<tt>organizations:ListAccounts</tt>. The credentials assume it only to list "
+"the accounts. The role in each account is still assumed directly from the "
+"credentials. Leave this unchecked when the credentials may list the accounts "
+"themselves, for example as a delegated administrator."
+msgstr ""
+
 msgid "A rule pack with this ID already exists."
 msgstr "Ya existe un paquete de reglas con este ID."
 
@@ -3577,6 +3590,10 @@ msgstr "Actualizaciones de APT"
 
 msgid "ARM 64-bit only"
 msgstr ""
+
+#, fuzzy
+msgid "ARN"
+msgstr "WARN"
 
 #, fuzzy
 msgid "ASCII email"
@@ -49595,10 +49612,6 @@ msgstr "Nombre del grupo de recursos"
 msgid "Name of the resource group"
 msgstr "Nombre del grupo de recursos"
 
-#, fuzzy
-msgid "Name of the role in every account"
-msgstr "Nombre de la interfaz de enlace"
-
 msgid "Name of the service"
 msgstr "Nombre del servicio"
 
@@ -63318,6 +63331,10 @@ msgid "Role attribute must not be empty"
 msgstr "El atributo no existe."
 
 #, fuzzy
+msgid "Role in every account"
+msgstr "Nombre de la interfaz de enlace"
+
+#, fuzzy
 msgid "Role that lists the accounts"
 msgstr "desactivar el acceso a esta cuenta"
 
@@ -65950,15 +65967,18 @@ msgstr "Enviado"
 msgid "Sent on: %(sent_on)s, expires on: %(expires_on)s"
 msgstr "Versión: %s, Edición: %s"
 
+msgid ""
+"Sent only when the credentials assume this role. Set it when the trust "
+"policy of this role requires one."
+msgstr ""
+
 msgid "Sent vs Received Traffic Breakdown"
 msgstr "Desglose del tráfico enviado frente al recibido"
 
 msgid ""
-"Sent with every AssumeRole call of this rule, the same for every account and "
-"for the role that lists the accounts. Set it when the roles require one. A "
-"rule on this site can then use those roles only if it knows the ID. It is "
-"not a secret: it is stored and passed in plain text, so every user who can "
-"read this rule can copy it."
+"Sent when the credentials assume the role in each account, the same for "
+"every account. Set it when the roles require one. A rule on this site can "
+"then use those roles only if it knows the ID."
 msgstr ""
 
 msgid "Sentinel"
@@ -72682,6 +72702,10 @@ msgid "Synthetic monitoring (licensed tests: %(limit)s)"
 msgstr "Buscar en la supervisión"
 
 #, fuzzy
+msgid "Synthetic monitoring explorer"
+msgstr "Buscar en la supervisión"
+
+#, fuzzy
 msgid "Synthetic monitoring is an add-on."
 msgstr "Buscar en la supervisión"
 
@@ -73899,14 +73923,6 @@ msgstr "El clúster debe tener al menos un nodo"
 
 msgid "The <i>from</i> time must not be later then the <i>until</i> time."
 msgstr "La hora <i>desde</i> no debe ser posterior a la hora <i>hasta</i>."
-
-msgid ""
-"The ARN of a role in the management account that may call "
-"<tt>organizations:ListAccounts</tt>. The credentials assume it only to list "
-"the accounts. The role in each account is still assumed directly from the "
-"credentials. Leave this empty when the credentials may list the accounts "
-"themselves, for example as a delegated administrator."
-msgstr ""
 
 msgid "The ARN of the IAM role to assume"
 msgstr "El ARN del rol IAM a asumir"
@@ -82772,6 +82788,14 @@ msgid ""
 "This permission allows users to migrate other users to another connection"
 msgstr ""
 "Este permiso permite a los usuarios migrar a otros usuarios a otra conexión"
+
+#, fuzzy
+msgid ""
+"This permission allows users to see the results of their synthetic tests in "
+"the synthetic monitoring explorer."
+msgstr ""
+"Este permiso permite a los usuarios enviar mensajes a los usuarios del "
+"sistema de monitorización utilizando la interfaz web."
 
 msgid ""
 "This permission allows users to send messages to the users of the monitoring "
@@ -93136,6 +93160,10 @@ msgid "Use the status of the service..."
 msgstr "Utiliza el estado del servicio..."
 
 #, fuzzy
+msgid "Use the synthetic monitoring explorer"
+msgstr "Buscar en la supervisión"
+
+#, fuzzy
 msgid "Use the threshold reported by the device"
 msgstr "Utiliza el estado del servicio..."
 
@@ -98515,6 +98543,10 @@ msgid ""
 msgstr ""
 "No tiene permiso para realizar acciones. Si cree que se trata de un error, "
 "pida a su administrador que le conceda el permiso para hacerlo."
+
+#, fuzzy
+msgid "You are not allowed to see the pending changes"
+msgstr "No está permitido utilizar la configuración."
 
 msgid "You are not allowed to use passwords from the password store here."
 msgstr ""
@@ -110438,6 +110470,25 @@ msgstr "Ninguno seleccionado"
 msgid "Select a metric to see its graph"
 msgstr "Clonar gráfico personalizado"
 
+msgid ""
+"OpenTelemetry data is disabled on %{host} by the dynamic host management "
+"connection \"%{connection}\", so this service will not receive data on that "
+"host. Enable OpenTelemetry data in that connection."
+msgstr ""
+
+msgid ""
+"OpenTelemetry data is disabled and locked on %{host}, so this service will "
+"not receive data on that host."
+msgstr ""
+
+#, fuzzy
+msgid "OpenTelemetry data will be enabled on %{hosts} when you save."
+msgstr "El par de claves se generará al guardar."
+
+#, fuzzy
+msgid "Could not check whether OpenTelemetry data is enabled on the hosts."
+msgstr "Añadir una nueva configuración de usuario"
+
 #, fuzzy
 msgid "Enter a host name template to see the hosts it matches."
 msgstr "Plantilla de nombre de host"
@@ -113076,10 +113127,6 @@ msgid "Could not change the selected services"
 msgstr "El host/servicio debe tener uno de los contactos seleccionados."
 
 #, fuzzy
-msgid "Not available yet"
-msgstr "no disponible"
-
-#, fuzzy
 msgid "Selected: %{count}"
 msgstr "Borrar host"
 
@@ -115137,6 +115184,10 @@ msgstr ""
 #, fuzzy
 msgid "To explore"
 msgstr "La prueba ha caducado"
+
+#, fuzzy
+#~ msgid "Not available yet"
+#~ msgstr "no disponible"
 
 #, fuzzy
 #~ msgid "Deprecated GUI extensions"

@@ -344,8 +344,25 @@ describe('DashboardContentMonitoringTable', () => {
     })
   })
 
-  it('shows the host name as plain text, not as a button', async () => {
+  it('offers the details of a host from its name', async () => {
     await renderWidget()
+
+    expect(await screen.findByRole('button', { name: 'heute' })).toBeInTheDocument()
+  })
+
+  it('shows the host name as plain text in the wizard preview', async () => {
+    render(DashboardContentMonitoringTable, {
+      props: makeContentProps(CONTENT, { isPreview: true })
+    })
+    await nextTick()
+    deliverSize(800, 400)
+
+    expect(await screen.findByText('heute')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'heute' })).not.toBeInTheDocument()
+  })
+
+  it('shows the host name as plain text in a shared dashboard', async () => {
+    await renderInSharedDashboard()
 
     expect(await screen.findByText('heute')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'heute' })).not.toBeInTheDocument()
@@ -366,9 +383,9 @@ describe('DashboardContentMonitoringTable', () => {
     })
   })
 
-  it('shows the host of a service as text, not as a link', async () => {
+  it('shows the host of a service as text in a shared dashboard', async () => {
     value = SERVICES_VALUE
-    await renderWidget(SERVICES_CONTENT)
+    await renderInSharedDashboard(SERVICES_CONTENT)
     await screen.findByText('Check_MK')
 
     expect(screen.getByRole('cell', { name: /today/ })).toBeInTheDocument()

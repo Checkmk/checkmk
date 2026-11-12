@@ -98,6 +98,8 @@ function unappliedHint(value: ComputedMonitoringTable): string {
 // dashboard cannot open the pages the rows link to: in neither may the links navigate away.
 const blocksLinks = props.isPreview || useInjectIsPublicDashboard()
 
+const readOnly = !offersRowActions || blocksLinks
+
 function blockLinks(event: MouseEvent): void {
   if (blocksLinks && event.target instanceof Element && event.target.closest('a')) {
     event.preventDefault()
@@ -145,7 +147,7 @@ function truncatedHint(value: ComputedMonitoringTable): string {
             timestampFormat: content.timestamp_format
           }"
           :action-offer="actionOffer"
-          :read-only="true"
+          :read-only="readOnly"
           @performed="onPerformed"
         />
         <p v-if="value.matched > value.rows.length" class="db-content-monitoring-table__truncated">

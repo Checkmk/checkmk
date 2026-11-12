@@ -184,9 +184,9 @@ aiosqlite==0.22.1 \
     # via
     #   -c requirements.txt
     #   -r non-free/packages/cmk-ai-control-plane/requirements.in
-annotated-doc==0.0.5 \
-    --hash=sha256:117bac03a25ede5df5440e855b32d556049ca169ead221505badf432fed4b101 \
-    --hash=sha256:c7e58ce09192557605d8bbd92836d7e1d520ac9580096042c0bfd197efacf1bb
+annotated-doc==0.0.6 \
+    --hash=sha256:361ca0950cc7082f53fa69e9328409f40a62c61e57e0a47e1825a08078a58a53 \
+    --hash=sha256:7969bb69912085b2285849c0dcac0b4b374fd180c13cf10a87f284ffcf347bbf
     # via
     #   -c requirements.txt
     #   fastapi
@@ -199,9 +199,9 @@ annotated-types==0.8.0 \
     #   -r non-free/packages/cmk-data-backend/requirements.in
     #   -r non-free/packages/cmk-telemetry/requirements.in
     #   pydantic
-anthropic==2.6.0 \
-    --hash=sha256:4325cdf9346fa29183674b6ee6289ebad5b2b0a935758f7350fa504032da1d9b \
-    --hash=sha256:a38d8698258a4cb33a9bc9d2f0ced1d96b71010870e5ed703807d21021a0da24
+anthropic==2.8.0 \
+    --hash=sha256:76ad332e2d500fc54d0112cf100544ad1a7605e71e092b98d9eb664d2b66e283 \
+    --hash=sha256:d34e389ba0544cd64e033eb7475f46cc1ac6f2a388cdcd472b33ad4ac29ef40c
     # via
     #   -c requirements.txt
     #   -r non-free/packages/cmk-ai-control-plane/requirements.in
@@ -213,6 +213,7 @@ anyio==4.16.0 \
     #   -c requirements.txt
     #   -r packages/cmk-agent-receiver/requirements.in
     #   anthropic
+    #   fastapi
     #   httpx
     #   httpx2
     #   mcp
@@ -348,16 +349,16 @@ blinker==1.9.0 \
     # via
     #   -c requirements.txt
     #   flask
-boto3==1.43.126 \
-    --hash=sha256:5fda4a3dd2782c134a01d1678911962c2860dd8de8cd10bef168ba1507b371a9 \
-    --hash=sha256:dd701a973b02a73930e546a6a15d13edbfbedc3180bb3d55b0a88678c284ccd6
+boto3==1.44.1 \
+    --hash=sha256:1342653b8af9dc89f182cb5c0dfd5fa10f430d757c0ebd00326c053a6270d2c4 \
+    --hash=sha256:c81dfdaab894cbcba78aa3773fe3fb27a13b576f49ff5552b91190072fc7dac0
     # via
     #   -c requirements.txt
     #   -r packages/cmk-backup/requirements.in
     #   -r packages/cmk-plugins/requirements.in
-botocore==1.43.126 \
-    --hash=sha256:2f2239a47025a2fa173cd145ab8803ac02b76114864bf5b66475ff1cb88e6b0a \
-    --hash=sha256:96996af07d8b703c3cdf44863f69c0b4b8b2d1cb6976c641986ced3e38c072f3
+botocore==1.44.1 \
+    --hash=sha256:7a741074a78e28187c88d9f7f91db18731ea91725455873d863ae63ea35e75f3 \
+    --hash=sha256:e71f6249be2a7324899ba81c5958ac1809a78498ea2c8f60e00fc0e62262ab83
     # via
     #   -c requirements.txt
     #   -r packages/cmk-plugins/requirements.in
@@ -954,9 +955,9 @@ exchangelib==5.6.0 \
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
-fastapi==0.162.2 \
-    --hash=sha256:9ebd2a69b579141315b2447d8e3f518e6fd909abd6c01cac5cc6b06d5c8841f4 \
-    --hash=sha256:d0584f9662317e01140df94c64f4bed1d8b059fe35496e30c9c92f70e6e5ff15
+fastapi==0.162.5 \
+    --hash=sha256:1ca37f64f61c99cebd38636e67525fb721c5e8c1169f07f2a35d73b0a63265d4 \
+    --hash=sha256:5303c67415fde762889ca337db79d27b755b8bd09cef314fa7a4340bb30bfd2b
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
@@ -1195,9 +1196,9 @@ frozenlist==1.8.0 \
     #   -c requirements.txt
     #   aiohttp
     #   aiosignal
-genai-prices==0.2.1 \
-    --hash=sha256:b438753161537f2e2a5c937887721467dd5a24297a52ae77f946f541ce22c3a0 \
-    --hash=sha256:d3c19682e63ae3827e7d166fc92c0f69943f446aa58725f38090301ca1cae36d
+genai-prices==0.2.3 \
+    --hash=sha256:56976ce2b04ec206117f7d0e53f4849211a6724ab3a12119afec304eba63ee25 \
+    --hash=sha256:cdee9b0b2e44b1323c477ebe3c84e44ddbcdd1a3feb0ebce5bb2af1bc667d900
     # via
     #   -c requirements.txt
     #   pydantic-ai-slim
@@ -1224,15 +1225,15 @@ google-api-core[grpc]==2.33.0 \
     #   google-cloud-monitoring
     #   google-cloud-org-policy
     #   google-cloud-os-config
-google-api-python-client==2.201.0 \
-    --hash=sha256:2d9bf1ba3f12eee8ed3d0f1791ce0605d163432f496baa72d3677faa2cf097d6 \
-    --hash=sha256:d5691982abd7287f53cb0b0e0c6a9984d4103cf864ea0a88cb6e4347bbaf70de
+google-api-python-client==2.202.0 \
+    --hash=sha256:aaa90064c9bb642ff1d065b22ca8958a2cb6e345909cefe70d0e5452fc50e08b \
+    --hash=sha256:ae126c8e91f43c331e23dbd83bc4a8075699dd48089cebc7295f6ab2f5850fc5
     # via
     #   -c requirements.txt
     #   -r packages/cmk-plugins/requirements.in
-google-auth==2.62.1 \
-    --hash=sha256:015399a5abde39033c69404cc1c079e6d4c2de2993e164c9f4eac6e5376ad72b \
-    --hash=sha256:3c8e1ce2553784ae17fd220e6f88df3281d86ab98019278f436d06dffab17a9e
+google-auth==2.62.2 \
+    --hash=sha256:046c61a72d3a847d6df6417a7f0d5cf054e3b82bbcb54fb1e69d47880964049c \
+    --hash=sha256:e9bcdb0679b6a4369ac327c5c59f06d92f7b4cd2624e7100294c14632f55a36b
     # via
     #   -c requirements.txt
     #   -r packages/cmk-plugins/requirements.in
@@ -1380,9 +1381,9 @@ grpcio-status==1.80.1 \
     # via
     #   -c requirements.txt
     #   google-api-core
-gunicorn==26.2.0 \
-    --hash=sha256:62b864895d9ebff0b2f9867ba04fe811c93121596540830c9c916d0769668447 \
-    --hash=sha256:bd249d0b3f7972f7432f0a6b6ff3b3ee2d129f70cd1ff6c09a9dd9e29a2b88e3
+gunicorn==27.0.0 \
+    --hash=sha256:1380f2f520abc3beb9e72cd2e728bd2d08a19b3ff6ac03ebd8da71d1798a4008 \
+    --hash=sha256:88d52e7c60b3af07bc8db431fbb450a94780f2cbe7c420c7cf1891392661c591
     # via
     #   -c requirements.txt
     #   -r packages/cmk-agent-receiver/requirements.in
@@ -1607,9 +1608,9 @@ jmespath==1.1.0 \
     #   -c requirements.txt
     #   boto3
     #   botocore
-jsonpatch==1.45 \
-    --hash=sha256:e170131ff8c5b01216dfe35f034613209ee1fd012abbd849a9791f9139e44cf9 \
-    --hash=sha256:f0975a88d0b26b6ebbcdfc4620483cb56c249115833d51c426cae305b96519ad
+jsonpatch==1.47 \
+    --hash=sha256:5ed650b7517789e0f43428aa7b09442c0b90de0a0fd17a53fd0ebf55205c601e \
+    --hash=sha256:c9ba6de59c481bf2be05041514ecb0d97f994aa645c4e00831805dbe2281811a
     # via
     #   -c requirements.txt
     #   redfish
@@ -1619,9 +1620,9 @@ jsonpath-ng==1.16.0 \
     # via
     #   -c requirements.txt
     #   redfish
-jsonpointer==3.10 \
-    --hash=sha256:3b08b9e5239f1b683e31c9561c350d75ce3fa8cdd407130ca8491fdb0c9e56f3 \
-    --hash=sha256:69349c0e738c93e9efa501397091f49ad302ae686293effd05d7755c06f88ef0
+jsonpointer==3.12 \
+    --hash=sha256:7a3dcc11b64053eaa9c549e85e413f8d40a075215f793a331bed9182a14251ae \
+    --hash=sha256:89f391335ee2719ae72149e1bf30a4d4c7c5d92f15a3f53faa8d20cc7c6c7f19
     # via
     #   -c requirements.txt
     #   jsonpatch
@@ -1796,9 +1797,9 @@ lark==1.3.1 \
     # via
     #   -c requirements.txt
     #   pysmi
-logfire-api==5.5.0 \
-    --hash=sha256:175b968fdfe31c39248b7afb07529bcd3ecbb44933aa882b0e66e6cd3bc7c2e1 \
-    --hash=sha256:ffa071d45ddb89aa21dc5a1b24044aa8dc296606b60305ab988bfdc328f57f3e
+logfire-api==5.6.0 \
+    --hash=sha256:146c4292b11cc5c8a0a6eab1b0e93713c4575b9028e5693112bb776cb4db5026 \
+    --hash=sha256:e2341041ebe7bb0283d41e5defa03655f04706b2eeede9b89b6fc23b955ee565
     # via
     #   -c requirements.txt
     #   pydantic-graph
@@ -1990,9 +1991,9 @@ markdown==3.11.3 \
     # via
     #   -c requirements.txt
     #   -r packages/cmk-werks/requirements.in
-markdown-it-py==4.2.0 \
-    --hash=sha256:04a21681d6fbb623de53f6f364d352309d4094dd4194040a10fd51833e418d49 \
-    --hash=sha256:9f7ebbcd14fe59494226453aed97c1070d83f8d24b6fc3a3bcf9a38092641c4a
+markdown-it-py==4.3.0 \
+    --hash=sha256:7aa1511a46c39138de78d9eba92ce47e63124d8003fc98b3a351909e04239efa \
+    --hash=sha256:91a58fa5b72c71a40cf7177250fd767480d7a2bb3ac426ccfb76fb90305fdaaa
     # via
     #   -c requirements.txt
     #   rich
@@ -2512,9 +2513,9 @@ oauthlib==4.0.1 \
     #   -r cmk/requirements.in
     #   exchangelib
     #   requests-oauthlib
-openai==3.46.0 \
-    --hash=sha256:7b650117e9bf539029bf880c2eff94a26f281394f6572284efa5d068d4b1c98e \
-    --hash=sha256:fb34cd8cab6809ad0aa8dc42493fa622aaa87c814fd8e67a6fb3fa1f1e5d952d
+openai==3.49.0 \
+    --hash=sha256:3977754792115027ba80ae16996ba3366478b5b228e1ab58e2660bd7ac8c3d78 \
+    --hash=sha256:44badf2bea9bcd643dafa0bc4d5a109a14395889219fd68b8560322288196e96
     # via
     #   -c requirements.txt
     #   pydantic-ai-slim
@@ -3200,9 +3201,9 @@ pydantic==2.14.3 \
     #   openai
     #   pydantic-ai-slim
     #   pydantic-graph
-pydantic-ai-slim[anthropic, openai]==2.66.0 \
-    --hash=sha256:78968fa75086ddae9039bdaa3939e9510f15a40d5f1f58fb3ded04386f9292f2 \
-    --hash=sha256:c47bbd0abe6f51e5400308a53b4f7e3409a582b1459140c381e3d4701a205608
+pydantic-ai-slim[anthropic, openai]==2.68.0 \
+    --hash=sha256:7e545ad147ee955d3ee83532ad793570a444a3e7c290328c4809b67a32c78a01 \
+    --hash=sha256:bb2fe81f198b77da7686f7b78c78c8a8ce966807c77d9ae277950fc20b77b165
     # via
     #   -c requirements.txt
     #   -r non-free/packages/cmk-ai-control-plane/requirements.in
@@ -3354,9 +3355,9 @@ pydantic-core==2.50.4 \
     #   -r packages/cmk-agent-receiver/requirements.in
     #   -r packages/cmk-mkp-tool/requirements.in
     #   pydantic
-pydantic-graph==2.66.0 \
-    --hash=sha256:5b2a0aafc569c00fdb36879b1e80bed06ed5926979e2c1d44533222f208fd2ec \
-    --hash=sha256:af31fd3ad5f3446556a270b14e1a43b12996f4bb52a0511f58f739dbacadb3f9
+pydantic-graph==2.68.0 \
+    --hash=sha256:1314df1961b0decaa39176531a7a9b63b37c437e69a6463b042e0a1924fadea8 \
+    --hash=sha256:3428c563bb6346aeeda28a79322cfcbe4e0087d7a23881ec2f1b06a95e983f00
     # via
     #   -c requirements.txt
     #   pydantic-ai-slim
@@ -3575,9 +3576,9 @@ pyparsing==3.3.3 \
     #   -r cmk/requirements.in
     #   httplib2
     #   matplotlib
-pypdf==7.0.0 \
-    --hash=sha256:061aa78dec270854c912dde80c6bc060486fa955399d643da27ea30afeb6571b \
-    --hash=sha256:112a2c7cbabefd8dfe498f7a13977e575e762d58cdb0d832acb8886922602c6f
+pypdf==7.0.1 \
+    --hash=sha256:0a78bb99efb41e9088260e9a8e5da134a5cbb9a322014744177bf29b5267ea6d \
+    --hash=sha256:6131b764b046282357037309e7ef2a1b7679d4a5c53eed3db2bfbf7c673ddc2b
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in
@@ -3694,9 +3695,9 @@ python-multipart==0.0.33 \
     #   -c requirements.txt
     #   -r packages/cmk-agent-receiver/requirements.in
     #   mcp
-python-snap7==3.4.0 \
-    --hash=sha256:69536a0722815f5cb1a6f8c69308734bcc311f10fd4e6005566273b76db0ef0a \
-    --hash=sha256:b886ba2aecad27ea9a9f43fe502fed91c37ce7998e6103541f8257cf1b2707aa
+python-snap7==3.5.0 \
+    --hash=sha256:86be44d0b272eca5bcc964bc04cf76f3858e119ec54bea16a9bed6faa895685f \
+    --hash=sha256:baef4b06863f64115159c203e6aaaa0100e651e0332d606bacd3f416e3375f27
     # via
     #   -c requirements.txt
     #   -r cmk/requirements.in

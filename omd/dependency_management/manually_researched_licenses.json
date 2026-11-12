@@ -75,7 +75,7 @@
   "pkg:pypi/jsonpointer@3.10": "BSD-3-Clause",
   "pkg:pypi/kiwisolver@1.5.1": "BSD-3-Clause",
   "pkg:pypi/kubernetes@36.0.3": "Apache-2.0",
-  "pkg:pypi/markdown-it-py@4.2.0": "MIT",
+  "pkg:pypi/markdown-it-py@4.3.0": "MIT",
   "pkg:pypi/marshmallow-oneofschema@3.2.0": "MIT",
   "pkg:pypi/marshmallow@3.26.2": "MIT",
   "pkg:pypi/matplotlib@3.11.2": "PSF-2.0",

@@ -216,10 +216,7 @@ _SKIPPED_SPECIAL_AGENTS = {
 }
 
 
-@pytest.mark.parametrize(
-    "plugin",
-    (pytest.param(p, id=f"{p.binary_name}") for p in MONITORING_PLUGINS),
-)
+@pytest.mark.parametrize("plugin", MONITORING_PLUGINS, ids=lambda p: p.binary_name)
 def test_monitoring_plugins_can_be_executed(plugin: Plugin, site: Site) -> None:
     """Validate the plugin's presence and version in the site."""
     if site.edition.is_cloud_edition() and plugin.binary_name == "check_mkevents":
@@ -234,10 +231,7 @@ def test_monitoring_plugins_can_be_executed(plugin: Plugin, site: Site) -> None:
     assert not process.stderr
 
 
-@pytest.mark.parametrize(
-    "agent",
-    (pytest.param(p, id=f"{p.binary_name}") for p in SPECIAL_AGENTS),
-)
+@pytest.mark.parametrize("agent", SPECIAL_AGENTS, ids=lambda p: p.binary_name)
 def test_special_agents_can_be_executed(agent: SpecialAgent, site: Site) -> None:
     """Validate the plugin's presence and version in the site."""
     cmd_line = [agent.detect_full_path(site).as_posix(), agent.cmd_line_option]

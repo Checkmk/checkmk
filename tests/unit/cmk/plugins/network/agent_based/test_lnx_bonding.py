@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator
 from typing import TypedDict
 
 import pytest
@@ -93,17 +92,18 @@ def configured_params() -> Params:
     return params
 
 
-def data_for_test() -> Iterator[tuple[str, str]]:
-    yield "mode_0", "round-robin"
-    yield "mode_1", "active-backup"
-    yield "mode_2", "xor"
-    yield "mode_3", "broadcast"
-    yield "mode_4", "802.3ad"
-    yield "mode_5", "transmit"
-    yield "mode_6", "adaptive"
-
-
-@pytest.mark.parametrize("mode, mode_str", data_for_test())
+@pytest.mark.parametrize(
+    "mode, mode_str",
+    [
+        ("mode_0", "round-robin"),
+        ("mode_1", "active-backup"),
+        ("mode_2", "xor"),
+        ("mode_3", "broadcast"),
+        ("mode_4", "802.3ad"),
+        ("mode_5", "transmit"),
+        ("mode_6", "adaptive"),
+    ],
+)
 def test_mode_matches_expected_state(mode: str, mode_str: str, params: Params) -> None:
     COPY_OF_DATA = DATA_FAILOVER[:]
     COPY_OF_DATA[2] = ["Bonding Mode", f"({mode_str})"]

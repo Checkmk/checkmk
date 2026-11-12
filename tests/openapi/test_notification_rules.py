@@ -543,7 +543,7 @@ def invalid_conditions() -> Iterator:
         yield config
 
 
-@pytest.mark.parametrize("testdata", invalid_conditions())
+@pytest.mark.parametrize("testdata", list(invalid_conditions()))
 @pytest.mark.usefixtures("mock_password_file_regeneration")
 def test_create_and_update_rule_with_conditions_data_400(
     clients: ClientRegistry,
@@ -2070,7 +2070,7 @@ def plugin_with_bulking(
                 plugins.append(plugin["plugin_name"])
 
 
-@pytest.mark.parametrize("config", plugin_with_bulking(bulking="allowed"))
+@pytest.mark.parametrize("config", list(plugin_with_bulking(bulking="allowed")))
 @pytest.mark.usefixtures("mock_password_file_regeneration")
 def test_bulking_200(
     clients: ClientRegistry,
@@ -2081,7 +2081,7 @@ def test_bulking_200(
     clients.RuleNotification.create(rule_config=config)
 
 
-@pytest.mark.parametrize("config", plugin_with_bulking(bulking="not_allowed"))
+@pytest.mark.parametrize("config", list(plugin_with_bulking(bulking="not_allowed")))
 @pytest.mark.usefixtures("mock_password_file_regeneration")
 def test_bulking_400(
     clients: ClientRegistry,

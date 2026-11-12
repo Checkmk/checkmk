@@ -132,10 +132,7 @@ REPO_SCRIPTS: Sequence[RepoScript] = [
 ]
 
 
-@pytest.mark.parametrize(
-    "binary",
-    (pytest.param(b, id=b.name) for b in ALL_SITE_BINARIES),
-)
+@pytest.mark.parametrize("binary", ALL_SITE_BINARIES, ids=lambda b: b.name)
 def test_binary_smoke(binary: BinarySmoke, site: Site) -> None:
     """Run binary in site context and verify it produces expected output."""
     p = site.run(binary.cmd_line(site), check=False, input_=binary.stdin)
@@ -144,10 +141,7 @@ def test_binary_smoke(binary: BinarySmoke, site: Site) -> None:
 
 
 @pytest.mark.skip_if_not_edition("pro", "ultimate", "ultimatemt", "cloud")
-@pytest.mark.parametrize(
-    "binary",
-    (pytest.param(b, id=b.name) for b in NONFREE_PRO_BINARIES),
-)
+@pytest.mark.parametrize("binary", NONFREE_PRO_BINARIES, ids=lambda b: b.name)
 def test_binary_smoke_pro(binary: BinarySmoke, site: Site) -> None:
     """Run pro+ binary in site context and verify it produces expected output."""
     p = site.run(binary.cmd_line(site), check=False, input_=binary.stdin)
@@ -156,10 +150,7 @@ def test_binary_smoke_pro(binary: BinarySmoke, site: Site) -> None:
 
 
 @pytest.mark.skip_if_not_edition("ultimate", "ultimatemt")
-@pytest.mark.parametrize(
-    "binary",
-    (pytest.param(b, id=b.name) for b in NONFREE_ULTIMATE_BINARIES),
-)
+@pytest.mark.parametrize("binary", NONFREE_ULTIMATE_BINARIES, ids=lambda b: b.name)
 def test_binary_smoke_ultimate(binary: BinarySmoke, site: Site) -> None:
     """Run ultimate+ binary in site context and verify it produces expected output."""
     p = site.run(binary.cmd_line(site), check=False, input_=binary.stdin)
@@ -167,10 +158,7 @@ def test_binary_smoke_ultimate(binary: BinarySmoke, site: Site) -> None:
     assert re.search(binary.expected_stderr, p.stderr, re.DOTALL)
 
 
-@pytest.mark.parametrize(
-    "script",
-    (pytest.param(s, id=s.name) for s in REPO_SCRIPTS),
-)
+@pytest.mark.parametrize("script", REPO_SCRIPTS, ids=lambda s: s.name)
 def test_repo_script_smoke(script: RepoScript) -> None:
     """Run build/dev scripts from the repository that are not installed in the site."""
     repo_root = Path(__file__).parent.parent.parent.parent

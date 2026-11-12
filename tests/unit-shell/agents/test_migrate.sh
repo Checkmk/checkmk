@@ -7,7 +7,8 @@
 # single-directory tree. These cases cover the move itself: the entries the
 # shell's "*" does not match, a directory that exists on both sides, and the
 # modes of such a directory, which the package sets and the migration must not
-# undo.
+# undo. Further cases cover the controller registration and the home directory
+# of the agent user, which the legacy layout kept in /var/lib/cmk-agent.
 #
 # The script also runs on Solaris, from an SVR4 postinstall script. The last two
 # cases cover what that adds: another shell, and an exit code that must not
@@ -16,11 +17,15 @@
 TESTEE="${UNIT_SH_AGENTS_DIR}/scripts/migrate.sh"
 
 setUp() {
+    # CMK-40622 AC8
     WORK="${SHUNIT_TMPDIR}/work"
     OLD_VARDIR="${WORK}/var/lib/check_mk_agent"
     INSTALLDIR="${WORK}/opt/checkmk/agent/default"
     RUNTIME="${INSTALLDIR}/runtime"
+    CONTROLLER="${RUNTIME}/controller"
+    LEGACY_HOME="${WORK}/var/lib/cmk-agent"
     STUBS="${WORK}/stubs"
+    CALLS="${WORK}/calls"
 
     mkdir -p "${OLD_VARDIR}" "${RUNTIME}" "${STUBS}"
 
@@ -31,16 +36,32 @@ setUp() {
     # The package ships these empty and with these modes, and the migration has
     # to leave them that way. 0751 on runtime and runtime/job lets mk-job
     # traverse to runtime/job/<user>; the rest is closed to others (werk 22168).
-    mkdir -p "${RUNTIME}/cache" "${RUNTIME}/job"
+    mkdir -p "${RUNTIME}/cache" "${RUNTIME}/job" "${CONTROLLER}"
     chmod 0751 "${RUNTIME}" "${RUNTIME}/job"
-    chmod 0750 "${RUNTIME}/cache"
+    chmod 0750 "${RUNTIME}/cache" "${CONTROLLER}"
 
-    # The agent user is left alone: a getent that finds nobody makes the home
-    # directory step return before it reaches usermod.
-    for stub in getent usermod systemctl; do
-        printf '#!/bin/sh\nexit 1\n' >"${STUBS}/${stub}"
-        chmod +x "${STUBS}/${stub}"
-    done
+    # The agent user exists only once a test writes its home to ${STUBS}/home.
+    # Until then getent finds nobody, and the home directory step returns
+    # before it reaches usermod. usermod writes the new home there, so a second
+    # run sees what the first one did.
+    cat >"${STUBS}/getent" <<EOF
+#!/bin/sh
+[ -e '${STUBS}/home' ] || exit 2
+echo "cmk-agent:x:999:999::\$(cat '${STUBS}/home'):/bin/false"
+EOF
+    cat >"${STUBS}/usermod" <<EOF
+#!/bin/sh
+echo "usermod \$*" >>'${CALLS}'
+echo "\$2" >'${STUBS}/home'
+EOF
+    # The controller daemon runs only once a test creates ${STUBS}/daemon_running.
+    cat >"${STUBS}/systemctl" <<EOF
+#!/bin/sh
+echo "systemctl \$*" >>'${CALLS}'
+[ "\$1" = status ] && [ ! -e '${STUBS}/daemon_running' ] && exit 3
+exit 0
+EOF
+    chmod +x "${STUBS}/getent" "${STUBS}/usermod" "${STUBS}/systemctl"
 }
 
 tearDown() {
@@ -55,7 +76,108 @@ _migrate_with() {
     PATH="${STUBS}:${PATH}" \
         MK_INSTALLDIR="${INSTALLDIR}" \
         OLD_MK_VARDIR="${OLD_VARDIR}" \
+        LEGACY_HOMEDIR="${LEGACY_HOME}" \
         "$1" "${TESTEE}"
+}
+
+_snapshot() {
+    find "${WORK}/opt" "${WORK}/var" -printf '%p %y %m %s\n' | sort
+}
+
+test_nothing_is_migrated_without_installdir() {
+    # CMK-40622 AC1
+    printf 'from the old tree\n' >"${OLD_VARDIR}/cache/old_entry"
+    mkdir -p "${LEGACY_HOME}"
+    printf '{}\n' >"${LEGACY_HOME}/registered_connections.json"
+    printf '%s\n' "${LEGACY_HOME}" >"${STUBS}/home"
+    before="$(_snapshot)"
+
+    env -u MK_INSTALLDIR \
+        PATH="${STUBS}:${PATH}" \
+        OLD_MK_VARDIR="${OLD_VARDIR}" \
+        LEGACY_HOMEDIR="${LEGACY_HOME}" \
+        /bin/sh "${TESTEE}" >/dev/null
+
+    assertEquals "the files changed" "${before}" "$(_snapshot)"
+    assertFalse "a command was called" "[ -s '${CALLS}' ]"
+}
+
+test_nothing_to_migrate() {
+    # CMK-40622 AC2
+    rm -rf "${OLD_VARDIR}"
+    printf '%s\n' "${CONTROLLER}" >"${STUBS}/home"
+    before="$(_snapshot)"
+
+    _migrate >/dev/null
+
+    assertEquals "the files changed" "${before}" "$(_snapshot)"
+    assertFalse "a command was called" "[ -s '${CALLS}' ]"
+}
+
+test_custom_old_vardir_is_migrated() {
+    # CMK-40622 AC6
+    OLD_VARDIR="${WORK}/srv/agent-state"
+    mkdir -p "${OLD_VARDIR}"
+    printf 'from the custom tree\n' >"${OLD_VARDIR}/entry"
+
+    _migrate >/dev/null
+
+    assertEquals "content of the moved entry" "from the custom tree" "$(cat "${RUNTIME}/entry")"
+    assertFalse "the custom directory survived" "[ -e '${OLD_VARDIR}' ]"
+}
+
+test_controller_registration_is_migrated() {
+    # CMK-40621 AC2, CMK-40622 AC4
+    mkdir -p "${LEGACY_HOME}"
+    printf '{"push": {}}\n' >"${LEGACY_HOME}/registered_connections.json"
+    printf '' >"${LEGACY_HOME}/allow-legacy-pull"
+
+    _migrate >/dev/null
+
+    assertEquals "content of the registry" '{"push": {}}' "$(cat "${CONTROLLER}/registered_connections.json")"
+    assertTrue "the legacy pull marker did not arrive" "[ -f '${CONTROLLER}/allow-legacy-pull' ]"
+    assertFalse "the legacy home directory survived" "[ -e '${LEGACY_HOME}' ]"
+}
+
+test_home_directory_of_the_agent_user_changes() {
+    # CMK-40622 AC5
+    printf '%s\n' "${LEGACY_HOME}" >"${STUBS}/home"
+
+    _migrate >/dev/null
+
+    assertEquals "usermod call" "usermod -d ${CONTROLLER} cmk-agent" "$(grep '^usermod' "${CALLS}")"
+}
+
+test_running_controller_daemon_is_stopped_around_usermod() {
+    # CMK-40622 AC5
+    printf '%s\n' "${LEGACY_HOME}" >"${STUBS}/home"
+    printf '' >"${STUBS}/daemon_running"
+
+    _migrate >/dev/null
+
+    assertEquals "calls" \
+        "systemctl status cmk-agent-ctl-daemon
+systemctl stop cmk-agent-ctl-daemon
+usermod -d ${CONTROLLER} cmk-agent
+systemctl start cmk-agent-ctl-daemon" \
+        "$(cat "${CALLS}")"
+}
+
+test_second_run_changes_nothing() {
+    # CMK-40622 AC7
+    printf 'from the old tree\n' >"${OLD_VARDIR}/cache/old_entry"
+    mkdir -p "${LEGACY_HOME}"
+    printf '{"push": {}}\n' >"${LEGACY_HOME}/registered_connections.json"
+    printf '' >"${LEGACY_HOME}/allow-legacy-pull"
+    printf '%s\n' "${LEGACY_HOME}" >"${STUBS}/home"
+    _migrate >/dev/null
+    after_first_run="$(_snapshot)"
+    rm -f "${CALLS}"
+
+    _migrate >/dev/null
+
+    assertEquals "the files changed" "${after_first_run}" "$(_snapshot)"
+    assertFalse "a command was called" "[ -s '${CALLS}' ]"
 }
 
 test_hidden_file_is_moved() {

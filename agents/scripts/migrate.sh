@@ -6,8 +6,7 @@
 : "${MK_INSTALLDIR:=""}"
 : "${OLD_MK_VARDIR:="/var/lib/check_mk_agent"}"
 : "${AGENT_USER:="cmk-agent"}"
-
-LEGACY_HOMEDIR="/var/lib/cmk-agent"
+: "${LEGACY_HOMEDIR:="/var/lib/cmk-agent"}"
 
 # Linux calls this script with /bin/sh, Solaris with bash. Hence, stick to POSIX sh.
 # The runtime tree is walked with globs rather than with find, because Solaris has no

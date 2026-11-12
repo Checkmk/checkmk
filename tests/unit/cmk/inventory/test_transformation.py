@@ -6,9 +6,11 @@
 import gzip
 import io
 import logging
+import os
 from pathlib import Path
 
 import cmk.ccc.store
+from cmk.inventory.paths import TreePath
 from cmk.inventory.structured_data import (
     make_meta,
     SDKey,
@@ -16,7 +18,11 @@ from cmk.inventory.structured_data import (
     SDNodeName,
     SDRawTree,
 )
-from cmk.inventory.transformation import transform_inventory_trees
+from cmk.inventory.transformation import (
+    _compute_bundle,
+    _HostTreePath,
+    transform_inventory_trees,
+)
 
 
 def _logger() -> logging.Logger:
@@ -147,3 +153,19 @@ def test_transform_delta_cache_tree(tmp_path: Path) -> None:
 
     assert not (tmp_path / "var/check_mk/inventory_delta_cache/hostname/123_456").exists()
     assert (tmp_path / "var/check_mk/inventory_delta_cache/hostname/123_456.json").exists()
+
+
+def test_the_bundle_spreads_all_trees_including_the_transformed_ones() -> None:
+    pending = [
+        _HostTreePath(
+            host_name=f"host{index}",
+            tree_path=TreePath(
+                path=Path(f"host{index}.json"),
+                legacy=Path(f"host{index}"),
+            ),
+            stat=os.stat_result((0,) * 10),
+        )
+        for index in range(400)
+    ]
+
+    assert len(_compute_bundle(0, pending, 600)) == 5

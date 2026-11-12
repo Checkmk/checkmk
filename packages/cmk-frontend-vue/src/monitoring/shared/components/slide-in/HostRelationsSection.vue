@@ -77,6 +77,14 @@ function hostRef(relation: Relation): HostRef {
 
 const section = useTemplateRef<HTMLElement>('section')
 
+/** The nearest ancestor that scrolls - the panel body, which has to move to show the section. */
+function scrollParentOf(element: HTMLElement): HTMLElement | null {
+  const parent = element.parentElement
+  return parent === null || /auto|scroll/.test(getComputedStyle(parent).overflowY)
+    ? parent
+    : scrollParentOf(parent)
+}
+
 // Watched rather than done on mount: the panel keeps the same tab when the reader clicks the
 // relation count of the host it already shows, so there is no second mount to hang this on.
 watch(
@@ -86,9 +94,20 @@ watch(
       return
     }
     await nextTick()
-    // Focused rather than scrolled: the dialog puts the reading cursor at the top of the panel,
-    // and focus() takes it along instead of only moving pixels.
-    section.value?.focus()
+    const element = section.value
+    if (!element) {
+      return
+    }
+    // Scrolled to the top of the panel by hand: focus() alone scrolls only as far as needed, so a
+    // section already peeking in at the bottom stayed where it was, the panel looking as if
+    // opened by the host name. Focused too, as the dialog puts the reading cursor at the top of
+    // the panel and focus() takes it along.
+    const container = scrollParentOf(element)
+    if (container) {
+      container.scrollTop +=
+        element.getBoundingClientRect().top - container.getBoundingClientRect().top
+    }
+    element.focus({ preventScroll: true })
   },
   { immediate: true }
 )

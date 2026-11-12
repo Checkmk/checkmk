@@ -199,3 +199,36 @@ test('leaves the reader at the top of the tab when it was not opened for the rel
 
   expect(document.activeElement).not.toBe(sectionOf(container))
 })
+
+test('scrolls the panel so the relations start at its top', async () => {
+  // focus() alone scrolls only as far as needed: a section already peeking in at the bottom of
+  // the panel stayed there, and the panel looked as if it had been opened by the host name.
+  const panel = document.createElement('div')
+  panel.style.overflowY = 'auto'
+  document.body.appendChild(panel)
+  // jsdom lays nothing out, so the panel's scroll offset and both boxes are stood in for.
+  let scrollTop = 20
+  Object.defineProperty(panel, 'scrollTop', {
+    get: () => scrollTop,
+    set: (value: number) => {
+      scrollTop = value
+    }
+  })
+  vi.spyOn(panel, 'getBoundingClientRect').mockReturnValue({ top: 100 } as DOMRect)
+  const relations = [makeRelation()]
+  const { container, rerender, unmount } = render(HostRelationsSection, {
+    props: { relations, revealRequest: 0 },
+    container: panel
+  })
+  vi.spyOn(sectionOf(container) as HTMLElement, 'getBoundingClientRect').mockReturnValue({
+    top: 700
+  } as DOMRect)
+
+  await rerender({ relations, revealRequest: 1 })
+  await nextTick()
+
+  expect(scrollTop).toBe(620)
+  expect(document.activeElement).toBe(sectionOf(container))
+  unmount()
+  panel.remove()
+})

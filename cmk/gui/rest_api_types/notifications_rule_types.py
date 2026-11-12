@@ -1473,7 +1473,7 @@ class AcknowledgeState:
     def api_response(self) -> AckStateAPI:
         state: CheckboxState = "disabled" if not self.value else "enabled"
         r: AckStateAPI = {"state": state}
-        if self.value is None:
+        if not self.value:
             return r
 
         if self.value["start"][0] == "integer":
@@ -1523,7 +1523,7 @@ class RecoveryStateIncident:
     def api_response(self) -> RecoveryStateIncidentAPI:
         state: CheckboxState = "disabled" if not self.value else "enabled"
         r: RecoveryStateIncidentAPI = {"state": state}
-        if self.value is None:
+        if not self.value:
             return r
 
         if self.value["start"][0] == "integer":
@@ -1575,7 +1575,7 @@ class RecoveryStateCase:
     def api_response(self) -> RecoveryStateCaseAPI:
         state: CheckboxState = "disabled" if not self.value else "enabled"
         r: RecoveryStateCaseAPI = {"state": state}
-        if self.value is None:
+        if not self.value:
             return r
 
         if self.value["start"][0] == "integer":
@@ -1639,14 +1639,15 @@ class DowntimeState:
     def api_response(self) -> DowntimeStateAPI:
         state: CheckboxState = "disabled" if not self.value else "enabled"
         r: DowntimeStateAPI = {"state": state}
-        if self.value is None:
+        if not self.value:
             return r
 
         v: DowntimeStateValue = {}
-        if self.value["start"][0] == "integer":
-            v["start_integer"] = self.value["start"][1]
-        else:
-            v["start_predefined"] = self.value["start"][1]
+        if "start" in self.value:
+            if self.value["start"][0] == "integer":
+                v["start_integer"] = self.value["start"][1]
+            else:
+                v["start_predefined"] = self.value["start"][1]
 
         if "end" in self.value:
             if self.value["end"][0] == "integer":

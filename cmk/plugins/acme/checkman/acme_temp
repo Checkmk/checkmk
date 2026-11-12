@@ -1,4 +1,4 @@
-title: ACME Devices: Temperature
+title: Acme Packet SBC: Temperature
 agents: snmp
 catalog: hw/environment/acme
 license: GPLv2

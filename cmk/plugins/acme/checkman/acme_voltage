@@ -1,4 +1,4 @@
-title: ACME Devices: Voltage
+title: Acme Packet SBC: Voltage
 agents: snmp
 catalog: hw/environment/acme
 license: GPLv2

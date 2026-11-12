@@ -1,4 +1,4 @@
-title: ACME Devices: Power Supplies
+title: Acme Packet SBC: Power Supplies
 agents: snmp
 catalog: hw/environment/acme
 license: GPLv2

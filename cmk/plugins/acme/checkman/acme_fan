@@ -1,4 +1,4 @@
-title: ACME Devices: Fans
+title: Acme Packet SBC: Fans
 agents: snmp
 catalog: hw/environment/acme
 license: GPLv2

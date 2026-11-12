@@ -1,4 +1,4 @@
-title: ACME SBC: Health (via SNMP)
+title: Acme Packet SBC: Health and Redundancy via SNMP
 agents: snmp
 catalog: hw/network/acme
 license: GPLv2

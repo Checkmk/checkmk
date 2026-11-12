@@ -1,4 +1,4 @@
-title: ACME Devices: Realm
+title: Acme Packet SBC: Realms
 agents: snmp
 catalog: hw/environment/acme
 license: GPLv2

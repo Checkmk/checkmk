@@ -3,9 +3,9 @@ Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
 This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 conditions defined in the file COPYING, which is part of this source code package.
 -->
-<script setup lang="ts" generic="T extends RowWithModes, Target">
+<script setup lang="ts" generic="T extends RowWithModes, Target, Subject">
 import type { ColumnPinningState } from '@tanstack/vue-table'
-import { computed, provide } from 'vue'
+import { computed, provide, shallowRef } from 'vue'
 
 import MonitoringEmptyState from '@/monitoring/shared/components/MonitoringEmptyState.vue'
 import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
@@ -29,13 +29,14 @@ import type { WidgetTableState } from './WidgetTableState'
 import type { MonitoringTableActionOffer, MonitoringTableDescriptor } from './tableDescriptors'
 
 const props = defineProps<{
-  descriptor: MonitoringTableDescriptor<T, Target>
+  descriptor: MonitoringTableDescriptor<T, Target, Subject>
   columnIds: readonly string[]
   rows: T[]
   tableState: WidgetTableState
   displayOptions: DisplayOptions
   /** What the reader may do with the rows. Without it, the rows offer no actions. */
   actionOffer?: MonitoringTableActionOffer | undefined
+  readOnly: boolean
 }>()
 
 const emit = defineEmits<{
@@ -74,6 +75,16 @@ const columnPinning = computed<ColumnPinningState>(() => ({
 
 const rowCommands = useRowCommandRunner()
 
+const subject = shallowRef<Subject | null>(null)
+
+function open(opened: Subject): void {
+  subject.value = opened
+}
+
+function close(): void {
+  subject.value = null
+}
+
 async function onCommand(row: T, command: RowCommand<Target>): Promise<void> {
   const actions = rowActions.value
   if (actions === null) {
@@ -106,8 +117,9 @@ async function onCommand(row: T, command: RowCommand<Target>): Promise<void> {
           :row="row"
           :table-row="tableRow"
           :display-options="displayOptions"
-          :read-only="true"
+          :read-only="readOnly"
           :busy="rowCommands.isBusy(descriptor.rowKey(row))"
+          v-on="descriptor.rowListeners(row, open)"
           @command="(command: RowCommand<Target>) => onCommand(row, command)"
         />
       </template>
@@ -115,6 +127,15 @@ async function onCommand(row: T, command: RowCommand<Target>): Promise<void> {
         <MonitoringEmptyState />
       </template>
     </MonitoringTable>
+    <component
+      :is="descriptor.detailsComponent"
+      v-if="descriptor.detailsComponent !== null"
+      :subject="subject"
+      :offer="actionOffer"
+      :display-options="displayOptions"
+      @close="close"
+      @performed="(outcome: ActionOutcome) => emit('performed', outcome)"
+    />
   </div>
 </template>
 

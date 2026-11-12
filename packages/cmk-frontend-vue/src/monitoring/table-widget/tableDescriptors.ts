@@ -25,6 +25,8 @@ import { columnId } from '@/monitoring/shared/tableState/schema'
 import { useHostActions } from '@/monitoring/shared/useHostActions'
 import { useServiceActions } from '@/monitoring/shared/useServiceActions'
 
+import HostsTableDetails from './HostsTableDetails.vue'
+
 export type MonitoringTableName = components['schemas']['MonitoringTableContent']['table']
 
 export interface MonitoringTableRows {
@@ -60,6 +62,21 @@ type RowCommandTarget<C> =
       : never
     : never
 
+/**
+ * The listeners a descriptor binds to the events of the row component `C`, keyed by event name and
+ * typed from `C`'s emits, so a row that renames or changes an event fails to compile there.
+ */
+export type RowListeners<C> = {
+  [K in keyof ComponentProps<C> as K extends `on${infer Event}`
+    ? Uncapitalize<Event>
+    : never]?: NonNullable<ComponentProps<C>[K]>
+}
+
+export interface HostsTableSubject {
+  host: HostEntry
+  revealRelations: boolean
+}
+
 export interface MonitoringTableColumn {
   id: string
   title: string
@@ -68,8 +85,10 @@ export interface MonitoringTableColumn {
 }
 
 /** A table of rows `T`, whose row component emits a command picked in a row naming `Target`. */
-export abstract class MonitoringTableDescriptor<T, Target = unknown> {
+export abstract class MonitoringTableDescriptor<T, Target = unknown, Subject = unknown> {
   abstract readonly rowComponent: Component
+
+  readonly detailsComponent: Component | null = null
 
   /** The columns the backend offers for this table. */
   abstract readonly columnIds: readonly string[]
@@ -86,6 +105,10 @@ export abstract class MonitoringTableDescriptor<T, Target = unknown> {
    * must use no lifecycle hook, watcher or inject.
    */
   abstract rowActions(offer: MonitoringTableActionOffer): MonitoringTableRowActions<T, Target>
+
+  rowListeners(_row: T, _open: (subject: Subject) => void): object {
+    return {}
+  }
 
   catalog(): MonitoringTableColumn[] {
     return this.inRowOrder(this.columnIds).map(([id, column]) => ({
@@ -116,9 +139,12 @@ export abstract class MonitoringTableDescriptor<T, Target = unknown> {
 
 export class HostsTableDescriptor extends MonitoringTableDescriptor<
   HostEntry,
-  RowCommandTarget<typeof HostRow>
+  RowCommandTarget<typeof HostRow>,
+  HostsTableSubject
 > {
   readonly rowComponent: Component = HostRow
+
+  override readonly detailsComponent: Component = HostsTableDetails
 
   readonly columnIds = [
     'state',
@@ -166,6 +192,15 @@ export class HostsTableDescriptor extends MonitoringTableDescriptor<
       rowProps: () =>
         ({ rowActions, loadActionMenu }) satisfies Partial<ComponentProps<typeof HostRow>>,
       run: (_row, command, signal) => performRowCommand(registry, command, signal)
+    }
+  }
+
+  override rowListeners(
+    _row: HostEntry,
+    open: (subject: HostsTableSubject) => void
+  ): RowListeners<typeof HostRow> {
+    return {
+      open: (host: HostEntry, revealRelations: boolean = false) => open({ host, revealRelations })
     }
   }
 

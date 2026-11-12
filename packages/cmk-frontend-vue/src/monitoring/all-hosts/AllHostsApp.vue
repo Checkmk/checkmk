@@ -38,6 +38,7 @@ import { labelCondition } from '@/monitoring/shared/labels'
 import { hostRefOf } from '@/monitoring/shared/objectRefs'
 import { DEFAULT_DISPLAY_OPTIONS } from '@/monitoring/shared/types'
 import { IMMEDIATE_HOST_COMMAND_IDS, useHostActions } from '@/monitoring/shared/useHostActions'
+import { useHostSlideInTabs } from '@/monitoring/shared/useHostSlideInTabs'
 
 import MonitoringExportFeedback from '../shared/components/MonitoringExportFeedback.vue'
 import MonitoringHeaderActions from '../shared/components/MonitoringHeaderActions.vue'
@@ -262,21 +263,15 @@ function hostCountsLabel(selected: number, total: number): TranslatedString {
 }
 
 const slideInHost = ref<HostEntry | null>(null)
-const slideInTabId = ref<string | undefined>(undefined)
-// Counted rather than flagged: clicking the relation count of the host the panel already shows
-// has to scroll there again, and a flag that is already set changes nothing.
-const revealRelationsRequest = ref(0)
+const slideInTabs = useHostSlideInTabs()
+const slideInTabId = slideInTabs.tabId
+const revealRelationsRequest = slideInTabs.revealRelationsRequest
 
 function openSlideIn(host: HostEntry, reveal: boolean = false): void {
   if (slideInHost.value === null) {
     hostService.beginAutoPause()
   }
-  if (reveal) {
-    slideInTabId.value = HOST_TAB_OVERVIEW
-    revealRelationsRequest.value += 1
-  } else {
-    revealRelationsRequest.value = 0
-  }
+  slideInTabs.open(reveal)
   slideInHost.value = host
 }
 
@@ -285,13 +280,6 @@ function closeSlideIn(): void {
     hostService.endAutoPause()
   }
   slideInHost.value = null
-}
-
-function selectSlideInTab(id: string): void {
-  slideInTabId.value = id
-  if (id !== HOST_TAB_OVERVIEW) {
-    revealRelationsRequest.value = 0
-  }
 }
 
 // A host is identified by the site it lives on plus its name. The listing this
@@ -406,7 +394,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
         :row-actions="rowActionButtons"
         :permitted-actions="hostActions"
         :load-action-menu="loadActionMenu"
-        @update:active-tab-id="selectSlideInTab"
+        @update:active-tab-id="slideInTabs.selectTab"
         @close="closeSlideIn"
         @performed="onActionPerformed"
       />

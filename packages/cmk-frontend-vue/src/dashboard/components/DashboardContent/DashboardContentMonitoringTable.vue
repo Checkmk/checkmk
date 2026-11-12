@@ -140,6 +140,7 @@ function truncatedHint(value: ComputedMonitoringTable): string {
             timestampFormat: content.timestamp_format
           }"
           :action-offer="actionOffer"
+          :read-only="true"
           @performed="onPerformed"
         />
         <p v-if="value.matched > value.rows.length" class="db-content-monitoring-table__truncated">

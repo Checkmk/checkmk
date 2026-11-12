@@ -1368,7 +1368,7 @@ plugin_test_data: list[PluginType] = [
             "value": {"option": "automatic", "schema": "https"},
         },
         "disable_ssl_cert_verification": {
-            "state": "enabled",
+            "state": "disabled",
         },
         "http_proxy": {
             "state": "enabled",
@@ -1385,7 +1385,7 @@ plugin_test_data: list[PluginType] = [
             "state": "disabled",
         },
         "disable_ssl_cert_verification": {
-            "state": "disabled",
+            "state": "enabled",
         },
         "http_proxy": {
             "state": "disabled",

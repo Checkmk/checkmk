@@ -131,12 +131,9 @@ void provide_agent_binaries(Map args) {
                     signed_plugins.tar \
                     ${checkout_dir}/omd/packages/win-signed-plugins/
                 cp \
-                    check_mk_agent.exe \
                     check_mk_agent.msi \
                     check_mk_agent_unsigned.msi \
                     cmk-agent-ctl.exe \
-                    check_mk.yml \
-                    check_mk.user.yml \
                     mk-sql.exe \
                     robotmk_ext.exe \
                     windows_files_hashes.txt \

@@ -23,7 +23,6 @@ filegroup(
 # hermetically on Linux via //agents/modules/windows:python_3_cab, so it is
 # always the real cab (see :python_cab below), never faked.
 WINDOWS_ARTIFACTS = [
-    "check_mk.user.yml",
     "check_mk_agent.msi",
     "mk-sql.exe",
     "robotmk_ext.exe",
@@ -38,6 +37,13 @@ WINDOWS_ARTIFACTS = [
     visibility = ["//omd:__subpackages__"],
 ) for artifact in WINDOWS_ARTIFACTS]
 
+# Taken from the source tree: no build needed, so never faked either.
+copy_file(
+    name = "check_mk_user_yml",
+    src = "//agents/wnx:install/resources/check_mk.user.yml",
+    out = "check_mk.user.yml",
+)
+
 # The rule outputs python_3_cab.cab; the package expects python-3.cab.
 copy_file(
     name = "python_cab",
@@ -51,7 +57,10 @@ filegroup(
     srcs = select({
         "@//:use_fake_artifacts_enabled": [artifact + ".faked" for artifact in WINDOWS_ARTIFACTS],
         "//conditions:default": WINDOWS_ARTIFACTS,
-    }) + [":python_cab"],
+    }) + [
+        ":check_mk_user_yml",
+        ":python_cab",
+    ],
     tags = ["no-python-extension-checker"],
     visibility = ["//omd:__subpackages__"],
 )

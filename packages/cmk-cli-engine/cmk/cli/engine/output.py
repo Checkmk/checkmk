@@ -9,19 +9,21 @@ import subprocess
 import sys
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager, suppress
-from typing import Final
+from typing import Final, TextIO
+
+
+def _write(stream: TextIO, txt: str) -> None:
+    with suppress(IOError):
+        stream.write(txt)
+        stream.flush()
 
 
 def write_stdout(txt: str) -> None:
-    with suppress(IOError):
-        sys.stdout.write(txt)
-        sys.stdout.flush()
+    _write(sys.stdout, txt)
 
 
 def write_stderr(txt: str) -> None:
-    with suppress(IOError):
-        sys.stderr.write(txt)
-        sys.stderr.flush()
+    _write(sys.stderr, txt)
 
 
 _DEFAULT_PAGER: Final = "less"

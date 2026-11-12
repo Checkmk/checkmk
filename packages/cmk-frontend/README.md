@@ -3,6 +3,12 @@
 Holds all theming, js and css source files.
 The `dist` folder is the base for `~/share/check_mk/web/htdocs` in the site.
 
+## Page structure
+
+When the AI assistant is available, `div#ai-panel-container` wraps the page
+content inside `#content_area`. Don't use `#content_area > …` or
+`:has(> …)`; use descendant selectors.
+
 ## webpack-watch
 
 `npm run build-watch` is a a simple watch mode for js/css files.

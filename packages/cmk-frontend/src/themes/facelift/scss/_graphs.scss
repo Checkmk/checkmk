@@ -7,7 +7,7 @@
 /* Stylesheets for graphs */
 
 /* stylelint-disable selector-id-pattern */
-#content_area:has(> cmk-global-time-picker) {
+#content_area:has(cmk-global-time-picker) {
   table.data.single > tbody > tr.data > td:has(> cmk-graph-group) {
     --graphing-graph-header-inline-padding: 0;
     --graphing-graph-group-panel-padding: var(--dimension-7);
@@ -18,23 +18,23 @@
   }
 }
 
-#content_area:has(> cmk-global-time-picker):has(table.boxlayout.graph) {
+#content_area:has(cmk-global-time-picker):has(table.boxlayout.graph) {
   $graph-page-content-padding: $spacing-double;
 
   padding-left: 0;
 
-  > div#top_heading,
-  > cmk-global-time-picker {
+  div#top_heading,
+  cmk-global-time-picker {
     display: block;
     box-sizing: border-box;
     background-color: $graph-page-header-bg-color;
   }
 
-  > div#top_heading {
+  div#top_heading {
     padding: 0 $spacing-double;
   }
 
-  > cmk-global-time-picker {
+  cmk-global-time-picker {
     --graphing-global-time-picker-padding-bottom: var(--dimension-6);
 
     padding-left: $titlebar-spacing-horizontal;
@@ -72,7 +72,7 @@
     }
   }
 
-  > div#main_page_content {
+  div#main_page_content {
     padding: $graph-page-content-padding;
   }
 

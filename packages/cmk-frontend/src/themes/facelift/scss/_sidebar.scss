@@ -129,6 +129,8 @@ body.side.main {
   }
 }
 
+// The page content is not always a direct child: see "Page structure" in
+// packages/cmk-frontend/README.md before using `#content_area > …`.
 #content_area {
   display: flex;
   flex-flow: column nowrap;
@@ -160,7 +162,7 @@ body.side.main {
 // The toolbar band directly below the menu bar takes over its bottom spacing.
 #content_area:has(cmk-monitoring-all-hosts),
 #content_area:has(cmk-monitoring-host-services) {
-  > #top_heading table.menubar {
+  #top_heading table.menubar {
     padding-bottom: 0;
   }
 }

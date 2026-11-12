@@ -525,10 +525,6 @@ def constraints_files() -> list[Path]:
     ]
 
 
-@pytest.mark.skipif(
-    branch_from_env(env_var="GERRIT_BRANCH", fallback=current_base_branch_name) != "master",
-    reason="every package should be pinned on release branches",
-)
 def test_constraints() -> None:
     """Make sure all constraints have a ticket to be removed"""
     offenses = []

@@ -34,6 +34,7 @@ _CONTENT: dict[str, object] = {
     "limit": 100,
     "date_format": "%Y-%m-%d",
     "timestamp_format": "mixed",
+    "read_only": False,
 }
 
 
@@ -452,6 +453,7 @@ _HOSTS_TABLE = MonitoringTableContent(
     limit=10,
     date_format="%d.%m.%Y",
     timestamp_format="abs",
+    read_only=False,
 )
 
 
@@ -466,6 +468,19 @@ def test_a_monitoring_table_stored_without_display_options_shows_the_page_defaul
     content = MonitoringTableContent.from_internal(config)
 
     assert (content.date_format, content.timestamp_format) == ("%Y-%m-%d", "mixed")
+
+
+def test_a_read_only_monitoring_table_survives_the_internal_round_trip() -> None:
+    read_only = dataclasses.replace(_HOSTS_TABLE, read_only=True)
+
+    assert MonitoringTableContent.from_internal(read_only.to_internal()).read_only
+
+
+def test_a_monitoring_table_stored_before_is_not_read_only() -> None:
+    config = _HOSTS_TABLE.to_internal()
+    del config["read_only"]
+
+    assert MonitoringTableContent.from_internal(config).read_only is False
 
 
 @pytest.mark.usefixtures("request_context")

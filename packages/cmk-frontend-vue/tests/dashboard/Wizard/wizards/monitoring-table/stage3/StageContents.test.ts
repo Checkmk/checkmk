@@ -15,7 +15,7 @@ import { useWidgetVisualizationProps } from '@/dashboard/components/Wizard/compo
 import Stage3 from '@/dashboard/components/Wizard/wizards/monitoring-table/stage3/StageContents.vue'
 import { useProvideDashboardConstants } from '@/dashboard/composables/useProvideDashboardConstants'
 import type { DashboardConstants } from '@/dashboard/types/dashboard'
-import type { WidgetGeneralSettings } from '@/dashboard/types/widget'
+import type { MonitoringTableContent, WidgetGeneralSettings } from '@/dashboard/types/widget'
 
 const API = `${location.protocol}//${location.host}/api/internal/domain-types/dashboard/actions`
 
@@ -44,7 +44,10 @@ useMswServer(
   )
 )
 
-function renderStage3(currentSettings?: WidgetGeneralSettings) {
+function renderStage3(
+  currentSettings?: WidgetGeneralSettings,
+  updates: MonitoringTableContent[] = []
+) {
   const saved: WidgetGeneralSettings[] = []
   const stage = defineComponent({
     setup() {
@@ -66,11 +69,13 @@ function renderStage3(currentSettings?: WidgetGeneralSettings) {
             sort: [],
             limit: 1000,
             date_format: '%Y-%m-%d',
-            timestamp_format: 'mixed'
+            timestamp_format: 'mixed',
+            read_only: false
           },
           effectiveFilterContext: { uses_infos: ['host'], filters: {}, restricted_to_single: [] },
           isEditMode: currentSettings !== undefined,
-          onAddWidget: (settings: WidgetGeneralSettings) => saved.push(settings)
+          onAddWidget: (settings: WidgetGeneralSettings) => saved.push(settings),
+          'onUpdate:content': (content: MonitoringTableContent) => updates.push(content)
         })
     }
   })
@@ -122,5 +127,15 @@ describe('monitoring table visualization', () => {
     await user.click(screen.getByRole('button', { name: 'Save widget' }))
 
     expect(saved).toEqual([current])
+  })
+
+  it('makes the rows read only on request', async () => {
+    const user = userEvent.setup()
+    const updates: MonitoringTableContent[] = []
+    renderStage3(undefined, updates)
+
+    await user.click(screen.getByRole('checkbox', { name: 'Read only' }))
+
+    expect(updates.at(-1)?.read_only).toBe(true)
   })
 })

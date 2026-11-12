@@ -227,10 +227,10 @@ function saveWidget(generalSettings: WidgetGeneralSettings) {
       <Stage3
         v-if="wizardHandler.stage.value === 2 && content"
         v-model:visualization="visualizationProps"
+        v-model:content="content"
         :tick="tick"
         :range="range"
         :dashboard-key="dashboardKey"
-        :content="content"
         :effective-filter-context="effectiveFilterContext"
         :is-edit-mode="!!editWidgetSpec"
         @go-prev="wizardHandler.prev"

@@ -19,7 +19,8 @@ const CONTENT: MonitoringTableContent = {
   sort: ['address:desc', 'state:asc'],
   limit: 1000,
   date_format: '%Y-%m-%d',
-  timestamp_format: 'mixed'
+  timestamp_format: 'mixed',
+  read_only: false
 }
 
 describe('row limit', () => {

@@ -31,7 +31,8 @@ const CONTENT: MonitoringTableContent = {
   sort: ['name:asc'],
   limit: 100,
   date_format: '%Y-%m-%d',
-  timestamp_format: 'mixed'
+  timestamp_format: 'mixed',
+  read_only: false
 }
 
 const VALUE: ComputedMonitoringTable = {
@@ -350,6 +351,13 @@ describe('DashboardContentMonitoringTable', () => {
     expect(await screen.findByRole('button', { name: 'heute' })).toBeInTheDocument()
   })
 
+  it('shows the host name as plain text when the widget is read only', async () => {
+    await renderWidget({ ...CONTENT, read_only: true })
+
+    expect(await screen.findByText('heute')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'heute' })).not.toBeInTheDocument()
+  })
+
   it('shows the host name as plain text in the wizard preview', async () => {
     render(DashboardContentMonitoringTable, {
       props: makeContentProps(CONTENT, { isPreview: true })
@@ -553,6 +561,13 @@ describe('DashboardContentMonitoringTable', () => {
     })
     await nextTick()
     deliverSize(800, 400)
+    await screen.findByText('heute')
+
+    expect(screen.queryByRole('button', { name: 'More actions' })).not.toBeInTheDocument()
+  })
+
+  it('offers no row actions when the widget is read only', async () => {
+    await renderWidget({ ...CONTENT, read_only: true })
     await screen.findByText('heute')
 
     expect(screen.queryByRole('button', { name: 'More actions' })).not.toBeInTheDocument()

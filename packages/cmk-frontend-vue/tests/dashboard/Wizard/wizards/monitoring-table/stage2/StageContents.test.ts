@@ -29,6 +29,7 @@ function renderStage2(initial: Partial<MonitoringTableContent> = {}) {
     limit: 1000,
     date_format: '%Y-%m-%d',
     timestamp_format: 'mixed',
+    read_only: false,
     ...initial
   })
   const goNext: string[] = []

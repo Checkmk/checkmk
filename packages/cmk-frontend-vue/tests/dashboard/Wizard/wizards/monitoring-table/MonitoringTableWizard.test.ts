@@ -63,7 +63,8 @@ const EDITED: WidgetSpec = {
     sort: ['name:desc'],
     limit: 250,
     date_format: '%d.%m.%Y',
-    timestamp_format: 'abs'
+    timestamp_format: 'abs',
+    read_only: false
   },
   general_settings: {
     title: { text: 'Linux hosts', render_mode: 'with_background' },
@@ -107,10 +108,13 @@ function renderWizard(editWidgetSpec: WidgetSpec | null) {
   return saved
 }
 
-async function stepThrough(saveLabel: string) {
+async function stepThrough(saveLabel: string, { readOnly = false } = {}) {
   const user = userEvent.setup()
   await user.click(screen.getByRole('button', { name: /Next step: Data configuration/ }))
   await user.click(await screen.findByRole('button', { name: /Next step: Visualization/ }))
+  if (readOnly) {
+    await user.click(await screen.findByRole('checkbox', { name: 'Read only' }))
+  }
   await user.click(await screen.findByRole('button', { name: saveLabel }))
 }
 
@@ -123,6 +127,14 @@ describe('monitoring table wizard', () => {
     expect(saved.map(([content, , filterContext]) => [content, filterContext])).toEqual([
       [EDITED.content, EDITED.filter_context]
     ])
+  })
+
+  it('saves the read-only setting of the widget settings', async () => {
+    const saved = renderWizard(EDITED)
+
+    await stepThrough('Save widget', { readOnly: true })
+
+    expect(saved.map(([content]) => content)).toEqual([{ ...EDITED.content, read_only: true }])
   })
 
   it('saves a new widget with the defaults of the chosen view', async () => {

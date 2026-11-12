@@ -61,6 +61,15 @@ class MonitoringTableContent(BaseWidgetContent):
         ),
         example="mixed",
     )
+    read_only: bool = api_field(
+        description=(
+            "Whether the rows are read only: a click on a host or service name, a related hosts "
+            "count or a perfometer then opens no details, and the rows offer no actions. "
+            "The graph links next to the names still open the graphs. "
+            "The rows of a shared dashboard and of the widget preview are always read only."
+        ),
+        example=False,
+    )
 
     @classmethod
     @override
@@ -82,6 +91,7 @@ class MonitoringTableContent(BaseWidgetContent):
             limit=config["limit"],
             date_format=config.get("date_format", "%Y-%m-%d"),
             timestamp_format=config.get("timestamp_format", "mixed"),
+            read_only=config.get("read_only", False),
         )
 
     @override
@@ -94,4 +104,5 @@ class MonitoringTableContent(BaseWidgetContent):
             limit=self.limit,
             date_format=self.date_format,
             timestamp_format=self.timestamp_format,
+            read_only=self.read_only,
         )

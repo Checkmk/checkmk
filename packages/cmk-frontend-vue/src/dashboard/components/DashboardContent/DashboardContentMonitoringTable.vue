@@ -76,7 +76,7 @@ const offersRowActions = !props.isPreview && useInjectCmkToken() === undefined
 // A refresh offering the same actions keeps the previous offer, and so the rows' actions as built.
 const actionOffer = computed<MonitoringTableActionOffer | undefined>((previous) => {
   const current = state.value
-  if (!offersRowActions || current.kind !== 'data') {
+  if (!offersRowActions || props.content.read_only || current.kind !== 'data') {
     return undefined
   }
   const offer = {
@@ -98,7 +98,7 @@ function unappliedHint(value: ComputedMonitoringTable): string {
 // dashboard cannot open the pages the rows link to: in neither may the links navigate away.
 const blocksLinks = props.isPreview || useInjectIsPublicDashboard()
 
-const readOnly = !offersRowActions || blocksLinks
+const readOnly = computed(() => !offersRowActions || blocksLinks || props.content.read_only)
 
 function blockLinks(event: MouseEvent): void {
   if (blocksLinks && event.target instanceof Element && event.target.closest('a')) {

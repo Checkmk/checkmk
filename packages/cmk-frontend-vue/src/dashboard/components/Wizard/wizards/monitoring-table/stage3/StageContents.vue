@@ -7,6 +7,7 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkCatalogPanel from 'cmk-ui-library/components/CmkCatalogPanel.vue'
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
+import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { randomId } from 'cmk-ui-library/lib/randomId'
 import { computed } from 'vue'
@@ -33,7 +34,6 @@ const props = defineProps<{
   tick: number
   range: DateTimeRange
   dashboardKey: DashboardKey
-  content: MonitoringTableContent
   effectiveFilterContext: EffectiveWidgetFilterContext
   isEditMode: boolean
 }>()
@@ -47,10 +47,19 @@ const visualization = defineModel<UseWidgetVisualizationProps>('visualization', 
   required: true
 })
 
+const content = defineModel<MonitoringTableContent>('content', { required: true })
+
+const readOnly = computed({
+  get: () => content.value.read_only,
+  set: (value: boolean) => {
+    content.value = { ...content.value, read_only: value }
+  }
+})
+
 const effectiveTitle = usePreviewWidgetTitle(
   computed(() => ({
     generalSettings: visualization.value.widgetGeneralSettings.value,
-    content: props.content,
+    content: content.value,
     effectiveFilters: props.effectiveFilterContext.filters
   }))
 )
@@ -61,7 +70,7 @@ const previewProps = computed(
   () =>
     ({
       widget_id: previewId,
-      content: props.content,
+      content: content.value,
       effectiveTitle: effectiveTitle.value,
       effective_filter_context: props.effectiveFilterContext,
       dashboardKey: props.dashboardKey,
@@ -113,7 +122,21 @@ function saveWidget() {
         v-model:title-url-enabled="visualization.titleUrlEnabled.value"
         v-model:title-url-validation-errors="visualization.titleUrlValidationErrors.value"
         :title-macros="visualization.titleMacros.value"
-      />
+      >
+        <template #interaction>
+          <div class="field-component__item">
+            <CmkCheckbox
+              v-model="readOnly"
+              :label="_t('Read only')"
+              :help="
+                _t(
+                  'A click on a host or service name, a related hosts count or a perfometer opens no details, and the rows offer no actions. The graph links next to the names still open the graphs.'
+                )
+              "
+            />
+          </div>
+        </template>
+      </WidgetVisualization>
     </div>
   </CmkCatalogPanel>
 </template>

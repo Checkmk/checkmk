@@ -244,6 +244,7 @@ class MonitoringTableDashletConfig(DashletConfig):
     limit: int
     date_format: NotRequired[MonitoringTableDateFormat]
     timestamp_format: NotRequired[MonitoringTableTimestampFormat]
+    read_only: NotRequired[bool]
 
 
 class SiteOverviewDashletConfig(DashletConfig):

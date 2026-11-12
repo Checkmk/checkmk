@@ -82,6 +82,7 @@ const showWidgetBackground = defineModel<boolean | undefined>('showWidgetBackgro
             />
           </CmkIndent>
         </div>
+        <slot name="interaction" />
       </FieldComponent>
     </TableFormRow>
     <TableFormRow>

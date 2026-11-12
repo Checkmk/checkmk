@@ -172,7 +172,8 @@ const hostsTableWidget = {
     sort: ['name:asc'],
     limit: 100,
     date_format: '%Y-%m-%d',
-    timestamp_format: 'mixed'
+    timestamp_format: 'mixed',
+    read_only: false
   },
   filter_context: { uses_infos: [], filters: {} }
 }

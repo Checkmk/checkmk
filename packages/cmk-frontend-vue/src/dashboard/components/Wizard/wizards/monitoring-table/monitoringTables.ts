@@ -52,6 +52,7 @@ export function defaultMonitoringTableContent(table: MonitoringTableName): Monit
     sort: [],
     limit: DEFAULT_ROW_LIMIT,
     date_format: DEFAULT_DISPLAY_OPTIONS.dateFormat,
-    timestamp_format: DEFAULT_DISPLAY_OPTIONS.timestampFormat
+    timestamp_format: DEFAULT_DISPLAY_OPTIONS.timestampFormat,
+    read_only: false
   }
 }

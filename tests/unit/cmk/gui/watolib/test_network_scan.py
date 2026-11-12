@@ -5,9 +5,6 @@
 
 # ruff: noqa: ARG001  # Unused fixtures are needed for setup side effects
 
-import pytest
-
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.site import SiteId
 from cmk.ccc.user import UserId
 from cmk.gui.config import Config
@@ -19,7 +16,6 @@ from cmk.gui.watolib.pending_changes import NoopPendingChangesStore, PendingChan
 from cmk.livestatus_client import SiteConfigurations
 
 
-@pytest.mark.xfail(strict=True, raises=MKGeneralException, reason="crash group 4766")
 def test_scan_run_as_a_missing_user_is_recorded_as_failed(
     config: Config, tree: FolderTree, with_admin: tuple[UserId, str]
 ) -> None:

@@ -3,9 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import pytest
-
-from cmk.ccc.exceptions import MKGeneralException
 from cmk.ccc.user import UserId
 from cmk.gui.config import Config
 from cmk.gui.watolib.host_attributes import HostAttributes
@@ -13,7 +10,6 @@ from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.network_scan import execute_network_scan_job
 
 
-@pytest.mark.xfail(strict=True, raises=MKGeneralException, reason="crash group 4766")
 def test_scan_run_as_a_missing_user_is_recorded_as_failed(
     load_config: Config, with_admin_login: UserId
 ) -> None:

@@ -8,7 +8,8 @@
 
 import time
 import uuid
-from collections.abc import Iterable, Iterator
+from collections.abc import Callable, Iterable, Iterator, Sequence
+from functools import partial
 from typing import Any, cast, NotRequired
 
 import cmk.ccc.version as cmk_version
@@ -259,19 +260,9 @@ def migrate_dashboard_config(dashboard: MaybeOldDashboardConfig) -> DashboardCon
                 f"{dashboard['name']}-{idx}": dashlet for idx, dashlet in enumerate(raw_dashlets)
             }
 
+    owner = dashboard.get("owner")
     dashboard["widgets"] = {
-        widget_id: _clamp_timeline_window(
-            _migrate_timeline_time_range(
-                _migrate_alert_overview_time_range(
-                    migrate_widget_time_range(
-                        _migrate_inventory_link(
-                            _migrate_metric_time_range(_migrate_status_display(widget)),
-                            dashboard.get("owner"),
-                        )
-                    )
-                )
-            )
-        )
+        widget_id: _migrate_widget(widget, owner)
         for widget_id, widget in dashboard["widgets"].items()
     }
 
@@ -282,6 +273,21 @@ def migrate_dashboard_config(dashboard: MaybeOldDashboardConfig) -> DashboardCon
         dashboard["embedded_views"] = embedded_views
 
     return dashboard
+
+
+def _migrate_widget(widget: DashletConfig, owner: UserId | None) -> DashletConfig:
+    migrations: Sequence[Callable[[DashletConfig], DashletConfig]] = (
+        _migrate_status_display,
+        _migrate_metric_time_range,
+        partial(_migrate_inventory_link, owner=owner),
+        migrate_widget_time_range,
+        _migrate_alert_overview_time_range,
+        _migrate_timeline_time_range,
+        _clamp_timeline_window,
+    )
+    for migrate in migrations:
+        widget = migrate(widget)
+    return widget
 
 
 def _migrate_status_display(widget: DashletConfig) -> DashletConfig:

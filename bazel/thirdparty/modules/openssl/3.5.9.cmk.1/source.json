@@ -1,0 +1,13 @@
+{
+  "integrity": "sha256-YD9WAuLu8A13+9Qp003NWCK7MBdXobyc2yTGcPHrhZo=",
+  "strip_prefix": "openssl-3.5.9",
+  "url": "https://github.com/openssl/openssl/releases/download/openssl-3.5.9/openssl-3.5.9.tar.gz",
+  "overlay": {
+    "BUILD.bazel": "sha256-e2OPaj2Jv9ctWWlmTKq5fYHwBetHtdjmFzkyJH5HqgE=",
+    "MODULE.bazel": "sha256-OY7SSdnkACq8bj09rjXEoPJu23UTG2NDOVEHU8RDpYY="
+  },
+  "patches": {
+    "0001-strip-bazel-paths-from-buildinf.patch": "sha256-V2b13a9qrd18viv8Gu/smMph+yuO5mAFcqnKfDpyHis="
+  },
+  "patch_strip": 1
+}

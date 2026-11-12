@@ -16,18 +16,19 @@ import CmkSpace from '@/components/CmkSpace.vue'
 import CmkHeading from '@/components/typography/CmkHeading.vue'
 
 import { stepComponents } from './steps/stepComponents'
+import type { StepId } from './steps/utils'
 
 const { _t } = usei18n()
 
 const props = defineProps<{
   cards: WelcomeCards
-  finishedSteps: string[]
+  finishedSteps: StepId[]
   showHeading: boolean
 }>()
 
 const emit = defineEmits(['step-completed'])
 const buildStepId = (step: number): string => `step-${step}`
-const getFirstNotFinishedStep = (finishedStages: string[]): string[] => {
+const getFirstNotFinishedStep = (finishedStages: StepId[]): string[] => {
   const steps = stepComponents.map(({ stepId }) => stepId)
   const firstUnfinished = steps.find((stepId) => !finishedStages.includes(stepId))
   return firstUnfinished

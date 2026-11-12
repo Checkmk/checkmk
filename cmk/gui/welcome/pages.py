@@ -22,7 +22,12 @@ from cmk.gui.utils.urls import (
     makeuri_contextless,
 )
 from cmk.gui.wato.pages.user_profile.main_menu import set_user_attribute
-from cmk.gui.welcome.registry import welcome_card_registry, WelcomeCardCallback
+from cmk.gui.welcome.registry import (
+    welcome_card_registry,
+    welcome_flag_registry,
+    WelcomeCardCallback,
+    WelcomeCardDynamicUrl,
+)
 from cmk.gui.welcome.utils import WELCOME_PERMISSIONS
 from cmk.shared_typing.welcome import FinishedEnum, StageInformation, WelcomeCards, WelcomePage
 from cmk.utils.urls import is_allowed_url
@@ -39,9 +44,6 @@ def register(page_registry: PageRegistry) -> None:
 def _get_finished_stages() -> Generator[FinishedEnum]:
     if "add_host" in user.welcome_completed_steps:
         yield FinishedEnum.add_host
-
-    if "activate_changes" in user.welcome_completed_steps:
-        yield FinishedEnum.activate_changes
 
     if "adjust_services" in user.welcome_completed_steps:
         yield FinishedEnum.adjust_services
@@ -68,11 +70,20 @@ def _make_url_or_callback_from_registry(
     if isinstance(url, WelcomeCardCallback):
         return url.callback_id
 
+    if isinstance(url, WelcomeCardDynamicUrl):
+        if (addvars := url.make_vars()) is None:
+            return None
+        return _make_url(addvars=addvars, filename=url.filename, is_snapin=is_snapin)
+
     return _make_url(
         addvars=url.vars,
         filename=url.filename,
         is_snapin=is_snapin,
     )
+
+
+def _flag_from_registry(identifier: str) -> bool | None:
+    return None if (flag := welcome_flag_registry.get(identifier)) is None else flag.value()
 
 
 def _ajax_mark_step_as_complete(ctx: PageContext) -> None:
@@ -146,11 +157,6 @@ def _make_url(addvars: HTTPVariables, filename: str, is_snapin: bool) -> str:
 def get_welcome_data(is_snapin: bool) -> WelcomePage:
     return WelcomePage(
         cards=WelcomeCards(
-            add_folder=_make_url(
-                addvars=[("mode", "newfolder")],
-                filename="wato.py",
-                is_snapin=is_snapin,
-            ),
             checkmk_ai="https://chat.checkmk.com",
             checkmk_forum="https://forum.checkmk.com",
             checkmk_docs=doc_reference_url(
@@ -221,6 +227,7 @@ def get_welcome_data(is_snapin: bool) -> WelcomePage:
                 is_snapin=is_snapin,
                 identifier="relays",
             ),
+            relay_configured=_flag_from_registry("relay_configured"),
             aws_quick_setup=_make_url(
                 addvars=[
                     ("mode", "new_special_agent_configuration"),

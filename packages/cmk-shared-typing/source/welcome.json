@@ -20,7 +20,6 @@
     "welcome_cards": {
       "type": "object",
       "properties": {
-        "add_folder": { "type": "string" },
         "checkmk_ai": { "type": "string" },
         "checkmk_docs": { "type": "string" },
         "checkmk_forum": { "type": "string" },
@@ -39,6 +38,7 @@
         "add_host": { "type": "string" },
         "network_devices": { "type": "string" },
         "relays": { "type": "string" },
+        "relay_configured": { "type": "boolean" },
         "aws_quick_setup": { "type": "string" },
         "azure_quick_setup": { "type": "string" },
         "gcp_quick_setup": { "type": "string" },
@@ -61,7 +61,6 @@
         "intro_notifications": { "type": "string" }
       },
       "required": [
-        "add_folder",
         "checkmk_ai",
         "checkmk_docs",
         "checkmk_forum",
@@ -106,7 +105,6 @@
             "type": "string",
             "enum": [
               "add_host",
-              "activate_changes",
               "adjust_services",
               "assign_responsibilities",
               "enable_notifications",

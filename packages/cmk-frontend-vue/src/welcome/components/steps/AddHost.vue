@@ -6,12 +6,14 @@ conditions defined in the file COPYING, which is part of this source code packag
 
 <script setup lang="ts">
 import type { WelcomeCards } from 'cmk-shared-typing/typescript/welcome'
-import { type Ref, ref } from 'vue'
+import { type Ref, computed, ref } from 'vue'
 
 import usei18n from '@/lib/i18n'
 import usePersistentRef from '@/lib/usePersistentRef'
 
 import CmkAccordionStepPanelItem from '@/components/CmkAccordionStepPanel/CmkAccordionStepPanelItem.vue'
+import CmkAlertBox from '@/components/CmkAlertBox.vue'
+import CmkButton from '@/components/CmkButton.vue'
 import CmkLinkCard from '@/components/CmkLinkCard'
 import CmkWizard from '@/components/CmkWizard/CmkWizard.vue'
 import CmkWizardButton from '@/components/CmkWizard/CmkWizardButton.vue'
@@ -23,9 +25,9 @@ import StepHeading from '@/welcome/components/steps/components/StepHeading.vue'
 import StepParagraph from '@/welcome/components/steps/components/StepParagraph.vue'
 
 import FirstHostSlideout from '../first-host/FirstHostSlideout.vue'
-import type { StepId } from './stepComponents'
+import type { StepId } from './utils'
 
-const { _t } = usei18n()
+const { _t, _tp } = usei18n()
 
 const cseSlideoutOpen = ref<boolean>(false)
 
@@ -38,7 +40,7 @@ const props = defineProps<{
 
 const useCseSlideout = ref<boolean>(false)
 const currentStep: Ref<number> = usePersistentRef<number>(
-  `${props.step}-currentStep`,
+  `${props.stepId}-currentStep`,
   0,
   (v) => v as number,
   'local'
@@ -47,6 +49,32 @@ const currentStep: Ref<number> = usePersistentRef<number>(
 if (props.cards.add_host === 'cse-first-host-slideout') {
   useCseSlideout.value = true
 }
+
+function openRelaySetup(): void {
+  if (props.cards.relays) {
+    window.location.href = props.cards.relays
+  }
+}
+
+// Checkmk Cloud reaches network devices only through a relay, so their card
+// stays greyed out until a relay exists.
+const cloudWithoutRelay = computed(
+  () => useCseSlideout.value && props.cards.relay_configured === false
+)
+const relayFirstCardProps = computed(() =>
+  cloudWithoutRelay.value
+    ? {
+        subtitle: _t('Set up a Checkmk Relay first'),
+        disabled: true
+      }
+    : {}
+)
+
+// One msgid for the whole sentence, so translations can move the link.
+const relayNoteParts = _tp(
+  '%{link} is the link text "Checkmk Relay"',
+  'Systems behind a firewall? Set up a %{link} first.'
+).split('%{link}')
 
 const emit = defineEmits(['step-completed'])
 </script>
@@ -62,10 +90,8 @@ const emit = defineEmits(['step-completed'])
     <StepParagraph>
       {{
         _t(
-          `In Checkmk, a host is any standalone physical or virtual system that is monitored.
-Each host has services which represent what is monitored, for example CPU usage, disk space, processes, or hardware sensors.
-The service discovery of Checkmk automatically detects these services.
-This allows monitoring to start with minimal configuration effort.`
+          `A host is anything you monitor: a server, a network device, a VM, a container platform,
+a cloud account or an application. Checkmk finds its services automatically.`
         )
       }}
     </StepParagraph>
@@ -73,52 +99,17 @@ This allows monitoring to start with minimal configuration effort.`
     <CmkWizard v-model="currentStep" mode="guided">
       <CmkWizardStep :index="0" :is-completed="() => currentStep > 0 || accomplished">
         <template #header>
-          <CmkHeading type="h3">{{ _t('Set up basic folder structure') }}</CmkHeading>
-        </template>
-        <template #content>
-          <StepParagraph>
-            {{
-              _t(`In Checkmk, folders are the foundation for organizing hosts and applying settings consistently.
-            Creating a folder (or folder structure) before adding your first host helps you keep things tidy from
-            the start and makes it easier to manage similar hosts later on through inheritance. Learn more about
-            folders and inheritance in the`)
-            }}
-            <a
-              href="https://docs.checkmk.com/latest/en/hosts_structure.html?lquery=folder#folder"
-              target="_blank"
-            >
-              {{ _t('documentation.') }}
-            </a>
-          </StepParagraph>
-
-          <StepCardsRow>
-            <CmkLinkCard
-              icon-name="newfolder"
-              :url="cards.add_folder"
-              :title="_t('Add folder')"
-              :open-in-new-tab="false"
-            />
-          </StepCardsRow>
-        </template>
-        <template #actions>
-          <CmkWizardButton type="next" :override-label="_t('Continue')" />
-        </template>
-      </CmkWizardStep>
-
-      <CmkWizardStep :index="1" :is-completed="() => currentStep > 1 || accomplished">
-        <template #header>
           <CmkHeading type="h3">{{ _t('Add your first host') }}</CmkHeading>
         </template>
         <template #content>
           <div>
-            <StepHeading>
-              {{ _t('On-premises hosts') }}
-            </StepHeading>
+            <StepHeading>{{ _t('Servers & operating systems') }}</StepHeading>
             <StepCardsRow>
               <CmkLinkCard
                 icon-name="folder"
                 :url="useCseSlideout ? undefined : cards.add_host"
-                :title="_t('Server (Linux, Windows, Solaris, ...)')"
+                :title="_t('Linux, Windows & Unix servers')"
+                :subtitle="_t('Solaris, AIX, FreeBSD, macOS, ...')"
                 :open-in-new-tab="false"
                 :callback="
                   () => {
@@ -128,27 +119,44 @@ This allows monitoring to start with minimal configuration effort.`
                   }
                 "
               />
+            </StepCardsRow>
+          </div>
+
+          <CmkAlertBox
+            v-if="cloudWithoutRelay"
+            variant="info"
+            :heading="_t('Network devices need a Checkmk Relay')"
+          >
+            {{
+              _t(
+                'Checkmk Cloud cannot reach systems inside your network directly. Set up a Checkmk Relay in your network first, then add network devices.'
+              )
+            }}
+            <CmkButton @click="openRelaySetup">{{ _t('Set up Checkmk Relay') }}</CmkButton>
+          </CmkAlertBox>
+
+          <div v-if="cards.network_devices || cloudWithoutRelay">
+            <StepHeading>{{ _t('Network devices') }}</StepHeading>
+            <StepCardsRow>
               <CmkLinkCard
-                v-if="cards.network_devices"
                 icon-name="networking"
-                :title="_t('Network devices and SNMP')"
-                :url="cards.network_devices"
-                :open-in-new-tab="false"
-              />
-              <CmkLinkCard
-                v-if="cards.relays"
-                icon-name="relay-menu"
-                :title="_t('Checkmk Relay (objects behind a firewall)')"
-                :url="cards.relays"
+                :title="_t('Switches, routers, firewalls & other SNMP devices')"
+                :url="cloudWithoutRelay ? undefined : cards.network_devices"
+                v-bind="relayFirstCardProps"
                 :open-in-new-tab="false"
               />
             </StepCardsRow>
           </div>
+          <StepParagraph
+            v-if="!useCseSlideout && cards.relays"
+            class="welcome-add-host__relay-note"
+          >
+            {{ relayNoteParts[0] }}<a :href="cards.relays">{{ _t('Checkmk Relay') }}</a
+            >{{ relayNoteParts[1] }}
+          </StepParagraph>
 
           <div>
-            <StepHeading>
-              {{ _t('Cloud platforms') }}
-            </StepHeading>
+            <StepHeading>{{ _t('Cloud platforms') }}</StepHeading>
             <StepCardsRow>
               <CmkLinkCard
                 icon-name="aws-logo"
@@ -172,9 +180,7 @@ This allows monitoring to start with minimal configuration effort.`
           </div>
 
           <div v-if="cards.synthetic_monitoring || cards.opentelemetry">
-            <StepHeading>
-              {{ _t('Application monitoring') }}
-            </StepHeading>
+            <StepHeading>{{ _t('Applications & databases') }}</StepHeading>
             <StepCardsRow>
               <CmkLinkCard
                 v-if="cards.synthetic_monitoring"
@@ -194,6 +200,43 @@ This allows monitoring to start with minimal configuration effort.`
           </div>
         </template>
         <template #actions>
+          <CmkWizardButton type="next" :override-label="_t('Continue')" />
+        </template>
+      </CmkWizardStep>
+
+      <CmkWizardStep :index="1" :is-completed="() => currentStep > 1 || accomplished">
+        <template #header>
+          <CmkHeading type="h3">{{ _t('Activate changes') }}</CmkHeading>
+        </template>
+        <template #content>
+          <StepParagraph>
+            {{
+              _t(
+                `In Checkmk, configuration changes are first saved as pending and do not affect the running monitoring right away.
+          This lets you prepare and review multiple changes — such as adding hosts, adjusting services, or fine-tuning
+          thresholds — before applying them all at once. Only when you activate the pending changes are they transferred
+          to the live monitoring system as a single bundle.`
+              )
+            }}
+          </StepParagraph>
+          <CmkAlertBox :heading="_t('Spotting pending changes')">
+            {{
+              _t(
+                `If there are pending changes, you’ll see a yellow badge on the “Changes” menu item in the main navigation, reminding you that your setup is not yet active.`
+              )
+            }}
+          </CmkAlertBox>
+
+          <StepCardsRow>
+            <CmkLinkCard
+              icon-name="main-changes"
+              :title="_t('Open all pending changes')"
+              :url="cards.activate_changes"
+              :open-in-new-tab="false"
+            />
+          </StepCardsRow>
+        </template>
+        <template #actions>
           <CmkWizardButton
             v-if="!accomplished && step"
             type="finish"
@@ -208,3 +251,9 @@ This allows monitoring to start with minimal configuration effort.`
 
   <FirstHostSlideout v-if="useCseSlideout" v-model="cseSlideoutOpen" />
 </template>
+
+<style scoped>
+.welcome-add-host__relay-note {
+  margin-top: var(--spacing);
+}
+</style>

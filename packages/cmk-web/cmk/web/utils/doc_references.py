@@ -123,6 +123,7 @@ def youtube_reference_url(youtube_ref: YouTubeReference | None = None) -> str:
 
 class WerkReference(Enum):
     DECOMMISSION_V1_API = 17201
+    SINGLE_DIRECTORY_DEPLOYMENT_DEFAULT = 19234
 
     def ref(self) -> str:
         return f"Werk #{self.value}"

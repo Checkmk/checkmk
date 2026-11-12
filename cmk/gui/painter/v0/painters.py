@@ -1160,9 +1160,16 @@ class PainterSvcNextCheck(Painter):
 
     @property
     def columns(self) -> Sequence[ColumnName]:
-        return ["service_next_check"]
+        return ["service_next_check", "service_check_type", "host_labels"]
 
     def render(self, row: Row, cell: Cell, user: LoggedInUser) -> CellSpec:
+        # The core schedules no active check that a relay runs.
+        if (
+            not row["service_next_check"]
+            and row["service_check_type"] == 0
+            and "cmk/relay" in row["host_labels"]
+        ):
+            return "", _("Managed by the relay")
         return _paint_future_time(
             row["service_next_check"],
             request=self.request,

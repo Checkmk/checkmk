@@ -688,7 +688,7 @@ class TestMigrateGraphLegend:
         }
 
     @pytest.mark.parametrize("widget_type", ["pnpgraph", "custom_graph"])
-    def test_a_shown_legend_without_a_style_is_compact(self, widget_type: str) -> None:
+    def test_a_shown_legend_without_a_style_is_extended(self, widget_type: str) -> None:
         dashboard = _responsive_dashboard(
             {
                 "type": widget_type,
@@ -699,7 +699,7 @@ class TestMigrateGraphLegend:
 
         result = migrate_dashboard_config(dashboard)
 
-        assert result["widgets"]["w1"]["graph_render_options"] == {"legend": "compact"}  # type: ignore[typeddict-item]
+        assert result["widgets"]["w1"]["graph_render_options"] == {"legend": "extended"}  # type: ignore[typeddict-item]
 
     def test_a_hidden_legend_becomes_none(self) -> None:
         dashboard = _responsive_dashboard(
@@ -735,7 +735,7 @@ class TestMigrateGraphLegend:
 
         widget = result["widgets"]["w1"]
         assert "show_legend" not in widget
-        assert widget["graph_render_options"] == {"legend": "compact"}  # type: ignore[typeddict-item]
+        assert widget["graph_render_options"] == {"legend": "extended"}  # type: ignore[typeddict-item]
 
     def test_a_top_level_legend_replaces_the_render_option(self) -> None:
         dashboard = _responsive_dashboard(

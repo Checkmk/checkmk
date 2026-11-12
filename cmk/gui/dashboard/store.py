@@ -393,7 +393,7 @@ def _migrate_graph_legend(widget: DashletConfig) -> DashletConfig:
         return widget
     return cast(
         DashletConfig,
-        {**raw, "graph_render_options": _with_legend(render_options, unstyled="compact")},
+        {**raw, "graph_render_options": _with_legend(render_options, unstyled="extended")},
     )
 
 

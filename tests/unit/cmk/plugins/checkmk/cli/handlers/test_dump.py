@@ -35,12 +35,12 @@ from cmk.cli.internal import Declaration as CLIDeclaration
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Reader as CLIReader
-from cmk.plugins.checkmk.cli import dump
 from cmk.plugins.checkmk.cli.dump import (
     _dump_agent_request,
-    _DumpAgentRequest,
-    _run_dump_agent,
+    DumpAgentRequest,
 )
+from cmk.plugins.checkmk.cli.handlers import dump
+from cmk.plugins.checkmk.cli.handlers.dump import cli_handler_dump_agent
 from cmk.plugins.checkmk.cli.options import FileCacheRequest, NO_TCP_FLAG, SNMP_BACKEND_VALUE
 from cmk.ruleset_matcher.tags import TagGroupID, TagID
 from tests.testlib.unit.base_configuration_scenario import Scenario
@@ -72,7 +72,7 @@ def test_the_dump_agent_request_is_read_from_the_command_line() -> None:
 
     assert _dump_agent_request(
         CLIReader(lambda declaration: given.get(declaration, ()))
-    ) == _DumpAgentRequest(
+    ) == DumpAgentRequest(
         file_cache=FileCacheRequest(cache=False, no_cache=False, no_tcp=True),
         snmp_backend=SNMPBackendEnum.STORED_WALK,
         fake_dns=None,
@@ -81,7 +81,7 @@ def test_the_dump_agent_request_is_read_from_the_command_line() -> None:
 
 def _dump_agent(hostname: HostName, options: Mapping[CLIDeclaration, Sequence[str]]) -> CLIExitCode:
     logger = logging.getLogger(__name__)
-    return _run_dump_agent(
+    return cli_handler_dump_agent.run(
         CLIContext(omd_root=_OMD_ROOT, global_options=CLIGlobalOptions(), logger=logger),
         _dump_agent_request(CLIReader(lambda declaration: options.get(declaration, ()))),
         [hostname],

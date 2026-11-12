@@ -17,16 +17,15 @@ from cmk.cli.internal import Declaration as CLIDeclaration
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Reader as CLIReader
+from cmk.plugins.checkmk.cli.handlers.snmp import cli_handler_snmptranslate, cli_handler_snmpwalk
 from cmk.plugins.checkmk.cli.options import FAKE_DNS_VALUE, SNMP_BACKEND_VALUE
 from cmk.plugins.checkmk.cli.snmp import (
     _EXTRA_OIDS_VALUES,
     _get_request,
-    _GetRequest,
     _OIDS_VALUES,
-    _run_snmptranslate,
-    _run_snmpwalk,
     _walk_request,
-    _WalkRequest,
+    GetRequest,
+    WalkRequest,
 )
 
 
@@ -39,19 +38,19 @@ def _context(*, debug_mode: bool = False) -> CLIContext:
 
 
 def test_a_missing_walk_name_exits_three() -> None:
-    assert _run_snmptranslate(_context(), None, [""]) == CLIExitCode.UNKNOWN
+    assert cli_handler_snmptranslate.run(_context(), None, [""]) == CLIExitCode.UNKNOWN
 
 
 def test_a_missing_walk_name_is_logged(caplog: pytest.LogCaptureFixture) -> None:
     with caplog.at_level(logging.ERROR):
-        _run_snmptranslate(_context(), None, [""])
+        cli_handler_snmptranslate.run(_context(), None, [""])
 
     assert caplog.messages == ["Please provide the name of a SNMP walk file"]
 
 
 def test_a_missing_walk_name_is_raised_through_under_debug() -> None:
     with pytest.raises(MKGeneralException, match="name of a SNMP walk file"):
-        _run_snmptranslate(_context(debug_mode=True), None, [""])
+        cli_handler_snmptranslate.run(_context(debug_mode=True), None, [""])
 
 
 def test_oids_and_extra_oids_together_exit_three() -> None:
@@ -61,7 +60,7 @@ def test_oids_and_extra_oids_together_exit_three() -> None:
     }
 
     assert (
-        _run_snmpwalk(
+        cli_handler_snmpwalk.run(
             _context(),
             _walk_request(CLIReader(lambda declaration: given.get(declaration, ()))),
             [],
@@ -77,7 +76,7 @@ def test_oids_and_extra_oids_together_are_raised_through_under_debug() -> None:
             _EXTRA_OIDS_VALUES: ["1.4"],
         }
 
-        _run_snmpwalk(
+        cli_handler_snmpwalk.run(
             _context(debug_mode=True),
             _walk_request(CLIReader(lambda declaration: given.get(declaration, ()))),
             [],
@@ -91,7 +90,7 @@ def test_the_walk_request_is_read_from_the_command_line() -> None:
         _OIDS_VALUES: [".1.3", ".1.4"],
     }
 
-    assert _walk_request(CLIReader(lambda declaration: given.get(declaration, ()))) == _WalkRequest(
+    assert _walk_request(CLIReader(lambda declaration: given.get(declaration, ()))) == WalkRequest(
         backend=SNMPBackendEnum.CLASSIC,
         extra_oids=(),
         oids=(".1.3", ".1.4"),
@@ -102,7 +101,7 @@ def test_the_walk_request_is_read_from_the_command_line() -> None:
 def test_the_get_request_is_read_from_the_command_line() -> None:
     given: Mapping[CLIDeclaration, Sequence[str]] = {SNMP_BACKEND_VALUE: ["stored-walk"]}
 
-    assert _get_request(CLIReader(lambda declaration: given.get(declaration, ()))) == _GetRequest(
+    assert _get_request(CLIReader(lambda declaration: given.get(declaration, ()))) == GetRequest(
         backend=SNMPBackendEnum.STORED_WALK, fake_dns=None
     )
 

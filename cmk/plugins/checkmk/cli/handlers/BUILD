@@ -12,6 +12,7 @@ py_library(
     deps = [
         "//cmk/base:app",
         "//cmk/base:checking",
+        "//cmk/base:dump-host",
         "//cmk/base:inventory",
         "//cmk/base/config",
         "//cmk/base/core",
@@ -29,8 +30,10 @@ py_library(
         "//packages/cmk-ccc:timeout",
         "//packages/cmk-ccc:tty",
         "//packages/cmk-ccc:version",
+        "//packages/cmk-check-engine:helper-interface",
         "//packages/cmk-check-engine:lib",
         "//packages/cmk-check-engine:snmplib",
+        "//packages/cmk-check-engine:sources",
         "//packages/cmk-check-engine:specs",
         "//packages/cmk-check-engine/cmk/checkengine/discovery",
         "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",

@@ -4,312 +4,44 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """The dumping commands: --dump-agent and --dump."""
 
-import itertools
-import logging
-import sys
-from collections.abc import Iterable
 from dataclasses import dataclass
-from pathlib import Path
 
-import cmk.base.dump_host
-import cmk.livestatus_client as livestatus
-import cmk.utils.password_store
-import cmk.utils.paths
-from cmk.base import config
-from cmk.base.app import make_app
-from cmk.base.config import handle_ip_lookup_failure
-from cmk.base.configlib.fetchers import make_parsed_snmp_fetch_intervals_config
-from cmk.base.configlib.servicename import make_final_service_name_config
-from cmk.ccc.exceptions import MKBailOut, MKGeneralException, OnError
-from cmk.ccc.hostaddress import HostAddress, HostName
-from cmk.checkengine.fetcher_abc import Mode as FetchMode
-from cmk.checkengine.fetcher_utils.secrets import AdHocSecrets, StoredSecrets
-from cmk.checkengine.fetchers.snmp import NoSelectedSNMPSections, SNMPFetcherConfig
-from cmk.checkengine.fetchers.tcp import TLSConfig
-from cmk.checkengine.filecache import MaxAge
-from cmk.checkengine.helper_interface import FetcherType
-from cmk.checkengine.parser import make_parser, NO_SELECTION, parse_raw_data, SectionStore
+from cmk.ccc.hostaddress import HostAddress
 from cmk.checkengine.snmplib import SNMPBackendEnum
-from cmk.checkengine.source_builder import SourceBuilder
-from cmk.checkengine.summarize import summarize
-from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Arguments as CLIArguments
 from cmk.cli.internal import Command as CLICommand
-from cmk.cli.internal import Context as CLIContext
-from cmk.cli.internal import ExitCode as CLIExitCode
-from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.cli.internal import Reader as CLIReader
-from cmk.ruleset_matcher.matcher import BundledHostRulesetMatcher
-from cmk.server_side_calls_backend import ExecutableFinder, load_secrets_file
-from cmk.utils import ip_lookup, timeperiod
-from cmk.utils.ip_lookup import ConfiguredIPLookup
-from cmk.utils.log import console
 
-from .agent_based import load_checks
 from .options import (
     fake_dns_request,
     FAKE_DNS_VALUE,
     file_cache_request,
     FileCacheRequest,
-    host_address,
-    host_addresses,
-    make_file_cache_options,
     SNMP_BACKEND_VALUE,
 )
-from .output import write_stdout
-
-# .
-#   .--dump-agent----------------------------------------------------------.
-#   |        _                                                    _        |
-#   |     __| |_   _ _ __ ___  _ __         __ _  __ _  ___ _ __ | |_      |
-#   |    / _` | | | | '_ ` _ \| '_ \ _____ / _` |/ _` |/ _ \ '_ \| __|     |
-#   |   | (_| | |_| | | | | | | |_) |_____| (_| | (_| |  __/ | | | |_      |
-#   |    \__,_|\__,_|_| |_| |_| .__/       \__,_|\__, |\___|_| |_|\__|     |
-#   |                         |_|                |___/                     |
-#   '----------------------------------------------------------------------'
 
 
 @dataclass(frozen=True, kw_only=True)
-class _DumpAgentRequest:
+class DumpAgentRequest:
     file_cache: FileCacheRequest
     snmp_backend: SNMPBackendEnum | None
     fake_dns: HostAddress | None
 
 
-def _dump_agent_request(options: CLIReader) -> _DumpAgentRequest:
-    return _DumpAgentRequest(
+def _dump_agent_request(options: CLIReader) -> DumpAgentRequest:
+    return DumpAgentRequest(
         file_cache=file_cache_request(options),
         snmp_backend=options.value(SNMP_BACKEND_VALUE),
         fake_dns=options.value(FAKE_DNS_VALUE),
     )
 
 
-def _mode_dump_agent(
-    omd_root: Path, global_options: CLIGlobalOptions, request: _DumpAgentRequest, args: CLIArgs
-) -> CLIExitCode:
-    app = make_app(omd_root)
-    raw_host_name = args[0]
-    hostname = host_address(raw_host_name)
-    file_cache_options = make_file_cache_options(request.file_cache)
-
-    plugins = load_checks(debug=global_options.debug)
-    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
-    loaded_config = loading_result.loaded_config
-    ruleset_matcher = loading_result.config_cache.ruleset_matcher
-    label_manager = loading_result.config_cache.label_manager
-    hosts_config = loading_result.hosts_config
-
-    if hostname in hosts_config.clusters:
-        raise MKBailOut("Can not be used with cluster hosts")
-
-    config_cache = loading_result.config_cache
-    service_name_config = config_cache.make_passive_service_name_config(
-        make_final_service_name_config(loaded_config, ruleset_matcher)
-    )
-    enforced_services_table = config.EnforcedServicesTable(
-        BundledHostRulesetMatcher(
-            loaded_config.static_checks,
-            ruleset_matcher,
-            label_manager.labels_of_host,
-        ),
-        service_name_config,
-        plugins.check_plugins,
-        label_manager.labels_of_service,
-    )
-
-    host_labels = label_manager.labels_of_host(hostname)
-    relay_id = config.get_relay_id(host_labels)
-    fetcher_trigger = app.make_fetcher_trigger(relay_id, cmk.utils.paths.trusted_ca_file)
-
-    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=request.fake_dns)
-    ip_family = ip_lookup_config.default_address_family(hostname)
-    ip_address_of_bare = ip_lookup.make_lookup_ip_address(ip_lookup_config)
-    ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_address_of_bare,
-        allow_empty=(),
-        error_handler=config.handle_ip_lookup_failure,
-    )
-    ip_address_of_mgmt = ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)
-    with ruleset_matcher.ruleset_optimizer.processed_hosts({hostname}):
-        ip_stack_config = ip_lookup_config.ip_stack_config(hostname)
-        ipaddress = (
-            None
-            if ip_stack_config is ip_lookup.IPStackConfig.NO_IP
-            else ip_address_of(hostname, ip_family)
-        )
-        check_interval = config_cache.check_mk_check_interval(hostname)
-        section_cache_path = cmk.utils.paths.var_dir
-        tls_config = TLSConfig(
-            cas_dir=Path(cmk.utils.paths.agent_cas_dir),
-            ca_store=Path(cmk.utils.paths.agent_cert_store),
-            site_crt=Path(cmk.utils.paths.site_cert_file),
-        )
-
-        output = []
-        warnings = []
-        errors = []
-
-        secrets = (
-            AdHocSecrets(
-                path=cmk.utils.password_store.generate_ad_hoc_secrets_path(
-                    cmk.utils.paths.relative_tmp_dir
-                ),
-                secrets=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
-            )
-            if relay_id
-            else StoredSecrets(
-                path=cmk.utils.password_store.pending_secrets_path_site(),
-                secrets=load_secrets_file(cmk.utils.password_store.pending_secrets_path_site()),
-            )
-        )
-
-        for source in SourceBuilder(
-            plugins,
-            hostname,
-            ip_family,
-            ipaddress,
-            ip_stack_config,
-            source_config=config_cache.make_source_config(
-                config_cache.make_service_configurer(plugins.check_plugins, service_name_config),
-                ip_address_of,
-                service_name_config,
-                enforced_services_table,
-                SNMPFetcherConfig(
-                    on_error=OnError.RAISE,
-                    missing_sys_description=config_cache.missing_sys_description,
-                    selected_sections=NoSelectedSNMPSections(),
-                    backend_override=request.snmp_backend,
-                    base_path=cmk.utils.paths.omd_root,
-                    relative_stored_walk_path=cmk.utils.paths.relative_snmpwalks_dir,
-                    relative_walk_cache_path=cmk.utils.paths.relative_walk_cache_dir,
-                    relative_section_cache_path=cmk.utils.paths.relative_snmp_section_cache_dir,
-                    caching_config=make_parsed_snmp_fetch_intervals_config(
-                        loading_result.loaded_config,
-                        config_cache.ruleset_matcher,
-                        config_cache.label_manager.labels_of_host,
-                    ),
-                    force_stored_walks=False,
-                    debug=global_options.debug,
-                ),
-            ),
-            simulation_mode=loaded_config.simulation_mode,
-            file_cache_options=file_cache_options,
-            file_cache_max_age=MaxAge(
-                checking=loaded_config.check_max_cachefile_age,
-                discovery=1.5 * check_interval,
-                inventory=1.5 * check_interval,
-            ),
-            snmp_backend=config_cache.get_snmp_backend(hostname),
-            file_cache_path_base=cmk.utils.paths.omd_root,
-            file_cache_path_relative=cmk.utils.paths.relative_data_source_cache_dir,
-            tcp_cache_path_relative=cmk.utils.paths.relative_tcp_cache_dir,
-            tls_config=tls_config,
-            computed_datasources=config_cache.computed_datasources(hostname),
-            datasource_programs=config_cache.datasource_programs(hostname),
-            tag_list=loading_result.host_tags.tag_list(hostname),
-            management_ip=ip_address_of_mgmt(hostname, ip_family),
-            management_protocol=config_cache.management_protocol(hostname),
-            special_agent_command_lines=config_cache.special_agent_command_lines(
-                hostname,
-                ip_family,
-                ipaddress,
-                secrets_config=secrets,
-                ip_address_of=ConfiguredIPLookup(
-                    ip_address_of_bare,
-                    allow_empty=hosts_config.clusters,
-                    error_handler=handle_ip_lookup_failure,
-                ),
-                executable_finder=ExecutableFinder(
-                    # NOTE: we can't ignore these, they're an API promise.
-                    cmk.utils.paths.local_special_agents_dir,
-                    cmk.utils.paths.special_agents_dir,
-                    prefix_map=(() if relay_id is None else ((cmk.utils.paths.omd_root, Path()),)),
-                ),
-                for_relay=relay_id is not None,
-            ),
-            is_pull_host=config_cache.is_pull_host(hostname),
-            check_mk_check_interval=config_cache.check_mk_check_interval(hostname),
-            metrics_association=config_cache.metrics_association(hostname),
-            omd_root=cmk.utils.paths.omd_root,
-        ).sources:
-            source_info = source.source_info()
-            if source_info.fetcher_type is FetcherType.SNMP:
-                continue
-
-            raw_data = fetcher_trigger.get_raw_data(
-                source.file_cache(
-                    simulation=loaded_config.simulation_mode,
-                    file_cache_options=file_cache_options,
-                ),
-                source.fetcher(),
-                FetchMode.CHECKING,
-                secrets,
-                debug=global_options.debug,
-            ).raw_data
-            host_sections = parse_raw_data(
-                make_parser(
-                    config.make_parser_config(
-                        loaded_config,
-                        ruleset_matcher,
-                        label_manager,
-                        ip_address_of=config_cache.primary_ip_address_of,
-                    ),
-                    source_info.hostname,
-                    source_info.ipaddress,
-                    source_info.fetcher_type,
-                    cached_at=None,
-                    omd_root=cmk.utils.paths.omd_root,
-                    persisted_section_dir=SectionStore.make_persisted_section_dir(
-                        source_info.hostname,
-                        ident=source_info.ident,
-                        section_cache_path=section_cache_path,
-                    ),
-                    keep_outdated=file_cache_options.keep_outdated,
-                    debug=global_options.debug,
-                ),
-                raw_data,
-                selection=NO_SELECTION,
-            )
-            source_results = summarize(
-                host_sections,
-                config_cache.summary_config(hostname, source_info.ident),
-                fetcher_type=source_info.fetcher_type,
-            )
-            summaries = ", ".join(r.summary for r in source_results)
-            if any(r.state not in (0, 1) for r in source_results):
-                errors.append(f"ERROR [{source_info.ident}]: {summaries}")
-            elif any(r.state == 1 for r in source_results):
-                warnings.append(f"WARNING [{source_info.ident}]: {summaries}")
-
-            if raw_data.is_ok():
-                assert raw_data.ok is not None
-                output.append(raw_data.ok)
-
-        write_stdout(b"".join(output).decode(errors="surrogateescape"))
-        for warn in warnings:
-            console.warning(warn, file=sys.stderr)
-        for err in errors:
-            console.error(err, file=sys.stderr)
-
-        return CLIExitCode.FAILURE if errors else CLIExitCode.SUCCESS
-
-
-def _run_dump_agent(context: CLIContext, request: _DumpAgentRequest, args: CLIArgs) -> CLIExitCode:
-    try:
-        return _mode_dump_agent(context.omd_root, context.global_options, request, args)
-    except (MKBailOut, MKGeneralException) as e:
-        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
-        if context.global_options.debug:
-            raise
-        return CLIExitCode.UNKNOWN
-
-
 cli_command_dump_agent = CLICommand(
     name="dump_agent",
+    handler="cmk.plugins.checkmk.cli.handlers.dump:cli_handler_dump_agent",
     long="dump-agent",
     short="d",
     request=_dump_agent_request,
-    handler=_run_dump_agent,
     arguments=CLIArguments("HOSTNAME|ADDRESS"),
     help="Show raw information from agent",
     description=[
@@ -322,105 +54,11 @@ cli_command_dump_agent = CLICommand(
 )
 
 
-# .
-#   .--dump----------------------------------------------------------------.
-#   |                         _                                            |
-#   |                      __| |_   _ _ __ ___  _ __                       |
-#   |                     / _` | | | | '_ ` _ \| '_ \                      |
-#   |                    | (_| | |_| | | | | | | |_) |                     |
-#   |                     \__,_|\__,_|_| |_| |_| .__/                      |
-#   |                                          |_|                         |
-#   '----------------------------------------------------------------------'
-
-
-def _mode_dump_hosts(
-    _omd_root: Path, global_options: CLIGlobalOptions, fake_dns: HostAddress | None, args: CLIArgs
-) -> CLIExitCode:
-    hostlist: Iterable[HostName] = host_addresses(args)
-    logger = logging.getLogger("cmk.base.modes")  # this might go nowhere.
-    plugins = load_checks(debug=global_options.debug)
-    loading_result = config.load(validate_hosts=True, debug=global_options.debug)
-    loaded_config = loading_result.loaded_config
-    ruleset_matcher = loading_result.config_cache.ruleset_matcher
-    label_manager = loading_result.config_cache.label_manager
-    config_cache = loading_result.config_cache
-    core_objects_config = config.CoreObjectsConfig(loaded_config, ruleset_matcher, label_manager)
-    hosts_config = loading_result.hosts_config
-    ip_lookup_config = config_cache.ip_lookup_config(fake_dns=fake_dns)
-
-    ip_address_of = ip_lookup.ConfiguredIPLookup(
-        ip_lookup.make_lookup_ip_address(ip_lookup_config),
-        allow_empty=hosts_config.clusters,
-        error_handler=config.handle_ip_lookup_failure,
-    )
-    ip_address_of_mgmt = ip_lookup.make_lookup_mgmt_board_ip_address(ip_lookup_config)
-
-    all_hosts = {
-        hn
-        for hn in itertools.chain(hosts_config.hosts, hosts_config.clusters)
-        if config_cache.is_active(hn) and config_cache.is_online(hn)
-    }
-    hosts = set(hostlist)
-    if not hosts:
-        hosts = all_hosts
-
-    with ruleset_matcher.ruleset_optimizer.processed_hosts(hosts):
-        service_name_config = config_cache.make_passive_service_name_config(
-            make_final_service_name_config(loaded_config, ruleset_matcher)
-        )
-        enforced_services_table = config.EnforcedServicesTable(
-            BundledHostRulesetMatcher(
-                loaded_config.static_checks,
-                ruleset_matcher,
-                label_manager.labels_of_host,
-            ),
-            service_name_config,
-            plugins.check_plugins,
-            label_manager.labels_of_service,
-        )
-        for hostname in sorted(hosts - all_hosts):
-            sys.stderr.write(f"unknown host: {hostname}\n")
-        for hostname in sorted(hosts & all_hosts):
-            cmk.base.dump_host.dump_host(
-                loading_result.loaded_config,
-                loading_result.hosts_config,
-                loading_result.host_tags,
-                config_cache,
-                core_objects_config,
-                service_name_config,
-                enforced_services_table,
-                plugins,
-                hostname,
-                ip_lookup_config.ip_stack_config(hostname),
-                ip_lookup_config.default_address_family(hostname),
-                ip_address_of=ip_address_of,
-                ip_address_of_mgmt=ip_address_of_mgmt,
-                simulation_mode=loaded_config.simulation_mode,
-                timeperiod_active=timeperiod.TimeperiodActiveCoreLookup(
-                    livestatus.get_optional_timeperiods_active_map, log=logger.warning
-                ).get,
-                debug=global_options.debug,
-            )
-        return CLIExitCode.SUCCESS
-
-
-def _run_dump_hosts(
-    context: CLIContext, fake_dns: HostAddress | None, args: CLIArgs
-) -> CLIExitCode:
-    try:
-        return _mode_dump_hosts(context.omd_root, context.global_options, fake_dns, args)
-    except (MKBailOut, MKGeneralException) as e:
-        context.logger.error("%(error)s", {"error": e})  # noqa: TRY400
-        if context.global_options.debug:
-            raise
-        return CLIExitCode.UNKNOWN
-
-
 cli_command_dump = CLICommand(
     name="dump",
+    handler="cmk.plugins.checkmk.cli.handlers.dump:cli_handler_dump",
     long="dump",
     short="D",
-    handler=_run_dump_hosts,
     arguments=CLIArguments("H1 H2...", optional=True),
     request=fake_dns_request,
     help="Dump info about all or some hosts",

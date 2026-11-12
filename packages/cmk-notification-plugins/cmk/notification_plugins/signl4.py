@@ -53,7 +53,7 @@ def _signl4_msg(context: dict[str, str]) -> dict[str, JsonPayload]:
     service_desc_base64 = ""
     service_desc_id_part = ""
     if len(service_desc) > 0:
-        service_desc_bytes = service_desc.encode("ascii")
+        service_desc_bytes = service_desc.encode("ascii", errors="replace")
         service_desc_base64 = base64.b64encode(service_desc_bytes).decode()
         service_desc_id_part = ":ServiceDesc:" + service_desc_base64
     return {

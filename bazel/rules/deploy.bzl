@@ -249,6 +249,7 @@ CLOUD_WHEELS = PRO_WHEELS + [
     "//non-free/packages/cmk-plugins-nonfree:wheel-azure_v2_extended",
     "//non-free/packages/cmk-plugins-nonfree:wheel-gcp_extended",
     "//non-free/packages/cmk-telemetry:wheel",
+    "//non-free/packages/cmk-telemetry:wheel-auth-only",
 ]
 
 ULTIMATE_WHEELS = PRO_WHEELS + [

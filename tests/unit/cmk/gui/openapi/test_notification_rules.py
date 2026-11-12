@@ -712,11 +712,13 @@ def test_create_and_update_rule_with_bulking_method_data(
 
     notification_bulking: NotificationBulkingAPIValueType = {"state": "enabled", "value": testdata}
     config["notification_method"]["notification_bulking"] = notification_bulking
-    r2 = clients.RuleNotification.edit(
+    clients.RuleNotification.edit(
         rule_id=r1.json["id"],
         rule_config=config,
     )
-    assert r2.json["extensions"]["rule_config"] == config
+
+    # The response to the edit is built from the request, not from the stored rule.
+    assert clients.RuleNotification.get(r1.json["id"]).json["extensions"]["rule_config"] == config
 
 
 plugin_test_data: list[PluginType] = [

@@ -14,8 +14,8 @@ from cmk.cli.engine.arguments import RunCommand as CLIRunCommand
 from cmk.cli.engine.arguments import ShowHelp as CLIShowHelp
 from cmk.cli.engine.commands import Commands as CLICommands
 from cmk.cli.engine.discovery import make_command as cli_make_command
+from cmk.cli.engine.options import _GENERAL_OPTIONS as CLI_GENERAL_OPTIONS
 from cmk.cli.engine.options import Declaration as CLIDeclaration
-from cmk.cli.engine.options import GENERAL_OPTIONS as CLI_GENERAL_OPTIONS
 from cmk.cli.engine.options import GlobalOptions as CLIEngineGlobalOptions
 from cmk.cli.engine.options import placeholder as cli_placeholder
 from cmk.cli.internal import Args as CLIArgs

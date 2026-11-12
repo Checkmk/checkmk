@@ -50,14 +50,14 @@ _LOG_FILE_OPTION: Final = CLIValue(
     parse=Path,
 )
 
-GENERAL_OPTIONS: Final[Sequence[Declaration]] = (
+_GENERAL_OPTIONS: Final[Sequence[Declaration]] = (
     _VERBOSE_OPTION,
     _DEBUG_OPTION,
     _PROFILE_OPTION,
     _LOG_FILE_OPTION,
 )
 
-ENGINE_OPTIONS: Final[Sequence[Declaration]] = (HELP_OPTION, *GENERAL_OPTIONS)
+ENGINE_OPTIONS: Final[Sequence[Declaration]] = (HELP_OPTION, *_GENERAL_OPTIONS)
 
 
 def spellings(option: Declaration) -> Sequence[str]:

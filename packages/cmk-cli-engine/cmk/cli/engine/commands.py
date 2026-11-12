@@ -96,21 +96,21 @@ def _long_help_text(command: DiscoveredCommand) -> str | None:
     return "\n\n".join(text)
 
 
-def _names(option: Declaration) -> Sequence[str]:
-    return [name for name in (option.short, option.long, *option.deprecated_names) if name]
-
-
 def _map_commands(commands: Sequence[DiscoveredCommand]) -> Mapping[str, DiscoveredCommand]:
     claimants = {
-        name: f"the option {option.long!r}" for option in ENGINE_OPTIONS for name in _names(option)
+        spelling: f"the option {option.long!r}"
+        for option in ENGINE_OPTIONS
+        for spelling in spellings(option)
     }
     mapped: dict[str, DiscoveredCommand] = {}
     for command in commands:
-        for name in _names(command.selector):
-            if (other := claimants.get(name)) is not None:
-                raise ValueError(f"{name!r} is claimed by {other} and the command {command.name!r}")
-            claimants[name] = f"the command {command.name!r}"
-            mapped[name] = command
+        for spelling in spellings(command.selector):
+            if (other := claimants.get(spelling)) is not None:
+                raise ValueError(
+                    f"{spelling!r} is claimed by {other} and the command {command.name!r}"
+                )
+            claimants[spelling] = f"the command {command.name!r}"
+            mapped[spelling] = command
     return mapped
 
 
@@ -151,8 +151,8 @@ class Commands:
         ]
         _check_arguments(self._declarations)
 
-    def find(self, name: str) -> DiscoveredCommand | None:
-        return self._command_map.get(name)
+    def find(self, spelling: str) -> DiscoveredCommand | None:
+        return self._command_map.get(spelling)
 
     def short_getopt_specs(self) -> str:
         return "".join(

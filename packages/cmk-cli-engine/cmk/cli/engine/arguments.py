@@ -50,7 +50,7 @@ def _selected(
     commands: Commands, options: GetoptOptions, positional: Sequence[str]
 ) -> tuple[DiscoveredCommand, str] | None:
     for option, argument in options:
-        if (command := commands.find(option.lstrip("-"))) is not None:
+        if (command := commands.find(option)) is not None:
             return command, argument
     if positional and commands.default is not None:
         return commands.default, ""

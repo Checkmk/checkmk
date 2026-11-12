@@ -1061,7 +1061,7 @@
     "@@perl-modules+//:extensions.bzl%perl_modules": {
       "general": {
         "bzlTransitiveDigest": "witXEIg5hr5mzvDAg2a0m0XPFE2ts9rsrLJuAjMLUPA=",
-        "usagesDigest": "rdluZTxTW3M/s48AHcXOAAf301ZYhLivFZ+No9XLIdA=",
+        "usagesDigest": "zjbmCf6yD8cgjDRzbYdk5kx2Q657ptRbPdmGpMDiueA=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},

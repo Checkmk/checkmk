@@ -1,4 +1,4 @@
-title: AppDynamics: Number of Sessions
+title: AppDynamics: Sessions
 agents: appdynamics
 catalog: app/java
 license: GPLv2

@@ -43,7 +43,6 @@ function lockedWarning({ host_name: host, dcd_connection: connection }: HostOpen
 <template>
   <CmkAlert
     v-if="hostsToEnable.length > 0"
-    size="small"
     variant="info"
     :text="
       _t('OpenTelemetry data will be enabled on %{hosts} when you save.', {
@@ -54,13 +53,11 @@ function lockedWarning({ host_name: host, dcd_connection: connection }: HostOpen
   <CmkAlert
     v-for="host in lockedHosts"
     :key="host.host_name"
-    size="small"
     variant="warning"
     :text="lockedWarning(host)"
   />
   <CmkAlert
     v-if="data.status === 'failed'"
-    size="small"
     variant="warning"
     :text="_t('Could not check whether OpenTelemetry data is enabled on the hosts.')"
   />

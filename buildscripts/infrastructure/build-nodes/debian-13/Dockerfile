@@ -12,6 +12,10 @@ ENV \
     LANG=C.UTF-8 \
     PATH="/opt/bin:${PATH}"
 
+# Fix for ITSD-5837, using our internal apt mirror
+# The debian-security endpoint will not be changed
+RUN sed -i "s|http://deb.debian.org/debian$|http://apt.lan.checkmk.net/debian|g" /etc/apt/sources.list.d/debian.sources
+
 RUN apt-get update
 
 RUN apt-get install -y \

@@ -254,7 +254,10 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         "-v",
         action="count",
         default=0,
-        help="Increase log verbosity. Use -vv for debug output of 'boto3' and 'botocore'.",
+        help=(
+            "Log to stderr. Repeat for more detail: -v warnings and errors,"
+            " -vv also info messages, -vvv also debug output, including boto3 and botocore."
+        ),
     )
     parser.add_argument(
         "--vcrtrace",
@@ -492,9 +495,12 @@ def _positive_int(value: str) -> int:
     return number
 
 
-def _setup_logging(opt_debug: bool, opt_verbose: int) -> None:
-    logging.getLogger().disabled = not (opt_debug or opt_verbose)
-    configure_logging(logging.DEBUG if opt_verbose > 1 else logging.INFO)
+def _setup_logging(verbosity: int) -> None:
+    # Disabling the root logger would not silence its children, such as botocore.
+    silent = logging.CRITICAL + 1
+    configure_logging(
+        {0: silent, 1: logging.WARNING, 2: logging.INFO}.get(verbosity, logging.DEBUG)
+    )
     for handler in logging.getLogger().handlers:
         handler.addFilter(_name_the_job)
 
@@ -846,7 +852,7 @@ def _run_region(
 
 
 def agent_aws_main(args: argparse.Namespace) -> int:
-    _setup_logging(args.debug, args.verbose)
+    _setup_logging(args.verbose)
 
     client_config = _client_config(args)
     _pass_proxy_to_credential_process(args)

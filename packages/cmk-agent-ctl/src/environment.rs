@@ -9,6 +9,7 @@ use crate::constants;
 use std::path::{Path, PathBuf};
 
 /// Deployment mode of the agent controller, selecting the on-disk directory layout.
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub enum SetupMode {
     /// Classic package deployment: files are deployed in a some system directory:
     /// `/var/lib/cmk-agent`(fixed) for Linux
@@ -21,6 +22,8 @@ pub enum SetupMode {
 }
 
 pub struct PathResolver {
+    pub setup_mode: SetupMode,
+
     pub config_path: PathBuf,
     pub pre_configured_connections_path: PathBuf,
     pub trusted_cas_path: PathBuf,
@@ -80,6 +83,7 @@ impl PathResolver {
     /// - `%ProgramData%\checkmk\agent` on Windows.
     fn from_home(home_dir: &Path) -> PathResolver {
         PathResolver {
+            setup_mode: SetupMode::Classic,
             config_path: home_dir.join(constants::CONFIG_FILE),
             pre_configured_connections_path: home_dir
                 .join(constants::PRE_CONFIGURED_CONNECTIONS_FILE),
@@ -131,6 +135,7 @@ impl PathResolver {
         let runtime_dir = install_dir.join("runtime/controller");
         let agent_dir = install_dir.join("package/agent");
         PathResolver {
+            setup_mode: SetupMode::SingleDir,
             config_path: config_dir.join(constants::CONFIG_FILE),
             pre_configured_connections_path: config_dir
                 .join(constants::PRE_CONFIGURED_CONNECTIONS_FILE),
@@ -160,6 +165,7 @@ mod tests {
     fn test_classic_paths() {
         let home_dir = Path::new("/a/b/c");
         let paths = PathResolver::new(SetupMode::Classic, home_dir);
+        assert_eq!(paths.setup_mode, SetupMode::Classic);
         assert_eq!(paths.config_path, home_dir.join("cmk-agent-ctl.toml"));
         assert_eq!(
             paths.pre_configured_connections_path,
@@ -210,6 +216,7 @@ mod tests {
     fn test_single_dir_paths() {
         let install_dir = Path::new("/a/b/c");
         let paths = PathResolver::new(SetupMode::SingleDir, install_dir);
+        assert_eq!(paths.setup_mode, SetupMode::SingleDir);
         assert_eq!(
             paths.config_path,
             install_dir.join("package/config/cmk-agent-ctl.toml")

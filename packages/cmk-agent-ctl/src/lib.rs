@@ -183,7 +183,13 @@ pub fn run_requested_mode(cli: cli::Cli, paths: environment::PathResolver) -> An
                 config::ClientConfig::new(runtime_config, update_opts.client_opts, None);
             let python_updater = updater::PythonUpdater::find(&paths, &client_config);
             if update_opts.check_only {
-                check(&updater, &registry, &client_config, python_updater.as_ref())
+                check(
+                    &updater,
+                    &registry,
+                    &client_config,
+                    python_updater.as_ref(),
+                    paths.setup_mode,
+                )
             } else {
                 update(
                     &mut Updater::writable(&paths)?,
@@ -195,6 +201,7 @@ pub fn run_requested_mode(cli: cli::Cli, paths: environment::PathResolver) -> An
                         updater::SignatureCheck::Required
                     },
                     python_updater.as_ref(),
+                    paths.setup_mode,
                 )
             }
         }

@@ -7,7 +7,7 @@
 
 use crate::configuration::config::{ClientConfig, Registry};
 use crate::constants::CMK_UPDATE_AGENT_CMD;
-use crate::environment::PathResolver;
+use crate::environment::{PathResolver, SetupMode};
 #[cfg(unix)]
 use crate::updater::InstallOutcome;
 use crate::updater::{
@@ -34,9 +34,10 @@ pub fn check(
     registry: &Registry,
     client_config: &ClientConfig,
     python_updater: Option<&PythonUpdater>,
+    setup_mode: SetupMode,
 ) -> AnyhowResult<()> {
     if !updater.is_configured()? {
-        println!("{}", report_unconfigured(python_updater));
+        println!("{}", report_unconfigured(python_updater, setup_mode));
         return Ok(());
     }
     let api = agent_receiver_api::Api {
@@ -75,11 +76,19 @@ pub fn update(
     client_config: &ClientConfig,
     signature: SignatureCheck,
     python_updater: Option<&PythonUpdater>,
+    setup_mode: SetupMode,
 ) -> AnyhowResult<()> {
     let api = agent_receiver_api::Api {
         use_proxy: client_config.use_proxy,
     };
-    update_through(updater, registry, &api, signature, python_updater)
+    update_through(
+        updater,
+        registry,
+        &api,
+        signature,
+        python_updater,
+        setup_mode,
+    )
 }
 
 fn update_through(
@@ -88,9 +97,10 @@ fn update_through(
     api: &(impl agent_receiver_api::AgentUpdate + agent_receiver_api::RegistrationStatusV2),
     signature: SignatureCheck,
     python_updater: Option<&PythonUpdater>,
+    setup_mode: SetupMode,
 ) -> AnyhowResult<()> {
     if !updater.is_configured()? {
-        println!("{}", report_unconfigured(python_updater));
+        println!("{}", report_unconfigured(python_updater, setup_mode));
         return Ok(());
     }
 
@@ -184,7 +194,7 @@ fn run_cycle(
 /// The bakery ships the Python updater only under a rule that enables agent
 /// updates, so a package with it and without an update configuration is
 /// updated by the Python updater.
-fn report_unconfigured(python_updater: Option<&PythonUpdater>) -> String {
+fn report_unconfigured(python_updater: Option<&PythonUpdater>, setup_mode: SetupMode) -> String {
     if python_updater.is_none() {
         return String::from("Agent updates are not configured for this host");
     }
@@ -193,10 +203,20 @@ fn report_unconfigured(python_updater: Option<&PythonUpdater>) -> String {
     } else {
         String::from(CMK_UPDATE_AGENT_CMD)
     };
-    format!(
+    let mut report = format!(
         "Agent updates of this host are handled by the legacy updater\n\
          ({command}), not by the Agent Controller."
-    )
+    );
+    // Windows knows the classic mode only, and the integrated updater runs in it.
+    if cfg!(unix) && setup_mode == SetupMode::Classic {
+        report.push_str(
+            "\n\n\
+             The Agent Controller can only update agents that use the single-directory\n\
+             deployment. This agent uses the classic file deployment.\n\
+             To switch, see https://checkmk.com/werk/19234",
+        );
+    }
+    report
 }
 
 /// The outcome of a check in the one line the mode prints.
@@ -323,6 +343,7 @@ pub fn fn_thread(
                         // A cycle runs only with an update configuration, and the
                         // Python updater is named only without one.
                         None,
+                        paths.setup_mode,
                     ) {
                         warn!("Could not update. {result:#}");
                     }
@@ -471,18 +492,43 @@ mod tests {
     #[test]
     fn test_report_a_host_updated_by_the_legacy_updater() {
         assert_eq!(
-            report_unconfigured(Some(&PythonUpdater::at("cmk-update-agent"))),
+            report_unconfigured(
+                Some(&PythonUpdater::at("cmk-update-agent")),
+                SetupMode::SingleDir
+            ),
             "Agent updates of this host are handled by the legacy updater\n\
              (cmk-update-agent), not by the Agent Controller."
         );
     }
 
-    /// CMK-42015: on Windows the legacy updater is a command of the agent.
+    /// CMK-42015: the classic layout keeps a host on the legacy updater.
+    #[cfg(unix)]
+    #[test]
+    fn test_report_the_layout_of_a_classic_host_updated_by_the_legacy_updater() {
+        assert_eq!(
+            report_unconfigured(
+                Some(&PythonUpdater::at("cmk-update-agent")),
+                SetupMode::Classic
+            ),
+            "Agent updates of this host are handled by the legacy updater\n\
+             (cmk-update-agent), not by the Agent Controller.\n\
+             \n\
+             The Agent Controller can only update agents that use the single-directory\n\
+             deployment. This agent uses the classic file deployment.\n\
+             To switch, see https://checkmk.com/werk/19234"
+        );
+    }
+
+    /// CMK-42015: on Windows the legacy updater is a command of the agent, and
+    /// the classic mode is no reason to keep it.
     #[cfg(windows)]
     #[test]
     fn test_report_a_host_updated_by_the_legacy_updater() {
         assert_eq!(
-            report_unconfigured(Some(&PythonUpdater::at("check_mk_agent.exe"))),
+            report_unconfigured(
+                Some(&PythonUpdater::at("check_mk_agent.exe")),
+                SetupMode::Classic
+            ),
             "Agent updates of this host are handled by the legacy updater\n\
              (check_mk_agent.exe updater), not by the Agent Controller."
         );
@@ -748,6 +794,7 @@ mod tests {
                     api,
                     SignatureCheck::Required,
                     None,
+                    self.paths.setup_mode,
                 )
             }
 

@@ -8,6 +8,7 @@ from contextlib import nullcontext
 import pytest
 
 from cmk.ccc.version import Edition
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.rule_specs.legacy_converter import convert_to_legacy_rulespec
 from cmk.plugins.windows.rulesets.winperf_ts_sessions import rule_spec_winperf_ts_sessions
 
@@ -32,7 +33,7 @@ def test_rule_spec_winperf_ts_sessions_levels_migrated(
         rule_spec_winperf_ts_sessions, Edition.COMMUNITY, lambda x: x
     ).valuespec
 
-    context = pytest.raises(KeyError) if expected_exception else nullcontext()
+    context = pytest.raises(MKUserError) if expected_exception else nullcontext()
     with context:
         valuespec.validate_datatype(rule, "")
         valuespec.validate_value(rule, "")

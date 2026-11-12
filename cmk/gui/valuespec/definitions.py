@@ -7088,7 +7088,13 @@ class Transform[T](ValueSpec[T]):
 
     @override
     def validate_datatype(self, value: Any, varprefix: str) -> None:
-        self._valuespec.validate_datatype(self.to_valuespec(value), varprefix)
+        try:
+            converted = self.to_valuespec(value)
+        except (KeyError, IndexError, TypeError, ValueError) as exc:
+            raise MKUserError(
+                varprefix, _("The value has an unknown format: %(error)s") % {"error": exc}
+            ) from exc
+        self._valuespec.validate_datatype(converted, varprefix)
 
     @override
     def _validate_value(self, value: Any, varprefix: str) -> None:

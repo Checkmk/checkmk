@@ -1035,6 +1035,13 @@ def make_svc_check_cache_info_painter() -> InternalPainter:
 def _render_svc_next_check(
     row: Row, _cell: Cell, _user: LoggedInUser, context: PainterContext
 ) -> CellSpec:
+    # The core schedules no active check that a relay runs.
+    if (
+        not row["service_next_check"]
+        and row["service_check_type"] == 0
+        and "cmk/relay" in row["host_labels"]
+    ):
+        return "", _("Managed by the relay")
     return _paint_future_time(
         row["service_next_check"],
         request=context.request,
@@ -1047,7 +1054,7 @@ def make_svc_next_check_painter() -> InternalPainter:
         ident="svc_next_check",
         title=_l("Time of the next scheduled service check"),
         short_title=_l("Next check"),
-        columns=["service_next_check"],
+        columns=["service_next_check", "service_check_type", "host_labels"],
         render=_render_svc_next_check,
     )
 

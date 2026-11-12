@@ -2227,7 +2227,10 @@ class BulkOutsideTimePeriod:
 
         return r
 
-    def to_mk_file_format(self) -> AlwaysBulkParameters:
+    def to_mk_file_format(self) -> AlwaysBulkParameters | None:
+        if self.state == "disabled":
+            return None
+
         r = AlwaysBulkParameters(
             count=self.max_bulk_size,
             groupby=self.notification_bulks_based_on,
@@ -2396,12 +2399,10 @@ class CheckboxNotificationBulking:
             always_bulk_params = cast(AlwaysBulkParameters, r)
             return ("always", always_bulk_params)
 
-        r.update(
-            {
-                "timeperiod": self.bulk.time_period,
-                "bulk_outside": self.bulk.bulk_outside_timeperiod.to_mk_file_format(),
-            }
-        )
+        r["timeperiod"] = self.bulk.time_period
+        if (bulk_outside := self.bulk.bulk_outside_timeperiod.to_mk_file_format()) is not None:
+            r["bulk_outside"] = bulk_outside
+
         timeperiod_bulk_params = cast(TimeperiodBulkParameters, r)
         return ("timeperiod", timeperiod_bulk_params)
 

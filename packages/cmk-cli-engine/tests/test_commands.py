@@ -47,33 +47,33 @@ def _command(
 
 def test_two_commands_cannot_claim_the_same_long_option() -> None:
     with pytest.raises(ValueError, match="'--twice'"):
-        CLICommands(plugins=[_command("twice"), _command("twice")])
+        CLICommands(commands=[_command("twice"), _command("twice")])
 
 
 def test_two_commands_cannot_claim_the_same_short_option() -> None:
     with pytest.raises(ValueError, match="'-x'"):
-        CLICommands(plugins=[_command("one", "x"), _command("other", "x")])
+        CLICommands(commands=[_command("one", "x"), _command("other", "x")])
 
 
 def test_a_short_and_a_long_option_of_the_same_letter_do_not_collide() -> None:
-    commands = CLICommands(plugins=[_command("x"), _command("other", "x")])
+    commands = CLICommands(commands=[_command("x"), _command("other", "x")])
     assert commands.find("--x") is not commands.find("-x")
 
 
 def test_a_command_cannot_claim_the_built_in_help_option() -> None:
     with pytest.raises(ValueError, match="'--help'"):
-        CLICommands(plugins=[_command("help")])
+        CLICommands(commands=[_command("help")])
 
 
 def test_a_command_cannot_claim_a_general_option() -> None:
     with pytest.raises(ValueError, match="'--log-file'"):
-        CLICommands(plugins=[_command("log-file")])
+        CLICommands(commands=[_command("log-file")])
 
 
 def test_an_option_cannot_be_declared_with_and_without_an_argument() -> None:
     with pytest.raises(ValueError, match="'--plugins'"):
         CLICommands(
-            plugins=[
+            commands=[
                 _command(
                     "one", request=lambda options: options.flag(CLIFlag(long="plugins", help="f"))
                 ),
@@ -89,9 +89,9 @@ def test_an_option_cannot_be_declared_with_and_without_an_argument() -> None:
 
 def test_there_is_at_most_one_default_command() -> None:
     with pytest.raises(ValueError, match="default commands"):
-        CLICommands(plugins=[_command("one", default=True), _command("other", default=True)])
+        CLICommands(commands=[_command("one", default=True), _command("other", default=True)])
 
 
 def test_the_default_command_cannot_require_an_argument() -> None:
     with pytest.raises(ValueError, match="'one'"):
-        CLICommands(plugins=[_command("one", arguments=CLIArguments("HOST"), default=True)])
+        CLICommands(commands=[_command("one", arguments=CLIArguments("HOST"), default=True)])

@@ -43,4 +43,4 @@ def test_available_commands() -> None:
 def test_no_two_commands_claim_the_same_option() -> None:
     # Commands() rejects a collision; nothing else sees one, because the names above
     # are a set and a duplicate would collapse into it.
-    CLICommands(plugins=cli_discover_commands())
+    CLICommands(commands=cli_discover_commands())

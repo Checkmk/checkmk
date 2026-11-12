@@ -119,7 +119,7 @@ _DEFAULT: Final = cli_make_command(
     )
 )
 
-_COMMANDS: Final = CLICommands(plugins=[_PLAIN, _OTHER_PLAIN, _WITH_ARGUMENT, _DEFAULT])
+_COMMANDS: Final = CLICommands(commands=[_PLAIN, _OTHER_PLAIN, _WITH_ARGUMENT, _DEFAULT])
 
 
 def _parse(argv: Sequence[str]) -> CLIRunCommand | CLIShowHelp | CLIInvalidArguments:
@@ -227,7 +227,7 @@ def test_positional_arguments_alone_run_the_default_command() -> None:
 
 
 def test_without_a_default_command_positional_arguments_show_the_help() -> None:
-    commands = CLICommands(plugins=[_PLAIN])
+    commands = CLICommands(commands=[_PLAIN])
 
     assert isinstance(cli_parse(commands, ["cmk", "myhost"], null_logger()), CLIShowHelp)
 

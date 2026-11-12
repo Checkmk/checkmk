@@ -102,7 +102,7 @@ def run(
 ) -> int:
     signal.signal(signal.SIGINT, runtime.on_sigint)
 
-    commands = Commands(plugins=runtime.discover())
+    commands = Commands(commands=runtime.discover())
     logger = runtime.logger.getChild("cli")
 
     match parse(commands, argv, logger):

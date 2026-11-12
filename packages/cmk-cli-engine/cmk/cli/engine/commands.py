@@ -140,14 +140,14 @@ def _help_order(text: str) -> str:
 
 
 class Commands:
-    def __init__(self, *, plugins: Sequence[DiscoveredCommand]) -> None:
-        self._commands = plugins
-        self._command_map = _map_commands(plugins)
-        self.default = _default_command(plugins)
+    def __init__(self, *, commands: Sequence[DiscoveredCommand]) -> None:
+        self._commands = commands
+        self._command_map = _map_commands(commands)
+        self.default = _default_command(commands)
         self._declarations: Sequence[Declaration] = [
-            *(command.selector for command in plugins),
+            *(command.selector for command in commands),
             *ENGINE_OPTIONS,
-            *(option for command in plugins for option in command.options),
+            *(option for command in commands for option in command.options),
         ]
         _check_arguments(self._declarations)
 

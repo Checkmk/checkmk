@@ -1,4 +1,4 @@
-title: IBM SVC / Storwize V3700 / V7000: Status and Mode of MDisks
+title: IBM SAN Volume Controller: MDisk Status and Mode
 agents: ibm_svc
 catalog: hw/storagehw/ibm
 license: GPLv2

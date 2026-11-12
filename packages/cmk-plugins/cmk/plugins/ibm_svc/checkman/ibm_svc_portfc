@@ -1,4 +1,4 @@
-title: IBM SVC / Storwize V3700 / V7000: Status of FC Ports
+title: IBM SAN Volume Controller: FC Ports
 agents: ibm_svc
 catalog: hw/storagehw/ibm
 license: GPLv2

@@ -1,4 +1,4 @@
-title: IBM Servers: Physical Disks
+title: IBM: xSeries Physical Disks
 agents: snmp
 catalog: hw/server/ibm
 license: GPLv2

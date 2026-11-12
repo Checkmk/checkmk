@@ -1,4 +1,4 @@
-title: Informix DB: Spaces
+title: IBM Informix: Dbspaces
 agents: linux
 catalog: app/informix
 license: GPLv2

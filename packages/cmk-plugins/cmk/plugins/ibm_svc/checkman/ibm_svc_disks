@@ -1,4 +1,4 @@
-title: IBM SVC / Storwize V3700 / V7000: Summary of Disks
+title: IBM SAN Volume Controller: Disk Summary
 agents: ibm_svc
 catalog: hw/storagehw/ibm
 license: GPLv2

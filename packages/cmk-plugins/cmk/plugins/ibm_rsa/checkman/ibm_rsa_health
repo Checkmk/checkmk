@@ -1,4 +1,4 @@
-title: IBM Remote Supervisor Adapter (RSA): System Health
+title: IBM Remote Supervisor Adapter: System Health
 agents: snmp
 catalog: hw/server/ibm
 license: GPLv2

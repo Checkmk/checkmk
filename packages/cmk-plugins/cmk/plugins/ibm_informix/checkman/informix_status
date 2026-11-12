@@ -1,4 +1,4 @@
-title: Informix DB: Status
+title: IBM Informix: Status
 agents: linux
 catalog: app/informix
 license: GPLv2

@@ -1,4 +1,4 @@
-title: IBM MQ: Availability of Queue Manager
+title: IBM MQ: Queue Manager Availability
 agents: linux, solaris, aix, hpux
 catalog: app/ibm_mq
 license: GPLv2

@@ -1,4 +1,4 @@
-title: IBM SVC / Storwize V3700 / V7000: Latency for Drives/MDisks/VDisks per Node
+title: IBM SAN Volume Controller: Disk Latency per Node
 agents: ibm_svc
 catalog: hw/storagehw/ibm
 license: GPLv2

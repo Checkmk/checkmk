@@ -1,4 +1,4 @@
-title: IBM MQ: General Information about Queue
+title: IBM MQ: Queues
 agents: linux, solaris, aix, hpux
 catalog: app/ibm_mq
 license: GPLv2

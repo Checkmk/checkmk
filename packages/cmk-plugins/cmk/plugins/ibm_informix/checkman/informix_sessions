@@ -1,4 +1,4 @@
-title: Informix DB: Sessions
+title: IBM Informix: Sessions
 agents: linux
 catalog: app/informix
 license: GPLv2

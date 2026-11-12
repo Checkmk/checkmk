@@ -1,4 +1,4 @@
-title: Informix DB: Table Extents
+title: IBM Informix: Table Extents
 agents: linux
 catalog: app/informix
 license: GPLv2

@@ -1,4 +1,4 @@
-title: Informix DB: Locks
+title: IBM Informix: Locks
 agents: linux
 catalog: app/informix
 license: GPLv2

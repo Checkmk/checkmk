@@ -341,7 +341,7 @@ const { CmkErrorBoundary } = useCmkErrorBoundary()
 <template>
   <CmkErrorBoundary>
     <MonitoringHeaderActions :teleport-target="header_teleport_target">
-      <MonitoringSurveyLink url="https://survey.checkmk.com/index.php/815511?lang=en" />
+      <MonitoringSurveyLink url="https://survey.checkmk.com/index.php/393543?lang=en" />
       <MonitoringLegacyViewButton
         v-if="legacy_view_button"
         :title="legacy_view_button.title"

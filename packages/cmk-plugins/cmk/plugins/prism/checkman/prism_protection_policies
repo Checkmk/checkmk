@@ -1,0 +1,43 @@
+title: Nutanix Prism: Protection Policies
+agents: nutanix
+catalog: virtual/nutanix
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the protection policies a Nutanix Prism Central owns,
+ with the v4 API. It shows the policy's recovery point objective (RPO), the
+ number of VMs it protects, its remote locations and the retention of each
+ schedule. Policies of another Prism Central that replicate to this one are
+ monitored on the Prism Central owning them.
+
+ For each protected VM it checks the age of the VM's newest recovery point.
+ The levels are multiples of the policy's shortest RPO other than 0 (an RPO
+ of 0 is synchronous replication) and can be configured with the
+ rule "Nutanix protection policies". By default the service goes {WARN} at
+ 1.5 times and {CRIT} at 2 times the RPO. With several schedules, e.g.
+ hourly local recovery points and a daily replication to a remote site, the
+ levels follow the shortest RPO and the age counts from the newest recovery
+ point of any schedule. The check doesn't notice if only the longer schedule
+ fails. A VM without any recovery point
+ gets the same levels, counted from when the check first saw it. Nutanix
+ takes a VM's first recovery point as soon as it protects the VM, so a newly
+ protected VM usually has one at once. A manual recovery point counts like
+ one made by the policy's schedule, because the API doesn't tell them apart.
+ A VM whose recovery point the agent couldn't fetch is {UNKNOWN}.
+
+ VMs on ESXi clusters are not covered: the v4 API shows which policy protects
+ a VM only for AHV VMs. A policy protecting only ESXi VMs shows "Protected
+ VMs: 0".
+
+ The v4 API can't read protection domains. Convert them to protection
+ policies to monitor them with this check.
+
+ This check requires the special agent configurable through "Nutanix Prism"
+ with the v4 API.
+
+item:
+ The name of the protection policy and the last 8 characters of its ID in
+ brackets, e.g. "daily (1a2b3c4d)".
+
+discovery:
+ One service is created for each protection policy the Prism Central owns.

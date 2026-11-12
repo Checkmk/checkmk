@@ -2200,3 +2200,16 @@ def test_no_policies_means_no_vm_call(api: responses.RequestsMock) -> None:
     )
 
     assert fetch_protection_policies(_context()) == [Section("prism_protection_policies", [], None)]
+
+
+def test_recorded_policies_give_the_recorded_section(api: responses.RequestsMock) -> None:
+    """section_prism_protection_policies.json is what the check plugin tests read"""
+    _serve_recorded_protection_policies(api)
+    _serve_recorded_vms(api)
+    api.assert_all_requests_are_fired = False
+
+    assert fetch_protection_policies(_context()) == [
+        Section(
+            "prism_protection_policies", _recorded("section_prism_protection_policies.json"), None
+        )
+    ]

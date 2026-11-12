@@ -1,0 +1,93 @@
+[
+  {
+    "extId": "2b6ea400-1fd0-4683-b379-afc0c589036a",
+    "name": "pts-pp",
+    "replicationLocations": [
+      {
+        "label": "pc-a",
+        "domainManagerExtId": "0806a141-8916-471b-99fd-b5119ff280ef",
+        "isPrimary": true
+      },
+      {
+        "label": "pc-c-1",
+        "domainManagerExtId": "539b621c-85a5-47ff-b9c9-5479a7eb3f3c",
+        "isPrimary": false
+      }
+    ],
+    "replicationConfigurations": [
+      {
+        "sourceLocationLabel": "pc-a",
+        "remoteLocationLabel": "pc-c-1",
+        "schedule": {
+          "recoveryPointObjectiveTimeSeconds": 3600,
+          "retention": {
+            "local": 1,
+            "remote": 1
+          }
+        }
+      },
+      {
+        "sourceLocationLabel": "pc-c-1",
+        "remoteLocationLabel": "pc-a",
+        "schedule": {
+          "recoveryPointObjectiveTimeSeconds": 3600,
+          "retention": {
+            "local": 1,
+            "remote": 1
+          }
+        }
+      }
+    ],
+    "vms": []
+  },
+  {
+    "extId": "6937453c-62f9-47c8-89f9-8e86228d134a",
+    "name": "cross-cluster",
+    "replicationLocations": [
+      {
+        "label": "pc-a",
+        "domainManagerExtId": "0806a141-8916-471b-99fd-b5119ff280ef",
+        "isPrimary": true
+      },
+      {
+        "label": "pc-c-1",
+        "domainManagerExtId": "539b621c-85a5-47ff-b9c9-5479a7eb3f3c",
+        "isPrimary": false
+      }
+    ],
+    "replicationConfigurations": [
+      {
+        "sourceLocationLabel": "pc-a",
+        "schedule": {
+          "recoveryPointObjectiveTimeSeconds": 3600,
+          "retention": {
+            "local": 1
+          }
+        }
+      },
+      {
+        "sourceLocationLabel": "pc-a",
+        "remoteLocationLabel": "pc-c-1",
+        "schedule": {
+          "recoveryPointObjectiveTimeSeconds": 3600,
+          "retention": {
+            "local": 1,
+            "remote": 1
+          }
+        }
+      },
+      {
+        "sourceLocationLabel": "pc-c-1",
+        "remoteLocationLabel": "pc-a",
+        "schedule": {
+          "recoveryPointObjectiveTimeSeconds": 3600,
+          "retention": {
+            "local": 1,
+            "remote": 1
+          }
+        }
+      }
+    ],
+    "vms": []
+  }
+]

@@ -1887,6 +1887,7 @@ FROZEN_SERVICE_NAMES: Final[Mapping[str, str]] = {
     "prism_hosts": "NTNX Host %s",
     "prism_info": "NTNX Cluster",
     "prism_protection_domains": "NTNX Data Protection %s",
+    "prism_protection_policies": "NTNX Data Protection %s",
     "prism_remote_support": "NTNX Remote Tunnel",
     "prism_storage_pools": "NTNX Storage %s",
     "prism_vm_stats": "NTNX I/O",

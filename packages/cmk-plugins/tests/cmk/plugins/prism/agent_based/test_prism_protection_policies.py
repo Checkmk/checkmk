@@ -1,0 +1,371 @@
+#!/usr/bin/env python3
+# Copyright (C) 2026 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+import json
+from datetime import datetime, UTC
+from pathlib import Path
+
+from cmk.agent_based.v2 import Result, Service, State, StringTable
+from cmk.plugins.prism.agent_based.prism_protection_policies import (
+    check_protection_policy,
+    DEFAULT_PARAMS,
+    discovery_prism_protection_policies,
+    Params,
+    parse_prism_protection_policies,
+)
+
+# The 2 policies a Prism Central 7.5 lab (anonymised) owns, as the v4 agent writes them: none
+# protects a VM.
+RECORDED_SECTION: StringTable = [
+    [
+        (
+            Path(__file__).parents[1]
+            / "special_agent"
+            / "v4_fixtures"
+            / "section_prism_protection_policies.json"
+        ).read_text()
+    ]
+]
+
+NOW = datetime(2026, 11, 11, 16, 0, tzinfo=UTC)
+# The item of _policy() and of the recorded policy "cross-cluster"
+HOURLY = "hourly (00000001)"
+CROSS_CLUSTER = "cross-cluster (228d134a)"
+LOCAL = {"label": "pc-a", "domainManagerExtId": "pc-a-id", "isPrimary": True}
+REMOTE = {"label": "pc-c", "domainManagerExtId": "pc-c-id", "isPrimary": False}
+HOUR = 3600.0
+
+
+def _policy(
+    vms: list[dict[str, object]],
+    name: str = "hourly",
+    ext_id: str = "11111111-aaaa-bbbb-cccc-000000000001",
+    locations: tuple[dict[str, object], ...] = (LOCAL, REMOTE),
+) -> dict[str, object]:
+    return {
+        "extId": ext_id,
+        "name": name,
+        "replicationLocations": list(locations),
+        "replicationConfigurations": [
+            {
+                "sourceLocationLabel": "pc-a",
+                "remoteLocationLabel": "pc-c",
+                "schedule": {
+                    "recoveryPointObjectiveTimeSeconds": 3600,
+                    "retention": {"local": 2, "remote": 2},
+                },
+            }
+        ],
+        "vms": vms,
+    }
+
+
+def _section(*policies: dict[str, object]) -> StringTable:
+    return [[json.dumps(list(policies))]]
+
+
+def _check(
+    item: str,
+    string_table: StringTable,
+    params: Params = DEFAULT_PARAMS,
+    value_store: dict[str, object] | None = None,
+) -> list[Result]:
+    return [
+        result
+        for result in check_protection_policy(
+            item,
+            params,
+            parse_prism_protection_policies(string_table),
+            {} if value_store is None else value_store,
+            NOW.timestamp(),
+        )
+        if isinstance(result, Result)
+    ]
+
+
+def _vm(name: str, newest: str | None) -> dict[str, object]:
+    vm: dict[str, object] = {"extId": f"id-{name}", "name": name}
+    if newest is not None:
+        vm["newestRecoveryPoint"] = newest
+    return vm
+
+
+def test_every_recorded_policy_gets_a_service() -> None:
+    assert list(
+        discovery_prism_protection_policies(parse_prism_protection_policies(RECORDED_SECTION))
+    ) == [Service(item="pts-pp (c589036a)"), Service(item=CROSS_CLUSTER)]
+
+
+def test_lab_policy_without_vms_is_ok() -> None:
+    assert _check(CROSS_CLUSTER, RECORDED_SECTION) == [
+        Result(state=State.OK, summary="RPO: 1 hour 0 minutes"),
+        Result(state=State.OK, summary="Protected VMs: 0"),
+        Result(state=State.OK, notice="Remote locations: pc-c-1"),
+        Result(state=State.OK, notice="Retention pc-a: 1 recovery point locally"),
+        Result(
+            state=State.OK,
+            notice="Retention pc-a -> pc-c-1: 1 recovery point locally, 1 recovery point remotely",
+        ),
+    ]
+
+
+def test_the_way_back_of_a_policy_is_ignored() -> None:
+    """Only the schedules from the primary location apply while the VMs run there"""
+    policy = _policy([_vm("app", "2026-11-11T14:00:00Z")])
+    policy["replicationConfigurations"] = [
+        {
+            "sourceLocationLabel": source,
+            "remoteLocationLabel": remote,
+            "schedule": {"recoveryPointObjectiveTimeSeconds": rpo},
+        }
+        for source, remote, rpo in (("pc-a", "pc-c", 4 * 3600), ("pc-c", "pc-a", 3600))
+    ]
+
+    results = _check(HOURLY, _section(policy))
+
+    assert (results[0], results[2], results[-1].state) == (
+        Result(state=State.OK, summary="RPO: 4 hours 0 minutes"),
+        Result(state=State.OK, notice="Remote locations: pc-c"),
+        State.OK,
+    )
+
+
+def test_vm_with_an_unknown_recovery_point_is_unknown() -> None:
+    results = _check(
+        HOURLY,
+        _section(
+            _policy(
+                [
+                    _vm("app", "2026-11-11T15:30:00Z"),
+                    {"extId": "id-db", "name": "db", "recoveryPointUnknown": True},
+                ]
+            )
+        ),
+    )
+
+    assert results[-2:] == [
+        Result(state=State.OK, notice="app: newest recovery point: 30 minutes 0 seconds"),
+        Result(state=State.UNKNOWN, summary="db: recovery point could not be fetched"),
+    ]
+
+
+def test_auto_rollup_retention_shows_the_period() -> None:
+    policy = _policy([])
+    policy["replicationConfigurations"] = [
+        {
+            "sourceLocationLabel": "pc-a",
+            "remoteLocationLabel": "pc-c",
+            "schedule": {
+                "recoveryPointObjectiveTimeSeconds": 3600,
+                "retention": {
+                    "local": {"snapshotIntervalType": "WEEKLY", "frequency": 4},
+                    "remote": {"snapshotIntervalType": "DAILY", "frequency": 1},
+                },
+            },
+        }
+    ]
+
+    assert _check(HOURLY, _section(policy))[3] == Result(
+        state=State.OK, notice="Retention pc-a -> pc-c: 4 weeks locally, 1 day remotely"
+    )
+
+
+def test_vm_recovery_points_are_checked_against_the_rpo() -> None:
+    results = _check(
+        HOURLY,
+        _section(
+            _policy(
+                [
+                    _vm("fresh", "2026-11-11T15:30:00Z"),
+                    _vm("late", "2026-11-11T14:15:00Z"),
+                    _vm("stale", "2026-11-11T13:00:00Z"),
+                ]
+            )
+        ),
+    )
+
+    assert results[4:] == [
+        Result(state=State.OK, notice="fresh: newest recovery point: 30 minutes 0 seconds"),
+        Result(
+            state=State.WARN,
+            summary=(
+                "late: newest recovery point: 1 hour 45 minutes "
+                "(warn/crit at 1 hour 30 minutes/2 hours 0 minutes)"
+            ),
+        ),
+        Result(
+            state=State.CRIT,
+            summary=(
+                "stale: newest recovery point: 3 hours 0 minutes "
+                "(warn/crit at 1 hour 30 minutes/2 hours 0 minutes)"
+            ),
+        ),
+    ]
+
+
+def test_age_levels_can_be_switched_off() -> None:
+    results = _check(
+        HOURLY,
+        _section(_policy([_vm("stale", "2026-11-10T16:00:00Z")])),
+        Params(recovery_point_age=("no_levels", None)),
+    )
+
+    assert results[-1] == Result(
+        state=State.OK, notice="stale: newest recovery point: 1 day 0 hours"
+    )
+
+
+def test_vm_without_recovery_point_is_ok_when_first_seen() -> None:
+    assert _check(HOURLY, _section(_policy([_vm("new", None)])))[-1] == Result(
+        state=State.OK, notice="new: without recovery point since first seen: 0 seconds"
+    )
+
+
+def test_vm_without_recovery_point_gets_the_age_levels_from_when_it_was_first_seen() -> None:
+    store: dict[str, object] = {"vms": {"id-new": {"first_seen": NOW.timestamp() - 1.75 * HOUR}}}
+
+    assert _check(HOURLY, _section(_policy([_vm("new", None)])), value_store=store)[-1] == Result(
+        state=State.WARN,
+        summary=(
+            "new: without recovery point since first seen: 1 hour 45 minutes "
+            "(warn/crit at 1 hour 30 minutes/2 hours 0 minutes)"
+        ),
+    )
+
+
+def test_remembered_recovery_point_counts_when_the_agent_no_longer_reports_it() -> None:
+    store: dict[str, object] = {
+        "vms": {"id-old": {"newest_recovery_point": NOW.timestamp() - 3 * HOUR}}
+    }
+
+    assert _check(HOURLY, _section(_policy([_vm("old", None)])), value_store=store)[-1] == Result(
+        state=State.CRIT,
+        summary=(
+            "old: last recovery point (no longer listed in Prism Central): 3 hours 0 minutes "
+            "(warn/crit at 1 hour 30 minutes/2 hours 0 minutes)"
+        ),
+    )
+
+
+def test_listed_recovery_point_counts_even_if_a_later_one_was_seen_before() -> None:
+    """The later one was deleted: the age counts from the newest one that still exists"""
+    store: dict[str, object] = {
+        "vms": {"id-app": {"newest_recovery_point": NOW.timestamp() - 1 * HOUR}}
+    }
+
+    assert _check(
+        HOURLY, _section(_policy([_vm("app", "2026-11-11T14:00:00Z")])), value_store=store
+    )[-1] == Result(
+        state=State.CRIT,
+        summary=(
+            "app: newest recovery point: 2 hours 0 minutes "
+            "(warn/crit at 1 hour 30 minutes/2 hours 0 minutes)"
+        ),
+    )
+
+
+def test_vms_gone_from_the_policy_for_a_day_are_forgotten() -> None:
+    store: dict[str, object] = {
+        "vms": {
+            "id-gone": {
+                "first_seen": NOW.timestamp() - 25 * HOUR,
+                "last_seen": NOW.timestamp() - 24 * HOUR,
+            }
+        }
+    }
+
+    _check(HOURLY, _section(_policy([_vm("kept", "2026-11-11T15:30:00Z")])), value_store=store)
+
+    assert store == {
+        "vms": {
+            "id-kept": {
+                "newest_recovery_point": NOW.timestamp() - 0.5 * HOUR,
+                "last_seen": NOW.timestamp(),
+            }
+        }
+    }
+
+
+def test_forgetting_the_last_vm_leaves_a_value_store_that_is_not_empty() -> None:
+    """Checkmk only writes a value store that isn't empty: an empty one would keep the old
+    values on disk"""
+    store: dict[str, object] = {
+        "vms": {
+            "id-gone": {
+                "first_seen": NOW.timestamp() - 25 * HOUR,
+                "last_seen": NOW.timestamp() - 24 * HOUR,
+            }
+        }
+    }
+
+    _check(HOURLY, _section(_policy([])), value_store=store)
+
+    assert store == {"vms": {}}
+
+
+def test_vm_missing_from_one_run_keeps_its_grace_period() -> None:
+    store: dict[str, object] = {}
+    list(
+        check_protection_policy(
+            HOURLY,
+            DEFAULT_PARAMS,
+            parse_prism_protection_policies(_section(_policy([_vm("new", None)]))),
+            store,
+            NOW.timestamp() - 1.75 * HOUR,
+        )
+    )
+    _check(HOURLY, _section(_policy([])), value_store=store)
+
+    assert (
+        _check(HOURLY, _section(_policy([_vm("new", None)])), value_store=store)[-1].state
+        == State.WARN
+    )
+
+
+def test_every_item_ends_with_the_end_of_the_policy_id() -> None:
+    section = parse_prism_protection_policies(
+        _section(
+            _policy([], name="daily", ext_id="aaaaaaaa-0000-0000-0000-000000000001"),
+            _policy([], name="daily", ext_id="bbbbbbbb-0000-0000-0000-000000000002"),
+            _policy([], name="weekly", ext_id="cccccccc-0000-0000-0000-000000000003"),
+        )
+    )
+
+    assert list(section) == ["daily (00000001)", "daily (00000002)", "weekly (00000003)"]
+
+
+def _with_rpos(*rpos: int) -> dict[str, object]:
+    policy = _policy([_vm("stale", "2026-11-11T13:00:00Z")])
+    policy["replicationConfigurations"] = [
+        {
+            "sourceLocationLabel": "pc-a",
+            "remoteLocationLabel": f"pc-{index}",
+            "schedule": {"recoveryPointObjectiveTimeSeconds": rpo},
+        }
+        for index, rpo in enumerate(rpos)
+    ]
+    return policy
+
+
+def test_synchronous_replication_keeps_the_levels_of_the_other_schedules() -> None:
+    results = _check(HOURLY, _section(_with_rpos(0, 3600)))
+
+    assert (results[0], results[-1].state) == (
+        Result(state=State.OK, summary="RPO: 1 hour 0 minutes (and synchronous replication)"),
+        State.CRIT,
+    )
+
+
+def test_synchronous_replication_only_has_no_age_levels() -> None:
+    results = _check(HOURLY, _section(_with_rpos(0)))
+
+    assert (results[0], results[-1]) == (
+        Result(state=State.OK, summary="RPO: 0 (synchronous replication)"),
+        Result(state=State.OK, notice="stale: newest recovery point: 3 hours 0 minutes"),
+    )
+
+
+def test_empty_section_discovers_nothing() -> None:
+    assert list(discovery_prism_protection_policies(parse_prism_protection_policies([]))) == []

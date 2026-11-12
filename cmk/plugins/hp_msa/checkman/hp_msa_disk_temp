@@ -1,4 +1,4 @@
-title: HPE MSA 2040: Temperature of all Disks
+title: HPE MSA: Disk Temperature
 agents: hp_msa
 catalog: hw/storagehw/hp
 license: GPLv2

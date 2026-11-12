@@ -1,4 +1,4 @@
-title: HPE Switches: Power Supply Status
+title: HPE ProCurve: Power Supply Status
 agents: snmp
 catalog: hw/network/hp
 license: GPLv2

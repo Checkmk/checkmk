@@ -1,4 +1,4 @@
-title: HPE MSA 2040: Fan Speed and Status
+title: HPE MSA: Fan Speed and Status
 agents: hp_msa
 catalog: hw/storagehw/hp
 license: GPLv2

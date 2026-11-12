@@ -1,4 +1,4 @@
-title: Kernel Tunables: Number of Open Files
+title: HP-UX: Kernel Tunable Open Files
 agents: hpux
 catalog: os/kernel
 license: GPLv2

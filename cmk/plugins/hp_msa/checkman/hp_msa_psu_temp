@@ -1,4 +1,4 @@
-title: HPE MSA 2040: Power Supply Temperature
+title: HPE MSA: Power Supply Temperature
 agents: hp_msa
 catalog: hw/storagehw/hp
 license: GPLv2

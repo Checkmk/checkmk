@@ -1,4 +1,4 @@
-title: HP-UX: Mirror State of LVM Logical Volumes
+title: HP-UX: LVM Mirror State
 agents: hpux
 catalog: os/storage
 license: GPLv2

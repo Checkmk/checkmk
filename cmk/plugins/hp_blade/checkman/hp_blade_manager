@@ -1,4 +1,4 @@
-title: HPE BladeSystem Enclosures: Manager Boards
+title: HPE BladeSystem: Manager Boards
 agents: snmp
 catalog: hw/server/hpe
 license: GPLv2

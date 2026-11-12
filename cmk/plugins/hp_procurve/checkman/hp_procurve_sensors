@@ -1,4 +1,4 @@
-title: HPE Procurve Switches: Power Supplies, Fans, Temperature
+title: HPE ProCurve: Chassis Sensors
 agents: snmp
 catalog: hw/network/hp
 license: GPLv2

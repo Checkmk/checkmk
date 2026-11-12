@@ -1,4 +1,4 @@
-title: HPE Devices: Module States
+title: HPE Comware: Module States
 agents: snmp
 catalog: hw/network/hp
 license: GPLv2

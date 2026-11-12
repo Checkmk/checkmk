@@ -1,4 +1,4 @@
-title: HPE MSA 2040: Controller IO
+title: HPE MSA: Controller I/O
 agents: hp_msa
 catalog: hw/storagehw/hp
 license: GPLv2

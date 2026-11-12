@@ -1,4 +1,4 @@
-title: HPE Web Management: Status
+title: HPE: Web Management Status
 agents: snmp
 catalog: hw/network/hp
 license: GPLv2

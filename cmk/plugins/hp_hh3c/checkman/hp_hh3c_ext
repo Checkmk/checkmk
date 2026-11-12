@@ -1,4 +1,4 @@
-title: HPE Devices: Module Temperature
+title: HPE Comware: Module Temperature
 agents: snmp
 catalog: hw/network/hp
 license: GPLv2

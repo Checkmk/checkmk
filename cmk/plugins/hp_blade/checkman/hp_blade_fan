@@ -1,4 +1,4 @@
-title: HPE BladeSystem Enclosures: FANs
+title: HPE BladeSystem: Fans
 agents: snmp
 catalog: hw/server/hpe
 license: GPLv2

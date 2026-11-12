@@ -1,4 +1,4 @@
-title: HPE BladeSystem Enclosures: Power Supplies
+title: HPE BladeSystem: Power Supplies
 agents: snmp
 catalog: hw/server/hpe
 license: GPLv2

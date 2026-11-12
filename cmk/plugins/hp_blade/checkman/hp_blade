@@ -1,4 +1,4 @@
-title: HPE BladeSystem Enclosures: Summary Health State
+title: HPE BladeSystem: Enclosure Health
 agents: snmp
 catalog: hw/server/hpe
 license: GPLv2

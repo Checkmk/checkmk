@@ -1,4 +1,4 @@
-title: Disk Throughput
+title: Disk I/O: Throughput of Disks
 agents: aix
 catalog: os/storage
 license: GPLv2

@@ -1,4 +1,4 @@
-title: Disk Throughput for Volumes
+title: Disk I/O: Throughput of Volumes
 agents: emc
 catalog: os/storage
 license: GPLv2

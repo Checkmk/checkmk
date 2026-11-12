@@ -1,4 +1,4 @@
-title: HPE Procurve Switches: Memory Usage
+title: HPE ProCurve: Memory Usage
 agents: snmp
 catalog: hw/network/hp
 license: GPLv2

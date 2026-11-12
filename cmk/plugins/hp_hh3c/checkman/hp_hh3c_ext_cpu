@@ -1,4 +1,4 @@
-title: HPE Devices: Module CPU
+title: HPE Comware: Module CPU Utilization
 agents: snmp
 catalog: hw/network/hp
 license: GPLv2

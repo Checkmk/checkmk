@@ -1,4 +1,4 @@
-title: Disk Throughput for Volume Directors
+title: Disk I/O: Throughput of Volume Directors
 agents: emc
 catalog: os/storage
 license: GPLv2

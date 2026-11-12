@@ -1,4 +1,4 @@
-title: HPE Switches: System Temperature
+title: HPE ProCurve: System Temperature
 agents: snmp
 catalog: hw/network/hp
 license: GPLv2

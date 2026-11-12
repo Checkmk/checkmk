@@ -1,4 +1,4 @@
-title: HPE BladeSystem Enclosures: Health of Blades
+title: HPE BladeSystem: Blades
 agents: snmp
 catalog: hw/server/hpe
 license: GPLv2

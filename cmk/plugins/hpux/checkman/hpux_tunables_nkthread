@@ -1,4 +1,4 @@
-title: Kernel Tunables: Number of Threads
+title: HP-UX: Kernel Tunable Threads
 agents: hpux
 catalog: os/kernel
 license: GPLv2

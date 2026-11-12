@@ -1,4 +1,4 @@
-title: Kernel Tunables: Number of Processes
+title: HP-UX: Kernel Tunable Processes
 agents: hpux
 catalog: os/kernel
 license: GPLv2

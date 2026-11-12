@@ -1,4 +1,4 @@
-title: HPE MSA 2040: Controller CPU
+title: HPE MSA: Controller CPU
 agents: hp_msa
 catalog: hw/storagehw/hp
 license: GPLv2

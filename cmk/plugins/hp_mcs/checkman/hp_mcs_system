@@ -1,4 +1,4 @@
-title: HPE MCS 200: System Health
+title: HPE MCS: System Health
 agents: snmp
 catalog: hw/environment/hpe
 license: GPLv2

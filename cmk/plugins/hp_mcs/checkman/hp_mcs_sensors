@@ -1,4 +1,4 @@
-title: HPE MCS 200: Temperature Levels
+title: HPE MCS: Temperature
 agents: snmp
 catalog: hw/environment/hpe
 license: GPLv2

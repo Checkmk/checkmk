@@ -1,4 +1,4 @@
-title: HP-UX: CPU Utilization (via SNMP)
+title: HP-UX: CPU Utilization via SNMP
 agents: hpux
 catalog: os/kernel
 license: GPLv2

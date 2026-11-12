@@ -1,4 +1,4 @@
-title: HPE MCS 200: Fan Status
+title: HPE MCS: Fan Status
 agents: snmp
 catalog: hw/environment/hpe
 license: GPLv2

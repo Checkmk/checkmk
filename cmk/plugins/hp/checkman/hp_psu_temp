@@ -1,4 +1,4 @@
-title: HPE Switches: Power Supply Temperature
+title: HPE ProCurve: Power Supply Temperature
 agents: snmp
 catalog: hw/network/hp
 license: GPLv2

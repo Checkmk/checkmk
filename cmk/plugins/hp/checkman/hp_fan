@@ -1,4 +1,4 @@
-title: HPE Switches: Fan Status
+title: HPE ProCurve: Fan Status
 agents: snmp
 catalog: hw/network/hp
 license: GPLv2

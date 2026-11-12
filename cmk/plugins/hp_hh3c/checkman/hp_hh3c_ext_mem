@@ -1,4 +1,4 @@
-title: HPE Devices: Module Memory
+title: HPE Comware: Module Memory Usage
 agents: snmp
 catalog: hw/network/hp
 license: GPLv2

@@ -16,7 +16,9 @@ description:
  or discovered state (required state takes precedence), and {CRIT} otherwise.
 
 item:
- The ID of the plug as given by the device
+ The outlet ID, e.g. 2. When multiple PDUs are found, the PDU ID is
+ prefixed, e.g. 1/2. The outlet label and name are shown
+ in the service details and do not determine its identity.
 
 discovery:
  One service is created for each plug.

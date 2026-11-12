@@ -9,7 +9,12 @@ description:
  The check displays the measured value of the sensor.
 
 item:
- The fixed statement {{Phase}} plus the ID of the phase.
+ The inletLabel, {{Phase}} and the actual inletPoleLine, for example
+ {{I1 Phase L1}} or {{I1 Phase N}}. Line names are L1, L2, L3, N, DC+ and DC-.
+ Missing labels use {{Inlet <ID>}}; missing line assignments use {{Pole <index>}}.
+ Multiple PDUs include the PDU ID. Duplicate labels or line assignments include
+ additional indices so distinct sensors cannot overwrite each other.
 
 discovery:
- One service is created for each phase.
+ One service is created for each inlet pole with supported electrical measurements.
+ Inlet and outlet measurements are discovered independently.

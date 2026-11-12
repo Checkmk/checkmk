@@ -34,3 +34,23 @@ perfometer_residual_current = perfometers.Perfometer(
     focus_range=perfometers.FocusRange(perfometers.Closed(0), perfometers.Open(0.02)),
     segments=["residual_current"],
 )
+
+metric_residual_current_ac = metrics.Metric(
+    name="residual_current_ac",
+    title=Title("AC residual current"),
+    unit=UNIT_CURRENT,
+    color=metrics.Color.GREEN,
+)
+
+metric_residual_current_dc = metrics.Metric(
+    name="residual_current_dc",
+    title=Title("DC residual current"),
+    unit=UNIT_CURRENT,
+    color=metrics.Color.ORANGE,
+)
+
+graph_residual_current_components = graphs.Graph(
+    name="residual_current_components",
+    title=Title("AC and DC residual current"),
+    simple_lines=["residual_current_ac", "residual_current_dc"],
+)

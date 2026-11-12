@@ -2365,6 +2365,239 @@ def test_service_now_case_state_recovery_enabled_without_value_400(
     )
 
 
+_START_STATE_REQUIRED = "At least one of 'start_predefined' or 'start_integer' is required."
+_ANY_STATE_REQUIRED = (
+    "At least one of 'start_predefined', 'start_integer', 'end_predefined' or "
+    "'end_integer' is required."
+)
+_END_STATE = {"end_predefined": "resolved"}
+
+
+@pytest.mark.parametrize(
+    "management_type, field, states, error",
+    [
+        pytest.param(
+            "incident", "state_acknowledgement", {}, _START_STATE_REQUIRED, id="incident_ack_empty"
+        ),
+        pytest.param(
+            "incident",
+            "state_acknowledgement",
+            _END_STATE,
+            _START_STATE_REQUIRED,
+            id="incident_ack_end_only",
+        ),
+        pytest.param(
+            "incident", "state_downtime", {}, _ANY_STATE_REQUIRED, id="incident_downtime_empty"
+        ),
+        pytest.param(
+            "incident", "state_recovery", {}, _START_STATE_REQUIRED, id="incident_recovery_empty"
+        ),
+        pytest.param(
+            "incident",
+            "state_recovery",
+            _END_STATE,
+            _START_STATE_REQUIRED,
+            id="incident_recovery_end_only",
+        ),
+        pytest.param("case", "state_recovery", {}, _START_STATE_REQUIRED, id="case_recovery_empty"),
+    ],
+)
+def test_service_now_state_without_required_state_400(
+    clients: ClientRegistry,
+    management_type: str,
+    field: str,
+    states: Mapping[str, object],
+    error: str,
+) -> None:
+    path = (*_MANAGEMENT_TYPE_PARAMS, field)
+    rule_config = _with_value_at(
+        _rule_with_service_now({"option": management_type, "params": {}}),
+        path,
+        {"state": "enabled", "value": states},
+    )
+
+    resp = clients.RuleNotification.create(rule_config=rule_config, expect_ok=False)
+
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
+    assert resp.json["fields"]["rule_config"] == _error_at(path, {"value": [error]})
+
+
+def _read_management_type_params(clients: ClientRegistry, rule_id: str) -> dict[str, object]:
+    rule_config = clients.RuleNotification.get(rule_id).json["extensions"]["rule_config"]
+    return cast(
+        dict[str, object],
+        rule_config["notification_method"]["notify_plugin"]["plugin_params"]["management_type"][
+            "params"
+        ],
+    )
+
+
+def test_service_now_downtime_state_with_end_only(clients: ClientRegistry) -> None:
+    state_downtime = {"state": "enabled", "value": _END_STATE}
+    rule_config = _with_value_at(
+        _rule_with_service_now({"option": "incident", "params": {}}),
+        (*_MANAGEMENT_TYPE_PARAMS, "state_downtime"),
+        state_downtime,
+    )
+
+    rule_id = clients.RuleNotification.create(rule_config=rule_config).json["id"]
+
+    assert _read_management_type_params(clients, rule_id)["state_downtime"] == state_downtime
+
+
+@pytest.mark.parametrize(
+    "stored_management_type, field, state",
+    [
+        pytest.param(
+            ("incident", {"caller": "", "ack_state": {}}),
+            "state_acknowledgement",
+            {"state": "disabled"},
+            id="incident_ack_empty",
+        ),
+        pytest.param(
+            ("incident", {"caller": "", "dt_state": {}}),
+            "state_downtime",
+            {"state": "disabled"},
+            id="incident_downtime_empty",
+        ),
+        pytest.param(
+            ("incident", {"caller": "", "dt_state": {"end": ("predefined", "resolved")}}),
+            "state_downtime",
+            {"state": "enabled", "value": _END_STATE},
+            id="incident_downtime_end_only",
+        ),
+        pytest.param(
+            ("incident", {"caller": "", "recovery_state": {}}),
+            "state_recovery",
+            {"state": "disabled"},
+            id="incident_recovery_empty",
+        ),
+        pytest.param(
+            ("case", {"recovery_state": {}}),
+            "state_recovery",
+            {"state": "disabled"},
+            id="case_recovery_empty",
+        ),
+    ],
+)
+def test_service_now_state_without_start_stored_by_the_setup_can_be_read(
+    clients: ClientRegistry,
+    stored_management_type: tuple[str, Mapping[str, object]],
+    field: str,
+    state: Mapping[str, object],
+) -> None:
+    rule_id = clients.RuleNotification.create(
+        rule_config=_rule_with_service_now({"option": stored_management_type[0], "params": {}})
+    ).json["id"]
+    # The Setup stores a state without a start state if only its checkbox is ticked
+    parameter_file = NotificationParameterConfigFile()
+    parameters = parameter_file.load_for_modification()
+    for parameter in parameters["servicenow"].values():
+        cast(dict[str, object], parameter["parameter_properties"])["mgmt_type"] = (
+            stored_management_type
+        )
+    parameter_file.save(parameters, pprint_value=False)
+
+    params = _read_management_type_params(clients, rule_id)
+
+    assert params[field] == state
+
+
+@pytest.mark.parametrize(
+    "management_type, default_params",
+    [
+        pytest.param(
+            "incident",
+            {
+                "caller": "",
+                "host_description": {"state": "disabled"},
+                "host_short_description": {"state": "disabled"},
+                "impact": {"state": "disabled"},
+                "service_description": {"state": "disabled"},
+                "service_short_description": {"state": "disabled"},
+                "state_acknowledgement": {"state": "disabled"},
+                "state_downtime": {"state": "disabled"},
+                "state_recovery": {"state": "disabled"},
+                "urgency": {"state": "disabled"},
+            },
+            id="incident",
+        ),
+        pytest.param(
+            "case",
+            {
+                "host_description": {"state": "disabled"},
+                "host_short_description": {"state": "disabled"},
+                "priority": {"state": "disabled"},
+                "service_description": {"state": "disabled"},
+                "service_short_description": {"state": "disabled"},
+                "state_recovery": {"state": "disabled"},
+            },
+            id="case",
+        ),
+    ],
+)
+def test_service_now_management_type_without_params_uses_defaults(
+    clients: ClientRegistry,
+    management_type: str,
+    default_params: Mapping[str, object],
+) -> None:
+    rule_config = _rule_with_service_now({"option": management_type})
+
+    rule_id = clients.RuleNotification.create(rule_config=rule_config).json["id"]
+
+    assert _read_management_type_params(clients, rule_id) == default_params
+
+
+def test_enable_sync_smtp_with_empty_value_uses_defaults(clients: ClientRegistry) -> None:
+    rule_config = _rule_with_plugin(
+        {"plugin_name": "mail", "enable_sync_smtp": {"state": "enabled", "value": {}}}
+    )
+
+    rule_id = clients.RuleNotification.create(rule_config=rule_config).json["id"]
+
+    stored = clients.RuleNotification.get(rule_id).json["extensions"]["rule_config"]
+    assert stored["notification_method"]["notify_plugin"]["plugin_params"]["enable_sync_smtp"] == {
+        "state": "enabled",
+        "value": {"auth": {"state": "disabled"}, "port": 25, "smarthosts": []},
+    }
+
+
+@pytest.mark.parametrize(
+    "plugin, url_field",
+    [
+        pytest.param({"plugin_name": "cisco_webex_teams"}, "webhook_url", id="cisco_webex_teams"),
+        pytest.param(
+            {
+                "plugin_name": "jira_issues",
+                "auth": {
+                    "option": "explicit_password",
+                    "username": "user_username",
+                    "password": "user_password",
+                },
+                "host_custom_id": "3456",
+                "service_custom_id": "",
+                "monitoring_url": "http://test_monitoring_url.com/here",
+            },
+            "jira_url",
+            id="jira_issues",
+        ),
+    ],
+)
+def test_plugin_without_url_400(
+    clients: ClientRegistry,
+    plugin: Mapping[str, object],
+    url_field: str,
+) -> None:
+    rule_config = _rule_with_plugin(plugin)
+
+    resp = clients.RuleNotification.create(rule_config=rule_config, expect_ok=False)
+
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
+    assert resp.json["fields"]["rule_config"] == _error_at(
+        (*_PLUGIN_PARAMS, url_field), ["Missing data for required field."]
+    )
+
+
 @pytest.mark.parametrize("config", list(plugin_with_bulking(bulking="allowed")))
 @pytest.mark.usefixtures("mock_password_file_regeneration")
 def test_bulking_200(

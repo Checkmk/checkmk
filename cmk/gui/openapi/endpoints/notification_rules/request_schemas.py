@@ -6,6 +6,7 @@
 # mypy: disable-error-code="explicit-any"
 
 import re
+from collections.abc import Mapping
 from typing import Any, cast, get_args
 
 from marshmallow import post_load, pre_load, ValidationError
@@ -1110,6 +1111,7 @@ class AuthOneOfSchema(CheckboxOneOfSchema):
 class EnableSynchronousDeliveryViaSMTP(BaseSchema):
     auth = fields.Nested(
         AuthOneOfSchema,
+        load_default=lambda: {"state": "disabled"},
     )
     encryption = fields.String(
         enum=["ssl_tls", "starttls"],
@@ -1118,7 +1120,7 @@ class EnableSynchronousDeliveryViaSMTP(BaseSchema):
         example="ssl_tls",
     )
     port = fields.Integer(
-        required=False,
+        load_default=25,
         description="",
         example=25,
     )
@@ -1325,7 +1327,7 @@ class CiscoWebexPluginCreate(BaseSchema):
         example="cisco_webex_teams",
     )
     disable_ssl_cert_verification = DISABLE_SSL_CERT_VERIFICATION
-    webhook_url = fields.Nested(CiscoUrlOrStoreSelector)
+    webhook_url = fields.Nested(CiscoUrlOrStoreSelector, required=True)
     url_prefix_for_links_to_checkmk = URL_PREFIX_FOR_LINKS_TO_CHECKMK_CREATE
     http_proxy = HTTP_PROXY_CREATE
 
@@ -1488,7 +1490,7 @@ class JiraPluginCreate(BaseSchema):
         example="jira_issues",
     )
     jira_url = fields.String(
-        required=False,
+        required=True,
         example="http://jira_url_example.com",
         description="Configure the Jira URL here",
     )
@@ -2041,6 +2043,11 @@ class PriorityOneOfSchema(CheckboxOneOfSchema):
     }
 
 
+def _validate_start_state(states: Mapping[str, object]) -> None:
+    if not states.keys() & {"start_predefined", "start_integer"}:
+        raise ValidationError("At least one of 'start_predefined' or 'start_integer' is required.")
+
+
 class ManagementTypeCaseStates(BaseSchema):
     start_predefined = fields.String(
         enum=list(get_args(CaseStateStr)),
@@ -2056,6 +2063,8 @@ class CheckboxWithManagementTypeStateCaseValues(Checkbox):
     value = fields.Nested(
         ManagementTypeCaseStates,
         required=True,
+        validate=_validate_start_state,
+        description="A start state is required, either predefined or as an integer.",
     )
 
 
@@ -2100,6 +2109,8 @@ class CheckboxWithManagementTypeStateIncedentValues(Checkbox):
     value = fields.Nested(
         ManagementTypeIncedentStates,
         required=True,
+        validate=_validate_start_state,
+        description="A start state is required, either predefined or as an integer. An end state has no effect.",
     )
 
 
@@ -2107,6 +2118,30 @@ class TypeStateOneOfSchema(CheckboxOneOfSchema):
     type_schemas = {  # type: ignore[mutable-override]
         "disabled": Checkbox,
         "enabled": CheckboxWithManagementTypeStateIncedentValues,
+    }
+
+
+def _validate_downtime_state(states: Mapping[str, object]) -> None:
+    if not states:
+        raise ValidationError(
+            "At least one of 'start_predefined', 'start_integer', 'end_predefined' or "
+            "'end_integer' is required."
+        )
+
+
+class CheckboxWithManagementTypeDowntimeStateValues(Checkbox):
+    value = fields.Nested(
+        ManagementTypeIncedentStates,
+        required=True,
+        validate=_validate_downtime_state,
+        description="A start state, an end state or both are required, each either predefined or as an integer.",
+    )
+
+
+class DowntimeStateOneOfSchema(CheckboxOneOfSchema):
+    type_schemas = {  # type: ignore[mutable-override]
+        "disabled": Checkbox,
+        "enabled": CheckboxWithManagementTypeDowntimeStateValues,
     }
 
 
@@ -2143,7 +2178,7 @@ class IncidentParams(IncidentAndCaseParams):
         load_default=lambda: {"state": "disabled"},
     )
     state_downtime = fields.Nested(
-        TypeStateOneOfSchema,
+        DowntimeStateOneOfSchema,
         load_default=lambda: {"state": "disabled"},
     )
     state_recovery = fields.Nested(
@@ -2161,11 +2196,11 @@ class MgmntTypeCommon(BaseSchema):
 
 
 class MgmntTypeCaseParams(MgmntTypeCommon):
-    params = fields.Nested(CaseParams)
+    params = fields.Nested(CaseParams, load_default=lambda: CaseParams().load({}))
 
 
 class MgmntTypeIncidentParams(MgmntTypeCommon):
-    params = fields.Nested(IncidentParams)
+    params = fields.Nested(IncidentParams, load_default=lambda: IncidentParams().load({}))
 
 
 class MgmntTypeSelector(OptionOneOfSchema):

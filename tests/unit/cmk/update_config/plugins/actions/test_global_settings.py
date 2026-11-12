@@ -230,28 +230,9 @@ def test_update_global_config_is_idempotent(monkeypatch: pytest.MonkeyPatch) -> 
 
 
 @pytest.mark.usefixtures("request_context")
-@pytest.mark.parametrize(
-    "is_remote_site",
-    [
-        pytest.param(True, id="remote"),
-        pytest.param(
-            False,
-            id="central",
-            marks=pytest.mark.xfail(
-                strict=True,
-                reason="CMK-39715: the update skips a central site's sitespecific.mk",
-            ),
-        ),
-    ],
-)
-def test_site_specific_settings_are_converted(
-    monkeypatch: pytest.MonkeyPatch, is_remote_site: bool
-) -> None:
+def test_site_specific_settings_are_converted(monkeypatch: pytest.MonkeyPatch) -> None:
     """Every site uses its own sitespecific.mk, so the update must convert it,
     on a remote and on a central site alike."""
-    monkeypatch.setattr(
-        global_settings, "is_distributed_setup_remote_site", lambda _sites: is_remote_site
-    )
     monkeypatch.setattr(global_settings, "load_site_global_settings", previous_release_settings)
     saved: list[GlobalSettings] = []
     monkeypatch.setattr(global_settings, "save_site_global_settings_raw", saved.append)

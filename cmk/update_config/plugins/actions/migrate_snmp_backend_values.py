@@ -15,7 +15,6 @@ from logging import Logger
 from typing import Final, override
 
 from cmk.gui.config import active_config, Config
-from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.global_settings import (
     load_configuration_settings,
@@ -123,10 +122,12 @@ def _migrate_installation_wide_global_setting(logger: Logger) -> None:
     save_global_settings_raw(migrated, skip_cloud_edition_check=True)
 
 
-def _migrate_site_specific_global_setting(logger: Logger, ui_config: Config) -> None:
-    """Rewrite the value in the sitespecific.mk of the local site (which is a remote site)"""
-    if not is_distributed_setup_remote_site(ui_config.sites):
-        return
+def _migrate_site_specific_global_setting(logger: Logger) -> None:
+    """Rewrite the value in the sitespecific.mk of the local site
+
+    Every site runs with its own: on a remote the central site pushes it, on any other
+    site it is written along with the local site's settings in the sites file.
+    """
     settings = load_site_global_settings()
     if (
         migrated := migrate_global_setting(settings, "the site specific global settings", logger)
@@ -163,7 +164,7 @@ class MigrateSNMPBackendValues(UpdateAction):
     @override
     def __call__(self, logger: Logger, *, debug: bool) -> None:
         _migrate_installation_wide_global_setting(logger)
-        _migrate_site_specific_global_setting(logger, active_config)
+        _migrate_site_specific_global_setting(logger)
         _migrate_remote_site_global_settings(logger, active_config)
         _migrate_rules(logger, active_config)
 

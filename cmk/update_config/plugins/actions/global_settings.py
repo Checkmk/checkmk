@@ -13,7 +13,6 @@ from cmk.ccc.version import edition
 from cmk.gui.config import active_config, Config
 from cmk.gui.form_specs._utils import migrate_form_spec_disk_value
 from cmk.gui.logged_in import LoggedInSuperUser, LoggedInUser
-from cmk.gui.site_config import is_distributed_setup_remote_site
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib.config_domain_name import (
     config_variable_registry,
@@ -81,9 +80,11 @@ def _update_site_specific_global_settings(
     ui_config: Config,
     acting_user: LoggedInUser,
 ) -> None:
-    """Update the sitespecific.mk of the local site (which is a remote site)"""
-    if not is_distributed_setup_remote_site(ui_config.sites):
-        return
+    """Update the sitespecific.mk of the local site
+
+    Every site runs with its own: on a remote the central site pushes it, on any other
+    site it is written along with the local site's settings in the sites file.
+    """
     save_site_global_settings_raw(
         update_global_config(
             logger,

@@ -1,0 +1,31 @@
+load("@aspect_rules_py//py:defs.bzl", "py_library")
+
+py_library(
+    name = "handlers",
+    srcs = glob(["*.py"]),
+    imports = ["../../../../.."],
+    visibility = [
+        "//cmk:__subpackages__",
+        "//non-free/packages/cmk-plugins-nonfree:__subpackages__",
+        "//tests:__subpackages__",
+    ],
+    deps = [
+        "//cmk/base/config",
+        "//cmk/piggyback:backend",
+        "//cmk/plugins/checkmk/cli",
+        "//cmk/server_side_calls_backend",
+        "//cmk/utils",
+        "//cmk/utils:man_pages",
+        "//packages/cmk-ccc:exceptions",
+        "//packages/cmk-ccc:hostaddress",
+        "//packages/cmk-ccc:tty",
+        "//packages/cmk-ccc:version",
+        "//packages/cmk-check-engine/cmk/checkengine/discovery",
+        "//packages/cmk-check-engine/cmk/checkengine/plugin_backend",
+        "//packages/cmk-check-engine/cmk/checkengine/plugins",
+        "//packages/cmk-licensing/cmk/licensing/basics",
+        "//packages/cmk-plugin-apis:cli",
+        "//packages/cmk-plugin-apis:discover_plugins",
+        "//packages/cmk-ruleset-matcher",
+    ],
+)

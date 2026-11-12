@@ -12,6 +12,7 @@ py_cmk_test(
         "//cmk/automations",
         "//cmk/base:base-app",
         "//cmk/plugins/checkmk/cli",
+        "//cmk/plugins/checkmk/cli/handlers",
         "//packages/cmk-plugin-apis:automations",
         "//packages/cmk-plugin-apis:cli",
         "//tests/testlib/unit",

@@ -6,7 +6,7 @@ py_library(
     imports = ["../../.."],
     visibility = [
         "//cmk/gui_plugins/internal:__pkg__",
-        "//cmk/plugins/checkmk/cli:__pkg__",
+        "//cmk/plugins/checkmk/cli:__subpackages__",
         "//non-free/packages/cmk-data-backend:__pkg__",
         "//non-free/tests/testlib/system:__pkg__",
         "//non-free/tests/testlib/system/licensing:__pkg__",

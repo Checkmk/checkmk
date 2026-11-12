@@ -11,7 +11,7 @@ import pytest
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
-from cmk.plugins.checkmk.cli.localize import _mode_localize
+from cmk.plugins.checkmk.cli.handlers.localize import cli_handler_localize
 
 
 def _context() -> CLIContext:
@@ -26,12 +26,12 @@ def _context() -> CLIContext:
     "args", [[], ["frobnicate", "de"]], ids=["without a command", "with an unknown command"]
 )
 def test_a_wrong_invocation_fails(args: list[str]) -> None:
-    assert _mode_localize(_context(), None, args) == CLIExitCode.FAILURE
+    assert cli_handler_localize.run(_context(), None, args) == CLIExitCode.FAILURE
 
 
 def test_a_call_without_a_command_shows_the_usage_on_stderr(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    _mode_localize(_context(), None, [])
+    cli_handler_localize.run(_context(), None, [])
 
     assert "Usage:" in capsys.readouterr().err

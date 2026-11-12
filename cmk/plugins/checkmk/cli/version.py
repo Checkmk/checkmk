@@ -4,51 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """The "cmk --version" command."""
 
-import cmk.ccc.version as cmk_version
-from cmk.ccc.version import edition
-from cmk.cli.internal import Args as CLIArgs
 from cmk.cli.internal import Command as CLICommand
-from cmk.cli.internal import Context as CLIContext
-from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import no_options as cli_no_options
-
-from .output import write_stdout
-
-
-def _mode_version(context: CLIContext, _request: None, _args: CLIArgs) -> CLIExitCode:
-    write_stdout(
-        """This is %s version %s
-Copyright (C) 2009 Checkmk GmbH
-
-    This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; see the file COPYING.  If not, write to
-    the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-    Boston, MA 02111-1307, USA.
-
-"""
-        % (
-            edition(context.omd_root).title,
-            cmk_version.__version__,
-        )
-    )
-    return CLIExitCode.SUCCESS
-
 
 cli_command_version = CLICommand(
     name="version",
+    handler="cmk.plugins.checkmk.cli.handlers.version:cli_handler_version",
     long="version",
     short="V",
     request=cli_no_options,
-    handler=_mode_version,
     help="Print the version of Checkmk",
 )

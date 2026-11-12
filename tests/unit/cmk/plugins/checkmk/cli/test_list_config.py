@@ -11,7 +11,7 @@ from cmk.cli.internal import Reader as CLIReader
 from cmk.plugins.checkmk.cli.list_config import (
     _INCLUDE_OFFLINE_FLAG,
     _list_hosts_request,
-    _ListHostsRequest,
+    ListHostsRequest,
 )
 
 
@@ -20,4 +20,4 @@ def test_the_list_hosts_request_is_read_from_the_command_line() -> None:
 
     assert _list_hosts_request(
         CLIReader(lambda declaration: given.get(declaration, ()))
-    ) == _ListHostsRequest(all_sites=False, include_offline=True)
+    ) == ListHostsRequest(all_sites=False, include_offline=True)

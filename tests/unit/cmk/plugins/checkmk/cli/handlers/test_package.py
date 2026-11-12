@@ -10,7 +10,7 @@ import pytest
 
 from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
-from cmk.plugins.checkmk.cli.package import _fail_with_deprecation_msg
+from cmk.plugins.checkmk.cli.handlers.package import cli_handler_package
 
 
 def test_the_retired_command_refers_to_mkp_on_stderr(capsys: pytest.CaptureFixture[str]) -> None:
@@ -20,6 +20,6 @@ def test_the_retired_command_refers_to_mkp_on_stderr(capsys: pytest.CaptureFixtu
         logger=logging.getLogger(__name__),
     )
 
-    _fail_with_deprecation_msg(context, None, ["list"])
+    cli_handler_package.run(context, None, ["list"])
 
     assert "`mkp list`" in capsys.readouterr().err

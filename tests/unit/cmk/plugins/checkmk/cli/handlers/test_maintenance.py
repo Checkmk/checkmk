@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
 import logging
 import time
 from collections.abc import Mapping, Sequence
@@ -16,9 +17,7 @@ from cmk.cli.internal import Context as CLIContext
 from cmk.cli.internal import ExitCode as CLIExitCode
 from cmk.cli.internal import GlobalOptions as CLIGlobalOptions
 from cmk.piggyback import backend
-from cmk.plugins.checkmk.cli.maintenance import (
-    _run_cleanup_piggyback,
-)
+from cmk.plugins.checkmk.cli.handlers.maintenance import cli_handler_cleanup_piggyback
 from cmk.ruleset_matcher.matcher import RuleSpec
 
 _SHORT_MAX_AGE = 60
@@ -67,7 +66,7 @@ def test_cleanup_piggyback_removes_files_beyond_configured_max_age(
     _store_aged(tmp_path, "aged-out", age=_LONG_MAX_AGE + 600)
     _store_aged(tmp_path, "still-valid", age=_LONG_MAX_AGE - 600)
     logger = logging.getLogger(__name__)
-    exit_code = _run_cleanup_piggyback(
+    exit_code = cli_handler_cleanup_piggyback.run(
         CLIContext(omd_root=tmp_path, global_options=CLIGlobalOptions(), logger=logger),
         None,
         (),

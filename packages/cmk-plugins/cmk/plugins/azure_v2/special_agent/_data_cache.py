@@ -107,26 +107,5 @@ class DataCache(abc.ABC):
             raise
         return content
 
-    def get_data(self, *args: Any, **kwargs: Any) -> Any:
-        use_cache = kwargs.pop("use_cache", True)
-        if use_cache and self.get_validity_from_args(*args) and self._cache_is_valid():
-            try:
-                return self.get_cached_data()
-            except (OSError, ValueError) as exc:
-                LOGGER.info(
-                    "Getting live data (failed to read from cache: %(error)s).", {"error": exc}
-                )
-                if self.debug:
-                    raise
-
-        live_data = self.get_live_data(*args)
-        try:
-            self._write_to_cache(live_data)
-        except (OSError, TypeError) as exc:
-            LOGGER.info("Failed to write data to cache file: %(error)s", {"error": exc})
-            if self.debug:
-                raise
-        return live_data
-
     def _write_to_cache(self, raw_content: Any) -> Any:
         self._write_storage(json.dumps(raw_content, default=_datetime_serializer))

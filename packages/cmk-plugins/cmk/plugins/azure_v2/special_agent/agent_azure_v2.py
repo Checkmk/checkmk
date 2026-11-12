@@ -1636,7 +1636,6 @@ class AzureAsyncCache(DataCache):
     def get_validity_from_args(self, *args: Any) -> bool:
         return True
 
-    @override
     async def get_data(self, *args, **kwargs):
         use_cache = kwargs.pop("use_cache", True)
         if use_cache and self.get_validity_from_args(*args) and self._cache_is_valid():

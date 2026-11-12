@@ -5,7 +5,7 @@ Product usage analytics (`product_usage_analytics`)
 Introduction and goals
 =======================
 
-Checkmk can optionally collect a small set of anonymized usage data -- counts of hosts, services and folders, which checks and MKPs are in use, the site's edition and version, and whether the site's Grafana connector is used -- and send it to a Checkmk-hosted analytics endpoint.
+Checkmk can optionally collect a small set of anonymized usage data -- counts of hosts, services and folders, which check plug-ins are in use, the site's edition and version, and whether the site's Grafana connector is used -- and send it to a Checkmk-hosted analytics endpoint.
 This usage data lets Checkmk see which features and integrations are actually used, to prioritize development.
 The receiving endpoint lives in a separate repository (``checkmk-saas/checkmk-analytics``), outside this checkout, and is reachable from here only as a plain HTTPS endpoint; this document treats it as a black box.
 
@@ -14,6 +14,7 @@ Requirements overview
 * Collection and transmission are opt-in and ship disabled (``not_decided``); nothing is collected on a schedule or sent anywhere until an admin explicitly enables it.
 * An admin must be able to inspect the exact data that would be sent before deciding, without enabling anything.
 * Collected data must never carry secrets or identifying details such as hostnames, file paths, service instance names, or check-command arguments; only aggregate counts and check-command identifiers are allowed.
+  The full list of allowed and forbidden data, and who approves new data points, is in the internal guideline "How to add data points to Product Usage Analytics" (Confluence).
 * The identifier that correlates a site's uploads must be independent of that site's own Checkmk license/site ID.
 * Every site collects and transmits independently, but in a distributed setup the central site makes the consent decision once and replicates it to remote sites.
 
@@ -78,6 +79,9 @@ Interfaces
 * The REST API's ``get_graph`` metric action, called by the Grafana connector's Checkmk datasource plugin for every graph query (see :doc:`arch-comp-grafana-connector`), incidentally records a Grafana-usage snapshot that the next collection picks up.
 * External HTTPS endpoint (outside this repo): ``POST https://analytics.checkmk.com/upload`` receives the payload; the URL can be overridden via the ``CMK_PRODUCT_USAGE_URL`` environment variable, which must still resolve to an ``https`` URL.
   The help menu's "About Checkmk" section also links to ``https://analytics.checkmk.com/manifest``, a human-readable description of what is collected.
+* Manifest generator (``cmk/product_usage/manifest.py``, Bazel target ``//cmk/product_usage:manifest``): writes ``manifest.json``, a JSON schema of the complete transmitted document (metadata envelope plus data), built from the Pydantic models in ``schema.py``.
+  The ``description`` and ``examples`` of every field are the source text for the public manifest page.
+  The public page is not yet generated from this file (see `Risks and technical debts`_).
 
 Runtime view
 ============
@@ -105,9 +109,51 @@ Transmission uploads every stored file, oldest first, and deletes a file only on
 The Grafana-usage snapshot is cleared only once the newest file transmits successfully, since that file is the one expected to carry it.
 Because the whole ``--cron`` flow returns immediately while a run is not yet due, a failed transmission is not retried until the site's next scheduled run (~30 days, or ~7 days on a Cloud trial site), unless an admin re-runs ``cmk-product-usage --upload`` manually.
 
-**Extending the collected data.**
+Extending the collected data
+-----------------------------
+
+Which data may be added, and who approves it, is defined in the "How to add data points to Product Usage Analytics" guideline in Confluence.
+This section covers the technical side.
+
+**Code changes.**
 Add the new field to ``ProductUsageData`` in ``cmk/product_usage/schema.py``, gather it in a collector under ``cmk/product_usage/collectors/`` (a new module, or an existing one if it fits), and wire the result into ``collect_data()`` in ``cmk/product_usage/collection.py``.
-Keep the same sanitization discipline the existing collectors apply -- no hostnames, paths, service instance names, or check-command arguments, per the `Requirements overview`_ -- and coordinate with the ``checkmk-saas/checkmk-analytics`` repository, since it needs to accept the new field and its ``/manifest`` page needs to describe it.
+Keep the same sanitization discipline the existing collectors apply -- no hostnames, paths, service instance names, or check-command arguments, per the `Requirements overview`_.
+Every field needs a ``description`` and at least one entry in ``examples``; ``tests/unit/cmk/product_usage/test_manifest.py`` fails otherwise.
+The description is the text admins read on the manifest page, so write it for admins, not developers.
+Check the result with ``cmk-product-usage --dry-run`` on a test site.
+
+**Optional fields and the model version.**
+Add new fields as optional (``<type> | None`` with ``default=None``, like ``grafana``).
+An optional field does not require a new model version: ``metadata.version`` stays ``v1``.
+Increase the version only for changes that break existing consumers: removing or renaming a field, changing its type or meaning, or adding a required field.
+New data points are commonly backported to stable branches, to get data from real environments sooner.
+Patch releases of the same Checkmk version can therefore send different sets of fields, and consumers must treat a missing optional field as "not collected by this release".
+Extend the existing ``product_usage_analytics`` model; agree with the component owners before introducing a separate model with its own ``metadata.name``.
+
+**Data structure.**
+Group the data of a feature in one optional object at the top level, named after the feature (like ``grafana``), not after the team or initiative that adds it: field names are public in the manifest and outlive initiatives and team structures.
+A feature therefore adds exactly one top-level field; its collector lives in its own module under ``collectors/``.
+Fields added to an existing object later must be optional as well.
+Express "feature not used" inside the object (``is_used: false``, counts of 0), so that ``null`` only means "not collected by this release"; ``grafana``, which is ``null`` when Grafana is not connected, predates this rule.
+Follow the existing naming: snake_case, ``count_*`` for counts, ``is_*`` for booleans.
+The existing site-wide fields (``count_hosts``, ``edition``, ...) and ``checks`` stay at the top level, since moving them would be a breaking change.
+
+**Receiving side.**
+The endpoint in ``checkmk-saas/checkmk-analytics`` validates uploads against its own copy of the model and accepts only fields that model knows.
+Its model must therefore be extended and deployed before the first Checkmk release that sends the new field, including stable patch releases; otherwise every upload from that release is rejected (see `Risks and technical debts`_).
+
+**Manifest page.**
+The public manifest page is maintained by hand.
+After adding a field, give Marketing the new field's ``description`` and ``examples`` (or the regenerated ``manifest.json``) so the page lists it.
+
+**Limits.**
+A collector runs synchronously inside ``cmk-product-usage --cron`` and inside the admin download page request.
+A new collector must finish within a low single-digit number of seconds on a large site.
+Prefer Livestatus queries and data that already exists on disk, and do not call external services.
+The collector sees only the local site; in a distributed setup each site sends its own data.
+Keep additions small: single values (counts, booleans, versions) are fine, and a list or map is fine if its length depends on what Checkmk ships (check plug-ins, rulesets, features), never on the site's configuration (hosts, services, rules, users).
+For orientation, the payload is about 5--30 KB today, almost all of it the per-plug-in ``checks`` map; a new data point should not noticeably change that.
+The upload itself has a 30 second HTTP timeout (``transmission.py``); the client does not enforce a payload size limit.
 
 Opt-in and consent
 ---------------------
@@ -155,6 +201,9 @@ Risks and technical debts
 1. A failed upload is retried only at the next scheduled run, which for an already-opted-in site can be up to ~30 days later (~7 days on a Cloud trial site), since the whole ``--cron`` flow exits immediately while a run is not yet due; there is no short-interval backoff for a transient network failure.
 2. Grafana-usage detection is captured once and latched: ``store_usage_data`` returns immediately if ``grafana_usage.json`` already exists, and the file is cleared only once a transmission that included it succeeds.
    A site that toggles analytics off before ever successfully transmitting keeps a possibly stale snapshot (e.g. an outdated Grafana version) until it is eventually sent or the file is removed by hand.
+3. The client and the endpoint each have their own copy of the payload model, and nothing checks that they match.
+   If a release sends a field the endpoint does not know, the endpoint rejects the upload; the files stay in ``var/check_mk/product_usage/`` and are retried only at the next scheduled run.
+4. The public manifest page (``https://analytics.checkmk.com/manifest``) is maintained by hand and does not yet read the generated ``manifest.json``, so it can differ from the data that is actually sent.
 
 See Also
 ========

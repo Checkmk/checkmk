@@ -1,4 +1,4 @@
-title: Proxmox Virtual Environment: Node Status
+title: Proxmox VE: Cluster Node Status
 agents: linux
 catalog: app/proxmox
 license: GPLv2

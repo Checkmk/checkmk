@@ -1,4 +1,4 @@
-title: Proxmox VE: HA Manager Status/Watcher
+title: Proxmox VE: HA Manager Status
 agents: proxmox_ve
 catalog: os/misc
 license: GPLv2

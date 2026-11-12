@@ -1,4 +1,4 @@
-title: Cisco Core Switches: Power Usage
+title: Cisco: FRU Power Usage
 agents: snmp
 catalog: hw/network/cisco
 license: GPLv2

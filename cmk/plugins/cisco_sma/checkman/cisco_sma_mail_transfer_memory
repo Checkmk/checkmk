@@ -1,4 +1,4 @@
-title: Cisco SMA DNS mail transfer memory
+title: Cisco SMA: Mail Transfer Memory
 agents: snmp
 catalog: os/storage
 license: GPLv2

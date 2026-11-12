@@ -1,4 +1,4 @@
-title: Cisco Switches: Port Security Status
+title: Cisco: Port Security
 agents: snmp
 catalog: hw/network/cisco
 license: GPLv2

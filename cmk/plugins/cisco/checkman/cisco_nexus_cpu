@@ -1,4 +1,4 @@
-title: Cisco Nexus Devices: CPU Utilization
+title: Cisco Nexus: CPU Utilization
 agents: snmp
 catalog: hw/network/cisco
 license: GPLv2

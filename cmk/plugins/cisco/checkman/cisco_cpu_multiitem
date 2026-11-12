@@ -1,4 +1,4 @@
-title: Cisco Devices: CPU Utilization (multiple Items)
+title: Cisco: CPU Utilization per CPU
 agents: snmp
 catalog: hw/network/cisco
 license: GPLv2

@@ -1,4 +1,4 @@
-title: Cisco Prime WLAN Controller Access Points
+title: Cisco Prime: WLAN Controller Access Points
 agents: agent_cisco_prime
 catalog: hw/network/cisco
 license: GPLv2

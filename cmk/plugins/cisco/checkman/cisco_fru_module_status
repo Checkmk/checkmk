@@ -1,4 +1,4 @@
-title: Cisco Devices: Status of FRU Modules
+title: Cisco: FRU Modules
 agents: snmp
 catalog: hw/network/cisco
 license: GPLv2

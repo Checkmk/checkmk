@@ -1,4 +1,4 @@
-title: Cisco Prime WLAN Controller Alarm Status
+title: Cisco Prime: WLAN Controller Alarm Status
 agents: agent_cisco_prime
 catalog: hw/network/cisco
 license: GPLv2

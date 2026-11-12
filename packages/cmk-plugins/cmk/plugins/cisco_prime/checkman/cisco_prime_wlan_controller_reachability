@@ -1,4 +1,4 @@
-title: Cisco Prime WLAN Controller Reachability
+title: Cisco Prime: WLAN Controller Reachability
 agents: agent_cisco_prime
 catalog: hw/network/cisco
 license: GPLv2

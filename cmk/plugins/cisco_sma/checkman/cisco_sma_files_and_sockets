@@ -1,4 +1,4 @@
-title: Cisco SMA DNS files and sockets
+title: Cisco SMA: Open Files and Sockets
 agents: snmp
 catalog: os/storage
 license: GPLv2

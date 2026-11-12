@@ -1,4 +1,4 @@
-title: Cisco IE: Temperature
+title: Cisco: Industrial Ethernet Temperature
 agents: snmp
 catalog: hw/network/cisco
 license: GPLv2

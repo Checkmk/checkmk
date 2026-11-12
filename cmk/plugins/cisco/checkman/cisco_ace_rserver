@@ -1,4 +1,4 @@
-title: Cisco ACE Server: Status of Real Server
+title: Cisco: ACE Real Servers
 agents: snmp
 catalog: hw/network/cisco
 license: GPLv2

@@ -1,4 +1,4 @@
-title: Cisco ASA: Failover state
+title: Cisco ASA: Failover State
 agents: snmp
 catalog: hw/network/cisco
 license: GPLv2

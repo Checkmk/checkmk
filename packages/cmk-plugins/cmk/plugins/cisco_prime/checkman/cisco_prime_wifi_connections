@@ -1,4 +1,4 @@
-title: Cisco Prime WiFi connections
+title: Cisco Prime: WiFi Connections
 agents: agent_cisco_prime
 catalog: hw/network/cisco
 license: GPLv2

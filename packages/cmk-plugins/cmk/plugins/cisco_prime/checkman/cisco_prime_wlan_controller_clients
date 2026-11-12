@@ -1,4 +1,4 @@
-title: Cisco Prime WLAN Controller Clients
+title: Cisco Prime: WLAN Controller Clients
 agents: agent_cisco_prime
 catalog: hw/network/cisco
 license: GPLv2

@@ -1,4 +1,4 @@
-title: Cisco ASA: Connections
+title: Cisco ASA: Connection Count
 agents: snmp
 catalog: hw/network/cisco
 distribution: check_mk

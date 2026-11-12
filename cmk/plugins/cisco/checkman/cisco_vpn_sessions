@@ -1,4 +1,4 @@
-title: Cisco VPN sessions
+title: Cisco ASA: VPN Sessions
 agents: snmp
 catalog: hw/network/cisco
 license: GPLv2

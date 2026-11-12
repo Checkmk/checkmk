@@ -1,4 +1,4 @@
-title: Cisco Switch Catalyst 3750-E Series: Stack Port Link States
+title: Cisco: Catalyst 3750-E Stack Port Links
 agents: snmp
 catalog: hw/network/cisco
 license: GPLv2

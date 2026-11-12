@@ -1,4 +1,4 @@
-title: Cisco Wireless LAN Controller (WLC): Connected WLAN Accesspoints
+title: Cisco: Wireless LAN Controller Access Points
 agents: snmp
 catalog: hw/network/cisco
 license: GPLv2

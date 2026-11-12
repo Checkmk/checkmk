@@ -1,4 +1,4 @@
-title: Cisco ASA: Connections
+title: Cisco ASA: Connection States
 agents: snmp
 catalog: hw/network/cisco
 license: GPLv2

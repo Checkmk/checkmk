@@ -1,4 +1,4 @@
-title: Cisco Prime WLAN Controller Last Backup
+title: Cisco Prime: WLAN Controller Last Backup
 agents: agent_cisco_prime
 catalog: hw/network/cisco
 license: GPLv2

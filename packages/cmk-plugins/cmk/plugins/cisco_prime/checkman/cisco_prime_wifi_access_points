@@ -1,4 +1,4 @@
-title: Cisco Prime WiFi access points
+title: Cisco Prime: WiFi Access Points
 agents: agent_cisco_prime
 catalog: hw/network/cisco
 license: GPLv2

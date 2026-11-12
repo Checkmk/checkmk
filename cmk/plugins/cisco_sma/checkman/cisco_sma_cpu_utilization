@@ -1,4 +1,4 @@
-title: Cisco SMA CPU utilization
+title: Cisco SMA: CPU Utilization
 agents: snmp
 catalog: os/storage
 license: GPLv2

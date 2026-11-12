@@ -1,4 +1,4 @@
-title: Cisco Devices (old): CPU Utilization
+title: Cisco: Legacy CPU Utilization
 agents: snmp
 catalog: hw/network/cisco
 license: GPLv2

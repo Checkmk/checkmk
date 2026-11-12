@@ -26,6 +26,13 @@ filegroup(
 # python-3.cab is the exception: it builds hermetically on Linux via
 # //agents/modules/windows:python_3_cab, so it's always built for real here.
 
+# Taken from the source tree: no build needed.
+copy_file(
+    name = "check_mk_user_yml",
+    src = "//agents/wnx:install/resources/check_mk.user.yml",
+    out = "check_mk.user.yml",
+)
+
 # The rule outputs python_3_cab.cab; the package expects python-3.cab.
 copy_file(
     name = "python_cab",
@@ -37,12 +44,14 @@ copy_file(
 filegroup(
     name = "agents",
     srcs = [
-        "check_mk.user.yml",
         "check_mk_agent.msi",
         "mk-sql.exe",
         "robotmk_ext.exe",
         "unsign-msi.patch",
         "windows_files_hashes.txt",
-    ] + [":python_cab"],
+    ] + [
+        ":check_mk_user_yml",
+        ":python_cab",
+    ],
     visibility = ["//omd:__subpackages__"],
 )

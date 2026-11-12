@@ -158,12 +158,9 @@ void provide_agent_binaries(Map args) {
                     tar xf signed_plugins.tar -C "\${_signed_dir}/"
                 fi
                 cp \
-                    check_mk_agent.exe \
                     check_mk_agent.msi \
                     check_mk_agent_unsigned.msi \
                     cmk-agent-ctl.exe \
-                    check_mk.yml \
-                    check_mk.user.yml \
                     mk-sql.exe \
                     robotmk_ext.exe \
                     windows_files_hashes.txt \

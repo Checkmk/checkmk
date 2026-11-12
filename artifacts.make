@@ -36,7 +36,6 @@ SOURCE_BUILT_WINDOWS := \
 	$(REPO_PATH)/agents/windows/check_mk_agent.msi \
 	$(REPO_PATH)/agents/windows/python-3.cab \
 	$(REPO_PATH)/agents/windows/windows_files_hashes.txt \
-	$(REPO_PATH)/agents/windows/check_mk.user.yml \
 	$(REPO_PATH)/agents/windows/unsign-msi.patch
 ifneq (,$(filter $(EDITION),cloud ultimate ultimatemt))
 SOURCE_BUILT_RELAY := $(REPO_PATH)/omd/non-free/relay/CheckmkRelayInstaller.msi

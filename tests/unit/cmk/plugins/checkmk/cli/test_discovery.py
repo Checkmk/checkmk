@@ -13,11 +13,11 @@ from cmk.cli.internal import Declaration as CLIDeclaration
 from cmk.cli.internal import Reader as CLIReader
 from cmk.plugins.checkmk.cli.discovery import (
     _check_discovery_request,
-    _CheckDiscoveryRequest,
     _DISCOVER_COUNT,
     _discover_request,
-    _DiscoverRequest,
     _ONLY_HOST_LABELS_FLAG,
+    CheckDiscoveryRequest,
+    DiscoverRequest,
 )
 from cmk.plugins.checkmk.cli.options import (
     CACHE_FLAG,
@@ -39,7 +39,7 @@ def test_the_check_discovery_request_is_read_from_the_command_line() -> None:
 
     assert _check_discovery_request(
         CLIReader(lambda declaration: given.get(declaration, ()))
-    ) == _CheckDiscoveryRequest(
+    ) == CheckDiscoveryRequest(
         file_cache=FileCacheRequest(cache=True, no_cache=False, no_tcp=False),
         usewalk=False,
         snmp_backend=SNMPBackendEnum.INLINE,
@@ -57,7 +57,7 @@ def test_the_discover_request_counts_the_commands_own_option() -> None:
 
     assert _discover_request(
         CLIReader(lambda declaration: given.get(declaration, ()))
-    ) == _DiscoverRequest(
+    ) == DiscoverRequest(
         file_cache=FileCacheRequest(cache=False, no_cache=False, no_tcp=True),
         usewalk=False,
         snmp_backend=None,

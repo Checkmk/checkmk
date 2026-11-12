@@ -12,7 +12,7 @@ from cmk.cli.internal import Reader as CLIReader
 from cmk.plugins.checkmk.cli.inventory import (
     _FORCE_FLAG,
     _inventory_request,
-    _InventoryRequest,
+    InventoryRequest,
 )
 from cmk.plugins.checkmk.cli.options import (
     DETECT_SECTIONS_VALUE,
@@ -33,7 +33,7 @@ def test_the_inventory_request_is_read_from_the_command_line() -> None:
 
     assert _inventory_request(
         CLIReader(lambda declaration: given.get(declaration, ()))
-    ) == _InventoryRequest(
+    ) == InventoryRequest(
         file_cache=FileCacheRequest(cache=False, no_cache=False, no_tcp=False),
         usewalk=True,
         snmp_backend=None,

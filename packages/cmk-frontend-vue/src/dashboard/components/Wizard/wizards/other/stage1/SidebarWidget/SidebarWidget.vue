@@ -12,6 +12,7 @@ import DashboardPreviewContent from '@/dashboard/components/DashboardPreviewCont
 import FieldComponent from '@/dashboard/components/Wizard/components/TableForm/FieldComponent.vue'
 import FieldDescription from '@/dashboard/components/Wizard/components/TableForm/FieldDescription.vue'
 import TableFormRow from '@/dashboard/components/Wizard/components/TableForm/TableFormRow.vue'
+import WidgetInteraction from '@/dashboard/components/Wizard/components/WidgetInteraction/WidgetInteraction.vue'
 import WidgetVisualization from '@/dashboard/components/Wizard/components/WidgetVisualization/WidgetVisualization.vue'
 import type { BaseWidgetProp, WidgetProps } from '@/dashboard/components/Wizard/types'
 import DataSettings from '@/dashboard/components/Wizard/wizards/other/stage1/DataSettings.vue'
@@ -78,16 +79,23 @@ defineExpose<GetValidWidgetProps>({ getValidWidgetProps })
 
     <ContentSpacer :dimension="6" />
 
-    <CmkCatalogPanel :title="_t('Widget settings')" variant="padded">
+    <CmkCatalogPanel :title="_t('Widget')" variant="padded">
       <WidgetVisualization
         v-model:show-title="handler.showTitle.value"
         v-model:show-title-background="handler.showTitleBackground.value"
         v-model:show-widget-background="handler.showWidgetBackground.value"
         v-model:title="handler.title.value"
+        :title-macros="handler.titleMacros.value"
+      />
+    </CmkCatalogPanel>
+
+    <ContentSpacer />
+
+    <CmkCatalogPanel :title="_t('Interaction')" variant="padded">
+      <WidgetInteraction
         v-model:title-url="handler.titleUrl.value"
         v-model:title-url-enabled="handler.titleUrlEnabled.value"
         v-model:title-url-validation-errors="handler.titleUrlValidationErrors.value"
-        :title-macros="handler.titleMacros.value"
       />
     </CmkCatalogPanel>
 

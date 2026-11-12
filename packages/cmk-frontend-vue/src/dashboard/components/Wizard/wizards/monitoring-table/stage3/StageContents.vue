@@ -7,7 +7,6 @@ conditions defined in the file COPYING, which is part of this source code packag
 import CmkCatalogPanel from 'cmk-ui-library/components/CmkCatalogPanel.vue'
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
 import CmkHeading from 'cmk-ui-library/components/typography/CmkHeading.vue'
-import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import usei18n from 'cmk-ui-library/lib/i18n'
 import { randomId } from 'cmk-ui-library/lib/randomId'
 import { computed } from 'vue'
@@ -27,6 +26,8 @@ import type {
   MonitoringTableContent,
   WidgetGeneralSettings
 } from '@/dashboard/types/widget'
+
+import WidgetInteraction from '../../../components/WidgetInteraction/WidgetInteraction.vue'
 
 const { _t } = usei18n()
 
@@ -112,31 +113,26 @@ function saveWidget() {
 
   <ContentSpacer />
 
-  <CmkCatalogPanel :title="_t('Widget settings')" variant="padded">
+  <CmkCatalogPanel :title="_t('Widget')" variant="padded">
     <div :style="`max-width: ${MAX_WIZARD_FORM_WIDTH}px`">
       <WidgetVisualization
         v-model:show-title="visualization.showTitle.value"
         v-model:show-title-background="visualization.showTitleBackground.value"
         v-model:title="visualization.title.value"
-        v-model:title-url="visualization.titleUrl.value"
-        v-model:title-url-enabled="visualization.titleUrlEnabled.value"
-        v-model:title-url-validation-errors="visualization.titleUrlValidationErrors.value"
         :title-macros="visualization.titleMacros.value"
       >
-        <template #interaction>
-          <div class="field-component__item">
-            <CmkCheckbox
-              v-model="readOnly"
-              :label="_t('Read only')"
-              :help="
-                _t(
-                  'A click on a host or service name, a related hosts count or a perfometer opens no details, and the rows offer no actions. The graph links next to the names still open the graphs.'
-                )
-              "
-            />
-          </div>
-        </template>
       </WidgetVisualization>
     </div>
+  </CmkCatalogPanel>
+
+  <ContentSpacer />
+
+  <CmkCatalogPanel :title="_t('Interaction')" variant="padded">
+    <WidgetInteraction
+      v-model:title-url="visualization.titleUrl.value"
+      v-model:title-url-enabled="visualization.titleUrlEnabled.value"
+      v-model:title-url-validation-errors="visualization.titleUrlValidationErrors.value"
+      v-model:read-only-title="readOnly"
+    />
   </CmkCatalogPanel>
 </template>

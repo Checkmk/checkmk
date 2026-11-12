@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-"""The legend setting a graph widget wizard offers in its 'Additional graph options'.
+"""The legend setting a graph widget wizard offers in its 'Graph' panel.
 
 A graph widget shows no legend, a compact one or an extended one: the 'Show graph legend'
 checkbox switches the legend on, and only then offers the compact and the extended style as
@@ -18,7 +18,7 @@ from playwright.sync_api import expect, Locator
 from tests.testlib.common.utils import wait_until
 
 SHOW_LEGEND_LABEL = "Show graph legend"
-_PANEL_TOGGLE_LABEL = "Toggle Additional graph options"
+_PANEL_TOGGLE_LABEL = "Toggle Graph"
 
 
 class GraphLegendMode(StrEnum):
@@ -36,7 +36,7 @@ LEGEND_STYLES = (GraphLegendMode.COMPACT, GraphLegendMode.EXTENDED)
 class WidgetGraphLegendSettings:
     """The 'Legend' row of a graph widget wizard.
 
-    The row is part of the 'Additional graph options' panel, which starts out collapsed; every
+    The row is part of the 'Graph' panel, which starts out collapsed; every
     action below opens it first.
 
     Args:
@@ -59,7 +59,7 @@ class WidgetGraphLegendSettings:
         return self._wizard.get_by_role("button", name=_PANEL_TOGGLE_LABEL, exact=True)
 
     def reveal(self) -> None:
-        """Open the 'Additional graph options' panel until the row shows.
+        """Open the 'Graph' panel until the row shows.
 
         Retried rather than clicked once: the stage renders its panels only after it loaded
         the widget, and may render them again collapsed, so a single early click gets lost.
@@ -77,7 +77,7 @@ class WidgetGraphLegendSettings:
             _row_shown,
             timeout=30,
             interval=0.5,
-            condition_name="the legend setting to show in 'Additional graph options'",
+            condition_name="the legend setting to show in the 'Graph' panel",
         )
 
     @property

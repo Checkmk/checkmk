@@ -50,9 +50,6 @@ const timestamp = defineModel<boolean>('timestamp', { required: true })
 const roundMargin = defineModel<boolean>('roundMargin', { required: true })
 const graphLegend = defineModel<GraphLegend>('graphLegend', { required: true })
 
-const clickToPlacePin = defineModel<boolean>('clickToPlacePin', { required: true })
-const showBurgerMenu = defineModel<boolean>('showBurgerMenu', { required: true })
-
 const displayColorChooser = computed(() => color.value !== undefined && colorOptions.length > 0)
 const displayPresentation = computed(() => presentation.value !== undefined)
 </script>
@@ -98,7 +95,7 @@ const displayPresentation = computed(() => presentation.value !== undefined)
     <slot name="after-axis" />
 
     <TableFormRow>
-      <FieldDescription>{{ _t('Graph styling') }}</FieldDescription>
+      <FieldDescription>{{ _t('Styling') }}</FieldDescription>
       <FieldComponent>
         <div v-if="displayPresentation">
           <CmkLabel>{{ _t('Presentation') }}</CmkLabel>
@@ -136,7 +133,7 @@ const displayPresentation = computed(() => presentation.value !== undefined)
         <div>
           <CmkCheckbox
             v-model:model-value="timestamp"
-            :label="_t('Date and time stamp (right upper corner)')"
+            :label="_t('Date and time stamp (left upper corner)')"
           />
         </div>
         <div>
@@ -149,24 +146,6 @@ const displayPresentation = computed(() => presentation.value !== undefined)
       <FieldDescription>{{ _t('Legend') }}</FieldDescription>
       <FieldComponent>
         <GraphLegendOptions v-model:legend="graphLegend" />
-      </FieldComponent>
-    </TableFormRow>
-
-    <TableFormRow>
-      <FieldDescription>{{ _t('Interaction') }}</FieldDescription>
-      <FieldComponent>
-        <div>
-          <CmkCheckbox
-            v-model:model-value="clickToPlacePin"
-            :label="_t('Click on graph to place pin')"
-          />
-        </div>
-        <div>
-          <CmkCheckbox
-            v-model:model-value="showBurgerMenu"
-            :label="_t('Show burger menu for graph options')"
-          />
-        </div>
       </FieldComponent>
     </TableFormRow>
   </TableForm>

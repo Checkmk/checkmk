@@ -9,6 +9,7 @@ import usei18n from 'cmk-ui-library/lib/i18n'
 
 import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import DashboardPreviewContent from '@/dashboard/components/DashboardPreviewContent.vue'
+import WidgetInteraction from '@/dashboard/components/Wizard/components/WidgetInteraction/WidgetInteraction.vue'
 import WidgetVisualization from '@/dashboard/components/Wizard/components/WidgetVisualization/WidgetVisualization.vue'
 import type { BaseWidgetProp, WidgetProps } from '@/dashboard/components/Wizard/types'
 import type { GetValidWidgetProps } from '@/dashboard/components/Wizard/wizards/other/types'
@@ -47,16 +48,23 @@ defineExpose<GetValidWidgetProps>({ getValidWidgetProps })
 
     <ContentSpacer />
 
-    <CmkCatalogPanel :title="_t('Widget settings')" variant="padded">
+    <CmkCatalogPanel :title="_t('Widget')" variant="padded">
       <WidgetVisualization
         v-model:show-title="handler.showTitle.value"
         v-model:show-title-background="handler.showTitleBackground.value"
         v-model:show-widget-background="handler.showWidgetBackground.value"
         v-model:title="handler.title.value"
+        :title-macros="handler.titleMacros.value"
+      />
+    </CmkCatalogPanel>
+
+    <ContentSpacer />
+
+    <CmkCatalogPanel :title="_t('Interaction')" variant="padded">
+      <WidgetInteraction
         v-model:title-url="handler.titleUrl.value"
         v-model:title-url-enabled="handler.titleUrlEnabled.value"
         v-model:title-url-validation-errors="handler.titleUrlValidationErrors.value"
-        :title-macros="handler.titleMacros.value"
       />
     </CmkCatalogPanel>
 

@@ -12,12 +12,12 @@ import { computed } from 'vue'
 
 import ContentSpacer from '@/dashboard/components/ContentSpacer.vue'
 import DashboardPreviewContent from '@/dashboard/components/DashboardPreviewContent.vue'
-import ContextualLinkConfig from '@/dashboard/components/Wizard/components/ContextualLink/ContextualLinkConfig.vue'
 import RadioButton from '@/dashboard/components/Wizard/components/RadioButton.vue'
 import FieldComponent from '@/dashboard/components/Wizard/components/TableForm/FieldComponent.vue'
 import FieldDescription from '@/dashboard/components/Wizard/components/TableForm/FieldDescription.vue'
 import TableForm from '@/dashboard/components/Wizard/components/TableForm/TableForm.vue'
 import TableFormRow from '@/dashboard/components/Wizard/components/TableForm/TableFormRow.vue'
+import WidgetInteraction from '@/dashboard/components/Wizard/components/WidgetInteraction/WidgetInteraction.vue'
 import WidgetVisualization from '@/dashboard/components/Wizard/components/WidgetVisualization/WidgetVisualization.vue'
 import type { BaseWidgetProp } from '@/dashboard/components/Wizard/types'
 
@@ -44,7 +44,7 @@ const widgetProps = computed(() => handler.value.widgetProps)
 
   <ContentSpacer />
 
-  <CmkCatalogPanel :title="_t('Data settings')" variant="padded">
+  <CmkCatalogPanel :title="_t('Data')" variant="padded">
     <TableForm>
       <TableFormRow>
         <FieldDescription>{{ _t('Host status') }}</FieldDescription>
@@ -95,25 +95,25 @@ const widgetProps = computed(() => handler.value.widgetProps)
 
   <ContentSpacer />
 
-  <CmkCatalogPanel :title="_t('Widget settings')" variant="padded">
+  <CmkCatalogPanel :title="_t('Widget')" variant="padded">
     <WidgetVisualization
       v-model:show-title="handler.showTitle.value"
       v-model:show-title-background="handler.showTitleBackground.value"
       v-model:show-widget-background="handler.showWidgetBackground.value"
       v-model:title="handler.title.value"
-      v-model:title-url="handler.titleUrl.value"
-      v-model:title-url-enabled="handler.titleUrlEnabled.value"
-      v-model:title-url-validation-errors="handler.titleUrlValidationErrors.value"
       :title-macros="handler.titleMacros.value"
     />
   </CmkCatalogPanel>
 
   <ContentSpacer />
 
-  <CmkCatalogPanel :title="_t('Contextual link')" variant="padded">
-    <ContextualLinkConfig
-      v-model:handler="handler.contextualLink"
-      :default-target="_t('Service')"
+  <CmkCatalogPanel :title="_t('Interaction')" variant="padded">
+    <WidgetInteraction
+      v-model:title-url="handler.titleUrl.value"
+      v-model:title-url-enabled="handler.titleUrlEnabled.value"
+      v-model:title-url-validation-errors="handler.titleUrlValidationErrors.value"
+      v-model:contextual-link="handler.contextualLink"
+      :contextual-link-default-target="_t('Service')"
     />
   </CmkCatalogPanel>
 

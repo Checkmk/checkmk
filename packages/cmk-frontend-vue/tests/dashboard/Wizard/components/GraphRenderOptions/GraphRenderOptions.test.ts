@@ -16,9 +16,7 @@ const requiredProps = {
   fixedVerticalAxisWidth: 8,
   timestamp: false,
   roundMargin: false,
-  graphLegend: 'none' as const,
-  clickToPlacePin: true,
-  showBurgerMenu: false
+  graphLegend: 'none' as const
 }
 
 describe('GraphRenderOptions', () => {

@@ -189,7 +189,7 @@ function postBodies<T>(path: string): T[] {
 async function gotoWidgetSettings(): Promise<void> {
   await screen.findByRole('tab', { name: 'Metrics selection' })
   await fireEvent.click(screen.getByRole('button', { name: 'Next step: Widget settings' }))
-  await screen.findByRole('button', { name: /Additional graph options/ })
+  await screen.findByRole('button', { name: /Graph/ })
 }
 
 describe('CreateCustomGraphWizard', () => {

@@ -271,12 +271,12 @@ class MetricsAndGraphsWidgetWizard(BaseWidgetWizard):
 
     @property
     def graph_legend_settings(self) -> WidgetGraphLegendSettings:
-        """The 'Legend' row of the visualization stage's 'Additional graph options'."""
+        """The 'Legend' row of the visualization stage's 'Graph' panel."""
         return WidgetGraphLegendSettings(self.locator())
 
     def expand_collapsed_panels(self) -> None:
         """Open every settings panel of the stage that starts out collapsed, such as
-        'Additional graph options', so all the options it offers are rendered."""
+        'Graph', so all the options it offers are rendered."""
         headers = self.locator().locator("button.cmk-catalog-panel__header")
         collapsed = headers.and_(self.locator().locator("[aria-expanded='false']"))
         # Bounded and confirmed per click: a header re-read before Vue re-rendered would be
@@ -560,7 +560,11 @@ class _CustomGraphWidgetWizard(BaseWidgetWizard):
         panel = (
             self.locator()
             .locator(".cmk-catalog-panel")
-            .filter(has=self.page.locator(".cmk-catalog-panel__header", has_text="Widget settings"))
+            .filter(
+                has=self.page.locator(
+                    ".cmk-catalog-panel__header", has_text=re.compile(r"^\s*Widget\s*$")
+                )
+            )
         )
         row = panel.locator(".table-form-row").filter(
             has=self.page.get_by_text("Title", exact=True)

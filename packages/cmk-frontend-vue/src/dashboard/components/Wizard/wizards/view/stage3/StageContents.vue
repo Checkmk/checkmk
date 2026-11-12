@@ -28,6 +28,8 @@ import type {
   WidgetGeneralSettings
 } from '@/dashboard/types/widget'
 
+import WidgetInteraction from '../../../components/WidgetInteraction/WidgetInteraction.vue'
+
 const { _t } = usei18n()
 
 interface Stage3Props {
@@ -113,18 +115,25 @@ function saveWidget() {
 
   <ContentSpacer />
 
-  <CmkCatalogPanel :title="_t('Widget settings')" variant="padded">
+  <CmkCatalogPanel :title="_t('Widget')" variant="padded">
     <div :style="`max-width: ${MAX_WIZARD_FORM_WIDTH}px`">
       <WidgetVisualization
         v-model:show-title="visualizationProps.showTitle.value"
         v-model:show-title-background="visualizationProps.showTitleBackground.value"
         v-model:show-widget-background="visualizationProps.showWidgetBackground.value"
         v-model:title="visualizationProps.title.value"
-        v-model:title-url="visualizationProps.titleUrl.value"
-        v-model:title-url-enabled="visualizationProps.titleUrlEnabled.value"
-        v-model:title-url-validation-errors="visualizationProps.titleUrlValidationErrors.value"
         :title-macros="titleMacros"
       />
     </div>
+  </CmkCatalogPanel>
+
+  <ContentSpacer />
+
+  <CmkCatalogPanel :title="_t('Interaction')" variant="padded">
+    <WidgetInteraction
+      v-model:title-url="visualizationProps.titleUrl.value"
+      v-model:title-url-enabled="visualizationProps.titleUrlEnabled.value"
+      v-model:title-url-validation-errors="visualizationProps.titleUrlValidationErrors.value"
+    />
   </CmkCatalogPanel>
 </template>

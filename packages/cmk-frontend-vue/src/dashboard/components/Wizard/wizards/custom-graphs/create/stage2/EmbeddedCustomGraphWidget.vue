@@ -18,6 +18,7 @@ import FieldComponent from '@/dashboard/components/Wizard/components/TableForm/F
 import FieldDescription from '@/dashboard/components/Wizard/components/TableForm/FieldDescription.vue'
 import TableForm from '@/dashboard/components/Wizard/components/TableForm/TableForm.vue'
 import TableFormRow from '@/dashboard/components/Wizard/components/TableForm/TableFormRow.vue'
+import WidgetInteraction from '@/dashboard/components/Wizard/components/WidgetInteraction/WidgetInteraction.vue'
 import WidgetVisualization from '@/dashboard/components/Wizard/components/WidgetVisualization/WidgetVisualization.vue'
 import type { BaseWidgetProp, WidgetProps } from '@/dashboard/components/Wizard/types'
 import GraphOptionRows from '@/graphing/designer/components/GraphOptionRows.vue'
@@ -66,7 +67,7 @@ watch(
 
   <ContentSpacer />
 
-  <CmkCatalogPanel :title="_t('Data settings')" variant="padded">
+  <CmkCatalogPanel :title="_t('Data')" variant="padded">
     <TableForm>
       <TableFormRow>
         <FieldDescription>{{ _t('Time range') }}</FieldDescription>
@@ -82,22 +83,19 @@ watch(
 
   <ContentSpacer />
 
-  <CmkCatalogPanel :title="_t('Widget settings')" variant="padded">
+  <CmkCatalogPanel :title="_t('Widget')" variant="padded">
     <WidgetVisualization
       v-model:show-title="handler.visualization.showTitle.value"
       v-model:show-title-background="handler.visualization.showTitleBackground.value"
       v-model:show-widget-background="handler.visualization.showWidgetBackground.value"
       v-model:title="handler.visualization.title.value"
-      v-model:title-url="handler.visualization.titleUrl.value"
-      v-model:title-url-enabled="handler.visualization.titleUrlEnabled.value"
-      v-model:title-url-validation-errors="handler.visualization.titleUrlValidationErrors.value"
       :title-macros="handler.visualization.titleMacros.value"
     />
   </CmkCatalogPanel>
 
   <ContentSpacer />
 
-  <CmkCatalogPanel :title="_t('Additional graph options')" variant="padded" :open="false">
+  <CmkCatalogPanel :title="_t('Graph')" variant="padded" :open="false">
     <GraphRenderOptions
       v-model:horizontal-axis="handler.renderOptions.horizontalAxis.value"
       v-model:vertical-axis="handler.renderOptions.verticalAxis.value"
@@ -106,8 +104,6 @@ watch(
       v-model:timestamp="handler.renderOptions.timestamp.value"
       v-model:round-margin="handler.renderOptions.roundMargin.value"
       v-model:graph-legend="handler.renderOptions.graphLegend.value"
-      v-model:click-to-place-pin="handler.renderOptions.clickToPlacePin.value"
-      v-model:show-burger-menu="handler.renderOptions.showBurgerMenu.value"
     >
       <template #after-axis>
         <GraphOptionRows
@@ -116,6 +112,18 @@ watch(
         />
       </template>
     </GraphRenderOptions>
+  </CmkCatalogPanel>
+
+  <ContentSpacer />
+
+  <CmkCatalogPanel :title="_t('Interaction')" variant="padded">
+    <WidgetInteraction
+      v-model:click-to-place-pin="handler.renderOptions.clickToPlacePin.value"
+      v-model:show-burger-menu="handler.renderOptions.showBurgerMenu.value"
+      v-model:title-url="handler.visualization.titleUrl.value"
+      v-model:title-url-enabled="handler.visualization.titleUrlEnabled.value"
+      v-model:title-url-validation-errors="handler.visualization.titleUrlValidationErrors.value"
+    />
   </CmkCatalogPanel>
 
   <ContentSpacer />

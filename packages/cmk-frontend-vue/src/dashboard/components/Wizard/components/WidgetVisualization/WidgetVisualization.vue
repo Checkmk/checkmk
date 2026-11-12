@@ -4,7 +4,6 @@ This file is part of Checkmk (https://checkmk.com). It is subject to the terms a
 conditions defined in the file COPYING, which is part of this source code package.
 -->
 <script setup lang="ts">
-import CmkIndent from 'cmk-ui-library/components/CmkIndent.vue'
 import type { Suggestion } from 'cmk-ui-library/components/CmkSuggestions'
 import CmkCheckbox from 'cmk-ui-library/components/user-input/CmkCheckbox.vue'
 import CmkInput from 'cmk-ui-library/components/user-input/CmkInput.vue'
@@ -41,11 +40,6 @@ const titleHelpText = computed(() => {
 })
 
 const title = defineModel<string>('title', { required: true })
-const titleUrlEnabled = defineModel<boolean>('titleUrlEnabled', { required: true })
-const titleUrl = defineModel<string>('titleUrl', { required: true })
-const titleUrlValidationErrors = defineModel<string[]>('titleUrlValidationErrors', {
-  required: true
-})
 const showTitle = defineModel<boolean>('showTitle', { required: true })
 const showTitleBackground = defineModel<boolean>('showTitleBackground', { required: true })
 // Offered only where a wizard binds it; the default keeps Vue from casting it to false.
@@ -65,24 +59,6 @@ const showWidgetBackground = defineModel<boolean | undefined>('showWidgetBackgro
           field-size="medium"
           @update:model-value="(value) => (title = value ?? title)"
         />
-      </FieldComponent>
-    </TableFormRow>
-    <TableFormRow>
-      <FieldDescription>{{ _t('Interaction') }}</FieldDescription>
-      <FieldComponent>
-        <div class="field-component__item">
-          <CmkCheckbox v-model="titleUrlEnabled" :label="_t('Link title to')" />
-          <CmkIndent v-if="titleUrlEnabled">
-            <CmkInput
-              :model-value="titleUrl"
-              type="text"
-              field-size="medium"
-              :external-errors="titleUrlValidationErrors"
-              @update:model-value="(value) => (titleUrl = value ?? titleUrl)"
-            />
-          </CmkIndent>
-        </div>
-        <slot name="interaction" />
       </FieldComponent>
     </TableFormRow>
     <TableFormRow>

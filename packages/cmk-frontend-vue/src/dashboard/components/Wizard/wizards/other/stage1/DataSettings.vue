@@ -14,7 +14,7 @@ const { _t } = usei18n()
 
 <template>
   <div>
-    <CmkCatalogPanel :title="_t('Data settings')" variant="padded">
+    <CmkCatalogPanel :title="_t('Data')" variant="padded">
       <TableForm>
         <slot />
       </TableForm>

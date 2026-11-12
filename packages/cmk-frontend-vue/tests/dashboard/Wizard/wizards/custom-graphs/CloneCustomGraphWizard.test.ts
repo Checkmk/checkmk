@@ -224,7 +224,7 @@ async function editTheFirstRow(): Promise<void> {
 
 async function gotoWidgetSettings(): Promise<void> {
   await fireEvent.click(screen.getByRole('button', { name: 'Next step: Widget settings' }))
-  await screen.findByRole('button', { name: /Additional graph options/ })
+  await screen.findByRole('button', { name: /Graph/ })
 }
 
 /** Holds back each catalog graph until it is released by name. */

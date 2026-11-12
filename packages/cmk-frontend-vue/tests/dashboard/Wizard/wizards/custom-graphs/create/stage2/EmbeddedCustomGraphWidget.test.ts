@@ -123,7 +123,7 @@ function renderWidget(spec: WidgetSpec | null = STORED_WIDGET) {
 }
 
 async function openGraphOptions(): Promise<HTMLElement> {
-  const header = await screen.findByRole('button', { name: /Additional graph options/ })
+  const header = await screen.findByRole('button', { name: /Graph/ })
   await fireEvent.click(header)
   return header.parentElement!
 }
@@ -133,8 +133,8 @@ describe('EmbeddedCustomGraphWidget', () => {
     renderWidget(null)
     const panel = within(await openGraphOptions())
 
-    const rows = ['Axis', 'Unit', 'Explicit range', 'Metric visibility', 'Graph styling'].map(
-      (label) => panel.getByText(label)
+    const rows = ['Axis', 'Unit', 'Explicit range', 'Metric visibility', 'Styling'].map((label) =>
+      panel.getByText(label)
     )
 
     for (let index = 1; index < rows.length; index++) {

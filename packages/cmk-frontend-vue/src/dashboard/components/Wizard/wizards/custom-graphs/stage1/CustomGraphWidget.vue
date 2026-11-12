@@ -20,6 +20,7 @@ import WidgetVisualization from '@/dashboard/components/Wizard/components/Widget
 import type { BaseWidgetProp } from '@/dashboard/components/Wizard/types.ts'
 
 import GraphRenderOptions from '../../../components/GraphRenderOptions/GraphRenderOptions.vue'
+import WidgetInteraction from '../../../components/WidgetInteraction/WidgetInteraction.vue'
 import AutocompleteCustomGraph from '../../../components/autocompleters/AutocompleteCustomGraph.vue'
 import type { UseCustomGraph } from './composables/useCustomGraph.ts'
 
@@ -49,7 +50,7 @@ const widgetProps = computed(() => handler.value.widgetProps)
   />
   <ContentSpacer />
 
-  <CmkCatalogPanel :title="_t('Data settings')" variant="padded">
+  <CmkCatalogPanel :title="_t('Data')" variant="padded">
     <TableForm>
       <TableFormRow>
         <FieldDescription>{{ _t('Custom graph') }}</FieldDescription>
@@ -76,22 +77,19 @@ const widgetProps = computed(() => handler.value.widgetProps)
 
   <ContentSpacer />
 
-  <CmkCatalogPanel :title="_t('Widget settings')" variant="padded">
+  <CmkCatalogPanel :title="_t('Widget')" variant="padded">
     <WidgetVisualization
       v-model:show-title="handler.showTitle.value"
       v-model:show-title-background="handler.showTitleBackground.value"
       v-model:show-widget-background="handler.showWidgetBackground.value"
       v-model:title="handler.title.value"
-      v-model:title-url="handler.titleUrl.value"
-      v-model:title-url-enabled="handler.titleUrlEnabled.value"
-      v-model:title-url-validation-errors="handler.titleUrlValidationErrors.value"
       :title-macros="handler.titleMacros.value"
     />
   </CmkCatalogPanel>
 
   <ContentSpacer />
 
-  <CmkCatalogPanel :title="_t('Additional graph options')" variant="padded" :open="false">
+  <CmkCatalogPanel :title="_t('Graph')" variant="padded" :open="false">
     <GraphRenderOptions
       v-model:horizontal-axis="handler.horizontalAxis.value"
       v-model:vertical-axis="handler.verticalAxis.value"
@@ -100,11 +98,20 @@ const widgetProps = computed(() => handler.value.widgetProps)
       v-model:timestamp="handler.timestamp.value"
       v-model:round-margin="handler.roundMargin.value"
       v-model:graph-legend="handler.graphLegend.value"
-      v-model:click-to-place-pin="handler.clickToPlacePin.value"
-      v-model:show-burger-menu="handler.showBurgerMenu.value"
     />
   </CmkCatalogPanel>
 
+  <ContentSpacer />
+
+  <CmkCatalogPanel :title="_t('Interaction')" variant="padded">
+    <WidgetInteraction
+      v-model:click-to-place-pin="handler.clickToPlacePin.value"
+      v-model:show-burger-menu="handler.showBurgerMenu.value"
+      v-model:title-url="handler.titleUrl.value"
+      v-model:title-url-enabled="handler.titleUrlEnabled.value"
+      v-model:title-url-validation-errors="handler.titleUrlValidationErrors.value"
+    />
+  </CmkCatalogPanel>
   <ContentSpacer />
 </template>
 

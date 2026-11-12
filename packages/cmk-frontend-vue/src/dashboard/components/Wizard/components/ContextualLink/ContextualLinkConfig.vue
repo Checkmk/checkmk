@@ -37,7 +37,7 @@ const { _t } = usei18n()
 const handler = defineModel<UseContextualLink<C>>('handler', { required: true })
 const { defaultTarget } = defineProps<{
   // The title of the page the widget's built-in link leads to, if it has a single one.
-  defaultTarget?: TranslatedString
+  defaultTarget?: TranslatedString | undefined
 }>()
 
 const filterDefinitions = useFilterDefinitions()

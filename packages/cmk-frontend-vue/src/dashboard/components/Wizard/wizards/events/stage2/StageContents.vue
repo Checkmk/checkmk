@@ -23,6 +23,7 @@ import type { WidgetContent, WidgetGeneralSettings, WidgetSpec } from '@/dashboa
 import { buildWidgetEffectiveFilterContext } from '@/dashboard/utils.ts'
 
 import Stage2Header from '../../../components/Stage2Header.vue'
+import WidgetInteraction from '../../../components/WidgetInteraction/WidgetInteraction.vue'
 
 const { _t } = usei18n()
 
@@ -116,16 +117,23 @@ const gotoNextStage = () => {
 
   <ContentSpacer />
 
-  <CmkCatalogPanel :title="_t('Widget settings')" variant="padded">
+  <CmkCatalogPanel :title="_t('Widget')" variant="padded">
     <WidgetVisualization
       v-model:show-title="showTitle"
       v-model:show-title-background="showTitleBackground"
       v-model:show-widget-background="showWidgetBackground"
       v-model:title="title"
+      :title-macros="titleMacros"
+    />
+  </CmkCatalogPanel>
+
+  <ContentSpacer />
+
+  <CmkCatalogPanel :title="_t('Interaction')" variant="padded">
+    <WidgetInteraction
       v-model:title-url="titleUrl"
       v-model:title-url-enabled="titleUrlEnabled"
       v-model:title-url-validation-errors="titleUrlValidationErrors"
-      :title-macros="titleMacros"
     />
   </CmkCatalogPanel>
 

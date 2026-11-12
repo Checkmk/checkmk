@@ -79,7 +79,12 @@ const actionOffer = computed<MonitoringTableActionOffer | undefined>((previous) 
   if (!offersRowActions || current.kind !== 'data') {
     return undefined
   }
-  const offer = { actions: current.value.actions, links: current.value.links }
+  const offer = {
+    actions: current.value.actions,
+    links: current.value.links,
+    host_actions: current.value.host_actions,
+    host_links: current.value.host_links
+  }
   return JSON.stringify(offer) === JSON.stringify(previous) ? previous : offer
 })
 

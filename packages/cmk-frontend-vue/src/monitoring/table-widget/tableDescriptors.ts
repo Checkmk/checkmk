@@ -15,6 +15,7 @@ import { useAllServicesColumns } from '@/monitoring/all-services/columns'
 import { uncapNameWithoutSummary } from '@/monitoring/host-services/columns'
 import HostServicesRow from '@/monitoring/host-services/components/HostServicesRow.vue'
 import type { HostEntry, ServiceEntry } from '@/monitoring/shared/api/types'
+import type { HostSlideInSubject } from '@/monitoring/shared/components/HostSlideIn.vue'
 import {
   type RowCommand,
   performRowCommand
@@ -26,6 +27,7 @@ import { useHostActions } from '@/monitoring/shared/useHostActions'
 import { useServiceActions } from '@/monitoring/shared/useServiceActions'
 
 import HostsTableDetails from './HostsTableDetails.vue'
+import ServicesTableDetails from './ServicesTableDetails.vue'
 
 export type MonitoringTableName = components['schemas']['MonitoringTableContent']['table']
 
@@ -37,7 +39,7 @@ export interface MonitoringTableRows {
 /** What the backend offers the reader to do with the rows of a table. */
 export type MonitoringTableActionOffer = Pick<
   components['schemas']['MonitoringTable'],
-  'actions' | 'links'
+  'actions' | 'links' | 'host_actions' | 'host_links'
 >
 
 /** How the rows of a table get their actions, and what a command picked in a row acts on. */
@@ -77,6 +79,10 @@ export interface HostsTableSubject {
   revealRelations: boolean
 }
 
+export type ServicesTableSubject =
+  | { kind: 'service'; service: ServiceEntry; graphs: boolean }
+  | { kind: 'host'; host: HostSlideInSubject }
+
 export interface MonitoringTableColumn {
   id: string
   title: string
@@ -88,7 +94,7 @@ export interface MonitoringTableColumn {
 export abstract class MonitoringTableDescriptor<T, Target = unknown, Subject = unknown> {
   abstract readonly rowComponent: Component
 
-  readonly detailsComponent: Component | null = null
+  abstract readonly detailsComponent: Component
 
   /** The columns the backend offers for this table. */
   abstract readonly columnIds: readonly string[]
@@ -106,9 +112,7 @@ export abstract class MonitoringTableDescriptor<T, Target = unknown, Subject = u
    */
   abstract rowActions(offer: MonitoringTableActionOffer): MonitoringTableRowActions<T, Target>
 
-  rowListeners(_row: T, _open: (subject: Subject) => void): object {
-    return {}
-  }
+  abstract rowListeners(row: T, open: (subject: Subject) => void): object
 
   catalog(): MonitoringTableColumn[] {
     return this.inRowOrder(this.columnIds).map(([id, column]) => ({
@@ -144,7 +148,7 @@ export class HostsTableDescriptor extends MonitoringTableDescriptor<
 > {
   readonly rowComponent: Component = HostRow
 
-  override readonly detailsComponent: Component = HostsTableDetails
+  readonly detailsComponent: Component = HostsTableDetails
 
   readonly columnIds = [
     'state',
@@ -195,7 +199,7 @@ export class HostsTableDescriptor extends MonitoringTableDescriptor<
     }
   }
 
-  override rowListeners(
+  rowListeners(
     _row: HostEntry,
     open: (subject: HostsTableSubject) => void
   ): RowListeners<typeof HostRow> {
@@ -215,9 +219,12 @@ export class HostsTableDescriptor extends MonitoringTableDescriptor<
 
 export class ServicesTableDescriptor extends MonitoringTableDescriptor<
   ServiceEntry,
-  RowCommandTarget<typeof HostServicesRow>
+  RowCommandTarget<typeof HostServicesRow>,
+  ServicesTableSubject
 > {
   readonly rowComponent: Component = HostServicesRow
+
+  readonly detailsComponent: Component = ServicesTableDetails
 
   readonly columnIds = [
     'state',
@@ -261,6 +268,17 @@ export class ServicesTableDescriptor extends MonitoringTableDescriptor<
         }) satisfies Partial<ComponentProps<typeof HostServicesRow>>,
       run: (row, command, signal) =>
         performRowCommand(registry, serviceCommand(hostRefOfService(row), command), signal)
+    }
+  }
+
+  rowListeners(
+    row: ServiceEntry,
+    open: (subject: ServicesTableSubject) => void
+  ): RowListeners<typeof HostServicesRow> {
+    return {
+      open: () => open({ kind: 'service', service: row, graphs: false }),
+      openGraphs: () => open({ kind: 'service', service: row, graphs: true }),
+      openHost: (host: HostSlideInSubject) => open({ kind: 'host', host })
     }
   }
 

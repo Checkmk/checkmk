@@ -9,13 +9,17 @@ import { render, screen } from '@testing-library/vue'
 import { describe, expect, it } from 'vitest'
 import { type Component, type PropType, defineComponent, h } from 'vue'
 
-import type { HostEntry } from '@/monitoring/shared/api/types'
+import type { HostEntry, HostRef, ServiceEntry } from '@/monitoring/shared/api/types'
 import { MODE_COLUMN_ID, MODE_COLUMN_MAX_WIDTH } from '@/monitoring/shared/components/modeColumn'
 import { columnId } from '@/monitoring/shared/tableState/schema'
 import { DEFAULT_DISPLAY_OPTIONS } from '@/monitoring/shared/types'
 import MonitoringTableWidget from '@/monitoring/table-widget/MonitoringTableWidget.vue'
 import { WidgetTableState } from '@/monitoring/table-widget/WidgetTableState'
-import { HostsTableDescriptor } from '@/monitoring/table-widget/tableDescriptors'
+import {
+  HostsTableDescriptor,
+  type MonitoringTableDescriptor,
+  ServicesTableDescriptor
+} from '@/monitoring/table-widget/tableDescriptors'
 
 // The generic widget can't infer its row type through h(); the props below are the hosts'.
 const widget: Component = MonitoringTableWidget
@@ -74,20 +78,51 @@ function hostRowStub(readOnlySeen: boolean[]) {
   })
 }
 
-const hostSlideInStub = defineComponent({
-  props: { host: { type: Object as PropType<HostEntry | null>, default: null } },
-  setup: (props) => () => (props.host ? h('aside', `Details of ${props.host.name}`) : null)
+const SERVICE = { name: 'CPU load', host_name: 'web-1', site_id: 'local' } as ServiceEntry
+
+const serviceRowStub = defineComponent({
+  props: { row: { type: Object as PropType<ServiceEntry>, required: true } },
+  emits: ['open', 'openHost'],
+  setup:
+    (props, { emit }) =>
+    () =>
+      h('div', [
+        h('button', { onClick: () => emit('open', props.row) }, props.row.name),
+        h(
+          'button',
+          {
+            onClick: () =>
+              emit('openHost', { name: props.row.host_name, site_id: props.row.site_id })
+          },
+          props.row.host_name
+        )
+      ])
 })
 
-function renderHosts(readOnly: boolean): boolean[] {
+const hostSlideInStub = defineComponent({
+  props: { host: { type: Object as PropType<HostRef | null>, default: null } },
+  setup: (props) => () => (props.host ? h('aside', `Details of host ${props.host.name}`) : null)
+})
+
+const serviceSlideInStub = defineComponent({
+  props: { service: { type: Object as PropType<ServiceEntry | null>, default: null } },
+  setup: (props) => () =>
+    props.service ? h('aside', `Details of service ${props.service.name}`) : null
+})
+
+function renderWidget(
+  descriptor: MonitoringTableDescriptor<HostEntry> | MonitoringTableDescriptor<ServiceEntry>,
+  rows: unknown[],
+  readOnly: boolean
+): boolean[] {
   const readOnlySeen: boolean[] = []
   render(
     defineComponent({
       setup: () => () =>
         h(widget, {
-          descriptor: new HostsTableDescriptor(),
+          descriptor,
           columnIds: ['name'],
-          rows: [HOST],
+          rows,
           tableState: new WidgetTableState([]),
           displayOptions: DEFAULT_DISPLAY_OPTIONS,
           readOnly
@@ -98,7 +133,9 @@ function renderHosts(readOnly: boolean): boolean[] {
         stubs: {
           MonitoringTable: rowsStub,
           HostRow: hostRowStub(readOnlySeen),
-          HostSlideIn: hostSlideInStub
+          HostServicesRow: serviceRowStub,
+          HostSlideIn: hostSlideInStub,
+          ServiceSlideIn: serviceSlideInStub
         }
       }
     }
@@ -116,16 +153,33 @@ describe('MonitoringTableWidget', () => {
   })
 
   it('opens the details of the host whose name is clicked', async () => {
-    renderHosts(false)
+    renderWidget(new HostsTableDescriptor(), [HOST], false)
 
     await userEvent.click(screen.getByRole('button', { name: 'web-1' }))
 
-    expect(screen.getByText('Details of web-1')).toBeInTheDocument()
+    expect(screen.getByText('Details of host web-1')).toBeInTheDocument()
   })
 
   it('passes read-only on to its rows', () => {
-    const readOnlySeen = renderHosts(true)
+    const readOnlySeen = renderWidget(new HostsTableDescriptor(), [HOST], true)
 
     expect(readOnlySeen.at(-1)).toBe(true)
+  })
+
+  it('opens the details of the service whose name is clicked', async () => {
+    renderWidget(new ServicesTableDescriptor(), [SERVICE], false)
+
+    await userEvent.click(screen.getByRole('button', { name: 'CPU load' }))
+
+    expect(screen.getByText('Details of service CPU load')).toBeInTheDocument()
+  })
+
+  it('opens the details of the host a service row names', async () => {
+    renderWidget(new ServicesTableDescriptor(), [SERVICE], false)
+
+    await userEvent.click(screen.getByRole('button', { name: 'web-1' }))
+
+    expect(screen.getByText('Details of host web-1')).toBeInTheDocument()
+    expect(screen.queryByText('Details of service CPU load')).not.toBeInTheDocument()
   })
 })

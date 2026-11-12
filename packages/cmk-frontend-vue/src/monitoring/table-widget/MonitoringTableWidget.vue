@@ -129,7 +129,6 @@ async function onCommand(row: T, command: RowCommand<Target>): Promise<void> {
     </MonitoringTable>
     <component
       :is="descriptor.detailsComponent"
-      v-if="descriptor.detailsComponent !== null"
       :subject="subject"
       :offer="actionOffer"
       :display-options="displayOptions"

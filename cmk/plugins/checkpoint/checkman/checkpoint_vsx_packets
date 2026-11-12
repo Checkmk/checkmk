@@ -1,4 +1,4 @@
-title: Check Point VSID: Packets
+title: Check Point VSX: Packets
 agents: snmp
 catalog: hw/network/checkpoint
 license: GPLv2

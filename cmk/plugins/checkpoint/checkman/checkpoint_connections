@@ -1,4 +1,4 @@
-title: Check Point Firewalls: Current Number of Connections
+title: Check Point: Connections
 agents: snmp
 catalog: hw/network/checkpoint
 license: GPLv2

@@ -1,4 +1,4 @@
-title: Check Point Firewalls: General Status of Filtering Module
+title: Check Point: Filtering Module Status
 agents: snmp
 catalog: hw/network/checkpoint
 license: GPLv2

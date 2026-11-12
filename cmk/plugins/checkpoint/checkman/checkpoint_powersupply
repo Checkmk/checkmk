@@ -1,4 +1,4 @@
-title: Check Point Firewalls: Power Supply
+title: Check Point: Power Supplies
 agents: snmp
 catalog: hw/network/checkpoint
 license: GPLv2

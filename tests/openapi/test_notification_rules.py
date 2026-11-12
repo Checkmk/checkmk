@@ -6,7 +6,8 @@
 # mypy: disable-error-code="explicit-any"
 # mypy: disable-error-code="type-arg"
 
-from collections.abc import Generator, Iterator
+from collections.abc import Generator, Iterator, Mapping, Sequence
+from copy import deepcopy
 from http import HTTPStatus
 from typing import Any, cast, get_args, Literal
 
@@ -536,31 +537,35 @@ def test_create_and_update_rule_with_conditions_data_200(
     assert r2.json["extensions"]["rule_config"] == config
 
 
-def invalid_conditions() -> Iterator:
-    for k in notification_rule_request_example()["conditions"]:
-        config = notification_rule_request_example()
-        # NOTE: mypy currently doesn't have the equivalent of TypeScript's keyof, so k's type is
-        # simply str. Consequently, we need a suppression below. With PEP 827 ("Type Manipulation")
-        # we should be able to remove that.
-        config["conditions"].update({k: {"state": "enabled"}})  # type: ignore[misc]
-        yield config
-
-
-@pytest.mark.parametrize("testdata", list(invalid_conditions()))
-@pytest.mark.usefixtures("mock_password_file_regeneration")
-def test_create_and_update_rule_with_conditions_data_400(
+@pytest.mark.parametrize(
+    "testdata, default_events",
+    [
+        pytest.param(
+            {"match_host_event_type": {"state": "enabled"}},
+            {"any_up", "any_down"},
+            id="match_host_event_type",
+        ),
+        pytest.param(
+            {"match_service_event_type": {"state": "enabled"}},
+            {"any_ok", "any_warn", "any_crit"},
+            id="match_service_event_type",
+        ),
+    ],
+)
+def test_event_type_condition_without_value_matches_default_events(
     clients: ClientRegistry,
     testdata: APIConditions,
+    default_events: set[str],
 ) -> None:
-    setup_site_data(clients)
     config = notification_rule_request_example()
-    r1 = clients.RuleNotification.create(rule_config=config)
     config["conditions"].update(testdata)
-    clients.RuleNotification.edit(
-        rule_id=r1.json["id"],
-        rule_config=config,
-        expect_ok=False,
-    ).assert_status_code(HTTPStatus.BAD_REQUEST)
+
+    rule_id = clients.RuleNotification.create(rule_config=config).json["id"]
+
+    (condition,) = testdata
+    stored = clients.RuleNotification.get(rule_id).json["extensions"]["rule_config"]
+    events = stored["conditions"][condition]["value"]
+    assert {event for event, enabled in events.items() if enabled} == default_events
 
 
 rule_properties_testdata: list[APIRuleProperties] = [
@@ -2073,6 +2078,257 @@ def plugin_with_bulking(
             if not notification_scripts[plugin["plugin_name"]]["bulk"]:
                 yield config_with_bulk(plugin)
                 plugins.append(plugin["plugin_name"])
+
+
+def _rule_with_plugin(plugin: Mapping[str, object]) -> APINotificationRule:
+    config = notification_rule_request_example()
+    config["notification_method"]["notify_plugin"] = {
+        "option": PluginOptions.WITH_PARAMS,
+        "plugin_params": cast(PluginType, plugin),
+    }
+    return config
+
+
+def _rule_with_service_now(management_type: Mapping[str, object]) -> APINotificationRule:
+    return _rule_with_plugin(
+        {
+            "plugin_name": "servicenow",
+            "servicenow_url": "https://service_now_url_test",
+            "auth": {
+                "option": "explicit_password",
+                "username": "user_username",
+                "password": "user_password",
+            },
+            "management_type": management_type,
+        }
+    )
+
+
+def _rule_with_time_period_bulking() -> APINotificationRule:
+    config = notification_rule_request_example()
+    config["notification_method"]["notification_bulking"] = {
+        "state": "enabled",
+        "value": {
+            "when_to_bulk": "timeperiod",
+            "params": {
+                "time_period": "24X7",
+                "subject_for_bulk_notifications": {"state": "disabled"},
+                "max_bulk_size": 222,
+                "notification_bulks_based_on": ["host"],
+                "bulk_outside_timeperiod": {"state": "disabled"},
+            },
+        },
+    }
+    return config
+
+
+def _rule_matching_event_console_alerts() -> APINotificationRule:
+    config = notification_rule_request_example()
+    config["conditions"]["event_console_alerts"] = {
+        "state": "enabled",
+        "value": {
+            "match_type": "match_only_event_console_alerts",
+            "values": {
+                "match_rule_ids": {"state": "disabled"},
+                "match_syslog_priority": {"state": "disabled"},
+                "match_syslog_facility": {"state": "disabled"},
+                "match_event_comment": {"state": "disabled"},
+            },
+        },
+    }
+    return config
+
+
+def _with_value_at(
+    config: APINotificationRule, path: Sequence[str], value: object
+) -> APINotificationRule:
+    rule_config = deepcopy(config)
+    *parents, field = path
+    node = cast(dict[str, object], rule_config)
+    for key in parents:
+        node = cast(dict[str, object], node[key])
+    node[field] = value
+    return rule_config
+
+
+def _error_at(path: Sequence[str], error: object) -> object:
+    for key in reversed(path):
+        error = {key: error}
+    return error
+
+
+_PLUGIN_PARAMS = ("notification_method", "notify_plugin", "plugin_params")
+_MANAGEMENT_TYPE_PARAMS = (*_PLUGIN_PARAMS, "management_type", "params")
+
+
+def _assert_checkbox_value_required(
+    clients: ClientRegistry, config: APINotificationRule, path: Sequence[str]
+) -> None:
+    rule_config = _with_value_at(config, path, {"state": "enabled"})
+
+    resp = clients.RuleNotification.create(rule_config=rule_config, expect_ok=False)
+
+    resp.assert_status_code(HTTPStatus.BAD_REQUEST)
+    assert resp.json["fields"]["rule_config"] == _error_at(
+        path, {"value": ["Missing data for required field."]}
+    )
+
+
+@pytest.mark.parametrize(
+    "condition",
+    [
+        # The event type conditions are not listed, they fall back to a default value
+        "match_sites",
+        "match_folder",
+        "match_host_tags",
+        "match_host_labels",
+        "match_host_groups",
+        "match_hosts",
+        "match_exclude_hosts",
+        "match_service_labels",
+        "match_service_groups",
+        "match_exclude_service_groups",
+        "match_service_groups_regex",
+        "match_exclude_service_groups_regex",
+        "match_services",
+        "match_exclude_services",
+        "match_check_types",
+        "match_plugin_output",
+        "match_contact_groups",
+        "match_service_levels",
+        "match_only_during_time_period",
+        "restrict_to_notification_numbers",
+        "throttle_periodic_notifications",
+        "match_notification_comment",
+        "event_console_alerts",
+    ],
+)
+def test_condition_enabled_without_value_400(clients: ClientRegistry, condition: str) -> None:
+    _assert_checkbox_value_required(
+        clients, notification_rule_request_example(), ("conditions", condition)
+    )
+
+
+@pytest.mark.parametrize("field", ["match_syslog_priority", "match_syslog_facility"])
+def test_event_console_alert_field_enabled_without_value_400(
+    clients: ClientRegistry, field: str
+) -> None:
+    _assert_checkbox_value_required(
+        clients,
+        _rule_matching_event_console_alerts(),
+        ("conditions", "event_console_alerts", "value", "values", field),
+    )
+
+
+@pytest.mark.parametrize(
+    "field",
+    [
+        "the_following_users",
+        "members_of_contact_groups",
+        "explicit_email_addresses",
+        "restrict_by_contact_groups",
+        "restrict_by_custom_macros",
+    ],
+)
+def test_contact_selection_enabled_without_value_400(clients: ClientRegistry, field: str) -> None:
+    _assert_checkbox_value_required(
+        clients, notification_rule_request_example(), ("contact_selection", field)
+    )
+
+
+def test_notification_bulking_enabled_without_value_400(clients: ClientRegistry) -> None:
+    _assert_checkbox_value_required(
+        clients,
+        notification_rule_request_example(),
+        ("notification_method", "notification_bulking"),
+    )
+
+
+def test_bulk_outside_timeperiod_enabled_without_value_400(clients: ClientRegistry) -> None:
+    _assert_checkbox_value_required(
+        clients,
+        _rule_with_time_period_bulking(),
+        (
+            "notification_method",
+            "notification_bulking",
+            "value",
+            "params",
+            "bulk_outside_timeperiod",
+        ),
+    )
+
+
+@pytest.mark.parametrize(
+    "field",
+    [
+        "from_details",
+        "reply_to",
+        "subject_for_host_notifications",
+        "subject_for_service_notifications",
+        "insert_html_section_between_body_and_table",
+        "url_prefix_for_links_to_checkmk",
+        "enable_sync_smtp",
+    ],
+)
+def test_mail_param_enabled_without_value_400(clients: ClientRegistry, field: str) -> None:
+    _assert_checkbox_value_required(
+        clients, _rule_with_plugin({"plugin_name": "mail"}), (*_PLUGIN_PARAMS, field)
+    )
+
+
+def test_mkeventd_syslog_facility_enabled_without_value_400(clients: ClientRegistry) -> None:
+    _assert_checkbox_value_required(
+        clients,
+        _rule_with_plugin({"plugin_name": "mkeventd"}),
+        (*_PLUGIN_PARAMS, "syslog_facility_to_use"),
+    )
+
+
+@pytest.mark.parametrize("field", ["responsible_teams", "actions", "tags"])
+def test_opsgenie_issues_param_enabled_without_value_400(
+    clients: ClientRegistry, field: str
+) -> None:
+    _assert_checkbox_value_required(
+        clients,
+        _rule_with_plugin(
+            {"plugin_name": "opsgenie_issues", "api_key": {"option": "explicit", "key": "abcde"}}
+        ),
+        (*_PLUGIN_PARAMS, field),
+    )
+
+
+@pytest.mark.parametrize("field", ["responsible_teams", "additional_responders", "actions", "tags"])
+def test_jsm_operations_param_enabled_without_value_400(
+    clients: ClientRegistry, field: str
+) -> None:
+    _assert_checkbox_value_required(
+        clients,
+        _rule_with_plugin(
+            {"plugin_name": "jsm_operations", "api_key": {"option": "explicit", "key": "abcde"}}
+        ),
+        (*_PLUGIN_PARAMS, field),
+    )
+
+
+@pytest.mark.parametrize("field", ["state_acknowledgement", "state_downtime", "state_recovery"])
+def test_service_now_incident_state_enabled_without_value_400(
+    clients: ClientRegistry, field: str
+) -> None:
+    _assert_checkbox_value_required(
+        clients,
+        _rule_with_service_now({"option": "incident", "params": {}}),
+        (*_MANAGEMENT_TYPE_PARAMS, field),
+    )
+
+
+def test_service_now_case_state_recovery_enabled_without_value_400(
+    clients: ClientRegistry,
+) -> None:
+    _assert_checkbox_value_required(
+        clients,
+        _rule_with_service_now({"option": "case", "params": {}}),
+        (*_MANAGEMENT_TYPE_PARAMS, "state_recovery"),
+    )
 
 
 @pytest.mark.parametrize("config", list(plugin_with_bulking(bulking="allowed")))

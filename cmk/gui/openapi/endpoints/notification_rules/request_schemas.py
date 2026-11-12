@@ -230,7 +230,7 @@ class CustomMacro(BaseSchema):
 class MatchCustomMacros(Checkbox):
     value = fields.List(
         fields.Nested(CustomMacro),
-        required=False,
+        required=True,
     )
 
 
@@ -259,7 +259,7 @@ class CheckboxWithListOfEmailAddresses(Checkbox):
 
 
 class CheckboxWithListOfStr(Checkbox):
-    value = fields.List(fields.String)
+    value = fields.List(fields.String, required=True)
 
 
 class HttpProxy(BaseSchema):
@@ -760,6 +760,7 @@ class NotificationBulkingAlways(NotificationBulkingCommon):
 class OutsideTimeperiodValue(Checkbox):
     value = fields.Nested(
         NotificationBulkingAlways,
+        required=True,
     )
 
 
@@ -849,14 +850,14 @@ class SysLogToFromPriorities(BaseSchema):
 class CheckboxWithSysLogPriority(Checkbox):
     value = fields.Nested(
         SysLogToFromPriorities,
-        required=False,
+        required=True,
     )
 
 
 class CheckboxWithSysLogFacility(Checkbox):
     value = fields.String(
         enum=list(get_args(SysLogFacilityStrType)),
-        required=False,
+        required=True,
         example="kern",
         description="",
     )
@@ -933,6 +934,7 @@ class EmailAndDisplayName(BaseSchema):
 class FromEmailAndNameCheckbox(Checkbox):
     value = fields.Nested(
         EmailAndDisplayName,
+        required=True,
         description="The email address and visible name used in the From header of notifications messages. If no email address is specified the default address is OMD_SITE@FQDN is used. If the environment variable OMD_SITE is not set it defaults to checkmk",
     )
 
@@ -940,6 +942,7 @@ class FromEmailAndNameCheckbox(Checkbox):
 class ToEmailAndNameCheckbox(Checkbox):
     value = fields.Nested(
         EmailAndDisplayName,
+        required=True,
         description="The email address and visible name used in the Reply-To header of notifications messages",
     )
 
@@ -960,7 +963,7 @@ class ReplyToOneOfSchema(CheckboxOneOfSchema):
 
 class SubjectForHostNotificationsCheckbox(Checkbox):
     value = fields.String(
-        required=False,
+        required=True,
         description="Here you are allowed to use all macros that are defined in the notification context.",
         example="Check_MK: $HOSTNAME$ - $EVENT_TXT$",
     )
@@ -968,7 +971,7 @@ class SubjectForHostNotificationsCheckbox(Checkbox):
 
 class SubjectForServiceNotificationsCheckbox(Checkbox):
     value = fields.String(
-        required=False,
+        required=True,
         description="Here you are allowed to use all macros that are defined in the notification context.",
         example="Check_MK: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$",
     )
@@ -1047,7 +1050,7 @@ class AsciiMailPluginCreate(MailBaseCreate):
 
 class HtmlSectionBetweenBodyAndTableCheckbox(Checkbox):
     value = fields.String(
-        required=False,
+        required=True,
         description="Insert HTML section between body and table",
         example="<HTMLTAG>CONTENT</HTMLTAG>",
     )
@@ -1124,6 +1127,7 @@ class EnableSynchronousDeliveryViaSMTP(BaseSchema):
 class EnableSynchronousDeliveryViaSMTPValue(Checkbox):
     value = fields.Nested(
         EnableSynchronousDeliveryViaSMTP,
+        required=True,
     )
 
 
@@ -1200,6 +1204,7 @@ class ManualOrAutomaticSelector(OptionOneOfSchema):
 class CheckMKURLPrefixValue(Checkbox):
     value = fields.Nested(
         ManualOrAutomaticSelector,
+        required=True,
         description="If you use Automatic HTTP/s, the URL prefix for host and service links within the notification is filled automatically. If you specify an URL prefix here, then several parts of the notification are armed with hyperlinks to your Check_MK GUI. In both cases, the recipient of the notification can directly visit the host or service in question in Check_MK. Specify an absolute URL including the .../check_mk/",
     )
 
@@ -1326,7 +1331,7 @@ class CiscoWebexPluginCreate(BaseSchema):
 class CheckboxSysLogFacilityToUseValue(Checkbox):
     value = fields.String(
         enum=list(get_args(SysLogFacilityStrType)),
-        required=False,
+        required=True,
         description="",
         example="",
     )
@@ -1614,7 +1619,7 @@ class JsmTypedResponder(BaseSchema):
 
 
 class CheckboxWithListOfTypedResponders(Checkbox):
-    value = fields.List(fields.Nested(JsmTypedResponder))
+    value = fields.List(fields.Nested(JsmTypedResponder), required=True)
 
 
 class ListOfTypedRespondersOneOfSchema(CheckboxOneOfSchema):
@@ -2045,6 +2050,7 @@ class ManagementTypeCaseStates(BaseSchema):
 class CheckboxWithManagementTypeStateCaseValues(Checkbox):
     value = fields.Nested(
         ManagementTypeCaseStates,
+        required=True,
     )
 
 
@@ -2088,6 +2094,7 @@ class ManagementTypeIncedentStates(BaseSchema):
 class CheckboxWithManagementTypeStateIncedentValues(Checkbox):
     value = fields.Nested(
         ManagementTypeIncedentStates,
+        required=True,
     )
 
 
@@ -2643,6 +2650,7 @@ class NotificationBulkingWhenToBulkSelector(OneOfSchema):
 class NotificationBulkingValue(Checkbox):
     value = fields.Nested(
         NotificationBulkingWhenToBulkSelector,
+        required=True,
     )
 
 

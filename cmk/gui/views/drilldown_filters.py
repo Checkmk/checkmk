@@ -14,9 +14,14 @@ from typing import Literal
 from cmk.gui.data_source import ABCDataSource
 from cmk.gui.http import Request
 from cmk.gui.i18n import _
-from cmk.gui.type_defs import ContextFilterConfig, ContextualLinkTargetType, FilterName
+from cmk.gui.type_defs import (
+    ContextFilterConfig,
+    ContextualLinkTargetType,
+    FilterHTTPVariables,
+    FilterName,
+)
 from cmk.gui.visuals.filter import Filter, filter_registry
-from cmk.gui.visuals.filter.drilldowns import AuxTagKey, Drilldown, FilterKey
+from cmk.gui.visuals.filter.drilldowns import AuxTagKey, Drilldown, FilterKey, RowValues
 
 type DropReason = Literal["no_value", "no_such_key", "not_available"]
 
@@ -29,6 +34,11 @@ _KEY = re.compile(r"[^\s<>&\"']+")
 
 # A view's row is one object; these filters value elements that stand for several.
 _MULTI_VALUE_ONLY = frozenset({"sites", "wato_folders", "hostgroups"})
+
+# An Alert statistics row counts its alerts per state, in this order.
+_ALERT_COUNT_COLUMNS = ("log_alerts_ok", "log_alerts_warn", "log_alerts_crit", "log_alerts_unknown")
+# The states of Type of alerts, per object type: a host has no state Unknown.
+_ALERT_STATES = {"logst_h": range(3), "logst_s": range(4)}
 
 
 @dataclass(frozen=True)
@@ -44,6 +54,41 @@ def filter_drilldown(filter_name: FilterName) -> Drilldown | None:
     """How a drill-down values the filter from a row; None for a filter it can't carry, or
     one this edition lacks."""
     return None if (filter_ := filter_registry.get(filter_name)) is None else filter_.drilldown
+
+
+def row_drilldown(data_source: ABCDataSource, filter_name: FilterName) -> Drilldown | None:
+    """How a drill-down values the filter from a row of the data source: Alert statistics values
+    its log filters itself."""
+    if data_source.ident == "alert_stats" and (
+        (filter_ := filter_registry.get(filter_name)) is not None and filter_.info == "log"
+    ):
+        return _alert_stats_drilldown(filter_name)
+    return filter_drilldown(filter_name)
+
+
+def _alert_stats_drilldown(filter_name: FilterName) -> Drilldown | None:
+    """The log filters an Alert statistics row values without a column: its Stats query groups
+    by every fetched column, so a log column would split the row's counts. Any other log filter,
+    such as the contact name, has no value there."""
+    match filter_name:
+        case "log_class":
+            # The data source counts only alerts.
+            return Drilldown(columns=[], variables=lambda _row, _keys: {"logclass1": "on"})
+        case "log_state":
+            return Drilldown(columns=[], variables=_alerted_states)
+        case _:
+            return None
+
+
+def _alerted_states(row: RowValues, _keys: Sequence[str]) -> FilterHTTPVariables | None:
+    """The alert types the row counted; a host row has an empty service."""
+    prefix = "logst_s" if row.get("service_description") else "logst_h"
+    variables = {
+        f"{prefix}{state}": "on"
+        for state in _ALERT_STATES[prefix]
+        if row.get(_ALERT_COUNT_COLUMNS[state])
+    }
+    return variables or None
 
 
 def filter_key(filter_name: FilterName) -> FilterKey | None:
@@ -64,14 +109,12 @@ def drilldown_filters(
     return [
         filter_name
         for filter_name, filter_ in sorted(filter_registry.items(), key=_menu_order)
-        if filter_.drilldown is not None
+        if row_drilldown(data_source, filter_name) is not None
         and filter_name not in _MULTI_VALUE_ONLY
         and filter_.available()
         and filter_.info in data_source.infos
         # A dashboard's context takes only host and service filters.
         and (target_type == "views" or filter_.info in ("host", "service"))
-        # A Stats query counts log entries per object, so a log filter would split its counts.
-        and not (filter_.info == "log" and "Stats:" in data_source.add_headers)
     ]
 
 

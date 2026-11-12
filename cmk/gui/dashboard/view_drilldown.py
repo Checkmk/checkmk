@@ -28,8 +28,8 @@ from cmk.gui.views.drilldown_filters import (
     Dropped,
     DROPPED_FILTERS_VAR,
     dropped_filters_variable,
-    filter_drilldown,
     filter_keys,
+    row_drilldown,
 )
 from cmk.gui.visuals.filter.drilldowns import Drilldown
 from cmk.shared_typing.drill_up_button import DrillUpButton
@@ -86,7 +86,7 @@ def column_drilldowns(
                 filter_name: _CarriedFilter(drilldown, keys)
                 for filter_name, keys in configured.items()
                 if filter_name in carriable
-                and (drilldown := filter_drilldown(filter_name)) is not None
+                and (drilldown := row_drilldown(data_source, filter_name)) is not None
             }
             drilldowns[index] = CellDrilldown(
                 columns=[

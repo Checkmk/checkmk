@@ -16,6 +16,7 @@ from cmk.gui.views.drilldown_filters import (
     Dropped,
     dropped_filters_variable,
     dropped_filters_warning,
+    row_drilldown,
 )
 from cmk.gui.visuals.filter import filter_registry
 from cmk.gui.visuals.filter.drilldowns import (
@@ -47,6 +48,14 @@ _OTHER_HOST_ROW: RowValues = {
     "host_filename": "/wato/servers/windows/hosts.mk",
     "host_groups": ["windows"],
     "host_labels": {"cmk/os_family": "windows", "env": "prod"},
+}
+
+
+_ALERT_COUNTS: RowValues = {
+    "log_alerts_ok": 0,
+    "log_alerts_warn": 0,
+    "log_alerts_crit": 0,
+    "log_alerts_unknown": 0,
 }
 
 
@@ -644,11 +653,69 @@ def test_drilldown_filters_offer_event_filters_to_a_view_only() -> None:
 
 
 @pytest.mark.usefixtures("request_context")
-def test_drilldown_filters_offer_no_log_filter_on_a_stats_query() -> None:
+def test_drilldown_filters_offer_alert_statistics_the_class_and_the_alert_types() -> None:
     filters = drilldown_filters(data_source_registry["alert_stats"](), "views")
 
-    assert "log_state" not in filters
-    assert "host" in filters
+    assert {name for name in filters if filter_registry[name].info == "log"} == {
+        "log_class",
+        "log_state",
+    }
+
+
+@pytest.mark.parametrize(
+    "row, expected",
+    [
+        pytest.param(
+            {
+                **_ALERT_COUNTS,
+                "service_description": "CPU load",
+                "log_alerts_ok": 2,
+                "log_alerts_crit": 1,
+            },
+            {"logst_s0": "on", "logst_s2": "on"},
+            id="service row",
+        ),
+        pytest.param(
+            {**_ALERT_COUNTS, "service_description": "", "log_alerts_warn": 1},
+            {"logst_h1": "on"},
+            id="host row",
+        ),
+        pytest.param(
+            {**_ALERT_COUNTS, "service_description": "CPU load"}, None, id="row without alerts"
+        ),
+    ],
+)
+@pytest.mark.usefixtures("request_context")
+def test_row_drilldown_values_the_alert_types_of_alert_statistics_from_the_counts(
+    row: RowValues, expected: FilterHTTPVariables | None
+) -> None:
+    drilldown = row_drilldown(data_source_registry["alert_stats"](), "log_state")
+
+    assert drilldown is not None
+    assert drilldown.variables(row, []) == expected
+
+
+@pytest.mark.usefixtures("request_context")
+def test_row_drilldown_values_the_class_of_alert_statistics_as_alerts() -> None:
+    drilldown = row_drilldown(data_source_registry["alert_stats"](), "log_class")
+
+    assert drilldown is not None
+    assert drilldown.variables({}, []) == {"logclass1": "on"}
+
+
+@pytest.mark.usefixtures("request_context")
+@pytest.mark.parametrize("filter_name", ["log_class", "log_state"])
+def test_row_drilldown_sets_only_variables_the_alert_statistics_filter_reads(
+    filter_name: FilterName,
+) -> None:
+    drilldown = row_drilldown(data_source_registry["alert_stats"](), filter_name)
+    assert drilldown is not None
+    row: RowValues = {**_ALERT_COUNTS, "service_description": "CPU load", "log_alerts_crit": 1}
+
+    variables = drilldown.variables(row, [])
+
+    assert variables is not None
+    assert set(variables) <= set(filter_registry[filter_name].htmlvars)
 
 
 @pytest.mark.usefixtures("request_context")

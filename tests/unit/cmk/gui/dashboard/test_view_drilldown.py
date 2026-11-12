@@ -506,6 +506,16 @@ def test_column_drilldowns_custom_link_to_a_host_view_links_even_without_the_hos
             ["host_name"],
             id="no view-only filter to a dashboard",
         ),
+        pytest.param(
+            "alert_stats",
+            _custom(
+                ContextFilterConfig(filter_id="log_class"),
+                ContextFilterConfig(filter_id="log_state"),
+                location=("views", "svcevents"),
+            ),
+            [],
+            id="no column that splits a statistics row",
+        ),
     ],
 )
 @pytest.mark.usefixtures("request_context")

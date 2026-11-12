@@ -66,9 +66,9 @@ def _create(file_path: Path) -> Path:
 def _create_tree_files(omd_root: Path, host_name: HostName, *, mtime: int) -> Mapping[str, Path]:
     inv_paths = InventoryPaths(omd_root)
     files = {
-        "inventory": _create(inv_paths.inventory_tree(host_name).path),
-        "inventory gz": _create(inv_paths.inventory_tree_gz(host_name).path),
-        "status data": _create(inv_paths.status_data_tree(host_name).path),
+        "inventory": _create(inv_paths.inventory_tree(host_name)),
+        "inventory gz": _create(inv_paths.inventory_tree_gz(host_name)),
+        "status data": _create(inv_paths.status_data_tree(host_name)),
     }
     for file_path in files.values():
         os.utime(file_path, (mtime, mtime))
@@ -79,18 +79,17 @@ def _create_one_archive_file(omd_root: Path) -> Mapping[str, Path]:
     archive_tree = InventoryPaths(omd_root).archive_tree(HostName("hostname"), _TIMESTAMP - 1)
     return {
         **_create_tree_files(omd_root, HostName("hostname"), mtime=_TIMESTAMP),
-        "archive 99": _create(archive_tree.path),
+        "archive 99": _create(archive_tree),
     }
 
 
 def _create_history_files(omd_root: Path, host_name: HostName) -> Mapping[str, Path]:
     inv_paths = InventoryPaths(omd_root)
     archive_files = {
-        f"archive {ts}": _create(inv_paths.archive_tree(host_name, ts).path)
-        for ts in range(96, 100)
+        f"archive {ts}": _create(inv_paths.archive_tree(host_name, ts)) for ts in range(96, 100)
     }
     delta_cache_files = {
-        f"delta {ts}_{ts + 1}": _create(inv_paths.delta_cache_tree(host_name, ts, ts + 1).path)
+        f"delta {ts}_{ts + 1}": _create(inv_paths.delta_cache_tree(host_name, ts, ts + 1))
         for ts in range(95, 100)
     }
     return {
@@ -218,7 +217,7 @@ def test_cleanup_of_the_tree_files_of_an_abandoned_host_without_history(
 
 
 def test_file_age_removes_an_archive_file_dated_at_the_epoch(tmp_path: Path) -> None:
-    archive_file = _create(InventoryPaths(tmp_path).archive_tree(HostName("hostname"), 0).path)
+    archive_file = _create(InventoryPaths(tmp_path).archive_tree(HostName("hostname"), 0))
 
     _run(tmp_path, _for_hostname(("file_age", 3)), host_names=[HostName("hostname")])
 

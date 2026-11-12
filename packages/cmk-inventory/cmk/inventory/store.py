@@ -11,7 +11,7 @@ from cmk.ccc.hostaddress import HostName
 
 from .filtering import filter_tree, SDFilterChoice
 from .merging import merge_trees
-from .paths import InventoryPaths, parse_archive_timestamp, TreePath
+from .paths import InventoryPaths, is_json_tree_file, parse_archive_timestamp
 from .raw_store import (
     archive_inventory_tree,
     load_tree_from_tree_path,
@@ -88,8 +88,8 @@ class InventoryStore:
 
     def remove_inventory_tree(self, *, host_name: HostName) -> None:
         tree_path = self.inv_paths.inventory_tree(host_name)
-        tree_path.path.unlink(missing_ok=True)
-        self.inv_paths.inventory_tree_gz(host_name).path.unlink(missing_ok=True)
+        tree_path.unlink(missing_ok=True)
+        self.inv_paths.inventory_tree_gz(host_name).unlink(missing_ok=True)
 
     def load_status_data_tree(self, *, host_name: HostName) -> ImmutableTree:
         return load_tree_from_tree_path(self.inv_paths.status_data_tree(host_name))
@@ -103,7 +103,7 @@ class InventoryStore:
         self.inv_paths.status_data_marker_file.touch()
 
     def remove_status_data_tree(self, *, host_name: HostName) -> None:
-        self.inv_paths.status_data_tree(host_name).path.unlink(missing_ok=True)
+        self.inv_paths.status_data_tree(host_name).unlink(missing_ok=True)
 
     def load_merged_tree(
         self,
@@ -127,15 +127,15 @@ class InventoryStore:
             return tree
 
         try:
-            latest_archive_tree = TreePath(
-                path=max(
-                    self.inv_paths.archive_host(host_name).iterdir(),
-                    key=parse_archive_timestamp,
-                )
+            latest_archive_tree = max(
+                self.inv_paths.archive_host(host_name).iterdir(),
+                key=parse_archive_timestamp,
             )
         except FileNotFoundError, ValueError:
             return ImmutableTree()
 
+        if not is_json_tree_file(latest_archive_tree):
+            return ImmutableTree()
         return load_tree_from_tree_path(latest_archive_tree)
 
     def save_if_changed(

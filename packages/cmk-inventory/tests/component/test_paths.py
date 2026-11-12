@@ -23,7 +23,7 @@ from cmk.inventory.paths import (
 def test_has_inventory_tree(tmp_path: Path) -> None:
     inv_paths = InventoryPaths(tmp_path)
     inv_paths.inventory_dir.mkdir(parents=True)
-    inv_paths.inventory_tree(HostName("host")).path.touch()
+    inv_paths.inventory_tree(HostName("host")).touch()
     assert has_inventory_tree(inv_paths, HostName("host"))
 
 
@@ -34,7 +34,7 @@ def test_has_no_inventory_tree(tmp_path: Path) -> None:
 def test_has_status_data_tree(tmp_path: Path) -> None:
     inv_paths = InventoryPaths(tmp_path)
     inv_paths.status_data_dir.mkdir(parents=True)
-    inv_paths.status_data_tree(HostName("host")).path.touch()
+    inv_paths.status_data_tree(HostName("host")).touch()
     assert has_status_data_tree(inv_paths, HostName("host"))
 
 
@@ -82,9 +82,9 @@ def test_has_no_history(tmp_path: Path) -> None:
 
 def test_tree_mtime(tmp_path: Path) -> None:
     tree_path = InventoryPaths(tmp_path).inventory_tree(HostName("host"))
-    tree_path.path.parent.mkdir(parents=True)
-    tree_path.path.touch()
-    os.utime(tree_path.path, (100, 100))
+    tree_path.parent.mkdir(parents=True)
+    tree_path.touch()
+    os.utime(tree_path, (100, 100))
     assert tree_mtime(tree_path) == 100
 
 

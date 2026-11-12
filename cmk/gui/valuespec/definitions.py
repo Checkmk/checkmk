@@ -6722,7 +6722,11 @@ class Transform(ValueSpec[T]):
         return self.from_valuespec(self._valuespec.from_html_vars(varprefix))
 
     def validate_datatype(self, value: Any, varprefix: str) -> None:
-        self._valuespec.validate_datatype(self.to_valuespec(value), varprefix)
+        try:
+            converted = self.to_valuespec(value)
+        except (KeyError, IndexError, TypeError, ValueError) as exc:
+            raise MKUserError(varprefix, _("The value has an unknown format: %s") % exc) from exc
+        self._valuespec.validate_datatype(converted, varprefix)
 
     def _validate_value(self, value: Any, varprefix: str) -> None:
         self._valuespec.validate_value(self.to_valuespec(value), varprefix)

@@ -347,6 +347,27 @@ def test_edit_rule_rejects_outdated_legacy_value(clients: ClientRegistry) -> Non
     assert "inventory_rediscovery" not in value
 
 
+def test_create_rule_rejects_a_value_its_migration_cannot_read(clients: ClientRegistry) -> None:
+    resp = clients.Rule.create(
+        ruleset="piggybacked_host_files",
+        folder="/",
+        properties={"description": "unknown entry key", "disabled": False},
+        value_raw=repr(
+            {
+                "global_max_cache_age": 7200,
+                "global_validity": {"period": 1800, "check_mk_state": 0},
+                "per_piggybacked_host": [
+                    {"piggybacked_host_name": "opnsense", "keep_hosts_for": 300},
+                ],
+            }
+        ),
+        conditions={},
+        expect_ok=False,
+    )
+
+    resp.assert_status_code(400)
+
+
 @pytest.fixture(name="no_snmp_sections")
 def fixture_no_snmp_sections(mocker: MockerFixture) -> None:
     # Tech debt: validating the section choice of "snmpv3_contexts" runs the

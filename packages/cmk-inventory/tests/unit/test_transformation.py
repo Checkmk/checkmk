@@ -4,13 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+import os
 from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
 
 import cmk.ccc.store
+from cmk.inventory.paths import TreePath
 from cmk.inventory.transformation.tree_files import (
+    _compute_bundle,
+    _HostTreePath,
     show_transformation_results,
     transform_inventory_trees,
     TransformationResult,
@@ -167,6 +171,22 @@ def test_without_a_bundle_length_at_least_one_tree_is_transformed(tmp_path: Path
     )
 
     assert len(list((tmp_path / "var/check_mk/inventory").glob("*.json"))) == 1
+
+
+def test_the_bundle_spreads_all_trees_including_the_transformed_ones() -> None:
+    pending = [
+        _HostTreePath(
+            host_name=f"host{index}",
+            tree_path=TreePath(
+                path=Path(f"host{index}.json"),
+                legacy=Path(f"host{index}"),
+            ),
+            stat=os.stat_result((0,) * 10),
+        )
+        for index in range(400)
+    ]
+
+    assert len(_compute_bundle(0, pending, 600)) == 5
 
 
 def test_a_transformed_tree_is_not_overwritten_by_its_legacy_tree(tmp_path: Path) -> None:

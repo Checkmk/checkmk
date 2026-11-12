@@ -215,13 +215,14 @@ def _show_results(
 
 
 def _compute_bundle(
-    bundle_length: int, host_tree_paths: Sequence[_HostTreePath]
+    bundle_length: int, host_tree_paths: Sequence[_HostTreePath], transformed_count: int
 ) -> Sequence[_HostTreePath]:
     if not host_tree_paths:
         return []
     if bundle_length > 0:
         return host_tree_paths[:bundle_length]
-    return host_tree_paths[: math.ceil(len(host_tree_paths) / _NUMBER_OF_BUNDLES)]
+    total_count = len(host_tree_paths) + transformed_count
+    return host_tree_paths[: math.ceil(total_count / _NUMBER_OF_BUNDLES)]
 
 
 def _transform_host_tree_path(host_tree_path: _HostTreePath) -> TransformationResult:
@@ -277,7 +278,9 @@ def transform_inventory_trees(
     if filter_host_names:
         to_be_transformed = host_tree_paths
     else:
-        to_be_transformed = _compute_bundle(bundle_length, host_tree_paths)
+        to_be_transformed = _compute_bundle(
+            bundle_length, host_tree_paths, len(transformation_results)
+        )
 
     new_transformation_results = []
     for host_tree_path in to_be_transformed:

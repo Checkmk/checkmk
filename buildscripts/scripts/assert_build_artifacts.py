@@ -503,7 +503,7 @@ def assert_build_artifacts(args: Args, loaded_yaml: dict) -> None:
             )
 
     relay_missing = False
-    if not args.skip_relay:
+    if not args.skip_relay and not args.skip_docker:
         relay_result = assert_relay_image_on_docker_hub(args.version)
         results.append(relay_result)
         relay_missing = not relay_result.assertion_ok

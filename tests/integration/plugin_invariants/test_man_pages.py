@@ -9,9 +9,15 @@ from collections.abc import Mapping
 
 import pytest
 
+from cmk.agent_based import v3_unstable
 from cmk.agent_based.v2 import CheckPlugin
 from cmk.checkengine.plugins import AgentBasedPlugins
-from cmk.discover_plugins import discover_all_plugins, discover_families, PluginGroup
+from cmk.discover_plugins import (
+    discover_all_plugins,
+    discover_families,
+    DiscoveredPlugins,
+    PluginGroup,
+)
 from cmk.utils import man_pages
 from tests.code_quality.bazel_utils import bazel_repo_root as repo_path
 
@@ -90,9 +96,9 @@ def test_cmk_plugins_families_manpages() -> None:
     man_page_path_map = man_pages.make_man_page_path_map(
         discover_families(raise_errors=True), PluginGroup.CHECKMAN.value
     )
-    check_plugins = discover_all_plugins(
+    check_plugins: DiscoveredPlugins[CheckPlugin | v3_unstable.CheckPlugin] = discover_all_plugins(
         PluginGroup.AGENT_BASED,
-        {CheckPlugin: "check_plugin_"},
+        {CheckPlugin: "check_plugin_", v3_unstable.CheckPlugin: "check_plugin_"},
         skip_wrong_types=False,
         raise_errors=True,
     )

@@ -3,14 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from enum import Enum
-from typing import NamedTuple
+from typing import NamedTuple, Self
 
 from cmk.agent_based.v2 import (
     all_of,
-    CheckPlugin,
-    CheckResult,
     DiscoveryResult,
     exists,
     OIDEnd,
@@ -21,6 +19,7 @@ from cmk.agent_based.v2 import (
     State,
     StringTable,
 )
+from cmk.agent_based.v3_unstable import CheckPlugin, CheckResult, parse_as, ParseFailure
 from cmk.plugins.aruba.lib import DETECT_2930M
 
 
@@ -56,10 +55,24 @@ FanStateMapping = {
 
 
 class Fan(NamedTuple):
-    tray: int
-    type: FanType
-    state: FanState
-    failures: int
+    tray: int | None | ParseFailure
+    type: FanType | ParseFailure
+    state: FanState | ParseFailure
+    failures: int | None | ParseFailure
+
+    @classmethod
+    def parse(cls, entry: Sequence[str]) -> Self:
+        _key, tray, fan_type, state, failures = entry
+        return cls(
+            tray=cls._parse_count(tray, field="hpicfFanTray"),
+            type=parse_as(FanType, fan_type, field="hpicfFanType"),
+            state=parse_as(FanState, state, field="hpicfFanState"),
+            failures=cls._parse_count(failures, field="hpicfFanNumFailures"),
+        )
+
+    @staticmethod
+    def _parse_count(raw: str, *, field: str) -> int | None | ParseFailure:
+        return None if raw == "" else parse_as(int, raw, field=field)
 
 
 Section = Mapping[str, Fan]
@@ -68,15 +81,7 @@ TemperatureParams = tuple[float, float]
 
 
 def parse_aruba_fans(string_table: StringTable) -> Section:
-    return {
-        f"{int(entry[0]):06d}": Fan(
-            tray=int(entry[1]),
-            type=FanType(entry[2]),
-            state=FanState(entry[3]),
-            failures=int(entry[4]),
-        )
-        for entry in string_table
-    }
+    return {f"{int(entry[0]):06d}": Fan.parse(entry) for entry in string_table}
 
 
 snmp_section_aruba_fan_status = SimpleSNMPSection(
@@ -108,17 +113,30 @@ def check_aruba_fan_status(
     item: str,
     section: Section,
 ) -> CheckResult:
-    fan = section.get(item)
-    if not fan:
+    if (fan := section.get(item)) is None:
         return
 
-    yield Result(
-        state=FanStateMapping[fan.state],
-        summary=f"Fan Status: {fan.state.name}",
-    )
-    yield Result(state=State.OK, summary=f"Type: {fan.type.name}")
-    yield Result(state=State.OK, summary=f"Tray: {fan.tray}")
-    if fan.failures > 0:
+    if isinstance(fan.state, ParseFailure):
+        yield fan.state
+    else:
+        yield Result(
+            state=FanStateMapping[fan.state],
+            summary=f"Fan Status: {fan.state.name}",
+        )
+
+    if isinstance(fan.type, ParseFailure):
+        yield fan.type
+    else:
+        yield Result(state=State.OK, summary=f"Type: {fan.type.name}")
+
+    if isinstance(fan.tray, ParseFailure):
+        yield fan.tray
+    elif fan.tray is not None:
+        yield Result(state=State.OK, summary=f"Tray: {fan.tray}")
+
+    if isinstance(fan.failures, ParseFailure):
+        yield fan.failures
+    elif fan.failures is not None and fan.failures > 0:
         yield Result(state=State.OK, summary=f"Failures: {fan.failures}")
 
 

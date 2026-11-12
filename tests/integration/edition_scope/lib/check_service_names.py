@@ -7,6 +7,7 @@
 from collections.abc import Mapping, Sequence
 from typing import Final
 
+from cmk.agent_based import v3_unstable
 from cmk.agent_based.v2 import CheckPlugin, entry_point_prefixes
 from cmk.discover_plugins import discover_all_plugins, DiscoveredPlugins, PluginGroup
 from tests.integration.edition_scope.lib.frozen_service_names import FROZEN_SERVICE_NAMES
@@ -35,9 +36,12 @@ def extract_check_plugin_service_names() -> Mapping[str, str]:
     Only plugins written against the current plugin API are considered; FROZEN_SERVICE_NAMES
     also contains the legacy plugins, so coverage grows automatically as they are migrated.
     """
-    discovered: DiscoveredPlugins[CheckPlugin] = discover_all_plugins(
+    discovered: DiscoveredPlugins[CheckPlugin | v3_unstable.CheckPlugin] = discover_all_plugins(
         PluginGroup.AGENT_BASED,
-        {CheckPlugin: entry_point_prefixes()[CheckPlugin]},
+        {
+            CheckPlugin: entry_point_prefixes()[CheckPlugin],
+            v3_unstable.CheckPlugin: v3_unstable.entry_point_prefixes()[v3_unstable.CheckPlugin],
+        },
         skip_wrong_types=False,
         raise_errors=True,
     )

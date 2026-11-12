@@ -2723,7 +2723,6 @@ def write_usage_section(
         section.write()
 
 
-# TODO: test
 async def process_usage_details(
     mgmt_client: BaseAsyncApiClient,
     subscription: AzureSubscription,

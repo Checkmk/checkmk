@@ -6,6 +6,7 @@
 import pytest
 
 import cmk.gui.valuespec as vs
+from cmk.gui.exceptions import MKUserError
 
 from .utils import (
     expect_validate_failure_migrate_or_transform,
@@ -147,3 +148,14 @@ def test_transform_value_and_json() -> None:
 
     assert valuespec.value_to_json({"KEY1": "value1"}) == {"key1": "value1"}
     assert valuespec.value_from_json({"key1": "value1"}) == {"key1": "value1"}
+
+
+@pytest.mark.xfail(strict=True, raises=KeyError, reason="crash group 4686")
+def test_validate_datatype_rejects_a_value_the_migration_cannot_read() -> None:
+    migrate = vs.Migrate(
+        vs.Dictionary(elements=[("name", vs.TextInput())]),
+        migrate=lambda v: {"name": v["legacy_name"]},
+    )
+
+    with pytest.raises(MKUserError):
+        migrate.validate_datatype({"unknown_name": "opnsense"}, "")

@@ -1,4 +1,4 @@
-title: Fujitsu SC2: Memory Status
+title: Fujitsu PRIMERGY: Memory Status
 agents: snmp
 catalog: hw/server/fujitsu
 license: GPLv2

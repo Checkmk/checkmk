@@ -1,4 +1,4 @@
-title: Fujitsu Storage Systems: Flash of Controller Modules
+title: Fujitsu ETERNUS DX: Controller Module Flash
 agents: snmp
 catalog: hw/storagehw/fujitsu
 license: GPLv2

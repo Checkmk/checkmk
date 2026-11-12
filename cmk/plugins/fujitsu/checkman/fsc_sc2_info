@@ -1,4 +1,4 @@
-title: Fujitsu SC2: Server Info
+title: Fujitsu PRIMERGY: Server Info
 agents: snmp
 catalog: hw/server/fujitsu
 license: GPLv2

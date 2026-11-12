@@ -1,4 +1,4 @@
-title: Fujitsu Storage Systems: Thin Provisioning Pool
+title: Fujitsu ETERNUS DX: Thin Provisioning Pools
 agents: snmp
 catalog: hw/storagehw/fujitsu
 license: GPLv2

@@ -1,4 +1,4 @@
-title: Fujitsu Storage Systems: Status of PCIeflash Modules
+title: Fujitsu ETERNUS DX: PCIe Flash Modules
 agents: snmp
 catalog: hw/storagehw/fujitsu
 license: GPLv2

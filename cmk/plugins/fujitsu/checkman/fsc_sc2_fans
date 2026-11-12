@@ -1,4 +1,4 @@
-title: Fujitsu SC2: Fan Status
+title: Fujitsu PRIMERGY: Fans via FSC-SERVERCONTROL2-MIB
 agents: snmp
 catalog: hw/server/fujitsu
 license: GPLv2

@@ -1,4 +1,4 @@
-title: Fujitsu SC2: Power Consumption
+title: Fujitsu PRIMERGY: Power Consumption
 agents: snmp
 catalog: hw/server/fujitsu
 license: GPLv2

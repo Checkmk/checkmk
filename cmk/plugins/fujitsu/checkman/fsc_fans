@@ -1,4 +1,4 @@
-title: Fujitsu Siemens FSC: Fan Status
+title: Fujitsu PRIMERGY: Fans via SNI-SERVER-CONTROL-MIB
 agents: snmp
 catalog: hw/server/fujitsu
 license: GPLv2

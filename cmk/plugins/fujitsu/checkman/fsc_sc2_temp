@@ -1,4 +1,4 @@
-title: Fujitsu SC2: Temperature
+title: Fujitsu PRIMERGY: Temperature via FSC-SERVERCONTROL2-MIB
 agents: snmp
 catalog: hw/server/fujitsu
 license: GPLv2

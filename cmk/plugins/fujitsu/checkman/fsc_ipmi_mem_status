@@ -1,4 +1,4 @@
-title: Fujitsu Workstations: Memory
+title: Fujitsu PRIMERGY: Memory Modules via IPMI
 agents: linux
 catalog: hw/server/fujitsu
 license: GPLv2

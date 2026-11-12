@@ -1,4 +1,4 @@
-title: Fujitsu Storage Systems: Summarized Status of all Disks
+title: Fujitsu ETERNUS DX: Disk Summary
 agents: snmp
 catalog: hw/storagehw/fujitsu
 license: GPLv2

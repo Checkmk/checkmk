@@ -1,4 +1,4 @@
-title: Fujitsu SC2: PSU Status
+title: Fujitsu PRIMERGY: Power Supplies
 agents: snmp
 catalog: hw/server/fujitsu
 license: GPLv2

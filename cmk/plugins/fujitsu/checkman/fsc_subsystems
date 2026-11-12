@@ -1,4 +1,4 @@
-title: Fujitsu Siemens FSC: Physical Status of Hardware Parts
+title: Fujitsu PRIMERGY: Hardware Components
 agents: snmp
 catalog: hw/server/fujitsu
 license: GPLv2

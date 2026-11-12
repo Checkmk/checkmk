@@ -1,4 +1,4 @@
-title: Fujitsu SC2: CPU Status
+title: Fujitsu PRIMERGY: CPU Status
 agents: snmp
 catalog: hw/server/fujitsu
 license: GPLv2

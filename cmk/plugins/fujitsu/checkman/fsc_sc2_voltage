@@ -1,4 +1,4 @@
-title: Fujitsu SC2: Voltage
+title: Fujitsu PRIMERGY: Voltage
 agents: snmp
 catalog: hw/server/fujitsu
 license: GPLv2

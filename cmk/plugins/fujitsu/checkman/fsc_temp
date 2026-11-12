@@ -1,4 +1,4 @@
-title: Fujitsu Siemens FSC: Temperature Status of Hardware
+title: Fujitsu PRIMERGY: Temperature via SNI-SERVER-CONTROL-MIB
 agents: snmp
 catalog: hw/server/fujitsu
 license: GPLv2

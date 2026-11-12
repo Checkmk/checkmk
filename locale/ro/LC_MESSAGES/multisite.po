@@ -6840,6 +6840,13 @@ msgstr ""
 "destinație a rapoartelor."
 
 msgid ""
+"Allows listing the pending changes through the REST API without the "
+"permission to activate them. Users who may activate changes can always list "
+"them. The GUI shows pending changes to every user with access to Setup, "
+"regardless of this permission."
+msgstr ""
+
+msgid ""
 "Allows querying the metric backend (OpenTelemetry) from the  Custom Graph "
 "Editor. When disabled, only RRD-based metrics are available in the Custom "
 "Graph Editor, and graphs containing metric-backend queries cannot be "
@@ -11294,6 +11301,12 @@ msgid ""
 "you instead want to require that every currently failing component is "
 "covered — ensuring that no active, unplanned failure goes unnoticed behind a "
 "partial maintenance window."
+msgstr ""
+
+msgid ""
+"By default, a service is also created for a CDP job that is disabled in "
+"Veeam; it is always OK. Disable this option to create no services for "
+"disabled CDP jobs."
 msgstr ""
 
 msgid ""
@@ -21919,6 +21932,10 @@ msgstr "Persoane cu handicap"
 msgid "Disabled (configured away by admin)"
 msgstr "Dezactivat (configurat de către administrator)"
 
+#, fuzzy
+msgid "Disabled CDP jobs"
+msgstr "Persoane cu handicap "
+
 msgid "Disabled active checks"
 msgstr "Controale active dezactivate"
 
@@ -22006,6 +22023,10 @@ msgstr "Descoperiți serviciile statistice RMON"
 
 msgid "Discover a service checking the average of all CPUs"
 msgstr "Descoperiți un serviciu care verifică media tuturor procesoarelor"
+
+#, fuzzy
+msgid "Discover disabled CDP jobs"
+msgstr "Descoperiți sarcinile cu handicap"
 
 msgid "Discover disabled tasks"
 msgstr "Descoperiți sarcinile cu handicap"
@@ -26048,15 +26069,15 @@ msgstr "Evenimentul a fost șters automat"
 msgid "Events"
 msgstr "Evenimente"
 
-#, python-format
-msgid "Events of application \"%s\" on host %s"
+#, fuzzy, python-format
+msgid "Events of application \"%(app)s\" on host %(host)s"
 msgstr "Evenimente ale aplicației \"%s\" pe gazdă %s"
 
 msgid "Events of host"
 msgstr "Evenimente ale gazdei"
 
-#, python-format
-msgid "Events of host %s"
+#, fuzzy, python-format
+msgid "Events of host %(host_name)s"
 msgstr "Evenimente ale gazdei %s"
 
 #, fuzzy
@@ -61498,6 +61519,10 @@ msgstr "Vedeți sugestii pentru a vă îmbunătăți instalarea Checkmk"
 msgid "See packaged %s"
 msgstr "A se vedea ambalate %s"
 
+#, fuzzy
+msgid "See pending changes"
+msgstr "Nu există modificări în așteptare."
+
 msgid "See stale objects in tactical overview"
 msgstr "Vedeți obiectele învechite în prezentarea tactică"
 
@@ -89384,6 +89409,10 @@ msgstr "Seifuri"
 msgid "Veeam backup status (Windows)"
 msgstr "Veeam Backup Status (Windows)"
 
+#, fuzzy
+msgid "Veeam: CDP job discovery"
+msgstr "Determinată prin descoperire"
+
 msgid "Veeam: Time since last CDP run"
 msgstr "Veeam: Timpul de la ultima rulare CDP"
 
@@ -92765,6 +92794,10 @@ msgstr ""
 "Nu vi se permite să efectuați acțiuni. Dacă credeți că este o eroare, vă "
 "rugăm să cereți administratorului dumneavoastră să vă acorde permisiunea de "
 "a face acest lucru."
+
+#, fuzzy
+msgid "You are not allowed to see the pending changes"
+msgstr "Nu aveți voie să folosiți configurația."
 
 msgid "You are not allowed to use passwords from the password store here."
 msgstr "Nu aveți voie să folosiți aici parole din magazinul de parole."
@@ -103927,9 +103960,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Disable time specific parameters"
 #~ msgstr "Dezactivarea parametrilor temporali specifici"
-
-#~ msgid "Disabled "
-#~ msgstr "Persoane cu handicap "
 
 #~ msgid "Display axis labels for the selected/automatic data range"
 #~ msgstr ""

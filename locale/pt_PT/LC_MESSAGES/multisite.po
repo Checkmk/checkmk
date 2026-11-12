@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-11-11 08:56+0000\n"
 "Language-Team: Portuguese (Portugal) <https://translate.checkmk.com/projects/"
@@ -6841,6 +6841,13 @@ msgstr ""
 "destino do relatório."
 
 msgid ""
+"Allows listing the pending changes through the REST API without the "
+"permission to activate them. Users who may activate changes can always list "
+"them. The GUI shows pending changes to every user with access to Setup, "
+"regardless of this permission."
+msgstr ""
+
+msgid ""
 "Allows querying the metric backend (OpenTelemetry) from the  Custom Graph "
 "Editor. When disabled, only RRD-based metrics are available in the Custom "
 "Graph Editor, and graphs containing metric-backend queries cannot be "
@@ -11271,6 +11278,12 @@ msgid ""
 "you instead want to require that every currently failing component is "
 "covered — ensuring that no active, unplanned failure goes unnoticed behind a "
 "partial maintenance window."
+msgstr ""
+
+msgid ""
+"By default, a service is also created for a CDP job that is disabled in "
+"Veeam; it is always OK. Disable this option to create no services for "
+"disabled CDP jobs."
 msgstr ""
 
 msgid ""
@@ -21867,6 +21880,10 @@ msgstr "Deficiente"
 msgid "Disabled (configured away by admin)"
 msgstr "Desactivado (não configurado pelo administrador)"
 
+#, fuzzy
+msgid "Disabled CDP jobs"
+msgstr "Deficiente "
+
 msgid "Disabled active checks"
 msgstr "Verificações ativas para deficientes"
 
@@ -21953,6 +21970,10 @@ msgstr "Descobrir os serviços de estatísticas RMON"
 
 msgid "Discover a service checking the average of all CPUs"
 msgstr "Descobrir um serviço que verifica a média de todas as CPUs"
+
+#, fuzzy
+msgid "Discover disabled CDP jobs"
+msgstr "Descobrir anfitriões registados"
 
 #, fuzzy
 msgid "Discover disabled tasks"
@@ -25966,15 +25987,15 @@ msgstr "O evento foi eliminado automaticamente"
 msgid "Events"
 msgstr "Eventos"
 
-#, python-format
-msgid "Events of application \"%s\" on host %s"
+#, fuzzy, python-format
+msgid "Events of application \"%(app)s\" on host %(host)s"
 msgstr "Eventos de Aplicação \"%s\" no Anfitrião %s"
 
 msgid "Events of host"
 msgstr "Eventos do anfitrião"
 
-#, python-format
-msgid "Events of host %s"
+#, fuzzy, python-format
+msgid "Events of host %(host_name)s"
 msgstr "Eventos do Anfitrião %s"
 
 #, fuzzy
@@ -61382,6 +61403,10 @@ msgstr "Veja dicas de como melhorar a sua instalação Checkmk"
 msgid "See packaged %s"
 msgstr "Ver pacote %s"
 
+#, fuzzy
+msgid "See pending changes"
+msgstr "Não há alterações pendentes."
+
 msgid "See stale objects in tactical overview"
 msgstr "Ver objectos obsoletos na síntese táctica"
 
@@ -88958,6 +88983,10 @@ msgstr "Cofres"
 msgid "Veeam backup status (Windows)"
 msgstr "Estado do Veeam Backup (Windows)"
 
+#, fuzzy
+msgid "Veeam: CDP job discovery"
+msgstr "Determinado pela descoberta"
+
 msgid "Veeam: Time since last CDP run"
 msgstr "Veeam: Tempo desde a última execução do CDP"
 
@@ -92281,6 +92310,10 @@ msgstr ""
 "Você não está autorizado a realizar ações. Se você acha que isto é um erro, "
 "por favor peça ao seu administrador que lhe conceda a permissão para o fazer."
 
+#, fuzzy
+msgid "You are not allowed to see the pending changes"
+msgstr "Você não está autorizado a usar a configuração."
+
 msgid "You are not allowed to use passwords from the password store here."
 msgstr "Você não está autorizado a usar senhas da loja de senhas aqui."
 
@@ -94785,7 +94818,6 @@ msgstr "contando"
 msgid "cp437"
 msgstr "cp437"
 
-#, fuzzy
 msgid "crash report"
 msgid_plural "crash reports"
 msgstr[0] ""
@@ -95303,7 +95335,6 @@ msgstr "os anfitriões estão de pé e não têm problemas de serviço"
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
-#, fuzzy
 msgid "hour"
 msgid_plural "hours"
 msgstr[0] ""
@@ -103324,9 +103355,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Disable time specific parameters"
 #~ msgstr "Desabilitar parâmetros específicos de tempo"
-
-#~ msgid "Disabled "
-#~ msgstr "Deficiente "
 
 #~ msgid "Display axis labels for the selected/automatic data range"
 #~ msgstr ""

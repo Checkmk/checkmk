@@ -6822,6 +6822,13 @@ msgstr ""
 "en ook willekeurige e-mailadressen opgeven als rapportbestemming."
 
 msgid ""
+"Allows listing the pending changes through the REST API without the "
+"permission to activate them. Users who may activate changes can always list "
+"them. The GUI shows pending changes to every user with access to Setup, "
+"regardless of this permission."
+msgstr ""
+
+msgid ""
 "Allows querying the metric backend (OpenTelemetry) from the  Custom Graph "
 "Editor. When disabled, only RRD-based metrics are available in the Custom "
 "Graph Editor, and graphs containing metric-backend queries cannot be "
@@ -11256,6 +11263,12 @@ msgid ""
 "you instead want to require that every currently failing component is "
 "covered — ensuring that no active, unplanned failure goes unnoticed behind a "
 "partial maintenance window."
+msgstr ""
+
+msgid ""
+"By default, a service is also created for a CDP job that is disabled in "
+"Veeam; it is always OK. Disable this option to create no services for "
+"disabled CDP jobs."
 msgstr ""
 
 msgid ""
@@ -21863,6 +21876,10 @@ msgstr "Uitgeschakeld"
 msgid "Disabled (configured away by admin)"
 msgstr "Uitgeschakeld (weg geconfigureerd door admin)"
 
+#, fuzzy
+msgid "Disabled CDP jobs"
+msgstr "Uitgeschakeld "
+
 msgid "Disabled active checks"
 msgstr "Uitgeschakelde actieve controles"
 
@@ -21951,6 +21968,10 @@ msgstr "Diensten ontdekken"
 
 msgid "Discover a service checking the average of all CPUs"
 msgstr "Ontdek een dienst die het gemiddelde van alle CPU's controleert"
+
+#, fuzzy
+msgid "Discover disabled CDP jobs"
+msgstr "Ontdek geregistreerde hosts"
 
 #, fuzzy
 msgid "Discover disabled tasks"
@@ -25958,15 +25979,15 @@ msgstr "Gebeurtenis werd automatisch verwijderd"
 msgid "Events"
 msgstr "Evenementen"
 
-#, python-format
-msgid "Events of application \"%s\" on host %s"
+#, fuzzy, python-format
+msgid "Events of application \"%(app)s\" on host %(host)s"
 msgstr "Gebeurtenissen van toepassing \"%s\" op host %s"
 
 msgid "Events of host"
 msgstr "Gebeurtenissen van gastheer"
 
-#, python-format
-msgid "Events of host %s"
+#, fuzzy, python-format
+msgid "Events of host %(host_name)s"
 msgstr "Gebeurtenissen van Host %s"
 
 #, fuzzy
@@ -61352,6 +61373,10 @@ msgstr "Bekijk hints hoe u uw Checkmk-installatie kunt verbeteren"
 msgid "See packaged %s"
 msgstr "Zie verpakt %s"
 
+#, fuzzy
+msgid "See pending changes"
+msgstr "Geen hangende wijzigingen"
+
 msgid "See stale objects in tactical overview"
 msgstr "Zie muffe objecten in tactisch overzicht"
 
@@ -88978,6 +89003,10 @@ msgstr "Kluisjes"
 msgid "Veeam backup status (Windows)"
 msgstr "Veeam Back-upstatus (Windows)"
 
+#, fuzzy
+msgid "Veeam: CDP job discovery"
+msgstr "Bepaald door ontdekking"
+
 msgid "Veeam: Time since last CDP run"
 msgstr "Veeam: Tijd sinds laatste CDP-run"
 
@@ -92328,6 +92357,10 @@ msgid ""
 msgstr ""
 "U mag geen acties uitvoeren. Als u denkt dat dit een fout is, vraag dan uw "
 "beheerder om u hiervoor de toestemming te geven."
+
+#, fuzzy
+msgid "You are not allowed to see the pending changes"
+msgstr "Je mag de opstelling niet gebruiken."
 
 msgid "You are not allowed to use passwords from the password store here."
 msgstr "U mag hier geen wachtwoorden uit de wachtwoordwinkel gebruiken."
@@ -103377,9 +103410,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Disable time specific parameters"
 #~ msgstr "Tijdspecifieke parameters uitschakelen"
-
-#~ msgid "Disabled "
-#~ msgstr "Uitgeschakeld "
 
 #~ msgid "Display axis labels for the selected/automatic data range"
 #~ msgstr "Toon aslabels voor het geselecteerde/automatische gegevensbereik"

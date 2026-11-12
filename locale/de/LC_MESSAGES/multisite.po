@@ -4,7 +4,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@checkmk.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2026-11-11 08:56+0000\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/stable/"
@@ -6752,6 +6752,13 @@ msgstr ""
 "auszuwählen."
 
 msgid ""
+"Allows listing the pending changes through the REST API without the "
+"permission to activate them. Users who may activate changes can always list "
+"them. The GUI shows pending changes to every user with access to Setup, "
+"regardless of this permission."
+msgstr ""
+
+msgid ""
 "Allows querying the metric backend (OpenTelemetry) from the  Custom Graph "
 "Editor. When disabled, only RRD-based metrics are available in the Custom "
 "Graph Editor, and graphs containing metric-backend queries cannot be "
@@ -10903,6 +10910,12 @@ msgstr ""
 "wenn Sie stattdessen verlangen möchten, dass jede aktuell ausgefallene "
 "Komponente erfasst wird – um sicherzustellen, dass kein aktiver, ungeplanter "
 "Ausfall hinter einem teilweisen Wartungsfenster unbemerkt bleibt."
+
+msgid ""
+"By default, a service is also created for a CDP job that is disabled in "
+"Veeam; it is always OK. Disable this option to create no services for "
+"disabled CDP jobs."
+msgstr ""
 
 msgid ""
 "By default, agents on Linux are installed under the root account. If "
@@ -21202,6 +21215,10 @@ msgstr "Deaktiviert"
 msgid "Disabled (configured away by admin)"
 msgstr "Deaktiviert (vom Administrator wegkonfiguriert)"
 
+#, fuzzy
+msgid "Disabled CDP jobs"
+msgstr "Deaktiviert "
+
 msgid "Disabled active checks"
 msgstr "Deaktivierte aktive Checks"
 
@@ -21286,6 +21303,10 @@ msgstr "RMON Statistikdienste erkennen"
 
 msgid "Discover a service checking the average of all CPUs"
 msgstr "Erkennung eines Dienstes, der den Durchschnitt aller CPUs überprüft"
+
+#, fuzzy
+msgid "Discover disabled CDP jobs"
+msgstr "Deaktivierte Aufgaben erkennen"
 
 msgid "Discover disabled tasks"
 msgstr "Deaktivierte Aufgaben erkennen"
@@ -25187,15 +25208,15 @@ msgstr "Ereignis wurde automatisch gelöscht"
 msgid "Events"
 msgstr "Ereignisse"
 
-#, python-format
-msgid "Events of application \"%s\" on host %s"
+#, fuzzy, python-format
+msgid "Events of application \"%(app)s\" on host %(host)s"
 msgstr "Ereignisse von Anwendung \"%s\" auf %s"
 
 msgid "Events of host"
 msgstr "Ereignisse von Host"
 
-#, python-format
-msgid "Events of host %s"
+#, fuzzy, python-format
+msgid "Events of host %(host_name)s"
 msgstr "Ereignisse von Host %s"
 
 msgid "Events of hosts & services"
@@ -58853,6 +58874,10 @@ msgstr "Hinweise zur Verbesserung der Checkmk-Installation sehen"
 msgid "See packaged %s"
 msgstr "Siehe paketierte %s"
 
+#, fuzzy
+msgid "See pending changes"
+msgstr "Keine ausstehenden Änderungen."
+
 msgid "See stale objects in tactical overview"
 msgstr "Veraltete Objekte in taktischer Übersicht sehen"
 
@@ -85905,6 +85930,10 @@ msgstr "Tresore"
 msgid "Veeam backup status (Windows)"
 msgstr "Veeam Sicherungsstatus (Windows)"
 
+#, fuzzy
+msgid "Veeam: CDP job discovery"
+msgstr "Durch die Erkennung bestimmt"
+
 msgid "Veeam: Time since last CDP run"
 msgstr "Veeam: Zeit seit dem letzten CDP-Lauf"
 
@@ -89243,6 +89272,10 @@ msgid ""
 msgstr ""
 "Sie sind nicht berechtigt, Aktionen ausführen. Wenn Sie diese Berechtigungen "
 "benötigen, dann wenden Sie sich an den Administrator."
+
+#, fuzzy
+msgid "You are not allowed to see the pending changes"
+msgstr "Sie sind nicht berechtigt, das Setup zu verwenden."
 
 msgid "You are not allowed to use passwords from the password store here."
 msgstr ""
@@ -100256,9 +100289,6 @@ msgstr ""
 
 #~ msgid "Disable time specific parameters"
 #~ msgstr "Deaktiviere zeitspezifische Parameter"
-
-#~ msgid "Disabled "
-#~ msgstr "Deaktiviert "
 
 #~ msgid "Display axis labels for the selected/automatic data range"
 #~ msgstr ""

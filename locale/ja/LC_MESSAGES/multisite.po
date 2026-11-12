@@ -6532,6 +6532,13 @@ msgstr ""
 "して任意の電子メールアドレスを指定することを許可する。"
 
 msgid ""
+"Allows listing the pending changes through the REST API without the "
+"permission to activate them. Users who may activate changes can always list "
+"them. The GUI shows pending changes to every user with access to Setup, "
+"regardless of this permission."
+msgstr ""
+
+msgid ""
 "Allows querying the metric backend (OpenTelemetry) from the  Custom Graph "
 "Editor. When disabled, only RRD-based metrics are available in the Custom "
 "Graph Editor, and graphs containing metric-backend queries cannot be "
@@ -10587,6 +10594,12 @@ msgstr ""
 "に、現在障害が発生しているすべてのコンポーネントを対象としたい場合は、このオ"
 "プションを有効にしてください。これにより、部分的なメンテナンスウィンドウの陰"
 "で、アクティブな予期せぬ障害が見逃されることを防ぐことができます。"
+
+msgid ""
+"By default, a service is also created for a CDP job that is disabled in "
+"Veeam; it is always OK. Disable this option to create no services for "
+"disabled CDP jobs."
+msgstr ""
 
 msgid ""
 "By default, agents on Linux are installed under the root account. If "
@@ -20648,6 +20661,10 @@ msgstr "無効"
 msgid "Disabled (configured away by admin)"
 msgstr "無効にする（管理者が設定しない）"
 
+#, fuzzy
+msgid "Disabled CDP jobs"
+msgstr "無効 "
+
 msgid "Disabled active checks"
 msgstr "アクティブチェックを無効にしました"
 
@@ -20729,6 +20746,10 @@ msgstr "RMON統計サービスの発見"
 
 msgid "Discover a service checking the average of all CPUs"
 msgstr "全CPUの平均値をチェックするサービスを発見する"
+
+#, fuzzy
+msgid "Discover disabled CDP jobs"
+msgstr "無効なタスクの発見"
 
 msgid "Discover disabled tasks"
 msgstr "無効なタスクの発見"
@@ -24570,15 +24591,15 @@ msgstr "イベントは自動的に削除されました"
 msgid "Events"
 msgstr "イベント"
 
-#, python-format
-msgid "Events of application \"%s\" on host %s"
+#, fuzzy, python-format
+msgid "Events of application \"%(app)s\" on host %(host)s"
 msgstr "ホスト %s でのアプリケーション \"%s\"のイベント"
 
 msgid "Events of host"
 msgstr "ホストのイベント"
 
-#, python-format
-msgid "Events of host %s"
+#, fuzzy, python-format
+msgid "Events of host %(host_name)s"
 msgstr "ホスト %sのイベント"
 
 #, fuzzy
@@ -57927,6 +57948,10 @@ msgstr "Checkmkのインストールを改善するためのヒントを参照�
 msgid "See packaged %s"
 msgstr "パッケージを見る%s"
 
+#, fuzzy
+msgid "See pending changes"
+msgstr "保留中の変更はありません。"
+
 msgid "See stale objects in tactical overview"
 msgstr "戦術的概要(Tactical Overview)の古くなったオブジェクトを見る"
 
@@ -84190,6 +84215,10 @@ msgstr "Vaults"
 msgid "Veeam backup status (Windows)"
 msgstr "Veeamバックアップステータス(Windows)"
 
+#, fuzzy
+msgid "Veeam: CDP job discovery"
+msgstr "ディスカバリーによる決定"
+
 msgid "Veeam: Time since last CDP run"
 msgstr "Veeam: 最後のCDPランからの時間"
 
@@ -87423,6 +87452,10 @@ msgid ""
 msgstr ""
 "アクションの実行が許可されていません。エラーと思われる場合は、管理者に許可を"
 "確認してください。"
+
+#, fuzzy
+msgid "You are not allowed to see the pending changes"
+msgstr "セットアップの使用は許可されていません。"
 
 msgid "You are not allowed to use passwords from the password store here."
 msgstr ""
@@ -98736,9 +98769,6 @@ msgstr ""
 
 #~ msgid "Disable time specific parameters"
 #~ msgstr "時間指定パラメータを無効にする"
-
-#~ msgid "Disabled "
-#~ msgstr "無効 "
 
 #~ msgid "Display axis labels for the selected/automatic data range"
 #~ msgstr "選択された/自動データ範囲の軸ラベルを表示する"

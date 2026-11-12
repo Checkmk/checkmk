@@ -1464,6 +1464,9 @@ class CheckboxHttpProxy:
     @classmethod
     def from_api_request(cls, data: HttpProxyAPIValueType) -> CheckboxHttpProxy:
         match data:
+            case {"state": "disabled"}:
+                return cls()
+
             case {"state": "enabled", "value": {"option": "no_proxy"}}:
                 return cls(value=("cmk_postprocessed", "no_proxy", ""))
 
@@ -1483,7 +1486,7 @@ class CheckboxHttpProxy:
                 return cls(value=("cmk_postprocessed", "environment_proxy", ""))
 
             case _:
-                return cls()
+                raise ValueError("Invalid HttpProxyAPIValueType")
 
     def api_response(self) -> HttpProxyAPIValueType:
         state: CheckboxState = "disabled" if self.value is None else "enabled"

@@ -2284,6 +2284,16 @@ def test_mkeventd_syslog_facility_enabled_without_value_400(clients: ClientRegis
     )
 
 
+def test_slack_http_proxy_enabled_without_value_400(clients: ClientRegistry) -> None:
+    _assert_checkbox_value_required(
+        clients,
+        _rule_with_plugin(
+            {"plugin_name": "slack", "webhook_url": {"option": "explicit", "url": "http://abc.com"}}
+        ),
+        (*_PLUGIN_PARAMS, "http_proxy"),
+    )
+
+
 @pytest.mark.parametrize("field", ["responsible_teams", "actions", "tags"])
 def test_opsgenie_issues_param_enabled_without_value_400(
     clients: ClientRegistry, field: str

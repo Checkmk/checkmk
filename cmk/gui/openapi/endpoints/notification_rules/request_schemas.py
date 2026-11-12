@@ -382,6 +382,7 @@ class HttpProxyOptions(OneOfSchema):
 class HttpProxyValue(Checkbox):
     value = fields.Nested(
         HttpProxyOptions,
+        required=True,
         description="Use the proxy settings from the environment variables. The variables NO_PROXY, HTTP_PROXY and HTTPS_PROXY are taken into account during execution. Have a look at the python requests module documentation for further information. Note that these variables must be defined as a site-user in ~/etc/environment and that this might affect other notification methods which also use the requests module",
     )
 

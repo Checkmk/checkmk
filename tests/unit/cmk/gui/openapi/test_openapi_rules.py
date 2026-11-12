@@ -273,6 +273,27 @@ def test_create_rule_stores_migrated_value(clients: ClientRegistry) -> None:
     }
 
 
+def test_create_rule_rejects_a_value_its_migration_cannot_read(clients: ClientRegistry) -> None:
+    resp = clients.Rule.create(
+        ruleset="piggybacked_host_files",
+        folder="/",
+        properties={"description": "unknown entry key", "disabled": False},
+        value_raw=repr(
+            {
+                "global_max_cache_age": 7200,
+                "global_validity": {"period": 1800, "check_mk_state": 0},
+                "per_piggybacked_host": [
+                    {"piggybacked_host_name": "opnsense", "keep_hosts_for": 300},
+                ],
+            }
+        ),
+        conditions={},
+        expect_ok=False,
+    )
+
+    resp.assert_status_code(400)
+
+
 @pytest.fixture(name="no_snmp_sections")
 def fixture_no_snmp_sections(mocker: MockerFixture) -> None:
     # Tech debt: validating the section choice of "snmpv3_contexts" runs the
@@ -597,7 +618,7 @@ def test_openapi_edit_rule_reject_incompatible_value_raw(clients: ClientRegistry
         rule_id=resp.json["id"],
         value_raw='{"memory": {"horizon": 90, "levels_upper": ("absolute", (0.5, 1.0)), "period": "24x7"}}',
         expect_ok=False,
-    ).assert_rest_api_crash()
+    ).assert_status_code(400)
 
 
 def test_openapi_create_rule_label_groups_no_operator(clients: ClientRegistry) -> None:

@@ -1,4 +1,4 @@
-title: Generic Printer: Input Unit State
+title: Printers: Input Unit State
 agents: snmp
 catalog: hw/printer
 license: GPLv2

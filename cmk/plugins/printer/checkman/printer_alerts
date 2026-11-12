@@ -1,4 +1,4 @@
-title: Generic Printer: Alerts Reported
+title: Printers: Alerts
 agents: snmp
 catalog: hw/printer
 license: GPLv2

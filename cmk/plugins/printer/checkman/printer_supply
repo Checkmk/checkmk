@@ -1,4 +1,4 @@
-title: Generic Printer: Remaining Filling Level
+title: Printers: Supply Levels
 agents: snmp
 catalog: hw/printer
 license: GPLv2

@@ -1,4 +1,4 @@
-title: Generic Printer: Number of Printed Pages
+title: Printers: Printed Pages
 agents: snmp
 catalog: hw/printer
 license: GPLv2

@@ -9,7 +9,7 @@
 # has stay at its versions (the ones the suites are type-checked against).
 
 pytest
-pyyaml
+# pyyaml has no cp315 win_amd64 wheel: see :pyyaml_wheel in BUILD.bazel
 pywin32  # win32evtlog (test_section_eventlog.py)
 # pip_offline installs the closure with the pinned pip from its own wheel.
 pip

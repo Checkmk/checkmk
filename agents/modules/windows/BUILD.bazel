@@ -1,4 +1,5 @@
 load("@rules_python//python:defs.bzl", "py_binary")
+load("@rules_python//python:packaging.bzl", "py_wheel")
 load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
 load("@rules_shell//shell:sh_library.bzl", "sh_library")
 load("@rules_uv//uv:pip.bzl", "pip_compile")
@@ -162,6 +163,24 @@ filegroup(
     output_group = "cabextract",
 )
 
+# PyPI has no cp315 win_amd64 wheel of PyYAML 6.0.3, so both cabs get a
+# pure-Python one, built from its sdist: yaml falls back to its Python loaders
+# and dumpers without the libyaml extension, only CLoader & co. are missing.
+# The version must match @pyyaml_sdist (//bazel/extensions:python_cab_repositories.bzl).
+# TODO: Back into windows-requirements.in and windows-test-cab-requirements.in
+# once PyYAML publishes win_amd64 wheels for PYTHON_VERSION_WINDOWS.
+py_wheel(
+    name = "pyyaml_wheel",
+    distribution = "PyYAML",
+    extra_distinfo_files = {"@pyyaml_sdist//:LICENSE": "LICENSE"},
+    license = "MIT",
+    python_requires = ">=3.8",
+    strip_path_prefixes = ["lib/"],
+    summary = "YAML parser and emitter for Python",
+    version = "6.0.3",
+    deps = ["@pyyaml_sdist//:pyyaml"],
+)
+
 # The python.org MSIs extracted once, for both cabs.
 python_msi_tree(name = "python_tree")
 
@@ -171,7 +190,7 @@ python_cab(
     python_tree = ":python_tree",
     venv_scripts = [":venv_scripts"],
     visibility = ["//visibility:public"],
-    wheels = all_whl_requirements,
+    wheels = all_whl_requirements + [":pyyaml_wheel"],
 )
 
 py_cmk_test(
@@ -193,7 +212,7 @@ python_test_cab(
     testonly = True,
     python_tree = ":python_tree",
     visibility = ["//agents/wnx/tests:__subpackages__"],
-    wheels = test_whl_requirements,
+    wheels = test_whl_requirements + [":pyyaml_wheel"],
 )
 
 py_cmk_test(

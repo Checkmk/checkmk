@@ -1,0 +1,14 @@
+load("@rules_python//python:defs.bzl", "py_library")
+
+# PyYAML's pure-Python packages, as its wheels lay them out: yaml, and the _yaml
+# compatibility stub, which raises ModuleNotFoundError without libyaml.
+py_library(
+    name = "pyyaml",
+    srcs = glob([
+        "lib/_yaml/*.py",
+        "lib/yaml/*.py",
+    ]),
+    visibility = ["//visibility:public"],
+)
+
+exports_files(["LICENSE"])

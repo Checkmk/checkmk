@@ -95,6 +95,11 @@ _ProductWheelsInfo = provider(
 )
 
 def _product_wheels_aspect_impl(target, ctx):
+    # Wheels built for Windows end up in the Windows agent's python-3.cab,
+    # not in the site's Python, so deploy-python must not install them.
+    if ctx.target_platform_has_constraint(ctx.attr._windows[platform_common.ConstraintValueInfo]):
+        return [_ProductWheelsInfo(wheels = depset())]
+
     own = []
     if PyWheelInfo in target and not target.label.workspace_name:
         # External wheels are skipped: they are not built from this repo.
@@ -120,6 +125,9 @@ def _product_wheels_aspect_impl(target, ctx):
 _product_wheels_aspect = aspect(
     implementation = _product_wheels_aspect_impl,
     attr_aspects = ["*"],
+    attrs = {
+        "_windows": attr.label(default = "@platforms//os:windows"),
+    },
 )
 
 def _deploy_python_drift_test_impl(ctx):

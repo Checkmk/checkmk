@@ -6,7 +6,7 @@
 # Version bounds belong in windows-constraints.txt.
 
 colorama  # Windows has to have some color output
-pyyaml  # to support the agent config
+# pyyaml (agent config) has no cp315 win_amd64 wheel: see :pyyaml_wheel in BUILD.bazel
 certifi  # jolokia
 chardet  # jolokia
 idna  # jolokia

@@ -10,11 +10,11 @@ load("//agents/modules/windows:python_msis.bzl", "PYTHON_MSI_FEATURES")
 # touch; regenerate it with //agents/modules/windows:refresh_msi_pins.  Its keys are
 # PYTHON_MSI_FEATURES, each naming the @python_msi_<key> repo declared below.
 _MSI_SHA256 = {
-    "core": "3dfcfe7b42e6f2d683be427af62369761c7e6627aff6a8da2f439a9d11e62cdf",
-    "exe": "63035cb1fc01ec085c0f18e73f8c1b000ca148378f4f4b1db11f3baabcc8cf3a",
-    "lib": "d68a92dcc61addb49e4678f60af2838d7675991341c9bf0facd2c5e7283841c3",
-    "pip": "b9c87eee34ab2ded2702b1fb26ea031b07ffbb665617336b2a70508e660153eb",
-    "ucrt": "c35e76105318b7472c6028e8d4a2f9b8ec1a3ef02897b4e49350c8adb84a2105",
+    "core": "1ab04330cedbf1e12e9a11a3afb21679e808d02bffe49dff5483dfaa7641b1ef",
+    "exe": "3d8b229039e276aadc880e52c4aea3ab3b9af4934e34d6be08c9cf78919c9e55",
+    "lib": "cf9dd1af2ad9d3f8c9f0ce76c56c6def378f6ab1b79f964dd54e0ea958403c08",
+    "pip": "42741e3241aeff190674d635c2b65984262e9059788040d04c6c7e66ae0ca42b",
+    "ucrt": "7abe902a0458d01b8fbcfb10ebb634398a85e3acb0ad6ec5ed6db6785af76e12",
 }
 
 def _repos_impl(_mctx):
@@ -26,6 +26,19 @@ def _repos_impl(_mctx):
         urls = [
             "https://files.pythonhosted.org/packages/source/c/cabarchive/cabarchive-0.2.5.tar.gz",
             UPSTREAM_MIRROR_URL + "cabarchive-0.2.5.tar.gz",
+        ],
+    )
+
+    # The sources of //agents/modules/windows:pyyaml_wheel, whose version must match.
+    # TODO: Drop it once PyYAML publishes win_amd64 wheels for PYTHON_VERSION_WINDOWS.
+    http_archive(
+        name = "pyyaml_sdist",
+        build_file = "//agents/modules/windows:pyyaml.BUILD.bazel",
+        sha256 = "d76623373421df22fb4cf8817020cbb7ef15c725b9d5e45f17e189bfc384190f",
+        strip_prefix = "pyyaml-6.0.3",
+        urls = [
+            "https://files.pythonhosted.org/packages/source/p/pyyaml/pyyaml-6.0.3.tar.gz",
+            UPSTREAM_MIRROR_URL + "pyyaml-6.0.3.tar.gz",
         ],
     )
 

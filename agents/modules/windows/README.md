@@ -65,6 +65,12 @@ Everything else is hermetic via bazel modules:
   by `:windows_test_cab_requirements_test`); `//:lock_python_requirements`
   refreshes both.
 
+  PyYAML is the exception: PyPI has no `cp315` `win_amd64` wheel of it, so it
+  is in neither `.in` file. `:pyyaml_wheel` builds a pure-Python wheel from its
+  sdist (`@pyyaml_sdist`) instead, which both cabs install along with the hub's
+  closure. Its version is spelled out in `BUILD.bazel` and in
+  `//bazel/extensions:python_cab_repositories.bzl`.
+
   Keep `windows-requirements.in` unpinned — the resolved
   `windows-requirements.txt` is the pin. Version bounds go into
   `windows-constraints.txt`, which the resolution consumes via

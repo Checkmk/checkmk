@@ -9,12 +9,13 @@ use_repo(
     "python_msi_lib",
     "python_msi_pip",
     "python_msi_ucrt",
+    "pyyaml_sdist",
 )
 
 pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
 pip.parse(
     hub_name = "windows_python_wheels",
-    python_version = "3.14",
+    python_version = "3.15",
     requirements_by_platform = {
         "@//agents/modules/windows:windows-requirements.txt": "windows_x86_64",
     },
@@ -26,7 +27,7 @@ use_repo(pip, "windows_python_wheels")
 # Python of the Windows agent's pytest suites in their QEMU tiers.
 pip.parse(
     hub_name = "windows_test_python_wheels",
-    python_version = "3.14",
+    python_version = "3.15",
     requirements_by_platform = {
         "@//agents/modules/windows:windows-test-cab-requirements.txt": "windows_x86_64",
     },

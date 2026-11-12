@@ -172,9 +172,10 @@ _CAB_ATTRS = {
     "wheels": attr.label_list(
         allow_files = [".whl"],
         cfg = _windows_wheels_transition,
-        doc = "The all_whl_requirements of a pip.parse hub: the pinned " +
-              "win_amd64/cp3xx wheel closure, installed offline. Must include " +
-              "exactly one pip wheel, the one pip_offline runs.",
+        doc = "The all_whl_requirements of a pip.parse hub, the pinned " +
+              "win_amd64/cp3xx wheel closure, plus any wheels built here: " +
+              "installed offline. Must include exactly one pip wheel, the one " +
+              "pip_offline runs.",
     ),
     "_cab_lib": attr.label(
         default = Label(":cab_lib"),

@@ -1,4 +1,4 @@
-title: APT: Normal and Security Updates
+title: Linux: Package Updates via APT
 agents: linux
 catalog: os/misc
 license: GPLv2

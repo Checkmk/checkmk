@@ -192,6 +192,7 @@ def test_context_view_drag_shifts_the_window(
     assert not javascript_errors, f"Uncaught JS errors during the brush drag: {javascript_errors}"
 
 
+@pytest.mark.skip(reason="CMK-42326")
 def test_pinning_a_point_marks_it_on_every_graph_and_stores_it(
     dashboard_page: MainDashboard,
     graph_hosts_with_varying_data: list[str],

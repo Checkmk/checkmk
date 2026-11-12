@@ -6,10 +6,13 @@
 //! configured interval by the update thread of the daemon.
 
 use crate::configuration::config::{ClientConfig, Registry};
+use crate::constants::CMK_UPDATE_AGENT_CMD;
 use crate::environment::PathResolver;
 #[cfg(unix)]
 use crate::updater::InstallOutcome;
-use crate::updater::{CheckOutcome, FetchOutcome, SignatureCheck, Updater, WritableUpdater};
+use crate::updater::{
+    CheckOutcome, FetchOutcome, PythonUpdater, SignatureCheck, Updater, WritableUpdater,
+};
 use crate::{agent_receiver_api, misc, setup};
 use anyhow::Result as AnyhowResult;
 use log::warn;
@@ -30,9 +33,10 @@ pub fn check(
     updater: &Updater,
     registry: &Registry,
     client_config: &ClientConfig,
+    python_updater: Option<&PythonUpdater>,
 ) -> AnyhowResult<()> {
     if !updater.is_configured()? {
-        println!("Agent updates are not configured for this host");
+        println!("{}", report_unconfigured(python_updater));
         return Ok(());
     }
     let api = agent_receiver_api::Api {
@@ -70,11 +74,12 @@ pub fn update(
     registry: &Registry,
     client_config: &ClientConfig,
     signature: SignatureCheck,
+    python_updater: Option<&PythonUpdater>,
 ) -> AnyhowResult<()> {
     let api = agent_receiver_api::Api {
         use_proxy: client_config.use_proxy,
     };
-    update_through(updater, registry, &api, signature)
+    update_through(updater, registry, &api, signature, python_updater)
 }
 
 fn update_through(
@@ -82,9 +87,10 @@ fn update_through(
     registry: &Registry,
     api: &(impl agent_receiver_api::AgentUpdate + agent_receiver_api::RegistrationStatusV2),
     signature: SignatureCheck,
+    python_updater: Option<&PythonUpdater>,
 ) -> AnyhowResult<()> {
     if !updater.is_configured()? {
-        println!("Agent updates are not configured for this host");
+        println!("{}", report_unconfigured(python_updater));
         return Ok(());
     }
 
@@ -171,6 +177,26 @@ fn run_cycle(
         },
     }
     Ok(())
+}
+
+/// What a host without an update configuration is told.
+///
+/// The bakery ships the Python updater only under a rule that enables agent
+/// updates, so a package with it and without an update configuration is
+/// updated by the Python updater.
+fn report_unconfigured(python_updater: Option<&PythonUpdater>) -> String {
+    if python_updater.is_none() {
+        return String::from("Agent updates are not configured for this host");
+    }
+    let command = if cfg!(windows) {
+        format!("{CMK_UPDATE_AGENT_CMD} updater")
+    } else {
+        String::from(CMK_UPDATE_AGENT_CMD)
+    };
+    format!(
+        "Agent updates of this host are handled by the legacy updater\n\
+         ({command}), not by the Agent Controller."
+    )
 }
 
 /// The outcome of a check in the one line the mode prints.
@@ -294,6 +320,9 @@ pub fn fn_thread(
                         &registry,
                         &client_config,
                         SignatureCheck::Required,
+                        // A cycle runs only with an update configuration, and the
+                        // Python updater is named only without one.
+                        None,
                     ) {
                         warn!("Could not update. {result:#}");
                     }
@@ -434,6 +463,28 @@ mod tests {
         assert_eq!(
             report(CheckOutcome::NotPossible),
             "No agent update check is possible for this host, run with -v for the reason"
+        );
+    }
+
+    /// CMK-42015: a host that the legacy updater updates is not unconfigured.
+    #[cfg(unix)]
+    #[test]
+    fn test_report_a_host_updated_by_the_legacy_updater() {
+        assert_eq!(
+            report_unconfigured(Some(&PythonUpdater::at("cmk-update-agent"))),
+            "Agent updates of this host are handled by the legacy updater\n\
+             (cmk-update-agent), not by the Agent Controller."
+        );
+    }
+
+    /// CMK-42015: on Windows the legacy updater is a command of the agent.
+    #[cfg(windows)]
+    #[test]
+    fn test_report_a_host_updated_by_the_legacy_updater() {
+        assert_eq!(
+            report_unconfigured(Some(&PythonUpdater::at("check_mk_agent.exe"))),
+            "Agent updates of this host are handled by the legacy updater\n\
+             (check_mk_agent.exe updater), not by the Agent Controller."
         );
     }
 
@@ -696,6 +747,7 @@ mod tests {
                     &self.registry.registry,
                     api,
                     SignatureCheck::Required,
+                    None,
                 )
             }
 

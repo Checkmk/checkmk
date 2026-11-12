@@ -354,6 +354,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.schema_migrations.ai_control_plane",
     ),
     Component("cmk.ai_control_plane.conversation"): _allow(
+        "cmk.ai_control_plane.mcp_tool_results",
         "cmk.ai_control_plane.protocols",
         "cmk.ai_control_plane.site",
         "cmk.ai_control_plane.storage",
@@ -366,6 +367,7 @@ COMPONENTS: Mapping[Component, ImportCheckerProtocol] = {
         "cmk.ai_control_plane.protocols",
         "cmk.password_store.v1_unstable",
     ),
+    Component("cmk.ai_control_plane.mcp_tool_results"): _allow(),
     Component("cmk.ai_control_plane.protocols"): _allow(),
     Component("cmk.ai_control_plane.site"): _allow(
         *PACKAGE_CCC,

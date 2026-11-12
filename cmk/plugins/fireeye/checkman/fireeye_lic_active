@@ -1,4 +1,4 @@
-title: FireEye Appliances: License Status
+title: FireEye: License Status
 agents: snmp
 catalog: hw/network/fireeye
 license: GPLv2

@@ -1,4 +1,4 @@
-title: FireEye Appliances: System Image
+title: FireEye: System Image
 agents: snmp
 catalog: hw/network/fireeye
 license: GPLv2

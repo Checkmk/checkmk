@@ -1,4 +1,4 @@
-title: FireEye Appliances: Attachment Rates
+title: FireEye: Attachment Rates
 agents: snmp
 catalog: hw/network/fireeye
 license: GPLv2

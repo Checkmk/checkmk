@@ -1,4 +1,4 @@
-title: FireEye Appliances: Temperature
+title: FireEye: Temperature
 agents: snmp
 catalog: hw/network/fireeye
 license: GPLv2

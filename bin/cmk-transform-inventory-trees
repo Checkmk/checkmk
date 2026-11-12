@@ -6,6 +6,7 @@
 import logging
 import subprocess
 import sys
+import time
 from argparse import ArgumentParser, Namespace
 from collections.abc import Sequence
 
@@ -69,6 +70,7 @@ def main() -> int:
             bundle_length=args.bundle_length,
             filter_host_names=args.host_name,
             all_host_names=_collect_hosts(),
+            clock=time.perf_counter,
         )
     except Exception as e:
         logger.error("Failed to transform inventory trees: %s", e)

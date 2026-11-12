@@ -22,7 +22,16 @@ from cmk.inventory.transformation import (
     _compute_bundle,
     _HostTreePath,
     transform_inventory_trees,
+    TransformationResultsStore,
 )
+
+
+class FakeClock:
+    def __init__(self, *times: float) -> None:
+        self._times = list(times)
+
+    def __call__(self) -> float:
+        return self._times.pop(0) if len(self._times) > 1 else self._times[0]
 
 
 def _logger() -> logging.Logger:
@@ -39,6 +48,7 @@ def test_transformation_nothing_to_do(tmp_path: Path) -> None:
         bundle_length=0,
         filter_host_names=[],
         all_host_names=[],
+        clock=FakeClock(0.0),
     )
 
 
@@ -92,6 +102,7 @@ def test_transform_inventory_tree(tmp_path: Path) -> None:
         bundle_length=0,
         filter_host_names=["hostname"],
         all_host_names=["hostname"],
+        clock=FakeClock(0.0),
     )
 
     assert not (tmp_path / "var/check_mk/inventory/hostname").exists()
@@ -111,6 +122,7 @@ def test_transform_status_data_tree(tmp_path: Path) -> None:
         bundle_length=0,
         filter_host_names=["hostname"],
         all_host_names=["hostname"],
+        clock=FakeClock(0.0),
     )
 
     assert not (tmp_path / "tmp/check_mk/status_data/hostname").exists()
@@ -130,6 +142,7 @@ def test_transform_archive_tree(tmp_path: Path) -> None:
         bundle_length=0,
         filter_host_names=["hostname"],
         all_host_names=["hostname"],
+        clock=FakeClock(0.0),
     )
 
     assert not (tmp_path / "var/check_mk/inventory_archive/hostname/123").exists()
@@ -149,6 +162,7 @@ def test_transform_delta_cache_tree(tmp_path: Path) -> None:
         bundle_length=0,
         filter_host_names=["hostname"],
         all_host_names=["hostname"],
+        clock=FakeClock(0.0),
     )
 
     assert not (tmp_path / "var/check_mk/inventory_delta_cache/hostname/123_456").exists()
@@ -169,3 +183,19 @@ def test_the_bundle_spreads_all_trees_including_the_transformed_ones() -> None:
     ]
 
     assert len(_compute_bundle(0, pending, 600)) == 5
+
+
+def test_transform_records_the_precise_duration(tmp_path: Path) -> None:
+    cmk.ccc.store.save_object_to_file(tmp_path / "var/check_mk/inventory/hostname", _raw_tree())
+
+    transform_inventory_trees(
+        logger=_logger(),
+        omd_root=tmp_path,
+        show_results=False,
+        bundle_length=0,
+        filter_host_names=[],
+        all_host_names=["hostname"],
+        clock=FakeClock(10.0, 10.25),
+    )
+
+    assert [r["duration"] for r in TransformationResultsStore(tmp_path).load()] == [0.25]

@@ -139,6 +139,57 @@ describe('DashboardTimeFollowerApp', () => {
   })
 })
 
+describe('DashboardTimeFollowerApp on the way back to the dashboard', () => {
+  const pageUrl = window.location.href
+  const dashboardUrl = 'https://example.com/check_mk/dashboard.py?name=main'
+
+  afterEach(() => {
+    window.history.replaceState({}, '', pageUrl)
+  })
+
+  function wayBack(): Record<string, string> {
+    const iframeUrl = new URL(window.location.href)
+    return Object.fromEntries(
+      new URL(iframeUrl.searchParams.get('drill_down_source_url')!).searchParams
+    )
+  }
+
+  it('carries the duration while the dashboard is live', () => {
+    window.history.replaceState(
+      {},
+      '',
+      `?drill_down_source_url=${encodeURIComponent(dashboardUrl)}`
+    )
+
+    post(liveMessage(0))
+
+    expect(wayBack()).toEqual({ name: 'main', from: 'now-3600s', to: 'now' })
+  })
+
+  it('carries the two instants while the dashboard is paused', () => {
+    window.history.replaceState(
+      {},
+      '',
+      `?drill_down_source_url=${encodeURIComponent(dashboardUrl)}`
+    )
+    post(liveMessage(0))
+
+    post(message(0))
+
+    expect(wayBack()).toEqual({ name: 'main', from: '1767225600000', to: '1767229200000' })
+  })
+
+  it('leaves its address alone without a way back', () => {
+    window.history.replaceState({}, '', '?view_name=host')
+    const replaceState = vi.spyOn(window.history, 'replaceState')
+
+    post(liveMessage(0))
+
+    expect(replaceState).not.toHaveBeenCalled()
+    replaceState.mockRestore()
+  })
+})
+
 describe('DashboardTimeFollowerApp on a column link that includes the time range', () => {
   it('carries the duration while the dashboard is live', async () => {
     post(liveMessage(0))

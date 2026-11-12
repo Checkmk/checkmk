@@ -18,6 +18,7 @@ import {
   linkTimeRangeVariables,
   setTimeRangeVariables
 } from '@/graphing/GlobalTimePicker/timeRangeUrl'
+import { IFRAME_DASHBOARD_URL_PARAM } from '@/page-header/drillUp'
 
 import { isDashboardTimeRangeMessage } from './lib/dashboardTimeRangeMessage'
 
@@ -51,6 +52,21 @@ function followDashboard(event: MessageEvent): void {
   }
   lastTick = tick
   toldTimeRange = linkTimeRangeVariables(followed, live)
+  keepWayBackCurrent(toldTimeRange)
+}
+
+function keepWayBackCurrent(timeRange: TimeRangeVariables): void {
+  const pageUrl = new URL(window.location.href)
+  const dashboardUrl = pageUrl.searchParams.get(IFRAME_DASHBOARD_URL_PARAM)
+  if (dashboardUrl === null) {
+    return
+  }
+  const wayBack = new URL(dashboardUrl, pageUrl)
+  setTimeRangeVariables(wayBack.searchParams, timeRange)
+  pageUrl.searchParams.set(IFRAME_DASHBOARD_URL_PARAM, wayBack.toString())
+  if (pageUrl.href !== window.location.href) {
+    window.history.replaceState(window.history.state, '', pageUrl)
+  }
 }
 
 function carryTimeRange(event: Event): void {

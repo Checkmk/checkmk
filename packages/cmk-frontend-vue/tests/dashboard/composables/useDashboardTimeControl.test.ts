@@ -4,7 +4,8 @@
  * conditions defined in the file COPYING, which is part of this source code package.
  */
 import type { GlobalTimePickerProps } from 'cmk-shared-typing/typescript/global_time_picker'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { nextTick } from 'vue'
 
 import { useDashboardTimeControl } from '@/dashboard/composables/useDashboardTimeControl'
 import {
@@ -41,8 +42,13 @@ describe('useDashboardTimeControl', () => {
 
   afterEach(() => {
     resetGlobalTimeState()
+    vi.restoreAllMocks()
     window.history.replaceState({}, '', pageUrl)
   })
+
+  function addressBarVariables(): Record<string, string> {
+    return Object.fromEntries(new URL(window.location.href).searchParams)
+  }
 
   it.each([
     { startsLive: true, paused: false },
@@ -73,5 +79,42 @@ describe('useDashboardTimeControl', () => {
 
     expect(useGlobalTimeRange().activeTimeRange.value).toEqual(picked)
     expect(useGlobalRefresh().refreshPaused.value).toBe(true)
+  })
+
+  it('writes a picked live range into the address bar as its duration', async () => {
+    window.history.replaceState({}, '', '?name=main')
+    useDashboardTimeControl(globalTimePicker(true))
+
+    useGlobalTimeRange().setActiveTimeRange(rollingRange(HOUR), 'time_picker')
+    await nextTick()
+
+    expect(addressBarVariables()).toEqual({ name: 'main', from: 'now-3600s', to: 'now' })
+  })
+
+  it("writes a widget's range into the address bar as its two instants", async () => {
+    window.history.replaceState({}, '', '?name=main')
+    const { updateTimeRange } = useDashboardTimeControl(globalTimePicker(true))
+    const picked = rollingRange(HOUR)
+
+    updateTimeRange(picked)
+    await nextTick()
+
+    expect(addressBarVariables()).toEqual({
+      name: 'main',
+      from: String(picked.from.toDate().getTime()),
+      to: String(picked.to.toDate().getTime())
+    })
+  })
+
+  it('leaves the address bar alone while a live range rolls on', async () => {
+    useDashboardTimeControl(globalTimePicker(true))
+    useGlobalTimeRange().setActiveTimeRange(rollingRange(HOUR), 'time_picker')
+    await nextTick()
+    const replaceState = vi.spyOn(window.history, 'replaceState')
+
+    useGlobalRefresh().refreshOnce()
+    await nextTick()
+
+    expect(replaceState).not.toHaveBeenCalled()
   })
 })

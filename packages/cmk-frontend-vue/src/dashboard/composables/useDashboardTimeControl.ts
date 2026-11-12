@@ -5,20 +5,27 @@
  */
 import type { GlobalTimePickerProps } from 'cmk-shared-typing/typescript/global_time_picker'
 import type { DateTimeRange } from 'cmk-ui-library/components/date-time'
-import type { ComputedRef, WritableComputedRef } from 'vue'
+import { type ComputedRef, type WritableComputedRef, watch } from 'vue'
 
+import { urlHandler } from '@/dashboard/utils'
 import {
   initGlobalTime,
   useGlobalRefresh,
   useGlobalTimeRange
 } from '@/graphing/GlobalTimePicker/globalTimeState'
-import { timeStartFromUrl } from '@/graphing/GlobalTimePicker/timeRangeUrl'
+import {
+  type TimeRangeVariables,
+  timeStartFromUrl,
+  useTimeRangeVariables
+} from '@/graphing/GlobalTimePicker/timeRangeUrl'
 import { useGlobalTimePickerRange } from '@/graphing/GlobalTimePicker/useGlobalTimePickerRange'
 
 export interface DashboardTimeControl {
   /** The window every widget draws, shared with the rest of the page. */
   range: WritableComputedRef<DateTimeRange>
   refreshTick: ComputedRef<number>
+  /** The variables that carry the shared range; the address bar keeps them for the way back. */
+  timeRangeVariables: ComputedRef<TimeRangeVariables | null>
   /** A widget picked its own window: it becomes everyone's, and stays put until Resume. */
   updateTimeRange: (range: DateTimeRange) => void
 }
@@ -39,9 +46,15 @@ export function useDashboardTimeControl(
     )
   })
 
+  const timeRangeVariables = useTimeRangeVariables()
+  watch(timeRangeVariables, (variables) =>
+    urlHandler.updateCurrentUrl(urlHandler.withTimeRange(new URL(window.location.href), variables))
+  )
+
   return {
     range,
     refreshTick,
+    timeRangeVariables,
     updateTimeRange: (newRange: DateTimeRange) => {
       setActiveTimeRange(newRange, 'external')
       pauseRefresh()

@@ -117,6 +117,27 @@ describe('urlHandler', () => {
     })
   })
 
+  describe('withTimeRange', () => {
+    it('replaces the time range and keeps the other variables', () => {
+      const input = new URL('https://example.com/dashboard.py?name=foo&from=1&to=2&host=web01')
+
+      const url = urlHandler.withTimeRange(input, { from: 'now-3600s', to: 'now' })
+
+      expect(Object.fromEntries(url.searchParams)).toEqual({
+        name: 'foo',
+        from: 'now-3600s',
+        to: 'now',
+        host: 'web01'
+      })
+    })
+
+    it('leaves the URL as it is without a time range', () => {
+      const input = new URL('https://example.com/dashboard.py?name=foo&host=web01')
+
+      expect(urlHandler.withTimeRange(input, null).toString()).toBe(input.toString())
+    })
+  })
+
   describe('updateCurrentUrl', () => {
     it('updates the current URL in the browser', () => {
       defineLocation(window, 'https://example.com/site/check_mk/dashboard.py?name=foo')

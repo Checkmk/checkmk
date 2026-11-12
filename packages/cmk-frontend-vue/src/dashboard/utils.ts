@@ -64,7 +64,11 @@ import type {
   WidgetTimeRange
 } from '@/dashboard/types/widget.ts'
 import type { GraphFetchResponse } from '@/graphing'
-import { TIME_RANGE_VARIABLES } from '@/graphing/GlobalTimePicker/timeRangeUrl'
+import {
+  TIME_RANGE_VARIABLES,
+  type TimeRangeVariables,
+  setTimeRangeVariables
+} from '@/graphing/GlobalTimePicker/timeRangeUrl'
 import { DRILLED_FROM_PARAM } from '@/page-header/drillUp'
 
 import type { ComputeWidgetTitlesRequest, ComputeWidgetTitlesResponse } from './types/api'
@@ -600,8 +604,8 @@ export const urlHandler = {
   },
 
   /**
-   * The dashboard's URL with new runtime filters. It keeps the dashboard, and the way back and
-   * the time range a drill-down offered, and drops every other variable.
+   * The dashboard's URL with new runtime filters. It keeps the dashboard, its time range and the
+   * way back a drill-down offered, and drops every other variable.
    */
   withRuntimeFilters(input: string, runtimeFilters: Record<string, string>): URL {
     return urlHandler.updateWithPreserve(
@@ -609,6 +613,15 @@ export const urlHandler = {
       ['name', 'owner', DRILLED_FROM_PARAM, ...TIME_RANGE_VARIABLES],
       runtimeFilters
     )
+  },
+
+  /** A copy of `url` that carries `timeRange`; without a time range, the copy stays as it is. */
+  withTimeRange(url: URL, timeRange: TimeRangeVariables | null): URL {
+    const result = new URL(url)
+    if (timeRange !== null) {
+      setTimeRangeVariables(result.searchParams, timeRange)
+    }
+    return result
   },
 
   /** Update the current URL in the browser's address bar.

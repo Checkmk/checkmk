@@ -299,7 +299,9 @@ const handleSelectDashboard = async (dashboard: DashboardMetadata) => {
   dashboardFilters.handleResetRuntimeFilters()
   selectedDashboardBreadcrumb.value =
     dashboardsManager.activeDashboard.value?.metadata?.display?.topic?.breadcrumb ?? null
-  urlHandler.pushCurrentUrl(urlHandler.getDashboardUrl(key, {}))
+  urlHandler.pushCurrentUrl(
+    urlHandler.withTimeRange(urlHandler.getDashboardUrl(key, {}), timeRangeVariables.value)
+  )
 
   if (!dashboardFilters.areAllMandatoryFiltersApplied.value) {
     openDashboardFilterSettings.value = true
@@ -684,9 +686,9 @@ const updateDashboardSettings = async (
   openDashboardSettings.value = false
   showCloneSuccessAlert.value = false
 
-  const updatedDashboardUrl = urlHandler.getDashboardUrl(
-    newKey,
-    dashboardFilters.runtimeFiltersSearchParams.value
+  const updatedDashboardUrl = urlHandler.withTimeRange(
+    urlHandler.getDashboardUrl(newKey, dashboardFilters.runtimeFiltersSearchParams.value),
+    timeRangeVariables.value
   )
   urlHandler.updateCurrentUrl(updatedDashboardUrl)
   if (!kioskMode.isActive()) {
@@ -703,7 +705,7 @@ const reviewFilters = () => {
   openDashboardFilterSettings.value = true
 }
 
-const { range, refreshTick, updateTimeRange } = useDashboardTimeControl(
+const { range, refreshTick, timeRangeVariables, updateTimeRange } = useDashboardTimeControl(
   props.global_time_picker,
   true
 )

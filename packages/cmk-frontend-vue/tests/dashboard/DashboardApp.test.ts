@@ -3,12 +3,13 @@
  * This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
  * conditions defined in the file COPYING, which is part of this source code package.
  */
+import { fromDate } from '@internationalized/date'
 import userEvent from '@testing-library/user-event'
-import { configure, render, screen, waitFor, within } from '@testing-library/vue'
+import { configure, fireEvent, render, screen, waitFor, within } from '@testing-library/vue'
 import { restApiHttp, useMswServer } from 'cmk-ui-library/vitest.msw'
 // eslint-disable-next-line no-restricted-imports -- pre-existing violation: type these handlers, never copy this line
 import { HttpResponse, http } from 'msw'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, toRaw } from 'vue'
 
 import DashboardApp from '@/dashboard/DashboardApp.vue'
@@ -24,6 +25,11 @@ import type {
   ResponsiveGridWidgetLayout,
   ResponsiveGridWidgetLayouts
 } from '@/dashboard/types/widget'
+import {
+  resetGlobalTimeState,
+  useGlobalRefresh,
+  useGlobalTimeRange
+} from '@/graphing/GlobalTimePicker/globalTimeState'
 
 import { FakeResizeObserver, deliverSize } from '@tests/lib/fakeResizeObserver'
 
@@ -509,4 +515,77 @@ describe('DashboardApp', () => {
       expect(failure).toHaveTextContent('Could not reschedule the checks for the selected hosts')
     }
   )
+})
+
+describe('DashboardApp on a switch to another dashboard', () => {
+  const pageUrl = window.location.href
+  const OTHER_ID = 'other_dashboard'
+  const OTHER_TITLE = 'Other dashboard'
+  const otherMetadata: DashboardMetadata = {
+    ...metadata,
+    name: OTHER_ID,
+    display: { ...metadata.display, title: OTHER_TITLE }
+  }
+
+  afterEach(() => {
+    resetGlobalTimeState()
+    window.history.replaceState({}, '', pageUrl)
+  })
+
+  function serveTheOtherDashboard(): void {
+    server.use(
+      http.get(`${API}/domain-types/dashboard_metadata/collections/all`, () =>
+        HttpResponse.json({
+          domainType: 'dashboard_metadata',
+          id: 'all',
+          links: [],
+          value: [metadata, otherMetadata].map((extensions) => ({
+            domainType: 'dashboard_metadata',
+            id: extensions.name,
+            links: [],
+            extensions
+          }))
+        })
+      ),
+      http.get(`${API}/objects/dashboard_metadata/${OTHER_ID}`, () =>
+        HttpResponse.json({
+          domainType: 'dashboard_metadata',
+          id: OTHER_ID,
+          links: [],
+          extensions: otherMetadata
+        })
+      ),
+      http.get(`${API}/objects/dashboard_relative_grid/${OTHER_ID}`, () =>
+        HttpResponse.json({
+          domainType: 'dashboard_relative_grid',
+          id: OTHER_ID,
+          links: [],
+          extensions: sourceDashboard
+        })
+      )
+    )
+  }
+
+  it('keeps the time range in the address bar', async () => {
+    serveTheOtherDashboard()
+    render(DashboardApp, { props: pageProperties })
+    await screen.findByText(SOURCE_TEXT)
+    const [start, end] = [Date.parse('2026-01-01T00:00:00Z'), Date.parse('2026-01-01T04:00:00Z')]
+    useGlobalTimeRange().setActiveTimeRange(
+      { from: fromDate(new Date(start), 'UTC'), to: fromDate(new Date(end), 'UTC') },
+      'time_picker'
+    )
+    useGlobalRefresh().pauseRefresh()
+
+    await fireEvent.focus(screen.getByPlaceholderText(SOURCE_TITLE))
+    await fireEvent.click(await screen.findByText(OTHER_TITLE))
+
+    await waitFor(() => {
+      expect(Object.fromEntries(new URL(window.location.href).searchParams)).toMatchObject({
+        name: OTHER_ID,
+        from: String(start),
+        to: String(end)
+      })
+    })
+  })
 })

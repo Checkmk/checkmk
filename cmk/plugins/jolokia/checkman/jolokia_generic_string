@@ -1,4 +1,4 @@
-title: Jolokia: Generic MBean String Value
+title: Java: Generic MBean String Value
 agents: linux, windows
 catalog: app/java
 license: GPLv2

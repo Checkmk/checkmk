@@ -1,4 +1,4 @@
-title: JVM Ehcache Statistics: Cache Writer
+title: Java: Ehcache Writer
 agents: linux, windows
 catalog: app/java
 license: GPLv2

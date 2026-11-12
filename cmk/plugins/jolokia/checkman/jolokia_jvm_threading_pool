@@ -1,4 +1,4 @@
-title: Java Virtual Machine: Tomcat Threads
+title: Java: Tomcat Thread Pool
 agents: linux, windows
 license: GPLv2
 catalog: app/java

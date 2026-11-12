@@ -1,4 +1,4 @@
-title: Java Virtual Machine: Uptime
+title: Java: JVM Uptime
 agents: linux, windows
 catalog: app/java
 license: GPLv2

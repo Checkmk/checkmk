@@ -1,4 +1,4 @@
-title: JVM Ehcache Statistics: On-disk Cache Usage
+title: Java: Ehcache On-Disk Usage
 agents: linux, windows
 catalog: app/java
 license: GPLv2

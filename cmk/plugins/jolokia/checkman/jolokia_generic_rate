@@ -1,4 +1,4 @@
-title: Jolokia: Generic Numeric MBean Rate
+title: Java: Generic MBean Numeric Rate
 agents: linux, windows
 catalog: app/java
 license: GPLv2

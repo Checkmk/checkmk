@@ -1,10 +1,10 @@
-title: BEA Weblogic: Length of Queue
+title: Oracle WebLogic: Queue Length
 agents: linux, windows
 catalog: app/java
 license: GPLv2
 distribution: check_mk
 description:
- The BEA application servers have "Execute Queues" in which requests are
+ The Oracle application servers have "Execute Queues" in which requests are
  processed. This check allows to monitor the number of requests that
  are being queued for processing.
 

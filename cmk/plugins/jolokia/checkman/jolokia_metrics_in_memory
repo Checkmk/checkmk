@@ -1,4 +1,4 @@
-title: JVM Ehcache Statistics: In-memory Cache Usage
+title: Java: Ehcache In-Memory Usage
 agents: linux, windows
 catalog: app/java
 license: GPLv2

@@ -26,6 +26,8 @@ export interface CellLink {
 
 export type CellVerticalAlign = 'top' | 'middle'
 
+export type CellBackground = 'ux-theme-2' | 'ux-theme-3'
+
 const props = defineProps<{
   columnId?: string | undefined
   breakpoints?: CellBreakpoints | undefined
@@ -37,6 +39,8 @@ const props = defineProps<{
   buttonLabel?: TranslatedString | undefined
   verticalAlign?: CellVerticalAlign | undefined
   noWrap?: boolean | undefined
+  background?: CellBackground | undefined
+  fill?: boolean | undefined
 }>()
 
 const emit = defineEmits<{
@@ -109,7 +113,9 @@ const highlightStyle = computed<CSSProperties>(() =>
       'monitoring-base-cell--button': button === true,
       'monitoring-base-cell--vertical-middle': verticalAlign === 'middle',
       'monitoring-base-cell--no-wrap': noWrap === true,
-      'monitoring-base-cell--with-aside': slots.aside !== undefined
+      'monitoring-base-cell--with-aside': slots.aside !== undefined,
+      'monitoring-base-cell--background-ux-theme-3': background === 'ux-theme-3',
+      'monitoring-base-cell--fill': fill === true
     }"
     :style="pinnedStyle"
   >
@@ -261,6 +267,11 @@ const highlightStyle = computed<CSSProperties>(() =>
     padding: 5px var(--dimension-4);
   }
 
+  &.monitoring-base-cell--fill .monitoring-base-cell__plain {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
   /* Underline the name only, so the reserved icon slot stays undecorated. */
   .monitoring-base-cell__button .monitoring-base-cell__plain {
     min-width: 0;
@@ -268,6 +279,10 @@ const highlightStyle = computed<CSSProperties>(() =>
     text-decoration-color: var(--font-underline-color);
     text-underline-offset: var(--dimension-2);
   }
+}
+
+.monitoring-base-cell--background-ux-theme-3 {
+  background-color: var(--ux-theme-3);
 }
 
 .monitoring-base-cell--button {
@@ -349,6 +364,11 @@ const highlightStyle = computed<CSSProperties>(() =>
   gap: var(--dimension-4);
   margin: 0 var(--dimension-3);
   color: var(--cell-highlight-font-color, inherit);
+}
+
+.monitoring-base-cell--fill .monitoring-base-cell__highlight {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .monitoring-base-cell

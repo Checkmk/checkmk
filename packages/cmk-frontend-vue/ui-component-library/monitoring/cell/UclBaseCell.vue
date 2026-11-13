@@ -39,6 +39,22 @@ export const panelConfig = {
     initialState: 'left',
     help: 'Align the cell content.'
   },
+  background: {
+    type: 'list' as const,
+    title: 'background',
+    options: [
+      { title: 'ux-theme-2', name: 'ux-theme-2' },
+      { title: 'ux-theme-3', name: 'ux-theme-3' }
+    ],
+    initialState: 'ux-theme-2',
+    help: 'The surface of the cell. A row state such as hover or error paints over it.'
+  },
+  fill: {
+    type: 'boolean' as const,
+    title: 'fill',
+    initialState: false,
+    help: 'The content takes the full width of the cell and may shrink below its own, to truncate.'
+  },
   buttonEnabled: {
     type: 'boolean' as const,
     title: 'button',
@@ -116,7 +132,7 @@ import type { InferPanelState } from '@ucl/_ucl/types/prop-panel'
 import { computed, ref } from 'vue'
 
 import MonitoringTable from '@/monitoring/shared/components/MonitoringTable.vue'
-import type { CellLink } from '@/monitoring/shared/components/cell/BaseCell.vue'
+import type { CellBackground, CellLink } from '@/monitoring/shared/components/cell/BaseCell.vue'
 import BaseCell from '@/monitoring/shared/components/cell/BaseCell.vue'
 import type { CellHighlight } from '@/monitoring/shared/components/cell/base/highlight'
 
@@ -139,6 +155,8 @@ const linkedTo = computed<CellLink | undefined>(() =>
 )
 
 const justify = computed(() => propState.value.justify as 'left' | 'center' | 'right')
+
+const background = computed(() => propState.value.background as CellBackground)
 
 const highlight = computed<CellHighlight | undefined>(() =>
   propState.value.highlightEnabled
@@ -208,6 +226,8 @@ const columns = computed<ColumnDef<DemoRow>[]>(() => [
               :highlight="highlight"
               :justify="justify"
               :button="propState.buttonEnabled"
+              :background="background"
+              :fill="propState.fill"
             >
               {{ propState.defaultContent }}
             </BaseCell>

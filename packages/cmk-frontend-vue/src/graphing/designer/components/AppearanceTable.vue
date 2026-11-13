@@ -335,7 +335,7 @@ function onLineStyleChange(row: DesignerItem, value: string | null): void {
 /* Direct cells only: the nested attribute table keeps its own row hover. */
 /* stylelint-disable-next-line selector-pseudo-class-no-unknown */
 .graphing-appearance-table__series--hovered > :deep(td) {
-  background-color: var(--background-highlight);
+  background-color: var(--background-row-hover-highlight);
 }
 
 .graphing-appearance-table__color-swatch {

@@ -135,7 +135,7 @@ function attributesId(name: string): string {
 
 /* Direct cells only: the nested attribute table keeps its own row hover. */
 .graphing-metrics-preview__line--hovered > td {
-  background-color: var(--background-highlight);
+  background-color: var(--background-row-hover-highlight);
 }
 
 .graphing-metrics-preview__swatch-cell {

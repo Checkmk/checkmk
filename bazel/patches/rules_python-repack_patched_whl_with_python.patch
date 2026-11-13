@@ -1,8 +1,8 @@
 diff --git a/python/private/pypi/hub_builder.bzl b/python/private/pypi/hub_builder.bzl
-index 596cfb2..e00a90e 100644
+index ef6a724..9c5cbc0 100644
 --- a/python/private/pypi/hub_builder.bzl
 +++ b/python/private/pypi/hub_builder.bzl
-@@ -640,7 +640,8 @@ def _whl_repo(
+@@ -705,7 +705,8 @@ def _whl_repo(
          # need to pass the extra args there, so only pop this for whls
          args["extra_pip_args"] = src.extra_pip_args
  
@@ -13,7 +13,7 @@ index 596cfb2..e00a90e 100644
              args["python_interpreter"] = interpreter.path
          if interpreter.target:
 diff --git a/python/private/pypi/patch_whl.bzl b/python/private/pypi/patch_whl.bzl
-index e8d76ee..ef6c55c 100644
+index b257f2b..5da5394 100644
 --- a/python/private/pypi/patch_whl.bzl
 +++ b/python/private/pypi/patch_whl.bzl
 @@ -22,6 +22,7 @@ the RECORD file natively in Starlark and repack using system zip.
@@ -24,7 +24,7 @@ index e8d76ee..ef6c55c 100644
  
  _DUMMY_SHA256 = "sha256=0"
  
-@@ -213,17 +214,17 @@ def _repack_whl(rctx, *, output):
+@@ -230,17 +231,17 @@ def _repack_whl(rctx, *, output):
          _repack_whl_unix(rctx, output = output)
  
  def _repack_whl_unix(rctx, *, output):
@@ -50,17 +50,17 @@ index e8d76ee..ef6c55c 100644
      )
  
  def _repack_whl_windows(rctx, *, output):
-diff --git a/python/private/pypi/whl_archive.bzl b/python/private/pypi/whl_archive.bzl
-index 242104f..2bf60d5 100644
---- a/python/private/pypi/whl_archive.bzl
-+++ b/python/private/pypi/whl_archive.bzl
-@@ -124,6 +124,9 @@ way to define whl_library and move whl patching to a separate place. INTERNAL US
-         "enable_implicit_namespace_pkgs",
-         "envsubst",
-         "pip_data_exclude",
-+        # Repacking patched wheels needs Python, see patch_whl.bzl.
-+        "python_interpreter",
-+        "python_interpreter_target",
-     ]
- } | AUTH_ATTRS
- 
+diff --git a/python/private/pypi/whl_file_repo.bzl b/python/private/pypi/whl_file_repo.bzl
+index 40d79ac..801c8ef 100644
+--- a/python/private/pypi/whl_file_repo.bzl
++++ b/python/private/pypi/whl_file_repo.bzl
+@@ -50,6 +50,9 @@ whl_file_repo_attrs = {
+     "index_url": attr.string(doc = "The index URL used to resolve relative wheel URLs."),
+     "integrity": attr.string(doc = "The expected SRI checksum, used when sha256 is unset."),
+     "patches": attr.label_keyed_string_dict(doc = "Patch labels mapped to their strip levels."),
++    # Repacking patched wheels needs Python, see patch_whl.bzl.
++    "python_interpreter": ATTRS["python_interpreter"],
++    "python_interpreter_target": ATTRS["python_interpreter_target"],
+     "requirement": attr.string(doc = "The requirement used in download diagnostics."),
+     "sha256": attr.string(doc = "The expected SHA256 checksum."),
+     "urls": attr.string_list(doc = "The wheel download URLs."),
